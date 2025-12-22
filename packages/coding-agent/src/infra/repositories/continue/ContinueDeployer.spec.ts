@@ -523,7 +523,193 @@ describe('ContinueDeployer', () => {
           );
 
           const standardFile = result.createOrUpdate[0];
+          expect(standardFile.content).toContain(`globs: "${standard.scope}"`);
+        });
+
+        it('quotes globs starting with **/', async () => {
+          const standard = standardFactory({
+            name: 'Test Standard',
+            slug: 'test-standard',
+            scope: '**/*.spec.ts',
+          });
+
+          const standardVersion: StandardVersion = {
+            id: createStandardVersionId('standard-version-1'),
+            standardId: standard.id,
+            name: standard.name,
+            slug: standard.slug,
+            description: standard.description,
+            version: 1,
+            summary: 'A test standard summary',
+            userId: createUserId('user-1'),
+            scope: standard.scope,
+            rules: [] as Rule[],
+          };
+
+          const result = await deployer.deployStandards(
+            [standardVersion],
+            mockGitRepo,
+            mockTarget,
+          );
+
+          const standardFile = result.createOrUpdate[0];
+          expect(standardFile.content).toContain('globs: "**/*.spec.ts"');
+        });
+
+        it('quotes globs starting with *', async () => {
+          const standard = standardFactory({
+            name: 'Test Standard',
+            slug: 'test-standard',
+            scope: '*.spec.ts',
+          });
+
+          const standardVersion: StandardVersion = {
+            id: createStandardVersionId('standard-version-1'),
+            standardId: standard.id,
+            name: standard.name,
+            slug: standard.slug,
+            description: standard.description,
+            version: 1,
+            summary: 'A test standard summary',
+            userId: createUserId('user-1'),
+            scope: standard.scope,
+            rules: [] as Rule[],
+          };
+
+          const result = await deployer.deployStandards(
+            [standardVersion],
+            mockGitRepo,
+            mockTarget,
+          );
+
+          const standardFile = result.createOrUpdate[0];
+          expect(standardFile.content).toContain('globs: "*.spec.ts"');
+        });
+
+        it('includes unquoted globs not starting with *', async () => {
+          const standard = standardFactory({
+            name: 'Test Standard',
+            slug: 'test-standard',
+            scope: 'src/**/*.ts',
+          });
+
+          const standardVersion: StandardVersion = {
+            id: createStandardVersionId('standard-version-1'),
+            standardId: standard.id,
+            name: standard.name,
+            slug: standard.slug,
+            description: standard.description,
+            version: 1,
+            summary: 'A test standard summary',
+            userId: createUserId('user-1'),
+            scope: standard.scope,
+            rules: [] as Rule[],
+          };
+
+          const result = await deployer.deployStandards(
+            [standardVersion],
+            mockGitRepo,
+            mockTarget,
+          );
+
+          const standardFile = result.createOrUpdate[0];
           expect(standardFile.content).toContain(`globs: ${standard.scope}`);
+        });
+
+        it('does not quote globs not starting with *', async () => {
+          const standard = standardFactory({
+            name: 'Test Standard',
+            slug: 'test-standard',
+            scope: 'src/**/*.ts',
+          });
+
+          const standardVersion: StandardVersion = {
+            id: createStandardVersionId('standard-version-1'),
+            standardId: standard.id,
+            name: standard.name,
+            slug: standard.slug,
+            description: standard.description,
+            version: 1,
+            summary: 'A test standard summary',
+            userId: createUserId('user-1'),
+            scope: standard.scope,
+            rules: [] as Rule[],
+          };
+
+          const result = await deployer.deployStandards(
+            [standardVersion],
+            mockGitRepo,
+            mockTarget,
+          );
+
+          const standardFile = result.createOrUpdate[0];
+          expect(standardFile.content).not.toContain(
+            `globs: "${standard.scope}"`,
+          );
+        });
+
+        it('formats multiple comma-separated globs as array', async () => {
+          const standard = standardFactory({
+            name: 'Test Standard',
+            slug: 'test-standard',
+            scope: '**/*.spec.ts, **/*.test.ts',
+          });
+
+          const standardVersion: StandardVersion = {
+            id: createStandardVersionId('standard-version-1'),
+            standardId: standard.id,
+            name: standard.name,
+            slug: standard.slug,
+            description: standard.description,
+            version: 1,
+            summary: 'A test standard summary',
+            userId: createUserId('user-1'),
+            scope: standard.scope,
+            rules: [] as Rule[],
+          };
+
+          const result = await deployer.deployStandards(
+            [standardVersion],
+            mockGitRepo,
+            mockTarget,
+          );
+
+          const standardFile = result.createOrUpdate[0];
+          expect(standardFile.content).toContain(
+            'globs: ["**/*.spec.ts", "**/*.test.ts"]',
+          );
+        });
+
+        it('formats multiple globs with mixed quoting requirements', async () => {
+          const standard = standardFactory({
+            name: 'Test Standard',
+            slug: 'test-standard',
+            scope: '**/*.spec.ts, src/**/*.ts',
+          });
+
+          const standardVersion: StandardVersion = {
+            id: createStandardVersionId('standard-version-1'),
+            standardId: standard.id,
+            name: standard.name,
+            slug: standard.slug,
+            description: standard.description,
+            version: 1,
+            summary: 'A test standard summary',
+            userId: createUserId('user-1'),
+            scope: standard.scope,
+            rules: [] as Rule[],
+          };
+
+          const result = await deployer.deployStandards(
+            [standardVersion],
+            mockGitRepo,
+            mockTarget,
+          );
+
+          const standardFile = result.createOrUpdate[0];
+          expect(standardFile.content).toContain(
+            'globs: ["**/*.spec.ts", src/**/*.ts]',
+          );
         });
 
         it('sets alwaysApply to false', async () => {
@@ -972,7 +1158,7 @@ describe('ContinueDeployer', () => {
           file.path.includes('frontend-standard'),
         );
         if (frontendFile) {
-          expect(frontendFile.content).toContain('globs: **/*.{ts,tsx}');
+          expect(frontendFile.content).toContain('globs: "**/*.{ts,tsx}"');
         }
       });
 
