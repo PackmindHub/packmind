@@ -2,14 +2,16 @@ import {
   Controller,
   Get,
   Query,
-  Res,
   BadRequestException,
   InternalServerErrorException,
 } from '@nestjs/common';
-import { Response } from 'express';
 import { Public } from '@packmind/node-utils';
 import { PackmindLogger } from '@packmind/logger';
-import { IAccountsPort, StartTrialCommand } from '@packmind/types';
+import {
+  IAccountsPort,
+  StartTrialCommand,
+  StartTrialResult,
+} from '@packmind/types';
 import { InjectAccountsAdapter } from '../shared/HexaInjection';
 import { McpService } from '../organizations/mcp/mcp.service';
 
@@ -27,10 +29,7 @@ export class TrialController {
 
   @Public()
   @Get()
-  async startTrial(
-    @Query('agent') agent: string,
-    @Res() response: Response,
-  ): Promise<void> {
+  async startTrial(@Query('agent') agent: string): Promise<StartTrialResult> {
     this.logger.info('GET /start-trial - Starting trial', { agent });
 
     if (agent !== 'vs-code' && agent !== 'cursor' && agent !== 'claude') {
@@ -44,39 +43,20 @@ export class TrialController {
       const { user, organization, role } =
         await this.accountsAdapter.startTrial(command);
 
-      // Generate MCP token using the shared McpService
       const tokenResponse = this.mcpService.generateTokenForUser(
         user,
         organization,
         role,
       );
 
-      // Build MCP setup URL based on agent
-      const mcpUrl = await this.mcpService.getMcpUrl();
-      let mcpSetupUrl: string;
+      this.logger.info('Trial started successfully', { agent });
 
-      if (agent === 'claude') {
-        mcpSetupUrl = await this.mcpService.buildClaudeSetupUrl(
-          tokenResponse.access_token,
-          mcpUrl,
-        );
-      } else if (agent === 'cursor') {
-        mcpSetupUrl = this.mcpService.buildCursorMcpUrl(
-          tokenResponse.access_token,
-          mcpUrl,
-        );
-      } else {
-        mcpSetupUrl = this.mcpService.buildVsCodeMcpUrl(
-          tokenResponse.access_token,
-          mcpUrl,
-        );
-      }
-
-      this.logger.info('Trial started successfully, redirecting to MCP setup', {
-        agent,
-      });
-
-      response.redirect(mcpSetupUrl);
+      return {
+        user,
+        organization,
+        role,
+        mcpToken: tokenResponse.access_token,
+      };
     } catch (error) {
       this.logger.error('Failed to start trial', {
         agent,

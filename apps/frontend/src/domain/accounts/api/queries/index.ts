@@ -12,3 +12,4 @@ export {
 } from './AuthQueries';
 export { useGetMeQuery, getMeQueryOptions } from './UserQueries';
 export { getUserOrganizationsQueryOptions } from './AccountsQueries';
+export { useStartTrialMutation } from './TrialQueries';

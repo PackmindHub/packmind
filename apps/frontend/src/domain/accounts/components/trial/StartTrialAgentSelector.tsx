@@ -9,6 +9,7 @@ import {
   PMGrid,
 } from '@packmind/ui';
 import { StartTrialCommand } from '@packmind/types';
+import { useStartTrialMutation } from '../../api/queries';
 
 type Agent = StartTrialCommand['agent'];
 
@@ -53,12 +54,21 @@ export function StartTrialAgentSelector({
   onTokenAvailable,
 }: IStartTrialAgentSelectorProps) {
   const [selectedAgent, setSelectedAgent] = useState<Agent | null>(null);
+  const { mutate: startTrial, isPending } = useStartTrialMutation();
 
-  const handleContinue = async () => {
+  const handleContinue = () => {
     if (!selectedAgent) return;
-    const token = 'aaaa-bbbb-cccc-dddd';
 
-    onTokenAvailable(selectedAgent, token);
+    startTrial(
+      { agent: selectedAgent },
+      {
+        onSuccess: (result) => {
+          if (result.mcpToken) {
+            onTokenAvailable(selectedAgent, result.mcpToken);
+          }
+        },
+      },
+    );
   };
 
   return (
@@ -93,7 +103,12 @@ export function StartTrialAgentSelector({
         </PMGrid>
       </PMRadioCard.Root>
 
-      <PMButton disabled={!selectedAgent} width="full" onClick={handleContinue}>
+      <PMButton
+        disabled={!selectedAgent || isPending}
+        loading={isPending}
+        width="full"
+        onClick={handleContinue}
+      >
         Continue
       </PMButton>
     </PMVStack>
