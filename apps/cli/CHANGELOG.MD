@@ -2,6 +2,8 @@
 
 ## Added
 
+- Allow `continue` as a new target for MCP setup
+
 ## Changed
 
 ## Fixed
