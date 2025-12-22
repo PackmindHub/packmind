@@ -7,10 +7,10 @@ import {
   IStartTrial,
   RenderMode,
   StartTrialCommand,
-  StartTrialResult,
-  UserSignedUpEvent,
-  TrialStartedEvent,
   StartTrialCommandAgents,
+  StartTrialResult,
+  TrialStartedEvent,
+  UserSignedUpEvent,
 } from '@packmind/types';
 import { v4 as uuidv4 } from 'uuid';
 import { OrganizationService } from '../../services/OrganizationService';
@@ -134,15 +134,15 @@ export class StartTrialUseCase implements IStartTrial {
   }
 
   private mapAgentToRenderModes(agent: StartTrialCommandAgents): RenderMode[] {
-    switch (agent) {
-      case 'vs-code':
-        return [RenderMode.GH_COPILOT];
-      case 'cursor':
-        return [RenderMode.CURSOR];
-      case 'claude':
-        return [RenderMode.CLAUDE];
-      default:
-        return [];
-    }
+    const renderModeByAgents: Record<StartTrialCommandAgents, RenderMode[]> = {
+      'vs-code': [RenderMode.GH_COPILOT],
+      claude: [RenderMode.CLAUDE],
+      cursor: [RenderMode.CURSOR],
+      'continue-dev': [RenderMode.CONTINUE],
+      jetbrains: [RenderMode.GH_COPILOT],
+      other: [RenderMode.AGENTS_MD],
+    };
+
+    return renderModeByAgents[agent];
   }
 }

@@ -16,3 +16,28 @@
 # - badExample: Code showing incorrect usage (omit for DELETED)
 #
 # This file is automatically maintained by the signal-capture skill.
+
+- newRule: "Use type guard functions with `parameter is Type` return type instead of manual type casting when validating union types"
+  operation: ADDED
+  standard: typescript-code-standards
+  date: "2025-12-22"
+  sourceFile: "apps/api/src/app/trial/trial.controller.ts"
+  language: TYPESCRIPT
+  goodExample: |
+    function isValidAgent(value: string): value is StartTrialCommandAgents {
+      const validAgents = ['vs-code', 'cursor', 'claude'];
+      return validAgents.includes(value);
+    }
+
+    if (!isValidAgent(agent)) {
+      throw new BadRequestException('Invalid agent');
+    }
+    // agent is now typed as StartTrialCommandAgents
+    const command: StartTrialCommand = { agent };
+  badExample: |
+    if (!validAgents.includes(agent as StartTrialCommand['agent'])) {
+      throw new BadRequestException('Invalid agent');
+    }
+    const command: StartTrialCommand = {
+      agent: agent as StartTrialCommand['agent'],
+    };
