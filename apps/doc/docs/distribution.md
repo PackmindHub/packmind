@@ -29,10 +29,11 @@ You can create an issue in our [repository](https://github.com/PackmindHub/packm
 
 ## How to Distribute
 
-There are two ways to distribute packages to your repositories:
+There are three ways to distribute packages to your repositories:
 
 1. **Using the Packmind app** - Distribute packages through the web interface with full control over targets and repositories
 2. **Using packmind-cli** - Install packages directly from your terminal, useful for CI/CD pipelines and local development
+3. **Using the MCP tool** - Install packages directly from AI agents that support MCP (Model Context Protocol)
 
 ### Distribution Methods Overview
 
@@ -40,6 +41,7 @@ There are two ways to distribute packages to your repositories:
 | ------- | ------------------------------------------- | ---------------------------------------- |
 | **App** | Centralized distribution, team coordination | Full control via connected Git providers |
 | **CLI** | CI/CD pipelines, local development          | Creates read-only provider entries       |
+| **MCP** | AI-assisted development, agent workflows    | Creates read-only provider entries       |
 
 ## Distribute via the App
 
@@ -110,3 +112,50 @@ The CLI approach is ideal for:
 - **Local development** - Quickly install packages without leaving your terminal
 - **Monorepos** - Use `packmind-cli install --recursive` to install packages for all `packmind.json` files in the repository
 - **Self-hosted Git instances** - Distribute to repositories that aren't connected to the app
+
+## Distribute via MCP Tool
+
+If you're using an AI agent that supports MCP (Model Context Protocol) and have the Packmind MCP server configured, you can install packages directly through your AI assistant using the `install_package` tool.
+
+### How It Works
+
+The MCP tool provides a two-step installation process:
+
+1. **Get installation instructions** - Call `install_package` with your package slugs to receive the list of file updates needed
+2. **Apply the changes** - The AI agent applies the file updates to your repository
+
+### Usage
+
+Ask your AI assistant to install Packmind packages. For example:
+
+> "Install the backend-standards package from Packmind"
+
+The AI agent will:
+
+1. Call the `install_package` MCP tool with the specified package slugs
+2. Receive the file contents for all enabled AI agent renderers
+3. Write or update the instruction files in your repository
+4. Notify Packmind that a distribution occurred
+
+### MCP Distribution Considerations
+
+Similar to CLI distributions, MCP-based distributions create Git provider entries with limited functionality:
+
+:::warning Limited Provider Management
+Git providers created through MCP distributions do not have an associated token. This means:
+
+- **You cannot trigger new distributions** from the app for these repositories
+- **You cannot add new targets** to these providers from the app
+- The provider appears in your organization's Git settings but with limited functionality
+
+To enable full management from the app, connect a Git provider with a valid token in **Settings** → **Git Providers**.
+:::
+
+### When to Use MCP Distribution
+
+The MCP approach is ideal for:
+
+- **AI-assisted development** - Let your AI coding assistant manage package installation as part of your workflow
+- **Interactive setup** - Get guidance and validation from your AI agent during installation
+- **Quick iterations** - Update packages without switching context from your AI chat interface
+- **Onboarding new projects** - Have your AI assistant set up Packmind standards in new repositories
