@@ -156,7 +156,8 @@ export const getAgentsConfig = (): IAgentConfig[] => [
       },
       {
         type: 'json',
-        label: 'YAML Configuration',
+        label:
+          'Create .continue/mcpServers/packmind-mcp.yaml with this content:',
         available: true,
         getJsonConfig: (token: string, url: string) => {
           return `name: Packmind MCP Server
