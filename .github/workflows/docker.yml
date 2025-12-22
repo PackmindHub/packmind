@@ -76,10 +76,10 @@ jobs:
         id: set-image-naming
         run: |
           if [ "${{ vars.PACKMIND_EDITION }}" = "oss" ]; then
-            echo "name_suffix=" >> $GITHUB_OUTPUT
+            echo "name_suffix=-oss" >> $GITHUB_OUTPUT
             echo "version_suffix=" >> $GITHUB_OUTPUT
           elif [ "${{ vars.PACKMIND_EDITION }}" = "proprietary" ]; then
-            echo "name_suffix=" >> $GITHUB_OUTPUT
+            echo "name_suffix=-proprietary" >> $GITHUB_OUTPUT
             echo "version_suffix=-enterprise" >> $GITHUB_OUTPUT
           else
             echo "name_suffix=-${{ vars.PACKMIND_EDITION }}" >> $GITHUB_OUTPUT

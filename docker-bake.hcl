@@ -26,8 +26,8 @@ variable "EDITION" {
 }
 
 variable "IMAGE_NAME_SUFFIX" {
-  // For OSS: empty string (results in packmind/api)
-  // For proprietary: empty string (results in packmind/api)
+  // For OSS: -oss (results in packmind/api-oss for continuous builds)
+  // For proprietary: -proprietary (results in packmind/api-proprietary)
   // For others: -${EDITION} (results in packmind/api-${EDITION})
   default = ""
 }
