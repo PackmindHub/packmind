@@ -50,9 +50,9 @@ jobs:
     outputs:
       # On main: outputs SHA tag (what's actually pushed)
       # On release/*: outputs version tag (what's actually pushed)
-      api-image-tag: packmind/api-${{ vars.PACKMIND_EDITION }}:${{ steps.get-image-tag.outputs.tag }}
-      frontend-image-tag: packmind/frontend-${{ vars.PACKMIND_EDITION }}:${{ steps.get-image-tag.outputs.tag }}
-      mcp-image-tag: packmind/mcp-${{ vars.PACKMIND_EDITION }}:${{ steps.get-image-tag.outputs.tag }}
+      api-image-tag: packmind/api${{ steps.set-image-naming.outputs.name_suffix }}:${{ steps.get-image-tag.outputs.tag }}
+      frontend-image-tag: packmind/frontend${{ steps.set-image-naming.outputs.name_suffix }}:${{ steps.get-image-tag.outputs.tag }}
+      mcp-image-tag: packmind/mcp${{ steps.set-image-naming.outputs.name_suffix }}:${{ steps.get-image-tag.outputs.tag }}
       version: ${{ steps.get-version.outputs.version }}
 
     steps:
@@ -72,13 +72,27 @@ jobs:
         id: get-version
         run: echo "version=$(node -p "require('./package.json').version")" >> $GITHUB_OUTPUT
 
+      - name: Set image naming strategy
+        id: set-image-naming
+        run: |
+          if [ "${{ vars.PACKMIND_EDITION }}" = "oss" ]; then
+            echo "name_suffix=" >> $GITHUB_OUTPUT
+            echo "version_suffix=" >> $GITHUB_OUTPUT
+          elif [ "${{ vars.PACKMIND_EDITION }}" = "proprietary" ]; then
+            echo "name_suffix=" >> $GITHUB_OUTPUT
+            echo "version_suffix=-enterprise" >> $GITHUB_OUTPUT
+          else
+            echo "name_suffix=-${{ vars.PACKMIND_EDITION }}" >> $GITHUB_OUTPUT
+            echo "version_suffix=-${{ vars.PACKMIND_EDITION }}" >> $GITHUB_OUTPUT
+          fi
+
       - name: Determine image tag
         id: get-image-tag
         run: |
-          # On release/* tags: use semantic version (e.g., 1.4.2)
+          # On release/* tags: use semantic version (e.g., 1.4.2 or 1.4.2-enterprise)
           # On main branch: use commit SHA
           if [[ "${{ github.ref }}" == refs/tags/release/* ]]; then
-            echo "tag=${{ steps.get-version.outputs.version }}" >> $GITHUB_OUTPUT
+            echo "tag=${{ steps.get-version.outputs.version }}${{ steps.set-image-naming.outputs.version_suffix }}" >> $GITHUB_OUTPUT
           else
             echo "tag=${{ github.sha }}" >> $GITHUB_OUTPUT
           fi
@@ -140,6 +154,8 @@ jobs:
           VERSION: ${{ steps.get-version.outputs.version }}
           SHA: ${{ github.sha }}
           EDITION: ${{ vars.PACKMIND_EDITION }}
+          IMAGE_NAME_SUFFIX: ${{ steps.set-image-naming.outputs.name_suffix }}
+          VERSION_SUFFIX: ${{ steps.set-image-naming.outputs.version_suffix }}
         run: |
           docker buildx bake \
             --file docker-bake.hcl \
@@ -153,7 +169,7 @@ jobs:
         with:
           command: cves
           organization: packmind
-          image: packmind/api-${{ vars.PACKMIND_EDITION }}:${{ steps.get-version.outputs.version }}
+          image: packmind/api${{ steps.set-image-naming.outputs.name_suffix }}:${{ steps.get-version.outputs.version }}${{ steps.set-image-naming.outputs.version_suffix }}
           only-severities: critical,high
           exit-code: true
 
@@ -162,7 +178,7 @@ jobs:
         with:
           command: cves
           organization: packmind
-          image: packmind/frontend-${{ vars.PACKMIND_EDITION }}:${{ steps.get-version.outputs.version }}
+          image: packmind/frontend${{ steps.set-image-naming.outputs.name_suffix }}:${{ steps.get-version.outputs.version }}${{ steps.set-image-naming.outputs.version_suffix }}
           only-severities: critical,high
           exit-code: true
 
@@ -171,7 +187,7 @@ jobs:
         with:
           command: cves
           organization: packmind
-          image: packmind/mcp-${{ vars.PACKMIND_EDITION }}:${{ steps.get-version.outputs.version }}
+          image: packmind/mcp${{ steps.set-image-naming.outputs.name_suffix }}:${{ steps.get-version.outputs.version }}${{ steps.set-image-naming.outputs.version_suffix }}
           only-severities: critical,high
           exit-code: true
 
@@ -210,9 +226,9 @@ jobs:
           }
 
           # Push only SHA-tagged images (version tags are reserved for releases)
-          retry_push "packmind/api-${{ vars.PACKMIND_EDITION }}:${{ github.sha }}"
-          retry_push "packmind/frontend-${{ vars.PACKMIND_EDITION }}:${{ github.sha }}"
-          retry_push "packmind/mcp-${{ vars.PACKMIND_EDITION }}:${{ github.sha }}"
+          retry_push "packmind/api${{ steps.set-image-naming.outputs.name_suffix }}:${{ github.sha }}"
+          retry_push "packmind/frontend${{ steps.set-image-naming.outputs.name_suffix }}:${{ github.sha }}"
+          retry_push "packmind/mcp${{ steps.set-image-naming.outputs.name_suffix }}:${{ github.sha }}"
 
       # Release tags: Rebuild with multi-platform and push
       - name: Build and push multi-platform images (release)
@@ -221,6 +237,8 @@ jobs:
           VERSION: ${{ steps.get-version.outputs.version }}
           SHA: ${{ github.sha }}
           EDITION: ${{ vars.PACKMIND_EDITION }}
+          IMAGE_NAME_SUFFIX: ${{ steps.set-image-naming.outputs.name_suffix }}
+          VERSION_SUFFIX: ${{ steps.set-image-naming.outputs.version_suffix }}
         run: |
           docker buildx bake \
             --file docker-bake.hcl \

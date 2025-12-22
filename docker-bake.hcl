@@ -25,6 +25,20 @@ variable "EDITION" {
   default = "oss"
 }
 
+variable "IMAGE_NAME_SUFFIX" {
+  // For OSS: empty string (results in packmind/api)
+  // For proprietary: empty string (results in packmind/api)
+  // For others: -${EDITION} (results in packmind/api-${EDITION})
+  default = ""
+}
+
+variable "VERSION_SUFFIX" {
+  // For OSS: empty string (results in version like 1.4.2)
+  // For proprietary: -enterprise (results in version like 1.4.2-enterprise)
+  // For others: -${EDITION} (results in version like 1.4.2-${EDITION})
+  default = ""
+}
+
 // ============================================================================
 // Groups
 // ============================================================================
@@ -60,9 +74,9 @@ target "api" {
     EDITION = "${EDITION}"
   }
   tags = [
-    "${REGISTRY}/api-${EDITION}:${VERSION}",
-    "${REGISTRY}/api-${EDITION}:latest",
-    notequal("", SHA) ? "${REGISTRY}/api-${EDITION}:${SHA}" : "",
+    "${REGISTRY}/api${IMAGE_NAME_SUFFIX}:${VERSION}${VERSION_SUFFIX}",
+    "${REGISTRY}/api${IMAGE_NAME_SUFFIX}:latest",
+    notequal("", SHA) ? "${REGISTRY}/api${IMAGE_NAME_SUFFIX}:${SHA}" : "",
   ]
   platforms = ["linux/amd64"]
 }
@@ -79,9 +93,9 @@ target "frontend" {
   inherits   = ["_common"]
   dockerfile = "dockerfile/Dockerfile.frontend"
   tags = [
-    "${REGISTRY}/frontend-${EDITION}:${VERSION}",
-    "${REGISTRY}/frontend-${EDITION}:latest",
-    notequal("", SHA) ? "${REGISTRY}/frontend-${EDITION}:${SHA}" : "",
+    "${REGISTRY}/frontend${IMAGE_NAME_SUFFIX}:${VERSION}${VERSION_SUFFIX}",
+    "${REGISTRY}/frontend${IMAGE_NAME_SUFFIX}:latest",
+    notequal("", SHA) ? "${REGISTRY}/frontend${IMAGE_NAME_SUFFIX}:${SHA}" : "",
   ]
   platforms = ["linux/amd64"]
 }
@@ -98,9 +112,9 @@ target "mcp" {
   inherits   = ["_common"]
   dockerfile = "dockerfile/Dockerfile.mcp"
   tags = [
-    "${REGISTRY}/mcp-${EDITION}:${VERSION}",
-    "${REGISTRY}/mcp-${EDITION}:latest",
-    notequal("", SHA) ? "${REGISTRY}/mcp-${EDITION}:${SHA}" : "",
+    "${REGISTRY}/mcp${IMAGE_NAME_SUFFIX}:${VERSION}${VERSION_SUFFIX}",
+    "${REGISTRY}/mcp${IMAGE_NAME_SUFFIX}:latest",
+    notequal("", SHA) ? "${REGISTRY}/mcp${IMAGE_NAME_SUFFIX}:${SHA}" : "",
   ]
   platforms = ["linux/amd64"]
 }
