@@ -10,6 +10,7 @@ import {
   StartTrialResult,
   UserSignedUpEvent,
   TrialStartedEvent,
+  StartTrialCommandAgents,
 } from '@packmind/types';
 import { v4 as uuidv4 } from 'uuid';
 import { OrganizationService } from '../../services/OrganizationService';
@@ -132,9 +133,7 @@ export class StartTrialUseCase implements IStartTrial {
     }
   }
 
-  private mapAgentToRenderModes(
-    agent: StartTrialCommand['agent'],
-  ): RenderMode[] {
+  private mapAgentToRenderModes(agent: StartTrialCommandAgents): RenderMode[] {
     switch (agent) {
       case 'vs-code':
         return [RenderMode.GH_COPILOT];

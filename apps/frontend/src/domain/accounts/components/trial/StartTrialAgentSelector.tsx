@@ -8,13 +8,11 @@ import {
   PMButton,
   PMGrid,
 } from '@packmind/ui';
-import { StartTrialCommand } from '@packmind/types';
+import { StartTrialCommandAgents } from '@packmind/types';
 import { useStartTrialMutation } from '../../api/queries';
 
-type Agent = StartTrialCommand['agent'];
-
 interface IAgentOption {
-  value: Agent;
+  value: StartTrialCommandAgents;
   label: string;
 }
 
@@ -47,13 +45,14 @@ const AGENT_OPTIONS: IAgentOption[] = [
 ];
 
 interface IStartTrialAgentSelectorProps {
-  onTokenAvailable: (agent: Agent, token: string) => void;
+  onTokenAvailable: (agent: StartTrialCommandAgents, token: string) => void;
 }
 
 export function StartTrialAgentSelector({
   onTokenAvailable,
 }: IStartTrialAgentSelectorProps) {
-  const [selectedAgent, setSelectedAgent] = useState<Agent | null>(null);
+  const [selectedAgent, setSelectedAgent] =
+    useState<StartTrialCommandAgents | null>(null);
   const { mutate: startTrial, isPending } = useStartTrialMutation();
 
   const handleContinue = () => {
@@ -84,7 +83,9 @@ export function StartTrialAgentSelector({
         size="md"
         variant="outline"
         value={selectedAgent ?? undefined}
-        onValueChange={(e) => setSelectedAgent(e.value as Agent)}
+        onValueChange={(e) =>
+          setSelectedAgent(e.value as StartTrialCommandAgents)
+        }
       >
         <PMGrid gridTemplateColumns="repeat(3, 1fr)" gap={3}>
           {AGENT_OPTIONS.map((option) => (
