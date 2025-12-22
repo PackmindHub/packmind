@@ -78,5 +78,8 @@ export const routes = {
     toResetPassword: (token?: string) =>
       token ? `/reset-password?token=${token}` : '/reset-password',
     toActivate: (token: string) => `/activate?token=${token}`,
+    toStartTrial: () => '/start-trial',
+    toStartTrialAgent: (agent: string, token: string) =>
+      `/start-trial/${agent}?token=${token}`,
   },
 };
