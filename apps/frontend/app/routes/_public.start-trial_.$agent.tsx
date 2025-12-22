@@ -7,6 +7,7 @@ import {
   PMText,
   PMButton,
   PMLink,
+  PMField,
 } from '@packmind/ui';
 import { StartTrialCommand } from '@packmind/types';
 import { routes } from '../../src/shared/utils/routes';
@@ -71,7 +72,7 @@ const MagicLinkContent: React.FC<{
   const isVSCode = magicLink.startsWith('vscode:');
 
   return (
-    <PMVStack gap={4} width="100%" alignItems="center">
+    <PMVStack gap={4} width="100%" alignItems="stretch">
       <PMText as="p" fontSize="sm" color="tertiary">
         Click the button below to install automatically:
       </PMText>
@@ -173,6 +174,22 @@ const McpConfigContent: React.FC<IMcpConfigContentProps> = ({
   return null;
 };
 
+const PlaybookContent: React.FC = () => (
+  <PMVStack align="flex-start" gap={4}>
+    <PMField.Root width="full">
+      <PMField.Label>
+        Prompt: Get started with on-boarding MCP tool
+      </PMField.Label>
+      <CopiableTextarea
+        value="Run the Packmind on-boarding process"
+        readOnly
+        rows={1}
+        width="full"
+      />
+    </PMField.Root>
+  </PMVStack>
+);
+
 export default function StartTrialAgentRouteModule() {
   const { agent } = useParams<{ agent: Agent }>();
   const [searchParams] = useSearchParams();
@@ -205,20 +222,35 @@ export default function StartTrialAgentRouteModule() {
       <PMBox textAlign="center">
         <PMHeading level="h2">Start with {agentLabel}</PMHeading>
         <PMText color="secondary" mt={2}>
-          Configure Packmind MCP server in your AI coding agent
+          Get up and running in 2 simple steps
         </PMText>
       </PMBox>
 
-      {agentConfig && (
+      <PMVStack gap={8} align="stretch">
         <PMBox>
-          <McpConfigContent
-            agent={agent as Agent}
-            agentConfig={agentConfig}
-            token={token}
-            url={mcpUrl}
-          />
+          <PMHeading level="h4" mb={4}>
+            1 - Install
+          </PMHeading>
+          {agentConfig && (
+            <McpConfigContent
+              agent={agent as Agent}
+              agentConfig={agentConfig}
+              token={token}
+              url={mcpUrl}
+            />
+          )}
         </PMBox>
-      )}
+
+        <PMBox>
+          <PMHeading level="h4" mb={2}>
+            2 - Create your playbook
+          </PMHeading>
+          <PMText as="p" mb={4} color="secondary">
+            Create instructions tailored to your project context.
+          </PMText>
+          <PlaybookContent />
+        </PMBox>
+      </PMVStack>
     </PMVStack>
   );
 }
