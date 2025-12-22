@@ -13,7 +13,7 @@ export const CliMethodContent: React.FC<IMethodContentProps> = ({
 
   return (
     <PMVStack gap={4} width="100%" alignItems="flex-start">
-      <PMText as="p" fontSize="sm" color="faded">
+      <PMText as="p" fontSize="sm" color="secondary">
         Run this command in your terminal:
       </PMText>
       <CopiableTextarea value={command} readOnly rows={2} />
