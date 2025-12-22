@@ -14,15 +14,19 @@ This skill helps detect technical preferences in user messages and captures them
 - Naming conventions: "All interfaces should start with I", "Use snake_case for columns"
 - Code structure directives: "Wrap emojis for accessibility", "Always use async/await", "Don't use class components"
 - Pattern enforcement: "Use composition over inheritance", "Prefer functional programming"
+- Principle references in tasks: "follow KISS", "apply DRY principle", "respect SOLID", "use React best practices", "follow clean code", "apply separation of concerns"
+  **Note:** These require a clarification step (see "Clarification for Abstract Principles" below)
 - Removal/updates: "Remove the rule about X", "We no longer need Y convention"
 - Formatting rules: "Always add JSDoc comments", "Use single quotes"
 
-**NON-TRIGGER CONDITIONS** - User asks WHAT to build or fix:
+**NON-TRIGGER CONDITIONS** - User asks WHAT to build or fix (without HOW):
 
-- Feature requests: "Add a search feature", "Create a new component"
+- Feature requests without principles: "Add a search feature", "Create a new component"
 - Bug reports: "This function is broken", "Fix the error on line 10"
 - Questions: "How does this work?", "What's the best approach?"
-- Implementation tasks WITHOUT coding preferences: "Implement the login page", "Add error handling"
+- Implementation tasks without standards: "Implement the login page", "Add error handling"
+
+⚠️ **EXCEPTION:** If any of the above includes principle references (KISS, DRY, SOLID, best practices), it BECOMES a trigger. Ask for specific rules before proceeding.
 
 ## Workflow
 
@@ -50,6 +54,28 @@ Present the detected preference to the user for approval:
 - Example: "Prefix interfaces with I to distinguish them from types"
 
 Wait for user approval before proceeding. If user refuses, continue with the original task without updating standards.
+
+### Clarification for Abstract Principles
+
+When the user references abstract principles (KISS, DRY, SOLID, best practices) without explicit rules, ask for specifics before capturing:
+
+> I noticed you mentioned [PRINCIPLE]. To capture this as a standard, could you specify concrete rules? For example:
+>
+> - [Suggest 2-3 specific rules relevant to the context]
+>
+> Which rules would you like to add, or type "skip" to continue without capturing.
+
+This applies to:
+
+- KISS, DRY, SOLID, YAGNI principles
+- "Best practices" without specifics
+- "Clean code" without specifics
+- Framework conventions without explicit rules
+
+**Language Independence:** Signal detection works regardless of the input language. Common principle names (KISS, DRY, SOLID) are universal. For localized terms, recognize equivalents like:
+
+- FR: "bonnes pratiques", "principes de conception"
+- ES: "buenas prácticas", "principios de diseño"
 
 ### Step 3: Log to `.packmind/changes.yaml`
 
