@@ -343,6 +343,65 @@ ${packmindInstructions}`;
   }
 
   /**
+   * Format globs value for YAML frontmatter.
+   * Parses comma-separated globs and formats them as a YAML array.
+   * Quotes individual globs that start with one or two asterisks/stars to prevent YAML syntax issues.
+   * Note: Commas inside braces are not treated as separators (e.g., a pattern with braces is a single glob).
+   */
+  private formatGlobsValue(scope: string): string {
+    // Parse comma-separated globs, but don't split on commas inside braces {}
+    const globs: string[] = [];
+    let currentGlob = '';
+    let braceDepth = 0;
+
+    for (let i = 0; i < scope.length; i++) {
+      const char = scope[i];
+
+      if (char === '{') {
+        braceDepth++;
+        currentGlob += char;
+      } else if (char === '}') {
+        braceDepth--;
+        currentGlob += char;
+      } else if (char === ',' && braceDepth === 0) {
+        // Only split on commas that are not inside braces
+        const trimmed = currentGlob.trim();
+        if (trimmed) {
+          globs.push(trimmed);
+        }
+        currentGlob = '';
+      } else {
+        currentGlob += char;
+      }
+    }
+
+    // Add the last glob
+    const trimmed = currentGlob.trim();
+    if (trimmed) {
+      globs.push(trimmed);
+    }
+
+    // If only one glob, check if it needs quoting
+    if (globs.length === 1) {
+      const glob = globs[0];
+      if (glob.startsWith('**/') || glob.startsWith('*')) {
+        return `"${glob}"`;
+      }
+      return glob;
+    }
+
+    // Multiple globs: format as YAML array
+    const quotedGlobs = globs.map((glob) => {
+      if (glob.startsWith('**/') || glob.startsWith('*')) {
+        return `"${glob}"`;
+      }
+      return glob;
+    });
+
+    return `[${quotedGlobs.join(', ')}]`;
+  }
+
+  /**
    * Generate Continue configuration file for a specific standard
    */
   private async generateContinueConfigForStandard(
@@ -377,7 +436,7 @@ ${packmindInstructions}`;
       // When the scope is not null or empty
       frontmatter = `---
 name: ${standardVersion.name}
-globs: ${standardVersion.scope}
+globs: ${this.formatGlobsValue(standardVersion.scope)}
 alwaysApply: false
 description: ${summary}
 ---`;

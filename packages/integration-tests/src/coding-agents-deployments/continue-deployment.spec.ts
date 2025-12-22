@@ -570,7 +570,7 @@ describe('Continue Deployment Integration', () => {
 
           if (continueStandardFile) {
             expect(continueStandardFile.content).toContain(
-              'globs: **/*.{ts,tsx}',
+              'globs: "**/*.{ts,tsx}"',
             );
           }
         });
@@ -1367,7 +1367,7 @@ Before writing, editing, or generating ANY code:
 
           if (frontendFile) {
             expect(frontendFile.content).toContain(
-              'globs: **/*.{ts,tsx,js,jsx}',
+              'globs: "**/*.{ts,tsx,js,jsx}"',
             );
           }
         });
