@@ -159,3 +159,43 @@ The MCP approach is ideal for:
 - **Interactive setup** - Get guidance and validation from your AI agent during installation
 - **Quick iterations** - Update packages without switching context from your AI chat interface
 - **Onboarding new projects** - Have your AI assistant set up Packmind standards in new repositories
+
+## Removing Packages
+
+When you no longer need a package in your repository, you can remove it using either the app or the CLI.
+
+### Remove via the App
+
+In the Packmind app, you can remove packages one-by-one from your distributions:
+
+1. Navigate to the **Packages** section
+2. Open the package you want to remove
+3. Click **Remove from target** and confirm the removal
+
+### Remove via the CLI
+
+There are two ways to remove packages using the CLI:
+
+**Option 1: Use the remove command**
+
+```bash
+packmind-cli remove <package-slug>
+```
+
+For example:
+
+```bash
+packmind-cli remove backend-standards
+```
+
+**Option 2: Edit packmind.json and reinstall**
+
+1. Open your `packmind.json` file
+2. Remove the package slug from the packages list
+3. Run the install command to update your repository:
+
+```bash
+packmind-cli install
+```
+
+This approach is useful when you want to make multiple changes to your package configuration at once.
