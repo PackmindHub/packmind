@@ -14,6 +14,7 @@ import {
   TargetId,
 } from '@packmind/types';
 import { useRemovePackageFromTargets } from '../../hooks';
+import { listActiveDistributions } from '../../utils/listActiveDistributions';
 import { RemovePackageFromTargetsBodyImpl } from './RemovePackageFromTargetsBody';
 import { RemovePackageFromTargetsCTAImpl } from './RemovePackageFromTargetsCTA';
 
@@ -60,6 +61,12 @@ const RemovePackageFromTargetsComponent: React.FC<
   const [currentStep, setCurrentStep] =
     useState<RemovePackageFromTargetsStep>('select');
 
+  // Filter to only show targets where the package is currently deployed
+  const activeDistributions = useMemo(
+    () => listActiveDistributions(distributions, selectedPackage.id),
+    [distributions, selectedPackage.id],
+  );
+
   const canRemove = selectedTargetIds.length > 0 && !isRemoving;
 
   const remove = useCallback(async () => {
@@ -90,7 +97,7 @@ const RemovePackageFromTargetsComponent: React.FC<
 
   const value = useMemo<RemovePackageFromTargetsCtxType>(
     () => ({
-      distributions,
+      distributions: activeDistributions,
       selectedTargetIds,
       setSelectedTargetIds,
       currentStep,
@@ -101,7 +108,7 @@ const RemovePackageFromTargetsComponent: React.FC<
       selectedPackage,
     }),
     [
-      distributions,
+      activeDistributions,
       selectedTargetIds,
       currentStep,
       isRemoving,
