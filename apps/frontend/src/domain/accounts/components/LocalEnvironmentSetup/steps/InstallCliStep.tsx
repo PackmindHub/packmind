@@ -89,7 +89,7 @@ export const InstallCliStep: React.FC<IInstallCliStepProps> = ({
           title={selectedOs === 'macos-linux' ? 'Alternative' : 'Recommended'}
           description="Install via npm (most reliable across environments)."
         >
-          <PMBox width="1/4">
+          <PMBox width="1/2">
             <CopiableTextField
               value={buildNpmInstallCommand()}
               readOnly
