@@ -21,6 +21,7 @@ export type User = {
   active: boolean;
   memberships: UserOrganizationMembership[];
   trial: boolean;
+  createdAt?: Date;
 };
 
 export type SanitizedUser = Omit<User, 'passwordHash' | 'memberships'>;
