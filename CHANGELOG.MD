@@ -2,6 +2,16 @@
 
 ## Added
 
+## Changed
+
+## Fixed
+
+## Removed
+
+# [1.6.0] - 2025-12-22
+
+## Added
+
 - Add possibility to install a package through MCP #54
 - Track distribution of packages installed using the command line #38
 - Support rendering for Continue.dev #52
@@ -151,7 +161,8 @@
 - Bulk deployment across multiple repositories with atomic commits
 - Optional OpenAI integration for enhanced AI-powered features
 
-[Unreleased]: https://github.com/PackmindHub/packmind/compare/release/1.5.0...HEAD
+[Unreleased]: https://github.com/PackmindHub/packmind/compare/release/1.6.0...HEAD
+[1.6.0]: https://github.com/PackmindHub/packmind/compare/release/1.5.0...release/1.6.0
 [1.5.0]: https://github.com/PackmindHub/packmind/compare/release/1.4.1...release/1.5.0
 [1.4.1]: https://github.com/PackmindHub/packmind/compare/release/1.4.0...release/1.4.1
 [1.4.0]: https://github.com/PackmindHub/packmind/compare/release/1.3.1...release/1.4.0
