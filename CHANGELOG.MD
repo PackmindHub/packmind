@@ -5,6 +5,7 @@
 - Add possibility to install a package through MCP #54
 - Track distribution of packages installed using the command line #38
 - Support rendering for Continue.dev #52
+- Enable removing packages from the app.
 
 ## Changed
 
