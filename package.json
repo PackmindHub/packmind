@@ -151,7 +151,7 @@
     "@mdx-js/react": "^3.0.0",
     "@milkdown/crepe": "^7.15.2",
     "@milkdown/kit": "^7.15.2",
-    "@milkdown/react": "^7.15.2",
+    "@milkdown/react": "^7.17.3",
     "@modelcontextprotocol/sdk": "^1.24.0",
     "@nestjs/common": "^11.1.6",
     "@nestjs/core": "^11.1.6",
