@@ -1,5 +1,9 @@
 import { AbstractPackmindAppPage } from './AbstractPackmindAppPage';
-import { IGitSettingsPage, ISettingsPage } from '../../domain/pages';
+import {
+  IGitSettingsPage,
+  ISettingsPage,
+  IUsersSettingsPage,
+} from '../../domain/pages';
 import { SettingsRouteDataTestIds } from '@packmind/frontend';
 
 export class SettingsPage
@@ -10,6 +14,12 @@ export class SettingsPage
     await this.page.getByTestId(SettingsRouteDataTestIds.GitLink).click();
 
     return this.pageFactory.getGitSettingsPage();
+  }
+
+  async openUsersSettings(): Promise<IUsersSettingsPage> {
+    await this.page.getByTestId(SettingsRouteDataTestIds.UsersLink).click();
+
+    return this.pageFactory.getUsersSettingsPage();
   }
 
   expectedUrl(): string | RegExp {

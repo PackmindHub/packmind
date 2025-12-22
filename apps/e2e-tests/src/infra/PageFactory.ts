@@ -1,6 +1,7 @@
 import {
   IDashboardPage,
   IGitSettingsPage,
+  IInvitationPage,
   IPackagePage,
   IPackagesPage,
   IPackmindPage,
@@ -8,15 +9,18 @@ import {
   ISettingsPage,
   ISignUpPage,
   IUserSettingsPage,
+  IUsersSettingsPage,
 } from '../domain/pages';
 import { Page } from '@playwright/test';
 import { SignupPage } from './pages/SignupPage';
 import { DashboardPage } from './pages/DashboardPage';
 import { UserSettingsPage } from './pages/UserSettingsPage';
+import { UsersSettingsPage } from './pages/UsersSettingsPage';
 import { PackagesPage } from './pages/PackagesPage';
 import { PackagePage } from './pages/PackagePage';
 import { SettingsPage } from './pages/SettingsPage';
 import { GitSettings } from './pages/GitSettingsPage';
+import { InvitationPage } from './pages/InvitationPage';
 
 export type Constructor<T> = new (page: Page, pageFactory: IPageFactory) => T;
 
@@ -36,6 +40,10 @@ export class PageFactory implements IPageFactory {
     return this.getPageInstance(UserSettingsPage);
   }
 
+  async getUsersSettingsPage(): Promise<IUsersSettingsPage> {
+    return this.getPageInstance(UsersSettingsPage);
+  }
+
   getPackagesPage(): Promise<IPackagesPage> {
     return this.getPageInstance(PackagesPage);
   }
@@ -50,6 +58,11 @@ export class PageFactory implements IPageFactory {
 
   getGitSettingsPage(): Promise<IGitSettingsPage> {
     return this.getPageInstance(GitSettings);
+  }
+
+  async getInvitationPage(invitationLink: string): Promise<IInvitationPage> {
+    await this.page.goto(invitationLink);
+    return this.getPageInstance(InvitationPage);
   }
 
   private async getPageInstance<T extends IPackmindPage>(

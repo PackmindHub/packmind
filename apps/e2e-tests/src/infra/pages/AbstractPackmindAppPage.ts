@@ -50,4 +50,17 @@ export abstract class AbstractPackmindAppPage
 
     return this.pageFactory.getUserSettingsPage();
   }
+
+  async signOut(): Promise<void> {
+    await this.page
+      .getByTestId(SidebarAccountsMenuDataTestIds.OpenSubMenuCTA)
+      .click();
+
+    await this.page
+      .getByTestId(SidebarAccountsMenuDataTestIds.SignoutCTA)
+      .click();
+
+    // Wait for the sign out to complete (redirected to sign-in page)
+    await this.page.waitForURL(/\/(sign-in|sign-up|get-started)/);
+  }
 }
