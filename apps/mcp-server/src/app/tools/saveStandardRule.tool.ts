@@ -9,9 +9,11 @@ import {
 } from '@packmind/types';
 import { z } from 'zod';
 import {
+  buildTrialActivationPrompt,
   buildTrialInstallPrompt,
   ensureDefaultPackageWithArtifact,
   isTrialUser,
+  shouldPromptForTrialActivation,
 } from './trialPackageUtils';
 import { registerMcpTool, ToolDependencies } from './types';
 import { getGlobalSpace } from './utils';
@@ -151,11 +153,20 @@ export function registerSaveStandardRuleTool(
         const baseMessage = `Rule added successfully to standard '${standardSlug.toLowerCase()}'. New version ${newStandardVersion.version} created.`;
 
         if (trialPackageSlug) {
+          const shouldPromptActivation = await shouldPromptForTrialActivation(
+            fastify,
+            createUserId(userContext.userId),
+          );
+
+          const activationPrompt = shouldPromptActivation
+            ? `\n\n${buildTrialActivationPrompt()}`
+            : '';
+
           return {
             content: [
               {
                 type: 'text',
-                text: `${baseMessage}\n\n${buildTrialInstallPrompt(trialPackageSlug)}`,
+                text: `${baseMessage}\n\n${buildTrialInstallPrompt(trialPackageSlug)}${activationPrompt}`,
               },
             ],
           };
