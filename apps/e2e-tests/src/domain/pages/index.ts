@@ -9,6 +9,7 @@ export interface IPackmindAppPage extends IPackmindPage {
   openPackages(): Promise<IPackagesPage>;
   openSettings(): Promise<ISettingsPage>;
   openUserSettings(): Promise<IUserSettingsPage>;
+  signOut(): Promise<void>;
 }
 
 export interface ISignUpPage extends IPackmindPage {
@@ -56,6 +57,12 @@ export interface IRecipesPage extends IPackmindAppPage {
 
 export interface ISettingsPage extends IPackmindAppPage {
   openGitSettings(): Promise<IGitSettingsPage>;
+  openUsersSettings(): Promise<IUsersSettingsPage>;
+}
+
+export interface IUsersSettingsPage extends IPackmindAppPage {
+  inviteUser(email: string): Promise<void>;
+  getInvitationLink(): Promise<string>;
 }
 
 export interface IGitSettingsPage extends IPackmindAppPage {
@@ -69,12 +76,18 @@ export interface IUserSettingsPage extends IPackmindAppPage {
   getApiKey(): Promise<string>;
 }
 
+export interface IInvitationPage extends IPackmindPage {
+  activateAccount(password: string): Promise<IDashboardPage>;
+}
+
 export interface IPageFactory {
   getSignupPage(): Promise<ISignUpPage>;
   getDashboardPage(): Promise<IDashboardPage>;
   getUserSettingsPage(): Promise<IUserSettingsPage>;
+  getUsersSettingsPage(): Promise<IUsersSettingsPage>;
   getPackagesPage(): Promise<IPackagesPage>;
   getPackagePage(): Promise<IPackagePage>;
   getSettingsPage(): Promise<ISettingsPage>;
   getGitSettingsPage(): Promise<IGitSettingsPage>;
+  getInvitationPage(invitationLink: string): Promise<IInvitationPage>;
 }

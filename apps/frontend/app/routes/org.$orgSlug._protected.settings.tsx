@@ -102,6 +102,7 @@ export default function SettingsIndexRouteModule() {
               url={orgSlug ? routes.org.toSettingsUsers(orgSlug) : '#'}
               label="Users"
               exact
+              data-testid={SettingsRouteDataTestIds.UsersLink}
             />,
           ]}
         />

@@ -7,6 +7,7 @@ import {
   PMText,
   PMAlert,
 } from '@packmind/ui';
+import { ActivationFormDataTestIds } from '@packmind/frontend';
 
 interface ActivationFormProps {
   email: string; // Pre-filled from invitation, read-only
@@ -161,6 +162,7 @@ export default function ActivationForm({
             disabled={isSubmitting}
             maxLength={PASSWORD_MAX_LENGTH}
             autoComplete="new-password"
+            data-testid={ActivationFormDataTestIds.PasswordInput}
           />
           <PMField.ErrorText>{errors.password}</PMField.ErrorText>
         </PMField.Root>
@@ -181,6 +183,7 @@ export default function ActivationForm({
             disabled={isSubmitting}
             maxLength={PASSWORD_MAX_LENGTH}
             autoComplete="new-password"
+            data-testid={ActivationFormDataTestIds.ConfirmPasswordInput}
           />
           <PMField.ErrorText>{errors.confirmPassword}</PMField.ErrorText>
         </PMField.Root>
@@ -201,6 +204,7 @@ export default function ActivationForm({
           disabled={isSubmitting}
           variant="primary"
           width="full"
+          data-testid={ActivationFormDataTestIds.SubmitCTA}
         >
           {isSubmitting ? 'Activating Account...' : 'Activate Account'}
         </PMButton>

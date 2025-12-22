@@ -17,6 +17,7 @@ import validator from 'validator';
 import { useAuthContext } from '../../../accounts/hooks/useAuthContext';
 import { useInviteUsersMutation } from '../../../accounts/api/queries/AccountsQueries';
 import { UserOrganizationRole } from '@packmind/types';
+import { UsersPageDataTestIds } from '@packmind/frontend';
 
 interface InviteUsersDialogProps {
   open: boolean;
@@ -128,6 +129,7 @@ export const InviteUsersDialog: React.FC<InviteUsersDialogProps> = ({
                     placeholder="ex: alice@myorga.com, john@myorga.com"
                     onChange={handleEmailsChange}
                     maxLength={10000}
+                    data-testid={UsersPageDataTestIds.InviteUsersEmailInput}
                   />
                 </PMInputGroup>
                 <PMField.HelperText>
@@ -163,6 +165,7 @@ export const InviteUsersDialog: React.FC<InviteUsersDialogProps> = ({
                   emails.length > MAX_EMAILS ||
                   !!emailError
                 }
+                data-testid={UsersPageDataTestIds.InviteUsersSubmitCTA}
               >
                 <PMIcon>
                   <LuMail />

@@ -26,6 +26,7 @@ import {
   PMVStack,
 } from '@packmind/ui';
 import { OrganizationId, UserStatus } from '@packmind/types';
+import { UsersPageDataTestIds } from '@packmind/frontend';
 
 import { useGetUserStatusesQuery } from '../api/queries/UserQueries';
 import { useInviteUsersMutation } from '../api/queries/AccountsQueries';
@@ -118,6 +119,7 @@ export const UsersList: React.FC<UsersListProps> = ({ organizationId }) => {
               variant="primary"
               size="xs"
               onClick={() => setInviteUserOpened(true)}
+              data-testid={UsersPageDataTestIds.InviteUsersCTA}
             >
               <PMIcon>
                 <LuCirclePlus />
@@ -269,7 +271,10 @@ const UserActions: React.FunctionComponent<{
         content: (
           <PMCopiable.Root value={userStatus.invitationLink}>
             <PMCopiable.Trigger asChild>
-              <PMHStack gap={2}>
+              <PMHStack
+                gap={2}
+                data-testid={UsersPageDataTestIds.InvitationLinkCopyCTA}
+              >
                 <PMIcon>
                   <LuLink />
                 </PMIcon>
