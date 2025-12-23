@@ -8,9 +8,12 @@ import {
   PMRadioCard,
   PMButton,
   PMGrid,
+  PMHStack,
+  PMIcon,
 } from '@packmind/ui';
 import { StartTrialCommandAgents } from '@packmind/types';
 import { useStartTrialMutation } from '../../api/queries';
+import { AGENT_ICONS } from './AgentIcons';
 
 interface IAgentOption {
   value: StartTrialCommandAgents;
@@ -103,6 +106,12 @@ export function StartTrialAgentSelector({
               <PMRadioCard.ItemHiddenInput />
               <PMRadioCard.ItemControl>
                 <PMRadioCard.ItemContent>
+                  <PMIcon
+                    as={AGENT_ICONS[option.value]}
+                    size="2xl"
+                    color={'text.tertiary'}
+                    marginBottom={1}
+                  />
                   <PMRadioCard.ItemText fontWeight="semibold">
                     {option.label}
                   </PMRadioCard.ItemText>

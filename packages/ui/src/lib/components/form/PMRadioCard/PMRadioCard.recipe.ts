@@ -11,6 +11,9 @@ export const pmRadioCard = {
             bg: 'blue.900',
             borderColor: 'branding.primary',
           },
+          _hover: {
+            borderColor: 'blue.500',
+          },
         },
       },
     },
