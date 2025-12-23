@@ -3,8 +3,7 @@ import { RuleId } from '@packmind/types';
 import { ProgrammingLanguage } from '@packmind/types';
 import type { RuleDetectionAssessment } from '@packmind/types';
 
-export interface IRuleDetectionAssessmentRepository
-  extends IRepository<RuleDetectionAssessment> {
+export interface IRuleDetectionAssessmentRepository extends IRepository<RuleDetectionAssessment> {
   get(
     ruleId: RuleId,
     language: ProgrammingLanguage,

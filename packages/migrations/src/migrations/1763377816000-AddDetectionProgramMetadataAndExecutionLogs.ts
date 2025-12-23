@@ -14,9 +14,7 @@ import { PackmindLogger } from '@packmind/logger';
 
 const origin = 'AddDetectionProgramMetadataAndExecutionLogs1763377816000';
 
-export class AddDetectionProgramMetadataAndExecutionLogs1763377816000
-  implements MigrationInterface
-{
+export class AddDetectionProgramMetadataAndExecutionLogs1763377816000 implements MigrationInterface {
   constructor(
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {}

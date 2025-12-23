@@ -21,9 +21,7 @@ import { GenerateHeuristicFollowingChatbotInputUsecase } from '../generateHeuris
 
 const origin = 'UpdateRuleDetectionHeuristicsUseCase';
 
-export class UpdateRuleDetectionHeuristicsUseCase
-  implements IUpdateRuleDetectionHeuristics
-{
+export class UpdateRuleDetectionHeuristicsUseCase implements IUpdateRuleDetectionHeuristics {
   constructor(
     private readonly linterRepositories: ILinterRepositories,
     private readonly standardsAdapter: IStandardsPort,

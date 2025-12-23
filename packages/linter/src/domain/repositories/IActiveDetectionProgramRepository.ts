@@ -6,8 +6,7 @@ import type {
 } from '@packmind/types';
 import { RuleId } from '@packmind/types';
 
-export interface IActiveDetectionProgramRepository
-  extends IRepository<ActiveDetectionProgram> {
+export interface IActiveDetectionProgramRepository extends IRepository<ActiveDetectionProgram> {
   findByRuleId(
     ruleId: RuleId,
     opts?: QueryOption,

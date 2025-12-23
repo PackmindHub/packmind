@@ -6,8 +6,7 @@ import type {
   ExecutionLog,
 } from '@packmind/types';
 
-export interface IDetectionProgramMetadataRepository
-  extends IRepository<DetectionProgramMetadata> {
+export interface IDetectionProgramMetadataRepository extends IRepository<DetectionProgramMetadata> {
   findByDetectionProgramId(
     detectionProgramId: DetectionProgramId,
     opts?: QueryOption,

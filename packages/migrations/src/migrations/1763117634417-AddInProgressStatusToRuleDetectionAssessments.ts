@@ -3,9 +3,7 @@ import { PackmindLogger } from '@packmind/logger';
 
 const origin = 'AddInProgressStatusToRuleDetectionAssessments1763117634417';
 
-export class AddInProgressStatusToRuleDetectionAssessments1763117634417
-  implements MigrationInterface
-{
+export class AddInProgressStatusToRuleDetectionAssessments1763117634417 implements MigrationInterface {
   constructor(
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {}
