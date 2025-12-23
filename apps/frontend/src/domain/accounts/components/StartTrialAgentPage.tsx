@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import {
+  PMAlert,
   PMBox,
   PMVStack,
   PMHeading,
@@ -139,9 +140,10 @@ export const StartTrialAgentPage: React.FC<IStartTrialAgentPageProps> = ({
             Create an account
           </PMButton>
           {accountError && (
-            <PMText color="error" mt={2}>
-              {accountError}
-            </PMText>
+            <PMAlert.Root status="error" mt={2}>
+              <PMAlert.Indicator />
+              <PMAlert.Title>{accountError}</PMAlert.Title>
+            </PMAlert.Root>
           )}
         </PMBox>
       </PMVStack>
