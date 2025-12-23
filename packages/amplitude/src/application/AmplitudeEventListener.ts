@@ -9,6 +9,7 @@ import {
   ArtifactsPulledEvent,
   AnonymousTrialStartedEvent,
   AnonymousTrialAccountActivatedEvent,
+  StandardDeletedEvent,
 } from '@packmind/types';
 import { EventTrackingAdapter } from './EventTrackingAdapter';
 
@@ -22,6 +23,7 @@ export class AmplitudeEventListener extends PackmindListener<EventTrackingAdapte
   protected registerHandlers(): void {
     this.subscribe(StandardCreatedEvent, this.onStandardCreated);
     this.subscribe(StandardUpdatedEvent, this.onStandardUpdated);
+    this.subscribe(StandardDeletedEvent, this.onStandardDeleted);
     this.subscribe(RuleAddedEvent, this.onRuleAdded);
     this.subscribe(RecipeCreatedEvent, this.onRecipeCreated);
     this.subscribe(RecipeUpdatedEvent, this.onRecipeUpdated);
@@ -55,6 +57,16 @@ export class AmplitudeEventListener extends PackmindListener<EventTrackingAdapte
       standardId,
       spaceId,
       newVersion,
+    });
+  };
+
+  private onStandardDeleted = async (
+    event: StandardDeletedEvent,
+  ): Promise<void> => {
+    const { userId, organizationId, standardId, spaceId } = event.payload;
+    await this.adapter.trackEvent(userId, organizationId, 'standard_deleted', {
+      standardId,
+      spaceId,
     });
   };
 
