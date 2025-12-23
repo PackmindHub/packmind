@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router';
 import {
   PMAlert,
   PMBox,
@@ -72,6 +73,8 @@ export const StartTrialAgentPage: React.FC<IStartTrialAgentPageProps> = ({
   preferredMethodType,
   preferredMethodLabel,
 }) => {
+  const navigate = useNavigate();
+
   // Améliore le titre pour l'option "other"
   const getAgentTitle = (label: string) => {
     if (label.trim().toLowerCase() === 'other') {
@@ -94,7 +97,9 @@ export const StartTrialAgentPage: React.FC<IStartTrialAgentPageProps> = ({
       const { activationUrl } = await trialGateway.getActivationToken({
         mcpToken: token,
       });
-      window.location.href = activationUrl;
+      // Use relative navigation to work regardless of the host (localhost vs Docker)
+      const url = new URL(activationUrl);
+      navigate(url.pathname + url.search);
     } catch (error) {
       setAccountError(
         error instanceof Error ? error.message : 'Failed to create account',
