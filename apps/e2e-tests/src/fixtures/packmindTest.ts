@@ -8,6 +8,7 @@ import { PageFactory } from '../infra/PageFactory';
 
 export const testWithUserData = base.extend<{
   userData: SignUpWithOrganizationCommand;
+  effectiveBaseUrl: string;
 }>({
   // eslint-disable-next-line no-empty-pattern
   userData: ({}, use) => {
@@ -16,6 +17,10 @@ export const testWithUserData = base.extend<{
       password: uuidv4(),
       organizationName: `my-organization-${uuidv4()}`,
     });
+  },
+  // For tests running inside docker - we connect to the app via frontend:4200, but the app consider it serves on localhost.
+  effectiveBaseUrl: ({ baseURL }, use) => {
+    use(baseURL?.replace('frontend', 'localhost') ?? '');
   },
 });
 

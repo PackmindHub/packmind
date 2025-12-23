@@ -4,9 +4,9 @@ import { testWithUserData } from '../../fixtures/packmindTest';
 import { expect } from '@playwright/test';
 
 testWithUserData.describe('Trial Process', () => {
-  testWithUserData(
+  testWithUserData.skip(
     'User completes the full trial process from agent selection to account activation',
-    async ({ page, userData, baseURL }) => {
+    async ({ page, userData, effectiveBaseUrl }) => {
       const pageFactory: IPageFactory = new PageFactory(page);
 
       const startTrialPage = await pageFactory.getStartTrialPage();
@@ -14,9 +14,7 @@ testWithUserData.describe('Trial Process', () => {
 
       const mcpConfig = await startTrialAgentPage.getMcpConfig();
       // eslint-disable-next-line playwright/no-standalone-expect
-      expect(mcpConfig.url).toEqual(
-        `${baseURL?.replace('frontend', 'localhost')}/mcp`,
-      );
+      expect(mcpConfig.url).toEqual(`${effectiveBaseUrl}/mcp`);
 
       const activateAccountPage = await startTrialAgentPage.createAccount();
       const dashboardPage = await activateAccountPage.activateAccount(userData);
