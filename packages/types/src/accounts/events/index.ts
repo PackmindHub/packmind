@@ -1,4 +1,4 @@
 export * from './UserSignedUpEvent';
 export * from './UserJoinedOrganizationEvent';
-export * from './TrialStartedEvent';
-export * from './TrialAccountActivatedEvent';
+export * from './AnonymousTrialStartedEvent';
+export * from './AnonymousTrialAccountActivatedEvent';

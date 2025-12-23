@@ -5,7 +5,7 @@ import {
   ActivateTrialAccountResult,
   IActivateTrialAccountUseCase,
   createTrialActivationToken,
-  TrialAccountActivatedEvent,
+  AnonymousTrialAccountActivatedEvent,
 } from '@packmind/types';
 import { PackmindEventEmitterService } from '@packmind/node-utils';
 import { TrialActivationService } from '../../services/TrialActivationService';
@@ -109,7 +109,7 @@ export class ActivateTrialAccountUseCase
 
     // Emit trial account activated event
     this.eventEmitterService.emit(
-      new TrialAccountActivatedEvent({
+      new AnonymousTrialAccountActivatedEvent({
         userId,
         organizationId: updatedOrganization.id,
         email: command.email,
