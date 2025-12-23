@@ -29,15 +29,16 @@ export class TrialActivationService {
       Date.now() + TRIAL_ACTIVATION_EXPIRATION_MINUTES * 60 * 1000,
     );
 
-    // Create JWT payload with userId and expiration
+    // Create JWT payload with userId (expiration is set via sign options)
     const jwtPayload: Record<string, unknown> = {
       userId: userId as string,
-      exp: Math.floor(expirationDate.getTime() / 1000),
       type: 'trial_activation',
     };
 
-    // Sign the JWT token
-    const signedToken = this.jwtService.sign(jwtPayload);
+    // Sign the JWT token with explicit expiration to override any global settings
+    const signedToken = this.jwtService.sign(jwtPayload, {
+      expiresIn: `${TRIAL_ACTIVATION_EXPIRATION_MINUTES}m`,
+    });
 
     // Create the trial activation entity
     const trialActivation: TrialActivation = {

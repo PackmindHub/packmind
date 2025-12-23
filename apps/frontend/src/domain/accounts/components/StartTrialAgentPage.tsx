@@ -1,8 +1,16 @@
-import React from 'react';
-import { PMBox, PMVStack, PMHeading, PMText, PMField } from '@packmind/ui';
+import React, { useState } from 'react';
+import {
+  PMBox,
+  PMVStack,
+  PMHeading,
+  PMText,
+  PMField,
+  PMButton,
+} from '@packmind/ui';
 import { CopiableTextarea } from '../../../shared/components/inputs';
 import { IAgentConfig } from './McpConfig/types';
 import { MethodContent } from './McpConfig/InstallMethods';
+import { trialGateway } from '../api/gateways';
 
 interface IStartTrialAgentPageProps {
   agentLabel: string;
@@ -62,16 +70,36 @@ export const StartTrialAgentPage: React.FC<IStartTrialAgentPageProps> = ({
   preferredMethodType,
   preferredMethodLabel,
 }) => {
+  const [isCreatingAccount, setIsCreatingAccount] = useState(false);
+  const [accountError, setAccountError] = useState<string | null>(null);
+
   const method = agentConfig
     ? getPreferredMethod(agentConfig, preferredMethodType, preferredMethodLabel)
     : null;
+
+  const handleCreateAccount = async () => {
+    setIsCreatingAccount(true);
+    setAccountError(null);
+
+    try {
+      const { activationUrl } = await trialGateway.getActivationToken({
+        mcpToken: token,
+      });
+      window.location.href = activationUrl;
+    } catch (error) {
+      setAccountError(
+        error instanceof Error ? error.message : 'Failed to create account',
+      );
+      setIsCreatingAccount(false);
+    }
+  };
 
   return (
     <PMVStack gap={6} align="stretch">
       <PMBox textAlign="center">
         <PMHeading level="h2">Start with {agentLabel}</PMHeading>
         <PMText color="secondary" mt={2}>
-          Get up and running in 2 simple steps
+          Get up and running in 3 simple steps
         </PMText>
       </PMBox>
 
@@ -93,6 +121,28 @@ export const StartTrialAgentPage: React.FC<IStartTrialAgentPageProps> = ({
             Create instructions tailored to your project context.
           </PMText>
           <PlaybookContent />
+        </PMBox>
+
+        <PMBox>
+          <PMHeading level="h4" mb={2}>
+            3 - Work with your teammates
+          </PMHeading>
+          <PMText as="p" mb={4} color="secondary">
+            Create your account to collaborate with your team and share your
+            playbooks.
+          </PMText>
+          <PMButton
+            onClick={handleCreateAccount}
+            loading={isCreatingAccount}
+            disabled={isCreatingAccount}
+          >
+            Create an account
+          </PMButton>
+          {accountError && (
+            <PMText color="error" mt={2}>
+              {accountError}
+            </PMText>
+          )}
         </PMBox>
       </PMVStack>
     </PMVStack>
