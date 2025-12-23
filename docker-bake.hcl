@@ -75,7 +75,7 @@ target "api" {
   }
   tags = [
     "${REGISTRY}/api${IMAGE_NAME_SUFFIX}:${VERSION}${VERSION_SUFFIX}",
-    "${REGISTRY}/api${IMAGE_NAME_SUFFIX}:latest",
+    "${REGISTRY}/api${IMAGE_NAME_SUFFIX}:latest${VERSION_SUFFIX}",
     notequal("", SHA) ? "${REGISTRY}/api${IMAGE_NAME_SUFFIX}:${SHA}" : "",
   ]
   platforms = ["linux/amd64"]
@@ -94,7 +94,7 @@ target "frontend" {
   dockerfile = "dockerfile/Dockerfile.frontend"
   tags = [
     "${REGISTRY}/frontend${IMAGE_NAME_SUFFIX}:${VERSION}${VERSION_SUFFIX}",
-    "${REGISTRY}/frontend${IMAGE_NAME_SUFFIX}:latest",
+    "${REGISTRY}/frontend${IMAGE_NAME_SUFFIX}:latest${VERSION_SUFFIX}",
     notequal("", SHA) ? "${REGISTRY}/frontend${IMAGE_NAME_SUFFIX}:${SHA}" : "",
   ]
   platforms = ["linux/amd64"]
@@ -113,7 +113,7 @@ target "mcp" {
   dockerfile = "dockerfile/Dockerfile.mcp"
   tags = [
     "${REGISTRY}/mcp${IMAGE_NAME_SUFFIX}:${VERSION}${VERSION_SUFFIX}",
-    "${REGISTRY}/mcp${IMAGE_NAME_SUFFIX}:latest",
+    "${REGISTRY}/mcp${IMAGE_NAME_SUFFIX}:latest${VERSION_SUFFIX}",
     notequal("", SHA) ? "${REGISTRY}/mcp${IMAGE_NAME_SUFFIX}:${SHA}" : "",
   ]
   platforms = ["linux/amd64"]
