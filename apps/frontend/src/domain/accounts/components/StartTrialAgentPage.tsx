@@ -71,6 +71,13 @@ export const StartTrialAgentPage: React.FC<IStartTrialAgentPageProps> = ({
   preferredMethodType,
   preferredMethodLabel,
 }) => {
+  // Améliore le titre pour l'option "other"
+  const getAgentTitle = (label: string) => {
+    if (label.trim().toLowerCase() === 'other') {
+      return 'Start with your agent';
+    }
+    return `Start with ${label}`;
+  };
   const [isCreatingAccount, setIsCreatingAccount] = useState(false);
   const [accountError, setAccountError] = useState<string | null>(null);
 
@@ -98,7 +105,7 @@ export const StartTrialAgentPage: React.FC<IStartTrialAgentPageProps> = ({
   return (
     <PMVStack gap={6} align="stretch">
       <PMBox textAlign="center">
-        <PMHeading level="h2">Start with {agentLabel}</PMHeading>
+        <PMHeading level="h2">{getAgentTitle(agentLabel)}</PMHeading>
         <PMText color="secondary" mt={2}>
           Get up and running in 3 simple steps
         </PMText>
@@ -107,7 +114,7 @@ export const StartTrialAgentPage: React.FC<IStartTrialAgentPageProps> = ({
       <PMVStack gap={8} align="stretch">
         <PMBox>
           <PMHeading level="h4" mb={4}>
-            1 - Install
+            1 - Connect to Packmind MCP server
           </PMHeading>
           {method && (
             <MethodContent method={method} token={token} url={mcpUrl} />
