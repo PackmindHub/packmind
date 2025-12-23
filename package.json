@@ -116,7 +116,7 @@
     "storybook": "^9.0.16",
     "tar-fs": "^2.1.4",
     "ts-jest": "^29.4.6",
-    "ts-node": "10.9.1",
+    "ts-node": "10.9.2",
     "tslib": "^2.3.0",
     "typescript": "~5.8.2",
     "typescript-eslint": "^8.35.1",
@@ -129,7 +129,7 @@
   "dependencies": {
     "@amplitude/analytics-browser": "^2.25.4",
     "@amplitude/analytics-node": "^1.5.18",
-    "@anthropic-ai/sdk": "^0.70.0",
+    "@anthropic-ai/sdk": "^0.71.2",
     "@azure/openai": "^2.0.0",
     "@chakra-ui/react": "3.27",
     "@codemirror/lang-cpp": "^6.0.3",

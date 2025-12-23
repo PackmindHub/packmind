@@ -15,7 +15,7 @@
     "openai": "^6.9.0",
     "uuid": "^11.1.0",
     "typeorm": "0.3.27",
-    "@anthropic-ai/sdk": "^0.70.0",
+    "@anthropic-ai/sdk": "^0.71.2",
     "@google/genai": "^1.34.0"
   }
 }
