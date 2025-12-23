@@ -82,6 +82,7 @@ export class TrialController {
         organization,
         role,
         mcpToken: tokenResponse.access_token,
+        mcpUrl: await this.mcpService.getMcpUrl(),
       };
     } catch (error) {
       this.logger.error('Failed to start trial', {
