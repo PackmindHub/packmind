@@ -7,7 +7,7 @@ import {
   Organization,
   TrialActivation,
   User,
-  TrialAccountActivatedEvent,
+  AnonymousTrialAccountActivatedEvent,
 } from '@packmind/types';
 import { ActivateTrialAccountUseCase } from './ActivateTrialAccountUseCase';
 import { TrialActivationService } from '../../services/TrialActivationService';
@@ -289,10 +289,12 @@ describe('ActivateTrialAccountUseCase', () => {
       const trialActivatedCall = (
         mockEventEmitterService.emit as jest.Mock
       ).mock.calls.find(
-        (call) => call[0] instanceof TrialAccountActivatedEvent,
+        (call) => call[0] instanceof AnonymousTrialAccountActivatedEvent,
       );
       expect(trialActivatedCall).toBeDefined();
-      expect(trialActivatedCall[0]).toBeInstanceOf(TrialAccountActivatedEvent);
+      expect(trialActivatedCall[0]).toBeInstanceOf(
+        AnonymousTrialAccountActivatedEvent,
+      );
     });
   });
 });

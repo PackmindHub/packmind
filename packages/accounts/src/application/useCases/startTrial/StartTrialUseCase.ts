@@ -9,7 +9,7 @@ import {
   StartTrialCommand,
   StartTrialCommandAgents,
   StartTrialResult,
-  TrialStartedEvent,
+  AnonymousTrialStartedEvent,
   UserSignedUpEvent,
 } from '@packmind/types';
 import { v4 as uuidv4 } from 'uuid';
@@ -83,7 +83,7 @@ export class StartTrialUseCase implements IStartTrial {
 
       // Emit trial started event
       this.eventEmitterService.emit(
-        new TrialStartedEvent({
+        new AnonymousTrialStartedEvent({
           userId: createUserId(user.id),
           organizationId: organization.id,
           agent: command.agent,

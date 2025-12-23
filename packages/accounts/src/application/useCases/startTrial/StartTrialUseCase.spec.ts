@@ -8,7 +8,7 @@ import {
   ISpacesPort,
   RenderMode,
   StartTrialCommand,
-  TrialStartedEvent,
+  AnonymousTrialStartedEvent,
 } from '@packmind/types';
 import { organizationFactory, userFactory } from '../../../../test';
 import { OrganizationService } from '../../services/OrganizationService';
@@ -168,9 +168,11 @@ describe('StartTrialUseCase', () => {
 
         const trialStartedCall = (
           mockEventEmitterService.emit as jest.Mock
-        ).mock.calls.find((call) => call[0] instanceof TrialStartedEvent);
+        ).mock.calls.find(
+          (call) => call[0] instanceof AnonymousTrialStartedEvent,
+        );
         expect(trialStartedCall).toBeDefined();
-        expect(trialStartedCall[0]).toBeInstanceOf(TrialStartedEvent);
+        expect(trialStartedCall[0]).toBeInstanceOf(AnonymousTrialStartedEvent);
       });
 
       it('returns user data', async () => {
