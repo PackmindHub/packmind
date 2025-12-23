@@ -35,6 +35,6 @@ const logger = new PackmindLogger('OrganizationMcpModule', LogLevel.INFO);
         new PackmindLogger('OrganizationMcpModule', LogLevel.INFO),
     },
   ],
-  exports: [McpService],
+  exports: [McpService, JwtModule],
 })
 export class OrganizationMcpModule {}

@@ -51,15 +51,15 @@ describe('TrialActivationService', () => {
         mockTrialActivationRepository.add.mockImplementation(async (ta) => ta);
       });
 
-      it('signs JWT with userId and expiration', async () => {
+      it('signs JWT with userId and expiration option', async () => {
         await service.generateTrialActivationToken(mockUserId);
 
         expect(mockJwtService.sign).toHaveBeenCalledWith(
           expect.objectContaining({
             userId: mockUserId,
             type: 'trial_activation',
-            exp: expect.any(Number),
           }),
+          { expiresIn: '5m' },
         );
       });
 

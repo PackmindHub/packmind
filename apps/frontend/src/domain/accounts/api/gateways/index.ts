@@ -9,7 +9,11 @@ import {
   ValidatePasswordResetResponse,
 } from './IAuthGateway';
 import { AuthGatewayApi } from './AuthGatewayApi';
-import { ITrialGateway } from './ITrialGateway';
+import {
+  GetActivationTokenCommand,
+  GetActivationTokenResponse,
+  ITrialGateway,
+} from './ITrialGateway';
 import { TrialGatewayApi } from './TrialGatewayApi';
 
 export const organizationGateway: IOrganizationGateway =
@@ -22,4 +26,6 @@ export type {
   TokenResponse,
   ValidateInvitationResponse,
   ValidatePasswordResetResponse,
+  GetActivationTokenCommand,
+  GetActivationTokenResponse,
 };
