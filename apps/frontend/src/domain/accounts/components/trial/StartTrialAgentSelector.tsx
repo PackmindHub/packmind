@@ -8,11 +8,11 @@ import {
   PMRadioCard,
   PMButton,
   PMGrid,
-  PMHStack,
   PMIcon,
 } from '@packmind/ui';
 import { StartTrialCommandAgents } from '@packmind/types';
 import { useStartTrialMutation } from '../../api/queries';
+import { StartTrialAgentSelectorDataTestIds } from '@packmind/frontend';
 import { AGENT_ICONS } from './AgentIcons';
 
 interface IAgentOption {
@@ -102,7 +102,11 @@ export function StartTrialAgentSelector({
       >
         <PMGrid gridTemplateColumns="repeat(3, 1fr)" gap={3}>
           {AGENT_OPTIONS.map((option) => (
-            <PMRadioCard.Item key={option.value} value={option.value}>
+            <PMRadioCard.Item
+              key={option.value}
+              value={option.value}
+              data-testid={`${StartTrialAgentSelectorDataTestIds.AgentOption}.${option.value}`}
+            >
               <PMRadioCard.ItemHiddenInput />
               <PMRadioCard.ItemControl>
                 <PMRadioCard.ItemContent>
@@ -128,6 +132,7 @@ export function StartTrialAgentSelector({
         loading={isPending}
         width="full"
         onClick={handleContinue}
+        data-testid={StartTrialAgentSelectorDataTestIds.ContinueButton}
       >
         Continue
       </PMButton>

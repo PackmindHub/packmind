@@ -12,6 +12,7 @@ import { CopiableTextarea } from '../../../shared/components/inputs';
 import { IAgentConfig } from './McpConfig/types';
 import { MethodContent } from './McpConfig/InstallMethods';
 import { trialGateway } from '../api/gateways';
+import { StartTrialAgentPageDataTestIds } from '@packmind/frontend';
 
 interface IStartTrialAgentPageProps {
   agentLabel: string;
@@ -143,6 +144,7 @@ export const StartTrialAgentPage: React.FC<IStartTrialAgentPageProps> = ({
             onClick={handleCreateAccount}
             loading={isCreatingAccount}
             disabled={isCreatingAccount}
+            data-testid={StartTrialAgentPageDataTestIds.CreateAccountButton}
           >
             Create an account
           </PMButton>
