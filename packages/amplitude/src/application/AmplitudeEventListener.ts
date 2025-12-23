@@ -7,7 +7,8 @@ import {
   RecipeUpdatedEvent,
   DeploymentCompletedEvent,
   ArtifactsPulledEvent,
-  UserSignedUpEvent,
+  AnonymousTrialStartedEvent,
+  AnonymousTrialAccountActivatedEvent,
 } from '@packmind/types';
 import { EventTrackingAdapter } from './EventTrackingAdapter';
 
@@ -19,7 +20,6 @@ import { EventTrackingAdapter } from './EventTrackingAdapter';
  */
 export class AmplitudeEventListener extends PackmindListener<EventTrackingAdapter> {
   protected registerHandlers(): void {
-    this.subscribe(UserSignedUpEvent, this.onUserSignup);
     this.subscribe(StandardCreatedEvent, this.onStandardCreated);
     this.subscribe(StandardUpdatedEvent, this.onStandardUpdated);
     this.subscribe(RuleAddedEvent, this.onRuleAdded);
@@ -27,11 +27,12 @@ export class AmplitudeEventListener extends PackmindListener<EventTrackingAdapte
     this.subscribe(RecipeUpdatedEvent, this.onRecipeUpdated);
     this.subscribe(DeploymentCompletedEvent, this.onDeploymentCompleted);
     this.subscribe(ArtifactsPulledEvent, this.onArtifactsPulled);
+    this.subscribe(AnonymousTrialStartedEvent, this.handleTrialStarted);
+    this.subscribe(
+      AnonymousTrialAccountActivatedEvent,
+      this.handleTrialAccountActivated,
+    );
   }
-
-  private onUserSignup = async (event: UserSignedUpEvent): Promise<void> => {
-    await this.adapter.identifyUser(event.payload);
-  };
 
   private onStandardCreated = async (
     event: StandardCreatedEvent,
@@ -123,5 +124,34 @@ export class AmplitudeEventListener extends PackmindListener<EventTrackingAdapte
       standardCount,
       source,
     });
+  };
+
+  private handleTrialStarted = async (
+    event: AnonymousTrialStartedEvent,
+  ): Promise<void> => {
+    const { userId, organizationId, agent, startedAt } = event.payload;
+
+    await this.adapter.trackEvent(
+      userId,
+      organizationId,
+      'anonymous_trial_started',
+      {
+        agent,
+        startedAt: startedAt.toISOString(),
+      },
+    );
+  };
+
+  private handleTrialAccountActivated = async (
+    event: AnonymousTrialAccountActivatedEvent,
+  ): Promise<void> => {
+    const { userId, organizationId } = event.payload;
+
+    await this.adapter.trackEvent(
+      userId,
+      organizationId,
+      'anonymous_trial_account_activated',
+      {},
+    );
   };
 }
