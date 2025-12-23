@@ -3,9 +3,7 @@ import { PackmindLogger } from '@packmind/logger';
 
 const origin = 'AddSourceToDistributions1765210682020';
 
-export class AddSourceToDistributions1765210682020
-  implements MigrationInterface
-{
+export class AddSourceToDistributions1765210682020 implements MigrationInterface {
   constructor(
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {}

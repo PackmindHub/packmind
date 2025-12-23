@@ -9,9 +9,7 @@ import {
 
 const origin = 'GetOrganizationByNameUseCase';
 
-export class GetOrganizationByNameUseCase
-  implements IGetOrganizationByNameUseCase
-{
+export class GetOrganizationByNameUseCase implements IGetOrganizationByNameUseCase {
   constructor(
     private readonly organizationService: OrganizationService,
     private readonly logger: PackmindLogger = new PackmindLogger(origin),

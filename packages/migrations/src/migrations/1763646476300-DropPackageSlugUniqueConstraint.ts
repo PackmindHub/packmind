@@ -3,9 +3,7 @@ import { PackmindLogger } from '@packmind/logger';
 
 const origin = 'DropPackageSlugUniqueConstraint1763646476300';
 
-export class DropPackageSlugUniqueConstraint1763646476300
-  implements MigrationInterface
-{
+export class DropPackageSlugUniqueConstraint1763646476300 implements MigrationInterface {
   constructor(
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {}

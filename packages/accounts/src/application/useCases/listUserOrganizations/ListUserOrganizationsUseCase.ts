@@ -9,9 +9,7 @@ import { Organization } from '@packmind/types';
 
 const origin = 'ListUserOrganizationsUseCase';
 
-export class ListUserOrganizationsUseCase
-  implements IListUserOrganizationsUseCase
-{
+export class ListUserOrganizationsUseCase implements IListUserOrganizationsUseCase {
   constructor(
     private readonly userService: UserService,
     private readonly logger: PackmindLogger = new PackmindLogger(origin),

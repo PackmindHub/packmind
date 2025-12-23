@@ -13,9 +13,7 @@ import {
 
 const origin = 'CreateInvitationsAndUserActivation1758800000000';
 
-export class CreateInvitationsAndUserActivation1758800000000
-  implements MigrationInterface
-{
+export class CreateInvitationsAndUserActivation1758800000000 implements MigrationInterface {
   constructor(
     private readonly logger: PackmindLogger = new PackmindLogger(
       origin,

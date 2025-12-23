@@ -1,8 +1,6 @@
 import { MigrationInterface, QueryRunner } from 'typeorm';
 
-export class AddDraftProgramDraftVersionToActiveDetectionPrograms1756200000000
-  implements MigrationInterface
-{
+export class AddDraftProgramDraftVersionToActiveDetectionPrograms1756200000000 implements MigrationInterface {
   public async up(queryRunner: QueryRunner): Promise<void> {
     // Add draftProgramDraftVersion column
     await queryRunner.query(`

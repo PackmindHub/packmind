@@ -11,8 +11,7 @@ import { UserId } from '@packmind/types';
  * Password reset token repository contract exposing persistence operations required by
  * password reset use cases.
  */
-export interface IPasswordResetTokenRepository
-  extends IRepository<PasswordResetTokenEntity> {
+export interface IPasswordResetTokenRepository extends IRepository<PasswordResetTokenEntity> {
   /**
    * Find a password reset token by its deterministically encrypted token value.
    */

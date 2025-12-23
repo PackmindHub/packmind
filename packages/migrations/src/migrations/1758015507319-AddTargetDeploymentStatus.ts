@@ -1,8 +1,6 @@
 import { MigrationInterface, QueryRunner } from 'typeorm';
 
-export class AddTargetDeploymentStatus1758015507319
-  implements MigrationInterface
-{
+export class AddTargetDeploymentStatus1758015507319 implements MigrationInterface {
   public async up(queryRunner: QueryRunner): Promise<void> {
     // Add new columns to deployments table
     await queryRunner.query(`

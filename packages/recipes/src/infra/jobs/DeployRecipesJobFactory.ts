@@ -6,9 +6,7 @@ import { DeployRecipesInput } from '../../domain/jobs/DeployRecipes';
 
 const origin = 'DeployRecipesJobFactory';
 
-export class DeployRecipesJobFactory
-  implements IJobFactory<DeployRecipesInput>
-{
+export class DeployRecipesJobFactory implements IJobFactory<DeployRecipesInput> {
   private _delayedJob: DeployRecipesDelayedJob | null = null;
 
   constructor(

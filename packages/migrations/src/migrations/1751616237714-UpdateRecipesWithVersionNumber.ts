@@ -12,9 +12,7 @@ import { PackmindLogger } from '@packmind/logger';
 
 const origin = 'UpdateRecipesWithVersionNumber1751616237714';
 
-export class UpdateRecipesWithVersionNumber1751616237714
-  implements MigrationInterface
-{
+export class UpdateRecipesWithVersionNumber1751616237714 implements MigrationInterface {
   constructor(
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {}

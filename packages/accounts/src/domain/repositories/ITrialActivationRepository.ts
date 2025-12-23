@@ -10,8 +10,7 @@ import { UserId } from '@packmind/types';
  * Trial activation repository contract exposing persistence operations required by
  * trial activation use cases.
  */
-export interface ITrialActivationRepository
-  extends IRepository<TrialActivation> {
+export interface ITrialActivationRepository extends IRepository<TrialActivation> {
   /**
    * Find a trial activation by its token value.
    */

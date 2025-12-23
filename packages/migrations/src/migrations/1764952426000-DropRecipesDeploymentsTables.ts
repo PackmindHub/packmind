@@ -13,9 +13,7 @@ const origin = 'DropRecipesDeploymentsTables1764952426000';
  * - deployment_recipe_versions (junction table)
  * - deployments (main table)
  */
-export class DropRecipesDeploymentsTables1764952426000
-  implements MigrationInterface
-{
+export class DropRecipesDeploymentsTables1764952426000 implements MigrationInterface {
   constructor(
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {}

@@ -7,9 +7,7 @@ import {
 } from '@packmind/types';
 import { IDistributionRepository } from '../../domain/repositories/IDistributionRepository';
 
-export class ListDistributionsByStandardUseCase
-  implements IListDistributionsByStandard
-{
+export class ListDistributionsByStandardUseCase implements IListDistributionsByStandard {
   constructor(
     private readonly distributionRepository: IDistributionRepository,
     private readonly logger: PackmindLogger = new PackmindLogger(

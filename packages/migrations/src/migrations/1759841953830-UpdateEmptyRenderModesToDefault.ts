@@ -12,9 +12,7 @@ const DEFAULT_RENDER_MODES = [
   'CURSOR',
 ];
 
-export class UpdateEmptyRenderModesToDefault1759841953830
-  implements MigrationInterface
-{
+export class UpdateEmptyRenderModesToDefault1759841953830 implements MigrationInterface {
   constructor(
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {}

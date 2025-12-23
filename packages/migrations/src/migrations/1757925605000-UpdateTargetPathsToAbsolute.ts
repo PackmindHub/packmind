@@ -3,9 +3,7 @@ import { PackmindLogger, LogLevel } from '@packmind/logger';
 
 const origin = 'UpdateTargetPathsToAbsolute1757925605000';
 
-export class UpdateTargetPathsToAbsolute1757925605000
-  implements MigrationInterface
-{
+export class UpdateTargetPathsToAbsolute1757925605000 implements MigrationInterface {
   constructor(
     private readonly logger: PackmindLogger = new PackmindLogger(
       origin,

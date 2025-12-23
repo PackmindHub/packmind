@@ -9,9 +9,7 @@ import { timestampsMigrationColumns } from '@packmind/node-utils';
 
 const origin = 'AddUserOrganizationMemberships1758700000000';
 
-export class AddUserOrganizationMemberships1758700000000
-  implements MigrationInterface
-{
+export class AddUserOrganizationMemberships1758700000000 implements MigrationInterface {
   constructor(
     private readonly logger: PackmindLogger = new PackmindLogger(
       origin,

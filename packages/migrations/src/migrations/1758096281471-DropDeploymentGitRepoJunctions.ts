@@ -8,9 +8,7 @@ import { PackmindLogger, LogLevel } from '@packmind/logger';
 
 const origin = 'DropDeploymentGitRepoJunctions1758096281471';
 
-export class DropDeploymentGitRepoJunctions1758096281471
-  implements MigrationInterface
-{
+export class DropDeploymentGitRepoJunctions1758096281471 implements MigrationInterface {
   constructor(
     private readonly logger: PackmindLogger = new PackmindLogger(
       origin,

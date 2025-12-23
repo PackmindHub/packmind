@@ -1,8 +1,6 @@
 import { MigrationInterface, QueryRunner } from 'typeorm';
 
-export class ReplaceSuccessWithReadyInDetectionPrograms1761145506088
-  implements MigrationInterface
-{
+export class ReplaceSuccessWithReadyInDetectionPrograms1761145506088 implements MigrationInterface {
   public async up(queryRunner: QueryRunner): Promise<void> {
     // Update all detection_programs with status='SUCCESS' to status='READY'
     await queryRunner.query(`

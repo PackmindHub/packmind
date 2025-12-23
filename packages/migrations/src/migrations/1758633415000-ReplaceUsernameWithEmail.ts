@@ -7,9 +7,7 @@ const origin = 'ReplaceUsernameWithEmail1758633415000';
  * Replaces the username field with email field in the users table.
  * Converts existing usernames to email format by appending @packmind.com domain.
  */
-export class ReplaceUsernameWithEmail1758633415000
-  implements MigrationInterface
-{
+export class ReplaceUsernameWithEmail1758633415000 implements MigrationInterface {
   constructor(
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {}

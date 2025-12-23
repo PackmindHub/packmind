@@ -9,9 +9,9 @@ import {
 import assert from 'assert';
 import { BadRequestException } from '@nestjs/common';
 
-export abstract class AbstractRepository<Entity extends { id: string }>
-  implements IRepository<Entity>
-{
+export abstract class AbstractRepository<
+  Entity extends { id: string },
+> implements IRepository<Entity> {
   constructor(
     private readonly entityName: string,
     protected readonly repository: Repository<Entity>,
