@@ -13,7 +13,7 @@ export const JsonMethodContent: React.FC<IMethodContentProps> = ({
 
   return (
     <PMVStack gap={4} width="100%" alignItems="flex-start">
-      <PMText as="p" fontSize="sm" color="faded">
+      <PMText as="p" color="secondary">
         {method.label}:
       </PMText>
       <CopiableTextarea value={config} readOnly rows={12} />
