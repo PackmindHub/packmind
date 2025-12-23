@@ -10,6 +10,7 @@ import {
   AnonymousTrialStartedEvent,
   AnonymousTrialAccountActivatedEvent,
   StandardDeletedEvent,
+  RecipeDeletedEvent,
 } from '@packmind/types';
 import { EventTrackingAdapter } from './EventTrackingAdapter';
 
@@ -27,6 +28,7 @@ export class AmplitudeEventListener extends PackmindListener<EventTrackingAdapte
     this.subscribe(RuleAddedEvent, this.onRuleAdded);
     this.subscribe(RecipeCreatedEvent, this.onRecipeCreated);
     this.subscribe(RecipeUpdatedEvent, this.onRecipeUpdated);
+    this.subscribe(RecipeDeletedEvent, this.onRecipeDeleted);
     this.subscribe(DeploymentCompletedEvent, this.onDeploymentCompleted);
     this.subscribe(ArtifactsPulledEvent, this.onArtifactsPulled);
     this.subscribe(AnonymousTrialStartedEvent, this.handleTrialStarted);
@@ -104,6 +106,16 @@ export class AmplitudeEventListener extends PackmindListener<EventTrackingAdapte
       recipeId,
       spaceId,
       newVersion,
+    });
+  };
+
+  private onRecipeDeleted = async (
+    event: RecipeDeletedEvent,
+  ): Promise<void> => {
+    const { userId, organizationId, recipeId, spaceId } = event.payload;
+    await this.adapter.trackEvent(userId, organizationId, 'recipe_deleted', {
+      recipeId,
+      spaceId,
     });
   };
 
