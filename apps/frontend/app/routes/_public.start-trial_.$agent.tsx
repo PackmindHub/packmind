@@ -39,18 +39,13 @@ const AGENT_TO_PREFERRED_METHOD: Record<
   other: { type: 'json' },
 };
 
-const getMcpUrl = () => {
-  // Hardcoded for now - will be computed based on environment
-  return 'https://mcp.packmind.com/sse';
-};
-
 export default function StartTrialAgentRouteModule() {
   const { agent } = useParams<{ agent: Agent }>();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
 
   const token = searchParams.get('token');
-  const mcpUrl = getMcpUrl();
+  const mcpUrl = searchParams.get('mcpUrl');
 
   const agentConfig = useMemo(() => {
     if (!agent) return null;
@@ -60,12 +55,12 @@ export default function StartTrialAgentRouteModule() {
   }, [agent]);
 
   useEffect(() => {
-    if (!token) {
+    if (!token || !mcpUrl) {
       navigate(routes.auth.toStartTrial(), { replace: true });
     }
-  }, [token, navigate]);
+  }, [token, mcpUrl, navigate]);
 
-  if (!token || !agent) {
+  if (!token || !agent || !mcpUrl) {
     return null;
   }
 

@@ -7,8 +7,8 @@ export default function StartTrialRouteModule() {
 
   return (
     <StartTrialAgentSelector
-      onTokenAvailable={(agent, token) => {
-        navigate(routes.auth.toStartTrialAgent(agent, token));
+      onTokenAvailable={(agent, token, mcpUrl) => {
+        navigate(routes.auth.toStartTrialAgent(agent, token, mcpUrl));
       }}
     />
   );

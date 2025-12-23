@@ -46,7 +46,11 @@ const AGENT_OPTIONS: IAgentOption[] = [
 ];
 
 interface IStartTrialAgentSelectorProps {
-  onTokenAvailable: (agent: StartTrialCommandAgents, token: string) => void;
+  onTokenAvailable: (
+    agent: StartTrialCommandAgents,
+    token: string,
+    mcpUrl: string,
+  ) => void;
 }
 
 export function StartTrialAgentSelector({
@@ -65,8 +69,8 @@ export function StartTrialAgentSelector({
       { agent: selectedAgent },
       {
         onSuccess: (result) => {
-          if (result.mcpToken) {
-            onTokenAvailable(selectedAgent, result.mcpToken);
+          if (result.mcpToken && result.mcpUrl) {
+            onTokenAvailable(selectedAgent, result.mcpToken, result.mcpUrl);
           }
         },
         onError: () => {

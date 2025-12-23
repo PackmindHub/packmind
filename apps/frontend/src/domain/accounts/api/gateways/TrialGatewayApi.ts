@@ -8,12 +8,12 @@ import {
 
 export class TrialGatewayApi extends PackmindGateway implements ITrialGateway {
   constructor() {
-    super('/');
+    super('/start-trial');
   }
 
   startTrial = async (params: StartTrialCommand): Promise<StartTrialResult> => {
     return this._api.get<StartTrialResult>(
-      `${this._endpoint}start-trial?agent=${params.agent}`,
+      `${this._endpoint}?agent=${params.agent}`,
     );
   };
 
@@ -21,7 +21,7 @@ export class TrialGatewayApi extends PackmindGateway implements ITrialGateway {
     command: GetActivationTokenCommand,
   ): Promise<GetActivationTokenResponse> => {
     return this._api.post<GetActivationTokenResponse>(
-      `${this._endpoint}start-trial/get-activation-token`,
+      `${this._endpoint}/get-activation-token`,
       command,
     );
   };
