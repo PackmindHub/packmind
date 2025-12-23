@@ -1,8 +1,6 @@
 import { MigrationInterface, QueryRunner } from 'typeorm';
 
-export class SafeCleanupDeploymentSchema1758026000000
-  implements MigrationInterface
-{
+export class SafeCleanupDeploymentSchema1758026000000 implements MigrationInterface {
   name = 'SafeCleanupDeploymentSchema1758026000000';
 
   public async up(queryRunner: QueryRunner): Promise<void> {

@@ -9,9 +9,7 @@ import { StandardVersionService } from '../../application/services/StandardVersi
 
 const origin = 'GenerateStandardSummaryJobFactory';
 
-export class GenerateStandardSummaryJobFactory
-  implements IJobFactory<GenerateStandardSummaryInput>
-{
+export class GenerateStandardSummaryJobFactory implements IJobFactory<GenerateStandardSummaryInput> {
   private _delayedJob: GenerateStandardSummaryDelayedJob | null = null;
 
   constructor(

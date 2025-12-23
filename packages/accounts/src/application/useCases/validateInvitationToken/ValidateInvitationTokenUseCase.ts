@@ -10,9 +10,7 @@ import { createInvitationToken } from '../../../domain/entities/Invitation';
 
 const origin = 'ValidateInvitationTokenUseCase';
 
-export class ValidateInvitationTokenUseCase
-  implements IValidateInvitationTokenUseCase
-{
+export class ValidateInvitationTokenUseCase implements IValidateInvitationTokenUseCase {
   constructor(
     private readonly invitationService: InvitationService,
     private readonly userService: UserService,

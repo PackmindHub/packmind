@@ -5,9 +5,10 @@ import { IQueue, QueueListeners, WorkerListeners } from '../domain/IQueue';
 import { TokensUsed, TokensUsedByOperation } from '../domain/TokensUsed';
 import { PackmindSerializer } from '../utils/PackmindSerializer';
 
-export abstract class AbstractAIDelayedJob<Input, Output>
-  implements IDelayedJob<Input, Output>
-{
+export abstract class AbstractAIDelayedJob<
+  Input,
+  Output,
+> implements IDelayedJob<Input, Output> {
   protected queue!: IQueue<Input, Output>;
   abstract readonly origin: string;
   protected timeout!: number;

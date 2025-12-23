@@ -1,8 +1,6 @@
 import { MigrationInterface, QueryRunner } from 'typeorm';
 
-export class AddLanguageToDetectionProgram1756131626379
-  implements MigrationInterface
-{
+export class AddLanguageToDetectionProgram1756131626379 implements MigrationInterface {
   public async up(queryRunner: QueryRunner): Promise<void> {
     // Add language column
     await queryRunner.query(`

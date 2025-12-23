@@ -26,55 +26,54 @@ export interface HelloWorldEvent extends SSEEvent<{ message: string }> {
 }
 
 // Generic data change events
-export interface DataChangeEvent<TPayload = unknown>
-  extends SSEEvent<TPayload> {
+export interface DataChangeEvent<
+  TPayload = unknown,
+> extends SSEEvent<TPayload> {
   type: 'PUT' | 'DELETE' | 'CREATE' | 'UPDATE';
 }
 
 // Notification event
-export interface NotificationEvent
-  extends SSEEvent<{
-    title: string;
-    message: string;
-    level: 'info' | 'warning' | 'error' | 'success';
-  }> {
+export interface NotificationEvent extends SSEEvent<{
+  title: string;
+  message: string;
+  level: 'info' | 'warning' | 'error' | 'success';
+}> {
   type: 'NOTIFICATION';
 }
 
 // Program status change event for cache invalidation
-export interface ProgramStatusChangeEvent
-  extends SSEEvent<{ ruleId: string; language: string }> {
+export interface ProgramStatusChangeEvent extends SSEEvent<{
+  ruleId: string;
+  language: string;
+}> {
   type: 'PROGRAM_STATUS_CHANGE';
 }
 
 // Assessment status change event for cache invalidation
-export interface AssessmentStatusChangeEvent
-  extends SSEEvent<{
-    ruleId: string;
-    language: string;
-  }> {
+export interface AssessmentStatusChangeEvent extends SSEEvent<{
+  ruleId: string;
+  language: string;
+}> {
   type: 'ASSESSMENT_STATUS_CHANGE';
 }
 
 // Detection heuristics updated event for cache invalidation
-export interface DetectionHeuristicsUpdatedEvent
-  extends SSEEvent<{
-    ruleId: string;
-    language: string;
-    detectionHeuristicsId: string;
-  }> {
+export interface DetectionHeuristicsUpdatedEvent extends SSEEvent<{
+  ruleId: string;
+  language: string;
+  detectionHeuristicsId: string;
+}> {
   type: 'DETECTION_HEURISTICS_UPDATED';
 }
 
 export type UserContextChangeType = 'role_changed' | 'removed' | 'invited';
 
-export interface UserContextChangeEvent
-  extends SSEEvent<{
-    userId: string;
-    organizationId: string;
-    changeType: UserContextChangeType;
-    role?: UserOrganizationRole;
-  }> {
+export interface UserContextChangeEvent extends SSEEvent<{
+  userId: string;
+  organizationId: string;
+  changeType: UserContextChangeType;
+  role?: UserOrganizationRole;
+}> {
   type: 'USER_CONTEXT_CHANGE';
 }
 

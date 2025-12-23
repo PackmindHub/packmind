@@ -5,9 +5,7 @@ import {
 } from '../../domain/useCases/IExecuteSingleFileAstUseCase';
 import { IExecuteLinterProgramsUseCase } from '@packmind/types';
 
-export class ExecuteSingleFileAstUseCase
-  implements IExecuteSingleFileAstUseCase
-{
+export class ExecuteSingleFileAstUseCase implements IExecuteSingleFileAstUseCase {
   private static readonly fallbackStandardSlug = 'adhoc-linter';
   private static readonly fallbackRuleContent = 'adhoc-rule';
 

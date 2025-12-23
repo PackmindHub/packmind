@@ -26,9 +26,7 @@ import { IDistributionRepository } from '../../domain/repositories/IDistribution
 
 const origin = 'GetStandardDeploymentOverviewUseCase';
 
-export class GetStandardDeploymentOverviewUseCase
-  implements IGetStandardDeploymentOverview
-{
+export class GetStandardDeploymentOverviewUseCase implements IGetStandardDeploymentOverview {
   constructor(
     private readonly distributionRepository: IDistributionRepository,
     private readonly standardsPort: IStandardsPort,

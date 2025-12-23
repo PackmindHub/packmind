@@ -2,8 +2,10 @@ import { Checkbox as ChakraCheckbox } from '@chakra-ui/react';
 import type { CheckedChangeDetails } from '@zag-js/checkbox';
 import * as React from 'react';
 
-export interface PMCheckboxProps
-  extends Omit<ChakraCheckbox.RootProps, 'children'> {
+export interface PMCheckboxProps extends Omit<
+  ChakraCheckbox.RootProps,
+  'children'
+> {
   /** Texte/contenu du label (au lieu d'utiliser le children du Root) */
   children?: React.ReactNode;
   icon?: React.ReactNode;

@@ -3,9 +3,7 @@ import { PackmindLogger } from '@packmind/logger';
 
 const origin = 'RenameColumnsToSnakeCase1753017705747';
 
-export class RenameColumnsToSnakeCase1753017705747
-  implements MigrationInterface
-{
+export class RenameColumnsToSnakeCase1753017705747 implements MigrationInterface {
   constructor(
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {}

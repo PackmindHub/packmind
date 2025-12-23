@@ -10,9 +10,7 @@ import { IGitPort } from '@packmind/types';
 
 const origin = 'GetTargetsByRepositoryUseCase';
 
-export class GetTargetsByRepositoryUseCase
-  implements IGetTargetsByRepositoryUseCase
-{
+export class GetTargetsByRepositoryUseCase implements IGetTargetsByRepositoryUseCase {
   constructor(
     private readonly targetService: TargetService,
     private readonly gitPort: IGitPort,

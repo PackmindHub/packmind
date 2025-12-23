@@ -3,9 +3,7 @@ import { PackmindLogger, LogLevel } from '@packmind/logger';
 
 const origin = 'DropOrganizationIdFromStandardsAndRecipes1761308230218';
 
-export class DropOrganizationIdFromStandardsAndRecipes1761308230218
-  implements MigrationInterface
-{
+export class DropOrganizationIdFromStandardsAndRecipes1761308230218 implements MigrationInterface {
   constructor(
     private readonly logger: PackmindLogger = new PackmindLogger(
       origin,

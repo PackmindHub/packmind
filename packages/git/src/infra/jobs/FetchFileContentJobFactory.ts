@@ -9,9 +9,7 @@ import { IGitRepoFactory } from '../../domain/repositories/IGitRepoFactory';
 
 const origin = 'FetchFileContentJobFactory';
 
-export class FetchFileContentJobFactory
-  implements IJobFactory<FetchFileContentInput>
-{
+export class FetchFileContentJobFactory implements IJobFactory<FetchFileContentInput> {
   private _delayedJob: FetchFileContentDelayedJob | null = null;
 
   constructor(

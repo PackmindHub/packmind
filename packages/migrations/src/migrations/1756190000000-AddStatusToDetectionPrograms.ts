@@ -1,8 +1,6 @@
 import { MigrationInterface, QueryRunner } from 'typeorm';
 
-export class AddStatusToDetectionPrograms1756190000000
-  implements MigrationInterface
-{
+export class AddStatusToDetectionPrograms1756190000000 implements MigrationInterface {
   public async up(queryRunner: QueryRunner): Promise<void> {
     // Add status column with default value 'CONFIGURED'
     await queryRunner.query(`

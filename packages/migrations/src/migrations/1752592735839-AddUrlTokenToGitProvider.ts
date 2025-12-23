@@ -1,8 +1,6 @@
 import { MigrationInterface, QueryRunner } from 'typeorm';
 
-export class AddUrlTokenToGitProvider1752592735839
-  implements MigrationInterface
-{
+export class AddUrlTokenToGitProvider1752592735839 implements MigrationInterface {
   public async up(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.query(`
             ALTER TABLE "git_providers" 

@@ -4,9 +4,7 @@ import { v4 as uuidv4 } from 'uuid';
 
 const origin = 'AddDefaultTargetsForExistingGitRepos1757667343776';
 
-export class AddDefaultTargetsForExistingGitRepos1757667343776
-  implements MigrationInterface
-{
+export class AddDefaultTargetsForExistingGitRepos1757667343776 implements MigrationInterface {
   constructor(
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {}
