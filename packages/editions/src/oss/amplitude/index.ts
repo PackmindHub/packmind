@@ -12,5 +12,4 @@ export async function enableAmplitudeProxy(app?: unknown) {
 export { AmplitudeModule } from './nest-api/amplitude/amplitude.module';
 export { EventTrackingAdapter } from './application/EventTrackingAdapter';
 export { AmplitudeHexa } from './AmplitudeHexa';
-export { AmplitudeListener } from './application/AmplitudeListener';
 export type { AmplitudeNodeEvent } from './domain/entities/AmplitudeNodeEvent';
