@@ -4,7 +4,7 @@ import { testWithUserData } from '../../fixtures/packmindTest';
 import { expect } from '@playwright/test';
 
 testWithUserData.describe('Trial Process', () => {
-  testWithUserData.skip(
+  testWithUserData(
     'User completes the full trial process from agent selection to account activation',
     async ({ page, userData, effectiveBaseUrl }) => {
       const pageFactory: IPageFactory = new PageFactory(page);
