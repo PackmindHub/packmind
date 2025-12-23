@@ -1,4 +1,5 @@
 import {
+  IActivateAccountPage,
   IDashboardPage,
   IGitSettingsPage,
   IInvitationPage,
@@ -8,6 +9,8 @@ import {
   IPageFactory,
   ISettingsPage,
   ISignUpPage,
+  IStartTrialAgentPage,
+  IStartTrialPage,
   IUserSettingsPage,
   IUsersSettingsPage,
 } from '../domain/pages';
@@ -21,6 +24,9 @@ import { PackagePage } from './pages/PackagePage';
 import { SettingsPage } from './pages/SettingsPage';
 import { GitSettings } from './pages/GitSettingsPage';
 import { InvitationPage } from './pages/InvitationPage';
+import { StartTrialPage } from './pages/StartTrialPage';
+import { ClaudeStartTrialAgentPage } from './pages/ClaudeStartTrialAgentPage';
+import { ActivateAccountPage } from './pages/ActivateAccountPage';
 
 export type Constructor<T> = new (page: Page, pageFactory: IPageFactory) => T;
 
@@ -63,6 +69,24 @@ export class PageFactory implements IPageFactory {
   async getInvitationPage(invitationLink: string): Promise<IInvitationPage> {
     await this.page.goto(invitationLink);
     return this.getPageInstance(InvitationPage);
+  }
+
+  async getStartTrialPage(): Promise<IStartTrialPage> {
+    await this.page.goto('/start-trial');
+    return this.getPageInstance(StartTrialPage);
+  }
+
+  async getStartTrialAgentPage(agent: string): Promise<IStartTrialAgentPage> {
+    switch (agent) {
+      case 'claude':
+        return this.getPageInstance(ClaudeStartTrialAgentPage);
+      default:
+        throw new Error(`Unsupported agent: ${agent}`);
+    }
+  }
+
+  async getActivateAccountPage(): Promise<IActivateAccountPage> {
+    return this.getPageInstance(ActivateAccountPage);
   }
 
   private async getPageInstance<T extends IPackmindPage>(
