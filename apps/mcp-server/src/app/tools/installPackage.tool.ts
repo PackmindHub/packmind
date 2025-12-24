@@ -255,6 +255,8 @@ Then apply the file updates returned by the tool.`;
 
 You must now apply the following file changes in the \`${safeRelativePath}\` directory.
 
+**IMPORTANT**: The path \`${safeRelativePath}\` is relative to the git repository root or current project directory, NOT the filesystem root. For example, if \`relativePath\` is "/" and the project is at \`/Users/dev/my-project\`, files should be written to \`/Users/dev/my-project/\`, not to \`/\`.
+
 ## File Updates
 
 \`\`\`json
