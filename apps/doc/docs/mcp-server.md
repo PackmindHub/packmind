@@ -247,26 +247,44 @@ Retrieves the full content of a specific package including all its recipes and s
 
 **Tool:** `install_package`
 
-Installs Packmind packages into your project by generating the necessary configuration files. This tool operates in two modes: instruction mode (default) which returns setup guidance, and agent rendering mode which returns file updates for the AI agent to apply directly.
+Provides installation instructions for Packmind packages. This tool returns guidance that directs the AI agent to either use the `packmind-cli` (if available) or call the `render_package` tool to generate file updates.
 
 **Parameters:**
 
 - `packageSlug` (required) - The slug of the package to install. Use `list_packages` to find available packages.
-- `installedPackages` (optional) - Array of already installed package slugs from your `packmind.json` file. Read the file and extract the package slugs from the `packages` section to preserve existing installations.
 - `relativePath` (required) - The target directory where files should be installed (e.g., `"/"` for project root, `"/packages/my-app/"` for a monorepo subfolder)
-- `agentRendering` (required) - Controls the tool's output mode:
-  - `false` - Returns installation instructions for manual setup
-  - `true` - Returns file updates for the AI agent to apply automatically
-- `gitRemoteUrl` (optional) - The git remote URL of your repository. Run `git remote get-url origin` to obtain it.
-- `gitBranch` (optional) - The current git branch name. Run `git branch --show-current` to obtain it.
 
-**Returns:**
+**Returns:** Step-by-step installation instructions that guide the AI agent to:
 
-- When `agentRendering` is `false`: Step-by-step installation instructions
-- When `agentRendering` is `true`: File contents to create or update, which the AI agent will apply to your project
+1. Check if `packmind-cli` is installed
+2. Use the CLI if available, or call `render_package` if not
 
 **Usage Example:**
 
 ```plaintext
 "Install the typescript-best-practices package in my project"
 ```
+
+### Render Package
+
+**Tool:** `render_package`
+
+Generates file updates for the AI agent to apply when installing a Packmind package. This tool is called by the AI agent after `install_package` when the `packmind-cli` is not available.
+
+**Parameters:**
+
+- `packageSlug` (required) - The slug of the package to render. Use `list_packages` to find available packages.
+- `installedPackages` (optional) - Array of already installed package slugs from your `packmind.json` file. Read the file and extract the package slugs from the `packages` section to preserve existing installations.
+- `relativePath` (required) - The target directory where files should be installed (e.g., `"/"` for project root, `"/packages/my-app/"` for a monorepo subfolder)
+- `gitRemoteUrl` (required) - The git remote URL of your repository. Run `git remote get-url origin` to obtain it. Use an empty string if unable to retrieve.
+- `gitBranch` (required) - The current git branch name. Run `git branch --show-current` to obtain it. Use an empty string if unable to retrieve.
+
+**Returns:** File contents to create or update, which the AI agent will apply to your project. The response includes:
+
+- Files to create or update with their content
+- Files to delete
+- Section-based updates for files like `CLAUDE.md`
+
+:::note
+You typically don't call this tool directly. The AI agent will automatically use it based on the instructions from `install_package` when `packmind-cli` is not available.
+:::
