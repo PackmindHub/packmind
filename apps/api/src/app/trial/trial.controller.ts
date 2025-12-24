@@ -8,7 +8,6 @@ import {
   InternalServerErrorException,
   UnauthorizedException,
 } from '@nestjs/common';
-import { JwtService } from '@nestjs/jwt';
 import { Configuration, Public } from '@packmind/node-utils';
 import { PackmindLogger } from '@packmind/logger';
 import {
@@ -47,7 +46,6 @@ export class TrialController {
   constructor(
     @InjectAccountsAdapter() private readonly accountsAdapter: IAccountsPort,
     private readonly mcpService: McpService,
-    private readonly jwtService: JwtService,
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {
     this.logger.info('TrialController initialized');
@@ -109,7 +107,9 @@ export class TrialController {
 
     try {
       // Decode the MCP token to extract user information
-      const decoded = this.jwtService.verify(body.mcpToken);
+      // Using mcpService.verifyToken() ensures we use the same JWT secret
+      // that was used to sign the token (MCP_JWT_SECRET_KEY)
+      const decoded = this.mcpService.verifyToken(body.mcpToken);
 
       if (!decoded.sub || !decoded.organizationId) {
         throw new UnauthorizedException(

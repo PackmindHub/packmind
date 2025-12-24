@@ -287,6 +287,7 @@ jobs:
           PACKMIND_EDITION: ${{ vars.PACKMIND_EDITION }}
           COMPOSE_PROJECT_NAME: ci-${{ github.run_number }}
           CI: 'true'
+          APP_WEB_URL: http://frontend:4200
 
       - name: Wait for E2E tests to complete
         env:

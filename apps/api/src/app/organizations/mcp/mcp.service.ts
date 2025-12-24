@@ -14,6 +14,12 @@ import { ACCOUNTS_ADAPTER_TOKEN } from '../../shared/HexaRegistryModule';
 
 const origin = 'OrganizationMcpService';
 
+export interface IMcpTokenPayload {
+  sub: string;
+  email: string;
+  organizationId: string;
+}
+
 @Injectable()
 export class McpService {
   constructor(
@@ -78,6 +84,10 @@ export class McpService {
       token_type: 'Bearer',
       expires_in: 30 * 24 * 60 * 60,
     };
+  }
+
+  verifyToken(token: string): IMcpTokenPayload {
+    return this.jwtService.verify<IMcpTokenPayload>(token);
   }
 
   async getMcpUrl(): Promise<string> {
