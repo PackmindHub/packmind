@@ -19,6 +19,7 @@ import {
   registerOnboardingTool,
   registerGenerateTrialActivationUrlTool,
   registerInstallPackageTool,
+  registerRenderPackageTool,
 } from './tools';
 import { UserContext } from './tools/types';
 
@@ -77,6 +78,7 @@ export async function createMCPServer(
   registerCreateStandardRuleTool(toolDependencies, mcpServer);
   registerOnboardingTool(toolDependencies, mcpServer);
   registerInstallPackageTool(toolDependencies, mcpServer);
+  registerRenderPackageTool(toolDependencies, mcpServer);
 
   // Register trial activation tool only for trial users (fetch fresh data from DB)
   if (userContext) {

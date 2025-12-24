@@ -4,6 +4,8 @@
 
 ## Changed
 
+- split `install_package` MCP tool into two tools (`install_package` and `render_package`) to ensure the agents do not skip some tasks.
+
 ## Fixed
 
 ## Removed
