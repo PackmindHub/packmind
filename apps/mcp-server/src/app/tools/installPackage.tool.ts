@@ -40,15 +40,13 @@ export function registerInstallPackageTool(
           ),
         gitRemoteUrl: z
           .string()
-          .optional()
           .describe(
-            'The git remote URL. Run "git remote get-url origin" to obtain it.',
+            'The git remote URL. Run "git remote get-url origin" to obtain it. Use an empty string if unable to retrieve.',
           ),
         gitBranch: z
           .string()
-          .optional()
           .describe(
-            'The git branch name. Run "git branch --show-current" to obtain it.',
+            'The git branch name. Run "git branch --show-current" to obtain it. Use an empty string if unable to retrieve.',
           ),
       },
     },
@@ -64,8 +62,8 @@ export function registerInstallPackageTool(
       installedPackages?: string[];
       relativePath?: string;
       agentRendering?: boolean;
-      gitRemoteUrl?: string;
-      gitBranch?: string;
+      gitRemoteUrl: string;
+      gitBranch: string;
     }) => {
       if (!userContext) {
         throw new Error('User context is required to install a package');
@@ -111,8 +109,8 @@ Then call the \`packmind_install_package\` MCP tool with these parameters:
 - \`installedPackages\`: array of existing package slugs from packmind.json (e.g., ["existing-package-1", "existing-package-2"])
 - \`relativePath\`: the target directory (e.g., "/" or "/packages/my-app/")
 - \`agentRendering\`: true
-- \`gitRemoteUrl\`: run \`git remote get-url origin\` to get this value
-- \`gitBranch\`: run \`git branch --show-current\` to get this value
+- \`gitRemoteUrl\`: run \`git remote get-url origin\` to get this value, use empty string "" if unable to retrieve
+- \`gitBranch\`: run \`git branch --show-current\` to get this value, use empty string "" if unable to retrieve
 
 Then apply the file updates returned by the tool.`;
 
@@ -186,9 +184,9 @@ Then apply the file updates returned by the tool.`;
           deleteCount: pullContentResult.fileUpdates.delete.length,
         });
 
-        // If gitRemoteUrl is provided, record the distribution
+        // If gitRemoteUrl is non-empty, record the distribution
         let distributionId: string | undefined;
-        if (gitRemoteUrl) {
+        if (gitRemoteUrl && gitRemoteUrl.trim().length > 0) {
           try {
             const notifyResult = await deploymentsAdapter.notifyDistribution({
               userId: userContext.userId,
