@@ -58,7 +58,7 @@
     "@nx/storybook": "21.6.8",
     "@nx/vite": "21.6.8",
     "@nx/web": "21.6.8",
-    "@nx/webpack": "21.6.8",
+    "@nx/webpack": "22.3.3",
     "@playwright/test": "^1.56.1",
     "@react-router/dev": "^7.2.0",
     "@storybook/react-vite": "^9.0.16",
