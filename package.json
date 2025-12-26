@@ -105,7 +105,7 @@
     "jsonc-eslint-parser": "^2.1.0",
     "nest": "^0.1.6",
     "nodemon": "^3.1.10",
-    "nx": "21.6.8",
+    "nx": "22.3.3",
     "pg-mem": "^3.0.5",
     "prettier": "^3.7.4",
     "pretty-quick": "^4.2.2",
