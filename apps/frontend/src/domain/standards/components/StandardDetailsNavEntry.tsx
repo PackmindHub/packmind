@@ -1,6 +1,6 @@
-import { PMBox, PMIcon, PMLink, PMText, PMTooltip } from '@packmind/ui';
+import { PMIcon, PMLink, PMText, PMTooltip } from '@packmind/ui';
 import type { ComponentType } from 'react';
-import { TiWarningOutline } from 'react-icons/ti';
+import { LuInfo } from 'react-icons/lu';
 
 type StandardDetailsNavEntryProps<TValue extends string> = {
   label:
@@ -97,10 +97,11 @@ export const StandardDetailsNavEntry = <TValue extends string>({
             <PMIcon
               as="span"
               display="inline-flex"
-              color="text.warning"
+              color="text.info"
               data-testid="rule-wip-icon"
+              marginRight={1}
             >
-              <TiWarningOutline />
+              <LuInfo />
             </PMIcon>
           ) : null}
           <PMText
