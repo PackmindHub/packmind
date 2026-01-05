@@ -336,7 +336,7 @@ export const DeploymentsPage: React.FC = () => {
   const rawArtType = searchParams.get('artType');
   const artifactTypeFilter: ArtifactTypeFilter =
     rawArtType === 'all' ||
-    rawArtType === 'recipes' ||
+    rawArtType === 'commands' ||
     rawArtType === 'standards'
       ? (rawArtType as ArtifactTypeFilter)
       : 'all';
@@ -363,7 +363,7 @@ export const DeploymentsPage: React.FC = () => {
           onValueChange={(e) => {
             if (
               e.value === 'all' ||
-              e.value === 'recipes' ||
+              e.value === 'commands' ||
               e.value === 'standards'
             )
               setArtifactTypeFilter(e.value as ArtifactTypeFilter);
@@ -373,7 +373,7 @@ export const DeploymentsPage: React.FC = () => {
           <PMSegmentGroup.Items
             items={[
               { label: 'All', value: 'all' },
-              { label: 'Recipes', value: 'recipes' },
+              { label: 'Commands', value: 'commands' },
               { label: 'Standards', value: 'standards' },
             ]}
           />

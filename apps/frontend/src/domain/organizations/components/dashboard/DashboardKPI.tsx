@@ -39,7 +39,7 @@ export const DashboardKPI = () => {
         minW={0}
       >
         <PMStat.Root>
-          <PMStat.Label>Active recipes</PMStat.Label>
+          <PMStat.Label>Active commands</PMStat.Label>
           <PMStat.ValueText>{activeRecipes}</PMStat.ValueText>
         </PMStat.Root>
       </PMBox>

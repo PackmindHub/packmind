@@ -277,7 +277,7 @@ const PackageFormContent = ({
                       alignItems="center"
                     >
                       <NavLink
-                        to={routes.space.toRecipe(
+                        to={routes.space.toCommand(
                           organizationSlug,
                           spaceSlug,
                           id,

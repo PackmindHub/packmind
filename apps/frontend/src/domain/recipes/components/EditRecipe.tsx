@@ -31,12 +31,12 @@ export const EditRecipe: React.FC<EditRecipeProps> = ({
 
     // Validation
     if (!name.trim()) {
-      alert('Recipe name is required');
+      alert('Command name is required');
       return;
     }
 
     if (!content.trim()) {
-      alert('Recipe content is required');
+      alert('Command content is required');
       return;
     }
 
@@ -52,12 +52,12 @@ export const EditRecipe: React.FC<EditRecipeProps> = ({
       },
       {
         onSuccess: () => {
-          console.log('Recipe updated successfully');
+          console.log('Command updated successfully');
           onSuccess();
         },
         onError: (error) => {
-          console.error('Failed to update recipe:', error);
-          alert('Failed to update recipe. Please try again.');
+          console.error('Failed to update command:', error);
+          alert('Failed to update command. Please try again.');
         },
       },
     );
@@ -67,14 +67,14 @@ export const EditRecipe: React.FC<EditRecipeProps> = ({
 
   return (
     <PMBox maxW="800px" mx="auto" p={6}>
-      <PMText mb={6}>Edit Recipe</PMText>
+      <PMText mb={6}>Edit Command</PMText>
 
       <form onSubmit={handleSubmit}>
         <PMVStack gap={6} align="stretch">
           <PMBox>
             <PMText mb={2}>Name *</PMText>
             <PMInput
-              placeholder="Enter recipe name"
+              placeholder="Enter command name"
               value={name}
               onChange={(e) => setName(e.target.value)}
               disabled={isPending}
@@ -84,7 +84,7 @@ export const EditRecipe: React.FC<EditRecipeProps> = ({
           <PMBox>
             <PMText mb={2}>Content *</PMText>
             <PMTextArea
-              placeholder="Enter recipe content (markdown supported)"
+              placeholder="Enter command content (markdown supported)"
               value={content}
               onChange={(e) => setContent(e.target.value)}
               disabled={isPending}
@@ -104,7 +104,7 @@ export const EditRecipe: React.FC<EditRecipeProps> = ({
               disabled={!isFormValid || isPending}
               loading={isPending}
             >
-              Update Recipe
+              Update Command
             </PMButton>
             <PMButton
               variant="secondary"

@@ -46,7 +46,7 @@ const DEFAULT_DIALOGS: Required<
         <PMBox>
           <PMImage src={createRecipe} mb={4} />
           <PMText color="tertiary">
-            Connect your MCP server to capture standards and recipes directly
+            Connect your MCP server to capture standards and commands directly
             from your coding assistant.
           </PMText>
         </PMBox>
@@ -73,7 +73,7 @@ const DEFAULT_DIALOGS: Required<
           </PMHeading>
           <PMText color="secondary">
             Use prompts in your coding assistant to create standards and
-            recipes.
+            commands.
           </PMText>
           <PMField.Root>
             <PMField.Label>
@@ -88,11 +88,11 @@ const DEFAULT_DIALOGS: Required<
 
           <PMField.Root>
             <PMField.Label>
-              Example: create a recipe to refactor a React component
+              Example: create a command to refactor a React component
             </PMField.Label>
 
             <PMTextArea
-              value="From the last commit, create a Packmind Recipe to refactor a React component to use hooks instead of class components."
+              value="From the last commit, create a Packmind Command to refactor a React component to use hooks instead of class components."
               readOnly
               resize={'none'}
             />
@@ -114,7 +114,7 @@ const DEFAULT_DIALOGS: Required<
         <PMBox>
           <PMImage src={distributeCodingStandards} mb={4} />
           <PMText color="tertiary">
-            Distribute standards and recipes to Git repositories. They are
+            Distribute standards and commands to Git repositories. They are
             published as Markdown in target repositories, making them easy to
             use by AI coding agents and developers.
           </PMText>
@@ -158,7 +158,7 @@ const DEFAULT_DIALOGS: Required<
           <PMList.Root>
             <PMList.Item>
               <PMText color="secondary">
-                Standards and recipes must be bundled into packages to be
+                Standards and commands must be bundled into packages to be
                 distributed in your projects.
               </PMText>
             </PMList.Item>
@@ -200,7 +200,7 @@ const DEFAULT_DIALOGS: Required<
 
               <PMText color="secondary">
                 Each connected repository has a default target at the repository
-                root ('/'). Standards and recipes are created in a .packmind
+                root ('/'). Standards and commands are created in a .packmind
                 directory.
               </PMText>
             </PMList.Item>
@@ -213,8 +213,8 @@ const DEFAULT_DIALOGS: Required<
           </PMHeading>
 
           <PMText color="secondary">
-            In monorepos, distribute standards and recipes only to relevant apps
-            and packages by creating additional targets for specific
+            In monorepos, distribute standards and commands only to relevant
+            apps and packages by creating additional targets for specific
             directories.
           </PMText>
 
@@ -240,8 +240,8 @@ const DEFAULT_DIALOGS: Required<
               </PMText>
 
               <PMText color="secondary">
-                When deploying from the Standards or Recipes page, select your
-                new target just like the default one.
+                When deploying packages, select your new target just like the
+                default one.
               </PMText>
             </PMList.Item>
           </PMList.Root>
@@ -269,7 +269,8 @@ const DEFAULT_DIALOGS: Required<
           <PMText color="secondary">
             During the "Distribution" action, Packmind also update config files
             for most popular coding assistant (Github Copilot, Claude,
-            Cursor...) so they are natively aware of your standards and recipes.
+            Cursor...) so they are natively aware of your standards and
+            commands.
           </PMText>
 
           <PMText color="secondary">
@@ -323,12 +324,12 @@ export const GettingStartedWidget: React.FC<GettingStartedWidgetProps> = ({
       <PMAccordion.Item value="getting-started-1">
         <PMAccordion.ItemTrigger cursor={'pointer'}>
           <PMAccordion.ItemIndicator />
-          Create standards and recipes
+          Create standards and commands
         </PMAccordion.ItemTrigger>
         <PMAccordion.ItemContent>
           <PMVStack align="flex-start" paddingBottom={6}>
             <PMText color="secondary">
-              Set up your MCP server to capture standards and recipes from your
+              Set up your MCP server to capture standards and commands from your
               coding assistant.
             </PMText>
             <GettingStartedLearnMoreDialog
@@ -343,12 +344,12 @@ export const GettingStartedWidget: React.FC<GettingStartedWidgetProps> = ({
       <PMAccordion.Item value="getting-started-2">
         <PMAccordion.ItemTrigger cursor={'pointer'}>
           <PMAccordion.ItemIndicator />
-          Distribute standards and recipes
+          Distribute standards and commands
         </PMAccordion.ItemTrigger>
         <PMAccordion.ItemContent>
           <PMVStack align="flex-start" paddingBottom={6}>
             <PMText color="secondary">
-              Distribute standards and recipes to your targets (Git
+              Distribute standards and commands to your targets (Git
               repositories, directories).
             </PMText>
             <GettingStartedLearnMoreDialog
@@ -363,7 +364,7 @@ export const GettingStartedWidget: React.FC<GettingStartedWidgetProps> = ({
       <PMAccordion.Item value="getting-started-3">
         <PMAccordion.ItemTrigger cursor={'pointer'}>
           <PMAccordion.ItemIndicator />
-          Leverage your code standards and recipes
+          Leverage your code standards and commands
         </PMAccordion.ItemTrigger>
         <PMAccordion.ItemContent>
           <PMVStack align="flex-start" paddingBottom={6}>
