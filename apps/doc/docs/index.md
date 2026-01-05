@@ -22,7 +22,7 @@ But your team’s **actual standards aren’t stored anywhere**:
 - best practices → scattered across repos
 
 👉 **Packmind helps you turn all of this into a real engineering playbook**  
-(standards, rules, patterns, recipes) so **AI agents finally code _your way_.**
+(standards, rules, patterns, commands) so **AI agents finally code _your way_.**
 
 ---
 

@@ -1,6 +1,6 @@
 # Distribute artifacts
 
-Now that Packmind contains coding standards and recipes, let's distribute them to your Git Repositories.
+Now that Packmind contains coding standards and commands, let's distribute them to your Git Repositories.
 
 The distribution will commit instructions files that will be used by AI Agents (Claude Code, Cursor, etc.).
 
@@ -21,7 +21,7 @@ Here is an overview of the supported agents:
 | **Gitlab Duo**     | Updates chat rules file          | `.gitlab/duo/chat-rules.md`       |
 | **Continue**       | Creates rules in Markdown format | `.continue/rules/packmind/`       |
 
-When you distribute standards or recipes, only the enabled agents will receive updates. The Packmind renderer is always active and creates files in the `.packmind/` directory that are used by other agents.
+When you distribute standards or commands, only the enabled agents will receive updates. The Packmind renderer is always active and creates files in the `.packmind/` directory that are used by other agents.
 
 :::tip Need support for a new AI agent?
 You can create an issue in our [repository](https://github.com/PackmindHub/packmind) to request support for additional AI coding assistants
@@ -45,11 +45,11 @@ There are three ways to distribute packages to your repositories:
 
 ## Distribute via the App
 
-To distribute standards and recipes, you need to add them to a package.
+To distribute standards and commands, you need to add them to a package.
 
-A package is a curated collection of recipes and standards grouped together (e.g., "Frontend React Standards", "Backend API Guidelines"). When you distribute a package:
+A package is a curated collection of commands and standards grouped together (e.g., "Frontend React Standards", "Backend API Guidelines"). When you distribute a package:
 
-- All recipes and standards in the package are distributed together
+- All commands and standards in the package are distributed together
 - The latest version of each item is used
 - A single commit contains all the package content
 - You can distribute multiple packages at once to the same target

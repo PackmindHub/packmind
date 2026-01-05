@@ -208,7 +208,7 @@ When you run `packmind-cli login`, the setup-mcp command runs automatically afte
 
 ## Install Command
 
-Download recipes and standards from packages to your local machine.
+Download commands and standards from packages to your local machine.
 
 ### List Available Packages
 
@@ -262,7 +262,7 @@ packmind-cli install <package-slug> [additional-package-slugs...]
 packmind-cli install backend frontend
 ```
 
-This downloads all recipes and standards from the specified packages and creates the appropriate files for your AI coding assistant.
+This downloads all commands and standards from the specified packages and creates the appropriate files for your AI coding assistant.
 
 ### Recursive Install (Monorepos)
 
@@ -309,7 +309,7 @@ When you have `packmind.json` files in your project, the CLI uses them to determ
 
 All standards from packages defined in these `packmind.json` files are included in the analysis scope. This allows different parts of your codebase to have different standards while inheriting common standards from parent directories.
 
-To set up local linting, install packages using the `install` command. See [Distribute Standards and Recipes](./gs-distribute.md) for details.
+To set up local linting, install packages using the `install` command. See [Distribute Standards and Commands](./gs-distribute.md) for details.
 
 **Deployment Mode**:
 
@@ -401,6 +401,6 @@ packmind-cli lint . --logger=ide
 
 ## Related Documentation
 
-- [Packages Management](./packages-management.md): Learn about organizing recipes and standards into packages
+- [Packages Management](./packages-management.md): Learn about organizing commands and standards into packages
 - [Linter: Automated Detection](./linter.md): Learn about how detection programs work
 - [Standards Management](./standards-management.md): Create rules and add code examples

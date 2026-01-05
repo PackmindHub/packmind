@@ -2,7 +2,7 @@
 
 ## Overview
 
-Organization administrators can control which AI coding assistants receive your standards and recipes when you distribute them to Git repositories. This allows you to distribute only the formats your team actually uses.
+Organization administrators can control which AI coding assistants receive your standards and commands when you distribute them to Git repositories. This allows you to distribute only the formats your team actually uses.
 
 :::info
 Only users with **Admin** privileges can configure AI agent rendering. If you need to change this configuration, contact your organization administrator.
@@ -16,7 +16,7 @@ To configure which agents are enabled:
 2. Toggle on the agents you want to use
 3. Click **Save Changes**
 
-When you distribute standards or recipes, only the enabled agents will have their instruction files updated in your Git repositories.
+When you distribute standards or commands, only the enabled agents will have their instruction files updated in your Git repositories.
 
 ## Available AI Agents
 
@@ -39,5 +39,5 @@ The **Packmind** renderer cannot be disabled. It creates internal files in the `
 
 - Changes apply immediately to all future distributions
 - Existing distributed files in your repositories are not affected
-- Only the selected agents will receive updates when you distribute standards or recipes
+- Only the selected agents will receive updates when you distribute standards or commands
 - The Packmind renderer always creates files regardless of your selection

@@ -1,6 +1,6 @@
 # LLM Provider Configuration
 
-Configure your LLM (Large Language Model) provider to enable AI-powered features in Packmind, such as customizing standards and recipes for AI Agents.
+Configure your LLM (Large Language Model) provider to enable AI-powered features in Packmind, such as customizing standards and commands for AI Agents.
 
 ## Supported Providers
 
@@ -28,7 +28,7 @@ The recommended way to configure your LLM provider is through the Packmind web i
 
 Packmind uses two model types:
 
-- **Primary Model**: Used for complex operations like generating detailed standards and recipes. Choose a more capable model here.
+- **Primary Model**: Used for complex operations like generating detailed standards and commands. Choose a more capable model here.
 - **Fast Model**: Used for simpler operations where speed matters more than capability. Choose an economical model here.
 
 **Recommended configurations:**
