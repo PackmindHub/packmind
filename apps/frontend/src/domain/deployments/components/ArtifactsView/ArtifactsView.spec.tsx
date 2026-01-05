@@ -156,7 +156,7 @@ describe('ArtifactsView', () => {
     );
 
     // Sections
-    expect(screen.getByText('Recipes')).toBeInTheDocument();
+    expect(screen.getByText('Commands')).toBeInTheDocument();
     expect(screen.getByText('Standards')).toBeInTheDocument();
 
     // Artifact headings are links

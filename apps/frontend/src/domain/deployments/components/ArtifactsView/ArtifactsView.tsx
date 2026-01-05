@@ -41,12 +41,12 @@ const getEmptyStateProps = (
   if (searchTerm) {
     return {
       title: 'No artifacts found',
-      description: `No recipes or standards match your search "${searchTerm}"`,
+      description: `No commands or standards match your search "${searchTerm}"`,
     };
   }
   return {
     title: 'No artifacts',
-    description: 'No recipes or standards were found in your organization',
+    description: 'No commands or standards were found in your organization',
   };
 };
 
@@ -274,7 +274,7 @@ const buildStandardBlocks = (
     })
     .filter((node): node is React.ReactElement => node !== null);
 
-export type ArtifactTypeFilter = 'all' | 'recipes' | 'standards';
+export type ArtifactTypeFilter = 'all' | 'commands' | 'standards';
 
 export const ArtifactsView: React.FC<ArtifactsViewProps> = ({
   recipes,
@@ -336,7 +336,7 @@ export const ArtifactsView: React.FC<ArtifactsViewProps> = ({
 
   const visibleRecipes = useMemo(
     () =>
-      artifactTypeFilter === 'all' || artifactTypeFilter === 'recipes'
+      artifactTypeFilter === 'all' || artifactTypeFilter === 'commands'
         ? filteredRecipes
         : ([] as typeof filteredRecipes),
     [artifactTypeFilter, filteredRecipes],
@@ -381,10 +381,10 @@ export const ArtifactsView: React.FC<ArtifactsViewProps> = ({
           description={emptyState.description}
         />
       )}
-      {(artifactTypeFilter === 'all' || artifactTypeFilter === 'recipes') &&
+      {(artifactTypeFilter === 'all' || artifactTypeFilter === 'commands') &&
         recipeBlocks.length > 0 && (
           <PMVStack gap={3} align="stretch">
-            <PMHeading level="h5">Recipes</PMHeading>
+            <PMHeading level="h5">Commands</PMHeading>
             {recipeBlocks}
           </PMVStack>
         )}
