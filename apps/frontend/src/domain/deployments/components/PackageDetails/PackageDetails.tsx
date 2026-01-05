@@ -119,8 +119,8 @@ const PackageEditFormContent = ({
 
   const recipeDisplayValue =
     selectedRecipeIds.length === 0
-      ? 'Select recipes...'
-      : `${selectedRecipeIds.length} recipe(s) selected`;
+      ? 'Select commands...'
+      : `${selectedRecipeIds.length} command(s) selected`;
 
   const standardDisplayValue =
     selectedStandardIds.length === 0
@@ -246,13 +246,13 @@ const PackageEditFormContent = ({
       </PMField.Root>
 
       <PMField.Root flex={1} width="full">
-        <PMField.Label>Recipes</PMField.Label>
+        <PMField.Label>Commands</PMField.Label>
         {isLoadingRecipes || allRecipes.length === 0 ? (
           isLoadingRecipes ? (
             <PMSpinner size="sm" />
           ) : (
             <PMText colorPalette="gray" fontSize="sm" display="block">
-              No recipes available in this space
+              No commands available in this space
             </PMText>
           )
         ) : (
@@ -666,7 +666,7 @@ export const PackageDetails = ({
             minH="200px"
           >
             <PMSpinner size="lg" mr={2} />
-            <PMText ml={2}>Loading recipes and standards...</PMText>
+            <PMText ml={2}>Loading commands and standards...</PMText>
           </PMBox>
         </PMPage>
       );
@@ -675,7 +675,7 @@ export const PackageDetails = ({
     return (
       <PMPage
         title="Edit Package"
-        subtitle="Update package details, recipes, and standards"
+        subtitle="Update package details, commands, and standards"
         breadcrumbComponent={<AutobreadCrumb />}
       >
         <MarkdownEditorProvider>
@@ -732,7 +732,7 @@ export const PackageDetails = ({
                   <PMHeading level="h3">Content Selection</PMHeading>
                 </PMFieldset.Legend>
                 <PMFieldset.HelperText>
-                  Select the recipes and standards to include in this package.
+                  Select the commands and standards to include in this package.
                 </PMFieldset.HelperText>
                 <PMFieldset.Content
                   border="solid 1px"
@@ -895,7 +895,7 @@ export const PackageDetails = ({
                     mx={'auto'}
                     mt={8}
                     title={'This package is empty'}
-                    description="Add recipes and standards to this package to distribute them to your repositories"
+                    description="Add commands and standards to this package to distribute them to your repositories"
                   >
                     <PMHStack>
                       <PMButton variant="secondary" onClick={handleEdit}>
@@ -923,7 +923,7 @@ export const PackageDetails = ({
                     {recipeCount > 0 && (
                       <PMBox flex={1} width="full">
                         <PMHeading size="lg" mb={4}>
-                          Recipes ({recipeCount})
+                          Commands ({recipeCount})
                         </PMHeading>
                         <PMTable
                           columns={recipeColumns}
