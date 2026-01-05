@@ -113,7 +113,7 @@ export const RepositoryTargetTable: React.FC<RepositoryTargetTableProps> = ({
         name: (
           <PMVStack align="start" gap={0}>
             <PMText variant="small" color="tertiary">
-              Recipe
+              Command
             </PMText>
             {orgSlug && spaceSlug ? (
               <PMLink asChild>
@@ -234,7 +234,7 @@ export const RepositoryTargetTable: React.FC<RepositoryTargetTableProps> = ({
             <LuCircleCheckBig />
           </PMIcon>
           <PMText variant="body" color="faded">
-            No recipes or standards distributed here
+            No commands or standards distributed here
           </PMText>
         </PMHStack>
       )}

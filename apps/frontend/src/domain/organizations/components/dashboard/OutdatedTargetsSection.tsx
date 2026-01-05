@@ -109,7 +109,7 @@ export const OutdatedTargetsSection: React.FC = () => {
               </PMIcon>
             }
             title="No outdated deployments"
-            description="All distributed recipes and standards are up-to-date across your targets."
+            description="All distributed commands and standards are up-to-date across your targets."
           />
         </PMBox>
       )}
