@@ -151,7 +151,7 @@ export async function pingPackmindSetup(): Promise<void> {
     }
 
     // Case 2: Instance ID exists but version changed - upgrade detected
-    if (cachedVersion !== currentVersion) {
+    if (cachedVersion && cachedVersion !== currentVersion) {
       logger.info(
         'Version upgrade detected - sending ping with existing instance ID',
         {
@@ -178,7 +178,27 @@ export async function pingPackmindSetup(): Promise<void> {
       return;
     }
 
-    // Case 3: Instance ID exists and version matches - already sent for this version
+    // Case 3: Instance ID exists and version matches (or version cache missing)
+    // If version cache is missing, treat it as already sent to avoid duplicate pings
+    if (!cachedVersion) {
+      logger.info(
+        'Version cache missing but instance ID exists - storing current version without ping',
+        {
+          instanceId: existingInstanceId,
+          currentVersion: currentVersion,
+        },
+      );
+
+      // Store version in cache without sending ping
+      await cache.set(
+        VERSION_CACHE_KEY,
+        currentVersion,
+        CACHE_EXPIRATION_SECONDS,
+      );
+      return;
+    }
+
+    // Case 4: Instance ID exists and version matches - already sent for this version
     logger.debug('Ping already sent for current version, skipping', {
       instanceId: existingInstanceId,
       version: currentVersion,
