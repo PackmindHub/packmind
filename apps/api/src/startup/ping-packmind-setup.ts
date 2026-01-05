@@ -9,7 +9,8 @@ const origin = 'PingPackmindSetup';
 const logger = new PackmindLogger(origin, LogLevel.INFO);
 
 const INSTANCE_ID_CACHE_KEY = 'packmind:instanceId';
-const INSTANCE_ID_EXPIRATION_SECONDS = 365 * 24 * 60 * 60; // 365 days
+const VERSION_CACHE_KEY = 'packmind:version';
+const CACHE_EXPIRATION_SECONDS = 365 * 24 * 60 * 60; // 365 days
 const WEBHOOK_URL =
   'https://packmind.app.n8n.cloud/webhook/ping-packmind-setup';
 
@@ -93,18 +94,11 @@ async function sendPing(version: string, instanceId: string): Promise<void> {
 /**
  * Ping Packmind setup webhook with server version and instance ID
  * This function should be called after the server starts successfully
+ * Sends ping on first startup or when version changes (upgrade detected)
  */
 export async function pingPackmindSetup(): Promise<void> {
   try {
-    // First check if instance ID already exists in cache
-    // If it exists, the ping was already sent, so return silently
     const cache = Cache.getInstance();
-    const existingInstanceId = await cache.get<string>(INSTANCE_ID_CACHE_KEY);
-
-    if (existingInstanceId) {
-      logger.debug('Instance ID already exists in cache, skipping ping');
-      return;
-    }
 
     // Check if ping is disabled via environment variable
     const disablePing = await Configuration.getConfig('DISABLE_PING');
@@ -120,28 +114,75 @@ export async function pingPackmindSetup(): Promise<void> {
       return;
     }
 
-    // Get version from package.json
-    const version = getVersion();
-    if (!version) {
+    // Get current version from package.json
+    const currentVersion = getVersion();
+    if (!currentVersion) {
       logger.warn('Could not determine version, skipping ping');
       return;
     }
 
-    // Create new instance ID
-    const newInstanceId = uuidv4();
-    logger.info('Generated new instance ID for first ping', {
-      instanceId: newInstanceId,
+    // Check if instance ID exists in cache
+    const existingInstanceId = await cache.get<string>(INSTANCE_ID_CACHE_KEY);
+    const cachedVersion = await cache.get<string>(VERSION_CACHE_KEY);
+
+    // Case 1: No instance ID exists - first startup
+    if (!existingInstanceId) {
+      const newInstanceId = uuidv4();
+      logger.info('First startup detected - generating new instance ID', {
+        instanceId: newInstanceId,
+        version: currentVersion,
+      });
+
+      // Store instance ID and version in cache with 365-day expiration
+      await cache.set(
+        INSTANCE_ID_CACHE_KEY,
+        newInstanceId,
+        CACHE_EXPIRATION_SECONDS,
+      );
+      await cache.set(
+        VERSION_CACHE_KEY,
+        currentVersion,
+        CACHE_EXPIRATION_SECONDS,
+      );
+
+      // Send ping
+      await sendPing(currentVersion, newInstanceId);
+      return;
+    }
+
+    // Case 2: Instance ID exists but version changed - upgrade detected
+    if (cachedVersion !== currentVersion) {
+      logger.info(
+        'Version upgrade detected - sending ping with existing instance ID',
+        {
+          instanceId: existingInstanceId,
+          previousVersion: cachedVersion,
+          currentVersion: currentVersion,
+        },
+      );
+
+      // Update version in cache (keep same instance ID, refresh expiration)
+      await cache.set(
+        INSTANCE_ID_CACHE_KEY,
+        existingInstanceId,
+        CACHE_EXPIRATION_SECONDS,
+      );
+      await cache.set(
+        VERSION_CACHE_KEY,
+        currentVersion,
+        CACHE_EXPIRATION_SECONDS,
+      );
+
+      // Send ping with existing instance ID
+      await sendPing(currentVersion, existingInstanceId);
+      return;
+    }
+
+    // Case 3: Instance ID exists and version matches - already sent for this version
+    logger.debug('Ping already sent for current version, skipping', {
+      instanceId: existingInstanceId,
+      version: currentVersion,
     });
-
-    // Store in cache with 365-day expiration
-    await cache.set(
-      INSTANCE_ID_CACHE_KEY,
-      newInstanceId,
-      INSTANCE_ID_EXPIRATION_SECONDS,
-    );
-
-    // Send ping (fire-and-forget, errors are handled internally)
-    await sendPing(version, newInstanceId);
   } catch (error) {
     // Catch any unexpected errors to ensure server startup is not affected
     logger.warn('Unexpected error in pingPackmindSetup', {
