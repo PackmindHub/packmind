@@ -26,7 +26,7 @@ export const RecipeVersionsListDrawer: React.FC<
   }
 
   if (!versions || versions.length === 0) {
-    return <PMText>No versions found for this recipe.</PMText>;
+    return <PMText>No versions found for this command.</PMText>;
   }
 
   const tableData: PMTableRow[] = versions.map((version) => ({
