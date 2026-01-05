@@ -155,13 +155,20 @@ Some recipe content here
       deleteFiles = commitToGit.mock.calls[0][3];
     });
 
-    it('clears Packmind sections in CLAUDE.md', () => {
+    it('clears Packmind recipes section in CLAUDE.md', () => {
       const claudeFile = fileUpdates.find((f) => f.path === 'CLAUDE.md');
 
       expect(claudeFile?.sections).toEqual(
+        expect.arrayContaining([{ key: 'Packmind recipes', content: '' }]),
+      );
+    });
+
+    it('deletes individual standard files', () => {
+      expect(deleteFiles).toEqual(
         expect.arrayContaining([
-          { key: 'Packmind recipes', content: '' },
-          { key: 'Packmind standards', content: '' },
+          expect.objectContaining({
+            path: '.claude/rules/packmind/standard-test-standard.md',
+          }),
         ]),
       );
     });
@@ -201,17 +208,13 @@ Some recipe content here
       fileUpdates = commitToGit.mock.calls[0][1];
     });
 
-    it('sends section clearing updates to commitToGit', () => {
-      // The deployers send section clearing updates
-      // The CommitToGit use case will detect that the file would be empty
-      // and move it to the delete list (tested in commitToGit.usecase.spec.ts)
+    it('sends section clearing updates to commitToGit for recipes', () => {
+      // The deployers send section clearing updates for recipes in CLAUDE.md
+      // Standards are now individual files and will be in the delete list
       const claudeFileUpdate = fileUpdates.find((f) => f.path === 'CLAUDE.md');
 
       expect(claudeFileUpdate?.sections).toEqual(
-        expect.arrayContaining([
-          { key: 'Packmind recipes', content: '' },
-          { key: 'Packmind standards', content: '' },
-        ]),
+        expect.arrayContaining([{ key: 'Packmind recipes', content: '' }]),
       );
     });
   });

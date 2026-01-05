@@ -99,7 +99,7 @@ describe('Package removal from target integration', () => {
       deleteFiles = commitToGit.mock.calls[0][3];
     });
 
-    it('deletes artifacts files for Cursor and Packmind', () => {
+    it('deletes artifacts files for Cursor, Claude and Packmind', () => {
       expect(deleteFiles).toEqual(
         expect.arrayContaining([
           { path: '.packmind/recipes/recipe-1.md' },
@@ -108,18 +108,19 @@ describe('Package removal from target integration', () => {
           { path: '.packmind/standards-index.md' },
           { path: '.cursor/rules/packmind/recipes-index.mdc' },
           { path: '.cursor/rules/packmind/standard-standard-1.mdc' },
+          { path: '.claude/rules/packmind/standard-standard-1.md' },
+          { path: '.claude/rules/packmind/' },
         ]),
       );
     });
 
-    it('clears Claude sections instead of deleting file', () => {
+    it('clears Claude recipes section instead of deleting file', () => {
       expect(fileUpdates).toEqual(
         expect.arrayContaining([
           expect.objectContaining({
             path: 'CLAUDE.md',
             sections: expect.arrayContaining([
               { key: 'Packmind recipes', content: '' },
-              { key: 'Packmind standards', content: '' },
             ]),
           }),
         ]),
@@ -220,11 +221,11 @@ describe('Package removal from target integration', () => {
                 key: 'Packmind recipes',
                 content: expect.stringContaining('Shared Recipe'),
               },
-              {
-                key: 'Packmind standards',
-                content: expect.stringContaining('Standard 1'),
-              },
             ]),
+          }),
+          expect.objectContaining({
+            path: '.claude/rules/packmind/standard-standard-1.md',
+            content: expect.stringContaining('Standard 1'),
           }),
         ]),
       );
