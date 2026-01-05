@@ -13,7 +13,7 @@ import {
 export const installCommand = command({
   name: 'install',
   description:
-    'Install recipes and standards from specified packages and save them to the current directory',
+    'Install commands and standards from specified packages and save them to the current directory',
   aliases: ['pull'],
   args: {
     list: flag({
