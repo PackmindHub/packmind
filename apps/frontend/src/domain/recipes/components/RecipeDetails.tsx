@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import {
   PMPage,
   PMButton,
-  PMMarkdownViewer,
   PMText,
   PMPageSection,
   PMBox,
@@ -82,7 +81,7 @@ export const RecipeDetails = ({ id, orgSlug }: RecipeDetailsProps) => {
       setTimeout(() => {
         setDeleteAlert(null);
         if (orgSlug && spaceSlug) {
-          navigate(routes.space.toRecipes(orgSlug, spaceSlug));
+          navigate(routes.space.toCommands(orgSlug, spaceSlug));
         }
       }, 2000);
     } catch (error) {

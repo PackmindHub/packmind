@@ -12,7 +12,7 @@ import { routes } from '../../src/shared/utils/routes';
 export async function clientLoader({
   params,
 }: {
-  params: { orgSlug: string; spaceSlug: string; recipeId: string };
+  params: { orgSlug: string; spaceSlug: string; commandId: string };
 }) {
   const me = await queryClient.fetchQuery(getMeQueryOptions());
   if (!me.organization) {
@@ -33,7 +33,7 @@ export async function clientLoader({
     ? recipesResponse
     : (recipesResponse?.recipes ?? []);
   const recipeExists = recipesList.some(
-    (candidate) => candidate.id === params.recipeId,
+    (candidate) => candidate.id === params.commandId,
   );
 
   if (!recipeExists) {
@@ -44,7 +44,7 @@ export async function clientLoader({
     getRecipeByIdOptions(
       me.organization.id as OrganizationId,
       space.id,
-      params.recipeId as RecipeId,
+      params.commandId as RecipeId,
     ),
   );
 }
@@ -54,19 +54,19 @@ export const handle = {
     params,
     data,
   }: {
-    params: { orgSlug: string; spaceSlug: string; recipeId: string };
+    params: { orgSlug: string; spaceSlug: string; commandId: string };
     data: Recipe;
   }) => {
-    const recipeId = params.recipeId;
+    const commandId = params.commandId;
     return (
       <NavLink
-        to={routes.space.toRecipe(params.orgSlug, params.spaceSlug, recipeId)}
+        to={routes.space.toCommand(params.orgSlug, params.spaceSlug, commandId)}
       >
         {data.name}
       </NavLink>
     );
   },
 };
-export default function RecipeDetailsRouteModule() {
+export default function CommandDetailsRouteModule() {
   return <Outlet />;
 }

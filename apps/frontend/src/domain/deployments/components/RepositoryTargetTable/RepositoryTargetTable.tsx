@@ -118,7 +118,7 @@ export const RepositoryTargetTable: React.FC<RepositoryTargetTableProps> = ({
             {orgSlug && spaceSlug ? (
               <PMLink asChild>
                 <Link
-                  to={routes.space.toRecipe(orgSlug, spaceSlug, d.recipe.id)}
+                  to={routes.space.toCommand(orgSlug, spaceSlug, d.recipe.id)}
                 >
                   {d.recipe.name}
                 </Link>

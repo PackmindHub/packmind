@@ -4,7 +4,7 @@ import { useAuthContext } from '../../src/domain/accounts/hooks/useAuthContext';
 import { RecipesList } from '../../src/domain/recipes/components/RecipesList';
 import { AutobreadCrumb } from '../../src/shared/components/navigation/AutobreadCrumb';
 
-export default function OrgRecipesIndex() {
+export default function OrgCommandsIndex() {
   const { organization } = useAuthContext();
   if (!organization) {
     return null;
@@ -12,8 +12,8 @@ export default function OrgRecipesIndex() {
 
   return (
     <PMPage
-      title="Recipes"
-      subtitle="Create and manage your recipes"
+      title="Commands"
+      subtitle="Create and manage your commands"
       breadcrumbComponent={<AutobreadCrumb />}
     >
       <PMVStack align="stretch" gap={6}>

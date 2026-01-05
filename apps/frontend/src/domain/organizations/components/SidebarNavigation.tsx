@@ -102,8 +102,8 @@ export const SidebarNavigation: React.FunctionComponent<
           />,
           <SidebarNavigationLink
             key="recipes"
-            url={routes.space.toRecipes(orgSlug, currentSpaceSlug)}
-            label="Recipes"
+            url={routes.space.toCommands(orgSlug, currentSpaceSlug)}
+            label="Commands"
           />,
         ]}
       />

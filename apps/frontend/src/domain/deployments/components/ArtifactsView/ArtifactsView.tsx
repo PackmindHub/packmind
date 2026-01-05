@@ -190,7 +190,7 @@ const buildRecipeBlocks = (
             {orgSlug && spaceSlug ? (
               <PMLink asChild color="text.primary">
                 <Link
-                  to={routes.space.toRecipe(
+                  to={routes.space.toCommand(
                     orgSlug,
                     spaceSlug,
                     recipe.recipe.id,

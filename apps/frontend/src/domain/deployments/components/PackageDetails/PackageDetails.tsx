@@ -318,7 +318,7 @@ const PackageEditFormContent = ({
                       alignItems="center"
                     >
                       <Link
-                        to={routes.space.toRecipe(orgSlug, spaceSlug, id)}
+                        to={routes.space.toCommand(orgSlug, spaceSlug, id)}
                         target="_blank"
                         rel="noopener noreferrer"
                         style={{
@@ -545,7 +545,7 @@ export const PackageDetails = ({
           key: recipeId,
           name: (
             <PMLink asChild>
-              <Link to={routes.space.toRecipe(orgSlug, spaceSlug, recipeId)}>
+              <Link to={routes.space.toCommand(orgSlug, spaceSlug, recipeId)}>
                 {recipe.name}
               </Link>
             </PMLink>

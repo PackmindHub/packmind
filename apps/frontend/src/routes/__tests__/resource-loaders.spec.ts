@@ -2,7 +2,7 @@ import { queryClient } from '../../shared/data/queryClient';
 import { pmToaster } from '@packmind/ui';
 import { clientLoader as standardLoader } from '../../../app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.standards.$standardId';
 import { clientLoader as packageLoader } from '../../../app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.packages.$packageId';
-import { clientLoader as recipeLoader } from '../../../app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.recipes.$recipeId';
+import { clientLoader as recipeLoader } from '../../../app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.commands.$commandId';
 
 jest.mock('../../shared/data/queryClient', () => ({
   queryClient: {
@@ -106,7 +106,7 @@ describe('organization resource loaders', () => {
           params: {
             orgSlug: 'org-slug',
             spaceSlug: 'space-slug',
-            recipeId: 'rec-1',
+            commandId: 'rec-1',
           },
         });
       } catch (response) {

@@ -162,7 +162,7 @@ describe('ArtifactsView', () => {
     // Artifact headings are links
     expect(screen.getByRole('link', { name: 'Recipe Z' })).toHaveAttribute(
       'href',
-      '/org/org-x/space/test-space/recipes/r1',
+      '/org/org-x/space/test-space/commands/r1',
     );
     expect(screen.getByRole('link', { name: 'Standard B' })).toHaveAttribute(
       'href',

@@ -121,7 +121,7 @@ export const RecipesList = ({ orgSlug }: RecipesListProps) => {
             <Link
               to={
                 spaceSlug
-                  ? routes.space.toRecipe(orgSlug, spaceSlug, recipe.id)
+                  ? routes.space.toCommand(orgSlug, spaceSlug, recipe.id)
                   : '#'
               }
             >

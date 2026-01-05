@@ -4,13 +4,13 @@ import { routes } from '../../src/shared/utils/routes';
 export const handle = {
   crumb: ({ params }: { params: { orgSlug: string; spaceSlug: string } }) => {
     return (
-      <NavLink to={routes.space.toRecipes(params.orgSlug, params.spaceSlug)}>
-        Recipes
+      <NavLink to={routes.space.toCommands(params.orgSlug, params.spaceSlug)}>
+        Commands
       </NavLink>
     );
   },
 };
 
-export default function RecipesRouteModule() {
+export default function CommandsRouteModule() {
   return <Outlet />;
 }

@@ -5,10 +5,10 @@ import { RecipeDetails } from '../../src/domain/recipes/components/RecipeDetails
 import { AutobreadCrumb } from '../../src/shared/components/navigation/AutobreadCrumb';
 import { RecipeId } from '@packmind/types';
 
-export default function RecipeDetailsIndexRouteModule() {
-  const { recipeId } = useParams<{
+export default function CommandDetailsIndexRouteModule() {
+  const { commandId } = useParams<{
     orgSlug: string;
-    recipeId: string;
+    commandId: string;
   }>();
   const { organization } = useAuthContext();
 
@@ -16,16 +16,16 @@ export default function RecipeDetailsIndexRouteModule() {
     return null;
   }
 
-  if (!recipeId) {
+  if (!commandId) {
     return (
       <PMPage
-        title="Recipe Not Found"
-        subtitle="No recipe ID provided"
+        title="Command Not Found"
+        subtitle="No command ID provided"
         breadcrumbComponent={<AutobreadCrumb />}
       >
         <PMBox>
           <p>
-            The recipe you're looking for doesn't exist or the ID is invalid.
+            The command you're looking for doesn't exist or the ID is invalid.
           </p>
         </PMBox>
       </PMPage>
@@ -34,7 +34,7 @@ export default function RecipeDetailsIndexRouteModule() {
 
   return (
     <RecipeDetails
-      id={recipeId as RecipeId}
+      id={commandId as RecipeId}
       orgSlug={organization.slug}
       orgName={organization.name}
     />
