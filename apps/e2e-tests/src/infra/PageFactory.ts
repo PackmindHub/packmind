@@ -66,8 +66,8 @@ export class PageFactory implements IPageFactory {
     return this.getPageInstance(GitSettings);
   }
 
-  async getInvitationPage(invitationLink: string): Promise<IInvitationPage> {
-    await this.page.goto(invitationLink);
+  async getInvitationPage(token: string): Promise<IInvitationPage> {
+    await this.page.goto(`/activate?token=${token}`);
     return this.getPageInstance(InvitationPage);
   }
 

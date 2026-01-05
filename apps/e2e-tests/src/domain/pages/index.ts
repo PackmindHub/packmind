@@ -64,7 +64,7 @@ export interface ISettingsPage extends IPackmindAppPage {
 
 export interface IUsersSettingsPage extends IPackmindAppPage {
   inviteUser(email: string): Promise<void>;
-  getInvitationLink(): Promise<string>;
+  getInvitationToken(): Promise<string>;
 }
 
 export interface IGitSettingsPage extends IPackmindAppPage {
@@ -114,7 +114,7 @@ export interface IPageFactory {
   getPackagePage(): Promise<IPackagePage>;
   getSettingsPage(): Promise<ISettingsPage>;
   getGitSettingsPage(): Promise<IGitSettingsPage>;
-  getInvitationPage(invitationLink: string): Promise<IInvitationPage>;
+  getInvitationPage(token: string): Promise<IInvitationPage>;
   getStartTrialPage(): Promise<IStartTrialPage>;
   getStartTrialAgentPage(agent: string): Promise<IStartTrialAgentPage>;
   getActivateAccountPage(): Promise<IActivateAccountPage>;

@@ -4,7 +4,7 @@ import { testWithUserSignedUp } from '../../fixtures/packmindTest';
 import { PageFactory } from '../../infra/PageFactory';
 
 testWithUserSignedUp.describe('Invitation Workflow', () => {
-  testWithUserSignedUp.skip(
+  testWithUserSignedUp(
     'admin invites a new user who successfully activates their account',
     async ({ dashboardPage, page }) => {
       const invitedEmail = `invited-${uuidv4()}@example.com`;
@@ -16,15 +16,15 @@ testWithUserSignedUp.describe('Invitation Workflow', () => {
 
       // Invite a new user
       await usersSettingsPage.inviteUser(invitedEmail);
-      const invitationLink = await usersSettingsPage.getInvitationLink();
+      const invitationToken = await usersSettingsPage.getInvitationToken();
 
       // Sign out
       await usersSettingsPage.signOut();
 
-      // Open the invitation link and activate the account
+      // Open the invitation page and activate the account
       const pageFactory = new PageFactory(page);
       const invitationPage =
-        await pageFactory.getInvitationPage(invitationLink);
+        await pageFactory.getInvitationPage(invitationToken);
       const dashboardPageNewUser =
         await invitationPage.activateAccount(newUserPassword);
 
