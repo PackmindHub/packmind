@@ -1,6 +1,6 @@
 # Configure MCP server
 
-The MCP (Model Context Protocol) server lets you interact with Packmind within your AI Agents sessions, to create new recipes and standards for instances.
+The MCP (Model Context Protocol) server lets you interact with Packmind within your AI Agents sessions, to create new commands and standards for instances.
 
 ## Getting Your MCP Access Token
 
@@ -22,6 +22,6 @@ Once configured, you can use MCP commands directly in your AI agent conversation
 
 - Create standards
 - Add rules to existing standards
-- Create recipes from your workflow
+- Create commands from your workflow
 
-See the [Standards Management](./standards-management.md) and [Recipes Management](./recipes-management.md) sections for specific usage examples.
+See the [Standards Management](./standards-management.md) and [Commands Management](./commands-management.md) sections for specific usage examples.

@@ -26,11 +26,11 @@ Packmind supports multiple Git providers to connect your repositories.
 
 Once you've added your providers, **add repositories** for each provider.
 
-When you add a Git repository, Packmind automatically creates a default target with the root path "/" for that repository. This allows you to immediately start distributing standards and recipes to the entire repository. You can later create additional targets for specific paths within the repository if needed.
+When you add a Git repository, Packmind automatically creates a default target with the root path "/" for that repository. This allows you to immediately start distributing standards and commands to the entire repository. You can later create additional targets for specific paths within the repository if needed.
 
 ## Distribution Targets
 
-Before distributing your standards and recipes, you can configure targets in **Settings** → **Distribution** → **Targets**. A target defines a specific path within your Git repository where standards and recipes will be distributed.
+Before distributing your standards and commands, you can configure targets in **Settings** → **Distribution** → **Targets**. A target defines a specific path within your Git repository where standards and commands will be distributed.
 
 Targets are particularly useful in monorepo environments where you want to apply different standards to different parts of your codebase. For example:
 

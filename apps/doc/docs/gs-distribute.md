@@ -1,12 +1,12 @@
-# Distribute standards and recipes
+# Distribute standards and commands
 
-This guide shows you how to install your **Standards** and **Recipes** locally using the Packmind CLI, making them available to your AI coding assistant.
+This guide shows you how to install your **Standards** and **Commands** locally using the Packmind CLI, making them available to your AI coding assistant.
 
 This approach downloads content directly to your local machine without requiring Git configuration.
 
 ## Create your first package
 
-Before distributing your standards and recipes, organize them into **Packages**. A package is a curated collection of recipes and standards grouped together—for example, "Frontend Guidelines" or "Backend API Standards".
+Before distributing your standards and commands, organize them into **Packages**. A package is a curated collection of commands and standards grouped together—for example, "Frontend Guidelines" or "Backend API Standards".
 
 Packages make it easy to distribute related guidelines as a single unit.
 
@@ -15,7 +15,7 @@ Packages make it easy to distribute related guidelines as a single unit.
 1. Navigate to **Packages** in the Packmind UI
 2. Click **Create Package**
 3. Provide a name and description
-4. Select recipes and standards to include
+4. Select commands and standards to include
 5. Save the package
 
 You can organize packages by technology, domain, team, or architectural layer—whatever matches how your team works.
@@ -50,7 +50,7 @@ packmind-cli install --show <package-slug>
 packmind-cli install <package-slug> [additional-package-slugs...]
 ```
 
-This downloads all recipes and standards from the specified packages and creates the appropriate files for your AI coding assistant.
+This downloads all commands and standards from the specified packages and creates the appropriate files for your AI coding assistant.
 
 **Example - First installation:**
 
@@ -72,7 +72,7 @@ For detailed CLI usage, see the [CLI documentation](./cli.md).
 
 ## Understanding packmind.json
 
-The `packmind.json` file is automatically created in your directory when you first run `packmind-cli install` with package names. This file tracks which packages are installed locally, making it easy to keep your standards and recipes up to date.
+The `packmind.json` file is automatically created in your directory when you first run `packmind-cli install` with package names. This file tracks which packages are installed locally, making it easy to keep your standards and commands up to date.
 
 ### File Structure
 
@@ -106,7 +106,7 @@ When you run `packmind-cli install` (without package names), the CLI:
 
 1. Reads the `packmind.json` file
 2. Installs all packages listed in the file
-3. Updates your local standards and recipes to the latest versions
+3. Updates your local standards and commands to the latest versions
 
 **Adding More Packages:**
 
@@ -176,13 +176,13 @@ Each `packmind.json` file operates independently. When you run `packmind-cli ins
 
 ## Alternative: Distribute to Git repositories
 
-Instead of pulling locally, you can distribute packages directly to your Git repositories. This pushes standards and recipes as files that are committed to your codebase.
+Instead of pulling locally, you can distribute packages directly to your Git repositories. This pushes standards and commands as files that are committed to your codebase.
 
 To learn about distributing to Git repositories, see the [Distribution documentation](./distribution.md).
 
 ## Use your artifacts
 
-When you prompt your coding assistant, **Standards** and **Recipes** are automatically included in its context.
-For complex tasks, the context can grow large, and the generated code may stop following your standards and recipes.
+When you prompt your coding assistant, **Standards** and **Commands** are automatically included in its context.
+For complex tasks, the context can grow large, and the generated code may stop following your standards and commands.
 
 If this happens, re-add the `.packmind` directory to the agent's context and try again.

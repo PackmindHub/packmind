@@ -26,7 +26,7 @@ Get started on the [Helm Chart GitHub repository](https://github.com/PackmindHub
 
 ## Connect your LLM (Optional but important)
 
-Connecting a LLM offers a better experience when distributing your standards and recipes in your Git Repositories, while it's _not mandatory_ and you can use Packmind without this.
+Connecting a LLM offers a better experience when distributing your standards and commands in your Git Repositories, while it's _not mandatory_ and you can use Packmind without this.
 
 _OpenAI_ is the only currently supported AI Provider.
 
@@ -143,7 +143,7 @@ Authentication & Security:
 
 API Integration:
 
-- `OPENAI_API_KEY` - API key for accessing OpenAI services for customizing standards and recipes for AI Agents.
+- `OPENAI_API_KEY` - API key for accessing OpenAI services for customizing standards and commands for AI Agents.
 
 Rate Limiting:
 

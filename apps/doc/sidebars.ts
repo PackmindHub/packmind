@@ -24,7 +24,7 @@ const sidebars: SidebarsConfig = {
         'gs-install-cloud',
         'gs-install-self-hosted',
         'gs-create-standard',
-        'gs-create-recipe',
+        'gs-create-command',
         'gs-distribute',
       ],
       collapsed: false,
@@ -34,7 +34,7 @@ const sidebars: SidebarsConfig = {
       label: 'Concepts',
       items: [
         'standards-management',
-        'recipes-management',
+        'commands-management',
         'packages-management',
       ],
       collapsed: false,
