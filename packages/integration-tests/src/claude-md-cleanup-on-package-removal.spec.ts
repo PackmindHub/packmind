@@ -14,16 +14,20 @@ import { makeIntegrationTestDataSource } from './helpers/makeIntegrationTestData
 import { TestApp } from './helpers/TestApp';
 
 /**
- * Integration tests for CLAUDE.md file cleanup during package removal.
+ * Integration tests for Claude Code cleanup during package removal.
  *
  * These tests verify the behavior when removing packages that deployed content
- * to CLAUDE.md files. The expected behavior is:
+ * to Claude Code. The expected behavior is:
  *
- * 1. When a CLAUDE.md file has pre-existing user content (outside Packmind sections),
- *    the file should be preserved with the original user content after removal.
+ * 1. Individual recipe command files at .claude/commands/packmind/{slug}.md are deleted.
  *
- * 2. When a CLAUDE.md file was created entirely by Packmind (only sections, no user content),
- *    the file should be deleted after removal instead of being left empty.
+ * 2. The .claude/commands/packmind/ folder is deleted when all recipes are removed.
+ *
+ * 3. Individual standard rule files at .claude/rules/packmind/standard-{slug}.md are deleted.
+ *
+ * 4. The .claude/rules/packmind/ folder is deleted when all artifacts are removed.
+ *
+ * 5. CLAUDE.md is NOT modified for recipe removal - only individual command files are deleted.
  */
 describe('CLAUDE.md cleanup on package removal', () => {
   let testApp: TestApp;
@@ -91,48 +95,14 @@ describe('CLAUDE.md cleanup on package removal', () => {
     });
   }
 
-  describe('when CLAUDE.md has pre-existing user content', () => {
-    const preExistingUserContent = `# My Project Instructions
-
-This is my custom content that I added to CLAUDE.md manually.
-It should be preserved after Packmind content is removed.
-
-## My Rules
-- Rule 1: Always use TypeScript
-- Rule 2: Follow the style guide
-`;
-
+  describe('when removing a package with recipes and standards', () => {
     let packageToRemove: Package;
     let fileUpdates: FileModification[];
     let deleteFiles: { path: string }[];
 
     beforeEach(async () => {
-      // Simulate pre-existing CLAUDE.md with user content AND Packmind sections
-      const existingClaudeMdWithSections = `${preExistingUserContent}
-<!-- start: Packmind standards -->
-# Packmind Standards
-Some standard content here
-<!-- end: Packmind standards -->
-
-<!-- start: Packmind recipes -->
-# Packmind Recipes
-Some recipe content here
-<!-- end: Packmind recipes -->
-`;
-
-      getFileFromRepo.mockImplementation(
-        async (_gitRepoId: string, path: string) => {
-          if (path === 'CLAUDE.md') {
-            return {
-              content: Buffer.from(existingClaudeMdWithSections).toString(
-                'base64',
-              ),
-              sha: 'existing-file-sha',
-            };
-          }
-          return null;
-        },
-      );
+      // No pre-existing files
+      getFileFromRepo.mockResolvedValue(null);
 
       const response = await testApp.deploymentsHexa
         .getAdapter()
@@ -155,12 +125,26 @@ Some recipe content here
       deleteFiles = commitToGit.mock.calls[0][3];
     });
 
-    it('clears Packmind recipes section in CLAUDE.md', () => {
-      const claudeFile = fileUpdates.find((f) => f.path === 'CLAUDE.md');
-
-      expect(claudeFile?.sections).toEqual(
-        expect.arrayContaining([{ key: 'Packmind recipes', content: '' }]),
+    it('deletes recipe command file', () => {
+      expect(deleteFiles).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            path: '.claude/commands/packmind/test-recipe.md',
+          }),
+        ]),
       );
+    });
+
+    describe('when all recipes removed', () => {
+      it('deletes commands folder', () => {
+        expect(deleteFiles).toEqual(
+          expect.arrayContaining([
+            expect.objectContaining({
+              path: '.claude/commands/packmind/',
+            }),
+          ]),
+        );
+      });
     });
 
     it('deletes individual standard files', () => {
@@ -173,19 +157,30 @@ Some recipe content here
       );
     });
 
-    it('excludes CLAUDE.md from the delete list', () => {
-      expect(deleteFiles).not.toContain(
-        expect.objectContaining({ path: 'CLAUDE.md' }),
-      );
+    describe('when all artifacts removed', () => {
+      it('deletes rules folder', () => {
+        expect(deleteFiles).toEqual(
+          expect.arrayContaining([
+            expect.objectContaining({
+              path: '.claude/rules/packmind/',
+            }),
+          ]),
+        );
+      });
+    });
+
+    it('does not update CLAUDE.md', () => {
+      const claudeFile = fileUpdates.find((f) => f.path === 'CLAUDE.md');
+      expect(claudeFile).toBeUndefined();
     });
   });
 
-  describe('when CLAUDE.md does not exist before deployment', () => {
+  describe('when removing only recipes (no standards)', () => {
     let packageToRemove: Package;
-    let fileUpdates: FileModification[];
+    let deleteFiles: { path: string }[];
 
     beforeEach(async () => {
-      // No pre-existing CLAUDE.md file
+      // No pre-existing files
       getFileFromRepo.mockResolvedValue(null);
 
       const response = await testApp.deploymentsHexa
@@ -194,10 +189,10 @@ Some recipe content here
           userId: dataFactory.user.id,
           organizationId: dataFactory.organization.id,
           spaceId: dataFactory.space.id,
-          name: 'Package without pre-existing Claude.md',
+          name: 'Package with only recipe',
           description: 'Package that will be removed',
           recipeIds: [recipe.id],
-          standardIds: [standard.id],
+          standardIds: [],
         });
       packageToRemove = response.package;
 
@@ -205,17 +200,41 @@ Some recipe content here
 
       await removePackage(packageToRemove);
 
-      fileUpdates = commitToGit.mock.calls[0][1];
+      deleteFiles = commitToGit.mock.calls[0][3];
     });
 
-    it('sends section clearing updates to commitToGit for recipes', () => {
-      // The deployers send section clearing updates for recipes in CLAUDE.md
-      // Standards are now individual files and will be in the delete list
-      const claudeFileUpdate = fileUpdates.find((f) => f.path === 'CLAUDE.md');
-
-      expect(claudeFileUpdate?.sections).toEqual(
-        expect.arrayContaining([{ key: 'Packmind recipes', content: '' }]),
+    it('deletes recipe command file', () => {
+      expect(deleteFiles).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            path: '.claude/commands/packmind/test-recipe.md',
+          }),
+        ]),
       );
+    });
+
+    describe('when all recipes removed', () => {
+      it('deletes commands folder', () => {
+        expect(deleteFiles).toEqual(
+          expect.arrayContaining([
+            expect.objectContaining({
+              path: '.claude/commands/packmind/',
+            }),
+          ]),
+        );
+      });
+    });
+
+    describe('when all artifacts removed', () => {
+      it('deletes rules folder', () => {
+        expect(deleteFiles).toEqual(
+          expect.arrayContaining([
+            expect.objectContaining({
+              path: '.claude/rules/packmind/',
+            }),
+          ]),
+        );
+      });
     });
   });
 });

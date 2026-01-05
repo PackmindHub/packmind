@@ -10,6 +10,8 @@ import {
   createGitProviderId,
   createGitRepoId,
   createTargetId,
+  FileModification,
+  FileUpdates,
   GitRepo,
   Organization,
   Recipe,
@@ -227,11 +229,8 @@ class MyService {
     });
 
     describe('when deploying standard to jetbrains path for Claude agent', () => {
-      let standardUpdates: {
-        createOrUpdate: { path: string; content: string }[];
-        delete: string[];
-      };
-      let deployedFile: { path: string; content: string };
+      let standardUpdates: FileUpdates;
+      let deployedFile: FileModification;
 
       beforeEach(async () => {
         const standardVersions: StandardVersion[] = [
@@ -617,15 +616,17 @@ class MyService {
 
       expect(recipeUpdates.createOrUpdate).toHaveLength(1);
 
-      // Verify Claude file is deployed to jetbrains/CLAUDE.md
+      // Verify Claude command file is deployed to jetbrains/.claude/commands/packmind/{slug}.md
       const deployedFile = recipeUpdates.createOrUpdate[0];
-      expect(deployedFile.path).toBe('jetbrains/CLAUDE.md');
-      // Claude deployer creates a general recipe template, not specific recipe content
-      expect(deployedFile.sections).toBeDefined();
-      expect(deployedFile.sections![0].content).toContain('Packmind Recipes');
-      expect(deployedFile.sections![0].content).toContain(
-        recipeVersions[0].name,
+      expect(deployedFile.path).toBe(
+        `jetbrains/.claude/commands/packmind/${recipe.slug}.md`,
       );
+      // Claude deployer creates individual command files with frontmatter
+      expect(deployedFile.content).toContain('---');
+      expect(deployedFile.content).toContain(
+        'description: JetBrains services best practices',
+      );
+      expect(deployedFile.content).toContain(recipe.content);
     });
 
     it('deploys recipe to jetbrains path for Cursor agent', async () => {

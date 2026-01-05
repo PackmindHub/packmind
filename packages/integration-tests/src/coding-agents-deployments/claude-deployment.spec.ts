@@ -153,49 +153,81 @@ describe('Claude Deployment Integration', () => {
       jest.restoreAllMocks();
     });
 
-    it('creates CLAUDE.md with recipes instructions only', async () => {
-      const recipeVersions: RecipeVersion[] = [
-        {
-          id: 'recipe-version-1' as RecipeVersionId,
-          recipeId: recipe.id,
-          name: recipe.name,
-          slug: recipe.slug,
-          content: recipe.content,
-          version: recipe.version,
-          summary: 'Test recipe for deployment',
-          userId: user.id,
-        },
-      ];
+    describe('when deploying a single recipe', () => {
+      let fileUpdates: {
+        createOrUpdate: FileModification[];
+        delete: { path: string }[];
+      };
+      let recipeFile: FileModification | undefined;
 
-      const fileUpdates = await deployerService.aggregateRecipeDeployments(
-        recipeVersions,
-        gitRepo,
-        [defaultTarget],
-        ['claude'],
-      );
+      beforeEach(async () => {
+        const recipeVersions: RecipeVersion[] = [
+          {
+            id: 'recipe-version-1' as RecipeVersionId,
+            recipeId: recipe.id,
+            name: recipe.name,
+            slug: recipe.slug,
+            content: recipe.content,
+            version: recipe.version,
+            summary: 'Test recipe for deployment',
+            userId: user.id,
+          },
+        ];
 
-      expect(fileUpdates.createOrUpdate).toHaveLength(1);
-      expect(fileUpdates.delete).toHaveLength(0);
+        fileUpdates = await deployerService.aggregateRecipeDeployments(
+          recipeVersions,
+          gitRepo,
+          [defaultTarget],
+          ['claude'],
+        );
 
-      const claudeFile = fileUpdates.createOrUpdate.find(
-        (file) => file.path === 'CLAUDE.md',
-      );
+        recipeFile = fileUpdates.createOrUpdate.find((file) =>
+          file.path.startsWith('.claude/commands/packmind/'),
+        );
+      });
 
-      expect(claudeFile).toBeDefined();
-      if (claudeFile) {
-        const sectionContent = claudeFile.sections![0].content;
-        expect(sectionContent).toContain('# Packmind Recipes');
-        expect(sectionContent).toContain('🚨 **MANDATORY STEP** 🚨');
-        expect(sectionContent).toContain('ALWAYS READ');
-        expect(sectionContent).toContain(recipeVersions[0].name);
+      it('creates exactly one file to update', () => {
+        expect(fileUpdates.createOrUpdate).toHaveLength(1);
+      });
 
-        // Should NOT contain standards content yet
-        expect(sectionContent).not.toContain('## Packmind Standards');
-      }
+      it('has no files to delete', () => {
+        expect(fileUpdates.delete).toHaveLength(0);
+      });
+
+      it('creates recipe file in .claude/commands/packmind/', () => {
+        expect(recipeFile).toBeDefined();
+      });
+
+      it('uses correct path for recipe file', () => {
+        expect(recipeFile?.path).toBe(
+          `.claude/commands/packmind/${recipe.slug}.md`,
+        );
+      });
+
+      it('includes frontmatter delimiter', () => {
+        expect(recipeFile?.content).toContain('---');
+      });
+
+      it('includes recipe description in frontmatter', () => {
+        expect(recipeFile?.content).toContain(
+          'description: Test recipe for deployment',
+        );
+      });
+
+      it('includes recipe content', () => {
+        expect(recipeFile?.content).toContain(recipe.content);
+      });
+
+      it('excludes standards content', () => {
+        expect(recipeFile?.content).not.toContain('## Packmind Standards');
+      });
     });
 
     describe('when deploying standards', () => {
-      let fileUpdates: { createOrUpdate: FileModification[]; delete: string[] };
+      let fileUpdates: {
+        createOrUpdate: FileModification[];
+        delete: { path: string }[];
+      };
       let standardFile: FileModification | undefined;
 
       beforeEach(async () => {
@@ -349,8 +381,10 @@ describe('Claude Deployment Integration', () => {
         expect(pathMap.size).toBe(2);
       });
 
-      it('creates CLAUDE.md file', () => {
-        expect(pathMap.has('CLAUDE.md')).toBe(true);
+      it('creates recipe command file in .claude/commands/packmind/', () => {
+        expect(pathMap.has(`.claude/commands/packmind/${recipe.slug}.md`)).toBe(
+          true,
+        );
       });
 
       it('creates standard file in .claude/rules/packmind/', () => {
@@ -359,11 +393,24 @@ describe('Claude Deployment Integration', () => {
         ).toBe(true);
       });
 
-      it('includes recipes section in CLAUDE.md', () => {
-        const claudeFile = pathMap.get('CLAUDE.md');
-        expect(claudeFile?.sections?.[0].content).toContain(
-          '# Packmind Recipes',
-        );
+      describe('recipe file content', () => {
+        let recipeFile: FileModification | undefined;
+
+        beforeEach(() => {
+          recipeFile = pathMap.get(
+            `.claude/commands/packmind/${recipe.slug}.md`,
+          );
+        });
+
+        it('includes frontmatter delimiter', () => {
+          expect(recipeFile?.content).toContain('---');
+        });
+
+        it('includes recipe description in frontmatter', () => {
+          expect(recipeFile?.content).toContain(
+            'description: Test recipe for deployment',
+          );
+        });
       });
 
       it('includes standard header in standard file', () => {
@@ -398,46 +445,79 @@ describe('Claude Deployment Integration', () => {
       jest.restoreAllMocks();
     });
 
-    it('generates recipe section content', async () => {
-      const recipeVersions: RecipeVersion[] = [
-        {
-          id: 'recipe-version-1' as RecipeVersionId,
-          recipeId: recipe.id,
-          name: recipe.name,
-          slug: recipe.slug,
-          content: recipe.content,
-          version: recipe.version,
-          summary: 'Test recipe for deployment',
-          userId: user.id,
-        },
-      ];
+    describe('when generating recipe command file', () => {
+      let fileUpdates: {
+        createOrUpdate: FileModification[];
+        delete: { path: string }[];
+      };
+      let recipeFile: FileModification;
 
-      const fileUpdates = await deployerService.aggregateRecipeDeployments(
-        recipeVersions,
-        gitRepo,
-        [defaultTarget],
-        ['claude'],
-      );
+      beforeEach(async () => {
+        const recipeVersions: RecipeVersion[] = [
+          {
+            id: 'recipe-version-1' as RecipeVersionId,
+            recipeId: recipe.id,
+            name: recipe.name,
+            slug: recipe.slug,
+            content: recipe.content,
+            version: recipe.version,
+            summary: 'Test recipe for deployment',
+            userId: user.id,
+          },
+        ];
 
-      expect(fileUpdates.createOrUpdate).toHaveLength(1);
-      expect(fileUpdates.delete).toHaveLength(0);
+        fileUpdates = await deployerService.aggregateRecipeDeployments(
+          recipeVersions,
+          gitRepo,
+          [defaultTarget],
+          ['claude'],
+        );
 
-      const claudeFile = fileUpdates.createOrUpdate[0];
-      expect(claudeFile.path).toBe('CLAUDE.md');
+        recipeFile = fileUpdates.createOrUpdate[0];
+      });
 
-      const sectionContent = claudeFile.sections![0].content;
+      it('creates exactly one file to update', () => {
+        expect(fileUpdates.createOrUpdate).toHaveLength(1);
+      });
 
-      // Should generate recipe section with Packmind content only
-      expect(sectionContent).toContain('# Packmind Recipes');
-      expect(sectionContent).toContain('🚨 **MANDATORY STEP** 🚨');
+      it('has no files to delete', () => {
+        expect(fileUpdates.delete).toHaveLength(0);
+      });
 
-      // Should NOT contain user content (that's preserved by merge layer)
-      expect(sectionContent).not.toContain('# Some User Instructions');
-      expect(sectionContent).not.toContain('# Packmind Standards');
+      it('uses correct path for recipe file', () => {
+        expect(recipeFile.path).toBe(
+          `.claude/commands/packmind/${recipe.slug}.md`,
+        );
+      });
+
+      it('includes frontmatter delimiter', () => {
+        expect(recipeFile.content).toContain('---');
+      });
+
+      it('includes recipe description in frontmatter', () => {
+        expect(recipeFile.content).toContain(
+          'description: Test recipe for deployment',
+        );
+      });
+
+      it('includes recipe content', () => {
+        expect(recipeFile.content).toContain(recipe.content);
+      });
+
+      it('excludes user content', () => {
+        expect(recipeFile.content).not.toContain('# Some User Instructions');
+      });
+
+      it('excludes standards content', () => {
+        expect(recipeFile.content).not.toContain('# Packmind Standards');
+      });
     });
 
     describe('when generating individual standard file', () => {
-      let fileUpdates: { createOrUpdate: FileModification[]; delete: string[] };
+      let fileUpdates: {
+        createOrUpdate: FileModification[];
+        delete: { path: string }[];
+      };
       let standardFile: FileModification;
 
       beforeEach(async () => {
@@ -580,10 +660,12 @@ describe('Claude Deployment Integration', () => {
       expect(fileUpdates.createOrUpdate).toHaveLength(1);
       expect(fileUpdates.delete).toHaveLength(0);
 
-      const claudeFile = fileUpdates.createOrUpdate[0];
-      const sectionContent = claudeFile.sections![0].content;
-      expect(sectionContent).toContain('# Packmind Recipes');
-      expect(sectionContent).toContain('🚨 **MANDATORY STEP** 🚨');
+      const recipeFile = fileUpdates.createOrUpdate[0];
+      expect(recipeFile.path).toBe(
+        `.claude/commands/packmind/${recipe.slug}.md`,
+      );
+      expect(recipeFile.content).toContain('---');
+      expect(recipeFile.content).toContain('description: Test recipe');
     });
   });
 });
