@@ -9,15 +9,14 @@ import {
   Target,
 } from '@packmind/types';
 import { ICodingAgentDeployer } from '../../../domain/repository/ICodingAgentDeployer';
-import { GenericRecipeSectionWriter } from '../genericSectionWriter/GenericRecipeSectionWriter';
 import { GenericStandardSectionWriter } from '../genericSectionWriter/GenericStandardSectionWriter';
 import { getTargetPrefixedPath } from '../utils/FileUtils';
 
 const origin = 'ClaudeDeployer';
 
 export class ClaudeDeployer implements ICodingAgentDeployer {
-  private static readonly RECIPES_FILE_PATH = 'CLAUDE.md';
   private static readonly STANDARDS_FOLDER_PATH = '.claude/rules/packmind/';
+  private static readonly COMMANDS_FOLDER_PATH = '.claude/commands/packmind/';
   private readonly logger: PackmindLogger;
 
   constructor(
@@ -25,25 +24,6 @@ export class ClaudeDeployer implements ICodingAgentDeployer {
     private readonly gitPort?: IGitPort,
   ) {
     this.logger = new PackmindLogger(origin);
-  }
-
-  private formatMarkdownLink(
-    item: {
-      name: string;
-      summary?: string | null;
-      description?: string | null;
-    },
-    filePath: string,
-  ): string {
-    const link = `* [${item.name}](${filePath})`;
-    const summaryOrDescription =
-      GenericStandardSectionWriter.extractSummaryOrDescription(item);
-
-    if (!summaryOrDescription) {
-      return link;
-    }
-
-    return `${link}: ${summaryOrDescription}`;
   }
 
   async deployRecipes(
@@ -58,41 +38,47 @@ export class ClaudeDeployer implements ICodingAgentDeployer {
       targetPath: target.path,
     });
 
-    const recipesListContent = recipeVersions
-      .map((recipeVersion) =>
-        this.formatMarkdownLink(
-          recipeVersion,
-          `.packmind/recipes/${recipeVersion.slug}.md`,
-        ),
-      )
-      .join('\n');
-
-    const sectionContent = GenericRecipeSectionWriter.generateRecipesSection({
-      recipesSection: recipesListContent,
-    });
-
     const fileUpdates: FileUpdates = {
       createOrUpdate: [],
       delete: [],
     };
 
-    if (sectionContent) {
-      const targetPrefixedPath = getTargetPrefixedPath(
-        ClaudeDeployer.RECIPES_FILE_PATH,
-        target,
-      );
+    // Generate individual Claude command files for each recipe
+    for (const recipeVersion of recipeVersions) {
+      const configFile = this.generateClaudeConfigForRecipe(recipeVersion);
+      const targetPrefixedPath = getTargetPrefixedPath(configFile.path, target);
       fileUpdates.createOrUpdate.push({
         path: targetPrefixedPath,
-        sections: [
-          {
-            key: 'Packmind recipes',
-            content: sectionContent,
-          },
-        ],
+        content: configFile.content,
       });
     }
 
     return fileUpdates;
+  }
+
+  /**
+   * Generate Claude command file for a specific recipe
+   */
+  private generateClaudeConfigForRecipe(recipeVersion: RecipeVersion): {
+    path: string;
+    content: string;
+  } {
+    const description = recipeVersion.summary?.trim() || recipeVersion.name;
+
+    const frontmatter = `---
+description: ${description}
+---`;
+
+    const content = `${frontmatter}
+
+${recipeVersion.content}`;
+
+    const path = `${ClaudeDeployer.COMMANDS_FOLDER_PATH}${recipeVersion.slug}.md`;
+
+    return {
+      path,
+      content,
+    };
   }
 
   async deployStandards(
@@ -138,23 +124,14 @@ export class ClaudeDeployer implements ICodingAgentDeployer {
       delete: [],
     };
 
-    const updatedContent = GenericRecipeSectionWriter.replace({
-      currentContent: '',
-      commentMarker: 'Packmind recipes',
-      recipesSection: recipeVersions
-        .map((recipeVersion) =>
-          this.formatMarkdownLink(
-            recipeVersion,
-            `.packmind/recipes/${recipeVersion.slug}.md`,
-          ),
-        )
-        .join('\n'),
-    });
-
-    fileUpdates.createOrUpdate.push({
-      path: ClaudeDeployer.RECIPES_FILE_PATH,
-      content: updatedContent,
-    });
+    // Generate individual Claude command files for each recipe (without target prefix)
+    for (const recipeVersion of recipeVersions) {
+      const configFile = this.generateClaudeConfigForRecipe(recipeVersion);
+      fileUpdates.createOrUpdate.push({
+        path: configFile.path,
+        content: configFile.content,
+      });
+    }
 
     return fileUpdates;
   }
@@ -201,30 +178,12 @@ export class ClaudeDeployer implements ICodingAgentDeployer {
       delete: [],
     };
 
-    // Generate recipes section in CLAUDE.md only if there are recipes
-    const recipesListContent = recipeVersions
-      .map((recipeVersion) =>
-        this.formatMarkdownLink(
-          recipeVersion,
-          `.packmind/recipes/${recipeVersion.slug}.md`,
-        ),
-      )
-      .join('\n');
-
-    const recipesSectionContent =
-      GenericRecipeSectionWriter.generateRecipesSection({
-        recipesSection: recipesListContent,
-      });
-
-    if (recipesSectionContent) {
+    // Generate individual Claude command files for each recipe
+    for (const recipeVersion of recipeVersions) {
+      const configFile = this.generateClaudeConfigForRecipe(recipeVersion);
       fileUpdates.createOrUpdate.push({
-        path: ClaudeDeployer.RECIPES_FILE_PATH,
-        sections: [
-          {
-            key: 'Packmind recipes',
-            content: recipesSectionContent,
-          },
-        ],
+        path: configFile.path,
+        content: configFile.content,
       });
     }
 
@@ -263,20 +222,18 @@ export class ClaudeDeployer implements ICodingAgentDeployer {
       delete: [],
     };
 
-    const wouldClearRecipes =
-      removed.recipeVersions.length > 0 &&
-      installed.recipeVersions.length === 0;
-
-    const sections: { key: string; content: string }[] = [];
-
-    if (wouldClearRecipes) {
-      sections.push({ key: 'Packmind recipes', content: '' });
+    // Delete individual Claude command files for removed recipes
+    for (const recipeVersion of removed.recipeVersions) {
+      fileUpdates.delete.push({
+        path: `${ClaudeDeployer.COMMANDS_FOLDER_PATH}${recipeVersion.slug}.md`,
+      });
     }
 
-    if (sections.length > 0) {
-      fileUpdates.createOrUpdate.push({
-        path: ClaudeDeployer.RECIPES_FILE_PATH,
-        sections,
+    // Delete commands folder if all recipes are removed and something was actually removed
+    const hasRemovedRecipes = removed.recipeVersions.length > 0;
+    if (hasRemovedRecipes && installed.recipeVersions.length === 0) {
+      fileUpdates.delete.push({
+        path: ClaudeDeployer.COMMANDS_FOLDER_PATH,
       });
     }
 
@@ -287,7 +244,7 @@ export class ClaudeDeployer implements ICodingAgentDeployer {
       });
     }
 
-    // Delete packmind folder if all artifacts are removed and something was actually removed
+    // Delete rules folder if all artifacts are removed and something was actually removed
     const hasRemovedArtifacts =
       removed.recipeVersions.length > 0 || removed.standardVersions.length > 0;
     if (

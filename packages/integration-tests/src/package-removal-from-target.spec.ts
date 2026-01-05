@@ -108,23 +108,24 @@ describe('Package removal from target integration', () => {
           { path: '.packmind/standards-index.md' },
           { path: '.cursor/rules/packmind/recipes-index.mdc' },
           { path: '.cursor/rules/packmind/standard-standard-1.mdc' },
+          { path: '.claude/commands/packmind/recipe-1.md' },
+          { path: '.claude/commands/packmind/' },
           { path: '.claude/rules/packmind/standard-standard-1.md' },
           { path: '.claude/rules/packmind/' },
         ]),
       );
     });
 
-    it('clears Claude recipes section instead of deleting file', () => {
-      expect(fileUpdates).toEqual(
-        expect.arrayContaining([
-          expect.objectContaining({
-            path: 'CLAUDE.md',
-            sections: expect.arrayContaining([
-              { key: 'Packmind recipes', content: '' },
-            ]),
-          }),
-        ]),
-      );
+    describe('when deleting recipe command files', () => {
+      it('does not update CLAUDE.md', () => {
+        expect(fileUpdates).not.toEqual(
+          expect.arrayContaining([
+            expect.objectContaining({
+              path: 'CLAUDE.md',
+            }),
+          ]),
+        );
+      });
     });
 
     it('updates packmind.json', () => {
@@ -207,25 +208,46 @@ describe('Package removal from target integration', () => {
       );
     });
 
-    it('updates artifacts for Claude and packmind.json', () => {
+    it('deletes exclusive recipe command file for Claude', () => {
+      expect(deleteFiles).toEqual(
+        expect.arrayContaining([
+          { path: '.claude/commands/packmind/recipe-1.md' },
+        ]),
+      );
+    });
+
+    it('does not delete shared recipe command file for Claude', () => {
+      expect(deleteFiles).not.toEqual(
+        expect.arrayContaining([
+          { path: '.claude/commands/packmind/shared-recipe.md' },
+        ]),
+      );
+    });
+
+    describe('when recipes remain', () => {
+      it('does not delete commands folder', () => {
+        expect(deleteFiles).not.toEqual(
+          expect.arrayContaining([{ path: '.claude/commands/packmind/' }]),
+        );
+      });
+    });
+
+    it('does not update CLAUDE.md', () => {
+      expect(fileUpdates).not.toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            path: 'CLAUDE.md',
+          }),
+        ]),
+      );
+    });
+
+    it('updates packmind.json', () => {
       expect(fileUpdates).toEqual(
         expect.arrayContaining([
           expect.objectContaining({
             path: 'packmind.json',
             content: expect.not.stringContaining(packageToRemove.slug),
-          }),
-          expect.objectContaining({
-            path: 'CLAUDE.md',
-            sections: expect.arrayContaining([
-              {
-                key: 'Packmind recipes',
-                content: expect.stringContaining('Shared Recipe'),
-              },
-            ]),
-          }),
-          expect.objectContaining({
-            path: '.claude/rules/packmind/standard-standard-1.md',
-            content: expect.stringContaining('Standard 1'),
           }),
         ]),
       );
