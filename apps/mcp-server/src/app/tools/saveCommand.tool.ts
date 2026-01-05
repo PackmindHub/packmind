@@ -17,7 +17,7 @@ import { registerMcpTool, ToolDependencies } from './types';
 import { getGlobalSpace } from './utils';
 
 // Define step schema separately to avoid deep type instantiation
-const recipeStepSchema = z.object({
+const commandStepSchema = z.object({
   name: z
     .string()
     .min(1)
@@ -36,7 +36,7 @@ const recipeStepSchema = z.object({
     ),
 });
 
-type SaveRecipeInput = {
+type SaveCommandInput = {
   name: string;
   summary: string;
   whenToUse: string[];
@@ -45,7 +45,7 @@ type SaveRecipeInput = {
   packageSlugs?: string[];
 };
 
-export function registerSaveRecipeTool(
+export function registerSaveCommandTool(
   dependencies: ToolDependencies,
   mcpServer: McpServer,
 ) {
@@ -53,33 +53,33 @@ export function registerSaveRecipeTool(
 
   registerMcpTool(
     mcpServer,
-    `save_recipe`,
+    `save_command`,
     {
-      title: 'Save Recipe',
+      title: 'Save Command',
       description:
-        'Create a new reusable recipe as a structured Packmind recipe. Do not call this tool directly—you need to first use the tool packmind_create_recipe.',
+        'Create a new reusable command as a structured Packmind command. Do not call this tool directly—you need to first use the tool packmind_create_command.',
       inputSchema: {
-        name: z.string().min(1).describe('The name of the recipe to create'),
+        name: z.string().min(1).describe('The name of the command to create'),
         summary: z
           .string()
           .min(1)
           .describe(
-            'A concise sentence describing the intent of this recipe (what it does) and its value (why it is useful) and when it is relevant to use it',
+            'A concise sentence describing the intent of this command (what it does) and its value (why it is useful) and when it is relevant to use it',
           ),
         whenToUse: z
           .array(z.string())
           .describe(
-            'Array of scenarios when this recipe is applicable. Provide specific, actionable scenarios.',
+            'Array of scenarios when this command is applicable. Provide specific, actionable scenarios.',
           ),
         contextValidationCheckpoints: z
           .array(z.string())
           .describe(
-            'Array of checkpoints to ensure the context is clarified enough before implementing the recipe steps. Each checkpoint should be a question or validation point.',
+            'Array of checkpoints to ensure the context is clarified enough before implementing the command steps. Each checkpoint should be a question or validation point.',
           ),
         steps: z
-          .array(recipeStepSchema)
+          .array(commandStepSchema)
           .describe(
-            'Array of atomic steps that make up the recipe implementation. Each step should be clear and actionable.',
+            'Array of atomic steps that make up the command implementation. Each step should be clear and actionable.',
           ),
         packageSlugs: z
           .array(z.string())
@@ -89,7 +89,7 @@ export function registerSaveRecipeTool(
           ),
       },
     },
-    async (input: SaveRecipeInput) => {
+    async (input: SaveCommandInput) => {
       const {
         name,
         summary,
@@ -99,7 +99,7 @@ export function registerSaveRecipeTool(
         packageSlugs,
       } = input;
       if (!userContext) {
-        throw new Error('User context is required to create recipes');
+        throw new Error('User context is required to create commands');
       }
 
       const recipesHexa = fastify.recipesHexa();
@@ -108,7 +108,7 @@ export function registerSaveRecipeTool(
         fastify,
         createOrganizationId(userContext.organizationId),
       );
-      logger.info('Using global space for recipe creation', {
+      logger.info('Using global space for command creation', {
         spaceId: globalSpace.id,
         spaceName: globalSpace.name,
         organizationId: userContext.organizationId,
@@ -142,7 +142,7 @@ export function registerSaveRecipeTool(
           content: [
             {
               type: 'text',
-              text: `Recipe '${recipe.name}' has been created successfully and added to ${packageSlugs.length} package(s).`,
+              text: `Command '${recipe.name}' has been created successfully and added to ${packageSlugs.length} package(s).`,
             },
           ],
         };
@@ -189,7 +189,7 @@ export function registerSaveRecipeTool(
         );
       }
 
-      const baseMessage = `Recipe '${recipe.name}' has been created successfully.`;
+      const baseMessage = `Command '${recipe.name}' has been created successfully.`;
 
       if (trialPackageSlug) {
         const shouldPromptActivation = await shouldPromptForTrialActivation(

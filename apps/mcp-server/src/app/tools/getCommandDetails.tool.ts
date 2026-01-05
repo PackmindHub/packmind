@@ -3,7 +3,7 @@ import { createOrganizationId, createUserId } from '@packmind/types';
 import { z } from 'zod';
 import { registerMcpTool, ToolDependencies } from './types';
 
-export function registerGetRecipeDetailsTool(
+export function registerGetCommandDetailsTool(
   dependencies: ToolDependencies,
   mcpServer: McpServer,
 ) {
@@ -11,20 +11,20 @@ export function registerGetRecipeDetailsTool(
 
   registerMcpTool(
     mcpServer,
-    `get_recipe_details`,
+    `get_command_details`,
     {
-      title: 'Get Recipe Details',
-      description: 'Get the full content of a recipe by its slug.',
+      title: 'Get Command Details',
+      description: 'Get the full content of a command by its slug.',
       inputSchema: {
         recipeSlug: z
           .string()
           .min(1)
-          .describe('The slug of the recipe to retrieve'),
+          .describe('The slug of the command to retrieve'),
       },
     },
     async ({ recipeSlug }: { recipeSlug: string }) => {
       if (!userContext) {
-        throw new Error('User context is required to get recipe by slug');
+        throw new Error('User context is required to get command by slug');
       }
 
       const recipesHexa = fastify.recipesHexa();
@@ -41,7 +41,7 @@ export function registerGetRecipeDetailsTool(
             content: [
               {
                 type: 'text',
-                text: `Recipe with slug '${recipeSlug}' not found in your organization`,
+                text: `Command with slug '${recipeSlug}' not found in your organization`,
               },
             ],
           };
@@ -80,7 +80,7 @@ export function registerGetRecipeDetailsTool(
           content: [
             {
               type: 'text',
-              text: `Failed to get recipe: ${error instanceof Error ? error.message : String(error)}`,
+              text: `Failed to get command: ${error instanceof Error ? error.message : String(error)}`,
             },
           ],
         };

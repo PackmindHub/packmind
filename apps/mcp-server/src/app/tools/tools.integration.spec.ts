@@ -2,16 +2,16 @@ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { stubLogger } from '@packmind/test-utils';
 import { IEventTrackingPort } from '@packmind/types';
 import {
-  registerCreateRecipeTool,
+  registerCreateCommandTool,
   registerSaveStandardRuleTool,
   registerListStandardsTool,
   registerGetStandardDetailsTool,
-  registerListRecipesTool,
-  registerGetRecipeDetailsTool,
+  registerListCommandsTool,
+  registerGetCommandDetailsTool,
   registerListPackagesTool,
   registerShowPackageTool,
   registerCreateStandardTool,
-  registerSaveRecipeTool,
+  registerSaveCommandTool,
   registerSaveStandardTool,
   registerCreateStandardRuleTool,
   registerOnboardingTool,
@@ -90,32 +90,32 @@ describe('tools.integration', () => {
   describe('tool registration', () => {
     it('registers all tools with correct names', () => {
       // Register all tools
-      registerCreateRecipeTool(dependencies, mcpServer);
+      registerCreateCommandTool(dependencies, mcpServer);
       registerSaveStandardRuleTool(dependencies, mcpServer);
       registerListStandardsTool(dependencies, mcpServer);
       registerGetStandardDetailsTool(dependencies, mcpServer);
-      registerListRecipesTool(dependencies, mcpServer);
-      registerGetRecipeDetailsTool(dependencies, mcpServer);
+      registerListCommandsTool(dependencies, mcpServer);
+      registerGetCommandDetailsTool(dependencies, mcpServer);
       registerListPackagesTool(dependencies, mcpServer);
       registerShowPackageTool(dependencies, mcpServer);
       registerCreateStandardTool(dependencies, mcpServer);
-      registerSaveRecipeTool(dependencies, mcpServer);
+      registerSaveCommandTool(dependencies, mcpServer);
       registerSaveStandardTool(dependencies, mcpServer);
       registerCreateStandardRuleTool(dependencies, mcpServer);
       registerOnboardingTool(dependencies, mcpServer);
 
       // Verify all expected tools are registered
       const expectedTools = [
-        'create_recipe',
+        'create_command',
         'save_standard_rule',
         'list_standards',
         'get_standard_details',
-        'list_recipes',
-        'get_recipe_details',
+        'list_commands',
+        'get_command_details',
         'list_packages',
         'get_package_details',
         'create_standard',
-        'save_recipe',
+        'save_command',
         'save_standard',
         'create_standard_rule',
         'onboarding',
@@ -129,16 +129,16 @@ describe('tools.integration', () => {
 
     it('each tool has a description', () => {
       // Register all tools
-      registerCreateRecipeTool(dependencies, mcpServer);
+      registerCreateCommandTool(dependencies, mcpServer);
       registerSaveStandardRuleTool(dependencies, mcpServer);
       registerListStandardsTool(dependencies, mcpServer);
       registerGetStandardDetailsTool(dependencies, mcpServer);
-      registerListRecipesTool(dependencies, mcpServer);
-      registerGetRecipeDetailsTool(dependencies, mcpServer);
+      registerListCommandsTool(dependencies, mcpServer);
+      registerGetCommandDetailsTool(dependencies, mcpServer);
       registerListPackagesTool(dependencies, mcpServer);
       registerShowPackageTool(dependencies, mcpServer);
       registerCreateStandardTool(dependencies, mcpServer);
-      registerSaveRecipeTool(dependencies, mcpServer);
+      registerSaveCommandTool(dependencies, mcpServer);
       registerSaveStandardTool(dependencies, mcpServer);
       registerCreateStandardRuleTool(dependencies, mcpServer);
       registerOnboardingTool(dependencies, mcpServer);
@@ -212,7 +212,7 @@ describe('tools.integration', () => {
 
   describe('tool isolation', () => {
     it('tools do not interfere with each other', () => {
-      registerCreateRecipeTool(dependencies, mcpServer);
+      registerCreateCommandTool(dependencies, mcpServer);
       registerListPackagesTool(dependencies, mcpServer);
       registerShowPackageTool(dependencies, mcpServer);
 

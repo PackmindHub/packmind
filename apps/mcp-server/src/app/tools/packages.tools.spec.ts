@@ -253,7 +253,7 @@ describe('packages.tools', () => {
 
       expect(mcpServer.tool).toHaveBeenCalledWith(
         'get_package_details',
-        'Get detailed information about a specific package including its recipes and standards.',
+        'Get detailed information about a specific package including its commands and standards.',
         expect.any(Object),
         expect.any(Function),
       );
@@ -286,7 +286,7 @@ describe('packages.tools', () => {
 
       expect(result.content[0].text).toContain('# Test Package');
       expect(result.content[0].text).toContain('A test package');
-      expect(result.content[0].text).toContain('## Recipes');
+      expect(result.content[0].text).toContain('## Commands');
       expect(result.content[0].text).toContain('• Recipe 1');
       expect(result.content[0].text).toContain('• Recipe 2');
       expect(result.content[0].text).toContain('## Standards');

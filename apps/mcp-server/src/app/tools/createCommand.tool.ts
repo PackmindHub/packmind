@@ -2,27 +2,27 @@ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { createOrganizationId, createUserId } from '@packmind/types';
 import { z } from 'zod';
 import {
-  RECIPE_WORKFLOW_STEP_ORDER,
-  RECIPE_WORKFLOW_STEPS,
-  RecipeWorkflowStep,
+  COMMAND_WORKFLOW_STEP_ORDER,
+  COMMAND_WORKFLOW_STEPS,
+  CommandWorkflowStep,
 } from '../prompts/packmind-recipe-workflow';
 import { registerMcpTool, ToolDependencies } from './types';
 
-const isRecipeWorkflowStep = (value: string): value is RecipeWorkflowStep =>
-  Object.prototype.hasOwnProperty.call(RECIPE_WORKFLOW_STEPS, value);
+const isCommandWorkflowStep = (value: string): value is CommandWorkflowStep =>
+  Object.prototype.hasOwnProperty.call(COMMAND_WORKFLOW_STEPS, value);
 
 const stepSchema = z
-  .enum(RECIPE_WORKFLOW_STEP_ORDER)
+  .enum(COMMAND_WORKFLOW_STEP_ORDER)
   .optional()
   .describe(
     'Identifier of the workflow step to retrieve guidance for. Leave empty to start at the first step.',
   );
 
-type CreateRecipeInput = {
-  step?: (typeof RECIPE_WORKFLOW_STEP_ORDER)[number];
+type CreateCommandInput = {
+  step?: (typeof COMMAND_WORKFLOW_STEP_ORDER)[number];
 };
 
-export function registerCreateRecipeTool(
+export function registerCreateCommandTool(
   dependencies: ToolDependencies,
   mcpServer: McpServer,
 ) {
@@ -30,21 +30,21 @@ export function registerCreateRecipeTool(
 
   registerMcpTool(
     mcpServer,
-    `create_recipe`,
+    `create_command`,
     {
-      title: 'Create Recipe',
+      title: 'Create Command',
       description:
-        'Get step-by-step guidance for the Packmind recipe creation workflow. Provide an optional step to retrieve a specific stage.',
+        'Get step-by-step guidance for the Packmind Command creation workflow. Provide an optional step to retrieve a specific stage.',
       inputSchema: {
         step: stepSchema,
       },
     },
-    async (input: CreateRecipeInput) => {
+    async (input: CreateCommandInput) => {
       const { step } = input;
       const requestedStep = step ?? 'initial-request';
 
-      if (!isRecipeWorkflowStep(requestedStep)) {
-        const availableSteps = Object.keys(RECIPE_WORKFLOW_STEPS).join(', ');
+      if (!isCommandWorkflowStep(requestedStep)) {
+        const availableSteps = Object.keys(COMMAND_WORKFLOW_STEPS).join(', ');
         return {
           content: [
             {
@@ -62,7 +62,7 @@ export function registerCreateRecipeTool(
           createOrganizationId(userContext.organizationId),
           'mcp_tool_call',
           {
-            tool: `create_recipe`,
+            tool: `create_command`,
             step: requestedStep,
           },
         );
@@ -72,7 +72,7 @@ export function registerCreateRecipeTool(
         content: [
           {
             type: 'text',
-            text: RECIPE_WORKFLOW_STEPS[requestedStep],
+            text: COMMAND_WORKFLOW_STEPS[requestedStep],
           },
         ],
       };

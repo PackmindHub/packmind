@@ -1,10 +1,10 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { stubLogger } from '@packmind/test-utils';
 import { IEventTrackingPort } from '@packmind/types';
-import { registerCreateRecipeTool } from './createRecipe.tool';
+import { registerCreateCommandTool } from './createCommand.tool';
 import { ToolDependencies, UserContext } from './types';
 
-describe('createRecipe.tool', () => {
+describe('createCommand.tool', () => {
   let mcpServer: McpServer;
   let dependencies: ToolDependencies;
   let mockAnalyticsAdapter: jest.Mocked<IEventTrackingPort>;
@@ -54,7 +54,7 @@ describe('createRecipe.tool', () => {
     beforeEach(() => {
       (mcpServer.tool as jest.Mock).mockImplementation(
         (name, description, schema, handler) => {
-          if (name === 'create_recipe') {
+          if (name === 'create_command') {
             toolHandler = handler;
           }
         },
@@ -62,11 +62,11 @@ describe('createRecipe.tool', () => {
     });
 
     it('registers the tool with correct name and description', () => {
-      registerCreateRecipeTool(dependencies, mcpServer);
+      registerCreateCommandTool(dependencies, mcpServer);
 
       expect(mcpServer.tool).toHaveBeenCalledWith(
-        'create_recipe',
-        'Get step-by-step guidance for the Packmind recipe creation workflow. Provide an optional step to retrieve a specific stage.',
+        'create_command',
+        'Get step-by-step guidance for the Packmind Command creation workflow. Provide an optional step to retrieve a specific stage.',
         expect.any(Object),
         expect.any(Function),
       );
@@ -74,7 +74,7 @@ describe('createRecipe.tool', () => {
 
     describe('when no step specified', () => {
       it('returns default step content', async () => {
-        registerCreateRecipeTool(dependencies, mcpServer);
+        registerCreateCommandTool(dependencies, mcpServer);
 
         const result = await toolHandler({});
 
@@ -92,7 +92,7 @@ describe('createRecipe.tool', () => {
     });
 
     it('returns specific step content for initial-request', async () => {
-      registerCreateRecipeTool(dependencies, mcpServer);
+      registerCreateCommandTool(dependencies, mcpServer);
 
       const result = await toolHandler({ step: 'initial-request' });
 
@@ -109,7 +109,7 @@ describe('createRecipe.tool', () => {
     });
 
     it('returns specific step content for drafting', async () => {
-      registerCreateRecipeTool(dependencies, mcpServer);
+      registerCreateCommandTool(dependencies, mcpServer);
 
       const result = await toolHandler({ step: 'drafting' });
 
@@ -126,7 +126,7 @@ describe('createRecipe.tool', () => {
     });
 
     it('returns specific step content for finalization', async () => {
-      registerCreateRecipeTool(dependencies, mcpServer);
+      registerCreateCommandTool(dependencies, mcpServer);
 
       const result = await toolHandler({ step: 'finalization' });
 
@@ -141,7 +141,7 @@ describe('createRecipe.tool', () => {
     });
 
     it('returns error message for invalid step name', async () => {
-      registerCreateRecipeTool(dependencies, mcpServer);
+      registerCreateCommandTool(dependencies, mcpServer);
 
       const result = await toolHandler({ step: 'invalid-step' });
 
@@ -157,7 +157,7 @@ describe('createRecipe.tool', () => {
 
     describe('when userContext is available', () => {
       it('tracks analytics event with correct step', async () => {
-        registerCreateRecipeTool(dependencies, mcpServer);
+        registerCreateCommandTool(dependencies, mcpServer);
 
         await toolHandler({ step: 'drafting' });
 
@@ -165,7 +165,7 @@ describe('createRecipe.tool', () => {
           'user-123',
           'org-123',
           'mcp_tool_call',
-          { tool: 'create_recipe', step: 'drafting' },
+          { tool: 'create_command', step: 'drafting' },
         );
       });
     });
@@ -173,7 +173,7 @@ describe('createRecipe.tool', () => {
     describe('when userContext is missing', () => {
       it('does not track analytics', async () => {
         dependencies.userContext = undefined;
-        registerCreateRecipeTool(dependencies, mcpServer);
+        registerCreateCommandTool(dependencies, mcpServer);
 
         const result = await toolHandler({ step: 'initial-request' });
 
@@ -193,7 +193,7 @@ describe('createRecipe.tool', () => {
 
     describe('when no step provided', () => {
       it("defaults to 'initial-request'", async () => {
-        registerCreateRecipeTool(dependencies, mcpServer);
+        registerCreateCommandTool(dependencies, mcpServer);
 
         await toolHandler({});
 
@@ -201,13 +201,13 @@ describe('createRecipe.tool', () => {
           'user-123',
           'org-123',
           'mcp_tool_call',
-          { tool: 'create_recipe', step: 'initial-request' },
+          { tool: 'create_command', step: 'initial-request' },
         );
       });
     });
 
     it('tracks analytics with different steps for each valid step', async () => {
-      registerCreateRecipeTool(dependencies, mcpServer);
+      registerCreateCommandTool(dependencies, mcpServer);
 
       const steps = ['initial-request', 'drafting', 'finalization'];
 
@@ -218,7 +218,7 @@ describe('createRecipe.tool', () => {
           'user-123',
           'org-123',
           'mcp_tool_call',
-          { tool: 'create_recipe', step },
+          { tool: 'create_command', step },
         );
       }
     });
@@ -226,7 +226,7 @@ describe('createRecipe.tool', () => {
     describe('when userContext is missing for default step', () => {
       it('continues to work', async () => {
         dependencies.userContext = undefined;
-        registerCreateRecipeTool(dependencies, mcpServer);
+        registerCreateCommandTool(dependencies, mcpServer);
 
         const result = await toolHandler({});
 

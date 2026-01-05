@@ -8,7 +8,7 @@ import {
   RecipeId,
   Space,
 } from '@packmind/types';
-import { registerSaveRecipeTool } from './saveRecipe.tool';
+import { registerSaveCommandTool } from './saveCommand.tool';
 import { ToolDependencies, UserContext } from './types';
 
 // Mock getGlobalSpace utility
@@ -18,7 +18,7 @@ jest.mock('./utils', () => ({
 
 import { getGlobalSpace } from './utils';
 
-describe('saveRecipe.tool', () => {
+describe('saveCommand.tool', () => {
   let mcpServer: McpServer;
   let dependencies: ToolDependencies;
   let mockAnalyticsAdapter: jest.Mocked<IEventTrackingPort>;
@@ -107,7 +107,7 @@ describe('saveRecipe.tool', () => {
     beforeEach(() => {
       (mcpServer.tool as jest.Mock).mockImplementation(
         (name, description, schema, handler) => {
-          if (name === 'save_recipe') {
+          if (name === 'save_command') {
             toolHandler = handler;
           }
         },
@@ -115,11 +115,11 @@ describe('saveRecipe.tool', () => {
     });
 
     it('registers the tool with correct name and description', () => {
-      registerSaveRecipeTool(dependencies, mcpServer);
+      registerSaveCommandTool(dependencies, mcpServer);
 
       expect(mcpServer.tool).toHaveBeenCalledWith(
-        'save_recipe',
-        'Create a new reusable recipe as a structured Packmind recipe. Do not call this tool directly—you need to first use the tool packmind_create_recipe.',
+        'save_command',
+        'Create a new reusable command as a structured Packmind command. Do not call this tool directly—you need to first use the tool packmind_create_command.',
         expect.any(Object),
         expect.any(Function),
       );
@@ -157,7 +157,7 @@ describe('saveRecipe.tool', () => {
         getAdapter: () => mockAdapter,
       });
 
-      registerSaveRecipeTool(dependencies, mcpServer);
+      registerSaveCommandTool(dependencies, mcpServer);
 
       const result = await toolHandler({
         name: 'Test Recipe',
@@ -192,7 +192,7 @@ describe('saveRecipe.tool', () => {
         content: [
           {
             type: 'text',
-            text: "Recipe 'Test Recipe' has been created successfully.",
+            text: "Command 'Test Recipe' has been created successfully.",
           },
         ],
       });
@@ -251,7 +251,7 @@ export class User {
         getAdapter: () => mockAdapter,
       });
 
-      registerSaveRecipeTool(dependencies, mcpServer);
+      registerSaveCommandTool(dependencies, mcpServer);
 
       const result = await toolHandler({
         name: 'Complex Recipe',
@@ -330,7 +330,7 @@ export class User {
         content: [
           {
             type: 'text',
-            text: "Recipe 'Complex Recipe' has been created successfully.",
+            text: "Command 'Complex Recipe' has been created successfully.",
           },
         ],
       });
@@ -359,7 +359,7 @@ export class User {
         getAdapter: () => mockAdapter,
       });
 
-      registerSaveRecipeTool(dependencies, mcpServer);
+      registerSaveCommandTool(dependencies, mcpServer);
 
       await toolHandler({
         name: 'Analytics Recipe',
@@ -386,7 +386,7 @@ export class User {
       it('throws error', async () => {
         dependencies.userContext = undefined;
 
-        registerSaveRecipeTool(dependencies, mcpServer);
+        registerSaveCommandTool(dependencies, mcpServer);
 
         await expect(
           toolHandler({
@@ -401,7 +401,7 @@ export class User {
               },
             ],
           }),
-        ).rejects.toThrow('User context is required to create recipes');
+        ).rejects.toThrow('User context is required to create commands');
       });
     });
 
@@ -425,7 +425,7 @@ export class User {
           getAdapter: () => mockAdapter,
         });
 
-        registerSaveRecipeTool(dependencies, mcpServer);
+        registerSaveCommandTool(dependencies, mcpServer);
 
         await expect(
           toolHandler({
@@ -467,7 +467,7 @@ export class User {
         getAdapter: () => mockAdapter,
       });
 
-      registerSaveRecipeTool(dependencies, mcpServer);
+      registerSaveCommandTool(dependencies, mcpServer);
 
       await toolHandler({
         name: 'Space Recipe',
@@ -494,7 +494,7 @@ export class User {
           new Error('No spaces found in organization'),
         );
 
-        registerSaveRecipeTool(dependencies, mcpServer);
+        registerSaveCommandTool(dependencies, mcpServer);
 
         await expect(
           toolHandler({
@@ -574,7 +574,7 @@ export class User {
               },
             });
 
-            registerSaveRecipeTool(dependencies, mcpServer);
+            registerSaveCommandTool(dependencies, mcpServer);
 
             const result = await toolHandler({
               name: 'Test Recipe',
@@ -596,7 +596,7 @@ export class User {
             });
 
             expect(result.content[0].text).toContain(
-              "Recipe 'Test Recipe' has been created successfully",
+              "Command 'Test Recipe' has been created successfully",
             );
             expect(result.content[0].text).toContain(
               '**IMPORTANT: You MUST now call packmind_install_package',
@@ -636,7 +636,7 @@ export class User {
               ],
             });
 
-            registerSaveRecipeTool(dependencies, mcpServer);
+            registerSaveCommandTool(dependencies, mcpServer);
 
             const result = await toolHandler({
               name: 'Another Recipe',
@@ -659,7 +659,7 @@ export class User {
             expect(mockDeploymentsAdapter.createPackage).not.toHaveBeenCalled();
 
             expect(result.content[0].text).toContain(
-              "Recipe 'Another Recipe' has been created successfully",
+              "Command 'Another Recipe' has been created successfully",
             );
             expect(result.content[0].text).toContain(
               '**IMPORTANT: You MUST now call packmind_install_package with packageSlugs: ["default"]',
@@ -696,7 +696,7 @@ export class User {
             getAdapter: () => mockAdapter,
           });
 
-          registerSaveRecipeTool(dependencies, mcpServer);
+          registerSaveCommandTool(dependencies, mcpServer);
 
           const result = await toolHandler({
             name: 'Regular Recipe',
@@ -713,7 +713,7 @@ export class User {
           ).not.toHaveBeenCalled();
 
           expect(result.content[0].text).toBe(
-            "Recipe 'Regular Recipe' has been created successfully.",
+            "Command 'Regular Recipe' has been created successfully.",
           );
           expect(result.content[0].text).not.toContain(
             'packmind_install_package',

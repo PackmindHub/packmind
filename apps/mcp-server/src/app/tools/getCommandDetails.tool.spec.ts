@@ -1,10 +1,10 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { stubLogger } from '@packmind/test-utils';
 import { IEventTrackingPort } from '@packmind/types';
-import { registerGetRecipeDetailsTool } from './getRecipeDetails.tool';
+import { registerGetCommandDetailsTool } from './getCommandDetails.tool';
 import { ToolDependencies, UserContext } from './types';
 
-describe('getRecipeDetails.tool', () => {
+describe('getCommandDetails.tool', () => {
   let mcpServer: McpServer;
   let dependencies: ToolDependencies;
   let mockAnalyticsAdapter: jest.Mocked<IEventTrackingPort>;
@@ -42,7 +42,7 @@ describe('getRecipeDetails.tool', () => {
 
     mcpServer = {
       tool: jest.fn((name, description, schema, handler) => {
-        if (name === 'get_recipe_details') {
+        if (name === 'get_command_details') {
           toolHandler = handler;
         }
       }),
@@ -54,11 +54,11 @@ describe('getRecipeDetails.tool', () => {
   });
 
   it('registers the tool with correct name and description', () => {
-    registerGetRecipeDetailsTool(dependencies, mcpServer);
+    registerGetCommandDetailsTool(dependencies, mcpServer);
 
     expect(mcpServer.tool).toHaveBeenCalledWith(
-      'get_recipe_details',
-      'Get the full content of a recipe by its slug.',
+      'get_command_details',
+      'Get the full content of a command by its slug.',
       expect.any(Object),
       expect.any(Function),
     );
@@ -80,7 +80,7 @@ describe('getRecipeDetails.tool', () => {
       getAdapter: () => mockRecipesAdapter,
     });
 
-    registerGetRecipeDetailsTool(dependencies, mcpServer);
+    registerGetCommandDetailsTool(dependencies, mcpServer);
 
     const result = await toolHandler({ recipeSlug: 'test-recipe' });
 
@@ -101,7 +101,7 @@ describe('getRecipeDetails.tool', () => {
         getAdapter: () => mockRecipesAdapter,
       });
 
-      registerGetRecipeDetailsTool(dependencies, mcpServer);
+      registerGetCommandDetailsTool(dependencies, mcpServer);
 
       const result = await toolHandler({ recipeSlug: 'non-existent' });
 
@@ -109,7 +109,7 @@ describe('getRecipeDetails.tool', () => {
         content: [
           {
             type: 'text',
-            text: "Recipe with slug 'non-existent' not found in your organization",
+            text: "Command with slug 'non-existent' not found in your organization",
           },
         ],
       });
@@ -132,7 +132,7 @@ describe('getRecipeDetails.tool', () => {
       getAdapter: () => mockRecipesAdapter,
     });
 
-    registerGetRecipeDetailsTool(dependencies, mcpServer);
+    registerGetCommandDetailsTool(dependencies, mcpServer);
 
     await toolHandler({ recipeSlug: 'test-recipe' });
 
@@ -148,10 +148,10 @@ describe('getRecipeDetails.tool', () => {
     it('throws error', async () => {
       dependencies.userContext = undefined;
 
-      registerGetRecipeDetailsTool(dependencies, mcpServer);
+      registerGetCommandDetailsTool(dependencies, mcpServer);
 
       await expect(toolHandler({ recipeSlug: 'test-recipe' })).rejects.toThrow(
-        'User context is required to get recipe by slug',
+        'User context is required to get command by slug',
       );
     });
   });
@@ -168,7 +168,7 @@ describe('getRecipeDetails.tool', () => {
         getAdapter: () => mockRecipesAdapter,
       });
 
-      registerGetRecipeDetailsTool(dependencies, mcpServer);
+      registerGetCommandDetailsTool(dependencies, mcpServer);
 
       const result = await toolHandler({ recipeSlug: 'test-recipe' });
 
@@ -176,7 +176,7 @@ describe('getRecipeDetails.tool', () => {
         content: [
           {
             type: 'text',
-            text: 'Failed to get recipe: Database error',
+            text: 'Failed to get command: Database error',
           },
         ],
       });
@@ -199,7 +199,7 @@ describe('getRecipeDetails.tool', () => {
       getAdapter: () => mockRecipesAdapter,
     });
 
-    registerGetRecipeDetailsTool(dependencies, mcpServer);
+    registerGetCommandDetailsTool(dependencies, mcpServer);
 
     const result = await toolHandler({ recipeSlug: 'empty-recipe' });
 
