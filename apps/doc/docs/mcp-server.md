@@ -1,12 +1,12 @@
 # MCP Server: Connect AI Agents to Packmind
 
-The Packmind MCP (Model Context Protocol) server enables AI coding assistants like Claude, Cursor, and GitHub Copilot to interact directly with your organization's recipes and coding standards, allowing them to capture knowledge and enforce best practices during development.
+The Packmind MCP (Model Context Protocol) server enables AI coding assistants like Claude, Cursor, and GitHub Copilot to interact directly with your organization's commands and coding standards, allowing them to capture knowledge and enforce best practices during development.
 
 Once you've configured your MCP server (see [MCP Server Setup](gs-mcp-server-setup.md)), you can use these tools through your AI agent.
 
 ## Understanding Workflows
 
-Packmind MCP provides **workflow tools** that guide AI agents through a structured process for creating high-quality standards and recipes. These workflows ensure consistency and completeness by providing step-by-step instructions that the AI agent follows to:
+Packmind MCP provides **workflow tools** that guide AI agents through a structured process for creating high-quality standards and commands. These workflows ensure consistency and completeness by providing step-by-step instructions that the AI agent follows to:
 
 1. Gather appropriate context from your codebase
 2. Draft initial content with user collaboration
@@ -137,64 +137,64 @@ Do not call this tool directly. AI agents must first complete the add rule workf
 
 ---
 
-## Recipes Tools
+## Commands Tools
 
-### List Recipes
+### List Commands
 
-**Tool:** `list_recipes`
+**Tool:** `list_commands`
 
-Retrieves all recipes created in your organization. Returns up to 20 recipes sorted alphabetically by slug.
+Retrieves all commands created in your organization. Returns up to 20 commands sorted alphabetically by slug.
 
 **Parameters:** None
 
-**Returns:** A formatted list showing `• slug: name` for each recipe
+**Returns:** A formatted list showing `• slug: name` for each command
 
-### Get Recipe Details
+### Get Command Details
 
-**Tool:** `get_recipe_details`
+**Tool:** `get_command_details`
 
-Retrieves the full content of a specific recipe by its slug identifier.
+Retrieves the full content of a specific command by its slug identifier.
 
 **Parameters:**
 
-- `recipeSlug` (required) - The slug identifier of the recipe
+- `commandSlug` (required) - The slug identifier of the command
 
-**Returns:** Complete recipe details including name, slug, version, and full markdown content
+**Returns:** Complete command details including name, slug, version, and full markdown content
 
-### Recipe Creation Workflow
+### Command Creation Workflow
 
-**Tool:** `create_recipe`
+**Tool:** `create_command`
 
-Provides step-by-step guidance for creating a new recipe. This workflow ensures the AI agent properly structures the recipe with clear steps, appropriate context validation checkpoints, and usage scenarios.
+Provides step-by-step guidance for creating a new command. This workflow ensures the AI agent properly structures the command with clear steps, appropriate context validation checkpoints, and usage scenarios.
 
 **Parameters:**
 
 - `step` (optional) - Workflow step identifier. Defaults to `initial-request` when omitted.
-  - `initial-request` - Initial guidance for understanding the process to capture as a recipe
-  - `drafting` - Instructions for structuring the recipe with steps, checkpoints, and scenarios
-  - `finalization` - Final validation before calling `save_recipe`
+  - `initial-request` - Initial guidance for understanding the process to capture as a command
+  - `drafting` - Instructions for structuring the command with steps, checkpoints, and scenarios
+  - `finalization` - Final validation before calling `save_command`
 
 **Usage:** The AI agent will automatically progress through these steps. You typically don't need to specify the step parameter.
 
-### Save Recipe
+### Save Command
 
-**Tool:** `save_recipe`
+**Tool:** `save_command`
 
-Captures a reusable development process or procedure as a structured Packmind recipe with clear, actionable steps.
+Captures a reusable development process or procedure as a structured Packmind command with clear, actionable steps.
 
 :::warning
-Do not call this tool directly. AI agents must first complete the recipe creation workflow using `create_recipe`.
+Do not call this tool directly. AI agents must first complete the command creation workflow using `create_command`.
 :::
 
 :::tip
-When creating new recipe using `save_recipe`, you can include the optional `packageSlugs` parameter to automatically add them to packages during creation.
+When creating new command using `save_command`, you can include the optional `packageSlugs` parameter to automatically add them to packages during creation.
 :::
 
 **Parameters:**
 
-- `name` (required) - The name of the recipe (e.g., "Add REST Endpoint", "Create Domain Model")
+- `name` (required) - The name of the command (e.g., "Add REST Endpoint", "Create Domain Model")
 - `summary` (required) - A concise sentence describing the intent (what it does), value (why useful), and relevance (when to use)
-- `whenToUse` (required) - Array of specific, actionable scenarios when this recipe applies
+- `whenToUse` (required) - Array of specific, actionable scenarios when this command applies
 - `contextValidationCheckpoints` (required) - Array of checkpoints (questions or validation points) to ensure context is clarified before implementing steps
 - `steps` (required) - Array of atomic, actionable steps, each containing:
   - `name` (required) - The step title (e.g., "Setup Dependencies", "Create Database Schema")
@@ -209,7 +209,7 @@ When creating new recipe using `save_recipe`, you can include the optional `pack
 
 **Tool:** `list_packages`
 
-Retrieves all packages created in your organization. Packages are collections of recipes and standards that can be distributed together.
+Retrieves all packages created in your organization. Packages are collections of commands and standards that can be distributed together.
 
 **Parameters:** None
 
@@ -225,7 +225,7 @@ Retrieves all packages created in your organization. Packages are collections of
 
 **Tool:** `get_package_details`
 
-Retrieves the full content of a specific package including all its recipes and standards.
+Retrieves the full content of a specific package including all its commands and standards.
 
 **Parameters:**
 
@@ -234,7 +234,7 @@ Retrieves the full content of a specific package including all its recipes and s
 **Returns:** Complete package details including:
 
 - Package name, slug, and description
-- List of all recipes in the package with their summaries
+- List of all commands in the package with their summaries
 - List of all standards in the package with their summaries
 
 **Usage Example:**
