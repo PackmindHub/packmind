@@ -91,7 +91,7 @@ describe('saveCommand.tool', () => {
     jest.clearAllMocks();
   });
 
-  describe('registerSaveRecipeTool', () => {
+  describe('registerSaveCommandTool', () => {
     let toolHandler: (params: {
       name: string;
       summary: string;

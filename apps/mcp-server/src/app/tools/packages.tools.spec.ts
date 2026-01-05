@@ -68,7 +68,7 @@ describe('packages.tools', () => {
 
       expect(mcpServer.tool).toHaveBeenCalledWith(
         'list_packages',
-        'Get a list of all available packages in Packmind. Packages are collections of recipes and standards that can be pulled together.',
+        'Get a list of all available packages in Packmind. Packages are collections of commands and standards that can be pulled together.',
         {},
         expect.any(Function),
       );

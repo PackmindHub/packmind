@@ -85,7 +85,7 @@ export function registerSaveCommandTool(
           .array(z.string())
           .optional()
           .describe(
-            'Optional array of package slugs to add this recipe to after creation',
+            'Optional array of package slugs to add this command to after creation',
           ),
       },
     },

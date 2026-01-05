@@ -14,7 +14,7 @@ export function registerListPackagesTool(
     {
       title: 'List Packages',
       description:
-        'Get a list of all available packages in Packmind. Packages are collections of recipes and standards that can be pulled together.',
+        'Get a list of all available packages in Packmind. Packages are collections of commands and standards that can be pulled together.',
       inputSchema: {},
     },
     async () => {
