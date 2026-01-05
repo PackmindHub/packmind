@@ -9,7 +9,7 @@ import {
 export const uninstallCommand = command({
   name: 'uninstall',
   description:
-    'Uninstall packages and remove their recipes and standards from the current directory',
+    'Uninstall packages and remove their commands and standards from the current directory',
   args: {
     packagesSlugs: restPositionals({
       type: string,

@@ -3,7 +3,7 @@ import { createOrganizationId, createUserId } from '@packmind/types';
 import { registerMcpTool, ToolDependencies } from './types';
 import { getGlobalSpace } from './utils';
 
-export function registerListRecipesTool(
+export function registerListCommandsTool(
   dependencies: ToolDependencies,
   mcpServer: McpServer,
 ) {
@@ -11,15 +11,15 @@ export function registerListRecipesTool(
 
   registerMcpTool(
     mcpServer,
-    `list_recipes`,
+    `list_commands`,
     {
-      title: 'List Recipes',
-      description: 'Get a list of current recipes in Packmind.',
+      title: 'List Commands',
+      description: 'Get a list of current commands in Packmind.',
       inputSchema: {},
     },
     async () => {
       if (!userContext) {
-        throw new Error('User context is required to list recipes');
+        throw new Error('User context is required to list commands');
       }
 
       const recipesHexa = fastify.recipesHexa();
@@ -39,7 +39,7 @@ export function registerListRecipesTool(
             content: [
               {
                 type: 'text',
-                text: 'No recipes found for your organization',
+                text: 'No commands found for your organization',
               },
             ],
           };
@@ -76,7 +76,7 @@ export function registerListRecipesTool(
           content: [
             {
               type: 'text',
-              text: `Failed to list recipes: ${error instanceof Error ? error.message : String(error)}`,
+              text: `Failed to list commands: ${error instanceof Error ? error.message : String(error)}`,
             },
           ],
         };

@@ -15,7 +15,7 @@ export function registerShowPackageTool(
     {
       title: 'Get Package Details',
       description:
-        'Get detailed information about a specific package including its recipes and standards.',
+        'Get detailed information about a specific package including its commands and standards.',
       inputSchema: {
         packageSlug: z
           .string()
@@ -63,7 +63,7 @@ export function registerShowPackageTool(
         }
 
         if (pkg.recipes && pkg.recipes.length > 0) {
-          contentParts.push(`## Recipes`, ``);
+          contentParts.push(`## Commands`, ``);
           for (const recipe of pkg.recipes) {
             contentParts.push(`• ${recipe.name}`);
           }

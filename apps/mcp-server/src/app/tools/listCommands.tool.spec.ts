@@ -1,10 +1,10 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { stubLogger } from '@packmind/test-utils';
 import { IEventTrackingPort } from '@packmind/types';
-import { registerListRecipesTool } from './listRecipes.tool';
+import { registerListCommandsTool } from './listCommands.tool';
 import { ToolDependencies, UserContext } from './types';
 
-describe('listRecipes.tool', () => {
+describe('listCommands.tool', () => {
   let mcpServer: McpServer;
   let dependencies: ToolDependencies;
   let mockAnalyticsAdapter: jest.Mocked<IEventTrackingPort>;
@@ -47,7 +47,7 @@ describe('listRecipes.tool', () => {
 
     mcpServer = {
       tool: jest.fn((name, description, schema, handler) => {
-        if (name === 'list_recipes') {
+        if (name === 'list_commands') {
           toolHandler = handler;
         }
       }),
@@ -59,11 +59,11 @@ describe('listRecipes.tool', () => {
   });
 
   it('registers the tool with correct name and description', () => {
-    registerListRecipesTool(dependencies, mcpServer);
+    registerListCommandsTool(dependencies, mcpServer);
 
     expect(mcpServer.tool).toHaveBeenCalledWith(
-      'list_recipes',
-      'Get a list of current recipes in Packmind.',
+      'list_commands',
+      'Get a list of current commands in Packmind.',
       {},
       expect.any(Function),
     );
@@ -94,7 +94,7 @@ describe('listRecipes.tool', () => {
       getAdapter: () => mockSpacesAdapter,
     });
 
-    registerListRecipesTool(dependencies, mcpServer);
+    registerListCommandsTool(dependencies, mcpServer);
 
     const result = await toolHandler();
 
@@ -135,7 +135,7 @@ describe('listRecipes.tool', () => {
       getAdapter: () => mockSpacesAdapter,
     });
 
-    registerListRecipesTool(dependencies, mcpServer);
+    registerListCommandsTool(dependencies, mcpServer);
 
     const result = await toolHandler();
 
@@ -166,7 +166,7 @@ describe('listRecipes.tool', () => {
         getAdapter: () => mockSpacesAdapter,
       });
 
-      registerListRecipesTool(dependencies, mcpServer);
+      registerListCommandsTool(dependencies, mcpServer);
 
       const result = await toolHandler();
 
@@ -174,7 +174,7 @@ describe('listRecipes.tool', () => {
         content: [
           {
             type: 'text',
-            text: 'No recipes found for your organization',
+            text: 'No commands found for your organization',
           },
         ],
       });
@@ -205,7 +205,7 @@ describe('listRecipes.tool', () => {
       getAdapter: () => mockSpacesAdapter,
     });
 
-    registerListRecipesTool(dependencies, mcpServer);
+    registerListCommandsTool(dependencies, mcpServer);
 
     await toolHandler();
 
@@ -221,10 +221,10 @@ describe('listRecipes.tool', () => {
     it('throws error', async () => {
       dependencies.userContext = undefined;
 
-      registerListRecipesTool(dependencies, mcpServer);
+      registerListCommandsTool(dependencies, mcpServer);
 
       await expect(toolHandler()).rejects.toThrow(
-        'User context is required to list recipes',
+        'User context is required to list commands',
       );
     });
   });
@@ -254,7 +254,7 @@ describe('listRecipes.tool', () => {
         getAdapter: () => mockSpacesAdapter,
       });
 
-      registerListRecipesTool(dependencies, mcpServer);
+      registerListCommandsTool(dependencies, mcpServer);
 
       const result = await toolHandler();
 
@@ -262,7 +262,7 @@ describe('listRecipes.tool', () => {
         content: [
           {
             type: 'text',
-            text: 'Failed to list recipes: Database error',
+            text: 'Failed to list commands: Database error',
           },
         ],
       });
@@ -281,7 +281,7 @@ describe('listRecipes.tool', () => {
         getAdapter: () => mockSpacesAdapter,
       });
 
-      registerListRecipesTool(dependencies, mcpServer);
+      registerListCommandsTool(dependencies, mcpServer);
 
       const result = await toolHandler();
 
@@ -289,7 +289,7 @@ describe('listRecipes.tool', () => {
         content: [
           {
             type: 'text',
-            text: 'Failed to list recipes: Space not found',
+            text: 'Failed to list commands: Space not found',
           },
         ],
       });

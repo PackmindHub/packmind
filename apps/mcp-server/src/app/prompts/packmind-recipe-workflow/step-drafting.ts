@@ -1,12 +1,12 @@
 const prompt = `# Step 2 · Draft and Iterate with the User
 
-Now that the context is locked in, create the draft recipe and iterate with the user until they approve. Keep all reasoning local—no backend completions.
+Now that the context is locked in, create the draft command and iterate with the user until they approve. Keep all reasoning local—no backend completions.
 
 ## Draft Creation
 
-1. Create the draft in \`.packmind/recipes/_drafts\` (create the folder if missing) using the filename \`<slug>-draft.md\` (lowercase with hyphens).
+1. Create the draft in \`.packmind/commands/_drafts\` (create the folder if missing) using the filename \`<slug>-draft.md\` (lowercase with hyphens).
 2. Recommended draft structure:
-   - \`# <Recipe Title>\`
+   - \`# <Command Title>\`
    - **Summary**: Single concise sentence (max 2 lines) explaining the intent and value.
    - \`## When to Use\` section with 3-5 brief, specific scenarios (one line each).
    - \`## Context Validation Checkpoints\` section with 3-5 focused questions (one line each).
@@ -24,16 +24,16 @@ Now that the context is locked in, create the draft recipe and iterate with the 
 ## TL;DR and Review Loop
 
 1. After saving the draft file, write a concise TL;DR that includes:
-   - A bullet point list summarizing each implementation step from the recipe (keep each step summary very short and concise—8-10 words max).
+   - A bullet point list summarizing each implementation step from the command (keep each step summary very short and concise—8-10 words max).
    - Then ask: "**Would you like me to adjust:**"
    - "* anything in the draft? OR"
-   - "* finalize the recipe and add it to Packmind?"
+   - "* finalize the command and add it to Packmind?"
 2. If the user requests changes, apply them to the draft file and repeat the TL;DR asking what to do next.
 3. Keep iterating until the user explicitly chooses to finalize.
 
 ## Next Step
 
-Once the user approves the draft, call \`packmind_save_recipe\` with:
+Once the user approves the draft, call \`packmind_save_command\` with:
 \`\`\`json
 { "step": "finalization" }
 \`\`\`

@@ -4,16 +4,16 @@ import { LogLevel, PackmindLogger } from '@packmind/logger';
 import { createUserId, IEventTrackingPort } from '@packmind/types';
 import { FastifyInstance } from 'fastify';
 import {
-  registerSaveRecipeTool,
+  registerSaveCommandTool,
   registerSaveStandardRuleTool,
   registerListStandardsTool,
   registerGetStandardDetailsTool,
-  registerListRecipesTool,
-  registerGetRecipeDetailsTool,
+  registerListCommandsTool,
+  registerGetCommandDetailsTool,
   registerListPackagesTool,
   registerShowPackageTool,
   registerCreateStandardTool,
-  registerCreateRecipeTool,
+  registerCreateCommandTool,
   registerSaveStandardTool,
   registerCreateStandardRuleTool,
   registerOnboardingTool,
@@ -64,16 +64,16 @@ export async function createMCPServer(
   };
 
   // Register all tools
-  registerSaveRecipeTool(toolDependencies, mcpServer);
+  registerSaveCommandTool(toolDependencies, mcpServer);
   registerSaveStandardRuleTool(toolDependencies, mcpServer);
   registerListStandardsTool(toolDependencies, mcpServer);
   registerGetStandardDetailsTool(toolDependencies, mcpServer);
-  registerListRecipesTool(toolDependencies, mcpServer);
-  registerGetRecipeDetailsTool(toolDependencies, mcpServer);
+  registerListCommandsTool(toolDependencies, mcpServer);
+  registerGetCommandDetailsTool(toolDependencies, mcpServer);
   registerListPackagesTool(toolDependencies, mcpServer);
   registerShowPackageTool(toolDependencies, mcpServer);
   registerCreateStandardTool(toolDependencies, mcpServer);
-  registerCreateRecipeTool(toolDependencies, mcpServer);
+  registerCreateCommandTool(toolDependencies, mcpServer);
   registerSaveStandardTool(toolDependencies, mcpServer);
   registerCreateStandardRuleTool(toolDependencies, mcpServer);
   registerOnboardingTool(toolDependencies, mcpServer);

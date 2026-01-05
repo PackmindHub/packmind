@@ -1,13 +1,13 @@
-export { registerSaveRecipeTool } from './saveRecipe.tool';
+export { registerSaveCommandTool } from './saveCommand.tool';
 export { registerSaveStandardRuleTool } from './saveStandardRule.tool';
 export { registerListStandardsTool } from './listStandards.tool';
 export { registerGetStandardDetailsTool } from './getStandardDetails.tool';
-export { registerListRecipesTool } from './listRecipes.tool';
-export { registerGetRecipeDetailsTool } from './getRecipeDetails.tool';
+export { registerListCommandsTool } from './listCommands.tool';
+export { registerGetCommandDetailsTool } from './getCommandDetails.tool';
 export { registerListPackagesTool } from './listPackages.tool';
 export { registerShowPackageTool } from './showPackage.tool';
 export { registerCreateStandardTool } from './createStandard.tool';
-export { registerCreateRecipeTool } from './createRecipe.tool';
+export { registerCreateCommandTool } from './createCommand.tool';
 export { registerSaveStandardTool } from './saveStandard.tool';
 export { registerCreateStandardRuleTool } from './createStandardRule.tool';
 export { registerOnboardingTool } from './onboarding.tool';

@@ -386,7 +386,7 @@ async function executeInstallForDirectory(
 
     // Show installation message with counts
     log(
-      `  Installing ${result.recipesCount} recipes and ${result.standardsCount} standards...`,
+      `  Installing ${result.recipesCount} commands and ${result.standardsCount} standards...`,
     );
 
     // Display results
@@ -493,7 +493,7 @@ export async function installPackagesHandler(
     log('  packmind-cli install backend frontend');
     log('  packmind-cli install --list  # Show available packages');
     log('');
-    log('Install recipes and standards from the specified packages.');
+    log('Install commands and standards from the specified packages.');
     exit(0);
     return {
       filesCreated: 0,
@@ -526,7 +526,7 @@ export async function installPackagesHandler(
 
     // Show installation message with counts
     log(
-      `Installing ${result.recipesCount} recipes and ${result.standardsCount} standards...`,
+      `Installing ${result.recipesCount} commands and ${result.standardsCount} standards...`,
     );
 
     // Display results
@@ -799,7 +799,7 @@ export async function uninstallPackagesHandler(
       // Show removal message with counts
       if (result.recipesCount > 0 || result.standardsCount > 0) {
         log(
-          `Removing ${result.recipesCount} recipes and ${result.standardsCount} standards...`,
+          `Removing ${result.recipesCount} commands and ${result.standardsCount} standards...`,
         );
       }
 

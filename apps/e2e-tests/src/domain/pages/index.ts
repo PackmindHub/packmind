@@ -7,7 +7,7 @@ export interface IPackmindPage {
 
 export interface IPackmindAppPage extends IPackmindPage {
   openStandards(): Promise<IStandardsPage>;
-  openRecipes(): Promise<IRecipesPage>;
+  openCommands(): Promise<ICommandsPage>;
   openPackages(): Promise<IPackagesPage>;
   openSettings(): Promise<ISettingsPage>;
   openUserSettings(): Promise<IUserSettingsPage>;
@@ -53,8 +53,8 @@ export interface ICreateStandardPage extends IPackmindAppPage {
   ): Promise<IStandardsPage>;
 }
 
-export interface IRecipesPage extends IPackmindAppPage {
-  listRecipes(): Promise<{ IRecipesPagename: string }[]>;
+export interface ICommandsPage extends IPackmindAppPage {
+  listCommands(): Promise<{ commandName: string }[]>;
 }
 
 export interface ISettingsPage extends IPackmindAppPage {
