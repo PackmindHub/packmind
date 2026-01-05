@@ -278,7 +278,12 @@ const UserActions: React.FunctionComponent<{
                 <PMIcon>
                   <LuLink />
                 </PMIcon>
-                <PMText color="secondary">Copy invitation link</PMText>
+                <PMText
+                  color="secondary"
+                  data-value={userStatus.invitationLink}
+                >
+                  Copy invitation link
+                </PMText>
               </PMHStack>
             </PMCopiable.Trigger>
           </PMCopiable.Root>
