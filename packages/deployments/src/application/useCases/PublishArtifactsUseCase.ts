@@ -468,7 +468,7 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
     for (const id of recipeVersionIds) {
       const version = await this.recipesPort.getRecipeVersionById(id);
       if (!version) {
-        throw new Error(`Recipe version with ID ${id} not found`);
+        throw new Error(`Command version with ID ${id} not found`);
       }
       versions.push(version);
     }
@@ -660,13 +660,13 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
     targets: Target[],
   ): string {
     const parts: string[] = [
-      '[PACKMIND] Update artifacts (recipes + standards)',
+      '[PACKMIND] Update artifacts (commands + standards)',
       '',
     ];
 
     if (recipeVersions.length > 0) {
-      parts.push(`- Updated ${recipeVersions.length} recipe(s)`);
-      parts.push(`- Total recipes in repository: ${allRecipeVersions.length}`);
+      parts.push(`- Updated ${recipeVersions.length} command(s)`);
+      parts.push(`- Total commands in repository: ${allRecipeVersions.length}`);
     }
 
     if (standardVersions.length > 0) {
@@ -680,7 +680,7 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
     parts.push('');
 
     if (recipeVersions.length > 0) {
-      parts.push('Recipes updated:');
+      parts.push('Commands updated:');
       recipeVersions.forEach((rv) => {
         parts.push(`- ${rv.name} (${rv.slug}) v${rv.version}`);
       });

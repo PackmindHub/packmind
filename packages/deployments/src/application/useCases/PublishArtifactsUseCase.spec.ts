@@ -292,7 +292,7 @@ describe('PublishArtifactsUseCase', () => {
             path: expect.stringContaining('standards'),
           }),
         ]),
-        expect.stringContaining('Update artifacts (recipes + standards)'),
+        expect.stringContaining('Update artifacts (commands + standards)'),
         expect.any(Array),
       );
     });
@@ -981,7 +981,7 @@ describe('PublishArtifactsUseCase', () => {
       mockRecipesPort.getRecipeVersionById.mockResolvedValue(null);
 
       await expect(useCase.execute(command)).rejects.toThrow(
-        'Recipe version with ID',
+        'Command version with ID',
       );
     });
   });
