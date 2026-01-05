@@ -185,7 +185,7 @@ describe('OnboardingSteps', () => {
 
     expect(
       screen.getByText(
-        'Create standards and recipes tailored to your project context. With configured MCP server, use this prompt with your AI coding agent:',
+        'Create standards and commands tailored to your project context. With configured MCP server, use this prompt with your AI coding agent:',
       ),
     ).toBeInTheDocument();
   });
@@ -196,7 +196,7 @@ describe('OnboardingSteps', () => {
     expect(screen.getByText('Create packages')).toBeInTheDocument();
     expect(
       screen.getByText(
-        'Standards and recipes must be bundled into packages to be distributed in your projects.',
+        'Standards and commands must be bundled into packages to be distributed in your projects.',
       ),
     ).toBeInTheDocument();
     expect(

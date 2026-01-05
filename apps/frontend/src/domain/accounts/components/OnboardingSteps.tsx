@@ -55,7 +55,7 @@ export const OnboardingSteps: React.FC = () => {
           <PMAccordion.ItemContent p={2}>
             <PMVStack align="flex-start" paddingBottom={6} gap={4}>
               <PMText as="p">
-                Create standards and recipes tailored to your project context.
+                Create standards and commands tailored to your project context.
                 With configured MCP server, use this prompt with your AI coding
                 agent:
               </PMText>
@@ -107,10 +107,10 @@ export const OnboardingSteps: React.FC = () => {
 
                         <PMField.Root width="full">
                           <PMField.Label>
-                            Prompt: create new recipe
+                            Prompt: create new command
                           </PMField.Label>
                           <CopiableTextarea
-                            value="From the last commit, create a Packmind Recipe to refactor a React component to use Hooks instead of class components."
+                            value="From the last commit, create a Packmind Command to refactor a React component to use Hooks instead of class components."
                             readOnly
                             rows={2}
                             width="full"
@@ -152,7 +152,7 @@ export const OnboardingSteps: React.FC = () => {
               <PMHeading level="h6">Create packages</PMHeading>
 
               <PMText as="p">
-                Standards and recipes must be bundled into packages to be
+                Standards and commands must be bundled into packages to be
                 distributed in your projects.
               </PMText>
 

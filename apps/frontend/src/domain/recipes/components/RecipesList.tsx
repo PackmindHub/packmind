@@ -234,9 +234,9 @@ export const RecipesList = ({ orgSlug }: RecipesListProps) => {
           borderRadius={'md'}
           width={'2xl'}
           mx={'auto'}
-          title={'No recipes yet'}
+          title={'No commands yet'}
         >
-          Recipes are reusable prompts that help you speed up recurring dev
+          Commands are reusable prompts that help you speed up recurring dev
           tasks — like creating a new React component or setting up tests — with
           consistent results across your team.
           <GettingStartedLearnMoreDialog
