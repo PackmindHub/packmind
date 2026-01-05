@@ -226,39 +226,74 @@ class MyService {
       expect(indexFile?.content).toContain('ide-code-quality-standards.md');
     });
 
-    it('deploys standard to jetbrains path for Claude agent', async () => {
-      const standardVersions: StandardVersion[] = [
-        {
-          id: 'standard-version-1' as StandardVersionId,
-          standardId: standard.id,
-          name: standard.name,
-          slug: standard.slug,
-          description: standard.description,
-          version: standard.version,
-          summary: 'IDE code quality standards',
-          userId: user.id,
-          scope: standard.scope,
-        },
-      ];
+    describe('when deploying standard to jetbrains path for Claude agent', () => {
+      let standardUpdates: {
+        createOrUpdate: { path: string; content: string }[];
+        delete: string[];
+      };
+      let deployedFile: { path: string; content: string };
 
-      // Deploy to jetbrains target for Claude
-      const standardUpdates =
-        await deployerService.aggregateStandardsDeployments(
+      beforeEach(async () => {
+        const standardVersions: StandardVersion[] = [
+          {
+            id: 'standard-version-1' as StandardVersionId,
+            standardId: standard.id,
+            name: standard.name,
+            slug: standard.slug,
+            description: standard.description,
+            version: standard.version,
+            summary: 'IDE code quality standards',
+            userId: user.id,
+            scope: standard.scope,
+          },
+        ];
+
+        // Deploy to jetbrains target for Claude
+        standardUpdates = await deployerService.aggregateStandardsDeployments(
           standardVersions,
           gitRepo,
           [jetbrainsTarget],
           ['claude'],
         );
 
-      expect(standardUpdates.createOrUpdate).toHaveLength(1);
+        deployedFile = standardUpdates.createOrUpdate[0];
+      });
 
-      // Verify Claude file is deployed to jetbrains/CLAUDE.md
-      const deployedFile = standardUpdates.createOrUpdate[0];
-      expect(deployedFile.path).toBe('jetbrains/CLAUDE.md');
-      // Claude deployer creates a general template for standards, not specific standard content
-      expect(deployedFile.sections).toBeDefined();
-      expect(deployedFile.sections![0].content).toContain('Packmind Standards');
-      expect(deployedFile.sections![0].content).toContain(standard.name);
+      it('creates exactly one file to update', () => {
+        expect(standardUpdates.createOrUpdate).toHaveLength(1);
+      });
+
+      it('deploys to correct path', () => {
+        expect(deployedFile.path).toBe(
+          'jetbrains/.claude/rules/packmind/standard-ide-code-quality-standards.md',
+        );
+      });
+
+      it('includes file content', () => {
+        expect(deployedFile.content).toBeDefined();
+      });
+
+      it('includes frontmatter delimiter', () => {
+        expect(deployedFile.content).toContain('---');
+      });
+
+      it('includes standard name in frontmatter', () => {
+        expect(deployedFile.content).toContain(
+          'name: IDE Code Quality Standards',
+        );
+      });
+
+      it('includes standard header', () => {
+        expect(deployedFile.content).toContain(
+          '## Standard: IDE Code Quality Standards',
+        );
+      });
+
+      it('includes rule content', () => {
+        expect(deployedFile.content).toContain(
+          '* Always use meaningful variable names',
+        );
+      });
     });
 
     it('deploys standard to jetbrains path for Cursor agent', async () => {

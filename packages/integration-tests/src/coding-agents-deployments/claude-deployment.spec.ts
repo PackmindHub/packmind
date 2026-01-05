@@ -194,121 +194,184 @@ describe('Claude Deployment Integration', () => {
       }
     });
 
-    it('creates CLAUDE.md with standards instructions only', async () => {
-      const standardVersions: StandardVersion[] = [
-        {
-          id: 'standard-version-1' as StandardVersionId,
-          standardId: standard.id,
-          name: standard.name,
-          slug: standard.slug,
-          description: standard.description,
-          version: standard.version,
-          summary: 'Test standard for deployment',
-          userId: user.id,
-          scope: standard.scope,
-        },
-      ];
+    describe('when deploying standards', () => {
+      let fileUpdates: { createOrUpdate: FileModification[]; delete: string[] };
+      let standardFile: FileModification | undefined;
 
-      const fileUpdates = await deployerService.aggregateStandardsDeployments(
-        standardVersions,
-        gitRepo,
-        [defaultTarget],
-        ['claude'],
-      );
+      beforeEach(async () => {
+        const standardVersions: StandardVersion[] = [
+          {
+            id: 'standard-version-1' as StandardVersionId,
+            standardId: standard.id,
+            name: standard.name,
+            slug: standard.slug,
+            description: standard.description,
+            version: standard.version,
+            summary: 'Test standard for deployment',
+            userId: user.id,
+            scope: standard.scope,
+          },
+        ];
 
-      expect(fileUpdates.createOrUpdate).toHaveLength(1);
-      expect(fileUpdates.delete).toHaveLength(0);
-
-      const claudeFile = fileUpdates.createOrUpdate.find(
-        (file) => file.path === 'CLAUDE.md',
-      );
-
-      expect(claudeFile).toBeDefined();
-      if (claudeFile) {
-        const sectionContent = claudeFile.sections![0].content;
-        expect(sectionContent).toContain('# Packmind Standards');
-        expect(sectionContent).toContain(
-          'Before starting your work, make sure to review the coding standards relevant to your current task',
-        );
-        expect(sectionContent).toContain('Test standard for deployment :');
-        expect(sectionContent).toContain('* Use meaningful variable names');
-        expect(sectionContent).toContain('* Write comprehensive tests');
-        expect(sectionContent).toContain(
-          'Full standard is available here for further request: [Test Standard](.packmind/standards/test-standard.md)',
-        );
-
-        // Should NOT contain recipes content yet
-        expect(sectionContent).not.toContain('# Packmind Recipes');
-      }
-    });
-
-    it('merges recipes and standards for combined deployment', async () => {
-      const recipeVersions: RecipeVersion[] = [
-        {
-          id: 'recipe-version-1' as RecipeVersionId,
-          recipeId: recipe.id,
-          name: recipe.name,
-          slug: recipe.slug,
-          content: recipe.content,
-          version: recipe.version,
-          summary: 'Test recipe for deployment',
-          userId: user.id,
-        },
-      ];
-
-      const standardVersions: StandardVersion[] = [
-        {
-          id: 'standard-version-1' as StandardVersionId,
-          standardId: standard.id,
-          name: standard.name,
-          slug: standard.slug,
-          description: standard.description,
-          version: standard.version,
-          summary: 'Test standard for deployment',
-          userId: user.id,
-          scope: standard.scope,
-        },
-      ];
-
-      // Deploy recipes first
-      const recipeUpdates = await deployerService.aggregateRecipeDeployments(
-        recipeVersions,
-        gitRepo,
-        [defaultTarget],
-        ['claude'],
-      );
-
-      // Deploy standards second
-      const standardsUpdates =
-        await deployerService.aggregateStandardsDeployments(
+        fileUpdates = await deployerService.aggregateStandardsDeployments(
           standardVersions,
           gitRepo,
           [defaultTarget],
           ['claude'],
         );
 
-      // Simulate the file merging that DeployerService does
-      const allUpdates = [recipeUpdates, standardsUpdates];
-      const pathMap = new Map<string, FileModification>();
+        standardFile = fileUpdates.createOrUpdate.find((file) =>
+          file.path.startsWith('.claude/rules/packmind/standard-'),
+        );
+      });
 
-      for (const update of allUpdates) {
-        for (const file of update.createOrUpdate) {
-          pathMap.set(file.path, file);
+      it('creates exactly one file to update', () => {
+        expect(fileUpdates.createOrUpdate).toHaveLength(1);
+      });
+
+      it('has no files to delete', () => {
+        expect(fileUpdates.delete).toHaveLength(0);
+      });
+
+      it('creates individual standard file in .claude/rules/packmind/', () => {
+        expect(standardFile).toBeDefined();
+      });
+
+      it('uses correct path for standard file', () => {
+        expect(standardFile?.path).toBe(
+          '.claude/rules/packmind/standard-test-standard.md',
+        );
+      });
+
+      it('includes frontmatter delimiter', () => {
+        expect(standardFile?.content).toContain('---');
+      });
+
+      it('includes standard name in frontmatter', () => {
+        expect(standardFile?.content).toContain('name: Test Standard');
+      });
+
+      it('includes globs in frontmatter', () => {
+        expect(standardFile?.content).toContain('globs:');
+      });
+
+      it('includes alwaysApply setting', () => {
+        expect(standardFile?.content).toContain('alwaysApply: false');
+      });
+
+      it('includes standard description', () => {
+        expect(standardFile?.content).toContain(
+          'description: Test standard for deployment',
+        );
+      });
+
+      it('includes standard header', () => {
+        expect(standardFile?.content).toContain('## Standard: Test Standard');
+      });
+
+      it('includes first rule content', () => {
+        expect(standardFile?.content).toContain(
+          '* Use meaningful variable names',
+        );
+      });
+
+      it('includes second rule content', () => {
+        expect(standardFile?.content).toContain('* Write comprehensive tests');
+      });
+
+      it('includes link to full standard', () => {
+        expect(standardFile?.content).toContain(
+          'Full standard is available here for further request: [Test Standard](../../../.packmind/standards/test-standard.md)',
+        );
+      });
+    });
+
+    describe('when deploying recipes and standards together', () => {
+      let pathMap: Map<string, FileModification>;
+
+      beforeEach(async () => {
+        const recipeVersions: RecipeVersion[] = [
+          {
+            id: 'recipe-version-1' as RecipeVersionId,
+            recipeId: recipe.id,
+            name: recipe.name,
+            slug: recipe.slug,
+            content: recipe.content,
+            version: recipe.version,
+            summary: 'Test recipe for deployment',
+            userId: user.id,
+          },
+        ];
+
+        const standardVersions: StandardVersion[] = [
+          {
+            id: 'standard-version-1' as StandardVersionId,
+            standardId: standard.id,
+            name: standard.name,
+            slug: standard.slug,
+            description: standard.description,
+            version: standard.version,
+            summary: 'Test standard for deployment',
+            userId: user.id,
+            scope: standard.scope,
+          },
+        ];
+
+        // Deploy recipes first
+        const recipeUpdates = await deployerService.aggregateRecipeDeployments(
+          recipeVersions,
+          gitRepo,
+          [defaultTarget],
+          ['claude'],
+        );
+
+        // Deploy standards second
+        const standardsUpdates =
+          await deployerService.aggregateStandardsDeployments(
+            standardVersions,
+            gitRepo,
+            [defaultTarget],
+            ['claude'],
+          );
+
+        // Simulate the file merging that DeployerService does
+        const allUpdates = [recipeUpdates, standardsUpdates];
+        pathMap = new Map<string, FileModification>();
+
+        for (const update of allUpdates) {
+          for (const file of update.createOrUpdate) {
+            pathMap.set(file.path, file);
+          }
         }
-      }
+      });
 
-      // Since both write to the same file, the last one wins in this simulation
-      // This demonstrates the issue that was fixed by implementing content checking
-      expect(pathMap.size).toBe(1);
-      expect(pathMap.has('CLAUDE.md')).toBe(true);
+      it('creates exactly two files', () => {
+        expect(pathMap.size).toBe(2);
+      });
 
-      // The final content should be from the standards deployment (last one wins)
-      const finalFile = pathMap.get('CLAUDE.md');
-      expect(finalFile).toBeDefined();
-      if (finalFile && finalFile.sections) {
-        const sectionContent = finalFile.sections[0].content;
-        expect(sectionContent).toContain('# Packmind Standards');
-      }
+      it('creates CLAUDE.md file', () => {
+        expect(pathMap.has('CLAUDE.md')).toBe(true);
+      });
+
+      it('creates standard file in .claude/rules/packmind/', () => {
+        expect(
+          pathMap.has('.claude/rules/packmind/standard-test-standard.md'),
+        ).toBe(true);
+      });
+
+      it('includes recipes section in CLAUDE.md', () => {
+        const claudeFile = pathMap.get('CLAUDE.md');
+        expect(claudeFile?.sections?.[0].content).toContain(
+          '# Packmind Recipes',
+        );
+      });
+
+      it('includes standard header in standard file', () => {
+        const standardFile = pathMap.get(
+          '.claude/rules/packmind/standard-test-standard.md',
+        );
+        expect(standardFile?.content).toContain('## Standard: Test Standard');
+      });
     });
   });
 
@@ -373,47 +436,78 @@ describe('Claude Deployment Integration', () => {
       expect(sectionContent).not.toContain('# Packmind Standards');
     });
 
-    it('generates standards section content', async () => {
-      const standardVersions: StandardVersion[] = [
-        {
-          id: 'standard-version-1' as StandardVersionId,
-          standardId: standard.id,
-          name: standard.name,
-          slug: standard.slug,
-          description: standard.description,
-          version: standard.version,
-          summary: 'Test standard for deployment',
-          userId: user.id,
-          scope: standard.scope,
-        },
-      ];
+    describe('when generating individual standard file', () => {
+      let fileUpdates: { createOrUpdate: FileModification[]; delete: string[] };
+      let standardFile: FileModification;
 
-      const fileUpdates = await deployerService.aggregateStandardsDeployments(
-        standardVersions,
-        gitRepo,
-        [defaultTarget],
-        ['claude'],
-      );
+      beforeEach(async () => {
+        const standardVersions: StandardVersion[] = [
+          {
+            id: 'standard-version-1' as StandardVersionId,
+            standardId: standard.id,
+            name: standard.name,
+            slug: standard.slug,
+            description: standard.description,
+            version: standard.version,
+            summary: 'Test standard for deployment',
+            userId: user.id,
+            scope: standard.scope,
+          },
+        ];
 
-      expect(fileUpdates.createOrUpdate).toHaveLength(1);
-      expect(fileUpdates.delete).toHaveLength(0);
+        fileUpdates = await deployerService.aggregateStandardsDeployments(
+          standardVersions,
+          gitRepo,
+          [defaultTarget],
+          ['claude'],
+        );
 
-      const claudeFile = fileUpdates.createOrUpdate[0];
-      expect(claudeFile.path).toBe('CLAUDE.md');
+        standardFile = fileUpdates.createOrUpdate[0];
+      });
 
-      const sectionContent = claudeFile.sections![0].content;
+      it('creates exactly one file to update', () => {
+        expect(fileUpdates.createOrUpdate).toHaveLength(1);
+      });
 
-      // Should generate standards section with Packmind content only
-      expect(sectionContent).toContain('# Packmind Standards');
-      expect(sectionContent).toContain(
-        'Before starting your work, make sure to review the coding standards relevant to your current task',
-      );
-      expect(sectionContent).toContain('* Use meaningful variable names');
-      expect(sectionContent).toContain('* Write comprehensive tests');
+      it('has no files to delete', () => {
+        expect(fileUpdates.delete).toHaveLength(0);
+      });
 
-      // Should NOT contain user content (that's preserved by merge layer)
-      expect(sectionContent).not.toContain('# Some User Instructions');
-      expect(sectionContent).not.toContain('# Packmind Recipes');
+      it('uses correct path for standard file', () => {
+        expect(standardFile.path).toBe(
+          '.claude/rules/packmind/standard-test-standard.md',
+        );
+      });
+
+      it('includes frontmatter delimiter', () => {
+        expect(standardFile.content).toContain('---');
+      });
+
+      it('includes standard name in frontmatter', () => {
+        expect(standardFile.content).toContain('name: Test Standard');
+      });
+
+      it('includes standard header', () => {
+        expect(standardFile.content).toContain('## Standard: Test Standard');
+      });
+
+      it('includes first rule content', () => {
+        expect(standardFile.content).toContain(
+          '* Use meaningful variable names',
+        );
+      });
+
+      it('includes second rule content', () => {
+        expect(standardFile.content).toContain('* Write comprehensive tests');
+      });
+
+      it('excludes user content', () => {
+        expect(standardFile.content).not.toContain('# Some User Instructions');
+      });
+
+      it('excludes recipes content', () => {
+        expect(standardFile.content).not.toContain('# Packmind Recipes');
+      });
     });
   });
 
