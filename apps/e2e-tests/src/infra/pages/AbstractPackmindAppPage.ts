@@ -1,7 +1,7 @@
 import {
   IPackagesPage,
   IPackmindAppPage,
-  IRecipesPage,
+  ICommandsPage,
   ISettingsPage,
   IStandardsPage,
 } from '../../domain/pages';
@@ -15,7 +15,7 @@ export abstract class AbstractPackmindAppPage
   extends AbstractPackmindPage
   implements IPackmindAppPage
 {
-  openRecipes(): Promise<IRecipesPage> {
+  openCommands(): Promise<ICommandsPage> {
     throw new Error('Not implemented yet');
   }
 
