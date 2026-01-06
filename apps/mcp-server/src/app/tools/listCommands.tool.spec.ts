@@ -213,7 +213,7 @@ describe('listCommands.tool', () => {
       'user-123',
       'org-123',
       'mcp_tool_call',
-      { tool: 'list_recipes' },
+      { tool: 'list_commands' },
     );
   });
 

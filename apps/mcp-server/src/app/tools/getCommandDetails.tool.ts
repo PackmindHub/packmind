@@ -64,7 +64,7 @@ export function registerGetCommandDetailsTool(
           createUserId(userContext.userId),
           createOrganizationId(userContext.organizationId),
           'mcp_tool_call',
-          { tool: `get_recipe_details`, recipeSlug },
+          { tool: `get_command_details`, recipeSlug },
         );
 
         return {

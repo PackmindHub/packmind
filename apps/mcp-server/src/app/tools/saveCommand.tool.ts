@@ -165,7 +165,7 @@ export function registerSaveCommandTool(
         createUserId(userContext.userId),
         createOrganizationId(userContext.organizationId),
         'mcp_tool_call',
-        { tool: `save_recipe` },
+        { tool: `save_command` },
       );
 
       // For trial users, ensure the recipe is added to the Default package

@@ -60,7 +60,7 @@ export function registerListCommandsTool(
           createUserId(userContext.userId),
           createOrganizationId(userContext.organizationId),
           'mcp_tool_call',
-          { tool: `list_recipes` },
+          { tool: `list_commands` },
         );
 
         return {

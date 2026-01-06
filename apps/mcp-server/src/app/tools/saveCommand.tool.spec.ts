@@ -378,7 +378,7 @@ export class User {
         createUserId('user-123'),
         createOrganizationId('org-123'),
         'mcp_tool_call',
-        { tool: 'save_recipe' },
+        { tool: 'save_command' },
       );
     });
 

@@ -140,7 +140,7 @@ describe('getCommandDetails.tool', () => {
       'user-123',
       'org-123',
       'mcp_tool_call',
-      { tool: 'get_recipe_details', recipeSlug: 'test-recipe' },
+      { tool: 'get_command_details', recipeSlug: 'test-recipe' },
     );
   });
 
