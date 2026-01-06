@@ -2,11 +2,11 @@ import { UserEvent } from '../../events';
 import { SpaceId } from '../../spaces';
 import { RecipeId } from '../RecipeId';
 
-export interface RecipeDeletedPayload {
-  recipeId: RecipeId;
+export interface CommandDeletedPayload {
+  id: RecipeId;
   spaceId: SpaceId;
 }
 
-export class RecipeDeletedEvent extends UserEvent<RecipeDeletedPayload> {
+export class CommandDeletedEvent extends UserEvent<CommandDeletedPayload> {
   static override readonly eventName = 'recipes.recipe.deleted';
 }

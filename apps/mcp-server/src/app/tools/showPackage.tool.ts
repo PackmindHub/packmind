@@ -64,8 +64,8 @@ export function registerShowPackageTool(
 
         if (pkg.recipes && pkg.recipes.length > 0) {
           contentParts.push(`## Commands`, ``);
-          for (const recipe of pkg.recipes) {
-            contentParts.push(`• ${recipe.name}`);
+          for (const command of pkg.recipes) {
+            contentParts.push(`• ${command.name}`);
           }
           contentParts.push(``);
         }

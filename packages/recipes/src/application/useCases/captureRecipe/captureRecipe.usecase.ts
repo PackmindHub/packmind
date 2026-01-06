@@ -10,7 +10,7 @@ import {
   createUserId,
   ICaptureRecipeUseCase,
   Recipe,
-  RecipeCreatedEvent,
+  CommandCreatedEvent,
   RecipeStep,
 } from '@packmind/types';
 import slug from 'slug';
@@ -147,8 +147,8 @@ export class CaptureRecipeUsecase implements ICaptureRecipeUseCase {
       });
 
       this.eventEmitterService.emit(
-        new RecipeCreatedEvent({
-          recipeId: createRecipeId(recipe.id),
+        new CommandCreatedEvent({
+          id: createRecipeId(recipe.id),
           spaceId,
           organizationId,
           userId,

@@ -46,7 +46,7 @@ describe('createCommand.tool', () => {
     jest.clearAllMocks();
   });
 
-  describe('registerCreateRecipeTool', () => {
+  describe('registerCreateCommandTool', () => {
     let toolHandler: (params: {
       step?: string;
     }) => Promise<{ content: { type: string; text: string }[] }>;

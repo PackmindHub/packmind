@@ -8,7 +8,7 @@ import {
   DeleteRecipeCommand,
   OrganizationId,
   Recipe,
-  RecipeDeletedEvent,
+  CommandDeletedEvent,
   RecipeId,
   SpaceId,
   UserId,
@@ -137,11 +137,11 @@ describe('DeleteRecipeUsecase', () => {
 
       it('emits RecipeDeletedEvent with correct payload', () => {
         expect(eventEmitterService.emit).toHaveBeenCalledWith(
-          expect.any(RecipeDeletedEvent),
+          expect.any(CommandDeletedEvent),
         );
         const emittedEvent = eventEmitterService.emit.mock
-          .calls[0][0] as RecipeDeletedEvent;
-        expect(emittedEvent.payload.recipeId).toBe(recipeId);
+          .calls[0][0] as CommandDeletedEvent;
+        expect(emittedEvent.payload.id).toBe(recipeId);
         expect(emittedEvent.payload.spaceId).toBe(spaceId);
       });
     });

@@ -5,7 +5,7 @@ import {
   createSpaceId,
   createStandardId,
   createUserId,
-  RecipeDeletedEvent,
+  CommandDeletedEvent,
   StandardDeletedEvent,
 } from '@packmind/types';
 import { DataSource } from 'typeorm';
@@ -59,8 +59,8 @@ describe('DeploymentsListener', () => {
     const recipeId = createRecipeId('recipe-123');
 
     it('calls removeRecipeFromAllPackages with the recipeId', async () => {
-      const event = new RecipeDeletedEvent({
-        recipeId,
+      const event = new CommandDeletedEvent({
+        id: recipeId,
         spaceId,
         organizationId,
         userId,
@@ -80,8 +80,8 @@ describe('DeploymentsListener', () => {
       const recipeId2 = createRecipeId('recipe-456');
 
       eventService.emit(
-        new RecipeDeletedEvent({
-          recipeId,
+        new CommandDeletedEvent({
+          id: recipeId,
           spaceId,
           organizationId,
           userId,
@@ -89,8 +89,8 @@ describe('DeploymentsListener', () => {
       );
 
       eventService.emit(
-        new RecipeDeletedEvent({
-          recipeId: recipeId2,
+        new CommandDeletedEvent({
+          id: recipeId2,
           spaceId,
           organizationId,
           userId,

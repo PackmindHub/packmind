@@ -1,6 +1,6 @@
 import { PackmindLogger } from '@packmind/logger';
 import { PackmindListener } from '@packmind/node-utils';
-import { RecipeDeletedEvent, StandardDeletedEvent } from '@packmind/types';
+import { CommandDeletedEvent, StandardDeletedEvent } from '@packmind/types';
 import { IPackageRepository } from '../../domain/repositories/IPackageRepository';
 
 const origin = 'DeploymentsListener';
@@ -14,24 +14,24 @@ export class DeploymentsListener extends PackmindListener<IPackageRepository> {
   }
 
   protected registerHandlers(): void {
-    this.subscribe(RecipeDeletedEvent, this.handleRecipeDeleted);
+    this.subscribe(CommandDeletedEvent, this.handleCommandDeleted);
     this.subscribe(StandardDeletedEvent, this.handleStandardDeleted);
   }
 
-  private handleRecipeDeleted = async (
-    event: RecipeDeletedEvent,
+  private handleCommandDeleted = async (
+    event: CommandDeletedEvent,
   ): Promise<void> => {
-    const { recipeId } = event.payload;
-    this.logger.info('Handling RecipeDeletedEvent', { recipeId });
+    const { id } = event.payload;
+    this.logger.info('Handling RecipeDeletedEvent', { recipeId: id });
 
     try {
-      await this.adapter.removeRecipeFromAllPackages(recipeId);
+      await this.adapter.removeRecipeFromAllPackages(id);
       this.logger.info('Recipe removed from all packages successfully', {
-        recipeId,
+        recipeId: id,
       });
     } catch (error) {
       this.logger.error('Failed to remove recipe from packages', {
-        recipeId,
+        recipeId: id,
         error: error instanceof Error ? error.message : String(error),
       });
       // Re-throw to ensure the error is not silently swallowed
