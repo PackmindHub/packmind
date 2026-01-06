@@ -104,15 +104,19 @@ export class PackageService {
 
   async getPackagesBySlugsWithArtefacts(
     slugs: string[],
+    organizationId: OrganizationId,
   ): Promise<PackageWithArtefacts[]> {
     this.logger.info('Getting packages by slugs with artefacts', {
       slugs,
       count: slugs.length,
+      organizationId,
     });
 
     try {
-      const packages =
-        await this.packageRepository.findBySlugsWithArtefacts(slugs);
+      const packages = await this.packageRepository.findBySlugsWithArtefacts(
+        slugs,
+        organizationId,
+      );
 
       this.logger.info('Packages found by slugs with artefacts successfully', {
         requestedCount: slugs.length,

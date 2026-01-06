@@ -394,6 +394,29 @@ describe('PullContentUseCase', () => {
       });
     });
 
+    describe('when package belongs to a different organization', () => {
+      beforeEach(() => {
+        // Package exists but belongs to a different organization
+        // Repository filters by organization, so it returns empty array
+        packageService.getPackagesBySlugsWithArtefacts.mockResolvedValue([]);
+      });
+
+      it('throws PackagesNotFoundError', async () => {
+        await expect(useCase.execute(command)).rejects.toThrow(
+          'Package "test-package" was not found',
+        );
+      });
+
+      it('passes the organization ID to packageService', async () => {
+        // eslint-disable-next-line @typescript-eslint/no-empty-function
+        await useCase.execute(command).catch(() => {});
+
+        expect(
+          packageService.getPackagesBySlugsWithArtefacts,
+        ).toHaveBeenCalledWith(['test-package'], organization.id);
+      });
+    });
+
     describe('when generating packmind.json config file', () => {
       let testPackage: PackageWithArtefacts;
 
@@ -891,7 +914,7 @@ describe('PullContentUseCase', () => {
 
         expect(
           packageService.getPackagesBySlugsWithArtefacts,
-        ).toHaveBeenCalledWith(['package-a']);
+        ).toHaveBeenCalledWith(['package-a'], organization.id);
       });
 
       it('calls generateRemovalFileUpdates with all artifacts from removed package', async () => {

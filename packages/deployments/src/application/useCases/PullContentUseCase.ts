@@ -13,6 +13,7 @@ import {
   IPullContentResponse,
   IRecipesPort,
   IStandardsPort,
+  OrganizationId,
   PullContentCommand,
   RecipeVersion,
   StandardVersion,
@@ -105,6 +106,7 @@ export class PullContentUseCase extends AbstractMemberUseCase<
         const packages =
           await this.packageService.getPackagesBySlugsWithArtefacts(
             command.packagesSlugs,
+            command.organization.id,
           );
 
         // Check if all requested slugs were found
@@ -201,8 +203,10 @@ export class PullContentUseCase extends AbstractMemberUseCase<
             count: removedPackageSlugs.length,
           });
 
-          const result =
-            await this.fetchArtifactsForRemovedPackages(removedPackageSlugs);
+          const result = await this.fetchArtifactsForRemovedPackages(
+            removedPackageSlugs,
+            command.organization.id,
+          );
           removedRecipeVersions = result.recipeVersions;
           removedStandardVersions = result.standardVersions;
 
@@ -411,15 +415,16 @@ export class PullContentUseCase extends AbstractMemberUseCase<
    */
   private async fetchArtifactsForRemovedPackages(
     removedPackageSlugs: string[],
+    organizationId: OrganizationId,
   ): Promise<{
     recipeVersions: RecipeVersion[];
     standardVersions: StandardVersion[];
   }> {
     // Fetch packages by slugs (they may not exist anymore, so we handle gracefully)
-    const packages =
-      await this.packageService.getPackagesBySlugsWithArtefacts(
-        removedPackageSlugs,
-      );
+    const packages = await this.packageService.getPackagesBySlugsWithArtefacts(
+      removedPackageSlugs,
+      organizationId,
+    );
 
     // Extract recipes and standards from removed packages
     const allRecipes = packages.flatMap((pkg) => pkg.recipes);
