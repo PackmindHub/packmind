@@ -32,7 +32,8 @@ export const DetectionAccordion: React.FC<DetectionAccordionProps> = ({
       collapsible
       backgroundColor={disabled ? 'background.tertiary' : 'background.primary'}
       px="4"
-      py="2"
+      paddingTop="2"
+      paddingBottom={open ? '6' : '2'}
       rounded="md"
       variant="plain"
       disabled={disabled}

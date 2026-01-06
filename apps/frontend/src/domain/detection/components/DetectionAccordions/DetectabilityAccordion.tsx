@@ -60,7 +60,11 @@ const DetectabilityBadge: React.FunctionComponent<{
 
   const badgeConfig = STATUS_CONFIG[status];
   return (
-    <PMBadge colorPalette={badgeConfig.colorPalette} variant="solid">
+    <PMBadge
+      colorPalette={badgeConfig.colorPalette}
+      backgroundColor="colorPalette.500"
+      variant="solid"
+    >
       {badgeConfig.text}
     </PMBadge>
   );

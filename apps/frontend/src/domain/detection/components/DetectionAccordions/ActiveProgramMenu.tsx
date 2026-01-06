@@ -6,6 +6,7 @@ import {
   PMButton,
   PMText,
   PMVStack,
+  PMSeparator,
 } from '@packmind/ui';
 import { LuChevronDown, LuPlay, LuFileText, LuSparkles } from 'react-icons/lu';
 import { DetectionStatus } from '@packmind/types';
@@ -173,7 +174,7 @@ export const ActiveProgramMenu: React.FC<ActiveProgramMenuProps> = ({
       <PMPortal>
         <PMMenu.Positioner>
           <PMMenu.Content>
-            <PMVStack alignItems="left">
+            <PMVStack alignItems="left" px="1" pb="2">
               <PMText variant={'body-important'}>Information</PMText>
               <PMText fontSize={'sm'}>
                 Version: {activeConfig?.detectionProgram?.version}
@@ -185,6 +186,7 @@ export const ActiveProgramMenu: React.FC<ActiveProgramMenuProps> = ({
                 </PMText>
               )}
             </PMVStack>
+            <PMSeparator borderColor="border.tertiary" pb="2" />
             {actions.map((action, index) => (
               <PMMenu.Item
                 key={index}
