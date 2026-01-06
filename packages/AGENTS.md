@@ -88,7 +88,7 @@ Full standard is available here for further request: [Jest Test Suite Organizati
 
 ## Standard: Compliance - Logging Personal Information
 
-Ensure personal information is masked in logs using a standard format in TypeScript projects to maintain user privacy and comply with data protection regulations when logging user-related information or debugging authentication flows. :
+Enforce masking of personal information in TypeScript logs, using a standard first-6-characters-plus-* format for emails and similar patterns for other identifiers, to protect user privacy, comply with data protection regulations, and reduce security risks when handling user-related log entries. :
 * Never log personal information in clear text across all log levels. Always mask sensitive data such as emails, phone numbers, IP addresses, and other personally identifiable information before logging.
 * Use the standard masking format of first 6 characters followed by "*" for logging user emails. This ensures consistency across the codebase and makes it easier to audit logs for compliance.
 
@@ -113,7 +113,7 @@ Full standard is available here for further request: [Backend Tests Redaction](.
 
 ## Standard: Back-end repositories SQL queries using TypeORM
 
-Implement SQL query guidelines using TypeORM's QueryBuilder in back-end repositories under /infra/repositories/*Repository.ts to enhance type safety, prevent SQL injection, and improve code maintainability when writing database queries, including lookups, joins, and handling soft-deleted entities. :
+Standardize use of TypeORM QueryBuilder with parameterized WHERE/AND WHERE and IN (:...param) clauses in /infra/repositories/*.ts, including correct handling of soft-deleted entities via withDeleted() or includeDeleted options, to ensure type safety, prevent SQL injection, and improve maintainability and testability of all repository queries. :
 * Handle soft-deleted entities properly using withDeleted() or includeDeleted options. Always respect the QueryOption parameter when provided, and only include deleted entities when explicitly requested.
 * Use IN clause with array parameterization for filtering by multiple values. Always pass arrays as spread parameters using :...paramName syntax to ensure proper parameterization.
 * Use TypeORM's QueryBuilder with parameterized queries instead of raw SQL strings. Always pass parameters as objects to where(), andWhere(), and other query methods to prevent SQL injection and ensure type safety.
