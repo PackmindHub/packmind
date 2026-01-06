@@ -29,7 +29,7 @@ import { DataSource } from 'typeorm';
 import { TestApp } from '../helpers/TestApp';
 
 describe('Cursor Deployment Integration', () => {
-  const CURSOR_COMMANDS_PATH = '.cursor/commands';
+  const CURSOR_COMMANDS_PATH = '.cursor/commands/packmind';
   let testApp: TestApp;
   let dataSource: DataSource;
   let standardsPort: IStandardsPort;

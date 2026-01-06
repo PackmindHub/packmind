@@ -15,7 +15,7 @@ import { getTargetPrefixedPath } from '../utils/FileUtils';
 const origin = 'CursorDeployer';
 
 export class CursorDeployer implements ICodingAgentDeployer {
-  private static readonly COMMANDS_PATH = '.cursor/commands';
+  private static readonly COMMANDS_PATH = '.cursor/commands/packmind';
   /** @deprecated Legacy path to clean up during migration */
   private static readonly LEGACY_RECIPES_INDEX_PATH =
     '.cursor/rules/packmind/recipes-index.mdc';
