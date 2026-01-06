@@ -3,11 +3,15 @@ import {
   ArtifactsPulledEvent,
   DeploymentCompletedEvent,
   IEventTrackingPort,
-  RecipeCreatedEvent,
-  RecipeUpdatedEvent,
+  CommandCreatedEvent,
+  CommandUpdatedEvent,
   RuleAddedEvent,
   StandardCreatedEvent,
   StandardUpdatedEvent,
+  createUserId,
+  createOrganizationId,
+  createRecipeId,
+  createSpaceId,
 } from '@packmind/types';
 import { DataSource } from 'typeorm';
 import { AmplitudeEventListener } from './AmplitudeEventListener';
@@ -119,13 +123,13 @@ describe('AmplitudeEventListener', () => {
     });
   });
 
-  describe('RecipeCreatedEvent', () => {
-    it('tracks recipe_created event with correct payload', async () => {
-      const event = new RecipeCreatedEvent({
-        userId: 'user-123',
-        organizationId: 'org-456',
-        recipeId: 'recipe-789',
-        spaceId: 'space-abc',
+  describe('CommandCreatedEvent', () => {
+    it('tracks command_created event with correct payload', async () => {
+      const event = new CommandCreatedEvent({
+        userId: createUserId('user-123'),
+        organizationId: createOrganizationId('org-456'),
+        id: createRecipeId('command-789'),
+        spaceId: createSpaceId('space-abc'),
       });
 
       eventEmitterService.emit(event);
@@ -135,22 +139,22 @@ describe('AmplitudeEventListener', () => {
       expect(mockAdapter.trackEvent).toHaveBeenCalledWith(
         'user-123',
         'org-456',
-        'recipe_created',
+        'command_created',
         {
-          recipeId: 'recipe-789',
+          id: 'command-789',
           spaceId: 'space-abc',
         },
       );
     });
   });
 
-  describe('RecipeUpdatedEvent', () => {
-    it('tracks recipe_updated event with correct payload', async () => {
-      const event = new RecipeUpdatedEvent({
-        userId: 'user-123',
-        organizationId: 'org-456',
-        recipeId: 'recipe-789',
-        spaceId: 'space-abc',
+  describe('CommandUpdatedEvent', () => {
+    it('tracks command_updated event with correct payload', async () => {
+      const event = new CommandUpdatedEvent({
+        userId: createUserId('user-123'),
+        organizationId: createOrganizationId('org-456'),
+        id: createRecipeId('command-789'),
+        spaceId: createSpaceId('space-abc'),
         newVersion: 4,
       });
 
@@ -161,9 +165,9 @@ describe('AmplitudeEventListener', () => {
       expect(mockAdapter.trackEvent).toHaveBeenCalledWith(
         'user-123',
         'org-456',
-        'recipe_updated',
+        'command_updated',
         {
-          recipeId: 'recipe-789',
+          id: 'command-789',
           spaceId: 'space-abc',
           newVersion: 4,
         },

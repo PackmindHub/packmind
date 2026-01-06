@@ -3,14 +3,14 @@ import {
   StandardCreatedEvent,
   StandardUpdatedEvent,
   RuleAddedEvent,
-  RecipeCreatedEvent,
-  RecipeUpdatedEvent,
+  CommandCreatedEvent,
+  CommandUpdatedEvent,
   DeploymentCompletedEvent,
   ArtifactsPulledEvent,
   AnonymousTrialStartedEvent,
   AnonymousTrialAccountActivatedEvent,
   StandardDeletedEvent,
-  RecipeDeletedEvent,
+  CommandDeletedEvent,
 } from '@packmind/types';
 import { EventTrackingAdapter } from './EventTrackingAdapter';
 
@@ -26,9 +26,9 @@ export class AmplitudeEventListener extends PackmindListener<EventTrackingAdapte
     this.subscribe(StandardUpdatedEvent, this.onStandardUpdated);
     this.subscribe(StandardDeletedEvent, this.onStandardDeleted);
     this.subscribe(RuleAddedEvent, this.onRuleAdded);
-    this.subscribe(RecipeCreatedEvent, this.onRecipeCreated);
-    this.subscribe(RecipeUpdatedEvent, this.onRecipeUpdated);
-    this.subscribe(RecipeDeletedEvent, this.onRecipeDeleted);
+    this.subscribe(CommandCreatedEvent, this.onCommandCreated);
+    this.subscribe(CommandUpdatedEvent, this.onCommandUpdated);
+    this.subscribe(CommandDeletedEvent, this.onCommandDeleted);
     this.subscribe(DeploymentCompletedEvent, this.onDeploymentCompleted);
     this.subscribe(ArtifactsPulledEvent, this.onArtifactsPulled);
     this.subscribe(AnonymousTrialStartedEvent, this.handleTrialStarted);
@@ -87,34 +87,33 @@ export class AmplitudeEventListener extends PackmindListener<EventTrackingAdapte
     });
   };
 
-  private onRecipeCreated = async (
-    event: RecipeCreatedEvent,
+  private onCommandCreated = async (
+    event: CommandCreatedEvent,
   ): Promise<void> => {
-    const { userId, organizationId, recipeId, spaceId } = event.payload;
-    await this.adapter.trackEvent(userId, organizationId, 'recipe_created', {
-      recipeId,
+    const { userId, organizationId, id, spaceId } = event.payload;
+    await this.adapter.trackEvent(userId, organizationId, 'command_created', {
+      id,
       spaceId,
     });
   };
 
-  private onRecipeUpdated = async (
-    event: RecipeUpdatedEvent,
+  private onCommandUpdated = async (
+    event: CommandUpdatedEvent,
   ): Promise<void> => {
-    const { userId, organizationId, recipeId, spaceId, newVersion } =
-      event.payload;
-    await this.adapter.trackEvent(userId, organizationId, 'recipe_updated', {
-      recipeId,
+    const { userId, organizationId, id, spaceId, newVersion } = event.payload;
+    await this.adapter.trackEvent(userId, organizationId, 'command_updated', {
+      id,
       spaceId,
       newVersion,
     });
   };
 
-  private onRecipeDeleted = async (
-    event: RecipeDeletedEvent,
+  private onCommandDeleted = async (
+    event: CommandDeletedEvent,
   ): Promise<void> => {
-    const { userId, organizationId, recipeId, spaceId } = event.payload;
-    await this.adapter.trackEvent(userId, organizationId, 'recipe_deleted', {
-      recipeId,
+    const { userId, organizationId, id, spaceId } = event.payload;
+    await this.adapter.trackEvent(userId, organizationId, 'command_deleted', {
+      id,
       spaceId,
     });
   };
