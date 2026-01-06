@@ -31,7 +31,7 @@ export class GetPackageSummaryUsecase
   ): Promise<GetPackageSummaryResponse> {
     const packages = await this.services
       .getPackageService()
-      .getPackagesBySlugsWithArtefacts([command.slug]);
+      .getPackagesBySlugsWithArtefacts([command.slug], command.organizationId);
 
     if (packages.length === 0) {
       throw new Error(`Package '${command.slug}' does not exist`);
