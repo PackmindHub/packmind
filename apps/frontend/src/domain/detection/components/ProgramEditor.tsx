@@ -615,7 +615,8 @@ function isDraftCardData(tbd: unknown): tbd is DraftCardData {
     tbd !== null &&
     typeof tbd === 'object' &&
     (tbd as DraftCardData).draftProgram !== undefined &&
-    (tbd as DraftCardData).draftProgram !== null
+    (tbd as DraftCardData).draftProgram !== null &&
+    'activeDetectionProgramId' in (tbd as object)
   );
 }
 
