@@ -11,7 +11,7 @@ import { UserContext } from './types';
 
 export const DEFAULT_PACKAGE_NAME = 'Default';
 export const DEFAULT_PACKAGE_DESCRIPTION =
-  'Default package for organizing your standards and recipes';
+  'Default package for organizing your standards and commands';
 
 export type ArtifactToAdd = {
   standardId?: StandardId;

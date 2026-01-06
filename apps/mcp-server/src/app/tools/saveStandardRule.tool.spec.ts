@@ -668,7 +668,7 @@ describe('addRuleToStandard.tool', () => {
               spaceId: 'space-123',
               name: 'Default',
               description:
-                'Default package for organizing your standards and recipes',
+                'Default package for organizing your standards and commands',
               recipeIds: [],
               standardIds: ['standard-123'],
             });
