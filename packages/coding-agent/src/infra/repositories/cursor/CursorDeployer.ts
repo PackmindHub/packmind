@@ -16,6 +16,9 @@ const origin = 'CursorDeployer';
 
 export class CursorDeployer implements ICodingAgentDeployer {
   private static readonly COMMANDS_PATH = '.cursor/commands';
+  /** @deprecated Legacy path to clean up during migration */
+  private static readonly LEGACY_RECIPES_INDEX_PATH =
+    '.cursor/rules/packmind/recipes-index.mdc';
   private readonly logger: PackmindLogger;
 
   constructor(
@@ -54,6 +57,14 @@ export class CursorDeployer implements ICodingAgentDeployer {
         content: commandFile.content,
       });
     }
+
+    // Clean up legacy recipes-index.mdc file
+    fileUpdates.delete.push({
+      path: getTargetPrefixedPath(
+        CursorDeployer.LEGACY_RECIPES_INDEX_PATH,
+        target,
+      ),
+    });
 
     return fileUpdates;
   }
@@ -109,6 +120,11 @@ export class CursorDeployer implements ICodingAgentDeployer {
         content: commandFile.content,
       });
     }
+
+    // Clean up legacy recipes-index.mdc file
+    fileUpdates.delete.push({
+      path: CursorDeployer.LEGACY_RECIPES_INDEX_PATH,
+    });
 
     return fileUpdates;
   }
@@ -170,6 +186,11 @@ export class CursorDeployer implements ICodingAgentDeployer {
         content: configFile.content,
       });
     }
+
+    // Clean up legacy recipes-index.mdc file
+    fileUpdates.delete.push({
+      path: CursorDeployer.LEGACY_RECIPES_INDEX_PATH,
+    });
 
     return fileUpdates;
   }

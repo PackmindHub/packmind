@@ -190,6 +190,12 @@ describe('Cursor Deployment Integration', () => {
       it('uses recipe content as command file content', () => {
         expect(fileUpdates.createOrUpdate[0].content).toBe(recipe.content);
       });
+
+      it('deletes legacy recipes-index.mdc file', () => {
+        expect(fileUpdates.delete).toContainEqual({
+          path: '.cursor/rules/packmind/recipes-index.mdc',
+        });
+      });
     });
 
     it('creates multiple .cursor/rules/packmind/standard-*.mdc files for standards', async () => {
@@ -385,15 +391,26 @@ describe('Cursor Deployment Integration', () => {
       cursorDeployer = new CursorDeployer(standardsPort, gitPort);
     });
 
-    it('handles empty recipe list gracefully', async () => {
-      const fileUpdates = await cursorDeployer.deployRecipes(
-        [],
-        gitRepo,
-        defaultTarget,
-      );
+    describe('when deploying empty recipe list', () => {
+      let fileUpdates: FileUpdates;
 
-      expect(fileUpdates.createOrUpdate).toHaveLength(0);
-      expect(fileUpdates.delete).toHaveLength(0);
+      beforeEach(async () => {
+        fileUpdates = await cursorDeployer.deployRecipes(
+          [],
+          gitRepo,
+          defaultTarget,
+        );
+      });
+
+      it('creates no command files', () => {
+        expect(fileUpdates.createOrUpdate).toHaveLength(0);
+      });
+
+      it('still deletes legacy recipes-index.mdc file', () => {
+        expect(fileUpdates.delete).toContainEqual({
+          path: '.cursor/rules/packmind/recipes-index.mdc',
+        });
+      });
     });
 
     it('handles empty standards list gracefully', async () => {
