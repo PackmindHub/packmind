@@ -4,6 +4,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import {
   GET_ACTIVE_DETECTION_PROGRAMS_KEY,
   GET_ALL_DETECTION_PROGRAMS_KEY,
+  GET_DETECTION_HEURISTICS_KEY,
   GET_DETECTION_PROGRAM_METADATA_KEY,
   GET_RULE_DETECTION_ASSESSMENT_KEY,
   GET_RULE_LANGUAGE_DETECTION_STATUS_KEY,
@@ -128,6 +129,16 @@ export const useStandardEditionFeatures = (
           queryClient.invalidateQueries({
             queryKey: [
               ...GET_RULE_DETECTION_ASSESSMENT_KEY,
+              standardIdString,
+              ruleIdString,
+              languageString,
+            ],
+          }),
+        );
+        tasks.push(
+          queryClient.invalidateQueries({
+            queryKey: [
+              ...GET_DETECTION_HEURISTICS_KEY,
               standardIdString,
               ruleIdString,
               languageString,

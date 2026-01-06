@@ -338,18 +338,14 @@ export const DetectabilitySection: React.FC<DetectabilitySectionProps> = ({
     ? previousAssessmentData.updatedAt
     : assessment.updatedAt;
 
-  // Hide clues block if assessment is successful and there are no heuristics
-  // OR if assessment is in progress and there's no previous data
-  const shouldShowCluesBlock =
-    (assessment.status !== RuleDetectionAssessmentStatus.SUCCESS ||
-      (detectionHeuristics &&
-        detectionHeuristics.heuristics &&
-        detectionHeuristics.heuristics.length > 0)) &&
-    !(
-      isAssessmentPending &&
-      !previousAssessmentData.clarificationQuestion &&
-      !detectionHeuristics?.heuristics?.length
-    );
+  // Show clues block unless assessment is IN_PROGRESS with no previous data and no heuristics
+  // (i.e., initial loading state with no content to display)
+  // When assessment is SUCCESS, always show the clues block so users can see/edit heuristics
+  const shouldShowCluesBlock = !(
+    isAssessmentPending &&
+    !previousAssessmentData.clarificationQuestion &&
+    !detectionHeuristics?.heuristics?.length
+  );
 
   return (
     <PMVStack width="full" gap={0} p={4}>
