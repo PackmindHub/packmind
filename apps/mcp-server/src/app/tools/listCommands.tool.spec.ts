@@ -69,11 +69,11 @@ describe('listCommands.tool', () => {
     );
   });
 
-  it('returns formatted list of recipes sorted by slug', async () => {
-    const mockRecipesAdapter = {
+  it('returns formatted list of commands sorted by slug', async () => {
+    const mockCommandsAdapter = {
       listRecipesBySpace: jest.fn().mockResolvedValue([
-        { slug: 'recipe-b', name: 'Recipe B' },
-        { slug: 'recipe-a', name: 'Recipe A' },
+        { slug: 'command-b', name: 'Command B' },
+        { slug: 'command-a', name: 'Command A' },
       ]),
     };
 
@@ -87,7 +87,7 @@ describe('listCommands.tool', () => {
     };
 
     mockFastify.recipesHexa.mockReturnValue({
-      getAdapter: () => mockRecipesAdapter,
+      getAdapter: () => mockCommandsAdapter,
     });
 
     mockFastify.spacesHexa.mockReturnValue({
@@ -102,20 +102,20 @@ describe('listCommands.tool', () => {
       content: [
         {
           type: 'text',
-          text: '• recipe-a: Recipe A\n• recipe-b: Recipe B',
+          text: '• command-a: Command A\n• command-b: Command B',
         },
       ],
     });
   });
 
-  it('limits results to 20 recipes', async () => {
-    const mockRecipes = Array.from({ length: 25 }, (_, i) => ({
-      slug: `recipe-${i.toString().padStart(2, '0')}`,
-      name: `Recipe ${i}`,
+  it('limits results to 20 commands', async () => {
+    const mockCommands = Array.from({ length: 25 }, (_, i) => ({
+      slug: `command-${i.toString().padStart(2, '0')}`,
+      name: `Command ${i}`,
     }));
 
-    const mockRecipesAdapter = {
-      listRecipesBySpace: jest.fn().mockResolvedValue(mockRecipes),
+    const mockCommandsAdapter = {
+      listRecipesBySpace: jest.fn().mockResolvedValue(mockCommands),
     };
 
     const mockSpacesAdapter = {
@@ -128,7 +128,7 @@ describe('listCommands.tool', () => {
     };
 
     mockFastify.recipesHexa.mockReturnValue({
-      getAdapter: () => mockRecipesAdapter,
+      getAdapter: () => mockCommandsAdapter,
     });
 
     mockFastify.spacesHexa.mockReturnValue({
@@ -143,9 +143,9 @@ describe('listCommands.tool', () => {
     expect(lines).toHaveLength(20);
   });
 
-  describe('when no recipes found', () => {
+  describe('when no commands found', () => {
     it('returns message', async () => {
-      const mockRecipesAdapter = {
+      const mockCommandsAdapter = {
         listRecipesBySpace: jest.fn().mockResolvedValue([]),
       };
 
@@ -159,7 +159,7 @@ describe('listCommands.tool', () => {
       };
 
       mockFastify.recipesHexa.mockReturnValue({
-        getAdapter: () => mockRecipesAdapter,
+        getAdapter: () => mockCommandsAdapter,
       });
 
       mockFastify.spacesHexa.mockReturnValue({
@@ -182,10 +182,10 @@ describe('listCommands.tool', () => {
   });
 
   it('tracks analytics event on success', async () => {
-    const mockRecipesAdapter = {
+    const mockCommandsAdapter = {
       listRecipesBySpace: jest
         .fn()
-        .mockResolvedValue([{ slug: 'recipe-a', name: 'Recipe A' }]),
+        .mockResolvedValue([{ slug: 'command-a', name: 'Command A' }]),
     };
 
     const mockSpacesAdapter = {
@@ -198,7 +198,7 @@ describe('listCommands.tool', () => {
     };
 
     mockFastify.recipesHexa.mockReturnValue({
-      getAdapter: () => mockRecipesAdapter,
+      getAdapter: () => mockCommandsAdapter,
     });
 
     mockFastify.spacesHexa.mockReturnValue({
@@ -231,7 +231,7 @@ describe('listCommands.tool', () => {
 
   describe('when adapter throws error', () => {
     it('returns error message', async () => {
-      const mockRecipesAdapter = {
+      const mockCommandsAdapter = {
         listRecipesBySpace: jest
           .fn()
           .mockRejectedValue(new Error('Database error')),
@@ -247,7 +247,7 @@ describe('listCommands.tool', () => {
       };
 
       mockFastify.recipesHexa.mockReturnValue({
-        getAdapter: () => mockRecipesAdapter,
+        getAdapter: () => mockCommandsAdapter,
       });
 
       mockFastify.spacesHexa.mockReturnValue({

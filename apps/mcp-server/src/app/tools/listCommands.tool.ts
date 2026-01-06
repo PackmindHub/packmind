@@ -28,13 +28,13 @@ export function registerListCommandsTool(
         const organizationId = createOrganizationId(userContext.organizationId);
         const globalSpace = await getGlobalSpace(fastify, organizationId);
 
-        const recipes = await recipesHexa.getAdapter().listRecipesBySpace({
+        const commands = await recipesHexa.getAdapter().listRecipesBySpace({
           organizationId,
           spaceId: globalSpace.id,
           userId: createUserId(userContext.userId),
         });
 
-        if (recipes.length === 0) {
+        if (commands.length === 0) {
           return {
             content: [
               {
@@ -45,14 +45,14 @@ export function registerListCommandsTool(
           };
         }
 
-        // Sort alphabetically by slug and limit to 20 recipes
-        const sortedRecipes = recipes
+        // Sort alphabetically by slug and limit to 20 commands
+        const sortedCommands = commands
           .sort((a, b) => a.slug.localeCompare(b.slug))
           .slice(0, 20);
 
         // Format as bullet points: • slug: name
-        const formattedList = sortedRecipes
-          .map((recipe) => `• ${recipe.slug}: ${recipe.name}`)
+        const formattedList = sortedCommands
+          .map((command) => `• ${command.slug}: ${command.name}`)
           .join('\n');
 
         // Track analytics event

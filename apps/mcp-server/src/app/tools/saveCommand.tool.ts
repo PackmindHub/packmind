@@ -114,9 +114,9 @@ export function registerSaveCommandTool(
         organizationId: userContext.organizationId,
       });
 
-      // If packageSlugs provided, use captureRecipeWithPackages
+      // If packageSlugs provided, use captureRecipeWithPackages to save command
       if (packageSlugs && packageSlugs.length > 0) {
-        const { recipe } = await recipesHexa
+        const { recipe: command } = await recipesHexa
           .getAdapter()
           .captureRecipeWithPackages({
             name,
@@ -135,21 +135,21 @@ export function registerSaveCommandTool(
           createUserId(userContext.userId),
           createOrganizationId(userContext.organizationId),
           'mcp_tool_call',
-          { tool: `save_recipe` },
+          { tool: `save_command` },
         );
 
         return {
           content: [
             {
               type: 'text',
-              text: `Command '${recipe.name}' has been created successfully and added to ${packageSlugs.length} package(s).`,
+              text: `Command '${command.name}' has been created successfully and added to ${packageSlugs.length} package(s).`,
             },
           ],
         };
       }
 
-      // Otherwise use regular captureRecipe
-      const recipe = await recipesHexa.getAdapter().captureRecipe({
+      // Otherwise use regular captureRecipe to save command
+      const command = await recipesHexa.getAdapter().captureRecipe({
         name,
         summary,
         whenToUse,
@@ -168,7 +168,7 @@ export function registerSaveCommandTool(
         { tool: `save_command` },
       );
 
-      // For trial users, ensure the recipe is added to the Default package
+      // For trial users, ensure the command is added to the Default package
       let trialPackageSlug: string | null = null;
       const isTrial = await isTrialUser(
         fastify,
@@ -184,12 +184,12 @@ export function registerSaveCommandTool(
           fastify,
           userContext,
           globalSpace.id,
-          { recipeId: createRecipeId(recipe.id) },
+          { recipeId: createRecipeId(command.id) },
           logger,
         );
       }
 
-      const baseMessage = `Command '${recipe.name}' has been created successfully.`;
+      const baseMessage = `Command '${command.name}' has been created successfully.`;
 
       if (trialPackageSlug) {
         const shouldPromptActivation = await shouldPromptForTrialActivation(

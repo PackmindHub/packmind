@@ -259,15 +259,15 @@ describe('packages.tools', () => {
       );
     });
 
-    it('returns formatted package details with recipes and standards', async () => {
+    it('returns formatted package details with commands and standards', async () => {
       const mockAdapter = {
         getPackageSummary: jest.fn().mockResolvedValue({
           name: 'Test Package',
           slug: 'test-pkg',
           description: 'A test package',
           recipes: [
-            { name: 'Recipe 1', summary: undefined },
-            { name: 'Recipe 2', summary: undefined },
+            { name: 'Command 1', summary: undefined },
+            { name: 'Command 2', summary: undefined },
           ],
           standards: [
             { name: 'Standard 1', summary: 'Summary 1' },
@@ -287,8 +287,8 @@ describe('packages.tools', () => {
       expect(result.content[0].text).toContain('# Test Package');
       expect(result.content[0].text).toContain('A test package');
       expect(result.content[0].text).toContain('## Commands');
-      expect(result.content[0].text).toContain('• Recipe 1');
-      expect(result.content[0].text).toContain('• Recipe 2');
+      expect(result.content[0].text).toContain('• Command 1');
+      expect(result.content[0].text).toContain('• Command 2');
       expect(result.content[0].text).toContain('## Standards');
       expect(result.content[0].text).toContain('• Standard 1: Summary 1');
       expect(result.content[0].text).toContain('• Standard 2: Summary 2');
@@ -328,7 +328,7 @@ describe('packages.tools', () => {
       });
     });
 
-    describe('when packages with no recipes or standards', () => {
+    describe('when packages with no commands or standards', () => {
       it('handles empty sections', async () => {
         const mockAdapter = {
           getPackageSummary: jest.fn().mockResolvedValue({
@@ -351,7 +351,7 @@ describe('packages.tools', () => {
         // Empty sections should not be displayed
         expect(result.content[0].text).toContain('# Empty Package');
         expect(result.content[0].text).toContain('An empty package');
-        expect(result.content[0].text).not.toContain('## Recipes');
+        expect(result.content[0].text).not.toContain('## Commands');
         expect(result.content[0].text).not.toContain('## Standards');
       });
     });

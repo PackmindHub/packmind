@@ -125,11 +125,11 @@ describe('saveCommand.tool', () => {
       );
     });
 
-    it('creates recipe with all parameters', async () => {
-      const mockRecipe = {
-        id: 'recipe-123' as RecipeId,
-        name: 'Test Recipe',
-        summary: 'A test recipe summary',
+    it('creates command with all parameters', async () => {
+      const mockCommand = {
+        id: 'command-123' as RecipeId,
+        name: 'Test Command',
+        summary: 'A test command summary',
         whenToUse: ['When testing'],
         contextValidationCheckpoints: ['Ensure tests exist'],
         steps: [
@@ -149,7 +149,7 @@ describe('saveCommand.tool', () => {
       };
 
       const mockAdapter = {
-        captureRecipe: jest.fn().mockResolvedValue(mockRecipe),
+        captureRecipe: jest.fn().mockResolvedValue(mockCommand),
       };
 
       mockGetGlobalSpace.mockResolvedValue(mockGlobalSpace);
@@ -160,8 +160,8 @@ describe('saveCommand.tool', () => {
       registerSaveCommandTool(dependencies, mcpServer);
 
       const result = await toolHandler({
-        name: 'Test Recipe',
-        summary: 'A test recipe summary',
+        name: 'Test Command',
+        summary: 'A test command summary',
         whenToUse: ['When testing'],
         contextValidationCheckpoints: ['Ensure tests exist'],
         steps: [
@@ -173,8 +173,8 @@ describe('saveCommand.tool', () => {
       });
 
       expect(mockAdapter.captureRecipe).toHaveBeenCalledWith({
-        name: 'Test Recipe',
-        summary: 'A test recipe summary',
+        name: 'Test Command',
+        summary: 'A test command summary',
         whenToUse: ['When testing'],
         contextValidationCheckpoints: ['Ensure tests exist'],
         steps: [
@@ -192,17 +192,17 @@ describe('saveCommand.tool', () => {
         content: [
           {
             type: 'text',
-            text: "Command 'Test Recipe' has been created successfully.",
+            text: "Command 'Test Command' has been created successfully.",
           },
         ],
       });
     });
 
-    it('creates recipe with complex steps including code snippets', async () => {
-      const mockRecipe = {
-        id: 'recipe-456' as RecipeId,
-        name: 'Complex Recipe',
-        summary: 'A complex recipe with code snippets',
+    it('creates command with complex steps including code snippets', async () => {
+      const mockCommand = {
+        id: 'command-456' as RecipeId,
+        name: 'Complex Command',
+        summary: 'A complex command with code snippets',
         whenToUse: [
           'When creating TypeORM entities',
           'When setting up database migrations',
@@ -243,7 +243,7 @@ export class User {
       };
 
       const mockAdapter = {
-        captureRecipe: jest.fn().mockResolvedValue(mockRecipe),
+        captureRecipe: jest.fn().mockResolvedValue(mockCommand),
       };
 
       mockGetGlobalSpace.mockResolvedValue(mockGlobalSpace);
@@ -254,8 +254,8 @@ export class User {
       registerSaveCommandTool(dependencies, mcpServer);
 
       const result = await toolHandler({
-        name: 'Complex Recipe',
-        summary: 'A complex recipe with code snippets',
+        name: 'Complex Command',
+        summary: 'A complex command with code snippets',
         whenToUse: [
           'When creating TypeORM entities',
           'When setting up database migrations',
@@ -289,8 +289,8 @@ export class User {
       });
 
       expect(mockAdapter.captureRecipe).toHaveBeenCalledWith({
-        name: 'Complex Recipe',
-        summary: 'A complex recipe with code snippets',
+        name: 'Complex Command',
+        summary: 'A complex command with code snippets',
         whenToUse: [
           'When creating TypeORM entities',
           'When setting up database migrations',
@@ -330,16 +330,16 @@ export class User {
         content: [
           {
             type: 'text',
-            text: "Command 'Complex Recipe' has been created successfully.",
+            text: "Command 'Complex Command' has been created successfully.",
           },
         ],
       });
     });
 
     it('tracks analytics event on success', async () => {
-      const mockRecipe = {
-        id: 'recipe-789' as RecipeId,
-        name: 'Analytics Recipe',
+      const mockCommand = {
+        id: 'command-789' as RecipeId,
+        name: 'Analytics Command',
         summary: 'Testing analytics tracking',
       };
 
@@ -351,7 +351,7 @@ export class User {
       };
 
       const mockAdapter = {
-        captureRecipe: jest.fn().mockResolvedValue(mockRecipe),
+        captureRecipe: jest.fn().mockResolvedValue(mockCommand),
       };
 
       mockGetGlobalSpace.mockResolvedValue(mockGlobalSpace);
@@ -362,7 +362,7 @@ export class User {
       registerSaveCommandTool(dependencies, mcpServer);
 
       await toolHandler({
-        name: 'Analytics Recipe',
+        name: 'Analytics Command',
         summary: 'Testing analytics tracking',
         whenToUse: ['When testing analytics'],
         contextValidationCheckpoints: ['Analytics is configured'],
@@ -390,8 +390,8 @@ export class User {
 
         await expect(
           toolHandler({
-            name: 'Test Recipe',
-            summary: 'A test recipe',
+            name: 'Test Command',
+            summary: 'A test command',
             whenToUse: ['When testing'],
             contextValidationCheckpoints: ['Ensure context exists'],
             steps: [
@@ -429,7 +429,7 @@ export class User {
 
         await expect(
           toolHandler({
-            name: 'Error Recipe',
+            name: 'Error Command',
             summary: 'This should fail',
             whenToUse: ['When testing errors'],
             contextValidationCheckpoints: ['Error handling is configured'],
@@ -445,9 +445,9 @@ export class User {
     });
 
     it('uses global space via getGlobalSpace', async () => {
-      const mockRecipe = {
-        id: 'recipe-space' as RecipeId,
-        name: 'Space Recipe',
+      const mockCommand = {
+        id: 'command-space' as RecipeId,
+        name: 'Space Command',
         summary: 'Testing space usage',
       };
 
@@ -459,7 +459,7 @@ export class User {
       };
 
       const mockAdapter = {
-        captureRecipe: jest.fn().mockResolvedValue(mockRecipe),
+        captureRecipe: jest.fn().mockResolvedValue(mockCommand),
       };
 
       mockGetGlobalSpace.mockResolvedValue(mockGlobalSpace);
@@ -470,7 +470,7 @@ export class User {
       registerSaveCommandTool(dependencies, mcpServer);
 
       await toolHandler({
-        name: 'Space Recipe',
+        name: 'Space Command',
         summary: 'Testing space usage',
         whenToUse: ['When testing spaces'],
         contextValidationCheckpoints: ['Space exists'],
@@ -498,7 +498,7 @@ export class User {
 
         await expect(
           toolHandler({
-            name: 'No Space Recipe',
+            name: 'No Space Command',
             summary: 'This should fail due to missing space',
             whenToUse: ['When no space exists'],
             contextValidationCheckpoints: ['Space should exist'],
@@ -543,14 +543,14 @@ export class User {
         });
 
         describe('when Default package does not exist', () => {
-          it('creates Default package with the recipe and returns install prompt', async () => {
-            const mockRecipe = {
-              id: 'recipe-123',
-              name: 'Test Recipe',
+          it('creates Default package with the command and returns install prompt', async () => {
+            const mockCommand = {
+              id: 'command-123',
+              name: 'Test Command',
             };
 
             const mockAdapter = {
-              captureRecipe: jest.fn().mockResolvedValue(mockRecipe),
+              captureRecipe: jest.fn().mockResolvedValue(mockCommand),
             };
 
             mockGetGlobalSpace.mockResolvedValue({
@@ -577,8 +577,8 @@ export class User {
             registerSaveCommandTool(dependencies, mcpServer);
 
             const result = await toolHandler({
-              name: 'Test Recipe',
-              summary: 'A test recipe',
+              name: 'Test Command',
+              summary: 'A test command',
               whenToUse: ['When testing'],
               contextValidationCheckpoints: ['Test exists'],
               steps: [{ name: 'Step 1', description: 'Do something' }],
@@ -591,12 +591,12 @@ export class User {
               name: 'Default',
               description:
                 'Default package for organizing your standards and commands',
-              recipeIds: ['recipe-123'],
+              recipeIds: ['command-123'],
               standardIds: [],
             });
 
             expect(result.content[0].text).toContain(
-              "Command 'Test Recipe' has been created successfully",
+              "Command 'Test Command' has been created successfully",
             );
             expect(result.content[0].text).toContain(
               '**IMPORTANT: You MUST now call packmind_install_package',
@@ -606,14 +606,14 @@ export class User {
         });
 
         describe('when Default package already exists', () => {
-          it('adds recipe to existing Default package and returns install prompt', async () => {
-            const mockRecipe = {
-              id: 'recipe-456',
-              name: 'Another Recipe',
+          it('adds command to existing Default package and returns install prompt', async () => {
+            const mockCommand = {
+              id: 'command-456',
+              name: 'Another Command',
             };
 
             const mockAdapter = {
-              captureRecipe: jest.fn().mockResolvedValue(mockRecipe),
+              captureRecipe: jest.fn().mockResolvedValue(mockCommand),
             };
 
             mockGetGlobalSpace.mockResolvedValue({
@@ -639,8 +639,8 @@ export class User {
             registerSaveCommandTool(dependencies, mcpServer);
 
             const result = await toolHandler({
-              name: 'Another Recipe',
-              summary: 'Another test recipe',
+              name: 'Another Command',
+              summary: 'Another test command',
               whenToUse: ['When testing'],
               contextValidationCheckpoints: ['Test exists'],
               steps: [{ name: 'Step 1', description: 'Do something' }],
@@ -652,14 +652,14 @@ export class User {
               userId: 'user-123',
               organizationId: 'org-123',
               packageId: 'existing-package-123',
-              recipeIds: ['recipe-456'],
+              recipeIds: ['command-456'],
               standardIds: undefined,
             });
 
             expect(mockDeploymentsAdapter.createPackage).not.toHaveBeenCalled();
 
             expect(result.content[0].text).toContain(
-              "Command 'Another Recipe' has been created successfully",
+              "Command 'Another Command' has been created successfully",
             );
             expect(result.content[0].text).toContain(
               '**IMPORTANT: You MUST now call packmind_install_package with packageSlugs: ["default"]',
@@ -678,13 +678,13 @@ export class User {
         });
 
         it('does not create or add to Default package', async () => {
-          const mockRecipe = {
-            id: 'recipe-789',
-            name: 'Regular Recipe',
+          const mockCommand = {
+            id: 'command-789',
+            name: 'Regular Command',
           };
 
           const mockAdapter = {
-            captureRecipe: jest.fn().mockResolvedValue(mockRecipe),
+            captureRecipe: jest.fn().mockResolvedValue(mockCommand),
           };
 
           mockGetGlobalSpace.mockResolvedValue({
@@ -699,8 +699,8 @@ export class User {
           registerSaveCommandTool(dependencies, mcpServer);
 
           const result = await toolHandler({
-            name: 'Regular Recipe',
-            summary: 'A regular recipe',
+            name: 'Regular Command',
+            summary: 'A regular command',
             whenToUse: ['When testing'],
             contextValidationCheckpoints: ['Test exists'],
             steps: [{ name: 'Step 1', description: 'Do something' }],
@@ -713,7 +713,7 @@ export class User {
           ).not.toHaveBeenCalled();
 
           expect(result.content[0].text).toBe(
-            "Command 'Regular Recipe' has been created successfully.",
+            "Command 'Regular Command' has been created successfully.",
           );
           expect(result.content[0].text).not.toContain(
             'packmind_install_package',

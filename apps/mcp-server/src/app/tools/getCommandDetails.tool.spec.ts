@@ -11,7 +11,7 @@ describe('getCommandDetails.tool', () => {
   let mockFastify: jest.Mocked<{ recipesHexa: () => unknown }>;
   let userContext: UserContext;
   let toolHandler: (params: {
-    recipeSlug: string;
+    slug: string;
   }) => Promise<{ content: { type: string; text: string }[] }>;
 
   beforeEach(() => {
@@ -64,46 +64,46 @@ describe('getCommandDetails.tool', () => {
     );
   });
 
-  it('returns formatted recipe details', async () => {
-    const mockRecipe = {
-      slug: 'test-recipe',
-      name: 'Test Recipe',
+  it('returns formatted command details', async () => {
+    const mockCommand = {
+      slug: 'test-command',
+      name: 'Test Command',
       version: 1,
       content: '## Steps\n\n1. Step one\n2. Step two',
     };
 
-    const mockRecipesAdapter = {
-      findRecipeBySlug: jest.fn().mockResolvedValue(mockRecipe),
+    const mockCommandsAdapter = {
+      findRecipeBySlug: jest.fn().mockResolvedValue(mockCommand),
     };
 
     mockFastify.recipesHexa.mockReturnValue({
-      getAdapter: () => mockRecipesAdapter,
+      getAdapter: () => mockCommandsAdapter,
     });
 
     registerGetCommandDetailsTool(dependencies, mcpServer);
 
-    const result = await toolHandler({ recipeSlug: 'test-recipe' });
+    const result = await toolHandler({ slug: 'test-command' });
 
-    expect(result.content[0].text).toContain('# Test Recipe');
-    expect(result.content[0].text).toContain('**Slug:** test-recipe');
+    expect(result.content[0].text).toContain('# Test Command');
+    expect(result.content[0].text).toContain('**Slug:** test-command');
     expect(result.content[0].text).toContain('**Version:** 1');
     expect(result.content[0].text).toContain('## Steps');
     expect(result.content[0].text).toContain('1. Step one');
   });
 
-  describe('when recipe does not exist', () => {
+  describe('when command does not exist', () => {
     it('returns not found message', async () => {
-      const mockRecipesAdapter = {
+      const mockCommandsAdapter = {
         findRecipeBySlug: jest.fn().mockResolvedValue(null),
       };
 
       mockFastify.recipesHexa.mockReturnValue({
-        getAdapter: () => mockRecipesAdapter,
+        getAdapter: () => mockCommandsAdapter,
       });
 
       registerGetCommandDetailsTool(dependencies, mcpServer);
 
-      const result = await toolHandler({ recipeSlug: 'non-existent' });
+      const result = await toolHandler({ slug: 'non-existent' });
 
       expect(result).toEqual({
         content: [
@@ -117,30 +117,30 @@ describe('getCommandDetails.tool', () => {
   });
 
   it('tracks analytics event on success', async () => {
-    const mockRecipe = {
-      slug: 'test-recipe',
-      name: 'Test Recipe',
+    const mockCommand = {
+      slug: 'test-command',
+      name: 'Test Command',
       version: 1,
-      content: 'Recipe content',
+      content: 'Command content',
     };
 
-    const mockRecipesAdapter = {
-      findRecipeBySlug: jest.fn().mockResolvedValue(mockRecipe),
+    const mockCommandsAdapter = {
+      findRecipeBySlug: jest.fn().mockResolvedValue(mockCommand),
     };
 
     mockFastify.recipesHexa.mockReturnValue({
-      getAdapter: () => mockRecipesAdapter,
+      getAdapter: () => mockCommandsAdapter,
     });
 
     registerGetCommandDetailsTool(dependencies, mcpServer);
 
-    await toolHandler({ recipeSlug: 'test-recipe' });
+    await toolHandler({ slug: 'test-command' });
 
     expect(mockAnalyticsAdapter.trackEvent).toHaveBeenCalledWith(
       'user-123',
       'org-123',
       'mcp_tool_call',
-      { tool: 'get_command_details', recipeSlug: 'test-recipe' },
+      { tool: 'get_command_details', slug: 'test-command' },
     );
   });
 
@@ -150,7 +150,7 @@ describe('getCommandDetails.tool', () => {
 
       registerGetCommandDetailsTool(dependencies, mcpServer);
 
-      await expect(toolHandler({ recipeSlug: 'test-recipe' })).rejects.toThrow(
+      await expect(toolHandler({ slug: 'test-command' })).rejects.toThrow(
         'User context is required to get command by slug',
       );
     });
@@ -158,19 +158,19 @@ describe('getCommandDetails.tool', () => {
 
   describe('when adapter throws error', () => {
     it('returns error message', async () => {
-      const mockRecipesAdapter = {
+      const mockCommandsAdapter = {
         findRecipeBySlug: jest
           .fn()
           .mockRejectedValue(new Error('Database error')),
       };
 
       mockFastify.recipesHexa.mockReturnValue({
-        getAdapter: () => mockRecipesAdapter,
+        getAdapter: () => mockCommandsAdapter,
       });
 
       registerGetCommandDetailsTool(dependencies, mcpServer);
 
-      const result = await toolHandler({ recipeSlug: 'test-recipe' });
+      const result = await toolHandler({ slug: 'test-command' });
 
       expect(result).toEqual({
         content: [
@@ -183,27 +183,27 @@ describe('getCommandDetails.tool', () => {
     });
   });
 
-  it('handles recipe with empty content', async () => {
-    const mockRecipe = {
-      slug: 'empty-recipe',
-      name: 'Empty Recipe',
+  it('handles command with empty content', async () => {
+    const mockCommand = {
+      slug: 'empty-command',
+      name: 'Empty Command',
       version: 1,
       content: '',
     };
 
-    const mockRecipesAdapter = {
-      findRecipeBySlug: jest.fn().mockResolvedValue(mockRecipe),
+    const mockCommandsAdapter = {
+      findRecipeBySlug: jest.fn().mockResolvedValue(mockCommand),
     };
 
     mockFastify.recipesHexa.mockReturnValue({
-      getAdapter: () => mockRecipesAdapter,
+      getAdapter: () => mockCommandsAdapter,
     });
 
     registerGetCommandDetailsTool(dependencies, mcpServer);
 
-    const result = await toolHandler({ recipeSlug: 'empty-recipe' });
+    const result = await toolHandler({ slug: 'empty-command' });
 
-    expect(result.content[0].text).toContain('# Empty Recipe');
-    expect(result.content[0].text).toContain('**Slug:** empty-recipe');
+    expect(result.content[0].text).toContain('# Empty Command');
+    expect(result.content[0].text).toContain('**Slug:** empty-command');
   });
 });

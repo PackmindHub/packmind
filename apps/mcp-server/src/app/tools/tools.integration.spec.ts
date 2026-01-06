@@ -217,7 +217,7 @@ describe('tools.integration', () => {
       registerShowPackageTool(dependencies, mcpServer);
 
       expect(registeredTools.size).toBe(3);
-      expect(registeredTools.get('create_recipe')?.handler).not.toBe(
+      expect(registeredTools.get('create_command')?.handler).not.toBe(
         registeredTools.get('list_packages')?.handler,
       );
       expect(registeredTools.get('list_packages')?.handler).not.toBe(

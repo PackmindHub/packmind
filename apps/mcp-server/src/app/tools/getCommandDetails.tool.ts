@@ -16,13 +16,10 @@ export function registerGetCommandDetailsTool(
       title: 'Get Command Details',
       description: 'Get the full content of a command by its slug.',
       inputSchema: {
-        recipeSlug: z
-          .string()
-          .min(1)
-          .describe('The slug of the command to retrieve'),
+        slug: z.string().min(1).describe('The slug of the command to retrieve'),
       },
     },
-    async ({ recipeSlug }: { recipeSlug: string }) => {
+    async ({ slug }: { slug: string }) => {
       if (!userContext) {
         throw new Error('User context is required to get command by slug');
       }
@@ -32,31 +29,31 @@ export function registerGetCommandDetailsTool(
       try {
         const organizationId = createOrganizationId(userContext.organizationId);
 
-        const recipe = await recipesHexa
+        const command = await recipesHexa
           .getAdapter()
-          .findRecipeBySlug(recipeSlug, organizationId);
+          .findRecipeBySlug(slug, organizationId);
 
-        if (!recipe) {
+        if (!command) {
           return {
             content: [
               {
                 type: 'text',
-                text: `Command with slug '${recipeSlug}' not found in your organization`,
+                text: `Command with slug '${slug}' not found in your organization`,
               },
             ],
           };
         }
 
-        // Format the recipe content for AI agents
+        // Format the command content for AI agents
         const formattedContent = [
-          `# ${recipe.name}`,
+          `# ${command.name}`,
           ``,
-          `**Slug:** ${recipe.slug}`,
-          `**Version:** ${recipe.version}`,
+          `**Slug:** ${command.slug}`,
+          `**Version:** ${command.version}`,
           ``,
           `---`,
           ``,
-          recipe.content,
+          command.content,
         ].join('\n');
 
         // Track analytics event
@@ -64,7 +61,7 @@ export function registerGetCommandDetailsTool(
           createUserId(userContext.userId),
           createOrganizationId(userContext.organizationId),
           'mcp_tool_call',
-          { tool: `get_command_details`, recipeSlug },
+          { tool: `get_command_details`, slug },
         );
 
         return {
