@@ -251,6 +251,7 @@ export class PackageRepository
 
   async findBySlugsWithArtefacts(
     slugs: string[],
+    organizationId: OrganizationId,
   ): Promise<PackageWithArtefacts[]> {
     if (slugs.length === 0) {
       this.logger.info('No slugs provided to findBySlugsWithArtefacts');
@@ -260,12 +261,16 @@ export class PackageRepository
     this.logger.info('Finding packages by slugs with artefacts', {
       slugs,
       count: slugs.length,
+      organizationId,
     });
 
     try {
       const packages = await this.repository
         .createQueryBuilder('package')
+        .innerJoin('spaces', 'sp', 'package.spaceId = sp.id')
         .where('package.slug IN (:...slugs)', { slugs })
+        .andWhere('sp.organizationId = :organizationId', { organizationId })
+        .andWhere('package.deletedAt IS NULL')
         .orderBy('package.createdAt', 'DESC')
         .getMany();
 
