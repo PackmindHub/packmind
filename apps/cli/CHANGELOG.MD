@@ -4,6 +4,8 @@
 
 ## Changed
 
+- renamed `recipe` to `command` #85
+
 ## Fixed
 
 ## Removed

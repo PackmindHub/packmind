@@ -107,7 +107,7 @@ export default defineConfig(() => {
             // Group organization artifacts (dashboard, recipes and standards)
             if (
               id.includes('app/routes/org.$orgSlug._protected._index') ||
-              id.includes('_space-protected.recipes') ||
+              id.includes('_space-protected.commands') ||
               id.includes('_space-protected.standards')
             ) {
               return 'routes-org-artifacts';
