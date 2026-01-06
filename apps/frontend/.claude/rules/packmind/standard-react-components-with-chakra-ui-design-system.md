@@ -1,0 +1,17 @@
+---
+name: React Components with Chakra UI Design System
+alwaysApply: true
+description: Build React components using Chakra UI primitives and theme tokens with PM-prefixed wrappers that extend ChakraProvider for consistent accessible maintainable UI patterns in TypeScript React applications
+---
+
+## Standard: React Components with Chakra UI Design System
+
+Build React components using Chakra UI primitives and theme tokens with PM-prefixed wrappers that extend ChakraProvider for consistent accessible maintainable UI patterns in TypeScript React applications :
+
+- Define all colors spacing typography in theme tokens using defineConfig from Chakra UI reference tokens with curly brace syntax like colors.background.primary never use hex codes pixel values or inline styles
+- Export custom PM components from a central index file to enforce consistent imports across the application and prevent direct Chakra UI imports in feature code
+- Use React forwardRef when wrapping Chakra primitives to support ref forwarding destructure Chakra component namespaces like Root Content Title and compose with other PM components for consistency
+- Wrap application root with ChakraProvider configured with custom theme system value from defineConfig to ensure all components inherit design tokens and ARIA support
+- Wrap Chakra UI primitives like Button Box Text in custom PM-prefixed components that extend their prop interfaces to inherit aria attributes event handlers and style props never create raw HTML elements with inline styles
+
+Full standard is available here for further request: [React Components with Chakra UI Design System](../../../.packmind/standards/react-components-with-chakra-ui-design-system.md)

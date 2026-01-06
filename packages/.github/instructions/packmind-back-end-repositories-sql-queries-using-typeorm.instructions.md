@@ -3,7 +3,7 @@ applyTo: '**/infra/repositories/*.ts'
 ---
 ## Standard: Back-end repositories SQL queries using TypeORM
 
-Implement SQL query guidelines using TypeORM's QueryBuilder in back-end repositories under /infra/repositories/*Repository.ts to enhance type safety, prevent SQL injection, and improve code maintainability when writing database queries, including lookups, joins, and handling soft-deleted entities. :
+Standardize use of TypeORM QueryBuilder with parameterized WHERE/AND WHERE and IN (:...param) clauses in /infra/repositories/*.ts, including correct handling of soft-deleted entities via withDeleted() or includeDeleted options, to ensure type safety, prevent SQL injection, and improve maintainability and testability of all repository queries. :
 * Handle soft-deleted entities properly using withDeleted() or includeDeleted options. Always respect the QueryOption parameter when provided, and only include deleted entities when explicitly requested.
 * Use IN clause with array parameterization for filtering by multiple values. Always pass arrays as spread parameters using :...paramName syntax to ensure proper parameterization.
 * Use TypeORM's QueryBuilder with parameterized queries instead of raw SQL strings. Always pass parameters as objects to where(), andWhere(), and other query methods to prevent SQL injection and ensure type safety.

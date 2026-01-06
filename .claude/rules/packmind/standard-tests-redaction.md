@@ -1,0 +1,16 @@
+---
+name: Tests redaction
+globs: '**/*.spec.ts'
+alwaysApply: false
+description: Apply good practices for test redaction in **/*.spec.ts files using single expectations, assertive titles, and nested describe blocks for workflows to improve test clarity and maintainability during the development and testing of TypeScript applications.
+---
+
+## Standard: Tests redaction
+
+Apply good practices for test redaction in \*_/_.spec.ts files using single expectations, assertive titles, and nested describe blocks for workflows to improve test clarity and maintainability during the development and testing of TypeScript applications. :
+
+- Tests have a single expectation
+- Tests have an assertive title and do not start with should
+- Tests that show a workflow uses multiple describe to nest steps
+
+Full standard is available here for further request: [Tests redaction](../../../.packmind/standards/tests-redaction.md)

@@ -189,12 +189,12 @@ describe('rate limiting', () => {
 
 ## Rules
 
-* Organize describe blocks using 'with...' prefix for input/state conditions and 'when...' prefix for action-based scenarios
-* Define reusable test data at the describe block level before test cases when the data is shared across multiple tests
-* Use typed mocks with 'jest.Mocked<ServiceType>' and initialize them in beforeEach using the pattern '{ methodName: jest.fn() } as unknown as jest.Mocked<ServiceType>'
 * Order tests within each describe block: happy path first, then error cases, then edge cases (null/undefined/empty/whitespace), then complex scenarios
-* Use .not.toHaveBeenCalled() to verify services were not invoked in error or validation failure scenarios
-* Test all validation edge cases systematically in separate describe blocks: empty string, whitespace-only, null, undefined, and minimal valid input
-* Group related complex scenarios in dedicated describe blocks (e.g., 'rate limiting', 'multiple organizations') with multiple test cases covering different aspects
-* Use `createXXXId` functions from @packmind/types (createUserId, createOrganizationId, createStandardId, createRecipeId) for creating typed IDs in test data
+* Use typed mocks with 'jest.Mocked<ServiceType>' and initialize them in beforeEach using the pattern '{ methodName: jest.fn() } as unknown as jest.Mocked<ServiceType>'
+* Define reusable test data at the describe block level before test cases when the data is shared across multiple tests
+* Organize describe blocks using 'with...' prefix for input/state conditions and 'when...' prefix for action-based scenarios
 * Use createMockInstance to create mock instances
+* Use `createXXXId` functions from @packmind/types (createUserId, createOrganizationId, createStandardId, createRecipeId) for creating typed IDs in test data
+* Group related complex scenarios in dedicated describe blocks (e.g., 'rate limiting', 'multiple organizations') with multiple test cases covering different aspects
+* Test all validation edge cases systematically in separate describe blocks: empty string, whitespace-only, null, undefined, and minimal valid input
+* Use .not.toHaveBeenCalled() to verify services were not invoked in error or validation failure scenarios

@@ -1,6 +1,6 @@
 # Compliance - Logging Personal Information
 
-This standard ensures personal information is not exposed in application logs across all environments (development, staging, and production). Logs are often forwarded to external processors such as Datadog, making it critical to prevent leaking sensitive user data. By masking personal information in logs, we maintain user privacy, comply with data protection regulations, and reduce security risks. This standard is applicable when logging any user-related information, debugging authentication flows, tracking user actions, or handling error scenarios that involve personal data.
+This standard ensures personal information is not exposed in application logs across all environments (development, staging, and production). Logs are often forwarded to external processors such as Datadog, making it critical to prevent leaking sensitive user data. By masking personal information in logs, we maintain user privacy, comply with data protection regulations, and reduce security risks. This standard applies when logging user-related information, debugging authentication flows, tracking user actions, or handling error scenarios involving personal data.
 
 ## Rules
 
