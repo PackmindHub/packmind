@@ -1,3 +1,3 @@
-export * from './RecipeCreatedEvent';
-export * from './RecipeDeletedEvent';
-export * from './RecipeUpdatedEvent';
+export * from './CommandCreatedEvent';
+export * from './CommandDeletedEvent';
+export * from './CommandUpdatedEvent';

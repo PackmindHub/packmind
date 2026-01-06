@@ -8,7 +8,7 @@ import {
   DeleteRecipeCommand,
   DeleteRecipeResponse,
   IDeleteRecipeUseCase,
-  RecipeDeletedEvent,
+  CommandDeletedEvent,
   UserId,
 } from '@packmind/types';
 
@@ -74,8 +74,8 @@ export class DeleteRecipeUsecase implements IDeleteRecipeUseCase {
       );
 
       // Emit event to notify other domains
-      const event = new RecipeDeletedEvent({
-        recipeId,
+      const event = new CommandDeletedEvent({
+        id: recipeId,
         spaceId,
         organizationId: createOrganizationId(organizationId),
         userId: createUserId(userId),

@@ -4,7 +4,7 @@ import { AiNotConfigured } from '@packmind/types';
 import {
   OrganizationId,
   RecipeId,
-  RecipeUpdatedEvent,
+  CommandUpdatedEvent,
   SpaceId,
   UserId,
 } from '@packmind/types';
@@ -160,8 +160,8 @@ export class UpdateRecipeFromUIUsecase {
       });
 
       this.eventEmitterService.emit(
-        new RecipeUpdatedEvent({
-          recipeId,
+        new CommandUpdatedEvent({
+          id: recipeId,
           spaceId,
           newVersion: nextVersion,
           organizationId,
