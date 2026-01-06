@@ -186,8 +186,16 @@ describe('Claude Deployment Integration', () => {
         );
       });
 
-      it('creates exactly one file to update', () => {
-        expect(fileUpdates.createOrUpdate).toHaveLength(1);
+      it('creates two files to update', () => {
+        expect(fileUpdates.createOrUpdate).toHaveLength(2);
+      });
+
+      it('includes one recipe command file', () => {
+        expect(
+          fileUpdates.createOrUpdate.filter((f) =>
+            f.path.startsWith('.claude/commands/packmind/'),
+          ),
+        ).toHaveLength(1);
       });
 
       it('has no files to delete', () => {
@@ -257,8 +265,16 @@ describe('Claude Deployment Integration', () => {
         );
       });
 
-      it('creates exactly one file to update', () => {
-        expect(fileUpdates.createOrUpdate).toHaveLength(1);
+      it('creates two files to update', () => {
+        expect(fileUpdates.createOrUpdate).toHaveLength(2);
+      });
+
+      it('includes one standard rule file', () => {
+        expect(
+          fileUpdates.createOrUpdate.filter((f) =>
+            f.path.startsWith('.claude/rules/packmind/'),
+          ),
+        ).toHaveLength(1);
       });
 
       it('has no files to delete', () => {
@@ -377,8 +393,8 @@ describe('Claude Deployment Integration', () => {
         }
       });
 
-      it('creates exactly two files', () => {
-        expect(pathMap.size).toBe(2);
+      it('creates three files (recipe, standard, CLAUDE.md clearing)', () => {
+        expect(pathMap.size).toBe(3);
       });
 
       it('creates recipe command file in .claude/commands/packmind/', () => {
@@ -391,6 +407,10 @@ describe('Claude Deployment Integration', () => {
         expect(
           pathMap.has('.claude/rules/packmind/standard-test-standard.md'),
         ).toBe(true);
+      });
+
+      it('creates CLAUDE.md section clearing', () => {
+        expect(pathMap.has('CLAUDE.md')).toBe(true);
       });
 
       describe('recipe file content', () => {
@@ -473,11 +493,23 @@ describe('Claude Deployment Integration', () => {
           ['claude'],
         );
 
-        recipeFile = fileUpdates.createOrUpdate[0];
+        const foundRecipeFile = fileUpdates.createOrUpdate.find((f) =>
+          f.path.startsWith('.claude/commands/packmind/'),
+        );
+        assert(foundRecipeFile, 'Recipe file should exist');
+        recipeFile = foundRecipeFile;
       });
 
-      it('creates exactly one file to update', () => {
-        expect(fileUpdates.createOrUpdate).toHaveLength(1);
+      it('creates two files to update', () => {
+        expect(fileUpdates.createOrUpdate).toHaveLength(2);
+      });
+
+      it('includes one recipe command file', () => {
+        expect(
+          fileUpdates.createOrUpdate.filter((f) =>
+            f.path.startsWith('.claude/commands/packmind/'),
+          ),
+        ).toHaveLength(1);
       });
 
       it('has no files to delete', () => {
@@ -485,7 +517,7 @@ describe('Claude Deployment Integration', () => {
       });
 
       it('uses correct path for recipe file', () => {
-        expect(recipeFile.path).toBe(
+        expect(recipeFile?.path).toBe(
           `.claude/commands/packmind/${recipe.slug}.md`,
         );
       });
@@ -542,11 +574,23 @@ describe('Claude Deployment Integration', () => {
           ['claude'],
         );
 
-        standardFile = fileUpdates.createOrUpdate[0];
+        const foundStandardFile = fileUpdates.createOrUpdate.find((f) =>
+          f.path.startsWith('.claude/rules/packmind/'),
+        );
+        assert(foundStandardFile, 'Standard file should exist');
+        standardFile = foundStandardFile;
       });
 
-      it('creates exactly one file to update', () => {
-        expect(fileUpdates.createOrUpdate).toHaveLength(1);
+      it('creates two files to update', () => {
+        expect(fileUpdates.createOrUpdate).toHaveLength(2);
+      });
+
+      it('includes one standard rule file', () => {
+        expect(
+          fileUpdates.createOrUpdate.filter((f) =>
+            f.path.startsWith('.claude/rules/packmind/'),
+          ),
+        ).toHaveLength(1);
       });
 
       it('has no files to delete', () => {
@@ -554,7 +598,7 @@ describe('Claude Deployment Integration', () => {
       });
 
       it('uses correct path for standard file', () => {
-        expect(standardFile.path).toBe(
+        expect(standardFile?.path).toBe(
           '.claude/rules/packmind/standard-test-standard.md',
         );
       });
@@ -606,30 +650,62 @@ describe('Claude Deployment Integration', () => {
       claudeDeployer = new ClaudeDeployer(standardsPort, gitPort);
     });
 
-    it('handles empty recipe list gracefully', async () => {
-      jest.spyOn(gitPort, 'getFileFromRepo').mockResolvedValue(null);
+    describe('when deploying empty recipe list', () => {
+      let fileUpdates: {
+        createOrUpdate: FileModification[];
+        delete: { path: string }[];
+      };
 
-      const fileUpdates = await claudeDeployer.deployRecipes(
-        [],
-        gitRepo,
-        defaultTarget,
-      );
+      beforeEach(async () => {
+        jest.spyOn(gitPort, 'getFileFromRepo').mockResolvedValue(null);
 
-      expect(fileUpdates.createOrUpdate).toHaveLength(0);
-      expect(fileUpdates.delete).toHaveLength(0);
+        fileUpdates = await claudeDeployer.deployRecipes(
+          [],
+          gitRepo,
+          defaultTarget,
+        );
+      });
+
+      it('creates one file to update', () => {
+        expect(fileUpdates.createOrUpdate).toHaveLength(1);
+      });
+
+      it('includes CLAUDE.md clearing section', () => {
+        expect(fileUpdates.createOrUpdate[0].path).toBe('CLAUDE.md');
+      });
+
+      it('has no files to delete', () => {
+        expect(fileUpdates.delete).toHaveLength(0);
+      });
     });
 
-    it('handles empty standards list gracefully', async () => {
-      jest.spyOn(gitPort, 'getFileFromRepo').mockResolvedValue(null);
+    describe('when deploying empty standards list', () => {
+      let fileUpdates: {
+        createOrUpdate: FileModification[];
+        delete: { path: string }[];
+      };
 
-      const fileUpdates = await claudeDeployer.deployStandards(
-        [],
-        gitRepo,
-        defaultTarget,
-      );
+      beforeEach(async () => {
+        jest.spyOn(gitPort, 'getFileFromRepo').mockResolvedValue(null);
 
-      expect(fileUpdates.createOrUpdate).toHaveLength(0);
-      expect(fileUpdates.delete).toHaveLength(0);
+        fileUpdates = await claudeDeployer.deployStandards(
+          [],
+          gitRepo,
+          defaultTarget,
+        );
+      });
+
+      it('creates one file to update', () => {
+        expect(fileUpdates.createOrUpdate).toHaveLength(1);
+      });
+
+      it('includes CLAUDE.md clearing section', () => {
+        expect(fileUpdates.createOrUpdate[0].path).toBe('CLAUDE.md');
+      });
+
+      it('has no files to delete', () => {
+        expect(fileUpdates.delete).toHaveLength(0);
+      });
     });
 
     it('handles GitHexa errors gracefully', async () => {
@@ -657,15 +733,17 @@ describe('Claude Deployment Integration', () => {
       );
 
       // Should still work despite the error, treating it as if file doesn't exist
-      expect(fileUpdates.createOrUpdate).toHaveLength(1);
+      expect(fileUpdates.createOrUpdate).toHaveLength(2);
       expect(fileUpdates.delete).toHaveLength(0);
 
-      const recipeFile = fileUpdates.createOrUpdate[0];
-      expect(recipeFile.path).toBe(
+      const recipeFile = fileUpdates.createOrUpdate.find((f) =>
+        f.path.startsWith('.claude/commands/packmind/'),
+      );
+      expect(recipeFile?.path).toBe(
         `.claude/commands/packmind/${recipe.slug}.md`,
       );
-      expect(recipeFile.content).toContain('---');
-      expect(recipeFile.content).toContain('description: Test recipe');
+      expect(recipeFile?.content).toContain('---');
+      expect(recipeFile?.content).toContain('description: Test recipe');
     });
   });
 });

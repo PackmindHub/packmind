@@ -117,11 +117,21 @@ describe('Package removal from target integration', () => {
     });
 
     describe('when deleting recipe command files', () => {
-      it('does not update CLAUDE.md', () => {
-        expect(fileUpdates).not.toEqual(
+      it('clears legacy CLAUDE.md sections', () => {
+        expect(fileUpdates).toEqual(
           expect.arrayContaining([
             expect.objectContaining({
               path: 'CLAUDE.md',
+              sections: expect.arrayContaining([
+                expect.objectContaining({
+                  key: 'Packmind standards',
+                  content: '',
+                }),
+                expect.objectContaining({
+                  key: 'Packmind recipes',
+                  content: '',
+                }),
+              ]),
             }),
           ]),
         );
@@ -232,11 +242,21 @@ describe('Package removal from target integration', () => {
       });
     });
 
-    it('does not update CLAUDE.md', () => {
-      expect(fileUpdates).not.toEqual(
+    it('clears legacy CLAUDE.md sections', () => {
+      expect(fileUpdates).toEqual(
         expect.arrayContaining([
           expect.objectContaining({
             path: 'CLAUDE.md',
+            sections: expect.arrayContaining([
+              expect.objectContaining({
+                key: 'Packmind standards',
+                content: '',
+              }),
+              expect.objectContaining({
+                key: 'Packmind recipes',
+                content: '',
+              }),
+            ]),
           }),
         ]),
       );

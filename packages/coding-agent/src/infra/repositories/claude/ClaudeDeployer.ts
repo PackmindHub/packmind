@@ -17,6 +17,7 @@ const origin = 'ClaudeDeployer';
 export class ClaudeDeployer implements ICodingAgentDeployer {
   private static readonly STANDARDS_FOLDER_PATH = '.claude/rules/packmind/';
   private static readonly COMMANDS_FOLDER_PATH = '.claude/commands/packmind/';
+  private static readonly CLAUDE_MD_PATH = 'CLAUDE.md';
   private readonly logger: PackmindLogger;
 
   constructor(
@@ -52,6 +53,16 @@ export class ClaudeDeployer implements ICodingAgentDeployer {
         content: configFile.content,
       });
     }
+
+    // Clear legacy Packmind recipes section from CLAUDE.md
+    const claudeMdPath = getTargetPrefixedPath(
+      ClaudeDeployer.CLAUDE_MD_PATH,
+      target,
+    );
+    fileUpdates.createOrUpdate.push({
+      path: claudeMdPath,
+      sections: [{ key: 'Packmind recipes', content: '' }],
+    });
 
     return fileUpdates;
   }
@@ -109,6 +120,16 @@ ${recipeVersion.content}`;
       });
     }
 
+    // Clear legacy Packmind standards section from CLAUDE.md
+    const claudeMdPath = getTargetPrefixedPath(
+      ClaudeDeployer.CLAUDE_MD_PATH,
+      target,
+    );
+    fileUpdates.createOrUpdate.push({
+      path: claudeMdPath,
+      sections: [{ key: 'Packmind standards', content: '' }],
+    });
+
     return fileUpdates;
   }
 
@@ -132,6 +153,12 @@ ${recipeVersion.content}`;
         content: configFile.content,
       });
     }
+
+    // Clear legacy Packmind recipes section from CLAUDE.md
+    fileUpdates.createOrUpdate.push({
+      path: ClaudeDeployer.CLAUDE_MD_PATH,
+      sections: [{ key: 'Packmind recipes', content: '' }],
+    });
 
     return fileUpdates;
   }
@@ -157,6 +184,12 @@ ${recipeVersion.content}`;
         content: configFile.content,
       });
     }
+
+    // Clear legacy Packmind standards section from CLAUDE.md
+    fileUpdates.createOrUpdate.push({
+      path: ClaudeDeployer.CLAUDE_MD_PATH,
+      sections: [{ key: 'Packmind standards', content: '' }],
+    });
 
     return fileUpdates;
   }
@@ -196,6 +229,15 @@ ${recipeVersion.content}`;
         content: configFile.content,
       });
     }
+
+    // Clear legacy Packmind sections from CLAUDE.md
+    fileUpdates.createOrUpdate.push({
+      path: ClaudeDeployer.CLAUDE_MD_PATH,
+      sections: [
+        { key: 'Packmind standards', content: '' },
+        { key: 'Packmind recipes', content: '' },
+      ],
+    });
 
     return fileUpdates;
   }
