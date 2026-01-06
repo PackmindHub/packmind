@@ -223,7 +223,7 @@ export class DeployerService {
     const agentToFile: Record<CodingAgent, string> = {
       claude: 'CLAUDE.md',
       agents_md: 'AGENTS.md',
-      cursor: '.cursor/rules/packmind/recipes-index.mdc',
+      cursor: '.cursor/commands',
       copilot: '.github/copilot-instructions.md',
       junie: '.junie.md',
       packmind: '.packmind.md',

@@ -8,6 +8,7 @@ import { standardsSchemas } from '@packmind/standards';
 import { makeTestDatasource } from '@packmind/test-utils';
 import {
   createTargetId,
+  FileUpdates,
   GitProviderVendors,
   GitRepo,
   IGitPort,
@@ -28,6 +29,7 @@ import { DataSource } from 'typeorm';
 import { TestApp } from '../helpers/TestApp';
 
 describe('Cursor Deployment Integration', () => {
+  const CURSOR_COMMANDS_PATH = '.cursor/commands';
   let testApp: TestApp;
   let dataSource: DataSource;
   let standardsPort: IStandardsPort;
@@ -132,7 +134,7 @@ describe('Cursor Deployment Integration', () => {
     await dataSource.destroy();
   });
 
-  describe('when .cursor/rules/packmind/recipes-index.mdc does not exist', () => {
+  describe('recipe deployment', () => {
     let defaultTarget: Target;
 
     beforeEach(() => {
@@ -143,64 +145,51 @@ describe('Cursor Deployment Integration', () => {
         path: '/',
         gitRepoId: gitRepo.id,
       };
-      // Mock GitHexa.getFileFromRepo to return null (file doesn't exist)
-      // Mock gitPort.getFileFromRepo (gitPort is initialized in main beforeEach)
-      jest.spyOn(gitPort, 'getFileFromRepo').mockResolvedValue(null);
     });
 
     afterEach(() => {
       jest.restoreAllMocks();
     });
 
-    it('creates .cursor/rules/packmind/recipes-index.mdc with recipe summaries', async () => {
-      const recipeVersions: RecipeVersion[] = [
-        {
-          id: 'recipe-version-1' as RecipeVersionId,
-          recipeId: recipe.id,
-          name: recipe.name,
-          slug: recipe.slug,
-          content: recipe.content,
-          version: recipe.version,
-          summary:
-            'Test recipe for Cursor deployment with detailed instructions',
-          userId: user.id,
-        },
-      ];
+    describe('when deploying a single recipe', () => {
+      let fileUpdates: FileUpdates;
 
-      const fileUpdates = await deployerService.aggregateRecipeDeployments(
-        recipeVersions,
-        gitRepo,
-        [defaultTarget],
-        ['cursor'],
-      );
+      beforeEach(async () => {
+        const recipeVersions: RecipeVersion[] = [
+          {
+            id: 'recipe-version-1' as RecipeVersionId,
+            recipeId: recipe.id,
+            name: recipe.name,
+            slug: recipe.slug,
+            content: recipe.content,
+            version: recipe.version,
+            summary:
+              'Test recipe for Cursor deployment with detailed instructions',
+            userId: user.id,
+          },
+        ];
 
-      expect(fileUpdates.createOrUpdate).toHaveLength(1);
-      expect(fileUpdates.delete).toHaveLength(0);
-
-      const cursorFile = fileUpdates.createOrUpdate.find(
-        (file) => file.path === '.cursor/rules/packmind/recipes-index.mdc',
-      );
-
-      expect(cursorFile).toBeDefined();
-      if (cursorFile) {
-        // Check Cursor front matter
-        expect(cursorFile.content).toContain('---');
-        expect(cursorFile.content).toContain('alwaysApply: true');
-
-        // Check Packmind recipes header and instructions
-        expect(cursorFile.content).toContain('# Packmind Recipes');
-        expect(cursorFile.content).toContain('🚨 **MANDATORY STEP** 🚨');
-        expect(cursorFile.content).toContain('ALWAYS READ');
-        expect(cursorFile.content).toContain('available recipes below');
-
-        // Check recipes list
-        expect(cursorFile.content).toContain('## Available recipes');
-        expect(cursorFile.content).toContain('Test Recipe for Cursor');
-        expect(cursorFile.content).toContain(recipe.slug);
-        expect(cursorFile.content).toContain(
-          'Test recipe for Cursor deployment with detailed instructions',
+        fileUpdates = await deployerService.aggregateRecipeDeployments(
+          recipeVersions,
+          gitRepo,
+          [defaultTarget],
+          ['cursor'],
         );
-      }
+      });
+
+      it('creates one command file', () => {
+        expect(fileUpdates.createOrUpdate).toHaveLength(1);
+      });
+
+      it('uses correct path for command file', () => {
+        expect(fileUpdates.createOrUpdate[0].path).toBe(
+          `${CURSOR_COMMANDS_PATH}/${recipe.slug}.md`,
+        );
+      });
+
+      it('uses recipe content as command file content', () => {
+        expect(fileUpdates.createOrUpdate[0].content).toBe(recipe.content);
+      });
     });
 
     it('creates multiple .cursor/rules/packmind/standard-*.mdc files for standards', async () => {
@@ -367,90 +356,15 @@ describe('Cursor Deployment Integration', () => {
       expect(recipeUpdates.createOrUpdate).toHaveLength(1);
       expect(standardsUpdates.createOrUpdate).toHaveLength(1);
 
-      // Recipes should create .cursor/rules/packmind/recipes-index.mdc
+      // Recipes should create .cursor/commands/<slug>.md
       expect(recipeUpdates.createOrUpdate[0].path).toBe(
-        '.cursor/rules/packmind/recipes-index.mdc',
+        `${CURSOR_COMMANDS_PATH}/${recipe.slug}.md`,
       );
 
       // Standards should create .cursor/rules/packmind/standard-*.mdc
       expect(standardsUpdates.createOrUpdate[0].path).toBe(
         `.cursor/rules/packmind/standard-${standard.slug}.mdc`,
       );
-    });
-  });
-
-  describe('when .cursor/rules/packmind/recipes-index.mdc already exists', () => {
-    let defaultTarget: Target;
-    const existingContent = `---
-alwaysApply: true
----
-
-# Packmind Recipes
-
-🚨 **MANDATORY STEP** 🚨
-
-Before writing, editing, or generating ANY code:
-
-**ALWAYS READ**: the available recipes below to see what recipes are available
-
-## Recipe Usage Rules:
-- **MANDATORY**: Always check the recipes list first
-- **CONDITIONAL**: Only read/use individual recipes if they are relevant to your task
-- **OPTIONAL**: If no recipes are relevant, proceed without using any
-
-**Remember: Always check the recipes list first, but only use recipes that actually apply to your specific task.**\`
-
-## Available recipes
-
-- [Test Recipe for Cursor](.packmind/recipes/test-recipe-for-cursor.md) : Test recipe for deployment`;
-
-    beforeEach(async () => {
-      // Hexas are already initialized by testApp.initialize()
-      const gitPort = testApp.gitHexa.getAdapter();
-
-      // Create a default target for testing
-      defaultTarget = {
-        id: createTargetId('default-target-id'),
-        name: 'Default',
-        path: '/',
-        gitRepoId: gitRepo.id,
-      };
-      // Mock gitPort.getFileFromRepo to return existing content
-      const existingFile = {
-        content: existingContent,
-        sha: 'abc123',
-      };
-      jest.spyOn(gitPort, 'getFileFromRepo').mockResolvedValue(existingFile);
-    });
-
-    afterEach(() => {
-      jest.restoreAllMocks();
-    });
-
-    it('does not modify existing .cursor/rules/packmind/recipes-index.mdc file', async () => {
-      const recipeVersions: RecipeVersion[] = [
-        {
-          id: 'recipe-version-1' as RecipeVersionId,
-          recipeId: recipe.id,
-          name: recipe.name,
-          slug: recipe.slug,
-          content: recipe.content,
-          version: recipe.version,
-          summary: 'Test recipe for deployment',
-          userId: user.id,
-        },
-      ];
-
-      const fileUpdates = await deployerService.aggregateRecipeDeployments(
-        recipeVersions,
-        gitRepo,
-        [defaultTarget],
-        ['cursor'],
-      );
-
-      // No files should be updated since instructions already exist
-      expect(fileUpdates.createOrUpdate).toHaveLength(0);
-      expect(fileUpdates.delete).toHaveLength(0);
     });
   });
 
@@ -472,9 +386,6 @@ Before writing, editing, or generating ANY code:
     });
 
     it('handles empty recipe list gracefully', async () => {
-      // Mock gitPort.getFileFromRepo (gitPort is initialized in main beforeEach)
-      jest.spyOn(gitPort, 'getFileFromRepo').mockResolvedValue(null);
-
       const fileUpdates = await cursorDeployer.deployRecipes(
         [],
         gitRepo,
@@ -496,37 +407,84 @@ Before writing, editing, or generating ANY code:
       expect(fileUpdates.delete).toHaveLength(0);
     });
 
-    it('handles GitHexa errors gracefully', async () => {
-      jest
-        .spyOn(testApp.gitHexa.getAdapter(), 'getFileFromRepo')
-        .mockRejectedValue(new Error('GitHub API error'));
+    describe('when deploying multiple recipes', () => {
+      let fileUpdates: FileUpdates;
+      let recipe2: Recipe;
 
-      const recipeVersions: RecipeVersion[] = [
-        {
-          id: 'recipe-version-1' as RecipeVersionId,
-          recipeId: recipe.id,
-          name: recipe.name,
-          slug: recipe.slug,
-          content: recipe.content,
-          version: recipe.version,
-          summary: 'Test recipe',
+      beforeEach(async () => {
+        recipe2 = await testApp.recipesHexa.getAdapter().captureRecipe({
+          name: 'Second Test Recipe',
+          content: 'Second recipe content for testing',
+          organizationId: organization.id,
           userId: user.id,
-        },
-      ];
+          spaceId: space.id.toString(),
+        });
 
-      const fileUpdates = await cursorDeployer.deployRecipes(
-        recipeVersions,
-        gitRepo,
-        defaultTarget,
-      );
+        const recipeVersions: RecipeVersion[] = [
+          {
+            id: 'recipe-version-1' as RecipeVersionId,
+            recipeId: recipe.id,
+            name: recipe.name,
+            slug: recipe.slug,
+            content: recipe.content,
+            version: recipe.version,
+            summary: 'First test recipe',
+            userId: user.id,
+          },
+          {
+            id: 'recipe-version-2' as RecipeVersionId,
+            recipeId: recipe2.id,
+            name: recipe2.name,
+            slug: recipe2.slug,
+            content: recipe2.content,
+            version: recipe2.version,
+            summary: 'Second test recipe',
+            userId: user.id,
+          },
+        ];
 
-      // Should still work despite the error, treating it as if file doesn't exist
-      expect(fileUpdates.createOrUpdate).toHaveLength(1);
-      expect(fileUpdates.delete).toHaveLength(0);
+        fileUpdates = await cursorDeployer.deployRecipes(
+          recipeVersions,
+          gitRepo,
+          defaultTarget,
+        );
+      });
 
-      const cursorFile = fileUpdates.createOrUpdate[0];
-      expect(cursorFile.content).toContain('# Packmind Recipes');
-      expect(cursorFile.content).toContain('🚨 **MANDATORY STEP** 🚨');
+      it('creates two command files', () => {
+        expect(fileUpdates.createOrUpdate).toHaveLength(2);
+      });
+
+      it('creates command file for first recipe with correct path', () => {
+        const firstRecipeFile = fileUpdates.createOrUpdate.find((file) =>
+          file.path.includes(recipe.slug),
+        );
+        expect(firstRecipeFile?.path).toBe(
+          `${CURSOR_COMMANDS_PATH}/${recipe.slug}.md`,
+        );
+      });
+
+      it('creates command file for first recipe with correct content', () => {
+        const firstRecipeFile = fileUpdates.createOrUpdate.find((file) =>
+          file.path.includes(recipe.slug),
+        );
+        expect(firstRecipeFile?.content).toBe(recipe.content);
+      });
+
+      it('creates command file for second recipe with correct path', () => {
+        const secondRecipeFile = fileUpdates.createOrUpdate.find((file) =>
+          file.path.includes(recipe2.slug),
+        );
+        expect(secondRecipeFile?.path).toBe(
+          `${CURSOR_COMMANDS_PATH}/${recipe2.slug}.md`,
+        );
+      });
+
+      it('creates command file for second recipe with correct content', () => {
+        const secondRecipeFile = fileUpdates.createOrUpdate.find((file) =>
+          file.path.includes(recipe2.slug),
+        );
+        expect(secondRecipeFile?.content).toBe(recipe2.content);
+      });
     });
 
     it('generates multiple standard files correctly', async () => {

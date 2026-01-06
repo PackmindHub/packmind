@@ -688,12 +688,12 @@ class MyService {
 
       expect(recipeUpdates.createOrUpdate).toHaveLength(1);
 
-      // Verify Cursor file is deployed to jetbrains/.cursor/rules/packmind/recipes-index.mdc
+      // Verify Cursor command file is deployed to jetbrains/.cursor/commands/<slug>.md
       const deployedFile = recipeUpdates.createOrUpdate[0];
       expect(deployedFile.path).toBe(
-        'jetbrains/.cursor/rules/packmind/recipes-index.mdc',
+        `jetbrains/.cursor/commands/${recipe.slug}.md`,
       );
-      expect(deployedFile.content).toContain('Writing Good JetBrains Services');
+      expect(deployedFile.content).toBe(recipe.content);
     });
   });
 

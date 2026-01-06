@@ -9,15 +9,13 @@ import {
   Target,
 } from '@packmind/types';
 import { ICodingAgentDeployer } from '../../../domain/repository/ICodingAgentDeployer';
-import { GenericRecipeSectionWriter } from '../genericSectionWriter/GenericRecipeSectionWriter';
 import { GenericStandardSectionWriter } from '../genericSectionWriter/GenericStandardSectionWriter';
 import { getTargetPrefixedPath } from '../utils/FileUtils';
 
 const origin = 'CursorDeployer';
 
 export class CursorDeployer implements ICodingAgentDeployer {
-  private static readonly RECIPES_INDEX_PATH =
-    '.cursor/rules/packmind/recipes-index.mdc';
+  private static readonly COMMANDS_PATH = '.cursor/commands';
   private readonly logger: PackmindLogger;
 
   constructor(
@@ -39,29 +37,21 @@ export class CursorDeployer implements ICodingAgentDeployer {
       targetPath: target.path,
     });
 
-    // Get existing recipes index content
-    const existingContent = await this.getExistingRecipesIndexContent(
-      gitRepo,
-      target,
-    );
-
-    // Generate content with recipe instructions
-    const updatedContent = await this.generateRecipeContent(recipeVersions);
-
     const fileUpdates: FileUpdates = {
       createOrUpdate: [],
       delete: [],
     };
 
-    // Only create file if content is not empty and was updated
-    if (updatedContent !== '' && updatedContent !== existingContent) {
+    // Generate individual command files for each recipe
+    for (const recipe of recipeVersions) {
+      const commandFile = this.generateCursorCommandForRecipe(recipe);
       const targetPrefixedPath = getTargetPrefixedPath(
-        CursorDeployer.RECIPES_INDEX_PATH,
+        commandFile.path,
         target,
       );
       fileUpdates.createOrUpdate.push({
         path: targetPrefixedPath,
-        content: updatedContent,
+        content: commandFile.content,
       });
     }
 
@@ -111,14 +101,12 @@ export class CursorDeployer implements ICodingAgentDeployer {
       delete: [],
     };
 
-    // Generate content without target prefixing
-    const content = this.generateRecipeContentSimple(recipeVersions);
-
-    // Only add file if there is content
-    if (content !== '') {
+    // Generate individual command files for each recipe
+    for (const recipe of recipeVersions) {
+      const commandFile = this.generateCursorCommandForRecipe(recipe);
       fileUpdates.createOrUpdate.push({
-        path: CursorDeployer.RECIPES_INDEX_PATH,
-        content,
+        path: commandFile.path,
+        content: commandFile.content,
       });
     }
 
@@ -164,12 +152,12 @@ export class CursorDeployer implements ICodingAgentDeployer {
       delete: [],
     };
 
-    // Generate recipes index file only if there are recipes
-    const recipesContent = this.generateRecipeContentSimple(recipeVersions);
-    if (recipesContent !== '') {
+    // Generate individual command files for each recipe
+    for (const recipe of recipeVersions) {
+      const commandFile = this.generateCursorCommandForRecipe(recipe);
       fileUpdates.createOrUpdate.push({
-        path: CursorDeployer.RECIPES_INDEX_PATH,
-        content: recipesContent,
+        path: commandFile.path,
+        content: commandFile.content,
       });
     }
 
@@ -208,10 +196,10 @@ export class CursorDeployer implements ICodingAgentDeployer {
       delete: [],
     };
 
-    // Delete recipes index file if no recipes remain installed
-    if (installed.recipeVersions.length === 0) {
+    // Delete individual command files for removed recipes
+    for (const recipeVersion of removed.recipeVersions) {
       fileUpdates.delete.push({
-        path: CursorDeployer.RECIPES_INDEX_PATH,
+        path: `${CursorDeployer.COMMANDS_PATH}/${recipeVersion.slug}.md`,
       });
     }
 
@@ -222,14 +210,17 @@ export class CursorDeployer implements ICodingAgentDeployer {
       });
     }
 
-    // Delete packmind folder if all artifacts are removed and something was actually removed
-    const hasRemovedArtifacts =
-      removed.recipeVersions.length > 0 || removed.standardVersions.length > 0;
-    if (
-      hasRemovedArtifacts &&
-      installed.recipeVersions.length === 0 &&
-      installed.standardVersions.length === 0
-    ) {
+    // Delete commands folder if no recipes remain installed
+    const hasRemovedRecipes = removed.recipeVersions.length > 0;
+    if (hasRemovedRecipes && installed.recipeVersions.length === 0) {
+      fileUpdates.delete.push({
+        path: `${CursorDeployer.COMMANDS_PATH}/`,
+      });
+    }
+
+    // Delete packmind folder if all standards are removed
+    const hasRemovedStandards = removed.standardVersions.length > 0;
+    if (hasRemovedStandards && installed.standardVersions.length === 0) {
       fileUpdates.delete.push({
         path: '.cursor/rules/packmind/',
       });
@@ -239,100 +230,23 @@ export class CursorDeployer implements ICodingAgentDeployer {
   }
 
   /**
-   * Generate content with recipe instructions without target/repo context
+   * Generate Cursor command file for a specific recipe
    */
-  private generateRecipeContentSimple(recipeVersions: RecipeVersion[]): string {
-    // Generate recipes list
-    const recipesSection = this.generateRecipesSection(recipeVersions);
+  private generateCursorCommandForRecipe(recipe: RecipeVersion): {
+    path: string;
+    content: string;
+  } {
+    this.logger.debug('Generating Cursor command for recipe', {
+      recipeSlug: recipe.slug,
+    });
 
-    // If no recipes, return empty string to indicate no file should be created
-    if (recipesSection === '') {
-      return '';
-    }
+    const path = `${CursorDeployer.COMMANDS_PATH}/${recipe.slug}.md`;
+    const content = recipe.content;
 
-    const packmindInstructions =
-      GenericRecipeSectionWriter.generateRecipesSection({
-        recipesSection,
-      });
-
-    return `---
-alwaysApply: true
----
-
-${packmindInstructions}`;
-  }
-
-  /**
-   * Get existing content from packmind-recipes-index.mdc file
-   */
-  private async getExistingRecipesIndexContent(
-    gitRepo: GitRepo,
-    target: Target,
-  ): Promise<string> {
-    if (!this.gitPort) {
-      this.logger.debug('No GitHexa available, returning empty content');
-      return '';
-    }
-
-    try {
-      const targetPrefixedPath = getTargetPrefixedPath(
-        CursorDeployer.RECIPES_INDEX_PATH,
-        target,
-      );
-      const existingFile = await this.gitPort.getFileFromRepo(
-        gitRepo,
-        targetPrefixedPath,
-      );
-      return existingFile?.content || '';
-    } catch (error) {
-      this.logger.debug('Failed to get existing Cursor recipes index content', {
-        error: error instanceof Error ? error.message : String(error),
-        targetPath: target.path,
-      });
-      return '';
-    }
-  }
-
-  /**
-   * Generate content with recipe instructions, including recipe summaries
-   */
-  private async generateRecipeContent(
-    recipeVersions: RecipeVersion[],
-  ): Promise<string> {
-    // Generate recipes list
-    const recipesSection = this.generateRecipesSection(recipeVersions);
-
-    // If no recipes, return empty string to indicate no file should be created
-    if (recipesSection === '') {
-      return '';
-    }
-
-    const packmindInstructions =
-      GenericRecipeSectionWriter.generateRecipesSection({
-        recipesSection,
-      });
-
-    return `---
-alwaysApply: true
----
-
-${packmindInstructions}`;
-  }
-
-  /**
-   * Generate the recipes section with summaries
-   */
-  private generateRecipesSection(recipeVersions: RecipeVersion[]): string {
-    if (recipeVersions.length === 0) {
-      return '';
-    }
-
-    return recipeVersions
-      .map(
-        (recipe) =>
-          `- [${recipe.name}](.packmind/recipes/${recipe.slug}.md) : ${recipe.summary || recipe.name}`,
-      )
-      .join('\n');
+    return {
+      path,
+      content,
+    };
   }
 
   /**
