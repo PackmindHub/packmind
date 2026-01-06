@@ -178,29 +178,22 @@ describe('GitHub Copilot Deployment Integration', () => {
       expect(fileUpdates.delete).toHaveLength(0);
 
       const copilotFile = fileUpdates.createOrUpdate.find(
-        (file) =>
-          file.path ===
-          '.github/instructions/packmind-recipes-index.instructions.md',
+        (file) => file.path === `.github/prompts/${recipe.slug}.prompt.md`,
       );
 
       expect(copilotFile).toBeDefined();
       if (copilotFile) {
-        // Check Copilot front matter
+        // Check Copilot prompt file YAML frontmatter
         expect(copilotFile.content).toContain('---');
-        expect(copilotFile.content).toContain("applyTo: '**'");
-
-        // Check Packmind recipes header and instructions
-        expect(copilotFile.content).toContain('# Packmind Recipes');
-        expect(copilotFile.content).toContain('🚨 **MANDATORY STEP** 🚨');
-        expect(copilotFile.content).toContain('ALWAYS READ');
-        expect(copilotFile.content).toContain('available recipes below');
-
-        // Check recipes list
-        expect(copilotFile.content).toContain('## Available recipes');
-        expect(copilotFile.content).toContain('Test Recipe for Copilot');
-        expect(copilotFile.content).toContain(recipe.slug);
         expect(copilotFile.content).toContain(
-          'Test recipe for GitHub Copilot deployment with detailed instructions',
+          "description: 'Test recipe for GitHub Copilot deployment with detailed instructions'",
+        );
+        expect(copilotFile.content).toContain("agent: 'agent'");
+        expect(copilotFile.content).toContain('---');
+
+        // Check recipe content is included
+        expect(copilotFile.content).toContain(
+          'This is test recipe content for GitHub Copilot deployment',
         );
       }
     });
@@ -370,9 +363,9 @@ describe('GitHub Copilot Deployment Integration', () => {
       expect(recipeUpdates.createOrUpdate).toHaveLength(1);
       expect(standardsUpdates.createOrUpdate).toHaveLength(1);
 
-      // Recipes should create .github/instructions/packmind-recipes-index.instructions.md
+      // Recipes should create individual .github/prompts/*.prompt.md files
       expect(recipeUpdates.createOrUpdate[0].path).toBe(
-        '.github/instructions/packmind-recipes-index.instructions.md',
+        `.github/prompts/${recipe.slug}.prompt.md`,
       );
 
       // Standards should create .github/instructions/packmind-*.instructions.md
@@ -382,30 +375,8 @@ describe('GitHub Copilot Deployment Integration', () => {
     });
   });
 
-  describe('when .github/instructions/packmind-recipes-index.instructions.md already exists', () => {
+  describe('migration from index to prompt files', () => {
     let defaultTarget: Target;
-    const existingContent = `---
-applyTo: '**'
----
-
-# Packmind Recipes
-
-🚨 **MANDATORY STEP** 🚨
-
-Before writing, editing, or generating ANY code:
-
-**ALWAYS READ**: the available recipes below to see what recipes are available
-
-## Recipe Usage Rules:
-- **MANDATORY**: Always check the recipes list first
-- **CONDITIONAL**: Only read/use individual recipes if they are relevant to your task
-- **OPTIONAL**: If no recipes are relevant, proceed without using any
-
-**Remember: Always check the recipes list first, but only use recipes that actually apply to your specific task.**\`
-
-## Available recipes
-
-- [Test Recipe for Copilot](.packmind/recipes/test-recipe-for-copilot.md) : Test recipe for deployment`;
 
     beforeEach(() => {
       // Create a default target for testing
@@ -415,20 +386,17 @@ Before writing, editing, or generating ANY code:
         path: '/',
         gitRepoId: gitRepo.id,
       };
-      // Mock GitHexa.getFileFromRepo to return existing content
-      const existingFile = {
-        content: existingContent,
-        sha: 'abc123',
-      };
-      jest.spyOn(gitPort, 'getFileFromRepo').mockResolvedValue(existingFile);
     });
 
     afterEach(() => {
       jest.restoreAllMocks();
     });
 
-    it('does not modify existing .github/instructions/packmind-recipes-index.instructions.md file', async () => {
-      const recipeVersions: RecipeVersion[] = [
+    let recipeVersions: RecipeVersion[];
+    let fileUpdates: FileUpdates;
+
+    beforeEach(async () => {
+      recipeVersions = [
         {
           id: 'recipe-version-1' as RecipeVersionId,
           recipeId: recipe.id,
@@ -441,16 +409,32 @@ Before writing, editing, or generating ANY code:
         },
       ];
 
-      const fileUpdates = await deployerService.aggregateRecipeDeployments(
+      fileUpdates = await deployerService.aggregateRecipeDeployments(
         recipeVersions,
         gitRepo,
         [defaultTarget],
         ['copilot'],
       );
+    });
 
-      // No files should be updated since instructions already exist
-      expect(fileUpdates.createOrUpdate).toHaveLength(0);
-      expect(fileUpdates.delete).toHaveLength(0);
+    it('creates one prompt file', async () => {
+      expect(fileUpdates.createOrUpdate).toHaveLength(1);
+    });
+
+    it('uses correct prompt file path', async () => {
+      expect(fileUpdates.createOrUpdate[0].path).toBe(
+        `.github/prompts/${recipe.slug}.prompt.md`,
+      );
+    });
+
+    it('includes description in YAML frontmatter', async () => {
+      expect(fileUpdates.createOrUpdate[0].content).toContain(
+        "description: 'Test recipe for deployment'",
+      );
+    });
+
+    it('sets agent mode in YAML frontmatter', async () => {
+      expect(fileUpdates.createOrUpdate[0].content).toContain("agent: 'agent'");
     });
   });
 
@@ -522,13 +506,18 @@ Before writing, editing, or generating ANY code:
         defaultTarget,
       );
 
-      // Should still work despite the error, treating it as if file doesn't exist
+      // Should still work despite the error, creating individual prompt files
       expect(fileUpdates.createOrUpdate).toHaveLength(1);
       expect(fileUpdates.delete).toHaveLength(0);
 
       const copilotFile = fileUpdates.createOrUpdate[0];
-      expect(copilotFile.content).toContain('# Packmind Recipes');
-      expect(copilotFile.content).toContain('🚨 **MANDATORY STEP** 🚨');
+      // Check YAML frontmatter
+      expect(copilotFile.content).toContain("description: 'Test recipe'");
+      expect(copilotFile.content).toContain("agent: 'agent'");
+      // Check recipe content is included
+      expect(copilotFile.content).toContain(
+        'This is test recipe content for GitHub Copilot deployment',
+      );
     });
 
     it('generates multiple standard files correctly', async () => {
