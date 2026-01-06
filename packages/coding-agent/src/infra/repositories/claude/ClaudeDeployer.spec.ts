@@ -75,7 +75,65 @@ describe('ClaudeDeployer', () => {
           mockTarget,
         );
 
-        expect(result.createOrUpdate).toHaveLength(1);
+        expect(result.createOrUpdate).toHaveLength(2);
+        expect(
+          result.createOrUpdate.filter((f) =>
+            f.path.startsWith('.claude/commands/packmind/'),
+          ),
+        ).toHaveLength(1);
+      });
+
+      describe('when clearing legacy CLAUDE.md recipes section', () => {
+        let claudeMdUpdate: (typeof result.createOrUpdate)[number] | undefined;
+        let result: Awaited<ReturnType<typeof deployer.deployRecipes>>;
+
+        beforeEach(async () => {
+          const recipe = recipeFactory({
+            name: 'Test Recipe',
+            slug: 'test-recipe',
+          });
+
+          const recipeVersion: RecipeVersion = {
+            id: createRecipeVersionId('recipe-version-1'),
+            recipeId: recipe.id,
+            name: recipe.name,
+            slug: recipe.slug,
+            content: 'This is the recipe content',
+            version: 1,
+            summary: 'A test recipe summary',
+            userId: createUserId('user-1'),
+          };
+
+          result = await deployer.deployRecipes(
+            [recipeVersion],
+            mockGitRepo,
+            mockTarget,
+          );
+
+          claudeMdUpdate = result.createOrUpdate.find(
+            (f) => f.path === 'CLAUDE.md',
+          );
+        });
+
+        it('includes CLAUDE.md in updates', () => {
+          expect(claudeMdUpdate).toBeDefined();
+        });
+
+        it('has sections defined', () => {
+          expect(claudeMdUpdate?.sections).toBeDefined();
+        });
+
+        it('has exactly one section', () => {
+          expect(claudeMdUpdate?.sections).toHaveLength(1);
+        });
+
+        it('has Packmind recipes section key', () => {
+          expect(claudeMdUpdate?.sections?.[0].key).toBe('Packmind recipes');
+        });
+
+        it('sets section content to empty string', () => {
+          expect(claudeMdUpdate?.sections?.[0].content).toBe('');
+        });
       });
 
       it('does not delete any files', async () => {
@@ -247,16 +305,28 @@ describe('ClaudeDeployer', () => {
       });
     });
 
-    it('returns no file updates for empty recipe list', async () => {
-      const result = await deployer.deployRecipes([], mockGitRepo, mockTarget);
+    describe('when deploying empty recipe list', () => {
+      let result: Awaited<ReturnType<typeof deployer.deployRecipes>>;
 
-      expect(result.createOrUpdate).toHaveLength(0);
-    });
+      beforeEach(async () => {
+        result = await deployer.deployRecipes([], mockGitRepo, mockTarget);
+      });
 
-    it('returns no file deletions for empty recipe list', async () => {
-      const result = await deployer.deployRecipes([], mockGitRepo, mockTarget);
+      it('returns one file update', () => {
+        expect(result.createOrUpdate).toHaveLength(1);
+      });
 
-      expect(result.delete).toHaveLength(0);
+      it('returns CLAUDE.md as the file path', () => {
+        expect(result.createOrUpdate[0].path).toBe('CLAUDE.md');
+      });
+
+      it('returns one section in the update', () => {
+        expect(result.createOrUpdate[0].sections).toHaveLength(1);
+      });
+
+      it('returns no file deletions', () => {
+        expect(result.delete).toHaveLength(0);
+      });
     });
 
     describe('when deploying multiple recipes', () => {
@@ -299,7 +369,12 @@ describe('ClaudeDeployer', () => {
           mockTarget,
         );
 
-        expect(result.createOrUpdate).toHaveLength(2);
+        expect(result.createOrUpdate).toHaveLength(3);
+        expect(
+          result.createOrUpdate.filter((f) =>
+            f.path.startsWith('.claude/commands/packmind/'),
+          ),
+        ).toHaveLength(2);
       });
 
       it('creates first recipe file at correct path', async () => {
@@ -519,7 +594,68 @@ describe('ClaudeDeployer', () => {
           mockTarget,
         );
 
-        expect(result.createOrUpdate).toHaveLength(1);
+        expect(result.createOrUpdate).toHaveLength(2);
+        expect(
+          result.createOrUpdate.filter((f) =>
+            f.path.startsWith('.claude/rules/packmind/'),
+          ),
+        ).toHaveLength(1);
+      });
+
+      describe('when clearing legacy CLAUDE.md standards section', () => {
+        let claudeMdUpdate: (typeof result.createOrUpdate)[number] | undefined;
+        let result: Awaited<ReturnType<typeof deployer.deployStandards>>;
+
+        beforeEach(async () => {
+          const standard = standardFactory({
+            name: 'Test Standard',
+            slug: 'test-standard',
+            scope: '**/*.{ts,tsx}',
+          });
+
+          const standardVersion: StandardVersion = {
+            id: createStandardVersionId('standard-version-1'),
+            standardId: standard.id,
+            name: standard.name,
+            slug: standard.slug,
+            description: standard.description,
+            version: 1,
+            summary: 'A test standard summary',
+            userId: createUserId('user-1'),
+            scope: standard.scope,
+            rules: [] as Rule[],
+          };
+
+          result = await deployer.deployStandards(
+            [standardVersion],
+            mockGitRepo,
+            mockTarget,
+          );
+
+          claudeMdUpdate = result.createOrUpdate.find(
+            (f) => f.path === 'CLAUDE.md',
+          );
+        });
+
+        it('includes CLAUDE.md in updates', () => {
+          expect(claudeMdUpdate).toBeDefined();
+        });
+
+        it('has sections defined', () => {
+          expect(claudeMdUpdate?.sections).toBeDefined();
+        });
+
+        it('has exactly one section', () => {
+          expect(claudeMdUpdate?.sections).toHaveLength(1);
+        });
+
+        it('has Packmind standards section key', () => {
+          expect(claudeMdUpdate?.sections?.[0].key).toBe('Packmind standards');
+        });
+
+        it('sets section content to empty string', () => {
+          expect(claudeMdUpdate?.sections?.[0].content).toBe('');
+        });
       });
 
       it('creates file at correct path', async () => {
@@ -548,8 +684,10 @@ describe('ClaudeDeployer', () => {
           mockTarget,
         );
 
-        const standardFile = result.createOrUpdate[0];
-        expect(standardFile.path).toBe(
+        const standardFile = result.createOrUpdate.find((f) =>
+          f.path.startsWith('.claude/rules/packmind/'),
+        );
+        expect(standardFile?.path).toBe(
           '.claude/rules/packmind/standard-test-standard.md',
         );
       });
@@ -1154,24 +1292,28 @@ describe('ClaudeDeployer', () => {
       });
     });
 
-    it('returns no file updates for empty standards list', async () => {
-      const result = await deployer.deployStandards(
-        [],
-        mockGitRepo,
-        mockTarget,
-      );
+    describe('when deploying empty standards list', () => {
+      let result: Awaited<ReturnType<typeof deployer.deployStandards>>;
 
-      expect(result.createOrUpdate).toHaveLength(0);
-    });
+      beforeEach(async () => {
+        result = await deployer.deployStandards([], mockGitRepo, mockTarget);
+      });
 
-    it('returns no file deletions for empty standards list', async () => {
-      const result = await deployer.deployStandards(
-        [],
-        mockGitRepo,
-        mockTarget,
-      );
+      it('returns one file update', () => {
+        expect(result.createOrUpdate).toHaveLength(1);
+      });
 
-      expect(result.delete).toHaveLength(0);
+      it('returns CLAUDE.md as the file path', () => {
+        expect(result.createOrUpdate[0].path).toBe('CLAUDE.md');
+      });
+
+      it('returns one section in the update', () => {
+        expect(result.createOrUpdate[0].sections).toHaveLength(1);
+      });
+
+      it('returns no file deletions', () => {
+        expect(result.delete).toHaveLength(0);
+      });
     });
 
     describe('when deploying multiple standards', () => {
@@ -1520,7 +1662,12 @@ describe('ClaudeDeployer', () => {
           recipeVersion,
         ]);
 
-        expect(result.createOrUpdate).toHaveLength(1);
+        expect(result.createOrUpdate).toHaveLength(2);
+        expect(
+          result.createOrUpdate.filter((f) =>
+            f.path.startsWith('.claude/commands/packmind/'),
+          ),
+        ).toHaveLength(1);
       });
 
       it('creates file at correct path without target prefix', async () => {
@@ -1544,7 +1691,10 @@ describe('ClaudeDeployer', () => {
           recipeVersion,
         ]);
 
-        expect(result.createOrUpdate[0].path).toBe(
+        const recipeFile = result.createOrUpdate.find((f) =>
+          f.path.startsWith('.claude/commands/packmind/'),
+        );
+        expect(recipeFile?.path).toBe(
           '.claude/commands/packmind/test-recipe.md',
         );
       });
@@ -1652,15 +1802,27 @@ describe('ClaudeDeployer', () => {
     });
 
     describe('when no recipes', () => {
-      it('returns no file updates', async () => {
-        const result = await deployer.generateFileUpdatesForRecipes([]);
+      let result: Awaited<
+        ReturnType<typeof deployer.generateFileUpdatesForRecipes>
+      >;
 
-        expect(result.createOrUpdate).toHaveLength(0);
+      beforeEach(async () => {
+        result = await deployer.generateFileUpdatesForRecipes([]);
       });
 
-      it('returns no file deletions', async () => {
-        const result = await deployer.generateFileUpdatesForRecipes([]);
+      it('returns one file update', () => {
+        expect(result.createOrUpdate).toHaveLength(1);
+      });
 
+      it('returns CLAUDE.md as the file path', () => {
+        expect(result.createOrUpdate[0].path).toBe('CLAUDE.md');
+      });
+
+      it('returns one section in the update', () => {
+        expect(result.createOrUpdate[0].sections).toHaveLength(1);
+      });
+
+      it('returns no file deletions', () => {
         expect(result.delete).toHaveLength(0);
       });
     });
@@ -1704,7 +1866,12 @@ describe('ClaudeDeployer', () => {
           recipeVersion2,
         ]);
 
-        expect(result.createOrUpdate).toHaveLength(2);
+        expect(result.createOrUpdate).toHaveLength(3);
+        expect(
+          result.createOrUpdate.filter((f) =>
+            f.path.startsWith('.claude/commands/packmind/'),
+          ),
+        ).toHaveLength(2);
       });
 
       it('creates first recipe file at correct path', async () => {
@@ -1920,15 +2087,27 @@ describe('ClaudeDeployer', () => {
     });
 
     describe('when no standards', () => {
-      it('returns no file updates', async () => {
-        const result = await deployer.generateFileUpdatesForStandards([]);
+      let result: Awaited<
+        ReturnType<typeof deployer.generateFileUpdatesForStandards>
+      >;
 
-        expect(result.createOrUpdate).toHaveLength(0);
+      beforeEach(async () => {
+        result = await deployer.generateFileUpdatesForStandards([]);
       });
 
-      it('returns no file deletions', async () => {
-        const result = await deployer.generateFileUpdatesForStandards([]);
+      it('returns one file update', () => {
+        expect(result.createOrUpdate).toHaveLength(1);
+      });
 
+      it('returns CLAUDE.md as the file path', () => {
+        expect(result.createOrUpdate[0].path).toBe('CLAUDE.md');
+      });
+
+      it('returns one section in the update', () => {
+        expect(result.createOrUpdate[0].sections).toHaveLength(1);
+      });
+
+      it('returns no file deletions', () => {
         expect(result.delete).toHaveLength(0);
       });
     });
@@ -1936,48 +2115,64 @@ describe('ClaudeDeployer', () => {
 
   describe('deployArtifacts', () => {
     describe('when deploying both recipes and standards', () => {
-      it('creates two file updates', async () => {
-        const recipe = recipeFactory({
-          name: 'Test Recipe',
-          slug: 'test-recipe',
+      describe('when verifying file update count', () => {
+        let result: Awaited<ReturnType<typeof deployer.deployArtifacts>>;
+
+        beforeEach(async () => {
+          const recipe = recipeFactory({
+            name: 'Test Recipe',
+            slug: 'test-recipe',
+          });
+
+          const standard = standardFactory({
+            name: 'Test Standard',
+            slug: 'test-standard',
+            scope: '**/*.ts',
+          });
+
+          const recipeVersion: RecipeVersion = {
+            id: createRecipeVersionId('recipe-version-1'),
+            recipeId: recipe.id,
+            name: recipe.name,
+            slug: recipe.slug,
+            content: 'Recipe content',
+            version: 1,
+            summary: 'Recipe summary',
+            userId: createUserId('user-1'),
+          };
+
+          const standardVersion: StandardVersion = {
+            id: createStandardVersionId('standard-version-1'),
+            standardId: standard.id,
+            name: standard.name,
+            slug: standard.slug,
+            description: standard.description,
+            version: 1,
+            summary: 'Test standard',
+            userId: createUserId('user-1'),
+            scope: standard.scope,
+            rules: [] as Rule[],
+          };
+
+          result = await deployer.deployArtifacts(
+            [recipeVersion],
+            [standardVersion],
+          );
         });
 
-        const standard = standardFactory({
-          name: 'Test Standard',
-          slug: 'test-standard',
-          scope: '**/*.ts',
+        it('creates three file updates', () => {
+          expect(result.createOrUpdate).toHaveLength(3);
         });
 
-        const recipeVersion: RecipeVersion = {
-          id: createRecipeVersionId('recipe-version-1'),
-          recipeId: recipe.id,
-          name: recipe.name,
-          slug: recipe.slug,
-          content: 'Recipe content',
-          version: 1,
-          summary: 'Recipe summary',
-          userId: createUserId('user-1'),
-        };
-
-        const standardVersion: StandardVersion = {
-          id: createStandardVersionId('standard-version-1'),
-          standardId: standard.id,
-          name: standard.name,
-          slug: standard.slug,
-          description: standard.description,
-          version: 1,
-          summary: 'Test standard',
-          userId: createUserId('user-1'),
-          scope: standard.scope,
-          rules: [] as Rule[],
-        };
-
-        const result = await deployer.deployArtifacts(
-          [recipeVersion],
-          [standardVersion],
-        );
-
-        expect(result.createOrUpdate).toHaveLength(2);
+        it('creates two artifact files', () => {
+          expect(
+            result.createOrUpdate.filter(
+              (f) =>
+                f.path.startsWith('.claude/commands/packmind/') ||
+                f.path.startsWith('.claude/rules/packmind/'),
+            ),
+          ).toHaveLength(2);
+        });
       });
 
       it('creates recipe command file', async () => {
@@ -2028,50 +2223,81 @@ describe('ClaudeDeployer', () => {
         ).toBe(true);
       });
 
-      it('does not create CLAUDE.md file', async () => {
-        const recipe = recipeFactory({
-          name: 'Test Recipe',
-          slug: 'test-recipe',
+      describe('when clearing legacy CLAUDE.md sections', () => {
+        let claudeMdUpdate: (typeof result.createOrUpdate)[number] | undefined;
+        let result: Awaited<ReturnType<typeof deployer.deployArtifacts>>;
+
+        beforeEach(async () => {
+          const recipe = recipeFactory({
+            name: 'Test Recipe',
+            slug: 'test-recipe',
+          });
+
+          const standard = standardFactory({
+            name: 'Test Standard',
+            slug: 'test-standard',
+            scope: '**/*.ts',
+          });
+
+          const recipeVersion: RecipeVersion = {
+            id: createRecipeVersionId('recipe-version-1'),
+            recipeId: recipe.id,
+            name: recipe.name,
+            slug: recipe.slug,
+            content: 'Recipe content',
+            version: 1,
+            summary: 'Recipe summary',
+            userId: createUserId('user-1'),
+          };
+
+          const standardVersion: StandardVersion = {
+            id: createStandardVersionId('standard-version-1'),
+            standardId: standard.id,
+            name: standard.name,
+            slug: standard.slug,
+            description: standard.description,
+            version: 1,
+            summary: 'Test standard',
+            userId: createUserId('user-1'),
+            scope: standard.scope,
+            rules: [] as Rule[],
+          };
+
+          result = await deployer.deployArtifacts(
+            [recipeVersion],
+            [standardVersion],
+          );
+
+          claudeMdUpdate = result.createOrUpdate.find(
+            (f) => f.path === 'CLAUDE.md',
+          );
         });
 
-        const standard = standardFactory({
-          name: 'Test Standard',
-          slug: 'test-standard',
-          scope: '**/*.ts',
+        it('includes CLAUDE.md in updates', () => {
+          expect(claudeMdUpdate).toBeDefined();
         });
 
-        const recipeVersion: RecipeVersion = {
-          id: createRecipeVersionId('recipe-version-1'),
-          recipeId: recipe.id,
-          name: recipe.name,
-          slug: recipe.slug,
-          content: 'Recipe content',
-          version: 1,
-          summary: 'Recipe summary',
-          userId: createUserId('user-1'),
-        };
+        it('has sections defined', () => {
+          expect(claudeMdUpdate?.sections).toBeDefined();
+        });
 
-        const standardVersion: StandardVersion = {
-          id: createStandardVersionId('standard-version-1'),
-          standardId: standard.id,
-          name: standard.name,
-          slug: standard.slug,
-          description: standard.description,
-          version: 1,
-          summary: 'Test standard',
-          userId: createUserId('user-1'),
-          scope: standard.scope,
-          rules: [] as Rule[],
-        };
+        it('has exactly two sections', () => {
+          expect(claudeMdUpdate?.sections).toHaveLength(2);
+        });
 
-        const result = await deployer.deployArtifacts(
-          [recipeVersion],
-          [standardVersion],
-        );
+        it('includes Packmind standards section', () => {
+          expect(
+            claudeMdUpdate?.sections?.find(
+              (s) => s.key === 'Packmind standards',
+            ),
+          ).toBeDefined();
+        });
 
-        expect(result.createOrUpdate.some((f) => f.path === 'CLAUDE.md')).toBe(
-          false,
-        );
+        it('includes Packmind recipes section', () => {
+          expect(
+            claudeMdUpdate?.sections?.find((s) => s.key === 'Packmind recipes'),
+          ).toBeDefined();
+        });
       });
 
       it('creates standard file', async () => {
@@ -2124,26 +2350,40 @@ describe('ClaudeDeployer', () => {
     });
 
     describe('when deploying only recipes', () => {
-      it('creates one file update', async () => {
-        const recipe = recipeFactory({
-          name: 'Test Recipe',
-          slug: 'test-recipe',
+      describe('when verifying file update count', () => {
+        let result: Awaited<ReturnType<typeof deployer.deployArtifacts>>;
+
+        beforeEach(async () => {
+          const recipe = recipeFactory({
+            name: 'Test Recipe',
+            slug: 'test-recipe',
+          });
+
+          const recipeVersion: RecipeVersion = {
+            id: createRecipeVersionId('recipe-version-1'),
+            recipeId: recipe.id,
+            name: recipe.name,
+            slug: recipe.slug,
+            content: 'Recipe content',
+            version: 1,
+            summary: 'Recipe summary',
+            userId: createUserId('user-1'),
+          };
+
+          result = await deployer.deployArtifacts([recipeVersion], []);
         });
 
-        const recipeVersion: RecipeVersion = {
-          id: createRecipeVersionId('recipe-version-1'),
-          recipeId: recipe.id,
-          name: recipe.name,
-          slug: recipe.slug,
-          content: 'Recipe content',
-          version: 1,
-          summary: 'Recipe summary',
-          userId: createUserId('user-1'),
-        };
+        it('creates two file updates', () => {
+          expect(result.createOrUpdate).toHaveLength(2);
+        });
 
-        const result = await deployer.deployArtifacts([recipeVersion], []);
-
-        expect(result.createOrUpdate).toHaveLength(1);
+        it('creates one command file', () => {
+          expect(
+            result.createOrUpdate.filter((f) =>
+              f.path.startsWith('.claude/commands/packmind/'),
+            ),
+          ).toHaveLength(1);
+        });
       });
 
       it('creates command file at correct path', async () => {
@@ -2165,7 +2405,10 @@ describe('ClaudeDeployer', () => {
 
         const result = await deployer.deployArtifacts([recipeVersion], []);
 
-        expect(result.createOrUpdate[0].path).toBe(
+        const recipeFile = result.createOrUpdate.find((f) =>
+          f.path.startsWith('.claude/commands/packmind/'),
+        );
+        expect(recipeFile?.path).toBe(
           '.claude/commands/packmind/test-recipe.md',
         );
       });
@@ -2256,7 +2499,12 @@ describe('ClaudeDeployer', () => {
           [],
         );
 
-        expect(result.createOrUpdate).toHaveLength(2);
+        expect(result.createOrUpdate).toHaveLength(3);
+        expect(
+          result.createOrUpdate.filter((f) =>
+            f.path.startsWith('.claude/commands/packmind/'),
+          ),
+        ).toHaveLength(2);
       });
 
       it('creates first recipe at correct path', async () => {
@@ -2353,29 +2601,43 @@ describe('ClaudeDeployer', () => {
     });
 
     describe('when deploying only standards', () => {
-      it('creates one file update', async () => {
-        const standard = standardFactory({
-          name: 'Test Standard',
-          slug: 'test-standard',
-          scope: '**/*.ts',
+      describe('when verifying file update count', () => {
+        let result: Awaited<ReturnType<typeof deployer.deployArtifacts>>;
+
+        beforeEach(async () => {
+          const standard = standardFactory({
+            name: 'Test Standard',
+            slug: 'test-standard',
+            scope: '**/*.ts',
+          });
+
+          const standardVersion: StandardVersion = {
+            id: createStandardVersionId('standard-version-1'),
+            standardId: standard.id,
+            name: standard.name,
+            slug: standard.slug,
+            description: standard.description,
+            version: 1,
+            summary: 'Test standard',
+            userId: createUserId('user-1'),
+            scope: standard.scope,
+            rules: [] as Rule[],
+          };
+
+          result = await deployer.deployArtifacts([], [standardVersion]);
         });
 
-        const standardVersion: StandardVersion = {
-          id: createStandardVersionId('standard-version-1'),
-          standardId: standard.id,
-          name: standard.name,
-          slug: standard.slug,
-          description: standard.description,
-          version: 1,
-          summary: 'Test standard',
-          userId: createUserId('user-1'),
-          scope: standard.scope,
-          rules: [] as Rule[],
-        };
+        it('creates two file updates', () => {
+          expect(result.createOrUpdate).toHaveLength(2);
+        });
 
-        const result = await deployer.deployArtifacts([], [standardVersion]);
-
-        expect(result.createOrUpdate).toHaveLength(1);
+        it('creates one rule file', () => {
+          expect(
+            result.createOrUpdate.filter((f) =>
+              f.path.startsWith('.claude/rules/packmind/'),
+            ),
+          ).toHaveLength(1);
+        });
       });
 
       it('creates standard file', async () => {
@@ -2400,22 +2662,33 @@ describe('ClaudeDeployer', () => {
 
         const result = await deployer.deployArtifacts([], [standardVersion]);
 
-        expect(result.createOrUpdate[0].path).toContain(
-          'standard-test-standard',
+        const standardFile = result.createOrUpdate.find((f) =>
+          f.path.startsWith('.claude/rules/packmind/'),
         );
+        expect(standardFile?.path).toContain('standard-test-standard');
       });
     });
 
     describe('when deploying empty lists', () => {
-      it('returns no file updates', async () => {
-        const result = await deployer.deployArtifacts([], []);
+      let result: Awaited<ReturnType<typeof deployer.deployArtifacts>>;
 
-        expect(result.createOrUpdate).toHaveLength(0);
+      beforeEach(async () => {
+        result = await deployer.deployArtifacts([], []);
       });
 
-      it('returns no file deletions', async () => {
-        const result = await deployer.deployArtifacts([], []);
+      it('returns one file update', () => {
+        expect(result.createOrUpdate).toHaveLength(1);
+      });
 
+      it('returns CLAUDE.md as the file path', () => {
+        expect(result.createOrUpdate[0].path).toBe('CLAUDE.md');
+      });
+
+      it('returns two sections in the update', () => {
+        expect(result.createOrUpdate[0].sections).toHaveLength(2);
+      });
+
+      it('returns no file deletions', () => {
         expect(result.delete).toHaveLength(0);
       });
     });

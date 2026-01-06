@@ -255,11 +255,42 @@ class MyService {
           ['claude'],
         );
 
-        deployedFile = standardUpdates.createOrUpdate[0];
+        const foundFile = standardUpdates.createOrUpdate.find(
+          (f) =>
+            f.path ===
+            'jetbrains/.claude/rules/packmind/standard-ide-code-quality-standards.md',
+        );
+        assert(foundFile, 'Standard file should exist');
+        deployedFile = foundFile;
       });
 
-      it('creates exactly one file to update', () => {
-        expect(standardUpdates.createOrUpdate).toHaveLength(1);
+      it('creates two files (standard + CLAUDE.md clearing)', () => {
+        expect(standardUpdates.createOrUpdate).toHaveLength(2);
+      });
+
+      describe('when clearing legacy CLAUDE.md section', () => {
+        let claudeUpdate: FileModification | undefined;
+
+        beforeEach(() => {
+          claudeUpdate = standardUpdates.createOrUpdate.find(
+            (f) => f.path === 'jetbrains/CLAUDE.md',
+          );
+        });
+
+        it('includes CLAUDE.md in updates', () => {
+          expect(claudeUpdate).toBeDefined();
+        });
+
+        it('sets Packmind standards section to empty content', () => {
+          expect(claudeUpdate?.sections).toEqual(
+            expect.arrayContaining([
+              expect.objectContaining({
+                key: 'Packmind standards',
+                content: '',
+              }),
+            ]),
+          );
+        });
       });
 
       it('deploys to correct path', () => {
@@ -614,19 +645,23 @@ class MyService {
         ['claude'],
       );
 
-      expect(recipeUpdates.createOrUpdate).toHaveLength(1);
+      expect(recipeUpdates.createOrUpdate).toHaveLength(2);
 
       // Verify Claude command file is deployed to jetbrains/.claude/commands/packmind/{slug}.md
-      const deployedFile = recipeUpdates.createOrUpdate[0];
-      expect(deployedFile.path).toBe(
+      const deployedFile = recipeUpdates.createOrUpdate.find(
+        (f) =>
+          f.path === `jetbrains/.claude/commands/packmind/${recipe.slug}.md`,
+      );
+      expect(deployedFile).toBeDefined();
+      expect(deployedFile?.path).toBe(
         `jetbrains/.claude/commands/packmind/${recipe.slug}.md`,
       );
       // Claude deployer creates individual command files with frontmatter
-      expect(deployedFile.content).toContain('---');
-      expect(deployedFile.content).toContain(
+      expect(deployedFile?.content).toContain('---');
+      expect(deployedFile?.content).toContain(
         'description: JetBrains services best practices',
       );
-      expect(deployedFile.content).toContain(recipe.content);
+      expect(deployedFile?.content).toContain(recipe.content);
     });
 
     it('deploys recipe to jetbrains path for Cursor agent', async () => {

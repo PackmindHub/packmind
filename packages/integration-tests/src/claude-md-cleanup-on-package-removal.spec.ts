@@ -27,7 +27,7 @@ import { TestApp } from './helpers/TestApp';
  *
  * 4. The .claude/rules/packmind/ folder is deleted when all artifacts are removed.
  *
- * 5. CLAUDE.md is NOT modified for recipe removal - only individual command files are deleted.
+ * 5. CLAUDE.md legacy sections are cleared (Packmind standards and recipes sections set to empty).
  */
 describe('CLAUDE.md cleanup on package removal', () => {
   let testApp: TestApp;
@@ -169,9 +169,24 @@ describe('CLAUDE.md cleanup on package removal', () => {
       });
     });
 
-    it('does not update CLAUDE.md', () => {
-      const claudeFile = fileUpdates.find((f) => f.path === 'CLAUDE.md');
-      expect(claudeFile).toBeUndefined();
+    it('clears legacy CLAUDE.md sections', () => {
+      expect(fileUpdates).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            path: 'CLAUDE.md',
+            sections: expect.arrayContaining([
+              expect.objectContaining({
+                key: 'Packmind standards',
+                content: '',
+              }),
+              expect.objectContaining({
+                key: 'Packmind recipes',
+                content: '',
+              }),
+            ]),
+          }),
+        ]),
+      );
     });
   });
 
