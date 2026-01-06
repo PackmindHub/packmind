@@ -7,6 +7,8 @@
 - split `install_package` MCP tool into two tools (`install_package` and `render_package`) to ensure the agents do not skip some tasks.
 - renamed `recipe` to `command` #85
 - render commands for Cursor #88
+- render commands for Claude Code #86
+- render standards as Claude Code rules #86
 
 ## Fixed
 
