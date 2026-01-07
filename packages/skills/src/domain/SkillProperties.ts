@@ -1,3 +1,5 @@
+import { Skill } from '@packmind/types';
+
 /**
  * Allowed fields in the SKILL.md frontmatter according to the Agent Skills specification.
  * @see https://agentskills.io/specification
@@ -8,40 +10,24 @@ export const ALLOWED_FRONTMATTER_FIELDS = [
   'license',
   'compatibility',
   'metadata',
-  'allowed-tools',
+  'allowedTools',
 ] as const;
 
 export type AllowedFrontmatterField =
   (typeof ALLOWED_FRONTMATTER_FIELDS)[number];
 
 /**
- * Metadata key-value mapping for additional properties not defined by the spec.
- */
-export type SkillMetadata = Record<string, string>;
-
-/**
  * Represents the parsed frontmatter properties from a SKILL.md file.
+ * Derived from Skill, excluding entity-specific fields (id, spaceId, version, prompt).
  *
- * Required fields:
- * - name: 1-64 characters, lowercase alphanumeric and hyphens only
- * - description: 1-1024 characters, describes what the skill does
- *
- * Optional fields:
- * - license: License name or reference to bundled license file
- * - compatibility: 1-500 characters, environment requirements
- * - metadata: Arbitrary key-value mapping
- * - allowed-tools: Space-delimited list of pre-approved tools (experimental)
+ * The parser transforms 'allowed-tools' from YAML to 'allowedTools' in TypeScript.
  *
  * @see https://agentskills.io/specification
  */
-export type SkillProperties = {
-  name: string;
-  description: string;
-  license?: string;
-  compatibility?: string;
-  metadata?: SkillMetadata;
-  'allowed-tools'?: string;
-};
+export type SkillProperties = Omit<
+  Skill,
+  'id' | 'spaceId' | 'version' | 'prompt'
+>;
 
 /**
  * Represents the result of parsing a SKILL.md file.
