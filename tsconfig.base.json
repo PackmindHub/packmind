@@ -44,6 +44,7 @@
       "@packmind/node-utils": ["packages/node-utils/src/index.ts"],
       "@packmind/recipes": ["packages/recipes/src/index.ts"],
       "@packmind/recipes/test": ["packages/recipes/test/index.ts"],
+      "@packmind/skills": ["packages/skills/src/index.ts"],
       "@packmind/spaces": ["packages/spaces/src/index.ts"],
       "@packmind/spaces/test": ["packages/spaces/test/index.ts"],
       "@packmind/standards": ["packages/standards/src/index.ts"],
@@ -56,8 +57,7 @@
       "features/detection/ProgramEditor": [
         "apps/frontend/src/domain/detection/components/ProgramEditor"
       ],
-      "packmind-plugin": ["tools/packmind-plugin/src/index.ts"],
-      "skills": ["skills/src/index.ts"]
+      "packmind-plugin": ["tools/packmind-plugin/src/index.ts"]
     }
   },
   "exclude": ["node_modules", "tmp"]
