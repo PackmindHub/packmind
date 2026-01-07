@@ -10,9 +10,7 @@ import { ILinterRepositories } from '../../../domain/repositories/ILinterReposit
 
 const origin = 'ComputeRuleLanguageDetectionStatusUseCase';
 
-export class ComputeRuleLanguageDetectionStatusUseCase
-  implements IComputeRuleLanguageDetectionStatusUseCase
-{
+export class ComputeRuleLanguageDetectionStatusUseCase implements IComputeRuleLanguageDetectionStatusUseCase {
   constructor(
     private readonly repositories: ILinterRepositories,
     private readonly logger: PackmindLogger = new PackmindLogger(origin),

@@ -14,9 +14,10 @@ import {
 import { PackmindLogger } from '@packmind/logger';
 import { PackmindSerializer } from '../../utils/PackmindSerializer';
 
-export abstract class AbstractQueue<Input, Output>
-  implements IQueue<Input, Output>
-{
+export abstract class AbstractQueue<Input, Output> implements IQueue<
+  Input,
+  Output
+> {
   protected queue: BMQueue;
 
   constructor(

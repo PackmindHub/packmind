@@ -16,9 +16,7 @@ import { DetectionProgramNotFoundError } from '../../../domain/errors/DetectionP
 
 const origin = 'TestProgramExecutionUseCase';
 
-export class TestProgramExecutionUseCase
-  implements ITestProgramExecutionUseCase
-{
+export class TestProgramExecutionUseCase implements ITestProgramExecutionUseCase {
   constructor(
     private readonly repositories: ILinterRepositories,
     private readonly linterExecutionUseCase: IExecuteLinterProgramsUseCase,

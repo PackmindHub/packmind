@@ -13,9 +13,7 @@ import validator from 'validator';
 
 const origin = 'RequestPasswordResetUseCase';
 
-export class RequestPasswordResetUseCase
-  implements IRequestPasswordResetUseCase
-{
+export class RequestPasswordResetUseCase implements IRequestPasswordResetUseCase {
   constructor(
     private readonly userService: UserService,
     private readonly passwordResetTokenService: PasswordResetTokenService,

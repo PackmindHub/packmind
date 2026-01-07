@@ -8,9 +8,7 @@ import {
 
 const origin = 'GetOrganizationBySlugUseCase';
 
-export class GetOrganizationBySlugUseCase
-  implements IGetOrganizationBySlugUseCase
-{
+export class GetOrganizationBySlugUseCase implements IGetOrganizationBySlugUseCase {
   constructor(
     private readonly organizationService: OrganizationService,
     private readonly logger: PackmindLogger = new PackmindLogger(origin),

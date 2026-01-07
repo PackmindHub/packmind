@@ -8,8 +8,7 @@ import {
   StandardVersionId,
 } from '@packmind/types';
 
-export interface IDistributedPackageRepository
-  extends IRepository<DistributedPackage> {
+export interface IDistributedPackageRepository extends IRepository<DistributedPackage> {
   findByDistributionId(
     distributionId: DistributionId,
   ): Promise<DistributedPackage[]>;

@@ -8,9 +8,7 @@ import { PackmindLogger } from '@packmind/logger';
 
 const origin = 'AddOrganizationToGitProvider1752500000000';
 
-export class AddOrganizationToGitProvider1752500000000
-  implements MigrationInterface
-{
+export class AddOrganizationToGitProvider1752500000000 implements MigrationInterface {
   constructor(
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {}

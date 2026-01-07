@@ -10,9 +10,7 @@ import { PackmindLogger } from '@packmind/logger';
 
 const origin = 'CheckDirectoryExistenceUseCase';
 
-export class CheckDirectoryExistenceUseCase
-  implements ICheckDirectoryExistenceUseCase
-{
+export class CheckDirectoryExistenceUseCase implements ICheckDirectoryExistenceUseCase {
   constructor(
     private readonly gitRepoService: GitRepoService,
     private readonly gitProviderService: GitProviderService,

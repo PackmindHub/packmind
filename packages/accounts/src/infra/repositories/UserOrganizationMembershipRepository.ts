@@ -14,9 +14,7 @@ const origin = 'UserOrganizationMembershipRepository';
 
 type MembershipEntity = WithTimestamps<UserOrganizationMembership>;
 
-export class UserOrganizationMembershipRepository
-  implements IUserOrganizationMembershipRepository
-{
+export class UserOrganizationMembershipRepository implements IUserOrganizationMembershipRepository {
   constructor(
     private readonly repository: Repository<MembershipEntity> = localDataSource.getRepository(
       UserOrganizationMembershipSchema,

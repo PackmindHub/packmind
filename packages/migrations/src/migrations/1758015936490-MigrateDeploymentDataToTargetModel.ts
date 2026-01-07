@@ -1,8 +1,6 @@
 import { MigrationInterface, QueryRunner } from 'typeorm';
 
-export class MigrateDeploymentDataToTargetModel1758015936490
-  implements MigrationInterface
-{
+export class MigrateDeploymentDataToTargetModel1758015936490 implements MigrationInterface {
   public async up(queryRunner: QueryRunner): Promise<void> {
     console.log('Starting deployment data migration to target model...');
 

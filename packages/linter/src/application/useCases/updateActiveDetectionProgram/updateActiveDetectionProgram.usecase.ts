@@ -11,9 +11,7 @@ import { IActiveDetectionProgramRepository } from '../../../domain/repositories/
 import { IDetectionProgramRepository } from '../../../domain/repositories/IDetectionProgramRepository';
 import { InvalidDetectionProgramStatusError } from '../../../domain/errors';
 
-export class UpdateActiveDetectionProgramUseCase
-  implements IUpdateActiveDetectionProgramUseCase
-{
+export class UpdateActiveDetectionProgramUseCase implements IUpdateActiveDetectionProgramUseCase {
   constructor(
     private readonly activeDetectionProgramRepository: IActiveDetectionProgramRepository,
     private readonly detectionProgramRepository: IDetectionProgramRepository,

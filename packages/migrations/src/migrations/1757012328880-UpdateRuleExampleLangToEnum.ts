@@ -3,9 +3,7 @@ import { PackmindLogger } from '@packmind/logger';
 
 const origin = 'UpdateRuleExampleLangToTYPESCRIPT1757012328880';
 
-export class UpdateRuleExampleLangToTYPESCRIPT1757012328880
-  implements MigrationInterface
-{
+export class UpdateRuleExampleLangToTYPESCRIPT1757012328880 implements MigrationInterface {
   constructor(
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {}

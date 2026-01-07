@@ -12,9 +12,7 @@ import { PackmindLogger } from '@packmind/logger';
 
 const origin = 'AddOrganizationAndUsers1752400000000';
 
-export class AddOrganizationAndUsers1752400000000
-  implements MigrationInterface
-{
+export class AddOrganizationAndUsers1752400000000 implements MigrationInterface {
   constructor(
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {}

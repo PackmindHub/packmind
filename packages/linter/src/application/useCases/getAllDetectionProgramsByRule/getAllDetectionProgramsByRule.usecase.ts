@@ -8,9 +8,7 @@ import { ILinterRepositories } from '../../../domain/repositories/ILinterReposit
 
 const origin = 'GetAllDetectionProgramsByRuleUseCase';
 
-export class GetAllDetectionProgramsByRuleUseCase
-  implements IGetAllDetectionProgramsByRule
-{
+export class GetAllDetectionProgramsByRuleUseCase implements IGetAllDetectionProgramsByRule {
   constructor(
     private readonly linterRepositories: ILinterRepositories,
     private readonly logger: PackmindLogger = new PackmindLogger(origin),

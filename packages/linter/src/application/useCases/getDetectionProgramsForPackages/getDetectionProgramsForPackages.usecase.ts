@@ -12,9 +12,7 @@ import { DetectionProgramService } from '../../services/DetectionProgramService'
 
 const origin = 'GetDetectionProgramsForPackagesUseCase';
 
-export class GetDetectionProgramsForPackagesUseCase
-  implements IGetDetectionProgramsForPackagesUseCase
-{
+export class GetDetectionProgramsForPackagesUseCase implements IGetDetectionProgramsForPackagesUseCase {
   constructor(
     private readonly detectionProgramService: DetectionProgramService,
     private readonly deploymentsAdapter: IDeploymentPort | undefined,

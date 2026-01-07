@@ -14,9 +14,7 @@ import {
 
 const origin = 'CopyDetectionProgramsToNewRuleUseCase';
 
-export class CopyDetectionProgramsToNewRuleUseCase
-  implements ICopyDetectionProgramsToNewRule
-{
+export class CopyDetectionProgramsToNewRuleUseCase implements ICopyDetectionProgramsToNewRule {
   constructor(
     private readonly repositories: ILinterRepositories,
     private readonly logger: PackmindLogger = new PackmindLogger(

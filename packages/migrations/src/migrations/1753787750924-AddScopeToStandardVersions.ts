@@ -1,8 +1,6 @@
 import { MigrationInterface, QueryRunner } from 'typeorm';
 
-export class AddScopeToStandardVersions1753787750924
-  implements MigrationInterface
-{
+export class AddScopeToStandardVersions1753787750924 implements MigrationInterface {
   public async up(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.query(`
             ALTER TABLE "standard_versions" 
