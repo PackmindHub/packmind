@@ -1,4 +1,5 @@
 import { LogLevel, PackmindLogger } from '@packmind/logger';
+import { PackmindEventEmitterService } from '@packmind/node-utils';
 import {
   createOrganizationId,
   createUserId,
@@ -9,7 +10,7 @@ import {
   StandardVersion,
   GitRepo,
   GitRepoId,
-  IEventTrackingPort,
+  LinterCalledEvent,
 } from '@packmind/types';
 
 import {
@@ -30,14 +31,16 @@ import { DetectionProgramService } from '../../services/DetectionProgramService'
 
 const origin = 'ListDetectionProgramUseCase';
 
-export class ListDetectionProgramUseCase implements IListDetectionProgramUseCase {
+export class ListDetectionProgramUseCase
+  implements IListDetectionProgramUseCase
+{
   constructor(
     private readonly detectionProgramService: DetectionProgramService,
     private readonly deploymentsQueryAdapter: IDeploymentPort | undefined,
     private readonly standardsAdapter: IStandardsPort | undefined,
     private readonly spacesAdapter: ISpacesPort | undefined,
     private readonly gitPort: IGitPort,
-    private readonly eventTrackingPort: IEventTrackingPort | null,
+    private readonly eventEmitterService: PackmindEventEmitterService,
     private readonly logger: PackmindLogger = new PackmindLogger(
       origin,
       LogLevel.DEBUG,
@@ -189,17 +192,22 @@ export class ListDetectionProgramUseCase implements IListDetectionProgramUseCase
         },
       );
 
-      // Track analytics event
-      if (this.eventTrackingPort) {
-        await this.eventTrackingPort.trackEvent(
-          createUserId(command.userId),
-          createOrganizationId(command.organizationId),
-          'linter_called',
-        );
-        this.logger.debug('Analytics event tracked', {
-          event: 'linter_called',
-        });
-      }
+      // Calculate total standard count across all targets
+      const totalStandardCount = targetsWithStandards.reduce(
+        (sum, target) => sum + target.standards.length,
+        0,
+      );
+
+      // Emit domain event for analytics
+      this.eventEmitterService.emit(
+        new LinterCalledEvent({
+          userId: createUserId(command.userId),
+          organizationId: createOrganizationId(command.organizationId),
+          gitRepoId: gitRepo.id,
+          targetCount: targetsWithStandards.length,
+          standardCount: totalStandardCount,
+        }),
+      );
 
       return { targets: targetsWithStandards };
     } catch (error) {
@@ -442,8 +450,8 @@ export class ListDetectionProgramUseCase implements IListDetectionProgramUseCase
               .filter((x) =>
                 Boolean(
                   x.detectionProgram &&
-                  x.detectionProgram.code &&
-                  x.detectionProgram.mode,
+                    x.detectionProgram.code &&
+                    x.detectionProgram.mode,
                 ),
               );
 

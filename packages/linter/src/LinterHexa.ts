@@ -1,4 +1,4 @@
-import { JobsService } from '@packmind/node-utils';
+import { JobsService, PackmindEventEmitterService } from '@packmind/node-utils';
 import { LinterAstAdapter } from '@packmind/linter-ast';
 import { ExecuteLinterProgramsUseCase } from '@packmind/linter-execution';
 import { PackmindLogger } from '@packmind/logger';
@@ -188,6 +188,11 @@ export class LinterHexa extends BaseHexa<LinterHexaOpts, ILinterPort> {
         throw new Error('JobsHexa not found in registry');
       }
 
+      // Get PackmindEventEmitterService (required) - for domain event emission
+      const eventEmitterService = registry.getService(
+        PackmindEventEmitterService,
+      );
+
       // Build delayed jobs
       this.logger.debug('Building linter delayed jobs');
       const linterDelayedJobs = await this.buildLinterDelayedJobs(
@@ -209,6 +214,7 @@ export class LinterHexa extends BaseHexa<LinterHexaOpts, ILinterPort> {
         llmPort,
         linterAstPort: this.linterAstAdapter,
         linterDelayedJobs,
+        eventEmitterService,
       });
 
       this.logger.info('LinterHexa initialized successfully');

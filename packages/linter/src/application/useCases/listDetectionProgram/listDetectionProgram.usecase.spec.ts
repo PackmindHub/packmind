@@ -1,10 +1,17 @@
 import { stubLogger } from '@packmind/test-utils';
-import { createOrganizationId, createUserId, IGitPort } from '@packmind/types';
+import { PackmindEventEmitterService } from '@packmind/node-utils';
+import {
+  createOrganizationId,
+  createUserId,
+  IGitPort,
+  LinterCalledEvent,
+} from '@packmind/types';
 import {
   createGitRepoId,
   createGitProviderId,
   ISpacesPort,
   ListDetectionProgramCommand,
+  createTargetId,
 } from '@packmind/types';
 import { ListDetectionProgramUseCase } from './listDetectionProgram.usecase';
 import { DetectionProgramService } from '../../services/DetectionProgramService';
@@ -24,8 +31,14 @@ describe('ListDetectionProgramUseCase', () => {
     listStandardsBySpace: jest.Mock;
   };
   let mockSpacesAdapter: jest.Mocked<ISpacesPort>;
+  let mockEventEmitterService: jest.Mocked<PackmindEventEmitterService>;
 
   beforeEach(() => {
+    mockEventEmitterService = {
+      emit: jest.fn(),
+      removeAllListeners: jest.fn(),
+    } as unknown as jest.Mocked<PackmindEventEmitterService>;
+
     mockDetectionProgramService = {
       findActiveByRuleIdWithPrograms: jest.fn(),
     } as unknown as jest.Mocked<DetectionProgramService>;
@@ -61,7 +74,7 @@ describe('ListDetectionProgramUseCase', () => {
       mockStandardsAdapter as never,
       mockSpacesAdapter,
       mockGitPort,
-      null,
+      mockEventEmitterService,
       stubLogger(),
     );
   });
@@ -284,6 +297,88 @@ describe('ListDetectionProgramUseCase', () => {
 
         await expect(useCase.execute(command)).rejects.toThrow(
           'Git repository (url: github.com/owner/repo) is not connected to your organization',
+        );
+      });
+    });
+
+    describe('when targets with detection programs are found', () => {
+      it('emits LinterCalledEvent with correct structure', async () => {
+        const gitRepoId = createGitRepoId('git-repo-1');
+        const mockGitRepo = {
+          id: gitRepoId,
+          owner: 'owner',
+          repo: 'repo',
+          branch: 'main',
+          providerId: createGitProviderId('provider-1'),
+        };
+
+        mockGitPort.findGitRepoByOwnerRepoAndBranchInOrganization.mockResolvedValue(
+          { gitRepo: mockGitRepo },
+        );
+        mockDeploymentsAdapter.getTargetsByGitRepo.mockResolvedValue([]);
+
+        const command: ListDetectionProgramCommand = {
+          organizationId,
+          userId,
+          gitRemoteUrl: 'github.com/owner/repo',
+          branches: ['main'],
+        };
+
+        await expect(useCase.execute(command)).rejects.toThrow();
+
+        expect(mockEventEmitterService.emit).not.toHaveBeenCalled();
+      });
+
+      it('emits LinterCalledEvent when execution succeeds', async () => {
+        const gitRepoId = createGitRepoId('git-repo-1');
+        const mockGitRepo = {
+          id: gitRepoId,
+          owner: 'owner',
+          repo: 'repo',
+          branch: 'main',
+          providerId: createGitProviderId('provider-1'),
+        };
+
+        const mockTargets = [
+          {
+            id: createTargetId('target-1'),
+            name: 'Target 1',
+            path: '/path1',
+          },
+        ];
+
+        mockGitPort.findGitRepoByOwnerRepoAndBranchInOrganization.mockResolvedValue(
+          { gitRepo: mockGitRepo },
+        );
+        mockDeploymentsAdapter.getTargetsByGitRepo.mockResolvedValue(
+          mockTargets,
+        );
+        mockDeploymentsAdapter.findActiveStandardVersionsByTarget.mockResolvedValue(
+          [],
+        );
+
+        const command: ListDetectionProgramCommand = {
+          organizationId,
+          userId,
+          gitRemoteUrl: 'github.com/owner/repo',
+          branches: ['main'],
+        };
+
+        await useCase.execute(command);
+
+        expect(mockEventEmitterService.emit).toHaveBeenCalledTimes(1);
+
+        const emittedEvent = (mockEventEmitterService.emit as jest.Mock).mock
+          .calls[0][0];
+        expect(emittedEvent).toBeInstanceOf(LinterCalledEvent);
+        expect(emittedEvent.payload).toEqual(
+          expect.objectContaining({
+            userId: createUserId(userId),
+            organizationId: createOrganizationId(organizationId),
+            gitRepoId,
+            targetCount: expect.any(Number),
+            standardCount: expect.any(Number),
+          }),
         );
       });
     });

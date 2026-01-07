@@ -1,4 +1,7 @@
-import { IBaseAdapter } from '@packmind/node-utils';
+import {
+  IBaseAdapter,
+  PackmindEventEmitterService,
+} from '@packmind/node-utils';
 import {
   IAccountsPortName,
   IDeploymentPortName,
@@ -202,6 +205,7 @@ export class LinterAdapter implements IBaseAdapter<ILinterPort>, ILinterPort {
     llmPort: ILlmPort | null;
     linterAstPort: ILinterAstPort | null;
     linterDelayedJobs: ILinterDelayedJobs;
+    eventEmitterService: PackmindEventEmitterService;
   }): Promise<void> {
     // Step 1: Set all ports
     this.standardsPort = ports[IStandardsPortName];
@@ -245,7 +249,7 @@ export class LinterAdapter implements IBaseAdapter<ILinterPort>, ILinterPort {
       this.standardsPort,
       this.spacesPort,
       this.gitPort,
-      this.eventTrackingPort,
+      ports.eventEmitterService,
     );
 
     this._updateDetectionProgramUseCase = new UpdateDetectionProgramUseCase(

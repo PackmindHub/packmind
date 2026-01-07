@@ -11,6 +11,7 @@ import {
   AnonymousTrialAccountActivatedEvent,
   StandardDeletedEvent,
   CommandDeletedEvent,
+  LinterCalledEvent,
 } from '@packmind/types';
 import { EventTrackingAdapter } from './EventTrackingAdapter';
 
@@ -36,6 +37,7 @@ export class AmplitudeEventListener extends PackmindListener<EventTrackingAdapte
       AnonymousTrialAccountActivatedEvent,
       this.handleTrialAccountActivated,
     );
+    this.subscribe(LinterCalledEvent, this.onLinterCalled);
   }
 
   private onStandardCreated = async (
@@ -176,5 +178,15 @@ export class AmplitudeEventListener extends PackmindListener<EventTrackingAdapte
       'anonymous_trial_account_activated',
       {},
     );
+  };
+
+  private onLinterCalled = async (event: LinterCalledEvent): Promise<void> => {
+    const { userId, organizationId, gitRepoId, targetCount, standardCount } =
+      event.payload;
+    await this.adapter.trackEvent(userId, organizationId, 'linter_called', {
+      gitRepoId,
+      targetCount,
+      standardCount,
+    });
   };
 }
