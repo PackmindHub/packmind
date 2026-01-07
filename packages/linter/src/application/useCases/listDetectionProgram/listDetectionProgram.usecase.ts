@@ -29,9 +29,7 @@ import { DetectionProgramService } from '../../services/DetectionProgramService'
 
 const origin = 'ListDetectionProgramUseCase';
 
-export class ListDetectionProgramUseCase
-  implements IListDetectionProgramUseCase
-{
+export class ListDetectionProgramUseCase implements IListDetectionProgramUseCase {
   constructor(
     private readonly detectionProgramService: DetectionProgramService,
     private readonly deploymentsQueryAdapter: IDeploymentPort | undefined,
@@ -430,8 +428,8 @@ export class ListDetectionProgramUseCase
               .filter((x) =>
                 Boolean(
                   x.detectionProgram &&
-                    x.detectionProgram.code &&
-                    x.detectionProgram.mode,
+                  x.detectionProgram.code &&
+                  x.detectionProgram.mode,
                 ),
               );
 
