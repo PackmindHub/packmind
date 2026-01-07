@@ -3,7 +3,9 @@ import { PackmindLogger } from '@packmind/logger';
 
 const origin = 'AddGitRepoToRecipeUsage1752700000000';
 
-export class AddGitRepoToRecipeUsage1752700000000 implements MigrationInterface {
+export class AddGitRepoToRecipeUsage1752700000000
+  implements MigrationInterface
+{
   constructor(
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {}

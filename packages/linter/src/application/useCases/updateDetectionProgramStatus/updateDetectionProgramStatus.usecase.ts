@@ -20,7 +20,9 @@ import { RuleNotFoundError } from '../../../domain/errors';
 
 const origin = 'UpdateDetectionProgramStatusUseCase';
 
-export class UpdateDetectionProgramStatusUseCase implements IUpdateDetectionProgramStatusUseCase {
+export class UpdateDetectionProgramStatusUseCase
+  implements IUpdateDetectionProgramStatusUseCase
+{
   constructor(
     private readonly repositories: ILinterRepositories,
     private readonly standardsAdapter: IStandardsPort,

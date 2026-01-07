@@ -8,7 +8,9 @@ import { RecipeSummaryService } from '../../application/services/RecipeSummarySe
 
 const origin = 'UpdateRecipesAndGenerateSummariesJobFactory';
 
-export class UpdateRecipesAndGenerateSummariesJobFactory implements IJobFactory<UpdateRecipesAndGenerateSummariesInput> {
+export class UpdateRecipesAndGenerateSummariesJobFactory
+  implements IJobFactory<UpdateRecipesAndGenerateSummariesInput>
+{
   private _delayedJob: UpdateRecipesAndGenerateSummariesDelayedJob | null =
     null;
 

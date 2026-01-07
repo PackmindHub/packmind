@@ -11,7 +11,9 @@ const origin = 'BackfillRecipeUsageTargetId1758200000000';
  * - Use the "Default" target (name='Default', path='/') attached to the same git_repo_id
  * - Do nothing for rows where git_repo_id IS NULL or no default target exists
  */
-export class BackfillRecipeUsageTargetId1758200000000 implements MigrationInterface {
+export class BackfillRecipeUsageTargetId1758200000000
+  implements MigrationInterface
+{
   constructor(
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {}

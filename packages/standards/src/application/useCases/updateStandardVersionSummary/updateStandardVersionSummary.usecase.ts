@@ -9,7 +9,9 @@ import {
 
 const origin = 'UpdateStandardVersionSummary';
 
-export class UpdateStandardVersionSummaryUsecase implements IUpdateStandardVersionSummary {
+export class UpdateStandardVersionSummaryUsecase
+  implements IUpdateStandardVersionSummary
+{
   constructor(
     private readonly _repositories: IStandardsRepositories,
     private readonly _logger: PackmindLogger = new PackmindLogger(origin),

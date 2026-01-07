@@ -8,7 +8,9 @@ import { IDistributionRepository } from '../../domain/repositories/IDistribution
 
 const origin = 'FindActiveStandardVersionsByTargetUseCase';
 
-export class FindActiveStandardVersionsByTargetUseCase implements IFindActiveStandardVersionsByTargetUseCase {
+export class FindActiveStandardVersionsByTargetUseCase
+  implements IFindActiveStandardVersionsByTargetUseCase
+{
   constructor(
     private readonly distributionRepository: IDistributionRepository,
     private readonly logger: PackmindLogger = new PackmindLogger(origin),

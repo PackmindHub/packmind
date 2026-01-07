@@ -13,7 +13,9 @@ import { PackmindLogger } from '@packmind/logger';
 
 const origin = 'CreateDistributionTables1764700000000';
 
-export class CreateDistributionTables1764700000000 implements MigrationInterface {
+export class CreateDistributionTables1764700000000
+  implements MigrationInterface
+{
   constructor(
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {}

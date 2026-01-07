@@ -3,7 +3,9 @@ import { PackmindLogger, LogLevel } from '@packmind/logger';
 
 const origin = 'PopulateAndRequireSpaceId1761222060596';
 
-export class PopulateAndRequireSpaceId1761222060596 implements MigrationInterface {
+export class PopulateAndRequireSpaceId1761222060596
+  implements MigrationInterface
+{
   constructor(
     private readonly logger: PackmindLogger = new PackmindLogger(
       origin,

@@ -8,7 +8,9 @@ import AnalysisResultCalculator from './AnalysisResultCalculator';
 /**
  * In this class, we compute result for source files where we have just negative and positive examples for 1 file
  */
-export default abstract class AnalysisResultCalculatorForPackmindRules implements AnalysisResultCalculator {
+export default abstract class AnalysisResultCalculatorForPackmindRules
+  implements AnalysisResultCalculator
+{
   public abstract computeAnalysisResult(results: number[]): AnalysisResult;
 
   public abstract isPositive(): boolean;

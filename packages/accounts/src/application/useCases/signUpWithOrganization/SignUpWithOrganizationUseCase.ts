@@ -13,7 +13,9 @@ import { UserService } from '../../services/UserService';
 
 const origin = 'SignUpWithOrganizationUseCase';
 
-export class SignUpWithOrganizationUseCase implements ISignUpWithOrganizationUseCase {
+export class SignUpWithOrganizationUseCase
+  implements ISignUpWithOrganizationUseCase
+{
   constructor(
     private readonly userService: UserService,
     private readonly organizationService: OrganizationService,

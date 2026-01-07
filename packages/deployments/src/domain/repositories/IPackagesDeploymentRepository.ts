@@ -8,7 +8,8 @@ import {
   TargetId,
 } from '@packmind/types';
 
-export interface IPackagesDeploymentRepository extends IRepository<PackagesDeployment> {
+export interface IPackagesDeploymentRepository
+  extends IRepository<PackagesDeployment> {
   listByOrganizationId(
     organizationId: OrganizationId,
   ): Promise<PackagesDeployment[]>;

@@ -12,7 +12,9 @@ import { DetectionProgram } from '@packmind/types';
 
 const origin = 'GetActiveDetectionProgramForRuleUseCase';
 
-export class GetActiveDetectionProgramForRuleUseCase implements IGetActiveDetectionProgramForRule {
+export class GetActiveDetectionProgramForRuleUseCase
+  implements IGetActiveDetectionProgramForRule
+{
   constructor(
     private readonly detectionProgramService: DetectionProgramService,
     private readonly standardsAdapter: IStandardsPort,

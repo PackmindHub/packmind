@@ -3,7 +3,9 @@ import { PackmindLogger } from '@packmind/logger';
 
 const origin = 'RefactorClarificationQuestionToSeparateFields1763049615109';
 
-export class RefactorClarificationQuestionToSeparateFields1763049615109 implements MigrationInterface {
+export class RefactorClarificationQuestionToSeparateFields1763049615109
+  implements MigrationInterface
+{
   constructor(
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {}

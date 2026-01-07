@@ -10,7 +10,9 @@ import {
 
 const origin = 'DetectionProgramMetadataRepository';
 
-export class DetectionProgramMetadataCacheRepository implements IDetectionProgramMetadataRepository {
+export class DetectionProgramMetadataCacheRepository
+  implements IDetectionProgramMetadataRepository
+{
   private readonly cache: Cache;
   private readonly logger: PackmindLogger;
   private static readonly CACHE_PREFIX = 'detection_program_metadata:';

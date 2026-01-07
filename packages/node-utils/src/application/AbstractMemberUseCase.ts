@@ -31,7 +31,8 @@ export type MemberContext = {
 export abstract class AbstractMemberUseCase<
   Command extends PackmindCommand,
   Result extends PackmindResult,
-> implements IUseCase<Command, Result> {
+> implements IUseCase<Command, Result>
+{
   protected readonly accountsPort: IAccountsPort;
   protected readonly logger: PackmindLogger;
 

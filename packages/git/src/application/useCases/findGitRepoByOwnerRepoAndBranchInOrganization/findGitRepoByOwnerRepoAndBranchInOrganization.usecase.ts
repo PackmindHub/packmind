@@ -5,7 +5,9 @@ import {
 } from '../../../domain/useCases/IFindGitRepoByOwnerRepoAndBranchInOrganization';
 import { GitRepoService } from '../../GitRepoService';
 
-export class FindGitRepoByOwnerRepoAndBranchInOrganizationUseCase implements IFindGitRepoByOwnerRepoAndBranchInOrganizationUseCase {
+export class FindGitRepoByOwnerRepoAndBranchInOrganizationUseCase
+  implements IFindGitRepoByOwnerRepoAndBranchInOrganizationUseCase
+{
   constructor(private readonly gitRepoService: GitRepoService) {}
 
   async execute(

@@ -3,7 +3,9 @@ import { PackmindLogger } from '@packmind/logger';
 
 const origin = 'AddSourceCodeStateToDetectionPrograms1760524511000';
 
-export class AddSourceCodeStateToDetectionPrograms1760524511000 implements MigrationInterface {
+export class AddSourceCodeStateToDetectionPrograms1760524511000
+  implements MigrationInterface
+{
   constructor(
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {}

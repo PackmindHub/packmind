@@ -52,7 +52,9 @@ type TargetRemovalData = {
   removedStandardVersions: StandardVersion[];
 };
 
-export class RemovePackageFromTargetsUseCase implements IRemovePackageFromTargetsUseCase {
+export class RemovePackageFromTargetsUseCase
+  implements IRemovePackageFromTargetsUseCase
+{
   constructor(
     private readonly packageService: PackageService,
     private readonly targetService: TargetService,

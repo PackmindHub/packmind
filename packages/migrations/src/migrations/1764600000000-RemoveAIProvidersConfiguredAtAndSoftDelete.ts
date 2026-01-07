@@ -3,7 +3,9 @@ import { PackmindLogger, LogLevel } from '@packmind/logger';
 
 const origin = 'RemoveAIProvidersConfiguredAtAndSoftDelete1764600000000';
 
-export class RemoveAIProvidersConfiguredAtAndSoftDelete1764600000000 implements MigrationInterface {
+export class RemoveAIProvidersConfiguredAtAndSoftDelete1764600000000
+  implements MigrationInterface
+{
   constructor(
     private readonly logger: PackmindLogger = new PackmindLogger(
       origin,

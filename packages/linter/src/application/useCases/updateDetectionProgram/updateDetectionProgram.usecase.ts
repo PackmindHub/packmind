@@ -7,7 +7,9 @@ import {
 } from '@packmind/types';
 import { IDetectionProgramRepository } from '../../../domain/repositories/IDetectionProgramRepository';
 
-export class UpdateDetectionProgramUseCase implements IUpdateDetectionProgramUseCase {
+export class UpdateDetectionProgramUseCase
+  implements IUpdateDetectionProgramUseCase
+{
   constructor(
     private readonly detectionProgramRepository: IDetectionProgramRepository,
     private readonly logger: PackmindLogger = new PackmindLogger(

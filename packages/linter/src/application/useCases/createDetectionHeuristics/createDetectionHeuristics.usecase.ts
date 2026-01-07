@@ -11,7 +11,9 @@ import { v4 as uuidv4 } from 'uuid';
 
 const origin = 'CreateDetectionHeuristicsUseCase';
 
-export class CreateDetectionHeuristicsUseCase implements ICreateDetectionHeuristics {
+export class CreateDetectionHeuristicsUseCase
+  implements ICreateDetectionHeuristics
+{
   constructor(
     private readonly linterRepositories: ILinterRepositories,
     private readonly logger: PackmindLogger = new PackmindLogger(origin),

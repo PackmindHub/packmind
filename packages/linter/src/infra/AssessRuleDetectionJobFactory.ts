@@ -11,7 +11,9 @@ import { ILinterRepositories } from '../domain/repositories/ILinterRepositories'
 
 const origin = 'AssessRuleDetectionJobFactory';
 
-export class AssessRuleDetectionJobFactory implements IJobFactory<AssessRuleDetectionInput> {
+export class AssessRuleDetectionJobFactory
+  implements IJobFactory<AssessRuleDetectionInput>
+{
   public delayedJob: AssessRuleDetectionDelayedJob | null = null;
 
   constructor(

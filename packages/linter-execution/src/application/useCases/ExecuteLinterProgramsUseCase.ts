@@ -12,7 +12,9 @@ import { PackmindLogger } from '@packmind/logger';
 
 const origin = 'ExecuteLinterProgramsUseCase';
 
-export class ExecuteLinterProgramsUseCase implements IExecuteLinterProgramsUseCase {
+export class ExecuteLinterProgramsUseCase
+  implements IExecuteLinterProgramsUseCase
+{
   constructor(
     private readonly linterAstAdapter: ILinterAstPort = new LinterAstAdapter(),
     private readonly logger: PackmindLogger = new PackmindLogger(origin),

@@ -59,7 +59,9 @@ export class CliLoginCodeApiKeyError extends Error {
   }
 }
 
-export class ExchangeCliLoginCodeUseCase implements IExchangeCliLoginCodeUseCase {
+export class ExchangeCliLoginCodeUseCase
+  implements IExchangeCliLoginCodeUseCase
+{
   constructor(
     private readonly cliLoginCodeRepository: ICliLoginCodeRepository,
     private readonly userService: UserService,

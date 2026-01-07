@@ -13,7 +13,9 @@ const origin = 'DropStandardDeploymentsTables1764952425000';
  * - standard_deployment_versions (junction table)
  * - standard_deployments (main table)
  */
-export class DropStandardDeploymentsTables1764952425000 implements MigrationInterface {
+export class DropStandardDeploymentsTables1764952425000
+  implements MigrationInterface
+{
   constructor(
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {}

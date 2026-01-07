@@ -12,7 +12,9 @@ import {
 
 const origin = 'UpdateRuleDetectionStatusAfterUpdateUseCase';
 
-export class UpdateRuleDetectionStatusAfterUpdateUseCase implements IUpdateRuleDetectionStatusAfterUpdateUseCase {
+export class UpdateRuleDetectionStatusAfterUpdateUseCase
+  implements IUpdateRuleDetectionStatusAfterUpdateUseCase
+{
   constructor(
     private readonly linterRepositories: ILinterRepositories,
     private readonly standardsAdapter: IStandardsPort,

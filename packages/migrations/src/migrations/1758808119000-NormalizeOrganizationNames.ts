@@ -3,7 +3,9 @@ import { PackmindLogger, LogLevel } from '@packmind/logger';
 
 const origin = 'NormalizeOrganizationNames1758808119000';
 
-export class NormalizeOrganizationNames1758808119000 implements MigrationInterface {
+export class NormalizeOrganizationNames1758808119000
+  implements MigrationInterface
+{
   constructor(
     private readonly logger: PackmindLogger = new PackmindLogger(
       origin,

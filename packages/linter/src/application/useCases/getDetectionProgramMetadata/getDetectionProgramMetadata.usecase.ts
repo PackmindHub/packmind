@@ -8,7 +8,9 @@ import { ILinterRepositories } from '../../../domain/repositories/ILinterReposit
 
 const origin = 'GetDetectionProgramMetadataUseCase';
 
-export class GetDetectionProgramMetadataUseCase implements IGetDetectionProgramMetadata {
+export class GetDetectionProgramMetadataUseCase
+  implements IGetDetectionProgramMetadata
+{
   constructor(
     private readonly linterRepositories: ILinterRepositories,
     private readonly logger: PackmindLogger = new PackmindLogger(origin),

@@ -15,7 +15,9 @@ import { v4 as uuidv4 } from 'uuid';
 
 const origin = 'StartRuleDetectionAssessmentUseCase';
 
-export class StartRuleDetectionAssessmentUseCase implements IStartRuleDetectionAssessmentUseCase {
+export class StartRuleDetectionAssessmentUseCase
+  implements IStartRuleDetectionAssessmentUseCase
+{
   constructor(
     private readonly linterRepositories: ILinterRepositories,
     private readonly linterDelayedJobs: ILinterDelayedJobs,

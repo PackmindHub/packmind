@@ -13,7 +13,9 @@ import { PackmindLogger } from '@packmind/logger';
 
 const origin = 'CreateRenderModeConfigurations1759300000000';
 
-export class CreateRenderModeConfigurations1759300000000 implements MigrationInterface {
+export class CreateRenderModeConfigurations1759300000000
+  implements MigrationInterface
+{
   constructor(
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {}

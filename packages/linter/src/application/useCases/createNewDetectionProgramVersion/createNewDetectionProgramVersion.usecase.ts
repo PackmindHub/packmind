@@ -9,7 +9,9 @@ import { IActiveDetectionProgramRepository } from '../../../domain/repositories/
 import { IStandardsPort } from '@packmind/types';
 import { DetectionProgram, createDetectionProgramId } from '@packmind/types';
 
-export class CreateNewDetectionProgramVersionUsecase implements ICreateNewDetectionProgramVersion {
+export class CreateNewDetectionProgramVersionUsecase
+  implements ICreateNewDetectionProgramVersion
+{
   constructor(
     private readonly detectionProgramRepository: IDetectionProgramRepository,
     private readonly activeDetectionProgramRepository: IActiveDetectionProgramRepository,

@@ -17,7 +17,9 @@ const origin = 'CreateEmptyRuleDetectionAssessmentUseCase';
  * By default creates with NOT_STARTED status, but can be configured
  * to use SUCCESS status when importing ready-to-use detection programs.
  */
-export class CreateEmptyRuleDetectionAssessmentUseCase implements ICreateEmptyRuleDetectionAssessment {
+export class CreateEmptyRuleDetectionAssessmentUseCase
+  implements ICreateEmptyRuleDetectionAssessment
+{
   constructor(
     private readonly linterRepositories: ILinterRepositories,
     private readonly logger: PackmindLogger = new PackmindLogger(origin),

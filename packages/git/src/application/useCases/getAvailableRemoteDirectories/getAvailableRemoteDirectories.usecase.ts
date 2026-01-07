@@ -8,7 +8,9 @@ import { Cache } from '@packmind/node-utils';
 
 const origin = 'GetAvailableRemoteDirectoriesUseCase';
 
-export class GetAvailableRemoteDirectoriesUseCase implements IGetAvailableRemoteDirectoriesUseCase {
+export class GetAvailableRemoteDirectoriesUseCase
+  implements IGetAvailableRemoteDirectoriesUseCase
+{
   private readonly cache: Cache;
 
   constructor(

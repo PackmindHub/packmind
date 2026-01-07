@@ -3,7 +3,9 @@ import { PackmindLogger } from '@packmind/logger';
 
 const origin = 'AddRecipeSlugUniqueIndex1760624066555';
 
-export class AddRecipeSlugUniqueIndex1760624066555 implements MigrationInterface {
+export class AddRecipeSlugUniqueIndex1760624066555
+  implements MigrationInterface
+{
   constructor(
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {}

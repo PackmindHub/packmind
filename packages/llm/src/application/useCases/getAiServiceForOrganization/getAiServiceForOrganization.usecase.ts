@@ -11,7 +11,9 @@ import { isPackmindProviderAvailable } from '../utils';
 
 const origin = 'GetAiServiceForOrganizationUseCase';
 
-export class GetAiServiceForOrganizationUseCase implements IGetAiServiceForOrganizationUseCase {
+export class GetAiServiceForOrganizationUseCase
+  implements IGetAiServiceForOrganizationUseCase
+{
   constructor(
     private readonly configurationRepository: IAIProviderRepository,
     private readonly logger: PackmindLogger = new PackmindLogger(origin),

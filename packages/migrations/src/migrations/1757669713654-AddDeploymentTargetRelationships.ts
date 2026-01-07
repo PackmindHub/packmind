@@ -8,7 +8,9 @@ import { PackmindLogger } from '@packmind/logger';
 
 const origin = 'AddDeploymentTargetRelationships1757669713654';
 
-export class AddDeploymentTargetRelationships1757669713654 implements MigrationInterface {
+export class AddDeploymentTargetRelationships1757669713654
+  implements MigrationInterface
+{
   constructor(
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {}

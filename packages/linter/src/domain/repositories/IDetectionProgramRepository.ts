@@ -4,7 +4,8 @@ import { QueryOption } from '@packmind/types';
 import type { DetectionProgram, DetectionProgramId } from '@packmind/types';
 import { RuleId } from '@packmind/types';
 
-export interface IDetectionProgramRepository extends IRepository<DetectionProgram> {
+export interface IDetectionProgramRepository
+  extends IRepository<DetectionProgram> {
   findByRuleId(ruleId: RuleId, opts?: QueryOption): Promise<DetectionProgram[]>;
   findByRuleIdAndVersion(
     ruleId: RuleId,

@@ -11,7 +11,9 @@ import { IStandardsPort, IGitPort } from '@packmind/types';
 import { GitlabDuoDeployer } from './gitlabDuo/GitlabDuoDeployer';
 import { ContinueDeployer } from './continue/ContinueDeployer';
 
-export class CodingAgentDeployerRegistry implements ICodingAgentDeployerRegistry {
+export class CodingAgentDeployerRegistry
+  implements ICodingAgentDeployerRegistry
+{
   private readonly deployers = new Map<CodingAgent, ICodingAgentDeployer>();
 
   constructor(

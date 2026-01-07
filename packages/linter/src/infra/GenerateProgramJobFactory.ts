@@ -10,7 +10,9 @@ import { GenerateProgramInput } from '../domain';
 import { GenerateProgramDelayedJob } from '../application/useCases/generateProgramUseCase/GenerateProgramDelayedJob';
 import { ILinterRepositories } from '../domain/repositories/ILinterRepositories';
 
-export class GenerateProgramJobFactory implements IJobFactory<GenerateProgramInput> {
+export class GenerateProgramJobFactory
+  implements IJobFactory<GenerateProgramInput>
+{
   public delayedJob: GenerateProgramDelayedJob | null = null;
 
   constructor(

@@ -11,7 +11,9 @@ import {
 import { DetectionProgramService } from '../../services/DetectionProgramService';
 import { IStandardsPort } from '@packmind/types';
 
-export class GetActiveDetectionProgramUseCase implements IGetActiveDetectionProgram {
+export class GetActiveDetectionProgramUseCase
+  implements IGetActiveDetectionProgram
+{
   constructor(
     private readonly detectionProgramService: DetectionProgramService,
     private readonly standardsAdapter: IStandardsPort,

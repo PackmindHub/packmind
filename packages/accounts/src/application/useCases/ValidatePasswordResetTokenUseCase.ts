@@ -10,7 +10,9 @@ import { createPasswordResetToken } from '../../domain/entities/PasswordResetTok
 
 const origin = 'ValidatePasswordResetTokenUseCase';
 
-export class ValidatePasswordResetTokenUseCase implements IValidatePasswordResetTokenUseCase {
+export class ValidatePasswordResetTokenUseCase
+  implements IValidatePasswordResetTokenUseCase
+{
   constructor(
     private readonly passwordResetTokenService: PasswordResetTokenService,
     private readonly userService: UserService,
