@@ -15,6 +15,7 @@ import { getTargetPrefixedPath } from '../utils/FileUtils';
 const origin = 'CopilotDeployer';
 
 export class CopilotDeployer implements ICodingAgentDeployer {
+  /** @deprecated Legacy path to clean up during migration */
   private static readonly RECIPES_INDEX_PATH =
     '.github/instructions/packmind-recipes-index.instructions.md';
   private readonly logger: PackmindLogger;
@@ -52,6 +53,11 @@ export class CopilotDeployer implements ICodingAgentDeployer {
         content: promptFile.content,
       });
     }
+
+    // Clean up legacy recipes-index.instructions.md file
+    fileUpdates.delete.push({
+      path: getTargetPrefixedPath(CopilotDeployer.RECIPES_INDEX_PATH, target),
+    });
 
     return fileUpdates;
   }
@@ -107,6 +113,11 @@ export class CopilotDeployer implements ICodingAgentDeployer {
         content: promptFile.content,
       });
     }
+
+    // Clean up legacy recipes-index.instructions.md file
+    fileUpdates.delete.push({
+      path: CopilotDeployer.RECIPES_INDEX_PATH,
+    });
 
     return fileUpdates;
   }
@@ -171,6 +182,11 @@ export class CopilotDeployer implements ICodingAgentDeployer {
         content: configFile.content,
       });
     }
+
+    // Clean up legacy recipes-index.instructions.md file
+    fileUpdates.delete.push({
+      path: CopilotDeployer.RECIPES_INDEX_PATH,
+    });
 
     return fileUpdates;
   }

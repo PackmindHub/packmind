@@ -152,50 +152,66 @@ describe('GitHub Copilot Deployment Integration', () => {
       jest.restoreAllMocks();
     });
 
-    it('creates .github/instructions/packmind-recipes-index.instructions.md with recipe summaries', async () => {
-      const recipeVersions: RecipeVersion[] = [
-        {
-          id: 'recipe-version-1' as RecipeVersionId,
-          recipeId: recipe.id,
-          name: recipe.name,
-          slug: recipe.slug,
-          content: recipe.content,
-          version: recipe.version,
-          summary:
-            'Test recipe for GitHub Copilot deployment with detailed instructions',
-          userId: user.id,
-        },
-      ];
+    describe('when deploying recipe', () => {
+      let recipeVersions: RecipeVersion[];
+      let fileUpdates: FileUpdates;
 
-      const fileUpdates = await deployerService.aggregateRecipeDeployments(
-        recipeVersions,
-        gitRepo,
-        [defaultTarget],
-        ['copilot'],
-      );
+      beforeEach(async () => {
+        recipeVersions = [
+          {
+            id: 'recipe-version-1' as RecipeVersionId,
+            recipeId: recipe.id,
+            name: recipe.name,
+            slug: recipe.slug,
+            content: recipe.content,
+            version: recipe.version,
+            summary:
+              'Test recipe for GitHub Copilot deployment with detailed instructions',
+            userId: user.id,
+          },
+        ];
 
-      expect(fileUpdates.createOrUpdate).toHaveLength(1);
-      expect(fileUpdates.delete).toHaveLength(0);
+        fileUpdates = await deployerService.aggregateRecipeDeployments(
+          recipeVersions,
+          gitRepo,
+          [defaultTarget],
+          ['copilot'],
+        );
+      });
 
-      const copilotFile = fileUpdates.createOrUpdate.find(
-        (file) => file.path === `.github/prompts/${recipe.slug}.prompt.md`,
-      );
+      it('creates one prompt file', () => {
+        expect(fileUpdates.createOrUpdate).toHaveLength(1);
+      });
 
-      expect(copilotFile).toBeDefined();
-      if (copilotFile) {
-        // Check Copilot prompt file YAML frontmatter
-        expect(copilotFile.content).toContain('---');
-        expect(copilotFile.content).toContain(
+      it('uses correct prompt file path', () => {
+        expect(fileUpdates.createOrUpdate[0].path).toBe(
+          `.github/prompts/${recipe.slug}.prompt.md`,
+        );
+      });
+
+      it('includes description in YAML frontmatter', () => {
+        expect(fileUpdates.createOrUpdate[0].content).toContain(
           "description: 'Test recipe for GitHub Copilot deployment with detailed instructions'",
         );
-        expect(copilotFile.content).toContain("agent: 'agent'");
-        expect(copilotFile.content).toContain('---');
+      });
 
-        // Check recipe content is included
-        expect(copilotFile.content).toContain(
+      it('sets agent mode in YAML frontmatter', () => {
+        expect(fileUpdates.createOrUpdate[0].content).toContain(
+          "agent: 'agent'",
+        );
+      });
+
+      it('includes recipe content in prompt file', () => {
+        expect(fileUpdates.createOrUpdate[0].content).toContain(
           'This is test recipe content for GitHub Copilot deployment',
         );
-      }
+      });
+
+      it('deletes legacy recipes-index.instructions.md file', () => {
+        expect(fileUpdates.delete).toContainEqual({
+          path: '.github/instructions/packmind-recipes-index.instructions.md',
+        });
+      });
     });
 
     it('creates multiple .github/instructions/packmind-*.instructions.md files for standards', async () => {
@@ -458,17 +474,28 @@ describe('GitHub Copilot Deployment Integration', () => {
       copilotDeployer = new CopilotDeployer(standardsPort, gitPort);
     });
 
-    it('handles empty recipe list gracefully', async () => {
-      jest.spyOn(gitPort, 'getFileFromRepo').mockResolvedValue(null);
+    describe('when deploying empty recipe list', () => {
+      let fileUpdates: FileUpdates;
 
-      const fileUpdates = await copilotDeployer.deployRecipes(
-        [],
-        gitRepo,
-        defaultTarget,
-      );
+      beforeEach(async () => {
+        jest.spyOn(gitPort, 'getFileFromRepo').mockResolvedValue(null);
 
-      expect(fileUpdates.createOrUpdate).toHaveLength(0);
-      expect(fileUpdates.delete).toHaveLength(0);
+        fileUpdates = await copilotDeployer.deployRecipes(
+          [],
+          gitRepo,
+          defaultTarget,
+        );
+      });
+
+      it('creates no prompt files', () => {
+        expect(fileUpdates.createOrUpdate).toHaveLength(0);
+      });
+
+      it('still deletes legacy recipes-index.instructions.md file', () => {
+        expect(fileUpdates.delete).toContainEqual({
+          path: '.github/instructions/packmind-recipes-index.instructions.md',
+        });
+      });
     });
 
     it('handles empty standards list gracefully', async () => {
@@ -508,7 +535,11 @@ describe('GitHub Copilot Deployment Integration', () => {
 
       // Should still work despite the error, creating individual prompt files
       expect(fileUpdates.createOrUpdate).toHaveLength(1);
-      expect(fileUpdates.delete).toHaveLength(0);
+
+      // Verify legacy file deletion
+      expect(fileUpdates.delete).toContainEqual({
+        path: '.github/instructions/packmind-recipes-index.instructions.md',
+      });
 
       const copilotFile = fileUpdates.createOrUpdate[0];
       // Check YAML frontmatter
