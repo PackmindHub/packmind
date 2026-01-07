@@ -141,7 +141,7 @@
     "@codemirror/lang-python": "^6.1.6",
     "@codemirror/lang-sass": "^6.0.2",
     "@codemirror/lang-sql": "^6.8.1",
-    "@docusaurus/core": "3.8.1",
+    "@docusaurus/core": "3.9.2",
     "@docusaurus/preset-classic": "3.8.1",
     "@fastify/autoload": "~6.0.3",
     "@fastify/rate-limit": "^10.3.0",
