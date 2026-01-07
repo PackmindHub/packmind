@@ -709,6 +709,60 @@ export class LinterController {
     }
   }
 
+  @Post('track-execution')
+  async trackLinterExecution(
+    @Body()
+    body: {
+      gitRemoteUrl: string;
+      targetCount: number;
+      standardCount: number;
+    },
+    @Req() request: AuthenticatedRequest,
+  ): Promise<{ success: boolean }> {
+    const { gitRemoteUrl, targetCount, standardCount } = body;
+    this.logger.info('POST /track-execution - Tracking linter execution', {
+      gitRemoteUrl,
+      targetCount,
+      standardCount,
+      userId: request.user?.userId,
+      organizationId: request.organization?.id,
+    });
+
+    try {
+      const organizationId = request.organization?.id;
+      const userId = request.user?.userId;
+
+      if (!organizationId || !userId) {
+        this.logger.error(
+          'POST /track-execution - Missing user or organization context',
+        );
+        throw new BadRequestException('User authentication required');
+      }
+
+      // Track the linter execution
+      await this.linterService.trackLinterExecution({
+        organizationId,
+        userId,
+        gitRemoteUrl,
+        targetCount,
+        standardCount,
+      });
+
+      this.logger.info(
+        'POST /track-execution - Execution tracked successfully',
+      );
+
+      return { success: true };
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      this.logger.error('POST /track-execution - Failed to track execution', {
+        error: errorMessage,
+      });
+      throw error;
+    }
+  }
+
   @Post('detection-programs-for-packages')
   async getDetectionProgramsForPackages(
     @Body() body: { packagesSlugs: string[] },

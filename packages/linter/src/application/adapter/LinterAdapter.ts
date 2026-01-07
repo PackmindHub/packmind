@@ -68,6 +68,7 @@ import {
   IExecuteLinterProgramsUseCase,
   ListDetectionProgramCommand,
   ListDetectionProgramResponse,
+  OrganizationId,
   StartProgramGenerationCommand,
   StartProgramGenerationResponse,
   TestProgramExecutionCommand,
@@ -79,6 +80,7 @@ import {
   UpdateRuleDetectionHeuristicsCommand,
   UpdateRuleDetectionHeuristicsResponse,
   UpdateRuleDetectionStatusAfterUpdateCommand,
+  UserId,
 } from '@packmind/types';
 import type { DetectionProgramService } from '../services/DetectionProgramService';
 import { ComputeRuleLanguageDetectionStatusUseCase } from '../useCases/computeRuleLanguageDetectionStatus/computeRuleLanguageDetectionStatus.usecase';
@@ -106,6 +108,7 @@ import { TestProgramExecutionUseCase } from '../useCases/testProgramExecutionUse
 import { UpdateActiveDetectionProgramUseCase } from '../useCases/updateActiveDetectionProgram/updateActiveDetectionProgram.usecase';
 import { UpdateDetectionProgramUseCase } from '../useCases/updateDetectionProgram/updateDetectionProgram.usecase';
 import { UpdateDetectionProgramStatusUseCase } from '../useCases/updateDetectionProgramStatus/updateDetectionProgramStatus.usecase';
+import { TrackLinterExecutionUseCase } from '../useCases/trackLinterExecution/trackLinterExecution.usecase';
 import { UpdateRuleDetectionHeuristicsUseCase } from '../useCases/updateRuleDetectionHeuristics/updateRuleDetectionHeuristics.usecase';
 import { UpdateRuleDetectionStatusAfterUpdateUseCase } from '../useCases/updateRuleDetectionStatusAfterUpdate/updateRuleDetectionStatusAfterUpdate.usecase';
 
@@ -181,6 +184,7 @@ export class LinterAdapter implements IBaseAdapter<ILinterPort>, ILinterPort {
   private _createDetectionHeuristicsUseCase!: CreateDetectionHeuristicsUseCase;
   private _getDetectionProgramsForPackagesUseCase!: GetDetectionProgramsForPackagesUseCase;
   private _createEmptyRuleDetectionAssessmentUseCase!: CreateEmptyRuleDetectionAssessmentUseCase;
+  private _trackLinterExecutionUseCase!: TrackLinterExecutionUseCase;
 
   constructor({
     hexaFactory,
@@ -249,7 +253,6 @@ export class LinterAdapter implements IBaseAdapter<ILinterPort>, ILinterPort {
       this.standardsPort,
       this.spacesPort,
       this.gitPort,
-      ports.eventEmitterService,
     );
 
     this._updateDetectionProgramUseCase = new UpdateDetectionProgramUseCase(
@@ -367,6 +370,10 @@ export class LinterAdapter implements IBaseAdapter<ILinterPort>, ILinterPort {
 
     this._createEmptyRuleDetectionAssessmentUseCase =
       new CreateEmptyRuleDetectionAssessmentUseCase(this.repositories);
+
+    this._trackLinterExecutionUseCase = new TrackLinterExecutionUseCase(
+      ports.eventEmitterService,
+    );
   }
 
   public isReady(): boolean {
@@ -552,5 +559,15 @@ export class LinterAdapter implements IBaseAdapter<ILinterPort>, ILinterPort {
     command: CreateEmptyRuleDetectionAssessmentCommand,
   ): Promise<CreateEmptyRuleDetectionAssessmentResponse> {
     return this._createEmptyRuleDetectionAssessmentUseCase.execute(command);
+  }
+
+  async trackLinterExecution(command: {
+    organizationId: OrganizationId;
+    userId: UserId;
+    gitRemoteUrl: string;
+    targetCount: number;
+    standardCount: number;
+  }): Promise<void> {
+    return this._trackLinterExecutionUseCase.execute(command);
   }
 }

@@ -54,6 +54,7 @@ import type {
 } from '../contracts';
 import { DetectionProgram } from '../DetectionProgram';
 import { RuleDetectionAssessment } from '../RuleDetectionAssessment';
+import { OrganizationId, UserId } from '../../accounts';
 
 export const ILinterPortName = 'ILinterPort' as const;
 
@@ -169,4 +170,12 @@ export interface ILinterPort {
   createEmptyRuleDetectionAssessment(
     command: CreateEmptyRuleDetectionAssessmentCommand,
   ): Promise<CreateEmptyRuleDetectionAssessmentResponse>;
+
+  trackLinterExecution(command: {
+    organizationId: OrganizationId;
+    userId: UserId;
+    gitRemoteUrl: string;
+    targetCount: number;
+    standardCount: number;
+  }): Promise<void>;
 }

@@ -160,6 +160,17 @@ export type NotifyDistributionGateway = (
   command: NotifyDistributionCommand,
 ) => Promise<NotifyDistributionResult>;
 
+// Track Linter Execution types
+export type TrackLinterExecutionCommand = {
+  gitRemoteUrl: string;
+  targetCount: number;
+  standardCount: number;
+};
+
+export type TrackLinterExecution = (
+  command: TrackLinterExecutionCommand,
+) => Promise<void>;
+
 export interface IPackmindGateway {
   listExecutionPrograms: Gateway<ListDetectionPrograms>;
   getDraftDetectionProgramsForRule: Gateway<GetDraftDetectionProgramsForRule>;
@@ -171,4 +182,5 @@ export interface IPackmindGateway {
   getMcpToken: Gateway<IGetMcpTokenUseCase>;
   getMcpUrl: Gateway<IGetMcpUrlUseCase>;
   notifyDistribution: NotifyDistributionGateway;
+  trackLinterExecution: TrackLinterExecution;
 }

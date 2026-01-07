@@ -1,5 +1,4 @@
 import { LogLevel, PackmindLogger } from '@packmind/logger';
-import { PackmindEventEmitterService } from '@packmind/node-utils';
 import {
   createOrganizationId,
   createUserId,
@@ -10,7 +9,6 @@ import {
   StandardVersion,
   GitRepo,
   GitRepoId,
-  LinterCalledEvent,
 } from '@packmind/types';
 
 import {
@@ -40,7 +38,6 @@ export class ListDetectionProgramUseCase
     private readonly standardsAdapter: IStandardsPort | undefined,
     private readonly spacesAdapter: ISpacesPort | undefined,
     private readonly gitPort: IGitPort,
-    private readonly eventEmitterService: PackmindEventEmitterService,
     private readonly logger: PackmindLogger = new PackmindLogger(
       origin,
       LogLevel.DEBUG,
@@ -190,23 +187,6 @@ export class ListDetectionProgramUseCase
         {
           targetsCount: targetsWithStandards.length,
         },
-      );
-
-      // Calculate total standard count across all targets
-      const totalStandardCount = targetsWithStandards.reduce(
-        (sum, target) => sum + target.standards.length,
-        0,
-      );
-
-      // Emit domain event for analytics
-      this.eventEmitterService.emit(
-        new LinterCalledEvent({
-          userId: createUserId(command.userId),
-          organizationId: createOrganizationId(command.organizationId),
-          gitRepoId: gitRepo.id,
-          targetCount: targetsWithStandards.length,
-          standardCount: totalStandardCount,
-        }),
       );
 
       return { targets: targetsWithStandards };

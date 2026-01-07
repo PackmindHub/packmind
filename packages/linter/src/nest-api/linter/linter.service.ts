@@ -183,4 +183,14 @@ export class LinterService {
       organizationId: command.organizationId,
     });
   }
+
+  async trackLinterExecution(command: {
+    organizationId: OrganizationId;
+    userId: UserId;
+    gitRemoteUrl: string;
+    targetCount: number;
+    standardCount: number;
+  }): Promise<void> {
+    return this.linterAdapter.trackLinterExecution(command);
+  }
 }

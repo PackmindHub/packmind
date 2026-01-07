@@ -995,4 +995,37 @@ export class PackmindGateway implements IPackmindGateway {
       );
     }
   };
+
+  /**
+   * Track linter execution (fire-and-forget).
+   * This method is called before running detection programs to track usage.
+   * It silently fails if the API call fails to not block linting.
+   */
+  public trackLinterExecution = async (params: {
+    gitRemoteUrl: string;
+    targetCount: number;
+    standardCount: number;
+  }): Promise<void> => {
+    const decodedApiKey = decodeApiKey(this.apiKey);
+
+    // Silent fail if not logged in or invalid API key
+    if (!decodedApiKey.isValid) {
+      return;
+    }
+
+    const { host } = decodedApiKey.payload;
+    const url = `${host}/api/v0/track-execution`;
+
+    // Fire-and-forget: don't await, catch errors silently
+    fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${this.apiKey}`,
+      },
+      body: JSON.stringify(params),
+    }).catch(() => {
+      // Silent fail - we don't want tracking failures to affect linting
+    });
+  };
 }

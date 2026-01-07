@@ -331,4 +331,17 @@ export class LinterAdapter implements ILinterPort {
   ): Promise<GetDetectionProgramsForPackagesResponse> {
     throw new Error('Method not implemented.');
   }
+
+  async trackLinterExecution(
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    command: {
+      organizationId: import('@packmind/types').OrganizationId;
+      userId: import('@packmind/types').UserId;
+      gitRemoteUrl: string;
+      targetCount: number;
+      standardCount: number;
+    },
+  ): Promise<void> {
+    // OSS edition: no-op, tracking is not available
+  }
 }
