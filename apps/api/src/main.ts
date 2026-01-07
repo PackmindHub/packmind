@@ -14,6 +14,7 @@ import { AppModule } from './app/app.module';
 import { PackmindLogger, LogLevel } from '@packmind/logger';
 import { Configuration, Cache } from '@packmind/node-utils';
 import { enableAmplitudeProxy } from '@packmind/amplitude';
+import { pingPackmindSetup } from './startup/ping-packmind-setup';
 
 const logger = new PackmindLogger('PackmindAPI', LogLevel.INFO);
 
@@ -137,6 +138,13 @@ async function bootstrap() {
       prefix: globalPrefix,
       version: 'v0',
       pid: process.pid,
+    });
+
+    // Send ping to Packmind setup webhook (fire-and-forget)
+    pingPackmindSetup().catch((error) => {
+      logger.warn('Ping to Packmind setup webhook failed', {
+        error: error instanceof Error ? error.message : String(error),
+      });
     });
 
     // Graceful shutdown handling
