@@ -2,9 +2,10 @@ Create a Packmind release with version {{version}}. Follow these steps:
 
 1. **Verify clean git status**: Check that `git status` shows no uncommitted changes. If there are changes, fail and ask the user to commit or stash them first.
 
-2. **Update package.json and CHANGELOG.MD for release (First commit)**:
-   - Update the version in package.json to `{{version}}`
-   - in CHANGELOG.md:
+2. **Update package.json files and CHANGELOG.MD for release (First commit)**:
+   - Update the version in `package.json` to `{{version}}`
+   - Update the version in `apps/api/docker-package.json` to `{{version}}`
+   - In CHANGELOG.md:
      - Replace the `[Unreleased]` heading with `[{{version}}] - {{today_date}}` (use ISO 8601 format YYYY-MM-DD for the date)
      - Update the unreleased comparison link at the bottom to point to the new release:
        ```
