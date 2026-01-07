@@ -141,7 +141,7 @@ describe('installPackagesHandler', () => {
         expect(mockLog).toHaveBeenCalledWith('Test Package (test-package):\n');
         expect(mockLog).toHaveBeenCalledWith('A test package\n');
         expect(mockLog).toHaveBeenCalledWith('Standards:');
-        expect(mockLog).toHaveBeenCalledWith('Recipes:');
+        expect(mockLog).toHaveBeenCalledWith('Commands:');
         expect(mockExit).toHaveBeenCalledWith(0);
       });
     });

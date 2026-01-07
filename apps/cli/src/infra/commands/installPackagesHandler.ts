@@ -157,7 +157,7 @@ export async function showPackageHandler(
 
     // Display recipes
     if (pkg.recipes && pkg.recipes.length > 0) {
-      log('Recipes:');
+      log('Commands:');
       pkg.recipes.forEach((recipe: SummarizedArtifact) => {
         if (recipe.summary) {
           log(`  - ${recipe.name}: ${recipe.summary}`);
