@@ -421,7 +421,7 @@ export const DetectabilitySection: React.FC<IDetectabilitySectionProps> = ({
         >
           <PMText color="tertiary">How to detect it?</PMText>
           {shouldShowProgramGenerationLoading && (
-            <LoadingOverlay message="Rule is detectable. A detection program is generating" />
+            <LoadingOverlay message="Rule is detectable. A detection program is generating." />
           )}
           {/** Use grid to guarantee equal heights between columns */}
           <PMGrid
