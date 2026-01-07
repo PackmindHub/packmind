@@ -1,4 +1,4 @@
-# [Unreleased]
+# [1.7.0] - 2025-01-07
 
 ## Added
 
@@ -169,7 +169,7 @@
 - Bulk deployment across multiple repositories with atomic commits
 - Optional OpenAI integration for enhanced AI-powered features
 
-[Unreleased]: https://github.com/PackmindHub/packmind/compare/release/1.6.0...HEAD
+[1.7.0]: https://github.com/PackmindHub/packmind/compare/release/1.6.0...release/1.7.0
 [1.6.0]: https://github.com/PackmindHub/packmind/compare/release/1.5.0...release/1.6.0
 [1.5.0]: https://github.com/PackmindHub/packmind/compare/release/1.4.1...release/1.5.0
 [1.4.1]: https://github.com/PackmindHub/packmind/compare/release/1.4.0...release/1.4.1
