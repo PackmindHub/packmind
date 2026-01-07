@@ -23,7 +23,7 @@ export const buildCurlInstallCommand = (loginCode: string): string => {
   const hostExport = isDefaultHost()
     ? ''
     : `export PACKMIND_HOST=${getCurrentHost()}\n`;
-  return `export PACKMIND_LOGIN_CODE=${loginCode}\n${hostExport}curl -fsSL https://packmind.sh/install | sh`;
+  return `export PACKMIND_LOGIN_CODE=${loginCode}\n${hostExport}curl --proto '=https' --tlsv1.2 -sSf https://raw.githubusercontent.com/PackmindHub/packmind/main/apps/cli/scripts/install.sh | sh`;
 };
 
 export const buildCliLoginCommand = (): string => {
