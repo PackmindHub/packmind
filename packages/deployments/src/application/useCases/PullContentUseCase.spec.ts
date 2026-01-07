@@ -733,7 +733,7 @@ describe('PullContentUseCase', () => {
         mockDeployer.generateRemovalFileUpdates.mockResolvedValue({
           createOrUpdate: [],
           delete: [
-            { path: '.packmind/recipes/unique-recipe.md' },
+            { path: '.packmind/commands/unique-recipe.md' },
             { path: '.packmind/standards/unique-standard.md' },
           ],
         });
@@ -744,7 +744,7 @@ describe('PullContentUseCase', () => {
 
         const deletedPaths = result.fileUpdates.delete.map((f) => f.path);
         expect(deletedPaths).not.toContain(
-          '.packmind/recipes/shared-recipe.md',
+          '.packmind/commands/shared-recipe.md',
         );
       });
 
@@ -761,7 +761,7 @@ describe('PullContentUseCase', () => {
         const result = await useCase.execute(command);
 
         const deletedPaths = result.fileUpdates.delete.map((f) => f.path);
-        expect(deletedPaths).toContain('.packmind/recipes/unique-recipe.md');
+        expect(deletedPaths).toContain('.packmind/commands/unique-recipe.md');
       });
 
       it('deletes unique standard files from removed package', async () => {
@@ -843,7 +843,7 @@ describe('PullContentUseCase', () => {
         mockDeployer.generateRemovalFileUpdates.mockResolvedValue({
           createOrUpdate: [],
           delete: [
-            { path: '.packmind/recipes/unique-recipe.md' },
+            { path: '.packmind/commands/unique-recipe.md' },
             { path: '.packmind/standards/unique-standard.md' },
           ],
         });
@@ -853,7 +853,7 @@ describe('PullContentUseCase', () => {
         const result = await useCase.execute(command);
 
         const deletedPaths = result.fileUpdates.delete.map((f) => f.path);
-        expect(deletedPaths).toContain('.packmind/recipes/unique-recipe.md');
+        expect(deletedPaths).toContain('.packmind/commands/unique-recipe.md');
       });
 
       it('deletes unique standard from removed package', async () => {
@@ -889,8 +889,8 @@ describe('PullContentUseCase', () => {
         mockDeployer.generateRemovalFileUpdates.mockResolvedValue({
           createOrUpdate: [],
           delete: [
-            { path: '.packmind/recipes/shared-recipe.md' },
-            { path: '.packmind/recipes/unique-recipe.md' },
+            { path: '.packmind/commands/shared-recipe.md' },
+            { path: '.packmind/commands/unique-recipe.md' },
             { path: '.packmind/standards/shared-standard.md' },
             { path: '.packmind/standards/unique-standard.md' },
           ],
@@ -936,14 +936,14 @@ describe('PullContentUseCase', () => {
         const result = await useCase.execute(command);
 
         const deletedPaths = result.fileUpdates.delete.map((f) => f.path);
-        expect(deletedPaths).toContain('.packmind/recipes/shared-recipe.md');
+        expect(deletedPaths).toContain('.packmind/commands/shared-recipe.md');
       });
 
       it('marks unique recipe for deletion', async () => {
         const result = await useCase.execute(command);
 
         const deletedPaths = result.fileUpdates.delete.map((f) => f.path);
-        expect(deletedPaths).toContain('.packmind/recipes/unique-recipe.md');
+        expect(deletedPaths).toContain('.packmind/commands/unique-recipe.md');
       });
 
       it('marks shared standard for deletion', async () => {

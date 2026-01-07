@@ -9,6 +9,7 @@
 - render commands for Cursor #88
 - render commands for Claude Code #86
 - render standards as Claude Code rules #86
+- render commands in `.packmind/commands/` folder (renamed from `recipes/`) #90
 
 ## Fixed
 

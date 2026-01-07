@@ -604,17 +604,17 @@ class MyService {
 
       // Verify individual recipe file is created in jetbrains path
       const recipeFile = recipeUpdates.createOrUpdate.find((file) =>
-        file.path.includes('recipes/writing-good-jetbrains-services.md'),
+        file.path.includes('commands/writing-good-jetbrains-services.md'),
       );
       expect(recipeFile).toBeDefined();
       expect(recipeFile?.path).toBe(
-        'jetbrains/.packmind/recipes/writing-good-jetbrains-services.md',
+        'jetbrains/.packmind/commands/writing-good-jetbrains-services.md',
       );
       expect(recipeFile?.content).toContain('Writing Good JetBrains Services');
 
       // Verify recipes index file is created in jetbrains path
       const indexFile = recipeUpdates.createOrUpdate.find(
-        (file) => file.path === 'jetbrains/.packmind/recipes-index.md',
+        (file) => file.path === 'jetbrains/.packmind/commands-index.md',
       );
       expect(indexFile).toBeDefined();
       expect(indexFile?.content).toContain('Writing Good JetBrains Services');
@@ -732,7 +732,7 @@ class MyService {
       expect(jetbrainsUpdates.createOrUpdate).toHaveLength(2);
 
       const jetbrainsRecipeFile = jetbrainsUpdates.createOrUpdate.find((file) =>
-        file.path.includes('recipes/writing-good-jetbrains-services.md'),
+        file.path.includes('commands/writing-good-jetbrains-services.md'),
       );
       expect(jetbrainsRecipeFile).toBeDefined();
       expect(jetbrainsRecipeFile?.path.startsWith('jetbrains/')).toBe(true);
@@ -743,15 +743,15 @@ class MyService {
       // Verify vscode deployment creates empty index (no actual recipes, but still creates index file)
       expect(vscodeUpdates.createOrUpdate).toHaveLength(1);
       expect(vscodeUpdates.createOrUpdate[0].path).toBe(
-        'vscode/.packmind/recipes-index.md',
+        'vscode/.packmind/commands-index.md',
       );
       expect(vscodeUpdates.createOrUpdate[0].content).toContain(
-        'No recipes available',
+        'No commands available',
       );
 
       // Verify the paths are completely separate
       const jetbrainsIndexFile = jetbrainsUpdates.createOrUpdate.find(
-        (file) => file.path === 'jetbrains/.packmind/recipes-index.md',
+        (file) => file.path === 'jetbrains/.packmind/commands-index.md',
       );
       expect(jetbrainsIndexFile).toBeDefined();
       expect(jetbrainsIndexFile?.path.startsWith('jetbrains/')).toBe(true);
@@ -813,20 +813,20 @@ This recipe provides TDD best practices applicable to any IDE platform.
       const jetbrainsRecipeFile = multiTargetUpdates.createOrUpdate.find(
         (file) =>
           file.path ===
-          'jetbrains/.packmind/recipes/test-driven-development-tdd-best-practices.md',
+          'jetbrains/.packmind/commands/test-driven-development-tdd-best-practices.md',
       );
       const jetbrainsIndexFile = multiTargetUpdates.createOrUpdate.find(
-        (file) => file.path === 'jetbrains/.packmind/recipes-index.md',
+        (file) => file.path === 'jetbrains/.packmind/commands-index.md',
       );
 
       // Find vscode files
       const vscodeRecipeFile = multiTargetUpdates.createOrUpdate.find(
         (file) =>
           file.path ===
-          'vscode/.packmind/recipes/test-driven-development-tdd-best-practices.md',
+          'vscode/.packmind/commands/test-driven-development-tdd-best-practices.md',
       );
       const vscodeIndexFile = multiTargetUpdates.createOrUpdate.find(
-        (file) => file.path === 'vscode/.packmind/recipes-index.md',
+        (file) => file.path === 'vscode/.packmind/commands-index.md',
       );
 
       // Verify all files exist
@@ -889,7 +889,7 @@ This recipe provides TDD best practices applicable to any IDE platform.
 
       // Find the jetbrains index file
       const jetbrainsIndexFile = jetbrainsOnlyUpdates.createOrUpdate.find(
-        (file) => file.path === 'jetbrains/.packmind/recipes-index.md',
+        (file) => file.path === 'jetbrains/.packmind/commands-index.md',
       );
       expect(jetbrainsIndexFile).toBeDefined();
       expect(jetbrainsIndexFile?.content).toContain(
@@ -929,12 +929,12 @@ This recipe provides TDD best practices applicable to any IDE platform.
 
       // Find the index file to verify path behavior
       const indexFile = updates.createOrUpdate.find(
-        (file) => file.path === 'jetbrains/.packmind/recipes-index.md',
+        (file) => file.path === 'jetbrains/.packmind/commands-index.md',
       );
       expect(indexFile).toBeDefined();
 
       // Verify the path doesn't have double slashes
-      expect(indexFile?.path).toBe('jetbrains/.packmind/recipes-index.md');
+      expect(indexFile?.path).toBe('jetbrains/.packmind/commands-index.md');
       expect(indexFile?.path).not.toContain('//');
     });
 
@@ -964,12 +964,12 @@ This recipe provides TDD best practices applicable to any IDE platform.
 
       // Find the index file to verify root path behavior
       const indexFile = updates.createOrUpdate.find(
-        (file) => file.path === '.packmind/recipes-index.md',
+        (file) => file.path === '.packmind/commands-index.md',
       );
       expect(indexFile).toBeDefined();
 
       // Verify root deployment has no prefix
-      expect(indexFile?.path).toBe('.packmind/recipes-index.md');
+      expect(indexFile?.path).toBe('.packmind/commands-index.md');
     });
   });
 });

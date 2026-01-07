@@ -102,8 +102,8 @@ describe('Package removal from target integration', () => {
     it('deletes artifacts files for Cursor, Claude and Packmind', () => {
       expect(deleteFiles).toEqual(
         expect.arrayContaining([
-          { path: '.packmind/recipes/recipe-1.md' },
-          { path: '.packmind/recipes-index.md' },
+          { path: '.packmind/commands/recipe-1.md' },
+          { path: '.packmind/commands-index.md' },
           { path: '.packmind/standards/standard-1.md' },
           { path: '.packmind/standards-index.md' },
           { path: '.cursor/commands/packmind/recipe-1.md' },
@@ -206,16 +206,16 @@ describe('Package removal from target integration', () => {
       deleteFiles = commitToGit.mock.calls[0][3];
     });
 
-    it('deletes exclusive recipe files', () => {
+    it('deletes exclusive command files', () => {
       expect(deleteFiles).toEqual(
-        expect.arrayContaining([{ path: '.packmind/recipes/recipe-1.md' }]),
+        expect.arrayContaining([{ path: '.packmind/commands/recipe-1.md' }]),
       );
     });
 
-    it('preserves shared recipe files', () => {
+    it('preserves shared command files', () => {
       expect(deleteFiles).not.toEqual(
         expect.arrayContaining([
-          { path: '.packmind/recipes/shared-recipe.md' },
+          { path: '.packmind/commands/shared-recipe.md' },
         ]),
       );
     });

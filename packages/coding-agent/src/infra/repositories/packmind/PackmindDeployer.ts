@@ -8,7 +8,7 @@ import {
   Target,
 } from '@packmind/types';
 import { ICodingAgentDeployer } from '../../../domain/repository/ICodingAgentDeployer';
-import { RecipesIndexService } from '../../../application/services/RecipesIndexService';
+import { CommandsIndexService } from '../../../application/services/CommandsIndexService';
 import { StandardsIndexService } from '../../../application/services/StandardsIndexService';
 import { getTargetPrefixedPath } from '../utils/FileUtils';
 import { GenericStandardWriter } from '../genericSectionWriter/GenericStandardWriter';
@@ -16,13 +16,15 @@ import { GenericStandardWriter } from '../genericSectionWriter/GenericStandardWr
 const origin = 'PackmindDeployer';
 
 export class PackmindDeployer implements ICodingAgentDeployer {
-  private static readonly RECIPES_INDEX_PATH = '.packmind/recipes-index.md';
-  private readonly recipesIndexService: RecipesIndexService;
+  private static readonly COMMANDS_INDEX_PATH = '.packmind/commands-index.md';
+  private static readonly LEGACY_RECIPES_INDEX_PATH =
+    '.packmind/recipes-index.md';
+  private readonly commandsIndexService: CommandsIndexService;
   private readonly standardsIndexService: StandardsIndexService;
   private readonly logger: PackmindLogger;
 
   constructor(private readonly standardsPort?: IStandardsPort) {
-    this.recipesIndexService = new RecipesIndexService();
+    this.commandsIndexService = new CommandsIndexService();
     this.standardsIndexService = new StandardsIndexService();
     this.logger = new PackmindLogger(origin);
   }
@@ -32,8 +34,8 @@ export class PackmindDeployer implements ICodingAgentDeployer {
     _gitRepo: GitRepo,
     target: Target,
   ): Promise<FileUpdates> {
-    this.logger.info('Deploying recipes for Packmind', {
-      recipesCount: recipeVersions.length,
+    this.logger.info('Deploying commands for Packmind', {
+      commandsCount: recipeVersions.length,
       targetId: target.id,
       targetPath: target.path,
     });
@@ -43,28 +45,35 @@ export class PackmindDeployer implements ICodingAgentDeployer {
       delete: [],
     };
 
-    // Deploy each recipe to its own file
+    // Deploy each command to its own file
     for (const recipeVersion of recipeVersions) {
-      const recipeFilePath = `.packmind/recipes/${recipeVersion.slug}.md`;
-      const targetPrefixedPath = getTargetPrefixedPath(recipeFilePath, target);
+      const commandFilePath = `.packmind/commands/${recipeVersion.slug}.md`;
+      const targetPrefixedPath = getTargetPrefixedPath(commandFilePath, target);
       fileUpdates.createOrUpdate.push({
         path: targetPrefixedPath,
         content: recipeVersion.content,
       });
     }
 
-    // Generate and deploy the recipes index
-    const recipesIndexContent =
-      this.recipesIndexService.buildRecipesIndex(recipeVersions);
+    // Generate and deploy the commands index
+    const commandsIndexContent =
+      this.commandsIndexService.buildCommandsIndex(recipeVersions);
 
     const indexTargetPrefixedPath = getTargetPrefixedPath(
-      PackmindDeployer.RECIPES_INDEX_PATH,
+      PackmindDeployer.COMMANDS_INDEX_PATH,
       target,
     );
     fileUpdates.createOrUpdate.push({
       path: indexTargetPrefixedPath,
-      content: recipesIndexContent,
+      content: commandsIndexContent,
     });
+
+    // Delete legacy recipes-index.md file
+    const legacyIndexPath = getTargetPrefixedPath(
+      PackmindDeployer.LEGACY_RECIPES_INDEX_PATH,
+      target,
+    );
+    fileUpdates.delete.push({ path: legacyIndexPath });
 
     return fileUpdates;
   }
@@ -130,8 +139,8 @@ export class PackmindDeployer implements ICodingAgentDeployer {
   async generateFileUpdatesForRecipes(
     recipeVersions: RecipeVersion[],
   ): Promise<FileUpdates> {
-    this.logger.info('Generating file updates for recipes (Packmind)', {
-      recipesCount: recipeVersions.length,
+    this.logger.info('Generating file updates for commands (Packmind)', {
+      commandsCount: recipeVersions.length,
     });
 
     const fileUpdates: FileUpdates = {
@@ -139,22 +148,27 @@ export class PackmindDeployer implements ICodingAgentDeployer {
       delete: [],
     };
 
-    // Deploy each recipe to its own file
+    // Deploy each command to its own file
     for (const recipeVersion of recipeVersions) {
-      const recipeFilePath = `.packmind/recipes/${recipeVersion.slug}.md`;
+      const commandFilePath = `.packmind/commands/${recipeVersion.slug}.md`;
       fileUpdates.createOrUpdate.push({
-        path: recipeFilePath,
+        path: commandFilePath,
         content: recipeVersion.content,
       });
     }
 
-    // Generate and deploy the recipes index
-    const recipesIndexContent =
-      this.recipesIndexService.buildRecipesIndex(recipeVersions);
+    // Generate and deploy the commands index
+    const commandsIndexContent =
+      this.commandsIndexService.buildCommandsIndex(recipeVersions);
 
     fileUpdates.createOrUpdate.push({
-      path: PackmindDeployer.RECIPES_INDEX_PATH,
-      content: recipesIndexContent,
+      path: PackmindDeployer.COMMANDS_INDEX_PATH,
+      content: commandsIndexContent,
+    });
+
+    // Delete legacy recipes-index.md file
+    fileUpdates.delete.push({
+      path: PackmindDeployer.LEGACY_RECIPES_INDEX_PATH,
     });
 
     return fileUpdates;
@@ -210,32 +224,40 @@ export class PackmindDeployer implements ICodingAgentDeployer {
     recipeVersions: RecipeVersion[],
     standardVersions: StandardVersion[],
   ): Promise<FileUpdates> {
-    this.logger.info('Deploying artifacts (recipes + standards) for Packmind', {
-      recipesCount: recipeVersions.length,
-      standardsCount: standardVersions.length,
-    });
+    this.logger.info(
+      'Deploying artifacts (commands + standards) for Packmind',
+      {
+        commandsCount: recipeVersions.length,
+        standardsCount: standardVersions.length,
+      },
+    );
 
     const fileUpdates: FileUpdates = {
       createOrUpdate: [],
       delete: [],
     };
 
-    // Deploy each recipe to its own file
+    // Deploy each command to its own file
     for (const recipeVersion of recipeVersions) {
-      const recipeFilePath = `.packmind/recipes/${recipeVersion.slug}.md`;
+      const commandFilePath = `.packmind/commands/${recipeVersion.slug}.md`;
       fileUpdates.createOrUpdate.push({
-        path: recipeFilePath,
+        path: commandFilePath,
         content: recipeVersion.content,
       });
     }
 
-    // Generate and deploy the recipes index only if there are recipes
+    // Generate and deploy the commands index only if there are commands
     if (recipeVersions.length > 0) {
-      const recipesIndexContent =
-        this.recipesIndexService.buildRecipesIndex(recipeVersions);
+      const commandsIndexContent =
+        this.commandsIndexService.buildCommandsIndex(recipeVersions);
       fileUpdates.createOrUpdate.push({
-        path: PackmindDeployer.RECIPES_INDEX_PATH,
-        content: recipesIndexContent,
+        path: PackmindDeployer.COMMANDS_INDEX_PATH,
+        content: commandsIndexContent,
+      });
+
+      // Delete legacy recipes-index.md file
+      fileUpdates.delete.push({
+        path: PackmindDeployer.LEGACY_RECIPES_INDEX_PATH,
       });
     }
 
@@ -285,9 +307,9 @@ export class PackmindDeployer implements ICodingAgentDeployer {
     },
   ): Promise<FileUpdates> {
     this.logger.info('Generating removal file updates for Packmind', {
-      removedRecipesCount: removed.recipeVersions.length,
+      removedCommandsCount: removed.recipeVersions.length,
       removedStandardsCount: removed.standardVersions.length,
-      installedRecipesCount: installed.recipeVersions.length,
+      installedCommandsCount: installed.recipeVersions.length,
       installedStandardsCount: installed.standardVersions.length,
     });
 
@@ -296,16 +318,16 @@ export class PackmindDeployer implements ICodingAgentDeployer {
       delete: [],
     };
 
-    // Delete individual recipe files for removed recipes
+    // Delete individual command files for removed commands
     for (const recipeVersion of removed.recipeVersions) {
       fileUpdates.delete.push({
-        path: `.packmind/recipes/${recipeVersion.slug}.md`,
+        path: `.packmind/commands/${recipeVersion.slug}.md`,
       });
     }
 
-    // Delete recipes index if no recipes remain installed
+    // Delete commands index if no commands remain installed
     if (installed.recipeVersions.length === 0) {
-      fileUpdates.delete.push({ path: PackmindDeployer.RECIPES_INDEX_PATH });
+      fileUpdates.delete.push({ path: PackmindDeployer.COMMANDS_INDEX_PATH });
     }
 
     // Delete individual standard files for removed standards
@@ -328,7 +350,7 @@ export class PackmindDeployer implements ICodingAgentDeployer {
       installed.recipeVersions.length === 0 &&
       installed.standardVersions.length === 0
     ) {
-      fileUpdates.delete.push({ path: '.packmind/recipes/' });
+      fileUpdates.delete.push({ path: '.packmind/commands/' });
       fileUpdates.delete.push({ path: '.packmind/standards/' });
       fileUpdates.delete.push({ path: '.packmind/' });
     }
