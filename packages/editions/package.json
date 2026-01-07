@@ -10,7 +10,7 @@
     "@packmind/logger": "*",
     "@packmind/node-utils": "*",
     "@packmind/types": "*",
-    "@nestjs/common": "^11.1.6",
+    "@nestjs/common": "^11.1.11",
     "typeorm": "0.3.27"
   }
 }
