@@ -23,6 +23,8 @@ Here is an overview of the supported agents:
 
 When you distribute standards or commands, only the enabled agents will receive updates. The Packmind renderer is always active and creates files in the `.packmind/` directory that are used by other agents.
 
+For detailed information about where your artifacts appear and how to use them with each AI assistant, see [Understanding Where Your Artifacts Appear](./artifact-rendering.md).
+
 :::tip Need support for a new AI agent?
 You can create an issue in our [repository](https://github.com/PackmindHub/packmind) to request support for additional AI coding assistants
 :::

@@ -36,6 +36,7 @@ const sidebars: SidebarsConfig = {
         'standards-management',
         'commands-management',
         'packages-management',
+        'artifact-rendering',
       ],
       collapsed: false,
     },
