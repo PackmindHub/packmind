@@ -81,24 +81,27 @@ describe('PackmindDeployer', () => {
       );
 
       expect(result.createOrUpdate).toHaveLength(2);
-      expect(result.delete).toHaveLength(0);
+      expect(result.delete).toHaveLength(1);
+      expect(result.delete).toContainEqual({
+        path: '.packmind/recipes-index.md',
+      });
 
-      // Check recipe file
-      const recipeFile = result.createOrUpdate.find(
-        (f) => f.path === '.packmind/recipes/test-recipe.md',
+      // Check command file
+      const commandFile = result.createOrUpdate.find(
+        (f) => f.path === '.packmind/commands/test-recipe.md',
       );
 
-      expect(recipeFile?.content).toContain('This is the recipe content');
+      expect(commandFile?.content).toContain('This is the recipe content');
 
-      // Check recipes index
-      const recipesIndexFile = result.createOrUpdate.find(
-        (f) => f.path === '.packmind/recipes-index.md',
+      // Check commands index
+      const commandsIndexFile = result.createOrUpdate.find(
+        (f) => f.path === '.packmind/commands-index.md',
       );
-      expect(recipesIndexFile).toBeDefined();
-      expect(recipesIndexFile?.content).toContain('# Packmind Recipes Index');
-      expect(recipesIndexFile?.content).toContain('## Available Recipes');
-      expect(recipesIndexFile?.content).toContain(
-        '- [Test Recipe](recipes/test-recipe.md) : A test recipe summary',
+      expect(commandsIndexFile).toBeDefined();
+      expect(commandsIndexFile?.content).toContain('# Packmind Commands Index');
+      expect(commandsIndexFile?.content).toContain('## Available Commands');
+      expect(commandsIndexFile?.content).toContain(
+        '- [Test Recipe](commands/test-recipe.md) : A test recipe summary',
       );
     });
 
@@ -152,26 +155,29 @@ describe('PackmindDeployer', () => {
         mockTarget,
       );
 
-      expect(result.createOrUpdate).toHaveLength(3); // 2 recipes + 1 recipes index
+      expect(result.createOrUpdate).toHaveLength(3); // 2 commands + 1 commands index
 
-      // Check recipes index has recipes in alphabetical order
-      const recipesIndexFile = result.createOrUpdate.find(
-        (f) => f.path === '.packmind/recipes-index.md',
+      // Check commands index has commands in alphabetical order
+      const commandsIndexFile = result.createOrUpdate.find(
+        (f) => f.path === '.packmind/commands-index.md',
       );
-      const recipesIndexContent = recipesIndexFile?.content || '';
-      const appleIndex = recipesIndexContent.indexOf('Apple Recipe');
-      const zebraIndex = recipesIndexContent.indexOf('Zebra Recipe');
+      const commandsIndexContent = commandsIndexFile?.content || '';
+      const appleIndex = commandsIndexContent.indexOf('Apple Recipe');
+      const zebraIndex = commandsIndexContent.indexOf('Zebra Recipe');
       expect(appleIndex).toBeLessThan(zebraIndex);
     });
 
     it('handles empty recipe list', async () => {
       const result = await deployer.deployRecipes([], mockGitRepo, mockTarget);
 
-      expect(result.createOrUpdate).toHaveLength(1); // Only recipes index
-      expect(result.delete).toHaveLength(0);
+      expect(result.createOrUpdate).toHaveLength(1); // Only commands index
+      expect(result.delete).toHaveLength(1); // Legacy recipes-index.md
+      expect(result.delete).toContainEqual({
+        path: '.packmind/recipes-index.md',
+      });
 
-      const recipesIndexFile = result.createOrUpdate[0];
-      expect(recipesIndexFile.content).toContain('No recipes available.');
+      const commandsIndexFile = result.createOrUpdate[0];
+      expect(commandsIndexFile.content).toContain('No commands available.');
     });
   });
 
@@ -515,15 +521,15 @@ describe('PackmindDeployer', () => {
         expect(result.delete).toHaveLength(6);
       });
 
-      it('deletes the removed recipe file', () => {
+      it('deletes the removed command file', () => {
         expect(result.delete).toContainEqual({
-          path: '.packmind/recipes/removed-recipe.md',
+          path: '.packmind/commands/removed-recipe.md',
         });
       });
 
-      it('deletes the recipes index file', () => {
+      it('deletes the commands index file', () => {
         expect(result.delete).toContainEqual({
-          path: '.packmind/recipes-index.md',
+          path: '.packmind/commands-index.md',
         });
       });
 
@@ -533,9 +539,9 @@ describe('PackmindDeployer', () => {
         });
       });
 
-      it('deletes the recipes folder', () => {
+      it('deletes the commands folder', () => {
         expect(result.delete).toContainEqual({
-          path: '.packmind/recipes/',
+          path: '.packmind/commands/',
         });
       });
 
@@ -556,7 +562,7 @@ describe('PackmindDeployer', () => {
       });
     });
 
-    describe('when recipes are removed but others remain installed', () => {
+    describe('when commands are removed but others remain installed', () => {
       const removedRecipes: RecipeVersion[] = [
         {
           id: createRecipeVersionId('recipe-version-1'),
@@ -602,9 +608,9 @@ describe('PackmindDeployer', () => {
         expect(result.delete).toHaveLength(2);
       });
 
-      it('deletes the removed recipe file', () => {
+      it('deletes the removed command file', () => {
         expect(result.delete).toContainEqual({
-          path: '.packmind/recipes/removed-recipe.md',
+          path: '.packmind/commands/removed-recipe.md',
         });
       });
 
@@ -665,15 +671,15 @@ describe('PackmindDeployer', () => {
         });
       });
 
-      it('deletes the recipes index file', () => {
+      it('deletes the commands index file', () => {
         expect(result.delete).toContainEqual({
-          path: '.packmind/recipes-index.md',
+          path: '.packmind/commands-index.md',
         });
       });
 
-      it('deletes the recipes folder', () => {
+      it('deletes the commands folder', () => {
         expect(result.delete).toContainEqual({
-          path: '.packmind/recipes/',
+          path: '.packmind/commands/',
         });
       });
 
@@ -748,9 +754,9 @@ describe('PackmindDeployer', () => {
         });
       });
 
-      it('deletes the recipes index file', () => {
+      it('deletes the commands index file', () => {
         expect(result.delete).toContainEqual({
-          path: '.packmind/recipes-index.md',
+          path: '.packmind/commands-index.md',
         });
       });
 
@@ -759,7 +765,7 @@ describe('PackmindDeployer', () => {
       });
     });
 
-    describe('when all recipes and standards are removed and none remain installed', () => {
+    describe('when all commands and standards are removed and none remain installed', () => {
       const removedRecipes: RecipeVersion[] = [
         {
           id: createRecipeVersionId('recipe-version-1'),
@@ -815,21 +821,21 @@ describe('PackmindDeployer', () => {
         expect(result.delete).toHaveLength(8);
       });
 
-      it('deletes the first removed recipe file', () => {
+      it('deletes the first removed command file', () => {
         expect(result.delete).toContainEqual({
-          path: '.packmind/recipes/removed-recipe-1.md',
+          path: '.packmind/commands/removed-recipe-1.md',
         });
       });
 
-      it('deletes the second removed recipe file', () => {
+      it('deletes the second removed command file', () => {
         expect(result.delete).toContainEqual({
-          path: '.packmind/recipes/removed-recipe-2.md',
+          path: '.packmind/commands/removed-recipe-2.md',
         });
       });
 
-      it('deletes the recipes index file', () => {
+      it('deletes the commands index file', () => {
         expect(result.delete).toContainEqual({
-          path: '.packmind/recipes-index.md',
+          path: '.packmind/commands-index.md',
         });
       });
 
@@ -845,9 +851,9 @@ describe('PackmindDeployer', () => {
         });
       });
 
-      it('deletes the recipes folder', () => {
+      it('deletes the commands folder', () => {
         expect(result.delete).toContainEqual({
-          path: '.packmind/recipes/',
+          path: '.packmind/commands/',
         });
       });
 
@@ -892,9 +898,9 @@ describe('PackmindDeployer', () => {
         expect(result.delete).toHaveLength(2);
       });
 
-      it('deletes the recipes index file', () => {
+      it('deletes the commands index file', () => {
         expect(result.delete).toContainEqual({
-          path: '.packmind/recipes-index.md',
+          path: '.packmind/commands-index.md',
         });
       });
 

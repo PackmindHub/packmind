@@ -114,7 +114,7 @@ describe('SingleFileDeployer', () => {
 
       // Should contain only the link without colon and description
       expect(sectionContent).toContain(
-        '* [Recipe Without Summary](.packmind/recipes/recipe-without-summary.md)',
+        '* [Recipe Without Summary](.packmind/commands/recipe-without-summary.md)',
       );
       expect(sectionContent).not.toMatch(
         /Recipe Without Summary\].*:\s+Recipe Without Summary/,
@@ -421,7 +421,7 @@ describe('SingleFileDeployer', () => {
       );
       expect(recipesSection).toBeDefined();
       expect(recipesSection!.content).toContain(
-        '[Test Recipe](.packmind/recipes/test-recipe.md)',
+        '[Test Recipe](.packmind/commands/test-recipe.md)',
       );
 
       const standardsSection = file.sections!.find(
@@ -468,7 +468,7 @@ describe('SingleFileDeployer', () => {
         expect(file.sections).toHaveLength(1);
         expect(file.sections![0].key).toBe('Packmind recipes');
         expect(file.sections![0].content).toContain(
-          '[Test Recipe](.packmind/recipes/test-recipe.md)',
+          '[Test Recipe](.packmind/commands/test-recipe.md)',
         );
       });
     });

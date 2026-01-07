@@ -224,11 +224,11 @@ describe('Packmind Deployment Spec', () => {
         dataFactory.gitRepo,
         [
           {
-            path: `.packmind/recipes/${recipe1.slug}.md`,
+            path: `.packmind/commands/${recipe1.slug}.md`,
             content: expect.stringContaining(recipe1.content),
           },
           {
-            path: `.packmind/recipes-index.md`,
+            path: `.packmind/commands-index.md`,
             content: expect.any(String),
           },
           {
@@ -254,15 +254,15 @@ describe('Packmind Deployment Spec', () => {
           dataFactory.gitRepo,
           [
             {
-              path: `.packmind/recipes/${recipe1.slug}.md`,
+              path: `.packmind/commands/${recipe1.slug}.md`,
               content: expect.stringContaining(recipe1.content),
             },
             {
-              path: `.packmind/recipes/${recipe2.slug}.md`,
+              path: `.packmind/commands/${recipe2.slug}.md`,
               content: expect.stringContaining(recipe2.content),
             },
             {
-              path: `.packmind/recipes-index.md`,
+              path: `.packmind/commands-index.md`,
               content: expect.any(String),
             },
             {
@@ -297,11 +297,11 @@ describe('Packmind Deployment Spec', () => {
           dataFactory.gitRepo,
           [
             {
-              path: `.packmind/recipes/${recipe2.slug}.md`,
+              path: `.packmind/commands/${recipe2.slug}.md`,
               content: expect.stringContaining(recipe2.content),
             },
             {
-              path: `.packmind/recipes-index.md`,
+              path: `.packmind/commands-index.md`,
               content: expect.any(String),
             },
             {

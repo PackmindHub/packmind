@@ -83,7 +83,7 @@ export abstract class SingleFileDeployer implements ICodingAgentDeployer {
       .map((recipeVersion) =>
         this.formatMarkdownLink(
           recipeVersion,
-          `${this.config.pathToPackmindFolder ?? ''}.packmind/recipes/${recipeVersion.slug}.md`,
+          `${this.config.pathToPackmindFolder ?? ''}.packmind/commands/${recipeVersion.slug}.md`,
         ),
       )
       .join('\n');
@@ -189,7 +189,7 @@ export abstract class SingleFileDeployer implements ICodingAgentDeployer {
         .map((recipeVersion) =>
           this.formatMarkdownLink(
             recipeVersion,
-            `${this.config.pathToPackmindFolder ?? ''}.packmind/recipes/${recipeVersion.slug}.md`,
+            `${this.config.pathToPackmindFolder ?? ''}.packmind/commands/${recipeVersion.slug}.md`,
           ),
         )
         .join('\n'),
@@ -258,7 +258,7 @@ export abstract class SingleFileDeployer implements ICodingAgentDeployer {
       .map((recipeVersion) =>
         this.formatMarkdownLink(
           recipeVersion,
-          `${this.config.pathToPackmindFolder ?? ''}.packmind/recipes/${recipeVersion.slug}.md`,
+          `${this.config.pathToPackmindFolder ?? ''}.packmind/commands/${recipeVersion.slug}.md`,
         ),
       )
       .join('\n');
