@@ -9,7 +9,6 @@ import {
   Target,
 } from '@packmind/types';
 import { ICodingAgentDeployer } from '../../../domain/repository/ICodingAgentDeployer';
-import { GenericRecipeSectionWriter } from '../genericSectionWriter/GenericRecipeSectionWriter';
 import { GenericStandardSectionWriter } from '../genericSectionWriter/GenericStandardSectionWriter';
 import { getTargetPrefixedPath } from '../utils/FileUtils';
 
@@ -39,29 +38,18 @@ export class CopilotDeployer implements ICodingAgentDeployer {
       targetPath: target.path,
     });
 
-    // Get existing recipes index content
-    const existingContent = await this.getExistingRecipesIndexContent(
-      gitRepo,
-      target,
-    );
-
-    // Generate content with recipe instructions
-    const updatedContent = await this.generateRecipeContent(recipeVersions);
-
     const fileUpdates: FileUpdates = {
       createOrUpdate: [],
       delete: [],
     };
 
-    // Only create file if content is not empty and was updated
-    if (updatedContent !== '' && updatedContent !== existingContent) {
-      const targetPrefixedPath = getTargetPrefixedPath(
-        CopilotDeployer.RECIPES_INDEX_PATH,
-        target,
-      );
+    // Generate individual Copilot prompt files for each recipe
+    for (const recipeVersion of recipeVersions) {
+      const promptFile = this.generateCopilotPromptForRecipe(recipeVersion);
+      const targetPrefixedPath = getTargetPrefixedPath(promptFile.path, target);
       fileUpdates.createOrUpdate.push({
         path: targetPrefixedPath,
-        content: updatedContent,
+        content: promptFile.content,
       });
     }
 
@@ -111,14 +99,12 @@ export class CopilotDeployer implements ICodingAgentDeployer {
       delete: [],
     };
 
-    // Generate content without target prefixing
-    const content = this.generateRecipeContentSimple(recipeVersions);
-
-    // Only add file if there is content
-    if (content !== '') {
+    // Generate individual Copilot prompt files for each recipe
+    for (const recipeVersion of recipeVersions) {
+      const promptFile = this.generateCopilotPromptForRecipe(recipeVersion);
       fileUpdates.createOrUpdate.push({
-        path: CopilotDeployer.RECIPES_INDEX_PATH,
-        content,
+        path: promptFile.path,
+        content: promptFile.content,
       });
     }
 
@@ -167,12 +153,12 @@ export class CopilotDeployer implements ICodingAgentDeployer {
       delete: [],
     };
 
-    // Generate recipes index file only if there are recipes
-    const recipesContent = this.generateRecipeContentSimple(recipeVersions);
-    if (recipesContent !== '') {
+    // Generate individual Copilot prompt files for each recipe
+    for (const recipeVersion of recipeVersions) {
+      const promptFile = this.generateCopilotPromptForRecipe(recipeVersion);
       fileUpdates.createOrUpdate.push({
-        path: CopilotDeployer.RECIPES_INDEX_PATH,
-        content: recipesContent,
+        path: promptFile.path,
+        content: promptFile.content,
       });
     }
 
@@ -211,8 +197,19 @@ export class CopilotDeployer implements ICodingAgentDeployer {
       delete: [],
     };
 
-    // Delete recipes index file if no recipes remain installed
-    if (installed.recipeVersions.length === 0) {
+    // Delete individual Copilot prompt files for removed recipes
+    for (const recipeVersion of removed.recipeVersions) {
+      fileUpdates.delete.push({
+        path: `.github/prompts/${recipeVersion.slug}.prompt.md`,
+      });
+    }
+
+    // Delete old index file (migration cleanup)
+    // This ensures clean migration from index-based to prompt-based approach
+    if (
+      removed.recipeVersions.length > 0 ||
+      installed.recipeVersions.length === 0
+    ) {
       fileUpdates.delete.push({
         path: CopilotDeployer.RECIPES_INDEX_PATH,
       });
@@ -226,106 +223,6 @@ export class CopilotDeployer implements ICodingAgentDeployer {
     }
 
     return fileUpdates;
-  }
-
-  /**
-   * Generate content with recipe instructions without target/repo context
-   */
-  private generateRecipeContentSimple(recipeVersions: RecipeVersion[]): string {
-    // Generate recipes list
-    const recipesSection = this.generateRecipesSection(recipeVersions);
-
-    // If no recipes, return empty string to indicate no file should be created
-    if (recipesSection === '') {
-      return '';
-    }
-
-    const packmindInstructions =
-      GenericRecipeSectionWriter.generateRecipesSection({
-        recipesSection,
-      });
-
-    return `---
-applyTo: '**'
----
-
-${packmindInstructions}`;
-  }
-
-  /**
-   * Get existing content from recipes-index.instructions.md file
-   */
-  private async getExistingRecipesIndexContent(
-    gitRepo: GitRepo,
-    target: Target,
-  ): Promise<string> {
-    if (!this.gitPort) {
-      this.logger.debug('No GitHexa available, returning empty content');
-      return '';
-    }
-
-    try {
-      const targetPrefixedPath = getTargetPrefixedPath(
-        CopilotDeployer.RECIPES_INDEX_PATH,
-        target,
-      );
-      const existingFile = await this.gitPort.getFileFromRepo(
-        gitRepo,
-        targetPrefixedPath,
-      );
-      return existingFile?.content || '';
-    } catch (error) {
-      this.logger.debug(
-        'Failed to get existing Copilot recipes index content',
-        {
-          error: error instanceof Error ? error.message : String(error),
-          targetPath: target.path,
-        },
-      );
-      return '';
-    }
-  }
-
-  /**
-   * Generate content with recipe instructions, including recipe summaries
-   */
-  private async generateRecipeContent(
-    recipeVersions: RecipeVersion[],
-  ): Promise<string> {
-    // Generate recipes list
-    const recipesSection = this.generateRecipesSection(recipeVersions);
-
-    // If no recipes, return empty string to indicate no file should be created
-    if (recipesSection === '') {
-      return '';
-    }
-
-    const packmindInstructions =
-      GenericRecipeSectionWriter.generateRecipesSection({
-        recipesSection,
-      });
-
-    return `---
-applyTo: '**'
----
-
-${packmindInstructions}`;
-  }
-
-  /**
-   * Generate the recipes section with summaries
-   */
-  private generateRecipesSection(recipeVersions: RecipeVersion[]): string {
-    if (recipeVersions.length === 0) {
-      return '';
-    }
-
-    return recipeVersions
-      .map(
-        (recipe) =>
-          `- [${recipe.name}](.packmind/recipes/${recipe.slug}.md) : ${recipe.summary || recipe.name}`,
-      )
-      .join('\n');
   }
 
   /**
@@ -365,5 +262,46 @@ ${GenericStandardSectionWriter.formatStandardContent({
       path,
       content,
     };
+  }
+
+  /**
+   * Generate GitHub Copilot prompt file for a specific recipe
+   */
+  private generateCopilotPromptForRecipe(recipeVersion: RecipeVersion): {
+    path: string;
+    content: string;
+  } {
+    this.logger.debug('Generating Copilot prompt for recipe', {
+      recipeSlug: recipeVersion.slug,
+      recipeName: recipeVersion.name,
+    });
+
+    // Use summary if available, otherwise fall back to name
+    const description = recipeVersion.summary?.trim() || recipeVersion.name;
+
+    // Generate frontmatter with YAML format
+    const frontmatter = `---
+description: '${this.escapeSingleQuotes(description)}'
+agent: 'agent'
+---`;
+
+    // Content is the full recipe markdown
+    const content = `${frontmatter}
+
+${recipeVersion.content}`;
+
+    const path = `.github/prompts/${recipeVersion.slug}.prompt.md`;
+
+    return {
+      path,
+      content,
+    };
+  }
+
+  /**
+   * Escape single quotes in YAML values to prevent parsing errors
+   */
+  private escapeSingleQuotes(value: string): string {
+    return value.replace(/'/g, "''");
   }
 }
