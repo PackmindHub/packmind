@@ -77,3 +77,9 @@ You can update your standard later to add and remove rules. Each rule can be doc
 
 Every time you update a standard, this creates a new version.
 This keeps track of the history of your changes, and it's useful to keep track of which versions are currently distributed to Git repositories.
+
+## Where Standards Appear After Distribution
+
+Once you distribute a package containing standards, they appear in specific locations in your repository depending on which AI assistants your organization has enabled. Standards are automatically loaded by your AI assistant—you don't need to do anything special to activate them.
+
+For detailed information about where standards appear for each AI assistant, see [Understanding Where Your Artifacts Appear](./artifact-rendering.md).

@@ -57,3 +57,29 @@ For detailed information about the command creation workflow and available MCP t
 
 Every time you update a command, this creates a new version.
 This keeps track of the history of your changes, and it's useful to keep track of which versions are currently distributed to Git repositories.
+
+## How to Use Commands After Distribution
+
+Unlike standards (which are applied automatically), commands are **user-invoked**—you run them when you need them.
+
+### Using Slash Commands (Claude Code, Cursor, GitHub Copilot)
+
+For AI assistants with native slash command support, type `/` followed by the command name in your chat:
+
+```
+/create-new-use-case
+```
+
+The AI assistant will recognize the command and execute its instructions.
+
+### Manual Invocation (Continue, GitLab Duo, Junie, AGENTS.md)
+
+For AI assistants without native slash command support, reference the command file directly in your prompt:
+
+```
+Execute @.packmind/commands/create-new-use-case.md
+```
+
+The AI assistant will read the command file and follow its instructions.
+
+For detailed information about where commands appear for each AI assistant and all invocation methods, see [Understanding Where Your Artifacts Appear](./artifact-rendering.md).

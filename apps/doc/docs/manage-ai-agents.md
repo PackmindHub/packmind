@@ -41,3 +41,7 @@ The **Packmind** renderer cannot be disabled. It creates internal files in the `
 - Existing distributed files in your repositories are not affected
 - Only the selected agents will receive updates when you distribute standards or commands
 - The Packmind renderer always creates files regardless of your selection
+
+## Learn More
+
+For detailed information about where standards and commands appear for each AI assistant and how to use them, see [Understanding Where Your Artifacts Appear](./artifact-rendering.md).
