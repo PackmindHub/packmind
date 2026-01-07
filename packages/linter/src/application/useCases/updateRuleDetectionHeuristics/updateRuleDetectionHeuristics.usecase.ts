@@ -136,13 +136,15 @@ export class UpdateRuleDetectionHeuristicsUseCase implements IUpdateRuleDetectio
       // Don't throw here - the main operation was successful
     }
 
-    // Trigger rule detection assessment after heuristics update
-    await this.triggerRuleDetectionAssessment(
-      existingHeuristics.ruleId,
-      existingHeuristics.language,
-      createOrganizationId(command.organizationId),
-      createUserId(command.userId),
-    );
+    // Trigger rule detection assessment after heuristics update (unless skipped)
+    if (!command.skipAssessmentTrigger) {
+      await this.triggerRuleDetectionAssessment(
+        existingHeuristics.ruleId,
+        existingHeuristics.language,
+        createOrganizationId(command.organizationId),
+        createUserId(command.userId),
+      );
+    }
 
     return {
       detectionHeuristics: updatedHeuristics,

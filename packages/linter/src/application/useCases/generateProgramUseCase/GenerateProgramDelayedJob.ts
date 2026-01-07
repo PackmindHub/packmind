@@ -352,6 +352,7 @@ export class GenerateProgramDelayedJob extends AbstractAIDelayedJob<
             heuristics: generatedHeuristics,
             organizationId: input.organizationId,
             userId: input.userId,
+            skipAssessmentTrigger: true,
           });
 
           this.logger.info(

@@ -460,6 +460,61 @@ describe('UpdateRuleDetectionHeuristicsUseCase', () => {
     });
   });
 
+  describe('when skipAssessmentTrigger is true', () => {
+    const heuristicsId = createDetectionHeuristicsId(uuidv4());
+    const ruleId = createRuleId(uuidv4());
+    const userId = createUserId(uuidv4());
+    const organizationId = createOrganizationId(uuidv4());
+    let existingHeuristics: DetectionHeuristics;
+    let updatedHeuristics: DetectionHeuristics;
+    let command: UpdateRuleDetectionHeuristicsCommand;
+
+    beforeEach(() => {
+      existingHeuristics = {
+        id: heuristicsId,
+        ruleId,
+        language: ProgrammingLanguage.TYPESCRIPT,
+        heuristics: ['old heuristics'],
+      };
+
+      updatedHeuristics = {
+        ...existingHeuristics,
+        heuristics: ['new heuristics'],
+      };
+
+      heuristicsRepository.getHeuristicsById
+        .mockResolvedValueOnce(existingHeuristics)
+        .mockResolvedValueOnce(updatedHeuristics);
+      heuristicsRepository.updateHeuristics.mockResolvedValue();
+
+      command = {
+        userId,
+        organizationId,
+        detectionHeuristicsId: heuristicsId,
+        heuristics: ['new heuristics'],
+        skipAssessmentTrigger: true,
+      };
+    });
+
+    it('does not fetch rule for assessment', async () => {
+      await useCase.execute(command);
+
+      expect(standardsAdapter.getRule).not.toHaveBeenCalled();
+    });
+
+    it('does not start rule detection assessment', async () => {
+      await useCase.execute(command);
+
+      expect(linterAdapter.startRuleDetectionAssessment).not.toHaveBeenCalled();
+    });
+
+    it('returns updated heuristics', async () => {
+      const result = await useCase.execute(command);
+
+      expect(result.detectionHeuristics).toEqual(updatedHeuristics);
+    });
+  });
+
   describe('when clarification question is provided', () => {
     const heuristicsId = createDetectionHeuristicsId(uuidv4());
     const ruleId = createRuleId(uuidv4());

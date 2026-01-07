@@ -29,23 +29,27 @@ import {
 import { HeuristicsEditor } from '../HeuristicsEditor';
 import { formatDuration } from '../../../../shared/utils/dateUtils';
 
-interface DetectabilitySectionProps {
+interface IDetectabilitySectionProps {
   standardId: string;
   ruleId: string;
   language: string;
   ruleExamples?: RuleExample[];
 }
 
+interface ILoadingOverlayProps {
+  message: string;
+}
+
 const OTHER_ANSWER_VALUE = '__OTHER__';
 
-const LoadingOverlay: React.FC = () => (
+const LoadingOverlay: React.FC<ILoadingOverlayProps> = ({ message }) => (
   <PMBox
     position="absolute"
     top={0}
     left={0}
     right={0}
     bottom={0}
-    background={'background.primary'}
+    background="background.primary"
     display="flex"
     alignItems="center"
     justifyContent="center"
@@ -54,14 +58,12 @@ const LoadingOverlay: React.FC = () => (
   >
     <PMVStack gap={3}>
       <PMSpinner size="lg" />
-      <PMText color="faded">
-        Packmind is checking the detectability of the rule
-      </PMText>
+      <PMText color="faded">{message}</PMText>
     </PMVStack>
   </PMBox>
 );
 
-export const DetectabilitySection: React.FC<DetectabilitySectionProps> = ({
+export const DetectabilitySection: React.FC<IDetectabilitySectionProps> = ({
   standardId,
   ruleId,
   language,
@@ -122,6 +124,14 @@ export const DetectabilitySection: React.FC<DetectabilitySectionProps> = ({
 
   const updateHeuristics = useUpdateDetectionHeuristicsMutation();
 
+  const programForLanguage = useMemo(() => {
+    return activePrograms?.find(
+      (program) =>
+        program.detectionProgram?.language === language ||
+        program.language === language,
+    );
+  }, [activePrograms, language]);
+
   const isEditable = useMemo(() => {
     if (!assessment) return false;
 
@@ -130,11 +140,6 @@ export const DetectabilitySection: React.FC<DetectabilitySectionProps> = ({
       assessment.status === RuleDetectionAssessmentStatus.FAILED;
 
     // Check if program generation is in error, failed, or needs review
-    const programForLanguage = activePrograms?.find(
-      (program) =>
-        program.detectionProgram?.language === language ||
-        program.language === language,
-    );
     const isProgramGenerationInError =
       programForLanguage?.detectionProgram?.status === DetectionStatus.ERROR ||
       programForLanguage?.detectionProgram?.status ===
@@ -143,7 +148,16 @@ export const DetectabilitySection: React.FC<DetectabilitySectionProps> = ({
         DetectionStatus.TO_REVIEW;
 
     return isAssessmentInError || isProgramGenerationInError;
-  }, [assessment, activePrograms, language]);
+  }, [assessment, programForLanguage]);
+
+  const isProgramGenerating = useMemo(() => {
+    return (
+      programForLanguage?.detectionProgram?.status ===
+        DetectionStatus.IN_PROGRESS ||
+      programForLanguage?.draftDetectionProgram?.status ===
+        DetectionStatus.IN_PROGRESS
+    );
+  }, [programForLanguage]);
 
   useEffect(() => {
     if (detectionHeuristics && Array.isArray(detectionHeuristics.heuristics)) {
@@ -347,6 +361,10 @@ export const DetectabilitySection: React.FC<DetectabilitySectionProps> = ({
     !detectionHeuristics?.heuristics?.length
   );
 
+  // Show program generation loading overlay when a program is generating and no heuristics exist yet
+  const shouldShowProgramGenerationLoading =
+    isProgramGenerating && !detectionHeuristics?.heuristics?.length;
+
   return (
     <PMVStack width="full" gap={0} p={4}>
       {(displayDetails ||
@@ -386,14 +404,25 @@ export const DetectabilitySection: React.FC<DetectabilitySectionProps> = ({
                 )}
               </>
             )}
-            {isAssessmentPending && <LoadingOverlay />}
+            {isAssessmentPending && (
+              <LoadingOverlay message="Packmind is checking the detectability of the rule" />
+            )}
           </PMVStack>
         </PMVStack>
       )}
 
       {shouldShowCluesBlock && (
-        <PMVStack width="full" gap={2} align="flex-start">
+        <PMVStack
+          width="full"
+          gap={2}
+          align="flex-start"
+          position="relative"
+          minHeight={shouldShowProgramGenerationLoading ? '150px' : undefined}
+        >
           <PMText color="tertiary">How to detect it?</PMText>
+          {shouldShowProgramGenerationLoading && (
+            <LoadingOverlay message="Rule is detectable. A detection program is generating" />
+          )}
           {/** Use grid to guarantee equal heights between columns */}
           <PMGrid
             gap={4}
@@ -478,7 +507,9 @@ export const DetectabilitySection: React.FC<DetectabilitySectionProps> = ({
                     </PMButton>
                   )}
                 </PMHStack>
-                {isAssessmentPending && <LoadingOverlay />}
+                {isAssessmentPending && (
+                  <LoadingOverlay message="Packmind is checking the detectability of the rule" />
+                )}
               </PMVStack>
             )}
 
@@ -499,39 +530,40 @@ export const DetectabilitySection: React.FC<DetectabilitySectionProps> = ({
         </PMVStack>
       )}
 
-      {assessment.status === RuleDetectionAssessmentStatus.SUCCESS && (
-        <PMVStack width="full" align="flex-start" mt={2}>
-          <PMHeading size="sm" color="tertiary">
-            Flagged a false positive?
-          </PMHeading>
-          <PMList.Root as="ul" listStyle="disc" pl={4}>
-            <PMList.Item>
-              <PMText color="tertiary">
-                Add a new &quot;don&apos;t&quot; example that reflects the code
-                flagged as a false positive
-              </PMText>
-            </PMList.Item>
-            <PMList.Item>
-              <PMText color="tertiary">
-                The status of the detection program should be updated to
-                &quot;To review&quot;
-              </PMText>
-            </PMList.Item>
-            <PMList.Item>
-              <PMText color="tertiary">
-                You can then update the detection clues to indicate why this
-                kind of code example should not be flagged
-              </PMText>
-            </PMList.Item>
-            <PMList.Item>
-              <PMText color="tertiary">
-                Click on &quot;Retry&quot; to re-generate a new detection
-                program
-              </PMText>
-            </PMList.Item>
-          </PMList.Root>
-        </PMVStack>
-      )}
+      {assessment.status === RuleDetectionAssessmentStatus.SUCCESS &&
+        !shouldShowProgramGenerationLoading && (
+          <PMVStack width="full" align="flex-start" mt={2}>
+            <PMHeading size="sm" color="tertiary">
+              Flagged a false positive?
+            </PMHeading>
+            <PMList.Root as="ul" listStyle="disc" pl={4}>
+              <PMList.Item>
+                <PMText color="tertiary">
+                  Add a new &quot;don&apos;t&quot; example that reflects the
+                  code flagged as a false positive
+                </PMText>
+              </PMList.Item>
+              <PMList.Item>
+                <PMText color="tertiary">
+                  The status of the detection program should be updated to
+                  &quot;To review&quot;
+                </PMText>
+              </PMList.Item>
+              <PMList.Item>
+                <PMText color="tertiary">
+                  You can then update the detection clues to indicate why this
+                  kind of code example should not be flagged
+                </PMText>
+              </PMList.Item>
+              <PMList.Item>
+                <PMText color="tertiary">
+                  Click on &quot;Retry&quot; to re-generate a new detection
+                  program
+                </PMText>
+              </PMList.Item>
+            </PMList.Root>
+          </PMVStack>
+        )}
     </PMVStack>
   );
 };
