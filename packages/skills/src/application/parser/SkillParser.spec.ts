@@ -60,7 +60,7 @@ Content here.
           author: 'example-org',
           version: '1.0',
         },
-        'allowed-tools': 'Bash(git:*) Read',
+        allowedTools: 'Bash(git:*) Read',
       });
     });
 

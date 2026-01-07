@@ -63,7 +63,7 @@ export class SkillParser {
 
   private parseYamlFrontmatter(frontmatter: string): SkillProperties {
     try {
-      const parsed = parseYaml(frontmatter) as SkillProperties;
+      const parsed = parseYaml(frontmatter) as Record<string, unknown>;
 
       if (parsed === null || typeof parsed !== 'object') {
         throw new SkillParseError(
@@ -71,7 +71,7 @@ export class SkillParser {
         );
       }
 
-      return parsed;
+      return this.transformToSkillProperties(parsed);
     } catch (error) {
       if (error instanceof SkillParseError) {
         throw error;
@@ -80,5 +80,16 @@ export class SkillParser {
         `Invalid YAML syntax: ${error instanceof Error ? error.message : 'unknown error'}`,
       );
     }
+  }
+
+  private transformToSkillProperties(
+    parsed: Record<string, unknown>,
+  ): SkillProperties {
+    const { 'allowed-tools': allowedTools, ...rest } = parsed;
+
+    return {
+      ...rest,
+      ...(allowedTools !== undefined && { allowedTools }),
+    } as SkillProperties;
   }
 }
