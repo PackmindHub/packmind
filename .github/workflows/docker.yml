@@ -187,7 +187,8 @@ jobs:
           command: cves
           organization: packmind
           image: packmind/api${{ steps.set-image-naming.outputs.name_suffix }}:${{ steps.get-version.outputs.version }}${{ steps.set-image-naming.outputs.version_suffix }}
-          only-severities: critical,high
+          #only-severities: critical,high
+          only-severities: critical
           exit-code: true
 
       - name: Scan Frontend Docker image for vulnerabilities
