@@ -3,3 +3,6 @@ export * from './UpdateSkillUseCase';
 export * from './DeleteSkillUseCase';
 export * from './GetSkillByIdContract';
 export * from './ListSkillsBySpaceContract';
+export * from './FindSkillBySlugContract';
+export * from './GetSkillVersionContract';
+export * from './GetLatestSkillVersionContract';
