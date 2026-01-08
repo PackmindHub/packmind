@@ -19,13 +19,7 @@ export { PMImage } from './PMImage/PMImage';
 export { PMAccordion } from './PMAccordion/PMAccordion';
 export { PMStat } from './PMStat/PMStat';
 export { PMCard } from './PMCard/PMCard';
-export {
-  PMFeatureFlag,
-  isFeatureFlagEnabled,
-  RULE_DETAILS_DETECTION_TAB_FEATURE_KEY,
-  MCP_CONFIG_REDESIGN_FEATURE_KEY,
-  DEFAULT_FEATURE_DOMAIN_MAP,
-} from './PMFeatureFlag/PMFeatureFlag';
+export * from './PMFeatureFlag/PMFeatureFlag';
 export type { IPMFeatureFlagProps } from './PMFeatureFlag/PMFeatureFlag';
 export {
   PMTimeline,
