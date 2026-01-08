@@ -1099,6 +1099,7 @@ export class PackmindGateway implements IPackmindGateway {
         `Failed to upload skill: Error: ${err?.message || JSON.stringify(error)}`,
       );
     }
+  };
   /**
    * Track linter execution (fire-and-forget).
    * This method is called before running detection programs to track usage.
