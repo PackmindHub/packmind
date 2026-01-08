@@ -4,7 +4,7 @@ This standards index contains all available coding standards that can be used by
 
 ## Available Standards
 
-- [[cli]](./standards/cli.md) : Use shared consoleLogger utilities instead of direct console.log/warn methods to standardize output formatting and enable centralized logging control.
+- [[cli] Good practices](./standards/cli.md) : Enforce the use of consoleLogger utilities instead of built-in console methods to standardize CLI logging behavior and improve maintainability.
 
 
 ---

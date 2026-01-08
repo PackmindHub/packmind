@@ -16,5 +16,5 @@ Before writing, editing, or generating ANY code:
 
 ## Available recipes
 
-* [Create or update model and TypeORM schemas](.packmind/recipes/create-or-update-model-and-typeorm-schemas.md): Create and evolve TypeORM-backed domain models, schemas, repositories, and migrations to keep your database structure consistent, maintainable, and backward compatible when business requirements or existing entities change.
+* [Create or update model and TypeORM schemas](.packmind/commands/create-or-update-model-and-typeorm-schemas.md): Create and evolve TypeORM-backed domain models, schemas, repositories, and migrations to keep your database structure consistent, maintainable, and backward compatible when business requirements or existing entities change.
 <!-- end: Packmind recipes -->

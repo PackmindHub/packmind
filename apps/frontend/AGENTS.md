@@ -17,10 +17,7 @@ Before writing, editing, or generating ANY code:
 
 ## Available recipes
 
-* [Gateway Pattern Implementation in Packmind Frontend](.packmind/recipes/gateway-pattern-implementation-in-packmind-frontend.md): Implement gateways in the Packmind frontend to create a clean abstraction for API communication, enhancing maintainability and testability across the application.
-* [Create End-User Documentation for Packmind Features](.packmind/recipes/create-end-user-documentation-for-packmind-features.md): Create clear and concise end-user documentation for Packmind features to empower users in accomplishing their tasks effectively while avoiding unnecessary technical details.
-* [Create Organization-Scoped Pages in React Router](.packmind/recipes/create-organization-scoped-pages-in-react-router.md): Create organization-scoped pages in a React Router application to enhance navigation and user experience by ensuring secure access to relevant data for each organization.
-* [Create Slot Components for Chakra UI](.packmind/recipes/create-slot-components-for-chakra-ui.md): Create typed slot components that wrap Chakra UI primitives to centralize custom behavior, styling, and context, improving API consistency and composability across your design system when building complex components like tabs, accordions, or modals.
+* [Gateway Pattern Implementation in Packmind Frontend](.packmind/commands/gateway-pattern-implementation-in-packmind-frontend.md): Implement gateways in the Packmind frontend to create a clean abstraction for API communication, enhancing maintainability and testability across the application.
 <!-- end: Packmind recipes -->
 <!-- start: Packmind standards -->
 # Packmind Standards
@@ -122,59 +119,4 @@ Manage TanStack Query key structures using hierarchical prefix matching and dedi
 * Use query invalidation with prefix matching from key start in correct hierarchical order
 
 Full standard is available here for further request: [TanStack Query Key Management](.packmind/standards/tanstack-query-key-management.md)
-
-## Standard: React Components with Chakra UI Design System
-
-Build React components using Chakra UI primitives and theme tokens with PM-prefixed wrappers that extend ChakraProvider for consistent accessible maintainable UI patterns in TypeScript React applications :
-* Define all colors spacing typography in theme tokens using defineConfig from Chakra UI reference tokens with curly brace syntax like colors.background.primary never use hex codes pixel values or inline styles
-* Export custom PM components from a central index file to enforce consistent imports across the application and prevent direct Chakra UI imports in feature code
-* Use React forwardRef when wrapping Chakra primitives to support ref forwarding destructure Chakra component namespaces like Root Content Title and compose with other PM components for consistency
-* Wrap application root with ChakraProvider configured with custom theme system value from defineConfig to ensure all components inherit design tokens and ARIA support
-* Wrap Chakra UI primitives like Button Box Text in custom PM-prefixed components that extend their prop interfaces to inherit aria attributes event handlers and style props never create raw HTML elements with inline styles
-
-Full standard is available here for further request: [React Components with Chakra UI Design System](.packmind/standards/react-components-with-chakra-ui-design-system.md)
-
-## Standard: React Query Data Fetching Patterns
-
-Standardize React Query (TanStack Query) keys, options factories, and mutation patterns with cache invalidation and typed query definitions to ensure predictable data fetching, consistent cache behavior, and a maintainable API layer. :
-* Create query options factory functions that return queryKey, queryFn, and enabled properties for reuse in both hooks and loaders
-* Define mutation keys as constants with descriptive UPPER_SNAKE_CASE names for each mutation
-* Define query keys as exported constants with descriptive UPPER_SNAKE_CASE names at the top of query files
-* Export custom hooks that wrap useQuery with the query options factory function
-* Implement onError callbacks in mutations to log errors with relevant context including error, variables, and context parameters
-* Implement onSuccess callbacks in mutations to invalidate related query keys using queryClient.invalidateQueries
-* Include enabled property in query options when the query depends on dynamic parameters that might be undefined
-* Include mutationKey property in useMutation configuration for better debugging and DevTools support
-* Invalidate all affected query keys after successful mutations to ensure data consistency across the UI
-* Use useQueryClient hook to access the query client instance in mutation callbacks
-
-Full standard is available here for further request: [React Query Data Fetching Patterns](.packmind/standards/react-query-data-fetching-patterns.md)
-
-## Standard: React Router Organization-Scoped Routing
-
-Establish consistent organization-scoped routing patterns in React Router applications with proper authentication, URL validation, and navigation patterns. :
-* Extract orgSlug from route params using useParams() hook
-* Implement authentication checks using useAuthContext before rendering content
-* Implement the handle.crumb pattern for dynamic breadcrumb generation in nested routes
-* Pass React Router's Link component to PMPage via LinkComponent prop for client-side navigation
-* Redirect unauthenticated users to /org/${orgSlug}/sign-in or /get-started
-* Redirect users to their correct organization URL when slug mismatch is detected using navigate with replace: true
-* Return null during loading states or when authentication/organization validation is pending
-* Use PMPage component with organization-aware breadcrumbs that include organization name and slug
-* Use the file naming convention org.$orgSlug._protected.{feature}._index.tsx for all organization-scoped routes
-* Validate that the URL orgSlug matches the authenticated user's organization slug
-
-Full standard is available here for further request: [React Router Organization-Scoped Routing](.packmind/standards/react-router-organization-scoped-routing.md)
-
-## Standard: Structured Logging with PackmindLogger and Datadog
-
-Enforce structured logging with PackmindLogger and Datadog across Node.js/TypeScript services by creating named PackmindLogger instances with service name and LogLevel enum (default INFO) that emit structured JSON to Datadog from constructors and lifecycle initialization using logger.info/debug and logger.error with sanitized contextual metadata (organizationId, userId, recipeId, standardId, entity IDs) while never logging passwords, tokens, API keys, PII or full request payloads, avoiding console.log, using PackmindErrorHandler.throwError and error instanceof Error checks to convert errors to messages, and choosing error/warn/info/debug levels appropriately to enable reliable debugging, monitoring, observability and security compliance in development and production. :
-* Create PackmindLogger instances with service name and LogLevel in constructor log info for successful operations error for failures with structured metadata including IDs and error messages never use console.log
-* Define origin constant for logger name inject PackmindLogger with default LogLevel.INFO in constructor log initialization lifecycle events with info and debug use try-catch to log initialization errors before throwing
-* Log metadata with userId organizationId recipeId standardId and sanitized error messages never log passwords tokens API keys PII or full request payloads to prevent sensitive data exposure
-* Use error for failures requiring investigation warn for unexpected but recoverable issues info for significant business events and debug for detailed diagnostic information choose appropriate level based on production relevance
-* Use logger.info for operation start and success logger.error with full error context before rethrowing errors include entity IDs operation context and convert error to message using error instanceof Error check
-* Use PackmindErrorHandler.throwError instead of this.handleError(error);
-
-Full standard is available here for further request: [Structured Logging with PackmindLogger and Datadog](.packmind/standards/structured-logging-with-packmindlogger-and-datadog.md)
 <!-- end: Packmind standards -->

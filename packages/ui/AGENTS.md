@@ -37,5 +37,5 @@ Before writing, editing, or generating ANY code:
 
 ## Available recipes
 
-* [Wrapping Chakra UI with Slot Components](.packmind/recipes/wrapping-chakra-ui-with-slot-components.md): Create slot components to wrap Chakra UI primitives for enhanced custom composition and API consistency in your design system.
+* [Wrapping Chakra UI with Slot Components](.packmind/commands/wrapping-chakra-ui-with-slot-components.md): Create slot components to wrap Chakra UI primitives for enhanced custom composition and API consistency in your design system.
 <!-- end: Packmind recipes -->
