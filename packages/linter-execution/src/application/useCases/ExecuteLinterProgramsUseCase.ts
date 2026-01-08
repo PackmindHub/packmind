@@ -235,11 +235,11 @@ export class ExecuteLinterProgramsUseCase implements IExecuteLinterProgramsUseCa
   }
 
   private extractRuleName(ruleContent: string): string {
-    if (!ruleContent.includes('/')) {
-      return ruleContent;
+    // Only extract from path if it looks like a file path (ends with .js)
+    if (ruleContent.endsWith('.js') && ruleContent.includes('/')) {
+      return ruleContent.split('/').pop()?.replace('.js', '') ?? ruleContent;
     }
-
-    return ruleContent.split('/').pop()?.replace('.js', '') ?? ruleContent;
+    return ruleContent;
   }
 
   private filterProgramsByLanguage(

@@ -8,6 +8,8 @@
 
 ## Fixed
 
+- Fix linter output when the rule name contains a `/` #94
+
 ## Removed
 
 # [0.11.0] - 2026-01-07
