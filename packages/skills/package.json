@@ -9,10 +9,8 @@
     "@packmind/logger": "0.0.1",
     "@packmind/node-utils": "0.0.1",
     "@packmind/types": "0.0.1",
-    "slug": "^9.1.0",
     "tslib": "^2.3.0",
-    "typeorm": "0.3.21",
-    "uuid": "^11.0.5",
+    "typeorm": "0.3.27",
     "yaml": "^2.7.0"
   }
 }

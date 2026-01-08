@@ -1,4 +1,9 @@
-import { IRepository, SkillVersion, SkillId } from '@packmind/types';
+import {
+  IRepository,
+  SkillVersion,
+  SkillId,
+  SkillVersionId,
+} from '@packmind/types';
 
 export interface ISkillVersionRepository extends IRepository<SkillVersion> {
   findBySkillId(skillId: SkillId): Promise<SkillVersion[]>;
@@ -8,7 +13,7 @@ export interface ISkillVersionRepository extends IRepository<SkillVersion> {
     version: number,
   ): Promise<SkillVersion | null>;
   updateMetadata(
-    versionId: string,
+    versionId: SkillVersionId,
     metadata: Record<string, string>,
   ): Promise<void>;
 }
