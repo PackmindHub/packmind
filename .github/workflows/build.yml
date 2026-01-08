@@ -270,7 +270,7 @@ jobs:
       - name: Start E2E test environment
         uses: nick-fields/retry@v3
         with:
-          timeout_minutes: 10
+          timeout_minutes: 15
           max_attempts: 3
           retry_wait_seconds: 10
           command: |
