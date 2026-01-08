@@ -174,7 +174,6 @@ export interface ILinterPort {
   trackLinterExecution(command: {
     organizationId: OrganizationId;
     userId: UserId;
-    gitRemoteUrl: string;
     targetCount: number;
     standardCount: number;
   }): Promise<void>;

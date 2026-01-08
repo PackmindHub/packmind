@@ -337,7 +337,6 @@ export class LinterAdapter implements ILinterPort {
     command: {
       organizationId: import('@packmind/types').OrganizationId;
       userId: import('@packmind/types').UserId;
-      gitRemoteUrl: string;
       targetCount: number;
       standardCount: number;
     },

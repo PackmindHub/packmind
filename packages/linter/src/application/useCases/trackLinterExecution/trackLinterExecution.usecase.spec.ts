@@ -34,7 +34,6 @@ describe('TrackLinterExecutionUseCase', () => {
       const command = {
         organizationId,
         userId,
-        gitRemoteUrl: 'github.com/owner/repo',
         targetCount: 2,
         standardCount: 5,
       };
@@ -49,7 +48,6 @@ describe('TrackLinterExecutionUseCase', () => {
       expect(emittedEvent.payload).toEqual({
         userId: createUserId(userId),
         organizationId: createOrganizationId(organizationId),
-        gitRepoId: 'github.com/owner/repo',
         targetCount: 2,
         standardCount: 5,
       });
@@ -59,7 +57,6 @@ describe('TrackLinterExecutionUseCase', () => {
       const command = {
         organizationId,
         userId,
-        gitRemoteUrl: 'github.com/owner/repo',
         targetCount: 0,
         standardCount: 0,
       };

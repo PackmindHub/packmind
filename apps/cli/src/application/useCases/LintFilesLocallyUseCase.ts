@@ -218,9 +218,6 @@ export class LintFilesLocallyUseCase implements ILintFilesLocally {
     // Get git remote URL if available for tracking
     try {
       if (gitRepoRoot) {
-        const { gitRemoteUrl } =
-          this.services.gitRemoteUrlService.getGitRemoteUrl(gitRepoRoot);
-
         // Count total targets and standards from configs
         const targetCount = allConfigs.configs.length;
         const standardCount = allConfigs.configs.reduce((sum, config) => {
@@ -228,7 +225,6 @@ export class LintFilesLocallyUseCase implements ILintFilesLocally {
         }, 0);
 
         this.repositories.packmindGateway.trackLinterExecution({
-          gitRemoteUrl,
           targetCount,
           standardCount,
         });

@@ -384,7 +384,6 @@ export class LintFilesInDirectoryUseCase implements ILintFilesInDirectory {
       );
 
       this.repositories.packmindGateway.trackLinterExecution({
-        gitRemoteUrl,
         targetCount: detectionPrograms.targets.length,
         standardCount: totalStandardCount,
       });

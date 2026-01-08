@@ -13,7 +13,6 @@ import {
   createOrganizationId,
   createRecipeId,
   createSpaceId,
-  createGitRepoId,
 } from '@packmind/types';
 import { DataSource } from 'typeorm';
 import { AmplitudeEventListener } from './AmplitudeEventListener';
@@ -238,7 +237,6 @@ describe('AmplitudeEventListener', () => {
       const event = new LinterCalledEvent({
         userId: createUserId('user-123'),
         organizationId: createOrganizationId('org-456'),
-        gitRepoId: createGitRepoId('repo-789'),
         targetCount: 3,
         standardCount: 5,
       });
@@ -252,7 +250,6 @@ describe('AmplitudeEventListener', () => {
         'org-456',
         'linter_called',
         {
-          gitRepoId: 'repo-789',
           targetCount: 3,
           standardCount: 5,
         },

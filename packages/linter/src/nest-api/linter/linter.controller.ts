@@ -713,15 +713,13 @@ export class LinterController {
   async trackLinterExecution(
     @Body()
     body: {
-      gitRemoteUrl: string;
       targetCount: number;
       standardCount: number;
     },
     @Req() request: AuthenticatedRequest,
   ): Promise<{ success: boolean }> {
-    const { gitRemoteUrl, targetCount, standardCount } = body;
+    const { targetCount, standardCount } = body;
     this.logger.info('POST /track-execution - Tracking linter execution', {
-      gitRemoteUrl,
       targetCount,
       standardCount,
       userId: request.user?.userId,
@@ -743,7 +741,6 @@ export class LinterController {
       await this.linterService.trackLinterExecution({
         organizationId,
         userId,
-        gitRemoteUrl,
         targetCount,
         standardCount,
       });

@@ -1,8 +1,6 @@
 import { UserEvent } from '../../events';
-import { GitRepoId } from '../../git';
 
 export interface LinterCalledPayload {
-  gitRepoId: GitRepoId;
   targetCount: number;
   standardCount: number;
 }

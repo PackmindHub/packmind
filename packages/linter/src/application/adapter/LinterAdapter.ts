@@ -564,7 +564,6 @@ export class LinterAdapter implements IBaseAdapter<ILinterPort>, ILinterPort {
   async trackLinterExecution(command: {
     organizationId: OrganizationId;
     userId: UserId;
-    gitRemoteUrl: string;
     targetCount: number;
     standardCount: number;
   }): Promise<void> {

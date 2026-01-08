@@ -162,7 +162,6 @@ export type NotifyDistributionGateway = (
 
 // Track Linter Execution types
 export type TrackLinterExecutionCommand = {
-  gitRemoteUrl: string;
   targetCount: number;
   standardCount: number;
 };

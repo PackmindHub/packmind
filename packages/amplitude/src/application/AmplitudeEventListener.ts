@@ -181,10 +181,9 @@ export class AmplitudeEventListener extends PackmindListener<EventTrackingAdapte
   };
 
   private onLinterCalled = async (event: LinterCalledEvent): Promise<void> => {
-    const { userId, organizationId, gitRepoId, targetCount, standardCount } =
+    const { userId, organizationId, targetCount, standardCount } =
       event.payload;
     await this.adapter.trackEvent(userId, organizationId, 'linter_called', {
-      gitRepoId,
       targetCount,
       standardCount,
     });

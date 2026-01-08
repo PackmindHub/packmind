@@ -1002,7 +1002,6 @@ export class PackmindGateway implements IPackmindGateway {
    * It silently fails if the API call fails to not block linting.
    */
   public trackLinterExecution = async (params: {
-    gitRemoteUrl: string;
     targetCount: number;
     standardCount: number;
   }): Promise<void> => {
