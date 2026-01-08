@@ -8,6 +8,8 @@
   "dependencies": {
     "@packmind/logger": "0.0.1",
     "@packmind/node-utils": "0.0.1",
+    "@packmind/spaces": "0.0.1",
+    "@packmind/test-utils": "0.0.1",
     "@packmind/types": "0.0.1",
     "slug": "^11.0.1",
     "tslib": "^2.3.0",
