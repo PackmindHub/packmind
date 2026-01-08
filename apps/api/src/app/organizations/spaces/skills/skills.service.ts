@@ -27,19 +27,17 @@ export class SkillsService {
     const skills = await this.skillsHexa
       .getAdapter()
       .listSkillsBySpace(spaceId, organizationId, userId);
-    return { skills };
+    return skills;
   }
 
   async getSkillById(
     id: SkillId,
     organizationId: OrganizationId,
-    spaceId: SpaceId,
     userId: UserId,
   ): Promise<GetSkillByIdResponse> {
     return this.skillsHexa.getAdapter().getSkillById({
       skillId: id,
       organizationId,
-      spaceId,
       userId,
     });
   }
@@ -59,7 +57,13 @@ export class SkillsService {
     spaceId: SpaceId,
   ): Promise<Skill> {
     return this.skillsHexa.getAdapter().createSkill({
-      ...skill,
+      name: skill.name,
+      description: skill.description,
+      prompt: skill.prompt,
+      license: skill.license,
+      compatibility: skill.compatibility,
+      metadata: skill.metadata,
+      allowedTools: skill.allowedTools,
       organizationId,
       userId,
       spaceId,
@@ -79,14 +83,18 @@ export class SkillsService {
     },
     organizationId: OrganizationId,
     userId: UserId,
-    spaceId: SpaceId,
   ): Promise<Skill> {
     return this.skillsHexa.getAdapter().updateSkill({
       skillId,
-      ...skill,
+      name: skill.name,
+      description: skill.description,
+      prompt: skill.prompt,
+      license: skill.license,
+      compatibility: skill.compatibility,
+      metadata: skill.metadata,
+      allowedTools: skill.allowedTools,
       organizationId,
-      userId: userId.toString(),
-      spaceId,
+      userId,
     });
   }
 
@@ -98,7 +106,11 @@ export class SkillsService {
     id: SkillId,
     userId: UserId,
     organizationId: OrganizationId,
-  ): Promise<void> {
-    return this.skillsHexa.getAdapter().deleteSkill(id, userId, organizationId);
+  ): Promise<{ success: boolean }> {
+    return this.skillsHexa.getAdapter().deleteSkill({
+      skillId: id,
+      userId,
+      organizationId,
+    });
   }
 }

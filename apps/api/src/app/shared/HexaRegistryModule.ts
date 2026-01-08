@@ -16,6 +16,7 @@ import {
   HexaRegistry,
 } from '@packmind/node-utils';
 import { RecipesHexa } from '@packmind/recipes';
+import { SkillsHexa } from '@packmind/skills';
 import { SpacesHexa } from '@packmind/spaces';
 import { StandardsHexa } from '@packmind/standards';
 import {
@@ -26,6 +27,7 @@ import {
   ILinterPort,
   ILlmPort,
   IRecipesPort,
+  ISkillsPort,
   ISpacesPort,
   IStandardsPort,
 } from '@packmind/types';
@@ -67,6 +69,7 @@ export const HEXA_REGISTRY_OPTIONS_TOKEN = 'HEXA_REGISTRY_OPTIONS';
 export const ACCOUNTS_ADAPTER_TOKEN = 'ACCOUNTS_ADAPTER';
 export const DEPLOYMENT_ADAPTER_TOKEN = 'DEPLOYMENT_ADAPTER';
 export const RECIPES_ADAPTER_TOKEN = 'RECIPES_ADAPTER';
+export const SKILLS_ADAPTER_TOKEN = 'SKILLS_ADAPTER';
 export const STANDARDS_ADAPTER_TOKEN = 'STANDARDS_ADAPTER';
 export const GIT_ADAPTER_TOKEN = 'GIT_ADAPTER';
 export const SPACES_ADAPTER_TOKEN = 'SPACES_ADAPTER';
@@ -244,6 +247,21 @@ export class HexaRegistryModule {
           return standardsHexa.getAdapter();
         } catch {
           // StandardsHexa not available
+        }
+        return null;
+      },
+      inject: [HEXA_REGISTRY_TOKEN],
+    });
+
+    // Skills adapter
+    providers.push({
+      provide: SKILLS_ADAPTER_TOKEN,
+      useFactory: (registry: HexaRegistry): ISkillsPort | null => {
+        try {
+          const skillsHexa = registry.get(SkillsHexa);
+          return skillsHexa.getAdapter();
+        } catch {
+          // SkillsHexa not available
         }
         return null;
       },

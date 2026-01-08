@@ -128,7 +128,6 @@ export class OrganizationsSpacesSkillsController {
       return await this.skillsService.getSkillById(
         skillId,
         organizationId,
-        spaceId,
         userId,
       );
     } catch (error) {
@@ -172,7 +171,6 @@ export class OrganizationsSpacesSkillsController {
         body,
         organizationId,
         userId,
-        spaceId,
       );
     } catch (error) {
       const errorMessage =

@@ -9,6 +9,7 @@ import { LlmHexa } from '@packmind/llm';
 import { PackmindLogger } from '@packmind/logger';
 import { JobsService } from '@packmind/node-utils';
 import { RecipesHexa } from '@packmind/recipes';
+import { SkillsHexa } from '@packmind/skills';
 import { SpacesHexa } from '@packmind/spaces';
 import { ImportPracticeLegacyHexa } from '@packmind/import-practices-legacy';
 import { StandardsHexa } from '@packmind/standards';
@@ -56,6 +57,7 @@ describe('PackmindApp API', () => {
         RecipesHexa,
         LinterHexa,
         StandardsHexa,
+        SkillsHexa,
         CodingAgentHexa,
         DeploymentsHexa,
         ImportPracticeLegacyHexa,
