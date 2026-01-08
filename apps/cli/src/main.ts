@@ -11,6 +11,7 @@ import { loginCommand } from './infra/commands/LoginCommand';
 import { logoutCommand } from './infra/commands/LogoutCommand';
 import { whoamiCommand } from './infra/commands/WhoamiCommand';
 import { setupMcpCommand } from './infra/commands/SetupMcpCommand';
+import { uploadSkillCommand } from './infra/commands/UploadSkillCommand';
 import { GitService } from './application/services/GitService';
 import { logErrorConsole } from './infra/utils/consoleLogger';
 
@@ -93,6 +94,7 @@ const app = subcommands({
     logout: logoutCommand,
     whoami: whoamiCommand,
     'setup-mcp': setupMcpCommand,
+    'upload-skill': uploadSkillCommand,
   },
 });
 

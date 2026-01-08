@@ -160,6 +160,24 @@ export type NotifyDistributionGateway = (
   command: NotifyDistributionCommand,
 ) => Promise<NotifyDistributionResult>;
 
+// Upload Skill types
+export type UploadSkillCommand = PackmindCommand & {
+  skillPath: string; // local directory path
+  spaceId: string;
+};
+
+export type UploadSkillResult = {
+  skillId: string;
+  name: string;
+  fileCount: number;
+  totalSize: number;
+};
+
+export type IUploadSkillUseCase = IUseCase<
+  UploadSkillCommand,
+  UploadSkillResult
+>;
+
 export interface IPackmindGateway {
   listExecutionPrograms: Gateway<ListDetectionPrograms>;
   getDraftDetectionProgramsForRule: Gateway<GetDraftDetectionProgramsForRule>;
@@ -171,4 +189,5 @@ export interface IPackmindGateway {
   getMcpToken: Gateway<IGetMcpTokenUseCase>;
   getMcpUrl: Gateway<IGetMcpUrlUseCase>;
   notifyDistribution: NotifyDistributionGateway;
+  uploadSkill: Gateway<IUploadSkillUseCase>;
 }

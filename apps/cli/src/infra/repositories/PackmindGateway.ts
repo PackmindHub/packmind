@@ -14,7 +14,10 @@ import {
   IGetMcpUrlUseCase,
   NotifyDistributionGateway,
   NotifyDistributionResult,
+  IUploadSkillUseCase,
+  UploadSkillResult,
 } from '../../domain/repositories/IPackmindGateway';
+import { readSkillDirectory } from '../utils/readSkillDirectory';
 import { CommunityEditionError } from '../../domain/errors/CommunityEditionError';
 import { NotLoggedInError } from '../../domain/errors/NotLoggedInError';
 import {
@@ -992,6 +995,108 @@ export class PackmindGateway implements IPackmindGateway {
 
       throw new Error(
         `Failed to notify distribution: Error: ${err?.message || JSON.stringify(error)}`,
+      );
+    }
+  };
+
+  public uploadSkill: Gateway<IUploadSkillUseCase> = async (command) => {
+    const decodedApiKey = decodeApiKey(this.apiKey);
+
+    if (!decodedApiKey.isValid) {
+      if (decodedApiKey.error === 'NOT_LOGGED_IN') {
+        throw new NotLoggedInError();
+      }
+      throw new Error(`Invalid API key: ${decodedApiKey.error}`);
+    }
+
+    const { host, jwt } = decodedApiKey.payload;
+    const jwtPayload = decodeJwt(jwt);
+
+    if (!jwtPayload?.organization?.id) {
+      throw new Error('Invalid API key: missing organizationId in JWT');
+    }
+
+    const organizationId = jwtPayload.organization.id;
+
+    // Read all files from skill directory
+    const files = await readSkillDirectory(command.skillPath);
+
+    // Validate SKILL.md exists
+    if (!files.find((f) => f.relativePath === 'SKILL.md')) {
+      throw new Error('SKILL.md not found in skill directory');
+    }
+
+    // Calculate total size
+    const totalSize = files.reduce((sum, f) => sum + f.size, 0);
+    if (totalSize > 10 * 1024 * 1024) {
+      throw new Error(`Skill size (${totalSize} bytes) exceeds 10MB limit`);
+    }
+
+    // Prepare payload
+    const payload = {
+      files: files.map((f) => ({
+        path: f.relativePath,
+        content: f.content,
+        permissions: f.permissions || 'rw-r--r--',
+      })),
+    };
+
+    const url = `${host}/api/v0/organizations/${organizationId}/spaces/${command.spaceId}/skills/upload`;
+
+    try {
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${this.apiKey}`,
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (!response.ok) {
+        let errorMsg = `API request failed: ${response.status} ${response.statusText}`;
+        try {
+          const errorBody = await response.json();
+          if (errorBody?.message) {
+            errorMsg = errorBody.message;
+          }
+        } catch {
+          // ignore
+        }
+        throw new Error(errorMsg);
+      }
+
+      const result = await response.json();
+      return {
+        skillId: result.id,
+        name: result.name,
+        fileCount: files.length,
+        totalSize,
+      } as UploadSkillResult;
+    } catch (error: unknown) {
+      const err = error as {
+        code?: string;
+        name?: string;
+        message?: string;
+        cause?: { code?: string };
+      };
+      const code = err?.code || err?.cause?.code;
+      if (
+        code === 'ECONNREFUSED' ||
+        code === 'ENOTFOUND' ||
+        err?.name === 'FetchError' ||
+        (typeof err?.message === 'string' &&
+          (err.message.includes('Failed to fetch') ||
+            err.message.includes('network') ||
+            err.message.includes('NetworkError')))
+      ) {
+        throw new Error(
+          `Packmind server is not accessible at ${host}. Please check your network connection or the server URL.`,
+        );
+      }
+
+      throw new Error(
+        `Failed to upload skill: Error: ${err?.message || JSON.stringify(error)}`,
       );
     }
   };
