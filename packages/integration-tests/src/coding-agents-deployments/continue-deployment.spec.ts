@@ -8,6 +8,7 @@ import { standardsSchemas } from '@packmind/standards';
 import { makeTestDatasource } from '@packmind/test-utils';
 import {
   createTargetId,
+  FileModification,
   GitProviderVendors,
   GitRepo,
   IGitPort,
@@ -132,912 +133,359 @@ describe('Continue Deployment Integration', () => {
     await dataSource.destroy();
   });
 
-  describe('when .continue/rules/packmind/recipes-index.md does not exist', () => {
+  describe('when deploying a single recipe', () => {
     let defaultTarget: Target;
+    let fileUpdates: {
+      createOrUpdate: FileModification[];
+      delete: { path: string }[];
+    };
+    let recipeFile: FileModification | undefined;
 
-    beforeEach(() => {
-      // Create a default target for testing
+    beforeEach(async () => {
       defaultTarget = {
         id: createTargetId('default-target-id'),
         name: 'Default',
         path: '/',
         gitRepoId: gitRepo.id,
       };
-      // Mock GitHexa.getFileFromRepo to return null (file doesn't exist)
-      // Mock gitPort.getFileFromRepo (gitPort is initialized in main beforeEach)
       jest.spyOn(gitPort, 'getFileFromRepo').mockResolvedValue(null);
+
+      const recipeVersions: RecipeVersion[] = [
+        {
+          id: 'recipe-version-1' as RecipeVersionId,
+          recipeId: recipe.id,
+          name: recipe.name,
+          slug: recipe.slug,
+          content: recipe.content,
+          version: recipe.version,
+          summary:
+            'Test recipe for Continue deployment with detailed instructions',
+          userId: user.id,
+        },
+      ];
+
+      fileUpdates = await deployerService.aggregateRecipeDeployments(
+        recipeVersions,
+        gitRepo,
+        [defaultTarget],
+        ['continue'],
+      );
+
+      recipeFile = fileUpdates.createOrUpdate.find((file) =>
+        file.path.startsWith('.continue/prompts/'),
+      );
     });
 
     afterEach(() => {
       jest.restoreAllMocks();
     });
 
-    describe('when deploying recipes', () => {
-      it('creates one file update', async () => {
-        const recipeVersions: RecipeVersion[] = [
-          {
-            id: 'recipe-version-1' as RecipeVersionId,
-            recipeId: recipe.id,
-            name: recipe.name,
-            slug: recipe.slug,
-            content: recipe.content,
-            version: recipe.version,
-            summary:
-              'Test recipe for Continue deployment with detailed instructions',
-            userId: user.id,
-          },
-        ];
-
-        const fileUpdates = await deployerService.aggregateRecipeDeployments(
-          recipeVersions,
-          gitRepo,
-          [defaultTarget],
-          ['continue'],
-        );
-
-        expect(fileUpdates.createOrUpdate).toHaveLength(1);
-      });
-
-      it('does not delete any files', async () => {
-        const recipeVersions: RecipeVersion[] = [
-          {
-            id: 'recipe-version-1' as RecipeVersionId,
-            recipeId: recipe.id,
-            name: recipe.name,
-            slug: recipe.slug,
-            content: recipe.content,
-            version: recipe.version,
-            summary:
-              'Test recipe for Continue deployment with detailed instructions',
-            userId: user.id,
-          },
-        ];
-
-        const fileUpdates = await deployerService.aggregateRecipeDeployments(
-          recipeVersions,
-          gitRepo,
-          [defaultTarget],
-          ['continue'],
-        );
-
-        expect(fileUpdates.delete).toHaveLength(0);
-      });
-
-      it('creates file at correct path', async () => {
-        const recipeVersions: RecipeVersion[] = [
-          {
-            id: 'recipe-version-1' as RecipeVersionId,
-            recipeId: recipe.id,
-            name: recipe.name,
-            slug: recipe.slug,
-            content: recipe.content,
-            version: recipe.version,
-            summary:
-              'Test recipe for Continue deployment with detailed instructions',
-            userId: user.id,
-          },
-        ];
-
-        const fileUpdates = await deployerService.aggregateRecipeDeployments(
-          recipeVersions,
-          gitRepo,
-          [defaultTarget],
-          ['continue'],
-        );
-
-        const continueFile = fileUpdates.createOrUpdate.find(
-          (file) => file.path === '.continue/rules/packmind/recipes-index.md',
-        );
-
-        expect(continueFile).toBeDefined();
-      });
-
-      it('includes frontmatter with name', async () => {
-        const recipeVersions: RecipeVersion[] = [
-          {
-            id: 'recipe-version-1' as RecipeVersionId,
-            recipeId: recipe.id,
-            name: recipe.name,
-            slug: recipe.slug,
-            content: recipe.content,
-            version: recipe.version,
-            summary:
-              'Test recipe for Continue deployment with detailed instructions',
-            userId: user.id,
-          },
-        ];
-
-        const fileUpdates = await deployerService.aggregateRecipeDeployments(
-          recipeVersions,
-          gitRepo,
-          [defaultTarget],
-          ['continue'],
-        );
-
-        const continueFile = fileUpdates.createOrUpdate.find(
-          (file) => file.path === '.continue/rules/packmind/recipes-index.md',
-        );
-
-        if (continueFile) {
-          expect(continueFile.content).toContain('name: Packmind Recipes');
-        }
-      });
-
-      it('includes frontmatter with alwaysApply true', async () => {
-        const recipeVersions: RecipeVersion[] = [
-          {
-            id: 'recipe-version-1' as RecipeVersionId,
-            recipeId: recipe.id,
-            name: recipe.name,
-            slug: recipe.slug,
-            content: recipe.content,
-            version: recipe.version,
-            summary:
-              'Test recipe for Continue deployment with detailed instructions',
-            userId: user.id,
-          },
-        ];
-
-        const fileUpdates = await deployerService.aggregateRecipeDeployments(
-          recipeVersions,
-          gitRepo,
-          [defaultTarget],
-          ['continue'],
-        );
-
-        const continueFile = fileUpdates.createOrUpdate.find(
-          (file) => file.path === '.continue/rules/packmind/recipes-index.md',
-        );
-
-        if (continueFile) {
-          expect(continueFile.content).toContain('alwaysApply: true');
-        }
-      });
-
-      it('includes frontmatter with description', async () => {
-        const recipeVersions: RecipeVersion[] = [
-          {
-            id: 'recipe-version-1' as RecipeVersionId,
-            recipeId: recipe.id,
-            name: recipe.name,
-            slug: recipe.slug,
-            content: recipe.content,
-            version: recipe.version,
-            summary:
-              'Test recipe for Continue deployment with detailed instructions',
-            userId: user.id,
-          },
-        ];
-
-        const fileUpdates = await deployerService.aggregateRecipeDeployments(
-          recipeVersions,
-          gitRepo,
-          [defaultTarget],
-          ['continue'],
-        );
-
-        const continueFile = fileUpdates.createOrUpdate.find(
-          (file) => file.path === '.continue/rules/packmind/recipes-index.md',
-        );
-
-        if (continueFile) {
-          expect(continueFile.content).toContain(
-            'description: Packmind recipes for Continue',
-          );
-        }
-      });
-
-      it('includes Packmind Recipes header', async () => {
-        const recipeVersions: RecipeVersion[] = [
-          {
-            id: 'recipe-version-1' as RecipeVersionId,
-            recipeId: recipe.id,
-            name: recipe.name,
-            slug: recipe.slug,
-            content: recipe.content,
-            version: recipe.version,
-            summary:
-              'Test recipe for Continue deployment with detailed instructions',
-            userId: user.id,
-          },
-        ];
-
-        const fileUpdates = await deployerService.aggregateRecipeDeployments(
-          recipeVersions,
-          gitRepo,
-          [defaultTarget],
-          ['continue'],
-        );
-
-        const continueFile = fileUpdates.createOrUpdate.find(
-          (file) => file.path === '.continue/rules/packmind/recipes-index.md',
-        );
-
-        if (continueFile) {
-          expect(continueFile.content).toContain('# Packmind Recipes');
-        }
-      });
-
-      it('includes mandatory step warning', async () => {
-        const recipeVersions: RecipeVersion[] = [
-          {
-            id: 'recipe-version-1' as RecipeVersionId,
-            recipeId: recipe.id,
-            name: recipe.name,
-            slug: recipe.slug,
-            content: recipe.content,
-            version: recipe.version,
-            summary:
-              'Test recipe for Continue deployment with detailed instructions',
-            userId: user.id,
-          },
-        ];
-
-        const fileUpdates = await deployerService.aggregateRecipeDeployments(
-          recipeVersions,
-          gitRepo,
-          [defaultTarget],
-          ['continue'],
-        );
-
-        const continueFile = fileUpdates.createOrUpdate.find(
-          (file) => file.path === '.continue/rules/packmind/recipes-index.md',
-        );
-
-        if (continueFile) {
-          expect(continueFile.content).toContain('🚨 **MANDATORY STEP** 🚨');
-        }
-      });
-
-      it('includes recipe name in content', async () => {
-        const recipeVersions: RecipeVersion[] = [
-          {
-            id: 'recipe-version-1' as RecipeVersionId,
-            recipeId: recipe.id,
-            name: recipe.name,
-            slug: recipe.slug,
-            content: recipe.content,
-            version: recipe.version,
-            summary:
-              'Test recipe for Continue deployment with detailed instructions',
-            userId: user.id,
-          },
-        ];
-
-        const fileUpdates = await deployerService.aggregateRecipeDeployments(
-          recipeVersions,
-          gitRepo,
-          [defaultTarget],
-          ['continue'],
-        );
-
-        const continueFile = fileUpdates.createOrUpdate.find(
-          (file) => file.path === '.continue/rules/packmind/recipes-index.md',
-        );
-
-        if (continueFile) {
-          expect(continueFile.content).toContain('Test Recipe for Continue');
-        }
-      });
+    it('creates one file update', () => {
+      expect(fileUpdates.createOrUpdate).toHaveLength(1);
     });
 
-    describe('when deploying standards', () => {
-      it('creates one file update', async () => {
-        const standardVersions: StandardVersion[] = [
-          {
-            id: 'standard-version-1' as StandardVersionId,
-            standardId: standard.id,
-            name: standard.name,
-            slug: standard.slug,
-            description: standard.description,
-            version: standard.version,
-            summary: 'Test standard for Continue deployment',
-            userId: user.id,
-            scope: standard.scope,
-          },
-        ];
-
-        const fileUpdates = await deployerService.aggregateStandardsDeployments(
-          standardVersions,
-          gitRepo,
-          [defaultTarget],
-          ['continue'],
-        );
-
-        expect(fileUpdates.createOrUpdate).toHaveLength(1);
-      });
-
-      it('does not delete any files', async () => {
-        const standardVersions: StandardVersion[] = [
-          {
-            id: 'standard-version-1' as StandardVersionId,
-            standardId: standard.id,
-            name: standard.name,
-            slug: standard.slug,
-            description: standard.description,
-            version: standard.version,
-            summary: 'Test standard for Continue deployment',
-            userId: user.id,
-            scope: standard.scope,
-          },
-        ];
-
-        const fileUpdates = await deployerService.aggregateStandardsDeployments(
-          standardVersions,
-          gitRepo,
-          [defaultTarget],
-          ['continue'],
-        );
-
-        expect(fileUpdates.delete).toHaveLength(0);
-      });
-
-      it('creates file at correct path', async () => {
-        const standardVersions: StandardVersion[] = [
-          {
-            id: 'standard-version-1' as StandardVersionId,
-            standardId: standard.id,
-            name: standard.name,
-            slug: standard.slug,
-            description: standard.description,
-            version: standard.version,
-            summary: 'Test standard for Continue deployment',
-            userId: user.id,
-            scope: standard.scope,
-          },
-        ];
-
-        const fileUpdates = await deployerService.aggregateStandardsDeployments(
-          standardVersions,
-          gitRepo,
-          [defaultTarget],
-          ['continue'],
-        );
-
-        const continueStandardFile = fileUpdates.createOrUpdate.find(
-          (file) =>
-            file.path ===
-            `.continue/rules/packmind/standard-${standard.slug}.md`,
-        );
-
-        expect(continueStandardFile).toBeDefined();
-      });
-
-      it('includes frontmatter with name', async () => {
-        const standardVersions: StandardVersion[] = [
-          {
-            id: 'standard-version-1' as StandardVersionId,
-            standardId: standard.id,
-            name: standard.name,
-            slug: standard.slug,
-            description: standard.description,
-            version: standard.version,
-            summary: 'Test standard for Continue deployment',
-            userId: user.id,
-            scope: standard.scope,
-          },
-        ];
-
-        const fileUpdates = await deployerService.aggregateStandardsDeployments(
-          standardVersions,
-          gitRepo,
-          [defaultTarget],
-          ['continue'],
-        );
-
-        const continueStandardFile = fileUpdates.createOrUpdate.find(
-          (file) =>
-            file.path ===
-            `.continue/rules/packmind/standard-${standard.slug}.md`,
-        );
-
-        if (continueStandardFile) {
-          expect(continueStandardFile.content).toContain(
-            `name: ${standard.name}`,
-          );
-        }
-      });
-
-      describe('when scope exists', () => {
-        it('includes frontmatter with globs', async () => {
-          const standardVersions: StandardVersion[] = [
-            {
-              id: 'standard-version-1' as StandardVersionId,
-              standardId: standard.id,
-              name: standard.name,
-              slug: standard.slug,
-              description: standard.description,
-              version: standard.version,
-              summary: 'Test standard for Continue deployment',
-              userId: user.id,
-              scope: standard.scope,
-            },
-          ];
-
-          const fileUpdates =
-            await deployerService.aggregateStandardsDeployments(
-              standardVersions,
-              gitRepo,
-              [defaultTarget],
-              ['continue'],
-            );
-
-          const continueStandardFile = fileUpdates.createOrUpdate.find(
-            (file) =>
-              file.path ===
-              `.continue/rules/packmind/standard-${standard.slug}.md`,
-          );
-
-          if (continueStandardFile) {
-            expect(continueStandardFile.content).toContain(
-              'globs: "**/*.{ts,tsx}"',
-            );
-          }
-        });
-
-        it('sets alwaysApply to false', async () => {
-          const standardVersions: StandardVersion[] = [
-            {
-              id: 'standard-version-1' as StandardVersionId,
-              standardId: standard.id,
-              name: standard.name,
-              slug: standard.slug,
-              description: standard.description,
-              version: standard.version,
-              summary: 'Test standard for Continue deployment',
-              userId: user.id,
-              scope: standard.scope,
-            },
-          ];
-
-          const fileUpdates =
-            await deployerService.aggregateStandardsDeployments(
-              standardVersions,
-              gitRepo,
-              [defaultTarget],
-              ['continue'],
-            );
-
-          const continueStandardFile = fileUpdates.createOrUpdate.find(
-            (file) =>
-              file.path ===
-              `.continue/rules/packmind/standard-${standard.slug}.md`,
-          );
-
-          if (continueStandardFile) {
-            expect(continueStandardFile.content).toContain(
-              'alwaysApply: false',
-            );
-          }
-        });
-      });
-
-      it('includes frontmatter with description from summary', async () => {
-        const standardVersions: StandardVersion[] = [
-          {
-            id: 'standard-version-1' as StandardVersionId,
-            standardId: standard.id,
-            name: standard.name,
-            slug: standard.slug,
-            description: standard.description,
-            version: standard.version,
-            summary: 'Test standard for Continue deployment',
-            userId: user.id,
-            scope: standard.scope,
-          },
-        ];
-
-        const fileUpdates = await deployerService.aggregateStandardsDeployments(
-          standardVersions,
-          gitRepo,
-          [defaultTarget],
-          ['continue'],
-        );
-
-        const continueStandardFile = fileUpdates.createOrUpdate.find(
-          (file) =>
-            file.path ===
-            `.continue/rules/packmind/standard-${standard.slug}.md`,
-        );
-
-        if (continueStandardFile) {
-          expect(continueStandardFile.content).toContain(
-            'description: Test standard for Continue deployment',
-          );
-        }
-      });
-
-      it('includes first rule in content', async () => {
-        const standardVersions: StandardVersion[] = [
-          {
-            id: 'standard-version-1' as StandardVersionId,
-            standardId: standard.id,
-            name: standard.name,
-            slug: standard.slug,
-            description: standard.description,
-            version: standard.version,
-            summary: 'Test standard for Continue deployment',
-            userId: user.id,
-            scope: standard.scope,
-          },
-        ];
-
-        const fileUpdates = await deployerService.aggregateStandardsDeployments(
-          standardVersions,
-          gitRepo,
-          [defaultTarget],
-          ['continue'],
-        );
-
-        const continueStandardFile = fileUpdates.createOrUpdate.find(
-          (file) =>
-            file.path ===
-            `.continue/rules/packmind/standard-${standard.slug}.md`,
-        );
-
-        if (continueStandardFile) {
-          expect(continueStandardFile.content).toContain(
-            '* Use meaningful variable names in TypeScript',
-          );
-        }
-      });
-
-      it('includes second rule in content', async () => {
-        const standardVersions: StandardVersion[] = [
-          {
-            id: 'standard-version-1' as StandardVersionId,
-            standardId: standard.id,
-            name: standard.name,
-            slug: standard.slug,
-            description: standard.description,
-            version: standard.version,
-            summary: 'Test standard for Continue deployment',
-            userId: user.id,
-            scope: standard.scope,
-          },
-        ];
-
-        const fileUpdates = await deployerService.aggregateStandardsDeployments(
-          standardVersions,
-          gitRepo,
-          [defaultTarget],
-          ['continue'],
-        );
-
-        const continueStandardFile = fileUpdates.createOrUpdate.find(
-          (file) =>
-            file.path ===
-            `.continue/rules/packmind/standard-${standard.slug}.md`,
-        );
-
-        if (continueStandardFile) {
-          expect(continueStandardFile.content).toContain(
-            '* Write comprehensive tests for all components',
-          );
-        }
-      });
-
-      it('includes link to full standard', async () => {
-        const standardVersions: StandardVersion[] = [
-          {
-            id: 'standard-version-1' as StandardVersionId,
-            standardId: standard.id,
-            name: standard.name,
-            slug: standard.slug,
-            description: standard.description,
-            version: standard.version,
-            summary: 'Test standard for Continue deployment',
-            userId: user.id,
-            scope: standard.scope,
-          },
-        ];
-
-        const fileUpdates = await deployerService.aggregateStandardsDeployments(
-          standardVersions,
-          gitRepo,
-          [defaultTarget],
-          ['continue'],
-        );
-
-        const continueStandardFile = fileUpdates.createOrUpdate.find(
-          (file) =>
-            file.path ===
-            `.continue/rules/packmind/standard-${standard.slug}.md`,
-        );
-
-        if (continueStandardFile) {
-          expect(continueStandardFile.content).toContain(
-            `Full standard is available here for further request: [${standard.name}](../../../.packmind/standards/${standard.slug}.md)`,
-          );
-        }
-      });
+    it('includes one recipe command file', () => {
+      expect(
+        fileUpdates.createOrUpdate.filter((f) =>
+          f.path.startsWith('.continue/prompts/'),
+        ),
+      ).toHaveLength(1);
     });
 
-    describe('when deploying standard without scope', () => {
-      it('sets alwaysApply to true', async () => {
-        const globalStandard = await testApp.standardsHexa
-          .getAdapter()
-          .createStandard({
-            name: 'Global Standard',
-            description: 'A global standard without scope',
-            rules: [{ content: 'Always use consistent formatting' }],
-            organizationId: organization.id,
-            userId: user.id,
-            scope: '',
-            spaceId: space.id,
-          });
-
-        const standardVersions: StandardVersion[] = [
-          {
-            id: 'standard-version-2' as StandardVersionId,
-            standardId: globalStandard.id,
-            name: globalStandard.name,
-            slug: globalStandard.slug,
-            description: globalStandard.description,
-            version: globalStandard.version,
-            summary: 'Global standard for all files',
-            userId: user.id,
-            scope: globalStandard.scope,
-          },
-        ];
-
-        const fileUpdates = await deployerService.aggregateStandardsDeployments(
-          standardVersions,
-          gitRepo,
-          [defaultTarget],
-          ['continue'],
-        );
-
-        const continueStandardFile = fileUpdates.createOrUpdate[0];
-        expect(continueStandardFile.content).toContain('alwaysApply: true');
-      });
-
-      it('does not include globs in frontmatter', async () => {
-        const globalStandard = await testApp.standardsHexa
-          .getAdapter()
-          .createStandard({
-            name: 'Global Standard',
-            description: 'A global standard without scope',
-            rules: [{ content: 'Always use consistent formatting' }],
-            organizationId: organization.id,
-            userId: user.id,
-            scope: '',
-            spaceId: space.id,
-          });
-
-        const standardVersions: StandardVersion[] = [
-          {
-            id: 'standard-version-2' as StandardVersionId,
-            standardId: globalStandard.id,
-            name: globalStandard.name,
-            slug: globalStandard.slug,
-            description: globalStandard.description,
-            version: globalStandard.version,
-            summary: 'Global standard for all files',
-            userId: user.id,
-            scope: globalStandard.scope,
-          },
-        ];
-
-        const fileUpdates = await deployerService.aggregateStandardsDeployments(
-          standardVersions,
-          gitRepo,
-          [defaultTarget],
-          ['continue'],
-        );
-
-        const continueStandardFile = fileUpdates.createOrUpdate[0];
-        expect(continueStandardFile.content).not.toContain('globs:');
-      });
+    it('deletes one legacy file', () => {
+      expect(fileUpdates.delete).toHaveLength(1);
     });
 
-    describe('when deploying both recipes and standards', () => {
-      it('creates one file update for recipes', async () => {
-        const recipeVersions: RecipeVersion[] = [
-          {
-            id: 'recipe-version-1' as RecipeVersionId,
-            recipeId: recipe.id,
-            name: recipe.name,
-            slug: recipe.slug,
-            content: recipe.content,
-            version: recipe.version,
-            summary: 'Test recipe for combined deployment',
-            userId: user.id,
-          },
-        ];
+    it('deletes legacy recipes-index.md file', () => {
+      expect(fileUpdates.delete[0].path).toBe(
+        '.continue/rules/packmind/recipes-index.md',
+      );
+    });
 
-        const defaultTarget = {
-          id: createTargetId('default-target-id'),
-          name: 'Default',
-          path: '/',
-          gitRepoId: gitRepo.id,
-        };
+    it('creates recipe file in .continue/prompts/', () => {
+      expect(recipeFile).toBeDefined();
+    });
 
-        const recipeUpdates = await deployerService.aggregateRecipeDeployments(
-          recipeVersions,
-          gitRepo,
-          [defaultTarget],
-          ['continue'],
-        );
+    it('uses correct path for recipe file', () => {
+      expect(recipeFile?.path).toBe(`.continue/prompts/${recipe.slug}.md`);
+    });
 
-        expect(recipeUpdates.createOrUpdate).toHaveLength(1);
-      });
+    it('includes frontmatter delimiter', () => {
+      expect(recipeFile?.content).toContain('---');
+    });
 
-      it('creates one file update for standards', async () => {
-        const standardVersions: StandardVersion[] = [
-          {
-            id: 'standard-version-1' as StandardVersionId,
-            standardId: standard.id,
-            name: standard.name,
-            slug: standard.slug,
-            description: standard.description,
-            version: standard.version,
-            summary: 'Test standard for combined deployment',
-            userId: user.id,
-            scope: standard.scope,
-          },
-        ];
+    it('includes recipe description in frontmatter', () => {
+      expect(recipeFile?.content).toContain(
+        'description: Test recipe for Continue deployment with detailed instructions',
+      );
+    });
 
-        const defaultTarget = {
-          id: createTargetId('default-target-id'),
-          name: 'Default',
-          path: '/',
-          gitRepoId: gitRepo.id,
-        };
+    it('includes recipe name in frontmatter', () => {
+      expect(recipeFile?.content).toContain(`name: ${recipe.name}`);
+    });
 
-        const standardsUpdates =
-          await deployerService.aggregateStandardsDeployments(
-            standardVersions,
-            gitRepo,
-            [defaultTarget],
-            ['continue'],
-          );
+    it('includes invokable set to true in frontmatter', () => {
+      expect(recipeFile?.content).toContain('invokable: true');
+    });
 
-        expect(standardsUpdates.createOrUpdate).toHaveLength(1);
-      });
-
-      it('creates recipes file at correct path', async () => {
-        const recipeVersions: RecipeVersion[] = [
-          {
-            id: 'recipe-version-1' as RecipeVersionId,
-            recipeId: recipe.id,
-            name: recipe.name,
-            slug: recipe.slug,
-            content: recipe.content,
-            version: recipe.version,
-            summary: 'Test recipe for combined deployment',
-            userId: user.id,
-          },
-        ];
-
-        const defaultTarget = {
-          id: createTargetId('default-target-id'),
-          name: 'Default',
-          path: '/',
-          gitRepoId: gitRepo.id,
-        };
-
-        const recipeUpdates = await deployerService.aggregateRecipeDeployments(
-          recipeVersions,
-          gitRepo,
-          [defaultTarget],
-          ['continue'],
-        );
-
-        expect(recipeUpdates.createOrUpdate[0].path).toBe(
-          '.continue/rules/packmind/recipes-index.md',
-        );
-      });
-
-      it('creates standards file at correct path', async () => {
-        const standardVersions: StandardVersion[] = [
-          {
-            id: 'standard-version-1' as StandardVersionId,
-            standardId: standard.id,
-            name: standard.name,
-            slug: standard.slug,
-            description: standard.description,
-            version: standard.version,
-            summary: 'Test standard for combined deployment',
-            userId: user.id,
-            scope: standard.scope,
-          },
-        ];
-
-        const defaultTarget = {
-          id: createTargetId('default-target-id'),
-          name: 'Default',
-          path: '/',
-          gitRepoId: gitRepo.id,
-        };
-
-        const standardsUpdates =
-          await deployerService.aggregateStandardsDeployments(
-            standardVersions,
-            gitRepo,
-            [defaultTarget],
-            ['continue'],
-          );
-
-        expect(standardsUpdates.createOrUpdate[0].path).toBe(
-          `.continue/rules/packmind/standard-${standard.slug}.md`,
-        );
-      });
+    it('includes recipe content', () => {
+      expect(recipeFile?.content).toContain(recipe.content);
     });
   });
 
-  describe('when .continue/rules/packmind/recipes-index.md already exists', () => {
+  describe('when deploying multiple recipes', () => {
     let defaultTarget: Target;
-    const existingContent = `---
-name: Packmind Recipes
-alwaysApply: true
-description: Packmind recipes for Continue
----
-
-# Packmind Recipes
-
-🚨 **MANDATORY STEP** 🚨
-
-Before writing, editing, or generating ANY code:
-
-**ALWAYS READ**: the available recipes below to see what recipes are available
-
-## Recipe Usage Rules:
-- **MANDATORY**: Always check the recipes list first
-- **CONDITIONAL**: Only read/use individual recipes if they are relevant to your task
-- **OPTIONAL**: If no recipes are relevant, proceed without using any
-
-**Remember: Always check the recipes list first, but only use recipes that actually apply to your specific task.**\`
-
-## Available recipes
-
-- [Test Recipe for Continue](.packmind/recipes/test-recipe-for-continue.md) : Test recipe for deployment`;
+    let fileUpdates: {
+      createOrUpdate: FileModification[];
+      delete: { path: string }[];
+    };
+    let recipe2: Recipe;
 
     beforeEach(async () => {
-      const gitPort = testApp.gitHexa.getAdapter();
-
       defaultTarget = {
         id: createTargetId('default-target-id'),
         name: 'Default',
         path: '/',
         gitRepoId: gitRepo.id,
       };
-      const existingFile = {
-        content: existingContent,
-        sha: 'abc123',
-      };
-      jest.spyOn(gitPort, 'getFileFromRepo').mockResolvedValue(existingFile);
+      jest.spyOn(gitPort, 'getFileFromRepo').mockResolvedValue(null);
+
+      // Create second recipe
+      recipe2 = await testApp.recipesHexa.getAdapter().captureRecipe({
+        name: 'Second Recipe for Continue',
+        content: 'This is the second recipe content',
+        organizationId: organization.id,
+        userId: user.id,
+        spaceId: space.id.toString(),
+      });
+
+      const recipeVersions: RecipeVersion[] = [
+        {
+          id: 'recipe-version-1' as RecipeVersionId,
+          recipeId: recipe.id,
+          name: recipe.name,
+          slug: recipe.slug,
+          content: recipe.content,
+          version: recipe.version,
+          summary: 'First recipe summary',
+          userId: user.id,
+        },
+        {
+          id: 'recipe-version-2' as RecipeVersionId,
+          recipeId: recipe2.id,
+          name: recipe2.name,
+          slug: recipe2.slug,
+          content: recipe2.content,
+          version: recipe2.version,
+          summary: 'Second recipe summary',
+          userId: user.id,
+        },
+      ];
+
+      fileUpdates = await deployerService.aggregateRecipeDeployments(
+        recipeVersions,
+        gitRepo,
+        [defaultTarget],
+        ['continue'],
+      );
     });
 
     afterEach(() => {
       jest.restoreAllMocks();
     });
 
-    it('does not create any file updates', async () => {
-      const recipeVersions: RecipeVersion[] = [
-        {
-          id: 'recipe-version-1' as RecipeVersionId,
-          recipeId: recipe.id,
-          name: recipe.name,
-          slug: recipe.slug,
-          content: recipe.content,
-          version: recipe.version,
-          summary: 'Test recipe for deployment',
-          userId: user.id,
-        },
-      ];
-
-      const fileUpdates = await deployerService.aggregateRecipeDeployments(
-        recipeVersions,
-        gitRepo,
-        [defaultTarget],
-        ['continue'],
-      );
-
-      expect(fileUpdates.createOrUpdate).toHaveLength(0);
+    it('creates two file updates', () => {
+      expect(fileUpdates.createOrUpdate).toHaveLength(2);
     });
 
-    it('does not delete any files', async () => {
+    it('creates first recipe command file at correct path', () => {
+      const firstFile = fileUpdates.createOrUpdate.find(
+        (f) => f.path === `.continue/prompts/${recipe.slug}.md`,
+      );
+      expect(firstFile).toBeDefined();
+    });
+
+    it('creates second recipe command file at correct path', () => {
+      const secondFile = fileUpdates.createOrUpdate.find(
+        (f) => f.path === `.continue/prompts/${recipe2.slug}.md`,
+      );
+      expect(secondFile).toBeDefined();
+    });
+  });
+
+  describe('when deploying standards', () => {
+    let defaultTarget: Target;
+    let fileUpdates: {
+      createOrUpdate: FileModification[];
+      delete: { path: string }[];
+    };
+    let standardFile: FileModification | undefined;
+
+    beforeEach(async () => {
+      defaultTarget = {
+        id: createTargetId('default-target-id'),
+        name: 'Default',
+        path: '/',
+        gitRepoId: gitRepo.id,
+      };
+      jest.spyOn(gitPort, 'getFileFromRepo').mockResolvedValue(null);
+
+      const standardVersions: StandardVersion[] = [
+        {
+          id: 'standard-version-1' as StandardVersionId,
+          standardId: standard.id,
+          name: standard.name,
+          slug: standard.slug,
+          description: standard.description,
+          version: standard.version,
+          summary: 'Test standard for Continue deployment',
+          userId: user.id,
+          scope: standard.scope,
+        },
+      ];
+
+      fileUpdates = await deployerService.aggregateStandardsDeployments(
+        standardVersions,
+        gitRepo,
+        [defaultTarget],
+        ['continue'],
+      );
+
+      standardFile = fileUpdates.createOrUpdate.find(
+        (file) =>
+          file.path === `.continue/rules/packmind/standard-${standard.slug}.md`,
+      );
+    });
+
+    afterEach(() => {
+      jest.restoreAllMocks();
+    });
+
+    it('creates one file update', () => {
+      expect(fileUpdates.createOrUpdate).toHaveLength(1);
+    });
+
+    it('creates file at correct path', () => {
+      expect(standardFile).toBeDefined();
+    });
+
+    it('includes frontmatter with name', () => {
+      expect(standardFile?.content).toContain(`name: ${standard.name}`);
+    });
+
+    describe('when scope exists', () => {
+      it('includes frontmatter with globs', () => {
+        expect(standardFile?.content).toContain('globs: "**/*.{ts,tsx}"');
+      });
+
+      it('sets alwaysApply to false', () => {
+        expect(standardFile?.content).toContain('alwaysApply: false');
+      });
+    });
+
+    it('includes frontmatter with description from summary', () => {
+      expect(standardFile?.content).toContain(
+        'description: Test standard for Continue deployment',
+      );
+    });
+
+    it('includes first rule in content', () => {
+      expect(standardFile?.content).toContain(
+        '* Use meaningful variable names in TypeScript',
+      );
+    });
+
+    it('includes second rule in content', () => {
+      expect(standardFile?.content).toContain(
+        '* Write comprehensive tests for all components',
+      );
+    });
+
+    it('includes link to full standard', () => {
+      expect(standardFile?.content).toContain(
+        `Full standard is available here for further request: [${standard.name}](../../../.packmind/standards/${standard.slug}.md)`,
+      );
+    });
+  });
+
+  describe('when deploying standard without scope', () => {
+    let defaultTarget: Target;
+    let fileUpdates: {
+      createOrUpdate: FileModification[];
+      delete: { path: string }[];
+    };
+    let globalStandard: Standard;
+    let standardFile: FileModification | undefined;
+
+    beforeEach(async () => {
+      defaultTarget = {
+        id: createTargetId('default-target-id'),
+        name: 'Default',
+        path: '/',
+        gitRepoId: gitRepo.id,
+      };
+      jest.spyOn(gitPort, 'getFileFromRepo').mockResolvedValue(null);
+
+      globalStandard = await testApp.standardsHexa.getAdapter().createStandard({
+        name: 'Global Standard',
+        description: 'A global standard without scope',
+        rules: [{ content: 'Always use consistent formatting' }],
+        organizationId: organization.id,
+        userId: user.id,
+        scope: '',
+        spaceId: space.id,
+      });
+
+      const standardVersions: StandardVersion[] = [
+        {
+          id: 'standard-version-2' as StandardVersionId,
+          standardId: globalStandard.id,
+          name: globalStandard.name,
+          slug: globalStandard.slug,
+          description: globalStandard.description,
+          version: globalStandard.version,
+          summary: 'Global standard for all files',
+          userId: user.id,
+          scope: globalStandard.scope,
+        },
+      ];
+
+      fileUpdates = await deployerService.aggregateStandardsDeployments(
+        standardVersions,
+        gitRepo,
+        [defaultTarget],
+        ['continue'],
+      );
+
+      standardFile = fileUpdates.createOrUpdate[0];
+    });
+
+    afterEach(() => {
+      jest.restoreAllMocks();
+    });
+
+    it('sets alwaysApply to true', () => {
+      expect(standardFile.content).toContain('alwaysApply: true');
+    });
+
+    it('does not include globs in frontmatter', () => {
+      expect(standardFile.content).not.toContain('globs:');
+    });
+  });
+
+  describe('when deploying both recipes and standards', () => {
+    let defaultTarget: Target;
+    let pathMap: Map<string, FileModification>;
+
+    beforeEach(async () => {
+      defaultTarget = {
+        id: createTargetId('default-target-id'),
+        name: 'Default',
+        path: '/',
+        gitRepoId: gitRepo.id,
+      };
+      jest.spyOn(gitPort, 'getFileFromRepo').mockResolvedValue(null);
+
       const recipeVersions: RecipeVersion[] = [
         {
           id: 'recipe-version-1' as RecipeVersionId,
@@ -1046,19 +494,94 @@ Before writing, editing, or generating ANY code:
           slug: recipe.slug,
           content: recipe.content,
           version: recipe.version,
-          summary: 'Test recipe for deployment',
+          summary: 'Test recipe for combined deployment',
           userId: user.id,
         },
       ];
 
-      const fileUpdates = await deployerService.aggregateRecipeDeployments(
+      const standardVersions: StandardVersion[] = [
+        {
+          id: 'standard-version-1' as StandardVersionId,
+          standardId: standard.id,
+          name: standard.name,
+          slug: standard.slug,
+          description: standard.description,
+          version: standard.version,
+          summary: 'Test standard for combined deployment',
+          userId: user.id,
+          scope: standard.scope,
+        },
+      ];
+
+      // Deploy recipes first
+      const recipeUpdates = await deployerService.aggregateRecipeDeployments(
         recipeVersions,
         gitRepo,
         [defaultTarget],
         ['continue'],
       );
 
-      expect(fileUpdates.delete).toHaveLength(0);
+      // Deploy standards second
+      const standardsUpdates =
+        await deployerService.aggregateStandardsDeployments(
+          standardVersions,
+          gitRepo,
+          [defaultTarget],
+          ['continue'],
+        );
+
+      // Simulate the file merging that DeployerService does
+      const allUpdates = [recipeUpdates, standardsUpdates];
+      pathMap = new Map<string, FileModification>();
+
+      for (const update of allUpdates) {
+        for (const file of update.createOrUpdate) {
+          pathMap.set(file.path, file);
+        }
+      }
+    });
+
+    afterEach(() => {
+      jest.restoreAllMocks();
+    });
+
+    it('creates two files (recipe command and standard)', () => {
+      expect(pathMap.size).toBe(2);
+    });
+
+    it('creates recipe command file in .continue/prompts/', () => {
+      expect(pathMap.has(`.continue/prompts/${recipe.slug}.md`)).toBe(true);
+    });
+
+    it('creates standard file in .continue/rules/packmind/', () => {
+      expect(
+        pathMap.has(`.continue/rules/packmind/standard-${standard.slug}.md`),
+      ).toBe(true);
+    });
+
+    describe('recipe file content', () => {
+      let recipeFile: FileModification | undefined;
+
+      beforeEach(() => {
+        recipeFile = pathMap.get(`.continue/prompts/${recipe.slug}.md`);
+      });
+
+      it('includes frontmatter delimiter', () => {
+        expect(recipeFile?.content).toContain('---');
+      });
+
+      it('includes recipe description in frontmatter', () => {
+        expect(recipeFile?.content).toContain(
+          'description: Test recipe for combined deployment',
+        );
+      });
+    });
+
+    it('includes standard header in standard file', () => {
+      const standardFile = pathMap.get(
+        `.continue/rules/packmind/standard-${standard.slug}.md`,
+      );
+      expect(standardFile?.content).toContain(`## Standard: ${standard.name}`);
     });
   });
 
@@ -1090,16 +613,31 @@ Before writing, editing, or generating ANY code:
       expect(fileUpdates.createOrUpdate).toHaveLength(0);
     });
 
-    it('returns no file deletions for empty recipe list', async () => {
-      jest.spyOn(gitPort, 'getFileFromRepo').mockResolvedValue(null);
+    describe('when deploying empty recipe list', () => {
+      let fileUpdates: {
+        createOrUpdate: FileModification[];
+        delete: { path: string }[];
+      };
 
-      const fileUpdates = await continueDeployer.deployRecipes(
-        [],
-        gitRepo,
-        defaultTarget,
-      );
+      beforeEach(async () => {
+        jest.spyOn(gitPort, 'getFileFromRepo').mockResolvedValue(null);
 
-      expect(fileUpdates.delete).toHaveLength(0);
+        fileUpdates = await continueDeployer.deployRecipes(
+          [],
+          gitRepo,
+          defaultTarget,
+        );
+      });
+
+      it('deletes one legacy file', () => {
+        expect(fileUpdates.delete).toHaveLength(1);
+      });
+
+      it('deletes legacy recipes-index.md file', () => {
+        expect(fileUpdates.delete[0].path).toBe(
+          '.continue/rules/packmind/recipes-index.md',
+        );
+      });
     });
 
     it('returns no file updates for empty standards list', async () => {
@@ -1122,88 +660,34 @@ Before writing, editing, or generating ANY code:
       expect(fileUpdates.delete).toHaveLength(0);
     });
 
-    describe('when GitHexa throws an error', () => {
-      it('creates file update despite error', async () => {
-        jest
-          .spyOn(testApp.gitHexa.getAdapter(), 'getFileFromRepo')
-          .mockRejectedValue(new Error('GitHub API error'));
-
-        const recipeVersions: RecipeVersion[] = [
-          {
-            id: 'recipe-version-1' as RecipeVersionId,
-            recipeId: recipe.id,
-            name: recipe.name,
-            slug: recipe.slug,
-            content: recipe.content,
-            version: recipe.version,
-            summary: 'Test recipe',
-            userId: user.id,
-          },
-        ];
-
-        const fileUpdates = await continueDeployer.deployRecipes(
-          recipeVersions,
-          gitRepo,
-          defaultTarget,
-        );
-
-        expect(fileUpdates.createOrUpdate).toHaveLength(1);
-      });
-
-      it('includes Packmind Recipes header in generated file', async () => {
-        jest
-          .spyOn(testApp.gitHexa.getAdapter(), 'getFileFromRepo')
-          .mockRejectedValue(new Error('GitHub API error'));
-
-        const recipeVersions: RecipeVersion[] = [
-          {
-            id: 'recipe-version-1' as RecipeVersionId,
-            recipeId: recipe.id,
-            name: recipe.name,
-            slug: recipe.slug,
-            content: recipe.content,
-            version: recipe.version,
-            summary: 'Test recipe',
-            userId: user.id,
-          },
-        ];
-
-        const fileUpdates = await continueDeployer.deployRecipes(
-          recipeVersions,
-          gitRepo,
-          defaultTarget,
-        );
-
-        const continueFile = fileUpdates.createOrUpdate[0];
-        expect(continueFile.content).toContain('# Packmind Recipes');
-      });
-    });
-
     describe('when deploying multiple standards', () => {
-      it('creates two file updates', async () => {
-        const standard1 = await testApp.standardsHexa
-          .getAdapter()
-          .createStandard({
-            name: 'Frontend Standard',
-            description: 'Frontend coding standard',
-            rules: [{ content: 'Use TypeScript' }],
-            organizationId: organization.id,
-            userId: user.id,
-            scope: '**/*.{ts,tsx,js,jsx}',
-            spaceId: space.id,
-          });
+      let fileUpdates: {
+        createOrUpdate: FileModification[];
+        delete: { path: string }[];
+      };
+      let standard1: Standard;
+      let standard2: Standard;
 
-        const standard2 = await testApp.standardsHexa
-          .getAdapter()
-          .createStandard({
-            name: 'Backend Standard',
-            description: 'Backend coding standard',
-            rules: [{ content: 'Use dependency injection' }],
-            organizationId: organization.id,
-            userId: user.id,
-            scope: '',
-            spaceId: space.id,
-          });
+      beforeEach(async () => {
+        standard1 = await testApp.standardsHexa.getAdapter().createStandard({
+          name: 'Frontend Standard',
+          description: 'Frontend coding standard',
+          rules: [{ content: 'Use TypeScript' }],
+          organizationId: organization.id,
+          userId: user.id,
+          scope: '**/*.{ts,tsx,js,jsx}',
+          spaceId: space.id,
+        });
+
+        standard2 = await testApp.standardsHexa.getAdapter().createStandard({
+          name: 'Backend Standard',
+          description: 'Backend coding standard',
+          rules: [{ content: 'Use dependency injection' }],
+          organizationId: organization.id,
+          userId: user.id,
+          scope: '',
+          spaceId: space.id,
+        });
 
         const standardVersions: StandardVersion[] = [
           {
@@ -1230,408 +714,60 @@ Before writing, editing, or generating ANY code:
           },
         ];
 
-        const fileUpdates = await continueDeployer.deployStandards(
+        fileUpdates = await continueDeployer.deployStandards(
           standardVersions,
           gitRepo,
           defaultTarget,
         );
+      });
 
+      it('creates two file updates', () => {
         expect(fileUpdates.createOrUpdate).toHaveLength(2);
       });
 
       describe('for first standard with scope', () => {
-        it('includes name in frontmatter', async () => {
-          const standard1 = await testApp.standardsHexa
-            .getAdapter()
-            .createStandard({
-              name: 'Frontend Standard',
-              description: 'Frontend coding standard',
-              rules: [{ content: 'Use TypeScript' }],
-              organizationId: organization.id,
-              userId: user.id,
-              scope: '**/*.{ts,tsx,js,jsx}',
-              spaceId: space.id,
-            });
+        let frontendFile: FileModification | undefined;
 
-          const standard2 = await testApp.standardsHexa
-            .getAdapter()
-            .createStandard({
-              name: 'Backend Standard',
-              description: 'Backend coding standard',
-              rules: [{ content: 'Use dependency injection' }],
-              organizationId: organization.id,
-              userId: user.id,
-              scope: '',
-              spaceId: space.id,
-            });
-
-          const standardVersions: StandardVersion[] = [
-            {
-              id: 'standard-version-1' as StandardVersionId,
-              standardId: standard1.id,
-              name: standard1.name,
-              slug: standard1.slug,
-              description: standard1.description,
-              version: standard1.version,
-              summary: 'Frontend standard',
-              userId: user.id,
-              scope: standard1.scope,
-            },
-            {
-              id: 'standard-version-2' as StandardVersionId,
-              standardId: standard2.id,
-              name: standard2.name,
-              slug: standard2.slug,
-              description: standard2.description,
-              version: standard2.version,
-              summary: 'Backend standard',
-              userId: user.id,
-              scope: standard2.scope,
-            },
-          ];
-
-          const fileUpdates = await continueDeployer.deployStandards(
-            standardVersions,
-            gitRepo,
-            defaultTarget,
-          );
-
-          const frontendFile = fileUpdates.createOrUpdate.find((file) =>
+        beforeEach(() => {
+          frontendFile = fileUpdates.createOrUpdate.find((file) =>
             file.path.includes(standard1.slug),
           );
-
-          if (frontendFile) {
-            expect(frontendFile.content).toContain(`name: ${standard1.name}`);
-          }
         });
 
-        it('includes globs in frontmatter', async () => {
-          const standard1 = await testApp.standardsHexa
-            .getAdapter()
-            .createStandard({
-              name: 'Frontend Standard',
-              description: 'Frontend coding standard',
-              rules: [{ content: 'Use TypeScript' }],
-              organizationId: organization.id,
-              userId: user.id,
-              scope: '**/*.{ts,tsx,js,jsx}',
-              spaceId: space.id,
-            });
-
-          const standard2 = await testApp.standardsHexa
-            .getAdapter()
-            .createStandard({
-              name: 'Backend Standard',
-              description: 'Backend coding standard',
-              rules: [{ content: 'Use dependency injection' }],
-              organizationId: organization.id,
-              userId: user.id,
-              scope: '',
-              spaceId: space.id,
-            });
-
-          const standardVersions: StandardVersion[] = [
-            {
-              id: 'standard-version-1' as StandardVersionId,
-              standardId: standard1.id,
-              name: standard1.name,
-              slug: standard1.slug,
-              description: standard1.description,
-              version: standard1.version,
-              summary: 'Frontend standard',
-              userId: user.id,
-              scope: standard1.scope,
-            },
-            {
-              id: 'standard-version-2' as StandardVersionId,
-              standardId: standard2.id,
-              name: standard2.name,
-              slug: standard2.slug,
-              description: standard2.description,
-              version: standard2.version,
-              summary: 'Backend standard',
-              userId: user.id,
-              scope: standard2.scope,
-            },
-          ];
-
-          const fileUpdates = await continueDeployer.deployStandards(
-            standardVersions,
-            gitRepo,
-            defaultTarget,
-          );
-
-          const frontendFile = fileUpdates.createOrUpdate.find((file) =>
-            file.path.includes(standard1.slug),
-          );
-
-          if (frontendFile) {
-            expect(frontendFile.content).toContain(
-              'globs: "**/*.{ts,tsx,js,jsx}"',
-            );
-          }
+        it('includes name in frontmatter', () => {
+          expect(frontendFile?.content).toContain(`name: ${standard1.name}`);
         });
 
-        it('sets alwaysApply to false', async () => {
-          const standard1 = await testApp.standardsHexa
-            .getAdapter()
-            .createStandard({
-              name: 'Frontend Standard',
-              description: 'Frontend coding standard',
-              rules: [{ content: 'Use TypeScript' }],
-              organizationId: organization.id,
-              userId: user.id,
-              scope: '**/*.{ts,tsx,js,jsx}',
-              spaceId: space.id,
-            });
-
-          const standard2 = await testApp.standardsHexa
-            .getAdapter()
-            .createStandard({
-              name: 'Backend Standard',
-              description: 'Backend coding standard',
-              rules: [{ content: 'Use dependency injection' }],
-              organizationId: organization.id,
-              userId: user.id,
-              scope: '',
-              spaceId: space.id,
-            });
-
-          const standardVersions: StandardVersion[] = [
-            {
-              id: 'standard-version-1' as StandardVersionId,
-              standardId: standard1.id,
-              name: standard1.name,
-              slug: standard1.slug,
-              description: standard1.description,
-              version: standard1.version,
-              summary: 'Frontend standard',
-              userId: user.id,
-              scope: standard1.scope,
-            },
-            {
-              id: 'standard-version-2' as StandardVersionId,
-              standardId: standard2.id,
-              name: standard2.name,
-              slug: standard2.slug,
-              description: standard2.description,
-              version: standard2.version,
-              summary: 'Backend standard',
-              userId: user.id,
-              scope: standard2.scope,
-            },
-          ];
-
-          const fileUpdates = await continueDeployer.deployStandards(
-            standardVersions,
-            gitRepo,
-            defaultTarget,
+        it('includes globs in frontmatter', () => {
+          expect(frontendFile?.content).toContain(
+            'globs: "**/*.{ts,tsx,js,jsx}"',
           );
+        });
 
-          const frontendFile = fileUpdates.createOrUpdate.find((file) =>
-            file.path.includes(standard1.slug),
-          );
-
-          if (frontendFile) {
-            expect(frontendFile.content).toContain('alwaysApply: false');
-          }
+        it('sets alwaysApply to false', () => {
+          expect(frontendFile?.content).toContain('alwaysApply: false');
         });
       });
 
       describe('for second standard without scope', () => {
-        it('includes name in frontmatter', async () => {
-          const standard1 = await testApp.standardsHexa
-            .getAdapter()
-            .createStandard({
-              name: 'Frontend Standard',
-              description: 'Frontend coding standard',
-              rules: [{ content: 'Use TypeScript' }],
-              organizationId: organization.id,
-              userId: user.id,
-              scope: '**/*.{ts,tsx,js,jsx}',
-              spaceId: space.id,
-            });
+        let backendFile: FileModification | undefined;
 
-          const standard2 = await testApp.standardsHexa
-            .getAdapter()
-            .createStandard({
-              name: 'Backend Standard',
-              description: 'Backend coding standard',
-              rules: [{ content: 'Use dependency injection' }],
-              organizationId: organization.id,
-              userId: user.id,
-              scope: '',
-              spaceId: space.id,
-            });
-
-          const standardVersions: StandardVersion[] = [
-            {
-              id: 'standard-version-1' as StandardVersionId,
-              standardId: standard1.id,
-              name: standard1.name,
-              slug: standard1.slug,
-              description: standard1.description,
-              version: standard1.version,
-              summary: 'Frontend standard',
-              userId: user.id,
-              scope: standard1.scope,
-            },
-            {
-              id: 'standard-version-2' as StandardVersionId,
-              standardId: standard2.id,
-              name: standard2.name,
-              slug: standard2.slug,
-              description: standard2.description,
-              version: standard2.version,
-              summary: 'Backend standard',
-              userId: user.id,
-              scope: standard2.scope,
-            },
-          ];
-
-          const fileUpdates = await continueDeployer.deployStandards(
-            standardVersions,
-            gitRepo,
-            defaultTarget,
-          );
-
-          const backendFile = fileUpdates.createOrUpdate.find((file) =>
+        beforeEach(() => {
+          backendFile = fileUpdates.createOrUpdate.find((file) =>
             file.path.includes(standard2.slug),
           );
-
-          if (backendFile) {
-            expect(backendFile.content).toContain(`name: ${standard2.name}`);
-          }
         });
 
-        it('does not include globs in frontmatter', async () => {
-          const standard1 = await testApp.standardsHexa
-            .getAdapter()
-            .createStandard({
-              name: 'Frontend Standard',
-              description: 'Frontend coding standard',
-              rules: [{ content: 'Use TypeScript' }],
-              organizationId: organization.id,
-              userId: user.id,
-              scope: '**/*.{ts,tsx,js,jsx}',
-              spaceId: space.id,
-            });
-
-          const standard2 = await testApp.standardsHexa
-            .getAdapter()
-            .createStandard({
-              name: 'Backend Standard',
-              description: 'Backend coding standard',
-              rules: [{ content: 'Use dependency injection' }],
-              organizationId: organization.id,
-              userId: user.id,
-              scope: '',
-              spaceId: space.id,
-            });
-
-          const standardVersions: StandardVersion[] = [
-            {
-              id: 'standard-version-1' as StandardVersionId,
-              standardId: standard1.id,
-              name: standard1.name,
-              slug: standard1.slug,
-              description: standard1.description,
-              version: standard1.version,
-              summary: 'Frontend standard',
-              userId: user.id,
-              scope: standard1.scope,
-            },
-            {
-              id: 'standard-version-2' as StandardVersionId,
-              standardId: standard2.id,
-              name: standard2.name,
-              slug: standard2.slug,
-              description: standard2.description,
-              version: standard2.version,
-              summary: 'Backend standard',
-              userId: user.id,
-              scope: standard2.scope,
-            },
-          ];
-
-          const fileUpdates = await continueDeployer.deployStandards(
-            standardVersions,
-            gitRepo,
-            defaultTarget,
-          );
-
-          const backendFile = fileUpdates.createOrUpdate.find((file) =>
-            file.path.includes(standard2.slug),
-          );
-
-          if (backendFile) {
-            expect(backendFile.content).not.toContain('globs:');
-          }
+        it('includes name in frontmatter', () => {
+          expect(backendFile?.content).toContain(`name: ${standard2.name}`);
         });
 
-        it('sets alwaysApply to true', async () => {
-          const standard1 = await testApp.standardsHexa
-            .getAdapter()
-            .createStandard({
-              name: 'Frontend Standard',
-              description: 'Frontend coding standard',
-              rules: [{ content: 'Use TypeScript' }],
-              organizationId: organization.id,
-              userId: user.id,
-              scope: '**/*.{ts,tsx,js,jsx}',
-              spaceId: space.id,
-            });
+        it('does not include globs in frontmatter', () => {
+          expect(backendFile?.content).not.toContain('globs:');
+        });
 
-          const standard2 = await testApp.standardsHexa
-            .getAdapter()
-            .createStandard({
-              name: 'Backend Standard',
-              description: 'Backend coding standard',
-              rules: [{ content: 'Use dependency injection' }],
-              organizationId: organization.id,
-              userId: user.id,
-              scope: '',
-              spaceId: space.id,
-            });
-
-          const standardVersions: StandardVersion[] = [
-            {
-              id: 'standard-version-1' as StandardVersionId,
-              standardId: standard1.id,
-              name: standard1.name,
-              slug: standard1.slug,
-              description: standard1.description,
-              version: standard1.version,
-              summary: 'Frontend standard',
-              userId: user.id,
-              scope: standard1.scope,
-            },
-            {
-              id: 'standard-version-2' as StandardVersionId,
-              standardId: standard2.id,
-              name: standard2.name,
-              slug: standard2.slug,
-              description: standard2.description,
-              version: standard2.version,
-              summary: 'Backend standard',
-              userId: user.id,
-              scope: standard2.scope,
-            },
-          ];
-
-          const fileUpdates = await continueDeployer.deployStandards(
-            standardVersions,
-            gitRepo,
-            defaultTarget,
-          );
-
-          const backendFile = fileUpdates.createOrUpdate.find((file) =>
-            file.path.includes(standard2.slug),
-          );
-
-          if (backendFile) {
-            expect(backendFile.content).toContain('alwaysApply: true');
-          }
+        it('sets alwaysApply to true', () => {
+          expect(backendFile?.content).toContain('alwaysApply: true');
         });
       });
     });
