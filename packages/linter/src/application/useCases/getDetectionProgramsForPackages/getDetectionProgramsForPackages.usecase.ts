@@ -134,7 +134,12 @@ export class GetDetectionProgramsForPackagesUseCase implements IGetDetectionProg
               standardsWithPrograms.push({
                 name: standard.name,
                 slug: standard.slug,
-                scope: standard.scope ? [standard.scope] : [],
+                scope: standard.scope
+                  ? standard.scope
+                      .split(',')
+                      .map((s) => s.trim())
+                      .filter(Boolean)
+                  : [],
                 rules: rulesWithPrograms,
               });
             }
