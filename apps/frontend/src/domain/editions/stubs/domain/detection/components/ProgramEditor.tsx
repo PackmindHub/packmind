@@ -1,4 +1,5 @@
 import { PMAlert } from '@packmind/ui';
+import { RuleExample } from '@packmind/types';
 
 interface ProgramEditorProps {
   standardId: string;
@@ -6,6 +7,7 @@ interface ProgramEditorProps {
   detectionLanguages: string[];
   selectedLanguage: string;
   onNavigateToExamples?: () => void;
+  ruleExamples?: RuleExample[];
 }
 
 export const ProgramEditor = (props: ProgramEditorProps) => {
