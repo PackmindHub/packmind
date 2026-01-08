@@ -163,7 +163,6 @@ export type NotifyDistributionGateway = (
 // Upload Skill types
 export type UploadSkillCommand = PackmindCommand & {
   skillPath: string; // local directory path
-  spaceId: string;
 };
 
 export type UploadSkillResult = {

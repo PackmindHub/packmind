@@ -1041,7 +1041,7 @@ export class PackmindGateway implements IPackmindGateway {
       })),
     };
 
-    const url = `${host}/api/v0/organizations/${organizationId}/spaces/${command.spaceId}/skills/upload`;
+    const url = `${host}/api/v0/organizations/${organizationId}/skills/upload`;
 
     try {
       const response = await fetch(url, {

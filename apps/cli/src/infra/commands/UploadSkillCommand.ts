@@ -1,4 +1,4 @@
-import { command, option, string, positional } from 'cmd-ts';
+import { command, string, positional } from 'cmd-ts';
 import { PackmindCliHexa } from '../../PackmindCliHexa';
 import { PackmindLogger, LogLevel } from '@packmind/logger';
 import {
@@ -9,21 +9,16 @@ import {
 
 export const uploadSkillCommand = command({
   name: 'upload-skill',
-  description: 'Upload a skill from a local directory to a Packmind space',
+  description:
+    'Upload a skill from a local directory to a Packmind organization',
   args: {
     skillPath: positional({
       type: string,
       displayName: 'path',
       description: 'Path to skill directory containing SKILL.md',
     }),
-    spaceId: option({
-      type: string,
-      long: 'space',
-      short: 's',
-      description: 'Space ID to upload the skill to',
-    }),
   },
-  handler: async ({ skillPath, spaceId }) => {
+  handler: async ({ skillPath }) => {
     const packmindLogger = new PackmindLogger('PackmindCLI', LogLevel.INFO);
     const packmindCliHexa = new PackmindCliHexa(packmindLogger);
 
@@ -32,7 +27,6 @@ export const uploadSkillCommand = command({
 
       const result = await packmindCliHexa.uploadSkill({
         skillPath,
-        spaceId,
         organizationId: '',
         userId: '',
       });
