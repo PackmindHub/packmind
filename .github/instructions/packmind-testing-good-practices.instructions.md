@@ -1,0 +1,13 @@
+---
+applyTo: '**/*.spec.ts, **/*.spec.tsx'
+---
+## Standard: Testing good practices
+
+Define unit test structure and naming in *.spec.ts(x) files by using verb-first assertive titles, Arrange-Act-Assert organization without comments, nested describe('when...') blocks, and one expect per test to improve readability, maintainability, and debugging clarity. :
+* Follow  'Arrange, Act, Assert' pattern
+* Move 'when' contextual clauses from `it()` into nested `describe('when...')` blocks
+* Remove explicit 'Arrange, Act, Assert' comments from tests and structure them so the setup, execution, and verification phases are clear without redundant labels
+* Use assertive, verb-first unit test names instead of starting with 'should'
+* Use one expect per test case for better clarity and easier debugging; group related tests in describe blocks with shared setup in beforeEach
+
+Full standard is available here for further request: [Testing good practices](../../.packmind/standards/testing-good-practices.md)

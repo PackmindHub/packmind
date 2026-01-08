@@ -9,10 +9,10 @@ All rules and guidelines defined in these standards are mandatory and must be fo
 
 Failure to follow these standards may lead to inconsistencies, errors, or rework. Treat them as the source of truth for how code should be written, structured, and maintained.
 
-## Standard: [cli]
+## Standard: [cli] Good practices
 
-Use shared consoleLogger utilities instead of direct console.log/warn methods to standardize output formatting and enable centralized logging control. :
-* Use `consoleLogger` utilities instead of console.(log/warn/...)
+Enforce the use of consoleLogger utilities instead of built-in console methods to standardize CLI logging behavior and improve maintainability. :
+* Use `consoleLogger` utilities instead of built-in console utilities (console.log/warn/...)
 
-Full standard is available here for further request: [[cli]](.packmind/standards/cli.md)
+Full standard is available here for further request: [[cli] Good practices](.packmind/standards/cli.md)
 <!-- end: Packmind standards -->
