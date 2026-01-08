@@ -42,93 +42,76 @@ describe('JunieDeployer', () => {
   });
 
   describe('deployRecipes', () => {
-    it('creates Junie guidelines file with recipe instructions', async () => {
-      const recipe = recipeFactory({
-        name: 'Test Recipe',
-        slug: 'test-recipe',
-      });
+    describe('with a single recipe', () => {
+      let result: Awaited<ReturnType<JunieDeployer['deployRecipes']>>;
 
-      const recipeVersion: RecipeVersion = {
-        id: createRecipeVersionId('recipe-version-1'),
-        recipeId: recipe.id,
-        name: recipe.name,
-        slug: recipe.slug,
-        content: 'This is the recipe content',
-        version: 1,
-        summary: 'A test recipe summary',
-        userId: createUserId('user-1'),
-      };
+      beforeEach(async () => {
+        const recipe = recipeFactory({
+          name: 'Test Recipe',
+          slug: 'test-recipe',
+        });
 
-      const result = await deployer.deployRecipes(
-        [recipeVersion],
-        mockGitRepo,
-        mockTarget,
-      );
-
-      expect(result.createOrUpdate).toHaveLength(1);
-      expect(result.delete).toHaveLength(0);
-
-      const guidelinesFile = result.createOrUpdate[0];
-      expect(guidelinesFile.path).toBe('.junie/guidelines.md');
-      const sectionContent = guidelinesFile.sections![0].content;
-      expect(sectionContent).toContain('# Packmind Recipes');
-      expect(sectionContent).toContain('🚨 **MANDATORY STEP** 🚨');
-      expect(sectionContent).toContain('ALWAYS READ');
-      expect(sectionContent).toContain(recipe.name);
-    });
-
-    it('handles empty recipe list', async () => {
-      const result = await deployer.deployRecipes([], mockGitRepo, mockTarget);
-
-      expect(result.createOrUpdate).toHaveLength(0);
-      expect(result.delete).toHaveLength(0);
-    });
-
-    it('includes multiple recipes in instructions', async () => {
-      const recipe1 = recipeFactory({
-        name: 'Recipe One',
-        slug: 'recipe-one',
-      });
-
-      const recipe2 = recipeFactory({
-        name: 'Recipe Two',
-        slug: 'recipe-two',
-      });
-
-      const recipeVersions: RecipeVersion[] = [
-        {
+        const recipeVersion: RecipeVersion = {
           id: createRecipeVersionId('recipe-version-1'),
-          recipeId: recipe1.id,
-          name: recipe1.name,
-          slug: recipe1.slug,
-          content: 'Recipe one content',
+          recipeId: recipe.id,
+          name: recipe.name,
+          slug: recipe.slug,
+          content: 'This is the recipe content',
           version: 1,
-          summary: 'Recipe one summary',
+          summary: 'A test recipe summary',
           userId: createUserId('user-1'),
-        },
-        {
-          id: createRecipeVersionId('recipe-version-2'),
-          recipeId: recipe2.id,
-          name: recipe2.name,
-          slug: recipe2.slug,
-          content: 'Recipe two content',
-          version: 1,
-          summary: 'Recipe two summary',
-          userId: createUserId('user-1'),
-        },
-      ];
+        };
 
-      const result = await deployer.deployRecipes(
-        recipeVersions,
-        mockGitRepo,
-        mockTarget,
-      );
+        result = await deployer.deployRecipes(
+          [recipeVersion],
+          mockGitRepo,
+          mockTarget,
+        );
+      });
 
-      const guidelinesFile = result.createOrUpdate[0];
-      const sectionContent = guidelinesFile.sections![0].content;
-      expect(sectionContent).toContain('# Packmind Recipes');
-      expect(sectionContent).toContain('🚨 **MANDATORY STEP** 🚨');
-      expect(sectionContent).toContain('ALWAYS READ');
+      it('creates one file to update', () => {
+        expect(result.createOrUpdate).toHaveLength(1);
+      });
+
+      it('targets the Junie guidelines file', () => {
+        expect(result.createOrUpdate[0].path).toBe('.junie/guidelines.md');
+      });
+
+      it('clears the recipes section for single-file deployers', () => {
+        expect(result.createOrUpdate[0].sections).toEqual([
+          { key: 'Packmind recipes', content: '' },
+        ]);
+      });
+
+      it('does not delete any files', () => {
+        expect(result.delete).toHaveLength(0);
+      });
+    });
+
+    describe('when recipe list is empty', () => {
+      let result: Awaited<ReturnType<JunieDeployer['deployRecipes']>>;
+
+      beforeEach(async () => {
+        result = await deployer.deployRecipes([], mockGitRepo, mockTarget);
+      });
+
+      it('creates one file to update', () => {
+        expect(result.createOrUpdate).toHaveLength(1);
+      });
+
+      it('targets the Junie guidelines file', () => {
+        expect(result.createOrUpdate[0].path).toBe('.junie/guidelines.md');
+      });
+
+      it('clears the recipes section', () => {
+        expect(result.createOrUpdate[0].sections).toEqual([
+          { key: 'Packmind recipes', content: '' },
+        ]);
+      });
+
+      it('does not delete any files', () => {
+        expect(result.delete).toHaveLength(0);
+      });
     });
   });
 

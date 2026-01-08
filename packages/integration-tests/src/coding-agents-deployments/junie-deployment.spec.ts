@@ -9,6 +9,7 @@ import { makeTestDatasource } from '@packmind/test-utils';
 import {
   createTargetId,
   FileModification,
+  FileUpdates,
   GitProviderVendors,
   GitRepo,
   IGitPort,
@@ -152,45 +153,50 @@ describe('Junie Deployment Integration', () => {
       jest.restoreAllMocks();
     });
 
-    it('creates .junie/guidelines.md with recipes instructions only', async () => {
-      const recipeVersions: RecipeVersion[] = [
-        {
-          id: 'recipe-version-1' as RecipeVersionId,
-          recipeId: recipe.id,
-          name: recipe.name,
-          slug: recipe.slug,
-          content: recipe.content,
-          version: recipe.version,
-          summary: 'Test recipe for deployment',
-          userId: user.id,
-        },
-      ];
+    describe('when clearing recipes section for single-file deployers', () => {
+      let fileUpdates: Awaited<
+        ReturnType<typeof deployerService.aggregateRecipeDeployments>
+      >;
 
-      const fileUpdates = await deployerService.aggregateRecipeDeployments(
-        recipeVersions,
-        gitRepo,
-        [defaultTarget],
-        ['junie'],
-      );
+      beforeEach(async () => {
+        const recipeVersions: RecipeVersion[] = [
+          {
+            id: 'recipe-version-1' as RecipeVersionId,
+            recipeId: recipe.id,
+            name: recipe.name,
+            slug: recipe.slug,
+            content: recipe.content,
+            version: recipe.version,
+            summary: 'Test recipe for deployment',
+            userId: user.id,
+          },
+        ];
 
-      expect(fileUpdates.createOrUpdate).toHaveLength(1);
-      expect(fileUpdates.delete).toHaveLength(0);
+        fileUpdates = await deployerService.aggregateRecipeDeployments(
+          recipeVersions,
+          gitRepo,
+          [defaultTarget],
+          ['junie'],
+        );
+      });
 
-      const guidelinesFile = fileUpdates.createOrUpdate.find(
-        (file) => file.path === '.junie/guidelines.md',
-      );
+      it('returns exactly one file to create or update', async () => {
+        expect(fileUpdates.createOrUpdate).toHaveLength(1);
+      });
 
-      expect(guidelinesFile).toBeDefined();
-      if (guidelinesFile) {
-        const sectionContent = guidelinesFile.sections![0].content;
-        expect(sectionContent).toContain('# Packmind Recipes');
-        expect(sectionContent).toContain('🚨 **MANDATORY STEP** 🚨');
-        expect(sectionContent).toContain('ALWAYS READ');
-        expect(sectionContent).toContain(recipeVersions[0].name);
+      it('targets the .junie/guidelines.md file', async () => {
+        expect(fileUpdates.createOrUpdate[0].path).toBe('.junie/guidelines.md');
+      });
 
-        // Should NOT contain standards content yet
-        expect(sectionContent).not.toContain('## Packmind Standards');
-      }
+      it('sets the Packmind recipes section to empty content', async () => {
+        expect(fileUpdates.createOrUpdate[0].sections).toEqual([
+          { key: 'Packmind recipes', content: '' },
+        ]);
+      });
+
+      it('returns no files to delete', async () => {
+        expect(fileUpdates.delete).toHaveLength(0);
+      });
     });
 
     it('create .junie/guidelines.md with standards instructions only', async () => {
@@ -339,42 +345,50 @@ describe('Junie Deployment Integration', () => {
       jest.restoreAllMocks();
     });
 
-    it('generates recipe section content', async () => {
-      const recipeVersions: RecipeVersion[] = [
-        {
-          id: 'recipe-version-1' as RecipeVersionId,
-          recipeId: recipe.id,
-          name: recipe.name,
-          slug: recipe.slug,
-          content: recipe.content,
-          version: recipe.version,
-          summary: 'Test recipe for deployment',
-          userId: user.id,
-        },
-      ];
+    describe('when clearing recipes section for single-file deployers', () => {
+      let fileUpdates: Awaited<
+        ReturnType<typeof deployerService.aggregateRecipeDeployments>
+      >;
 
-      const fileUpdates = await deployerService.aggregateRecipeDeployments(
-        recipeVersions,
-        gitRepo,
-        [defaultTarget],
-        ['junie'],
-      );
+      beforeEach(async () => {
+        const recipeVersions: RecipeVersion[] = [
+          {
+            id: 'recipe-version-1' as RecipeVersionId,
+            recipeId: recipe.id,
+            name: recipe.name,
+            slug: recipe.slug,
+            content: recipe.content,
+            version: recipe.version,
+            summary: 'Test recipe for deployment',
+            userId: user.id,
+          },
+        ];
 
-      expect(fileUpdates.createOrUpdate).toHaveLength(1);
-      expect(fileUpdates.delete).toHaveLength(0);
+        fileUpdates = await deployerService.aggregateRecipeDeployments(
+          recipeVersions,
+          gitRepo,
+          [defaultTarget],
+          ['junie'],
+        );
+      });
 
-      const guidelinesFile = fileUpdates.createOrUpdate[0];
-      expect(guidelinesFile.path).toBe('.junie/guidelines.md');
+      it('returns exactly one file to create or update', async () => {
+        expect(fileUpdates.createOrUpdate).toHaveLength(1);
+      });
 
-      const sectionContent = guidelinesFile.sections![0].content;
+      it('targets the .junie/guidelines.md file', async () => {
+        expect(fileUpdates.createOrUpdate[0].path).toBe('.junie/guidelines.md');
+      });
 
-      // Should generate recipe section with Packmind content only
-      expect(sectionContent).toContain('# Packmind Recipes');
-      expect(sectionContent).toContain('🚨 **MANDATORY STEP** 🚨');
+      it('sets the Packmind recipes section to empty content', async () => {
+        expect(fileUpdates.createOrUpdate[0].sections).toEqual([
+          { key: 'Packmind recipes', content: '' },
+        ]);
+      });
 
-      // Should NOT contain user content (that's preserved by merge layer)
-      expect(sectionContent).not.toContain('# Some User Instructions');
-      expect(sectionContent).not.toContain('# Packmind Standards');
+      it('returns no files to delete', async () => {
+        expect(fileUpdates.delete).toHaveLength(0);
+      });
     });
 
     it('generates standards section content', async () => {
@@ -441,64 +455,71 @@ describe('Junie Deployment Integration', () => {
       junieDeployer = new JunieDeployer(standardsPort, gitPort);
     });
 
-    it('handles empty recipe list gracefully', async () => {
-      jest.spyOn(gitPort, 'getFileFromRepo').mockResolvedValue(null);
+    describe('when clearing recipes section for single-file deployers', () => {
+      let fileUpdates: FileUpdates;
 
-      const fileUpdates = await junieDeployer.deployRecipes(
-        [],
-        gitRepo,
-        defaultTarget,
-      );
+      beforeEach(async () => {
+        jest.spyOn(gitPort, 'getFileFromRepo').mockResolvedValue(null);
 
-      expect(fileUpdates.createOrUpdate).toHaveLength(0);
-      expect(fileUpdates.delete).toHaveLength(0);
+        const recipeVersions: RecipeVersion[] = [
+          {
+            id: 'recipe-version-1' as RecipeVersionId,
+            recipeId: recipe.id,
+            name: recipe.name,
+            slug: recipe.slug,
+            content: recipe.content,
+            version: recipe.version,
+            summary: 'Test recipe',
+            userId: user.id,
+          },
+        ];
+
+        fileUpdates = await junieDeployer.deployRecipes(
+          recipeVersions,
+          gitRepo,
+          defaultTarget,
+        );
+      });
+
+      it('returns exactly one file to create or update', async () => {
+        expect(fileUpdates.createOrUpdate).toHaveLength(1);
+      });
+
+      it('targets the .junie/guidelines.md file', async () => {
+        expect(fileUpdates.createOrUpdate[0].path).toBe('.junie/guidelines.md');
+      });
+
+      it('sets the Packmind recipes section to empty content', async () => {
+        expect(fileUpdates.createOrUpdate[0].sections).toEqual([
+          { key: 'Packmind recipes', content: '' },
+        ]);
+      });
+
+      it('returns no files to delete', async () => {
+        expect(fileUpdates.delete).toHaveLength(0);
+      });
     });
 
-    it('handles empty standards list gracefully', async () => {
-      jest.spyOn(gitPort, 'getFileFromRepo').mockResolvedValue(null);
+    describe('when handling empty standards list', () => {
+      let fileUpdates: FileUpdates;
 
-      const fileUpdates = await junieDeployer.deployStandards(
-        [],
-        gitRepo,
-        defaultTarget,
-      );
+      beforeEach(async () => {
+        jest.spyOn(gitPort, 'getFileFromRepo').mockResolvedValue(null);
 
-      expect(fileUpdates.createOrUpdate).toHaveLength(0);
-      expect(fileUpdates.delete).toHaveLength(0);
-    });
+        fileUpdates = await junieDeployer.deployStandards(
+          [],
+          gitRepo,
+          defaultTarget,
+        );
+      });
 
-    it('handles GitHexa errors gracefully', async () => {
-      jest
-        .spyOn(testApp.gitHexa.getAdapter(), 'getFileFromRepo')
-        .mockRejectedValue(new Error('GitHub API error'));
+      it('returns no files to create or update', async () => {
+        expect(fileUpdates.createOrUpdate).toHaveLength(0);
+      });
 
-      const recipeVersions: RecipeVersion[] = [
-        {
-          id: 'recipe-version-1' as RecipeVersionId,
-          recipeId: recipe.id,
-          name: recipe.name,
-          slug: recipe.slug,
-          content: recipe.content,
-          version: recipe.version,
-          summary: 'Test recipe',
-          userId: user.id,
-        },
-      ];
-
-      const fileUpdates = await junieDeployer.deployRecipes(
-        recipeVersions,
-        gitRepo,
-        defaultTarget,
-      );
-
-      // Should still work despite the error, treating it as if file doesn't exist
-      expect(fileUpdates.createOrUpdate).toHaveLength(1);
-      expect(fileUpdates.delete).toHaveLength(0);
-
-      const guidelinesFile = fileUpdates.createOrUpdate[0];
-      const sectionContent = guidelinesFile.sections![0].content;
-      expect(sectionContent).toContain('# Packmind Recipes');
-      expect(sectionContent).toContain('🚨 **MANDATORY STEP** 🚨');
+      it('returns no files to delete', async () => {
+        expect(fileUpdates.delete).toHaveLength(0);
+      });
     });
   });
 });
