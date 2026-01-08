@@ -83,53 +83,42 @@ describe('SingleFileDeployer', () => {
       },
     ];
 
-    it('never outputs "null" for recipe with null summary', async () => {
-      const recipeWithNullSummary: RecipeVersion[] = [
-        {
-          id: createRecipeVersionId('recipe-version-1'),
-          recipeId: createRecipeId('recipe-1'),
-          name: 'Recipe Without Summary',
-          slug: 'recipe-without-summary',
-          content: '# Recipe Content',
-          version: 1,
-          summary: null,
-          userId: createUserId('user-1'),
-        },
-      ];
+    describe('when deploying recipes', () => {
+      let result: FileUpdates;
 
-      mockGitPort.getFileFromRepo.mockResolvedValue(null);
+      beforeEach(async () => {
+        result = await deployer.deployRecipes(
+          mockRecipeVersions,
+          mockGitRepo,
+          jetbrainsTarget,
+        );
+      });
 
-      const result = await deployer.deployRecipes(
-        recipeWithNullSummary,
-        mockGitRepo,
-        jetbrainsTarget,
-      );
+      it('returns one createOrUpdate entry', () => {
+        expect(result.createOrUpdate).toHaveLength(1);
+      });
 
-      expect(result.createOrUpdate).toHaveLength(1);
-      const sectionContent = result.createOrUpdate[0].sections![0].content;
+      it('uses target-prefixed path for the file', () => {
+        expect(result.createOrUpdate[0].path).toBe('jetbrains/TEST_AGENT.md');
+      });
 
-      // Should not contain the string "null" as a value
-      expect(sectionContent).not.toMatch(/:\s*null\s*$/m);
-      expect(sectionContent).not.toMatch(/:\s*null\n/);
+      it('includes one section in the file update', () => {
+        expect(result.createOrUpdate[0].sections).toHaveLength(1);
+      });
 
-      // Should contain only the link without colon and description
-      expect(sectionContent).toContain(
-        '* [Recipe Without Summary](.packmind/commands/recipe-without-summary.md)',
-      );
-      expect(sectionContent).not.toMatch(
-        /Recipe Without Summary\].*:\s+Recipe Without Summary/,
-      );
-    });
+      it('sets section key to Packmind recipes', () => {
+        expect(result.createOrUpdate[0].sections![0].key).toBe(
+          'Packmind recipes',
+        );
+      });
 
-    it('uses getTargetPrefixedPath for file path in recipe deployment', async () => {
-      const result = await deployer.deployRecipes(
-        mockRecipeVersions,
-        mockGitRepo,
-        jetbrainsTarget,
-      );
+      it('sets section content to empty string to clear recipes', () => {
+        expect(result.createOrUpdate[0].sections![0].content).toBe('');
+      });
 
-      expect(result.createOrUpdate).toHaveLength(1);
-      expect(result.createOrUpdate[0].path).toBe('jetbrains/TEST_AGENT.md');
+      it('does not delete any files', () => {
+        expect(result.delete).toHaveLength(0);
+      });
     });
   });
 
@@ -343,36 +332,70 @@ describe('SingleFileDeployer', () => {
   });
 
   describe('error handling in getExistingContent', () => {
-    it('returns empty string on gitHexa error', async () => {
-      const mockRecipeVersions: RecipeVersion[] = [];
-      mockGitPort.getFileFromRepo.mockRejectedValue(new Error('Git error'));
+    describe('when gitPort throws an error', () => {
+      let result: FileUpdates;
 
-      const result = await deployer.deployRecipes(
-        mockRecipeVersions,
-        mockGitRepo,
-        jetbrainsTarget,
-      );
+      beforeEach(async () => {
+        const mockRecipeVersions: RecipeVersion[] = [];
+        mockGitPort.getFileFromRepo.mockRejectedValue(new Error('Git error'));
 
-      // Should not throw error and should handle gracefully
-      // With empty recipes, no file updates should be generated
-      expect(result.createOrUpdate).toHaveLength(0);
-      expect(result.delete).toHaveLength(0);
+        result = await deployer.deployRecipes(
+          mockRecipeVersions,
+          mockGitRepo,
+          jetbrainsTarget,
+        );
+      });
+
+      it('returns one createOrUpdate entry', () => {
+        expect(result.createOrUpdate).toHaveLength(1);
+      });
+
+      it('sets section key to Packmind recipes', () => {
+        expect(result.createOrUpdate[0].sections![0].key).toBe(
+          'Packmind recipes',
+        );
+      });
+
+      it('sets section content to empty string', () => {
+        expect(result.createOrUpdate[0].sections![0].content).toBe('');
+      });
+
+      it('does not delete any files', () => {
+        expect(result.delete).toHaveLength(0);
+      });
     });
 
-    it('handles missing gitHexa gracefully', async () => {
-      const deployerWithoutGit = new TestSingleFileDeployer(); // No gitHexa
-      const mockRecipeVersions: RecipeVersion[] = [];
+    describe('when gitPort is missing', () => {
+      let result: FileUpdates;
 
-      const result = await deployerWithoutGit.deployRecipes(
-        mockRecipeVersions,
-        mockGitRepo,
-        jetbrainsTarget,
-      );
+      beforeEach(async () => {
+        const deployerWithoutGit = new TestSingleFileDeployer(); // No gitPort
+        const mockRecipeVersions: RecipeVersion[] = [];
 
-      // Should not throw error and should handle gracefully
-      // With empty recipes, no file updates should be generated
-      expect(result.createOrUpdate).toHaveLength(0);
-      expect(result.delete).toHaveLength(0);
+        result = await deployerWithoutGit.deployRecipes(
+          mockRecipeVersions,
+          mockGitRepo,
+          jetbrainsTarget,
+        );
+      });
+
+      it('returns one createOrUpdate entry', () => {
+        expect(result.createOrUpdate).toHaveLength(1);
+      });
+
+      it('sets section key to Packmind recipes', () => {
+        expect(result.createOrUpdate[0].sections![0].key).toBe(
+          'Packmind recipes',
+        );
+      });
+
+      it('sets section content to empty string', () => {
+        expect(result.createOrUpdate[0].sections![0].content).toBe('');
+      });
+
+      it('does not delete any files', () => {
+        expect(result.delete).toHaveLength(0);
+      });
     });
   });
 
@@ -404,95 +427,185 @@ describe('SingleFileDeployer', () => {
       },
     ];
 
-    it('generates sections for both recipes and standards', async () => {
-      const result = await deployer.deployArtifacts(
-        mockRecipeVersions,
-        mockStandardVersions,
-      );
+    describe('when deploying both recipes and standards', () => {
+      let result: FileUpdates;
 
-      expect(result.createOrUpdate).toHaveLength(1);
-      const file = result.createOrUpdate[0];
+      beforeEach(async () => {
+        result = await deployer.deployArtifacts(
+          mockRecipeVersions,
+          mockStandardVersions,
+        );
+      });
 
-      expect(file.path).toBe('TEST_AGENT.md');
-      expect(file.sections).toHaveLength(2);
+      it('returns one createOrUpdate entry', () => {
+        expect(result.createOrUpdate).toHaveLength(1);
+      });
 
-      const recipesSection = file.sections!.find(
-        (s) => s.key === 'Packmind recipes',
-      );
-      expect(recipesSection).toBeDefined();
-      expect(recipesSection!.content).toContain(
-        '[Test Recipe](.packmind/commands/test-recipe.md)',
-      );
+      it('sets file path to base agent file', () => {
+        expect(result.createOrUpdate[0].path).toBe('TEST_AGENT.md');
+      });
 
-      const standardsSection = file.sections!.find(
-        (s) => s.key === 'Packmind standards',
-      );
-      expect(standardsSection).toBeDefined();
-      expect(standardsSection!.content).toContain('## Standard: Test Standard');
-    });
+      it('includes two sections in the file update', () => {
+        expect(result.createOrUpdate[0].sections).toHaveLength(2);
+      });
 
-    it('returns base file path without target prefixing', async () => {
-      const result = await deployer.deployArtifacts(
-        mockRecipeVersions,
-        mockStandardVersions,
-      );
+      it('includes Packmind recipes section', () => {
+        const recipesSection = result.createOrUpdate[0].sections!.find(
+          (s) => s.key === 'Packmind recipes',
+        );
+        expect(recipesSection).toBeDefined();
+      });
 
-      expect(result.createOrUpdate).toHaveLength(1);
-      expect(result.createOrUpdate[0].path).toBe('TEST_AGENT.md');
-      expect(result.createOrUpdate[0].path).not.toContain('jetbrains');
-      expect(result.createOrUpdate[0].path).not.toContain('vscode');
+      it('sets recipes section content to empty string', () => {
+        const recipesSection = result.createOrUpdate[0].sections!.find(
+          (s) => s.key === 'Packmind recipes',
+        );
+        expect(recipesSection!.content).toBe('');
+      });
+
+      it('includes Packmind standards section', () => {
+        const standardsSection = result.createOrUpdate[0].sections!.find(
+          (s) => s.key === 'Packmind standards',
+        );
+        expect(standardsSection).toBeDefined();
+      });
+
+      it('includes standard name in standards section content', () => {
+        const standardsSection = result.createOrUpdate[0].sections!.find(
+          (s) => s.key === 'Packmind standards',
+        );
+        expect(standardsSection!.content).toContain(
+          '## Standard: Test Standard',
+        );
+      });
+
+      it('does not include target prefix in path', () => {
+        expect(result.createOrUpdate[0].path).not.toContain('jetbrains');
+      });
+
+      it('does not include vscode prefix in path', () => {
+        expect(result.createOrUpdate[0].path).not.toContain('vscode');
+      });
     });
 
     describe('when recipes are empty', () => {
-      it('generates only standards section', async () => {
-        const result = await deployer.deployArtifacts([], mockStandardVersions);
+      let result: FileUpdates;
 
+      beforeEach(async () => {
+        result = await deployer.deployArtifacts([], mockStandardVersions);
+      });
+
+      it('returns one createOrUpdate entry', () => {
         expect(result.createOrUpdate).toHaveLength(1);
-        const file = result.createOrUpdate[0];
+      });
 
-        expect(file.sections).toHaveLength(1);
-        expect(file.sections![0].key).toBe('Packmind standards');
-        expect(file.sections![0].content).toContain(
+      it('includes two sections in the file update', () => {
+        expect(result.createOrUpdate[0].sections).toHaveLength(2);
+      });
+
+      it('includes Packmind recipes section', () => {
+        const recipesSection = result.createOrUpdate[0].sections!.find(
+          (s) => s.key === 'Packmind recipes',
+        );
+        expect(recipesSection).toBeDefined();
+      });
+
+      it('sets recipes section content to empty string', () => {
+        const recipesSection = result.createOrUpdate[0].sections!.find(
+          (s) => s.key === 'Packmind recipes',
+        );
+        expect(recipesSection!.content).toBe('');
+      });
+
+      it('includes Packmind standards section', () => {
+        const standardsSection = result.createOrUpdate[0].sections!.find(
+          (s) => s.key === 'Packmind standards',
+        );
+        expect(standardsSection).toBeDefined();
+      });
+
+      it('includes standard name in standards section content', () => {
+        const standardsSection = result.createOrUpdate[0].sections!.find(
+          (s) => s.key === 'Packmind standards',
+        );
+        expect(standardsSection!.content).toContain(
           '## Standard: Test Standard',
         );
       });
     });
 
     describe('when standards are empty', () => {
-      it('generates only recipes section', async () => {
-        const result = await deployer.deployArtifacts(mockRecipeVersions, []);
+      let result: FileUpdates;
 
+      beforeEach(async () => {
+        result = await deployer.deployArtifacts(mockRecipeVersions, []);
+      });
+
+      it('returns one createOrUpdate entry', () => {
         expect(result.createOrUpdate).toHaveLength(1);
-        const file = result.createOrUpdate[0];
+      });
 
-        expect(file.sections).toHaveLength(1);
-        expect(file.sections![0].key).toBe('Packmind recipes');
-        expect(file.sections![0].content).toContain(
-          '[Test Recipe](.packmind/commands/test-recipe.md)',
+      it('includes one section in the file update', () => {
+        expect(result.createOrUpdate[0].sections).toHaveLength(1);
+      });
+
+      it('sets section key to Packmind recipes', () => {
+        expect(result.createOrUpdate[0].sections![0].key).toBe(
+          'Packmind recipes',
         );
+      });
+
+      it('sets section content to empty string', () => {
+        expect(result.createOrUpdate[0].sections![0].content).toBe('');
+      });
+
+      it('does not delete any files', () => {
+        expect(result.delete).toHaveLength(0);
       });
     });
 
     describe('when both recipes and standards are empty', () => {
-      it('returns empty array', async () => {
-        const result = await deployer.deployArtifacts([], []);
+      let result: FileUpdates;
 
-        expect(result.createOrUpdate).toHaveLength(0);
+      beforeEach(async () => {
+        result = await deployer.deployArtifacts([], []);
+      });
+
+      it('returns one createOrUpdate entry', () => {
+        expect(result.createOrUpdate).toHaveLength(1);
+      });
+
+      it('includes one section in the file update', () => {
+        expect(result.createOrUpdate[0].sections).toHaveLength(1);
+      });
+
+      it('sets section key to Packmind recipes', () => {
+        expect(result.createOrUpdate[0].sections![0].key).toBe(
+          'Packmind recipes',
+        );
+      });
+
+      it('sets section content to empty string', () => {
+        expect(result.createOrUpdate[0].sections![0].content).toBe('');
+      });
+
+      it('does not delete any files', () => {
         expect(result.delete).toHaveLength(0);
       });
     });
 
     describe('when rules not present on standards', () => {
-      it('fetches rules for standards', async () => {
-        const mockRules = [
-          {
-            id: 'rule-1',
-            standardId: mockStandardVersions[0].standardId,
-            content: 'Test rule content',
-            order: 1,
-          },
-        ];
+      let result: FileUpdates;
+      const mockRules = [
+        {
+          id: 'rule-1',
+          standardId: createStandardId('standard-1'),
+          content: 'Test rule content',
+          order: 1,
+        },
+      ];
 
+      beforeEach(async () => {
         mockStandardsPort.getRulesByStandardId = jest
           .fn()
           .mockResolvedValue(mockRules);
@@ -504,19 +617,31 @@ describe('SingleFileDeployer', () => {
           },
         ];
 
-        const result = await deployer.deployArtifacts([], standardWithoutRules);
+        result = await deployer.deployArtifacts([], standardWithoutRules);
+      });
 
+      it('calls getRulesByStandardId with the standard id', () => {
         expect(mockStandardsPort.getRulesByStandardId).toHaveBeenCalledWith(
           mockStandardVersions[0].standardId,
         );
+      });
+
+      it('returns one createOrUpdate entry', () => {
         expect(result.createOrUpdate).toHaveLength(1);
-        const file = result.createOrUpdate[0];
-        expect(file.sections![0].content).toContain('Test rule content');
+      });
+
+      it('includes rule content in standards section', () => {
+        const standardsSection = result.createOrUpdate[0].sections!.find(
+          (s) => s.key === 'Packmind standards',
+        );
+        expect(standardsSection!.content).toContain('Test rule content');
       });
     });
 
     describe('when rules present on standard version', () => {
-      it('uses existing rules', async () => {
+      let result: FileUpdates;
+
+      beforeEach(async () => {
         mockStandardsPort.getRulesByStandardId = jest.fn();
 
         const standardWithRules = [
@@ -532,48 +657,74 @@ describe('SingleFileDeployer', () => {
           },
         ];
 
-        const result = await deployer.deployArtifacts([], standardWithRules);
+        result = await deployer.deployArtifacts([], standardWithRules);
+      });
 
+      it('does not call getRulesByStandardId', () => {
         expect(mockStandardsPort.getRulesByStandardId).not.toHaveBeenCalled();
+      });
+
+      it('returns one createOrUpdate entry', () => {
         expect(result.createOrUpdate).toHaveLength(1);
-        const file = result.createOrUpdate[0];
-        expect(file.sections![0].content).toContain('Existing rule');
+      });
+
+      it('includes existing rule content in standards section', () => {
+        const standardsSection = result.createOrUpdate[0].sections!.find(
+          (s) => s.key === 'Packmind standards',
+        );
+        expect(standardsSection!.content).toContain('Existing rule');
       });
     });
 
-    it('handles null/undefined summaries gracefully', async () => {
-      const recipeWithNullSummary = [
-        {
-          ...mockRecipeVersions[0],
-          summary: null,
-        },
-      ];
+    describe('when standard has null summary', () => {
+      let result: FileUpdates;
 
-      const standardWithNullSummary = [
-        {
-          ...mockStandardVersions[0],
-          summary: null,
-        },
-      ];
+      beforeEach(async () => {
+        const standardWithNullSummary = [
+          {
+            ...mockStandardVersions[0],
+            summary: null,
+          },
+        ];
 
-      const result = await deployer.deployArtifacts(
-        recipeWithNullSummary,
-        standardWithNullSummary,
-      );
+        result = await deployer.deployArtifacts([], standardWithNullSummary);
+      });
 
-      expect(result.createOrUpdate).toHaveLength(1);
-      const file = result.createOrUpdate[0];
-      const recipesSection = file.sections!.find(
-        (s) => s.key === 'Packmind recipes',
-      );
-      const standardsSection = file.sections!.find(
-        (s) => s.key === 'Packmind standards',
-      );
+      it('returns one createOrUpdate entry', () => {
+        expect(result.createOrUpdate).toHaveLength(1);
+      });
 
-      expect(recipesSection!.content).not.toMatch(/:\s*null\s*$/m);
-      expect(recipesSection!.content).not.toMatch(/:\s*null\n/);
-      expect(standardsSection!.content).not.toMatch(/:\s*null\s*$/m);
-      expect(standardsSection!.content).not.toMatch(/:\s*null\n/);
+      it('includes two sections in the file update', () => {
+        expect(result.createOrUpdate[0].sections).toHaveLength(2);
+      });
+
+      it('includes Packmind recipes section', () => {
+        const recipesSection = result.createOrUpdate[0].sections!.find(
+          (s) => s.key === 'Packmind recipes',
+        );
+        expect(recipesSection).toBeDefined();
+      });
+
+      it('sets recipes section content to empty string', () => {
+        const recipesSection = result.createOrUpdate[0].sections!.find(
+          (s) => s.key === 'Packmind recipes',
+        );
+        expect(recipesSection!.content).toBe('');
+      });
+
+      it('does not output null at end of line in standards section', () => {
+        const standardsSection = result.createOrUpdate[0].sections!.find(
+          (s) => s.key === 'Packmind standards',
+        );
+        expect(standardsSection!.content).not.toMatch(/:\s*null\s*$/m);
+      });
+
+      it('does not output null followed by newline in standards section', () => {
+        const standardsSection = result.createOrUpdate[0].sections!.find(
+          (s) => s.key === 'Packmind standards',
+        );
+        expect(standardsSection!.content).not.toMatch(/:\s*null\n/);
+      });
     });
   });
 
@@ -607,76 +758,25 @@ describe('SingleFileDeployer', () => {
         );
       });
 
-      it('generates one createOrUpdate entry to clear recipes section', () => {
+      it('returns one createOrUpdate entry', () => {
         expect(result.createOrUpdate).toHaveLength(1);
       });
 
-      it('generates one section in the createOrUpdate entry', () => {
+      it('includes one section in the file update', () => {
         expect(result.createOrUpdate[0].sections).toHaveLength(1);
       });
 
-      it('targets the Packmind recipes section', () => {
+      it('sets section key to Packmind recipes', () => {
         expect(result.createOrUpdate[0].sections![0].key).toBe(
           'Packmind recipes',
         );
       });
 
-      it('sets the recipes section content to empty', () => {
+      it('sets section content to empty string', () => {
         expect(result.createOrUpdate[0].sections![0].content).toBe('');
       });
 
-      it('does not delete the file', () => {
-        expect(result.delete).toHaveLength(0);
-      });
-    });
-
-    describe('when recipes are removed but others remain installed', () => {
-      const removedRecipes: RecipeVersion[] = [
-        {
-          id: createRecipeVersionId('recipe-version-1'),
-          recipeId: createRecipeId('recipe-1'),
-          name: 'Removed Recipe',
-          slug: 'removed-recipe',
-          content: '# Removed Recipe',
-          version: 1,
-          summary: 'Removed',
-          userId: createUserId('user-1'),
-        },
-      ];
-
-      const installedRecipes: RecipeVersion[] = [
-        {
-          id: createRecipeVersionId('recipe-version-2'),
-          recipeId: createRecipeId('recipe-2'),
-          name: 'Installed Recipe',
-          slug: 'installed-recipe',
-          content: '# Installed Recipe',
-          version: 1,
-          summary: 'Installed',
-          userId: createUserId('user-1'),
-        },
-      ];
-
-      let result: FileUpdates;
-
-      beforeEach(async () => {
-        result = await deployer.generateRemovalFileUpdates(
-          {
-            recipeVersions: removedRecipes,
-            standardVersions: [],
-          },
-          {
-            recipeVersions: installedRecipes,
-            standardVersions: [],
-          },
-        );
-      });
-
-      it('does not generate createOrUpdate entries', () => {
-        expect(result.createOrUpdate).toHaveLength(0);
-      });
-
-      it('does not generate delete entries', () => {
+      it('does not delete any files', () => {
         expect(result.delete).toHaveLength(0);
       });
     });
@@ -711,22 +811,40 @@ describe('SingleFileDeployer', () => {
         );
       });
 
-      it('generates one createOrUpdate entry to clear standards section', () => {
+      it('generates one createOrUpdate entry to clear both sections', () => {
         expect(result.createOrUpdate).toHaveLength(1);
       });
 
-      it('generates one section in the createOrUpdate entry', () => {
-        expect(result.createOrUpdate[0].sections).toHaveLength(1);
+      it('generates two sections in the createOrUpdate entry (recipes and standards)', () => {
+        expect(result.createOrUpdate[0].sections).toHaveLength(2);
       });
 
-      it('targets the Packmind standards section', () => {
-        expect(result.createOrUpdate[0].sections![0].key).toBe(
-          'Packmind standards',
+      it('includes Packmind recipes section', () => {
+        const recipesSection = result.createOrUpdate[0].sections!.find(
+          (s) => s.key === 'Packmind recipes',
         );
+        expect(recipesSection).toBeDefined();
       });
 
-      it('sets the standards section content to empty', () => {
-        expect(result.createOrUpdate[0].sections![0].content).toBe('');
+      it('sets Packmind recipes section content to empty', () => {
+        const recipesSection = result.createOrUpdate[0].sections!.find(
+          (s) => s.key === 'Packmind recipes',
+        );
+        expect(recipesSection!.content).toBe('');
+      });
+
+      it('includes Packmind standards section', () => {
+        const standardsSection = result.createOrUpdate[0].sections!.find(
+          (s) => s.key === 'Packmind standards',
+        );
+        expect(standardsSection).toBeDefined();
+      });
+
+      it('sets Packmind standards section content to empty', () => {
+        const standardsSection = result.createOrUpdate[0].sections!.find(
+          (s) => s.key === 'Packmind standards',
+        );
+        expect(standardsSection!.content).toBe('');
       });
 
       it('does not delete the file', () => {
@@ -778,8 +896,22 @@ describe('SingleFileDeployer', () => {
         );
       });
 
-      it('does not generate createOrUpdate entries', () => {
-        expect(result.createOrUpdate).toHaveLength(0);
+      it('returns one createOrUpdate entry', () => {
+        expect(result.createOrUpdate).toHaveLength(1);
+      });
+
+      it('includes one section in the file update', () => {
+        expect(result.createOrUpdate[0].sections).toHaveLength(1);
+      });
+
+      it('sets section key to Packmind recipes', () => {
+        expect(result.createOrUpdate[0].sections![0].key).toBe(
+          'Packmind recipes',
+        );
+      });
+
+      it('sets section content to empty string', () => {
+        expect(result.createOrUpdate[0].sections![0].content).toBe('');
       });
 
       it('does not generate delete entries', () => {
@@ -833,32 +965,32 @@ describe('SingleFileDeployer', () => {
         expect(result.createOrUpdate).toHaveLength(1);
       });
 
-      it('generates two sections in the createOrUpdate entry', () => {
+      it('generates two sections in the createOrUpdate entry (recipes and standards)', () => {
         expect(result.createOrUpdate[0].sections).toHaveLength(2);
       });
 
-      it('targets the Packmind recipes section', () => {
+      it('includes Packmind recipes section', () => {
         const recipesSection = result.createOrUpdate[0].sections!.find(
           (s) => s.key === 'Packmind recipes',
         );
         expect(recipesSection).toBeDefined();
       });
 
-      it('sets the recipes section content to empty', () => {
+      it('sets Packmind recipes section content to empty', () => {
         const recipesSection = result.createOrUpdate[0].sections!.find(
           (s) => s.key === 'Packmind recipes',
         );
         expect(recipesSection!.content).toBe('');
       });
 
-      it('targets the Packmind standards section', () => {
+      it('includes Packmind standards section', () => {
         const standardsSection = result.createOrUpdate[0].sections!.find(
           (s) => s.key === 'Packmind standards',
         );
         expect(standardsSection).toBeDefined();
       });
 
-      it('sets the standards section content to empty', () => {
+      it('sets Packmind standards section content to empty', () => {
         const standardsSection = result.createOrUpdate[0].sections!.find(
           (s) => s.key === 'Packmind standards',
         );
@@ -913,25 +1045,25 @@ describe('SingleFileDeployer', () => {
         );
       });
 
-      it('generates one createOrUpdate entry to clear recipes section', () => {
+      it('returns one createOrUpdate entry', () => {
         expect(result.createOrUpdate).toHaveLength(1);
       });
 
-      it('generates one section in the createOrUpdate entry', () => {
+      it('includes one section in the file update', () => {
         expect(result.createOrUpdate[0].sections).toHaveLength(1);
       });
 
-      it('targets the Packmind recipes section', () => {
+      it('sets section key to Packmind recipes', () => {
         expect(result.createOrUpdate[0].sections![0].key).toBe(
           'Packmind recipes',
         );
       });
 
-      it('sets the recipes section content to empty', () => {
+      it('sets section content to empty string', () => {
         expect(result.createOrUpdate[0].sections![0].content).toBe('');
       });
 
-      it('does not delete the file', () => {
+      it('does not delete any files', () => {
         expect(result.delete).toHaveLength(0);
       });
     });
@@ -979,22 +1111,40 @@ describe('SingleFileDeployer', () => {
         );
       });
 
-      it('generates one createOrUpdate entry to clear standards section', () => {
+      it('generates one createOrUpdate entry to clear both sections', () => {
         expect(result.createOrUpdate).toHaveLength(1);
       });
 
-      it('generates one section in the createOrUpdate entry', () => {
-        expect(result.createOrUpdate[0].sections).toHaveLength(1);
+      it('generates two sections in the createOrUpdate entry (recipes and standards)', () => {
+        expect(result.createOrUpdate[0].sections).toHaveLength(2);
       });
 
-      it('targets the Packmind standards section', () => {
-        expect(result.createOrUpdate[0].sections![0].key).toBe(
-          'Packmind standards',
+      it('includes Packmind recipes section', () => {
+        const recipesSection = result.createOrUpdate[0].sections!.find(
+          (s) => s.key === 'Packmind recipes',
         );
+        expect(recipesSection).toBeDefined();
       });
 
-      it('sets the standards section content to empty', () => {
-        expect(result.createOrUpdate[0].sections![0].content).toBe('');
+      it('sets Packmind recipes section content to empty', () => {
+        const recipesSection = result.createOrUpdate[0].sections!.find(
+          (s) => s.key === 'Packmind recipes',
+        );
+        expect(recipesSection!.content).toBe('');
+      });
+
+      it('includes Packmind standards section', () => {
+        const standardsSection = result.createOrUpdate[0].sections!.find(
+          (s) => s.key === 'Packmind standards',
+        );
+        expect(standardsSection).toBeDefined();
+      });
+
+      it('sets Packmind standards section content to empty', () => {
+        const standardsSection = result.createOrUpdate[0].sections!.find(
+          (s) => s.key === 'Packmind standards',
+        );
+        expect(standardsSection!.content).toBe('');
       });
 
       it('does not delete the file', () => {
@@ -1018,8 +1168,22 @@ describe('SingleFileDeployer', () => {
         );
       });
 
-      it('does not generate createOrUpdate entries', () => {
-        expect(result.createOrUpdate).toHaveLength(0);
+      it('returns one createOrUpdate entry', () => {
+        expect(result.createOrUpdate).toHaveLength(1);
+      });
+
+      it('includes one section in the file update', () => {
+        expect(result.createOrUpdate[0].sections).toHaveLength(1);
+      });
+
+      it('sets section key to Packmind recipes', () => {
+        expect(result.createOrUpdate[0].sections![0].key).toBe(
+          'Packmind recipes',
+        );
+      });
+
+      it('sets section content to empty string', () => {
+        expect(result.createOrUpdate[0].sections![0].content).toBe('');
       });
 
       it('does not generate delete entries', () => {

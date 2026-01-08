@@ -46,97 +46,76 @@ describe('AgentsMDDeployer', () => {
   });
 
   describe('deployRecipes', () => {
-    it('creates AGENTS.md file with recipe instructions', async () => {
-      const recipe = recipeFactory({
-        name: 'Test Recipe',
-        slug: 'test-recipe',
+    describe('with a single recipe', () => {
+      let result: Awaited<ReturnType<AgentsMDDeployer['deployRecipes']>>;
+
+      beforeEach(async () => {
+        const recipe = recipeFactory({
+          name: 'Test Recipe',
+          slug: 'test-recipe',
+        });
+
+        const recipeVersion: RecipeVersion = {
+          id: createRecipeVersionId('recipe-version-1'),
+          recipeId: recipe.id,
+          name: recipe.name,
+          slug: recipe.slug,
+          content: 'This is the recipe content',
+          version: 1,
+          summary: 'A test recipe summary',
+          userId: createUserId('user-1'),
+        };
+
+        result = await deployer.deployRecipes(
+          [recipeVersion],
+          mockGitRepo,
+          mockTarget,
+        );
       });
 
-      const recipeVersion: RecipeVersion = {
-        id: createRecipeVersionId('recipe-version-1'),
-        recipeId: recipe.id,
-        name: recipe.name,
-        slug: recipe.slug,
-        content: 'This is the recipe content',
-        version: 1,
-        summary: 'A test recipe summary',
-        userId: createUserId('user-1'),
-      };
+      it('creates one file to update', () => {
+        expect(result.createOrUpdate).toHaveLength(1);
+      });
 
-      const result = await deployer.deployRecipes(
-        [recipeVersion],
-        mockGitRepo,
-        mockTarget,
-      );
+      it('targets AGENTS.md file', () => {
+        expect(result.createOrUpdate[0].path).toBe('AGENTS.md');
+      });
 
-      expect(result.createOrUpdate).toHaveLength(1);
-      expect(result.delete).toHaveLength(0);
+      it('clears recipes section for single-file deployers', () => {
+        expect(result.createOrUpdate[0].sections).toEqual([
+          { key: 'Packmind recipes', content: '' },
+        ]);
+      });
 
-      const agentsMDFile = result.createOrUpdate[0];
-      expect(agentsMDFile.path).toBe('AGENTS.md');
-      const sectionContent = agentsMDFile.sections![0].content;
-      expect(sectionContent).toContain('# Packmind Recipes');
-      expect(sectionContent).toContain('🚨 **MANDATORY STEP** 🚨');
-      expect(sectionContent).toContain('ALWAYS READ');
-      expect(sectionContent).toContain(recipe.name);
+      it('does not delete any files', () => {
+        expect(result.delete).toHaveLength(0);
+      });
     });
 
-    it('handles empty recipe list', async () => {
-      const result = await deployer.deployRecipes([], mockGitRepo, mockTarget);
+    describe('when recipe list is empty', () => {
+      let result: Awaited<ReturnType<AgentsMDDeployer['deployRecipes']>>;
 
-      expect(result.createOrUpdate).toHaveLength(0);
-      expect(result.delete).toHaveLength(0);
-    });
-
-    it('includes multiple recipes in instructions', async () => {
-      const recipe1 = recipeFactory({
-        name: 'Test Recipe 1',
-        slug: 'test-recipe-1',
+      beforeEach(async () => {
+        result = await deployer.deployRecipes([], mockGitRepo, mockTarget);
       });
 
-      const recipe2 = recipeFactory({
-        name: 'Test Recipe 2',
-        slug: 'test-recipe-2',
+      it('creates one file to update', () => {
+        expect(result.createOrUpdate).toHaveLength(1);
       });
 
-      const recipeVersion1: RecipeVersion = {
-        id: createRecipeVersionId('recipe-version-1'),
-        recipeId: recipe1.id,
-        name: recipe1.name,
-        slug: recipe1.slug,
-        content: 'Recipe 1 instructions',
-        version: 1,
-        summary: 'Recipe 1 summary',
-        userId: createUserId('user-1'),
-      };
+      it('targets AGENTS.md file', () => {
+        expect(result.createOrUpdate[0].path).toBe('AGENTS.md');
+      });
 
-      const recipeVersion2: RecipeVersion = {
-        id: createRecipeVersionId('recipe-version-2'),
-        recipeId: recipe2.id,
-        name: recipe2.name,
-        slug: recipe2.slug,
-        content: 'Recipe 2 instructions',
-        version: 1,
-        summary: 'Recipe 2 summary',
-        userId: createUserId('user-1'),
-      };
+      it('clears recipes section', () => {
+        expect(result.createOrUpdate[0].sections).toEqual([
+          { key: 'Packmind recipes', content: '' },
+        ]);
+      });
 
-      const result = await deployer.deployRecipes(
-        [recipeVersion1, recipeVersion2],
-        mockGitRepo,
-        mockTarget,
-      );
-
-      expect(result.createOrUpdate).toHaveLength(1);
-      expect(result.delete).toHaveLength(0);
-
-      const agentsMDFile = result.createOrUpdate[0];
-      expect(agentsMDFile.path).toBe('AGENTS.md');
-      const sectionContent = agentsMDFile.sections![0].content;
-      expect(sectionContent).toContain('# Packmind Recipes');
-      expect(sectionContent).toContain('🚨 **MANDATORY STEP** 🚨');
-      expect(sectionContent).toContain(recipeVersion1.name);
-      expect(sectionContent).toContain(recipeVersion2.name);
+      it('does not delete any files', () => {
+        expect(result.delete).toHaveLength(0);
+      });
     });
   });
 
