@@ -10,6 +10,7 @@ import { PackmindLogger } from '@packmind/logger';
 import { JobsService } from '@packmind/node-utils';
 import { apiHexaPlugins } from '@packmind/plugins';
 import { RecipesHexa } from '@packmind/recipes';
+import { SkillsHexa } from '@packmind/skills';
 import { SpacesHexa } from '@packmind/spaces';
 import { StandardsHexa } from '@packmind/standards';
 import { DataSource } from 'typeorm';
@@ -56,6 +57,7 @@ describe('PackmindApp API', () => {
         RecipesHexa,
         LinterHexa,
         StandardsHexa,
+        SkillsHexa,
         CodingAgentHexa,
         DeploymentsHexa,
         ...apiHexaPlugins,

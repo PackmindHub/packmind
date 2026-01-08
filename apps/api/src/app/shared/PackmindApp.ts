@@ -20,6 +20,7 @@ import {
   PackmindEventEmitterService,
 } from '@packmind/node-utils';
 import { RecipesHexa } from '@packmind/recipes';
+import { SkillsHexa } from '@packmind/skills';
 import { SpacesHexa } from '@packmind/spaces';
 import { StandardsHexa } from '@packmind/standards';
 import { DataSource } from 'typeorm';
@@ -74,6 +75,7 @@ export function getPackmindAppDefinition(): PackmindAppDefinition {
       RecipesHexa,
       LinterHexa, // Must come before StandardsHexa (StandardsHexa depends on LinterHexa)
       StandardsHexa,
+      SkillsHexa,
       CodingAgentHexa,
       DeploymentsHexa,
       ...apiHexaPlugins,

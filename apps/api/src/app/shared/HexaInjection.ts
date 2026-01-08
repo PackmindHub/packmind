@@ -4,6 +4,7 @@ import {
   ACCOUNTS_ADAPTER_TOKEN,
   DEPLOYMENT_ADAPTER_TOKEN,
   RECIPES_ADAPTER_TOKEN,
+  SKILLS_ADAPTER_TOKEN,
   STANDARDS_ADAPTER_TOKEN,
   GIT_ADAPTER_TOKEN,
   SPACES_ADAPTER_TOKEN,
@@ -64,6 +65,7 @@ export function createHexaInjector<T>(HexaClass: HexaConstructor<T>) {
 export const InjectAccountsAdapter = () => Inject(ACCOUNTS_ADAPTER_TOKEN);
 export const InjectDeploymentAdapter = () => Inject(DEPLOYMENT_ADAPTER_TOKEN);
 export const InjectRecipesAdapter = () => Inject(RECIPES_ADAPTER_TOKEN);
+export const InjectSkillsAdapter = () => Inject(SKILLS_ADAPTER_TOKEN);
 export const InjectStandardsAdapter = () => Inject(STANDARDS_ADAPTER_TOKEN);
 export const InjectGitAdapter = () => Inject(GIT_ADAPTER_TOKEN);
 export const InjectSpacesAdapter = () => Inject(SPACES_ADAPTER_TOKEN);

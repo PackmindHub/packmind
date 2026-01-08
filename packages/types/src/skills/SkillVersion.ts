@@ -1,14 +1,14 @@
-import { UserId } from '../accounts/User';
-import { SpaceId } from '../spaces/SpaceId';
+import { SkillVersionId } from './SkillVersionId';
 import { SkillId } from './SkillId';
+import { UserId } from '../accounts/User';
 
-export type Skill = {
-  id: SkillId;
-  spaceId: SpaceId;
+export type SkillVersion = {
+  id: SkillVersionId;
+  skillId: SkillId;
+  version: number;
   userId: UserId;
   name: string;
   slug: string;
-  version: number;
   description: string;
   prompt: string;
   license?: string;

@@ -12,6 +12,7 @@ import { Configuration } from '@packmind/node-utils';
 import { RecipesHexa, recipesSchemas } from '@packmind/recipes';
 import { SpacesHexa, spacesSchemas } from '@packmind/spaces';
 import { StandardsHexa, standardsSchemas } from '@packmind/standards';
+import { skillsSchemas } from '@packmind/skills';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { HooksModule } from './hooks/hooks.module';
@@ -32,6 +33,7 @@ import { OrganizationsSpacesModule } from './organizations/spaces/spaces.module'
 import { OrganizationsSpacesStandardsModule } from './organizations/spaces/standards/standards.module';
 import { OrganizationsSpacesStandardsRulesModule } from './organizations/spaces/standards/rules/rules.module';
 import { OrganizationsSpacesPackagesModule } from './organizations/spaces/packages/packages.module';
+import { OrganizationsSpacesSkillsModule } from './organizations/spaces/skills/skills.module';
 import { OrganizationsUsersModule } from './organizations/users/users.module';
 import { OrganizationDeploymentsModule } from './organizations/deployments/deployments.module';
 import { OrganizationTargetsModule } from './organizations/deployments/targets/targets.module';
@@ -57,6 +59,7 @@ const logger = new PackmindLogger('AppModule', LogLevel.INFO);
         ...accountsSchemas,
         ...spacesSchemas,
         ...standardsSchemas,
+        ...skillsSchemas,
         ...deploymentsSchemas,
         ...linterSchemas,
         ...llmSchemas,
@@ -175,6 +178,10 @@ const logger = new PackmindLogger('AppModule', LogLevel.INFO);
               {
                 path: ':spaceId/packages',
                 module: OrganizationsSpacesPackagesModule,
+              },
+              {
+                path: ':spaceId/skills',
+                module: OrganizationsSpacesSkillsModule,
               },
             ],
           },
