@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { OrganizationsSpacesSkillsController } from './skills.controller';
-import { SpaceSkillsService } from './skills.service';
+import { SkillsService } from './skills.service';
 import { OrganizationAccessGuard } from '../../guards/organization-access.guard';
 import { SpaceAccessGuard } from '../guards/space-access.guard';
 import { PackmindLogger, LogLevel } from '@packmind/logger';
@@ -18,7 +18,7 @@ import { HexaRegistryModule } from '../../../shared/HexaRegistryModule';
   imports: [HexaRegistryModule],
   controllers: [OrganizationsSpacesSkillsController],
   providers: [
-    SpaceSkillsService,
+    SkillsService,
     OrganizationAccessGuard,
     SpaceAccessGuard,
     {
@@ -27,6 +27,6 @@ import { HexaRegistryModule } from '../../../shared/HexaRegistryModule';
         new PackmindLogger('OrganizationsSpacesSkillsModule', LogLevel.INFO),
     },
   ],
-  exports: [SpaceSkillsService],
+  exports: [SkillsService],
 })
 export class OrganizationsSpacesSkillsModule {}

@@ -1,8 +1,21 @@
-import { Controller, Get, Param, Req, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Post,
+  Req,
+  UseGuards,
+} from '@nestjs/common';
 import { LogLevel, PackmindLogger } from '@packmind/logger';
 import { AuthenticatedRequest } from '@packmind/node-utils';
-import { OrganizationId, Skill, SpaceId } from '@packmind/types';
-import { SpaceSkillsService } from './skills.service';
+import {
+  OrganizationId,
+  Skill,
+  SpaceId,
+  UploadSkillFileInput,
+} from '@packmind/types';
+import { SkillsService } from './skills.service';
 import { OrganizationAccessGuard } from '../../guards/organization-access.guard';
 import { SpaceAccessGuard } from '../guards/space-access.guard';
 
@@ -11,12 +24,20 @@ const origin = 'OrganizationsSpacesSkillsController';
 /**
  * Controller for space-scoped skill routes within organizations
  * Actual path: /organizations/:orgId/spaces/:spaceId/skills (inherited via RouterModule in AppModule)
+ *
+ * This controller provides space-scoped skill endpoints within organizations.
+ * The path is inherited from the RouterModule configuration in AppModule:
+ * - Parent: /organizations/:orgId/spaces/:spaceId (from OrganizationsSpacesModule)
+ * - This controller: (empty, inherits from /skills path in RouterModule)
+ * - Final path: /organizations/:orgId/spaces/:spaceId/skills
+ *
+ * Both OrganizationAccessGuard and SpaceAccessGuard ensure proper access control.
  */
 @Controller()
 @UseGuards(OrganizationAccessGuard, SpaceAccessGuard)
 export class OrganizationsSpacesSkillsController {
   constructor(
-    private readonly skillsService: SpaceSkillsService,
+    private readonly skillsService: SkillsService,
     private readonly logger: PackmindLogger = new PackmindLogger(
       origin,
       LogLevel.INFO,
@@ -54,6 +75,54 @@ export class OrganizationsSpacesSkillsController {
       this.logger.error(
         'GET /organizations/:orgId/spaces/:spaceId/skills - Failed to fetch skills',
         { organizationId, spaceId, error: errorMessage },
+      );
+      throw error;
+    }
+  }
+
+  /**
+   * Upload a skill within a space
+   * POST /organizations/:orgId/spaces/:spaceId/skills/upload
+   */
+  @Post('upload')
+  async uploadSkill(
+    @Param('orgId') organizationId: OrganizationId,
+    @Param('spaceId') spaceId: SpaceId,
+    @Body()
+    body: {
+      files: UploadSkillFileInput[];
+    },
+    @Req() request: AuthenticatedRequest,
+  ): Promise<Skill> {
+    const userId = request.user.userId;
+
+    this.logger.info(
+      'POST /organizations/:orgId/spaces/:spaceId/skills/upload - Uploading skill',
+      {
+        organizationId,
+        spaceId,
+        fileCount: body.files.length,
+        userId,
+      },
+    );
+
+    try {
+      return await this.skillsService.uploadSkill(
+        body.files,
+        organizationId,
+        spaceId,
+        userId,
+      );
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      this.logger.error(
+        'POST /organizations/:orgId/spaces/:spaceId/skills/upload - Failed to upload skill',
+        {
+          organizationId,
+          spaceId,
+          error: errorMessage,
+        },
       );
       throw error;
     }

@@ -34,7 +34,6 @@ import { OrganizationsSpacesStandardsModule } from './organizations/spaces/stand
 import { OrganizationsSpacesStandardsRulesModule } from './organizations/spaces/standards/rules/rules.module';
 import { OrganizationsSpacesPackagesModule } from './organizations/spaces/packages/packages.module';
 import { OrganizationsSpacesSkillsModule } from './organizations/spaces/skills/skills.module';
-import { OrganizationSkillsModule } from './organizations/skills/skills.module';
 import { OrganizationsUsersModule } from './organizations/users/users.module';
 import { OrganizationDeploymentsModule } from './organizations/deployments/deployments.module';
 import { OrganizationTargetsModule } from './organizations/deployments/targets/targets.module';
@@ -158,10 +157,6 @@ const logger = new PackmindLogger('AppModule', LogLevel.INFO);
           {
             path: 'llm',
             module: OrganizationLlmModule,
-          },
-          {
-            path: 'skills',
-            module: OrganizationSkillsModule,
           },
           {
             path: 'spaces',

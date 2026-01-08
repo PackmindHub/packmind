@@ -1,19 +1,18 @@
-import { Injectable } from '@nestjs/common';
-import { PackmindLogger } from '@packmind/logger';
+import { Injectable, Inject } from '@nestjs/common';
+import { SkillsHexa } from '@packmind/skills';
 import {
-  ISkillsPort,
   OrganizationId,
   Skill,
   SpaceId,
+  UploadSkillFileInput,
   UserId,
 } from '@packmind/types';
-import { InjectSkillsAdapter } from '../../../shared/HexaInjection';
 
 @Injectable()
-export class SpaceSkillsService {
+export class SkillsService {
   constructor(
-    @InjectSkillsAdapter() private readonly skillsAdapter: ISkillsPort,
-    private readonly logger: PackmindLogger,
+    @Inject(SkillsHexa)
+    private readonly skillsHexa: SkillsHexa,
   ) {}
 
   async getSkillsBySpace(
@@ -21,10 +20,23 @@ export class SpaceSkillsService {
     organizationId: OrganizationId,
     userId: UserId,
   ): Promise<Skill[]> {
-    return this.skillsAdapter.listSkillsBySpace(
+    return this.skillsHexa.getAdapter().listSkillsBySpace(
       spaceId,
       organizationId,
       userId,
     );
+  }
+
+  async uploadSkill(
+    files: UploadSkillFileInput[],
+    organizationId: OrganizationId,
+    spaceId: SpaceId,
+    userId: UserId,
+  ): Promise<Skill> {
+    return this.skillsHexa.getAdapter().uploadSkill({
+      files,
+      organizationId,
+      userId,
+    });
   }
 }
