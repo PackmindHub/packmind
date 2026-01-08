@@ -133,7 +133,6 @@ export class OrganizationsSpacesSkillsController {
         body.files,
         organizationId,
         userId,
-        spaceId,
       );
     } catch (error) {
       const errorMessage =

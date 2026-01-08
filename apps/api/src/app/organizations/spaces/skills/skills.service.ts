@@ -75,13 +75,11 @@ export class SkillsService {
     files: UploadSkillFileInput[],
     organizationId: OrganizationId,
     userId: UserId,
-    spaceId: SpaceId,
   ): Promise<Skill> {
     return this.skillsHexa.getAdapter().uploadSkill({
       files,
       organizationId,
       userId,
-      spaceId,
     });
   }
 

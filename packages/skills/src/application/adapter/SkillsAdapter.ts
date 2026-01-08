@@ -101,6 +101,7 @@ export class SkillsAdapter implements IBaseAdapter<ISkillsPort>, ISkillsPort {
       this.services.getSkillVersionService(),
       this.repositories.getSkillFileRepository(),
       this.eventEmitterService,
+      this.spacesPort,
     );
 
     this._updateSkill = new UpdateSkillUsecase(
@@ -226,7 +227,6 @@ export class SkillsAdapter implements IBaseAdapter<ISkillsPort>, ISkillsPort {
       fileCount: command.files.length,
       userId: command.userId.substring(0, 6) + '*',
       organizationId: command.organizationId,
-      spaceId: command.spaceId,
     });
     return this._uploadSkill.execute(command);
   }

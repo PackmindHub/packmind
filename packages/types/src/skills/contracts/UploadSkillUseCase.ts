@@ -8,7 +8,6 @@ export type UploadSkillFileInput = {
 };
 
 export type UploadSkillCommand = PackmindCommand & {
-  spaceId: string;
   files: UploadSkillFileInput[];
 };
 
