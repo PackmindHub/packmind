@@ -10,6 +10,7 @@ import {
   SkillVersion,
   SpaceId,
   UserId,
+  UploadSkillFileInput,
 } from '@packmind/types';
 
 @Injectable()
@@ -64,6 +65,20 @@ export class SkillsService {
       compatibility: skill.compatibility,
       metadata: skill.metadata,
       allowedTools: skill.allowedTools,
+      organizationId,
+      userId,
+      spaceId,
+    });
+  }
+
+  async uploadSkill(
+    files: UploadSkillFileInput[],
+    organizationId: OrganizationId,
+    userId: UserId,
+    spaceId: SpaceId,
+  ): Promise<Skill> {
+    return this.skillsHexa.getAdapter().uploadSkill({
+      files,
       organizationId,
       userId,
       spaceId,

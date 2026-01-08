@@ -19,6 +19,7 @@ import {
   SkillId,
   SkillVersion,
   SpaceId,
+  UploadSkillFileInput,
 } from '@packmind/types';
 import { SkillsService } from './skills.service';
 import { OrganizationAccessGuard } from '../../guards/organization-access.guard';
@@ -104,6 +105,41 @@ export class OrganizationsSpacesSkillsController {
         error instanceof Error ? error.message : String(error);
       this.logger.error(
         'POST /organizations/:orgId/spaces/:spaceId/skills - Failed to create skill',
+        { organizationId, spaceId, error: errorMessage },
+      );
+      throw error;
+    }
+  }
+
+  @Post('upload')
+  async uploadSkill(
+    @Param('orgId') organizationId: OrganizationId,
+    @Param('spaceId') spaceId: SpaceId,
+    @Body()
+    body: {
+      files: UploadSkillFileInput[];
+    },
+    @Req() request: AuthenticatedRequest,
+  ): Promise<Skill> {
+    const userId = request.user.userId;
+
+    this.logger.info(
+      'POST /organizations/:orgId/spaces/:spaceId/skills/upload - Uploading skill',
+      { organizationId, spaceId, fileCount: body.files.length },
+    );
+
+    try {
+      return await this.skillsService.uploadSkill(
+        body.files,
+        organizationId,
+        userId,
+        spaceId,
+      );
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      this.logger.error(
+        'POST /organizations/:orgId/spaces/:spaceId/skills/upload - Failed to upload skill',
         { organizationId, spaceId, error: errorMessage },
       );
       throw error;
