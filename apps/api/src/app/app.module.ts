@@ -12,7 +12,7 @@ import { Configuration } from '@packmind/node-utils';
 import { RecipesHexa, recipesSchemas } from '@packmind/recipes';
 import { SpacesHexa, spacesSchemas } from '@packmind/spaces';
 import { StandardsHexa, standardsSchemas } from '@packmind/standards';
-import { skillsSchemas } from '@packmind/skills';
+import { SkillsHexa, skillsSchemas } from '@packmind/skills';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { HooksModule } from './hooks/hooks.module';
@@ -93,6 +93,7 @@ const logger = new PackmindLogger('AppModule', LogLevel.INFO);
         RecipesHexa,
         LinterHexa, // Must come before StandardsHexa (StandardsHexa depends on LinterHexa)
         StandardsHexa,
+        SkillsHexa,
         ImportPracticeLegacyHexa, // After StandardsHexa (depends on Linter/Standards ports)
         CodingAgentHexa,
         DeploymentsHexa,
