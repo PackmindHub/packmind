@@ -23,6 +23,7 @@ import {
   SkillVersionId,
   SpaceId,
   UpdateSkillCommand,
+  UploadSkillCommand,
   createSkillId,
   createSkillVersionId,
   createUserId,
@@ -37,6 +38,7 @@ import { GetSkillByIdUsecase } from '../useCases/getSkillById/getSkillById.useca
 import { GetSkillVersionUsecase } from '../useCases/getSkillVersion/getSkillVersion.usecase';
 import { ListSkillsBySpaceUsecase } from '../useCases/listSkillsBySpace/listSkillsBySpace.usecase';
 import { UpdateSkillUsecase } from '../useCases/updateSkill/updateSkill.usecase';
+import { UploadSkillUsecase } from '../useCases/uploadSkill/uploadSkill.usecase';
 
 const origin = 'SkillsAdapter';
 
@@ -47,6 +49,7 @@ export class SkillsAdapter implements IBaseAdapter<ISkillsPort>, ISkillsPort {
 
   // Use cases - all initialized in initialize()
   private _createSkill!: CreateSkillUsecase;
+  private _uploadSkill!: UploadSkillUsecase;
   private _updateSkill!: UpdateSkillUsecase;
   private _deleteSkill!: DeleteSkillUsecase;
   private _getSkillById!: GetSkillByIdUsecase;
@@ -91,6 +94,14 @@ export class SkillsAdapter implements IBaseAdapter<ISkillsPort>, ISkillsPort {
       this.services.getSkillService(),
       this.services.getSkillVersionService(),
       this.eventEmitterService,
+    );
+
+    this._uploadSkill = new UploadSkillUsecase(
+      this.services.getSkillService(),
+      this.services.getSkillVersionService(),
+      this.repositories.getSkillFileRepository(),
+      this.eventEmitterService,
+      this.spacesPort,
     );
 
     this._updateSkill = new UpdateSkillUsecase(
@@ -209,6 +220,15 @@ export class SkillsAdapter implements IBaseAdapter<ISkillsPort>, ISkillsPort {
       spaceId: command.spaceId,
     });
     return this._createSkill.execute(command);
+  }
+
+  async uploadSkill(command: UploadSkillCommand): Promise<Skill> {
+    this.logger.info('uploadSkill use case invoked', {
+      fileCount: command.files.length,
+      userId: command.userId.substring(0, 6) + '*',
+      organizationId: command.organizationId,
+    });
+    return this._uploadSkill.execute(command);
   }
 
   async updateSkill(command: UpdateSkillCommand): Promise<Skill> {

@@ -2,6 +2,8 @@ export * from './SkillId';
 export * from './Skill';
 export * from './SkillVersionId';
 export * from './SkillVersion';
+export * from './SkillFileId';
+export * from './SkillFile';
 export * from './contracts';
 export * from './ports/ISkillsPort';
 export * from './events';

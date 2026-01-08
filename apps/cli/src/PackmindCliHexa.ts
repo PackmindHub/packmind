@@ -50,6 +50,8 @@ import { logWarningConsole } from './infra/utils/consoleLogger';
 import {
   NotifyDistributionCommand,
   NotifyDistributionResult,
+  UploadSkillCommand,
+  UploadSkillResult,
 } from './domain/repositories/IPackmindGateway';
 
 const origin = 'PackmindCliHexa';
@@ -241,5 +243,11 @@ export class PackmindCliHexa {
     command: NotifyDistributionCommand,
   ): Promise<NotifyDistributionResult> {
     return this.hexa.repositories.packmindGateway.notifyDistribution(command);
+  }
+
+  public async uploadSkill(
+    command: UploadSkillCommand,
+  ): Promise<UploadSkillResult> {
+    return this.hexa.repositories.packmindGateway.uploadSkill(command);
   }
 }

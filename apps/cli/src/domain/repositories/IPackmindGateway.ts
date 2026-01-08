@@ -160,6 +160,22 @@ export type NotifyDistributionGateway = (
   command: NotifyDistributionCommand,
 ) => Promise<NotifyDistributionResult>;
 
+// Upload Skill types
+export type UploadSkillCommand = PackmindCommand & {
+  skillPath: string; // local directory path
+};
+
+export type UploadSkillResult = {
+  skillId: string;
+  name: string;
+  fileCount: number;
+  totalSize: number;
+};
+
+export type IUploadSkillUseCase = IUseCase<
+  UploadSkillCommand,
+  UploadSkillResult
+>;
 // Track Linter Execution types
 export type TrackLinterExecutionCommand = {
   targetCount: number;
@@ -181,5 +197,6 @@ export interface IPackmindGateway {
   getMcpToken: Gateway<IGetMcpTokenUseCase>;
   getMcpUrl: Gateway<IGetMcpUrlUseCase>;
   notifyDistribution: NotifyDistributionGateway;
+  uploadSkill: Gateway<IUploadSkillUseCase>;
   trackLinterExecution: TrackLinterExecution;
 }
