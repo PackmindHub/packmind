@@ -4,6 +4,7 @@ import { SpaceAccessGuard } from './guards/space-access.guard';
 import { RecipesModule } from './recipes/recipes.module';
 import { OrganizationsSpacesStandardsModule } from './standards/standards.module';
 import { OrganizationsSpacesPackagesModule } from './packages/packages.module';
+import { OrganizationsSpacesSkillsModule } from './skills/skills.module';
 import { PackmindLogger, LogLevel } from '@packmind/logger';
 import { SpacesService } from '../../spaces/spaces.service';
 
@@ -32,6 +33,7 @@ import { SpacesService } from '../../spaces/spaces.service';
     RecipesModule,
     OrganizationsSpacesStandardsModule,
     OrganizationsSpacesPackagesModule,
+    OrganizationsSpacesSkillsModule,
   ],
   controllers: [OrganizationsSpacesController],
   providers: [
