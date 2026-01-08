@@ -345,18 +345,22 @@ packmind-cli lint src/
 packmind-cli lint /path/to/your/project
 ```
 
-### Limiting Scope with --diff
+### Limiting Scope with `--changed-files` and `--changed-lines`
 
-When working on large codebases, you can focus the lint check on only the files or lines you've modified using the `--diff` option.
+When working on large codebases, you can focus the lint check on only the files or lines you've modified using the `--changed-files` and `--changed-lines` flags.
 
 :::info Git Repository Required
-The `--diff` option requires your project to be in a Git repository.
+The `--changed-files` and `--changed-lines` flags requires your project to be in a Git repository.
+:::
+
+:::note Deprecated Option
+The `--diff` option is deprecated. Use `--changed-files` (equivalent to `--diff=files`) or `--changed-lines` (equivalent to `--diff=lines`) instead.
 :::
 
 **Check modified lines only:**
 
 ```bash
-packmind-cli lint . --diff=lines
+packmind-cli lint . --changed-lines
 ```
 
 This analyzes only the specific lines you've changed, making it ideal for pre-commit hooks or reviewing your work before pushing.
@@ -364,7 +368,7 @@ This analyzes only the specific lines you've changed, making it ideal for pre-co
 **Check modified files only:**
 
 ```bash
-packmind-cli lint . --diff=files
+packmind-cli lint . --changed-files
 ```
 
 This analyzes all content in files you've modified, useful when you want full context but don't want to scan the entire codebase.
@@ -376,7 +380,7 @@ This analyzes all content in files you've modified, useful when you want full co
 git add .
 
 # Check only what you changed
-packmind-cli lint . --diff=lines
+packmind-cli lint . --changed-lines
 
 # If clean, commit
 git commit -m "Your changes"
