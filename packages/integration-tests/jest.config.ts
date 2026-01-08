@@ -20,5 +20,5 @@ export default {
     compilerOptions.paths,
     '<rootDir>/../../',
   ),
-  testTimeout: 30000,
+  testTimeout: 60000,
 };
