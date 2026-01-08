@@ -13,6 +13,7 @@
     "@packmind/git": "*",
     "@packmind/node-utils": "*",
     "@packmind/types": "*",
+    "@packmind/skills": "*",
     "@packmind/spaces": "*",
     "typeorm": "0.3.27",
     "@packmind/standards": "*",

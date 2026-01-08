@@ -40,6 +40,8 @@ import {
   IPullContentResponse,
   IRecipesPort,
   IRecipesPortName,
+  ISkillsPort,
+  ISkillsPortName,
   ISpacesPort,
   ISpacesPortName,
   IStandardsPort,
@@ -106,6 +108,7 @@ export class DeploymentsAdapter
   private recipesPort: IRecipesPort | null = null;
   private codingAgentPort: ICodingAgentPort | null = null;
   private standardsPort: IStandardsPort | null = null;
+  private skillsPort: ISkillsPort | null = null;
   private spacesPort: ISpacesPort | null = null;
   private accountsPort: IAccountsPort | null = null;
 
@@ -154,6 +157,7 @@ export class DeploymentsAdapter
     [IRecipesPortName]: IRecipesPort;
     [ICodingAgentPortName]: ICodingAgentPort;
     [IStandardsPortName]: IStandardsPort;
+    [ISkillsPortName]: ISkillsPort;
     [ISpacesPortName]: ISpacesPort;
     [IAccountsPortName]: IAccountsPort;
     eventEmitterService: PackmindEventEmitterService;
@@ -163,6 +167,7 @@ export class DeploymentsAdapter
     this.recipesPort = ports[IRecipesPortName];
     this.codingAgentPort = ports[ICodingAgentPortName];
     this.standardsPort = ports[IStandardsPortName];
+    this.skillsPort = ports[ISkillsPortName];
     this.spacesPort = ports[ISpacesPortName];
     this.accountsPort = ports[IAccountsPortName];
 
@@ -172,6 +177,7 @@ export class DeploymentsAdapter
       !this.recipesPort &&
       !this.codingAgentPort &&
       !this.standardsPort &&
+      !this.skillsPort &&
       !this.spacesPort &&
       !this.accountsPort &&
       !this.deploymentsServices
@@ -322,6 +328,7 @@ export class DeploymentsAdapter
       this.spacesPort,
       this.recipesPort,
       this.standardsPort,
+      this.skillsPort,
     );
 
     this._getPackageByIdUseCase = new GetPackageByIdUsecase(

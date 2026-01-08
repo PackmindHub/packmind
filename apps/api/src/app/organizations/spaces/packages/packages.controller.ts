@@ -20,6 +20,7 @@ import {
   OrganizationId,
   PackageId,
   RecipeId,
+  SkillId,
   SpaceId,
   StandardId,
 } from '@packmind/types';
@@ -210,6 +211,7 @@ export class OrganizationsSpacesPackagesController {
       description: string;
       recipeIds: RecipeId[];
       standardIds: StandardId[];
+      skillsIds: SkillId[];
     },
   ): Promise<UpdatePackageResponse> {
     const userId = request.user.userId;
@@ -234,6 +236,7 @@ export class OrganizationsSpacesPackagesController {
         description: body.description,
         recipeIds: body.recipeIds,
         standardIds: body.standardIds,
+        skillsIds: body.skillsIds,
       });
     } catch (error) {
       const errorMessage =

@@ -457,6 +457,7 @@ export const PackageDetails = ({
         description: editDescription,
         recipeIds: selectedRecipeIds,
         standardIds: selectedStandardIds,
+        skillsIds: [],
       });
 
       pmToaster.create({

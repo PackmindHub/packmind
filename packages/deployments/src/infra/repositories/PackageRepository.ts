@@ -6,12 +6,17 @@ import {
   RecipeId,
   SpaceId,
   StandardId,
+  SkillId,
   OrganizationId,
 } from '@packmind/types';
 import { PackmindLogger } from '@packmind/logger';
 import { localDataSource, AbstractRepository } from '@packmind/node-utils';
 import { IPackageRepository } from '../../domain/repositories/IPackageRepository';
 import { PackageSchema } from '../schemas/PackageSchema';
+import {
+  PackageSkillsSchema,
+  PackageSkill,
+} from '../schemas/PackageSkillsSchema';
 
 const origin = 'PackageRepository';
 
@@ -76,6 +81,13 @@ export class PackageRepository
         .where('ps.package_id IN (:...packageIds)', { packageIds })
         .getRawMany();
 
+      // Fetch skill relations (relationships are cleaned up when skills are deleted)
+      const skillRelations: PackageSkill[] = await this.repository.manager
+        .getRepository(PackageSkillsSchema)
+        .find({
+          where: packageIds.map((id) => ({ package_id: id })),
+        });
+
       // Group relations by package ID
       const recipesByPackage = recipeRelations.reduce(
         (acc, rel) => {
@@ -95,10 +107,20 @@ export class PackageRepository
         {} as Record<string, string[]>,
       );
 
+      const skillsByPackage = skillRelations.reduce(
+        (acc, rel) => {
+          if (!acc[rel.package_id]) acc[rel.package_id] = [];
+          acc[rel.package_id].push(rel.skill_id);
+          return acc;
+        },
+        {} as Record<string, string[]>,
+      );
+
       const results: Package[] = packages.map((pkg) => ({
         ...pkg,
         recipes: (recipesByPackage[pkg.id] || []) as RecipeId[],
         standards: (standardsByPackage[pkg.id] || []) as StandardId[],
+        skills: (skillsByPackage[pkg.id] || []) as SkillId[],
       }));
 
       this.logger.info('Packages found by space ID successfully', {
@@ -161,6 +183,13 @@ export class PackageRepository
         .where('ps.package_id IN (:...packageIds)', { packageIds })
         .getRawMany();
 
+      // Fetch skill relations (relationships are cleaned up when skills are deleted)
+      const skillRelations: PackageSkill[] = await this.repository.manager
+        .getRepository(PackageSkillsSchema)
+        .find({
+          where: packageIds.map((id) => ({ package_id: id })),
+        });
+
       // Group relations by package ID
       const recipesByPackage = recipeRelations.reduce(
         (acc, rel) => {
@@ -180,10 +209,20 @@ export class PackageRepository
         {} as Record<string, string[]>,
       );
 
+      const skillsByPackage = skillRelations.reduce(
+        (acc, rel) => {
+          if (!acc[rel.package_id]) acc[rel.package_id] = [];
+          acc[rel.package_id].push(rel.skill_id);
+          return acc;
+        },
+        {} as Record<string, string[]>,
+      );
+
       const results: Package[] = packages.map((pkg) => ({
         ...pkg,
         recipes: (recipesByPackage[pkg.id] || []) as RecipeId[],
         standards: (standardsByPackage[pkg.id] || []) as StandardId[],
+        skills: (skillsByPackage[pkg.id] || []) as SkillId[],
       }));
 
       this.logger.info('Packages found by organization ID successfully', {
@@ -232,10 +271,19 @@ export class PackageRepository
         .where('ps.package_id = :packageId', { packageId: id })
         .getRawMany();
 
+      // Fetch skill IDs separately (relationships are cleaned up when skills are deleted)
+      const skillRelations = await this.repository.manager
+        .createQueryBuilder()
+        .select('psk.skill_id', 'skill_id')
+        .from('package_skills', 'psk')
+        .where('psk.package_id = :packageId', { packageId: id })
+        .getRawMany();
+
       const result: Package = {
         ...pkg,
         recipes: recipeRelations.map((r) => r.recipe_id) as RecipeId[],
         standards: standardRelations.map((s) => s.standard_id) as StandardId[],
+        skills: skillRelations.map((sk) => sk.skill_id) as SkillId[],
       };
 
       this.logger.info('Package found by ID successfully', { packageId: id });
@@ -296,6 +344,12 @@ export class PackageRepository
         .from('package_standards', 'ps')
         .where('ps.package_id IN (:...packageIds)', { packageIds })
         .getRawMany();
+
+      const skillRelations: PackageSkill[] = await this.repository.manager
+        .getRepository(PackageSkillsSchema)
+        .find({
+          where: packageIds.map((id) => ({ package_id: id })),
+        });
 
       const uniqueRecipeIds = [
         ...new Set(recipeRelations.map((r) => r.recipe_id)),
@@ -389,11 +443,21 @@ export class PackageRepository
         {} as Record<string, typeof standards>,
       );
 
+      const skillsByPackage = skillRelations.reduce(
+        (acc, rel) => {
+          if (!acc[rel.package_id]) acc[rel.package_id] = [];
+          acc[rel.package_id].push(rel.skill_id);
+          return acc;
+        },
+        {} as Record<string, string[]>,
+      );
+
       const packagesWithArtefacts: PackageWithArtefacts[] = packages.map(
         (pkg) => ({
           ...pkg,
           recipes: recipesByPackage[pkg.id] || [],
           standards: standardsByPackage[pkg.id] || [],
+          skills: (skillsByPackage[pkg.id] || []) as SkillId[],
         }),
       );
 
@@ -644,6 +708,107 @@ export class PackageRepository
     } catch (error) {
       this.logger.error('Failed to remove standard from all packages', {
         standardId,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
+    }
+  }
+
+  async addSkills(packageId: PackageId, skillIds: SkillId[]): Promise<void> {
+    if (skillIds.length === 0) {
+      return;
+    }
+
+    this.logger.info('Adding skills to package', {
+      packageId,
+      skillCount: skillIds.length,
+    });
+
+    try {
+      const values = skillIds.map((skillId) => ({
+        package_id: packageId,
+        skill_id: skillId,
+      }));
+
+      await this.repository
+        .createQueryBuilder()
+        .insert()
+        .into('package_skills')
+        .values(values)
+        .execute();
+
+      this.logger.info('Skills added to package successfully', {
+        packageId,
+        skillCount: skillIds.length,
+      });
+    } catch (error) {
+      this.logger.error('Failed to add skills to package', {
+        packageId,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
+    }
+  }
+
+  async setSkills(packageId: PackageId, skillIds: SkillId[]): Promise<void> {
+    this.logger.info('Setting skills for package', {
+      packageId,
+      skillCount: skillIds.length,
+    });
+
+    try {
+      await this.repository
+        .createQueryBuilder()
+        .delete()
+        .from('package_skills')
+        .where('package_id = :packageId', { packageId })
+        .execute();
+
+      if (skillIds.length > 0) {
+        const values = skillIds.map((skillId) => ({
+          package_id: packageId,
+          skill_id: skillId,
+        }));
+
+        await this.repository
+          .createQueryBuilder()
+          .insert()
+          .into('package_skills')
+          .values(values)
+          .execute();
+      }
+
+      this.logger.info('Skills set for package successfully', {
+        packageId,
+        skillCount: skillIds.length,
+      });
+    } catch (error) {
+      this.logger.error('Failed to set skills for package', {
+        packageId,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
+    }
+  }
+
+  async removeSkillFromAllPackages(skillId: SkillId): Promise<void> {
+    this.logger.info('Removing skill from all packages', { skillId });
+
+    try {
+      const result = await this.repository
+        .createQueryBuilder()
+        .delete()
+        .from('package_skills')
+        .where('skill_id = :skillId', { skillId })
+        .execute();
+
+      this.logger.info('Skill removed from all packages successfully', {
+        skillId,
+        affectedRows: result.affected ?? 0,
+      });
+    } catch (error) {
+      this.logger.error('Failed to remove skill from all packages', {
+        skillId,
         error: error instanceof Error ? error.message : String(error),
       });
       throw error;

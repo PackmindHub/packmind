@@ -11,6 +11,7 @@ import {
   PackmindEventEmitterService,
 } from '@packmind/node-utils';
 import { RecipesHexa } from '@packmind/recipes';
+import { SkillsHexa } from '@packmind/skills';
 import { SpacesHexa } from '@packmind/spaces';
 import { StandardsHexa } from '@packmind/standards';
 import { DataSource } from 'typeorm';
@@ -37,6 +38,7 @@ export class TestApp {
   public accountsHexa!: AccountsHexa;
   public recipesHexa!: RecipesHexa;
   public standardsHexa!: StandardsHexa;
+  public skillsHexa!: SkillsHexa;
   public spacesHexa!: SpacesHexa;
   public gitHexa!: GitHexa;
   public llmHexa!: LlmHexa;
@@ -69,6 +71,7 @@ export class TestApp {
     this._registry.register(LinterHexa);
     this._registry.register(RecipesHexa);
     this._registry.register(StandardsHexa);
+    this._registry.register(SkillsHexa);
     this._registry.register(CodingAgentHexa);
     this._registry.register(DeploymentsHexa);
   }
@@ -80,6 +83,7 @@ export class TestApp {
     this.accountsHexa = this._registry.get(AccountsHexa);
     this.recipesHexa = this._registry.get(RecipesHexa);
     this.standardsHexa = this._registry.get(StandardsHexa);
+    this.skillsHexa = this._registry.get(SkillsHexa);
     this.spacesHexa = this._registry.get(SpacesHexa);
     this.gitHexa = this._registry.get(GitHexa);
     this.llmHexa = this._registry.get(LlmHexa);

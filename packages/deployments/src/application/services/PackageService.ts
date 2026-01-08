@@ -6,6 +6,7 @@ import {
   RecipeId,
   SpaceId,
   StandardId,
+  SkillId,
   UserId,
   OrganizationId,
 } from '@packmind/types';
@@ -134,15 +135,17 @@ export class PackageService {
   }
 
   async createPackage(
-    pkg: Omit<Package, 'recipes' | 'standards'>,
+    pkg: Omit<Package, 'recipes' | 'standards' | 'skills'>,
     recipeIds: RecipeId[],
     standardIds: StandardId[],
+    skillIds: SkillId[] = [],
   ): Promise<Package> {
     this.logger.info('Creating package', {
       packageId: pkg.id,
       name: pkg.name,
       recipeCount: recipeIds.length,
       standardCount: standardIds.length,
+      skillCount: skillIds.length,
     });
 
     try {
@@ -150,11 +153,13 @@ export class PackageService {
         ...pkg,
         recipes: [],
         standards: [],
+        skills: [],
       };
 
       await this.packageRepository.add(packageToCreate);
       await this.packageRepository.addRecipes(pkg.id, recipeIds);
       await this.packageRepository.addStandards(pkg.id, standardIds);
+      await this.packageRepository.addSkills(pkg.id, skillIds);
 
       const savedPackage = await this.packageRepository.findById(pkg.id);
       if (!savedPackage) {
@@ -166,6 +171,7 @@ export class PackageService {
         name: savedPackage.name,
         recipeCount: savedPackage.recipes?.length ?? 0,
         standardCount: savedPackage.standards?.length ?? 0,
+        skillCount: savedPackage.skills?.length ?? 0,
       });
 
       return savedPackage;
@@ -240,12 +246,14 @@ export class PackageService {
     description: string,
     recipeIds: RecipeId[],
     standardIds: StandardId[],
+    skillIds: SkillId[],
   ): Promise<Package> {
     this.logger.info('Updating package', {
       packageId,
       name,
       recipeCount: recipeIds.length,
       standardCount: standardIds.length,
+      skillCount: skillIds.length,
     });
 
     try {
@@ -256,6 +264,7 @@ export class PackageService {
       );
       await this.packageRepository.setRecipes(packageId, recipeIds);
       await this.packageRepository.setStandards(packageId, standardIds);
+      await this.packageRepository.setSkills(packageId, skillIds);
 
       const updatedPackage = await this.packageRepository.findById(packageId);
       if (!updatedPackage) {
@@ -267,6 +276,7 @@ export class PackageService {
         name: updatedPackage.name,
         recipeCount: updatedPackage.recipes?.length ?? 0,
         standardCount: updatedPackage.standards?.length ?? 0,
+        skillCount: updatedPackage.skills?.length ?? 0,
       });
 
       return updatedPackage;
