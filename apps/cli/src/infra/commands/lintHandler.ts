@@ -6,6 +6,7 @@ import { IDELintLogger } from '../repositories/IDELintLogger';
 import { HumanReadableLogger } from '../repositories/HumanReadableLogger';
 import { CommunityEditionError } from '../../domain/errors/CommunityEditionError';
 import { NotLoggedInError } from '../../domain/errors/NotLoggedInError';
+import { logInfoConsole, logWarningConsole } from '../utils/consoleLogger';
 
 export enum Loggers {
   ide = 'ide',
@@ -71,7 +72,7 @@ export async function lintHandler(
     const gitRoot = await packmindCliHexa.tryGetGitRepositoryRoot(absolutePath);
     if (!gitRoot) {
       throw new Error(
-        'The --diff option requires the project to be in a Git repository',
+        'The --changed-files and --changed-lines options require the project to be in a Git repository',
       );
     }
   }
@@ -118,15 +119,15 @@ export async function lintHandler(
     }
   } catch (error) {
     if (isNotLoggedInError(error) && continueOnMissingKey) {
-      console.warn(
+      logWarningConsole(
         'Warning: Not logged in to Packmind, linting is skipped. Run `packmind-cli login` to authenticate.',
       );
       exit(0);
       return;
     }
     if (error instanceof CommunityEditionError) {
-      console.log(`packmind-cli ${error.message}`);
-      console.log('Linting skipped.');
+      logInfoConsole(`packmind-cli ${error.message}`);
+      logInfoConsole('Linting skipped.');
       exit(0);
       return;
     }
@@ -138,7 +139,7 @@ export async function lintHandler(
   );
 
   const durationSeconds = (Date.now() - startedAt) / 1000;
-  console.log(`Lint completed in ${durationSeconds.toFixed(2)}s`);
+  logInfoConsole(`Lint completed in ${durationSeconds.toFixed(2)}s`);
 
   if (violations.length > 0 && !continueOnError) {
     exit(1);
