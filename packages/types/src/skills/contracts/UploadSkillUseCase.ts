@@ -9,6 +9,7 @@ export type UploadSkillFileInput = {
 
 export type UploadSkillCommand = PackmindCommand & {
   files: UploadSkillFileInput[];
+  spaceId: string;
 };
 
 export type UploadSkillResponse = Skill;

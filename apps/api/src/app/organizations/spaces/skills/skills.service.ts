@@ -37,6 +37,7 @@ export class SkillsService {
       files,
       organizationId,
       userId,
+      spaceId,
     });
   }
 }

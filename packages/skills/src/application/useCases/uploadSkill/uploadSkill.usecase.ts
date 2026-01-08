@@ -10,7 +10,7 @@ import {
   createSkillVersionId,
   createSkillFileId,
   SkillFile,
-  ISpacesPort,
+  createSpaceId,
 } from '@packmind/types';
 import slug from 'slug';
 import { v4 as uuidv4 } from 'uuid';
@@ -22,7 +22,6 @@ import { SkillValidator } from '../../validator/SkillValidator';
 import { ISkillFileRepository } from '../../../domain/repositories/ISkillFileRepository';
 import { SkillParseError } from '../../errors/SkillParseError';
 import { SkillValidationError } from '../../errors/SkillValidationError';
-import { SkillSpaceError } from '../../errors/SkillSpaceError';
 
 const origin = 'UploadSkillUsecase';
 
@@ -35,7 +34,6 @@ export class UploadSkillUsecase implements IUploadSkill {
     private readonly skillVersionService: SkillVersionService,
     private readonly skillFileRepository: ISkillFileRepository,
     private readonly eventEmitterService: PackmindEventEmitterService,
-    private readonly spacesPort: ISpacesPort,
     private readonly logger: PackmindLogger = new PackmindLogger(
       origin,
       LogLevel.DEBUG,
@@ -53,30 +51,11 @@ export class UploadSkillUsecase implements IUploadSkill {
       files,
       organizationId: orgIdString,
       userId: userIdString,
+      spaceId: spaceIdString,
     } = command;
     const organizationId = createOrganizationId(orgIdString);
     const userId = createUserId(userIdString);
-
-    // Auto-select first space in organization
-    this.logger.info('Auto-selecting first space in organization', {
-      organizationId,
-    });
-
-    const spaces =
-      await this.spacesPort.listSpacesByOrganization(organizationId);
-
-    if (spaces.length === 0) {
-      throw new SkillSpaceError(
-        'No spaces found in organization. Please create a space first.',
-      );
-    }
-
-    const spaceId = spaces[0].id;
-    this.logger.info('Auto-selected space', {
-      spaceId,
-      spaceName: spaces[0].name,
-      totalSpaces: spaces.length,
-    });
+    const spaceId = createSpaceId(spaceIdString);
 
     this.logger.info('Starting uploadSkill process', {
       fileCount: files.length,
@@ -225,8 +204,7 @@ export class UploadSkillUsecase implements IUploadSkill {
     } catch (error) {
       if (
         error instanceof SkillParseError ||
-        error instanceof SkillValidationError ||
-        error instanceof SkillSpaceError
+        error instanceof SkillValidationError
       ) {
         this.logger.error('Skill upload failed due to validation', {
           error: error.message,
