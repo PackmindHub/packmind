@@ -18,6 +18,11 @@ This skill helps detect technical preferences in user messages and captures them
   **Note:** These require a clarification step (see "Clarification for Abstract Principles" below)
 - Removal/updates: "Remove the rule about X", "We no longer need Y convention"
 - Formatting rules: "Always add JSDoc comments", "Use single quotes"
+- **Suggestive patterns (indicating preferences):**
+  - Questions suggesting alternatives: "Could we use X instead?", "Should we prefer Y?", "Why not do Z?", "What about using X here?"
+  - Comparative statements: "Use X instead of Y", "Prefer X over Y", "Replace X with Y", "Let's switch from X to Y"
+  - Code review feedback implying patterns: "This would be clearer with X", "Better to use Y", "It's more maintainable if we X"
+  - Context-specific suggestions revealing general practices: "Let's ensure X exists rather than Y" (implies: prefer X pattern over Y pattern)
 
 **NON-TRIGGER CONDITIONS** - User asks WHAT to build or fix (without HOW):
 
@@ -226,6 +231,51 @@ Then continue with the original task.
   standard: 'typescript-code-standards'
   date: '2025-12-19'
   sourceFile: 'CLAUDE.md'
+```
+
+### Example 4: Suggestive Pattern (Code Review Feedback)
+
+**User message:** "Could we just ensure that standardFile and recipeFile exist instead of those optional chaining?"
+
+**Detection:** Suggestive pattern revealing a testing practice preference (use assertions instead of optional chaining for test data setup)
+
+**Validation prompt:**
+
+> I detected a technical preference. Add this rule to **tests-redaction**?
+>
+> Proposed rule: _"Use assert to verify test data exists in beforeEach setup rather than optional chaining in test assertions for clearer failure messages and type narrowing"_
+
+**If approved, log:**
+
+```yaml
+- newRule: 'Use assert to verify test data exists in beforeEach setup rather than optional chaining in test assertions for clearer failure messages and type narrowing'
+  operation: ADDED
+  standard: 'tests-redaction'
+  date: '2026-01-08'
+  sourceFile: 'packages/integration-tests/src/coding-agents-deployments/claude-deployment.spec.ts'
+  language: 'TYPESCRIPT'
+  goodExample: |
+    let recipeFile: FileModification;
+
+    beforeEach(() => {
+      const found = files.find(f => f.path.startsWith('.claude/'));
+      assert(found, 'Recipe file should exist');
+      recipeFile = found;
+    });
+
+    it('includes content', () => {
+      expect(recipeFile.content).toContain('---');
+    });
+  badExample: |
+    let recipeFile: FileModification | undefined;
+
+    beforeEach(() => {
+      recipeFile = files.find(f => f.path.startsWith('.claude/'));
+    });
+
+    it('includes content', () => {
+      expect(recipeFile?.content).toContain('---');
+    });
 ```
 
 ## Integration with Main Task
