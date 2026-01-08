@@ -15,6 +15,7 @@ import { IDELintLogger } from '../repositories/IDELintLogger';
 import { HumanReadableLogger } from '../repositories/HumanReadableLogger';
 import * as pathModule from 'path';
 import { lintHandler, LintHandlerDependencies, Loggers } from './lintHandler';
+import { logWarningConsole } from '../utils/consoleLogger';
 
 const Logger: Type<string, Loggers> = {
   from: async (input) => {
@@ -106,11 +107,39 @@ export const lintCommand = command({
     }),
     diff: option({
       long: 'diff',
-      description: 'Filter violations by git diff (files | lines)',
+      description:
+        '[Deprecated: use --changed-files or --changed-lines] Filter violations by git diff (files | lines)',
       type: optional(DiffModeType),
+    }),
+    changedFiles: flag({
+      long: 'changed-files',
+      description: 'Only lint files that have changed',
+    }),
+    changedLines: flag({
+      long: 'changed-lines',
+      description: 'Only lint lines that have changed',
     }),
   },
   handler: async (args) => {
+    if (args.changedFiles && args.changedLines) {
+      throw new Error(
+        'Options --changed-files and --changed-lines are mutually exclusive',
+      );
+    }
+
+    if (args.diff) {
+      const replacement =
+        args.diff === DiffMode.FILES ? '--changed-files' : '--changed-lines';
+      logWarningConsole(`--diff is deprecated. Use ${replacement} instead.`);
+    }
+
+    let diff = args.diff;
+    if (args.changedFiles) {
+      diff = DiffMode.FILES;
+    } else if (args.changedLines) {
+      diff = DiffMode.LINES;
+    }
+
     const packmindLogger = new PackmindLogger(
       'PackmindCLI',
       args.debug ? LogLevel.DEBUG : LogLevel.INFO,
@@ -127,6 +156,6 @@ export const lintCommand = command({
       exit: (code: number) => process.exit(code),
     };
 
-    await lintHandler(args, deps);
+    await lintHandler({ ...args, diff }, deps);
   },
 });

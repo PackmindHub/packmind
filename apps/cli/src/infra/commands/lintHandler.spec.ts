@@ -11,6 +11,13 @@ import {
   Loggers,
 } from './lintHandler';
 
+import { logInfoConsole, logWarningConsole } from '../utils/consoleLogger';
+
+jest.mock('../utils/consoleLogger', () => ({
+  logInfoConsole: jest.fn(),
+  logWarningConsole: jest.fn(),
+}));
+
 describe('lintHandler', () => {
   let mockPackmindCliHexa: jest.Mocked<PackmindCliHexa>;
   let mockHumanLogger: jest.Mocked<HumanReadableLogger>;
@@ -18,7 +25,6 @@ describe('lintHandler', () => {
   let mockExit: jest.Mock;
   let mockResolvePath: jest.Mock;
   let deps: LintHandlerDependencies;
-  let consoleSpy: jest.SpyInstance;
 
   beforeEach(() => {
     mockPackmindCliHexa = {
@@ -38,7 +44,6 @@ describe('lintHandler', () => {
 
     mockExit = jest.fn();
     mockResolvePath = jest.fn((path) => `/absolute/${path}`);
-    consoleSpy = jest.spyOn(console, 'log').mockImplementation();
 
     deps = {
       packmindCliHexa: mockPackmindCliHexa,
@@ -346,20 +351,20 @@ describe('lintHandler', () => {
     });
   });
 
-  describe('--diff option validation', () => {
-    describe('when --diff is used outside git repository', () => {
+  describe('diff mode validation', () => {
+    describe('when diff mode is used outside git repository', () => {
       it('throws error', async () => {
         mockPackmindCliHexa.tryGetGitRepositoryRoot.mockResolvedValue(null);
 
         await expect(
           lintHandler(createArgs({ diff: DiffMode.FILES }), deps),
         ).rejects.toThrow(
-          'The --diff option requires the project to be in a Git repository',
+          'The --changed-files and --changed-lines options require the project to be in a Git repository',
         );
       });
     });
 
-    describe('when --diff is used in a git repository', () => {
+    describe('when diff mode is used in a git repository', () => {
       it('does not throw', async () => {
         mockPackmindCliHexa.tryGetGitRepositoryRoot.mockResolvedValue(
           '/project',
@@ -404,26 +409,19 @@ describe('lintHandler', () => {
 
       await lintHandler(createArgs(), deps);
 
-      expect(consoleSpy).toHaveBeenCalledWith(
+      expect(logInfoConsole).toHaveBeenCalledWith(
         expect.stringMatching(/^Lint completed in \d+\.\d+s$/),
       );
     });
   });
 
   describe('--continue-on-missing-key flag', () => {
-    let consoleWarnSpy: jest.SpyInstance;
-
     beforeEach(() => {
-      consoleWarnSpy = jest.spyOn(console, 'warn').mockImplementation();
       mockPackmindCliHexa.tryGetGitRepositoryRoot.mockResolvedValue('/project');
       mockPackmindCliHexa.readHierarchicalConfig.mockResolvedValue({
         hasConfigs: false,
         configs: [],
       });
-    });
-
-    afterEach(() => {
-      consoleWarnSpy.mockRestore();
     });
 
     describe('when not logged in and flag is set', () => {
@@ -434,7 +432,7 @@ describe('lintHandler', () => {
 
         await lintHandler(createArgs({ continueOnMissingKey: true }), deps);
 
-        expect(consoleWarnSpy).toHaveBeenCalledWith(
+        expect(logWarningConsole).toHaveBeenCalledWith(
           'Warning: Not logged in to Packmind, linting is skipped. Run `packmind-cli login` to authenticate.',
         );
         expect(mockExit).toHaveBeenCalledWith(0);
@@ -476,7 +474,7 @@ describe('lintHandler', () => {
 
       await lintHandler(createArgs({ continueOnMissingKey: true }), deps);
 
-      expect(consoleWarnSpy).toHaveBeenCalledWith(
+      expect(logWarningConsole).toHaveBeenCalledWith(
         'Warning: Not logged in to Packmind, linting is skipped. Run `packmind-cli login` to authenticate.',
       );
       expect(mockExit).toHaveBeenCalledWith(0);

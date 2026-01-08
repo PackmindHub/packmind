@@ -2,6 +2,8 @@
 
 ## Added
 
+- Added flags `--changed-files` and `--changed-lines` on the linter command to replace the `--diff` option. #93
+
 ## Changed
 
 ## Fixed
