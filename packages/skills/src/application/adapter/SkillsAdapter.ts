@@ -22,6 +22,7 @@ import {
   ListSkillVersionsResponse,
   OrganizationId,
   Skill,
+  SkillFile,
   SkillId,
   SkillVersion,
   SkillVersionId,
@@ -246,6 +247,13 @@ export class SkillsAdapter implements IBaseAdapter<ISkillsPort>, ISkillsPort {
     return this.services
       .getSkillService()
       .findSkillBySlug(slug, organizationId);
+  }
+
+  async getSkillFiles(skillVersionId: SkillVersionId): Promise<SkillFile[]> {
+    this.logger.info('getSkillFiles called via port', { skillVersionId });
+    return this.repositories
+      .getSkillFileRepository()
+      .findBySkillVersionId(skillVersionId);
   }
 
   // ========================================================================

@@ -190,7 +190,14 @@ export class PullContentUseCase extends AbstractMemberUseCase<
         const skillVersionsPromises = skills.map(async (skill) => {
           const versions = await this.skillsPort.listSkillVersions(skill.id);
           versions.sort((a, b) => b.version - a.version);
-          return versions[0];
+          const latestVersion = versions[0];
+
+          // Fetch skill files for this version
+          if (latestVersion) {
+            const files = await this.skillsPort.getSkillFiles(latestVersion.id);
+            return { ...latestVersion, files };
+          }
+          return latestVersion;
         });
 
         skillVersions = (await Promise.all(skillVersionsPromises)).filter(
@@ -239,6 +246,56 @@ export class PullContentUseCase extends AbstractMemberUseCase<
             removedStandardsCount: removedStandardVersions.length,
             removedSkillsCount: removedSkillVersions.length,
           });
+        }
+
+        // Also check for updated packages (packages that are in both lists)
+        // to detect artifacts that were removed from those packages
+        const updatedPackageSlugs = this.computeUpdatedPackages(
+          command.previousPackagesSlugs,
+          command.packagesSlugs ?? [],
+        );
+
+        if (updatedPackageSlugs.length > 0) {
+          this.logger.info(
+            'Detected updated packages - checking for removed artifacts',
+            {
+              updatedPackageSlugs,
+              count: updatedPackageSlugs.length,
+            },
+          );
+
+          const previousResult = await this.fetchArtifactsForRemovedPackages(
+            updatedPackageSlugs,
+            command.organization.id,
+          );
+
+          // Add previous artifacts from updated packages to the removed lists
+          // These will be filtered later by filterSharedArtifacts to exclude
+          // artifacts that are still present in the current package content
+          removedRecipeVersions = [
+            ...removedRecipeVersions,
+            ...previousResult.recipeVersions,
+          ];
+          removedStandardVersions = [
+            ...removedStandardVersions,
+            ...previousResult.standardVersions,
+          ];
+          removedSkillVersions = [
+            ...removedSkillVersions,
+            ...previousResult.skillVersions,
+          ];
+
+          this.logger.info(
+            'Retrieved previous artifact versions from updated packages',
+            {
+              previousRecipesCount: previousResult.recipeVersions.length,
+              previousStandardsCount: previousResult.standardVersions.length,
+              previousSkillsCount: previousResult.skillVersions.length,
+              totalRemovedRecipesCount: removedRecipeVersions.length,
+              totalRemovedStandardsCount: removedStandardVersions.length,
+              totalRemovedSkillsCount: removedSkillVersions.length,
+            },
+          );
         }
       }
 
@@ -415,6 +472,18 @@ export class PullContentUseCase extends AbstractMemberUseCase<
   ): string[] {
     const currentSet = new Set(currentSlugs);
     return previousSlugs.filter((slug) => !currentSet.has(slug));
+  }
+
+  /**
+   * Computes packages that are in both previous and current lists (updated packages).
+   * These packages may have had artifacts added or removed.
+   */
+  private computeUpdatedPackages(
+    previousSlugs: string[],
+    currentSlugs: string[],
+  ): string[] {
+    const currentSet = new Set(currentSlugs);
+    return previousSlugs.filter((slug) => currentSet.has(slug));
   }
 
   /**

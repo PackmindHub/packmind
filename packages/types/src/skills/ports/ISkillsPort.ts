@@ -4,6 +4,7 @@ import { Skill } from '../Skill';
 import { SkillId } from '../SkillId';
 import { SkillVersion } from '../SkillVersion';
 import { SkillVersionId } from '../SkillVersionId';
+import { SkillFile } from '../SkillFile';
 
 export const ISkillsPortName = 'ISkillsPort' as const;
 
@@ -21,4 +22,5 @@ export interface ISkillsPort {
     slug: string,
     organizationId: OrganizationId,
   ): Promise<Skill | null>;
+  getSkillFiles(skillVersionId: SkillVersionId): Promise<SkillFile[]>;
 }

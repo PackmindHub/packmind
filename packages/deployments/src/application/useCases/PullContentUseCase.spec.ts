@@ -86,6 +86,7 @@ describe('PullContentUseCase', () => {
 
     skillsPort = {
       listSkillVersions: jest.fn(),
+      getSkillFiles: jest.fn().mockResolvedValue([]),
     } as unknown as jest.Mocked<ISkillsPort>;
 
     const mockDeployer = {
@@ -429,7 +430,7 @@ describe('PullContentUseCase', () => {
         expect(mockDeployer.deployArtifacts).toHaveBeenCalledWith(
           [],
           [],
-          [skillVersion],
+          [{ ...skillVersion, files: [] }],
         );
       });
 
@@ -494,7 +495,7 @@ describe('PullContentUseCase', () => {
         expect(mockDeployer.deployArtifacts).toHaveBeenCalledWith(
           [],
           [],
-          [newerVersion],
+          [{ ...newerVersion, files: [] }],
         );
       });
     });
@@ -945,20 +946,27 @@ describe('PullContentUseCase', () => {
 
         packageService.getPackagesBySlugsWithArtefacts
           .mockResolvedValueOnce([packageB])
+          .mockResolvedValueOnce([packageA])
           .mockResolvedValueOnce([packageA]);
 
         recipesPort.listRecipeVersions
           .mockResolvedValueOnce([sharedRecipeVersion])
+          .mockResolvedValueOnce([sharedRecipeVersion])
+          .mockResolvedValueOnce([uniqueRecipeVersion])
           .mockResolvedValueOnce([sharedRecipeVersion])
           .mockResolvedValueOnce([uniqueRecipeVersion]);
 
         standardsPort.listStandardVersions
           .mockResolvedValueOnce([sharedStandardVersion])
           .mockResolvedValueOnce([sharedStandardVersion])
+          .mockResolvedValueOnce([uniqueStandardVersion])
+          .mockResolvedValueOnce([sharedStandardVersion])
           .mockResolvedValueOnce([uniqueStandardVersion]);
 
         skillsPort.listSkillVersions
           .mockResolvedValueOnce([sharedSkillVersion])
+          .mockResolvedValueOnce([sharedSkillVersion])
+          .mockResolvedValueOnce([uniqueSkillVersion])
           .mockResolvedValueOnce([sharedSkillVersion])
           .mockResolvedValueOnce([uniqueSkillVersion]);
 
@@ -1038,6 +1046,7 @@ describe('PullContentUseCase', () => {
 
         packageService.getPackagesBySlugsWithArtefacts
           .mockResolvedValueOnce([packageB])
+          .mockResolvedValueOnce([packageAOnlyShared])
           .mockResolvedValueOnce([packageAOnlyShared]);
 
         recipesPort.listRecipeVersions.mockResolvedValue([sharedRecipeVersion]);
@@ -1084,6 +1093,7 @@ describe('PullContentUseCase', () => {
 
         packageService.getPackagesBySlugsWithArtefacts
           .mockResolvedValueOnce([packageBDifferent])
+          .mockResolvedValueOnce([packageAUniqueOnly])
           .mockResolvedValueOnce([packageAUniqueOnly]);
 
         recipesPort.listRecipeVersions.mockResolvedValue([uniqueRecipeVersion]);

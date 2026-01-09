@@ -861,8 +861,141 @@ describe('GitHub Copilot Deployment Integration', () => {
         });
       });
 
+      describe('when skill has multiple files', () => {
+        let skillWithFiles: Skill;
+        let skillVersionWithFiles: SkillVersion;
+
+        beforeEach(async () => {
+          skillWithFiles = await testApp.skillsHexa.getAdapter().uploadSkill({
+            files: [
+              {
+                path: 'SKILL.md',
+                content: `---
+name: multi-file-skill
+description: A skill with multiple files
+---
+
+# Multi-file Skill
+
+See reference.md and forms.md for more information.`,
+                permissions: 'rw-r--r--',
+              },
+              {
+                path: 'reference.md',
+                content:
+                  '# Reference\n\nThis is additional reference documentation.',
+                permissions: 'rw-r--r--',
+              },
+              {
+                path: 'forms.md',
+                content: '# Forms\n\nInstructions for working with forms.',
+                permissions: 'rw-r--r--',
+              },
+            ],
+            organizationId: organization.id,
+            userId: user.id,
+            spaceId: space.id.toString(),
+          });
+
+          // Get the latest version with files
+          const versions = await testApp.skillsHexa
+            .getAdapter()
+            .listSkillVersions(skillWithFiles.id);
+          const latestVersion = versions.sort(
+            (a, b) => b.version - a.version,
+          )[0];
+
+          // Fetch skill files
+          const files = await testApp.skillsHexa
+            .getAdapter()
+            .getSkillFiles(latestVersion.id);
+
+          skillVersionWithFiles = {
+            ...latestVersion,
+            files,
+          };
+        });
+
+        it('creates SKILL.md and all additional files', async () => {
+          const fileUpdates = await copilotDeployer.deploySkills(
+            [skillVersionWithFiles],
+            gitRepo,
+            defaultTarget,
+          );
+
+          expect(fileUpdates.createOrUpdate).toHaveLength(3);
+
+          const paths = fileUpdates.createOrUpdate.map((f) => f.path);
+          expect(paths).toContain(
+            `.github/skills/${skillWithFiles.slug}/SKILL.md`,
+          );
+          expect(paths).toContain(
+            `.github/skills/${skillWithFiles.slug}/reference.md`,
+          );
+          expect(paths).toContain(
+            `.github/skills/${skillWithFiles.slug}/forms.md`,
+          );
+        });
+
+        it('includes correct content for each file', async () => {
+          const fileUpdates = await copilotDeployer.deploySkills(
+            [skillVersionWithFiles],
+            gitRepo,
+            defaultTarget,
+          );
+
+          const referenceFile = fileUpdates.createOrUpdate.find((f) =>
+            f.path.endsWith('reference.md'),
+          );
+          expect(referenceFile?.content).toContain(
+            'This is additional reference documentation',
+          );
+
+          const formsFile = fileUpdates.createOrUpdate.find((f) =>
+            f.path.endsWith('forms.md'),
+          );
+          expect(formsFile?.content).toContain(
+            'Instructions for working with forms',
+          );
+        });
+
+        it('places all files in the skill directory', async () => {
+          const fileUpdates = await copilotDeployer.deploySkills(
+            [skillVersionWithFiles],
+            gitRepo,
+            defaultTarget,
+          );
+
+          fileUpdates.createOrUpdate.forEach((file) => {
+            expect(file.path).toMatch(
+              new RegExp(`^\\.github/skills/${skillWithFiles.slug}/`),
+            );
+          });
+        });
+      });
+
+      describe('when skill has no additional files', () => {
+        it('creates only SKILL.md', async () => {
+          const skillVersionWithoutFiles: SkillVersion = {
+            ...skillVersions[0],
+            files: undefined,
+          };
+
+          const fileUpdates = await copilotDeployer.deploySkills(
+            [skillVersionWithoutFiles],
+            gitRepo,
+            defaultTarget,
+          );
+
+          expect(fileUpdates.createOrUpdate).toHaveLength(1);
+          expect(fileUpdates.createOrUpdate[0].path).toBe(
+            `.github/skills/${skill.slug}/SKILL.md`,
+          );
+        });
+      });
+
       describe('when removing skills', () => {
-        it('deletes skill SKILL.md files', async () => {
+        it('deletes skill directory', async () => {
           const fileUpdates = await copilotDeployer.generateRemovalFileUpdates(
             {
               recipeVersions: [],
@@ -877,7 +1010,7 @@ describe('GitHub Copilot Deployment Integration', () => {
           );
 
           expect(fileUpdates.delete).toContainEqual({
-            path: `.github/skills/${skill.slug}/SKILL.md`,
+            path: `.github/skills/${skill.slug}`,
           });
         });
       });
