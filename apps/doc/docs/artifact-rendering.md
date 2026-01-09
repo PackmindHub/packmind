@@ -42,19 +42,19 @@ For other AI assistants (GitLab Duo, Junie, AGENTS.md), standards are included i
 
 Commands are placed in specific locations, but unlike standards, you need to invoke them manually when you want to use them.
 
-| AI Assistant   | Where Commands Are Rendered             | How to Use                                  |
-| -------------- | --------------------------------------- | ------------------------------------------- |
-| Claude Code    | `.claude/commands/packmind/` folder     | Type `/command-name` in chat                |
-| Cursor         | `.cursor/commands/packmind/` folder     | Type `/command-name` in chat                |
-| GitHub Copilot | `.github/prompts/` (recipes index file) | Type `/command-name` in chat                |
-| Continue       | Not rendered (use source)               | Execute @.packmind/commands/command-name.md |
-| GitLab Duo     | Not rendered (use source)               | Execute @.packmind/commands/command-name.md |
-| Junie          | Not rendered (use source)               | Execute @.packmind/commands/command-name.md |
-| AGENTS.md      | Not rendered (use source)               | Execute @.packmind/commands/command-name.md |
+| AI Assistant   | Where Commands Are Rendered         | How to Use                                  |
+| -------------- | ----------------------------------- | ------------------------------------------- |
+| Claude Code    | `.claude/commands/packmind/` folder | Type `/command-name` in chat                |
+| Cursor         | `.cursor/commands/packmind/` folder | Type `/command-name` in chat                |
+| GitHub Copilot | `.github/prompts/`                  | Type `/command-name` in chat                |
+| Continue       | `.continue/prompts/`                | Type `/command-name` in chat                |
+| GitLab Duo     | Not rendered (use source)           | Execute @.packmind/commands/command-name.md |
+| Junie          | Not rendered (use source)           | Execute @.packmind/commands/command-name.md |
+| AGENTS.md      | Not rendered (use source)           | Execute @.packmind/commands/command-name.md |
 
 ### Using Slash Commands (Claude Code, Cursor, GitHub Copilot)
 
-For AI assistants with native slash command support (**Claude Code**, **Cursor**, and **GitHub Copilot**), commands are rendered in dedicated folders and can be invoked using slash commands:
+For AI assistants with native slash command support (**Continue**, **Claude Code**, **Cursor**, and **GitHub Copilot**), commands are rendered in dedicated folders and can be invoked using slash commands:
 
 ```
 /create-new-use-case
@@ -64,7 +64,7 @@ The AI assistant will recognize the command and execute the instructions defined
 
 ### Direct Source File Invocation (Continue, GitLab Duo, Junie, AGENTS.md)
 
-For AI assistants without native command rendering (**Continue**, **GitLab Duo**, **Junie**, and **AGENTS.md**), commands are not rendered in agent-specific files. Instead, you must reference the source command file directly from the `.packmind/commands/` folder:
+For AI assistants without native command rendering (**GitLab Duo**, **Junie**, and **AGENTS.md**), commands are not rendered in agent-specific files. Instead, you must reference the source command file directly from the `.packmind/commands/` folder:
 
 ```
 Execute @.packmind/commands/create-new-use-case.md
