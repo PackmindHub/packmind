@@ -20,11 +20,9 @@ export class SkillsService {
     organizationId: OrganizationId,
     userId: UserId,
   ): Promise<Skill[]> {
-    return this.skillsHexa.getAdapter().listSkillsBySpace(
-      spaceId,
-      organizationId,
-      userId,
-    );
+    return this.skillsHexa
+      .getAdapter()
+      .listSkillsBySpace(spaceId, organizationId, userId);
   }
 
   async uploadSkill(
