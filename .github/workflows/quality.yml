@@ -148,6 +148,7 @@ jobs:
           - packages/migrations
           - packages/skills
           - packages/spaces
+          - packages/types
 
     steps:
       - name: Checkout
