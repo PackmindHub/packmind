@@ -1,0 +1,32 @@
+# AI Agent Assumption Correction Log
+#
+# This file captures assumptions about the codebase that AI agents made
+# and later discovered were incorrect. It helps identify documentation gaps
+# and improves onboarding context for future AI agent sessions.
+#
+# Review this file periodically to:
+# - Understand what's confusing about the codebase
+# - Improve CLAUDE.md with better context
+# - Identify misleading names or structures to refactor
+# - See common onboarding friction points
+# - Enhance documentation for humans too
+#
+# File is managed by the codebase-assumption-capture skill.
+# Schema: See .claude/skills/codebase-assumption-capture/SKILL.md
+
+# Example entry showing the skill in action:
+
+- timestamp: 2026-01-09T18:00:00Z
+  category: 'structure'
+  assumption: 'Example assumption showing the skill format - no real assumption was incorrect here'
+  reality: 'This is a placeholder demonstrating the YAML structure'
+  discovery_point: 'Created this file as part of skill initialization'
+  impact: 'low'
+  misleading_signals:
+    - 'This is just an example entry'
+  documentation_gap: 'No real documentation gap - this demonstrates the format for future entries'
+  files_explored:
+    - .claude/skills/codebase-assumption-capture/SKILL.md
+  tags:
+    - 'example'
+    - 'skill-initialization'

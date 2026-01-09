@@ -1,0 +1,35 @@
+# AI Agent Consistency Violation Log
+#
+# This file captures inconsistencies discovered in the codebase by AI agents
+# during exploration or coding work. It helps track places where different
+# parts of the codebase handle similar concerns differently.
+#
+# Review this file periodically to:
+# - Understand where the codebase lacks consistency
+# - Prioritize which inconsistencies to address first
+# - Create new standards to prevent future occurrences
+# - Plan refactoring sessions
+# - Make decisions about which pattern to adopt as standard
+#
+# File is managed by the consistency-violation-capture skill.
+# Schema: See .claude/skills/consistency-violation-capture/SKILL.md
+
+# Example entry showing the skill in action:
+
+- timestamp: 2026-01-09T18:00:00Z
+  category: 'naming'
+  description: 'Example consistency violation demonstrating the skill format'
+  examples:
+    - file: .claude/skills/consistency-violation-capture/SKILL.md
+      pattern: 'Uses comprehensive examples in skill documentation'
+      context: 'New skill created with detailed example scenarios'
+    - file: .claude/skills/uncertainty-capture/SKILL.md
+      pattern: 'Uses comprehensive examples in skill documentation'
+      context: 'Both skills follow same documentation pattern (this is consistent!)'
+  impact: 'low'
+  scope: 'local'
+  recommendation: 'This is a placeholder example - real violations will show conflicting patterns'
+  related_standard: null
+  tags:
+    - 'example'
+    - 'skill-documentation'
