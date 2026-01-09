@@ -23,7 +23,7 @@ describe('OrganizationsSpacesController', () => {
   });
 
   describe('listSpaces', () => {
-    it('returns all spaces for an organization', async () => {
+    describe('when listing spaces', () => {
       const orgId = createOrganizationId('test-org-id');
       const mockSpaces: Space[] = [
         {
@@ -39,19 +39,27 @@ describe('OrganizationsSpacesController', () => {
           organizationId: orgId,
         },
       ];
-      spacesService.listSpacesByOrganization.mockResolvedValue(mockSpaces);
+      let result: Space[];
 
-      const result = await controller.listSpaces(orgId);
+      beforeEach(async () => {
+        spacesService.listSpacesByOrganization.mockResolvedValue(mockSpaces);
+        result = await controller.listSpaces(orgId);
+      });
 
-      expect(result).toEqual(mockSpaces);
-      expect(spacesService.listSpacesByOrganization).toHaveBeenCalledWith(
-        orgId,
-      );
+      it('returns all spaces for the organization', () => {
+        expect(result).toEqual(mockSpaces);
+      });
+
+      it('calls service with correct organization ID', () => {
+        expect(spacesService.listSpacesByOrganization).toHaveBeenCalledWith(
+          orgId,
+        );
+      });
     });
   });
 
   describe('getSpaceBySlug', () => {
-    it('returns a space by slug within an organization', async () => {
+    describe('when space exists', () => {
       const orgId = createOrganizationId('test-org-id');
       const slug = 'test-space';
       const mockSpace: Space = {
@@ -60,12 +68,20 @@ describe('OrganizationsSpacesController', () => {
         slug,
         organizationId: orgId,
       };
-      spacesService.getSpaceBySlug.mockResolvedValue(mockSpace);
+      let result: Space;
 
-      const result = await controller.getSpaceBySlug(orgId, slug);
+      beforeEach(async () => {
+        spacesService.getSpaceBySlug.mockResolvedValue(mockSpace);
+        result = await controller.getSpaceBySlug(orgId, slug);
+      });
 
-      expect(result).toEqual(mockSpace);
-      expect(spacesService.getSpaceBySlug).toHaveBeenCalledWith(slug, orgId);
+      it('returns the space', () => {
+        expect(result).toEqual(mockSpace);
+      });
+
+      it('calls service with correct params', () => {
+        expect(spacesService.getSpaceBySlug).toHaveBeenCalledWith(slug, orgId);
+      });
     });
   });
 });
