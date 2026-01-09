@@ -1,24 +1,3 @@
-
-<!-- start: Packmind recipes -->
-# Packmind Recipes
-
-🚨 **MANDATORY STEP** 🚨
-
-Before writing, editing, or generating ANY code:
-
-**ALWAYS READ**: the available recipes below to see what recipes are available
-
-## Recipe Usage Rules:
-- **MANDATORY**: Always check the recipes list first
-- **CONDITIONAL**: Only read/use individual recipes if they are relevant to your task
-- **OPTIONAL**: If no recipes are relevant, proceed without using any
-
-**Remember: Always check the recipes list first, but only use recipes that actually apply to your specific task.**`
-
-## Available recipes
-
-* [Gateway Pattern Implementation in Packmind Frontend](.packmind/commands/gateway-pattern-implementation-in-packmind-frontend.md): Implement gateways in the Packmind frontend to create a clean abstraction for API communication, enhancing maintainability and testability across the application.
-<!-- end: Packmind recipes -->
 <!-- start: Packmind standards -->
 # Packmind Standards
 

@@ -1,9 +1,9 @@
 ---
-applyTo: '**/*.spec.ts, **/*.spec.tsx'
+applyTo: '**/*.spec.ts, **/*.spec.tsx, **/*.test.ts, **/*.test.tsx'
 ---
 ## Standard: Testing good practices
 
-Define unit test structure and naming in *.spec.ts(x) files by using verb-first assertive titles, Arrange-Act-Assert organization without comments, nested describe('when...') blocks, and one expect per test to improve readability, maintainability, and debugging clarity. :
+Standardize unit test structure and naming in TypeScript/TSX test files using verb-first descriptions, Arrange-Act-Assert flow without comments, nested describe('when...') context blocks, and single-expect test cases to improve readability, maintainability, and debugging. :
 * Follow  'Arrange, Act, Assert' pattern
 * Move 'when' contextual clauses from `it()` into nested `describe('when...')` blocks
 * Remove explicit 'Arrange, Act, Assert' comments from tests and structure them so the setup, execution, and verification phases are clear without redundant labels

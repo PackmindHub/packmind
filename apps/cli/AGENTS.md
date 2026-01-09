@@ -11,7 +11,7 @@ Failure to follow these standards may lead to inconsistencies, errors, or rework
 
 ## Standard: [cli] Good practices
 
-Enforce the use of consoleLogger utilities instead of built-in console methods to standardize CLI logging behavior and improve maintainability. :
+Enforce using consoleLogger utilities instead of native console methods in CLI applications to ensure consistent logging behavior and centralized log management. :
 * Use `consoleLogger` utilities instead of built-in console utilities (console.log/warn/...)
 
 Full standard is available here for further request: [[cli] Good practices](.packmind/standards/cli.md)
