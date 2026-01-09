@@ -1,21 +1,21 @@
 ---
-name: decision-capture
-description: Silently capture implicit technical decisions made by AI agents during coding work. This skill logs specific implementation choices, architectural patterns, and design decisions that were not explicitly requested by the user or documented in project context. Use this proactively after completing tasks to track "what technical choices I made and why."
+name: implicit-decision-capture
+description: Silently capture implicit technical decisions and uncertainties encountered by AI agents during coding work. This skill logs decision points where the agent chose an approach without explicit user guidance, enabling later review and context enrichment. Use this proactively during any coding task to track "what choices I made and why."
 ---
 
-# Decision Capture Skill
+# Implicit Decision Capture Skill
 
 This skill helps AI agents create a transparent log of implicit technical decisions made during implementation. The goal is to capture specific, non-obvious choices that could be valuable for later review and potential standardization.
 
 ## Purpose
 
-AI agents constantly make technical decisions during implementation:
+AI agents constantly make technical decisions during implementation without explicit guidance:
 
-- "I'll use the compound component pattern here"
-- "I'll handle errors with custom exception classes"
-- "I'll organize tests with factory functions"
-- "I'll structure the API with repository pattern"
-- "I'll implement caching at the service layer"
+- "Should I use async/await or Promises?"
+- "Is this the right design pattern for this context?"
+- "Should tests use mocks or real implementations?"
+- "What's the naming convention for this type of file?"
+- "How should errors be handled here?"
 
 These decisions:
 
@@ -26,45 +26,47 @@ These decisions:
 
 By capturing them, developers can:
 
-1. **Review what patterns emerged** during implementation
+1. **Review what assumptions were made** during implementation
 2. **Validate AI decisions** and provide feedback
 3. **Identify candidates for standards** that should be formalized
 4. **Understand the rationale** behind implementation choices
-5. **Track consistency** of patterns across the codebase
+5. **Improve future AI agent performance** with better context
 
 ## When to Use This Skill
 
-Use this skill **proactively and silently** after completing coding tasks when you made:
+Use this skill **proactively and silently** during any coding work when you (the AI agent):
 
-1. **Architectural Decisions**
-   - Component structure or composition patterns
-   - Module organization or layering
-   - Data flow or state management approach
-   - API design patterns
+1. **Make a design decision** without explicit guidance
+   - Choose between multiple valid approaches
+   - Pick a pattern or architecture
+   - Decide on naming conventions
+   - Select a library or tool
 
-2. **Design Pattern Choices**
-   - Factory, Builder, Strategy, etc.
-   - Functional vs OOP approaches
-   - Composition vs inheritance
-   - Dependency injection patterns
+2. **Encounter ambiguity** in requirements
+   - User's instructions could be interpreted multiple ways
+   - Best practices are unclear for this context
+   - No existing examples to follow
 
-3. **Implementation Strategies**
+3. **Apply implicit knowledge** from general training
+   - Use "common practices" that may not match this codebase
+   - Make assumptions about code style
+   - Infer patterns from limited examples
+
+4. **Feel uncertain** about your choice
+   - Low confidence in the approach
+   - Multiple alternatives seem equally valid
+   - Unusual or edge case scenario
+
+5. **Choose implementation strategies**
    - Error handling approach
    - Validation logic placement
    - Caching strategies
    - Performance optimizations
 
-4. **Testing Approaches**
-   - Test data creation methods
-   - Mock vs real dependencies
-   - Test organization patterns
-   - Assertion strategies
-
-5. **Code Organization**
+6. **Decide on code organization**
    - File/folder structure decisions
    - Naming conventions not documented
    - Import/export patterns
-   - Code grouping logic
 
 ## When NOT to Use
 
@@ -79,28 +81,16 @@ Don't capture:
 
 ## Workflow
 
-### Step 1: Complete Your Task
+### Step 1: Silent Capture (During Work)
 
-Implement the feature/fix as requested by the user.
-
-### Step 2: Reflect on Decisions (Silent)
-
-After completing the task, mentally review:
-
-- What technical decisions did I make?
-- Were any of these NOT explicitly requested?
-- Are these non-obvious choices?
-- Could these be valuable patterns?
-
-### Step 3: Silent Logging
-
-**Silently** append significant decisions to `.claude/decisions.yaml`:
+When you make a decision during coding, **silently** append it to `.claude/decisions.yaml` without interrupting the user or your workflow:
 
 ```yaml
 - timestamp: 2026-01-09T10:30:00Z
   file: src/components/UserProfile.tsx
   context: 'Implementing user profile component'
   category: 'architecture' # architecture|patterns|naming|testing|error-handling|performance|security|styling|dependencies
+  question: 'Should the component fetch its own data or receive it via props?' # Optional: the uncertainty you had
   decision: 'Use compound component pattern with Profile.Header, Profile.Content, Profile.Actions'
   reasoning: 'Provides composition flexibility while maintaining encapsulation. Follows Chakra UI pattern seen in codebase.'
   alternatives:
@@ -115,7 +105,7 @@ After completing the task, mentally review:
     - 'compound-components'
 ```
 
-### Step 4: File Management
+### Step 2: File Management
 
 **Location:** Always use `.claude/decisions.yaml` at the repository root.
 
@@ -127,14 +117,15 @@ After completing the task, mentally review:
 - `file`: Relative path from repo root where decision was applied
 - `context`: Brief description of what you were implementing
 - `category`: One of: architecture, patterns, naming, testing, error-handling, performance, security, styling, dependencies
+- `question`: (Optional) The question/uncertainty you had before deciding
 - `decision`: The technical decision made (verb-first, imperative like "Use X pattern", "Structure Y as Z")
 - `reasoning`: Why you chose this approach (reference similar patterns if found)
-- `alternatives`: List of other valid options you considered (optional but recommended)
+- `alternatives`: List of other valid options you considered
 - `impact`: Scope of the decision
   - `local`: Affects only this file/component
   - `module`: Could affect this package/folder
   - `global`: Could be project-wide pattern
-- `confidence`: low (experimental) | medium (reasonable) | high (confident)
+- `confidence`: low (uncertain, needs review) | medium (reasonable choice) | high (confident but worth documenting)
 - `source`: How you arrived at this decision
   - `ai-agent`: Based on your general AI knowledge
   - `inference`: Inferred from codebase patterns
@@ -148,17 +139,17 @@ After completing the task, mentally review:
 - Interrupt your workflow to announce it
 - Make it visible in your response
 
-Logging happens seamlessly after completing tasks.
+Logging happens seamlessly as you work.
 
-### Step 5: User Review (Later)
+### Step 3: User Review (Later)
 
 Users can review `.claude/decisions.yaml` at any time to:
 
-- Understand what technical choices were made
+- Understand what decisions were made and why
+- Identify patterns in uncertainties
+- Create explicit guidelines in CLAUDE.md
+- Add standards to Packmind
 - Validate or question specific decisions
-- Identify patterns that should become standards
-- Provide feedback for future implementations
-- Use signal-capture to formalize good patterns
 
 ## Example Scenarios
 
@@ -169,6 +160,7 @@ Users can review `.claude/decisions.yaml` at any time to:
   file: src/features/dashboard/Dashboard.tsx
   context: 'Creating dashboard feature with multiple widgets'
   category: 'architecture'
+  question: 'Should the dashboard component handle data fetching or just presentation?'
   decision: 'Use container/presenter pattern with DashboardContainer fetching data and Dashboard handling presentation'
   reasoning: 'Separates data fetching concerns from UI logic. Saw this pattern in features/analytics folder.'
   alternatives:
@@ -183,13 +175,36 @@ Users can review `.claude/decisions.yaml` at any time to:
     - 'separation-of-concerns'
 ```
 
-### Example 2: Error Handling Strategy
+### Example 2: Testing Approach
+
+```yaml
+- timestamp: 2026-01-09T14:22:00Z
+  file: src/services/auth.spec.ts
+  context: 'Writing unit tests for authentication service'
+  category: 'testing'
+  question: 'Should I mock the database or use an in-memory test database?'
+  decision: 'Use mocks for the database layer'
+  reasoning: 'Tests run faster with mocks and other test files in the codebase use this approach'
+  alternatives:
+    - 'Use in-memory SQLite for integration testing'
+    - 'Use test containers with real database'
+  impact: 'module'
+  confidence: 'medium'
+  source: 'pattern-matching'
+  tags:
+    - 'testing'
+    - 'mocking'
+    - 'database'
+```
+
+### Example 3: Error Handling Strategy
 
 ```yaml
 - timestamp: 2026-01-09T10:45:00Z
   file: src/services/payment/PaymentService.ts
   context: 'Implementing payment processing service'
   category: 'error-handling'
+  question: 'Should API errors throw exceptions or return Result<T, Error> types?'
   decision: 'Use Result<T, E> type instead of throwing exceptions for expected errors (insufficient funds, invalid card)'
   reasoning: 'Makes error handling explicit and type-safe. Allows callers to handle errors functionally without try-catch.'
   alternatives:
@@ -204,49 +219,26 @@ Users can review `.claude/decisions.yaml` at any time to:
     - 'type-safety'
 ```
 
-### Example 3: Test Organization
+### Example 4: Naming Convention
 
 ```yaml
-- timestamp: 2026-01-09T11:30:00Z
-  file: src/domain/user/User.spec.ts
-  context: 'Writing domain model tests'
-  category: 'testing'
-  decision: 'Create test fixtures using factory functions (createTestUser, createTestOrganization) in __fixtures__ folder'
-  reasoning: 'Reduces test data duplication, provides consistent defaults, easier to maintain. Saw similar pattern in auth tests.'
+- timestamp: 2026-01-09T16:10:00Z
+  file: src/hooks/useUserData.ts
+  context: 'Creating custom React hook for user data'
+  category: 'naming'
+  question: 'Should custom hooks be in /hooks or co-located with components?'
+  decision: 'Place reusable hooks in /src/hooks/ directory'
+  reasoning: 'Found other custom hooks in this directory'
   alternatives:
-    - 'Inline test data in each test'
-    - 'Shared constants file with test objects'
-    - 'Use testing library like factory.ts'
-  impact: 'module'
+    - 'Co-locate with the component that uses it'
+    - 'Create /src/lib/hooks for reusable hooks'
+  impact: 'global'
   confidence: 'high'
   source: 'pattern-matching'
   tags:
-    - 'testing'
-    - 'test-data'
-    - 'fixtures'
-    - 'maintainability'
-```
-
-### Example 4: API Design
-
-```yaml
-- timestamp: 2026-01-09T14:00:00Z
-  file: src/api/users/users.controller.ts
-  context: 'Creating user management API endpoints'
-  category: 'patterns'
-  decision: 'Use command/query separation with dedicated command and query objects instead of request DTOs'
-  reasoning: 'Clearly separates write operations from reads, enables command/query handlers. Aligns with CQRS principles I see in codebase.'
-  alternatives:
-    - 'Traditional REST with DTOs'
-    - 'GraphQL mutations/queries'
-  impact: 'global'
-  confidence: 'medium'
-  source: 'inference'
-  tags:
-    - 'cqrs'
-    - 'api-design'
-    - 'commands'
-    - 'architecture'
+    - 'react'
+    - 'hooks'
+    - 'project-structure'
 ```
 
 ### Example 5: Performance Optimization
@@ -268,22 +260,21 @@ Users can review `.claude/decisions.yaml` at any time to:
     - 'performance'
     - 'react'
     - 'memoization'
-    - 'optimization'
 ```
 
-### Example 6: Dependency Management
+### Example 6: Dependency Choice
 
 ```yaml
-- timestamp: 2026-01-09T16:10:00Z
+- timestamp: 2026-01-09T16:55:00Z
   file: src/utils/date.ts
-  context: 'Adding date formatting utilities'
+  context: 'Adding date formatting utility'
   category: 'dependencies'
-  decision: 'Use date-fns instead of moment.js or dayjs'
-  reasoning: 'date-fns already in package.json dependencies. Tree-shakeable and modern. No need for additional library.'
+  question: 'Should I use date-fns, dayjs, or native Intl for date formatting?'
+  decision: 'Use date-fns because it was already in package.json'
+  reasoning: 'Avoiding adding new dependencies, date-fns already installed and tree-shakeable'
   alternatives:
-    - 'dayjs (smaller bundle)'
-    - 'native Intl.DateTimeFormat (no dependency)'
-    - 'moment.js (legacy, larger bundle)'
+    - 'Use dayjs (smaller bundle size)'
+    - 'Use native Intl.DateTimeFormat (no dependencies)'
   impact: 'global'
   confidence: 'high'
   source: 'inference'
@@ -295,73 +286,72 @@ Users can review `.claude/decisions.yaml` at any time to:
 
 ## Integration Pattern
 
-### During Task Completion
+### During Normal Work
 
-After implementing a feature:
+When implementing a feature:
 
-1. Complete the implementation
-2. Reflect on technical decisions (mentally)
-3. Identify non-trivial, implicit choices
-4. Silently log to decisions.yaml
-5. Continue to next task or respond to user
+1. Write code as normal
+2. When you make a decision without explicit guidance, silently append to decisions.yaml
+3. Continue working without interruption
+4. Multiple decisions can be logged during a single task
 
 ### Example Flow
 
 ```
-User: "Add a search feature to the products page"
+User: "Add a search feature to the user list"
 
-[AI implements search with debouncing, case-insensitive matching, highlighting]
+[AI Agent thinking: "Should search be debounced? How long? No guidance provided..."]
+[AI Agent silently logs to decisions.yaml with question + decision]
+[AI Agent implements with 300ms debounce]
 
-[AI thinking: "I decided to debounce at 300ms - not specified by user"]
-[AI thinking: "I chose case-insensitive search - non-obvious choice"]
-[AI thinking: "I added result highlighting - enhancement decision"]
+[AI Agent thinking: "Should search be case-sensitive? No examples to follow..."]
+[AI Agent silently logs to decisions.yaml]
+[AI Agent implements case-insensitive search]
 
-[AI silently logs these decisions to .claude/decisions.yaml]
-
-AI: "I've added the search feature with debounced input (300ms delay),
-     case-insensitive matching, and result highlighting."
+AI Agent: "I've added the search feature with debounced input (300ms) and case-insensitive matching."
 ```
 
-User sees the implementation. Later, they can review `.claude/decisions.yaml` to see WHY these choices were made.
+User sees the implementation but can later review decisions.yaml to see what decisions were made and why.
 
 ## Benefits
 
-1. **Transparency**: Developers see the AI's technical decision-making process
+1. **Transparency**: Developers see the AI's decision-making process
 2. **Pattern Discovery**: Reveals emerging patterns that should be standardized
-3. **Knowledge Capture**: Documents implementation rationale for future reference
+3. **Context Improvement**: Identify gaps in project guidelines
 4. **Quality Assurance**: Enables review of AI decisions before they become habits
 5. **Standard Creation**: Provides source material for formalizing practices
-6. **Onboarding**: New team members see examples of project patterns
+6. **Trust Building**: Users understand what assumptions were made
 7. **Continuous Improvement**: Feedback loop for improving AI coding decisions
 
 ## Important Guidelines
 
 1. **Be specific**: Decisions should be concrete and actionable, not vague
-2. **Be honest**: Log real decisions you made, not theoretical ones
-3. **Be selective**: Only log non-trivial, project-specific choices
+2. **Be honest**: Log real decisions you made, not imagined ones
+3. **Be selective**: Only log meaningful decisions, not trivial choices
 4. **Be silent**: Never interrupt workflow with logging notifications
 5. **Be contextual**: Include enough information to understand the situation later
 6. **Reference patterns**: When you followed existing code, mention it
 7. **Consider impact**: Tag global decisions for higher-priority review
-8. **Track confidence**: Low confidence = needs earlier review
+8. **Track confidence**: Low-confidence decisions need review more urgently
 9. **Source attribution**: Distinguish between your AI knowledge vs codebase patterns
 
 ## Decisions YAML Schema
 
 ```yaml
 # .claude/decisions.yaml
-- timestamp: string         # ISO 8601: "2026-01-09T10:30:00Z"
-  file: string             # Relative path: "src/api/users.ts"
-  context: string          # Brief: "Adding user authentication"
-  category: string         # architecture|patterns|naming|testing|error-handling|performance|security|styling|dependencies
-  decision: string         # Imperative: "Use factory pattern for object creation"
-  reasoning: string        # Why: "Encapsulates creation logic, saw pattern in auth module"
-  alternatives: array      # Optional: Other options considered
+- timestamp: string      # ISO 8601: "2026-01-09T10:30:00Z"
+  file: string           # Relative path: "src/api/users.ts"
+  context: string        # Brief: "Adding user authentication"
+  category: string       # architecture|patterns|naming|testing|error-handling|performance|security|styling|dependencies
+  question: string       # Optional: "Should validation be in middleware or controller?"
+  decision: string       # Imperative: "Use factory pattern for object creation"
+  reasoning: string      # Why: "Encapsulates creation logic, saw pattern in auth module"
+  alternatives: array    # Other options considered
     - string
-  impact: string          # local|module|global
-  confidence: string      # low|medium|high
-  source: string          # ai-agent|inference|pattern-matching
-  tags: array            # Keywords
+  impact: string         # local|module|global
+  confidence: string     # low|medium|high
+  source: string         # ai-agent|inference|pattern-matching
+  tags: array            # Keywords for filtering
     - string
 ```
 
@@ -375,7 +365,7 @@ Once `.claude/decisions.yaml` accumulates entries, developers can:
 4. **Create standards** - Use signal-capture to formalize good patterns
 5. **Provide feedback** - Add clarifications to CLAUDE.md
 6. **Audit consistency** - Ensure similar problems have similar solutions
-7. **Generate documentation** - Extract patterns for onboarding docs
+7. **Onboard new AI contexts** - Show examples of past decisions
 
 ## Integration with Other Skills
 
@@ -386,25 +376,8 @@ Once `.claude/decisions.yaml` accumulates entries, developers can:
   → Use signal-capture to add to standards
   ```
 
-- **uncertainty-capture**: Sometimes overlaps, but:
-  - Uncertainty = "I wondered about X" (question-focused)
-  - Decision = "I chose X" (decision-focused)
-  - If both uncertain AND decided, log to both files
-
 - **Standard creation**: Decisions file provides source material for new standards
-
-## Review Workflow
-
-Periodic review process:
-
-1. **Weekly Review**: Scan new decisions
-2. **Filter by impact**: Review global decisions first
-3. **Filter by confidence**: Check low-confidence decisions
-4. **Identify patterns**: Look for repeated similar decisions
-5. **Formalize**: Use signal-capture to add patterns to standards
-6. **Clarify**: Add guidelines to CLAUDE.md for future AI agents
-7. **Clean up**: Archive reviewed decisions or mark as "reviewed"
 
 ---
 
-**Remember:** This skill should be used proactively and silently after completing coding tasks. It's not about asking permission - it's about creating a transparent technical decision log for later review and pattern discovery.
+**Remember:** This skill should be used proactively and silently during ALL coding work. It's not about asking permission - it's about creating a transparent log for later review.

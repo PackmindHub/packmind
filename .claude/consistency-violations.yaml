@@ -23,7 +23,7 @@
     - file: .claude/skills/consistency-violation-capture/SKILL.md
       pattern: 'Uses comprehensive examples in skill documentation'
       context: 'New skill created with detailed example scenarios'
-    - file: .claude/skills/uncertainty-capture/SKILL.md
+    - file: .claude/skills/implicit-decision-capture/SKILL.md
       pattern: 'Uses comprehensive examples in skill documentation'
       context: 'Both skills follow same documentation pattern (this is consistent!)'
   impact: 'low'

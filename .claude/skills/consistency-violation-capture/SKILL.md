@@ -411,15 +411,10 @@ Once `.claude/consistency-violations.yaml` accumulates entries, developers can:
   Consistency violation identified → Team picks preferred pattern → Use signal-capture to add standard
   ```
 
-- **decision-capture**: When making a choice in inconsistent area
-
+- **implicit-decision-capture**: When making a choice in inconsistent area
   ```
-  AI must pick one pattern → Log decision-capture for the choice made
-  ```
-
-- **uncertainty-capture**: When unsure which pattern to follow
-  ```
-  Inconsistency causes uncertainty → Log question about which to use
+  AI must pick one pattern → Log implicit-decision-capture for the choice made
+  Inconsistency causes uncertainty → Log the decision with the question field
   ```
 
 ---

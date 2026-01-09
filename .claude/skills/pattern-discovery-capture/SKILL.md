@@ -431,7 +431,7 @@ Once `.claude/discovered-patterns.yaml` accumulates entries, developers can:
   Violation: "NewRepo doesn't extend AbstractRepository"
   ```
 
-- **decision-capture**: Decisions may follow discovered patterns
+- **implicit-decision-capture**: Decisions may follow discovered patterns
   ```
   Pattern: "Use Result types for errors"
   Decision: "Used Result type in new service (following pattern)"

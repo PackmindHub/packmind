@@ -176,6 +176,7 @@ Users can review `.claude/command-candidates.yaml` at any time to:
 **Task Completed:** "Set up Jest testing framework with TypeScript"
 
 **Evaluation:**
+
 - Multi-step process (install deps, configure jest.config.js, add test scripts, create example test)
 - Very common across TypeScript projects
 - Clear, repeatable steps
@@ -205,6 +206,7 @@ Users can review `.claude/command-candidates.yaml` at any time to:
 **Task Completed:** "Create new REST API endpoint for user management with validation"
 
 **Evaluation:**
+
 - Standard pattern (route → controller → service → tests)
 - Common task for API development
 - Well-defined steps
@@ -234,6 +236,7 @@ Users can review `.claude/command-candidates.yaml` at any time to:
 **Task Completed:** "Add new database table with TypeORM migration"
 
 **Evaluation:**
+
 - Repeatable workflow (create entity, generate migration, test up/down, update schema)
 - Common in projects using TypeORM
 - Clear steps that must be followed in order
@@ -262,6 +265,7 @@ Users can review `.claude/command-candidates.yaml` at any time to:
 **Task Completed:** "Set up GitHub Actions workflow with linting, tests, and build"
 
 **Evaluation:**
+
 - Standard DevOps pattern
 - Applicable to many projects
 - Multiple configuration steps
@@ -291,6 +295,7 @@ Users can review `.claude/command-candidates.yaml` at any time to:
 **Task Completed:** "Implement JWT authentication middleware for Express"
 
 **Evaluation:**
+
 - Common security pattern
 - Well-established steps
 - Reusable across Express APIs
@@ -320,6 +325,7 @@ Users can review `.claude/command-candidates.yaml` at any time to:
 **Task Completed:** "Create reusable React component with Storybook documentation"
 
 **Evaluation:**
+
 - Standard component development workflow
 - Follows best practices
 - Repeatable for each new component
@@ -349,6 +355,7 @@ Users can review `.claude/command-candidates.yaml` at any time to:
 **Task Completed:** "Create release workflow with version bumping, changelog updates, and git tagging"
 
 **Evaluation:**
+
 - Multi-step process (verify git status, update versions, update changelog, create tags, push)
 - Common across projects that follow semantic versioning
 - Clear, ordered steps that must be executed correctly
@@ -378,6 +385,7 @@ Users can review `.claude/command-candidates.yaml` at any time to:
 **Task Completed:** "Add new AI agent rendering system with deployer, type mappings, frontend config, tests"
 
 **Evaluation:**
+
 - Complex integration across multiple packages in monorepo
 - Touches types, backend deployer, frontend UI, documentation
 - Repeatable pattern when adding new AI agent integrations
@@ -407,6 +415,7 @@ Users can review `.claude/command-candidates.yaml` at any time to:
 **Task Completed:** "Create new settings page with routing, form components, validation, and API integration"
 
 **Evaluation:**
+
 - Standard frontend workflow (route setup, component creation, state management, API calls)
 - Common when building admin panels or dashboard pages
 - Well-defined pattern in React/Angular/Vue applications
@@ -436,6 +445,7 @@ Users can review `.claude/command-candidates.yaml` at any time to:
 **Task Completed:** "Add new use case in hexagonal architecture with ports, adapters, and domain logic"
 
 **Evaluation:**
+
 - Architectural pattern with clear structure (domain → ports → adapters → infrastructure)
 - Common in projects following clean architecture / hexagonal architecture
 - Multiple files and layers involved
@@ -540,9 +550,11 @@ Once `.claude/command-candidates.yaml` accumulates entries, developers can:
 
 ## Integration with Other Skills
 
-- **decision-capture**: Command candidates may reference specific technical decisions
+- **implicit-decision-capture**: Command candidates may reference specific technical decisions
+
   ```
   Command involves choosing patterns → decisions.yaml has the technical rationale
+  Repeated uncertainties → Opportunity for a command to standardize the approach
   ```
 
 - **signal-capture**: Commands represent formalized workflows based on standards
@@ -550,19 +562,14 @@ Once `.claude/command-candidates.yaml` accumulates entries, developers can:
   Standards define "how" → Commands automate the "what"
   ```
 
-- **uncertainty-capture**: Questions during work may reveal needs for new commands
-  ```
-  Repeated uncertainties → Opportunity for a command to standardize the approach
-  ```
-
 ## Distinguishing Commands from Other Captures
 
-- **Decision (decision-capture)**: "I chose compound components pattern" - A technical choice
+- **Decision (implicit-decision-capture)**: "I chose compound components pattern" - A technical choice or uncertainty
 - **Signal (signal-capture)**: "Prefix interfaces with I" - A coding standard
-- **Uncertainty (uncertainty-capture)**: "Should I mock the database?" - A question
 - **Command (command-capture)**: "Set up Jest testing framework" - A reusable workflow
 
 All four work together:
+
 - Signals define standards
 - Decisions apply standards to specific contexts
 - Uncertainties reveal gaps in guidance
