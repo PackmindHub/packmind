@@ -12,15 +12,15 @@ import {
   SkillVersion,
   User,
 } from '@packmind/types';
-import { ISkillRepository } from '../../../domain/repositories/ISkillRepository';
-import { ISkillVersionRepository } from '../../../domain/repositories/ISkillVersionRepository';
+import { SkillService } from '../../services/SkillService';
+import { SkillVersionService } from '../../services/SkillVersionService';
 import { ListSkillVersionsUsecase } from './listSkillVersions.usecase';
 
 describe('ListSkillVersionsUsecase', () => {
   let usecase: ListSkillVersionsUsecase;
   let mockAccountsPort: jest.Mocked<IAccountsPort>;
-  let mockSkillRepository: jest.Mocked<ISkillRepository>;
-  let mockSkillVersionRepository: jest.Mocked<ISkillVersionRepository>;
+  let mockSkillService: jest.Mocked<SkillService>;
+  let mockSkillVersionService: jest.Mocked<SkillVersionService>;
 
   const userId = createUserId('user-123');
   const organizationId = createOrganizationId('org-123');
@@ -33,6 +33,7 @@ describe('ListSkillVersionsUsecase', () => {
     passwordHash: 'hashed_password',
     memberships: [{ organizationId, role: 'member', userId }],
     active: true,
+    trial: false,
   };
 
   const mockOrganization: Organization = {
@@ -91,31 +92,27 @@ describe('ListSkillVersionsUsecase', () => {
       getOrganizationById: jest.fn(),
     } as unknown as jest.Mocked<IAccountsPort>;
 
-    mockSkillRepository = {
-      findById: jest.fn(),
-      findBySlug: jest.fn(),
-      findByOrganizationId: jest.fn(),
-      findBySpaceId: jest.fn(),
-      findByUserId: jest.fn(),
-      findByOrganizationAndUser: jest.fn(),
-      add: jest.fn(),
-      deleteById: jest.fn(),
-    } as jest.Mocked<ISkillRepository>;
+    mockSkillService = {
+      getSkillById: jest.fn(),
+      findSkillBySlug: jest.fn(),
+      listSkillsBySpace: jest.fn(),
+      addSkill: jest.fn(),
+      updateSkill: jest.fn(),
+      deleteSkill: jest.fn(),
+    } as unknown as jest.Mocked<SkillService>;
 
-    mockSkillVersionRepository = {
-      findById: jest.fn(),
-      findBySkillId: jest.fn(),
-      findLatestBySkillId: jest.fn(),
-      findBySkillIdAndVersion: jest.fn(),
-      updateMetadata: jest.fn(),
-      add: jest.fn(),
-      deleteById: jest.fn(),
-    } as jest.Mocked<ISkillVersionRepository>;
+    mockSkillVersionService = {
+      listSkillVersions: jest.fn(),
+      getLatestSkillVersion: jest.fn(),
+      getSkillVersionById: jest.fn(),
+      getSkillVersion: jest.fn(),
+      addSkillVersion: jest.fn(),
+    } as unknown as jest.Mocked<SkillVersionService>;
 
     usecase = new ListSkillVersionsUsecase(
       mockAccountsPort,
-      mockSkillRepository,
-      mockSkillVersionRepository,
+      mockSkillService,
+      mockSkillVersionService,
       stubLogger(),
     );
 
@@ -136,8 +133,8 @@ describe('ListSkillVersionsUsecase', () => {
     };
 
     beforeEach(() => {
-      mockSkillRepository.findById.mockResolvedValue(mockSkill);
-      mockSkillVersionRepository.findBySkillId.mockResolvedValue(mockVersions);
+      mockSkillService.getSkillById.mockResolvedValue(mockSkill);
+      mockSkillVersionService.listSkillVersions.mockResolvedValue(mockVersions);
     });
 
     it('returns versions ordered by version number descending', async () => {
@@ -149,21 +146,26 @@ describe('ListSkillVersionsUsecase', () => {
     it('fetches skill by ID to validate ownership', async () => {
       await usecase.execute(command);
 
-      expect(mockSkillRepository.findById).toHaveBeenCalledWith(skillId);
+      expect(mockSkillService.getSkillById).toHaveBeenCalledWith(skillId);
     });
 
     it('fetches versions by skill ID', async () => {
       await usecase.execute(command);
 
-      expect(mockSkillVersionRepository.findBySkillId).toHaveBeenCalledWith(
+      expect(mockSkillVersionService.listSkillVersions).toHaveBeenCalledWith(
         skillId,
       );
     });
 
-    it('validates member access', async () => {
+    it('fetches user by ID for access validation', async () => {
       await usecase.execute(command);
 
       expect(mockAccountsPort.getUserById).toHaveBeenCalledWith(userId);
+    });
+
+    it('fetches organization by ID for access validation', async () => {
+      await usecase.execute(command);
+
       expect(mockAccountsPort.getOrganizationById).toHaveBeenCalledWith(
         organizationId,
       );
@@ -179,7 +181,7 @@ describe('ListSkillVersionsUsecase', () => {
     };
 
     beforeEach(() => {
-      mockSkillRepository.findById.mockResolvedValue(null);
+      mockSkillService.getSkillById.mockResolvedValue(null);
     });
 
     it('returns empty versions array', async () => {
@@ -191,7 +193,7 @@ describe('ListSkillVersionsUsecase', () => {
     it('does not fetch versions', async () => {
       await usecase.execute(command);
 
-      expect(mockSkillVersionRepository.findBySkillId).not.toHaveBeenCalled();
+      expect(mockSkillVersionService.listSkillVersions).not.toHaveBeenCalled();
     });
   });
 
@@ -210,7 +212,7 @@ describe('ListSkillVersionsUsecase', () => {
     };
 
     beforeEach(() => {
-      mockSkillRepository.findById.mockResolvedValue(skillInDifferentSpace);
+      mockSkillService.getSkillById.mockResolvedValue(skillInDifferentSpace);
     });
 
     it('returns empty versions array', async () => {
@@ -222,7 +224,7 @@ describe('ListSkillVersionsUsecase', () => {
     it('does not fetch versions', async () => {
       await usecase.execute(command);
 
-      expect(mockSkillVersionRepository.findBySkillId).not.toHaveBeenCalled();
+      expect(mockSkillVersionService.listSkillVersions).not.toHaveBeenCalled();
     });
   });
 
@@ -235,8 +237,8 @@ describe('ListSkillVersionsUsecase', () => {
     };
 
     beforeEach(() => {
-      mockSkillRepository.findById.mockResolvedValue(mockSkill);
-      mockSkillVersionRepository.findBySkillId.mockResolvedValue([]);
+      mockSkillService.getSkillById.mockResolvedValue(mockSkill);
+      mockSkillVersionService.listSkillVersions.mockResolvedValue([]);
     });
 
     it('returns empty versions array', async () => {
@@ -254,35 +256,48 @@ describe('ListSkillVersionsUsecase', () => {
       organizationId,
     };
 
-    it('throws error when user not found', async () => {
-      mockAccountsPort.getUserById.mockResolvedValue(null);
+    describe('when user is not found', () => {
+      beforeEach(() => {
+        mockAccountsPort.getUserById.mockResolvedValue(null);
+      });
 
-      await expect(usecase.execute(command)).rejects.toThrow(
-        `User not found: ${userId}`,
-      );
+      it('throws user not found error', async () => {
+        await expect(usecase.execute(command)).rejects.toThrow(
+          `User not found: ${userId}`,
+        );
+      });
     });
 
-    it('throws error when organization not found', async () => {
-      mockAccountsPort.getOrganizationById.mockResolvedValue(null);
+    describe('when organization is not found', () => {
+      beforeEach(() => {
+        mockAccountsPort.getOrganizationById.mockResolvedValue(null);
+      });
 
-      await expect(usecase.execute(command)).rejects.toThrow(
-        `Organization ${organizationId} not found`,
-      );
+      it('throws organization not found error', async () => {
+        await expect(usecase.execute(command)).rejects.toThrow(
+          `Organization ${organizationId} not found`,
+        );
+      });
     });
 
-    it('throws error when user is not member of organization', async () => {
+    describe('when user is not a member of the organization', () => {
       const otherOrganizationId = createOrganizationId('other-org');
-      const userInOtherOrg: User = {
-        ...mockUser,
-        memberships: [
-          { organizationId: otherOrganizationId, role: 'member', userId },
-        ],
-      };
-      mockAccountsPort.getUserById.mockResolvedValue(userInOtherOrg);
 
-      await expect(usecase.execute(command)).rejects.toThrow(
-        `User ${userId} is not a member of organization ${organizationId}`,
-      );
+      beforeEach(() => {
+        const userInOtherOrg: User = {
+          ...mockUser,
+          memberships: [
+            { organizationId: otherOrganizationId, role: 'member', userId },
+          ],
+        };
+        mockAccountsPort.getUserById.mockResolvedValue(userInOtherOrg);
+      });
+
+      it('throws membership error', async () => {
+        await expect(usecase.execute(command)).rejects.toThrow(
+          `User ${userId} is not a member of organization ${organizationId}`,
+        );
+      });
     });
   });
 });
