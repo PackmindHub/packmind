@@ -261,7 +261,7 @@ export const PackageDetails = ({
     standardCount === 0 &&
     (!showSkillsSelection || skillCount === 0);
 
-  const pullCommand = `packmind-cli pull ${pkg.slug}`;
+  const installCommand = `packmind-cli install ${pkg.slug}`;
 
   return (
     <PMPage
@@ -334,7 +334,7 @@ export const PackageDetails = ({
                       Install package
                     </PMText>
                     <CopiableTextField
-                      value={pullCommand}
+                      value={installCommand}
                       readOnly
                       width="auto"
                     />
