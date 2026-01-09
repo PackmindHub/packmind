@@ -221,7 +221,7 @@ export class UploadSkillUsecase
           spaceId,
           organizationId: command.organization.id,
           userId: command.user.id,
-          source: 'ui',
+          source: 'cli',
           fileCount: fileCountExcludingSkillMd,
         }),
       );
