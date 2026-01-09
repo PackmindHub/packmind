@@ -68,7 +68,9 @@ describe('AuthService - getMe method', () => {
   describe('getMe', () => {
     describe('when valid token is provided', () => {
       describe('when user has access to organization', () => {
-        it('returns user payload', async () => {
+        let result: GetMeResponse;
+
+        beforeEach(async () => {
           mockJwtService.verify = jest.fn().mockReturnValue(mockPayload);
           mockAccountsAdapter.getUserById.mockResolvedValue({
             id: createUserId('1'),
@@ -80,15 +82,15 @@ describe('AuthService - getMe method', () => {
               },
             ],
           });
-
           mockAccountsAdapter.getOrganizationById.mockResolvedValue({
             id: createOrganizationId('org-1'),
             name: 'Test Organization',
             slug: 'test-organization',
           });
+          result = await authService.getMe('valid-jwt-token');
+        });
 
-          const result = await authService.getMe('valid-jwt-token');
-
+        it('returns authenticated user with organization', () => {
           expect(result).toEqual({
             authenticated: true,
             user: {
@@ -102,7 +104,13 @@ describe('AuthService - getMe method', () => {
               role: 'admin',
             },
           });
+        });
+
+        it('verifies the JWT token', () => {
           expect(mockJwtService.verify).toHaveBeenCalledWith('valid-jwt-token');
+        });
+
+        it('fetches user by ID', () => {
           expect(mockAccountsAdapter.getUserById).toHaveBeenCalledWith({
             userId: createUserId('1'),
           });
@@ -110,7 +118,9 @@ describe('AuthService - getMe method', () => {
       });
 
       describe('when user does not have access to organization in token', () => {
-        it('returns unauthenticated', async () => {
+        let result: GetMeResponse;
+
+        beforeEach(async () => {
           mockJwtService.verify = jest.fn().mockReturnValue(mockPayload);
           mockAccountsAdapter.getUserById.mockResolvedValue({
             id: createUserId('1'),
@@ -122,17 +132,27 @@ describe('AuthService - getMe method', () => {
               },
             ],
           });
+          result = await authService.getMe('valid-jwt-token');
+        });
 
-          const result = await authService.getMe('valid-jwt-token');
-
+        it('returns unauthenticated response', () => {
           expect(result).toEqual({
             message: 'User does not have access to the organization in token',
             authenticated: false,
           });
+        });
+
+        it('verifies the JWT token', () => {
           expect(mockJwtService.verify).toHaveBeenCalledWith('valid-jwt-token');
+        });
+
+        it('fetches user by ID', () => {
           expect(mockAccountsAdapter.getUserById).toHaveBeenCalledWith({
             userId: createUserId('1'),
           });
+        });
+
+        it('logs a warning', () => {
           expect(authService.logger.warn).toHaveBeenCalledWith(
             'User does not have access to organization',
             {
@@ -162,17 +182,18 @@ describe('AuthService - getMe method', () => {
       });
 
       describe('when token has no organization', () => {
-        it('returns authenticated with user organizations', async () => {
-          const payloadWithoutOrg: JwtPayload = {
-            user: {
-              name: 'testuser@packmind.com',
-              userId: createUserId('1'),
-            },
-            organization: null,
-            iat: Math.floor(Date.now() / 1000),
-            exp: Math.floor(Date.now() / 1000) + 3600,
-          };
+        const payloadWithoutOrg: JwtPayload = {
+          user: {
+            name: 'testuser@packmind.com',
+            userId: createUserId('1'),
+          },
+          organization: null,
+          iat: Math.floor(Date.now() / 1000),
+          exp: Math.floor(Date.now() / 1000) + 3600,
+        };
+        let result: GetMeResponse;
 
+        beforeEach(async () => {
           mockJwtService.verify = jest.fn().mockReturnValue(payloadWithoutOrg);
           mockAccountsAdapter.getUserById.mockResolvedValue({
             id: createUserId('1'),
@@ -199,9 +220,10 @@ describe('AuthService - getMe method', () => {
               name: 'Organization 2',
               slug: 'org-2',
             });
+          result = await authService.getMe('valid-jwt-token');
+        });
 
-          const result = await authService.getMe('valid-jwt-token');
-
+        it('returns authenticated with user organizations list', () => {
           expect(result).toEqual({
             user: {
               id: '1',
@@ -229,13 +251,25 @@ describe('AuthService - getMe method', () => {
               'User is authenticated but has not selected an organization',
             authenticated: true,
           });
+        });
+
+        it('verifies the JWT token', () => {
           expect(mockJwtService.verify).toHaveBeenCalledWith('valid-jwt-token');
+        });
+
+        it('fetches user by ID', () => {
           expect(mockAccountsAdapter.getUserById).toHaveBeenCalledWith({
             userId: createUserId('1'),
           });
+        });
+
+        it('fetches all user organizations', () => {
           expect(mockAccountsAdapter.getOrganizationById).toHaveBeenCalledTimes(
             2,
           );
+        });
+
+        it('logs the multi-organization state', () => {
           expect(authService.logger.log).toHaveBeenCalledWith(
             'User is authenticated but has not selected an organization',
             {
@@ -247,85 +281,124 @@ describe('AuthService - getMe method', () => {
     });
 
     describe('when no token is provided', () => {
-      it('returns unauthenticated response', async () => {
-        const result = await authService.getMe();
+      let result: GetMeResponse;
 
+      beforeEach(async () => {
+        result = await authService.getMe();
+      });
+
+      it('returns unauthenticated response', () => {
         expect(result).toEqual({
           message: 'No valid access token found',
           authenticated: false,
         });
+      });
+
+      it('does not verify token', () => {
         expect(mockJwtService.verify).not.toHaveBeenCalled();
       });
     });
 
     describe('when empty token is provided', () => {
-      it('returns unauthenticated response', async () => {
-        const result = await authService.getMe('');
+      let result: GetMeResponse;
 
+      beforeEach(async () => {
+        result = await authService.getMe('');
+      });
+
+      it('returns unauthenticated response', () => {
         expect(result).toEqual({
           message: 'No valid access token found',
           authenticated: false,
         });
+      });
+
+      it('does not verify token', () => {
         expect(mockJwtService.verify).not.toHaveBeenCalled();
       });
     });
 
     describe('when undefined token is provided', () => {
-      it('returns unauthenticated response', async () => {
-        const result = await authService.getMe(undefined);
+      let result: GetMeResponse;
 
+      beforeEach(async () => {
+        result = await authService.getMe(undefined);
+      });
+
+      it('returns unauthenticated response', () => {
         expect(result).toEqual({
           message: 'No valid access token found',
           authenticated: false,
         });
+      });
+
+      it('does not verify token', () => {
         expect(mockJwtService.verify).not.toHaveBeenCalled();
       });
     });
 
     describe('when token verification fails', () => {
-      it('returns error response', async () => {
+      let result: GetMeResponse;
+
+      beforeEach(async () => {
         mockJwtService.verify = jest.fn().mockImplementation(() => {
           throw new Error('Invalid token');
         });
+        result = await authService.getMe('invalid-jwt-token');
+      });
 
-        const result = await authService.getMe('invalid-jwt-token');
-
+      it('returns error response', () => {
         expect(result).toEqual({
           message: 'Invalid or expired access token',
           authenticated: false,
         });
+      });
+
+      it('attempts to verify the token', () => {
         expect(mockJwtService.verify).toHaveBeenCalledWith('invalid-jwt-token');
       });
     });
 
     describe('when token is expired', () => {
-      it('returns error response', async () => {
+      let result: GetMeResponse;
+
+      beforeEach(async () => {
         mockJwtService.verify = jest.fn().mockImplementation(() => {
           throw new Error('Token expired');
         });
+        result = await authService.getMe('expired-jwt-token');
+      });
 
-        const result = await authService.getMe('expired-jwt-token');
-
+      it('returns error response', () => {
         expect(result).toEqual({
           message: 'Invalid or expired access token',
           authenticated: false,
         });
+      });
+
+      it('attempts to verify the token', () => {
         expect(mockJwtService.verify).toHaveBeenCalledWith('expired-jwt-token');
       });
     });
 
     describe('when token is malformed', () => {
-      it('returns error response', async () => {
+      let result: GetMeResponse;
+
+      beforeEach(async () => {
         mockJwtService.verify = jest.fn().mockImplementation(() => {
           throw new Error('Malformed token');
         });
+        result = await authService.getMe('malformed-token');
+      });
 
-        const result = await authService.getMe('malformed-token');
-
+      it('returns error response', () => {
         expect(result).toEqual({
           message: 'Invalid or expired access token',
           authenticated: false,
         });
+      });
+
+      it('attempts to verify the token', () => {
         expect(mockJwtService.verify).toHaveBeenCalledWith('malformed-token');
       });
     });
