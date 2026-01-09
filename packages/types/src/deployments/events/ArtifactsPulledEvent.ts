@@ -4,6 +4,7 @@ export interface ArtifactsPulledPayload {
   packageSlugs: string[];
   recipeCount: number;
   standardCount: number;
+  skillCount: number;
   source: string;
 }
 

@@ -5,6 +5,7 @@ import {
   IAccountsPort,
   ICodingAgentPort,
   IRecipesPort,
+  ISkillsPort,
   IStandardsPort,
   Organization,
   OrganizationId,
@@ -12,6 +13,8 @@ import {
   PullContentCommand,
   Recipe,
   RecipeVersion,
+  Skill,
+  SkillVersion,
   Standard,
   StandardVersion,
   User,
@@ -20,6 +23,8 @@ import {
   createPackageId,
   createRecipeId,
   createRecipeVersionId,
+  createSkillId,
+  createSkillVersionId,
   createSpaceId,
   createStandardId,
   createStandardVersionId,
@@ -55,6 +60,7 @@ describe('PullContentUseCase', () => {
   let packageService: jest.Mocked<PackageService>;
   let recipesPort: jest.Mocked<IRecipesPort>;
   let standardsPort: jest.Mocked<IStandardsPort>;
+  let skillsPort: jest.Mocked<ISkillsPort>;
   let codingAgentPort: jest.Mocked<ICodingAgentPort>;
   let accountsPort: jest.Mocked<IAccountsPort>;
   let eventEmitterService: jest.Mocked<PackmindEventEmitterService>;
@@ -77,6 +83,10 @@ describe('PullContentUseCase', () => {
     standardsPort = {
       listStandardVersions: jest.fn(),
     } as unknown as jest.Mocked<IStandardsPort>;
+
+    skillsPort = {
+      listSkillVersions: jest.fn(),
+    } as unknown as jest.Mocked<ISkillsPort>;
 
     const mockDeployer = {
       generateFileUpdatesForRecipes: jest.fn(),
@@ -144,6 +154,7 @@ describe('PullContentUseCase', () => {
       packageService,
       recipesPort,
       standardsPort,
+      skillsPort,
       codingAgentPort,
       renderModeConfigurationService,
       accountsPort,
@@ -154,6 +165,25 @@ describe('PullContentUseCase', () => {
   });
 
   afterEach(() => jest.clearAllMocks());
+
+  describe('constructor', () => {
+    it('accepts ISkillsPort as a dependency', () => {
+      expect(() => {
+        new PullContentUseCase(
+          packageService,
+          recipesPort,
+          standardsPort,
+          skillsPort,
+          codingAgentPort,
+          renderModeConfigurationService,
+          accountsPort,
+          eventEmitterService,
+          packmindConfigService,
+          stubLogger(),
+        );
+      }).not.toThrow();
+    });
+  });
 
   describe('when pulling all content', () => {
     let mockDeployer: {
@@ -191,6 +221,7 @@ describe('PullContentUseCase', () => {
         createdBy: createUserId('user-1'),
         recipes: [],
         standards: [],
+        skills: [],
       };
 
       packageService.getPackagesBySlugsWithArtefacts.mockResolvedValue([
@@ -223,6 +254,7 @@ describe('PullContentUseCase', () => {
         createdBy: createUserId('user-1'),
         recipes: [],
         standards: [],
+        skills: [],
       };
 
       packageService.getPackagesBySlugsWithArtefacts.mockResolvedValue([
@@ -301,6 +333,7 @@ describe('PullContentUseCase', () => {
         createdBy: createUserId('user-1'),
         recipes: [],
         standards: [],
+        skills: [],
       };
 
       packageService.getPackagesBySlugsWithArtefacts.mockResolvedValue([
@@ -326,6 +359,142 @@ describe('PullContentUseCase', () => {
           }),
         }),
       );
+    });
+
+    describe('when package contains skills', () => {
+      let testPackage: PackageWithArtefacts;
+      let skill: Skill;
+      let skillVersion: SkillVersion;
+
+      beforeEach(() => {
+        skill = {
+          id: createSkillId('skill-1'),
+          name: 'Test Skill',
+          slug: 'test-skill',
+          description: 'Test skill description',
+          prompt: 'Test prompt',
+          version: 1,
+          userId: createUserId('user-1'),
+          spaceId: createSpaceId('space-1'),
+        };
+
+        skillVersion = {
+          id: createSkillVersionId('skill-version-1'),
+          skillId: skill.id,
+          name: 'Test Skill',
+          slug: 'test-skill',
+          description: 'Test skill description',
+          prompt: 'Test prompt',
+          version: 1,
+          userId: createUserId('user-1'),
+        };
+
+        testPackage = {
+          id: createPackageId('test-package-id'),
+          slug: 'test-package',
+          name: 'Test Package',
+          description: 'Test package description',
+          spaceId: createSpaceId('space-1'),
+          createdBy: createUserId('user-1'),
+          recipes: [],
+          standards: [],
+          skills: [skill],
+        };
+
+        packageService.getPackagesBySlugsWithArtefacts.mockResolvedValue([
+          testPackage,
+        ]);
+
+        recipesPort.listRecipeVersions.mockResolvedValue([]);
+        standardsPort.listStandardVersions.mockResolvedValue([]);
+        skillsPort.listSkillVersions.mockResolvedValue([skillVersion]);
+
+        mockDeployer.deployArtifacts.mockResolvedValue({
+          createOrUpdate: [],
+          delete: [],
+        } as FileUpdates);
+      });
+
+      it('fetches skill versions from skillsPort', async () => {
+        await useCase.execute(command);
+
+        expect(skillsPort.listSkillVersions).toHaveBeenCalledWith(skill.id);
+      });
+
+      it('passes skill versions to deployArtifacts', async () => {
+        await useCase.execute(command);
+
+        expect(mockDeployer.deployArtifacts).toHaveBeenCalledWith(
+          [],
+          [],
+          [skillVersion],
+        );
+      });
+
+      it('emits ArtifactsPulledEvent with skillCount', async () => {
+        await useCase.execute(command);
+
+        expect(eventEmitterService.emit).toHaveBeenCalledWith(
+          expect.objectContaining({
+            payload: expect.objectContaining({
+              skillCount: 1,
+            }),
+          }),
+        );
+      });
+
+      it('deduplicates skills when multiple packages share the same skill', async () => {
+        const secondPackage: PackageWithArtefacts = {
+          id: createPackageId('test-package-2-id'),
+          slug: 'test-package-2',
+          name: 'Test Package 2',
+          description: 'Test package 2 description',
+          spaceId: createSpaceId('space-1'),
+          createdBy: createUserId('user-1'),
+          recipes: [],
+          standards: [],
+          skills: [skill],
+        };
+
+        packageService.getPackagesBySlugsWithArtefacts.mockResolvedValue([
+          testPackage,
+          secondPackage,
+        ]);
+
+        command.packagesSlugs = ['test-package', 'test-package-2'];
+
+        await useCase.execute(command);
+
+        expect(skillsPort.listSkillVersions).toHaveBeenCalledTimes(1);
+        expect(skillsPort.listSkillVersions).toHaveBeenCalledWith(skill.id);
+      });
+
+      it('fetches latest version when multiple versions exist', async () => {
+        const olderVersion: SkillVersion = {
+          ...skillVersion,
+          id: createSkillVersionId('skill-version-0'),
+          version: 1,
+        };
+
+        const newerVersion: SkillVersion = {
+          ...skillVersion,
+          id: createSkillVersionId('skill-version-2'),
+          version: 2,
+        };
+
+        skillsPort.listSkillVersions.mockResolvedValue([
+          newerVersion,
+          olderVersion,
+        ]);
+
+        await useCase.execute(command);
+
+        expect(mockDeployer.deployArtifacts).toHaveBeenCalledWith(
+          [],
+          [],
+          [newerVersion],
+        );
+      });
     });
 
     describe('when package slugs do not match', () => {
@@ -562,10 +731,14 @@ describe('PullContentUseCase', () => {
     let uniqueRecipe: Recipe;
     let sharedStandard: Standard;
     let uniqueStandard: Standard;
+    let sharedSkill: Skill;
+    let uniqueSkill: Skill;
     let sharedRecipeVersion: RecipeVersion;
     let uniqueRecipeVersion: RecipeVersion;
     let sharedStandardVersion: StandardVersion;
     let uniqueStandardVersion: StandardVersion;
+    let sharedSkillVersion: SkillVersion;
+    let uniqueSkillVersion: SkillVersion;
     let mockDeployer: {
       generateFileUpdatesForRecipes: jest.Mock;
       generateFileUpdatesForStandards: jest.Mock;
@@ -620,6 +793,28 @@ describe('PullContentUseCase', () => {
         scope: null,
       };
 
+      sharedSkill = {
+        id: createSkillId('shared-skill-id'),
+        name: 'Shared Skill',
+        slug: 'shared-skill',
+        description: 'shared skill description',
+        prompt: 'shared prompt',
+        version: 1,
+        userId,
+        spaceId,
+      };
+
+      uniqueSkill = {
+        id: createSkillId('unique-skill-id'),
+        name: 'Unique Skill',
+        slug: 'unique-skill',
+        description: 'unique skill description',
+        prompt: 'unique prompt',
+        version: 1,
+        userId,
+        spaceId,
+      };
+
       sharedRecipeVersion = {
         id: createRecipeVersionId('rv-shared'),
         recipeId: sharedRecipe.id,
@@ -660,6 +855,28 @@ describe('PullContentUseCase', () => {
         scope: null,
       };
 
+      sharedSkillVersion = {
+        id: createSkillVersionId('skv-shared'),
+        skillId: sharedSkill.id,
+        name: 'Shared Skill',
+        slug: 'shared-skill',
+        description: 'shared skill description',
+        prompt: 'shared prompt',
+        version: 1,
+        userId,
+      };
+
+      uniqueSkillVersion = {
+        id: createSkillVersionId('skv-unique'),
+        skillId: uniqueSkill.id,
+        name: 'Unique Skill',
+        slug: 'unique-skill',
+        description: 'unique skill description',
+        prompt: 'unique prompt',
+        version: 1,
+        userId,
+      };
+
       packageA = {
         id: createPackageId('package-a-id'),
         slug: 'package-a',
@@ -669,6 +886,7 @@ describe('PullContentUseCase', () => {
         createdBy: userId,
         recipes: [sharedRecipe, uniqueRecipe],
         standards: [sharedStandard, uniqueStandard],
+        skills: [sharedSkill, uniqueSkill],
       };
 
       packageB = {
@@ -680,6 +898,7 @@ describe('PullContentUseCase', () => {
         createdBy: userId,
         recipes: [sharedRecipe],
         standards: [sharedStandard],
+        skills: [sharedSkill],
       };
 
       mockDeployer = {
@@ -730,11 +949,17 @@ describe('PullContentUseCase', () => {
           .mockResolvedValueOnce([sharedStandardVersion])
           .mockResolvedValueOnce([uniqueStandardVersion]);
 
+        skillsPort.listSkillVersions
+          .mockResolvedValueOnce([sharedSkillVersion])
+          .mockResolvedValueOnce([sharedSkillVersion])
+          .mockResolvedValueOnce([uniqueSkillVersion]);
+
         mockDeployer.generateRemovalFileUpdates.mockResolvedValue({
           createOrUpdate: [],
           delete: [
             { path: '.packmind/commands/unique-recipe.md' },
             { path: '.packmind/standards/unique-standard.md' },
+            { path: '.packmind/skills/unique-skill.md' },
           ],
         });
       });
@@ -772,6 +997,20 @@ describe('PullContentUseCase', () => {
           '.packmind/standards/unique-standard.md',
         );
       });
+
+      it('does not delete shared skill files', async () => {
+        const result = await useCase.execute(command);
+
+        const deletedPaths = result.fileUpdates.delete.map((f) => f.path);
+        expect(deletedPaths).not.toContain('.packmind/skills/shared-skill.md');
+      });
+
+      it('deletes unique skill files from removed package', async () => {
+        const result = await useCase.execute(command);
+
+        const deletedPaths = result.fileUpdates.delete.map((f) => f.path);
+        expect(deletedPaths).toContain('.packmind/skills/unique-skill.md');
+      });
     });
 
     describe('when all artifacts are shared with remaining packages', () => {
@@ -780,6 +1019,7 @@ describe('PullContentUseCase', () => {
           ...packageA,
           recipes: [sharedRecipe],
           standards: [sharedStandard],
+          skills: [sharedSkill],
         };
 
         command = {
@@ -796,6 +1036,7 @@ describe('PullContentUseCase', () => {
         standardsPort.listStandardVersions.mockResolvedValue([
           sharedStandardVersion,
         ]);
+        skillsPort.listSkillVersions.mockResolvedValue([sharedSkillVersion]);
       });
 
       it('does not generate any deletion paths', async () => {
@@ -817,12 +1058,14 @@ describe('PullContentUseCase', () => {
           ...packageA,
           recipes: [uniqueRecipe],
           standards: [uniqueStandard],
+          skills: [uniqueSkill],
         };
 
         const packageBDifferent: PackageWithArtefacts = {
           ...packageB,
           recipes: [],
           standards: [],
+          skills: [],
         };
 
         command = {
@@ -839,12 +1082,14 @@ describe('PullContentUseCase', () => {
         standardsPort.listStandardVersions.mockResolvedValue([
           uniqueStandardVersion,
         ]);
+        skillsPort.listSkillVersions.mockResolvedValue([uniqueSkillVersion]);
 
         mockDeployer.generateRemovalFileUpdates.mockResolvedValue({
           createOrUpdate: [],
           delete: [
             { path: '.packmind/commands/unique-recipe.md' },
             { path: '.packmind/standards/unique-standard.md' },
+            { path: '.packmind/skills/unique-skill.md' },
           ],
         });
       });
@@ -863,6 +1108,13 @@ describe('PullContentUseCase', () => {
         expect(deletedPaths).toContain(
           '.packmind/standards/unique-standard.md',
         );
+      });
+
+      it('deletes unique skill from removed package', async () => {
+        const result = await useCase.execute(command);
+
+        const deletedPaths = result.fileUpdates.delete.map((f) => f.path);
+        expect(deletedPaths).toContain('.packmind/skills/unique-skill.md');
       });
     });
 
@@ -886,6 +1138,10 @@ describe('PullContentUseCase', () => {
           .mockResolvedValueOnce([sharedStandardVersion])
           .mockResolvedValueOnce([uniqueStandardVersion]);
 
+        skillsPort.listSkillVersions
+          .mockResolvedValueOnce([sharedSkillVersion])
+          .mockResolvedValueOnce([uniqueSkillVersion]);
+
         mockDeployer.generateRemovalFileUpdates.mockResolvedValue({
           createOrUpdate: [],
           delete: [
@@ -893,6 +1149,8 @@ describe('PullContentUseCase', () => {
             { path: '.packmind/commands/unique-recipe.md' },
             { path: '.packmind/standards/shared-standard.md' },
             { path: '.packmind/standards/unique-standard.md' },
+            { path: '.packmind/skills/shared-skill.md' },
+            { path: '.packmind/skills/unique-skill.md' },
           ],
         });
       });
@@ -924,7 +1182,7 @@ describe('PullContentUseCase', () => {
           {
             recipeVersions: [sharedRecipeVersion, uniqueRecipeVersion],
             standardVersions: [sharedStandardVersion, uniqueStandardVersion],
-            skillVersions: [],
+            skillVersions: [sharedSkillVersion, uniqueSkillVersion],
           },
           {
             recipeVersions: [],
@@ -964,6 +1222,20 @@ describe('PullContentUseCase', () => {
         expect(deletedPaths).toContain(
           '.packmind/standards/unique-standard.md',
         );
+      });
+
+      it('marks shared skill for deletion', async () => {
+        const result = await useCase.execute(command);
+
+        const deletedPaths = result.fileUpdates.delete.map((f) => f.path);
+        expect(deletedPaths).toContain('.packmind/skills/shared-skill.md');
+      });
+
+      it('marks unique skill for deletion', async () => {
+        const result = await useCase.execute(command);
+
+        const deletedPaths = result.fileUpdates.delete.map((f) => f.path);
+        expect(deletedPaths).toContain('.packmind/skills/unique-skill.md');
       });
 
       it('calls config service with empty package list', async () => {

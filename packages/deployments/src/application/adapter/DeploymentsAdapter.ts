@@ -293,6 +293,7 @@ export class DeploymentsAdapter
       this.deploymentsServices.getPackageService(),
       this.recipesPort,
       this.standardsPort,
+      this.skillsPort,
       this.codingAgentPort,
       this.deploymentsServices.getRenderModeConfigurationService(),
       this.accountsPort,
