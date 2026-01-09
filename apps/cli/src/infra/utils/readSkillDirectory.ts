@@ -9,6 +9,28 @@ type SkillFile = {
   permissions: string;
 };
 
+/**
+ * Normalizes file path by:
+ * 1. Converting backslashes to forward slashes
+ * 2. Removing leading slash or backslash
+ */
+function normalizePath(filePath: string): string {
+  let normalized = filePath.replace(/\\/g, '/');
+  if (normalized.startsWith('/') || normalized.startsWith('\\')) {
+    normalized = normalized.substring(1);
+  }
+  return normalized;
+}
+
+/**
+ * Normalizes line endings by:
+ * 1. Converting CRLF (\r\n) to LF (\n)
+ * 2. Converting CR (\r) to LF (\n)
+ */
+function normalizeLineEndings(content: string): string {
+  return content.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+}
+
 export async function readSkillDirectory(
   dirPath: string,
 ): Promise<SkillFile[]> {
@@ -25,12 +47,14 @@ export async function readSkillDirectory(
         await readDir(fullPath, basePath);
       } else if (entry.isFile()) {
         const content = await fs.readFile(fullPath, 'utf-8');
+        const normalizedContent = normalizeLineEndings(content);
+        const normalizedPath = normalizePath(relativePath);
 
         files.push({
           path: fullPath,
-          relativePath,
-          content,
-          size: Buffer.byteLength(content, 'utf-8'),
+          relativePath: normalizedPath,
+          content: normalizedContent,
+          size: Buffer.byteLength(normalizedContent, 'utf-8'),
           permissions: 'rw-r--r--', // Simple default
         });
       }
