@@ -87,7 +87,7 @@ describe('PackmindApp API', () => {
       expect(registry.initialized).toBe(true);
     });
 
-    it('registers all expected hexas', async () => {
+    it('registers SpacesHexa', async () => {
       const logger = new PackmindLogger('Test');
       const apiKeyServiceProvider = new ApiKeyServiceProvider();
       const apiKeyService = apiKeyServiceProvider.createApiKeyService(
@@ -100,12 +100,110 @@ describe('PackmindApp API', () => {
       });
 
       expect(registry.get(SpacesHexa)).toBeDefined();
+    });
+
+    it('registers AccountsHexa', async () => {
+      const logger = new PackmindLogger('Test');
+      const apiKeyServiceProvider = new ApiKeyServiceProvider();
+      const apiKeyService = apiKeyServiceProvider.createApiKeyService(
+        jwtService,
+        logger,
+      );
+
+      const registry = await initializePackmindApp(dataSource, {
+        apiKeyService,
+      });
+
       expect(registry.get(AccountsHexa)).toBeDefined();
+    });
+
+    it('registers GitHexa', async () => {
+      const logger = new PackmindLogger('Test');
+      const apiKeyServiceProvider = new ApiKeyServiceProvider();
+      const apiKeyService = apiKeyServiceProvider.createApiKeyService(
+        jwtService,
+        logger,
+      );
+
+      const registry = await initializePackmindApp(dataSource, {
+        apiKeyService,
+      });
+
       expect(registry.get(GitHexa)).toBeDefined();
+    });
+
+    it('registers RecipesHexa', async () => {
+      const logger = new PackmindLogger('Test');
+      const apiKeyServiceProvider = new ApiKeyServiceProvider();
+      const apiKeyService = apiKeyServiceProvider.createApiKeyService(
+        jwtService,
+        logger,
+      );
+
+      const registry = await initializePackmindApp(dataSource, {
+        apiKeyService,
+      });
+
       expect(registry.get(RecipesHexa)).toBeDefined();
+    });
+
+    it('registers LinterHexa', async () => {
+      const logger = new PackmindLogger('Test');
+      const apiKeyServiceProvider = new ApiKeyServiceProvider();
+      const apiKeyService = apiKeyServiceProvider.createApiKeyService(
+        jwtService,
+        logger,
+      );
+
+      const registry = await initializePackmindApp(dataSource, {
+        apiKeyService,
+      });
+
       expect(registry.get(LinterHexa)).toBeDefined();
+    });
+
+    it('registers StandardsHexa', async () => {
+      const logger = new PackmindLogger('Test');
+      const apiKeyServiceProvider = new ApiKeyServiceProvider();
+      const apiKeyService = apiKeyServiceProvider.createApiKeyService(
+        jwtService,
+        logger,
+      );
+
+      const registry = await initializePackmindApp(dataSource, {
+        apiKeyService,
+      });
+
       expect(registry.get(StandardsHexa)).toBeDefined();
+    });
+
+    it('registers CodingAgentHexa', async () => {
+      const logger = new PackmindLogger('Test');
+      const apiKeyServiceProvider = new ApiKeyServiceProvider();
+      const apiKeyService = apiKeyServiceProvider.createApiKeyService(
+        jwtService,
+        logger,
+      );
+
+      const registry = await initializePackmindApp(dataSource, {
+        apiKeyService,
+      });
+
       expect(registry.get(CodingAgentHexa)).toBeDefined();
+    });
+
+    it('registers DeploymentsHexa', async () => {
+      const logger = new PackmindLogger('Test');
+      const apiKeyServiceProvider = new ApiKeyServiceProvider();
+      const apiKeyService = apiKeyServiceProvider.createApiKeyService(
+        jwtService,
+        logger,
+      );
+
+      const registry = await initializePackmindApp(dataSource, {
+        apiKeyService,
+      });
+
       expect(registry.get(DeploymentsHexa)).toBeDefined();
     });
 
@@ -124,7 +222,7 @@ describe('PackmindApp API', () => {
       expect(registry.getService(JobsService)).toBeDefined();
     });
 
-    it('provides access to hexas through adapters', async () => {
+    it('provides AccountsHexa adapter', async () => {
       const logger = new PackmindLogger('Test');
       const apiKeyServiceProvider = new ApiKeyServiceProvider();
       const apiKeyService = apiKeyServiceProvider.createApiKeyService(
@@ -138,15 +236,67 @@ describe('PackmindApp API', () => {
 
       const accountsHexa = registry.get(AccountsHexa);
       expect(accountsHexa.getAdapter()).toBeDefined();
+    });
+
+    it('provides GitHexa adapter', async () => {
+      const logger = new PackmindLogger('Test');
+      const apiKeyServiceProvider = new ApiKeyServiceProvider();
+      const apiKeyService = apiKeyServiceProvider.createApiKeyService(
+        jwtService,
+        logger,
+      );
+
+      const registry = await initializePackmindApp(dataSource, {
+        apiKeyService,
+      });
 
       const gitHexa = registry.get(GitHexa);
       expect(gitHexa.getAdapter()).toBeDefined();
+    });
+
+    it('provides RecipesHexa adapter', async () => {
+      const logger = new PackmindLogger('Test');
+      const apiKeyServiceProvider = new ApiKeyServiceProvider();
+      const apiKeyService = apiKeyServiceProvider.createApiKeyService(
+        jwtService,
+        logger,
+      );
+
+      const registry = await initializePackmindApp(dataSource, {
+        apiKeyService,
+      });
 
       const recipesHexa = registry.get(RecipesHexa);
       expect(recipesHexa.getAdapter()).toBeDefined();
+    });
+
+    it('provides StandardsHexa adapter', async () => {
+      const logger = new PackmindLogger('Test');
+      const apiKeyServiceProvider = new ApiKeyServiceProvider();
+      const apiKeyService = apiKeyServiceProvider.createApiKeyService(
+        jwtService,
+        logger,
+      );
+
+      const registry = await initializePackmindApp(dataSource, {
+        apiKeyService,
+      });
 
       const standardsHexa = registry.get(StandardsHexa);
       expect(standardsHexa.getAdapter()).toBeDefined();
+    });
+
+    it('provides DeploymentsHexa adapter', async () => {
+      const logger = new PackmindLogger('Test');
+      const apiKeyServiceProvider = new ApiKeyServiceProvider();
+      const apiKeyService = apiKeyServiceProvider.createApiKeyService(
+        jwtService,
+        logger,
+      );
+
+      const registry = await initializePackmindApp(dataSource, {
+        apiKeyService,
+      });
 
       const deploymentsHexa = registry.get(DeploymentsHexa);
       expect(deploymentsHexa.getAdapter()).toBeDefined();
