@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Get,
@@ -9,6 +10,7 @@ import {
 } from '@nestjs/common';
 import { LogLevel, PackmindLogger } from '@packmind/logger';
 import { AuthenticatedRequest } from '@packmind/node-utils';
+import { SkillValidationError, SkillParseError } from '@packmind/skills';
 import {
   OrganizationId,
   Skill,
@@ -18,6 +20,7 @@ import {
 import { SkillsService } from './skills.service';
 import { OrganizationAccessGuard } from '../../guards/organization-access.guard';
 import { SpaceAccessGuard } from '../guards/space-access.guard';
+import { getErrorMessage } from '../../../shared/utils/error.utils';
 
 const origin = 'OrganizationsSpacesSkillsController';
 
@@ -114,8 +117,7 @@ export class OrganizationsSpacesSkillsController {
         userId,
       );
     } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : String(error);
+      const errorMessage = getErrorMessage(error);
       this.logger.error(
         'POST /organizations/:orgId/spaces/:spaceId/skills/upload - Failed to upload skill',
         {
@@ -124,6 +126,16 @@ export class OrganizationsSpacesSkillsController {
           error: errorMessage,
         },
       );
+
+      // Convert domain errors to HTTP exceptions
+      if (error instanceof SkillValidationError) {
+        throw new BadRequestException(error.message);
+      }
+
+      if (error instanceof SkillParseError) {
+        throw new BadRequestException(error.message);
+      }
+
       throw error;
     }
   }
