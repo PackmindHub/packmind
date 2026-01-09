@@ -296,6 +296,7 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
             target,
             recipeVersions,
             standardVersions,
+            skillVersions,
             activeRenderModes,
             DistributionStatus.failure,
             undefined,

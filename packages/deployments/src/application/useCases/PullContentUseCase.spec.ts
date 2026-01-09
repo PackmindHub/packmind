@@ -924,10 +924,12 @@ describe('PullContentUseCase', () => {
           {
             recipeVersions: [sharedRecipeVersion, uniqueRecipeVersion],
             standardVersions: [sharedStandardVersion, uniqueStandardVersion],
+            skillVersions: [],
           },
           {
             recipeVersions: [],
             standardVersions: [],
+            skillVersions: [],
           },
         );
       });

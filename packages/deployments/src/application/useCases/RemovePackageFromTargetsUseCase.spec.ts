@@ -589,6 +589,7 @@ describe('RemovePackageFromTargetsUseCase', () => {
                   standardVersions: expect.arrayContaining([
                     expect.objectContaining({ id: standardVersionId1 }),
                   ]),
+                  skillVersions: [],
                 },
               }),
             );

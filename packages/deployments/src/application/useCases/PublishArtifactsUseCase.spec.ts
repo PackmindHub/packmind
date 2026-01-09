@@ -260,10 +260,12 @@ describe('PublishArtifactsUseCase', () => {
                 rules: [],
               }),
             ],
+            skillVersions: [],
           },
           removed: {
             recipeVersions: [],
             standardVersions: [],
+            skillVersions: [],
           },
           codingAgents: activeCodingAgents,
         }),
@@ -299,7 +301,9 @@ describe('PublishArtifactsUseCase', () => {
             path: expect.stringContaining('standards'),
           }),
         ]),
-        expect.stringContaining('Update artifacts (commands + standards)'),
+        expect.stringContaining(
+          'Update artifacts (commands + standards + skills)',
+        ),
         expect.any(Array),
       );
     });
@@ -1383,6 +1387,7 @@ describe('PublishArtifactsUseCase', () => {
           removed: {
             recipeVersions: [],
             standardVersions: [],
+            skillVersions: [],
           },
         }),
       );

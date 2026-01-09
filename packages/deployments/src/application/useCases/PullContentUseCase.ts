@@ -281,10 +281,12 @@ export class PullContentUseCase extends AbstractMemberUseCase<
                 {
                   recipeVersions: recipeVersionsToDelete,
                   standardVersions: standardVersionsToDelete,
+                  skillVersions: [], // TODO: Add skill support in PullContentUseCase
                 },
                 {
                   recipeVersions: recipeVersions,
                   standardVersions: standardVersions,
+                  skillVersions: [], // TODO: Add skill support in PullContentUseCase
                 },
               );
 
