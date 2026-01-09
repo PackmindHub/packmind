@@ -1,9 +1,15 @@
-import { LogLevel, PackmindLogger } from '@packmind/logger';
-import { PackmindEventEmitterService } from '@packmind/node-utils';
+import { PackmindLogger } from '@packmind/logger';
 import {
+  AbstractMemberUseCase,
+  MemberContext,
+  PackmindEventEmitterService,
+} from '@packmind/node-utils';
+import {
+  IAccountsPort,
+  ISpacesPort,
+  SkillUpdatedEvent,
   UpdateSkillCommand,
   UpdateSkillResponse,
-  SkillUpdatedEvent,
   createOrganizationId,
   createSkillId,
   createUserId,
@@ -15,21 +21,24 @@ import { SkillVersionService } from '../../services/SkillVersionService';
 
 const origin = 'UpdateSkillUsecase';
 
-export class UpdateSkillUsecase implements IUpdateSkill {
+export class UpdateSkillUsecase
+  extends AbstractMemberUseCase<UpdateSkillCommand, UpdateSkillResponse>
+  implements IUpdateSkill
+{
   constructor(
+    accountsPort: IAccountsPort,
+    private readonly spacesPort: ISpacesPort,
     private readonly skillService: SkillService,
     private readonly skillVersionService: SkillVersionService,
     private readonly eventEmitterService: PackmindEventEmitterService,
-    private readonly logger: PackmindLogger = new PackmindLogger(
-      origin,
-      LogLevel.DEBUG,
-    ),
+    logger: PackmindLogger = new PackmindLogger(origin),
   ) {
+    super(accountsPort, logger);
     this.logger.info('UpdateSkillUsecase initialized');
   }
 
-  public async execute(
-    command: UpdateSkillCommand,
+  public async executeForMembers(
+    command: UpdateSkillCommand & MemberContext,
   ): Promise<UpdateSkillResponse> {
     const {
       skillId: skillIdString,
@@ -65,6 +74,26 @@ export class UpdateSkillUsecase implements IUpdateSkill {
         skillId,
         currentVersion: existingSkill.version,
       });
+
+      // Verify the space belongs to the organization
+      const space = await this.spacesPort.getSpaceById(existingSkill.spaceId);
+      if (!space) {
+        this.logger.error('Space not found', {
+          spaceId: existingSkill.spaceId,
+        });
+        throw new Error(`Space with id ${existingSkill.spaceId} not found`);
+      }
+
+      if (space.organizationId !== organizationId) {
+        this.logger.error('Space does not belong to organization', {
+          spaceId: existingSkill.spaceId,
+          spaceOrganizationId: space.organizationId,
+          requestOrganizationId: organizationId,
+        });
+        throw new Error(
+          `Space ${existingSkill.spaceId} does not belong to organization ${organizationId}`,
+        );
+      }
 
       // Increment version number
       const newVersion = existingSkill.version + 1;

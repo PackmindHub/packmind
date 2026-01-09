@@ -91,12 +91,16 @@ export class SkillsAdapter implements IBaseAdapter<ISkillsPort>, ISkillsPort {
 
     // Create all use cases with non-null dependencies
     this._createSkill = new CreateSkillUsecase(
+      this.accountsPort,
+      this.spacesPort,
       this.services.getSkillService(),
       this.services.getSkillVersionService(),
       this.eventEmitterService,
     );
 
     this._uploadSkill = new UploadSkillUsecase(
+      this.accountsPort,
+      this.spacesPort,
       this.services.getSkillService(),
       this.services.getSkillVersionService(),
       this.repositories.getSkillFileRepository(),
@@ -104,34 +108,50 @@ export class SkillsAdapter implements IBaseAdapter<ISkillsPort>, ISkillsPort {
     );
 
     this._updateSkill = new UpdateSkillUsecase(
+      this.accountsPort,
+      this.spacesPort,
       this.services.getSkillService(),
       this.services.getSkillVersionService(),
       this.eventEmitterService,
     );
 
     this._deleteSkill = new DeleteSkillUsecase(
+      this.accountsPort,
+      this.spacesPort,
       this.services.getSkillService(),
       this.eventEmitterService,
     );
 
     this._getSkillById = new GetSkillByIdUsecase(
+      this.accountsPort,
       this.services.getSkillService(),
+      this.spacesPort,
     );
 
     this._findSkillBySlug = new FindSkillBySlugUsecase(
+      this.accountsPort,
       this.services.getSkillService(),
+      this.spacesPort,
     );
 
     this._listSkillsBySpace = new ListSkillsBySpaceUsecase(
+      this.accountsPort,
       this.services.getSkillService(),
+      this.spacesPort,
     );
 
     this._getSkillVersion = new GetSkillVersionUsecase(
+      this.accountsPort,
       this.services.getSkillVersionService(),
+      this.services.getSkillService(),
+      this.spacesPort,
     );
 
     this._getLatestSkillVersion = new GetLatestSkillVersionUsecase(
+      this.accountsPort,
+      this.services.getSkillService(),
       this.services.getSkillVersionService(),
+      this.spacesPort,
     );
 
     this.logger.info('SkillsAdapter initialized successfully');
@@ -290,6 +310,7 @@ export class SkillsAdapter implements IBaseAdapter<ISkillsPort>, ISkillsPort {
     this.logger.info('getSkillVersion use case invoked', {
       skillId: command.skillId,
       version: command.version,
+      spaceId: command.spaceId,
       userId: command.userId.substring(0, 6) + '*',
       organizationId: command.organizationId,
     });
@@ -301,6 +322,7 @@ export class SkillsAdapter implements IBaseAdapter<ISkillsPort>, ISkillsPort {
   ): Promise<{ skillVersion: SkillVersion | null }> {
     this.logger.info('getLatestSkillVersion use case invoked', {
       skillId: command.skillId,
+      spaceId: command.spaceId,
       userId: command.userId.substring(0, 6) + '*',
       organizationId: command.organizationId,
     });

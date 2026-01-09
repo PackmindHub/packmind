@@ -1,5 +1,7 @@
-import { GetSkillByIdCommand, GetSkillByIdResponse } from '@packmind/types';
+import {
+  GetSkillByIdCommand,
+  GetSkillByIdResponse,
+  IUseCase,
+} from '@packmind/types';
 
-export interface IGetSkillById {
-  execute(command: GetSkillByIdCommand): Promise<GetSkillByIdResponse>;
-}
+export type IGetSkillById = IUseCase<GetSkillByIdCommand, GetSkillByIdResponse>;

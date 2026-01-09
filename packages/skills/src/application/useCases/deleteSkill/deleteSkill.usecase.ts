@@ -1,41 +1,50 @@
-import { LogLevel, PackmindLogger } from '@packmind/logger';
-import { PackmindEventEmitterService } from '@packmind/node-utils';
+import { PackmindLogger } from '@packmind/logger';
+import {
+  AbstractMemberUseCase,
+  MemberContext,
+  PackmindEventEmitterService,
+} from '@packmind/node-utils';
 import {
   DeleteSkillCommand,
   DeleteSkillResponse,
+  IAccountsPort,
+  IDeleteSkillUseCase,
+  ISpacesPort,
   SkillDeletedEvent,
   createOrganizationId,
   createSkillId,
   createUserId,
 } from '@packmind/types';
-import { IDeleteSkill } from '../../../domain/useCases/IDeleteSkill';
 import { SkillService } from '../../services/SkillService';
 
 const origin = 'DeleteSkillUsecase';
 
-export class DeleteSkillUsecase implements IDeleteSkill {
+export class DeleteSkillUsecase
+  extends AbstractMemberUseCase<DeleteSkillCommand, DeleteSkillResponse>
+  implements IDeleteSkillUseCase
+{
   constructor(
+    accountsPort: IAccountsPort,
+    private readonly spacesPort: ISpacesPort,
     private readonly skillService: SkillService,
     private readonly eventEmitterService: PackmindEventEmitterService,
-    private readonly logger: PackmindLogger = new PackmindLogger(
-      origin,
-      LogLevel.DEBUG,
-    ),
+    logger: PackmindLogger = new PackmindLogger(origin),
   ) {
+    super(accountsPort, logger);
     this.logger.info('DeleteSkillUsecase initialized');
   }
 
-  public async execute(
-    command: DeleteSkillCommand,
+  async executeForMembers(
+    command: DeleteSkillCommand & MemberContext,
   ): Promise<DeleteSkillResponse> {
     const {
       skillId: skillIdString,
       organizationId: orgIdString,
       userId: userIdString,
     } = command;
+    const skillId = createSkillId(skillIdString);
     const organizationId = createOrganizationId(orgIdString);
     const userId = createUserId(userIdString);
-    const skillId = createSkillId(skillIdString);
 
     this.logger.info('Starting deleteSkill process', {
       skillId,
@@ -54,10 +63,29 @@ export class DeleteSkillUsecase implements IDeleteSkill {
       this.logger.info('Skill found for deletion', {
         skillId,
         name: existingSkill.name,
+        spaceId: existingSkill.spaceId,
       });
 
+      // Verify the space belongs to the organization
+      const space = await this.spacesPort.getSpaceById(existingSkill.spaceId);
+      if (!space) {
+        this.logger.warn('Space not found', { spaceId: existingSkill.spaceId });
+        throw new Error(`Space with id ${existingSkill.spaceId} not found`);
+      }
+
+      if (space.organizationId !== organizationId) {
+        this.logger.warn('Space does not belong to organization', {
+          spaceId: existingSkill.spaceId,
+          spaceOrganizationId: space.organizationId,
+          requestOrganizationId: organizationId,
+        });
+        throw new Error(
+          `Space ${existingSkill.spaceId} does not belong to organization ${organizationId}`,
+        );
+      }
+
       // Perform soft delete
-      await this.skillService.deleteSkill(skillId, userId);
+      await this.skillService.deleteSkill(skillId, command.user.id);
 
       this.logger.info('Skill deleted successfully', {
         skillId,

@@ -1,5 +1,8 @@
+import { MemberContext } from '@packmind/node-utils';
 import { UpdateSkillCommand, UpdateSkillResponse } from '@packmind/types';
 
 export interface IUpdateSkill {
-  execute(command: UpdateSkillCommand): Promise<UpdateSkillResponse>;
+  executeForMembers(
+    command: UpdateSkillCommand & MemberContext,
+  ): Promise<UpdateSkillResponse>;
 }

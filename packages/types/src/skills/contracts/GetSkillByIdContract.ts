@@ -1,8 +1,11 @@
 import { IUseCase, PackmindCommand } from '../../UseCase';
 import { Skill } from '../Skill';
+import { SkillId } from '../SkillId';
+import { SpaceId } from '../../spaces/SpaceId';
 
 export type GetSkillByIdCommand = PackmindCommand & {
-  skillId: string;
+  spaceId: SpaceId;
+  skillId: SkillId;
 };
 
 export type GetSkillByIdResponse = { skill: Skill | null };

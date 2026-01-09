@@ -4,6 +4,7 @@ import { SkillVersion } from '../SkillVersion';
 export type GetSkillVersionCommand = PackmindCommand & {
   skillId: string;
   version: number;
+  spaceId: string;
 };
 
 export type GetSkillVersionResponse = { skillVersion: SkillVersion | null };

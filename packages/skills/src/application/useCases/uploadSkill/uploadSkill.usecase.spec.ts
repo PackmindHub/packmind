@@ -16,10 +16,18 @@ import {
   Skill,
   SkillVersion,
   UploadSkillFileInput,
+  IAccountsPort,
+  ISpacesPort,
+  User,
+  Organization,
+  Space,
+  UserOrganizationMembership,
 } from '@packmind/types';
 
 describe('UploadSkillUsecase', () => {
   let usecase: UploadSkillUsecase;
+  let mockAccountsPort: jest.Mocked<IAccountsPort>;
+  let mockSpacesPort: jest.Mocked<ISpacesPort>;
   let mockSkillService: jest.Mocked<SkillService>;
   let mockSkillVersionService: jest.Mocked<SkillVersionService>;
   let mockSkillFileRepository: jest.Mocked<ISkillFileRepository>;
@@ -29,7 +37,50 @@ describe('UploadSkillUsecase', () => {
   const organizationId = createOrganizationId('org-123');
   const spaceId = createSpaceId('space-123');
 
+  const mockUser: User = {
+    id: userId,
+    email: 'test@example.com',
+    memberships: [
+      {
+        organizationId,
+        role: 'member',
+      } as UserOrganizationMembership,
+    ],
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  };
+
+  const mockOrganization: Organization = {
+    id: organizationId,
+    name: 'Test Org',
+    slug: 'test-org',
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  };
+
+  const mockSpace: Space = {
+    id: spaceId,
+    name: 'Test Space',
+    slug: 'test-space',
+    organizationId,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    deletedAt: null,
+  };
+
   beforeEach(() => {
+    mockAccountsPort = {
+      getUserById: jest.fn().mockResolvedValue(mockUser),
+      getOrganizationById: jest.fn().mockResolvedValue(mockOrganization),
+    } as jest.Mocked<IAccountsPort>;
+
+    mockSpacesPort = {
+      getSpaceById: jest.fn().mockResolvedValue(mockSpace),
+      createSpace: jest.fn(),
+      listSpacesByOrganization: jest.fn(),
+      getSpaceBySlug: jest.fn(),
+    } as jest.Mocked<ISpacesPort>;
+
     mockSkillService = createMockInstance(SkillService);
     mockSkillVersionService = createMockInstance(SkillVersionService);
     mockSkillFileRepository = {
@@ -39,6 +90,8 @@ describe('UploadSkillUsecase', () => {
     mockEventEmitterService = createMockInstance(PackmindEventEmitterService);
 
     usecase = new UploadSkillUsecase(
+      mockAccountsPort,
+      mockSpacesPort,
       mockSkillService,
       mockSkillVersionService,
       mockSkillFileRepository,
@@ -1027,6 +1080,125 @@ Content`,
 
       expect(mockSkillService.addSkill).toHaveBeenCalledWith(
         expect.objectContaining({ spaceId }),
+      );
+    });
+  });
+
+  describe('member validation', () => {
+    it('validates user exists', async () => {
+      mockAccountsPort.getUserById.mockResolvedValue(null);
+
+      const files: UploadSkillFileInput[] = [
+        {
+          path: 'SKILL.md',
+          content: `---
+name: test-skill
+description: A test skill
+---
+
+Content`,
+          permissions: 'rw-r--r--',
+        },
+      ];
+
+      const command: UploadSkillCommand = {
+        files,
+        organizationId,
+        userId,
+        spaceId,
+      };
+
+      await expect(usecase.execute(command)).rejects.toThrow();
+    });
+
+    it('validates user is member of organization', async () => {
+      const userWithoutMembership: User = {
+        ...mockUser,
+        memberships: [],
+      };
+      mockAccountsPort.getUserById.mockResolvedValue(userWithoutMembership);
+
+      const files: UploadSkillFileInput[] = [
+        {
+          path: 'SKILL.md',
+          content: `---
+name: test-skill
+description: A test skill
+---
+
+Content`,
+          permissions: 'rw-r--r--',
+        },
+      ];
+
+      const command: UploadSkillCommand = {
+        files,
+        organizationId,
+        userId,
+        spaceId,
+      };
+
+      await expect(usecase.execute(command)).rejects.toThrow();
+    });
+
+    it('validates space exists', async () => {
+      mockSpacesPort.getSpaceById.mockResolvedValue(null);
+
+      const files: UploadSkillFileInput[] = [
+        {
+          path: 'SKILL.md',
+          content: `---
+name: test-skill
+description: A test skill
+---
+
+Content`,
+          permissions: 'rw-r--r--',
+        },
+      ];
+
+      const command: UploadSkillCommand = {
+        files,
+        organizationId,
+        userId,
+        spaceId,
+      };
+
+      await expect(usecase.execute(command)).rejects.toThrow(
+        `Space with id ${spaceId} not found`,
+      );
+    });
+
+    it('validates space belongs to organization', async () => {
+      const differentOrgId = createOrganizationId('different-org');
+      const spaceInDifferentOrg: Space = {
+        ...mockSpace,
+        organizationId: differentOrgId,
+      };
+      mockSpacesPort.getSpaceById.mockResolvedValue(spaceInDifferentOrg);
+
+      const files: UploadSkillFileInput[] = [
+        {
+          path: 'SKILL.md',
+          content: `---
+name: test-skill
+description: A test skill
+---
+
+Content`,
+          permissions: 'rw-r--r--',
+        },
+      ];
+
+      const command: UploadSkillCommand = {
+        files,
+        organizationId,
+        userId,
+        spaceId,
+      };
+
+      await expect(usecase.execute(command)).rejects.toThrow(
+        `Space ${spaceId} does not belong to organization ${organizationId}`,
       );
     });
   });

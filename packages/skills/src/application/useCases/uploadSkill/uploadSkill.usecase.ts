@@ -1,16 +1,20 @@
-import { LogLevel, PackmindLogger } from '@packmind/logger';
-import { PackmindEventEmitterService } from '@packmind/node-utils';
+import { PackmindLogger } from '@packmind/logger';
+import {
+  AbstractMemberUseCase,
+  MemberContext,
+  PackmindEventEmitterService,
+} from '@packmind/node-utils';
 import {
   UploadSkillCommand,
   UploadSkillResponse,
   SkillCreatedEvent,
-  createOrganizationId,
   createSkillId,
-  createUserId,
   createSkillVersionId,
   createSkillFileId,
   SkillFile,
   createSpaceId,
+  IAccountsPort,
+  ISpacesPort,
 } from '@packmind/types';
 import slug from 'slug';
 import { v4 as uuidv4 } from 'uuid';
@@ -25,46 +29,63 @@ import { SkillValidationError } from '../../errors/SkillValidationError';
 
 const origin = 'UploadSkillUsecase';
 
-export class UploadSkillUsecase implements IUploadSkill {
+export class UploadSkillUsecase
+  extends AbstractMemberUseCase<UploadSkillCommand, UploadSkillResponse>
+  implements IUploadSkill
+{
   private readonly skillParser: SkillParser;
   private readonly skillValidator: SkillValidator;
 
   constructor(
+    accountsPort: IAccountsPort,
+    private readonly spacesPort: ISpacesPort,
     private readonly skillService: SkillService,
     private readonly skillVersionService: SkillVersionService,
     private readonly skillFileRepository: ISkillFileRepository,
     private readonly eventEmitterService: PackmindEventEmitterService,
-    private readonly logger: PackmindLogger = new PackmindLogger(
-      origin,
-      LogLevel.DEBUG,
-    ),
+    logger: PackmindLogger = new PackmindLogger(origin),
   ) {
+    super(accountsPort, logger);
     this.skillParser = new SkillParser();
     this.skillValidator = new SkillValidator();
     this.logger.info('UploadSkillUsecase initialized');
   }
 
-  public async execute(
-    command: UploadSkillCommand,
+  async executeForMembers(
+    command: UploadSkillCommand & MemberContext,
   ): Promise<UploadSkillResponse> {
     const {
       files,
       organizationId: orgIdString,
-      userId: userIdString,
       spaceId: spaceIdString,
     } = command;
-    const organizationId = createOrganizationId(orgIdString);
-    const userId = createUserId(userIdString);
     const spaceId = createSpaceId(spaceIdString);
 
     this.logger.info('Starting uploadSkill process', {
       fileCount: files.length,
-      organizationId,
-      userId,
-      spaceId,
+      organizationId: orgIdString,
+      userId: command.userId,
+      spaceId: spaceIdString,
     });
 
     try {
+      // Verify the space belongs to the organization
+      const space = await this.spacesPort.getSpaceById(spaceId);
+      if (!space) {
+        this.logger.warn('Space not found', { spaceId: spaceIdString });
+        throw new Error(`Space with id ${spaceIdString} not found`);
+      }
+
+      if (space.organizationId !== orgIdString) {
+        this.logger.warn('Space does not belong to organization', {
+          spaceId: spaceIdString,
+          spaceOrganizationId: space.organizationId,
+          requestOrganizationId: orgIdString,
+        });
+        throw new Error(
+          `Space ${spaceIdString} does not belong to organization ${orgIdString}`,
+        );
+      }
       // Find SKILL.md file
       this.logger.info('Looking for SKILL.md file');
       const skillMdFile = files.find((f) => f.path === 'SKILL.md');
@@ -136,7 +157,7 @@ export class UploadSkillUsecase implements IUploadSkill {
         slug: skillSlug,
         version: initialVersion,
         prompt,
-        userId,
+        userId: command.user.id,
         spaceId,
         allowedTools,
         license,
@@ -157,7 +178,7 @@ export class UploadSkillUsecase implements IUploadSkill {
         description,
         version: initialVersion,
         prompt,
-        userId,
+        userId: command.user.id,
         allowedTools,
         license,
         compatibility,
@@ -194,8 +215,8 @@ export class UploadSkillUsecase implements IUploadSkill {
         new SkillCreatedEvent({
           skillId: createSkillId(skill.id),
           spaceId,
-          organizationId,
-          userId,
+          organizationId: command.organization.id,
+          userId: command.user.id,
           source: 'ui',
         }),
       );
@@ -213,8 +234,8 @@ export class UploadSkillUsecase implements IUploadSkill {
       }
 
       this.logger.error('Failed to upload skill', {
-        organizationId,
-        userId,
+        organizationId: command.organization.id,
+        userId: command.user.id,
         error: error instanceof Error ? error.message : String(error),
       });
       throw error;
