@@ -5,9 +5,15 @@ import {
   PMLink,
   PMIcon,
   PMSeparator,
+  isFeatureFlagEnabled,
+  DEFAULT_FEATURE_DOMAIN_MAP,
+  MANAGE_SKILLS_FEATURE_KEY,
 } from '@packmind/ui';
 import { NavLink, useParams } from 'react-router';
-import { AuthContextOrganization } from '../../accounts/hooks/useAuthContext';
+import {
+  AuthContextOrganization,
+  useAuthContext,
+} from '../../accounts/hooks/useAuthContext';
 import { SidebarAccountMenu } from '../../accounts/components/SidebarAccountMenu';
 import { SidebarOrgaSelector } from './OrgaSelector';
 import { SidebarHelpMenu } from './SidebarHelpMenu';
@@ -54,6 +60,13 @@ export const SidebarNavigation: React.FunctionComponent<
 > = ({ organization }) => {
   const { spaceSlug } = useParams<{ spaceSlug?: string }>();
   const { data: spaces } = useGetSpacesQuery();
+  const { user } = useAuthContext();
+
+  const showSkills = isFeatureFlagEnabled({
+    featureDomainMap: DEFAULT_FEATURE_DOMAIN_MAP,
+    featureKeys: [MANAGE_SKILLS_FEATURE_KEY],
+    userEmail: user?.email,
+  });
 
   // Use spaceSlug from URL if available, otherwise use first space from query
   const currentSpaceSlug =
@@ -105,6 +118,16 @@ export const SidebarNavigation: React.FunctionComponent<
             url={routes.space.toCommands(orgSlug, currentSpaceSlug)}
             label="Commands"
           />,
+          ...(showSkills
+            ? [
+                <SidebarNavigationLink
+                  key="skills"
+                  url={routes.space.toSkills(orgSlug, currentSpaceSlug)}
+                  label="Skills"
+                  data-testid={SidebarNavigationDataTestId.SkillsLink}
+                />,
+              ]
+            : []),
         ]}
       />
       <PMVerticalNavSection
