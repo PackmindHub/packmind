@@ -40,7 +40,7 @@ describe('OrganizationsSpacesRecipesController', () => {
   });
 
   describe('getRecipes', () => {
-    it('returns recipes for space within organization', async () => {
+    describe('with valid space', () => {
       const orgId = createOrganizationId('org-123');
       const spaceId = createSpaceId('space-456');
       const userId = createUserId('user-1');
@@ -67,17 +67,24 @@ describe('OrganizationsSpacesRecipesController', () => {
           name: 'Test User',
         },
       } as unknown as AuthenticatedRequest;
+      let result: Recipe[];
 
-      recipesService.getRecipesBySpace.mockResolvedValue(mockRecipes);
+      beforeEach(async () => {
+        recipesService.getRecipesBySpace.mockResolvedValue(mockRecipes);
+        result = await controller.getRecipes(orgId, spaceId, request);
+      });
 
-      const result = await controller.getRecipes(orgId, spaceId, request);
+      it('returns recipes', () => {
+        expect(result).toEqual(mockRecipes);
+      });
 
-      expect(result).toEqual(mockRecipes);
-      expect(recipesService.getRecipesBySpace).toHaveBeenCalledWith(
-        spaceId,
-        orgId,
-        userId,
-      );
+      it('calls service with correct params', () => {
+        expect(recipesService.getRecipesBySpace).toHaveBeenCalledWith(
+          spaceId,
+          orgId,
+          userId,
+        );
+      });
     });
 
     it('propagates errors from service', async () => {
@@ -105,7 +112,7 @@ describe('OrganizationsSpacesRecipesController', () => {
       ).rejects.toThrow('Database error');
     });
 
-    it('handles empty recipe list', async () => {
+    describe('when recipe list is empty', () => {
       const orgId = createOrganizationId('org-123');
       const spaceId = createSpaceId('space-456');
       const userId = createUserId('user-1');
@@ -121,22 +128,29 @@ describe('OrganizationsSpacesRecipesController', () => {
           name: 'Test User',
         },
       } as unknown as AuthenticatedRequest;
+      let result: Recipe[];
 
-      recipesService.getRecipesBySpace.mockResolvedValue([]);
+      beforeEach(async () => {
+        recipesService.getRecipesBySpace.mockResolvedValue([]);
+        result = await controller.getRecipes(orgId, spaceId, request);
+      });
 
-      const result = await controller.getRecipes(orgId, spaceId, request);
+      it('returns empty array', () => {
+        expect(result).toEqual([]);
+      });
 
-      expect(result).toEqual([]);
-      expect(recipesService.getRecipesBySpace).toHaveBeenCalledWith(
-        spaceId,
-        orgId,
-        userId,
-      );
+      it('calls service with correct params', () => {
+        expect(recipesService.getRecipesBySpace).toHaveBeenCalledWith(
+          spaceId,
+          orgId,
+          userId,
+        );
+      });
     });
   });
 
   describe('getRecipeById', () => {
-    it('returns recipe by ID within space', async () => {
+    describe('when recipe exists', () => {
       const orgId = createOrganizationId('org-123');
       const spaceId = createSpaceId('space-456');
       const recipeId = createRecipeId('recipe-1');
@@ -162,23 +176,30 @@ describe('OrganizationsSpacesRecipesController', () => {
           name: 'Test User',
         },
       } as unknown as AuthenticatedRequest;
+      let result: Recipe;
 
-      recipesService.getRecipeById.mockResolvedValue(mockRecipe);
+      beforeEach(async () => {
+        recipesService.getRecipeById.mockResolvedValue(mockRecipe);
+        result = await controller.getRecipeById(
+          orgId,
+          spaceId,
+          recipeId,
+          request,
+        );
+      });
 
-      const result = await controller.getRecipeById(
-        orgId,
-        spaceId,
-        recipeId,
-        request,
-      );
+      it('returns recipe', () => {
+        expect(result).toEqual(mockRecipe);
+      });
 
-      expect(result).toEqual(mockRecipe);
-      expect(recipesService.getRecipeById).toHaveBeenCalledWith(
-        recipeId,
-        orgId,
-        spaceId,
-        userId,
-      );
+      it('calls service with correct params', () => {
+        expect(recipesService.getRecipeById).toHaveBeenCalledWith(
+          recipeId,
+          orgId,
+          spaceId,
+          userId,
+        );
+      });
     });
 
     it('throws NotFoundException for non-existent recipe', async () => {
@@ -234,7 +255,7 @@ describe('OrganizationsSpacesRecipesController', () => {
   });
 
   describe('getRecipeVersionsById', () => {
-    it('returns recipe versions within space', async () => {
+    describe('when versions exist', () => {
       const orgId = createOrganizationId('org-123');
       const spaceId = createSpaceId('space-456');
       const recipeId = createRecipeId('recipe-1');
@@ -258,19 +279,26 @@ describe('OrganizationsSpacesRecipesController', () => {
           userId: createUserId('user-1'),
         },
       ];
+      let result: typeof mockVersions;
 
-      recipesService.getRecipeVersionsById.mockResolvedValue(mockVersions);
+      beforeEach(async () => {
+        recipesService.getRecipeVersionsById.mockResolvedValue(mockVersions);
+        result = await controller.getRecipeVersionsById(
+          orgId,
+          spaceId,
+          recipeId,
+        );
+      });
 
-      const result = await controller.getRecipeVersionsById(
-        orgId,
-        spaceId,
-        recipeId,
-      );
+      it('returns recipe versions', () => {
+        expect(result).toEqual(mockVersions);
+      });
 
-      expect(result).toEqual(mockVersions);
-      expect(recipesService.getRecipeVersionsById).toHaveBeenCalledWith(
-        recipeId,
-      );
+      it('calls service with correct params', () => {
+        expect(recipesService.getRecipeVersionsById).toHaveBeenCalledWith(
+          recipeId,
+        );
+      });
     });
 
     it('throws NotFoundException for empty versions list', async () => {
@@ -300,7 +328,7 @@ describe('OrganizationsSpacesRecipesController', () => {
   });
 
   describe('updateRecipe', () => {
-    it('updates recipe within space and returns updated recipe', async () => {
+    describe('when update is successful', () => {
       const orgId = createOrganizationId('org-123');
       const spaceId = createSpaceId('space-456');
       const recipeId = createRecipeId('recipe-1');
@@ -330,28 +358,35 @@ describe('OrganizationsSpacesRecipesController', () => {
           name: 'Test User',
         },
       } as unknown as AuthenticatedRequest;
+      let result: Recipe;
 
-      recipesService.updateRecipeFromUI.mockResolvedValue(mockUpdatedRecipe);
+      beforeEach(async () => {
+        recipesService.updateRecipeFromUI.mockResolvedValue(mockUpdatedRecipe);
+        result = await controller.updateRecipe(
+          orgId,
+          spaceId,
+          recipeId,
+          updateData,
+          request,
+        );
+      });
 
-      const result = await controller.updateRecipe(
-        orgId,
-        spaceId,
-        recipeId,
-        updateData,
-        request,
-      );
+      it('returns updated recipe', () => {
+        expect(result).toEqual(mockUpdatedRecipe);
+      });
 
-      expect(result).toEqual(mockUpdatedRecipe);
-      expect(recipesService.updateRecipeFromUI).toHaveBeenCalledWith(
-        recipeId,
-        spaceId,
-        orgId,
-        updateData.name,
-        '', // slug (empty string when not provided)
-        updateData.content,
-        userId,
-        undefined, // summary (undefined when not provided)
-      );
+      it('calls service with correct params', () => {
+        expect(recipesService.updateRecipeFromUI).toHaveBeenCalledWith(
+          recipeId,
+          spaceId,
+          orgId,
+          updateData.name,
+          '', // slug (empty string when not provided)
+          updateData.content,
+          userId,
+          undefined, // summary (undefined when not provided)
+        );
+      });
     });
 
     it('propagates errors from service', async () => {

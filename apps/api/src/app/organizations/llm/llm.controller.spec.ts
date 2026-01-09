@@ -57,7 +57,7 @@ describe('LlmController', () => {
   });
 
   describe('testConnection', () => {
-    it('returns connection test results for OpenAI', async () => {
+    describe('with valid OpenAI config', () => {
       const body: PackmindCommandBody<TestLLMConnectionCommand> = {
         config: {
           provider: LLMProvider.OPENAI,
@@ -65,7 +65,6 @@ describe('LlmController', () => {
           model: 'gpt-4',
         },
       };
-
       const expectedResponse: TestLLMConnectionResponse = {
         provider: LLMProvider.OPENAI,
         standardModel: {
@@ -74,17 +73,26 @@ describe('LlmController', () => {
         },
         overallSuccess: true,
       };
+      let result: TestLLMConnectionResponse;
 
-      jest.spyOn(service, 'testConnection').mockResolvedValue(expectedResponse);
+      beforeEach(async () => {
+        jest
+          .spyOn(service, 'testConnection')
+          .mockResolvedValue(expectedResponse);
+        result = await controller.testConnection(
+          createOrganizationId('org-123'),
+          mockRequest,
+          body,
+        );
+      });
 
-      const result = await controller.testConnection(
-        createOrganizationId('org-123'),
-        mockRequest,
-        body,
-      );
+      it('returns connection test results', () => {
+        expect(result).toEqual(expectedResponse);
+      });
 
-      expect(result).toEqual(expectedResponse);
-      expect(service.testConnection).toHaveBeenCalledWith(mockRequest, body);
+      it('calls service.testConnection with correct params', () => {
+        expect(service.testConnection).toHaveBeenCalledWith(mockRequest, body);
+      });
     });
 
     it('returns connection test results with failures', async () => {
@@ -145,30 +153,36 @@ describe('LlmController', () => {
   });
 
   describe('getModels', () => {
-    it('returns available models for OpenAI', async () => {
+    describe('with valid OpenAI config', () => {
       const body: PackmindCommandBody<GetModelsCommand> = {
         config: {
           provider: LLMProvider.OPENAI,
           apiKey: 'test-key',
         },
       };
-
       const expectedResponse: GetModelsResponse = {
         provider: LLMProvider.OPENAI,
         models: ['gpt-4', 'gpt-3.5-turbo'],
         success: true,
       };
+      let result: GetModelsResponse;
 
-      jest.spyOn(service, 'getModels').mockResolvedValue(expectedResponse);
+      beforeEach(async () => {
+        jest.spyOn(service, 'getModels').mockResolvedValue(expectedResponse);
+        result = await controller.getModels(
+          createOrganizationId('org-123'),
+          mockRequest,
+          body,
+        );
+      });
 
-      const result = await controller.getModels(
-        createOrganizationId('org-123'),
-        mockRequest,
-        body,
-      );
+      it('returns available models', () => {
+        expect(result).toEqual(expectedResponse);
+      });
 
-      expect(result).toEqual(expectedResponse);
-      expect(service.getModels).toHaveBeenCalledWith(mockRequest, body);
+      it('calls service.getModels with correct params', () => {
+        expect(service.getModels).toHaveBeenCalledWith(mockRequest, body);
+      });
     });
 
     describe('when models retrieval fails', () => {

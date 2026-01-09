@@ -43,68 +43,77 @@ describe('OrganizationsSpacesStandardsRulesController', () => {
 
   describe('getRulesByStandardId', () => {
     describe('when validation passes', () => {
-      it('returns rules for standard within space', async () => {
-        const orgId = createOrganizationId('org-123');
-        const spaceId = createSpaceId('space-456');
-        const standardId = createStandardId('standard-789');
-        const userId = createUserId('user-1');
+      const orgId = createOrganizationId('org-123');
+      const spaceId = createSpaceId('space-456');
+      const standardId = createStandardId('standard-789');
+      const userId = createUserId('user-1');
 
-        const mockStandard: Standard = {
-          id: standardId,
-          slug: 'test-standard',
-          name: 'Test Standard',
-          description: 'Test description',
+      const mockStandard: Standard = {
+        id: standardId,
+        slug: 'test-standard',
+        name: 'Test Standard',
+        description: 'Test description',
+        userId,
+        version: 1,
+        spaceId,
+        scope: null,
+      };
+
+      const mockRules: Rule[] = [
+        {
+          id: createRuleId('rule-1'),
+          content: 'Test rule 1',
+          standardVersionId: createStandardVersionId('version-1'),
+        },
+        {
+          id: createRuleId('rule-2'),
+          content: 'Test rule 2',
+          standardVersionId: createStandardVersionId('version-1'),
+        },
+      ];
+
+      const request = {
+        organization: {
+          id: orgId,
+          name: 'Test Org',
+          slug: 'test-org',
+          role: 'admin',
+        },
+        user: {
           userId,
-          version: 1,
-          spaceId,
-          scope: null,
-        };
+          name: 'Test User',
+        },
+      } as unknown as AuthenticatedRequest;
 
-        const mockRules: Rule[] = [
-          {
-            id: createRuleId('rule-1'),
-            content: 'Test rule 1',
-            standardVersionId: createStandardVersionId('version-1'),
-          },
-          {
-            id: createRuleId('rule-2'),
-            content: 'Test rule 2',
-            standardVersionId: createStandardVersionId('version-1'),
-          },
-        ];
+      let result: Rule[];
 
-        const request = {
-          organization: {
-            id: orgId,
-            name: 'Test Org',
-            slug: 'test-org',
-            role: 'admin',
-          },
-          user: {
-            userId,
-            name: 'Test User',
-          },
-        } as unknown as AuthenticatedRequest;
-
+      beforeEach(async () => {
         rulesService.getStandardById.mockResolvedValue({
           standard: mockStandard,
         });
         rulesService.getRulesByStandardId.mockResolvedValue(mockRules);
-
-        const result = await controller.getRulesByStandardId(
+        result = await controller.getRulesByStandardId(
           orgId,
           spaceId,
           standardId,
           request,
         );
+      });
 
+      it('returns rules for standard', () => {
         expect(result).toEqual(mockRules);
+      });
+
+      it('calls getStandardById with correct params', () => {
         expect(rulesService.getStandardById).toHaveBeenCalledWith(
           standardId,
           orgId,
           spaceId,
           userId,
         );
+      });
+
+      it('calls getRulesByStandardId with correct params', () => {
         expect(rulesService.getRulesByStandardId).toHaveBeenCalledWith(
           standardId,
         );
@@ -112,142 +121,6 @@ describe('OrganizationsSpacesStandardsRulesController', () => {
     });
 
     describe('when standard does not exist', () => {
-      it('throws NotFoundException', async () => {
-        const orgId = createOrganizationId('org-123');
-        const spaceId = createSpaceId('space-456');
-        const standardId = createStandardId('standard-789');
-        const userId = createUserId('user-1');
-
-        const request = {
-          organization: {
-            id: orgId,
-            name: 'Test Org',
-            slug: 'test-org',
-            role: 'admin',
-          },
-          user: {
-            userId,
-            name: 'Test User',
-          },
-        } as unknown as AuthenticatedRequest;
-
-        rulesService.getStandardById.mockResolvedValue({
-          standard: null as unknown as Standard,
-        });
-
-        await expect(
-          controller.getRulesByStandardId(orgId, spaceId, standardId, request),
-        ).rejects.toThrow(NotFoundException);
-        await expect(
-          controller.getRulesByStandardId(orgId, spaceId, standardId, request),
-        ).rejects.toThrow(
-          `Standard ${standardId} not found in space ${spaceId}`,
-        );
-
-        expect(rulesService.getRulesByStandardId).not.toHaveBeenCalled();
-      });
-    });
-
-    describe('when standard belongs to different space', () => {
-      it('throws NotFoundException', async () => {
-        const orgId = createOrganizationId('org-123');
-        const spaceId = createSpaceId('space-456');
-        const differentSpaceId = createSpaceId('space-999');
-        const standardId = createStandardId('standard-789');
-        const userId = createUserId('user-1');
-
-        const mockStandard: Standard = {
-          id: standardId,
-          slug: 'test-standard',
-          name: 'Test Standard',
-          description: 'Test description',
-          userId,
-          version: 1,
-          spaceId: differentSpaceId, // Different space!
-          scope: null,
-        };
-
-        const request = {
-          organization: {
-            id: orgId,
-            name: 'Test Org',
-            slug: 'test-org',
-            role: 'admin',
-          },
-          user: {
-            userId,
-            name: 'Test User',
-          },
-        } as unknown as AuthenticatedRequest;
-
-        rulesService.getStandardById.mockResolvedValue({
-          standard: mockStandard,
-        });
-
-        await expect(
-          controller.getRulesByStandardId(orgId, spaceId, standardId, request),
-        ).rejects.toThrow(NotFoundException);
-        await expect(
-          controller.getRulesByStandardId(orgId, spaceId, standardId, request),
-        ).rejects.toThrow(
-          `Standard ${standardId} does not belong to space ${spaceId}`,
-        );
-
-        expect(rulesService.getRulesByStandardId).not.toHaveBeenCalled();
-      });
-    });
-
-    describe('when standard has no rules', () => {
-      it('returns empty array', async () => {
-        const orgId = createOrganizationId('org-123');
-        const spaceId = createSpaceId('space-456');
-        const standardId = createStandardId('standard-789');
-        const userId = createUserId('user-1');
-
-        const mockStandard: Standard = {
-          id: standardId,
-          slug: 'test-standard',
-          name: 'Test Standard',
-          description: 'Test description',
-          userId,
-          version: 1,
-          spaceId,
-          scope: null,
-        };
-
-        const request = {
-          organization: {
-            id: orgId,
-            name: 'Test Org',
-            slug: 'test-org',
-            role: 'admin',
-          },
-          user: {
-            userId,
-            name: 'Test User',
-          },
-        } as unknown as AuthenticatedRequest;
-
-        rulesService.getStandardById.mockResolvedValue({
-          standard: mockStandard,
-        });
-        rulesService.getRulesByStandardId.mockResolvedValue([]);
-
-        const result = await controller.getRulesByStandardId(
-          orgId,
-          spaceId,
-          standardId,
-          request,
-        );
-
-        expect(result).toEqual([]);
-        expect(rulesService.getRulesByStandardId).toHaveBeenCalledWith(
-          standardId,
-        );
-      });
-    });
-
-    it('propagates errors from standardsService', async () => {
       const orgId = createOrganizationId('org-123');
       const spaceId = createSpaceId('space-456');
       const standardId = createStandardId('standard-789');
@@ -266,14 +139,191 @@ describe('OrganizationsSpacesStandardsRulesController', () => {
         },
       } as unknown as AuthenticatedRequest;
 
-      const error = new Error('Database error');
-      rulesService.getStandardById.mockRejectedValue(error);
+      beforeEach(() => {
+        rulesService.getStandardById.mockResolvedValue({
+          standard: null as unknown as Standard,
+        });
+      });
 
-      await expect(
-        controller.getRulesByStandardId(orgId, spaceId, standardId, request),
-      ).rejects.toThrow('Database error');
+      it('throws NotFoundException', async () => {
+        await expect(
+          controller.getRulesByStandardId(orgId, spaceId, standardId, request),
+        ).rejects.toThrow(NotFoundException);
+      });
 
-      expect(rulesService.getRulesByStandardId).not.toHaveBeenCalled();
+      it('includes descriptive error message', async () => {
+        await expect(
+          controller.getRulesByStandardId(orgId, spaceId, standardId, request),
+        ).rejects.toThrow(
+          `Standard ${standardId} not found in space ${spaceId}`,
+        );
+      });
+
+      it('does not call getRulesByStandardId', async () => {
+        await controller
+          .getRulesByStandardId(orgId, spaceId, standardId, request)
+          .catch(() => {
+            /* expected */
+          });
+        expect(rulesService.getRulesByStandardId).not.toHaveBeenCalled();
+      });
+    });
+
+    describe('when standard belongs to different space', () => {
+      const orgId = createOrganizationId('org-123');
+      const spaceId = createSpaceId('space-456');
+      const differentSpaceId = createSpaceId('space-999');
+      const standardId = createStandardId('standard-789');
+      const userId = createUserId('user-1');
+
+      const mockStandard: Standard = {
+        id: standardId,
+        slug: 'test-standard',
+        name: 'Test Standard',
+        description: 'Test description',
+        userId,
+        version: 1,
+        spaceId: differentSpaceId, // Different space!
+        scope: null,
+      };
+
+      const request = {
+        organization: {
+          id: orgId,
+          name: 'Test Org',
+          slug: 'test-org',
+          role: 'admin',
+        },
+        user: {
+          userId,
+          name: 'Test User',
+        },
+      } as unknown as AuthenticatedRequest;
+
+      beforeEach(() => {
+        rulesService.getStandardById.mockResolvedValue({
+          standard: mockStandard,
+        });
+      });
+
+      it('throws NotFoundException', async () => {
+        await expect(
+          controller.getRulesByStandardId(orgId, spaceId, standardId, request),
+        ).rejects.toThrow(NotFoundException);
+      });
+
+      it('includes descriptive error message', async () => {
+        await expect(
+          controller.getRulesByStandardId(orgId, spaceId, standardId, request),
+        ).rejects.toThrow(
+          `Standard ${standardId} does not belong to space ${spaceId}`,
+        );
+      });
+
+      it('does not call getRulesByStandardId', async () => {
+        await controller
+          .getRulesByStandardId(orgId, spaceId, standardId, request)
+          .catch(() => {
+            /* expected */
+          });
+        expect(rulesService.getRulesByStandardId).not.toHaveBeenCalled();
+      });
+    });
+
+    describe('when standard has no rules', () => {
+      const orgId = createOrganizationId('org-123');
+      const spaceId = createSpaceId('space-456');
+      const standardId = createStandardId('standard-789');
+      const userId = createUserId('user-1');
+
+      const mockStandard: Standard = {
+        id: standardId,
+        slug: 'test-standard',
+        name: 'Test Standard',
+        description: 'Test description',
+        userId,
+        version: 1,
+        spaceId,
+        scope: null,
+      };
+
+      const request = {
+        organization: {
+          id: orgId,
+          name: 'Test Org',
+          slug: 'test-org',
+          role: 'admin',
+        },
+        user: {
+          userId,
+          name: 'Test User',
+        },
+      } as unknown as AuthenticatedRequest;
+
+      let result: Rule[];
+
+      beforeEach(async () => {
+        rulesService.getStandardById.mockResolvedValue({
+          standard: mockStandard,
+        });
+        rulesService.getRulesByStandardId.mockResolvedValue([]);
+        result = await controller.getRulesByStandardId(
+          orgId,
+          spaceId,
+          standardId,
+          request,
+        );
+      });
+
+      it('returns empty array', () => {
+        expect(result).toEqual([]);
+      });
+
+      it('calls getRulesByStandardId with correct params', () => {
+        expect(rulesService.getRulesByStandardId).toHaveBeenCalledWith(
+          standardId,
+        );
+      });
+    });
+
+    describe('when standardsService throws error', () => {
+      const orgId = createOrganizationId('org-123');
+      const spaceId = createSpaceId('space-456');
+      const standardId = createStandardId('standard-789');
+      const userId = createUserId('user-1');
+
+      const request = {
+        organization: {
+          id: orgId,
+          name: 'Test Org',
+          slug: 'test-org',
+          role: 'admin',
+        },
+        user: {
+          userId,
+          name: 'Test User',
+        },
+      } as unknown as AuthenticatedRequest;
+
+      beforeEach(() => {
+        const error = new Error('Database error');
+        rulesService.getStandardById.mockRejectedValue(error);
+      });
+
+      it('propagates the error', async () => {
+        await expect(
+          controller.getRulesByStandardId(orgId, spaceId, standardId, request),
+        ).rejects.toThrow('Database error');
+      });
+
+      it('does not call getRulesByStandardId', async () => {
+        await controller
+          .getRulesByStandardId(orgId, spaceId, standardId, request)
+          .catch(() => {
+            /* expected */
+          });
+        expect(rulesService.getRulesByStandardId).not.toHaveBeenCalled();
+      });
     });
 
     it('propagates errors from rulesService', async () => {
@@ -321,74 +371,83 @@ describe('OrganizationsSpacesStandardsRulesController', () => {
 
   describe('getRuleExamples', () => {
     describe('when validation passes', () => {
-      it('returns rule examples for a rule within a standard', async () => {
-        const orgId = createOrganizationId('org-123');
-        const spaceId = createSpaceId('space-456');
-        const standardId = createStandardId('standard-789');
-        const ruleId = createRuleId('rule-1');
-        const userId = createUserId('user-1');
+      const orgId = createOrganizationId('org-123');
+      const spaceId = createSpaceId('space-456');
+      const standardId = createStandardId('standard-789');
+      const ruleId = createRuleId('rule-1');
+      const userId = createUserId('user-1');
 
-        const mockStandard: Standard = {
-          id: standardId,
-          slug: 'test-standard',
-          name: 'Test Standard',
-          description: 'Test description',
+      const mockStandard: Standard = {
+        id: standardId,
+        slug: 'test-standard',
+        name: 'Test Standard',
+        description: 'Test description',
+        userId,
+        version: 1,
+        spaceId,
+        scope: null,
+      };
+
+      const mockRuleExamples: RuleExample[] = [
+        {
+          id: createRuleExampleId('example-1'),
+          ruleId,
+          lang: ProgrammingLanguage.TYPESCRIPT,
+          positive: 'const x = 1;',
+          negative: 'var x = 1;',
+        },
+        {
+          id: createRuleExampleId('example-2'),
+          ruleId,
+          lang: ProgrammingLanguage.JAVASCRIPT,
+          positive: 'const y = 2;',
+          negative: 'var y = 2;',
+        },
+      ];
+
+      const request = {
+        organization: {
+          id: orgId,
+          name: 'Test Org',
+          slug: 'test-org',
+          role: 'admin',
+        },
+        user: {
           userId,
-          version: 1,
-          spaceId,
-          scope: null,
-        };
+          name: 'Test User',
+        },
+      } as unknown as AuthenticatedRequest;
 
-        const mockRuleExamples: RuleExample[] = [
-          {
-            id: createRuleExampleId('example-1'),
-            ruleId,
-            lang: ProgrammingLanguage.TYPESCRIPT,
-            positive: 'const x = 1;',
-            negative: 'var x = 1;',
-          },
-          {
-            id: createRuleExampleId('example-2'),
-            ruleId,
-            lang: ProgrammingLanguage.JAVASCRIPT,
-            positive: 'const y = 2;',
-            negative: 'var y = 2;',
-          },
-        ];
+      let result: RuleExample[];
 
-        const request = {
-          organization: {
-            id: orgId,
-            name: 'Test Org',
-            slug: 'test-org',
-            role: 'admin',
-          },
-          user: {
-            userId,
-            name: 'Test User',
-          },
-        } as unknown as AuthenticatedRequest;
-
+      beforeEach(async () => {
         rulesService.getStandardById.mockResolvedValue({
           standard: mockStandard,
         });
         rulesService.getRuleExamples.mockResolvedValue(mockRuleExamples);
-
-        const result = await controller.getRuleExamples(
+        result = await controller.getRuleExamples(
           orgId,
           spaceId,
           standardId,
           ruleId,
           request,
         );
+      });
 
+      it('returns rule examples', () => {
         expect(result).toEqual(mockRuleExamples);
+      });
+
+      it('calls getStandardById with correct params', () => {
         expect(rulesService.getStandardById).toHaveBeenCalledWith(
           standardId,
           orgId,
           spaceId,
           userId,
         );
+      });
+
+      it('calls getRuleExamples with correct params', () => {
         expect(rulesService.getRuleExamples).toHaveBeenCalledWith({
           userId,
           organizationId: orgId,
@@ -398,30 +457,32 @@ describe('OrganizationsSpacesStandardsRulesController', () => {
     });
 
     describe('when standard does not exist', () => {
-      it('throws NotFoundException', async () => {
-        const orgId = createOrganizationId('org-123');
-        const spaceId = createSpaceId('space-456');
-        const standardId = createStandardId('standard-789');
-        const ruleId = createRuleId('rule-1');
-        const userId = createUserId('user-1');
+      const orgId = createOrganizationId('org-123');
+      const spaceId = createSpaceId('space-456');
+      const standardId = createStandardId('standard-789');
+      const ruleId = createRuleId('rule-1');
+      const userId = createUserId('user-1');
 
-        const request = {
-          organization: {
-            id: orgId,
-            name: 'Test Org',
-            slug: 'test-org',
-            role: 'admin',
-          },
-          user: {
-            userId,
-            name: 'Test User',
-          },
-        } as unknown as AuthenticatedRequest;
+      const request = {
+        organization: {
+          id: orgId,
+          name: 'Test Org',
+          slug: 'test-org',
+          role: 'admin',
+        },
+        user: {
+          userId,
+          name: 'Test User',
+        },
+      } as unknown as AuthenticatedRequest;
 
+      beforeEach(() => {
         rulesService.getStandardById.mockResolvedValue({
           standard: null as unknown as Standard,
         });
+      });
 
+      it('throws NotFoundException', async () => {
         await expect(
           controller.getRuleExamples(
             orgId,
@@ -431,6 +492,9 @@ describe('OrganizationsSpacesStandardsRulesController', () => {
             request,
           ),
         ).rejects.toThrow(NotFoundException);
+      });
+
+      it('includes descriptive error message', async () => {
         await expect(
           controller.getRuleExamples(
             orgId,
@@ -442,48 +506,57 @@ describe('OrganizationsSpacesStandardsRulesController', () => {
         ).rejects.toThrow(
           `Standard with ID ${standardId} not found in organization ${orgId} and space ${spaceId}`,
         );
+      });
 
+      it('does not call getRuleExamples', async () => {
+        await controller
+          .getRuleExamples(orgId, spaceId, standardId, ruleId, request)
+          .catch(() => {
+            /* expected */
+          });
         expect(rulesService.getRuleExamples).not.toHaveBeenCalled();
       });
     });
 
     describe('when standard belongs to different space', () => {
-      it('throws NotFoundException', async () => {
-        const orgId = createOrganizationId('org-123');
-        const spaceId = createSpaceId('space-456');
-        const differentSpaceId = createSpaceId('space-999');
-        const standardId = createStandardId('standard-789');
-        const ruleId = createRuleId('rule-1');
-        const userId = createUserId('user-1');
+      const orgId = createOrganizationId('org-123');
+      const spaceId = createSpaceId('space-456');
+      const differentSpaceId = createSpaceId('space-999');
+      const standardId = createStandardId('standard-789');
+      const ruleId = createRuleId('rule-1');
+      const userId = createUserId('user-1');
 
-        const mockStandard: Standard = {
-          id: standardId,
-          slug: 'test-standard',
-          name: 'Test Standard',
-          description: 'Test description',
+      const mockStandard: Standard = {
+        id: standardId,
+        slug: 'test-standard',
+        name: 'Test Standard',
+        description: 'Test description',
+        userId,
+        version: 1,
+        spaceId: differentSpaceId, // Different space!
+        scope: null,
+      };
+
+      const request = {
+        organization: {
+          id: orgId,
+          name: 'Test Org',
+          slug: 'test-org',
+          role: 'admin',
+        },
+        user: {
           userId,
-          version: 1,
-          spaceId: differentSpaceId, // Different space!
-          scope: null,
-        };
+          name: 'Test User',
+        },
+      } as unknown as AuthenticatedRequest;
 
-        const request = {
-          organization: {
-            id: orgId,
-            name: 'Test Org',
-            slug: 'test-org',
-            role: 'admin',
-          },
-          user: {
-            userId,
-            name: 'Test User',
-          },
-        } as unknown as AuthenticatedRequest;
-
+      beforeEach(() => {
         rulesService.getStandardById.mockResolvedValue({
           standard: mockStandard,
         });
+      });
 
+      it('throws NotFoundException', async () => {
         await expect(
           controller.getRuleExamples(
             orgId,
@@ -493,6 +566,9 @@ describe('OrganizationsSpacesStandardsRulesController', () => {
             request,
           ),
         ).rejects.toThrow(NotFoundException);
+      });
+
+      it('includes descriptive error message', async () => {
         await expect(
           controller.getRuleExamples(
             orgId,
@@ -504,57 +580,70 @@ describe('OrganizationsSpacesStandardsRulesController', () => {
         ).rejects.toThrow(
           `Standard ${standardId} does not belong to space ${spaceId}`,
         );
+      });
 
+      it('does not call getRuleExamples', async () => {
+        await controller
+          .getRuleExamples(orgId, spaceId, standardId, ruleId, request)
+          .catch(() => {
+            /* expected */
+          });
         expect(rulesService.getRuleExamples).not.toHaveBeenCalled();
       });
     });
 
     describe('when rule has no examples', () => {
-      it('returns empty array', async () => {
-        const orgId = createOrganizationId('org-123');
-        const spaceId = createSpaceId('space-456');
-        const standardId = createStandardId('standard-789');
-        const ruleId = createRuleId('rule-1');
-        const userId = createUserId('user-1');
+      const orgId = createOrganizationId('org-123');
+      const spaceId = createSpaceId('space-456');
+      const standardId = createStandardId('standard-789');
+      const ruleId = createRuleId('rule-1');
+      const userId = createUserId('user-1');
 
-        const mockStandard: Standard = {
-          id: standardId,
-          slug: 'test-standard',
-          name: 'Test Standard',
-          description: 'Test description',
+      const mockStandard: Standard = {
+        id: standardId,
+        slug: 'test-standard',
+        name: 'Test Standard',
+        description: 'Test description',
+        userId,
+        version: 1,
+        spaceId,
+        scope: null,
+      };
+
+      const request = {
+        organization: {
+          id: orgId,
+          name: 'Test Org',
+          slug: 'test-org',
+          role: 'admin',
+        },
+        user: {
           userId,
-          version: 1,
-          spaceId,
-          scope: null,
-        };
+          name: 'Test User',
+        },
+      } as unknown as AuthenticatedRequest;
 
-        const request = {
-          organization: {
-            id: orgId,
-            name: 'Test Org',
-            slug: 'test-org',
-            role: 'admin',
-          },
-          user: {
-            userId,
-            name: 'Test User',
-          },
-        } as unknown as AuthenticatedRequest;
+      let result: RuleExample[];
 
+      beforeEach(async () => {
         rulesService.getStandardById.mockResolvedValue({
           standard: mockStandard,
         });
         rulesService.getRuleExamples.mockResolvedValue([]);
-
-        const result = await controller.getRuleExamples(
+        result = await controller.getRuleExamples(
           orgId,
           spaceId,
           standardId,
           ruleId,
           request,
         );
+      });
 
+      it('returns empty array', () => {
         expect(result).toEqual([]);
+      });
+
+      it('calls getRuleExamples with correct params', () => {
         expect(rulesService.getRuleExamples).toHaveBeenCalledWith({
           userId,
           organizationId: orgId,

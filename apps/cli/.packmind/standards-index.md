@@ -4,7 +4,7 @@ This standards index contains all available coding standards that can be used by
 
 ## Available Standards
 
-- [[cli] Good practices](./standards/cli.md) : Enforce the use of consoleLogger utilities instead of built-in console methods to standardize CLI logging behavior and improve maintainability.
+- [[cli] Good practices](./standards/cli.md) : Enforce using consoleLogger utilities instead of native console methods in CLI applications to ensure consistent logging behavior and centralized log management.
 
 
 ---

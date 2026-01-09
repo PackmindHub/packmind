@@ -1,16 +1,12 @@
-import { PackmindEvent } from '../../events';
-import { UserId } from '../User';
-import { OrganizationId } from '../Organization';
+import { UserEvent } from '../../events';
 
 export interface UserSignedUpPayload {
-  userId: UserId;
-  organizationId: OrganizationId;
   email: string;
 }
 
 /**
  * Event emitted when a new user signs up and creates an organization.
  */
-export class UserSignedUpEvent extends PackmindEvent<UserSignedUpPayload> {
-  static override readonly eventName = 'accounts.user.signed_up';
+export class UserSignedUpEvent extends UserEvent<UserSignedUpPayload> {
+  static override readonly eventName = 'accounts.user.signed-up';
 }

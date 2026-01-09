@@ -211,6 +211,10 @@ export class UploadSkillUsecase
         fileCount: files.length,
       });
 
+      const fileCountExcludingSkillMd = files.filter(
+        (f) => f.path !== 'SKILL.md',
+      ).length;
+
       this.eventEmitterService.emit(
         new SkillCreatedEvent({
           skillId: createSkillId(skill.id),
@@ -218,6 +222,7 @@ export class UploadSkillUsecase
           organizationId: command.organization.id,
           userId: command.user.id,
           source: 'ui',
+          fileCount: fileCountExcludingSkillMd,
         }),
       );
 

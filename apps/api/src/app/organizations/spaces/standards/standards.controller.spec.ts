@@ -37,7 +37,7 @@ describe('OrganizationsSpacesStandardsController', () => {
   });
 
   describe('getStandards', () => {
-    it('returns standards for space within organization', async () => {
+    describe('when standards exist', () => {
       const orgId = createOrganizationId('org-123');
       const spaceId = createSpaceId('space-456');
       const userId = createUserId('user-1');
@@ -67,18 +67,26 @@ describe('OrganizationsSpacesStandardsController', () => {
         },
       } as unknown as AuthenticatedRequest;
 
-      standardsService.getStandardsBySpace.mockResolvedValue({
-        standards: mockStandards,
+      let result: { standards: Standard[] };
+
+      beforeEach(async () => {
+        standardsService.getStandardsBySpace.mockResolvedValue({
+          standards: mockStandards,
+        });
+        result = await controller.getStandards(orgId, spaceId, request);
       });
 
-      const result = await controller.getStandards(orgId, spaceId, request);
+      it('returns standards', () => {
+        expect(result).toEqual({ standards: mockStandards });
+      });
 
-      expect(result).toEqual({ standards: mockStandards });
-      expect(standardsService.getStandardsBySpace).toHaveBeenCalledWith(
-        spaceId,
-        orgId,
-        userId,
-      );
+      it('calls service with correct params', () => {
+        expect(standardsService.getStandardsBySpace).toHaveBeenCalledWith(
+          spaceId,
+          orgId,
+          userId,
+        );
+      });
     });
 
     it('propagates errors from service', async () => {
@@ -107,7 +115,7 @@ describe('OrganizationsSpacesStandardsController', () => {
       ).rejects.toThrow('Database error');
     });
 
-    it('handles empty standard list', async () => {
+    describe('when standard list is empty', () => {
       const orgId = createOrganizationId('org-123');
       const spaceId = createSpaceId('space-456');
       const userId = createUserId('user-1');
@@ -125,16 +133,26 @@ describe('OrganizationsSpacesStandardsController', () => {
         },
       } as unknown as AuthenticatedRequest;
 
-      standardsService.getStandardsBySpace.mockResolvedValue({ standards: [] });
+      let result: { standards: Standard[] };
 
-      const result = await controller.getStandards(orgId, spaceId, request);
+      beforeEach(async () => {
+        standardsService.getStandardsBySpace.mockResolvedValue({
+          standards: [],
+        });
+        result = await controller.getStandards(orgId, spaceId, request);
+      });
 
-      expect(result).toEqual({ standards: [] });
-      expect(standardsService.getStandardsBySpace).toHaveBeenCalledWith(
-        spaceId,
-        orgId,
-        userId,
-      );
+      it('returns empty array', () => {
+        expect(result).toEqual({ standards: [] });
+      });
+
+      it('calls service with correct params', () => {
+        expect(standardsService.getStandardsBySpace).toHaveBeenCalledWith(
+          spaceId,
+          orgId,
+          userId,
+        );
+      });
     });
   });
 
@@ -170,7 +188,7 @@ describe('OrganizationsSpacesStandardsController', () => {
       scope: 'backend',
     };
 
-    it('updates standard successfully', async () => {
+    describe('when update is successful', () => {
       const mockUpdatedStandard: Standard = {
         id: standardId,
         slug: 'updated-standard',
@@ -181,82 +199,119 @@ describe('OrganizationsSpacesStandardsController', () => {
         version: 2,
         scope: 'backend',
       };
+      let result: Standard;
 
-      standardsService.updateStandard.mockResolvedValue(mockUpdatedStandard);
+      beforeEach(async () => {
+        standardsService.updateStandard.mockResolvedValue(mockUpdatedStandard);
+        result = await controller.updateStandard(
+          orgId,
+          spaceId,
+          standardId,
+          validStandard,
+          request,
+        );
+      });
 
-      const result = await controller.updateStandard(
-        orgId,
-        spaceId,
-        standardId,
-        validStandard,
-        request,
-      );
+      it('returns updated standard', () => {
+        expect(result).toEqual(mockUpdatedStandard);
+      });
 
-      expect(result).toEqual(mockUpdatedStandard);
-      expect(standardsService.updateStandard).toHaveBeenCalledWith(
-        standardId,
-        validStandard,
-        orgId,
-        userId,
-        spaceId,
-      );
+      it('calls service with correct params', () => {
+        expect(standardsService.updateStandard).toHaveBeenCalledWith(
+          standardId,
+          validStandard,
+          orgId,
+          userId,
+          spaceId,
+        );
+      });
     });
 
-    it('throws BadRequestException if name is missing', async () => {
+    describe('when name is missing', () => {
       const invalidStandard = {
         ...validStandard,
         name: '',
       };
 
-      await expect(
-        controller.updateStandard(
-          orgId,
-          spaceId,
-          standardId,
-          invalidStandard,
-          request,
-        ),
-      ).rejects.toThrow(BadRequestException);
-      expect(standardsService.updateStandard).not.toHaveBeenCalled();
+      it('throws BadRequestException', async () => {
+        await expect(
+          controller.updateStandard(
+            orgId,
+            spaceId,
+            standardId,
+            invalidStandard,
+            request,
+          ),
+        ).rejects.toThrow(BadRequestException);
+      });
+
+      it('does not call updateStandard', async () => {
+        await controller
+          .updateStandard(orgId, spaceId, standardId, invalidStandard, request)
+          .catch(() => {
+            /* expected */
+          });
+        expect(standardsService.updateStandard).not.toHaveBeenCalled();
+      });
     });
 
-    it('throws BadRequestException if description is missing', async () => {
+    describe('when description is missing', () => {
       const invalidStandard = {
         ...validStandard,
         description: '',
       };
 
-      await expect(
-        controller.updateStandard(
-          orgId,
-          spaceId,
-          standardId,
-          invalidStandard,
-          request,
-        ),
-      ).rejects.toThrow(BadRequestException);
-      expect(standardsService.updateStandard).not.toHaveBeenCalled();
+      it('throws BadRequestException', async () => {
+        await expect(
+          controller.updateStandard(
+            orgId,
+            spaceId,
+            standardId,
+            invalidStandard,
+            request,
+          ),
+        ).rejects.toThrow(BadRequestException);
+      });
+
+      it('does not call updateStandard', async () => {
+        await controller
+          .updateStandard(orgId, spaceId, standardId, invalidStandard, request)
+          .catch(() => {
+            /* expected */
+          });
+        expect(standardsService.updateStandard).not.toHaveBeenCalled();
+      });
     });
 
-    it('throws BadRequestException if rules is not an array', async () => {
+    describe('when rules is not an array', () => {
       const invalidStandard = {
         ...validStandard,
         rules: null as unknown as Array<{ id: RuleId; content: string }>,
       };
 
-      await expect(
-        controller.updateStandard(
-          orgId,
-          spaceId,
-          standardId,
-          invalidStandard,
-          request,
-        ),
-      ).rejects.toThrow(BadRequestException);
-      expect(standardsService.updateStandard).not.toHaveBeenCalled();
+      it('throws BadRequestException', async () => {
+        await expect(
+          controller.updateStandard(
+            orgId,
+            spaceId,
+            standardId,
+            invalidStandard,
+            request,
+          ),
+        ).rejects.toThrow(BadRequestException);
+      });
+
+      it('does not call updateStandard', async () => {
+        await controller
+          .updateStandard(orgId, spaceId, standardId, invalidStandard, request)
+          .catch(() => {
+            /* expected */
+          });
+        expect(standardsService.updateStandard).not.toHaveBeenCalled();
+      });
     });
 
-    it('throws BadRequestException if rule content is missing', async () => {
+    describe('when rule content is missing', () => {
       const invalidStandard = {
         ...validStandard,
         rules: [
@@ -267,16 +322,26 @@ describe('OrganizationsSpacesStandardsController', () => {
         ],
       };
 
-      await expect(
-        controller.updateStandard(
-          orgId,
-          spaceId,
-          standardId,
-          invalidStandard,
-          request,
-        ),
-      ).rejects.toThrow(BadRequestException);
-      expect(standardsService.updateStandard).not.toHaveBeenCalled();
+      it('throws BadRequestException', async () => {
+        await expect(
+          controller.updateStandard(
+            orgId,
+            spaceId,
+            standardId,
+            invalidStandard,
+            request,
+          ),
+        ).rejects.toThrow(BadRequestException);
+      });
+
+      it('does not call updateStandard', async () => {
+        await controller
+          .updateStandard(orgId, spaceId, standardId, invalidStandard, request)
+          .catch(() => {
+            /* expected */
+          });
+        expect(standardsService.updateStandard).not.toHaveBeenCalled();
+      });
     });
 
     it('propagates errors from service', async () => {
@@ -294,7 +359,7 @@ describe('OrganizationsSpacesStandardsController', () => {
       ).rejects.toThrow('Database error');
     });
 
-    it('updates standard with null scope', async () => {
+    describe('when scope is null', () => {
       const standardWithNullScope = {
         ...validStandard,
         scope: null,
@@ -311,24 +376,32 @@ describe('OrganizationsSpacesStandardsController', () => {
         scope: null,
       };
 
-      standardsService.updateStandard.mockResolvedValue(mockUpdatedStandard);
+      let result: Standard;
 
-      const result = await controller.updateStandard(
-        orgId,
-        spaceId,
-        standardId,
-        standardWithNullScope,
-        request,
-      );
+      beforeEach(async () => {
+        standardsService.updateStandard.mockResolvedValue(mockUpdatedStandard);
+        result = await controller.updateStandard(
+          orgId,
+          spaceId,
+          standardId,
+          standardWithNullScope,
+          request,
+        );
+      });
 
-      expect(result).toEqual(mockUpdatedStandard);
-      expect(standardsService.updateStandard).toHaveBeenCalledWith(
-        standardId,
-        standardWithNullScope,
-        orgId,
-        userId,
-        spaceId,
-      );
+      it('returns updated standard', () => {
+        expect(result).toEqual(mockUpdatedStandard);
+      });
+
+      it('calls service with correct params', () => {
+        expect(standardsService.updateStandard).toHaveBeenCalledWith(
+          standardId,
+          standardWithNullScope,
+          orgId,
+          userId,
+          spaceId,
+        );
+      });
     });
   });
 });

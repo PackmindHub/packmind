@@ -1,11 +1,7 @@
-import { PackmindEvent } from '../../events';
-import { UserId } from '../User';
-import { OrganizationId } from '../Organization';
+import { UserEvent } from '../../events';
 import { StartTrialCommandAgents } from '../contracts';
 
 export interface AnonymousTrialStartedPayload {
-  userId: UserId;
-  organizationId: OrganizationId;
   agent: StartTrialCommandAgents;
   startedAt: Date;
 }
@@ -13,6 +9,6 @@ export interface AnonymousTrialStartedPayload {
 /**
  * Event emitted when a user starts a trial.
  */
-export class AnonymousTrialStartedEvent extends PackmindEvent<AnonymousTrialStartedPayload> {
+export class AnonymousTrialStartedEvent extends UserEvent<AnonymousTrialStartedPayload> {
   static override readonly eventName = 'accounts.anonymous-trial.started';
 }

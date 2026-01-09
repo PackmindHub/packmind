@@ -1,12 +1,12 @@
 ---
 name: [cli] Good practices
 alwaysApply: true
-description: Enforce the use of consoleLogger utilities instead of built-in console methods to standardize CLI logging behavior and improve maintainability.
+description: Enforce using consoleLogger utilities instead of native console methods in CLI applications to ensure consistent logging behavior and centralized log management.
 ---
 
 ## Standard: [cli] Good practices
 
-Enforce the use of consoleLogger utilities instead of built-in console methods to standardize CLI logging behavior and improve maintainability. :
+Enforce using consoleLogger utilities instead of native console methods in CLI applications to ensure consistent logging behavior and centralized log management. :
 
 - Use `consoleLogger` utilities instead of built-in console utilities (console.log/warn/...)
 

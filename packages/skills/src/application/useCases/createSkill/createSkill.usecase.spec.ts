@@ -203,10 +203,21 @@ describe('CreateSkillUsecase', () => {
         });
       });
 
-      it('emits event', async () => {
+      it('emits SkillCreatedEvent with fileCount zero', async () => {
         await usecase.execute(command);
 
-        expect(eventEmitterService.emit).toHaveBeenCalled();
+        expect(eventEmitterService.emit).toHaveBeenCalledWith(
+          expect.objectContaining({
+            payload: expect.objectContaining({
+              skillId: createdSkill.id,
+              spaceId,
+              organizationId,
+              userId,
+              source: 'ui',
+              fileCount: 0,
+            }),
+          }),
+        );
       });
 
       it('returns created skill', async () => {

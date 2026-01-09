@@ -163,6 +163,7 @@ export class CreateSkillUsecase extends AbstractMemberUseCase<
           organizationId,
           userId,
           source: 'ui',
+          fileCount: 0,
         }),
       );
 
