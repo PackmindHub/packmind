@@ -289,6 +289,7 @@ describe('PullContentUseCase', () => {
           createdBy: createUserId('user-1'),
           recipes: [],
           standards: [],
+          skills: [],
         };
 
         packageService.getPackagesBySlugsWithArtefacts.mockResolvedValue([
@@ -516,6 +517,7 @@ describe('PullContentUseCase', () => {
           createdBy: createUserId('user-1'),
           recipes: [],
           standards: [],
+          skills: [],
         };
 
         packageService.getPackagesBySlugsWithArtefacts.mockResolvedValue([
@@ -549,6 +551,7 @@ describe('PullContentUseCase', () => {
           createdBy: createUserId('user-1'),
           recipes: [],
           standards: [],
+          skills: [],
         };
 
         packageService.getPackagesBySlugsWithArtefacts.mockResolvedValue([
@@ -599,6 +602,7 @@ describe('PullContentUseCase', () => {
           createdBy: createUserId('user-1'),
           recipes: [],
           standards: [],
+          skills: [],
         };
 
         packageService.getPackagesBySlugsWithArtefacts.mockResolvedValue([
@@ -656,6 +660,7 @@ describe('PullContentUseCase', () => {
           createdBy: createUserId('user-1'),
           recipes: [],
           standards: [],
+          skills: [],
         };
 
         packageService.getPackagesBySlugsWithArtefacts.mockResolvedValue([

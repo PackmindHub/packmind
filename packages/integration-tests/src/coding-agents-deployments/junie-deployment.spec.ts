@@ -230,7 +230,8 @@ describe('Junie Deployment Integration', () => {
 
       expect(guidelinesFile).toBeDefined();
       if (guidelinesFile) {
-        const sectionContent = guidelinesFile.sections![0].content;
+        expect(guidelinesFile.sections).toBeDefined();
+        const sectionContent = guidelinesFile.sections[0].content;
         expect(sectionContent).toContain('# Packmind Standards');
         expect(sectionContent).toContain('Test standard for deployment :');
         expect(sectionContent).toContain('* Use meaningful variable names');
@@ -419,7 +420,8 @@ describe('Junie Deployment Integration', () => {
       const guidelinesFile = fileUpdates.createOrUpdate[0];
       expect(guidelinesFile.path).toBe('.junie/guidelines.md');
 
-      const sectionContent = guidelinesFile.sections![0].content;
+      expect(guidelinesFile.sections).toBeDefined();
+      const sectionContent = guidelinesFile.sections[0].content;
 
       // Should generate standards section with Packmind content only
       expect(sectionContent).toContain('# Packmind Standards');
