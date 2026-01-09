@@ -385,9 +385,12 @@ async function executeInstallForDirectory(
     });
 
     // Show installation message with counts
-    log(
-      `  Installing ${result.recipesCount} commands and ${result.standardsCount} standards...`,
-    );
+    const parts = [];
+    if (result.recipesCount > 0) parts.push(`${result.recipesCount} commands`);
+    if (result.standardsCount > 0)
+      parts.push(`${result.standardsCount} standards`);
+    if (result.skillsCount > 0) parts.push(`${result.skillsCount} skills`);
+    log(`  Installing ${parts.join(', ') || 'artifacts'}...`);
 
     // Display results
     log(
@@ -525,9 +528,12 @@ export async function installPackagesHandler(
     });
 
     // Show installation message with counts
-    log(
-      `Installing ${result.recipesCount} commands and ${result.standardsCount} standards...`,
-    );
+    const parts = [];
+    if (result.recipesCount > 0) parts.push(`${result.recipesCount} commands`);
+    if (result.standardsCount > 0)
+      parts.push(`${result.standardsCount} standards`);
+    if (result.skillsCount > 0) parts.push(`${result.skillsCount} skills`);
+    log(`Installing ${parts.join(', ') || 'artifacts'}...`);
 
     // Display results
     log(

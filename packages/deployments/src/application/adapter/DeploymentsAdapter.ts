@@ -189,6 +189,7 @@ export class DeploymentsAdapter
     this._publishArtifactsUseCase = new PublishArtifactsUseCase(
       this.recipesPort,
       this.standardsPort,
+      this.skillsPort,
       this.gitPort,
       this.codingAgentPort,
       this.distributionRepository,
@@ -292,6 +293,7 @@ export class DeploymentsAdapter
       this.deploymentsServices.getPackageService(),
       this.recipesPort,
       this.standardsPort,
+      this.skillsPort,
       this.codingAgentPort,
       this.deploymentsServices.getRenderModeConfigurationService(),
       this.accountsPort,

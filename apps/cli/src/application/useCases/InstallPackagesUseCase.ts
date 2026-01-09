@@ -23,6 +23,7 @@ export class InstallPackagesUseCase implements IInstallPackagesUseCase {
       errors: [],
       recipesCount: 0,
       standardsCount: 0,
+      skillsCount: 0,
     };
     // Fetch data from the gateway
     const response = await this.packmindGateway.getPullData({
@@ -46,7 +47,7 @@ export class InstallPackagesUseCase implements IInstallPackagesUseCase {
 
     const uniqueFiles = Array.from(uniqueFilesMap.values());
 
-    // Count recipes and standards from the deduplicated files
+    // Count recipes, standards, and skills from the deduplicated files
     for (const file of uniqueFiles) {
       if (
         file.path.includes('.packmind/recipes/') &&
@@ -58,6 +59,11 @@ export class InstallPackagesUseCase implements IInstallPackagesUseCase {
         file.path.endsWith('.md')
       ) {
         result.standardsCount++;
+      } else if (
+        file.path.includes('.packmind/skills/') &&
+        file.path.endsWith('.md')
+      ) {
+        result.skillsCount++;
       }
     }
 

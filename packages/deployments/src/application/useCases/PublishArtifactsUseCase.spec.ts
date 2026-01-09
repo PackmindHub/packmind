@@ -21,6 +21,7 @@ import {
   GitRepo,
   GitCommit,
   IRecipesPort,
+  ISkillsPort,
   IStandardsPort,
   ICodingAgentPort,
   IGitPort,
@@ -38,6 +39,7 @@ describe('PublishArtifactsUseCase', () => {
   let useCase: PublishArtifactsUseCase;
   let mockRecipesPort: jest.Mocked<IRecipesPort>;
   let mockStandardsPort: jest.Mocked<IStandardsPort>;
+  let mockSkillsPort: jest.Mocked<ISkillsPort>;
   let mockGitPort: jest.Mocked<IGitPort>;
   let mockCodingAgentPort: jest.Mocked<ICodingAgentPort>;
   let mockDistributionRepository: jest.Mocked<IDistributionRepository>;
@@ -71,6 +73,10 @@ describe('PublishArtifactsUseCase', () => {
       getStandardVersionById: jest.fn(),
       getRulesByStandardId: jest.fn().mockResolvedValue([]),
     } as unknown as jest.Mocked<IStandardsPort>;
+
+    mockSkillsPort = {
+      getSkillVersion: jest.fn(),
+    } as unknown as jest.Mocked<ISkillsPort>;
 
     mockGitPort = {
       commitToGit: jest.fn(),
@@ -113,6 +119,7 @@ describe('PublishArtifactsUseCase', () => {
     useCase = new PublishArtifactsUseCase(
       mockRecipesPort,
       mockStandardsPort,
+      mockSkillsPort,
       mockGitPort,
       mockCodingAgentPort,
       mockDistributionRepository,
@@ -253,10 +260,12 @@ describe('PublishArtifactsUseCase', () => {
                 rules: [],
               }),
             ],
+            skillVersions: [],
           },
           removed: {
             recipeVersions: [],
             standardVersions: [],
+            skillVersions: [],
           },
           codingAgents: activeCodingAgents,
         }),
@@ -292,7 +301,9 @@ describe('PublishArtifactsUseCase', () => {
             path: expect.stringContaining('standards'),
           }),
         ]),
-        expect.stringContaining('Update artifacts (commands + standards)'),
+        expect.stringContaining(
+          'Update artifacts (commands + standards + skills)',
+        ),
         expect.any(Array),
       );
     });
@@ -1376,6 +1387,7 @@ describe('PublishArtifactsUseCase', () => {
           removed: {
             recipeVersions: [],
             standardVersions: [],
+            skillVersions: [],
           },
         }),
       );

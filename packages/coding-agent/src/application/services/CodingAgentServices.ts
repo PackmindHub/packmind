@@ -3,6 +3,7 @@ import {
   FileUpdates,
   GitRepo,
   RecipeVersion,
+  SkillVersion,
   StandardVersion,
   Target,
 } from '@packmind/types';
@@ -107,19 +108,23 @@ export class CodingAgentServices {
     installed: {
       recipeVersions: RecipeVersion[];
       standardVersions: StandardVersion[];
+      skillVersions: SkillVersion[];
     },
     removed: {
       recipeVersions: RecipeVersion[];
       standardVersions: StandardVersion[];
+      skillVersions: SkillVersion[];
     },
     codingAgents: CodingAgent[],
     existingFiles: Map<string, string>,
   ): Promise<FileUpdates> {
-    this.logger.info('Rendering artifacts (recipes + standards)', {
+    this.logger.info('Rendering artifacts (recipes + standards + skills)', {
       recipesCount: installed.recipeVersions.length,
       standardsCount: installed.standardVersions.length,
+      skillsCount: installed.skillVersions.length,
       removedRecipesCount: removed.recipeVersions.length,
       removedStandardsCount: removed.standardVersions.length,
+      removedSkillsCount: removed.skillVersions.length,
       agentsCount: codingAgents.length,
       existingFilesCount: existingFiles.size,
     });
@@ -132,18 +137,22 @@ export class CodingAgentServices {
     const result = await this.deployerService.aggregateArtifactRendering(
       installed.recipeVersions,
       installed.standardVersions,
+      installed.skillVersions,
       codingAgents,
       existingFiles,
     );
 
     // Process removed artifacts to generate file updates
     const hasRemovedArtifacts =
-      removed.recipeVersions.length > 0 || removed.standardVersions.length > 0;
+      removed.recipeVersions.length > 0 ||
+      removed.standardVersions.length > 0 ||
+      removed.skillVersions.length > 0;
 
     if (hasRemovedArtifacts) {
       this.logger.info('Processing removed artifacts', {
         removedRecipesCount: removed.recipeVersions.length,
         removedStandardsCount: removed.standardVersions.length,
+        removedSkillsCount: removed.skillVersions.length,
       });
 
       for (const agent of codingAgents) {

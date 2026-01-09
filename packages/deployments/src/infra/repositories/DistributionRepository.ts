@@ -8,6 +8,7 @@ import {
   PackageId,
   RecipeId,
   RecipeVersion,
+  SkillId,
   StandardId,
   StandardVersion,
   TargetId,
@@ -798,6 +799,59 @@ export class DistributionRepository implements IDistributionRepository {
           error: error instanceof Error ? error.message : String(error),
         },
       );
+      throw error;
+    }
+  }
+
+  async listBySkillId(
+    skillId: SkillId,
+    organizationId: OrganizationId,
+  ): Promise<Distribution[]> {
+    this.logger.info('Listing distributions by skill ID and organization ID', {
+      skillId,
+      organizationId,
+    });
+
+    try {
+      const distributions = await this.repository
+        .createQueryBuilder('distribution')
+        .innerJoinAndSelect(
+          'distribution.distributedPackages',
+          'distributedPackage',
+        )
+        .leftJoinAndSelect('distributedPackage.package', 'package')
+        .leftJoinAndSelect(
+          'distributedPackage.standardVersions',
+          'standardVersion',
+        )
+        .leftJoinAndSelect('distributedPackage.recipeVersions', 'recipeVersion')
+        .innerJoinAndSelect('distributedPackage.skillVersions', 'skillVersion')
+        .leftJoinAndSelect('distribution.gitCommit', 'gitCommit')
+        .leftJoinAndSelect('distribution.target', 'target')
+        .leftJoinAndSelect('target.gitRepo', 'gitRepo')
+        .where('skillVersion.skillId = :skillId', {
+          skillId: skillId as string,
+        })
+        .andWhere('distribution.organizationId = :organizationId', {
+          organizationId,
+        })
+        .orderBy('distribution.createdAt', 'DESC')
+        .getMany();
+
+      this.logger.info(
+        'Distributions listed by skill ID and organization ID successfully',
+        {
+          skillId,
+          organizationId,
+          count: distributions.length,
+        },
+      );
+      return distributions;
+    } catch (error) {
+      this.logger.error('Failed to list distributions by skill ID', {
+        skillId,
+        error: error instanceof Error ? error.message : String(error),
+      });
       throw error;
     }
   }

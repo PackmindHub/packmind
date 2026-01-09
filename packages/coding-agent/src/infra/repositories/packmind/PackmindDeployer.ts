@@ -4,6 +4,7 @@ import {
   GitRepo,
   IStandardsPort,
   RecipeVersion,
+  SkillVersion,
   StandardVersion,
   Target,
 } from '@packmind/types';
@@ -220,9 +221,31 @@ export class PackmindDeployer implements ICodingAgentDeployer {
     return fileUpdates;
   }
 
+  async deploySkills(
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    skillVersions: SkillVersion[],
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    gitRepo: GitRepo,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    target: Target,
+  ): Promise<FileUpdates> {
+    // Skills not supported for Packmind deployer yet
+    return { createOrUpdate: [], delete: [] };
+  }
+
+  async generateFileUpdatesForSkills(
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    skillVersions: SkillVersion[],
+  ): Promise<FileUpdates> {
+    // Skills not supported for Packmind deployer yet
+    return { createOrUpdate: [], delete: [] };
+  }
+
   async deployArtifacts(
     recipeVersions: RecipeVersion[],
     standardVersions: StandardVersion[],
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    skillVersions: SkillVersion[] = [],
   ): Promise<FileUpdates> {
     this.logger.info(
       'Deploying artifacts (commands + standards) for Packmind',
@@ -300,17 +323,21 @@ export class PackmindDeployer implements ICodingAgentDeployer {
     removed: {
       recipeVersions: RecipeVersion[];
       standardVersions: StandardVersion[];
+      skillVersions: SkillVersion[];
     },
     installed: {
       recipeVersions: RecipeVersion[];
       standardVersions: StandardVersion[];
+      skillVersions: SkillVersion[];
     },
   ): Promise<FileUpdates> {
     this.logger.info('Generating removal file updates for Packmind', {
       removedCommandsCount: removed.recipeVersions.length,
       removedStandardsCount: removed.standardVersions.length,
+      removedSkillsCount: removed.skillVersions.length,
       installedCommandsCount: installed.recipeVersions.length,
       installedStandardsCount: installed.standardVersions.length,
+      installedSkillsCount: installed.skillVersions.length,
     });
 
     const fileUpdates: FileUpdates = {

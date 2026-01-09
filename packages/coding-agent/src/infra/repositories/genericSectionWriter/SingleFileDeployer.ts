@@ -5,6 +5,7 @@ import {
   IGitPort,
   IStandardsPort,
   RecipeVersion,
+  SkillVersion,
   StandardVersion,
   Target,
 } from '@packmind/types';
@@ -188,9 +189,31 @@ export abstract class SingleFileDeployer implements ICodingAgentDeployer {
     return fileUpdates;
   }
 
+  async deploySkills(
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    skillVersions: SkillVersion[],
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    gitRepo: GitRepo,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    target: Target,
+  ): Promise<FileUpdates> {
+    // Skills not supported for single-file deployers yet
+    return { createOrUpdate: [], delete: [] };
+  }
+
+  async generateFileUpdatesForSkills(
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    skillVersions: SkillVersion[],
+  ): Promise<FileUpdates> {
+    // Skills not supported for single-file deployers yet
+    return { createOrUpdate: [], delete: [] };
+  }
+
   async deployArtifacts(
     recipeVersions: RecipeVersion[],
     standardVersions: StandardVersion[],
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    skillVersions: SkillVersion[] = [],
   ): Promise<FileUpdates> {
     this.logger.info(
       `Deploying artifacts for ${this.config.agentName} - clearing recipes and deploying standards`,
@@ -240,17 +263,21 @@ export abstract class SingleFileDeployer implements ICodingAgentDeployer {
     removed: {
       recipeVersions: RecipeVersion[];
       standardVersions: StandardVersion[];
+      skillVersions: SkillVersion[];
     },
     installed: {
       recipeVersions: RecipeVersion[];
       standardVersions: StandardVersion[];
+      skillVersions: SkillVersion[];
     },
   ): Promise<FileUpdates> {
     this.logger.info(
       `Generating removal file updates for ${this.config.agentName} - clearing recipes and standards as needed`,
       {
         removedStandardsCount: removed.standardVersions.length,
+        removedSkillsCount: removed.skillVersions.length,
         installedStandardsCount: installed.standardVersions.length,
+        installedSkillsCount: installed.skillVersions.length,
       },
     );
 

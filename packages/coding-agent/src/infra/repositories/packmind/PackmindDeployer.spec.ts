@@ -509,10 +509,12 @@ describe('PackmindDeployer', () => {
           {
             recipeVersions: removedRecipes,
             standardVersions: [],
+            skillVersions: [],
           },
           {
             recipeVersions: [],
             standardVersions: [],
+            skillVersions: [],
           },
         );
       });
@@ -596,10 +598,12 @@ describe('PackmindDeployer', () => {
           {
             recipeVersions: removedRecipes,
             standardVersions: [],
+            skillVersions: [],
           },
           {
             recipeVersions: installedRecipes,
             standardVersions: [],
+            skillVersions: [],
           },
         );
       });
@@ -647,10 +651,12 @@ describe('PackmindDeployer', () => {
           {
             recipeVersions: [],
             standardVersions: removedStandards,
+            skillVersions: [],
           },
           {
             recipeVersions: [],
             standardVersions: [],
+            skillVersions: [],
           },
         );
       });
@@ -736,10 +742,12 @@ describe('PackmindDeployer', () => {
           {
             recipeVersions: [],
             standardVersions: removedStandards,
+            skillVersions: [],
           },
           {
             recipeVersions: [],
             standardVersions: installedStandards,
+            skillVersions: [],
           },
         );
       });
@@ -809,10 +817,12 @@ describe('PackmindDeployer', () => {
           {
             recipeVersions: removedRecipes,
             standardVersions: removedStandards,
+            skillVersions: [],
           },
           {
             recipeVersions: [],
             standardVersions: [],
+            skillVersions: [],
           },
         );
       });
@@ -882,10 +892,12 @@ describe('PackmindDeployer', () => {
           {
             recipeVersions: [],
             standardVersions: [],
+            skillVersions: [],
           },
           {
             recipeVersions: [],
             standardVersions: [],
+            skillVersions: [],
           },
         );
       });

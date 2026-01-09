@@ -310,10 +310,12 @@ export class RemovePackageFromTargetsUseCase implements IRemovePackageFromTarget
         installed: {
           recipeVersions: installedRecipeVersions,
           standardVersions: installedStandardVersions,
+          skillVersions: [], // TODO: Add skill support in RemovePackageFromTargetsUseCase
         },
         removed: {
           recipeVersions: removedRecipeVersions,
           standardVersions: removedStandardVersions,
+          skillVersions: [], // TODO: Add skill support in RemovePackageFromTargetsUseCase
         },
         codingAgents,
         existingFiles,

@@ -13,6 +13,7 @@ export type IInstallPackagesResult = {
   errors: string[];
   recipesCount: number;
   standardsCount: number;
+  skillsCount: number;
 };
 
 export type IInstallPackagesUseCase = IPublicUseCase<

@@ -3,6 +3,7 @@ import { CopilotDeployer, DeployerService } from '@packmind/coding-agent';
 import { deploymentsSchemas } from '@packmind/deployments';
 import { gitSchemas } from '@packmind/git';
 import { recipesSchemas } from '@packmind/recipes';
+import { skillsSchemas } from '@packmind/skills';
 import { spacesSchemas } from '@packmind/spaces';
 import { standardsSchemas } from '@packmind/standards';
 import { makeTestDatasource } from '@packmind/test-utils';
@@ -15,6 +16,9 @@ import {
   Recipe,
   RecipeVersion,
   RecipeVersionId,
+  Skill,
+  SkillVersion,
+  SkillVersionId,
   Space,
   Standard,
   StandardVersion,
@@ -37,6 +41,7 @@ describe('GitHub Copilot Deployment Integration', () => {
 
   let recipe: Recipe;
   let standard: Standard;
+  let skill: Skill;
   let organization: Organization;
   let user: User;
   let space: Space;
@@ -48,6 +53,7 @@ describe('GitHub Copilot Deployment Integration', () => {
       ...accountsSchemas,
       ...recipesSchemas,
       ...standardsSchemas,
+      ...skillsSchemas,
       ...spacesSchemas,
       ...gitSchemas,
       ...deploymentsSchemas,
@@ -106,6 +112,20 @@ describe('GitHub Copilot Deployment Integration', () => {
       userId: user.id,
       scope: '**/*.{js,ts}',
       spaceId: space.id,
+    });
+
+    // Create test skill
+    skill = await testApp.skillsHexa.getAdapter().createSkill({
+      name: 'Test Skill for Copilot',
+      description: 'A test skill for GitHub Copilot deployment',
+      prompt: 'This is the skill prompt content for testing',
+      license: 'MIT',
+      compatibility: 'copilot',
+      metadata: { category: 'testing', version: '1.0' },
+      allowedTools: 'read,write,execute',
+      organizationId: organization.id,
+      userId: user.id,
+      spaceId: space.id.toString(),
     });
 
     // Create git provider and repository
@@ -638,6 +658,290 @@ describe('GitHub Copilot Deployment Integration', () => {
           `Full standard is available here for further request: [${standard2.name}](../../.packmind/standards/${standard2.slug}.md)`,
         );
       }
+    });
+
+    describe('when deploying skills', () => {
+      let skillVersions: SkillVersion[];
+
+      beforeEach(async () => {
+        skillVersions = [
+          {
+            id: 'skill-version-1' as SkillVersionId,
+            skillId: skill.id,
+            name: skill.name,
+            slug: skill.slug,
+            description: skill.description,
+            prompt: skill.prompt,
+            version: skill.version,
+            userId: user.id,
+            license: skill.license,
+            compatibility: skill.compatibility,
+            metadata: skill.metadata,
+            allowedTools: skill.allowedTools,
+          },
+        ];
+      });
+
+      describe('when calling deploySkills', () => {
+        let fileUpdates: FileUpdates;
+
+        beforeEach(async () => {
+          fileUpdates = await copilotDeployer.deploySkills(
+            skillVersions,
+            gitRepo,
+            defaultTarget,
+          );
+        });
+
+        it('creates one SKILL.md file in a folder', () => {
+          expect(fileUpdates.createOrUpdate).toHaveLength(1);
+          expect(fileUpdates.createOrUpdate[0].path).toBe(
+            `.github/skills/${skill.slug}/SKILL.md`,
+          );
+        });
+
+        it('includes name in frontmatter', () => {
+          expect(fileUpdates.createOrUpdate[0].content).toContain(
+            `name: ${skill.name}`,
+          );
+        });
+
+        it('includes description in frontmatter', () => {
+          expect(fileUpdates.createOrUpdate[0].content).toContain(
+            `description: '${skill.description}'`,
+          );
+        });
+
+        it('includes license in frontmatter', () => {
+          expect(fileUpdates.createOrUpdate[0].content).toContain(
+            `license: '${skill.license}'`,
+          );
+        });
+
+        it('includes compatibility in frontmatter', () => {
+          expect(fileUpdates.createOrUpdate[0].content).toContain(
+            `compatibility: '${skill.compatibility}'`,
+          );
+        });
+
+        it('includes allowed-tools in frontmatter', () => {
+          expect(fileUpdates.createOrUpdate[0].content).toContain(
+            `allowed-tools: '${skill.allowedTools}'`,
+          );
+        });
+
+        it('includes metadata in frontmatter', () => {
+          expect(fileUpdates.createOrUpdate[0].content).toContain('metadata:');
+          expect(fileUpdates.createOrUpdate[0].content).toContain(
+            "category: 'testing'",
+          );
+          expect(fileUpdates.createOrUpdate[0].content).toContain(
+            "version: '1.0'",
+          );
+        });
+
+        it('includes prompt content in body', () => {
+          expect(fileUpdates.createOrUpdate[0].content).toContain(
+            'This is the skill prompt content for testing',
+          );
+        });
+
+        it('has proper YAML frontmatter structure', () => {
+          const content = fileUpdates.createOrUpdate[0].content;
+          expect(content).toMatch(/^---\n/);
+          expect(content).toMatch(/\n---\n/);
+        });
+      });
+
+      describe('when calling generateFileUpdatesForSkills', () => {
+        let fileUpdates: FileUpdates;
+
+        beforeEach(async () => {
+          fileUpdates =
+            await copilotDeployer.generateFileUpdatesForSkills(skillVersions);
+        });
+
+        it('creates one SKILL.md file', () => {
+          expect(fileUpdates.createOrUpdate).toHaveLength(1);
+          expect(fileUpdates.createOrUpdate[0].path).toBe(
+            `.github/skills/${skill.slug}/SKILL.md`,
+          );
+        });
+
+        it('includes all frontmatter fields', () => {
+          const content = fileUpdates.createOrUpdate[0].content;
+          expect(content).toContain(`name: ${skill.name}`);
+          expect(content).toContain(`description: '${skill.description}'`);
+          expect(content).toContain(`license: '${skill.license}'`);
+        });
+      });
+
+      describe('when deploying multiple skills', () => {
+        let skill2: Skill;
+        let multipleSkillVersions: SkillVersion[];
+
+        beforeEach(async () => {
+          skill2 = await testApp.skillsHexa.getAdapter().createSkill({
+            name: 'Second Test Skill',
+            description: 'Another test skill',
+            prompt: 'Second skill prompt',
+            organizationId: organization.id,
+            userId: user.id,
+            spaceId: space.id.toString(),
+          });
+
+          multipleSkillVersions = [
+            skillVersions[0],
+            {
+              id: 'skill-version-2' as SkillVersionId,
+              skillId: skill2.id,
+              name: skill2.name,
+              slug: skill2.slug,
+              description: skill2.description,
+              prompt: skill2.prompt,
+              version: skill2.version,
+              userId: user.id,
+            },
+          ];
+        });
+
+        it('creates multiple SKILL.md files in separate folders', async () => {
+          const fileUpdates = await copilotDeployer.deploySkills(
+            multipleSkillVersions,
+            gitRepo,
+            defaultTarget,
+          );
+
+          expect(fileUpdates.createOrUpdate).toHaveLength(2);
+          expect(fileUpdates.createOrUpdate[0].path).toBe(
+            `.github/skills/${skill.slug}/SKILL.md`,
+          );
+          expect(fileUpdates.createOrUpdate[1].path).toBe(
+            `.github/skills/${skill2.slug}/SKILL.md`,
+          );
+        });
+      });
+
+      describe('when skill has special characters in description', () => {
+        let skillWithQuotes: Skill;
+
+        beforeEach(async () => {
+          skillWithQuotes = await testApp.skillsHexa.getAdapter().createSkill({
+            name: 'Skill with quotes',
+            description: "This skill's description has 'single quotes'",
+            prompt: 'Test prompt',
+            organizationId: organization.id,
+            userId: user.id,
+            spaceId: space.id.toString(),
+          });
+        });
+
+        it('escapes single quotes in YAML frontmatter', async () => {
+          const skillVersion: SkillVersion = {
+            id: 'skill-version-quotes' as SkillVersionId,
+            skillId: skillWithQuotes.id,
+            name: skillWithQuotes.name,
+            slug: skillWithQuotes.slug,
+            description: skillWithQuotes.description,
+            prompt: skillWithQuotes.prompt,
+            version: skillWithQuotes.version,
+            userId: user.id,
+          };
+
+          const fileUpdates = await copilotDeployer.deploySkills(
+            [skillVersion],
+            gitRepo,
+            defaultTarget,
+          );
+
+          // Single quotes should be escaped as ''
+          expect(fileUpdates.createOrUpdate[0].content).toContain(
+            "description: 'This skill''s description has ''single quotes'''",
+          );
+        });
+      });
+
+      describe('when removing skills', () => {
+        it('deletes skill SKILL.md files', async () => {
+          const fileUpdates = await copilotDeployer.generateRemovalFileUpdates(
+            {
+              recipeVersions: [],
+              standardVersions: [],
+              skillVersions: skillVersions,
+            },
+            {
+              recipeVersions: [],
+              standardVersions: [],
+              skillVersions: [],
+            },
+          );
+
+          expect(fileUpdates.delete).toContainEqual({
+            path: `.github/skills/${skill.slug}/SKILL.md`,
+          });
+        });
+      });
+
+      describe('when deploying artifacts with skills', () => {
+        let fileUpdates: FileUpdates;
+
+        beforeEach(async () => {
+          const recipeVersions: RecipeVersion[] = [
+            {
+              id: 'recipe-version-1' as RecipeVersionId,
+              recipeId: recipe.id,
+              name: recipe.name,
+              slug: recipe.slug,
+              content: recipe.content,
+              version: recipe.version,
+              summary: 'Test recipe',
+              userId: user.id,
+            },
+          ];
+
+          const standardVersions: StandardVersion[] = [
+            {
+              id: 'standard-version-1' as StandardVersionId,
+              standardId: standard.id,
+              name: standard.name,
+              slug: standard.slug,
+              description: standard.description,
+              version: standard.version,
+              summary: 'Test standard',
+              userId: user.id,
+              scope: standard.scope,
+            },
+          ];
+
+          fileUpdates = await copilotDeployer.deployArtifacts(
+            recipeVersions,
+            standardVersions,
+            skillVersions,
+          );
+        });
+
+        it('creates recipe, standard, and skill files', () => {
+          // 1 recipe + 1 standard + 1 skill = 3 files
+          expect(fileUpdates.createOrUpdate).toHaveLength(3);
+        });
+
+        it('creates skill file in correct location', () => {
+          const skillFile = fileUpdates.createOrUpdate.find((file) =>
+            file.path.includes('.github/skills/'),
+          );
+          expect(skillFile).toBeDefined();
+          expect(skillFile?.path).toBe(`.github/skills/${skill.slug}/SKILL.md`);
+        });
+
+        it('includes skill prompt in file content', () => {
+          const skillFile = fileUpdates.createOrUpdate.find((file) =>
+            file.path.includes('.github/skills/'),
+          );
+          expect(skillFile?.content).toContain(
+            'This is the skill prompt content for testing',
+          );
+        });
+      });
     });
   });
 });

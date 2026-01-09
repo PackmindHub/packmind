@@ -357,6 +357,9 @@ export class PackageRepository
       const uniqueStandardIds = [
         ...new Set(standardRelations.map((s) => s.standard_id)),
       ];
+      const uniqueSkillIds = [
+        ...new Set(skillRelations.map((s) => s.skill_id)),
+      ];
 
       const recipes =
         uniqueRecipeIds.length > 0
@@ -420,8 +423,58 @@ export class PackageRepository
               )
           : [];
 
+      const skills =
+        uniqueSkillIds.length > 0
+          ? await this.repository.manager
+              .createQueryBuilder()
+              .select([
+                'skill.id',
+                'skill.name',
+                'skill.slug',
+                'skill.version',
+                'skill.description',
+                'skill.prompt',
+                'skill.license',
+                'skill.compatibility',
+                'skill.metadata',
+                'skill.allowed_tools',
+                'skill.space_id',
+                'skill.user_id',
+                'skill.created_at',
+                'skill.updated_at',
+                'skill.deleted_at',
+                'skill.deleted_by',
+              ])
+              .from('skills', 'skill')
+              .where('skill.id IN (:...skillIds)', {
+                skillIds: uniqueSkillIds,
+              })
+              .getRawMany()
+              .then((rows) =>
+                rows.map((row) => ({
+                  id: row.skill_id,
+                  name: row.skill_name,
+                  slug: row.skill_slug,
+                  version: row.skill_version,
+                  description: row.skill_description,
+                  prompt: row.skill_prompt,
+                  license: row.skill_license || undefined,
+                  compatibility: row.skill_compatibility || undefined,
+                  metadata: row.skill_metadata || undefined,
+                  allowedTools: row.skill_allowed_tools || undefined,
+                  spaceId: row.skill_space_id,
+                  userId: row.skill_user_id,
+                  createdAt: row.skill_created_at,
+                  updatedAt: row.skill_updated_at,
+                  deletedAt: row.skill_deleted_at,
+                  deletedBy: row.skill_deleted_by,
+                })),
+              )
+          : [];
+
       const recipesMap = new Map(recipes.map((r) => [r['id'], r]));
       const standardsMap = new Map(standards.map((s) => [s['id'], s]));
+      const skillsMap = new Map(skills.map((s) => [s['id'], s]));
 
       const recipesByPackage = recipeRelations.reduce(
         (acc, rel) => {
@@ -446,10 +499,11 @@ export class PackageRepository
       const skillsByPackage = skillRelations.reduce(
         (acc, rel) => {
           if (!acc[rel.package_id]) acc[rel.package_id] = [];
-          acc[rel.package_id].push(rel.skill_id);
+          const skill = skillsMap.get(rel.skill_id);
+          if (skill) acc[rel.package_id].push(skill);
           return acc;
         },
-        {} as Record<string, string[]>,
+        {} as Record<string, typeof skills>,
       );
 
       const packagesWithArtefacts: PackageWithArtefacts[] = packages.map(
@@ -457,7 +511,7 @@ export class PackageRepository
           ...pkg,
           recipes: recipesByPackage[pkg.id] || [],
           standards: standardsByPackage[pkg.id] || [],
-          skills: (skillsByPackage[pkg.id] || []) as SkillId[],
+          skills: skillsByPackage[pkg.id] || [],
         }),
       );
 
