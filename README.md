@@ -76,18 +76,17 @@ Make your standards available to your AI coding assistant:
 
 In Packmind, go to **Packages** → **Create Package**, then add your standards and commands to it.
 
-### 2. Pull locally
+### 2. Install locally
 
 ```bash
 # Install the CLI
 npm install -g @packmind/cli
 
-# Get your API key from Packmind: Settings → API Key → Generate Api Key
-export PACKMIND_API_KEY_V3="your-api-key"
+packmind-cli login
 
-# Pull your packages
-packmind-cli pull --list
-packmind-cli pull <package-slug>
+# Install your packages
+packmind-cli install --list
+packmind-cli install <package-slug>
 ```
 
 Your standards are now available in the `.packmind` directory and your AI agent configuration files.

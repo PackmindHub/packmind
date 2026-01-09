@@ -67,10 +67,10 @@ export const RunDistributionBodyImpl: React.FC = () => {
 
   const getCliCommand = React.useCallback(() => {
     if (selectedPackages.length === 0) {
-      return 'packmind-cli pull';
+      return 'packmind-cli install';
     }
     const slugs = selectedPackages.map((pkg) => pkg.slug).join(' ');
-    return `packmind-cli pull ${slugs}`;
+    return `packmind-cli install ${slugs}`;
   }, [selectedPackages]);
 
   const groupedTargets = React.useMemo(() => {
