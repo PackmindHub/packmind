@@ -23,7 +23,6 @@
     "@packmind/deployments": "*",
     "uuid": "11.1.0",
     "@packmind/test-utils": "*",
-    "@packmind/llm": "*",
-    "@packmind/editions": "*"
+    "@packmind/llm": "*"
   }
 }

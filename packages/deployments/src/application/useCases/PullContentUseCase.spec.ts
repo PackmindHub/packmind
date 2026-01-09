@@ -444,7 +444,7 @@ describe('PullContentUseCase', () => {
         );
       });
 
-      it('deduplicates skills when multiple packages share the same skill', async () => {
+      it('deduplicates skills shared across multiple packages', async () => {
         const secondPackage: PackageWithArtefacts = {
           id: createPackageId('test-package-2-id'),
           slug: 'test-package-2',
@@ -470,7 +470,7 @@ describe('PullContentUseCase', () => {
         expect(skillsPort.listSkillVersions).toHaveBeenCalledWith(skill.id);
       });
 
-      it('fetches latest version when multiple versions exist', async () => {
+      it('fetches latest version from multiple versions', async () => {
         const olderVersion: SkillVersion = {
           ...skillVersion,
           id: createSkillVersionId('skill-version-0'),
