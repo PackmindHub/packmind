@@ -22,6 +22,6 @@
     "uuid": "11.1.0",
     "@packmind/test-utils": "*",
     "@packmind/llm": "*",
-    "@packmind/editions": "*"
+    "@packmind/editions": "0.0.1"
   }
 }
