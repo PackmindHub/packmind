@@ -1,0 +1,34 @@
+# AI Agent Technical Decision Log
+#
+# This file captures implicit technical decisions made by AI agents during
+# coding work. It helps track what architectural and design choices were made
+# without explicit user guidance or documented standards.
+#
+# Review this file periodically to:
+# - Understand what technical choices were made and why
+# - Validate or question specific implementation decisions
+# - Identify patterns that should become formal standards
+# - Provide feedback for future AI agent implementations
+# - Use signal-capture to formalize good patterns into standards
+#
+# File is managed by the decision-capture skill.
+# Schema: See .claude/skills/decision-capture/SKILL.md
+
+# Example entry showing the skill in action:
+
+- timestamp: 2026-01-09T17:45:00Z
+  file: .claude/skills/decision-capture/SKILL.md
+  context: 'Creating the decision-capture skill itself'
+  category: 'architecture'
+  decision: 'Structure the skill with comprehensive examples and comparison with uncertainty-capture and signal-capture skills'
+  reasoning: 'Users need to understand the distinctions between these three similar skills. Comprehensive examples demonstrate when to use each skill and what kind of entries to create.'
+  alternatives:
+    - 'Brief skill description with minimal examples'
+    - 'Focus only on schema without contextual guidance'
+  impact: 'local'
+  confidence: 'high'
+  source: 'pattern-matching'
+  tags:
+    - 'skill-design'
+    - 'documentation'
+    - 'examples'
