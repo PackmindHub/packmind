@@ -59,10 +59,13 @@ describe('OrganizationAccessGuard', () => {
   });
 
   describe('when orgId is missing from URL', () => {
-    it('throws BadRequestException', () => {
-      const context = createMockContext(undefined, 'org-123');
+    const context = createMockContext(undefined, 'org-123');
 
+    it('throws BadRequestException', () => {
       expect(() => guard.canActivate(context)).toThrow(BadRequestException);
+    });
+
+    it('includes descriptive error message', () => {
       expect(() => guard.canActivate(context)).toThrow(
         'Organization ID is required in URL',
       );
@@ -70,10 +73,13 @@ describe('OrganizationAccessGuard', () => {
   });
 
   describe('when orgId is empty string', () => {
-    it('throws BadRequestException', () => {
-      const context = createMockContext('', 'org-123');
+    const context = createMockContext('', 'org-123');
 
+    it('throws BadRequestException', () => {
       expect(() => guard.canActivate(context)).toThrow(BadRequestException);
+    });
+
+    it('includes descriptive error message', () => {
       expect(() => guard.canActivate(context)).toThrow(
         'Organization ID is required in URL',
       );
@@ -81,24 +87,27 @@ describe('OrganizationAccessGuard', () => {
   });
 
   describe('when user organization is missing', () => {
+    const request = {
+      params: { orgId: 'org-123' },
+      path: '/organizations/org-123/recipes',
+      user: {
+        name: 'Test User',
+        userId: createUserId('user-123'),
+      },
+      organization: undefined,
+    } as unknown as AuthenticatedRequest;
+
+    const context = {
+      switchToHttp: () => ({
+        getRequest: () => request,
+      }),
+    } as ExecutionContext;
+
     it('throws ForbiddenException', () => {
-      const request = {
-        params: { orgId: 'org-123' },
-        path: '/organizations/org-123/recipes',
-        user: {
-          name: 'Test User',
-          userId: createUserId('user-123'),
-        },
-        organization: undefined,
-      } as unknown as AuthenticatedRequest;
-
-      const context = {
-        switchToHttp: () => ({
-          getRequest: () => request,
-        }),
-      } as ExecutionContext;
-
       expect(() => guard.canActivate(context)).toThrow(ForbiddenException);
+    });
+
+    it('includes descriptive error message', () => {
       expect(() => guard.canActivate(context)).toThrow(
         'User organization context missing',
       );
@@ -106,10 +115,13 @@ describe('OrganizationAccessGuard', () => {
   });
 
   describe('when organization IDs do not match', () => {
-    it('throws ForbiddenException', () => {
-      const context = createMockContext('org-456', 'org-123');
+    const context = createMockContext('org-456', 'org-123');
 
+    it('throws ForbiddenException', () => {
       expect(() => guard.canActivate(context)).toThrow(ForbiddenException);
+    });
+
+    it('includes descriptive error message', () => {
       expect(() => guard.canActivate(context)).toThrow(
         'Access denied: You do not have access to this organization',
       );
