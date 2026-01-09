@@ -308,10 +308,12 @@ setup_mcp() {
 # Configure PATH in shell rc file
 # Sets: PATH_NEEDS_RELOAD (1 if PATH was newly added and shell reload is needed)
 #       RC_FILE (path to the shell rc file that was modified)
+#       PATH_UNKNOWN_SHELL (1 if shell is unknown and manual PATH setup is needed)
 configure_path() {
     INSTALL_DIR="${PACKMIND_INSTALL_DIR:-$DEFAULT_INSTALL_DIR}"
     export_line="export PATH=\"$INSTALL_DIR:\$PATH\""
     PATH_NEEDS_RELOAD=0
+    PATH_UNKNOWN_SHELL=0
     RC_FILE=""
 
     # Check if install dir is already in PATH
@@ -337,6 +339,9 @@ configure_path() {
         *)
             warn "Unknown shell: $shell_name. Please add this to your shell configuration manually:"
             echo "  $export_line"
+            PATH_UNKNOWN_SHELL=1
+            # Still export PATH for this script's subshell (used by auto_login and setup_mcp)
+            export PATH="$INSTALL_DIR:$PATH"
             return 0
             ;;
     esac
@@ -380,6 +385,10 @@ print_instructions() {
         echo "  source $RC_FILE"
         echo ""
         echo "Or simply open a new terminal window."
+    elif [ "${PATH_UNKNOWN_SHELL:-0}" -eq 1 ]; then
+        echo ""
+        info "To use ${BINARY_NAME} in this terminal session, run:"
+        echo "  export PATH=\"$INSTALL_DIR:\$PATH\""
     fi
 
     # Login instructions if not already logged in
