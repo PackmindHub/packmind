@@ -6,6 +6,7 @@ export interface SkillCreatedPayload {
   skillId: SkillId;
   spaceId: SpaceId;
   source: 'ui' | 'mcp';
+  fileCount: number;
 }
 
 export class SkillCreatedEvent extends UserEvent<SkillCreatedPayload> {

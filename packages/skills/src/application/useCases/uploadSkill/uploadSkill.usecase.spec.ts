@@ -330,6 +330,7 @@ Content`,
             organizationId,
             userId,
             source: 'ui',
+            fileCount: 0,
           }),
         }),
       );
@@ -502,6 +503,92 @@ Content`,
             content: 'Nested file content',
           }),
         ]),
+      );
+    });
+
+    it('emits SkillCreatedEvent with file count excluding SKILL.md', async () => {
+      const files: UploadSkillFileInput[] = [
+        {
+          path: 'SKILL.md',
+          content: `---
+name: multi-file-skill
+description: Skill with multiple files
+---
+
+Main content`,
+          permissions: 'rw-r--r--',
+        },
+        {
+          path: 'prompts/helper.md',
+          content: 'Helper content',
+          permissions: 'rw-r--r--',
+        },
+        {
+          path: 'data/config.json',
+          content: '{"key": "value"}',
+          permissions: 'rw-r--r--',
+        },
+      ];
+
+      const command: UploadSkillCommand = {
+        files,
+        organizationId,
+        userId,
+        spaceId,
+      };
+
+      const mockSkill: Skill = {
+        id: createSkillId('skill-123'),
+        name: 'multi-file-skill',
+        slug: 'multi-file-skill',
+        description: 'Skill with multiple files',
+        prompt: 'Main content',
+        version: 1,
+        userId,
+        spaceId,
+        organizationId,
+        allowedTools: undefined,
+        license: undefined,
+        compatibility: undefined,
+        metadata: undefined,
+        deletedAt: null,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      const mockSkillVersion: SkillVersion = {
+        id: createSkillVersionId('version-123'),
+        skillId: mockSkill.id,
+        userId,
+        name: 'multi-file-skill',
+        slug: 'multi-file-skill',
+        description: 'Skill with multiple files',
+        prompt: 'Main content',
+        version: 1,
+        allowedTools: undefined,
+        license: undefined,
+        compatibility: undefined,
+        metadata: undefined,
+        deletedAt: null,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      mockSkillService.listSkillsBySpace.mockResolvedValue([]);
+      mockSkillService.addSkill.mockResolvedValue(mockSkill);
+      mockSkillVersionService.addSkillVersion.mockResolvedValue(
+        mockSkillVersion,
+      );
+      mockSkillFileRepository.addMany.mockResolvedValue([]);
+
+      await usecase.execute(command);
+
+      expect(mockEventEmitterService.emit).toHaveBeenCalledWith(
+        expect.objectContaining({
+          payload: expect.objectContaining({
+            fileCount: 2,
+          }),
+        }),
       );
     });
   });
