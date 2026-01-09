@@ -1044,6 +1044,14 @@ export class PackmindGateway implements IPackmindGateway {
       throw new Error('SKILL.md not found in skill directory');
     }
 
+    // Validate file count
+    const MAX_FILES = 100;
+    if (files.length > MAX_FILES) {
+      throw new Error(
+        `Skill contains ${files.length} files, but maximum allowed is ${MAX_FILES}`,
+      );
+    }
+
     // Calculate total size
     const totalSize = files.reduce((sum, f) => sum + f.size, 0);
     if (totalSize > 10 * 1024 * 1024) {
