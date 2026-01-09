@@ -58,7 +58,7 @@ describe('LlmService', () => {
   });
 
   describe('testConnection', () => {
-    it('calls adapter with correct command for OpenAI', async () => {
+    describe('with OpenAI config', () => {
       const body: PackmindCommandBody<TestLLMConnectionCommand> = {
         config: {
           provider: LLMProvider.OPENAI,
@@ -66,13 +66,11 @@ describe('LlmService', () => {
           model: 'gpt-4',
         },
       };
-
       const command: TestLLMConnectionCommand = {
         userId: 'user-123',
         organizationId: createOrganizationId('org-123'),
         config: body.config,
       };
-
       const response: TestLLMConnectionResponse = {
         provider: LLMProvider.OPENAI,
         standardModel: {
@@ -81,18 +79,28 @@ describe('LlmService', () => {
         },
         overallSuccess: true,
       };
+      let result: TestLLMConnectionResponse;
 
-      authService.makePackmindCommand.mockReturnValue(command);
-      llmAdapter.testLLMConnection.mockResolvedValue(response);
+      beforeEach(async () => {
+        authService.makePackmindCommand.mockReturnValue(command);
+        llmAdapter.testLLMConnection.mockResolvedValue(response);
+        result = await service.testConnection(mockRequest, body);
+      });
 
-      const result = await service.testConnection(mockRequest, body);
+      it('creates packmind command from request', () => {
+        expect(authService.makePackmindCommand).toHaveBeenCalledWith(
+          mockRequest,
+          body,
+        );
+      });
 
-      expect(authService.makePackmindCommand).toHaveBeenCalledWith(
-        mockRequest,
-        body,
-      );
-      expect(llmAdapter.testLLMConnection).toHaveBeenCalledWith(command);
-      expect(result).toEqual(response);
+      it('calls adapter with command', () => {
+        expect(llmAdapter.testLLMConnection).toHaveBeenCalledWith(command);
+      });
+
+      it('returns connection test response', () => {
+        expect(result).toEqual(response);
+      });
     });
 
     it('calls adapter with correct command for Anthropic', async () => {
@@ -128,37 +136,45 @@ describe('LlmService', () => {
   });
 
   describe('getModels', () => {
-    it('calls adapter with correct command for OpenAI', async () => {
+    describe('with OpenAI config', () => {
       const body: PackmindCommandBody<GetModelsCommand> = {
         config: {
           provider: LLMProvider.OPENAI,
           apiKey: 'test-key',
         },
       };
-
       const command: GetModelsCommand = {
         userId: 'user-123',
         organizationId: createOrganizationId('org-123'),
         config: body.config,
       };
-
       const response: GetModelsResponse = {
         provider: LLMProvider.OPENAI,
         models: ['gpt-4', 'gpt-3.5-turbo', 'gpt-4-turbo'],
         success: true,
       };
+      let result: GetModelsResponse;
 
-      authService.makePackmindCommand.mockReturnValue(command);
-      llmAdapter.getModels.mockResolvedValue(response);
+      beforeEach(async () => {
+        authService.makePackmindCommand.mockReturnValue(command);
+        llmAdapter.getModels.mockResolvedValue(response);
+        result = await service.getModels(mockRequest, body);
+      });
 
-      const result = await service.getModels(mockRequest, body);
+      it('creates packmind command from request', () => {
+        expect(authService.makePackmindCommand).toHaveBeenCalledWith(
+          mockRequest,
+          body,
+        );
+      });
 
-      expect(authService.makePackmindCommand).toHaveBeenCalledWith(
-        mockRequest,
-        body,
-      );
-      expect(llmAdapter.getModels).toHaveBeenCalledWith(command);
-      expect(result).toEqual(response);
+      it('calls adapter with command', () => {
+        expect(llmAdapter.getModels).toHaveBeenCalledWith(command);
+      });
+
+      it('returns models response', () => {
+        expect(result).toEqual(response);
+      });
     });
 
     it('calls adapter with correct command for Gemini', async () => {
