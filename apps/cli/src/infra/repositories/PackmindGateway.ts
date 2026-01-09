@@ -1018,7 +1018,25 @@ export class PackmindGateway implements IPackmindGateway {
 
     const organizationId = jwtPayload.organization.id;
 
-    // Read all files from skill directory
+    // Step 1: Resolve 'global' slug to UUID
+    const spacesUrl = `${host}/api/v0/organizations/${organizationId}/spaces/global`;
+    const spaceResponse = await fetch(spacesUrl, {
+      method: 'GET',
+      headers: {
+        Authorization: `Bearer ${this.apiKey}`,
+      },
+    });
+
+    if (!spaceResponse.ok) {
+      throw new Error(
+        `Failed to resolve global space: ${spaceResponse.status} ${spaceResponse.statusText}`,
+      );
+    }
+
+    const space = await spaceResponse.json();
+    const spaceId = space.id;
+
+    // Step 2: Read all files from skill directory
     const files = await readSkillDirectory(command.skillPath);
 
     // Validate SKILL.md exists
@@ -1041,7 +1059,8 @@ export class PackmindGateway implements IPackmindGateway {
       })),
     };
 
-    const url = `${host}/api/v0/organizations/${organizationId}/skills/upload`;
+    // Step 3: Use resolved UUID in upload URL
+    const url = `${host}/api/v0/organizations/${organizationId}/spaces/${spaceId}/skills/upload`;
 
     try {
       const response = await fetch(url, {
