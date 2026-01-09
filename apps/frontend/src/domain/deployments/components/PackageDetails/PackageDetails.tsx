@@ -734,12 +734,34 @@ export const PackageDetails = ({
     );
   }, [standardIds, allStandards, orgSlug, spaceSlug]);
 
+  const skillTableData: PMTableRow[] = React.useMemo(() => {
+    const rows: PMTableRow[] = [];
+    for (const skillId of skillIds) {
+      const skill = allSkills.find((s) => s.id === skillId);
+      if (skill) {
+        rows.push({
+          key: skillId,
+          name: <PMText>{skill.name}</PMText>,
+          sortName: skill.name,
+        });
+      }
+    }
+    return rows.sort((a, b) =>
+      (a.sortName as string).localeCompare(b.sortName as string),
+    );
+  }, [skillIds, allSkills]);
+
   const recipeColumns: PMTableColumn[] = React.useMemo(
     () => [{ key: 'name', header: 'Name', grow: true }],
     [],
   );
 
   const standardColumns: PMTableColumn[] = React.useMemo(
+    () => [{ key: 'name', header: 'Name', grow: true }],
+    [],
+  );
+
+  const skillColumns: PMTableColumn[] = React.useMemo(
     () => [{ key: 'name', header: 'Name', grow: true }],
     [],
   );
@@ -796,7 +818,11 @@ export const PackageDetails = ({
 
   const recipeCount = recipeTableData.length;
   const standardCount = standardTableData.length;
-  const isPackageEmpty = recipeCount === 0 && standardCount === 0;
+  const skillCount = skillTableData.length;
+  const isPackageEmpty =
+    recipeCount === 0 &&
+    standardCount === 0 &&
+    (!showSkillsSelection || skillCount === 0);
 
   const isPending = updatePackageMutation.isPending || isSubmitting;
   const isFormValid = editName.trim();
@@ -1056,7 +1082,11 @@ export const PackageDetails = ({
                     mx={'auto'}
                     mt={8}
                     title={'This package is empty'}
-                    description="Add commands and standards to this package to distribute them to your repositories"
+                    description={
+                      showSkillsSelection
+                        ? 'Add commands, standards, and skills to this package to distribute them to your repositories'
+                        : 'Add commands and standards to this package to distribute them to your repositories'
+                    }
                   >
                     <PMHStack>
                       <PMButton variant="secondary" onClick={handleEdit}>
@@ -1089,6 +1119,21 @@ export const PackageDetails = ({
                         <PMTable
                           columns={recipeColumns}
                           data={recipeTableData}
+                          striped={true}
+                          hoverable={true}
+                          variant="line"
+                        />
+                      </PMBox>
+                    )}
+
+                    {showSkillsSelection && skillCount > 0 && (
+                      <PMBox flex={1} width="full">
+                        <PMHeading size="lg" mb={4}>
+                          Skills ({skillCount})
+                        </PMHeading>
+                        <PMTable
+                          columns={skillColumns}
+                          data={skillTableData}
                           striped={true}
                           hoverable={true}
                           variant="line"
