@@ -1,0 +1,23 @@
+Si t# Command Candidates
+# This file captures reusable task patterns that could be valuable as commands/recipes.
+# AI agents silently log workflows here when they complete tasks that represent common,
+# repeatable patterns that could benefit developers across projects.
+#
+# Each entry contains:
+# - name: Kebab-case identifier (e.g., "setup-jest-testing")
+# - description: 1-2 sentences explaining what the command does
+# - category: Type of task (setup, testing, api, database, etc.)
+# - frequency: How often it would be used (weekly, monthly, quarterly)
+# - complexity: Scope and difficulty (simple, medium, complex)
+# - timestamp: When it was captured (ISO 8601)
+# - context: Brief note about when/why this was captured
+# - applicability: How widely applicable (project-specific, cross-project, universal)
+# - tags: Keywords for filtering/searching
+#
+# Review this file periodically to:
+# - Prioritize which patterns to formalize as full commands
+# - Build a library of reusable workflows
+# - Identify common tasks worth automating
+# - Standardize approaches across projects
+
+[]
