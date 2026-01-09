@@ -68,6 +68,10 @@ export const routes = {
       `/org/${orgSlug}/space/${spaceSlug}/standards/${standardId}/edit`,
     toCreateStandard: (orgSlug: string, spaceSlug: string) =>
       `/org/${orgSlug}/space/${spaceSlug}/standards/create`,
+    toSkills: (orgSlug: string, spaceSlug: string) =>
+      `/org/${orgSlug}/space/${spaceSlug}/skills`,
+    toSkill: (orgSlug: string, spaceSlug: string, skillSlug: string) =>
+      `/org/${orgSlug}/space/${spaceSlug}/skills/${skillSlug}`,
   },
 
   /**

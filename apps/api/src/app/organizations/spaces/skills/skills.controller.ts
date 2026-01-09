@@ -3,6 +3,7 @@ import {
   Body,
   Controller,
   Get,
+  NotFoundException,
   Param,
   Post,
   Req,
@@ -14,6 +15,9 @@ import { SkillValidationError, SkillParseError } from '@packmind/skills';
 import {
   OrganizationId,
   Skill,
+  SkillId,
+  SkillVersion,
+  SkillWithFiles,
   SpaceId,
   UploadSkillFileInput,
 } from '@packmind/types';
@@ -78,6 +82,85 @@ export class OrganizationsSpacesSkillsController {
       this.logger.error(
         'GET /organizations/:orgId/spaces/:spaceId/skills - Failed to fetch skills',
         { organizationId, spaceId, error: errorMessage },
+      );
+      throw error;
+    }
+  }
+
+  /**
+   * Get a skill with its files within a space
+   * GET /organizations/:orgId/spaces/:spaceId/skills/:slug
+   */
+  @Get(':slug')
+  async getSkillWithFiles(
+    @Param('orgId') organizationId: OrganizationId,
+    @Param('spaceId') spaceId: SpaceId,
+    @Param('slug') slug: string,
+    @Req() request: AuthenticatedRequest,
+  ): Promise<SkillWithFiles> {
+    const userId = request.user.userId;
+
+    this.logger.info(
+      'GET /organizations/:orgId/spaces/:spaceId/skills/:slug - Fetching skill with files',
+      { organizationId, spaceId, slug },
+    );
+
+    try {
+      const skillWithFiles = await this.skillsService.getSkillWithFiles(
+        slug,
+        spaceId,
+        organizationId,
+        userId,
+      );
+
+      if (!skillWithFiles) {
+        throw new NotFoundException(`Skill with slug "${slug}" not found`);
+      }
+
+      return skillWithFiles;
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+      const errorMessage = getErrorMessage(error);
+      this.logger.error(
+        'GET /organizations/:orgId/spaces/:spaceId/skills/:slug - Failed to fetch skill with files',
+        { organizationId, spaceId, slug, error: errorMessage },
+      );
+      throw error;
+    }
+  }
+
+  /**
+   * Get all versions for a skill
+   * GET /organizations/:orgId/spaces/:spaceId/skills/:skillId/versions
+   */
+  @Get(':skillId/versions')
+  async getSkillVersions(
+    @Param('orgId') organizationId: OrganizationId,
+    @Param('spaceId') spaceId: SpaceId,
+    @Param('skillId') skillId: SkillId,
+    @Req() request: AuthenticatedRequest,
+  ): Promise<SkillVersion[]> {
+    const userId = request.user.userId;
+
+    this.logger.info(
+      'GET /organizations/:orgId/spaces/:spaceId/skills/:skillId/versions - Fetching skill versions',
+      { organizationId, spaceId, skillId },
+    );
+
+    try {
+      return await this.skillsService.listSkillVersions(
+        skillId,
+        spaceId,
+        organizationId,
+        userId,
+      );
+    } catch (error) {
+      const errorMessage = getErrorMessage(error);
+      this.logger.error(
+        'GET /organizations/:orgId/spaces/:spaceId/skills/:skillId/versions - Failed to fetch skill versions',
+        { organizationId, spaceId, skillId, error: errorMessage },
       );
       throw error;
     }
