@@ -1,16 +1,15 @@
 import { command, string, positional } from 'cmd-ts';
-import { PackmindCliHexa } from '../../PackmindCliHexa';
+import { PackmindCliHexa } from '../../../PackmindCliHexa';
 import { PackmindLogger, LogLevel } from '@packmind/logger';
 import {
   logSuccessConsole,
   logErrorConsole,
   logInfoConsole,
-} from '../utils/consoleLogger';
+} from '../../utils/consoleLogger';
 
-export const uploadSkillCommand = command({
-  name: 'upload-skill',
-  description:
-    'Upload a skill from a local directory to a Packmind organization',
+export const addSkillCommand = command({
+  name: 'add',
+  description: 'Add a skill from a local directory to a Packmind organization',
   args: {
     skillPath: positional({
       type: string,
