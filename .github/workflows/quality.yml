@@ -146,7 +146,6 @@ jobs:
           - packages/editions
           - packages/frontend
           - packages/migrations
-          - packages/shared
           - packages/skills
           - packages/spaces
 
