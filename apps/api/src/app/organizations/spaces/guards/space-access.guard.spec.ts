@@ -59,9 +59,13 @@ describe('SpaceAccessGuard', () => {
   });
 
   describe('when spaceId is missing from URL', () => {
+    const context = createMockContext(undefined, 'org-123');
+
     it('throws BadRequestException', () => {
-      const context = createMockContext(undefined, 'org-123');
       expect(() => guard.canActivate(context)).toThrow(BadRequestException);
+    });
+
+    it('includes descriptive error message', () => {
       expect(() => guard.canActivate(context)).toThrow(
         'Space ID is required in URL',
       );
@@ -69,9 +73,13 @@ describe('SpaceAccessGuard', () => {
   });
 
   describe('when spaceId is empty string', () => {
+    const context = createMockContext('', 'org-123');
+
     it('throws BadRequestException', () => {
-      const context = createMockContext('', 'org-123');
       expect(() => guard.canActivate(context)).toThrow(BadRequestException);
+    });
+
+    it('includes descriptive error message', () => {
       expect(() => guard.canActivate(context)).toThrow(
         'Space ID is required in URL',
       );
@@ -79,24 +87,27 @@ describe('SpaceAccessGuard', () => {
   });
 
   describe('when user organization is missing', () => {
+    const request = {
+      params: { spaceId: 'space-123', orgId: 'org-123' },
+      path: '/organizations/org-123/spaces/space-123/recipes',
+      user: {
+        name: 'Test User',
+        userId: createUserId('user-123'),
+      },
+      organization: undefined,
+    } as unknown as AuthenticatedRequest;
+
+    const context = {
+      switchToHttp: () => ({
+        getRequest: () => request,
+      }),
+    } as ExecutionContext;
+
     it('throws ForbiddenException', () => {
-      const request = {
-        params: { spaceId: 'space-123', orgId: 'org-123' },
-        path: '/organizations/org-123/spaces/space-123/recipes',
-        user: {
-          name: 'Test User',
-          userId: createUserId('user-123'),
-        },
-        organization: undefined,
-      } as unknown as AuthenticatedRequest;
-
-      const context = {
-        switchToHttp: () => ({
-          getRequest: () => request,
-        }),
-      } as ExecutionContext;
-
       expect(() => guard.canActivate(context)).toThrow(ForbiddenException);
+    });
+
+    it('includes descriptive error message', () => {
       expect(() => guard.canActivate(context)).toThrow(
         'User organization context missing',
       );
