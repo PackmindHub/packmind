@@ -14,17 +14,17 @@ import {
   SkillVersion,
   User,
 } from '@packmind/types';
-import { ISkillFileRepository } from '../../../domain/repositories/ISkillFileRepository';
-import { ISkillRepository } from '../../../domain/repositories/ISkillRepository';
-import { ISkillVersionRepository } from '../../../domain/repositories/ISkillVersionRepository';
+import { SkillFileService } from '../../services/SkillFileService';
+import { SkillService } from '../../services/SkillService';
+import { SkillVersionService } from '../../services/SkillVersionService';
 import { GetSkillWithFilesUsecase } from './getSkillWithFiles.usecase';
 
 describe('GetSkillWithFilesUsecase', () => {
   let usecase: GetSkillWithFilesUsecase;
   let mockAccountsPort: jest.Mocked<IAccountsPort>;
-  let mockSkillRepository: jest.Mocked<ISkillRepository>;
-  let mockSkillVersionRepository: jest.Mocked<ISkillVersionRepository>;
-  let mockSkillFileRepository: jest.Mocked<ISkillFileRepository>;
+  let mockSkillService: jest.Mocked<SkillService>;
+  let mockSkillVersionService: jest.Mocked<SkillVersionService>;
+  let mockSkillFileService: jest.Mocked<SkillFileService>;
 
   const userId = createUserId('user-123');
   const organizationId = createOrganizationId('org-123');
@@ -38,6 +38,7 @@ describe('GetSkillWithFilesUsecase', () => {
     passwordHash: 'hashed_password',
     memberships: [{ organizationId, role: 'member', userId }],
     active: true,
+    trial: false,
   };
 
   const mockOrganization: Organization = {
@@ -91,44 +92,35 @@ describe('GetSkillWithFilesUsecase', () => {
       getOrganizationById: jest.fn(),
     } as unknown as jest.Mocked<IAccountsPort>;
 
-    mockSkillRepository = {
-      findById: jest.fn(),
-      findBySlug: jest.fn(),
-      findByOrganizationId: jest.fn(),
-      findBySpaceId: jest.fn(),
-      findByUserId: jest.fn(),
-      findByOrganizationAndUser: jest.fn(),
-      add: jest.fn(),
-      deleteById: jest.fn(),
-    } as jest.Mocked<ISkillRepository>;
+    mockSkillService = {
+      getSkillById: jest.fn(),
+      findSkillBySlug: jest.fn(),
+      listSkillsBySpace: jest.fn(),
+      addSkill: jest.fn(),
+      updateSkill: jest.fn(),
+      deleteSkill: jest.fn(),
+    } as unknown as jest.Mocked<SkillService>;
 
-    mockSkillVersionRepository = {
-      findById: jest.fn(),
-      findBySkillId: jest.fn(),
-      findLatestBySkillId: jest.fn(),
-      findBySkillIdAndVersion: jest.fn(),
-      updateMetadata: jest.fn(),
-      add: jest.fn(),
-      deleteById: jest.fn(),
-    } as jest.Mocked<ISkillVersionRepository>;
+    mockSkillVersionService = {
+      listSkillVersions: jest.fn(),
+      getLatestSkillVersion: jest.fn(),
+      getSkillVersionById: jest.fn(),
+      getSkillVersion: jest.fn(),
+      addSkillVersion: jest.fn(),
+    } as unknown as jest.Mocked<SkillVersionService>;
 
-    mockSkillFileRepository = {
-      findById: jest.fn(),
-      findBySkillVersionId: jest.fn(),
-      addMany: jest.fn(),
-      add: jest.fn(),
-      deleteById: jest.fn(),
-    } as jest.Mocked<ISkillFileRepository>;
+    mockSkillFileService = {
+      findByVersionId: jest.fn(),
+    } as unknown as jest.Mocked<SkillFileService>;
 
     usecase = new GetSkillWithFilesUsecase(
       mockAccountsPort,
-      mockSkillRepository,
-      mockSkillVersionRepository,
-      mockSkillFileRepository,
+      mockSkillService,
+      mockSkillVersionService,
+      mockSkillFileService,
       stubLogger(),
     );
 
-    // Default mocks for member validation
     mockAccountsPort.getUserById.mockResolvedValue(mockUser);
     mockAccountsPort.getOrganizationById.mockResolvedValue(mockOrganization);
   });
@@ -147,13 +139,11 @@ describe('GetSkillWithFilesUsecase', () => {
     };
 
     beforeEach(() => {
-      mockSkillRepository.findBySlug.mockResolvedValue(mockSkill);
-      mockSkillVersionRepository.findLatestBySkillId.mockResolvedValue(
+      mockSkillService.findSkillBySlug.mockResolvedValue(mockSkill);
+      mockSkillVersionService.getLatestSkillVersion.mockResolvedValue(
         mockSkillVersion,
       );
-      mockSkillFileRepository.findBySkillVersionId.mockResolvedValue(
-        mockSkillFiles,
-      );
+      mockSkillFileService.findByVersionId.mockResolvedValue(mockSkillFiles);
     });
 
     it('returns skill with files and latest version', async () => {
@@ -169,7 +159,7 @@ describe('GetSkillWithFilesUsecase', () => {
     it('fetches skill by slug', async () => {
       await usecase.execute(command);
 
-      expect(mockSkillRepository.findBySlug).toHaveBeenCalledWith(
+      expect(mockSkillService.findSkillBySlug).toHaveBeenCalledWith(
         slug,
         organizationId,
       );
@@ -179,22 +169,27 @@ describe('GetSkillWithFilesUsecase', () => {
       await usecase.execute(command);
 
       expect(
-        mockSkillVersionRepository.findLatestBySkillId,
+        mockSkillVersionService.getLatestSkillVersion,
       ).toHaveBeenCalledWith(skillId);
     });
 
     it('fetches files by version ID', async () => {
       await usecase.execute(command);
 
-      expect(mockSkillFileRepository.findBySkillVersionId).toHaveBeenCalledWith(
+      expect(mockSkillFileService.findByVersionId).toHaveBeenCalledWith(
         skillVersionId,
       );
     });
 
-    it('validates member access', async () => {
+    it('fetches user by ID for member validation', async () => {
       await usecase.execute(command);
 
       expect(mockAccountsPort.getUserById).toHaveBeenCalledWith(userId);
+    });
+
+    it('fetches organization by ID for member validation', async () => {
+      await usecase.execute(command);
+
       expect(mockAccountsPort.getOrganizationById).toHaveBeenCalledWith(
         organizationId,
       );
@@ -211,7 +206,7 @@ describe('GetSkillWithFilesUsecase', () => {
     };
 
     beforeEach(() => {
-      mockSkillRepository.findBySlug.mockResolvedValue(null);
+      mockSkillService.findSkillBySlug.mockResolvedValue(null);
     });
 
     it('returns null skillWithFiles', async () => {
@@ -220,15 +215,18 @@ describe('GetSkillWithFilesUsecase', () => {
       expect(result.skillWithFiles).toBeNull();
     });
 
-    it('does not fetch version or files', async () => {
+    it('does not fetch version', async () => {
       await usecase.execute(command);
 
       expect(
-        mockSkillVersionRepository.findLatestBySkillId,
+        mockSkillVersionService.getLatestSkillVersion,
       ).not.toHaveBeenCalled();
-      expect(
-        mockSkillFileRepository.findBySkillVersionId,
-      ).not.toHaveBeenCalled();
+    });
+
+    it('does not fetch files', async () => {
+      await usecase.execute(command);
+
+      expect(mockSkillFileService.findByVersionId).not.toHaveBeenCalled();
     });
   });
 
@@ -242,8 +240,8 @@ describe('GetSkillWithFilesUsecase', () => {
     };
 
     beforeEach(() => {
-      mockSkillRepository.findBySlug.mockResolvedValue(mockSkill);
-      mockSkillVersionRepository.findLatestBySkillId.mockResolvedValue(null);
+      mockSkillService.findSkillBySlug.mockResolvedValue(mockSkill);
+      mockSkillVersionService.getLatestSkillVersion.mockResolvedValue(null);
     });
 
     it('returns null skillWithFiles', async () => {
@@ -255,9 +253,7 @@ describe('GetSkillWithFilesUsecase', () => {
     it('does not fetch files', async () => {
       await usecase.execute(command);
 
-      expect(
-        mockSkillFileRepository.findBySkillVersionId,
-      ).not.toHaveBeenCalled();
+      expect(mockSkillFileService.findByVersionId).not.toHaveBeenCalled();
     });
   });
 
@@ -271,11 +267,11 @@ describe('GetSkillWithFilesUsecase', () => {
     };
 
     beforeEach(() => {
-      mockSkillRepository.findBySlug.mockResolvedValue(mockSkill);
-      mockSkillVersionRepository.findLatestBySkillId.mockResolvedValue(
+      mockSkillService.findSkillBySlug.mockResolvedValue(mockSkill);
+      mockSkillVersionService.getLatestSkillVersion.mockResolvedValue(
         mockSkillVersion,
       );
-      mockSkillFileRepository.findBySkillVersionId.mockResolvedValue([]);
+      mockSkillFileService.findByVersionId.mockResolvedValue([]);
     });
 
     it('returns skill with empty files array', async () => {
@@ -305,7 +301,7 @@ describe('GetSkillWithFilesUsecase', () => {
     };
 
     beforeEach(() => {
-      mockSkillRepository.findBySlug.mockResolvedValue(skillInDifferentSpace);
+      mockSkillService.findSkillBySlug.mockResolvedValue(skillInDifferentSpace);
     });
 
     it('returns null skillWithFiles', async () => {
@@ -314,15 +310,18 @@ describe('GetSkillWithFilesUsecase', () => {
       expect(result.skillWithFiles).toBeNull();
     });
 
-    it('does not fetch version or files', async () => {
+    it('does not fetch version', async () => {
       await usecase.execute(command);
 
       expect(
-        mockSkillVersionRepository.findLatestBySkillId,
+        mockSkillVersionService.getLatestSkillVersion,
       ).not.toHaveBeenCalled();
-      expect(
-        mockSkillFileRepository.findBySkillVersionId,
-      ).not.toHaveBeenCalled();
+    });
+
+    it('does not fetch files', async () => {
+      await usecase.execute(command);
+
+      expect(mockSkillFileService.findByVersionId).not.toHaveBeenCalled();
     });
   });
 
@@ -335,35 +334,47 @@ describe('GetSkillWithFilesUsecase', () => {
       organizationId,
     };
 
-    it('throws error when user not found', async () => {
-      mockAccountsPort.getUserById.mockResolvedValue(null);
+    describe('when user not found', () => {
+      beforeEach(() => {
+        mockAccountsPort.getUserById.mockResolvedValue(null);
+      });
 
-      await expect(usecase.execute(command)).rejects.toThrow(
-        `User not found: ${userId}`,
-      );
+      it('throws error', async () => {
+        await expect(usecase.execute(command)).rejects.toThrow(
+          `User not found: ${userId}`,
+        );
+      });
     });
 
-    it('throws error when organization not found', async () => {
-      mockAccountsPort.getOrganizationById.mockResolvedValue(null);
+    describe('when organization not found', () => {
+      beforeEach(() => {
+        mockAccountsPort.getOrganizationById.mockResolvedValue(null);
+      });
 
-      await expect(usecase.execute(command)).rejects.toThrow(
-        `Organization ${organizationId} not found`,
-      );
+      it('throws error', async () => {
+        await expect(usecase.execute(command)).rejects.toThrow(
+          `Organization ${organizationId} not found`,
+        );
+      });
     });
 
-    it('throws error when user is not member of organization', async () => {
-      const otherOrganizationId = createOrganizationId('other-org');
-      const userInOtherOrg: User = {
-        ...mockUser,
-        memberships: [
-          { organizationId: otherOrganizationId, role: 'member', userId },
-        ],
-      };
-      mockAccountsPort.getUserById.mockResolvedValue(userInOtherOrg);
+    describe('when user is not member of organization', () => {
+      beforeEach(() => {
+        const otherOrganizationId = createOrganizationId('other-org');
+        const userInOtherOrg: User = {
+          ...mockUser,
+          memberships: [
+            { organizationId: otherOrganizationId, role: 'member', userId },
+          ],
+        };
+        mockAccountsPort.getUserById.mockResolvedValue(userInOtherOrg);
+      });
 
-      await expect(usecase.execute(command)).rejects.toThrow(
-        `User ${userId} is not a member of organization ${organizationId}`,
-      );
+      it('throws error', async () => {
+        await expect(usecase.execute(command)).rejects.toThrow(
+          `User ${userId} is not a member of organization ${organizationId}`,
+        );
+      });
     });
   });
 });

@@ -6,8 +6,8 @@ import {
   ListSkillVersionsCommand,
   ListSkillVersionsResponse,
 } from '@packmind/types';
-import { ISkillRepository } from '../../../domain/repositories/ISkillRepository';
-import { ISkillVersionRepository } from '../../../domain/repositories/ISkillVersionRepository';
+import { SkillService } from '../../services/SkillService';
+import { SkillVersionService } from '../../services/SkillVersionService';
 
 const origin = 'ListSkillVersionsUsecase';
 
@@ -20,8 +20,8 @@ export class ListSkillVersionsUsecase
 {
   constructor(
     accountsPort: IAccountsPort,
-    private readonly skillRepository: ISkillRepository,
-    private readonly skillVersionRepository: ISkillVersionRepository,
+    private readonly skillService: SkillService,
+    private readonly skillVersionService: SkillVersionService,
     logger: PackmindLogger = new PackmindLogger(origin),
   ) {
     super(accountsPort, logger);
@@ -35,7 +35,7 @@ export class ListSkillVersionsUsecase
     try {
       this.logger.info('Listing skill versions', { skillId, spaceId });
 
-      const skill = await this.skillRepository.findById(skillId);
+      const skill = await this.skillService.getSkillById(skillId);
 
       if (!skill) {
         this.logger.info('Skill not found', { skillId });
@@ -51,7 +51,8 @@ export class ListSkillVersionsUsecase
         return { versions: [] };
       }
 
-      const versions = await this.skillVersionRepository.findBySkillId(skillId);
+      const versions =
+        await this.skillVersionService.listSkillVersions(skillId);
 
       this.logger.info('Skill versions retrieved successfully', {
         skillId,

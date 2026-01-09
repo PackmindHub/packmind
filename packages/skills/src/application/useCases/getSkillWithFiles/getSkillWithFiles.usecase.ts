@@ -7,9 +7,9 @@ import {
   IAccountsPort,
   IGetSkillWithFilesUseCase,
 } from '@packmind/types';
-import { ISkillFileRepository } from '../../../domain/repositories/ISkillFileRepository';
-import { ISkillRepository } from '../../../domain/repositories/ISkillRepository';
-import { ISkillVersionRepository } from '../../../domain/repositories/ISkillVersionRepository';
+import { SkillFileService } from '../../services/SkillFileService';
+import { SkillService } from '../../services/SkillService';
+import { SkillVersionService } from '../../services/SkillVersionService';
 
 const origin = 'GetSkillWithFilesUsecase';
 
@@ -22,9 +22,9 @@ export class GetSkillWithFilesUsecase
 {
   constructor(
     accountsPort: IAccountsPort,
-    private readonly skillRepository: ISkillRepository,
-    private readonly skillVersionRepository: ISkillVersionRepository,
-    private readonly skillFileRepository: ISkillFileRepository,
+    private readonly skillService: SkillService,
+    private readonly skillVersionService: SkillVersionService,
+    private readonly skillFileService: SkillFileService,
     logger: PackmindLogger = new PackmindLogger(origin),
   ) {
     super(accountsPort, logger);
@@ -39,7 +39,10 @@ export class GetSkillWithFilesUsecase
     try {
       this.logger.info('Getting skill with files', { slug, spaceId });
 
-      const skill = await this.skillRepository.findBySlug(slug, organizationId);
+      const skill = await this.skillService.findSkillBySlug(
+        slug,
+        organizationId,
+      );
 
       if (!skill) {
         this.logger.info('Skill not found', { slug });
@@ -56,7 +59,7 @@ export class GetSkillWithFilesUsecase
       }
 
       const latestVersion =
-        await this.skillVersionRepository.findLatestBySkillId(skill.id);
+        await this.skillVersionService.getLatestSkillVersion(skill.id);
 
       if (!latestVersion) {
         this.logger.info('No version found for skill', {
@@ -66,7 +69,7 @@ export class GetSkillWithFilesUsecase
         return { skillWithFiles: null };
       }
 
-      const files = await this.skillFileRepository.findBySkillVersionId(
+      const files = await this.skillFileService.findByVersionId(
         latestVersion.id,
       );
 
