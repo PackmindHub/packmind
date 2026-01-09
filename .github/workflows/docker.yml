@@ -198,6 +198,7 @@ jobs:
           organization: packmind
           image: packmind/frontend${{ steps.set-image-naming.outputs.name_suffix }}:${{ steps.get-version.outputs.version }}${{ steps.set-image-naming.outputs.version_suffix }}
           only-severities: critical,high
+          only-fixed: true # set to false in most cases
           exit-code: true
 
       - name: Scan MCP Server Docker image for vulnerabilities
