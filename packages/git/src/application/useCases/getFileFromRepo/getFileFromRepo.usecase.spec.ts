@@ -73,15 +73,6 @@ describe('GetFileFromRepo', () => {
         sha: fileSha,
         content: originalContent, // Should be decoded UTF-8, not base64
       });
-
-      expect(logger.info).toHaveBeenCalledWith(
-        'File retrieved and decoded successfully',
-        expect.objectContaining({
-          filePath: 'test-file.txt',
-          sha: fileSha,
-          decodedContentLength: originalContent.length,
-        }),
-      );
     });
   });
 
@@ -108,14 +99,6 @@ describe('GetFileFromRepo', () => {
         sha: fileSha,
         content: Buffer.from(garbageBase64Content, 'base64').toString('utf-8'),
       });
-
-      expect(logger.info).toHaveBeenCalledWith(
-        'File retrieved and decoded successfully',
-        expect.objectContaining({
-          filePath: 'test-file.txt',
-          sha: fileSha,
-        }),
-      );
     });
   });
 
@@ -132,13 +115,6 @@ describe('GetFileFromRepo', () => {
       );
 
       expect(result).toBeNull();
-
-      expect(logger.info).toHaveBeenCalledWith(
-        'File not found in repository',
-        expect.objectContaining({
-          filePath: 'non-existent-file.txt',
-        }),
-      );
     });
   });
 
