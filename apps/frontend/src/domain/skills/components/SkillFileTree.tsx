@@ -1,8 +1,7 @@
-import { useEffect, useMemo } from 'react';
+import { useMemo } from 'react';
 import { LuFolder, LuFile, LuChevronRight } from 'react-icons/lu';
 import {
   createFileTreeCollection,
-  PMBox,
   PMIcon,
   PMTreeView,
   PMTreeViewBranchIndentGuide,
@@ -27,9 +26,17 @@ export const SkillFileTree = ({
     [filePaths],
   );
 
-  const handleSelectionChange = (details: { selectedValue: string[] }) => {
+  const handleSelectionChange = (details: {
+    selectedValue: string[];
+    selectedNodes: { children?: unknown[] }[];
+  }) => {
+    const selectedNode = details.selectedNodes[0];
     const selectedValue = details.selectedValue[0];
-    if (selectedValue) {
+
+    // Only trigger selection for files (nodes without children), not folders
+    const isFile = !selectedNode?.children?.length;
+
+    if (isFile && selectedValue) {
       onFileSelect(selectedValue);
     }
   };
@@ -51,8 +58,6 @@ export const SkillFileTree = ({
         <PMTreeView.Node
           indentGuide={<PMTreeViewBranchIndentGuide />}
           render={({ node, nodeState }) => {
-            const isSelected = selectedFilePath === node.value;
-
             if (nodeState.isBranch) {
               return (
                 <PMTreeView.Branch>
@@ -60,12 +65,10 @@ export const SkillFileTree = ({
                     <PMTreeView.BranchIndicator>
                       <LuChevronRight />
                     </PMTreeView.BranchIndicator>
-                    <PMIcon color="text.secondary" fontSize="sm">
+                    <PMIcon>
                       <LuFolder />
                     </PMIcon>
-                    <PMTreeView.BranchText color="text.primary">
-                      {node.label}
-                    </PMTreeView.BranchText>
+                    <PMTreeView.BranchText>{node.label}</PMTreeView.BranchText>
                   </PMTreeView.BranchControl>
                   <PMTreeView.BranchContent />
                 </PMTreeView.Branch>
@@ -75,12 +78,7 @@ export const SkillFileTree = ({
             return (
               <PMTreeView.Item>
                 <LuFile />
-                <PMTreeView.ItemText
-                  fontWeight={isSelected ? 'bold' : 'normal'}
-                  fontSize="sm"
-                >
-                  {node.label}
-                </PMTreeView.ItemText>
+                <PMTreeView.ItemText>{node.label}</PMTreeView.ItemText>
               </PMTreeView.Item>
             );
           }}
