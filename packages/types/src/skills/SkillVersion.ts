@@ -1,6 +1,7 @@
 import { SkillVersionId } from './SkillVersionId';
 import { SkillId } from './SkillId';
 import { UserId } from '../accounts/User';
+import { SkillFile } from './SkillFile';
 
 export type SkillVersion = {
   id: SkillVersionId;
@@ -15,4 +16,5 @@ export type SkillVersion = {
   compatibility?: string;
   metadata?: Record<string, string>;
   allowedTools?: string;
+  files?: SkillFile[];
 };

@@ -248,10 +248,11 @@ export class PackmindDeployer implements ICodingAgentDeployer {
     skillVersions: SkillVersion[] = [],
   ): Promise<FileUpdates> {
     this.logger.info(
-      'Deploying artifacts (commands + standards) for Packmind',
+      'Deploying artifacts (commands + standards + skills) for Packmind',
       {
         commandsCount: recipeVersions.length,
         standardsCount: standardVersions.length,
+        skillsCount: skillVersions.length,
       },
     );
 

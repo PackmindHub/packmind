@@ -165,14 +165,19 @@ export class CopilotDeployer implements ICodingAgentDeployer {
       delete: [],
     };
 
-    // Generate individual skill files for each skill version
+    // Generate skill files for each skill version
     for (const skillVersion of skillVersions) {
-      const skillFile = this.generateCopilotSkillFile(skillVersion);
-      const targetPrefixedPath = getTargetPrefixedPath(skillFile.path, target);
-      fileUpdates.createOrUpdate.push({
-        path: targetPrefixedPath,
-        content: skillFile.content,
-      });
+      const skillFiles = this.generateCopilotSkillFiles(skillVersion);
+      for (const skillFile of skillFiles) {
+        const targetPrefixedPath = getTargetPrefixedPath(
+          skillFile.path,
+          target,
+        );
+        fileUpdates.createOrUpdate.push({
+          path: targetPrefixedPath,
+          content: skillFile.content,
+        });
+      }
     }
 
     return fileUpdates;
@@ -190,13 +195,15 @@ export class CopilotDeployer implements ICodingAgentDeployer {
       delete: [],
     };
 
-    // Generate individual skill files for each skill version
+    // Generate skill files for each skill version
     for (const skillVersion of skillVersions) {
-      const skillFile = this.generateCopilotSkillFile(skillVersion);
-      fileUpdates.createOrUpdate.push({
-        path: skillFile.path,
-        content: skillFile.content,
-      });
+      const skillFiles = this.generateCopilotSkillFiles(skillVersion);
+      for (const skillFile of skillFiles) {
+        fileUpdates.createOrUpdate.push({
+          path: skillFile.path,
+          content: skillFile.content,
+        });
+      }
     }
 
     return fileUpdates;
@@ -240,13 +247,15 @@ export class CopilotDeployer implements ICodingAgentDeployer {
       });
     }
 
-    // Generate individual skill files for each skill version
+    // Generate skill files for each skill version
     for (const skillVersion of skillVersions) {
-      const skillFile = this.generateCopilotSkillFile(skillVersion);
-      fileUpdates.createOrUpdate.push({
-        path: skillFile.path,
-        content: skillFile.content,
-      });
+      const skillFiles = this.generateCopilotSkillFiles(skillVersion);
+      for (const skillFile of skillFiles) {
+        fileUpdates.createOrUpdate.push({
+          path: skillFile.path,
+          content: skillFile.content,
+        });
+      }
     }
 
     // Clean up legacy recipes-index.instructions.md file
@@ -308,10 +317,10 @@ export class CopilotDeployer implements ICodingAgentDeployer {
       });
     }
 
-    // Delete individual skill files for removed skills
+    // Delete skill directories for removed skills
     for (const skillVersion of removed.skillVersions) {
       fileUpdates.delete.push({
-        path: `.github/skills/${skillVersion.slug}/SKILL.md`,
+        path: `.github/skills/${skillVersion.slug}`,
       });
     }
 
@@ -392,18 +401,50 @@ ${recipeVersion.content}`;
   }
 
   /**
-   * Generate GitHub Copilot skill file for a specific skill version
-   * Skills are deployed to .github/skills/{skill-slug}/SKILL.md following the Agent Skills specification
+   * Generate GitHub Copilot skill files for a specific skill version
+   * Skills are deployed to .github/skills/{skill-slug}/ following the Agent Skills specification
+   * Returns an array of files including SKILL.md and any additional files
    */
-  private generateCopilotSkillFile(skillVersion: SkillVersion): {
+  private generateCopilotSkillFiles(skillVersion: SkillVersion): Array<{
     path: string;
     content: string;
-  } {
-    this.logger.debug('Generating Copilot skill file', {
+  }> {
+    this.logger.debug('Generating Copilot skill files', {
       skillSlug: skillVersion.slug,
       skillName: skillVersion.name,
+      fileCount: (skillVersion.files?.length ?? 0) + 1,
     });
 
+    const files: Array<{ path: string; content: string }> = [];
+
+    // Generate SKILL.md (main skill file)
+    const skillMdContent = this.generateSkillMdContent(skillVersion);
+    files.push({
+      path: `.github/skills/${skillVersion.slug}/SKILL.md`,
+      content: skillMdContent,
+    });
+
+    // Add additional skill files if they exist (excluding SKILL.md which we already generated)
+    if (skillVersion.files && skillVersion.files.length > 0) {
+      for (const file of skillVersion.files) {
+        // Skip SKILL.md as it's already generated from the prompt
+        if (file.path.toUpperCase() === 'SKILL.MD') {
+          continue;
+        }
+        files.push({
+          path: `.github/skills/${skillVersion.slug}/${file.path}`,
+          content: file.content,
+        });
+      }
+    }
+
+    return files;
+  }
+
+  /**
+   * Generate the SKILL.md content with frontmatter for a specific skill version
+   */
+  private generateSkillMdContent(skillVersion: SkillVersion): string {
     // Build frontmatter according to Agent Skills specification
     const frontmatterFields: string[] = [];
 
@@ -454,16 +495,31 @@ ${frontmatterFields.join('\n')}
 ---`;
 
     // Content is the skill prompt (body)
-    const content = `${frontmatter}
+    return `${frontmatter}
 
 ${skillVersion.prompt}`;
+  }
 
-    // Path: .github/skills/{skill-slug}/SKILL.md (folder structure with SKILL.md file)
+  /**
+   * @deprecated Use generateCopilotSkillFiles instead
+   * Generate GitHub Copilot skill file for a specific skill version
+   * Skills are deployed to .github/skills/{skill-slug}/SKILL.md following the Agent Skills specification
+   */
+  private generateCopilotSkillFile(skillVersion: SkillVersion): {
+    path: string;
+    content: string;
+  } {
+    this.logger.debug('Generating Copilot skill file', {
+      skillSlug: skillVersion.slug,
+      skillName: skillVersion.name,
+    });
+
+    const skillMdContent = this.generateSkillMdContent(skillVersion);
     const path = `.github/skills/${skillVersion.slug}/SKILL.md`;
 
     return {
       path,
-      content,
+      content: skillMdContent,
     };
   }
 
