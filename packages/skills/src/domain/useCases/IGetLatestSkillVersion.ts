@@ -1,10 +1,3 @@
-import {
-  GetLatestSkillVersionCommand,
-  GetLatestSkillVersionResponse,
-} from '@packmind/types';
+import { IGetLatestSkillVersionUseCase } from '@packmind/types';
 
-export interface IGetLatestSkillVersion {
-  execute(
-    command: GetLatestSkillVersionCommand,
-  ): Promise<GetLatestSkillVersionResponse>;
-}
+export type IGetLatestSkillVersion = IGetLatestSkillVersionUseCase;

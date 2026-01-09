@@ -1,5 +1,9 @@
-import { DeleteSkillCommand, DeleteSkillResponse } from '@packmind/types';
+import {
+  DeleteSkillCommand,
+  DeleteSkillResponse,
+  IDeleteSkillUseCase,
+} from '@packmind/types';
 
-export interface IDeleteSkill {
+export interface IDeleteSkill extends IDeleteSkillUseCase {
   execute(command: DeleteSkillCommand): Promise<DeleteSkillResponse>;
 }

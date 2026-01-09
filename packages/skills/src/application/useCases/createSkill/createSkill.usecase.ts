@@ -1,5 +1,9 @@
-import { LogLevel, PackmindLogger } from '@packmind/logger';
-import { PackmindEventEmitterService } from '@packmind/node-utils';
+import { PackmindLogger } from '@packmind/logger';
+import {
+  AbstractMemberUseCase,
+  MemberContext,
+  PackmindEventEmitterService,
+} from '@packmind/node-utils';
 import {
   CreateSkillCommand,
   CreateSkillResponse,
@@ -8,29 +12,33 @@ import {
   createSpaceId,
   createSkillId,
   createUserId,
+  IAccountsPort,
+  ISpacesPort,
 } from '@packmind/types';
 import slug from 'slug';
-import { ICreateSkill } from '../../../domain/useCases/ICreateSkill';
 import { SkillService } from '../../services/SkillService';
 import { SkillVersionService } from '../../services/SkillVersionService';
 
 const origin = 'CreateSkillUsecase';
 
-export class CreateSkillUsecase implements ICreateSkill {
+export class CreateSkillUsecase extends AbstractMemberUseCase<
+  CreateSkillCommand,
+  CreateSkillResponse
+> {
   constructor(
+    accountsPort: IAccountsPort,
+    private readonly spacesPort: ISpacesPort,
     private readonly skillService: SkillService,
     private readonly skillVersionService: SkillVersionService,
     private readonly eventEmitterService: PackmindEventEmitterService,
-    private readonly logger: PackmindLogger = new PackmindLogger(
-      origin,
-      LogLevel.DEBUG,
-    ),
+    logger: PackmindLogger = new PackmindLogger(origin),
   ) {
+    super(accountsPort, logger);
     this.logger.info('CreateSkillUsecase initialized');
   }
 
-  public async execute(
-    command: CreateSkillCommand,
+  async executeForMembers(
+    command: CreateSkillCommand & MemberContext,
   ): Promise<CreateSkillResponse> {
     const {
       name,
@@ -54,6 +62,24 @@ export class CreateSkillUsecase implements ICreateSkill {
       userId,
       spaceId,
     });
+
+    // Verify the space belongs to the organization
+    const space = await this.spacesPort.getSpaceById(spaceId);
+    if (!space) {
+      this.logger.warn('Space not found', { spaceId });
+      throw new Error(`Space with id ${spaceId} not found`);
+    }
+
+    if (space.organizationId !== organizationId) {
+      this.logger.warn('Space does not belong to organization', {
+        spaceId,
+        spaceOrganizationId: space.organizationId,
+        requestOrganizationId: organizationId,
+      });
+      throw new Error(
+        `Space ${spaceId} does not belong to organization ${organizationId}`,
+      );
+    }
 
     try {
       this.logger.info('Generating slug from skill name', { name });
