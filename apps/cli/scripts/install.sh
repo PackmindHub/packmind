@@ -306,9 +306,13 @@ setup_mcp() {
 }
 
 # Configure PATH in shell rc file
+# Sets: PATH_NEEDS_RELOAD (1 if PATH was newly added and shell reload is needed)
+#       RC_FILE (path to the shell rc file that was modified)
 configure_path() {
     INSTALL_DIR="${PACKMIND_INSTALL_DIR:-$DEFAULT_INSTALL_DIR}"
     export_line="export PATH=\"$INSTALL_DIR:\$PATH\""
+    PATH_NEEDS_RELOAD=0
+    RC_FILE=""
 
     # Check if install dir is already in PATH
     case ":$PATH:" in
@@ -325,10 +329,10 @@ configure_path() {
     case "$shell_name" in
         bash)
             # Always use .bashrc for bash (works on Linux, macOS, and Git Bash on Windows)
-            rc_file="$HOME/.bashrc"
+            RC_FILE="$HOME/.bashrc"
             ;;
         zsh)
-            rc_file="$HOME/.zshrc"
+            RC_FILE="$HOME/.zshrc"
             ;;
         *)
             warn "Unknown shell: $shell_name. Please add this to your shell configuration manually:"
@@ -338,19 +342,19 @@ configure_path() {
     esac
 
     # Check if the export line is already in the rc file
-    if [ -f "$rc_file" ] && grep -q "$INSTALL_DIR" "$rc_file" 2>/dev/null; then
-        info "PATH already configured in $rc_file"
+    if [ -f "$RC_FILE" ] && grep -q "$INSTALL_DIR" "$RC_FILE" 2>/dev/null; then
+        info "PATH already configured in $RC_FILE"
     else
         # Add the export line to the rc file (creates the file if it doesn't exist)
-        info "Adding PATH to $rc_file"
-        echo "" >> "$rc_file"
-        echo "# Packmind CLI" >> "$rc_file"
-        echo "$export_line" >> "$rc_file"
-        success "PATH configured in $rc_file"
+        info "Adding PATH to $RC_FILE"
+        echo "" >> "$RC_FILE"
+        echo "# Packmind CLI" >> "$RC_FILE"
+        echo "$export_line" >> "$RC_FILE"
+        success "PATH configured in $RC_FILE"
+        PATH_NEEDS_RELOAD=1
     fi
 
-    # Source the rc file to update current session
-    info "Updating current shell session..."
+    # Export PATH for this script's subshell (used by auto_login and setup_mcp)
     export PATH="$INSTALL_DIR:$PATH"
 }
 
@@ -368,6 +372,15 @@ print_instructions() {
     echo ""
     echo "You can now run:"
     echo "  ${BINARY_NAME} --help"
+
+    # Show reload instructions if PATH was newly configured
+    if [ "${PATH_NEEDS_RELOAD:-0}" -eq 1 ] && [ -n "${RC_FILE:-}" ]; then
+        echo ""
+        info "To use ${BINARY_NAME} in this terminal session, run:"
+        echo "  source $RC_FILE"
+        echo ""
+        echo "Or simply open a new terminal window."
+    fi
 
     # Login instructions if not already logged in
     if [ -z "${PACKMIND_LOGIN_CODE:-}" ]; then
