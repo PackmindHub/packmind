@@ -2,15 +2,21 @@
 
 ## Added
 
-- Added flags `--changed-files` and `--changed-lines` on the linter command to replace the `--diff` option. #93
-
 ## Changed
 
 ## Fixed
 
-- Fix linter output when the rule name contains a `/` #94
-
 ## Removed
+
+# [0.12.0] - 2026-01-09
+
+## Added
+
+- Added flags `--changed-files` and `--changed-lines` on the linter command to replace the `--diff` option. #93
+
+## Fixed
+
+- Fix linter output when the rule name contains a `/` #94
 
 # [0.11.0] - 2026-01-07
 
@@ -124,7 +130,8 @@
 
 - Add proper CHANGELOG.MD in the GH release
 
-[Unreleased]: https://github.com/PackmindHub/packmind/compare/release-cli/0.11.0...HEAD
+[Unreleased]: https://github.com/PackmindHub/packmind/compare/release-cli/0.12.0...HEAD
+[0.12.0]: https://github.com/PackmindHub/packmind/compare/release-cli/0.11.0...release-cli/0.12.0
 [0.11.0]: https://github.com/PackmindHub/packmind/compare/release-cli/0.10.0...release-cli/0.11.0
 [0.10.0]: https://github.com/PackmindHub/packmind/compare/release-cli/0.9.0...release-cli/0.10.0
 [0.9.0]: https://github.com/PackmindHub/packmind/compare/release-cli/0.8.0...release-cli/0.9.0
