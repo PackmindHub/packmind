@@ -138,9 +138,9 @@ export class SkillsAdapter implements IBaseAdapter<ISkillsPort>, ISkillsPort {
 
     this._getSkillWithFiles = new GetSkillWithFilesUsecase(
       this.accountsPort,
-      this.repositories.getSkillRepository(),
-      this.repositories.getSkillVersionRepository(),
-      this.repositories.getSkillFileRepository(),
+      this.services.getSkillService(),
+      this.services.getSkillVersionService(),
+      this.services.getSkillFileService(),
     );
 
     this._findSkillBySlug = new FindSkillBySlugUsecase(
@@ -171,8 +171,8 @@ export class SkillsAdapter implements IBaseAdapter<ISkillsPort>, ISkillsPort {
 
     this._listSkillVersions = new ListSkillVersionsUsecase(
       this.accountsPort,
-      this.repositories.getSkillRepository(),
-      this.repositories.getSkillVersionRepository(),
+      this.services.getSkillService(),
+      this.services.getSkillVersionService(),
     );
 
     this.logger.info('SkillsAdapter initialized successfully');
