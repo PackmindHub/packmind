@@ -298,6 +298,7 @@ describe('PullContentUseCase', () => {
 
         recipesPort.listRecipeVersions.mockResolvedValue([]);
         standardsPort.listStandardVersions.mockResolvedValue([]);
+        skillsPort.listSkillVersions.mockResolvedValue([]);
 
         mockDeployer.deployArtifacts.mockResolvedValue({
           createOrUpdate: [],
@@ -611,6 +612,7 @@ describe('PullContentUseCase', () => {
 
         recipesPort.listRecipeVersions.mockResolvedValue([]);
         standardsPort.listStandardVersions.mockResolvedValue([]);
+        skillsPort.listSkillVersions.mockResolvedValue([]);
 
         mockDeployer.deployArtifacts.mockResolvedValue({
           createOrUpdate: [],
@@ -669,6 +671,7 @@ describe('PullContentUseCase', () => {
 
         recipesPort.listRecipeVersions.mockResolvedValue([]);
         standardsPort.listStandardVersions.mockResolvedValue([]);
+        skillsPort.listSkillVersions.mockResolvedValue([]);
 
         mockDeployer.deployArtifacts.mockResolvedValue({
           createOrUpdate: [],

@@ -10,12 +10,16 @@ import {
   GetLatestSkillVersionCommand,
   GetSkillByIdCommand,
   GetSkillVersionCommand,
+  GetSkillWithFilesCommand,
+  GetSkillWithFilesResponse,
   IAccountsPort,
   IAccountsPortName,
   ISkillsPort,
   ISpacesPort,
   ISpacesPortName,
   ListSkillsBySpaceCommand,
+  ListSkillVersionsCommand,
+  ListSkillVersionsResponse,
   OrganizationId,
   Skill,
   SkillId,
@@ -36,7 +40,9 @@ import { FindSkillBySlugUsecase } from '../useCases/findSkillBySlug/findSkillByS
 import { GetLatestSkillVersionUsecase } from '../useCases/getLatestSkillVersion/getLatestSkillVersion.usecase';
 import { GetSkillByIdUsecase } from '../useCases/getSkillById/getSkillById.usecase';
 import { GetSkillVersionUsecase } from '../useCases/getSkillVersion/getSkillVersion.usecase';
+import { GetSkillWithFilesUsecase } from '../useCases/getSkillWithFiles/getSkillWithFiles.usecase';
 import { ListSkillsBySpaceUsecase } from '../useCases/listSkillsBySpace/listSkillsBySpace.usecase';
+import { ListSkillVersionsUsecase } from '../useCases/listSkillVersions/listSkillVersions.usecase';
 import { UpdateSkillUsecase } from '../useCases/updateSkill/updateSkill.usecase';
 import { UploadSkillUsecase } from '../useCases/uploadSkill/uploadSkill.usecase';
 
@@ -53,10 +59,12 @@ export class SkillsAdapter implements IBaseAdapter<ISkillsPort>, ISkillsPort {
   private _updateSkill!: UpdateSkillUsecase;
   private _deleteSkill!: DeleteSkillUsecase;
   private _getSkillById!: GetSkillByIdUsecase;
+  private _getSkillWithFiles!: GetSkillWithFilesUsecase;
   private _findSkillBySlug!: FindSkillBySlugUsecase;
   private _listSkillsBySpace!: ListSkillsBySpaceUsecase;
   private _getSkillVersion!: GetSkillVersionUsecase;
   private _getLatestSkillVersion!: GetLatestSkillVersionUsecase;
+  private _listSkillVersions!: ListSkillVersionsUsecase;
 
   constructor(
     private readonly services: SkillsServices,
@@ -128,6 +136,13 @@ export class SkillsAdapter implements IBaseAdapter<ISkillsPort>, ISkillsPort {
       this.spacesPort,
     );
 
+    this._getSkillWithFiles = new GetSkillWithFilesUsecase(
+      this.accountsPort,
+      this.repositories.getSkillRepository(),
+      this.repositories.getSkillVersionRepository(),
+      this.repositories.getSkillFileRepository(),
+    );
+
     this._findSkillBySlug = new FindSkillBySlugUsecase(
       this.accountsPort,
       this.services.getSkillService(),
@@ -152,6 +167,12 @@ export class SkillsAdapter implements IBaseAdapter<ISkillsPort>, ISkillsPort {
       this.services.getSkillService(),
       this.services.getSkillVersionService(),
       this.spacesPort,
+    );
+
+    this._listSkillVersions = new ListSkillVersionsUsecase(
+      this.accountsPort,
+      this.repositories.getSkillRepository(),
+      this.repositories.getSkillVersionRepository(),
     );
 
     this.logger.info('SkillsAdapter initialized successfully');
@@ -327,6 +348,30 @@ export class SkillsAdapter implements IBaseAdapter<ISkillsPort>, ISkillsPort {
       organizationId: command.organizationId,
     });
     return this._getLatestSkillVersion.execute(command);
+  }
+
+  async getSkillWithFilesUseCase(
+    command: GetSkillWithFilesCommand,
+  ): Promise<GetSkillWithFilesResponse> {
+    this.logger.info('getSkillWithFiles use case invoked', {
+      slug: command.slug,
+      spaceId: command.spaceId,
+      userId: command.userId.substring(0, 6) + '*',
+      organizationId: command.organizationId,
+    });
+    return this._getSkillWithFiles.execute(command);
+  }
+
+  async listSkillVersionsUseCase(
+    command: ListSkillVersionsCommand,
+  ): Promise<ListSkillVersionsResponse> {
+    this.logger.info('listSkillVersions use case invoked', {
+      skillId: command.skillId,
+      spaceId: command.spaceId,
+      userId: command.userId.substring(0, 6) + '*',
+      organizationId: command.organizationId,
+    });
+    return this._listSkillVersions.execute(command);
   }
 
   /**
