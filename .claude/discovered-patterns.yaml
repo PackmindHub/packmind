@@ -21,12 +21,12 @@
   pattern_name: 'Capture Skill Documentation Pattern'
   description: 'All capture skills follow a consistent documentation structure with purpose, when to use, workflow, examples, and integration sections'
   evidence:
-    - file: .claude/skills/decision-capture/SKILL.md
+    - file: .claude/skills/implicit-decision-capture/SKILL.md
       observation: 'Follows purpose → when to use → workflow → examples → integration structure'
-    - file: .claude/skills/uncertainty-capture/SKILL.md
-      observation: 'Same documentation structure with YAML schema examples'
     - file: .claude/skills/consistency-violation-capture/SKILL.md
       observation: 'Consistent structure including benefits and guidelines sections'
+    - file: .claude/skills/pattern-discovery-capture/SKILL.md
+      observation: 'Same documentation structure with YAML schema examples'
   consistency: 'strong'
   coverage: 'local'
   formalization_value: 'medium'

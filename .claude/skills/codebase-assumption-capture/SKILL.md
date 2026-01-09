@@ -378,23 +378,19 @@ Once `.claude/assumption-corrections.yaml` accumulates entries, developers can:
 
 ## Integration with Other Skills
 
-- **uncertainty-capture**: Assumptions sometimes overlap with uncertainties
+- **implicit-decision-capture**: Assumptions sometimes overlap with decisions/uncertainties
 
   ```
   Uncertainty: "Is this Next.js?"
   Assumption: "I assumed it was Next.js and was wrong"
   Key difference: Assumption was acted upon before verification
+  Decision: "Used JWT for new endpoint" → Later found session auth → Log assumption
   ```
 
 - **consistency-violation-capture**: Wrong assumptions may reveal inconsistencies
 
   ```
   "Assumed all auth was JWT" → Found mixed auth approaches → Log both
-  ```
-
-- **decision-capture**: Decisions may be based on (correct or incorrect) assumptions
-  ```
-  Decision: "Used JWT for new endpoint" → Later found session auth → Log assumption
   ```
 
 ---

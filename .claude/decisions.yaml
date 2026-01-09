@@ -1,34 +1,54 @@
-# AI Agent Technical Decision Log
+# AI Agent Implicit Decision Log
 #
-# This file captures implicit technical decisions made by AI agents during
-# coding work. It helps track what architectural and design choices were made
-# without explicit user guidance or documented standards.
+# This file captures implicit technical decisions and uncertainties encountered
+# by AI agents during coding work. It helps track what architectural and design
+# choices were made without explicit user guidance or documented standards.
 #
 # Review this file periodically to:
 # - Understand what technical choices were made and why
+# - Identify what uncertainties the AI had during implementation
 # - Validate or question specific implementation decisions
 # - Identify patterns that should become formal standards
-# - Provide feedback for future AI agent implementations
+# - Create explicit guidelines in CLAUDE.md
+# - Add standards to Packmind
 # - Use signal-capture to formalize good patterns into standards
 #
-# File is managed by the decision-capture skill.
-# Schema: See .claude/skills/decision-capture/SKILL.md
+# File is managed by the implicit-decision-capture skill.
+# Schema: See .claude/skills/implicit-decision-capture/SKILL.md
 
-# Example entry showing the skill in action:
+# Example entries showing the skill in action:
 
-- timestamp: 2026-01-09T17:45:00Z
-  file: .claude/skills/decision-capture/SKILL.md
-  context: 'Creating the decision-capture skill itself'
+- timestamp: 2026-01-09T17:30:00Z
+  file: .claude/skills/implicit-decision-capture/SKILL.md
+  context: 'Creating the implicit-decision-capture skill'
   category: 'architecture'
-  decision: 'Structure the skill with comprehensive examples and comparison with uncertainty-capture and signal-capture skills'
-  reasoning: 'Users need to understand the distinctions between these three similar skills. Comprehensive examples demonstrate when to use each skill and what kind of entries to create.'
+  question: 'Should the decisions.yaml file be tracked in git or gitignored?'
+  decision: 'Track in git so teams can collaborate on context improvement'
+  reasoning: 'This is team-wide context that everyone should review and improve, similar to CLAUDE.md'
   alternatives:
-    - 'Brief skill description with minimal examples'
-    - 'Focus only on schema without contextual guidance'
-  impact: 'local'
+    - 'Gitignore it and keep it local to each developer'
+    - 'Make it optional via configuration'
+  impact: 'global'
   confidence: 'high'
   source: 'pattern-matching'
   tags:
     - 'skill-design'
-    - 'documentation'
-    - 'examples'
+    - 'collaboration'
+    - 'git'
+
+- timestamp: 2026-01-09T17:45:00Z
+  file: .claude/skills/implicit-decision-capture/SKILL.md
+  context: 'Creating the implicit-decision-capture skill'
+  category: 'architecture'
+  decision: 'Merge uncertainty-capture and decision-capture into a single skill'
+  reasoning: 'Both skills captured the same concept (implicit decisions) with only minor differences. A single skill reduces cognitive overhead and eliminates the "log to both files" edge case.'
+  alternatives:
+    - 'Keep separate skills for questions vs decisions'
+    - 'Create three-way merge with a new skill'
+  impact: 'global'
+  confidence: 'high'
+  source: 'ai-agent'
+  tags:
+    - 'skill-design'
+    - 'simplification'
+    - 'architecture'
