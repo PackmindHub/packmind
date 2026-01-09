@@ -8,6 +8,7 @@ import {
   IRecipesPort,
   ISpacesPort,
   IStandardsPort,
+  ISkillsPort,
 } from '@packmind/types';
 import { DeploymentsServices } from '../../services/DeploymentsServices';
 
@@ -23,6 +24,7 @@ export class UpdatePackageUsecase
     private readonly spacesPort: ISpacesPort,
     private readonly recipesPort: IRecipesPort,
     private readonly standardsPort: IStandardsPort,
+    private readonly skillsPort: ISkillsPort,
     logger: PackmindLogger = new PackmindLogger(origin),
   ) {
     super(accountsPort, logger);
@@ -32,13 +34,15 @@ export class UpdatePackageUsecase
   async executeForMembers(
     command: UpdatePackageCommand & MemberContext,
   ): Promise<UpdatePackageResponse> {
-    const { packageId, name, description, recipeIds, standardIds } = command;
+    const { packageId, name, description, recipeIds, standardIds, skillsIds } =
+      command;
 
     this.logger.info('Updating package', {
       packageId,
       name,
       recipeCount: recipeIds.length,
       standardCount: standardIds.length,
+      skillCount: skillsIds.length,
     });
 
     // Validate package exists
@@ -103,16 +107,43 @@ export class UpdatePackageUsecase
       }
     }
 
+    // Validate all skills belong to the space
+    if (skillsIds.length > 0) {
+      const skills = await Promise.all(
+        skillsIds.map((skillId) => this.skillsPort.getSkill(skillId)),
+      );
+
+      for (let i = 0; i < skills.length; i++) {
+        const skill = skills[i];
+        if (!skill) {
+          throw new Error(`Skill with id ${skillsIds[i]} not found`);
+        }
+        if (skill.spaceId !== existingPackage.spaceId) {
+          throw new Error(
+            `Skill ${skillsIds[i]} does not belong to space ${existingPackage.spaceId}`,
+          );
+        }
+      }
+    }
+
     // Update package using the service
     const updatedPackage = await this.services
       .getPackageService()
-      .updatePackage(packageId, name, description, recipeIds, standardIds);
+      .updatePackage(
+        packageId,
+        name,
+        description,
+        recipeIds,
+        standardIds,
+        skillsIds,
+      );
 
     this.logger.info('Package updated successfully', {
       packageId: updatedPackage.id,
       name: updatedPackage.name,
       recipeCount: updatedPackage.recipes?.length ?? 0,
       standardCount: updatedPackage.standards?.length ?? 0,
+      skillCount: updatedPackage.skills?.length ?? 0,
     });
 
     return { package: updatedPackage };

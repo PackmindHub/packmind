@@ -33,6 +33,7 @@ import { OrganizationsSpacesModule } from './organizations/spaces/spaces.module'
 import { OrganizationsSpacesStandardsModule } from './organizations/spaces/standards/standards.module';
 import { OrganizationsSpacesStandardsRulesModule } from './organizations/spaces/standards/rules/rules.module';
 import { OrganizationsSpacesPackagesModule } from './organizations/spaces/packages/packages.module';
+import { OrganizationsSpacesSkillsModule } from './organizations/spaces/skills/skills.module';
 import { OrganizationSkillsModule } from './organizations/skills/skills.module';
 import { OrganizationsUsersModule } from './organizations/users/users.module';
 import { OrganizationDeploymentsModule } from './organizations/deployments/deployments.module';
@@ -183,6 +184,10 @@ const logger = new PackmindLogger('AppModule', LogLevel.INFO);
               {
                 path: ':spaceId/packages',
                 module: OrganizationsSpacesPackagesModule,
+              },
+              {
+                path: ':spaceId/skills',
+                module: OrganizationsSpacesSkillsModule,
               },
             ],
           },

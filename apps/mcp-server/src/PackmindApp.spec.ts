@@ -7,6 +7,7 @@ import { LinterHexa } from '@packmind/linter';
 import { LlmHexa } from '@packmind/llm';
 import { JobsService, PackmindEventEmitterService } from '@packmind/node-utils';
 import { RecipesHexa } from '@packmind/recipes';
+import { SkillsHexa } from '@packmind/skills';
 import { SpacesHexa } from '@packmind/spaces';
 import { StandardsHexa } from '@packmind/standards';
 import { DataSource } from 'typeorm';
@@ -46,6 +47,7 @@ describe('PackmindApp MCP Server', () => {
         LinterHexa,
         RecipesHexa,
         StandardsHexa,
+        SkillsHexa,
         CodingAgentHexa,
         DeploymentsHexa,
       ]);

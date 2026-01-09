@@ -5,6 +5,7 @@ import {
   RecipeId,
   SpaceId,
   StandardId,
+  SkillId,
   OrganizationId,
 } from '@packmind/types';
 import { IRepository } from '@packmind/types';
@@ -26,6 +27,9 @@ export interface IPackageRepository extends IRepository<Package> {
   ): Promise<void>;
   setRecipes(packageId: PackageId, recipeIds: RecipeId[]): Promise<void>;
   setStandards(packageId: PackageId, standardIds: StandardId[]): Promise<void>;
+  addSkills(packageId: PackageId, skillIds: SkillId[]): Promise<void>;
+  setSkills(packageId: PackageId, skillIds: SkillId[]): Promise<void>;
   removeRecipeFromAllPackages(recipeId: RecipeId): Promise<void>;
   removeStandardFromAllPackages(standardId: StandardId): Promise<void>;
+  removeSkillFromAllPackages(skillId: SkillId): Promise<void>;
 }

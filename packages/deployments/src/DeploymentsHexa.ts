@@ -16,6 +16,8 @@ import {
   IGitPortName,
   IRecipesPort,
   IRecipesPortName,
+  ISkillsPort,
+  ISkillsPortName,
   ISpacesPort,
   ISpacesPortName,
   IStandardsPort,
@@ -99,6 +101,7 @@ export class DeploymentsHexa extends BaseHexa<
         registry.getAdapter<ICodingAgentPort>(ICodingAgentPortName);
       const standardsPort =
         registry.getAdapter<IStandardsPort>(IStandardsPortName);
+      const skillsPort = registry.getAdapter<ISkillsPort>(ISkillsPortName);
       const spacesPort = registry.getAdapter<ISpacesPort>(ISpacesPortName);
       const accountsPort =
         registry.getAdapter<IAccountsPort>(IAccountsPortName);
@@ -112,6 +115,7 @@ export class DeploymentsHexa extends BaseHexa<
         [IRecipesPortName]: recipesPort,
         [ICodingAgentPortName]: codingAgentPort,
         [IStandardsPortName]: standardsPort,
+        [ISkillsPortName]: skillsPort,
         [ISpacesPortName]: spacesPort,
         [IAccountsPortName]: accountsPort,
         eventEmitterService,

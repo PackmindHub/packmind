@@ -117,10 +117,11 @@ export class DeploymentsGatewayApi
       description,
       recipeIds,
       standardIds,
+      skillsIds,
     } = params;
     return this._api.patch(
       `/organizations/${organizationId}/spaces/${spaceId}/packages/${packageId}`,
-      { name, description, recipeIds, standardIds },
+      { name, description, recipeIds, standardIds, skillsIds },
     );
   };
 
