@@ -187,7 +187,7 @@ jobs:
           command: cves
           organization: packmind
           image: packmind/api${{ steps.set-image-naming.outputs.name_suffix }}:${{ steps.get-version.outputs.version }}${{ steps.set-image-naming.outputs.version_suffix }}
-          #only-severities: critical,high
+          only-fixed: true # set to false in most cases
           only-severities: critical,high
           exit-code: true
 
@@ -207,6 +207,7 @@ jobs:
           organization: packmind
           image: packmind/mcp${{ steps.set-image-naming.outputs.name_suffix }}:${{ steps.get-version.outputs.version }}${{ steps.set-image-naming.outputs.version_suffix }}
           only-severities: critical
+          only-fixed: true # set to false in most cases
           exit-code: true
 
       # ========================================================================
