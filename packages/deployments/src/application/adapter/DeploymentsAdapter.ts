@@ -189,6 +189,7 @@ export class DeploymentsAdapter
     this._publishArtifactsUseCase = new PublishArtifactsUseCase(
       this.recipesPort,
       this.standardsPort,
+      this.skillsPort,
       this.gitPort,
       this.codingAgentPort,
       this.distributionRepository,

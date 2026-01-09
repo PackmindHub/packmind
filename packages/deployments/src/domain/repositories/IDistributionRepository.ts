@@ -6,6 +6,8 @@ import {
   PackageId,
   RecipeId,
   RecipeVersion,
+  SkillId,
+  SkillVersion,
   StandardId,
   StandardVersion,
   TargetId,
@@ -30,6 +32,11 @@ export interface IDistributionRepository {
 
   listByStandardId(
     standardId: StandardId,
+    organizationId: OrganizationId,
+  ): Promise<Distribution[]>;
+
+  listBySkillId(
+    skillId: SkillId,
     organizationId: OrganizationId,
   ): Promise<Distribution[]>;
 
@@ -88,6 +95,31 @@ export interface IDistributionRepository {
     targetId: TargetId,
     packageIds: PackageId[],
   ): Promise<RecipeVersion[]>;
+
+  /**
+   * Get all currently distributed skill versions for a specific target.
+   * This returns the latest distributed version of each unique skill.
+   * Used to generate complete skill books that include all distributed skills.
+   * TODO: Implement when skill-package relationship and distribution tracking is ready
+   */
+  findActiveSkillVersionsByTarget?(
+    organizationId: OrganizationId,
+    targetId: TargetId,
+  ): Promise<SkillVersion[]>;
+
+  /**
+   * Get currently distributed skill versions for a specific target,
+   * filtered by the specified packages.
+   * This returns the latest distributed version of each unique skill
+   * that belongs to one of the specified packages.
+   * Used to compute removed artifacts only from packages being deployed.
+   * TODO: Implement when skill-package relationship and distribution tracking is ready
+   */
+  findActiveSkillVersionsByTargetAndPackages?(
+    organizationId: OrganizationId,
+    targetId: TargetId,
+    packageIds: PackageId[],
+  ): Promise<SkillVersion[]>;
 
   /**
    * Get all currently active (not removed) package IDs for a specific target.

@@ -78,10 +78,12 @@ describe('RenderArtifactsUseCase', () => {
         installed: {
           recipeVersions: mockRecipeVersions,
           standardVersions: mockStandardVersions,
+          skillVersions: [],
         },
         removed: {
           recipeVersions: [],
           standardVersions: [],
+          skillVersions: [],
         },
         codingAgents: ['claude'],
         existingFiles,
@@ -96,10 +98,12 @@ describe('RenderArtifactsUseCase', () => {
         {
           recipeVersions: mockRecipeVersions,
           standardVersions: mockStandardVersions,
+          skillVersions: [],
         },
         {
           recipeVersions: [],
           standardVersions: [],
+          skillVersions: [],
         },
         ['claude'],
         existingFiles,
@@ -123,10 +127,12 @@ describe('RenderArtifactsUseCase', () => {
         installed: {
           recipeVersions: mockRecipeVersions,
           standardVersions: mockStandardVersions,
+          skillVersions: [],
         },
         removed: {
           recipeVersions: [],
           standardVersions: [],
+          skillVersions: [],
         },
         codingAgents: ['claude', 'agents_md'],
         existingFiles: new Map(),
@@ -154,10 +160,12 @@ describe('RenderArtifactsUseCase', () => {
         installed: {
           recipeVersions: mockRecipeVersions,
           standardVersions: mockStandardVersions,
+          skillVersions: [],
         },
         removed: {
           recipeVersions: [],
           standardVersions: [],
+          skillVersions: [],
         },
         codingAgents: ['claude', 'cursor'],
         existingFiles,
@@ -171,10 +179,12 @@ describe('RenderArtifactsUseCase', () => {
         {
           recipeVersions: mockRecipeVersions,
           standardVersions: mockStandardVersions,
+          skillVersions: [],
         },
         {
           recipeVersions: [],
           standardVersions: [],
+          skillVersions: [],
         },
         ['claude', 'cursor'],
         existingFiles,
@@ -191,10 +201,12 @@ describe('RenderArtifactsUseCase', () => {
         installed: {
           recipeVersions: [],
           standardVersions: [],
+          skillVersions: [],
         },
         removed: {
           recipeVersions: [],
           standardVersions: [],
+          skillVersions: [],
         },
         codingAgents: ['claude'],
         existingFiles: new Map(),
@@ -208,10 +220,12 @@ describe('RenderArtifactsUseCase', () => {
         {
           recipeVersions: [],
           standardVersions: [],
+          skillVersions: [],
         },
         {
           recipeVersions: [],
           standardVersions: [],
+          skillVersions: [],
         },
         ['claude'],
         expect.any(Map),
@@ -227,10 +241,12 @@ describe('RenderArtifactsUseCase', () => {
         installed: {
           recipeVersions: mockRecipeVersions,
           standardVersions: mockStandardVersions,
+          skillVersions: [],
         },
         removed: {
           recipeVersions: [],
           standardVersions: [],
+          skillVersions: [],
         },
         codingAgents: ['claude'],
         existingFiles: new Map(),
@@ -251,10 +267,12 @@ describe('RenderArtifactsUseCase', () => {
         installed: {
           recipeVersions: mockRecipeVersions,
           standardVersions: mockStandardVersions,
+          skillVersions: [],
         },
         removed: {
           recipeVersions: [],
           standardVersions: [],
+          skillVersions: [],
         },
         codingAgents: ['claude'],
         existingFiles: new Map(),
@@ -285,10 +303,12 @@ describe('RenderArtifactsUseCase', () => {
         installed: {
           recipeVersions: mockRecipeVersions,
           standardVersions: mockStandardVersions,
+          skillVersions: [],
         },
         removed: {
           recipeVersions: [],
           standardVersions: [],
+          skillVersions: [],
         },
         codingAgents: ['claude', 'agents_md', 'cursor'],
         existingFiles: new Map(),

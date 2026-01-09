@@ -91,6 +91,7 @@ const logger = new PackmindLogger('AppModule', LogLevel.INFO);
         AccountsHexa,
         GitHexa,
         RecipesHexa,
+        SkillsHexa, // Skills domain
         LinterHexa, // Must come before StandardsHexa (StandardsHexa depends on LinterHexa)
         StandardsHexa,
         SkillsHexa,

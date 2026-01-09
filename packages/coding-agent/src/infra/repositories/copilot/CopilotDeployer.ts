@@ -5,6 +5,7 @@ import {
   IGitPort,
   IStandardsPort,
   RecipeVersion,
+  SkillVersion,
   StandardVersion,
   Target,
 } from '@packmind/types';
@@ -147,15 +148,71 @@ export class CopilotDeployer implements ICodingAgentDeployer {
     return fileUpdates;
   }
 
+  async deploySkills(
+    skillVersions: SkillVersion[],
+    gitRepo: GitRepo,
+    target: Target,
+  ): Promise<FileUpdates> {
+    this.logger.info('Deploying skills for GitHub Copilot', {
+      skillsCount: skillVersions.length,
+      gitRepoId: gitRepo.id,
+      targetId: target.id,
+      targetPath: target.path,
+    });
+
+    const fileUpdates: FileUpdates = {
+      createOrUpdate: [],
+      delete: [],
+    };
+
+    // Generate individual skill files for each skill version
+    for (const skillVersion of skillVersions) {
+      const skillFile = this.generateCopilotSkillFile(skillVersion);
+      const targetPrefixedPath = getTargetPrefixedPath(skillFile.path, target);
+      fileUpdates.createOrUpdate.push({
+        path: targetPrefixedPath,
+        content: skillFile.content,
+      });
+    }
+
+    return fileUpdates;
+  }
+
+  async generateFileUpdatesForSkills(
+    skillVersions: SkillVersion[],
+  ): Promise<FileUpdates> {
+    this.logger.info('Generating file updates for skills (GitHub Copilot)', {
+      skillsCount: skillVersions.length,
+    });
+
+    const fileUpdates: FileUpdates = {
+      createOrUpdate: [],
+      delete: [],
+    };
+
+    // Generate individual skill files for each skill version
+    for (const skillVersion of skillVersions) {
+      const skillFile = this.generateCopilotSkillFile(skillVersion);
+      fileUpdates.createOrUpdate.push({
+        path: skillFile.path,
+        content: skillFile.content,
+      });
+    }
+
+    return fileUpdates;
+  }
+
   async deployArtifacts(
     recipeVersions: RecipeVersion[],
     standardVersions: StandardVersion[],
+    skillVersions: SkillVersion[] = [],
   ): Promise<FileUpdates> {
     this.logger.info(
-      'Deploying artifacts (recipes + standards) for GitHub Copilot',
+      'Deploying artifacts (recipes + standards + skills) for GitHub Copilot',
       {
         recipesCount: recipeVersions.length,
         standardsCount: standardVersions.length,
+        skillsCount: skillVersions.length,
       },
     );
 
@@ -183,6 +240,15 @@ export class CopilotDeployer implements ICodingAgentDeployer {
       });
     }
 
+    // Generate individual skill files for each skill version
+    for (const skillVersion of skillVersions) {
+      const skillFile = this.generateCopilotSkillFile(skillVersion);
+      fileUpdates.createOrUpdate.push({
+        path: skillFile.path,
+        content: skillFile.content,
+      });
+    }
+
     // Clean up legacy recipes-index.instructions.md file
     fileUpdates.delete.push({
       path: CopilotDeployer.RECIPES_INDEX_PATH,
@@ -195,17 +261,21 @@ export class CopilotDeployer implements ICodingAgentDeployer {
     removed: {
       recipeVersions: RecipeVersion[];
       standardVersions: StandardVersion[];
+      skillVersions: SkillVersion[];
     },
     installed: {
       recipeVersions: RecipeVersion[];
       standardVersions: StandardVersion[];
+      skillVersions: SkillVersion[];
     },
   ): Promise<FileUpdates> {
     this.logger.info('Generating removal file updates for GitHub Copilot', {
       removedRecipesCount: removed.recipeVersions.length,
       removedStandardsCount: removed.standardVersions.length,
+      removedSkillsCount: removed.skillVersions.length,
       installedRecipesCount: installed.recipeVersions.length,
       installedStandardsCount: installed.standardVersions.length,
+      installedSkillsCount: installed.skillVersions.length,
     });
 
     const fileUpdates: FileUpdates = {
@@ -235,6 +305,13 @@ export class CopilotDeployer implements ICodingAgentDeployer {
     for (const standardVersion of removed.standardVersions) {
       fileUpdates.delete.push({
         path: `.github/instructions/packmind-${standardVersion.slug}.instructions.md`,
+      });
+    }
+
+    // Delete individual skill files for removed skills
+    for (const skillVersion of removed.skillVersions) {
+      fileUpdates.delete.push({
+        path: `.github/skills/${skillVersion.slug}/SKILL.md`,
       });
     }
 
@@ -307,6 +384,82 @@ agent: 'agent'
 ${recipeVersion.content}`;
 
     const path = `.github/prompts/${recipeVersion.slug}.prompt.md`;
+
+    return {
+      path,
+      content,
+    };
+  }
+
+  /**
+   * Generate GitHub Copilot skill file for a specific skill version
+   * Skills are deployed to .github/skills/{skill-slug}/SKILL.md following the Agent Skills specification
+   */
+  private generateCopilotSkillFile(skillVersion: SkillVersion): {
+    path: string;
+    content: string;
+  } {
+    this.logger.debug('Generating Copilot skill file', {
+      skillSlug: skillVersion.slug,
+      skillName: skillVersion.name,
+    });
+
+    // Build frontmatter according to Agent Skills specification
+    const frontmatterFields: string[] = [];
+
+    if (skillVersion.name) {
+      frontmatterFields.push(`name: ${skillVersion.name}`);
+    }
+
+    if (skillVersion.description) {
+      frontmatterFields.push(
+        `description: '${this.escapeSingleQuotes(skillVersion.description)}'`,
+      );
+    }
+
+    if (skillVersion.license) {
+      frontmatterFields.push(
+        `license: '${this.escapeSingleQuotes(skillVersion.license)}'`,
+      );
+    }
+
+    if (skillVersion.compatibility) {
+      frontmatterFields.push(
+        `compatibility: '${this.escapeSingleQuotes(skillVersion.compatibility)}'`,
+      );
+    }
+
+    if (skillVersion.allowedTools) {
+      frontmatterFields.push(
+        `allowed-tools: '${this.escapeSingleQuotes(skillVersion.allowedTools)}'`,
+      );
+    }
+
+    if (
+      skillVersion.metadata &&
+      Object.keys(skillVersion.metadata).length > 0
+    ) {
+      // Metadata is stored as JSONB, convert to YAML format
+      const metadataYaml = Object.entries(skillVersion.metadata)
+        .map(
+          ([key, value]) =>
+            `  ${key}: '${this.escapeSingleQuotes(String(value))}'`,
+        )
+        .join('\n');
+      frontmatterFields.push(`metadata:\n${metadataYaml}`);
+    }
+
+    const frontmatter = `---
+${frontmatterFields.join('\n')}
+---`;
+
+    // Content is the skill prompt (body)
+    const content = `${frontmatter}
+
+${skillVersion.prompt}`;
+
+    // Path: .github/skills/{skill-slug}/SKILL.md (folder structure with SKILL.md file)
+    const path = `.github/skills/${skillVersion.slug}/SKILL.md`;
 
     return {
       path,

@@ -7,6 +7,7 @@ import {
   Distribution,
   createDistributionId,
   IRecipesPort,
+  ISkillsPort,
   IStandardsPort,
   ICodingAgentPort,
   IGitPort,
@@ -18,6 +19,8 @@ import {
   Target,
   TargetId,
   RecipeVersion,
+  SkillVersion,
+  SkillVersionId,
   StandardVersion,
   StandardVersionId,
   RenderMode,
@@ -39,13 +42,14 @@ import { v4 as uuidv4 } from 'uuid';
 const origin = 'PublishArtifactsUseCase';
 
 /**
- * Unified usecase for publishing both recipes and standards together
+ * Unified usecase for publishing recipes, standards, and skills together
  * Uses the unified renderArtifacts method for atomic updates
  */
 export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
   constructor(
     private readonly recipesPort: IRecipesPort,
     private readonly standardsPort: IStandardsPort,
+    private readonly skillsPort: ISkillsPort,
     private readonly gitPort: IGitPort,
     private readonly codingAgentPort: ICodingAgentPort,
     private readonly distributionRepository: IDistributionRepository,
@@ -59,12 +63,16 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
   async execute(
     command: PublishArtifactsCommand,
   ): Promise<PublishArtifactsResponse> {
-    this.logger.info('Publishing artifacts (unified recipes + standards)', {
-      recipeVersionIdsCount: command.recipeVersionIds.length,
-      standardVersionIdsCount: command.standardVersionIds.length,
-      targetIdsCount: command.targetIds.length,
-      organizationId: command.organizationId,
-    });
+    this.logger.info(
+      'Publishing artifacts (unified recipes + standards + skills)',
+      {
+        recipeVersionIdsCount: command.recipeVersionIds.length,
+        standardVersionIdsCount: command.standardVersionIds.length,
+        skillVersionIdsCount: command.skillVersionIds?.length ?? 0,
+        targetIdsCount: command.targetIds.length,
+        organizationId: command.organizationId,
+      },
+    );
 
     if (command.targetIds.length === 0) {
       throw new Error('At least one target must be provided');
@@ -86,12 +94,15 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
       command.targetIds,
     );
 
-    // Fetch recipe and standard versions
+    // Fetch recipe, standard, and skill versions
     const recipeVersions = await this.fetchRecipeVersions(
       command.recipeVersionIds,
     );
     const standardVersions = await this.fetchStandardVersions(
       command.standardVersionIds,
+    );
+    const skillVersions = await this.fetchSkillVersions(
+      command.skillVersionIds ?? [],
     );
 
     const distributions: Distribution[] = [];
@@ -109,11 +120,13 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
           targetsCount: targets.length,
           recipesCount: recipeVersions.length,
           standardsCount: standardVersions.length,
+          skillsCount: skillVersions.length,
         });
 
         this.logger.info('--------------');
         this.logger.info('Recipe versions', { recipeVersions });
         this.logger.info('Standard versions', { standardVersions });
+        this.logger.info('Skill versions', { skillVersions });
         this.logger.info('--------------');
 
         // Get previous deployments for all targets in this repo
@@ -133,6 +146,10 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
           targets,
           standardVersions,
         );
+        const {
+          previousFromPackages: previousSkillVersionsFromPackages,
+          combined: allSkillVersions,
+        } = await this.collectAllSkillVersions(command, targets, skillVersions);
 
         // Compute removed artifacts (previously deployed from the same packages but not in new deployment command)
         // Only compare against artifacts from the packages being deployed to avoid removing artifacts from other packages
@@ -143,6 +160,10 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
         const removedStandardVersions = this.computeRemovedStandardVersions(
           previousStandardVersionsFromPackages,
           standardVersions, // Compare against new versions from command, not combined
+        );
+        const removedSkillVersions = this.computeRemovedSkillVersions(
+          previousSkillVersionsFromPackages,
+          skillVersions, // Compare against new versions from command, not combined
         );
 
         // Load rules for all standard versions that don't have them populated
@@ -168,10 +189,13 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
         this.logger.info('Combined artifact versions', {
           totalRecipes: allRecipeVersions.length,
           totalStandards: standardVersionsWithRules.length,
+          totalSkills: allSkillVersions.length,
           newRecipes: recipeVersions.length,
           newStandards: standardVersions.length,
+          newSkills: skillVersions.length,
           removedRecipes: removedRecipeVersions.length,
           removedStandards: removedStandardVersions.length,
+          removedSkills: removedSkillVersions.length,
         });
 
         // Prepare unified deployment using renderArtifacts for ALL targets
@@ -180,8 +204,10 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
           command.organizationId as OrganizationId,
           allRecipeVersions,
           standardVersionsWithRules,
+          allSkillVersions,
           removedRecipeVersions,
           removedStandardVersions,
+          removedSkillVersions,
           gitRepo,
           targets,
           codingAgents,
@@ -192,8 +218,10 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
         const commitMessage = this.buildCommitMessage(
           recipeVersions,
           standardVersions,
+          skillVersions,
           allRecipeVersions,
           standardVersionsWithRules,
+          allSkillVersions,
           targets,
         );
 
@@ -240,6 +268,7 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
             target,
             recipeVersions,
             standardVersions,
+            skillVersions,
             activeRenderModes,
             distributionStatus,
             gitCommit,
@@ -302,6 +331,7 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
     target: Target,
     recipeVersions: RecipeVersion[],
     standardVersions: StandardVersion[],
+    skillVersions: SkillVersion[],
     activeRenderModes: RenderMode[],
     status: DistributionStatus,
     gitCommit?: GitCommit,
@@ -337,8 +367,10 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
     organizationId: OrganizationId,
     installedRecipeVersions: RecipeVersion[],
     installedStandardVersions: StandardVersion[],
+    installedSkillVersions: SkillVersion[],
     removedRecipeVersions: RecipeVersion[],
     removedStandardVersions: StandardVersion[],
+    removedSkillVersions: SkillVersion[],
     gitRepo: GitRepo,
     targets: Target[],
     codingAgents: CodingAgent[],
@@ -356,17 +388,19 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
         this.logger,
       );
 
-      // Call unified renderArtifacts with both recipes and standards
+      // Call unified renderArtifacts with recipes, standards, and skills
       const baseFileUpdates = await this.codingAgentPort.renderArtifacts({
         userId,
         organizationId,
         installed: {
           recipeVersions: installedRecipeVersions,
           standardVersions: installedStandardVersions,
+          skillVersions: installedSkillVersions,
         },
         removed: {
           recipeVersions: removedRecipeVersions,
           standardVersions: removedStandardVersions,
+          skillVersions: removedSkillVersions,
         },
         codingAgents,
         existingFiles,
@@ -489,6 +523,20 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
     return versions.sort((a, b) => a.name.localeCompare(b.name));
   }
 
+  private async fetchSkillVersions(
+    skillVersionIds: SkillVersionId[],
+  ): Promise<SkillVersion[]> {
+    const versions: SkillVersion[] = [];
+    for (const id of skillVersionIds) {
+      const version = await this.skillsPort.getSkillVersion(id);
+      if (!version) {
+        throw new Error(`Skill version with ID ${id} not found`);
+      }
+      versions.push(version);
+    }
+    return versions.sort((a, b) => a.name.localeCompare(b.name));
+  }
+
   private async collectAllRecipeVersions(
     command: PublishArtifactsCommand,
     targets: Target[],
@@ -600,6 +648,31 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
     return { previous, previousFromPackages, combined };
   }
 
+  private async collectAllSkillVersions(
+    command: PublishArtifactsCommand,
+    targets: Target[],
+    newSkillVersions: SkillVersion[],
+  ): Promise<{
+    previous: SkillVersion[];
+    previousFromPackages: SkillVersion[];
+    combined: SkillVersion[];
+  }> {
+    // TODO: Implement when skill-package relationship is ready and distribution tracking is added
+    // For now, return only new skill versions (no previous tracking yet)
+    this.logger.debug(
+      'collectAllSkillVersions: Skill distribution tracking not yet implemented',
+      {
+        newSkillVersionsCount: newSkillVersions.length,
+      },
+    );
+
+    return {
+      previous: [],
+      previousFromPackages: [],
+      combined: newSkillVersions,
+    };
+  }
+
   private combineRecipeVersions(
     previous: RecipeVersion[],
     newVersions: RecipeVersion[],
@@ -619,6 +692,18 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
     const map = new Map<string, StandardVersion>();
     previous.forEach((sv) => map.set(sv.standardId, sv));
     newVersions.forEach((sv) => map.set(sv.standardId, sv));
+    return Array.from(map.values()).sort((a, b) =>
+      a.name.localeCompare(b.name),
+    );
+  }
+
+  private combineSkillVersions(
+    previous: SkillVersion[],
+    newVersions: SkillVersion[],
+  ): SkillVersion[] {
+    const map = new Map<string, SkillVersion>();
+    previous.forEach((skv) => map.set(skv.skillId, skv));
+    newVersions.forEach((skv) => map.set(skv.skillId, skv));
     return Array.from(map.values()).sort((a, b) =>
       a.name.localeCompare(b.name),
     );
@@ -652,15 +737,29 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
     );
   }
 
+  /**
+   * Computes skill versions that were previously deployed but are no longer
+   * in the current deployment (i.e., they are being removed)
+   */
+  private computeRemovedSkillVersions(
+    previousVersions: SkillVersion[],
+    currentVersions: SkillVersion[],
+  ): SkillVersion[] {
+    const currentSkillIds = new Set(currentVersions.map((skv) => skv.skillId));
+    return previousVersions.filter((skv) => !currentSkillIds.has(skv.skillId));
+  }
+
   private buildCommitMessage(
     recipeVersions: RecipeVersion[],
     standardVersions: StandardVersion[],
+    skillVersions: SkillVersion[],
     allRecipeVersions: RecipeVersion[],
     allStandardVersions: StandardVersion[],
+    allSkillVersions: SkillVersion[],
     targets: Target[],
   ): string {
     const parts: string[] = [
-      '[PACKMIND] Update artifacts (commands + standards)',
+      '[PACKMIND] Update artifacts (commands + standards + skills)',
       '',
     ];
 
@@ -674,6 +773,11 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
       parts.push(
         `- Total standards in repository: ${allStandardVersions.length}`,
       );
+    }
+
+    if (skillVersions.length > 0) {
+      parts.push(`- Updated ${skillVersions.length} skill(s)`);
+      parts.push(`- Total skills in repository: ${allSkillVersions.length}`);
     }
 
     parts.push(`- Targets: ${targets.map((t) => t.name).join(', ')}`);
@@ -691,6 +795,14 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
       parts.push('Standards updated:');
       standardVersions.forEach((sv) => {
         parts.push(`- ${sv.name} (${sv.slug}) v${sv.version}`);
+      });
+      parts.push('');
+    }
+
+    if (skillVersions.length > 0) {
+      parts.push('Skills updated:');
+      skillVersions.forEach((skv) => {
+        parts.push(`- ${skv.name} (${skv.slug}) v${skv.version}`);
       });
     }
 

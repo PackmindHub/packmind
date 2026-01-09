@@ -750,10 +750,12 @@ describe('SingleFileDeployer', () => {
           {
             recipeVersions: removedRecipes,
             standardVersions: [],
+            skillVersions: [],
           },
           {
             recipeVersions: [],
             standardVersions: [],
+            skillVersions: [],
           },
         );
       });
@@ -803,10 +805,12 @@ describe('SingleFileDeployer', () => {
           {
             recipeVersions: [],
             standardVersions: removedStandards,
+            skillVersions: [],
           },
           {
             recipeVersions: [],
             standardVersions: [],
+            skillVersions: [],
           },
         );
       });
@@ -888,10 +892,12 @@ describe('SingleFileDeployer', () => {
           {
             recipeVersions: [],
             standardVersions: removedStandards,
+            skillVersions: [],
           },
           {
             recipeVersions: [],
             standardVersions: installedStandards,
+            skillVersions: [],
           },
         );
       });
@@ -953,10 +959,12 @@ describe('SingleFileDeployer', () => {
           {
             recipeVersions: removedRecipes,
             standardVersions: removedStandards,
+            skillVersions: [],
           },
           {
             recipeVersions: [],
             standardVersions: [],
+            skillVersions: [],
           },
         );
       });
@@ -1037,10 +1045,12 @@ describe('SingleFileDeployer', () => {
           {
             recipeVersions: removedRecipes,
             standardVersions: [],
+            skillVersions: [],
           },
           {
             recipeVersions: [],
             standardVersions: installedStandards,
+            skillVersions: [],
           },
         );
       });
@@ -1103,10 +1113,12 @@ describe('SingleFileDeployer', () => {
           {
             recipeVersions: [],
             standardVersions: removedStandards,
+            skillVersions: [],
           },
           {
             recipeVersions: installedRecipes,
             standardVersions: [],
+            skillVersions: [],
           },
         );
       });
@@ -1160,10 +1172,12 @@ describe('SingleFileDeployer', () => {
           {
             recipeVersions: [],
             standardVersions: [],
+            skillVersions: [],
           },
           {
             recipeVersions: [],
             standardVersions: [],
+            skillVersions: [],
           },
         );
       });

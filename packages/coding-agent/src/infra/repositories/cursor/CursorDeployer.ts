@@ -5,6 +5,7 @@ import {
   IGitPort,
   IStandardsPort,
   RecipeVersion,
+  SkillVersion,
   StandardVersion,
   Target,
 } from '@packmind/types';
@@ -154,9 +155,31 @@ export class CursorDeployer implements ICodingAgentDeployer {
     return fileUpdates;
   }
 
+  async deploySkills(
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    skillVersions: SkillVersion[],
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    gitRepo: GitRepo,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    target: Target,
+  ): Promise<FileUpdates> {
+    // Skills not supported for Cursor deployer yet
+    return { createOrUpdate: [], delete: [] };
+  }
+
+  async generateFileUpdatesForSkills(
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    skillVersions: SkillVersion[],
+  ): Promise<FileUpdates> {
+    // Skills not supported for Cursor deployer yet
+    return { createOrUpdate: [], delete: [] };
+  }
+
   async deployArtifacts(
     recipeVersions: RecipeVersion[],
     standardVersions: StandardVersion[],
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    skillVersions: SkillVersion[] = [],
   ): Promise<FileUpdates> {
     this.logger.info('Deploying artifacts (recipes + standards) for Cursor', {
       recipesCount: recipeVersions.length,
@@ -199,15 +222,18 @@ export class CursorDeployer implements ICodingAgentDeployer {
     removed: {
       recipeVersions: RecipeVersion[];
       standardVersions: StandardVersion[];
+      skillVersions: SkillVersion[];
     },
     installed: {
       recipeVersions: RecipeVersion[];
       standardVersions: StandardVersion[];
+      skillVersions: SkillVersion[];
     },
   ): Promise<FileUpdates> {
     this.logger.info('Generating removal file updates for Cursor', {
       removedRecipesCount: removed.recipeVersions.length,
       removedStandardsCount: removed.standardVersions.length,
+      removedSkillsCount: removed.skillVersions.length,
       installedRecipesCount: installed.recipeVersions.length,
       installedStandardsCount: installed.standardVersions.length,
     });

@@ -80,10 +80,12 @@ describe('CodingAgentServices', () => {
         {
           recipeVersions: mockRecipeVersions,
           standardVersions: mockStandardVersions,
+          skillVersions: [],
         },
         {
           recipeVersions: [],
           standardVersions: [],
+          skillVersions: [],
         },
         ['claude'],
         existingFiles,
@@ -94,6 +96,7 @@ describe('CodingAgentServices', () => {
       ).toHaveBeenCalledWith(
         mockRecipeVersions,
         mockStandardVersions,
+        [],
         ['claude'],
         existingFiles,
       );
@@ -116,10 +119,12 @@ describe('CodingAgentServices', () => {
         {
           recipeVersions: [],
           standardVersions: mockStandardVersions,
+          skillVersions: [],
         },
         {
           recipeVersions: [],
           standardVersions: [],
+          skillVersions: [],
         },
         ['claude'],
         existingFiles,
@@ -130,6 +135,7 @@ describe('CodingAgentServices', () => {
       ).toHaveBeenCalledWith(
         [],
         mockStandardVersions,
+        [],
         ['claude'],
         existingFiles,
       );
@@ -152,10 +158,12 @@ describe('CodingAgentServices', () => {
         {
           recipeVersions: mockRecipeVersions,
           standardVersions: [],
+          skillVersions: [],
         },
         {
           recipeVersions: [],
           standardVersions: [],
+          skillVersions: [],
         },
         ['claude'],
         existingFiles,
@@ -163,7 +171,13 @@ describe('CodingAgentServices', () => {
 
       expect(
         mockDeployerService.aggregateArtifactRendering,
-      ).toHaveBeenCalledWith(mockRecipeVersions, [], ['claude'], existingFiles);
+      ).toHaveBeenCalledWith(
+        mockRecipeVersions,
+        [],
+        [],
+        ['claude'],
+        existingFiles,
+      );
       expect(result).toEqual(mockFileUpdates);
     });
 
@@ -175,10 +189,12 @@ describe('CodingAgentServices', () => {
           {
             recipeVersions: mockRecipeVersions,
             standardVersions: mockStandardVersions,
+            skillVersions: [],
           },
           {
             recipeVersions: [],
             standardVersions: [],
+            skillVersions: [],
           },
           [],
           existingFiles,
@@ -212,10 +228,12 @@ describe('CodingAgentServices', () => {
         {
           recipeVersions: mockRecipeVersions,
           standardVersions: mockStandardVersions,
+          skillVersions: [],
         },
         {
           recipeVersions: [],
           standardVersions: [],
+          skillVersions: [],
         },
         ['claude', 'agents_md'],
         existingFiles,
@@ -226,6 +244,7 @@ describe('CodingAgentServices', () => {
       ).toHaveBeenCalledWith(
         mockRecipeVersions,
         mockStandardVersions,
+        [],
         ['claude', 'agents_md'],
         existingFiles,
       );
@@ -251,10 +270,12 @@ describe('CodingAgentServices', () => {
         {
           recipeVersions: mockRecipeVersions,
           standardVersions: mockStandardVersions,
+          skillVersions: [],
         },
         {
           recipeVersions: [],
           standardVersions: [],
+          skillVersions: [],
         },
         agents,
         existingFiles,
@@ -275,10 +296,12 @@ describe('CodingAgentServices', () => {
           {
             recipeVersions: mockRecipeVersions,
             standardVersions: mockStandardVersions,
+            skillVersions: [],
           },
           {
             recipeVersions: [],
             standardVersions: [],
+            skillVersions: [],
           },
           ['claude'],
           existingFiles,
@@ -332,10 +355,12 @@ describe('CodingAgentServices', () => {
           {
             recipeVersions: mockRecipeVersions,
             standardVersions: mockStandardVersions,
+            skillVersions: [],
           },
           {
             recipeVersions: [removedRecipe],
             standardVersions: [],
+            skillVersions: [],
           },
           ['claude'],
           new Map(),
@@ -353,10 +378,12 @@ describe('CodingAgentServices', () => {
           {
             recipeVersions: [removedRecipe],
             standardVersions: [],
+            skillVersions: [],
           },
           {
             recipeVersions: mockRecipeVersions,
             standardVersions: mockStandardVersions,
+            skillVersions: [],
           },
         );
       });
@@ -416,10 +443,12 @@ describe('CodingAgentServices', () => {
           {
             recipeVersions: mockRecipeVersions,
             standardVersions: mockStandardVersions,
+            skillVersions: [],
           },
           {
             recipeVersions: [],
             standardVersions: [removedStandard],
+            skillVersions: [],
           },
           ['claude'],
           new Map(),
@@ -437,10 +466,12 @@ describe('CodingAgentServices', () => {
           {
             recipeVersions: [],
             standardVersions: [removedStandard],
+            skillVersions: [],
           },
           {
             recipeVersions: mockRecipeVersions,
             standardVersions: mockStandardVersions,
+            skillVersions: [],
           },
         );
       });
@@ -497,10 +528,12 @@ describe('CodingAgentServices', () => {
           {
             recipeVersions: mockRecipeVersions,
             standardVersions: mockStandardVersions,
+            skillVersions: [],
           },
           {
             recipeVersions: [removedRecipe],
             standardVersions: [],
+            skillVersions: [],
           },
           ['claude', 'cursor'],
           new Map(),
@@ -530,10 +563,12 @@ describe('CodingAgentServices', () => {
           {
             recipeVersions: [removedRecipe],
             standardVersions: [],
+            skillVersions: [],
           },
           {
             recipeVersions: mockRecipeVersions,
             standardVersions: mockStandardVersions,
+            skillVersions: [],
           },
         );
       });
@@ -554,10 +589,12 @@ describe('CodingAgentServices', () => {
           {
             recipeVersions: mockRecipeVersions,
             standardVersions: mockStandardVersions,
+            skillVersions: [],
           },
           {
             recipeVersions: [],
             standardVersions: [],
+            skillVersions: [],
           },
           ['claude'],
           new Map(),

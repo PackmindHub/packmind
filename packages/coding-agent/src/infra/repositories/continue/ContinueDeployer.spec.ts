@@ -1899,8 +1899,16 @@ describe('ContinueDeployer', () => {
         };
 
         const result = await deployer.generateRemovalFileUpdates(
-          { recipeVersions: [removedRecipeVersion], standardVersions: [] },
-          { recipeVersions: [installedRecipeVersion], standardVersions: [] },
+          {
+            recipeVersions: [removedRecipeVersion],
+            standardVersions: [],
+            skillVersions: [],
+          },
+          {
+            recipeVersions: [installedRecipeVersion],
+            standardVersions: [],
+            skillVersions: [],
+          },
         );
 
         expect(result.delete).toHaveLength(1);
@@ -1940,8 +1948,16 @@ describe('ContinueDeployer', () => {
         };
 
         const result = await deployer.generateRemovalFileUpdates(
-          { recipeVersions: [removedRecipeVersion], standardVersions: [] },
-          { recipeVersions: [installedRecipeVersion], standardVersions: [] },
+          {
+            recipeVersions: [removedRecipeVersion],
+            standardVersions: [],
+            skillVersions: [],
+          },
+          {
+            recipeVersions: [installedRecipeVersion],
+            standardVersions: [],
+            skillVersions: [],
+          },
         );
 
         expect(result.delete[0].path).toBe(
@@ -1983,8 +1999,16 @@ describe('ContinueDeployer', () => {
         };
 
         const result = await deployer.generateRemovalFileUpdates(
-          { recipeVersions: [removedRecipeVersion], standardVersions: [] },
-          { recipeVersions: [installedRecipeVersion], standardVersions: [] },
+          {
+            recipeVersions: [removedRecipeVersion],
+            standardVersions: [],
+            skillVersions: [],
+          },
+          {
+            recipeVersions: [installedRecipeVersion],
+            standardVersions: [],
+            skillVersions: [],
+          },
         );
 
         expect(result.delete.some((f) => f.path === '.continue/prompts/')).toBe(
@@ -2012,8 +2036,12 @@ describe('ContinueDeployer', () => {
         };
 
         const result = await deployer.generateRemovalFileUpdates(
-          { recipeVersions: [removedRecipeVersion], standardVersions: [] },
-          { recipeVersions: [], standardVersions: [] },
+          {
+            recipeVersions: [removedRecipeVersion],
+            standardVersions: [],
+            skillVersions: [],
+          },
+          { recipeVersions: [], standardVersions: [], skillVersions: [] },
         );
 
         expect(
@@ -2041,8 +2069,12 @@ describe('ContinueDeployer', () => {
         };
 
         const result = await deployer.generateRemovalFileUpdates(
-          { recipeVersions: [removedRecipeVersion], standardVersions: [] },
-          { recipeVersions: [], standardVersions: [] },
+          {
+            recipeVersions: [removedRecipeVersion],
+            standardVersions: [],
+            skillVersions: [],
+          },
+          { recipeVersions: [], standardVersions: [], skillVersions: [] },
         );
 
         expect(result.delete.some((f) => f.path === '.continue/prompts/')).toBe(
@@ -2068,8 +2100,12 @@ describe('ContinueDeployer', () => {
         };
 
         const result = await deployer.generateRemovalFileUpdates(
-          { recipeVersions: [removedRecipeVersion], standardVersions: [] },
-          { recipeVersions: [], standardVersions: [] },
+          {
+            recipeVersions: [removedRecipeVersion],
+            standardVersions: [],
+            skillVersions: [],
+          },
+          { recipeVersions: [], standardVersions: [], skillVersions: [] },
         );
 
         expect(
@@ -2095,8 +2131,12 @@ describe('ContinueDeployer', () => {
         };
 
         const result = await deployer.generateRemovalFileUpdates(
-          { recipeVersions: [removedRecipeVersion], standardVersions: [] },
-          { recipeVersions: [], standardVersions: [] },
+          {
+            recipeVersions: [removedRecipeVersion],
+            standardVersions: [],
+            skillVersions: [],
+          },
+          { recipeVersions: [], standardVersions: [], skillVersions: [] },
         );
 
         expect(
@@ -2146,8 +2186,16 @@ describe('ContinueDeployer', () => {
         };
 
         const result = await deployer.generateRemovalFileUpdates(
-          { recipeVersions: [], standardVersions: [removedStandardVersion] },
-          { recipeVersions: [], standardVersions: [installedStandardVersion] },
+          {
+            recipeVersions: [],
+            standardVersions: [removedStandardVersion],
+            skillVersions: [],
+          },
+          {
+            recipeVersions: [],
+            standardVersions: [installedStandardVersion],
+            skillVersions: [],
+          },
         );
 
         expect(
@@ -2180,8 +2228,12 @@ describe('ContinueDeployer', () => {
         };
 
         const result = await deployer.generateRemovalFileUpdates(
-          { recipeVersions: [], standardVersions: [removedStandardVersion] },
-          { recipeVersions: [], standardVersions: [] },
+          {
+            recipeVersions: [],
+            standardVersions: [removedStandardVersion],
+            skillVersions: [],
+          },
+          { recipeVersions: [], standardVersions: [], skillVersions: [] },
         );
 
         expect(
@@ -2212,8 +2264,12 @@ describe('ContinueDeployer', () => {
         };
 
         const result = await deployer.generateRemovalFileUpdates(
-          { recipeVersions: [], standardVersions: [removedStandardVersion] },
-          { recipeVersions: [], standardVersions: [] },
+          {
+            recipeVersions: [],
+            standardVersions: [removedStandardVersion],
+            skillVersions: [],
+          },
+          { recipeVersions: [], standardVersions: [], skillVersions: [] },
         );
 
         expect(
@@ -2260,8 +2316,16 @@ describe('ContinueDeployer', () => {
         };
 
         const result = await deployer.generateRemovalFileUpdates(
-          { recipeVersions: [removedRecipeVersion], standardVersions: [] },
-          { recipeVersions: [], standardVersions: [installedStandardVersion] },
+          {
+            recipeVersions: [removedRecipeVersion],
+            standardVersions: [],
+            skillVersions: [],
+          },
+          {
+            recipeVersions: [],
+            standardVersions: [installedStandardVersion],
+            skillVersions: [],
+          },
         );
 
         expect(
@@ -2308,8 +2372,16 @@ describe('ContinueDeployer', () => {
         };
 
         const result = await deployer.generateRemovalFileUpdates(
-          { recipeVersions: [removedRecipeVersion], standardVersions: [] },
-          { recipeVersions: [], standardVersions: [installedStandardVersion] },
+          {
+            recipeVersions: [removedRecipeVersion],
+            standardVersions: [],
+            skillVersions: [],
+          },
+          {
+            recipeVersions: [],
+            standardVersions: [installedStandardVersion],
+            skillVersions: [],
+          },
         );
 
         expect(result.delete.some((f) => f.path === '.continue/prompts/')).toBe(
@@ -2354,8 +2426,16 @@ describe('ContinueDeployer', () => {
         };
 
         const result = await deployer.generateRemovalFileUpdates(
-          { recipeVersions: [removedRecipeVersion], standardVersions: [] },
-          { recipeVersions: [], standardVersions: [installedStandardVersion] },
+          {
+            recipeVersions: [removedRecipeVersion],
+            standardVersions: [],
+            skillVersions: [],
+          },
+          {
+            recipeVersions: [],
+            standardVersions: [installedStandardVersion],
+            skillVersions: [],
+          },
         );
 
         expect(
@@ -2400,8 +2480,16 @@ describe('ContinueDeployer', () => {
         };
 
         const result = await deployer.generateRemovalFileUpdates(
-          { recipeVersions: [removedRecipeVersion], standardVersions: [] },
-          { recipeVersions: [], standardVersions: [installedStandardVersion] },
+          {
+            recipeVersions: [removedRecipeVersion],
+            standardVersions: [],
+            skillVersions: [],
+          },
+          {
+            recipeVersions: [],
+            standardVersions: [installedStandardVersion],
+            skillVersions: [],
+          },
         );
 
         expect(
@@ -2448,8 +2536,16 @@ describe('ContinueDeployer', () => {
         };
 
         const result = await deployer.generateRemovalFileUpdates(
-          { recipeVersions: [], standardVersions: [removedStandardVersion] },
-          { recipeVersions: [installedRecipeVersion], standardVersions: [] },
+          {
+            recipeVersions: [],
+            standardVersions: [removedStandardVersion],
+            skillVersions: [],
+          },
+          {
+            recipeVersions: [installedRecipeVersion],
+            standardVersions: [],
+            skillVersions: [],
+          },
         );
 
         expect(
@@ -2496,8 +2592,16 @@ describe('ContinueDeployer', () => {
         };
 
         const result = await deployer.generateRemovalFileUpdates(
-          { recipeVersions: [], standardVersions: [removedStandardVersion] },
-          { recipeVersions: [installedRecipeVersion], standardVersions: [] },
+          {
+            recipeVersions: [],
+            standardVersions: [removedStandardVersion],
+            skillVersions: [],
+          },
+          {
+            recipeVersions: [installedRecipeVersion],
+            standardVersions: [],
+            skillVersions: [],
+          },
         );
 
         expect(

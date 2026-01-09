@@ -20,6 +20,7 @@ export class RenderArtifactsUseCase implements IRenderArtifactsUseCase {
     this.logger.info('Executing render artifacts use case', {
       recipesCount: command.installed.recipeVersions.length,
       standardsCount: command.installed.standardVersions.length,
+      skillsCount: command.installed.skillVersions.length,
       agentsCount: command.codingAgents.length,
       existingFilesCount: command.existingFiles.size,
       organizationId: command.organizationId,
@@ -47,6 +48,7 @@ export class RenderArtifactsUseCase implements IRenderArtifactsUseCase {
         error: error instanceof Error ? error.message : String(error),
         recipesCount: command.installed.recipeVersions.length,
         standardsCount: command.installed.standardVersions.length,
+        skillsCount: command.installed.skillVersions.length,
         agentsCount: command.codingAgents.length,
       });
       throw error;

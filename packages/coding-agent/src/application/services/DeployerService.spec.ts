@@ -12,6 +12,7 @@ import {
   RecipeId,
   RecipeVersion,
   RecipeVersionId,
+  SkillVersion,
   Standard,
   StandardId,
   StandardVersion,
@@ -44,6 +45,7 @@ class MockDeployer implements ICodingAgentDeployer {
   constructor(
     private recipeResult: FileUpdates = { createOrUpdate: [], delete: [] },
     private standardResult: FileUpdates = { createOrUpdate: [], delete: [] },
+    private skillResult: FileUpdates = { createOrUpdate: [], delete: [] },
     private artifactsResult: FileUpdates = { createOrUpdate: [], delete: [] },
     private removalResult: FileUpdates = { createOrUpdate: [], delete: [] },
   ) {}
@@ -84,16 +86,36 @@ class MockDeployer implements ICodingAgentDeployer {
     return this.standardResult;
   }
 
+  async deploySkills(
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    skillVersions: SkillVersion[],
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    gitRepo: GitRepo,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    target: Target,
+  ): Promise<FileUpdates> {
+    return this.skillResult;
+  }
+
+  async generateFileUpdatesForSkills(
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    skillVersions: SkillVersion[],
+  ): Promise<FileUpdates> {
+    return this.skillResult;
+  }
+
   async generateRemovalFileUpdates(
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     removed: {
       recipeVersions: RecipeVersion[];
       standardVersions: StandardVersion[];
+      skillVersions: SkillVersion[];
     },
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     installed: {
       recipeVersions: RecipeVersion[];
       standardVersions: StandardVersion[];
+      skillVersions: SkillVersion[];
     },
   ): Promise<FileUpdates> {
     return this.removalResult;
@@ -104,6 +126,8 @@ class MockDeployer implements ICodingAgentDeployer {
     recipeVersions: RecipeVersion[],
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     standardVersions: StandardVersion[],
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    skillVersions: SkillVersion[] = [],
   ): Promise<FileUpdates> {
     return this.artifactsResult;
   }
@@ -401,6 +425,7 @@ describe('DeployerService', () => {
       const claudeDeployer = new MockDeployer(
         { createOrUpdate: [], delete: [] },
         { createOrUpdate: [], delete: [] },
+        { createOrUpdate: [], delete: [] },
         {
           createOrUpdate: [{ path: 'CLAUDE.md', content: 'claude content' }],
           delete: [],
@@ -408,6 +433,7 @@ describe('DeployerService', () => {
       );
 
       const cursorDeployer = new MockDeployer(
+        { createOrUpdate: [], delete: [] },
         { createOrUpdate: [], delete: [] },
         { createOrUpdate: [], delete: [] },
         {
@@ -426,6 +452,7 @@ describe('DeployerService', () => {
       const result = await service.aggregateArtifactRendering(
         mockRecipeVersions,
         mockStandardVersions,
+        [],
         ['claude', 'cursor'],
         existingFiles,
       );
@@ -471,6 +498,7 @@ describe('DeployerService', () => {
       await service.aggregateArtifactRendering(
         mockRecipeVersions,
         mockStandardVersions,
+        [],
         ['claude'],
         existingFiles,
       );
@@ -478,11 +506,13 @@ describe('DeployerService', () => {
       expect(deployArtifactsSpy).toHaveBeenCalledWith(
         mockRecipeVersions,
         mockStandardVersions,
+        [],
       );
     });
 
     it('merges file updates with later entries overriding earlier', async () => {
       const deployer1 = new MockDeployer(
+        { createOrUpdate: [], delete: [] },
         { createOrUpdate: [], delete: [] },
         { createOrUpdate: [], delete: [] },
         {
@@ -495,6 +525,7 @@ describe('DeployerService', () => {
       );
 
       const deployer2 = new MockDeployer(
+        { createOrUpdate: [], delete: [] },
         { createOrUpdate: [], delete: [] },
         { createOrUpdate: [], delete: [] },
         {
@@ -514,6 +545,7 @@ describe('DeployerService', () => {
       const result = await service.aggregateArtifactRendering(
         mockRecipeVersions,
         mockStandardVersions,
+        [],
         ['agents_md', 'claude'],
         existingFiles,
       );
@@ -532,6 +564,7 @@ describe('DeployerService', () => {
         mockRecipeVersions,
         mockStandardVersions,
         [],
+        [],
         existingFiles,
       );
 
@@ -544,6 +577,7 @@ describe('DeployerService', () => {
         { createOrUpdate: [], delete: [] },
         { createOrUpdate: [], delete: [] },
         { createOrUpdate: [], delete: [] },
+        { createOrUpdate: [], delete: [] },
       );
 
       registry.registerDeployer('claude', emptyDeployer);
@@ -553,6 +587,7 @@ describe('DeployerService', () => {
       const result = await service.aggregateArtifactRendering(
         mockRecipeVersions,
         mockStandardVersions,
+        [],
         ['claude'],
         existingFiles,
       );
@@ -565,6 +600,7 @@ describe('DeployerService', () => {
       const deployer1 = new MockDeployer(
         { createOrUpdate: [], delete: [] },
         { createOrUpdate: [], delete: [] },
+        { createOrUpdate: [], delete: [] },
         {
           createOrUpdate: [{ path: 'same.md', content: 'first' }],
           delete: [],
@@ -572,6 +608,7 @@ describe('DeployerService', () => {
       );
 
       const deployer2 = new MockDeployer(
+        { createOrUpdate: [], delete: [] },
         { createOrUpdate: [], delete: [] },
         { createOrUpdate: [], delete: [] },
         {
@@ -588,6 +625,7 @@ describe('DeployerService', () => {
       const result = await service.aggregateArtifactRendering(
         mockRecipeVersions,
         mockStandardVersions,
+        [],
         ['claude', 'cursor'],
         existingFiles,
       );
@@ -628,6 +666,7 @@ describe('DeployerService', () => {
       await service.aggregateArtifactRendering(
         mockRecipeVersions,
         mockStandardVersions,
+        [],
         ['claude'],
         existingFiles,
       );
@@ -635,6 +674,7 @@ describe('DeployerService', () => {
       expect(deployArtifactsSpy).toHaveBeenCalledWith(
         mockRecipeVersions,
         mockStandardVersions,
+        [],
       );
     });
 
@@ -665,6 +705,7 @@ describe('DeployerService', () => {
         service.aggregateArtifactRendering(
           mockRecipeVersions,
           mockStandardVersions,
+          [],
           ['claude'],
           existingFiles,
         ),
@@ -696,6 +737,7 @@ describe('DeployerService', () => {
         const deployer = new MockDeployer(
           { createOrUpdate: [], delete: [] },
           { createOrUpdate: [], delete: [] },
+          { createOrUpdate: [], delete: [] },
           {
             createOrUpdate: [
               { path: expectedFiles[index], content: `${agent} content` },
@@ -711,6 +753,7 @@ describe('DeployerService', () => {
       const result = await service.aggregateArtifactRendering(
         mockRecipeVersions,
         mockStandardVersions,
+        [],
         agents,
         existingFiles,
       );
