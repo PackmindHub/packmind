@@ -40,6 +40,8 @@ export const routes = {
       `/org/${orgSlug}/space/${spaceSlug}/packages/${packageId}`,
     toCreatePackage: (orgSlug: string, spaceSlug: string) =>
       `/org/${orgSlug}/space/${spaceSlug}/packages/new`,
+    toPackageEdit: (orgSlug: string, spaceSlug: string, packageId: string) =>
+      `/org/${orgSlug}/space/${spaceSlug}/packages/${packageId}/edit`,
     toStandard: (orgSlug: string, spaceSlug: string, standardId: string) =>
       `/org/${orgSlug}/space/${spaceSlug}/standards/${standardId}`,
     toStandardSummary: (
