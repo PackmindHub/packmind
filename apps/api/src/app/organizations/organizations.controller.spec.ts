@@ -52,28 +52,32 @@ describe('OrganizationsController', () => {
   });
 
   describe('getOnboardingStatus', () => {
-    it('returns onboarding status from accounts hexa', async () => {
-      const orgId = createOrganizationId('org-123');
-      const mockRequest = {
-        organization: { id: orgId },
-        user: { userId: 'user-123' },
-      } as AuthenticatedRequest;
+    const orgId = createOrganizationId('org-123');
+    const mockRequest = {
+      organization: { id: orgId },
+      user: { userId: 'user-123' },
+    } as AuthenticatedRequest;
+    const mockStatus = {
+      hasConnectedGitProvider: true,
+      hasConnectedGitRepo: true,
+      hasCreatedStandard: false,
+      hasDeployed: false,
+      hasInvitedColleague: true,
+    };
+    let result: typeof mockStatus;
 
-      const mockStatus = {
-        hasConnectedGitProvider: true,
-        hasConnectedGitRepo: true,
-        hasCreatedStandard: false,
-        hasDeployed: false,
-        hasInvitedColleague: true,
-      };
-
+    beforeEach(async () => {
       mockAccountsAdapter.getOrganizationOnboardingStatus.mockResolvedValue(
         mockStatus,
       );
+      result = await controller.getOnboardingStatus(orgId, mockRequest);
+    });
 
-      const result = await controller.getOnboardingStatus(orgId, mockRequest);
-
+    it('returns onboarding status', () => {
       expect(result).toEqual(mockStatus);
+    });
+
+    it('calls adapter with correct params', () => {
       expect(
         mockAccountsAdapter.getOrganizationOnboardingStatus,
       ).toHaveBeenCalledWith({
