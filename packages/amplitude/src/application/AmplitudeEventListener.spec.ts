@@ -9,10 +9,12 @@ import {
   StandardCreatedEvent,
   StandardUpdatedEvent,
   LinterCalledEvent,
+  SkillCreatedEvent,
   createUserId,
   createOrganizationId,
   createRecipeId,
   createSpaceId,
+  createSkillId,
 } from '@packmind/types';
 import { DataSource } from 'typeorm';
 import { AmplitudeEventListener } from './AmplitudeEventListener';
@@ -252,6 +254,35 @@ describe('AmplitudeEventListener', () => {
         {
           targetCount: 3,
           standardCount: 5,
+        },
+      );
+    });
+  });
+
+  describe('SkillCreatedEvent', () => {
+    it('tracks skill_created event with correct payload', async () => {
+      const event = new SkillCreatedEvent({
+        userId: createUserId('user-123'),
+        organizationId: createOrganizationId('org-456'),
+        skillId: createSkillId('skill-789'),
+        spaceId: createSpaceId('space-abc'),
+        source: 'ui',
+        fileCount: 3,
+      });
+
+      eventEmitterService.emit(event);
+
+      await flushPromises();
+
+      expect(mockAdapter.trackEvent).toHaveBeenCalledWith(
+        'user-123',
+        'org-456',
+        'skill_created',
+        {
+          skillId: 'skill-789',
+          spaceId: 'space-abc',
+          source: 'ui',
+          fileCount: 3,
         },
       );
     });
