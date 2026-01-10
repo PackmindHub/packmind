@@ -18,6 +18,7 @@ const origin = 'ClaudeDeployer';
 export class ClaudeDeployer implements ICodingAgentDeployer {
   private static readonly STANDARDS_FOLDER_PATH = '.claude/rules/packmind/';
   private static readonly COMMANDS_FOLDER_PATH = '.claude/commands/packmind/';
+  private static readonly SKILLS_FOLDER_PATH = '.claude/skills/';
   private static readonly CLAUDE_MD_PATH = 'CLAUDE.md';
   private readonly logger: PackmindLogger;
 
@@ -196,36 +197,74 @@ ${recipeVersion.content}`;
   }
 
   async deploySkills(
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     skillVersions: SkillVersion[],
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     gitRepo: GitRepo,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     target: Target,
   ): Promise<FileUpdates> {
-    // Skills not supported for Claude deployer yet
-    return { createOrUpdate: [], delete: [] };
+    this.logger.info('Deploying skills for Claude Code', {
+      skillsCount: skillVersions.length,
+      gitRepoId: gitRepo.id,
+      targetId: target.id,
+      targetPath: target.path,
+    });
+
+    const fileUpdates: FileUpdates = {
+      createOrUpdate: [],
+      delete: [],
+    };
+
+    // Generate individual Claude skill files for each skill
+    for (const skillVersion of skillVersions) {
+      const skillFiles = this.generateClaudeSkillFiles(skillVersion);
+      for (const file of skillFiles) {
+        const targetPrefixedPath = getTargetPrefixedPath(file.path, target);
+        fileUpdates.createOrUpdate.push({
+          path: targetPrefixedPath,
+          content: file.content,
+        });
+      }
+    }
+
+    return fileUpdates;
   }
 
   async generateFileUpdatesForSkills(
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     skillVersions: SkillVersion[],
   ): Promise<FileUpdates> {
-    // Skills not supported for Claude deployer yet
-    return { createOrUpdate: [], delete: [] };
+    this.logger.info('Generating file updates for skills (Claude Code)', {
+      skillsCount: skillVersions.length,
+    });
+
+    const fileUpdates: FileUpdates = {
+      createOrUpdate: [],
+      delete: [],
+    };
+
+    // Generate individual Claude skill files for each skill (without target prefix)
+    for (const skillVersion of skillVersions) {
+      const skillFiles = this.generateClaudeSkillFiles(skillVersion);
+      for (const file of skillFiles) {
+        fileUpdates.createOrUpdate.push({
+          path: file.path,
+          content: file.content,
+        });
+      }
+    }
+
+    return fileUpdates;
   }
 
   async deployArtifacts(
     recipeVersions: RecipeVersion[],
     standardVersions: StandardVersion[],
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     skillVersions: SkillVersion[] = [],
   ): Promise<FileUpdates> {
     this.logger.info(
-      'Deploying artifacts (recipes + standards) for Claude Code',
+      'Deploying artifacts (recipes + standards + skills) for Claude Code',
       {
         recipesCount: recipeVersions.length,
         standardsCount: standardVersions.length,
+        skillsCount: skillVersions.length,
       },
     );
 
@@ -251,6 +290,17 @@ ${recipeVersion.content}`;
         path: configFile.path,
         content: configFile.content,
       });
+    }
+
+    // Generate individual Claude skill files for each skill
+    for (const skillVersion of skillVersions) {
+      const skillFiles = this.generateClaudeSkillFiles(skillVersion);
+      for (const file of skillFiles) {
+        fileUpdates.createOrUpdate.push({
+          path: file.path,
+          content: file.content,
+        });
+      }
     }
 
     // Clear legacy Packmind sections from CLAUDE.md
@@ -323,6 +373,13 @@ ${recipeVersion.content}`;
     ) {
       fileUpdates.delete.push({
         path: ClaudeDeployer.STANDARDS_FOLDER_PATH,
+      });
+    }
+
+    // Delete skill directories for removed skills
+    for (const skillVersion of removed.skillVersions) {
+      fileUpdates.delete.push({
+        path: `.claude/skills/${skillVersion.slug}`,
       });
     }
 
@@ -442,5 +499,107 @@ ${instructionContent}`;
       path,
       content,
     };
+  }
+
+  private generateClaudeSkillFiles(skillVersion: SkillVersion): Array<{
+    path: string;
+    content: string;
+  }> {
+    this.logger.debug('Generating Claude skill files', {
+      skillSlug: skillVersion.slug,
+      skillName: skillVersion.name,
+      fileCount: (skillVersion.files?.length ?? 0) + 1,
+    });
+
+    const files: Array<{ path: string; content: string }> = [];
+
+    // Generate SKILL.md (main skill file)
+    const skillMdContent = this.generateSkillMdContent(skillVersion);
+    files.push({
+      path: `.claude/skills/${skillVersion.slug}/SKILL.md`,
+      content: skillMdContent,
+    });
+
+    // Add additional skill files if they exist (excluding SKILL.md which we already generated)
+    if (skillVersion.files && skillVersion.files.length > 0) {
+      for (const file of skillVersion.files) {
+        // Skip SKILL.md as it's already generated from the prompt
+        if (file.path.toUpperCase() === 'SKILL.MD') {
+          continue;
+        }
+        files.push({
+          path: `.claude/skills/${skillVersion.slug}/${file.path}`,
+          content: file.content,
+        });
+      }
+    }
+
+    return files;
+  }
+
+  /**
+   * Generate the SKILL.md content with frontmatter for a specific skill version
+   */
+  private generateSkillMdContent(skillVersion: SkillVersion): string {
+    // Build frontmatter according to Agent Skills specification
+    const frontmatterFields: string[] = [];
+
+    if (skillVersion.name) {
+      frontmatterFields.push(`name: ${skillVersion.name}`);
+    }
+
+    if (skillVersion.description) {
+      frontmatterFields.push(
+        `description: '${this.escapeSingleQuotes(skillVersion.description)}'`,
+      );
+    }
+
+    if (skillVersion.license) {
+      frontmatterFields.push(
+        `license: '${this.escapeSingleQuotes(skillVersion.license)}'`,
+      );
+    }
+
+    if (skillVersion.compatibility) {
+      frontmatterFields.push(
+        `compatibility: '${this.escapeSingleQuotes(skillVersion.compatibility)}'`,
+      );
+    }
+
+    if (skillVersion.allowedTools) {
+      frontmatterFields.push(
+        `allowed-tools: '${this.escapeSingleQuotes(skillVersion.allowedTools)}'`,
+      );
+    }
+
+    if (
+      skillVersion.metadata &&
+      Object.keys(skillVersion.metadata).length > 0
+    ) {
+      // Metadata is stored as JSONB, convert to YAML format
+      const metadataYaml = Object.entries(skillVersion.metadata)
+        .map(
+          ([key, value]) =>
+            `  ${key}: '${this.escapeSingleQuotes(String(value))}'`,
+        )
+        .join('\n');
+      frontmatterFields.push(`metadata:\n${metadataYaml}`);
+    }
+
+    const frontmatter = `---
+${frontmatterFields.join('\n')}
+---`;
+
+    // Content is the skill prompt (body)
+    return `${frontmatter}
+
+${skillVersion.prompt}`;
+  }
+
+  /**
+   * Escape single quotes in YAML values to prevent parsing errors
+   */
+  private escapeSingleQuotes(value: string): string {
+    return value.replace(/'/g, "''");
   }
 }
