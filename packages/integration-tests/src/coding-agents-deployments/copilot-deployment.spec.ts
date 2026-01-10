@@ -17,7 +17,6 @@ import {
   RecipeVersion,
   RecipeVersionId,
   Skill,
-  SkillFile,
   SkillVersion,
   SkillVersionId,
   Space,
@@ -1080,10 +1079,10 @@ See reference.md and forms.md for more information.`,
 
       describe('when deploying skills with multiple files', () => {
         it('creates SKILL.md from metadata and all additional files', async () => {
-          const skillFilesMap = new Map<SkillVersionId, SkillFile[]>([
-            [
-              skillVersions[0].id,
-              [
+          const skillVersionsWithFiles = [
+            {
+              ...skillVersions[0],
+              files: [
                 {
                   id: createSkillFileId('file-1'),
                   skillVersionId: skillVersions[0].id,
@@ -1099,23 +1098,22 @@ See reference.md and forms.md for more information.`,
                   permissions: '644',
                 },
               ],
-            ],
-          ]);
+            },
+          ];
 
           const fileUpdates =
             await copilotDeployer.generateFileUpdatesForSkills(
-              skillVersions,
-              skillFilesMap,
+              skillVersionsWithFiles,
             );
 
           expect(fileUpdates.createOrUpdate).toHaveLength(3);
         });
 
         it('places SKILL.md in correct directory', async () => {
-          const skillFilesMap = new Map<SkillVersionId, SkillFile[]>([
-            [
-              skillVersions[0].id,
-              [
+          const skillVersionsWithFiles = [
+            {
+              ...skillVersions[0],
+              files: [
                 {
                   id: createSkillFileId('file-1'),
                   skillVersionId: skillVersions[0].id,
@@ -1124,13 +1122,12 @@ See reference.md and forms.md for more information.`,
                   permissions: '644',
                 },
               ],
-            ],
-          ]);
+            },
+          ];
 
           const fileUpdates =
             await copilotDeployer.generateFileUpdatesForSkills(
-              skillVersions,
-              skillFilesMap,
+              skillVersionsWithFiles,
             );
 
           const skillMdFile = fileUpdates.createOrUpdate.find((file) =>
@@ -1142,10 +1139,10 @@ See reference.md and forms.md for more information.`,
         });
 
         it('places helper file in correct path', async () => {
-          const skillFilesMap = new Map<SkillVersionId, SkillFile[]>([
-            [
-              skillVersions[0].id,
-              [
+          const skillVersionsWithFiles = [
+            {
+              ...skillVersions[0],
+              files: [
                 {
                   id: createSkillFileId('file-1'),
                   skillVersionId: skillVersions[0].id,
@@ -1161,13 +1158,12 @@ See reference.md and forms.md for more information.`,
                   permissions: '644',
                 },
               ],
-            ],
-          ]);
+            },
+          ];
 
           const fileUpdates =
             await copilotDeployer.generateFileUpdatesForSkills(
-              skillVersions,
-              skillFilesMap,
+              skillVersionsWithFiles,
             );
 
           const helperFile = fileUpdates.createOrUpdate.find((file) =>
@@ -1179,10 +1175,10 @@ See reference.md and forms.md for more information.`,
         });
 
         it('places formatter file in correct nested path', async () => {
-          const skillFilesMap = new Map<SkillVersionId, SkillFile[]>([
-            [
-              skillVersions[0].id,
-              [
+          const skillVersionsWithFiles = [
+            {
+              ...skillVersions[0],
+              files: [
                 {
                   id: createSkillFileId('file-1'),
                   skillVersionId: skillVersions[0].id,
@@ -1198,13 +1194,12 @@ See reference.md and forms.md for more information.`,
                   permissions: '644',
                 },
               ],
-            ],
-          ]);
+            },
+          ];
 
           const fileUpdates =
             await copilotDeployer.generateFileUpdatesForSkills(
-              skillVersions,
-              skillFilesMap,
+              skillVersionsWithFiles,
             );
 
           const formatterFile = fileUpdates.createOrUpdate.find((file) =>
@@ -1219,10 +1214,10 @@ See reference.md and forms.md for more information.`,
           const helperContent = 'export const helper = () => {}';
           const formatterContent = 'export const format = (s: string) => s';
 
-          const skillFilesMap = new Map<SkillVersionId, SkillFile[]>([
-            [
-              skillVersions[0].id,
-              [
+          const skillVersionsWithFiles = [
+            {
+              ...skillVersions[0],
+              files: [
                 {
                   id: createSkillFileId('file-1'),
                   skillVersionId: skillVersions[0].id,
@@ -1238,13 +1233,12 @@ See reference.md and forms.md for more information.`,
                   permissions: '644',
                 },
               ],
-            ],
-          ]);
+            },
+          ];
 
           const fileUpdates =
             await copilotDeployer.generateFileUpdatesForSkills(
-              skillVersions,
-              skillFilesMap,
+              skillVersionsWithFiles,
             );
 
           const helperFile = fileUpdates.createOrUpdate.find((file) =>
@@ -1257,10 +1251,10 @@ See reference.md and forms.md for more information.`,
           const helperContent = 'export const helper = () => {}';
           const formatterContent = 'export const format = (s: string) => s';
 
-          const skillFilesMap = new Map<SkillVersionId, SkillFile[]>([
-            [
-              skillVersions[0].id,
-              [
+          const skillVersionsWithFiles = [
+            {
+              ...skillVersions[0],
+              files: [
                 {
                   id: createSkillFileId('file-1'),
                   skillVersionId: skillVersions[0].id,
@@ -1276,13 +1270,12 @@ See reference.md and forms.md for more information.`,
                   permissions: '644',
                 },
               ],
-            ],
-          ]);
+            },
+          ];
 
           const fileUpdates =
             await copilotDeployer.generateFileUpdatesForSkills(
-              skillVersions,
-              skillFilesMap,
+              skillVersionsWithFiles,
             );
 
           const formatterFile = fileUpdates.createOrUpdate.find((file) =>
@@ -1291,153 +1284,100 @@ See reference.md and forms.md for more information.`,
           expect(formatterFile?.content).toBe(formatterContent);
         });
 
-        it('creates only two files when SKILL.md is in SkillFile table', async () => {
-          const skillFilesMap = new Map<SkillVersionId, SkillFile[]>([
-            [
-              skillVersions[0].id,
-              [
-                {
-                  id: createSkillFileId('file-0'),
-                  skillVersionId: skillVersions[0].id,
-                  path: 'SKILL.md',
-                  content: 'This should be ignored',
-                  permissions: '644',
-                },
-                {
-                  id: createSkillFileId('file-1'),
-                  skillVersionId: skillVersions[0].id,
-                  path: 'helper.ts',
-                  content: 'export const helper = () => {}',
-                  permissions: '644',
-                },
-              ],
-            ],
-          ]);
+        describe('when SKILL.md is in SkillFile table', () => {
+          let fileUpdates: FileUpdates;
 
-          const fileUpdates =
-            await copilotDeployer.generateFileUpdatesForSkills(
-              skillVersions,
-              skillFilesMap,
+          beforeEach(async () => {
+            const skillVersionsWithFiles = [
+              {
+                ...skillVersions[0],
+                files: [
+                  {
+                    id: createSkillFileId('file-0'),
+                    skillVersionId: skillVersions[0].id,
+                    path: 'SKILL.md',
+                    content: 'This should be ignored',
+                    permissions: '644',
+                  },
+                  {
+                    id: createSkillFileId('file-1'),
+                    skillVersionId: skillVersions[0].id,
+                    path: 'helper.ts',
+                    content: 'export const helper = () => {}',
+                    permissions: '644',
+                  },
+                ],
+              },
+            ];
+
+            fileUpdates = await copilotDeployer.generateFileUpdatesForSkills(
+              skillVersionsWithFiles,
             );
-
-          expect(fileUpdates.createOrUpdate).toHaveLength(2);
-        });
-
-        it('creates only one SKILL.md file when duplicate exists in SkillFile table', async () => {
-          const skillFilesMap = new Map<SkillVersionId, SkillFile[]>([
-            [
-              skillVersions[0].id,
-              [
-                {
-                  id: createSkillFileId('file-0'),
-                  skillVersionId: skillVersions[0].id,
-                  path: 'SKILL.md',
-                  content: 'This should be ignored',
-                  permissions: '644',
-                },
-                {
-                  id: createSkillFileId('file-1'),
-                  skillVersionId: skillVersions[0].id,
-                  path: 'helper.ts',
-                  content: 'export const helper = () => {}',
-                  permissions: '644',
-                },
-              ],
-            ],
-          ]);
-
-          const fileUpdates =
-            await copilotDeployer.generateFileUpdatesForSkills(
-              skillVersions,
-              skillFilesMap,
-            );
-
-          const skillMdFiles = fileUpdates.createOrUpdate.filter((file) =>
-            file.path.endsWith('SKILL.md'),
-          );
-          expect(skillMdFiles).toHaveLength(1);
-        });
-
-        it('ignores SKILL.md content from SkillFile table', async () => {
-          const skillFilesMap = new Map<SkillVersionId, SkillFile[]>([
-            [
-              skillVersions[0].id,
-              [
-                {
-                  id: createSkillFileId('file-0'),
-                  skillVersionId: skillVersions[0].id,
-                  path: 'SKILL.md',
-                  content: 'This should be ignored',
-                  permissions: '644',
-                },
-                {
-                  id: createSkillFileId('file-1'),
-                  skillVersionId: skillVersions[0].id,
-                  path: 'helper.ts',
-                  content: 'export const helper = () => {}',
-                  permissions: '644',
-                },
-              ],
-            ],
-          ]);
-
-          const fileUpdates =
-            await copilotDeployer.generateFileUpdatesForSkills(
-              skillVersions,
-              skillFilesMap,
-            );
-
-          const skillMdFiles = fileUpdates.createOrUpdate.filter((file) =>
-            file.path.endsWith('SKILL.md'),
-          );
-          expect(skillMdFiles[0].content).not.toContain(
-            'This should be ignored',
-          );
-        });
-
-        it('creates one file when skill has no additional files', async () => {
-          const skillFilesMap = new Map<SkillVersionId, SkillFile[]>([
-            [skillVersions[0].id, []],
-          ]);
-
-          const fileUpdates =
-            await copilotDeployer.generateFileUpdatesForSkills(
-              skillVersions,
-              skillFilesMap,
-            );
-
-          expect(fileUpdates.createOrUpdate).toHaveLength(1);
-        });
-
-        it('creates SKILL.md file when skill has no additional files', async () => {
-          const skillFilesMap = new Map<SkillVersionId, SkillFile[]>([
-            [skillVersions[0].id, []],
-          ]);
-
-          const fileUpdates =
-            await copilotDeployer.generateFileUpdatesForSkills(
-              skillVersions,
-              skillFilesMap,
-            );
-
-          expect(fileUpdates.createOrUpdate[0].path).toBe(
-            `.github/skills/${skill.slug}/SKILL.md`,
-          );
-        });
-
-        it('creates four files when deploying two skills with one additional file each', async () => {
-          const skill2 = await testApp.skillsHexa.getAdapter().createSkill({
-            name: 'Second Test Skill',
-            description: 'Another test skill',
-            prompt: 'Second skill prompt',
-            organizationId: organization.id,
-            userId: user.id,
-            spaceId: space.id.toString(),
           });
 
-          const multipleSkillVersions: SkillVersion[] = [
-            skillVersions[0],
-            {
+          it('creates only two files', () => {
+            expect(fileUpdates.createOrUpdate).toHaveLength(2);
+          });
+
+          it('creates only one SKILL.md file', () => {
+            const skillMdFiles = fileUpdates.createOrUpdate.filter((file) =>
+              file.path.endsWith('SKILL.md'),
+            );
+            expect(skillMdFiles).toHaveLength(1);
+          });
+
+          it('ignores SKILL.md content from SkillFile table', () => {
+            const skillMdFiles = fileUpdates.createOrUpdate.filter((file) =>
+              file.path.endsWith('SKILL.md'),
+            );
+            expect(skillMdFiles[0].content).not.toContain(
+              'This should be ignored',
+            );
+          });
+        });
+
+        describe('when skill has no additional files', () => {
+          let fileUpdates: FileUpdates;
+
+          beforeEach(async () => {
+            const skillVersionsWithFiles = [
+              {
+                ...skillVersions[0],
+                files: [],
+              },
+            ];
+
+            fileUpdates = await copilotDeployer.generateFileUpdatesForSkills(
+              skillVersionsWithFiles,
+            );
+          });
+
+          it('creates one file', () => {
+            expect(fileUpdates.createOrUpdate).toHaveLength(1);
+          });
+
+          it('creates SKILL.md file', () => {
+            expect(fileUpdates.createOrUpdate[0].path).toBe(
+              `.github/skills/${skill.slug}/SKILL.md`,
+            );
+          });
+        });
+
+        describe('when deploying two skills with one additional file each', () => {
+          let skill2: Skill;
+          let fileUpdates: FileUpdates;
+
+          beforeEach(async () => {
+            skill2 = await testApp.skillsHexa.getAdapter().createSkill({
+              name: 'Second Test Skill',
+              description: 'Another test skill',
+              prompt: 'Second skill prompt',
+              organizationId: organization.id,
+              userId: user.id,
+              spaceId: space.id.toString(),
+            });
+
+            const skillVersion2 = {
               id: 'skill-version-2' as SkillVersionId,
               skillId: skill2.id,
               name: skill2.name,
@@ -1446,420 +1386,146 @@ See reference.md and forms.md for more information.`,
               prompt: skill2.prompt,
               version: skill2.version,
               userId: user.id,
-            },
-          ];
+            };
 
-          const skillFilesMap = new Map<SkillVersionId, SkillFile[]>([
-            [
-              skillVersions[0].id,
-              [
-                {
-                  id: createSkillFileId('file-1'),
-                  skillVersionId: skillVersions[0].id,
-                  path: 'helper1.ts',
-                  content: 'export const helper1 = () => {}',
-                  permissions: '644',
-                },
-              ],
-            ],
-            [
-              multipleSkillVersions[1].id,
-              [
-                {
-                  id: createSkillFileId('file-2'),
-                  skillVersionId: multipleSkillVersions[1].id,
-                  path: 'helper2.ts',
-                  content: 'export const helper2 = () => {}',
-                  permissions: '644',
-                },
-              ],
-            ],
-          ]);
+            const multipleSkillVersionsWithFiles = [
+              {
+                ...skillVersions[0],
+                files: [
+                  {
+                    id: createSkillFileId('file-1'),
+                    skillVersionId: skillVersions[0].id,
+                    path: 'helper1.ts',
+                    content: 'export const helper1 = () => {}',
+                    permissions: '644',
+                  },
+                ],
+              },
+              {
+                ...skillVersion2,
+                files: [
+                  {
+                    id: createSkillFileId('file-2'),
+                    skillVersionId: skillVersion2.id,
+                    path: 'helper2.ts',
+                    content: 'export const helper2 = () => {}',
+                    permissions: '644',
+                  },
+                ],
+              },
+            ];
 
-          const fileUpdates =
-            await copilotDeployer.generateFileUpdatesForSkills(
-              multipleSkillVersions,
-              skillFilesMap,
+            fileUpdates = await copilotDeployer.generateFileUpdatesForSkills(
+              multipleSkillVersionsWithFiles,
             );
-
-          expect(fileUpdates.createOrUpdate).toHaveLength(4);
-        });
-
-        it('creates two files for first skill when deploying multiple skills', async () => {
-          const skill2 = await testApp.skillsHexa.getAdapter().createSkill({
-            name: 'Second Test Skill',
-            description: 'Another test skill',
-            prompt: 'Second skill prompt',
-            organizationId: organization.id,
-            userId: user.id,
-            spaceId: space.id.toString(),
           });
 
-          const multipleSkillVersions: SkillVersion[] = [
-            skillVersions[0],
-            {
-              id: 'skill-version-2' as SkillVersionId,
-              skillId: skill2.id,
-              name: skill2.name,
-              slug: skill2.slug,
-              description: skill2.description,
-              prompt: skill2.prompt,
-              version: skill2.version,
-              userId: user.id,
-            },
-          ];
-
-          const skillFilesMap = new Map<SkillVersionId, SkillFile[]>([
-            [
-              skillVersions[0].id,
-              [
-                {
-                  id: createSkillFileId('file-1'),
-                  skillVersionId: skillVersions[0].id,
-                  path: 'helper1.ts',
-                  content: 'export const helper1 = () => {}',
-                  permissions: '644',
-                },
-              ],
-            ],
-            [
-              multipleSkillVersions[1].id,
-              [
-                {
-                  id: createSkillFileId('file-2'),
-                  skillVersionId: multipleSkillVersions[1].id,
-                  path: 'helper2.ts',
-                  content: 'export const helper2 = () => {}',
-                  permissions: '644',
-                },
-              ],
-            ],
-          ]);
-
-          const fileUpdates =
-            await copilotDeployer.generateFileUpdatesForSkills(
-              multipleSkillVersions,
-              skillFilesMap,
-            );
-
-          const skill1Files = fileUpdates.createOrUpdate.filter((file) =>
-            file.path.includes(skill.slug),
-          );
-          expect(skill1Files).toHaveLength(2);
-        });
-
-        it('creates two files for second skill when deploying multiple skills', async () => {
-          const skill2 = await testApp.skillsHexa.getAdapter().createSkill({
-            name: 'Second Test Skill',
-            description: 'Another test skill',
-            prompt: 'Second skill prompt',
-            organizationId: organization.id,
-            userId: user.id,
-            spaceId: space.id.toString(),
+          it('creates four files', () => {
+            expect(fileUpdates.createOrUpdate).toHaveLength(4);
           });
 
-          const multipleSkillVersions: SkillVersion[] = [
-            skillVersions[0],
-            {
-              id: 'skill-version-2' as SkillVersionId,
-              skillId: skill2.id,
-              name: skill2.name,
-              slug: skill2.slug,
-              description: skill2.description,
-              prompt: skill2.prompt,
-              version: skill2.version,
-              userId: user.id,
-            },
-          ];
-
-          const skillFilesMap = new Map<SkillVersionId, SkillFile[]>([
-            [
-              skillVersions[0].id,
-              [
-                {
-                  id: createSkillFileId('file-1'),
-                  skillVersionId: skillVersions[0].id,
-                  path: 'helper1.ts',
-                  content: 'export const helper1 = () => {}',
-                  permissions: '644',
-                },
-              ],
-            ],
-            [
-              multipleSkillVersions[1].id,
-              [
-                {
-                  id: createSkillFileId('file-2'),
-                  skillVersionId: multipleSkillVersions[1].id,
-                  path: 'helper2.ts',
-                  content: 'export const helper2 = () => {}',
-                  permissions: '644',
-                },
-              ],
-            ],
-          ]);
-
-          const fileUpdates =
-            await copilotDeployer.generateFileUpdatesForSkills(
-              multipleSkillVersions,
-              skillFilesMap,
+          it('creates two files for first skill', () => {
+            const skill1Files = fileUpdates.createOrUpdate.filter((file) =>
+              file.path.includes(skill.slug),
             );
+            expect(skill1Files).toHaveLength(2);
+          });
 
-          const skill2Files = fileUpdates.createOrUpdate.filter((file) =>
-            file.path.includes(skill2.slug),
-          );
-          expect(skill2Files).toHaveLength(2);
+          it('creates two files for second skill', () => {
+            const skill2Files = fileUpdates.createOrUpdate.filter((file) =>
+              file.path.includes(skill2.slug),
+            );
+            expect(skill2Files).toHaveLength(2);
+          });
         });
       });
 
       describe('when deploying artifacts with multi-file skills', () => {
-        it('creates five files when deploying recipe, standard, and skill with additional files', async () => {
-          const recipeVersions: RecipeVersion[] = [
-            {
-              id: 'recipe-version-1' as RecipeVersionId,
-              recipeId: recipe.id,
-              name: recipe.name,
-              slug: recipe.slug,
-              content: recipe.content,
-              version: recipe.version,
-              summary: 'Test recipe',
-              userId: user.id,
-            },
-          ];
+        describe('when deploying recipe, standard, and skill with additional files', () => {
+          let fileUpdates: FileUpdates;
 
-          const standardVersions: StandardVersion[] = [
-            {
-              id: 'standard-version-1' as StandardVersionId,
-              standardId: standard.id,
-              name: standard.name,
-              slug: standard.slug,
-              description: standard.description,
-              version: standard.version,
-              summary: 'Test standard',
-              userId: user.id,
-              scope: standard.scope,
-            },
-          ];
+          beforeEach(async () => {
+            const recipeVersions: RecipeVersion[] = [
+              {
+                id: 'recipe-version-1' as RecipeVersionId,
+                recipeId: recipe.id,
+                name: recipe.name,
+                slug: recipe.slug,
+                content: recipe.content,
+                version: recipe.version,
+                summary: 'Test recipe',
+                userId: user.id,
+              },
+            ];
 
-          const skillFilesMap = new Map<SkillVersionId, SkillFile[]>([
-            [
-              skillVersions[0].id,
-              [
-                {
-                  id: createSkillFileId('file-1'),
-                  skillVersionId: skillVersions[0].id,
-                  path: 'helper.ts',
-                  content: 'export const helper = () => {}',
-                  permissions: '644',
-                },
-                {
-                  id: createSkillFileId('file-2'),
-                  skillVersionId: skillVersions[0].id,
-                  path: 'README.md',
-                  content: '# Helper Documentation',
-                  permissions: '644',
-                },
-              ],
-            ],
-          ]);
+            const standardVersions: StandardVersion[] = [
+              {
+                id: 'standard-version-1' as StandardVersionId,
+                standardId: standard.id,
+                name: standard.name,
+                slug: standard.slug,
+                description: standard.description,
+                version: standard.version,
+                summary: 'Test standard',
+                userId: user.id,
+                scope: standard.scope,
+              },
+            ];
 
-          const fileUpdates = await copilotDeployer.deployArtifacts(
-            recipeVersions,
-            standardVersions,
-            skillVersions,
-            skillFilesMap,
-          );
+            // Attach files to skill version
+            const skillVersionsWithFiles = [
+              {
+                ...skillVersions[0],
+                files: [
+                  {
+                    id: createSkillFileId('file-1'),
+                    skillVersionId: skillVersions[0].id,
+                    path: 'helper.ts',
+                    content: 'export const helper = () => {}',
+                    permissions: '644',
+                  },
+                  {
+                    id: createSkillFileId('file-2'),
+                    skillVersionId: skillVersions[0].id,
+                    path: 'README.md',
+                    content: '# Helper Documentation',
+                    permissions: '644',
+                  },
+                ],
+              },
+            ];
 
-          expect(fileUpdates.createOrUpdate).toHaveLength(5);
-        });
+            fileUpdates = await copilotDeployer.deployArtifacts(
+              recipeVersions,
+              standardVersions,
+              skillVersionsWithFiles,
+            );
+          });
 
-        it('includes SKILL.md file when deploying with recipes and standards', async () => {
-          const recipeVersions: RecipeVersion[] = [
-            {
-              id: 'recipe-version-1' as RecipeVersionId,
-              recipeId: recipe.id,
-              name: recipe.name,
-              slug: recipe.slug,
-              content: recipe.content,
-              version: recipe.version,
-              summary: 'Test recipe',
-              userId: user.id,
-            },
-          ];
+          it('creates five files', () => {
+            expect(fileUpdates.createOrUpdate).toHaveLength(5);
+          });
 
-          const standardVersions: StandardVersion[] = [
-            {
-              id: 'standard-version-1' as StandardVersionId,
-              standardId: standard.id,
-              name: standard.name,
-              slug: standard.slug,
-              description: standard.description,
-              version: standard.version,
-              summary: 'Test standard',
-              userId: user.id,
-              scope: standard.scope,
-            },
-          ];
+          it('includes SKILL.md file', () => {
+            const skillMdFile = fileUpdates.createOrUpdate.find((file) =>
+              file.path.endsWith('SKILL.md'),
+            );
+            expect(skillMdFile).toBeDefined();
+          });
 
-          const skillFilesMap = new Map<SkillVersionId, SkillFile[]>([
-            [
-              skillVersions[0].id,
-              [
-                {
-                  id: createSkillFileId('file-1'),
-                  skillVersionId: skillVersions[0].id,
-                  path: 'helper.ts',
-                  content: 'export const helper = () => {}',
-                  permissions: '644',
-                },
-                {
-                  id: createSkillFileId('file-2'),
-                  skillVersionId: skillVersions[0].id,
-                  path: 'README.md',
-                  content: '# Helper Documentation',
-                  permissions: '644',
-                },
-              ],
-            ],
-          ]);
+          it('includes helper.ts file', () => {
+            const helperFile = fileUpdates.createOrUpdate.find((file) =>
+              file.path.includes('helper.ts'),
+            );
+            expect(helperFile).toBeDefined();
+          });
 
-          const fileUpdates = await copilotDeployer.deployArtifacts(
-            recipeVersions,
-            standardVersions,
-            skillVersions,
-            skillFilesMap,
-          );
-
-          const skillMdFile = fileUpdates.createOrUpdate.find((file) =>
-            file.path.endsWith('SKILL.md'),
-          );
-          expect(skillMdFile).toBeDefined();
-        });
-
-        it('includes helper.ts file when deploying with recipes and standards', async () => {
-          const recipeVersions: RecipeVersion[] = [
-            {
-              id: 'recipe-version-1' as RecipeVersionId,
-              recipeId: recipe.id,
-              name: recipe.name,
-              slug: recipe.slug,
-              content: recipe.content,
-              version: recipe.version,
-              summary: 'Test recipe',
-              userId: user.id,
-            },
-          ];
-
-          const standardVersions: StandardVersion[] = [
-            {
-              id: 'standard-version-1' as StandardVersionId,
-              standardId: standard.id,
-              name: standard.name,
-              slug: standard.slug,
-              description: standard.description,
-              version: standard.version,
-              summary: 'Test standard',
-              userId: user.id,
-              scope: standard.scope,
-            },
-          ];
-
-          const skillFilesMap = new Map<SkillVersionId, SkillFile[]>([
-            [
-              skillVersions[0].id,
-              [
-                {
-                  id: createSkillFileId('file-1'),
-                  skillVersionId: skillVersions[0].id,
-                  path: 'helper.ts',
-                  content: 'export const helper = () => {}',
-                  permissions: '644',
-                },
-                {
-                  id: createSkillFileId('file-2'),
-                  skillVersionId: skillVersions[0].id,
-                  path: 'README.md',
-                  content: '# Helper Documentation',
-                  permissions: '644',
-                },
-              ],
-            ],
-          ]);
-
-          const fileUpdates = await copilotDeployer.deployArtifacts(
-            recipeVersions,
-            standardVersions,
-            skillVersions,
-            skillFilesMap,
-          );
-
-          const helperFile = fileUpdates.createOrUpdate.find((file) =>
-            file.path.includes('helper.ts'),
-          );
-          expect(helperFile).toBeDefined();
-        });
-
-        it('includes README.md file when deploying with recipes and standards', async () => {
-          const recipeVersions: RecipeVersion[] = [
-            {
-              id: 'recipe-version-1' as RecipeVersionId,
-              recipeId: recipe.id,
-              name: recipe.name,
-              slug: recipe.slug,
-              content: recipe.content,
-              version: recipe.version,
-              summary: 'Test recipe',
-              userId: user.id,
-            },
-          ];
-
-          const standardVersions: StandardVersion[] = [
-            {
-              id: 'standard-version-1' as StandardVersionId,
-              standardId: standard.id,
-              name: standard.name,
-              slug: standard.slug,
-              description: standard.description,
-              version: standard.version,
-              summary: 'Test standard',
-              userId: user.id,
-              scope: standard.scope,
-            },
-          ];
-
-          const skillFilesMap = new Map<SkillVersionId, SkillFile[]>([
-            [
-              skillVersions[0].id,
-              [
-                {
-                  id: createSkillFileId('file-1'),
-                  skillVersionId: skillVersions[0].id,
-                  path: 'helper.ts',
-                  content: 'export const helper = () => {}',
-                  permissions: '644',
-                },
-                {
-                  id: createSkillFileId('file-2'),
-                  skillVersionId: skillVersions[0].id,
-                  path: 'README.md',
-                  content: '# Helper Documentation',
-                  permissions: '644',
-                },
-              ],
-            ],
-          ]);
-
-          const fileUpdates = await copilotDeployer.deployArtifacts(
-            recipeVersions,
-            standardVersions,
-            skillVersions,
-            skillFilesMap,
-          );
-
-          const readmeFile = fileUpdates.createOrUpdate.find((file) =>
-            file.path.includes('README.md'),
-          );
-          expect(readmeFile).toBeDefined();
+          it('includes README.md file', () => {
+            const readmeFile = fileUpdates.createOrUpdate.find((file) =>
+              file.path.includes('README.md'),
+            );
+            expect(readmeFile).toBeDefined();
+          });
         });
       });
     });

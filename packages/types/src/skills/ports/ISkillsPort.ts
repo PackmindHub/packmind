@@ -5,7 +5,6 @@ import { SkillFile } from '../SkillFile';
 import { SkillId } from '../SkillId';
 import { SkillVersion } from '../SkillVersion';
 import { SkillVersionId } from '../SkillVersionId';
-import { SkillFile } from '../SkillFile';
 
 export const ISkillsPortName = 'ISkillsPort' as const;
 
