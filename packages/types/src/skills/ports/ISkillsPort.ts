@@ -1,6 +1,7 @@
 import { OrganizationId } from '../../accounts/Organization';
 import { SpaceId } from '../../spaces/SpaceId';
 import { Skill } from '../Skill';
+import { SkillFile } from '../SkillFile';
 import { SkillId } from '../SkillId';
 import { SkillVersion } from '../SkillVersion';
 import { SkillVersionId } from '../SkillVersionId';
