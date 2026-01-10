@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   Body,
+  ConflictException,
   Controller,
   Get,
   NotFoundException,
@@ -15,6 +16,7 @@ import { SkillValidationError, SkillParseError } from '@packmind/skills';
 import {
   OrganizationId,
   Skill,
+  SkillAlreadyExistsError,
   SkillId,
   SkillVersion,
   SkillWithFiles,
@@ -217,6 +219,10 @@ export class OrganizationsSpacesSkillsController {
 
       if (error instanceof SkillParseError) {
         throw new BadRequestException(error.message);
+      }
+
+      if (error instanceof SkillAlreadyExistsError) {
+        throw new ConflictException(error.message);
       }
 
       throw error;

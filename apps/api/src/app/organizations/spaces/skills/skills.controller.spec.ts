@@ -1,4 +1,4 @@
-import { BadRequestException } from '@nestjs/common';
+import { BadRequestException, ConflictException } from '@nestjs/common';
 import { PackmindLogger } from '@packmind/logger';
 import { AuthenticatedRequest } from '@packmind/node-utils';
 import { SkillParseError, SkillValidationError } from '@packmind/skills';
@@ -9,6 +9,7 @@ import {
   createSpaceId,
   createUserId,
   Skill,
+  SkillAlreadyExistsError,
   UploadSkillFileInput,
 } from '@packmind/types';
 import { OrganizationsSpacesSkillsController } from './skills.controller';
@@ -320,6 +321,36 @@ describe('OrganizationsSpacesSkillsController', () => {
         await expect(
           controller.uploadSkill(orgId, spaceId, { files: mockFiles }, request),
         ).rejects.toThrow('SKILL.md must have frontmatter');
+      });
+    });
+
+    describe('when skill already exists', () => {
+      it('returns 409 Conflict', async () => {
+        const alreadyExistsError = new SkillAlreadyExistsError(
+          'test-skill',
+          1,
+          spaceId,
+        );
+
+        skillsService.uploadSkill.mockRejectedValue(alreadyExistsError);
+
+        await expect(
+          controller.uploadSkill(orgId, spaceId, { files: mockFiles }, request),
+        ).rejects.toThrow(ConflictException);
+      });
+
+      it('includes error message in ConflictException', async () => {
+        const alreadyExistsError = new SkillAlreadyExistsError(
+          'test-skill',
+          1,
+          spaceId,
+        );
+
+        skillsService.uploadSkill.mockRejectedValue(alreadyExistsError);
+
+        await expect(
+          controller.uploadSkill(orgId, spaceId, { files: mockFiles }, request),
+        ).rejects.toThrow(alreadyExistsError.message);
       });
     });
 
