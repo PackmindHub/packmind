@@ -31,13 +31,21 @@ export const addSkillCommand = command({
       });
 
       logSuccessConsole('Skill uploaded successfully!');
-      console.log(`  Skill ID: ${result.skillId}`);
-      console.log(`  Name: ${result.name}`);
-      console.log(`  Files: ${result.fileCount}`);
-      console.log(`  Total size: ${(result.totalSize / 1024).toFixed(2)} KB`);
+      logInfoConsole(`  Skill ID: ${result.skillId}`);
+      logInfoConsole(`  Name: ${result.name}`);
+      logInfoConsole(`  Files: ${result.fileCount}`);
+      logInfoConsole(
+        `  Total size: ${(result.totalSize / 1024).toFixed(2)} KB`,
+      );
     } catch (error) {
       if (error instanceof Error) {
-        logErrorConsole(`Upload failed: ${error.message}`);
+        // Provide more helpful message for duplicate skill errors
+        if (error.message.includes('already exists')) {
+          logErrorConsole(`${error.message}`);
+          logInfoConsole('Hint: Skills must have unique names within a space.');
+        } else {
+          logErrorConsole(`Upload failed: ${error.message}`);
+        }
       } else {
         logErrorConsole(`Upload failed: ${String(error)}`);
       }
