@@ -1,11 +1,14 @@
 import { PackmindLogger } from '@packmind/logger';
 import {
+  CodingAgent,
   FileUpdates,
   GitRepo,
   IGitPort,
   IStandardsPort,
   RecipeVersion,
+  SkillFile,
   SkillVersion,
+  SkillVersionId,
   StandardVersion,
   Target,
 } from '@packmind/types';
@@ -17,6 +20,7 @@ export interface DeployerConfig {
   filePath: string;
   agentName: string;
   pathToPackmindFolder?: string;
+  codingAgent?: CodingAgent;
 }
 
 export abstract class SingleFileDeployer implements ICodingAgentDeployer {
@@ -202,11 +206,50 @@ export abstract class SingleFileDeployer implements ICodingAgentDeployer {
   }
 
   async generateFileUpdatesForSkills(
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     skillVersions: SkillVersion[],
+    skillFilesMap?: Map<SkillVersionId, SkillFile[]>,
   ): Promise<FileUpdates> {
-    // Skills not supported for single-file deployers yet
-    return { createOrUpdate: [], delete: [] };
+    this.logger.info(
+      `Generating file updates for skills (${this.config.agentName})`,
+      {
+        skillsCount: skillVersions.length,
+      },
+    );
+
+    const fileUpdates: FileUpdates = {
+      createOrUpdate: [],
+      delete: [],
+    };
+
+    for (const skillVersion of skillVersions) {
+      // Generate SKILL.md with YAML frontmatter
+      const skillMarkdown = this.generateSkillMarkdown(skillVersion);
+      const basePath = this.getSkillBasePath(skillVersion.slug);
+      const skillMdPath = `${basePath}/SKILL.md`;
+
+      fileUpdates.createOrUpdate.push({
+        path: skillMdPath,
+        content: skillMarkdown,
+      });
+
+      // Deploy additional skill files if provided
+      if (skillFilesMap) {
+        const skillFiles = skillFilesMap.get(skillVersion.id);
+        if (skillFiles) {
+          for (const skillFile of skillFiles) {
+            // Skip SKILL.md as we already deployed it
+            if (skillFile.path !== 'SKILL.md') {
+              fileUpdates.createOrUpdate.push({
+                path: `${basePath}/${skillFile.path}`,
+                content: skillFile.content,
+              });
+            }
+          }
+        }
+      }
+    }
+
+    return fileUpdates;
   }
 
   async deployArtifacts(
@@ -214,6 +257,8 @@ export abstract class SingleFileDeployer implements ICodingAgentDeployer {
     standardVersions: StandardVersion[],
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     skillVersions: SkillVersion[] = [],
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    skillFilesMap?: Map<SkillVersionId, SkillFile[]>,
   ): Promise<FileUpdates> {
     this.logger.info(
       `Deploying artifacts for ${this.config.agentName} - clearing recipes and deploying standards`,
@@ -334,5 +379,63 @@ export abstract class SingleFileDeployer implements ICodingAgentDeployer {
       );
       return '';
     }
+  }
+
+  private escapeSingleQuotes(value: string): string {
+    return value.replace(/'/g, "''");
+  }
+
+  private getSkillBasePath(skillSlug: string): string {
+    const codingAgent = this.config.codingAgent;
+
+    switch (codingAgent) {
+      case 'claude':
+        return `.claude/skills/${skillSlug}`;
+      case 'cursor':
+        return `.cursor/skills/${skillSlug}`;
+      case 'continue':
+        return `.continue/skills/${skillSlug}`;
+      default:
+        return `.packmind/skills/${skillSlug}`;
+    }
+  }
+
+  private generateSkillMarkdown(skillVersion: SkillVersion): string {
+    const frontmatterLines: string[] = [];
+
+    frontmatterLines.push(
+      `name: '${this.escapeSingleQuotes(skillVersion.name)}'`,
+    );
+    frontmatterLines.push(
+      `description: '${this.escapeSingleQuotes(skillVersion.description)}'`,
+    );
+
+    if (skillVersion.license) {
+      frontmatterLines.push(
+        `license: '${this.escapeSingleQuotes(skillVersion.license)}'`,
+      );
+    }
+
+    if (skillVersion.compatibility) {
+      frontmatterLines.push(
+        `compatibility: '${this.escapeSingleQuotes(skillVersion.compatibility)}'`,
+      );
+    }
+
+    if (skillVersion.allowedTools) {
+      frontmatterLines.push(
+        `allowedTools: '${this.escapeSingleQuotes(skillVersion.allowedTools)}'`,
+      );
+    }
+
+    if (skillVersion.metadata) {
+      frontmatterLines.push('metadata:');
+      for (const [key, value] of Object.entries(skillVersion.metadata)) {
+        frontmatterLines.push(`  ${key}: '${this.escapeSingleQuotes(value)}'`);
+      }
+    }
+
+    const frontmatter = frontmatterLines.join('\n');
+    return `---\n${frontmatter}\n---\n\n${skillVersion.prompt}`;
   }
 }

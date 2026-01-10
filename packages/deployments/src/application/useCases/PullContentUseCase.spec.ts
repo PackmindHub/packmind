@@ -92,7 +92,9 @@ describe('PullContentUseCase', () => {
     const mockDeployer = {
       generateFileUpdatesForRecipes: jest.fn(),
       generateFileUpdatesForStandards: jest.fn(),
+      generateFileUpdatesForSkills: jest.fn(),
       deployArtifacts: jest.fn(),
+      generateRemovalFileUpdates: jest.fn(),
     };
 
     const mockRegistry = {
@@ -190,7 +192,9 @@ describe('PullContentUseCase', () => {
     let mockDeployer: {
       generateFileUpdatesForRecipes: jest.Mock;
       generateFileUpdatesForStandards: jest.Mock;
+      generateFileUpdatesForSkills: jest.Mock;
       deployArtifacts: jest.Mock;
+      generateRemovalFileUpdates: jest.Mock;
     };
     let mockRegistry: {
       getDeployer: jest.Mock;
@@ -200,7 +204,9 @@ describe('PullContentUseCase', () => {
       mockDeployer = {
         generateFileUpdatesForRecipes: jest.fn(),
         generateFileUpdatesForStandards: jest.fn(),
+        generateFileUpdatesForSkills: jest.fn(),
         deployArtifacts: jest.fn(),
+        generateRemovalFileUpdates: jest.fn(),
       };
 
       mockRegistry = {
@@ -913,6 +919,7 @@ describe('PullContentUseCase', () => {
       mockDeployer = {
         generateFileUpdatesForRecipes: jest.fn(),
         generateFileUpdatesForStandards: jest.fn(),
+        generateFileUpdatesForSkills: jest.fn(),
         deployArtifacts: jest.fn(),
         generateRemovalFileUpdates: jest.fn(),
       };
