@@ -15,6 +15,7 @@ import {
   createSpaceId,
   IAccountsPort,
   ISpacesPort,
+  SkillAlreadyExistsError,
 } from '@packmind/types';
 import slug from 'slug';
 import { v4 as uuidv4 } from 'uuid';
@@ -137,15 +138,16 @@ export class UploadSkillUsecase
       const existingSkills = await this.skillService.listSkillsBySpace(spaceId);
       const existingSlugs = new Set(existingSkills.map((s) => s.slug));
 
-      let skillSlug = baseSlug;
+      const skillSlug = baseSlug;
       if (existingSlugs.has(skillSlug)) {
-        let counter = 1;
-        while (existingSlugs.has(`${baseSlug}-${counter}`)) {
-          counter++;
-        }
-        skillSlug = `${baseSlug}-${counter}`;
+        this.logger.error('Skill with same slug already exists in space', {
+          skillName: name,
+          slug: skillSlug,
+          spaceId,
+        });
+        throw new SkillAlreadyExistsError(name, skillSlug, spaceId);
       }
-      this.logger.info('Resolved unique slug', { slug: skillSlug });
+      this.logger.info('Slug is unique within space', { slug: skillSlug });
 
       // Create skill with initial version 1
       const initialVersion = 1;

@@ -1090,6 +1090,12 @@ export class PackmindGateway implements IPackmindGateway {
         } catch {
           // ignore
         }
+
+        // Special handling for conflict errors (409)
+        if (response.status === 409) {
+          throw new Error(`Skill already exists: ${errorMsg}`);
+        }
+
         throw new Error(errorMsg);
       }
 

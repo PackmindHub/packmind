@@ -22,6 +22,7 @@ import {
   Organization,
   Space,
   UserOrganizationMembership,
+  SkillAlreadyExistsError,
 } from '@packmind/types';
 
 describe('UploadSkillUsecase', () => {
@@ -677,8 +678,8 @@ Content`,
     });
   });
 
-  describe('when skill name conflicts', () => {
-    it('generates unique slug with counter suffix', async () => {
+  describe('when skill slug already exists', () => {
+    it('throws SkillAlreadyExistsError', async () => {
       const files: UploadSkillFileInput[] = [
         {
           path: 'SKILL.md',
@@ -718,66 +719,20 @@ Content`,
         updatedAt: new Date(),
       };
 
-      const mockSkill: Skill = {
-        id: createSkillId('skill-123'),
-        name: 'existing-skill',
-        slug: 'existing-skill-1',
-        description: 'Test conflict',
-        prompt: 'Content',
-        version: 1,
-        userId,
-        spaceId,
-        organizationId,
-        allowedTools: undefined,
-        license: undefined,
-        compatibility: undefined,
-        metadata: undefined,
-        deletedAt: null,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      };
-
-      const mockSkillVersion: SkillVersion = {
-        id: createSkillVersionId('version-123'),
-        skillId: mockSkill.id,
-        userId,
-        name: 'existing-skill',
-        slug: 'existing-skill-1',
-        description: 'Test conflict',
-        prompt: 'Content',
-        version: 1,
-        allowedTools: undefined,
-        license: undefined,
-        compatibility: undefined,
-        metadata: undefined,
-        deletedAt: null,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      };
-
       mockSkillService.listSkillsBySpace.mockResolvedValue([existingSkill]);
-      mockSkillService.addSkill.mockResolvedValue(mockSkill);
-      mockSkillVersionService.addSkillVersion.mockResolvedValue(
-        mockSkillVersion,
-      );
-      mockSkillFileRepository.addMany.mockResolvedValue([]);
 
-      await usecase.execute(command);
-
-      expect(mockSkillService.addSkill).toHaveBeenCalledWith(
-        expect.objectContaining({
-          slug: 'existing-skill-1',
-        }),
+      await expect(usecase.execute(command)).rejects.toThrow(
+        SkillAlreadyExistsError,
       );
     });
 
-    it('handles multiple conflicting slugs', async () => {
+    it('includes error type SkillAlreadyExistsError', async () => {
       const files: UploadSkillFileInput[] = [
         {
           path: 'SKILL.md',
           content: `---
-name: popular-skill
-description: Many conflicts
+name: existing-skill
+description: Test conflict
 ---
 
 Content`,
@@ -792,50 +747,11 @@ Content`,
         spaceId,
       };
 
-      const existingSkills: Skill[] = [
-        {
-          id: createSkillId('skill-1'),
-          name: 'popular-skill',
-          slug: 'popular-skill',
-          description: 'First',
-          prompt: 'Content',
-          version: 1,
-          userId,
-          spaceId,
-          organizationId,
-          allowedTools: undefined,
-          license: undefined,
-          compatibility: undefined,
-          metadata: undefined,
-          deletedAt: null,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        },
-        {
-          id: createSkillId('skill-2'),
-          name: 'popular-skill-1',
-          slug: 'popular-skill-1',
-          description: 'Second',
-          prompt: 'Content',
-          version: 1,
-          userId,
-          spaceId,
-          organizationId,
-          allowedTools: undefined,
-          license: undefined,
-          compatibility: undefined,
-          metadata: undefined,
-          deletedAt: null,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        },
-      ];
-
-      const mockSkill: Skill = {
-        id: createSkillId('skill-123'),
-        name: 'popular-skill',
-        slug: 'popular-skill-2',
-        description: 'Many conflicts',
+      const existingSkill: Skill = {
+        id: createSkillId('existing-123'),
+        name: 'existing-skill',
+        slug: 'existing-skill',
+        description: 'Existing',
         prompt: 'Content',
         version: 1,
         userId,
@@ -850,15 +766,47 @@ Content`,
         updatedAt: new Date(),
       };
 
-      const mockSkillVersion: SkillVersion = {
-        id: createSkillVersionId('version-123'),
-        skillId: mockSkill.id,
+      mockSkillService.listSkillsBySpace.mockResolvedValue([existingSkill]);
+
+      try {
+        await usecase.execute(command);
+        fail('Should have thrown SkillAlreadyExistsError');
+      } catch (error) {
+        expect(error).toBeInstanceOf(SkillAlreadyExistsError);
+      }
+    });
+
+    it('includes skill name in error', async () => {
+      const files: UploadSkillFileInput[] = [
+        {
+          path: 'SKILL.md',
+          content: `---
+name: existing-skill
+description: Test conflict
+---
+
+Content`,
+          permissions: 'rw-r--r--',
+        },
+      ];
+
+      const command: UploadSkillCommand = {
+        files,
+        organizationId,
         userId,
-        name: 'popular-skill',
-        slug: 'popular-skill-2',
-        description: 'Many conflicts',
+        spaceId,
+      };
+
+      const existingSkill: Skill = {
+        id: createSkillId('existing-123'),
+        name: 'existing-skill',
+        slug: 'existing-skill',
+        description: 'Existing',
         prompt: 'Content',
         version: 1,
+        userId,
+        spaceId,
+        organizationId,
         allowedTools: undefined,
         license: undefined,
         compatibility: undefined,
@@ -868,20 +816,271 @@ Content`,
         updatedAt: new Date(),
       };
 
-      mockSkillService.listSkillsBySpace.mockResolvedValue(existingSkills);
-      mockSkillService.addSkill.mockResolvedValue(mockSkill);
-      mockSkillVersionService.addSkillVersion.mockResolvedValue(
-        mockSkillVersion,
-      );
-      mockSkillFileRepository.addMany.mockResolvedValue([]);
+      mockSkillService.listSkillsBySpace.mockResolvedValue([existingSkill]);
 
-      await usecase.execute(command);
+      try {
+        await usecase.execute(command);
+        fail('Should have thrown SkillAlreadyExistsError');
+      } catch (error) {
+        expect((error as SkillAlreadyExistsError).skillName).toBe(
+          'existing-skill',
+        );
+      }
+    });
 
-      expect(mockSkillService.addSkill).toHaveBeenCalledWith(
-        expect.objectContaining({
-          slug: 'popular-skill-2',
-        }),
-      );
+    it('includes skill slug in error', async () => {
+      const files: UploadSkillFileInput[] = [
+        {
+          path: 'SKILL.md',
+          content: `---
+name: existing-skill
+description: Test conflict
+---
+
+Content`,
+          permissions: 'rw-r--r--',
+        },
+      ];
+
+      const command: UploadSkillCommand = {
+        files,
+        organizationId,
+        userId,
+        spaceId,
+      };
+
+      const existingSkill: Skill = {
+        id: createSkillId('existing-123'),
+        name: 'existing-skill',
+        slug: 'existing-skill',
+        description: 'Existing',
+        prompt: 'Content',
+        version: 1,
+        userId,
+        spaceId,
+        organizationId,
+        allowedTools: undefined,
+        license: undefined,
+        compatibility: undefined,
+        metadata: undefined,
+        deletedAt: null,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      mockSkillService.listSkillsBySpace.mockResolvedValue([existingSkill]);
+
+      try {
+        await usecase.execute(command);
+        fail('Should have thrown SkillAlreadyExistsError');
+      } catch (error) {
+        expect((error as SkillAlreadyExistsError).skillSlug).toBe(
+          'existing-skill',
+        );
+      }
+    });
+
+    it('includes space ID in error', async () => {
+      const files: UploadSkillFileInput[] = [
+        {
+          path: 'SKILL.md',
+          content: `---
+name: existing-skill
+description: Test conflict
+---
+
+Content`,
+          permissions: 'rw-r--r--',
+        },
+      ];
+
+      const command: UploadSkillCommand = {
+        files,
+        organizationId,
+        userId,
+        spaceId,
+      };
+
+      const existingSkill: Skill = {
+        id: createSkillId('existing-123'),
+        name: 'existing-skill',
+        slug: 'existing-skill',
+        description: 'Existing',
+        prompt: 'Content',
+        version: 1,
+        userId,
+        spaceId,
+        organizationId,
+        allowedTools: undefined,
+        license: undefined,
+        compatibility: undefined,
+        metadata: undefined,
+        deletedAt: null,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      mockSkillService.listSkillsBySpace.mockResolvedValue([existingSkill]);
+
+      try {
+        await usecase.execute(command);
+        fail('Should have thrown SkillAlreadyExistsError');
+      } catch (error) {
+        expect((error as SkillAlreadyExistsError).spaceId).toBe(spaceId);
+      }
+    });
+
+    it('does not create skill', async () => {
+      const files: UploadSkillFileInput[] = [
+        {
+          path: 'SKILL.md',
+          content: `---
+name: existing-skill
+description: Test conflict
+---
+
+Content`,
+          permissions: 'rw-r--r--',
+        },
+      ];
+
+      const command: UploadSkillCommand = {
+        files,
+        organizationId,
+        userId,
+        spaceId,
+      };
+
+      const existingSkill: Skill = {
+        id: createSkillId('existing-123'),
+        name: 'existing-skill',
+        slug: 'existing-skill',
+        description: 'Existing',
+        prompt: 'Content',
+        version: 1,
+        userId,
+        spaceId,
+        organizationId,
+        allowedTools: undefined,
+        license: undefined,
+        compatibility: undefined,
+        metadata: undefined,
+        deletedAt: null,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      mockSkillService.listSkillsBySpace.mockResolvedValue([existingSkill]);
+
+      try {
+        await usecase.execute(command);
+      } catch {
+        // expected
+      }
+
+      expect(mockSkillService.addSkill).not.toHaveBeenCalled();
+    });
+
+    it('does not create skill version', async () => {
+      const files: UploadSkillFileInput[] = [
+        {
+          path: 'SKILL.md',
+          content: `---
+name: existing-skill
+description: Test conflict
+---
+
+Content`,
+          permissions: 'rw-r--r--',
+        },
+      ];
+
+      const command: UploadSkillCommand = {
+        files,
+        organizationId,
+        userId,
+        spaceId,
+      };
+
+      const existingSkill: Skill = {
+        id: createSkillId('existing-123'),
+        name: 'existing-skill',
+        slug: 'existing-skill',
+        description: 'Existing',
+        prompt: 'Content',
+        version: 1,
+        userId,
+        spaceId,
+        organizationId,
+        allowedTools: undefined,
+        license: undefined,
+        compatibility: undefined,
+        metadata: undefined,
+        deletedAt: null,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      mockSkillService.listSkillsBySpace.mockResolvedValue([existingSkill]);
+
+      try {
+        await usecase.execute(command);
+      } catch {
+        // expected
+      }
+
+      expect(mockSkillVersionService.addSkillVersion).not.toHaveBeenCalled();
+    });
+
+    it('does not save skill files', async () => {
+      const files: UploadSkillFileInput[] = [
+        {
+          path: 'SKILL.md',
+          content: `---
+name: existing-skill
+description: Test conflict
+---
+
+Content`,
+          permissions: 'rw-r--r--',
+        },
+      ];
+
+      const command: UploadSkillCommand = {
+        files,
+        organizationId,
+        userId,
+        spaceId,
+      };
+
+      const existingSkill: Skill = {
+        id: createSkillId('existing-123'),
+        name: 'existing-skill',
+        slug: 'existing-skill',
+        description: 'Existing',
+        prompt: 'Content',
+        version: 1,
+        userId,
+        spaceId,
+        organizationId,
+        allowedTools: undefined,
+        license: undefined,
+        compatibility: undefined,
+        metadata: undefined,
+        deletedAt: null,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      mockSkillService.listSkillsBySpace.mockResolvedValue([existingSkill]);
+
+      try {
+        await usecase.execute(command);
+      } catch {
+        // expected
+      }
+
+      expect(mockSkillFileRepository.addMany).not.toHaveBeenCalled();
     });
   });
 
