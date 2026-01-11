@@ -2,10 +2,9 @@
 
 ## Added
 
-## Changed
+- Render skills for GitHub Copilot and Claude Code (#71)
 
-- **BREAKING**: CLI command renamed from `upload-skill` to `skills add` for better command organization (#71)
-  - Migration: Replace `packmind-cli upload-skill <path>` with `packmind-cli skills add <path>`
+## Changed
 
 ## Fixed
 

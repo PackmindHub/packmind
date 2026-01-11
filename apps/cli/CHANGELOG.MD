@@ -2,6 +2,8 @@
 
 ## Added
 
+- Add `skills add` command to import skills in Packmind (#71)
+
 ## Changed
 
 ## Fixed
