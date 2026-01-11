@@ -12,10 +12,14 @@ import {
   createTargetId,
   IStandardsPort,
   Rule,
+  SkillVersion,
+  createSkillVersionId,
+  createSkillFileId,
 } from '@packmind/types';
 import { v4 as uuidv4 } from 'uuid';
 import { recipeFactory } from '@packmind/recipes/test';
 import { standardFactory } from '@packmind/standards/test';
+import { skillVersionFactory } from '@packmind/skills/test';
 
 describe('ClaudeDeployer', () => {
   let deployer: ClaudeDeployer;
@@ -3456,6 +3460,859 @@ describe('ClaudeDeployer', () => {
         );
 
         expect(result.delete).toHaveLength(0);
+      });
+    });
+  });
+
+  describe('deploySkills', () => {
+    let skillVersions: SkillVersion[];
+
+    beforeEach(() => {
+      skillVersions = [
+        skillVersionFactory({
+          name: 'Test Skill',
+          slug: 'test-skill',
+          description: 'A test skill for Claude deployment',
+          prompt: 'This is the skill prompt content for testing',
+          license: 'MIT',
+          compatibility: 'Claude Code',
+          metadata: { category: 'testing', version: '1.0' },
+          allowedTools: 'Read,Write,Bash',
+        }),
+      ];
+    });
+
+    describe('when calling deploySkills', () => {
+      let fileUpdates: Awaited<ReturnType<typeof deployer.deploySkills>>;
+
+      beforeEach(async () => {
+        fileUpdates = await deployer.deploySkills(
+          skillVersions,
+          mockGitRepo,
+          mockTarget,
+        );
+      });
+
+      it('creates one SKILL.md file in a folder', () => {
+        expect(fileUpdates.createOrUpdate).toHaveLength(1);
+      });
+
+      it('creates SKILL.md at correct path', () => {
+        expect(fileUpdates.createOrUpdate[0].path).toBe(
+          `.claude/skills/${skillVersions[0].slug}/SKILL.md`,
+        );
+      });
+
+      it('includes name in frontmatter', () => {
+        expect(fileUpdates.createOrUpdate[0].content).toContain(
+          `name: ${skillVersions[0].name}`,
+        );
+      });
+
+      it('includes description in frontmatter', () => {
+        expect(fileUpdates.createOrUpdate[0].content).toContain(
+          `description: '${skillVersions[0].description}'`,
+        );
+      });
+
+      it('includes license in frontmatter', () => {
+        expect(fileUpdates.createOrUpdate[0].content).toContain(
+          `license: '${skillVersions[0].license}'`,
+        );
+      });
+
+      it('includes compatibility in frontmatter', () => {
+        expect(fileUpdates.createOrUpdate[0].content).toContain(
+          `compatibility: '${skillVersions[0].compatibility}'`,
+        );
+      });
+
+      it('includes allowed-tools in frontmatter', () => {
+        expect(fileUpdates.createOrUpdate[0].content).toContain(
+          `allowed-tools: '${skillVersions[0].allowedTools}'`,
+        );
+      });
+
+      it('includes metadata section in frontmatter', () => {
+        const content = fileUpdates.createOrUpdate[0].content;
+        expect(content).toContain('metadata:');
+      });
+
+      it('includes category in metadata', () => {
+        const content = fileUpdates.createOrUpdate[0].content;
+        expect(content).toContain("category: 'testing'");
+      });
+
+      it('includes version in metadata', () => {
+        const content = fileUpdates.createOrUpdate[0].content;
+        expect(content).toContain("version: '1.0'");
+      });
+
+      it('includes prompt content in body', () => {
+        expect(fileUpdates.createOrUpdate[0].content).toContain(
+          'This is the skill prompt content for testing',
+        );
+      });
+
+      it('starts with YAML frontmatter delimiter', () => {
+        const content = fileUpdates.createOrUpdate[0].content;
+        expect(content).toMatch(/^---\n/);
+      });
+
+      it('ends frontmatter section with YAML delimiter', () => {
+        const content = fileUpdates.createOrUpdate[0].content;
+        expect(content).toMatch(/\n---\n/);
+      });
+    });
+
+    describe('when calling generateFileUpdatesForSkills', () => {
+      let fileUpdates: Awaited<
+        ReturnType<typeof deployer.generateFileUpdatesForSkills>
+      >;
+
+      beforeEach(async () => {
+        fileUpdates =
+          await deployer.generateFileUpdatesForSkills(skillVersions);
+      });
+
+      it('creates one SKILL.md file', () => {
+        expect(fileUpdates.createOrUpdate).toHaveLength(1);
+      });
+
+      it('creates SKILL.md at correct path', () => {
+        expect(fileUpdates.createOrUpdate[0].path).toBe(
+          `.claude/skills/${skillVersions[0].slug}/SKILL.md`,
+        );
+      });
+
+      it('includes name in frontmatter', () => {
+        const content = fileUpdates.createOrUpdate[0].content;
+        expect(content).toContain(`name: ${skillVersions[0].name}`);
+      });
+
+      it('includes description in frontmatter', () => {
+        const content = fileUpdates.createOrUpdate[0].content;
+        expect(content).toContain(
+          `description: '${skillVersions[0].description}'`,
+        );
+      });
+
+      it('includes license in frontmatter', () => {
+        const content = fileUpdates.createOrUpdate[0].content;
+        expect(content).toContain(`license: '${skillVersions[0].license}'`);
+      });
+    });
+
+    describe('when deploying multiple skills', () => {
+      let multipleSkillVersions: SkillVersion[];
+
+      beforeEach(() => {
+        multipleSkillVersions = [
+          skillVersions[0],
+          skillVersionFactory({
+            name: 'Second Test Skill',
+            slug: 'second-test-skill',
+            description: 'Another test skill',
+            prompt: 'Second skill prompt',
+          }),
+          skillVersionFactory({
+            name: 'Third Test Skill',
+            slug: 'third-test-skill',
+            description: 'Yet another test skill',
+            prompt: 'Third skill prompt',
+          }),
+        ];
+      });
+
+      it('creates multiple SKILL.md files in separate folders', async () => {
+        const fileUpdates = await deployer.deploySkills(
+          multipleSkillVersions,
+          mockGitRepo,
+          mockTarget,
+        );
+
+        expect(fileUpdates.createOrUpdate).toHaveLength(3);
+      });
+
+      it('creates first skill at correct path', async () => {
+        const fileUpdates = await deployer.deploySkills(
+          multipleSkillVersions,
+          mockGitRepo,
+          mockTarget,
+        );
+
+        expect(fileUpdates.createOrUpdate[0].path).toBe(
+          `.claude/skills/${multipleSkillVersions[0].slug}/SKILL.md`,
+        );
+      });
+
+      it('creates second skill at correct path', async () => {
+        const fileUpdates = await deployer.deploySkills(
+          multipleSkillVersions,
+          mockGitRepo,
+          mockTarget,
+        );
+
+        expect(fileUpdates.createOrUpdate[1].path).toBe(
+          `.claude/skills/${multipleSkillVersions[1].slug}/SKILL.md`,
+        );
+      });
+
+      it('creates third skill at correct path', async () => {
+        const fileUpdates = await deployer.deploySkills(
+          multipleSkillVersions,
+          mockGitRepo,
+          mockTarget,
+        );
+
+        expect(fileUpdates.createOrUpdate[2].path).toBe(
+          `.claude/skills/${multipleSkillVersions[2].slug}/SKILL.md`,
+        );
+      });
+    });
+
+    describe('when skill has single quotes in description', () => {
+      let skillWithSingleQuotes: SkillVersion;
+
+      beforeEach(() => {
+        skillWithSingleQuotes = skillVersionFactory({
+          name: 'Skill with quotes',
+          slug: 'skill-with-quotes',
+          description: "This skill's description has 'single quotes'",
+          prompt: 'Test prompt',
+        });
+      });
+
+      it('escapes single quotes in YAML frontmatter', async () => {
+        const fileUpdates = await deployer.deploySkills(
+          [skillWithSingleQuotes],
+          mockGitRepo,
+          mockTarget,
+        );
+
+        expect(fileUpdates.createOrUpdate[0].content).toContain(
+          "description: 'This skill''s description has ''single quotes'''",
+        );
+      });
+    });
+
+    describe('when skill has double quotes in description', () => {
+      let skillWithDoubleQuotes: SkillVersion;
+
+      beforeEach(() => {
+        skillWithDoubleQuotes = skillVersionFactory({
+          name: 'Skill with double quotes',
+          slug: 'skill-with-double-quotes',
+          description: 'This skill has "double quotes" in description',
+          prompt: 'Test prompt',
+        });
+      });
+
+      it('preserves double quotes in YAML frontmatter', async () => {
+        const fileUpdates = await deployer.deploySkills(
+          [skillWithDoubleQuotes],
+          mockGitRepo,
+          mockTarget,
+        );
+
+        expect(fileUpdates.createOrUpdate[0].content).toContain(
+          'description: \'This skill has "double quotes" in description\'',
+        );
+      });
+    });
+
+    describe('when skill has multiple files', () => {
+      let skillVersionWithFiles: SkillVersion;
+
+      beforeEach(() => {
+        skillVersionWithFiles = skillVersionFactory({
+          name: 'Multi-file Skill',
+          slug: 'multi-file-skill',
+          description: 'A skill with multiple files',
+          prompt: 'See reference.md and forms.md for more information.',
+          files: [
+            {
+              id: createSkillFileId('file-1'),
+              skillVersionId: createSkillVersionId('skill-version-1'),
+              path: 'reference.md',
+              content:
+                '# Reference\n\nThis is additional reference documentation.',
+              permissions: 'rw-r--r--',
+            },
+            {
+              id: createSkillFileId('file-2'),
+              skillVersionId: createSkillVersionId('skill-version-1'),
+              path: 'forms.md',
+              content: '# Forms\n\nInstructions for working with forms.',
+              permissions: 'rw-r--r--',
+            },
+          ],
+        });
+      });
+
+      it('creates SKILL.md and all additional files', async () => {
+        const fileUpdates = await deployer.deploySkills(
+          [skillVersionWithFiles],
+          mockGitRepo,
+          mockTarget,
+        );
+
+        expect(fileUpdates.createOrUpdate).toHaveLength(3);
+      });
+
+      it('includes SKILL.md file', async () => {
+        const fileUpdates = await deployer.deploySkills(
+          [skillVersionWithFiles],
+          mockGitRepo,
+          mockTarget,
+        );
+
+        const paths = fileUpdates.createOrUpdate.map((f) => f.path);
+        expect(paths).toContain(
+          `.claude/skills/${skillVersionWithFiles.slug}/SKILL.md`,
+        );
+      });
+
+      it('includes reference.md file', async () => {
+        const fileUpdates = await deployer.deploySkills(
+          [skillVersionWithFiles],
+          mockGitRepo,
+          mockTarget,
+        );
+
+        const paths = fileUpdates.createOrUpdate.map((f) => f.path);
+        expect(paths).toContain(
+          `.claude/skills/${skillVersionWithFiles.slug}/reference.md`,
+        );
+      });
+
+      it('includes forms.md file', async () => {
+        const fileUpdates = await deployer.deploySkills(
+          [skillVersionWithFiles],
+          mockGitRepo,
+          mockTarget,
+        );
+
+        const paths = fileUpdates.createOrUpdate.map((f) => f.path);
+        expect(paths).toContain(
+          `.claude/skills/${skillVersionWithFiles.slug}/forms.md`,
+        );
+      });
+
+      it('includes correct content for reference.md', async () => {
+        const fileUpdates = await deployer.deploySkills(
+          [skillVersionWithFiles],
+          mockGitRepo,
+          mockTarget,
+        );
+
+        const referenceFile = fileUpdates.createOrUpdate.find((f) =>
+          f.path.endsWith('reference.md'),
+        );
+        expect(referenceFile?.content).toContain(
+          'This is additional reference documentation',
+        );
+      });
+
+      it('includes correct content for forms.md', async () => {
+        const fileUpdates = await deployer.deploySkills(
+          [skillVersionWithFiles],
+          mockGitRepo,
+          mockTarget,
+        );
+
+        const formsFile = fileUpdates.createOrUpdate.find((f) =>
+          f.path.endsWith('forms.md'),
+        );
+        expect(formsFile?.content).toContain(
+          'Instructions for working with forms',
+        );
+      });
+
+      it('places all files in the skill directory', async () => {
+        const fileUpdates = await deployer.deploySkills(
+          [skillVersionWithFiles],
+          mockGitRepo,
+          mockTarget,
+        );
+
+        fileUpdates.createOrUpdate.forEach((file) => {
+          expect(file.path).toMatch(
+            new RegExp(`^\\.claude/skills/${skillVersionWithFiles.slug}/`),
+          );
+        });
+      });
+    });
+
+    describe('when skill has no additional files', () => {
+      it('creates only SKILL.md', async () => {
+        const skillVersionWithoutFiles = skillVersionFactory({
+          files: undefined,
+        });
+
+        const fileUpdates = await deployer.deploySkills(
+          [skillVersionWithoutFiles],
+          mockGitRepo,
+          mockTarget,
+        );
+
+        expect(fileUpdates.createOrUpdate).toHaveLength(1);
+      });
+
+      it('creates SKILL.md at correct path', async () => {
+        const skillVersionWithoutFiles = skillVersionFactory({
+          files: undefined,
+        });
+
+        const fileUpdates = await deployer.deploySkills(
+          [skillVersionWithoutFiles],
+          mockGitRepo,
+          mockTarget,
+        );
+
+        expect(fileUpdates.createOrUpdate[0].path).toBe(
+          `.claude/skills/${skillVersionWithoutFiles.slug}/SKILL.md`,
+        );
+      });
+    });
+
+    describe('when deploying skills with multiple files', () => {
+      describe('when skill has helper and formatter files', () => {
+        let skillVersionsWithFiles: SkillVersion[];
+
+        beforeEach(() => {
+          skillVersionsWithFiles = [
+            skillVersionFactory({
+              files: [
+                {
+                  id: createSkillFileId('file-1'),
+                  skillVersionId: createSkillVersionId('skill-version-1'),
+                  path: 'helper.ts',
+                  content: 'export const helper = () => {}',
+                  permissions: '644',
+                },
+                {
+                  id: createSkillFileId('file-2'),
+                  skillVersionId: createSkillVersionId('skill-version-1'),
+                  path: 'utils/formatter.ts',
+                  content: 'export const format = (s: string) => s',
+                  permissions: '644',
+                },
+              ],
+            }),
+          ];
+        });
+
+        it('creates three files', async () => {
+          const fileUpdates = await deployer.generateFileUpdatesForSkills(
+            skillVersionsWithFiles,
+          );
+
+          expect(fileUpdates.createOrUpdate).toHaveLength(3);
+        });
+
+        it('places SKILL.md in correct directory', async () => {
+          const fileUpdates = await deployer.generateFileUpdatesForSkills(
+            skillVersionsWithFiles,
+          );
+
+          const skillMdFile = fileUpdates.createOrUpdate.find((file) =>
+            file.path.endsWith('SKILL.md'),
+          );
+          expect(skillMdFile?.path).toBe(
+            `.claude/skills/${skillVersionsWithFiles[0].slug}/SKILL.md`,
+          );
+        });
+
+        it('places helper file in correct path', async () => {
+          const fileUpdates = await deployer.generateFileUpdatesForSkills(
+            skillVersionsWithFiles,
+          );
+
+          const helperFile = fileUpdates.createOrUpdate.find((file) =>
+            file.path.includes('helper.ts'),
+          );
+          expect(helperFile?.path).toBe(
+            `.claude/skills/${skillVersionsWithFiles[0].slug}/helper.ts`,
+          );
+        });
+
+        it('places formatter file in correct nested path', async () => {
+          const fileUpdates = await deployer.generateFileUpdatesForSkills(
+            skillVersionsWithFiles,
+          );
+
+          const formatterFile = fileUpdates.createOrUpdate.find((file) =>
+            file.path.includes('formatter.ts'),
+          );
+          expect(formatterFile?.path).toBe(
+            `.claude/skills/${skillVersionsWithFiles[0].slug}/utils/formatter.ts`,
+          );
+        });
+
+        it('preserves helper file content', async () => {
+          const fileUpdates = await deployer.generateFileUpdatesForSkills(
+            skillVersionsWithFiles,
+          );
+
+          const helperFile = fileUpdates.createOrUpdate.find((file) =>
+            file.path.includes('helper.ts'),
+          );
+          expect(helperFile?.content).toBe('export const helper = () => {}');
+        });
+
+        it('preserves formatter file content', async () => {
+          const fileUpdates = await deployer.generateFileUpdatesForSkills(
+            skillVersionsWithFiles,
+          );
+
+          const formatterFile = fileUpdates.createOrUpdate.find((file) =>
+            file.path.includes('formatter.ts'),
+          );
+          expect(formatterFile?.content).toBe(
+            'export const format = (s: string) => s',
+          );
+        });
+      });
+
+      describe('when SKILL.md is in SkillFile table', () => {
+        let fileUpdates: Awaited<
+          ReturnType<typeof deployer.generateFileUpdatesForSkills>
+        >;
+
+        beforeEach(async () => {
+          const skillVersionsWithFiles = [
+            skillVersionFactory({
+              files: [
+                {
+                  id: createSkillFileId('file-0'),
+                  skillVersionId: createSkillVersionId('skill-version-1'),
+                  path: 'SKILL.md',
+                  content: 'This should be ignored',
+                  permissions: '644',
+                },
+                {
+                  id: createSkillFileId('file-1'),
+                  skillVersionId: createSkillVersionId('skill-version-1'),
+                  path: 'helper.ts',
+                  content: 'export const helper = () => {}',
+                  permissions: '644',
+                },
+              ],
+            }),
+          ];
+
+          fileUpdates = await deployer.generateFileUpdatesForSkills(
+            skillVersionsWithFiles,
+          );
+        });
+
+        it('creates only two files', () => {
+          expect(fileUpdates.createOrUpdate).toHaveLength(2);
+        });
+
+        it('creates only one SKILL.md file', () => {
+          const skillMdFiles = fileUpdates.createOrUpdate.filter((file) =>
+            file.path.endsWith('SKILL.md'),
+          );
+          expect(skillMdFiles).toHaveLength(1);
+        });
+
+        it('ignores SKILL.md content from SkillFile table', () => {
+          const skillMdFiles = fileUpdates.createOrUpdate.filter((file) =>
+            file.path.endsWith('SKILL.md'),
+          );
+          expect(skillMdFiles[0].content).not.toContain(
+            'This should be ignored',
+          );
+        });
+      });
+
+      describe('when skill has no additional files', () => {
+        let fileUpdates: Awaited<
+          ReturnType<typeof deployer.generateFileUpdatesForSkills>
+        >;
+
+        beforeEach(async () => {
+          const skillVersionsWithFiles = [
+            skillVersionFactory({
+              files: [],
+            }),
+          ];
+
+          fileUpdates = await deployer.generateFileUpdatesForSkills(
+            skillVersionsWithFiles,
+          );
+        });
+
+        it('creates one file', () => {
+          expect(fileUpdates.createOrUpdate).toHaveLength(1);
+        });
+
+        it('creates SKILL.md file', () => {
+          expect(fileUpdates.createOrUpdate[0].path).toMatch(/SKILL\.md$/);
+        });
+      });
+
+      describe('when deploying two skills with one additional file each', () => {
+        let fileUpdates: Awaited<
+          ReturnType<typeof deployer.generateFileUpdatesForSkills>
+        >;
+
+        beforeEach(async () => {
+          const multipleSkillVersionsWithFiles = [
+            skillVersionFactory({
+              slug: 'first-skill',
+              files: [
+                {
+                  id: createSkillFileId('file-1'),
+                  skillVersionId: createSkillVersionId('skill-version-1'),
+                  path: 'helper1.ts',
+                  content: 'export const helper1 = () => {}',
+                  permissions: '644',
+                },
+              ],
+            }),
+            skillVersionFactory({
+              slug: 'second-skill',
+              files: [
+                {
+                  id: createSkillFileId('file-2'),
+                  skillVersionId: createSkillVersionId('skill-version-2'),
+                  path: 'helper2.ts',
+                  content: 'export const helper2 = () => {}',
+                  permissions: '644',
+                },
+              ],
+            }),
+          ];
+
+          fileUpdates = await deployer.generateFileUpdatesForSkills(
+            multipleSkillVersionsWithFiles,
+          );
+        });
+
+        it('creates four files', () => {
+          expect(fileUpdates.createOrUpdate).toHaveLength(4);
+        });
+
+        it('creates two files for first skill', () => {
+          const skill1Files = fileUpdates.createOrUpdate.filter((file) =>
+            file.path.includes('first-skill'),
+          );
+          expect(skill1Files).toHaveLength(2);
+        });
+
+        it('creates two files for second skill', () => {
+          const skill2Files = fileUpdates.createOrUpdate.filter((file) =>
+            file.path.includes('second-skill'),
+          );
+          expect(skill2Files).toHaveLength(2);
+        });
+      });
+    });
+
+    describe('when removing skills', () => {
+      it('deletes skill directory', async () => {
+        const fileUpdates = await deployer.generateRemovalFileUpdates(
+          {
+            recipeVersions: [],
+            standardVersions: [],
+            skillVersions: skillVersions,
+          },
+          {
+            recipeVersions: [],
+            standardVersions: [],
+            skillVersions: [],
+          },
+        );
+
+        expect(fileUpdates.delete).toContainEqual({
+          path: `.claude/skills/${skillVersions[0].slug}`,
+        });
+      });
+    });
+
+    describe('when deploying artifacts with skills', () => {
+      let fileUpdates: Awaited<ReturnType<typeof deployer.deployArtifacts>>;
+
+      beforeEach(async () => {
+        const recipe = recipeFactory({
+          name: 'Test Recipe',
+          slug: 'test-recipe',
+        });
+
+        const recipeVersions: RecipeVersion[] = [
+          {
+            id: createRecipeVersionId('recipe-version-1'),
+            recipeId: recipe.id,
+            name: recipe.name,
+            slug: recipe.slug,
+            content: recipe.content,
+            version: recipe.version,
+            summary: 'Test recipe',
+            userId: createUserId('user-1'),
+          },
+        ];
+
+        const standard = standardFactory({
+          name: 'Test Standard',
+          slug: 'test-standard',
+        });
+
+        const standardVersions: StandardVersion[] = [
+          {
+            id: createStandardVersionId('standard-version-1'),
+            standardId: standard.id,
+            name: standard.name,
+            slug: standard.slug,
+            description: standard.description,
+            version: standard.version,
+            summary: 'Test standard',
+            userId: createUserId('user-1'),
+            scope: standard.scope,
+            rules: [] as Rule[],
+          },
+        ];
+
+        mockStandardsPort.getRulesByStandardId.mockResolvedValue([]);
+
+        fileUpdates = await deployer.deployArtifacts(
+          recipeVersions,
+          standardVersions,
+          skillVersions,
+        );
+      });
+
+      it('creates recipe, standard, and skill files', () => {
+        expect(fileUpdates.createOrUpdate.length).toBeGreaterThanOrEqual(3);
+      });
+
+      it('creates skill file in correct location', () => {
+        const skillFile = fileUpdates.createOrUpdate.find((file) =>
+          file.path.includes('.claude/skills/'),
+        );
+        expect(skillFile).toBeDefined();
+      });
+
+      it('creates skill file with correct path', () => {
+        const skillFile = fileUpdates.createOrUpdate.find((file) =>
+          file.path.includes('.claude/skills/'),
+        );
+        expect(skillFile?.path).toBe(
+          `.claude/skills/${skillVersions[0].slug}/SKILL.md`,
+        );
+      });
+
+      it('includes skill prompt in file content', () => {
+        const skillFile = fileUpdates.createOrUpdate.find((file) =>
+          file.path.includes('.claude/skills/'),
+        );
+        expect(skillFile?.content).toContain(
+          'This is the skill prompt content for testing',
+        );
+      });
+    });
+
+    describe('when deploying artifacts with multi-file skills', () => {
+      describe('when deploying recipe, standard, and skill with additional files', () => {
+        let fileUpdates: Awaited<ReturnType<typeof deployer.deployArtifacts>>;
+
+        beforeEach(async () => {
+          const recipe = recipeFactory({
+            name: 'Test Recipe',
+            slug: 'test-recipe',
+          });
+
+          const recipeVersions: RecipeVersion[] = [
+            {
+              id: createRecipeVersionId('recipe-version-1'),
+              recipeId: recipe.id,
+              name: recipe.name,
+              slug: recipe.slug,
+              content: recipe.content,
+              version: recipe.version,
+              summary: 'Test recipe',
+              userId: createUserId('user-1'),
+            },
+          ];
+
+          const standard = standardFactory({
+            name: 'Test Standard',
+            slug: 'test-standard',
+          });
+
+          const standardVersions: StandardVersion[] = [
+            {
+              id: createStandardVersionId('standard-version-1'),
+              standardId: standard.id,
+              name: standard.name,
+              slug: standard.slug,
+              description: standard.description,
+              version: standard.version,
+              summary: 'Test standard',
+              userId: createUserId('user-1'),
+              scope: standard.scope,
+              rules: [] as Rule[],
+            },
+          ];
+
+          const skillVersionsWithFiles = [
+            skillVersionFactory({
+              files: [
+                {
+                  id: createSkillFileId('file-1'),
+                  skillVersionId: createSkillVersionId('skill-version-1'),
+                  path: 'helper.ts',
+                  content: 'export const helper = () => {}',
+                  permissions: '644',
+                },
+                {
+                  id: createSkillFileId('file-2'),
+                  skillVersionId: createSkillVersionId('skill-version-1'),
+                  path: 'README.md',
+                  content: '# Helper Documentation',
+                  permissions: '644',
+                },
+              ],
+            }),
+          ];
+
+          mockStandardsPort.getRulesByStandardId.mockResolvedValue([]);
+
+          fileUpdates = await deployer.deployArtifacts(
+            recipeVersions,
+            standardVersions,
+            skillVersionsWithFiles,
+          );
+        });
+
+        it('creates five files', () => {
+          expect(fileUpdates.createOrUpdate.length).toBeGreaterThanOrEqual(5);
+        });
+
+        it('includes SKILL.md file', () => {
+          const skillMdFile = fileUpdates.createOrUpdate.find((file) =>
+            file.path.endsWith('SKILL.md'),
+          );
+          expect(skillMdFile).toBeDefined();
+        });
+
+        it('includes helper.ts file', () => {
+          const helperFile = fileUpdates.createOrUpdate.find((file) =>
+            file.path.includes('helper.ts'),
+          );
+          expect(helperFile).toBeDefined();
+        });
+
+        it('includes README.md file', () => {
+          const readmeFile = fileUpdates.createOrUpdate.find(
+            (file) =>
+              file.path.includes('README.md') &&
+              file.path.includes('.claude/skills/'),
+          );
+          expect(readmeFile).toBeDefined();
+        });
       });
     });
   });
