@@ -209,7 +209,7 @@ describe('buildSkillMarkdown', () => {
       allowedTools: undefined,
     });
 
-    it('omits metadata field when object is empty', () => {
+    it('omits metadata field', () => {
       const result = buildSkillMarkdown(skillVersion);
 
       expect(result).not.toContain('metadata:');
