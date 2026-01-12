@@ -20,6 +20,21 @@ export const pmTabsRecipe = defineSlotRecipe({
           },
         },
       },
+      enclosed: {
+        list: {
+          bg: '{colors.background.tertiary}',
+          rounded: 'md',
+          mb: 2,
+        },
+        trigger: {
+          color: '{colors.text.tertiary}',
+          _selected: {
+            color: '{colors.text.primary}',
+            bg: '{colors.background.primary}',
+            rounded: 'md',
+          },
+        },
+      },
     },
   },
 });

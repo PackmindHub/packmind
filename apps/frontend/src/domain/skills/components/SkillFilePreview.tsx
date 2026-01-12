@@ -126,7 +126,7 @@ export const SkillFilePreview = ({ file }: ISkillFilePreviewProps) => {
         </PMHStack>
       </PMHStack>
 
-      <PMTabs tabs={tabs} defaultValue="preview" />
+      <PMTabs tabs={tabs} defaultValue="preview" variant="enclosed" />
     </PMVStack>
   );
 };
