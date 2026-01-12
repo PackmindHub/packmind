@@ -8,6 +8,19 @@
 - Each sub task MUST have its own commit.
 - Before commiting anything, you must ensure that `npm run quality-gate` does not raise any issue.
 
+# Proactive Skills - Use During Work
+
+After completing exploration or coding tasks, check if any of these skills should be triggered:
+
+- **consistency-violation-capture** - Did you find different approaches to the same concern across modules/packages?
+- **pattern-discovery-capture** - Did you observe recurring patterns or conventions that aren't formally documented?
+- **implicit-decision-capture** - Did you make technical decisions without explicit user guidance during coding?
+- **command-capture** - Did you complete a multi-step workflow that could benefit other developers?
+- **signal-capture** - Did the user express technical preferences or coding practices that should become standards?
+- **codebase-assumption-capture** - Did you discover that initial assumptions about architecture or patterns were incorrect?
+
+These skills should be triggered DURING work, not just at the end. When you notice something relevant, invoke the skill immediately.
+
 # Commiting
 
 - When referencing an issue (example #123), DO NOT write "Close" or "Fix", as this closes the issue which has not been validated by other developers.
