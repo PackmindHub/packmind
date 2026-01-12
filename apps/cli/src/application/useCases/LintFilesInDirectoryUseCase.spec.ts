@@ -399,6 +399,7 @@ describe('LintFilesInDirectoryUseCase', () => {
 
     expect(result.violations).toHaveLength(0);
     expect(consoleSpy).toHaveBeenCalledWith(
+      expect.any(String),
       expect.stringContaining('Error executing programs for file'),
     );
 

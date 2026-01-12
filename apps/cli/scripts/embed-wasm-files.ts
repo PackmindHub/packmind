@@ -10,8 +10,9 @@ import { resolve, join } from 'path';
 
 const WASM_SOURCE_DIR = resolve(__dirname, '../../../packages/linter-ast/res');
 const OUTPUT_FILE = resolve(__dirname, '../src/embedded-wasm.ts');
+const logger = console;
 
-console.log('🔧 Embedding WASM files...');
+logger.log('🔧 Embedding WASM files...');
 
 const wasmFiles = readdirSync(WASM_SOURCE_DIR).filter((f) =>
   f.endsWith('.wasm'),
@@ -24,7 +25,7 @@ for (const wasmFile of wasmFiles) {
   const wasmBuffer = readFileSync(wasmPath);
   const base64Data = wasmBuffer.toString('base64');
   embeddedWasmData[wasmFile] = base64Data;
-  console.log(
+  logger.log(
     `  ✓ Embedded ${wasmFile} (${(wasmBuffer.length / 1024).toFixed(2)} KB)`,
   );
 }
@@ -37,7 +38,7 @@ export const EMBEDDED_WASM_FILES: Record<string, string> = ${JSON.stringify(embe
 
 writeFileSync(OUTPUT_FILE, outputContent);
 
-console.log(`\n✅ Embedded ${wasmFiles.length} WASM files to ${OUTPUT_FILE}`);
-console.log(
+logger.log(`\n✅ Embedded ${wasmFiles.length} WASM files to ${OUTPUT_FILE}`);
+logger.log(
   `📦 Total size: ${(JSON.stringify(embeddedWasmData).length / 1024 / 1024).toFixed(2)} MB`,
 );

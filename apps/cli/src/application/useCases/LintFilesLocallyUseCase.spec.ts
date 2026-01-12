@@ -55,6 +55,10 @@ describe('LintFilesLocallyUseCase', () => {
     } as unknown as jest.Mocked<IExecuteLinterProgramsUseCase>;
 
     mockPackmindGateway = {
+      getMcpToken: jest.fn(),
+      getMcpUrl: jest.fn(),
+      notifyDistribution: jest.fn(),
+      uploadSkill: jest.fn(),
       listExecutionPrograms: jest.fn(),
       getDraftDetectionProgramsForRule: jest.fn(),
       getActiveDetectionProgramsForRule: jest.fn(),
