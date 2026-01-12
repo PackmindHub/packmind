@@ -7,6 +7,7 @@ import {
   PMText,
   PMVerticalNav,
   PMVerticalNavSection,
+  PMVStack,
 } from '@packmind/ui';
 import { LuGitCommitVertical } from 'react-icons/lu';
 
@@ -110,8 +111,8 @@ export const SkillDetailsSidebar = ({
       }
     >
       <PMVerticalNavSection navEntries={distributionNavEntries} />
-      <PMBox px={3} py={2}>
-        <PMText fontSize="xs" fontWeight="bold" color="secondary" mb={2}>
+      <PMVStack align="flex-start" px={2} gap={2}>
+        <PMText fontSize="xs" fontWeight="bold" color="secondary">
           FILES
         </PMText>
         {files.length === 0 ? (
@@ -125,7 +126,7 @@ export const SkillDetailsSidebar = ({
             onFileSelect={onFileSelect}
           />
         )}
-      </PMBox>
+      </PMVStack>
     </PMVerticalNav>
   );
 };

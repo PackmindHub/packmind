@@ -4,11 +4,6 @@ import { MemoryRouter } from 'react-router-dom';
 import { UIProvider } from '@packmind/ui';
 import { skillFactory, skillVersionFactory } from '@packmind/skills/test';
 import { SkillDetails } from './SkillDetails';
-import { buildSkillMarkdown } from '../utils/buildSkillMarkdown';
-
-jest.mock('../utils/buildSkillMarkdown', () => ({
-  buildSkillMarkdown: jest.fn(),
-}));
 
 jest.mock('./SkillDetailsSidebar', () => ({
   SkillDetailsSidebar: ({ files }: { files: { path: string }[] }) => (
@@ -40,10 +35,6 @@ jest.mock('./SkillFilePreview', () => ({
   ),
 }));
 
-const mockBuildSkillMarkdown = buildSkillMarkdown as jest.MockedFunction<
-  typeof buildSkillMarkdown
->;
-
 const renderComponent = (props: Partial<Parameters<typeof SkillDetails>[0]>) =>
   render(
     <MemoryRouter initialEntries={['/org/test-org/spaces/test-space/skills']}>
@@ -66,35 +57,21 @@ describe('SkillDetails', () => {
   });
 
   describe('when rendering', () => {
-    it('creates virtual SKILL.md with reconstructed content', () => {
+    it('creates virtual SKILL.md with prompt content', () => {
       const latestVersion = skillVersionFactory({
         name: 'Test Skill',
         description: 'Test description',
         prompt: 'Test prompt content',
       });
 
-      const reconstructedContent = 'Reconstructed SKILL.md content';
-      mockBuildSkillMarkdown.mockReturnValue(reconstructedContent);
-
       renderComponent({ latestVersion });
 
-      expect(mockBuildSkillMarkdown).toHaveBeenCalledWith(latestVersion);
-    });
-
-    it('displays reconstructed SKILL.md content by default', () => {
-      const reconstructedContent = 'Reconstructed SKILL.md content';
-      mockBuildSkillMarkdown.mockReturnValue(reconstructedContent);
-
-      renderComponent({});
-
       expect(screen.getByTestId('file-content').textContent).toBe(
-        reconstructedContent,
+        'Test prompt content',
       );
     });
 
     it('includes SKILL.md in sidebar file list', () => {
-      mockBuildSkillMarkdown.mockReturnValue('content');
-
       renderComponent({});
 
       expect(screen.getByTestId('sidebar-file-SKILL.md')).toBeInTheDocument();
@@ -102,20 +79,19 @@ describe('SkillDetails', () => {
   });
 
   describe('when files array is empty', () => {
-    it('still shows SKILL.md with reconstructed content', () => {
-      const reconstructedContent = 'Reconstructed content';
-      mockBuildSkillMarkdown.mockReturnValue(reconstructedContent);
+    it('still shows SKILL.md with prompt content', () => {
+      const latestVersion = skillVersionFactory({
+        prompt: 'Prompt content here',
+      });
 
-      renderComponent({ files: [] });
+      renderComponent({ files: [], latestVersion });
 
       expect(screen.getByTestId('file-content').textContent).toBe(
-        reconstructedContent,
+        'Prompt content here',
       );
     });
 
     it('shows SKILL.md as the only file in sidebar', () => {
-      mockBuildSkillMarkdown.mockReturnValue('content');
-
       renderComponent({ files: [] });
 
       expect(screen.getByTestId('sidebar-file-SKILL.md')).toBeInTheDocument();
