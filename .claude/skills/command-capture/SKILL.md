@@ -1,11 +1,44 @@
 ---
 name: command-capture
-description: Silently capture reusable task patterns as command candidates after completing coding work. This skill identifies multi-step workflows that could benefit other developers across projects and logs them to command-candidates.yaml for potential automation. Use this proactively when completing tasks that represent common, repeatable patterns worth standardizing as commands.
+description: Automatically capture reusable task patterns as command candidates after completing coding work. This skill identifies multi-step workflows that could benefit other developers across projects and logs them to command-candidates.yaml for potential automation. Use this proactively when completing tasks that represent common, repeatable patterns worth standardizing as commands.
 ---
 
 # Command Capture Skill
 
 This skill helps AI agents identify and log task patterns that could be valuable as reusable commands (also known as recipes in Packmind). The goal is to capture workflows that represent common, repeatable patterns that developers might need across multiple projects.
+
+## TRIGGER CHECKLIST - Read This First
+
+**TRIGGER THIS SKILL IMMEDIATELY AFTER COMPLETING WORK WHEN:**
+
+- [ ] You followed a multi-step workflow (3-10 steps) to complete a task
+- [ ] The workflow could be reused in other projects
+- [ ] The task represents a common development pattern (testing setup, API endpoint, CI/CD, etc.)
+- [ ] The workflow took 10-60 minutes of work
+- [ ] Other developers would likely need to do this same thing
+
+**TRIGGER AFTER TASK COMPLETION** - evaluate every completed task for reusability.
+
+**MANDATORY POST-TASK CHECK:**
+After completing ANY coding task, ask yourself: "Would this workflow be useful to other developers?" If yes → trigger this skill.
+
+## Failure Example - When This Skill SHOULD Have Been Triggered
+
+```
+User: "Set up Jest testing for this project"
+
+AI: [Installs dependencies]
+AI: [Creates jest.config.js]
+AI: [Adds test scripts to package.json]
+AI: [Creates example test file]
+AI: [Responds "Testing is set up!" but FORGETS to log the command candidate] ❌
+
+CORRECT BEHAVIOR:
+AI: [Completes the multi-step task]
+AI: [Evaluates: "This is a common 5-step workflow, reusable across projects"]
+AI: [Triggers skill and logs to .claude/command-candidates.yaml]
+AI: [Responds to user]
+```
 
 ## Purpose
 
@@ -150,14 +183,14 @@ After completing the task, mentally review:
   - `universal`: Useful across any project/domain
 - `tags`: Relevant keywords for filtering/searching
 
-**CRITICAL:** This is a silent operation. Do NOT:
+**IMPORTANT:** This is an automatic, non-interrupting operation:
 
-- Ask the user if you should log it
-- Confirm to the user that you logged it
-- Interrupt your workflow to announce it
-- Make it visible in your response
+- Do NOT ask the user for permission to log
+- Do NOT announce that you logged something
+- Simply log and continue your work seamlessly
+- The user can review `.claude/command-candidates.yaml` later
 
-Logging happens seamlessly after completing tasks.
+This skill is MANDATORY for reusable workflows - it's not optional.
 
 ### Step 5: User Review (Later)
 
@@ -577,4 +610,4 @@ All four work together:
 
 ---
 
-**Remember:** This skill should be used proactively and silently after completing tasks that represent reusable patterns. It's not about asking permission - it's about building a library of valuable workflows for the team.
+**REMEMBER:** This skill is MANDATORY after completing multi-step coding tasks. Evaluate every completed task for reusability. If the workflow could benefit other developers, you MUST log it - this is not optional. The logging happens automatically without user interaction. Building a library of reusable workflows is a key goal of this skill.

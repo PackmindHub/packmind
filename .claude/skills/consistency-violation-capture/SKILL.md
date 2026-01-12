@@ -1,11 +1,45 @@
 ---
 name: consistency-violation-capture
-description: Silently capture inconsistencies discovered in the codebase during exploration or coding work. This skill logs situations where different parts of the codebase handle similar concerns differently, enabling later standardization efforts. Use this proactively when you notice conflicting patterns, naming conventions, or approaches across the codebase.
+description: Automatically capture inconsistencies discovered in the codebase during exploration or coding work. This skill logs situations where different parts of the codebase handle similar concerns differently, enabling later standardization efforts. Use this proactively when you notice conflicting patterns, naming conventions, or approaches across the codebase.
 ---
 
 # Consistency Violation Capture Skill
 
 This skill helps AI agents identify and log inconsistencies discovered while exploring or working in the codebase. The goal is to create a transparent log of places where the codebase lacks consistency, enabling teams to standardize approaches over time.
+
+## TRIGGER CHECKLIST - Read This First
+
+**TRIGGER THIS SKILL IMMEDIATELY WHEN:**
+
+- [ ] You explored code across 2+ modules/packages and found different approaches to the same concern
+- [ ] You noticed naming conventions differ between files (e.g., `IFoo` vs `Foo` for interfaces)
+- [ ] You found different error handling patterns (exceptions vs Result types)
+- [ ] You discovered mixed async patterns (Promises vs async/await)
+- [ ] You saw inconsistent API response structures
+- [ ] You found varying test organization approaches
+- [ ] You noticed different folder structures for similar modules
+
+**TRIGGER AS SOON AS YOU NOTICE** - don't wait until the end of your response. Log immediately, then continue your work.
+
+**MANDATORY POST-EXPLORATION CHECK:**
+After ANY codebase exploration task, ask yourself: "Did I find any inconsistencies?" If yes → trigger this skill.
+
+## Failure Example - When This Skill SHOULD Have Been Triggered
+
+```
+User: "Analyze event tracking in the standards package"
+
+AI: [Explores packages/standards and packages/llm]
+AI: [Finds that standards package emits events but LLM package doesn't]
+AI: [Finds that some use cases extend AbstractMemberUseCase, others don't]
+AI: [Responds with analysis but FORGETS to trigger this skill] ❌
+
+CORRECT BEHAVIOR:
+AI: [Notices inconsistency] → [Immediately triggers skill and logs to .claude/consistency-violations.yaml]
+AI: [Continues exploration]
+AI: [Notices another inconsistency] → [Immediately triggers skill again]
+AI: [Responds to user with analysis]
+```
 
 ## Purpose
 
@@ -136,14 +170,14 @@ While exploring or coding, notice when different parts of the codebase handle si
 - `related_standard`: If there's an existing standard being violated (optional)
 - `tags`: Relevant keywords for filtering/searching
 
-**CRITICAL:** This is a silent operation. Do NOT:
+**IMPORTANT:** This is an automatic, non-interrupting operation:
 
-- Ask the user if you should log it
-- Confirm to the user that you logged it
-- Interrupt your workflow to announce it
-- Make it visible in your response
+- Do NOT ask the user for permission to log
+- Do NOT announce that you logged something
+- Simply log and continue your work seamlessly
+- The user can review `.claude/consistency-violations.yaml` later
 
-Logging happens seamlessly during exploration and work.
+This skill is MANDATORY when inconsistencies are found - it's not optional.
 
 ### Step 4: User Review (Later)
 
@@ -419,4 +453,4 @@ Once `.claude/consistency-violations.yaml` accumulates entries, developers can:
 
 ---
 
-**Remember:** This skill should be used proactively and silently during codebase exploration and coding work. It's not about asking permission - it's about creating a transparent log of inconsistencies that can drive standardization efforts.
+**REMEMBER:** This skill is MANDATORY during codebase exploration. When you find inconsistencies, you MUST log them - this is not optional. The logging happens automatically without user interaction. Failure to trigger this skill when inconsistencies are discovered is a missed opportunity for improving codebase quality.

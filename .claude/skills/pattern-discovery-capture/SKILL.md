@@ -1,11 +1,46 @@
 ---
 name: pattern-discovery-capture
-description: Silently capture recurring patterns discovered in the codebase during exploration. This skill logs implicit conventions, architectural patterns, and coding practices that are followed consistently but not formally documented. Use this proactively when you observe patterns that could become explicit standards.
+description: Automatically capture recurring patterns discovered in the codebase during exploration. This skill logs implicit conventions, architectural patterns, and coding practices that are followed consistently but not formally documented. Use this proactively when you observe patterns that could become explicit standards.
 ---
 
 # Pattern Discovery Capture Skill
 
 This skill helps AI agents identify and log recurring patterns discovered while exploring the codebase. The goal is to surface implicit conventions that exist in practice but aren't formally documented, enabling teams to recognize and codify their actual coding standards.
+
+## TRIGGER CHECKLIST - Read This First
+
+**TRIGGER THIS SKILL IMMEDIATELY WHEN:**
+
+- [ ] You found 3+ files following the same undocumented convention
+- [ ] You discovered a consistent architectural pattern (e.g., all use cases extend a base class)
+- [ ] You noticed recurring naming conventions (e.g., all events end with `Event`)
+- [ ] You found consistent error handling approaches across modules
+- [ ] You observed repeated test organization patterns
+- [ ] You discovered implicit API response structures
+- [ ] You noticed consistent dependency injection patterns
+
+**TRIGGER AS SOON AS YOU IDENTIFY THE PATTERN** - don't wait until the end of your response. Log immediately, then continue your work.
+
+**MANDATORY POST-EXPLORATION CHECK:**
+After ANY codebase exploration task, ask yourself: "Did I discover any recurring patterns?" If yes → trigger this skill.
+
+## Failure Example - When This Skill SHOULD Have Been Triggered
+
+```
+User: "Help me understand how use cases work in this codebase"
+
+AI: [Explores multiple use case files]
+AI: [Notices all use cases extend AbstractMemberUseCase with executeForMembers() method]
+AI: [Notices all use cases follow Command/Response pattern]
+AI: [Responds explaining the patterns but FORGETS to log them] ❌
+
+CORRECT BEHAVIOR:
+AI: [Explores files, notices consistent pattern in 3+ files]
+AI: [Immediately triggers skill and logs to .claude/discovered-patterns.yaml]
+AI: [Continues exploration, finds another pattern]
+AI: [Triggers skill again]
+AI: [Responds to user with explanation]
+```
 
 ## Purpose
 
@@ -147,14 +182,14 @@ Confirm the pattern appears at least 3 times to ensure it's intentional, not coi
 - `exceptions`: Any known cases that don't follow the pattern (can be empty)
 - `tags`: Relevant keywords for filtering/searching
 
-**CRITICAL:** This is a silent operation. Do NOT:
+**IMPORTANT:** This is an automatic, non-interrupting operation:
 
-- Ask the user if you should log it
-- Confirm to the user that you logged it
-- Interrupt your workflow to announce it
-- Make it visible in your response
+- Do NOT ask the user for permission to log
+- Do NOT announce that you logged something
+- Simply log and continue your work seamlessly
+- The user can review `.claude/discovered-patterns.yaml` later
 
-Logging happens seamlessly during exploration.
+This skill is MANDATORY when patterns are discovered - it's not optional.
 
 ### Step 4: User Review (Later)
 
@@ -448,4 +483,4 @@ Pattern discovery is **descriptive** (what IS done), while standards are **presc
 
 ---
 
-**Remember:** This skill should be used proactively and silently during codebase exploration. It's not about asking permission - it's about surfacing implicit conventions that could become explicit standards.
+**REMEMBER:** This skill is MANDATORY during codebase exploration. When you discover recurring patterns (3+ examples), you MUST log them - this is not optional. The logging happens automatically without user interaction. Failure to trigger this skill when patterns are discovered means valuable conventions remain undocumented.

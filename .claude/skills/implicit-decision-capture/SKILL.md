@@ -1,11 +1,48 @@
 ---
 name: implicit-decision-capture
-description: Silently capture implicit technical decisions and uncertainties encountered by AI agents during coding work. This skill logs decision points where the agent chose an approach without explicit user guidance, enabling later review and context enrichment. Use this proactively during any coding task to track "what choices I made and why."
+description: Automatically capture implicit technical decisions and uncertainties encountered by AI agents during coding work. This skill logs decision points where the agent chose an approach without explicit user guidance, enabling later review and context enrichment. Use this proactively during any coding task to track "what choices I made and why."
 ---
 
 # Implicit Decision Capture Skill
 
 This skill helps AI agents create a transparent log of implicit technical decisions made during implementation. The goal is to capture specific, non-obvious choices that could be valuable for later review and potential standardization.
+
+## TRIGGER CHECKLIST - Read This First
+
+**TRIGGER THIS SKILL IMMEDIATELY DURING CODING WHEN:**
+
+- [ ] You chose between multiple valid approaches without explicit user guidance
+- [ ] You picked a design pattern (e.g., compound components vs monolithic)
+- [ ] You decided on an error handling strategy
+- [ ] You chose a naming convention not documented in CLAUDE.md
+- [ ] You selected a testing approach (mocks vs real implementations)
+- [ ] You made a performance optimization decision
+- [ ] You felt uncertain about your choice but proceeded anyway
+
+**TRIGGER DURING IMPLEMENTATION** - log decisions as you make them, not after the fact.
+
+**MANDATORY SELF-CHECK:**
+Whenever you think "Should I do X or Y?" and choose without asking the user → trigger this skill.
+
+## Failure Example - When This Skill SHOULD Have Been Triggered
+
+```
+User: "Add a search feature to the user list"
+
+AI: [Thinks: "Should search be debounced? How long? No guidance..."]
+AI: [Chooses 300ms debounce]
+AI: [Thinks: "Case-sensitive or insensitive? No examples..."]
+AI: [Chooses case-insensitive]
+AI: [Implements feature but FORGETS to log these decisions] ❌
+
+CORRECT BEHAVIOR:
+AI: [Makes decision about debounce]
+AI: [Immediately triggers skill and logs to .claude/decisions.yaml]
+AI: [Makes decision about case sensitivity]
+AI: [Triggers skill again]
+AI: [Completes implementation]
+AI: [Responds to user]
+```
 
 ## Purpose
 
@@ -132,14 +169,14 @@ When you make a decision during coding, **silently** append it to `.claude/decis
   - `pattern-matching`: Following similar code you found
 - `tags`: Relevant keywords for filtering/searching
 
-**CRITICAL:** This is a silent operation. Do NOT:
+**IMPORTANT:** This is an automatic, non-interrupting operation:
 
-- Ask the user if you should log it
-- Confirm to the user that you logged it
-- Interrupt your workflow to announce it
-- Make it visible in your response
+- Do NOT ask the user for permission to log
+- Do NOT announce that you logged something
+- Simply log and continue your work seamlessly
+- The user can review `.claude/decisions.yaml` later
 
-Logging happens seamlessly as you work.
+This skill is MANDATORY during coding work - it's not optional.
 
 ### Step 3: User Review (Later)
 
@@ -380,4 +417,4 @@ Once `.claude/decisions.yaml` accumulates entries, developers can:
 
 ---
 
-**Remember:** This skill should be used proactively and silently during ALL coding work. It's not about asking permission - it's about creating a transparent log for later review.
+**REMEMBER:** This skill is MANDATORY during ALL coding work. When you make technical decisions without explicit user guidance, you MUST log them - this is not optional. The logging happens automatically without user interaction. Every undocumented decision is an opportunity to improve project guidelines and maintain transparency.
