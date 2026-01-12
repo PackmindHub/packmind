@@ -8,7 +8,6 @@ import {
   SkillVersion,
 } from '@packmind/types';
 import { routes } from '../../../shared/utils/routes';
-import { buildSkillMarkdown } from '../utils/buildSkillMarkdown';
 import { SkillDetailsSidebar } from './SkillDetailsSidebar';
 import { SkillFilePreview } from './SkillFilePreview';
 import { SkillVersionHistoryHeader } from './SkillVersionHistoryHeader';
@@ -42,7 +41,7 @@ export const SkillDetails = ({
       skillVersionId: latestVersion.id,
       permissions: '',
       path: SKILL_MD_FILENAME,
-      content: buildSkillMarkdown(latestVersion),
+      content: latestVersion.prompt,
     }),
     [latestVersion],
   );
@@ -97,6 +96,7 @@ export const SkillDetails = ({
       {/* Main content */}
       <PMPage
         title={skill.name}
+        subtitle={latestVersion.description}
         breadcrumbComponent={
           <SkillVersionHistoryHeader
             skill={skill}

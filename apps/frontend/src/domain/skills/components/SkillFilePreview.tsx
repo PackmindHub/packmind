@@ -9,9 +9,9 @@ import {
   PMCopiable,
   PMCodeMirror,
   PMMarkdownViewer,
-  PMText,
   PMIconButton,
   PMTooltip,
+  PMBreadcrumb,
 } from '@packmind/ui';
 import type { SkillFile } from '@packmind/types';
 import { getFileLanguage, isPreviewable } from '../utils/fileTreeUtils';
@@ -92,17 +92,15 @@ export const SkillFilePreview = ({ file }: ISkillFilePreviewProps) => {
   ];
 
   return (
-    <PMVStack align="stretch" gap={4} width="full">
+    <PMVStack align="stretch" gap={2} width="full">
       <PMHStack justify="space-between" align="center">
-        <PMText fontWeight="bold" variant="small" color="secondary">
-          {fileName}
-        </PMText>
+        <PMBreadcrumb segments={file.path.split('/')} interactive={false} />
         <PMHStack gap={2}>
           <PMTooltip label="Download file">
             <PMIconButton
               aria-label="Download file"
-              variant="outline"
               size="sm"
+              variant="tertiary"
               onClick={handleDownload}
             >
               <LuDownload />
@@ -113,8 +111,8 @@ export const SkillFilePreview = ({ file }: ISkillFilePreviewProps) => {
               <PMCopiable.Trigger asChild>
                 <PMIconButton
                   aria-label="Copy to clipboard"
-                  variant="outline"
                   size="sm"
+                  variant="tertiary"
                 >
                   <PMCopiable.Indicator>
                     <LuCopy />

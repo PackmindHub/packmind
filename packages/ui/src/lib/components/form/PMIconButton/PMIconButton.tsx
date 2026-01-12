@@ -1,7 +1,14 @@
 import { IconButton, IconButtonProps } from '@chakra-ui/react';
 
 export interface IPMIconButtonProps extends IconButtonProps {
-  variant?: 'solid' | 'subtle' | 'surface' | 'outline' | 'ghost' | 'plain';
+  variant?:
+    | 'solid'
+    | 'subtle'
+    | 'surface'
+    | 'outline'
+    | 'ghost'
+    | 'plain'
+    | 'tertiary';
   children: React.ReactNode;
 }
 
