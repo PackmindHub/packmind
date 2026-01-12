@@ -14,6 +14,7 @@ import { StartTrialCommandAgents } from '@packmind/types';
 import { useStartTrialMutation } from '../../api/queries';
 import { StartTrialAgentSelectorDataTestIds } from '@packmind/frontend';
 import { AGENT_ICONS } from './AgentIcons';
+import { useAnalytics } from '@packmind/proprietary/frontend/domain/amplitude/providers/AnalyticsProvider';
 
 interface IAgentOption {
   value: StartTrialCommandAgents;
@@ -63,6 +64,7 @@ export function StartTrialAgentSelector({
     useState<StartTrialCommandAgents | null>(null);
   const [error, setError] = useState<string | null>(null);
   const { mutate: startTrial, isPending } = useStartTrialMutation();
+  const analytics = useAnalytics();
 
   const handleContinue = () => {
     if (!selectedAgent) return;
@@ -72,6 +74,11 @@ export function StartTrialAgentSelector({
       { agent: selectedAgent },
       {
         onSuccess: (result) => {
+          if (result.user && result.organization) {
+            analytics.setUserId(result.user.id);
+            analytics.setUserOrganizations([result.organization.id]);
+          }
+
           if (result.mcpToken && result.mcpUrl) {
             onTokenAvailable(selectedAgent, result.mcpToken, result.mcpUrl);
           }
