@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router';
-import { PMGrid, PMPage, PMVStack } from '@packmind/ui';
+import { PMGrid, PMPage, PMText, PMVStack } from '@packmind/ui';
 import {
   createSkillFileId,
   Skill,
@@ -96,17 +96,28 @@ export const SkillDetails = ({
       {/* Main content */}
       <PMPage
         title={skill.name}
-        subtitle={latestVersion.description}
         breadcrumbComponent={
           <SkillVersionHistoryHeader
             skill={skill}
             latestVersion={latestVersion}
           />
         }
-        isFullWidth
       >
         <PMVStack align="stretch" gap={6}>
-          <SkillFilePreview file={selectedFile} />
+          {latestVersion.description && (
+            <PMText color="secondary">{latestVersion.description}</PMText>
+          )}
+          <PMVStack
+            align="stretch"
+            gap={6}
+            border="solid 1px"
+            borderColor="border.tertiary"
+            borderRadius="md"
+            p={4}
+            overflow="hidden"
+          >
+            <SkillFilePreview file={selectedFile} />
+          </PMVStack>
         </PMVStack>
       </PMPage>
     </PMGrid>
