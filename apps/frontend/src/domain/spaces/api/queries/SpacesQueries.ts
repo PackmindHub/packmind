@@ -13,6 +13,7 @@ export const getSpacesQueryOptions = (orgId: string) =>
       return spacesGateway.getSpaces(orgId);
     },
     enabled: !!orgId,
+    staleTime: 1000 * 60 * 10, // 10 minutes - spaces data is stable
   });
 
 export const useGetSpacesQuery = () => {
@@ -34,6 +35,7 @@ export const getSpaceBySlugQueryOptions = (slug: string, orgId: string) =>
       return spacesGateway.getSpaceBySlug(slug, orgId);
     },
     enabled: !!slug && !!orgId,
+    staleTime: 1000 * 60 * 10, // 10 minutes - space data is stable
   });
 
 export const useGetSpaceBySlugQuery = (slug: string) => {

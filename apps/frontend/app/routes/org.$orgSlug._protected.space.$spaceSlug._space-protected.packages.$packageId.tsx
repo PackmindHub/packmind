@@ -20,12 +20,14 @@ export async function clientLoader({
 }: {
   params: { orgSlug: string; spaceSlug: string; packageId: string };
 }) {
-  const me = await queryClient.fetchQuery(getMeQueryOptions());
+  // Get user to access organization - use cached data from parent loader
+  const me = await queryClient.ensureQueryData(getMeQueryOptions());
   if (!me.organization) {
     throw new Error('Organization not found');
   }
 
-  const space = await queryClient.fetchQuery(
+  // Get space to access spaceId - use cached data from parent loader
+  const space = await queryClient.ensureQueryData(
     getSpaceBySlugQueryOptions(params.spaceSlug, me.organization.id),
   );
   if (!space) {
@@ -33,7 +35,7 @@ export async function clientLoader({
   }
 
   const packagesResponse =
-    await queryClient.fetchQuery<ListPackagesBySpaceResponse>(
+    await queryClient.ensureQueryData<ListPackagesBySpaceResponse>(
       getPackagesBySpaceQueryOptions(space.id, me.organization.id),
     );
   const packagesList: Package[] = Array.isArray(packagesResponse)
@@ -47,7 +49,7 @@ export async function clientLoader({
     throw redirect(routes.org.toDashboard(me.organization.slug));
   }
 
-  return queryClient.fetchQuery(
+  return queryClient.ensureQueryData(
     getPackageByIdOptions(
       me.organization.id as OrganizationId,
       space.id,

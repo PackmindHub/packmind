@@ -6,7 +6,7 @@ import { clientLoader as recipeLoader } from '../../../app/routes/org.$orgSlug._
 
 jest.mock('../../shared/data/queryClient', () => ({
   queryClient: {
-    fetchQuery: jest.fn(),
+    ensureQueryData: jest.fn(),
   },
 }));
 
@@ -25,20 +25,20 @@ jest.mock('@packmind/ui', () => {
   };
 });
 
-const fetchQueryMock = queryClient.fetchQuery as jest.MockedFunction<
-  typeof queryClient.fetchQuery
+const ensureQueryDataMock = queryClient.ensureQueryData as jest.MockedFunction<
+  typeof queryClient.ensureQueryData
 >;
 const pmToasterErrorMock = pmToaster.error as jest.Mock;
 
 describe('organization resource loaders', () => {
   beforeEach(() => {
-    fetchQueryMock.mockReset();
+    ensureQueryDataMock.mockReset();
     pmToasterErrorMock.mockReset();
   });
 
   describe('when a standard does not belong to the current space', () => {
     it('redirects to dashboard', async () => {
-      fetchQueryMock
+      ensureQueryDataMock
         .mockResolvedValueOnce({
           organization: { id: 'org-1', slug: 'org-slug', name: 'Org Name' },
         })
@@ -59,13 +59,13 @@ describe('organization resource loaders', () => {
 
       expect(redirectResponse).toBeTruthy();
       expect(pmToasterErrorMock).not.toHaveBeenCalled();
-      expect(fetchQueryMock).toHaveBeenCalledTimes(3);
+      expect(ensureQueryDataMock).toHaveBeenCalledTimes(3);
     });
   });
 
   describe('when a package does not belong to the current space', () => {
     it('redirects to dashboard', async () => {
-      fetchQueryMock
+      ensureQueryDataMock
         .mockResolvedValueOnce({
           organization: { id: 'org-1', slug: 'org-slug', name: 'Org Name' },
         })
@@ -87,13 +87,13 @@ describe('organization resource loaders', () => {
 
       expect(redirectResponse).toBeTruthy();
       expect(pmToasterErrorMock).not.toHaveBeenCalled();
-      expect(fetchQueryMock).toHaveBeenCalledTimes(3);
+      expect(ensureQueryDataMock).toHaveBeenCalledTimes(3);
     });
   });
 
   describe('when a recipe does not belong to the current space', () => {
     it('redirects to dashboard', async () => {
-      fetchQueryMock
+      ensureQueryDataMock
         .mockResolvedValueOnce({
           organization: { id: 'org-1', slug: 'org-slug', name: 'Org Name' },
         })
@@ -115,7 +115,7 @@ describe('organization resource loaders', () => {
 
       expect(redirectResponse).toBeTruthy();
       expect(pmToasterErrorMock).not.toHaveBeenCalled();
-      expect(fetchQueryMock).toHaveBeenCalledTimes(3);
+      expect(ensureQueryDataMock).toHaveBeenCalledTimes(3);
     });
   });
 });
