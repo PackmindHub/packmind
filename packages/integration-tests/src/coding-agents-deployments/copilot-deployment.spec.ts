@@ -703,7 +703,7 @@ describe('GitHub Copilot Deployment Integration', () => {
 
         it('includes name in frontmatter', () => {
           expect(fileUpdates.createOrUpdate[0].content).toContain(
-            `name: ${skill.name}`,
+            `name: '${skill.name}'`,
           );
         });
 
@@ -771,7 +771,7 @@ describe('GitHub Copilot Deployment Integration', () => {
 
         it('includes all frontmatter fields', () => {
           const content = fileUpdates.createOrUpdate[0].content;
-          expect(content).toContain(`name: ${skill.name}`);
+          expect(content).toContain(`name: '${skill.name}'`);
           expect(content).toContain(`description: '${skill.description}'`);
           expect(content).toContain(`license: '${skill.license}'`);
         });

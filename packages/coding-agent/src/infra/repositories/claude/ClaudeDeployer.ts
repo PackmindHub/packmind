@@ -545,7 +545,9 @@ ${instructionContent}`;
     const frontmatterFields: string[] = [];
 
     if (skillVersion.name) {
-      frontmatterFields.push(`name: ${skillVersion.name}`);
+      frontmatterFields.push(
+        `name: '${this.escapeSingleQuotes(skillVersion.name)}'`,
+      );
     }
 
     if (skillVersion.description) {

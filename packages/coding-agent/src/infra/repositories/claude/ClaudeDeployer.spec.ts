@@ -3505,7 +3505,7 @@ describe('ClaudeDeployer', () => {
 
       it('includes name in frontmatter', () => {
         expect(fileUpdates.createOrUpdate[0].content).toContain(
-          `name: ${skillVersions[0].name}`,
+          `name: '${skillVersions[0].name}'`,
         );
       });
 
@@ -3587,7 +3587,7 @@ describe('ClaudeDeployer', () => {
 
       it('includes name in frontmatter', () => {
         const content = fileUpdates.createOrUpdate[0].content;
-        expect(content).toContain(`name: ${skillVersions[0].name}`);
+        expect(content).toContain(`name: '${skillVersions[0].name}'`);
       });
 
       it('includes description in frontmatter', () => {

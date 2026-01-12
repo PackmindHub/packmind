@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router';
 import { PMGrid, PMPage, PMVStack } from '@packmind/ui';
-import { Skill, SkillFile, SkillVersion } from '@packmind/types';
+import { Skill, SkillFile, SkillFileId, SkillVersion } from '@packmind/types';
 import { routes } from '../../../shared/utils/routes';
+import { buildSkillMarkdown } from '../utils/buildSkillMarkdown';
 import { SkillDetailsSidebar } from './SkillDetailsSidebar';
 import { SkillFilePreview } from './SkillFilePreview';
 import { SkillVersionHistoryHeader } from './SkillVersionHistoryHeader';
@@ -35,7 +36,20 @@ export const SkillDetails = ({
       null,
   );
 
-  const selectedFile = files.find((f) => f.path === selectedFilePath) ?? null;
+  const selectedFile = useMemo(() => {
+    if (selectedFilePath === SKILL_MD_FILENAME) {
+      const reconstructedContent = buildSkillMarkdown(latestVersion);
+      const existingFile = files.find((f) => f.path === SKILL_MD_FILENAME);
+      return {
+        id: existingFile?.id ?? ('' as SkillFileId),
+        skillVersionId: existingFile?.skillVersionId ?? latestVersion.id,
+        permissions: existingFile?.permissions ?? '',
+        path: SKILL_MD_FILENAME,
+        content: reconstructedContent,
+      };
+    }
+    return files.find((f) => f.path === selectedFilePath) ?? null;
+  }, [selectedFilePath, files, latestVersion]);
 
   const handleSkillChange = (skillId: string) => {
     const selectedSkill = skills.find((s) => s.id === skillId);
