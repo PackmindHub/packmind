@@ -47,6 +47,19 @@
   max-width: 800px;
 }
 
+.milkdown .ProseMirror > :first-child {
+  margin-top: 0 !important;
+}
+
+.milkdown .ProseMirror h1:first-of-type,
+.milkdown .ProseMirror h2:first-of-type,
+.milkdown .ProseMirror h3:first-of-type,
+.milkdown .ProseMirror h4:first-of-type,
+.milkdown .ProseMirror h5:first-of-type,
+.milkdown .ProseMirror h6:first-of-type {
+  margin-top: 0;
+}
+
 .milkdown .ProseMirror h1 {
   font-weight: var(--pm-font-weights-bold);
   font-size: var(--pm-font-sizes-4xl);

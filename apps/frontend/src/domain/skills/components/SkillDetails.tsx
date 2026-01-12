@@ -105,7 +105,9 @@ export const SkillDetails = ({
       >
         <PMVStack align="stretch" gap={6}>
           {latestVersion.description && (
-            <PMText color="secondary">{latestVersion.description}</PMText>
+            <PMText color="secondary" variant="body-important">
+              {latestVersion.description}
+            </PMText>
           )}
           <PMVStack
             align="stretch"

@@ -46,6 +46,10 @@ export function PMMarkdownViewer({
             margin-bottom: 0.5em;
             font-weight: bold;
           }
+          
+          .pm-markdown-viewer > :first-child { 
+            margin-top: 0;
+           }
 
           .pm-markdown-viewer h1 { font-size: 2rem; }
           .pm-markdown-viewer h2 { font-size: 1.5rem; }
