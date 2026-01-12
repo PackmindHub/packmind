@@ -178,7 +178,13 @@ export const PackageDetails = ({
       if (skill) {
         rows.push({
           key: skillId,
-          name: <PMText>{skill.name}</PMText>,
+          name: (
+            <PMLink asChild>
+              <Link to={routes.space.toSkill(orgSlug, spaceSlug, skill.slug)}>
+                {skill.name}
+              </Link>
+            </PMLink>
+          ),
           sortName: skill.name,
         });
       }
