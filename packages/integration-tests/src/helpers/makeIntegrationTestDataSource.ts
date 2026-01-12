@@ -6,6 +6,7 @@ import { standardsSchemas } from '@packmind/standards';
 import { spacesSchemas } from '@packmind/spaces';
 import { gitSchemas } from '@packmind/git';
 import { deploymentsSchemas } from '@packmind/deployments';
+import { skillsSchemas } from '@packmind/skills';
 
 export function makeIntegrationTestDataSource(): Promise<DataSource> {
   return makeTestDatasource([
@@ -15,5 +16,6 @@ export function makeIntegrationTestDataSource(): Promise<DataSource> {
     ...spacesSchemas,
     ...gitSchemas,
     ...deploymentsSchemas,
+    ...skillsSchemas,
   ]);
 }

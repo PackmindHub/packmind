@@ -6,11 +6,14 @@ import {
   PackageId,
   RecipeId,
   StandardId,
+  SkillId,
   RecipeVersionId,
   StandardVersionId,
+  SkillVersionId,
   PublishArtifactsCommand,
   IRecipesPort,
   IStandardsPort,
+  ISkillsPort,
   IDeploymentPort,
   createDistributedPackageId,
   createPackagesDeploymentId,
@@ -29,6 +32,7 @@ type PackageVersionsMap = Map<
   {
     recipeVersionIds: RecipeVersionId[];
     standardVersionIds: StandardVersionId[];
+    skillVersionIds: SkillVersionId[];
   }
 >;
 
@@ -36,6 +40,7 @@ export class PublishPackagesUseCase implements IPublishPackages {
   constructor(
     private readonly recipesPort: IRecipesPort,
     private readonly standardsPort: IStandardsPort,
+    private readonly skillsPort: ISkillsPort,
     private readonly deploymentPort: IDeploymentPort,
     public readonly packageService: PackageService,
     private readonly distributedPackageRepository: IDistributedPackageRepository,
@@ -72,6 +77,7 @@ export class PublishPackagesUseCase implements IPublishPackages {
     // Build a map of recipeId -> latestVersionId for deduplication
     const recipeVersionCache = new Map<string, RecipeVersionId>();
     const standardVersionCache = new Map<string, StandardVersionId>();
+    const skillVersionCache = new Map<string, SkillVersionId>();
 
     // Track per-package versions for distribution storage
     const packageVersionsMap: PackageVersionsMap = new Map();
@@ -80,6 +86,7 @@ export class PublishPackagesUseCase implements IPublishPackages {
     for (const pkg of packages) {
       const pkgRecipeVersionIds: RecipeVersionId[] = [];
       const pkgStandardVersionIds: StandardVersionId[] = [];
+      const pkgSkillVersionIds: SkillVersionId[] = [];
 
       // Resolve recipe versions
       for (const recipeId of pkg.recipes) {
@@ -123,9 +130,26 @@ export class PublishPackagesUseCase implements IPublishPackages {
         }
       }
 
+      // Resolve skill versions
+      for (const skillId of pkg.skills) {
+        if (!skillVersionCache.has(skillId)) {
+          const latestVersion = await this.skillsPort.getLatestSkillVersion(
+            skillId as SkillId,
+          );
+          if (latestVersion) {
+            skillVersionCache.set(skillId, latestVersion.id as SkillVersionId);
+          }
+        }
+        const versionId = skillVersionCache.get(skillId);
+        if (versionId) {
+          pkgSkillVersionIds.push(versionId);
+        }
+      }
+
       packageVersionsMap.set(pkg.id, {
         recipeVersionIds: pkgRecipeVersionIds,
         standardVersionIds: pkgStandardVersionIds,
+        skillVersionIds: pkgSkillVersionIds,
       });
     }
 
@@ -216,6 +240,7 @@ export class PublishPackagesUseCase implements IPublishPackages {
           packageId: pkg.id,
           standardVersions: [],
           recipeVersions: [],
+          skillVersions: [],
           operation: 'add',
         });
 
@@ -232,6 +257,14 @@ export class PublishPackagesUseCase implements IPublishPackages {
           await this.distributedPackageRepository.addRecipeVersions(
             distributedPackageId,
             versions.recipeVersionIds,
+          );
+        }
+
+        // Link skill versions
+        if (versions.skillVersionIds.length > 0) {
+          await this.distributedPackageRepository.addSkillVersions(
+            distributedPackageId,
+            versions.skillVersionIds,
           );
         }
       }

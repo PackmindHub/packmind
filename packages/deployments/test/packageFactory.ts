@@ -17,6 +17,7 @@ export const packageFactory: Factory<Package> = (pkg?: Partial<Package>) => {
     createdBy: createUserId(uuidv4()),
     recipes: [],
     standards: [],
+    skills: [],
     ...pkg,
   };
 };

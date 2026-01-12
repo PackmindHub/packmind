@@ -201,6 +201,7 @@ export class DeploymentsAdapter
     this._publishPackagesUseCase = new PublishPackagesUseCase(
       this.recipesPort,
       this.standardsPort,
+      this.skillsPort,
       this,
       this.deploymentsServices.getPackageService(),
       this.distributedPackageRepository,

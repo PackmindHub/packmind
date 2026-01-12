@@ -9,6 +9,7 @@ import {
   RecipeId,
   RecipeVersion,
   SkillId,
+  SkillVersion,
   StandardId,
   StandardVersion,
   TargetId,
@@ -919,6 +920,192 @@ export class DistributionRepository implements IDistributionRepository {
         targetId,
         error: error instanceof Error ? error.message : String(error),
       });
+      throw error;
+    }
+  }
+
+  async findActiveSkillVersionsByTarget(
+    organizationId: OrganizationId,
+    targetId: TargetId,
+  ): Promise<SkillVersion[]> {
+    this.logger.info('Finding active skill versions by target', {
+      organizationId,
+      targetId,
+    });
+
+    try {
+      const distributions = await this.repository
+        .createQueryBuilder('distribution')
+        .leftJoinAndSelect(
+          'distribution.distributedPackages',
+          'distributedPackage',
+        )
+        .leftJoinAndSelect('distributedPackage.skillVersions', 'skillVersion')
+        .where('distribution.organizationId = :organizationId', {
+          organizationId,
+        })
+        .andWhere('distribution.target_id = :targetId', { targetId })
+        .andWhere('distribution.status = :status', {
+          status: DistributionStatus.success,
+        })
+        .orderBy('distribution.createdAt', 'DESC')
+        .getMany();
+
+      // First pass: Track the latest distribution for each package
+      // This is needed to handle package removals correctly
+      const latestDistributionPerPackage = new Map<
+        string,
+        {
+          operation: string;
+          skillVersions: SkillVersion[];
+        }
+      >();
+
+      for (const distribution of distributions) {
+        for (const distributedPackage of distribution.distributedPackages) {
+          // Only keep the first (latest) occurrence of each package
+          if (!latestDistributionPerPackage.has(distributedPackage.packageId)) {
+            latestDistributionPerPackage.set(distributedPackage.packageId, {
+              operation: distributedPackage.operation ?? 'add',
+              skillVersions: distributedPackage.skillVersions,
+            });
+          }
+        }
+      }
+
+      // Second pass: Extract skill versions only from packages whose latest operation is NOT 'remove'
+      const skillVersionMap = new Map<string, SkillVersion>();
+
+      for (const [, data] of latestDistributionPerPackage) {
+        // Skip packages whose latest distribution was a removal
+        if (data.operation === 'remove') {
+          continue;
+        }
+
+        for (const skillVersion of data.skillVersions) {
+          // Only keep the first (most recent) version of each skill
+          if (!skillVersionMap.has(skillVersion.skillId)) {
+            skillVersionMap.set(skillVersion.skillId, skillVersion);
+          }
+        }
+      }
+
+      const activeSkillVersions = Array.from(skillVersionMap.values());
+
+      this.logger.info('Active skill versions found by target', {
+        organizationId,
+        targetId,
+        totalSuccessfulDistributions: distributions.length,
+        activeSkillVersionsCount: activeSkillVersions.length,
+        skillIds: activeSkillVersions.map((sv) => sv.skillId),
+      });
+
+      return activeSkillVersions;
+    } catch (error) {
+      this.logger.error('Failed to find active skill versions by target', {
+        organizationId,
+        targetId,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
+    }
+  }
+
+  async findActiveSkillVersionsByTargetAndPackages(
+    organizationId: OrganizationId,
+    targetId: TargetId,
+    packageIds: PackageId[],
+  ): Promise<SkillVersion[]> {
+    this.logger.info('Finding active skill versions by target and packages', {
+      organizationId,
+      targetId,
+      packageIdsCount: packageIds.length,
+    });
+
+    if (packageIds.length === 0) {
+      return [];
+    }
+
+    try {
+      const distributions = await this.repository
+        .createQueryBuilder('distribution')
+        .innerJoinAndSelect(
+          'distribution.distributedPackages',
+          'distributedPackage',
+        )
+        .leftJoinAndSelect('distributedPackage.skillVersions', 'skillVersion')
+        .where('distribution.organizationId = :organizationId', {
+          organizationId,
+        })
+        .andWhere('distribution.target_id = :targetId', { targetId })
+        .andWhere('distribution.status = :status', {
+          status: DistributionStatus.success,
+        })
+        .andWhere('distributedPackage.packageId IN (:...packageIds)', {
+          packageIds: packageIds as string[],
+        })
+        .orderBy('distribution.createdAt', 'DESC')
+        .getMany();
+
+      // First pass: Track the latest distribution for each package
+      const latestDistributionPerPackage = new Map<
+        string,
+        {
+          operation: string;
+          skillVersions: SkillVersion[];
+        }
+      >();
+
+      for (const distribution of distributions) {
+        for (const distributedPackage of distribution.distributedPackages) {
+          // Only process packages that are in the filter list
+          if (!packageIds.includes(distributedPackage.packageId as PackageId)) {
+            continue;
+          }
+          // Only keep the first (latest) occurrence of each package
+          if (!latestDistributionPerPackage.has(distributedPackage.packageId)) {
+            latestDistributionPerPackage.set(distributedPackage.packageId, {
+              operation: distributedPackage.operation ?? 'add',
+              skillVersions: distributedPackage.skillVersions,
+            });
+          }
+        }
+      }
+
+      // Second pass: Extract skill versions only from packages whose latest operation is NOT 'remove'
+      const skillVersionMap = new Map<string, SkillVersion>();
+
+      for (const [, data] of latestDistributionPerPackage) {
+        if (data.operation === 'remove') {
+          continue;
+        }
+
+        for (const skillVersion of data.skillVersions) {
+          if (!skillVersionMap.has(skillVersion.skillId)) {
+            skillVersionMap.set(skillVersion.skillId, skillVersion);
+          }
+        }
+      }
+
+      const activeSkillVersions = Array.from(skillVersionMap.values());
+
+      this.logger.info('Active skill versions found by target and packages', {
+        organizationId,
+        targetId,
+        packageIdsCount: packageIds.length,
+        activeSkillVersionsCount: activeSkillVersions.length,
+      });
+
+      return activeSkillVersions;
+    } catch (error) {
+      this.logger.error(
+        'Failed to find active skill versions by target and packages',
+        {
+          organizationId,
+          targetId,
+          error: error instanceof Error ? error.message : String(error),
+        },
+      );
       throw error;
     }
   }

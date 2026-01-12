@@ -92,9 +92,19 @@ describe('PublishArtifactsUseCase', () => {
       add: jest.fn(),
       findActiveStandardVersionsByTarget: jest.fn(),
       findActiveRecipeVersionsByTarget: jest.fn(),
+      findActiveSkillVersionsByTarget: jest.fn(),
       findActiveStandardVersionsByTargetAndPackages: jest.fn(),
       findActiveRecipeVersionsByTargetAndPackages: jest.fn(),
+      findActiveSkillVersionsByTargetAndPackages: jest.fn(),
     } as unknown as jest.Mocked<IDistributionRepository>;
+
+    // Default empty arrays for skill-related methods (can be overridden in test blocks)
+    mockDistributionRepository.findActiveSkillVersionsByTarget.mockResolvedValue(
+      [],
+    );
+    mockDistributionRepository.findActiveSkillVersionsByTargetAndPackages.mockResolvedValue(
+      [],
+    );
 
     mockTargetService = {
       findById: jest.fn(),

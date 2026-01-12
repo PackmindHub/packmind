@@ -70,6 +70,21 @@ export const DistributedPackageSchema = new EntitySchema<DistributedPackage>({
         },
       },
     },
+    skillVersions: {
+      type: 'many-to-many',
+      target: 'SkillVersion',
+      joinTable: {
+        name: 'distributed_package_skill_versions',
+        joinColumn: {
+          name: 'distributed_package_id',
+          referencedColumnName: 'id',
+        },
+        inverseJoinColumn: {
+          name: 'skill_version_id',
+          referencedColumnName: 'id',
+        },
+      },
+    },
   },
   indices: [
     {
