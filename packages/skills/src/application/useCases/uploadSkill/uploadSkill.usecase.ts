@@ -8,6 +8,7 @@ import {
   UploadSkillCommand,
   UploadSkillResponse,
   SkillCreatedEvent,
+  SkillUpdatedEvent,
   createSkillId,
   createSkillVersionId,
   createSkillFileId,
@@ -15,7 +16,6 @@ import {
   createSpaceId,
   IAccountsPort,
   ISpacesPort,
-  SkillAlreadyExistsError,
 } from '@packmind/types';
 import slug from 'slug';
 import { v4 as uuidv4 } from 'uuid';
@@ -128,29 +128,114 @@ export class UploadSkillUsecase
 
       // Generate slug
       this.logger.info('Generating slug from skill name', { name });
-      const baseSlug = slug(name);
-      this.logger.info('Base slug generated', { slug: baseSlug });
+      const skillSlug = slug(name);
+      this.logger.info('Base slug generated', { slug: skillSlug });
 
-      // Ensure slug is unique per space
-      this.logger.info('Checking slug uniqueness within space', {
-        baseSlug,
+      // Check if skill with same slug already exists in space
+      this.logger.info('Checking if skill exists in space', {
+        slug: skillSlug,
         spaceId,
       });
       const existingSkills = await this.skillService.listSkillsBySpace(spaceId);
-      const existingSlugs = new Set(existingSkills.map((s) => s.slug));
+      const existingSkill = existingSkills.find((s) => s.slug === skillSlug);
 
-      const skillSlug = baseSlug;
-      if (existingSlugs.has(skillSlug)) {
-        this.logger.error('Skill with same slug already exists in space', {
-          skillName: name,
-          slug: skillSlug,
-          spaceId,
+      // Save supporting files (excluding SKILL.md which is already extracted into SkillVersion)
+      const supportingFiles = files.filter((f) => f.path !== SKILL_MD_FILENAME);
+
+      if (existingSkill) {
+        // Skill exists - create a new version
+        this.logger.info('Skill already exists, creating new version', {
+          skillId: existingSkill.id,
+          currentVersion: existingSkill.version,
         });
-        throw new SkillAlreadyExistsError(name, skillSlug, spaceId);
-      }
-      this.logger.info('Slug is unique within space', { slug: skillSlug });
 
-      // Create skill with initial version 1
+        const newVersion = existingSkill.version + 1;
+
+        // Update skill entity with new version
+        const updatedSkill = await this.skillService.updateSkill(
+          existingSkill.id,
+          {
+            name,
+            description,
+            slug: skillSlug,
+            version: newVersion,
+            prompt,
+            userId: command.user.id,
+            allowedTools,
+            license,
+            compatibility,
+            metadata,
+          },
+        );
+        this.logger.info('Skill entity updated successfully', {
+          skillId: updatedSkill.id,
+          version: newVersion,
+        });
+
+        // Create new skill version
+        const skillVersion = await this.skillVersionService.addSkillVersion({
+          skillId: existingSkill.id,
+          name,
+          slug: skillSlug,
+          description,
+          version: newVersion,
+          prompt,
+          userId: command.user.id,
+          allowedTools,
+          license,
+          compatibility,
+          metadata,
+        });
+        this.logger.info('New skill version created successfully', {
+          skillId: existingSkill.id,
+          skillVersionId: skillVersion.id,
+          version: newVersion,
+        });
+
+        // Save supporting files
+        this.logger.info('Saving supporting skill files', {
+          count: supportingFiles.length,
+        });
+        const skillFiles: SkillFile[] = supportingFiles.map((file) => ({
+          id: createSkillFileId(uuidv4()),
+          skillVersionId: createSkillVersionId(skillVersion.id),
+          path: file.path,
+          content: file.content,
+          permissions: file.permissions,
+        }));
+
+        await this.skillFileRepository.addMany(skillFiles);
+        this.logger.info('Supporting skill files saved successfully', {
+          count: skillFiles.length,
+        });
+
+        this.logger.info(
+          'UploadSkill process completed - new version created',
+          {
+            skillId: updatedSkill.id,
+            version: newVersion,
+            supportingFileCount: supportingFiles.length,
+          },
+        );
+
+        this.eventEmitterService.emit(
+          new SkillUpdatedEvent({
+            skillId: createSkillId(updatedSkill.id),
+            spaceId,
+            organizationId: command.organization.id,
+            userId: command.user.id,
+            source: 'cli',
+            fileCount: supportingFiles.length,
+          }),
+        );
+
+        return updatedSkill;
+      }
+
+      // Skill does not exist - create new skill with initial version 1
+      this.logger.info('Slug is unique within space, creating new skill', {
+        slug: skillSlug,
+      });
       const initialVersion = 1;
 
       this.logger.info('Creating skill entity');
@@ -193,8 +278,7 @@ export class UploadSkillUsecase
         version: initialVersion,
       });
 
-      // Save supporting files (excluding SKILL.md which is already extracted into SkillVersion)
-      const supportingFiles = files.filter((f) => f.path !== SKILL_MD_FILENAME);
+      // Save supporting files
       this.logger.info('Saving supporting skill files', {
         count: supportingFiles.length,
       });

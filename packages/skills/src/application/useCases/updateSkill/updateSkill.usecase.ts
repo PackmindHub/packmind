@@ -183,6 +183,7 @@ export class UpdateSkillUsecase
           organizationId,
           userId,
           source: 'ui',
+          fileCount: 0,
         }),
       );
 

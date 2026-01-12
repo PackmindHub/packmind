@@ -22,7 +22,7 @@ import {
   Organization,
   Space,
   UserOrganizationMembership,
-  SkillAlreadyExistsError,
+  SkillUpdatedEvent,
 } from '@packmind/types';
 
 describe('UploadSkillUsecase', () => {
@@ -748,37 +748,68 @@ Content`,
   });
 
   describe('when skill slug already exists', () => {
-    it('throws SkillAlreadyExistsError', async () => {
-      const files: UploadSkillFileInput[] = [
-        {
-          path: 'SKILL.md',
-          content: `---
+    const existingSkillId = createSkillId('existing-123');
+
+    const existingSkill: Skill = {
+      id: existingSkillId,
+      name: 'existing-skill',
+      slug: 'existing-skill',
+      description: 'Existing',
+      prompt: 'Old content',
+      version: 1,
+      userId,
+      spaceId,
+      organizationId,
+      allowedTools: undefined,
+      license: undefined,
+      compatibility: undefined,
+      metadata: undefined,
+      deletedAt: null,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    const files: UploadSkillFileInput[] = [
+      {
+        path: 'SKILL.md',
+        content: `---
 name: existing-skill
-description: Test conflict
+description: Updated description
 ---
 
-Content`,
-          permissions: 'rw-r--r--',
-        },
-      ];
+New content`,
+        permissions: 'rw-r--r--',
+      },
+    ];
 
-      const command: UploadSkillCommand = {
-        files,
-        organizationId,
-        userId,
-        spaceId,
+    const command: UploadSkillCommand = {
+      files,
+      organizationId,
+      userId,
+      spaceId,
+    };
+
+    beforeEach(() => {
+      mockSkillService.listSkillsBySpace.mockResolvedValue([existingSkill]);
+    });
+
+    it('updates the existing skill instead of creating a new one', async () => {
+      const updatedSkill: Skill = {
+        ...existingSkill,
+        description: 'Updated description',
+        prompt: 'New content',
+        version: 2,
       };
 
-      const existingSkill: Skill = {
-        id: createSkillId('existing-123'),
+      const mockSkillVersion: SkillVersion = {
+        id: createSkillVersionId('version-123'),
+        skillId: existingSkillId,
+        userId,
         name: 'existing-skill',
         slug: 'existing-skill',
-        description: 'Existing',
-        prompt: 'Content',
-        version: 1,
-        userId,
-        spaceId,
-        organizationId,
+        description: 'Updated description',
+        prompt: 'New content',
+        version: 2,
         allowedTools: undefined,
         license: undefined,
         compatibility: undefined,
@@ -788,44 +819,39 @@ Content`,
         updatedAt: new Date(),
       };
 
-      mockSkillService.listSkillsBySpace.mockResolvedValue([existingSkill]);
+      mockSkillService.updateSkill.mockResolvedValue(updatedSkill);
+      mockSkillVersionService.addSkillVersion.mockResolvedValue(
+        mockSkillVersion,
+      );
+      mockSkillFileRepository.addMany.mockResolvedValue([]);
 
-      await expect(usecase.execute(command)).rejects.toThrow(
-        SkillAlreadyExistsError,
+      await usecase.execute(command);
+
+      expect(mockSkillService.updateSkill).toHaveBeenCalledWith(
+        existingSkillId,
+        expect.objectContaining({
+          version: 2,
+          description: 'Updated description',
+          prompt: 'New content',
+        }),
       );
     });
 
-    it('includes error type SkillAlreadyExistsError', async () => {
-      const files: UploadSkillFileInput[] = [
-        {
-          path: 'SKILL.md',
-          content: `---
-name: existing-skill
-description: Test conflict
----
-
-Content`,
-          permissions: 'rw-r--r--',
-        },
-      ];
-
-      const command: UploadSkillCommand = {
-        files,
-        organizationId,
-        userId,
-        spaceId,
+    it('increments the version number', async () => {
+      const updatedSkill: Skill = {
+        ...existingSkill,
+        version: 2,
       };
 
-      const existingSkill: Skill = {
-        id: createSkillId('existing-123'),
+      const mockSkillVersion: SkillVersion = {
+        id: createSkillVersionId('version-123'),
+        skillId: existingSkillId,
+        userId,
         name: 'existing-skill',
         slug: 'existing-skill',
-        description: 'Existing',
-        prompt: 'Content',
-        version: 1,
-        userId,
-        spaceId,
-        organizationId,
+        description: 'Updated description',
+        prompt: 'New content',
+        version: 2,
         allowedTools: undefined,
         license: undefined,
         compatibility: undefined,
@@ -835,47 +861,32 @@ Content`,
         updatedAt: new Date(),
       };
 
-      mockSkillService.listSkillsBySpace.mockResolvedValue([existingSkill]);
+      mockSkillService.updateSkill.mockResolvedValue(updatedSkill);
+      mockSkillVersionService.addSkillVersion.mockResolvedValue(
+        mockSkillVersion,
+      );
+      mockSkillFileRepository.addMany.mockResolvedValue([]);
 
-      try {
-        await usecase.execute(command);
-        fail('Should have thrown SkillAlreadyExistsError');
-      } catch (error) {
-        expect(error).toBeInstanceOf(SkillAlreadyExistsError);
-      }
+      const result = await usecase.execute(command);
+
+      expect(result.version).toBe(2);
     });
 
-    it('includes skill name in error', async () => {
-      const files: UploadSkillFileInput[] = [
-        {
-          path: 'SKILL.md',
-          content: `---
-name: existing-skill
-description: Test conflict
----
-
-Content`,
-          permissions: 'rw-r--r--',
-        },
-      ];
-
-      const command: UploadSkillCommand = {
-        files,
-        organizationId,
-        userId,
-        spaceId,
+    it('creates a new skill version', async () => {
+      const updatedSkill: Skill = {
+        ...existingSkill,
+        version: 2,
       };
 
-      const existingSkill: Skill = {
-        id: createSkillId('existing-123'),
+      const mockSkillVersion: SkillVersion = {
+        id: createSkillVersionId('version-123'),
+        skillId: existingSkillId,
+        userId,
         name: 'existing-skill',
         slug: 'existing-skill',
-        description: 'Existing',
-        prompt: 'Content',
-        version: 1,
-        userId,
-        spaceId,
-        organizationId,
+        description: 'Updated description',
+        prompt: 'New content',
+        version: 2,
         allowedTools: undefined,
         license: undefined,
         compatibility: undefined,
@@ -885,49 +896,37 @@ Content`,
         updatedAt: new Date(),
       };
 
-      mockSkillService.listSkillsBySpace.mockResolvedValue([existingSkill]);
+      mockSkillService.updateSkill.mockResolvedValue(updatedSkill);
+      mockSkillVersionService.addSkillVersion.mockResolvedValue(
+        mockSkillVersion,
+      );
+      mockSkillFileRepository.addMany.mockResolvedValue([]);
 
-      try {
-        await usecase.execute(command);
-        fail('Should have thrown SkillAlreadyExistsError');
-      } catch (error) {
-        expect((error as SkillAlreadyExistsError).skillName).toBe(
-          'existing-skill',
-        );
-      }
+      await usecase.execute(command);
+
+      expect(mockSkillVersionService.addSkillVersion).toHaveBeenCalledWith(
+        expect.objectContaining({
+          skillId: existingSkillId,
+          version: 2,
+        }),
+      );
     });
 
-    it('includes skill slug in error', async () => {
-      const files: UploadSkillFileInput[] = [
-        {
-          path: 'SKILL.md',
-          content: `---
-name: existing-skill
-description: Test conflict
----
-
-Content`,
-          permissions: 'rw-r--r--',
-        },
-      ];
-
-      const command: UploadSkillCommand = {
-        files,
-        organizationId,
-        userId,
-        spaceId,
+    it('does not create a new skill', async () => {
+      const updatedSkill: Skill = {
+        ...existingSkill,
+        version: 2,
       };
 
-      const existingSkill: Skill = {
-        id: createSkillId('existing-123'),
+      const mockSkillVersion: SkillVersion = {
+        id: createSkillVersionId('version-123'),
+        skillId: existingSkillId,
+        userId,
         name: 'existing-skill',
         slug: 'existing-skill',
-        description: 'Existing',
-        prompt: 'Content',
-        version: 1,
-        userId,
-        spaceId,
-        organizationId,
+        description: 'Updated description',
+        prompt: 'New content',
+        version: 2,
         allowedTools: undefined,
         license: undefined,
         compatibility: undefined,
@@ -937,150 +936,32 @@ Content`,
         updatedAt: new Date(),
       };
 
-      mockSkillService.listSkillsBySpace.mockResolvedValue([existingSkill]);
+      mockSkillService.updateSkill.mockResolvedValue(updatedSkill);
+      mockSkillVersionService.addSkillVersion.mockResolvedValue(
+        mockSkillVersion,
+      );
+      mockSkillFileRepository.addMany.mockResolvedValue([]);
 
-      try {
-        await usecase.execute(command);
-        fail('Should have thrown SkillAlreadyExistsError');
-      } catch (error) {
-        expect((error as SkillAlreadyExistsError).skillSlug).toBe(
-          'existing-skill',
-        );
-      }
-    });
-
-    it('includes space ID in error', async () => {
-      const files: UploadSkillFileInput[] = [
-        {
-          path: 'SKILL.md',
-          content: `---
-name: existing-skill
-description: Test conflict
----
-
-Content`,
-          permissions: 'rw-r--r--',
-        },
-      ];
-
-      const command: UploadSkillCommand = {
-        files,
-        organizationId,
-        userId,
-        spaceId,
-      };
-
-      const existingSkill: Skill = {
-        id: createSkillId('existing-123'),
-        name: 'existing-skill',
-        slug: 'existing-skill',
-        description: 'Existing',
-        prompt: 'Content',
-        version: 1,
-        userId,
-        spaceId,
-        organizationId,
-        allowedTools: undefined,
-        license: undefined,
-        compatibility: undefined,
-        metadata: undefined,
-        deletedAt: null,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      };
-
-      mockSkillService.listSkillsBySpace.mockResolvedValue([existingSkill]);
-
-      try {
-        await usecase.execute(command);
-        fail('Should have thrown SkillAlreadyExistsError');
-      } catch (error) {
-        expect((error as SkillAlreadyExistsError).spaceId).toBe(spaceId);
-      }
-    });
-
-    it('does not create skill', async () => {
-      const files: UploadSkillFileInput[] = [
-        {
-          path: 'SKILL.md',
-          content: `---
-name: existing-skill
-description: Test conflict
----
-
-Content`,
-          permissions: 'rw-r--r--',
-        },
-      ];
-
-      const command: UploadSkillCommand = {
-        files,
-        organizationId,
-        userId,
-        spaceId,
-      };
-
-      const existingSkill: Skill = {
-        id: createSkillId('existing-123'),
-        name: 'existing-skill',
-        slug: 'existing-skill',
-        description: 'Existing',
-        prompt: 'Content',
-        version: 1,
-        userId,
-        spaceId,
-        organizationId,
-        allowedTools: undefined,
-        license: undefined,
-        compatibility: undefined,
-        metadata: undefined,
-        deletedAt: null,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      };
-
-      mockSkillService.listSkillsBySpace.mockResolvedValue([existingSkill]);
-
-      try {
-        await usecase.execute(command);
-      } catch {
-        // expected
-      }
+      await usecase.execute(command);
 
       expect(mockSkillService.addSkill).not.toHaveBeenCalled();
     });
 
-    it('does not create skill version', async () => {
-      const files: UploadSkillFileInput[] = [
-        {
-          path: 'SKILL.md',
-          content: `---
-name: existing-skill
-description: Test conflict
----
-
-Content`,
-          permissions: 'rw-r--r--',
-        },
-      ];
-
-      const command: UploadSkillCommand = {
-        files,
-        organizationId,
-        userId,
-        spaceId,
+    it('emits SkillUpdatedEvent instead of SkillCreatedEvent', async () => {
+      const updatedSkill: Skill = {
+        ...existingSkill,
+        version: 2,
       };
 
-      const existingSkill: Skill = {
-        id: createSkillId('existing-123'),
+      const mockSkillVersion: SkillVersion = {
+        id: createSkillVersionId('version-123'),
+        skillId: existingSkillId,
+        userId,
         name: 'existing-skill',
         slug: 'existing-skill',
-        description: 'Existing',
-        prompt: 'Content',
-        version: 1,
-        userId,
-        spaceId,
-        organizationId,
+        description: 'Updated description',
+        prompt: 'New content',
+        version: 2,
         allowedTools: undefined,
         license: undefined,
         compatibility: undefined,
@@ -1090,48 +971,34 @@ Content`,
         updatedAt: new Date(),
       };
 
-      mockSkillService.listSkillsBySpace.mockResolvedValue([existingSkill]);
+      mockSkillService.updateSkill.mockResolvedValue(updatedSkill);
+      mockSkillVersionService.addSkillVersion.mockResolvedValue(
+        mockSkillVersion,
+      );
+      mockSkillFileRepository.addMany.mockResolvedValue([]);
 
-      try {
-        await usecase.execute(command);
-      } catch {
-        // expected
-      }
+      await usecase.execute(command);
 
-      expect(mockSkillVersionService.addSkillVersion).not.toHaveBeenCalled();
+      expect(mockEventEmitterService.emit).toHaveBeenCalledWith(
+        expect.any(SkillUpdatedEvent),
+      );
     });
 
-    it('does not save skill files', async () => {
-      const files: UploadSkillFileInput[] = [
-        {
-          path: 'SKILL.md',
-          content: `---
-name: existing-skill
-description: Test conflict
----
-
-Content`,
-          permissions: 'rw-r--r--',
-        },
-      ];
-
-      const command: UploadSkillCommand = {
-        files,
-        organizationId,
-        userId,
-        spaceId,
+    it('emits SkillUpdatedEvent with cli source', async () => {
+      const updatedSkill: Skill = {
+        ...existingSkill,
+        version: 2,
       };
 
-      const existingSkill: Skill = {
-        id: createSkillId('existing-123'),
+      const mockSkillVersion: SkillVersion = {
+        id: createSkillVersionId('version-123'),
+        skillId: existingSkillId,
+        userId,
         name: 'existing-skill',
         slug: 'existing-skill',
-        description: 'Existing',
-        prompt: 'Content',
-        version: 1,
-        userId,
-        spaceId,
-        organizationId,
+        description: 'Updated description',
+        prompt: 'New content',
+        version: 2,
         allowedTools: undefined,
         license: undefined,
         compatibility: undefined,
@@ -1141,15 +1008,131 @@ Content`,
         updatedAt: new Date(),
       };
 
-      mockSkillService.listSkillsBySpace.mockResolvedValue([existingSkill]);
+      mockSkillService.updateSkill.mockResolvedValue(updatedSkill);
+      mockSkillVersionService.addSkillVersion.mockResolvedValue(
+        mockSkillVersion,
+      );
+      mockSkillFileRepository.addMany.mockResolvedValue([]);
 
-      try {
-        await usecase.execute(command);
-      } catch {
-        // expected
-      }
+      await usecase.execute(command);
 
-      expect(mockSkillFileRepository.addMany).not.toHaveBeenCalled();
+      expect(mockEventEmitterService.emit).toHaveBeenCalledWith(
+        expect.objectContaining({
+          payload: expect.objectContaining({
+            skillId: existingSkillId,
+            spaceId,
+            source: 'cli',
+          }),
+        }),
+      );
+    });
+
+    describe('with supporting files', () => {
+      const filesWithSupporting: UploadSkillFileInput[] = [
+        {
+          path: 'SKILL.md',
+          content: `---
+name: existing-skill
+description: Updated description
+---
+
+New content`,
+          permissions: 'rw-r--r--',
+        },
+        {
+          path: 'helper.md',
+          content: 'Helper content',
+          permissions: 'rw-r--r--',
+        },
+      ];
+
+      const commandWithFiles: UploadSkillCommand = {
+        files: filesWithSupporting,
+        organizationId,
+        userId,
+        spaceId,
+      };
+
+      it('saves supporting files for the new version', async () => {
+        const updatedSkill: Skill = {
+          ...existingSkill,
+          version: 2,
+        };
+
+        const mockSkillVersion: SkillVersion = {
+          id: createSkillVersionId('version-123'),
+          skillId: existingSkillId,
+          userId,
+          name: 'existing-skill',
+          slug: 'existing-skill',
+          description: 'Updated description',
+          prompt: 'New content',
+          version: 2,
+          allowedTools: undefined,
+          license: undefined,
+          compatibility: undefined,
+          metadata: undefined,
+          deletedAt: null,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        };
+
+        mockSkillService.updateSkill.mockResolvedValue(updatedSkill);
+        mockSkillVersionService.addSkillVersion.mockResolvedValue(
+          mockSkillVersion,
+        );
+        mockSkillFileRepository.addMany.mockResolvedValue([]);
+
+        await usecase.execute(commandWithFiles);
+
+        expect(mockSkillFileRepository.addMany).toHaveBeenCalledWith([
+          expect.objectContaining({
+            path: 'helper.md',
+            content: 'Helper content',
+          }),
+        ]);
+      });
+
+      it('emits SkillUpdatedEvent with correct file count', async () => {
+        const updatedSkill: Skill = {
+          ...existingSkill,
+          version: 2,
+        };
+
+        const mockSkillVersion: SkillVersion = {
+          id: createSkillVersionId('version-123'),
+          skillId: existingSkillId,
+          userId,
+          name: 'existing-skill',
+          slug: 'existing-skill',
+          description: 'Updated description',
+          prompt: 'New content',
+          version: 2,
+          allowedTools: undefined,
+          license: undefined,
+          compatibility: undefined,
+          metadata: undefined,
+          deletedAt: null,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        };
+
+        mockSkillService.updateSkill.mockResolvedValue(updatedSkill);
+        mockSkillVersionService.addSkillVersion.mockResolvedValue(
+          mockSkillVersion,
+        );
+        mockSkillFileRepository.addMany.mockResolvedValue([]);
+
+        await usecase.execute(commandWithFiles);
+
+        expect(mockEventEmitterService.emit).toHaveBeenCalledWith(
+          expect.objectContaining({
+            payload: expect.objectContaining({
+              fileCount: 1,
+            }),
+          }),
+        );
+      });
     });
   });
 

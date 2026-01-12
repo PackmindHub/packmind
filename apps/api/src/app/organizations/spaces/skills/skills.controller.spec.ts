@@ -1,4 +1,5 @@
-import { BadRequestException, ConflictException } from '@nestjs/common';
+import { BadRequestException, HttpStatus } from '@nestjs/common';
+import { Response } from 'express';
 import { PackmindLogger } from '@packmind/logger';
 import { AuthenticatedRequest } from '@packmind/node-utils';
 import { SkillParseError, SkillValidationError } from '@packmind/skills';
@@ -9,7 +10,6 @@ import {
   createSpaceId,
   createUserId,
   Skill,
-  SkillAlreadyExistsError,
   UploadSkillFileInput,
 } from '@packmind/types';
 import { OrganizationsSpacesSkillsController } from './skills.controller';
@@ -182,27 +182,113 @@ describe('OrganizationsSpacesSkillsController', () => {
       },
     } as unknown as AuthenticatedRequest;
 
-    it('returns uploaded skill', async () => {
-      const mockSkill: Skill = {
-        id: createSkillId('skill-1'),
-        slug: 'test-skill',
-        name: 'Test Skill',
-        content: 'Test content',
-        userId,
-        version: 1,
-        spaceId,
-      };
+    let mockResponse: jest.Mocked<Response>;
 
-      skillsService.uploadSkill.mockResolvedValue(mockSkill);
+    beforeEach(() => {
+      mockResponse = {
+        status: jest.fn().mockReturnThis(),
+        json: jest.fn().mockReturnThis(),
+      } as unknown as jest.Mocked<Response>;
+    });
 
-      const result = await controller.uploadSkill(
-        orgId,
-        spaceId,
-        { files: mockFiles },
-        request,
-      );
+    describe('when creating a new skill', () => {
+      it('returns 201 Created status', async () => {
+        const mockSkill: Skill = {
+          id: createSkillId('skill-1'),
+          slug: 'test-skill',
+          name: 'Test Skill',
+          content: 'Test content',
+          userId,
+          version: 1,
+          spaceId,
+        };
 
-      expect(result).toEqual(mockSkill);
+        skillsService.uploadSkill.mockResolvedValue(mockSkill);
+
+        await controller.uploadSkill(
+          orgId,
+          spaceId,
+          { files: mockFiles },
+          request,
+          mockResponse,
+        );
+
+        expect(mockResponse.status).toHaveBeenCalledWith(HttpStatus.CREATED);
+      });
+
+      it('returns the created skill in the response body', async () => {
+        const mockSkill: Skill = {
+          id: createSkillId('skill-1'),
+          slug: 'test-skill',
+          name: 'Test Skill',
+          content: 'Test content',
+          userId,
+          version: 1,
+          spaceId,
+        };
+
+        skillsService.uploadSkill.mockResolvedValue(mockSkill);
+
+        await controller.uploadSkill(
+          orgId,
+          spaceId,
+          { files: mockFiles },
+          request,
+          mockResponse,
+        );
+
+        expect(mockResponse.json).toHaveBeenCalledWith(mockSkill);
+      });
+    });
+
+    describe('when updating an existing skill', () => {
+      it('returns 200 OK status', async () => {
+        const mockSkill: Skill = {
+          id: createSkillId('skill-1'),
+          slug: 'test-skill',
+          name: 'Test Skill',
+          content: 'Test content',
+          userId,
+          version: 2,
+          spaceId,
+        };
+
+        skillsService.uploadSkill.mockResolvedValue(mockSkill);
+
+        await controller.uploadSkill(
+          orgId,
+          spaceId,
+          { files: mockFiles },
+          request,
+          mockResponse,
+        );
+
+        expect(mockResponse.status).toHaveBeenCalledWith(HttpStatus.OK);
+      });
+
+      it('returns the updated skill in the response body', async () => {
+        const mockSkill: Skill = {
+          id: createSkillId('skill-1'),
+          slug: 'test-skill',
+          name: 'Test Skill',
+          content: 'Updated content',
+          userId,
+          version: 3,
+          spaceId,
+        };
+
+        skillsService.uploadSkill.mockResolvedValue(mockSkill);
+
+        await controller.uploadSkill(
+          orgId,
+          spaceId,
+          { files: mockFiles },
+          request,
+          mockResponse,
+        );
+
+        expect(mockResponse.json).toHaveBeenCalledWith(mockSkill);
+      });
     });
 
     it('calls upload service with correct parameters', async () => {
@@ -223,6 +309,7 @@ describe('OrganizationsSpacesSkillsController', () => {
         spaceId,
         { files: mockFiles },
         request,
+        mockResponse,
       );
 
       expect(skillsService.uploadSkill).toHaveBeenCalledWith(
@@ -245,7 +332,13 @@ describe('OrganizationsSpacesSkillsController', () => {
         skillsService.uploadSkill.mockRejectedValue(validationError);
 
         await expect(
-          controller.uploadSkill(orgId, spaceId, { files: mockFiles }, request),
+          controller.uploadSkill(
+            orgId,
+            spaceId,
+            { files: mockFiles },
+            request,
+            mockResponse,
+          ),
         ).rejects.toThrow(BadRequestException);
       });
 
@@ -260,7 +353,13 @@ describe('OrganizationsSpacesSkillsController', () => {
         skillsService.uploadSkill.mockRejectedValue(validationError);
 
         await expect(
-          controller.uploadSkill(orgId, spaceId, { files: mockFiles }, request),
+          controller.uploadSkill(
+            orgId,
+            spaceId,
+            { files: mockFiles },
+            request,
+            mockResponse,
+          ),
         ).rejects.toThrow(validationError.message);
       });
 
@@ -279,7 +378,13 @@ describe('OrganizationsSpacesSkillsController', () => {
         skillsService.uploadSkill.mockRejectedValue(validationError);
 
         await expect(
-          controller.uploadSkill(orgId, spaceId, { files: mockFiles }, request),
+          controller.uploadSkill(
+            orgId,
+            spaceId,
+            { files: mockFiles },
+            request,
+            mockResponse,
+          ),
         ).rejects.toThrow(
           'Skill validation failed: name must contain only lowercase characters; slug cannot be empty',
         );
@@ -295,7 +400,13 @@ describe('OrganizationsSpacesSkillsController', () => {
         skillsService.uploadSkill.mockRejectedValue(parseError);
 
         await expect(
-          controller.uploadSkill(orgId, spaceId, { files: mockFiles }, request),
+          controller.uploadSkill(
+            orgId,
+            spaceId,
+            { files: mockFiles },
+            request,
+            mockResponse,
+          ),
         ).rejects.toThrow(BadRequestException);
       });
 
@@ -307,7 +418,13 @@ describe('OrganizationsSpacesSkillsController', () => {
         skillsService.uploadSkill.mockRejectedValue(parseError);
 
         await expect(
-          controller.uploadSkill(orgId, spaceId, { files: mockFiles }, request),
+          controller.uploadSkill(
+            orgId,
+            spaceId,
+            { files: mockFiles },
+            request,
+            mockResponse,
+          ),
         ).rejects.toThrow('Invalid YAML in SKILL.md frontmatter');
       });
 
@@ -319,38 +436,14 @@ describe('OrganizationsSpacesSkillsController', () => {
         skillsService.uploadSkill.mockRejectedValue(parseError);
 
         await expect(
-          controller.uploadSkill(orgId, spaceId, { files: mockFiles }, request),
+          controller.uploadSkill(
+            orgId,
+            spaceId,
+            { files: mockFiles },
+            request,
+            mockResponse,
+          ),
         ).rejects.toThrow('SKILL.md must have frontmatter');
-      });
-    });
-
-    describe('when skill already exists', () => {
-      it('returns 409 Conflict', async () => {
-        const alreadyExistsError = new SkillAlreadyExistsError(
-          'test-skill',
-          1,
-          spaceId,
-        );
-
-        skillsService.uploadSkill.mockRejectedValue(alreadyExistsError);
-
-        await expect(
-          controller.uploadSkill(orgId, spaceId, { files: mockFiles }, request),
-        ).rejects.toThrow(ConflictException);
-      });
-
-      it('includes error message in ConflictException', async () => {
-        const alreadyExistsError = new SkillAlreadyExistsError(
-          'test-skill',
-          1,
-          spaceId,
-        );
-
-        skillsService.uploadSkill.mockRejectedValue(alreadyExistsError);
-
-        await expect(
-          controller.uploadSkill(orgId, spaceId, { files: mockFiles }, request),
-        ).rejects.toThrow(alreadyExistsError.message);
       });
     });
 
@@ -361,7 +454,13 @@ describe('OrganizationsSpacesSkillsController', () => {
         skillsService.uploadSkill.mockRejectedValue(error);
 
         await expect(
-          controller.uploadSkill(orgId, spaceId, { files: mockFiles }, request),
+          controller.uploadSkill(
+            orgId,
+            spaceId,
+            { files: mockFiles },
+            request,
+            mockResponse,
+          ),
         ).rejects.toThrow('Database connection failed');
       });
 
@@ -371,7 +470,13 @@ describe('OrganizationsSpacesSkillsController', () => {
         skillsService.uploadSkill.mockRejectedValue(error);
 
         await expect(
-          controller.uploadSkill(orgId, spaceId, { files: mockFiles }, request),
+          controller.uploadSkill(
+            orgId,
+            spaceId,
+            { files: mockFiles },
+            request,
+            mockResponse,
+          ),
         ).rejects.toThrow('Network timeout');
       });
 
@@ -381,7 +486,13 @@ describe('OrganizationsSpacesSkillsController', () => {
         skillsService.uploadSkill.mockRejectedValue(error);
 
         await expect(
-          controller.uploadSkill(orgId, spaceId, { files: mockFiles }, request),
+          controller.uploadSkill(
+            orgId,
+            spaceId,
+            { files: mockFiles },
+            request,
+            mockResponse,
+          ),
         ).rejects.toThrow('Insufficient permissions');
       });
     });
