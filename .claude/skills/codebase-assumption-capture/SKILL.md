@@ -1,11 +1,45 @@
 ---
 name: codebase-assumption-capture
-description: Silently capture assumptions about the codebase that AI agents made and later discovered were incorrect. This skill logs when initial assumptions about architecture, patterns, or conventions turned out to be wrong, identifying documentation gaps and improving future AI agent onboarding. Use this proactively when you realize an assumption was incorrect.
+description: Automatically capture assumptions about the codebase that AI agents made and later discovered were incorrect. This skill logs when initial assumptions about architecture, patterns, or conventions turned out to be wrong, identifying documentation gaps and improving future AI agent onboarding. Use this proactively when you realize an assumption was incorrect.
 ---
 
 # Codebase Assumption Capture Skill
 
 This skill helps AI agents track assumptions they made about the codebase that turned out to be incorrect. The goal is to identify documentation gaps and create better onboarding context for future AI agent sessions.
+
+## TRIGGER CHECKLIST - Read This First
+
+**TRIGGER THIS SKILL IMMEDIATELY WHEN:**
+
+- [ ] You assumed a framework/library was used but found a different one (e.g., assumed Jest, found Vitest)
+- [ ] You assumed an architectural pattern but discovered a different one (e.g., assumed MVC, found hexagonal)
+- [ ] You assumed a file/folder was the entry point but it wasn't
+- [ ] You assumed a naming convention but found the opposite
+- [ ] You had to backtrack after discovering your initial assumption was wrong
+- [ ] You started implementing with a wrong assumption and had to change approach
+- [ ] You found something non-obvious that CLAUDE.md should mention
+
+**TRIGGER THE MOMENT YOU REALIZE YOU WERE WRONG** - don't wait. Log immediately, then continue with the corrected understanding.
+
+**MANDATORY SELF-CHECK:**
+Whenever you realize "I assumed X, but it's actually Y" → trigger this skill.
+
+## Failure Example - When This Skill SHOULD Have Been Triggered
+
+```
+User: "Add a new API endpoint"
+
+AI: [Thinks: "Based on Express in dependencies, I'll create a REST endpoint"]
+AI: [Explores src/api/ and finds GraphQL resolvers]
+AI: [Thinks: "Oh, it's GraphQL, not REST"]
+AI: [Implements GraphQL resolver but FORGETS to log the wrong assumption] ❌
+
+CORRECT BEHAVIOR:
+AI: [Realizes assumption was wrong]
+AI: [Immediately triggers skill and logs to .claude/assumption-corrections.yaml]
+AI: [Continues with corrected approach]
+AI: [Responds to user]
+```
 
 ## Purpose
 
@@ -125,14 +159,14 @@ During exploration or implementation, notice when your initial assumption about 
 - `files_explored`: Files that helped reveal the truth
 - `tags`: Relevant keywords for filtering/searching
 
-**CRITICAL:** This is a silent operation. Do NOT:
+**IMPORTANT:** This is an automatic, non-interrupting operation:
 
-- Ask the user if you should log it
-- Confirm to the user that you logged it
-- Interrupt your workflow to announce it
-- Make it visible in your response
+- Do NOT ask the user for permission to log
+- Do NOT announce that you logged something
+- Simply log and continue your work seamlessly
+- The user can review `.claude/assumption-corrections.yaml` later
 
-Logging happens seamlessly during work.
+This skill is MANDATORY when you realize an assumption was wrong - it's not optional.
 
 ### Step 4: User Review (Later)
 
@@ -395,4 +429,4 @@ Once `.claude/assumption-corrections.yaml` accumulates entries, developers can:
 
 ---
 
-**Remember:** This skill should be used proactively and silently when you realize an assumption about the codebase was incorrect. It's not about asking permission - it's about creating a feedback loop for improving project documentation and onboarding.
+**REMEMBER:** This skill is MANDATORY whenever you realize an assumption was wrong. You MUST log it - this is not optional. The logging happens automatically without user interaction. Every wrong assumption is a documentation gap that should be captured to improve future AI agent sessions.
