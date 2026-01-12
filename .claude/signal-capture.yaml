@@ -1,0 +1,86 @@
+# Signal Capture Changes Log
+#
+# This file tracks technical preferences, naming conventions, and architectural practices
+# detected from user messages and integrated into Packmind coding standards.
+#
+# Each entry represents a change to a standard (ADDED, UPDATED, or DELETED rule).
+# The signal-capture skill automatically appends entries here after user validation.
+#
+# Entry Format:
+# -------------
+# - newRule: '<rule text>'           # Required for ADDED/UPDATED, omit for DELETED
+#   oldRule: '<previous text>'       # Required for UPDATED/DELETED only
+#   operation: ADDED | UPDATED | DELETED
+#   standard: '<short-name>'         # e.g., typescript-code-standards, tests-redaction
+#   date: '<ISO date>'               # e.g., 2025-12-19
+#   sourceFile: '<file path>'        # File being worked on when rule was captured
+#   language: '<language>'           # Required for ADDED/UPDATED, omit for DELETED
+#   goodExample: |                   # Required for ADDED/UPDATED, omit for DELETED
+#     <valid code example>
+#   badExample: |                    # Required for ADDED/UPDATED, omit for DELETED
+#     <invalid code example>
+#
+# Example Entry (ADDED):
+# ----------------------
+# - newRule: 'Use arrow functions for functions that do not use the keyword "this"'
+#   operation: ADDED
+#   standard: 'typescript-code-standards'
+#   date: '2025-12-11'
+#   sourceFile: 'src/utils/helpers.ts'
+#   language: 'TYPESCRIPT'
+#   goodExample: |
+#     // Arrow function for utility
+#     const calculate = (a: number, b: number) => a + b;
+#
+#     // Regular function when using 'this'
+#     class Service {
+#       process() {
+#         return this.data;
+#       }
+#     }
+#   badExample: |
+#     // Unnecessary function keyword
+#     const calculate = function(a: number, b: number) {
+#       return a + b;
+#     };
+#
+# Example Entry (UPDATED):
+# ------------------------
+# - newRule: "Prefix public interfaces with I (internal interfaces don't need prefix)"
+#   oldRule: 'Prefix interfaces with I'
+#   operation: UPDATED
+#   standard: 'typescript-code-standards'
+#   date: '2025-12-19'
+#   sourceFile: 'src/types/user.ts'
+#   language: 'TYPESCRIPT'
+#   goodExample: |
+#     // Public interface
+#     export interface IUserService {
+#       getUser(id: string): Promise<User>;
+#     }
+#
+#     // Internal interface (no prefix needed)
+#     interface UserCache {
+#       [key: string]: User;
+#     }
+#   badExample: |
+#     // Public interface missing I prefix
+#     export interface UserService {
+#       getUser(id: string): Promise<User>;
+#     }
+#
+#     // Internal interface with unnecessary prefix
+#     interface IUserCache {
+#       [key: string]: User;
+#     }
+#
+# Example Entry (DELETED):
+# ------------------------
+# - oldRule: 'Add JSDoc comments to all exported functions'
+#   operation: DELETED
+#   standard: 'typescript-code-standards'
+#   date: '2025-12-19'
+#   sourceFile: 'CLAUDE.md'
+
+# ====== CAPTURED CHANGES START BELOW ======
+

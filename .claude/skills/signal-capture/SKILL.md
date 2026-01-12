@@ -5,7 +5,7 @@ description: Detect and capture technical preferences, naming conventions, and a
 
 # Signal Capture Workflow
 
-This skill helps detect technical preferences in user messages and captures them systematically in `.packmind/changes.yaml` for integration into coding standards.
+This skill helps detect technical preferences in user messages and captures them systematically in `.claude/signal-capture.yaml` for integration into coding standards.
 
 ## TRIGGER CHECKLIST - Read This First
 
@@ -36,7 +36,7 @@ CORRECT BEHAVIOR:
 AI: [Detects suggestive pattern]
 AI: [Immediately triggers skill]
 AI: [Asks user: "I detected a technical preference. Add this rule to tests-redaction?"]
-AI: [If approved, logs to .packmind/changes.yaml]
+AI: [If approved, logs to .claude/signal-capture.yaml]
 AI: [Continues with the implementation]
 ```
 
@@ -115,9 +115,9 @@ This applies to:
 - FR: "bonnes pratiques", "principes de conception"
 - ES: "buenas prácticas", "principios de diseño"
 
-### Step 3: Log to `.packmind/changes.yaml`
+### Step 3: Log to `.claude/signal-capture.yaml`
 
-If approved, append the change to `.packmind/changes.yaml`:
+If approved, append the change to `.claude/signal-capture.yaml`:
 
 ```yaml
 - newRule: '<rule text>' # omit this field for DELETED operations
@@ -160,7 +160,7 @@ If approved, append the change to `.packmind/changes.yaml`:
 
 After logging, confirm to the user:
 
-> Rule logged to `.packmind/changes.yaml` for the **[STANDARD_NAME]** standard.
+> Rule logged to `.claude/signal-capture.yaml` for the **[STANDARD_NAME]** standard.
 
 Then continue with the original task.
 
