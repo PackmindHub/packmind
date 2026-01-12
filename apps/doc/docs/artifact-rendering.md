@@ -76,12 +76,29 @@ The AI assistant will read the command file from the `.packmind/commands/` folde
 All commands are **user-invoked**—they only run when you explicitly call them. This is different from standards, which are applied automatically by the AI.
 :::
 
+## Where Skills Appear
+
+Skills are folders of instructions, scripts, and resources that AI agents can discover and use to perform tasks more accurately. Unlike commands which require explicit invocation, skills are **agent-discovered**—the AI automatically loads relevant skills based on the task at hand.
+
+| AI Assistant   | Where Skills Appear                    |
+| -------------- | -------------------------------------- |
+| GitHub Copilot | `.github/skills/{skill-slug}/SKILL.md` |
+| Claude Code    | `.claude/skills/{skill-slug}/SKILL.md` |
+| Cursor         | Uses Claude Code skills                |
+
+Skills contain YAML frontmatter with metadata (name, description, license, compatibility, allowed-tools) followed by the skill instructions.
+
+:::note
+Skills are currently only available for GitHub Copilot and Claude Code. Cursor uses the Claude Code skills. Other AI assistants do not support skill rendering.
+:::
+
 ## The Source Files
 
 Regardless of which AI assistant you use, Packmind always creates source files in the `.packmind/` folder:
 
 - **Standards**: `.packmind/standards/` folder
 - **Commands**: `.packmind/commands/` folder
+- **Skills**: `.packmind/skills/` folder
 
 These source files are the single source of truth. The files in AI assistant-specific folders (like `.claude/` or `.cursor/`) are generated from these sources during distribution.
 
@@ -115,6 +132,15 @@ These source files are the single source of truth. The files in AI assistant-spe
 1. Check that the standard scope (file patterns) matches the files you're working with
 2. Verify the standard was distributed to the correct AI assistant
 3. Try referencing the standard explicitly in your prompt if needed
+
+### I can't find my skills
+
+**Solution**:
+
+1. Skills are only rendered for GitHub Copilot and Claude Code (Cursor uses Claude Code skills)
+2. Check the `.packmind/skills/` folder for the source files
+3. For GitHub Copilot: Check `.github/skills/{skill-slug}/SKILL.md`
+4. For Claude Code/Cursor: Check `.claude/skills/{skill-slug}/SKILL.md`
 
 ## Related Documentation
 

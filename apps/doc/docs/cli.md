@@ -10,6 +10,7 @@ The Packmind CLI provides the following commands:
 - **`setup-mcp`** - Configure MCP for AI coding agents
 - **`install`** - Download packages locally
 - **`lint`** - Run detection programs (Enterprise only)
+- **`skills add`** - Import skills into Packmind
 
 ## Installation
 
@@ -402,6 +403,28 @@ packmind-cli lint . --logger=ide
 - Summary of total violations found
 
 **IDE format** provides structured output that can be parsed by editors and CI/CD tools.
+
+## Skills Command
+
+Import skills into your Packmind organization. Skills are reusable prompts that can be invoked by AI coding assistants.
+
+### Add a Skill
+
+```bash
+packmind-cli skills add <path>
+```
+
+**Arguments:**
+
+- `<path>` - Path to the skill directory containing skill files
+
+**Example:**
+
+```bash
+packmind-cli skills add ./my-skill
+```
+
+This uploads the skill to your Packmind organization, making it available for distribution to repositories.
 
 ## Related Documentation
 
