@@ -1,7 +1,12 @@
 import { useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router';
 import { PMGrid, PMPage, PMVStack } from '@packmind/ui';
-import { Skill, SkillFile, SkillFileId, SkillVersion } from '@packmind/types';
+import {
+  createSkillFileId,
+  Skill,
+  SkillFile,
+  SkillVersion,
+} from '@packmind/types';
 import { routes } from '../../../shared/utils/routes';
 import { buildSkillMarkdown } from '../utils/buildSkillMarkdown';
 import { SkillDetailsSidebar } from './SkillDetailsSidebar';
@@ -30,26 +35,32 @@ export const SkillDetails = ({
   const navigate = useNavigate();
   const { spaceSlug } = useParams<{ spaceSlug?: string }>();
 
+  // Create virtual SKILL.md file with reconstructed content
+  const skillMdFile = useMemo<SkillFile>(
+    () => ({
+      id: createSkillFileId(''),
+      skillVersionId: latestVersion.id,
+      permissions: '',
+      path: SKILL_MD_FILENAME,
+      content: buildSkillMarkdown(latestVersion),
+    }),
+    [latestVersion],
+  );
+
+  // Combine virtual SKILL.md with other files for the sidebar
+  const allFiles = useMemo(() => [skillMdFile, ...files], [skillMdFile, files]);
+
+  // Default to SKILL.md
   const [selectedFilePath, setSelectedFilePath] = useState<string | null>(
-    files.find((f) => f.path === SKILL_MD_FILENAME)?.path ??
-      files[0]?.path ??
-      null,
+    SKILL_MD_FILENAME,
   );
 
   const selectedFile = useMemo(() => {
     if (selectedFilePath === SKILL_MD_FILENAME) {
-      const reconstructedContent = buildSkillMarkdown(latestVersion);
-      const existingFile = files.find((f) => f.path === SKILL_MD_FILENAME);
-      return {
-        id: existingFile?.id ?? ('' as SkillFileId),
-        skillVersionId: existingFile?.skillVersionId ?? latestVersion.id,
-        permissions: existingFile?.permissions ?? '',
-        path: SKILL_MD_FILENAME,
-        content: reconstructedContent,
-      };
+      return skillMdFile;
     }
     return files.find((f) => f.path === selectedFilePath) ?? null;
-  }, [selectedFilePath, files, latestVersion]);
+  }, [selectedFilePath, files, skillMdFile]);
 
   const handleSkillChange = (skillId: string) => {
     const selectedSkill = skills.find((s) => s.id === skillId);
@@ -75,7 +86,7 @@ export const SkillDetails = ({
       <SkillDetailsSidebar
         skill={skill}
         skills={skills}
-        files={files}
+        files={allFiles}
         selectedFilePath={selectedFilePath}
         onFileSelect={handleFileSelect}
         onSkillChange={handleSkillChange}
