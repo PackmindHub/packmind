@@ -20,6 +20,7 @@ import {
 import slug from 'slug';
 import { v4 as uuidv4 } from 'uuid';
 import { IUploadSkill } from '../../../domain/useCases/IUploadSkill';
+import { SKILL_MD_FILENAME } from '../../../domain/SkillProperties';
 import { SkillService } from '../../services/SkillService';
 import { SkillVersionService } from '../../services/SkillVersionService';
 import { SkillParser } from '../../parser/SkillParser';
@@ -89,7 +90,7 @@ export class UploadSkillUsecase
       }
       // Find SKILL.md file
       this.logger.info('Looking for SKILL.md file');
-      const skillMdFile = files.find((f) => f.path === 'SKILL.md');
+      const skillMdFile = files.find((f) => f.path === SKILL_MD_FILENAME);
       if (!skillMdFile) {
         throw new SkillParseError('SKILL.md not found in uploaded files');
       }
@@ -192,9 +193,12 @@ export class UploadSkillUsecase
         version: initialVersion,
       });
 
-      // Save all files
-      this.logger.info('Saving skill files', { count: files.length });
-      const skillFiles: SkillFile[] = files.map((file) => ({
+      // Save supporting files (excluding SKILL.md which is already extracted into SkillVersion)
+      const supportingFiles = files.filter((f) => f.path !== SKILL_MD_FILENAME);
+      this.logger.info('Saving supporting skill files', {
+        count: supportingFiles.length,
+      });
+      const skillFiles: SkillFile[] = supportingFiles.map((file) => ({
         id: createSkillFileId(uuidv4()),
         skillVersionId: createSkillVersionId(skillVersion.id),
         path: file.path,
@@ -203,19 +207,15 @@ export class UploadSkillUsecase
       }));
 
       await this.skillFileRepository.addMany(skillFiles);
-      this.logger.info('Skill files saved successfully', {
+      this.logger.info('Supporting skill files saved successfully', {
         count: skillFiles.length,
       });
 
       this.logger.info('UploadSkill process completed successfully', {
         skillId: skill.id,
         name,
-        fileCount: files.length,
+        supportingFileCount: supportingFiles.length,
       });
-
-      const fileCountExcludingSkillMd = files.filter(
-        (f) => f.path !== 'SKILL.md',
-      ).length;
 
       this.eventEmitterService.emit(
         new SkillCreatedEvent({
@@ -224,7 +224,7 @@ export class UploadSkillUsecase
           organizationId: command.organization.id,
           userId: command.user.id,
           source: 'cli',
-          fileCount: fileCountExcludingSkillMd,
+          fileCount: supportingFiles.length,
         }),
       );
 
