@@ -32,7 +32,9 @@ export const SkillFilePreview = ({ file }: ISkillFilePreviewProps) => {
 
   const language = getFileLanguage(file.path);
   const canPreview = isPreviewable(file.path);
-  const isMarkdown = file.path.toLowerCase().endsWith('.md');
+  const markdownExtensions = ['.md', '.mdx', '.mdc'];
+  const lowerPath = file.path.toLowerCase();
+  const isMarkdown = markdownExtensions.some((ext) => lowerPath.endsWith(ext));
   const fileName = file.path.split('/').pop() ?? 'file';
 
   const handleDownload = () => {
@@ -45,51 +47,54 @@ export const SkillFilePreview = ({ file }: ISkillFilePreviewProps) => {
     URL.revokeObjectURL(url);
   };
 
-  const renderPreviewContent = () => {
-    if (!canPreview) {
-      return (
-        <PMEmptyState
-          title="Preview unavailable"
-          description={`Files of type ".${file.path.split('.').pop()}" cannot be previewed`}
-        >
-          <PMButton onClick={handleDownload}>Download file</PMButton>
-        </PMEmptyState>
-      );
-    }
+  const renderMarkdownPreview = () => (
+    <PMBox
+      border="solid 1px"
+      borderColor="border.primary"
+      borderRadius="md"
+      padding={4}
+      backgroundColor="background.primary"
+    >
+      <PMMarkdownViewer content={file.content} />
+    </PMBox>
+  );
 
-    if (isMarkdown) {
-      return (
-        <PMBox
-          border="solid 1px"
-          borderColor="border.primary"
-          borderRadius="md"
-          padding={4}
-          backgroundColor="background.primary"
-        >
-          <PMMarkdownViewer content={file.content} />
-        </PMBox>
-      );
-    }
-
-    return <PMCodeMirror value={file.content} language={language} readOnly />;
-  };
-
-  const renderRawContent = () => (
+  const renderCodeContent = () => (
     <PMCodeMirror value={file.content} language={language} readOnly />
   );
 
-  const tabs = [
-    {
-      value: 'preview',
-      triggerLabel: 'Preview',
-      content: renderPreviewContent(),
-    },
-    {
-      value: 'raw',
-      triggerLabel: 'Raw',
-      content: renderRawContent(),
-    },
-  ];
+  const renderNonPreviewableContent = () => (
+    <PMEmptyState
+      title="Preview unavailable"
+      description={`Files of type ".${file.path.split('.').pop()}" cannot be previewed`}
+    >
+      <PMButton onClick={handleDownload}>Download file</PMButton>
+    </PMEmptyState>
+  );
+
+  const renderFileContent = () => {
+    if (!canPreview) {
+      return renderNonPreviewableContent();
+    }
+
+    if (isMarkdown) {
+      const tabs = [
+        {
+          value: 'preview',
+          triggerLabel: 'Preview',
+          content: renderMarkdownPreview(),
+        },
+        {
+          value: 'raw',
+          triggerLabel: 'Raw',
+          content: renderCodeContent(),
+        },
+      ];
+      return <PMTabs tabs={tabs} defaultValue="preview" variant="enclosed" />;
+    }
+
+    return renderCodeContent();
+  };
 
   return (
     <PMVStack align="stretch" gap={2} width="full">
@@ -124,7 +129,7 @@ export const SkillFilePreview = ({ file }: ISkillFilePreviewProps) => {
         </PMHStack>
       </PMHStack>
 
-      <PMTabs tabs={tabs} defaultValue="preview" variant="enclosed" />
+      {renderFileContent()}
     </PMVStack>
   );
 };
