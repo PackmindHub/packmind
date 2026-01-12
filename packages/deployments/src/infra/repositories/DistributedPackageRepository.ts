@@ -6,6 +6,7 @@ import {
   DistributionId,
   PackageId,
   RecipeVersionId,
+  SkillVersionId,
   StandardVersionId,
 } from '@packmind/types';
 import { Repository } from 'typeorm';
@@ -199,6 +200,48 @@ export class DistributedPackageRepository
           error: error instanceof Error ? error.message : String(error),
         },
       );
+      throw error;
+    }
+  }
+
+  async addSkillVersions(
+    distributedPackageId: DistributedPackageId,
+    skillVersionIds: SkillVersionId[],
+  ): Promise<void> {
+    if (skillVersionIds.length === 0) {
+      return;
+    }
+
+    this.logger.info('Adding skill versions to distributed package', {
+      distributedPackageId,
+      skillVersionCount: skillVersionIds.length,
+    });
+
+    try {
+      const values = skillVersionIds.map((skillVersionId) => ({
+        distributed_package_id: distributedPackageId,
+        skill_version_id: skillVersionId,
+      }));
+
+      await this.repository
+        .createQueryBuilder()
+        .insert()
+        .into('distributed_package_skill_versions')
+        .values(values)
+        .execute();
+
+      this.logger.info(
+        'Skill versions added to distributed package successfully',
+        {
+          distributedPackageId,
+          skillVersionCount: skillVersionIds.length,
+        },
+      );
+    } catch (error) {
+      this.logger.error('Failed to add skill versions to distributed package', {
+        distributedPackageId,
+        error: error instanceof Error ? error.message : String(error),
+      });
       throw error;
     }
   }

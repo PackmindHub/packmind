@@ -3,6 +3,7 @@ import { DeployerService } from '@packmind/coding-agent';
 import { deploymentsSchemas } from '@packmind/deployments';
 import { gitSchemas } from '@packmind/git';
 import { recipesSchemas } from '@packmind/recipes';
+import { skillsSchemas } from '@packmind/skills';
 import { spacesSchemas } from '@packmind/spaces';
 import { standardsSchemas } from '@packmind/standards';
 import { makeTestDatasource } from '@packmind/test-utils';
@@ -70,6 +71,7 @@ describe('Target-Specific Deployment Integration', () => {
       ...spacesSchemas,
       ...gitSchemas,
       ...deploymentsSchemas,
+      ...skillsSchemas,
     ]);
     await dataSource.initialize();
     await dataSource.synchronize();

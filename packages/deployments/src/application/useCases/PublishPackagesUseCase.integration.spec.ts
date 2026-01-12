@@ -13,6 +13,7 @@ import {
   PublishPackagesCommand,
   IRecipesPort,
   IStandardsPort,
+  ISkillsPort,
   IDeploymentPort,
   Distribution,
   DistributionStatus,
@@ -29,6 +30,7 @@ describe('PublishPackagesUseCase - Integration behavior', () => {
   let useCase: PublishPackagesUseCase;
   let mockRecipesPort: jest.Mocked<IRecipesPort>;
   let mockStandardsPort: jest.Mocked<IStandardsPort>;
+  let mockSkillsPort: jest.Mocked<ISkillsPort>;
   let mockDeploymentPort: jest.Mocked<IDeploymentPort>;
   let mockPackageService: jest.Mocked<PackageService>;
   let mockDistributedPackageRepository: jest.Mocked<IDistributedPackageRepository>;
@@ -49,6 +51,10 @@ describe('PublishPackagesUseCase - Integration behavior', () => {
       getLatestStandardVersion: jest.fn(),
     } as unknown as jest.Mocked<IStandardsPort>;
 
+    mockSkillsPort = {
+      getLatestSkillVersion: jest.fn(),
+    } as unknown as jest.Mocked<ISkillsPort>;
+
     mockDeploymentPort = {
       publishArtifacts: jest.fn(),
     } as unknown as jest.Mocked<IDeploymentPort>;
@@ -66,11 +72,13 @@ describe('PublishPackagesUseCase - Integration behavior', () => {
       findByPackageId: jest.fn(),
       addStandardVersions: jest.fn(),
       addRecipeVersions: jest.fn(),
+      addSkillVersions: jest.fn(),
     } as unknown as jest.Mocked<IDistributedPackageRepository>;
 
     useCase = new PublishPackagesUseCase(
       mockRecipesPort,
       mockStandardsPort,
+      mockSkillsPort,
       mockDeploymentPort,
       mockPackageService,
       mockDistributedPackageRepository,

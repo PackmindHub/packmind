@@ -16,6 +16,7 @@ import {
   StandardVersion,
   IRecipesPort,
   IStandardsPort,
+  ISkillsPort,
   IDeploymentPort,
   Distribution,
   DistributionStatus,
@@ -33,6 +34,7 @@ describe('PublishPackagesUseCase', () => {
   let useCase: PublishPackagesUseCase;
   let mockRecipesPort: jest.Mocked<IRecipesPort>;
   let mockStandardsPort: jest.Mocked<IStandardsPort>;
+  let mockSkillsPort: jest.Mocked<ISkillsPort>;
   let mockDeploymentPort: jest.Mocked<IDeploymentPort>;
   let mockPackageService: jest.Mocked<PackageService>;
   let mockDistributedPackageRepository: jest.Mocked<IDistributedPackageRepository>;
@@ -73,6 +75,10 @@ describe('PublishPackagesUseCase', () => {
       getLatestStandardVersion: jest.fn(),
     } as unknown as jest.Mocked<IStandardsPort>;
 
+    mockSkillsPort = {
+      getLatestSkillVersion: jest.fn(),
+    } as unknown as jest.Mocked<ISkillsPort>;
+
     mockDeploymentPort = {
       publishArtifacts: jest.fn(),
     } as unknown as jest.Mocked<IDeploymentPort>;
@@ -90,11 +96,13 @@ describe('PublishPackagesUseCase', () => {
       findByPackageId: jest.fn(),
       addStandardVersions: jest.fn(),
       addRecipeVersions: jest.fn(),
+      addSkillVersions: jest.fn(),
     } as unknown as jest.Mocked<IDistributedPackageRepository>;
 
     useCase = new PublishPackagesUseCase(
       mockRecipesPort,
       mockStandardsPort,
+      mockSkillsPort,
       mockDeploymentPort,
       mockPackageService,
       mockDistributedPackageRepository,

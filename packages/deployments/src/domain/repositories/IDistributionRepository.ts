@@ -100,9 +100,8 @@ export interface IDistributionRepository {
    * Get all currently distributed skill versions for a specific target.
    * This returns the latest distributed version of each unique skill.
    * Used to generate complete skill books that include all distributed skills.
-   * TODO: Implement when skill-package relationship and distribution tracking is ready
    */
-  findActiveSkillVersionsByTarget?(
+  findActiveSkillVersionsByTarget(
     organizationId: OrganizationId,
     targetId: TargetId,
   ): Promise<SkillVersion[]>;
@@ -113,9 +112,8 @@ export interface IDistributionRepository {
    * This returns the latest distributed version of each unique skill
    * that belongs to one of the specified packages.
    * Used to compute removed artifacts only from packages being deployed.
-   * TODO: Implement when skill-package relationship and distribution tracking is ready
    */
-  findActiveSkillVersionsByTargetAndPackages?(
+  findActiveSkillVersionsByTargetAndPackages(
     organizationId: OrganizationId,
     targetId: TargetId,
     packageIds: PackageId[],

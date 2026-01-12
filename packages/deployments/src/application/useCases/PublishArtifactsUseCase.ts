@@ -658,20 +658,44 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
     previousFromPackages: SkillVersion[];
     combined: SkillVersion[];
   }> {
-    // TODO: Implement when skill-package relationship is ready and distribution tracking is added
-    // For now, return only new skill versions (no previous tracking yet)
-    this.logger.debug(
-      'collectAllSkillVersions: Skill distribution tracking not yet implemented',
-      {
-        newSkillVersionsCount: newSkillVersions.length,
-      },
-    );
+    const allPreviousSkillVersions = new Map<string, SkillVersion>();
+    const previousFromPackagesMap = new Map<string, SkillVersion>();
 
-    return {
-      previous: [],
-      previousFromPackages: [],
-      combined: newSkillVersions,
-    };
+    for (const target of targets) {
+      // Get all previous skill versions (for combining)
+      const previousSkillVersions =
+        await this.distributionRepository.findActiveSkillVersionsByTarget(
+          command.organizationId as OrganizationId,
+          target.id,
+        );
+
+      for (const skillVersion of previousSkillVersions) {
+        const existing = allPreviousSkillVersions.get(skillVersion.skillId);
+        if (!existing || skillVersion.version > existing.version) {
+          allPreviousSkillVersions.set(skillVersion.skillId, skillVersion);
+        }
+      }
+
+      // Get previous skill versions filtered by packages being deployed (for removal calculation)
+      const previousFromPackagesVersions =
+        await this.distributionRepository.findActiveSkillVersionsByTargetAndPackages(
+          command.organizationId as OrganizationId,
+          target.id,
+          command.packageIds,
+        );
+
+      for (const skillVersion of previousFromPackagesVersions) {
+        const existing = previousFromPackagesMap.get(skillVersion.skillId);
+        if (!existing || skillVersion.version > existing.version) {
+          previousFromPackagesMap.set(skillVersion.skillId, skillVersion);
+        }
+      }
+    }
+
+    const previous = Array.from(allPreviousSkillVersions.values());
+    const previousFromPackages = Array.from(previousFromPackagesMap.values());
+    const combined = this.combineSkillVersions(previous, newSkillVersions);
+    return { previous, previousFromPackages, combined };
   }
 
   private combineRecipeVersions(

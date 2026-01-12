@@ -514,6 +514,7 @@ export class RemovePackageFromTargetsUseCase implements IRemovePackageFromTarget
       packageId: pkg.id,
       standardVersions: [],
       recipeVersions: [],
+      skillVersions: [],
       operation: 'remove',
     });
 
