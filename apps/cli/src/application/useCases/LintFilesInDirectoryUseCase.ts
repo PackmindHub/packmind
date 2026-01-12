@@ -20,6 +20,7 @@ import {
 } from '@packmind/types';
 import * as path from 'path';
 import * as fs from 'fs/promises';
+import { logErrorConsole } from '../../infra/utils/consoleLogger';
 
 const origin = 'LintFilesInDirectoryUseCase';
 
@@ -450,7 +451,7 @@ export class LintFilesInDirectoryUseCase implements ILintFilesInDirectory {
                 );
 
                 if (!programLanguage) {
-                  console.error(
+                  logErrorConsole(
                     `Unsupported language "${activeProgram.language}" for file ${file.path}`,
                   );
                   continue;
@@ -476,7 +477,7 @@ export class LintFilesInDirectoryUseCase implements ILintFilesInDirectory {
                 programsByLanguage.set(programLanguage, programsForLanguage);
               } catch (error) {
                 // Log error but continue with other programs
-                console.error(
+                logErrorConsole(
                   `Error preparing program for file ${file.path}: ${error}`,
                 );
               }
@@ -503,13 +504,13 @@ export class LintFilesInDirectoryUseCase implements ILintFilesInDirectory {
 
               fileViolations.push(...result);
             } catch (error) {
-              console.error(
+              logErrorConsole(
                 `Error executing programs for file ${file.path} (${language}): ${error}`,
               );
             }
           }
         } catch (error) {
-          console.error(
+          logErrorConsole(
             `Error reading file content for ${file.path}: ${error}`,
           );
         }
