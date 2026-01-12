@@ -1,6 +1,12 @@
 import { Skill } from '@packmind/types';
 
 /**
+ * The filename for skill definition files according to the Agent Skills specification.
+ * @see https://agentskills.io/specification
+ */
+export const SKILL_MD_FILENAME = 'SKILL.md';
+
+/**
  * Allowed fields in the SKILL.md frontmatter according to the Agent Skills specification.
  * @see https://agentskills.io/specification
  */

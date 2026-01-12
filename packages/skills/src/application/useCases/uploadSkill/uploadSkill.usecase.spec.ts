@@ -178,7 +178,7 @@ This is the skill body.`,
       expect(result).toEqual(mockSkill);
     });
 
-    it('saves all uploaded files to repository', async () => {
+    it('does not save SKILL.md to repository since data is extracted into SkillVersion', async () => {
       const files: UploadSkillFileInput[] = [
         {
           path: 'SKILL.md',
@@ -245,15 +245,7 @@ Content`,
 
       await usecase.execute(command);
 
-      expect(mockSkillFileRepository.addMany).toHaveBeenCalledWith(
-        expect.arrayContaining([
-          expect.objectContaining({
-            path: 'SKILL.md',
-            content: expect.stringContaining('name: test-skill'),
-            permissions: 'rw-r--r--',
-          }),
-        ]),
-      );
+      expect(mockSkillFileRepository.addMany).toHaveBeenCalledWith([]);
     });
 
     it('emits SkillCreatedEvent with correct payload', async () => {
@@ -339,7 +331,7 @@ Content`,
   });
 
   describe('with multiple files', () => {
-    it('creates skill with all files saved', async () => {
+    it('saves only supporting files excluding SKILL.md', async () => {
       const files: UploadSkillFileInput[] = [
         {
           path: 'SKILL.md',
@@ -418,14 +410,93 @@ Main content`,
 
       expect(mockSkillFileRepository.addMany).toHaveBeenCalledWith(
         expect.arrayContaining([
-          expect.objectContaining({ path: 'SKILL.md' }),
           expect.objectContaining({ path: 'prompts/helper.md' }),
           expect.objectContaining({ path: 'data/config.json' }),
         ]),
       );
     });
 
-    it('preserves nested directory structure', async () => {
+    it('excludes SKILL.md from saved files', async () => {
+      const files: UploadSkillFileInput[] = [
+        {
+          path: 'SKILL.md',
+          content: `---
+name: multi-file-skill
+description: Skill with multiple files
+---
+
+Main content`,
+          permissions: 'rw-r--r--',
+        },
+        {
+          path: 'prompts/helper.md',
+          content: 'Helper content',
+          permissions: 'rw-r--r--',
+        },
+      ];
+
+      const command: UploadSkillCommand = {
+        files,
+        organizationId,
+        userId,
+        spaceId,
+      };
+
+      const mockSkill: Skill = {
+        id: createSkillId('skill-123'),
+        name: 'multi-file-skill',
+        slug: 'multi-file-skill',
+        description: 'Skill with multiple files',
+        prompt: 'Main content',
+        version: 1,
+        userId,
+        spaceId,
+        organizationId,
+        allowedTools: undefined,
+        license: undefined,
+        compatibility: undefined,
+        metadata: undefined,
+        deletedAt: null,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      const mockSkillVersion: SkillVersion = {
+        id: createSkillVersionId('version-123'),
+        skillId: mockSkill.id,
+        userId,
+        name: 'multi-file-skill',
+        slug: 'multi-file-skill',
+        description: 'Skill with multiple files',
+        prompt: 'Main content',
+        version: 1,
+        allowedTools: undefined,
+        license: undefined,
+        compatibility: undefined,
+        metadata: undefined,
+        deletedAt: null,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      mockSkillService.listSkillsBySpace.mockResolvedValue([]);
+      mockSkillService.addSkill.mockResolvedValue(mockSkill);
+      mockSkillVersionService.addSkillVersion.mockResolvedValue(
+        mockSkillVersion,
+      );
+      mockSkillFileRepository.addMany.mockResolvedValue([]);
+
+      await usecase.execute(command);
+
+      const savedFiles = mockSkillFileRepository.addMany.mock.calls[0][0];
+      const skillMdSaved = savedFiles.some(
+        (f: { path: string }) => f.path === 'SKILL.md',
+      );
+
+      expect(skillMdSaved).toBe(false);
+    });
+
+    it('preserves nested directory structure for supporting files', async () => {
       const files: UploadSkillFileInput[] = [
         {
           path: 'SKILL.md',
@@ -497,14 +568,12 @@ Content`,
 
       await usecase.execute(command);
 
-      expect(mockSkillFileRepository.addMany).toHaveBeenCalledWith(
-        expect.arrayContaining([
-          expect.objectContaining({
-            path: 'deep/nested/file.txt',
-            content: 'Nested file content',
-          }),
-        ]),
-      );
+      expect(mockSkillFileRepository.addMany).toHaveBeenCalledWith([
+        expect.objectContaining({
+          path: 'deep/nested/file.txt',
+          content: 'Nested file content',
+        }),
+      ]);
     });
 
     it('emits SkillCreatedEvent with file count excluding SKILL.md', async () => {
