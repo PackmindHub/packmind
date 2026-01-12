@@ -13,7 +13,7 @@ export const getMeQueryOptions = () => ({
     return authGateway.getMe();
   },
   retry: false,
-  staleTime: 1000 * 30,
+  staleTime: 1000 * 60 * 15, // 15 minutes - user data is very stable
 });
 
 export const useGetMeQuery = () => {

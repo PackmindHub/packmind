@@ -24,22 +24,23 @@ export async function clientLoader({
 }: {
   params: { standardId: string; spaceSlug: string };
 }) {
-  // Get user to access organization
-  const me = await queryClient.fetchQuery(getMeQueryOptions());
+  // Get user to access organization - use cached data from parent loader
+  const me = await queryClient.ensureQueryData(getMeQueryOptions());
   if (!me.organization) {
     throw new Error('Organization not found');
   }
 
-  // Get space to access spaceId
-  const space = await queryClient.fetchQuery(
+  // Get space to access spaceId - use cached data from parent loader
+  const space = await queryClient.ensureQueryData(
     getSpaceBySlugQueryOptions(params.spaceSlug, me.organization.id),
   );
   if (!space) {
     throw new Error('Space not found');
   }
 
+  // Standards list should be prefetched by parent loader
   const standardsResponse =
-    await queryClient.fetchQuery<ListStandardsBySpaceResponse>(
+    await queryClient.ensureQueryData<ListStandardsBySpaceResponse>(
       getStandardsBySpaceQueryOptions(space.id, me.organization.id),
     );
   const standardsList: Standard[] = Array.isArray(standardsResponse)

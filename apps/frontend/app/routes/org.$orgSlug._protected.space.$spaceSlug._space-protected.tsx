@@ -6,11 +6,13 @@ import {
   getSpaceBySlugQueryOptions,
   getSpacesQueryOptions,
 } from '../../src/domain/spaces/api/queries/SpacesQueries';
+import { getStandardsBySpaceQueryOptions } from '../../src/domain/standards/api/queries/StandardsQueries';
 import { pmToaster } from '@packmind/ui';
 
 export async function clientLoader({ params }: LoaderFunctionArgs) {
   // User is already authenticated (checked by parent _protected route)
-  const me = await queryClient.fetchQuery(getMeQueryOptions());
+  // Use ensureQueryData to reuse cached data from parent loader
+  const me = await queryClient.ensureQueryData(getMeQueryOptions());
 
   if (!me.organization) {
     throw redirect('/sign-in');
@@ -18,7 +20,7 @@ export async function clientLoader({ params }: LoaderFunctionArgs) {
 
   // Validate space exists and belongs to this org
   try {
-    const space = await queryClient.fetchQuery(
+    const space = await queryClient.ensureQueryData(
       getSpaceBySlugQueryOptions(params.spaceSlug || '', me.organization.id),
     );
 
@@ -43,6 +45,12 @@ export async function clientLoader({ params }: LoaderFunctionArgs) {
         throw redirect(`/org/${params.orgSlug}`);
       }
     }
+
+    // Prefetch standards list for this space to warm cache for child routes
+    // This runs in parallel and doesn't block the loader
+    queryClient.prefetchQuery(
+      getStandardsBySpaceQueryOptions(space.id, me.organization.id),
+    );
 
     return { space };
   } catch (error) {

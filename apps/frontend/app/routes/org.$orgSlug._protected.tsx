@@ -12,6 +12,8 @@ import {
   setCrispUserInfo,
 } from '@packmind/proprietary/frontend/services/vendors/CrispService';
 import { AuthService } from '../../src/services/auth/AuthService';
+import { getSpacesQueryOptions } from '../../src/domain/spaces/api/queries/SpacesQueries';
+import { queryClient } from '../../src/shared/data/queryClient';
 
 export async function clientLoader({ params }: LoaderFunctionArgs) {
   const authService = AuthService.getInstance();
@@ -41,6 +43,11 @@ export async function clientLoader({ params }: LoaderFunctionArgs) {
 
       // Switch succeeded, return updated me
       return { me: switchResult.updatedMe || me };
+    }
+
+    // Prefetch spaces list to warm cache for child routes
+    if (me.organization?.id) {
+      queryClient.prefetchQuery(getSpacesQueryOptions(me.organization.id));
     }
 
     return { me };
