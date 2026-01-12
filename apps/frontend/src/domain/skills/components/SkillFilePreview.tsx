@@ -90,7 +90,14 @@ export const SkillFilePreview = ({ file }: ISkillFilePreviewProps) => {
           content: renderCodeContent(),
         },
       ];
-      return <PMTabs tabs={tabs} defaultValue="preview" variant="enclosed" />;
+      return (
+        <PMTabs
+          tabs={tabs}
+          defaultValue="preview"
+          variant="enclosed"
+          size="sm"
+        />
+      );
     }
 
     return renderCodeContent();
