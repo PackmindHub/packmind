@@ -1103,10 +1103,11 @@ export class PackmindGateway implements IPackmindGateway {
       const isNewSkill = response.status === 201;
       const result = await response.json();
       return {
-        skillId: result.id,
-        name: result.name,
-        version: result.version,
+        skillId: result.skill.id,
+        name: result.skill.name,
+        version: result.skill.version,
         isNewSkill,
+        versionCreated: result.versionCreated,
         fileCount: files.length,
         totalSize,
       } as UploadSkillResult;

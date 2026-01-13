@@ -32,6 +32,10 @@ export const addSkillCommand = command({
 
       if (result.isNewSkill) {
         logSuccessConsole('Skill created successfully!');
+      } else if (!result.versionCreated) {
+        logInfoConsole(
+          `Skill content is identical to version ${result.version}, no new version created.`,
+        );
       } else {
         logSuccessConsole(`Skill updated to version ${result.version}!`);
       }

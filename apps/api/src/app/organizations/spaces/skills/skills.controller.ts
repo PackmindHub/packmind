@@ -173,7 +173,7 @@ export class OrganizationsSpacesSkillsController {
   /**
    * Upload a skill within a space
    * POST /organizations/:orgId/spaces/:spaceId/skills/upload
-   * Returns 201 Created for new skills, 200 OK for version updates or identical content
+   * Returns 201 Created for new skills, 200 OK for updates or if content is identical (check versionCreated flag)
    */
   @Post('upload')
   async uploadSkill(
@@ -206,8 +206,12 @@ export class OrganizationsSpacesSkillsController {
         userId,
       );
 
-      const isNewSkill = result.skill.version === 1 && result.versionCreated;
-      const statusCode = isNewSkill ? HttpStatus.CREATED : HttpStatus.OK;
+      let statusCode: HttpStatus;
+      if (result.skill.version === 1 && result.versionCreated) {
+        statusCode = HttpStatus.CREATED;
+      } else {
+        statusCode = HttpStatus.OK;
+      }
 
       return response.status(statusCode).json(result);
     } catch (error) {
