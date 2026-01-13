@@ -26,6 +26,11 @@ export const SkillFileSchema = new EntitySchema<
       type: 'varchar',
       length: 10,
     },
+    isBase64: {
+      name: 'is_base64',
+      type: 'boolean',
+      default: false,
+    },
     ...uuidSchema,
   },
   relations: {
