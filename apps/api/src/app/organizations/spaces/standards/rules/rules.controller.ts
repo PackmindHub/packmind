@@ -13,13 +13,10 @@ import {
 } from '@nestjs/common';
 import { LogLevel, PackmindLogger } from '@packmind/logger';
 import { AuthenticatedRequest } from '@packmind/node-utils';
+import { GetRuleExamplesCommand } from '@packmind/standards';
 import {
   CreateRuleExampleCommand,
   DeleteRuleExampleCommand,
-  GetRuleExamplesCommand,
-  UpdateRuleExampleCommand,
-} from '@packmind/standards';
-import {
   OrganizationId,
   Rule,
   RuleExample,
@@ -27,6 +24,7 @@ import {
   RuleId,
   SpaceId,
   StandardId,
+  UpdateRuleExampleCommand,
   stringToProgrammingLanguage,
 } from '@packmind/types';
 import { RulesService } from './rules.service';

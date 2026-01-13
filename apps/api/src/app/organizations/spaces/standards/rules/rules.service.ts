@@ -1,19 +1,17 @@
 import { Injectable } from '@nestjs/common';
 import { PackmindLogger } from '@packmind/logger';
+import { GetRuleExamplesCommand, StandardsHexa } from '@packmind/standards';
 import {
   CreateRuleExampleCommand,
   DeleteRuleExampleCommand,
-  GetRuleExamplesCommand,
-  StandardsHexa,
-  UpdateRuleExampleCommand,
-} from '@packmind/standards';
-import {
+  DeleteRuleExampleResponse,
   GetStandardByIdResponse,
   OrganizationId,
   Rule,
   RuleExample,
   SpaceId,
   StandardId,
+  UpdateRuleExampleCommand,
   UserId,
 } from '@packmind/types';
 
@@ -60,7 +58,9 @@ export class RulesService {
     return this.standardsHexa.getAdapter().updateRuleExample(command);
   }
 
-  async deleteRuleExample(command: DeleteRuleExampleCommand): Promise<void> {
+  async deleteRuleExample(
+    command: DeleteRuleExampleCommand,
+  ): Promise<DeleteRuleExampleResponse> {
     return this.standardsHexa.getAdapter().deleteRuleExample(command);
   }
 }
