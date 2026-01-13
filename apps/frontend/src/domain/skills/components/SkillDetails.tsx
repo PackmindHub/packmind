@@ -125,74 +125,71 @@ export const SkillDetails = ({
         }
       >
         <PMVStack align="stretch" gap={6}>
-          {hasInfoFields && (
-            <PMVStack
-              align="stretch"
-              gap={2}
-              border="solid 1px"
-              borderColor="border.tertiary"
-              borderRadius="md"
-              bg="background.tertiary"
-              p={4}
-            >
-              <PMVStack gap={2} align="flex-start">
-                <PMText color="secondary" fontSize="sm">
-                  Description:
-                </PMText>
-                <PMText>{latestVersion.description}</PMText>
-              </PMVStack>
-              <PMSeparator my={2} borderColor="border.secondary" />
-              {latestVersion.license && (
-                <PMHStack gap={2}>
-                  <PMText color="secondary" fontSize="sm">
-                    License:
-                  </PMText>
-                  <PMText fontSize="sm">{latestVersion.license}</PMText>
-                </PMHStack>
-              )}
-              {latestVersion.compatibility && (
-                <PMHStack gap={2}>
-                  <PMText color="secondary" fontSize="sm">
-                    Compatibility:
-                  </PMText>
-                  <PMText fontSize="sm">{latestVersion.compatibility}</PMText>
-                </PMHStack>
-              )}
-              {latestVersion.allowedTools && (
-                <PMHStack gap={2}>
-                  <PMText color="secondary" fontSize="sm">
-                    Allowed Tools:
-                  </PMText>
-                  <PMText fontSize="sm">{latestVersion.allowedTools}</PMText>
-                </PMHStack>
-              )}
-              {latestVersion.metadata &&
-                Object.keys(latestVersion.metadata).length > 0 && (
-                  <PMVStack gap={1} align="stretch">
-                    <PMText color="secondary" fontSize="sm">
-                      Metadata:
-                    </PMText>
-                    <PMVStack gap={1} pl={4} align="flex-start">
-                      {Object.entries(latestVersion.metadata).map(
-                        ([key, value]) => (
-                          <PMHStack key={key} gap={2}>
-                            <PMText color="secondary" fontSize="sm">
-                              - {key}:
-                            </PMText>
-                            <PMText fontSize="sm">{value}</PMText>
-                          </PMHStack>
-                        ),
-                      )}
-                    </PMVStack>
-                  </PMVStack>
-                )}
+          <PMVStack
+            align="stretch"
+            gap={2}
+            border="solid 1px"
+            borderColor="border.tertiary"
+            borderRadius="md"
+            bg="background.tertiary"
+            p={4}
+          >
+            <PMVStack gap={2} align="flex-start">
+              <PMText color="secondary" fontSize="sm">
+                Description:
+              </PMText>
+              <PMText>{latestVersion.description}</PMText>
             </PMVStack>
-          )}
-          {/*{latestVersion.description && (*/}
-          {/*  <PMText color="secondary" variant="body-important" >*/}
-          {/*    {latestVersion.description}*/}
-          {/*  </PMText>*/}
-          {/*)}*/}
+            {hasInfoFields && (
+              <>
+                <PMSeparator my={2} borderColor="border.secondary" />
+                {latestVersion.license && (
+                  <PMHStack gap={2}>
+                    <PMText color="secondary" fontSize="sm">
+                      License:
+                    </PMText>
+                    <PMText fontSize="sm">{latestVersion.license}</PMText>
+                  </PMHStack>
+                )}
+                {latestVersion.compatibility && (
+                  <PMHStack gap={2}>
+                    <PMText color="secondary" fontSize="sm">
+                      Compatibility:
+                    </PMText>
+                    <PMText fontSize="sm">{latestVersion.compatibility}</PMText>
+                  </PMHStack>
+                )}
+                {latestVersion.allowedTools && (
+                  <PMHStack gap={2}>
+                    <PMText color="secondary" fontSize="sm">
+                      Allowed Tools:
+                    </PMText>
+                    <PMText fontSize="sm">{latestVersion.allowedTools}</PMText>
+                  </PMHStack>
+                )}
+                {latestVersion.metadata &&
+                  Object.keys(latestVersion.metadata).length > 0 && (
+                    <PMVStack gap={1} align="stretch">
+                      <PMText color="secondary" fontSize="sm">
+                        Metadata:
+                      </PMText>
+                      <PMVStack gap={1} pl={4} align="flex-start">
+                        {Object.entries(latestVersion.metadata).map(
+                          ([key, value]) => (
+                            <PMHStack key={key} gap={2}>
+                              <PMText color="secondary" fontSize="sm">
+                                - {key}:
+                              </PMText>
+                              <PMText fontSize="sm">{value}</PMText>
+                            </PMHStack>
+                          ),
+                        )}
+                      </PMVStack>
+                    </PMVStack>
+                  )}
+              </>
+            )}
+          </PMVStack>
           <PMVStack
             align="stretch"
             gap={6}
