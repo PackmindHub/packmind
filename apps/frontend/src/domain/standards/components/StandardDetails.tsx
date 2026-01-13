@@ -214,7 +214,6 @@ export const StandardDetails = ({
       gridTemplateColumns={{
         base: 'minmax(240px, 270px) minmax(0, 1fr)',
       }}
-      gap={6}
       alignItems="start"
       overflowX="auto"
     >

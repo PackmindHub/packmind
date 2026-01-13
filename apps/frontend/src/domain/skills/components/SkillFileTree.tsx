@@ -3,6 +3,7 @@ import { LuFolder, LuFile, LuChevronRight } from 'react-icons/lu';
 import {
   createFileTreeCollection,
   PMIcon,
+  PMSeparator,
   PMTreeView,
   PMTreeViewBranchIndentGuide,
 } from '@packmind/ui';
@@ -24,15 +25,27 @@ const getParentFolders = (filePath: string): string[] => {
   return parts.slice(0, -1).map((_, i) => parts.slice(0, i + 1).join('/'));
 };
 
+const SKILL_MD_PATH = 'SKILL.md';
+
 export const SkillFileTree = ({
   files,
   selectedFilePath,
   onFileSelect,
 }: SkillFileTreeProps) => {
-  const filePaths = useMemo(() => files.map((f) => f.path), [files]);
+  // Separate SKILL.md from other files
+  const { skillMdFile, otherFiles } = useMemo(() => {
+    const skillMd = files.find((f) => f.path === SKILL_MD_PATH);
+    const others = files.filter((f) => f.path !== SKILL_MD_PATH);
+    return { skillMdFile: skillMd, otherFiles: others };
+  }, [files]);
+
+  const otherFilePaths = useMemo(
+    () => otherFiles.map((f) => f.path),
+    [otherFiles],
+  );
   const collection = useMemo(
-    () => createFileTreeCollection(filePaths),
-    [filePaths],
+    () => createFileTreeCollection(otherFilePaths),
+    [otherFilePaths],
   );
 
   // Track expanded folders - initialize with parents of selected file
@@ -75,47 +88,86 @@ export const SkillFileTree = ({
     return null;
   }
 
-  return (
-    <PMTreeView.Root
-      collection={collection}
-      selectionMode="single"
-      selectedValue={selectedFilePath ? [selectedFilePath] : []}
-      onSelectionChange={handleSelectionChange}
-      expandedValue={expandedValue}
-      onExpandedChange={handleExpandedChange}
-      width="full"
-      size="sm"
-    >
-      <PMTreeView.Tree>
-        <PMTreeView.Node
-          indentGuide={<PMTreeViewBranchIndentGuide />}
-          render={({ node, nodeState }) => {
-            if (nodeState.isBranch) {
-              return (
-                <PMTreeView.Branch>
-                  <PMTreeView.BranchControl>
-                    <PMTreeView.BranchIndicator>
-                      <LuChevronRight />
-                    </PMTreeView.BranchIndicator>
-                    <PMIcon>
-                      <LuFolder />
-                    </PMIcon>
-                    <PMTreeView.BranchText>{node.label}</PMTreeView.BranchText>
-                  </PMTreeView.BranchControl>
-                  <PMTreeView.BranchContent />
-                </PMTreeView.Branch>
-              );
-            }
+  const hasOtherFiles = otherFiles.length > 0;
 
-            return (
-              <PMTreeView.Item>
-                <LuFile />
-                <PMTreeView.ItemText>{node.label}</PMTreeView.ItemText>
-              </PMTreeView.Item>
-            );
-          }}
-        />
-      </PMTreeView.Tree>
-    </PMTreeView.Root>
+  return (
+    <>
+      {/* SKILL.md - Principal file */}
+      {skillMdFile && (
+        <PMTreeView.Root
+          collection={createFileTreeCollection([SKILL_MD_PATH])}
+          selectionMode="single"
+          selectedValue={
+            selectedFilePath === SKILL_MD_PATH ? [SKILL_MD_PATH] : []
+          }
+          onSelectionChange={() => onFileSelect(SKILL_MD_PATH)}
+          width="full"
+          size="sm"
+        >
+          <PMTreeView.Tree>
+            <PMTreeView.Node
+              render={() => (
+                <PMTreeView.Item>
+                  <LuFile />
+                  <PMTreeView.ItemText>{SKILL_MD_PATH}</PMTreeView.ItemText>
+                </PMTreeView.Item>
+              )}
+            />
+          </PMTreeView.Tree>
+        </PMTreeView.Root>
+      )}
+
+      {/* Separator between SKILL.md and other files */}
+      {skillMdFile && hasOtherFiles && (
+        <PMSeparator borderColor="border.secondary" width="full" />
+      )}
+
+      {/* Other files tree */}
+      {hasOtherFiles && (
+        <PMTreeView.Root
+          collection={collection}
+          selectionMode="single"
+          selectedValue={selectedFilePath ? [selectedFilePath] : []}
+          onSelectionChange={handleSelectionChange}
+          expandedValue={expandedValue}
+          onExpandedChange={handleExpandedChange}
+          width="full"
+          size="sm"
+        >
+          <PMTreeView.Tree>
+            <PMTreeView.Node
+              indentGuide={<PMTreeViewBranchIndentGuide />}
+              render={({ node, nodeState }) => {
+                if (nodeState.isBranch) {
+                  return (
+                    <PMTreeView.Branch>
+                      <PMTreeView.BranchControl>
+                        <PMTreeView.BranchIndicator>
+                          <LuChevronRight />
+                        </PMTreeView.BranchIndicator>
+                        <PMIcon>
+                          <LuFolder />
+                        </PMIcon>
+                        <PMTreeView.BranchText>
+                          {node.label}
+                        </PMTreeView.BranchText>
+                      </PMTreeView.BranchControl>
+                      <PMTreeView.BranchContent />
+                    </PMTreeView.Branch>
+                  );
+                }
+
+                return (
+                  <PMTreeView.Item>
+                    <LuFile />
+                    <PMTreeView.ItemText>{node.label}</PMTreeView.ItemText>
+                  </PMTreeView.Item>
+                );
+              }}
+            />
+          </PMTreeView.Tree>
+        </PMTreeView.Root>
+      )}
+    </>
   );
 };
