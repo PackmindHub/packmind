@@ -16,6 +16,7 @@ import { AuthProvider } from '../../../../providers/AuthProvider';
 import {
   DeploymentOverview,
   StandardDeploymentOverview,
+  SkillDeploymentOverview,
 } from '@packmind/types';
 import {
   createDeploymentOverview,
@@ -82,6 +83,7 @@ const renderWithProvider = async (ui: React.ReactElement) => {
 jest.mock('../../api/queries/DeploymentsQueries', () => ({
   useGetRecipesDeploymentOverviewQuery: jest.fn(),
   useGetStandardsDeploymentOverviewQuery: jest.fn(),
+  useGetSkillsDeploymentOverviewQuery: jest.fn(),
 }));
 
 // Mock PMTable to avoid internal hook/state issues during tests
@@ -98,6 +100,10 @@ const mockUseGetRecipesDeploymentOverview =
 const mockUseGetStandardsDeploymentOverview =
   DeploymentQueries.useGetStandardsDeploymentOverviewQuery as jest.MockedFunction<
     typeof DeploymentQueries.useGetStandardsDeploymentOverviewQuery
+  >;
+const mockUseGetSkillsDeploymentOverview =
+  DeploymentQueries.useGetSkillsDeploymentOverviewQuery as jest.MockedFunction<
+    typeof DeploymentQueries.useGetSkillsDeploymentOverviewQuery
   >;
 
 describe('DeploymentsPage', () => {
@@ -130,6 +136,18 @@ describe('DeploymentsPage', () => {
     } as Partial<
       UseQueryResult<StandardDeploymentOverview, Error>
     > as UseQueryResult<StandardDeploymentOverview, Error>);
+
+    mockUseGetSkillsDeploymentOverview.mockReturnValue({
+      data: { repositories: [], skills: [] },
+      isLoading: false,
+      error: null,
+      isError: false,
+      isPending: false,
+      isSuccess: true,
+      refetch: jest.fn(),
+    } as Partial<
+      UseQueryResult<SkillDeploymentOverview, Error>
+    > as UseQueryResult<SkillDeploymentOverview, Error>);
   });
 
   afterEach(() => {
@@ -168,6 +186,18 @@ describe('DeploymentsPage', () => {
     } as Partial<
       UseQueryResult<StandardDeploymentOverview, Error>
     > as UseQueryResult<StandardDeploymentOverview, Error>);
+
+    mockUseGetSkillsDeploymentOverview.mockReturnValue({
+      data: undefined,
+      isLoading: true,
+      error: null,
+      isError: false,
+      isPending: true,
+      isSuccess: false,
+      refetch: jest.fn(),
+    } as Partial<
+      UseQueryResult<SkillDeploymentOverview, Error>
+    > as UseQueryResult<SkillDeploymentOverview, Error>);
 
     await renderWithProvider(<DeploymentsPage />);
 

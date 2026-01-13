@@ -27,6 +27,7 @@ import {
   GetRenderModeConfigurationCommand,
   GetRenderModeConfigurationResult,
   GetStandardDeploymentOverviewCommand,
+  GetSkillDeploymentOverviewCommand,
   GetTargetsByGitRepoCommand,
   GetTargetsByOrganizationCommand,
   GetTargetsByRepositoryCommand,
@@ -64,6 +65,7 @@ import {
   PullContentCommand,
   RenderModeConfiguration,
   StandardDeploymentOverview,
+  SkillDeploymentOverview,
   Target,
   TargetWithRepository,
   UpdateRenderModeConfigurationCommand,
@@ -84,6 +86,7 @@ import { GetDeploymentOverviewUseCase } from '../useCases/GetDeploymentOverviewU
 import { GetPackageByIdUsecase } from '../useCases/getPackageById/getPackageById.usecase';
 import { GetRenderModeConfigurationUseCase } from '../useCases/GetRenderModeConfigurationUseCase';
 import { GetStandardDeploymentOverviewUseCase } from '../useCases/GetStandardDeploymentOverviewUseCase';
+import { GetSkillsDeploymentOverviewUseCase } from '../useCases/GetSkillsDeploymentOverviewUseCase';
 import { GetTargetsByGitRepoUseCase } from '../useCases/GetTargetsByGitRepoUseCase';
 import { GetTargetsByOrganizationUseCase } from '../useCases/GetTargetsByOrganizationUseCase';
 import { GetTargetsByRepositoryUseCase } from '../useCases/GetTargetsByRepositoryUseCase';
@@ -121,6 +124,7 @@ export class DeploymentsAdapter
   private _listDistributionsByRecipeUseCase!: ListDistributionsByRecipeUseCase;
   private _listDistributionsByStandardUseCase!: ListDistributionsByStandardUseCase;
   private _getStandardDeploymentOverviewUseCase!: GetStandardDeploymentOverviewUseCase;
+  private _getSkillsDeploymentOverviewUseCase!: GetSkillsDeploymentOverviewUseCase;
   private _addTargetUseCase!: AddTargetUseCase;
   private _getTargetsByGitRepoUseCase!: GetTargetsByGitRepoUseCase;
   private _getTargetsByRepositoryUseCase!: GetTargetsByRepositoryUseCase;
@@ -239,6 +243,14 @@ export class DeploymentsAdapter
       new GetStandardDeploymentOverviewUseCase(
         this.distributionRepository,
         this.standardsPort,
+        this.gitPort,
+        this.spacesPort,
+      );
+
+    this._getSkillsDeploymentOverviewUseCase =
+      new GetSkillsDeploymentOverviewUseCase(
+        this.distributionRepository,
+        this.skillsPort,
         this.gitPort,
         this.spacesPort,
       );
@@ -438,6 +450,12 @@ export class DeploymentsAdapter
     command: GetStandardDeploymentOverviewCommand,
   ): Promise<StandardDeploymentOverview> {
     return this._getStandardDeploymentOverviewUseCase.execute(command);
+  }
+
+  getSkillsDeploymentOverview(
+    command: GetSkillDeploymentOverviewCommand,
+  ): Promise<SkillDeploymentOverview> {
+    return this._getSkillsDeploymentOverviewUseCase.execute(command);
   }
 
   async addTarget(command: AddTargetCommand): Promise<Target> {

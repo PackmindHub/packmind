@@ -29,6 +29,7 @@ import {
   GET_RECIPES_DEPLOYMENT_OVERVIEW_KEY,
   GET_RENDER_MODE_CONFIGURATION_KEY,
   GET_STANDARDS_DEPLOYMENT_OVERVIEW_KEY,
+  GET_SKILLS_DEPLOYMENT_OVERVIEW_KEY,
   GET_TARGETS_BY_ORGANIZATION_KEY,
   GET_TARGETS_BY_REPOSITORY_KEY,
   LIST_PACKAGES_BY_SPACE_KEY,
@@ -228,6 +229,25 @@ export const useGetStandardsDeploymentOverviewQuery = () => {
         );
       }
       return deploymentsGateways.getStandardsDeploymentOverview({
+        organizationId: organization.id,
+      });
+    },
+    enabled: !!organization?.id,
+  });
+};
+
+export const useGetSkillsDeploymentOverviewQuery = () => {
+  const { organization } = useAuthContext();
+
+  return useQuery({
+    queryKey: GET_SKILLS_DEPLOYMENT_OVERVIEW_KEY,
+    queryFn: () => {
+      if (!organization?.id) {
+        throw new Error(
+          'Organization ID is required to fetch skills deployment overview',
+        );
+      }
+      return deploymentsGateways.getSkillsDeploymentOverview({
         organizationId: organization.id,
       });
     },

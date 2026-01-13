@@ -20,6 +20,7 @@ import {
   GetRenderModeConfigurationCommand,
   GetRenderModeConfigurationResult,
   GetStandardDeploymentOverviewCommand,
+  GetSkillDeploymentOverviewCommand,
   GetTargetsByGitRepoCommand,
   GetTargetsByOrganizationCommand,
   GetTargetsByRepositoryCommand,
@@ -48,6 +49,7 @@ import { Distribution } from '../Distribution';
 import { PackagesDeployment } from '../PackagesDeployment';
 import { RenderModeConfiguration } from '../RenderModeConfiguration';
 import { StandardDeploymentOverview } from '../StandardDeploymentOverview';
+import { SkillDeploymentOverview } from '../SkillDeploymentOverview';
 import { Target } from '../Target';
 import { TargetWithRepository } from '../TargetWithRepository';
 
@@ -160,6 +162,21 @@ export interface IDeploymentPort {
   getStandardDeploymentOverview(
     command: GetStandardDeploymentOverviewCommand,
   ): Promise<StandardDeploymentOverview>;
+
+  /**
+   * Gets skills deployment overview for an organization
+   *
+   * Provides a comprehensive view of skills deployment status across all repositories
+   * for the specified organization, including:
+   * - Repository-centric view: which skills are deployed where and if they're up-to-date
+   * - Skill-centric view: which repositories each skill is deployed to and deployment status
+   *
+   * @param command - Command containing organizationId
+   * @returns Promise of SkillDeploymentOverview with repositories and skills deployment status
+   */
+  getSkillsDeploymentOverview(
+    command: GetSkillDeploymentOverviewCommand,
+  ): Promise<SkillDeploymentOverview>;
 
   /**
    * Creates a target for a git repository

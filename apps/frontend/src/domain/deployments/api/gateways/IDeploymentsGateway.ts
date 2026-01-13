@@ -3,6 +3,7 @@ import {
   IGetDeploymentOverview,
   IGetPackageByIdUseCase,
   IGetStandardDeploymentOverview,
+  IGetSkillDeploymentOverview,
   IListDeploymentsByPackage,
   IListDistributionsByRecipe,
   IListDistributionsByStandard,
@@ -34,6 +35,7 @@ export interface IDeploymentsGateway {
   getPackageById: NewGateway<IGetPackageByIdUseCase>;
   getRecipesDeploymentOverview: NewGateway<IGetDeploymentOverview>;
   getStandardsDeploymentOverview: NewGateway<IGetStandardDeploymentOverview>;
+  getSkillsDeploymentOverview: NewGateway<IGetSkillDeploymentOverview>;
   publishRecipes: NewGateway<IPublishRecipes>;
   publishStandards: NewGateway<IPublishStandards>;
   publishPackages: NewGateway<IPublishPackages>;

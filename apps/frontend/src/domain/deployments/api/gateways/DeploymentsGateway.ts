@@ -13,6 +13,7 @@ import {
   IPublishStandards,
   IPublishPackages,
   IGetStandardDeploymentOverview,
+  IGetSkillDeploymentOverview,
   IListDeploymentsByPackage,
   IListDistributionsByRecipe,
   IListDistributionsByStandard,
@@ -29,6 +30,7 @@ import {
   ListDistributionsByStandardCommand,
   GetDeploymentOverviewCommand,
   GetStandardDeploymentOverviewCommand,
+  GetSkillDeploymentOverviewCommand,
   PublishRecipesCommand,
   PublishStandardsCommand,
   PublishPackagesCommand,
@@ -163,6 +165,15 @@ export class DeploymentsGatewayApi
     }: NewPackmindCommandBody<GetStandardDeploymentOverviewCommand>) => {
       return this._api.get(
         `${this._endpoint}/${organizationId}/deployments/standards/overview`,
+      );
+    };
+
+  getSkillsDeploymentOverview: NewGateway<IGetSkillDeploymentOverview> =
+    async ({
+      organizationId,
+    }: NewPackmindCommandBody<GetSkillDeploymentOverviewCommand>) => {
+      return this._api.get(
+        `${this._endpoint}/${organizationId}/deployments/skills/overview`,
       );
     };
 

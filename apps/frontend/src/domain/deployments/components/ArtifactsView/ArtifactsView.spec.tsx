@@ -149,6 +149,7 @@ describe('ArtifactsView', () => {
       <ArtifactsView
         recipes={recipes}
         standards={standards}
+        skills={[]}
         artifactStatusFilter="all"
         searchTerm=""
         orgSlug="org-x"
@@ -212,6 +213,7 @@ describe('ArtifactsView', () => {
       <ArtifactsView
         recipes={recipes}
         standards={standards}
+        skills={[]}
         artifactStatusFilter="outdated"
         searchTerm=""
       />,

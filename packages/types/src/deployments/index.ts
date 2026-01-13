@@ -9,6 +9,7 @@ export * from './RenderModeConfiguration';
 export * from './PackagesDeploymentId';
 export * from './PackagesDeployment';
 export * from './StandardDeploymentOverview';
+export * from './SkillDeploymentOverview';
 export * from './FileUpdates';
 export * from './Package';
 export * from './PackmindFileConfig';
