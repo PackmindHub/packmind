@@ -11,6 +11,7 @@ import { recipesSchemas } from '@packmind/recipes';
 import { llmSchemas } from '@packmind/llm';
 import { spacesSchemas } from '@packmind/spaces';
 import { standardsSchemas } from '@packmind/standards';
+import { skillsSchemas } from '@packmind/skills';
 
 export async function registerDb(fastify: FastifyInstance) {
   fastify.register(dbConnection, {
@@ -21,9 +22,10 @@ export async function registerDb(fastify: FastifyInstance) {
       ...recipesSchemas,
       ...gitSchemas,
       ...accountsSchemas,
-      ...standardsSchemas,
-      ...deploymentsSchemas,
       ...spacesSchemas,
+      ...standardsSchemas,
+      ...skillsSchemas,
+      ...deploymentsSchemas,
       ...linterSchemas,
       ...llmSchemas,
     ],
