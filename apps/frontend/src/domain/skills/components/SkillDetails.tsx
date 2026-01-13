@@ -1,6 +1,13 @@
 import { useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router';
-import { PMGrid, PMPage, PMText, PMVStack } from '@packmind/ui';
+import {
+  PMGrid,
+  PMHStack,
+  PMPage,
+  PMSeparator,
+  PMText,
+  PMVStack,
+} from '@packmind/ui';
 import {
   createSkillFileId,
   Skill,
@@ -63,6 +70,18 @@ export const SkillDetails = ({
 
   const resolvedSelectedFilePath = selectedFile?.path ?? SKILL_MD_FILENAME;
 
+  const hasInfoFields = useMemo(
+    () =>
+      Boolean(
+        latestVersion.license ||
+        latestVersion.compatibility ||
+        latestVersion.allowedTools ||
+        (latestVersion.metadata &&
+          Object.keys(latestVersion.metadata).length > 0),
+      ),
+    [latestVersion],
+  );
+
   const handleSkillChange = (skillId: string) => {
     const selectedSkill = skills.find((s) => s.id === skillId);
     if (selectedSkill && orgSlug && spaceSlug) {
@@ -106,11 +125,74 @@ export const SkillDetails = ({
         }
       >
         <PMVStack align="stretch" gap={6}>
-          {latestVersion.description && (
-            <PMText color="secondary" variant="body-important">
-              {latestVersion.description}
-            </PMText>
+          {hasInfoFields && (
+            <PMVStack
+              align="stretch"
+              gap={2}
+              border="solid 1px"
+              borderColor="border.tertiary"
+              borderRadius="md"
+              bg="background.tertiary"
+              p={4}
+            >
+              <PMVStack gap={2} align="flex-start">
+                <PMText color="secondary" fontSize="sm">
+                  Description:
+                </PMText>
+                <PMText>{latestVersion.description}</PMText>
+              </PMVStack>
+              <PMSeparator my={2} borderColor="border.secondary" />
+              {latestVersion.license && (
+                <PMHStack gap={2}>
+                  <PMText color="secondary" fontSize="sm">
+                    License:
+                  </PMText>
+                  <PMText fontSize="sm">{latestVersion.license}</PMText>
+                </PMHStack>
+              )}
+              {latestVersion.compatibility && (
+                <PMHStack gap={2}>
+                  <PMText color="secondary" fontSize="sm">
+                    Compatibility:
+                  </PMText>
+                  <PMText fontSize="sm">{latestVersion.compatibility}</PMText>
+                </PMHStack>
+              )}
+              {latestVersion.allowedTools && (
+                <PMHStack gap={2}>
+                  <PMText color="secondary" fontSize="sm">
+                    Allowed Tools:
+                  </PMText>
+                  <PMText fontSize="sm">{latestVersion.allowedTools}</PMText>
+                </PMHStack>
+              )}
+              {latestVersion.metadata &&
+                Object.keys(latestVersion.metadata).length > 0 && (
+                  <PMVStack gap={1} align="stretch">
+                    <PMText color="secondary" fontSize="sm">
+                      Metadata:
+                    </PMText>
+                    <PMVStack gap={1} pl={4} align="flex-start">
+                      {Object.entries(latestVersion.metadata).map(
+                        ([key, value]) => (
+                          <PMHStack key={key} gap={2}>
+                            <PMText color="secondary" fontSize="sm">
+                              - {key}:
+                            </PMText>
+                            <PMText fontSize="sm">{value}</PMText>
+                          </PMHStack>
+                        ),
+                      )}
+                    </PMVStack>
+                  </PMVStack>
+                )}
+            </PMVStack>
           )}
+          {/*{latestVersion.description && (*/}
+          {/*  <PMText color="secondary" variant="body-important" >*/}
+          {/*    {latestVersion.description}*/}
+          {/*  </PMText>*/}
+          {/*)}*/}
           <PMVStack
             align="stretch"
             gap={6}
