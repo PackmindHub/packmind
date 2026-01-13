@@ -10,16 +10,24 @@
 
 # Proactive Skills - Use During Work
 
-After completing exploration or coding tasks, check if any of these skills should be triggered:
+These skills should be triggered **DURING** work, not just at the end. When you notice something relevant, invoke the skill immediately without asking the user.
 
-- **consistency-violation-capture** - Did you find different approaches to the same concern across modules/packages?
-- **pattern-discovery-capture** - Did you observe recurring patterns or conventions that aren't formally documented?
-- **implicit-decision-capture** - Did you make technical decisions without explicit user guidance during coding?
-- **command-capture** - Did you complete a multi-step workflow that could benefit other developers?
-- **signal-capture** - Did the user express technical preferences or coding practices that should become standards?
-- **codebase-assumption-capture** - Did you discover that initial assumptions about architecture or patterns were incorrect?
+## During Exploration (when searching for patterns to follow)
 
-These skills should be triggered DURING work, not just at the end. When you notice something relevant, invoke the skill immediately.
+- **consistency-violation-capture** - Found conflicting patterns? (e.g., "some UseCases extend AbstractMemberUseCase, others don't", "validation in controllers here, in entities there")
+- **pattern-discovery-capture** - Found 3+ files following the same undocumented convention?
+- **codebase-assumption-capture** - Reality different from expectation? (e.g., "assumed Jest but found Vitest", "assumed REST but found GraphQL")
+
+## During Implementation (while coding)
+
+- **implicit-decision-capture** - Chose between valid alternatives without user guidance? (e.g., "picked 300ms debounce", "used compound component pattern")
+- **consistency-violation-capture** - Your implementation approach differs from similar code elsewhere?
+- **codebase-assumption-capture** - Started coding with wrong assumption and had to change approach?
+
+## After Completing Work
+
+- **command-capture** - Completed a multi-step workflow worth standardizing? (e.g., "added UseCase with tests and wiring")
+- **signal-capture** - User expressed a preference that should become a standard? (e.g., "Use snake_case for DB columns")
 
 # Commiting
 

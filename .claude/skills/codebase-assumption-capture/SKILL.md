@@ -1,6 +1,6 @@
 ---
 name: codebase-assumption-capture
-description: Automatically capture assumptions about the codebase that AI agents made and later discovered were incorrect. This skill logs when initial assumptions about architecture, patterns, or conventions turned out to be wrong, identifying documentation gaps and improving future AI agent onboarding. Use this proactively when you realize an assumption was incorrect.
+description: Capture wrong assumptions you made about the codebase. TRIGGER when reality differs from expectation (e.g., "assumed Jest but it's Vitest", "assumed AbstractUseCase exists but found AbstractMemberUseCase", "assumed REST but it's GraphQL"). Log silently to .claude/assumption-corrections.yaml to identify CLAUDE.md documentation gaps. Key distinction - assumptions are corrected by reality, decisions are choices between valid options.
 ---
 
 # Codebase Assumption Capture Skill
@@ -11,20 +11,44 @@ This skill helps AI agents track assumptions they made about the codebase that t
 
 **TRIGGER THIS SKILL IMMEDIATELY WHEN:**
 
+### Pre-Work Assumptions (before you start coding)
+
 - [ ] You assumed a framework/library was used but found a different one (e.g., assumed Jest, found Vitest)
 - [ ] You assumed an architectural pattern but discovered a different one (e.g., assumed MVC, found hexagonal)
 - [ ] You assumed a file/folder was the entry point but it wasn't
 - [ ] You assumed a naming convention but found the opposite
-- [ ] You had to backtrack after discovering your initial assumption was wrong
-- [ ] You started implementing with a wrong assumption and had to change approach
 - [ ] You found something non-obvious that CLAUDE.md should mention
+
+### During Implementation (when starting to code)
+
+- [ ] You started implementing with a wrong assumption and had to change approach
+- [ ] You assumed you'd find a pattern/template to follow but it doesn't exist
+- [ ] You assumed certain helpers/utils existed but they don't (or they work differently)
+- [ ] You assumed the testing setup works a certain way but it doesn't
+- [ ] You thought a base class/interface existed but had to create it yourself
+- [ ] You assumed DI/IoC container works a certain way but discovered it's different
+
+### Post-Implementation Realizations
+
+- [ ] You had to backtrack after discovering your initial assumption was wrong
+- [ ] Tests failed because your assumption about dependencies was wrong
+- [ ] Build/lint failed because of an undocumented rule you didn't know about
 
 **TRIGGER THE MOMENT YOU REALIZE YOU WERE WRONG** - don't wait. Log immediately, then continue with the corrected understanding.
 
 **MANDATORY SELF-CHECK:**
 Whenever you realize "I assumed X, but it's actually Y" → trigger this skill.
 
-## Failure Example - When This Skill SHOULD Have Been Triggered
+**KEY DISTINCTION FROM implicit-decision-capture:**
+
+- **Assumption**: "I thought/expected X" → Reality proved me wrong → Log as assumption
+- **Decision**: "I chose X over Y" → Both were valid options → Log as decision
+- If you **had no choice** because reality was different from expectation → that's an assumption
+- If you **made a choice** between valid alternatives → that's a decision
+
+## Failure Examples - When This Skill SHOULD Have Been Triggered
+
+### Failure Example 1: During Exploration (Classic)
 
 ```
 User: "Add a new API endpoint"
@@ -38,6 +62,57 @@ CORRECT BEHAVIOR:
 AI: [Realizes assumption was wrong]
 AI: [Immediately triggers skill and logs to .claude/assumption-corrections.yaml]
 AI: [Continues with corrected approach]
+AI: [Responds to user]
+```
+
+### Failure Example 2: During Implementation (Common!)
+
+```
+User: "Add a new UseCase to edit a standard"
+
+AI: [Thinks: "UseCases probably follow a base class pattern like in most clean architecture codebases"]
+AI: [Creates EditStandardUseCase extending a presumed AbstractUseCase]
+AI: [Finds that AbstractUseCase doesn't exist - it's AbstractMemberUseCase with different requirements]
+AI: [Adapts the code but FORGETS to log the wrong assumption] ❌
+
+CORRECT BEHAVIOR:
+AI: [Discovers base class is different than expected]
+AI: [Triggers skill: "Assumed generic AbstractUseCase exists, but found AbstractMemberUseCase with member-scoping"]
+AI: [Adjusts implementation to use correct base class]
+AI: [Responds to user with correct implementation]
+```
+
+### Failure Example 3: Build/Test Failure Reveals Assumption
+
+```
+User: "Add unit tests for this service"
+
+AI: [Thinks: "I'll use Jest mocking patterns like jest.mock()"]
+AI: [Writes tests with Jest patterns]
+AI: [Tests fail because project uses Vitest with different mocking API]
+AI: [Fixes tests but FORGETS to log the assumption] ❌
+
+CORRECT BEHAVIOR:
+AI: [Test failure reveals testing framework assumption was wrong]
+AI: [Triggers skill: "Assumed Jest testing framework, but project uses Vitest"]
+AI: [Rewrites tests with Vitest patterns]
+AI: [Responds with working tests]
+```
+
+### Failure Example 4: Helper/Util Assumption
+
+```
+User: "Add date formatting to the response"
+
+AI: [Thinks: "There's probably a date formatting util in this codebase"]
+AI: [Searches for formatDate or date utils]
+AI: [Finds nothing - project uses raw Intl.DateTimeFormat everywhere]
+AI: [Implements without util but FORGETS to log the assumption] ❌
+
+CORRECT BEHAVIOR:
+AI: [Realizes expected utility doesn't exist]
+AI: [Triggers skill: "Assumed centralized date formatting utility exists, but found raw Intl.DateTimeFormat used directly"]
+AI: [Suggests adding documentation about date handling approach OR follows existing pattern]
 AI: [Responds to user]
 ```
 

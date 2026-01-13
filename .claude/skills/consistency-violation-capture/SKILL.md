@@ -1,6 +1,6 @@
 ---
 name: consistency-violation-capture
-description: Automatically capture inconsistencies discovered in the codebase during exploration or coding work. This skill logs situations where different parts of the codebase handle similar concerns differently, enabling later standardization efforts. Use this proactively when you notice conflicting patterns, naming conventions, or approaches across the codebase.
+description: Capture codebase inconsistencies discovered during exploration OR implementation. TRIGGER when you find conflicting patterns while looking for code to follow (e.g., "some UseCases extend AbstractMemberUseCase, others don't") or different approaches to the same concern across modules (naming, error handling, validation placement). Log silently to .claude/consistency-violations.yaml so teams can standardize later.
 ---
 
 # Consistency Violation Capture Skill
@@ -11,6 +11,8 @@ This skill helps AI agents identify and log inconsistencies discovered while exp
 
 **TRIGGER THIS SKILL IMMEDIATELY WHEN:**
 
+### During Exploration
+
 - [ ] You explored code across 2+ modules/packages and found different approaches to the same concern
 - [ ] You noticed naming conventions differ between files (e.g., `IFoo` vs `Foo` for interfaces)
 - [ ] You found different error handling patterns (exceptions vs Result types)
@@ -19,12 +21,26 @@ This skill helps AI agents identify and log inconsistencies discovered while exp
 - [ ] You found varying test organization approaches
 - [ ] You noticed different folder structures for similar modules
 
+### During Implementation (e.g., "Add a UseCase", "Create a new endpoint")
+
+- [ ] You looked for similar implementations to follow as a template and found **conflicting patterns**
+- [ ] You tried to extend/inherit from a base class but found that similar code doesn't follow this pattern
+- [ ] You discovered that event emission/handling varies (some use cases emit events, others don't)
+- [ ] You found that validation is placed differently (controller vs use case vs domain entity)
+- [ ] You noticed dependency injection patterns vary (constructor vs method injection)
+- [ ] You found mixed approaches to repository methods (findById vs getById, returning null vs throwing)
+
 **TRIGGER AS SOON AS YOU NOTICE** - don't wait until the end of your response. Log immediately, then continue your work.
 
-**MANDATORY POST-EXPLORATION CHECK:**
-After ANY codebase exploration task, ask yourself: "Did I find any inconsistencies?" If yes → trigger this skill.
+**MANDATORY CHECKS:**
 
-## Failure Example - When This Skill SHOULD Have Been Triggered
+- **Post-Exploration:** After ANY codebase exploration task, ask yourself: "Did I find any inconsistencies?" If yes → trigger this skill.
+- **Pre-Implementation:** Before implementing, when looking for patterns to follow: "Are there conflicting approaches?" If yes → trigger this skill.
+- **During Implementation:** While coding: "Does my approach match what I see elsewhere?" If not → investigate and potentially trigger this skill.
+
+## Failure Examples - When This Skill SHOULD Have Been Triggered
+
+### Failure Example 1: During Exploration
 
 ```
 User: "Analyze event tracking in the standards package"
@@ -39,6 +55,39 @@ AI: [Notices inconsistency] → [Immediately triggers skill and logs to .claude/
 AI: [Continues exploration]
 AI: [Notices another inconsistency] → [Immediately triggers skill again]
 AI: [Responds to user with analysis]
+```
+
+### Failure Example 2: During Implementation (Common!)
+
+```
+User: "Add a new UseCase to edit a standard"
+
+AI: [Explores existing UseCases to find a pattern to follow]
+AI: [Finds EditStandardNameUseCase extends AbstractMemberUseCase]
+AI: [Finds CreateStandardUseCase does NOT extend AbstractMemberUseCase]
+AI: [Picks one pattern and implements but FORGETS to log the inconsistency] ❌
+
+CORRECT BEHAVIOR:
+AI: [Discovers conflicting patterns while looking for template]
+AI: [Immediately triggers skill: "UseCase inheritance varies - some extend AbstractMemberUseCase, some don't"]
+AI: [Continues with implementation, following one pattern]
+AI: [Responds to user with the implementation]
+```
+
+### Failure Example 3: During Code Review/Understanding
+
+```
+User: "Help me understand how validation works in this codebase"
+
+AI: [Explores API controllers - finds validation in controllers]
+AI: [Explores domain layer - finds validation in entities]
+AI: [Explores use cases - finds validation there too]
+AI: [Explains validation but FORGETS to log the inconsistency] ❌
+
+CORRECT BEHAVIOR:
+AI: [Notices validation is scattered across layers]
+AI: [Triggers skill: "Validation placement inconsistent - found in controllers, use cases, and entities"]
+AI: [Responds to user with explanation AND the team can later review the logged inconsistency]
 ```
 
 ## Purpose
