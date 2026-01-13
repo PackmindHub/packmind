@@ -237,7 +237,7 @@ export const PackagesPage: React.FC<PackagesPageProps> = ({
           mx={'auto'}
           title={'No packages yet'}
         >
-          Packages are collections of standards and commands that can be
+          Packages are collections of standards, commands and skills that can be
           distributed together to your repositories, ensuring consistent
           practices across your projects.
           <PMHStack>
