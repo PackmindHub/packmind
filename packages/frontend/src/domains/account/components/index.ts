@@ -1,6 +1,7 @@
 export * from './ActivateTrialAccountFormDataTestIds';
 export * from './ActivationFormDataTestIds';
 export * from './SignUpWithOrganizationFormDataTestIds';
+export * from './SignUpOptionsDataTestIds';
 export * from './SidebarAccountsMenuDataTestIds';
 export * from './SettingsPageDataTestIds';
 export * from './CliAuthenticationDataTestIds';

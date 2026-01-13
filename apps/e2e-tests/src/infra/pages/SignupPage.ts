@@ -31,6 +31,6 @@ export class SignupPage extends AbstractPackmindPage implements ISignUpPage {
   }
 
   expectedUrl(): string {
-    return '/sign-up';
+    return '/create-account';
   }
 }

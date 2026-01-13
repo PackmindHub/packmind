@@ -12,6 +12,7 @@ import {
   PMEm,
   PMHStack,
 } from '@packmind/ui';
+import { SignUpOptionsDataTestIds } from '@packmind/frontend';
 
 export function SignUpOptions() {
   const navigate = useNavigate();
@@ -60,6 +61,7 @@ export function SignUpOptions() {
                 variant="primary"
                 size="lg"
                 mb={4}
+                data-testid={SignUpOptionsDataTestIds.QuickStartButton}
               >
                 Get started
               </PMButton>
@@ -109,6 +111,7 @@ export function SignUpOptions() {
                 variant="secondary"
                 size="lg"
                 mb={4}
+                data-testid={SignUpOptionsDataTestIds.CreateAccountButton}
               >
                 Create account
               </PMButton>
