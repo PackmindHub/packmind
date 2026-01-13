@@ -6,6 +6,7 @@ import {
   IAccountsPort,
   ICreatePackageUseCase,
   IRecipesPort,
+  ISkillsPort,
   ISpacesPort,
   IStandardsPort,
   createPackageId,
@@ -27,6 +28,7 @@ export class CreatePackageUsecase
     private readonly spacesPort: ISpacesPort,
     private readonly recipesPort: IRecipesPort,
     private readonly standardsPort: IStandardsPort,
+    private readonly skillsPort: ISkillsPort,
     logger: PackmindLogger = new PackmindLogger(origin),
   ) {
     super(accountsPort, logger);
@@ -36,14 +38,22 @@ export class CreatePackageUsecase
   async executeForMembers(
     command: CreatePackageCommand & MemberContext,
   ): Promise<CreatePackageResponse> {
-    const { spaceId, name, description, recipeIds, standardIds, userId } =
-      command;
+    const {
+      spaceId,
+      name,
+      description,
+      recipeIds,
+      standardIds,
+      skillIds = [],
+      userId,
+    } = command;
 
     this.logger.info('Creating package', {
       spaceId,
       name,
       recipeCount: recipeIds.length,
       standardCount: standardIds.length,
+      skillCount: skillIds.length,
     });
 
     // Validate space exists and belongs to organization
@@ -125,6 +135,25 @@ export class CreatePackageUsecase
       }
     }
 
+    // Validate all skills belong to the space
+    if (skillIds.length > 0) {
+      const skills = await Promise.all(
+        skillIds.map((skillId) => this.skillsPort.getSkill(skillId)),
+      );
+
+      for (let i = 0; i < skills.length; i++) {
+        const skill = skills[i];
+        if (!skill) {
+          throw new Error(`Skill with id ${skillIds[i]} not found`);
+        }
+        if (skill.spaceId !== spaceId) {
+          throw new Error(
+            `Skill ${skillIds[i]} does not belong to space ${spaceId}`,
+          );
+        }
+      }
+    }
+
     // Create package using the service
     const savedPackage = await this.services.getPackageService().createPackage(
       {
@@ -137,6 +166,7 @@ export class CreatePackageUsecase
       },
       recipeIds,
       standardIds,
+      skillIds,
     );
 
     this.logger.info('Package created successfully', {
@@ -144,6 +174,7 @@ export class CreatePackageUsecase
       name: savedPackage.name,
       recipeCount: savedPackage.recipes?.length ?? 0,
       standardCount: savedPackage.standards?.length ?? 0,
+      skillCount: savedPackage.skills?.length ?? 0,
     });
 
     return { package: savedPackage };

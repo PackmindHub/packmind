@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState } from 'react';
 import {
   PMVStack,
   PMBox,
@@ -17,13 +17,25 @@ import {
   pmUseListCollection,
   PMBadge,
   PMCloseButton,
+  isFeatureFlagEnabled,
+  DEFAULT_FEATURE_DOMAIN_MAP,
+  MANAGE_SKILLS_FEATURE_KEY,
 } from '@packmind/ui';
 import { useNavigate, NavLink } from 'react-router';
 import { useCurrentSpace } from '../../../spaces/hooks/useCurrentSpace';
+import { useAuthContext } from '../../../accounts/hooks/useAuthContext';
 import { useGetRecipesQuery } from '../../../recipes/api/queries/RecipesQueries';
 import { useGetStandardsQuery } from '../../../standards/api/queries/StandardsQueries';
+import { useGetSkillsQuery } from '../../../skills/api/queries/SkillsQueries';
 import { useCreatePackageMutation } from '../../api/queries/DeploymentsQueries';
-import { RecipeId, StandardId, Recipe, Standard } from '@packmind/types';
+import {
+  RecipeId,
+  StandardId,
+  SkillId,
+  Recipe,
+  Standard,
+  Skill,
+} from '@packmind/types';
 import {
   MarkdownEditor,
   MarkdownEditorProvider,
@@ -38,11 +50,16 @@ export interface CreatePackagePageProps {
 interface PackageFormContentProps {
   recipes: Recipe[];
   standards: Standard[];
+  skills: Skill[];
   selectedRecipeIds: RecipeId[];
   selectedStandardIds: StandardId[];
+  selectedSkillIds: SkillId[];
   setSelectedRecipeIds: (ids: RecipeId[]) => void;
   setSelectedStandardIds: (ids: StandardId[]) => void;
+  setSelectedSkillIds: (ids: SkillId[]) => void;
   isPending: boolean;
+  isLoadingSkills: boolean;
+  showSkillsSelection: boolean;
   organizationSlug: string;
   spaceSlug: string;
 }
@@ -50,11 +67,16 @@ interface PackageFormContentProps {
 const PackageFormContent = ({
   recipes,
   standards,
+  skills,
   selectedRecipeIds,
   selectedStandardIds,
+  selectedSkillIds,
   setSelectedRecipeIds,
   setSelectedStandardIds,
+  setSelectedSkillIds,
   isPending,
+  isLoadingSkills,
+  showSkillsSelection,
   organizationSlug,
   spaceSlug,
 }: PackageFormContentProps) => {
@@ -70,6 +92,11 @@ const PackageFormContent = ({
     value: standard.id,
   }));
 
+  const skillItems = skills.map((skill: Skill) => ({
+    label: skill.name,
+    value: skill.id,
+  }));
+
   const { collection: recipeCollection, filter: filterRecipes } =
     pmUseListCollection({
       initialItems: recipeItems,
@@ -82,6 +109,12 @@ const PackageFormContent = ({
       filter: contains,
     });
 
+  const { collection: skillCollection, filter: filterSkills } =
+    pmUseListCollection({
+      initialItems: skillItems,
+      filter: contains,
+    });
+
   const recipeDisplayValue =
     selectedRecipeIds.length === 0
       ? 'Select recipes...'
@@ -91,6 +124,11 @@ const PackageFormContent = ({
     selectedStandardIds.length === 0
       ? 'Select standards...'
       : `${selectedStandardIds.length} standard(s) selected`;
+
+  const skillDisplayValue =
+    selectedSkillIds.length === 0
+      ? 'Select skills...'
+      : `${selectedSkillIds.length} skill(s) selected`;
 
   return (
     <PMHStack align="flex-start" gap={4} width="full">
@@ -319,6 +357,108 @@ const PackageFormContent = ({
         <PMField.HelperText />
         <PMField.ErrorText />
       </PMField.Root>
+
+      {showSkillsSelection && (
+        <PMField.Root flex={1} width="full">
+          <PMField.Label>Skills</PMField.Label>
+          {isLoadingSkills || skills.length === 0 ? (
+            isLoadingSkills ? (
+              <PMSpinner size="sm" />
+            ) : (
+              <PMText colorPalette="gray" fontSize="sm" display="block">
+                No skills available in this space
+              </PMText>
+            )
+          ) : (
+            <PMVStack gap={2} width="full" align="flex-start">
+              <PMCombobox.Root
+                collection={skillCollection}
+                onInputValueChange={(e: { inputValue: string }) =>
+                  filterSkills(e.inputValue)
+                }
+                onValueChange={(details: { value: string[] }) =>
+                  setSelectedSkillIds(details.value as SkillId[])
+                }
+                value={selectedSkillIds}
+                multiple
+                openOnClick
+                placeholder={skillDisplayValue}
+                width="full"
+                disabled={isPending}
+              >
+                <PMCombobox.Control>
+                  <PMVStack gap={0} width="full">
+                    <PMCombobox.Input />
+                    <PMCombobox.IndicatorGroup>
+                      <PMCombobox.ClearTrigger />
+                      <PMCombobox.Trigger />
+                    </PMCombobox.IndicatorGroup>
+                  </PMVStack>
+                </PMCombobox.Control>
+
+                <PMPortal>
+                  <PMCombobox.Positioner>
+                    <PMCombobox.Content>
+                      <PMCombobox.Empty>No skills found</PMCombobox.Empty>
+                      {skillCollection.items.map((item) => (
+                        <PMCombobox.Item item={item} key={item.value}>
+                          <PMCombobox.ItemText>
+                            {item.label}
+                          </PMCombobox.ItemText>
+                          <PMCombobox.ItemIndicator />
+                        </PMCombobox.Item>
+                      ))}
+                    </PMCombobox.Content>
+                  </PMCombobox.Positioner>
+                </PMPortal>
+              </PMCombobox.Root>
+
+              {selectedSkillIds.length > 0 && (
+                <PMHStack gap={2} flexWrap="wrap" width="full">
+                  {selectedSkillIds
+                    .map((skillId) => {
+                      const skill = skills.find((s) => s.id === skillId);
+                      return skill ? { id: skillId, name: skill.name } : null;
+                    })
+                    .filter(
+                      (item): item is { id: SkillId; name: string } =>
+                        item !== null,
+                    )
+                    .sort((a, b) => a.name.localeCompare(b.name))
+                    .map(({ id, name }) => (
+                      <PMBadge
+                        key={id}
+                        variant="subtle"
+                        maxW="300px"
+                        display="inline-flex"
+                        alignItems="center"
+                      >
+                        <PMText truncate title={name}>
+                          {name}
+                        </PMText>
+                        <PMCloseButton
+                          size="xs"
+                          ml={1}
+                          flexShrink={0}
+                          onClick={() =>
+                            setSelectedSkillIds(
+                              selectedSkillIds.filter(
+                                (skillId) => skillId !== id,
+                              ),
+                            )
+                          }
+                          disabled={isPending}
+                        />
+                      </PMBadge>
+                    ))}
+                </PMHStack>
+              )}
+            </PMVStack>
+          )}
+          <PMField.HelperText />
+          <PMField.ErrorText />
+        </PMField.Root>
+      )}
     </PMHStack>
   );
 };
@@ -329,6 +469,7 @@ export const CreatePackagePage: React.FC<CreatePackagePageProps> = ({
 }) => {
   const navigate = useNavigate();
   const { spaceId, space, isLoading: isLoadingSpace } = useCurrentSpace();
+  const { user } = useAuthContext();
   const organizationId = space?.organizationId;
 
   const {
@@ -343,6 +484,9 @@ export const CreatePackagePage: React.FC<CreatePackagePageProps> = ({
     error: standardsError,
   } = useGetStandardsQuery();
 
+  const { data: skillsResponse, isLoading: isLoadingSkills } =
+    useGetSkillsQuery();
+
   const createPackageMutation = useCreatePackageMutation();
 
   const [name, setName] = useState('');
@@ -351,14 +495,22 @@ export const CreatePackagePage: React.FC<CreatePackagePageProps> = ({
   const [selectedStandardIds, setSelectedStandardIds] = useState<StandardId[]>(
     [],
   );
+  const [selectedSkillIds, setSelectedSkillIds] = useState<SkillId[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const { contains } = pmUseFilter({ sensitivity: 'base' });
+  const showSkillsSelection = isFeatureFlagEnabled({
+    featureDomainMap: DEFAULT_FEATURE_DOMAIN_MAP,
+    featureKeys: [MANAGE_SKILLS_FEATURE_KEY],
+    userEmail: user?.email,
+  });
 
   const recipes = (recipesResponse || []).sort((a, b) =>
     a.name.localeCompare(b.name),
   );
   const standards = (standardsResponse?.standards || []).sort((a, b) =>
+    a.name.localeCompare(b.name),
+  );
+  const skills = (skillsResponse || []).sort((a, b) =>
     a.name.localeCompare(b.name),
   );
 
@@ -383,6 +535,7 @@ export const CreatePackagePage: React.FC<CreatePackagePageProps> = ({
         description,
         recipeIds: selectedRecipeIds,
         standardIds: selectedStandardIds,
+        skillIds: selectedSkillIds,
       });
 
       pmToaster.create({
@@ -487,14 +640,19 @@ export const CreatePackagePage: React.FC<CreatePackagePageProps> = ({
             >
               {isLoadingRecipes || isLoadingStandards ? null : (
                 <PackageFormContent
-                  key={`loaded-${recipes.length}-${standards.length}`}
+                  key={`loaded-${recipes.length}-${standards.length}-${skills.length}`}
                   recipes={recipes}
                   standards={standards}
+                  skills={skills}
                   selectedRecipeIds={selectedRecipeIds}
                   selectedStandardIds={selectedStandardIds}
+                  selectedSkillIds={selectedSkillIds}
                   setSelectedRecipeIds={setSelectedRecipeIds}
                   setSelectedStandardIds={setSelectedStandardIds}
+                  setSelectedSkillIds={setSelectedSkillIds}
                   isPending={isPending}
+                  isLoadingSkills={isLoadingSkills}
+                  showSkillsSelection={showSkillsSelection}
                   organizationSlug={organizationSlug}
                   spaceSlug={spaceSlug}
                 />
