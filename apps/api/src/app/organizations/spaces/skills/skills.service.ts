@@ -8,6 +8,7 @@ import {
   SkillWithFiles,
   SpaceId,
   UploadSkillFileInput,
+  UploadSkillResponse,
   UserId,
 } from '@packmind/types';
 
@@ -33,7 +34,7 @@ export class SkillsService {
     organizationId: OrganizationId,
     spaceId: SpaceId,
     userId: UserId,
-  ): Promise<Skill> {
+  ): Promise<UploadSkillResponse> {
     return this.skillsHexa.getAdapter().uploadSkill({
       files,
       organizationId,

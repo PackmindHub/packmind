@@ -203,7 +203,10 @@ describe('OrganizationsSpacesSkillsController', () => {
           spaceId,
         };
 
-        skillsService.uploadSkill.mockResolvedValue(mockSkill);
+        skillsService.uploadSkill.mockResolvedValue({
+          skill: mockSkill,
+          versionCreated: true,
+        });
 
         await controller.uploadSkill(
           orgId,
@@ -216,7 +219,7 @@ describe('OrganizationsSpacesSkillsController', () => {
         expect(mockResponse.status).toHaveBeenCalledWith(HttpStatus.CREATED);
       });
 
-      it('returns the created skill in the response body', async () => {
+      it('returns the upload response in the response body', async () => {
         const mockSkill: Skill = {
           id: createSkillId('skill-1'),
           slug: 'test-skill',
@@ -227,7 +230,12 @@ describe('OrganizationsSpacesSkillsController', () => {
           spaceId,
         };
 
-        skillsService.uploadSkill.mockResolvedValue(mockSkill);
+        const uploadResponse = {
+          skill: mockSkill,
+          versionCreated: true,
+        };
+
+        skillsService.uploadSkill.mockResolvedValue(uploadResponse);
 
         await controller.uploadSkill(
           orgId,
@@ -237,7 +245,7 @@ describe('OrganizationsSpacesSkillsController', () => {
           mockResponse,
         );
 
-        expect(mockResponse.json).toHaveBeenCalledWith(mockSkill);
+        expect(mockResponse.json).toHaveBeenCalledWith(uploadResponse);
       });
     });
 
@@ -253,7 +261,10 @@ describe('OrganizationsSpacesSkillsController', () => {
           spaceId,
         };
 
-        skillsService.uploadSkill.mockResolvedValue(mockSkill);
+        skillsService.uploadSkill.mockResolvedValue({
+          skill: mockSkill,
+          versionCreated: true,
+        });
 
         await controller.uploadSkill(
           orgId,
@@ -266,7 +277,7 @@ describe('OrganizationsSpacesSkillsController', () => {
         expect(mockResponse.status).toHaveBeenCalledWith(HttpStatus.OK);
       });
 
-      it('returns the updated skill in the response body', async () => {
+      it('returns the upload response in the response body', async () => {
         const mockSkill: Skill = {
           id: createSkillId('skill-1'),
           slug: 'test-skill',
@@ -277,7 +288,12 @@ describe('OrganizationsSpacesSkillsController', () => {
           spaceId,
         };
 
-        skillsService.uploadSkill.mockResolvedValue(mockSkill);
+        const uploadResponse = {
+          skill: mockSkill,
+          versionCreated: true,
+        };
+
+        skillsService.uploadSkill.mockResolvedValue(uploadResponse);
 
         await controller.uploadSkill(
           orgId,
@@ -287,7 +303,65 @@ describe('OrganizationsSpacesSkillsController', () => {
           mockResponse,
         );
 
-        expect(mockResponse.json).toHaveBeenCalledWith(mockSkill);
+        expect(mockResponse.json).toHaveBeenCalledWith(uploadResponse);
+      });
+    });
+
+    describe('when content is identical to latest version', () => {
+      it('returns 200 OK status', async () => {
+        const mockSkill: Skill = {
+          id: createSkillId('skill-1'),
+          slug: 'test-skill',
+          name: 'Test Skill',
+          content: 'Test content',
+          userId,
+          version: 1,
+          spaceId,
+        };
+
+        skillsService.uploadSkill.mockResolvedValue({
+          skill: mockSkill,
+          versionCreated: false,
+        });
+
+        await controller.uploadSkill(
+          orgId,
+          spaceId,
+          { files: mockFiles },
+          request,
+          mockResponse,
+        );
+
+        expect(mockResponse.status).toHaveBeenCalledWith(HttpStatus.OK);
+      });
+
+      it('returns versionCreated false in response', async () => {
+        const mockSkill: Skill = {
+          id: createSkillId('skill-1'),
+          slug: 'test-skill',
+          name: 'Test Skill',
+          content: 'Test content',
+          userId,
+          version: 1,
+          spaceId,
+        };
+
+        const uploadResponse = {
+          skill: mockSkill,
+          versionCreated: false,
+        };
+
+        skillsService.uploadSkill.mockResolvedValue(uploadResponse);
+
+        await controller.uploadSkill(
+          orgId,
+          spaceId,
+          { files: mockFiles },
+          request,
+          mockResponse,
+        );
+
+        expect(mockResponse.json).toHaveBeenCalledWith(uploadResponse);
       });
     });
 
@@ -302,7 +376,10 @@ describe('OrganizationsSpacesSkillsController', () => {
         spaceId,
       };
 
-      skillsService.uploadSkill.mockResolvedValue(mockSkill);
+      skillsService.uploadSkill.mockResolvedValue({
+        skill: mockSkill,
+        versionCreated: true,
+      });
 
       await controller.uploadSkill(
         orgId,

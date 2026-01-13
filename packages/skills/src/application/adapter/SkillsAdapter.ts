@@ -29,6 +29,7 @@ import {
   SpaceId,
   UpdateSkillCommand,
   UploadSkillCommand,
+  UploadSkillResponse,
   createSkillId,
   createSkillVersionId,
   createUserId,
@@ -270,7 +271,7 @@ export class SkillsAdapter implements IBaseAdapter<ISkillsPort>, ISkillsPort {
     return this._createSkill.execute(command);
   }
 
-  async uploadSkill(command: UploadSkillCommand): Promise<Skill> {
+  async uploadSkill(command: UploadSkillCommand): Promise<UploadSkillResponse> {
     this.logger.info('uploadSkill use case invoked', {
       fileCount: command.files.length,
       userId: command.userId.substring(0, 6) + '*',

@@ -23,6 +23,7 @@ import {
   SkillWithFiles,
   SpaceId,
   UploadSkillFileInput,
+  UploadSkillResponse,
 } from '@packmind/types';
 import { SkillsService } from './skills.service';
 import { OrganizationAccessGuard } from '../../guards/organization-access.guard';
@@ -172,7 +173,7 @@ export class OrganizationsSpacesSkillsController {
   /**
    * Upload a skill within a space
    * POST /organizations/:orgId/spaces/:spaceId/skills/upload
-   * Returns 201 Created for new skills, 200 OK for version updates
+   * Returns 201 Created for new skills, 200 OK for version updates or identical content
    */
   @Post('upload')
   async uploadSkill(
@@ -184,7 +185,7 @@ export class OrganizationsSpacesSkillsController {
     },
     @Req() request: AuthenticatedRequest,
     @Res() response: Response,
-  ): Promise<Response<Skill>> {
+  ): Promise<Response<UploadSkillResponse>> {
     const userId = request.user.userId;
 
     this.logger.info(
@@ -198,17 +199,17 @@ export class OrganizationsSpacesSkillsController {
     );
 
     try {
-      const skill = await this.skillsService.uploadSkill(
+      const result = await this.skillsService.uploadSkill(
         body.files,
         organizationId,
         spaceId,
         userId,
       );
 
-      const isNewSkill = skill.version === 1;
+      const isNewSkill = result.skill.version === 1 && result.versionCreated;
       const statusCode = isNewSkill ? HttpStatus.CREATED : HttpStatus.OK;
 
-      return response.status(statusCode).json(skill);
+      return response.status(statusCode).json(result);
     } catch (error) {
       const errorMessage = getErrorMessage(error);
       this.logger.error(

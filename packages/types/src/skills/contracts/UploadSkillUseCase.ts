@@ -13,7 +13,10 @@ export type UploadSkillCommand = PackmindCommand & {
   spaceId: string;
 };
 
-export type UploadSkillResponse = Skill;
+export type UploadSkillResponse = {
+  skill: Skill;
+  versionCreated: boolean;
+};
 
 export type IUploadSkillUseCase = IUseCase<
   UploadSkillCommand,
