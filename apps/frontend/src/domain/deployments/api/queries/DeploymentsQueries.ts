@@ -10,6 +10,7 @@ import {
   SpaceId,
   StandardId,
   StandardVersionId,
+  SkillId,
   TargetId,
   UpdatePackageCommand,
   UpdateRenderModeConfigurationCommand,
@@ -37,6 +38,7 @@ import {
   LIST_RECIPE_DEPLOYMENTS_KEY,
   LIST_RECIPE_DISTRIBUTIONS_KEY,
   LIST_STANDARD_DISTRIBUTIONS_KEY,
+  LIST_SKILL_DISTRIBUTIONS_KEY,
   REMOVE_PACKAGE_FROM_TARGETS_MUTATION_KEY,
   UPDATE_PACKAGE_MUTATION_KEY,
 } from '../queryKeys';
@@ -118,6 +120,31 @@ export const useListStandardDistributionsQuery = (standardId: StandardId) => {
       });
     },
     enabled: !!organization?.id,
+  });
+};
+
+export const useListSkillDistributionsQuery = (
+  skillId: SkillId | undefined,
+) => {
+  const { organization } = useAuthContext();
+
+  return useQuery({
+    queryKey: [...LIST_SKILL_DISTRIBUTIONS_KEY, skillId],
+    queryFn: () => {
+      if (!organization?.id) {
+        throw new Error(
+          'Organization ID is required to fetch skill distributions',
+        );
+      }
+      if (!skillId) {
+        throw new Error('Skill ID is required to fetch skill distributions');
+      }
+      return deploymentsGateways.listDistributionsBySkillId({
+        organizationId: organization.id,
+        skillId,
+      });
+    },
+    enabled: !!organization?.id && !!skillId,
   });
 };
 

@@ -7,6 +7,7 @@ import {
   IListDeploymentsByPackage,
   IListDistributionsByRecipe,
   IListDistributionsByStandard,
+  IListDistributionsBySkill,
   IListPackagesBySpaceUseCase,
   ICreatePackageUseCase,
   IUpdatePackageUseCase,
@@ -28,6 +29,7 @@ export interface IDeploymentsGateway {
   listDeploymentsByPackageId: NewGateway<IListDeploymentsByPackage>;
   listDistributionsByRecipeId: NewGateway<IListDistributionsByRecipe>;
   listDistributionsByStandardId: NewGateway<IListDistributionsByStandard>;
+  listDistributionsBySkillId: NewGateway<IListDistributionsBySkill>;
   listPackagesBySpace: NewGateway<IListPackagesBySpaceUseCase>;
   createPackage: NewGateway<ICreatePackageUseCase>;
   updatePackage: NewGateway<IUpdatePackageUseCase>;

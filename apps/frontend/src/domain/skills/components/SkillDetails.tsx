@@ -113,6 +113,7 @@ export const SkillDetails = ({
         onSkillChange={handleSkillChange}
         isSkillSelectDisabled={!orgSlug || !spaceSlug}
         skillsLoading={skillsLoading}
+        orgSlug={orgSlug}
       />
 
       {/* Main content */}

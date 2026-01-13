@@ -20,7 +20,7 @@ import { format } from 'date-fns';
 import { Link } from 'react-router';
 import { routes } from '../../../../shared/utils/routes';
 
-export type DeploymentType = 'recipe' | 'standard' | 'package';
+export type DeploymentType = 'recipe' | 'standard' | 'skill' | 'package';
 
 interface DeploymentsHistoryProps {
   deployments: Distribution[];
@@ -112,6 +112,13 @@ export const DeploymentsHistory: React.FC<DeploymentsHistoryProps> = ({
         );
         if (standardVersion) {
           return standardVersion.version;
+        }
+      } else if (type === 'skill') {
+        const skillVersion = dp.skillVersions?.find(
+          (v) => v.skillId === entityId,
+        );
+        if (skillVersion) {
+          return skillVersion.version;
         }
       }
     }
@@ -230,6 +237,11 @@ export const DeploymentsHistory: React.FC<DeploymentsHistoryProps> = ({
       distributedPackage = deployment.distributedPackages?.find(
         (dp: DistributedPackage) =>
           dp.standardVersions?.some((sv) => sv.standardId === entityId),
+      );
+    } else if (type === 'skill') {
+      distributedPackage = deployment.distributedPackages?.find(
+        (dp: DistributedPackage) =>
+          dp.skillVersions?.some((sv) => sv.skillId === entityId),
       );
     }
 

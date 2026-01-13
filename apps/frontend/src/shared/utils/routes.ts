@@ -72,6 +72,13 @@ export const routes = {
       `/org/${orgSlug}/space/${spaceSlug}/skills`,
     toSkill: (orgSlug: string, spaceSlug: string, skillSlug: string) =>
       `/org/${orgSlug}/space/${spaceSlug}/skills/${skillSlug}`,
+    toSkillSummary: (orgSlug: string, spaceSlug: string, skillSlug: string) =>
+      `/org/${orgSlug}/space/${spaceSlug}/skills/${skillSlug}/summary`,
+    toSkillDeployment: (
+      orgSlug: string,
+      spaceSlug: string,
+      skillSlug: string,
+    ) => `/org/${orgSlug}/space/${spaceSlug}/skills/${skillSlug}/deployment`,
   },
 
   /**

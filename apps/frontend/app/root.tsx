@@ -80,7 +80,7 @@ export function Layout({ children }: Readonly<{ children: React.ReactNode }>) {
         <Meta />
         <Links />
       </head>
-      <body style={{ height: '100%' }}>
+      <body style={{ height: '100%' }} suppressHydrationWarning>
         {children}
         <ScrollRestoration />
         <Scripts />

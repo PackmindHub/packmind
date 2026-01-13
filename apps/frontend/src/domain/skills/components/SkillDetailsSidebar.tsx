@@ -1,4 +1,5 @@
 import { ChangeEvent, useMemo } from 'react';
+import { useNavigate, useParams } from 'react-router';
 import {
   PMBox,
   PMIcon,
@@ -12,6 +13,7 @@ import {
 import { LuGitCommitVertical } from 'react-icons/lu';
 
 import type { Skill, SkillFile } from '@packmind/types';
+import { routes } from '../../../shared/utils/routes';
 
 import { SkillFileTree } from './SkillFileTree';
 
@@ -24,6 +26,7 @@ interface ISkillDetailsSidebarProps {
   onSkillChange: (skillId: string) => void;
   isSkillSelectDisabled: boolean;
   skillsLoading: boolean;
+  orgSlug?: string;
 }
 
 export const SkillDetailsSidebar = ({
@@ -35,7 +38,11 @@ export const SkillDetailsSidebar = ({
   onSkillChange,
   isSkillSelectDisabled,
   skillsLoading,
+  orgSlug,
 }: ISkillDetailsSidebarProps) => {
+  const navigate = useNavigate();
+  const { spaceSlug } = useParams<{ spaceSlug?: string }>();
+
   const skillSelectItems = useMemo(
     () =>
       (skills.length > 0 ? skills : [skill]).map((s) => ({
@@ -51,6 +58,13 @@ export const SkillDetailsSidebar = ({
       return;
     }
     onSkillChange(nextSkillId);
+  };
+
+  const handleDistributionClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (orgSlug && spaceSlug) {
+      navigate(routes.space.toSkillDeployment(orgSlug, spaceSlug, skill.slug));
+    }
   };
 
   const selectDisabled =
@@ -69,6 +83,7 @@ export const SkillDetailsSidebar = ({
       alignItems="center"
       textDecoration="none"
       fontWeight="medium"
+      onClick={handleDistributionClick}
       _hover={{ fontWeight: 'medium', textDecoration: 'none' }}
       _focus={{ outline: 'none', boxShadow: 'none' }}
       _focusVisible={{ outline: 'none', boxShadow: 'none' }}

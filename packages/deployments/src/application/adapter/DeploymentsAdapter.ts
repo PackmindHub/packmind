@@ -50,6 +50,7 @@ import {
   ListDeploymentsByPackageCommand,
   ListDistributionsByRecipeCommand,
   ListDistributionsByStandardCommand,
+  ListDistributionsBySkillCommand,
   ListPackagesCommand,
   ListPackagesResponse,
   ListPackagesBySpaceCommand,
@@ -93,6 +94,7 @@ import { GetTargetsByRepositoryUseCase } from '../useCases/GetTargetsByRepositor
 import { ListDeploymentsByPackageUseCase } from '../useCases/ListDeploymentsByPackageUseCase';
 import { ListDistributionsByRecipeUseCase } from '../useCases/ListDistributionsByRecipeUseCase';
 import { ListDistributionsByStandardUseCase } from '../useCases/ListDistributionsByStandardUseCase';
+import { ListDistributionsBySkillUseCase } from '../useCases/ListDistributionsBySkillUseCase';
 import { ListPackagesUsecase } from '../useCases/listPackages/listPackages.usecase';
 import { NotifyDistributionUseCase } from '../useCases/notifyDistribution/notifyDistribution.usecase';
 import { RemovePackageFromTargetsUseCase } from '../useCases/RemovePackageFromTargetsUseCase';
@@ -123,6 +125,7 @@ export class DeploymentsAdapter
   private _listDeploymentsByPackageUseCase!: ListDeploymentsByPackageUseCase;
   private _listDistributionsByRecipeUseCase!: ListDistributionsByRecipeUseCase;
   private _listDistributionsByStandardUseCase!: ListDistributionsByStandardUseCase;
+  private _listDistributionsBySkillUseCase!: ListDistributionsBySkillUseCase;
   private _getStandardDeploymentOverviewUseCase!: GetStandardDeploymentOverviewUseCase;
   private _getSkillsDeploymentOverviewUseCase!: GetSkillsDeploymentOverviewUseCase;
   private _addTargetUseCase!: AddTargetUseCase;
@@ -238,6 +241,10 @@ export class DeploymentsAdapter
 
     this._listDistributionsByStandardUseCase =
       new ListDistributionsByStandardUseCase(this.distributionRepository);
+
+    this._listDistributionsBySkillUseCase = new ListDistributionsBySkillUseCase(
+      this.distributionRepository,
+    );
 
     this._getStandardDeploymentOverviewUseCase =
       new GetStandardDeploymentOverviewUseCase(
@@ -444,6 +451,12 @@ export class DeploymentsAdapter
     command: ListDistributionsByStandardCommand,
   ): Promise<Distribution[]> {
     return this._listDistributionsByStandardUseCase.execute(command);
+  }
+
+  listDistributionsBySkill(
+    command: ListDistributionsBySkillCommand,
+  ): Promise<Distribution[]> {
+    return this._listDistributionsBySkillUseCase.execute(command);
   }
 
   getStandardDeploymentOverview(

@@ -36,6 +36,8 @@ import {
   ListDeploymentsByPackageCommand,
   ListDistributionsByRecipeCommand,
   ListDistributionsByStandardCommand,
+  ListDistributionsBySkillCommand,
+  SkillId,
   NotifyDistributionCommand,
   NotifyDistributionResponse,
   RemovePackageFromTargetsCommand,
@@ -290,6 +292,66 @@ export class DeploymentsController {
         'GET /organizations/:orgId/deployments/distributions/standard/:id - Failed to fetch distributions',
         {
           standardId: id,
+          organizationId,
+          error: errorMessage,
+        },
+      );
+      throw error;
+    }
+  }
+
+  @Get('distributions/skill/:id')
+  async getDistributionsBySkillId(
+    @Param('orgId') organizationId: OrganizationId,
+    @Param('id') id: SkillId,
+    @Req() request: AuthenticatedRequest,
+  ): Promise<Distribution[]> {
+    this.logger.info(
+      'GET /organizations/:orgId/deployments/distributions/skill/:id - Fetching distributions by skill ID',
+      {
+        skillId: id,
+        organizationId,
+      },
+    );
+
+    try {
+      const command: ListDistributionsBySkillCommand = {
+        userId: request.user.userId,
+        organizationId,
+        skillId: id,
+      };
+
+      const distributions =
+        await this.deploymentsService.listDistributionsBySkill(command);
+
+      if (!distributions || distributions.length === 0) {
+        this.logger.warn(
+          'GET /organizations/:orgId/deployments/distributions/skill/:id - No distributions found',
+          {
+            skillId: id,
+            organizationId,
+          },
+        );
+        return [];
+      }
+
+      this.logger.info(
+        'GET /organizations/:orgId/deployments/distributions/skill/:id - Distributions fetched successfully',
+        {
+          skillId: id,
+          organizationId,
+          count: distributions.length,
+        },
+      );
+
+      return distributions;
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      this.logger.error(
+        'GET /organizations/:orgId/deployments/distributions/skill/:id - Failed to fetch distributions',
+        {
+          skillId: id,
           organizationId,
           error: errorMessage,
         },

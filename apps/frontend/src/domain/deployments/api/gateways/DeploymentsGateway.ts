@@ -17,6 +17,7 @@ import {
   IListDeploymentsByPackage,
   IListDistributionsByRecipe,
   IListDistributionsByStandard,
+  IListDistributionsBySkill,
   IListPackagesBySpaceUseCase,
   ICreatePackageUseCase,
   IUpdatePackageUseCase,
@@ -28,6 +29,7 @@ import {
   ListDeploymentsByPackageCommand,
   ListDistributionsByRecipeCommand,
   ListDistributionsByStandardCommand,
+  ListDistributionsBySkillCommand,
   GetDeploymentOverviewCommand,
   GetStandardDeploymentOverviewCommand,
   GetSkillDeploymentOverviewCommand,
@@ -82,6 +84,15 @@ export class DeploymentsGatewayApi
         `${this._endpoint}/${organizationId}/deployments/distributions/standard/${standardId}`,
       );
     };
+
+  listDistributionsBySkillId: NewGateway<IListDistributionsBySkill> = async ({
+    organizationId,
+    skillId,
+  }: NewPackmindCommandBody<ListDistributionsBySkillCommand>) => {
+    return this._api.get(
+      `${this._endpoint}/${organizationId}/deployments/distributions/skill/${skillId}`,
+    );
+  };
 
   listPackagesBySpace: NewGateway<IListPackagesBySpaceUseCase> = async ({
     spaceId,

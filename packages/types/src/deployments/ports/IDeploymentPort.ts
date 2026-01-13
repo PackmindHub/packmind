@@ -28,6 +28,7 @@ import {
   ListDeploymentsByPackageCommand,
   ListDistributionsByRecipeCommand,
   ListDistributionsByStandardCommand,
+  ListDistributionsBySkillCommand,
   ListPackagesBySpaceCommand,
   ListPackagesBySpaceResponse,
   ListPackagesCommand,
@@ -146,6 +147,16 @@ export interface IDeploymentPort {
    */
   listDistributionsByStandard(
     command: ListDistributionsByStandardCommand,
+  ): Promise<Distribution[]>;
+
+  /**
+   * Lists all distributions that include a specific skill
+   *
+   * @param command - Command containing skillId and organizationId
+   * @returns Promise of Distribution entries that include versions of the specified skill
+   */
+  listDistributionsBySkill(
+    command: ListDistributionsBySkillCommand,
   ): Promise<Distribution[]>;
 
   /**

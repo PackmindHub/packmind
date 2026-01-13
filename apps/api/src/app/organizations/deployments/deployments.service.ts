@@ -4,9 +4,11 @@ import {
   Distribution,
   GetDeploymentOverviewCommand,
   GetStandardDeploymentOverviewCommand,
+  GetSkillDeploymentOverviewCommand,
   ListDeploymentsByPackageCommand,
   ListDistributionsByRecipeCommand,
   ListDistributionsByStandardCommand,
+  ListDistributionsBySkillCommand,
   PublishArtifactsCommand,
   PublishArtifactsResponse,
   PublishRecipesCommand,
@@ -14,6 +16,7 @@ import {
   PublishPackagesCommand,
   PackagesDeployment,
   StandardDeploymentOverview,
+  SkillDeploymentOverview,
   UpdateRenderModeConfigurationCommand,
   RenderModeConfiguration,
   GetRenderModeConfigurationCommand,
@@ -61,10 +64,22 @@ export class DeploymentsService {
     return this.deploymentAdapter.listDistributionsByStandard(command);
   }
 
+  async listDistributionsBySkill(
+    command: ListDistributionsBySkillCommand,
+  ): Promise<Distribution[]> {
+    return this.deploymentAdapter.listDistributionsBySkill(command);
+  }
+
   async getStandardDeploymentOverview(
     command: GetStandardDeploymentOverviewCommand,
   ): Promise<StandardDeploymentOverview> {
     return this.deploymentAdapter.getStandardDeploymentOverview(command);
+  }
+
+  async getSkillsDeploymentOverview(
+    command: GetSkillDeploymentOverviewCommand,
+  ): Promise<SkillDeploymentOverview> {
+    return this.deploymentAdapter.getSkillsDeploymentOverview(command);
   }
 
   async getDeploymentOverview(
