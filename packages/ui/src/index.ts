@@ -2,6 +2,7 @@ import '@packmind/assets';
 export * from './lib/UIProvider';
 export * from './lib/components/typography/PMHeading';
 export * from './lib/components/typography/PMText';
+export * from './lib/components/typography/PMEm';
 export * from './lib/components/typography/PMLink';
 export * from './lib/components/typography/PMList';
 export * from './lib/components/form/PMInput/PMInput';
