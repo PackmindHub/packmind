@@ -57,10 +57,13 @@ export class SkillService {
 
     try {
       const skillId = createSkillId(uuidv4());
+      const now = new Date();
 
       const skill: Skill = {
         id: skillId,
         ...skillData,
+        createdAt: now,
+        updatedAt: now,
       };
 
       const savedSkill = await this.skillRepository.add(skill);
@@ -178,6 +181,8 @@ export class SkillService {
         id: skillId,
         ...skillData,
         spaceId: existingSkill.spaceId,
+        createdAt: existingSkill.createdAt,
+        updatedAt: new Date(),
       };
 
       const savedSkill = await this.skillRepository.add(updatedSkill);

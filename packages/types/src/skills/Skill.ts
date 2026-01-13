@@ -15,4 +15,6 @@ export type Skill = {
   compatibility?: string;
   metadata?: Record<string, string>;
   allowedTools?: string;
+  createdAt: Date;
+  updatedAt: Date;
 };
