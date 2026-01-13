@@ -104,13 +104,6 @@ Establish a structured frontend data flow pattern using React Router v7, @react-
 
 Full standard is available here for further request: [Frontend data flow](.packmind/standards/frontend-data-flow.md)
 
-## Standard: qqqqq
-
-qzd :
-* dddd
-
-Full standard is available here for further request: [qqqqq](.packmind/standards/qqqqq.md)
-
 ## Standard: TanStack Query Key Management
 
 Structure TanStack Query keys hierarchically with domain-scoped constants and enums to enable predictable cache invalidation and prevent cross-domain dependencies in React applications. :
