@@ -5,16 +5,20 @@ import {
   createSpaceId,
   createRecipeId,
   createStandardId,
+  createSkillId,
   IAccountsPort,
   ISpacesPort,
   IRecipesPort,
   IStandardsPort,
+  ISkillsPort,
   CreatePackageCommand,
   Space,
   Recipe,
   Standard,
+  Skill,
   RecipeId,
   StandardId,
+  SkillId,
   SpaceId,
 } from '@packmind/types';
 import { PackmindLogger } from '@packmind/logger';
@@ -32,6 +36,7 @@ describe('CreatePackageUsecase', () => {
   let mockSpacesPort: jest.Mocked<ISpacesPort>;
   let mockRecipesPort: jest.Mocked<IRecipesPort>;
   let mockStandardsPort: jest.Mocked<IStandardsPort>;
+  let mockSkillsPort: jest.Mocked<ISkillsPort>;
   let stubbedLogger: jest.Mocked<PackmindLogger>;
 
   const userId = createUserId(uuidv4());
@@ -41,6 +46,7 @@ describe('CreatePackageUsecase', () => {
   const recipeId2 = createRecipeId(uuidv4());
   const standardId1 = createStandardId(uuidv4());
   const standardId2 = createStandardId(uuidv4());
+  const skillId1 = createSkillId(uuidv4());
 
   const buildUser = () => ({
     id: userId,
@@ -90,6 +96,19 @@ describe('CreatePackageUsecase', () => {
     spaceId: spaceIdParam,
   });
 
+  const buildSkill = (id: SkillId, spaceIdParam: SpaceId): Skill => ({
+    id,
+    name: `Skill ${id}`,
+    prompt: 'Test skill content',
+    userId,
+    spaceId: spaceIdParam,
+    slug: '',
+    version: 0,
+    description: '',
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  });
+
   beforeEach(() => {
     mockPackageService = {
       createPackage: jest.fn(),
@@ -126,6 +145,10 @@ describe('CreatePackageUsecase', () => {
       getStandard: jest.fn(),
     } as unknown as jest.Mocked<IStandardsPort>;
 
+    mockSkillsPort = {
+      getSkill: jest.fn(),
+    } as unknown as jest.Mocked<ISkillsPort>;
+
     stubbedLogger = stubLogger();
 
     useCase = new CreatePackageUsecase(
@@ -134,6 +157,7 @@ describe('CreatePackageUsecase', () => {
       mockSpacesPort,
       mockRecipesPort,
       mockStandardsPort,
+      mockSkillsPort,
       stubbedLogger,
     );
   });
@@ -179,6 +203,7 @@ describe('CreatePackageUsecase', () => {
           description: 'Package description',
           recipeIds: [recipeId1, recipeId2],
           standardIds: [standardId1, standardId2],
+          skillIds: [],
         };
 
         const result = await useCase.execute(command);
@@ -203,6 +228,7 @@ describe('CreatePackageUsecase', () => {
           }),
           [recipeId1, recipeId2],
           [standardId1, standardId2],
+          [],
         );
       });
     });
@@ -235,6 +261,7 @@ describe('CreatePackageUsecase', () => {
           description: 'Package description',
           recipeIds: [],
           standardIds: [standardId1],
+          skillIds: [],
         };
 
         const result = await useCase.execute(command);
@@ -275,6 +302,7 @@ describe('CreatePackageUsecase', () => {
           description: 'Package description',
           recipeIds: [recipeId1],
           standardIds: [],
+          skillIds: [],
         };
 
         const result = await useCase.execute(command);
@@ -313,6 +341,7 @@ describe('CreatePackageUsecase', () => {
           description: 'Package description',
           recipeIds: [],
           standardIds: [],
+          skillIds: [],
         };
 
         const result = await useCase.execute(command);
@@ -349,6 +378,7 @@ describe('CreatePackageUsecase', () => {
           description: 'Package description',
           recipeIds: [],
           standardIds: [],
+          skillIds: [],
         };
 
         await useCase.execute(command);
@@ -360,6 +390,7 @@ describe('CreatePackageUsecase', () => {
           expect.objectContaining({
             slug: 'my-package',
           }),
+          [],
           [],
           [],
         );
@@ -414,6 +445,7 @@ describe('CreatePackageUsecase', () => {
           description: 'Package description',
           recipeIds: [],
           standardIds: [],
+          skillIds: [],
         };
 
         await useCase.execute(command);
@@ -425,6 +457,7 @@ describe('CreatePackageUsecase', () => {
           expect.objectContaining({
             slug: 'my-package-2',
           }),
+          [],
           [],
           [],
         );
@@ -443,6 +476,7 @@ describe('CreatePackageUsecase', () => {
           description: 'Package description',
           recipeIds: [],
           standardIds: [],
+          skillIds: [],
         };
 
         await expect(useCase.execute(command)).rejects.toThrow(
@@ -474,6 +508,7 @@ describe('CreatePackageUsecase', () => {
           description: 'Package description',
           recipeIds: [],
           standardIds: [],
+          skillIds: [],
         };
 
         await expect(useCase.execute(command)).rejects.toThrow(
@@ -500,6 +535,7 @@ describe('CreatePackageUsecase', () => {
           description: 'Package description',
           recipeIds: [recipeId1],
           standardIds: [],
+          skillIds: [],
         };
 
         await expect(useCase.execute(command)).rejects.toThrow(
@@ -531,6 +567,7 @@ describe('CreatePackageUsecase', () => {
           description: 'Package description',
           recipeIds: [recipeId1],
           standardIds: [],
+          skillIds: [],
         };
 
         await expect(useCase.execute(command)).rejects.toThrow(
@@ -560,6 +597,7 @@ describe('CreatePackageUsecase', () => {
           description: 'Package description',
           recipeIds: [],
           standardIds: [standardId1],
+          skillIds: [],
         };
 
         await expect(useCase.execute(command)).rejects.toThrow(
@@ -589,6 +627,7 @@ describe('CreatePackageUsecase', () => {
           description: 'Package description',
           recipeIds: [],
           standardIds: [standardId1],
+          skillIds: [],
         };
 
         await expect(useCase.execute(command)).rejects.toThrow(
@@ -598,6 +637,108 @@ describe('CreatePackageUsecase', () => {
         expect(mockSpacesPort.getSpaceById).toHaveBeenCalledWith(spaceId);
         expect(mockStandardsPort.getStandard).toHaveBeenCalledWith(standardId1);
         expect(mockPackageService.createPackage).not.toHaveBeenCalled();
+      });
+    });
+
+    describe('when skill does not exist', () => {
+      let command: CreatePackageCommand;
+
+      beforeEach(() => {
+        const mockSpace = buildSpace();
+        mockSpacesPort.getSpaceById.mockResolvedValue(mockSpace);
+        mockSkillsPort.getSkill.mockResolvedValue(null);
+
+        command = {
+          userId,
+          organizationId,
+          spaceId,
+          name: 'My Package',
+          description: 'Package description',
+          recipeIds: [],
+          standardIds: [],
+          skillIds: [skillId1],
+        };
+      });
+
+      it('throws error', async () => {
+        await expect(useCase.execute(command)).rejects.toThrow(
+          `Skill with id ${skillId1} not found`,
+        );
+      });
+
+      it('does not create package', async () => {
+        try {
+          await useCase.execute(command);
+        } catch {
+          // Expected to throw
+        }
+
+        expect(mockPackageService.createPackage).not.toHaveBeenCalled();
+      });
+    });
+
+    describe('when skill does not belong to space', () => {
+      let command: CreatePackageCommand;
+
+      beforeEach(() => {
+        const differentSpaceId = createSpaceId(uuidv4());
+        const mockSpace = buildSpace();
+        const mockSkill = buildSkill(skillId1, differentSpaceId);
+
+        mockSpacesPort.getSpaceById.mockResolvedValue(mockSpace);
+        mockSkillsPort.getSkill.mockResolvedValue(mockSkill);
+
+        command = {
+          userId,
+          organizationId,
+          spaceId,
+          name: 'My Package',
+          description: 'Package description',
+          recipeIds: [],
+          standardIds: [],
+          skillIds: [skillId1],
+        };
+      });
+
+      it('throws error', async () => {
+        await expect(useCase.execute(command)).rejects.toThrow(
+          `Skill ${skillId1} does not belong to space ${spaceId}`,
+        );
+      });
+
+      it('does not create package', async () => {
+        try {
+          await useCase.execute(command);
+        } catch {
+          // Expected to throw
+        }
+
+        expect(mockPackageService.createPackage).not.toHaveBeenCalled();
+      });
+    });
+
+    describe('when skills port fails', () => {
+      it('throws the error from skills port', async () => {
+        const mockSpace = buildSpace();
+        const error = new Error('Skills service unavailable');
+
+        mockSpacesPort.getSpaceById.mockResolvedValue(mockSpace);
+        mockSkillsPort.getSkill.mockRejectedValue(error);
+
+        const command: CreatePackageCommand = {
+          userId,
+          organizationId,
+          spaceId,
+          name: 'My Package',
+          description: 'Package description',
+          recipeIds: [],
+          standardIds: [],
+          skillIds: [skillId1],
+        };
+
+        await expect(useCase.execute(command)).rejects.toThrow(
+          'Skills service unavailable',
+        );
       });
     });
 
@@ -617,6 +758,7 @@ describe('CreatePackageUsecase', () => {
           description: 'Package description',
           recipeIds: [],
           standardIds: [],
+          skillIds: [],
         };
 
         await expect(useCase.execute(command)).rejects.toThrow(
@@ -638,6 +780,7 @@ describe('CreatePackageUsecase', () => {
           description: 'Package description',
           recipeIds: [],
           standardIds: [],
+          skillIds: [],
         };
 
         await expect(useCase.execute(command)).rejects.toThrow(
@@ -662,6 +805,7 @@ describe('CreatePackageUsecase', () => {
           description: 'Package description',
           recipeIds: [recipeId1],
           standardIds: [],
+          skillIds: [],
         };
 
         await expect(useCase.execute(command)).rejects.toThrow(
@@ -686,6 +830,7 @@ describe('CreatePackageUsecase', () => {
           description: 'Package description',
           recipeIds: [],
           standardIds: [standardId1],
+          skillIds: [],
         };
 
         await expect(useCase.execute(command)).rejects.toThrow(

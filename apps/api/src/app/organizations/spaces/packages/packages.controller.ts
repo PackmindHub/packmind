@@ -156,6 +156,7 @@ export class OrganizationsSpacesPackagesController {
       description: string;
       recipeIds: RecipeId[];
       standardIds: StandardId[];
+      skillIds?: SkillId[];
     },
   ): Promise<CreatePackageResponse> {
     const userId = request.user.userId;
@@ -178,6 +179,7 @@ export class OrganizationsSpacesPackagesController {
         description: body.description,
         recipeIds: body.recipeIds,
         standardIds: body.standardIds,
+        skillIds: body.skillIds,
       });
     } catch (error) {
       const errorMessage =
