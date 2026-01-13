@@ -87,6 +87,7 @@ export const routes = {
   auth: {
     toSignIn: () => '/sign-in',
     toSignUp: () => '/sign-up',
+    toCreateAccount: () => '/create-account',
     toForgotPassword: () => '/forgot-password',
     toResetPassword: (token?: string) =>
       token ? `/reset-password?token=${token}` : '/reset-password',

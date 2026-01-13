@@ -115,6 +115,7 @@ export function useNavigation() {
   const auth = {
     toSignIn: () => navigate('/sign-in'),
     toSignUp: () => navigate('/sign-up'),
+    toCreateAccount: () => navigate('/create-account'),
     toForgotPassword: () => navigate('/forgot-password'),
     toResetPassword: (token?: string) =>
       navigate(token ? `/reset-password?token=${token}` : '/reset-password'),
