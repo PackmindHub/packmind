@@ -7,6 +7,7 @@ import {
 import {
   CreateRuleExampleCommand,
   DeleteRuleExampleCommand,
+  DeleteRuleExampleResponse,
   GetStandardByIdResponse,
   IAccountsPort,
   IAccountsPortName,
@@ -523,7 +524,9 @@ export class StandardsAdapter
     return this._updateRuleExample.execute(command);
   }
 
-  async deleteRuleExample(command: DeleteRuleExampleCommand): Promise<void> {
+  async deleteRuleExample(
+    command: DeleteRuleExampleCommand,
+  ): Promise<DeleteRuleExampleResponse> {
     return this._deleteRuleExample.execute(command);
   }
 }
