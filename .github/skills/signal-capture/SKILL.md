@@ -1,11 +1,44 @@
 ---
-name: signal-capture
+name: 'signal-capture'
 description: 'Detect and capture technical preferences, naming conventions, and architectural practices from user messages into Packmind standards. Trigger when user prescribes HOW to code through direct statements (e.g., "Use snake_case for columns", "Always use async/await") or suggestive patterns like questions ("Could we use X instead?"), code review feedback ("This would be clearer with X"), and comparative statements ("Use X instead of Y"). Does NOT trigger for feature requests, bug reports, or general implementation tasks without coding preferences.'
 ---
 
 # Signal Capture Workflow
 
-This skill helps detect technical preferences in user messages and captures them systematically in `.packmind/changes.yaml` for integration into coding standards.
+This skill helps detect technical preferences in user messages and captures them systematically in `.claude/signal-capture.yaml` for integration into coding standards.
+
+## TRIGGER CHECKLIST - Read This First
+
+**TRIGGER THIS SKILL IMMEDIATELY WHEN THE USER:**
+
+- [ ] States a naming convention ("All interfaces should start with I")
+- [ ] Prescribes a code structure ("Always use async/await")
+- [ ] Suggests an alternative ("Could we use X instead?")
+- [ ] Gives code review feedback implying a pattern ("This would be clearer with X")
+- [ ] Makes a comparative statement ("Use X instead of Y", "Prefer X over Y")
+- [ ] References a principle that needs clarification ("follow KISS", "apply DRY")
+- [ ] Requests removal of a rule ("Remove the rule about X")
+
+**TRIGGER AS SOON AS YOU DETECT THE PREFERENCE** - don't wait until the end of your response. Ask for validation immediately.
+
+**MANDATORY MESSAGE CHECK:**
+For every user message, ask yourself: "Is the user telling me HOW to code?" If yes → trigger this skill.
+
+## Failure Example - When This Skill SHOULD Have Been Triggered
+
+```
+User: "Could we just ensure that standardFile exists instead of using optional chaining?"
+
+AI: [Detects this is a suggestive pattern indicating a preference]
+AI: [Implements the change but FORGETS to capture the preference as a rule] ❌
+
+CORRECT BEHAVIOR:
+AI: [Detects suggestive pattern]
+AI: [Immediately triggers skill]
+AI: [Asks user: "I detected a technical preference. Add this rule to tests-redaction?"]
+AI: [If approved, logs to .claude/signal-capture.yaml]
+AI: [Continues with the implementation]
+```
 
 ## When to Trigger
 
@@ -82,9 +115,9 @@ This applies to:
 - FR: "bonnes pratiques", "principes de conception"
 - ES: "buenas prácticas", "principios de diseño"
 
-### Step 3: Log to `.packmind/changes.yaml`
+### Step 3: Log to `.claude/signal-capture.yaml`
 
-If approved, append the change to `.packmind/changes.yaml`:
+If approved, append the change to `.claude/signal-capture.yaml`:
 
 ```yaml
 - newRule: '<rule text>' # omit this field for DELETED operations
@@ -127,7 +160,7 @@ If approved, append the change to `.packmind/changes.yaml`:
 
 After logging, confirm to the user:
 
-> Rule logged to `.packmind/changes.yaml` for the **[STANDARD_NAME]** standard.
+> Rule logged to `.claude/signal-capture.yaml` for the **[STANDARD_NAME]** standard.
 
 Then continue with the original task.
 
@@ -288,3 +321,7 @@ Signal capture should happen seamlessly:
 4. Continue with the main task without significant disruption
 
 The goal is to build a knowledge base of coding preferences over time without interrupting the development flow.
+
+---
+
+**REMEMBER:** This skill is MANDATORY when users express technical preferences. Unlike other capture skills, this one requires user validation before logging. When you detect a preference, you MUST ask for approval - don't skip this step. Every captured preference helps build a comprehensive knowledge base of coding standards.
