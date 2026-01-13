@@ -480,5 +480,127 @@ describe('readSkillDirectory', () => {
         expect(file.size).toBe(Buffer.byteLength(expectedBase64, 'base64'));
       });
     });
+
+    describe('when detecting by file extension', () => {
+      it('sets isBase64 to true for .pdf files regardless of null bytes', async () => {
+        const pdfContent = Buffer.from('%PDF-1.3\nsome text content');
+        await fs.writeFile(path.join(tempDir, 'document.pdf'), pdfContent);
+
+        const files = await readSkillDirectory(tempDir);
+        const file = files[0];
+
+        expect(file.isBase64).toBe(true);
+      });
+
+      it('encodes .pdf content as base64', async () => {
+        const pdfContent = Buffer.from('%PDF-1.3\nsome text content');
+        await fs.writeFile(path.join(tempDir, 'document.pdf'), pdfContent);
+
+        const files = await readSkillDirectory(tempDir);
+        const file = files[0];
+
+        expect(file.content).toBe(pdfContent.toString('base64'));
+      });
+
+      it('sets isBase64 to true for .png files regardless of null bytes', async () => {
+        const pngContent = Buffer.from('PNG file without null bytes in header');
+        await fs.writeFile(path.join(tempDir, 'image.png'), pngContent);
+
+        const files = await readSkillDirectory(tempDir);
+        const file = files[0];
+
+        expect(file.isBase64).toBe(true);
+      });
+
+      it('sets isBase64 to true for .jpg files', async () => {
+        const jpgContent = Buffer.from('JPEG file content');
+        await fs.writeFile(path.join(tempDir, 'photo.jpg'), jpgContent);
+
+        const files = await readSkillDirectory(tempDir);
+        const file = files[0];
+
+        expect(file.isBase64).toBe(true);
+      });
+
+      it('sets isBase64 to true for .jpeg files', async () => {
+        const jpegContent = Buffer.from('JPEG file content');
+        await fs.writeFile(path.join(tempDir, 'photo.jpeg'), jpegContent);
+
+        const files = await readSkillDirectory(tempDir);
+        const file = files[0];
+
+        expect(file.isBase64).toBe(true);
+      });
+
+      it('sets isBase64 to true for .gif files', async () => {
+        const gifContent = Buffer.from('GIF89a content');
+        await fs.writeFile(path.join(tempDir, 'animation.gif'), gifContent);
+
+        const files = await readSkillDirectory(tempDir);
+        const file = files[0];
+
+        expect(file.isBase64).toBe(true);
+      });
+
+      it('sets isBase64 to true for .zip files', async () => {
+        const zipContent = Buffer.from('PK\x03\x04 zip header');
+        await fs.writeFile(path.join(tempDir, 'archive.zip'), zipContent);
+
+        const files = await readSkillDirectory(tempDir);
+        const file = files[0];
+
+        expect(file.isBase64).toBe(true);
+      });
+
+      it('sets isBase64 to true for .mp3 files', async () => {
+        const mp3Content = Buffer.from('ID3 audio content');
+        await fs.writeFile(path.join(tempDir, 'audio.mp3'), mp3Content);
+
+        const files = await readSkillDirectory(tempDir);
+        const file = files[0];
+
+        expect(file.isBase64).toBe(true);
+      });
+
+      it('sets isBase64 to true for .ttf font files', async () => {
+        const ttfContent = Buffer.from('font content');
+        await fs.writeFile(path.join(tempDir, 'font.ttf'), ttfContent);
+
+        const files = await readSkillDirectory(tempDir);
+        const file = files[0];
+
+        expect(file.isBase64).toBe(true);
+      });
+
+      it('sets isBase64 to true for uppercase extensions', async () => {
+        const pdfContent = Buffer.from('%PDF-1.3\nsome text content');
+        await fs.writeFile(path.join(tempDir, 'document.PDF'), pdfContent);
+
+        const files = await readSkillDirectory(tempDir);
+        const file = files[0];
+
+        expect(file.isBase64).toBe(true);
+      });
+
+      it('sets isBase64 to true for mixed case extensions', async () => {
+        const pngContent = Buffer.from('PNG content');
+        await fs.writeFile(path.join(tempDir, 'image.PnG'), pngContent);
+
+        const files = await readSkillDirectory(tempDir);
+        const file = files[0];
+
+        expect(file.isBase64).toBe(true);
+      });
+
+      it('sets isBase64 to false for unknown extensions without null bytes', async () => {
+        const textContent = Buffer.from('plain text content');
+        await fs.writeFile(path.join(tempDir, 'file.xyz'), textContent);
+
+        const files = await readSkillDirectory(tempDir);
+        const file = files[0];
+
+        expect(file.isBase64).toBe(false);
+      });
+    });
   });
 });
