@@ -22,6 +22,9 @@ import { AuthProvider } from '../src/providers/AuthProvider';
 import { SSEProvider } from '../src/services/sse';
 import { ErrorBoundary } from '../src/providers/ErrorBoundary';
 import { AnalyticsProvider } from '@packmind/proprietary/frontend/domain/amplitude/providers/AnalyticsProvider';
+import nProgress from 'nprogress';
+import { useNavigation } from 'react-router';
+import { useEffect, useRef } from 'react';
 
 initSentry();
 
@@ -50,10 +53,6 @@ export const links: LinksFunction = () => [
     href: 'https://unpkg.com/nprogress@0.2.0/nprogress.css',
   },
 ];
-
-import nProgress from 'nprogress';
-import { useNavigation } from 'react-router';
-import { useEffect, useRef } from 'react';
 
 export function Layout({ children }: Readonly<{ children: React.ReactNode }>) {
   const navigation = useNavigation();
