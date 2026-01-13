@@ -202,6 +202,7 @@ export class UploadSkillUsecase
           path: file.path,
           content: file.content,
           permissions: file.permissions,
+          isBase64: file.isBase64,
         }));
 
         await this.skillFileRepository.addMany(skillFiles);
@@ -288,6 +289,7 @@ export class UploadSkillUsecase
         path: file.path,
         content: file.content,
         permissions: file.permissions,
+        isBase64: file.isBase64,
       }));
 
       await this.skillFileRepository.addMany(skillFiles);

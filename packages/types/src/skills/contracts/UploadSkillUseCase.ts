@@ -5,6 +5,7 @@ export type UploadSkillFileInput = {
   path: string;
   content: string;
   permissions: string;
+  isBase64: boolean;
 };
 
 export type UploadSkillCommand = PackmindCommand & {

@@ -1064,6 +1064,7 @@ export class PackmindGateway implements IPackmindGateway {
         path: f.relativePath,
         content: f.content,
         permissions: f.permissions || 'rw-r--r--',
+        isBase64: f.isBase64,
       })),
     };
 
