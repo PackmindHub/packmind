@@ -7,4 +7,5 @@ export type SkillFile = {
   path: string;
   content: string;
   permissions: string;
+  isBase64: boolean;
 };

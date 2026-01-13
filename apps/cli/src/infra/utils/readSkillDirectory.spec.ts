@@ -343,4 +343,142 @@ describe('readSkillDirectory', () => {
       expect(file.permissions).toBe('rw-r--r--');
     });
   });
+
+  describe('when detecting binary files', () => {
+    describe('when reading text files', () => {
+      it('sets isBase64 to false for plain text', async () => {
+        await fs.writeFile(path.join(tempDir, 'text.md'), 'Hello, world!');
+
+        const files = await readSkillDirectory(tempDir);
+        const file = files[0];
+
+        expect(file.isBase64).toBe(false);
+      });
+
+      it('returns content as UTF-8 string for plain text', async () => {
+        await fs.writeFile(path.join(tempDir, 'text.md'), 'Hello, world!');
+
+        const files = await readSkillDirectory(tempDir);
+        const file = files[0];
+
+        expect(file.content).toBe('Hello, world!');
+      });
+
+      it('sets isBase64 to false for UTF-8 text with special characters', async () => {
+        await fs.writeFile(
+          path.join(tempDir, 'utf8.md'),
+          'Hello 世界 emoji: 🎉',
+        );
+
+        const files = await readSkillDirectory(tempDir);
+        const file = files[0];
+
+        expect(file.isBase64).toBe(false);
+      });
+
+      it('sets isBase64 to false for empty files', async () => {
+        await fs.writeFile(path.join(tempDir, 'empty.txt'), '');
+
+        const files = await readSkillDirectory(tempDir);
+        const file = files[0];
+
+        expect(file.isBase64).toBe(false);
+      });
+    });
+
+    describe('when reading binary files', () => {
+      it('sets isBase64 to true for files with null bytes', async () => {
+        const binaryContent = Buffer.from([
+          0x48, 0x65, 0x6c, 0x6c, 0x6f, 0x00, 0x57, 0x6f, 0x72, 0x6c, 0x64,
+        ]); // "Hello\0World"
+        await fs.writeFile(path.join(tempDir, 'binary.bin'), binaryContent);
+
+        const files = await readSkillDirectory(tempDir);
+        const file = files[0];
+
+        expect(file.isBase64).toBe(true);
+      });
+
+      it('returns content as base64 encoded string for binary files', async () => {
+        const binaryContent = Buffer.from([
+          0x48, 0x65, 0x6c, 0x6c, 0x6f, 0x00, 0x57, 0x6f, 0x72, 0x6c, 0x64,
+        ]); // "Hello\0World"
+        await fs.writeFile(path.join(tempDir, 'binary.bin'), binaryContent);
+
+        const files = await readSkillDirectory(tempDir);
+        const file = files[0];
+
+        expect(file.content).toBe(binaryContent.toString('base64'));
+      });
+
+      it('decodes base64 content back to original binary data', async () => {
+        const binaryContent = Buffer.from([
+          0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0x00, 0x00, 0x00,
+        ]); // PNG header-like
+        await fs.writeFile(path.join(tempDir, 'image.png'), binaryContent);
+
+        const files = await readSkillDirectory(tempDir);
+        const file = files[0];
+
+        const decodedContent = Buffer.from(file.content, 'base64');
+        expect(decodedContent).toEqual(binaryContent);
+      });
+
+      it('sets isBase64 to true for null byte at start of file', async () => {
+        const binaryContent = Buffer.from([0x00, 0x48, 0x65, 0x6c, 0x6c, 0x6f]);
+        await fs.writeFile(path.join(tempDir, 'start-null.bin'), binaryContent);
+
+        const files = await readSkillDirectory(tempDir);
+        const file = files[0];
+
+        expect(file.isBase64).toBe(true);
+      });
+
+      it('sets isBase64 to true for null byte within first 8000 bytes', async () => {
+        const textPart = Buffer.alloc(4000, 0x41); // 4000 'A' characters
+        const nullByte = Buffer.from([0x00]);
+        const moreTxt = Buffer.alloc(100, 0x42); // 100 'B' characters
+        const binaryContent = Buffer.concat([textPart, nullByte, moreTxt]);
+        await fs.writeFile(
+          path.join(tempDir, 'null-in-middle.bin'),
+          binaryContent,
+        );
+
+        const files = await readSkillDirectory(tempDir);
+        const file = files[0];
+
+        expect(file.isBase64).toBe(true);
+      });
+
+      it('sets isBase64 to false for null byte after 8000 bytes', async () => {
+        const textPart = Buffer.alloc(8001, 0x41); // 8001 'A' characters
+        const nullByte = Buffer.from([0x00]);
+        const binaryContent = Buffer.concat([textPart, nullByte]);
+        await fs.writeFile(
+          path.join(tempDir, 'null-after-8000.txt'),
+          binaryContent,
+        );
+
+        const files = await readSkillDirectory(tempDir);
+        const file = files[0];
+
+        expect(file.isBase64).toBe(false);
+      });
+    });
+
+    describe('when calculating size for binary files', () => {
+      it('calculates size as byte length of base64 encoded content', async () => {
+        const binaryContent = Buffer.from([
+          0x48, 0x65, 0x6c, 0x6c, 0x6f, 0x00, 0x57, 0x6f, 0x72, 0x6c, 0x64,
+        ]);
+        await fs.writeFile(path.join(tempDir, 'binary.bin'), binaryContent);
+
+        const files = await readSkillDirectory(tempDir);
+        const file = files[0];
+
+        const expectedBase64 = binaryContent.toString('base64');
+        expect(file.size).toBe(Buffer.byteLength(expectedBase64, 'base64'));
+      });
+    });
+  });
 });

@@ -7,6 +7,7 @@ type SkillFile = {
   content: string;
   size: number;
   permissions: string;
+  isBase64: boolean;
 };
 
 /**
@@ -31,6 +32,14 @@ function normalizeLineEndings(content: string): string {
   return content.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
 }
 
+/**
+ * Detects if a buffer contains binary content using Git's algorithm:
+ * A file is considered binary if it contains a null byte (0x00) in the first 8000 bytes.
+ */
+function isBinaryBuffer(buffer: Buffer): boolean {
+  return buffer.subarray(0, 8000).includes(0x00);
+}
+
 export async function readSkillDirectory(
   dirPath: string,
 ): Promise<SkillFile[]> {
@@ -46,16 +55,24 @@ export async function readSkillDirectory(
       if (entry.isDirectory()) {
         await readDir(fullPath, basePath);
       } else if (entry.isFile()) {
-        const content = await fs.readFile(fullPath, 'utf-8');
-        const normalizedContent = normalizeLineEndings(content);
+        const buffer = await fs.readFile(fullPath);
+        const isBinary = isBinaryBuffer(buffer);
         const normalizedPath = normalizePath(relativePath);
+
+        let content: string;
+        if (isBinary) {
+          content = buffer.toString('base64');
+        } else {
+          content = normalizeLineEndings(buffer.toString('utf-8'));
+        }
 
         files.push({
           path: fullPath,
           relativePath: normalizedPath,
-          content: normalizedContent,
-          size: Buffer.byteLength(normalizedContent, 'utf-8'),
+          content,
+          size: Buffer.byteLength(content, isBinary ? 'base64' : 'utf-8'),
           permissions: 'rw-r--r--', // Simple default
+          isBase64: isBinary,
         });
       }
     }

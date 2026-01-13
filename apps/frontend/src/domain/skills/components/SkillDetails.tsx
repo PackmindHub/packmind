@@ -49,6 +49,7 @@ export const SkillDetails = ({
       permissions: '',
       path: SKILL_MD_FILENAME,
       content: latestVersion.prompt,
+      isBase64: false,
     }),
     [latestVersion],
   );
