@@ -13,6 +13,7 @@ import {
   CommandDeletedEvent,
   LinterCalledEvent,
   SkillCreatedEvent,
+  SkillUpdatedEvent,
 } from '@packmind/types';
 import { EventTrackingAdapter } from './EventTrackingAdapter';
 
@@ -40,6 +41,7 @@ export class AmplitudeEventListener extends PackmindListener<EventTrackingAdapte
     );
     this.subscribe(LinterCalledEvent, this.onLinterCalled);
     this.subscribe(SkillCreatedEvent, this.onSkillCreated);
+    this.subscribe(SkillUpdatedEvent, this.onSkillUpdated);
   }
 
   private onStandardCreated = async (
@@ -197,6 +199,16 @@ export class AmplitudeEventListener extends PackmindListener<EventTrackingAdapte
     await this.adapter.trackEvent(userId, organizationId, 'skill_created', {
       skillId,
       spaceId,
+      source,
+      fileCount,
+    });
+  };
+
+  private onSkillUpdated = async (event: SkillUpdatedEvent) => {
+    const { userId, organizationId, source, fileCount } = event.payload;
+    await this.adapter.trackEvent(userId, organizationId, 'skill_updated', {
+      userId,
+      organizationId,
       source,
       fileCount,
     });
