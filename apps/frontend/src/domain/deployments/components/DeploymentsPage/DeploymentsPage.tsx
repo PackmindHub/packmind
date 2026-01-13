@@ -17,6 +17,7 @@ import { StatusCombobox, type RepositoryStatus } from '../StatusCombobox';
 import {
   useGetRecipesDeploymentOverviewQuery,
   useGetStandardsDeploymentOverviewQuery,
+  useGetSkillsDeploymentOverviewQuery,
 } from '../../api/queries/DeploymentsQueries';
 import {
   Target,
@@ -191,6 +192,11 @@ export const DeploymentsPage: React.FC = () => {
     isLoading: standardIsLoading,
     error: standardError,
   } = useGetStandardsDeploymentOverviewQuery();
+  const {
+    data: skillsData,
+    isLoading: skillsIsLoading,
+    error: skillsError,
+  } = useGetSkillsDeploymentOverviewQuery();
 
   // Filter targets by selected repositories (if any), then extract available targets
   const filteredRecipeTargets = useMemo(() => {
@@ -268,11 +274,11 @@ export const DeploymentsPage: React.FC = () => {
     }
   }, [availableTargets, selectedTargetNames, setSelectedTargetNames]);
 
-  if (isLoading || standardIsLoading) {
+  if (isLoading || standardIsLoading || skillsIsLoading) {
     return <PMText>Loading...</PMText>;
   }
 
-  if (error || standardError) {
+  if (error || standardError || skillsError) {
     return <PMText color="error">Error loading deployment data</PMText>;
   }
 
@@ -337,7 +343,8 @@ export const DeploymentsPage: React.FC = () => {
   const artifactTypeFilter: ArtifactTypeFilter =
     rawArtType === 'all' ||
     rawArtType === 'commands' ||
-    rawArtType === 'standards'
+    rawArtType === 'standards' ||
+    rawArtType === 'skills'
       ? (rawArtType as ArtifactTypeFilter)
       : 'all';
   const setArtifactTypeFilter = (newType: ArtifactTypeFilter) => {
@@ -364,7 +371,8 @@ export const DeploymentsPage: React.FC = () => {
             if (
               e.value === 'all' ||
               e.value === 'commands' ||
-              e.value === 'standards'
+              e.value === 'standards' ||
+              e.value === 'skills'
             )
               setArtifactTypeFilter(e.value as ArtifactTypeFilter);
           }}
@@ -375,6 +383,7 @@ export const DeploymentsPage: React.FC = () => {
               { label: 'All', value: 'all' },
               { label: 'Commands', value: 'commands' },
               { label: 'Standards', value: 'standards' },
+              { label: 'Skills', value: 'skills' },
             ]}
           />
         </PMSegmentGroup.Root>
@@ -382,6 +391,7 @@ export const DeploymentsPage: React.FC = () => {
       <ArtifactsView
         recipes={recipesData.recipes}
         standards={standardData?.standards || []}
+        skills={skillsData?.skills || []}
         searchTerm={searchTerm}
         artifactStatusFilter={repositoryStatus}
         orgSlug={orgSlug}

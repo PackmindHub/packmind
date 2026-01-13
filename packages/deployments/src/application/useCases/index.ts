@@ -9,6 +9,8 @@ export { FindActiveStandardVersionsByTargetUseCase } from './FindActiveStandardV
 export { GetDeploymentOverviewUseCase } from './GetDeploymentOverviewUseCase';
 export { GetRenderModeConfigurationUseCase } from './GetRenderModeConfigurationUseCase';
 export { GetStandardDeploymentOverviewUseCase } from './GetStandardDeploymentOverviewUseCase';
+export { GetSkillsDeploymentOverviewUseCase } from './GetSkillsDeploymentOverviewUseCase';
+export { ListDistributionsBySkillUseCase } from './ListDistributionsBySkillUseCase';
 export { GetTargetsByGitRepoUseCase } from './GetTargetsByGitRepoUseCase';
 export { GetTargetsByOrganizationUseCase } from './GetTargetsByOrganizationUseCase';
 export { GetTargetsByRepositoryUseCase } from './GetTargetsByRepositoryUseCase';

@@ -147,5 +147,6 @@ export const useStandardSectionNavigation = ({
     summaryPath,
     handleSectionSelect,
     handleBackToSummary,
+    getPathForNavKey,
   };
 };

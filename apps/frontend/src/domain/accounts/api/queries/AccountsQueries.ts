@@ -5,12 +5,9 @@ import {
   GET_USER_STATUSES_KEY,
   GET_ONBOARDING_STATUS_KEY,
 } from '../queryKeys';
-import {
-  UserId,
-  UserOrganizationRole,
-  createOrganizationId,
-} from '@packmind/types';
+import { UserId, UserOrganizationRole } from '@packmind/types';
 import { useAuthContext } from '../../hooks/useAuthContext';
+import { spacesQueryKeys } from '../../../spaces/api/queryKeys';
 
 const CREATE_ORGANIZATION_MUTATION_KEY = 'createOrganization';
 const INVITE_USERS_MUTATION_KEY = 'inviteUsers';
@@ -35,8 +32,13 @@ export const useCreateOrganizationMutation = () => {
       return organizationGateway.createOrganization(organization);
     },
     onSuccess: async () => {
+      // Invalidate user organizations list
       await queryClient.invalidateQueries({
         queryKey: GET_USER_ORGANIZATIONS_KEY,
+      });
+      // Invalidate spaces cache to fetch the default "Global" space created with the org
+      await queryClient.invalidateQueries({
+        queryKey: spacesQueryKeys.all,
       });
     },
     onError: (error) => {

@@ -3,9 +3,11 @@ import {
   IGetDeploymentOverview,
   IGetPackageByIdUseCase,
   IGetStandardDeploymentOverview,
+  IGetSkillDeploymentOverview,
   IListDeploymentsByPackage,
   IListDistributionsByRecipe,
   IListDistributionsByStandard,
+  IListDistributionsBySkill,
   IListPackagesBySpaceUseCase,
   ICreatePackageUseCase,
   IUpdatePackageUseCase,
@@ -27,6 +29,7 @@ export interface IDeploymentsGateway {
   listDeploymentsByPackageId: NewGateway<IListDeploymentsByPackage>;
   listDistributionsByRecipeId: NewGateway<IListDistributionsByRecipe>;
   listDistributionsByStandardId: NewGateway<IListDistributionsByStandard>;
+  listDistributionsBySkillId: NewGateway<IListDistributionsBySkill>;
   listPackagesBySpace: NewGateway<IListPackagesBySpaceUseCase>;
   createPackage: NewGateway<ICreatePackageUseCase>;
   updatePackage: NewGateway<IUpdatePackageUseCase>;
@@ -34,6 +37,7 @@ export interface IDeploymentsGateway {
   getPackageById: NewGateway<IGetPackageByIdUseCase>;
   getRecipesDeploymentOverview: NewGateway<IGetDeploymentOverview>;
   getStandardsDeploymentOverview: NewGateway<IGetStandardDeploymentOverview>;
+  getSkillsDeploymentOverview: NewGateway<IGetSkillDeploymentOverview>;
   publishRecipes: NewGateway<IPublishRecipes>;
   publishStandards: NewGateway<IPublishStandards>;
   publishPackages: NewGateway<IPublishPackages>;

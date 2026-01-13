@@ -6,29 +6,29 @@ import { PMPage, PMBox, PMVStack, PMSpinner } from '@packmind/ui';
 import { routes } from '../../src/shared/utils/routes';
 
 export default function IndexRoute() {
-  const { isAuthenticated, isLoading, organization } = useAuthContext();
+  const { isAuthenticated, organization } = useAuthContext();
   const navigate = useNavigate();
   useAuthErrorHandler();
 
   useEffect(() => {
     // Redirect unauthenticated users to sign in page
-    if (!isLoading && !isAuthenticated) {
+    if (!isAuthenticated) {
       navigate(routes.auth.toSignIn());
       return;
     }
 
     // Redirect authenticated users with selected organization to their org dashboard
-    if (!isLoading && isAuthenticated && organization) {
+    if (isAuthenticated && organization) {
       navigate(routes.org.toDashboard(organization.slug), { replace: true });
       return;
     }
 
     // Redirect authenticated users without selected organization back to sign-in
     // The sign-in page will handle organization selection/creation
-    if (!isLoading && isAuthenticated && !organization) {
+    if (isAuthenticated && !organization) {
       navigate(routes.auth.toSignIn(), { replace: true });
     }
-  }, [isAuthenticated, isLoading, organization, navigate]);
+  }, [isAuthenticated, organization, navigate]);
 
   // Show loading state while checking authentication and preparing redirect
   return (

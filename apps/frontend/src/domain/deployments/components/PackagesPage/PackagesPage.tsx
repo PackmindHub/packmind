@@ -140,6 +140,7 @@ export const PackagesPage: React.FC<PackagesPageProps> = ({
         ),
         recipes: pkg.recipes?.length || 0,
         standards: pkg.standards?.length || 0,
+        skills: pkg.skills?.length || 0,
       })),
     );
   }, [packagesResponse, orgSlug, spaceSlug, selectedPackageIds]);
@@ -160,6 +161,7 @@ export const PackagesPage: React.FC<PackagesPageProps> = ({
     { key: 'name', header: 'Name', grow: true },
     { key: 'recipes', header: 'Recipes', width: '100px', align: 'center' },
     { key: 'standards', header: 'Standards', width: '100px', align: 'center' },
+    { key: 'skills', header: 'Skills', width: '100px', align: 'center' },
   ];
 
   const isLoading = isLoadingSpace || isLoadingPackages;

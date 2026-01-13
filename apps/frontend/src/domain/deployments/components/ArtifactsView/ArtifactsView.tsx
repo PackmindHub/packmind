@@ -16,6 +16,7 @@ import { Link } from 'react-router';
 import {
   RecipeDeploymentStatus,
   StandardDeploymentStatus,
+  SkillDeploymentStatus,
 } from '@packmind/types';
 import { useCurrentSpace } from '../../../spaces/hooks/useCurrentSpace';
 import { routes } from '../../../../shared/utils/routes';
@@ -25,6 +26,7 @@ type ArtifactStatus = 'all' | 'outdated' | 'up-to-date';
 type ArtifactsViewProps = {
   recipes: ReadonlyArray<RecipeDeploymentStatus>;
   standards: ReadonlyArray<StandardDeploymentStatus>;
+  skills: ReadonlyArray<SkillDeploymentStatus>;
   searchTerm?: string;
   artifactStatusFilter?: ArtifactStatus;
   orgSlug?: string;
@@ -36,17 +38,20 @@ type EmptyState = { title: string; description: string } | null;
 const getEmptyStateProps = (
   hasAnyArtifacts: boolean,
   searchTerm: string,
+  artifactTypeFilter?: ArtifactTypeFilter,
 ): EmptyState => {
   if (hasAnyArtifacts) return null;
+
   if (searchTerm) {
     return {
       title: 'No artifacts found',
-      description: `No commands or standards match your search "${searchTerm}"`,
+      description: `No commands, standards, or skills match your search "${searchTerm}"`,
     };
   }
   return {
     title: 'No artifacts',
-    description: 'No commands or standards were found in your organization',
+    description:
+      'No commands, standards, or skills were found in your organization',
   };
 };
 
@@ -274,11 +279,61 @@ const buildStandardBlocks = (
     })
     .filter((node): node is React.ReactElement => node !== null);
 
-export type ArtifactTypeFilter = 'all' | 'commands' | 'standards';
+const buildSkillBlocks = (
+  skills: ReadonlyArray<SkillDeploymentStatus>,
+  artifactStatusFilter: ArtifactStatus,
+  columns: PMTableColumn[],
+  orgSlug?: string,
+  spaceSlug?: string,
+) =>
+  skills
+    .map((skill) => {
+      const rows: PMTableRow[] = filterAndSortDeployments(
+        skill.targetDeployments,
+        artifactStatusFilter,
+      ).map((td) => {
+        const upToDate = td.isUpToDate;
+        const version = renderVersionNode(
+          artifactStatusFilter,
+          upToDate,
+          td.deployedVersion.version,
+          skill.latestVersion.version,
+        );
+        const status = renderStatusNode(artifactStatusFilter, upToDate);
+        const repoLabel = formatRepoLabel(td);
+
+        return {
+          name: <PMText variant="body-important">{td.target.name}</PMText>,
+          repository: <PMText variant="body">{repoLabel}</PMText>,
+          version,
+          status,
+        };
+      });
+
+      if (rows.length === 0) return null;
+
+      return (
+        <PMVStack
+          key={`skill-${skill.skill.id}`}
+          align="stretch"
+          backgroundColor={'blue.1000'}
+          gap={4}
+          borderRadius={'lg'}
+          padding={6}
+        >
+          <PMHeading level="h3">{skill.skill.name}</PMHeading>
+          <PMTable columns={columns} data={rows} size="sm" />
+        </PMVStack>
+      );
+    })
+    .filter((node): node is React.ReactElement => node !== null);
+
+export type ArtifactTypeFilter = 'all' | 'commands' | 'standards' | 'skills';
 
 export const ArtifactsView: React.FC<ArtifactsViewProps> = ({
   recipes,
   standards,
+  skills,
   searchTerm = '',
   artifactStatusFilter = 'all',
   orgSlug,
@@ -309,6 +364,16 @@ export const ArtifactsView: React.FC<ArtifactsViewProps> = ({
     );
   }, [standards, normalizedSearch]);
 
+  const filteredSkills = useMemo(() => {
+    if (!skills) return [];
+    const base = !normalizedSearch
+      ? skills
+      : skills.filter((s) =>
+          s.skill.name.toLowerCase().includes(normalizedSearch),
+        );
+    return [...base].sort((a, b) => a.skill.name.localeCompare(b.skill.name));
+  }, [skills, normalizedSearch]);
+
   // Build blocks before any early return to respect hooks order
   const recipeBlocks = useMemo(
     () =>
@@ -334,6 +399,18 @@ export const ArtifactsView: React.FC<ArtifactsViewProps> = ({
     [filteredStandards, artifactStatusFilter, orgSlug, spaceSlug],
   );
 
+  const skillBlocks = useMemo(
+    () =>
+      buildSkillBlocks(
+        filteredSkills,
+        artifactStatusFilter,
+        TABLE_COLUMNS,
+        orgSlug,
+        spaceSlug,
+      ),
+    [filteredSkills, artifactStatusFilter, orgSlug, spaceSlug],
+  );
+
   const visibleRecipes = useMemo(
     () =>
       artifactTypeFilter === 'all' || artifactTypeFilter === 'commands'
@@ -348,9 +425,19 @@ export const ArtifactsView: React.FC<ArtifactsViewProps> = ({
         : ([] as typeof filteredStandards),
     [artifactTypeFilter, filteredStandards],
   );
+  const visibleSkills = useMemo(
+    () =>
+      artifactTypeFilter === 'all' || artifactTypeFilter === 'skills'
+        ? filteredSkills
+        : ([] as typeof filteredSkills),
+    [artifactTypeFilter, filteredSkills],
+  );
 
   const hasAnyArtifacts =
-    (visibleRecipes?.length || 0) + (visibleStandards?.length || 0) > 0;
+    (visibleRecipes?.length || 0) +
+      (visibleStandards?.length || 0) +
+      (visibleSkills?.length || 0) >
+    0;
   const globalCounts = useMemo(() => {
     const totals = { upToDate: 0, outdated: 0 };
     visibleRecipes.forEach((recipe) => {
@@ -365,10 +452,20 @@ export const ArtifactsView: React.FC<ArtifactsViewProps> = ({
         else totals.outdated += 1;
       });
     });
+    visibleSkills.forEach((skill) => {
+      (skill.targetDeployments || []).forEach((td) => {
+        if (td.isUpToDate) totals.upToDate += 1;
+        else totals.outdated += 1;
+      });
+    });
     return totals;
-  }, [visibleRecipes, visibleStandards]);
+  }, [visibleRecipes, visibleStandards, visibleSkills]);
 
-  const emptyState = getEmptyStateProps(hasAnyArtifacts, searchTerm);
+  const emptyState = getEmptyStateProps(
+    hasAnyArtifacts,
+    searchTerm,
+    artifactTypeFilter,
+  );
 
   // recipeBlocks and standardBlocks are memoized above
 
@@ -393,6 +490,13 @@ export const ArtifactsView: React.FC<ArtifactsViewProps> = ({
           <PMVStack gap={3} align="stretch">
             <PMHeading level="h5">Standards</PMHeading>
             {standardBlocks}
+          </PMVStack>
+        )}
+      {(artifactTypeFilter === 'all' || artifactTypeFilter === 'skills') &&
+        skillBlocks.length > 0 && (
+          <PMVStack gap={3} align="stretch">
+            <PMHeading level="h5">Skills</PMHeading>
+            {skillBlocks}
           </PMVStack>
         )}
     </PMVStack>

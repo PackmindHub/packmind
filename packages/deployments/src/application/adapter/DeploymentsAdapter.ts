@@ -27,6 +27,7 @@ import {
   GetRenderModeConfigurationCommand,
   GetRenderModeConfigurationResult,
   GetStandardDeploymentOverviewCommand,
+  GetSkillDeploymentOverviewCommand,
   GetTargetsByGitRepoCommand,
   GetTargetsByOrganizationCommand,
   GetTargetsByRepositoryCommand,
@@ -49,6 +50,7 @@ import {
   ListDeploymentsByPackageCommand,
   ListDistributionsByRecipeCommand,
   ListDistributionsByStandardCommand,
+  ListDistributionsBySkillCommand,
   ListPackagesCommand,
   ListPackagesResponse,
   ListPackagesBySpaceCommand,
@@ -64,6 +66,7 @@ import {
   PullContentCommand,
   RenderModeConfiguration,
   StandardDeploymentOverview,
+  SkillDeploymentOverview,
   Target,
   TargetWithRepository,
   UpdateRenderModeConfigurationCommand,
@@ -84,12 +87,14 @@ import { GetDeploymentOverviewUseCase } from '../useCases/GetDeploymentOverviewU
 import { GetPackageByIdUsecase } from '../useCases/getPackageById/getPackageById.usecase';
 import { GetRenderModeConfigurationUseCase } from '../useCases/GetRenderModeConfigurationUseCase';
 import { GetStandardDeploymentOverviewUseCase } from '../useCases/GetStandardDeploymentOverviewUseCase';
+import { GetSkillsDeploymentOverviewUseCase } from '../useCases/GetSkillsDeploymentOverviewUseCase';
 import { GetTargetsByGitRepoUseCase } from '../useCases/GetTargetsByGitRepoUseCase';
 import { GetTargetsByOrganizationUseCase } from '../useCases/GetTargetsByOrganizationUseCase';
 import { GetTargetsByRepositoryUseCase } from '../useCases/GetTargetsByRepositoryUseCase';
 import { ListDeploymentsByPackageUseCase } from '../useCases/ListDeploymentsByPackageUseCase';
 import { ListDistributionsByRecipeUseCase } from '../useCases/ListDistributionsByRecipeUseCase';
 import { ListDistributionsByStandardUseCase } from '../useCases/ListDistributionsByStandardUseCase';
+import { ListDistributionsBySkillUseCase } from '../useCases/ListDistributionsBySkillUseCase';
 import { ListPackagesUsecase } from '../useCases/listPackages/listPackages.usecase';
 import { NotifyDistributionUseCase } from '../useCases/notifyDistribution/notifyDistribution.usecase';
 import { RemovePackageFromTargetsUseCase } from '../useCases/RemovePackageFromTargetsUseCase';
@@ -120,7 +125,9 @@ export class DeploymentsAdapter
   private _listDeploymentsByPackageUseCase!: ListDeploymentsByPackageUseCase;
   private _listDistributionsByRecipeUseCase!: ListDistributionsByRecipeUseCase;
   private _listDistributionsByStandardUseCase!: ListDistributionsByStandardUseCase;
+  private _listDistributionsBySkillUseCase!: ListDistributionsBySkillUseCase;
   private _getStandardDeploymentOverviewUseCase!: GetStandardDeploymentOverviewUseCase;
+  private _getSkillsDeploymentOverviewUseCase!: GetSkillsDeploymentOverviewUseCase;
   private _addTargetUseCase!: AddTargetUseCase;
   private _getTargetsByGitRepoUseCase!: GetTargetsByGitRepoUseCase;
   private _getTargetsByRepositoryUseCase!: GetTargetsByRepositoryUseCase;
@@ -235,10 +242,22 @@ export class DeploymentsAdapter
     this._listDistributionsByStandardUseCase =
       new ListDistributionsByStandardUseCase(this.distributionRepository);
 
+    this._listDistributionsBySkillUseCase = new ListDistributionsBySkillUseCase(
+      this.distributionRepository,
+    );
+
     this._getStandardDeploymentOverviewUseCase =
       new GetStandardDeploymentOverviewUseCase(
         this.distributionRepository,
         this.standardsPort,
+        this.gitPort,
+        this.spacesPort,
+      );
+
+    this._getSkillsDeploymentOverviewUseCase =
+      new GetSkillsDeploymentOverviewUseCase(
+        this.distributionRepository,
+        this.skillsPort,
         this.gitPort,
         this.spacesPort,
       );
@@ -434,10 +453,22 @@ export class DeploymentsAdapter
     return this._listDistributionsByStandardUseCase.execute(command);
   }
 
+  listDistributionsBySkill(
+    command: ListDistributionsBySkillCommand,
+  ): Promise<Distribution[]> {
+    return this._listDistributionsBySkillUseCase.execute(command);
+  }
+
   getStandardDeploymentOverview(
     command: GetStandardDeploymentOverviewCommand,
   ): Promise<StandardDeploymentOverview> {
     return this._getStandardDeploymentOverviewUseCase.execute(command);
+  }
+
+  getSkillsDeploymentOverview(
+    command: GetSkillDeploymentOverviewCommand,
+  ): Promise<SkillDeploymentOverview> {
+    return this._getSkillsDeploymentOverviewUseCase.execute(command);
   }
 
   async addTarget(command: AddTargetCommand): Promise<Target> {
