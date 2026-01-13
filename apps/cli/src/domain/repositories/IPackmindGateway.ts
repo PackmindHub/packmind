@@ -168,6 +168,8 @@ export type UploadSkillCommand = PackmindCommand & {
 export type UploadSkillResult = {
   skillId: string;
   name: string;
+  version: number;
+  isNewSkill: boolean;
   fileCount: number;
   totalSize: number;
 };

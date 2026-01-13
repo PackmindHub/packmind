@@ -30,22 +30,20 @@ export const addSkillCommand = command({
         userId: '',
       });
 
-      logSuccessConsole('Skill uploaded successfully!');
-      logInfoConsole(`  Skill ID: ${result.skillId}`);
+      if (result.isNewSkill) {
+        logSuccessConsole('Skill created successfully!');
+      } else {
+        logSuccessConsole(`Skill updated to version ${result.version}!`);
+      }
       logInfoConsole(`  Name: ${result.name}`);
+      logInfoConsole(`  Version: ${result.version}`);
       logInfoConsole(`  Files: ${result.fileCount}`);
       logInfoConsole(
         `  Total size: ${(result.totalSize / 1024).toFixed(2)} KB`,
       );
     } catch (error) {
       if (error instanceof Error) {
-        // Provide more helpful message for duplicate skill errors
-        if (error.message.includes('already exists')) {
-          logErrorConsole(`${error.message}`);
-          logInfoConsole('Hint: Skills must have unique names within a space.');
-        } else {
-          logErrorConsole(`Upload failed: ${error.message}`);
-        }
+        logErrorConsole(`Upload failed: ${error.message}`);
       } else {
         logErrorConsole(`Upload failed: ${String(error)}`);
       }

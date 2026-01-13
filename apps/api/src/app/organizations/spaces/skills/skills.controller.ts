@@ -1,22 +1,23 @@
 import {
   BadRequestException,
   Body,
-  ConflictException,
   Controller,
   Get,
+  HttpStatus,
   NotFoundException,
   Param,
   Post,
   Req,
+  Res,
   UseGuards,
 } from '@nestjs/common';
+import { Response } from 'express';
 import { LogLevel, PackmindLogger } from '@packmind/logger';
 import { AuthenticatedRequest } from '@packmind/node-utils';
 import { SkillValidationError, SkillParseError } from '@packmind/skills';
 import {
   OrganizationId,
   Skill,
-  SkillAlreadyExistsError,
   SkillId,
   SkillVersion,
   SkillWithFiles,
@@ -171,6 +172,7 @@ export class OrganizationsSpacesSkillsController {
   /**
    * Upload a skill within a space
    * POST /organizations/:orgId/spaces/:spaceId/skills/upload
+   * Returns 201 Created for new skills, 200 OK for version updates
    */
   @Post('upload')
   async uploadSkill(
@@ -181,7 +183,8 @@ export class OrganizationsSpacesSkillsController {
       files: UploadSkillFileInput[];
     },
     @Req() request: AuthenticatedRequest,
-  ): Promise<Skill> {
+    @Res() response: Response,
+  ): Promise<Response<Skill>> {
     const userId = request.user.userId;
 
     this.logger.info(
@@ -195,12 +198,17 @@ export class OrganizationsSpacesSkillsController {
     );
 
     try {
-      return await this.skillsService.uploadSkill(
+      const skill = await this.skillsService.uploadSkill(
         body.files,
         organizationId,
         spaceId,
         userId,
       );
+
+      const isNewSkill = skill.version === 1;
+      const statusCode = isNewSkill ? HttpStatus.CREATED : HttpStatus.OK;
+
+      return response.status(statusCode).json(skill);
     } catch (error) {
       const errorMessage = getErrorMessage(error);
       this.logger.error(
@@ -219,10 +227,6 @@ export class OrganizationsSpacesSkillsController {
 
       if (error instanceof SkillParseError) {
         throw new BadRequestException(error.message);
-      }
-
-      if (error instanceof SkillAlreadyExistsError) {
-        throw new ConflictException(error.message);
       }
 
       throw error;
