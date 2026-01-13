@@ -55,11 +55,13 @@ export const SkillDetails = ({
   );
 
   const selectedFile = useMemo(() => {
-    if (selectedFilePath === SKILL_MD_FILENAME) {
+    if (!selectedFilePath || selectedFilePath === SKILL_MD_FILENAME) {
       return skillMdFile;
     }
-    return files.find((f) => f.path === selectedFilePath) ?? null;
+    return files.find((f) => f.path === selectedFilePath) ?? skillMdFile;
   }, [selectedFilePath, files, skillMdFile]);
+
+  const resolvedSelectedFilePath = selectedFile?.path ?? SKILL_MD_FILENAME;
 
   const handleSkillChange = (skillId: string) => {
     const selectedSkill = skills.find((s) => s.id === skillId);
@@ -86,7 +88,7 @@ export const SkillDetails = ({
         skill={skill}
         skills={skills}
         files={allFiles}
-        selectedFilePath={selectedFilePath}
+        selectedFilePath={resolvedSelectedFilePath}
         onFileSelect={handleFileSelect}
         onSkillChange={handleSkillChange}
         isSkillSelectDisabled={!orgSlug || !spaceSlug}
