@@ -9,6 +9,7 @@ import {
   IPageFactory,
   ISettingsPage,
   ISignUpPage,
+  ISignUpOptionsPage,
   IStartTrialAgentPage,
   IStartTrialPage,
   IUserSettingsPage,
@@ -16,6 +17,7 @@ import {
 } from '../domain/pages';
 import { Page } from '@playwright/test';
 import { SignupPage } from './pages/SignupPage';
+import { SignUpOptionsPage } from './pages/SignUpOptionsPage';
 import { DashboardPage } from './pages/DashboardPage';
 import { UserSettingsPage } from './pages/UserSettingsPage';
 import { UsersSettingsPage } from './pages/UsersSettingsPage';
@@ -35,6 +37,16 @@ export class PageFactory implements IPageFactory {
 
   async getSignupPage(): Promise<ISignUpPage> {
     await this.page.goto('/sign-up');
+    const signUpOptionsPage = await this.getPageInstance(SignUpOptionsPage);
+    return signUpOptionsPage.clickCreateAccount();
+  }
+
+  async getSignupOptionsPage(): Promise<ISignUpOptionsPage> {
+    await this.page.goto('/sign-up');
+    return this.getPageInstance(SignUpOptionsPage);
+  }
+
+  async getSignupFormPage(): Promise<ISignUpPage> {
     return this.getPageInstance(SignupPage);
   }
 
