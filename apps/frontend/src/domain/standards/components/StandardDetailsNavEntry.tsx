@@ -1,6 +1,7 @@
 import { PMIcon, PMLink, PMText, PMTooltip } from '@packmind/ui';
 import type { ComponentType } from 'react';
 import { LuInfo } from 'react-icons/lu';
+import { NavLink } from 'react-router';
 
 type StandardDetailsNavEntryProps<TValue extends string> = {
   label:
@@ -21,6 +22,7 @@ type StandardDetailsNavEntryProps<TValue extends string> = {
   onSelect: (value: TValue) => void;
   tooltipLabel?: string;
   isTruncated?: boolean;
+  url?: string;
 };
 
 export const StandardDetailsNavEntry = <TValue extends string>({
@@ -30,6 +32,7 @@ export const StandardDetailsNavEntry = <TValue extends string>({
   onSelect,
   tooltipLabel,
   isTruncated,
+  url,
 }: StandardDetailsNavEntryProps<TValue>) => {
   const fontWeight = isActive ? 'bold' : 'medium';
   const textTruncationProps = isTruncated
@@ -40,26 +43,9 @@ export const StandardDetailsNavEntry = <TValue extends string>({
       }
     : {};
 
-  const entry = (
-    <PMLink
-      variant="navbar"
-      data-active={isActive ? 'true' : undefined}
-      as="button"
-      onClick={() => onSelect(value)}
-      width="full"
-      textAlign="left"
-      py={2}
-      type="button"
-      display="flex"
-      alignItems="center"
-      textDecoration="none"
-      {...(isTruncated ? { overflow: 'hidden' as const } : {})}
-      fontWeight={fontWeight}
-      _hover={{ fontWeight, textDecoration: 'none' }}
-      _focus={{ outline: 'none', boxShadow: 'none' }}
-      _focusVisible={{ outline: 'none', boxShadow: 'none' }}
-    >
-      {typeof label === 'string' ? (
+  const renderLabel = () => {
+    if (typeof label === 'string') {
+      return (
         <PMText
           width="full"
           fontSize="sm"
@@ -68,7 +54,11 @@ export const StandardDetailsNavEntry = <TValue extends string>({
         >
           {label}
         </PMText>
-      ) : label.type === 'icon-text' ? (
+      );
+    }
+
+    if (label.type === 'icon-text') {
+      return (
         <PMText
           width="full"
           fontSize="sm"
@@ -83,7 +73,11 @@ export const StandardDetailsNavEntry = <TValue extends string>({
           </PMIcon>
           {label.text}
         </PMText>
-      ) : label.type === 'rule-entry' ? (
+      );
+    }
+
+    if (label.type === 'rule-entry') {
+      return (
         <PMLink
           as="span"
           width="full"
@@ -115,7 +109,48 @@ export const StandardDetailsNavEntry = <TValue extends string>({
             {label.content}
           </PMText>
         </PMLink>
-      ) : null}
+      );
+    }
+
+    return null;
+  };
+
+  const commonProps = {
+    variant: 'navbar' as const,
+    'data-active': isActive ? 'true' : undefined,
+    width: 'full' as const,
+    textAlign: 'left' as const,
+    py: 2,
+    display: 'flex' as const,
+    alignItems: 'center' as const,
+    textDecoration: 'none' as const,
+    fontWeight,
+    _hover: { fontWeight, textDecoration: 'none' as const },
+    _focus: { outline: 'none' as const, boxShadow: 'none' as const },
+    _focusVisible: { outline: 'none' as const, boxShadow: 'none' as const },
+    ...(isTruncated ? { overflow: 'hidden' as const } : {}),
+  };
+
+  const entry = url ? (
+    <NavLink
+      to={url}
+      prefetch="intent"
+      onClick={(e: React.MouseEvent) => {
+        onSelect(value);
+      }}
+    >
+      <PMLink as="span" {...commonProps}>
+        {renderLabel()}
+      </PMLink>
+    </NavLink>
+  ) : (
+    <PMLink
+      as="button"
+      type="button"
+      onClick={() => onSelect(value)}
+      {...commonProps}
+    >
+      {renderLabel()}
     </PMLink>
   );
 

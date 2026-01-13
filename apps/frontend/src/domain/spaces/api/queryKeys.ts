@@ -1,3 +1,5 @@
+import { ORGANIZATION_QUERY_SCOPE } from '../../organizations/api/queryKeys';
+
 export const SPACES_SCOPE = 'spaces' as const;
 
 export enum SpaceQueryKey {
@@ -6,7 +8,7 @@ export enum SpaceQueryKey {
 }
 
 export const spacesQueryKeys = {
-  all: [SPACES_SCOPE] as const,
+  all: [ORGANIZATION_QUERY_SCOPE, SPACES_SCOPE] as const,
   lists: () => [...spacesQueryKeys.all, SpaceQueryKey.LIST] as const,
   list: (orgId: string) => [...spacesQueryKeys.lists(), orgId] as const,
   details: () => [...spacesQueryKeys.all, SpaceQueryKey.DETAIL] as const,

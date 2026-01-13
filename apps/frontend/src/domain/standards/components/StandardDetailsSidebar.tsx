@@ -25,6 +25,7 @@ type StandardDetailsSidebarProps = {
   rules?: Rule[];
   rulesLoading: boolean;
   rulesError: boolean;
+  getPathForNavKey?: (navKey: NavKey) => string | null;
 };
 
 export const StandardDetailsSidebar = ({
@@ -38,6 +39,7 @@ export const StandardDetailsSidebar = ({
   rules,
   rulesLoading,
   rulesError,
+  getPathForNavKey,
 }: StandardDetailsSidebarProps) => {
   const { data: detectionStatuses } = useGetStandardRulesDetectionStatusQuery(
     standard.id,
@@ -78,6 +80,11 @@ export const StandardDetailsSidebar = ({
     onStandardChange(nextStandardId);
   };
 
+  const summaryUrl = getPathForNavKey ? getPathForNavKey('summary') : null;
+  const deploymentUrl = getPathForNavKey
+    ? getPathForNavKey('deployment')
+    : null;
+
   const generalNavEntries = [
     <StandardDetailsNavEntry
       key="summary"
@@ -85,6 +92,7 @@ export const StandardDetailsSidebar = ({
       value="summary"
       isActive={activeSection === 'summary'}
       onSelect={onSectionSelect}
+      url={summaryUrl ?? undefined}
     />,
     <StandardDetailsNavEntry
       key="deployment"
@@ -97,6 +105,7 @@ export const StandardDetailsSidebar = ({
       value="deployment"
       isActive={activeSection === 'deployment'}
       onSelect={onSectionSelect}
+      url={deploymentUrl ?? undefined}
     />,
   ];
 
@@ -128,6 +137,7 @@ export const StandardDetailsSidebar = ({
     return rules.map((rule) => {
       const navKey = makeRuleNavKey(rule.id);
       const hasWipStatus = rulesWithWipStatus.has(rule.id);
+      const url = getPathForNavKey ? getPathForNavKey(navKey) : null;
 
       return (
         <StandardDetailsNavEntry
@@ -142,6 +152,7 @@ export const StandardDetailsSidebar = ({
           onSelect={onSectionSelect}
           tooltipLabel={rule.content}
           isTruncated
+          url={url ?? undefined}
         />
       );
     });

@@ -14,16 +14,16 @@ import ResetPasswordForm from '../../src/domain/accounts/components/ResetPasswor
 import { useValidatePasswordResetTokenQuery } from '../../src/domain/accounts/api/queries/AuthQueries';
 
 export default function ResetPasswordRoute() {
-  const { isAuthenticated, isLoading: authLoading } = useIsAuthenticated();
+  const { isAuthenticated } = useIsAuthenticated();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const token = searchParams.get('token') || '';
 
   useEffect(() => {
-    if (!authLoading && isAuthenticated) {
+    if (isAuthenticated) {
       navigate('/');
     }
-  }, [authLoading, isAuthenticated, navigate]);
+  }, [isAuthenticated, navigate]);
 
   const {
     data: validationData,
@@ -38,19 +38,6 @@ export default function ResetPasswordRoute() {
     if (validationData?.isValid) return 'valid';
     return 'invalid';
   })();
-
-  if (authLoading) {
-    return (
-      <PMVStack gap={6} align="center">
-        <PMSpinner size="lg" />
-        <PMText>Loading...</PMText>
-      </PMVStack>
-    );
-  }
-
-  if (isAuthenticated) {
-    return null;
-  }
 
   if (tokenState === 'loading') {
     return (

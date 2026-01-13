@@ -20,3 +20,5 @@ export type { PMAlertDialogProps } from './PMAlertDialog';
 export { PMTooltip } from './PMTooltip';
 export type { PMTooltipProps } from './PMTooltip';
 export { PMStatus } from './PMStatus/PMStatus';
+export { PMSkeleton } from './PMSkeleton/PMSkeleton';
+export type { PMSkeletonProps } from './PMSkeleton/PMSkeleton';

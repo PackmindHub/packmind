@@ -9,6 +9,7 @@ import {
   pmToaster,
 } from '@packmind/ui';
 import { useCreateOrganizationMutation } from '../../accounts/api/queries/AccountsQueries';
+import { useSelectOrganizationMutation } from '../../accounts/api/queries/AuthQueries';
 import { routes } from '../../../shared/utils/routes';
 
 interface NewOrganizationDialogProps {
@@ -25,6 +26,7 @@ export const NewOrganizationDialog: React.FC<NewOrganizationDialogProps> = ({
   const [newOrgaName, setNewOrgaName] = React.useState('');
   const navigate = useNavigate();
   const createOrganizationMutation = useCreateOrganizationMutation();
+  const selectOrganizationMutation = useSelectOrganizationMutation();
 
   const handleOrganizationCreation = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -43,6 +45,11 @@ export const NewOrganizationDialog: React.FC<NewOrganizationDialogProps> = ({
         name: newOrgaName.trim(),
       });
 
+      // Select the newly created organization before navigating
+      await selectOrganizationMutation.mutateAsync({
+        organizationId: organization.id,
+      });
+
       pmToaster.create({
         title: 'Success',
         description: `Organization "${organization.name}" created successfully`,
@@ -52,11 +59,7 @@ export const NewOrganizationDialog: React.FC<NewOrganizationDialogProps> = ({
       setNewOrgaName('');
       setOpen(false);
 
-      // Delay navigation to prevent error when navigating to new organization
-      await new Promise<void>((resolve) => {
-        setTimeout(resolve, 500);
-      });
-
+      // Navigate to the new organization's dashboard
       navigate(routes.org.toDashboard(organization.slug));
     } catch (error) {
       pmToaster.create({
@@ -74,7 +77,10 @@ export const NewOrganizationDialog: React.FC<NewOrganizationDialogProps> = ({
     <PMDialog.Root
       open={open}
       onOpenChange={(details: { open: boolean }) => {
-        if (!createOrganizationMutation.isPending) {
+        if (
+          !createOrganizationMutation.isPending &&
+          !selectOrganizationMutation.isPending
+        ) {
           setOpen(details.open);
           if (!details.open) {
             setNewOrgaName('');
@@ -106,7 +112,10 @@ export const NewOrganizationDialog: React.FC<NewOrganizationDialogProps> = ({
                   maxLength={ORG_NAME_MAX_LENGTH}
                   placeholder="Enter organization name"
                   required
-                  disabled={createOrganizationMutation.isPending}
+                  disabled={
+                    createOrganizationMutation.isPending ||
+                    selectOrganizationMutation.isPending
+                  }
                 />
               </PMField.Root>
             </PMDialog.Body>
@@ -114,7 +123,10 @@ export const NewOrganizationDialog: React.FC<NewOrganizationDialogProps> = ({
               <PMDialog.Trigger asChild>
                 <PMButton
                   variant="tertiary"
-                  disabled={createOrganizationMutation.isPending}
+                  disabled={
+                    createOrganizationMutation.isPending ||
+                    selectOrganizationMutation.isPending
+                  }
                 >
                   Close
                 </PMButton>
@@ -122,9 +134,13 @@ export const NewOrganizationDialog: React.FC<NewOrganizationDialogProps> = ({
               <PMButton
                 variant="primary"
                 type="submit"
-                loading={createOrganizationMutation.isPending}
+                loading={
+                  createOrganizationMutation.isPending ||
+                  selectOrganizationMutation.isPending
+                }
               >
-                {createOrganizationMutation.isPending
+                {createOrganizationMutation.isPending ||
+                selectOrganizationMutation.isPending
                   ? 'Creating...'
                   : 'Create'}
               </PMButton>

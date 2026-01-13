@@ -79,6 +79,7 @@ export const handle = {
           params.spaceSlug,
           standardId,
         )}
+        prefetch="intent"
       >
         {data.name}
       </NavLink>

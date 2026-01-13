@@ -17,7 +17,7 @@ import {
 } from '../../src/domain/accounts/api/queries/AuthQueries';
 
 export default function ActivateRoute() {
-  const { isAuthenticated, isLoading: authLoading } = useIsAuthenticated();
+  const { isAuthenticated } = useIsAuthenticated();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [activationError, setActivationError] = useState<string>('');
@@ -36,10 +36,10 @@ export default function ActivateRoute() {
 
   // Redirect authenticated users
   useEffect(() => {
-    if (!authLoading && isAuthenticated) {
+    if (isAuthenticated) {
       navigate('/');
     }
-  }, [isAuthenticated, authLoading, navigate]);
+  }, [isAuthenticated, navigate]);
 
   // Determine validation state based on query results
   const getValidationState = () => {
@@ -56,21 +56,6 @@ export default function ActivateRoute() {
 
   const tokenValidationState = getValidationState();
   const invitationEmail = validationData?.email || '';
-
-  // Show loading while checking authentication
-  if (authLoading) {
-    return (
-      <PMVStack gap={6} align="center">
-        <PMSpinner size="lg" />
-        <PMText>Loading...</PMText>
-      </PMVStack>
-    );
-  }
-
-  // Don't render anything if user is authenticated (will redirect)
-  if (isAuthenticated) {
-    return null;
-  }
 
   // Show loading while validating token
   if (tokenValidationState === 'loading') {

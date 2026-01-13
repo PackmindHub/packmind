@@ -1,5 +1,5 @@
 import { PMHeading, PMVStack, PMBox, PMText, PMButton } from '@packmind/ui';
-import { useNavigate } from 'react-router';
+import { useNavigate, Link } from 'react-router';
 import SignInForm from '../../src/domain/accounts/components/SignInForm';
 
 export default function SignInRoute() {
@@ -14,13 +14,11 @@ export default function SignInRoute() {
       <SignInForm />
       <PMBox mt={4} textAlign="center">
         <PMText>No account yet? </PMText>
-        <PMButton
-          variant="tertiary"
-          size={'xs'}
-          onClick={() => navigate('/sign-up')}
-        >
-          Sign up
-        </PMButton>
+        <Link to="/sign-up" prefetch="intent">
+          <PMButton variant="tertiary" size={'xs'} tabIndex={-1}>
+            Sign up
+          </PMButton>
+        </Link>
       </PMBox>
     </PMVStack>
   );

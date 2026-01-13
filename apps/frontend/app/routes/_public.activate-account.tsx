@@ -5,7 +5,6 @@ import {
   PMVStack,
   PMHeading,
   PMText,
-  PMSpinner,
   PMAlert,
   PMButton,
 } from '@packmind/ui';
@@ -13,29 +12,16 @@ import { useIsAuthenticated } from '../../src/domain/accounts/hooks/useIsAuthent
 import ActivateTrialAccountForm from '../../src/domain/accounts/components/ActivateTrialAccountForm';
 
 export default function ActivateAccountRoute() {
-  const { isAuthenticated, isLoading: authLoading } = useIsAuthenticated();
+  const { isAuthenticated } = useIsAuthenticated();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const token = searchParams.get('token') || '';
 
   useEffect(() => {
-    if (!authLoading && isAuthenticated) {
+    if (isAuthenticated) {
       navigate('/');
     }
-  }, [authLoading, isAuthenticated, navigate]);
-
-  if (authLoading) {
-    return (
-      <PMVStack gap={6} align="center">
-        <PMSpinner size="lg" />
-        <PMText>Loading...</PMText>
-      </PMVStack>
-    );
-  }
-
-  if (isAuthenticated) {
-    return null;
-  }
+  }, [isAuthenticated, navigate]);
 
   if (!token) {
     return (

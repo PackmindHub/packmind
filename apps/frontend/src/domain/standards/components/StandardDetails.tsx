@@ -77,6 +77,7 @@ export const StandardDetails = ({
     showRuleActions,
     handleSectionSelect,
     handleBackToSummary,
+    getPathForNavKey,
   } = useStandardSectionNavigation({
     standardId: standard.id,
     orgSlug,
@@ -228,6 +229,7 @@ export const StandardDetails = ({
         rules={sortedRules}
         rulesLoading={rulesLoading}
         rulesError={rulesError}
+        getPathForNavKey={getPathForNavKey}
       />
 
       <PMPage

@@ -22,7 +22,6 @@ import {
   SELECT_ORGANIZATION_KEY,
   GET_USER_ORGANIZATIONS_KEY,
   ACCOUNTS_QUERY_SCOPE,
-  GET_MCP_TOKEN_KEY,
 } from '../queryKeys';
 import { ORGANIZATION_QUERY_SCOPE } from '../../../organizations/api/queryKeys';
 import { useAuthContext } from '../../hooks/useAuthContext';
@@ -327,6 +326,11 @@ export const useSelectOrganizationMutation = () => {
       // refetching with stale organization context during navigation
       queryClient.removeQueries({
         queryKey: [ORGANIZATION_QUERY_SCOPE],
+      });
+
+      // Invalidate GET_ME_KEY to refresh the auth context with the new organization
+      await queryClient.invalidateQueries({
+        queryKey: GET_ME_KEY,
       });
     },
     onError: (error) => {

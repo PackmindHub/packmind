@@ -39,7 +39,7 @@ export function SidebarNavigationLink(
 ): React.ReactElement {
   const { url, label, exact = false, icon } = props;
   return (
-    <NavLink to={url} end={exact}>
+    <NavLink to={url} end={exact} prefetch="intent">
       {({ isActive }) => (
         <PMLink
           variant="navbar"

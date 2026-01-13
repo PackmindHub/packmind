@@ -12,18 +12,16 @@ import { useIsAuthenticated } from '../../src/domain/accounts/hooks/useIsAuthent
 import SignUpWithOrganizationForm from '../../src/domain/accounts/components/SignUpWithOrganizationForm';
 
 export default function SignUpRouteModule() {
-  const { isAuthenticated, isLoading } = useIsAuthenticated();
+  const { isAuthenticated } = useIsAuthenticated();
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!isLoading && isAuthenticated) {
+    if (isAuthenticated) {
       navigate('/');
     }
-  }, [isAuthenticated, isLoading, navigate]);
+  }, [isAuthenticated, navigate]);
 
-  if (isLoading) return <div>Loading...</div>;
-  if (isAuthenticated) return null;
-
+  // Show form immediately - redirect happens in background if authenticated
   return (
     <PMVStack gap={6} align="stretch">
       <PMBox textAlign="center">

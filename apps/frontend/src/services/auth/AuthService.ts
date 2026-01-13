@@ -4,6 +4,8 @@ import {
   getMeQueryOptions,
   getUserOrganizationsQueryOptions,
   getSelectOrganizationQueryOptions,
+  GET_ME_KEY,
+  GET_USER_ORGANIZATIONS_KEY,
 } from '../../domain/accounts/api/queries';
 import { MeResponse } from '../../domain/accounts/api/gateways/IAuthGateway';
 import { ORGANIZATION_QUERY_SCOPE } from '../../domain/organizations/api/queryKeys';
@@ -114,10 +116,13 @@ export class AuthService {
 
     // Remove all organization-scoped queries from the cache
     // This prevents stale queries from refetching with the wrong org context
-    // which can cause "does not belong to space" errors during org transitions
-    queryClient.removeQueries({
+    await queryClient.removeQueries({
       queryKey: [ORGANIZATION_QUERY_SCOPE],
     });
+
+    // Explicitly remove ME and USER_ORGS to be absolutely safe
+    await queryClient.removeQueries({ queryKey: GET_ME_KEY });
+    await queryClient.removeQueries({ queryKey: GET_USER_ORGANIZATIONS_KEY });
 
     // Fetch updated me data (this will be fresh since we removed the cached query)
     const updatedMe = await queryClient.fetchQuery(getMeQueryOptions());

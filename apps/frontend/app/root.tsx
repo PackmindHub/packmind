@@ -17,6 +17,11 @@ import {
 } from '@packmind/ui';
 import { useAuthContext } from '../src/domain/accounts/hooks';
 import { UserContextChangeSubscription } from '../src/domain/accounts/components/UserContextChangeSubscription';
+import { QueryProvider } from '../src/providers/QueryProvider';
+import { AuthProvider } from '../src/providers/AuthProvider';
+import { SSEProvider } from '../src/services/sse';
+import { ErrorBoundary } from '../src/providers/ErrorBoundary';
+import { AnalyticsProvider } from '@packmind/proprietary/frontend/domain/amplitude/providers/AnalyticsProvider';
 
 initSentry();
 
@@ -40,9 +45,34 @@ export const links: LinksFunction = () => [
     rel: 'stylesheet',
     href: 'https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap',
   },
+  {
+    rel: 'stylesheet',
+    href: 'https://unpkg.com/nprogress@0.2.0/nprogress.css',
+  },
 ];
 
+import nProgress from 'nprogress';
+import { useNavigation } from 'react-router';
+import { useEffect, useRef } from 'react';
+
 export function Layout({ children }: Readonly<{ children: React.ReactNode }>) {
+  const navigation = useNavigation();
+  const isFirstRender = useRef(true);
+
+  useEffect(() => {
+    // Skip NProgress on the very first render (initial hydration)
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
+    }
+
+    if (navigation.state === 'idle') {
+      nProgress.done();
+    } else {
+      nProgress.start();
+    }
+  }, [navigation.state]);
+
   return (
     <html lang="en" style={{ height: '100%' }}>
       <head>
@@ -85,7 +115,7 @@ export function HydrateFallback() {
   );
 }
 
-export default function App() {
+function AppContent() {
   const { isAuthenticated } = useAuthContext();
 
   return (
@@ -115,5 +145,23 @@ export default function App() {
         <PMToaster />
       </PMVStack>
     </div>
+  );
+}
+
+export default function App() {
+  return (
+    <ErrorBoundary level="app">
+      <QueryProvider>
+        <AuthProvider>
+          <SSEProvider>
+            <AnalyticsProvider>
+              <UIProvider>
+                <AppContent />
+              </UIProvider>
+            </AnalyticsProvider>
+          </SSEProvider>
+        </AuthProvider>
+      </QueryProvider>
+    </ErrorBoundary>
   );
 }
