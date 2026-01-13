@@ -4,9 +4,15 @@ This file contains all available coding commands that can be used by AI agents (
 
 ## Available Commands
 
-- [Test Placeholder One](commands/test-placeholder-one.md) : Placeholder recipe one
-- [Test Placeholder Three](commands/test-placeholder-three.md) : Placeholder recipe three
-- [Test Placeholder Two](commands/test-placeholder-two.md) : Placeholder recipe two
+- [Adding ai-agent rendering system](commands/adding-ai-agent-rendering-system.md) : Implement a new AI agent rendering pipeline in Packmind that wires a deployer, type mappings, frontend configuration, documentation, and comprehensive tests to support both single-file and multi-file formats for distributing standards and recipes whenever you add or extend integrations for AI coding assistants.
+- [Create New Package](commands/create-new-package-in-monorepo.md) : Create a new buildable TypeScript package in the Packmind Nx monorepo, wiring up TypeScript paths, TypeORM, and Webpack so it can serve as a reusable shared or domain-specific library for consistent, type-safe code reuse across applications.
+- [Create or update model and TypeORM schemas](commands/create-or-update-model-and-typeorm-schemas.md) : Create and evolve TypeORM-backed domain models, schemas, repositories, and migrations to keep your database structure consistent, maintainable, and backward compatible when business requirements or existing entities change.
+- [Creating End-User Documentation for Packmind](commands/creating-end-user-documentation-for-packmind.md) : Create clear and concise end-user documentation for Packmind features to empower users in accomplishing their tasks effectively while avoiding unnecessary technical details.
+- [Gateway Pattern Implementation in Packmind Frontend](commands/gateway-pattern-implementation-in-packmind-frontend.md) : Implement gateways in the Packmind frontend to create a clean abstraction for API communication, enhancing maintainability and testability across the application.
+- [How to Write TypeORM Migrations in Packmind](commands/how-to-write-typeorm-migrations-in-packmind.md) : Write TypeORM migrations in the Packmind monorepo to manage and version database schema changes with consistent logging, reversible rollbacks, and shared helpers so you can safely create or modify tables, columns, and foreign-key relationships whenever schema changes need to be tracked and reversible.
+- [Repository Implementation and Testing Pattern](commands/repository-implementation-and-testing-pattern.md) : Implement a standardized repository with soft delete functionality and comprehensive tests to ensure maintainable code and reliable data access patterns in the Packmind codebase.
+- [Working with Git Worktrees in Cursor](commands/working-with-git-worktrees-in-cursor.md) : Enable parallel development on multiple branches simultaneously without switching contexts, with automatic setup and clean commit integration.
+- [Wrapping Chakra UI with Slot Components](commands/wrapping-chakra-ui-with-slot-components.md) : Create slot components to wrap Chakra UI primitives for enhanced custom composition and API consistency in your design system.
 
 
 ---

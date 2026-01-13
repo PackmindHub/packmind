@@ -1,6 +1,6 @@
 ---
-name: signal-capture
-description: Detect and capture technical preferences, naming conventions, and architectural practices from user messages into Packmind standards. Trigger when user prescribes HOW to code through direct statements (e.g., "Use snake_case for columns", "Always use async/await") or suggestive patterns like questions ("Could we use X instead?"), code review feedback ("This would be clearer with X"), and comparative statements ("Use X instead of Y"). Does NOT trigger for feature requests, bug reports, or general implementation tasks without coding preferences.
+name: 'signal-capture'
+description: 'Detect and capture technical preferences, naming conventions, and architectural practices from user messages into Packmind standards. Trigger when user prescribes HOW to code through direct statements (e.g., "Use snake_case for columns", "Always use async/await") or suggestive patterns like questions ("Could we use X instead?"), code review feedback ("This would be clearer with X"), and comparative statements ("Use X instead of Y"). Does NOT trigger for feature requests, bug reports, or general implementation tasks without coding preferences.'
 ---
 
 # Signal Capture Workflow
