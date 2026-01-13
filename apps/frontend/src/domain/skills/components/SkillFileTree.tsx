@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { LuFolder, LuFile, LuChevronRight } from 'react-icons/lu';
 import {
   createFileTreeCollection,
@@ -15,6 +15,15 @@ type SkillFileTreeProps = {
   onFileSelect: (path: string) => void;
 };
 
+/**
+ * Get all parent folder paths for a given file path.
+ * e.g., 'src/utils/helper.ts' → ['src', 'src/utils']
+ */
+const getParentFolders = (filePath: string): string[] => {
+  const parts = filePath.split('/');
+  return parts.slice(0, -1).map((_, i) => parts.slice(0, i + 1).join('/'));
+};
+
 export const SkillFileTree = ({
   files,
   selectedFilePath,
@@ -25,6 +34,23 @@ export const SkillFileTree = ({
     () => createFileTreeCollection(filePaths),
     [filePaths],
   );
+
+  // Track expanded folders - initialize with parents of selected file
+  const [expandedValue, setExpandedValue] = useState<string[]>(() =>
+    selectedFilePath ? getParentFolders(selectedFilePath) : [],
+  );
+
+  // Auto-expand parent folders when selectedFilePath changes (e.g., from URL navigation)
+  useEffect(() => {
+    if (selectedFilePath) {
+      const parentFolders = getParentFolders(selectedFilePath);
+      setExpandedValue((prev) => {
+        // Merge new parents with existing expanded folders to preserve user expansions
+        const combined = new Set([...prev, ...parentFolders]);
+        return Array.from(combined);
+      });
+    }
+  }, [selectedFilePath]);
 
   const handleSelectionChange = (details: {
     selectedValue: string[];
@@ -41,6 +67,10 @@ export const SkillFileTree = ({
     }
   };
 
+  const handleExpandedChange = (details: { expandedValue: string[] }) => {
+    setExpandedValue(details.expandedValue);
+  };
+
   if (files.length === 0) {
     return null;
   }
@@ -51,6 +81,8 @@ export const SkillFileTree = ({
       selectionMode="single"
       selectedValue={selectedFilePath ? [selectedFilePath] : []}
       onSelectionChange={handleSelectionChange}
+      expandedValue={expandedValue}
+      onExpandedChange={handleExpandedChange}
       width="full"
       size="sm"
     >

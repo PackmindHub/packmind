@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router';
 import {
   PMGrid,
@@ -26,6 +26,7 @@ interface ISkillDetailsProps {
   skills: Skill[];
   skillsLoading: boolean;
   orgSlug?: string;
+  selectedFilePath?: string;
 }
 
 const SKILL_MD_FILENAME = 'SKILL.md';
@@ -37,6 +38,7 @@ export const SkillDetails = ({
   skills,
   skillsLoading,
   orgSlug,
+  selectedFilePath: selectedFilePathFromRoute,
 }: ISkillDetailsProps) => {
   const navigate = useNavigate();
   const { spaceSlug } = useParams<{ spaceSlug?: string }>();
@@ -57,10 +59,8 @@ export const SkillDetails = ({
   // Combine virtual SKILL.md with other files for the sidebar
   const allFiles = useMemo(() => [skillMdFile, ...files], [skillMdFile, files]);
 
-  // Default to SKILL.md
-  const [selectedFilePath, setSelectedFilePath] = useState<string | null>(
-    SKILL_MD_FILENAME,
-  );
+  // Use file path from route, default to SKILL.md
+  const selectedFilePath = selectedFilePathFromRoute || SKILL_MD_FILENAME;
 
   const selectedFile = useMemo(() => {
     if (!selectedFilePath || selectedFilePath === SKILL_MD_FILENAME) {
@@ -91,7 +91,17 @@ export const SkillDetails = ({
   };
 
   const handleFileSelect = (path: string) => {
-    setSelectedFilePath(path);
+    if (!orgSlug || !spaceSlug) return;
+
+    if (path === SKILL_MD_FILENAME) {
+      navigate(routes.space.toSkill(orgSlug, spaceSlug, skill.slug), {
+        replace: true,
+      });
+    } else {
+      navigate(routes.space.toSkillFile(orgSlug, spaceSlug, skill.slug, path), {
+        replace: true,
+      });
+    }
   };
 
   return (

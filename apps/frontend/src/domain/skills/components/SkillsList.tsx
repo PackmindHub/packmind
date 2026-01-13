@@ -90,9 +90,9 @@ export const SkillsList = ({ orgSlug }: ISkillsListProps) => {
             mx={'auto'}
             title={'No skills yet'}
           >
-            Skills are reusable AI agent workflows that help automate complex
-            development tasks. Create skills via the CLI using the `packmind
-            skills push` command.
+            Skills are reusable prompts that can be invoked by AI coding
+            assistants. Create skills via the CLI using the command
+            "packmind-cli skill add"
           </PMEmptyState>
         )
       )}
