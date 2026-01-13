@@ -1,15 +1,7 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router';
-import {
-  PMBox,
-  PMVStack,
-  PMHeading,
-  PMText,
-  PMButton,
-  PMHStack,
-} from '@packmind/ui';
 import { useIsAuthenticated } from '../../src/domain/accounts/hooks/useIsAuthenticated';
-import SignUpWithOrganizationForm from '../../src/domain/accounts/components/SignUpWithOrganizationForm';
+import { SignUpOptions } from '../../src/domain/accounts/components/SignUpOptions';
 
 export default function SignUpRouteModule() {
   const { isAuthenticated } = useIsAuthenticated();
@@ -21,29 +13,5 @@ export default function SignUpRouteModule() {
     }
   }, [isAuthenticated, navigate]);
 
-  // Show form immediately - redirect happens in background if authenticated
-  return (
-    <PMVStack gap={6} align="stretch">
-      <PMBox textAlign="center">
-        <PMHeading level="h2">Create your account</PMHeading>
-        <PMText color="secondary" mt={2}>
-          Start your journey with Packmind by creating your organization and
-          account
-        </PMText>
-      </PMBox>
-
-      <SignUpWithOrganizationForm />
-
-      <PMHStack justifyContent="center" paddingX={6}>
-        <PMText>Already have an organization?</PMText>
-        <PMButton
-          variant="tertiary"
-          size="xs"
-          onClick={() => navigate('/sign-in')}
-        >
-          Sign in to existing organization
-        </PMButton>
-      </PMHStack>
-    </PMVStack>
-  );
+  return <SignUpOptions />;
 }

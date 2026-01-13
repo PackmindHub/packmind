@@ -93,7 +93,7 @@ export function StartTrialAgentSelector({
   return (
     <PMVStack gap={6} align="stretch">
       <PMBox textAlign="center">
-        <PMHeading level="h2">Start your free trial</PMHeading>
+        <PMHeading level="h2">Quick start</PMHeading>
         <PMText color="secondary" mt={2}>
           Select the AI coding agent you use to get started with Packmind
         </PMText>
