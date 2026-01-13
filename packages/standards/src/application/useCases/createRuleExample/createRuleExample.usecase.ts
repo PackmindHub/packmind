@@ -1,84 +1,107 @@
-import { IRuleExampleRepository } from '../../../domain/repositories/IRuleExampleRepository';
-import { IRuleRepository } from '../../../domain/repositories/IRuleRepository';
-import { RuleExample, createRuleExampleId } from '@packmind/types';
-import { RuleId } from '@packmind/types';
 import { PackmindLogger } from '@packmind/logger';
-import { getErrorMessage } from '@packmind/node-utils';
-import { ProgrammingLanguage } from '@packmind/types';
-import { createOrganizationId, createUserId } from '@packmind/types';
-import { v4 as uuidv4 } from 'uuid';
+import {
+  AbstractMemberUseCase,
+  MemberContext,
+  PackmindEventEmitterService,
+} from '@packmind/node-utils';
 import {
   CreateRuleExampleCommand,
-  ICreateRuleExample,
-} from '../../../domain/useCases/ICreateRuleExample';
-import type { ILinterPort } from '@packmind/types';
+  CreateRuleExampleResponse,
+  IAccountsPort,
+  ICreateRuleExampleUseCase,
+  ILinterPort,
+  ProgrammingLanguage,
+  RuleExample,
+  RuleId,
+  RuleUpdatedEvent,
+  createOrganizationId,
+  createRuleExampleId,
+  createStandardId,
+  createStandardVersionId,
+  createUserId,
+} from '@packmind/types';
+import { v4 as uuidv4 } from 'uuid';
+import { IRuleExampleRepository } from '../../../domain/repositories/IRuleExampleRepository';
+import { IRuleRepository } from '../../../domain/repositories/IRuleRepository';
+import { IStandardVersionRepository } from '../../../domain/repositories/IStandardVersionRepository';
 
 const origin = 'CreateRuleExampleUsecase';
 
-export class CreateRuleExampleUsecase implements ICreateRuleExample {
+export class CreateRuleExampleUsecase
+  extends AbstractMemberUseCase<
+    CreateRuleExampleCommand,
+    CreateRuleExampleResponse
+  >
+  implements ICreateRuleExampleUseCase
+{
   constructor(
+    accountsAdapter: IAccountsPort,
     private readonly _ruleExampleRepository: IRuleExampleRepository,
     private readonly _ruleRepository: IRuleRepository,
+    private readonly _standardVersionRepository: IStandardVersionRepository,
+    private readonly _eventEmitterService: PackmindEventEmitterService,
     private readonly _linterAdapter?: ILinterPort,
-    private readonly _logger: PackmindLogger = new PackmindLogger(origin),
-  ) {}
+    logger: PackmindLogger = new PackmindLogger(origin),
+  ) {
+    super(accountsAdapter, logger);
+  }
 
-  async execute(command: CreateRuleExampleCommand): Promise<RuleExample> {
-    this._logger.info(`[${origin}] Execute command`);
-
+  async executeForMembers(
+    command: CreateRuleExampleCommand & MemberContext,
+  ): Promise<CreateRuleExampleResponse> {
     const { ruleId, lang, positive, negative, organizationId, userId } =
       command;
 
-    // Validate input parameters
     if (!lang) {
       throw new Error('Language is required and cannot be empty');
     }
 
-    // Validate that the rule exists
     const rule = await this._ruleRepository.findById(ruleId);
     if (!rule) {
       throw new Error(`Rule with id ${ruleId} not found`);
     }
 
-    // Create the rule example entity
     const ruleExample: RuleExample = {
       id: createRuleExampleId(uuidv4()),
       ruleId,
-      lang: lang,
+      lang,
       positive: positive || '',
       negative: negative || '',
     };
 
-    try {
-      // Save the rule example
-      const savedRuleExample =
-        await this._ruleExampleRepository.add(ruleExample);
+    const savedRuleExample = await this._ruleExampleRepository.add(ruleExample);
 
-      this._logger.info(`${origin}.execute completed`, {
-        ruleExampleId: savedRuleExample.id,
-        ruleId: savedRuleExample.ruleId,
-        lang: savedRuleExample.lang,
-      });
+    this.logger.info('Rule example created', {
+      ruleExampleId: savedRuleExample.id,
+      ruleId: savedRuleExample.ruleId,
+      lang: savedRuleExample.lang,
+    });
 
-      // Validate detection programs for the current language
-      if (this._linterAdapter && organizationId && userId) {
-        await this.assessOrUpdateRuleDetectionForLanguage(
-          ruleId,
-          lang,
-          organizationId,
-          userId,
-        );
-      }
+    const standardVersion = await this._standardVersionRepository.findById(
+      rule.standardVersionId,
+    );
+    if (standardVersion) {
+      this._eventEmitterService.emit(
+        new RuleUpdatedEvent({
+          standardId: createStandardId(standardVersion.standardId),
+          standardVersionId: createStandardVersionId(standardVersion.id),
+          newVersion: standardVersion.version,
+          organizationId: createOrganizationId(organizationId),
+          userId: createUserId(userId),
+        }),
+      );
+    }
 
-      return savedRuleExample;
-    } catch (error) {
-      this._logger.error(`${origin}.execute failed`, {
+    if (this._linterAdapter) {
+      await this.assessOrUpdateRuleDetectionForLanguage(
         ruleId,
         lang,
-        error: getErrorMessage(error),
-      });
-      throw error;
+        organizationId,
+        userId,
+      );
     }
+
+    return savedRuleExample;
   }
 
   private async assessOrUpdateRuleDetectionForLanguage(
@@ -99,13 +122,11 @@ export class CreateRuleExampleUsecase implements ICreateRuleExample {
         userId: createUserId(userId),
       });
     } catch (error) {
-      this._logger.error('Failed to update detection program status', {
+      this.logger.error('Failed to update detection program status', {
         ruleId,
         language,
-        organizationId,
-        error: getErrorMessage(error),
+        error: error instanceof Error ? error.message : String(error),
       });
-      // Don't throw - we want rule example creation to succeed even if detection program update fails
     }
   }
 }

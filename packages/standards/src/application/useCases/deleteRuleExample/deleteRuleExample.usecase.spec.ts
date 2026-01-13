@@ -1,28 +1,68 @@
-import { OrganizationId, UserId } from '@packmind/types';
 import { PackmindLogger } from '@packmind/logger';
+import { PackmindEventEmitterService } from '@packmind/node-utils';
 import { stubLogger } from '@packmind/test-utils';
-import { RuleExampleId } from '@packmind/types';
-import { ruleExampleFactory } from '../../../../test';
+import {
+  createOrganizationId,
+  createUserId,
+  DeleteRuleExampleCommand,
+  IAccountsPort,
+  Organization,
+  RuleExampleId,
+  RuleUpdatedEvent,
+  User,
+} from '@packmind/types';
+import { v4 as uuidv4 } from 'uuid';
+import {
+  ruleExampleFactory,
+  ruleFactory,
+  standardVersionFactory,
+} from '../../../../test';
 import { IRuleExampleRepository } from '../../../domain/repositories/IRuleExampleRepository';
+import { IRuleRepository } from '../../../domain/repositories/IRuleRepository';
+import { IStandardVersionRepository } from '../../../domain/repositories/IStandardVersionRepository';
 import { IStandardsRepositories } from '../../../domain/repositories/IStandardsRepositories';
 import { DeleteRuleExampleUsecase } from './deleteRuleExample.usecase';
 
 describe('DeleteRuleExampleUsecase', () => {
   let usecase: DeleteRuleExampleUsecase;
+  let accountsAdapter: jest.Mocked<IAccountsPort>;
   let repositories: jest.Mocked<IStandardsRepositories>;
   let ruleExampleRepository: jest.Mocked<IRuleExampleRepository>;
+  let ruleRepository: jest.Mocked<IRuleRepository>;
+  let standardVersionRepository: jest.Mocked<IStandardVersionRepository>;
+  let eventEmitterService: jest.Mocked<PackmindEventEmitterService>;
   let logger: PackmindLogger;
 
-  const mockUserId = 'user-123' as UserId;
-  const mockOrganizationId = 'org-123' as OrganizationId;
+  const userId = createUserId(uuidv4());
+  const organizationId = createOrganizationId(uuidv4());
 
-  const createCommand = (props: { ruleExampleId: RuleExampleId }) => ({
+  const user: User = {
+    id: userId,
+    email: 'test@example.com',
+    passwordHash: 'hashed_password',
+    memberships: [{ organizationId, role: 'member', userId }],
+    active: true,
+  };
+  const organization: Organization = {
+    id: organizationId,
+    name: 'Test Org',
+    slug: 'test-org',
+  };
+
+  const createCommand = (props: {
+    ruleExampleId: RuleExampleId;
+  }): DeleteRuleExampleCommand => ({
     ...props,
-    userId: mockUserId,
-    organizationId: mockOrganizationId,
+    userId,
+    organizationId,
   });
 
   beforeEach(() => {
+    accountsAdapter = {
+      getUserById: jest.fn(),
+      getOrganizationById: jest.fn(),
+    } as unknown as jest.Mocked<IAccountsPort>;
+
     ruleExampleRepository = {
       add: jest.fn(),
       findById: jest.fn(),
@@ -32,27 +72,70 @@ describe('DeleteRuleExampleUsecase', () => {
       restoreById: jest.fn(),
     };
 
+    ruleRepository = {
+      findById: jest.fn(),
+      add: jest.fn(),
+      deleteById: jest.fn(),
+      restoreById: jest.fn(),
+      findByStandardVersionId: jest.fn(),
+    } as unknown as jest.Mocked<IRuleRepository>;
+
+    standardVersionRepository = {
+      findById: jest.fn(),
+      list: jest.fn(),
+      findByStandardId: jest.fn(),
+      findLatestByStandardId: jest.fn(),
+      findByStandardIdAndVersion: jest.fn(),
+      updateSummary: jest.fn(),
+      add: jest.fn(),
+      deleteById: jest.fn(),
+      restoreById: jest.fn(),
+    } as unknown as jest.Mocked<IStandardVersionRepository>;
+
     repositories = {
       getRuleExampleRepository: jest
         .fn()
         .mockReturnValue(ruleExampleRepository),
       getStandardRepository: jest.fn(),
-      getStandardVersionRepository: jest.fn(),
-      getRuleRepository: jest.fn(),
+      getStandardVersionRepository: jest
+        .fn()
+        .mockReturnValue(standardVersionRepository),
+      getRuleRepository: jest.fn().mockReturnValue(ruleRepository),
       getDetectionProgramRepository: jest.fn(),
       getActiveDetectionProgramRepository: jest.fn(),
     } as jest.Mocked<IStandardsRepositories>;
 
+    eventEmitterService = {
+      emit: jest.fn().mockReturnValue(true),
+    } as unknown as jest.Mocked<PackmindEventEmitterService>;
+
     logger = stubLogger();
 
-    usecase = new DeleteRuleExampleUsecase(repositories, undefined, logger);
+    accountsAdapter.getUserById.mockResolvedValue(user);
+    accountsAdapter.getOrganizationById.mockResolvedValue(organization);
+
+    usecase = new DeleteRuleExampleUsecase(
+      accountsAdapter,
+      repositories,
+      eventEmitterService,
+      undefined,
+      logger,
+    );
+  });
+
+  afterEach(() => {
+    jest.clearAllMocks();
   });
 
   it('deletes a rule example successfully', async () => {
-    const existingExample = ruleExampleFactory();
+    const standardVersion = standardVersionFactory();
+    const rule = ruleFactory({ standardVersionId: standardVersion.id });
+    const existingExample = ruleExampleFactory({ ruleId: rule.id });
 
     ruleExampleRepository.findById.mockResolvedValue(existingExample);
     ruleExampleRepository.deleteById.mockResolvedValue(undefined);
+    ruleRepository.findById.mockResolvedValue(rule);
+    standardVersionRepository.findById.mockResolvedValue(standardVersion);
 
     const command = createCommand({
       ruleExampleId: existingExample.id,
@@ -65,6 +148,27 @@ describe('DeleteRuleExampleUsecase', () => {
     );
     expect(ruleExampleRepository.deleteById).toHaveBeenCalledWith(
       existingExample.id,
+    );
+  });
+
+  it('emits RuleUpdatedEvent after deleting', async () => {
+    const standardVersion = standardVersionFactory();
+    const rule = ruleFactory({ standardVersionId: standardVersion.id });
+    const existingExample = ruleExampleFactory({ ruleId: rule.id });
+
+    ruleExampleRepository.findById.mockResolvedValue(existingExample);
+    ruleExampleRepository.deleteById.mockResolvedValue(undefined);
+    ruleRepository.findById.mockResolvedValue(rule);
+    standardVersionRepository.findById.mockResolvedValue(standardVersion);
+
+    const command = createCommand({
+      ruleExampleId: existingExample.id,
+    });
+
+    await usecase.execute(command);
+
+    expect(eventEmitterService.emit).toHaveBeenCalledWith(
+      expect.any(RuleUpdatedEvent),
     );
   });
 
