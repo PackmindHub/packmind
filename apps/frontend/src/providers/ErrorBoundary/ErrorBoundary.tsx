@@ -8,7 +8,6 @@ import {
   PMText,
   PMVStack,
   PMAlert,
-  UIProvider,
 } from '@packmind/ui';
 import { logoPackmindText } from '@packmind/assets';
 
@@ -133,94 +132,9 @@ export class ErrorBoundary extends Component<
     const { level = 'app' } = this.props;
     const { error, errorInfo } = this.state;
 
-    // Check if this is a Chakra context error
-    const isChakraContextError =
-      error?.message?.includes('useContext') &&
-      error?.message?.includes('ChakraProvider');
-
-    // If it's a Chakra context error, render a plain HTML fallback
-    if (isChakraContextError) {
+    // App-level error (most severe)
+    if (level === 'app') {
       return (
-        <div
-          style={{
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-            minHeight: '100vh',
-            padding: '2rem',
-            fontFamily: 'system-ui, sans-serif',
-          }}
-        >
-          <div
-            style={{
-              maxWidth: '600px',
-              textAlign: 'center',
-            }}
-          >
-            <h1 style={{ fontSize: '2rem', marginBottom: '1rem' }}>
-              Oops! Something went wrong
-            </h1>
-            <p style={{ fontSize: '1.125rem', marginBottom: '2rem' }}>
-              The application encountered an initialization error. Please try
-              reloading the page.
-            </p>
-            <div
-              style={{
-                padding: '1rem',
-                backgroundColor: '#fee',
-                border: '1px solid #fcc',
-                borderRadius: '0.5rem',
-                marginBottom: '2rem',
-              }}
-            >
-              <strong>Error Details:</strong>
-              <p style={{ marginTop: '0.5rem' }}>
-                {error?.message || 'An unknown error occurred'}
-              </p>
-            </div>
-            <button
-              onClick={this.handleReload}
-              style={{
-                padding: '0.75rem 1.5rem',
-                fontSize: '1rem',
-                backgroundColor: '#007bff',
-                color: 'white',
-                border: 'none',
-                borderRadius: '0.375rem',
-                cursor: 'pointer',
-                marginRight: '0.5rem',
-              }}
-            >
-              Reload Application
-            </button>
-            {process.env.NODE_ENV === 'development' && errorInfo && (
-              <pre
-                style={{
-                  marginTop: '2rem',
-                  padding: '1rem',
-                  backgroundColor: '#f5f5f5',
-                  borderRadius: '0.375rem',
-                  fontSize: '0.75rem',
-                  fontFamily: 'monospace',
-                  textAlign: 'left',
-                  maxHeight: '200px',
-                  overflow: 'auto',
-                }}
-              >
-                <strong>Component Stack (Dev Only):</strong>
-                {'\n'}
-                {errorInfo.componentStack}
-              </pre>
-            )}
-          </div>
-        </div>
-      );
-    }
-
-    // Wrap fallback UI in UIProvider to ensure Chakra context is available
-    const fallbackContent =
-      level === 'app' ? (
         <PMBox
           display="flex"
           flexDirection="column"
@@ -272,53 +186,55 @@ export class ErrorBoundary extends Component<
             )}
           </PMVStack>
         </PMBox>
-      ) : (
-        <PMBox p={8} maxW="800px" mx="auto">
-          <PMVStack gap={6} alignItems="center">
-            <PMImage src={logoPackmindText} maxHeight="32px" />
-            <PMHeading size="xl" textAlign="center">
-              Page Error
-            </PMHeading>
-            <PMText textAlign="center">
-              This page encountered an error while loading. You can try going
-              back or reloading the page.
-            </PMText>
-            <PMAlert.Root status="error">
-              <PMAlert.Indicator />
-              <PMBox>
-                <PMAlert.Title>Error Details</PMAlert.Title>
-                <PMAlert.Description>
-                  {error?.message || 'An unknown error occurred'}
-                </PMAlert.Description>
-              </PMBox>
-            </PMAlert.Root>
-            <PMButton onClick={this.handleGoBack}>Go Back</PMButton>
-            <PMButton onClick={this.handleReload} variant="outline">
-              Reload Page
-            </PMButton>
-            <PMButton onClick={this.handleReset} variant="ghost" size="sm">
-              Try Again
-            </PMButton>
-            {process.env.NODE_ENV === 'development' && errorInfo && (
-              <PMBox
-                mt={4}
-                p={4}
-                borderRadius="md"
-                fontSize="xs"
-                fontFamily="mono"
-                maxH="200px"
-                overflow="auto"
-              >
-                <PMText fontWeight="bold" mb={2}>
-                  Component Stack (Dev Only):
-                </PMText>
-                <pre>{errorInfo.componentStack}</pre>
-              </PMBox>
-            )}
-          </PMVStack>
-        </PMBox>
       );
+    }
 
-    return <UIProvider>{fallbackContent}</UIProvider>;
+    // Route-level error
+    return (
+      <PMBox p={8} maxW="800px" mx="auto">
+        <PMVStack gap={6} alignItems="center">
+          <PMImage src={logoPackmindText} maxHeight="32px" />
+          <PMHeading size="xl" textAlign="center">
+            Page Error
+          </PMHeading>
+          <PMText textAlign="center">
+            This page encountered an error while loading. You can try going back
+            or reloading the page.
+          </PMText>
+          <PMAlert.Root status="error">
+            <PMAlert.Indicator />
+            <PMBox>
+              <PMAlert.Title>Error Details</PMAlert.Title>
+              <PMAlert.Description>
+                {error?.message || 'An unknown error occurred'}
+              </PMAlert.Description>
+            </PMBox>
+          </PMAlert.Root>
+          <PMButton onClick={this.handleGoBack}>Go Back</PMButton>
+          <PMButton onClick={this.handleReload} variant="outline">
+            Reload Page
+          </PMButton>
+          <PMButton onClick={this.handleReset} variant="ghost" size="sm">
+            Try Again
+          </PMButton>
+          {process.env.NODE_ENV === 'development' && errorInfo && (
+            <PMBox
+              mt={4}
+              p={4}
+              borderRadius="md"
+              fontSize="xs"
+              fontFamily="mono"
+              maxH="200px"
+              overflow="auto"
+            >
+              <PMText fontWeight="bold" mb={2}>
+                Component Stack (Dev Only):
+              </PMText>
+              <pre>{errorInfo.componentStack}</pre>
+            </PMBox>
+          )}
+        </PMVStack>
+      </PMBox>
+    );
   }
 }
