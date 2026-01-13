@@ -93,10 +93,11 @@ async function bootstrap() {
     app.use(cookieParser());
     logger.debug('Cookie parser enabled');
 
-    // Configure body-parser with increased limit for bulk imports
-    app.use(bodyParser.json({ limit: '5mb' }));
-    app.use(bodyParser.urlencoded({ limit: '5mb', extended: true }));
-    logger.debug('Body parser configured with 5MB limit');
+    // Configure body-parser with increased limit for bulk imports and skill uploads
+    // Limit set to 15MB to accommodate 10MB skills with base64 encoding overhead (~33% increase)
+    app.use(bodyParser.json({ limit: '15mb' }));
+    app.use(bodyParser.urlencoded({ limit: '15mb', extended: true }));
+    logger.debug('Body parser configured with 15MB limit');
 
     // Enable CORS with dynamic origins
     const corsOrigins = await getCorsOrigins();
