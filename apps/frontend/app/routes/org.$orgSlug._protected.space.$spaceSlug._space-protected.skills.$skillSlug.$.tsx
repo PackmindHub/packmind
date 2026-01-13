@@ -24,7 +24,12 @@ interface ISkillDetailLoaderData {
 export async function clientLoader({
   params,
 }: {
-  params: { orgSlug: string; spaceSlug: string; skillSlug: string };
+  params: {
+    orgSlug: string;
+    spaceSlug: string;
+    skillSlug: string;
+    '*': string;
+  };
 }): Promise<ISkillDetailLoaderData> {
   const me = await queryClient.fetchQuery(getMeQueryOptions());
   if (!me.organization) {
@@ -83,9 +88,14 @@ export const handle = {
 
 export default function SkillDetailRouteModule() {
   const loaderData = useLoaderData() as ISkillDetailLoaderData | undefined;
-  const { orgSlug, skillSlug } = useParams<{
+  const {
+    orgSlug,
+    skillSlug,
+    '*': filePath,
+  } = useParams<{
     orgSlug: string;
     skillSlug: string;
+    '*': string;
   }>();
   const { organization } = useAuthContext();
 
@@ -125,6 +135,7 @@ export default function SkillDetailRouteModule() {
       skills={skills}
       skillsLoading={skillsLoading}
       orgSlug={orgSlug}
+      selectedFilePath={filePath}
     />
   );
 }
