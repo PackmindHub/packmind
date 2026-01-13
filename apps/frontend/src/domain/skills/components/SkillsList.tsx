@@ -8,6 +8,7 @@ import {
   PMTableRow,
   PMEmptyState,
 } from '@packmind/ui';
+import { formatDistanceToNowStrict } from 'date-fns';
 
 import { useGetSkillsQuery } from '../api/queries/SkillsQueries';
 import { useCurrentSpace } from '../../spaces/hooks/useCurrentSpace';
@@ -16,13 +17,6 @@ import { routes } from '../../../shared/utils/routes';
 interface ISkillsListProps {
   orgSlug: string;
 }
-
-const truncateDescription = (description: string, maxLength = 100): string => {
-  if (description.length <= maxLength) {
-    return description;
-  }
-  return `${description.slice(0, maxLength)}...`;
-};
 
 export const SkillsList = ({ orgSlug }: ISkillsListProps) => {
   const { spaceSlug } = useCurrentSpace();
@@ -48,7 +42,13 @@ export const SkillsList = ({ orgSlug }: ISkillsListProps) => {
             </Link>
           </PMLink>
         ),
-        description: truncateDescription(skill.description),
+        updatedAt: (
+          <>
+            {formatDistanceToNowStrict(skill.updatedAt || new Date(), {
+              addSuffix: true,
+            })}
+          </>
+        ),
         version: skill.version,
       })),
     );
@@ -56,7 +56,12 @@ export const SkillsList = ({ orgSlug }: ISkillsListProps) => {
 
   const columns: PMTableColumn[] = [
     { key: 'name', header: 'Name', grow: true },
-    { key: 'description', header: 'Description', grow: true },
+    {
+      key: 'updatedAt',
+      header: 'Last Updated',
+      width: '250px',
+      align: 'center',
+    },
     { key: 'version', header: 'Version', width: '100px', align: 'center' },
   ];
 
