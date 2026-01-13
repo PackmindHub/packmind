@@ -1,36 +1,52 @@
-import { RuleExample, RuleId } from '@packmind/types';
-import { ProgrammingLanguage } from '@packmind/types';
 import { PackmindLogger } from '@packmind/logger';
-import { IStandardsRepositories } from '../../../domain/repositories/IStandardsRepositories';
 import {
-  IUpdateRuleExample,
+  AbstractMemberUseCase,
+  MemberContext,
+  PackmindEventEmitterService,
+} from '@packmind/node-utils';
+import {
+  IAccountsPort,
+  ILinterPort,
+  IUpdateRuleExampleUseCase,
+  ProgrammingLanguage,
+  RuleExample,
+  RuleId,
+  RuleUpdatedEvent,
   UpdateRuleExampleCommand,
-} from '../../../domain/useCases/IUpdateRuleExample';
-import {
-  OrganizationId,
-  UserId,
+  UpdateRuleExampleResponse,
   createOrganizationId,
+  createStandardId,
+  createStandardVersionId,
   createUserId,
 } from '@packmind/types';
-import type { ILinterPort } from '@packmind/types';
+import { IStandardsRepositories } from '../../../domain/repositories/IStandardsRepositories';
 
 const origin = 'UpdateRuleExampleUsecase';
-export class UpdateRuleExampleUsecase implements IUpdateRuleExample {
+
+export class UpdateRuleExampleUsecase
+  extends AbstractMemberUseCase<
+    UpdateRuleExampleCommand,
+    UpdateRuleExampleResponse
+  >
+  implements IUpdateRuleExampleUseCase
+{
   constructor(
+    accountsAdapter: IAccountsPort,
     private readonly _repositories: IStandardsRepositories,
+    private readonly _eventEmitterService: PackmindEventEmitterService,
     private readonly _linterAdapter?: ILinterPort,
-    private readonly _logger: PackmindLogger = new PackmindLogger(origin),
-  ) {}
+    logger: PackmindLogger = new PackmindLogger(origin),
+  ) {
+    super(accountsAdapter, logger);
+  }
 
-  async execute(command: UpdateRuleExampleCommand): Promise<RuleExample> {
-    this._logger.info('UpdateRuleExampleUsecase.execute', { command });
-
-    // Validate that at least one field is provided for update
+  async executeForMembers(
+    command: UpdateRuleExampleCommand & MemberContext,
+  ): Promise<UpdateRuleExampleResponse> {
     if (!command.lang && !command.positive && !command.negative) {
       throw new Error('At least one field must be provided for update');
     }
 
-    // Get the existing rule example
     const ruleExampleRepository = this._repositories.getRuleExampleRepository();
     const existingExample = await ruleExampleRepository.findById(
       command.ruleExampleId,
@@ -42,7 +58,6 @@ export class UpdateRuleExampleUsecase implements IUpdateRuleExample {
       );
     }
 
-    // Prepare update data with trimmed values where applicable
     const updateData: Partial<RuleExample> = {};
 
     if (command.lang !== undefined) {
@@ -60,40 +75,59 @@ export class UpdateRuleExampleUsecase implements IUpdateRuleExample {
       updateData.negative = command.negative || '';
     }
 
-    // Update the rule example
     const updatedExample = await ruleExampleRepository.updateById(
       command.ruleExampleId,
       updateData,
     );
 
-    this._logger.info('UpdateRuleExampleUsecase.execute completed', {
+    this.logger.info('Rule example updated', {
       ruleExampleId: command.ruleExampleId,
       updatedFields: Object.keys(updateData),
     });
 
-    // Validate detection program for the updated language
+    const ruleRepository = this._repositories.getRuleRepository();
+    const rule = await ruleRepository.findById(existingExample.ruleId);
+    if (rule) {
+      const standardVersionRepository =
+        this._repositories.getStandardVersionRepository();
+      const standardVersion = await standardVersionRepository.findById(
+        rule.standardVersionId,
+      );
+      if (standardVersion) {
+        this._eventEmitterService.emit(
+          new RuleUpdatedEvent({
+            standardId: createStandardId(standardVersion.standardId),
+            standardVersionId: createStandardVersionId(standardVersion.id),
+            newVersion: standardVersion.version,
+            organizationId: createOrganizationId(command.organizationId),
+            userId: createUserId(command.userId),
+          }),
+        );
+      }
+    }
+
     const languageToValidate = command.lang || existingExample.lang;
     await this.assessOrUpdateRuleDetectionForLanguage(
       existingExample.ruleId,
       languageToValidate as ProgrammingLanguage,
-      createOrganizationId(command.organizationId),
-      createUserId(command.userId),
+      command.organizationId,
+      command.userId,
     );
 
     return updatedExample;
   }
 
-  public async assessOrUpdateRuleDetectionForLanguage(
+  private async assessOrUpdateRuleDetectionForLanguage(
     ruleId: RuleId,
     language: ProgrammingLanguage,
-    organizationId: OrganizationId,
-    userId: UserId,
+    organizationId: string,
+    userId: string,
   ): Promise<void> {
     if (!this._linterAdapter) {
       return;
     }
 
-    this._logger.info('Validating detection program for rule and language', {
+    this.logger.info('Validating detection program for rule and language', {
       ruleId,
       language,
     });
@@ -102,11 +136,11 @@ export class UpdateRuleExampleUsecase implements IUpdateRuleExample {
       await this._linterAdapter.updateRuleDetectionAssessmentAfterUpdate({
         ruleId,
         language,
-        organizationId,
-        userId,
+        organizationId: createOrganizationId(organizationId),
+        userId: createUserId(userId),
       });
     } catch (error) {
-      this._logger.error('Failed to update detection program status', {
+      this.logger.error('Failed to update detection program status', {
         ruleId,
         language,
         error: error instanceof Error ? error.message : String(error),

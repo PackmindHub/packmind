@@ -5,6 +5,8 @@ import {
   PackmindEventEmitterService,
 } from '@packmind/node-utils';
 import {
+  CreateRuleExampleCommand,
+  DeleteRuleExampleCommand,
   GetStandardByIdResponse,
   IAccountsPort,
   IAccountsPortName,
@@ -27,17 +29,13 @@ import {
   StandardId,
   StandardVersion,
   StandardVersionId,
+  UpdateRuleExampleCommand,
   UpdateStandardCommand,
   UserId,
 } from '@packmind/types';
 import { IStandardDelayedJobs } from '../../domain/jobs/IStandardDelayedJobs';
 import { IStandardsRepositories } from '../../domain/repositories/IStandardsRepositories';
-import {
-  CreateRuleExampleCommand,
-  DeleteRuleExampleCommand,
-  GetRuleExamplesCommand,
-  UpdateRuleExampleCommand,
-} from '../../domain/useCases';
+import { GetRuleExamplesCommand } from '../../domain/useCases';
 import { GenerateStandardSummaryJobFactory } from '../../infra/jobs/GenerateStandardSummaryJobFactory';
 import { StandardsServices } from '../services/StandardsServices';
 import { AddRuleToStandardUsecase } from '../useCases/addRuleToStandard/addRuleToStandard.usecase';
@@ -252,18 +250,25 @@ export class StandardsAdapter
     );
 
     this._createRuleExample = new CreateRuleExampleUsecase(
+      this.accountsPort,
       this.repositories.getRuleExampleRepository(),
       this.repositories.getRuleRepository(),
+      this.repositories.getStandardVersionRepository(),
+      this.eventEmitterService,
       this.linterPort,
     );
 
     this._updateRuleExample = new UpdateRuleExampleUsecase(
+      this.accountsPort,
       this.repositories,
+      this.eventEmitterService,
       this.linterPort,
     );
 
     this._deleteRuleExample = new DeleteRuleExampleUsecase(
+      this.accountsPort,
       this.repositories,
+      this.eventEmitterService,
       this.linterPort,
     );
 

@@ -1,27 +1,47 @@
 import { PackmindLogger } from '@packmind/logger';
-import { createOrganizationId, createUserId } from '@packmind/types';
-import { IStandardsRepositories } from '../../../domain/repositories/IStandardsRepositories';
 import {
-  IDeleteRuleExample,
+  AbstractMemberUseCase,
+  MemberContext,
+  PackmindEventEmitterService,
+} from '@packmind/node-utils';
+import {
   DeleteRuleExampleCommand,
-} from '../../../domain/useCases/IDeleteRuleExample';
-import { RuleId } from '@packmind/types';
-import { ProgrammingLanguage } from '@packmind/types';
-import type { ILinterPort } from '@packmind/types';
+  DeleteRuleExampleResponse,
+  IAccountsPort,
+  IDeleteRuleExampleUseCase,
+  ILinterPort,
+  ProgrammingLanguage,
+  RuleId,
+  RuleUpdatedEvent,
+  createOrganizationId,
+  createStandardId,
+  createStandardVersionId,
+  createUserId,
+} from '@packmind/types';
+import { IStandardsRepositories } from '../../../domain/repositories/IStandardsRepositories';
 
 const origin = 'DeleteRuleExampleUsecase';
 
-export class DeleteRuleExampleUsecase implements IDeleteRuleExample {
+export class DeleteRuleExampleUsecase
+  extends AbstractMemberUseCase<
+    DeleteRuleExampleCommand,
+    DeleteRuleExampleResponse
+  >
+  implements IDeleteRuleExampleUseCase
+{
   constructor(
+    accountsAdapter: IAccountsPort,
     private readonly _repositories: IStandardsRepositories,
+    private readonly _eventEmitterService: PackmindEventEmitterService,
     private readonly _linterAdapter?: ILinterPort,
-    private readonly _logger: PackmindLogger = new PackmindLogger(origin),
-  ) {}
+    logger: PackmindLogger = new PackmindLogger(origin),
+  ) {
+    super(accountsAdapter, logger);
+  }
 
-  async execute(command: DeleteRuleExampleCommand): Promise<void> {
-    this._logger.info('DeleteRuleExampleUsecase.execute', { command });
-
-    // Check if the rule example exists
+  async executeForMembers(
+    command: DeleteRuleExampleCommand & MemberContext,
+  ): Promise<DeleteRuleExampleResponse> {
     const ruleExampleRepository = this._repositories.getRuleExampleRepository();
     const existingExample = await ruleExampleRepository.findById(
       command.ruleExampleId,
@@ -33,41 +53,57 @@ export class DeleteRuleExampleUsecase implements IDeleteRuleExample {
       );
     }
 
-    // Store info before deletion for validation
     const ruleId = existingExample.ruleId;
     const language = existingExample.lang;
 
-    // Delete the rule example
     await ruleExampleRepository.deleteById(command.ruleExampleId);
 
-    this._logger.info('DeleteRuleExampleUsecase.execute completed', {
+    this.logger.info('Rule example deleted', {
       ruleExampleId: command.ruleExampleId,
     });
 
-    // Validate detection programs for the deleted example's language
+    const ruleRepository = this._repositories.getRuleRepository();
+    const rule = await ruleRepository.findById(ruleId);
+    if (rule) {
+      const standardVersionRepository =
+        this._repositories.getStandardVersionRepository();
+      const standardVersion = await standardVersionRepository.findById(
+        rule.standardVersionId,
+      );
+      if (standardVersion) {
+        this._eventEmitterService.emit(
+          new RuleUpdatedEvent({
+            standardId: createStandardId(standardVersion.standardId),
+            standardVersionId: createStandardVersionId(standardVersion.id),
+            newVersion: standardVersion.version,
+            organizationId: createOrganizationId(command.organizationId),
+            userId: createUserId(command.userId),
+          }),
+        );
+      }
+    }
+
     await this.assessOrUpdateRuleDetectionForLanguage(
       ruleId,
-      language,
+      language as ProgrammingLanguage,
       command.organizationId,
       command.userId,
     );
+
+    return {};
   }
 
-  public async assessOrUpdateRuleDetectionForLanguage(
+  private async assessOrUpdateRuleDetectionForLanguage(
     ruleId: RuleId,
     language: ProgrammingLanguage,
     organizationId: string,
     userId: string,
   ): Promise<void> {
     if (!this._linterAdapter) {
-      this._logger.warn(
-        'Linter adapter not available, skipping detection program validation',
-        { ruleId, language },
-      );
       return;
     }
 
-    this._logger.info('Validating detection programs for rule and language', {
+    this.logger.info('Validating detection programs for rule and language', {
       ruleId,
       language,
     });
@@ -79,15 +115,10 @@ export class DeleteRuleExampleUsecase implements IDeleteRuleExample {
         organizationId: createOrganizationId(organizationId),
         userId: createUserId(userId),
       });
-      this._logger.debug('Detection program validation triggered', {
-        ruleId,
-        language,
-      });
     } catch (error) {
-      this._logger.error('Failed to update detection program status', {
+      this.logger.error('Failed to update detection program status', {
         ruleId,
         language,
-        organizationId,
         error: error instanceof Error ? error.message : String(error),
       });
     }
