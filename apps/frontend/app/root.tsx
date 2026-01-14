@@ -55,23 +55,6 @@ export const links: LinksFunction = () => [
 ];
 
 export function Layout({ children }: Readonly<{ children: React.ReactNode }>) {
-  const navigation = useNavigation();
-  const isFirstRender = useRef(true);
-
-  useEffect(() => {
-    // Skip NProgress on the very first render (initial hydration)
-    if (isFirstRender.current) {
-      isFirstRender.current = false;
-      return;
-    }
-
-    if (navigation.state === 'idle') {
-      nProgress.done();
-    } else {
-      nProgress.start();
-    }
-  }, [navigation.state]);
-
   return (
     <html lang="en" style={{ height: '100%' }}>
       <head>
@@ -81,7 +64,15 @@ export function Layout({ children }: Readonly<{ children: React.ReactNode }>) {
         <Links />
       </head>
       <body style={{ height: '100%' }} suppressHydrationWarning>
-        {children}
+        <ErrorBoundary level="app">
+          <QueryProvider>
+            <AuthProvider>
+              <SSEProvider>
+                <AnalyticsProvider>{children}</AnalyticsProvider>
+              </SSEProvider>
+            </AuthProvider>
+          </QueryProvider>
+        </ErrorBoundary>
         <ScrollRestoration />
         <Scripts />
       </body>
@@ -116,6 +107,22 @@ export function HydrateFallback() {
 
 function AppContent() {
   const { isAuthenticated } = useAuthContext();
+  const navigation = useNavigation();
+  const isFirstRender = useRef(true);
+
+  useEffect(() => {
+    // Skip NProgress on the very first render (initial hydration)
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
+    }
+
+    if (navigation.state === 'idle') {
+      nProgress.done();
+    } else {
+      nProgress.start();
+    }
+  }, [navigation.state]);
 
   return (
     <div
@@ -149,18 +156,8 @@ function AppContent() {
 
 export default function App() {
   return (
-    <ErrorBoundary level="app">
-      <QueryProvider>
-        <AuthProvider>
-          <SSEProvider>
-            <AnalyticsProvider>
-              <UIProvider>
-                <AppContent />
-              </UIProvider>
-            </AnalyticsProvider>
-          </SSEProvider>
-        </AuthProvider>
-      </QueryProvider>
-    </ErrorBoundary>
+    <UIProvider>
+      <AppContent />
+    </UIProvider>
   );
 }

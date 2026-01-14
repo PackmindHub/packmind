@@ -78,6 +78,7 @@ export class DistributionRepository implements IDistributionRepository {
           'standardVersion',
         )
         .leftJoinAndSelect('distributedPackage.recipeVersions', 'recipeVersion')
+        .leftJoinAndSelect('distributedPackage.skillVersions', 'skillVersion')
         .leftJoinAndSelect('distribution.gitCommit', 'gitCommit')
         .leftJoinAndSelect('distribution.target', 'target')
         .where('distribution.organizationId = :organizationId', {
@@ -124,6 +125,7 @@ export class DistributionRepository implements IDistributionRepository {
           'standardVersion',
         )
         .leftJoinAndSelect('distributedPackage.recipeVersions', 'recipeVersion')
+        .leftJoinAndSelect('distributedPackage.skillVersions', 'skillVersion')
         .leftJoinAndSelect('distribution.gitCommit', 'gitCommit')
         .leftJoinAndSelect('distribution.target', 'target')
         .leftJoinAndSelect('target.gitRepo', 'gitRepo')
@@ -234,6 +236,7 @@ export class DistributionRepository implements IDistributionRepository {
           'standardVersion',
         )
         .leftJoinAndSelect('distributedPackage.recipeVersions', 'recipeVersion')
+        .leftJoinAndSelect('distributedPackage.skillVersions', 'skillVersion')
         .leftJoinAndSelect('distribution.gitCommit', 'gitCommit')
         .leftJoinAndSelect('distribution.target', 'target')
         .leftJoinAndSelect('target.gitRepo', 'gitRepo')
@@ -289,6 +292,7 @@ export class DistributionRepository implements IDistributionRepository {
           'standardVersion',
         )
         .leftJoinAndSelect('distributedPackage.recipeVersions', 'recipeVersion')
+        .leftJoinAndSelect('distributedPackage.skillVersions', 'skillVersion')
         .leftJoinAndSelect('distribution.gitCommit', 'gitCommit')
         .leftJoinAndSelect('distribution.target', 'target')
         .where('distribution.organizationId = :organizationId', {
@@ -346,6 +350,7 @@ export class DistributionRepository implements IDistributionRepository {
           'standardVersion',
         )
         .leftJoinAndSelect('distributedPackage.recipeVersions', 'recipeVersion')
+        .leftJoinAndSelect('distributedPackage.skillVersions', 'skillVersion')
         .leftJoinAndSelect('distribution.gitCommit', 'gitCommit')
         .leftJoinAndSelect('distribution.target', 'target')
         .where('distribution.organizationId = :organizationId', {
@@ -397,6 +402,7 @@ export class DistributionRepository implements IDistributionRepository {
           'standardVersion',
         )
         .leftJoinAndSelect('distributedPackage.recipeVersions', 'recipeVersion')
+        .leftJoinAndSelect('distributedPackage.skillVersions', 'skillVersion')
         .leftJoinAndSelect('distribution.gitCommit', 'gitCommit')
         .leftJoinAndSelect('distribution.target', 'target')
         .where('distribution.id = :id', { id })

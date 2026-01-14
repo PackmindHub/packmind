@@ -230,9 +230,10 @@ export class GetSkillsDeploymentOverviewUseCase implements IGetSkillDeploymentOv
 
       for (const distribution of targetDistributions) {
         // All distributions are successful since we filtered at query level
-        const skillVersions = distribution.distributedPackages.flatMap(
-          (dp) => dp.skillVersions,
-        );
+        const skillVersions = distribution.distributedPackages
+          .filter((dp) => dp && dp.skillVersions)
+          .flatMap((dp) => dp.skillVersions)
+          .filter((sv) => sv && sv.skillId);
         for (const skillVersion of skillVersions) {
           const existing = skillVersionsMap.get(skillVersion.skillId);
           if (!existing || skillVersion.version > existing.version) {
@@ -332,9 +333,10 @@ export class GetSkillsDeploymentOverviewUseCase implements IGetSkillDeploymentOv
       let latestDeploymentDate = '';
 
       for (const distribution of targetDistributions) {
-        const skillVersions = distribution.distributedPackages.flatMap(
-          (dp) => dp.skillVersions,
-        );
+        const skillVersions = distribution.distributedPackages
+          .filter((dp) => dp && dp.skillVersions)
+          .flatMap((dp) => dp.skillVersions)
+          .filter((sv) => sv && sv.skillId);
         for (const skillVersion of skillVersions) {
           if (skillVersion.skillId === skill.id) {
             if (
@@ -438,9 +440,10 @@ export class GetSkillsDeploymentOverviewUseCase implements IGetSkillDeploymentOv
 
     // Get all unique skills from the latest distribution
     const deployedSkillsMap = new Map<string, SkillVersion>();
-    const skillVersions = latestDistribution.distributedPackages.flatMap(
-      (dp) => dp.skillVersions,
-    );
+    const skillVersions = latestDistribution.distributedPackages
+      .filter((dp) => dp && dp.skillVersions)
+      .flatMap((dp) => dp.skillVersions)
+      .filter((sv) => sv && sv.skillId);
     skillVersions.forEach((skillVersion) => {
       const existing = deployedSkillsMap.get(skillVersion.skillId);
       if (!existing || skillVersion.version > existing.version) {
@@ -513,8 +516,9 @@ export class GetSkillsDeploymentOverviewUseCase implements IGetSkillDeploymentOv
 
       // Find the latest version of this skill in the distribution
       const skillsInLatestDistribution = latestDistribution.distributedPackages
+        .filter((dp) => dp && dp.skillVersions)
         .flatMap((dp) => dp.skillVersions)
-        .filter((version) => version.skillId === skill.id);
+        .filter((version) => version && version.skillId === skill.id);
 
       const deployedVersion = skillsInLatestDistribution.reduce(
         (latest, current) => {

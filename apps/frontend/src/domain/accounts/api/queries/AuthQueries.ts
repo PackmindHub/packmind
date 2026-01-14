@@ -52,10 +52,11 @@ export const useSignUpWithOrganizationMutation = () => {
     retry: false, // Disable retries for sign-up mutations
     onSuccess: (data) => {
       console.log('User and organization created successfully:', data);
-      // Invalidate authentication queries to refresh user state
-      queryClient.invalidateQueries({ queryKey: GET_ME_KEY });
+      // Note: We don't prefetch /auth/me here because the user isn't signed in yet
+      // The sign-in mutation that follows will handle the prefetch
 
-      // New organization created - refresh org list
+      // Invalidate to ensure fresh data after the subsequent sign-in
+      queryClient.invalidateQueries({ queryKey: GET_ME_KEY });
       queryClient.invalidateQueries({
         queryKey: GET_USER_ORGANIZATIONS_KEY,
       });
@@ -75,9 +76,13 @@ export const useSignInMutation = () => {
       return authGateway.signIn(request);
     },
     retry: false, // Disable retries for sign-in mutations
-    onSuccess: (data) => {
-      // Invalidate authentication queries to refresh user state
-      queryClient.invalidateQueries({ queryKey: GET_ME_KEY });
+    onSuccess: async () => {
+      // Prefetch /auth/me immediately after sign-in to avoid loader delays
+      // This ensures the data is in cache before navigation to protected routes
+      await queryClient.prefetchQuery({
+        queryKey: GET_ME_KEY,
+        queryFn: () => authGateway.getMe(),
+      });
     },
     onError: (error) => {
       console.error('Error signing in user:', error);
@@ -93,7 +98,7 @@ export const useSignOutMutation = () => {
     mutationFn: async () => {
       return authGateway.signOut();
     },
-    onSuccess: (data) => {
+    onSuccess: () => {
       // Clear all queries to reset authentication state
       queryClient
         .invalidateQueries({ queryKey: GET_ME_KEY })
@@ -159,7 +164,7 @@ export const useGenerateApiKeyMutation = () => {
 
   return useMutation({
     mutationKey: [GENERATE_API_KEY_MUTATION_KEY],
-    mutationFn: async (_: Record<string, never> = {}) => {
+    mutationFn: async () => {
       return authGateway.generateApiKey({});
     },
     onSuccess: (data) => {
