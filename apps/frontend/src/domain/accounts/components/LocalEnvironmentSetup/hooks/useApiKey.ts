@@ -20,7 +20,7 @@ export const useApiKey = () => {
       setShowConfirmGenerate(true);
       return;
     }
-    generateMutation.mutate({});
+    generateMutation.mutate();
     setShowConfirmGenerate(false);
   }, [
     currentApiKeyQuery.data?.hasApiKey,

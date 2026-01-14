@@ -57,7 +57,7 @@ export const CliAuthentication: React.FunctionComponent = () => {
       return;
     }
 
-    generateApiKeyMutation.mutate({});
+    generateApiKeyMutation.mutate();
     setShowConfirmGenerate(false);
   };
 

@@ -13,6 +13,8 @@ import {
   PMAlertDialog,
   PMButtonGroup,
   PMAlert,
+  PMTooltip,
+  PMText,
 } from '@packmind/ui';
 import { PackageId } from '@packmind/types';
 import { useCurrentSpace } from '../../../spaces/hooks/useCurrentSpace';
@@ -125,27 +127,64 @@ export const PackagesPage: React.FC<PackagesPageProps> = ({
     );
 
     setTableData(
-      sortedPackages.map((pkg) => ({
-        key: pkg.id,
-        select: (
-          <PMCheckbox
-            checked={selectedPackageIds.includes(pkg.id)}
-            onCheckedChange={(e) => {
-              handleSelectPackage(pkg.id, e.checked === true);
-            }}
+      sortedPackages.map((pkg) => {
+        const commandsCount = pkg.recipes?.length || 0;
+        const standardsCount = pkg.standards?.length || 0;
+        const skillsCount = pkg.skills?.length || 0;
+        const totalCount = commandsCount + standardsCount + skillsCount;
+
+        const tooltipContent = (
+          <PMTable
+            columns={[
+              { key: 'type', header: 'Type', width: '120px' },
+              { key: 'count', header: 'Count', width: '80px', align: 'right' },
+            ]}
+            data={[
+              {
+                key: 'commands',
+                type: <PMText variant="body">Commands</PMText>,
+                count: <PMText variant="body">{commandsCount}</PMText>,
+              },
+              {
+                key: 'standards',
+                type: <PMText variant="body">Standards</PMText>,
+                count: <PMText variant="body">{standardsCount}</PMText>,
+              },
+              {
+                key: 'skills',
+                type: <PMText variant="body">Skills</PMText>,
+                count: <PMText variant="body">{skillsCount}</PMText>,
+              },
+            ]}
+            size="sm"
+            variant="line"
           />
-        ),
-        name: (
-          <PMLink asChild>
-            <Link to={routes.space.toPackage(orgSlug, spaceSlug, pkg.id)}>
-              {pkg.name}
-            </Link>
-          </PMLink>
-        ),
-        recipes: pkg.recipes?.length || 0,
-        standards: pkg.standards?.length || 0,
-        skills: pkg.skills?.length || 0,
-      })),
+        );
+
+        return {
+          key: pkg.id,
+          select: (
+            <PMCheckbox
+              checked={selectedPackageIds.includes(pkg.id)}
+              onCheckedChange={(e) => {
+                handleSelectPackage(pkg.id, e.checked === true);
+              }}
+            />
+          ),
+          name: (
+            <PMLink asChild>
+              <Link to={routes.space.toPackage(orgSlug, spaceSlug, pkg.id)}>
+                {pkg.name}
+              </Link>
+            </PMLink>
+          ),
+          artifacts: (
+            <PMTooltip label={tooltipContent} placement="top">
+              <PMBox as="span">{totalCount}</PMBox>
+            </PMTooltip>
+          ),
+        };
+      }),
     );
   }, [packagesResponse, orgSlug, spaceSlug, selectedPackageIds]);
 
@@ -163,9 +202,7 @@ export const PackagesPage: React.FC<PackagesPageProps> = ({
       align: 'center',
     },
     { key: 'name', header: 'Name', grow: true },
-    { key: 'recipes', header: 'Recipes', width: '100px', align: 'center' },
-    { key: 'standards', header: 'Standards', width: '100px', align: 'center' },
-    { key: 'skills', header: 'Skills', width: '100px', align: 'center' },
+    { key: 'artifacts', header: 'Artifacts', width: '100px', align: 'center' },
   ];
 
   const isLoading = isLoadingSpace || isLoadingPackages;

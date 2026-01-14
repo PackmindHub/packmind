@@ -8,13 +8,17 @@ import {
 } from '../../src/domain/spaces/api/queries/SpacesQueries';
 import { getStandardsBySpaceQueryOptions } from '../../src/domain/standards/api/queries/StandardsQueries';
 import { pmToaster } from '@packmind/ui';
+import { MeResponse } from '../../src/domain/accounts/api/gateways/IAuthGateway';
 
 export async function clientLoader({ params }: LoaderFunctionArgs) {
   // User is already authenticated (checked by parent _protected route)
-  // Use ensureQueryData to reuse cached data from parent loader
-  const me = await queryClient.ensureQueryData(getMeQueryOptions());
+  // Get cached data without blocking - parent layout ensures this is loaded
+  const me = queryClient.getQueryData(getMeQueryOptions().queryKey) as
+    | MeResponse
+    | undefined;
 
-  if (!me.organization) {
+  if (!me?.organization) {
+    // If somehow not in cache, redirect to sign-in
     throw redirect('/sign-in');
   }
 
@@ -79,6 +83,9 @@ export async function clientLoader({ params }: LoaderFunctionArgs) {
       });
       throw redirect(`/org/${params.orgSlug}`);
     }
+
+    // If we reach here, redirect to org page as final fallback
+    throw redirect(`/org/${params.orgSlug}`);
   }
 }
 
