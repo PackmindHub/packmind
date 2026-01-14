@@ -14,6 +14,7 @@ import {
   LinterCalledEvent,
   SkillCreatedEvent,
   SkillUpdatedEvent,
+  RuleUpdatedEvent,
 } from '@packmind/types';
 import { EventTrackingAdapter } from './EventTrackingAdapter';
 
@@ -29,6 +30,7 @@ export class AmplitudeEventListener extends PackmindListener<EventTrackingAdapte
     this.subscribe(StandardUpdatedEvent, this.onStandardUpdated);
     this.subscribe(StandardDeletedEvent, this.onStandardDeleted);
     this.subscribe(RuleAddedEvent, this.onRuleAdded);
+    this.subscribe(RuleUpdatedEvent, this.onRuleUpdated);
     this.subscribe(CommandCreatedEvent, this.onCommandCreated);
     this.subscribe(CommandUpdatedEvent, this.onCommandUpdated);
     this.subscribe(CommandDeletedEvent, this.onCommandDeleted);
@@ -87,6 +89,21 @@ export class AmplitudeEventListener extends PackmindListener<EventTrackingAdapte
       newVersion,
     } = event.payload;
     await this.adapter.trackEvent(userId, organizationId, 'rule_added', {
+      standardId,
+      standardVersionId,
+      newVersion,
+    });
+  };
+
+  private onRuleUpdated = async (event: RuleUpdatedEvent): Promise<void> => {
+    const {
+      userId,
+      organizationId,
+      standardId,
+      standardVersionId,
+      newVersion,
+    } = event.payload;
+    await this.adapter.trackEvent(userId, organizationId, 'rule_updated', {
       standardId,
       standardVersionId,
       newVersion,
