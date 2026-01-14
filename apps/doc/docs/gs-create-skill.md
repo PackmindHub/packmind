@@ -31,6 +31,16 @@ packmind-cli skills add ./my-skill
 
 The CLI will upload the skill to your Packmind organization and display a confirmation.
 
+### Uploading Multiple Skills at Once
+
+If you have a collection of skills organized in subdirectories (e.g., `.claude/skills/*/`), you can upload them all with a single command:
+
+```bash
+for dir in '.claude/skills/*/'; do packmind-cli skills add "$dir"; done
+```
+
+This iterates through all skill folders and uploads each one to Packmind.
+
 ## View Your Skill
 
 After uploading, your skill appears in the Packmind web app:
