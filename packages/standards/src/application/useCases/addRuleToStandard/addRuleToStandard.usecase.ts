@@ -189,6 +189,7 @@ export class AddRuleToStandardUsecase {
           organizationId,
           userId,
           newVersion: nextVersion,
+          source: 'ui',
         }),
       );
 

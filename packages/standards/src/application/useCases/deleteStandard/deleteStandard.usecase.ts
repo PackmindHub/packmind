@@ -39,6 +39,7 @@ export class DeleteStandardUsecase {
         spaceId: standard.spaceId,
         organizationId,
         userId,
+        source: 'ui',
       });
       this.eventEmitterService.emit(event);
       this.logger.info('StandardDeletedEvent emitted', {

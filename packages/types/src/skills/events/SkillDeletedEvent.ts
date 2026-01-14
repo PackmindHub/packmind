@@ -5,7 +5,6 @@ import { SkillId } from '../SkillId';
 export interface SkillDeletedPayload {
   skillId: SkillId;
   spaceId: SpaceId;
-  source: 'ui' | 'mcp';
 }
 
 export class SkillDeletedEvent extends UserEvent<SkillDeletedPayload> {

@@ -154,6 +154,7 @@ describe('ActivateUserAccountUseCase', () => {
             userId: mockUserId,
             organizationId: mockOrganizationId,
             email: 'test@example.com',
+            source: 'ui',
           },
         }),
       );

@@ -78,6 +78,7 @@ export class StartTrialUseCase implements IStartTrial {
           userId: createUserId(user.id),
           organizationId: organization.id,
           email,
+          source: 'ui',
         }),
       );
 
@@ -88,6 +89,7 @@ export class StartTrialUseCase implements IStartTrial {
           organizationId: organization.id,
           agent: command.agent,
           startedAt: new Date(),
+          source: 'ui',
         }),
       );
 

@@ -88,6 +88,7 @@ export class CreateRuleExampleUsecase
           newVersion: standardVersion.version,
           organizationId: createOrganizationId(organizationId),
           userId: createUserId(userId),
+          source: 'ui',
         }),
       );
     }
