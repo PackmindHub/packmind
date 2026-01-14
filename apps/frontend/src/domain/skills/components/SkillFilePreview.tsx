@@ -80,6 +80,8 @@ export const SkillFilePreview = ({ file }: ISkillFilePreviewProps) => {
   const renderNonPreviewableContent = () => (
     <PMEmptyState
       title="Preview unavailable"
+      backgroundColor={'background.primary'}
+      borderRadius={'md'}
       description={`Files of type ".${file.path.split('.').pop()}" cannot be previewed`}
     >
       <PMButton onClick={handleDownload}>Download file</PMButton>
