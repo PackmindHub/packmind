@@ -156,11 +156,13 @@ export class PublishPackagesUseCase implements IPublishPackages {
     // Collect unique version IDs for publishing
     const recipeVersionIds = Array.from(recipeVersionCache.values());
     const standardVersionIds = Array.from(standardVersionCache.values());
+    const skillVersionIds = Array.from(skillVersionCache.values());
 
     this.logger.info('Resolved package contents', {
       packagesCount: packages.length,
       recipeVersionsCount: recipeVersionIds.length,
       standardVersionsCount: standardVersionIds.length,
+      skillVersionsCount: skillVersionIds.length,
     });
 
     // Extract package slugs
@@ -172,6 +174,7 @@ export class PublishPackagesUseCase implements IPublishPackages {
       organizationId: command.organizationId,
       recipeVersionIds,
       standardVersionIds,
+      skillVersionIds,
       targetIds: command.targetIds,
       packagesSlugs,
       packageIds: command.packageIds,
