@@ -4,7 +4,7 @@
 
 # Artefact Usage Logging
 
-After reading `CLAUDE.md`, `.claude/rules/**`, `.claude/skills/**`, `.skills/commands/**`, `.claude/agents/**` files, or invoking Skills/Task agents, append to `.claude/artefacts.yaml`:
+After reading `CLAUDE.md`, `.claude/rules/**`, `.claude/skills/**`, `.skills/commands/**`, `.claude/agents/**` files, or invoking Skills, append to `.claude/artefacts.yaml`:
 
 ```yaml
 - name: <filename or skill/agent name>
@@ -12,6 +12,8 @@ After reading `CLAUDE.md`, `.claude/rules/**`, `.claude/skills/**`, `.skills/com
   type: claude_md | rule | skill | command | agent
   date: <ISO 8601 timestamp>
 ```
+
+**Do NOT log internal Task tool agents** (Explore, Plan, Bash, general-purpose, etc.) - only log custom agents defined in `.claude/agents/**`.
 
 Create if missing. Log each access. Best effort tracking.
 

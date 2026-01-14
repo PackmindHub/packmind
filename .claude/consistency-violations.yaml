@@ -33,3 +33,104 @@
   tags:
     - 'example'
     - 'skill-documentation'
+
+- timestamp: 2026-01-14T21:35:00Z
+  category: 'architecture'
+  description: 'Use case base class patterns vary across packages - some extend AbstractMemberUseCase/AbstractAdminUseCase, some implement interfaces directly, some have no base class at all'
+  examples:
+    - file: packages/standards/src/application/useCases/listStandardsBySpace/listStandardsBySpace.usecase.ts
+      pattern: 'Extends AbstractMemberUseCase for role-based authorization'
+      context: 'Most use cases in standards package follow this pattern for authenticated operations'
+    - file: packages/llm/src/application/useCases/getLLMConfiguration/getLLMConfiguration.usecase.ts
+      pattern: 'Implements IGetLLMConfigurationUseCase interface directly'
+      context: 'Some use cases implement interface without base class'
+    - file: packages/standards/src/application/useCases/getRulesByStandardId/getRulesByStandardId.usecase.ts
+      pattern: 'No base class or interface - plain class'
+      context: 'Public/unauthenticated use cases in standards package have no base class'
+    - file: packages/standards/src/application/useCases/findStandardBySlug/findStandardBySlug.usecase.ts
+      pattern: 'No base class or interface - plain class'
+      context: 'Another public use case with no inheritance or interface implementation'
+  impact: 'high'
+  scope: 'global'
+  recommendation: 'Establish clear guidelines: (1) Use AbstractMemberUseCase/AbstractAdminUseCase for authenticated operations requiring authorization, (2) Use plain classes for public/unauthenticated operations, (3) Define when interface implementation is required'
+  related_standard: null
+  tags:
+    - 'use-cases'
+    - 'architecture'
+    - 'authentication'
+    - 'authorization'
+    - 'hexagonal-architecture'
+
+- timestamp: 2026-01-14T21:35:00Z
+  category: 'naming'
+  description: 'Execute method naming is inconsistent across use cases - executeForMembers, executeForAdmins, execute, or custom public method names'
+  examples:
+    - file: packages/standards/src/application/useCases/listStandardsBySpace/listStandardsBySpace.usecase.ts
+      pattern: 'Uses executeForMembers() method'
+      context: 'Use cases extending AbstractMemberUseCase implement this method'
+    - file: packages/llm/src/application/useCases/saveLLMConfiguration/saveLLMConfiguration.usecase.ts
+      pattern: 'Uses executeForAdmins() method'
+      context: 'Use cases extending AbstractAdminUseCase implement this method'
+    - file: packages/llm/src/application/useCases/getLLMConfiguration/getLLMConfiguration.usecase.ts
+      pattern: 'Uses execute() method'
+      context: 'Use cases implementing interfaces directly use standard execute()'
+    - file: packages/standards/src/application/useCases/getRulesByStandardId/getRulesByStandardId.usecase.ts
+      pattern: 'Uses custom public method getRulesByStandardId()'
+      context: 'Public use cases define custom method names matching their domain operation'
+  impact: 'medium'
+  scope: 'global'
+  recommendation: 'Document the pattern: (1) executeForMembers/executeForAdmins for role-based use cases, (2) execute() for interface-based use cases, (3) domain-specific method names for public use cases without base class'
+  related_standard: null
+  tags:
+    - 'use-cases'
+    - 'naming-conventions'
+    - 'method-naming'
+
+- timestamp: 2026-01-14T21:35:00Z
+  category: 'patterns'
+  description: 'Command/Response pattern usage is inconsistent - some use cases use typed Command objects, others take plain parameters'
+  examples:
+    - file: packages/llm/src/application/useCases/saveLLMConfiguration/saveLLMConfiguration.usecase.ts
+      pattern: 'Uses SaveLLMConfigurationCommand with SaveLLMConfigurationResponse'
+      context: 'Role-based use cases follow Command/Response pattern with typed objects'
+    - file: packages/standards/src/application/useCases/listStandardsBySpace/listStandardsBySpace.usecase.ts
+      pattern: 'Uses ListStandardsBySpaceCommand with typed response'
+      context: 'AbstractMemberUseCase-based use cases use Command pattern'
+    - file: packages/standards/src/application/useCases/findStandardBySlug/findStandardBySlug.usecase.ts
+      pattern: 'Takes plain parameters: findStandardBySlug(slug: string, organizationId: OrganizationId)'
+      context: 'Public use cases pass parameters directly without Command object'
+    - file: packages/standards/src/application/useCases/deleteStandardsBatch/deleteStandardsBatch.usecase.ts
+      pattern: 'Takes plain parameters: deleteStandardsBatch(standardIds, userId, organizationId)'
+      context: 'Another public use case with plain parameters'
+  impact: 'medium'
+  scope: 'global'
+  recommendation: 'Use Command/Response pattern for complex operations with multiple parameters or when type safety is critical. Use plain parameters for simple public operations with 1-3 parameters. Consider creating a standard for when to use each approach.'
+  related_standard: null
+  tags:
+    - 'use-cases'
+    - 'command-pattern'
+    - 'cqrs'
+    - 'type-safety'
+
+- timestamp: 2026-01-14T21:35:00Z
+  category: 'error-handling'
+  description: 'Error handling approaches differ between packages - LLM uses detailed error classification with graceful responses, Standards uses simple throw with logging'
+  examples:
+    - file: packages/llm/src/application/useCases/testLLMConnection/testLLMConnection.usecase.ts
+      pattern: 'Uses classifyErrorType() and extractStatusCode() functions for detailed error classification, returns error objects in response'
+      context: 'LLM package handles errors gracefully with classified error types (rate_limit, invalid_credentials, etc.)'
+    - file: packages/standards/src/application/useCases/createStandard/createStandard.usecase.ts
+      pattern: 'Simple throw with logging: this.logger.error(...); throw error;'
+      context: 'Standards package typically logs and rethrows exceptions'
+    - file: packages/standards/src/application/useCases/updateRuleExample/updateRuleExample.usecase.ts
+      pattern: 'Direct throws for validation: if (!ruleExample) throw new Error(...)'
+      context: 'Standards package throws exceptions for domain validation errors'
+  impact: 'medium'
+  scope: 'module'
+  recommendation: 'Document error handling strategy: (1) Use graceful error responses (Result pattern) for external integrations where failures are expected (LLM API calls), (2) Use exceptions for internal domain validation and unexpected errors, (3) Always log errors with context before throwing'
+  related_standard: null
+  tags:
+    - 'error-handling'
+    - 'exceptions'
+    - 'result-pattern'
+    - 'logging'
