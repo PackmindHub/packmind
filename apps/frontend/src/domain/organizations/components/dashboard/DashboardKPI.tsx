@@ -47,7 +47,7 @@ export const DashboardKPI = () => {
         minW={0}
       >
         <PMStat.Root>
-          <PMStat.Label>Active standards</PMStat.Label>
+          <PMStat.Label>Standards distributed</PMStat.Label>
           <PMStat.ValueText>{activeStandards}</PMStat.ValueText>
         </PMStat.Root>
       </PMBox>
@@ -60,7 +60,7 @@ export const DashboardKPI = () => {
         minW={0}
       >
         <PMStat.Root>
-          <PMStat.Label>Active commands</PMStat.Label>
+          <PMStat.Label>Commands distributed</PMStat.Label>
           <PMStat.ValueText>{activeRecipes}</PMStat.ValueText>
         </PMStat.Root>
       </PMBox>
@@ -74,7 +74,7 @@ export const DashboardKPI = () => {
           minW={0}
         >
           <PMStat.Root>
-            <PMStat.Label>Active skills</PMStat.Label>
+            <PMStat.Label>Skills distributed</PMStat.Label>
             <PMStat.ValueText>{activeSkills}</PMStat.ValueText>
           </PMStat.Root>
         </PMBox>
