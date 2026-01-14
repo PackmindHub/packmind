@@ -38,3 +38,7 @@
   path: consistency-violation-capture
   type: skill
   date: 2026-01-14T21:35:00Z
+- name: standard-domain-events.md
+  path: .claude/rules/packmind/standard-domain-events.md
+  type: rule
+  date: 2026-01-14T22:00:00Z

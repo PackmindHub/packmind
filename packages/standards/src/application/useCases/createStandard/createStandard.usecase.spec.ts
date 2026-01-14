@@ -3,6 +3,8 @@ import { PackmindEventEmitterService } from '@packmind/node-utils';
 import { stubLogger } from '@packmind/test-utils';
 import {
   CreateStandardCommand,
+  RuleAddedEvent,
+  StandardCreatedEvent,
   createOrganizationId,
   createSpaceId,
   createUserId,
@@ -11,8 +13,11 @@ import slug from 'slug';
 import { v4 as uuidv4 } from 'uuid';
 import { standardFactory } from '../../../../test/standardFactory';
 import { standardVersionFactory } from '../../../../test/standardVersionFactory';
+import { ruleFactory } from '../../../../test/ruleFactory';
 import { Standard, createStandardId } from '@packmind/types';
 import { StandardVersion, createStandardVersionId } from '@packmind/types';
+import { Rule } from '@packmind/types';
+import { IRuleRepository } from '../../../domain/repositories/IRuleRepository';
 import { GenerateStandardSummaryDelayedJob } from '../../jobs/GenerateStandardSummaryDelayedJob';
 import { StandardService } from '../../services/StandardService';
 import { StandardVersionService } from '../../services/StandardVersionService';
@@ -29,6 +34,7 @@ describe('CreateStandardUsecase', () => {
   let standardVersionService: jest.Mocked<StandardVersionService>;
   let generateStandardSummaryDelayedJob: jest.Mocked<GenerateStandardSummaryDelayedJob>;
   let eventEmitterService: jest.Mocked<PackmindEventEmitterService>;
+  let ruleRepository: jest.Mocked<IRuleRepository>;
   let stubbedLogger: jest.Mocked<PackmindLogger>;
 
   beforeEach(() => {
@@ -68,16 +74,26 @@ describe('CreateStandardUsecase', () => {
       emit: jest.fn().mockReturnValue(true),
     } as unknown as jest.Mocked<PackmindEventEmitterService>;
 
+    ruleRepository = {
+      add: jest.fn(),
+      findById: jest.fn(),
+      findByStandardVersionId: jest.fn(),
+      updateById: jest.fn(),
+      deleteById: jest.fn(),
+    } as unknown as jest.Mocked<IRuleRepository>;
+
     stubbedLogger = stubLogger();
     generateStandardSummaryDelayedJob.addJob.mockResolvedValue('job-id-123');
 
     standardService.listStandardsBySpace.mockResolvedValue([]);
+    ruleRepository.findByStandardVersionId.mockResolvedValue([]);
 
     createStandardUsecase = new CreateStandardUsecase(
       standardService,
       standardVersionService,
       generateStandardSummaryDelayedJob,
       eventEmitterService,
+      ruleRepository,
       stubbedLogger,
     );
   });
@@ -580,12 +596,154 @@ describe('CreateStandardUsecase', () => {
       });
     });
 
+    describe('event emission', () => {
+      describe('when standard is created with rules', () => {
+        let inputData: CreateStandardCommand;
+        let createdStandard: Standard;
+        let createdStandardVersion: StandardVersion;
+        let createdRules: Rule[];
+
+        beforeEach(async () => {
+          inputData = {
+            name: 'Test Standard',
+            description: 'Test description',
+            rules: [{ content: 'Rule 1' }, { content: 'Rule 2' }],
+            organizationId: createOrganizationId(uuidv4()).toString(),
+            userId: createUserId(uuidv4()).toString(),
+            spaceId: createSpaceId(uuidv4()).toString(),
+            scope: null,
+          };
+
+          createdStandard = standardFactory({
+            id: createStandardId(uuidv4()),
+            name: inputData.name,
+          });
+
+          createdStandardVersion = standardVersionFactory({
+            id: createStandardVersionId(uuidv4()),
+            standardId: createdStandard.id,
+            version: 1,
+          });
+
+          createdRules = [
+            ruleFactory({
+              id: uuidv4(),
+              standardVersionId: createdStandardVersion.id,
+            }),
+            ruleFactory({
+              id: uuidv4(),
+              standardVersionId: createdStandardVersion.id,
+            }),
+          ];
+
+          standardService.addStandard.mockResolvedValue(createdStandard);
+          standardVersionService.addStandardVersion.mockResolvedValue(
+            createdStandardVersion,
+          );
+          ruleRepository.findByStandardVersionId.mockResolvedValue(
+            createdRules,
+          );
+
+          await createStandardUsecase.execute(inputData);
+        });
+
+        it('emits correct number of events', () => {
+          expect(eventEmitterService.emit).toHaveBeenCalledTimes(3);
+        });
+
+        it('emits StandardCreatedEvent as first event', () => {
+          const firstCall = eventEmitterService.emit.mock.calls[0][0];
+          expect(firstCall).toBeInstanceOf(StandardCreatedEvent);
+        });
+
+        it('emits RuleAddedEvent for each rule', () => {
+          const secondCall = eventEmitterService.emit.mock.calls[1][0];
+          expect(secondCall).toBeInstanceOf(RuleAddedEvent);
+        });
+      });
+
+      describe('when querying rules repository', () => {
+        let inputData: CreateStandardCommand;
+        let createdStandardVersion: StandardVersion;
+
+        beforeEach(async () => {
+          inputData = {
+            name: 'Test Standard',
+            description: 'Test description',
+            rules: [{ content: 'Rule 1' }],
+            organizationId: createOrganizationId(uuidv4()).toString(),
+            userId: createUserId(uuidv4()).toString(),
+            spaceId: createSpaceId(uuidv4()).toString(),
+            scope: null,
+          };
+
+          const createdStandard = standardFactory();
+          createdStandardVersion = standardVersionFactory({
+            id: createStandardVersionId(uuidv4()),
+          });
+
+          standardService.addStandard.mockResolvedValue(createdStandard);
+          standardVersionService.addStandardVersion.mockResolvedValue(
+            createdStandardVersion,
+          );
+          ruleRepository.findByStandardVersionId.mockResolvedValue([
+            ruleFactory({ standardVersionId: createdStandardVersion.id }),
+          ]);
+
+          await createStandardUsecase.execute(inputData);
+        });
+
+        it('calls findByStandardVersionId with correct standardVersionId', () => {
+          expect(ruleRepository.findByStandardVersionId).toHaveBeenCalledWith(
+            createStandardVersionId(createdStandardVersion.id),
+          );
+        });
+      });
+
+      describe('when standard is created without rules', () => {
+        let inputData: CreateStandardCommand;
+
+        beforeEach(async () => {
+          inputData = {
+            name: 'Test Standard',
+            description: 'Test description',
+            rules: [],
+            organizationId: createOrganizationId(uuidv4()).toString(),
+            userId: createUserId(uuidv4()).toString(),
+            spaceId: createSpaceId(uuidv4()).toString(),
+            scope: null,
+          };
+
+          const createdStandard = standardFactory();
+          const createdStandardVersion = standardVersionFactory();
+
+          standardService.addStandard.mockResolvedValue(createdStandard);
+          standardVersionService.addStandardVersion.mockResolvedValue(
+            createdStandardVersion,
+          );
+          ruleRepository.findByStandardVersionId.mockResolvedValue([]);
+
+          await createStandardUsecase.execute(inputData);
+        });
+
+        it('emits only one event', () => {
+          expect(eventEmitterService.emit).toHaveBeenCalledTimes(1);
+        });
+
+        it('emits StandardCreatedEvent', () => {
+          const firstCall = eventEmitterService.emit.mock.calls[0][0];
+          expect(firstCall).toBeInstanceOf(StandardCreatedEvent);
+        });
+      });
+    });
+
     describe('slug uniqueness', () => {
       let createStandardUsecase: CreateStandardUsecase;
       let standardService: jest.Mocked<StandardService>;
       let standardVersionService: jest.Mocked<StandardVersionService>;
       let generateStandardSummaryDelayedJob: jest.Mocked<GenerateStandardSummaryDelayedJob>;
       let eventEmitterService: jest.Mocked<PackmindEventEmitterService>;
+      let ruleRepository: jest.Mocked<IRuleRepository>;
       let stubbedLogger: jest.Mocked<PackmindLogger>;
 
       beforeEach(() => {
@@ -628,11 +786,20 @@ describe('CreateStandardUsecase', () => {
           emit: jest.fn().mockReturnValue(true),
         } as unknown as jest.Mocked<PackmindEventEmitterService>;
 
+        ruleRepository = {
+          add: jest.fn(),
+          findById: jest.fn(),
+          findByStandardVersionId: jest.fn().mockResolvedValue([]),
+          updateById: jest.fn(),
+          deleteById: jest.fn(),
+        } as unknown as jest.Mocked<IRuleRepository>;
+
         createStandardUsecase = new CreateStandardUsecase(
           standardService,
           standardVersionService,
           generateStandardSummaryDelayedJob,
           eventEmitterService,
+          ruleRepository,
           stubbedLogger,
         );
       });

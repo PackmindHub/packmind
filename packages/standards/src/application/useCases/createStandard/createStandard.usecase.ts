@@ -5,15 +5,21 @@ import {
   CreateStandardResponse,
   ICreateStandardUseCase,
   OrganizationId,
+  PackmindEventSource,
+  RuleAddedEvent,
   StandardCreatedEvent,
+  StandardId,
   StandardVersion,
+  StandardVersionId,
   UserId,
   createOrganizationId,
   createSpaceId,
   createStandardId,
+  createStandardVersionId,
   createUserId,
 } from '@packmind/types';
 import slug from 'slug';
+import { IRuleRepository } from '../../../domain/repositories/IRuleRepository';
 import { GenerateStandardSummaryDelayedJob } from '../../jobs/GenerateStandardSummaryDelayedJob';
 import { StandardService } from '../../services/StandardService';
 import {
@@ -29,6 +35,7 @@ export class CreateStandardUsecase implements ICreateStandardUseCase {
     private readonly standardVersionService: StandardVersionService,
     private readonly generateStandardSummaryDelayedJob: GenerateStandardSummaryDelayedJob,
     private readonly eventEmitterService: PackmindEventEmitterService,
+    private readonly ruleRepository: IRuleRepository,
     private readonly logger: PackmindLogger = new PackmindLogger(
       origin,
       LogLevel.DEBUG,
@@ -161,6 +168,15 @@ export class CreateStandardUsecase implements ICreateStandardUseCase {
         }),
       );
 
+      await this.emitRuleAddedEventsForRules(
+        createStandardId(standard.id),
+        createStandardVersionId(standardVersion.id),
+        initialVersion,
+        organizationId,
+        userId,
+        'ui',
+      );
+
       return standard;
     } catch (error) {
       this.logger.error('Failed to create standard', {
@@ -185,6 +201,51 @@ export class CreateStandardUsecase implements ICreateStandardUseCase {
       organizationId,
       standardVersion,
       rules: rules.map((r) => ({ content: r.content, examples: [] })),
+    });
+  }
+
+  private async emitRuleAddedEventsForRules(
+    standardId: StandardId,
+    standardVersionId: StandardVersionId,
+    version: number,
+    organizationId: OrganizationId,
+    userId: UserId,
+    source: PackmindEventSource,
+  ): Promise<void> {
+    this.logger.info('Querying created rules to emit RuleAddedEvents', {
+      standardVersionId,
+      standardId,
+    });
+
+    const createdRules =
+      await this.ruleRepository.findByStandardVersionId(standardVersionId);
+
+    if (createdRules.length === 0) {
+      this.logger.debug('No rules to emit events for', { standardId });
+      return;
+    }
+
+    this.logger.info('Emitting RuleAddedEvent for each created rule', {
+      rulesCount: createdRules.length,
+      standardId,
+    });
+
+    createdRules.forEach(() => {
+      this.eventEmitterService.emit(
+        new RuleAddedEvent({
+          standardId,
+          standardVersionId,
+          organizationId,
+          userId,
+          newVersion: version,
+          source,
+        }),
+      );
+    });
+
+    this.logger.info('RuleAddedEvents emitted successfully', {
+      count: createdRules.length,
+      standardId,
     });
   }
 }

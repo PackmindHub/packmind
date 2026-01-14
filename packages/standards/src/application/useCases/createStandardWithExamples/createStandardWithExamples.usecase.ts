@@ -5,7 +5,7 @@ import {
 } from '../../services/StandardVersionService';
 import { StandardSummaryService } from '../../services/StandardSummaryService';
 import { Standard } from '@packmind/types';
-import { StandardVersionId } from '@packmind/types';
+import { StandardId, StandardVersionId } from '@packmind/types';
 import { createRuleId, RuleId } from '@packmind/types';
 import { RuleExample, createRuleExampleId } from '@packmind/types';
 import { IRuleExampleRepository } from '../../../domain/repositories/IRuleExampleRepository';
@@ -18,8 +18,17 @@ import {
 } from '@packmind/node-utils';
 import { RuleWithExamples, AiNotConfigured } from '@packmind/types';
 import { OrganizationId, UserId } from '@packmind/types';
-import { SpaceId, ProgrammingLanguage } from '@packmind/types';
-import { StandardCreatedEvent, createStandardId } from '@packmind/types';
+import {
+  SpaceId,
+  ProgrammingLanguage,
+  PackmindEventSource,
+} from '@packmind/types';
+import {
+  RuleAddedEvent,
+  StandardCreatedEvent,
+  createStandardId,
+  createStandardVersionId,
+} from '@packmind/types';
 import { v4 as uuidv4 } from 'uuid';
 import type { ILinterPort } from '@packmind/types';
 
@@ -211,6 +220,15 @@ export class CreateStandardWithExamplesUsecase {
           userId,
           source: 'mcp',
         }),
+      );
+
+      await this.emitRuleAddedEventsForRules(
+        createStandardId(standard.id),
+        createStandardVersionId(standardVersion.id),
+        initialVersion,
+        organizationId,
+        userId,
+        'mcp',
       );
 
       this.logger.info(
@@ -491,5 +509,50 @@ export class CreateStandardWithExamplesUsecase {
         error: getErrorMessage(error),
       });
     }
+  }
+
+  private async emitRuleAddedEventsForRules(
+    standardId: StandardId,
+    standardVersionId: StandardVersionId,
+    version: number,
+    organizationId: OrganizationId,
+    userId: UserId,
+    source: PackmindEventSource,
+  ): Promise<void> {
+    this.logger.info('Querying created rules to emit RuleAddedEvents', {
+      standardVersionId,
+      standardId,
+    });
+
+    const createdRules =
+      await this.ruleRepository.findByStandardVersionId(standardVersionId);
+
+    if (createdRules.length === 0) {
+      this.logger.debug('No rules to emit events for', { standardId });
+      return;
+    }
+
+    this.logger.info('Emitting RuleAddedEvent for each created rule', {
+      rulesCount: createdRules.length,
+      standardId,
+    });
+
+    createdRules.forEach(() => {
+      this.eventEmitterService.emit(
+        new RuleAddedEvent({
+          standardId,
+          standardVersionId,
+          organizationId,
+          userId,
+          newVersion: version,
+          source,
+        }),
+      );
+    });
+
+    this.logger.info('RuleAddedEvents emitted successfully', {
+      count: createdRules.length,
+      standardId,
+    });
   }
 }

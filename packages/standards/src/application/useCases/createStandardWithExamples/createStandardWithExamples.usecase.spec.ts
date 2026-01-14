@@ -3,6 +3,8 @@ import { PackmindEventEmitterService } from '@packmind/node-utils';
 import { stubLogger } from '@packmind/test-utils';
 import type { ILinterPort } from '@packmind/types';
 import {
+  RuleAddedEvent,
+  StandardCreatedEvent,
   createOrganizationId,
   createSpaceId,
   createUserId,
@@ -16,6 +18,7 @@ import { standardVersionFactory } from '../../../../test/standardVersionFactory'
 import { createRuleExampleId } from '@packmind/types';
 import { createStandardId } from '@packmind/types';
 import { createStandardVersionId } from '@packmind/types';
+import { Standard, StandardVersion, Rule } from '@packmind/types';
 import { IRuleExampleRepository } from '../../../domain/repositories/IRuleExampleRepository';
 import { IRuleRepository } from '../../../domain/repositories/IRuleRepository';
 import { StandardService } from '../../services/StandardService';
@@ -1205,6 +1208,132 @@ describe('CreateStandardWithExamplesUsecase', () => {
             'Linter adapter not available, skipping detection program validation',
             expect.any(Object),
           );
+        });
+      });
+    });
+
+    describe('event emission', () => {
+      describe('when standard is created with rules', () => {
+        let mockStandard: Standard;
+        let mockStandardVersion: StandardVersion;
+        let mockRules: Rule[];
+
+        beforeEach(async () => {
+          const rules: RuleWithExamples[] = [
+            { content: 'Rule 1' },
+            { content: 'Rule 2' },
+          ];
+
+          mockStandard = standardFactory({
+            id: createStandardId(uuidv4()),
+            name: baseRequest.name,
+          });
+
+          mockStandardVersion = standardVersionFactory({
+            id: createStandardVersionId(uuidv4()),
+            standardId: mockStandard.id,
+            version: 1,
+          });
+
+          mockRules = [
+            ruleFactory({
+              id: uuidv4(),
+              standardVersionId: mockStandardVersion.id,
+            }),
+            ruleFactory({
+              id: uuidv4(),
+              standardVersionId: mockStandardVersion.id,
+            }),
+          ];
+
+          standardService.listStandardsBySpace.mockResolvedValue([]);
+          standardService.addStandard.mockResolvedValue(mockStandard);
+          standardVersionService.addStandardVersion.mockResolvedValue(
+            mockStandardVersion,
+          );
+          ruleRepository.findByStandardVersionId.mockResolvedValue(mockRules);
+
+          await usecase.createStandardWithExamples({
+            ...baseRequest,
+            rules,
+          });
+        });
+
+        it('emits correct number of events', () => {
+          expect(eventEmitterService.emit).toHaveBeenCalledTimes(3);
+        });
+
+        it('emits StandardCreatedEvent as first event', () => {
+          const firstCall = eventEmitterService.emit.mock.calls[0][0];
+          expect(firstCall).toBeInstanceOf(StandardCreatedEvent);
+        });
+
+        it('emits RuleAddedEvent for each rule', () => {
+          const secondCall = eventEmitterService.emit.mock.calls[1][0];
+          expect(secondCall).toBeInstanceOf(RuleAddedEvent);
+        });
+      });
+
+      describe('when querying rules repository', () => {
+        let mockStandardVersion: StandardVersion;
+
+        beforeEach(async () => {
+          const rules: RuleWithExamples[] = [{ content: 'Rule 1' }];
+
+          const mockStandard = standardFactory();
+          mockStandardVersion = standardVersionFactory({
+            id: createStandardVersionId(uuidv4()),
+          });
+
+          standardService.listStandardsBySpace.mockResolvedValue([]);
+          standardService.addStandard.mockResolvedValue(mockStandard);
+          standardVersionService.addStandardVersion.mockResolvedValue(
+            mockStandardVersion,
+          );
+          ruleRepository.findByStandardVersionId.mockResolvedValue([
+            ruleFactory({ standardVersionId: mockStandardVersion.id }),
+          ]);
+
+          await usecase.createStandardWithExamples({
+            ...baseRequest,
+            rules,
+          });
+        });
+
+        it('calls findByStandardVersionId with correct standardVersionId', () => {
+          expect(ruleRepository.findByStandardVersionId).toHaveBeenCalledWith(
+            createStandardVersionId(mockStandardVersion.id),
+          );
+        });
+      });
+
+      describe('when standard is created without rules', () => {
+        beforeEach(async () => {
+          const rules: RuleWithExamples[] = [];
+
+          const mockStandard = standardFactory();
+          const mockStandardVersion = standardVersionFactory();
+
+          standardService.listStandardsBySpace.mockResolvedValue([]);
+          standardService.addStandard.mockResolvedValue(mockStandard);
+          standardVersionService.addStandardVersion.mockResolvedValue(
+            mockStandardVersion,
+          );
+          ruleRepository.findByStandardVersionId.mockResolvedValue([]);
+
+          await usecase.createStandardWithExamples({
+            ...baseRequest,
+            rules,
+          });
+        });
+
+        it('emits only one event', () => {
+          expect(eventEmitterService.emit).toHaveBeenCalledTimes(1);
+        });
+
+        it('emits StandardCreatedEvent', () => {
+          const firstCall = eventEmitterService.emit.mock.calls[0][0];
+          expect(firstCall).toBeInstanceOf(StandardCreatedEvent);
         });
       });
     });
