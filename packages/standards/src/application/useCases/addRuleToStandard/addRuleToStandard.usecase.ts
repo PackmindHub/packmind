@@ -3,12 +3,16 @@ import { StandardVersionService } from '../../services/StandardVersionService';
 import { GenerateStandardSummaryDelayedJob } from '../../jobs/GenerateStandardSummaryDelayedJob';
 import { IRuleRepository } from '../../../domain/repositories/IRuleRepository';
 import {
+  createRuleExampleId,
+  createRuleId,
   createStandardId,
   createStandardVersionId,
   RuleAddedEvent,
   RuleExample,
+  RuleExampleInput,
   StandardVersion,
 } from '@packmind/types';
+import { v4 as uuidv4 } from 'uuid';
 import { CreateStandardVersionData } from '../../services/StandardVersionService';
 import { LogLevel, PackmindLogger } from '@packmind/logger';
 import { PackmindEventEmitterService } from '@packmind/node-utils';
@@ -23,6 +27,7 @@ export type AddRuleToStandardRequest = {
   ruleContent: string;
   organizationId: OrganizationId;
   userId: UserId;
+  examples?: RuleExampleInput[];
 };
 
 export class AddRuleToStandardUsecase {
@@ -47,6 +52,7 @@ export class AddRuleToStandardUsecase {
     ruleContent,
     organizationId,
     userId,
+    examples,
   }: AddRuleToStandardRequest): Promise<StandardVersion> {
     // Normalize the slug to lowercase for consistent lookup
     const normalizedSlug = standardSlug.toLowerCase();
@@ -122,8 +128,9 @@ export class AddRuleToStandardUsecase {
         allRules.push({ content: rule.content, examples: examples || [] });
       }
 
-      //Push new rule to allRules
-      allRules.push({ content: ruleContent, examples: [] });
+      // Push new rule with processed examples to allRules
+      const processedExamples = this.processExamples(examples || []);
+      allRules.push({ content: ruleContent, examples: processedExamples });
 
       this.logger.debug('Prepared rules for new version', {
         existingRulesCount: existingRules.length,
@@ -242,5 +249,28 @@ export class AddRuleToStandardUsecase {
         }
       }
     }
+  }
+
+  private processExamples(examples: RuleExampleInput[]): RuleExample[] {
+    const processedExamples: RuleExample[] = [];
+
+    for (const exampleInput of examples) {
+      if (!exampleInput.language) {
+        this.logger.warn('Example missing language, skipping');
+        continue;
+      }
+
+      const ruleExample: RuleExample = {
+        id: createRuleExampleId(uuidv4()),
+        ruleId: createRuleId(uuidv4()), // Temporary ID, replaced by StandardVersionService
+        lang: exampleInput.language,
+        positive: exampleInput.positive || '',
+        negative: exampleInput.negative || '',
+      };
+
+      processedExamples.push(ruleExample);
+    }
+
+    return processedExamples;
   }
 }

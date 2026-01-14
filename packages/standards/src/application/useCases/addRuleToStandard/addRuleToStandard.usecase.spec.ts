@@ -20,6 +20,8 @@ import {
   createOrganizationId,
   createUserId,
   OrganizationId,
+  ProgrammingLanguage,
+  RuleAddedEvent,
   UserId,
 } from '@packmind/types';
 import { createStandardVersionId } from '@packmind/types';
@@ -570,6 +572,182 @@ describe('AddRuleToStandardUsecase', () => {
           expect.objectContaining({
             rules: [
               { content: 'First rule for this standard', examples: [] }, // Only the new rule
+            ],
+          }),
+        );
+      });
+    });
+
+    describe('when adding rule with examples', () => {
+      let inputData: AddRuleToStandardRequest;
+      let existingStandard: Standard;
+      let latestVersion: StandardVersion;
+      let updatedStandard: Standard;
+      let newVersion: StandardVersion;
+
+      beforeEach(async () => {
+        existingStandard = standardFactory({
+          id: createStandardId(uuidv4()),
+          name: 'Frontend Testing Standard',
+          slug: 'frontend-testing',
+          version: 1,
+          userId,
+        });
+
+        latestVersion = standardVersionFactory({
+          id: createStandardVersionId(uuidv4()),
+          standardId: existingStandard.id,
+          version: 1,
+        });
+
+        updatedStandard = standardFactory({
+          id: existingStandard.id,
+          version: 2,
+        });
+
+        newVersion = standardVersionFactory({
+          id: createStandardVersionId(uuidv4()),
+          standardId: existingStandard.id,
+          version: 2,
+        });
+
+        standardService.findStandardBySlug.mockResolvedValue(existingStandard);
+        standardVersionService.getLatestStandardVersion.mockResolvedValue(
+          latestVersion,
+        );
+        ruleRepository.findByStandardVersionId.mockResolvedValue([]);
+        standardService.updateStandard.mockResolvedValue(updatedStandard);
+        standardVersionService.addStandardVersion.mockResolvedValue(newVersion);
+      });
+
+      it('includes examples in the new standard version rules', async () => {
+        inputData = {
+          standardSlug: 'frontend-testing',
+          ruleContent: 'Use descriptive test names',
+          userId,
+          organizationId,
+          examples: [
+            {
+              positive: 'it("calculates total correctly", () => {...})',
+              negative: 'it("test1", () => {...})',
+              language: ProgrammingLanguage.JAVASCRIPT,
+            },
+          ],
+        };
+
+        await addRuleToStandardUsecase.addRuleToStandard(inputData);
+
+        expect(standardVersionService.addStandardVersion).toHaveBeenCalledWith(
+          expect.objectContaining({
+            rules: [
+              expect.objectContaining({
+                content: 'Use descriptive test names',
+                examples: expect.arrayContaining([
+                  expect.objectContaining({
+                    positive: 'it("calculates total correctly", () => {...})',
+                    negative: 'it("test1", () => {...})',
+                    lang: ProgrammingLanguage.JAVASCRIPT,
+                  }),
+                ]),
+              }),
+            ],
+          }),
+        );
+      });
+
+      it('emits only RuleAddedEvent (not RuleUpdatedEvent)', async () => {
+        inputData = {
+          standardSlug: 'frontend-testing',
+          ruleContent: 'Use descriptive test names',
+          userId,
+          organizationId,
+          examples: [
+            {
+              positive: 'it("calculates total correctly", () => {...})',
+              negative: 'it("test1", () => {...})',
+              language: ProgrammingLanguage.JAVASCRIPT,
+            },
+          ],
+        };
+
+        await addRuleToStandardUsecase.addRuleToStandard(inputData);
+
+        expect(eventEmitterService.emit).toHaveBeenCalledTimes(1);
+        expect(eventEmitterService.emit).toHaveBeenCalledWith(
+          expect.any(RuleAddedEvent),
+        );
+      });
+
+      it('skips examples without language', async () => {
+        inputData = {
+          standardSlug: 'frontend-testing',
+          ruleContent: 'Use descriptive test names',
+          userId,
+          organizationId,
+          examples: [
+            {
+              positive: 'valid example',
+              negative: 'invalid example',
+              language: undefined as unknown as ProgrammingLanguage,
+            },
+          ],
+        };
+
+        await addRuleToStandardUsecase.addRuleToStandard(inputData);
+
+        expect(standardVersionService.addStandardVersion).toHaveBeenCalledWith(
+          expect.objectContaining({
+            rules: [
+              expect.objectContaining({
+                content: 'Use descriptive test names',
+                examples: [], // Empty because example was skipped
+              }),
+            ],
+          }),
+        );
+      });
+
+      it('works with empty examples array', async () => {
+        inputData = {
+          standardSlug: 'frontend-testing',
+          ruleContent: 'Use descriptive test names',
+          userId,
+          organizationId,
+          examples: [],
+        };
+
+        await addRuleToStandardUsecase.addRuleToStandard(inputData);
+
+        expect(standardVersionService.addStandardVersion).toHaveBeenCalledWith(
+          expect.objectContaining({
+            rules: [
+              expect.objectContaining({
+                content: 'Use descriptive test names',
+                examples: [],
+              }),
+            ],
+          }),
+        );
+      });
+
+      it('works without examples parameter (backward compatibility)', async () => {
+        inputData = {
+          standardSlug: 'frontend-testing',
+          ruleContent: 'Use descriptive test names',
+          userId,
+          organizationId,
+          // examples not provided
+        };
+
+        await addRuleToStandardUsecase.addRuleToStandard(inputData);
+
+        expect(standardVersionService.addStandardVersion).toHaveBeenCalledWith(
+          expect.objectContaining({
+            rules: [
+              expect.objectContaining({
+                content: 'Use descriptive test names',
+                examples: [],
+              }),
             ],
           }),
         );
