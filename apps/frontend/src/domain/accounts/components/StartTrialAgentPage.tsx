@@ -8,7 +8,11 @@ import {
   PMText,
   PMField,
   PMButton,
+  PMIcon,
+  PMHStack,
+  PMBadge,
 } from '@packmind/ui';
+import { LuLink, LuFileText, LuUsers, LuArrowRight } from 'react-icons/lu';
 import { CopiableTextarea } from '../../../shared/components/inputs';
 import { IAgentConfig } from './McpConfig/types';
 import { MethodContent } from './McpConfig/InstallMethods';
@@ -118,9 +122,30 @@ export const StartTrialAgentPage: React.FC<IStartTrialAgentPageProps> = ({
       </PMBox>
 
       <PMVStack gap={8} align="stretch">
-        <PMBox>
+        <PMBox
+          p={6}
+          borderRadius="lg"
+          borderWidth="1px"
+          borderColor="gray.700"
+          bg="gray.800"
+          transition="all 0.2s"
+          _hover={{ borderColor: 'primary', shadow: 'md' }}
+        >
+          <PMHStack mb={3} gap={3}>
+            <PMBadge
+              size="lg"
+              colorScheme="primary"
+              borderRadius="full"
+              px={3}
+              py={1}
+              fontWeight="bold"
+            >
+              1
+            </PMBadge>
+            <PMIcon as={LuLink} size="xl" color="text.faded" />
+          </PMHStack>
           <PMHeading level="h4" mb={2}>
-            1 - Connect your AI assistant
+            Connect your AI assistant
           </PMHeading>
           <PMText as="p" mb={4} color="secondary">
             Get your agent talking to Packmind in 2 minutes
@@ -130,9 +155,30 @@ export const StartTrialAgentPage: React.FC<IStartTrialAgentPageProps> = ({
           )}
         </PMBox>
 
-        <PMBox>
+        <PMBox
+          p={6}
+          borderRadius="lg"
+          borderWidth="1px"
+          borderColor="gray.700"
+          bg="gray.800"
+          transition="all 0.2s"
+          _hover={{ borderColor: 'primary', shadow: 'md' }}
+        >
+          <PMHStack mb={3} gap={3}>
+            <PMBadge
+              size="lg"
+              colorScheme="gray"
+              borderRadius="full"
+              px={3}
+              py={1}
+              fontWeight="bold"
+            >
+              2
+            </PMBadge>
+            <PMIcon as={LuFileText} size="xl" color="text.faded" />
+          </PMHStack>
           <PMHeading level="h4" mb={2}>
-            2 - Capture your first coding rule
+            Capture your first coding rule
           </PMHeading>
           <PMText as="p" mb={4} color="secondary">
             Turn tribal knowledge into AI-ready instructions
@@ -140,9 +186,30 @@ export const StartTrialAgentPage: React.FC<IStartTrialAgentPageProps> = ({
           <PlaybookContent />
         </PMBox>
 
-        <PMBox>
+        <PMBox
+          p={6}
+          borderRadius="lg"
+          borderWidth="1px"
+          borderColor="gray.700"
+          bg="gray.800"
+          transition="all 0.2s"
+          _hover={{ borderColor: 'primary', shadow: 'md' }}
+        >
+          <PMHStack mb={3} gap={3}>
+            <PMBadge
+              size="lg"
+              colorScheme="gray"
+              borderRadius="full"
+              px={3}
+              py={1}
+              fontWeight="bold"
+            >
+              3
+            </PMBadge>
+            <PMIcon as={LuUsers} size="xl" color="text.faded" />
+          </PMHStack>
           <PMHeading level="h4" mb={2}>
-            3 - Create your account
+            Create your account
           </PMHeading>
           <PMText as="p" mb={4} color="secondary">
             Save your work and share with your team
@@ -152,8 +219,12 @@ export const StartTrialAgentPage: React.FC<IStartTrialAgentPageProps> = ({
             loading={isCreatingAccount}
             disabled={isCreatingAccount}
             data-testid={StartTrialAgentPageDataTestIds.CreateAccountButton}
+            size="lg"
+            width="full"
+            colorScheme="primary"
           >
-            Create an account
+            Create your account
+            <PMIcon as={LuArrowRight} ml={2} />
           </PMButton>
           {accountError && (
             <PMAlert.Root status="error" mt={2}>
