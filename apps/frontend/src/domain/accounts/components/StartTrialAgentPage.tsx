@@ -119,9 +119,12 @@ export const StartTrialAgentPage: React.FC<IStartTrialAgentPageProps> = ({
 
       <PMVStack gap={8} align="stretch">
         <PMBox>
-          <PMHeading level="h4" mb={4}>
-            1 - Connect to Packmind MCP server
+          <PMHeading level="h4" mb={2}>
+            1 - Connect your AI assistant
           </PMHeading>
+          <PMText as="p" mb={4} color="secondary">
+            Get your agent talking to Packmind in 2 minutes
+          </PMText>
           {method && (
             <MethodContent method={method} token={token} url={mcpUrl} />
           )}
@@ -129,21 +132,20 @@ export const StartTrialAgentPage: React.FC<IStartTrialAgentPageProps> = ({
 
         <PMBox>
           <PMHeading level="h4" mb={2}>
-            2 - Create your playbook
+            2 - Capture your first coding rule
           </PMHeading>
           <PMText as="p" mb={4} color="secondary">
-            Create instructions tailored to your project context.
+            Turn tribal knowledge into AI-ready instructions
           </PMText>
           <PlaybookContent />
         </PMBox>
 
         <PMBox>
           <PMHeading level="h4" mb={2}>
-            3 - Work with your teammates
+            3 - Create your account
           </PMHeading>
           <PMText as="p" mb={4} color="secondary">
-            Create your account to collaborate with your team and share your
-            playbooks.
+            Save your work and share with your team
           </PMText>
           <PMButton
             onClick={handleCreateAccount}
