@@ -119,6 +119,9 @@ function isBinaryFile(filePath: string, buffer: Buffer): boolean {
   return isBinaryExtension(filePath) || isBinaryBuffer(buffer);
 }
 
+const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024; // 10 MB
+const MAX_FILE_SIZE_MB = 10;
+
 export async function readSkillDirectory(
   dirPath: string,
 ): Promise<SkillFile[]> {
@@ -134,6 +137,14 @@ export async function readSkillDirectory(
       if (entry.isDirectory()) {
         await readDir(fullPath, basePath);
       } else if (entry.isFile()) {
+        const stat = await fs.stat(fullPath);
+        if (stat.size > MAX_FILE_SIZE_BYTES) {
+          const fileSizeMB = (stat.size / (1024 * 1024)).toFixed(2);
+          throw new Error(
+            `File "${relativePath}" is ${fileSizeMB} MB which exceeds the maximum allowed size of ${MAX_FILE_SIZE_MB} MB per file.`,
+          );
+        }
+
         const buffer = await fs.readFile(fullPath);
         const isBinary = isBinaryFile(fullPath, buffer);
         const normalizedPath = normalizePath(relativePath);

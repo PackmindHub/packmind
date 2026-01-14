@@ -603,4 +603,33 @@ describe('readSkillDirectory', () => {
       });
     });
   });
+
+  describe('when validating file size', () => {
+    it('throws error for files exceeding 10 MB', async () => {
+      await fs.writeFile(path.join(tempDir, 'SKILL.md'), 'content');
+
+      const originalStat = fs.stat;
+      jest.spyOn(fs, 'stat').mockImplementation(async (filePath) => {
+        const realStat = await originalStat(filePath);
+        return {
+          ...realStat,
+          size: 11 * 1024 * 1024, // 11 MB
+        } as Awaited<ReturnType<typeof fs.stat>>;
+      });
+
+      await expect(readSkillDirectory(tempDir)).rejects.toThrow(
+        'File "SKILL.md" is 11.00 MB which exceeds the maximum allowed size of 10 MB per file.',
+      );
+
+      jest.restoreAllMocks();
+    });
+
+    it('accepts files under 10 MB', async () => {
+      await fs.writeFile(path.join(tempDir, 'SKILL.md'), 'small content');
+
+      const files = await readSkillDirectory(tempDir);
+
+      expect(files).toHaveLength(1);
+    });
+  });
 });
