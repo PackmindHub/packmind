@@ -407,6 +407,9 @@ export const useDeployPackagesMutation = () => {
       await queryClient.invalidateQueries({
         queryKey: LIST_STANDARD_DISTRIBUTIONS_KEY,
       });
+      await queryClient.invalidateQueries({
+        queryKey: LIST_SKILL_DISTRIBUTIONS_KEY,
+      });
       // Invalidate package deployments using predicate to match query key structure
       await queryClient.invalidateQueries({
         predicate: (query) =>
@@ -418,6 +421,9 @@ export const useDeployPackagesMutation = () => {
       });
       await queryClient.invalidateQueries({
         queryKey: GET_STANDARDS_DEPLOYMENT_OVERVIEW_KEY,
+      });
+      await queryClient.invalidateQueries({
+        queryKey: GET_SKILLS_DEPLOYMENT_OVERVIEW_KEY,
       });
       await queryClient.invalidateQueries({
         queryKey: [GET_ONBOARDING_STATUS_KEY],
@@ -500,12 +506,15 @@ export const useAddTargetMutation = () => {
         queryKey: GET_TARGETS_BY_ORGANIZATION_KEY,
       });
 
-      // Invalidate all deployment overviews (new target available for both)
+      // Invalidate all deployment overviews (new target available for all)
       await queryClient.invalidateQueries({
         queryKey: GET_RECIPES_DEPLOYMENT_OVERVIEW_KEY,
       });
       await queryClient.invalidateQueries({
         queryKey: GET_STANDARDS_DEPLOYMENT_OVERVIEW_KEY,
+      });
+      await queryClient.invalidateQueries({
+        queryKey: GET_SKILLS_DEPLOYMENT_OVERVIEW_KEY,
       });
 
       pmToaster.create({
@@ -557,6 +566,9 @@ export const useUpdateTargetMutation = () => {
       await queryClient.invalidateQueries({
         queryKey: GET_STANDARDS_DEPLOYMENT_OVERVIEW_KEY,
       });
+      await queryClient.invalidateQueries({
+        queryKey: GET_SKILLS_DEPLOYMENT_OVERVIEW_KEY,
+      });
 
       pmToaster.create({
         type: 'success',
@@ -606,6 +618,9 @@ export const useDeleteTargetMutation = () => {
       });
       await queryClient.invalidateQueries({
         queryKey: GET_STANDARDS_DEPLOYMENT_OVERVIEW_KEY,
+      });
+      await queryClient.invalidateQueries({
+        queryKey: GET_SKILLS_DEPLOYMENT_OVERVIEW_KEY,
       });
 
       pmToaster.create({
@@ -780,6 +795,9 @@ export const useRemovePackageFromTargetsMutation = () => {
       });
       await queryClient.invalidateQueries({
         queryKey: GET_STANDARDS_DEPLOYMENT_OVERVIEW_KEY,
+      });
+      await queryClient.invalidateQueries({
+        queryKey: GET_SKILLS_DEPLOYMENT_OVERVIEW_KEY,
       });
     },
     onError: (error) => {
