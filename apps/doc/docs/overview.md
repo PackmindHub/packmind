@@ -1,16 +1,17 @@
 # Distribution Overview
 
-The Distribution Overview provides a centralized view of where your commands and standards are distributed across your organization's Git repositories and targets.
+The Distribution Overview provides a centralized view of where your commands, standards, and skills are distributed across your organization's Git repositories and targets.
 
 ## What You Can Do
 
 ### View Distributions from Multiple Perspectives
 
-Switch between three views to analyze your distributions:
+Switch between four views to analyze your distributions:
 
-- **Repository View** - See all commands and standards distributed to each Git repository and target
+- **Repository View** - See all commands, standards, and skills distributed to each Git repository and target
 - **Command View** - See where each command is distributed and track version status
 - **Standard View** - See where each standard is distributed and track version status
+- **Skill View** - See where each skill is distributed and track version status
 
 ### Track Version Status
 
@@ -29,4 +30,4 @@ Use filters to focus on what matters:
 - Show only undistributed items
 - Filter by specific targets
 
-Targets represent specific paths within repositories where commands and standards are distributed (e.g., `/`, `/src/frontend/`, `/src/backend/`). Each target can have different versions of commands and standards distributed.
+Targets represent specific paths within repositories where artifacts are distributed (e.g., `/`, `/src/frontend/`, `/src/backend/`). Each target can have different versions of commands, standards, and skills distributed.

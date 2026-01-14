@@ -25,6 +25,7 @@ const sidebars: SidebarsConfig = {
         'gs-install-self-hosted',
         'gs-create-standard',
         'gs-create-command',
+        'gs-create-skill',
         'gs-distribute',
       ],
       collapsed: false,
@@ -35,6 +36,7 @@ const sidebars: SidebarsConfig = {
       items: [
         'standards-management',
         'commands-management',
+        'skills-management',
         'packages-management',
         'artifact-rendering',
       ],
