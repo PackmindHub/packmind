@@ -7,6 +7,7 @@ import {
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import { logWarningConsole } from '../utils/consoleLogger';
+import { normalizePath } from '../../application/utils/pathUtils';
 
 export class ConfigFileRepository {
   private readonly CONFIG_FILENAME = 'packmind.json';
@@ -260,11 +261,14 @@ export class ConfigFileRepository {
     absolutePath: string,
     basePath: string,
   ): string {
-    if (absolutePath === basePath) {
+    const normalizedAbsolute = normalizePath(absolutePath);
+    const normalizedBase = normalizePath(basePath);
+
+    if (normalizedAbsolute === normalizedBase) {
       return '/';
     }
 
-    const relativePath = absolutePath.substring(basePath.length);
+    const relativePath = normalizedAbsolute.substring(normalizedBase.length);
     return relativePath.startsWith('/') ? relativePath : '/' + relativePath;
   }
 }
