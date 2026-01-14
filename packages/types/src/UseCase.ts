@@ -1,12 +1,15 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 // That's pretty ugly, but we need to rely on the any type for infering properly the use case types.
 
+import { PackmindEventSource } from './events';
+
 export type PublicPackmindCommand = object;
 export type PublicEmptyPackmindCommand = Record<string, never>;
 
 export type PackmindCommand = {
   userId: string;
   organizationId: string;
+  source?: PackmindEventSource;
 };
 
 export type SystemPackmindCommand = {
