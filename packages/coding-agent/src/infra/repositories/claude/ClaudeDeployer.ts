@@ -221,6 +221,7 @@ ${recipeVersion.content}`;
         fileUpdates.createOrUpdate.push({
           path: targetPrefixedPath,
           content: file.content,
+          isBase64: file.isBase64,
         });
       }
     }
@@ -247,6 +248,7 @@ ${recipeVersion.content}`;
         fileUpdates.createOrUpdate.push({
           path: file.path,
           content: file.content,
+          isBase64: file.isBase64,
         });
       }
     }
@@ -299,6 +301,7 @@ ${recipeVersion.content}`;
         fileUpdates.createOrUpdate.push({
           path: file.path,
           content: file.content,
+          isBase64: file.isBase64,
         });
       }
     }
@@ -504,6 +507,7 @@ ${instructionContent}`;
   private generateClaudeSkillFiles(skillVersion: SkillVersion): Array<{
     path: string;
     content: string;
+    isBase64?: boolean;
   }> {
     this.logger.debug('Generating Claude skill files', {
       skillSlug: skillVersion.slug,
@@ -511,7 +515,8 @@ ${instructionContent}`;
       fileCount: (skillVersion.files?.length ?? 0) + 1,
     });
 
-    const files: Array<{ path: string; content: string }> = [];
+    const files: Array<{ path: string; content: string; isBase64?: boolean }> =
+      [];
 
     // Generate SKILL.md (main skill file)
     const skillMdContent = this.generateSkillMdContent(skillVersion);
@@ -530,6 +535,7 @@ ${instructionContent}`;
         files.push({
           path: `.claude/skills/${skillVersion.slug}/${file.path}`,
           content: file.content,
+          isBase64: file.isBase64,
         });
       }
     }
