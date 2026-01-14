@@ -234,7 +234,7 @@ export const RepositoryTargetTable: React.FC<RepositoryTargetTableProps> = ({
             <LuCircleCheckBig />
           </PMIcon>
           <PMText variant="body" color="faded">
-            No commands or standards distributed here
+            No artifacts distributed here
           </PMText>
         </PMHStack>
       )}

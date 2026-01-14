@@ -45,13 +45,12 @@ const getEmptyStateProps = (
   if (searchTerm) {
     return {
       title: 'No artifacts found',
-      description: `No commands, standards, or skills match your search "${searchTerm}"`,
+      description: `No artifacts match your search "${searchTerm}"`,
     };
   }
   return {
     title: 'No artifacts',
-    description:
-      'No commands, standards, or skills were found in your organization',
+    description: 'No artifacts were found in your organization',
   };
 };
 
