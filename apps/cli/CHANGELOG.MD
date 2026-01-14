@@ -2,13 +2,17 @@
 
 ## Added
 
-- Add `skills add` command to import skills in Packmind (#71)
-
 ## Changed
 
 ## Fixed
 
 ## Removed
+
+# [0.13.0] - 2026-01-14
+
+## Added
+
+- Add `skills add` command to import skills in Packmind (#71)
 
 # [0.12.0] - 2026-01-09
 
@@ -132,7 +136,8 @@
 
 - Add proper CHANGELOG.MD in the GH release
 
-[Unreleased]: https://github.com/PackmindHub/packmind/compare/release-cli/0.12.0...HEAD
+[Unreleased]: https://github.com/PackmindHub/packmind/compare/release-cli/0.13.0...HEAD
+[0.13.0]: https://github.com/PackmindHub/packmind/compare/release-cli/0.12.0...release-cli/0.13.0
 [0.12.0]: https://github.com/PackmindHub/packmind/compare/release-cli/0.11.0...release-cli/0.12.0
 [0.11.0]: https://github.com/PackmindHub/packmind/compare/release-cli/0.10.0...release-cli/0.11.0
 [0.10.0]: https://github.com/PackmindHub/packmind/compare/release-cli/0.9.0...release-cli/0.10.0
