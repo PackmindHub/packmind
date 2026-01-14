@@ -1,4 +1,4 @@
-import { useNavigate } from 'react-router';
+import { useNavigate, Link } from 'react-router';
 import { LuZap, LuUsers, LuCheck } from 'react-icons/lu';
 import {
   PMBox,
@@ -128,6 +128,15 @@ export function SignUpOptions() {
           </PMCard.Body>
         </PMCard.Root>
       </PMGrid>
+
+      <PMBox mt={4} textAlign="center">
+        <PMText>Already have an account? </PMText>
+        <Link to="/sign-in" prefetch="intent">
+          <PMButton variant="tertiary" size={'xs'} tabIndex={-1}>
+            Sign in
+          </PMButton>
+        </Link>
+      </PMBox>
     </PMVStack>
   );
 }
