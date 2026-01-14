@@ -3975,6 +3975,63 @@ describe('ClaudeDeployer', () => {
         });
       });
 
+      describe('when skill file has isBase64 flag set to true', () => {
+        it('propagates isBase64 true to file updates', async () => {
+          const skillVersionsWithBase64File = [
+            skillVersionFactory({
+              files: [
+                {
+                  id: createSkillFileId('file-1'),
+                  skillVersionId: createSkillVersionId('skill-version-1'),
+                  path: 'image.png',
+                  content:
+                    'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==',
+                  permissions: '644',
+                  isBase64: true,
+                },
+              ],
+            }),
+          ];
+
+          const fileUpdates = await deployer.generateFileUpdatesForSkills(
+            skillVersionsWithBase64File,
+          );
+
+          const imageFile = fileUpdates.createOrUpdate.find((file) =>
+            file.path.includes('image.png'),
+          );
+          expect(imageFile?.isBase64).toBe(true);
+        });
+      });
+
+      describe('when skill file has isBase64 flag set to false', () => {
+        it('propagates isBase64 false to file updates', async () => {
+          const skillVersionsWithTextFile = [
+            skillVersionFactory({
+              files: [
+                {
+                  id: createSkillFileId('file-1'),
+                  skillVersionId: createSkillVersionId('skill-version-1'),
+                  path: 'helper.ts',
+                  content: 'export const helper = () => {}',
+                  permissions: '644',
+                  isBase64: false,
+                },
+              ],
+            }),
+          ];
+
+          const fileUpdates = await deployer.generateFileUpdatesForSkills(
+            skillVersionsWithTextFile,
+          );
+
+          const helperFile = fileUpdates.createOrUpdate.find((file) =>
+            file.path.includes('helper.ts'),
+          );
+          expect(helperFile?.isBase64).toBe(false);
+        });
+      });
+
       describe('when SKILL.md is in SkillFile table', () => {
         let fileUpdates: Awaited<
           ReturnType<typeof deployer.generateFileUpdatesForSkills>

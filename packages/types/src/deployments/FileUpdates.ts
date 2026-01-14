@@ -7,6 +7,7 @@ export type FileModification =
   | {
       path: string;
       content: string;
+      isBase64?: boolean;
       sections?: never;
     }
   | {

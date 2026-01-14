@@ -105,6 +105,7 @@ export class InstallPackagesUseCase implements IInstallPackagesUseCase {
       path: string;
       content?: string;
       sections?: { key: string; content: string }[];
+      isBase64?: boolean;
     },
     result: IInstallPackagesResult,
   ): Promise<void> {
@@ -124,6 +125,7 @@ export class InstallPackagesUseCase implements IInstallPackagesUseCase {
         file.content,
         fileExists,
         result,
+        file.isBase64,
       );
     } else if (file.sections !== undefined) {
       // Handle section-based update
@@ -141,7 +143,19 @@ export class InstallPackagesUseCase implements IInstallPackagesUseCase {
     content: string,
     fileExists: boolean,
     result: IInstallPackagesResult,
+    isBase64?: boolean,
   ): Promise<void> {
+    if (isBase64) {
+      const buffer = Buffer.from(content, 'base64');
+      await fs.writeFile(fullPath, buffer);
+      if (fileExists) {
+        result.filesUpdated++;
+      } else {
+        result.filesCreated++;
+      }
+      return;
+    }
+
     if (fileExists) {
       // Read existing file content
       const existingContent = await fs.readFile(fullPath, 'utf-8');

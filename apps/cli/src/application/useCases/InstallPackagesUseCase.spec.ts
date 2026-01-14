@@ -549,6 +549,152 @@ Section content here
     });
   });
 
+  describe('when file has isBase64 flag', () => {
+    describe('when isBase64 is true', () => {
+      const base64Content = Buffer.from('binary content here').toString(
+        'base64',
+      );
+
+      beforeEach(() => {
+        mockGateway.getPullData.mockResolvedValue({
+          fileUpdates: {
+            createOrUpdate: [
+              {
+                path: 'images/logo.png',
+                content: base64Content,
+                isBase64: true,
+              },
+            ],
+            delete: [],
+          },
+        });
+      });
+
+      describe('when file does not exist', () => {
+        beforeEach(() => {
+          (fs.access as jest.Mock).mockRejectedValue(
+            new Error('File not found'),
+          );
+        });
+
+        it('decodes base64 content and writes as binary', async () => {
+          await useCase.execute({
+            packagesSlugs: ['test-package'],
+            baseDirectory: '/test',
+          });
+
+          expect(fs.writeFile).toHaveBeenCalledWith(
+            '/test/images/logo.png',
+            Buffer.from(base64Content, 'base64'),
+          );
+        });
+
+        it('counts as file created', async () => {
+          const result = await useCase.execute({
+            packagesSlugs: ['test-package'],
+            baseDirectory: '/test',
+          });
+
+          expect(result.filesCreated).toBe(1);
+        });
+      });
+
+      describe('when file already exists', () => {
+        beforeEach(() => {
+          (fs.access as jest.Mock).mockResolvedValue(undefined);
+        });
+
+        it('decodes base64 content and writes as binary', async () => {
+          await useCase.execute({
+            packagesSlugs: ['test-package'],
+            baseDirectory: '/test',
+          });
+
+          expect(fs.writeFile).toHaveBeenCalledWith(
+            '/test/images/logo.png',
+            Buffer.from(base64Content, 'base64'),
+          );
+        });
+
+        it('counts as file updated', async () => {
+          const result = await useCase.execute({
+            packagesSlugs: ['test-package'],
+            baseDirectory: '/test',
+          });
+
+          expect(result.filesUpdated).toBe(1);
+        });
+      });
+    });
+
+    describe('when isBase64 is false', () => {
+      const textContent = '# Text content';
+
+      beforeEach(() => {
+        mockGateway.getPullData.mockResolvedValue({
+          fileUpdates: {
+            createOrUpdate: [
+              {
+                path: 'README.md',
+                content: textContent,
+                isBase64: false,
+              },
+            ],
+            delete: [],
+          },
+        });
+
+        (fs.access as jest.Mock).mockRejectedValue(new Error('File not found'));
+      });
+
+      it('writes content as UTF-8 text', async () => {
+        await useCase.execute({
+          packagesSlugs: ['test-package'],
+          baseDirectory: '/test',
+        });
+
+        expect(fs.writeFile).toHaveBeenCalledWith(
+          '/test/README.md',
+          textContent,
+          'utf-8',
+        );
+      });
+    });
+
+    describe('when isBase64 is undefined', () => {
+      const textContent = '# Text content';
+
+      beforeEach(() => {
+        mockGateway.getPullData.mockResolvedValue({
+          fileUpdates: {
+            createOrUpdate: [
+              {
+                path: 'README.md',
+                content: textContent,
+              },
+            ],
+            delete: [],
+          },
+        });
+
+        (fs.access as jest.Mock).mockRejectedValue(new Error('File not found'));
+      });
+
+      it('writes content as UTF-8 text', async () => {
+        await useCase.execute({
+          packagesSlugs: ['test-package'],
+          baseDirectory: '/test',
+        });
+
+        expect(fs.writeFile).toHaveBeenCalledWith(
+          '/test/README.md',
+          textContent,
+          'utf-8',
+        );
+      });
+    });
+  });
+
   describe('when section merge results in empty content', () => {
     describe('when content becomes empty after section merge', () => {
       it('deletes file', async () => {
