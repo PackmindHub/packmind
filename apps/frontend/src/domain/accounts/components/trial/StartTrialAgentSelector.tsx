@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'react-router';
 import {
   PMAlert,
   PMBox,
@@ -150,6 +151,14 @@ export function StartTrialAgentSelector({
           <PMAlert.Title>{error}</PMAlert.Title>
         </PMAlert.Root>
       )}
+
+      <PMBox mt={4} textAlign="center">
+        <Link to="/sign-up" prefetch="intent">
+          <PMButton variant="tertiary" size={'xs'} tabIndex={-1}>
+            Back to getting started options
+          </PMButton>
+        </Link>
+      </PMBox>
     </PMVStack>
   );
 }
