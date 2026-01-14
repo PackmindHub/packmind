@@ -414,9 +414,16 @@ export class UploadSkillUsecase
     // Compare metadata (deep equality)
     const latestMetadata = latestVersion.metadata || {};
     const newMetadata = newContent.metadata || {};
+    const sortedLatest = Object.keys(latestMetadata).sort((a, b) =>
+      a.localeCompare(b),
+    );
+    const sortedNew = Object.keys(newMetadata).sort((a, b) =>
+      a.localeCompare(b),
+    );
+
     if (
-      JSON.stringify(latestMetadata, Object.keys(latestMetadata).sort()) !==
-      JSON.stringify(newMetadata, Object.keys(newMetadata).sort())
+      JSON.stringify(latestMetadata, sortedLatest) !==
+      JSON.stringify(newMetadata, sortedNew)
     ) {
       return false;
     }
