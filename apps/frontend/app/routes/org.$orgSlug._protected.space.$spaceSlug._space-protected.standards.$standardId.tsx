@@ -9,7 +9,6 @@ import {
   ListStandardsBySpaceResponse,
   Standard,
   StandardId,
-  Space,
 } from '@packmind/types';
 import { routes } from '../../src/shared/utils/routes';
 import { getSpaceBySlugQueryOptions } from '../../src/domain/spaces/api/queries/SpacesQueries';
@@ -19,25 +18,22 @@ import { StandardDetails } from '../../src/domain/standards/components/StandardD
 import { PMBox, PMPage } from '@packmind/ui';
 import { AutobreadCrumb } from '../../src/shared/components/navigation/AutobreadCrumb';
 import { GetStandardByIdResponse } from '@packmind/types';
-import { MeResponse } from '../../src/domain/accounts/api/gateways/IAuthGateway';
 
 export async function clientLoader({
   params,
 }: {
   params: { standardId: string; spaceSlug: string };
 }) {
-  // Get cached data from parent loaders without blocking
-  const me = queryClient.getQueryData(getMeQueryOptions().queryKey) as
-    | MeResponse
-    | undefined;
-  if (!me?.organization) {
+  // Fetch user data - ensureQueryData uses cache if available, fetches otherwise
+  const me = await queryClient.ensureQueryData(getMeQueryOptions());
+  if (!me.organization) {
     throw new Error('Organization not found');
   }
 
-  // Get space from cache - parent loader ensures this is loaded
-  const space = queryClient.getQueryData(
-    getSpaceBySlugQueryOptions(params.spaceSlug, me.organization.id).queryKey,
-  ) as Space | undefined;
+  // Fetch space data - ensureQueryData uses cache if available, fetches otherwise
+  const space = await queryClient.ensureQueryData(
+    getSpaceBySlugQueryOptions(params.spaceSlug, me.organization.id),
+  );
   if (!space) {
     throw new Error('Space not found');
   }
