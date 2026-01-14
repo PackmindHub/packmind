@@ -1,4 +1,4 @@
-import { OrganizationId, Recipe, RecipeId, Space } from '@packmind/types';
+import { OrganizationId, Recipe, RecipeId } from '@packmind/types';
 import { NavLink, Outlet, redirect } from 'react-router';
 import { getMeQueryOptions } from '../../src/domain/accounts/api/queries/UserQueries';
 import {
@@ -8,25 +8,22 @@ import {
 import { getSpaceBySlugQueryOptions } from '../../src/domain/spaces/api/queries/SpacesQueries';
 import { queryClient } from '../../src/shared/data/queryClient';
 import { routes } from '../../src/shared/utils/routes';
-import { MeResponse } from '../../src/domain/accounts/api/gateways/IAuthGateway';
 
 export async function clientLoader({
   params,
 }: {
   params: { orgSlug: string; spaceSlug: string; commandId: string };
 }) {
-  // Get cached data from parent loaders without blocking
-  const me = queryClient.getQueryData(getMeQueryOptions().queryKey) as
-    | MeResponse
-    | undefined;
-  if (!me?.organization) {
+  // Fetch user data - ensureQueryData uses cache if available, fetches otherwise
+  const me = await queryClient.ensureQueryData(getMeQueryOptions());
+  if (!me.organization) {
     throw new Error('Organization not found');
   }
 
-  // Get space from cache - parent loader ensures this is loaded
-  const space = queryClient.getQueryData(
-    getSpaceBySlugQueryOptions(params.spaceSlug, me.organization.id).queryKey,
-  ) as Space | undefined;
+  // Fetch space data - ensureQueryData uses cache if available, fetches otherwise
+  const space = await queryClient.ensureQueryData(
+    getSpaceBySlugQueryOptions(params.spaceSlug, me.organization.id),
+  );
   if (!space) {
     throw new Error('Space not found');
   }
