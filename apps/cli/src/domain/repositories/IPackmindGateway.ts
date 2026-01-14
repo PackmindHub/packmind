@@ -170,6 +170,7 @@ export type UploadSkillResult = {
   name: string;
   version: number;
   isNewSkill: boolean;
+  versionCreated: boolean;
   fileCount: number;
   totalSize: number;
 };

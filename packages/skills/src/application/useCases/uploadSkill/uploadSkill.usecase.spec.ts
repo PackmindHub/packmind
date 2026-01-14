@@ -12,6 +12,7 @@ import {
   createSpaceId,
   createSkillId,
   createSkillVersionId,
+  createSkillFileId,
   UploadSkillCommand,
   Skill,
   SkillVersion,
@@ -175,7 +176,7 @@ This is the skill body.`,
 
       const result = await usecase.execute(command);
 
-      expect(result).toEqual(mockSkill);
+      expect(result).toEqual({ skill: mockSkill, versionCreated: true });
     });
 
     it('does not save SKILL.md to repository since data is extracted into SkillVersion', async () => {
@@ -743,7 +744,7 @@ Content`,
 
       const result = await usecase.execute(command);
 
-      expect(result.allowedTools).toBe('Bash Read Write');
+      expect(result.skill.allowedTools).toBe('Bash Read Write');
     });
   });
 
@@ -789,8 +790,30 @@ New content`,
       spaceId,
     };
 
+    const latestSkillVersion: SkillVersion = {
+      id: createSkillVersionId('version-1'),
+      skillId: existingSkillId,
+      userId,
+      name: 'existing-skill',
+      slug: 'existing-skill',
+      description: 'Existing',
+      prompt: 'Old content',
+      version: 1,
+      allowedTools: undefined,
+      license: undefined,
+      compatibility: undefined,
+      metadata: undefined,
+      deletedAt: null,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
     beforeEach(() => {
       mockSkillService.listSkillsBySpace.mockResolvedValue([existingSkill]);
+      mockSkillVersionService.getLatestSkillVersion.mockResolvedValue(
+        latestSkillVersion,
+      );
+      mockSkillFileRepository.findBySkillVersionId.mockResolvedValue([]);
     });
 
     it('updates the existing skill instead of creating a new one', async () => {
@@ -869,7 +892,7 @@ New content`,
 
       const result = await usecase.execute(command);
 
-      expect(result.version).toBe(2);
+      expect(result.skill.version).toBe(2);
     });
 
     it('creates a new skill version', async () => {
@@ -1132,6 +1155,300 @@ New content`,
             }),
           }),
         );
+      });
+    });
+  });
+
+  describe('when content is identical to latest version', () => {
+    const existingSkillId = createSkillId('existing-123');
+
+    const existingSkill: Skill = {
+      id: existingSkillId,
+      name: 'existing-skill',
+      slug: 'existing-skill',
+      description: 'A test skill',
+      prompt: 'Same content',
+      version: 1,
+      userId,
+      spaceId,
+      organizationId,
+      allowedTools: undefined,
+      license: undefined,
+      compatibility: undefined,
+      metadata: undefined,
+      deletedAt: null,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    const latestSkillVersion: SkillVersion = {
+      id: createSkillVersionId('version-1'),
+      skillId: existingSkillId,
+      userId,
+      name: 'existing-skill',
+      slug: 'existing-skill',
+      description: 'A test skill',
+      prompt: 'Same content',
+      version: 1,
+      allowedTools: undefined,
+      license: undefined,
+      compatibility: undefined,
+      metadata: undefined,
+      deletedAt: null,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    const files: UploadSkillFileInput[] = [
+      {
+        path: 'SKILL.md',
+        content: `---
+name: existing-skill
+description: A test skill
+---
+
+Same content`,
+        permissions: 'rw-r--r--',
+      },
+    ];
+
+    const command: UploadSkillCommand = {
+      files,
+      organizationId,
+      userId,
+      spaceId,
+    };
+
+    beforeEach(() => {
+      mockSkillService.listSkillsBySpace.mockResolvedValue([existingSkill]);
+      mockSkillVersionService.getLatestSkillVersion.mockResolvedValue(
+        latestSkillVersion,
+      );
+      mockSkillFileRepository.findBySkillVersionId.mockResolvedValue([]);
+    });
+
+    it('returns versionCreated: false', async () => {
+      const result = await usecase.execute(command);
+
+      expect(result.versionCreated).toBe(false);
+    });
+
+    it('returns the existing skill unchanged', async () => {
+      const result = await usecase.execute(command);
+
+      expect(result.skill).toEqual(existingSkill);
+    });
+
+    it('does not create a new skill version', async () => {
+      await usecase.execute(command);
+
+      expect(mockSkillVersionService.addSkillVersion).not.toHaveBeenCalled();
+    });
+
+    it('does not update the skill', async () => {
+      await usecase.execute(command);
+
+      expect(mockSkillService.updateSkill).not.toHaveBeenCalled();
+    });
+
+    it('does not emit any event', async () => {
+      await usecase.execute(command);
+
+      expect(mockEventEmitterService.emit).not.toHaveBeenCalled();
+    });
+
+    describe('with supporting files', () => {
+      const filesWithSupporting: UploadSkillFileInput[] = [
+        {
+          path: 'SKILL.md',
+          content: `---
+name: existing-skill
+description: A test skill
+---
+
+Same content`,
+          permissions: 'rw-r--r--',
+          isBase64: false,
+        },
+        {
+          path: 'helper.md',
+          content: 'Helper content',
+          permissions: 'rw-r--r--',
+          isBase64: false,
+        },
+      ];
+
+      const commandWithFiles: UploadSkillCommand = {
+        files: filesWithSupporting,
+        organizationId,
+        userId,
+        spaceId,
+      };
+
+      describe('when files also match', () => {
+        it('detects identical content', async () => {
+          mockSkillFileRepository.findBySkillVersionId.mockResolvedValue([
+            {
+              id: createSkillFileId('file-1'),
+              skillVersionId: latestSkillVersion.id,
+              path: 'helper.md',
+              content: 'Helper content',
+              permissions: 'rw-r--r--',
+              isBase64: false,
+            },
+          ]);
+
+          const result = await usecase.execute(commandWithFiles);
+
+          expect(result.versionCreated).toBe(false);
+        });
+      });
+
+      describe('when file content differs', () => {
+        it('creates new version', async () => {
+          mockSkillFileRepository.findBySkillVersionId.mockResolvedValue([
+            {
+              id: createSkillFileId('file-1'),
+              skillVersionId: latestSkillVersion.id,
+              path: 'helper.md',
+              content: 'Different helper content',
+              permissions: 'rw-r--r--',
+              isBase64: false,
+            },
+          ]);
+
+          const updatedSkill = { ...existingSkill, version: 2 };
+          mockSkillService.updateSkill.mockResolvedValue(updatedSkill);
+          mockSkillVersionService.addSkillVersion.mockResolvedValue({
+            ...latestSkillVersion,
+            id: createSkillVersionId('version-2'),
+            version: 2,
+          });
+          mockSkillFileRepository.addMany.mockResolvedValue([]);
+
+          const result = await usecase.execute(commandWithFiles);
+
+          expect(result.versionCreated).toBe(true);
+        });
+      });
+
+      describe('when file count differs', () => {
+        it('creates new version', async () => {
+          mockSkillFileRepository.findBySkillVersionId.mockResolvedValue([]);
+
+          const updatedSkill = { ...existingSkill, version: 2 };
+          mockSkillService.updateSkill.mockResolvedValue(updatedSkill);
+          mockSkillVersionService.addSkillVersion.mockResolvedValue({
+            ...latestSkillVersion,
+            id: createSkillVersionId('version-2'),
+            version: 2,
+          });
+          mockSkillFileRepository.addMany.mockResolvedValue([]);
+
+          const result = await usecase.execute(commandWithFiles);
+
+          expect(result.versionCreated).toBe(true);
+        });
+      });
+    });
+
+    describe('with metadata', () => {
+      describe('when metadata matches', () => {
+        it('detects identical content', async () => {
+          const filesWithMetadata: UploadSkillFileInput[] = [
+            {
+              path: 'SKILL.md',
+              content: `---
+name: existing-skill
+description: A test skill
+metadata:
+  author: test
+  version: "1.0"
+---
+
+Same content`,
+              permissions: 'rw-r--r--',
+            },
+          ];
+
+          const skillWithMetadata = {
+            ...existingSkill,
+            metadata: { author: 'test', version: '1.0' },
+          };
+          const versionWithMetadata = {
+            ...latestSkillVersion,
+            metadata: { author: 'test', version: '1.0' },
+          };
+
+          mockSkillService.listSkillsBySpace.mockResolvedValue([
+            skillWithMetadata,
+          ]);
+          mockSkillVersionService.getLatestSkillVersion.mockResolvedValue(
+            versionWithMetadata,
+          );
+
+          const result = await usecase.execute({
+            files: filesWithMetadata,
+            organizationId,
+            userId,
+            spaceId,
+          });
+
+          expect(result.versionCreated).toBe(false);
+        });
+      });
+
+      describe('when metadata differs', () => {
+        it('creates new version', async () => {
+          const filesWithDifferentMetadata: UploadSkillFileInput[] = [
+            {
+              path: 'SKILL.md',
+              content: `---
+name: existing-skill
+description: A test skill
+metadata:
+  author: different
+---
+
+Same content`,
+              permissions: 'rw-r--r--',
+            },
+          ];
+
+          const skillWithMetadata = {
+            ...existingSkill,
+            metadata: { author: 'test' },
+          };
+          const versionWithMetadata = {
+            ...latestSkillVersion,
+            metadata: { author: 'test' },
+          };
+
+          mockSkillService.listSkillsBySpace.mockResolvedValue([
+            skillWithMetadata,
+          ]);
+          mockSkillVersionService.getLatestSkillVersion.mockResolvedValue(
+            versionWithMetadata,
+          );
+
+          const updatedSkill = { ...skillWithMetadata, version: 2 };
+          mockSkillService.updateSkill.mockResolvedValue(updatedSkill);
+          mockSkillVersionService.addSkillVersion.mockResolvedValue({
+            ...versionWithMetadata,
+            id: createSkillVersionId('version-2'),
+            version: 2,
+          });
+          mockSkillFileRepository.addMany.mockResolvedValue([]);
+
+          const result = await usecase.execute({
+            files: filesWithDifferentMetadata,
+            organizationId,
+            userId,
+            spaceId,
+          });
+
+          expect(result.versionCreated).toBe(true);
+        });
       });
     });
   });

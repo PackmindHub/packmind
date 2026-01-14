@@ -867,11 +867,13 @@ describe('GitHub Copilot Deployment Integration', () => {
         let skillVersionWithFiles: SkillVersion;
 
         beforeEach(async () => {
-          skillWithFiles = await testApp.skillsHexa.getAdapter().uploadSkill({
-            files: [
-              {
-                path: 'SKILL.md',
-                content: `---
+          const uploadResult = await testApp.skillsHexa
+            .getAdapter()
+            .uploadSkill({
+              files: [
+                {
+                  path: 'SKILL.md',
+                  content: `---
 name: multi-file-skill
 description: A skill with multiple files
 ---
@@ -879,24 +881,25 @@ description: A skill with multiple files
 # Multi-file Skill
 
 See reference.md and forms.md for more information.`,
-                permissions: 'rw-r--r--',
-              },
-              {
-                path: 'reference.md',
-                content:
-                  '# Reference\n\nThis is additional reference documentation.',
-                permissions: 'rw-r--r--',
-              },
-              {
-                path: 'forms.md',
-                content: '# Forms\n\nInstructions for working with forms.',
-                permissions: 'rw-r--r--',
-              },
-            ],
-            organizationId: organization.id,
-            userId: user.id,
-            spaceId: space.id.toString(),
-          });
+                  permissions: 'rw-r--r--',
+                },
+                {
+                  path: 'reference.md',
+                  content:
+                    '# Reference\n\nThis is additional reference documentation.',
+                  permissions: 'rw-r--r--',
+                },
+                {
+                  path: 'forms.md',
+                  content: '# Forms\n\nInstructions for working with forms.',
+                  permissions: 'rw-r--r--',
+                },
+              ],
+              organizationId: organization.id,
+              userId: user.id,
+              spaceId: space.id.toString(),
+            });
+          skillWithFiles = uploadResult.skill;
 
           // Get the latest version with files
           const versions = await testApp.skillsHexa

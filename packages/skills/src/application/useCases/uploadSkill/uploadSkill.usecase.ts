@@ -7,12 +7,14 @@ import {
 import {
   UploadSkillCommand,
   UploadSkillResponse,
+  UploadSkillFileInput,
   SkillCreatedEvent,
   SkillUpdatedEvent,
   createSkillId,
   createSkillVersionId,
   createSkillFileId,
   SkillFile,
+  SkillVersion,
   createSpaceId,
   IAccountsPort,
   ISpacesPort,
@@ -143,11 +145,51 @@ export class UploadSkillUsecase
       const supportingFiles = files.filter((f) => f.path !== SKILL_MD_FILENAME);
 
       if (existingSkill) {
-        // Skill exists - create a new version
-        this.logger.info('Skill already exists, creating new version', {
+        // Skill exists - check if content is identical to latest version
+        this.logger.info('Skill already exists, checking for content changes', {
           skillId: existingSkill.id,
           currentVersion: existingSkill.version,
         });
+
+        const latestVersion =
+          await this.skillVersionService.getLatestSkillVersion(
+            existingSkill.id,
+          );
+
+        if (latestVersion) {
+          const isIdentical = await this.isContentIdentical(
+            latestVersion,
+            {
+              name,
+              description,
+              prompt,
+              license,
+              compatibility,
+              metadata,
+              allowedTools,
+            },
+            files,
+          );
+
+          if (isIdentical) {
+            this.logger.info(
+              'Content is identical to latest version, skipping version creation',
+              {
+                skillId: existingSkill.id,
+                version: existingSkill.version,
+              },
+            );
+            return { skill: existingSkill, versionCreated: false };
+          }
+        }
+
+        this.logger.info(
+          'Content differs from latest version, creating new version',
+          {
+            skillId: existingSkill.id,
+            currentVersion: existingSkill.version,
+          },
+        );
 
         const newVersion = existingSkill.version + 1;
 
@@ -230,7 +272,7 @@ export class UploadSkillUsecase
           }),
         );
 
-        return updatedSkill;
+        return { skill: updatedSkill, versionCreated: true };
       }
 
       // Skill does not exist - create new skill with initial version 1
@@ -314,7 +356,7 @@ export class UploadSkillUsecase
         }),
       );
 
-      return skill;
+      return { skill, versionCreated: true };
     } catch (error) {
       if (
         error instanceof SkillParseError ||
@@ -334,4 +376,89 @@ export class UploadSkillUsecase
       throw error;
     }
   }
+
+  private async isContentIdentical(
+    latestVersion: SkillVersion,
+    newContent: {
+      name: string;
+      description: string;
+      prompt: string;
+      license?: string;
+      compatibility?: string;
+      metadata?: Record<string, string>;
+      allowedTools?: string;
+    },
+    newFiles: UploadSkillFileInput[],
+  ): Promise<boolean> {
+    // Compare all content fields
+    if (latestVersion.name !== newContent.name) return false;
+    if (latestVersion.description !== newContent.description) return false;
+    if (latestVersion.prompt !== newContent.prompt) return false;
+    if (!comparePotentiallyNull(latestVersion.license, newContent.license))
+      return false;
+    if (
+      !comparePotentiallyNull(
+        latestVersion.compatibility,
+        newContent.compatibility,
+      )
+    )
+      return false;
+    if (
+      !comparePotentiallyNull(
+        latestVersion.allowedTools,
+        newContent.allowedTools,
+      )
+    )
+      return false;
+
+    // Compare metadata (deep equality)
+    const latestMetadata = latestVersion.metadata || {};
+    const newMetadata = newContent.metadata || {};
+    if (
+      JSON.stringify(latestMetadata, Object.keys(latestMetadata).sort()) !==
+      JSON.stringify(newMetadata, Object.keys(newMetadata).sort())
+    ) {
+      return false;
+    }
+
+    // Compare files
+    const latestFiles = await this.skillFileRepository.findBySkillVersionId(
+      latestVersion.id,
+    );
+
+    // Filter out SKILL.md from new files for comparison
+    const newSupportingFiles = newFiles.filter(
+      (f) => f.path !== SKILL_MD_FILENAME,
+    );
+
+    if (latestFiles.length !== newSupportingFiles.length) return false;
+
+    // Sort both arrays by path for comparison
+    const sortedLatestFiles = [...latestFiles].sort((a, b) =>
+      a.path.localeCompare(b.path),
+    );
+    const sortedNewFiles = [...newSupportingFiles].sort((a, b) =>
+      a.path.localeCompare(b.path),
+    );
+
+    for (let i = 0; i < sortedLatestFiles.length; i++) {
+      const latestFile = sortedLatestFiles[i];
+      const newFile = sortedNewFiles[i];
+
+      if (latestFile.path !== newFile.path) return false;
+      if (latestFile.content !== newFile.content) return false;
+      if (latestFile.permissions !== newFile.permissions) return false;
+      if (latestFile.isBase64 !== newFile.isBase64) return false;
+    }
+
+    return true;
+  }
+}
+
+// After database extraction, some fields appear as null instead of undefined.
+function comparePotentiallyNull(
+  str1: string | undefined,
+  str2: string | undefined,
+) {
+  return (str1 ?? '') === (str2 ?? '');
 }
