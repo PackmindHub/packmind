@@ -18,10 +18,13 @@ import { PackmindEventEmitterService } from '@packmind/node-utils';
 import { stubLogger } from '@packmind/test-utils';
 import {
   createOrganizationId,
+  createSpaceId,
   createUserId,
   OrganizationId,
   ProgrammingLanguage,
   RuleAddedEvent,
+  SpaceId,
+  StandardUpdatedEvent,
   UserId,
 } from '@packmind/types';
 import { createStandardVersionId } from '@packmind/types';
@@ -655,7 +658,7 @@ describe('AddRuleToStandardUsecase', () => {
         );
       });
 
-      it('emits only RuleAddedEvent (not RuleUpdatedEvent)', async () => {
+      it('emits RuleAddedEvent and StandardUpdatedEvent', async () => {
         inputData = {
           standardSlug: 'frontend-testing',
           ruleContent: 'Use descriptive test names',
@@ -672,9 +675,12 @@ describe('AddRuleToStandardUsecase', () => {
 
         await addRuleToStandardUsecase.addRuleToStandard(inputData);
 
-        expect(eventEmitterService.emit).toHaveBeenCalledTimes(1);
+        expect(eventEmitterService.emit).toHaveBeenCalledTimes(2);
         expect(eventEmitterService.emit).toHaveBeenCalledWith(
           expect.any(RuleAddedEvent),
+        );
+        expect(eventEmitterService.emit).toHaveBeenCalledWith(
+          expect.any(StandardUpdatedEvent),
         );
       });
 
@@ -749,6 +755,119 @@ describe('AddRuleToStandardUsecase', () => {
                 examples: [],
               }),
             ],
+          }),
+        );
+      });
+    });
+
+    describe('event emission', () => {
+      let existingStandard: Standard;
+      let latestVersion: StandardVersion;
+      let newVersion: StandardVersion;
+      let spaceId: SpaceId;
+
+      beforeEach(() => {
+        spaceId = createSpaceId(uuidv4());
+        existingStandard = standardFactory({
+          id: createStandardId(uuidv4()),
+          slug: 'test-standard',
+          version: 1,
+          userId,
+          spaceId,
+        });
+
+        latestVersion = standardVersionFactory({
+          id: createStandardVersionId(uuidv4()),
+          standardId: existingStandard.id,
+          version: 1,
+        });
+
+        newVersion = standardVersionFactory({
+          id: createStandardVersionId(uuidv4()),
+          standardId: existingStandard.id,
+          version: 2,
+        });
+
+        standardService.findStandardBySlug.mockResolvedValue(existingStandard);
+        standardVersionService.getLatestStandardVersion.mockResolvedValue(
+          latestVersion,
+        );
+        ruleRepository.findByStandardVersionId.mockResolvedValue([]);
+        standardService.updateStandard.mockResolvedValue(
+          standardFactory({ ...existingStandard, version: 2 }),
+        );
+        standardVersionService.addStandardVersion.mockResolvedValue(newVersion);
+      });
+
+      it('emits StandardUpdatedEvent with correct payload', async () => {
+        const inputData: AddRuleToStandardRequest = {
+          standardSlug: 'test-standard',
+          ruleContent: 'Test rule content',
+          userId,
+          organizationId,
+        };
+
+        await addRuleToStandardUsecase.addRuleToStandard(inputData);
+
+        expect(eventEmitterService.emit).toHaveBeenCalledWith(
+          expect.objectContaining({
+            payload: expect.objectContaining({
+              standardId: existingStandard.id,
+              spaceId: existingStandard.spaceId,
+              newVersion: 2,
+              organizationId,
+              userId,
+              source: 'ui',
+            }),
+          }),
+        );
+      });
+
+      it('uses default source ui when not specified', async () => {
+        const inputData: AddRuleToStandardRequest = {
+          standardSlug: 'test-standard',
+          ruleContent: 'Test rule content',
+          userId,
+          organizationId,
+        };
+
+        await addRuleToStandardUsecase.addRuleToStandard(inputData);
+
+        expect(eventEmitterService.emit).toHaveBeenCalledWith(
+          expect.objectContaining({
+            payload: expect.objectContaining({
+              source: 'ui',
+            }),
+          }),
+        );
+      });
+
+      it('passes provided source to both events', async () => {
+        const inputData: AddRuleToStandardRequest = {
+          standardSlug: 'test-standard',
+          ruleContent: 'Test rule content',
+          userId,
+          organizationId,
+          source: 'mcp',
+        };
+
+        await addRuleToStandardUsecase.addRuleToStandard(inputData);
+
+        expect(eventEmitterService.emit).toHaveBeenCalledTimes(2);
+        expect(eventEmitterService.emit).toHaveBeenNthCalledWith(
+          1,
+          expect.objectContaining({
+            payload: expect.objectContaining({
+              source: 'mcp',
+            }),
+          }),
+        );
+        expect(eventEmitterService.emit).toHaveBeenNthCalledWith(
+          2,
+          expect.objectContaining({
+            payload: expect.objectContaining({
+              source: 'mcp',
+            }),
           }),
         );
       });
