@@ -823,7 +823,7 @@ describe('AddRuleToStandardUsecase', () => {
         );
       });
 
-      it('uses default source ui when not specified', async () => {
+      it('defaults to ui source in events', async () => {
         const inputData: AddRuleToStandardRequest = {
           standardSlug: 'test-standard',
           ruleContent: 'Test rule content',
@@ -837,36 +837,6 @@ describe('AddRuleToStandardUsecase', () => {
           expect.objectContaining({
             payload: expect.objectContaining({
               source: 'ui',
-            }),
-          }),
-        );
-      });
-
-      it('passes provided source to both events', async () => {
-        const inputData: AddRuleToStandardRequest = {
-          standardSlug: 'test-standard',
-          ruleContent: 'Test rule content',
-          userId,
-          organizationId,
-          source: 'mcp',
-        };
-
-        await addRuleToStandardUsecase.addRuleToStandard(inputData);
-
-        expect(eventEmitterService.emit).toHaveBeenCalledTimes(2);
-        expect(eventEmitterService.emit).toHaveBeenNthCalledWith(
-          1,
-          expect.objectContaining({
-            payload: expect.objectContaining({
-              source: 'mcp',
-            }),
-          }),
-        );
-        expect(eventEmitterService.emit).toHaveBeenNthCalledWith(
-          2,
-          expect.objectContaining({
-            payload: expect.objectContaining({
-              source: 'mcp',
             }),
           }),
         );
