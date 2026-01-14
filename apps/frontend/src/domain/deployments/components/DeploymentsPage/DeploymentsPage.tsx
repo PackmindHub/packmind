@@ -23,6 +23,7 @@ import {
   Target,
   TargetDeploymentStatus,
   TargetStandardDeploymentStatus,
+  TargetSkillDeploymentStatus,
 } from '@packmind/types';
 
 type ViewMode = 'repositories' | 'artifacts';
@@ -33,6 +34,7 @@ type ViewMode = 'repositories' | 'artifacts';
 const extractAvailableTargets = (
   recipeTargets: TargetDeploymentStatus[] = [],
   standardTargets: TargetStandardDeploymentStatus[] = [],
+  skillTargets: TargetSkillDeploymentStatus[] = [],
 ): Target[] => {
   const targetMap = new Map<string, Target>();
 
@@ -43,6 +45,11 @@ const extractAvailableTargets = (
 
   // Add targets from standard deployments
   standardTargets.forEach((targetDeployment) => {
+    targetMap.set(targetDeployment.target.id, targetDeployment.target);
+  });
+
+  // Add targets from skill deployments
+  skillTargets.forEach((targetDeployment) => {
     targetMap.set(targetDeployment.target.id, targetDeployment.target);
   });
 
@@ -213,10 +220,18 @@ export const DeploymentsPage: React.FC = () => {
     return all.filter((t) => t.gitRepo && selected.has(t.gitRepo.id));
   }, [standardData?.targets, selectedRepoIds]);
 
+  const filteredSkillTargets = useMemo(() => {
+    const all = skillsData?.targets ?? [];
+    if (!selectedRepoIds.length) return all;
+    const selected = new Set(selectedRepoIds);
+    return all.filter((t) => t.gitRepo && selected.has(t.gitRepo.id));
+  }, [skillsData?.targets, selectedRepoIds]);
+
   // Extract available targets for filtering (safe to call even when data is loading)
   const availableTargets = extractAvailableTargets(
     filteredRecipeTargets,
     filteredStandardTargets,
+    filteredSkillTargets,
   );
 
   // Build available repositories list for combobox (from targets, since repository view is target-based)
@@ -236,10 +251,11 @@ export const DeploymentsPage: React.FC = () => {
     };
     recipesData?.targets?.forEach((t) => add(t.gitRepo));
     standardData?.targets?.forEach((t) => add(t.gitRepo));
+    skillsData?.targets?.forEach((t) => add(t.gitRepo));
     return Array.from(map.values()).sort((a, b) =>
       (a.owner + '/' + a.repo).localeCompare(b.owner + '/' + b.repo),
     );
-  }, [recipesData?.targets, standardData?.targets]);
+  }, [recipesData?.targets, standardData?.targets, skillsData?.targets]);
 
   // Cleanup invalid selectedRepoIds when data updates
   useEffect(() => {
@@ -327,6 +343,7 @@ export const DeploymentsPage: React.FC = () => {
         standardRepositories={standardData?.repositories}
         recipeTargets={recipesData.targets}
         standardTargets={standardData?.targets}
+        skillTargets={skillsData?.targets}
         searchTerm={searchTerm}
         artifactStatusFilter={repositoryStatus}
         selectedTargetNames={selectedTargetNames}
