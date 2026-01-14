@@ -141,6 +141,7 @@ export const OutdatedTargetsSection: React.FC = () => {
                       target={{ id: t.id, name: t.title }}
                       recipes={t.recipes}
                       standards={t.standards}
+                      skills={[]}
                       mode="outdated"
                     />
                   ))}
