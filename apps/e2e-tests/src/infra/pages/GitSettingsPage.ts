@@ -8,6 +8,18 @@ export class GitSettings
   async listGitProviders(): Promise<
     { provider: string; repositoriesCount: number; tokenLess: boolean }[]
   > {
+    // Wait for the table to be populated with data by waiting for specific text content
+    await this.page.waitForFunction(
+      () => {
+        const table = document.querySelector('table tbody');
+        return table && table.querySelectorAll('tr').length > 0;
+      },
+      { timeout: 10000 },
+    );
+
+    // Give a small delay for React to fully render the content
+    await this.page.waitForTimeout(500);
+
     const rows = this.page.locator('table tbody tr');
 
     const count = await rows.count();

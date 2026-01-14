@@ -2,6 +2,19 @@
 - When renaming or moving a file that is commited to git, use `git mv` instead of `mv`
 - ensure the env variable `PACKMIND_EDITION` is properly set to `oss`
 
+# Artefact Usage Logging
+
+After reading `CLAUDE.md`, `.claude/rules/**`, `.claude/skills/**`, `.skills/commands/**`, `.claude/agents/**` files, or invoking Skills/Task agents, append to `.claude/artefacts.yaml`:
+
+```yaml
+- name: <filename or skill/agent name>
+  path: <relative path or identifier>
+  type: claude_md | rule | skill | command | agent
+  date: <ISO 8601 timestamp>
+```
+
+Create if missing. Log each access. Best effort tracking.
+
 # Task splitting
 
 - For any task you perform, you MUST split it into multiple into sub-tasks which have a logical increment (eg: new endpoint, new component, new use case etc). When a task is done, run all the validation steps (lint, test, packmind etc) and ask me for validation of the work you did.
