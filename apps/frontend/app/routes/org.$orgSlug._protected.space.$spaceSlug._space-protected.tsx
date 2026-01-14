@@ -8,17 +8,13 @@ import {
 } from '../../src/domain/spaces/api/queries/SpacesQueries';
 import { getStandardsBySpaceQueryOptions } from '../../src/domain/standards/api/queries/StandardsQueries';
 import { pmToaster } from '@packmind/ui';
-import { MeResponse } from '../../src/domain/accounts/api/gateways/IAuthGateway';
 
 export async function clientLoader({ params }: LoaderFunctionArgs) {
-  // User is already authenticated (checked by parent _protected route)
-  // Get cached data without blocking - parent layout ensures this is loaded
-  const me = queryClient.getQueryData(getMeQueryOptions().queryKey) as
-    | MeResponse
-    | undefined;
+  // Ensure auth data is loaded - uses cache if available, fetches otherwise
+  // This is critical for page refreshes where cache is empty
+  const me = await queryClient.ensureQueryData(getMeQueryOptions());
 
   if (!me?.organization) {
-    // If somehow not in cache, redirect to sign-in
     throw redirect('/sign-in');
   }
 
