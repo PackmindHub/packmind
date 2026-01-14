@@ -116,7 +116,7 @@ const logger = new PackmindLogger('AppModule', LogLevel.INFO);
     // This must come after OrganizationsModule and its child modules are imported
     RouterModule.register([
       {
-        path: 'start-trial',
+        path: 'quick-start',
         module: TrialModule,
       },
       {

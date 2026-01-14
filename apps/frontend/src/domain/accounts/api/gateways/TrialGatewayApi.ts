@@ -8,7 +8,7 @@ import {
 
 export class TrialGatewayApi extends PackmindGateway implements ITrialGateway {
   constructor() {
-    super('/start-trial');
+    super('/quick-start');
   }
 
   startTrial = async (params: StartTrialCommand): Promise<StartTrialResult> => {

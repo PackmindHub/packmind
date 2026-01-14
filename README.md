@@ -26,25 +26,25 @@ But your team’s **actual standards aren’t stored anywhere**:
 - patterns → hiding in PR comments
 - best practices → scattered across repos
 
-👉 **Packmind helps you turn all of this into a real engineering playbook**  
+👉 **Packmind helps you turn all of this into a real engineering playbook**
 (standards, rules, patterns, commands) so **AI agents finally code _your way_.**
 
 ### **2️⃣ “Why am I copy-pasting this across every repo and every agent?”**
 
-Every repo.  
-Every assistant.  
+Every repo.
+Every assistant.
 Different files, different folders, different formats.
 
 Keeping everything in sync is impossible.
 
-👉 **Packmind centralizes your playbook once — and distributes it everywhere**,  
+👉 **Packmind centralizes your playbook once — and distributes it everywhere**,
 generating the exact instruction files each AI tool needs, optimized for context.
 
 # Get started
 
 Choose your preferred setup option:
 
-- **Cloud version**: Get started at [https://app.packmind.ai](https://app.packmind.ai/start-trial?utm_source=oss) (no account required)
+- **Cloud version**: Get started at [https://app.packmind.ai](https://app.packmind.ai/sign-up?utm_source=oss) (no account required)
 - **Self-hosted**: Deploy on your own infrastructure using [Docker Compose or Kubernetes](https://packmindhub.github.io/packmind/gs-install-self-hosted)
 
 ## Connect MCP server
