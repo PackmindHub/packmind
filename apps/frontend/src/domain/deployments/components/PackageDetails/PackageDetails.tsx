@@ -18,9 +18,6 @@ import {
   PMDataList,
   PMTabs,
   PMEmptyState,
-  isFeatureFlagEnabled,
-  DEFAULT_FEATURE_DOMAIN_MAP,
-  MANAGE_SKILLS_FEATURE_KEY,
 } from '@packmind/ui';
 import { Link, useNavigate } from 'react-router';
 import {
@@ -56,15 +53,10 @@ export const PackageDetails = ({
   spaceSlug,
 }: PackageDetailsProps) => {
   const navigate = useNavigate();
-  const { organization, user } = useAuthContext();
+  const { organization } = useAuthContext();
   const { spaceId } = useCurrentSpace();
 
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const showSkillsSelection = isFeatureFlagEnabled({
-    featureDomainMap: DEFAULT_FEATURE_DOMAIN_MAP,
-    featureKeys: [MANAGE_SKILLS_FEATURE_KEY],
-    userEmail: user?.email,
-  });
 
   const {
     data: packageResponse,
@@ -263,9 +255,7 @@ export const PackageDetails = ({
   const standardCount = standardTableData.length;
   const skillCount = skillTableData.length;
   const isPackageEmpty =
-    recipeCount === 0 &&
-    standardCount === 0 &&
-    (!showSkillsSelection || skillCount === 0);
+    recipeCount === 0 && standardCount === 0 && skillCount === 0;
 
   const installCommand = `packmind-cli install ${pkg.slug}`;
 
@@ -361,9 +351,7 @@ export const PackageDetails = ({
                     mt={8}
                     title={'This package is empty'}
                     description={
-                      showSkillsSelection
-                        ? 'Add commands, standards, and skills to this package to distribute them to your repositories'
-                        : 'Add commands and standards to this package to distribute them to your repositories'
+                      'Add commands, standards, and skills to this package to distribute them to your repositories'
                     }
                   >
                     <PMHStack>
@@ -404,7 +392,7 @@ export const PackageDetails = ({
                       </PMBox>
                     )}
 
-                    {showSkillsSelection && skillCount > 0 && (
+                    {skillCount > 0 && (
                       <PMBox flex={1} width="full">
                         <PMHeading size="lg" mb={4}>
                           Skills ({skillCount})

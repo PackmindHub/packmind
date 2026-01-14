@@ -1,29 +1,14 @@
-import {
-  PMBox,
-  PMHStack,
-  PMStat,
-  isFeatureFlagEnabled,
-  DEFAULT_FEATURE_DOMAIN_MAP,
-  MANAGE_SKILLS_FEATURE_KEY,
-} from '@packmind/ui';
+import { PMBox, PMHStack, PMStat } from '@packmind/ui';
 import {
   useGetRecipesDeploymentOverviewQuery,
   useGetStandardsDeploymentOverviewQuery,
   useGetSkillsDeploymentOverviewQuery,
 } from '../../../deployments/api/queries/DeploymentsQueries';
-import { useAuthContext } from '../../../accounts/hooks';
 
 export const DashboardKPI = () => {
-  const { organization, user } = useAuthContext();
   const { data: recipesOverview } = useGetRecipesDeploymentOverviewQuery();
   const { data: standardsOverview } = useGetStandardsDeploymentOverviewQuery();
   const { data: skillsOverview } = useGetSkillsDeploymentOverviewQuery();
-
-  const showSkills = isFeatureFlagEnabled({
-    featureDomainMap: DEFAULT_FEATURE_DOMAIN_MAP,
-    featureKeys: [MANAGE_SKILLS_FEATURE_KEY],
-    userEmail: user?.email,
-  });
 
   const activeRecipes =
     recipesOverview?.recipes.filter((r) => r.targetDeployments.length > 0)
@@ -65,20 +50,18 @@ export const DashboardKPI = () => {
         </PMStat.Root>
       </PMBox>
 
-      {showSkills && (
-        <PMBox
-          backgroundColor={'background.primary'}
-          padding={4}
-          borderRadius={'md'}
-          flex={1}
-          minW={0}
-        >
-          <PMStat.Root>
-            <PMStat.Label>Skills distributed</PMStat.Label>
-            <PMStat.ValueText>{activeSkills}</PMStat.ValueText>
-          </PMStat.Root>
-        </PMBox>
-      )}
+      <PMBox
+        backgroundColor={'background.primary'}
+        padding={4}
+        borderRadius={'md'}
+        flex={1}
+        minW={0}
+      >
+        <PMStat.Root>
+          <PMStat.Label>Skills distributed</PMStat.Label>
+          <PMStat.ValueText>{activeSkills}</PMStat.ValueText>
+        </PMStat.Root>
+      </PMBox>
     </PMHStack>
   );
 };

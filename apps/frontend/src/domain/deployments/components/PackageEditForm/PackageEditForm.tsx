@@ -19,9 +19,6 @@ import {
   pmUseListCollection,
   PMBadge,
   PMCloseButton,
-  isFeatureFlagEnabled,
-  DEFAULT_FEATURE_DOMAIN_MAP,
-  MANAGE_SKILLS_FEATURE_KEY,
 } from '@packmind/ui';
 import { Link, useNavigate } from 'react-router';
 import {
@@ -69,7 +66,6 @@ interface PackageEditFormContentProps {
   isLoadingRecipes: boolean;
   isLoadingStandards: boolean;
   isLoadingSkills: boolean;
-  showSkillsSelection: boolean;
   orgSlug: string;
   spaceSlug: string;
 }
@@ -88,7 +84,6 @@ const PackageEditFormContent = ({
   isLoadingRecipes,
   isLoadingStandards,
   isLoadingSkills,
-  showSkillsSelection,
   orgSlug,
   spaceSlug,
 }: PackageEditFormContentProps) => {
@@ -372,107 +367,103 @@ const PackageEditFormContent = ({
         <PMField.ErrorText />
       </PMField.Root>
 
-      {showSkillsSelection && (
-        <PMField.Root flex={1} width="full">
-          <PMField.Label>Skills</PMField.Label>
-          {isLoadingSkills || allSkills.length === 0 ? (
-            isLoadingSkills ? (
-              <PMSpinner size="sm" />
-            ) : (
-              <PMText colorPalette="gray" fontSize="sm" display="block">
-                No skills available in this space
-              </PMText>
-            )
+      <PMField.Root flex={1} width="full">
+        <PMField.Label>Skills</PMField.Label>
+        {isLoadingSkills || allSkills.length === 0 ? (
+          isLoadingSkills ? (
+            <PMSpinner size="sm" />
           ) : (
-            <PMVStack gap={2} width="full" align="flex-start">
-              <PMCombobox.Root
-                collection={skillCollection}
-                onInputValueChange={(e: { inputValue: string }) =>
-                  filterSkills(e.inputValue)
-                }
-                onValueChange={(details: { value: string[] }) =>
-                  setSelectedSkillIds(details.value as SkillId[])
-                }
-                value={selectedSkillIds}
-                multiple
-                openOnClick
-                placeholder={skillDisplayValue}
-                width="full"
-                disabled={isPending}
-              >
-                <PMCombobox.Control>
-                  <PMVStack gap={0} width="full">
-                    <PMCombobox.Input />
-                    <PMCombobox.IndicatorGroup>
-                      <PMCombobox.ClearTrigger />
-                      <PMCombobox.Trigger />
-                    </PMCombobox.IndicatorGroup>
-                  </PMVStack>
-                </PMCombobox.Control>
+            <PMText colorPalette="gray" fontSize="sm" display="block">
+              No skills available in this space
+            </PMText>
+          )
+        ) : (
+          <PMVStack gap={2} width="full" align="flex-start">
+            <PMCombobox.Root
+              collection={skillCollection}
+              onInputValueChange={(e: { inputValue: string }) =>
+                filterSkills(e.inputValue)
+              }
+              onValueChange={(details: { value: string[] }) =>
+                setSelectedSkillIds(details.value as SkillId[])
+              }
+              value={selectedSkillIds}
+              multiple
+              openOnClick
+              placeholder={skillDisplayValue}
+              width="full"
+              disabled={isPending}
+            >
+              <PMCombobox.Control>
+                <PMVStack gap={0} width="full">
+                  <PMCombobox.Input />
+                  <PMCombobox.IndicatorGroup>
+                    <PMCombobox.ClearTrigger />
+                    <PMCombobox.Trigger />
+                  </PMCombobox.IndicatorGroup>
+                </PMVStack>
+              </PMCombobox.Control>
 
-                <PMPortal>
-                  <PMCombobox.Positioner>
-                    <PMCombobox.Content>
-                      <PMCombobox.Empty>No skills found</PMCombobox.Empty>
-                      {skillCollection.items.map((item) => (
-                        <PMCombobox.Item item={item} key={item.value}>
-                          <PMCombobox.ItemText>
-                            {item.label}
-                          </PMCombobox.ItemText>
-                          <PMCombobox.ItemIndicator />
-                        </PMCombobox.Item>
-                      ))}
-                    </PMCombobox.Content>
-                  </PMCombobox.Positioner>
-                </PMPortal>
-              </PMCombobox.Root>
-
-              {selectedSkillIds.length > 0 && (
-                <PMHStack gap={2} flexWrap="wrap" width="full">
-                  {selectedSkillIds
-                    .map((skillId) => {
-                      const skill = allSkills.find((s) => s.id === skillId);
-                      return skill ? { id: skillId, name: skill.name } : null;
-                    })
-                    .filter(
-                      (item): item is { id: SkillId; name: string } =>
-                        item !== null,
-                    )
-                    .sort((a, b) => a.name.localeCompare(b.name))
-                    .map(({ id, name }) => (
-                      <PMBadge
-                        key={id}
-                        variant="subtle"
-                        maxW="300px"
-                        display="inline-flex"
-                        alignItems="center"
-                      >
-                        <PMText truncate title={name}>
-                          {name}
-                        </PMText>
-                        <PMCloseButton
-                          size="xs"
-                          ml={1}
-                          flexShrink={0}
-                          onClick={() =>
-                            setSelectedSkillIds(
-                              selectedSkillIds.filter(
-                                (skillId) => skillId !== id,
-                              ),
-                            )
-                          }
-                          disabled={isPending}
-                        />
-                      </PMBadge>
+              <PMPortal>
+                <PMCombobox.Positioner>
+                  <PMCombobox.Content>
+                    <PMCombobox.Empty>No skills found</PMCombobox.Empty>
+                    {skillCollection.items.map((item) => (
+                      <PMCombobox.Item item={item} key={item.value}>
+                        <PMCombobox.ItemText>{item.label}</PMCombobox.ItemText>
+                        <PMCombobox.ItemIndicator />
+                      </PMCombobox.Item>
                     ))}
-                </PMHStack>
-              )}
-            </PMVStack>
-          )}
-          <PMField.HelperText />
-          <PMField.ErrorText />
-        </PMField.Root>
-      )}
+                  </PMCombobox.Content>
+                </PMCombobox.Positioner>
+              </PMPortal>
+            </PMCombobox.Root>
+
+            {selectedSkillIds.length > 0 && (
+              <PMHStack gap={2} flexWrap="wrap" width="full">
+                {selectedSkillIds
+                  .map((skillId) => {
+                    const skill = allSkills.find((s) => s.id === skillId);
+                    return skill ? { id: skillId, name: skill.name } : null;
+                  })
+                  .filter(
+                    (item): item is { id: SkillId; name: string } =>
+                      item !== null,
+                  )
+                  .sort((a, b) => a.name.localeCompare(b.name))
+                  .map(({ id, name }) => (
+                    <PMBadge
+                      key={id}
+                      variant="subtle"
+                      maxW="300px"
+                      display="inline-flex"
+                      alignItems="center"
+                    >
+                      <PMText truncate title={name}>
+                        {name}
+                      </PMText>
+                      <PMCloseButton
+                        size="xs"
+                        ml={1}
+                        flexShrink={0}
+                        onClick={() =>
+                          setSelectedSkillIds(
+                            selectedSkillIds.filter(
+                              (skillId) => skillId !== id,
+                            ),
+                          )
+                        }
+                        disabled={isPending}
+                      />
+                    </PMBadge>
+                  ))}
+              </PMHStack>
+            )}
+          </PMVStack>
+        )}
+        <PMField.HelperText />
+        <PMField.ErrorText />
+      </PMField.Root>
     </PMHStack>
   );
 };
@@ -494,11 +485,6 @@ export const PackageEditForm = ({
   );
   const [selectedSkillIds, setSelectedSkillIds] = useState<SkillId[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const showSkillsSelection = isFeatureFlagEnabled({
-    featureDomainMap: DEFAULT_FEATURE_DOMAIN_MAP,
-    featureKeys: [MANAGE_SKILLS_FEATURE_KEY],
-    userEmail: user?.email,
-  });
 
   const {
     data: packageResponse,
@@ -641,11 +627,7 @@ export const PackageEditForm = ({
     );
   }
 
-  if (
-    isLoadingRecipes ||
-    isLoadingStandards ||
-    (showSkillsSelection && isLoadingSkills)
-  ) {
+  if (isLoadingRecipes || isLoadingStandards || isLoadingSkills) {
     return (
       <PMPage
         title="Edit Package"
@@ -747,7 +729,6 @@ export const PackageEditForm = ({
                   isLoadingRecipes={isLoadingRecipes}
                   isLoadingStandards={isLoadingStandards}
                   isLoadingSkills={isLoadingSkills}
-                  showSkillsSelection={showSkillsSelection}
                   orgSlug={orgSlug}
                   spaceSlug={spaceSlug}
                 />
