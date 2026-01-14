@@ -49,7 +49,7 @@ export function SignUpOptions() {
                   <PMText color="secondary" fontSize="md" textAlign="center">
                     Get your agent code <PMEm>your way</PMEm> in{' '}
                     <PMText as="span" fontWeight="semibold">
-                      5 minutes
+                      2 minutes
                     </PMText>
                   </PMText>
                 </PMVStack>
