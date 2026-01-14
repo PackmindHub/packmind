@@ -14,7 +14,11 @@ import {
   PMBreadcrumb,
 } from '@packmind/ui';
 import type { SkillFile } from '@packmind/types';
-import { getFileLanguage, isPreviewable } from '../utils/fileTreeUtils';
+import {
+  getFileLanguage,
+  getMimeType,
+  isPreviewable,
+} from '../utils/fileTreeUtils';
 
 interface ISkillFilePreviewProps {
   file: SkillFile | null;
@@ -38,7 +42,17 @@ export const SkillFilePreview = ({ file }: ISkillFilePreviewProps) => {
   const fileName = file.path.split('/').pop() ?? 'file';
 
   const handleDownload = () => {
-    const blob = new Blob([file.content], { type: 'text/plain' });
+    let blob: Blob;
+    if (file.isBase64) {
+      const binaryString = atob(file.content);
+      const bytes = new Uint8Array(binaryString.length);
+      for (let i = 0; i < binaryString.length; i++) {
+        bytes[i] = binaryString.charCodeAt(i);
+      }
+      blob = new Blob([bytes], { type: getMimeType(file.path) });
+    } else {
+      blob = new Blob([file.content], { type: 'text/plain' });
+    }
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
