@@ -120,8 +120,12 @@ export const PackagesPage: React.FC<PackagesPageProps> = ({
   React.useEffect(() => {
     if (!packagesResponse) return;
 
+    const sortedPackages = [...packagesResponse.packages].sort((a, b) =>
+      a.name.localeCompare(b.name),
+    );
+
     setTableData(
-      packagesResponse.packages.map((pkg) => ({
+      sortedPackages.map((pkg) => ({
         key: pkg.id,
         select: (
           <PMCheckbox
