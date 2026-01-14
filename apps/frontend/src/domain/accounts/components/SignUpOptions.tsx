@@ -56,7 +56,7 @@ export function SignUpOptions() {
               </PMBox>
 
               <PMButton
-                onClick={() => navigate('/start-trial')}
+                onClick={() => navigate('/quick-start')}
                 width="full"
                 variant="primary"
                 size="lg"

@@ -21,6 +21,6 @@ export class ClaudeStartTrialAgentPage extends AbstractStartTrialAgentPage {
   }
 
   expectedUrl(): RegExp {
-    return /\/start-trial\/claude\?/;
+    return /\/quick-start\/claude\?/;
   }
 }

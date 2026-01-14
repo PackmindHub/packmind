@@ -84,7 +84,7 @@ export class PageFactory implements IPageFactory {
   }
 
   async getStartTrialPage(): Promise<IStartTrialPage> {
-    await this.page.goto('/start-trial');
+    await this.page.goto('/quick-start');
     return this.getPageInstance(StartTrialPage);
   }
 

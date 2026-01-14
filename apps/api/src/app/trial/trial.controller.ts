@@ -54,7 +54,7 @@ export class TrialController {
   @Public()
   @Get()
   async startTrial(@Query('agent') agent: string): Promise<StartTrialResult> {
-    this.logger.info('GET /start-trial - Starting trial', { agent });
+    this.logger.info('GET /quick-start - Starting trial', { agent });
 
     if (!isValidAgent(agent)) {
       throw new BadRequestException(
@@ -98,7 +98,7 @@ export class TrialController {
     @Body() body: GetActivationTokenBody,
   ): Promise<GetActivationTokenResponse> {
     this.logger.info(
-      'POST /start-trial/get-activation-token - Getting activation token',
+      'POST /quick-start/get-activation-token - Getting activation token',
     );
 
     if (!body.mcpToken) {

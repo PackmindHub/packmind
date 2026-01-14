@@ -20,6 +20,6 @@ export class StartTrialPage
   }
 
   expectedUrl(): RegExp {
-    return /\/start-trial$/;
+    return /\/quick-start$/;
   }
 }
