@@ -2,6 +2,8 @@
 
 ## Why Standards Matter with AI Agents
 
+Standards are one of three artifact types in Packmind, alongside [commands](./commands-management.md) and [skills](./skills-management.md).
+
 Context engineering is key to making the most of AI coding assistants. Standards are guidelines that drive the output of agents, ensuring they generate code that follows your team's conventions and best practices.
 
 Many teams struggle with documentation that nobody reads or maintains—wikis and Markdown files that become outdated quickly. With AI coding assistants, this problem becomes even more critical. Standards make your written documentation useful again by providing consistent, actionable guidance that AI agents can follow automatically.

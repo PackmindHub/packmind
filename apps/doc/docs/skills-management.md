@@ -1,0 +1,128 @@
+# Skills: reusable knowledge for AI agents
+
+## What are Skills?
+
+Skills are reusable knowledge packages that AI coding agents can discover and use to perform tasks more accurately. Based on Claude Code skills and Agents skills specifications, they provide specialized capabilities that agents can trigger based on the task at hand.
+
+Unlike standards (which apply automatically) and commands (which require explicit invocation), skills are **agent-discovered**—the AI automatically loads relevant skills based on context and triggers defined in the skill.
+
+## Skill Structure
+
+A skill is a folder containing at minimum a `SKILL.md` file, plus optional supporting files.
+
+### Required: SKILL.md
+
+The `SKILL.md` file contains YAML frontmatter followed by Markdown instructions:
+
+```markdown
+---
+name: 'skill-name'
+description: 'Brief description of what this skill does'
+---
+
+# Skill Name
+
+Instructions for when and how AI agents should use this skill.
+```
+
+**Frontmatter fields:**
+
+| Field           | Required | Description                              |
+| --------------- | -------- | ---------------------------------------- |
+| `name`          | Yes      | Unique identifier for the skill          |
+| `description`   | Yes      | Brief explanation of what the skill does |
+| `license`       | No       | License type (e.g., MIT, Apache-2.0)     |
+| `compatibility` | No       | Which AI agents support this skill       |
+| `allowed-tools` | No       | List of tools the skill may use          |
+| `metadata`      | No       | Additional custom metadata               |
+
+### Optional Supporting Files
+
+Skills can include additional files alongside `SKILL.md`:
+
+- **Templates** — Boilerplate code, configuration files, or scaffolding
+- **Scripts** — Automation scripts the skill may reference or execute
+- **Resources** — Documentation, examples, or reference materials
+- **Subdirectories** — Organize complex skills with multiple related files
+
+All files in the skill directory are packaged together when you upload the skill.
+
+## Creating Skills
+
+Skills are created through the CLI by uploading a skill directory:
+
+```bash
+# Create your skill directory with SKILL.md
+mkdir my-skill
+# Add your SKILL.md and any supporting files
+# ...
+
+# Upload to Packmind
+packmind-cli skills add ./my-skill
+```
+
+For a complete walkthrough, see [Create Your First Skill](./gs-create-skill.md).
+
+## Viewing Skills
+
+Access your skills through the Packmind web app:
+
+1. Navigate to **Skills** in the main menu
+2. Browse the list of available skills
+3. Click a skill to view its details
+
+The skill details view shows:
+
+- **Description** — What the skill does
+- **Files** — All files included in the skill
+- **Version history** — Track changes over time
+- **Packages** — Which packages include this skill
+
+## Skills in Packages
+
+Skills can be added to packages alongside commands and standards. To add a skill to a package:
+
+1. Go to **Packages** in the web app
+2. Edit an existing package or create a new one
+3. Select skills to include
+4. Save the package
+
+When you distribute a package, all included skills are deployed together with your other artifacts.
+
+## Where Skills Appear After Distribution
+
+After distributing a package containing skills, they appear in specific locations based on the AI assistant:
+
+| AI Assistant   | Where Skills Appear                    |
+| -------------- | -------------------------------------- |
+| Claude Code    | `.claude/skills/{skill-slug}/SKILL.md` |
+| Cursor         | Uses Claude Code skills                |
+| GitHub Copilot | `.github/skills/{skill-slug}/SKILL.md` |
+
+The source files are always stored in `.packmind/skills/` regardless of which AI assistants are enabled.
+
+:::note
+Skills are currently available for Claude Code, Cursor, and GitHub Copilot. Other AI assistants do not support skill rendering.
+:::
+
+For complete details on where artifacts appear, see [Understanding Where Your Artifacts Appear](./artifact-rendering.md).
+
+## How Skills Differ from Commands and Standards
+
+| Aspect         | Standards           | Commands                  | Skills               |
+| -------------- | ------------------- | ------------------------- | -------------------- |
+| **Activation** | Automatic           | User-invoked              | Agent-discovered     |
+| **Purpose**    | Enforce guidelines  | Execute tasks             | Provide capabilities |
+| **Creation**   | MCP or Web UI       | MCP                       | CLI only             |
+| **Format**     | Rules with examples | Step-by-step instructions | SKILL.md + resources |
+
+- **Standards** are coding guidelines that AI assistants follow automatically
+- **Commands** are tasks you invoke explicitly with slash commands
+- **Skills** are knowledge packages that AI agents discover and use as needed
+
+## Related Documentation
+
+- [Create Your First Skill](./gs-create-skill.md) — Step-by-step guide to creating skills
+- [CLI Reference](./cli.md#skills-command) — Skills CLI command details
+- [Packages Management](./packages-management.md) — Organize and distribute artifacts
+- [Understanding Where Your Artifacts Appear](./artifact-rendering.md) — See where skills are rendered

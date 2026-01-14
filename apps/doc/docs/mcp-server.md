@@ -209,7 +209,7 @@ When creating new command using `save_command`, you can include the optional `pa
 
 **Tool:** `list_packages`
 
-Retrieves all packages created in your organization. Packages are collections of commands and standards that can be distributed together.
+Retrieves all packages created in your organization. Packages are collections of commands, standards, and skills that can be distributed together.
 
 **Parameters:** None
 
@@ -225,7 +225,7 @@ Retrieves all packages created in your organization. Packages are collections of
 
 **Tool:** `get_package_details`
 
-Retrieves the full content of a specific package including all its commands and standards.
+Retrieves the full content of a specific package including all its commands, standards, and skills.
 
 **Parameters:**
 
@@ -236,6 +236,7 @@ Retrieves the full content of a specific package including all its commands and 
 - Package name, slug, and description
 - List of all commands in the package with their summaries
 - List of all standards in the package with their summaries
+- List of all skills in the package with their descriptions
 
 **Usage Example:**
 

@@ -1,14 +1,16 @@
 # Understanding Where Your Artifacts Appear
 
-After distributing your standards and commands through Packmind, they appear in specific locations in your Git repositories. Each AI coding assistant reads from its own designated folder or file, allowing it to apply your team's guidelines automatically.
+After distributing your standards, commands, and skills through Packmind, they appear in specific locations in your Git repositories. Each AI coding assistant reads from its own designated folder or file, allowing it to apply your team's guidelines automatically.
 
 ## Overview
 
-When you distribute a package containing standards and commands:
+When you distribute a package containing standards, commands, and skills:
 
 1. **Standards** are automatically loaded by your AI assistant when you're coding. They guide the AI to follow your team's conventions without any action on your part.
 
 2. **Commands** are instructions you can run on-demand when you need to perform a specific task. You invoke them manually when needed.
+
+3. **Skills** are knowledge packages that AI agents discover and use based on the task at hand. They're triggered automatically by the AI when relevant.
 
 Your organization administrator controls which AI assistants receive updates in **Settings** → **Distribution** → **Rendering**. See [Manage AI Agent Rendering](./manage-ai-agents.md) for details.
 
@@ -148,3 +150,4 @@ These source files are the single source of truth. The files in AI assistant-spe
 - [Distribute Artifacts](./distribution.md) - Learn how to distribute packages to repositories
 - [Standards Management](./standards-management.md) - Create and manage coding standards
 - [Commands Management](./commands-management.md) - Create and manage reusable commands
+- [Skills Management](./skills-management.md) - Create and manage reusable skills

@@ -1,12 +1,12 @@
-# Distribute standards and commands
+# Distribute standards, commands, and skills
 
-This guide shows you how to install your **Standards** and **Commands** locally using the Packmind CLI, making them available to your AI coding assistant.
+This guide shows you how to install your **Standards**, **Commands**, and **Skills** locally using the Packmind CLI, making them available to your AI coding assistant.
 
 This approach downloads content directly to your local machine without requiring Git configuration.
 
 ## Create your first package
 
-Before distributing your standards and commands, organize them into **Packages**. A package is a curated collection of commands and standards grouped together—for example, "Frontend Guidelines" or "Backend API Standards".
+Before distributing your artifacts, organize them into **Packages**. A package is a curated collection of commands, standards, and skills grouped together—for example, "Frontend Guidelines" or "Backend API Standards".
 
 Packages make it easy to distribute related guidelines as a single unit.
 
@@ -15,7 +15,7 @@ Packages make it easy to distribute related guidelines as a single unit.
 1. Navigate to **Packages** in the Packmind UI
 2. Click **Create Package**
 3. Provide a name and description
-4. Select commands and standards to include
+4. Select commands, standards, and skills to include
 5. Save the package
 
 You can organize packages by technology, domain, team, or architectural layer—whatever matches how your team works.
@@ -50,7 +50,7 @@ packmind-cli install --show <package-slug>
 packmind-cli install <package-slug> [additional-package-slugs...]
 ```
 
-This downloads all commands and standards from the specified packages and creates the appropriate files for your AI coding assistant.
+This downloads all commands, standards, and skills from the specified packages and creates the appropriate files for your AI coding assistant.
 
 **Example - First installation:**
 

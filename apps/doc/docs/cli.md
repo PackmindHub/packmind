@@ -209,7 +209,7 @@ When you run `packmind-cli login`, the setup-mcp command runs automatically afte
 
 ## Install Command
 
-Download commands and standards from packages to your local machine.
+Download commands, standards, and skills from packages to your local machine.
 
 ### List Available Packages
 
@@ -263,7 +263,7 @@ packmind-cli install <package-slug> [additional-package-slugs...]
 packmind-cli install backend frontend
 ```
 
-This downloads all commands and standards from the specified packages and creates the appropriate files for your AI coding assistant.
+This downloads all commands, standards, and skills from the specified packages and creates the appropriate files for your AI coding assistant.
 
 ### Recursive Install (Monorepos)
 
@@ -428,6 +428,7 @@ This uploads the skill to your Packmind organization, making it available for di
 
 ## Related Documentation
 
-- [Packages Management](./packages-management.md): Learn about organizing commands and standards into packages
+- [Packages Management](./packages-management.md): Learn about organizing commands, standards, and skills into packages
 - [Linter: Automated Detection](./linter.md): Learn about how detection programs work
 - [Standards Management](./standards-management.md): Create rules and add code examples
+- [Skills Management](./skills-management.md): Create and manage reusable skills

@@ -2,6 +2,8 @@
 
 ## What are Commands?
 
+Commands are one of three artifact types in Packmind, alongside [standards](./standards-management.md) and [skills](./skills-management.md).
+
 In teams using AI coding assistants, sharing and reusing prompts that work is often tedious. A Packmind **Command** is an executable, step-by-step guide that tells the AI assistant exactly how to perform a development task so your team's practices are applied consistently and reproducibly.
 
 Commands are repeatable and predictable instruction patterns that can be applied to achieve a specific outcome.

@@ -1,10 +1,10 @@
-# Packages: organize your coding guidelines
+# Packages: organize your artifacts
 
 ## What are Packages?
 
-A **Package** is a curated collection of commands and standards grouped together. Packages organize your coding guidelines in a way that matches how your team actually works—whether by technology, domain, team, or architectural layer.
+A **Package** is a curated collection of commands, standards, and skills grouped together. Packages organize your artifacts in a way that matches how your team actually works—whether by technology, domain, team, or architectural layer.
 
-Instead of managing dozens of individual items, packages let you group related guidelines and distribute them as a single unit.
+Instead of managing dozens of individual items, packages let you group related artifacts and distribute them as a single unit.
 
 ## How to Distribute Packages
 
@@ -22,10 +22,10 @@ Create packages through the web interface:
 1. Navigate to **Packages** in the Packmind UI
 2. Click **Create Package**
 3. Provide a name and description
-4. Select commands and standards to include
+4. Select commands, standards, and skills to include
 5. Save the package
 
-You can also add items to packages automatically when creating commands or standards via the MCP server by including the `packageSlugs` parameter.
+You can also add items to packages automatically when creating commands or standards via the MCP server by including the `packageSlugs` parameter. Skills are added to packages through the web interface after uploading them via CLI.
 
 ## Using Packages
 
@@ -56,7 +56,7 @@ Push packages to your Git repositories through the web interface:
 3. Choose target paths
 4. Click **Distribute**
 
-All commands and standards in the package are committed together to your repository.
+All commands, standards, and skills in the package are committed together to your repository.
 
 Learn more in the [Distribution documentation](./distribution.md).
 
@@ -73,6 +73,6 @@ See the [MCP Server reference](./mcp-server.md#packages-tools) for details.
 
 ## Package Versions
 
-Packages are dynamic collections without their own versions. When you distribute a package, it always includes the latest version of each command and standard it contains.
+Packages are dynamic collections without their own versions. When you distribute a package, it always includes the latest version of each command, standard, and skill it contains.
 
 To see which repositories have outdated versions, check the [distribution overview](./distribution.md).

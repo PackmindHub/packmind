@@ -27,7 +27,7 @@ But your team’s **actual standards aren’t stored anywhere**:
 - best practices → scattered across repos
 
 👉 **Packmind helps you turn all of this into a real engineering playbook**
-(standards, rules, patterns, commands) so **AI agents finally code _your way_.**
+(standards, commands, skills) so **AI agents finally code _your way_.**
 
 ### **2️⃣ “Why am I copy-pasting this across every repo and every agent?”**
 
@@ -49,7 +49,7 @@ Choose your preferred setup option:
 
 ## Connect MCP server
 
-The MCP server allows you to interact with Packmind directly from your AI agent (GitHub Copilot, Claude Code, Cursor, etc.) to create and manage standards and commands.
+The MCP server allows you to interact with Packmind directly from your AI agent (GitHub Copilot, Claude Code, Cursor, etc.) to create and manage standards and commands. Skills are created via the CLI.
 
 1. Go to **Account Settings** in Packmind
 2. Copy your MCP Access token
@@ -68,13 +68,13 @@ Start packmind onboarding
 Your AI agent will guide you through creating your first coding standard interactively.
 Go in Packmind to see the final results.
 
-## Distribute standards and commands
+## Distribute standards, commands, and skills
 
-Make your standards available to your AI coding assistant:
+Make your artifacts available to your AI coding assistant:
 
 ### 1. Create a package
 
-In Packmind, go to **Packages** → **Create Package**, then add your standards and commands to it.
+In Packmind, go to **Packages** → **Create Package**, then add your standards, commands, and skills to it.
 
 ### 2. Install locally
 
