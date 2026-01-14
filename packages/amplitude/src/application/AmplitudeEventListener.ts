@@ -15,6 +15,7 @@ import {
   SkillCreatedEvent,
   SkillUpdatedEvent,
   RuleUpdatedEvent,
+  UserEvent,
 } from '@packmind/types';
 import { EventTrackingAdapter } from './EventTrackingAdapter';
 
@@ -46,188 +47,156 @@ export class AmplitudeEventListener extends PackmindListener<EventTrackingAdapte
     this.subscribe(SkillUpdatedEvent, this.onSkillUpdated);
   }
 
+  private async emitAmplitudeEvent<T extends UserEvent>(
+    event: T,
+    eventName: string,
+    transformer: (payload: T['payload']) => Record<string, string | number>,
+  ) {
+    const { userId, organizationId } = event.payload;
+
+    await this.adapter.trackEvent(userId, organizationId, eventName, {
+      ...transformer(event.payload),
+      source: event.payload.source,
+    });
+  }
+
   private onStandardCreated = async (
     event: StandardCreatedEvent,
   ): Promise<void> => {
-    const { userId, organizationId, standardId, spaceId, source } =
-      event.payload;
-    await this.adapter.trackEvent(userId, organizationId, 'standard_created', {
-      standardId,
-      spaceId,
-      source,
-    });
+    return this.emitAmplitudeEvent(event, 'standard_created', (payload) => ({
+      standardId: payload.standardId,
+      spaceId: payload.spaceId,
+    }));
   };
 
   private onStandardUpdated = async (
     event: StandardUpdatedEvent,
   ): Promise<void> => {
-    const { userId, organizationId, standardId, spaceId, newVersion } =
-      event.payload;
-    await this.adapter.trackEvent(userId, organizationId, 'standard_updated', {
-      standardId,
-      spaceId,
-      newVersion,
-    });
+    return this.emitAmplitudeEvent(event, 'standard_updated', (payload) => ({
+      standardId: payload.standardId,
+      spaceId: payload.spaceId,
+      newVersion: payload.newVersion,
+    }));
   };
 
   private onStandardDeleted = async (
     event: StandardDeletedEvent,
   ): Promise<void> => {
-    const { userId, organizationId, standardId, spaceId } = event.payload;
-    await this.adapter.trackEvent(userId, organizationId, 'standard_deleted', {
-      standardId,
-      spaceId,
-    });
+    return this.emitAmplitudeEvent(event, 'standard_deleted', (payload) => ({
+      standardId: payload.standardId,
+      spaceId: payload.spaceId,
+    }));
   };
 
   private onRuleAdded = async (event: RuleAddedEvent): Promise<void> => {
-    const {
-      userId,
-      organizationId,
-      standardId,
-      standardVersionId,
-      newVersion,
-    } = event.payload;
-    await this.adapter.trackEvent(userId, organizationId, 'rule_added', {
-      standardId,
-      standardVersionId,
-      newVersion,
-    });
+    return this.emitAmplitudeEvent(event, 'rule_added', (payload) => ({
+      standardId: payload.standardId,
+      standardVersionId: payload.standardVersionId,
+      newVersion: payload.newVersion,
+    }));
   };
 
   private onRuleUpdated = async (event: RuleUpdatedEvent): Promise<void> => {
-    const {
-      userId,
-      organizationId,
-      standardId,
-      standardVersionId,
-      newVersion,
-    } = event.payload;
-    await this.adapter.trackEvent(userId, organizationId, 'rule_updated', {
-      standardId,
-      standardVersionId,
-      newVersion,
-    });
+    return this.emitAmplitudeEvent(event, 'rule_updated', (payload) => ({
+      standardId: payload.standardId,
+      standardVersionId: payload.standardVersionId,
+      newVersion: payload.newVersion,
+    }));
   };
 
   private onCommandCreated = async (
     event: CommandCreatedEvent,
   ): Promise<void> => {
-    const { userId, organizationId, id, spaceId } = event.payload;
-    await this.adapter.trackEvent(userId, organizationId, 'command_created', {
-      id,
-      spaceId,
-    });
+    return this.emitAmplitudeEvent(event, 'command_created', (payload) => ({
+      id: payload.id,
+      spaceId: payload.spaceId,
+    }));
   };
 
   private onCommandUpdated = async (
     event: CommandUpdatedEvent,
   ): Promise<void> => {
-    const { userId, organizationId, id, spaceId, newVersion } = event.payload;
-    await this.adapter.trackEvent(userId, organizationId, 'command_updated', {
-      id,
-      spaceId,
-      newVersion,
-    });
+    return this.emitAmplitudeEvent(event, 'command_updated', (payload) => ({
+      id: payload.id,
+      spaceId: payload.spaceId,
+      newVersion: payload.newVersion,
+    }));
   };
 
   private onCommandDeleted = async (
     event: CommandDeletedEvent,
   ): Promise<void> => {
-    const { userId, organizationId, id, spaceId } = event.payload;
-    await this.adapter.trackEvent(userId, organizationId, 'command_deleted', {
-      id,
-      spaceId,
-    });
+    return this.emitAmplitudeEvent(event, 'command_deleted', (payload) => ({
+      id: payload.id,
+      spaceId: payload.spaceId,
+    }));
   };
 
   private onDeploymentCompleted = async (
     event: DeploymentCompletedEvent,
   ): Promise<void> => {
-    const { userId, organizationId, targetIds, recipeCount, standardCount } =
-      event.payload;
-    await this.adapter.trackEvent(userId, organizationId, 'deployment_done', {
-      targetCount: targetIds.length,
-      recipeCount,
-      standardCount,
-    });
+    return this.emitAmplitudeEvent(event, 'deployment_done', (payload) => ({
+      targetCount: payload.targetIds.length,
+      recipeCount: payload.recipeCount,
+      standardCount: payload.standardCount,
+    }));
   };
 
   private onArtifactsPulled = async (
     event: ArtifactsPulledEvent,
   ): Promise<void> => {
-    const {
-      userId,
-      organizationId,
-      packageSlugs,
-      recipeCount,
-      standardCount,
-      source,
-    } = event.payload;
-    await this.adapter.trackEvent(userId, organizationId, 'artifacts_pulled', {
-      packageCount: packageSlugs.length,
-      recipeCount,
-      standardCount,
-      source,
-    });
+    return this.emitAmplitudeEvent(event, 'artifacts_pulled', (payload) => ({
+      packageCount: payload.packageSlugs.length,
+      recipeCount: payload.recipeCount,
+      standardCount: payload.standardCount,
+      skillCount: payload.skillCount,
+    }));
   };
 
   private handleTrialStarted = async (
     event: AnonymousTrialStartedEvent,
   ): Promise<void> => {
-    const { userId, organizationId, agent, startedAt } = event.payload;
-
-    await this.adapter.trackEvent(
-      userId,
-      organizationId,
+    return this.emitAmplitudeEvent(
+      event,
       'anonymous_trial_started',
-      {
-        agent,
-        startedAt: startedAt.toISOString(),
-      },
+      (payload) => ({
+        agent: payload.agent,
+        startedAt: payload.startedAt.toISOString(),
+      }),
     );
   };
 
   private handleTrialAccountActivated = async (
     event: AnonymousTrialAccountActivatedEvent,
   ): Promise<void> => {
-    const { userId, organizationId } = event.payload;
-
-    await this.adapter.trackEvent(
-      userId,
-      organizationId,
+    return this.emitAmplitudeEvent(
+      event,
       'anonymous_trial_account_activated',
-      {},
+      (payload) => ({
+        userId: payload.userId,
+        organizationId: payload.organizationId,
+      }),
     );
   };
 
   private onLinterCalled = async (event: LinterCalledEvent): Promise<void> => {
-    const { userId, organizationId, targetCount, standardCount } =
-      event.payload;
-    await this.adapter.trackEvent(userId, organizationId, 'linter_called', {
-      targetCount,
-      standardCount,
-    });
+    return this.emitAmplitudeEvent(event, 'linter_called', (payload) => ({
+      targetCount: payload.targetCount,
+      standardCount: payload.standardCount,
+    }));
   };
 
   private onSkillCreated = async (event: SkillCreatedEvent): Promise<void> => {
-    const { userId, organizationId, skillId, spaceId, source, fileCount } =
-      event.payload;
-    await this.adapter.trackEvent(userId, organizationId, 'skill_created', {
-      skillId,
-      spaceId,
-      source,
-      fileCount,
-    });
+    return this.emitAmplitudeEvent(event, 'skill_created', (payload) => ({
+      skillId: payload.skillId,
+      spaceId: payload.spaceId,
+      fileCount: payload.fileCount,
+    }));
   };
 
   private onSkillUpdated = async (event: SkillUpdatedEvent) => {
-    const { userId, organizationId, source, fileCount } = event.payload;
-    await this.adapter.trackEvent(userId, organizationId, 'skill_updated', {
-      userId,
-      organizationId,
-      source,
-      fileCount,
-    });
+    return this.emitAmplitudeEvent(event, 'skill_updated', (payload) => ({
+      fileCount: payload.fileCount,
+    }));
   };
 }

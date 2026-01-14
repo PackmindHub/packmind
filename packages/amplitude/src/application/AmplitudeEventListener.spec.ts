@@ -15,6 +15,9 @@ import {
   createRecipeId,
   createSpaceId,
   createSkillId,
+  createStandardId,
+  createStandardVersionId,
+  createTargetId,
 } from '@packmind/types';
 import { DataSource } from 'typeorm';
 import { AmplitudeEventListener } from './AmplitudeEventListener';
@@ -48,10 +51,10 @@ describe('AmplitudeEventListener', () => {
   describe('StandardCreatedEvent', () => {
     it('tracks standard_created event with correct payload', async () => {
       const event = new StandardCreatedEvent({
-        userId: 'user-123',
-        organizationId: 'org-456',
-        standardId: 'std-789',
-        spaceId: 'space-abc',
+        userId: createUserId('user-123'),
+        organizationId: createOrganizationId('org-456'),
+        standardId: createStandardId('std-789'),
+        spaceId: createSpaceId('space-abc'),
         source: 'ui',
       });
 
@@ -75,11 +78,12 @@ describe('AmplitudeEventListener', () => {
   describe('StandardUpdatedEvent', () => {
     it('tracks standard_updated event with correct payload', async () => {
       const event = new StandardUpdatedEvent({
-        userId: 'user-123',
-        organizationId: 'org-456',
-        standardId: 'std-789',
-        spaceId: 'space-abc',
+        userId: createUserId('user-123'),
+        organizationId: createOrganizationId('org-456'),
+        standardId: createStandardId('std-789'),
+        spaceId: createSpaceId('space-abc'),
         newVersion: 2,
+        source: 'ui',
       });
 
       eventEmitterService.emit(event);
@@ -94,6 +98,7 @@ describe('AmplitudeEventListener', () => {
           standardId: 'std-789',
           spaceId: 'space-abc',
           newVersion: 2,
+          source: 'ui',
         },
       );
     });
@@ -102,11 +107,12 @@ describe('AmplitudeEventListener', () => {
   describe('RuleAddedEvent', () => {
     it('tracks rule_added event with correct payload', async () => {
       const event = new RuleAddedEvent({
-        userId: 'user-123',
-        organizationId: 'org-456',
-        standardId: 'std-789',
-        standardVersionId: 'sv-001',
+        userId: createUserId('user-123'),
+        organizationId: createOrganizationId('org-456'),
+        standardId: createStandardId('std-789'),
+        standardVersionId: createStandardVersionId('sv-001'),
         newVersion: 3,
+        source: 'ui',
       });
 
       eventEmitterService.emit(event);
@@ -121,6 +127,7 @@ describe('AmplitudeEventListener', () => {
           standardId: 'std-789',
           standardVersionId: 'sv-001',
           newVersion: 3,
+          source: 'ui',
         },
       );
     });
@@ -133,6 +140,7 @@ describe('AmplitudeEventListener', () => {
         organizationId: createOrganizationId('org-456'),
         id: createRecipeId('command-789'),
         spaceId: createSpaceId('space-abc'),
+        source: 'ui',
       });
 
       eventEmitterService.emit(event);
@@ -146,6 +154,7 @@ describe('AmplitudeEventListener', () => {
         {
           id: 'command-789',
           spaceId: 'space-abc',
+          source: 'ui',
         },
       );
     });
@@ -159,6 +168,7 @@ describe('AmplitudeEventListener', () => {
         id: createRecipeId('command-789'),
         spaceId: createSpaceId('space-abc'),
         newVersion: 4,
+        source: 'ui',
       });
 
       eventEmitterService.emit(event);
@@ -173,6 +183,7 @@ describe('AmplitudeEventListener', () => {
           id: 'command-789',
           spaceId: 'space-abc',
           newVersion: 4,
+          source: 'ui',
         },
       );
     });
@@ -181,11 +192,12 @@ describe('AmplitudeEventListener', () => {
   describe('DeploymentCompletedEvent', () => {
     it('tracks deployment_done event with correct payload', async () => {
       const event = new DeploymentCompletedEvent({
-        userId: 'user-123',
-        organizationId: 'org-456',
-        targetIds: ['target-1', 'target-2', 'target-3'],
+        userId: createUserId('user-123'),
+        organizationId: createOrganizationId('org-456'),
+        targetIds: ['target-1', 'target-2', 'target-3'].map(createTargetId),
         recipeCount: 5,
         standardCount: 3,
+        source: 'ui',
       });
 
       eventEmitterService.emit(event);
@@ -200,6 +212,7 @@ describe('AmplitudeEventListener', () => {
           targetCount: 3,
           recipeCount: 5,
           standardCount: 3,
+          source: 'ui',
         },
       );
     });
@@ -208,11 +221,12 @@ describe('AmplitudeEventListener', () => {
   describe('ArtifactsPulledEvent', () => {
     it('tracks artifacts_pulled event with correct payload', async () => {
       const event = new ArtifactsPulledEvent({
-        userId: 'user-123',
-        organizationId: 'org-456',
+        userId: createUserId('user-123'),
+        organizationId: createOrganizationId('org-456'),
         packageSlugs: ['pkg-1', 'pkg-2'],
         recipeCount: 10,
         standardCount: 5,
+        skillCount: 2,
         source: 'cli',
       });
 
@@ -228,6 +242,7 @@ describe('AmplitudeEventListener', () => {
           packageCount: 2,
           recipeCount: 10,
           standardCount: 5,
+          skillCount: 2,
           source: 'cli',
         },
       );
@@ -241,6 +256,7 @@ describe('AmplitudeEventListener', () => {
         organizationId: createOrganizationId('org-456'),
         targetCount: 3,
         standardCount: 5,
+        source: 'cli',
       });
 
       eventEmitterService.emit(event);
@@ -254,6 +270,7 @@ describe('AmplitudeEventListener', () => {
         {
           targetCount: 3,
           standardCount: 5,
+          source: 'cli',
         },
       );
     });
