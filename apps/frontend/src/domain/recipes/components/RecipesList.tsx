@@ -105,8 +105,12 @@ export const RecipesList = ({ orgSlug }: RecipesListProps) => {
   React.useEffect(() => {
     if (!recipes) return;
 
+    const sortedRecipes = [...recipes].sort((a, b) =>
+      a.name.localeCompare(b.name),
+    );
+
     setTableData(
-      recipes.map((recipe) => ({
+      sortedRecipes.map((recipe) => ({
         key: recipe.id,
         select: (
           <PMCheckbox
