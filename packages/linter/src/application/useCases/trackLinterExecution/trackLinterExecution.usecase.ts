@@ -36,6 +36,7 @@ export class TrackLinterExecutionUseCase {
         organizationId: createOrganizationId(command.organizationId),
         targetCount: command.targetCount,
         standardCount: command.standardCount,
+        source: 'cli',
       }),
     );
 

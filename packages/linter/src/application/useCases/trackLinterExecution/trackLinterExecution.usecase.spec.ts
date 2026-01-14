@@ -50,6 +50,7 @@ describe('TrackLinterExecutionUseCase', () => {
         organizationId: createOrganizationId(organizationId),
         targetCount: 2,
         standardCount: 5,
+        source: 'cli',
       });
     });
 
