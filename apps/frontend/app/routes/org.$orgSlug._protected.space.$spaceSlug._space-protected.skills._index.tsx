@@ -1,11 +1,18 @@
-import { PMPage } from '@packmind/ui';
-import { PMVStack } from '@packmind/ui';
+import { PMPage, PMVStack, PMButton } from '@packmind/ui';
 import { useAuthContext } from '../../src/domain/accounts/hooks/useAuthContext';
 import { SkillsList } from '../../src/domain/skills/components/SkillsList';
 import { AutobreadCrumb } from '../../src/shared/components/navigation/AutobreadCrumb';
+import { GettingStartedLearnMoreDialog } from '../../src/domain/organizations/components/dashboard/GettingStartedLearnMoreDialog';
+import { SkillsLearnMoreContent } from '../../src/domain/skills/components/SkillsLearnMoreContent';
+import { useParams } from 'react-router';
 
 export default function SkillsIndexRouteModule() {
   const { organization } = useAuthContext();
+  const { spaceSlug } = useParams<{
+    orgSlug: string;
+    spaceSlug: string;
+  }>();
+
   if (!organization) {
     return null;
   }
@@ -15,6 +22,16 @@ export default function SkillsIndexRouteModule() {
       title="Skills"
       subtitle="Skills give the AI the ability to handle a type of task on its own — use them when a task requires structured know-how or multiple steps"
       breadcrumbComponent={<AutobreadCrumb />}
+      actions={
+        spaceSlug && (
+          <GettingStartedLearnMoreDialog
+            body={<SkillsLearnMoreContent />}
+            title="How to create skills"
+            buttonLabel="Create"
+            buttonSize="md"
+          />
+        )
+      }
     >
       <PMVStack align="stretch" gap={6}>
         <SkillsList orgSlug={organization.slug} />
