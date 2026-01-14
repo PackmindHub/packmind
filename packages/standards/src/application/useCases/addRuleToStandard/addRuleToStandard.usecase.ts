@@ -5,11 +5,14 @@ import { IRuleRepository } from '../../../domain/repositories/IRuleRepository';
 import {
   createRuleExampleId,
   createRuleId,
+  createSpaceId,
   createStandardId,
   createStandardVersionId,
+  PackmindEventSource,
   RuleAddedEvent,
   RuleExample,
   RuleExampleInput,
+  StandardUpdatedEvent,
   StandardVersion,
 } from '@packmind/types';
 import { v4 as uuidv4 } from 'uuid';
@@ -28,6 +31,7 @@ export type AddRuleToStandardRequest = {
   organizationId: OrganizationId;
   userId: UserId;
   examples?: RuleExampleInput[];
+  source?: PackmindEventSource;
 };
 
 export class AddRuleToStandardUsecase {
@@ -53,6 +57,7 @@ export class AddRuleToStandardUsecase {
     organizationId,
     userId,
     examples,
+    source = 'ui',
   }: AddRuleToStandardRequest): Promise<StandardVersion> {
     // Normalize the slug to lowercase for consistent lookup
     const normalizedSlug = standardSlug.toLowerCase();
@@ -196,7 +201,18 @@ export class AddRuleToStandardUsecase {
           organizationId,
           userId,
           newVersion: nextVersion,
-          source: 'ui',
+          source,
+        }),
+      );
+
+      this.eventEmitterService.emit(
+        new StandardUpdatedEvent({
+          standardId: createStandardId(existingStandard.id),
+          spaceId: createSpaceId(existingStandard.spaceId),
+          organizationId,
+          userId,
+          newVersion: nextVersion,
+          source,
         }),
       );
 
