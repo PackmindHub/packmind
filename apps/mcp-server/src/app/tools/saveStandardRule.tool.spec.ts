@@ -123,12 +123,6 @@ describe('addRuleToStandard.tool', () => {
           standardId: 'standard-123',
           version: '1.1.0',
         }),
-        getRulesByStandardId: jest.fn().mockResolvedValue([
-          {
-            id: 'rule-123',
-            content: 'Use meaningful variable names',
-          },
-        ]),
       };
 
       mockFastify.standardsHexa.mockReturnValue({
@@ -147,6 +141,7 @@ describe('addRuleToStandard.tool', () => {
         ruleContent: 'Use meaningful variable names',
         organizationId: 'org-123',
         userId: 'user-123',
+        examples: [],
       });
 
       expect(result).toEqual({
@@ -172,13 +167,6 @@ describe('addRuleToStandard.tool', () => {
           standardId: 'standard-123',
           version: '1.1.0',
         }),
-        getRulesByStandardId: jest.fn().mockResolvedValue([
-          {
-            id: 'rule-123',
-            content: 'Use const for immutable variables',
-          },
-        ]),
-        createRuleExample: jest.fn().mockResolvedValue({}),
       };
 
       mockFastify.standardsHexa.mockReturnValue({
@@ -195,13 +183,18 @@ describe('addRuleToStandard.tool', () => {
         language: 'typescript',
       });
 
-      expect(mockAdapter.createRuleExample).toHaveBeenCalledWith({
-        ruleId: 'rule-123',
-        positive: 'const PI = 3.14;',
-        negative: 'let PI = 3.14;',
-        lang: 'TYPESCRIPT',
+      expect(mockAdapter.addRuleToStandard).toHaveBeenCalledWith({
+        standardSlug: 'typescript-best-practices',
+        ruleContent: 'Use const for immutable variables',
         organizationId: 'org-123',
         userId: 'user-123',
+        examples: [
+          {
+            positive: 'const PI = 3.14;',
+            negative: 'let PI = 3.14;',
+            language: 'TYPESCRIPT',
+          },
+        ],
       });
 
       expect(result).toEqual({
@@ -220,12 +213,6 @@ describe('addRuleToStandard.tool', () => {
           standardId: 'standard-123',
           version: '1.2.0',
         }),
-        getRulesByStandardId: jest.fn().mockResolvedValue([
-          {
-            id: 'rule-123',
-            content: 'Follow naming conventions',
-          },
-        ]),
       };
 
       mockFastify.standardsHexa.mockReturnValue({
@@ -244,6 +231,7 @@ describe('addRuleToStandard.tool', () => {
         ruleContent: 'Follow naming conventions',
         organizationId: 'org-123',
         userId: 'user-123',
+        examples: [],
       });
 
       expect(result.content[0].text).toContain('typescript-best-practices');
@@ -262,13 +250,6 @@ describe('addRuleToStandard.tool', () => {
           standardId: 'standard-123',
           version: '1.1.0',
         }),
-        getRulesByStandardId: jest.fn().mockResolvedValue([
-          {
-            id: 'rule-123',
-            content: 'Test rule',
-          },
-        ]),
-        createRuleExample: jest.fn().mockResolvedValue({}),
       };
 
       mockFastify.standardsHexa.mockReturnValue({
@@ -292,10 +273,14 @@ describe('addRuleToStandard.tool', () => {
         '```js\nvar x = 1;\n```',
       );
 
-      expect(mockAdapter.createRuleExample).toHaveBeenCalledWith(
+      expect(mockAdapter.addRuleToStandard).toHaveBeenCalledWith(
         expect.objectContaining({
-          positive: 'extracted: ```js\nconst x = 1;\n```',
-          negative: 'extracted: ```js\nvar x = 1;\n```',
+          examples: [
+            expect.objectContaining({
+              positive: 'extracted: ```js\nconst x = 1;\n```',
+              negative: 'extracted: ```js\nvar x = 1;\n```',
+            }),
+          ],
         }),
       );
     });
@@ -306,12 +291,6 @@ describe('addRuleToStandard.tool', () => {
           standardId: 'standard-123',
           version: '1.1.0',
         }),
-        getRulesByStandardId: jest.fn().mockResolvedValue([
-          {
-            id: 'rule-123',
-            content: 'Test rule',
-          },
-        ]),
       };
 
       mockFastify.standardsHexa.mockReturnValue({
@@ -379,19 +358,12 @@ describe('addRuleToStandard.tool', () => {
     });
 
     describe('when no code snippets provided', () => {
-      it('does not create rule example', async () => {
+      it('passes empty examples array to addRuleToStandard', async () => {
         const mockAdapter = {
           addRuleToStandard: jest.fn().mockResolvedValue({
             standardId: 'standard-123',
             version: '1.1.0',
           }),
-          getRulesByStandardId: jest.fn().mockResolvedValue([
-            {
-              id: 'rule-123',
-              content: 'Test rule',
-            },
-          ]),
-          createRuleExample: jest.fn().mockResolvedValue({}),
         };
 
         mockFastify.standardsHexa.mockReturnValue({
@@ -405,24 +377,21 @@ describe('addRuleToStandard.tool', () => {
           ruleContent: 'Test rule',
         });
 
-        expect(mockAdapter.createRuleExample).not.toHaveBeenCalled();
+        expect(mockAdapter.addRuleToStandard).toHaveBeenCalledWith(
+          expect.objectContaining({
+            examples: [],
+          }),
+        );
       });
     });
 
     describe('when only positive example provided', () => {
-      it('creates rule example', async () => {
+      it('passes example with positive and empty negative to addRuleToStandard', async () => {
         const mockAdapter = {
           addRuleToStandard: jest.fn().mockResolvedValue({
             standardId: 'standard-123',
             version: '1.1.0',
           }),
-          getRulesByStandardId: jest.fn().mockResolvedValue([
-            {
-              id: 'rule-123',
-              content: 'Test rule',
-            },
-          ]),
-          createRuleExample: jest.fn().mockResolvedValue({}),
         };
 
         mockFastify.standardsHexa.mockReturnValue({
@@ -438,30 +407,26 @@ describe('addRuleToStandard.tool', () => {
           language: 'javascript',
         });
 
-        expect(mockAdapter.createRuleExample).toHaveBeenCalledWith(
+        expect(mockAdapter.addRuleToStandard).toHaveBeenCalledWith(
           expect.objectContaining({
-            ruleId: 'rule-123',
-            positive: 'const x = 1;',
-            negative: '',
+            examples: [
+              expect.objectContaining({
+                positive: 'const x = 1;',
+                negative: '',
+              }),
+            ],
           }),
         );
       });
     });
 
     describe('when only negative example provided', () => {
-      it('creates rule example', async () => {
+      it('passes example with empty positive and negative to addRuleToStandard', async () => {
         const mockAdapter = {
           addRuleToStandard: jest.fn().mockResolvedValue({
             standardId: 'standard-123',
             version: '1.1.0',
           }),
-          getRulesByStandardId: jest.fn().mockResolvedValue([
-            {
-              id: 'rule-123',
-              content: 'Test rule',
-            },
-          ]),
-          createRuleExample: jest.fn().mockResolvedValue({}),
         };
 
         mockFastify.standardsHexa.mockReturnValue({
@@ -477,30 +442,26 @@ describe('addRuleToStandard.tool', () => {
           language: 'javascript',
         });
 
-        expect(mockAdapter.createRuleExample).toHaveBeenCalledWith(
+        expect(mockAdapter.addRuleToStandard).toHaveBeenCalledWith(
           expect.objectContaining({
-            ruleId: 'rule-123',
-            positive: '',
-            negative: 'var x = 1;',
+            examples: [
+              expect.objectContaining({
+                positive: '',
+                negative: 'var x = 1;',
+              }),
+            ],
           }),
         );
       });
     });
 
     describe('when language is not provided with examples', () => {
-      it('returns error', async () => {
+      it('defaults to JAVASCRIPT language', async () => {
         const mockAdapter = {
           addRuleToStandard: jest.fn().mockResolvedValue({
             standardId: 'standard-123',
             version: '1.1.0',
           }),
-          getRulesByStandardId: jest.fn().mockResolvedValue([
-            {
-              id: 'rule-123',
-              content: 'Test rule',
-            },
-          ]),
-          createRuleExample: jest.fn().mockResolvedValue({}),
         };
 
         mockFastify.standardsHexa.mockReturnValue({
@@ -515,16 +476,18 @@ describe('addRuleToStandard.tool', () => {
           positiveExample: 'const x = 1;',
         });
 
-        expect(result).toEqual({
-          content: [
-            {
-              type: 'text',
-              text: 'Failed to add rule to standard: Language input cannot be empty',
-            },
-          ],
-        });
+        expect(mockAdapter.addRuleToStandard).toHaveBeenCalledWith(
+          expect.objectContaining({
+            examples: [
+              expect.objectContaining({
+                positive: 'const x = 1;',
+                language: 'JAVASCRIPT',
+              }),
+            ],
+          }),
+        );
 
-        expect(mockAdapter.createRuleExample).not.toHaveBeenCalled();
+        expect(result.content[0].text).toContain('Rule added successfully');
       });
     });
 
@@ -535,13 +498,6 @@ describe('addRuleToStandard.tool', () => {
             standardId: 'standard-123',
             version: '1.1.0',
           }),
-          getRulesByStandardId: jest.fn().mockResolvedValue([
-            {
-              id: 'rule-123',
-              content: 'Test rule',
-            },
-          ]),
-          createRuleExample: jest.fn().mockResolvedValue({}),
         };
 
         mockFastify.standardsHexa.mockReturnValue({
@@ -560,23 +516,16 @@ describe('addRuleToStandard.tool', () => {
         expect(result.content[0].text).toContain(
           'Failed to add rule to standard: Unknown programming language',
         );
-        expect(mockAdapter.createRuleExample).not.toHaveBeenCalled();
+        expect(mockAdapter.addRuleToStandard).not.toHaveBeenCalled();
       });
     });
 
-    it('handles empty string examples by not creating rule example', async () => {
+    it('handles empty string examples by passing empty examples array', async () => {
       const mockAdapter = {
         addRuleToStandard: jest.fn().mockResolvedValue({
           standardId: 'standard-123',
           version: '1.1.0',
         }),
-        getRulesByStandardId: jest.fn().mockResolvedValue([
-          {
-            id: 'rule-123',
-            content: 'Test rule',
-          },
-        ]),
-        createRuleExample: jest.fn().mockResolvedValue({}),
       };
 
       mockFastify.standardsHexa.mockReturnValue({
@@ -592,7 +541,11 @@ describe('addRuleToStandard.tool', () => {
         negativeExample: '',
       });
 
-      expect(mockAdapter.createRuleExample).not.toHaveBeenCalled();
+      expect(mockAdapter.addRuleToStandard).toHaveBeenCalledWith(
+        expect.objectContaining({
+          examples: [],
+        }),
+      );
     });
 
     describe('trial user behavior', () => {
@@ -631,12 +584,6 @@ describe('addRuleToStandard.tool', () => {
                 standardId: 'standard-123',
                 version: '1.1.0',
               }),
-              getRulesByStandardId: jest.fn().mockResolvedValue([
-                {
-                  id: 'rule-123',
-                  content: 'Test rule',
-                },
-              ]),
             };
 
             mockFastify.standardsHexa.mockReturnValue({
@@ -689,12 +636,6 @@ describe('addRuleToStandard.tool', () => {
                 standardId: 'standard-456',
                 version: '1.2.0',
               }),
-              getRulesByStandardId: jest.fn().mockResolvedValue([
-                {
-                  id: 'rule-456',
-                  content: 'Another rule',
-                },
-              ]),
             };
 
             mockFastify.standardsHexa.mockReturnValue({
@@ -755,12 +696,6 @@ describe('addRuleToStandard.tool', () => {
               standardId: 'standard-789',
               version: '1.3.0',
             }),
-            getRulesByStandardId: jest.fn().mockResolvedValue([
-              {
-                id: 'rule-789',
-                content: 'Regular rule',
-              },
-            ]),
           };
 
           mockFastify.standardsHexa.mockReturnValue({

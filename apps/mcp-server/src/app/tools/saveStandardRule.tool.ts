@@ -5,6 +5,7 @@ import {
   createUserId,
   getAllProgrammingLanguages,
   ProgrammingLanguage,
+  RuleExampleInput,
   stringToProgrammingLanguage,
 } from '@packmind/types';
 import { z } from 'zod';
@@ -85,6 +86,24 @@ export function registerSaveStandardRuleTool(
       const standardsHexa = fastify.standardsHexa();
 
       try {
+        // Build examples array if provided
+        const examples: RuleExampleInput[] = [];
+        const hasPositive = (positiveExample?.length ?? 0) > 0;
+        const hasNegative = (negativeExample?.length ?? 0) > 0;
+
+        if (hasPositive || hasNegative) {
+          const parsedLanguage = language?.trim()
+            ? stringToProgrammingLanguage(language)
+            : ProgrammingLanguage.JAVASCRIPT;
+
+          examples.push({
+            positive: extractCodeFromMarkdown(positiveExample ?? '') || '',
+            negative: extractCodeFromMarkdown(negativeExample ?? '') || '',
+            language: parsedLanguage,
+          });
+        }
+
+        // Add rule with examples in one atomic operation
         const newStandardVersion = await standardsHexa
           .getAdapter()
           .addRuleToStandard({
@@ -92,29 +111,8 @@ export function registerSaveStandardRuleTool(
             ruleContent,
             organizationId: createOrganizationId(userContext.organizationId),
             userId: createUserId(userContext.userId),
+            examples,
           });
-
-        const rules = await standardsHexa
-          .getAdapter()
-          .getRulesByStandardId(newStandardVersion.standardId);
-        const newRule = rules.filter((rule) => rule.content === ruleContent);
-
-        const codeSnippetProvided =
-          (positiveExample?.length ?? 0) > 0 ||
-          (negativeExample?.length ?? 0) > 0;
-        if (newRule && codeSnippetProvided) {
-          logger.info('Creating rule example');
-          await standardsHexa.getAdapter().createRuleExample({
-            ruleId: newRule[0].id,
-            positive: extractCodeFromMarkdown(positiveExample ?? '') || '',
-            negative: extractCodeFromMarkdown(negativeExample ?? '') || '',
-            lang:
-              stringToProgrammingLanguage(language ?? '') ||
-              ProgrammingLanguage.JAVASCRIPT,
-            organizationId: createOrganizationId(userContext.organizationId),
-            userId: createUserId(userContext.userId),
-          });
-        }
 
         // Track analytics event
         analyticsAdapter.trackEvent(

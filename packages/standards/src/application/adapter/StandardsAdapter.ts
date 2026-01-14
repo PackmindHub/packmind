@@ -24,6 +24,7 @@ import {
   OrganizationId,
   Rule,
   RuleExample,
+  RuleExampleInput,
   RuleId,
   SpaceId,
   Standard,
@@ -465,6 +466,7 @@ export class StandardsAdapter
     ruleContent: string;
     organizationId: OrganizationId;
     userId: UserId;
+    examples?: RuleExampleInput[];
   }): Promise<StandardVersion> {
     return this._addRuleToStandard.addRuleToStandard(params);
   }
