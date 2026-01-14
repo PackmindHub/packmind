@@ -106,6 +106,7 @@ export class SignUpWithOrganizationUseCase implements ISignUpWithOrganizationUse
           userId: createUserId(user.id),
           organizationId: organization.id,
           email,
+          source: 'ui',
         }),
       );
 

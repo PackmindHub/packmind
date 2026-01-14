@@ -115,6 +115,7 @@ export class ActivateUserAccountUseCase implements IActivateUserAccountUseCase {
             userId: updatedUser.id,
             organizationId,
             email: updatedUser.email,
+            source: 'ui',
           }),
         );
       }

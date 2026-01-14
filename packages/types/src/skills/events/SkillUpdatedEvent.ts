@@ -5,7 +5,6 @@ import { SkillId } from '../SkillId';
 export interface SkillUpdatedPayload {
   skillId: SkillId;
   spaceId: SpaceId;
-  source: 'ui' | 'mcp' | 'cli';
   fileCount: number;
 }
 

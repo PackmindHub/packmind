@@ -152,6 +152,7 @@ export class CaptureRecipeUsecase implements ICaptureRecipeUseCase {
           spaceId,
           organizationId,
           userId,
+          source: 'ui',
         }),
       );
 

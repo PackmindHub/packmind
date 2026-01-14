@@ -78,6 +78,7 @@ export class DeleteRuleExampleUsecase
             newVersion: standardVersion.version,
             organizationId: createOrganizationId(command.organizationId),
             userId: createUserId(command.userId),
+            source: 'ui',
           }),
         );
       }

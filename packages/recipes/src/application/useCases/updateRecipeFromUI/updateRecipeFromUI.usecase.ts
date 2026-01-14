@@ -166,6 +166,7 @@ export class UpdateRecipeFromUIUsecase {
           newVersion: nextVersion,
           organizationId,
           userId: editorUserId,
+          source: 'ui',
         }),
       );
 

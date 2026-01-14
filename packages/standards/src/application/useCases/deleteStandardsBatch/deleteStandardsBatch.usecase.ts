@@ -46,6 +46,7 @@ export class DeleteStandardsBatchUsecase {
             spaceId: standard.spaceId,
             organizationId,
             userId,
+            source: 'ui',
           });
           this.eventEmitterService.emit(event);
         }

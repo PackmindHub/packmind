@@ -319,6 +319,7 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
         targetIds: command.targetIds,
         recipeCount: recipeVersions.length,
         standardCount: standardVersions.length,
+        source: 'ui',
       }),
     );
 

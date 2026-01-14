@@ -111,6 +111,7 @@ export class ActivateTrialAccountUseCase implements IActivateTrialAccountUseCase
         userId,
         organizationId: updatedOrganization.id,
         email: command.email,
+        source: 'ui',
       }),
     );
 

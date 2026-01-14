@@ -260,6 +260,7 @@ export class UpdateStandardUsecase
         organizationId: brandedOrganizationId,
         userId: brandedUserId,
         newVersion: nextVersion,
+        source: 'ui',
       });
       const hasListeners = this.eventEmitterService.emit(event);
       this.logger.info('StandardUpdatedEvent emitted', {

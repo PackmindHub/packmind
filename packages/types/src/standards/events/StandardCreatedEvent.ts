@@ -5,7 +5,6 @@ import { StandardId } from '../StandardId';
 export interface StandardCreatedPayload {
   standardId: StandardId;
   spaceId: SpaceId;
-  source: 'ui' | 'mcp';
 }
 
 export class StandardCreatedEvent extends UserEvent<StandardCreatedPayload> {

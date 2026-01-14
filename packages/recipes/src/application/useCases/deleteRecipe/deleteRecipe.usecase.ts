@@ -79,6 +79,7 @@ export class DeleteRecipeUsecase implements IDeleteRecipeUseCase {
         spaceId,
         organizationId: createOrganizationId(organizationId),
         userId: createUserId(userId),
+        source: 'ui',
       });
       this.eventEmitterService.emit(event);
       this.logger.info('RecipeDeletedEvent emitted', {
