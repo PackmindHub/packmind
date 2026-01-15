@@ -120,8 +120,10 @@ describe('addRuleToStandard.tool', () => {
     it('adds rule with standardSlug and ruleContent', async () => {
       const mockAdapter = {
         addRuleToStandard: jest.fn().mockResolvedValue({
-          standardId: 'standard-123',
-          version: '1.1.0',
+          standardVersion: {
+            standardId: 'standard-123',
+            version: '1.1.0',
+          },
         }),
       };
 
@@ -142,6 +144,7 @@ describe('addRuleToStandard.tool', () => {
         organizationId: 'org-123',
         userId: 'user-123',
         examples: [],
+        source: 'mcp',
       });
 
       expect(result).toEqual({
@@ -164,8 +167,10 @@ describe('addRuleToStandard.tool', () => {
 
       const mockAdapter = {
         addRuleToStandard: jest.fn().mockResolvedValue({
-          standardId: 'standard-123',
-          version: '1.1.0',
+          standardVersion: {
+            standardId: 'standard-123',
+            version: '1.1.0',
+          },
         }),
       };
 
@@ -195,6 +200,7 @@ describe('addRuleToStandard.tool', () => {
             language: 'TYPESCRIPT',
           },
         ],
+        source: 'mcp',
       });
 
       expect(result).toEqual({
@@ -210,8 +216,10 @@ describe('addRuleToStandard.tool', () => {
     it('converts standardSlug to lowercase', async () => {
       const mockAdapter = {
         addRuleToStandard: jest.fn().mockResolvedValue({
-          standardId: 'standard-123',
-          version: '1.2.0',
+          standardVersion: {
+            standardId: 'standard-123',
+            version: '1.2.0',
+          },
         }),
       };
 
@@ -232,6 +240,7 @@ describe('addRuleToStandard.tool', () => {
         organizationId: 'org-123',
         userId: 'user-123',
         examples: [],
+        source: 'mcp',
       });
 
       expect(result.content[0].text).toContain('typescript-best-practices');
@@ -247,8 +256,10 @@ describe('addRuleToStandard.tool', () => {
 
       const mockAdapter = {
         addRuleToStandard: jest.fn().mockResolvedValue({
-          standardId: 'standard-123',
-          version: '1.1.0',
+          standardVersion: {
+            standardId: 'standard-123',
+            version: '1.1.0',
+          },
         }),
       };
 
@@ -288,8 +299,10 @@ describe('addRuleToStandard.tool', () => {
     it('tracks analytics event on success', async () => {
       const mockAdapter = {
         addRuleToStandard: jest.fn().mockResolvedValue({
-          standardId: 'standard-123',
-          version: '1.1.0',
+          standardVersion: {
+            standardId: 'standard-123',
+            version: '1.1.0',
+          },
         }),
       };
 
@@ -361,8 +374,10 @@ describe('addRuleToStandard.tool', () => {
       it('passes empty examples array to addRuleToStandard', async () => {
         const mockAdapter = {
           addRuleToStandard: jest.fn().mockResolvedValue({
-            standardId: 'standard-123',
-            version: '1.1.0',
+            standardVersion: {
+              standardId: 'standard-123',
+              version: '1.1.0',
+            },
           }),
         };
 
@@ -389,8 +404,10 @@ describe('addRuleToStandard.tool', () => {
       it('passes example with positive and empty negative to addRuleToStandard', async () => {
         const mockAdapter = {
           addRuleToStandard: jest.fn().mockResolvedValue({
-            standardId: 'standard-123',
-            version: '1.1.0',
+            standardVersion: {
+              standardId: 'standard-123',
+              version: '1.1.0',
+            },
           }),
         };
 
@@ -424,8 +441,10 @@ describe('addRuleToStandard.tool', () => {
       it('passes example with empty positive and negative to addRuleToStandard', async () => {
         const mockAdapter = {
           addRuleToStandard: jest.fn().mockResolvedValue({
-            standardId: 'standard-123',
-            version: '1.1.0',
+            standardVersion: {
+              standardId: 'standard-123',
+              version: '1.1.0',
+            },
           }),
         };
 
@@ -459,8 +478,10 @@ describe('addRuleToStandard.tool', () => {
       it('defaults to JAVASCRIPT language', async () => {
         const mockAdapter = {
           addRuleToStandard: jest.fn().mockResolvedValue({
-            standardId: 'standard-123',
-            version: '1.1.0',
+            standardVersion: {
+              standardId: 'standard-123',
+              version: '1.1.0',
+            },
           }),
         };
 
@@ -495,8 +516,10 @@ describe('addRuleToStandard.tool', () => {
       it('returns error', async () => {
         const mockAdapter = {
           addRuleToStandard: jest.fn().mockResolvedValue({
-            standardId: 'standard-123',
-            version: '1.1.0',
+            standardVersion: {
+              standardId: 'standard-123',
+              version: '1.1.0',
+            },
           }),
         };
 
@@ -523,8 +546,10 @@ describe('addRuleToStandard.tool', () => {
     it('handles empty string examples by passing empty examples array', async () => {
       const mockAdapter = {
         addRuleToStandard: jest.fn().mockResolvedValue({
-          standardId: 'standard-123',
-          version: '1.1.0',
+          standardVersion: {
+            standardId: 'standard-123',
+            version: '1.1.0',
+          },
         }),
       };
 
@@ -581,8 +606,10 @@ describe('addRuleToStandard.tool', () => {
           it('creates Default package with the standard and returns install prompt', async () => {
             const mockAdapter = {
               addRuleToStandard: jest.fn().mockResolvedValue({
-                standardId: 'standard-123',
-                version: '1.1.0',
+                standardVersion: {
+                  standardId: 'standard-123',
+                  version: '1.1.0',
+                },
               }),
             };
 
@@ -633,8 +660,10 @@ describe('addRuleToStandard.tool', () => {
           it('adds standard to existing Default package and returns install prompt', async () => {
             const mockAdapter = {
               addRuleToStandard: jest.fn().mockResolvedValue({
-                standardId: 'standard-456',
-                version: '1.2.0',
+                standardVersion: {
+                  standardId: 'standard-456',
+                  version: '1.2.0',
+                },
               }),
             };
 
@@ -693,8 +722,10 @@ describe('addRuleToStandard.tool', () => {
         it('does not create or add to Default package', async () => {
           const mockAdapter = {
             addRuleToStandard: jest.fn().mockResolvedValue({
-              standardId: 'standard-789',
-              version: '1.3.0',
+              standardVersion: {
+                standardId: 'standard-789',
+                version: '1.3.0',
+              },
             }),
           };
 
