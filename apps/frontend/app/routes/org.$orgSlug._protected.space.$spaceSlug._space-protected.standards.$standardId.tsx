@@ -40,7 +40,7 @@ export async function clientLoader({
 
   // Standards list should be prefetched by parent loader
   const standardsResponse =
-    await queryClient.ensureQueryData<ListStandardsBySpaceResponse>(
+    await queryClient.fetchQuery<ListStandardsBySpaceResponse>(
       getStandardsBySpaceQueryOptions(space.id, me.organization.id),
     );
   const standardsList: Standard[] = Array.isArray(standardsResponse)
