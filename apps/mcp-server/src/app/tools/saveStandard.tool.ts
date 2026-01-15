@@ -166,6 +166,7 @@ export function registerSaveStandardTool(
             scope: null,
             spaceId: firstSpace.id,
             packageSlugs,
+            source: 'mcp',
           });
 
         // Track analytics event

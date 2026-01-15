@@ -128,6 +128,7 @@ export function registerSaveCommandTool(
             organizationId: userContext.organizationId,
             userId: userContext.userId,
             spaceId: globalSpace.id,
+            source: 'mcp',
           });
 
         // Track analytics event
@@ -158,6 +159,7 @@ export function registerSaveCommandTool(
         organizationId: createOrganizationId(userContext.organizationId),
         userId: createUserId(userContext.userId),
         spaceId: globalSpace.id,
+        source: 'mcp',
       });
 
       // Track analytics event

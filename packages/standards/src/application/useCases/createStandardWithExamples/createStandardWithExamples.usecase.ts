@@ -48,6 +48,10 @@ export type CreateStandardWithExamplesRequest = {
    * Useful for bulk imports where assessment would be too expensive.
    */
   disableTriggerAssessment?: boolean;
+  /**
+   * The source of the event. Defaults to 'ui' if not provided.
+   */
+  source?: PackmindEventSource;
 };
 
 export class CreateStandardWithExamplesUsecase {
@@ -80,6 +84,7 @@ export class CreateStandardWithExamplesUsecase {
     scope,
     spaceId,
     disableTriggerAssessment = false,
+    source = 'ui',
   }: CreateStandardWithExamplesRequest) {
     this.logger.info('Starting createStandardWithExamples process', {
       name,
@@ -218,7 +223,7 @@ export class CreateStandardWithExamplesUsecase {
           spaceId,
           organizationId,
           userId,
-          source: 'mcp',
+          source,
         }),
       );
 
@@ -228,7 +233,7 @@ export class CreateStandardWithExamplesUsecase {
         initialVersion,
         organizationId,
         userId,
-        'mcp',
+        source,
       );
 
       this.logger.info(

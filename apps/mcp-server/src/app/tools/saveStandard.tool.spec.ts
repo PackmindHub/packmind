@@ -228,6 +228,7 @@ describe('createStandard.tool', () => {
         scope: null,
         spaceId: 'space-123',
         packageSlugs: undefined,
+        source: 'mcp',
       });
 
       expect(result).toEqual({
@@ -273,6 +274,7 @@ describe('createStandard.tool', () => {
         scope: null,
         spaceId: 'space-123',
         packageSlugs: undefined,
+        source: 'mcp',
       });
 
       expect(result).toEqual({

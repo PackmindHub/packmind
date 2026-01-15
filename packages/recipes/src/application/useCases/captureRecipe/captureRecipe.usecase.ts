@@ -47,6 +47,7 @@ export class CaptureRecipeUsecase implements ICaptureRecipeUseCase {
       content: legacyContent,
       organizationId: orgIdString,
       userId: userIdString,
+      source = 'ui',
     } = command;
     const organizationId = createOrganizationId(orgIdString);
     const userId = createUserId(userIdString);
@@ -152,7 +153,7 @@ export class CaptureRecipeUsecase implements ICaptureRecipeUseCase {
           spaceId,
           organizationId,
           userId,
-          source: 'ui',
+          source,
         }),
       );
 

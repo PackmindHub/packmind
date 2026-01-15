@@ -186,6 +186,7 @@ describe('saveCommand.tool', () => {
         organizationId: createOrganizationId('org-123'),
         userId: createUserId('user-123'),
         spaceId: createSpaceId('space-123'),
+        source: 'mcp',
       });
 
       expect(result).toEqual({
@@ -324,6 +325,7 @@ export class User {
         organizationId: createOrganizationId('org-123'),
         userId: createUserId('user-123'),
         spaceId: createSpaceId('space-456'),
+        source: 'mcp',
       });
 
       expect(result).toEqual({

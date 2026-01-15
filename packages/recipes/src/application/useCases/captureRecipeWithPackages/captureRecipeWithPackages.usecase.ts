@@ -46,6 +46,7 @@ export class CaptureRecipeWithPackagesUsecase
       packageSlugs = [],
       userId,
       organizationId,
+      source = 'ui',
     } = command;
 
     this.logger.info('Creating recipe with packages', {
@@ -78,6 +79,7 @@ export class CaptureRecipeWithPackagesUsecase
       organizationId,
       userId,
       spaceId,
+      source,
     });
 
     this.logger.info('Recipe created successfully', {
