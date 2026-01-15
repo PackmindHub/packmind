@@ -60,7 +60,7 @@ export class StandardsService {
     },
     organizationId: OrganizationId,
     userId: UserId,
-    spaceId: SpaceId | null,
+    spaceId: SpaceId,
   ): Promise<Standard> {
     return this.standardsHexa.getAdapter().createStandard({
       ...standard,

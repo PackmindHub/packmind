@@ -124,8 +124,9 @@ export class DataFactory {
 
     return this.testApp.standardsHexa.getAdapter().createStandard({
       rules: [],
-      organizationId: this.organization.id,
       ...standardFactory({ spaceId: this.space.id, ...standard }),
+      organizationId: this.organization.id,
+      userId: this.user.id,
     });
   }
 

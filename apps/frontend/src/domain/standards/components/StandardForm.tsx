@@ -110,7 +110,6 @@ export const StandardForm: React.FC<StandardFormProps> = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('submit');
 
     // Validation
     if (!name.trim()) {

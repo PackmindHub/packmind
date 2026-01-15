@@ -207,6 +207,7 @@ export class StandardsAdapter
 
     // Use cases that depend on delayed jobs (required)
     this._createStandard = new CreateStandardUsecase(
+      this.accountsPort,
       this.services.getStandardService(),
       this.services.getStandardVersionService(),
       this.standardDelayedJobs.standardSummaryDelayedJob,
@@ -413,14 +414,13 @@ export class StandardsAdapter
     organizationId: OrganizationId;
     userId: UserId;
     scope: string | null;
-    spaceId: SpaceId | null;
+    spaceId: SpaceId;
   }): Promise<Standard> {
-    return this._createStandard.execute({
+    const result = await this._createStandard.execute({
       ...params,
-      organizationId: params.organizationId.toString(),
       userId: params.userId.toString(),
-      spaceId: params.spaceId?.toString() || '',
     });
+    return result.standard;
   }
 
   async createStandardWithExamples(params: {

@@ -59,7 +59,7 @@ describe('organization resource loaders', () => {
 
       expect(redirectResponse).toBeTruthy();
       expect(pmToasterErrorMock).not.toHaveBeenCalled();
-      expect(ensureQueryDataMock).toHaveBeenCalledTimes(3);
+      expect(ensureQueryDataMock).toHaveBeenCalledTimes(2);
     });
   });
 

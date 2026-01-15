@@ -1,8 +1,13 @@
-import { LogLevel, PackmindLogger } from '@packmind/logger';
-import { PackmindEventEmitterService } from '@packmind/node-utils';
+import { PackmindLogger } from '@packmind/logger';
+import {
+  AbstractMemberUseCase,
+  MemberContext,
+  PackmindEventEmitterService,
+} from '@packmind/node-utils';
 import {
   CreateStandardCommand,
   CreateStandardResponse,
+  IAccountsPort,
   ICreateStandardUseCase,
   OrganizationId,
   PackmindEventSource,
@@ -12,8 +17,6 @@ import {
   StandardVersion,
   StandardVersionId,
   UserId,
-  createOrganizationId,
-  createSpaceId,
   createStandardId,
   createStandardVersionId,
   createUserId,
@@ -29,36 +32,36 @@ import {
 
 const origin = 'CreateStandardUsecase';
 
-export class CreateStandardUsecase implements ICreateStandardUseCase {
+export class CreateStandardUsecase
+  extends AbstractMemberUseCase<CreateStandardCommand, CreateStandardResponse>
+  implements ICreateStandardUseCase
+{
   constructor(
+    accountsPort: IAccountsPort,
     private readonly standardService: StandardService,
     private readonly standardVersionService: StandardVersionService,
     private readonly generateStandardSummaryDelayedJob: GenerateStandardSummaryDelayedJob,
     private readonly eventEmitterService: PackmindEventEmitterService,
     private readonly ruleRepository: IRuleRepository,
-    private readonly logger: PackmindLogger = new PackmindLogger(
-      origin,
-      LogLevel.DEBUG,
-    ),
+    logger: PackmindLogger = new PackmindLogger(origin),
   ) {
+    super(accountsPort, logger);
     this.logger.info('CreateStandardUsecase initialized');
   }
 
-  public async execute(
-    command: CreateStandardCommand,
+  protected async executeForMembers(
+    command: CreateStandardCommand & MemberContext,
   ): Promise<CreateStandardResponse> {
     const {
       name,
       description,
       rules,
       scope,
-      spaceId: spaceIdString,
-      organizationId: orgIdString,
-      userId: userIdString,
+      spaceId,
+      organizationId,
+      source = 'ui',
     } = command;
-    const organizationId = createOrganizationId(orgIdString);
-    const userId = createUserId(userIdString);
-    const spaceId = createSpaceId(spaceIdString);
+    const userId = createUserId(command.userId);
     this.logger.info('Starting createStandard process', {
       name,
       organizationId,
@@ -164,7 +167,7 @@ export class CreateStandardUsecase implements ICreateStandardUseCase {
           spaceId,
           organizationId,
           userId,
-          source: 'ui',
+          source,
         }),
       );
 
@@ -174,10 +177,10 @@ export class CreateStandardUsecase implements ICreateStandardUseCase {
         initialVersion,
         organizationId,
         userId,
-        'ui',
+        source,
       );
 
-      return standard;
+      return { standard };
     } catch (error) {
       this.logger.error('Failed to create standard', {
         name,
