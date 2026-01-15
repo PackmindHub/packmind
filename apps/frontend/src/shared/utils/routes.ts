@@ -72,14 +72,20 @@ export const routes = {
       `/org/${orgSlug}/space/${spaceSlug}/skills`,
     toSkill: (orgSlug: string, spaceSlug: string, skillSlug: string) =>
       `/org/${orgSlug}/space/${spaceSlug}/skills/${skillSlug}`,
-    toSkillFile: (
+    toSkillFiles: (orgSlug: string, spaceSlug: string, skillSlug: string) =>
+      `/org/${orgSlug}/space/${spaceSlug}/skills/${skillSlug}/files`,
+    toSkillFileWithPath: (
       orgSlug: string,
       spaceSlug: string,
       skillSlug: string,
       filePath: string,
-    ) => `/org/${orgSlug}/space/${spaceSlug}/skills/${skillSlug}/${filePath}`,
-    toSkillSummary: (orgSlug: string, spaceSlug: string, skillSlug: string) =>
-      `/org/${orgSlug}/space/${spaceSlug}/skills/${skillSlug}/summary`,
+    ) =>
+      `/org/${orgSlug}/space/${spaceSlug}/skills/${skillSlug}/files/${filePath}`,
+    toSkillDistributions: (
+      orgSlug: string,
+      spaceSlug: string,
+      skillSlug: string,
+    ) => `/org/${orgSlug}/space/${spaceSlug}/skills/${skillSlug}/distributions`,
   },
 
   /**
