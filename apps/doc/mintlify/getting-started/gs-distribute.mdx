@@ -26,11 +26,10 @@ For more details on managing packages, see the [Packages Management](/concepts/p
 
 ## Install packages with CLI
 
-<Warning title="API Key Required">
-The install command requires a valid API key to authenticate with Packmind.
-
-See the [CLI documentation](/tools/cli#authentication) for setup instructions.
-
+<Warning>
+  **API Key Required** — The install command requires a valid API key to
+  authenticate with Packmind. See the [CLI
+  documentation](/tools/cli#authentication) for setup instructions.
 </Warning>
 
 Use the Packmind CLI to install packages locally:
@@ -148,11 +147,13 @@ You can edit the `packmind.json` file directly to add or remove packages.
 2. Remove the package slug from the `packages` object
 3. Run `packmind-cli install` to update your local files
 
-<Warning title="Removal Limitations">
-Currently, when you remove a package from `packmind.json` and run `install`, only the `CLAUDE.md` and `AGENTS.md` files are updated to remove references. Files specific to GitHub Copilot (`.github/copilot-instructions.md`) and Cursor (`.cursor/rules/`) are not yet automatically removed. This functionality will be added in a future update.
-
-You may need to manually delete these files if you remove packages.
-
+<Warning>
+  **Removal Limitations** — Currently, when you remove a package from
+  `packmind.json` and run `install`, only the `CLAUDE.md` and `AGENTS.md` files
+  are updated to remove references. Files specific to GitHub Copilot
+  (`.github/copilot-instructions.md`) and Cursor (`.cursor/rules/`) are not yet
+  automatically removed. This functionality will be added in a future update.
+  You may need to manually delete these files if you remove packages.
 </Warning>
 
 ### Using Multiple packmind.json Files

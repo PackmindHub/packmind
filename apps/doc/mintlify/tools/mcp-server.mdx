@@ -84,12 +84,14 @@ Provides step-by-step guidance for creating a new coding standard. This workflow
 
 Creates a new coding standard with multiple rules and code examples in a single operation.
 
-<Warning title="Do not call this tool directly. AI agents must first complete the standard creation workflow using `create_standard`.">
-
+<Warning>
+  Do not call this tool directly. AI agents must first complete the standard
+  creation workflow using `create_standard`.
 </Warning>
 
-<Tip title="When creating new standard using `save_standard`, you can include the optional `packageSlugs` parameter to automatically add it to packages during creation.">
-
+<Tip>
+  When creating new standard using `save_standard`, you can include the optional
+  `packageSlugs` parameter to automatically add it to packages during creation.
 </Tip>
 
 **Parameters:**
@@ -123,8 +125,9 @@ Provides step-by-step guidance for adding a new rule to an existing standard. En
 
 Adds a new coding rule to an existing standard in your organization. Creates a new version of the standard.
 
-<Warning title="Do not call this tool directly. AI agents must first complete the add rule workflow using `create_standard_rule`.">
-
+<Warning>
+  Do not call this tool directly. AI agents must first complete the add rule
+  workflow using `create_standard_rule`.
 </Warning>
 
 **Parameters:**
@@ -184,12 +187,15 @@ Provides step-by-step guidance for creating a new command. This workflow ensures
 
 Captures a reusable development process or procedure as a structured Packmind command with clear, actionable steps.
 
-<Warning title="Do not call this tool directly. AI agents must first complete the command creation workflow using `create_command`.">
-
+<Warning>
+  Do not call this tool directly. AI agents must first complete the command
+  creation workflow using `create_command`.
 </Warning>
 
-<Tip title="When creating new command using `save_command`, you can include the optional `packageSlugs` parameter to automatically add them to packages during creation.">
-
+<Tip>
+  When creating new command using `save_command`, you can include the optional
+  `packageSlugs` parameter to automatically add them to packages during
+  creation.
 </Tip>
 
 **Parameters:**
@@ -288,6 +294,8 @@ Generates file updates for the AI agent to apply when installing a Packmind pack
 - Files to delete
 - Section-based updates for files like `CLAUDE.md`
 
-<Note title="You typically don't call this tool directly. The AI agent will automatically use it based on the instructions from `install_package` when `packmind-cli` is not available.">
-
+<Note>
+  You typically don't call this tool directly. The AI agent will automatically
+  use it based on the instructions from `install_package` when `packmind-cli` is
+  not available.
 </Note>

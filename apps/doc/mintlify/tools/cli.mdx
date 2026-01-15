@@ -60,11 +60,11 @@ sudo mv packmind-cli-*-{version} /usr/local/bin/packmind-cli
 # Windows: Move to a directory in your PATH or run directly
 ```
 
-<Tip title="Choosing an Installation Method">
-  - Use **npm global** if you want `packmind-cli` always available system-wide -
-  Use **npx** for project-specific usage or testing without installation - Use
-  **standalone executables** if you don't have Node.js installed or need a
-  specific binary for your environment
+<Tip>
+  **Choosing an Installation Method** — Use **npm global** if you want
+  `packmind-cli` always available system-wide. Use **npx** for project-specific
+  usage or testing without installation. Use **standalone executables** if you
+  don't have Node.js installed or need a specific binary for your environment.
 </Tip>
 
 ## Authentication
@@ -157,9 +157,9 @@ echo 'export PACKMIND_API_KEY_V3="your-api-key-here"' >> ~/.zshrc
 source ~/.zshrc
 ```
 
-<Tip title="Credential Priority">
-  When both a credentials file and environment variable exist, the environment
-  variable takes precedence.
+<Tip>
+  **Credential Priority** — When both a credentials file and environment
+  variable exist, the environment variable takes precedence.
 </Tip>
 
 ## Setup MCP Command
@@ -206,9 +206,9 @@ Or using the short form:
 packmind-cli setup-mcp -t claude -t cursor -t copilot
 ```
 
-<Tip title="Automatic Setup">
-  When you run `packmind-cli login`, the setup-mcp command runs automatically
-  after successful authentication.
+<Tip>
+  **Automatic Setup** — When you run `packmind-cli login`, the setup-mcp command
+  runs automatically after successful authentication.
 </Tip>
 
 ## Install Command
@@ -285,19 +285,21 @@ packmind-cli install --recursive
 
 This finds all `packmind.json` files in your git repository and installs their configured packages. After installation, a summary shows how many distributions were notified to Packmind.
 
-<Tip title="AI Agent Rendering">
-The files created by the install command depend on which AI agents are enabled in your organization settings. The CLI respects your organization's configured agents and creates instruction files accordingly (e.g., `AGENTS.md`, `.cursor/rules/`, `.github/copilot-instructions.md`).
-
-The `.packmind/` directory is always created regardless of your configuration.
-
-To configure which agents are enabled, see [Manage AI Agent Rendering](/administration/manage-ai-agents).
-
+<Tip>
+  **AI Agent Rendering** — The files created by the install command depend on
+  which AI agents are enabled in your organization settings. The CLI respects
+  your organization's configured agents and creates instruction files
+  accordingly (e.g., `AGENTS.md`, `.cursor/rules/`,
+  `.github/copilot-instructions.md`). The `.packmind/` directory is always
+  created regardless of your configuration. To configure which agents are
+  enabled, see [Manage AI Agent Rendering](/administration/manage-ai-agents).
 </Tip>
 
 ## Lint Command
 
-<Info title="Enterprise Feature">
-  The lint command is only available in the **Enterprise** edition.
+<Info>
+  **Enterprise Feature** — The lint command is only available in the
+  **Enterprise** edition.
 </Info>
 
 Run detection programs against your codebase from the command line. This is useful for testing draft detection programs, verifying active programs, and integrating linting into your development workflow or CI/CD pipelines.
@@ -321,9 +323,9 @@ To set up local linting, install packages using the `install` command. See [Dist
 
 If no `packmind.json` files are found, the CLI falls back to using standards that have been deployed to your Git repository through the web interface. See [Deployment](/governance/distribution) to learn about this approach.
 
-<Tip title="Priority">
-  When both local `packmind.json` files and deployments exist, the local
-  configuration takes priority.
+<Tip>
+  **Priority** — When both local `packmind.json` files and deployments exist,
+  the local configuration takes priority.
 </Tip>
 
 ### Basic Usage
@@ -356,14 +358,15 @@ packmind-cli lint /path/to/your/project
 
 When working on large codebases, you can focus the lint check on only the files or lines you've modified using the `--changed-files` and `--changed-lines` flags.
 
-<Info title="Git Repository Required">
-  The `--changed-files` and `--changed-lines` flags requires your project to be
-  in a Git repository.
+<Info>
+  **Git Repository Required** — The `--changed-files` and `--changed-lines`
+  flags requires your project to be in a Git repository.
 </Info>
 
-<Note title="Deprecated Option">
-  The `--diff` option is deprecated. Use `--changed-files` (equivalent to
-  `--diff=files`) or `--changed-lines` (equivalent to `--diff=lines`) instead.
+<Note>
+  **Deprecated Option** — The `--diff` option is deprecated. Use
+  `--changed-files` (equivalent to `--diff=files`) or `--changed-lines`
+  (equivalent to `--diff=lines`) instead.
 </Note>
 
 **Check modified lines only:**

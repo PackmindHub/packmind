@@ -3,11 +3,11 @@
   "theme": "mint",
   "name": "Packmind",
   "logo": {
-    "light": "/images/packmind-logo.svg",
-    "dark": "/images/packmind-logo.svg",
+    "light": "/images/logo.svg",
+    "dark": "/images/logo.svg",
     "href": "https://packmind.com"
   },
-  "favicon": "/images/packmind-favicon.svg",
+  "favicon": "/images/favicon.svg",
   "colors": {
     "primary": "#6366f1",
     "light": "#818cf8",
@@ -33,13 +33,10 @@
   "navigation": {
     "groups": [
       {
-        "group": "Introduction",
-        "pages": ["index"]
-      },
-      {
         "group": "Getting Started",
         "icon": "rocket",
         "pages": [
+          "index",
           "getting-started/gs-mcp-server-setup",
           "getting-started/gs-install-cloud",
           "getting-started/gs-install-self-hosted",

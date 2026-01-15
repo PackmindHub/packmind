@@ -30,8 +30,10 @@ Standards are placed in specific folders that your AI assistant monitors. Once d
 | Junie          | `.junie/guidelines.md` file           |
 | AGENTS.md      | `AGENTS.md` file (in repository root) |
 
-<Tip title="Standards work automatically—you don't need to do anything special to activate them. Your AI assistant reads them and applies the guidelines when generating code.">
-
+<Tip>
+  Standards work automatically—you don't need to do anything special to activate
+  them. Your AI assistant reads them and applies the guidelines when generating
+  code.
 </Tip>
 
 ### Standard Scopes and File Patterns
@@ -76,8 +78,9 @@ Execute @.packmind/commands/create-new-use-case.md
 
 The AI assistant will read the command file from the `.packmind/commands/` folder and follow its instructions.
 
-<Info title="All commands are **user-invoked**—they only run when you explicitly call them. This is different from standards, which are applied automatically by the AI.">
-
+<Info>
+  All commands are **user-invoked**—they only run when you explicitly call them.
+  This is different from standards, which are applied automatically by the AI.
 </Info>
 
 ## Where Skills Appear
@@ -92,8 +95,10 @@ Skills are folders of instructions, scripts, and resources that AI agents can di
 
 Skills contain YAML frontmatter with metadata (name, description, license, compatibility, allowed-tools) followed by the skill instructions.
 
-<Note title="Skills are currently only available for GitHub Copilot and Claude Code. Cursor uses the Claude Code skills. Other AI assistants do not support skill rendering.">
-
+<Note>
+  Skills are currently only available for GitHub Copilot and Claude Code. Cursor
+  uses the Claude Code skills. Other AI assistants do not support skill
+  rendering.
 </Note>
 
 ## The Source Files
