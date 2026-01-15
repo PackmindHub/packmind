@@ -1,0 +1,32 @@
+name: "TMP: CLI lint on windows"
+
+on:
+  push:
+    branches:
+      - cli-lint-windows
+
+jobs:
+  cli-lint-windows:
+    runs-on: depot-windows-2025-4
+    name: CLI lint on Windows
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Use Node.js 22.17.0
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22.17.0'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build CLI
+        run: npm run packmind-cli:build
+
+      - name: Run CLI lint
+        run: node dist/apps/cli/main.cjs lint .
+        env:
+          PACKMIND_API_KEY_V3: ${{ secrets.PACKMIND_API_KEY_V3 }}
