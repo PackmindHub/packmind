@@ -14,6 +14,7 @@ import {
   IGitPort,
   INotifyDistributionUseCase,
   IRecipesPort,
+  ISkillsPort,
   IStandardsPort,
   NotifyDistributionCommand,
   NotifyDistributionResponse,
@@ -24,6 +25,8 @@ import {
   RecipeVersion,
   RecipeVersionId,
   RenderMode,
+  SkillId,
+  SkillVersionId,
   StandardId,
   StandardVersionId,
   Target,
@@ -45,6 +48,7 @@ type GitProviderVendor = 'github' | 'gitlab' | 'unknown';
 type DistributedPackageWithVersionIds = DistributedPackage & {
   _standardVersionIds: StandardVersionId[];
   _recipeVersionIds: RecipeVersionId[];
+  _skillVersionIds: SkillVersionId[];
 };
 
 /**
@@ -164,6 +168,7 @@ export class NotifyDistributionUseCase
     private readonly gitPort: IGitPort,
     private readonly recipesPort: IRecipesPort,
     private readonly standardsPort: IStandardsPort,
+    private readonly skillsPort: ISkillsPort,
     private readonly packageRepository: IPackageRepository,
     private readonly targetRepository: ITargetRepository,
     private readonly distributionRepository: IDistributionRepository,
@@ -527,6 +532,7 @@ export class NotifyDistributionUseCase
       const recipeVersionIds = await this.getLatestRecipeVersionIds(
         pkg.recipes,
       );
+      const skillVersionIds = await this.getLatestSkillVersionIds(pkg.skills);
 
       distributedPackages.push({
         id: createDistributedPackageId(uuidv4()),
@@ -538,6 +544,7 @@ export class NotifyDistributionUseCase
         operation: 'add',
         _standardVersionIds: standardVersionIds,
         _recipeVersionIds: recipeVersionIds,
+        _skillVersionIds: skillVersionIds,
       });
     }
 
@@ -558,6 +565,7 @@ export class NotifyDistributionUseCase
           operation: 'remove',
           _standardVersionIds: [],
           _recipeVersionIds: [],
+          _skillVersionIds: [],
         });
       }
     }
@@ -593,6 +601,22 @@ export class NotifyDistributionUseCase
           current.version > (latest?.version ?? 0) ? current : latest,
         undefined,
       );
+      if (latestVersion) {
+        versionIds.push(latestVersion.id);
+      }
+    }
+
+    return versionIds;
+  }
+
+  private async getLatestSkillVersionIds(
+    skillIds: SkillId[],
+  ): Promise<SkillVersionId[]> {
+    const versionIds: SkillVersionId[] = [];
+
+    for (const skillId of skillIds) {
+      const latestVersion =
+        await this.skillsPort.getLatestSkillVersion(skillId);
       if (latestVersion) {
         versionIds.push(latestVersion.id);
       }
@@ -653,6 +677,13 @@ export class NotifyDistributionUseCase
         await this.distributedPackageRepository.addRecipeVersions(
           distributedPackage.id,
           distributedPackage._recipeVersionIds,
+        );
+      }
+
+      if (distributedPackage._skillVersionIds.length > 0) {
+        await this.distributedPackageRepository.addSkillVersions(
+          distributedPackage.id,
+          distributedPackage._skillVersionIds,
         );
       }
     }
