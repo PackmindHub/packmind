@@ -24,7 +24,7 @@ export default function CreatePackageRouteModule() {
   return (
     <PMPage
       title="Create Package"
-      subtitle="Create a new package with recipes and standards"
+      subtitle="Create a new package with standards, commands and skills"
       breadcrumbComponent={<AutobreadCrumb />}
     >
       <PMVStack align="stretch" gap={6}>
