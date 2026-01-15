@@ -3,11 +3,11 @@
   "theme": "mint",
   "name": "Packmind",
   "logo": {
-    "light": "/images/logo.svg",
-    "dark": "/images/logo.svg",
+    "light": "/images/packmind-logo.svg",
+    "dark": "/images/packmind-logo.svg",
     "href": "https://packmind.com"
   },
-  "favicon": "/images/favicon.svg",
+  "favicon": "/images/packmind-favicon.svg",
   "colors": {
     "primary": "#6366f1",
     "light": "#818cf8",
