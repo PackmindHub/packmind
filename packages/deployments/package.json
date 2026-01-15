@@ -16,6 +16,7 @@
     "@packmind/logger": "*",
     "@packmind/node-utils": "*",
     "@packmind/recipes": "*",
+    "@packmind/skills": "*",
     "@packmind/standards": "*",
     "@packmind/types": "*",
     "@packmind/test-utils": "0.0.1"

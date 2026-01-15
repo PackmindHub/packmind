@@ -11,6 +11,8 @@ import {
   RenderMode,
   createRecipeVersionId,
   createStandardVersionId,
+  createSkillVersionId,
+  createSkillFileId,
   createRecipeId,
   createStandardId,
   createTargetId,
@@ -26,14 +28,17 @@ import {
   ICodingAgentPort,
   IGitPort,
   Rule,
+  SkillFile,
 } from '@packmind/types';
 import { PackmindLogger } from '@packmind/logger';
 import { PackmindEventEmitterService } from '@packmind/node-utils';
 import { recipeVersionFactory } from '@packmind/recipes/test/recipeVersionFactory';
 import { standardVersionFactory } from '@packmind/standards/test/standardVersionFactory';
+import { skillVersionFactory } from '@packmind/skills/test/skillVersionFactory';
 import { targetFactory } from '../../../test/targetFactory';
 import { v4 as uuidv4 } from 'uuid';
 import { stubLogger } from '@packmind/test-utils';
+import assert from 'assert';
 
 describe('PublishArtifactsUseCase', () => {
   let useCase: PublishArtifactsUseCase;
@@ -76,6 +81,7 @@ describe('PublishArtifactsUseCase', () => {
 
     mockSkillsPort = {
       getSkillVersion: jest.fn(),
+      getSkillFiles: jest.fn().mockResolvedValue([]),
     } as unknown as jest.Mocked<ISkillsPort>;
 
     mockGitPort = {
@@ -1640,6 +1646,11 @@ describe('PublishArtifactsUseCase', () => {
         f.path.endsWith('packmind.json'),
       );
 
+      assert(packmindJsonFile, 'packmindJsonFile should be defined');
+      assert(
+        packmindJsonFile.content,
+        'packmindJsonFile.content should be defined',
+      );
       expect(packmindJsonFile.content).toContain('package-one');
     });
 
@@ -1651,6 +1662,11 @@ describe('PublishArtifactsUseCase', () => {
         f.path.endsWith('packmind.json'),
       );
 
+      assert(packmindJsonFile, 'packmindJsonFile should be defined');
+      assert(
+        packmindJsonFile.content,
+        'packmindJsonFile.content should be defined',
+      );
       expect(packmindJsonFile.content).toContain('package-two');
     });
 
@@ -1660,6 +1676,12 @@ describe('PublishArtifactsUseCase', () => {
       const committedFiles = mockGitPort.commitToGit.mock.calls[0][1];
       const packmindJsonFile = committedFiles.find((f: { path: string }) =>
         f.path.endsWith('packmind.json'),
+      );
+
+      assert(packmindJsonFile, 'packmindJsonFile should be defined');
+      assert(
+        packmindJsonFile.content,
+        'packmindJsonFile.content should be defined',
       );
       const parsedContent = JSON.parse(packmindJsonFile.content);
 
@@ -1762,6 +1784,12 @@ describe('PublishArtifactsUseCase', () => {
       const packmindJsonFile = committedFiles.find((f: { path: string }) =>
         f.path.endsWith('packmind.json'),
       );
+
+      assert(packmindJsonFile, 'packmindJsonFile should be defined');
+      assert(
+        packmindJsonFile.content,
+        'packmindJsonFile.content should be defined',
+      );
       const parsedContent = JSON.parse(packmindJsonFile.content);
 
       expect(parsedContent.packages).toEqual({
@@ -1778,6 +1806,12 @@ describe('PublishArtifactsUseCase', () => {
       const packmindJsonFile = committedFiles.find((f: { path: string }) =>
         f.path.endsWith('packmind.json'),
       );
+
+      assert(packmindJsonFile, 'packmindJsonFile should be defined');
+      assert(
+        packmindJsonFile.content,
+        'packmindJsonFile.content should be defined',
+      );
       const parsedContent = JSON.parse(packmindJsonFile.content);
 
       expect(parsedContent.packages['existing-package-a']).toBe('*');
@@ -1789,6 +1823,12 @@ describe('PublishArtifactsUseCase', () => {
       const committedFiles = mockGitPort.commitToGit.mock.calls[0][1];
       const packmindJsonFile = committedFiles.find((f: { path: string }) =>
         f.path.endsWith('packmind.json'),
+      );
+
+      assert(packmindJsonFile, 'packmindJsonFile should be defined');
+      assert(
+        packmindJsonFile.content,
+        'packmindJsonFile.content should be defined',
       );
       const parsedContent = JSON.parse(packmindJsonFile.content);
 
@@ -1986,11 +2026,194 @@ describe('PublishArtifactsUseCase', () => {
       const packmindJsonFile = committedFiles.find((f: { path: string }) =>
         f.path.endsWith('packmind.json'),
       );
+
+      assert(packmindJsonFile, 'packmindJsonFile should be defined');
+      assert(
+        packmindJsonFile.content,
+        'packmindJsonFile.content should be defined',
+      );
       const parsedContent = JSON.parse(packmindJsonFile.content);
 
       expect(parsedContent.packages).toEqual({
         'new-package': '*',
       });
+    });
+  });
+
+  describe('when deploying skills with files', () => {
+    let command: PublishArtifactsCommand;
+    let skillVersion: ReturnType<typeof skillVersionFactory>;
+    let skillFiles: SkillFile[];
+    let target: ReturnType<typeof targetFactory>;
+    let gitRepo: GitRepo;
+    let gitCommit: GitCommit;
+
+    beforeEach(() => {
+      const skillVersionId = createSkillVersionId(uuidv4());
+      skillVersion = skillVersionFactory({
+        id: skillVersionId,
+        name: 'Test Skill',
+        slug: 'test-skill',
+        version: 1,
+      });
+
+      skillFiles = [
+        {
+          id: createSkillFileId(uuidv4()),
+          skillVersionId,
+          path: 'helper.js',
+          content: 'console.log("helper");',
+          permissions: '644',
+          isBase64: false,
+        },
+        {
+          id: createSkillFileId(uuidv4()),
+          skillVersionId,
+          path: 'config.json',
+          content: '{"key": "value"}',
+          permissions: '644',
+          isBase64: false,
+        },
+      ];
+
+      gitRepo = {
+        id: createGitRepoId(uuidv4()),
+        owner: 'test-owner',
+        repo: 'test-repo',
+        branch: 'main',
+        providerId: createGitProviderId(uuidv4()),
+      };
+
+      target = targetFactory({
+        id: targetId,
+        gitRepoId: gitRepo.id,
+        name: 'Production',
+        path: '',
+      });
+
+      gitCommit = {
+        id: createGitCommitId(uuidv4()),
+        sha: 'abc123def456',
+        message: 'Test commit',
+        author: 'Test Author <test@example.com>',
+        url: 'https://github.com/test-owner/test-repo/commit/abc123def456',
+      };
+
+      command = {
+        userId,
+        organizationId,
+        recipeVersionIds: [],
+        standardVersionIds: [],
+        skillVersionIds: [skillVersion.id],
+        targetIds: [targetId],
+        packagesSlugs: [],
+        packageIds: [],
+      };
+
+      mockSkillsPort.getSkillVersion.mockResolvedValue(skillVersion);
+      mockSkillsPort.getSkillFiles.mockResolvedValue(skillFiles);
+      mockTargetService.findById.mockResolvedValue(target);
+      mockGitPort.getRepositoryById.mockResolvedValue(gitRepo);
+      mockDistributionRepository.findActiveRecipeVersionsByTarget.mockResolvedValue(
+        [],
+      );
+      mockDistributionRepository.findActiveStandardVersionsByTarget.mockResolvedValue(
+        [],
+      );
+      mockDistributionRepository.findActiveSkillVersionsByTarget.mockResolvedValue(
+        [],
+      );
+      mockDistributionRepository.findActiveRecipeVersionsByTargetAndPackages.mockResolvedValue(
+        [],
+      );
+      mockDistributionRepository.findActiveStandardVersionsByTargetAndPackages.mockResolvedValue(
+        [],
+      );
+      mockDistributionRepository.findActiveSkillVersionsByTargetAndPackages.mockResolvedValue(
+        [],
+      );
+      mockGitPort.getFileFromRepo.mockResolvedValue(null);
+      mockCodingAgentPort.renderArtifacts.mockResolvedValue({
+        createOrUpdate: [
+          {
+            path: '.claude/skills/test-skill/SKILL.md',
+            content: 'skill content',
+          },
+          {
+            path: '.claude/skills/test-skill/helper.js',
+            content: 'console.log("helper");',
+          },
+          {
+            path: '.claude/skills/test-skill/config.json',
+            content: '{"key": "value"}',
+          },
+        ],
+        delete: [],
+      });
+      mockGitPort.commitToGit.mockResolvedValue(gitCommit);
+    });
+
+    it('fetches skill files for each skill version', async () => {
+      await useCase.execute(command);
+
+      expect(mockSkillsPort.getSkillFiles).toHaveBeenCalledWith(
+        skillVersion.id,
+      );
+    });
+
+    it('passes skill versions with files to renderArtifacts', async () => {
+      await useCase.execute(command);
+
+      expect(mockCodingAgentPort.renderArtifacts).toHaveBeenCalledWith(
+        expect.objectContaining({
+          installed: expect.objectContaining({
+            skillVersions: expect.arrayContaining([
+              expect.objectContaining({
+                id: skillVersion.id,
+                files: skillFiles,
+              }),
+            ]),
+          }),
+        }),
+      );
+    });
+
+    it('creates distribution with success status', async () => {
+      const result = await useCase.execute(command);
+
+      expect(result.distributions[0].status).toBe(DistributionStatus.success);
+    });
+  });
+
+  describe('when skill version does not exist', () => {
+    it('throws error', async () => {
+      const target = targetFactory({ id: targetId });
+      const gitRepo = {
+        id: createGitRepoId(uuidv4()),
+        owner: 'test-owner',
+        repo: 'test-repo',
+        branch: 'main',
+        providerId: createGitProviderId(uuidv4()),
+      };
+
+      const command: PublishArtifactsCommand = {
+        userId,
+        organizationId,
+        recipeVersionIds: [],
+        standardVersionIds: [],
+        skillVersionIds: [createSkillVersionId(uuidv4())],
+        targetIds: [targetId],
+        packagesSlugs: [],
+        packageIds: [],
+      };
+
+      mockTargetService.findById.mockResolvedValue(target);
+      mockGitPort.getRepositoryById.mockResolvedValue(gitRepo);
+      mockSkillsPort.getSkillVersion.mockResolvedValue(null);
+
+      await expect(useCase.execute(command)).rejects.toThrow(
+        'Skill version with ID',
+      );
     });
   });
 });

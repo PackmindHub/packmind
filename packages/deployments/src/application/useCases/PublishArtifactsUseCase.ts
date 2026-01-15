@@ -534,7 +534,9 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
       if (!version) {
         throw new Error(`Skill version with ID ${id} not found`);
       }
-      versions.push(version);
+      // Fetch skill files for this version
+      const files = await this.skillsPort.getSkillFiles(id);
+      versions.push({ ...version, files });
     }
     return versions.sort((a, b) => a.name.localeCompare(b.name));
   }
