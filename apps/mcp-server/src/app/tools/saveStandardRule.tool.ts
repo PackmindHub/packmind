@@ -104,15 +104,15 @@ export function registerSaveStandardRuleTool(
         }
 
         // Add rule with examples in one atomic operation
-        const newStandardVersion = await standardsHexa
-          .getAdapter()
-          .addRuleToStandard({
-            standardSlug: standardSlug.toLowerCase(),
-            ruleContent,
-            organizationId: createOrganizationId(userContext.organizationId),
-            userId: createUserId(userContext.userId),
-            examples,
-          });
+        const result = await standardsHexa.getAdapter().addRuleToStandard({
+          standardSlug: standardSlug.toLowerCase(),
+          ruleContent,
+          organizationId: userContext.organizationId,
+          userId: userContext.userId,
+          examples,
+          source: 'mcp',
+        });
+        const newStandardVersion = result.standardVersion;
 
         // Track analytics event
         analyticsAdapter.trackEvent(

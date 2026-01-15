@@ -5,6 +5,8 @@ import {
   PackmindEventEmitterService,
 } from '@packmind/node-utils';
 import {
+  AddRuleToStandardCommand,
+  AddRuleToStandardResponse,
   CreateRuleExampleCommand,
   DeleteRuleExampleCommand,
   DeleteRuleExampleResponse,
@@ -24,7 +26,6 @@ import {
   OrganizationId,
   Rule,
   RuleExample,
-  RuleExampleInput,
   RuleId,
   SpaceId,
   Standard,
@@ -224,6 +225,7 @@ export class StandardsAdapter
     );
 
     this._addRuleToStandard = new AddRuleToStandardUsecase(
+      this.accountsPort,
       this.services.getStandardService(),
       this.services.getStandardVersionService(),
       this.repositories.getRuleRepository(),
@@ -461,14 +463,10 @@ export class StandardsAdapter
     return result.standard;
   }
 
-  async addRuleToStandard(params: {
-    standardSlug: string;
-    ruleContent: string;
-    organizationId: OrganizationId;
-    userId: UserId;
-    examples?: RuleExampleInput[];
-  }): Promise<StandardVersion> {
-    return this._addRuleToStandard.addRuleToStandard(params);
+  async addRuleToStandard(
+    command: AddRuleToStandardCommand,
+  ): Promise<AddRuleToStandardResponse> {
+    return this._addRuleToStandard.execute(command);
   }
 
   async getStandardById(command: {

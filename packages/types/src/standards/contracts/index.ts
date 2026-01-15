@@ -1,5 +1,6 @@
 export * from './CreateStandardUseCase';
 export * from './CreateStandardWithPackagesContract';
+export * from './IAddRuleToStandard';
 export * from './ICreateRuleExample';
 export * from './IDeleteRuleExample';
 export * from './IGetStandardById';
