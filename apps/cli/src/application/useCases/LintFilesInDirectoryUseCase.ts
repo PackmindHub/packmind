@@ -20,7 +20,6 @@ import {
 } from '@packmind/types';
 import * as path from 'path';
 import * as fs from 'fs/promises';
-import { pathStartsWith } from '../utils/pathUtils';
 
 const origin = 'LintFilesInDirectoryUseCase';
 
@@ -177,7 +176,7 @@ export class LintFilesInDirectoryUseCase implements ILintFilesInDirectory {
     const absoluteLintPath = absoluteUserPath;
 
     // Verify the path is within the git repository
-    if (!pathStartsWith(absoluteLintPath, gitRepoRoot)) {
+    if (!absoluteLintPath.startsWith(gitRepoRoot)) {
       throw new Error(
         `The path "${absoluteLintPath}" is not within the git repository at "${gitRepoRoot}"`,
       );
@@ -385,7 +384,7 @@ export class LintFilesInDirectoryUseCase implements ILintFilesInDirectory {
 
       // Convert absolute file path to relative path from git repo root
       // This ensures proper matching against target paths and scopes
-      const relativeFilePath = pathStartsWith(file.path, gitRepoRoot)
+      const relativeFilePath = file.path.startsWith(gitRepoRoot)
         ? file.path.substring(gitRepoRoot.length)
         : file.path;
 

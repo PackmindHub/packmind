@@ -22,7 +22,6 @@ import {
 } from '@packmind/types';
 import * as path from 'path';
 import * as fs from 'fs/promises';
-import { pathStartsWith } from '../utils/pathUtils';
 
 const origin = 'LintFilesLocallyUseCase';
 
@@ -221,7 +220,7 @@ export class LintFilesLocallyUseCase implements ILintFilesLocally {
     for (const file of files) {
       const fileViolations: LintViolation['violations'] = [];
 
-      const relativeFilePath = pathStartsWith(file.path, basePath)
+      const relativeFilePath = file.path.startsWith(basePath)
         ? file.path.substring(basePath.length)
         : file.path;
 
@@ -380,8 +379,10 @@ export class LintFilesLocallyUseCase implements ILintFilesLocally {
     absoluteFilePath: string,
     configs: ConfigWithTarget[],
   ): ConfigWithTarget[] {
-    return configs.filter((config) =>
-      pathStartsWith(absoluteFilePath, config.absoluteTargetPath),
+    return configs.filter(
+      (config) =>
+        absoluteFilePath.startsWith(config.absoluteTargetPath + '/') ||
+        absoluteFilePath === config.absoluteTargetPath,
     );
   }
 
