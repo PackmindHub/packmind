@@ -1,8 +1,8 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { stubLogger } from '@packmind/test-utils';
 import { IEventTrackingPort } from '@packmind/types';
-import { registerListPackagesTool } from './listPackages.tool';
-import { registerShowPackageTool } from './showPackage.tool';
+import { registerListPackagesTool } from './listPackages/listPackages.tool';
+import { registerShowPackageTool } from './showPackage/showPackage.tool';
 import { ToolDependencies, UserContext } from './types';
 
 describe('packages.tools', () => {
