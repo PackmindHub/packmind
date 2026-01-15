@@ -76,7 +76,13 @@ export function SignUpOptions() {
                 <PMHStack gap={2} alignItems="flex-start">
                   <PMIcon as={LuCheck} color="blue.500" marginTop={0.5} />
                   <PMText fontSize="sm" color="secondary">
-                    No account or credit card required
+                    Free
+                  </PMText>
+                </PMHStack>
+                <PMHStack gap={2} alignItems="flex-start">
+                  <PMIcon as={LuCheck} color="blue.500" marginTop={0.5} />
+                  <PMText fontSize="sm" color="secondary">
+                    Create your account later to collaborate
                   </PMText>
                 </PMHStack>
               </PMVStack>
@@ -120,7 +126,7 @@ export function SignUpOptions() {
                 <PMHStack gap={2} alignItems="flex-start">
                   <PMIcon as={LuCheck} color="purple.500" marginTop={0.5} />
                   <PMText fontSize="sm" color="secondary">
-                    No credit card required
+                    Free. No credit card required.
                   </PMText>
                 </PMHStack>
               </PMVStack>
