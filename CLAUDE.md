@@ -23,26 +23,17 @@ Create if missing. Log each access. Best effort tracking.
 - Each sub task MUST have its own commit.
 - Before commiting anything, you must ensure that `npm run quality-gate` does not raise any issue.
 
-# Proactive Skills - Use During Work
+# Post-Task Skills Check
 
-These skills should be triggered **DURING** work, not just at the end. When you notice something relevant, invoke the skill immediately without asking the user.
+**MANDATORY CHECK**: After completing ANY task, you MUST systematically check for opportunities to invoke these skills. Review the work you just completed and actively look for content worth capturing. If nothing is relevant or worthwhile, that's acceptable - but you MUST perform this check every time.
 
-## During Exploration (when searching for patterns to follow)
-
-- **consistency-violation-capture** - Found conflicting patterns? (e.g., "some UseCases extend AbstractMemberUseCase, others don't", "validation in controllers here, in entities there")
-- **pattern-discovery-capture** - Found 3+ files following the same undocumented convention?
-- **codebase-assumption-capture** - Reality different from expectation? (e.g., "assumed Jest but found Vitest", "assumed REST but found GraphQL")
-
-## During Implementation (while coding)
-
-- **implicit-decision-capture** - Chose between valid alternatives without user guidance? (e.g., "picked 300ms debounce", "used compound component pattern")
-- **consistency-violation-capture** - Your implementation approach differs from similar code elsewhere?
-- **codebase-assumption-capture** - Started coding with wrong assumption and had to change approach?
-
-## After Completing Work
-
-- **command-capture** - Completed a multi-step workflow worth standardizing? (e.g., "added UseCase with tests and wiring")
-- **signal-capture** - User expressed a preference that should become a standard? (e.g., "Use snake_case for DB columns")
+Check for:
+- **command-capture** - Did you complete a multi-step workflow worth standardizing? (e.g., "added UseCase with tests and wiring", "set up new API endpoint with validation and tests")
+- **signal-capture** - Did the user express a preference that should become a standard? (e.g., "Use snake_case for DB columns", "Always add loading states to async operations")
+- **pattern-discovery-capture** - Did you find 3+ files following the same undocumented convention? (e.g., "all controllers use a consistent error handling pattern", "service classes follow similar initialization patterns")
+- **implicit-decision-capture** - Did you make technical choices without explicit user guidance during implementation? (e.g., "chose 300ms debounce", "used compound component pattern")
+- **consistency-violation-capture** - Did you discover inconsistencies in the codebase while working? (e.g., "some error handling uses try-catch, others use error boundaries", "some UseCases extend AbstractMemberUseCase, others don't")
+- **codebase-assumption-capture** - Did reality differ from your initial expectations during the work? (e.g., "assumed Redux but found Context API", "expected REST but discovered GraphQL", "assumed Jest but found Vitest")
 
 # Commiting
 
