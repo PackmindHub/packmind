@@ -1,0 +1,209 @@
+---
+title: 'Distribute artifacts'
+---
+
+Now that Packmind contains coding standards, commands, and skills, let's distribute them to your Git Repositories.
+
+The distribution will commit instructions files that will be used by AI Agents (Claude Code, Cursor, etc.).
+
+## Supported AI Agents
+
+Packmind supports multiple AI coding assistants. Organization administrators can choose which agents to enable in **Settings** → **Distribution** → **Rendering**. See [Manage AI Agent Rendering](/administration/manage-ai-agents) for details.
+
+Here is an overview of the supported agents:
+
+| AI Agent           | What It Does                     | File Location                     |
+| ------------------ | -------------------------------- | --------------------------------- |
+| **Packmind**       | Internal renderer (required)     | `.packmind/`                      |
+| **AGENTS.md**      | Updates instructions file        | `AGENTS.md`                       |
+| **GitHub Copilot** | Updates instructions file        | `.github/copilot-instructions.md` |
+| **Cursor**         | Creates rules in YAML format     | `.cursor/rules/`                  |
+| **Claude Code**    | Updates instructions file        | `CLAUDE.md`                       |
+| **Junie**          | Updates guidelines file          | `.junie/guidelines.md`            |
+| **Gitlab Duo**     | Updates chat rules file          | `.gitlab/duo/chat-rules.md`       |
+| **Continue**       | Creates rules in Markdown format | `.continue/rules/packmind/`       |
+
+When you distribute standards, commands, or skills, only the enabled agents will receive updates. The Packmind renderer is always active and creates files in the `.packmind/` directory that are used by other agents.
+
+For detailed information about where your artifacts appear and how to use them with each AI assistant, see [Understanding Where Your Artifacts Appear](/concepts/artifact-rendering).
+
+<Tip title="Need support for a new AI agent?">
+  You can create an issue in our
+  [repository](https://github.com/PackmindHub/packmind) to request support for
+  additional AI coding assistants
+</Tip>
+
+## How to Distribute
+
+There are three ways to distribute packages to your repositories:
+
+1. **Using the Packmind app** - Distribute packages through the web interface with full control over targets and repositories
+2. **Using packmind-cli** - Install packages directly from your terminal, useful for CI/CD pipelines and local development
+3. **Using the MCP tool** - Install packages directly from AI agents that support MCP (Model Context Protocol)
+
+### Distribution Methods Overview
+
+| Method  | Best For                                    | Git Provider Management                  |
+| ------- | ------------------------------------------- | ---------------------------------------- |
+| **App** | Centralized distribution, team coordination | Full control via connected Git providers |
+| **CLI** | CI/CD pipelines, local development          | Creates read-only provider entries       |
+| **MCP** | AI-assisted development, agent workflows    | Creates read-only provider entries       |
+
+## Distribute via the App
+
+To distribute standards, commands, and skills, you need to add them to a package.
+
+A package is a curated collection of commands, standards, and skills grouped together (e.g., "Frontend React Standards", "Backend API Guidelines"). When you distribute a package:
+
+- All commands, standards, and skills in the package are distributed together
+- The latest version of each item is used
+- A single commit contains all the package content
+- You can distribute multiple packages at once to the same target
+
+To distribute packages:
+
+1. Navigate to the **Packages** section
+2. Select the package(s) you want to distribute
+3. Click **Distribute** and choose your target repositories
+4. Confirm the Distribution
+
+This approach is useful when you want to:
+
+- Distribute related guidelines together
+- Maintain consistent sets of standards across projects
+- Organize guidelines by technology, team, or project structure
+
+For more information on creating and managing packages, see [Packages Management](/concepts/packages-management).
+
+## Distribute via packmind-cli
+
+You can also distribute packages directly from your terminal using the `packmind-cli` command:
+
+```bash
+packmind-cli install <package-slug>
+```
+
+For example:
+
+```bash
+packmind-cli install backend-standards frontend-react
+```
+
+This will:
+
+1. Fetch the specified packages from Packmind
+2. Generate the instruction files for all enabled AI agents
+3. Write the files to your local repository
+4. Notify Packmind that a distribution occurred
+
+### CLI Distribution Considerations
+
+When you distribute packages using the CLI, Packmind automatically creates a Git provider entry to track the distribution. However, these CLI-created providers have some limitations:
+
+<Warning title="Limited Provider Management">
+Git providers created through CLI distributions do not have an associated token. This means:
+
+- **You cannot trigger new distributions** from the app for these repositories
+- **You cannot add new targets** to these providers from the app
+- The provider appears in your organization's Git settings but with limited functionality
+
+To enable full management from the app, connect a Git provider with a valid token in **Settings** → **Git Providers**.
+
+</Warning>
+
+### When to Use CLI Distribution
+
+The CLI approach is ideal for:
+
+- **CI/CD pipelines** - Automate distribution as part of your deployment process
+- **Local development** - Quickly install packages without leaving your terminal
+- **Monorepos** - Use `packmind-cli install --recursive` to install packages for all `packmind.json` files in the repository
+- **Self-hosted Git instances** - Distribute to repositories that aren't connected to the app
+
+## Distribute via MCP Tool
+
+If you're using an AI agent that supports MCP (Model Context Protocol) and have the Packmind MCP server configured, you can install packages directly through your AI assistant using the `install_package` tool.
+
+### How It Works
+
+The MCP tool provides a two-step installation process:
+
+1. **Get installation instructions** - Call `install_package` with your package slugs to receive the list of file updates needed
+2. **Apply the changes** - The AI agent applies the file updates to your repository
+
+### Usage
+
+Ask your AI assistant to install Packmind packages. For example:
+
+> "Install the backend-standards package from Packmind"
+
+The AI agent will:
+
+1. Call the `install_package` MCP tool with the specified package slugs
+2. Receive the file contents for all enabled AI agent renderers
+3. Write or update the instruction files in your repository
+4. Notify Packmind that a distribution occurred
+
+### MCP Distribution Considerations
+
+Similar to CLI distributions, MCP-based distributions create Git provider entries with limited functionality:
+
+<Warning title="Limited Provider Management">
+Git providers created through MCP distributions do not have an associated token. This means:
+
+- **You cannot trigger new distributions** from the app for these repositories
+- **You cannot add new targets** to these providers from the app
+- The provider appears in your organization's Git settings but with limited functionality
+
+To enable full management from the app, connect a Git provider with a valid token in **Settings** → **Git Providers**.
+
+</Warning>
+
+### When to Use MCP Distribution
+
+The MCP approach is ideal for:
+
+- **AI-assisted development** - Let your AI coding assistant manage package installation as part of your workflow
+- **Interactive setup** - Get guidance and validation from your AI agent during installation
+- **Quick iterations** - Update packages without switching context from your AI chat interface
+- **Onboarding new projects** - Have your AI assistant set up Packmind standards in new repositories
+
+## Removing Packages
+
+When you no longer need a package in your repository, you can remove it using either the app or the CLI.
+
+### Remove via the App
+
+In the Packmind app, you can remove packages one-by-one from your distributions:
+
+1. Navigate to the **Packages** section
+2. Open the package you want to remove
+3. Click **Remove from target** and confirm the removal
+
+### Remove via the CLI
+
+There are two ways to remove packages using the CLI:
+
+**Option 1: Use the remove command**
+
+```bash
+packmind-cli remove <package-slug>
+```
+
+For example:
+
+```bash
+packmind-cli remove backend-standards
+```
+
+**Option 2: Edit packmind.json and reinstall**
+
+1. Open your `packmind.json` file
+2. Remove the package slug from the packages list
+3. Run the install command to update your repository:
+
+```bash
+packmind-cli install
+```
+
+This approach is useful when you want to make multiple changes to your package configuration at once.

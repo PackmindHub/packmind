@@ -1,0 +1,141 @@
+---
+title: 'Security & Privacy (Self-Hosted)'
+---
+
+Understand your responsibilities and control over data when running Packmind on your own infrastructure.
+
+## Overview
+
+When you install Packmind on your own servers, **you have complete control over your data**. Nothing is sent to Packmind's cloud services. This page explains what this means for you and what you're responsible for managing.
+
+For information about Packmind Cloud security and privacy, see [Security & Privacy](/security/security-privacy).
+
+## Your Data Control
+
+### Complete Local Control
+
+When you run Packmind on your infrastructure:
+
+- **All your data stays local** - Nothing is sent to Packmind's cloud application
+- **You control everything** - Your database, backups, and all data remain within your infrastructure
+- **Air-gapped deployments supported** - You can run Packmind entirely offline within your local network
+
+### No Data Sharing with Packmind
+
+Packmind has **no access** to your self-hosted installation:
+
+- We cannot see what you do in your Packmind instance
+- We do not have access to your database or any operational data
+- All your data remains entirely within your infrastructure
+
+## Your Responsibilities
+
+When you run Packmind self-hosted, you are responsible for:
+
+### Data Backups
+
+You must create and maintain your own backup strategy. Packmind does not automatically back up your data.
+
+### Data Encryption
+
+You are responsible for encrypting your data:
+
+- Data stored in your database (encryption at rest)
+- Data transmitted between services (encryption in transit)
+
+### Database Security
+
+You manage and secure your database. This includes:
+
+- Setting strong passwords
+- Controlling who has access
+- Keeping your database updated
+
+### Network Security
+
+You control:
+
+- Who can access your Packmind instance
+- Firewall rules and network isolation
+- How services communicate within your network
+
+### API Keys and Credentials
+
+You manage all secrets and credentials:
+
+- API keys for AI providers
+- Access tokens for Git repositories
+- Database passwords and other credentials
+
+### Monitoring and Maintenance
+
+You are responsible for:
+
+- Monitoring your Packmind instance
+- Keeping components updated
+- Reviewing logs for issues
+
+## Connecting External Services
+
+### Git Repositories
+
+When you connect GitLab, GitHub, or other Git repositories:
+
+- All repository data stays on your infrastructure
+- No repository information is sent to Packmind servers
+- You control all access tokens and credentials
+- Everything happens within your network
+
+### AI Providers
+
+When you connect AI providers like OpenAI, Anthropic, or Azure OpenAI:
+
+- You use **your own API keys** - Packmind never sees these credentials
+- You are responsible for reviewing each provider's:
+  - Data processing and retention policies
+  - Terms of service
+  - Privacy policies
+  - Compliance certifications (if needed for your use case)
+- All API calls go directly from your infrastructure to your chosen provider
+
+## Air-Gapped Deployments
+
+You can run Packmind in environments with no internet connection:
+
+- The application runs entirely within your local network
+- No connection to external Packmind services is needed
+- All functionality works offline
+- You can deploy using Docker Compose or Kubernetes in your isolated network
+
+To deploy in an air-gapped environment, ensure you have all required components available locally before starting the installation.
+
+## Data Retention
+
+You have complete control over how long to keep your data:
+
+- You decide when to delete data
+- You set your own retention policies
+- Packmind does not automatically delete any data
+
+## Compliance
+
+When running Packmind self-hosted:
+
+- You are responsible for meeting compliance requirements (GDPR, HIPAA, SOC 2, etc.)
+- Packmind's SOC 2 Type II certification applies to the cloud version only
+- You must implement and maintain your own compliance measures
+- All data processing happens within your infrastructure under your control
+
+## Open Source Transparency
+
+Packmind is open source, which means you can:
+
+- Review the code to understand exactly what it does
+- Verify how your data is handled
+- Customize the deployment for your security needs
+- Contribute improvements to the project
+
+## Related Documentation
+
+- [Install Packmind on your server](/getting-started/gs-install-self-hosted) - Setup instructions for self-hosted deployments
+- [Security & Privacy](/security/security-privacy) - Security information for Packmind Cloud

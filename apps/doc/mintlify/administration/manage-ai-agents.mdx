@@ -1,0 +1,49 @@
+---
+title: 'Manage AI Agent Rendering'
+---
+
+## Overview
+
+Organization administrators can control which AI coding assistants receive your standards and commands when you distribute them to Git repositories. This allows you to distribute only the formats your team actually uses.
+
+<Info title="Only users with **Admin** privileges can configure AI agent rendering. If you need to change this configuration, contact your organization administrator.">
+
+</Info>
+
+## Configuring AI Agents
+
+To configure which agents are enabled:
+
+1. Go to **Settings** → **Distribution** → **Rendering**
+2. Toggle on the agents you want to use
+3. Click **Save Changes**
+
+When you distribute standards or commands, only the enabled agents will have their instruction files updated in your Git repositories.
+
+## Available AI Agents
+
+| AI Agent           | File Location                     | Can be Disabled? |
+| ------------------ | --------------------------------- | ---------------- |
+| **Packmind**       | `.packmind/`                      | No (Required)    |
+| **AGENTS.md**      | `AGENTS.md`                       | Yes              |
+| **GitHub Copilot** | `.github/copilot-instructions.md` | Yes              |
+| **Cursor**         | `.cursor/rules/`                  | Yes              |
+| **Claude Code**    | `CLAUDE.md`                       | Yes              |
+| **Junie**          | `.junie/guidelines.md`            | Yes              |
+| **Gitlab Duo**     | `.gitlab/duo/chat-rules.md`       | Yes              |
+| **Continue**       | `.continue/rules/packmind/`       | Yes              |
+
+<Info title="The **Packmind** renderer cannot be disabled. It creates internal files in the `.packmind/` directory that are used by Packmind and other agents to function properly.">
+
+</Info>
+
+## What Happens When You Change Configuration
+
+- Changes apply immediately to all future distributions
+- Existing distributed files in your repositories are not affected
+- Only the selected agents will receive updates when you distribute standards or commands
+- The Packmind renderer always creates files regardless of your selection
+
+## Learn More
+
+For detailed information about where standards and commands appear for each AI assistant and how to use them, see [Understanding Where Your Artifacts Appear](/concepts/artifact-rendering).

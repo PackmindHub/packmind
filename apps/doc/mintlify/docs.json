@@ -1,0 +1,111 @@
+{
+  "$schema": "https://mintlify.com/docs.json",
+  "theme": "mint",
+  "name": "Packmind",
+  "logo": {
+    "light": "/images/logo.svg",
+    "dark": "/images/logo.svg",
+    "href": "https://packmind.com"
+  },
+  "favicon": "/images/favicon.svg",
+  "colors": {
+    "primary": "#6366f1",
+    "light": "#818cf8",
+    "dark": "#4f46e5"
+  },
+  "navbar": {
+    "links": [
+      {
+        "label": "GitHub",
+        "href": "https://github.com/PackmindHub/packmind"
+      },
+      {
+        "label": "Community",
+        "href": "https://packmind.slack.com/"
+      }
+    ],
+    "primary": {
+      "type": "button",
+      "label": "Get Started",
+      "href": "https://app.packmind.com"
+    }
+  },
+  "navigation": {
+    "groups": [
+      {
+        "group": "Introduction",
+        "pages": ["index"]
+      },
+      {
+        "group": "Getting Started",
+        "icon": "rocket",
+        "pages": [
+          "getting-started/gs-mcp-server-setup",
+          "getting-started/gs-install-cloud",
+          "getting-started/gs-install-self-hosted",
+          "getting-started/gs-create-standard",
+          "getting-started/gs-create-command",
+          "getting-started/gs-create-skill",
+          "getting-started/gs-distribute"
+        ]
+      },
+      {
+        "group": "Concepts",
+        "icon": "lightbulb",
+        "pages": [
+          "concepts/standards-management",
+          "concepts/commands-management",
+          "concepts/skills-management",
+          "concepts/packages-management",
+          "concepts/artifact-rendering"
+        ]
+      },
+      {
+        "group": "Tools & Integrations",
+        "icon": "wrench",
+        "pages": ["tools/mcp-server", "tools/cli"]
+      },
+      {
+        "group": "Governance",
+        "icon": "shield",
+        "pages": [
+          "governance/distribution",
+          "governance/git-repository-connection",
+          "governance/overview"
+        ]
+      },
+      {
+        "group": "Linter",
+        "icon": "magnifying-glass",
+        "pages": ["linter/linter"]
+      },
+      {
+        "group": "Administration",
+        "icon": "gear",
+        "pages": [
+          "administration/manage-users",
+          "administration/manage-ai-agents",
+          "administration/llm-configuration"
+        ]
+      },
+      {
+        "group": "Security & Privacy",
+        "icon": "lock",
+        "pages": [
+          "security/security-privacy",
+          "security/security-privacy-self-hosted"
+        ]
+      }
+    ]
+  },
+  "footerSocials": {
+    "github": "https://github.com/PackmindHub/packmind",
+    "slack": "https://packmind.slack.com/"
+  },
+  "feedback": {
+    "thumbsRating": true
+  },
+  "contextual": {
+    "options": ["copy", "view", "chatgpt", "claude"]
+  }
+}
