@@ -24,6 +24,7 @@ import {
   IStandardsPort,
   ListStandardsBySpaceCommand,
   OrganizationId,
+  PackmindEventSource,
   Rule,
   RuleExample,
   RuleId,
@@ -454,6 +455,7 @@ export class StandardsAdapter
     userId: UserId;
     spaceId: SpaceId;
     packageSlugs?: string[];
+    source?: PackmindEventSource;
   }): Promise<Standard> {
     const result = await this._createStandardWithPackages.execute({
       ...params,

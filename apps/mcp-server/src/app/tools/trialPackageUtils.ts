@@ -61,6 +61,7 @@ export async function ensureDefaultPackageWithArtifact(
       packageId: defaultPackage.id,
       standardIds: artifact.standardId ? [artifact.standardId] : undefined,
       recipeIds: artifact.recipeId ? [artifact.recipeId] : undefined,
+      source: 'mcp',
     });
 
     return defaultPackage.slug;
@@ -80,6 +81,7 @@ export async function ensureDefaultPackageWithArtifact(
     description: DEFAULT_PACKAGE_DESCRIPTION,
     recipeIds: artifact.recipeId ? [artifact.recipeId] : [],
     standardIds: artifact.standardId ? [artifact.standardId] : [],
+    source: 'mcp',
   });
 
   logger.info('Default package created successfully', {
