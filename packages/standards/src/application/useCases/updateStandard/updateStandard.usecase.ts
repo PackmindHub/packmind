@@ -9,6 +9,8 @@ import {
   ISpacesPort,
   IUpdateStandardUseCase,
   OrganizationId,
+  RuleAddedEvent,
+  RuleDeletedEvent,
   RuleExample,
   RuleId,
   StandardUpdatedEvent,
@@ -19,6 +21,7 @@ import {
   createOrganizationId,
   createSpaceId,
   createStandardId,
+  createStandardVersionId,
   createUserId,
 } from '@packmind/types';
 import { IRuleExampleRepository } from '../../../domain/repositories/IRuleExampleRepository';
@@ -270,6 +273,47 @@ export class UpdateStandardUsecase
         newVersion: nextVersion,
       });
 
+      // Detect and emit rule change events
+      const ruleChanges = this.detectRuleChanges(existingRules, rules);
+      const brandedStandardId = createStandardId(standardId);
+      const brandedStandardVersionId = createStandardVersionId(
+        newStandardVersion.id,
+      );
+
+      for (let i = 0; i < ruleChanges.deleted.length; i++) {
+        this.eventEmitterService.emit(
+          new RuleDeletedEvent({
+            standardId: brandedStandardId,
+            standardVersionId: brandedStandardVersionId,
+            organizationId: brandedOrganizationId,
+            userId: brandedUserId,
+            newVersion: nextVersion,
+            source: 'ui',
+          }),
+        );
+      }
+
+      for (let i = 0; i < ruleChanges.added.length; i++) {
+        this.eventEmitterService.emit(
+          new RuleAddedEvent({
+            standardId: brandedStandardId,
+            standardVersionId: brandedStandardVersionId,
+            organizationId: brandedOrganizationId,
+            userId: brandedUserId,
+            newVersion: nextVersion,
+            source: 'ui',
+          }),
+        );
+      }
+
+      if (ruleChanges.deleted.length > 0 || ruleChanges.added.length > 0) {
+        this.logger.info('Rule change events emitted', {
+          standardId,
+          deletedCount: ruleChanges.deleted.length,
+          addedCount: ruleChanges.added.length,
+        });
+      }
+
       return { standard: updatedStandard };
     } catch (error) {
       this.logger.error('Failed to update standard', {
@@ -365,5 +409,30 @@ export class UpdateStandardUsecase
 
     this.logger.debug('No content changes detected');
     return false;
+  }
+
+  private detectRuleChanges(
+    existingRules: Array<{ content: string }>,
+    newRules: Array<{ content: string }>,
+  ): { added: string[]; deleted: string[] } {
+    const existingContents = new Set(existingRules.map((r) => r.content));
+    const newContents = new Set(newRules.map((r) => r.content));
+
+    const added: string[] = [];
+    const deleted: string[] = [];
+
+    for (const content of newContents) {
+      if (!existingContents.has(content)) {
+        added.push(content);
+      }
+    }
+
+    for (const content of existingContents) {
+      if (!newContents.has(content)) {
+        deleted.push(content);
+      }
+    }
+
+    return { added, deleted };
   }
 }
