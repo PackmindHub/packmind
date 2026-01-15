@@ -3,6 +3,7 @@ import {
   StandardCreatedEvent,
   StandardUpdatedEvent,
   RuleAddedEvent,
+  RuleDeletedEvent,
   CommandCreatedEvent,
   CommandUpdatedEvent,
   DeploymentCompletedEvent,
@@ -32,6 +33,7 @@ export class AmplitudeEventListener extends PackmindListener<EventTrackingAdapte
     this.subscribe(StandardDeletedEvent, this.onStandardDeleted);
     this.subscribe(RuleAddedEvent, this.onRuleAdded);
     this.subscribe(RuleUpdatedEvent, this.onRuleUpdated);
+    this.subscribe(RuleDeletedEvent, this.onRuleDeleted);
     this.subscribe(CommandCreatedEvent, this.onCommandCreated);
     this.subscribe(CommandUpdatedEvent, this.onCommandUpdated);
     this.subscribe(CommandDeletedEvent, this.onCommandDeleted);
@@ -98,6 +100,14 @@ export class AmplitudeEventListener extends PackmindListener<EventTrackingAdapte
 
   private onRuleUpdated = async (event: RuleUpdatedEvent): Promise<void> => {
     return this.emitAmplitudeEvent(event, 'rule_updated', (payload) => ({
+      standardId: payload.standardId,
+      standardVersionId: payload.standardVersionId,
+      newVersion: payload.newVersion,
+    }));
+  };
+
+  private onRuleDeleted = async (event: RuleDeletedEvent): Promise<void> => {
+    return this.emitAmplitudeEvent(event, 'rule_deleted', (payload) => ({
       standardId: payload.standardId,
       standardVersionId: payload.standardVersionId,
       newVersion: payload.newVersion,
