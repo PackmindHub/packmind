@@ -7,7 +7,12 @@ import { IRuleRepository } from '../../../domain/repositories/IRuleRepository';
 import { IRuleExampleRepository } from '../../../domain/repositories/IRuleExampleRepository';
 import { Standard, StandardId, createStandardId } from '@packmind/types';
 import { StandardVersion } from '@packmind/types';
-import { Rule, createRuleId } from '@packmind/types';
+import {
+  Rule,
+  createRuleId,
+  RuleAddedEvent,
+  RuleDeletedEvent,
+} from '@packmind/types';
 import { standardFactory } from '../../../../test/standardFactory';
 import { standardVersionFactory } from '../../../../test/standardVersionFactory';
 import { ruleFactory } from '../../../../test/ruleFactory';
@@ -136,6 +141,7 @@ describe('UpdateStandardUsecase', () => {
       passwordHash: 'hashed-password',
       active: true,
       memberships: [mockMembership],
+      trial: false,
     };
 
     accountsAdapter = {
@@ -1220,6 +1226,267 @@ describe('UpdateStandardUsecase', () => {
         await expect(updateStandardUsecase.execute(inputData)).rejects.toThrow(
           'Database error',
         );
+      });
+    });
+
+    describe('rule change event emission', () => {
+      let existingStandard: Standard;
+      let latestVersion: StandardVersion;
+      let updatedStandard: Standard;
+      let newStandardVersion: StandardVersion;
+
+      beforeEach(() => {
+        existingStandard = standardFactory({
+          id: standardId,
+          name: 'Test Standard',
+          slug: 'test-standard',
+          description: 'Test description',
+          version: 1,
+          spaceId: spaceId,
+        });
+
+        latestVersion = standardVersionFactory({
+          id: createStandardVersionId(uuidv4()),
+          standardId,
+          name: 'Test Standard',
+          slug: 'test-standard',
+          description: 'Test description',
+          version: 1,
+        });
+
+        updatedStandard = standardFactory({
+          id: standardId,
+          name: 'Test Standard',
+          slug: 'test-standard',
+          description: 'Test description',
+          version: 2,
+        });
+
+        newStandardVersion = standardVersionFactory({
+          id: createStandardVersionId(uuidv4()),
+          standardId,
+          name: 'Test Standard',
+          slug: 'test-standard',
+          description: 'Test description',
+          version: 2,
+        });
+
+        standardService.getStandardById.mockResolvedValue(existingStandard);
+        standardVersionService.getLatestStandardVersion.mockResolvedValue(
+          latestVersion,
+        );
+        standardService.updateStandard.mockResolvedValue(updatedStandard);
+        standardVersionService.addStandardVersion.mockResolvedValue(
+          newStandardVersion,
+        );
+      });
+
+      describe('when rules are added', () => {
+        it('emits RuleAddedEvent for each new rule', async () => {
+          const existingRules = [
+            ruleFactory({
+              content: 'Existing rule',
+              standardVersionId: latestVersion.id,
+            }),
+          ];
+          ruleRepository.findByStandardVersionId.mockResolvedValue(
+            existingRules,
+          );
+
+          const inputData: UpdateStandardCommand = {
+            standardId,
+            name: 'Test Standard',
+            description: 'Updated description',
+            rules: [
+              { id: createRuleId(uuidv4()), content: 'Existing rule' },
+              { id: createRuleId(uuidv4()), content: 'New rule 1' },
+              { id: createRuleId(uuidv4()), content: 'New rule 2' },
+            ],
+            organizationId,
+            userId: userId.toString(),
+            spaceId,
+            scope: null,
+          };
+
+          await updateStandardUsecase.execute(inputData);
+
+          const ruleAddedCalls = eventEmitterService.emit.mock.calls.filter(
+            (call) => call[0] instanceof RuleAddedEvent,
+          );
+          expect(ruleAddedCalls).toHaveLength(2);
+        });
+      });
+
+      describe('when rules are deleted', () => {
+        it('emits RuleDeletedEvent for each removed rule', async () => {
+          const existingRules = [
+            ruleFactory({
+              content: 'Rule to keep',
+              standardVersionId: latestVersion.id,
+            }),
+            ruleFactory({
+              content: 'Rule to delete 1',
+              standardVersionId: latestVersion.id,
+            }),
+            ruleFactory({
+              content: 'Rule to delete 2',
+              standardVersionId: latestVersion.id,
+            }),
+          ];
+          ruleRepository.findByStandardVersionId.mockResolvedValue(
+            existingRules,
+          );
+
+          const inputData: UpdateStandardCommand = {
+            standardId,
+            name: 'Test Standard',
+            description: 'Updated description',
+            rules: [{ id: createRuleId(uuidv4()), content: 'Rule to keep' }],
+            organizationId,
+            userId: userId.toString(),
+            spaceId,
+            scope: null,
+          };
+
+          await updateStandardUsecase.execute(inputData);
+
+          const ruleDeletedCalls = eventEmitterService.emit.mock.calls.filter(
+            (call) => call[0] instanceof RuleDeletedEvent,
+          );
+          expect(ruleDeletedCalls).toHaveLength(2);
+        });
+      });
+
+      describe('when rules are both added and deleted', () => {
+        beforeEach(async () => {
+          const existingRules = [
+            ruleFactory({
+              content: 'Rule A',
+              standardVersionId: latestVersion.id,
+            }),
+            ruleFactory({
+              content: 'Rule B',
+              standardVersionId: latestVersion.id,
+            }),
+          ];
+          ruleRepository.findByStandardVersionId.mockResolvedValue(
+            existingRules,
+          );
+
+          const inputData: UpdateStandardCommand = {
+            standardId,
+            name: 'Test Standard',
+            description: 'Updated description',
+            rules: [
+              { id: createRuleId(uuidv4()), content: 'Rule B' },
+              { id: createRuleId(uuidv4()), content: 'Rule C' },
+            ],
+            organizationId,
+            userId: userId.toString(),
+            spaceId,
+            scope: null,
+          };
+
+          await updateStandardUsecase.execute(inputData);
+        });
+
+        it('emits RuleAddedEvent for each added rule', () => {
+          const ruleAddedCalls = eventEmitterService.emit.mock.calls.filter(
+            (call) => call[0] instanceof RuleAddedEvent,
+          );
+          expect(ruleAddedCalls).toHaveLength(1);
+        });
+
+        it('emits RuleDeletedEvent for each deleted rule', () => {
+          const ruleDeletedCalls = eventEmitterService.emit.mock.calls.filter(
+            (call) => call[0] instanceof RuleDeletedEvent,
+          );
+          expect(ruleDeletedCalls).toHaveLength(1);
+        });
+      });
+
+      describe('when rule content changes', () => {
+        beforeEach(async () => {
+          const existingRules = [
+            ruleFactory({
+              content: 'Old rule content',
+              standardVersionId: latestVersion.id,
+            }),
+          ];
+          ruleRepository.findByStandardVersionId.mockResolvedValue(
+            existingRules,
+          );
+
+          const inputData: UpdateStandardCommand = {
+            standardId,
+            name: 'Test Standard',
+            description: 'Updated description',
+            rules: [
+              { id: createRuleId(uuidv4()), content: 'New rule content' },
+            ],
+            organizationId,
+            userId: userId.toString(),
+            spaceId,
+            scope: null,
+          };
+
+          await updateStandardUsecase.execute(inputData);
+        });
+
+        it('emits RuleAddedEvent for new content', () => {
+          const ruleAddedCalls = eventEmitterService.emit.mock.calls.filter(
+            (call) => call[0] instanceof RuleAddedEvent,
+          );
+          expect(ruleAddedCalls).toHaveLength(1);
+        });
+
+        it('emits RuleDeletedEvent for old content', () => {
+          const ruleDeletedCalls = eventEmitterService.emit.mock.calls.filter(
+            (call) => call[0] instanceof RuleDeletedEvent,
+          );
+          expect(ruleDeletedCalls).toHaveLength(1);
+        });
+      });
+
+      describe('when no rules change', () => {
+        beforeEach(async () => {
+          const existingRules = [
+            ruleFactory({
+              content: 'Unchanged rule',
+              standardVersionId: latestVersion.id,
+            }),
+          ];
+          ruleRepository.findByStandardVersionId.mockResolvedValue(
+            existingRules,
+          );
+
+          const inputData: UpdateStandardCommand = {
+            standardId,
+            name: 'Test Standard',
+            description: 'Updated description',
+            rules: [{ id: createRuleId(uuidv4()), content: 'Unchanged rule' }],
+            organizationId,
+            userId: userId.toString(),
+            spaceId,
+            scope: null,
+          };
+
+          await updateStandardUsecase.execute(inputData);
+        });
+
+        it('does not emit RuleAddedEvent', () => {
+          const ruleAddedCalls = eventEmitterService.emit.mock.calls.filter(
+            (call) => call[0] instanceof RuleAddedEvent,
+          );
+          expect(ruleAddedCalls).toHaveLength(0);
+        });
+
+        it('does not emit RuleDeletedEvent', () => {
+          const ruleDeletedCalls = eventEmitterService.emit.mock.calls.filter(
+            (call) => call[0] instanceof RuleDeletedEvent,
+          );
+          expect(ruleDeletedCalls).toHaveLength(0);
+        });
       });
     });
   });
