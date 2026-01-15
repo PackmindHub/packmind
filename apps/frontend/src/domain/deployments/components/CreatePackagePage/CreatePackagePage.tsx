@@ -111,8 +111,8 @@ const PackageFormContent = ({
 
   const recipeDisplayValue =
     selectedRecipeIds.length === 0
-      ? 'Select recipes...'
-      : `${selectedRecipeIds.length} recipe(s) selected`;
+      ? 'Select commands...'
+      : `${selectedRecipeIds.length} command(s) selected`;
 
   const standardDisplayValue =
     selectedStandardIds.length === 0
@@ -241,10 +241,10 @@ const PackageFormContent = ({
       </PMField.Root>
 
       <PMField.Root flex={1} width="full">
-        <PMField.Label>Recipes</PMField.Label>
+        <PMField.Label>Commands</PMField.Label>
         {recipes.length === 0 ? (
           <PMText colorPalette="gray" fontSize="sm" display="block">
-            No recipes available in this space
+            No commands available in this space
           </PMText>
         ) : (
           <PMVStack gap={2} width="full" align="flex-start">
@@ -276,7 +276,7 @@ const PackageFormContent = ({
               <PMPortal>
                 <PMCombobox.Positioner>
                   <PMCombobox.Content>
-                    <PMCombobox.Empty>No recipes found</PMCombobox.Empty>
+                    <PMCombobox.Empty>No commands found</PMCombobox.Empty>
                     {recipeCollection.items.map((item) => (
                       <PMCombobox.Item item={item} key={item.value}>
                         <PMCombobox.ItemText>{item.label}</PMCombobox.ItemText>
@@ -614,7 +614,8 @@ export const CreatePackagePage: React.FC<CreatePackagePageProps> = ({
               <PMHeading level="h3">Content Selection</PMHeading>
             </PMFieldset.Legend>
             <PMFieldset.HelperText>
-              Select the recipes and standards to include in this package.
+              Select the standards, commands and skills to include in this
+              package.
             </PMFieldset.HelperText>
             <PMFieldset.Content
               border="solid 1px"

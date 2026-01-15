@@ -295,7 +295,7 @@ const PackageEditFormContent = ({
               <PMPortal>
                 <PMCombobox.Positioner>
                   <PMCombobox.Content>
-                    <PMCombobox.Empty>No recipes found</PMCombobox.Empty>
+                    <PMCombobox.Empty>No commands found</PMCombobox.Empty>
                     {recipeCollection.items.map((item) => (
                       <PMCombobox.Item item={item} key={item.value}>
                         <PMCombobox.ItemText>{item.label}</PMCombobox.ItemText>
