@@ -35,6 +35,8 @@ import { ConfigFileRepository } from './infra/repositories/ConfigFileRepository'
 import { loadApiKey } from './infra/utils/credentialsLoader';
 import { IDeleteLocalSkillUseCase } from './domain/useCases/IDeleteLocalSkillUseCase';
 import { DeleteLocalSkillUseCase } from './application/useCases/DeleteLocalSkillUseCase';
+import { IUpdateLocalSkillUseCase } from './domain/useCases/IUpdateLocalSkillUseCase';
+import { UpdateLocalSkillUseCase } from './application/useCases/UpdateLocalSkillUseCase';
 
 export class PackmindCliHexaFactory {
   public repositories: IPackmindRepositories;
@@ -54,6 +56,7 @@ export class PackmindCliHexaFactory {
     whoami: IWhoamiUseCase;
     setupMcp: ISetupMcpUseCase;
     deleteLocalSkill: IDeleteLocalSkillUseCase;
+    updateLocalSkill: IUpdateLocalSkillUseCase;
   };
 
   constructor(private readonly logger: PackmindLogger) {
@@ -100,6 +103,7 @@ export class PackmindCliHexaFactory {
         mcpConfigService: new McpConfigService(),
       }),
       deleteLocalSkill: new DeleteLocalSkillUseCase(),
+      updateLocalSkill: new UpdateLocalSkillUseCase(),
     };
   }
 }
