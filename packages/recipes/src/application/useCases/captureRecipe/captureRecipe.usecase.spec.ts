@@ -116,7 +116,7 @@ describe('CaptureRecipeUsecase', () => {
       expect(result).toContain('## Context Validation Checkpoints');
       expect(result).toContain('* [ ] User model exists');
       expect(result).toContain('* [ ] Database is configured');
-      expect(result).toContain('## Recipe Steps');
+      expect(result).toContain('## Command Steps');
       expect(result).toContain('### Step 1: Setup Dependencies');
       expect(result).toContain('Install required packages');
       expect(result).toContain('npm install passport');
@@ -145,7 +145,7 @@ describe('CaptureRecipeUsecase', () => {
         expect(result).toBe('Simple recipe');
         expect(result).not.toContain('## When to Use');
         expect(result).not.toContain('## Context Validation Checkpoints');
-        expect(result).not.toContain('## Recipe Steps');
+        expect(result).not.toContain('## Command Steps');
       });
     });
 
@@ -166,7 +166,7 @@ describe('CaptureRecipeUsecase', () => {
         expect(result).toContain('Test recipe');
         expect(result).not.toContain('## When to Use');
         expect(result).toContain('## Context Validation Checkpoints');
-        expect(result).toContain('## Recipe Steps');
+        expect(result).toContain('## Command Steps');
       });
     });
 
@@ -187,12 +187,14 @@ describe('CaptureRecipeUsecase', () => {
         expect(result).toContain('Test recipe');
         expect(result).toContain('## When to Use');
         expect(result).not.toContain('## Context Validation Checkpoints');
-        expect(result).toContain('## Recipe Steps');
+        expect(result).toContain('## Command Steps');
       });
     });
 
-    describe('when Recipe Steps section is empty', () => {
-      it('omits Recipe Steps section', () => {
+    describe('when Command Steps section is empty', () => {
+      let result: string;
+
+      beforeEach(() => {
         const summary = 'Test recipe';
         const whenToUse = ['Scenario one'];
         const contextValidationCheckpoints = ['Check prerequisites'];
@@ -202,17 +204,29 @@ describe('CaptureRecipeUsecase', () => {
           codeSnippet?: string;
         }[] = [];
 
-        const result = captureRecipeUsecase.assembleRecipeContent(
+        result = captureRecipeUsecase.assembleRecipeContent(
           summary,
           whenToUse,
           contextValidationCheckpoints,
           steps,
         );
+      });
 
+      it('includes summary', () => {
         expect(result).toContain('Test recipe');
+      });
+
+      //  Wh-en -> otherwise packmind-cli will trigger a violation
+      it('includes Wh-en to Use section', () => {
         expect(result).toContain('## When to Use');
+      });
+
+      it('includes Context Validation Checkpoints section', () => {
         expect(result).toContain('## Context Validation Checkpoints');
-        expect(result).not.toContain('## Recipe Steps');
+      });
+
+      it('omits Command Steps section', () => {
+        expect(result).not.toContain('## Command Steps');
       });
     });
 
