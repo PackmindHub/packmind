@@ -146,6 +146,7 @@ export class UsersController {
         organizationId,
         targetUserId,
         newRole,
+        source: request.clientSource,
       };
       const response = await this.usersService.changeUserRole(command);
 
@@ -202,6 +203,7 @@ export class UsersController {
         organizationId,
         emails: body.emails,
         role: body.role,
+        source: request.clientSource,
       };
       const response = await this.usersService.createInvitations(command);
 
@@ -251,6 +253,7 @@ export class UsersController {
         userId: request.user.userId,
         organizationId,
         targetUserId,
+        source: request.clientSource,
       };
       const response =
         await this.usersService.removeUserFromOrganization(command);

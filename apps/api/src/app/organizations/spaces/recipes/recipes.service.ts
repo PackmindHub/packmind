@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { PackmindLogger } from '@packmind/logger';
 import {
+  ClientSource,
   IDeploymentPort,
   IRecipesPort,
   OrganizationId,
@@ -66,6 +67,7 @@ export class RecipesService {
     organizationId: OrganizationId,
     userId: UserId,
     spaceId: SpaceId,
+    source: ClientSource,
   ): Promise<Recipe> {
     return this.recipesAdapter.captureRecipe({
       ...recipe,
@@ -73,6 +75,7 @@ export class RecipesService {
       organizationId,
       userId,
       spaceId,
+      source,
     });
   }
 
@@ -108,6 +111,7 @@ export class RecipesService {
     slug: string,
     content: string,
     editorUserId: UserId,
+    source: ClientSource,
     summary?: string,
   ): Promise<Recipe> {
     const result = await this.recipesAdapter.updateRecipeFromUI({
@@ -119,6 +123,7 @@ export class RecipesService {
       slug,
       content,
       summary,
+      source,
     });
     return result.recipe;
   }
@@ -132,6 +137,7 @@ export class RecipesService {
     targetIds: TargetId[],
     authorId: UserId,
     organizationId: OrganizationId,
+    source: ClientSource,
   ) {
     const result = await this.deploymentAdapter.publishArtifacts({
       userId: authorId,
@@ -141,6 +147,7 @@ export class RecipesService {
       targetIds,
       packagesSlugs: [],
       packageIds: [],
+      source,
     });
 
     return {
@@ -157,12 +164,14 @@ export class RecipesService {
     spaceId: SpaceId,
     organizationId: OrganizationId,
     userId: UserId,
+    source: ClientSource,
   ): Promise<void> {
     await this.recipesAdapter.deleteRecipe({
       recipeId: id,
       spaceId,
       userId,
       organizationId,
+      source,
     });
   }
 
@@ -171,12 +180,14 @@ export class RecipesService {
     spaceId: SpaceId,
     userId: UserId,
     organizationId: OrganizationId,
+    source: ClientSource,
   ): Promise<void> {
     await this.recipesAdapter.deleteRecipesBatch({
       recipeIds,
       spaceId,
       userId,
       organizationId,
+      source,
     });
   }
 }
