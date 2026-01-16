@@ -78,6 +78,7 @@ export class StartTrialUseCase implements IStartTrial {
           userId: createUserId(user.id),
           organizationId: organization.id,
           email,
+          quickStart: true,
           source: 'ui',
         }),
       );

@@ -9,7 +9,7 @@ import {
   createUserId,
   IEventTrackingPort,
 } from '@packmind/types';
-import { EventTrackingAdapter } from '@packmind/linter';
+import { EventTrackingAdapter } from '@packmind/amplitude';
 
 interface UserContext {
   email: string;
