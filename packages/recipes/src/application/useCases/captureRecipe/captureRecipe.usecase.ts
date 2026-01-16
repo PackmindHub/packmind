@@ -242,9 +242,9 @@ export class CaptureRecipeUsecase implements ICaptureRecipeUseCase {
         .join('\n');
     }
 
-    // Add "Recipe Steps" section only if not empty
+    // Add "Command Steps" section only if not empty
     if (steps.length > 0) {
-      content += '\n\n## Recipe Steps\n\n';
+      content += '\n\n## Command Steps\n\n';
       steps.forEach((step, index) => {
         content += `### Step ${index + 1}: ${step.name}\n\n`;
         content += `${step.description}\n`;
