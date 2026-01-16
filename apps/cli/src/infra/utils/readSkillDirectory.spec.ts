@@ -632,4 +632,129 @@ describe('readSkillDirectory', () => {
       expect(files).toHaveLength(1);
     });
   });
+
+  describe('when filtering blacklisted files', () => {
+    describe('when .DS_Store file exists in root directory', () => {
+      it('excludes .DS_Store file', async () => {
+        await fs.writeFile(path.join(tempDir, 'SKILL.md'), 'skill content');
+        await fs.writeFile(path.join(tempDir, '.DS_Store'), 'macOS metadata');
+
+        const files = await readSkillDirectory(tempDir);
+
+        expect(
+          files.find((f) => f.relativePath === '.DS_Store'),
+        ).toBeUndefined();
+      });
+
+      it('includes non-blacklisted files', async () => {
+        await fs.writeFile(path.join(tempDir, 'SKILL.md'), 'skill content');
+        await fs.writeFile(path.join(tempDir, '.DS_Store'), 'macOS metadata');
+
+        const files = await readSkillDirectory(tempDir);
+
+        expect(files.find((f) => f.relativePath === 'SKILL.md')).toBeDefined();
+      });
+
+      it('returns only one file', async () => {
+        await fs.writeFile(path.join(tempDir, 'SKILL.md'), 'skill content');
+        await fs.writeFile(path.join(tempDir, '.DS_Store'), 'macOS metadata');
+
+        const files = await readSkillDirectory(tempDir);
+
+        expect(files).toHaveLength(1);
+      });
+    });
+
+    describe('when .DS_Store file exists in nested directory', () => {
+      it('excludes nested .DS_Store file', async () => {
+        await fs.mkdir(path.join(tempDir, 'subdir'), { recursive: true });
+        await fs.writeFile(path.join(tempDir, 'SKILL.md'), 'skill content');
+        await fs.writeFile(
+          path.join(tempDir, 'subdir', '.DS_Store'),
+          'macOS metadata',
+        );
+
+        const files = await readSkillDirectory(tempDir);
+
+        expect(
+          files.find((f) => f.relativePath === 'subdir/.DS_Store'),
+        ).toBeUndefined();
+      });
+
+      it('includes non-blacklisted files from nested directory', async () => {
+        await fs.mkdir(path.join(tempDir, 'subdir'), { recursive: true });
+        await fs.writeFile(path.join(tempDir, 'SKILL.md'), 'skill content');
+        await fs.writeFile(
+          path.join(tempDir, 'subdir', 'nested.md'),
+          'nested content',
+        );
+        await fs.writeFile(
+          path.join(tempDir, 'subdir', '.DS_Store'),
+          'macOS metadata',
+        );
+
+        const files = await readSkillDirectory(tempDir);
+
+        expect(
+          files.find((f) => f.relativePath === 'subdir/nested.md'),
+        ).toBeDefined();
+      });
+    });
+
+    describe('when multiple .DS_Store files exist at different levels', () => {
+      it('excludes all .DS_Store files', async () => {
+        await fs.mkdir(path.join(tempDir, 'subdir', 'nested'), {
+          recursive: true,
+        });
+        await fs.writeFile(path.join(tempDir, 'SKILL.md'), 'skill content');
+        await fs.writeFile(path.join(tempDir, '.DS_Store'), 'root metadata');
+        await fs.writeFile(
+          path.join(tempDir, 'subdir', '.DS_Store'),
+          'subdir metadata',
+        );
+        await fs.writeFile(
+          path.join(tempDir, 'subdir', 'nested', '.DS_Store'),
+          'nested metadata',
+        );
+
+        const files = await readSkillDirectory(tempDir);
+
+        const dsStoreFiles = files.filter((f) =>
+          f.relativePath.includes('.DS_Store'),
+        );
+        expect(dsStoreFiles).toHaveLength(0);
+      });
+
+      it('returns only non-blacklisted files', async () => {
+        await fs.mkdir(path.join(tempDir, 'subdir', 'nested'), {
+          recursive: true,
+        });
+        await fs.writeFile(path.join(tempDir, 'SKILL.md'), 'skill content');
+        await fs.writeFile(path.join(tempDir, '.DS_Store'), 'root metadata');
+        await fs.writeFile(
+          path.join(tempDir, 'subdir', '.DS_Store'),
+          'subdir metadata',
+        );
+        await fs.writeFile(
+          path.join(tempDir, 'subdir', 'nested', '.DS_Store'),
+          'nested metadata',
+        );
+
+        const files = await readSkillDirectory(tempDir);
+
+        expect(files).toHaveLength(1);
+      });
+    });
+
+    describe('when no blacklisted files exist', () => {
+      it('returns all files', async () => {
+        await fs.writeFile(path.join(tempDir, 'SKILL.md'), 'skill content');
+        await fs.writeFile(path.join(tempDir, 'README.md'), 'readme content');
+
+        const files = await readSkillDirectory(tempDir);
+
+        expect(files).toHaveLength(2);
+      });
+    });
+  });
 });

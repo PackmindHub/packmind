@@ -2,6 +2,8 @@
 
 ## Added
 
+- Add blacklist filter to `skills add` to exclude unwanted files like `.DS_Store` (#71)
+
 ## Changed
 
 ## Fixed
