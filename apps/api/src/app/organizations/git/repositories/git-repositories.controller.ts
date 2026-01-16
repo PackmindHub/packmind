@@ -74,6 +74,7 @@ export class GitRepositoriesController {
         addGitRepoDto.owner,
         addGitRepoDto.repo,
         addGitRepoDto.branch,
+        req.clientSource,
       );
     } catch (error) {
       if (error instanceof GitRepoAlreadyExistsError) {

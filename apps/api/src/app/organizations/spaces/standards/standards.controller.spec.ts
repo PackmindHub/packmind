@@ -174,6 +174,7 @@ describe('OrganizationsSpacesStandardsController', () => {
         userId,
         name: 'Test User',
       },
+      clientSource: 'ui',
     } as unknown as AuthenticatedRequest;
 
     const validStandard = {
@@ -223,6 +224,7 @@ describe('OrganizationsSpacesStandardsController', () => {
           orgId,
           userId,
           spaceId,
+          'ui',
         );
       });
     });
@@ -400,6 +402,7 @@ describe('OrganizationsSpacesStandardsController', () => {
           orgId,
           userId,
           spaceId,
+          'ui',
         );
       });
     });

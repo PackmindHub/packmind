@@ -228,6 +228,7 @@ export class OrganizationsSpacesStandardsRulesController {
         userId,
         organizationId,
         ruleId,
+        source: request.clientSource,
       };
 
       const result = await this.rulesService.getRuleExamples(command);
@@ -350,6 +351,7 @@ export class OrganizationsSpacesStandardsRulesController {
         lang: stringToProgrammingLanguage(body.lang),
         positive: body.positive || '',
         negative: body.negative || '',
+        source: request.clientSource,
       };
 
       const result = await this.rulesService.createRuleExample(command);
@@ -455,6 +457,7 @@ export class OrganizationsSpacesStandardsRulesController {
         lang: body.lang ? stringToProgrammingLanguage(body.lang) : undefined,
         positive: body.positive,
         negative: body.negative,
+        source: request.clientSource,
       };
 
       const result = await this.rulesService.updateRuleExample(command);
@@ -551,6 +554,7 @@ export class OrganizationsSpacesStandardsRulesController {
         userId,
         organizationId,
         ruleExampleId: exampleId,
+        source: request.clientSource,
       };
 
       await this.rulesService.deleteRuleExample(command);

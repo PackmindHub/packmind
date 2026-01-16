@@ -1,6 +1,7 @@
 import { Injectable, Inject } from '@nestjs/common';
 import { SkillsHexa } from '@packmind/skills';
 import {
+  ClientSource,
   OrganizationId,
   Skill,
   SkillId,
@@ -34,12 +35,14 @@ export class SkillsService {
     organizationId: OrganizationId,
     spaceId: SpaceId,
     userId: UserId,
+    source: ClientSource,
   ): Promise<UploadSkillResponse> {
     return this.skillsHexa.getAdapter().uploadSkill({
       files,
       organizationId,
       userId,
       spaceId,
+      source,
     });
   }
 

@@ -415,6 +415,7 @@ export class StandardsAdapter
     userId: UserId;
     scope: string | null;
     spaceId: SpaceId;
+    source?: PackmindEventSource;
   }): Promise<Standard> {
     const result = await this._createStandard.execute({
       ...params,

@@ -182,6 +182,7 @@ export class OrganizationsSpacesRecipesController {
         organizationId,
         userId,
         spaceId,
+        request.clientSource,
       );
     } catch (error) {
       const errorMessage =
@@ -240,6 +241,7 @@ export class OrganizationsSpacesRecipesController {
         updateData.slug || '',
         updateData.content,
         userId,
+        request.clientSource,
         updateData.summary,
       );
 
@@ -311,6 +313,7 @@ export class OrganizationsSpacesRecipesController {
         spaceId,
         userId,
         organizationId,
+        request.clientSource,
       );
 
       this.logger.info(
@@ -367,6 +370,7 @@ export class OrganizationsSpacesRecipesController {
         spaceId,
         organizationId,
         userId,
+        request.clientSource,
       );
 
       this.logger.info(

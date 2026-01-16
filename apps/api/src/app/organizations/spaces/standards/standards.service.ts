@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { PackmindLogger } from '@packmind/logger';
 import { StandardsHexa } from '@packmind/standards';
 import {
+  ClientSource,
   Distribution,
   GetStandardByIdResponse,
   IDeploymentPort,
@@ -61,6 +62,7 @@ export class StandardsService {
     organizationId: OrganizationId,
     userId: UserId,
     spaceId: SpaceId,
+    source: ClientSource,
   ): Promise<Standard> {
     return this.standardsHexa.getAdapter().createStandard({
       ...standard,
@@ -68,6 +70,7 @@ export class StandardsService {
       organizationId,
       userId,
       spaceId,
+      source,
     });
   }
 
@@ -82,6 +85,7 @@ export class StandardsService {
     organizationId: OrganizationId,
     userId: UserId,
     spaceId: SpaceId,
+    source: ClientSource,
   ): Promise<Standard> {
     return this.standardsHexa.getAdapter().updateStandard({
       standardId,
@@ -90,6 +94,7 @@ export class StandardsService {
       organizationId,
       userId: userId.toString(),
       spaceId,
+      source,
     });
   }
 

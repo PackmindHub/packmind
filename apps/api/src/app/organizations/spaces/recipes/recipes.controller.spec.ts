@@ -357,6 +357,7 @@ describe('OrganizationsSpacesRecipesController', () => {
           userId,
           name: 'Test User',
         },
+        clientSource: 'ui',
       } as unknown as AuthenticatedRequest;
       let result: Recipe;
 
@@ -384,6 +385,7 @@ describe('OrganizationsSpacesRecipesController', () => {
           '', // slug (empty string when not provided)
           updateData.content,
           userId,
+          'ui', // clientSource
           undefined, // summary (undefined when not provided)
         );
       });
@@ -471,6 +473,7 @@ describe('OrganizationsSpacesRecipesController', () => {
           userId,
           name: 'Test User',
         },
+        clientSource: 'ui',
       } as unknown as AuthenticatedRequest;
 
       recipesService.deleteRecipe.mockResolvedValue(undefined);
@@ -482,6 +485,7 @@ describe('OrganizationsSpacesRecipesController', () => {
         spaceId,
         orgId,
         userId,
+        'ui',
       );
     });
 

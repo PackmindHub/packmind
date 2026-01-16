@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { AccountsHexa } from '@packmind/accounts';
 import {
   AddGitProviderCommand,
+  ClientSource,
   GitProvider,
   GitProviderId,
   GitRepo,
@@ -25,6 +26,7 @@ export class GitProvidersService {
     userId: UserId,
     organizationId: OrganizationId,
     gitProvider: Omit<GitProvider, 'id'>,
+    source: ClientSource,
   ): Promise<GitProvider> {
     const command: AddGitProviderCommand = {
       userId: String(userId),
@@ -32,6 +34,7 @@ export class GitProvidersService {
       gitProvider,
       // Always false from API endpoints - only internal use cases can bypass token check
       allowTokenlessProvider: false,
+      source,
     };
 
     return this.gitAdapter.addGitProvider(command);
@@ -44,6 +47,7 @@ export class GitProvidersService {
     owner: string,
     repo: string,
     branch: string,
+    source: ClientSource,
   ): Promise<GitRepo> {
     const command = {
       userId,
@@ -52,6 +56,7 @@ export class GitProvidersService {
       owner,
       repo,
       branch,
+      source,
     };
 
     return await this.gitAdapter.addGitRepo(command);
