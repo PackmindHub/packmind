@@ -169,6 +169,7 @@ describe('SignUpWithOrganizationUseCase', () => {
               name: 'Test Organization',
               method: 'sign-up',
               source: 'ui',
+              quickStart: false,
             },
           }),
         );
