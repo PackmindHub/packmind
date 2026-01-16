@@ -283,7 +283,12 @@ export const useDeleteStandardMutation = () => {
         standardId,
       );
     },
-    onSuccess: async () => {
+    onSuccess: async (_, deletedStandardId) => {
+      // Remove the deleted standard's query from cache to prevent 404 refetch
+      queryClient.removeQueries({
+        queryKey: getStandardByIdKey(spaceId, deletedStandardId),
+      });
+
       // Invalidate all standards (standard is gone, may have had cached details)
       await queryClient.invalidateQueries({
         queryKey: getStandardsBySpaceKey(spaceId),
