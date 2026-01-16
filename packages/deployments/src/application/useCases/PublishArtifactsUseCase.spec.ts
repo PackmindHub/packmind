@@ -13,6 +13,7 @@ import {
   createStandardVersionId,
   createSkillVersionId,
   createSkillFileId,
+  createSkillId,
   createRecipeId,
   createStandardId,
   createTargetId,
@@ -2136,6 +2137,133 @@ describe('PublishArtifactsUseCase', () => {
 
       await expect(useCase.execute(command)).rejects.toThrow(
         'Skill version with ID',
+      );
+    });
+  });
+
+  describe('when a skill is renamed', () => {
+    let command: PublishArtifactsCommand;
+    let newSkillVersion: ReturnType<typeof skillVersionFactory>;
+    let previousSkillVersion: ReturnType<typeof skillVersionFactory>;
+    let target: ReturnType<typeof targetFactory>;
+    let gitRepo: GitRepo;
+    let gitCommit: GitCommit;
+    const sharedSkillId = createSkillId('shared-skill-id');
+
+    beforeEach(() => {
+      // New skill version with NEW slug (same skillId as previous)
+      newSkillVersion = skillVersionFactory({
+        id: createSkillVersionId(uuidv4()),
+        skillId: sharedSkillId,
+        name: 'Renamed Skill',
+        slug: 'renamed-skill', // NEW slug
+        version: 2,
+      });
+
+      // Previously deployed skill with OLD slug (same skillId as new)
+      previousSkillVersion = skillVersionFactory({
+        id: createSkillVersionId(uuidv4()),
+        skillId: sharedSkillId,
+        name: 'Original Skill',
+        slug: 'original-skill', // OLD slug
+        version: 1,
+      });
+
+      gitRepo = {
+        id: createGitRepoId(uuidv4()),
+        owner: 'test-owner',
+        repo: 'test-repo',
+        branch: 'main',
+        providerId: createGitProviderId(uuidv4()),
+      };
+
+      target = targetFactory({ id: targetId, gitRepoId: gitRepo.id });
+
+      gitCommit = {
+        id: createGitCommitId(uuidv4()),
+        sha: 'abc123',
+        message: 'Test',
+        author: 'Author',
+        url: 'https://example.com',
+      };
+
+      command = {
+        userId,
+        organizationId,
+        recipeVersionIds: [],
+        standardVersionIds: [],
+        skillVersionIds: [newSkillVersion.id],
+        targetIds: [targetId],
+        packagesSlugs: [],
+        packageIds: [],
+      };
+
+      mockSkillsPort.getSkillVersion.mockResolvedValue(newSkillVersion);
+      mockSkillsPort.getSkillFiles.mockResolvedValue([]);
+      mockTargetService.findById.mockResolvedValue(target);
+      mockGitPort.getRepositoryById.mockResolvedValue(gitRepo);
+      mockDistributionRepository.findActiveRecipeVersionsByTarget.mockResolvedValue(
+        [],
+      );
+      mockDistributionRepository.findActiveStandardVersionsByTarget.mockResolvedValue(
+        [],
+      );
+      // Return previously deployed skill with OLD slug
+      mockDistributionRepository.findActiveSkillVersionsByTarget.mockResolvedValue(
+        [previousSkillVersion],
+      );
+      mockDistributionRepository.findActiveRecipeVersionsByTargetAndPackages.mockResolvedValue(
+        [],
+      );
+      mockDistributionRepository.findActiveStandardVersionsByTargetAndPackages.mockResolvedValue(
+        [],
+      );
+      // For removal calculation, return the old skill version
+      mockDistributionRepository.findActiveSkillVersionsByTargetAndPackages.mockResolvedValue(
+        [previousSkillVersion],
+      );
+      mockGitPort.getFileFromRepo.mockResolvedValue(null);
+      mockCodingAgentPort.renderArtifacts.mockResolvedValue({
+        createOrUpdate: [
+          {
+            path: '.claude/skills/renamed-skill/SKILL.md',
+            content: 'skill content',
+          },
+        ],
+        delete: [],
+      });
+      mockGitPort.commitToGit.mockResolvedValue(gitCommit);
+    });
+
+    it('passes old skill version to removed.skillVersions for directory cleanup', async () => {
+      await useCase.execute(command);
+
+      expect(mockCodingAgentPort.renderArtifacts).toHaveBeenCalledWith(
+        expect.objectContaining({
+          removed: expect.objectContaining({
+            skillVersions: expect.arrayContaining([
+              expect.objectContaining({
+                slug: 'original-skill', // OLD slug should be in removed list
+              }),
+            ]),
+          }),
+        }),
+      );
+    });
+
+    it('passes new skill version to installed.skillVersions', async () => {
+      await useCase.execute(command);
+
+      expect(mockCodingAgentPort.renderArtifacts).toHaveBeenCalledWith(
+        expect.objectContaining({
+          installed: expect.objectContaining({
+            skillVersions: expect.arrayContaining([
+              expect.objectContaining({
+                slug: 'renamed-skill', // NEW slug should be in installed list
+              }),
+            ]),
+          }),
+        }),
       );
     });
   });

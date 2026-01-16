@@ -389,6 +389,7 @@ ${recipeVersion.content}`;
     }
 
     // Delete skill directories for removed skills
+    // (git port will expand directory paths to individual files)
     for (const skillVersion of removed.skillVersions) {
       fileUpdates.delete.push({
         path: `.claude/skills/${skillVersion.slug}`,
@@ -518,12 +519,6 @@ ${instructionContent}`;
     content: string;
     isBase64?: boolean;
   }> {
-    this.logger.debug('Generating Claude skill files', {
-      skillSlug: skillVersion.slug,
-      skillName: skillVersion.name,
-      fileCount: (skillVersion.files?.length ?? 0) + 1,
-    });
-
     const files: Array<{ path: string; content: string; isBase64?: boolean }> =
       [];
 
