@@ -157,21 +157,14 @@ export const StandardDetails = ({
 
     try {
       await deleteStandardMutation.mutateAsync(standard.id);
-      setDeleteAlert({
-        type: 'success',
-        message: STANDARD_MESSAGES.success.deleted,
-      });
       setDeleteModalOpen(false);
 
-      // Auto-dismiss success alert and navigate back after 2 seconds
-      setTimeout(() => {
-        setDeleteAlert(null);
-        if (orgSlug && spaceSlug) {
-          navigate(routes.space.toStandards(orgSlug, spaceSlug));
-          return;
-        }
-        navigate('..');
-      }, 2000);
+      // Navigate immediately after successful deletion
+      if (orgSlug && spaceSlug) {
+        navigate(routes.space.toStandards(orgSlug, spaceSlug));
+        return;
+      }
+      navigate('..');
     } catch (error) {
       console.error('Failed to delete standard:', error);
       setDeleteAlert({
