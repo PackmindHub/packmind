@@ -1,7 +1,7 @@
-import { OrganizationId, UserId } from '../accounts';
+import { ClientSource, OrganizationId, UserId } from '../accounts';
 import { PackmindEvent } from './PackmindEvent';
 
-export type PackmindEventSource = 'ui' | 'cli' | 'mcp';
+export type PackmindEventSource = ClientSource | 'mcp';
 /**
  * Base payload for user-triggered events.
  * All UserEvent payloads automatically include userId and organizationId.
