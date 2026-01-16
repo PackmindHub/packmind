@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import {
   CheckDirectoryExistenceResult,
+  ClientSource,
   GitProviderId,
   GitRepo,
   GitRepoId,
@@ -29,6 +30,7 @@ export class GitRepositoriesService {
     owner: string,
     repo: string,
     branch: string,
+    source: ClientSource,
   ): Promise<GitRepo> {
     const command = {
       userId,
@@ -39,6 +41,7 @@ export class GitRepositoriesService {
       branch,
       // Always false from API endpoints - only internal use cases can bypass token check
       allowTokenlessProvider: false,
+      source,
     };
 
     return await this.gitAdapter.addGitRepo(command);

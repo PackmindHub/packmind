@@ -95,6 +95,7 @@ export class OrganizationsController {
       return await this.accountsAdapter.getOrganizationOnboardingStatus({
         userId,
         organizationId,
+        source: request.clientSource,
       });
     } catch (error) {
       const errorMessage =
@@ -154,6 +155,7 @@ export class OrganizationsController {
         organizationId,
         packagesSlugs,
         previousPackagesSlugs,
+        source: request.clientSource,
       });
     } catch (error) {
       const errorMessage =
@@ -202,6 +204,7 @@ export class OrganizationsController {
       return await this.deploymentAdapter.listPackages({
         userId,
         organizationId,
+        source: request.clientSource,
       });
     } catch (error) {
       const errorMessage =
@@ -244,6 +247,7 @@ export class OrganizationsController {
         userId,
         organizationId,
         slug,
+        source: request.clientSource,
       });
     } catch (error) {
       const errorMessage =

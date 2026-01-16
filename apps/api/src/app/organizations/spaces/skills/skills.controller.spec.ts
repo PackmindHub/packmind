@@ -180,6 +180,7 @@ describe('OrganizationsSpacesSkillsController', () => {
         userId,
         name: 'Test User',
       },
+      clientSource: 'ui',
     } as unknown as AuthenticatedRequest;
 
     let mockResponse: jest.Mocked<Response>;
@@ -394,6 +395,7 @@ describe('OrganizationsSpacesSkillsController', () => {
         orgId,
         spaceId,
         userId,
+        'ui',
       );
     });
 

@@ -70,6 +70,7 @@ export class GitProvidersController {
         userId,
         organizationId,
         gitProvider,
+        req.clientSource,
       );
     } catch (error) {
       const errorMessage =
@@ -323,6 +324,7 @@ export class GitProvidersController {
         addRepositoryDto.owner,
         addRepositoryDto.repo,
         addRepositoryDto.branch,
+        req.clientSource,
       );
     } catch (error) {
       if (error instanceof GitRepoAlreadyExistsError) {
