@@ -8,7 +8,6 @@ import { IUseCase, PackmindCommand } from '../../UseCase';
 export type UpdateRecipeFromUICommand = PackmindCommand & {
   recipeId: RecipeId;
   name: string;
-  slug: string;
   content: string;
   summary?: string;
   userId: UserId;
