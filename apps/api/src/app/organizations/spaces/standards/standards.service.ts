@@ -3,6 +3,7 @@ import { PackmindLogger } from '@packmind/logger';
 import { StandardsHexa } from '@packmind/standards';
 import {
   ClientSource,
+  DeleteStandardCommand,
   Distribution,
   GetStandardByIdResponse,
   IDeploymentPort,
@@ -114,14 +115,8 @@ export class StandardsService {
     return result.distributions;
   }
 
-  async deleteStandard(
-    id: StandardId,
-    userId: UserId,
-    organizationId: OrganizationId,
-  ): Promise<void> {
-    return this.standardsHexa
-      .getAdapter()
-      .deleteStandard(id, userId, organizationId);
+  async deleteStandard(command: DeleteStandardCommand): Promise<void> {
+    return this.standardsHexa.getAdapter().deleteStandard(command);
   }
 
   async deleteStandardsBatch(

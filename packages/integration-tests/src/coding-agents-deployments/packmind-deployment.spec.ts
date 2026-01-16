@@ -159,13 +159,11 @@ describe('Packmind Deployment Spec', () => {
 
     describe('when a standard previously distributed has been deleted', () => {
       beforeEach(async () => {
-        await testApp.standardsHexa
-          .getAdapter()
-          .deleteStandard(
-            standard1.id,
-            dataFactory.user.id,
-            dataFactory.organization.id,
-          );
+        await testApp.standardsHexa.getAdapter().deleteStandard({
+          standardId: standard1.id,
+          userId: dataFactory.user.id.toString(),
+          organizationId: dataFactory.organization.id.toString(),
+        });
       });
 
       it('does not re-distribute the deleted standard', async () => {

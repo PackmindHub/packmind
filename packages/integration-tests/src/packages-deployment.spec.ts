@@ -365,13 +365,11 @@ describe('Package deployment integration', () => {
       expect(beforeDelete.package.standards).toContain(standard2.id);
 
       // Delete standard1
-      await testApp.standardsHexa
-        .getAdapter()
-        .deleteStandard(
-          standard1.id,
-          dataFactory.user.id,
-          dataFactory.organization.id,
-        );
+      await testApp.standardsHexa.getAdapter().deleteStandard({
+        standardId: standard1.id,
+        userId: dataFactory.user.id.toString(),
+        organizationId: dataFactory.organization.id.toString(),
+      });
 
       // Wait a bit for the async event handler to complete
       await new Promise((resolve) => setTimeout(resolve, 50));

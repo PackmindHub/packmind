@@ -1,59 +1,69 @@
 import { PackmindLogger } from '@packmind/logger';
-import { PackmindEventEmitterService } from '@packmind/node-utils';
 import {
-  OrganizationId,
+  AbstractMemberUseCase,
+  MemberContext,
+  PackmindEventEmitterService,
+} from '@packmind/node-utils';
+import {
+  createOrganizationId,
+  createUserId,
+  DeleteStandardCommand,
+  DeleteStandardResponse,
+  IAccountsPort,
+  IDeleteStandardUseCase,
   StandardDeletedEvent,
-  StandardId,
-  UserId,
 } from '@packmind/types';
 import { StandardService } from '../../services/StandardService';
 
 const origin = 'DeleteStandardUsecase';
 
-export class DeleteStandardUsecase {
+export class DeleteStandardUsecase
+  extends AbstractMemberUseCase<DeleteStandardCommand, DeleteStandardResponse>
+  implements IDeleteStandardUseCase
+{
   constructor(
+    accountsPort: IAccountsPort,
     private readonly standardService: StandardService,
     private readonly eventEmitterService: PackmindEventEmitterService,
-    private readonly logger: PackmindLogger = new PackmindLogger(origin),
-  ) {}
+    logger: PackmindLogger = new PackmindLogger(origin),
+  ) {
+    super(accountsPort, logger);
+  }
 
-  public async deleteStandard(
-    standardId: StandardId,
-    userId: UserId,
-    organizationId: OrganizationId,
-  ): Promise<void> {
+  protected async executeForMembers(
+    command: DeleteStandardCommand & MemberContext,
+  ): Promise<DeleteStandardResponse> {
+    const { standardId, organizationId, userId, source = 'ui' } = command;
+
+    const brandedUserId = createUserId(userId);
+    const brandedOrganizationId = createOrganizationId(organizationId);
+
     this.logger.info('Deleting standard', { standardId });
 
-    try {
-      // Get the standard before deleting to retrieve its spaceId
-      const standard = await this.standardService.getStandardById(standardId);
-      if (!standard) {
-        throw new Error(`Standard with id ${standardId} not found`);
-      }
-
-      await this.standardService.deleteStandard(standardId, userId);
-
-      // Emit event to notify other domains
-      const event = new StandardDeletedEvent({
-        standardId,
-        spaceId: standard.spaceId,
-        organizationId,
-        userId,
-        source: 'ui',
-      });
-      this.eventEmitterService.emit(event);
-      this.logger.info('StandardDeletedEvent emitted', {
-        standardId,
-        spaceId: standard.spaceId,
-      });
-
-      this.logger.info('Standard deleted successfully', { standardId });
-    } catch (error) {
-      this.logger.error('Failed to delete standard', {
-        standardId,
-        error: error instanceof Error ? error.message : String(error),
-      });
-      throw error;
+    // Get the standard before deleting to retrieve its spaceId
+    const standard = await this.standardService.getStandardById(standardId);
+    if (!standard) {
+      throw new Error(`Standard with id ${standardId} not found`);
     }
+
+    await this.standardService.deleteStandard(standardId, brandedUserId);
+
+    // Emit event to notify other domains
+    const event = new StandardDeletedEvent({
+      standardId,
+      spaceId: standard.spaceId,
+      organizationId: brandedOrganizationId,
+      userId: brandedUserId,
+      source,
+    });
+    this.eventEmitterService.emit(event);
+    this.logger.info('StandardDeletedEvent emitted', {
+      standardId,
+      spaceId: standard.spaceId,
+    });
+
+    this.logger.info('Standard deleted successfully', { standardId });
+
+    return {};
   }
 }
