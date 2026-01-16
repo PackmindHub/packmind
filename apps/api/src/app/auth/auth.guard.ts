@@ -64,6 +64,7 @@ export class AuthGuard implements CanActivate {
         }
         request.user = payload.user;
         request.organization = payload.organization;
+        request.clientSource = 'ui';
         return true;
       } catch {
         // Fall through to try API key header
@@ -99,6 +100,7 @@ export class AuthGuard implements CanActivate {
       slug: userInfo.organization.slug,
       role: 'admin',
     };
+    request.clientSource = 'cli';
 
     return true;
   }
