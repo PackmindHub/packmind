@@ -165,7 +165,29 @@ export const useDeleteRecipeMutation = () => {
         queryKey: [...GET_RECIPE_BY_ID_KEY, deletedCommand.recipeId],
       });
 
-      // Invalidate all recipes (recipe is gone, may have had cached details)
+      // Optimistically remove the deleted recipe from the list cache
+      // This prevents stale cache from causing 404 errors during navigation
+      queryClient.setQueryData<
+        { id: RecipeId }[] | { recipes: { id: RecipeId }[] } | undefined
+      >(GET_RECIPES_KEY, (oldData) => {
+        if (!oldData) return oldData;
+        if (Array.isArray(oldData)) {
+          return oldData.filter(
+            (recipe) => recipe.id !== deletedCommand.recipeId,
+          );
+        }
+        if ('recipes' in oldData) {
+          return {
+            ...oldData,
+            recipes: oldData.recipes.filter(
+              (recipe) => recipe.id !== deletedCommand.recipeId,
+            ),
+          };
+        }
+        return oldData;
+      });
+
+      // Invalidate all recipes to trigger background refetch
       await queryClient.invalidateQueries({
         queryKey: [ORGANIZATION_QUERY_SCOPE, RECIPES_QUERY_SCOPE],
       });
