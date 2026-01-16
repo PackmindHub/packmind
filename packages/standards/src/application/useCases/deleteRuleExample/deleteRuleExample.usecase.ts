@@ -42,6 +42,7 @@ export class DeleteRuleExampleUsecase
   async executeForMembers(
     command: DeleteRuleExampleCommand & MemberContext,
   ): Promise<DeleteRuleExampleResponse> {
+    const { source = 'ui' } = command;
     const ruleExampleRepository = this._repositories.getRuleExampleRepository();
     const existingExample = await ruleExampleRepository.findById(
       command.ruleExampleId,
@@ -78,7 +79,7 @@ export class DeleteRuleExampleUsecase
             newVersion: standardVersion.version,
             organizationId: createOrganizationId(command.organizationId),
             userId: createUserId(command.userId),
-            source: 'ui',
+            source,
           }),
         );
       }
