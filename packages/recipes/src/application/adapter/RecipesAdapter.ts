@@ -164,6 +164,8 @@ export class RecipesAdapter
     );
 
     this._updateRecipeFromUI = new UpdateRecipeFromUIUsecase(
+      this.accountsPort!,
+      this.spacesPort!,
       this.recipesServices.getRecipeService(),
       this.recipesServices.getRecipeVersionService(),
       this.recipesServices.getRecipeSummaryService(),
@@ -311,15 +313,7 @@ export class RecipesAdapter
   public async updateRecipeFromUI(
     command: UpdateRecipeFromUICommand,
   ): Promise<UpdateRecipeFromUIResponse> {
-    const recipe = await this._updateRecipeFromUI.updateRecipeFromUI({
-      recipeId: command.recipeId,
-      spaceId: command.spaceId,
-      organizationId: command.organizationId,
-      name: command.name,
-      content: command.content,
-      editorUserId: command.userId,
-    });
-    return { recipe };
+    return this._updateRecipeFromUI.execute(command);
   }
 
   public updateRecipesFromGitHub(command: UpdateRecipesFromGitHubCommand) {

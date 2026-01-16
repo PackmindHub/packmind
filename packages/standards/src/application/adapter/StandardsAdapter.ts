@@ -8,6 +8,7 @@ import {
   AddRuleToStandardCommand,
   AddRuleToStandardResponse,
   CreateRuleExampleCommand,
+  CreateStandardCommand,
   DeleteRuleExampleCommand,
   DeleteRuleExampleResponse,
   GetStandardByIdResponse,
@@ -407,16 +408,7 @@ export class StandardsAdapter
   // Additional Public Methods
   // ===========================
 
-  async createStandard(params: {
-    name: string;
-    description: string;
-    rules: Array<{ content: string }>;
-    organizationId: OrganizationId;
-    userId: UserId;
-    scope: string | null;
-    spaceId: SpaceId;
-    source?: PackmindEventSource;
-  }): Promise<Standard> {
+  async createStandard(params: CreateStandardCommand): Promise<Standard> {
     const result = await this._createStandard.execute({
       ...params,
       userId: params.userId.toString(),

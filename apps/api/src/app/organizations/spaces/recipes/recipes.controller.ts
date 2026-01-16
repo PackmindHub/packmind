@@ -213,7 +213,6 @@ export class OrganizationsSpacesRecipesController {
     @Body()
     updateData: {
       name: string;
-      slug?: string;
       content: string;
       summary?: string;
     },
@@ -233,17 +232,16 @@ export class OrganizationsSpacesRecipesController {
     );
 
     try {
-      const updatedRecipe = await this.recipesService.updateRecipeFromUI(
-        id,
+      const updatedRecipe = await this.recipesService.updateRecipeFromUI({
+        recipeId: id,
         spaceId,
         organizationId,
-        updateData.name,
-        updateData.slug || '',
-        updateData.content,
+        name: updateData.name,
+        content: updateData.content,
         userId,
-        request.clientSource,
-        updateData.summary,
-      );
+        source: request.clientSource,
+        summary: updateData.summary,
+      });
 
       this.logger.info(
         'PATCH /organizations/:orgId/spaces/:spaceId/recipes/:id - Recipe updated successfully',
