@@ -498,11 +498,12 @@ export class OrganizationsSpacesStandardsController {
         }
       }
 
-      await this.standardsService.deleteStandardsBatch(
-        body.standardIds,
-        userId,
-        organizationId,
-      );
+      await this.standardsService.deleteStandardsBatch({
+        standardIds: body.standardIds,
+        userId: userId.toString(),
+        organizationId: organizationId.toString(),
+        source: request.clientSource,
+      });
 
       this.logger.info(
         'DELETE /organizations/:orgId/spaces/:spaceId/standards - Standards batch deleted successfully',

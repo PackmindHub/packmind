@@ -12,6 +12,7 @@ import {
   DeleteRuleExampleCommand,
   DeleteRuleExampleResponse,
   DeleteStandardCommand,
+  DeleteStandardsBatchCommand,
   GetStandardByIdResponse,
   IAccountsPort,
   IAccountsPortName,
@@ -182,6 +183,7 @@ export class StandardsAdapter
     );
 
     this._deleteStandardsBatch = new DeleteStandardsBatchUsecase(
+      this.accountsPort,
       this.services.getStandardService(),
       this.eventEmitterService,
     );
@@ -485,15 +487,9 @@ export class StandardsAdapter
   }
 
   async deleteStandardsBatch(
-    standardIds: StandardId[],
-    userId: UserId,
-    organizationId: OrganizationId,
+    command: DeleteStandardsBatchCommand,
   ): Promise<void> {
-    return this._deleteStandardsBatch.deleteStandardsBatch(
-      standardIds,
-      userId,
-      organizationId,
-    );
+    await this._deleteStandardsBatch.execute(command);
   }
 
   async createRuleExample(
