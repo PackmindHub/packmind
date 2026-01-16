@@ -11,6 +11,7 @@ import {
   CreateStandardCommand,
   DeleteRuleExampleCommand,
   DeleteRuleExampleResponse,
+  DeleteStandardCommand,
   GetStandardByIdResponse,
   IAccountsPort,
   IAccountsPortName,
@@ -175,6 +176,7 @@ export class StandardsAdapter
     );
 
     this._deleteStandard = new DeleteStandardUsecase(
+      this.accountsPort,
       this.services.getStandardService(),
       this.eventEmitterService,
     );
@@ -473,16 +475,8 @@ export class StandardsAdapter
     return this._getStandardById.execute(command);
   }
 
-  async deleteStandard(
-    standardId: StandardId,
-    userId: UserId,
-    organizationId: OrganizationId,
-  ): Promise<void> {
-    return this._deleteStandard.deleteStandard(
-      standardId,
-      userId,
-      organizationId,
-    );
+  async deleteStandard(command: DeleteStandardCommand): Promise<void> {
+    await this._deleteStandard.execute(command);
   }
 
   async updateStandard(command: UpdateStandardCommand): Promise<Standard> {

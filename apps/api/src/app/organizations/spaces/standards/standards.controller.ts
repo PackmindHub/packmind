@@ -407,11 +407,12 @@ export class OrganizationsSpacesStandardsController {
         );
       }
 
-      await this.standardsService.deleteStandard(
+      await this.standardsService.deleteStandard({
         standardId,
         userId,
         organizationId,
-      );
+        source: request.clientSource,
+      });
 
       this.logger.info(
         'DELETE /organizations/:orgId/spaces/:spaceId/standards/:standardId - Standard deleted successfully',
