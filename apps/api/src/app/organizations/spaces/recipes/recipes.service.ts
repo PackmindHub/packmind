@@ -11,6 +11,7 @@ import {
   RecipeVersionId,
   SpaceId,
   TargetId,
+  UpdateRecipeFromUICommand,
   UserId,
 } from '@packmind/types';
 import {
@@ -104,27 +105,9 @@ export class RecipesService {
   }
 
   async updateRecipeFromUI(
-    recipeId: RecipeId,
-    spaceId: SpaceId,
-    organizationId: OrganizationId,
-    name: string,
-    slug: string,
-    content: string,
-    editorUserId: UserId,
-    source: ClientSource,
-    summary?: string,
+    command: UpdateRecipeFromUICommand,
   ): Promise<Recipe> {
-    const result = await this.recipesAdapter.updateRecipeFromUI({
-      userId: editorUserId,
-      recipeId,
-      spaceId,
-      organizationId,
-      name,
-      slug,
-      content,
-      summary,
-      source,
-    });
+    const result = await this.recipesAdapter.updateRecipeFromUI(command);
     return result.recipe;
   }
 

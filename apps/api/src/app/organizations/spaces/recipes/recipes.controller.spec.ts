@@ -377,17 +377,16 @@ describe('OrganizationsSpacesRecipesController', () => {
       });
 
       it('calls service with correct params', () => {
-        expect(recipesService.updateRecipeFromUI).toHaveBeenCalledWith(
+        expect(recipesService.updateRecipeFromUI).toHaveBeenCalledWith({
           recipeId,
           spaceId,
-          orgId,
-          updateData.name,
-          '', // slug (empty string when not provided)
-          updateData.content,
+          organizationId: orgId,
+          name: updateData.name,
+          content: updateData.content,
           userId,
-          'ui', // clientSource
-          undefined, // summary (undefined when not provided)
-        );
+          source: 'ui',
+          summary: undefined,
+        });
       });
     });
 
