@@ -17,8 +17,10 @@ import {
   SkillUpdatedEvent,
   RuleUpdatedEvent,
   UserEvent,
+  UserSignedUpEvent,
 } from '@packmind/types';
 import { EventTrackingAdapter } from './EventTrackingAdapter';
+import { AmplitudeMetadata } from '../domain/entities/AmplitudeNodeEvent';
 
 /**
  * Listens to domain events and forwards them to Amplitude for tracking.
@@ -47,12 +49,13 @@ export class AmplitudeEventListener extends PackmindListener<EventTrackingAdapte
     this.subscribe(LinterCalledEvent, this.onLinterCalled);
     this.subscribe(SkillCreatedEvent, this.onSkillCreated);
     this.subscribe(SkillUpdatedEvent, this.onSkillUpdated);
+    this.subscribe(UserSignedUpEvent, this.onUserSignedUpEvent);
   }
 
   private async emitAmplitudeEvent<T extends UserEvent>(
     event: T,
     eventName: string,
-    transformer: (payload: T['payload']) => Record<string, string | number>,
+    transformer: (payload: T['payload']) => AmplitudeMetadata,
   ) {
     const { userId, organizationId } = event.payload;
 
@@ -60,6 +63,12 @@ export class AmplitudeEventListener extends PackmindListener<EventTrackingAdapte
       ...transformer(event.payload),
       source: event.payload.source,
     });
+  }
+
+  private onUserSignedUpEvent(event: UserSignedUpEvent) {
+    return this.emitAmplitudeEvent(event, 'user_signed_up', (payload) => ({
+      quickStart: payload.quickStart,
+    }));
   }
 
   private onStandardCreated = async (
