@@ -1,66 +1,79 @@
 import { PackmindLogger } from '@packmind/logger';
-import { PackmindEventEmitterService } from '@packmind/node-utils';
 import {
-  OrganizationId,
+  AbstractMemberUseCase,
+  MemberContext,
+  PackmindEventEmitterService,
+} from '@packmind/node-utils';
+import {
+  createOrganizationId,
+  createUserId,
+  DeleteStandardsBatchCommand,
+  DeleteStandardsBatchResponse,
+  IAccountsPort,
+  IDeleteStandardsBatchUseCase,
   StandardDeletedEvent,
-  StandardId,
-  UserId,
 } from '@packmind/types';
 import { StandardService } from '../../services/StandardService';
 
 const origin = 'DeleteStandardsBatchUsecase';
 
-export class DeleteStandardsBatchUsecase {
+export class DeleteStandardsBatchUsecase
+  extends AbstractMemberUseCase<
+    DeleteStandardsBatchCommand,
+    DeleteStandardsBatchResponse
+  >
+  implements IDeleteStandardsBatchUseCase
+{
   constructor(
+    accountsPort: IAccountsPort,
     private readonly standardService: StandardService,
     private readonly eventEmitterService: PackmindEventEmitterService,
-    private readonly logger: PackmindLogger = new PackmindLogger(origin),
-  ) {}
+    logger: PackmindLogger = new PackmindLogger(origin),
+  ) {
+    super(accountsPort, logger);
+  }
 
-  public async deleteStandardsBatch(
-    standardIds: StandardId[],
-    userId: UserId,
-    organizationId: OrganizationId,
-  ): Promise<void> {
+  protected async executeForMembers(
+    command: DeleteStandardsBatchCommand & MemberContext,
+  ): Promise<DeleteStandardsBatchResponse> {
+    const { standardIds, organizationId, userId, source = 'ui' } = command;
+
+    const brandedUserId = createUserId(userId);
+    const brandedOrganizationId = createOrganizationId(organizationId);
+
     this.logger.info('Deleting standards batch', { count: standardIds.length });
 
-    try {
-      // Get all standards before deleting to retrieve their spaceIds
-      const standards = await Promise.all(
-        standardIds.map((id) => this.standardService.getStandardById(id)),
-      );
+    // Get all standards before deleting to retrieve their spaceIds
+    const standards = await Promise.all(
+      standardIds.map((id) => this.standardService.getStandardById(id)),
+    );
 
-      // Delete all standards
-      await Promise.all(
-        standardIds.map((id) =>
-          this.standardService.deleteStandard(id, userId),
-        ),
-      );
+    // Delete all standards
+    await Promise.all(
+      standardIds.map((id) =>
+        this.standardService.deleteStandard(id, brandedUserId),
+      ),
+    );
 
-      // Emit events for each deleted standard
-      for (let i = 0; i < standardIds.length; i++) {
-        const standard = standards[i];
-        if (standard) {
-          const event = new StandardDeletedEvent({
-            standardId: standardIds[i],
-            spaceId: standard.spaceId,
-            organizationId,
-            userId,
-            source: 'ui',
-          });
-          this.eventEmitterService.emit(event);
-        }
+    // Emit events for each deleted standard
+    for (let i = 0; i < standardIds.length; i++) {
+      const standard = standards[i];
+      if (standard) {
+        const event = new StandardDeletedEvent({
+          standardId: standardIds[i],
+          spaceId: standard.spaceId,
+          organizationId: brandedOrganizationId,
+          userId: brandedUserId,
+          source,
+        });
+        this.eventEmitterService.emit(event);
       }
-
-      this.logger.info('Standards batch deleted successfully', {
-        count: standardIds.length,
-      });
-    } catch (error) {
-      this.logger.error('Failed to delete standards batch', {
-        count: standardIds.length,
-        error: error instanceof Error ? error.message : String(error),
-      });
-      throw error;
     }
+
+    this.logger.info('Standards batch deleted successfully', {
+      count: standardIds.length,
+    });
+
+    return {};
   }
 }
