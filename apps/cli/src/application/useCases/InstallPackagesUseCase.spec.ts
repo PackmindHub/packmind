@@ -780,4 +780,122 @@ Old packmind content
       expect(result.filesDeleted).toBe(0);
     });
   });
+
+  describe('when skills are installed', () => {
+    beforeEach(() => {
+      (fs.access as jest.Mock).mockRejectedValue(new Error('File not found'));
+      (fs.readdir as jest.Mock).mockResolvedValue([]);
+      (fs.copyFile as jest.Mock).mockResolvedValue(undefined);
+    });
+
+    describe('when skill files are present in package', () => {
+      beforeEach(() => {
+        mockGateway.getPullData.mockResolvedValue({
+          fileUpdates: {
+            createOrUpdate: [
+              {
+                path: '.packmind/skills/signal-capture/SKILL.md',
+                content: '# Signal Capture Skill',
+              },
+              {
+                path: '.packmind/skills/signal-capture/helper.ts',
+                content: 'export {}',
+              },
+            ],
+            delete: [],
+          },
+        });
+
+        // Source skill directory exists
+        (fs.access as jest.Mock).mockImplementation((p: string) => {
+          if (p.includes('.packmind/skills/signal-capture')) {
+            return Promise.resolve();
+          }
+          return Promise.reject(new Error('Not found'));
+        });
+
+        // Return skill files when reading source directory
+        (fs.readdir as jest.Mock).mockImplementation((p: string) => {
+          if (p.includes('.packmind/skills/signal-capture')) {
+            return Promise.resolve([
+              {
+                name: 'SKILL.md',
+                isDirectory: () => false,
+                isFile: () => true,
+              },
+              {
+                name: 'helper.ts',
+                isDirectory: () => false,
+                isFile: () => true,
+              },
+            ]);
+          }
+          return Promise.resolve([]);
+        });
+      });
+
+      it('syncs skills to agent directories', async () => {
+        const result = await useCase.execute({
+          packagesSlugs: ['test-package'],
+          baseDirectory: '/test',
+        });
+
+        expect(result.skillsCount).toBe(1);
+        expect(result.skillsSyncedToAgents).toBe(2); // claude and github
+      });
+
+      it('copies files to .claude/skills directory', async () => {
+        await useCase.execute({
+          packagesSlugs: ['test-package'],
+          baseDirectory: '/test',
+        });
+
+        expect(fs.copyFile).toHaveBeenCalledWith(
+          '/test/.packmind/skills/signal-capture/SKILL.md',
+          '/test/.claude/skills/signal-capture/SKILL.md',
+        );
+      });
+
+      it('copies files to .github/skills directory', async () => {
+        await useCase.execute({
+          packagesSlugs: ['test-package'],
+          baseDirectory: '/test',
+        });
+
+        expect(fs.copyFile).toHaveBeenCalledWith(
+          '/test/.packmind/skills/signal-capture/SKILL.md',
+          '/test/.github/skills/signal-capture/SKILL.md',
+        );
+      });
+    });
+
+    describe('when skill source directory does not exist', () => {
+      beforeEach(() => {
+        mockGateway.getPullData.mockResolvedValue({
+          fileUpdates: {
+            createOrUpdate: [
+              {
+                path: '.packmind/skills/missing-skill/SKILL.md',
+                content: '# Missing Skill',
+              },
+            ],
+            delete: [],
+          },
+        });
+
+        // Source skill directory does not exist
+        (fs.access as jest.Mock).mockRejectedValue(new Error('Not found'));
+      });
+
+      it('does not sync to agent directories', async () => {
+        const result = await useCase.execute({
+          packagesSlugs: ['test-package'],
+          baseDirectory: '/test',
+        });
+
+        expect(result.skillsSyncedToAgents).toBe(0);
+        expect(fs.copyFile).not.toHaveBeenCalled();
+      });
+    });
+  });
 });
