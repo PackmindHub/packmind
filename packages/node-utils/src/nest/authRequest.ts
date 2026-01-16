@@ -1,5 +1,10 @@
 import { Request } from 'express';
-import { OrganizationId, UserId, UserOrganizationRole } from '@packmind/types';
+import {
+  ClientSource,
+  OrganizationId,
+  UserId,
+  UserOrganizationRole,
+} from '@packmind/types';
 
 export interface AuthenticatedRequest extends Request {
   user: {
@@ -15,4 +20,10 @@ export interface AuthenticatedRequest extends Request {
     slug: string;
     role: UserOrganizationRole;
   };
+  /**
+   * The source of the request, determined by the authentication method:
+   * - 'ui': Authenticated via session cookie
+   * - 'cli': Authenticated via API Key
+   */
+  clientSource: ClientSource;
 }

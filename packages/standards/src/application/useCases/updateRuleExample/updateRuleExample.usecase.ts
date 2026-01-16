@@ -43,6 +43,8 @@ export class UpdateRuleExampleUsecase
   async executeForMembers(
     command: UpdateRuleExampleCommand & MemberContext,
   ): Promise<UpdateRuleExampleResponse> {
+    const { source = 'ui' } = command;
+
     if (!command.lang && !command.positive && !command.negative) {
       throw new Error('At least one field must be provided for update');
     }
@@ -101,7 +103,7 @@ export class UpdateRuleExampleUsecase
             newVersion: standardVersion.version,
             organizationId: createOrganizationId(command.organizationId),
             userId: createUserId(command.userId),
-            source: 'ui',
+            source,
           }),
         );
       }

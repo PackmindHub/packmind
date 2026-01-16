@@ -1,12 +1,11 @@
-import { IUseCase } from '../../UseCase';
+import { IUseCase, PackmindCommand } from '../../UseCase';
 import { Standard } from '../Standard';
 import { StandardId } from '../StandardId';
 import { RuleId } from '../RuleId';
 import { OrganizationId } from '../../accounts/Organization';
 import { SpaceId } from '../../spaces/SpaceId';
 
-export type UpdateStandardCommand = {
-  userId: string;
+export type UpdateStandardCommand = PackmindCommand & {
   organizationId: OrganizationId;
   spaceId: SpaceId;
   standardId: StandardId;

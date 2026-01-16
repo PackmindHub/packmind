@@ -66,6 +66,8 @@ export class PullContentUseCase extends AbstractMemberUseCase<
   protected async executeForMembers(
     command: PullContentCommand & MemberContext,
   ): Promise<IPullContentResponse> {
+    const { source = 'cli' } = command;
+
     this.logger.info('Pulling content for organization', {
       organizationId: command.organizationId,
       userId: command.userId,
@@ -428,7 +430,7 @@ export class PullContentUseCase extends AbstractMemberUseCase<
           recipeCount: recipeVersions.length,
           standardCount: standardVersions.length,
           skillCount: skillVersions.length,
-          source: 'cli',
+          source,
         }),
       );
 

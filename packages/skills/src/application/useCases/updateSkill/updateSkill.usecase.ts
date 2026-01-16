@@ -51,6 +51,7 @@ export class UpdateSkillUsecase
       license,
       compatibility,
       metadata,
+      source = 'ui',
     } = command;
     const organizationId = createOrganizationId(orgIdString);
     const userId = createUserId(userIdString);
@@ -182,7 +183,7 @@ export class UpdateSkillUsecase
           spaceId: existingSkill.spaceId,
           organizationId,
           userId,
-          source: 'ui',
+          source,
           fileCount: 0,
         }),
       );

@@ -41,6 +41,7 @@ export class DeleteSkillUsecase
       skillId: skillIdString,
       organizationId: orgIdString,
       userId: userIdString,
+      source = 'ui',
     } = command;
     const skillId = createSkillId(skillIdString);
     const organizationId = createOrganizationId(orgIdString);
@@ -99,7 +100,7 @@ export class DeleteSkillUsecase
           spaceId: existingSkill.spaceId,
           organizationId,
           userId,
-          source: 'ui',
+          source,
         }),
       );
 

@@ -66,7 +66,9 @@ export class UpdateStandardUsecase
       userId,
       scope,
       spaceId,
+      source = 'ui',
     } = command;
+
     this.logger.info('Starting updateStandard process', {
       standardId,
       name,
@@ -263,7 +265,7 @@ export class UpdateStandardUsecase
         organizationId: brandedOrganizationId,
         userId: brandedUserId,
         newVersion: nextVersion,
-        source: 'ui',
+        source,
       });
       const hasListeners = this.eventEmitterService.emit(event);
       this.logger.info('StandardUpdatedEvent emitted', {
@@ -288,7 +290,7 @@ export class UpdateStandardUsecase
             organizationId: brandedOrganizationId,
             userId: brandedUserId,
             newVersion: nextVersion,
-            source: 'ui',
+            source,
           }),
         );
       }
@@ -301,7 +303,7 @@ export class UpdateStandardUsecase
             organizationId: brandedOrganizationId,
             userId: brandedUserId,
             newVersion: nextVersion,
-            source: 'ui',
+            source,
           }),
         );
       }

@@ -30,7 +30,13 @@ export class DeleteRecipeUsecase implements IDeleteRecipeUseCase {
   public async execute(
     command: DeleteRecipeCommand,
   ): Promise<DeleteRecipeResponse> {
-    const { recipeId, spaceId, userId, organizationId } = command;
+    const {
+      recipeId,
+      spaceId,
+      userId,
+      organizationId,
+      source = 'ui',
+    } = command;
     this.logger.info('Starting deleteRecipe process', {
       recipeId,
       spaceId,
@@ -79,7 +85,7 @@ export class DeleteRecipeUsecase implements IDeleteRecipeUseCase {
         spaceId,
         organizationId: createOrganizationId(organizationId),
         userId: createUserId(userId),
-        source: 'ui',
+        source,
       });
       this.eventEmitterService.emit(event);
       this.logger.info('RecipeDeletedEvent emitted', {
