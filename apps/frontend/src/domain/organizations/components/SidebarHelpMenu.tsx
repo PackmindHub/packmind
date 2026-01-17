@@ -31,7 +31,7 @@ export const SidebarHelpMenu: React.FunctionComponent = () => {
             </PMMenu.Item>
             <PMMenu.Item value="documentation" asChild>
               <PMLink
-                href="https://packmindhub.github.io/packmind/"
+                href="https://docs.packmind.com"
                 target="_blank"
                 rel="noopener noreferrer"
                 cursor={'pointer'}
