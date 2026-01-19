@@ -20,14 +20,14 @@
         "href": "https://github.com/PackmindHub/packmind"
       },
       {
-        "label": "Community",
-        "href": "https://packmind.slack.com/"
+        "label": "Slack",
+        "href": "https://join.slack.com/t/promyze/shared_invite/zt-vf6asxsj-aH1RbzuoOR5DNFexeaATVQ"
       }
     ],
     "primary": {
       "type": "button",
       "label": "Get Started",
-      "href": "https://app.packmind.com"
+      "href": "https://app.packmind.ai"
     }
   },
   "navigation": {
