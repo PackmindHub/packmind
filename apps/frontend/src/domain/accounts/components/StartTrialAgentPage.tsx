@@ -19,6 +19,7 @@ import { MethodContent } from './McpConfig/InstallMethods';
 import { trialGateway } from '../api/gateways';
 import { StartTrialAgentPageDataTestIds } from '@packmind/frontend';
 import { useAnalytics } from '@packmind/proprietary/frontend/domain/amplitude/providers/AnalyticsProvider';
+import { useOnboardingAgent } from '../contexts';
 
 interface IStartTrialAgentPageProps {
   agentLabel: string;
@@ -56,6 +57,7 @@ const getPreferredMethod = (
 
 const PlaybookContent: React.FC = () => {
   const analytics = useAnalytics();
+  const agent = useOnboardingAgent();
 
   return (
     <PMVStack align="flex-start" gap={4}>
@@ -68,7 +70,9 @@ const PlaybookContent: React.FC = () => {
           readOnly
           rows={1}
           width="full"
-          onInteraction={() => analytics.track('onboarding_prompt_copied', {})}
+          onInteraction={() =>
+            analytics.track('onboarding_prompt_copied', { agent })
+          }
         />
       </PMField.Root>
     </PMVStack>

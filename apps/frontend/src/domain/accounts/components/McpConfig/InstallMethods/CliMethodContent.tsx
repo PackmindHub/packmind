@@ -3,6 +3,7 @@ import { PMVStack, PMText } from '@packmind/ui';
 import { CopiableTextarea } from '../../../../../shared/components/inputs';
 import { IMethodContentProps } from './types';
 import { useAnalytics } from '@packmind/proprietary/frontend/domain/amplitude/providers/AnalyticsProvider';
+import { useOnboardingAgent } from '../../../contexts';
 
 export const CliMethodContent: React.FC<IMethodContentProps> = ({
   method,
@@ -11,6 +12,7 @@ export const CliMethodContent: React.FC<IMethodContentProps> = ({
 }) => {
   const command = method.getCliCommand?.(token, url);
   const analytics = useAnalytics();
+  const agent = useOnboardingAgent();
 
   if (!command) return null;
 
@@ -24,7 +26,7 @@ export const CliMethodContent: React.FC<IMethodContentProps> = ({
         readOnly
         rows={2}
         onInteraction={() =>
-          analytics.track('mcp_installed', { method: 'cli' })
+          analytics.track('mcp_installed', { method: 'cli', agent })
         }
       />
     </PMVStack>

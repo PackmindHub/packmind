@@ -8,6 +8,7 @@ import {
   useGetMcpURLQuery,
 } from '../../api/queries/AuthQueries';
 import { UIProvider } from '@packmind/ui';
+import { OnboardingAgentProvider } from '../../contexts';
 
 jest.mock('../../api/queries/AuthQueries');
 
@@ -27,7 +28,9 @@ const renderWithProviders = (ui: React.ReactElement) => {
 
   return render(
     <QueryClientProvider client={queryClient}>
-      <UIProvider>{ui}</UIProvider>
+      <UIProvider>
+        <OnboardingAgentProvider agent="claude">{ui}</OnboardingAgentProvider>
+      </UIProvider>
     </QueryClientProvider>,
   );
 };

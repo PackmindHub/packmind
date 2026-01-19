@@ -3,9 +3,11 @@ import { PMVStack, PMText, PMHStack, PMLink, PMButton } from '@packmind/ui';
 import { VSCodeIcon } from './VSCodeIcon';
 import { IMethodContentProps } from './types';
 import { useAnalytics } from '@packmind/proprietary/frontend/domain/amplitude/providers/AnalyticsProvider';
+import { useOnboardingAgent } from '../../../contexts';
 
 const VSCodeInstallBadge: React.FC<{ href: string }> = ({ href }) => {
   const analytics = useAnalytics();
+  const agent = useOnboardingAgent();
 
   return (
     <PMLink
@@ -13,7 +15,7 @@ const VSCodeInstallBadge: React.FC<{ href: string }> = ({ href }) => {
       variant="plain"
       data-testid="vscode-install-button"
       onMouseDown={() =>
-        analytics.track('mcp_installed', { method: 'magic-link' })
+        analytics.track('mcp_installed', { method: 'magic-link', agent })
       }
     >
       <PMButton as="span" bg="#007ACC" color="white" _hover={{ bg: '#005a9e' }}>
@@ -26,13 +28,14 @@ const VSCodeInstallBadge: React.FC<{ href: string }> = ({ href }) => {
 
 const CursorInstallBadge: React.FC<{ href: string }> = ({ href }) => {
   const analytics = useAnalytics();
+  const agent = useOnboardingAgent();
 
   return (
     <a
       href={href}
       data-testid="cursor-install-button"
       onMouseDown={() =>
-        analytics.track('mcp_installed', { method: 'magic-link' })
+        analytics.track('mcp_installed', { method: 'magic-link', agent })
       }
     >
       <img
