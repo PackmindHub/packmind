@@ -16,7 +16,32 @@ The Packmind CLI provides the following commands:
 
 ## Installation
 
-### Option 1: npm Package
+### One-click install (Recommended)
+
+The easiest way to install and configure the Packmind CLI is using the one-click install available in the Packmind web interface.
+
+**Where to find it:**
+
+- During your first onboarding after creating an account
+- Anytime in your **Account Settings** page
+
+**What it does:**
+
+1. Downloads and installs the Packmind CLI binary for your platform
+2. Authenticates you automatically with your Packmind account
+3. Configures the Packmind MCP servers for AI coding agents detected on your machine (Claude Code, Cursor, VS Code/GitHub Copilot)
+4. Sets up your PATH environment variable
+
+Simply copy the provided command and paste it into your terminal. The script handles everything automatically.
+
+<Tip>
+  **Why this is recommended** — The one-click install eliminates manual steps by
+  combining installation, authentication, and MCP configuration in a single
+  command. It also detects which AI coding agents you have installed and
+  configures them automatically.
+</Tip>
+
+### Alternative: npm Package
 
 **Global Installation**:
 
@@ -34,7 +59,7 @@ npx @packmind/cli install --list
 
 This runs the CLI directly without installing it, always using the latest version.
 
-### Option 2: Standalone Executables
+### Alternative: Standalone Executables
 
 Download the appropriate pre-built executable for your platform from the [GitHub Releases page](https://github.com/PackmindHub/packmind/releases?q=CLI&expanded=true).
 
@@ -61,10 +86,12 @@ sudo mv packmind-cli-*-{version} /usr/local/bin/packmind-cli
 ```
 
 <Tip>
-  **Choosing an Installation Method** — Use **npm global** if you want
-  `packmind-cli` always available system-wide. Use **npx** for project-specific
-  usage or testing without installation. Use **standalone executables** if you
-  don't have Node.js installed or need a specific binary for your environment.
+  **Choosing an Installation Method** — Use **one-click install** for the
+  simplest experience with automatic authentication and MCP setup. Use **npm
+  global** if you want `packmind-cli` always available system-wide. Use **npx**
+  for project-specific usage or testing without installation. Use **standalone
+  executables** if you don't have Node.js installed or need a specific binary
+  for your environment.
 </Tip>
 
 ## Authentication
