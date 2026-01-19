@@ -152,7 +152,7 @@
     "@nestjs/common": "^11.1.6",
     "@nestjs/core": "^11.1.6",
     "@nestjs/jwt": "^11.0.0",
-    "@nestjs/platform-express": "^11.1.6",
+    "@nestjs/platform-express": "^11.1.12",
     "@nestjs/typeorm": "^11.0.0",
     "@react-router/fs-routes": "^7.6.3",
     "@react-router/node": "^7.2.0",
