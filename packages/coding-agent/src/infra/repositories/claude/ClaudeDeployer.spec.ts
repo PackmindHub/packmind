@@ -56,7 +56,9 @@ describe('ClaudeDeployer', () => {
 
   describe('deployRecipes', () => {
     describe('when deploying a single recipe', () => {
-      it('creates one file update', async () => {
+      let result: Awaited<ReturnType<typeof deployer.deployRecipes>>;
+
+      beforeEach(async () => {
         const recipe = recipeFactory({
           name: 'Test Recipe',
           slug: 'test-recipe',
@@ -73,13 +75,18 @@ describe('ClaudeDeployer', () => {
           userId: createUserId('user-1'),
         };
 
-        const result = await deployer.deployRecipes(
+        result = await deployer.deployRecipes(
           [recipeVersion],
           mockGitRepo,
           mockTarget,
         );
+      });
 
+      it('returns two file updates', () => {
         expect(result.createOrUpdate).toHaveLength(2);
+      });
+
+      it('creates one recipe file in commands directory', () => {
         expect(
           result.createOrUpdate.filter((f) =>
             f.path.startsWith('.claude/commands/packmind/'),
@@ -334,7 +341,9 @@ describe('ClaudeDeployer', () => {
     });
 
     describe('when deploying multiple recipes', () => {
-      it('creates file for each recipe', async () => {
+      let result: Awaited<ReturnType<typeof deployer.deployRecipes>>;
+
+      beforeEach(async () => {
         const recipe1 = recipeFactory({
           name: 'Test Recipe 1',
           slug: 'test-recipe-1',
@@ -367,13 +376,18 @@ describe('ClaudeDeployer', () => {
           userId: createUserId('user-1'),
         };
 
-        const result = await deployer.deployRecipes(
+        result = await deployer.deployRecipes(
           [recipeVersion1, recipeVersion2],
           mockGitRepo,
           mockTarget,
         );
+      });
 
+      it('returns three file updates', () => {
         expect(result.createOrUpdate).toHaveLength(3);
+      });
+
+      it('creates two recipe files in commands directory', () => {
         expect(
           result.createOrUpdate.filter((f) =>
             f.path.startsWith('.claude/commands/packmind/'),
@@ -381,45 +395,7 @@ describe('ClaudeDeployer', () => {
         ).toHaveLength(2);
       });
 
-      it('creates first recipe file at correct path', async () => {
-        const recipe1 = recipeFactory({
-          name: 'Test Recipe 1',
-          slug: 'test-recipe-1',
-        });
-
-        const recipe2 = recipeFactory({
-          name: 'Test Recipe 2',
-          slug: 'test-recipe-2',
-        });
-
-        const recipeVersion1: RecipeVersion = {
-          id: createRecipeVersionId('recipe-version-1'),
-          recipeId: recipe1.id,
-          name: recipe1.name,
-          slug: recipe1.slug,
-          content: 'Recipe 1 instructions',
-          version: 1,
-          summary: 'Recipe 1 summary',
-          userId: createUserId('user-1'),
-        };
-
-        const recipeVersion2: RecipeVersion = {
-          id: createRecipeVersionId('recipe-version-2'),
-          recipeId: recipe2.id,
-          name: recipe2.name,
-          slug: recipe2.slug,
-          content: 'Recipe 2 instructions',
-          version: 1,
-          summary: 'Recipe 2 summary',
-          userId: createUserId('user-1'),
-        };
-
-        const result = await deployer.deployRecipes(
-          [recipeVersion1, recipeVersion2],
-          mockGitRepo,
-          mockTarget,
-        );
-
+      it('creates first recipe file at correct path', () => {
         const firstRecipeFile = result.createOrUpdate.find((f) =>
           f.path.includes('test-recipe-1'),
         );
@@ -428,45 +404,7 @@ describe('ClaudeDeployer', () => {
         );
       });
 
-      it('creates second recipe file at correct path', async () => {
-        const recipe1 = recipeFactory({
-          name: 'Test Recipe 1',
-          slug: 'test-recipe-1',
-        });
-
-        const recipe2 = recipeFactory({
-          name: 'Test Recipe 2',
-          slug: 'test-recipe-2',
-        });
-
-        const recipeVersion1: RecipeVersion = {
-          id: createRecipeVersionId('recipe-version-1'),
-          recipeId: recipe1.id,
-          name: recipe1.name,
-          slug: recipe1.slug,
-          content: 'Recipe 1 instructions',
-          version: 1,
-          summary: 'Recipe 1 summary',
-          userId: createUserId('user-1'),
-        };
-
-        const recipeVersion2: RecipeVersion = {
-          id: createRecipeVersionId('recipe-version-2'),
-          recipeId: recipe2.id,
-          name: recipe2.name,
-          slug: recipe2.slug,
-          content: 'Recipe 2 instructions',
-          version: 1,
-          summary: 'Recipe 2 summary',
-          userId: createUserId('user-1'),
-        };
-
-        const result = await deployer.deployRecipes(
-          [recipeVersion1, recipeVersion2],
-          mockGitRepo,
-          mockTarget,
-        );
-
+      it('creates second recipe file at correct path', () => {
         const secondRecipeFile = result.createOrUpdate.find((f) =>
           f.path.includes('test-recipe-2'),
         );
@@ -475,90 +413,14 @@ describe('ClaudeDeployer', () => {
         );
       });
 
-      it('includes first recipe content in its file', async () => {
-        const recipe1 = recipeFactory({
-          name: 'Test Recipe 1',
-          slug: 'test-recipe-1',
-        });
-
-        const recipe2 = recipeFactory({
-          name: 'Test Recipe 2',
-          slug: 'test-recipe-2',
-        });
-
-        const recipeVersion1: RecipeVersion = {
-          id: createRecipeVersionId('recipe-version-1'),
-          recipeId: recipe1.id,
-          name: recipe1.name,
-          slug: recipe1.slug,
-          content: 'Recipe 1 instructions',
-          version: 1,
-          summary: 'Recipe 1 summary',
-          userId: createUserId('user-1'),
-        };
-
-        const recipeVersion2: RecipeVersion = {
-          id: createRecipeVersionId('recipe-version-2'),
-          recipeId: recipe2.id,
-          name: recipe2.name,
-          slug: recipe2.slug,
-          content: 'Recipe 2 instructions',
-          version: 1,
-          summary: 'Recipe 2 summary',
-          userId: createUserId('user-1'),
-        };
-
-        const result = await deployer.deployRecipes(
-          [recipeVersion1, recipeVersion2],
-          mockGitRepo,
-          mockTarget,
-        );
-
+      it('includes first recipe content in its file', () => {
         const firstRecipeFile = result.createOrUpdate.find((f) =>
           f.path.includes('test-recipe-1'),
         );
         expect(firstRecipeFile?.content).toContain('Recipe 1 instructions');
       });
 
-      it('includes second recipe content in its file', async () => {
-        const recipe1 = recipeFactory({
-          name: 'Test Recipe 1',
-          slug: 'test-recipe-1',
-        });
-
-        const recipe2 = recipeFactory({
-          name: 'Test Recipe 2',
-          slug: 'test-recipe-2',
-        });
-
-        const recipeVersion1: RecipeVersion = {
-          id: createRecipeVersionId('recipe-version-1'),
-          recipeId: recipe1.id,
-          name: recipe1.name,
-          slug: recipe1.slug,
-          content: 'Recipe 1 instructions',
-          version: 1,
-          summary: 'Recipe 1 summary',
-          userId: createUserId('user-1'),
-        };
-
-        const recipeVersion2: RecipeVersion = {
-          id: createRecipeVersionId('recipe-version-2'),
-          recipeId: recipe2.id,
-          name: recipe2.name,
-          slug: recipe2.slug,
-          content: 'Recipe 2 instructions',
-          version: 1,
-          summary: 'Recipe 2 summary',
-          userId: createUserId('user-1'),
-        };
-
-        const result = await deployer.deployRecipes(
-          [recipeVersion1, recipeVersion2],
-          mockGitRepo,
-          mockTarget,
-        );
-
+      it('includes second recipe content in its file', () => {
         const secondRecipeFile = result.createOrUpdate.find((f) =>
           f.path.includes('test-recipe-2'),
         );
@@ -569,7 +431,9 @@ describe('ClaudeDeployer', () => {
 
   describe('deployStandards', () => {
     describe('when deploying standard with scope', () => {
-      it('creates one file update', async () => {
+      let result: Awaited<ReturnType<typeof deployer.deployStandards>>;
+
+      beforeEach(async () => {
         const standard = standardFactory({
           name: 'Test Standard',
           slug: 'test-standard',
@@ -592,13 +456,18 @@ describe('ClaudeDeployer', () => {
           ] as Rule[],
         };
 
-        const result = await deployer.deployStandards(
+        result = await deployer.deployStandards(
           [standardVersion],
           mockGitRepo,
           mockTarget,
         );
+      });
 
+      it('returns two file updates', () => {
         expect(result.createOrUpdate).toHaveLength(2);
+      });
+
+      it('creates one standard file in rules directory', () => {
         expect(
           result.createOrUpdate.filter((f) =>
             f.path.startsWith('.claude/rules/packmind/'),
@@ -1645,7 +1514,11 @@ describe('ClaudeDeployer', () => {
 
   describe('generateFileUpdatesForRecipes', () => {
     describe('when deploying a single recipe', () => {
-      it('creates one file update', async () => {
+      let result: Awaited<
+        ReturnType<typeof deployer.generateFileUpdatesForRecipes>
+      >;
+
+      beforeEach(async () => {
         const recipe = recipeFactory({
           name: 'Test Recipe',
           slug: 'test-recipe',
@@ -1662,11 +1535,14 @@ describe('ClaudeDeployer', () => {
           userId: createUserId('user-1'),
         };
 
-        const result = await deployer.generateFileUpdatesForRecipes([
-          recipeVersion,
-        ]);
+        result = await deployer.generateFileUpdatesForRecipes([recipeVersion]);
+      });
 
+      it('returns two file updates', () => {
         expect(result.createOrUpdate).toHaveLength(2);
+      });
+
+      it('creates one recipe file in commands directory', () => {
         expect(
           result.createOrUpdate.filter((f) =>
             f.path.startsWith('.claude/commands/packmind/'),
@@ -1674,27 +1550,7 @@ describe('ClaudeDeployer', () => {
         ).toHaveLength(1);
       });
 
-      it('creates file at correct path without target prefix', async () => {
-        const recipe = recipeFactory({
-          name: 'Test Recipe',
-          slug: 'test-recipe',
-        });
-
-        const recipeVersion: RecipeVersion = {
-          id: createRecipeVersionId('recipe-version-1'),
-          recipeId: recipe.id,
-          name: recipe.name,
-          slug: recipe.slug,
-          content: 'Recipe content',
-          version: 1,
-          summary: 'Recipe summary',
-          userId: createUserId('user-1'),
-        };
-
-        const result = await deployer.generateFileUpdatesForRecipes([
-          recipeVersion,
-        ]);
-
+      it('creates file at correct path without target prefix', () => {
         const recipeFile = result.createOrUpdate.find((f) =>
           f.path.startsWith('.claude/commands/packmind/'),
         );
@@ -1703,77 +1559,17 @@ describe('ClaudeDeployer', () => {
         );
       });
 
-      it('includes frontmatter with description from summary', async () => {
-        const recipe = recipeFactory({
-          name: 'Test Recipe',
-          slug: 'test-recipe',
-        });
-
-        const recipeVersion: RecipeVersion = {
-          id: createRecipeVersionId('recipe-version-1'),
-          recipeId: recipe.id,
-          name: recipe.name,
-          slug: recipe.slug,
-          content: 'Recipe content',
-          version: 1,
-          summary: 'Recipe summary',
-          userId: createUserId('user-1'),
-        };
-
-        const result = await deployer.generateFileUpdatesForRecipes([
-          recipeVersion,
-        ]);
-
+      it('includes frontmatter with description from summary', () => {
         expect(result.createOrUpdate[0].content).toContain(
           'description: Recipe summary',
         );
       });
 
-      it('includes YAML frontmatter delimiters', async () => {
-        const recipe = recipeFactory({
-          name: 'Test Recipe',
-          slug: 'test-recipe',
-        });
-
-        const recipeVersion: RecipeVersion = {
-          id: createRecipeVersionId('recipe-version-1'),
-          recipeId: recipe.id,
-          name: recipe.name,
-          slug: recipe.slug,
-          content: 'Recipe content',
-          version: 1,
-          summary: 'Recipe summary',
-          userId: createUserId('user-1'),
-        };
-
-        const result = await deployer.generateFileUpdatesForRecipes([
-          recipeVersion,
-        ]);
-
+      it('includes YAML frontmatter delimiters', () => {
         expect(result.createOrUpdate[0].content).toMatch(/^---\n/);
       });
 
-      it('includes recipe content after frontmatter', async () => {
-        const recipe = recipeFactory({
-          name: 'Test Recipe',
-          slug: 'test-recipe',
-        });
-
-        const recipeVersion: RecipeVersion = {
-          id: createRecipeVersionId('recipe-version-1'),
-          recipeId: recipe.id,
-          name: recipe.name,
-          slug: recipe.slug,
-          content: 'Recipe content',
-          version: 1,
-          summary: 'Recipe summary',
-          userId: createUserId('user-1'),
-        };
-
-        const result = await deployer.generateFileUpdatesForRecipes([
-          recipeVersion,
-        ]);
-
+      it('includes recipe content after frontmatter', () => {
         expect(result.createOrUpdate[0].content).toContain('Recipe content');
       });
     });
@@ -1832,7 +1628,11 @@ describe('ClaudeDeployer', () => {
     });
 
     describe('when deploying multiple recipes', () => {
-      it('creates file for each recipe', async () => {
+      let result: Awaited<
+        ReturnType<typeof deployer.generateFileUpdatesForRecipes>
+      >;
+
+      beforeEach(async () => {
         const recipe1 = recipeFactory({
           name: 'Test Recipe 1',
           slug: 'test-recipe-1',
@@ -1865,12 +1665,17 @@ describe('ClaudeDeployer', () => {
           userId: createUserId('user-1'),
         };
 
-        const result = await deployer.generateFileUpdatesForRecipes([
+        result = await deployer.generateFileUpdatesForRecipes([
           recipeVersion1,
           recipeVersion2,
         ]);
+      });
 
+      it('returns three file updates', () => {
         expect(result.createOrUpdate).toHaveLength(3);
+      });
+
+      it('creates two recipe files in commands directory', () => {
         expect(
           result.createOrUpdate.filter((f) =>
             f.path.startsWith('.claude/commands/packmind/'),
@@ -1878,44 +1683,7 @@ describe('ClaudeDeployer', () => {
         ).toHaveLength(2);
       });
 
-      it('creates first recipe file at correct path', async () => {
-        const recipe1 = recipeFactory({
-          name: 'Test Recipe 1',
-          slug: 'test-recipe-1',
-        });
-
-        const recipe2 = recipeFactory({
-          name: 'Test Recipe 2',
-          slug: 'test-recipe-2',
-        });
-
-        const recipeVersion1: RecipeVersion = {
-          id: createRecipeVersionId('recipe-version-1'),
-          recipeId: recipe1.id,
-          name: recipe1.name,
-          slug: recipe1.slug,
-          content: 'Recipe 1 instructions',
-          version: 1,
-          summary: 'Recipe 1 summary',
-          userId: createUserId('user-1'),
-        };
-
-        const recipeVersion2: RecipeVersion = {
-          id: createRecipeVersionId('recipe-version-2'),
-          recipeId: recipe2.id,
-          name: recipe2.name,
-          slug: recipe2.slug,
-          content: 'Recipe 2 instructions',
-          version: 1,
-          summary: 'Recipe 2 summary',
-          userId: createUserId('user-1'),
-        };
-
-        const result = await deployer.generateFileUpdatesForRecipes([
-          recipeVersion1,
-          recipeVersion2,
-        ]);
-
+      it('creates first recipe file at correct path', () => {
         const firstRecipeFile = result.createOrUpdate.find((f) =>
           f.path.includes('test-recipe-1'),
         );
@@ -1924,44 +1692,7 @@ describe('ClaudeDeployer', () => {
         );
       });
 
-      it('creates second recipe file at correct path', async () => {
-        const recipe1 = recipeFactory({
-          name: 'Test Recipe 1',
-          slug: 'test-recipe-1',
-        });
-
-        const recipe2 = recipeFactory({
-          name: 'Test Recipe 2',
-          slug: 'test-recipe-2',
-        });
-
-        const recipeVersion1: RecipeVersion = {
-          id: createRecipeVersionId('recipe-version-1'),
-          recipeId: recipe1.id,
-          name: recipe1.name,
-          slug: recipe1.slug,
-          content: 'Recipe 1 instructions',
-          version: 1,
-          summary: 'Recipe 1 summary',
-          userId: createUserId('user-1'),
-        };
-
-        const recipeVersion2: RecipeVersion = {
-          id: createRecipeVersionId('recipe-version-2'),
-          recipeId: recipe2.id,
-          name: recipe2.name,
-          slug: recipe2.slug,
-          content: 'Recipe 2 instructions',
-          version: 1,
-          summary: 'Recipe 2 summary',
-          userId: createUserId('user-1'),
-        };
-
-        const result = await deployer.generateFileUpdatesForRecipes([
-          recipeVersion1,
-          recipeVersion2,
-        ]);
-
+      it('creates second recipe file at correct path', () => {
         const secondRecipeFile = result.createOrUpdate.find((f) =>
           f.path.includes('test-recipe-2'),
         );
@@ -1970,88 +1701,14 @@ describe('ClaudeDeployer', () => {
         );
       });
 
-      it('includes first recipe content in its file', async () => {
-        const recipe1 = recipeFactory({
-          name: 'Test Recipe 1',
-          slug: 'test-recipe-1',
-        });
-
-        const recipe2 = recipeFactory({
-          name: 'Test Recipe 2',
-          slug: 'test-recipe-2',
-        });
-
-        const recipeVersion1: RecipeVersion = {
-          id: createRecipeVersionId('recipe-version-1'),
-          recipeId: recipe1.id,
-          name: recipe1.name,
-          slug: recipe1.slug,
-          content: 'Recipe 1 instructions',
-          version: 1,
-          summary: 'Recipe 1 summary',
-          userId: createUserId('user-1'),
-        };
-
-        const recipeVersion2: RecipeVersion = {
-          id: createRecipeVersionId('recipe-version-2'),
-          recipeId: recipe2.id,
-          name: recipe2.name,
-          slug: recipe2.slug,
-          content: 'Recipe 2 instructions',
-          version: 1,
-          summary: 'Recipe 2 summary',
-          userId: createUserId('user-1'),
-        };
-
-        const result = await deployer.generateFileUpdatesForRecipes([
-          recipeVersion1,
-          recipeVersion2,
-        ]);
-
+      it('includes first recipe content in its file', () => {
         const firstRecipeFile = result.createOrUpdate.find((f) =>
           f.path.includes('test-recipe-1'),
         );
         expect(firstRecipeFile?.content).toContain('Recipe 1 instructions');
       });
 
-      it('includes second recipe content in its file', async () => {
-        const recipe1 = recipeFactory({
-          name: 'Test Recipe 1',
-          slug: 'test-recipe-1',
-        });
-
-        const recipe2 = recipeFactory({
-          name: 'Test Recipe 2',
-          slug: 'test-recipe-2',
-        });
-
-        const recipeVersion1: RecipeVersion = {
-          id: createRecipeVersionId('recipe-version-1'),
-          recipeId: recipe1.id,
-          name: recipe1.name,
-          slug: recipe1.slug,
-          content: 'Recipe 1 instructions',
-          version: 1,
-          summary: 'Recipe 1 summary',
-          userId: createUserId('user-1'),
-        };
-
-        const recipeVersion2: RecipeVersion = {
-          id: createRecipeVersionId('recipe-version-2'),
-          recipeId: recipe2.id,
-          name: recipe2.name,
-          slug: recipe2.slug,
-          content: 'Recipe 2 instructions',
-          version: 1,
-          summary: 'Recipe 2 summary',
-          userId: createUserId('user-1'),
-        };
-
-        const result = await deployer.generateFileUpdatesForRecipes([
-          recipeVersion1,
-          recipeVersion2,
-        ]);
-
+      it('includes second recipe content in its file', () => {
         const secondRecipeFile = result.createOrUpdate.find((f) =>
           f.path.includes('test-recipe-2'),
         );
@@ -2465,7 +2122,9 @@ describe('ClaudeDeployer', () => {
     });
 
     describe('when deploying multiple recipes', () => {
-      it('creates file for each recipe', async () => {
+      let result: Awaited<ReturnType<typeof deployer.deployArtifacts>>;
+
+      beforeEach(async () => {
         const recipe1 = recipeFactory({
           name: 'Test Recipe 1',
           slug: 'test-recipe-1',
@@ -2498,12 +2157,17 @@ describe('ClaudeDeployer', () => {
           userId: createUserId('user-1'),
         };
 
-        const result = await deployer.deployArtifacts(
+        result = await deployer.deployArtifacts(
           [recipeVersion1, recipeVersion2],
           [],
         );
+      });
 
+      it('returns three file updates', () => {
         expect(result.createOrUpdate).toHaveLength(3);
+      });
+
+      it('creates two recipe files in commands directory', () => {
         expect(
           result.createOrUpdate.filter((f) =>
             f.path.startsWith('.claude/commands/packmind/'),
@@ -2511,44 +2175,7 @@ describe('ClaudeDeployer', () => {
         ).toHaveLength(2);
       });
 
-      it('creates first recipe at correct path', async () => {
-        const recipe1 = recipeFactory({
-          name: 'Test Recipe 1',
-          slug: 'test-recipe-1',
-        });
-
-        const recipe2 = recipeFactory({
-          name: 'Test Recipe 2',
-          slug: 'test-recipe-2',
-        });
-
-        const recipeVersion1: RecipeVersion = {
-          id: createRecipeVersionId('recipe-version-1'),
-          recipeId: recipe1.id,
-          name: recipe1.name,
-          slug: recipe1.slug,
-          content: 'Recipe 1 content',
-          version: 1,
-          summary: 'Recipe 1 summary',
-          userId: createUserId('user-1'),
-        };
-
-        const recipeVersion2: RecipeVersion = {
-          id: createRecipeVersionId('recipe-version-2'),
-          recipeId: recipe2.id,
-          name: recipe2.name,
-          slug: recipe2.slug,
-          content: 'Recipe 2 content',
-          version: 1,
-          summary: 'Recipe 2 summary',
-          userId: createUserId('user-1'),
-        };
-
-        const result = await deployer.deployArtifacts(
-          [recipeVersion1, recipeVersion2],
-          [],
-        );
-
+      it('creates first recipe at correct path', () => {
         const firstRecipe = result.createOrUpdate.find((f) =>
           f.path.includes('test-recipe-1'),
         );
@@ -2557,44 +2184,7 @@ describe('ClaudeDeployer', () => {
         );
       });
 
-      it('creates second recipe at correct path', async () => {
-        const recipe1 = recipeFactory({
-          name: 'Test Recipe 1',
-          slug: 'test-recipe-1',
-        });
-
-        const recipe2 = recipeFactory({
-          name: 'Test Recipe 2',
-          slug: 'test-recipe-2',
-        });
-
-        const recipeVersion1: RecipeVersion = {
-          id: createRecipeVersionId('recipe-version-1'),
-          recipeId: recipe1.id,
-          name: recipe1.name,
-          slug: recipe1.slug,
-          content: 'Recipe 1 content',
-          version: 1,
-          summary: 'Recipe 1 summary',
-          userId: createUserId('user-1'),
-        };
-
-        const recipeVersion2: RecipeVersion = {
-          id: createRecipeVersionId('recipe-version-2'),
-          recipeId: recipe2.id,
-          name: recipe2.name,
-          slug: recipe2.slug,
-          content: 'Recipe 2 content',
-          version: 1,
-          summary: 'Recipe 2 summary',
-          userId: createUserId('user-1'),
-        };
-
-        const result = await deployer.deployArtifacts(
-          [recipeVersion1, recipeVersion2],
-          [],
-        );
-
+      it('creates second recipe at correct path', () => {
         const secondRecipe = result.createOrUpdate.find((f) =>
           f.path.includes('test-recipe-2'),
         );

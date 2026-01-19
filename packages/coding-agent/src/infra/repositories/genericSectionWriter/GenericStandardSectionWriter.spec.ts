@@ -22,7 +22,11 @@ Some content after`;
         standardsSection: '* standard A: a good standard',
       };
 
-      const result = GenericStandardSectionWriter.replace(opts);
+      let result: string;
+
+      beforeEach(() => {
+        result = GenericStandardSectionWriter.replace(opts);
+      });
 
       it('preserves content before the markers', () => {
         expect(result).toContain(
@@ -30,10 +34,19 @@ Some content after`;
         );
       });
 
-      it('replaces content between markers', () => {
+      it('includes the start marker', () => {
         expect(result).toContain('<!-- start: packmind-standards -->');
+      });
+
+      it('includes the end marker', () => {
         expect(result).toContain('<!-- end: packmind-standards -->');
+      });
+
+      it('includes the Packmind Standards header', () => {
         expect(result).toContain('# Packmind Standards');
+      });
+
+      it('includes the standards introduction', () => {
         expect(result).toContain(
           GenericStandardSectionWriter.standardsIntroduction,
         );
@@ -41,6 +54,9 @@ Some content after`;
 
       it('removes old content between markers', () => {
         expect(result).not.toContain('Old standards content to be replaced');
+      });
+
+      it('removes all previous content between markers', () => {
         expect(result).not.toContain('This should all be replaced');
       });
 
@@ -62,17 +78,33 @@ Some initial content here`;
         commentMarker: 'packmind-standards',
       };
 
-      const result = GenericStandardSectionWriter.replace(opts);
+      let result: string;
 
-      it('preserves existing content', () => {
+      beforeEach(() => {
+        result = GenericStandardSectionWriter.replace(opts);
+      });
+
+      it('preserves the document header', () => {
         expect(result).toContain('# Some Document');
+      });
+
+      it('preserves the initial content', () => {
         expect(result).toContain('Some initial content here');
       });
 
-      it('appends new section with markers', () => {
+      it('appends the start marker', () => {
         expect(result).toContain('<!-- start: packmind-standards -->');
+      });
+
+      it('appends the end marker', () => {
         expect(result).toContain('<!-- end: packmind-standards -->');
+      });
+
+      it('includes the Packmind Standards header', () => {
         expect(result).toContain('# Packmind Standards');
+      });
+
+      it('includes the standards introduction', () => {
         expect(result).toContain(
           GenericStandardSectionWriter.standardsIntroduction,
         );
@@ -91,15 +123,31 @@ Some initial content here`;
         commentMarker: 'packmind-standards',
       };
 
-      const result = GenericStandardSectionWriter.replace(opts);
+      let result: string;
 
-      it('includes the standards section content', () => {
+      beforeEach(() => {
+        result = GenericStandardSectionWriter.replace(opts);
+      });
+
+      it('includes the Packmind Standards header', () => {
         expect(result).toContain('# Packmind Standards');
+      });
+
+      it('includes the standards introduction', () => {
         expect(result).toContain(
           GenericStandardSectionWriter.standardsIntroduction,
         );
+      });
+
+      it('includes the available standards section', () => {
         expect(result).toContain('## Available Standards');
+      });
+
+      it('includes the first standard item', () => {
         expect(result).toContain('- Standard 1');
+      });
+
+      it('includes the second standard item', () => {
         expect(result).toContain('- Standard 2');
       });
     });
@@ -112,18 +160,31 @@ Some initial content here`;
       standardsSection: '## Available Standards\n\n- Standard 1\n- Standard 2',
     };
 
-    const result = GenericStandardSectionWriter.generateStandardsSection(opts);
+    let result: string;
+
+    beforeEach(() => {
+      result = GenericStandardSectionWriter.generateStandardsSection(opts);
+    });
 
     it('generates section with standards header', () => {
       expect(result).toContain('# Packmind Standards');
     });
 
-    it('includes inline standards content', () => {
+    it('includes the standards introduction', () => {
       expect(result).toContain(
         GenericStandardSectionWriter.standardsIntroduction,
       );
+    });
+
+    it('includes the available standards section', () => {
       expect(result).toContain('## Available Standards');
+    });
+
+    it('includes the first standard item', () => {
       expect(result).toContain('- Standard 1');
+    });
+
+    it('includes the second standard item', () => {
       expect(result).toContain('- Standard 2');
     });
   });

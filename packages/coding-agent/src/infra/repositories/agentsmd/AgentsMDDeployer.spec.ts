@@ -120,111 +120,155 @@ describe('AgentsMDDeployer', () => {
   });
 
   describe('deployStandards', () => {
-    it('creates AGENTS.md file with standards instructions', async () => {
-      const standard = standardFactory({
-        name: 'Test Standard',
-        slug: 'test-standard',
-        scope: 'frontend',
+    describe('with a single standard', () => {
+      let result: Awaited<ReturnType<AgentsMDDeployer['deployStandards']>>;
+      let standardVersion: StandardVersion;
+
+      beforeEach(async () => {
+        const standard = standardFactory({
+          name: 'Test Standard',
+          slug: 'test-standard',
+          scope: 'frontend',
+        });
+
+        standardVersion = {
+          id: createStandardVersionId('standard-version-1'),
+          standardId: standard.id,
+          name: standard.name,
+          slug: standard.slug,
+          description: 'Test standard description',
+          scope: 'frontend',
+          version: 1,
+          summary: 'A test standard summary',
+          userId: createUserId('user-1'),
+          rules: [],
+        };
+
+        result = await deployer.deployStandards(
+          [standardVersion],
+          mockGitRepo,
+          mockTarget,
+        );
       });
 
-      const standardVersion: StandardVersion = {
-        id: createStandardVersionId('standard-version-1'),
-        standardId: standard.id,
-        name: standard.name,
-        slug: standard.slug,
-        description: 'Test standard description',
-        scope: 'frontend',
-        version: 1,
-        summary: 'A test standard summary',
-        userId: createUserId('user-1'),
-        rules: [],
-      };
+      it('creates one file to update', () => {
+        expect(result.createOrUpdate).toHaveLength(1);
+      });
 
-      const result = await deployer.deployStandards(
-        [standardVersion],
-        mockGitRepo,
-        mockTarget,
-      );
+      it('does not delete any files', () => {
+        expect(result.delete).toHaveLength(0);
+      });
 
-      expect(result.createOrUpdate).toHaveLength(1);
-      expect(result.delete).toHaveLength(0);
+      it('targets AGENTS.md file', () => {
+        expect(result.createOrUpdate[0].path).toBe('AGENTS.md');
+      });
 
-      const agentsMDFile = result.createOrUpdate[0];
-      expect(agentsMDFile.path).toBe('AGENTS.md');
-      const sectionContent = agentsMDFile.sections![0].content;
-      expect(sectionContent).toContain('# Packmind Standards');
-      expect(sectionContent).toContain(
-        GenericStandardSectionWriter.standardsIntroduction,
-      );
-      expect(sectionContent).toContain(standardVersion.name);
+      it('includes Packmind Standards header in section content', () => {
+        const sectionContent = result.createOrUpdate[0].sections![0].content;
+        expect(sectionContent).toContain('# Packmind Standards');
+      });
+
+      it('includes standards introduction in section content', () => {
+        const sectionContent = result.createOrUpdate[0].sections![0].content;
+        expect(sectionContent).toContain(
+          GenericStandardSectionWriter.standardsIntroduction,
+        );
+      });
+
+      it('includes standard name in section content', () => {
+        const sectionContent = result.createOrUpdate[0].sections![0].content;
+        expect(sectionContent).toContain(standardVersion.name);
+      });
     });
 
-    it('handles empty standards list', async () => {
-      const result = await deployer.deployStandards(
-        [],
-        mockGitRepo,
-        mockTarget,
-      );
+    describe('when standards list is empty', () => {
+      let result: Awaited<ReturnType<AgentsMDDeployer['deployStandards']>>;
 
-      expect(result.createOrUpdate).toHaveLength(0);
-      expect(result.delete).toHaveLength(0);
+      beforeEach(async () => {
+        result = await deployer.deployStandards([], mockGitRepo, mockTarget);
+      });
+
+      it('does not create any files', () => {
+        expect(result.createOrUpdate).toHaveLength(0);
+      });
+
+      it('does not delete any files', () => {
+        expect(result.delete).toHaveLength(0);
+      });
     });
 
-    it('includes multiple standards in instructions', async () => {
-      const standard1 = standardFactory({
-        name: 'Frontend Standard',
-        slug: 'frontend-standard',
-        scope: 'frontend',
+    describe('with multiple standards', () => {
+      let result: Awaited<ReturnType<AgentsMDDeployer['deployStandards']>>;
+
+      beforeEach(async () => {
+        const standard1 = standardFactory({
+          name: 'Frontend Standard',
+          slug: 'frontend-standard',
+          scope: 'frontend',
+        });
+
+        const standard2 = standardFactory({
+          name: 'Backend Standard',
+          slug: 'backend-standard',
+          scope: 'backend',
+        });
+
+        const standardVersion1: StandardVersion = {
+          id: createStandardVersionId('standard-version-1'),
+          standardId: standard1.id,
+          name: standard1.name,
+          slug: standard1.slug,
+          description: 'Frontend standard description',
+          scope: 'frontend',
+          version: 1,
+          summary: 'Frontend standard summary',
+          userId: createUserId('user-1'),
+          rules: [],
+        };
+
+        const standardVersion2: StandardVersion = {
+          id: createStandardVersionId('standard-version-2'),
+          standardId: standard2.id,
+          name: standard2.name,
+          slug: standard2.slug,
+          description: 'Backend standard description',
+          scope: 'backend',
+          version: 1,
+          summary: 'Backend standard summary',
+          userId: createUserId('user-1'),
+          rules: [],
+        };
+
+        result = await deployer.deployStandards(
+          [standardVersion1, standardVersion2],
+          mockGitRepo,
+          mockTarget,
+        );
       });
 
-      const standard2 = standardFactory({
-        name: 'Backend Standard',
-        slug: 'backend-standard',
-        scope: 'backend',
+      it('creates one file to update', () => {
+        expect(result.createOrUpdate).toHaveLength(1);
       });
 
-      const standardVersion1: StandardVersion = {
-        id: createStandardVersionId('standard-version-1'),
-        standardId: standard1.id,
-        name: standard1.name,
-        slug: standard1.slug,
-        description: 'Frontend standard description',
-        scope: 'frontend',
-        version: 1,
-        summary: 'Frontend standard summary',
-        userId: createUserId('user-1'),
-        rules: [],
-      };
+      it('does not delete any files', () => {
+        expect(result.delete).toHaveLength(0);
+      });
 
-      const standardVersion2: StandardVersion = {
-        id: createStandardVersionId('standard-version-2'),
-        standardId: standard2.id,
-        name: standard2.name,
-        slug: standard2.slug,
-        description: 'Backend standard description',
-        scope: 'backend',
-        version: 1,
-        summary: 'Backend standard summary',
-        userId: createUserId('user-1'),
-        rules: [],
-      };
+      it('targets AGENTS.md file', () => {
+        expect(result.createOrUpdate[0].path).toBe('AGENTS.md');
+      });
 
-      const result = await deployer.deployStandards(
-        [standardVersion1, standardVersion2],
-        mockGitRepo,
-        mockTarget,
-      );
+      it('includes Packmind Standards header in section content', () => {
+        const sectionContent = result.createOrUpdate[0].sections![0].content;
+        expect(sectionContent).toContain('# Packmind Standards');
+      });
 
-      expect(result.createOrUpdate).toHaveLength(1);
-      expect(result.delete).toHaveLength(0);
-
-      const agentsMDFile = result.createOrUpdate[0];
-      expect(agentsMDFile.path).toBe('AGENTS.md');
-      const sectionContent = agentsMDFile.sections![0].content;
-      expect(sectionContent).toContain('# Packmind Standards');
-      expect(sectionContent).toContain(
-        GenericStandardSectionWriter.standardsIntroduction,
-      );
+      it('includes standards introduction in section content', () => {
+        const sectionContent = result.createOrUpdate[0].sections![0].content;
+        expect(sectionContent).toContain(
+          GenericStandardSectionWriter.standardsIntroduction,
+        );
+      });
     });
   });
 });

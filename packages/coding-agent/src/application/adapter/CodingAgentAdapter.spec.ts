@@ -86,14 +86,23 @@ describe('CodingAgentAdapter', () => {
     });
 
     describe('when all dependencies provided', () => {
-      it('creates use cases', async () => {
+      beforeEach(async () => {
+        await adapter.initialize({
+          [IStandardsPortName]: mockStandardsPort,
+          [IGitPortName]: mockGitPort,
+        });
+      });
+
+      it('initializes without throwing', async () => {
         await expect(
           adapter.initialize({
             [IStandardsPortName]: mockStandardsPort,
             [IGitPortName]: mockGitPort,
           }),
         ).resolves.not.toThrow();
+      });
 
+      it('marks adapter as ready', () => {
         expect(adapter.isReady()).toBe(true);
       });
     });
