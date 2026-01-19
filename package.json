@@ -82,7 +82,7 @@
     "babel-jest": "^30.2.0",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.2",
-    "copy-webpack-plugin": "^11.0.0",
+    "copy-webpack-plugin": "^13.0.1",
     "esbuild-loader": "^4.3.0",
     "eslint": "^9.8.0",
     "eslint-config-prettier": "^10.1.8",
