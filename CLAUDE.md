@@ -68,12 +68,3 @@ At the end of your response, after completing the main task:
 4. If none apply, state "Skills check: none applicable"
 
 **FAILURE TO RUN THIS CHECK IS A VIOLATION OF PROJECT GUIDELINES.**
-
-# Commiting
-
-- When referencing an issue (example #123), DO NOT write "Close" or "Fix", as this closes the issue which has not been validated by other developers.
-- Before proposing to commit, ALWAYS run `npm run quality-gate` and fix the issues found
-- NEVER use the `--no-verify` argument when commiting
-- After commiting, ALWAYS ensure that the commit was successful.
-- NEVER run a commit message without asking for permission first to allow user to review the commit
-- ALWAYS ensure which GitHub issue is worked on, do not assume it based on previous commit.
