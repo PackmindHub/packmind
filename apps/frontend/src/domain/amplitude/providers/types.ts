@@ -1,3 +1,5 @@
+import { StartTrialCommandAgents } from '@packmind/types';
+
 export type AnalyticsEventMap = {
   page_view: {
     path: string;
@@ -18,8 +20,13 @@ export type AnalyticsEventMap = {
     agent: string;
   };
   cli_login_done: Record<string, never>;
-  mcp_installed: { method: 'cli' | 'magic-link' | 'json' };
-  onboarding_prompt_copied: Record<string, never>;
+  mcp_installed: {
+    method: 'cli' | 'magic-link' | 'json';
+    agent: StartTrialCommandAgents;
+  };
+  onboarding_prompt_copied: {
+    agent: StartTrialCommandAgents;
+  };
 };
 
 export type AnalyticsEventName = keyof AnalyticsEventMap;
