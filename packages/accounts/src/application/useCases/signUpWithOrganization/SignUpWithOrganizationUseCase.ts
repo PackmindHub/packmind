@@ -4,6 +4,7 @@ import {
   createUserId,
   ISignUpWithOrganizationUseCase,
   ISpacesPort,
+  OrganizationCreatedEvent,
   SignUpWithOrganizationCommand,
   SignUpWithOrganizationResponse,
   UserSignedUpEvent,
@@ -107,6 +108,16 @@ export class SignUpWithOrganizationUseCase implements ISignUpWithOrganizationUse
           organizationId: organization.id,
           email,
           quickStart: false,
+          source: 'ui',
+        }),
+      );
+
+      this.eventEmitterService.emit(
+        new OrganizationCreatedEvent({
+          userId: createUserId(user.id),
+          organizationId: organization.id,
+          name: organizationName,
+          method: 'sign-up',
           source: 'ui',
         }),
       );

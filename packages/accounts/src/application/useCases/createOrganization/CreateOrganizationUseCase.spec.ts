@@ -3,15 +3,21 @@ import { OrganizationService } from '../../services/OrganizationService';
 import { UserService } from '../../services/UserService';
 import { stubLogger } from '@packmind/test-utils';
 import { PackmindLogger } from '@packmind/logger';
-import { createUserId, UserId } from '@packmind/types';
-import { Organization, createOrganizationId } from '@packmind/types';
-import { User } from '@packmind/types';
+import { PackmindEventEmitterService } from '@packmind/node-utils';
+import {
+  createUserId,
+  UserId,
+  Organization,
+  createOrganizationId,
+  User,
+} from '@packmind/types';
 import { v4 as uuidv4 } from 'uuid';
 
 describe('CreateOrganizationUseCase', () => {
   let createOrganizationUseCase: CreateOrganizationUseCase;
   let mockOrganizationService: jest.Mocked<OrganizationService>;
   let mockUserService: jest.Mocked<UserService>;
+  let mockEventEmitterService: jest.Mocked<PackmindEventEmitterService>;
   let stubbedLogger: PackmindLogger;
 
   beforeEach(() => {
@@ -24,11 +30,16 @@ describe('CreateOrganizationUseCase', () => {
       addOrganizationMembership: jest.fn(),
     } as unknown as jest.Mocked<UserService>;
 
+    mockEventEmitterService = {
+      emit: jest.fn().mockReturnValue(true),
+    } as unknown as jest.Mocked<PackmindEventEmitterService>;
+
     stubbedLogger = stubLogger();
 
     createOrganizationUseCase = new CreateOrganizationUseCase(
       mockOrganizationService,
       mockUserService,
+      mockEventEmitterService,
       stubbedLogger,
     );
   });
@@ -80,6 +91,36 @@ describe('CreateOrganizationUseCase', () => {
         );
       });
 
+      it('emits OrganizationCreatedEvent after successful creation', async () => {
+        const mockUser: User = {
+          id: userId,
+          email: 'test@example.com',
+          passwordHash: 'hash',
+          active: true,
+          memberships: [],
+        };
+
+        mockUserService.getUserById.mockResolvedValue(mockUser);
+        mockOrganizationService.createOrganization.mockResolvedValue(
+          mockOrganization,
+        );
+        mockUserService.addOrganizationMembership.mockResolvedValue(mockUser);
+
+        await createOrganizationUseCase.execute(validCommand);
+
+        expect(mockEventEmitterService.emit).toHaveBeenCalledWith(
+          expect.objectContaining({
+            payload: {
+              userId,
+              organizationId: mockOrganization.id,
+              name: 'Test Organization',
+              method: 'create',
+              source: 'ui',
+            },
+          }),
+        );
+      });
+
       it('throws error if user not found', async () => {
         mockUserService.getUserById.mockResolvedValue(null);
 
@@ -94,6 +135,18 @@ describe('CreateOrganizationUseCase', () => {
         expect(
           mockUserService.addOrganizationMembership,
         ).not.toHaveBeenCalled();
+      });
+
+      it('does not emit event if user not found', async () => {
+        mockUserService.getUserById.mockResolvedValue(null);
+
+        try {
+          await createOrganizationUseCase.execute(validCommand);
+        } catch {
+          // Expected to throw
+        }
+
+        expect(mockEventEmitterService.emit).not.toHaveBeenCalled();
       });
     });
 

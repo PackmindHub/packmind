@@ -1,7 +1,12 @@
 import { OrganizationService } from '../../services/OrganizationService';
 import { UserService } from '../../services/UserService';
 import { PackmindLogger } from '@packmind/logger';
-import { ISpacesPort } from '@packmind/types';
+import { PackmindEventEmitterService } from '@packmind/node-utils';
+import {
+  createUserId,
+  ISpacesPort,
+  OrganizationCreatedEvent,
+} from '@packmind/types';
 import {
   ICreateOrganizationUseCase,
   CreateOrganizationCommand,
@@ -14,6 +19,7 @@ export class CreateOrganizationUseCase implements ICreateOrganizationUseCase {
   constructor(
     private readonly organizationService: OrganizationService,
     private readonly userService: UserService,
+    private readonly eventEmitterService: PackmindEventEmitterService,
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
     private readonly spacesPort?: ISpacesPort,
   ) {
@@ -86,6 +92,16 @@ export class CreateOrganizationUseCase implements ICreateOrganizationUseCase {
           });
         }
       }
+
+      this.eventEmitterService.emit(
+        new OrganizationCreatedEvent({
+          userId: createUserId(user.id),
+          organizationId: organization.id,
+          name,
+          method: 'create',
+          source: 'ui',
+        }),
+      );
 
       this.logger.info('Create organization use case executed successfully', {
         organizationId: organization.id,

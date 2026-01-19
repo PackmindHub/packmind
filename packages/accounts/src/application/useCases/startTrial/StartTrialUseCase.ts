@@ -11,6 +11,7 @@ import {
   StartTrialResult,
   AnonymousTrialStartedEvent,
   UserSignedUpEvent,
+  OrganizationCreatedEvent,
 } from '@packmind/types';
 import { v4 as uuidv4 } from 'uuid';
 import { OrganizationService } from '../../services/OrganizationService';
@@ -90,6 +91,16 @@ export class StartTrialUseCase implements IStartTrial {
           organizationId: organization.id,
           agent: command.agent,
           startedAt: new Date(),
+          source: 'ui',
+        }),
+      );
+
+      this.eventEmitterService.emit(
+        new OrganizationCreatedEvent({
+          userId: createUserId(user.id),
+          organizationId: organization.id,
+          name: organizationName,
+          method: 'quick-start',
           source: 'ui',
         }),
       );

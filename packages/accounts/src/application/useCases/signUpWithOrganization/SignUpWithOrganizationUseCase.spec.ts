@@ -154,6 +154,33 @@ describe('SignUpWithOrganizationUseCase', () => {
           }),
         );
       });
+
+      it('emits OrganizationCreatedEvent after successful signup', async () => {
+        const command: SignUpWithOrganizationCommand = {
+          organizationName: 'Test Organization',
+          email: 'testuser@packmind.com',
+          password: 'password123!@',
+        };
+
+        mockOrganizationService.createOrganization.mockResolvedValue(
+          mockOrganization,
+        );
+        mockUserService.createUser.mockResolvedValue(mockUser);
+
+        await signUpWithOrganizationUseCase.execute(command);
+
+        expect(mockEventEmitterService.emit).toHaveBeenCalledWith(
+          expect.objectContaining({
+            payload: {
+              userId: mockUser.id,
+              organizationId: mockOrganization.id,
+              name: 'Test Organization',
+              method: 'sign-up',
+              source: 'ui',
+            },
+          }),
+        );
+      });
     });
 
     describe('when organization name validation fails', () => {
