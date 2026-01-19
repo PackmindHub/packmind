@@ -18,6 +18,7 @@ import {
   RuleUpdatedEvent,
   UserEvent,
   UserSignedUpEvent,
+  OrganizationCreatedEvent,
 } from '@packmind/types';
 import { EventTrackingAdapter } from './EventTrackingAdapter';
 import { AmplitudeMetadata } from '../domain/entities/AmplitudeNodeEvent';
@@ -50,6 +51,7 @@ export class AmplitudeEventListener extends PackmindListener<EventTrackingAdapte
     this.subscribe(SkillCreatedEvent, this.onSkillCreated);
     this.subscribe(SkillUpdatedEvent, this.onSkillUpdated);
     this.subscribe(UserSignedUpEvent, this.onUserSignedUpEvent);
+    this.subscribe(OrganizationCreatedEvent, this.onOrganizationCreatedEvent);
   }
 
   private async emitAmplitudeEvent<T extends UserEvent>(
@@ -217,5 +219,18 @@ export class AmplitudeEventListener extends PackmindListener<EventTrackingAdapte
     return this.emitAmplitudeEvent(event, 'skill_updated', (payload) => ({
       fileCount: payload.fileCount,
     }));
+  };
+
+  private onOrganizationCreatedEvent = async (
+    event: OrganizationCreatedEvent,
+  ): Promise<void> => {
+    return this.emitAmplitudeEvent(
+      event,
+      'organization_created',
+      (payload) => ({
+        name: payload.name,
+        method: payload.method,
+      }),
+    );
   };
 }
