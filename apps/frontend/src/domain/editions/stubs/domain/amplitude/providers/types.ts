@@ -18,6 +18,8 @@ export type AnalyticsEventMap = {
     agent: string;
   };
   cli_login_done: Record<string, never>;
+  mcp_installed: { method: 'cli' | 'magic-link' | 'json' };
+  onboarding_prompt_copied: Record<string, never>;
 };
 
 export type AnalyticsEventName = keyof AnalyticsEventMap;
