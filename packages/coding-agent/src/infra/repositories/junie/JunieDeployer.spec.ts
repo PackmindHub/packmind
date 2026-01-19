@@ -116,159 +116,208 @@ describe('JunieDeployer', () => {
   });
 
   describe('deployStandards', () => {
-    it('creates Junie guidelines file with standards instructions', async () => {
-      const standard = standardFactory({
-        name: 'Test Standard',
-        slug: 'test-standard',
-        scope: 'backend',
-      });
+    describe('with a single standard', () => {
+      let result: Awaited<ReturnType<JunieDeployer['deployStandards']>>;
+      let standardVersion: StandardVersion;
 
-      const standardVersion: StandardVersion = {
-        id: createStandardVersionId('standard-version-1'),
-        standardId: standard.id,
-        name: standard.name,
-        slug: standard.slug,
-        description: 'This is the standard description',
-        version: 1,
-        summary: 'A test standard summary',
-        userId: createUserId('user-1'),
-        scope: 'backend',
-      };
+      beforeEach(async () => {
+        const standard = standardFactory({
+          name: 'Test Standard',
+          slug: 'test-standard',
+          scope: 'backend',
+        });
 
-      const result = await deployer.deployStandards(
-        [standardVersion],
-        mockGitRepo,
-        mockTarget,
-      );
-
-      expect(result.createOrUpdate).toHaveLength(1);
-      expect(result.delete).toHaveLength(0);
-
-      const guidelinesFile = result.createOrUpdate[0];
-      expect(guidelinesFile.path).toBe('.junie/guidelines.md');
-      const sectionContent = guidelinesFile.sections![0].content;
-      expect(sectionContent).toContain('# Packmind Standards');
-      expect(sectionContent).toContain(
-        GenericStandardSectionWriter.standardsIntroduction,
-      );
-      expect(sectionContent).toContain(standardVersion.name);
-    });
-
-    it('handles empty standards list', async () => {
-      const result = await deployer.deployStandards(
-        [],
-        mockGitRepo,
-        mockTarget,
-      );
-
-      expect(result.createOrUpdate).toHaveLength(0);
-      expect(result.delete).toHaveLength(0);
-    });
-
-    it('works with StandardsHexa dependency', async () => {
-      // Mock StandardsHexa
-      const mockStandardsHexa = {
-        getRulesByStandardId: jest.fn().mockResolvedValue([
-          {
-            id: 'rule-1',
-            content: 'Fetched rule 1',
-            standardVersionId: 'standard-version-1',
-          },
-          {
-            id: 'rule-2',
-            content: 'Fetched rule 2',
-            standardVersionId: 'standard-version-1',
-          },
-        ]),
-      } as any; // eslint-disable-line @typescript-eslint/no-explicit-any
-
-      const deployerWithHexa = new JunieDeployer(mockStandardsHexa);
-
-      const standard = standardFactory({
-        name: 'Standard Test',
-        slug: 'standard-test',
-        scope: 'backend',
-      });
-
-      const standardVersion: StandardVersion = {
-        id: createStandardVersionId('standard-version-1'),
-        standardId: standard.id,
-        name: standard.name,
-        slug: standard.slug,
-        description: 'Standard description',
-        version: 1,
-        summary: 'Test summary',
-        userId: createUserId('user-1'),
-        scope: 'backend',
-      };
-
-      const result = await deployerWithHexa.deployStandards(
-        [standardVersion],
-        mockGitRepo,
-        mockTarget,
-      );
-
-      // Check that the guidelines file was created
-      const guidelinesFile = result.createOrUpdate[0];
-      expect(guidelinesFile).toBeDefined();
-      expect(guidelinesFile.path).toBe('.junie/guidelines.md');
-      const sectionContent = guidelinesFile.sections![0].content;
-      expect(sectionContent).toContain('# Packmind Standards');
-      expect(sectionContent).toContain(
-        GenericStandardSectionWriter.standardsIntroduction,
-      );
-    });
-
-    it('includes multiple standards in instructions', async () => {
-      const standard1 = standardFactory({
-        name: 'Standard One',
-        slug: 'standard-one',
-        scope: 'backend',
-      });
-
-      const standard2 = standardFactory({
-        name: 'Standard Two',
-        slug: 'standard-two',
-        scope: 'frontend',
-      });
-
-      const standardVersions: StandardVersion[] = [
-        {
+        standardVersion = {
           id: createStandardVersionId('standard-version-1'),
-          standardId: standard1.id,
-          name: standard1.name,
-          slug: standard1.slug,
-          description: 'Standard one description',
+          standardId: standard.id,
+          name: standard.name,
+          slug: standard.slug,
+          description: 'This is the standard description',
           version: 1,
-          summary: 'Standard one summary',
+          summary: 'A test standard summary',
           userId: createUserId('user-1'),
           scope: 'backend',
-        },
-        {
-          id: createStandardVersionId('standard-version-2'),
-          standardId: standard2.id,
-          name: standard2.name,
-          slug: standard2.slug,
-          description: 'Standard two description',
+        };
+
+        result = await deployer.deployStandards(
+          [standardVersion],
+          mockGitRepo,
+          mockTarget,
+        );
+      });
+
+      it('creates one file to update', () => {
+        expect(result.createOrUpdate).toHaveLength(1);
+      });
+
+      it('does not delete any files', () => {
+        expect(result.delete).toHaveLength(0);
+      });
+
+      it('targets the Junie guidelines file', () => {
+        expect(result.createOrUpdate[0].path).toBe('.junie/guidelines.md');
+      });
+
+      it('includes the Packmind Standards header', () => {
+        const sectionContent = result.createOrUpdate[0].sections![0].content;
+        expect(sectionContent).toContain('# Packmind Standards');
+      });
+
+      it('includes the standards introduction', () => {
+        const sectionContent = result.createOrUpdate[0].sections![0].content;
+        expect(sectionContent).toContain(
+          GenericStandardSectionWriter.standardsIntroduction,
+        );
+      });
+
+      it('includes the standard name', () => {
+        const sectionContent = result.createOrUpdate[0].sections![0].content;
+        expect(sectionContent).toContain(standardVersion.name);
+      });
+    });
+
+    describe('when standards list is empty', () => {
+      let result: Awaited<ReturnType<JunieDeployer['deployStandards']>>;
+
+      beforeEach(async () => {
+        result = await deployer.deployStandards([], mockGitRepo, mockTarget);
+      });
+
+      it('creates no files to update', () => {
+        expect(result.createOrUpdate).toHaveLength(0);
+      });
+
+      it('does not delete any files', () => {
+        expect(result.delete).toHaveLength(0);
+      });
+    });
+
+    describe('when using StandardsHexa dependency', () => {
+      let result: Awaited<ReturnType<JunieDeployer['deployStandards']>>;
+
+      beforeEach(async () => {
+        const mockStandardsHexa = {
+          getRulesByStandardId: jest.fn().mockResolvedValue([
+            {
+              id: 'rule-1',
+              content: 'Fetched rule 1',
+              standardVersionId: 'standard-version-1',
+            },
+            {
+              id: 'rule-2',
+              content: 'Fetched rule 2',
+              standardVersionId: 'standard-version-1',
+            },
+          ]),
+        } as any; // eslint-disable-line @typescript-eslint/no-explicit-any
+
+        const deployerWithHexa = new JunieDeployer(mockStandardsHexa);
+
+        const standard = standardFactory({
+          name: 'Standard Test',
+          slug: 'standard-test',
+          scope: 'backend',
+        });
+
+        const standardVersion: StandardVersion = {
+          id: createStandardVersionId('standard-version-1'),
+          standardId: standard.id,
+          name: standard.name,
+          slug: standard.slug,
+          description: 'Standard description',
           version: 1,
-          summary: 'Standard two summary',
+          summary: 'Test summary',
           userId: createUserId('user-1'),
+          scope: 'backend',
+        };
+
+        result = await deployerWithHexa.deployStandards(
+          [standardVersion],
+          mockGitRepo,
+          mockTarget,
+        );
+      });
+
+      it('creates the guidelines file', () => {
+        expect(result.createOrUpdate[0]).toBeDefined();
+      });
+
+      it('targets the Junie guidelines file', () => {
+        expect(result.createOrUpdate[0].path).toBe('.junie/guidelines.md');
+      });
+
+      it('includes the Packmind Standards header', () => {
+        const sectionContent = result.createOrUpdate[0].sections![0].content;
+        expect(sectionContent).toContain('# Packmind Standards');
+      });
+
+      it('includes the standards introduction', () => {
+        const sectionContent = result.createOrUpdate[0].sections![0].content;
+        expect(sectionContent).toContain(
+          GenericStandardSectionWriter.standardsIntroduction,
+        );
+      });
+    });
+
+    describe('with multiple standards', () => {
+      let result: Awaited<ReturnType<JunieDeployer['deployStandards']>>;
+
+      beforeEach(async () => {
+        const standard1 = standardFactory({
+          name: 'Standard One',
+          slug: 'standard-one',
+          scope: 'backend',
+        });
+
+        const standard2 = standardFactory({
+          name: 'Standard Two',
+          slug: 'standard-two',
           scope: 'frontend',
-        },
-      ];
+        });
 
-      const result = await deployer.deployStandards(
-        standardVersions,
-        mockGitRepo,
-        mockTarget,
-      );
+        const standardVersions: StandardVersion[] = [
+          {
+            id: createStandardVersionId('standard-version-1'),
+            standardId: standard1.id,
+            name: standard1.name,
+            slug: standard1.slug,
+            description: 'Standard one description',
+            version: 1,
+            summary: 'Standard one summary',
+            userId: createUserId('user-1'),
+            scope: 'backend',
+          },
+          {
+            id: createStandardVersionId('standard-version-2'),
+            standardId: standard2.id,
+            name: standard2.name,
+            slug: standard2.slug,
+            description: 'Standard two description',
+            version: 1,
+            summary: 'Standard two summary',
+            userId: createUserId('user-1'),
+            scope: 'frontend',
+          },
+        ];
 
-      const guidelinesFile = result.createOrUpdate[0];
-      const sectionContent = guidelinesFile.sections![0].content;
-      expect(sectionContent).toContain('# Packmind Standards');
-      expect(sectionContent).toContain(
-        GenericStandardSectionWriter.standardsIntroduction,
-      );
+        result = await deployer.deployStandards(
+          standardVersions,
+          mockGitRepo,
+          mockTarget,
+        );
+      });
+
+      it('includes the Packmind Standards header', () => {
+        const sectionContent = result.createOrUpdate[0].sections![0].content;
+        expect(sectionContent).toContain('# Packmind Standards');
+      });
+
+      it('includes the standards introduction', () => {
+        const sectionContent = result.createOrUpdate[0].sections![0].content;
+        expect(sectionContent).toContain(
+          GenericStandardSectionWriter.standardsIntroduction,
+        );
+      });
     });
   });
 });

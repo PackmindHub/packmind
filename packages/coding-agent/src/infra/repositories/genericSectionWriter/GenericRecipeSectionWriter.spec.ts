@@ -23,7 +23,11 @@ Some content after`;
         target: '/',
       };
 
-      const result = GenericRecipeSectionWriter.replace(opts);
+      let result: string;
+
+      beforeEach(() => {
+        result = GenericRecipeSectionWriter.replace(opts);
+      });
 
       it('preserves content before the markers', () => {
         expect(result).toContain(
@@ -31,14 +35,23 @@ Some content after`;
         );
       });
 
-      it('replaces content between markers', () => {
+      it('includes start marker', () => {
         expect(result).toContain('<!-- start: packmind-recipes -->');
+      });
+
+      it('includes end marker', () => {
         expect(result).toContain('<!-- end: packmind-recipes -->');
+      });
+
+      it('includes mandatory step content', () => {
         expect(result).toContain('MANDATORY STEP');
       });
 
-      it('removes old content between markers', () => {
+      it('removes first line of old content', () => {
         expect(result).not.toContain('Old content to be replaced');
+      });
+
+      it('removes second line of old content', () => {
         expect(result).not.toContain('This should all be replaced');
       });
 
@@ -65,14 +78,21 @@ More content`;
         target: '/',
       };
 
-      const result = GenericRecipeSectionWriter.replace(opts);
+      let result: string;
+
+      beforeEach(() => {
+        result = GenericRecipeSectionWriter.replace(opts);
+      });
 
       it('preserves all original content', () => {
         expect(result).toContain(currentContent);
       });
 
-      it('appends the new section with markers', () => {
+      it('appends start marker', () => {
         expect(result).toContain('<!-- start: recipes-section -->');
+      });
+
+      it('appends end marker', () => {
         expect(result).toContain('<!-- end: recipes-section -->');
       });
 
@@ -110,10 +130,17 @@ Second occurrence
         target: '/',
       };
 
-      const result = GenericRecipeSectionWriter.replace(opts);
+      let result: string;
 
-      it('replaces all occurrences', () => {
+      beforeEach(() => {
+        result = GenericRecipeSectionWriter.replace(opts);
+      });
+
+      it('removes first occurrence content', () => {
         expect(result).not.toContain('First occurrence');
+      });
+
+      it('removes second occurrence content', () => {
         expect(result).not.toContain('Second occurrence');
       });
 
@@ -121,12 +148,15 @@ Second occurrence
         expect(result).toContain('Middle content');
       });
 
-      it('maintains correct number of marker pairs', () => {
+      it('maintains correct number of start markers', () => {
         const startMatches = (result.match(/<!-- start: my-marker -->/g) || [])
           .length;
+        expect(startMatches).toBe(2);
+      });
+
+      it('maintains correct number of end markers', () => {
         const endMatches = (result.match(/<!-- end: my-marker -->/g) || [])
           .length;
-        expect(startMatches).toBe(2);
         expect(endMatches).toBe(2);
       });
     });
@@ -143,10 +173,17 @@ Second occurrence
         target: '/',
       };
 
-      const result = GenericRecipeSectionWriter.replace(opts);
+      let result: string;
 
-      it('handles special characters in markers correctly', () => {
+      beforeEach(() => {
+        result = GenericRecipeSectionWriter.replace(opts);
+      });
+
+      it('includes start marker with special characters', () => {
         expect(result).toContain('<!-- start: recipes.$*+?[]{}()|^ -->');
+      });
+
+      it('includes end marker with special characters', () => {
         expect(result).toContain('<!-- end: recipes.$*+?[]{}()|^ -->');
       });
     });
@@ -161,10 +198,17 @@ Second occurrence
         target: '/',
       };
 
-      const result = GenericRecipeSectionWriter.replace(opts);
+      let result: string;
 
-      it('creates section with markers', () => {
+      beforeEach(() => {
+        result = GenericRecipeSectionWriter.replace(opts);
+      });
+
+      it('creates start marker', () => {
         expect(result).toContain('<!-- start: empty-marker -->');
+      });
+
+      it('creates end marker', () => {
         expect(result).toContain('<!-- end: empty-marker -->');
       });
     });
@@ -176,7 +220,11 @@ Second occurrence
         recipesSection: '## Custom Recipes\n\nRecipe content here',
       };
 
-      const result = GenericRecipeSectionWriter.generateRecipesSection(opts);
+      let result: string;
+
+      beforeEach(() => {
+        result = GenericRecipeSectionWriter.generateRecipesSection(opts);
+      });
 
       it('includes mandatory step warning', () => {
         expect(result).toContain('MANDATORY STEP');

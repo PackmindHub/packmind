@@ -8,46 +8,65 @@ describe('StandardsIndexService', () => {
   });
 
   describe('buildStandardsIndex', () => {
-    it('generates standards index with header and footer', () => {
-      const standardVersions = [
-        {
-          name: 'Test Standard',
-          slug: 'test-standard',
-          summary: 'A test standard for testing',
-        },
-      ];
+    describe('when generating index with standards', () => {
+      let result: string;
 
-      const result = service.buildStandardsIndex(standardVersions);
+      beforeEach(() => {
+        const standardVersions = [
+          {
+            name: 'Test Standard',
+            slug: 'test-standard',
+            summary: 'A test standard for testing',
+          },
+        ];
+        result = service.buildStandardsIndex(standardVersions);
+      });
 
-      expect(result).toContain('# Packmind Standards Index');
-      expect(result).toContain('## Available Standards');
-      expect(result).toContain(
-        '*This standards index was automatically generated from deployed standard versions.*',
-      );
+      it('includes the main header', () => {
+        expect(result).toContain('# Packmind Standards Index');
+      });
+
+      it('includes the available standards section header', () => {
+        expect(result).toContain('## Available Standards');
+      });
+
+      it('includes the auto-generated footer note', () => {
+        expect(result).toContain(
+          '*This standards index was automatically generated from deployed standard versions.*',
+        );
+      });
     });
 
-    it('lists standards with summaries', () => {
-      const standardVersions = [
-        {
-          name: 'Standard One',
-          slug: 'standard-one',
-          summary: 'First standard summary',
-        },
-        {
-          name: 'Standard Two',
-          slug: 'standard-two',
-          summary: 'Second standard summary',
-        },
-      ];
+    describe('when listing multiple standards', () => {
+      let result: string;
 
-      const result = service.buildStandardsIndex(standardVersions);
+      beforeEach(() => {
+        const standardVersions = [
+          {
+            name: 'Standard One',
+            slug: 'standard-one',
+            summary: 'First standard summary',
+          },
+          {
+            name: 'Standard Two',
+            slug: 'standard-two',
+            summary: 'Second standard summary',
+          },
+        ];
+        result = service.buildStandardsIndex(standardVersions);
+      });
 
-      expect(result).toContain(
-        '- [Standard One](./standards/standard-one.md) : First standard summary',
-      );
-      expect(result).toContain(
-        '- [Standard Two](./standards/standard-two.md) : Second standard summary',
-      );
+      it('lists the first standard with its summary', () => {
+        expect(result).toContain(
+          '- [Standard One](./standards/standard-one.md) : First standard summary',
+        );
+      });
+
+      it('lists the second standard with its summary', () => {
+        expect(result).toContain(
+          '- [Standard Two](./standards/standard-two.md) : Second standard summary',
+        );
+      });
     });
 
     describe('when summary is null', () => {
@@ -86,33 +105,44 @@ describe('StandardsIndexService', () => {
       });
     });
 
-    it('sorts standards alphabetically by name', () => {
-      const standardVersions = [
-        {
-          name: 'Zebra Standard',
-          slug: 'zebra',
-          summary: 'Last alphabetically',
-        },
-        {
-          name: 'Apple Standard',
-          slug: 'apple',
-          summary: 'First alphabetically',
-        },
-        {
-          name: 'Middle Standard',
-          slug: 'middle',
-          summary: 'Middle alphabetically',
-        },
-      ];
+    describe('when sorting standards alphabetically', () => {
+      let standardLines: string[];
 
-      const result = service.buildStandardsIndex(standardVersions);
+      beforeEach(() => {
+        const standardVersions = [
+          {
+            name: 'Zebra Standard',
+            slug: 'zebra',
+            summary: 'Last alphabetically',
+          },
+          {
+            name: 'Apple Standard',
+            slug: 'apple',
+            summary: 'First alphabetically',
+          },
+          {
+            name: 'Middle Standard',
+            slug: 'middle',
+            summary: 'Middle alphabetically',
+          },
+        ];
 
-      const lines = result.split('\n');
-      const standardLines = lines.filter((line) => line.startsWith('- ['));
+        const result = service.buildStandardsIndex(standardVersions);
+        const lines = result.split('\n');
+        standardLines = lines.filter((line) => line.startsWith('- ['));
+      });
 
-      expect(standardLines[0]).toContain('Apple Standard');
-      expect(standardLines[1]).toContain('Middle Standard');
-      expect(standardLines[2]).toContain('Zebra Standard');
+      it('places Apple Standard first', () => {
+        expect(standardLines[0]).toContain('Apple Standard');
+      });
+
+      it('places Middle Standard second', () => {
+        expect(standardLines[1]).toContain('Middle Standard');
+      });
+
+      it('places Zebra Standard last', () => {
+        expect(standardLines[2]).toContain('Zebra Standard');
+      });
     });
 
     it('handles empty standards list', () => {

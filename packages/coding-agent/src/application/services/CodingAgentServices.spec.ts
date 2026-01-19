@@ -63,129 +63,161 @@ describe('CodingAgentServices', () => {
   });
 
   describe('renderArtifacts', () => {
-    it('validates and delegates to DeployerService', async () => {
+    describe('when validating and delegating to DeployerService', () => {
       const mockFileUpdates: FileUpdates = {
         createOrUpdate: [{ path: 'CLAUDE.md', content: 'test content' }],
         delete: [],
       };
 
-      mockDeployerService.aggregateArtifactRendering.mockResolvedValue(
-        mockFileUpdates,
-      );
+      let result: FileUpdates;
+      let existingFiles: Map<string, string>;
 
-      const existingFiles = new Map<string, string>();
-      existingFiles.set('CLAUDE.md', 'existing content');
+      beforeEach(async () => {
+        mockDeployerService.aggregateArtifactRendering.mockResolvedValue(
+          mockFileUpdates,
+        );
 
-      const result = await service.renderArtifacts(
-        {
-          recipeVersions: mockRecipeVersions,
-          standardVersions: mockStandardVersions,
-          skillVersions: [],
-        },
-        {
-          recipeVersions: [],
-          standardVersions: [],
-          skillVersions: [],
-        },
-        ['claude'],
-        existingFiles,
-      );
+        existingFiles = new Map<string, string>();
+        existingFiles.set('CLAUDE.md', 'existing content');
 
-      expect(
-        mockDeployerService.aggregateArtifactRendering,
-      ).toHaveBeenCalledWith(
-        mockRecipeVersions,
-        mockStandardVersions,
-        [],
-        ['claude'],
-        existingFiles,
-      );
-      expect(result).toEqual(mockFileUpdates);
+        result = await service.renderArtifacts(
+          {
+            recipeVersions: mockRecipeVersions,
+            standardVersions: mockStandardVersions,
+            skillVersions: [],
+          },
+          {
+            recipeVersions: [],
+            standardVersions: [],
+            skillVersions: [],
+          },
+          ['claude'],
+          existingFiles,
+        );
+      });
+
+      it('calls aggregateArtifactRendering with correct parameters', () => {
+        expect(
+          mockDeployerService.aggregateArtifactRendering,
+        ).toHaveBeenCalledWith(
+          mockRecipeVersions,
+          mockStandardVersions,
+          [],
+          ['claude'],
+          existingFiles,
+        );
+      });
+
+      it('returns the file updates', () => {
+        expect(result).toEqual(mockFileUpdates);
+      });
     });
 
-    it('handles empty recipe versions array', async () => {
+    describe('when recipe versions array is empty', () => {
       const mockFileUpdates: FileUpdates = {
         createOrUpdate: [{ path: 'CLAUDE.md', content: 'standards only' }],
         delete: [],
       };
 
-      mockDeployerService.aggregateArtifactRendering.mockResolvedValue(
-        mockFileUpdates,
-      );
+      let result: FileUpdates;
+      let existingFiles: Map<string, string>;
 
-      const existingFiles = new Map<string, string>();
+      beforeEach(async () => {
+        mockDeployerService.aggregateArtifactRendering.mockResolvedValue(
+          mockFileUpdates,
+        );
 
-      const result = await service.renderArtifacts(
-        {
-          recipeVersions: [],
-          standardVersions: mockStandardVersions,
-          skillVersions: [],
-        },
-        {
-          recipeVersions: [],
-          standardVersions: [],
-          skillVersions: [],
-        },
-        ['claude'],
-        existingFiles,
-      );
+        existingFiles = new Map<string, string>();
 
-      expect(
-        mockDeployerService.aggregateArtifactRendering,
-      ).toHaveBeenCalledWith(
-        [],
-        mockStandardVersions,
-        [],
-        ['claude'],
-        existingFiles,
-      );
-      expect(result).toEqual(mockFileUpdates);
+        result = await service.renderArtifacts(
+          {
+            recipeVersions: [],
+            standardVersions: mockStandardVersions,
+            skillVersions: [],
+          },
+          {
+            recipeVersions: [],
+            standardVersions: [],
+            skillVersions: [],
+          },
+          ['claude'],
+          existingFiles,
+        );
+      });
+
+      it('calls aggregateArtifactRendering with empty recipe versions', () => {
+        expect(
+          mockDeployerService.aggregateArtifactRendering,
+        ).toHaveBeenCalledWith(
+          [],
+          mockStandardVersions,
+          [],
+          ['claude'],
+          existingFiles,
+        );
+      });
+
+      it('returns the file updates', () => {
+        expect(result).toEqual(mockFileUpdates);
+      });
     });
 
-    it('handles empty standard versions array', async () => {
+    describe('when standard versions array is empty', () => {
       const mockFileUpdates: FileUpdates = {
         createOrUpdate: [{ path: 'CLAUDE.md', content: 'recipes only' }],
         delete: [],
       };
 
-      mockDeployerService.aggregateArtifactRendering.mockResolvedValue(
-        mockFileUpdates,
-      );
+      let result: FileUpdates;
+      let existingFiles: Map<string, string>;
 
-      const existingFiles = new Map<string, string>();
+      beforeEach(async () => {
+        mockDeployerService.aggregateArtifactRendering.mockResolvedValue(
+          mockFileUpdates,
+        );
 
-      const result = await service.renderArtifacts(
-        {
-          recipeVersions: mockRecipeVersions,
-          standardVersions: [],
-          skillVersions: [],
-        },
-        {
-          recipeVersions: [],
-          standardVersions: [],
-          skillVersions: [],
-        },
-        ['claude'],
-        existingFiles,
-      );
+        existingFiles = new Map<string, string>();
 
-      expect(
-        mockDeployerService.aggregateArtifactRendering,
-      ).toHaveBeenCalledWith(
-        mockRecipeVersions,
-        [],
-        [],
-        ['claude'],
-        existingFiles,
-      );
-      expect(result).toEqual(mockFileUpdates);
+        result = await service.renderArtifacts(
+          {
+            recipeVersions: mockRecipeVersions,
+            standardVersions: [],
+            skillVersions: [],
+          },
+          {
+            recipeVersions: [],
+            standardVersions: [],
+            skillVersions: [],
+          },
+          ['claude'],
+          existingFiles,
+        );
+      });
+
+      it('calls aggregateArtifactRendering with empty standard versions', () => {
+        expect(
+          mockDeployerService.aggregateArtifactRendering,
+        ).toHaveBeenCalledWith(
+          mockRecipeVersions,
+          [],
+          [],
+          ['claude'],
+          existingFiles,
+        );
+      });
+
+      it('returns the file updates', () => {
+        expect(result).toEqual(mockFileUpdates);
+      });
     });
 
     describe('when codingAgents array is empty', () => {
-      it('returns empty FileUpdates', async () => {
+      let result: FileUpdates;
+
+      beforeEach(async () => {
         const existingFiles = new Map<string, string>();
 
-        const result = await service.renderArtifacts(
+        result = await service.renderArtifacts(
           {
             recipeVersions: mockRecipeVersions,
             standardVersions: mockStandardVersions,
@@ -199,10 +231,15 @@ describe('CodingAgentServices', () => {
           [],
           existingFiles,
         );
+      });
 
+      it('does not call aggregateArtifactRendering', () => {
         expect(
           mockDeployerService.aggregateArtifactRendering,
         ).not.toHaveBeenCalled();
+      });
+
+      it('returns empty FileUpdates', () => {
         expect(result).toEqual({
           createOrUpdate: [],
           delete: [],
@@ -575,17 +612,19 @@ describe('CodingAgentServices', () => {
     });
 
     describe('when removed arrays are empty', () => {
-      it('does not process removed artifacts', async () => {
-        const mockFileUpdates: FileUpdates = {
-          createOrUpdate: [{ path: 'CLAUDE.md', content: 'test content' }],
-          delete: [],
-        };
+      const mockFileUpdates: FileUpdates = {
+        createOrUpdate: [{ path: 'CLAUDE.md', content: 'test content' }],
+        delete: [],
+      };
 
+      let result: FileUpdates;
+
+      beforeEach(async () => {
         mockDeployerService.aggregateArtifactRendering.mockResolvedValue(
           mockFileUpdates,
         );
 
-        const result = await service.renderArtifacts(
+        result = await service.renderArtifacts(
           {
             recipeVersions: mockRecipeVersions,
             standardVersions: mockStandardVersions,
@@ -599,8 +638,13 @@ describe('CodingAgentServices', () => {
           ['claude'],
           new Map(),
         );
+      });
 
+      it('does not call getDeployerForAgent', () => {
         expect(mockDeployerService.getDeployerForAgent).not.toHaveBeenCalled();
+      });
+
+      it('returns result with empty delete array', () => {
         expect(result.delete).toHaveLength(0);
       });
     });

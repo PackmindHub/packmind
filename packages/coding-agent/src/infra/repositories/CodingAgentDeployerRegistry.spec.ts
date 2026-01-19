@@ -38,28 +38,42 @@ describe('CodingAgentDeployerRegistry', () => {
   });
 
   describe('getDeployer', () => {
-    it('creates and returns PackmindDeployer for packmind agent', () => {
-      const deployer = registry.getDeployer('packmind');
-      expect(deployer).toBeDefined();
+    describe('when getting packmind deployer', () => {
+      it('returns a defined deployer', () => {
+        const deployer = registry.getDeployer('packmind');
 
-      // Should return the same instance on subsequent calls
-      const deployer2 = registry.getDeployer('packmind');
-      expect(deployer2).toBe(deployer);
+        expect(deployer).toBeDefined();
+      });
+
+      it('returns the same instance on subsequent calls', () => {
+        const deployer = registry.getDeployer('packmind');
+        const deployer2 = registry.getDeployer('packmind');
+
+        expect(deployer2).toBe(deployer);
+      });
     });
 
-    it('creates and returns JunieDeployer for junie agent', () => {
-      const deployer = registry.getDeployer('junie');
-      expect(deployer).toBeDefined();
+    describe('when getting junie deployer', () => {
+      it('returns a defined deployer', () => {
+        const deployer = registry.getDeployer('junie');
 
-      // Should return the same instance on subsequent calls
-      const deployer2 = registry.getDeployer('junie');
-      expect(deployer2).toBe(deployer);
+        expect(deployer).toBeDefined();
+      });
+
+      it('returns the same instance on subsequent calls', () => {
+        const deployer = registry.getDeployer('junie');
+        const deployer2 = registry.getDeployer('junie');
+
+        expect(deployer2).toBe(deployer);
+      });
     });
 
-    it('throws error for unknown agent', () => {
-      expect(() => {
-        registry.getDeployer('unknown' as CodingAgent);
-      }).toThrow('Unknown coding agent: unknown');
+    describe('when getting unknown agent', () => {
+      it('throws an error', () => {
+        expect(() => {
+          registry.getDeployer('unknown' as CodingAgent);
+        }).toThrow('Unknown coding agent: unknown');
+      });
     });
   });
 
@@ -73,33 +87,53 @@ describe('CodingAgentDeployerRegistry', () => {
       expect(retrievedDeployer).toBe(mockDeployer);
     });
 
-    it('overrides existing deployer', () => {
-      const firstDeployer = registry.getDeployer('packmind');
-      const mockDeployer = new MockDeployer();
+    describe('when overriding existing deployer', () => {
+      let firstDeployer: ICodingAgentDeployer;
+      let mockDeployer: MockDeployer;
+      let newDeployer: ICodingAgentDeployer;
 
-      registry.registerDeployer('packmind', mockDeployer);
-      const newDeployer = registry.getDeployer('packmind');
+      beforeEach(() => {
+        firstDeployer = registry.getDeployer('packmind');
+        mockDeployer = new MockDeployer();
 
-      expect(newDeployer).toBe(mockDeployer);
-      expect(newDeployer).not.toBe(firstDeployer);
+        registry.registerDeployer('packmind', mockDeployer);
+        newDeployer = registry.getDeployer('packmind');
+      });
+
+      it('returns the new deployer', () => {
+        expect(newDeployer).toBe(mockDeployer);
+      });
+
+      it('does not return the first deployer', () => {
+        expect(newDeployer).not.toBe(firstDeployer);
+      });
     });
   });
 
   describe('hasDeployer', () => {
-    it('returns true for supported agents', () => {
-      expect(registry.hasDeployer('packmind')).toBe(true);
-      expect(registry.hasDeployer('junie')).toBe(true);
+    describe('when checking supported agents', () => {
+      it('returns true for packmind agent', () => {
+        expect(registry.hasDeployer('packmind')).toBe(true);
+      });
+
+      it('returns true for junie agent', () => {
+        expect(registry.hasDeployer('junie')).toBe(true);
+      });
     });
 
-    it('returns true for registered agents', () => {
-      const mockDeployer = new MockDeployer();
-      registry.registerDeployer('packmind', mockDeployer);
+    describe('when checking registered agents', () => {
+      it('returns true for registered agent', () => {
+        const mockDeployer = new MockDeployer();
+        registry.registerDeployer('packmind', mockDeployer);
 
-      expect(registry.hasDeployer('packmind')).toBe(true);
+        expect(registry.hasDeployer('packmind')).toBe(true);
+      });
     });
 
-    it('returns false for unknown agents', () => {
-      expect(registry.hasDeployer('unknown' as CodingAgent)).toBe(false);
+    describe('when checking unknown agents', () => {
+      it('returns false', () => {
+        expect(registry.hasDeployer('unknown' as CodingAgent)).toBe(false);
+      });
     });
   });
 });

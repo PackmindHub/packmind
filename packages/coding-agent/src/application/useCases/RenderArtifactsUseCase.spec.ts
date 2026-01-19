@@ -61,89 +61,111 @@ describe('RenderArtifactsUseCase', () => {
   });
 
   describe('execute', () => {
-    it('executes successfully with valid command', async () => {
-      const mockFileUpdates: FileUpdates = {
-        createOrUpdate: [{ path: 'CLAUDE.md', content: 'test content' }],
-        delete: [],
-      };
+    describe('when called with valid command', () => {
+      let mockFileUpdates: FileUpdates;
+      let existingFiles: Map<string, string>;
+      let command: RenderArtifactsCommand;
+      let result: FileUpdates;
 
-      mockCodingAgentServices.renderArtifacts.mockResolvedValue(
-        mockFileUpdates,
-      );
+      beforeEach(async () => {
+        mockFileUpdates = {
+          createOrUpdate: [{ path: 'CLAUDE.md', content: 'test content' }],
+          delete: [],
+        };
 
-      const existingFiles = new Map<string, string>();
-      existingFiles.set('CLAUDE.md', 'existing content');
+        mockCodingAgentServices.renderArtifacts.mockResolvedValue(
+          mockFileUpdates,
+        );
 
-      const command: RenderArtifactsCommand = {
-        installed: {
-          recipeVersions: mockRecipeVersions,
-          standardVersions: mockStandardVersions,
-          skillVersions: [],
-        },
-        removed: {
-          recipeVersions: [],
-          standardVersions: [],
-          skillVersions: [],
-        },
-        codingAgents: ['claude'],
-        existingFiles,
-        userId: 'user-1' as UserId,
-        organizationId: 'org-1' as OrganizationId,
-      };
+        existingFiles = new Map<string, string>();
+        existingFiles.set('CLAUDE.md', 'existing content');
 
-      const result = await useCase.execute(command);
+        command = {
+          installed: {
+            recipeVersions: mockRecipeVersions,
+            standardVersions: mockStandardVersions,
+            skillVersions: [],
+          },
+          removed: {
+            recipeVersions: [],
+            standardVersions: [],
+            skillVersions: [],
+          },
+          codingAgents: ['claude'],
+          existingFiles,
+          userId: 'user-1' as UserId,
+          organizationId: 'org-1' as OrganizationId,
+        };
 
-      expect(result).toEqual(mockFileUpdates);
-      expect(mockCodingAgentServices.renderArtifacts).toHaveBeenCalledWith(
-        {
-          recipeVersions: mockRecipeVersions,
-          standardVersions: mockStandardVersions,
-          skillVersions: [],
-        },
-        {
-          recipeVersions: [],
-          standardVersions: [],
-          skillVersions: [],
-        },
-        ['claude'],
-        existingFiles,
-      );
+        result = await useCase.execute(command);
+      });
+
+      it('returns the file updates from the service', () => {
+        expect(result).toEqual(mockFileUpdates);
+      });
+
+      it('calls renderArtifacts with correct parameters', () => {
+        expect(mockCodingAgentServices.renderArtifacts).toHaveBeenCalledWith(
+          {
+            recipeVersions: mockRecipeVersions,
+            standardVersions: mockStandardVersions,
+            skillVersions: [],
+          },
+          {
+            recipeVersions: [],
+            standardVersions: [],
+            skillVersions: [],
+          },
+          ['claude'],
+          existingFiles,
+        );
+      });
     });
 
-    it('returns file updates in response', async () => {
-      const mockFileUpdates: FileUpdates = {
-        createOrUpdate: [
-          { path: 'CLAUDE.md', content: 'content 1' },
-          { path: 'AGENTS.md', content: 'content 2' },
-        ],
-        delete: [{ path: 'old.md' }],
-      };
+    describe('when returning file updates with multiple files', () => {
+      let mockFileUpdates: FileUpdates;
+      let result: FileUpdates;
 
-      mockCodingAgentServices.renderArtifacts.mockResolvedValue(
-        mockFileUpdates,
-      );
+      beforeEach(async () => {
+        mockFileUpdates = {
+          createOrUpdate: [
+            { path: 'CLAUDE.md', content: 'content 1' },
+            { path: 'AGENTS.md', content: 'content 2' },
+          ],
+          delete: [{ path: 'old.md' }],
+        };
 
-      const command: RenderArtifactsCommand = {
-        installed: {
-          recipeVersions: mockRecipeVersions,
-          standardVersions: mockStandardVersions,
-          skillVersions: [],
-        },
-        removed: {
-          recipeVersions: [],
-          standardVersions: [],
-          skillVersions: [],
-        },
-        codingAgents: ['claude', 'agents_md'],
-        existingFiles: new Map(),
-        userId: 'user-1' as UserId,
-        organizationId: 'org-1' as OrganizationId,
-      };
+        mockCodingAgentServices.renderArtifacts.mockResolvedValue(
+          mockFileUpdates,
+        );
 
-      const result = await useCase.execute(command);
+        const command: RenderArtifactsCommand = {
+          installed: {
+            recipeVersions: mockRecipeVersions,
+            standardVersions: mockStandardVersions,
+            skillVersions: [],
+          },
+          removed: {
+            recipeVersions: [],
+            standardVersions: [],
+            skillVersions: [],
+          },
+          codingAgents: ['claude', 'agents_md'],
+          existingFiles: new Map(),
+          userId: 'user-1' as UserId,
+          organizationId: 'org-1' as OrganizationId,
+        };
 
-      expect(result.createOrUpdate).toHaveLength(2);
-      expect(result.delete).toHaveLength(1);
+        result = await useCase.execute(command);
+      });
+
+      it('returns the correct number of files to create or update', () => {
+        expect(result.createOrUpdate).toHaveLength(2);
+      });
+
+      it('returns the correct number of files to delete', () => {
+        expect(result.delete).toHaveLength(1);
+      });
     });
 
     it('passes all parameters to CodingAgentServices', async () => {

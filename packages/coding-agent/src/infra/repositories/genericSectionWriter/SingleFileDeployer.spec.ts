@@ -137,197 +137,297 @@ describe('SingleFileDeployer', () => {
       },
     ];
 
-    it('never outputs "null" for standard with null summary but existing description', async () => {
-      const standardWithNullSummary: StandardVersion[] = [
-        {
-          id: createStandardVersionId('standard-version-1'),
-          standardId: createStandardId('standard-1'),
-          name: 'Standard Without Summary',
-          slug: 'standard-without-summary',
-          description: 'This is the description',
-          version: 1,
-          summary: null,
-          userId: createUserId('user-1'),
-          scope: 'test',
-        },
-      ];
+    describe('when standard has null summary but existing description', () => {
+      let result: FileUpdates;
+      let sectionContent: string;
 
-      mockGitPort.getFileFromRepo.mockResolvedValue(null);
+      beforeEach(async () => {
+        const standardWithNullSummary: StandardVersion[] = [
+          {
+            id: createStandardVersionId('standard-version-1'),
+            standardId: createStandardId('standard-1'),
+            name: 'Standard Without Summary',
+            slug: 'standard-without-summary',
+            description: 'This is the description',
+            version: 1,
+            summary: null,
+            userId: createUserId('user-1'),
+            scope: 'test',
+          },
+        ];
 
-      const result = await deployer.deployStandards(
-        standardWithNullSummary,
-        mockGitRepo,
-        vscodeTarget,
-      );
+        mockGitPort.getFileFromRepo.mockResolvedValue(null);
 
-      expect(result.createOrUpdate).toHaveLength(1);
-      const sectionContent = result.createOrUpdate[0].sections![0].content;
+        result = await deployer.deployStandards(
+          standardWithNullSummary,
+          mockGitRepo,
+          vscodeTarget,
+        );
+        sectionContent = result.createOrUpdate[0].sections![0].content;
+      });
 
-      // Should not contain the string "null" as a value
-      expect(sectionContent).not.toMatch(/:\s*null\s*$/m);
-      expect(sectionContent).not.toMatch(/:\s*null\n/);
+      it('returns one createOrUpdate entry', () => {
+        expect(result.createOrUpdate).toHaveLength(1);
+      });
 
-      // Should use description as fallback (only first line)
-      expect(sectionContent).toContain('This is the description :');
-      expect(sectionContent).toContain('* No rules defined yet.');
-      expect(sectionContent).toContain(
-        'Full standard is available here for further request: [Standard Without Summary](.packmind/standards/standard-without-summary.md)',
-      );
+      it('does not contain null at end of line', () => {
+        expect(sectionContent).not.toMatch(/:\s*null\s*$/m);
+      });
+
+      it('does not contain null followed by newline', () => {
+        expect(sectionContent).not.toMatch(/:\s*null\n/);
+      });
+
+      it('uses description as fallback', () => {
+        expect(sectionContent).toContain('This is the description :');
+      });
+
+      it('includes no rules defined message', () => {
+        expect(sectionContent).toContain('* No rules defined yet.');
+      });
+
+      it('includes link to full standard', () => {
+        expect(sectionContent).toContain(
+          'Full standard is available here for further request: [Standard Without Summary](.packmind/standards/standard-without-summary.md)',
+        );
+      });
     });
 
-    it('truncates long descriptions (not summaries) to 200 characters', async () => {
-      const standardWithLongDescription: StandardVersion[] = [
-        {
-          id: createStandardVersionId('standard-version-1'),
-          standardId: createStandardId('standard-1'),
-          name: 'Standard With Long Description',
-          slug: 'standard-long-description',
-          description: 'A'.repeat(250),
-          version: 1,
-          summary: null, // Using description fallback, should truncate
-          userId: createUserId('user-1'),
-          scope: 'test',
-        },
-      ];
+    describe('when standard has long description (over 200 chars) and null summary', () => {
+      let result: FileUpdates;
+      let sectionContent: string;
 
-      mockGitPort.getFileFromRepo.mockResolvedValue(null);
+      beforeEach(async () => {
+        const standardWithLongDescription: StandardVersion[] = [
+          {
+            id: createStandardVersionId('standard-version-1'),
+            standardId: createStandardId('standard-1'),
+            name: 'Standard With Long Description',
+            slug: 'standard-long-description',
+            description: 'A'.repeat(250),
+            version: 1,
+            summary: null,
+            userId: createUserId('user-1'),
+            scope: 'test',
+          },
+        ];
 
-      const result = await deployer.deployStandards(
-        standardWithLongDescription,
-        mockGitRepo,
-        vscodeTarget,
-      );
+        mockGitPort.getFileFromRepo.mockResolvedValue(null);
 
-      expect(result.createOrUpdate).toHaveLength(1);
-      const sectionContent = result.createOrUpdate[0].sections![0].content;
+        result = await deployer.deployStandards(
+          standardWithLongDescription,
+          mockGitRepo,
+          vscodeTarget,
+        );
+        sectionContent = result.createOrUpdate[0].sections![0].content;
+      });
 
-      // Should truncate description at 200 characters and add ellipsis
-      expect(sectionContent).toContain(`${'A'.repeat(200)}... :`);
-      expect(sectionContent).toContain('* No rules defined yet.');
-      expect(sectionContent).toContain(
-        'Full standard is available here for further request: [Standard With Long Description](.packmind/standards/standard-long-description.md)',
-      );
-      expect(sectionContent).not.toContain('A'.repeat(250));
+      it('returns one createOrUpdate entry', () => {
+        expect(result.createOrUpdate).toHaveLength(1);
+      });
+
+      it('truncates description at 200 characters with ellipsis', () => {
+        expect(sectionContent).toContain(`${'A'.repeat(200)}... :`);
+      });
+
+      it('includes no rules defined message', () => {
+        expect(sectionContent).toContain('* No rules defined yet.');
+      });
+
+      it('includes link to full standard', () => {
+        expect(sectionContent).toContain(
+          'Full standard is available here for further request: [Standard With Long Description](.packmind/standards/standard-long-description.md)',
+        );
+      });
+
+      it('does not include the full 250 character description', () => {
+        expect(sectionContent).not.toContain('A'.repeat(250));
+      });
     });
 
-    it('does not truncate long summaries', async () => {
-      const standardWithLongSummary: StandardVersion[] = [
-        {
-          id: createStandardVersionId('standard-version-1'),
-          standardId: createStandardId('standard-1'),
-          name: 'Standard With Long Summary',
-          slug: 'standard-long-summary',
-          description: 'Short description',
-          version: 1,
-          summary: 'B'.repeat(250), // Using summary, should NOT truncate
-          userId: createUserId('user-1'),
-          scope: 'test',
-        },
-      ];
+    describe('when standard has long summary (over 200 chars)', () => {
+      let result: FileUpdates;
+      let sectionContent: string;
 
-      mockGitPort.getFileFromRepo.mockResolvedValue(null);
+      beforeEach(async () => {
+        const standardWithLongSummary: StandardVersion[] = [
+          {
+            id: createStandardVersionId('standard-version-1'),
+            standardId: createStandardId('standard-1'),
+            name: 'Standard With Long Summary',
+            slug: 'standard-long-summary',
+            description: 'Short description',
+            version: 1,
+            summary: 'B'.repeat(250),
+            userId: createUserId('user-1'),
+            scope: 'test',
+          },
+        ];
 
-      const result = await deployer.deployStandards(
-        standardWithLongSummary,
-        mockGitRepo,
-        vscodeTarget,
-      );
+        mockGitPort.getFileFromRepo.mockResolvedValue(null);
 
-      expect(result.createOrUpdate).toHaveLength(1);
-      const sectionContent = result.createOrUpdate[0].sections![0].content;
+        result = await deployer.deployStandards(
+          standardWithLongSummary,
+          mockGitRepo,
+          vscodeTarget,
+        );
+        sectionContent = result.createOrUpdate[0].sections![0].content;
+      });
 
-      // Should NOT truncate summary even if long
-      expect(sectionContent).toContain(`${'B'.repeat(250)} :`);
-      expect(sectionContent).toContain('* No rules defined yet.');
-      expect(sectionContent).toContain(
-        'Full standard is available here for further request: [Standard With Long Summary](.packmind/standards/standard-long-summary.md)',
-      );
-      expect(sectionContent).not.toContain('...');
+      it('returns one createOrUpdate entry', () => {
+        expect(result.createOrUpdate).toHaveLength(1);
+      });
+
+      it('does not truncate the summary', () => {
+        expect(sectionContent).toContain(`${'B'.repeat(250)} :`);
+      });
+
+      it('includes no rules defined message', () => {
+        expect(sectionContent).toContain('* No rules defined yet.');
+      });
+
+      it('includes link to full standard', () => {
+        expect(sectionContent).toContain(
+          'Full standard is available here for further request: [Standard With Long Summary](.packmind/standards/standard-long-summary.md)',
+        );
+      });
+
+      it('does not include ellipsis', () => {
+        expect(sectionContent).not.toContain('...');
+      });
     });
 
-    it('only uses first line of multiline descriptions', async () => {
-      const standardWithMultilineDescription: StandardVersion[] = [
-        {
-          id: createStandardVersionId('standard-version-1'),
-          standardId: createStandardId('standard-1'),
-          name: 'Standard With Multiline',
-          slug: 'standard-multiline',
-          description:
-            'First line of description\nSecond line should not appear\nThird line also not',
-          version: 1,
-          summary: null,
-          userId: createUserId('user-1'),
-          scope: 'test',
-        },
-      ];
+    describe('when standard has multiline description and null summary', () => {
+      let result: FileUpdates;
+      let sectionContent: string;
 
-      mockGitPort.getFileFromRepo.mockResolvedValue(null);
+      beforeEach(async () => {
+        const standardWithMultilineDescription: StandardVersion[] = [
+          {
+            id: createStandardVersionId('standard-version-1'),
+            standardId: createStandardId('standard-1'),
+            name: 'Standard With Multiline',
+            slug: 'standard-multiline',
+            description:
+              'First line of description\nSecond line should not appear\nThird line also not',
+            version: 1,
+            summary: null,
+            userId: createUserId('user-1'),
+            scope: 'test',
+          },
+        ];
 
-      const result = await deployer.deployStandards(
-        standardWithMultilineDescription,
-        mockGitRepo,
-        vscodeTarget,
-      );
+        mockGitPort.getFileFromRepo.mockResolvedValue(null);
 
-      expect(result.createOrUpdate).toHaveLength(1);
-      const sectionContent = result.createOrUpdate[0].sections![0].content;
+        result = await deployer.deployStandards(
+          standardWithMultilineDescription,
+          mockGitRepo,
+          vscodeTarget,
+        );
+        sectionContent = result.createOrUpdate[0].sections![0].content;
+      });
 
-      // Should only contain first line
-      expect(sectionContent).toContain('First line of description :');
-      expect(sectionContent).toContain('* No rules defined yet.');
-      expect(sectionContent).toContain(
-        'Full standard is available here for further request: [Standard With Multiline](.packmind/standards/standard-multiline.md)',
-      );
-      expect(sectionContent).not.toContain('Second line');
-      expect(sectionContent).not.toContain('Third line');
+      it('returns one createOrUpdate entry', () => {
+        expect(result.createOrUpdate).toHaveLength(1);
+      });
+
+      it('includes only the first line of description', () => {
+        expect(sectionContent).toContain('First line of description :');
+      });
+
+      it('includes no rules defined message', () => {
+        expect(sectionContent).toContain('* No rules defined yet.');
+      });
+
+      it('includes link to full standard', () => {
+        expect(sectionContent).toContain(
+          'Full standard is available here for further request: [Standard With Multiline](.packmind/standards/standard-multiline.md)',
+        );
+      });
+
+      it('does not include second line of description', () => {
+        expect(sectionContent).not.toContain('Second line');
+      });
+
+      it('does not include third line of description', () => {
+        expect(sectionContent).not.toContain('Third line');
+      });
     });
 
-    it('never outputs "null" for standard with both null summary and description', async () => {
-      const standardWithNullEverything: StandardVersion[] = [
-        {
-          id: createStandardVersionId('standard-version-1'),
-          standardId: createStandardId('standard-1'),
-          name: 'Standard Name Only',
-          slug: 'standard-name-only',
-          description: null as unknown as string,
-          version: 1,
-          summary: null,
-          userId: createUserId('user-1'),
-          scope: 'test',
-        },
-      ];
+    describe('when standard has both null summary and null description', () => {
+      let result: FileUpdates;
+      let sectionContent: string;
 
-      mockGitPort.getFileFromRepo.mockResolvedValue(null);
+      beforeEach(async () => {
+        const standardWithNullEverything: StandardVersion[] = [
+          {
+            id: createStandardVersionId('standard-version-1'),
+            standardId: createStandardId('standard-1'),
+            name: 'Standard Name Only',
+            slug: 'standard-name-only',
+            description: null as unknown as string,
+            version: 1,
+            summary: null,
+            userId: createUserId('user-1'),
+            scope: 'test',
+          },
+        ];
 
-      const result = await deployer.deployStandards(
-        standardWithNullEverything,
-        mockGitRepo,
-        vscodeTarget,
-      );
+        mockGitPort.getFileFromRepo.mockResolvedValue(null);
 
-      expect(result.createOrUpdate).toHaveLength(1);
-      const sectionContent = result.createOrUpdate[0].sections![0].content;
+        result = await deployer.deployStandards(
+          standardWithNullEverything,
+          mockGitRepo,
+          vscodeTarget,
+        );
+        sectionContent = result.createOrUpdate[0].sections![0].content;
+      });
 
-      // Should not contain the string "null" as a value
-      expect(sectionContent).not.toMatch(/:\s*null\s*$/m);
-      expect(sectionContent).not.toMatch(/:\s*null\n/);
+      it('returns one createOrUpdate entry', () => {
+        expect(result.createOrUpdate).toHaveLength(1);
+      });
 
-      expect(sectionContent).toContain('Summary unavailable :');
-      expect(sectionContent).toContain('* No rules defined yet.');
-      expect(sectionContent).toContain(
-        'Full standard is available here for further request: [Standard Name Only](.packmind/standards/standard-name-only.md)',
-      );
+      it('does not contain null at end of line', () => {
+        expect(sectionContent).not.toMatch(/:\s*null\s*$/m);
+      });
+
+      it('does not contain null followed by newline', () => {
+        expect(sectionContent).not.toMatch(/:\s*null\n/);
+      });
+
+      it('displays summary unavailable message', () => {
+        expect(sectionContent).toContain('Summary unavailable :');
+      });
+
+      it('includes no rules defined message', () => {
+        expect(sectionContent).toContain('* No rules defined yet.');
+      });
+
+      it('includes link to full standard', () => {
+        expect(sectionContent).toContain(
+          'Full standard is available here for further request: [Standard Name Only](.packmind/standards/standard-name-only.md)',
+        );
+      });
     });
 
-    it('uses getTargetPrefixedPath for file path in standards deployment', async () => {
-      const result = await deployer.deployStandards(
-        mockStandardVersions,
-        mockGitRepo,
-        vscodeTarget,
-      );
+    describe('when deploying standards with target', () => {
+      let result: FileUpdates;
 
-      expect(result.createOrUpdate).toHaveLength(1);
-      expect(result.createOrUpdate[0].path).toBe('vscode/TEST_AGENT.md');
+      beforeEach(async () => {
+        result = await deployer.deployStandards(
+          mockStandardVersions,
+          mockGitRepo,
+          vscodeTarget,
+        );
+      });
+
+      it('returns one createOrUpdate entry', () => {
+        expect(result.createOrUpdate).toHaveLength(1);
+      });
+
+      it('uses target-prefixed path for the file', () => {
+        expect(result.createOrUpdate[0].path).toBe('vscode/TEST_AGENT.md');
+      });
     });
   });
 

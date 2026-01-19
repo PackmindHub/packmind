@@ -8,46 +8,65 @@ describe('CookbookService', () => {
   });
 
   describe('buildCookbook', () => {
-    it('generates cookbook with header and footer', () => {
-      const recipes = [
-        {
-          name: 'Test Recipe',
-          slug: 'test-recipe',
-          summary: 'A test recipe for testing',
-        },
-      ];
+    describe('when generating cookbook structure', () => {
+      let result: string;
 
-      const result = service.buildCookbook(recipes);
+      beforeEach(() => {
+        const recipes = [
+          {
+            name: 'Test Recipe',
+            slug: 'test-recipe',
+            summary: 'A test recipe for testing',
+          },
+        ];
+        result = service.buildCookbook(recipes);
+      });
 
-      expect(result).toContain('# Packmind Cookbook');
-      expect(result).toContain('## Available Recipes');
-      expect(result).toContain(
-        '*This cookbook was automatically generated from deployed recipe versions.*',
-      );
+      it('includes the main header', () => {
+        expect(result).toContain('# Packmind Cookbook');
+      });
+
+      it('includes the available recipes section', () => {
+        expect(result).toContain('## Available Recipes');
+      });
+
+      it('includes the auto-generated footer', () => {
+        expect(result).toContain(
+          '*This cookbook was automatically generated from deployed recipe versions.*',
+        );
+      });
     });
 
-    it('lists recipes with summaries', () => {
-      const recipes = [
-        {
-          name: 'Recipe One',
-          slug: 'recipe-one',
-          summary: 'First recipe summary',
-        },
-        {
-          name: 'Recipe Two',
-          slug: 'recipe-two',
-          summary: 'Second recipe summary',
-        },
-      ];
+    describe('when listing multiple recipes', () => {
+      let result: string;
 
-      const result = service.buildCookbook(recipes);
+      beforeEach(() => {
+        const recipes = [
+          {
+            name: 'Recipe One',
+            slug: 'recipe-one',
+            summary: 'First recipe summary',
+          },
+          {
+            name: 'Recipe Two',
+            slug: 'recipe-two',
+            summary: 'Second recipe summary',
+          },
+        ];
+        result = service.buildCookbook(recipes);
+      });
 
-      expect(result).toContain(
-        '- [Recipe One](recipes/recipe-one.md) : First recipe summary',
-      );
-      expect(result).toContain(
-        '- [Recipe Two](recipes/recipe-two.md) : Second recipe summary',
-      );
+      it('includes first recipe with summary', () => {
+        expect(result).toContain(
+          '- [Recipe One](recipes/recipe-one.md) : First recipe summary',
+        );
+      });
+
+      it('includes second recipe with summary', () => {
+        expect(result).toContain(
+          '- [Recipe Two](recipes/recipe-two.md) : Second recipe summary',
+        );
+      });
     });
 
     describe('when summary is null', () => {
@@ -86,39 +105,52 @@ describe('CookbookService', () => {
       });
     });
 
-    it('sorts recipes alphabetically by name', () => {
-      const recipes = [
-        {
-          name: 'Zebra Recipe',
-          slug: 'zebra',
-          summary: 'Last alphabetically',
-        },
-        {
-          name: 'Apple Recipe',
-          slug: 'apple',
-          summary: 'First alphabetically',
-        },
-        {
-          name: 'Middle Recipe',
-          slug: 'middle',
-          summary: 'Middle alphabetically',
-        },
-      ];
+    describe('when sorting recipes alphabetically', () => {
+      let recipeLines: string[];
 
-      const result = service.buildCookbook(recipes);
+      beforeEach(() => {
+        const recipes = [
+          {
+            name: 'Zebra Recipe',
+            slug: 'zebra',
+            summary: 'Last alphabetically',
+          },
+          {
+            name: 'Apple Recipe',
+            slug: 'apple',
+            summary: 'First alphabetically',
+          },
+          {
+            name: 'Middle Recipe',
+            slug: 'middle',
+            summary: 'Middle alphabetically',
+          },
+        ];
 
-      const lines = result.split('\n');
-      const recipeLines = lines.filter((line) => line.startsWith('- ['));
+        const result = service.buildCookbook(recipes);
+        const lines = result.split('\n');
+        recipeLines = lines.filter((line) => line.startsWith('- ['));
+      });
 
-      expect(recipeLines[0]).toContain('Apple Recipe');
-      expect(recipeLines[1]).toContain('Middle Recipe');
-      expect(recipeLines[2]).toContain('Zebra Recipe');
+      it('places Apple Recipe first', () => {
+        expect(recipeLines[0]).toContain('Apple Recipe');
+      });
+
+      it('places Middle Recipe second', () => {
+        expect(recipeLines[1]).toContain('Middle Recipe');
+      });
+
+      it('places Zebra Recipe last', () => {
+        expect(recipeLines[2]).toContain('Zebra Recipe');
+      });
     });
 
-    it('handles empty recipe list', () => {
-      const result = service.buildCookbook([]);
+    describe('when recipe list is empty', () => {
+      it('displays no recipes available message', () => {
+        const result = service.buildCookbook([]);
 
-      expect(result).toContain('No recipes available.');
+        expect(result).toContain('No recipes available.');
+      });
     });
   });
 });

@@ -150,6 +150,8 @@ jobs:
           - packages/spaces
           - packages/test-utils
           - packages/types
+          - packages/accounts
+          - packages/coding-agent
 
     steps:
       - name: Checkout
