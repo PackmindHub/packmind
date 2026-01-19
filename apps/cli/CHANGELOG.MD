@@ -8,6 +8,8 @@
 
 ## Fixed
 
+- Fix `lint` on Windows that was not raising any violations (#97)
+
 ## Removed
 
 # [0.13.0] - 2026-01-14

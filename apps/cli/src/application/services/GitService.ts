@@ -2,6 +2,7 @@ import { execSync, ExecSyncOptions } from 'child_process';
 import { PackmindLogger } from '@packmind/logger';
 import { ModifiedLine } from '../../domain/entities/DiffMode';
 import * as path from 'path';
+import { normalizePath } from '../utils/pathUtils';
 
 const origin = 'GitService';
 
@@ -281,7 +282,7 @@ export class GitService {
         .trim()
         .split('\n')
         .filter((line) => line.length > 0)
-        .map((relativePath) => path.join(gitRoot, relativePath));
+        .map((relativePath) => normalizePath(path.join(gitRoot, relativePath)));
     } catch (error) {
       // If HEAD doesn't exist (first commit scenario), get all staged files
       if (
@@ -309,7 +310,7 @@ export class GitService {
       .trim()
       .split('\n')
       .filter((line) => line.length > 0)
-      .map((relativePath) => path.join(gitRoot, relativePath));
+      .map((relativePath) => normalizePath(path.join(gitRoot, relativePath)));
   }
 
   /**
@@ -327,7 +328,7 @@ export class GitService {
       .trim()
       .split('\n')
       .filter((line) => line.length > 0)
-      .map((relativePath) => path.join(gitRoot, relativePath));
+      .map((relativePath) => normalizePath(path.join(gitRoot, relativePath)));
   }
 
   /**
@@ -416,7 +417,7 @@ export class GitService {
       // Match file header: diff --git a/path b/path
       const fileMatch = line.match(/^diff --git a\/(.+) b\/(.+)$/);
       if (fileMatch) {
-        currentFile = path.join(gitRoot, fileMatch[2]);
+        currentFile = normalizePath(path.join(gitRoot, fileMatch[2]));
         continue;
       }
 
