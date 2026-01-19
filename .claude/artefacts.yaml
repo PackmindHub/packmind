@@ -18,7 +18,6 @@
   path: .claude/rules/packmind/standard-typescript-code-standards.md
   type: rule
   date: 2026-01-18T07:17:00Z
-  date: 2026-01-14T19:00:00Z
 - name: implicit-decision-capture
   path: implicit-decision-capture
   type: skill
