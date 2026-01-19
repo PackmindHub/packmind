@@ -14,7 +14,7 @@ import { DataFactory } from './helpers/DataFactory';
 import { makeIntegrationTestDataSource } from './helpers/makeIntegrationTestDataSource';
 import { TestApp } from './helpers/TestApp';
 
-describe.skip('Package removal from target integration', () => {
+describe('Package removal from target integration', () => {
   let testApp: TestApp;
   let dataFactory: DataFactory;
   let dataSource: DataSource;
