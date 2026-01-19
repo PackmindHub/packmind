@@ -1,4 +1,4 @@
-# [Unreleased]
+# [0.13.1] - 2026-01-19
 
 ## Added
 
@@ -140,7 +140,7 @@
 
 - Add proper CHANGELOG.MD in the GH release
 
-[Unreleased]: https://github.com/PackmindHub/packmind/compare/release-cli/0.13.0...HEAD
+[0.13.1]: https://github.com/PackmindHub/packmind/compare/release-cli/0.13.0...release-cli/0.13.1
 [0.13.0]: https://github.com/PackmindHub/packmind/compare/release-cli/0.12.0...release-cli/0.13.0
 [0.12.0]: https://github.com/PackmindHub/packmind/compare/release-cli/0.11.0...release-cli/0.12.0
 [0.11.0]: https://github.com/PackmindHub/packmind/compare/release-cli/0.10.0...release-cli/0.11.0
