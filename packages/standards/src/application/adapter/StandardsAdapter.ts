@@ -5,9 +5,14 @@ import {
   PackmindEventEmitterService,
 } from '@packmind/node-utils';
 import {
+  AddRuleToStandardCommand,
+  AddRuleToStandardResponse,
   CreateRuleExampleCommand,
+  CreateStandardCommand,
   DeleteRuleExampleCommand,
   DeleteRuleExampleResponse,
+  DeleteStandardCommand,
+  DeleteStandardsBatchCommand,
   GetStandardByIdResponse,
   IAccountsPort,
   IAccountsPortName,
@@ -22,6 +27,7 @@ import {
   IStandardsPort,
   ListStandardsBySpaceCommand,
   OrganizationId,
+  PackmindEventSource,
   Rule,
   RuleExample,
   RuleId,
@@ -171,11 +177,13 @@ export class StandardsAdapter
     );
 
     this._deleteStandard = new DeleteStandardUsecase(
+      this.accountsPort,
       this.services.getStandardService(),
       this.eventEmitterService,
     );
 
     this._deleteStandardsBatch = new DeleteStandardsBatchUsecase(
+      this.accountsPort,
       this.services.getStandardService(),
       this.eventEmitterService,
     );
@@ -204,6 +212,7 @@ export class StandardsAdapter
 
     // Use cases that depend on delayed jobs (required)
     this._createStandard = new CreateStandardUsecase(
+      this.accountsPort,
       this.services.getStandardService(),
       this.services.getStandardVersionService(),
       this.standardDelayedJobs.standardSummaryDelayedJob,
@@ -223,6 +232,7 @@ export class StandardsAdapter
     );
 
     this._addRuleToStandard = new AddRuleToStandardUsecase(
+      this.accountsPort,
       this.services.getStandardService(),
       this.services.getStandardVersionService(),
       this.repositories.getRuleRepository(),
@@ -402,21 +412,12 @@ export class StandardsAdapter
   // Additional Public Methods
   // ===========================
 
-  async createStandard(params: {
-    name: string;
-    description: string;
-    rules: Array<{ content: string }>;
-    organizationId: OrganizationId;
-    userId: UserId;
-    scope: string | null;
-    spaceId: SpaceId | null;
-  }): Promise<Standard> {
-    return this._createStandard.execute({
+  async createStandard(params: CreateStandardCommand): Promise<Standard> {
+    const result = await this._createStandard.execute({
       ...params,
-      organizationId: params.organizationId.toString(),
       userId: params.userId.toString(),
-      spaceId: params.spaceId?.toString() || '',
     });
+    return result.standard;
   }
 
   async createStandardWithExamples(params: {
@@ -451,6 +452,7 @@ export class StandardsAdapter
     userId: UserId;
     spaceId: SpaceId;
     packageSlugs?: string[];
+    source?: PackmindEventSource;
   }): Promise<Standard> {
     const result = await this._createStandardWithPackages.execute({
       ...params,
@@ -460,13 +462,10 @@ export class StandardsAdapter
     return result.standard;
   }
 
-  async addRuleToStandard(params: {
-    standardSlug: string;
-    ruleContent: string;
-    organizationId: OrganizationId;
-    userId: UserId;
-  }): Promise<StandardVersion> {
-    return this._addRuleToStandard.addRuleToStandard(params);
+  async addRuleToStandard(
+    command: AddRuleToStandardCommand,
+  ): Promise<AddRuleToStandardResponse> {
+    return this._addRuleToStandard.execute(command);
   }
 
   async getStandardById(command: {
@@ -478,16 +477,8 @@ export class StandardsAdapter
     return this._getStandardById.execute(command);
   }
 
-  async deleteStandard(
-    standardId: StandardId,
-    userId: UserId,
-    organizationId: OrganizationId,
-  ): Promise<void> {
-    return this._deleteStandard.deleteStandard(
-      standardId,
-      userId,
-      organizationId,
-    );
+  async deleteStandard(command: DeleteStandardCommand): Promise<void> {
+    await this._deleteStandard.execute(command);
   }
 
   async updateStandard(command: UpdateStandardCommand): Promise<Standard> {
@@ -496,15 +487,9 @@ export class StandardsAdapter
   }
 
   async deleteStandardsBatch(
-    standardIds: StandardId[],
-    userId: UserId,
-    organizationId: OrganizationId,
+    command: DeleteStandardsBatchCommand,
   ): Promise<void> {
-    return this._deleteStandardsBatch.deleteStandardsBatch(
-      standardIds,
-      userId,
-      organizationId,
-    );
+    await this._deleteStandardsBatch.execute(command);
   }
 
   async createRuleExample(

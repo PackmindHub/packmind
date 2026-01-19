@@ -18,6 +18,7 @@ import { IAgentConfig } from './McpConfig/types';
 import { MethodContent } from './McpConfig/InstallMethods';
 import { trialGateway } from '../api/gateways';
 import { StartTrialAgentPageDataTestIds } from '@packmind/frontend';
+import { useAnalytics } from '@packmind/proprietary/frontend/domain/amplitude/providers/AnalyticsProvider';
 
 interface IStartTrialAgentPageProps {
   agentLabel: string;
@@ -53,21 +54,26 @@ const getPreferredMethod = (
   return availableMethods[0] ?? null;
 };
 
-const PlaybookContent: React.FC = () => (
-  <PMVStack align="flex-start" gap={4}>
-    <PMField.Root width="full">
-      <PMField.Label>
-        Prompt: Get started with on-boarding MCP tool
-      </PMField.Label>
-      <CopiableTextarea
-        value="Run the Packmind on-boarding process"
-        readOnly
-        rows={1}
-        width="full"
-      />
-    </PMField.Root>
-  </PMVStack>
-);
+const PlaybookContent: React.FC = () => {
+  const analytics = useAnalytics();
+
+  return (
+    <PMVStack align="flex-start" gap={4}>
+      <PMField.Root width="full">
+        <PMField.Label>
+          Prompt: Get started with on-boarding MCP tool
+        </PMField.Label>
+        <CopiableTextarea
+          value="Run the Packmind on-boarding process"
+          readOnly
+          rows={1}
+          width="full"
+          onInteraction={() => analytics.track('onboarding_prompt_copied', {})}
+        />
+      </PMField.Root>
+    </PMVStack>
+  );
+};
 
 export const StartTrialAgentPage: React.FC<IStartTrialAgentPageProps> = ({
   agentLabel,

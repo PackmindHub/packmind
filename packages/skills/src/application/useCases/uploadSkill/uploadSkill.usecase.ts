@@ -62,6 +62,7 @@ export class UploadSkillUsecase
       files,
       organizationId: orgIdString,
       spaceId: spaceIdString,
+      source = 'cli',
     } = command;
     const spaceId = createSpaceId(spaceIdString);
 
@@ -267,7 +268,7 @@ export class UploadSkillUsecase
             spaceId,
             organizationId: command.organization.id,
             userId: command.user.id,
-            source: 'cli',
+            source,
             fileCount: supportingFiles.length,
           }),
         );
@@ -351,7 +352,7 @@ export class UploadSkillUsecase
           spaceId,
           organizationId: command.organization.id,
           userId: command.user.id,
-          source: 'cli',
+          source,
           fileCount: supportingFiles.length,
         }),
       );

@@ -49,8 +49,15 @@ export class CreateRuleExampleUsecase
   async executeForMembers(
     command: CreateRuleExampleCommand & MemberContext,
   ): Promise<CreateRuleExampleResponse> {
-    const { ruleId, lang, positive, negative, organizationId, userId } =
-      command;
+    const {
+      ruleId,
+      lang,
+      positive,
+      negative,
+      organizationId,
+      userId,
+      source = 'ui',
+    } = command;
 
     if (!lang) {
       throw new Error('Language is required and cannot be empty');
@@ -88,7 +95,7 @@ export class CreateRuleExampleUsecase
           newVersion: standardVersion.version,
           organizationId: createOrganizationId(organizationId),
           userId: createUserId(userId),
-          source: 'ui',
+          source,
         }),
       );
     }

@@ -127,14 +127,13 @@ describe('Add rule to standard integration', () => {
     const initialVersion = standard.version;
 
     // Add the rule to the standard
-    const newStandardVersion: StandardVersion = await testApp.standardsHexa
-      .getAdapter()
-      .addRuleToStandard({
-        standardSlug: standard.slug,
-        ruleContent: newRuleContent,
-        organizationId: organization.id,
-        userId: user.id,
-      });
+    const result = await testApp.standardsHexa.getAdapter().addRuleToStandard({
+      standardSlug: standard.slug,
+      ruleContent: newRuleContent,
+      organizationId: organization.id,
+      userId: user.id,
+    });
+    const newStandardVersion: StandardVersion = result.standardVersion;
 
     // Verify the new version was created with incremented version number
     expect(newStandardVersion.version).toBe(initialVersion + 1);
@@ -176,7 +175,7 @@ describe('Add rule to standard integration', () => {
     const secondRuleContent = 'Implement proper error handling';
 
     // Add first rule
-    const firstVersion = await testApp.standardsHexa
+    const firstResult = await testApp.standardsHexa
       .getAdapter()
       .addRuleToStandard({
         standardSlug: standard.slug,
@@ -185,10 +184,10 @@ describe('Add rule to standard integration', () => {
         userId: user.id,
       });
 
-    expect(firstVersion.version).toBe(2); // Initial was 1
+    expect(firstResult.standardVersion.version).toBe(2); // Initial was 1
 
     // Add second rule
-    const secondVersion = await testApp.standardsHexa
+    const secondResult = await testApp.standardsHexa
       .getAdapter()
       .addRuleToStandard({
         standardSlug: standard.slug,
@@ -197,7 +196,7 @@ describe('Add rule to standard integration', () => {
         userId: user.id,
       });
 
-    expect(secondVersion.version).toBe(3); // Incremented again
+    expect(secondResult.standardVersion.version).toBe(3); // Incremented again
 
     // Verify final state by getting rules for the standard
     const finalRules = await testApp.standardsHexa
@@ -230,14 +229,13 @@ describe('Add rule to standard integration', () => {
     expect(mixedCaseSlug).not.toBe(standard.slug);
 
     // Add rule using mixed case slug - this should work and normalize the slug internally
-    const newStandardVersion = await testApp.standardsHexa
-      .getAdapter()
-      .addRuleToStandard({
-        standardSlug: mixedCaseSlug,
-        ruleContent: newRuleContent,
-        organizationId: organization.id,
-        userId: user.id,
-      });
+    const result = await testApp.standardsHexa.getAdapter().addRuleToStandard({
+      standardSlug: mixedCaseSlug,
+      ruleContent: newRuleContent,
+      organizationId: organization.id,
+      userId: user.id,
+    });
+    const newStandardVersion = result.standardVersion;
 
     // Verify the rule was added successfully
     expect(newStandardVersion.version).toBe(standard.version + 1);

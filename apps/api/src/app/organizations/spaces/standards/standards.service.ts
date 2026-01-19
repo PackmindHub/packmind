@@ -2,6 +2,9 @@ import { Injectable } from '@nestjs/common';
 import { PackmindLogger } from '@packmind/logger';
 import { StandardsHexa } from '@packmind/standards';
 import {
+  ClientSource,
+  DeleteStandardCommand,
+  DeleteStandardsBatchCommand,
   Distribution,
   GetStandardByIdResponse,
   IDeploymentPort,
@@ -60,7 +63,8 @@ export class StandardsService {
     },
     organizationId: OrganizationId,
     userId: UserId,
-    spaceId: SpaceId | null,
+    spaceId: SpaceId,
+    source: ClientSource,
   ): Promise<Standard> {
     return this.standardsHexa.getAdapter().createStandard({
       ...standard,
@@ -68,6 +72,7 @@ export class StandardsService {
       organizationId,
       userId,
       spaceId,
+      source,
     });
   }
 
@@ -82,6 +87,7 @@ export class StandardsService {
     organizationId: OrganizationId,
     userId: UserId,
     spaceId: SpaceId,
+    source: ClientSource,
   ): Promise<Standard> {
     return this.standardsHexa.getAdapter().updateStandard({
       standardId,
@@ -90,6 +96,7 @@ export class StandardsService {
       organizationId,
       userId: userId.toString(),
       spaceId,
+      source,
     });
   }
 
@@ -109,23 +116,13 @@ export class StandardsService {
     return result.distributions;
   }
 
-  async deleteStandard(
-    id: StandardId,
-    userId: UserId,
-    organizationId: OrganizationId,
-  ): Promise<void> {
-    return this.standardsHexa
-      .getAdapter()
-      .deleteStandard(id, userId, organizationId);
+  async deleteStandard(command: DeleteStandardCommand): Promise<void> {
+    return this.standardsHexa.getAdapter().deleteStandard(command);
   }
 
   async deleteStandardsBatch(
-    standardIds: StandardId[],
-    userId: UserId,
-    organizationId: OrganizationId,
+    command: DeleteStandardsBatchCommand,
   ): Promise<void> {
-    return this.standardsHexa
-      .getAdapter()
-      .deleteStandardsBatch(standardIds, userId, organizationId);
+    return this.standardsHexa.getAdapter().deleteStandardsBatch(command);
   }
 }

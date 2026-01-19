@@ -71,21 +71,14 @@ export const RecipeDetails = ({ id, orgSlug }: RecipeDetailsProps) => {
         spaceId,
         recipeId: recipe.id,
       });
-      setDeleteAlert({
-        type: 'success',
-        message: RECIPE_MESSAGES.success.deleted,
-      });
       setDeleteModalOpen(false);
 
-      // Auto-dismiss success alert and navigate back after 2 seconds
-      setTimeout(() => {
-        setDeleteAlert(null);
-        if (orgSlug && spaceSlug) {
-          navigate(routes.space.toCommands(orgSlug, spaceSlug));
-        }
-      }, 2000);
+      // Navigate immediately after successful deletion
+      if (orgSlug && spaceSlug) {
+        navigate(routes.space.toCommands(orgSlug, spaceSlug));
+      }
     } catch (error) {
-      console.error('Failed to delete recipe:', error);
+      console.error('Failed to delete command:', error);
       setDeleteAlert({
         type: 'error',
         message: RECIPE_MESSAGES.error.deleteFailed,
@@ -97,8 +90,8 @@ export const RecipeDetails = ({ id, orgSlug }: RecipeDetailsProps) => {
   if (isLoading) {
     return (
       <PMPage
-        title="Loading Recipe..."
-        subtitle="Please wait while we fetch the recipe details"
+        title="Loading Command..."
+        subtitle="Please wait while we fetch the command details"
         breadcrumbComponent={<AutobreadCrumb />}
       >
         <PMBox
@@ -108,22 +101,23 @@ export const RecipeDetails = ({ id, orgSlug }: RecipeDetailsProps) => {
           minH="200px"
         >
           <PMSpinner size="lg" mr={2} />
-          <PMText ml={2}>Loading recipe details...</PMText>
+          <PMText ml={2}>Loading command details...</PMText>
         </PMBox>
       </PMPage>
     );
   }
 
-  if (isError) {
+  // Skip error state if deletion was successful (query will 404 after deletion)
+  if (isError && !deleteMutation.isSuccess) {
     return (
       <PMPage
-        title="Error Loading Recipe"
-        subtitle="Sorry, we couldn't load the recipe details"
+        title="Error Loading Command"
+        subtitle="Sorry, we couldn't load the command details"
         breadcrumbComponent={<AutobreadCrumb />}
       >
         <PMAlert.Root status="error" width="lg" mb={4}>
           <PMAlert.Indicator />
-          <PMAlert.Title>There was an error loading the recipe.</PMAlert.Title>
+          <PMAlert.Title>There was an error loading the command.</PMAlert.Title>
           {error && <PMText color="error">Error: {error.message}</PMText>}
         </PMAlert.Root>
       </PMPage>
@@ -133,12 +127,12 @@ export const RecipeDetails = ({ id, orgSlug }: RecipeDetailsProps) => {
   if (!recipe) {
     return (
       <PMPage
-        title="Recipe Not Found"
-        subtitle="The recipe you're looking for doesn't exist"
+        title="Command Not Found"
+        subtitle="The command you're looking for doesn't exist"
         breadcrumbComponent={<AutobreadCrumb />}
       >
         <PMBox>
-          <PMText>This recipe could not be found.</PMText>
+          <PMText>This command could not be found.</PMText>
         </PMBox>
       </PMPage>
     );
@@ -149,14 +143,14 @@ export const RecipeDetails = ({ id, orgSlug }: RecipeDetailsProps) => {
     if (!organization?.id || !spaceId) {
       return (
         <PMPage
-          title="Cannot Edit Recipe"
+          title="Cannot Edit Command"
           subtitle="Missing organization or space context"
           breadcrumbComponent={<AutobreadCrumb />}
         >
           <PMAlert.Root status="error" width="lg" mb={4}>
             <PMAlert.Indicator />
             <PMAlert.Title>
-              Cannot edit recipe without organization and space context.
+              Cannot edit command without organization and space context.
             </PMAlert.Title>
           </PMAlert.Root>
         </PMPage>
@@ -171,7 +165,7 @@ export const RecipeDetails = ({ id, orgSlug }: RecipeDetailsProps) => {
         onCancel={() => setIsEditing(false)}
         onSuccess={() => {
           setIsEditing(false);
-          // Recipe data will be automatically refreshed due to query invalidation
+          // Command data will be automatically refreshed due to query invalidation
         }}
       />
     );
@@ -204,11 +198,11 @@ export const RecipeDetails = ({ id, orgSlug }: RecipeDetailsProps) => {
                 Delete
               </PMButton>
             }
-            title="Delete Recipe"
+            title="Delete Command"
             message={
               recipe
                 ? RECIPE_MESSAGES.confirmation.deleteRecipe(recipe.name)
-                : 'Are you sure you want to delete this recipe?'
+                : 'Are you sure you want to delete this command?'
             }
             confirmText="Delete"
             cancelText="Cancel"
@@ -221,7 +215,7 @@ export const RecipeDetails = ({ id, orgSlug }: RecipeDetailsProps) => {
         </PMHStack>
       }
     >
-      {/* Delete Success/Error Alert */}
+      {/* Delete Error Alert */}
       {deleteAlert && (
         <PMAlert.Root status={deleteAlert.type} width="lg" mb={4}>
           <PMAlert.Indicator />

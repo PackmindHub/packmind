@@ -3,8 +3,14 @@ import { PackmindEventEmitterService } from '@packmind/node-utils';
 import { stubLogger } from '@packmind/test-utils';
 import {
   CreateStandardCommand,
+  CreateStandardResponse,
+  IAccountsPort,
+  Organization,
+  OrganizationId,
   RuleAddedEvent,
   StandardCreatedEvent,
+  User,
+  UserId,
   createOrganizationId,
   createSpaceId,
   createUserId,
@@ -30,6 +36,7 @@ const mockSlug = slug as jest.MockedFunction<typeof slug>;
 
 describe('CreateStandardUsecase', () => {
   let createStandardUsecase: CreateStandardUsecase;
+  let accountsPort: jest.Mocked<IAccountsPort>;
   let standardService: jest.Mocked<StandardService>;
   let standardVersionService: jest.Mocked<StandardVersionService>;
   let generateStandardSummaryDelayedJob: jest.Mocked<GenerateStandardSummaryDelayedJob>;
@@ -37,7 +44,39 @@ describe('CreateStandardUsecase', () => {
   let ruleRepository: jest.Mocked<IRuleRepository>;
   let stubbedLogger: jest.Mocked<PackmindLogger>;
 
+  let testUserId: UserId;
+  let testOrganizationId: OrganizationId;
+
   beforeEach(() => {
+    testUserId = createUserId(uuidv4());
+    testOrganizationId = createOrganizationId(uuidv4());
+
+    const user: User = {
+      id: testUserId,
+      email: 'test@example.com',
+      passwordHash: 'hashed_password',
+      memberships: [
+        {
+          organizationId: testOrganizationId,
+          role: 'member',
+          userId: testUserId,
+        },
+      ],
+      active: true,
+    };
+
+    const organization: Organization = {
+      id: testOrganizationId,
+      name: 'Test Org',
+      slug: 'test-org',
+    };
+
+    // Mock AccountsPort
+    accountsPort = {
+      getUserById: jest.fn().mockResolvedValue(user),
+      getOrganizationById: jest.fn().mockResolvedValue(organization),
+    } as unknown as jest.Mocked<IAccountsPort>;
+
     // Mock StandardService
     standardService = {
       addStandard: jest.fn(),
@@ -89,6 +128,7 @@ describe('CreateStandardUsecase', () => {
     ruleRepository.findByStandardVersionId.mockResolvedValue([]);
 
     createStandardUsecase = new CreateStandardUsecase(
+      accountsPort,
       standardService,
       standardVersionService,
       generateStandardSummaryDelayedJob,
@@ -107,7 +147,7 @@ describe('CreateStandardUsecase', () => {
       let inputData: CreateStandardCommand;
       let createdStandard: Standard;
       let createdStandardVersion: StandardVersion;
-      let result: Standard;
+      let result: CreateStandardResponse;
 
       beforeEach(async () => {
         inputData = {
@@ -117,9 +157,9 @@ describe('CreateStandardUsecase', () => {
             { content: 'Rule 1: Use proper naming conventions' },
             { content: 'Rule 2: Write comprehensive tests' },
           ],
-          organizationId: createOrganizationId(uuidv4()).toString(),
-          userId: createUserId(uuidv4()).toString(),
-          spaceId: createSpaceId(uuidv4()).toString(),
+          organizationId: testOrganizationId,
+          userId: testUserId.toString(),
+          spaceId: createSpaceId(uuidv4()),
           scope: null,
         };
 
@@ -202,8 +242,8 @@ describe('CreateStandardUsecase', () => {
         expect(standardCall).toBeLessThan(versionCall);
       });
 
-      it('returns the created standard', () => {
-        expect(result).toEqual(createdStandard);
+      it('returns the created standard wrapped in response object', () => {
+        expect(result).toEqual({ standard: createdStandard });
       });
 
       it('creates initial version as version 1', () => {
@@ -248,9 +288,9 @@ describe('CreateStandardUsecase', () => {
           name: 'My Complex Standard Name',
           description: 'Test description',
           rules: [{ content: 'Test rule' }],
-          organizationId: createOrganizationId(uuidv4()).toString(),
-          userId: createUserId(uuidv4()).toString(),
-          spaceId: createSpaceId(uuidv4()).toString(),
+          organizationId: testOrganizationId,
+          userId: testUserId.toString(),
+          spaceId: createSpaceId(uuidv4()),
           scope: null,
         };
 
@@ -290,9 +330,9 @@ describe('CreateStandardUsecase', () => {
           name: 'Standard with "Special" Characters!',
           description: 'Test description',
           rules: [{ content: 'Test rule' }],
-          organizationId: createOrganizationId(uuidv4()).toString(),
-          userId: createUserId(uuidv4()).toString(),
-          spaceId: createSpaceId(uuidv4()).toString(),
+          organizationId: testOrganizationId,
+          userId: testUserId.toString(),
+          spaceId: createSpaceId(uuidv4()),
           scope: null,
         };
 
@@ -338,9 +378,9 @@ describe('CreateStandardUsecase', () => {
           name: 'Standard Without Rules',
           description: 'A standard with no rules',
           rules: [],
-          organizationId: createOrganizationId(uuidv4()).toString(),
-          userId: createUserId(uuidv4()).toString(),
-          spaceId: createSpaceId(uuidv4()).toString(),
+          organizationId: testOrganizationId,
+          userId: testUserId.toString(),
+          spaceId: createSpaceId(uuidv4()),
           scope: null,
         };
 
@@ -369,9 +409,9 @@ describe('CreateStandardUsecase', () => {
             { content: 'Rule 3: Use TypeScript' },
             { content: 'Rule 4: Document your code' },
           ],
-          organizationId: createOrganizationId(uuidv4()).toString(),
-          userId: createUserId(uuidv4()).toString(),
-          spaceId: createSpaceId(uuidv4()).toString(),
+          organizationId: testOrganizationId,
+          userId: testUserId.toString(),
+          spaceId: createSpaceId(uuidv4()),
           scope: null,
         };
 
@@ -405,9 +445,9 @@ describe('CreateStandardUsecase', () => {
             name: 'Scoped Standard',
             description: 'A standard with specific scope',
             rules: [{ content: 'Test rule for TypeScript files' }],
-            organizationId: createOrganizationId(uuidv4()).toString(),
-            userId: createUserId(uuidv4()).toString(),
-            spaceId: createSpaceId(uuidv4()).toString(),
+            organizationId: testOrganizationId,
+            userId: testUserId.toString(),
+            spaceId: createSpaceId(uuidv4()),
             scope: '**/*.ts',
           };
 
@@ -437,9 +477,9 @@ describe('CreateStandardUsecase', () => {
             name: 'Unscoped Standard',
             description: 'A standard without specific scope',
             rules: [{ content: 'Test rule for all files' }],
-            organizationId: createOrganizationId(uuidv4()).toString(),
-            userId: createUserId(uuidv4()).toString(),
-            spaceId: createSpaceId(uuidv4()).toString(),
+            organizationId: testOrganizationId,
+            userId: testUserId.toString(),
+            spaceId: createSpaceId(uuidv4()),
             scope: null,
           };
 
@@ -470,9 +510,9 @@ describe('CreateStandardUsecase', () => {
           name: 'Test Standard',
           description: 'Test description',
           rules: [{ content: 'Test rule' }],
-          organizationId: createOrganizationId(uuidv4()).toString(),
-          userId: createUserId(uuidv4()).toString(),
-          spaceId: createSpaceId(uuidv4()).toString(),
+          organizationId: testOrganizationId,
+          userId: testUserId.toString(),
+          spaceId: createSpaceId(uuidv4()),
           scope: null,
         };
 
@@ -507,9 +547,9 @@ describe('CreateStandardUsecase', () => {
           name: 'Test Standard',
           description: 'Test description',
           rules: [{ content: 'Test rule' }],
-          organizationId: createOrganizationId(uuidv4()).toString(),
-          userId: createUserId(uuidv4()).toString(),
-          spaceId: createSpaceId(uuidv4()).toString(),
+          organizationId: testOrganizationId,
+          userId: testUserId.toString(),
+          spaceId: createSpaceId(uuidv4()),
           scope: null,
         };
 
@@ -536,9 +576,9 @@ describe('CreateStandardUsecase', () => {
           name: 'Test Standard',
           description: 'Test description',
           rules: [{ content: 'Test rule' }],
-          organizationId: createOrganizationId(uuidv4()).toString(),
-          userId: createUserId(uuidv4()).toString(),
-          spaceId: createSpaceId(uuidv4()).toString(),
+          organizationId: testOrganizationId,
+          userId: testUserId.toString(),
+          spaceId: createSpaceId(uuidv4()),
           scope: null,
         };
 
@@ -552,7 +592,7 @@ describe('CreateStandardUsecase', () => {
 
         const result = await createStandardUsecase.execute(inputData);
 
-        expect(result).toEqual(createdStandard);
+        expect(result).toEqual({ standard: createdStandard });
         expect(generateStandardSummaryDelayedJob.addJob).toHaveBeenCalledTimes(
           1,
         );
@@ -566,9 +606,9 @@ describe('CreateStandardUsecase', () => {
             name: 'Scoped Standard',
             description: 'A standard with scope',
             rules: [{ content: 'Test rule for TypeScript files' }],
-            organizationId: createOrganizationId(uuidv4()).toString(),
-            userId: createUserId(uuidv4()).toString(),
-            spaceId: createSpaceId(uuidv4()).toString(),
+            organizationId: testOrganizationId,
+            userId: testUserId.toString(),
+            spaceId: createSpaceId(uuidv4()),
             scope: 'src/**/*.ts',
           };
 
@@ -608,9 +648,9 @@ describe('CreateStandardUsecase', () => {
             name: 'Test Standard',
             description: 'Test description',
             rules: [{ content: 'Rule 1' }, { content: 'Rule 2' }],
-            organizationId: createOrganizationId(uuidv4()).toString(),
-            userId: createUserId(uuidv4()).toString(),
-            spaceId: createSpaceId(uuidv4()).toString(),
+            organizationId: testOrganizationId,
+            userId: testUserId.toString(),
+            spaceId: createSpaceId(uuidv4()),
             scope: null,
           };
 
@@ -671,9 +711,9 @@ describe('CreateStandardUsecase', () => {
             name: 'Test Standard',
             description: 'Test description',
             rules: [{ content: 'Rule 1' }],
-            organizationId: createOrganizationId(uuidv4()).toString(),
-            userId: createUserId(uuidv4()).toString(),
-            spaceId: createSpaceId(uuidv4()).toString(),
+            organizationId: testOrganizationId,
+            userId: testUserId.toString(),
+            spaceId: createSpaceId(uuidv4()),
             scope: null,
           };
 
@@ -708,9 +748,9 @@ describe('CreateStandardUsecase', () => {
             name: 'Test Standard',
             description: 'Test description',
             rules: [],
-            organizationId: createOrganizationId(uuidv4()).toString(),
-            userId: createUserId(uuidv4()).toString(),
-            spaceId: createSpaceId(uuidv4()).toString(),
+            organizationId: testOrganizationId,
+            userId: testUserId.toString(),
+            spaceId: createSpaceId(uuidv4()),
             scope: null,
           };
 
@@ -795,6 +835,7 @@ describe('CreateStandardUsecase', () => {
         } as unknown as jest.Mocked<IRuleRepository>;
 
         createStandardUsecase = new CreateStandardUsecase(
+          accountsPort,
           standardService,
           standardVersionService,
           generateStandardSummaryDelayedJob,
@@ -813,9 +854,9 @@ describe('CreateStandardUsecase', () => {
           name: 'Unique Name',
           description: 'Desc',
           rules: [{ content: 'R1' }],
-          organizationId: createOrganizationId(uuidv4()).toString(),
-          userId: createUserId(uuidv4()).toString(),
-          spaceId: createSpaceId(uuidv4()).toString(),
+          organizationId: testOrganizationId,
+          userId: testUserId.toString(),
+          spaceId: createSpaceId(uuidv4()),
           scope: null,
         };
 
@@ -859,9 +900,9 @@ describe('CreateStandardUsecase', () => {
           name: 'Test Standard', // base slug: test-standard
           description: 'Desc',
           rules: [{ content: 'R1' }],
-          organizationId: createOrganizationId(uuidv4()).toString(),
-          userId: createUserId(uuidv4()).toString(),
-          spaceId: createSpaceId(uuidv4()).toString(),
+          organizationId: testOrganizationId,
+          userId: testUserId.toString(),
+          spaceId: createSpaceId(uuidv4()),
           scope: null,
         };
 
@@ -894,9 +935,9 @@ describe('CreateStandardUsecase', () => {
           name: 'Test Standard', // base slug: test-standard
           description: 'Desc',
           rules: [{ content: 'R1' }],
-          organizationId: createOrganizationId(uuidv4()).toString(),
-          userId: createUserId(uuidv4()).toString(),
-          spaceId: createSpaceId(uuidv4()).toString(),
+          organizationId: testOrganizationId,
+          userId: testUserId.toString(),
+          spaceId: createSpaceId(uuidv4()),
           scope: null,
         };
 

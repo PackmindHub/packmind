@@ -19,7 +19,7 @@ export default function OrgStandardsIndex() {
   return (
     <PMPage
       title="Standards"
-      subtitle="Create and manage your standards"
+      subtitle="Standards define the rules the AI should always follow — use them to ensure consistent behavior across all interactions."
       breadcrumbComponent={<AutobreadCrumb />}
       actions={
         spaceSlug && (

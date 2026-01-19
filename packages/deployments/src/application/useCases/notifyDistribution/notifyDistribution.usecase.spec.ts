@@ -12,17 +12,21 @@ import {
   createTargetId,
   createRecipeId,
   createStandardId,
+  createSkillId,
   createRecipeVersionId,
   createStandardVersionId,
+  createSkillVersionId,
   DEFAULT_ACTIVE_RENDER_MODES,
   IAccountsPort,
   IGitPort,
   IRecipesPort,
+  ISkillsPort,
   IStandardsPort,
   NotifyDistributionCommand,
   Package,
   Target,
   RecipeVersion,
+  SkillVersion,
   StandardVersion,
 } from '@packmind/types';
 import { PackmindLogger } from '@packmind/logger';
@@ -40,6 +44,7 @@ describe('NotifyDistributionUseCase', () => {
   let mockGitPort: jest.Mocked<IGitPort>;
   let mockRecipesPort: jest.Mocked<IRecipesPort>;
   let mockStandardsPort: jest.Mocked<IStandardsPort>;
+  let mockSkillsPort: jest.Mocked<ISkillsPort>;
   let mockPackageRepository: jest.Mocked<IPackageRepository>;
   let mockTargetRepository: jest.Mocked<ITargetRepository>;
   let mockDistributionRepository: jest.Mocked<IDistributionRepository>;
@@ -56,6 +61,7 @@ describe('NotifyDistributionUseCase', () => {
   const targetId = createTargetId(uuidv4());
   const recipeId = createRecipeId(uuidv4());
   const standardId = createStandardId(uuidv4());
+  const skillId = createSkillId(uuidv4());
 
   const buildUser = () => ({
     id: userId,
@@ -86,6 +92,7 @@ describe('NotifyDistributionUseCase', () => {
     createdBy: userId,
     recipes: [recipeId],
     standards: [standardId],
+    skills: [skillId],
   });
 
   const buildTarget = (): Target => ({
@@ -118,6 +125,17 @@ describe('NotifyDistributionUseCase', () => {
     scope: null,
   });
 
+  const buildSkillVersion = (): SkillVersion => ({
+    id: createSkillVersionId(uuidv4()),
+    skillId,
+    version: 1,
+    name: 'Test Skill',
+    slug: 'test-skill',
+    description: 'Test skill description',
+    prompt: 'Test prompt',
+    userId,
+  });
+
   beforeEach(() => {
     mockAccountsPort = {
       getUserById: jest.fn().mockResolvedValue(buildUser()),
@@ -143,6 +161,10 @@ describe('NotifyDistributionUseCase', () => {
       getLatestStandardVersion: jest.fn(),
     } as unknown as jest.Mocked<IStandardsPort>;
 
+    mockSkillsPort = {
+      getLatestSkillVersion: jest.fn(),
+    } as unknown as jest.Mocked<ISkillsPort>;
+
     mockPackageRepository = {
       findByOrganizationId: jest.fn(),
     } as unknown as jest.Mocked<IPackageRepository>;
@@ -161,6 +183,7 @@ describe('NotifyDistributionUseCase', () => {
       add: jest.fn(),
       addStandardVersions: jest.fn(),
       addRecipeVersions: jest.fn(),
+      addSkillVersions: jest.fn(),
     } as unknown as jest.Mocked<IDistributedPackageRepository>;
 
     mockRenderModeConfigurationService = {
@@ -176,6 +199,7 @@ describe('NotifyDistributionUseCase', () => {
       mockGitPort,
       mockRecipesPort,
       mockStandardsPort,
+      mockSkillsPort,
       mockPackageRepository,
       mockTargetRepository,
       mockDistributionRepository,
@@ -197,6 +221,7 @@ describe('NotifyDistributionUseCase', () => {
         const existingTarget = buildTarget();
         const recipeVersion = buildRecipeVersion();
         const standardVersion = buildStandardVersion();
+        const skillVersion = buildSkillVersion();
         const pkg = buildPackage('my-package');
 
         mockGitPort.listProviders.mockResolvedValue({
@@ -229,6 +254,7 @@ describe('NotifyDistributionUseCase', () => {
           standardVersion,
         );
         mockRecipesPort.listRecipeVersions.mockResolvedValue([recipeVersion]);
+        mockSkillsPort.getLatestSkillVersion.mockResolvedValue(skillVersion);
         mockDistributionRepository.add.mockImplementation((d) =>
           Promise.resolve(d),
         );

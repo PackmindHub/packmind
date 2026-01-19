@@ -357,6 +357,7 @@ describe('OrganizationsSpacesRecipesController', () => {
           userId,
           name: 'Test User',
         },
+        clientSource: 'ui',
       } as unknown as AuthenticatedRequest;
       let result: Recipe;
 
@@ -376,16 +377,16 @@ describe('OrganizationsSpacesRecipesController', () => {
       });
 
       it('calls service with correct params', () => {
-        expect(recipesService.updateRecipeFromUI).toHaveBeenCalledWith(
+        expect(recipesService.updateRecipeFromUI).toHaveBeenCalledWith({
           recipeId,
           spaceId,
-          orgId,
-          updateData.name,
-          '', // slug (empty string when not provided)
-          updateData.content,
+          organizationId: orgId,
+          name: updateData.name,
+          content: updateData.content,
           userId,
-          undefined, // summary (undefined when not provided)
-        );
+          source: 'ui',
+          summary: undefined,
+        });
       });
     });
 
@@ -471,6 +472,7 @@ describe('OrganizationsSpacesRecipesController', () => {
           userId,
           name: 'Test User',
         },
+        clientSource: 'ui',
       } as unknown as AuthenticatedRequest;
 
       recipesService.deleteRecipe.mockResolvedValue(undefined);
@@ -482,6 +484,7 @@ describe('OrganizationsSpacesRecipesController', () => {
         spaceId,
         orgId,
         userId,
+        'ui',
       );
     });
 

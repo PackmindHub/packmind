@@ -14,7 +14,7 @@ export default function OrgCommandsIndex() {
   return (
     <PMPage
       title="Commands"
-      subtitle="Create and manage your commands"
+      subtitle="Commands are shortcuts you can run to trigger a specific action — use them to quickly repeat common tasks."
       breadcrumbComponent={<AutobreadCrumb />}
       actions={
         <GettingStartedLearnMoreDialog

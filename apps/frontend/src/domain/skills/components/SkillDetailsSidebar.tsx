@@ -1,11 +1,7 @@
 import { ChangeEvent, useMemo } from 'react';
-import { useNavigate, useParams } from 'react-router';
 import {
   PMBox,
-  PMIcon,
-  PMLink,
   PMNativeSelect,
-  PMText,
   PMVerticalNav,
   PMVerticalNavSection,
   PMVStack,
@@ -13,36 +9,38 @@ import {
 import { LuGitCommitVertical } from 'react-icons/lu';
 
 import type { Skill, SkillFile } from '@packmind/types';
-import { routes } from '../../../shared/utils/routes';
 
 import { SkillFileTree } from './SkillFileTree';
+import { SkillDetailsNavEntry } from './SkillDetailsNavEntry';
+import { SkillNavKey } from '../utils/skillNavigation';
 
 interface ISkillDetailsSidebarProps {
   skill: Skill;
   skills: Skill[];
-  files: SkillFile[];
-  selectedFilePath: string | null;
-  onFileSelect: (path: string) => void;
+  activeSection: SkillNavKey;
+  onSectionSelect: (value: SkillNavKey) => void;
   onSkillChange: (skillId: string) => void;
   isSkillSelectDisabled: boolean;
   skillsLoading: boolean;
-  orgSlug?: string;
+  getPathForNavKey?: (navKey: SkillNavKey) => string | null;
+  files?: SkillFile[];
+  selectedFilePath?: string | null;
+  onFileSelect?: (path: string) => void;
 }
 
 export const SkillDetailsSidebar = ({
   skill,
   skills,
-  files,
-  selectedFilePath,
-  onFileSelect,
+  activeSection,
+  onSectionSelect,
   onSkillChange,
   isSkillSelectDisabled,
   skillsLoading,
-  orgSlug,
+  getPathForNavKey,
+  files,
+  selectedFilePath,
+  onFileSelect,
 }: ISkillDetailsSidebarProps) => {
-  const navigate = useNavigate();
-  const { spaceSlug } = useParams<{ spaceSlug?: string }>();
-
   const skillSelectItems = useMemo(
     () =>
       (skills.length > 0 ? skills : [skill]).map((s) => ({
@@ -60,49 +58,25 @@ export const SkillDetailsSidebar = ({
     onSkillChange(nextSkillId);
   };
 
-  const handleDistributionClick = (e: React.MouseEvent) => {
-    e.preventDefault();
-    if (orgSlug && spaceSlug) {
-      navigate(routes.space.toSkillDeployment(orgSlug, spaceSlug, skill.slug));
-    }
-  };
-
   const selectDisabled =
     isSkillSelectDisabled || skillsLoading || skillSelectItems.length === 0;
 
-  const distributionNavEntries = [
-    <PMLink
-      key="distribution"
-      variant="navbar"
-      as="button"
-      width="full"
-      textAlign="left"
-      py={2}
-      type="button"
-      display="flex"
-      alignItems="center"
-      textDecoration="none"
-      fontWeight="medium"
-      onClick={handleDistributionClick}
-      _hover={{ fontWeight: 'medium', textDecoration: 'none' }}
-      _focus={{ outline: 'none', boxShadow: 'none' }}
-      _focusVisible={{ outline: 'none', boxShadow: 'none' }}
-    >
-      <PMText
-        width="full"
-        fontSize="sm"
-        fontWeight="medium"
-        display="inline-flex"
-        alignItems="center"
-        gap={2}
-      >
-        <PMIcon as="span" display="inline-flex">
-          <LuGitCommitVertical />
-        </PMIcon>
-        Distribution
-      </PMText>
-    </PMLink>,
+  const distributionsUrl = getPathForNavKey
+    ? getPathForNavKey('distributions')
+    : null;
+
+  const navEntries = [
+    <SkillDetailsNavEntry
+      key="distributions"
+      label={{ icon: LuGitCommitVertical, text: 'Distribution', gap: 2 }}
+      value="distributions"
+      isActive={activeSection === 'distributions'}
+      onSelect={onSectionSelect}
+      url={distributionsUrl ?? undefined}
+    />,
   ];
+
+  const showFileTree = files && files.length > 0 && onFileSelect;
 
   return (
     <PMVerticalNav
@@ -125,23 +99,22 @@ export const SkillDetailsSidebar = ({
         </PMBox>
       }
     >
-      <PMVerticalNavSection navEntries={distributionNavEntries} />
-      <PMVStack align="flex-start" px={2} gap={2}>
-        <PMText fontSize="xs" fontWeight="bold" color="secondary">
-          FILES
-        </PMText>
-        {files.length === 0 ? (
-          <PMText color="faded" fontSize="sm">
-            No files found.
-          </PMText>
-        ) : (
+      <PMVerticalNavSection navEntries={navEntries} />
+      {showFileTree && (
+        <PMVStack
+          align="flex-start"
+          px={2}
+          gap={2}
+          width="full"
+          overflow="hidden"
+        >
           <SkillFileTree
             files={files}
-            selectedFilePath={selectedFilePath}
+            selectedFilePath={selectedFilePath ?? null}
             onFileSelect={onFileSelect}
           />
-        )}
-      </PMVStack>
+        </PMVStack>
+      )}
     </PMVerticalNav>
   );
 };

@@ -2,30 +2,21 @@ import { useCallback, useMemo } from 'react';
 import { useLocation, useNavigate } from 'react-router';
 
 import { routes } from '../../../shared/utils/routes';
+import { SkillNavKey } from '../utils/skillNavigation';
 
-type SkillNavKey = 'summary' | 'deployment';
-
-type UseSkillSectionNavigationArgs = {
+interface IUseSkillSectionNavigationArgs {
   skillSlug: string;
   orgSlug?: string;
   spaceSlug?: string;
-};
+}
 
 export const useSkillSectionNavigation = ({
   skillSlug,
   orgSlug,
   spaceSlug,
-}: UseSkillSectionNavigationArgs) => {
-  const location = useLocation();
+}: IUseSkillSectionNavigationArgs) => {
   const navigate = useNavigate();
-
-  // Determine active section from URL
-  const activeSection: SkillNavKey = useMemo(() => {
-    if (location.pathname.endsWith('/deployment')) {
-      return 'deployment';
-    }
-    return 'summary';
-  }, [location.pathname]);
+  const location = useLocation();
 
   const getPathForNavKey = useCallback(
     (navKey: SkillNavKey): string | null => {
@@ -33,12 +24,12 @@ export const useSkillSectionNavigation = ({
         return null;
       }
 
-      if (navKey === 'summary') {
-        return routes.space.toSkillSummary(orgSlug, spaceSlug, skillSlug);
+      if (navKey === 'files') {
+        return routes.space.toSkillFiles(orgSlug, spaceSlug, skillSlug);
       }
 
-      if (navKey === 'deployment') {
-        return routes.space.toSkillDeployment(orgSlug, spaceSlug, skillSlug);
+      if (navKey === 'distributions') {
+        return routes.space.toSkillDistributions(orgSlug, spaceSlug, skillSlug);
       }
 
       return null;
@@ -46,18 +37,29 @@ export const useSkillSectionNavigation = ({
     [orgSlug, spaceSlug, skillSlug],
   );
 
-  const handleSectionSelect = (value: SkillNavKey) => {
-    const targetPath = getPathForNavKey(value);
-    if (!targetPath) {
-      return;
+  const activeSection: SkillNavKey = useMemo(() => {
+    if (location.pathname.includes('/distributions')) {
+      return 'distributions';
     }
 
-    if (targetPath === location.pathname) {
-      return;
-    }
+    return 'files';
+  }, [location.pathname]);
 
-    navigate(targetPath);
-  };
+  const handleSectionSelect = useCallback(
+    (value: SkillNavKey) => {
+      const targetPath = getPathForNavKey(value);
+      if (!targetPath) {
+        return;
+      }
+
+      if (location.pathname.startsWith(targetPath)) {
+        return;
+      }
+
+      navigate(targetPath);
+    },
+    [getPathForNavKey, location.pathname, navigate],
+  );
 
   return {
     activeSection,

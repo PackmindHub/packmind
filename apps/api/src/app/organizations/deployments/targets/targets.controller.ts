@@ -161,6 +161,7 @@ export class TargetsController {
         gitRepoId: body.gitRepoId,
         // Always false from API endpoints - only internal use cases can bypass token check
         allowTokenlessProvider: false,
+        source: request.clientSource,
       };
 
       const target = await this.targetsService.addTarget(command);
@@ -218,6 +219,7 @@ export class TargetsController {
         targetId,
         name: body.name,
         path: body.path,
+        source: request.clientSource,
       };
 
       const target = await this.targetsService.updateTarget(command);
@@ -269,6 +271,7 @@ export class TargetsController {
         userId: request.user.userId,
         organizationId,
         targetId,
+        source: request.clientSource,
       };
 
       const response = await this.targetsService.deleteTarget(command);

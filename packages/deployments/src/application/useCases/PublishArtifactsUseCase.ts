@@ -63,6 +63,8 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
   async execute(
     command: PublishArtifactsCommand,
   ): Promise<PublishArtifactsResponse> {
+    const { source = 'ui' } = command;
+
     this.logger.info(
       'Publishing artifacts (unified recipes + standards + skills)',
       {
@@ -319,7 +321,7 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
         targetIds: command.targetIds,
         recipeCount: recipeVersions.length,
         standardCount: standardVersions.length,
-        source: 'ui',
+        source,
       }),
     );
 
@@ -534,7 +536,9 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
       if (!version) {
         throw new Error(`Skill version with ID ${id} not found`);
       }
-      versions.push(version);
+      // Fetch skill files for this version
+      const files = await this.skillsPort.getSkillFiles(id);
+      versions.push({ ...version, files });
     }
     return versions.sort((a, b) => a.name.localeCompare(b.name));
   }
