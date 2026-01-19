@@ -141,36 +141,30 @@ describe('ExchangeCliLoginCodeUseCase', () => {
     });
 
     describe('when code is expired', () => {
-      it('throws CliLoginCodeExpiredError', async () => {
-        const expiredCode: CliLoginCode = {
-          id: codeId,
-          code: codeToken,
-          userId,
-          organizationId,
-          expiresAt: new Date(Date.now() - 1000), // 1 second ago
-        };
+      const expiredCode: CliLoginCode = {
+        id: codeId,
+        code: codeToken,
+        userId,
+        organizationId,
+        expiresAt: new Date(Date.now() - 1000), // 1 second ago
+      };
 
+      beforeEach(() => {
         mockRepository.findByCode.mockResolvedValue(expiredCode);
+      });
 
+      it('throws CliLoginCodeExpiredError', async () => {
         await expect(
           useCase.execute({ code: codeToken as string }),
         ).rejects.toThrow(CliLoginCodeExpiredError);
       });
 
       it('deletes the expired code', async () => {
-        const expiredCode: CliLoginCode = {
-          id: codeId,
-          code: codeToken,
-          userId,
-          organizationId,
-          expiresAt: new Date(Date.now() - 1000),
-        };
-
-        mockRepository.findByCode.mockResolvedValue(expiredCode);
-
-        await expect(
-          useCase.execute({ code: codeToken as string }),
-        ).rejects.toThrow(CliLoginCodeExpiredError);
+        try {
+          await useCase.execute({ code: codeToken as string });
+        } catch {
+          // Expected to throw
+        }
 
         expect(mockRepository.delete).toHaveBeenCalledWith(codeId);
       });

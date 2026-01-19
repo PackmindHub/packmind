@@ -73,32 +73,62 @@ describe('AccountsAdapter', () => {
   });
 
   describe('initialize', () => {
-    it('throw with no ports', async () => {
-      await expect(
-        adapter.initialize(
-          {} as {
-            [ISpacesPortName]: ISpacesPort;
-            [IGitPortName]: IGitPort;
-            [IStandardsPortName]: IStandardsPort;
-            [IDeploymentPortName]: IDeploymentPort;
-          },
-        ),
-      ).rejects.toThrow();
+    describe('when called with no ports', () => {
+      it('throws an error', async () => {
+        await expect(
+          adapter.initialize(
+            {} as {
+              [ISpacesPortName]: ISpacesPort;
+              [IGitPortName]: IGitPort;
+              [IStandardsPortName]: IStandardsPort;
+              [IDeploymentPortName]: IDeploymentPort;
+            },
+          ),
+        ).rejects.toThrow();
+      });
 
-      expect(adapter.isReady()).toBe(true);
+      it('sets adapter as ready', async () => {
+        try {
+          await adapter.initialize(
+            {} as {
+              [ISpacesPortName]: ISpacesPort;
+              [IGitPortName]: IGitPort;
+              [IStandardsPortName]: IStandardsPort;
+              [IDeploymentPortName]: IDeploymentPort;
+            },
+          );
+        } catch {
+          // Expected to throw
+        }
+
+        expect(adapter.isReady()).toBe(true);
+      });
     });
-    it('initializes successfully with all ports', async () => {
-      await expect(
-        adapter.initialize({
+
+    describe('when called with all ports', () => {
+      it('does not throw', async () => {
+        await expect(
+          adapter.initialize({
+            [ISpacesPortName]: mockSpacesPort,
+            [IGitPortName]: mockGitPort,
+            [IStandardsPortName]: mockStandardsPort,
+            [IDeploymentPortName]: mockDeploymentPort,
+            eventEmitterService: mockEventEmitterService,
+          }),
+        ).resolves.not.toThrow();
+      });
+
+      it('sets adapter as ready', async () => {
+        await adapter.initialize({
           [ISpacesPortName]: mockSpacesPort,
           [IGitPortName]: mockGitPort,
           [IStandardsPortName]: mockStandardsPort,
           [IDeploymentPortName]: mockDeploymentPort,
           eventEmitterService: mockEventEmitterService,
-        }),
-      ).resolves.not.toThrow();
+        });
 
-      expect(adapter.isReady()).toBe(true);
+        expect(adapter.isReady()).toBe(true);
+      });
     });
   });
 

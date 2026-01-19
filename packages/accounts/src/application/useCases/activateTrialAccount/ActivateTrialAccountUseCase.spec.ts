@@ -268,7 +268,7 @@ describe('ActivateTrialAccountUseCase', () => {
       });
     });
 
-    it('emits TrialAccountActivatedEvent', async () => {
+    it('emits event with correct payload', async () => {
       await useCase.execute({
         activationToken: mockToken,
         email: newEmail,
@@ -285,13 +285,21 @@ describe('ActivateTrialAccountUseCase', () => {
           }),
         }),
       );
+    });
+
+    it('emits AnonymousTrialAccountActivatedEvent instance', async () => {
+      await useCase.execute({
+        activationToken: mockToken,
+        email: newEmail,
+        password: newPassword,
+        organizationName: newOrgName,
+      });
 
       const trialActivatedCall = (
         mockEventEmitterService.emit as jest.Mock
       ).mock.calls.find(
         (call) => call[0] instanceof AnonymousTrialAccountActivatedEvent,
       );
-      expect(trialActivatedCall).toBeDefined();
       expect(trialActivatedCall[0]).toBeInstanceOf(
         AnonymousTrialAccountActivatedEvent,
       );

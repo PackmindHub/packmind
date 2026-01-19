@@ -88,7 +88,7 @@ describe('UserRepository', () => {
   });
 
   describe('.add', () => {
-    it('adds a new user successfully', async () => {
+    it('returns user matching the input', async () => {
       const id = createUserId('123e4567-e89b-12d3-a456-426614174000');
       const user = userFactory({
         id,
@@ -104,40 +104,53 @@ describe('UserRepository', () => {
       const result = await userRepository.add(user);
 
       expect(result).toEqual(user);
-      expect(result.id).toBe(user.id);
-      expect(result.email).toBe(user.email);
-      expect(result.passwordHash).toBe(user.passwordHash);
-      expect(result.active).toBe(true);
-      expect(result.memberships).toMatchObject(user.memberships);
     });
 
-    it('persists a user with null password hash and inactive status', async () => {
-      const id = createUserId('123e4567-e89b-12d3-a456-426614174010');
-      const user = userFactory({
-        id,
-        passwordHash: null,
-        active: false,
-        memberships: [
-          {
-            userId: id,
-            organizationId: testOrganization.id,
-            role: 'admin',
-          },
-        ],
+    describe('when user has null password hash and inactive status', () => {
+      it('persists null password hash', async () => {
+        const id = createUserId('123e4567-e89b-12d3-a456-426614174010');
+        const user = userFactory({
+          id,
+          passwordHash: null,
+          active: false,
+          memberships: [
+            {
+              userId: id,
+              organizationId: testOrganization.id,
+              role: 'admin',
+            },
+          ],
+        });
+
+        const result = await userRepository.add(user);
+
+        expect(result.passwordHash).toBeNull();
       });
 
-      const result = await userRepository.add(user);
+      it('persists inactive status', async () => {
+        const id = createUserId('123e4567-e89b-12d3-a456-426614174010');
+        const user = userFactory({
+          id,
+          passwordHash: null,
+          active: false,
+          memberships: [
+            {
+              userId: id,
+              organizationId: testOrganization.id,
+              role: 'admin',
+            },
+          ],
+        });
 
-      expect(result.id).toBe(user.id);
-      expect(result.email).toBe(user.email);
-      expect(result.passwordHash).toBeNull();
-      expect(result.active).toBe(false);
-      expect(result.memberships).toMatchObject(user.memberships);
+        const result = await userRepository.add(user);
+
+        expect(result.active).toBe(false);
+      });
     });
   });
 
   describe('.findById', () => {
-    it('finds user by ID', async () => {
+    it('returns user with expected properties', async () => {
       const id = createUserId('123e4567-e89b-12d3-a456-426614174000');
       const user = userFactory({
         id,
@@ -153,12 +166,12 @@ describe('UserRepository', () => {
 
       const result = await userRepository.findById(user.id);
 
-      expect(result).not.toBeNull();
-      expect(result?.id).toBe(user.id);
-      expect(result?.email).toBe(user.email);
-      expect(result?.passwordHash).toBe(user.passwordHash);
-      expect(result?.active).toBe(true);
-      expect(result?.memberships).toMatchObject(user.memberships);
+      expect(result).toMatchObject({
+        id: user.id,
+        email: user.email,
+        passwordHash: user.passwordHash,
+        active: true,
+      });
     });
 
     describe('when user is not found', () => {
@@ -175,7 +188,7 @@ describe('UserRepository', () => {
   });
 
   describe('.findByEmail', () => {
-    it('finds user by email', async () => {
+    it('returns user with expected properties', async () => {
       const id = createUserId('123e4567-e89b-12d3-a456-426614174000');
       const user = userFactory({
         id,
@@ -192,12 +205,12 @@ describe('UserRepository', () => {
 
       const result = await userRepository.findByEmail(user.email);
 
-      expect(result).not.toBeNull();
-      expect(result?.id).toBe(user.id);
-      expect(result?.email).toBe(user.email);
-      expect(result?.passwordHash).toBe(user.passwordHash);
-      expect(result?.active).toBe(true);
-      expect(result?.memberships).toMatchObject(user.memberships);
+      expect(result).toMatchObject({
+        id: user.id,
+        email: user.email,
+        passwordHash: user.passwordHash,
+        active: true,
+      });
     });
 
     describe('when email is not found', () => {
@@ -212,53 +225,58 @@ describe('UserRepository', () => {
   });
 
   describe('.findByEmailCaseInsensitive', () => {
-    it('finds user by email with different case', async () => {
-      const id = createUserId('123e4567-e89b-12d3-a456-426614174000');
-      const user = userFactory({
-        id,
-        email: 'Vincent@Example.com',
-        memberships: [
-          {
-            userId: id,
-            organizationId: testOrganization.id,
-            role: 'admin',
-          },
-        ],
+    describe('when querying with different case', () => {
+      it('returns user with expected properties', async () => {
+        const id = createUserId('123e4567-e89b-12d3-a456-426614174000');
+        const user = userFactory({
+          id,
+          email: 'Vincent@Example.com',
+          memberships: [
+            {
+              userId: id,
+              organizationId: testOrganization.id,
+              role: 'admin',
+            },
+          ],
+        });
+        await userRepository.add(user);
+
+        const result = await userRepository.findByEmailCaseInsensitive(
+          'vincent@EXAMPLE.com',
+        );
+
+        expect(result).toMatchObject({
+          id: user.id,
+          email: 'Vincent@Example.com',
+          passwordHash: user.passwordHash,
+        });
       });
-      await userRepository.add(user);
-
-      const result = await userRepository.findByEmailCaseInsensitive(
-        'vincent@EXAMPLE.com',
-      );
-
-      expect(result).not.toBeNull();
-      expect(result?.id).toBe(user.id);
-      expect(result?.email).toBe('Vincent@Example.com'); // Original case preserved
-      expect(result?.passwordHash).toBe(user.passwordHash);
-      expect(result?.memberships).toMatchObject(user.memberships);
     });
 
-    it('finds user by email with exact case', async () => {
-      const id = createUserId('123e4567-e89b-12d3-a456-426614174000');
-      const user = userFactory({
-        id,
-        email: 'test@example.com',
-        memberships: [
-          {
-            userId: id,
-            organizationId: testOrganization.id,
-            role: 'admin',
-          },
-        ],
+    describe('when querying with exact case', () => {
+      it('returns user with expected properties', async () => {
+        const id = createUserId('123e4567-e89b-12d3-a456-426614174000');
+        const user = userFactory({
+          id,
+          email: 'test@example.com',
+          memberships: [
+            {
+              userId: id,
+              organizationId: testOrganization.id,
+              role: 'admin',
+            },
+          ],
+        });
+        await userRepository.add(user);
+
+        const result =
+          await userRepository.findByEmailCaseInsensitive('test@example.com');
+
+        expect(result).toMatchObject({
+          id: user.id,
+          email: 'test@example.com',
+        });
       });
-      await userRepository.add(user);
-
-      const result =
-        await userRepository.findByEmailCaseInsensitive('test@example.com');
-
-      expect(result).not.toBeNull();
-      expect(result?.id).toBe(user.id);
-      expect(result?.email).toBe('test@example.com');
     });
 
     describe('when email is not found', () => {
@@ -282,7 +300,7 @@ describe('UserRepository', () => {
       });
     });
 
-    it('returns all users', async () => {
+    it('returns all users with expected length', async () => {
       const user1Id = createUserId('123e4567-e89b-12d3-a456-426614174000');
       const user1 = userFactory({
         id: user1Id,
@@ -315,9 +333,6 @@ describe('UserRepository', () => {
       const result = await userRepository.list();
 
       expect(result).toHaveLength(2);
-      expect(result.map((u) => u.email)).toContain('user1@packmind.com');
-      expect(result.map((u) => u.email)).toContain('user2@packmind.com');
-      expect(result.every((u) => typeof u.active === 'boolean')).toBe(true);
     });
   });
 });

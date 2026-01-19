@@ -36,18 +36,21 @@ describe('ListUserOrganizationsUseCase', () => {
 
   describe('execute', () => {
     describe('when user exists with organizations', () => {
-      it('returns organizations from user memberships', async () => {
-        const org1 = organizationFactory({
-          id: createOrganizationId('org-1'),
-          name: 'Organization 1',
-          slug: 'organization-1',
-        });
-        const org2 = organizationFactory({
-          id: createOrganizationId('org-2'),
-          name: 'Organization 2',
-          slug: 'organization-2',
-        });
+      const org1 = organizationFactory({
+        id: createOrganizationId('org-1'),
+        name: 'Organization 1',
+        slug: 'organization-1',
+      });
+      const org2 = organizationFactory({
+        id: createOrganizationId('org-2'),
+        name: 'Organization 2',
+        slug: 'organization-2',
+      });
+      const command: ListUserOrganizationsCommand = {
+        userId: createUserId('user-123'),
+      };
 
+      beforeEach(() => {
         const mockUser = userFactory({
           id: createUserId('user-123'),
           email: 'testuser@packmind.com',
@@ -66,16 +69,18 @@ describe('ListUserOrganizationsUseCase', () => {
             },
           ],
         });
-
         mockUserService.getUserById.mockResolvedValue(mockUser);
+      });
 
-        const command: ListUserOrganizationsCommand = {
-          userId: createUserId('user-123'),
-        };
-
+      it('returns organizations from user memberships', async () => {
         const result = await listUserOrganizationsUseCase.execute(command);
 
         expect(result).toEqual({ organizations: [org1, org2] });
+      });
+
+      it('calls getUserById with the user id', async () => {
+        await listUserOrganizationsUseCase.execute(command);
+
         expect(mockUserService.getUserById).toHaveBeenCalledWith(
           command.userId,
         );
@@ -83,22 +88,28 @@ describe('ListUserOrganizationsUseCase', () => {
     });
 
     describe('when user exists with no organizations', () => {
-      it('returns empty organizations array', async () => {
+      const command: ListUserOrganizationsCommand = {
+        userId: createUserId('user-123'),
+      };
+
+      beforeEach(() => {
         const mockUser = userFactory({
           id: createUserId('user-123'),
           email: 'testuser@packmind.com',
           memberships: [],
         });
-
         mockUserService.getUserById.mockResolvedValue(mockUser);
+      });
 
-        const command: ListUserOrganizationsCommand = {
-          userId: createUserId('user-123'),
-        };
-
+      it('returns empty organizations array', async () => {
         const result = await listUserOrganizationsUseCase.execute(command);
 
         expect(result).toEqual({ organizations: [] });
+      });
+
+      it('calls getUserById with the user id', async () => {
+        await listUserOrganizationsUseCase.execute(command);
+
         expect(mockUserService.getUserById).toHaveBeenCalledWith(
           command.userId,
         );
@@ -106,13 +117,16 @@ describe('ListUserOrganizationsUseCase', () => {
     });
 
     describe('when user exists with memberships without organization data', () => {
-      it('filters out memberships without organization', async () => {
-        const org1 = organizationFactory({
-          id: createOrganizationId('org-1'),
-          name: 'Organization 1',
-          slug: 'organization-1',
-        });
+      const org1 = organizationFactory({
+        id: createOrganizationId('org-1'),
+        name: 'Organization 1',
+        slug: 'organization-1',
+      });
+      const command: ListUserOrganizationsCommand = {
+        userId: createUserId('user-123'),
+      };
 
+      beforeEach(() => {
         const mockUser = userFactory({
           id: createUserId('user-123'),
           email: 'testuser@packmind.com',
@@ -131,16 +145,18 @@ describe('ListUserOrganizationsUseCase', () => {
             },
           ],
         });
-
         mockUserService.getUserById.mockResolvedValue(mockUser);
+      });
 
-        const command: ListUserOrganizationsCommand = {
-          userId: createUserId('user-123'),
-        };
-
+      it('filters out memberships without organization', async () => {
         const result = await listUserOrganizationsUseCase.execute(command);
 
         expect(result).toEqual({ organizations: [org1] });
+      });
+
+      it('calls getUserById with the user id', async () => {
+        await listUserOrganizationsUseCase.execute(command);
+
         expect(mockUserService.getUserById).toHaveBeenCalledWith(
           command.userId,
         );
@@ -148,16 +164,23 @@ describe('ListUserOrganizationsUseCase', () => {
     });
 
     describe('when user does not exist', () => {
-      it('returns empty organizations array', async () => {
+      const command: ListUserOrganizationsCommand = {
+        userId: createUserId('non-existent'),
+      };
+
+      beforeEach(() => {
         mockUserService.getUserById.mockResolvedValue(null);
+      });
 
-        const command: ListUserOrganizationsCommand = {
-          userId: createUserId('non-existent'),
-        };
-
+      it('returns empty organizations array', async () => {
         const result = await listUserOrganizationsUseCase.execute(command);
 
         expect(result).toEqual({ organizations: [] });
+      });
+
+      it('calls getUserById with the user id', async () => {
+        await listUserOrganizationsUseCase.execute(command);
+
         expect(mockUserService.getUserById).toHaveBeenCalledWith(
           command.userId,
         );

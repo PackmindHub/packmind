@@ -150,7 +150,7 @@ describe('StartTrialUseCase', () => {
         );
       });
 
-      it('emits TrialStartedEvent with agent and startedAt', async () => {
+      it('emits TrialStartedEvent with correct payload', async () => {
         const command: StartTrialCommand = { agent: 'vs-code' };
 
         await startTrialUseCase.execute(command);
@@ -165,13 +165,18 @@ describe('StartTrialUseCase', () => {
             }),
           }),
         );
+      });
+
+      it('emits AnonymousTrialStartedEvent instance', async () => {
+        const command: StartTrialCommand = { agent: 'vs-code' };
+
+        await startTrialUseCase.execute(command);
 
         const trialStartedCall = (
           mockEventEmitterService.emit as jest.Mock
         ).mock.calls.find(
           (call) => call[0] instanceof AnonymousTrialStartedEvent,
         );
-        expect(trialStartedCall).toBeDefined();
         expect(trialStartedCall[0]).toBeInstanceOf(AnonymousTrialStartedEvent);
       });
 

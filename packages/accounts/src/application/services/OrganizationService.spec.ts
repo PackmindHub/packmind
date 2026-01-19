@@ -43,29 +43,53 @@ describe('OrganizationService', () => {
   });
 
   describe('.createOrganization', () => {
-    it('creates a new organization successfully', async () => {
+    describe('when creating a new organization successfully', () => {
       const name = 'Test Organization';
 
-      mockOrganizationRepository.findBySlug.mockResolvedValue(null);
-      mockOrganizationRepository.add.mockResolvedValue({
-        id: expect.any(String),
-        name,
-        slug: 'test-organization',
+      beforeEach(() => {
+        mockOrganizationRepository.findBySlug.mockResolvedValue(null);
+        mockOrganizationRepository.add.mockResolvedValue({
+          id: expect.any(String),
+          name,
+          slug: 'test-organization',
+        });
       });
 
-      const result = await organizationService.createOrganization(name);
+      it('calls slug with the organization name', async () => {
+        await organizationService.createOrganization(name);
 
-      expect(mockSlug).toHaveBeenCalledWith(name);
-      expect(mockOrganizationRepository.findBySlug).toHaveBeenCalledWith(
-        'test-organization',
-      );
-      expect(mockOrganizationRepository.add).toHaveBeenCalledWith({
-        id: expect.any(String),
-        name,
-        slug: 'test-organization',
+        expect(mockSlug).toHaveBeenCalledWith(name);
       });
-      expect(result.name).toBe(name);
-      expect(result.slug).toBe('test-organization');
+
+      it('checks if slug already exists', async () => {
+        await organizationService.createOrganization(name);
+
+        expect(mockOrganizationRepository.findBySlug).toHaveBeenCalledWith(
+          'test-organization',
+        );
+      });
+
+      it('adds the organization to the repository', async () => {
+        await organizationService.createOrganization(name);
+
+        expect(mockOrganizationRepository.add).toHaveBeenCalledWith({
+          id: expect.any(String),
+          name,
+          slug: 'test-organization',
+        });
+      });
+
+      it('returns organization with correct name', async () => {
+        const result = await organizationService.createOrganization(name);
+
+        expect(result.name).toBe(name);
+      });
+
+      it('returns organization with correct slug', async () => {
+        const result = await organizationService.createOrganization(name);
+
+        expect(result.slug).toBe('test-organization');
+      });
     });
 
     describe('when organization slug already exists', () => {
@@ -86,52 +110,96 @@ describe('OrganizationService', () => {
         ).rejects.toThrow(
           'An organization with a similar name already exists. The name "Test Organization" conflicts with an existing organization when converted to URL-friendly format.',
         );
+      });
+
+      it('does not add organization to repository', async () => {
+        const name = 'Test Organization';
+        const existingOrganization = organizationFactory({
+          id: createOrganizationId('123e4567-e89b-12d3-a456-426614174000'),
+          name: 'Different Name',
+          slug: 'test-organization',
+        });
+
+        mockOrganizationRepository.findBySlug.mockResolvedValue(
+          existingOrganization,
+        );
+
+        try {
+          await organizationService.createOrganization(name);
+        } catch {
+          // Expected to throw
+        }
+
         expect(mockOrganizationRepository.add).not.toHaveBeenCalled();
       });
     });
 
-    it('generates correct slug for organization with spaces', async () => {
+    describe('when organization has spaces in name', () => {
       const name = 'My Complex Organization Name';
-      mockSlug.mockReturnValue('my-complex-organization-name');
 
-      mockOrganizationRepository.findBySlug.mockResolvedValue(null);
-      mockOrganizationRepository.add.mockResolvedValue({
-        id: expect.any(String),
-        name,
-        slug: 'my-complex-organization-name',
+      beforeEach(() => {
+        mockSlug.mockReturnValue('my-complex-organization-name');
+        mockOrganizationRepository.findBySlug.mockResolvedValue(null);
+        mockOrganizationRepository.add.mockResolvedValue({
+          id: expect.any(String),
+          name,
+          slug: 'my-complex-organization-name',
+        });
       });
 
-      await organizationService.createOrganization(name);
+      it('calls slug with the organization name', async () => {
+        await organizationService.createOrganization(name);
 
-      expect(mockSlug).toHaveBeenCalledWith(name);
-      expect(mockOrganizationRepository.findBySlug).toHaveBeenCalledWith(
-        'my-complex-organization-name',
-      );
-      expect(mockOrganizationRepository.add).toHaveBeenCalledWith({
-        id: expect.any(String),
-        name,
-        slug: 'my-complex-organization-name',
+        expect(mockSlug).toHaveBeenCalledWith(name);
+      });
+
+      it('checks if generated slug exists', async () => {
+        await organizationService.createOrganization(name);
+
+        expect(mockOrganizationRepository.findBySlug).toHaveBeenCalledWith(
+          'my-complex-organization-name',
+        );
+      });
+
+      it('adds organization with correct slug', async () => {
+        await organizationService.createOrganization(name);
+
+        expect(mockOrganizationRepository.add).toHaveBeenCalledWith({
+          id: expect.any(String),
+          name,
+          slug: 'my-complex-organization-name',
+        });
       });
     });
   });
 
   describe('.getOrganizationById', () => {
     describe('when organization is found', () => {
-      it('returns organization', async () => {
-        const organizationId = '123e4567-e89b-12d3-a456-426614174000';
-        const expectedOrganization = organizationFactory({
+      const organizationId = '123e4567-e89b-12d3-a456-426614174000';
+      let expectedOrganization: ReturnType<typeof organizationFactory>;
+
+      beforeEach(() => {
+        expectedOrganization = organizationFactory({
           id: createOrganizationId(organizationId),
         });
-
         mockOrganizationRepository.findById.mockResolvedValue(
           expectedOrganization,
         );
+      });
 
+      it('returns organization', async () => {
         const result = await organizationService.getOrganizationById(
           createOrganizationId(organizationId),
         );
 
         expect(result).toEqual(expectedOrganization);
+      });
+
+      it('calls repository with organization id', async () => {
+        await organizationService.getOrganizationById(
+          createOrganizationId(organizationId),
+        );
+
         expect(mockOrganizationRepository.findById).toHaveBeenCalledWith(
           organizationId,
         );
@@ -139,16 +207,25 @@ describe('OrganizationService', () => {
     });
 
     describe('when organization is not found', () => {
-      it('returns null', async () => {
-        const organizationId = '123e4567-e89b-12d3-a456-426614174000';
+      const organizationId = '123e4567-e89b-12d3-a456-426614174000';
 
+      beforeEach(() => {
         mockOrganizationRepository.findById.mockResolvedValue(null);
+      });
 
+      it('returns null', async () => {
         const result = await organizationService.getOrganizationById(
           createOrganizationId(organizationId),
         );
 
         expect(result).toBeNull();
+      });
+
+      it('calls repository with organization id', async () => {
+        await organizationService.getOrganizationById(
+          createOrganizationId(organizationId),
+        );
+
         expect(mockOrganizationRepository.findById).toHaveBeenCalledWith(
           organizationId,
         );
@@ -158,40 +235,55 @@ describe('OrganizationService', () => {
 
   describe('.getOrganizationByName', () => {
     describe('when organization is found', () => {
-      it('returns organization by slugifying the name', async () => {
-        const name = 'Test Organization';
-        const expectedSlug = 'test-organization';
-        const expectedOrganization = organizationFactory({
+      const name = 'Test Organization';
+      const expectedSlug = 'test-organization';
+      let expectedOrganization: ReturnType<typeof organizationFactory>;
+
+      beforeEach(() => {
+        expectedOrganization = organizationFactory({
           id: createOrganizationId('123e4567-e89b-12d3-a456-426614174000'),
           name,
           slug: expectedSlug,
         });
-
         mockOrganizationRepository.findBySlug.mockResolvedValue(
           expectedOrganization,
         );
+      });
 
-        const result = await organizationService.getOrganizationByName(name);
+      it('calls repository with slugified name', async () => {
+        await organizationService.getOrganizationByName(name);
 
         expect(mockOrganizationRepository.findBySlug).toHaveBeenCalledWith(
           expectedSlug,
         );
+      });
+
+      it('returns organization', async () => {
+        const result = await organizationService.getOrganizationByName(name);
+
         expect(result).toEqual(expectedOrganization);
       });
     });
 
     describe('when organization is not found', () => {
-      it('returns null', async () => {
-        const name = 'Test Organization';
-        const expectedSlug = 'test-organization';
+      const name = 'Test Organization';
+      const expectedSlug = 'test-organization';
 
+      beforeEach(() => {
         mockOrganizationRepository.findBySlug.mockResolvedValue(null);
+      });
 
-        const result = await organizationService.getOrganizationByName(name);
+      it('calls repository with slugified name', async () => {
+        await organizationService.getOrganizationByName(name);
 
         expect(mockOrganizationRepository.findBySlug).toHaveBeenCalledWith(
           expectedSlug,
         );
+      });
+
+      it('returns null', async () => {
+        const result = await organizationService.getOrganizationByName(name);
+
         expect(result).toBeNull();
       });
     });
@@ -199,21 +291,29 @@ describe('OrganizationService', () => {
 
   describe('.getOrganizationBySlug', () => {
     describe('when organization is found', () => {
-      it('returns organization', async () => {
-        const organizationSlug = 'test-organization';
-        const expectedOrganization = organizationFactory({
+      const organizationSlug = 'test-organization';
+      let expectedOrganization: ReturnType<typeof organizationFactory>;
+
+      beforeEach(() => {
+        expectedOrganization = organizationFactory({
           id: createOrganizationId('123e4567-e89b-12d3-a456-426614174000'),
           slug: organizationSlug,
         });
-
         mockOrganizationRepository.findBySlug.mockResolvedValue(
           expectedOrganization,
         );
+      });
 
+      it('returns organization', async () => {
         const result =
           await organizationService.getOrganizationBySlug(organizationSlug);
 
         expect(result).toEqual(expectedOrganization);
+      });
+
+      it('calls repository with slug', async () => {
+        await organizationService.getOrganizationBySlug(organizationSlug);
+
         expect(mockOrganizationRepository.findBySlug).toHaveBeenCalledWith(
           organizationSlug,
         );
@@ -221,15 +321,22 @@ describe('OrganizationService', () => {
     });
 
     describe('when organization is not found', () => {
-      it('returns null', async () => {
-        const organizationSlug = 'non-existent-organization';
+      const organizationSlug = 'non-existent-organization';
 
+      beforeEach(() => {
         mockOrganizationRepository.findBySlug.mockResolvedValue(null);
+      });
 
+      it('returns null', async () => {
         const result =
           await organizationService.getOrganizationBySlug(organizationSlug);
 
         expect(result).toBeNull();
+      });
+
+      it('calls repository with slug', async () => {
+        await organizationService.getOrganizationBySlug(organizationSlug);
+
         expect(mockOrganizationRepository.findBySlug).toHaveBeenCalledWith(
           organizationSlug,
         );
@@ -238,6 +345,27 @@ describe('OrganizationService', () => {
   });
 
   describe('.listOrganizations', () => {
+    it('calls repository list method', async () => {
+      const expectedOrganizations = [
+        organizationFactory({
+          id: createOrganizationId('123e4567-e89b-12d3-a456-426614174000'),
+          name: 'Test Organization 1',
+          slug: 'test-organization-1',
+        }),
+        organizationFactory({
+          id: createOrganizationId('123e4567-e89b-12d3-a456-426614174001'),
+          name: 'Test Organization 2',
+          slug: 'test-organization-2',
+        }),
+      ];
+
+      mockOrganizationRepository.list.mockResolvedValue(expectedOrganizations);
+
+      await organizationService.listOrganizations();
+
+      expect(mockOrganizationRepository.list).toHaveBeenCalled();
+    });
+
     it('returns all organizations', async () => {
       const expectedOrganizations = [
         organizationFactory({
@@ -256,7 +384,6 @@ describe('OrganizationService', () => {
 
       const result = await organizationService.listOrganizations();
 
-      expect(mockOrganizationRepository.list).toHaveBeenCalled();
       expect(result).toEqual(expectedOrganizations);
     });
   });

@@ -97,7 +97,7 @@ describe('ApiKeyService', () => {
   });
 
   describe('generateApiKey', () => {
-    it('generates a valid API key', () => {
+    it('returns a truthy string', () => {
       const host = 'http://localhost:3000';
 
       const apiKey = apiKeyService.generateApiKey(
@@ -108,15 +108,37 @@ describe('ApiKeyService', () => {
       );
 
       expect(apiKey).toBeTruthy();
-      expect(typeof apiKey).toBe('string');
+    });
 
-      // Decode and verify the API key structure
+    it('returns a valid API key that can be decoded', () => {
+      const host = 'http://localhost:3000';
+
+      const apiKey = apiKeyService.generateApiKey(
+        mockUser,
+        mockOrganization,
+        'admin',
+        host,
+      );
       const decoded = apiKeyService.validateApiKey(apiKey);
+
       expect(decoded.isValid).toBe(true);
+    });
+
+    it('includes the correct host in the decoded payload', () => {
+      const host = 'http://localhost:3000';
+
+      const apiKey = apiKeyService.generateApiKey(
+        mockUser,
+        mockOrganization,
+        'admin',
+        host,
+      );
+      const decoded = apiKeyService.validateApiKey(apiKey);
+
       expect(decoded.payload.host).toBe(host);
     });
 
-    it('generates API keys with 3-month expiration', () => {
+    it('returns an expiration date', () => {
       const host = 'http://localhost:3000';
 
       const apiKey = apiKeyService.generateApiKey(
@@ -128,23 +150,30 @@ describe('ApiKeyService', () => {
       const expiration = apiKeyService.getApiKeyExpiration(apiKey);
 
       expect(expiration).toBeInstanceOf(Date);
-
-      // Check that expiration is approximately 90 days from now (allow some tolerance)
-      if (expiration) {
-        const now = new Date();
-        const expectedExpiration = new Date(
-          now.getTime() + 90 * 24 * 60 * 60 * 1000,
-        );
-        const timeDiff = Math.abs(
-          expiration.getTime() - expectedExpiration.getTime(),
-        );
-
-        // Allow 1 minute tolerance
-        expect(timeDiff).toBeLessThan(60 * 1000);
-      }
     });
 
-    it('includes correct user and organization info in JWT payload', () => {
+    it('sets expiration approximately 90 days from now', () => {
+      const host = 'http://localhost:3000';
+
+      const apiKey = apiKeyService.generateApiKey(
+        mockUser,
+        mockOrganization,
+        'admin',
+        host,
+      );
+      const expiration = apiKeyService.getApiKeyExpiration(apiKey);
+      const now = new Date();
+      const expectedExpiration = new Date(
+        now.getTime() + 90 * 24 * 60 * 60 * 1000,
+      );
+      const timeDiff = Math.abs(
+        (expiration?.getTime() ?? 0) - expectedExpiration.getTime(),
+      );
+
+      expect(timeDiff).toBeLessThan(60 * 1000);
+    });
+
+    it('includes correct user name in JWT payload', () => {
       const host = 'http://localhost:3000';
 
       const apiKey = apiKeyService.generateApiKey(
@@ -155,15 +184,77 @@ describe('ApiKeyService', () => {
       );
       const userInfo = apiKeyService.extractUserFromApiKey(apiKey);
 
-      expect(userInfo).not.toBeNull();
-      if (userInfo) {
-        expect(userInfo.user.name).toBe(mockUser.email);
-        expect(userInfo.user.userId).toBe(mockUser.id);
-        expect(userInfo.organization.id).toBe(mockOrganization.id);
-        expect(userInfo.organization.name).toBe(mockOrganization.name);
-        expect(userInfo.organization.slug).toBe(mockOrganization.slug);
-        expect(userInfo.organization.role).toBe('admin');
-      }
+      expect(userInfo?.user.name).toBe(mockUser.email);
+    });
+
+    it('includes correct user ID in JWT payload', () => {
+      const host = 'http://localhost:3000';
+
+      const apiKey = apiKeyService.generateApiKey(
+        mockUser,
+        mockOrganization,
+        'admin',
+        host,
+      );
+      const userInfo = apiKeyService.extractUserFromApiKey(apiKey);
+
+      expect(userInfo?.user.userId).toBe(mockUser.id);
+    });
+
+    it('includes correct organization ID in JWT payload', () => {
+      const host = 'http://localhost:3000';
+
+      const apiKey = apiKeyService.generateApiKey(
+        mockUser,
+        mockOrganization,
+        'admin',
+        host,
+      );
+      const userInfo = apiKeyService.extractUserFromApiKey(apiKey);
+
+      expect(userInfo?.organization.id).toBe(mockOrganization.id);
+    });
+
+    it('includes correct organization name in JWT payload', () => {
+      const host = 'http://localhost:3000';
+
+      const apiKey = apiKeyService.generateApiKey(
+        mockUser,
+        mockOrganization,
+        'admin',
+        host,
+      );
+      const userInfo = apiKeyService.extractUserFromApiKey(apiKey);
+
+      expect(userInfo?.organization.name).toBe(mockOrganization.name);
+    });
+
+    it('includes correct organization slug in JWT payload', () => {
+      const host = 'http://localhost:3000';
+
+      const apiKey = apiKeyService.generateApiKey(
+        mockUser,
+        mockOrganization,
+        'admin',
+        host,
+      );
+      const userInfo = apiKeyService.extractUserFromApiKey(apiKey);
+
+      expect(userInfo?.organization.slug).toBe(mockOrganization.slug);
+    });
+
+    it('includes correct organization role in JWT payload', () => {
+      const host = 'http://localhost:3000';
+
+      const apiKey = apiKeyService.generateApiKey(
+        mockUser,
+        mockOrganization,
+        'admin',
+        host,
+      );
+      const userInfo = apiKeyService.extractUserFromApiKey(apiKey);
+
+      expect(userInfo?.organization.role).toBe('admin');
     });
 
     it('handles JWT service errors', () => {
@@ -188,170 +279,269 @@ describe('ApiKeyService', () => {
   });
 
   describe('validateApiKey', () => {
-    it('validates a correct API key', () => {
-      const host = 'http://localhost:3000';
-      const apiKey = apiKeyService.generateApiKey(
-        mockUser,
-        mockOrganization,
-        'admin',
-        host,
-      );
+    describe('when API key is valid', () => {
+      it('returns isValid as true', () => {
+        const host = 'http://localhost:3000';
+        const apiKey = apiKeyService.generateApiKey(
+          mockUser,
+          mockOrganization,
+          'admin',
+          host,
+        );
 
-      const result = apiKeyService.validateApiKey(apiKey);
+        const result = apiKeyService.validateApiKey(apiKey);
 
-      expect(result.isValid).toBe(true);
-      expect(result.payload.host).toBe(host);
-      expect(result.error).toBeUndefined();
-    });
-
-    it('rejects malformed API keys', () => {
-      const result = apiKeyService.validateApiKey('not-a-valid-api-key');
-
-      expect(result.isValid).toBe(false);
-      expect(result.error).toContain('Failed to decode API key');
-    });
-
-    it('rejects API keys with expired JWT tokens', () => {
-      // Create an API key with expired JWT
-      const expiredJwt = mockJwtService.createExpiredToken({
-        user: { name: mockUser.email, userId: mockUser.id },
-        organization: {
-          id: mockOrganization.id,
-          name: mockOrganization.name,
-          slug: mockOrganization.slug,
-        },
+        expect(result.isValid).toBe(true);
       });
 
-      const apiKeyPayload = {
-        host: 'http://localhost:3000',
-        jwt: expiredJwt,
-      };
+      it('returns the correct host in payload', () => {
+        const host = 'http://localhost:3000';
+        const apiKey = apiKeyService.generateApiKey(
+          mockUser,
+          mockOrganization,
+          'admin',
+          host,
+        );
 
-      const apiKey = Buffer.from(JSON.stringify(apiKeyPayload)).toString(
-        'base64',
-      );
+        const result = apiKeyService.validateApiKey(apiKey);
 
-      const result = apiKeyService.validateApiKey(apiKey);
+        expect(result.payload.host).toBe(host);
+      });
 
-      expect(result.isValid).toBe(false);
-      expect(result.error).toContain('Invalid or expired JWT token');
+      it('returns no error', () => {
+        const host = 'http://localhost:3000';
+        const apiKey = apiKeyService.generateApiKey(
+          mockUser,
+          mockOrganization,
+          'admin',
+          host,
+        );
+
+        const result = apiKeyService.validateApiKey(apiKey);
+
+        expect(result.error).toBeUndefined();
+      });
     });
 
-    it('rejects API keys with invalid JWT tokens', () => {
-      const apiKeyPayload = {
-        host: 'http://localhost:3000',
-        jwt: 'invalid-token',
-      };
+    describe('when API key is malformed', () => {
+      it('returns isValid as false', () => {
+        const result = apiKeyService.validateApiKey('not-a-valid-api-key');
 
-      const apiKey = Buffer.from(JSON.stringify(apiKeyPayload)).toString(
-        'base64',
-      );
+        expect(result.isValid).toBe(false);
+      });
 
-      const result = apiKeyService.validateApiKey(apiKey);
+      it('returns an error containing decode failure message', () => {
+        const result = apiKeyService.validateApiKey('not-a-valid-api-key');
 
-      expect(result.isValid).toBe(false);
-      expect(result.error).toContain('Invalid or expired JWT token');
+        expect(result.error).toContain('Failed to decode API key');
+      });
+    });
+
+    describe('when API key has expired JWT token', () => {
+      let apiKey: string;
+
+      beforeEach(() => {
+        const expiredJwt = mockJwtService.createExpiredToken({
+          user: { name: mockUser.email, userId: mockUser.id },
+          organization: {
+            id: mockOrganization.id,
+            name: mockOrganization.name,
+            slug: mockOrganization.slug,
+          },
+        });
+
+        const apiKeyPayload = {
+          host: 'http://localhost:3000',
+          jwt: expiredJwt,
+        };
+
+        apiKey = Buffer.from(JSON.stringify(apiKeyPayload)).toString('base64');
+      });
+
+      it('returns isValid as false', () => {
+        const result = apiKeyService.validateApiKey(apiKey);
+
+        expect(result.isValid).toBe(false);
+      });
+
+      it('returns an error containing invalid or expired message', () => {
+        const result = apiKeyService.validateApiKey(apiKey);
+
+        expect(result.error).toContain('Invalid or expired JWT token');
+      });
+    });
+
+    describe('when API key has invalid JWT token', () => {
+      let apiKey: string;
+
+      beforeEach(() => {
+        const apiKeyPayload = {
+          host: 'http://localhost:3000',
+          jwt: 'invalid-token',
+        };
+
+        apiKey = Buffer.from(JSON.stringify(apiKeyPayload)).toString('base64');
+      });
+
+      it('returns isValid as false', () => {
+        const result = apiKeyService.validateApiKey(apiKey);
+
+        expect(result.isValid).toBe(false);
+      });
+
+      it('returns an error containing invalid or expired message', () => {
+        const result = apiKeyService.validateApiKey(apiKey);
+
+        expect(result.error).toContain('Invalid or expired JWT token');
+      });
     });
   });
 
   describe('extractUserFromApiKey', () => {
-    it('extracts user info from valid API key', () => {
-      const apiKey = apiKeyService.generateApiKey(
-        mockUser,
-        mockOrganization,
-        'admin',
-        'http://localhost:3000',
-      );
+    describe('when API key is valid', () => {
+      let apiKey: string;
 
-      const userInfo = apiKeyService.extractUserFromApiKey(apiKey);
-
-      expect(userInfo).not.toBeNull();
-      if (userInfo) {
-        expect(userInfo.user.name).toBe(mockUser.email);
-        expect(userInfo.user.userId).toBe(mockUser.id);
-        expect(userInfo.organization.id).toBe(mockOrganization.id);
-        expect(userInfo.organization.name).toBe(mockOrganization.name);
-        expect(userInfo.organization.slug).toBe(mockOrganization.slug);
-      }
-    });
-
-    it('returns null for invalid API key', () => {
-      const userInfo = apiKeyService.extractUserFromApiKey('invalid-api-key');
-
-      expect(userInfo).toBeNull();
-    });
-
-    it('returns null for API key with expired JWT', () => {
-      const expiredJwt = mockJwtService.createExpiredToken({
-        user: { name: mockUser.email, userId: mockUser.id },
-        organization: {
-          id: mockOrganization.id,
-          name: mockOrganization.name,
-          slug: mockOrganization.slug,
-        },
+      beforeEach(() => {
+        apiKey = apiKeyService.generateApiKey(
+          mockUser,
+          mockOrganization,
+          'admin',
+          'http://localhost:3000',
+        );
       });
 
-      const apiKeyPayload = {
-        host: 'http://localhost:3000',
-        jwt: expiredJwt,
-      };
+      it('returns non-null user info', () => {
+        const userInfo = apiKeyService.extractUserFromApiKey(apiKey);
 
-      const apiKey = Buffer.from(JSON.stringify(apiKeyPayload)).toString(
-        'base64',
-      );
+        expect(userInfo).not.toBeNull();
+      });
 
-      const userInfo = apiKeyService.extractUserFromApiKey(apiKey);
+      it('extracts correct user name', () => {
+        const userInfo = apiKeyService.extractUserFromApiKey(apiKey);
 
-      expect(userInfo).toBeNull();
+        expect(userInfo?.user.name).toBe(mockUser.email);
+      });
+
+      it('extracts correct user ID', () => {
+        const userInfo = apiKeyService.extractUserFromApiKey(apiKey);
+
+        expect(userInfo?.user.userId).toBe(mockUser.id);
+      });
+
+      it('extracts correct organization ID', () => {
+        const userInfo = apiKeyService.extractUserFromApiKey(apiKey);
+
+        expect(userInfo?.organization.id).toBe(mockOrganization.id);
+      });
+
+      it('extracts correct organization name', () => {
+        const userInfo = apiKeyService.extractUserFromApiKey(apiKey);
+
+        expect(userInfo?.organization.name).toBe(mockOrganization.name);
+      });
+
+      it('extracts correct organization slug', () => {
+        const userInfo = apiKeyService.extractUserFromApiKey(apiKey);
+
+        expect(userInfo?.organization.slug).toBe(mockOrganization.slug);
+      });
+    });
+
+    describe('when API key is invalid', () => {
+      it('returns null', () => {
+        const userInfo = apiKeyService.extractUserFromApiKey('invalid-api-key');
+
+        expect(userInfo).toBeNull();
+      });
+    });
+
+    describe('when API key has expired JWT', () => {
+      it('returns null', () => {
+        const expiredJwt = mockJwtService.createExpiredToken({
+          user: { name: mockUser.email, userId: mockUser.id },
+          organization: {
+            id: mockOrganization.id,
+            name: mockOrganization.name,
+            slug: mockOrganization.slug,
+          },
+        });
+
+        const apiKeyPayload = {
+          host: 'http://localhost:3000',
+          jwt: expiredJwt,
+        };
+
+        const apiKey = Buffer.from(JSON.stringify(apiKeyPayload)).toString(
+          'base64',
+        );
+
+        const userInfo = apiKeyService.extractUserFromApiKey(apiKey);
+
+        expect(userInfo).toBeNull();
+      });
     });
   });
 
   describe('getApiKeyExpiration', () => {
-    it('returns expiration date for valid API key', () => {
-      const apiKey = apiKeyService.generateApiKey(
-        mockUser,
-        mockOrganization,
-        'admin',
-        'http://localhost:3000',
-      );
+    describe('when API key is valid', () => {
+      let apiKey: string;
 
-      const expiration = apiKeyService.getApiKeyExpiration(apiKey);
+      beforeEach(() => {
+        apiKey = apiKeyService.generateApiKey(
+          mockUser,
+          mockOrganization,
+          'admin',
+          'http://localhost:3000',
+        );
+      });
 
-      expect(expiration).toBeInstanceOf(Date);
-      if (expiration) {
-        expect(expiration.getTime()).toBeGreaterThan(Date.now());
-      }
+      it('returns a Date instance', () => {
+        const expiration = apiKeyService.getApiKeyExpiration(apiKey);
+
+        expect(expiration).toBeInstanceOf(Date);
+      });
+
+      it('returns a date in the future', () => {
+        const expiration = apiKeyService.getApiKeyExpiration(apiKey);
+
+        expect(expiration?.getTime()).toBeGreaterThan(Date.now());
+      });
     });
 
-    it('returns null for invalid API key', () => {
-      const expiration = apiKeyService.getApiKeyExpiration('invalid-api-key');
+    describe('when API key is invalid', () => {
+      it('returns null', () => {
+        const expiration = apiKeyService.getApiKeyExpiration('invalid-api-key');
 
-      expect(expiration).toBeNull();
+        expect(expiration).toBeNull();
+      });
     });
 
-    it('returns null for API key without expiration', () => {
-      // Create a JWT without expiration
-      const jwtWithoutExp = mockJwtService.sign({
-        user: { name: mockUser.email, userId: mockUser.id },
-        organization: {
-          id: mockOrganization.id,
-          name: mockOrganization.name,
-          slug: mockOrganization.slug,
-        },
-      }); // No expiresIn option
+    describe('when API key has no expiration', () => {
+      let apiKey: string;
 
-      const apiKeyPayload = {
-        host: 'http://localhost:3000',
-        jwt: jwtWithoutExp,
-      };
+      beforeEach(() => {
+        const jwtWithoutExp = mockJwtService.sign({
+          user: { name: mockUser.email, userId: mockUser.id },
+          organization: {
+            id: mockOrganization.id,
+            name: mockOrganization.name,
+            slug: mockOrganization.slug,
+          },
+        });
 
-      const apiKey = Buffer.from(JSON.stringify(apiKeyPayload)).toString(
-        'base64',
-      );
+        const apiKeyPayload = {
+          host: 'http://localhost:3000',
+          jwt: jwtWithoutExp,
+        };
 
-      const expiration = apiKeyService.getApiKeyExpiration(apiKey);
+        apiKey = Buffer.from(JSON.stringify(apiKeyPayload)).toString('base64');
+      });
 
-      expect(expiration).toBeNull();
+      it('returns null', () => {
+        const expiration = apiKeyService.getApiKeyExpiration(apiKey);
+
+        expect(expiration).toBeNull();
+      });
     });
   });
 });

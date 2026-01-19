@@ -85,10 +85,13 @@ describe('RemoveUserFromOrganizationUseCase', () => {
     });
 
   describe('when the exclusion is valid', () => {
-    it('removes the target membership and returns success response', async () => {
-      const requestingUser = buildUser(requestingUserId);
+    let requestingUser: User;
+    let targetUser: User;
+
+    beforeEach(() => {
+      requestingUser = buildUser(requestingUserId);
       mockGetUserById.mockResolvedValue(requestingUser);
-      const targetUser: User = {
+      targetUser = {
         ...buildUser(targetUserId),
         memberships: [
           {
@@ -109,13 +112,30 @@ describe('RemoveUserFromOrganizationUseCase', () => {
         return null;
       });
       userService.excludeUserFromOrganization.mockResolvedValue();
+    });
 
+    it('returns success response', async () => {
       const response = await useCase.execute(createCommand());
 
       const expected: RemoveUserFromOrganizationResponse = { removed: true };
       expect(response).toEqual(expected);
+    });
+
+    it('fetches the requesting user', async () => {
+      await useCase.execute(createCommand());
+
       expect(mockGetUserById).toHaveBeenCalledWith(requestingUserId);
+    });
+
+    it('fetches the target user', async () => {
+      await useCase.execute(createCommand());
+
       expect(mockGetUserById).toHaveBeenCalledWith(targetUserId);
+    });
+
+    it('calls excludeUserFromOrganization with correct parameters', async () => {
+      await useCase.execute(createCommand());
+
       expect(userService.excludeUserFromOrganization).toHaveBeenCalledWith({
         requestingUser,
         targetUser,
@@ -125,38 +145,74 @@ describe('RemoveUserFromOrganizationUseCase', () => {
   });
 
   describe('when requesting user is missing', () => {
-    it('throws UserNotFoundError', async () => {
+    beforeEach(() => {
       mockGetUserById.mockResolvedValueOnce(null);
+    });
 
+    it('throws UserNotFoundError', async () => {
       await expect(useCase.execute(createCommand())).rejects.toBeInstanceOf(
         UserNotFoundError,
       );
+    });
+
+    it('fetches the requesting user', async () => {
+      await useCase.execute(createCommand()).catch(() => {
+        // Expected to throw - catch to verify side effects
+      });
+
       expect(mockGetUserById).toHaveBeenCalledWith(requestingUserId);
+    });
+
+    it('does not call excludeUserFromOrganization', async () => {
+      await useCase.execute(createCommand()).catch(() => {
+        // Expected to throw - catch to verify side effects
+      });
+
       expect(userService.excludeUserFromOrganization).not.toHaveBeenCalled();
     });
   });
 
   describe('when target user is missing', () => {
-    it('throws UserNotFoundError', async () => {
+    beforeEach(() => {
       const requestingUser = buildUser(requestingUserId);
       mockGetUserById
         .mockResolvedValueOnce(requestingUser) // For AbstractAdminUseCase validation
         .mockResolvedValueOnce(null); // For target user lookup
+    });
 
+    it('throws UserNotFoundError', async () => {
       await expect(useCase.execute(createCommand())).rejects.toBeInstanceOf(
         UserNotFoundError,
       );
+    });
+
+    it('does not call excludeUserFromOrganization', async () => {
+      await useCase.execute(createCommand()).catch(() => {
+        // Expected to throw - catch to verify side effects
+      });
+
       expect(userService.excludeUserFromOrganization).not.toHaveBeenCalled();
     });
   });
 
   describe('when requester attempts self-exclusion', () => {
-    it('throws UserCannotExcludeSelfError before fetching users', async () => {
-      const command = createCommand({ targetUserId: requestingUserId });
+    const command = {
+      userId: requestingUserId,
+      organizationId,
+      targetUserId: requestingUserId,
+    };
 
+    it('throws UserCannotExcludeSelfError', async () => {
       await expect(useCase.execute(command)).rejects.toBeInstanceOf(
         UserCannotExcludeSelfError,
       );
+    });
+
+    it('only fetches users once', async () => {
+      await useCase.execute(command).catch(() => {
+        // Expected to throw - catch to verify side effects
+      });
+
       expect(mockGetUserById).toHaveBeenCalledTimes(1);
     });
   });

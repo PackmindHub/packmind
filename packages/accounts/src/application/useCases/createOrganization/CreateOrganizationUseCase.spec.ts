@@ -62,79 +62,106 @@ describe('CreateOrganizationUseCase', () => {
     };
 
     describe('with valid organization name', () => {
-      it('creates organization successfully and adds user as admin', async () => {
-        const mockUser: User = {
+      let mockUser: User;
+
+      beforeEach(() => {
+        mockUser = {
           id: userId,
           email: 'test@example.com',
           passwordHash: 'hash',
           active: true,
           memberships: [],
         };
-
-        mockUserService.getUserById.mockResolvedValue(mockUser);
-        mockOrganizationService.createOrganization.mockResolvedValue(
-          mockOrganization,
-        );
-        mockUserService.addOrganizationMembership.mockResolvedValue(mockUser);
-
-        const result = await createOrganizationUseCase.execute(validCommand);
-
-        expect(result).toEqual({ organization: mockOrganization });
-        expect(mockUserService.getUserById).toHaveBeenCalledWith(userId);
-        expect(mockOrganizationService.createOrganization).toHaveBeenCalledWith(
-          'Test Organization',
-        );
-        expect(mockUserService.addOrganizationMembership).toHaveBeenCalledWith(
-          mockUser,
-          mockOrganization.id,
-          'admin',
-        );
       });
 
-      it('emits OrganizationCreatedEvent after successful creation', async () => {
-        const mockUser: User = {
-          id: userId,
-          email: 'test@example.com',
-          passwordHash: 'hash',
-          active: true,
-          memberships: [],
-        };
+      describe('when user exists', () => {
+        beforeEach(() => {
+          mockUserService.getUserById.mockResolvedValue(mockUser);
+          mockOrganizationService.createOrganization.mockResolvedValue(
+            mockOrganization,
+          );
+          mockUserService.addOrganizationMembership.mockResolvedValue(mockUser);
+        });
 
-        mockUserService.getUserById.mockResolvedValue(mockUser);
-        mockOrganizationService.createOrganization.mockResolvedValue(
-          mockOrganization,
-        );
-        mockUserService.addOrganizationMembership.mockResolvedValue(mockUser);
+        it('emits OrganizationCreatedEvent after successful creation', async () => {
+          await createOrganizationUseCase.execute(validCommand);
 
-        await createOrganizationUseCase.execute(validCommand);
+          expect(mockEventEmitterService.emit).toHaveBeenCalledWith(
+            expect.objectContaining({
+              payload: {
+                userId,
+                organizationId: mockOrganization.id,
+                name: 'Test Organization',
+                method: 'create',
+                source: 'ui',
+              },
+            }),
+          );
+        });
 
-        expect(mockEventEmitterService.emit).toHaveBeenCalledWith(
-          expect.objectContaining({
-            payload: {
-              userId,
-              organizationId: mockOrganization.id,
-              name: 'Test Organization',
-              method: 'create',
-              source: 'ui',
-            },
-          }),
-        );
+        it('returns created organization', async () => {
+          const result = await createOrganizationUseCase.execute(validCommand);
+
+          expect(result).toEqual({ organization: mockOrganization });
+        });
+
+        it('fetches user by id', async () => {
+          await createOrganizationUseCase.execute(validCommand);
+
+          expect(mockUserService.getUserById).toHaveBeenCalledWith(userId);
+        });
+
+        it('creates organization with trimmed name', async () => {
+          await createOrganizationUseCase.execute(validCommand);
+
+          expect(
+            mockOrganizationService.createOrganization,
+          ).toHaveBeenCalledWith('Test Organization');
+        });
+
+        it('adds user as admin to created organization', async () => {
+          await createOrganizationUseCase.execute(validCommand);
+
+          expect(
+            mockUserService.addOrganizationMembership,
+          ).toHaveBeenCalledWith(mockUser, mockOrganization.id, 'admin');
+        });
       });
 
-      it('throws error if user not found', async () => {
-        mockUserService.getUserById.mockResolvedValue(null);
+      describe('when user not found', () => {
+        beforeEach(async () => {
+          mockUserService.getUserById.mockResolvedValue(null);
 
-        await expect(
-          createOrganizationUseCase.execute(validCommand),
-        ).rejects.toThrow('User not found');
+          try {
+            await createOrganizationUseCase.execute(validCommand);
+          } catch {
+            // Expected to throw
+          }
+        });
 
-        expect(mockUserService.getUserById).toHaveBeenCalledWith(userId);
-        expect(
-          mockOrganizationService.createOrganization,
-        ).not.toHaveBeenCalled();
-        expect(
-          mockUserService.addOrganizationMembership,
-        ).not.toHaveBeenCalled();
+        it('throws user not found error', async () => {
+          mockUserService.getUserById.mockResolvedValue(null);
+
+          await expect(
+            createOrganizationUseCase.execute(validCommand),
+          ).rejects.toThrow('User not found');
+        });
+
+        it('fetches user by id', () => {
+          expect(mockUserService.getUserById).toHaveBeenCalledWith(userId);
+        });
+
+        it('does not create organization', () => {
+          expect(
+            mockOrganizationService.createOrganization,
+          ).not.toHaveBeenCalled();
+        });
+
+        it('does not add organization membership', () => {
+          expect(
+            mockUserService.addOrganizationMembership,
+          ).not.toHaveBeenCalled();
+        });
       });
 
       it('does not emit event if user not found', async () => {
@@ -151,12 +178,10 @@ describe('CreateOrganizationUseCase', () => {
     });
 
     describe('with organization name having whitespace', () => {
-      it('trims whitespace and creates organization', async () => {
-        const commandWithWhitespace = {
-          userId,
-          name: '  Test Organization  ',
-        };
-        const mockUser: User = {
+      let mockUser: User;
+
+      beforeEach(() => {
+        mockUser = {
           id: userId,
           email: 'test@example.com',
           passwordHash: 'hash',
@@ -169,12 +194,29 @@ describe('CreateOrganizationUseCase', () => {
           mockOrganization,
         );
         mockUserService.addOrganizationMembership.mockResolvedValue(mockUser);
+      });
+
+      it('returns created organization', async () => {
+        const commandWithWhitespace = {
+          userId,
+          name: '  Test Organization  ',
+        };
 
         const result = await createOrganizationUseCase.execute(
           commandWithWhitespace,
         );
 
         expect(result).toEqual({ organization: mockOrganization });
+      });
+
+      it('trims whitespace before creating organization', async () => {
+        const commandWithWhitespace = {
+          userId,
+          name: '  Test Organization  ',
+        };
+
+        await createOrganizationUseCase.execute(commandWithWhitespace);
+
         expect(mockOrganizationService.createOrganization).toHaveBeenCalledWith(
           'Test Organization',
         );
@@ -182,17 +224,30 @@ describe('CreateOrganizationUseCase', () => {
     });
 
     describe('with missing userId', () => {
-      it('throws validation error', async () => {
-        const invalidCommand = {
-          userId: null as unknown as UserId,
-          name: 'Test Organization',
-        };
+      const invalidCommand = {
+        userId: null as unknown as UserId,
+        name: 'Test Organization',
+      };
 
+      beforeEach(async () => {
+        try {
+          await createOrganizationUseCase.execute(invalidCommand);
+        } catch {
+          // Expected to throw
+        }
+      });
+
+      it('throws validation error', async () => {
         await expect(
           createOrganizationUseCase.execute(invalidCommand),
         ).rejects.toThrow('User ID is required');
+      });
 
+      it('does not fetch user', () => {
         expect(mockUserService.getUserById).not.toHaveBeenCalled();
+      });
+
+      it('does not create organization', () => {
         expect(
           mockOrganizationService.createOrganization,
         ).not.toHaveBeenCalled();
@@ -200,16 +255,26 @@ describe('CreateOrganizationUseCase', () => {
     });
 
     describe('with empty organization name', () => {
-      it('throws validation error', async () => {
-        const invalidCommand = {
-          userId,
-          name: '',
-        };
+      const invalidCommand = {
+        userId,
+        name: '',
+      };
 
+      beforeEach(async () => {
+        try {
+          await createOrganizationUseCase.execute(invalidCommand);
+        } catch {
+          // Expected to throw
+        }
+      });
+
+      it('throws validation error', async () => {
         await expect(
           createOrganizationUseCase.execute(invalidCommand),
         ).rejects.toThrow('Organization name is required');
+      });
 
+      it('does not create organization', () => {
         expect(
           mockOrganizationService.createOrganization,
         ).not.toHaveBeenCalled();
@@ -217,16 +282,26 @@ describe('CreateOrganizationUseCase', () => {
     });
 
     describe('with whitespace-only organization name', () => {
-      it('throws validation error', async () => {
-        const invalidCommand = {
-          userId,
-          name: '   ',
-        };
+      const invalidCommand = {
+        userId,
+        name: '   ',
+      };
 
+      beforeEach(async () => {
+        try {
+          await createOrganizationUseCase.execute(invalidCommand);
+        } catch {
+          // Expected to throw
+        }
+      });
+
+      it('throws validation error', async () => {
         await expect(
           createOrganizationUseCase.execute(invalidCommand),
         ).rejects.toThrow('Organization name is required');
+      });
 
+      it('does not create organization', () => {
         expect(
           mockOrganizationService.createOrganization,
         ).not.toHaveBeenCalled();
@@ -234,16 +309,26 @@ describe('CreateOrganizationUseCase', () => {
     });
 
     describe('with null organization name', () => {
-      it('throws validation error', async () => {
-        const invalidCommand = {
-          userId,
-          name: null as unknown as string,
-        };
+      const invalidCommand = {
+        userId,
+        name: null as unknown as string,
+      };
 
+      beforeEach(async () => {
+        try {
+          await createOrganizationUseCase.execute(invalidCommand);
+        } catch {
+          // Expected to throw
+        }
+      });
+
+      it('throws validation error', async () => {
         await expect(
           createOrganizationUseCase.execute(invalidCommand),
         ).rejects.toThrow('Organization name is required');
+      });
 
+      it('does not create organization', () => {
         expect(
           mockOrganizationService.createOrganization,
         ).not.toHaveBeenCalled();
@@ -251,16 +336,26 @@ describe('CreateOrganizationUseCase', () => {
     });
 
     describe('with undefined organization name', () => {
-      it('throws validation error', async () => {
-        const invalidCommand = {
-          userId,
-          name: undefined as unknown as string,
-        };
+      const invalidCommand = {
+        userId,
+        name: undefined as unknown as string,
+      };
 
+      beforeEach(async () => {
+        try {
+          await createOrganizationUseCase.execute(invalidCommand);
+        } catch {
+          // Expected to throw
+        }
+      });
+
+      it('throws validation error', async () => {
         await expect(
           createOrganizationUseCase.execute(invalidCommand),
         ).rejects.toThrow('Organization name is required');
+      });
 
+      it('does not create organization', () => {
         expect(
           mockOrganizationService.createOrganization,
         ).not.toHaveBeenCalled();
@@ -268,8 +363,10 @@ describe('CreateOrganizationUseCase', () => {
     });
 
     describe('with service error', () => {
-      it('rethrows error', async () => {
-        const mockUser: User = {
+      let mockUser: User;
+
+      beforeEach(async () => {
+        mockUser = {
           id: userId,
           email: 'test@example.com',
           passwordHash: 'hash',
@@ -283,14 +380,30 @@ describe('CreateOrganizationUseCase', () => {
           serviceError,
         );
 
+        try {
+          await createOrganizationUseCase.execute(validCommand);
+        } catch {
+          // Expected to throw
+        }
+      });
+
+      it('rethrows error', async () => {
         await expect(
           createOrganizationUseCase.execute(validCommand),
         ).rejects.toThrow('Organization already exists');
+      });
 
+      it('fetches user by id', () => {
         expect(mockUserService.getUserById).toHaveBeenCalledWith(userId);
+      });
+
+      it('attempts to create organization', () => {
         expect(mockOrganizationService.createOrganization).toHaveBeenCalledWith(
           'Test Organization',
         );
+      });
+
+      it('does not add organization membership', () => {
         expect(
           mockUserService.addOrganizationMembership,
         ).not.toHaveBeenCalled();
@@ -298,7 +411,7 @@ describe('CreateOrganizationUseCase', () => {
     });
 
     describe('with non-Error exception', () => {
-      it('rethrows exception', async () => {
+      beforeEach(() => {
         const mockUser: User = {
           id: userId,
           email: 'test@example.com',
@@ -312,7 +425,9 @@ describe('CreateOrganizationUseCase', () => {
         mockOrganizationService.createOrganization.mockRejectedValue(
           serviceError,
         );
+      });
 
+      it('rethrows exception', async () => {
         await expect(
           createOrganizationUseCase.execute(validCommand),
         ).rejects.toBe('Database connection failed');
@@ -320,22 +435,21 @@ describe('CreateOrganizationUseCase', () => {
     });
 
     describe('with minimal valid organization name', () => {
-      it('creates organization successfully', async () => {
-        const minimalCommand = {
-          userId,
-          name: 'A',
-        };
-        const minimalOrganization: Organization = {
-          ...mockOrganization,
-          name: 'A',
-          slug: 'a',
-        };
-        const mockUser: User = {
+      let mockUser: User;
+      let minimalOrganization: Organization;
+
+      beforeEach(() => {
+        mockUser = {
           id: userId,
           email: 'test@example.com',
           passwordHash: 'hash',
           active: true,
           memberships: [],
+        };
+        minimalOrganization = {
+          ...mockOrganization,
+          name: 'A',
+          slug: 'a',
         };
 
         mockUserService.getUserById.mockResolvedValue(mockUser);
@@ -343,10 +457,27 @@ describe('CreateOrganizationUseCase', () => {
           minimalOrganization,
         );
         mockUserService.addOrganizationMembership.mockResolvedValue(mockUser);
+      });
+
+      it('returns created organization', async () => {
+        const minimalCommand = {
+          userId,
+          name: 'A',
+        };
 
         const result = await createOrganizationUseCase.execute(minimalCommand);
 
         expect(result).toEqual({ organization: minimalOrganization });
+      });
+
+      it('creates organization with minimal name', async () => {
+        const minimalCommand = {
+          userId,
+          name: 'A',
+        };
+
+        await createOrganizationUseCase.execute(minimalCommand);
+
         expect(mockOrganizationService.createOrganization).toHaveBeenCalledWith(
           'A',
         );

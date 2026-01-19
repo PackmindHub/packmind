@@ -63,46 +63,103 @@ describe('UserService', () => {
   });
 
   describe('.createInactiveUser', () => {
-    it('creates a new inactive user if none exists', async () => {
+    describe('when no user exists', () => {
       const email = 'new-user@packmind.com';
-      mockUserRepository.findByEmailCaseInsensitive.mockResolvedValue(null);
-      mockUserRepository.add.mockImplementation(async (user) => user);
+      let result: User;
 
-      const result = await userService.createInactiveUser(email);
+      beforeEach(async () => {
+        mockUserRepository.findByEmailCaseInsensitive.mockResolvedValue(null);
+        mockUserRepository.add.mockImplementation(async (user) => user);
+        result = await userService.createInactiveUser(email);
+      });
 
-      expect(
-        mockUserRepository.findByEmailCaseInsensitive,
-      ).toHaveBeenCalledWith(email.toLowerCase());
-      expect(mockUserRepository.add).toHaveBeenCalledWith(
-        expect.objectContaining({
-          email: email.toLowerCase(),
-          passwordHash: null,
-          active: false,
-          memberships: [],
-        }),
-      );
-      expect(result.active).toBe(false);
-      expect(result.passwordHash).toBeNull();
+      it('searches for existing user with lowercase email', () => {
+        expect(
+          mockUserRepository.findByEmailCaseInsensitive,
+        ).toHaveBeenCalledWith(email.toLowerCase());
+      });
+
+      it('persists user with lowercase email', () => {
+        expect(mockUserRepository.add).toHaveBeenCalledWith(
+          expect.objectContaining({
+            email: email.toLowerCase(),
+          }),
+        );
+      });
+
+      it('persists user with null password hash', () => {
+        expect(mockUserRepository.add).toHaveBeenCalledWith(
+          expect.objectContaining({
+            passwordHash: null,
+          }),
+        );
+      });
+
+      it('persists user as inactive', () => {
+        expect(mockUserRepository.add).toHaveBeenCalledWith(
+          expect.objectContaining({
+            active: false,
+          }),
+        );
+      });
+
+      it('persists user with empty memberships', () => {
+        expect(mockUserRepository.add).toHaveBeenCalledWith(
+          expect.objectContaining({
+            memberships: [],
+          }),
+        );
+      });
+
+      it('returns user with inactive status', () => {
+        expect(result.active).toBe(false);
+      });
+
+      it('returns user with null password hash', () => {
+        expect(result.passwordHash).toBeNull();
+      });
     });
 
-    it('returns existing user if already present', async () => {
+    describe('when user already exists', () => {
       const email = 'existing@packmind.com';
-      const existingUser = userFactory({ email });
-      mockUserRepository.findByEmailCaseInsensitive.mockResolvedValue(
-        existingUser,
-      );
+      let existingUser: User;
+      let result: User;
 
-      const result = await userService.createInactiveUser(email);
+      beforeEach(async () => {
+        existingUser = userFactory({ email });
+        mockUserRepository.findByEmailCaseInsensitive.mockResolvedValue(
+          existingUser,
+        );
+        result = await userService.createInactiveUser(email);
+      });
 
-      expect(result).toBe(existingUser);
-      expect(mockUserRepository.add).not.toHaveBeenCalled();
+      it('returns the existing user', () => {
+        expect(result).toBe(existingUser);
+      });
+
+      it('does not create a new user', () => {
+        expect(mockUserRepository.add).not.toHaveBeenCalled();
+      });
     });
 
-    it('throws if email is empty', async () => {
-      await expect(userService.createInactiveUser('')).rejects.toBeInstanceOf(
-        InvalidInvitationEmailError,
-      );
-      expect(mockUserRepository.add).not.toHaveBeenCalled();
+    describe('when email is empty', () => {
+      let thrownError: unknown;
+
+      beforeEach(async () => {
+        try {
+          await userService.createInactiveUser('');
+        } catch (error) {
+          thrownError = error;
+        }
+      });
+
+      it('throws InvalidInvitationEmailError', () => {
+        expect(thrownError).toBeInstanceOf(InvalidInvitationEmailError);
+      });
+
+      it('does not persist any user', () => {
+        expect(mockUserRepository.add).not.toHaveBeenCalled();
+      });
     });
   });
 
@@ -110,58 +167,79 @@ describe('UserService', () => {
     const organizationId = createOrganizationId('org-123');
 
     describe('when membership already exists', () => {
-      it('returns the provided user', async () => {
+      let user: User;
+      let result: User;
+
+      beforeEach(async () => {
         const existingMembership: UserOrganizationMembership = {
           userId: createUserId('user-1'),
           organizationId,
           role: 'admin',
         };
-        const user: User = {
+        user = {
           id: existingMembership.userId,
           email: 'member@packmind.com',
           passwordHash: null,
           active: true,
           memberships: [existingMembership],
         };
-
-        const result = await userService.addOrganizationMembership(
+        result = await userService.addOrganizationMembership(
           user,
           organizationId,
           'admin',
         );
+      });
 
+      it('returns the provided user', () => {
         expect(result).toBe(user);
+      });
+
+      it('does not persist any changes', () => {
         expect(mockUserRepository.add).not.toHaveBeenCalled();
       });
     });
 
     describe('when membership is missing', () => {
-      it('persists the new membership and returns the saved user', async () => {
-        const user = userFactory({ memberships: [] });
-        const expectedMembership: UserOrganizationMembership = {
+      let user: User;
+      let expectedMembership: UserOrganizationMembership;
+      let result: User;
+
+      beforeEach(async () => {
+        user = userFactory({ memberships: [] });
+        expectedMembership = {
           userId: user.id,
           organizationId,
           role: 'admin',
         };
-
         mockUserRepository.add.mockImplementation(
           async (savedUser) => savedUser,
         );
-
-        const result = await userService.addOrganizationMembership(
+        result = await userService.addOrganizationMembership(
           user,
           organizationId,
           'admin',
         );
+      });
 
+      it('persists user with correct id', () => {
         expect(mockUserRepository.add).toHaveBeenCalledWith(
           expect.objectContaining({
             id: user.id,
+          }),
+        );
+      });
+
+      it('persists user with new membership', () => {
+        expect(mockUserRepository.add).toHaveBeenCalledWith(
+          expect.objectContaining({
             memberships: expect.arrayContaining([
               expect.objectContaining(expectedMembership),
             ]),
           }),
         );
+      });
+
+      it('returns user with new membership', () => {
         expect(result.memberships).toEqual([
           expect.objectContaining(expectedMembership),
         ]);
@@ -202,69 +280,106 @@ describe('UserService', () => {
       });
     };
 
-    it('removes membership if requester is admin and target is a member', async () => {
-      const adminUser = createAdminUser();
-      const targetUser = createMemberUser({ id: createUserId('target-user') });
+    describe('when requester is admin and target is a member', () => {
+      let adminUser: User;
+      let targetUser: User;
 
-      mockMembershipRepository.removeMembership.mockResolvedValue(true);
-
-      await expect(
-        userService.excludeUserFromOrganization({
+      beforeEach(async () => {
+        adminUser = createAdminUser();
+        targetUser = createMemberUser({ id: createUserId('target-user') });
+        mockMembershipRepository.removeMembership.mockResolvedValue(true);
+        await userService.excludeUserFromOrganization({
           requestingUser: adminUser,
           targetUser,
           organizationId,
-        }),
-      ).resolves.toBeUndefined();
-
-      expect(mockMembershipRepository.removeMembership).toHaveBeenCalledWith(
-        targetUser.id,
-        organizationId,
-      );
-
-      expect(publishUserContextChangeEventSpy).toHaveBeenCalledWith(
-        String(targetUser.id),
-        String(organizationId),
-        'removed',
-        undefined,
-      );
-    });
-
-    it('throws if requester tries to exclude themselves', async () => {
-      const adminUser = createAdminUser();
-
-      await expect(
-        userService.excludeUserFromOrganization({
-          requestingUser: adminUser,
-          targetUser: adminUser,
-          organizationId,
-        }),
-      ).rejects.toBeInstanceOf(UserCannotExcludeSelfError);
-
-      expect(mockMembershipRepository.removeMembership).not.toHaveBeenCalled();
-      expect(publishUserContextChangeEventSpy).not.toHaveBeenCalled();
-    });
-
-    it('throws if membership removal fails due to missing membership', async () => {
-      const adminUser = createAdminUser();
-      const targetUser = createMemberUser({
-        id: createUserId('missing-membership-user'),
+        });
       });
 
-      mockMembershipRepository.removeMembership.mockResolvedValue(false);
-
-      await expect(
-        userService.excludeUserFromOrganization({
-          requestingUser: adminUser,
-          targetUser,
+      it('removes membership successfully', () => {
+        expect(mockMembershipRepository.removeMembership).toHaveBeenCalledWith(
+          targetUser.id,
           organizationId,
-        }),
-      ).rejects.toBeInstanceOf(UserNotInOrganizationError);
+        );
+      });
 
-      expect(mockMembershipRepository.removeMembership).toHaveBeenCalledWith(
-        targetUser.id,
-        organizationId,
-      );
-      expect(publishUserContextChangeEventSpy).not.toHaveBeenCalled();
+      it('publishes user context change event', () => {
+        expect(publishUserContextChangeEventSpy).toHaveBeenCalledWith(
+          String(targetUser.id),
+          String(organizationId),
+          'removed',
+          undefined,
+        );
+      });
+    });
+
+    describe('when requester tries to exclude themselves', () => {
+      let adminUser: User;
+      let thrownError: unknown;
+
+      beforeEach(async () => {
+        adminUser = createAdminUser();
+        try {
+          await userService.excludeUserFromOrganization({
+            requestingUser: adminUser,
+            targetUser: adminUser,
+            organizationId,
+          });
+        } catch (error) {
+          thrownError = error;
+        }
+      });
+
+      it('throws UserCannotExcludeSelfError', () => {
+        expect(thrownError).toBeInstanceOf(UserCannotExcludeSelfError);
+      });
+
+      it('does not remove membership', () => {
+        expect(
+          mockMembershipRepository.removeMembership,
+        ).not.toHaveBeenCalled();
+      });
+
+      it('does not publish event', () => {
+        expect(publishUserContextChangeEventSpy).not.toHaveBeenCalled();
+      });
+    });
+
+    describe('when membership removal fails due to missing membership', () => {
+      let adminUser: User;
+      let targetUser: User;
+      let thrownError: unknown;
+
+      beforeEach(async () => {
+        adminUser = createAdminUser();
+        targetUser = createMemberUser({
+          id: createUserId('missing-membership-user'),
+        });
+        mockMembershipRepository.removeMembership.mockResolvedValue(false);
+        try {
+          await userService.excludeUserFromOrganization({
+            requestingUser: adminUser,
+            targetUser,
+            organizationId,
+          });
+        } catch (error) {
+          thrownError = error;
+        }
+      });
+
+      it('throws UserNotInOrganizationError', () => {
+        expect(thrownError).toBeInstanceOf(UserNotInOrganizationError);
+      });
+
+      it('attempts to remove membership', () => {
+        expect(mockMembershipRepository.removeMembership).toHaveBeenCalledWith(
+          targetUser.id,
+          organizationId,
+        );
+      });
+
+      it('does not publish event', () => {
+        expect(publishUserContextChangeEventSpy).not.toHaveBeenCalled();
+      });
     });
   });
 
@@ -273,161 +388,250 @@ describe('UserService', () => {
       jest.mocked(bcrypt.hash).mockResolvedValue('hashedpassword123' as never);
     });
 
-    it('creates a new user successfully', async () => {
+    describe('when creating a new user successfully', () => {
       const email = 'testuser@packmind.com';
       const password = 'plainpassword';
       const organizationId = '123e4567-e89b-12d3-a456-426614174001';
+      let organization: ReturnType<typeof createOrganizationId>;
+      let result: User;
 
-      const organization = createOrganizationId(organizationId);
-      mockUserRepository.findByEmailCaseInsensitive.mockResolvedValue(null);
-      mockUserRepository.add.mockImplementation(async (user) => user);
+      beforeEach(async () => {
+        organization = createOrganizationId(organizationId);
+        mockUserRepository.findByEmailCaseInsensitive.mockResolvedValue(null);
+        mockUserRepository.add.mockImplementation(async (user) => user);
+        result = await userService.createUser(email, password, organization);
+      });
 
-      const result = await userService.createUser(
-        email,
-        password,
-        organization,
-      );
+      it('searches for existing user by email', () => {
+        expect(
+          mockUserRepository.findByEmailCaseInsensitive,
+        ).toHaveBeenCalledWith(email);
+      });
 
-      expect(
-        mockUserRepository.findByEmailCaseInsensitive,
-      ).toHaveBeenCalledWith(email);
-      expect(bcrypt.hash).toHaveBeenCalledWith(password, 10);
-      expect(mockUserRepository.add).toHaveBeenCalledWith(
-        expect.objectContaining({
-          email,
-          passwordHash: 'hashedpassword123',
-          active: true,
-          memberships: [
-            expect.objectContaining({
-              organizationId: organization,
-              role: 'admin',
-            }),
-          ],
-        }),
-      );
-      expect(result.email).toBe(email);
-      expect(result.active).toBe(true);
-      expect(result.memberships).toEqual([
-        expect.objectContaining({
-          organizationId: organization,
-          role: 'admin',
-        }),
-      ]);
+      it('hashes the password with correct salt rounds', () => {
+        expect(bcrypt.hash).toHaveBeenCalledWith(password, 10);
+      });
+
+      it('persists user with correct email', () => {
+        expect(mockUserRepository.add).toHaveBeenCalledWith(
+          expect.objectContaining({
+            email,
+          }),
+        );
+      });
+
+      it('persists user with hashed password', () => {
+        expect(mockUserRepository.add).toHaveBeenCalledWith(
+          expect.objectContaining({
+            passwordHash: 'hashedpassword123',
+          }),
+        );
+      });
+
+      it('persists user as active', () => {
+        expect(mockUserRepository.add).toHaveBeenCalledWith(
+          expect.objectContaining({
+            active: true,
+          }),
+        );
+      });
+
+      it('persists user with admin membership', () => {
+        expect(mockUserRepository.add).toHaveBeenCalledWith(
+          expect.objectContaining({
+            memberships: [
+              expect.objectContaining({
+                organizationId: organization,
+                role: 'admin',
+              }),
+            ],
+          }),
+        );
+      });
+
+      it('returns user with correct email', () => {
+        expect(result.email).toBe(email);
+      });
+
+      it('returns user as active', () => {
+        expect(result.active).toBe(true);
+      });
+
+      it('returns user with admin membership', () => {
+        expect(result.memberships).toEqual([
+          expect.objectContaining({
+            organizationId: organization,
+            role: 'admin',
+          }),
+        ]);
+      });
     });
 
     describe('when email is missing', () => {
-      it('throws error', async () => {
-        const email = '';
-        const password = 'plainpassword';
-        const organizationId = '123e4567-e89b-12d3-a456-426614174001';
+      let thrownError: unknown;
 
-        await expect(
-          userService.createUser(
-            email,
-            password,
-            createOrganizationId(organizationId),
-          ),
-        ).rejects.toThrow('Email, password, and organizationId are required');
+      beforeEach(async () => {
+        try {
+          await userService.createUser(
+            '',
+            'plainpassword',
+            createOrganizationId('123e4567-e89b-12d3-a456-426614174001'),
+          );
+        } catch (error) {
+          thrownError = error;
+        }
+      });
 
+      it('throws error with correct message', () => {
+        expect(thrownError).toEqual(
+          new Error('Email, password, and organizationId are required'),
+        );
+      });
+
+      it('does not persist user', () => {
         expect(mockUserRepository.add).not.toHaveBeenCalled();
       });
     });
 
     describe('when password is missing', () => {
-      it('throws error', async () => {
-        const email = 'testuser@packmind.com';
-        const password = '';
-        const organizationId = '123e4567-e89b-12d3-a456-426614174001';
+      let thrownError: unknown;
 
-        await expect(
-          userService.createUser(
-            email,
-            password,
-            createOrganizationId(organizationId),
-          ),
-        ).rejects.toThrow('Email, password, and organizationId are required');
+      beforeEach(async () => {
+        try {
+          await userService.createUser(
+            'testuser@packmind.com',
+            '',
+            createOrganizationId('123e4567-e89b-12d3-a456-426614174001'),
+          );
+        } catch (error) {
+          thrownError = error;
+        }
+      });
 
+      it('throws error with correct message', () => {
+        expect(thrownError).toEqual(
+          new Error('Email, password, and organizationId are required'),
+        );
+      });
+
+      it('does not persist user', () => {
         expect(mockUserRepository.add).not.toHaveBeenCalled();
       });
     });
 
     describe('when organizationId is missing', () => {
-      it('throws error', async () => {
-        const email = 'testuser@packmind.com';
-        const password = 'plainpassword';
-        const organizationId = '';
+      let thrownError: unknown;
 
-        await expect(
-          userService.createUser(
-            email,
-            password,
-            createOrganizationId(organizationId),
-          ),
-        ).rejects.toThrow('Email, password, and organizationId are required');
+      beforeEach(async () => {
+        try {
+          await userService.createUser(
+            'testuser@packmind.com',
+            'plainpassword',
+            createOrganizationId(''),
+          );
+        } catch (error) {
+          thrownError = error;
+        }
+      });
 
+      it('throws error with correct message', () => {
+        expect(thrownError).toEqual(
+          new Error('Email, password, and organizationId are required'),
+        );
+      });
+
+      it('does not persist user', () => {
         expect(mockUserRepository.add).not.toHaveBeenCalled();
       });
     });
 
     describe('when email already exists (case-insensitive)', () => {
-      it('throws error for exact case match', async () => {
+      describe('with exact case match', () => {
         const email = 'testuser@packmind.com';
-        const password = 'plainpassword';
-        const organizationId = '123e4567-e89b-12d3-a456-426614174001';
+        let thrownError: unknown;
 
-        const existingUser = userFactory({ email });
-        mockUserRepository.findByEmailCaseInsensitive.mockResolvedValue(
-          existingUser,
-        );
-
-        await expect(
-          userService.createUser(
-            email,
-            password,
-            createOrganizationId(organizationId),
-          ),
-        ).rejects.toThrow(`Email 'testus***************' already exists`);
-
-        expect(
-          mockUserRepository.findByEmailCaseInsensitive,
-        ).toHaveBeenCalledWith(email);
-        expect(mockUserRepository.add).not.toHaveBeenCalled();
-      });
-
-      it('throws error for different case match', async () => {
-        const email = 'NewUser@packmind.com';
-        const password = 'plainpassword';
-        const organizationId = '123e4567-e89b-12d3-a456-426614174001';
-
-        const existingUser = userFactory({
-          email: 'newuser@PACKMIND.com', // Different case
+        beforeEach(async () => {
+          const existingUser = userFactory({ email });
+          mockUserRepository.findByEmailCaseInsensitive.mockResolvedValue(
+            existingUser,
+          );
+          try {
+            await userService.createUser(
+              email,
+              'plainpassword',
+              createOrganizationId('123e4567-e89b-12d3-a456-426614174001'),
+            );
+          } catch (error) {
+            thrownError = error;
+          }
         });
 
-        mockUserRepository.findByEmailCaseInsensitive.mockResolvedValue(
-          existingUser,
-        );
+        it('throws error with masked email', () => {
+          expect(thrownError).toEqual(
+            new Error(`Email 'testus***************' already exists`),
+          );
+        });
 
-        await expect(
-          userService.createUser(
-            email,
-            password,
-            createOrganizationId(organizationId),
-          ),
-        ).rejects.toThrow(`Email 'NewUse**************' already exists`);
+        it('searches for existing user', () => {
+          expect(
+            mockUserRepository.findByEmailCaseInsensitive,
+          ).toHaveBeenCalledWith(email);
+        });
 
-        expect(
-          mockUserRepository.findByEmailCaseInsensitive,
-        ).toHaveBeenCalledWith(email);
-        expect(mockUserRepository.add).not.toHaveBeenCalled();
+        it('does not persist user', () => {
+          expect(mockUserRepository.add).not.toHaveBeenCalled();
+        });
+      });
+
+      describe('with different case match', () => {
+        const email = 'NewUser@packmind.com';
+        let thrownError: unknown;
+
+        beforeEach(async () => {
+          const existingUser = userFactory({
+            email: 'newuser@PACKMIND.com',
+          });
+          mockUserRepository.findByEmailCaseInsensitive.mockResolvedValue(
+            existingUser,
+          );
+          try {
+            await userService.createUser(
+              email,
+              'plainpassword',
+              createOrganizationId('123e4567-e89b-12d3-a456-426614174001'),
+            );
+          } catch (error) {
+            thrownError = error;
+          }
+        });
+
+        it('throws error with masked email', () => {
+          expect(thrownError).toEqual(
+            new Error(`Email 'NewUse**************' already exists`),
+          );
+        });
+
+        it('searches for existing user', () => {
+          expect(
+            mockUserRepository.findByEmailCaseInsensitive,
+          ).toHaveBeenCalledWith(email);
+        });
+
+        it('does not persist user', () => {
+          expect(mockUserRepository.add).not.toHaveBeenCalled();
+        });
       });
     });
   });
 
   describe('.getUserById', () => {
     describe('when user is found', () => {
-      it('returns the user', async () => {
-        const userId = createUserId('123e4567-e89b-12d3-a456-426614174000');
-        const user = userFactory({
+      const userId = createUserId('123e4567-e89b-12d3-a456-426614174000');
+      let user: User;
+      let result: User | null;
+
+      beforeEach(async () => {
+        user = userFactory({
           id: userId,
           memberships: [
             {
@@ -439,25 +643,33 @@ describe('UserService', () => {
             },
           ],
         });
-
         mockUserRepository.findById.mockResolvedValue(user);
+        result = await userService.getUserById(userId);
+      });
 
-        const result = await userService.getUserById(userId);
-
+      it('calls repository with correct userId', () => {
         expect(mockUserRepository.findById).toHaveBeenCalledWith(userId);
+      });
+
+      it('returns the user', () => {
         expect(result).toEqual(user);
       });
     });
 
     describe('when user is not found', () => {
-      it('returns null', async () => {
-        const userId = createUserId('123e4567-e89b-12d3-a456-426614174000');
+      const userId = createUserId('123e4567-e89b-12d3-a456-426614174000');
+      let result: User | null;
 
+      beforeEach(async () => {
         mockUserRepository.findById.mockResolvedValue(null);
+        result = await userService.getUserById(userId);
+      });
 
-        const result = await userService.getUserById(userId);
-
+      it('calls repository with correct userId', () => {
         expect(mockUserRepository.findById).toHaveBeenCalledWith(userId);
+      });
+
+      it('returns null', () => {
         expect(result).toBeNull();
       });
     });
@@ -465,9 +677,12 @@ describe('UserService', () => {
 
   describe('.getUserByEmail', () => {
     describe('when user is found', () => {
-      it('returns the user', async () => {
-        const email = 'testuser@packmind.com';
-        const user = userFactory({
+      const email = 'testuser@packmind.com';
+      let user: User;
+      let result: User | null;
+
+      beforeEach(async () => {
+        user = userFactory({
           id: createUserId('123e4567-e89b-12d3-a456-426614174000'),
           email,
           memberships: [
@@ -480,25 +695,33 @@ describe('UserService', () => {
             },
           ],
         });
-
         mockUserRepository.findByEmail.mockResolvedValue(user);
+        result = await userService.getUserByEmail(email);
+      });
 
-        const result = await userService.getUserByEmail(email);
-
+      it('calls repository with correct email', () => {
         expect(mockUserRepository.findByEmail).toHaveBeenCalledWith(email);
+      });
+
+      it('returns the user', () => {
         expect(result).toEqual(user);
       });
     });
 
     describe('when user is not found', () => {
-      it('returns null', async () => {
-        const email = 'testuser@packmind.com';
+      const email = 'testuser@packmind.com';
+      let result: User | null;
 
+      beforeEach(async () => {
         mockUserRepository.findByEmail.mockResolvedValue(null);
+        result = await userService.getUserByEmail(email);
+      });
 
-        const result = await userService.getUserByEmail(email);
-
+      it('calls repository with correct email', () => {
         expect(mockUserRepository.findByEmail).toHaveBeenCalledWith(email);
+      });
+
+      it('returns null', () => {
         expect(result).toBeNull();
       });
     });
@@ -506,11 +729,14 @@ describe('UserService', () => {
 
   describe('.getUserByEmailCaseInsensitive', () => {
     describe('when user is found with different case', () => {
-      it('returns the user', async () => {
-        const searchEmail = 'TestUser@PACKMIND.com';
-        const user = userFactory({
+      const searchEmail = 'TestUser@PACKMIND.com';
+      let user: User;
+      let result: User | null;
+
+      beforeEach(async () => {
+        user = userFactory({
           id: createUserId('123e4567-e89b-12d3-a456-426614174000'),
-          email: 'testuser@packmind.com', // Different case in database
+          email: 'testuser@packmind.com',
           memberships: [
             {
               userId: createUserId('123e4567-e89b-12d3-a456-426614174000'),
@@ -521,24 +747,32 @@ describe('UserService', () => {
             },
           ],
         });
-
         mockUserRepository.findByEmailCaseInsensitive.mockResolvedValue(user);
+        result = await userService.getUserByEmailCaseInsensitive(searchEmail);
+      });
 
-        const result =
-          await userService.getUserByEmailCaseInsensitive(searchEmail);
-
+      it('calls repository with search email', () => {
         expect(
           mockUserRepository.findByEmailCaseInsensitive,
         ).toHaveBeenCalledWith(searchEmail);
+      });
+
+      it('returns the user', () => {
         expect(result).toEqual(user);
-        expect(result?.email).toBe('testuser@packmind.com'); // Original case preserved
+      });
+
+      it('preserves original case in returned email', () => {
+        expect(result?.email).toBe('testuser@packmind.com');
       });
     });
 
     describe('when user is found with same case', () => {
-      it('returns the user', async () => {
-        const email = 'testuser@packmind.com';
-        const user = userFactory({
+      const email = 'testuser@packmind.com';
+      let user: User;
+      let result: User | null;
+
+      beforeEach(async () => {
+        user = userFactory({
           id: createUserId('123e4567-e89b-12d3-a456-426614174000'),
           email,
           memberships: [
@@ -551,139 +785,182 @@ describe('UserService', () => {
             },
           ],
         });
-
         mockUserRepository.findByEmailCaseInsensitive.mockResolvedValue(user);
+        result = await userService.getUserByEmailCaseInsensitive(email);
+      });
 
-        const result = await userService.getUserByEmailCaseInsensitive(email);
-
+      it('calls repository with correct email', () => {
         expect(
           mockUserRepository.findByEmailCaseInsensitive,
         ).toHaveBeenCalledWith(email);
+      });
+
+      it('returns the user', () => {
         expect(result).toEqual(user);
       });
     });
 
     describe('when user is not found', () => {
-      it('returns null', async () => {
-        const email = 'nonexistent@packmind.com';
+      const email = 'nonexistent@packmind.com';
+      let result: User | null;
 
+      beforeEach(async () => {
         mockUserRepository.findByEmailCaseInsensitive.mockResolvedValue(null);
+        result = await userService.getUserByEmailCaseInsensitive(email);
+      });
 
-        const result = await userService.getUserByEmailCaseInsensitive(email);
-
+      it('calls repository with correct email', () => {
         expect(
           mockUserRepository.findByEmailCaseInsensitive,
         ).toHaveBeenCalledWith(email);
+      });
+
+      it('returns null', () => {
         expect(result).toBeNull();
       });
     });
   });
 
   describe('.hashPassword', () => {
-    it('hashes password with correct salt rounds', async () => {
-      const password = 'plainpassword';
-      const hashedPassword = 'hashedpassword123';
+    const password = 'plainpassword';
+    const hashedPassword = 'hashedpassword123';
+    let result: string;
 
+    beforeEach(async () => {
       jest.mocked(bcrypt.hash).mockResolvedValue(hashedPassword as never);
+      result = await userService.hashPassword(password);
+    });
 
-      const result = await userService.hashPassword(password);
-
+    it('calls bcrypt with correct salt rounds', () => {
       expect(bcrypt.hash).toHaveBeenCalledWith(password, 10);
+    });
+
+    it('returns hashed password', () => {
       expect(result).toBe(hashedPassword);
     });
   });
 
   describe('.validatePassword', () => {
     describe('when password matches hash', () => {
-      it('returns true', async () => {
-        const password = 'plainpassword';
-        const hash = 'hashedpassword123';
+      const password = 'plainpassword';
+      const hash = 'hashedpassword123';
+      let result: boolean;
 
+      beforeEach(async () => {
         jest.mocked(bcrypt.compare).mockResolvedValue(true as never);
+        result = await userService.validatePassword(password, hash);
+      });
 
-        const result = await userService.validatePassword(password, hash);
-
+      it('compares password with hash', () => {
         expect(bcrypt.compare).toHaveBeenCalledWith(password, hash);
+      });
+
+      it('returns true', () => {
         expect(result).toBe(true);
       });
     });
 
     describe('when password does not match hash', () => {
-      it('returns false', async () => {
-        const password = 'plainpassword';
-        const hash = 'hashedpassword123';
+      const password = 'plainpassword';
+      const hash = 'hashedpassword123';
+      let result: boolean;
 
+      beforeEach(async () => {
         jest.mocked(bcrypt.compare).mockResolvedValue(false as never);
+        result = await userService.validatePassword(password, hash);
+      });
 
-        const result = await userService.validatePassword(password, hash);
-
+      it('compares password with hash', () => {
         expect(bcrypt.compare).toHaveBeenCalledWith(password, hash);
+      });
+
+      it('returns false', () => {
         expect(result).toBe(false);
       });
     });
 
     describe('when stored hash is null', () => {
-      it('returns false without invoking bcrypt', async () => {
-        const password = 'plainpassword';
+      const password = 'plainpassword';
+      let result: boolean;
 
-        const result = await userService.validatePassword(password, null);
+      beforeEach(async () => {
+        result = await userService.validatePassword(password, null);
+      });
 
+      it('does not invoke bcrypt', () => {
         expect(bcrypt.compare).not.toHaveBeenCalled();
+      });
+
+      it('returns false', () => {
         expect(result).toBe(false);
       });
     });
   });
 
   describe('.listUsers', () => {
-    it('returns all users', async () => {
-      const users: User[] = [
-        {
-          id: createUserId('123e4567-e89b-12d3-a456-426614174000'),
-          email: 'testuser1@packmind.com',
-          passwordHash: 'hashedpassword123',
-          active: true,
-          memberships: [
-            {
-              userId: createUserId('123e4567-e89b-12d3-a456-426614174000'),
-              organizationId: createOrganizationId(
-                '123e4567-e89b-12d3-a456-426614174001',
-              ),
-              role: 'admin',
-            },
-          ],
-        },
-        {
-          id: createUserId('123e4567-e89b-12d3-a456-426614174001'),
-          email: 'testuser2@packmind.com',
-          passwordHash: 'hashedpassword456',
-          active: true,
-          memberships: [
-            {
-              userId: createUserId('123e4567-e89b-12d3-a456-426614174001'),
-              organizationId: createOrganizationId(
-                '123e4567-e89b-12d3-a456-426614174002',
-              ),
-              role: 'admin',
-            },
-          ],
-        },
-      ];
+    describe('when users exist', () => {
+      let users: User[];
+      let result: User[];
 
-      mockUserRepository.list.mockResolvedValue(users);
+      beforeEach(async () => {
+        users = [
+          {
+            id: createUserId('123e4567-e89b-12d3-a456-426614174000'),
+            email: 'testuser1@packmind.com',
+            passwordHash: 'hashedpassword123',
+            active: true,
+            memberships: [
+              {
+                userId: createUserId('123e4567-e89b-12d3-a456-426614174000'),
+                organizationId: createOrganizationId(
+                  '123e4567-e89b-12d3-a456-426614174001',
+                ),
+                role: 'admin',
+              },
+            ],
+          },
+          {
+            id: createUserId('123e4567-e89b-12d3-a456-426614174001'),
+            email: 'testuser2@packmind.com',
+            passwordHash: 'hashedpassword456',
+            active: true,
+            memberships: [
+              {
+                userId: createUserId('123e4567-e89b-12d3-a456-426614174001'),
+                organizationId: createOrganizationId(
+                  '123e4567-e89b-12d3-a456-426614174002',
+                ),
+                role: 'admin',
+              },
+            ],
+          },
+        ];
+        mockUserRepository.list.mockResolvedValue(users);
+        result = await userService.listUsers();
+      });
 
-      const result = await userService.listUsers();
+      it('calls repository list method', () => {
+        expect(mockUserRepository.list).toHaveBeenCalled();
+      });
 
-      expect(mockUserRepository.list).toHaveBeenCalled();
-      expect(result).toEqual(users);
+      it('returns all users', () => {
+        expect(result).toEqual(users);
+      });
     });
 
     describe('when no users exist', () => {
-      it('returns empty array', async () => {
+      let result: User[];
+
+      beforeEach(async () => {
         mockUserRepository.list.mockResolvedValue([]);
+        result = await userService.listUsers();
+      });
 
-        const result = await userService.listUsers();
-
+      it('calls repository list method', () => {
         expect(mockUserRepository.list).toHaveBeenCalled();
+      });
+
+      it('returns empty array', () => {
         expect(result).toEqual([]);
       });
     });
@@ -695,107 +972,165 @@ describe('UserService', () => {
       '123e4567-e89b-12d3-a456-426614174001',
     );
 
-    it('changes user role successfully and returns true', async () => {
-      mockMembershipRepository.updateRole.mockResolvedValue(true);
+    describe('when role change succeeds', () => {
+      let result: boolean;
 
-      const result = await userService.changeUserRole(
-        userId,
-        organizationId,
-        'admin',
-      );
+      beforeEach(async () => {
+        mockMembershipRepository.updateRole.mockResolvedValue(true);
+        result = await userService.changeUserRole(
+          userId,
+          organizationId,
+          'admin',
+        );
+      });
 
-      expect(mockMembershipRepository.updateRole).toHaveBeenCalledWith(
-        userId,
-        organizationId,
-        'admin',
-      );
-      expect(result).toBe(true);
-      expect(publishUserContextChangeEventSpy).toHaveBeenCalledWith(
-        String(userId),
-        String(organizationId),
-        'role_changed',
-        'admin',
-      );
+      it('updates role in repository', () => {
+        expect(mockMembershipRepository.updateRole).toHaveBeenCalledWith(
+          userId,
+          organizationId,
+          'admin',
+        );
+      });
+
+      it('returns true', () => {
+        expect(result).toBe(true);
+      });
+
+      it('publishes user context change event', () => {
+        expect(publishUserContextChangeEventSpy).toHaveBeenCalledWith(
+          String(userId),
+          String(organizationId),
+          'role_changed',
+          'admin',
+        );
+      });
     });
 
-    it('returns false if membership update fails', async () => {
-      mockMembershipRepository.updateRole.mockResolvedValue(false);
+    describe('when membership update fails', () => {
+      let result: boolean;
 
-      const result = await userService.changeUserRole(
-        userId,
-        organizationId,
-        'member',
-      );
+      beforeEach(async () => {
+        mockMembershipRepository.updateRole.mockResolvedValue(false);
+        result = await userService.changeUserRole(
+          userId,
+          organizationId,
+          'member',
+        );
+      });
 
-      expect(mockMembershipRepository.updateRole).toHaveBeenCalledWith(
-        userId,
-        organizationId,
-        'member',
-      );
-      expect(result).toBe(false);
-      expect(publishUserContextChangeEventSpy).not.toHaveBeenCalled();
+      it('updates role in repository', () => {
+        expect(mockMembershipRepository.updateRole).toHaveBeenCalledWith(
+          userId,
+          organizationId,
+          'member',
+        );
+      });
+
+      it('returns false', () => {
+        expect(result).toBe(false);
+      });
+
+      it('does not publish event', () => {
+        expect(publishUserContextChangeEventSpy).not.toHaveBeenCalled();
+      });
     });
 
-    it('changes role from admin to member', async () => {
-      mockMembershipRepository.updateRole.mockResolvedValue(true);
+    describe('when changing role from admin to member', () => {
+      let result: boolean;
 
-      const result = await userService.changeUserRole(
-        userId,
-        organizationId,
-        'member',
-      );
+      beforeEach(async () => {
+        mockMembershipRepository.updateRole.mockResolvedValue(true);
+        result = await userService.changeUserRole(
+          userId,
+          organizationId,
+          'member',
+        );
+      });
 
-      expect(mockMembershipRepository.updateRole).toHaveBeenCalledWith(
-        userId,
-        organizationId,
-        'member',
-      );
-      expect(result).toBe(true);
-      expect(publishUserContextChangeEventSpy).toHaveBeenCalledWith(
-        String(userId),
-        String(organizationId),
-        'role_changed',
-        'member',
-      );
+      it('updates role in repository', () => {
+        expect(mockMembershipRepository.updateRole).toHaveBeenCalledWith(
+          userId,
+          organizationId,
+          'member',
+        );
+      });
+
+      it('returns true', () => {
+        expect(result).toBe(true);
+      });
+
+      it('publishes event with member role', () => {
+        expect(publishUserContextChangeEventSpy).toHaveBeenCalledWith(
+          String(userId),
+          String(organizationId),
+          'role_changed',
+          'member',
+        );
+      });
     });
 
-    it('changes role from member to admin', async () => {
-      mockMembershipRepository.updateRole.mockResolvedValue(true);
+    describe('when changing role from member to admin', () => {
+      let result: boolean;
 
-      const result = await userService.changeUserRole(
-        userId,
-        organizationId,
-        'admin',
-      );
+      beforeEach(async () => {
+        mockMembershipRepository.updateRole.mockResolvedValue(true);
+        result = await userService.changeUserRole(
+          userId,
+          organizationId,
+          'admin',
+        );
+      });
 
-      expect(mockMembershipRepository.updateRole).toHaveBeenCalledWith(
-        userId,
-        organizationId,
-        'admin',
-      );
-      expect(result).toBe(true);
-      expect(publishUserContextChangeEventSpy).toHaveBeenCalledWith(
-        String(userId),
-        String(organizationId),
-        'role_changed',
-        'admin',
-      );
+      it('updates role in repository', () => {
+        expect(mockMembershipRepository.updateRole).toHaveBeenCalledWith(
+          userId,
+          organizationId,
+          'admin',
+        );
+      });
+
+      it('returns true', () => {
+        expect(result).toBe(true);
+      });
+
+      it('publishes event with admin role', () => {
+        expect(publishUserContextChangeEventSpy).toHaveBeenCalledWith(
+          String(userId),
+          String(organizationId),
+          'role_changed',
+          'admin',
+        );
+      });
     });
 
-    it('propagates repository errors', async () => {
+    describe('when repository throws error', () => {
       const error = new Error('Database connection failed');
-      mockMembershipRepository.updateRole.mockRejectedValue(error);
+      let thrownError: unknown;
 
-      await expect(
-        userService.changeUserRole(userId, organizationId, 'admin'),
-      ).rejects.toThrow('Database connection failed');
+      beforeEach(async () => {
+        mockMembershipRepository.updateRole.mockRejectedValue(error);
+        try {
+          await userService.changeUserRole(userId, organizationId, 'admin');
+        } catch (e) {
+          thrownError = e;
+        }
+      });
 
-      expect(mockMembershipRepository.updateRole).toHaveBeenCalledWith(
-        userId,
-        organizationId,
-        'admin',
-      );
-      expect(publishUserContextChangeEventSpy).not.toHaveBeenCalled();
+      it('propagates repository errors', () => {
+        expect(thrownError).toEqual(new Error('Database connection failed'));
+      });
+
+      it('calls repository with correct parameters', () => {
+        expect(mockMembershipRepository.updateRole).toHaveBeenCalledWith(
+          userId,
+          organizationId,
+          'admin',
+        );
+      });
+
+      it('does not publish event', () => {
+        expect(publishUserContextChangeEventSpy).not.toHaveBeenCalled();
+      });
     });
   });
 });

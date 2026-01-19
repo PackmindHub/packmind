@@ -7,141 +7,221 @@ import { ApiKeyPayload } from '../entities/ApiKey';
 
 describe('API Key Utils', () => {
   describe('encodeApiKey', () => {
-    it('encodes a valid payload to base64', () => {
-      const payload: ApiKeyPayload = {
-        host: 'http://localhost:3000',
-        jwt: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.test.signature',
-      };
+    const validPayload: ApiKeyPayload = {
+      host: 'http://localhost:3000',
+      jwt: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.test.signature',
+    };
 
-      const encoded = encodeApiKey(payload);
+    it('returns a truthy value for valid payload', () => {
+      const encoded = encodeApiKey(validPayload);
 
       expect(encoded).toBeTruthy();
-      expect(typeof encoded).toBe('string');
-
-      // Verify it's valid base64
-      const decoded = Buffer.from(encoded, 'base64').toString('utf-8');
-      const parsedPayload = JSON.parse(decoded);
-      expect(parsedPayload).toEqual(payload);
     });
 
-    it('handles empty strings in payload', () => {
-      const payload: ApiKeyPayload = {
-        host: '',
-        jwt: '',
-      };
+    it('returns a string for valid payload', () => {
+      const encoded = encodeApiKey(validPayload);
 
-      const encoded = encodeApiKey(payload);
-      expect(encoded).toBeTruthy();
+      expect(typeof encoded).toBe('string');
+    });
+
+    it('produces valid base64 that decodes to original payload', () => {
+      const encoded = encodeApiKey(validPayload);
+
+      const decoded = Buffer.from(encoded, 'base64').toString('utf-8');
+      const parsedPayload = JSON.parse(decoded);
+
+      expect(parsedPayload).toEqual(validPayload);
+    });
+
+    describe('when payload has empty strings', () => {
+      it('returns a truthy value', () => {
+        const payload: ApiKeyPayload = {
+          host: '',
+          jwt: '',
+        };
+
+        const encoded = encodeApiKey(payload);
+
+        expect(encoded).toBeTruthy();
+      });
     });
   });
 
   describe('decodeApiKey', () => {
-    it('decodes a valid base64 API key', () => {
-      const payload: ApiKeyPayload = {
-        host: 'http://localhost:3000',
-        jwt: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.test.signature',
-      };
+    const validPayload: ApiKeyPayload = {
+      host: 'http://localhost:3000',
+      jwt: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.test.signature',
+    };
 
-      const encoded = encodeApiKey(payload);
-      const decoded = decodeApiKey(encoded);
+    describe('when API key is valid', () => {
+      let decoded: ReturnType<typeof decodeApiKey>;
 
-      expect(decoded.isValid).toBe(true);
-      expect(decoded.payload).toEqual(payload);
-      expect(decoded.error).toBeUndefined();
+      beforeEach(() => {
+        const encoded = encodeApiKey(validPayload);
+        decoded = decodeApiKey(encoded);
+      });
+
+      it('returns isValid as true', () => {
+        expect(decoded.isValid).toBe(true);
+      });
+
+      it('returns the original payload', () => {
+        expect(decoded.payload).toEqual(validPayload);
+      });
+
+      it('returns undefined error', () => {
+        expect(decoded.error).toBeUndefined();
+      });
     });
 
-    it('handles whitespace in API key', () => {
-      const payload: ApiKeyPayload = {
+    describe('when API key has whitespace', () => {
+      const payloadWithWhitespace: ApiKeyPayload = {
         host: 'http://localhost:3000',
         jwt: 'test-jwt',
       };
+      let decoded: ReturnType<typeof decodeApiKey>;
 
-      const encoded = encodeApiKey(payload);
-      const decodedWithSpaces = decodeApiKey(`  ${encoded}  \n`);
+      beforeEach(() => {
+        const encoded = encodeApiKey(payloadWithWhitespace);
+        decoded = decodeApiKey(`  ${encoded}  \n`);
+      });
 
-      expect(decodedWithSpaces.isValid).toBe(true);
-      expect(decodedWithSpaces.payload).toEqual(payload);
+      it('returns isValid as true', () => {
+        expect(decoded.isValid).toBe(true);
+      });
+
+      it('returns the original payload', () => {
+        expect(decoded.payload).toEqual(payloadWithWhitespace);
+      });
     });
 
-    it('returns invalid for malformed base64', () => {
-      const decoded = decodeApiKey('not-valid-base64!@#');
+    describe('when base64 is malformed', () => {
+      let decoded: ReturnType<typeof decodeApiKey>;
 
-      expect(decoded.isValid).toBe(false);
-      expect(decoded.error).toContain('Failed to decode API key');
+      beforeEach(() => {
+        decoded = decodeApiKey('not-valid-base64!@#');
+      });
+
+      it('returns isValid as false', () => {
+        expect(decoded.isValid).toBe(false);
+      });
+
+      it('returns error containing decode failure message', () => {
+        expect(decoded.error).toContain('Failed to decode API key');
+      });
     });
 
-    it('returns invalid for missing host field', () => {
-      const invalidPayload = { jwt: 'test-jwt' };
-      const encoded = Buffer.from(JSON.stringify(invalidPayload)).toString(
-        'base64',
-      );
+    describe('when host field is missing', () => {
+      let decoded: ReturnType<typeof decodeApiKey>;
 
-      const decoded = decodeApiKey(encoded);
+      beforeEach(() => {
+        const invalidPayload = { jwt: 'test-jwt' };
+        const encoded = Buffer.from(JSON.stringify(invalidPayload)).toString(
+          'base64',
+        );
+        decoded = decodeApiKey(encoded);
+      });
 
-      expect(decoded.isValid).toBe(false);
-      expect(decoded.error).toContain('missing or invalid host field');
+      it('returns isValid as false', () => {
+        expect(decoded.isValid).toBe(false);
+      });
+
+      it('returns error containing missing host message', () => {
+        expect(decoded.error).toContain('missing or invalid host field');
+      });
     });
 
-    it('returns invalid for missing jwt field', () => {
-      const invalidPayload = { host: 'http://localhost:3000' };
-      const encoded = Buffer.from(JSON.stringify(invalidPayload)).toString(
-        'base64',
-      );
+    describe('when jwt field is missing', () => {
+      let decoded: ReturnType<typeof decodeApiKey>;
 
-      const decoded = decodeApiKey(encoded);
+      beforeEach(() => {
+        const invalidPayload = { host: 'http://localhost:3000' };
+        const encoded = Buffer.from(JSON.stringify(invalidPayload)).toString(
+          'base64',
+        );
+        decoded = decodeApiKey(encoded);
+      });
 
-      expect(decoded.isValid).toBe(false);
-      expect(decoded.error).toContain('missing or invalid jwt field');
+      it('returns isValid as false', () => {
+        expect(decoded.isValid).toBe(false);
+      });
+
+      it('returns error containing missing jwt message', () => {
+        expect(decoded.error).toContain('missing or invalid jwt field');
+      });
     });
 
-    it('returns invalid for non-JSON content', () => {
-      const encoded = Buffer.from('not json content').toString('base64');
+    describe('when content is not JSON', () => {
+      let decoded: ReturnType<typeof decodeApiKey>;
 
-      const decoded = decodeApiKey(encoded);
+      beforeEach(() => {
+        const encoded = Buffer.from('not json content').toString('base64');
+        decoded = decodeApiKey(encoded);
+      });
 
-      expect(decoded.isValid).toBe(false);
-      expect(decoded.error).toContain('Failed to decode API key');
+      it('returns isValid as false', () => {
+        expect(decoded.isValid).toBe(false);
+      });
+
+      it('returns error containing decode failure message', () => {
+        expect(decoded.error).toContain('Failed to decode API key');
+      });
     });
   });
 
   describe('extractApiKeyFromHeader', () => {
-    it('extracts API key with Bearer prefix', () => {
-      const header = 'Bearer my-api-key-123';
-      const extracted = extractApiKeyFromHeader(header);
+    describe('when header has Bearer prefix', () => {
+      it('extracts the API key', () => {
+        const header = 'Bearer my-api-key-123';
 
-      expect(extracted).toBe('my-api-key-123');
+        const extracted = extractApiKeyFromHeader(header);
+
+        expect(extracted).toBe('my-api-key-123');
+      });
     });
 
-    it('extracts API key without Bearer prefix', () => {
-      const header = 'my-api-key-123';
-      const extracted = extractApiKeyFromHeader(header);
+    describe('when header has no Bearer prefix', () => {
+      it('returns the header as-is', () => {
+        const header = 'my-api-key-123';
 
-      expect(extracted).toBe('my-api-key-123');
+        const extracted = extractApiKeyFromHeader(header);
+
+        expect(extracted).toBe('my-api-key-123');
+      });
     });
 
-    it('handles extra whitespace with Bearer prefix', () => {
-      const header = 'Bearer   my-api-key-123  ';
-      const extracted = extractApiKeyFromHeader(header);
+    describe('when header has extra whitespace with Bearer prefix', () => {
+      it('extracts the trimmed API key', () => {
+        const header = 'Bearer   my-api-key-123  ';
 
-      expect(extracted).toBe('my-api-key-123');
+        const extracted = extractApiKeyFromHeader(header);
+
+        expect(extracted).toBe('my-api-key-123');
+      });
     });
 
-    it('returns null for undefined header', () => {
-      const extracted = extractApiKeyFromHeader(undefined);
+    describe('when header is undefined', () => {
+      it('returns null', () => {
+        const extracted = extractApiKeyFromHeader(undefined);
 
-      expect(extracted).toBeNull();
+        expect(extracted).toBeNull();
+      });
     });
 
-    it('returns null for empty header', () => {
-      const extracted = extractApiKeyFromHeader('');
+    describe('when header is empty', () => {
+      it('returns null', () => {
+        const extracted = extractApiKeyFromHeader('');
 
-      expect(extracted).toBeNull();
+        expect(extracted).toBeNull();
+      });
     });
 
-    it('handles just "Bearer" without key', () => {
-      const extracted = extractApiKeyFromHeader('Bearer');
+    describe('when header is just "Bearer" without key', () => {
+      it('returns empty string', () => {
+        const extracted = extractApiKeyFromHeader('Bearer');
 
-      expect(extracted).toBe('');
+        expect(extracted).toBe('');
+      });
     });
   });
 });

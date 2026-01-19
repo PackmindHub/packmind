@@ -32,12 +32,19 @@ describe('ValidatePasswordUseCase', () => {
     };
 
     describe('with valid credentials', () => {
-      it('returns isValid true', async () => {
+      beforeEach(() => {
         mockUserService.validatePassword.mockResolvedValue(true);
+      });
 
+      it('returns isValid true', async () => {
         const result = await validatePasswordUseCase.execute(validCommand);
 
         expect(result).toEqual({ isValid: true });
+      });
+
+      it('calls validatePassword with correct parameters', async () => {
+        await validatePasswordUseCase.execute(validCommand);
+
         expect(mockUserService.validatePassword).toHaveBeenCalledWith(
           'myPassword123',
           '$2b$10$abcdefghijklmnopqrstuvwxyz',
@@ -46,12 +53,19 @@ describe('ValidatePasswordUseCase', () => {
     });
 
     describe('with invalid credentials', () => {
-      it('returns isValid false', async () => {
+      beforeEach(() => {
         mockUserService.validatePassword.mockResolvedValue(false);
+      });
 
+      it('returns isValid false', async () => {
         const result = await validatePasswordUseCase.execute(validCommand);
 
         expect(result).toEqual({ isValid: false });
+      });
+
+      it('calls validatePassword with correct parameters', async () => {
+        await validatePasswordUseCase.execute(validCommand);
+
         expect(mockUserService.validatePassword).toHaveBeenCalledWith(
           'myPassword123',
           '$2b$10$abcdefghijklmnopqrstuvwxyz',
@@ -60,58 +74,93 @@ describe('ValidatePasswordUseCase', () => {
     });
 
     describe('with missing password', () => {
-      it('throws validation error', async () => {
-        const invalidCommand = {
-          password: '',
-          hash: '$2b$10$abcdefghijklmnopqrstuvwxyz',
-        };
+      const invalidCommand = {
+        password: '',
+        hash: '$2b$10$abcdefghijklmnopqrstuvwxyz',
+      };
 
+      it('throws validation error', async () => {
         await expect(
           validatePasswordUseCase.execute(invalidCommand),
         ).rejects.toThrow('Password and hash are required for validation');
+      });
+
+      it('does not call validatePassword', async () => {
+        try {
+          await validatePasswordUseCase.execute(invalidCommand);
+        } catch {
+          // Expected to throw
+        }
 
         expect(mockUserService.validatePassword).not.toHaveBeenCalled();
       });
     });
 
     describe('with missing hash', () => {
-      it('throws validation error', async () => {
-        const invalidCommand = {
-          password: 'myPassword123',
-          hash: '',
-        };
+      const invalidCommand = {
+        password: 'myPassword123',
+        hash: '',
+      };
 
+      it('throws validation error', async () => {
         await expect(
           validatePasswordUseCase.execute(invalidCommand),
         ).rejects.toThrow('Password and hash are required for validation');
+      });
+
+      it('does not call validatePassword', async () => {
+        try {
+          await validatePasswordUseCase.execute(invalidCommand);
+        } catch {
+          // Expected to throw
+        }
 
         expect(mockUserService.validatePassword).not.toHaveBeenCalled();
       });
     });
 
     describe('with missing password and hash', () => {
-      it('throws validation error', async () => {
-        const invalidCommand = {
-          password: '',
-          hash: '',
-        };
+      const invalidCommand = {
+        password: '',
+        hash: '',
+      };
 
+      it('throws validation error', async () => {
         await expect(
           validatePasswordUseCase.execute(invalidCommand),
         ).rejects.toThrow('Password and hash are required for validation');
+      });
+
+      it('does not call validatePassword', async () => {
+        try {
+          await validatePasswordUseCase.execute(invalidCommand);
+        } catch {
+          // Expected to throw
+        }
 
         expect(mockUserService.validatePassword).not.toHaveBeenCalled();
       });
     });
 
     describe('with service error', () => {
-      it('rethrows error', async () => {
-        const serviceError = new Error('Password validation failed');
-        mockUserService.validatePassword.mockRejectedValue(serviceError);
+      const serviceError = new Error('Password validation failed');
 
+      beforeEach(() => {
+        mockUserService.validatePassword.mockRejectedValue(serviceError);
+      });
+
+      it('rethrows error', async () => {
         await expect(
           validatePasswordUseCase.execute(validCommand),
         ).rejects.toThrow('Password validation failed');
+      });
+
+      it('calls validatePassword with correct parameters', async () => {
+        try {
+          await validatePasswordUseCase.execute(validCommand);
+        } catch {
+          // Expected to throw
+        }
 
         expect(mockUserService.validatePassword).toHaveBeenCalledWith(
           'myPassword123',
@@ -132,16 +181,24 @@ describe('ValidatePasswordUseCase', () => {
     });
 
     describe('with minimal valid input', () => {
-      it('validates password successfully', async () => {
-        const minimalCommand = {
-          password: 'a',
-          hash: 'b',
-        };
-        mockUserService.validatePassword.mockResolvedValue(true);
+      const minimalCommand = {
+        password: 'a',
+        hash: 'b',
+      };
 
+      beforeEach(() => {
+        mockUserService.validatePassword.mockResolvedValue(true);
+      });
+
+      it('validates password successfully', async () => {
         const result = await validatePasswordUseCase.execute(minimalCommand);
 
         expect(result).toEqual({ isValid: true });
+      });
+
+      it('calls validatePassword with minimal parameters', async () => {
+        await validatePasswordUseCase.execute(minimalCommand);
+
         expect(mockUserService.validatePassword).toHaveBeenCalledWith('a', 'b');
       });
     });

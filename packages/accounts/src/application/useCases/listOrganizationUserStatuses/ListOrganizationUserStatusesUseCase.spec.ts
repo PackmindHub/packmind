@@ -88,232 +88,266 @@ describe('ListOrganizationUserStatusesUseCase', () => {
     expect(result.userStatuses).toEqual([]);
   });
 
-  it('returns user statuses with accepted status for active users', async () => {
-    const adminUser = userFactory({
-      id: adminUserId,
-      memberships: [{ userId: adminUserId, organizationId, role: 'admin' }],
+  describe('when user is active', () => {
+    const activeUserId = createUserId('active-user');
+    let result: Awaited<ReturnType<typeof useCase.execute>>;
+
+    beforeEach(async () => {
+      const adminUser = userFactory({
+        id: adminUserId,
+        memberships: [{ userId: adminUserId, organizationId, role: 'admin' }],
+      });
+
+      const activeUser = userFactory({
+        id: activeUserId,
+        email: 'active@test.com',
+        active: true,
+        memberships: [
+          {
+            userId: activeUserId,
+            organizationId,
+            role: 'member',
+          },
+        ],
+      });
+
+      mockGetUserById.mockResolvedValue(adminUser);
+      mockListUsers.mockResolvedValue([activeUser]);
+      mockFindByUserIds.mockResolvedValue([]);
+
+      const command: ListOrganizationUserStatusesCommand = {
+        userId: adminUserId,
+        organizationId,
+      };
+
+      result = await useCase.execute(command);
     });
 
-    const activeUser = userFactory({
-      id: createUserId('active-user'),
-      email: 'active@test.com',
-      active: true,
-      memberships: [
-        {
-          userId: createUserId('active-user'),
-          organizationId,
-          role: 'member',
-        },
-      ],
-    });
-
-    mockGetUserById.mockResolvedValue(adminUser);
-    mockListUsers.mockResolvedValue([activeUser]);
-    mockFindByUserIds.mockResolvedValue([]);
-
-    const command: ListOrganizationUserStatusesCommand = {
-      userId: adminUserId,
-      organizationId,
-    };
-
-    const result = await useCase.execute(command);
-
-    expect(result.userStatuses).toHaveLength(1);
-    expect(result.userStatuses[0]).toEqual({
-      userId: activeUser.id,
-      email: activeUser.email,
-      role: 'member',
-      isActive: true,
-      invitationStatus: 'accepted',
-      invitationExpirationDate: undefined,
+    it('returns accepted invitation status', () => {
+      expect(result.userStatuses[0]).toEqual({
+        userId: activeUserId,
+        email: 'active@test.com',
+        role: 'member',
+        isActive: true,
+        invitationStatus: 'accepted',
+        invitationExpirationDate: undefined,
+      });
     });
   });
 
-  it('returns user statuses with pending invitation status', async () => {
-    const adminUser = userFactory({
-      id: adminUserId,
-      memberships: [{ userId: adminUserId, organizationId, role: 'admin' }],
-    });
-
-    const inactiveUser = userFactory({
-      id: createUserId('inactive-user'),
-      email: 'inactive@test.com',
-      active: false,
-      memberships: [
-        {
-          userId: createUserId('inactive-user'),
-          organizationId,
-          role: 'admin',
-        },
-      ],
-    });
-
+  describe('when user has pending invitation', () => {
+    const inactiveUserId = createUserId('inactive-user');
     const futureDate = new Date(Date.now() + 24 * 60 * 60 * 1000);
-    const invitation = invitationFactory({
-      userId: inactiveUser.id,
-      expirationDate: futureDate,
+    let result: Awaited<ReturnType<typeof useCase.execute>>;
+    let invitationToken: string;
+
+    beforeEach(async () => {
+      const adminUser = userFactory({
+        id: adminUserId,
+        memberships: [{ userId: adminUserId, organizationId, role: 'admin' }],
+      });
+
+      const inactiveUser = userFactory({
+        id: inactiveUserId,
+        email: 'inactive@test.com',
+        active: false,
+        memberships: [
+          {
+            userId: inactiveUserId,
+            organizationId,
+            role: 'admin',
+          },
+        ],
+      });
+
+      const invitation = invitationFactory({
+        userId: inactiveUser.id,
+        expirationDate: futureDate,
+      });
+      invitationToken = invitation.token;
+
+      mockGetUserById.mockResolvedValue(adminUser);
+      mockListUsers.mockResolvedValue([inactiveUser]);
+      mockFindByUserIds.mockResolvedValue([invitation]);
+
+      const command: ListOrganizationUserStatusesCommand = {
+        userId: adminUserId,
+        organizationId,
+      };
+
+      result = await useCase.execute(command);
     });
 
-    mockGetUserById.mockResolvedValue(adminUser);
-    mockListUsers.mockResolvedValue([inactiveUser]);
-    mockFindByUserIds.mockResolvedValue([invitation]);
-
-    const command: ListOrganizationUserStatusesCommand = {
-      userId: adminUserId,
-      organizationId,
-    };
-
-    const result = await useCase.execute(command);
-
-    expect(result.userStatuses).toHaveLength(1);
-    expect(result.userStatuses[0]).toEqual({
-      userId: inactiveUser.id,
-      email: inactiveUser.email,
-      role: 'admin',
-      isActive: false,
-      invitationStatus: 'pending',
-      invitationExpirationDate: futureDate,
-      invitationLink: `http://localhost:8081/activate?token=${encodeURIComponent(invitation.token)}`,
+    it('returns pending invitation status with invitation link', () => {
+      expect(result.userStatuses[0]).toEqual({
+        userId: inactiveUserId,
+        email: 'inactive@test.com',
+        role: 'admin',
+        isActive: false,
+        invitationStatus: 'pending',
+        invitationExpirationDate: futureDate,
+        invitationLink: `http://localhost:8081/activate?token=${encodeURIComponent(invitationToken)}`,
+      });
     });
   });
 
-  it('returns user statuses with expired invitation status', async () => {
-    const adminUser = userFactory({
-      id: adminUserId,
-      memberships: [{ userId: adminUserId, organizationId, role: 'admin' }],
-    });
-
-    const inactiveUser = userFactory({
-      id: createUserId('inactive-user'),
-      email: 'inactive@test.com',
-      active: false,
-      memberships: [
-        {
-          userId: createUserId('inactive-user'),
-          organizationId,
-          role: 'member',
-        },
-      ],
-    });
-
+  describe('when user has expired invitation', () => {
+    const inactiveUserId = createUserId('inactive-user');
     const pastDate = new Date(Date.now() - 24 * 60 * 60 * 1000);
-    const invitation = invitationFactory({
-      userId: inactiveUser.id,
-      expirationDate: pastDate,
+    let result: Awaited<ReturnType<typeof useCase.execute>>;
+
+    beforeEach(async () => {
+      const adminUser = userFactory({
+        id: adminUserId,
+        memberships: [{ userId: adminUserId, organizationId, role: 'admin' }],
+      });
+
+      const inactiveUser = userFactory({
+        id: inactiveUserId,
+        email: 'inactive@test.com',
+        active: false,
+        memberships: [
+          {
+            userId: inactiveUserId,
+            organizationId,
+            role: 'member',
+          },
+        ],
+      });
+
+      const invitation = invitationFactory({
+        userId: inactiveUser.id,
+        expirationDate: pastDate,
+      });
+
+      mockGetUserById.mockResolvedValue(adminUser);
+      mockListUsers.mockResolvedValue([inactiveUser]);
+      mockFindByUserIds.mockResolvedValue([invitation]);
+
+      const command: ListOrganizationUserStatusesCommand = {
+        userId: adminUserId,
+        organizationId,
+      };
+
+      result = await useCase.execute(command);
     });
 
-    mockGetUserById.mockResolvedValue(adminUser);
-    mockListUsers.mockResolvedValue([inactiveUser]);
-    mockFindByUserIds.mockResolvedValue([invitation]);
-
-    const command: ListOrganizationUserStatusesCommand = {
-      userId: adminUserId,
-      organizationId,
-    };
-
-    const result = await useCase.execute(command);
-
-    expect(result.userStatuses).toHaveLength(1);
-    expect(result.userStatuses[0]).toEqual({
-      userId: inactiveUser.id,
-      email: inactiveUser.email,
-      role: 'member',
-      isActive: false,
-      invitationStatus: 'expired',
-      invitationExpirationDate: pastDate,
-    });
-  });
-
-  it('returns user statuses with none invitation status for inactive users without invitations', async () => {
-    const adminUser = userFactory({
-      id: adminUserId,
-      memberships: [{ userId: adminUserId, organizationId, role: 'admin' }],
-    });
-
-    const inactiveUser = userFactory({
-      id: createUserId('inactive-user'),
-      email: 'inactive@test.com',
-      active: false,
-      memberships: [
-        {
-          userId: createUserId('inactive-user'),
-          organizationId,
-          role: 'member',
-        },
-      ],
-    });
-
-    mockGetUserById.mockResolvedValue(adminUser);
-    mockListUsers.mockResolvedValue([inactiveUser]);
-    mockFindByUserIds.mockResolvedValue([]);
-
-    const command: ListOrganizationUserStatusesCommand = {
-      userId: adminUserId,
-      organizationId,
-    };
-
-    const result = await useCase.execute(command);
-
-    expect(result.userStatuses).toHaveLength(1);
-    expect(result.userStatuses[0]).toEqual({
-      userId: inactiveUser.id,
-      email: inactiveUser.email,
-      role: 'member',
-      isActive: false,
-      invitationStatus: 'none',
-      invitationExpirationDate: undefined,
+    it('returns expired invitation status without invitation link', () => {
+      expect(result.userStatuses[0]).toEqual({
+        userId: inactiveUserId,
+        email: 'inactive@test.com',
+        role: 'member',
+        isActive: false,
+        invitationStatus: 'expired',
+        invitationExpirationDate: pastDate,
+      });
     });
   });
 
-  it('uses the latest invitation for users with multiple invitations', async () => {
-    const adminUser = userFactory({
-      id: adminUserId,
-      memberships: [{ userId: adminUserId, organizationId, role: 'admin' }],
+  describe('when user is inactive without invitation', () => {
+    const inactiveUserId = createUserId('inactive-user');
+    let result: Awaited<ReturnType<typeof useCase.execute>>;
+
+    beforeEach(async () => {
+      const adminUser = userFactory({
+        id: adminUserId,
+        memberships: [{ userId: adminUserId, organizationId, role: 'admin' }],
+      });
+
+      const inactiveUser = userFactory({
+        id: inactiveUserId,
+        email: 'inactive@test.com',
+        active: false,
+        memberships: [
+          {
+            userId: inactiveUserId,
+            organizationId,
+            role: 'member',
+          },
+        ],
+      });
+
+      mockGetUserById.mockResolvedValue(adminUser);
+      mockListUsers.mockResolvedValue([inactiveUser]);
+      mockFindByUserIds.mockResolvedValue([]);
+
+      const command: ListOrganizationUserStatusesCommand = {
+        userId: adminUserId,
+        organizationId,
+      };
+
+      result = await useCase.execute(command);
     });
 
-    const inactiveUser = userFactory({
-      id: createUserId('inactive-user'),
-      email: 'inactive@test.com',
-      active: false,
-      memberships: [
-        {
-          userId: createUserId('inactive-user'),
-          organizationId,
-          role: 'member',
-        },
-      ],
+    it('returns none invitation status', () => {
+      expect(result.userStatuses[0]).toEqual({
+        userId: inactiveUserId,
+        email: 'inactive@test.com',
+        role: 'member',
+        isActive: false,
+        invitationStatus: 'none',
+        invitationExpirationDate: undefined,
+      });
     });
+  });
 
-    const oldDate = new Date(Date.now() - 48 * 60 * 60 * 1000);
+  describe('when user has multiple invitations', () => {
+    const inactiveUserId = createUserId('inactive-user');
     const futureDate = new Date(Date.now() + 24 * 60 * 60 * 1000);
+    let result: Awaited<ReturnType<typeof useCase.execute>>;
+    let newInvitationToken: string;
 
-    const oldInvitation = invitationFactory({
-      userId: inactiveUser.id,
-      expirationDate: oldDate,
+    beforeEach(async () => {
+      const adminUser = userFactory({
+        id: adminUserId,
+        memberships: [{ userId: adminUserId, organizationId, role: 'admin' }],
+      });
+
+      const inactiveUser = userFactory({
+        id: inactiveUserId,
+        email: 'inactive@test.com',
+        active: false,
+        memberships: [
+          {
+            userId: inactiveUserId,
+            organizationId,
+            role: 'member',
+          },
+        ],
+      });
+
+      const oldDate = new Date(Date.now() - 48 * 60 * 60 * 1000);
+
+      const oldInvitation = invitationFactory({
+        userId: inactiveUser.id,
+        expirationDate: oldDate,
+      });
+
+      const newInvitation = invitationFactory({
+        userId: inactiveUser.id,
+        expirationDate: futureDate,
+      });
+      newInvitationToken = newInvitation.token;
+
+      mockGetUserById.mockResolvedValue(adminUser);
+      mockListUsers.mockResolvedValue([inactiveUser]);
+      mockFindByUserIds.mockResolvedValue([oldInvitation, newInvitation]);
+
+      const command: ListOrganizationUserStatusesCommand = {
+        userId: adminUserId,
+        organizationId,
+      };
+
+      result = await useCase.execute(command);
     });
 
-    const newInvitation = invitationFactory({
-      userId: inactiveUser.id,
-      expirationDate: futureDate,
+    it('uses the latest invitation', () => {
+      expect(result.userStatuses[0]).toMatchObject({
+        invitationStatus: 'pending',
+        invitationExpirationDate: futureDate,
+        invitationLink: `http://localhost:8081/activate?token=${encodeURIComponent(newInvitationToken)}`,
+      });
     });
-
-    mockGetUserById.mockResolvedValue(adminUser);
-    mockListUsers.mockResolvedValue([inactiveUser]);
-    mockFindByUserIds.mockResolvedValue([oldInvitation, newInvitation]);
-
-    const command: ListOrganizationUserStatusesCommand = {
-      userId: adminUserId,
-      organizationId,
-    };
-
-    const result = await useCase.execute(command);
-
-    expect(result.userStatuses).toHaveLength(1);
-    expect(result.userStatuses[0].invitationStatus).toBe('pending');
-    expect(result.userStatuses[0].invitationExpirationDate).toEqual(futureDate);
-    expect(result.userStatuses[0].invitationLink).toBe(
-      `http://localhost:8081/activate?token=${encodeURIComponent(newInvitation.token)}`,
-    );
   });
 
   it('throws error for non-admin users', async () => {

@@ -24,10 +24,15 @@ describe('GetOrganizationByNameUseCase', () => {
 
   describe('.execute', () => {
     describe('when organization is found', () => {
-      it('returns organization by slugifying the name and searching by slug', async () => {
-        const name = 'Test Organization';
-        const expectedSlug = 'test-organization';
-        const expectedOrganization = organizationFactory({
+      const name = 'Test Organization';
+      const expectedSlug = 'test-organization';
+      let expectedOrganization: ReturnType<typeof organizationFactory>;
+      let result: {
+        organization: ReturnType<typeof organizationFactory> | null;
+      };
+
+      beforeEach(async () => {
+        expectedOrganization = organizationFactory({
           id: createOrganizationId('123e4567-e89b-12d3-a456-426614174000'),
           name,
           slug: expectedSlug,
@@ -37,27 +42,39 @@ describe('GetOrganizationByNameUseCase', () => {
           expectedOrganization,
         );
 
-        const result = await useCase.execute({ name });
+        result = await useCase.execute({ name });
+      });
 
+      it('searches by slugified name', () => {
         expect(
           mockOrganizationService.getOrganizationBySlug,
         ).toHaveBeenCalledWith(expectedSlug);
+      });
+
+      it('returns the organization', () => {
         expect(result.organization).toEqual(expectedOrganization);
       });
     });
 
     describe('when organization is not found', () => {
-      it('returns null', async () => {
-        const name = 'Non-existent Organization';
-        const expectedSlug = 'non-existent-organization';
+      const name = 'Non-existent Organization';
+      const expectedSlug = 'non-existent-organization';
+      let result: {
+        organization: ReturnType<typeof organizationFactory> | null;
+      };
 
+      beforeEach(async () => {
         mockOrganizationService.getOrganizationBySlug.mockResolvedValue(null);
+        result = await useCase.execute({ name });
+      });
 
-        const result = await useCase.execute({ name });
-
+      it('searches by slugified name', () => {
         expect(
           mockOrganizationService.getOrganizationBySlug,
         ).toHaveBeenCalledWith(expectedSlug);
+      });
+
+      it('returns null', () => {
         expect(result.organization).toBeNull();
       });
     });

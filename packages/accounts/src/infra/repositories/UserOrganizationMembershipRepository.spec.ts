@@ -63,108 +63,130 @@ describe('UserOrganizationMembershipRepository', () => {
   };
 
   describe('.removeMembership', () => {
-    it('removes an existing membership and returns true', async () => {
-      const userId = await createMembership();
+    describe('when membership exists', () => {
+      let userId: ReturnType<typeof createUserId>;
+      let removed: boolean;
 
-      const removed = await repository.removeMembership(
-        userId,
-        organization.id,
-      );
-
-      expect(removed).toBe(true);
-
-      const membership = await ormRepository.findOne({
-        where: {
-          userId,
-          organizationId: organization.id,
-        },
+      beforeEach(async () => {
+        userId = await createMembership();
+        removed = await repository.removeMembership(userId, organization.id);
       });
-      expect(membership).toBeNull();
+
+      it('returns true', async () => {
+        expect(removed).toBe(true);
+      });
+
+      it('deletes the membership from the database', async () => {
+        const membership = await ormRepository.findOne({
+          where: {
+            userId,
+            organizationId: organization.id,
+          },
+        });
+        expect(membership).toBeNull();
+      });
     });
 
-    it('returns false if no membership exists', async () => {
-      const removed = await repository.removeMembership(
-        createUserId(uuidv4()),
-        organization.id,
-      );
+    describe('when membership does not exist', () => {
+      it('returns false', async () => {
+        const removed = await repository.removeMembership(
+          createUserId(uuidv4()),
+          organization.id,
+        );
 
-      expect(removed).toBe(false);
+        expect(removed).toBe(false);
+      });
     });
   });
 
   describe('.updateRole', () => {
-    it('updates an existing membership role and returns true', async () => {
-      const userId = await createMembership();
+    describe('when updating member to admin', () => {
+      let userId: ReturnType<typeof createUserId>;
+      let updated: boolean;
 
-      const updated = await repository.updateRole(
-        userId,
-        organization.id,
-        'admin',
-      );
-
-      expect(updated).toBe(true);
-
-      const membership = await ormRepository.findOne({
-        where: {
-          userId,
-          organizationId: organization.id,
-        },
+      beforeEach(async () => {
+        userId = await createMembership();
+        updated = await repository.updateRole(userId, organization.id, 'admin');
       });
-      expect(membership?.role).toBe('admin');
-    });
 
-    it('returns false if no membership exists', async () => {
-      const updated = await repository.updateRole(
-        createUserId(uuidv4()),
-        organization.id,
-        'admin',
-      );
+      it('returns true', async () => {
+        expect(updated).toBe(true);
+      });
 
-      expect(updated).toBe(false);
-    });
-
-    it('updates role from admin to member', async () => {
-      const userId = createUserId(uuidv4());
-      await createUser(dataSource, {
-        id: userId,
-        memberships: [
-          {
+      it('updates the role in the database', async () => {
+        const membership = await ormRepository.findOne({
+          where: {
             userId,
             organizationId: organization.id,
-            role: 'admin',
           },
-        ],
+        });
+        expect(membership?.role).toBe('admin');
       });
-
-      const updated = await repository.updateRole(
-        userId,
-        organization.id,
-        'member',
-      );
-
-      expect(updated).toBe(true);
-
-      const membership = await ormRepository.findOne({
-        where: {
-          userId,
-          organizationId: organization.id,
-        },
-      });
-      expect(membership?.role).toBe('member');
     });
 
-    it('handles transaction rollback on database error', async () => {
-      const userId = await createMembership();
+    describe('when updating admin to member', () => {
+      let userId: ReturnType<typeof createUserId>;
+      let updated: boolean;
 
-      // Mock a database error by creating a repository with invalid connection
-      const invalidRepository = new UserOrganizationMembershipRepository(
-        {} as Repository<WithTimestamps<UserOrganizationMembership>>, // Invalid repository
-        logger,
-      );
+      beforeEach(async () => {
+        userId = createUserId(uuidv4());
+        await createUser(dataSource, {
+          id: userId,
+          memberships: [
+            {
+              userId,
+              organizationId: organization.id,
+              role: 'admin',
+            },
+          ],
+        });
+        updated = await repository.updateRole(
+          userId,
+          organization.id,
+          'member',
+        );
+      });
 
-      await expect(
-        invalidRepository.updateRole(userId, organization.id, 'admin'),
-      ).rejects.toThrow();
+      it('returns true', async () => {
+        expect(updated).toBe(true);
+      });
+
+      it('updates the role in the database', async () => {
+        const membership = await ormRepository.findOne({
+          where: {
+            userId,
+            organizationId: organization.id,
+          },
+        });
+        expect(membership?.role).toBe('member');
+      });
+    });
+
+    describe('when membership does not exist', () => {
+      it('returns false', async () => {
+        const updated = await repository.updateRole(
+          createUserId(uuidv4()),
+          organization.id,
+          'admin',
+        );
+
+        expect(updated).toBe(false);
+      });
+    });
+
+    describe('when database error occurs', () => {
+      it('throws an error', async () => {
+        const userId = await createMembership();
+
+        const invalidRepository = new UserOrganizationMembershipRepository(
+          {} as Repository<WithTimestamps<UserOrganizationMembership>>,
+          logger,
+        );
+
+        await expect(
+          invalidRepository.updateRole(userId, organization.id, 'admin'),
+        ).rejects.toThrow();
+      });
     });
   });
 });
