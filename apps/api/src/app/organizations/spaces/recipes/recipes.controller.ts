@@ -182,6 +182,7 @@ export class OrganizationsSpacesRecipesController {
         organizationId,
         userId,
         spaceId,
+        request.clientSource,
       );
     } catch (error) {
       const errorMessage =
@@ -212,7 +213,6 @@ export class OrganizationsSpacesRecipesController {
     @Body()
     updateData: {
       name: string;
-      slug?: string;
       content: string;
       summary?: string;
     },
@@ -232,16 +232,16 @@ export class OrganizationsSpacesRecipesController {
     );
 
     try {
-      const updatedRecipe = await this.recipesService.updateRecipeFromUI(
-        id,
+      const updatedRecipe = await this.recipesService.updateRecipeFromUI({
+        recipeId: id,
         spaceId,
         organizationId,
-        updateData.name,
-        updateData.slug || '',
-        updateData.content,
+        name: updateData.name,
+        content: updateData.content,
         userId,
-        updateData.summary,
-      );
+        source: request.clientSource,
+        summary: updateData.summary,
+      });
 
       this.logger.info(
         'PATCH /organizations/:orgId/spaces/:spaceId/recipes/:id - Recipe updated successfully',
@@ -311,6 +311,7 @@ export class OrganizationsSpacesRecipesController {
         spaceId,
         userId,
         organizationId,
+        request.clientSource,
       );
 
       this.logger.info(
@@ -367,6 +368,7 @@ export class OrganizationsSpacesRecipesController {
         spaceId,
         organizationId,
         userId,
+        request.clientSource,
       );
 
       this.logger.info(

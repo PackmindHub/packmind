@@ -204,6 +204,7 @@ export class OrganizationsSpacesSkillsController {
         organizationId,
         spaceId,
         userId,
+        request.clientSource,
       );
 
       let statusCode: HttpStatus;

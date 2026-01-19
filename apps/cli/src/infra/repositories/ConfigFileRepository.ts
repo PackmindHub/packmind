@@ -7,6 +7,7 @@ import {
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import { logWarningConsole } from '../utils/consoleLogger';
+import { normalizePath } from '../../application/utils/pathUtils';
 
 export class ConfigFileRepository {
   private readonly CONFIG_FILENAME = 'packmind.json';
@@ -77,7 +78,7 @@ export class ConfigFileRepository {
    * @returns Array of directory paths that contain a packmind.json file
    */
   async findDescendantConfigs(directory: string): Promise<string[]> {
-    const normalizedDir = path.resolve(directory);
+    const normalizedDir = normalizePath(path.resolve(directory));
     const results: string[] = [];
 
     const searchRecursively = async (currentDir: string): Promise<void> => {
@@ -97,7 +98,7 @@ export class ConfigFileRepository {
           continue;
         }
 
-        const entryPath = path.join(currentDir, entry.name);
+        const entryPath = normalizePath(path.join(currentDir, entry.name));
         const config = await this.readConfig(entryPath);
 
         if (config) {
@@ -128,8 +129,10 @@ export class ConfigFileRepository {
     const configs: PackmindFileConfig[] = [];
     const configPaths: string[] = [];
 
-    const normalizedStart = path.resolve(startDirectory);
-    const normalizedStop = stopDirectory ? path.resolve(stopDirectory) : null;
+    const normalizedStart = normalizePath(path.resolve(startDirectory));
+    const normalizedStop = stopDirectory
+      ? normalizePath(path.resolve(stopDirectory))
+      : null;
 
     let currentDir = normalizedStart;
 
@@ -137,14 +140,16 @@ export class ConfigFileRepository {
       const config = await this.readConfig(currentDir);
       if (config) {
         configs.push(config);
-        configPaths.push(path.join(currentDir, this.CONFIG_FILENAME));
+        configPaths.push(
+          normalizePath(path.join(currentDir, this.CONFIG_FILENAME)),
+        );
       }
 
       if (normalizedStop !== null && currentDir === normalizedStop) {
         break;
       }
 
-      const parentDir = path.dirname(currentDir);
+      const parentDir = normalizePath(path.dirname(currentDir));
 
       if (parentDir === currentDir) {
         break;
@@ -181,8 +186,10 @@ export class ConfigFileRepository {
     startDirectory: string,
     stopDirectory: string | null,
   ): Promise<AllConfigsResult> {
-    const normalizedStart = path.resolve(startDirectory);
-    const normalizedStop = stopDirectory ? path.resolve(stopDirectory) : null;
+    const normalizedStart = normalizePath(path.resolve(startDirectory));
+    const normalizedStop = stopDirectory
+      ? normalizePath(path.resolve(stopDirectory))
+      : null;
     const basePath = normalizedStop ?? normalizedStart;
 
     const configsMap = new Map<string, ConfigWithTarget>();
@@ -204,7 +211,7 @@ export class ConfigFileRepository {
         break;
       }
 
-      const parentDir = path.dirname(currentDir);
+      const parentDir = normalizePath(path.dirname(currentDir));
       if (parentDir === currentDir) {
         break;
       }
@@ -216,20 +223,21 @@ export class ConfigFileRepository {
     const descendantDirs = await this.findDescendantConfigs(searchRoot);
 
     for (const descendantDir of descendantDirs) {
+      const normalizedDescendantDir = normalizePath(descendantDir);
       // Skip if already found in ancestor walk
-      if (configsMap.has(descendantDir)) {
+      if (configsMap.has(normalizedDescendantDir)) {
         continue;
       }
 
-      const config = await this.readConfig(descendantDir);
+      const config = await this.readConfig(normalizedDescendantDir);
       if (config) {
         const targetPath = this.computeRelativeTargetPath(
-          descendantDir,
+          normalizedDescendantDir,
           basePath,
         );
-        configsMap.set(descendantDir, {
+        configsMap.set(normalizedDescendantDir, {
           targetPath,
-          absoluteTargetPath: descendantDir,
+          absoluteTargetPath: normalizedDescendantDir,
           packages: config.packages,
         });
       }
@@ -260,11 +268,14 @@ export class ConfigFileRepository {
     absolutePath: string,
     basePath: string,
   ): string {
-    if (absolutePath === basePath) {
+    const normalizedAbsolute = normalizePath(absolutePath);
+    const normalizedBase = normalizePath(basePath);
+
+    if (normalizedAbsolute === normalizedBase) {
       return '/';
     }
 
-    const relativePath = absolutePath.substring(basePath.length);
+    const relativePath = normalizedAbsolute.substring(normalizedBase.length);
     return relativePath.startsWith('/') ? relativePath : '/' + relativePath;
   }
 }

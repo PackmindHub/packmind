@@ -1,0 +1,87 @@
+import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import { createOrganizationId, createUserId } from '@packmind/types';
+import { registerMcpTool, ToolDependencies } from '../types';
+import { getGlobalSpace } from '../utils';
+
+export function registerListCommandsTool(
+  dependencies: ToolDependencies,
+  mcpServer: McpServer,
+) {
+  const { fastify, userContext, analyticsAdapter } = dependencies;
+
+  registerMcpTool(
+    mcpServer,
+    `list_commands`,
+    {
+      title: 'List Commands',
+      description: 'Get a list of current commands in Packmind.',
+      inputSchema: {},
+    },
+    async () => {
+      if (!userContext) {
+        throw new Error('User context is required to list commands');
+      }
+
+      const recipesHexa = fastify.recipesHexa();
+
+      try {
+        const organizationId = createOrganizationId(userContext.organizationId);
+        const globalSpace = await getGlobalSpace(fastify, organizationId);
+
+        const commands = await recipesHexa.getAdapter().listRecipesBySpace({
+          organizationId,
+          spaceId: globalSpace.id,
+          userId: createUserId(userContext.userId),
+          source: 'mcp',
+        });
+
+        if (commands.length === 0) {
+          return {
+            content: [
+              {
+                type: 'text',
+                text: 'No commands found for your organization',
+              },
+            ],
+          };
+        }
+
+        // Sort alphabetically by slug and limit to 20 commands
+        const sortedCommands = commands
+          .sort((a, b) => a.slug.localeCompare(b.slug))
+          .slice(0, 20);
+
+        // Format as bullet points: • slug: name
+        const formattedList = sortedCommands
+          .map((command) => `• ${command.slug}: ${command.name}`)
+          .join('\n');
+
+        // Track analytics event
+        analyticsAdapter.trackEvent(
+          createUserId(userContext.userId),
+          createOrganizationId(userContext.organizationId),
+          'mcp_tool_call',
+          { tool: `list_commands` },
+        );
+
+        return {
+          content: [
+            {
+              type: 'text',
+              text: formattedList,
+            },
+          ],
+        };
+      } catch (error) {
+        return {
+          content: [
+            {
+              type: 'text',
+              text: `Failed to list commands: ${error instanceof Error ? error.message : String(error)}`,
+            },
+          ],
+        };
+      }
+    },
+  );
+}

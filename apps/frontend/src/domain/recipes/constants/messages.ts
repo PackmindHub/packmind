@@ -1,35 +1,35 @@
-// Centralized alert messages for Recipes domain
+// Centralized alert messages for Commands domain
 export const RECIPE_MESSAGES = {
   validation: {
-    nameRequired: 'Recipe name is required',
-    descriptionRequired: 'Recipe description is required',
-    contentRequired: 'Recipe content is required',
+    nameRequired: 'Command name is required',
+    descriptionRequired: 'Command description is required',
+    contentRequired: 'Command content is required',
   },
   success: {
-    created: 'Recipe created successfully!',
-    updated: 'Recipe updated successfully!',
-    deleted: 'Recipe deleted successfully!',
-    distributed: 'Recipe distributed successfully!',
+    created: 'Command created successfully!',
+    updated: 'Command updated successfully!',
+    deleted: 'Command deleted successfully!',
+    distributed: 'Command distributed successfully!',
   },
   error: {
-    createFailed: 'Failed to create recipe. Please try again.',
-    updateFailed: 'Failed to update recipe. Please try again.',
-    deleteFailed: 'Failed to delete recipe. Please try again.',
-    deployFailed: 'Failed to deploy recipe. Please try again.',
-    loadFailed: 'Failed to load recipe. Please try again.',
+    createFailed: 'Failed to create command. Please try again.',
+    updateFailed: 'Failed to update command. Please try again.',
+    deleteFailed: 'Failed to delete command. Please try again.',
+    deployFailed: 'Failed to deploy command. Please try again.',
+    loadFailed: 'Failed to load command. Please try again.',
   },
   loading: {
-    creating: 'Creating recipe...',
-    updating: 'Updating recipe...',
-    deleting: 'Deleting recipe...',
-    deploying: 'Deploying recipe...',
-    loading: 'Loading recipe...',
+    creating: 'Creating command...',
+    updating: 'Updating command...',
+    deleting: 'Deleting command...',
+    deploying: 'Deploying command...',
+    loading: 'Loading command...',
   },
   confirmation: {
     deleteRecipe: (name: string) =>
       `Are you sure you want to delete "${name}"? This action cannot be undone.`,
     deleteBatchRecipes: (count: number) =>
-      `Are you sure you want to delete ${count} recipe(s)? This action cannot be undone.`,
+      `Are you sure you want to delete ${count} command(s)? This action cannot be undone.`,
   },
 } as const;
 

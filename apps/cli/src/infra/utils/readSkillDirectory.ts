@@ -1,5 +1,6 @@
 import fs from 'fs/promises';
 import path from 'path';
+import { minimatch } from 'minimatch';
 
 type SkillFile = {
   path: string;
@@ -122,6 +123,23 @@ function isBinaryFile(filePath: string, buffer: Buffer): boolean {
 const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024; // 10 MB
 const MAX_FILE_SIZE_MB = 10;
 
+/**
+ * Glob patterns for files and directories that should be excluded from skill uploads.
+ * Add patterns here to blacklist additional files or directories.
+ */
+const BLACKLIST_PATTERNS = ['**/.DS_Store'];
+
+/**
+ * Checks if a relative path matches any of the blacklist patterns.
+ * Uses glob matching for flexible pattern specification.
+ */
+function isBlacklisted(relativePath: string): boolean {
+  const normalizedPath = relativePath.replace(/\\/g, '/');
+  return BLACKLIST_PATTERNS.some((pattern) =>
+    minimatch(normalizedPath, pattern, { dot: true }),
+  );
+}
+
 export async function readSkillDirectory(
   dirPath: string,
 ): Promise<SkillFile[]> {
@@ -133,6 +151,11 @@ export async function readSkillDirectory(
     for (const entry of entries) {
       const fullPath = path.join(currentPath, entry.name);
       const relativePath = path.relative(basePath, fullPath);
+
+      // Skip blacklisted files and directories
+      if (isBlacklisted(relativePath)) {
+        continue;
+      }
 
       if (entry.isDirectory()) {
         await readDir(fullPath, basePath);

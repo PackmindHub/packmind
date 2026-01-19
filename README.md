@@ -91,14 +91,14 @@ packmind-cli install <package-slug>
 
 Your standards are now available in the `.packmind` directory and your AI agent configuration files.
 
-For detailed CLI setup and usage, see the [CLI documentation](https://packmindhub.github.io/packmind/cli).
+For detailed CLI setup and usage, see the [CLI documentation](https://docs.packmind.com/cli).
 
 # Documentation
 
-Available here: [https://packmindhub.github.io/packmind](https://packmindhub.github.io/packmind).
+Available here: [https://docs.packmind.com](https://docs.packmind.com).
 
 # :compass: Key Links
 
-- [**Docs →**](https://packmindhub.github.io/packmind/)
+- [**Docs →**](https://docs.packmind.com)
 - [**Packmind Cloud →**](https://app.packmind.ai/sign-up)
 - [**Join the Slack Community →**](https://join.slack.com/t/promyze/shared_invite/zt-vf6asxsj-aH1RbzuoOR5DNFexeaATVQ)

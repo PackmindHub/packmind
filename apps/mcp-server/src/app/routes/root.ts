@@ -4,6 +4,12 @@ import type { FastifyReply, FastifyRequest } from 'fastify';
 import { PackmindLogger, LogLevel } from '@packmind/logger';
 
 import { createMCPServer } from '../mcp-server';
+import {
+  createOrganizationId,
+  createUserId,
+  IEventTrackingPort,
+} from '@packmind/types';
+import { EventTrackingAdapter } from '@packmind/amplitude';
 
 interface UserContext {
   email: string;
@@ -47,6 +53,20 @@ export default async function (fastify: FastifyInstance) {
     };
   });
 
+  function hasMethodField(tbd: unknown): tbd is { method: string } {
+    return (tbd as { method: string }).method !== undefined;
+  }
+
+  function isListToolCall(request: FastifyRequest) {
+    try {
+      return (
+        hasMethodField(request.body) && request.body.method == 'tools/list'
+      );
+    } catch {
+      return false;
+    }
+  }
+
   async function handleMCPRequest(
     request: FastifyRequest,
     reply: FastifyReply,
@@ -62,6 +82,18 @@ export default async function (fastify: FastifyInstance) {
         organizationId: user.organization.id,
         role: user.organization.role,
       };
+    }
+
+    if (isListToolCall(request) && userContext) {
+      const analyticsAdapter: IEventTrackingPort = new EventTrackingAdapter(
+        logger,
+      );
+      await analyticsAdapter.trackEvent(
+        createUserId(userContext.userId),
+        createOrganizationId(userContext.organizationId),
+        'mcp_listed_tools',
+        {},
+      );
     }
 
     const mcpServer = await createMCPServer(fastify, userContext);

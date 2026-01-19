@@ -159,8 +159,35 @@ export const useDeleteRecipeMutation = () => {
     }) => {
       return recipesGateway.deleteRecipe(command);
     },
-    onSuccess: async () => {
-      // Invalidate all recipes (recipe is gone, may have had cached details)
+    onSuccess: async (_, deletedCommand) => {
+      // Remove the deleted recipe's query from cache to prevent 404 refetch
+      queryClient.removeQueries({
+        queryKey: [...GET_RECIPE_BY_ID_KEY, deletedCommand.recipeId],
+      });
+
+      // Optimistically remove the deleted recipe from the list cache
+      // This prevents stale cache from causing 404 errors during navigation
+      queryClient.setQueryData<
+        { id: RecipeId }[] | { recipes: { id: RecipeId }[] } | undefined
+      >(GET_RECIPES_KEY, (oldData) => {
+        if (!oldData) return oldData;
+        if (Array.isArray(oldData)) {
+          return oldData.filter(
+            (recipe) => recipe.id !== deletedCommand.recipeId,
+          );
+        }
+        if ('recipes' in oldData) {
+          return {
+            ...oldData,
+            recipes: oldData.recipes.filter(
+              (recipe) => recipe.id !== deletedCommand.recipeId,
+            ),
+          };
+        }
+        return oldData;
+      });
+
+      // Invalidate all recipes to trigger background refetch
       await queryClient.invalidateQueries({
         queryKey: [ORGANIZATION_QUERY_SCOPE, RECIPES_QUERY_SCOPE],
       });
@@ -176,7 +203,7 @@ export const useDeleteRecipeMutation = () => {
       });
     },
     onError: async (error, variables, context) => {
-      console.error('Error deleting recipe');
+      console.error('Error deleting command');
       console.log('error: ', error);
       console.log('variables: ', variables);
       console.log('context: ', context);

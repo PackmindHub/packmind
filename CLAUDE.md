@@ -23,23 +23,48 @@ Create if missing. Log each access. Best effort tracking.
 - Each sub task MUST have its own commit.
 - Before commiting anything, you must ensure that `npm run quality-gate` does not raise any issue.
 
-# Post-Task Skills Check
+# ⚠️ STOP - Post-Task Skills Check (REQUIRED)
 
-**MANDATORY CHECK**: After completing ANY task, you MUST systematically check for opportunities to invoke these skills. Review the work you just completed and actively look for content worth capturing. If nothing is relevant or worthwhile, that's acceptable - but you MUST perform this check every time.
+**BEFORE FINISHING ANY RESPONSE WHERE YOU COMPLETED WORK**, you MUST run through this checklist. This is NOT optional.
 
-Check for:
-- **command-capture** - Did you complete a multi-step workflow worth standardizing? (e.g., "added UseCase with tests and wiring", "set up new API endpoint with validation and tests")
-- **signal-capture** - Did the user express a preference that should become a standard? (e.g., "Use snake_case for DB columns", "Always add loading states to async operations")
-- **pattern-discovery-capture** - Did you find 3+ files following the same undocumented convention? (e.g., "all controllers use a consistent error handling pattern", "service classes follow similar initialization patterns")
-- **implicit-decision-capture** - Did you make technical choices without explicit user guidance during implementation? (e.g., "chose 300ms debounce", "used compound component pattern")
-- **consistency-violation-capture** - Did you discover inconsistencies in the codebase while working? (e.g., "some error handling uses try-catch, others use error boundaries", "some UseCases extend AbstractMemberUseCase, others don't")
-- **codebase-assumption-capture** - Did reality differ from your initial expectations during the work? (e.g., "assumed Redux but found Context API", "expected REST but discovered GraphQL", "assumed Jest but found Vitest")
+## Checklist (go through each one)
 
-# Commiting
+1. [ ] **signal-capture** - Did the user express ANY preference about how code should be written?
+    - Look for: naming conventions, code style, UI preferences, architectural choices
+    - Examples: "borders are too harsh", "use snake_case", "prefer async/await"
+    - **If yes → invoke the skill immediately**
 
-- When referencing an issue (example #123), DO NOT write "Close" or "Fix", as this closes the issue which has not been validated by other developers.
-- Before proposing to commit, ALWAYS run `npm run quality-gate` and fix the issues found
-- NEVER use the `--no-verify` argument when commiting
-- After commiting, ALWAYS ensure that the commit was successful.
-- NEVER run a commit message without asking for permission first to allow user to review the commit
-- ALWAYS ensure which GitHub issue is worked on, do not assume it based on previous commit.
+2. [ ] **implicit-decision-capture** - Did you make technical choices the user didn't specify?
+    - Look for: specific values you chose, patterns you selected, approaches you took
+    - Examples: "chose 40% opacity", "used 300ms debounce", "picked flexbox over grid"
+    - **If yes → invoke the skill**
+
+3. [ ] **command-capture** - Did you complete a multi-step workflow worth reusing?
+    - Look for: 3+ step processes that could help other developers
+    - Examples: "added UseCase with tests and wiring", "set up API endpoint with validation"
+    - **If yes → invoke the skill**
+
+4. [ ] **pattern-discovery-capture** - Did you find 3+ files following an undocumented convention?
+    - Look for: consistent patterns across files that aren't formally documented
+    - Examples: "all controllers use same error handling", "services follow init pattern"
+    - **If yes → invoke the skill**
+
+5. [ ] **consistency-violation-capture** - Did you discover inconsistencies in the codebase?
+    - Look for: conflicting patterns, different approaches to same problem
+    - Examples: "some use try-catch, others use error boundaries"
+    - **If yes → invoke the skill**
+
+6. [ ] **codebase-assumption-capture** - Did reality differ from your initial expectations?
+    - Look for: wrong assumptions you had to correct during the work
+    - Examples: "assumed Jest but found Vitest", "expected REST but found GraphQL"
+    - **If yes → invoke the skill**
+
+## How to Complete This Check
+
+At the end of your response, after completing the main task:
+1. Add a brief "Skills check:" section
+2. List which skills apply (if any)
+3. Invoke the relevant skills
+4. If none apply, state "Skills check: none applicable"
+
+**FAILURE TO RUN THIS CHECK IS A VIOLATION OF PROJECT GUIDELINES.**

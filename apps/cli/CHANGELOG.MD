@@ -8,6 +8,20 @@
 
 ## Removed
 
+# [0.13.1] - 2026-01-19
+
+## Added
+
+- Add blacklist filter to `skills add` to exclude unwanted files like `.DS_Store` (#71)
+
+## Changed
+
+## Fixed
+
+- Fix `lint` on Windows that was not raising any violations (#97)
+
+## Removed
+
 # [0.13.0] - 2026-01-14
 
 ## Added
@@ -136,7 +150,8 @@
 
 - Add proper CHANGELOG.MD in the GH release
 
-[Unreleased]: https://github.com/PackmindHub/packmind/compare/release-cli/0.13.0...HEAD
+[Unreleased]: https://github.com/PackmindHub/packmind/compare/release-cli/0.13.1...HEAD
+[0.13.1]: https://github.com/PackmindHub/packmind/compare/release-cli/0.13.0...release-cli/0.13.1
 [0.13.0]: https://github.com/PackmindHub/packmind/compare/release-cli/0.12.0...release-cli/0.13.0
 [0.12.0]: https://github.com/PackmindHub/packmind/compare/release-cli/0.11.0...release-cli/0.12.0
 [0.11.0]: https://github.com/PackmindHub/packmind/compare/release-cli/0.10.0...release-cli/0.11.0

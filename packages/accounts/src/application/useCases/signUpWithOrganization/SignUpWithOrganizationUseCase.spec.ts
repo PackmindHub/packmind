@@ -149,6 +149,7 @@ describe('SignUpWithOrganizationUseCase', () => {
               organizationId: mockOrganization.id,
               email: 'testuser@packmind.com',
               source: 'ui',
+              quickStart: false,
             },
           }),
         );

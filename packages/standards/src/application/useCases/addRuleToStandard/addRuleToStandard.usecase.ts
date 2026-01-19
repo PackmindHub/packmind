@@ -3,30 +3,45 @@ import { StandardVersionService } from '../../services/StandardVersionService';
 import { GenerateStandardSummaryDelayedJob } from '../../jobs/GenerateStandardSummaryDelayedJob';
 import { IRuleRepository } from '../../../domain/repositories/IRuleRepository';
 import {
+  AddRuleToStandardCommand,
+  AddRuleToStandardResponse,
+  createRuleExampleId,
+  createRuleId,
+  createSpaceId,
   createStandardId,
   createStandardVersionId,
+  IAccountsPort,
+  IAddRuleToStandardUseCase,
+  OrganizationId,
   RuleAddedEvent,
   RuleExample,
-  StandardVersion,
+  RuleExampleInput,
+  StandardUpdatedEvent,
+  StandardVersionId,
+  UserId,
 } from '@packmind/types';
+import { v4 as uuidv4 } from 'uuid';
 import { CreateStandardVersionData } from '../../services/StandardVersionService';
-import { LogLevel, PackmindLogger } from '@packmind/logger';
-import { PackmindEventEmitterService } from '@packmind/node-utils';
-import { OrganizationId, UserId, StandardVersionId } from '@packmind/types';
+import { PackmindLogger } from '@packmind/logger';
+import {
+  AbstractMemberUseCase,
+  MemberContext,
+  PackmindEventEmitterService,
+} from '@packmind/node-utils';
 import { IRuleExampleRepository } from '../../../domain/repositories/IRuleExampleRepository';
 import type { ILinterPort } from '@packmind/types';
 
 const origin = 'AddRuleToStandardUsecase';
 
-export type AddRuleToStandardRequest = {
-  standardSlug: string;
-  ruleContent: string;
-  organizationId: OrganizationId;
-  userId: UserId;
-};
-
-export class AddRuleToStandardUsecase {
+export class AddRuleToStandardUsecase
+  extends AbstractMemberUseCase<
+    AddRuleToStandardCommand,
+    AddRuleToStandardResponse
+  >
+  implements IAddRuleToStandardUseCase
+{
   constructor(
+    accountsPort: IAccountsPort,
     private readonly standardService: StandardService,
     private readonly standardVersionService: StandardVersionService,
     private readonly ruleRepository: IRuleRepository,
@@ -34,21 +49,19 @@ export class AddRuleToStandardUsecase {
     private readonly generateStandardSummaryDelayedJob: GenerateStandardSummaryDelayedJob,
     private readonly eventEmitterService: PackmindEventEmitterService,
     private readonly linterAdapter?: ILinterPort,
-    private readonly logger: PackmindLogger = new PackmindLogger(
-      origin,
-      LogLevel.DEBUG,
-    ),
+    logger: PackmindLogger = new PackmindLogger(origin),
   ) {
-    this.logger.info('AddRuleToStandardUsecase initialized');
+    super(accountsPort, logger);
   }
 
-  public async addRuleToStandard({
-    standardSlug,
-    ruleContent,
-    organizationId,
-    userId,
-  }: AddRuleToStandardRequest): Promise<StandardVersion> {
-    // Normalize the slug to lowercase for consistent lookup
+  protected async executeForMembers(
+    command: AddRuleToStandardCommand & MemberContext,
+  ): Promise<AddRuleToStandardResponse> {
+    const { standardSlug, ruleContent, examples, source = 'ui' } = command;
+    const { user, organization } = command;
+    const userId = user.id;
+    const organizationId = organization.id;
+
     const normalizedSlug = standardSlug.toLowerCase();
 
     this.logger.info('Starting addRuleToStandard process', {
@@ -60,7 +73,6 @@ export class AddRuleToStandardUsecase {
     });
 
     try {
-      // Find the standard by slug within the organization
       const existingStandard = await this.standardService.findStandardBySlug(
         normalizedSlug,
         organizationId,
@@ -76,7 +88,6 @@ export class AddRuleToStandardUsecase {
         );
       }
 
-      // Get the latest version to get existing rules
       const latestVersion =
         await this.standardVersionService.getLatestStandardVersion(
           existingStandard.id,
@@ -95,14 +106,8 @@ export class AddRuleToStandardUsecase {
         latestVersion.id,
       );
 
-      // Business logic: Increment version number
       const nextVersion = existingStandard.version + 1;
-      this.logger.debug('Incrementing version number', {
-        currentVersion: existingStandard.version,
-        nextVersion,
-      });
 
-      // Update the standard entity with new version
       await this.standardService.updateStandard(existingStandard.id, {
         name: existingStandard.name,
         description: existingStandard.description,
@@ -118,21 +123,15 @@ export class AddRuleToStandardUsecase {
         examples: RuleExample[];
       }> = [];
       for (const rule of existingRules) {
-        const examples = await this.ruleExampleRepository.findByRuleId(rule.id);
-        allRules.push({ content: rule.content, examples: examples || [] });
+        const ruleExamples = await this.ruleExampleRepository.findByRuleId(
+          rule.id,
+        );
+        allRules.push({ content: rule.content, examples: ruleExamples || [] });
       }
 
-      //Push new rule to allRules
-      allRules.push({ content: ruleContent, examples: [] });
+      const processedExamples = this.processExamples(examples || []);
+      allRules.push({ content: ruleContent, examples: processedExamples });
 
-      this.logger.debug('Prepared rules for new version', {
-        existingRulesCount: existingRules.length,
-        totalRulesCount: allRules.length,
-        newRuleContent: ruleContent.substring(0, 50) + '...',
-      });
-
-      // Create new standard version with existing rules + new rule
-      this.logger.debug('Creating new standard version with additional rule');
       const standardVersionData: CreateStandardVersionData = {
         standardId: existingStandard.id,
         name: existingStandard.name,
@@ -141,7 +140,7 @@ export class AddRuleToStandardUsecase {
         version: nextVersion,
         rules: allRules,
         scope: existingStandard.scope,
-        userId, // Track the user who added the rule
+        userId,
       };
 
       const newStandardVersion =
@@ -158,16 +157,6 @@ export class AddRuleToStandardUsecase {
         addedRuleContent: ruleContent.substring(0, 50) + '...',
       });
 
-      this.logger.info('AddRuleToStandard process completed successfully', {
-        standardId: existingStandard.id,
-        versionId: newStandardVersion.id,
-        standardSlug,
-        organizationId,
-        userId,
-        totalRulesCount: allRules.length,
-      });
-
-      // Queue summary generation job
       await this.generateStandardSummaryDelayedJob.addJob({
         userId,
         organizationId,
@@ -175,7 +164,6 @@ export class AddRuleToStandardUsecase {
         rules: allRules,
       });
 
-      // Validate detection programs for all rules and languages
       await this.validateDetectionProgramsForStandardVersion(
         newStandardVersion.id,
         organizationId,
@@ -189,11 +177,22 @@ export class AddRuleToStandardUsecase {
           organizationId,
           userId,
           newVersion: nextVersion,
-          source: 'ui',
+          source,
         }),
       );
 
-      return newStandardVersion;
+      this.eventEmitterService.emit(
+        new StandardUpdatedEvent({
+          standardId: createStandardId(existingStandard.id),
+          spaceId: createSpaceId(existingStandard.spaceId),
+          organizationId,
+          userId,
+          newVersion: nextVersion,
+          source,
+        }),
+      );
+
+      return { standardVersion: newStandardVersion };
     } catch (error) {
       this.logger.error('Failed to add rule to standard', {
         standardSlug,
@@ -205,7 +204,7 @@ export class AddRuleToStandardUsecase {
     }
   }
 
-  public async validateDetectionProgramsForStandardVersion(
+  private async validateDetectionProgramsForStandardVersion(
     standardVersionId: StandardVersionId,
     organizationId: OrganizationId,
     userId: UserId,
@@ -242,5 +241,28 @@ export class AddRuleToStandardUsecase {
         }
       }
     }
+  }
+
+  private processExamples(examples: RuleExampleInput[]): RuleExample[] {
+    const processedExamples: RuleExample[] = [];
+
+    for (const exampleInput of examples) {
+      if (!exampleInput.language) {
+        this.logger.warn('Example missing language, skipping');
+        continue;
+      }
+
+      const ruleExample: RuleExample = {
+        id: createRuleExampleId(uuidv4()),
+        ruleId: createRuleId(uuidv4()),
+        lang: exampleInput.language,
+        positive: exampleInput.positive || '',
+        negative: exampleInput.negative || '',
+      };
+
+      processedExamples.push(ruleExample);
+    }
+
+    return processedExamples;
   }
 }
