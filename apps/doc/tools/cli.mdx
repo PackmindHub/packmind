@@ -1,0 +1,445 @@
+---
+title: 'CLI: Command-Line Interface'
+---
+
+## Overview
+
+The Packmind CLI provides the following commands:
+
+- **`login`** - Authenticate with your Packmind instance
+- **`logout`** - Clear stored credentials
+- **`whoami`** - Show current authentication status
+- **`setup-mcp`** - Configure MCP for AI coding agents
+- **`install`** - Download packages locally
+- **`lint`** - Run detection programs (Enterprise only)
+- **`skills add`** - Import skills into Packmind
+
+## Installation
+
+### Option 1: npm Package
+
+**Global Installation**:
+
+```bash
+npm install -g @packmind/cli
+```
+
+After installation, the `packmind-cli` command will be available globally.
+
+**npx** (no installation required):
+
+```bash
+npx @packmind/cli install --list
+```
+
+This runs the CLI directly without installing it, always using the latest version.
+
+### Option 2: Standalone Executables
+
+Download the appropriate pre-built executable for your platform from the [GitHub Releases page](https://github.com/PackmindHub/packmind/releases?q=CLI&expanded=true).
+
+**Available platforms:**
+
+- **Linux x64**: `packmind-cli-linux-x64-{version}`
+- **Linux arm64**: `packmind-cli-linux-arm64-{version}`
+- **macOS arm64**: `packmind-cli-macos-arm64-{version}` (signed and notarized)
+- **Windows x64**: `packmind-cli-windows-x64-{version}.exe`
+
+**For Linux/macOS**, make the executable runnable:
+
+```bash
+chmod +x packmind-cli-*-{version}
+```
+
+**Optional**: Move to a directory in your PATH for easy access:
+
+```bash
+# Linux/macOS
+sudo mv packmind-cli-*-{version} /usr/local/bin/packmind-cli
+
+# Windows: Move to a directory in your PATH or run directly
+```
+
+<Tip>
+  **Choosing an Installation Method** — Use **npm global** if you want
+  `packmind-cli` always available system-wide. Use **npx** for project-specific
+  usage or testing without installation. Use **standalone executables** if you
+  don't have Node.js installed or need a specific binary for your environment.
+</Tip>
+
+## Authentication
+
+The CLI requires authentication to communicate with your Packmind instance.
+
+### Login Command (Recommended)
+
+The easiest way to authenticate is using the `login` command:
+
+```bash
+packmind-cli login
+```
+
+This will:
+
+1. Open your browser to the Packmind login page
+2. After you authenticate, automatically receive credentials
+3. Store credentials securely in `~/.packmind/credentials.json`
+
+**For self-hosted instances**, specify your host:
+
+```bash
+packmind-cli login --host https://your-packmind-instance.com
+```
+
+**Manual code entry** (if browser flow doesn't work):
+
+You can also enter a login code manually from the web interface:
+
+```bash
+packmind-cli login --code YOUR_CODE_HERE
+```
+
+### Logout Command
+
+To clear stored credentials:
+
+```bash
+packmind-cli logout
+```
+
+This removes the credentials file. If you also have `PACKMIND_API_KEY_V3` set as an environment variable, you'll need to unset it separately:
+
+```bash
+unset PACKMIND_API_KEY_V3
+```
+
+### Whoami Command
+
+Check your current authentication status:
+
+```bash
+packmind-cli whoami
+```
+
+This displays:
+
+- Your API key (masked)
+- Connected host
+- Organization name
+- User name
+- Credential expiration status
+
+### Alternative: Environment Variable
+
+You can also authenticate using an environment variable. This is useful for CI/CD pipelines or when you prefer not to store credentials in a file.
+
+#### Getting Your API Key
+
+1. Log in to your Packmind instance (Cloud or self-hosted)
+2. Navigate to **Settings** (click your profile icon in the top right)
+3. Scroll to the **CLI Authentication** section
+4. Go to the **Environment Variable** tab
+5. Click **Generate New Key** to create an API key (valid for 90 days)
+6. Copy the generated key
+
+#### Setting the API Key
+
+Set the API key as an environment variable:
+
+```bash
+export PACKMIND_API_KEY_V3="your-api-key-here"
+```
+
+To make this permanent, add it to your shell configuration file (`~/.bashrc`, `~/.zshrc`, etc.):
+
+```bash
+echo 'export PACKMIND_API_KEY_V3="your-api-key-here"' >> ~/.zshrc
+source ~/.zshrc
+```
+
+<Tip>
+  **Credential Priority** — When both a credentials file and environment
+  variable exist, the environment variable takes precedence.
+</Tip>
+
+## Setup MCP Command
+
+Configure MCP (Model Context Protocol) for your AI coding agents. This command automatically sets up the Packmind MCP server in your agents' configuration.
+
+### Supported Agents
+
+- **Claude Code** (`claude`)
+- **Cursor** (`cursor`)
+- **VS Code / GitHub Copilot** (`copilot`)
+
+### Interactive Mode
+
+Run without arguments to use interactive mode:
+
+```bash
+packmind-cli setup-mcp
+```
+
+This will:
+
+1. Detect which AI agents are installed on your system
+2. Present a selection prompt with detected agents pre-selected
+3. Configure MCP for all selected agents
+
+### Direct Mode
+
+Specify target agents directly using the `--target` (or `-t`) flag:
+
+```bash
+packmind-cli setup-mcp --target claude
+```
+
+Configure multiple agents at once:
+
+```bash
+packmind-cli setup-mcp --target claude --target cursor
+```
+
+Or using the short form:
+
+```bash
+packmind-cli setup-mcp -t claude -t cursor -t copilot
+```
+
+<Tip>
+  **Automatic Setup** — When you run `packmind-cli login`, the setup-mcp command
+  runs automatically after successful authentication.
+</Tip>
+
+## Install Command
+
+Download commands, standards, and skills from packages to your local machine.
+
+### List Available Packages
+
+```bash
+packmind-cli install --list
+```
+
+### View Package Details
+
+```bash
+packmind-cli install --show <package-slug>
+```
+
+### View Workspace Status
+
+See an overview of all `packmind.json` files and their installed packages across your workspace:
+
+```bash
+packmind-cli install --status
+```
+
+**Example output:**
+
+```
+Workspace packages status
+
+packmind.json                        Packages
+-----------------------------------------------------------------
+./packmind.json                      generic
+./apps/api/packmind.json             nestjs
+./apps/frontend/packmind.json        frontend
+
+3 unique packages currently installed.
+```
+
+This is useful for:
+
+- Understanding what packages are installed across a monorepo
+- Identifying empty or misconfigured `packmind.json` files (shown as `<no packages>`)
+- Getting a quick summary of unique packages in your workspace
+
+### Install Packages
+
+```bash
+packmind-cli install <package-slug> [additional-package-slugs...]
+```
+
+**Example:**
+
+```bash
+packmind-cli install backend frontend
+```
+
+This downloads all commands, standards, and skills from the specified packages and creates the appropriate files for your AI coding assistant.
+
+### Recursive Install (Monorepos)
+
+For monorepos or projects with multiple `packmind.json` files, use the recursive flag to install packages across all locations:
+
+```bash
+packmind-cli install -r
+```
+
+Or the long form:
+
+```bash
+packmind-cli install --recursive
+```
+
+This finds all `packmind.json` files in your git repository and installs their configured packages. After installation, a summary shows how many distributions were notified to Packmind.
+
+<Tip>
+  **AI Agent Rendering** — The files created by the install command depend on
+  which AI agents are enabled in your organization settings. The CLI respects
+  your organization's configured agents and creates instruction files
+  accordingly (e.g., `AGENTS.md`, `.cursor/rules/`,
+  `.github/copilot-instructions.md`). The `.packmind/` directory is always
+  created regardless of your configuration. To configure which agents are
+  enabled, see [Manage AI Agent Rendering](/administration/manage-ai-agents).
+</Tip>
+
+## Lint Command
+
+<Info>
+  **Enterprise Feature** — The lint command is only available in the
+  **Enterprise** edition.
+</Info>
+
+Run detection programs against your codebase from the command line. This is useful for testing draft detection programs, verifying active programs, and integrating linting into your development workflow or CI/CD pipelines.
+
+### How Lint Works
+
+The CLI supports two linting modes:
+
+**Local Mode** (recommended):
+
+When you have `packmind.json` files in your project, the CLI uses them to determine which standards to check against. The CLI automatically searches for all `packmind.json` files in your project tree:
+
+- **Ancestor configs**: Searches parent directories up to the Git repository root
+- **Descendant configs**: Searches subdirectories from your current location
+
+All standards from packages defined in these `packmind.json` files are included in the analysis scope. This allows different parts of your codebase to have different standards while inheriting common standards from parent directories.
+
+To set up local linting, install packages using the `install` command. See [Distribute Standards and Commands](/getting-started/gs-distribute) for details.
+
+**Deployment Mode**:
+
+If no `packmind.json` files are found, the CLI falls back to using standards that have been deployed to your Git repository through the web interface. See [Deployment](/governance/distribution) to learn about this approach.
+
+<Tip>
+  **Priority** — When both local `packmind.json` files and deployments exist,
+  the local configuration takes priority.
+</Tip>
+
+### Basic Usage
+
+```bash
+packmind-cli lint .
+```
+
+This command:
+
+- Searches for `packmind.json` files in your project tree
+- Loads detection programs from the standards defined in your packages
+- Scans all files in the current directory (excluding `node_modules`, `dist`, and other common build folders)
+- Runs all active detection programs
+- Reports any violations found
+
+### Specify a Path
+
+Lint a specific directory or file:
+
+```bash
+packmind-cli lint src/
+```
+
+```bash
+packmind-cli lint /path/to/your/project
+```
+
+### Limiting Scope with `--changed-files` and `--changed-lines`
+
+When working on large codebases, you can focus the lint check on only the files or lines you've modified using the `--changed-files` and `--changed-lines` flags.
+
+<Info>
+  **Git Repository Required** — The `--changed-files` and `--changed-lines`
+  flags requires your project to be in a Git repository.
+</Info>
+
+<Note>
+  **Deprecated Option** — The `--diff` option is deprecated. Use
+  `--changed-files` (equivalent to `--diff=files`) or `--changed-lines`
+  (equivalent to `--diff=lines`) instead.
+</Note>
+
+**Check modified lines only:**
+
+```bash
+packmind-cli lint . --changed-lines
+```
+
+This analyzes only the specific lines you've changed, making it ideal for pre-commit hooks or reviewing your work before pushing.
+
+**Check modified files only:**
+
+```bash
+packmind-cli lint . --changed-files
+```
+
+This analyzes all content in files you've modified, useful when you want full context but don't want to scan the entire codebase.
+
+**Example workflow:**
+
+```bash
+# Make some changes to your code
+git add .
+
+# Check only what you changed
+packmind-cli lint . --changed-lines
+
+# If clean, commit
+git commit -m "Your changes"
+```
+
+### Output Formats
+
+Choose between human-readable and IDE-friendly output:
+
+```bash
+packmind-cli lint . --logger=ide
+```
+
+**Human-readable format** (default) shows:
+
+- File paths with violations
+- Line and character positions
+- Rule identifiers
+- Summary of total violations found
+
+**IDE format** provides structured output that can be parsed by editors and CI/CD tools.
+
+## Skills Command
+
+Import skills into your Packmind organization. Skills are reusable prompts that can be invoked by AI coding assistants.
+
+### Add a Skill
+
+```bash
+packmind-cli skills add <path>
+```
+
+**Arguments:**
+
+- `<path>` - Path to the skill directory containing skill files
+
+**Example:**
+
+```bash
+packmind-cli skills add ./my-skill
+```
+
+This uploads the skill to your Packmind organization, making it available for distribution to repositories.
+
+## Related Documentation
+
+- [Packages Management](/concepts/packages-management): Learn about organizing commands, standards, and skills into packages
+- [Linter: Automated Detection](/linter/linter): Learn about how detection programs work
+- [Standards Management](/concepts/standards-management): Create rules and add code examples
+- [Skills Management](/concepts/skills-management): Create and manage reusable skills

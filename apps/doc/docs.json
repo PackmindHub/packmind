@@ -1,0 +1,210 @@
+{
+  "$schema": "https://mintlify.com/docs.json",
+  "theme": "mint",
+  "name": "Packmind",
+  "logo": {
+    "light": "/images/packmind-logo.svg",
+    "dark": "/images/packmind-logo.svg",
+    "href": "https://packmind.com"
+  },
+  "favicon": "/images/packmind-favicon.svg",
+  "colors": {
+    "primary": "#6366f1",
+    "light": "#818cf8",
+    "dark": "#4f46e5"
+  },
+  "navbar": {
+    "links": [
+      {
+        "label": "GitHub",
+        "href": "https://github.com/PackmindHub/packmind"
+      },
+      {
+        "label": "Slack",
+        "href": "https://join.slack.com/t/promyze/shared_invite/zt-vf6asxsj-aH1RbzuoOR5DNFexeaATVQ"
+      }
+    ],
+    "primary": {
+      "type": "button",
+      "label": "Get Started",
+      "href": "https://app.packmind.ai"
+    }
+  },
+  "navigation": {
+    "groups": [
+      {
+        "group": "Getting Started",
+        "icon": "rocket",
+        "pages": [
+          "index",
+          "getting-started/gs-mcp-server-setup",
+          "getting-started/gs-install-cloud",
+          "getting-started/gs-install-self-hosted",
+          "getting-started/gs-create-standard",
+          "getting-started/gs-create-command",
+          "getting-started/gs-create-skill",
+          "getting-started/gs-distribute"
+        ]
+      },
+      {
+        "group": "Concepts",
+        "icon": "lightbulb",
+        "pages": [
+          "concepts/standards-management",
+          "concepts/commands-management",
+          "concepts/skills-management",
+          "concepts/packages-management",
+          "concepts/artifact-rendering"
+        ]
+      },
+      {
+        "group": "Tools & Integrations",
+        "icon": "wrench",
+        "pages": ["tools/mcp-server", "tools/cli"]
+      },
+      {
+        "group": "Governance",
+        "icon": "shield",
+        "pages": [
+          "governance/distribution",
+          "governance/git-repository-connection",
+          "governance/overview"
+        ]
+      },
+      {
+        "group": "Linter",
+        "icon": "magnifying-glass",
+        "pages": ["linter/linter"]
+      },
+      {
+        "group": "Administration",
+        "icon": "gear",
+        "pages": [
+          "administration/manage-users",
+          "administration/manage-ai-agents",
+          "administration/llm-configuration"
+        ]
+      },
+      {
+        "group": "Security & Privacy",
+        "icon": "lock",
+        "pages": [
+          "security/security-privacy",
+          "security/security-privacy-self-hosted"
+        ]
+      }
+    ]
+  },
+  "redirects": [
+    {
+      "source": "/docs",
+      "destination": "/"
+    },
+    {
+      "source": "/docs/index",
+      "destination": "/"
+    },
+    {
+      "source": "/docs/gs-mcp-server-setup",
+      "destination": "/getting-started/gs-mcp-server-setup"
+    },
+    {
+      "source": "/docs/gs-install-cloud",
+      "destination": "/getting-started/gs-install-cloud"
+    },
+    {
+      "source": "/gs-install-self-hosted",
+      "destination": "/getting-started/gs-install-self-hosted"
+    },
+    {
+      "source": "/gs-create-standard",
+      "destination": "/getting-started/gs-create-standard"
+    },
+    {
+      "source": "/gs-create-command",
+      "destination": "/getting-started/gs-create-command"
+    },
+    {
+      "source": "/gs-create-skill",
+      "destination": "/getting-started/gs-create-skill"
+    },
+    {
+      "source": "/gs-distribute",
+      "destination": "/getting-started/gs-distribute"
+    },
+    {
+      "source": "/standards-management",
+      "destination": "/concepts/standards-management"
+    },
+    {
+      "source": "/commands-management",
+      "destination": "/concepts/commands-management"
+    },
+    {
+      "source": "/skills-management",
+      "destination": "/concepts/skills-management"
+    },
+    {
+      "source": "/packages-management",
+      "destination": "/concepts/packages-management"
+    },
+    {
+      "source": "/artifact-rendering",
+      "destination": "/concepts/artifact-rendering"
+    },
+    {
+      "source": "/mcp-server",
+      "destination": "/tools/mcp-server"
+    },
+    {
+      "source": "/cli",
+      "destination": "/tools/cli"
+    },
+    {
+      "source": "/distribution",
+      "destination": "/governance/distribution"
+    },
+    {
+      "source": "/git-repository-connection",
+      "destination": "/governance/git-repository-connection"
+    },
+    {
+      "source": "/overview",
+      "destination": "/governance/overview"
+    },
+    {
+      "source": "/linter",
+      "destination": "/linter/linter"
+    },
+    {
+      "source": "/docs/manage-users",
+      "destination": "/administration/manage-users"
+    },
+    {
+      "source": "/docs/manage-ai-agents",
+      "destination": "/administration/manage-ai-agents"
+    },
+    {
+      "source": "/docs/llm-configuration",
+      "destination": "/administration/llm-configuration"
+    },
+    {
+      "source": "/docs/security-privacy",
+      "destination": "/security/security-privacy"
+    },
+    {
+      "source": "/docs/security-privacy-self-hosted",
+      "destination": "/security/security-privacy-self-hosted"
+    }
+  ],
+  "footerSocials": {
+    "github": "https://github.com/PackmindHub/packmind",
+    "slack": "https://join.slack.com/t/promyze/shared_invite/zt-vf6asxsj-aH1RbzuoOR5DNFexeaATVQ"
+  },
+  "feedback": {
+    "thumbsRating": true
+  },
+  "contextual": {
+    "options": ["copy", "view", "chatgpt", "claude"]
+  }
+}

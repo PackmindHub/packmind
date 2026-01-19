@@ -1,22 +1,23 @@
 - name: CLAUDE.md
-  path: CLAUDE.md
+  path: /Users/cedricteyton/Code/packmind/CLAUDE.md
   type: claude_md
-  date: 2026-01-14T19:00:00Z
-- name: standard-changelog.md
+  date: 2026-01-18T07:17:00Z
+- name: standard-changelog
   path: .claude/rules/packmind/standard-changelog.md
   type: rule
-  date: 2026-01-14T19:00:00Z
-- name: standard-testing-good-practices.md
+  date: 2026-01-18T07:17:00Z
+- name: standard-testing-good-practices
   path: .claude/rules/packmind/standard-testing-good-practices.md
   type: rule
-  date: 2026-01-14T19:00:00Z
-- name: standard-tests-redaction.md
+  date: 2026-01-18T07:17:00Z
+- name: standard-tests-redaction
   path: .claude/rules/packmind/standard-tests-redaction.md
   type: rule
-  date: 2026-01-14T19:00:00Z
-- name: standard-typescript-code-standards.md
+  date: 2026-01-18T07:17:00Z
+- name: standard-typescript-code-standards
   path: .claude/rules/packmind/standard-typescript-code-standards.md
   type: rule
+  date: 2026-01-18T07:17:00Z
   date: 2026-01-14T19:00:00Z
 - name: implicit-decision-capture
   path: implicit-decision-capture
