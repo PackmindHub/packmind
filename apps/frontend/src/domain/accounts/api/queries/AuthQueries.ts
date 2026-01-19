@@ -13,6 +13,7 @@ import {
   ResetPasswordCommand,
 } from '@packmind/types';
 import { authGateway } from '../gateways';
+import { getMeQueryOptions } from './UserQueries';
 import {
   GET_ME_KEY,
   GET_MCP_URL_KEY,
@@ -329,14 +330,14 @@ export const useSelectOrganizationMutation = () => {
 
       // Remove all organization-scoped queries from the cache to prevent
       // refetching with stale organization context during navigation
+      // (GET_ME_KEY is included since it starts with ORGANIZATION_QUERY_SCOPE)
       queryClient.removeQueries({
         queryKey: [ORGANIZATION_QUERY_SCOPE],
       });
 
-      // Invalidate GET_ME_KEY to refresh the auth context with the new organization
-      await queryClient.invalidateQueries({
-        queryKey: GET_ME_KEY,
-      });
+      // Fetch fresh /auth/me data and WAIT for it to complete
+      // This ensures the cache has the new org context before navigation
+      await queryClient.fetchQuery(getMeQueryOptions());
     },
     onError: (error) => {
       console.error('Error selecting organization:', error);
