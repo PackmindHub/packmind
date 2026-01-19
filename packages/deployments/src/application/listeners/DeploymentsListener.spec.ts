@@ -76,38 +76,48 @@ describe('DeploymentsListener', () => {
       ).toHaveBeenCalledWith(recipeId);
     });
 
-    it('handles multiple RecipeDeletedEvents', async () => {
+    describe('when multiple RecipeDeletedEvents are emitted', () => {
       const recipeId2 = createRecipeId('recipe-456');
 
-      eventService.emit(
-        new CommandDeletedEvent({
-          id: recipeId,
-          spaceId,
-          organizationId,
-          userId,
-        }),
-      );
+      beforeEach(async () => {
+        eventService.emit(
+          new CommandDeletedEvent({
+            id: recipeId,
+            spaceId,
+            organizationId,
+            userId,
+          }),
+        );
 
-      eventService.emit(
-        new CommandDeletedEvent({
-          id: recipeId2,
-          spaceId,
-          organizationId,
-          userId,
-        }),
-      );
+        eventService.emit(
+          new CommandDeletedEvent({
+            id: recipeId2,
+            spaceId,
+            organizationId,
+            userId,
+          }),
+        );
 
-      await new Promise((resolve) => setTimeout(resolve, 10));
+        await new Promise((resolve) => setTimeout(resolve, 10));
+      });
 
-      expect(
-        mockPackageRepository.removeRecipeFromAllPackages,
-      ).toHaveBeenCalledTimes(2);
-      expect(
-        mockPackageRepository.removeRecipeFromAllPackages,
-      ).toHaveBeenCalledWith(recipeId);
-      expect(
-        mockPackageRepository.removeRecipeFromAllPackages,
-      ).toHaveBeenCalledWith(recipeId2);
+      it('calls removeRecipeFromAllPackages twice', async () => {
+        expect(
+          mockPackageRepository.removeRecipeFromAllPackages,
+        ).toHaveBeenCalledTimes(2);
+      });
+
+      it('calls removeRecipeFromAllPackages with the first recipeId', async () => {
+        expect(
+          mockPackageRepository.removeRecipeFromAllPackages,
+        ).toHaveBeenCalledWith(recipeId);
+      });
+
+      it('calls removeRecipeFromAllPackages with the second recipeId', async () => {
+        expect(
+          mockPackageRepository.removeRecipeFromAllPackages,
+        ).toHaveBeenCalledWith(recipeId2);
+      });
     });
   });
 
@@ -132,38 +142,48 @@ describe('DeploymentsListener', () => {
       ).toHaveBeenCalledWith(standardId);
     });
 
-    it('handles multiple StandardDeletedEvents', async () => {
+    describe('when multiple StandardDeletedEvents are emitted', () => {
       const standardId2 = createStandardId('standard-456');
 
-      eventService.emit(
-        new StandardDeletedEvent({
-          standardId,
-          spaceId,
-          organizationId,
-          userId,
-        }),
-      );
+      beforeEach(async () => {
+        eventService.emit(
+          new StandardDeletedEvent({
+            standardId,
+            spaceId,
+            organizationId,
+            userId,
+          }),
+        );
 
-      eventService.emit(
-        new StandardDeletedEvent({
-          standardId: standardId2,
-          spaceId,
-          organizationId,
-          userId,
-        }),
-      );
+        eventService.emit(
+          new StandardDeletedEvent({
+            standardId: standardId2,
+            spaceId,
+            organizationId,
+            userId,
+          }),
+        );
 
-      await new Promise((resolve) => setTimeout(resolve, 10));
+        await new Promise((resolve) => setTimeout(resolve, 10));
+      });
 
-      expect(
-        mockPackageRepository.removeStandardFromAllPackages,
-      ).toHaveBeenCalledTimes(2);
-      expect(
-        mockPackageRepository.removeStandardFromAllPackages,
-      ).toHaveBeenCalledWith(standardId);
-      expect(
-        mockPackageRepository.removeStandardFromAllPackages,
-      ).toHaveBeenCalledWith(standardId2);
+      it('calls removeStandardFromAllPackages twice', async () => {
+        expect(
+          mockPackageRepository.removeStandardFromAllPackages,
+        ).toHaveBeenCalledTimes(2);
+      });
+
+      it('calls removeStandardFromAllPackages with the first standardId', async () => {
+        expect(
+          mockPackageRepository.removeStandardFromAllPackages,
+        ).toHaveBeenCalledWith(standardId);
+      });
+
+      it('calls removeStandardFromAllPackages with the second standardId', async () => {
+        expect(
+          mockPackageRepository.removeStandardFromAllPackages,
+        ).toHaveBeenCalledWith(standardId2);
+      });
     });
   });
 });

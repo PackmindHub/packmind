@@ -234,19 +234,39 @@ describe('GetDeploymentOverviewUseCase', () => {
         result = await useCase.execute(command);
       });
 
-      it('includes recipes with no deployments in recipe-centric view', () => {
+      it('includes one recipe in recipes array', () => {
         expect(result.recipes).toHaveLength(1);
-        const undeployedRecipe = result.recipes[0];
-        expect(undeployedRecipe.recipe.id).toBe(mockRecipe.id);
-        expect(undeployedRecipe.deployments).toHaveLength(0);
-        expect(undeployedRecipe.targetDeployments).toHaveLength(0);
-        expect(undeployedRecipe.hasOutdatedDeployments).toBe(false);
-        expect(undeployedRecipe.latestVersion.version).toBe(1);
+      });
+
+      it('includes recipe with correct id', () => {
+        expect(result.recipes[0].recipe.id).toBe(mockRecipe.id);
+      });
+
+      it('includes recipe with no deployments', () => {
+        expect(result.recipes[0].deployments).toHaveLength(0);
+      });
+
+      it('includes recipe with no target deployments', () => {
+        expect(result.recipes[0].targetDeployments).toHaveLength(0);
+      });
+
+      it('includes recipe with hasOutdatedDeployments false', () => {
+        expect(result.recipes[0].hasOutdatedDeployments).toBe(false);
+      });
+
+      it('includes recipe with latest version 1', () => {
+        expect(result.recipes[0].latestVersion.version).toBe(1);
+      });
+
+      it('includes one repository in repositories array', () => {
+        expect(result.repositories).toHaveLength(1);
       });
 
       it('includes repository with no deployed recipes', () => {
-        expect(result.repositories).toHaveLength(1);
         expect(result.repositories[0].deployedRecipes).toHaveLength(0);
+      });
+
+      it('includes repository with hasOutdatedRecipes false', () => {
         expect(result.repositories[0].hasOutdatedRecipes).toBe(false);
       });
     });
@@ -305,31 +325,66 @@ describe('GetDeploymentOverviewUseCase', () => {
         result = await useCase.execute(command);
       });
 
-      it('includes target-centric deployment information', () => {
+      it('returns one target in targets array', () => {
         expect(result.targets).toHaveLength(1);
-        const targetStatus = result.targets[0];
-        expect(targetStatus.target.id).toBe(mockTarget.id);
-        expect(targetStatus.gitRepo.id).toBe(mockGitRepo.id);
-        expect(targetStatus.deployedRecipes).toHaveLength(1);
-        expect(targetStatus.hasOutdatedRecipes).toBe(true); // version 1 deployed, latest is 2
       });
 
-      it('includes repository-centric deployment information for backward compatibility', () => {
+      it('returns target with correct target id', () => {
+        expect(result.targets[0].target.id).toBe(mockTarget.id);
+      });
+
+      it('returns target with correct git repo id', () => {
+        expect(result.targets[0].gitRepo.id).toBe(mockGitRepo.id);
+      });
+
+      it('returns target with one deployed recipe', () => {
+        expect(result.targets[0].deployedRecipes).toHaveLength(1);
+      });
+
+      it('returns target with hasOutdatedRecipes true because version 1 is deployed but latest is 2', () => {
+        expect(result.targets[0].hasOutdatedRecipes).toBe(true);
+      });
+
+      it('returns one repository in repositories array', () => {
         expect(result.repositories).toHaveLength(1);
-        const repoStatus = result.repositories[0];
-        expect(repoStatus.gitRepo.id).toBe(mockGitRepo.id);
-        expect(repoStatus.deployedRecipes).toHaveLength(1);
-        expect(repoStatus.hasOutdatedRecipes).toBe(true);
       });
 
-      it('includes recipe-centric deployment information', () => {
+      it('returns repository with correct git repo id', () => {
+        expect(result.repositories[0].gitRepo.id).toBe(mockGitRepo.id);
+      });
+
+      it('returns repository with one deployed recipe', () => {
+        expect(result.repositories[0].deployedRecipes).toHaveLength(1);
+      });
+
+      it('returns repository with hasOutdatedRecipes true', () => {
+        expect(result.repositories[0].hasOutdatedRecipes).toBe(true);
+      });
+
+      it('returns one recipe in recipes array', () => {
         expect(result.recipes).toHaveLength(1);
-        const recipeStatus = result.recipes[0];
-        expect(recipeStatus.recipe.id).toBe(mockRecipe.id);
-        expect(recipeStatus.targetDeployments).toHaveLength(1);
-        expect(recipeStatus.targetDeployments[0].target.id).toBe(mockTarget.id);
-        expect(recipeStatus.targetDeployments[0].isUpToDate).toBe(false);
-        expect(recipeStatus.hasOutdatedDeployments).toBe(true);
+      });
+
+      it('returns recipe with correct recipe id', () => {
+        expect(result.recipes[0].recipe.id).toBe(mockRecipe.id);
+      });
+
+      it('returns recipe with one target deployment', () => {
+        expect(result.recipes[0].targetDeployments).toHaveLength(1);
+      });
+
+      it('returns recipe with correct target id in target deployment', () => {
+        expect(result.recipes[0].targetDeployments[0].target.id).toBe(
+          mockTarget.id,
+        );
+      });
+
+      it('returns recipe with isUpToDate false in target deployment', () => {
+        expect(result.recipes[0].targetDeployments[0].isUpToDate).toBe(false);
+      });
+
+      it('returns recipe with hasOutdatedDeployments true', () => {
+        expect(result.recipes[0].hasOutdatedDeployments).toBe(true);
       });
     });
 
@@ -409,21 +464,35 @@ describe('GetDeploymentOverviewUseCase', () => {
         result = await useCase.execute(command);
       });
 
-      it('creates separate target statuses for each target', () => {
+      it('returns two targets in targets array', () => {
         expect(result.targets).toHaveLength(2);
+      });
+
+      it('includes backend target in targets array', () => {
         expect(result.targets.map((t) => t.target.name)).toContain('backend');
+      });
+
+      it('includes frontend target in targets array', () => {
         expect(result.targets.map((t) => t.target.name)).toContain('frontend');
       });
 
-      it('recipe deployment includes both targets', () => {
+      it('returns one recipe in recipes array', () => {
         expect(result.recipes).toHaveLength(1);
-        const recipeStatus = result.recipes[0];
-        expect(recipeStatus.targetDeployments).toHaveLength(2);
+      });
+
+      it('returns recipe with two target deployments', () => {
+        expect(result.recipes[0].targetDeployments).toHaveLength(2);
+      });
+
+      it('includes backend in recipe target deployments', () => {
         expect(
-          recipeStatus.targetDeployments.map((td) => td.target.name),
+          result.recipes[0].targetDeployments.map((td) => td.target.name),
         ).toContain('backend');
+      });
+
+      it('includes frontend in recipe target deployments', () => {
         expect(
-          recipeStatus.targetDeployments.map((td) => td.target.name),
+          result.recipes[0].targetDeployments.map((td) => td.target.name),
         ).toContain('frontend');
       });
     });
@@ -434,31 +503,45 @@ describe('GetDeploymentOverviewUseCase', () => {
       const mockRecipe = recipeFactory();
 
       describe('getTargetDeploymentStatus', () => {
-        it('groups distributions by target correctly', async () => {
-          const mockRecipeVersion = recipeVersionFactory({
-            recipeId: mockRecipe.id,
-            version: 1,
+        describe('when distribution has target', () => {
+          let targetStatuses: Awaited<
+            ReturnType<typeof useCase.getTargetDeploymentStatus>
+          >;
+
+          beforeEach(async () => {
+            const mockRecipeVersion = recipeVersionFactory({
+              recipeId: mockRecipe.id,
+              version: 1,
+            });
+
+            const mockDistribution = createDistribution({
+              organizationId,
+              target: mockTarget,
+              status: DistributionStatus.success,
+              recipeVersions: [mockRecipeVersion],
+            });
+
+            targetStatuses = await useCase.getTargetDeploymentStatus(
+              [mockDistribution],
+              [mockGitRepo],
+              [mockRecipe],
+            );
           });
 
-          const mockDistribution = createDistribution({
-            organizationId,
-            target: mockTarget,
-            status: DistributionStatus.success,
-            recipeVersions: [mockRecipeVersion],
+          it('returns one target status', () => {
+            expect(targetStatuses).toHaveLength(1);
           });
 
-          const targetStatuses = await useCase.getTargetDeploymentStatus(
-            [mockDistribution],
-            [mockGitRepo],
-            [mockRecipe],
-          );
+          it('returns target status with correct target id', () => {
+            expect(targetStatuses[0].target.id).toBe(mockTarget.id);
+          });
 
-          expect(targetStatuses).toHaveLength(1);
-          expect(targetStatuses[0].target.id).toBe(mockTarget.id);
-          expect(targetStatuses[0].deployedRecipes).toHaveLength(1);
+          it('returns target status with one deployed recipe', () => {
+            expect(targetStatuses[0].deployedRecipes).toHaveLength(1);
+          });
         });
 
-        it('handles distributions without targets gracefully', async () => {
+        it('returns empty array for distributions without targets', async () => {
           const mockDistribution = createDistribution({
             organizationId,
             target: undefined,
@@ -477,33 +560,47 @@ describe('GetDeploymentOverviewUseCase', () => {
       });
 
       describe('buildTargetDeploymentsForRecipe', () => {
-        it('builds target deployments for a specific recipe', () => {
-          const mockRecipeVersion = recipeVersionFactory({
-            recipeId: mockRecipe.id,
-            version: 1,
+        describe('when distribution contains the recipe', () => {
+          let targetDeployments: ReturnType<
+            typeof useCase.buildTargetDeploymentsForRecipe
+          >;
+
+          beforeEach(() => {
+            const mockRecipeVersion = recipeVersionFactory({
+              recipeId: mockRecipe.id,
+              version: 1,
+            });
+
+            const mockDistribution = createDistribution({
+              organizationId,
+              target: mockTarget,
+              status: DistributionStatus.success,
+              recipeVersions: [mockRecipeVersion],
+            });
+
+            targetDeployments = useCase.buildTargetDeploymentsForRecipe(
+              mockRecipe,
+              [mockDistribution],
+              [mockGitRepo],
+            );
           });
 
-          const mockDistribution = createDistribution({
-            organizationId,
-            target: mockTarget,
-            status: DistributionStatus.success,
-            recipeVersions: [mockRecipeVersion],
+          it('returns one target deployment', () => {
+            expect(targetDeployments).toHaveLength(1);
           });
 
-          const targetDeployments = useCase.buildTargetDeploymentsForRecipe(
-            mockRecipe,
-            [mockDistribution],
-            [mockGitRepo],
-          );
+          it('returns target deployment with correct target id', () => {
+            expect(targetDeployments[0].target.id).toBe(mockTarget.id);
+          });
 
-          expect(targetDeployments).toHaveLength(1);
-          expect(targetDeployments[0].target.id).toBe(mockTarget.id);
-          expect(targetDeployments[0].deployedVersion.recipeId).toBe(
-            mockRecipe.id,
-          );
+          it('returns target deployment with correct recipe id', () => {
+            expect(targetDeployments[0].deployedVersion.recipeId).toBe(
+              mockRecipe.id,
+            );
+          });
         });
 
-        it('filters out distributions for other recipes', () => {
+        it('returns empty array for distributions with other recipes', () => {
           const otherRecipe = recipeFactory();
           const otherRecipeVersion = recipeVersionFactory({
             recipeId: otherRecipe.id,
@@ -514,11 +611,11 @@ describe('GetDeploymentOverviewUseCase', () => {
             organizationId,
             target: mockTarget,
             status: DistributionStatus.success,
-            recipeVersions: [otherRecipeVersion], // Different recipe
+            recipeVersions: [otherRecipeVersion],
           });
 
           const targetDeployments = useCase.buildTargetDeploymentsForRecipe(
-            mockRecipe, // Looking for this recipe
+            mockRecipe,
             [mockDistribution],
             [mockGitRepo],
           );

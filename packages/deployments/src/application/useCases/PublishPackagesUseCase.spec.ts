@@ -161,18 +161,30 @@ describe('PublishPackagesUseCase', () => {
       });
     });
 
-    it('returns deployments from published artifacts', async () => {
-      const mockDistributions = [createMockDistribution()];
+    describe('when publishing artifacts', () => {
+      let result: Distribution[];
 
-      mockDeploymentPort.publishArtifacts.mockResolvedValue({
-        distributions: mockDistributions,
+      beforeEach(async () => {
+        const mockDistributions = [createMockDistribution()];
+
+        mockDeploymentPort.publishArtifacts.mockResolvedValue({
+          distributions: mockDistributions,
+        });
+
+        result = await useCase.execute(command);
       });
 
-      const result = await useCase.execute(command);
+      it('returns one distribution', () => {
+        expect(result).toHaveLength(1);
+      });
 
-      expect(result).toHaveLength(1);
-      expect(result[0].id).toBeDefined();
-      expect(result[0].status).toBe(DistributionStatus.success);
+      it('returns distribution with defined id', () => {
+        expect(result[0].id).toBeDefined();
+      });
+
+      it('returns distribution with success status', () => {
+        expect(result[0].status).toBe(DistributionStatus.success);
+      });
     });
 
     it('fetches package by ID', async () => {
@@ -274,20 +286,25 @@ describe('PublishPackagesUseCase', () => {
   });
 
   describe('when package contains only recipes', () => {
-    it('calls publishArtifacts with empty standardVersionIds', async () => {
-      const pkg = packageFactory({
+    let pkg: Package;
+    let recipeVersionForRecipeOnly: RecipeVersion;
+
+    beforeEach(async () => {
+      pkg = packageFactory({
         id: packageId,
         recipes: [recipeId],
         standards: [],
       });
 
-      const recipeVersion = recipeVersionFactory({
+      recipeVersionForRecipeOnly = recipeVersionFactory({
         recipeId,
         version: 1,
       });
 
       mockPackageService.findById.mockResolvedValue(pkg);
-      mockRecipesPort.listRecipeVersions.mockResolvedValue([recipeVersion]);
+      mockRecipesPort.listRecipeVersions.mockResolvedValue([
+        recipeVersionForRecipeOnly,
+      ]);
       mockDeploymentPort.publishArtifacts.mockResolvedValue({
         distributions: [],
       });
@@ -300,12 +317,17 @@ describe('PublishPackagesUseCase', () => {
       };
 
       await useCase.execute(command);
+    });
 
+    it('does not call getLatestStandardVersion', () => {
       expect(mockStandardsPort.getLatestStandardVersion).not.toHaveBeenCalled();
+    });
+
+    it('calls publishArtifacts with empty standardVersionIds', () => {
       expect(mockDeploymentPort.publishArtifacts).toHaveBeenCalledWith({
         userId,
         organizationId,
-        recipeVersionIds: [recipeVersion.id],
+        recipeVersionIds: [recipeVersionForRecipeOnly.id],
         standardVersionIds: [],
         skillVersionIds: [],
         targetIds: [targetId],
@@ -316,21 +338,24 @@ describe('PublishPackagesUseCase', () => {
   });
 
   describe('when package contains only standards', () => {
-    it('calls publishArtifacts with empty recipeVersionIds', async () => {
-      const pkg = packageFactory({
+    let pkg: Package;
+    let standardVersionForStandardOnly: StandardVersion;
+
+    beforeEach(async () => {
+      pkg = packageFactory({
         id: packageId,
         recipes: [],
         standards: [standardId],
       });
 
-      const standardVersion = standardVersionFactory({
+      standardVersionForStandardOnly = standardVersionFactory({
         standardId,
         version: 1,
       });
 
       mockPackageService.findById.mockResolvedValue(pkg);
       mockStandardsPort.getLatestStandardVersion.mockResolvedValue(
-        standardVersion,
+        standardVersionForStandardOnly,
       );
       mockDeploymentPort.publishArtifacts.mockResolvedValue({
         distributions: [],
@@ -344,13 +369,18 @@ describe('PublishPackagesUseCase', () => {
       };
 
       await useCase.execute(command);
+    });
 
+    it('does not call listRecipeVersions', () => {
       expect(mockRecipesPort.listRecipeVersions).not.toHaveBeenCalled();
+    });
+
+    it('calls publishArtifacts with empty recipeVersionIds', () => {
       expect(mockDeploymentPort.publishArtifacts).toHaveBeenCalledWith({
         userId,
         organizationId,
         recipeVersionIds: [],
-        standardVersionIds: [standardVersion.id],
+        standardVersionIds: [standardVersionForStandardOnly.id],
         skillVersionIds: [],
         targetIds: [targetId],
         packagesSlugs: [pkg.slug],
@@ -407,48 +437,62 @@ describe('PublishPackagesUseCase', () => {
   });
 
   describe('when multiple packages share same standards and recipes', () => {
-    it('publishes each standard and recipe only once', async () => {
-      const sharedRecipeId = createRecipeId(uuidv4());
-      const sharedStandardId = createStandardId(uuidv4());
-      const uniqueRecipeId = createRecipeId(uuidv4());
-      const uniqueStandardId = createStandardId(uuidv4());
+    let sharedRecipeId: ReturnType<typeof createRecipeId>;
+    let sharedStandardId: ReturnType<typeof createStandardId>;
+    let uniqueRecipeId: ReturnType<typeof createRecipeId>;
+    let uniqueStandardId: ReturnType<typeof createStandardId>;
+    let package1Id: ReturnType<typeof createPackageId>;
+    let package2Id: ReturnType<typeof createPackageId>;
+    let package1: Package;
+    let package2: Package;
+    let sharedRecipeVersion: RecipeVersion;
+    let uniqueRecipeVersion: RecipeVersion;
+    let sharedStandardVersion: StandardVersion;
+    let uniqueStandardVersion: StandardVersion;
+    let result: Distribution[];
 
-      const package1Id = createPackageId(uuidv4());
-      const package2Id = createPackageId(uuidv4());
+    beforeEach(async () => {
+      sharedRecipeId = createRecipeId(uuidv4());
+      sharedStandardId = createStandardId(uuidv4());
+      uniqueRecipeId = createRecipeId(uuidv4());
+      uniqueStandardId = createStandardId(uuidv4());
 
-      const package1 = packageFactory({
+      package1Id = createPackageId(uuidv4());
+      package2Id = createPackageId(uuidv4());
+
+      package1 = packageFactory({
         id: package1Id,
         slug: 'package-1-slug',
         recipes: [sharedRecipeId, uniqueRecipeId],
         standards: [sharedStandardId],
       });
 
-      const package2 = packageFactory({
+      package2 = packageFactory({
         id: package2Id,
         slug: 'package-2-slug',
         recipes: [sharedRecipeId],
         standards: [sharedStandardId, uniqueStandardId],
       });
 
-      const sharedRecipeVersion = recipeVersionFactory({
+      sharedRecipeVersion = recipeVersionFactory({
         id: createRecipeVersionId(uuidv4()),
         recipeId: sharedRecipeId,
         version: 1,
       });
 
-      const uniqueRecipeVersion = recipeVersionFactory({
+      uniqueRecipeVersion = recipeVersionFactory({
         id: createRecipeVersionId(uuidv4()),
         recipeId: uniqueRecipeId,
         version: 1,
       });
 
-      const sharedStandardVersion = standardVersionFactory({
+      sharedStandardVersion = standardVersionFactory({
         id: createStandardVersionId(uuidv4()),
         standardId: sharedStandardId,
         version: 1,
       });
 
-      const uniqueStandardVersion = standardVersionFactory({
+      uniqueStandardVersion = standardVersionFactory({
         id: createStandardVersionId(uuidv4()),
         standardId: uniqueStandardId,
         version: 1,
@@ -459,11 +503,11 @@ describe('PublishPackagesUseCase', () => {
         .mockResolvedValueOnce(package2);
 
       mockRecipesPort.listRecipeVersions.mockImplementation(
-        async (recipeId) => {
-          if (recipeId === sharedRecipeId) {
+        async (recipeIdParam) => {
+          if (recipeIdParam === sharedRecipeId) {
             return [sharedRecipeVersion];
           }
-          if (recipeId === uniqueRecipeId) {
+          if (recipeIdParam === uniqueRecipeId) {
             return [uniqueRecipeVersion];
           }
           return [];
@@ -471,11 +515,11 @@ describe('PublishPackagesUseCase', () => {
       );
 
       mockStandardsPort.getLatestStandardVersion.mockImplementation(
-        async (standardId) => {
-          if (standardId === sharedStandardId) {
+        async (standardIdParam) => {
+          if (standardIdParam === sharedStandardId) {
             return sharedStandardVersion;
           }
-          if (standardId === uniqueStandardId) {
+          if (standardIdParam === uniqueStandardId) {
             return uniqueStandardVersion;
           }
           return null;
@@ -494,27 +538,48 @@ describe('PublishPackagesUseCase', () => {
         targetIds: [targetId],
       };
 
-      const result = await useCase.execute(command);
+      result = await useCase.execute(command);
+    });
 
+    it('calls listRecipeVersions twice for deduplicated recipes', () => {
       expect(mockRecipesPort.listRecipeVersions).toHaveBeenCalledTimes(2);
+    });
+
+    it('calls listRecipeVersions with shared recipe id', () => {
       expect(mockRecipesPort.listRecipeVersions).toHaveBeenCalledWith(
         sharedRecipeId,
       );
+    });
+
+    it('calls listRecipeVersions with unique recipe id', () => {
       expect(mockRecipesPort.listRecipeVersions).toHaveBeenCalledWith(
         uniqueRecipeId,
       );
+    });
 
+    it('calls getLatestStandardVersion twice for deduplicated standards', () => {
       expect(mockStandardsPort.getLatestStandardVersion).toHaveBeenCalledTimes(
         2,
       );
+    });
+
+    it('calls getLatestStandardVersion with shared standard id', () => {
       expect(mockStandardsPort.getLatestStandardVersion).toHaveBeenCalledWith(
         sharedStandardId,
       );
+    });
+
+    it('calls getLatestStandardVersion with unique standard id', () => {
       expect(mockStandardsPort.getLatestStandardVersion).toHaveBeenCalledWith(
         uniqueStandardId,
       );
+    });
 
+    it('calls publishArtifacts once', () => {
       expect(mockDeploymentPort.publishArtifacts).toHaveBeenCalledTimes(1);
+    });
+
+    it('calls publishArtifacts with correct command including both packages', () => {
       expect(mockDeploymentPort.publishArtifacts).toHaveBeenCalledWith({
         userId,
         organizationId,
@@ -531,13 +596,21 @@ describe('PublishPackagesUseCase', () => {
         packagesSlugs: [package1.slug, package2.slug],
         packageIds: [package1Id, package2Id],
       });
+    });
+
+    it('publishes exactly two recipe versions', () => {
       expect(
         mockDeploymentPort.publishArtifacts.mock.calls[0][0].recipeVersionIds,
       ).toHaveLength(2);
+    });
+
+    it('publishes exactly two standard versions', () => {
       expect(
         mockDeploymentPort.publishArtifacts.mock.calls[0][0].standardVersionIds,
       ).toHaveLength(2);
+    });
 
+    it('returns one distribution', () => {
       expect(result).toHaveLength(1);
     });
   });

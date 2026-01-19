@@ -84,63 +84,98 @@ describe('UpdateRenderModeConfigurationUseCase', () => {
       );
     });
 
-    it('delegates to service and returns updated configuration', async () => {
-      const existingConfiguration: RenderModeConfiguration =
-        renderModeConfigurationFactory({
+    describe('when updating existing configuration', () => {
+      let existingConfiguration: RenderModeConfiguration;
+      let updatedConfiguration: RenderModeConfiguration;
+      let result: RenderModeConfiguration;
+
+      beforeEach(async () => {
+        existingConfiguration = renderModeConfigurationFactory({
           organizationId: organization.id,
           activeRenderModes: [RenderMode.PACKMIND],
         });
 
-      const updatedConfiguration: RenderModeConfiguration =
-        renderModeConfigurationFactory({
+        updatedConfiguration = renderModeConfigurationFactory({
           organizationId: organization.id,
           activeRenderModes: [RenderMode.PACKMIND, RenderMode.CLAUDE],
         });
 
-      service.getConfiguration.mockResolvedValue(existingConfiguration);
-      service.updateConfiguration.mockResolvedValue(updatedConfiguration);
+        service.getConfiguration.mockResolvedValue(existingConfiguration);
+        service.updateConfiguration.mockResolvedValue(updatedConfiguration);
 
-      const result = await useCase.execute(command);
+        result = await useCase.execute(command);
+      });
 
-      expect(service.getConfiguration).toHaveBeenCalledWith(organization.id);
-      expect(service.updateConfiguration).toHaveBeenCalledWith(
-        organization.id,
-        command.activeRenderModes,
-      );
-      expect(result).toEqual(updatedConfiguration);
+      it('fetches current configuration', () => {
+        expect(service.getConfiguration).toHaveBeenCalledWith(organization.id);
+      });
+
+      it('delegates update to service', () => {
+        expect(service.updateConfiguration).toHaveBeenCalledWith(
+          organization.id,
+          command.activeRenderModes,
+        );
+      });
+
+      it('returns the updated configuration', () => {
+        expect(result).toEqual(updatedConfiguration);
+      });
     });
 
     describe('with an invalid render mode', () => {
-      it('throws validation error without delegating to service', async () => {
-        await expect(
-          useCase.execute({
-            ...command,
-            activeRenderModes: ['INVALID' as RenderMode],
-          }),
-        ).rejects.toThrow('Invalid render mode provided: INVALID');
+      let executePromise: Promise<RenderModeConfiguration>;
 
+      beforeEach(() => {
+        executePromise = useCase.execute({
+          ...command,
+          activeRenderModes: ['INVALID' as RenderMode],
+        });
+      });
+
+      it('throws validation error', async () => {
+        await expect(executePromise).rejects.toThrow(
+          'Invalid render mode provided: INVALID',
+        );
+      });
+
+      it('does not delegate to service', async () => {
+        await executePromise.catch(() => {
+          /* expected rejection */
+        });
         expect(service.updateConfiguration).not.toHaveBeenCalled();
       });
     });
 
-    it('creates configuration if it does not exist', async () => {
-      const configuration: RenderModeConfiguration =
-        renderModeConfigurationFactory({
+    describe('when configuration does not exist', () => {
+      let configuration: RenderModeConfiguration;
+      let result: RenderModeConfiguration;
+
+      beforeEach(async () => {
+        configuration = renderModeConfigurationFactory({
           organizationId: organization.id,
           activeRenderModes: [RenderMode.CLAUDE],
         });
 
-      service.getConfiguration.mockResolvedValue(null);
-      service.createConfiguration.mockResolvedValue(configuration);
+        service.getConfiguration.mockResolvedValue(null);
+        service.createConfiguration.mockResolvedValue(configuration);
 
-      const result = await useCase.execute(command);
+        result = await useCase.execute(command);
+      });
 
-      expect(service.getConfiguration).toHaveBeenCalledWith(organization.id);
-      expect(service.createConfiguration).toHaveBeenCalledWith(
-        organization.id,
-        command.activeRenderModes,
-      );
-      expect(result).toEqual(configuration);
+      it('fetches current configuration', () => {
+        expect(service.getConfiguration).toHaveBeenCalledWith(organization.id);
+      });
+
+      it('creates new configuration', () => {
+        expect(service.createConfiguration).toHaveBeenCalledWith(
+          organization.id,
+          command.activeRenderModes,
+        );
+      });
+
+      it('returns the created configuration', () => {
+        expect(result).toEqual(configuration);
+      });
     });
 
     it('propagates service errors', async () => {
@@ -160,16 +195,25 @@ describe('UpdateRenderModeConfigurationUseCase', () => {
   });
 
   describe('when user is not admin', () => {
+    let executePromise: Promise<RenderModeConfiguration>;
+
     beforeEach(() => {
       accountsPort.getUserById.mockResolvedValue(
         createUserWithMembership(command.userId, organization, 'member'),
       );
+      executePromise = useCase.execute(command);
     });
 
     it('throws an OrganizationAdminRequiredError', async () => {
-      await expect(useCase.execute(command)).rejects.toBeInstanceOf(
+      await expect(executePromise).rejects.toBeInstanceOf(
         OrganizationAdminRequiredError,
       );
+    });
+
+    it('does not delegate to service', async () => {
+      await executePromise.catch(() => {
+        /* expected rejection */
+      });
       expect(service.updateConfiguration).not.toHaveBeenCalled();
     });
   });

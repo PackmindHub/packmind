@@ -73,7 +73,8 @@ describe('AddTargetUseCase', () => {
       });
     });
 
-    it('creates target with valid name and path', async () => {
+    describe('when creating target with valid name and path', () => {
+      let result: Target;
       const command: AddTargetCommand = {
         userId,
         organizationId,
@@ -89,18 +90,24 @@ describe('AddTargetUseCase', () => {
         gitRepoId,
       };
 
-      mockTargetService.addTarget.mockResolvedValue(expectedTarget);
+      beforeEach(async () => {
+        mockTargetService.addTarget.mockResolvedValue(expectedTarget);
+        result = await useCase.execute(command);
+      });
 
-      const result = await useCase.execute(command);
+      it('calls addTarget with correct parameters', () => {
+        expect(mockTargetService.addTarget).toHaveBeenCalledWith(
+          expect.objectContaining({
+            name: 'production',
+            path: '/src/',
+            gitRepoId,
+          }),
+        );
+      });
 
-      expect(mockTargetService.addTarget).toHaveBeenCalledWith(
-        expect.objectContaining({
-          name: 'production',
-          path: '/src/',
-          gitRepoId,
-        }),
-      );
-      expect(result).toEqual(expectedTarget);
+      it('returns the created target', () => {
+        expect(result).toEqual(expectedTarget);
+      });
     });
 
     it('trims whitespace from target name', async () => {
@@ -192,26 +199,33 @@ describe('AddTargetUseCase', () => {
   });
 
   describe('when provider has no token', () => {
-    beforeEach(() => {
+    let thrownError: Error;
+    const command: AddTargetCommand = {
+      userId,
+      organizationId,
+      name: 'production',
+      path: '/src/',
+      gitRepoId,
+    };
+
+    beforeEach(async () => {
       mockGitPort.getRepositoryById.mockResolvedValue(mockRepo);
       mockGitPort.listProviders.mockResolvedValue({
         providers: [mockProviderWithoutToken],
       });
+
+      try {
+        await useCase.execute(command);
+      } catch (error) {
+        thrownError = error as Error;
+      }
     });
 
-    it('throws GitProviderMissingTokenError', async () => {
-      const command: AddTargetCommand = {
-        userId,
-        organizationId,
-        name: 'production',
-        path: '/src/',
-        gitRepoId,
-      };
+    it('throws GitProviderMissingTokenError', () => {
+      expect(thrownError).toBeInstanceOf(GitProviderMissingTokenError);
+    });
 
-      await expect(useCase.execute(command)).rejects.toThrow(
-        GitProviderMissingTokenError,
-      );
-
+    it('does not call addTarget', () => {
       expect(mockTargetService.addTarget).not.toHaveBeenCalled();
     });
   });
@@ -224,7 +238,8 @@ describe('AddTargetUseCase', () => {
       });
     });
 
-    it('allows tokenless provider if allowTokenlessProvider is true', async () => {
+    describe('when allowTokenlessProvider is true', () => {
+      let result: Target;
       const command: AddTargetCommand = {
         userId,
         organizationId,
@@ -241,15 +256,22 @@ describe('AddTargetUseCase', () => {
         gitRepoId,
       };
 
-      mockTargetService.addTarget.mockResolvedValue(expectedTarget);
+      beforeEach(async () => {
+        mockTargetService.addTarget.mockResolvedValue(expectedTarget);
+        result = await useCase.execute(command);
+      });
 
-      const result = await useCase.execute(command);
+      it('returns the created target', () => {
+        expect(result).toEqual(expectedTarget);
+      });
 
-      expect(result).toEqual(expectedTarget);
-      expect(mockTargetService.addTarget).toHaveBeenCalled();
+      it('calls addTarget', () => {
+        expect(mockTargetService.addTarget).toHaveBeenCalled();
+      });
     });
 
-    it('rejects tokenless provider if allowTokenlessProvider is false', async () => {
+    describe('when allowTokenlessProvider is false', () => {
+      let thrownError: Error;
       const command: AddTargetCommand = {
         userId,
         organizationId,
@@ -259,14 +281,25 @@ describe('AddTargetUseCase', () => {
         allowTokenlessProvider: false,
       };
 
-      await expect(useCase.execute(command)).rejects.toThrow(
-        GitProviderMissingTokenError,
-      );
+      beforeEach(async () => {
+        try {
+          await useCase.execute(command);
+        } catch (error) {
+          thrownError = error as Error;
+        }
+      });
 
-      expect(mockTargetService.addTarget).not.toHaveBeenCalled();
+      it('throws GitProviderMissingTokenError', () => {
+        expect(thrownError).toBeInstanceOf(GitProviderMissingTokenError);
+      });
+
+      it('does not call addTarget', () => {
+        expect(mockTargetService.addTarget).not.toHaveBeenCalled();
+      });
     });
 
-    it('rejects tokenless provider if allowTokenlessProvider is not provided', async () => {
+    describe('when allowTokenlessProvider is not provided', () => {
+      let thrownError: Error;
       const command: AddTargetCommand = {
         userId,
         organizationId,
@@ -275,11 +308,21 @@ describe('AddTargetUseCase', () => {
         gitRepoId,
       };
 
-      await expect(useCase.execute(command)).rejects.toThrow(
-        GitProviderMissingTokenError,
-      );
+      beforeEach(async () => {
+        try {
+          await useCase.execute(command);
+        } catch (error) {
+          thrownError = error as Error;
+        }
+      });
 
-      expect(mockTargetService.addTarget).not.toHaveBeenCalled();
+      it('throws GitProviderMissingTokenError', () => {
+        expect(thrownError).toBeInstanceOf(GitProviderMissingTokenError);
+      });
+
+      it('does not call addTarget', () => {
+        expect(mockTargetService.addTarget).not.toHaveBeenCalled();
+      });
     });
   });
 
@@ -291,7 +334,8 @@ describe('AddTargetUseCase', () => {
       });
     });
 
-    it('throws error for empty target name', async () => {
+    describe('when target name is empty', () => {
+      let thrownError: Error;
       const command: AddTargetCommand = {
         userId,
         organizationId,
@@ -300,14 +344,25 @@ describe('AddTargetUseCase', () => {
         gitRepoId,
       };
 
-      await expect(useCase.execute(command)).rejects.toThrow(
-        'Target name cannot be empty',
-      );
+      beforeEach(async () => {
+        try {
+          await useCase.execute(command);
+        } catch (error) {
+          thrownError = error as Error;
+        }
+      });
 
-      expect(mockTargetService.addTarget).not.toHaveBeenCalled();
+      it('throws error with correct message', () => {
+        expect(thrownError.message).toBe('Target name cannot be empty');
+      });
+
+      it('does not call addTarget', () => {
+        expect(mockTargetService.addTarget).not.toHaveBeenCalled();
+      });
     });
 
-    it('throws error for whitespace-only target name', async () => {
+    describe('when target name is whitespace-only', () => {
+      let thrownError: Error;
       const command: AddTargetCommand = {
         userId,
         organizationId,
@@ -316,14 +371,25 @@ describe('AddTargetUseCase', () => {
         gitRepoId,
       };
 
-      await expect(useCase.execute(command)).rejects.toThrow(
-        'Target name cannot be empty',
-      );
+      beforeEach(async () => {
+        try {
+          await useCase.execute(command);
+        } catch (error) {
+          thrownError = error as Error;
+        }
+      });
 
-      expect(mockTargetService.addTarget).not.toHaveBeenCalled();
+      it('throws error with correct message', () => {
+        expect(thrownError.message).toBe('Target name cannot be empty');
+      });
+
+      it('does not call addTarget', () => {
+        expect(mockTargetService.addTarget).not.toHaveBeenCalled();
+      });
     });
 
-    it('throws error for empty path', async () => {
+    describe('when path is empty', () => {
+      let thrownError: Error;
       const command: AddTargetCommand = {
         userId,
         organizationId,
@@ -332,14 +398,25 @@ describe('AddTargetUseCase', () => {
         gitRepoId,
       };
 
-      await expect(useCase.execute(command)).rejects.toThrow(
-        'Invalid path format',
-      );
+      beforeEach(async () => {
+        try {
+          await useCase.execute(command);
+        } catch (error) {
+          thrownError = error as Error;
+        }
+      });
 
-      expect(mockTargetService.addTarget).not.toHaveBeenCalled();
+      it('throws error with correct message', () => {
+        expect(thrownError.message).toBe('Invalid path format');
+      });
+
+      it('does not call addTarget', () => {
+        expect(mockTargetService.addTarget).not.toHaveBeenCalled();
+      });
     });
 
-    it('throws error for invalid path format', async () => {
+    describe('when path format is invalid', () => {
+      let thrownError: Error;
       const command: AddTargetCommand = {
         userId,
         organizationId,
@@ -348,16 +425,25 @@ describe('AddTargetUseCase', () => {
         gitRepoId,
       };
 
-      await expect(useCase.execute(command)).rejects.toThrow(
-        'Invalid path format',
-      );
+      beforeEach(async () => {
+        try {
+          await useCase.execute(command);
+        } catch (error) {
+          thrownError = error as Error;
+        }
+      });
 
-      expect(mockTargetService.addTarget).not.toHaveBeenCalled();
+      it('throws error with correct message', () => {
+        expect(thrownError.message).toBe('Invalid path format');
+      });
+
+      it('does not call addTarget', () => {
+        expect(mockTargetService.addTarget).not.toHaveBeenCalled();
+      });
     });
 
-    it('throws error for repository not found', async () => {
-      mockGitPort.getRepositoryById.mockResolvedValue(null);
-
+    describe('when repository is not found', () => {
+      let thrownError: Error;
       const command: AddTargetCommand = {
         userId,
         organizationId,
@@ -366,11 +452,25 @@ describe('AddTargetUseCase', () => {
         gitRepoId,
       };
 
-      await expect(useCase.execute(command)).rejects.toThrow(
-        `Repository with id ${gitRepoId} not found`,
-      );
+      beforeEach(async () => {
+        mockGitPort.getRepositoryById.mockResolvedValue(null);
 
-      expect(mockTargetService.addTarget).not.toHaveBeenCalled();
+        try {
+          await useCase.execute(command);
+        } catch (error) {
+          thrownError = error as Error;
+        }
+      });
+
+      it('throws error with correct message', () => {
+        expect(thrownError.message).toBe(
+          `Repository with id ${gitRepoId} not found`,
+        );
+      });
+
+      it('does not call addTarget', () => {
+        expect(mockTargetService.addTarget).not.toHaveBeenCalled();
+      });
     });
   });
 

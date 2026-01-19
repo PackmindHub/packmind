@@ -81,18 +81,25 @@ describe('GetRenderModeConfigurationUseCase', () => {
   });
 
   describe('when service provides a configuration', () => {
-    it('wraps the configuration in the result object', async () => {
-      const configuration: RenderModeConfiguration =
-        renderModeConfigurationFactory({
-          organizationId,
-          activeRenderModes: [RenderMode.PACKMIND, RenderMode.CLAUDE],
-        });
+    let configuration: RenderModeConfiguration;
+    let result: { configuration: RenderModeConfiguration | null };
+
+    beforeEach(async () => {
+      configuration = renderModeConfigurationFactory({
+        organizationId,
+        activeRenderModes: [RenderMode.PACKMIND, RenderMode.CLAUDE],
+      });
 
       service.getConfiguration.mockResolvedValue(configuration);
 
-      const result = await useCase.execute(command);
+      result = await useCase.execute(command);
+    });
 
+    it('wraps the configuration in the result object', () => {
       expect(result).toEqual({ configuration });
+    });
+
+    it('calls service.getConfiguration with the organization id', () => {
       expect(service.getConfiguration).toHaveBeenCalledWith(organizationId);
     });
   });
