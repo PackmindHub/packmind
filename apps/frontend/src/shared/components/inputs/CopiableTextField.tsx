@@ -14,7 +14,7 @@ interface CopiableTextFieldProps extends Omit<IPMInputProps, 'value'> {
   onValueChange?: (value: string) => void;
   label?: string;
   readOnly?: boolean;
-  onInteraction?: () => void;
+  onCopy?: () => void;
 }
 
 export const CopiableTextField: React.FunctionComponent<
@@ -24,7 +24,7 @@ export const CopiableTextField: React.FunctionComponent<
   onValueChange,
   label,
   readOnly = false,
-  onInteraction,
+  onCopy,
   ...inputProps
 }) => {
   return (
@@ -52,7 +52,7 @@ export const CopiableTextField: React.FunctionComponent<
                 variant="surface"
                 size="xs"
                 me="-2"
-                onClick={onInteraction}
+                onClick={onCopy}
               >
                 <PMCopiable.Indicator>
                   <LuCopy />
@@ -65,8 +65,7 @@ export const CopiableTextField: React.FunctionComponent<
             value={value}
             onChange={(e) => !readOnly && onValueChange?.(e.target.value)}
             readOnly={readOnly}
-            onClick={onInteraction}
-            onSelect={onInteraction}
+            onCopy={onCopy}
             {...inputProps}
           />
         </PMInputGroup>

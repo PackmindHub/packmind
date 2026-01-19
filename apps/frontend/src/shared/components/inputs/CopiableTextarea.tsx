@@ -12,18 +12,12 @@ interface CopiableTextareaProps extends Omit<IPMTextAreaProps, 'value'> {
   value: string;
   onValueChange?: (value: string) => void;
   readOnly?: boolean;
-  onInteraction?: () => void;
+  onCopy?: () => void;
 }
 
 export const CopiableTextarea: React.FunctionComponent<
   CopiableTextareaProps
-> = ({
-  value,
-  onValueChange,
-  readOnly = false,
-  onInteraction,
-  ...textareaProps
-}) => {
+> = ({ value, onValueChange, readOnly = false, onCopy, ...textareaProps }) => {
   return (
     <PMCopiable.Root value={value} width={'full'}>
       <PMBox position="relative" _hover={{ '& .copy-button': { opacity: 1 } }}>
@@ -31,8 +25,7 @@ export const CopiableTextarea: React.FunctionComponent<
           value={value}
           onChange={(e) => !readOnly && onValueChange?.(e.target.value)}
           readOnly={readOnly}
-          onClick={onInteraction}
-          onSelect={onInteraction}
+          onCopy={onCopy}
           {...textareaProps}
         />
         <PMCopiable.Trigger asChild>
@@ -47,7 +40,7 @@ export const CopiableTextarea: React.FunctionComponent<
             opacity={0}
             transition="opacity 0.2s"
             zIndex={1}
-            onClick={onInteraction}
+            onClick={onCopy}
           >
             <PMCopiable.Indicator>
               <LuCopy />

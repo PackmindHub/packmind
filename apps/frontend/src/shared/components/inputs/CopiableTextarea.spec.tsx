@@ -77,4 +77,40 @@ describe('CopiableTextarea', () => {
     expect(textarea).toHaveAttribute('placeholder', 'Enter text');
     expect(textarea).toBeDisabled();
   });
+
+  describe('onCopy', () => {
+    describe('when copy button is clicked', () => {
+      it('triggers onCopy callback', () => {
+        const mockOnCopy = jest.fn();
+        renderWithUI(<CopiableTextarea value="test" onCopy={mockOnCopy} />);
+
+        const copyButton = screen.getByLabelText('Copy to clipboard');
+        fireEvent.click(copyButton);
+
+        expect(mockOnCopy).toHaveBeenCalledTimes(1);
+      });
+    });
+
+    describe('when text is copied from textarea', () => {
+      it('triggers onCopy callback', () => {
+        const mockOnCopy = jest.fn();
+        renderWithUI(<CopiableTextarea value="test" onCopy={mockOnCopy} />);
+
+        const textarea = screen.getByRole('textbox');
+        fireEvent.copy(textarea);
+
+        expect(mockOnCopy).toHaveBeenCalledTimes(1);
+      });
+    });
+
+    describe('when onCopy is not provided', () => {
+      it('does not throw', () => {
+        renderWithUI(<CopiableTextarea value="test" />);
+
+        const copyButton = screen.getByLabelText('Copy to clipboard');
+
+        expect(() => fireEvent.click(copyButton)).not.toThrow();
+      });
+    });
+  });
 });

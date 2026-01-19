@@ -24,7 +24,7 @@ export const JsonMethodContent: React.FC<IMethodContentProps> = ({
         value={config}
         readOnly
         rows={12}
-        onInteraction={() =>
+        onCopy={() =>
           analytics.track('mcp_installed', { method: 'json', agent })
         }
       />
