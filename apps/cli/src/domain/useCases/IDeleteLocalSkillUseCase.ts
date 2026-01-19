@@ -10,6 +10,7 @@ export type IDeleteLocalSkillResult = {
   deletedPaths: string[];
   notFoundPaths: string[];
   errors: string[];
+  skippedAsUserCreated: boolean;
 };
 
 export interface IDeleteLocalSkillUseCase {

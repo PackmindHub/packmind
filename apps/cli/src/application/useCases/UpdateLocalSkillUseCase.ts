@@ -120,6 +120,26 @@ export class UpdateLocalSkillUseCase implements IUpdateLocalSkillUseCase {
   ): Promise<IUpdateLocalSkillResult> {
     validateSkillName(command.skillName);
 
+    // Check if skill is Packmind-managed (exists in .packmind/skills/)
+    const packmindSkillPath = path.join(
+      command.baseDirectory,
+      '.packmind/skills',
+      command.skillName,
+    );
+    const isPackmindManaged = await this.deps.pathExists(packmindSkillPath);
+
+    if (!isPackmindManaged) {
+      return {
+        updatedPaths: [],
+        notFoundPaths: [],
+        filesUpdated: 0,
+        filesCreated: 0,
+        filesDeleted: 0,
+        errors: [],
+        skippedAsUserCreated: true,
+      };
+    }
+
     const sourceExists = await this.deps.pathExists(command.sourcePath);
     if (!sourceExists) {
       throw new Error(`Source path does not exist: ${command.sourcePath}`);
@@ -218,6 +238,7 @@ export class UpdateLocalSkillUseCase implements IUpdateLocalSkillUseCase {
       filesCreated: totalFilesCreated,
       filesDeleted: totalFilesDeleted,
       errors,
+      skippedAsUserCreated: false,
     };
   }
 }

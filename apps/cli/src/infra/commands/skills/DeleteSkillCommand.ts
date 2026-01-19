@@ -53,6 +53,16 @@ export const deleteSkillCommand = command({
         agents,
       });
 
+      if (result.skippedAsUserCreated) {
+        logWarningConsole(
+          `Skill "${skillName}" is not managed by Packmind. Skipping.`,
+        );
+        logInfoConsole(
+          `Only skills installed via Packmind packages can be deleted with this command.`,
+        );
+        process.exit(0);
+      }
+
       if (result.errors.length > 0) {
         for (const error of result.errors) {
           logErrorConsole(error);
