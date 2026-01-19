@@ -1,11 +1,14 @@
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import {
   Package,
   PackageId,
   PackageWithArtefacts,
+  Recipe,
   RecipeId,
   SpaceId,
+  Standard,
   StandardId,
+  Skill,
   SkillId,
   OrganizationId,
 } from '@packmind/types';
@@ -17,6 +20,14 @@ import {
   PackageSkillsSchema,
   PackageSkill,
 } from '../schemas/PackageSkillsSchema';
+import {
+  PackageRecipesSchema,
+  PackageRecipe,
+} from '../schemas/PackageRecipesSchema';
+import {
+  PackageStandardsSchema,
+  PackageStandard,
+} from '../schemas/PackageStandardsSchema';
 
 const origin = 'PackageRepository';
 
@@ -50,9 +61,9 @@ export class PackageRepository
       // Fetch packages first
       const packages = await this.repository
         .createQueryBuilder('package')
-        .where('package.spaceId = :spaceId', { spaceId })
-        .andWhere('package.deletedAt IS NULL')
-        .orderBy('package.createdAt', 'DESC')
+        .where('package.space_id = :spaceId', { spaceId })
+        .andWhere('package.deleted_at IS NULL')
+        .orderBy('package.created_at', 'DESC')
         .getMany();
 
       if (packages.length === 0) {
@@ -63,29 +74,24 @@ export class PackageRepository
       const packageIds = packages.map((p) => p.id);
 
       // Fetch recipe relations (relationships are cleaned up when recipes are deleted)
-      const recipeRelations = await this.repository.manager
-        .createQueryBuilder()
-        .select(['pr.package_id as package_id', 'pr.recipe_id as recipe_id'])
-        .from('package_recipes', 'pr')
-        .where('pr.package_id IN (:...packageIds)', { packageIds })
-        .getRawMany();
+      const recipeRelations: PackageRecipe[] = await this.repository.manager
+        .getRepository(PackageRecipesSchema)
+        .find({
+          where: { package_id: In(packageIds) },
+        });
 
       // Fetch standard relations (relationships are cleaned up when standards are deleted)
-      const standardRelations = await this.repository.manager
-        .createQueryBuilder()
-        .select([
-          'ps.package_id as package_id',
-          'ps.standard_id as standard_id',
-        ])
-        .from('package_standards', 'ps')
-        .where('ps.package_id IN (:...packageIds)', { packageIds })
-        .getRawMany();
+      const standardRelations: PackageStandard[] = await this.repository.manager
+        .getRepository(PackageStandardsSchema)
+        .find({
+          where: { package_id: In(packageIds) },
+        });
 
       // Fetch skill relations (relationships are cleaned up when skills are deleted)
       const skillRelations: PackageSkill[] = await this.repository.manager
         .getRepository(PackageSkillsSchema)
         .find({
-          where: packageIds.map((id) => ({ package_id: id })),
+          where: { package_id: In(packageIds) },
         });
 
       // Group relations by package ID
@@ -149,10 +155,9 @@ export class PackageRepository
       // Fetch packages first
       const packages = await this.repository
         .createQueryBuilder('package')
-        .innerJoin('spaces', 'sp', 'package.spaceId = sp.id')
-        .where('sp.organizationId = :organizationId', { organizationId })
-        .andWhere('package.deletedAt IS NULL')
-        .orderBy('package.createdAt', 'DESC')
+        .innerJoin('spaces', 'space', 'package.space_id = space.id')
+        .where('space.organization_id = :organizationId', { organizationId })
+        .orderBy('package.created_at', 'DESC')
         .getMany();
 
       if (packages.length === 0) {
@@ -165,29 +170,24 @@ export class PackageRepository
       const packageIds = packages.map((p) => p.id);
 
       // Fetch recipe relations (relationships are cleaned up when recipes are deleted)
-      const recipeRelations = await this.repository.manager
-        .createQueryBuilder()
-        .select(['pr.package_id as package_id', 'pr.recipe_id as recipe_id'])
-        .from('package_recipes', 'pr')
-        .where('pr.package_id IN (:...packageIds)', { packageIds })
-        .getRawMany();
+      const recipeRelations: PackageRecipe[] = await this.repository.manager
+        .getRepository(PackageRecipesSchema)
+        .find({
+          where: { package_id: In(packageIds) },
+        });
 
       // Fetch standard relations (relationships are cleaned up when standards are deleted)
-      const standardRelations = await this.repository.manager
-        .createQueryBuilder()
-        .select([
-          'ps.package_id as package_id',
-          'ps.standard_id as standard_id',
-        ])
-        .from('package_standards', 'ps')
-        .where('ps.package_id IN (:...packageIds)', { packageIds })
-        .getRawMany();
+      const standardRelations: PackageStandard[] = await this.repository.manager
+        .getRepository(PackageStandardsSchema)
+        .find({
+          where: { package_id: In(packageIds) },
+        });
 
       // Fetch skill relations (relationships are cleaned up when skills are deleted)
       const skillRelations: PackageSkill[] = await this.repository.manager
         .getRepository(PackageSkillsSchema)
         .find({
-          where: packageIds.map((id) => ({ package_id: id })),
+          where: { package_id: In(packageIds) },
         });
 
       // Group relations by package ID
@@ -313,13 +313,25 @@ export class PackageRepository
     });
 
     try {
+      // First get space IDs for the organization
+      const spaceIds = await this.repository.manager
+        .createQueryBuilder()
+        .select('space.id')
+        .from('spaces', 'space')
+        .where('space.organization_id = :organizationId', { organizationId })
+        .getRawMany()
+        .then((rows) => rows.map((r) => r.space_id));
+
+      if (spaceIds.length === 0) {
+        return [];
+      }
+
+      // Then find packages by slugs within those spaces
       const packages = await this.repository
         .createQueryBuilder('package')
-        .innerJoin('spaces', 'sp', 'package.spaceId = sp.id')
         .where('package.slug IN (:...slugs)', { slugs })
-        .andWhere('sp.organizationId = :organizationId', { organizationId })
-        .andWhere('package.deletedAt IS NULL')
-        .orderBy('package.createdAt', 'DESC')
+        .andWhere('package.space_id IN (:...spaceIds)', { spaceIds })
+        .orderBy('package.created_at', 'DESC')
         .getMany();
 
       if (packages.length === 0) {
@@ -328,27 +340,22 @@ export class PackageRepository
 
       const packageIds = packages.map((p) => p.id);
 
-      const recipeRelations = await this.repository.manager
-        .createQueryBuilder()
-        .select(['pr.package_id as package_id', 'pr.recipe_id as recipe_id'])
-        .from('package_recipes', 'pr')
-        .where('pr.package_id IN (:...packageIds)', { packageIds })
-        .getRawMany();
+      const recipeRelations: PackageRecipe[] = await this.repository.manager
+        .getRepository(PackageRecipesSchema)
+        .find({
+          where: { package_id: In(packageIds) },
+        });
 
-      const standardRelations = await this.repository.manager
-        .createQueryBuilder()
-        .select([
-          'ps.package_id as package_id',
-          'ps.standard_id as standard_id',
-        ])
-        .from('package_standards', 'ps')
-        .where('ps.package_id IN (:...packageIds)', { packageIds })
-        .getRawMany();
+      const standardRelations: PackageStandard[] = await this.repository.manager
+        .getRepository(PackageStandardsSchema)
+        .find({
+          where: { package_id: In(packageIds) },
+        });
 
       const skillRelations: PackageSkill[] = await this.repository.manager
         .getRepository(PackageSkillsSchema)
         .find({
-          where: packageIds.map((id) => ({ package_id: id })),
+          where: { package_id: In(packageIds) },
         });
 
       const uniqueRecipeIds = [
@@ -361,19 +368,19 @@ export class PackageRepository
         ...new Set(skillRelations.map((s) => s.skill_id)),
       ];
 
-      const recipes =
+      const recipes: Recipe[] =
         uniqueRecipeIds.length > 0
-          ? await this.repository.manager
+          ? ((await this.repository.manager
               .createQueryBuilder()
               .select('recipe')
               .from('recipes', 'recipe')
               .where('recipe.id IN (:...recipeIds)', {
                 recipeIds: uniqueRecipeIds,
               })
-              .getMany()
+              .getMany()) as Recipe[])
           : [];
 
-      const standards =
+      const standards: Standard[] =
         uniqueStandardIds.length > 0
           ? await this.repository.manager
               .createQueryBuilder()
@@ -404,26 +411,29 @@ export class PackageRepository
               })
               .getRawMany()
               .then((rows) =>
-                rows.map((row) => ({
-                  id: row.standard_id,
-                  name: row.standard_name,
-                  slug: row.standard_slug,
-                  description: row.standard_description,
-                  version: row.standard_version,
-                  gitCommitId: row.standard_git_commit_id,
-                  userId: row.standard_user_id,
-                  scope: row.standard_scope,
-                  spaceId: row.standard_space_id,
-                  createdAt: row.standard_created_at,
-                  updatedAt: row.standard_updated_at,
-                  deletedAt: row.standard_deleted_at,
-                  deletedBy: row.standard_deleted_by,
-                  summary: row.sv_summary || undefined,
-                })),
+                rows.map(
+                  (row) =>
+                    ({
+                      id: row.standard_id,
+                      name: row.standard_name,
+                      slug: row.standard_slug,
+                      description: row.standard_description,
+                      version: row.standard_version,
+                      gitCommitId: row.standard_git_commit_id,
+                      userId: row.standard_user_id,
+                      scope: row.standard_scope,
+                      spaceId: row.standard_space_id,
+                      createdAt: row.standard_created_at,
+                      updatedAt: row.standard_updated_at,
+                      deletedAt: row.standard_deleted_at,
+                      deletedBy: row.standard_deleted_by,
+                      summary: row.sv_summary || undefined,
+                    }) as Standard,
+                ),
               )
           : [];
 
-      const skills =
+      const skills: Skill[] =
         uniqueSkillIds.length > 0
           ? await this.repository.manager
               .createQueryBuilder()
@@ -451,30 +461,35 @@ export class PackageRepository
               })
               .getRawMany()
               .then((rows) =>
-                rows.map((row) => ({
-                  id: row.skill_id,
-                  name: row.skill_name,
-                  slug: row.skill_slug,
-                  version: row.skill_version,
-                  description: row.skill_description,
-                  prompt: row.skill_prompt,
-                  license: row.skill_license || undefined,
-                  compatibility: row.skill_compatibility || undefined,
-                  metadata: row.skill_metadata || undefined,
-                  allowedTools: row.skill_allowed_tools || undefined,
-                  spaceId: row.skill_space_id,
-                  userId: row.skill_user_id,
-                  createdAt: row.skill_created_at,
-                  updatedAt: row.skill_updated_at,
-                  deletedAt: row.skill_deleted_at,
-                  deletedBy: row.skill_deleted_by,
-                })),
+                rows.map(
+                  (row) =>
+                    ({
+                      id: row.skill_id,
+                      name: row.skill_name,
+                      slug: row.skill_slug,
+                      version: row.skill_version,
+                      description: row.skill_description,
+                      prompt: row.skill_prompt,
+                      license: row.skill_license || undefined,
+                      compatibility: row.skill_compatibility || undefined,
+                      metadata: row.skill_metadata || undefined,
+                      allowedTools: row.skill_allowed_tools || undefined,
+                      spaceId: row.skill_space_id,
+                      userId: row.skill_user_id,
+                      createdAt: row.skill_created_at,
+                      updatedAt: row.skill_updated_at,
+                      deletedAt: row.skill_deleted_at,
+                      deletedBy: row.skill_deleted_by,
+                    }) as Skill,
+                ),
               )
           : [];
 
-      const recipesMap = new Map(recipes.map((r) => [r['id'], r]));
-      const standardsMap = new Map(standards.map((s) => [s['id'], s]));
-      const skillsMap = new Map(skills.map((s) => [s['id'], s]));
+      const recipesMap = new Map<string, Recipe>(recipes.map((r) => [r.id, r]));
+      const standardsMap = new Map<string, Standard>(
+        standards.map((s) => [s.id, s]),
+      );
+      const skillsMap = new Map<string, Skill>(skills.map((s) => [s.id, s]));
 
       const recipesByPackage = recipeRelations.reduce(
         (acc, rel) => {
@@ -483,7 +498,7 @@ export class PackageRepository
           if (recipe) acc[rel.package_id].push(recipe);
           return acc;
         },
-        {} as Record<string, typeof recipes>,
+        {} as Record<string, Recipe[]>,
       );
 
       const standardsByPackage = standardRelations.reduce(
@@ -493,7 +508,7 @@ export class PackageRepository
           if (standard) acc[rel.package_id].push(standard);
           return acc;
         },
-        {} as Record<string, typeof standards>,
+        {} as Record<string, Standard[]>,
       );
 
       const skillsByPackage = skillRelations.reduce(
@@ -503,7 +518,7 @@ export class PackageRepository
           if (skill) acc[rel.package_id].push(skill);
           return acc;
         },
-        {} as Record<string, typeof skills>,
+        {} as Record<string, Skill[]>,
       );
 
       const packagesWithArtefacts: PackageWithArtefacts[] = packages.map(

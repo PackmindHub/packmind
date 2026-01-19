@@ -91,7 +91,11 @@ describe('ListPackagesBySpaceUsecase', () => {
 
   describe('execute', () => {
     describe('when space exists and belongs to organization', () => {
-      it('returns packages for the space', async () => {
+      let result: { packages: ReturnType<typeof packageFactory>[] };
+      let package1: ReturnType<typeof packageFactory>;
+      let package2: ReturnType<typeof packageFactory>;
+
+      beforeEach(async () => {
         const mockSpace: Space = {
           id: spaceId,
           slug: 'test-space',
@@ -99,11 +103,11 @@ describe('ListPackagesBySpaceUsecase', () => {
           organizationId,
         };
 
-        const package1 = packageFactory({
+        package1 = packageFactory({
           spaceId,
           name: 'Package 1',
         });
-        const package2 = packageFactory({
+        package2 = packageFactory({
           spaceId,
           name: 'Package 2',
         });
@@ -120,10 +124,18 @@ describe('ListPackagesBySpaceUsecase', () => {
           spaceId,
         };
 
-        const result = await useCase.execute(command);
+        result = await useCase.execute(command);
+      });
 
+      it('returns packages for the space', () => {
         expect(result).toEqual({ packages: [package1, package2] });
+      });
+
+      it('retrieves space by id', () => {
         expect(mockSpacesPort.getSpaceById).toHaveBeenCalledWith(spaceId);
+      });
+
+      it('retrieves packages by space id', () => {
         expect(mockPackageService.getPackagesBySpaceId).toHaveBeenCalledWith(
           spaceId,
         );
@@ -131,7 +143,9 @@ describe('ListPackagesBySpaceUsecase', () => {
     });
 
     describe('when space has no packages', () => {
-      it('returns empty packages array', async () => {
+      let result: { packages: ReturnType<typeof packageFactory>[] };
+
+      beforeEach(async () => {
         const mockSpace: Space = {
           id: spaceId,
           slug: 'test-space',
@@ -148,10 +162,18 @@ describe('ListPackagesBySpaceUsecase', () => {
           spaceId,
         };
 
-        const result = await useCase.execute(command);
+        result = await useCase.execute(command);
+      });
 
+      it('returns empty packages array', () => {
         expect(result).toEqual({ packages: [] });
+      });
+
+      it('retrieves space by id', () => {
         expect(mockSpacesPort.getSpaceById).toHaveBeenCalledWith(spaceId);
+      });
+
+      it('retrieves packages by space id', () => {
         expect(mockPackageService.getPackagesBySpaceId).toHaveBeenCalledWith(
           spaceId,
         );
@@ -159,7 +181,9 @@ describe('ListPackagesBySpaceUsecase', () => {
     });
 
     describe('when space does not exist', () => {
-      it('throws error', async () => {
+      let executionPromise: Promise<unknown>;
+
+      beforeEach(() => {
         mockSpacesPort.getSpaceById.mockResolvedValue(null);
 
         const command: ListPackagesBySpaceCommand = {
@@ -168,17 +192,34 @@ describe('ListPackagesBySpaceUsecase', () => {
           spaceId,
         };
 
-        await expect(useCase.execute(command)).rejects.toThrow(
+        executionPromise = useCase.execute(command);
+      });
+
+      it('throws error', async () => {
+        await expect(executionPromise).rejects.toThrow(
           `Space with id ${spaceId} not found`,
         );
+      });
 
+      it('retrieves space by id', async () => {
+        await executionPromise.catch(() => {
+          /* expected rejection */
+        });
         expect(mockSpacesPort.getSpaceById).toHaveBeenCalledWith(spaceId);
+      });
+
+      it('does not retrieve packages', async () => {
+        await executionPromise.catch(() => {
+          /* expected rejection */
+        });
         expect(mockPackageService.getPackagesBySpaceId).not.toHaveBeenCalled();
       });
     });
 
     describe('when space belongs to different organization', () => {
-      it('throws error', async () => {
+      let executionPromise: Promise<unknown>;
+
+      beforeEach(() => {
         const differentOrgId = createOrganizationId(uuidv4());
         const mockSpace: Space = {
           id: spaceId,
@@ -195,11 +236,26 @@ describe('ListPackagesBySpaceUsecase', () => {
           spaceId,
         };
 
-        await expect(useCase.execute(command)).rejects.toThrow(
+        executionPromise = useCase.execute(command);
+      });
+
+      it('throws error', async () => {
+        await expect(executionPromise).rejects.toThrow(
           `Space ${spaceId} does not belong to organization ${organizationId}`,
         );
+      });
 
+      it('retrieves space by id', async () => {
+        await executionPromise.catch(() => {
+          /* expected rejection */
+        });
         expect(mockSpacesPort.getSpaceById).toHaveBeenCalledWith(spaceId);
+      });
+
+      it('does not retrieve packages', async () => {
+        await executionPromise.catch(() => {
+          /* expected rejection */
+        });
         expect(mockPackageService.getPackagesBySpaceId).not.toHaveBeenCalled();
       });
     });

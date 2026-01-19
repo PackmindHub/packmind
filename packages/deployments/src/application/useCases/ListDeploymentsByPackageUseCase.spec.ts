@@ -35,7 +35,7 @@ describe('ListDeploymentsByPackageUseCase', () => {
   });
 
   describe('execute', () => {
-    it('lists distributions for a package', async () => {
+    describe('when listing distributions for a package', () => {
       const command: ListDeploymentsByPackageCommand = {
         packageId: createPackageId('package-123'),
         organizationId: 'org-456' as OrganizationId,
@@ -58,16 +58,23 @@ describe('ListDeploymentsByPackageUseCase', () => {
           renderModes: [],
         },
       ];
+      let result: Distribution[];
 
-      mockRepository.listByPackageId.mockResolvedValue(mockDistributions);
+      beforeEach(async () => {
+        mockRepository.listByPackageId.mockResolvedValue(mockDistributions);
+        result = await useCase.execute(command);
+      });
 
-      const result = await useCase.execute(command);
+      it('returns the distributions', () => {
+        expect(result).toEqual(mockDistributions);
+      });
 
-      expect(result).toEqual(mockDistributions);
-      expect(mockRepository.listByPackageId).toHaveBeenCalledWith(
-        command.packageId,
-        command.organizationId,
-      );
+      it('calls repository with correct parameters', () => {
+        expect(mockRepository.listByPackageId).toHaveBeenCalledWith(
+          command.packageId,
+          command.organizationId,
+        );
+      });
     });
 
     describe('when listing distributions fails', () => {

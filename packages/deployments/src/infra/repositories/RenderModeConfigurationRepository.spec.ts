@@ -86,52 +86,83 @@ describe('RenderModeConfigurationRepository', () => {
       expect(configuration).toBeNull();
     });
 
-    it('creates configuration for a new organization entry', async () => {
-      const configuration = renderModeConfigurationFactory({
-        organizationId: organization.id,
-        activeRenderModes: [RenderMode.PACKMIND, RenderMode.AGENTS_MD],
+    describe('when creating a new configuration', () => {
+      let configuration: RenderModeConfiguration;
+      let storedConfiguration: RenderModeConfiguration;
+      let foundConfiguration: RenderModeConfiguration | null;
+
+      beforeEach(async () => {
+        configuration = renderModeConfigurationFactory({
+          organizationId: organization.id,
+          activeRenderModes: [RenderMode.PACKMIND, RenderMode.AGENTS_MD],
+        });
+
+        storedConfiguration = await repository.upsert(configuration);
+        foundConfiguration = await repository.findByOrganizationId(
+          organization.id,
+        );
       });
 
-      const storedConfiguration = await repository.upsert(configuration);
-
-      expect(storedConfiguration).toMatchObject({
-        organizationId: organization.id,
-        activeRenderModes: [RenderMode.PACKMIND, RenderMode.AGENTS_MD],
+      it('returns the stored configuration with correct organization id', async () => {
+        expect(storedConfiguration.organizationId).toEqual(organization.id);
       });
 
-      const foundConfiguration = await repository.findByOrganizationId(
-        organization.id,
-      );
-      expect(foundConfiguration).not.toBeNull();
-      expect(foundConfiguration?.id).toEqual(configuration.id);
-      expect(foundConfiguration?.activeRenderModes).toEqual([
-        RenderMode.PACKMIND,
-        RenderMode.AGENTS_MD,
-      ]);
+      it('returns the stored configuration with correct active render modes', async () => {
+        expect(storedConfiguration.activeRenderModes).toEqual([
+          RenderMode.PACKMIND,
+          RenderMode.AGENTS_MD,
+        ]);
+      });
+
+      it('persists the configuration to the database', async () => {
+        expect(foundConfiguration).not.toBeNull();
+      });
+
+      it('persists the configuration with the correct id', async () => {
+        expect(foundConfiguration?.id).toEqual(configuration.id);
+      });
+
+      it('persists the configuration with the correct active render modes', async () => {
+        expect(foundConfiguration?.activeRenderModes).toEqual([
+          RenderMode.PACKMIND,
+          RenderMode.AGENTS_MD,
+        ]);
+      });
     });
   });
 
   describe('when configuration already exists', () => {
-    it('updates configuration for matching organization', async () => {
-      const configuration = renderModeConfigurationFactory({
-        organizationId: organization.id,
-        activeRenderModes: [RenderMode.PACKMIND, RenderMode.AGENTS_MD],
+    describe('when updating the configuration', () => {
+      let configuration: RenderModeConfiguration;
+      let updatedModes: RenderMode[];
+      let updatedConfiguration: RenderModeConfiguration;
+      let persistedConfiguration: RenderModeConfiguration | null;
+
+      beforeEach(async () => {
+        configuration = renderModeConfigurationFactory({
+          organizationId: organization.id,
+          activeRenderModes: [RenderMode.PACKMIND, RenderMode.AGENTS_MD],
+        });
+        await repository.add(configuration);
+
+        updatedModes = [RenderMode.PACKMIND, RenderMode.CLAUDE];
+
+        updatedConfiguration = await repository.upsert({
+          ...configuration,
+          activeRenderModes: updatedModes,
+        });
+        persistedConfiguration = await repository.findByOrganizationId(
+          organization.id,
+        );
       });
-      await repository.add(configuration);
 
-      const updatedModes = [RenderMode.PACKMIND, RenderMode.CLAUDE];
-
-      const updatedConfiguration = await repository.upsert({
-        ...configuration,
-        activeRenderModes: updatedModes,
+      it('returns the updated configuration with new active render modes', async () => {
+        expect(updatedConfiguration.activeRenderModes).toEqual(updatedModes);
       });
 
-      expect(updatedConfiguration.activeRenderModes).toEqual(updatedModes);
-
-      const persistedConfiguration = await repository.findByOrganizationId(
-        organization.id,
-      );
-      expect(persistedConfiguration?.activeRenderModes).toEqual(updatedModes);
+      it('persists the updated configuration to the database', async () => {
+        expect(persistedConfiguration?.activeRenderModes).toEqual(updatedModes);
+      });
     });
 
     it('finds configuration by organization id', async () => {

@@ -30,7 +30,7 @@ describe('GetTargetsByGitRepoUseCase', () => {
       userId: createUserId('user-123'),
     };
 
-    it('returns targets for a repository', async () => {
+    describe('when targets exist for repository', () => {
       const mockTargets: Target[] = [
         {
           id: createTargetId('target-1'),
@@ -45,24 +45,37 @@ describe('GetTargetsByGitRepoUseCase', () => {
           gitRepoId: mockCommand.gitRepoId,
         },
       ];
+      let result: Target[];
 
-      mockTargetService.getTargetsByGitRepoId.mockResolvedValue(mockTargets);
+      beforeEach(async () => {
+        mockTargetService.getTargetsByGitRepoId.mockResolvedValue(mockTargets);
+        result = await useCase.execute(mockCommand);
+      });
 
-      const result = await useCase.execute(mockCommand);
+      it('returns the targets', () => {
+        expect(result).toEqual(mockTargets);
+      });
 
-      expect(result).toEqual(mockTargets);
-      expect(mockTargetService.getTargetsByGitRepoId).toHaveBeenCalledWith(
-        mockCommand.gitRepoId,
-      );
+      it('calls the target service with the git repo id', () => {
+        expect(mockTargetService.getTargetsByGitRepoId).toHaveBeenCalledWith(
+          mockCommand.gitRepoId,
+        );
+      });
     });
 
     describe('when no targets exist for repository', () => {
-      it('returns empty array', async () => {
+      let result: Target[];
+
+      beforeEach(async () => {
         mockTargetService.getTargetsByGitRepoId.mockResolvedValue([]);
+        result = await useCase.execute(mockCommand);
+      });
 
-        const result = await useCase.execute(mockCommand);
-
+      it('returns empty array', () => {
         expect(result).toEqual([]);
+      });
+
+      it('calls the target service with the git repo id', () => {
         expect(mockTargetService.getTargetsByGitRepoId).toHaveBeenCalledWith(
           mockCommand.gitRepoId,
         );
@@ -70,14 +83,20 @@ describe('GetTargetsByGitRepoUseCase', () => {
     });
 
     describe('when repository errors occur', () => {
-      it('re-throws the error', async () => {
-        const error = new Error('Database connection failed');
-        mockTargetService.getTargetsByGitRepoId.mockRejectedValue(error);
+      const error = new Error('Database connection failed');
 
+      beforeEach(async () => {
+        mockTargetService.getTargetsByGitRepoId.mockRejectedValue(error);
+        await expect(useCase.execute(mockCommand)).rejects.toThrow();
+      });
+
+      it('re-throws the error', async () => {
         await expect(useCase.execute(mockCommand)).rejects.toThrow(
           'Database connection failed',
         );
+      });
 
+      it('calls the target service with the git repo id', () => {
         expect(mockTargetService.getTargetsByGitRepoId).toHaveBeenCalledWith(
           mockCommand.gitRepoId,
         );
@@ -85,10 +104,13 @@ describe('GetTargetsByGitRepoUseCase', () => {
     });
 
     describe('when non-Error exceptions occur', () => {
-      it('re-throws the exception', async () => {
-        const error = 'String error';
-        mockTargetService.getTargetsByGitRepoId.mockRejectedValue(error);
+      beforeEach(() => {
+        mockTargetService.getTargetsByGitRepoId.mockRejectedValue(
+          'String error',
+        );
+      });
 
+      it('re-throws the exception', async () => {
         await expect(useCase.execute(mockCommand)).rejects.toBe('String error');
       });
     });

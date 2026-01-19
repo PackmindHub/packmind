@@ -155,7 +155,9 @@ describe('AddArtefactsToPackageUsecase', () => {
 
   describe('execute', () => {
     describe('when adding new recipes and standards to package', () => {
-      it('adds artefacts and returns updated package', async () => {
+      let result: Awaited<ReturnType<typeof useCase.execute>>;
+
+      beforeEach(async () => {
         const existingPackage = packageFactory({
           id: packageId,
           name: 'My Package',
@@ -196,14 +198,25 @@ describe('AddArtefactsToPackageUsecase', () => {
           standardIds: [standardId1, standardId2],
         };
 
-        const result = await useCase.execute(command);
+        result = await useCase.execute(command);
+      });
 
+      it('returns updated package with recipes', () => {
         expect(result.package.recipes).toEqual([recipeId1, recipeId2]);
+      });
+
+      it('returns updated package with standards', () => {
         expect(result.package.standards).toEqual([standardId1, standardId2]);
+      });
+
+      it('calls addRecipes with correct arguments', () => {
         expect(mockPackageRepository.addRecipes).toHaveBeenCalledWith(
           packageId,
           [recipeId1, recipeId2],
         );
+      });
+
+      it('calls addStandards with correct arguments', () => {
         expect(mockPackageRepository.addStandards).toHaveBeenCalledWith(
           packageId,
           [standardId1, standardId2],
@@ -212,7 +225,9 @@ describe('AddArtefactsToPackageUsecase', () => {
     });
 
     describe('when adding only recipes to package', () => {
-      it('adds recipes without calling standards port', async () => {
+      let result: Awaited<ReturnType<typeof useCase.execute>>;
+
+      beforeEach(async () => {
         const existingPackage = packageFactory({
           id: packageId,
           name: 'My Package',
@@ -245,20 +260,33 @@ describe('AddArtefactsToPackageUsecase', () => {
           recipeIds: [recipeId1],
         };
 
-        const result = await useCase.execute(command);
+        result = await useCase.execute(command);
+      });
 
+      it('returns updated package with recipes', () => {
         expect(result.package.recipes).toEqual([recipeId1]);
+      });
+
+      it('calls addRecipes with correct arguments', () => {
         expect(mockPackageRepository.addRecipes).toHaveBeenCalledWith(
           packageId,
           [recipeId1],
         );
+      });
+
+      it('does not call standards port', () => {
         expect(mockStandardsPort.getStandard).not.toHaveBeenCalled();
+      });
+
+      it('does not call addStandards', () => {
         expect(mockPackageRepository.addStandards).not.toHaveBeenCalled();
       });
     });
 
     describe('when adding only standards to package', () => {
-      it('adds standards without calling recipes port', async () => {
+      let result: Awaited<ReturnType<typeof useCase.execute>>;
+
+      beforeEach(async () => {
         const existingPackage = packageFactory({
           id: packageId,
           name: 'My Package',
@@ -289,20 +317,31 @@ describe('AddArtefactsToPackageUsecase', () => {
           standardIds: [standardId1],
         };
 
-        const result = await useCase.execute(command);
+        result = await useCase.execute(command);
+      });
 
+      it('returns updated package with standards', () => {
         expect(result.package.standards).toEqual([standardId1]);
+      });
+
+      it('calls addStandards with correct arguments', () => {
         expect(mockPackageRepository.addStandards).toHaveBeenCalledWith(
           packageId,
           [standardId1],
         );
+      });
+
+      it('does not call recipes port', () => {
         expect(mockRecipesPort.getRecipeByIdInternal).not.toHaveBeenCalled();
+      });
+
+      it('does not call addRecipes', () => {
         expect(mockPackageRepository.addRecipes).not.toHaveBeenCalled();
       });
     });
 
     describe('when adding artefacts that already exist in package', () => {
-      it('filters out duplicates and adds only new artefacts', async () => {
+      beforeEach(async () => {
         const existingPackage = packageFactory({
           id: packageId,
           name: 'My Package',
@@ -340,17 +379,34 @@ describe('AddArtefactsToPackageUsecase', () => {
         };
 
         await useCase.execute(command);
+      });
 
+      it('calls getRecipeByIdInternal only for new recipe', () => {
         expect(mockRecipesPort.getRecipeByIdInternal).toHaveBeenCalledTimes(1);
+      });
+
+      it('fetches only the new recipe', () => {
         expect(mockRecipesPort.getRecipeByIdInternal).toHaveBeenCalledWith(
           recipeId2,
         );
+      });
+
+      it('calls getStandard only for new standard', () => {
         expect(mockStandardsPort.getStandard).toHaveBeenCalledTimes(1);
+      });
+
+      it('fetches only the new standard', () => {
         expect(mockStandardsPort.getStandard).toHaveBeenCalledWith(standardId2);
+      });
+
+      it('calls addRecipes with only new recipe', () => {
         expect(mockPackageRepository.addRecipes).toHaveBeenCalledWith(
           packageId,
           [recipeId2],
         );
+      });
+
+      it('calls addStandards with only new standard', () => {
         expect(mockPackageRepository.addStandards).toHaveBeenCalledWith(
           packageId,
           [standardId2],
@@ -359,7 +415,7 @@ describe('AddArtefactsToPackageUsecase', () => {
     });
 
     describe('when all artefacts already exist in package', () => {
-      it('does not add any artefacts', async () => {
+      beforeEach(async () => {
         const existingPackage = packageFactory({
           id: packageId,
           name: 'My Package',
@@ -385,16 +441,29 @@ describe('AddArtefactsToPackageUsecase', () => {
         };
 
         await useCase.execute(command);
+      });
 
+      it('does not call getRecipeByIdInternal', () => {
         expect(mockRecipesPort.getRecipeByIdInternal).not.toHaveBeenCalled();
+      });
+
+      it('does not call getStandard', () => {
         expect(mockStandardsPort.getStandard).not.toHaveBeenCalled();
+      });
+
+      it('does not call addRecipes', () => {
         expect(mockPackageRepository.addRecipes).not.toHaveBeenCalled();
+      });
+
+      it('does not call addStandards', () => {
         expect(mockPackageRepository.addStandards).not.toHaveBeenCalled();
       });
     });
 
     describe('when package does not exist', () => {
-      it('throws error', async () => {
+      let executePromise: Promise<unknown>;
+
+      beforeEach(() => {
         mockPackageService.findById.mockResolvedValue(null);
 
         const command: AddArtefactsToPackageCommand = {
@@ -405,18 +474,41 @@ describe('AddArtefactsToPackageUsecase', () => {
           standardIds: [standardId1],
         };
 
-        await expect(useCase.execute(command)).rejects.toThrow(
+        executePromise = useCase.execute(command);
+      });
+
+      it('throws error with package id', async () => {
+        await expect(executePromise).rejects.toThrow(
           `Package with id ${packageId} not found`,
         );
+      });
 
+      it('calls findById with package id', async () => {
+        await executePromise.catch(() => {
+          /* expected rejection */
+        });
         expect(mockPackageService.findById).toHaveBeenCalledWith(packageId);
+      });
+
+      it('does not call addRecipes', async () => {
+        await executePromise.catch(() => {
+          /* expected rejection */
+        });
         expect(mockPackageRepository.addRecipes).not.toHaveBeenCalled();
+      });
+
+      it('does not call addStandards', async () => {
+        await executePromise.catch(() => {
+          /* expected rejection */
+        });
         expect(mockPackageRepository.addStandards).not.toHaveBeenCalled();
       });
     });
 
     describe('when space does not exist', () => {
-      it('throws error', async () => {
+      let executePromise: Promise<unknown>;
+
+      beforeEach(() => {
         const existingPackage = packageFactory({
           id: packageId,
           name: 'My Package',
@@ -438,18 +530,35 @@ describe('AddArtefactsToPackageUsecase', () => {
           recipeIds: [recipeId1],
         };
 
-        await expect(useCase.execute(command)).rejects.toThrow(
+        executePromise = useCase.execute(command);
+      });
+
+      it('throws error with space id', async () => {
+        await expect(executePromise).rejects.toThrow(
           `Space with id ${spaceId} not found`,
         );
+      });
 
+      it('calls getSpaceById with space id', async () => {
+        await executePromise.catch(() => {
+          /* expected rejection */
+        });
         expect(mockSpacesPort.getSpaceById).toHaveBeenCalledWith(spaceId);
+      });
+
+      it('does not call addRecipes', async () => {
+        await executePromise.catch(() => {
+          /* expected rejection */
+        });
         expect(mockPackageRepository.addRecipes).not.toHaveBeenCalled();
       });
     });
 
     describe('when space belongs to different organization', () => {
-      it('throws error', async () => {
-        const differentOrgId = createOrganizationId(uuidv4());
+      let executePromise: Promise<unknown>;
+      const differentOrgId = createOrganizationId(uuidv4());
+
+      beforeEach(() => {
         const existingPackage = packageFactory({
           id: packageId,
           name: 'My Package',
@@ -477,17 +586,34 @@ describe('AddArtefactsToPackageUsecase', () => {
           recipeIds: [recipeId1],
         };
 
-        await expect(useCase.execute(command)).rejects.toThrow(
+        executePromise = useCase.execute(command);
+      });
+
+      it('throws error with package and organization ids', async () => {
+        await expect(executePromise).rejects.toThrow(
           `Package ${packageId} does not belong to organization ${organizationId}`,
         );
+      });
 
+      it('calls getSpaceById with space id', async () => {
+        await executePromise.catch(() => {
+          /* expected rejection */
+        });
         expect(mockSpacesPort.getSpaceById).toHaveBeenCalledWith(spaceId);
+      });
+
+      it('does not call addRecipes', async () => {
+        await executePromise.catch(() => {
+          /* expected rejection */
+        });
         expect(mockPackageRepository.addRecipes).not.toHaveBeenCalled();
       });
     });
 
     describe('when recipe does not exist', () => {
-      it('throws error', async () => {
+      let executePromise: Promise<unknown>;
+
+      beforeEach(() => {
         const existingPackage = packageFactory({
           id: packageId,
           name: 'My Package',
@@ -511,20 +637,37 @@ describe('AddArtefactsToPackageUsecase', () => {
           recipeIds: [recipeId1],
         };
 
-        await expect(useCase.execute(command)).rejects.toThrow(
+        executePromise = useCase.execute(command);
+      });
+
+      it('throws error with recipe id', async () => {
+        await expect(executePromise).rejects.toThrow(
           `Recipe with id ${recipeId1} not found`,
         );
+      });
 
+      it('calls getRecipeByIdInternal with recipe id', async () => {
+        await executePromise.catch(() => {
+          /* expected rejection */
+        });
         expect(mockRecipesPort.getRecipeByIdInternal).toHaveBeenCalledWith(
           recipeId1,
         );
+      });
+
+      it('does not call addRecipes', async () => {
+        await executePromise.catch(() => {
+          /* expected rejection */
+        });
         expect(mockPackageRepository.addRecipes).not.toHaveBeenCalled();
       });
     });
 
     describe('when recipe does not belong to space', () => {
-      it('throws error', async () => {
-        const differentSpaceId = createSpaceId(uuidv4());
+      let executePromise: Promise<unknown>;
+      const differentSpaceId = createSpaceId(uuidv4());
+
+      beforeEach(() => {
         const existingPackage = packageFactory({
           id: packageId,
           name: 'My Package',
@@ -549,19 +692,36 @@ describe('AddArtefactsToPackageUsecase', () => {
           recipeIds: [recipeId1],
         };
 
-        await expect(useCase.execute(command)).rejects.toThrow(
+        executePromise = useCase.execute(command);
+      });
+
+      it('throws error with recipe and space ids', async () => {
+        await expect(executePromise).rejects.toThrow(
           `Recipe ${recipeId1} does not belong to space ${spaceId}`,
         );
+      });
 
+      it('calls getRecipeByIdInternal with recipe id', async () => {
+        await executePromise.catch(() => {
+          /* expected rejection */
+        });
         expect(mockRecipesPort.getRecipeByIdInternal).toHaveBeenCalledWith(
           recipeId1,
         );
+      });
+
+      it('does not call addRecipes', async () => {
+        await executePromise.catch(() => {
+          /* expected rejection */
+        });
         expect(mockPackageRepository.addRecipes).not.toHaveBeenCalled();
       });
     });
 
     describe('when standard does not exist', () => {
-      it('throws error', async () => {
+      let executePromise: Promise<unknown>;
+
+      beforeEach(() => {
         const existingPackage = packageFactory({
           id: packageId,
           name: 'My Package',
@@ -585,18 +745,35 @@ describe('AddArtefactsToPackageUsecase', () => {
           standardIds: [standardId1],
         };
 
-        await expect(useCase.execute(command)).rejects.toThrow(
+        executePromise = useCase.execute(command);
+      });
+
+      it('throws error with standard id', async () => {
+        await expect(executePromise).rejects.toThrow(
           `Standard with id ${standardId1} not found`,
         );
+      });
 
+      it('calls getStandard with standard id', async () => {
+        await executePromise.catch(() => {
+          /* expected rejection */
+        });
         expect(mockStandardsPort.getStandard).toHaveBeenCalledWith(standardId1);
+      });
+
+      it('does not call addStandards', async () => {
+        await executePromise.catch(() => {
+          /* expected rejection */
+        });
         expect(mockPackageRepository.addStandards).not.toHaveBeenCalled();
       });
     });
 
     describe('when standard does not belong to space', () => {
-      it('throws error', async () => {
-        const differentSpaceId = createSpaceId(uuidv4());
+      let executePromise: Promise<unknown>;
+      const differentSpaceId = createSpaceId(uuidv4());
+
+      beforeEach(() => {
         const existingPackage = packageFactory({
           id: packageId,
           name: 'My Package',
@@ -621,17 +798,34 @@ describe('AddArtefactsToPackageUsecase', () => {
           standardIds: [standardId1],
         };
 
-        await expect(useCase.execute(command)).rejects.toThrow(
+        executePromise = useCase.execute(command);
+      });
+
+      it('throws error with standard and space ids', async () => {
+        await expect(executePromise).rejects.toThrow(
           `Standard ${standardId1} does not belong to space ${spaceId}`,
         );
+      });
 
+      it('calls getStandard with standard id', async () => {
+        await executePromise.catch(() => {
+          /* expected rejection */
+        });
         expect(mockStandardsPort.getStandard).toHaveBeenCalledWith(standardId1);
+      });
+
+      it('does not call addStandards', async () => {
+        await executePromise.catch(() => {
+          /* expected rejection */
+        });
         expect(mockPackageRepository.addStandards).not.toHaveBeenCalled();
       });
     });
 
     describe('when updated package cannot be retrieved', () => {
-      it('throws error', async () => {
+      let executePromise: Promise<unknown>;
+
+      beforeEach(() => {
         const existingPackage = packageFactory({
           id: packageId,
           name: 'My Package',
@@ -660,10 +854,19 @@ describe('AddArtefactsToPackageUsecase', () => {
           recipeIds: [recipeId1],
         };
 
-        await expect(useCase.execute(command)).rejects.toThrow(
+        executePromise = useCase.execute(command);
+      });
+
+      it('throws error with package id', async () => {
+        await expect(executePromise).rejects.toThrow(
           `Failed to retrieve updated package ${packageId}`,
         );
+      });
 
+      it('calls addRecipes before failing', async () => {
+        await executePromise.catch(() => {
+          /* expected rejection */
+        });
         expect(mockPackageRepository.addRecipes).toHaveBeenCalledWith(
           packageId,
           [recipeId1],

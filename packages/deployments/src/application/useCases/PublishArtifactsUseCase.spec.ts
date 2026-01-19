@@ -248,10 +248,15 @@ describe('PublishArtifactsUseCase', () => {
       mockGitPort.commitToGit.mockResolvedValue(gitCommit);
     });
 
-    it('returns distributions with empty distributedPackages', async () => {
+    it('returns one distribution', async () => {
       const result = await useCase.execute(command);
 
       expect(result.distributions).toHaveLength(1);
+    });
+
+    it('returns distributions with empty distributedPackages', async () => {
+      const result = await useCase.execute(command);
+
       // distributedPackages are created by PublishPackagesUseCase, not PublishArtifactsUseCase
       expect(result.distributions[0].distributedPackages).toEqual([]);
     });
@@ -260,6 +265,11 @@ describe('PublishArtifactsUseCase', () => {
       const result = await useCase.execute(command);
 
       expect(result.distributions[0].status).toBe(DistributionStatus.success);
+    });
+
+    it('stores distribution with git commit', async () => {
+      const result = await useCase.execute(command);
+
       expect(result.distributions[0].gitCommit).toEqual(gitCommit);
     });
 
@@ -288,12 +298,17 @@ describe('PublishArtifactsUseCase', () => {
       );
     });
 
-    it('uses coding agents mapped from render modes', async () => {
+    it('retrieves active render modes from configuration service', async () => {
       await useCase.execute(command);
 
       expect(
         mockRenderModeConfigurationService.getActiveRenderModes,
       ).toHaveBeenCalledWith(organizationId);
+    });
+
+    it('maps render modes to coding agents', async () => {
+      await useCase.execute(command);
+
       expect(
         mockRenderModeConfigurationService.mapRenderModesToCodingAgents,
       ).toHaveBeenCalledWith(activeRenderModes);
@@ -305,10 +320,15 @@ describe('PublishArtifactsUseCase', () => {
       expect(result.distributions[0].renderModes).toEqual(activeRenderModes);
     });
 
-    it('creates a single git commit for both artifacts', async () => {
+    it('creates exactly one git commit', async () => {
       await useCase.execute(command);
 
       expect(mockGitPort.commitToGit).toHaveBeenCalledTimes(1);
+    });
+
+    it('commits files for both recipes and standards', async () => {
+      await useCase.execute(command);
+
       expect(mockGitPort.commitToGit).toHaveBeenCalledWith(
         gitRepo,
         expect.arrayContaining([
@@ -324,14 +344,38 @@ describe('PublishArtifactsUseCase', () => {
       );
     });
 
-    it('includes both recipes and standards in commit message', async () => {
+    it('includes recipe name in commit message', async () => {
       await useCase.execute(command);
 
       const commitMessage = mockGitPort.commitToGit.mock.calls[0][2];
       expect(commitMessage).toContain('Test Recipe');
+    });
+
+    it('includes recipe slug in commit message', async () => {
+      await useCase.execute(command);
+
+      const commitMessage = mockGitPort.commitToGit.mock.calls[0][2];
       expect(commitMessage).toContain('test-recipe');
+    });
+
+    it('includes standard name in commit message', async () => {
+      await useCase.execute(command);
+
+      const commitMessage = mockGitPort.commitToGit.mock.calls[0][2];
       expect(commitMessage).toContain('Test Standard');
+    });
+
+    it('includes standard slug in commit message', async () => {
+      await useCase.execute(command);
+
+      const commitMessage = mockGitPort.commitToGit.mock.calls[0][2];
       expect(commitMessage).toContain('test-standard');
+    });
+
+    it('includes target name in commit message', async () => {
+      await useCase.execute(command);
+
+      const commitMessage = mockGitPort.commitToGit.mock.calls[0][2];
       expect(commitMessage).toContain('Production');
     });
 
@@ -412,10 +456,15 @@ describe('PublishArtifactsUseCase', () => {
       mockGitPort.commitToGit.mockResolvedValue(gitCommit);
     });
 
-    it('creates distribution with empty distributedPackages', async () => {
+    it('creates one distribution', async () => {
       const result = await useCase.execute(command);
 
       expect(result.distributions).toHaveLength(1);
+    });
+
+    it('creates distribution with empty distributedPackages', async () => {
+      const result = await useCase.execute(command);
+
       expect(result.distributions[0].distributedPackages).toEqual([]);
     });
 
@@ -499,10 +548,15 @@ describe('PublishArtifactsUseCase', () => {
       mockGitPort.commitToGit.mockResolvedValue(gitCommit);
     });
 
-    it('creates distribution with empty distributedPackages', async () => {
+    it('creates one distribution', async () => {
       const result = await useCase.execute(command);
 
       expect(result.distributions).toHaveLength(1);
+    });
+
+    it('creates distribution with empty distributedPackages', async () => {
+      const result = await useCase.execute(command);
+
       expect(result.distributions[0].distributedPackages).toEqual([]);
     });
 
@@ -774,11 +828,21 @@ describe('PublishArtifactsUseCase', () => {
       mockGitPort.commitToGit.mockResolvedValue(gitCommit);
     });
 
-    it('creates one distribution per target', async () => {
+    it('creates two distributions', async () => {
       const result = await useCase.execute(command);
 
       expect(result.distributions).toHaveLength(2);
+    });
+
+    it('assigns first target to first distribution', async () => {
+      const result = await useCase.execute(command);
+
       expect(result.distributions[0].target.id).toBe(targetId1);
+    });
+
+    it('assigns second target to second distribution', async () => {
+      const result = await useCase.execute(command);
+
       expect(result.distributions[1].target.id).toBe(targetId2);
     });
 
@@ -788,10 +852,15 @@ describe('PublishArtifactsUseCase', () => {
       expect(mockGitPort.commitToGit).toHaveBeenCalledTimes(1);
     });
 
-    it('all distributions share the same git commit', async () => {
+    it('assigns git commit to first distribution', async () => {
       const result = await useCase.execute(command);
 
       expect(result.distributions[0].gitCommit).toEqual(gitCommit);
+    });
+
+    it('assigns same git commit to second distribution', async () => {
+      const result = await useCase.execute(command);
+
       expect(result.distributions[1].gitCommit).toEqual(gitCommit);
     });
 
@@ -801,11 +870,17 @@ describe('PublishArtifactsUseCase', () => {
       expect(mockCodingAgentPort.renderArtifacts).toHaveBeenCalledTimes(2);
     });
 
-    it('includes both targets in commit message', async () => {
+    it('includes Production target in commit message', async () => {
       await useCase.execute(command);
 
       const commitMessage = mockGitPort.commitToGit.mock.calls[0][2];
       expect(commitMessage).toContain('Production');
+    });
+
+    it('includes Staging target in commit message', async () => {
+      await useCase.execute(command);
+
+      const commitMessage = mockGitPort.commitToGit.mock.calls[0][2];
       expect(commitMessage).toContain('Staging');
     });
   });
@@ -1063,19 +1138,25 @@ describe('PublishArtifactsUseCase', () => {
   });
 
   describe('when configuration is missing', () => {
-    it('uses default render modes', async () => {
-      const recipeVersion = recipeVersionFactory({
+    let recipeVersion: ReturnType<typeof recipeVersionFactory>;
+    let target: ReturnType<typeof targetFactory>;
+    let gitRepo: GitRepo;
+    let gitCommit: GitCommit;
+    let command: PublishArtifactsCommand;
+
+    beforeEach(() => {
+      recipeVersion = recipeVersionFactory({
         id: createRecipeVersionId(uuidv4()),
       });
-      const target = targetFactory({ id: targetId });
-      const gitRepo = {
+      target = targetFactory({ id: targetId });
+      gitRepo = {
         id: createGitRepoId(uuidv4()),
         owner: 'test-owner',
         repo: 'test-repo',
         branch: 'main',
         providerId: createGitProviderId(uuidv4()),
       };
-      const gitCommit = {
+      gitCommit = {
         id: createGitCommitId(uuidv4()),
         sha: 'abc123',
         message: 'Test',
@@ -1083,7 +1164,7 @@ describe('PublishArtifactsUseCase', () => {
         url: 'https://example.com',
       };
 
-      const command: PublishArtifactsCommand = {
+      command = {
         userId,
         organizationId,
         recipeVersionIds: [recipeVersion.id],
@@ -1119,12 +1200,19 @@ describe('PublishArtifactsUseCase', () => {
         delete: [],
       });
       mockGitPort.commitToGit.mockResolvedValue(gitCommit);
+    });
 
-      const result = await useCase.execute(command);
+    it('maps default render modes to coding agents', async () => {
+      await useCase.execute(command);
 
       expect(
         mockRenderModeConfigurationService.mapRenderModesToCodingAgents,
       ).toHaveBeenCalledWith(DEFAULT_ACTIVE_RENDER_MODES);
+    });
+
+    it('stores default render modes in distribution', async () => {
+      const result = await useCase.execute(command);
+
       expect(result.distributions[0].renderModes).toEqual(
         DEFAULT_ACTIVE_RENDER_MODES,
       );

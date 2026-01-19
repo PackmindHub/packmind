@@ -42,92 +42,116 @@ describe('GetTargetsByRepositoryUseCase', () => {
       userId: createUserId('user-123'),
     };
 
-    it('returns targets for a repository across all branches', async () => {
-      const mockRepositories = [
-        {
-          id: createGitRepoId('repo-main'),
-          owner: 'testowner',
-          repo: 'testrepo',
-          branch: 'main',
-          providerId: createGitProviderId('provider-1'),
-        },
-        {
-          id: createGitRepoId('repo-develop'),
-          owner: 'testowner',
-          repo: 'testrepo',
-          branch: 'develop',
-          providerId: createGitProviderId('provider-1'),
-        },
-        {
-          id: createGitRepoId('repo-other'),
-          owner: 'otherowner',
-          repo: 'otherrepo',
-          branch: 'main',
-          providerId: createGitProviderId('provider-2'),
-        },
-      ];
+    describe('when repository has targets across multiple branches', () => {
+      let result: TargetWithRepository[];
+      let mockTargetsMain: Target[];
+      let mockTargetsDevelop: Target[];
 
-      const mockTargetsMain: Target[] = [
-        {
-          id: createTargetId('target-1'),
-          name: 'Production',
-          path: '/prod',
-          gitRepoId: createGitRepoId('repo-main'),
-        },
-      ];
-
-      const mockTargetsDevelop: Target[] = [
-        {
-          id: createTargetId('target-2'),
-          name: 'Staging',
-          path: '/staging',
-          gitRepoId: createGitRepoId('repo-develop'),
-        },
-      ];
-
-      mockGitPort.getOrganizationRepositories.mockResolvedValue(
-        mockRepositories,
-      );
-      mockTargetService.getTargetsByGitRepoId
-        .mockResolvedValueOnce(mockTargetsMain)
-        .mockResolvedValueOnce(mockTargetsDevelop);
-
-      const result = await useCase.execute(mockCommand);
-
-      const expectedTargetsWithRepo: TargetWithRepository[] = [
-        {
-          ...mockTargetsMain[0],
-          repository: {
+      beforeEach(async () => {
+        const mockRepositories = [
+          {
+            id: createGitRepoId('repo-main'),
             owner: 'testowner',
             repo: 'testrepo',
             branch: 'main',
+            providerId: createGitProviderId('provider-1'),
           },
-        },
-        {
-          ...mockTargetsDevelop[0],
-          repository: {
+          {
+            id: createGitRepoId('repo-develop'),
             owner: 'testowner',
             repo: 'testrepo',
             branch: 'develop',
+            providerId: createGitProviderId('provider-1'),
           },
-        },
-      ];
+          {
+            id: createGitRepoId('repo-other'),
+            owner: 'otherowner',
+            repo: 'otherrepo',
+            branch: 'main',
+            providerId: createGitProviderId('provider-2'),
+          },
+        ];
 
-      expect(result).toEqual(expectedTargetsWithRepo);
-      expect(mockGitPort.getOrganizationRepositories).toHaveBeenCalledWith(
-        mockCommand.organizationId,
-      );
-      expect(mockTargetService.getTargetsByGitRepoId).toHaveBeenCalledTimes(2);
-      expect(mockTargetService.getTargetsByGitRepoId).toHaveBeenCalledWith(
-        createGitRepoId('repo-main'),
-      );
-      expect(mockTargetService.getTargetsByGitRepoId).toHaveBeenCalledWith(
-        createGitRepoId('repo-develop'),
-      );
+        mockTargetsMain = [
+          {
+            id: createTargetId('target-1'),
+            name: 'Production',
+            path: '/prod',
+            gitRepoId: createGitRepoId('repo-main'),
+          },
+        ];
+
+        mockTargetsDevelop = [
+          {
+            id: createTargetId('target-2'),
+            name: 'Staging',
+            path: '/staging',
+            gitRepoId: createGitRepoId('repo-develop'),
+          },
+        ];
+
+        mockGitPort.getOrganizationRepositories.mockResolvedValue(
+          mockRepositories,
+        );
+        mockTargetService.getTargetsByGitRepoId
+          .mockResolvedValueOnce(mockTargetsMain)
+          .mockResolvedValueOnce(mockTargetsDevelop);
+
+        result = await useCase.execute(mockCommand);
+      });
+
+      it('returns targets with repository information', () => {
+        const expectedTargetsWithRepo: TargetWithRepository[] = [
+          {
+            ...mockTargetsMain[0],
+            repository: {
+              owner: 'testowner',
+              repo: 'testrepo',
+              branch: 'main',
+            },
+          },
+          {
+            ...mockTargetsDevelop[0],
+            repository: {
+              owner: 'testowner',
+              repo: 'testrepo',
+              branch: 'develop',
+            },
+          },
+        ];
+
+        expect(result).toEqual(expectedTargetsWithRepo);
+      });
+
+      it('fetches organization repositories', () => {
+        expect(mockGitPort.getOrganizationRepositories).toHaveBeenCalledWith(
+          mockCommand.organizationId,
+        );
+      });
+
+      it('fetches targets for each matching repository', () => {
+        expect(mockTargetService.getTargetsByGitRepoId).toHaveBeenCalledTimes(
+          2,
+        );
+      });
+
+      it('fetches targets for main branch repository', () => {
+        expect(mockTargetService.getTargetsByGitRepoId).toHaveBeenCalledWith(
+          createGitRepoId('repo-main'),
+        );
+      });
+
+      it('fetches targets for develop branch repository', () => {
+        expect(mockTargetService.getTargetsByGitRepoId).toHaveBeenCalledWith(
+          createGitRepoId('repo-develop'),
+        );
+      });
     });
 
     describe('when no repositories match owner/repo', () => {
-      it('returns empty array', async () => {
+      let result: TargetWithRepository[];
+
+      beforeEach(async () => {
         const mockRepositories = [
           {
             id: createGitRepoId('repo-other'),
@@ -142,18 +166,28 @@ describe('GetTargetsByRepositoryUseCase', () => {
           mockRepositories,
         );
 
-        const result = await useCase.execute(mockCommand);
+        result = await useCase.execute(mockCommand);
+      });
 
+      it('returns empty array', () => {
         expect(result).toEqual([]);
+      });
+
+      it('fetches organization repositories', () => {
         expect(mockGitPort.getOrganizationRepositories).toHaveBeenCalledWith(
           mockCommand.organizationId,
         );
+      });
+
+      it('does not fetch targets', () => {
         expect(mockTargetService.getTargetsByGitRepoId).not.toHaveBeenCalled();
       });
     });
 
     describe('when matching repository has no targets', () => {
-      it('returns empty array', async () => {
+      let result: TargetWithRepository[];
+
+      beforeEach(async () => {
         const mockRepositories = [
           {
             id: createGitRepoId('repo-main'),
@@ -169,9 +203,14 @@ describe('GetTargetsByRepositoryUseCase', () => {
         );
         mockTargetService.getTargetsByGitRepoId.mockResolvedValue([]);
 
-        const result = await useCase.execute(mockCommand);
+        result = await useCase.execute(mockCommand);
+      });
 
+      it('returns empty array', () => {
         expect(result).toEqual([]);
+      });
+
+      it('fetches targets for the matching repository', () => {
         expect(mockTargetService.getTargetsByGitRepoId).toHaveBeenCalledWith(
           createGitRepoId('repo-main'),
         );
@@ -179,22 +218,26 @@ describe('GetTargetsByRepositoryUseCase', () => {
     });
 
     describe('when repository errors occur', () => {
-      it('re-throws the error', async () => {
+      let executePromise: Promise<TargetWithRepository[]>;
+
+      beforeEach(() => {
         const error = new Error('Database connection failed');
         mockGitPort.getOrganizationRepositories.mockRejectedValue(error);
 
-        await expect(useCase.execute(mockCommand)).rejects.toThrow(
-          'Database connection failed',
-        );
+        executePromise = useCase.execute(mockCommand);
+      });
 
-        expect(mockGitPort.getOrganizationRepositories).toHaveBeenCalledWith(
-          mockCommand.organizationId,
+      it('re-throws the error', async () => {
+        await expect(executePromise).rejects.toThrow(
+          'Database connection failed',
         );
       });
     });
 
     describe('when target retrieval errors occur', () => {
-      it('re-throws the error', async () => {
+      let executePromise: Promise<TargetWithRepository[]>;
+
+      beforeEach(() => {
         const mockRepositories = [
           {
             id: createGitRepoId('repo-main'),
@@ -211,13 +254,11 @@ describe('GetTargetsByRepositoryUseCase', () => {
         );
         mockTargetService.getTargetsByGitRepoId.mockRejectedValue(error);
 
-        await expect(useCase.execute(mockCommand)).rejects.toThrow(
-          'Target retrieval failed',
-        );
+        executePromise = useCase.execute(mockCommand);
+      });
 
-        expect(mockTargetService.getTargetsByGitRepoId).toHaveBeenCalledWith(
-          createGitRepoId('repo-main'),
-        );
+      it('re-throws the error', async () => {
+        await expect(executePromise).rejects.toThrow('Target retrieval failed');
       });
     });
   });

@@ -65,42 +65,61 @@ describe('FindActiveStandardVersionsByTargetUseCase', () => {
       ...overrides,
     });
 
-    it('returns active standard versions for target', async () => {
-      const command = createCommand();
-      const mockStandardVersions: StandardVersion[] = [
-        createStandardVersion({
-          id: createStandardVersionId('sv-1'),
-          standardId: createStandardId('std-1'),
-          name: 'Standard One',
-        }),
-        createStandardVersion({
-          id: createStandardVersionId('sv-2'),
-          standardId: createStandardId('std-2'),
-          name: 'Standard Two',
-        }),
-      ];
+    describe('when active standard versions exist', () => {
+      let result: StandardVersion[];
+      let command: FindActiveStandardVersionsByTargetCommand;
+      let mockStandardVersions: StandardVersion[];
 
-      mockRepository.findActiveStandardVersionsByTarget.mockResolvedValue(
-        mockStandardVersions,
-      );
+      beforeEach(async () => {
+        command = createCommand();
+        mockStandardVersions = [
+          createStandardVersion({
+            id: createStandardVersionId('sv-1'),
+            standardId: createStandardId('std-1'),
+            name: 'Standard One',
+          }),
+          createStandardVersion({
+            id: createStandardVersionId('sv-2'),
+            standardId: createStandardId('std-2'),
+            name: 'Standard Two',
+          }),
+        ];
 
-      const result = await useCase.execute(command);
+        mockRepository.findActiveStandardVersionsByTarget.mockResolvedValue(
+          mockStandardVersions,
+        );
 
-      expect(result).toEqual(mockStandardVersions);
-      expect(
-        mockRepository.findActiveStandardVersionsByTarget,
-      ).toHaveBeenCalledWith(command.organizationId, command.targetId);
+        result = await useCase.execute(command);
+      });
+
+      it('returns active standard versions for target', () => {
+        expect(result).toEqual(mockStandardVersions);
+      });
+
+      it('calls repository with correct parameters', () => {
+        expect(
+          mockRepository.findActiveStandardVersionsByTarget,
+        ).toHaveBeenCalledWith(command.organizationId, command.targetId);
+      });
     });
 
     describe('when no standard versions exist', () => {
-      it('returns empty array', async () => {
-        const command = createCommand();
+      let result: StandardVersion[];
+      let command: FindActiveStandardVersionsByTargetCommand;
+
+      beforeEach(async () => {
+        command = createCommand();
 
         mockRepository.findActiveStandardVersionsByTarget.mockResolvedValue([]);
 
-        const result = await useCase.execute(command);
+        result = await useCase.execute(command);
+      });
 
+      it('returns empty array', () => {
         expect(result).toEqual([]);
+      });
+
+      it('calls repository with correct parameters', () => {
         expect(
           mockRepository.findActiveStandardVersionsByTarget,
         ).toHaveBeenCalledWith(command.organizationId, command.targetId);

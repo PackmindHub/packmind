@@ -91,7 +91,9 @@ describe('PublishPackagesUseCase - Integration behavior', () => {
   });
 
   describe('when deployments return with no_changes status', () => {
-    it('returns deployments that can be analyzed by frontend notification utils', async () => {
+    let result: PackagesDeployment[];
+
+    beforeEach(async () => {
       const recipeId = createRecipeId(uuidv4());
       const standardId = createStandardId(uuidv4());
       const packageId = createPackageId(uuidv4());
@@ -103,7 +105,6 @@ describe('PublishPackagesUseCase - Integration behavior', () => {
         standards: [standardId],
       });
 
-      // Mock a no_changes distribution (content already distributed)
       const distribution: Distribution = {
         id: createDistributionId(uuidv4()),
         distributedPackages: [],
@@ -142,26 +143,27 @@ describe('PublishPackagesUseCase - Integration behavior', () => {
         targetIds: [targetId],
       };
 
-      const result = await useCase.execute(command);
+      result = await useCase.execute(command);
+    });
 
-      // Should return 1 deployment (one distribution per target)
+    it('returns one deployment per target', () => {
       expect(result).toHaveLength(1);
+    });
 
-      // Should have status no_changes
+    it('includes no_changes status in the deployment', () => {
       expect(result[0]).toHaveProperty('status', DistributionStatus.no_changes);
+    });
 
-      // Should have target property
+    it('includes target property in the deployment', () => {
       expect(result[0]).toHaveProperty('target');
+    });
 
-      // This simulates what the frontend does:
-      // It should be able to count deployments and analyze their status
-      const allDeployments = result;
-      const noChangesDeployments = allDeployments.filter(
+    it('allows frontend to filter deployments by status', () => {
+      const noChangesDeployments = result.filter(
         (d: PackagesDeployment) => d.status === DistributionStatus.no_changes,
       );
 
-      expect(allDeployments.length).toBe(1);
-      expect(noChangesDeployments.length).toBe(1);
+      expect(noChangesDeployments).toHaveLength(1);
     });
   });
 });

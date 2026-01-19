@@ -218,71 +218,95 @@ describe('PullContentUseCase', () => {
       );
     });
 
-    it('returns file updates from deployers', async () => {
-      const testPackage: PackageWithArtefacts = {
-        id: createPackageId('test-package-id'),
-        slug: 'test-package',
-        name: 'Test Package',
-        description: 'Test package description',
-        spaceId: createSpaceId('space-1'),
-        createdBy: createUserId('user-1'),
-        recipes: [],
-        standards: [],
-        skills: [],
-      };
+    describe('when deployer returns file updates', () => {
+      let result: Awaited<ReturnType<PullContentUseCase['execute']>>;
 
-      packageService.getPackagesBySlugsWithArtefacts.mockResolvedValue([
-        testPackage,
-      ]);
+      beforeEach(async () => {
+        const testPackage: PackageWithArtefacts = {
+          id: createPackageId('test-package-id'),
+          slug: 'test-package',
+          name: 'Test Package',
+          description: 'Test package description',
+          spaceId: createSpaceId('space-1'),
+          createdBy: createUserId('user-1'),
+          recipes: [],
+          standards: [],
+          skills: [],
+        };
 
-      recipesPort.listRecipeVersions.mockResolvedValue([]);
-      standardsPort.listStandardVersions.mockResolvedValue([]);
+        packageService.getPackagesBySlugsWithArtefacts.mockResolvedValue([
+          testPackage,
+        ]);
 
-      mockDeployer.deployArtifacts.mockResolvedValue({
-        createOrUpdate: [{ path: 'test.md', content: 'test content' }],
-        delete: [],
-      } as FileUpdates);
+        recipesPort.listRecipeVersions.mockResolvedValue([]);
+        standardsPort.listStandardVersions.mockResolvedValue([]);
 
-      const result = await useCase.execute(command);
+        mockDeployer.deployArtifacts.mockResolvedValue({
+          createOrUpdate: [{ path: 'test.md', content: 'test content' }],
+          delete: [],
+        } as FileUpdates);
 
-      expect(result).toBeDefined();
-      expect(result.fileUpdates).toBeDefined();
-      expect(result.fileUpdates.createOrUpdate).toBeInstanceOf(Array);
-      expect(result.fileUpdates.delete).toBeInstanceOf(Array);
+        result = await useCase.execute(command);
+      });
+
+      it('returns a defined result', () => {
+        expect(result).toBeDefined();
+      });
+
+      it('returns fileUpdates object', () => {
+        expect(result.fileUpdates).toBeDefined();
+      });
+
+      it('returns createOrUpdate as an array', () => {
+        expect(result.fileUpdates.createOrUpdate).toBeInstanceOf(Array);
+      });
+
+      it('returns delete as an array', () => {
+        expect(result.fileUpdates.delete).toBeInstanceOf(Array);
+      });
     });
 
-    it('merges file updates from recipes and standards', async () => {
-      const testPackage: PackageWithArtefacts = {
-        id: createPackageId('test-package-id'),
-        slug: 'test-package',
-        name: 'Test Package',
-        description: 'Test package description',
-        spaceId: createSpaceId('space-1'),
-        createdBy: createUserId('user-1'),
-        recipes: [],
-        standards: [],
-        skills: [],
-      };
+    describe('when merging file updates from recipes and standards', () => {
+      let result: Awaited<ReturnType<PullContentUseCase['execute']>>;
 
-      packageService.getPackagesBySlugsWithArtefacts.mockResolvedValue([
-        testPackage,
-      ]);
+      beforeEach(async () => {
+        const testPackage: PackageWithArtefacts = {
+          id: createPackageId('test-package-id'),
+          slug: 'test-package',
+          name: 'Test Package',
+          description: 'Test package description',
+          spaceId: createSpaceId('space-1'),
+          createdBy: createUserId('user-1'),
+          recipes: [],
+          standards: [],
+          skills: [],
+        };
 
-      recipesPort.listRecipeVersions.mockResolvedValue([]);
-      standardsPort.listStandardVersions.mockResolvedValue([]);
+        packageService.getPackagesBySlugsWithArtefacts.mockResolvedValue([
+          testPackage,
+        ]);
 
-      mockDeployer.deployArtifacts.mockResolvedValue({
-        createOrUpdate: [
-          { path: 'recipe.md', content: 'recipe content' },
-          { path: 'standard.md', content: 'standard content' },
-        ],
-        delete: [],
-      } as FileUpdates);
+        recipesPort.listRecipeVersions.mockResolvedValue([]);
+        standardsPort.listStandardVersions.mockResolvedValue([]);
 
-      const result = await useCase.execute(command);
+        mockDeployer.deployArtifacts.mockResolvedValue({
+          createOrUpdate: [
+            { path: 'recipe.md', content: 'recipe content' },
+            { path: 'standard.md', content: 'standard content' },
+          ],
+          delete: [],
+        } as FileUpdates);
 
-      expect(result.fileUpdates.createOrUpdate).toBeInstanceOf(Array);
-      expect(result.fileUpdates.delete).toBeInstanceOf(Array);
+        result = await useCase.execute(command);
+      });
+
+      it('returns createOrUpdate as an array', () => {
+        expect(result.fileUpdates.createOrUpdate).toBeInstanceOf(Array);
+      });
+
+      it('returns delete as an array', () => {
+        expect(result.fileUpdates.delete).toBeInstanceOf(Array);
+      });
     });
 
     describe('when recipe and standard lists are empty', () => {
@@ -452,30 +476,37 @@ describe('PullContentUseCase', () => {
         );
       });
 
-      it('deduplicates skills shared across multiple packages', async () => {
-        const secondPackage: PackageWithArtefacts = {
-          id: createPackageId('test-package-2-id'),
-          slug: 'test-package-2',
-          name: 'Test Package 2',
-          description: 'Test package 2 description',
-          spaceId: createSpaceId('space-1'),
-          createdBy: createUserId('user-1'),
-          recipes: [],
-          standards: [],
-          skills: [skill],
-        };
+      describe('when skill is shared across multiple packages', () => {
+        beforeEach(async () => {
+          const secondPackage: PackageWithArtefacts = {
+            id: createPackageId('test-package-2-id'),
+            slug: 'test-package-2',
+            name: 'Test Package 2',
+            description: 'Test package 2 description',
+            spaceId: createSpaceId('space-1'),
+            createdBy: createUserId('user-1'),
+            recipes: [],
+            standards: [],
+            skills: [skill],
+          };
 
-        packageService.getPackagesBySlugsWithArtefacts.mockResolvedValue([
-          testPackage,
-          secondPackage,
-        ]);
+          packageService.getPackagesBySlugsWithArtefacts.mockResolvedValue([
+            testPackage,
+            secondPackage,
+          ]);
 
-        command.packagesSlugs = ['test-package', 'test-package-2'];
+          command.packagesSlugs = ['test-package', 'test-package-2'];
 
-        await useCase.execute(command);
+          await useCase.execute(command);
+        });
 
-        expect(skillsPort.listSkillVersions).toHaveBeenCalledTimes(1);
-        expect(skillsPort.listSkillVersions).toHaveBeenCalledWith(skill.id);
+        it('fetches skill versions only once', () => {
+          expect(skillsPort.listSkillVersions).toHaveBeenCalledTimes(1);
+        });
+
+        it('fetches skill versions with the skill id', () => {
+          expect(skillsPort.listSkillVersions).toHaveBeenCalledWith(skill.id);
+        });
       });
 
       it('fetches latest version from multiple versions', async () => {

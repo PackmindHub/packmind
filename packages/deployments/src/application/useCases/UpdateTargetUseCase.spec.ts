@@ -50,29 +50,45 @@ describe('UpdateTargetUseCase', () => {
   });
 
   describe('when updating name only', () => {
-    it('updates the target without checking provider token', async () => {
-      const command: UpdateTargetCommand = {
-        targetId,
-        name: 'New Name',
-        path: '/original/path/',
-        userId,
-        organizationId,
-      };
+    const command: UpdateTargetCommand = {
+      targetId,
+      name: 'New Name',
+      path: '/original/path/',
+      userId,
+      organizationId,
+    };
 
-      const updatedTarget: Target = {
-        ...existingTarget,
-        name: 'New Name',
-      };
+    const updatedTarget: Target = {
+      ...existingTarget,
+      name: 'New Name',
+    };
 
+    let result: Target;
+
+    beforeEach(async () => {
       mockTargetService.findById.mockResolvedValue(existingTarget);
       mockTargetService.updateTarget.mockResolvedValue(updatedTarget);
 
-      const result = await useCase.execute(command);
+      result = await useCase.execute(command);
+    });
 
+    it('returns the updated target', () => {
       expect(result).toEqual(updatedTarget);
+    });
+
+    it('calls findById with the target id', () => {
       expect(mockTargetService.findById).toHaveBeenCalledWith(targetId);
+    });
+
+    it('does not call getRepositoryById', () => {
       expect(mockGitPort.getRepositoryById).not.toHaveBeenCalled();
+    });
+
+    it('does not call listProviders', () => {
       expect(mockGitPort.listProviders).not.toHaveBeenCalled();
+    });
+
+    it('calls updateTarget with correct parameters', () => {
       expect(mockTargetService.updateTarget).toHaveBeenCalledWith(targetId, {
         name: 'New Name',
         path: '/original/path/',
@@ -82,240 +98,10 @@ describe('UpdateTargetUseCase', () => {
 
   describe('when updating path', () => {
     describe('when provider has a token', () => {
-      it('updates the target path successfully', async () => {
-        const command: UpdateTargetCommand = {
-          targetId,
-          name: 'Original Name',
-          path: '/new/path/',
-          userId,
-          organizationId,
-        };
-
-        const mockRepo = {
-          id: gitRepoId,
-          owner: 'owner',
-          repo: 'repo',
-          branch: 'main',
-          providerId,
-        };
-
-        const mockProviderWithToken: GitProviderWithoutToken = {
-          id: providerId,
-          source: 'github',
-          organizationId,
-          url: 'https://github.com',
-          hasToken: true,
-        };
-
-        const updatedTarget: Target = {
-          ...existingTarget,
-          path: '/new/path/',
-        };
-
-        mockTargetService.findById.mockResolvedValue(existingTarget);
-        mockGitPort.getRepositoryById.mockResolvedValue(mockRepo);
-        mockGitPort.listProviders.mockResolvedValue({
-          providers: [mockProviderWithToken],
-        });
-        mockTargetService.updateTarget.mockResolvedValue(updatedTarget);
-
-        const result = await useCase.execute(command);
-
-        expect(result).toEqual(updatedTarget);
-        expect(mockGitPort.getRepositoryById).toHaveBeenCalledWith(gitRepoId);
-        expect(mockGitPort.listProviders).toHaveBeenCalledWith({
-          userId,
-          organizationId,
-        });
-        expect(mockTargetService.updateTarget).toHaveBeenCalledWith(targetId, {
-          name: 'Original Name',
-          path: '/new/path/',
-        });
-      });
-    });
-
-    describe('when provider has no token', () => {
-      it('throws TargetPathUpdateForbiddenError', async () => {
-        const command: UpdateTargetCommand = {
-          targetId,
-          name: 'Original Name',
-          path: '/new/path/',
-          userId,
-          organizationId,
-        };
-
-        const mockRepo = {
-          id: gitRepoId,
-          owner: 'owner',
-          repo: 'repo',
-          branch: 'main',
-          providerId,
-        };
-
-        const mockProviderWithoutToken: GitProviderWithoutToken = {
-          id: providerId,
-          source: 'github',
-          organizationId,
-          url: 'https://github.com',
-          hasToken: false,
-        };
-
-        mockTargetService.findById.mockResolvedValue(existingTarget);
-        mockGitPort.getRepositoryById.mockResolvedValue(mockRepo);
-        mockGitPort.listProviders.mockResolvedValue({
-          providers: [mockProviderWithoutToken],
-        });
-
-        await expect(useCase.execute(command)).rejects.toThrow(
-          TargetPathUpdateForbiddenError,
-        );
-
-        expect(mockTargetService.updateTarget).not.toHaveBeenCalled();
-      });
-    });
-  });
-
-  describe('validation errors', () => {
-    it('throws error for empty name', async () => {
       const command: UpdateTargetCommand = {
         targetId,
-        name: '',
-        path: '/some/path/',
-        userId,
-        organizationId,
-      };
-
-      await expect(useCase.execute(command)).rejects.toThrow(
-        'Target name cannot be empty',
-      );
-
-      expect(mockTargetService.updateTarget).not.toHaveBeenCalled();
-    });
-
-    it('throws error for whitespace-only name', async () => {
-      const command: UpdateTargetCommand = {
-        targetId,
-        name: '   ',
-        path: '/some/path/',
-        userId,
-        organizationId,
-      };
-
-      await expect(useCase.execute(command)).rejects.toThrow(
-        'Target name cannot be empty',
-      );
-
-      expect(mockTargetService.updateTarget).not.toHaveBeenCalled();
-    });
-
-    it('throws error for invalid path format', async () => {
-      const command: UpdateTargetCommand = {
-        targetId,
-        name: 'Valid Name',
-        path: 'invalid-path',
-        userId,
-        organizationId,
-      };
-
-      await expect(useCase.execute(command)).rejects.toThrow(
-        'Invalid path format',
-      );
-
-      expect(mockTargetService.updateTarget).not.toHaveBeenCalled();
-    });
-
-    it('throws error for path traversal attempt', async () => {
-      const command: UpdateTargetCommand = {
-        targetId,
-        name: 'Valid Name',
-        path: '/some/../path/',
-        userId,
-        organizationId,
-      };
-
-      await expect(useCase.execute(command)).rejects.toThrow(
-        'Invalid path format',
-      );
-
-      expect(mockTargetService.updateTarget).not.toHaveBeenCalled();
-    });
-
-    it('throws error for target not found', async () => {
-      const command: UpdateTargetCommand = {
-        targetId,
-        name: 'Valid Name',
-        path: '/',
-        userId,
-        organizationId,
-      };
-
-      mockTargetService.findById.mockResolvedValue(null);
-
-      await expect(useCase.execute(command)).rejects.toThrow(
-        `Target with id ${targetId} not found`,
-      );
-
-      expect(mockTargetService.updateTarget).not.toHaveBeenCalled();
-    });
-
-    describe('when updating path', () => {
-      const command: UpdateTargetCommand = {
-        targetId,
-        name: 'Valid Name',
+        name: 'Original Name',
         path: '/new/path/',
-        userId,
-        organizationId,
-      };
-
-      it('throws error for repository not found', async () => {
-        mockTargetService.findById.mockResolvedValue(existingTarget);
-        mockGitPort.getRepositoryById.mockResolvedValue(null);
-
-        await expect(useCase.execute(command)).rejects.toThrow(
-          `Repository with id ${gitRepoId} not found`,
-        );
-
-        expect(mockTargetService.updateTarget).not.toHaveBeenCalled();
-      });
-
-      it('throws error if the gitProvider does not have a token', async () => {
-        const providerId = createGitProviderId('prodiver-id');
-
-        mockTargetService.findById.mockResolvedValue(existingTarget);
-        mockGitPort.getRepositoryById.mockResolvedValue({
-          id: createGitRepoId('some-git-repo-id'),
-          owner: 'some-company',
-          repo: 'my-repo',
-          branch: 'main',
-          providerId,
-        });
-        mockGitPort.listProviders.mockResolvedValue({
-          providers: [
-            {
-              id: providerId,
-              source: 'github',
-              hasToken: false,
-              organizationId,
-              url: 'https://github.com',
-            },
-          ],
-        });
-
-        await expect(useCase.execute(command)).rejects.toThrow(
-          `Cannot update path for target '${targetId}'. The associated git provider has no token configured`,
-        );
-
-        expect(mockTargetService.updateTarget).not.toHaveBeenCalled();
-      });
-    });
-  });
-
-  describe('when path is root', () => {
-    it('allows updating to root path if provider has token', async () => {
-      const command: UpdateTargetCommand = {
-        targetId,
-        name: 'Root Target',
-        path: '/',
         userId,
         organizationId,
       };
@@ -338,10 +124,352 @@ describe('UpdateTargetUseCase', () => {
 
       const updatedTarget: Target = {
         ...existingTarget,
-        name: 'Root Target',
-        path: '/',
+        path: '/new/path/',
       };
 
+      let result: Target;
+
+      beforeEach(async () => {
+        mockTargetService.findById.mockResolvedValue(existingTarget);
+        mockGitPort.getRepositoryById.mockResolvedValue(mockRepo);
+        mockGitPort.listProviders.mockResolvedValue({
+          providers: [mockProviderWithToken],
+        });
+        mockTargetService.updateTarget.mockResolvedValue(updatedTarget);
+
+        result = await useCase.execute(command);
+      });
+
+      it('returns the updated target', () => {
+        expect(result).toEqual(updatedTarget);
+      });
+
+      it('calls getRepositoryById with the git repo id', () => {
+        expect(mockGitPort.getRepositoryById).toHaveBeenCalledWith(gitRepoId);
+      });
+
+      it('calls listProviders with user and organization id', () => {
+        expect(mockGitPort.listProviders).toHaveBeenCalledWith({
+          userId,
+          organizationId,
+        });
+      });
+
+      it('calls updateTarget with correct parameters', () => {
+        expect(mockTargetService.updateTarget).toHaveBeenCalledWith(targetId, {
+          name: 'Original Name',
+          path: '/new/path/',
+        });
+      });
+    });
+
+    describe('when provider has no token', () => {
+      const command: UpdateTargetCommand = {
+        targetId,
+        name: 'Original Name',
+        path: '/new/path/',
+        userId,
+        organizationId,
+      };
+
+      const mockRepo = {
+        id: gitRepoId,
+        owner: 'owner',
+        repo: 'repo',
+        branch: 'main',
+        providerId,
+      };
+
+      const mockProviderWithoutToken: GitProviderWithoutToken = {
+        id: providerId,
+        source: 'github',
+        organizationId,
+        url: 'https://github.com',
+        hasToken: false,
+      };
+
+      let thrownError: Error;
+
+      beforeEach(async () => {
+        mockTargetService.findById.mockResolvedValue(existingTarget);
+        mockGitPort.getRepositoryById.mockResolvedValue(mockRepo);
+        mockGitPort.listProviders.mockResolvedValue({
+          providers: [mockProviderWithoutToken],
+        });
+
+        try {
+          await useCase.execute(command);
+        } catch (error) {
+          thrownError = error as Error;
+        }
+      });
+
+      it('throws TargetPathUpdateForbiddenError', () => {
+        expect(thrownError).toBeInstanceOf(TargetPathUpdateForbiddenError);
+      });
+
+      it('does not call updateTarget', () => {
+        expect(mockTargetService.updateTarget).not.toHaveBeenCalled();
+      });
+    });
+  });
+
+  describe('validation errors', () => {
+    describe('when name is empty', () => {
+      const command: UpdateTargetCommand = {
+        targetId,
+        name: '',
+        path: '/some/path/',
+        userId,
+        organizationId,
+      };
+
+      let thrownError: Error;
+
+      beforeEach(async () => {
+        try {
+          await useCase.execute(command);
+        } catch (error) {
+          thrownError = error as Error;
+        }
+      });
+
+      it('throws error for empty name', () => {
+        expect(thrownError.message).toBe('Target name cannot be empty');
+      });
+
+      it('does not call updateTarget', () => {
+        expect(mockTargetService.updateTarget).not.toHaveBeenCalled();
+      });
+    });
+
+    describe('when name is whitespace-only', () => {
+      const command: UpdateTargetCommand = {
+        targetId,
+        name: '   ',
+        path: '/some/path/',
+        userId,
+        organizationId,
+      };
+
+      let thrownError: Error;
+
+      beforeEach(async () => {
+        try {
+          await useCase.execute(command);
+        } catch (error) {
+          thrownError = error as Error;
+        }
+      });
+
+      it('throws error for whitespace-only name', () => {
+        expect(thrownError.message).toBe('Target name cannot be empty');
+      });
+
+      it('does not call updateTarget', () => {
+        expect(mockTargetService.updateTarget).not.toHaveBeenCalled();
+      });
+    });
+
+    describe('when path format is invalid', () => {
+      const command: UpdateTargetCommand = {
+        targetId,
+        name: 'Valid Name',
+        path: 'invalid-path',
+        userId,
+        organizationId,
+      };
+
+      let thrownError: Error;
+
+      beforeEach(async () => {
+        try {
+          await useCase.execute(command);
+        } catch (error) {
+          thrownError = error as Error;
+        }
+      });
+
+      it('throws error for invalid path format', () => {
+        expect(thrownError.message).toBe('Invalid path format');
+      });
+
+      it('does not call updateTarget', () => {
+        expect(mockTargetService.updateTarget).not.toHaveBeenCalled();
+      });
+    });
+
+    describe('when path contains traversal attempt', () => {
+      const command: UpdateTargetCommand = {
+        targetId,
+        name: 'Valid Name',
+        path: '/some/../path/',
+        userId,
+        organizationId,
+      };
+
+      let thrownError: Error;
+
+      beforeEach(async () => {
+        try {
+          await useCase.execute(command);
+        } catch (error) {
+          thrownError = error as Error;
+        }
+      });
+
+      it('throws error for path traversal attempt', () => {
+        expect(thrownError.message).toBe('Invalid path format');
+      });
+
+      it('does not call updateTarget', () => {
+        expect(mockTargetService.updateTarget).not.toHaveBeenCalled();
+      });
+    });
+
+    describe('when target is not found', () => {
+      const command: UpdateTargetCommand = {
+        targetId,
+        name: 'Valid Name',
+        path: '/',
+        userId,
+        organizationId,
+      };
+
+      let thrownError: Error;
+
+      beforeEach(async () => {
+        mockTargetService.findById.mockResolvedValue(null);
+
+        try {
+          await useCase.execute(command);
+        } catch (error) {
+          thrownError = error as Error;
+        }
+      });
+
+      it('throws error for target not found', () => {
+        expect(thrownError.message).toBe(
+          `Target with id ${targetId} not found`,
+        );
+      });
+
+      it('does not call updateTarget', () => {
+        expect(mockTargetService.updateTarget).not.toHaveBeenCalled();
+      });
+    });
+
+    describe('when updating path', () => {
+      const command: UpdateTargetCommand = {
+        targetId,
+        name: 'Valid Name',
+        path: '/new/path/',
+        userId,
+        organizationId,
+      };
+
+      describe('when repository is not found', () => {
+        let thrownError: Error;
+
+        beforeEach(async () => {
+          mockTargetService.findById.mockResolvedValue(existingTarget);
+          mockGitPort.getRepositoryById.mockResolvedValue(null);
+
+          try {
+            await useCase.execute(command);
+          } catch (error) {
+            thrownError = error as Error;
+          }
+        });
+
+        it('throws error for repository not found', () => {
+          expect(thrownError.message).toBe(
+            `Repository with id ${gitRepoId} not found`,
+          );
+        });
+
+        it('does not call updateTarget', () => {
+          expect(mockTargetService.updateTarget).not.toHaveBeenCalled();
+        });
+      });
+
+      describe('when gitProvider does not have a token', () => {
+        const localProviderId = createGitProviderId('provider-id');
+        let thrownError: Error;
+
+        beforeEach(async () => {
+          mockTargetService.findById.mockResolvedValue(existingTarget);
+          mockGitPort.getRepositoryById.mockResolvedValue({
+            id: createGitRepoId('some-git-repo-id'),
+            owner: 'some-company',
+            repo: 'my-repo',
+            branch: 'main',
+            providerId: localProviderId,
+          });
+          mockGitPort.listProviders.mockResolvedValue({
+            providers: [
+              {
+                id: localProviderId,
+                source: 'github',
+                hasToken: false,
+                organizationId,
+                url: 'https://github.com',
+              },
+            ],
+          });
+
+          try {
+            await useCase.execute(command);
+          } catch (error) {
+            thrownError = error as Error;
+          }
+        });
+
+        it('throws error if the gitProvider does not have a token', () => {
+          expect(thrownError.message).toBe(
+            `Cannot update path for target '${targetId}'. The associated git provider has no token configured.`,
+          );
+        });
+
+        it('does not call updateTarget', () => {
+          expect(mockTargetService.updateTarget).not.toHaveBeenCalled();
+        });
+      });
+    });
+  });
+
+  describe('when path is root', () => {
+    const command: UpdateTargetCommand = {
+      targetId,
+      name: 'Root Target',
+      path: '/',
+      userId,
+      organizationId,
+    };
+
+    const mockRepo = {
+      id: gitRepoId,
+      owner: 'owner',
+      repo: 'repo',
+      branch: 'main',
+      providerId,
+    };
+
+    const mockProviderWithToken: GitProviderWithoutToken = {
+      id: providerId,
+      source: 'github',
+      organizationId,
+      url: 'https://github.com',
+      hasToken: true,
+    };
+
+    const updatedTarget: Target = {
+      ...existingTarget,
+      name: 'Root Target',
+      path: '/',
+    };
+
+    it('allows updating to root path if provider has token', async () => {
       mockTargetService.findById.mockResolvedValue(existingTarget);
       mockGitPort.getRepositoryById.mockResolvedValue(mockRepo);
       mockGitPort.listProviders.mockResolvedValue({

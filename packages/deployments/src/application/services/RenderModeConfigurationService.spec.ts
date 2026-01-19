@@ -34,15 +34,28 @@ describe('RenderModeConfigurationService', () => {
 
   describe('getConfiguration', () => {
     describe('when configuration is absent', () => {
-      it('returns null', async () => {
+      let configuration: ReturnType<
+        typeof service.getConfiguration
+      > extends Promise<infer T>
+        ? T
+        : never;
+
+      beforeEach(async () => {
         repository.findByOrganizationId.mockResolvedValue(null);
+        configuration = await service.getConfiguration(organizationId);
+      });
 
-        const configuration = await service.getConfiguration(organizationId);
-
+      it('returns null', () => {
         expect(configuration).toBeNull();
+      });
+
+      it('queries repository with organization id', () => {
         expect(repository.findByOrganizationId).toHaveBeenCalledWith(
           organizationId,
         );
+      });
+
+      it('does not upsert configuration', () => {
         expect(repository.upsert).not.toHaveBeenCalled();
       });
     });
@@ -56,19 +69,30 @@ describe('RenderModeConfigurationService', () => {
       });
 
       describe('without provided modes', () => {
-        it('creates configuration with defaults', async () => {
-          const configuration =
-            await service.createConfiguration(organizationId);
+        let configuration: Awaited<
+          ReturnType<typeof service.createConfiguration>
+        >;
 
+        beforeEach(async () => {
+          configuration = await service.createConfiguration(organizationId);
+        });
+
+        it('queries repository with organization id', () => {
           expect(repository.findByOrganizationId).toHaveBeenCalledWith(
             organizationId,
           );
+        });
+
+        it('upserts configuration with default render modes', () => {
           expect(repository.upsert).toHaveBeenCalledWith(
             expect.objectContaining({
               organizationId,
               activeRenderModes: DEFAULT_ACTIVE_RENDER_MODES,
             }),
           );
+        });
+
+        it('returns configuration with default active render modes', () => {
           expect(configuration.activeRenderModes).toEqual(
             DEFAULT_ACTIVE_RENDER_MODES,
           );
@@ -76,18 +100,26 @@ describe('RenderModeConfigurationService', () => {
       });
 
       describe('with provided modes', () => {
-        it('persists normalized render modes', async () => {
-          const configuration = await service.createConfiguration(
-            organizationId,
-            [RenderMode.CLAUDE],
-          );
+        let configuration: Awaited<
+          ReturnType<typeof service.createConfiguration>
+        >;
 
+        beforeEach(async () => {
+          configuration = await service.createConfiguration(organizationId, [
+            RenderMode.CLAUDE,
+          ]);
+        });
+
+        it('upserts configuration with normalized render modes', () => {
           expect(repository.upsert).toHaveBeenCalledWith(
             expect.objectContaining({
               organizationId,
               activeRenderModes: [RenderMode.PACKMIND, RenderMode.CLAUDE],
             }),
           );
+        });
+
+        it('returns configuration with normalized active render modes', () => {
           expect(configuration.activeRenderModes).toEqual([
             RenderMode.PACKMIND,
             RenderMode.CLAUDE,
@@ -99,8 +131,15 @@ describe('RenderModeConfigurationService', () => {
 
   describe('updateConfiguration', () => {
     describe('when configuration exists', () => {
-      it('updates configuration with normalized modes', async () => {
-        const existingConfiguration = renderModeConfigurationFactory({
+      let configuration: Awaited<
+        ReturnType<typeof service.updateConfiguration>
+      >;
+      let existingConfiguration: ReturnType<
+        typeof renderModeConfigurationFactory
+      >;
+
+      beforeEach(async () => {
+        existingConfiguration = renderModeConfigurationFactory({
           organizationId,
           activeRenderModes: DEFAULT_ACTIVE_RENDER_MODES,
         });
@@ -110,15 +149,19 @@ describe('RenderModeConfigurationService', () => {
         );
         repository.upsert.mockImplementation(async (config) => config);
 
-        const configuration = await service.updateConfiguration(
-          organizationId,
-          [RenderMode.CLAUDE],
-        );
+        configuration = await service.updateConfiguration(organizationId, [
+          RenderMode.CLAUDE,
+        ]);
+      });
 
+      it('upserts configuration with normalized render modes', () => {
         expect(repository.upsert).toHaveBeenCalledWith({
           ...existingConfiguration,
           activeRenderModes: [RenderMode.PACKMIND, RenderMode.CLAUDE],
         });
+      });
+
+      it('returns configuration with normalized active render modes', () => {
         expect(configuration.activeRenderModes).toEqual([
           RenderMode.PACKMIND,
           RenderMode.CLAUDE,
@@ -127,12 +170,27 @@ describe('RenderModeConfigurationService', () => {
     });
 
     describe('when configuration does not exist', () => {
-      it('throws an error', async () => {
+      let thrownError: Error | undefined;
+
+      beforeEach(async () => {
         repository.findByOrganizationId.mockResolvedValue(null);
 
-        await expect(
-          service.updateConfiguration(organizationId, [RenderMode.CLAUDE]),
-        ).rejects.toThrow('Render mode configuration does not exist');
+        try {
+          await service.updateConfiguration(organizationId, [
+            RenderMode.CLAUDE,
+          ]);
+        } catch (error) {
+          thrownError = error as Error;
+        }
+      });
+
+      it('throws an error', () => {
+        expect(thrownError?.message).toBe(
+          'Render mode configuration does not exist',
+        );
+      });
+
+      it('does not upsert configuration', () => {
         expect(repository.upsert).not.toHaveBeenCalled();
       });
     });

@@ -27,6 +27,7 @@ import { packageFactory } from '../../../../test';
 import { DeploymentsServices } from '../../services/DeploymentsServices';
 import { PackageService } from '../../services/PackageService';
 import { v4 as uuidv4 } from 'uuid';
+import { Package } from '../../../domain/entities/Package';
 
 describe('CreatePackageUsecase', () => {
   let useCase: CreatePackageUsecase;
@@ -168,7 +169,11 @@ describe('CreatePackageUsecase', () => {
 
   describe('execute', () => {
     describe('when all validation passes with recipes and standards', () => {
-      it('creates and returns package', async () => {
+      let result: { package: Package };
+      let createdPackage: Package;
+      let command: CreatePackageCommand;
+
+      beforeEach(async () => {
         const mockSpace = buildSpace();
         const mockRecipe1 = buildRecipe(recipeId1, spaceId);
         const mockRecipe2 = buildRecipe(recipeId2, spaceId);
@@ -183,7 +188,7 @@ describe('CreatePackageUsecase', () => {
           .mockResolvedValueOnce(mockStandard1)
           .mockResolvedValueOnce(mockStandard2);
 
-        const createdPackage = packageFactory({
+        createdPackage = packageFactory({
           name: 'My Package',
           slug: 'my-package',
           description: 'Package description',
@@ -195,7 +200,7 @@ describe('CreatePackageUsecase', () => {
 
         mockPackageService.createPackage.mockResolvedValue(createdPackage);
 
-        const command: CreatePackageCommand = {
+        command = {
           userId,
           organizationId,
           spaceId,
@@ -206,18 +211,38 @@ describe('CreatePackageUsecase', () => {
           skillIds: [],
         };
 
-        const result = await useCase.execute(command);
+        result = await useCase.execute(command);
+      });
 
+      it('returns the created package', () => {
         expect(result).toEqual({ package: createdPackage });
+      });
+
+      it('retrieves the space by id', () => {
         expect(mockSpacesPort.getSpaceById).toHaveBeenCalledWith(spaceId);
+      });
+
+      it('retrieves recipe 1 by id', () => {
         expect(mockRecipesPort.getRecipeByIdInternal).toHaveBeenCalledWith(
           recipeId1,
         );
+      });
+
+      it('retrieves recipe 2 by id', () => {
         expect(mockRecipesPort.getRecipeByIdInternal).toHaveBeenCalledWith(
           recipeId2,
         );
+      });
+
+      it('retrieves standard 1 by id', () => {
         expect(mockStandardsPort.getStandard).toHaveBeenCalledWith(standardId1);
+      });
+
+      it('retrieves standard 2 by id', () => {
         expect(mockStandardsPort.getStandard).toHaveBeenCalledWith(standardId2);
+      });
+
+      it('creates the package with correct parameters', () => {
         expect(mockPackageService.createPackage).toHaveBeenCalledWith(
           expect.objectContaining({
             name: 'My Package',
@@ -234,14 +259,17 @@ describe('CreatePackageUsecase', () => {
     });
 
     describe('when creating package with empty recipes array', () => {
-      it('creates package without calling recipes port', async () => {
+      let result: { package: Package };
+      let createdPackage: Package;
+
+      beforeEach(async () => {
         const mockSpace = buildSpace();
         const mockStandard1 = buildStandard(standardId1, spaceId);
 
         mockSpacesPort.getSpaceById.mockResolvedValue(mockSpace);
         mockStandardsPort.getStandard.mockResolvedValueOnce(mockStandard1);
 
-        const createdPackage = packageFactory({
+        createdPackage = packageFactory({
           name: 'My Package',
           slug: 'my-package',
           description: 'Package description',
@@ -264,16 +292,27 @@ describe('CreatePackageUsecase', () => {
           skillIds: [],
         };
 
-        const result = await useCase.execute(command);
+        result = await useCase.execute(command);
+      });
 
+      it('returns the created package', () => {
         expect(result).toEqual({ package: createdPackage });
+      });
+
+      it('does not call recipes port', () => {
         expect(mockRecipesPort.getRecipeByIdInternal).not.toHaveBeenCalled();
+      });
+
+      it('retrieves the standard by id', () => {
         expect(mockStandardsPort.getStandard).toHaveBeenCalledWith(standardId1);
       });
     });
 
     describe('when creating package with empty standards array', () => {
-      it('creates package without calling standards port', async () => {
+      let result: { package: Package };
+      let createdPackage: Package;
+
+      beforeEach(async () => {
         const mockSpace = buildSpace();
         const mockRecipe1 = buildRecipe(recipeId1, spaceId);
 
@@ -282,7 +321,7 @@ describe('CreatePackageUsecase', () => {
           mockRecipe1,
         );
 
-        const createdPackage = packageFactory({
+        createdPackage = packageFactory({
           name: 'My Package',
           slug: 'my-package',
           description: 'Package description',
@@ -305,23 +344,34 @@ describe('CreatePackageUsecase', () => {
           skillIds: [],
         };
 
-        const result = await useCase.execute(command);
+        result = await useCase.execute(command);
+      });
 
+      it('returns the created package', () => {
         expect(result).toEqual({ package: createdPackage });
+      });
+
+      it('retrieves the recipe by id', () => {
         expect(mockRecipesPort.getRecipeByIdInternal).toHaveBeenCalledWith(
           recipeId1,
         );
+      });
+
+      it('does not call standards port', () => {
         expect(mockStandardsPort.getStandard).not.toHaveBeenCalled();
       });
     });
 
     describe('when creating package with empty recipes and standards arrays', () => {
-      it('creates package without calling recipes or standards ports', async () => {
+      let result: { package: Package };
+      let createdPackage: Package;
+
+      beforeEach(async () => {
         const mockSpace = buildSpace();
 
         mockSpacesPort.getSpaceById.mockResolvedValue(mockSpace);
 
-        const createdPackage = packageFactory({
+        createdPackage = packageFactory({
           name: 'My Package',
           slug: 'my-package',
           description: 'Package description',
@@ -344,16 +394,24 @@ describe('CreatePackageUsecase', () => {
           skillIds: [],
         };
 
-        const result = await useCase.execute(command);
+        result = await useCase.execute(command);
+      });
 
+      it('returns the created package', () => {
         expect(result).toEqual({ package: createdPackage });
+      });
+
+      it('does not call recipes port', () => {
         expect(mockRecipesPort.getRecipeByIdInternal).not.toHaveBeenCalled();
+      });
+
+      it('does not call standards port', () => {
         expect(mockStandardsPort.getStandard).not.toHaveBeenCalled();
       });
     });
 
     describe('when slug needs to be generated from name', () => {
-      it('generates slug from name', async () => {
+      beforeEach(async () => {
         const mockSpace = buildSpace();
 
         mockSpacesPort.getSpaceById.mockResolvedValue(mockSpace);
@@ -382,10 +440,15 @@ describe('CreatePackageUsecase', () => {
         };
 
         await useCase.execute(command);
+      });
 
+      it('retrieves existing packages in the space', () => {
         expect(mockPackageService.getPackagesBySpaceId).toHaveBeenCalledWith(
           spaceId,
         );
+      });
+
+      it('creates the package with generated slug', () => {
         expect(mockPackageService.createPackage).toHaveBeenCalledWith(
           expect.objectContaining({
             slug: 'my-package',
@@ -398,7 +461,7 @@ describe('CreatePackageUsecase', () => {
     });
 
     describe('when slug already exists in space', () => {
-      it('appends counter to make slug unique', async () => {
+      beforeEach(async () => {
         const mockSpace = buildSpace();
         const existingPackage1 = packageFactory({
           name: 'My Package',
@@ -449,10 +512,15 @@ describe('CreatePackageUsecase', () => {
         };
 
         await useCase.execute(command);
+      });
 
+      it('retrieves existing packages in the space', () => {
         expect(mockPackageService.getPackagesBySpaceId).toHaveBeenCalledWith(
           spaceId,
         );
+      });
+
+      it('creates the package with unique slug suffix', () => {
         expect(mockPackageService.createPackage).toHaveBeenCalledWith(
           expect.objectContaining({
             slug: 'my-package-2',
@@ -465,10 +533,12 @@ describe('CreatePackageUsecase', () => {
     });
 
     describe('when space does not exist', () => {
-      it('throws error', async () => {
+      let command: CreatePackageCommand;
+
+      beforeEach(() => {
         mockSpacesPort.getSpaceById.mockResolvedValue(null);
 
-        const command: CreatePackageCommand = {
+        command = {
           userId,
           organizationId,
           spaceId,
@@ -478,19 +548,40 @@ describe('CreatePackageUsecase', () => {
           standardIds: [],
           skillIds: [],
         };
+      });
 
+      it('throws error', async () => {
         await expect(useCase.execute(command)).rejects.toThrow(
           `Space with id ${spaceId} not found`,
         );
+      });
+
+      it('retrieves the space by id', async () => {
+        try {
+          await useCase.execute(command);
+        } catch {
+          // Expected to throw
+        }
 
         expect(mockSpacesPort.getSpaceById).toHaveBeenCalledWith(spaceId);
+      });
+
+      it('does not create package', async () => {
+        try {
+          await useCase.execute(command);
+        } catch {
+          // Expected to throw
+        }
+
         expect(mockPackageService.createPackage).not.toHaveBeenCalled();
       });
     });
 
     describe('when space belongs to different organization', () => {
-      it('throws error', async () => {
-        const differentOrgId = createOrganizationId(uuidv4());
+      let command: CreatePackageCommand;
+      const differentOrgId = createOrganizationId(uuidv4());
+
+      beforeEach(() => {
         const mockSpace: Space = {
           id: spaceId,
           slug: 'test-space',
@@ -500,7 +591,7 @@ describe('CreatePackageUsecase', () => {
 
         mockSpacesPort.getSpaceById.mockResolvedValue(mockSpace);
 
-        const command: CreatePackageCommand = {
+        command = {
           userId,
           organizationId,
           spaceId,
@@ -510,24 +601,45 @@ describe('CreatePackageUsecase', () => {
           standardIds: [],
           skillIds: [],
         };
+      });
 
+      it('throws error', async () => {
         await expect(useCase.execute(command)).rejects.toThrow(
           `Space ${spaceId} does not belong to organization ${organizationId}`,
         );
+      });
+
+      it('retrieves the space by id', async () => {
+        try {
+          await useCase.execute(command);
+        } catch {
+          // Expected to throw
+        }
 
         expect(mockSpacesPort.getSpaceById).toHaveBeenCalledWith(spaceId);
+      });
+
+      it('does not create package', async () => {
+        try {
+          await useCase.execute(command);
+        } catch {
+          // Expected to throw
+        }
+
         expect(mockPackageService.createPackage).not.toHaveBeenCalled();
       });
     });
 
     describe('when recipe does not exist', () => {
-      it('throws error', async () => {
+      let command: CreatePackageCommand;
+
+      beforeEach(() => {
         const mockSpace = buildSpace();
 
         mockSpacesPort.getSpaceById.mockResolvedValue(mockSpace);
         mockRecipesPort.getRecipeByIdInternal.mockResolvedValue(null);
 
-        const command: CreatePackageCommand = {
+        command = {
           userId,
           organizationId,
           spaceId,
@@ -537,29 +649,59 @@ describe('CreatePackageUsecase', () => {
           standardIds: [],
           skillIds: [],
         };
+      });
 
+      it('throws error', async () => {
         await expect(useCase.execute(command)).rejects.toThrow(
           `Recipe with id ${recipeId1} not found`,
         );
+      });
+
+      it('retrieves the space by id', async () => {
+        try {
+          await useCase.execute(command);
+        } catch {
+          // Expected to throw
+        }
 
         expect(mockSpacesPort.getSpaceById).toHaveBeenCalledWith(spaceId);
+      });
+
+      it('retrieves the recipe by id', async () => {
+        try {
+          await useCase.execute(command);
+        } catch {
+          // Expected to throw
+        }
+
         expect(mockRecipesPort.getRecipeByIdInternal).toHaveBeenCalledWith(
           recipeId1,
         );
+      });
+
+      it('does not create package', async () => {
+        try {
+          await useCase.execute(command);
+        } catch {
+          // Expected to throw
+        }
+
         expect(mockPackageService.createPackage).not.toHaveBeenCalled();
       });
     });
 
     describe('when recipe does not belong to space', () => {
-      it('throws error', async () => {
-        const differentSpaceId = createSpaceId(uuidv4());
+      let command: CreatePackageCommand;
+      const differentSpaceId = createSpaceId(uuidv4());
+
+      beforeEach(() => {
         const mockSpace = buildSpace();
         const mockRecipe = buildRecipe(recipeId1, differentSpaceId);
 
         mockSpacesPort.getSpaceById.mockResolvedValue(mockSpace);
         mockRecipesPort.getRecipeByIdInternal.mockResolvedValue(mockRecipe);
 
-        const command: CreatePackageCommand = {
+        command = {
           userId,
           organizationId,
           spaceId,
@@ -569,27 +711,57 @@ describe('CreatePackageUsecase', () => {
           standardIds: [],
           skillIds: [],
         };
+      });
 
+      it('throws error', async () => {
         await expect(useCase.execute(command)).rejects.toThrow(
           `Recipe ${recipeId1} does not belong to space ${spaceId}`,
         );
+      });
+
+      it('retrieves the space by id', async () => {
+        try {
+          await useCase.execute(command);
+        } catch {
+          // Expected to throw
+        }
 
         expect(mockSpacesPort.getSpaceById).toHaveBeenCalledWith(spaceId);
+      });
+
+      it('retrieves the recipe by id', async () => {
+        try {
+          await useCase.execute(command);
+        } catch {
+          // Expected to throw
+        }
+
         expect(mockRecipesPort.getRecipeByIdInternal).toHaveBeenCalledWith(
           recipeId1,
         );
+      });
+
+      it('does not create package', async () => {
+        try {
+          await useCase.execute(command);
+        } catch {
+          // Expected to throw
+        }
+
         expect(mockPackageService.createPackage).not.toHaveBeenCalled();
       });
     });
 
     describe('when standard does not exist', () => {
-      it('throws error', async () => {
+      let command: CreatePackageCommand;
+
+      beforeEach(() => {
         const mockSpace = buildSpace();
 
         mockSpacesPort.getSpaceById.mockResolvedValue(mockSpace);
         mockStandardsPort.getStandard.mockResolvedValue(null);
 
-        const command: CreatePackageCommand = {
+        command = {
           userId,
           organizationId,
           spaceId,
@@ -599,27 +771,57 @@ describe('CreatePackageUsecase', () => {
           standardIds: [standardId1],
           skillIds: [],
         };
+      });
 
+      it('throws error', async () => {
         await expect(useCase.execute(command)).rejects.toThrow(
           `Standard with id ${standardId1} not found`,
         );
+      });
+
+      it('retrieves the space by id', async () => {
+        try {
+          await useCase.execute(command);
+        } catch {
+          // Expected to throw
+        }
 
         expect(mockSpacesPort.getSpaceById).toHaveBeenCalledWith(spaceId);
+      });
+
+      it('retrieves the standard by id', async () => {
+        try {
+          await useCase.execute(command);
+        } catch {
+          // Expected to throw
+        }
+
         expect(mockStandardsPort.getStandard).toHaveBeenCalledWith(standardId1);
+      });
+
+      it('does not create package', async () => {
+        try {
+          await useCase.execute(command);
+        } catch {
+          // Expected to throw
+        }
+
         expect(mockPackageService.createPackage).not.toHaveBeenCalled();
       });
     });
 
     describe('when standard does not belong to space', () => {
-      it('throws error', async () => {
-        const differentSpaceId = createSpaceId(uuidv4());
+      let command: CreatePackageCommand;
+      const differentSpaceId = createSpaceId(uuidv4());
+
+      beforeEach(() => {
         const mockSpace = buildSpace();
         const mockStandard = buildStandard(standardId1, differentSpaceId);
 
         mockSpacesPort.getSpaceById.mockResolvedValue(mockSpace);
         mockStandardsPort.getStandard.mockResolvedValue(mockStandard);
 
-        const command: CreatePackageCommand = {
+        command = {
           userId,
           organizationId,
           spaceId,
@@ -629,13 +831,41 @@ describe('CreatePackageUsecase', () => {
           standardIds: [standardId1],
           skillIds: [],
         };
+      });
 
+      it('throws error', async () => {
         await expect(useCase.execute(command)).rejects.toThrow(
           `Standard ${standardId1} does not belong to space ${spaceId}`,
         );
+      });
+
+      it('retrieves the space by id', async () => {
+        try {
+          await useCase.execute(command);
+        } catch {
+          // Expected to throw
+        }
 
         expect(mockSpacesPort.getSpaceById).toHaveBeenCalledWith(spaceId);
+      });
+
+      it('retrieves the standard by id', async () => {
+        try {
+          await useCase.execute(command);
+        } catch {
+          // Expected to throw
+        }
+
         expect(mockStandardsPort.getStandard).toHaveBeenCalledWith(standardId1);
+      });
+
+      it('does not create package', async () => {
+        try {
+          await useCase.execute(command);
+        } catch {
+          // Expected to throw
+        }
+
         expect(mockPackageService.createPackage).not.toHaveBeenCalled();
       });
     });
