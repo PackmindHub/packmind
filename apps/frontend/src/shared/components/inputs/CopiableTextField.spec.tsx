@@ -83,4 +83,40 @@ describe('CopiableTextField', () => {
     expect(input).toHaveAttribute('placeholder', 'Enter text');
     expect(input).toBeDisabled();
   });
+
+  describe('onCopy', () => {
+    describe('when copy button is clicked', () => {
+      it('triggers onCopy callback', () => {
+        const mockOnCopy = jest.fn();
+        renderWithUI(<CopiableTextField value="test" onCopy={mockOnCopy} />);
+
+        const copyButton = screen.getByLabelText('Copy to clipboard');
+        fireEvent.click(copyButton);
+
+        expect(mockOnCopy).toHaveBeenCalledTimes(1);
+      });
+    });
+
+    describe('when text is copied from input', () => {
+      it('triggers onCopy callback', () => {
+        const mockOnCopy = jest.fn();
+        renderWithUI(<CopiableTextField value="test" onCopy={mockOnCopy} />);
+
+        const input = screen.getByRole('textbox');
+        fireEvent.copy(input);
+
+        expect(mockOnCopy).toHaveBeenCalledTimes(1);
+      });
+    });
+
+    describe('when onCopy is not provided', () => {
+      it('does not throw', () => {
+        renderWithUI(<CopiableTextField value="test" />);
+
+        const copyButton = screen.getByLabelText('Copy to clipboard');
+
+        expect(() => fireEvent.click(copyButton)).not.toThrow();
+      });
+    });
+  });
 });

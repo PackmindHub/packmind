@@ -25,7 +25,7 @@ export const CliMethodContent: React.FC<IMethodContentProps> = ({
         value={command}
         readOnly
         rows={2}
-        onInteraction={() =>
+        onCopy={() =>
           analytics.track('mcp_installed', { method: 'cli', agent })
         }
       />

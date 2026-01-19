@@ -70,9 +70,7 @@ const PlaybookContent: React.FC = () => {
           readOnly
           rows={1}
           width="full"
-          onInteraction={() =>
-            analytics.track('onboarding_prompt_copied', { agent })
-          }
+          onCopy={() => analytics.track('onboarding_prompt_copied', { agent })}
         />
       </PMField.Root>
     </PMVStack>
