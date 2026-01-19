@@ -4,6 +4,7 @@ import { StartTrialCommand } from '@packmind/types';
 import { routes } from '../../src/shared/utils/routes';
 import { getAgentsConfig } from '../../src/domain/accounts/components/McpConfig/agentsConfig';
 import { StartTrialAgentPage } from '../../src/domain/accounts/components/StartTrialAgentPage';
+import { OnboardingAgentProvider } from '../../src/domain/accounts/contexts';
 
 type Agent = StartTrialCommand['agent'];
 
@@ -70,13 +71,15 @@ export default function StartTrialAgentRouteModule() {
   };
 
   return (
-    <StartTrialAgentPage
-      agentLabel={agentLabel}
-      agentConfig={agentConfig}
-      token={token}
-      mcpUrl={mcpUrl}
-      preferredMethodType={preferredMethod.type}
-      preferredMethodLabel={preferredMethod.label}
-    />
+    <OnboardingAgentProvider agent={agent as Agent}>
+      <StartTrialAgentPage
+        agentLabel={agentLabel}
+        agentConfig={agentConfig}
+        token={token}
+        mcpUrl={mcpUrl}
+        preferredMethodType={preferredMethod.type}
+        preferredMethodLabel={preferredMethod.label}
+      />
+    </OnboardingAgentProvider>
   );
 }

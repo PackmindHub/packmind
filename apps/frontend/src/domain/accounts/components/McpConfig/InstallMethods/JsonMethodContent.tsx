@@ -3,6 +3,7 @@ import { PMVStack, PMText } from '@packmind/ui';
 import { CopiableTextarea } from '../../../../../shared/components/inputs';
 import { IMethodContentProps } from './types';
 import { useAnalytics } from '@packmind/proprietary/frontend/domain/amplitude/providers/AnalyticsProvider';
+import { useOnboardingAgent } from '../../../contexts';
 
 export const JsonMethodContent: React.FC<IMethodContentProps> = ({
   method,
@@ -11,6 +12,7 @@ export const JsonMethodContent: React.FC<IMethodContentProps> = ({
 }) => {
   const config = method.getJsonConfig?.(token, url);
   const analytics = useAnalytics();
+  const agent = useOnboardingAgent();
   if (!config) return null;
 
   return (
@@ -23,7 +25,7 @@ export const JsonMethodContent: React.FC<IMethodContentProps> = ({
         readOnly
         rows={12}
         onInteraction={() =>
-          analytics.track('mcp_installed', { method: 'json' })
+          analytics.track('mcp_installed', { method: 'json', agent })
         }
       />
     </PMVStack>
