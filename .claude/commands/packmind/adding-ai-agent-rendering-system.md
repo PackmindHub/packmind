@@ -193,7 +193,7 @@ const labels: Record<RenderMode, string> = {
 
 ### Step 10: Update documentation files
 
-Add the new agent to both `apps/doc/docs/manage-ai-agents.md` and `apps/doc/docs/distribution.md` tables, ensuring consistency between both files. Include the file location and whether it can be disabled.
+Add the new agent to both `apps/doc/administration/manage-ai-agents.mdx` and `apps/doc/governance/distribution.mdx` tables, ensuring consistency between both files. Include the file location and whether it can be disabled.
 
 ```markdown
 | **New Agent** | `.new-agent/rules/` | Yes |
