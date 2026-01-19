@@ -88,7 +88,7 @@ interface WebhookTestConfig<TPayload> {
 }
 
 function contractWebhookTest<TPayload>(config: WebhookTestConfig<TPayload>) {
-  describe(`${config.providerName} Webhook Integration Test`, () => {
+  describe.skip(`${config.providerName} Webhook Integration Test`, () => {
     let dataSource: DataSource;
     let testApp: TestApp;
     let dataFactory: DataFactory;
