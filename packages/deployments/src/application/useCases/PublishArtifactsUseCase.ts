@@ -14,7 +14,6 @@ import {
   OrganizationId,
   UserId,
   DistributionStatus,
-  GitCommit,
   GitRepo,
   Target,
   TargetId,
@@ -38,6 +37,7 @@ import {
 } from '../utils/GitFileUtils';
 import { PackmindConfigService } from '../services/PackmindConfigService';
 import { v4 as uuidv4 } from 'uuid';
+import { PublishArtifactsDelayedJob } from '../jobs/PublishArtifactsDelayedJob';
 
 const origin = 'PublishArtifactsUseCase';
 
@@ -56,6 +56,7 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
     private readonly targetService: TargetService,
     private readonly renderModeConfigurationService: RenderModeConfigurationService,
     private readonly eventEmitterService: PackmindEventEmitterService,
+    private readonly publishArtifactsDelayedJob: PublishArtifactsDelayedJob,
     private readonly packmindConfigService: PackmindConfigService = new PackmindConfigService(),
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {}
@@ -124,12 +125,6 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
           standardsCount: standardVersions.length,
           skillsCount: skillVersions.length,
         });
-
-        this.logger.info('--------------');
-        this.logger.info('Recipe versions', { recipeVersions });
-        this.logger.info('Standard versions', { standardVersions });
-        this.logger.info('Skill versions', { skillVersions });
-        this.logger.info('--------------');
 
         // Get previous deployments for all targets in this repo
         const {
@@ -216,7 +211,7 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
           command.packagesSlugs,
         );
 
-        // Commit changes (once per repository)
+        // Build commit message for the job
         const commitMessage = this.buildCommitMessage(
           recipeVersions,
           standardVersions,
@@ -227,62 +222,56 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
           targets,
         );
 
-        let gitCommit;
-        let distributionStatus = DistributionStatus.success;
-
-        try {
-          // Use file updates from first target (they're all the same for multi-target repos)
-          const firstTargetUpdates = fileUpdatesPerTarget.values().next().value;
-          if (!firstTargetUpdates) {
-            throw new Error('No file updates found for any target');
-          }
-          gitCommit = await this.gitPort.commitToGit(
-            gitRepo,
-            firstTargetUpdates.createOrUpdate,
-            commitMessage,
-            firstTargetUpdates.delete,
-          );
-          this.logger.info('Committed unified artifacts', {
-            commitId: gitCommit.id,
-            commitSha: gitCommit.sha,
-            filesCreatedOrUpdated: firstTargetUpdates.createOrUpdate.length,
-            filesDeleted: firstTargetUpdates.delete.length,
-          });
-        } catch (error) {
-          if (
-            error instanceof Error &&
-            error.message === 'NO_CHANGES_DETECTED'
-          ) {
-            this.logger.info('No changes detected for unified deployment', {
-              repositoryId,
-            });
-            distributionStatus = DistributionStatus.no_changes;
-            gitCommit = undefined;
-          } else {
-            throw error;
-          }
+        // Get file updates from first target (they're all the same for multi-target repos)
+        const firstTargetUpdates = fileUpdatesPerTarget.values().next().value;
+        if (!firstTargetUpdates) {
+          throw new Error('No file updates found for any target');
         }
 
-        // Create distribution records for each target
+        // Create distribution records for each target with in_progress status
+        const targetDistributions: Distribution[] = [];
         for (const target of targets) {
           const distribution = await this.createDistribution(
             command,
             target,
-            recipeVersions,
-            standardVersions,
-            skillVersions,
             activeRenderModes,
-            distributionStatus,
-            gitCommit,
+            DistributionStatus.in_progress,
+            undefined,
           );
+          targetDistributions.push(distribution);
           distributions.push(distribution);
 
           this.logger.info('Created distribution record for target', {
             targetId: target.id,
             distributionId: distribution.id,
-            status: distributionStatus,
+            status: DistributionStatus.in_progress,
           });
         }
+
+        // Enqueue one job per repository (using the first target's distribution as the reference)
+        // The job will update all distributions for this repository on completion
+        const firstDistribution = targetDistributions[0];
+        await this.publishArtifactsDelayedJob.addJob({
+          distributionId: firstDistribution.id,
+          organizationId: command.organizationId as OrganizationId,
+          userId: command.userId as UserId,
+          targetId: targets[0].id,
+          gitRepoId: gitRepo.id,
+          fileUpdates: firstTargetUpdates,
+          commitMessage,
+          recipeVersionIds: recipeVersions.map((rv) => rv.id),
+          standardVersionIds: standardVersions.map((sv) => sv.id),
+          skillVersionIds: skillVersions.map((skv) => skv.id),
+          activeRenderModes,
+          packagesSlugs: command.packagesSlugs,
+          source,
+        });
+
+        this.logger.info('Enqueued publish artifacts job for repository', {
+          repositoryId,
+          distributionId: firstDistribution.id,
+          targetsCount: targets.length,
+        });
       } catch (error) {
         const errorMessage =
           error instanceof Error ? error.message : String(error);
@@ -296,9 +285,6 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
           const distribution = await this.createDistribution(
             command,
             target,
-            recipeVersions,
-            standardVersions,
-            skillVersions,
             activeRenderModes,
             DistributionStatus.failure,
             undefined,
@@ -333,12 +319,9 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
   private async createDistribution(
     command: PublishArtifactsCommand,
     target: Target,
-    recipeVersions: RecipeVersion[],
-    standardVersions: StandardVersion[],
-    skillVersions: SkillVersion[],
     activeRenderModes: RenderMode[],
     status: DistributionStatus,
-    gitCommit?: GitCommit,
+    gitCommit?: undefined,
     error?: string,
   ): Promise<Distribution> {
     const distributionId = createDistributionId(uuidv4());

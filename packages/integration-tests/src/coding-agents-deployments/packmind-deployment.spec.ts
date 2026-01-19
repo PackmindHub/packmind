@@ -1,6 +1,7 @@
 import { GitCommitSchema } from '@packmind/git';
 import { gitCommitFactory } from '@packmind/git/test';
 import {
+  DistributionStatus,
   GitCommit,
   Package,
   PackagesDeployment,
@@ -13,6 +14,15 @@ import { DataFactory } from '../helpers/DataFactory';
 import { makeIntegrationTestDataSource } from '../helpers/makeIntegrationTestDataSource';
 import { TestApp } from '../helpers/TestApp';
 
+/**
+ * Note: With async deployment using delayed jobs, commitToGit is now called
+ * asynchronously by the background job worker. These tests have been updated
+ * to verify:
+ * 1. Distributions are created with in_progress status
+ * 2. Jobs are enqueued (mocked in integration tests)
+ *
+ * File content verification is covered by unit tests in PublishArtifactsUseCase.spec.ts
+ */
 describe('Packmind Deployment Spec', () => {
   let testApp: TestApp;
   let dataFactory: DataFactory;
@@ -87,6 +97,7 @@ describe('Packmind Deployment Spec', () => {
     let standardsPackage1: Package;
 
     beforeEach(async () => {
+      // Mock the git commit to prevent actual git operations
       commit = await createGitCommit();
       commitToGit = jest.fn().mockResolvedValue(commit);
       const gitAdapter = testApp.gitHexa.getAdapter();
@@ -97,109 +108,70 @@ describe('Packmind Deployment Spec', () => {
         [],
         'Standards Package 1',
       );
-      await distributePackage(standardsPackage1);
     });
 
-    it('properly distributes standards', async () => {
-      expect(commitToGit).toHaveBeenCalledWith(
-        dataFactory.gitRepo,
-        [
-          {
-            content: expect.stringContaining(standard1.name),
-            path: `.packmind/standards/${standard1.slug}.md`,
-          },
-          {
-            content: expect.any(String),
-            path: `.packmind/standards-index.md`,
-          },
-          {
-            content: expect.any(String),
-            path: `packmind.json`,
-          },
-        ],
-        expect.any(String),
-        expect.any(Array),
-      );
+    describe('when distributing a single package', () => {
+      let result: PackagesDeployment[];
+
+      beforeEach(async () => {
+        result = await distributePackage(standardsPackage1);
+      });
+
+      it('creates exactly one distribution', async () => {
+        expect(result).toHaveLength(1);
+      });
+
+      it('sets distribution status to in_progress', async () => {
+        expect(result[0].status).toBe(DistributionStatus.in_progress);
+      });
     });
 
     describe('when new package is distributed', () => {
-      it('re-distributes previously distributed standards ', async () => {
+      let result: PackagesDeployment[];
+
+      beforeEach(async () => {
+        await distributePackage(standardsPackage1);
         const standardsPackage2 = await createPackage(
           [standard2],
           [],
           'Standards Package 2',
         );
-        await distributePackage(standardsPackage2);
+        result = await distributePackage(standardsPackage2);
+      });
 
-        expect(commitToGit).toHaveBeenCalledWith(
-          dataFactory.gitRepo,
-          [
-            {
-              content: expect.stringContaining(standard1.name),
-              path: `.packmind/standards/${standard1.slug}.md`,
-            },
-            {
-              content: expect.stringContaining(standard2.name),
-              path: `.packmind/standards/${standard2.slug}.md`,
-            },
-            {
-              content: expect.any(String),
-              path: `.packmind/standards-index.md`,
-            },
-            {
-              content: expect.any(String),
-              path: `packmind.json`,
-            },
-          ],
-          expect.any(String),
-          expect.any(Array),
-        );
+      it('creates exactly one distribution', async () => {
+        expect(result).toHaveLength(1);
+      });
+
+      it('sets distribution status to in_progress', async () => {
+        expect(result[0].status).toBe(DistributionStatus.in_progress);
       });
     });
 
     describe('when a standard previously distributed has been deleted', () => {
+      let result: PackagesDeployment[];
+
       beforeEach(async () => {
         await testApp.standardsHexa.getAdapter().deleteStandard({
           standardId: standard1.id,
           userId: dataFactory.user.id.toString(),
           organizationId: dataFactory.organization.id.toString(),
         });
-      });
-
-      it('does not re-distribute the deleted standard', async () => {
+        await distributePackage(standardsPackage1);
         const standardsPackage2 = await createPackage(
           [standard2],
           [],
           'Standards Package 2',
         );
-        await distributePackage(standardsPackage2);
+        result = await distributePackage(standardsPackage2);
+      });
 
-        // Check the second call (first call was in beforeEach with standard1)
-        expect(commitToGit).toHaveBeenCalledTimes(2);
-        const secondCallArgs = commitToGit.mock.calls[1];
-        expect(secondCallArgs[0]).toEqual(dataFactory.gitRepo);
-        // Note: publishPackages re-distributes all active standards for the target
-        // including previously distributed ones, not just the requested ones
-        expect(secondCallArgs[1]).toEqual([
-          {
-            content: expect.stringContaining(standard1.name),
-            path: `.packmind/standards/${standard1.slug}.md`,
-          },
-          {
-            content: expect.stringContaining(standard2.name),
-            path: `.packmind/standards/${standard2.slug}.md`,
-          },
-          {
-            content: expect.any(String),
-            path: `.packmind/standards-index.md`,
-          },
-          {
-            content: expect.any(String),
-            path: `packmind.json`,
-          },
-        ]);
-        expect(secondCallArgs[2]).toEqual(expect.any(String));
-        expect(secondCallArgs[3]).toEqual(expect.any(Array));
+      it('creates exactly one distribution', async () => {
+        expect(result).toHaveLength(1);
+      });
+
+      it('sets distribution status to in_progress', async () => {
+        expect(result[0].status).toBe(DistributionStatus.in_progress);
       });
     });
   });
@@ -208,108 +180,77 @@ describe('Packmind Deployment Spec', () => {
     let recipesPackage1: Package;
 
     beforeEach(async () => {
+      // Mock the git commit to prevent actual git operations
       commit = await createGitCommit();
       commitToGit = jest.fn().mockResolvedValue(commit);
       const gitAdapter = testApp.gitHexa.getAdapter();
       jest.spyOn(gitAdapter, 'commitToGit').mockImplementation(commitToGit);
 
       recipesPackage1 = await createPackage([], [recipe1], 'Recipes Package 1');
-      await distributePackage(recipesPackage1);
     });
 
-    it('properly distributes the recipes', async () => {
-      expect(commitToGit).toHaveBeenCalledWith(
-        dataFactory.gitRepo,
-        [
-          {
-            path: `.packmind/commands/${recipe1.slug}.md`,
-            content: expect.stringContaining(recipe1.content),
-          },
-          {
-            path: `.packmind/commands-index.md`,
-            content: expect.any(String),
-          },
-          {
-            path: `packmind.json`,
-            content: expect.any(String),
-          },
-        ],
-        expect.any(String),
-        expect.any(Array),
-      );
+    describe('when distributing a single package', () => {
+      let result: PackagesDeployment[];
+
+      beforeEach(async () => {
+        result = await distributePackage(recipesPackage1);
+      });
+
+      it('creates exactly one distribution', async () => {
+        expect(result).toHaveLength(1);
+      });
+
+      it('sets distribution status to in_progress', async () => {
+        expect(result[0].status).toBe(DistributionStatus.in_progress);
+      });
     });
 
     describe('when a new package is distributed', () => {
-      it('re-distributes previously distributed recipes ', async () => {
+      let result: PackagesDeployment[];
+
+      beforeEach(async () => {
+        await distributePackage(recipesPackage1);
         const recipesPackage2 = await createPackage(
           [],
           [recipe2],
           'Recipes Package 2',
         );
-        await distributePackage(recipesPackage2);
+        result = await distributePackage(recipesPackage2);
+      });
 
-        expect(commitToGit).toHaveBeenCalledWith(
-          dataFactory.gitRepo,
-          [
-            {
-              path: `.packmind/commands/${recipe1.slug}.md`,
-              content: expect.stringContaining(recipe1.content),
-            },
-            {
-              path: `.packmind/commands/${recipe2.slug}.md`,
-              content: expect.stringContaining(recipe2.content),
-            },
-            {
-              path: `.packmind/commands-index.md`,
-              content: expect.any(String),
-            },
-            {
-              path: `packmind.json`,
-              content: expect.any(String),
-            },
-          ],
-          expect.any(String),
-          expect.any(Array),
-        );
+      it('creates exactly one distribution', async () => {
+        expect(result).toHaveLength(1);
+      });
+
+      it('sets distribution status to in_progress', async () => {
+        expect(result[0].status).toBe(DistributionStatus.in_progress);
       });
     });
 
     describe('when a distributed recipe has been deleted', () => {
+      let result: PackagesDeployment[];
+
       beforeEach(async () => {
         await testApp.recipesHexa.getAdapter().deleteRecipe({
           ...dataFactory.packmindCommand(),
           recipeId: recipe1.id,
           spaceId: recipe1.spaceId,
         });
-      });
-
-      it('does not re-distribute the deleted recipe', async () => {
+        await distributePackage(recipesPackage1);
         const recipesPackage2 = await createPackage(
           [],
           [recipe2],
           'Recipes Package 2',
         );
-        await distributePackage(recipesPackage2);
+        result = await distributePackage(recipesPackage2);
+      });
 
-        expect(commitToGit).toHaveBeenCalledWith(
-          dataFactory.gitRepo,
-          [
-            {
-              path: `.packmind/commands/${recipe2.slug}.md`,
-              content: expect.stringContaining(recipe2.content),
-            },
-            {
-              path: `.packmind/commands-index.md`,
-              content: expect.any(String),
-            },
-            {
-              path: `packmind.json`,
-              content: expect.any(String),
-            },
-          ],
-          expect.any(String),
-          expect.any(Array),
-        );
+      it('creates exactly one distribution', async () => {
+        expect(result).toHaveLength(1);
+      });
+
+      it('sets distribution status to in_progress', async () => {
+        expect(result[0].status).toBe(DistributionStatus.in_progress);
       });
     });
   });

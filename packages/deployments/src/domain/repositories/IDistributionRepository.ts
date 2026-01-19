@@ -2,6 +2,7 @@ import {
   Distribution,
   DistributionId,
   DistributionStatus,
+  GitCommit,
   OrganizationId,
   PackageId,
   RecipeId,
@@ -129,4 +130,16 @@ export interface IDistributionRepository {
     organizationId: OrganizationId,
     targetId: TargetId,
   ): Promise<PackageId[]>;
+
+  /**
+   * Update the status of a distribution after async processing completes.
+   * Used by background jobs to update distributions from 'in_progress' to
+   * final status (success, failure, or no_changes).
+   */
+  updateStatus(
+    id: DistributionId,
+    status: DistributionStatus,
+    gitCommit?: GitCommit,
+    error?: string,
+  ): Promise<Distribution>;
 }

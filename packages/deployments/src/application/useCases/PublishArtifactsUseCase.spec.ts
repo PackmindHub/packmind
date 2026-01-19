@@ -18,10 +18,8 @@ import {
   createTargetId,
   createGitRepoId,
   createGitProviderId,
-  createGitCommitId,
   createRuleId,
   GitRepo,
-  GitCommit,
   IRecipesPort,
   ISkillsPort,
   IStandardsPort,
@@ -39,6 +37,7 @@ import { targetFactory } from '../../../test/targetFactory';
 import { v4 as uuidv4 } from 'uuid';
 import { stubLogger } from '@packmind/test-utils';
 import assert from 'assert';
+import { PublishArtifactsDelayedJob } from '../jobs/PublishArtifactsDelayedJob';
 
 describe('PublishArtifactsUseCase', () => {
   let useCase: PublishArtifactsUseCase;
@@ -51,6 +50,7 @@ describe('PublishArtifactsUseCase', () => {
   let mockTargetService: jest.Mocked<TargetService>;
   let mockRenderModeConfigurationService: jest.Mocked<RenderModeConfigurationService>;
   let mockEventEmitterService: jest.Mocked<PackmindEventEmitterService>;
+  let mockPublishArtifactsDelayedJob: jest.Mocked<PublishArtifactsDelayedJob>;
   let mockLogger: PackmindLogger;
 
   const userId = createUserId(uuidv4());
@@ -132,6 +132,10 @@ describe('PublishArtifactsUseCase', () => {
       emit: jest.fn(),
     } as unknown as jest.Mocked<PackmindEventEmitterService>;
 
+    mockPublishArtifactsDelayedJob = {
+      addJob: jest.fn().mockResolvedValue(undefined),
+    } as unknown as jest.Mocked<PublishArtifactsDelayedJob>;
+
     useCase = new PublishArtifactsUseCase(
       mockRecipesPort,
       mockStandardsPort,
@@ -142,6 +146,7 @@ describe('PublishArtifactsUseCase', () => {
       mockTargetService,
       mockRenderModeConfigurationService,
       mockEventEmitterService,
+      mockPublishArtifactsDelayedJob,
       undefined,
       mockLogger,
     );
@@ -155,7 +160,6 @@ describe('PublishArtifactsUseCase', () => {
     let command: PublishArtifactsCommand;
     let recipeVersion: ReturnType<typeof recipeVersionFactory>;
     let standardVersion: ReturnType<typeof standardVersionFactory>;
-    let gitCommit: GitCommit;
     let target: ReturnType<typeof targetFactory>;
     let gitRepo: GitRepo;
 
@@ -188,14 +192,6 @@ describe('PublishArtifactsUseCase', () => {
         name: 'Production',
         path: 'docs',
       });
-
-      gitCommit = {
-        id: createGitCommitId(uuidv4()),
-        sha: 'abc123def456',
-        message: 'Test commit',
-        author: 'Test Author <test@example.com>',
-        url: 'https://github.com/test-owner/test-repo/commit/abc123def456',
-      };
 
       command = {
         userId,
@@ -245,32 +241,28 @@ describe('PublishArtifactsUseCase', () => {
         ],
         delete: [],
       });
-      mockGitPort.commitToGit.mockResolvedValue(gitCommit);
-    });
-
-    it('returns one distribution', async () => {
-      const result = await useCase.execute(command);
-
-      expect(result.distributions).toHaveLength(1);
     });
 
     it('returns distributions with empty distributedPackages', async () => {
       const result = await useCase.execute(command);
 
+      expect(result.distributions).toHaveLength(1);
       // distributedPackages are created by PublishPackagesUseCase, not PublishArtifactsUseCase
       expect(result.distributions[0].distributedPackages).toEqual([]);
     });
 
-    it('stores distribution with success status', async () => {
+    it('stores distribution with in_progress status', async () => {
       const result = await useCase.execute(command);
 
-      expect(result.distributions[0].status).toBe(DistributionStatus.success);
+      expect(result.distributions[0].status).toBe(
+        DistributionStatus.in_progress,
+      );
     });
 
-    it('stores distribution with git commit', async () => {
+    it('stores distribution without git commit', async () => {
       const result = await useCase.execute(command);
 
-      expect(result.distributions[0].gitCommit).toEqual(gitCommit);
+      expect(result.distributions[0].gitCommit).toBeUndefined();
     });
 
     it('calls renderArtifacts with both recipe and standard versions', async () => {
@@ -298,17 +290,12 @@ describe('PublishArtifactsUseCase', () => {
       );
     });
 
-    it('retrieves active render modes from configuration service', async () => {
+    it('uses coding agents mapped from render modes', async () => {
       await useCase.execute(command);
 
       expect(
         mockRenderModeConfigurationService.getActiveRenderModes,
       ).toHaveBeenCalledWith(organizationId);
-    });
-
-    it('maps render modes to coding agents', async () => {
-      await useCase.execute(command);
-
       expect(
         mockRenderModeConfigurationService.mapRenderModesToCodingAgents,
       ).toHaveBeenCalledWith(activeRenderModes);
@@ -320,70 +307,56 @@ describe('PublishArtifactsUseCase', () => {
       expect(result.distributions[0].renderModes).toEqual(activeRenderModes);
     });
 
-    it('creates exactly one git commit', async () => {
+    it('enqueues exactly one job for the repository', async () => {
       await useCase.execute(command);
 
-      expect(mockGitPort.commitToGit).toHaveBeenCalledTimes(1);
+      expect(mockPublishArtifactsDelayedJob.addJob).toHaveBeenCalledTimes(1);
     });
 
-    it('commits files for both recipes and standards', async () => {
+    it('enqueues a job with correct parameters', async () => {
       await useCase.execute(command);
 
-      expect(mockGitPort.commitToGit).toHaveBeenCalledWith(
-        gitRepo,
-        expect.arrayContaining([
-          expect.objectContaining({ path: expect.stringContaining('recipes') }),
-          expect.objectContaining({
-            path: expect.stringContaining('standards'),
+      expect(mockPublishArtifactsDelayedJob.addJob).toHaveBeenCalledWith(
+        expect.objectContaining({
+          gitRepoId: gitRepo.id,
+          organizationId,
+          userId,
+          recipeVersionIds: [recipeVersion.id],
+          standardVersionIds: [standardVersion.id],
+          skillVersionIds: [],
+          fileUpdates: expect.objectContaining({
+            createOrUpdate: expect.arrayContaining([
+              expect.objectContaining({
+                path: expect.stringContaining('recipes'),
+              }),
+              expect.objectContaining({
+                path: expect.stringContaining('standards'),
+              }),
+            ]),
           }),
-        ]),
-        expect.stringContaining(
-          'Update artifacts (commands + standards + skills)',
-        ),
-        expect.any(Array),
+          commitMessage: expect.stringContaining(
+            'Update artifacts (commands + standards + skills)',
+          ),
+        }),
       );
     });
 
-    it('includes recipe name in commit message', async () => {
+    it('includes both recipes and standards in commit message', async () => {
       await useCase.execute(command);
 
-      const commitMessage = mockGitPort.commitToGit.mock.calls[0][2];
-      expect(commitMessage).toContain('Test Recipe');
+      const jobInput = mockPublishArtifactsDelayedJob.addJob.mock.calls[0][0];
+      expect(jobInput.commitMessage).toContain('Test Recipe');
+      expect(jobInput.commitMessage).toContain('test-recipe');
+      expect(jobInput.commitMessage).toContain('Test Standard');
+      expect(jobInput.commitMessage).toContain('test-standard');
+      expect(jobInput.commitMessage).toContain('Production');
     });
 
-    it('includes recipe slug in commit message', async () => {
+    it('includes packmind.json in file updates', async () => {
       await useCase.execute(command);
 
-      const commitMessage = mockGitPort.commitToGit.mock.calls[0][2];
-      expect(commitMessage).toContain('test-recipe');
-    });
-
-    it('includes standard name in commit message', async () => {
-      await useCase.execute(command);
-
-      const commitMessage = mockGitPort.commitToGit.mock.calls[0][2];
-      expect(commitMessage).toContain('Test Standard');
-    });
-
-    it('includes standard slug in commit message', async () => {
-      await useCase.execute(command);
-
-      const commitMessage = mockGitPort.commitToGit.mock.calls[0][2];
-      expect(commitMessage).toContain('test-standard');
-    });
-
-    it('includes target name in commit message', async () => {
-      await useCase.execute(command);
-
-      const commitMessage = mockGitPort.commitToGit.mock.calls[0][2];
-      expect(commitMessage).toContain('Production');
-    });
-
-    it('includes packmind.json in committed files', async () => {
-      await useCase.execute(command);
-
-      const committedFiles = mockGitPort.commitToGit.mock.calls[0][1];
-      expect(committedFiles).toContainEqual(
+      const jobInput = mockPublishArtifactsDelayedJob.addJob.mock.calls[0][0];
+      expect(jobInput.fileUpdates.createOrUpdate).toContainEqual(
         expect.objectContaining({
           path: expect.stringMatching(/packmind\.json$/),
         }),
@@ -396,7 +369,6 @@ describe('PublishArtifactsUseCase', () => {
     let recipeVersion: ReturnType<typeof recipeVersionFactory>;
     let target: ReturnType<typeof targetFactory>;
     let gitRepo: GitRepo;
-    let gitCommit: GitCommit;
 
     beforeEach(() => {
       recipeVersion = recipeVersionFactory({
@@ -412,14 +384,6 @@ describe('PublishArtifactsUseCase', () => {
       };
 
       target = targetFactory({ id: targetId, gitRepoId: gitRepo.id });
-
-      gitCommit = {
-        id: createGitCommitId(uuidv4()),
-        sha: 'abc123',
-        message: 'Test',
-        author: 'Author',
-        url: 'https://example.com',
-      };
 
       command = {
         userId,
@@ -453,18 +417,12 @@ describe('PublishArtifactsUseCase', () => {
         ],
         delete: [],
       });
-      mockGitPort.commitToGit.mockResolvedValue(gitCommit);
-    });
-
-    it('creates one distribution', async () => {
-      const result = await useCase.execute(command);
-
-      expect(result.distributions).toHaveLength(1);
     });
 
     it('creates distribution with empty distributedPackages', async () => {
       const result = await useCase.execute(command);
 
+      expect(result.distributions).toHaveLength(1);
       expect(result.distributions[0].distributedPackages).toEqual([]);
     });
 
@@ -486,7 +444,6 @@ describe('PublishArtifactsUseCase', () => {
     let standardVersion: ReturnType<typeof standardVersionFactory>;
     let target: ReturnType<typeof targetFactory>;
     let gitRepo: GitRepo;
-    let gitCommit: GitCommit;
 
     beforeEach(() => {
       standardVersion = standardVersionFactory({
@@ -502,14 +459,6 @@ describe('PublishArtifactsUseCase', () => {
       };
 
       target = targetFactory({ id: targetId, gitRepoId: gitRepo.id });
-
-      gitCommit = {
-        id: createGitCommitId(uuidv4()),
-        sha: 'abc123',
-        message: 'Test',
-        author: 'Author',
-        url: 'https://example.com',
-      };
 
       command = {
         userId,
@@ -545,18 +494,12 @@ describe('PublishArtifactsUseCase', () => {
         ],
         delete: [],
       });
-      mockGitPort.commitToGit.mockResolvedValue(gitCommit);
-    });
-
-    it('creates one distribution', async () => {
-      const result = await useCase.execute(command);
-
-      expect(result.distributions).toHaveLength(1);
     });
 
     it('creates distribution with empty distributedPackages', async () => {
       const result = await useCase.execute(command);
 
+      expect(result.distributions).toHaveLength(1);
       expect(result.distributions[0].distributedPackages).toEqual([]);
     });
 
@@ -573,7 +516,7 @@ describe('PublishArtifactsUseCase', () => {
     });
   });
 
-  describe('when no changes are detected', () => {
+  describe('when enqueuing the job', () => {
     let command: PublishArtifactsCommand;
     let recipeVersion: ReturnType<typeof recipeVersionFactory>;
     let standardVersion: ReturnType<typeof standardVersionFactory>;
@@ -628,19 +571,18 @@ describe('PublishArtifactsUseCase', () => {
       );
       mockGitPort.getFileFromRepo.mockResolvedValue(null);
       mockCodingAgentPort.renderArtifacts.mockResolvedValue({
-        createOrUpdate: [],
+        createOrUpdate: [
+          { path: '.packmind/recipes/test.md', content: 'content' },
+        ],
         delete: [],
       });
-      mockGitPort.commitToGit.mockRejectedValue(
-        new Error('NO_CHANGES_DETECTED'),
-      );
     });
 
-    it('creates distributions with no_changes status', async () => {
+    it('creates distributions with in_progress status', async () => {
       const result = await useCase.execute(command);
 
       expect(result.distributions[0].status).toBe(
-        DistributionStatus.no_changes,
+        DistributionStatus.in_progress,
       );
     });
 
@@ -650,12 +592,24 @@ describe('PublishArtifactsUseCase', () => {
       expect(result.distributions[0].gitCommit).toBeUndefined();
     });
 
-    it('saves distribution to repository', async () => {
+    it('saves distribution to repository with in_progress status', async () => {
       await useCase.execute(command);
 
       expect(mockDistributionRepository.add).toHaveBeenCalledWith(
         expect.objectContaining({
-          status: DistributionStatus.no_changes,
+          status: DistributionStatus.in_progress,
+        }),
+      );
+    });
+
+    it('enqueues a job with the distribution id', async () => {
+      await useCase.execute(command);
+
+      expect(mockPublishArtifactsDelayedJob.addJob).toHaveBeenCalledWith(
+        expect.objectContaining({
+          distributionId: expect.any(String),
+          organizationId,
+          userId,
         }),
       );
     });
@@ -746,7 +700,6 @@ describe('PublishArtifactsUseCase', () => {
     let target1: ReturnType<typeof targetFactory>;
     let target2: ReturnType<typeof targetFactory>;
     let gitRepo: GitRepo;
-    let gitCommit: GitCommit;
     const targetId1 = createTargetId(uuidv4());
     const targetId2 = createTargetId(uuidv4());
 
@@ -778,14 +731,6 @@ describe('PublishArtifactsUseCase', () => {
         name: 'Staging',
         path: 'docs/staging',
       });
-
-      gitCommit = {
-        id: createGitCommitId(uuidv4()),
-        sha: 'abc123',
-        message: 'Test',
-        author: 'Author',
-        url: 'https://example.com',
-      };
 
       command = {
         userId,
@@ -825,43 +770,48 @@ describe('PublishArtifactsUseCase', () => {
         ],
         delete: [],
       });
-      mockGitPort.commitToGit.mockResolvedValue(gitCommit);
     });
 
-    it('creates two distributions', async () => {
+    it('creates one distribution per target', async () => {
       const result = await useCase.execute(command);
 
       expect(result.distributions).toHaveLength(2);
-    });
-
-    it('assigns first target to first distribution', async () => {
-      const result = await useCase.execute(command);
-
       expect(result.distributions[0].target.id).toBe(targetId1);
-    });
-
-    it('assigns second target to second distribution', async () => {
-      const result = await useCase.execute(command);
-
       expect(result.distributions[1].target.id).toBe(targetId2);
     });
 
-    it('creates only one git commit for all targets', async () => {
+    it('enqueues only one job for all targets in the same repository', async () => {
       await useCase.execute(command);
 
-      expect(mockGitPort.commitToGit).toHaveBeenCalledTimes(1);
+      expect(mockPublishArtifactsDelayedJob.addJob).toHaveBeenCalledTimes(1);
     });
 
-    it('assigns git commit to first distribution', async () => {
+    it('sets first distribution status to in_progress', async () => {
       const result = await useCase.execute(command);
 
-      expect(result.distributions[0].gitCommit).toEqual(gitCommit);
+      expect(result.distributions[0].status).toBe(
+        DistributionStatus.in_progress,
+      );
     });
 
-    it('assigns same git commit to second distribution', async () => {
+    it('sets second distribution status to in_progress', async () => {
       const result = await useCase.execute(command);
 
-      expect(result.distributions[1].gitCommit).toEqual(gitCommit);
+      expect(result.distributions[1].status).toBe(
+        DistributionStatus.in_progress,
+      );
+    });
+
+    it('leaves first distribution gitCommit undefined', async () => {
+      const result = await useCase.execute(command);
+
+      expect(result.distributions[0].gitCommit).toBeUndefined();
+    });
+
+    it('leaves second distribution gitCommit undefined', async () => {
+      const result = await useCase.execute(command);
+
+      expect(result.distributions[1].gitCommit).toBeUndefined();
     });
 
     it('calls renderArtifacts once per target', async () => {
@@ -870,18 +820,12 @@ describe('PublishArtifactsUseCase', () => {
       expect(mockCodingAgentPort.renderArtifacts).toHaveBeenCalledTimes(2);
     });
 
-    it('includes Production target in commit message', async () => {
+    it('includes both targets in commit message', async () => {
       await useCase.execute(command);
 
-      const commitMessage = mockGitPort.commitToGit.mock.calls[0][2];
-      expect(commitMessage).toContain('Production');
-    });
-
-    it('includes Staging target in commit message', async () => {
-      await useCase.execute(command);
-
-      const commitMessage = mockGitPort.commitToGit.mock.calls[0][2];
-      expect(commitMessage).toContain('Staging');
+      const jobInput = mockPublishArtifactsDelayedJob.addJob.mock.calls[0][0];
+      expect(jobInput.commitMessage).toContain('Production');
+      expect(jobInput.commitMessage).toContain('Staging');
     });
   });
 
@@ -893,7 +837,6 @@ describe('PublishArtifactsUseCase', () => {
     let oldStandardVersion: ReturnType<typeof standardVersionFactory>;
     let target: ReturnType<typeof targetFactory>;
     let gitRepo: GitRepo;
-    let gitCommit: GitCommit;
 
     beforeEach(() => {
       const recipeId = createRecipeId(uuidv4());
@@ -935,14 +878,6 @@ describe('PublishArtifactsUseCase', () => {
 
       target = targetFactory({ id: targetId, gitRepoId: gitRepo.id });
 
-      gitCommit = {
-        id: createGitCommitId(uuidv4()),
-        sha: 'abc123',
-        message: 'Test',
-        author: 'Author',
-        url: 'https://example.com',
-      };
-
       command = {
         userId,
         organizationId,
@@ -979,7 +914,6 @@ describe('PublishArtifactsUseCase', () => {
         ],
         delete: [],
       });
-      mockGitPort.commitToGit.mockResolvedValue(gitCommit);
     });
 
     it('combines previous and new recipe versions for rendering', async () => {
@@ -1138,33 +1072,20 @@ describe('PublishArtifactsUseCase', () => {
   });
 
   describe('when configuration is missing', () => {
-    let recipeVersion: ReturnType<typeof recipeVersionFactory>;
-    let target: ReturnType<typeof targetFactory>;
-    let gitRepo: GitRepo;
-    let gitCommit: GitCommit;
-    let command: PublishArtifactsCommand;
-
-    beforeEach(() => {
-      recipeVersion = recipeVersionFactory({
+    it('uses default render modes', async () => {
+      const recipeVersion = recipeVersionFactory({
         id: createRecipeVersionId(uuidv4()),
       });
-      target = targetFactory({ id: targetId });
-      gitRepo = {
+      const target = targetFactory({ id: targetId });
+      const gitRepo = {
         id: createGitRepoId(uuidv4()),
         owner: 'test-owner',
         repo: 'test-repo',
         branch: 'main',
         providerId: createGitProviderId(uuidv4()),
       };
-      gitCommit = {
-        id: createGitCommitId(uuidv4()),
-        sha: 'abc123',
-        message: 'Test',
-        author: 'Author',
-        url: 'https://example.com',
-      };
 
-      command = {
+      const command: PublishArtifactsCommand = {
         userId,
         organizationId,
         recipeVersionIds: [recipeVersion.id],
@@ -1199,20 +1120,12 @@ describe('PublishArtifactsUseCase', () => {
         ],
         delete: [],
       });
-      mockGitPort.commitToGit.mockResolvedValue(gitCommit);
-    });
 
-    it('maps default render modes to coding agents', async () => {
-      await useCase.execute(command);
+      const result = await useCase.execute(command);
 
       expect(
         mockRenderModeConfigurationService.mapRenderModesToCodingAgents,
       ).toHaveBeenCalledWith(DEFAULT_ACTIVE_RENDER_MODES);
-    });
-
-    it('stores default render modes in distribution', async () => {
-      const result = await useCase.execute(command);
-
       expect(result.distributions[0].renderModes).toEqual(
         DEFAULT_ACTIVE_RENDER_MODES,
       );
@@ -1227,7 +1140,6 @@ describe('PublishArtifactsUseCase', () => {
     let previousStandardVersion: ReturnType<typeof standardVersionFactory>;
     let target: ReturnType<typeof targetFactory>;
     let gitRepo: GitRepo;
-    let gitCommit: GitCommit;
 
     beforeEach(() => {
       // New recipe to deploy (different recipeId than previous)
@@ -1278,14 +1190,6 @@ describe('PublishArtifactsUseCase', () => {
 
       target = targetFactory({ id: targetId, gitRepoId: gitRepo.id });
 
-      gitCommit = {
-        id: createGitCommitId(uuidv4()),
-        sha: 'abc123',
-        message: 'Test',
-        author: 'Author',
-        url: 'https://example.com',
-      };
-
       // Deploy only new versions (not the previously deployed ones)
       command = {
         userId,
@@ -1325,7 +1229,6 @@ describe('PublishArtifactsUseCase', () => {
         ],
         delete: [],
       });
-      mockGitPort.commitToGit.mockResolvedValue(gitCommit);
     });
 
     it('passes removed recipe versions to renderArtifacts', async () => {
@@ -1405,7 +1308,6 @@ describe('PublishArtifactsUseCase', () => {
     let standardVersion: ReturnType<typeof standardVersionFactory>;
     let target: ReturnType<typeof targetFactory>;
     let gitRepo: GitRepo;
-    let gitCommit: GitCommit;
 
     beforeEach(() => {
       recipeVersion = recipeVersionFactory({
@@ -1434,14 +1336,6 @@ describe('PublishArtifactsUseCase', () => {
       };
 
       target = targetFactory({ id: targetId, gitRepoId: gitRepo.id });
-
-      gitCommit = {
-        id: createGitCommitId(uuidv4()),
-        sha: 'abc123',
-        message: 'Test',
-        author: 'Author',
-        url: 'https://example.com',
-      };
 
       command = {
         userId,
@@ -1480,7 +1374,6 @@ describe('PublishArtifactsUseCase', () => {
         ],
         delete: [],
       });
-      mockGitPort.commitToGit.mockResolvedValue(gitCommit);
     });
 
     it('passes empty removed arrays to renderArtifacts', async () => {
@@ -1504,7 +1397,6 @@ describe('PublishArtifactsUseCase', () => {
     let previousStandardVersion: ReturnType<typeof standardVersionFactory>;
     let target: ReturnType<typeof targetFactory>;
     let gitRepo: GitRepo;
-    let gitCommit: GitCommit;
     const newStandardVersionId = createStandardVersionId(uuidv4());
     const previousStandardVersionId = createStandardVersionId(uuidv4());
     const mockRules: Rule[] = [
@@ -1544,14 +1436,6 @@ describe('PublishArtifactsUseCase', () => {
       };
 
       target = targetFactory({ id: targetId, gitRepoId: gitRepo.id });
-
-      gitCommit = {
-        id: createGitCommitId(uuidv4()),
-        sha: 'abc123',
-        message: 'Test',
-        author: 'Author',
-        url: 'https://example.com',
-      };
 
       command = {
         userId,
@@ -1594,7 +1478,6 @@ describe('PublishArtifactsUseCase', () => {
         ],
         delete: [],
       });
-      mockGitPort.commitToGit.mockResolvedValue(gitCommit);
     });
 
     it('loads rules for previously deployed standards', async () => {
@@ -1644,7 +1527,6 @@ describe('PublishArtifactsUseCase', () => {
     let recipeVersion: ReturnType<typeof recipeVersionFactory>;
     let target: ReturnType<typeof targetFactory>;
     let gitRepo: GitRepo;
-    let gitCommit: GitCommit;
 
     beforeEach(() => {
       recipeVersion = recipeVersionFactory({
@@ -1668,14 +1550,6 @@ describe('PublishArtifactsUseCase', () => {
         name: 'Production',
         path: '',
       });
-
-      gitCommit = {
-        id: createGitCommitId(uuidv4()),
-        sha: 'abc123def456',
-        message: 'Test commit',
-        author: 'Test Author <test@example.com>',
-        url: 'https://github.com/test-owner/test-repo/commit/abc123def456',
-      };
 
       command = {
         userId,
@@ -1712,15 +1586,14 @@ describe('PublishArtifactsUseCase', () => {
         ],
         delete: [],
       });
-      mockGitPort.commitToGit.mockResolvedValue(gitCommit);
     });
 
-    it('includes packmind.json in committed files', async () => {
+    it('includes packmind.json in file updates', async () => {
       await useCase.execute(command);
 
-      const committedFiles = mockGitPort.commitToGit.mock.calls[0][1];
-      const packmindJsonFile = committedFiles.find((f: { path: string }) =>
-        f.path.endsWith('packmind.json'),
+      const jobInput = mockPublishArtifactsDelayedJob.addJob.mock.calls[0][0];
+      const packmindJsonFile = jobInput.fileUpdates.createOrUpdate.find(
+        (f: { path: string }) => f.path.endsWith('packmind.json'),
       );
 
       expect(packmindJsonFile).toBeDefined();
@@ -1729,9 +1602,9 @@ describe('PublishArtifactsUseCase', () => {
     it('includes package-one slug in packmind.json content', async () => {
       await useCase.execute(command);
 
-      const committedFiles = mockGitPort.commitToGit.mock.calls[0][1];
-      const packmindJsonFile = committedFiles.find((f: { path: string }) =>
-        f.path.endsWith('packmind.json'),
+      const jobInput = mockPublishArtifactsDelayedJob.addJob.mock.calls[0][0];
+      const packmindJsonFile = jobInput.fileUpdates.createOrUpdate.find(
+        (f: { path: string }) => f.path.endsWith('packmind.json'),
       );
 
       assert(packmindJsonFile, 'packmindJsonFile should be defined');
@@ -1745,9 +1618,9 @@ describe('PublishArtifactsUseCase', () => {
     it('includes package-two slug in packmind.json content', async () => {
       await useCase.execute(command);
 
-      const committedFiles = mockGitPort.commitToGit.mock.calls[0][1];
-      const packmindJsonFile = committedFiles.find((f: { path: string }) =>
-        f.path.endsWith('packmind.json'),
+      const jobInput = mockPublishArtifactsDelayedJob.addJob.mock.calls[0][0];
+      const packmindJsonFile = jobInput.fileUpdates.createOrUpdate.find(
+        (f: { path: string }) => f.path.endsWith('packmind.json'),
       );
 
       assert(packmindJsonFile, 'packmindJsonFile should be defined');
@@ -1761,9 +1634,9 @@ describe('PublishArtifactsUseCase', () => {
     it('generates valid JSON content for packmind.json', async () => {
       await useCase.execute(command);
 
-      const committedFiles = mockGitPort.commitToGit.mock.calls[0][1];
-      const packmindJsonFile = committedFiles.find((f: { path: string }) =>
-        f.path.endsWith('packmind.json'),
+      const jobInput = mockPublishArtifactsDelayedJob.addJob.mock.calls[0][0];
+      const packmindJsonFile = jobInput.fileUpdates.createOrUpdate.find(
+        (f: { path: string }) => f.path.endsWith('packmind.json'),
       );
 
       assert(packmindJsonFile, 'packmindJsonFile should be defined');
@@ -1785,7 +1658,6 @@ describe('PublishArtifactsUseCase', () => {
     let recipeVersion: ReturnType<typeof recipeVersionFactory>;
     let target: ReturnType<typeof targetFactory>;
     let gitRepo: GitRepo;
-    let gitCommit: GitCommit;
 
     beforeEach(() => {
       recipeVersion = recipeVersionFactory({
@@ -1809,14 +1681,6 @@ describe('PublishArtifactsUseCase', () => {
         name: 'Production',
         path: '',
       });
-
-      gitCommit = {
-        id: createGitCommitId(uuidv4()),
-        sha: 'abc123def456',
-        message: 'Test commit',
-        author: 'Test Author <test@example.com>',
-        url: 'https://github.com/test-owner/test-repo/commit/abc123def456',
-      };
 
       command = {
         userId,
@@ -1862,15 +1726,14 @@ describe('PublishArtifactsUseCase', () => {
         ],
         delete: [],
       });
-      mockGitPort.commitToGit.mockResolvedValue(gitCommit);
     });
 
     it('merges new packages with existing packages', async () => {
       await useCase.execute(command);
 
-      const committedFiles = mockGitPort.commitToGit.mock.calls[0][1];
-      const packmindJsonFile = committedFiles.find((f: { path: string }) =>
-        f.path.endsWith('packmind.json'),
+      const jobInput = mockPublishArtifactsDelayedJob.addJob.mock.calls[0][0];
+      const packmindJsonFile = jobInput.fileUpdates.createOrUpdate.find(
+        (f: { path: string }) => f.path.endsWith('packmind.json'),
       );
 
       assert(packmindJsonFile, 'packmindJsonFile should be defined');
@@ -1890,9 +1753,9 @@ describe('PublishArtifactsUseCase', () => {
     it('preserves existing-package-a in merged result', async () => {
       await useCase.execute(command);
 
-      const committedFiles = mockGitPort.commitToGit.mock.calls[0][1];
-      const packmindJsonFile = committedFiles.find((f: { path: string }) =>
-        f.path.endsWith('packmind.json'),
+      const jobInput = mockPublishArtifactsDelayedJob.addJob.mock.calls[0][0];
+      const packmindJsonFile = jobInput.fileUpdates.createOrUpdate.find(
+        (f: { path: string }) => f.path.endsWith('packmind.json'),
       );
 
       assert(packmindJsonFile, 'packmindJsonFile should be defined');
@@ -1908,9 +1771,9 @@ describe('PublishArtifactsUseCase', () => {
     it('preserves existing-package-b in merged result', async () => {
       await useCase.execute(command);
 
-      const committedFiles = mockGitPort.commitToGit.mock.calls[0][1];
-      const packmindJsonFile = committedFiles.find((f: { path: string }) =>
-        f.path.endsWith('packmind.json'),
+      const jobInput = mockPublishArtifactsDelayedJob.addJob.mock.calls[0][0];
+      const packmindJsonFile = jobInput.fileUpdates.createOrUpdate.find(
+        (f: { path: string }) => f.path.endsWith('packmind.json'),
       );
 
       assert(packmindJsonFile, 'packmindJsonFile should be defined');
@@ -1940,7 +1803,6 @@ describe('PublishArtifactsUseCase', () => {
     let recipeVersion: ReturnType<typeof recipeVersionFactory>;
     let target: ReturnType<typeof targetFactory>;
     let gitRepo: GitRepo;
-    let gitCommit: GitCommit;
 
     beforeEach(() => {
       recipeVersion = recipeVersionFactory({
@@ -1964,14 +1826,6 @@ describe('PublishArtifactsUseCase', () => {
         name: 'Production',
         path: 'apps/frontend',
       });
-
-      gitCommit = {
-        id: createGitCommitId(uuidv4()),
-        sha: 'abc123def456',
-        message: 'Test commit',
-        author: 'Test Author <test@example.com>',
-        url: 'https://github.com/test-owner/test-repo/commit/abc123def456',
-      };
 
       command = {
         userId,
@@ -2015,7 +1869,6 @@ describe('PublishArtifactsUseCase', () => {
         ],
         delete: [],
       });
-      mockGitPort.commitToGit.mockResolvedValue(gitCommit);
     });
 
     it('fetches packmind.json from target path', async () => {
@@ -2035,7 +1888,6 @@ describe('PublishArtifactsUseCase', () => {
     let recipeVersion: ReturnType<typeof recipeVersionFactory>;
     let target: ReturnType<typeof targetFactory>;
     let gitRepo: GitRepo;
-    let gitCommit: GitCommit;
 
     beforeEach(() => {
       recipeVersion = recipeVersionFactory({
@@ -2059,14 +1911,6 @@ describe('PublishArtifactsUseCase', () => {
         name: 'Production',
         path: '',
       });
-
-      gitCommit = {
-        id: createGitCommitId(uuidv4()),
-        sha: 'abc123def456',
-        message: 'Test commit',
-        author: 'Test Author <test@example.com>',
-        url: 'https://github.com/test-owner/test-repo/commit/abc123def456',
-      };
 
       command = {
         userId,
@@ -2104,15 +1948,14 @@ describe('PublishArtifactsUseCase', () => {
         ],
         delete: [],
       });
-      mockGitPort.commitToGit.mockResolvedValue(gitCommit);
     });
 
     it('creates packmind.json with only new packages', async () => {
       await useCase.execute(command);
 
-      const committedFiles = mockGitPort.commitToGit.mock.calls[0][1];
-      const packmindJsonFile = committedFiles.find((f: { path: string }) =>
-        f.path.endsWith('packmind.json'),
+      const jobInput = mockPublishArtifactsDelayedJob.addJob.mock.calls[0][0];
+      const packmindJsonFile = jobInput.fileUpdates.createOrUpdate.find(
+        (f: { path: string }) => f.path.endsWith('packmind.json'),
       );
 
       assert(packmindJsonFile, 'packmindJsonFile should be defined');
@@ -2134,7 +1977,6 @@ describe('PublishArtifactsUseCase', () => {
     let skillFiles: SkillFile[];
     let target: ReturnType<typeof targetFactory>;
     let gitRepo: GitRepo;
-    let gitCommit: GitCommit;
 
     beforeEach(() => {
       const skillVersionId = createSkillVersionId(uuidv4());
@@ -2178,14 +2020,6 @@ describe('PublishArtifactsUseCase', () => {
         name: 'Production',
         path: '',
       });
-
-      gitCommit = {
-        id: createGitCommitId(uuidv4()),
-        sha: 'abc123def456',
-        message: 'Test commit',
-        author: 'Test Author <test@example.com>',
-        url: 'https://github.com/test-owner/test-repo/commit/abc123def456',
-      };
 
       command = {
         userId,
@@ -2238,7 +2072,6 @@ describe('PublishArtifactsUseCase', () => {
         ],
         delete: [],
       });
-      mockGitPort.commitToGit.mockResolvedValue(gitCommit);
     });
 
     it('fetches skill files for each skill version', async () => {
@@ -2266,10 +2099,12 @@ describe('PublishArtifactsUseCase', () => {
       );
     });
 
-    it('creates distribution with success status', async () => {
+    it('creates distribution with in_progress status', async () => {
       const result = await useCase.execute(command);
 
-      expect(result.distributions[0].status).toBe(DistributionStatus.success);
+      expect(result.distributions[0].status).toBe(
+        DistributionStatus.in_progress,
+      );
     });
   });
 

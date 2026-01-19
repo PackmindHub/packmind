@@ -3,6 +3,7 @@ import {
   BaseHexa,
   BaseHexaOpts,
   HexaRegistry,
+  JobsService,
   PackmindEventEmitterService,
 } from '@packmind/node-utils';
 import {
@@ -105,6 +106,7 @@ export class DeploymentsHexa extends BaseHexa<
       const spacesPort = registry.getAdapter<ISpacesPort>(ISpacesPortName);
       const accountsPort =
         registry.getAdapter<IAccountsPort>(IAccountsPortName);
+      const jobsService = registry.getService(JobsService);
       const eventEmitterService = registry.getService(
         PackmindEventEmitterService,
       );
@@ -118,6 +120,7 @@ export class DeploymentsHexa extends BaseHexa<
         [ISkillsPortName]: skillsPort,
         [ISpacesPortName]: spacesPort,
         [IAccountsPortName]: accountsPort,
+        jobsService,
         eventEmitterService,
       });
 

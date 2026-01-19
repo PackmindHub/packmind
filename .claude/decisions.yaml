@@ -52,3 +52,23 @@
     - 'skill-design'
     - 'simplification'
     - 'architecture'
+
+- timestamp: 2026-01-20T12:00:00Z
+  file: packages/integration-tests/src/test-setup.ts
+  context: 'Fixing pre-existing lint errors while adding SSEEventPublisher mock'
+  category: 'patterns'
+  question: 'How should I fix unused parameter lint errors in a stub class implementing an interface?'
+  decision: 'Use underscore prefix for unused parameters (_jobsOptions, _listeners, _jobId) combined with eslint-disable comments'
+  reasoning: 'The SyncJob class is a test stub that implements IQueue interface. The unused parameters are required by the interface contract but not needed for the in-memory stub implementation. Using underscore prefix signals intent while eslint-disable silences the warnings without refactoring the interface.'
+  alternatives:
+    - 'Refactor IQueue interface to make parameters optional'
+    - 'Remove parameters from method signatures (would break interface compliance)'
+    - 'Add no-op usage of parameters just to silence linter'
+  impact: 'local'
+  confidence: 'high'
+  source: 'pattern-matching'
+  tags:
+    - 'testing'
+    - 'typescript'
+    - 'eslint'
+    - 'interface-implementation'

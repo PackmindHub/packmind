@@ -4,6 +4,7 @@ import {
   Distribution,
   DistributionId,
   DistributionStatus,
+  GitCommit,
   OrganizationId,
   PackageId,
   RecipeId,
@@ -1112,6 +1113,57 @@ export class DistributionRepository implements IDistributionRepository {
           error: error instanceof Error ? error.message : String(error),
         },
       );
+      throw error;
+    }
+  }
+
+  async updateStatus(
+    id: DistributionId,
+    status: DistributionStatus,
+    gitCommit?: GitCommit,
+    error?: string,
+  ): Promise<Distribution> {
+    this.logger.info('Updating distribution status', {
+      distributionId: id,
+      status,
+      hasGitCommit: !!gitCommit,
+      hasError: !!error,
+    });
+
+    try {
+      const distribution = await this.findById(id);
+
+      if (!distribution) {
+        this.logger.error('Distribution not found for status update', {
+          distributionId: id,
+        });
+        throw new Error(`Distribution not found: ${id}`);
+      }
+
+      distribution.status = status;
+
+      if (gitCommit) {
+        distribution.gitCommit = gitCommit;
+      }
+
+      if (error) {
+        distribution.error = error;
+      }
+
+      const updatedDistribution = await this.repository.save(distribution);
+
+      this.logger.info('Distribution status updated successfully', {
+        distributionId: id,
+        status,
+      });
+
+      return updatedDistribution;
+    } catch (error) {
+      this.logger.error('Failed to update distribution status', {
+        distributionId: id,
+        status,
+        error: error instanceof Error ? error.message : String(error),
+      });
       throw error;
     }
   }

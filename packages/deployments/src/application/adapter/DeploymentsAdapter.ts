@@ -1,5 +1,7 @@
+import { PackmindLogger } from '@packmind/logger';
 import {
   IBaseAdapter,
+  JobsService,
   PackmindEventEmitterService,
 } from '@packmind/node-utils';
 import {
@@ -72,8 +74,10 @@ import {
   UpdateRenderModeConfigurationCommand,
   UpdateTargetCommand,
 } from '@packmind/types';
+import { IDeploymentsDelayedJobs } from '../../domain/jobs';
 import { IDistributionRepository } from '../../domain/repositories/IDistributionRepository';
 import { IDistributedPackageRepository } from '../../domain/repositories/IDistributedPackageRepository';
+import { PublishArtifactsJobFactory } from '../../infra/jobs/PublishArtifactsJobFactory';
 import { DeploymentsServices } from '../services/DeploymentsServices';
 import { AddArtefactsToPackageUsecase } from '../useCases/addArtefactsToPackage/addArtefactsToPackage.usecase';
 import { AddTargetUseCase } from '../useCases/AddTargetUseCase';
@@ -106,9 +110,12 @@ import { PullContentUseCase } from '../useCases/PullContentUseCase';
 import { UpdateRenderModeConfigurationUseCase } from '../useCases/UpdateRenderModeConfigurationUseCase';
 import { UpdateTargetUseCase } from '../useCases/UpdateTargetUseCase';
 
+const origin = 'DeploymentsAdapter';
+
 export class DeploymentsAdapter
   implements IBaseAdapter<IDeploymentPort>, IDeploymentPort
 {
+  private deploymentsDelayedJobs: IDeploymentsDelayedJobs | null = null;
   private gitPort: IGitPort | null = null;
   private recipesPort: IRecipesPort | null = null;
   private codingAgentPort: ICodingAgentPort | null = null;
@@ -153,6 +160,7 @@ export class DeploymentsAdapter
     private readonly deploymentsServices: DeploymentsServices,
     private readonly distributionRepository: IDistributionRepository,
     private readonly distributedPackageRepository: IDistributedPackageRepository,
+    private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {}
 
   /**
@@ -167,6 +175,7 @@ export class DeploymentsAdapter
     [ISkillsPortName]: ISkillsPort;
     [ISpacesPortName]: ISpacesPort;
     [IAccountsPortName]: IAccountsPort;
+    jobsService: JobsService;
     eventEmitterService: PackmindEventEmitterService;
   }): Promise<void> {
     // Step 1: Set all ports
@@ -178,7 +187,12 @@ export class DeploymentsAdapter
     this.spacesPort = ports[ISpacesPortName];
     this.accountsPort = ports[IAccountsPortName];
 
-    // Step 2: Validate all required ports are set
+    // Step 2: Build delayed jobs
+    this.deploymentsDelayedJobs = await this.buildDelayedJobs(
+      ports.jobsService,
+    );
+
+    // Step 3: Validate all required ports are set
     if (
       !this.gitPort &&
       !this.recipesPort &&
@@ -192,7 +206,7 @@ export class DeploymentsAdapter
       throw new Error('DeploymentsAdapter: Required ports not provided');
     }
 
-    // Step 3: Create all use cases with non-null ports
+    // Step 4: Create all use cases with non-null ports
     this._publishArtifactsUseCase = new PublishArtifactsUseCase(
       this.recipesPort,
       this.standardsPort,
@@ -203,6 +217,7 @@ export class DeploymentsAdapter
       this.deploymentsServices.getTargetService(),
       this.deploymentsServices.getRenderModeConfigurationService(),
       ports.eventEmitterService,
+      this.deploymentsDelayedJobs.publishArtifactsDelayedJob,
     );
 
     this._publishPackagesUseCase = new PublishPackagesUseCase(
@@ -397,6 +412,35 @@ export class DeploymentsAdapter
     );
   }
 
+  /**
+   * Build delayed jobs from JobsService.
+   * This is called internally during initialize().
+   */
+  private async buildDelayedJobs(
+    jobsService: JobsService,
+  ): Promise<IDeploymentsDelayedJobs> {
+    this.logger.debug('Building delayed jobs for Deployments domain');
+
+    const jobFactory = new PublishArtifactsJobFactory(
+      this.distributionRepository,
+      this.gitPort!,
+    );
+
+    jobsService.registerJobQueue(jobFactory.getQueueName(), jobFactory);
+    await jobFactory.createQueue();
+
+    if (!jobFactory.delayedJob) {
+      throw new Error(
+        'DeploymentsAdapter: Failed to create delayed job for publish artifacts',
+      );
+    }
+
+    this.logger.debug('Deployments delayed jobs built successfully');
+    return {
+      publishArtifactsDelayedJob: jobFactory.delayedJob,
+    };
+  }
+
   public isReady(): boolean {
     return (
       this.gitPort != null &&
@@ -405,7 +449,8 @@ export class DeploymentsAdapter
       this.standardsPort != null &&
       this.spacesPort != null &&
       this.accountsPort != null &&
-      this.deploymentsServices != null
+      this.deploymentsServices != null &&
+      this.deploymentsDelayedJobs != null
     );
   }
 
