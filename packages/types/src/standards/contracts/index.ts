@@ -4,6 +4,7 @@ export * from './IAddRuleToStandard';
 export * from './ICreateRuleExample';
 export * from './IDeleteRuleExample';
 export * from './IDeleteStandard';
+export * from './IDeleteStandardsBatch';
 export * from './IGetStandardById';
 export * from './IListStandardsBySpace';
 export * from './IUpdateRuleExample';

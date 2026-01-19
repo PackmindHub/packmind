@@ -613,6 +613,64 @@ export class GithubRepository implements IGitRepo {
     }
   }
 
+  async listFilesInDirectory(
+    path: string,
+    branch: string,
+  ): Promise<{ path: string }[]> {
+    const { owner, repo } = this.options;
+
+    try {
+      // Get the branch ref to find the tree SHA
+      const refResponse = await this.axiosInstance.get(
+        `/repos/${owner}/${repo}/git/ref/heads/${branch}`,
+      );
+      const refSha = refResponse.data.object.sha;
+
+      // Get the commit to find the tree SHA
+      const commitResponse = await this.axiosInstance.get(
+        `/repos/${owner}/${repo}/git/commits/${refSha}`,
+      );
+      const baseTreeSha = commitResponse.data.tree.sha;
+
+      // Fetch full tree recursively
+      const treeResponse = await this.axiosInstance.get(
+        `/repos/${owner}/${repo}/git/trees/${baseTreeSha}`,
+        { params: { recursive: 1 } },
+      );
+
+      // Normalize path to ensure it ends with /
+      const normalizedPath = path.endsWith('/') ? path : `${path}/`;
+
+      // Filter for files (blobs) under the given path
+      const files = treeResponse.data.tree
+        .filter(
+          (item: { type: string; path?: string }) =>
+            item.type === 'blob' && item.path?.startsWith(normalizedPath),
+        )
+        .map((item: { path: string }) => ({ path: item.path }));
+
+      this.logger.debug('Listed files in directory', {
+        path,
+        branch,
+        fileCount: files.length,
+      });
+
+      return files;
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      this.logger.error('Failed to list files in directory', {
+        path,
+        owner,
+        repo,
+        branch,
+        error: errorMessage,
+      });
+      // Return empty array if directory doesn't exist
+      return [];
+    }
+  }
+
   async handlePushHook(
     payload: unknown,
     fileMatcher: RegExp,
