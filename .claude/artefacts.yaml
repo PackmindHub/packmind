@@ -78,3 +78,19 @@
   path: CLAUDE.md
   type: claude_md
   date: 2026-01-19T10:00:00Z
+- name: standard-typescript-code-standards.md
+  path: .claude/rules/packmind/standard-typescript-code-standards.md
+  type: rule
+  date: 2026-01-19T14:00:00Z
+- name: standard-tests-redaction.md
+  path: .claude/rules/packmind/standard-tests-redaction.md
+  type: rule
+  date: 2026-01-19T14:00:00Z
+- name: standard-changelog.md
+  path: .claude/rules/packmind/standard-changelog.md
+  type: rule
+  date: 2026-01-19T14:00:00Z
+- name: standard-testing-good-practices.md
+  path: .claude/rules/packmind/standard-testing-good-practices.md
+  type: rule
+  date: 2026-01-19T14:00:00Z

@@ -1,6 +1,13 @@
 import { IBaseAdapter } from '@packmind/node-utils';
 import { PackmindLogger } from '@packmind/logger';
 import {
+  CodingAgent,
+  DeployArtifactsForAgentsCommand,
+  DeployArtifactsForAgentsResponse,
+  FileModification,
+  FileUpdates,
+  GenerateRemovalUpdatesCommand,
+  GenerateRemovalUpdatesResponse,
   ICodingAgentDeployerRegistry,
   ICodingAgentPort,
   IGitPort,
@@ -13,6 +20,11 @@ import {
 import { ICodingAgentRepositories } from '../../domain/repositories/ICodingAgentRepositories';
 import { CodingAgentServices } from '../services/CodingAgentServices';
 import { RenderArtifactsUseCase } from '../useCases/RenderArtifactsUseCase';
+import {
+  AGENT_FILE_PATHS,
+  AGENT_SKILL_PATHS,
+  SUPPORTED_AGENTS,
+} from '../../domain/AgentConfiguration';
 
 const origin = 'CodingAgentAdapter';
 
@@ -89,7 +101,101 @@ export class CodingAgentAdapter
     return this._renderArtifactsUseCase.execute(command);
   }
 
+  /**
+   * @deprecated Use deployArtifactsForAgents or generateRemovalUpdatesForAgents instead
+   */
   getDeployerRegistry(): ICodingAgentDeployerRegistry {
     return this.codingAgentRepositories.getDeployerRegistry();
+  }
+
+  async deployArtifactsForAgents(
+    command: DeployArtifactsForAgentsCommand,
+  ): Promise<DeployArtifactsForAgentsResponse> {
+    this.logger.info('Deploying artifacts for agents', {
+      agentsCount: command.codingAgents.length,
+      recipesCount: command.recipeVersions.length,
+      standardsCount: command.standardVersions.length,
+      skillsCount: command.skillVersions.length,
+    });
+
+    const allUpdates: FileUpdates[] = [];
+    const deployerRegistry = this.codingAgentRepositories.getDeployerRegistry();
+
+    for (const agent of command.codingAgents) {
+      const deployer = deployerRegistry.getDeployer(agent);
+      const updates = await deployer.deployArtifacts(
+        command.recipeVersions,
+        command.standardVersions,
+        command.skillVersions,
+      );
+      allUpdates.push(updates);
+    }
+
+    return this.mergeFileUpdates(allUpdates);
+  }
+
+  async generateRemovalUpdatesForAgents(
+    command: GenerateRemovalUpdatesCommand,
+  ): Promise<GenerateRemovalUpdatesResponse> {
+    this.logger.info('Generating removal updates for agents', {
+      agentsCount: command.codingAgents.length,
+      removedRecipesCount: command.removed.recipeVersions.length,
+      removedStandardsCount: command.removed.standardVersions.length,
+      removedSkillsCount: command.removed.skillVersions.length,
+    });
+
+    const allUpdates: FileUpdates[] = [];
+    const deployerRegistry = this.codingAgentRepositories.getDeployerRegistry();
+
+    for (const agent of command.codingAgents) {
+      const deployer = deployerRegistry.getDeployer(agent);
+      const updates = await deployer.generateRemovalFileUpdates(
+        command.removed,
+        command.installed,
+      );
+      allUpdates.push(updates);
+    }
+
+    return this.mergeFileUpdates(allUpdates);
+  }
+
+  getAgentFilePath(agent: CodingAgent): string {
+    return AGENT_FILE_PATHS[agent];
+  }
+
+  getAgentSkillPath(agent: CodingAgent): string | null {
+    return AGENT_SKILL_PATHS[agent];
+  }
+
+  getSupportedAgents(): CodingAgent[] {
+    return SUPPORTED_AGENTS;
+  }
+
+  private mergeFileUpdates(updates: FileUpdates[]): FileUpdates {
+    const merged: FileUpdates = {
+      createOrUpdate: [],
+      delete: [],
+    };
+
+    const pathMap = new Map<string, FileModification>();
+
+    for (const update of updates) {
+      for (const file of update.createOrUpdate) {
+        pathMap.set(file.path, file);
+      }
+    }
+
+    merged.createOrUpdate = Array.from(pathMap.values());
+
+    const deleteSet = new Set<string>();
+    for (const update of updates) {
+      for (const file of update.delete) {
+        deleteSet.add(file.path);
+      }
+    }
+
+    merged.delete = Array.from(deleteSet).map((path) => ({ path }));
+
+    return merged;
   }
 }

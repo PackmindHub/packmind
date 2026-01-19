@@ -53,6 +53,45 @@
     - 'simplification'
     - 'architecture'
 
+- timestamp: 2026-01-19T14:30:00Z
+  file: apps/cli/src/domain/constants/AgentPaths.ts
+  context: 'Consolidating agent paths from multiple locations into centralized AgentConfiguration'
+  category: 'architecture'
+  question: 'Should CLI use the same agent names as CodingAgent type or keep backward compatibility with "github" naming?'
+  decision: 'Maintain backward compatibility by keeping CLI AgentType as "claude" | "github" and mapping "github" to "copilot" internally'
+  reasoning: 'CLI commands already exposed to users use "github" as the agent name. Changing this would be a breaking change for users. The mapping is done at import time from the centralized configuration.'
+  alternatives:
+    - 'Rename "github" to "copilot" in CLI (breaking change)'
+    - 'Add both "github" and "copilot" as aliases'
+    - 'Use CodingAgent type directly in CLI'
+  impact: 'module'
+  confidence: 'high'
+  source: 'inference'
+  tags:
+    - 'backward-compatibility'
+    - 'cli'
+    - 'naming-conventions'
+    - 'agent-configuration'
+
+- timestamp: 2026-01-19T14:35:00Z
+  file: packages/coding-agent/src/domain/AgentConfiguration.ts
+  context: 'Creating centralized agent configuration for file paths and skill paths'
+  category: 'architecture'
+  question: 'Should agent skill paths return empty string or null for agents that do not support skills?'
+  decision: 'Use null for agents without skill support in AGENT_SKILL_PATHS constant'
+  reasoning: 'Null explicitly indicates "no skill support" vs empty string which could be ambiguous or indicate root directory. Makes it clear in API that callers need to check for null.'
+  alternatives:
+    - 'Return empty string for unsupported agents'
+    - 'Omit unsupported agents from the Record (requires Partial<Record>)'
+    - 'Throw error for unsupported agents'
+  impact: 'global'
+  confidence: 'high'
+  source: 'ai-agent'
+  tags:
+    - 'api-design'
+    - 'null-handling'
+    - 'type-safety'
+
 - timestamp: 2026-01-20T12:00:00Z
   file: packages/integration-tests/src/test-setup.ts
   context: 'Fixing pre-existing lint errors while adding SSEEventPublisher mock'
