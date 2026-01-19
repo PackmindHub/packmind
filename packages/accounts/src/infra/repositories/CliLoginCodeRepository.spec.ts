@@ -79,47 +79,76 @@ describe('CliLoginCodeRepository', () => {
   });
 
   describe('.add', () => {
-    it('encrypts code at rest and returns decrypted code', async () => {
-      const cliLoginCode: CliLoginCode = {
-        id: createCliLoginCodeId('123e4567-e89b-12d3-a456-426614174001'),
-        code: createCliLoginCodeToken('PLAIN_CODE'),
-        userId,
-        organizationId,
-        expiresAt: new Date(Date.now() + 5 * 60 * 1000),
-      };
+    const cliLoginCode: CliLoginCode = {
+      id: createCliLoginCodeId('123e4567-e89b-12d3-a456-426614174001'),
+      code: createCliLoginCodeToken('PLAIN_CODE'),
+      userId,
+      organizationId,
+      expiresAt: new Date(Date.now() + 5 * 60 * 1000),
+    };
 
+    it('returns decrypted code after saving', async () => {
       const saved = await repository.add(cliLoginCode);
 
       expect(saved.code).toEqual(cliLoginCode.code);
+    });
+
+    it('encrypts code at rest', async () => {
+      await repository.add(cliLoginCode);
 
       const persisted = await dataSource
         .getRepository(CliLoginCodeSchema)
         .findOne({ where: { id: cliLoginCode.id } });
 
       expect(persisted?.code).not.toEqual('PLAIN_CODE');
+    });
+
+    it('stores encrypted code with IV separator', async () => {
+      await repository.add(cliLoginCode);
+
+      const persisted = await dataSource
+        .getRepository(CliLoginCodeSchema)
+        .findOne({ where: { id: cliLoginCode.id } });
+
       expect(persisted?.code).toContain(':');
     });
   });
 
   describe('.findByCode', () => {
     describe('when code exists', () => {
-      it('returns decrypted CLI login code', async () => {
-        const cliLoginCode: CliLoginCode = {
-          id: createCliLoginCodeId('123e4567-e89b-12d3-a456-426614174002'),
-          code: createCliLoginCodeToken('FIND_CODE'),
-          userId,
-          organizationId,
-          expiresAt: new Date(Date.now() + 5 * 60 * 1000),
-        };
+      const cliLoginCode: CliLoginCode = {
+        id: createCliLoginCodeId('123e4567-e89b-12d3-a456-426614174002'),
+        code: createCliLoginCodeToken('FIND_CODE'),
+        userId,
+        organizationId,
+        expiresAt: new Date(Date.now() + 5 * 60 * 1000),
+      };
 
+      beforeEach(async () => {
         await repository.add(cliLoginCode);
+      });
 
+      it('returns a non-null result', async () => {
         const found = await repository.findByCode(
           createCliLoginCodeToken('FIND_CODE'),
         );
 
         expect(found).not.toBeNull();
+      });
+
+      it('returns the correct id', async () => {
+        const found = await repository.findByCode(
+          createCliLoginCodeToken('FIND_CODE'),
+        );
+
         expect(found?.id).toEqual(cliLoginCode.id);
+      });
+
+      it('returns decrypted code', async () => {
+        const found = await repository.findByCode(
+          createCliLoginCodeToken('FIND_CODE'),
+        );
+
         expect(found?.code).toEqual('FIND_CODE');
       });
     });
@@ -137,20 +166,27 @@ describe('CliLoginCodeRepository', () => {
 
   describe('.findById', () => {
     describe('when id exists', () => {
-      it('returns decrypted CLI login code', async () => {
-        const cliLoginCode: CliLoginCode = {
-          id: createCliLoginCodeId('123e4567-e89b-12d3-a456-426614174003'),
-          code: createCliLoginCodeToken('FINDBYID_CODE'),
-          userId,
-          organizationId,
-          expiresAt: new Date(Date.now() + 5 * 60 * 1000),
-        };
+      const cliLoginCode: CliLoginCode = {
+        id: createCliLoginCodeId('123e4567-e89b-12d3-a456-426614174003'),
+        code: createCliLoginCodeToken('FINDBYID_CODE'),
+        userId,
+        organizationId,
+        expiresAt: new Date(Date.now() + 5 * 60 * 1000),
+      };
 
+      beforeEach(async () => {
         await repository.add(cliLoginCode);
+      });
 
+      it('returns a non-null result', async () => {
         const found = await repository.findById(cliLoginCode.id);
 
         expect(found).not.toBeNull();
+      });
+
+      it('returns decrypted code', async () => {
+        const found = await repository.findById(cliLoginCode.id);
+
         expect(found?.code).toEqual('FINDBYID_CODE');
       });
     });
@@ -187,34 +223,46 @@ describe('CliLoginCodeRepository', () => {
 
   describe('.deleteExpired', () => {
     describe('when expired codes exist', () => {
-      it('deletes only expired codes', async () => {
-        const expiredCode: CliLoginCode = {
-          id: createCliLoginCodeId('123e4567-e89b-12d3-a456-426614174005'),
-          code: createCliLoginCodeToken('EXPIRED_CODE'),
-          userId,
-          organizationId,
-          expiresAt: new Date(Date.now() - 1000), // 1 second ago
-        };
+      const expiredCode: CliLoginCode = {
+        id: createCliLoginCodeId('123e4567-e89b-12d3-a456-426614174005'),
+        code: createCliLoginCodeToken('EXPIRED_CODE'),
+        userId,
+        organizationId,
+        expiresAt: new Date(Date.now() - 1000), // 1 second ago
+      };
 
-        const validCode: CliLoginCode = {
-          id: createCliLoginCodeId('123e4567-e89b-12d3-a456-426614174006'),
-          code: createCliLoginCodeToken('VALID_CODE'),
-          userId,
-          organizationId,
-          expiresAt: new Date(Date.now() + 5 * 60 * 1000), // 5 minutes from now
-        };
+      const validCode: CliLoginCode = {
+        id: createCliLoginCodeId('123e4567-e89b-12d3-a456-426614174006'),
+        code: createCliLoginCodeToken('VALID_CODE'),
+        userId,
+        organizationId,
+        expiresAt: new Date(Date.now() + 5 * 60 * 1000), // 5 minutes from now
+      };
 
+      beforeEach(async () => {
         await repository.add(expiredCode);
         await repository.add(validCode);
+      });
 
+      it('returns 1 for deleted count', async () => {
         const deletedCount = await repository.deleteExpired();
 
         expect(deletedCount).toBe(1);
+      });
+
+      it('removes expired code from repository', async () => {
+        await repository.deleteExpired();
 
         const foundExpired = await repository.findById(expiredCode.id);
-        const foundValid = await repository.findById(validCode.id);
 
         expect(foundExpired).toBeNull();
+      });
+
+      it('keeps valid code in repository', async () => {
+        await repository.deleteExpired();
+
+        const foundValid = await repository.findById(validCode.id);
+
         expect(foundValid).not.toBeNull();
       });
     });

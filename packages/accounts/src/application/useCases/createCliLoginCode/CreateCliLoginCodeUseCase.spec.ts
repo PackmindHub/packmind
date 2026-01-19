@@ -32,8 +32,10 @@ describe('CreateCliLoginCodeUseCase', () => {
 
   describe('execute', () => {
     describe('with valid command', () => {
-      it('creates a CLI login code with correct properties', async () => {
-        const savedCode: CliLoginCode = {
+      let savedCode: CliLoginCode;
+
+      beforeEach(() => {
+        savedCode = {
           id: 'code-id' as CliLoginCode['id'],
           code: 'ABCD1234EF' as CliLoginCode['code'],
           userId,
@@ -44,56 +46,52 @@ describe('CreateCliLoginCodeUseCase', () => {
         };
 
         mockRepository.add.mockResolvedValue(savedCode);
+      });
 
+      it('returns the generated code', async () => {
         const result = await useCase.execute({ userId, organizationId });
 
         expect(result.code).toBe('ABCD1234EF');
+      });
+
+      it('returns a Date for expiresAt', async () => {
+        const result = await useCase.execute({ userId, organizationId });
+
         expect(result.expiresAt).toBeInstanceOf(Date);
       });
 
-      it('sets expiration time based on CLI_LOGIN_CODE_EXPIRATION_MINUTES', async () => {
+      it('sets expiration time at or after expected minimum', async () => {
         const beforeExecution = Date.now();
-
-        const savedCode: CliLoginCode = {
-          id: 'code-id' as CliLoginCode['id'],
-          code: 'ABCD1234EF' as CliLoginCode['code'],
-          userId,
-          organizationId,
-          expiresAt: new Date(
-            Date.now() + CLI_LOGIN_CODE_EXPIRATION_MINUTES * 60 * 1000,
-          ),
-        };
-
-        mockRepository.add.mockResolvedValue(savedCode);
 
         const result = await useCase.execute({ userId, organizationId });
 
-        const afterExecution = Date.now();
         const expectedMinTime =
           beforeExecution + CLI_LOGIN_CODE_EXPIRATION_MINUTES * 60 * 1000;
-        const expectedMaxTime =
-          afterExecution + CLI_LOGIN_CODE_EXPIRATION_MINUTES * 60 * 1000;
 
         expect(result.expiresAt.getTime()).toBeGreaterThanOrEqual(
           expectedMinTime,
         );
+      });
+
+      it('sets expiration time at or before expected maximum', async () => {
+        const result = await useCase.execute({ userId, organizationId });
+
+        const afterExecution = Date.now();
+        const expectedMaxTime =
+          afterExecution + CLI_LOGIN_CODE_EXPIRATION_MINUTES * 60 * 1000;
+
         expect(result.expiresAt.getTime()).toBeLessThanOrEqual(expectedMaxTime);
       });
 
-      it('calls repository.add with correct parameters', async () => {
-        const savedCode: CliLoginCode = {
-          id: 'code-id' as CliLoginCode['id'],
-          code: 'ABCD1234EF' as CliLoginCode['code'],
-          userId,
-          organizationId,
-          expiresAt: new Date(),
-        };
-
-        mockRepository.add.mockResolvedValue(savedCode);
-
+      it('calls repository.add exactly once', async () => {
         await useCase.execute({ userId, organizationId });
 
         expect(mockRepository.add).toHaveBeenCalledTimes(1);
+      });
+
+      it('calls repository.add with userId and organizationId', async () => {
+        await useCase.execute({ userId, organizationId });
+
         expect(mockRepository.add).toHaveBeenCalledWith(
           expect.objectContaining({
             userId,

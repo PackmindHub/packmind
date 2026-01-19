@@ -147,12 +147,13 @@ export class InvitationRepository
       return [];
     }
 
-    const invitations = await this.repository
-      .createQueryBuilder('invitation')
-      .where('invitation.user_id IN (:...userIds)', { userIds })
-      .orderBy('invitation.user_id', 'ASC')
-      .addOrderBy('invitation.expiration_date', 'DESC')
-      .getMany();
+    const invitations = await this.repository.find({
+      where: { userId: In(userIds) },
+      order: {
+        userId: 'ASC',
+        expirationDate: 'DESC',
+      },
+    });
 
     return Promise.all(
       invitations.map((invitation) => this.decryptInvitation(invitation)),

@@ -60,12 +60,14 @@ describe('ListOrganizationUsersUseCase', () => {
     };
 
     describe('with valid organization containing multiple users', () => {
-      it('returns list of users with their roles', async () => {
-        const user1Id = createUserId('user-1');
-        const user2Id = createUserId('user-2');
-        const user3Id = createUserId('user-3');
+      const user1Id = createUserId('user-1');
+      const user2Id = createUserId('user-2');
+      const user3Id = createUserId('user-3');
 
-        const mockUsers = [
+      let mockUsers: ReturnType<typeof userFactory>[];
+
+      beforeEach(() => {
+        mockUsers = [
           userFactory({
             id: user1Id,
             email: 'admin@example.com',
@@ -102,7 +104,9 @@ describe('ListOrganizationUsersUseCase', () => {
         ];
 
         mockUserService.listUsersByOrganization.mockResolvedValue(mockUsers);
+      });
 
+      it('returns list of users with their roles', async () => {
         const result =
           await listOrganizationUsersUseCase.executeForMembers(validCommand);
 
@@ -113,6 +117,11 @@ describe('ListOrganizationUsersUseCase', () => {
             { userId: user3Id, email: 'viewer@example.com', role: 'member' },
           ],
         });
+      });
+
+      it('calls user service with organization id', async () => {
+        await listOrganizationUsersUseCase.executeForMembers(validCommand);
+
         expect(mockUserService.listUsersByOrganization).toHaveBeenCalledWith(
           organizationId,
         );
@@ -170,13 +179,24 @@ describe('ListOrganizationUsersUseCase', () => {
     });
 
     describe('with service error', () => {
-      it('rethrows error', async () => {
-        const serviceError = new Error('Database connection failed');
-        mockUserService.listUsersByOrganization.mockRejectedValue(serviceError);
+      const serviceError = new Error('Database connection failed');
 
+      beforeEach(() => {
+        mockUserService.listUsersByOrganization.mockRejectedValue(serviceError);
+      });
+
+      it('rethrows error', async () => {
         await expect(
           listOrganizationUsersUseCase.executeForMembers(validCommand),
         ).rejects.toThrow('Database connection failed');
+      });
+
+      it('calls user service with organization id', async () => {
+        await listOrganizationUsersUseCase
+          .executeForMembers(validCommand)
+          .catch(() => {
+            // Expected to throw - catch to verify side effects
+          });
 
         expect(mockUserService.listUsersByOrganization).toHaveBeenCalledWith(
           organizationId,
@@ -196,13 +216,24 @@ describe('ListOrganizationUsersUseCase', () => {
     });
 
     describe('with network timeout error', () => {
-      it('rethrows timeout error', async () => {
-        const timeoutError = new Error('Request timeout');
-        mockUserService.listUsersByOrganization.mockRejectedValue(timeoutError);
+      const timeoutError = new Error('Request timeout');
 
+      beforeEach(() => {
+        mockUserService.listUsersByOrganization.mockRejectedValue(timeoutError);
+      });
+
+      it('rethrows timeout error', async () => {
         await expect(
           listOrganizationUsersUseCase.executeForMembers(validCommand),
         ).rejects.toThrow('Request timeout');
+      });
+
+      it('calls user service with organization id', async () => {
+        await listOrganizationUsersUseCase
+          .executeForMembers(validCommand)
+          .catch(() => {
+            // Expected to throw - catch to verify side effects
+          });
 
         expect(mockUserService.listUsersByOrganization).toHaveBeenCalledWith(
           organizationId,
@@ -211,13 +242,20 @@ describe('ListOrganizationUsersUseCase', () => {
     });
 
     describe('with empty organization', () => {
-      it('returns empty array', async () => {
+      beforeEach(() => {
         mockUserService.listUsersByOrganization.mockResolvedValue([]);
+      });
 
+      it('returns empty array', async () => {
         const result =
           await listOrganizationUsersUseCase.executeForMembers(validCommand);
 
         expect(result).toEqual({ users: [] });
+      });
+
+      it('calls user service with organization id', async () => {
+        await listOrganizationUsersUseCase.executeForMembers(validCommand);
+
         expect(mockUserService.listUsersByOrganization).toHaveBeenCalledWith(
           organizationId,
         );
@@ -225,10 +263,12 @@ describe('ListOrganizationUsersUseCase', () => {
     });
 
     describe('with single user in organization', () => {
-      it('returns single user with role', async () => {
-        const user1Id = createUserId('single-user');
+      const user1Id = createUserId('single-user');
 
-        const mockUsers = [
+      let mockUsers: ReturnType<typeof userFactory>[];
+
+      beforeEach(() => {
+        mockUsers = [
           userFactory({
             id: user1Id,
             email: 'single@example.com',
@@ -243,7 +283,9 @@ describe('ListOrganizationUsersUseCase', () => {
         ];
 
         mockUserService.listUsersByOrganization.mockResolvedValue(mockUsers);
+      });
 
+      it('returns single user with role', async () => {
         const result =
           await listOrganizationUsersUseCase.executeForMembers(validCommand);
 
@@ -252,6 +294,11 @@ describe('ListOrganizationUsersUseCase', () => {
             { userId: user1Id, email: 'single@example.com', role: 'admin' },
           ],
         });
+      });
+
+      it('calls user service with organization id', async () => {
+        await listOrganizationUsersUseCase.executeForMembers(validCommand);
+
         expect(mockUserService.listUsersByOrganization).toHaveBeenCalledWith(
           organizationId,
         );

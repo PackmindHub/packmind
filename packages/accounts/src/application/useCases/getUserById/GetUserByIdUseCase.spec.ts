@@ -32,41 +32,51 @@ describe('GetUserByIdUseCase', () => {
 
   describe('execute', () => {
     describe('when a valid user ID', () => {
-      it('returns the user wrapped in response object', async () => {
-        const mockUser = userFactory({
-          id: createUserId('user-123'),
+      const userId = createUserId('user-123');
+      let mockUser: ReturnType<typeof userFactory>;
+      let command: GetUserByIdCommand;
+
+      beforeEach(() => {
+        mockUser = userFactory({
+          id: userId,
           email: 'testuser@packmind.com',
         });
-
         mockUserService.getUserById.mockResolvedValue(mockUser);
+        command = { userId };
+      });
 
-        const command: GetUserByIdCommand = {
-          userId: createUserId('user-123'),
-        };
-
+      it('returns the user wrapped in response object', async () => {
         const result = await getUserByIdUseCase.execute(command);
 
         expect(result).toEqual({ user: mockUser });
-        expect(mockUserService.getUserById).toHaveBeenCalledWith(
-          command.userId,
-        );
+      });
+
+      it('calls user service with the user ID', async () => {
+        await getUserByIdUseCase.execute(command);
+
+        expect(mockUserService.getUserById).toHaveBeenCalledWith(userId);
       });
     });
 
     describe('when a non-existent user ID', () => {
-      it('returns null user in response object', async () => {
+      const userId = createUserId('non-existent');
+      let command: GetUserByIdCommand;
+
+      beforeEach(() => {
         mockUserService.getUserById.mockResolvedValue(null);
+        command = { userId };
+      });
 
-        const command: GetUserByIdCommand = {
-          userId: createUserId('non-existent'),
-        };
-
+      it('returns null user in response object', async () => {
         const result = await getUserByIdUseCase.execute(command);
 
         expect(result).toEqual({ user: null });
-        expect(mockUserService.getUserById).toHaveBeenCalledWith(
-          command.userId,
-        );
+      });
+
+      it('calls user service with the user ID', async () => {
+        await getUserByIdUseCase.execute(command);
+
+        expect(mockUserService.getUserById).toHaveBeenCalledWith(userId);
       });
     });
 

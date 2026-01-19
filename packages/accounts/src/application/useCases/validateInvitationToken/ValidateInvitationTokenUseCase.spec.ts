@@ -62,49 +62,73 @@ describe('ValidateInvitationTokenUseCase', () => {
   });
 
   describe('execute', () => {
-    it('successfully validates a valid invitation token', async () => {
-      const command = {
-        token: mockToken as string,
-      };
+    describe('when invitation token is valid', () => {
+      let result: { email: string; isValid: boolean };
 
-      mockInvitationService.findByToken.mockResolvedValue(mockInvitation);
-      mockUserService.getUserById.mockResolvedValue(mockUser);
+      beforeEach(async () => {
+        const command = {
+          token: mockToken as string,
+        };
 
-      const result = await useCase.execute(command);
+        mockInvitationService.findByToken.mockResolvedValue(mockInvitation);
+        mockUserService.getUserById.mockResolvedValue(mockUser);
 
-      expect(result).toEqual({
-        email: 'test@example.com',
-        isValid: true,
+        result = await useCase.execute(command);
       });
 
-      expect(mockInvitationService.findByToken).toHaveBeenCalledWith(mockToken);
-      expect(mockUserService.getUserById).toHaveBeenCalledWith(mockUserId);
+      it('returns valid result with email', () => {
+        expect(result).toEqual({
+          email: 'test@example.com',
+          isValid: true,
+        });
+      });
+
+      it('calls findByToken with correct token', () => {
+        expect(mockInvitationService.findByToken).toHaveBeenCalledWith(
+          mockToken,
+        );
+      });
+
+      it('calls getUserById with correct userId', () => {
+        expect(mockUserService.getUserById).toHaveBeenCalledWith(mockUserId);
+      });
     });
 
     describe('when invitation does not exist', () => {
-      it('returns invalid result', async () => {
+      let result: { email: string; isValid: boolean };
+
+      beforeEach(async () => {
         const command = {
           token: mockToken as string,
         };
 
         mockInvitationService.findByToken.mockResolvedValue(null);
 
-        const result = await useCase.execute(command);
+        result = await useCase.execute(command);
+      });
 
+      it('returns invalid result', () => {
         expect(result).toEqual({
           email: '',
           isValid: false,
         });
+      });
 
+      it('calls findByToken with correct token', () => {
         expect(mockInvitationService.findByToken).toHaveBeenCalledWith(
           mockToken,
         );
+      });
+
+      it('does not call getUserById', () => {
         expect(mockUserService.getUserById).not.toHaveBeenCalled();
       });
     });
 
     describe('when invitation is expired', () => {
-      it('returns invalid result', async () => {
+      let result: { email: string; isValid: boolean };
+
+      beforeEach(async () => {
         const command = {
           token: mockToken as string,
         };
@@ -116,22 +140,31 @@ describe('ValidateInvitationTokenUseCase', () => {
 
         mockInvitationService.findByToken.mockResolvedValue(expiredInvitation);
 
-        const result = await useCase.execute(command);
+        result = await useCase.execute(command);
+      });
 
+      it('returns invalid result', () => {
         expect(result).toEqual({
           email: '',
           isValid: false,
         });
+      });
 
+      it('calls findByToken with correct token', () => {
         expect(mockInvitationService.findByToken).toHaveBeenCalledWith(
           mockToken,
         );
+      });
+
+      it('does not call getUserById', () => {
         expect(mockUserService.getUserById).not.toHaveBeenCalled();
       });
     });
 
     describe('when user does not exist', () => {
-      it('returns invalid result', async () => {
+      let result: { email: string; isValid: boolean };
+
+      beforeEach(async () => {
         const command = {
           token: mockToken as string,
         };
@@ -139,22 +172,31 @@ describe('ValidateInvitationTokenUseCase', () => {
         mockInvitationService.findByToken.mockResolvedValue(mockInvitation);
         mockUserService.getUserById.mockResolvedValue(null);
 
-        const result = await useCase.execute(command);
+        result = await useCase.execute(command);
+      });
 
+      it('returns invalid result', () => {
         expect(result).toEqual({
           email: '',
           isValid: false,
         });
+      });
 
+      it('calls findByToken with correct token', () => {
         expect(mockInvitationService.findByToken).toHaveBeenCalledWith(
           mockToken,
         );
+      });
+
+      it('calls getUserById with correct userId', () => {
         expect(mockUserService.getUserById).toHaveBeenCalledWith(mockUserId);
       });
     });
 
     describe('when user is already active (invitation already used)', () => {
-      it('returns invalid result', async () => {
+      let result: { email: string; isValid: boolean };
+
+      beforeEach(async () => {
         const command = {
           token: mockToken as string,
         };
@@ -168,22 +210,31 @@ describe('ValidateInvitationTokenUseCase', () => {
         mockInvitationService.findByToken.mockResolvedValue(mockInvitation);
         mockUserService.getUserById.mockResolvedValue(activeUser);
 
-        const result = await useCase.execute(command);
+        result = await useCase.execute(command);
+      });
 
+      it('returns invalid result', () => {
         expect(result).toEqual({
           email: '',
           isValid: false,
         });
+      });
 
+      it('calls findByToken with correct token', () => {
         expect(mockInvitationService.findByToken).toHaveBeenCalledWith(
           mockToken,
         );
+      });
+
+      it('calls getUserById with correct userId', () => {
         expect(mockUserService.getUserById).toHaveBeenCalledWith(mockUserId);
       });
     });
 
     describe('when an error occurs', () => {
-      it('returns invalid result for security', async () => {
+      let result: { email: string; isValid: boolean };
+
+      beforeEach(async () => {
         const command = {
           token: mockToken as string,
         };
@@ -191,13 +242,17 @@ describe('ValidateInvitationTokenUseCase', () => {
         const error = new Error('Database connection failed');
         mockInvitationService.findByToken.mockRejectedValue(error);
 
-        const result = await useCase.execute(command);
+        result = await useCase.execute(command);
+      });
 
+      it('returns invalid result for security', () => {
         expect(result).toEqual({
           email: '',
           isValid: false,
         });
+      });
 
+      it('calls findByToken with correct token', () => {
         expect(mockInvitationService.findByToken).toHaveBeenCalledWith(
           mockToken,
         );
@@ -210,7 +265,6 @@ describe('ValidateInvitationTokenUseCase', () => {
           token: 'malformed-token',
         };
 
-        // This will likely throw an error when creating the invitation token
         const error = new Error('Invalid token format');
         mockInvitationService.findByToken.mockRejectedValue(error);
 

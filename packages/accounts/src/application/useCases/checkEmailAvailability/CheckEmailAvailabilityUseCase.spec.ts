@@ -30,28 +30,35 @@ describe('CheckEmailAvailabilityUseCase', () => {
 
   describe('execute', () => {
     describe('when email is available', () => {
-      it('returns available true', async () => {
-        const command: CheckEmailAvailabilityCommand = {
-          email: 'available@packmind.com',
-        };
+      const command: CheckEmailAvailabilityCommand = {
+        email: 'available@packmind.com',
+      };
 
+      beforeEach(() => {
         mockUserService.getUserByEmailCaseInsensitive.mockResolvedValue(null);
+      });
 
-        const result = await checkEmailAvailabilityUseCase.execute(command);
+      it('calls user service with the email', async () => {
+        await checkEmailAvailabilityUseCase.execute(command);
 
         expect(
           mockUserService.getUserByEmailCaseInsensitive,
         ).toHaveBeenCalledWith('available@packmind.com');
+      });
+
+      it('returns available true', async () => {
+        const result = await checkEmailAvailabilityUseCase.execute(command);
+
         expect(result).toEqual({ available: true });
       });
     });
 
     describe('when email is already taken', () => {
-      it('returns available false', async () => {
-        const command: CheckEmailAvailabilityCommand = {
-          email: 'taken@packmind.com',
-        };
+      const command: CheckEmailAvailabilityCommand = {
+        email: 'taken@packmind.com',
+      };
 
+      beforeEach(() => {
         const existingUser = userFactory({
           id: createUserId('user-123'),
           email: 'taken@packmind.com',
@@ -60,22 +67,29 @@ describe('CheckEmailAvailabilityUseCase', () => {
         mockUserService.getUserByEmailCaseInsensitive.mockResolvedValue(
           existingUser,
         );
+      });
 
-        const result = await checkEmailAvailabilityUseCase.execute(command);
+      it('calls user service with the email', async () => {
+        await checkEmailAvailabilityUseCase.execute(command);
 
         expect(
           mockUserService.getUserByEmailCaseInsensitive,
         ).toHaveBeenCalledWith('taken@packmind.com');
+      });
+
+      it('returns available false', async () => {
+        const result = await checkEmailAvailabilityUseCase.execute(command);
+
         expect(result).toEqual({ available: false });
       });
     });
 
     describe('when email case differs', () => {
-      it('returns available false for case-insensitive match', async () => {
-        const command: CheckEmailAvailabilityCommand = {
-          email: 'NewUser@Packmind.com',
-        };
+      const command: CheckEmailAvailabilityCommand = {
+        email: 'NewUser@Packmind.com',
+      };
 
+      beforeEach(() => {
         const existingUser = userFactory({
           id: createUserId('user-123'),
           email: 'newuser@packmind.com', // Different case
@@ -84,34 +98,49 @@ describe('CheckEmailAvailabilityUseCase', () => {
         mockUserService.getUserByEmailCaseInsensitive.mockResolvedValue(
           existingUser,
         );
+      });
 
-        const result = await checkEmailAvailabilityUseCase.execute(command);
+      it('calls user service with the original email case', async () => {
+        await checkEmailAvailabilityUseCase.execute(command);
 
         expect(
           mockUserService.getUserByEmailCaseInsensitive,
         ).toHaveBeenCalledWith('NewUser@Packmind.com');
+      });
+
+      it('returns available false for case-insensitive match', async () => {
+        const result = await checkEmailAvailabilityUseCase.execute(command);
+
         expect(result).toEqual({ available: false });
       });
     });
 
     describe('when service throws error', () => {
-      it('propagates the error', async () => {
-        const command: CheckEmailAvailabilityCommand = {
-          email: 'error@packmind.com',
-        };
+      const command: CheckEmailAvailabilityCommand = {
+        email: 'error@packmind.com',
+      };
 
+      beforeEach(() => {
         const serviceError = new Error('Database connection failed');
         mockUserService.getUserByEmailCaseInsensitive.mockRejectedValue(
           serviceError,
         );
+      });
 
-        await expect(
-          checkEmailAvailabilityUseCase.execute(command),
-        ).rejects.toThrow('Database connection failed');
+      it('calls user service with the email', async () => {
+        await checkEmailAvailabilityUseCase.execute(command).catch(() => {
+          // Expected to throw - catch to verify side effects
+        });
 
         expect(
           mockUserService.getUserByEmailCaseInsensitive,
         ).toHaveBeenCalledWith('error@packmind.com');
+      });
+
+      it('propagates the error', async () => {
+        await expect(
+          checkEmailAvailabilityUseCase.execute(command),
+        ).rejects.toThrow('Database connection failed');
       });
     });
   });

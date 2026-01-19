@@ -16,7 +16,6 @@ import {
 import { InvitationBatchEmptyError } from '../../../domain/errors';
 import {
   InvitationCreationRecord,
-  InvitationCreationRequest,
   InvitationService,
 } from '../../services/InvitationService';
 import { UserService } from '../../services/UserService';
@@ -96,362 +95,500 @@ describe('CreateInvitationsUseCase', () => {
     jest.clearAllMocks();
   });
 
-  it('creates invitations for new users and returns created results', async () => {
+  describe('when creating invitations for new users', () => {
     const targetEmail = ' new-user@packmind.com ';
     const normalizedEmail = 'new-user@packmind.com';
-    const createdUser = userFactory({
-      id: createUserId('user-new'),
-      email: normalizedEmail,
-      active: false,
-      memberships: [],
-    });
-    const userWithMembership: User = {
-      ...createdUser,
-      memberships: [
-        {
-          userId: createdUser.id,
-          organizationId,
-          role: 'admin',
-        },
-      ],
-    };
-    const createdInvitation = invitationFactory({ userId: createdUser.id });
+    let createdUser: User;
+    let userWithMembership: User;
+    let createdInvitation: ReturnType<typeof invitationFactory>;
+    let result: Awaited<ReturnType<typeof useCase.execute>>;
 
-    mockUserService.getUserByEmailCaseInsensitive.mockResolvedValueOnce(null);
-    mockUserService.createInactiveUser.mockResolvedValue(createdUser);
-    mockUserService.addOrganizationMembership.mockResolvedValue(
-      userWithMembership,
-    );
-    mockInvitationService.createInvitations.mockImplementation(
-      async (requests: InvitationCreationRequest[]) => {
-        expect(requests).toHaveLength(1);
-        expect(requests[0].email).toBe(normalizedEmail);
-        expect(requests[0].user).toEqual(userWithMembership);
-        return [
-          {
-            email: normalizedEmail,
-            invitation: createdInvitation,
-            userId: createdUser.id,
-          } as InvitationCreationRecord,
-        ];
-      },
-    );
-
-    const command: CreateInvitationsCommand = {
-      organizationId: organizationId as string,
-      userId: inviter.id as string,
-      emails: [targetEmail],
-      role: 'admin',
-    };
-
-    const result = await useCase.execute(command);
-
-    expect(result.created).toHaveLength(1);
-    expect(result.created[0]).toEqual({
-      email: normalizedEmail,
-      invitation: createdInvitation,
-      userId: createdUser.id,
-    });
-    expect(result.organizationInvitations).toHaveLength(0);
-    expect(result.skipped).toHaveLength(0);
-    expect(mockUserService.createInactiveUser).toHaveBeenCalledWith(
-      normalizedEmail,
-    );
-    expect(mockUserService.addOrganizationMembership).toHaveBeenCalledWith(
-      createdUser,
-      organizationId,
-      'admin',
-    );
-  });
-
-  it('skips invalid and duplicate emails', async () => {
-    const command: CreateInvitationsCommand = {
-      organizationId: organizationId as string,
-      userId: inviter.id as string,
-      emails: ['bad-email', 'user@packmind.com', 'USER@packmind.com'],
-      role: 'admin',
-    };
-
-    mockUserService.getUserByEmailCaseInsensitive.mockResolvedValueOnce(null);
-    const normalizedEmail = 'user@packmind.com';
-    const createdUser = userFactory({
-      email: normalizedEmail,
-      memberships: [],
-    });
-    const userWithMembership: User = {
-      ...createdUser,
-      memberships: [
-        {
-          userId: createdUser.id,
-          organizationId,
-          role: 'admin',
-        },
-      ],
-    };
-    mockUserService.createInactiveUser.mockResolvedValue(createdUser);
-    mockUserService.addOrganizationMembership.mockResolvedValue(
-      userWithMembership,
-    );
-    mockInvitationService.createInvitations.mockResolvedValue([
-      {
+    beforeEach(async () => {
+      createdUser = userFactory({
+        id: createUserId('user-new'),
         email: normalizedEmail,
-        invitation: invitationFactory(),
-        userId: createUserId('generated'),
-      },
-    ]);
+        active: false,
+        memberships: [],
+      });
+      userWithMembership = {
+        ...createdUser,
+        memberships: [
+          {
+            userId: createdUser.id,
+            organizationId,
+            role: 'admin',
+          },
+        ],
+      };
+      createdInvitation = invitationFactory({ userId: createdUser.id });
 
-    const result = await useCase.execute(command);
+      mockUserService.getUserByEmailCaseInsensitive.mockResolvedValueOnce(null);
+      mockUserService.createInactiveUser.mockResolvedValue(createdUser);
+      mockUserService.addOrganizationMembership.mockResolvedValue(
+        userWithMembership,
+      );
+      mockInvitationService.createInvitations.mockResolvedValue([
+        {
+          email: normalizedEmail,
+          invitation: createdInvitation,
+          userId: createdUser.id,
+        } as InvitationCreationRecord,
+      ]);
 
-    expect(result.created).toHaveLength(1);
-    expect(result.organizationInvitations).toHaveLength(0);
-    expect(result.skipped).toEqual(
-      expect.arrayContaining([
-        { email: 'bad-email', reason: 'invalid-email' },
-        { email: 'USER@packmind.com', reason: 'duplicate-email' },
-      ]),
-    );
-    expect(mockUserService.addOrganizationMembership).toHaveBeenCalledWith(
-      createdUser,
-      organizationId,
-      'admin',
-    );
+      const command: CreateInvitationsCommand = {
+        organizationId: organizationId as string,
+        userId: inviter.id as string,
+        emails: [targetEmail],
+        role: 'admin',
+      };
+
+      result = await useCase.execute(command);
+    });
+
+    it('returns one created invitation', () => {
+      expect(result.created).toHaveLength(1);
+    });
+
+    it('returns the created invitation with correct data', () => {
+      expect(result.created[0]).toEqual({
+        email: normalizedEmail,
+        invitation: createdInvitation,
+        userId: createdUser.id,
+      });
+    });
+
+    it('returns no organization invitations', () => {
+      expect(result.organizationInvitations).toHaveLength(0);
+    });
+
+    it('returns no skipped emails', () => {
+      expect(result.skipped).toHaveLength(0);
+    });
+
+    it('creates an inactive user with normalized email', () => {
+      expect(mockUserService.createInactiveUser).toHaveBeenCalledWith(
+        normalizedEmail,
+      );
+    });
+
+    it('adds the user to the organization with admin role', () => {
+      expect(mockUserService.addOrganizationMembership).toHaveBeenCalledWith(
+        createdUser,
+        organizationId,
+        'admin',
+      );
+    });
   });
 
-  it('allows re-inviting inactive users who are already members', async () => {
-    const member = userFactory({
-      email: 'member@packmind.com',
-      active: false, // Inactive user but already member
-      memberships: [
+  describe('when emails include invalid and duplicate entries', () => {
+    const normalizedEmail = 'user@packmind.com';
+    let createdUser: User;
+    let result: Awaited<ReturnType<typeof useCase.execute>>;
+
+    beforeEach(async () => {
+      createdUser = userFactory({
+        email: normalizedEmail,
+        memberships: [],
+      });
+      const userWithMembership: User = {
+        ...createdUser,
+        memberships: [
+          {
+            userId: createdUser.id,
+            organizationId,
+            role: 'admin',
+          },
+        ],
+      };
+
+      mockUserService.getUserByEmailCaseInsensitive.mockResolvedValueOnce(null);
+      mockUserService.createInactiveUser.mockResolvedValue(createdUser);
+      mockUserService.addOrganizationMembership.mockResolvedValue(
+        userWithMembership,
+      );
+      mockInvitationService.createInvitations.mockResolvedValue([
         {
-          userId: createUserId('member'),
-          organizationId,
-          role: 'admin',
+          email: normalizedEmail,
+          invitation: invitationFactory(),
+          userId: createUserId('generated'),
         },
-      ],
+      ]);
+
+      const command: CreateInvitationsCommand = {
+        organizationId: organizationId as string,
+        userId: inviter.id as string,
+        emails: ['bad-email', 'user@packmind.com', 'USER@packmind.com'],
+        role: 'admin',
+      };
+
+      result = await useCase.execute(command);
     });
 
-    mockUserService.getUserByEmailCaseInsensitive.mockResolvedValue(member);
-    mockInvitationService.createInvitations.mockResolvedValue([
-      {
-        email: member.email,
-        invitation: invitationFactory(),
-        userId: member.id,
-      },
-    ]);
+    it('returns one created invitation for the valid email', () => {
+      expect(result.created).toHaveLength(1);
+    });
 
-    const command: CreateInvitationsCommand = {
-      organizationId: organizationId as string,
-      userId: inviter.id as string,
-      emails: [member.email],
-      role: 'admin',
-    };
+    it('returns no organization invitations', () => {
+      expect(result.organizationInvitations).toHaveLength(0);
+    });
 
-    const result = await useCase.execute(command);
+    it('skips the invalid and duplicate emails with appropriate reasons', () => {
+      expect(result.skipped).toEqual(
+        expect.arrayContaining([
+          { email: 'bad-email', reason: 'invalid-email' },
+          { email: 'USER@packmind.com', reason: 'duplicate-email' },
+        ]),
+      );
+    });
 
-    expect(result.created).toHaveLength(1);
-    expect(result.organizationInvitations).toHaveLength(0);
-    expect(result.skipped).toHaveLength(0);
-    // Should not try to add membership again since user is already a member
-    expect(mockUserService.addOrganizationMembership).not.toHaveBeenCalled();
+    it('adds the valid user to the organization', () => {
+      expect(mockUserService.addOrganizationMembership).toHaveBeenCalledWith(
+        createdUser,
+        organizationId,
+        'admin',
+      );
+    });
   });
 
-  it('adds active users directly to organization without creating invitation', async () => {
-    const activeUser = userFactory({
-      email: 'active@packmind.com',
-      active: true, // User completed signup
-      memberships: [],
-    });
+  describe('when re-inviting inactive users who are already members', () => {
+    let member: User;
+    let result: Awaited<ReturnType<typeof useCase.execute>>;
 
-    const userWithMembership = {
-      ...activeUser,
-      memberships: [
+    beforeEach(async () => {
+      member = userFactory({
+        email: 'member@packmind.com',
+        active: false,
+        memberships: [
+          {
+            userId: createUserId('member'),
+            organizationId,
+            role: 'admin',
+          },
+        ],
+      });
+
+      mockUserService.getUserByEmailCaseInsensitive.mockResolvedValue(member);
+      mockInvitationService.createInvitations.mockResolvedValue([
         {
-          userId: activeUser.id,
-          organizationId,
-          role: 'admin' as const,
+          email: member.email,
+          invitation: invitationFactory(),
+          userId: member.id,
         },
-      ],
-    };
+      ]);
 
-    mockUserService.getUserByEmailCaseInsensitive.mockResolvedValue(activeUser);
-    mockUserService.addOrganizationMembership.mockResolvedValue(
-      userWithMembership,
-    );
+      const command: CreateInvitationsCommand = {
+        organizationId: organizationId as string,
+        userId: inviter.id as string,
+        emails: [member.email],
+        role: 'admin',
+      };
 
-    const command: CreateInvitationsCommand = {
-      organizationId: organizationId as string,
-      userId: inviter.id as string,
-      emails: [activeUser.email],
-      role: 'admin',
-    };
-
-    const result = await useCase.execute(command);
-
-    expect(result.created).toHaveLength(0);
-    expect(result.organizationInvitations).toHaveLength(1);
-    expect(result.organizationInvitations[0]).toEqual({
-      email: activeUser.email,
-      userId: activeUser.id,
-      organizationId: organizationId as string,
-      role: 'admin',
+      result = await useCase.execute(command);
     });
-    expect(result.skipped).toHaveLength(0);
-    expect(mockUserService.addOrganizationMembership).toHaveBeenCalledWith(
-      activeUser,
-      organizationId,
-      'admin',
-    );
+
+    it('returns one created invitation', () => {
+      expect(result.created).toHaveLength(1);
+    });
+
+    it('returns no organization invitations', () => {
+      expect(result.organizationInvitations).toHaveLength(0);
+    });
+
+    it('returns no skipped emails', () => {
+      expect(result.skipped).toHaveLength(0);
+    });
+
+    it('does not try to add membership again', () => {
+      expect(mockUserService.addOrganizationMembership).not.toHaveBeenCalled();
+    });
   });
 
-  it('skips active users who are already members of the organization', async () => {
-    const activeUser = userFactory({
-      email: 'active@packmind.com',
-      active: true, // User completed signup
-      memberships: [
-        {
-          userId: createUserId('active-user'),
-          organizationId,
-          role: 'member',
-        },
-      ],
+  describe('when adding active users directly to organization', () => {
+    let activeUser: User;
+    let result: Awaited<ReturnType<typeof useCase.execute>>;
+
+    beforeEach(async () => {
+      activeUser = userFactory({
+        email: 'active@packmind.com',
+        active: true,
+        memberships: [],
+      });
+
+      const userWithMembership = {
+        ...activeUser,
+        memberships: [
+          {
+            userId: activeUser.id,
+            organizationId,
+            role: 'admin' as const,
+          },
+        ],
+      };
+
+      mockUserService.getUserByEmailCaseInsensitive.mockResolvedValue(
+        activeUser,
+      );
+      mockUserService.addOrganizationMembership.mockResolvedValue(
+        userWithMembership,
+      );
+
+      const command: CreateInvitationsCommand = {
+        organizationId: organizationId as string,
+        userId: inviter.id as string,
+        emails: [activeUser.email],
+        role: 'admin',
+      };
+
+      result = await useCase.execute(command);
     });
 
-    mockUserService.getUserByEmailCaseInsensitive.mockResolvedValue(activeUser);
+    it('returns no created invitations', () => {
+      expect(result.created).toHaveLength(0);
+    });
 
-    const command: CreateInvitationsCommand = {
-      organizationId: organizationId as string,
-      userId: inviter.id as string,
-      emails: [activeUser.email],
-      role: 'admin',
-    };
+    it('returns one organization invitation', () => {
+      expect(result.organizationInvitations).toHaveLength(1);
+    });
 
-    const result = await useCase.execute(command);
+    it('returns the organization invitation with correct data', () => {
+      expect(result.organizationInvitations[0]).toEqual({
+        email: activeUser.email,
+        userId: activeUser.id,
+        organizationId: organizationId as string,
+        role: 'admin',
+      });
+    });
 
-    expect(result.created).toHaveLength(0);
-    expect(result.organizationInvitations).toHaveLength(0);
-    expect(result.skipped).toEqual([
-      { email: activeUser.email, reason: 'already-member' },
-    ]);
-    expect(mockUserService.addOrganizationMembership).not.toHaveBeenCalled();
+    it('returns no skipped emails', () => {
+      expect(result.skipped).toHaveLength(0);
+    });
+
+    it('adds the user to the organization with admin role', () => {
+      expect(mockUserService.addOrganizationMembership).toHaveBeenCalledWith(
+        activeUser,
+        organizationId,
+        'admin',
+      );
+    });
   });
 
-  it('resends email for users with existing valid invitations', async () => {
-    const existingUser = userFactory({
-      email: 'existing@packmind.com',
-      active: false,
-      memberships: [],
+  describe('when active users are already members of the organization', () => {
+    let activeUser: User;
+    let result: Awaited<ReturnType<typeof useCase.execute>>;
+
+    beforeEach(async () => {
+      activeUser = userFactory({
+        email: 'active@packmind.com',
+        active: true,
+        memberships: [
+          {
+            userId: createUserId('active-user'),
+            organizationId,
+            role: 'member',
+          },
+        ],
+      });
+
+      mockUserService.getUserByEmailCaseInsensitive.mockResolvedValue(
+        activeUser,
+      );
+
+      const command: CreateInvitationsCommand = {
+        organizationId: organizationId as string,
+        userId: inviter.id as string,
+        emails: [activeUser.email],
+        role: 'admin',
+      };
+
+      result = await useCase.execute(command);
     });
-    const userWithMembership: User = {
-      ...existingUser,
-      memberships: [
-        {
-          userId: existingUser.id,
-          organizationId,
-          role: 'admin',
-        },
-      ],
-    };
-    const validInvitation = invitationFactory({
-      userId: existingUser.id,
-      expirationDate: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 hours from now
+
+    it('returns no created invitations', () => {
+      expect(result.created).toHaveLength(0);
     });
 
-    mockUserService.getUserByEmailCaseInsensitive.mockResolvedValue(
-      existingUser,
-    );
-    mockUserService.addOrganizationMembership.mockResolvedValue(
-      userWithMembership,
-    );
-    mockInvitationService.findLatestByUserId.mockResolvedValue(validInvitation);
+    it('returns no organization invitations', () => {
+      expect(result.organizationInvitations).toHaveLength(0);
+    });
 
-    const command: CreateInvitationsCommand = {
-      organizationId: organizationId as string,
-      userId: inviter.id as string,
-      emails: [existingUser.email],
-      role: 'admin',
-    };
+    it('skips the user with already-member reason', () => {
+      expect(result.skipped).toEqual([
+        { email: activeUser.email, reason: 'already-member' },
+      ]);
+    });
 
-    const result = await useCase.execute(command);
+    it('does not add membership', () => {
+      expect(mockUserService.addOrganizationMembership).not.toHaveBeenCalled();
+    });
+  });
 
-    expect(result.created).toHaveLength(1);
-    expect(result.created[0].invitation).toEqual(validInvitation);
-    expect(result.organizationInvitations).toHaveLength(0);
-    expect(result.skipped).toHaveLength(0);
-    expect(mockInvitationService.resendInvitationEmail).toHaveBeenCalledWith(
-      validInvitation,
-      expect.objectContaining({
+  describe('when users have existing valid invitations', () => {
+    let userWithMembership: User;
+    let validInvitation: ReturnType<typeof invitationFactory>;
+    let result: Awaited<ReturnType<typeof useCase.execute>>;
+
+    beforeEach(async () => {
+      const existingUser = userFactory({
+        email: 'existing@packmind.com',
+        active: false,
+        memberships: [],
+      });
+      userWithMembership = {
+        ...existingUser,
+        memberships: [
+          {
+            userId: existingUser.id,
+            organizationId,
+            role: 'admin',
+          },
+        ],
+      };
+      validInvitation = invitationFactory({
+        userId: existingUser.id,
+        expirationDate: new Date(Date.now() + 24 * 60 * 60 * 1000),
+      });
+
+      mockUserService.getUserByEmailCaseInsensitive.mockResolvedValue(
+        existingUser,
+      );
+      mockUserService.addOrganizationMembership.mockResolvedValue(
+        userWithMembership,
+      );
+      mockInvitationService.findLatestByUserId.mockResolvedValue(
+        validInvitation,
+      );
+
+      const command: CreateInvitationsCommand = {
+        organizationId: organizationId as string,
+        userId: inviter.id as string,
+        emails: [existingUser.email],
+        role: 'admin',
+      };
+
+      result = await useCase.execute(command);
+    });
+
+    it('returns one created invitation', () => {
+      expect(result.created).toHaveLength(1);
+    });
+
+    it('returns the existing valid invitation', () => {
+      expect(result.created[0].invitation).toEqual(validInvitation);
+    });
+
+    it('returns no organization invitations', () => {
+      expect(result.organizationInvitations).toHaveLength(0);
+    });
+
+    it('returns no skipped emails', () => {
+      expect(result.skipped).toHaveLength(0);
+    });
+
+    it('resends the invitation email', () => {
+      expect(mockInvitationService.resendInvitationEmail).toHaveBeenCalledWith(
+        validInvitation,
+        expect.objectContaining({
+          email: userWithMembership.email,
+          user: userWithMembership,
+          organization,
+          inviter,
+        }),
+      );
+    });
+
+    it('does not create a new invitation', () => {
+      expect(
+        mockInvitationService.createInvitationForExistingUser,
+      ).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('when users have expired invitations', () => {
+    let userWithMembership: User;
+    let newInvitation: ReturnType<typeof invitationFactory>;
+    let result: Awaited<ReturnType<typeof useCase.execute>>;
+
+    beforeEach(async () => {
+      const existingUser = userFactory({
+        email: 'expired@packmind.com',
+        active: false,
+        memberships: [],
+      });
+      userWithMembership = {
+        ...existingUser,
+        memberships: [
+          {
+            userId: existingUser.id,
+            organizationId,
+            role: 'admin',
+          },
+        ],
+      };
+      const expiredInvitation = invitationFactory({
+        userId: existingUser.id,
+        expirationDate: new Date(Date.now() - 24 * 60 * 60 * 1000),
+      });
+      newInvitation = invitationFactory({ userId: existingUser.id });
+
+      mockUserService.getUserByEmailCaseInsensitive.mockResolvedValue(
+        existingUser,
+      );
+      mockUserService.addOrganizationMembership.mockResolvedValue(
+        userWithMembership,
+      );
+      mockInvitationService.findLatestByUserId.mockResolvedValue(
+        expiredInvitation,
+      );
+      mockInvitationService.createInvitationForExistingUser.mockResolvedValue({
         email: userWithMembership.email,
-        user: userWithMembership,
-        organization,
-        inviter,
-      }),
-    );
-    expect(
-      mockInvitationService.createInvitationForExistingUser,
-    ).not.toHaveBeenCalled();
-  });
+        invitation: newInvitation,
+        userId: existingUser.id,
+      });
 
-  it('creates new invitation for users with expired invitations', async () => {
-    const existingUser = userFactory({
-      email: 'expired@packmind.com',
-      active: false,
-      memberships: [],
-    });
-    const userWithMembership: User = {
-      ...existingUser,
-      memberships: [
-        {
-          userId: existingUser.id,
-          organizationId,
-          role: 'admin',
-        },
-      ],
-    };
-    const expiredInvitation = invitationFactory({
-      userId: existingUser.id,
-      expirationDate: new Date(Date.now() - 24 * 60 * 60 * 1000), // 24 hours ago
-    });
-    const newInvitation = invitationFactory({ userId: existingUser.id });
+      const command: CreateInvitationsCommand = {
+        organizationId: organizationId as string,
+        userId: inviter.id as string,
+        emails: [existingUser.email],
+        role: 'admin',
+      };
 
-    mockUserService.getUserByEmailCaseInsensitive.mockResolvedValue(
-      existingUser,
-    );
-    mockUserService.addOrganizationMembership.mockResolvedValue(
-      userWithMembership,
-    );
-    mockInvitationService.findLatestByUserId.mockResolvedValue(
-      expiredInvitation,
-    );
-    mockInvitationService.createInvitationForExistingUser.mockResolvedValue({
-      email: userWithMembership.email,
-      invitation: newInvitation,
-      userId: existingUser.id,
+      result = await useCase.execute(command);
     });
 
-    const command: CreateInvitationsCommand = {
-      organizationId: organizationId as string,
-      userId: inviter.id as string,
-      emails: [existingUser.email],
-      role: 'admin',
-    };
+    it('returns one created invitation', () => {
+      expect(result.created).toHaveLength(1);
+    });
 
-    const result = await useCase.execute(command);
+    it('returns the new invitation', () => {
+      expect(result.created[0].invitation).toEqual(newInvitation);
+    });
 
-    expect(result.created).toHaveLength(1);
-    expect(result.created[0].invitation).toEqual(newInvitation);
-    expect(result.organizationInvitations).toHaveLength(0);
-    expect(result.skipped).toHaveLength(0);
-    expect(
-      mockInvitationService.createInvitationForExistingUser,
-    ).toHaveBeenCalledWith(
-      expect.objectContaining({
-        email: userWithMembership.email,
-        user: userWithMembership,
-        organization,
-        inviter,
-      }),
-    );
-    expect(mockInvitationService.resendInvitationEmail).not.toHaveBeenCalled();
+    it('returns no organization invitations', () => {
+      expect(result.organizationInvitations).toHaveLength(0);
+    });
+
+    it('returns no skipped emails', () => {
+      expect(result.skipped).toHaveLength(0);
+    });
+
+    it('creates a new invitation for the existing user', () => {
+      expect(
+        mockInvitationService.createInvitationForExistingUser,
+      ).toHaveBeenCalledWith(
+        expect.objectContaining({
+          email: userWithMembership.email,
+          user: userWithMembership,
+          organization,
+          inviter,
+        }),
+      );
+    });
+
+    it('does not resend the existing invitation email', () => {
+      expect(
+        mockInvitationService.resendInvitationEmail,
+      ).not.toHaveBeenCalled();
+    });
   });
 
   describe('when command role is Member', () => {
@@ -496,18 +633,28 @@ describe('CreateInvitationsUseCase', () => {
     });
   });
 
-  it('throws if no emails are provided', async () => {
+  describe('when no emails are provided', () => {
     const command: CreateInvitationsCommand = {
-      organizationId: organizationId as string,
-      userId: inviter.id as string,
+      organizationId: 'org-123',
+      userId: 'user-1',
       emails: [],
       role: 'admin',
     };
 
-    await expect(useCase.execute(command)).rejects.toBeInstanceOf(
-      InvitationBatchEmptyError,
-    );
-    expect(mockInvitationService.createInvitations).not.toHaveBeenCalled();
+    it('throws InvitationBatchEmptyError', async () => {
+      await expect(useCase.execute(command)).rejects.toBeInstanceOf(
+        InvitationBatchEmptyError,
+      );
+    });
+
+    it('does not call createInvitations', async () => {
+      try {
+        await useCase.execute(command);
+      } catch {
+        // Expected error
+      }
+      expect(mockInvitationService.createInvitations).not.toHaveBeenCalled();
+    });
   });
 
   it('throws if organization is not found', async () => {

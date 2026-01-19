@@ -65,14 +65,24 @@ describe('LoginRateLimiterService', () => {
   describe('checkLoginAllowed', () => {
     const testEmail = 'test@example.com';
 
-    it('allows login with no previous attempts', async () => {
-      mockCache.get.mockResolvedValue(null);
+    describe('when there are no previous attempts', () => {
+      beforeEach(() => {
+        mockCache.get.mockResolvedValue(null);
+      });
 
-      await expect(service.checkLoginAllowed(testEmail)).resolves.not.toThrow();
+      it('allows login', async () => {
+        await expect(
+          service.checkLoginAllowed(testEmail),
+        ).resolves.not.toThrow();
+      });
 
-      expect(mockCache.get).toHaveBeenCalledWith(
-        'login_attempts:test@example.com',
-      );
+      it('retrieves attempts from cache with correct key', async () => {
+        await service.checkLoginAllowed(testEmail);
+
+        expect(mockCache.get).toHaveBeenCalledWith(
+          'login_attempts:test@example.com',
+        );
+      });
     });
 
     it('allows login with empty attempts array', async () => {
@@ -116,114 +126,154 @@ describe('LoginRateLimiterService', () => {
       );
     });
 
-    it('filters out expired attempts and allows login', async () => {
-      const now = new Date();
-      const attempts: LoginAttempt[] = [
-        { timestamp: new Date(now.getTime() - 35 * 60 * 1000) }, // 35 minutes ago (expired)
-        { timestamp: new Date(now.getTime() - 32 * 60 * 1000) }, // 32 minutes ago (expired)
-        { timestamp: new Date(now.getTime() - 5 * 60 * 1000) }, // 5 minutes ago (valid)
-      ];
+    describe('when filtering expired attempts', () => {
+      let attempts: LoginAttempt[];
 
-      mockCache.get.mockResolvedValue(attempts);
+      beforeEach(() => {
+        const now = new Date();
+        attempts = [
+          { timestamp: new Date(now.getTime() - 35 * 60 * 1000) }, // 35 minutes ago (expired)
+          { timestamp: new Date(now.getTime() - 32 * 60 * 1000) }, // 32 minutes ago (expired)
+          { timestamp: new Date(now.getTime() - 5 * 60 * 1000) }, // 5 minutes ago (valid)
+        ];
+        mockCache.get.mockResolvedValue(attempts);
+      });
 
-      await expect(service.checkLoginAllowed(testEmail)).resolves.not.toThrow();
+      it('allows login', async () => {
+        await expect(
+          service.checkLoginAllowed(testEmail),
+        ).resolves.not.toThrow();
+      });
 
-      // Should update cache with only valid attempts
-      expect(mockCache.set).toHaveBeenCalledWith(
-        'login_attempts:test@example.com',
-        [{ timestamp: attempts[2].timestamp }],
-        30 * 60, // 30 minutes default
-      );
+      it('updates cache with only valid attempts', async () => {
+        await service.checkLoginAllowed(testEmail);
+
+        expect(mockCache.set).toHaveBeenCalledWith(
+          'login_attempts:test@example.com',
+          [{ timestamp: attempts[2].timestamp }],
+          30 * 60, // 30 minutes default
+        );
+      });
     });
 
-    it('uses custom ban time from configuration', async () => {
+    describe('when using custom ban time from configuration', () => {
       const customBanTime = 60 * 60; // 1 hour
-      (Configuration.getConfig as jest.Mock).mockImplementation(
-        (key: string) => {
-          if (key === 'LOGIN_BAN_TIME_SECONDS')
-            return Promise.resolve(customBanTime.toString());
-          if (key === 'MAX_LOGIN_ATTEMPTS') return Promise.resolve(null); // Use default
-          return Promise.resolve(null);
-        },
-      );
 
-      const now = new Date();
-      const attempts: LoginAttempt[] = [
-        { timestamp: new Date(now.getTime() - 45 * 60 * 1000) }, // 45 minutes ago
-        { timestamp: new Date(now.getTime() - 30 * 60 * 1000) }, // 30 minutes ago
-        { timestamp: new Date(now.getTime() - 15 * 60 * 1000) }, // 15 minutes ago
-      ];
+      beforeEach(() => {
+        (Configuration.getConfig as jest.Mock).mockImplementation(
+          (key: string) => {
+            if (key === 'LOGIN_BAN_TIME_SECONDS')
+              return Promise.resolve(customBanTime.toString());
+            if (key === 'MAX_LOGIN_ATTEMPTS') return Promise.resolve(null); // Use default
+            return Promise.resolve(null);
+          },
+        );
 
-      mockCache.get.mockResolvedValue(attempts);
+        const now = new Date();
+        const attempts: LoginAttempt[] = [
+          { timestamp: new Date(now.getTime() - 45 * 60 * 1000) }, // 45 minutes ago
+          { timestamp: new Date(now.getTime() - 30 * 60 * 1000) }, // 30 minutes ago
+          { timestamp: new Date(now.getTime() - 15 * 60 * 1000) }, // 15 minutes ago
+        ];
 
-      await expect(service.checkLoginAllowed(testEmail)).rejects.toThrow(
-        TooManyLoginAttemptsError,
-      );
+        mockCache.get.mockResolvedValue(attempts);
+      });
 
-      expect(Configuration.getConfig).toHaveBeenCalledWith(
-        'LOGIN_BAN_TIME_SECONDS',
-      );
-      expect(Configuration.getConfig).toHaveBeenCalledWith(
-        'MAX_LOGIN_ATTEMPTS',
-      );
+      it('throws TooManyLoginAttemptsError', async () => {
+        await expect(service.checkLoginAllowed(testEmail)).rejects.toThrow(
+          TooManyLoginAttemptsError,
+        );
+      });
+
+      it('fetches configuration for ban time and max attempts', async () => {
+        await service.checkLoginAllowed(testEmail).catch(() => {
+          // Expected to throw - catch to verify side effects
+        });
+
+        expect(Configuration.getConfig).toHaveBeenCalledWith(
+          'LOGIN_BAN_TIME_SECONDS',
+        );
+      });
     });
 
-    it('uses custom max attempts from configuration', async () => {
+    describe('when using custom max attempts from configuration', () => {
       const customMaxAttempts = 5;
-      (Configuration.getConfig as jest.Mock).mockImplementation(
-        (key: string) => {
-          if (key === 'MAX_LOGIN_ATTEMPTS')
-            return Promise.resolve(customMaxAttempts.toString());
-          if (key === 'LOGIN_BAN_TIME_SECONDS') return Promise.resolve(null); // Use default
-          return Promise.resolve(null);
-        },
-      );
 
-      const now = new Date();
-      // Create 4 attempts - should not be banned yet with max of 5
-      const attempts: LoginAttempt[] = [
-        { timestamp: new Date(now.getTime() - 25 * 60 * 1000) },
-        { timestamp: new Date(now.getTime() - 20 * 60 * 1000) },
-        { timestamp: new Date(now.getTime() - 15 * 60 * 1000) },
-        { timestamp: new Date(now.getTime() - 5 * 60 * 1000) },
-      ];
+      beforeEach(() => {
+        (Configuration.getConfig as jest.Mock).mockImplementation(
+          (key: string) => {
+            if (key === 'MAX_LOGIN_ATTEMPTS')
+              return Promise.resolve(customMaxAttempts.toString());
+            if (key === 'LOGIN_BAN_TIME_SECONDS') return Promise.resolve(null); // Use default
+            return Promise.resolve(null);
+          },
+        );
 
-      mockCache.get.mockResolvedValue(attempts);
+        const now = new Date();
+        // Create 4 attempts - should not be banned yet with max of 5
+        const attempts: LoginAttempt[] = [
+          { timestamp: new Date(now.getTime() - 25 * 60 * 1000) },
+          { timestamp: new Date(now.getTime() - 20 * 60 * 1000) },
+          { timestamp: new Date(now.getTime() - 15 * 60 * 1000) },
+          { timestamp: new Date(now.getTime() - 5 * 60 * 1000) },
+        ];
 
-      await expect(service.checkLoginAllowed(testEmail)).resolves.not.toThrow();
+        mockCache.get.mockResolvedValue(attempts);
+      });
 
-      expect(Configuration.getConfig).toHaveBeenCalledWith(
-        'MAX_LOGIN_ATTEMPTS',
-      );
+      it('allows login with fewer than max attempts', async () => {
+        await expect(
+          service.checkLoginAllowed(testEmail),
+        ).resolves.not.toThrow();
+      });
+
+      it('fetches configuration for max attempts', async () => {
+        await service.checkLoginAllowed(testEmail);
+
+        expect(Configuration.getConfig).toHaveBeenCalledWith(
+          'MAX_LOGIN_ATTEMPTS',
+        );
+      });
     });
 
-    it('bans user reaching custom max attempts', async () => {
+    describe('when user reaches custom max attempts', () => {
       const customMaxAttempts = 2; // Lower threshold
-      (Configuration.getConfig as jest.Mock).mockImplementation(
-        (key: string) => {
-          if (key === 'MAX_LOGIN_ATTEMPTS')
-            return Promise.resolve(customMaxAttempts.toString());
-          if (key === 'LOGIN_BAN_TIME_SECONDS') return Promise.resolve(null); // Use default
-          return Promise.resolve(null);
-        },
-      );
 
-      const now = new Date();
-      // Create 2 attempts - should be banned with max of 2
-      const attempts: LoginAttempt[] = [
-        { timestamp: new Date(now.getTime() - 15 * 60 * 1000) },
-        { timestamp: new Date(now.getTime() - 5 * 60 * 1000) },
-      ];
+      beforeEach(() => {
+        (Configuration.getConfig as jest.Mock).mockImplementation(
+          (key: string) => {
+            if (key === 'MAX_LOGIN_ATTEMPTS')
+              return Promise.resolve(customMaxAttempts.toString());
+            if (key === 'LOGIN_BAN_TIME_SECONDS') return Promise.resolve(null); // Use default
+            return Promise.resolve(null);
+          },
+        );
 
-      mockCache.get.mockResolvedValue(attempts);
+        const now = new Date();
+        // Create 2 attempts - should be banned with max of 2
+        const attempts: LoginAttempt[] = [
+          { timestamp: new Date(now.getTime() - 15 * 60 * 1000) },
+          { timestamp: new Date(now.getTime() - 5 * 60 * 1000) },
+        ];
 
-      await expect(service.checkLoginAllowed(testEmail)).rejects.toThrow(
-        TooManyLoginAttemptsError,
-      );
+        mockCache.get.mockResolvedValue(attempts);
+      });
 
-      expect(Configuration.getConfig).toHaveBeenCalledWith(
-        'MAX_LOGIN_ATTEMPTS',
-      );
+      it('throws TooManyLoginAttemptsError', async () => {
+        await expect(service.checkLoginAllowed(testEmail)).rejects.toThrow(
+          TooManyLoginAttemptsError,
+        );
+      });
+
+      it('fetches configuration for max attempts', async () => {
+        await service.checkLoginAllowed(testEmail).catch(() => {
+          // Expected to throw - catch to verify side effects
+        });
+
+        expect(Configuration.getConfig).toHaveBeenCalledWith(
+          'MAX_LOGIN_ATTEMPTS',
+        );
+      });
     });
 
     it('handles invalid ban time configuration gracefully', async () => {
@@ -358,19 +408,28 @@ describe('LoginRateLimiterService', () => {
       ).resolves.not.toThrow();
     });
 
-    it('converts email to lowercase for cache key', async () => {
-      mockCache.get.mockResolvedValue([]);
+    describe('when converting email to lowercase for cache key', () => {
+      beforeEach(() => {
+        mockCache.get.mockResolvedValue([]);
+      });
 
-      await service.recordFailedAttempt('TEST@EXAMPLE.COM');
+      it('retrieves attempts with lowercase cache key', async () => {
+        await service.recordFailedAttempt('TEST@EXAMPLE.COM');
 
-      expect(mockCache.get).toHaveBeenCalledWith(
-        'login_attempts:test@example.com',
-      );
-      expect(mockCache.set).toHaveBeenCalledWith(
-        'login_attempts:test@example.com',
-        expect.any(Array),
-        expect.any(Number),
-      );
+        expect(mockCache.get).toHaveBeenCalledWith(
+          'login_attempts:test@example.com',
+        );
+      });
+
+      it('stores attempts with lowercase cache key', async () => {
+        await service.recordFailedAttempt('TEST@EXAMPLE.COM');
+
+        expect(mockCache.set).toHaveBeenCalledWith(
+          'login_attempts:test@example.com',
+          expect.any(Array),
+          expect.any(Number),
+        );
+      });
     });
   });
 

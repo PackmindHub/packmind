@@ -54,17 +54,19 @@ describe('GenerateUserTokenUseCase', () => {
   });
 
   describe('when generating token for valid user', () => {
-    it('returns the user, organization, and role', async () => {
-      const command: GenerateUserTokenCommand = {
-        userId,
-        organizationId,
-      };
+    const command: GenerateUserTokenCommand = {
+      userId,
+      organizationId,
+    };
 
+    beforeEach(() => {
       userService.getUserById.mockResolvedValue(testUser);
       organizationService.getOrganizationById.mockResolvedValue(
         testOrganization,
       );
+    });
 
+    it('returns the user, organization, and role', async () => {
       const result = await useCase.execute(command);
 
       const expected: GenerateUserTokenResponse = {
@@ -74,7 +76,17 @@ describe('GenerateUserTokenUseCase', () => {
       };
 
       expect(result).toEqual(expected);
+    });
+
+    it('fetches the user by id', async () => {
+      await useCase.execute(command);
+
       expect(userService.getUserById).toHaveBeenCalledWith(userId);
+    });
+
+    it('fetches the organization by id', async () => {
+      await useCase.execute(command);
+
       expect(organizationService.getOrganizationById).toHaveBeenCalledWith(
         organizationId,
       );
@@ -82,17 +94,26 @@ describe('GenerateUserTokenUseCase', () => {
   });
 
   describe('when user does not exist', () => {
-    it('throws Error', async () => {
-      const command: GenerateUserTokenCommand = {
-        userId: createUserId('nonexistent'),
-        organizationId,
-      };
+    const command: GenerateUserTokenCommand = {
+      userId: createUserId('nonexistent'),
+      organizationId,
+    };
 
+    beforeEach(() => {
       userService.getUserById.mockResolvedValue(null);
+    });
 
+    it('throws Error', async () => {
       await expect(useCase.execute(command)).rejects.toThrow(
         new Error('User not found'),
       );
+    });
+
+    it('does not fetch the organization', async () => {
+      await useCase.execute(command).catch(() => {
+        // Expected to throw - catch to verify side effects
+      });
+
       expect(organizationService.getOrganizationById).not.toHaveBeenCalled();
     });
   });

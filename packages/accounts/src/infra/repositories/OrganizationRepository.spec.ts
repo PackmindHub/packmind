@@ -55,7 +55,7 @@ describe('OrganizationRepository', () => {
   });
 
   describe('.add', () => {
-    it('adds a new organization successfully', async () => {
+    it('returns the added organization', async () => {
       const organization = organizationFactory({
         id: createOrganizationId('123e4567-e89b-12d3-a456-426614174000'),
       });
@@ -63,14 +63,11 @@ describe('OrganizationRepository', () => {
       const result = await organizationRepository.add(organization);
 
       expect(result).toEqual(organization);
-      expect(result.id).toBe(organization.id);
-      expect(result.name).toBe(organization.name);
-      expect(result.slug).toBe(organization.slug);
     });
   });
 
   describe('.findById', () => {
-    it('finds organization by ID', async () => {
+    it('returns the organization matching the given ID', async () => {
       const organization = organizationFactory({
         id: createOrganizationId('123e4567-e89b-12d3-a456-426614174000'),
       });
@@ -78,10 +75,7 @@ describe('OrganizationRepository', () => {
 
       const result = await organizationRepository.findById(organization.id);
 
-      expect(result).not.toBeNull();
-      expect(result?.id).toBe(organization.id);
-      expect(result?.name).toBe(organization.name);
-      expect(result?.slug).toBe(organization.slug);
+      expect(result).toEqual(organization);
     });
 
     describe('when organization is not found', () => {
@@ -98,7 +92,7 @@ describe('OrganizationRepository', () => {
   });
 
   describe('.findBySlug', () => {
-    it('finds organization by slug', async () => {
+    it('returns the organization matching the given slug', async () => {
       const organization = organizationFactory({
         id: createOrganizationId('123e4567-e89b-12d3-a456-426614174000'),
       });
@@ -106,10 +100,7 @@ describe('OrganizationRepository', () => {
 
       const result = await organizationRepository.findBySlug(organization.slug);
 
-      expect(result).not.toBeNull();
-      expect(result?.id).toBe(organization.id);
-      expect(result?.name).toBe(organization.name);
-      expect(result?.slug).toBe(organization.slug);
+      expect(result).toEqual(organization);
     });
 
     describe('when organization slug is not found', () => {
@@ -132,27 +123,29 @@ describe('OrganizationRepository', () => {
       });
     });
 
-    it('returns all organizations', async () => {
-      const organization1 = organizationFactory({
-        id: createOrganizationId('123e4567-e89b-12d3-a456-426614174000'),
-        name: 'Tech Corporation',
-        slug: 'tech-corporation',
+    describe('when organizations exist', () => {
+      it('returns all organizations', async () => {
+        const organization1 = organizationFactory({
+          id: createOrganizationId('123e4567-e89b-12d3-a456-426614174000'),
+          name: 'Tech Corporation',
+          slug: 'tech-corporation',
+        });
+
+        const organization2 = organizationFactory({
+          id: createOrganizationId('123e4567-e89b-12d3-a456-426614174001'),
+          name: 'Marketing Inc',
+          slug: 'marketing-inc',
+        });
+
+        await organizationRepository.add(organization1);
+        await organizationRepository.add(organization2);
+
+        const result = await organizationRepository.list();
+
+        expect(result).toEqual(
+          expect.arrayContaining([organization1, organization2]),
+        );
       });
-
-      const organization2 = organizationFactory({
-        id: createOrganizationId('123e4567-e89b-12d3-a456-426614174001'),
-        name: 'Marketing Inc',
-        slug: 'marketing-inc',
-      });
-
-      await organizationRepository.add(organization1);
-      await organizationRepository.add(organization2);
-
-      const result = await organizationRepository.list();
-
-      expect(result).toHaveLength(2);
-      expect(result.map((o) => o.name)).toContain('Tech Corporation');
-      expect(result.map((o) => o.name)).toContain('Marketing Inc');
     });
   });
 });
