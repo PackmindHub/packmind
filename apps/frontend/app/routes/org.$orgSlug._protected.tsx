@@ -5,7 +5,7 @@ import {
   useParams,
   useSearchParams,
 } from 'react-router';
-import { useEffect, useRef } from 'react';
+import { useEffect } from 'react';
 import { PMBox, PMHStack } from '@packmind/ui';
 import { SidebarNavigation } from '../../src/domain/organizations/components/SidebarNavigation';
 import { useGetMeQuery } from '../../src/domain/accounts/api/queries/UserQueries';
@@ -25,7 +25,6 @@ export default function AuthenticatedLayout() {
   const params = useParams();
   const [searchParams] = useSearchParams();
   const authService = AuthService.getInstance();
-  const isSwitchingOrgRef = useRef(false);
 
   useAuthErrorHandler();
 
@@ -46,9 +45,9 @@ export default function AuthenticatedLayout() {
       me.organization?.slug &&
       params.orgSlug &&
       me.organization.slug !== params.orgSlug &&
-      !isSwitchingOrgRef.current
+      !AuthService.getIsSwitching()
     ) {
-      isSwitchingOrgRef.current = true;
+      // validateAndSwitchIfNeeded sets/clears the switching flag internally
       void authService
         .validateAndSwitchIfNeeded(params.orgSlug)
         .then((result) => {
@@ -57,14 +56,8 @@ export default function AuthenticatedLayout() {
             navigate(`/org/${me.organization?.slug}`);
           }
           // If success, the query cache invalidation in authService triggers a re-render with new data
-          isSwitchingOrgRef.current = false;
         });
       return; // Exit early to prevent Crisp init during switch
-    }
-
-    // Reset the switching flag once slugs match
-    if (me.organization?.slug === params.orgSlug) {
-      isSwitchingOrgRef.current = false;
     }
 
     // 3. Crisp Init

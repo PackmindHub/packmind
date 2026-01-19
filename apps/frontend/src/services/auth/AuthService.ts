@@ -28,6 +28,18 @@ export class AuthService {
   private static instance: AuthService | null = null;
   private queryClient: QueryClient | null = null;
 
+  // Static flags for org switching state
+  private static isSwitchingOrg = false;
+  private static targetOrgSlug: string | null = null;
+
+  static getIsSwitching(): boolean {
+    return AuthService.isSwitchingOrg;
+  }
+
+  static getTargetOrgSlug(): string | null {
+    return AuthService.targetOrgSlug;
+  }
+
   // Private constructor for singleton pattern
   // eslint-disable-next-line @typescript-eslint/no-empty-function
   private constructor() {}
@@ -84,54 +96,62 @@ export class AuthService {
   async validateAndSwitchIfNeeded(
     targetOrgSlug: string,
   ): Promise<OrganizationSwitchResult> {
-    const queryClient = this.ensureInitialized();
+    AuthService.isSwitchingOrg = true;
+    AuthService.targetOrgSlug = targetOrgSlug;
 
-    // Fetch all user's organizations
-    const organizations = await queryClient.fetchQuery(
-      getUserOrganizationsQueryOptions(),
-    );
+    try {
+      const queryClient = this.ensureInitialized();
 
-    // Find the target organization
-    const targetOrganization = organizations.find(
-      (org) => org.slug === targetOrgSlug,
-    );
+      // Fetch all user's organizations
+      const organizations = await queryClient.fetchQuery(
+        getUserOrganizationsQueryOptions(),
+      );
 
-    if (!targetOrganization) {
-      // User doesn't have access to this organization
+      // Find the target organization
+      const targetOrganization = organizations.find(
+        (org) => org.slug === targetOrgSlug,
+      );
+
+      if (!targetOrganization) {
+        // User doesn't have access to this organization
+        return {
+          success: false,
+          hasAccess: false,
+        };
+      }
+
+      // Switch to the target organization
+      await queryClient.fetchQuery(
+        getSelectOrganizationQueryOptions(targetOrganization.id),
+      );
+
+      // Stop any in-flight organization-scoped queries before clearing the cache
+      await queryClient.cancelQueries({
+        queryKey: [ORGANIZATION_QUERY_SCOPE],
+      });
+
+      // Remove all organization-scoped queries from the cache
+      // This prevents stale queries from refetching with the wrong org context
+      await queryClient.removeQueries({
+        queryKey: [ORGANIZATION_QUERY_SCOPE],
+      });
+
+      // Explicitly remove ME and USER_ORGS to be absolutely safe
+      await queryClient.removeQueries({ queryKey: GET_ME_KEY });
+      await queryClient.removeQueries({ queryKey: GET_USER_ORGANIZATIONS_KEY });
+
+      // Fetch updated me data (this will be fresh since we removed the cached query)
+      const updatedMe = await queryClient.fetchQuery(getMeQueryOptions());
+
       return {
-        success: false,
-        hasAccess: false,
+        success: true,
+        hasAccess: true,
+        updatedMe,
+        targetOrganization,
       };
+    } finally {
+      AuthService.isSwitchingOrg = false;
+      AuthService.targetOrgSlug = null;
     }
-
-    // Switch to the target organization
-    await queryClient.fetchQuery(
-      getSelectOrganizationQueryOptions(targetOrganization.id),
-    );
-
-    // Stop any in-flight organization-scoped queries before clearing the cache
-    await queryClient.cancelQueries({
-      queryKey: [ORGANIZATION_QUERY_SCOPE],
-    });
-
-    // Remove all organization-scoped queries from the cache
-    // This prevents stale queries from refetching with the wrong org context
-    await queryClient.removeQueries({
-      queryKey: [ORGANIZATION_QUERY_SCOPE],
-    });
-
-    // Explicitly remove ME and USER_ORGS to be absolutely safe
-    await queryClient.removeQueries({ queryKey: GET_ME_KEY });
-    await queryClient.removeQueries({ queryKey: GET_USER_ORGANIZATIONS_KEY });
-
-    // Fetch updated me data (this will be fresh since we removed the cached query)
-    const updatedMe = await queryClient.fetchQuery(getMeQueryOptions());
-
-    return {
-      success: true,
-      hasAccess: true,
-      updatedMe,
-      targetOrganization,
-    };
   }
 }
