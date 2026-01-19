@@ -14,6 +14,20 @@ import {
   getAvailableMethods,
 } from './types';
 import { MethodContent } from './InstallMethods';
+import { StartTrialCommandAgents } from '@packmind/types';
+import { OnboardingAgentProvider } from '../../contexts';
+
+const mapAgentIdToAnalytics = (agentId: string): StartTrialCommandAgents => {
+  const mapping: Record<string, StartTrialCommandAgents> = {
+    claude: 'claude',
+    'github-copilot-vscode': 'vs-code',
+    'github-copilot-jetbrains': 'jetbrains',
+    cursor: 'cursor',
+    continue: 'continue-dev',
+    generic: 'other',
+  };
+  return mapping[agentId] ?? 'other';
+};
 
 interface IAgentModalProps {
   agent: IAgentConfig;
@@ -109,11 +123,17 @@ export const AgentModal: React.FunctionComponent<IAgentModalProps> = ({
             </PMHStack>
           </PMDialog.Header>
           <PMDialog.Body maxH="70vh" overflowY="auto">
-            {hasSingleMethod ? (
-              firstTab.content
-            ) : (
-              <PMTabs width="100%" defaultValue={firstTab.value} tabs={tabs} />
-            )}
+            <OnboardingAgentProvider agent={mapAgentIdToAnalytics(agent.id)}>
+              {hasSingleMethod ? (
+                firstTab.content
+              ) : (
+                <PMTabs
+                  width="100%"
+                  defaultValue={firstTab.value}
+                  tabs={tabs}
+                />
+              )}
+            </OnboardingAgentProvider>
           </PMDialog.Body>
         </PMDialog.Content>
       </PMDialog.Positioner>

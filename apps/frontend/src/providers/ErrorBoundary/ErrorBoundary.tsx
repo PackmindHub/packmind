@@ -8,6 +8,7 @@ import {
   PMText,
   PMVStack,
   PMAlert,
+  UIProvider,
 } from '@packmind/ui';
 import { logoPackmindText } from '@packmind/assets';
 
@@ -135,22 +136,74 @@ export class ErrorBoundary extends Component<
     // App-level error (most severe)
     if (level === 'app') {
       return (
-        <PMBox
-          display="flex"
-          flexDirection="column"
-          alignItems="center"
-          justifyContent="center"
-          minH="100vh"
-          p={8}
-        >
-          <PMVStack gap={6} maxW="600px" alignItems="center">
+        <UIProvider>
+          <PMBox
+            display="flex"
+            flexDirection="column"
+            alignItems="center"
+            justifyContent="center"
+            minH="100vh"
+            p={8}
+          >
+            <PMVStack gap={6} maxW="600px" alignItems="center">
+              <PMImage src={logoPackmindText} maxHeight="32px" />
+              <PMHeading size="2xl" textAlign="center">
+                Oops! Something went wrong
+              </PMHeading>
+              <PMText fontSize="lg" textAlign="center">
+                We're sorry, but the application encountered an unexpected
+                error. Our team has been notified and we're working on a fix.
+              </PMText>
+              <PMAlert.Root status="error">
+                <PMAlert.Indicator />
+                <PMBox>
+                  <PMAlert.Title>Error Details</PMAlert.Title>
+                  <PMAlert.Description>
+                    {error?.message || 'An unknown error occurred'}
+                  </PMAlert.Description>
+                </PMBox>
+              </PMAlert.Root>
+              <PMButton onClick={this.handleReload} size="lg">
+                Reload Application
+              </PMButton>
+              <PMButton onClick={this.handleReset} variant="outline">
+                Try Again
+              </PMButton>
+              {process.env.NODE_ENV === 'development' && errorInfo && (
+                <PMBox
+                  mt={6}
+                  p={4}
+                  borderRadius="md"
+                  fontSize="xs"
+                  fontFamily="mono"
+                  textAlign="left"
+                  maxH="200px"
+                  overflow="auto"
+                >
+                  <PMText fontWeight="bold" mb={2}>
+                    Component Stack (Dev Only):
+                  </PMText>
+                  <pre>{errorInfo.componentStack}</pre>
+                </PMBox>
+              )}
+            </PMVStack>
+          </PMBox>
+        </UIProvider>
+      );
+    }
+
+    // Route-level error
+    return (
+      <UIProvider>
+        <PMBox p={8} maxW="800px" mx="auto">
+          <PMVStack gap={6} alignItems="center">
             <PMImage src={logoPackmindText} maxHeight="32px" />
-            <PMHeading size="2xl" textAlign="center">
-              Oops! Something went wrong
+            <PMHeading size="xl" textAlign="center">
+              Page Error
             </PMHeading>
-            <PMText fontSize="lg" textAlign="center">
-              We're sorry, but the application encountered an unexpected error.
-              Our team has been notified and we're working on a fix.
+            <PMText textAlign="center">
+              This page encountered an error while loading. You can try going
+              back or reloading the page.
             </PMText>
             <PMAlert.Root status="error">
               <PMAlert.Indicator />
@@ -161,20 +214,20 @@ export class ErrorBoundary extends Component<
                 </PMAlert.Description>
               </PMBox>
             </PMAlert.Root>
-            <PMButton onClick={this.handleReload} size="lg">
-              Reload Application
+            <PMButton onClick={this.handleGoBack}>Go Back</PMButton>
+            <PMButton onClick={this.handleReload} variant="outline">
+              Reload Page
             </PMButton>
-            <PMButton onClick={this.handleReset} variant="outline">
+            <PMButton onClick={this.handleReset} variant="ghost" size="sm">
               Try Again
             </PMButton>
             {process.env.NODE_ENV === 'development' && errorInfo && (
               <PMBox
-                mt={6}
+                mt={4}
                 p={4}
                 borderRadius="md"
                 fontSize="xs"
                 fontFamily="mono"
-                textAlign="left"
                 maxH="200px"
                 overflow="auto"
               >
@@ -186,55 +239,7 @@ export class ErrorBoundary extends Component<
             )}
           </PMVStack>
         </PMBox>
-      );
-    }
-
-    // Route-level error
-    return (
-      <PMBox p={8} maxW="800px" mx="auto">
-        <PMVStack gap={6} alignItems="center">
-          <PMImage src={logoPackmindText} maxHeight="32px" />
-          <PMHeading size="xl" textAlign="center">
-            Page Error
-          </PMHeading>
-          <PMText textAlign="center">
-            This page encountered an error while loading. You can try going back
-            or reloading the page.
-          </PMText>
-          <PMAlert.Root status="error">
-            <PMAlert.Indicator />
-            <PMBox>
-              <PMAlert.Title>Error Details</PMAlert.Title>
-              <PMAlert.Description>
-                {error?.message || 'An unknown error occurred'}
-              </PMAlert.Description>
-            </PMBox>
-          </PMAlert.Root>
-          <PMButton onClick={this.handleGoBack}>Go Back</PMButton>
-          <PMButton onClick={this.handleReload} variant="outline">
-            Reload Page
-          </PMButton>
-          <PMButton onClick={this.handleReset} variant="ghost" size="sm">
-            Try Again
-          </PMButton>
-          {process.env.NODE_ENV === 'development' && errorInfo && (
-            <PMBox
-              mt={4}
-              p={4}
-              borderRadius="md"
-              fontSize="xs"
-              fontFamily="mono"
-              maxH="200px"
-              overflow="auto"
-            >
-              <PMText fontWeight="bold" mb={2}>
-                Component Stack (Dev Only):
-              </PMText>
-              <pre>{errorInfo.componentStack}</pre>
-            </PMBox>
-          )}
-        </PMVStack>
-      </PMBox>
+      </UIProvider>
     );
   }
 }
