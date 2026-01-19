@@ -1,41 +1,35 @@
-# Website
+# Packmind Documentation
 
-This website is built using [Docusaurus](https://docusaurus.io/), a modern static website generator.
-
-## Installation
-
-```bash
-yarn
-```
+This documentation is built using [Mintlify](https://mintlify.com/), a modern documentation platform.
 
 ## Local Development
 
-```bash
-yarn start
-```
-
-This command starts a local development server and opens up a browser window. Most changes are reflected live without having to restart the server.
-
-## Build
+To preview the documentation locally:
 
 ```bash
-yarn build
+npx mintlify dev
 ```
 
-This command generates static content into the `build` directory and can be served using any static contents hosting service.
+This command starts a local development server and opens up a browser window. Changes are reflected live without having to restart the server.
 
 ## Deployment
 
-Using SSH:
+Documentation is automatically deployed to Mintlify Cloud when changes are pushed to the repository. No manual deployment is required.
 
-```bash
-USE_SSH=true yarn deploy
-```
+## Documentation Structure
 
-Not using SSH:
+- `docs.json` - Navigation and configuration
+- `getting-started/` - Getting started guides
+- `concepts/` - Core concepts documentation
+- `tools/` - Tools and integrations
+- `governance/` - Governance documentation
+- `linter/` - Linter documentation
+- `administration/` - Administration guides
+- `security/` - Security and privacy documentation
+- `images/` - Images and assets
 
-```bash
-GIT_USER=<Your GitHub username> yarn deploy
-```
+## Editing Documentation
 
-If you are using GitHub pages for hosting, this command is a convenient way to build the website and push to the `gh-pages` branch.
+All documentation files use MDX format (`.mdx`). You can use standard Markdown along with React components.
+
+For more information on Mintlify features, visit [Mintlify documentation](https://mintlify.com/docs).
