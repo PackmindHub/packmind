@@ -242,6 +242,7 @@ export class AccountsAdapter
     this._createOrganization = new CreateOrganizationUseCase(
       this.accountsServices.getOrganizationService(),
       this.accountsServices.getUserService(),
+      ports.eventEmitterService,
       this.logger,
       this.spacesPort,
     );

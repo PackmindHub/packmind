@@ -175,6 +175,24 @@ describe('StartTrialUseCase', () => {
         expect(trialStartedCall[0]).toBeInstanceOf(AnonymousTrialStartedEvent);
       });
 
+      it('emits OrganizationCreatedEvent with quick-start method', async () => {
+        const command: StartTrialCommand = { agent: 'vs-code' };
+
+        await startTrialUseCase.execute(command);
+
+        expect(mockEventEmitterService.emit).toHaveBeenCalledWith(
+          expect.objectContaining({
+            payload: expect.objectContaining({
+              userId: expect.anything(),
+              organizationId: mockOrganization.id,
+              name: expect.stringMatching(/^trial-[a-f0-9-]+$/),
+              method: 'quick-start',
+              source: 'ui',
+            }),
+          }),
+        );
+      });
+
       it('returns user data', async () => {
         const command: StartTrialCommand = { agent: 'vs-code' };
 
