@@ -70,17 +70,44 @@ describe('PackmindApp MCP Server', () => {
       expect(registry.initialized).toBe(true);
     });
 
-    it('registers all expected hexas', async () => {
-      const registry = await initializePackmindApp(dataSource);
+    describe('when registering hexas', () => {
+      let registry: Awaited<ReturnType<typeof initializePackmindApp>>;
 
-      expect(registry.get(AccountsHexa)).toBeDefined();
-      expect(registry.get(GitHexa)).toBeDefined();
-      expect(registry.get(SpacesHexa)).toBeDefined();
-      expect(registry.get(LinterHexa)).toBeDefined();
-      expect(registry.get(RecipesHexa)).toBeDefined();
-      expect(registry.get(StandardsHexa)).toBeDefined();
-      expect(registry.get(CodingAgentHexa)).toBeDefined();
-      expect(registry.get(DeploymentsHexa)).toBeDefined();
+      beforeEach(async () => {
+        registry = await initializePackmindApp(dataSource);
+      });
+
+      it('registers AccountsHexa', () => {
+        expect(registry.get(AccountsHexa)).toBeDefined();
+      });
+
+      it('registers GitHexa', () => {
+        expect(registry.get(GitHexa)).toBeDefined();
+      });
+
+      it('registers SpacesHexa', () => {
+        expect(registry.get(SpacesHexa)).toBeDefined();
+      });
+
+      it('registers LinterHexa', () => {
+        expect(registry.get(LinterHexa)).toBeDefined();
+      });
+
+      it('registers RecipesHexa', () => {
+        expect(registry.get(RecipesHexa)).toBeDefined();
+      });
+
+      it('registers StandardsHexa', () => {
+        expect(registry.get(StandardsHexa)).toBeDefined();
+      });
+
+      it('registers CodingAgentHexa', () => {
+        expect(registry.get(CodingAgentHexa)).toBeDefined();
+      });
+
+      it('registers DeploymentsHexa', () => {
+        expect(registry.get(DeploymentsHexa)).toBeDefined();
+      });
     });
 
     it('registers JobsService', async () => {
@@ -89,23 +116,42 @@ describe('PackmindApp MCP Server', () => {
       expect(registry.getService(JobsService)).toBeDefined();
     });
 
-    it('provides access to hexas through adapters', async () => {
-      const registry = await initializePackmindApp(dataSource);
+    describe('when accessing hexa adapters', () => {
+      let registry: Awaited<ReturnType<typeof initializePackmindApp>>;
 
-      const accountsHexa = registry.get(AccountsHexa);
-      expect(accountsHexa.getAdapter()).toBeDefined();
+      beforeEach(async () => {
+        registry = await initializePackmindApp(dataSource);
+      });
 
-      const gitHexa = registry.get(GitHexa);
-      expect(gitHexa.getAdapter()).toBeDefined();
+      it('provides access to AccountsHexa adapter', () => {
+        const accountsHexa = registry.get(AccountsHexa);
 
-      const recipesHexa = registry.get(RecipesHexa);
-      expect(recipesHexa.getAdapter()).toBeDefined();
+        expect(accountsHexa.getAdapter()).toBeDefined();
+      });
 
-      const standardsHexa = registry.get(StandardsHexa);
-      expect(standardsHexa.getAdapter()).toBeDefined();
+      it('provides access to GitHexa adapter', () => {
+        const gitHexa = registry.get(GitHexa);
 
-      const deploymentsHexa = registry.get(DeploymentsHexa);
-      expect(deploymentsHexa.getAdapter()).toBeDefined();
+        expect(gitHexa.getAdapter()).toBeDefined();
+      });
+
+      it('provides access to RecipesHexa adapter', () => {
+        const recipesHexa = registry.get(RecipesHexa);
+
+        expect(recipesHexa.getAdapter()).toBeDefined();
+      });
+
+      it('provides access to StandardsHexa adapter', () => {
+        const standardsHexa = registry.get(StandardsHexa);
+
+        expect(standardsHexa.getAdapter()).toBeDefined();
+      });
+
+      it('provides access to DeploymentsHexa adapter', () => {
+        const deploymentsHexa = registry.get(DeploymentsHexa);
+
+        expect(deploymentsHexa.getAdapter()).toBeDefined();
+      });
     });
   });
 });

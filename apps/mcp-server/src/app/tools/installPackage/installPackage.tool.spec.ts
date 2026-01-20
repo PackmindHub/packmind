@@ -70,29 +70,50 @@ describe('installPackage.tool', () => {
     );
   });
 
-  it('returns installation instructions', async () => {
-    registerInstallPackageTool(dependencies, mcpServer);
+  describe('when returning installation instructions', () => {
+    let resultText: string;
 
-    const result = await toolHandler({});
+    beforeEach(async () => {
+      registerInstallPackageTool(dependencies, mcpServer);
+      const result = await toolHandler({});
+      resultText = result.content[0].text;
+    });
 
-    expect(result.content[0].text).toContain(
-      '# Package Installation Instructions',
-    );
-    expect(result.content[0].text).toContain('packmind_list_packages');
-    expect(result.content[0].text).toContain('packmind-cli install');
-    expect(result.content[0].text).toContain('packmind.json');
-    expect(result.content[0].text).toContain('packageSlug');
-    expect(result.content[0].text).toContain('installedPackages');
-  });
+    it('includes installation header', () => {
+      expect(resultText).toContain('# Package Installation Instructions');
+    });
 
-  it('mentions render_package tool in instructions', async () => {
-    registerInstallPackageTool(dependencies, mcpServer);
+    it('includes packmind_list_packages reference', () => {
+      expect(resultText).toContain('packmind_list_packages');
+    });
 
-    const result = await toolHandler({});
+    it('includes packmind-cli install command', () => {
+      expect(resultText).toContain('packmind-cli install');
+    });
 
-    expect(result.content[0].text).toContain('packmind_render_package');
-    expect(result.content[0].text).toContain('gitRemoteUrl');
-    expect(result.content[0].text).toContain('gitBranch');
+    it('includes packmind.json reference', () => {
+      expect(resultText).toContain('packmind.json');
+    });
+
+    it('includes packageSlug reference', () => {
+      expect(resultText).toContain('packageSlug');
+    });
+
+    it('includes installedPackages reference', () => {
+      expect(resultText).toContain('installedPackages');
+    });
+
+    it('includes packmind_render_package reference', () => {
+      expect(resultText).toContain('packmind_render_package');
+    });
+
+    it('includes gitRemoteUrl reference', () => {
+      expect(resultText).toContain('gitRemoteUrl');
+    });
+
+    it('includes gitBranch reference', () => {
+      expect(resultText).toContain('gitBranch');
+    });
   });
 
   it('tracks analytics', async () => {

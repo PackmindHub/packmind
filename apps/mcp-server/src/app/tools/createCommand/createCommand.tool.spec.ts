@@ -171,13 +171,20 @@ describe('createCommand.tool', () => {
     });
 
     describe('when userContext is missing', () => {
-      it('does not track analytics', async () => {
+      let result: { content: { type: string; text: string }[] };
+
+      beforeEach(async () => {
         dependencies.userContext = undefined;
         registerCreateCommandTool(dependencies, mcpServer);
 
-        const result = await toolHandler({ step: 'initial-request' });
+        result = await toolHandler({ step: 'initial-request' });
+      });
 
+      it('does not track analytics', async () => {
         expect(mockAnalyticsAdapter.trackEvent).not.toHaveBeenCalled();
+      });
+
+      it('returns the expected step content', async () => {
         expect(result).toEqual({
           content: [
             {
@@ -224,13 +231,20 @@ describe('createCommand.tool', () => {
     });
 
     describe('when userContext is missing for default step', () => {
-      it('continues to work', async () => {
+      let result: { content: { type: string; text: string }[] };
+
+      beforeEach(async () => {
         dependencies.userContext = undefined;
         registerCreateCommandTool(dependencies, mcpServer);
 
-        const result = await toolHandler({});
+        result = await toolHandler({});
+      });
 
+      it('does not track analytics', async () => {
         expect(mockAnalyticsAdapter.trackEvent).not.toHaveBeenCalled();
+      });
+
+      it('returns the expected step content', async () => {
         expect(result).toEqual({
           content: [
             {

@@ -259,43 +259,72 @@ describe('packages.tools', () => {
       );
     });
 
-    it('returns formatted package details with commands and standards', async () => {
-      const mockAdapter = {
-        getPackageSummary: jest.fn().mockResolvedValue({
-          name: 'Test Package',
-          slug: 'test-pkg',
-          description: 'A test package',
-          recipes: [
-            { name: 'Command 1', summary: undefined },
-            { name: 'Command 2', summary: undefined },
-          ],
-          standards: [
-            { name: 'Standard 1', summary: 'Summary 1' },
-            { name: 'Standard 2', summary: 'Summary 2' },
-          ],
-        }),
-      };
+    describe('when package has commands and standards', () => {
+      let result: { content: { type: string; text: string }[] };
 
-      mockFastify.deploymentsHexa.mockReturnValue({
-        getAdapter: () => mockAdapter,
+      beforeEach(async () => {
+        const mockAdapter = {
+          getPackageSummary: jest.fn().mockResolvedValue({
+            name: 'Test Package',
+            slug: 'test-pkg',
+            description: 'A test package',
+            recipes: [
+              { name: 'Command 1', summary: undefined },
+              { name: 'Command 2', summary: undefined },
+            ],
+            standards: [
+              { name: 'Standard 1', summary: 'Summary 1' },
+              { name: 'Standard 2', summary: 'Summary 2' },
+            ],
+          }),
+        };
+
+        mockFastify.deploymentsHexa.mockReturnValue({
+          getAdapter: () => mockAdapter,
+        });
+
+        registerShowPackageTool(dependencies, mcpServer);
+
+        result = await toolHandler({ packageSlug: 'test-pkg' });
       });
 
-      registerShowPackageTool(dependencies, mcpServer);
+      it('includes package title', () => {
+        expect(result.content[0].text).toContain('# Test Package');
+      });
 
-      const result = await toolHandler({ packageSlug: 'test-pkg' });
+      it('includes package description', () => {
+        expect(result.content[0].text).toContain('A test package');
+      });
 
-      expect(result.content[0].text).toContain('# Test Package');
-      expect(result.content[0].text).toContain('A test package');
-      expect(result.content[0].text).toContain('## Commands');
-      expect(result.content[0].text).toContain('• Command 1');
-      expect(result.content[0].text).toContain('• Command 2');
-      expect(result.content[0].text).toContain('## Standards');
-      expect(result.content[0].text).toContain('• Standard 1: Summary 1');
-      expect(result.content[0].text).toContain('• Standard 2: Summary 2');
+      it('includes commands section', () => {
+        expect(result.content[0].text).toContain('## Commands');
+      });
+
+      it('includes first command', () => {
+        expect(result.content[0].text).toContain('• Command 1');
+      });
+
+      it('includes second command', () => {
+        expect(result.content[0].text).toContain('• Command 2');
+      });
+
+      it('includes standards section', () => {
+        expect(result.content[0].text).toContain('## Standards');
+      });
+
+      it('includes first standard with summary', () => {
+        expect(result.content[0].text).toContain('• Standard 1: Summary 1');
+      });
+
+      it('includes second standard with summary', () => {
+        expect(result.content[0].text).toContain('• Standard 2: Summary 2');
+      });
     });
 
     describe('when standards have no summary', () => {
-      it('displays only standard name without summary', async () => {
+      let result: { content: { type: string; text: string }[] };
+
+      beforeEach(async () => {
         const mockAdapter = {
           getPackageSummary: jest.fn().mockResolvedValue({
             name: 'Test Package',
@@ -315,21 +344,30 @@ describe('packages.tools', () => {
 
         registerShowPackageTool(dependencies, mcpServer);
 
-        const result = await toolHandler({ packageSlug: 'test-pkg' });
+        result = await toolHandler({ packageSlug: 'test-pkg' });
+      });
 
+      it('includes standard with summary and its summary text', () => {
         expect(result.content[0].text).toContain(
           '• Standard With Summary: This has a summary',
         );
+      });
+
+      it('includes standard without summary', () => {
         expect(result.content[0].text).toContain('• Standard Without Summary');
-        // Ensure no colon appears for standards without summary
+      });
+
+      it('omits colon for standard without summary', () => {
         expect(result.content[0].text).not.toContain(
           '• Standard Without Summary:',
         );
       });
     });
 
-    describe('when packages with no commands or standards', () => {
-      it('handles empty sections', async () => {
+    describe('when package has no commands or standards', () => {
+      let result: { content: { type: string; text: string }[] };
+
+      beforeEach(async () => {
         const mockAdapter = {
           getPackageSummary: jest.fn().mockResolvedValue({
             name: 'Empty Package',
@@ -346,12 +384,22 @@ describe('packages.tools', () => {
 
         registerShowPackageTool(dependencies, mcpServer);
 
-        const result = await toolHandler({ packageSlug: 'empty-pkg' });
+        result = await toolHandler({ packageSlug: 'empty-pkg' });
+      });
 
-        // Empty sections should not be displayed
+      it('includes package title', () => {
         expect(result.content[0].text).toContain('# Empty Package');
+      });
+
+      it('includes package description', () => {
         expect(result.content[0].text).toContain('An empty package');
+      });
+
+      it('omits commands section', () => {
         expect(result.content[0].text).not.toContain('## Commands');
+      });
+
+      it('omits standards section', () => {
         expect(result.content[0].text).not.toContain('## Standards');
       });
     });
