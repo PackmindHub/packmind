@@ -16,6 +16,42 @@ describe('DeleteLocalSkillUseCase', () => {
     });
   });
 
+  describe('when skill is not Packmind-managed', () => {
+    beforeEach(() => {
+      // .packmind/skills/{skillName} does not exist
+      mockPathExists.mockImplementation((path: string) =>
+        Promise.resolve(!path.includes('.packmind/skills')),
+      );
+    });
+
+    it('returns skippedAsUserCreated true', async () => {
+      const result = await useCase.execute({
+        baseDirectory: '/project',
+        skillName: 'user-created-skill',
+      });
+
+      expect(result.skippedAsUserCreated).toBe(true);
+    });
+
+    it('returns empty deletedPaths', async () => {
+      const result = await useCase.execute({
+        baseDirectory: '/project',
+        skillName: 'user-created-skill',
+      });
+
+      expect(result.deletedPaths).toEqual([]);
+    });
+
+    it('does not delete any directories', async () => {
+      await useCase.execute({
+        baseDirectory: '/project',
+        skillName: 'user-created-skill',
+      });
+
+      expect(mockDeleteDirectory).not.toHaveBeenCalled();
+    });
+  });
+
   describe('when skill exists in all agent directories', () => {
     beforeEach(() => {
       mockPathExists.mockResolvedValue(true);
@@ -57,13 +93,27 @@ describe('DeleteLocalSkillUseCase', () => {
 
       expect(result.errors).toEqual([]);
     });
+
+    it('returns skippedAsUserCreated false', async () => {
+      const result = await useCase.execute({
+        baseDirectory: '/project',
+        skillName: 'signal-capture',
+      });
+
+      expect(result.skippedAsUserCreated).toBe(false);
+    });
   });
 
   describe('when skill exists only in claude agent directory', () => {
     beforeEach(() => {
-      mockPathExists.mockImplementation((path: string) =>
-        Promise.resolve(path.includes('.claude')),
-      );
+      mockPathExists.mockImplementation((path: string) => {
+        // .packmind/skills exists
+        if (path.includes('.packmind/skills')) {
+          return Promise.resolve(true);
+        }
+        // Only .claude/skills exists
+        return Promise.resolve(path.includes('.claude'));
+      });
       mockDeleteDirectory.mockResolvedValue(undefined);
     });
 
@@ -116,26 +166,33 @@ describe('DeleteLocalSkillUseCase', () => {
       ]);
     });
 
-    it('does not check other agent directories', async () => {
+    it('checks packmind and specified agent only', async () => {
       await useCase.execute({
         baseDirectory: '/project',
         skillName: 'test-skill',
         agents: ['github'] as AgentType[],
       });
 
-      expect(mockPathExists).toHaveBeenCalledTimes(1);
+      // First call is for .packmind/skills check, second is for specified agent
+      expect(mockPathExists).toHaveBeenCalledTimes(2);
+      expect(mockPathExists).toHaveBeenCalledWith(
+        '/project/.packmind/skills/test-skill',
+      );
       expect(mockPathExists).toHaveBeenCalledWith(
         '/project/.github/skills/test-skill',
       );
     });
   });
 
-  describe('when skill does not exist in any agent directory', () => {
+  describe('when skill does not exist in any agent directory but is Packmind-managed', () => {
     beforeEach(() => {
-      mockPathExists.mockResolvedValue(false);
+      mockPathExists.mockImplementation((path: string) => {
+        // Only .packmind/skills exists
+        return Promise.resolve(path.includes('.packmind/skills'));
+      });
     });
 
-    it('reports all paths as not found', async () => {
+    it('reports all agent paths as not found', async () => {
       const result = await useCase.execute({
         baseDirectory: '/project',
         skillName: 'non-existent',

@@ -58,6 +58,23 @@ export class DeleteLocalSkillUseCase implements IDeleteLocalSkillUseCase {
   ): Promise<IDeleteLocalSkillResult> {
     validateSkillName(command.skillName);
 
+    // Check if skill is Packmind-managed (exists in .packmind/skills/)
+    const packmindSkillPath = path.join(
+      command.baseDirectory,
+      '.packmind/skills',
+      command.skillName,
+    );
+    const isPackmindManaged = await this.deps.pathExists(packmindSkillPath);
+
+    if (!isPackmindManaged) {
+      return {
+        deletedPaths: [],
+        notFoundPaths: [],
+        errors: [],
+        skippedAsUserCreated: true,
+      };
+    }
+
     const agents: AgentType[] = command.agents ?? ALL_AGENTS;
     const deletedPaths: string[] = [];
     const notFoundPaths: string[] = [];
@@ -90,6 +107,7 @@ export class DeleteLocalSkillUseCase implements IDeleteLocalSkillUseCase {
       deletedPaths,
       notFoundPaths,
       errors,
+      skippedAsUserCreated: false,
     };
   }
 }

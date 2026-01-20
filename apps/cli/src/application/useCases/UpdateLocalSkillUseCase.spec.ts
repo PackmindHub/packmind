@@ -31,9 +31,53 @@ describe('UpdateLocalSkillUseCase', () => {
     });
   });
 
+  describe('when skill is not Packmind-managed', () => {
+    beforeEach(() => {
+      mockPathExists.mockImplementation((path: string) =>
+        Promise.resolve(!path.includes('.packmind/skills')),
+      );
+    });
+
+    it('returns skippedAsUserCreated true', async () => {
+      const result = await useCase.execute({
+        baseDirectory: '/project',
+        skillName: 'user-created-skill',
+        sourcePath: '/source/user-created-skill',
+      });
+
+      expect(result.skippedAsUserCreated).toBe(true);
+    });
+
+    it('returns empty updatedPaths', async () => {
+      const result = await useCase.execute({
+        baseDirectory: '/project',
+        skillName: 'user-created-skill',
+        sourcePath: '/source/user-created-skill',
+      });
+
+      expect(result.updatedPaths).toEqual([]);
+    });
+
+    it('does not write any files', async () => {
+      await useCase.execute({
+        baseDirectory: '/project',
+        skillName: 'user-created-skill',
+        sourcePath: '/source/user-created-skill',
+      });
+
+      expect(mockWriteFile).not.toHaveBeenCalled();
+    });
+  });
+
   describe('when source path does not exist', () => {
     beforeEach(() => {
-      mockPathExists.mockResolvedValue(false);
+      mockPathExists.mockImplementation((path: string) => {
+        // .packmind/skills exists but source does not
+        if (path.includes('.packmind/skills')) {
+          return Promise.resolve(true);
+        }
+        return Promise.resolve(false);
+      });
     });
 
     it('throws error', async () => {
@@ -49,9 +93,12 @@ describe('UpdateLocalSkillUseCase', () => {
 
   describe('when source path does not contain SKILL.md', () => {
     beforeEach(() => {
-      mockPathExists.mockImplementation((p: string) =>
-        Promise.resolve(!p.includes('SKILL.md')),
-      );
+      mockPathExists.mockImplementation((p: string) => {
+        if (p.includes('SKILL.md')) {
+          return Promise.resolve(false);
+        }
+        return Promise.resolve(true);
+      });
     });
 
     it('throws error', async () => {
@@ -148,6 +195,16 @@ describe('UpdateLocalSkillUseCase', () => {
       expect(result.filesCreated).toBe(2); // helper.ts created in 2 agents
       expect(result.filesUpdated).toBe(2); // SKILL.md updated in 2 agents
     });
+
+    it('returns skippedAsUserCreated false', async () => {
+      const result = await useCase.execute({
+        baseDirectory: '/project',
+        skillName: 'test-skill',
+        sourcePath: '/source/test-skill',
+      });
+
+      expect(result.skippedAsUserCreated).toBe(false);
+    });
   });
 
   describe('when file content is unchanged', () => {
@@ -204,9 +261,16 @@ describe('UpdateLocalSkillUseCase', () => {
     });
   });
 
-  describe('when skill does not exist in target directory', () => {
+  describe('when skill does not exist in target directory but is Packmind-managed', () => {
     beforeEach(() => {
       mockPathExists.mockImplementation((p: string) => {
+        // .packmind/skills and source exist, but agent directories do not
+        if (p.includes('.packmind/skills')) {
+          return Promise.resolve(true);
+        }
+        if (p.includes('/source/')) {
+          return Promise.resolve(true);
+        }
         if (p.includes('.claude/skills') || p.includes('.github/skills')) {
           return Promise.resolve(false);
         }

@@ -14,6 +14,7 @@ export type IUpdateLocalSkillResult = {
   filesCreated: number;
   filesDeleted: number;
   errors: string[];
+  skippedAsUserCreated: boolean;
 };
 
 export interface IUpdateLocalSkillUseCase {
