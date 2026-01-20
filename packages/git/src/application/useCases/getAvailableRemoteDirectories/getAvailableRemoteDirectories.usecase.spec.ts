@@ -167,26 +167,34 @@ describe('GetAvailableTargetsUseCase', () => {
           ).toHaveBeenCalledWith(mockGitRepo, 'src/components');
         });
 
-        it('uses different cache key for different paths', async () => {
+        describe('when path is specified', () => {
           const commandWithPath = {
             ...validCommand,
             path: 'src/components',
           };
           const expectedCacheKeyWithPath = `available-remote-directories:${mockGitRepo.id}:src/components`;
-          mockCacheInstance.get.mockResolvedValue(null); // Cache miss
-          mockGitProviderService.listAvailableTargets.mockResolvedValue(
-            mockTargets,
-          );
 
-          await getAvailableTargetsUseCase.execute(commandWithPath);
+          beforeEach(async () => {
+            mockCacheInstance.get.mockResolvedValue(null); // Cache miss
+            mockGitProviderService.listAvailableTargets.mockResolvedValue(
+              mockTargets,
+            );
 
-          expect(mockCacheInstance.get).toHaveBeenCalledWith(
-            expectedCacheKeyWithPath,
-          );
-          expect(mockCacheInstance.set).toHaveBeenCalledWith(
-            expectedCacheKeyWithPath,
-            mockTargets,
-          );
+            await getAvailableTargetsUseCase.execute(commandWithPath);
+          });
+
+          it('calls cache get with path-specific key', () => {
+            expect(mockCacheInstance.get).toHaveBeenCalledWith(
+              expectedCacheKeyWithPath,
+            );
+          });
+
+          it('stores result in cache with path-specific key', () => {
+            expect(mockCacheInstance.set).toHaveBeenCalledWith(
+              expectedCacheKeyWithPath,
+              mockTargets,
+            );
+          });
         });
       });
     });
@@ -252,14 +260,21 @@ describe('GetAvailableTargetsUseCase', () => {
     });
 
     describe('when no targets are available', () => {
-      it('returns empty array and caches the result', async () => {
-        const expectedCacheKey = `available-remote-directories:${mockGitRepo.id}:root`;
+      const expectedCacheKey = `available-remote-directories:${mockGitRepo.id}:root`;
+      let result: string[];
+
+      beforeEach(async () => {
         mockCacheInstance.get.mockResolvedValue(null); // Cache miss
         mockGitProviderService.listAvailableTargets.mockResolvedValue([]);
 
-        const result = await getAvailableTargetsUseCase.execute(validCommand);
+        result = await getAvailableTargetsUseCase.execute(validCommand);
+      });
 
+      it('returns empty array', () => {
         expect(result).toEqual([]);
+      });
+
+      it('caches the empty result', () => {
         expect(mockCacheInstance.set).toHaveBeenCalledWith(
           expectedCacheKey,
           [],

@@ -133,7 +133,9 @@ describe('ListProvidersUseCase', () => {
     });
 
     describe('with mixed token states', () => {
-      it('returns correct hasToken for each provider', async () => {
+      let result: Awaited<ReturnType<typeof useCase.execute>>;
+
+      beforeEach(async () => {
         const providerWithToken = gitProviderFactory({
           organizationId,
           token: 'valid-token',
@@ -146,9 +148,14 @@ describe('ListProvidersUseCase', () => {
           [providerWithToken, providerWithoutToken],
         );
 
-        const result = await useCase.execute({ organizationId, userId });
+        result = await useCase.execute({ organizationId, userId });
+      });
 
+      it('returns hasToken true for provider with token', () => {
         expect(result.providers[0].hasToken).toBe(true);
+      });
+
+      it('returns hasToken false for provider without token', () => {
         expect(result.providers[1].hasToken).toBe(false);
       });
     });

@@ -93,8 +93,13 @@ describe('AddGitRepoUseCase', () => {
   });
 
   describe('when adding a valid repository', () => {
-    it('creates repository successfully with no conflicts', async () => {
-      const command: AddGitRepoCommand = {
+    let command: AddGitRepoCommand;
+    let mockProvider: GitProvider;
+    let expectedResult: GitRepo;
+    let result: GitRepo;
+
+    beforeEach(async () => {
+      command = {
         userId,
         organizationId,
         gitProviderId,
@@ -103,7 +108,7 @@ describe('AddGitRepoUseCase', () => {
         branch: 'main',
       };
 
-      const mockProvider: GitProvider = {
+      mockProvider = {
         id: gitProviderId,
         source: GitProviderVendors.github,
         organizationId,
@@ -111,7 +116,7 @@ describe('AddGitRepoUseCase', () => {
         token: 'token',
       };
 
-      const expectedResult: GitRepo = {
+      expectedResult = {
         id: createGitRepoId(uuidv4()),
         owner: 'testowner',
         repo: 'testrepo',
@@ -127,15 +132,26 @@ describe('AddGitRepoUseCase', () => {
       );
       mockGitRepoService.addGitRepo.mockResolvedValue(expectedResult);
 
-      const result = await useCase.execute(command);
+      result = await useCase.execute(command);
+    });
 
+    it('returns the created repository', () => {
       expect(result).toEqual(expectedResult);
+    });
+
+    it('calls findGitProviderById with the correct provider id', () => {
       expect(mockGitProviderService.findGitProviderById).toHaveBeenCalledWith(
         gitProviderId,
       );
+    });
+
+    it('calls findGitRepoByOwnerRepoAndBranchInOrganization with the correct parameters', () => {
       expect(
         mockGitRepoService.findGitRepoByOwnerRepoAndBranchInOrganization,
       ).toHaveBeenCalledWith('testowner', 'testrepo', 'main', organizationId);
+    });
+
+    it('calls addGitRepo with the correct repository data', () => {
       expect(mockGitRepoService.addGitRepo).toHaveBeenCalledWith({
         owner: 'testowner',
         repo: 'testrepo',
@@ -143,18 +159,25 @@ describe('AddGitRepoUseCase', () => {
         providerId: gitProviderId,
       });
     });
+  });
 
-    it('allows same repository with different branch', async () => {
-      const command: AddGitRepoCommand = {
+  describe('when adding a repository with a different branch', () => {
+    let command: AddGitRepoCommand;
+    let mockProvider: GitProvider;
+    let expectedResult: GitRepo;
+    let result: GitRepo;
+
+    beforeEach(async () => {
+      command = {
         userId,
         organizationId,
         gitProviderId,
         owner: 'testowner',
         repo: 'testrepo',
-        branch: 'develop', // Different branch
+        branch: 'develop',
       };
 
-      const mockProvider: GitProvider = {
+      mockProvider = {
         id: gitProviderId,
         source: GitProviderVendors.github,
         organizationId,
@@ -162,7 +185,7 @@ describe('AddGitRepoUseCase', () => {
         token: 'token',
       };
 
-      const expectedResult: GitRepo = {
+      expectedResult = {
         id: createGitRepoId(uuidv4()),
         owner: 'testowner',
         repo: 'testrepo',
@@ -178,9 +201,14 @@ describe('AddGitRepoUseCase', () => {
       );
       mockGitRepoService.addGitRepo.mockResolvedValue(expectedResult);
 
-      const result = await useCase.execute(command);
+      result = await useCase.execute(command);
+    });
 
+    it('returns the created repository', () => {
       expect(result).toEqual(expectedResult);
+    });
+
+    it('calls findGitRepoByOwnerRepoAndBranchInOrganization with the develop branch', () => {
       expect(
         mockGitRepoService.findGitRepoByOwnerRepoAndBranchInOrganization,
       ).toHaveBeenCalledWith(
@@ -192,9 +220,16 @@ describe('AddGitRepoUseCase', () => {
     });
   });
 
-  describe('default target creation', () => {
-    it('creates default target if deployment port is available', async () => {
-      const useCaseWithDeployment = new AddGitRepoUseCase(
+  describe('when deployment port is available', () => {
+    let useCaseWithDeployment: AddGitRepoUseCase;
+    let command: AddGitRepoCommand;
+    let mockProvider: GitProvider;
+    let expectedResult: GitRepo;
+    let mockTarget: Target;
+    let result: GitRepo;
+
+    beforeEach(async () => {
+      useCaseWithDeployment = new AddGitRepoUseCase(
         mockGitProviderService,
         mockGitRepoService,
         mockAccountsAdapter,
@@ -202,7 +237,7 @@ describe('AddGitRepoUseCase', () => {
         stubLogger(),
       );
 
-      const command: AddGitRepoCommand = {
+      command = {
         userId,
         organizationId,
         gitProviderId,
@@ -211,7 +246,7 @@ describe('AddGitRepoUseCase', () => {
         branch: 'main',
       };
 
-      const mockProvider: GitProvider = {
+      mockProvider = {
         id: gitProviderId,
         source: GitProviderVendors.github,
         organizationId,
@@ -219,7 +254,7 @@ describe('AddGitRepoUseCase', () => {
         token: 'token',
       };
 
-      const expectedResult: GitRepo = {
+      expectedResult = {
         id: createGitRepoId(uuidv4()),
         owner: 'testowner',
         repo: 'testrepo',
@@ -227,7 +262,7 @@ describe('AddGitRepoUseCase', () => {
         providerId: gitProviderId,
       };
 
-      const mockTarget: Target = {
+      mockTarget = {
         id: createTargetId(uuidv4()),
         name: 'Default',
         path: '.',
@@ -243,9 +278,14 @@ describe('AddGitRepoUseCase', () => {
       mockGitRepoService.addGitRepo.mockResolvedValue(expectedResult);
       mockDeploymentPort.addTarget.mockResolvedValue(mockTarget);
 
-      const result = await useCaseWithDeployment.execute(command);
+      result = await useCaseWithDeployment.execute(command);
+    });
 
+    it('returns the created repository', () => {
       expect(result).toEqual(expectedResult);
+    });
+
+    it('calls addTarget with the default target configuration', () => {
       expect(mockDeploymentPort.addTarget).toHaveBeenCalledWith(
         expect.objectContaining({
           name: 'Default',

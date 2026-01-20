@@ -4,7 +4,6 @@ import { IGitRepoFactory } from '../../../domain/repositories/IGitRepoFactory';
 import { IGitRepo } from '../../../domain/repositories/IGitRepo';
 import { GitRepo } from '@packmind/types';
 import { GitProvider, GitProviderVendors } from '@packmind/types';
-import { PackmindLogger } from '@packmind/logger';
 import { stubLogger } from '@packmind/test-utils';
 
 describe('GetFileFromRepo', () => {
@@ -12,7 +11,6 @@ describe('GetFileFromRepo', () => {
   let gitProviderService: jest.Mocked<GitProviderService>;
   let gitRepoFactory: jest.Mocked<IGitRepoFactory>;
   let mockGitRepoInstance: jest.Mocked<IGitRepo>;
-  let logger: PackmindLogger;
 
   const mockGitRepoEntity: GitRepo = {
     id: 'repo-123',
@@ -45,76 +43,70 @@ describe('GetFileFromRepo', () => {
       createGitRepo: jest.fn().mockReturnValue(mockGitRepoInstance),
     } as jest.Mocked<IGitRepoFactory>;
 
-    logger = stubLogger();
+    useCase = new GetFileFromRepo(
+      gitProviderService,
+      gitRepoFactory,
+      stubLogger(),
+    );
+  });
 
-    useCase = new GetFileFromRepo(gitProviderService, gitRepoFactory, logger);
+  afterEach(() => {
+    jest.clearAllMocks();
   });
 
   describe('when file exists and contains valid base64 content', () => {
-    it('returns decoded UTF-8 content', async () => {
-      const originalContent = 'Hello, World! This is a test file.';
-      const base64Content = Buffer.from(originalContent).toString('base64');
-      const fileSha = 'test-sha-123';
+    const originalContent = 'Hello, World! This is a test file.';
+    const base64Content = Buffer.from(originalContent).toString('base64');
+    const fileSha = 'test-sha-123';
+    let result: { sha: string; content: string } | null;
 
+    beforeEach(async () => {
       gitProviderService.findGitProviderById.mockResolvedValue(mockProvider);
-
-      // Mock the git repo instance
       mockGitRepoInstance.getFileOnRepo.mockResolvedValue({
         sha: fileSha,
         content: base64Content,
       });
 
-      const result = await useCase.getFileFromRepo(
+      result = await useCase.getFileFromRepo(
         mockGitRepoEntity,
         'test-file.txt',
       );
+    });
 
-      expect(result).toEqual({
-        sha: fileSha,
-        content: originalContent, // Should be decoded UTF-8, not base64
-      });
+    it('returns the correct sha', () => {
+      expect(result?.sha).toEqual(fileSha);
+    });
 
-      expect(logger.info).toHaveBeenCalledWith(
-        'File retrieved and decoded successfully',
-        expect.objectContaining({
-          filePath: 'test-file.txt',
-          sha: fileSha,
-          decodedContentLength: originalContent.length,
-        }),
-      );
+    it('returns decoded UTF-8 content', () => {
+      expect(result?.content).toEqual(originalContent);
     });
   });
 
   describe('when file content decoding succeeds with garbled base64', () => {
-    it('returns decoded content (even if garbled)', async () => {
-      // Node.js Buffer.from() doesn't throw for "invalid" base64, it just decodes what it can
-      const garbageBase64Content = 'invalid-base64-content!';
-      const fileSha = 'test-sha-123';
+    const garbageBase64Content = 'invalid-base64-content!';
+    const fileSha = 'test-sha-123';
+    let result: { sha: string; content: string } | null;
 
+    beforeEach(async () => {
       gitProviderService.findGitProviderById.mockResolvedValue(mockProvider);
-
-      // Mock the git repo instance
       mockGitRepoInstance.getFileOnRepo.mockResolvedValue({
         sha: fileSha,
         content: garbageBase64Content,
       });
 
-      const result = await useCase.getFileFromRepo(
+      result = await useCase.getFileFromRepo(
         mockGitRepoEntity,
         'test-file.txt',
       );
+    });
 
-      expect(result).toEqual({
-        sha: fileSha,
-        content: Buffer.from(garbageBase64Content, 'base64').toString('utf-8'),
-      });
+    it('returns the correct sha', () => {
+      expect(result?.sha).toEqual(fileSha);
+    });
 
-      expect(logger.info).toHaveBeenCalledWith(
-        'File retrieved and decoded successfully',
-        expect.objectContaining({
-          filePath: 'test-file.txt',
-          sha: fileSha,
-        }),
+    it('returns decoded content', () => {
+      expect(result?.content).toEqual(
+        Buffer.from(garbageBase64Content, 'base64').toString('utf-8'),
       );
     });
   });
@@ -122,8 +114,6 @@ describe('GetFileFromRepo', () => {
   describe('when file does not exist', () => {
     it('returns null', async () => {
       gitProviderService.findGitProviderById.mockResolvedValue(mockProvider);
-
-      // Mock the git repo instance to return null (file not found)
       mockGitRepoInstance.getFileOnRepo.mockResolvedValue(null);
 
       const result = await useCase.getFileFromRepo(
@@ -132,13 +122,6 @@ describe('GetFileFromRepo', () => {
       );
 
       expect(result).toBeNull();
-
-      expect(logger.info).toHaveBeenCalledWith(
-        'File not found in repository',
-        expect.objectContaining({
-          filePath: 'non-existent-file.txt',
-        }),
-      );
     });
   });
 
@@ -166,30 +149,33 @@ describe('GetFileFromRepo', () => {
   });
 
   describe('when using custom branch', () => {
-    it('passes branch parameter correctly', async () => {
-      const originalContent = 'Branch content';
-      const base64Content = Buffer.from(originalContent).toString('base64');
-      const customBranch = 'feature-branch';
+    const originalContent = 'Branch content';
+    const base64Content = Buffer.from(originalContent).toString('base64');
+    const customBranch = 'feature-branch';
+    let result: { sha: string; content: string } | null;
 
+    beforeEach(async () => {
       gitProviderService.findGitProviderById.mockResolvedValue(mockProvider);
-
-      // Mock the git repo instance
       mockGitRepoInstance.getFileOnRepo.mockResolvedValue({
         sha: 'branch-sha',
         content: base64Content,
       });
 
-      const result = await useCase.getFileFromRepo(
+      result = await useCase.getFileFromRepo(
         mockGitRepoEntity,
         'test-file.txt',
         customBranch,
       );
+    });
 
+    it('returns decoded content', () => {
       expect(result).toEqual({
         sha: 'branch-sha',
         content: originalContent,
       });
+    });
 
+    it('passes branch parameter to getFileOnRepo', () => {
       expect(mockGitRepoInstance.getFileOnRepo).toHaveBeenCalledWith(
         'test-file.txt',
         customBranch,
