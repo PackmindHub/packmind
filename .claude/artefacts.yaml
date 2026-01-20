@@ -872,3 +872,15 @@
   path: tmp/handoffs/handoff_20260120_standards_lint.md
   type: claude_md
   date: 2026-01-20T16:37:41+01:00
+- name: CLAUDE.md
+  path: CLAUDE.md
+  type: claude_md
+  date: 2026-01-20T19:26:10+01:00
+- name: standard-testing-good-practices.md
+  path: .claude/rules/packmind/standard-testing-good-practices.md
+  type: rule
+  date: 2026-01-20T19:26:10+01:00
+- name: standard-tests-redaction.md
+  path: .claude/rules/packmind/standard-tests-redaction.md
+  type: rule
+  date: 2026-01-20T19:26:10+01:00
