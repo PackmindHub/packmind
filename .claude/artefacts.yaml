@@ -895,3 +895,7 @@
   path: .claude/rules/packmind/standard-backend-tests-redaction.md
   type: rule
   date: 2026-01-20T10:17:47+01:00
+- name: resume_handoff
+  path: tmp/handoffs/handoff_20260120_integration_tests_lint.md
+  type: skill
+  date: 2026-01-20T10:31:09+01:00

@@ -14,11 +14,20 @@ describe.skip('ParserRegistry', () => {
   });
 
   describe('getParser', () => {
-    it('returns a parser instance for a valid language', async () => {
-      const parser = await registry.getParser('typescript');
+    describe('when requesting a valid language', () => {
+      let parser: Awaited<ReturnType<ParserRegistry['getParser']>>;
 
-      expect(parser).toBeDefined();
-      expect(parser.getLanguage()).toBe('typescript');
+      beforeEach(async () => {
+        parser = await registry.getParser('typescript');
+      });
+
+      it('returns a defined parser instance', () => {
+        expect(parser).toBeDefined();
+      });
+
+      it('returns a parser with the correct language', () => {
+        expect(parser.getLanguage()).toBe('typescript');
+      });
     });
 
     it('caches parser instances', async () => {
@@ -34,20 +43,38 @@ describe.skip('ParserRegistry', () => {
       );
     });
 
-    it('initializes parser on first access', async () => {
-      const parser = await registry.getParser('javascript');
+    describe('when initializing parser on first access', () => {
+      let parser: Awaited<ReturnType<ParserRegistry['getParser']>>;
 
-      expect(parser).toBeDefined();
-      expect(parser.getLanguage()).toBe('javascript');
+      beforeEach(async () => {
+        parser = await registry.getParser('javascript');
+      });
+
+      it('returns a defined parser instance', () => {
+        expect(parser).toBeDefined();
+      });
+
+      it('returns a parser with the correct language', () => {
+        expect(parser.getLanguage()).toBe('javascript');
+      });
     });
   });
 
   describe('getAvailableParsers', () => {
-    it('returns array of available parser languages', () => {
-      const available = registry.getAvailableParsers();
+    describe('when retrieving available parsers', () => {
+      let available: string[];
 
-      expect(Array.isArray(available)).toBe(true);
-      expect(available.length).toBeGreaterThan(0);
+      beforeEach(() => {
+        available = registry.getAvailableParsers();
+      });
+
+      it('returns an array', () => {
+        expect(Array.isArray(available)).toBe(true);
+      });
+
+      it('returns a non-empty array', () => {
+        expect(available.length).toBeGreaterThan(0);
+      });
     });
 
     it('includes typescript in available parsers', () => {
