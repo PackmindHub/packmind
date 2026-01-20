@@ -14,16 +14,19 @@ export function DistributionStatusChangeSubscription(): null {
       return;
     }
 
-    try {
-      void queryClient.invalidateQueries({
+    queryClient
+      .invalidateQueries({
         queryKey: [ORGANIZATION_QUERY_SCOPE, DEPLOYMENTS_QUERY_SCOPE],
+      })
+      .catch((error) => {
+        console.error(
+          'SSE: Failed to process distribution status change event',
+          {
+            error,
+            raw: event.data,
+          },
+        );
       });
-    } catch (error) {
-      console.error('SSE: Failed to process distribution status change event', {
-        error,
-        raw: event.data,
-      });
-    }
   }, []);
 
   // Memoize params to avoid unnecessary re-subscriptions
