@@ -1,4 +1,5 @@
 import { command, option, string, optional } from 'cmd-ts';
+import { removeTrailingSlash } from '@packmind/node-utils';
 import { PackmindCliHexa } from '../../PackmindCliHexa';
 import { PackmindLogger, LogLevel } from '@packmind/logger';
 import {
@@ -40,8 +41,9 @@ export const loginCommand = command({
     try {
       if (!code) {
         console.log('\nOpening browser for authentication...');
+        const normalizedHost = removeTrailingSlash(host);
         console.log(
-          `\nIf the browser doesn't open, visit: ${host}/cli-login?callback_url=${encodeURIComponent('http://127.0.0.1:19284')}\n`,
+          `\nIf the browser doesn't open, visit: ${normalizedHost}/cli-login?callback_url=${encodeURIComponent('http://127.0.0.1:19284')}\n`,
         );
         logInfoConsole('Waiting for browser authentication...');
       }

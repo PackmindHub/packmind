@@ -1,6 +1,7 @@
 import * as http from 'http';
 import open from 'open';
 import * as readline from 'readline';
+import { removeTrailingSlash } from '@packmind/node-utils';
 import {
   ILoginCommand,
   ILoginResult,
@@ -53,7 +54,8 @@ async function defaultExchangeCodeForApiKey(
   code: string,
   host: string,
 ): Promise<{ apiKey: string; expiresAt: string }> {
-  const url = `${host}/api/v0/auth/cli-login-exchange`;
+  const normalizedHost = removeTrailingSlash(host);
+  const url = `${normalizedHost}/api/v0/auth/cli-login-exchange`;
 
   const response = await fetch(url, {
     method: 'POST',
@@ -163,7 +165,8 @@ export class LoginUseCase implements ILoginUseCase {
     } else {
       const callbackPromise = this.deps.startCallbackServer();
       const callbackUrl = `http://127.0.0.1:${CALLBACK_PORT}`;
-      const loginUrl = `${host}/cli-login?callback_url=${encodeURIComponent(callbackUrl)}`;
+      const normalizedHost = removeTrailingSlash(host);
+      const loginUrl = `${normalizedHost}/cli-login?callback_url=${encodeURIComponent(callbackUrl)}`;
 
       try {
         await this.deps.openBrowser(loginUrl);

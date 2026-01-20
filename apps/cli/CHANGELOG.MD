@@ -8,6 +8,8 @@
 
 ## Fixed
 
+- Fix double-slash in login URLs when host ends with trailing slash (#100)
+
 ## Removed
 
 # [0.13.1] - 2026-01-19
