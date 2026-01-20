@@ -94,9 +94,9 @@ export function StartTrialAgentSelector({
   return (
     <PMVStack gap={6} align="stretch">
       <PMBox textAlign="center">
-        <PMHeading level="h2">Quick start</PMHeading>
+        <PMHeading level="h2">Select your AI assistant</PMHeading>
         <PMText color="secondary" mt={2}>
-          Select the AI coding agent you use to get started with Packmind
+          Packmind adapts the generated playbook to your AI coding agent.
         </PMText>
       </PMBox>
 
@@ -142,7 +142,7 @@ export function StartTrialAgentSelector({
         onClick={handleContinue}
         data-testid={StartTrialAgentSelectorDataTestIds.ContinueButton}
       >
-        Continue
+        Generate playbook for my AI assistant
       </PMButton>
 
       {error && (
@@ -155,7 +155,7 @@ export function StartTrialAgentSelector({
       <PMBox mt={4} textAlign="center">
         <Link to="/sign-up" prefetch="intent">
           <PMButton variant="tertiary" size={'xs'} tabIndex={-1}>
-            Back to getting started options
+            Back to options
           </PMButton>
         </Link>
       </PMBox>
