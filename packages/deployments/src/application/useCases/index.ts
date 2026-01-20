@@ -5,6 +5,7 @@ export { CreatePackageUsecase } from './createPackage/createPackage.usecase';
 export { CreateRenderModeConfigurationUseCase } from './CreateRenderModeConfigurationUseCase';
 export { DeletePackagesBatchUsecase } from './deletePackage/deletePackagesBatch.usecase';
 export { DeleteTargetUseCase } from './DeleteTargetUseCase';
+export { DeployDefaultSkillsUseCase } from './DeployDefaultSkillsUseCase';
 export { FindActiveStandardVersionsByTargetUseCase } from './FindActiveStandardVersionsByTargetUseCase';
 export { GetDeploymentOverviewUseCase } from './GetDeploymentOverviewUseCase';
 export { GetRenderModeConfigurationUseCase } from './GetRenderModeConfigurationUseCase';

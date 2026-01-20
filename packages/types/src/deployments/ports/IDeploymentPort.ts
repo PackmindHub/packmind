@@ -9,6 +9,8 @@ import {
   DeletePackagesBatchResponse,
   DeleteTargetCommand,
   DeleteTargetResponse,
+  DeployDefaultSkillsCommand,
+  DeployDefaultSkillsResponse,
   DeploymentOverview,
   FindActiveStandardVersionsByTargetCommand,
   FindActiveStandardVersionsByTargetResponse,
@@ -436,4 +438,19 @@ export interface IDeploymentPort {
   removePackageFromTargets(
     command: RemovePackageFromTargetsCommand,
   ): Promise<RemovePackageFromTargetsResponse>;
+
+  /**
+   * Deploys default skills for all configured coding agents
+   *
+   * For each coding agent that supports default skills:
+   * 1. Gets the configured coding agents for the organization
+   * 2. For each agent that supports default skills, generates the file updates
+   * 3. Merges all file updates into a single response
+   *
+   * @param command - Command containing organization context
+   * @returns Promise of DeployDefaultSkillsResponse with merged file updates
+   */
+  deployDefaultSkills(
+    command: DeployDefaultSkillsCommand,
+  ): Promise<DeployDefaultSkillsResponse>;
 }

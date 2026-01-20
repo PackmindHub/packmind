@@ -72,3 +72,43 @@
     - 'typescript'
     - 'eslint'
     - 'interface-implementation'
+
+- timestamp: 2026-01-20T14:30:00Z
+  file: packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/DefaultSkillsDeployer.ts
+  context: 'Implementing deploySkillsCreator method to generate FileUpdates for skill-creator files'
+  category: 'architecture'
+  question: 'Should file contents be stored as constants in the source code or read from disk at runtime?'
+  decision: 'Store file contents as string constants in the TypeScript source file'
+  reasoning: 'Consistent with how other deployers work in this codebase (e.g., ClaudeDeployer generates content from constants/templates). This approach avoids filesystem dependencies at runtime and keeps the deployment logic self-contained.'
+  alternatives:
+    - 'Read files from disk at runtime using fs module'
+    - 'Bundle files as assets and import them'
+    - 'Fetch files from a remote source'
+  impact: 'module'
+  confidence: 'high'
+  source: 'pattern-matching'
+  tags:
+    - 'file-management'
+    - 'deployment'
+    - 'bundling'
+    - 'coding-agent'
+
+- timestamp: 2026-01-20T15:15:00Z
+  file: packages/coding-agent/src/domain/repository/ICodingAgentDeployer.ts
+  context: 'Adding deployDefaultSkills method to ICodingAgentDeployer interface'
+  category: 'architecture'
+  question: 'Should deployDefaultSkills be a required or optional method on ICodingAgentDeployer interface?'
+  decision: 'Make deployDefaultSkills an optional method (deployDefaultSkills?())'
+  reasoning: 'Not all deployers need to support default skills deployment. Making it optional allows deployers like PackmindDeployer or CursorDeployer to implement the interface without providing this capability, while ClaudeDeployer can implement it.'
+  alternatives:
+    - 'Make it required and have non-supporting deployers throw NotImplementedError'
+    - 'Create a separate interface IDefaultSkillsDeployer'
+    - 'Use type guards instead of optional method'
+  impact: 'global'
+  confidence: 'high'
+  source: 'pattern-matching'
+  tags:
+    - 'interface-design'
+    - 'optional-methods'
+    - 'coding-agent'
+    - 'typescript'

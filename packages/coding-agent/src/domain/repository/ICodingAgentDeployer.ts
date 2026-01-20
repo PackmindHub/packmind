@@ -49,4 +49,5 @@ export interface ICodingAgentDeployer {
     standardVersions: StandardVersion[],
     skillVersions?: SkillVersion[],
   ): Promise<FileUpdates>;
+  deployDefaultSkills?(): Promise<FileUpdates> | FileUpdates;
 }

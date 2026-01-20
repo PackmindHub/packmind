@@ -12,6 +12,7 @@ import {
 import { ICodingAgentDeployer } from '../../../domain/repository/ICodingAgentDeployer';
 import { GenericStandardSectionWriter } from '../genericSectionWriter/GenericStandardSectionWriter';
 import { getTargetPrefixedPath } from '../utils/FileUtils';
+import { DefaultSkillsDeployer } from '../defaultSkillsDeployer/DefaultSkillsDeployer';
 
 const origin = 'ClaudeDeployer';
 
@@ -27,6 +28,14 @@ export class ClaudeDeployer implements ICodingAgentDeployer {
     private readonly gitPort?: IGitPort,
   ) {
     this.logger = new PackmindLogger(origin);
+  }
+
+  async deployDefaultSkills() {
+    const defaultSkillsDeployer = new DefaultSkillsDeployer(
+      'Claude',
+      '.claude/skills/packmind/',
+    );
+    return defaultSkillsDeployer.deployDefaultSkills();
   }
 
   async deployRecipes(

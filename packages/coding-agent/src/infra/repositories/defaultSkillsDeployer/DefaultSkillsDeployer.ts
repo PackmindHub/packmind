@@ -11,7 +11,7 @@ export class DefaultSkillsDeployer {
     return this.deploySkillsCreator();
   }
 
-  public deploySkillsCreator(): FileUpdates {
+  private deploySkillsCreator(): FileUpdates {
     return new SkillCreatorDeployer().deploy(
       this.agentName,
       this.skillsFolderPath,
