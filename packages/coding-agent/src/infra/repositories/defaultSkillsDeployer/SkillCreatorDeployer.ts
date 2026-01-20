@@ -209,33 +209,23 @@ To complete SKILL.md, answer the following questions:
 2. When should the skill be used?
 3. In practice, how should ${agentName} use the skill? All reusable skill contents developed above should be referenced so that ${agentName} knows how to use them.
 
-### Step 5: Packaging a Skill
+### Step 5: Validating a Skill
 
-Once the skill is ready, it should be packaged into a distributable zip file that gets shared with the user. The packaging process automatically validates the skill first to ensure it meets all requirements.
+Before distributing, validate the skill to ensure it meets all requirements.
 
-**Before running the script**, verify that python3 and packmind-cli are available (see Prerequisites section). If not installed, install them first.
-
-\`\`\`bash
-python3 scripts/package_skill.py <path/to/skill-folder>
-\`\`\`
-
-Optional output directory specification:
+**Before running the script**, verify that python3 is available (see Prerequisites section). If not installed, install it first.
 
 \`\`\`bash
-python3 scripts/package_skill.py <path/to/skill-folder> ./dist
+python3 scripts/quick_validate.py <path/to/skill-folder>
 \`\`\`
 
-The packaging script will:
+The validation script checks:
 
-1. **Validate** the skill automatically, checking:
-   - YAML frontmatter format and required fields
-   - Skill naming conventions and directory structure
-   - Description completeness and quality
-   - File organization and resource references
+- YAML frontmatter format and required fields
+- Skill naming conventions and directory structure
+- Description completeness and quality
 
-2. **Package** the skill if validation passes, creating a zip file named after the skill (e.g., \`my-skill.zip\`) that includes all files and maintains the proper directory structure for distribution.
-
-If validation fails, the script will report the errors and exit without creating a package. Fix any validation errors and run the packaging command again.
+If validation fails, fix the reported errors and run the validation again.
 
 ### Step 6: Iterate
 
@@ -250,7 +240,7 @@ After testing the skill, users may request improvements. Often this happens righ
 
 ### Step 7: Distributing a Skill
 
-Once the skill is packaged and ready for distribution, use packmind-cli to add it to the skills registry.
+Once the skill is validated and ready for distribution, use packmind-cli to add it to the skills registry.
 
 **Before running the command**, verify that packmind-cli is available (see Prerequisites section). If not installed, install it first.
 
@@ -773,118 +763,6 @@ if __name__ == "__main__":
 `;
 }
 
-const SKILL_CREATOR_PACKAGE_SKILL_PY = `#!/usr/bin/env python3
-"""
-Skill Packager - Creates a distributable zip file of a skill folder
-
-Usage:
-    python utils/package_skill.py <path/to/skill-folder> [output-directory]
-
-Example:
-    python utils/package_skill.py skills/public/my-skill
-    python utils/package_skill.py skills/public/my-skill ./dist
-"""
-
-import sys
-import zipfile
-from pathlib import Path
-from quick_validate import validate_skill
-
-
-def package_skill(skill_path, output_dir=None):
-    """
-    Package a skill folder into a zip file.
-
-    Args:
-        skill_path: Path to the skill folder
-        output_dir: Optional output directory for the zip file (defaults to current directory)
-
-    Returns:
-        Path to the created zip file, or None if error
-    """
-    skill_path = Path(skill_path).resolve()
-
-    # Validate skill folder exists
-    if not skill_path.exists():
-        print(f"❌ Error: Skill folder not found: {skill_path}")
-        return None
-
-    if not skill_path.is_dir():
-        print(f"❌ Error: Path is not a directory: {skill_path}")
-        return None
-
-    # Validate SKILL.md exists
-    skill_md = skill_path / "SKILL.md"
-    if not skill_md.exists():
-        print(f"❌ Error: SKILL.md not found in {skill_path}")
-        return None
-
-    # Run validation before packaging
-    print("🔍 Validating skill...")
-    valid, message = validate_skill(skill_path)
-    if not valid:
-        print(f"❌ Validation failed: {message}")
-        print("   Please fix the validation errors before packaging.")
-        return None
-    print(f"✅ {message}\\n")
-
-    # Determine output location
-    skill_name = skill_path.name
-    if output_dir:
-        output_path = Path(output_dir).resolve()
-        output_path.mkdir(parents=True, exist_ok=True)
-    else:
-        output_path = Path.cwd()
-
-    zip_filename = output_path / f"{skill_name}.zip"
-
-    # Create the zip file
-    try:
-        with zipfile.ZipFile(zip_filename, 'w', zipfile.ZIP_DEFLATED) as zipf:
-            # Walk through the skill directory
-            for file_path in skill_path.rglob('*'):
-                if file_path.is_file():
-                    # Calculate the relative path within the zip
-                    arcname = file_path.relative_to(skill_path.parent)
-                    zipf.write(file_path, arcname)
-                    print(f"  Added: {arcname}")
-
-        print(f"\\n✅ Successfully packaged skill to: {zip_filename}")
-        return zip_filename
-
-    except Exception as e:
-        print(f"❌ Error creating zip file: {e}")
-        return None
-
-
-def main():
-    if len(sys.argv) < 2:
-        print("Usage: python utils/package_skill.py <path/to/skill-folder> [output-directory]")
-        print("\\nExample:")
-        print("  python utils/package_skill.py skills/public/my-skill")
-        print("  python utils/package_skill.py skills/public/my-skill ./dist")
-        sys.exit(1)
-
-    skill_path = sys.argv[1]
-    output_dir = sys.argv[2] if len(sys.argv) > 2 else None
-
-    print(f"📦 Packaging skill: {skill_path}")
-    if output_dir:
-        print(f"   Output directory: {output_dir}")
-    print()
-
-    result = package_skill(skill_path, output_dir)
-
-    if result:
-        sys.exit(0)
-    else:
-        sys.exit(1)
-
-
-if __name__ == "__main__":
-    main()
-`;
-
 const SKILL_CREATOR_QUICK_VALIDATE_PY = `#!/usr/bin/env python3
 """
 Quick validation script for skills - minimal version
@@ -965,7 +843,7 @@ Skills are modular, self-contained packages that extend AI coding agents' capabi
 When users ask the AI agent to create a new skill, this skill provides:
 
 1. **Structured workflow** - A step-by-step process for skill creation
-2. **Python scripts** - Tools for initializing, validating, and packaging skills
+2. **Python scripts** - Tools for initializing and validating skills
 3. **Best practices** - Guidelines for effective skill design
 
 ## Prerequisites
@@ -984,7 +862,6 @@ skill-creator/
 ├── LICENSE.txt        # Apache 2.0 license
 └── scripts/
     ├── init_skill.py      # Initialize a new skill from template
-    ├── package_skill.py   # Package a skill for distribution
     └── quick_validate.py  # Validate skill structure
 \`\`\`
 
@@ -1010,14 +887,6 @@ Checks:
 - YAML frontmatter format
 - Required fields (name, description)
 - Naming conventions
-
-### Package a Skill
-
-\`\`\`bash
-python3 scripts/package_skill.py <path/to/skill-folder> [output-directory]
-\`\`\`
-
-Creates a distributable zip file after validation passes.
 
 ### Distribute a Skill
 
@@ -1053,10 +922,6 @@ export class SkillCreatorDeployer implements IDeploySkillsDeployer {
         {
           path: `${basePath}/scripts/init_skill.py`,
           content: getSkillCreatorInitSkillPy(agentName),
-        },
-        {
-          path: `${basePath}/scripts/package_skill.py`,
-          content: SKILL_CREATOR_PACKAGE_SKILL_PY,
         },
         {
           path: `${basePath}/scripts/quick_validate.py`,
