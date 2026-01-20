@@ -64,7 +64,7 @@ describe('RecipeVersionRepository', () => {
       }),
   });
 
-  it('can store and retrieve recipe versions', async () => {
+  it('stores and retrieves recipe versions', async () => {
     const recipe = recipeFactory();
     await recipeRepository.add(recipe);
 
@@ -76,8 +76,7 @@ describe('RecipeVersionRepository', () => {
     ]);
   });
 
-  it('can store and retrieve multiple recipe versions', async () => {
-    // Create recipes first
+  it('stores and retrieves multiple recipe versions', async () => {
     const recipe1 = recipeFactory();
     const recipe2 = recipeFactory();
     const recipe3 = recipeFactory();
@@ -86,7 +85,6 @@ describe('RecipeVersionRepository', () => {
     await recipeRepository.add(recipe2);
     await recipeRepository.add(recipe3);
 
-    // Then create recipe versions with valid recipeIds
     await recipeVersionRepository.add(
       recipeVersionFactory({ recipeId: recipe1.id }),
     );
@@ -100,9 +98,8 @@ describe('RecipeVersionRepository', () => {
     expect(await recipeVersionRepository.list()).toHaveLength(3);
   });
 
-  it('can find recipe versions by recipeId', async () => {
+  it('finds recipe versions by recipeId', async () => {
     const recipe = recipeFactory();
-    // Save the recipe to the database
     await recipeRepository.add(recipe);
 
     const recipeVersion1 = recipeVersionFactory({
@@ -122,7 +119,6 @@ describe('RecipeVersionRepository', () => {
     await recipeVersionRepository.add(recipeVersion2);
     await recipeVersionRepository.add(recipeVersion3);
 
-    // Add a version for a different recipe
     const anotherRecipe = recipeFactory();
     await recipeRepository.add(anotherRecipe);
     await recipeVersionRepository.add(
@@ -139,9 +135,8 @@ describe('RecipeVersionRepository', () => {
     );
   });
 
-  it('can find the latest recipe version by recipeId', async () => {
+  it('finds the latest recipe version by recipeId', async () => {
     const recipe = recipeFactory();
-    // Save the recipe to the database
     await recipeRepository.add(recipe);
 
     const recipeVersion1 = recipeVersionFactory({
@@ -167,16 +162,26 @@ describe('RecipeVersionRepository', () => {
     expect(latestVersion).toEqual({ ...recipeVersion3, gitCommit: null });
   });
 
-  it('returns null for non-existent recipe latest version', async () => {
-    const latestVersion = await recipeVersionRepository.findLatestByRecipeId(
-      createRecipeId(uuidv4()),
-    );
-    expect(latestVersion).toBeNull();
+  describe('when recipe does not exist', () => {
+    it('returns null for latest version', async () => {
+      const latestVersion = await recipeVersionRepository.findLatestByRecipeId(
+        createRecipeId(uuidv4()),
+      );
+      expect(latestVersion).toBeNull();
+    });
+
+    it('returns null for findByRecipeIdAndVersion', async () => {
+      const foundVersion =
+        await recipeVersionRepository.findByRecipeIdAndVersion(
+          createRecipeId(uuidv4()),
+          1,
+        );
+      expect(foundVersion).toBeNull();
+    });
   });
 
-  it('can find a specific recipe version by recipeId and version', async () => {
+  it('finds a specific recipe version by recipeId and version', async () => {
     const recipe = recipeFactory();
-    // Save the recipe to the database
     await recipeRepository.add(recipe);
 
     const recipeVersion1 = recipeVersionFactory({
@@ -203,137 +208,149 @@ describe('RecipeVersionRepository', () => {
     expect(foundVersion).toEqual(recipeVersion2);
   });
 
-  it('returns null for non-existent version of existing recipe', async () => {
-    const recipe = recipeFactory();
-    // Save the recipe to the database
-    await recipeRepository.add(recipe);
-
-    const recipeVersion1 = recipeVersionFactory({
-      recipeId: recipe.id,
-      version: 1,
-    });
-
-    await recipeVersionRepository.add(recipeVersion1);
-
-    const foundVersion = await recipeVersionRepository.findByRecipeIdAndVersion(
-      recipe.id,
-      5, // Non-existent version
-    );
-    expect(foundVersion).toBeNull();
-  });
-
-  it('returns null for version of non-existent recipe', async () => {
-    const foundVersion = await recipeVersionRepository.findByRecipeIdAndVersion(
-      createRecipeId(uuidv4()), // Non-existent recipe ID
-      1,
-    );
-    expect(foundVersion).toBeNull();
-  });
-
-  describe('GitCommit embedding', () => {
-    it('embeds GitCommit if available', async () => {
-      // Create a recipe
+  describe('when version does not exist', () => {
+    it('returns null for non-existent version of existing recipe', async () => {
       const recipe = recipeFactory();
       await recipeRepository.add(recipe);
 
-      // Create a git commit (without id for the add method)
-      const gitCommitData = gitCommitFactory();
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const { id, ...gitCommitWithoutId } = gitCommitData;
-      const savedGitCommit = await createGitCommit(
-        datasource,
-        gitCommitWithoutId,
-      );
-
-      // Create a recipe version with the git commit
-      const recipeVersion = recipeVersionFactory({
-        recipeId: recipe.id,
-        gitCommit: savedGitCommit,
-      });
-      await recipeVersionRepository.add(recipeVersion);
-
-      // Find versions by recipe ID
-      const versions = await recipeVersionRepository.findByRecipeId(recipe.id);
-
-      expect(versions).toHaveLength(1);
-      expect(versions[0].gitCommit).toBeDefined();
-      expect(versions[0].gitCommit).toEqual(savedGitCommit);
-    });
-
-    it('returns null gitCommit if not available', async () => {
-      // Create a recipe
-      const recipe = recipeFactory();
-      await recipeRepository.add(recipe);
-
-      // Create a recipe version without git commit
-      const recipeVersion = recipeVersionFactory({
-        recipeId: recipe.id,
-        gitCommit: undefined,
-      });
-      await recipeVersionRepository.add(recipeVersion);
-
-      // Find versions by recipe ID
-      const versions = await recipeVersionRepository.findByRecipeId(recipe.id);
-
-      expect(versions).toHaveLength(1);
-      expect(versions[0].gitCommit).toBeNull();
-    });
-
-    it('embeds GitCommit for multiple versions if available', async () => {
-      // Create a recipe
-      const recipe = recipeFactory();
-      await recipeRepository.add(recipe);
-
-      // Create git commits (without id for the add method)
-      const gitCommitData1 = gitCommitFactory();
-      const gitCommitData2 = gitCommitFactory();
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const { id: id1, ...gitCommitWithoutId1 } = gitCommitData1;
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const { id: id2, ...gitCommitWithoutId2 } = gitCommitData2;
-      const savedGitCommit1 = await createGitCommit(
-        datasource,
-        gitCommitWithoutId1,
-      );
-      const savedGitCommit2 = await createGitCommit(
-        datasource,
-        gitCommitWithoutId2,
-      );
-
-      // Create recipe versions with git commits
       const recipeVersion1 = recipeVersionFactory({
         recipeId: recipe.id,
         version: 1,
-        gitCommit: savedGitCommit1,
-      });
-      const recipeVersion2 = recipeVersionFactory({
-        recipeId: recipe.id,
-        version: 2,
-        gitCommit: savedGitCommit2,
-      });
-      const recipeVersion3 = recipeVersionFactory({
-        recipeId: recipe.id,
-        version: 3,
-        gitCommit: undefined,
       });
 
       await recipeVersionRepository.add(recipeVersion1);
-      await recipeVersionRepository.add(recipeVersion2);
-      await recipeVersionRepository.add(recipeVersion3);
 
-      // Find versions by recipe ID
-      const versions = await recipeVersionRepository.findByRecipeId(recipe.id);
+      const foundVersion =
+        await recipeVersionRepository.findByRecipeIdAndVersion(recipe.id, 5);
+      expect(foundVersion).toBeNull();
+    });
+  });
 
-      expect(versions).toHaveLength(3);
+  describe('GitCommit embedding', () => {
+    describe('when gitCommit is available', () => {
+      let recipe: Recipe;
+      let savedGitCommit: ReturnType<typeof gitCommitFactory>;
+      let versions: RecipeVersion[];
 
-      // Versions are ordered by version DESC, so version 3 comes first
-      const version3 = versions.find((v) => v.version === 3);
-      const version2 = versions.find((v) => v.version === 2);
-      const version1 = versions.find((v) => v.version === 1);
+      beforeEach(async () => {
+        recipe = recipeFactory();
+        await recipeRepository.add(recipe);
 
-      expect(version3?.gitCommit).toBeNull();
-      expect(version2?.gitCommit).toEqual(savedGitCommit2);
-      expect(version1?.gitCommit).toEqual(savedGitCommit1);
+        const gitCommitData = gitCommitFactory();
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const { id, ...gitCommitWithoutId } = gitCommitData;
+        savedGitCommit = await createGitCommit(datasource, gitCommitWithoutId);
+
+        const recipeVersion = recipeVersionFactory({
+          recipeId: recipe.id,
+          gitCommit: savedGitCommit,
+        });
+        await recipeVersionRepository.add(recipeVersion);
+
+        versions = await recipeVersionRepository.findByRecipeId(recipe.id);
+      });
+
+      it('returns one version', async () => {
+        expect(versions).toHaveLength(1);
+      });
+
+      it('embeds the gitCommit', async () => {
+        expect(versions[0].gitCommit).toEqual(savedGitCommit);
+      });
+    });
+
+    describe('when gitCommit is not available', () => {
+      let recipe: Recipe;
+      let versions: RecipeVersion[];
+
+      beforeEach(async () => {
+        recipe = recipeFactory();
+        await recipeRepository.add(recipe);
+
+        const recipeVersion = recipeVersionFactory({
+          recipeId: recipe.id,
+          gitCommit: undefined,
+        });
+        await recipeVersionRepository.add(recipeVersion);
+
+        versions = await recipeVersionRepository.findByRecipeId(recipe.id);
+      });
+
+      it('returns one version', async () => {
+        expect(versions).toHaveLength(1);
+      });
+
+      it('returns null gitCommit', async () => {
+        expect(versions[0].gitCommit).toBeNull();
+      });
+    });
+
+    describe('when multiple versions have different gitCommits', () => {
+      let recipe: Recipe;
+      let savedGitCommit1: ReturnType<typeof gitCommitFactory>;
+      let savedGitCommit2: ReturnType<typeof gitCommitFactory>;
+      let versions: RecipeVersion[];
+
+      beforeEach(async () => {
+        recipe = recipeFactory();
+        await recipeRepository.add(recipe);
+
+        const gitCommitData1 = gitCommitFactory();
+        const gitCommitData2 = gitCommitFactory();
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const { id: id1, ...gitCommitWithoutId1 } = gitCommitData1;
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const { id: id2, ...gitCommitWithoutId2 } = gitCommitData2;
+        savedGitCommit1 = await createGitCommit(
+          datasource,
+          gitCommitWithoutId1,
+        );
+        savedGitCommit2 = await createGitCommit(
+          datasource,
+          gitCommitWithoutId2,
+        );
+
+        const recipeVersion1 = recipeVersionFactory({
+          recipeId: recipe.id,
+          version: 1,
+          gitCommit: savedGitCommit1,
+        });
+        const recipeVersion2 = recipeVersionFactory({
+          recipeId: recipe.id,
+          version: 2,
+          gitCommit: savedGitCommit2,
+        });
+        const recipeVersion3 = recipeVersionFactory({
+          recipeId: recipe.id,
+          version: 3,
+          gitCommit: undefined,
+        });
+
+        await recipeVersionRepository.add(recipeVersion1);
+        await recipeVersionRepository.add(recipeVersion2);
+        await recipeVersionRepository.add(recipeVersion3);
+
+        versions = await recipeVersionRepository.findByRecipeId(recipe.id);
+      });
+
+      it('returns all three versions', async () => {
+        expect(versions).toHaveLength(3);
+      });
+
+      it('returns null gitCommit for version 3', async () => {
+        const version3 = versions.find((v) => v.version === 3);
+        expect(version3?.gitCommit).toBeNull();
+      });
+
+      it('embeds gitCommit2 for version 2', async () => {
+        const version2 = versions.find((v) => v.version === 2);
+        expect(version2?.gitCommit).toEqual(savedGitCommit2);
+      });
+
+      it('embeds gitCommit1 for version 1', async () => {
+        const version1 = versions.find((v) => v.version === 1);
+        expect(version1?.gitCommit).toEqual(savedGitCommit1);
+      });
     });
   });
 });

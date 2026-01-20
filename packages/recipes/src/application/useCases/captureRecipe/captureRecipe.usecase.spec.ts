@@ -83,49 +83,93 @@ describe('CaptureRecipeUsecase', () => {
   });
 
   describe('assembleRecipeContent', () => {
-    it('assembles content with all sections', () => {
-      const summary = 'Create user authentication flow';
-      const whenToUse = ['Adding login functionality', 'Implementing OAuth'];
-      const contextValidationCheckpoints = [
-        'User model exists',
-        'Database is configured',
-      ];
-      const steps = [
-        {
-          name: 'Setup Dependencies',
-          description: 'Install required packages',
-          codeSnippet: 'npm install passport',
-        },
-        {
-          name: 'Configure Routes',
-          description: 'Add authentication routes',
-        },
-      ];
+    describe('with all sections populated', () => {
+      let result: string;
 
-      const result = captureRecipeUsecase.assembleRecipeContent(
-        summary,
-        whenToUse,
-        contextValidationCheckpoints,
-        steps,
-      );
+      beforeEach(() => {
+        const summary = 'Create user authentication flow';
+        const whenToUse = ['Adding login functionality', 'Implementing OAuth'];
+        const contextValidationCheckpoints = [
+          'User model exists',
+          'Database is configured',
+        ];
+        const steps = [
+          {
+            name: 'Setup Dependencies',
+            description: 'Install required packages',
+            codeSnippet: 'npm install passport',
+          },
+          {
+            name: 'Configure Routes',
+            description: 'Add authentication routes',
+          },
+        ];
 
-      expect(result).toContain('Create user authentication flow');
-      expect(result).toContain('## When to Use');
-      expect(result).toContain('- Adding login functionality');
-      expect(result).toContain('- Implementing OAuth');
-      expect(result).toContain('## Context Validation Checkpoints');
-      expect(result).toContain('* [ ] User model exists');
-      expect(result).toContain('* [ ] Database is configured');
-      expect(result).toContain('## Command Steps');
-      expect(result).toContain('### Step 1: Setup Dependencies');
-      expect(result).toContain('Install required packages');
-      expect(result).toContain('npm install passport');
-      expect(result).toContain('### Step 2: Configure Routes');
-      expect(result).toContain('Add authentication routes');
+        result = captureRecipeUsecase.assembleRecipeContent(
+          summary,
+          whenToUse,
+          contextValidationCheckpoints,
+          steps,
+        );
+      });
+
+      it('includes summary', () => {
+        expect(result).toContain('Create user authentication flow');
+      });
+
+      it('includes WhenToUse section header', () => {
+        expect(result).toContain('## When to Use');
+      });
+
+      it('includes first WhenToUse item', () => {
+        expect(result).toContain('- Adding login functionality');
+      });
+
+      it('includes second WhenToUse item', () => {
+        expect(result).toContain('- Implementing OAuth');
+      });
+
+      it('includes Context Validation Checkpoints section header', () => {
+        expect(result).toContain('## Context Validation Checkpoints');
+      });
+
+      it('includes first checkpoint', () => {
+        expect(result).toContain('* [ ] User model exists');
+      });
+
+      it('includes second checkpoint', () => {
+        expect(result).toContain('* [ ] Database is configured');
+      });
+
+      it('includes Command Steps section header', () => {
+        expect(result).toContain('## Command Steps');
+      });
+
+      it('includes first step title', () => {
+        expect(result).toContain('### Step 1: Setup Dependencies');
+      });
+
+      it('includes first step description', () => {
+        expect(result).toContain('Install required packages');
+      });
+
+      it('includes first step code snippet', () => {
+        expect(result).toContain('npm install passport');
+      });
+
+      it('includes second step title', () => {
+        expect(result).toContain('### Step 2: Configure Routes');
+      });
+
+      it('includes second step description', () => {
+        expect(result).toContain('Add authentication routes');
+      });
     });
 
     describe('when other sections are empty', () => {
-      it('assembles content with only summary', () => {
+      let result: string;
+
+      beforeEach(() => {
         const summary = 'Simple recipe';
         const whenToUse: string[] = [];
         const contextValidationCheckpoints: string[] = [];
@@ -135,63 +179,100 @@ describe('CaptureRecipeUsecase', () => {
           codeSnippet?: string;
         }[] = [];
 
-        const result = captureRecipeUsecase.assembleRecipeContent(
+        result = captureRecipeUsecase.assembleRecipeContent(
           summary,
           whenToUse,
           contextValidationCheckpoints,
           steps,
         );
+      });
 
+      it('contains only summary', () => {
         expect(result).toBe('Simple recipe');
+      });
+
+      it('omits WhenToUse section', () => {
         expect(result).not.toContain('## When to Use');
+      });
+
+      it('omits Context Validation Checkpoints section', () => {
         expect(result).not.toContain('## Context Validation Checkpoints');
+      });
+
+      it('omits Command Steps section', () => {
         expect(result).not.toContain('## Command Steps');
       });
     });
 
-    describe('when W-hen to Use section is empty', () => {
-      it('omits W-hen to Use section', () => {
+    describe('with empty WhenToUse section', () => {
+      let result: string;
+
+      beforeEach(() => {
         const summary = 'Test recipe';
         const whenToUse: string[] = [];
         const contextValidationCheckpoints = ['Check prerequisites'];
         const steps = [{ name: 'Step One', description: 'Do something' }];
 
-        const result = captureRecipeUsecase.assembleRecipeContent(
+        result = captureRecipeUsecase.assembleRecipeContent(
           summary,
           whenToUse,
           contextValidationCheckpoints,
           steps,
         );
+      });
 
+      it('includes summary', () => {
         expect(result).toContain('Test recipe');
+      });
+
+      it('omits WhenToUse section', () => {
         expect(result).not.toContain('## When to Use');
+      });
+
+      it('includes Context Validation Checkpoints section', () => {
         expect(result).toContain('## Context Validation Checkpoints');
+      });
+
+      it('includes Command Steps section', () => {
         expect(result).toContain('## Command Steps');
       });
     });
 
-    describe('when Context Validation Checkpoints section is empty', () => {
-      it('omits Context Validation Checkpoints section', () => {
+    describe('with empty Context Validation Checkpoints section', () => {
+      let result: string;
+
+      beforeEach(() => {
         const summary = 'Test recipe';
         const whenToUse = ['Scenario one'];
         const contextValidationCheckpoints: string[] = [];
         const steps = [{ name: 'Step One', description: 'Do something' }];
 
-        const result = captureRecipeUsecase.assembleRecipeContent(
+        result = captureRecipeUsecase.assembleRecipeContent(
           summary,
           whenToUse,
           contextValidationCheckpoints,
           steps,
         );
+      });
 
+      it('includes summary', () => {
         expect(result).toContain('Test recipe');
+      });
+
+      it('includes WhenToUse section', () => {
         expect(result).toContain('## When to Use');
+      });
+
+      it('omits Context Validation Checkpoints section', () => {
         expect(result).not.toContain('## Context Validation Checkpoints');
+      });
+
+      it('includes Command Steps section', () => {
         expect(result).toContain('## Command Steps');
       });
     });
 
-    describe('when Command Steps section is empty', () => {
+    describe('with empty Command Steps section', () => {
       let result: string;
 
       beforeEach(() => {
@@ -216,8 +297,7 @@ describe('CaptureRecipeUsecase', () => {
         expect(result).toContain('Test recipe');
       });
 
-      //  Wh-en -> otherwise packmind-cli will trigger a violation
-      it('includes Wh-en to Use section', () => {
+      it('includes WhenToUse section', () => {
         expect(result).toContain('## When to Use');
       });
 
@@ -230,52 +310,79 @@ describe('CaptureRecipeUsecase', () => {
       });
     });
 
-    it('formats steps without code snippets correctly', () => {
-      const summary = 'Test recipe';
-      const steps = [
-        {
-          name: 'First Step',
-          description: 'This is the description',
-        },
-        {
-          name: 'Second Step',
-          description: 'Another description',
-        },
-      ];
+    describe('with steps without code snippets', () => {
+      let result: string;
 
-      const result = captureRecipeUsecase.assembleRecipeContent(
-        summary,
-        [],
-        [],
-        steps,
-      );
+      beforeEach(() => {
+        const summary = 'Test recipe';
+        const steps = [
+          {
+            name: 'First Step',
+            description: 'This is the description',
+          },
+          {
+            name: 'Second Step',
+            description: 'Another description',
+          },
+        ];
 
-      expect(result).toContain('### Step 1: First Step');
-      expect(result).toContain('This is the description');
-      expect(result).toContain('### Step 2: Second Step');
-      expect(result).toContain('Another description');
+        result = captureRecipeUsecase.assembleRecipeContent(
+          summary,
+          [],
+          [],
+          steps,
+        );
+      });
+
+      it('includes first step title', () => {
+        expect(result).toContain('### Step 1: First Step');
+      });
+
+      it('includes first step description', () => {
+        expect(result).toContain('This is the description');
+      });
+
+      it('includes second step title', () => {
+        expect(result).toContain('### Step 2: Second Step');
+      });
+
+      it('includes second step description', () => {
+        expect(result).toContain('Another description');
+      });
     });
 
-    it('formats steps with code snippets correctly', () => {
-      const summary = 'Test recipe';
-      const steps = [
-        {
-          name: 'Install Package',
-          description: 'Install the required package',
-          codeSnippet: '```bash\nnpm install express\n```',
-        },
-      ];
+    describe('with steps containing code snippets', () => {
+      let result: string;
 
-      const result = captureRecipeUsecase.assembleRecipeContent(
-        summary,
-        [],
-        [],
-        steps,
-      );
+      beforeEach(() => {
+        const summary = 'Test recipe';
+        const steps = [
+          {
+            name: 'Install Package',
+            description: 'Install the required package',
+            codeSnippet: '```bash\nnpm install express\n```',
+          },
+        ];
 
-      expect(result).toContain('### Step 1: Install Package');
-      expect(result).toContain('Install the required package');
-      expect(result).toContain('```bash\nnpm install express\n```');
+        result = captureRecipeUsecase.assembleRecipeContent(
+          summary,
+          [],
+          [],
+          steps,
+        );
+      });
+
+      it('includes step title', () => {
+        expect(result).toContain('### Step 1: Install Package');
+      });
+
+      it('includes step description', () => {
+        expect(result).toContain('Install the required package');
+      });
+
+      it('includes code snippet', () => {
+        expect(result).toContain('```bash\nnpm install express\n```');
+      });
     });
   });
 
@@ -372,8 +479,13 @@ describe('CaptureRecipeUsecase', () => {
           userId: createUserId(inputData.userId),
         });
       });
+    });
 
-      it('handles slug conflicts by appending counter', async () => {
+    describe('with slug conflicts', () => {
+      let result: Recipe;
+      let createdRecipe: Recipe;
+
+      beforeEach(async () => {
         const organizationId = createOrganizationId(uuidv4());
         const userId = createUserId(uuidv4());
         const inputData = {
@@ -387,16 +499,15 @@ describe('CaptureRecipeUsecase', () => {
           userId,
         };
 
-        // Mock existing recipes with conflicting slugs
         const existingRecipes = [
           recipeFactory({ slug: 'test-recipe' }),
           recipeFactory({ slug: 'test-recipe-1' }),
         ];
 
-        const createdRecipe = recipeFactory({
+        createdRecipe = recipeFactory({
           id: createRecipeId(uuidv4()),
           name: inputData.name,
-          slug: 'test-recipe-2', // Should be incremented
+          slug: 'test-recipe-2',
           content: inputData.summary,
           version: 1,
           userId,
@@ -416,9 +527,14 @@ describe('CaptureRecipeUsecase', () => {
           createdRecipeVersion,
         );
 
-        const result = await captureRecipeUsecase.execute(inputData);
+        result = await captureRecipeUsecase.execute(inputData);
+      });
 
+      it('returns the created recipe', () => {
         expect(result).toEqual(createdRecipe);
+      });
+
+      it('appends counter to slug', () => {
         expect(recipeService.addRecipe).toHaveBeenCalledWith(
           expect.objectContaining({
             slug: 'test-recipe-2',

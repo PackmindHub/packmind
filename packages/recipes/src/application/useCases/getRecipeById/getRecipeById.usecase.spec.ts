@@ -45,108 +45,152 @@ describe('GetRecipeByIdUsecase', () => {
   });
 
   describe('executeForMembers', () => {
-    it('returns recipe for valid request', async () => {
+    describe('when request is valid', () => {
       const organizationId = createOrganizationId('org-1');
       const spaceId = createSpaceId('space-1');
       const userId = createUserId('user-1');
       const recipeId = createRecipeId('recipe-1');
 
-      const organization = {
-        id: organizationId,
-        name: 'Test Org',
-        slug: 'test-org',
+      let organization: {
+        id: typeof organizationId;
+        name: string;
+        slug: string;
       };
-      const user = {
-        id: userId,
-        email: 'test@example.com',
-        passwordHash: 'hash',
-        active: true,
-        memberships: [
-          {
-            userId,
-            organizationId,
-            role: 'member' as const,
-          },
-        ],
+      let user: {
+        id: typeof userId;
+        email: string;
+        passwordHash: string;
+        active: boolean;
+        memberships: {
+          userId: typeof userId;
+          organizationId: typeof organizationId;
+          role: 'member';
+        }[];
       };
-      const space: Space = {
-        id: spaceId,
-        name: 'Test Space',
-        slug: 'test-space',
-        organizationId,
-      };
-      const recipe = recipeFactory({
-        id: recipeId,
-        spaceId: createSpaceId('space-1'),
+      let space: Space;
+      let recipe: ReturnType<typeof recipeFactory>;
+      let result: { recipe: ReturnType<typeof recipeFactory> | null };
+
+      beforeEach(async () => {
+        organization = {
+          id: organizationId,
+          name: 'Test Org',
+          slug: 'test-org',
+        };
+        user = {
+          id: userId,
+          email: 'test@example.com',
+          passwordHash: 'hash',
+          active: true,
+          memberships: [
+            {
+              userId,
+              organizationId,
+              role: 'member' as const,
+            },
+          ],
+        };
+        space = {
+          id: spaceId,
+          name: 'Test Space',
+          slug: 'test-space',
+          organizationId,
+        };
+        recipe = recipeFactory({
+          id: recipeId,
+          spaceId: createSpaceId('space-1'),
+        });
+
+        accountsAdapter.getOrganizationById.mockResolvedValue(organization);
+        accountsAdapter.getUserById.mockResolvedValue(user);
+        spacesPort.getSpaceById.mockResolvedValue(space);
+        recipeService.getRecipeById.mockResolvedValue(recipe);
+
+        result = await usecase.execute({
+          userId,
+          organizationId,
+          spaceId,
+          recipeId,
+        });
       });
 
-      accountsAdapter.getOrganizationById.mockResolvedValue(organization);
-      accountsAdapter.getUserById.mockResolvedValue(user);
-      spacesPort.getSpaceById.mockResolvedValue(space);
-      recipeService.getRecipeById.mockResolvedValue(recipe);
-
-      const result = await usecase.execute({
-        userId,
-        organizationId,
-        spaceId,
-        recipeId,
+      it('fetches organization by id', () => {
+        expect(accountsAdapter.getOrganizationById).toHaveBeenCalledWith(
+          organizationId,
+        );
       });
 
-      expect(accountsAdapter.getOrganizationById).toHaveBeenCalledWith(
-        organizationId,
-      );
-      expect(accountsAdapter.getUserById).toHaveBeenCalledWith(userId);
-      expect(spacesPort.getSpaceById).toHaveBeenCalledWith(spaceId);
-      expect(recipeService.getRecipeById).toHaveBeenCalledWith(recipeId);
+      it('fetches user by id', () => {
+        expect(accountsAdapter.getUserById).toHaveBeenCalledWith(userId);
+      });
 
-      expect(result.recipe).toEqual(recipe);
+      it('fetches space by id', () => {
+        expect(spacesPort.getSpaceById).toHaveBeenCalledWith(spaceId);
+      });
+
+      it('fetches recipe by id', () => {
+        expect(recipeService.getRecipeById).toHaveBeenCalledWith(recipeId);
+      });
+
+      it('returns the recipe', () => {
+        expect(result.recipe).toEqual(recipe);
+      });
     });
 
-    it('returns null for non-existent recipe', async () => {
+    describe('when recipe does not exist', () => {
       const organizationId = createOrganizationId('org-1');
       const spaceId = createSpaceId('space-1');
       const userId = createUserId('user-1');
       const recipeId = createRecipeId('recipe-1');
 
-      const organization = {
-        id: organizationId,
-        name: 'Test Org',
-        slug: 'test-org',
-      };
-      const user = {
-        id: userId,
-        email: 'test@example.com',
-        passwordHash: 'hash',
-        active: true,
-        memberships: [
-          {
-            userId,
-            organizationId,
-            role: 'member' as const,
-          },
-        ],
-      };
-      const space: Space = {
-        id: spaceId,
-        name: 'Test Space',
-        slug: 'test-space',
-        organizationId,
-      };
+      let result: { recipe: ReturnType<typeof recipeFactory> | null };
 
-      accountsAdapter.getOrganizationById.mockResolvedValue(organization);
-      accountsAdapter.getUserById.mockResolvedValue(user);
-      spacesPort.getSpaceById.mockResolvedValue(space);
-      recipeService.getRecipeById.mockResolvedValue(null);
+      beforeEach(async () => {
+        const organization = {
+          id: organizationId,
+          name: 'Test Org',
+          slug: 'test-org',
+        };
+        const user = {
+          id: userId,
+          email: 'test@example.com',
+          passwordHash: 'hash',
+          active: true,
+          memberships: [
+            {
+              userId,
+              organizationId,
+              role: 'member' as const,
+            },
+          ],
+        };
+        const space: Space = {
+          id: spaceId,
+          name: 'Test Space',
+          slug: 'test-space',
+          organizationId,
+        };
 
-      const result = await usecase.execute({
-        userId,
-        organizationId,
-        spaceId,
-        recipeId,
+        accountsAdapter.getOrganizationById.mockResolvedValue(organization);
+        accountsAdapter.getUserById.mockResolvedValue(user);
+        spacesPort.getSpaceById.mockResolvedValue(space);
+        recipeService.getRecipeById.mockResolvedValue(null);
+
+        result = await usecase.execute({
+          userId,
+          organizationId,
+          spaceId,
+          recipeId,
+        });
       });
 
-      expect(recipeService.getRecipeById).toHaveBeenCalledWith(recipeId);
-      expect(result.recipe).toBeNull();
+      it('fetches recipe by id', () => {
+        expect(recipeService.getRecipeById).toHaveBeenCalledWith(recipeId);
+      });
+
+      it('returns null', () => {
+        expect(result.recipe).toBeNull();
+      });
     });
 
     describe('when user is not found', () => {
@@ -509,26 +553,36 @@ describe('GetRecipeByIdUsecase', () => {
   });
 
   describe('getRecipeById (legacy internal method)', () => {
-    it('returns recipe without access control', async () => {
+    describe('when recipe exists', () => {
       const recipeId = createRecipeId('recipe-1');
-      const recipe = recipeFactory({ id: recipeId });
+      let recipe: ReturnType<typeof recipeFactory>;
+      let result: ReturnType<typeof recipeFactory> | null;
 
-      recipeService.getRecipeById.mockResolvedValue(recipe);
+      beforeEach(async () => {
+        recipe = recipeFactory({ id: recipeId });
+        recipeService.getRecipeById.mockResolvedValue(recipe);
+        result = await usecase.getRecipeById(recipeId);
+      });
 
-      const result = await usecase.getRecipeById(recipeId);
+      it('returns the recipe', () => {
+        expect(result).toEqual(recipe);
+      });
 
-      expect(result).toEqual(recipe);
-      expect(recipeService.getRecipeById).toHaveBeenCalledWith(recipeId);
+      it('fetches recipe by id', () => {
+        expect(recipeService.getRecipeById).toHaveBeenCalledWith(recipeId);
+      });
     });
 
-    it('returns null for non-existent recipe', async () => {
-      const recipeId = createRecipeId('recipe-1');
+    describe('when recipe does not exist', () => {
+      it('returns null', async () => {
+        const recipeId = createRecipeId('recipe-1');
 
-      recipeService.getRecipeById.mockResolvedValue(null);
+        recipeService.getRecipeById.mockResolvedValue(null);
 
-      const result = await usecase.getRecipeById(recipeId);
+        const result = await usecase.getRecipeById(recipeId);
 
-      expect(result).toBeNull();
+        expect(result).toBeNull();
+      });
     });
   });
 });
