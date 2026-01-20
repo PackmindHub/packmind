@@ -84,3 +84,19 @@
 
 # ====== CAPTURED CHANGES START BELOW ======
 
+- newRule: 'Normalize base URLs by removing trailing slashes before concatenating paths using removeTrailingSlash from @packmind/node-utils'
+  operation: ADDED
+  standard: 'typescript-code-standards'
+  date: '2026-01-20'
+  sourceFile: 'apps/cli/src/application/useCases/LoginUseCase.ts'
+  language: 'TYPESCRIPT'
+  goodExample: |
+    import { removeTrailingSlash } from '@packmind/node-utils';
+
+    const normalizedHost = removeTrailingSlash(host);
+    const url = `${normalizedHost}/api/v0/endpoint`;
+    // Result: "https://example.com/api/v0/endpoint"
+  badExample: |
+    // Direct concatenation without normalization
+    const url = `${host}/api/v0/endpoint`;
+    // If host = "https://example.com/", result: "https://example.com//api/v0/endpoint"
