@@ -152,6 +152,7 @@ jobs:
           - packages/types
           - packages/accounts
           - packages/coding-agent
+          - packages/git
 
     steps:
       - name: Checkout

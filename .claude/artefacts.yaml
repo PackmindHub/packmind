@@ -879,3 +879,19 @@
   path: .claude/rules/packmind/standard-tests-redaction.md
   type: rule
   date: 2026-01-19T23:56:47+01:00
+- name: CLAUDE.md
+  path: CLAUDE.md
+  type: claude_md
+  date: 2026-01-20T10:17:47+01:00
+- name: standard-testing-good-practices.md
+  path: .claude/rules/packmind/standard-testing-good-practices.md
+  type: rule
+  date: 2026-01-20T10:17:47+01:00
+- name: standard-tests-redaction.md
+  path: .claude/rules/packmind/standard-tests-redaction.md
+  type: rule
+  date: 2026-01-20T10:17:47+01:00
+- name: standard-backend-tests-redaction.md
+  path: .claude/rules/packmind/standard-backend-tests-redaction.md
+  type: rule
+  date: 2026-01-20T10:17:47+01:00
