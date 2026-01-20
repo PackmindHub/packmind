@@ -70,67 +70,114 @@ describe('Package deployment integration', () => {
       packageWithBoth = response.package;
     });
 
-    it('deploys package successfully', async () => {
-      const result = await testApp.deploymentsHexa
-        .getAdapter()
-        .publishPackages({
+    describe('when deploying package', () => {
+      let result: Awaited<
+        ReturnType<
+          ReturnType<
+            typeof testApp.deploymentsHexa.getAdapter
+          >['publishPackages']
+        >
+      >;
+
+      beforeEach(async () => {
+        result = await testApp.deploymentsHexa.getAdapter().publishPackages({
           ...dataFactory.packmindCommand(),
           packageIds: [packageWithBoth.id],
           targetIds: [dataFactory.target.id],
         });
+      });
 
-      // Unified Distribution: one per target containing all artifacts
-      expect(result).toHaveLength(1);
-      expect(result[0]).toHaveProperty('target');
-      expect(result[0]).toHaveProperty('status');
-      // With async deployment, status is in_progress until the background job completes
-      expect(result[0].status).toBe(DistributionStatus.in_progress);
-      // Note: commitToGit is now called asynchronously by the delayed job
+      it('returns one unified distribution per target', async () => {
+        expect(result).toHaveLength(1);
+      });
+
+      it('includes target property in distribution', async () => {
+        expect(result[0]).toHaveProperty('target');
+      });
+
+      it('includes status property in distribution', async () => {
+        expect(result[0]).toHaveProperty('status');
+      });
+
+      it('sets status to in_progress for async deployment', async () => {
+        expect(result[0].status).toBe(DistributionStatus.in_progress);
+      });
     });
 
-    it('fetches package with recipe and standard IDs', async () => {
-      const response = await testApp.deploymentsHexa
-        .getAdapter()
-        .getPackageById({
-          userId: dataFactory.user.id,
-          organizationId: dataFactory.organization.id,
-          spaceId: dataFactory.space.id,
-          packageId: packageWithBoth.id,
-        });
+    describe('when fetching package by ID', () => {
+      let fetchedPackage: Package;
 
-      const fetchedPackage = response.package;
-      expect(fetchedPackage).toBeDefined();
-      expect(fetchedPackage.id).toBe(packageWithBoth.id);
-      expect(fetchedPackage.recipes).toHaveLength(2);
-      expect(fetchedPackage.recipes).toContain(recipe1.id);
-      expect(fetchedPackage.recipes).toContain(recipe2.id);
-      expect(fetchedPackage.standards).toHaveLength(2);
-      expect(fetchedPackage.standards).toContain(standard1.id);
-      expect(fetchedPackage.standards).toContain(standard2.id);
+      beforeEach(async () => {
+        const response = await testApp.deploymentsHexa
+          .getAdapter()
+          .getPackageById({
+            userId: dataFactory.user.id,
+            organizationId: dataFactory.organization.id,
+            spaceId: dataFactory.space.id,
+            packageId: packageWithBoth.id,
+          });
+        fetchedPackage = response.package;
+      });
+
+      it('returns the package', async () => {
+        expect(fetchedPackage).toBeDefined();
+      });
+
+      it('returns the correct package ID', async () => {
+        expect(fetchedPackage.id).toBe(packageWithBoth.id);
+      });
+
+      it('includes both recipes', async () => {
+        expect(fetchedPackage.recipes).toEqual(
+          expect.arrayContaining([recipe1.id, recipe2.id]),
+        );
+      });
+
+      it('includes both standards', async () => {
+        expect(fetchedPackage.standards).toEqual(
+          expect.arrayContaining([standard1.id, standard2.id]),
+        );
+      });
     });
 
-    it('lists packages by space with IDs', async () => {
-      const packages = await testApp.deploymentsHexa
-        .getAdapter()
-        .listPackagesBySpace({
-          userId: dataFactory.user.id,
-          organizationId: dataFactory.organization.id,
-          spaceId: dataFactory.space.id,
-        });
+    describe('when listing packages by space', () => {
+      let pkg: Package;
 
-      expect(packages.packages).toHaveLength(1);
-      const pkg = packages.packages[0];
-      expect(pkg.recipes).toHaveLength(2);
-      expect(pkg.standards).toHaveLength(2);
-      expect(pkg.recipes).toContain(recipe1.id);
-      expect(pkg.recipes).toContain(recipe2.id);
-      expect(pkg.standards).toContain(standard1.id);
-      expect(pkg.standards).toContain(standard2.id);
+      beforeEach(async () => {
+        const packages = await testApp.deploymentsHexa
+          .getAdapter()
+          .listPackagesBySpace({
+            userId: dataFactory.user.id,
+            organizationId: dataFactory.organization.id,
+            spaceId: dataFactory.space.id,
+          });
+        pkg = packages.packages[0];
+      });
+
+      it('includes the package recipes', async () => {
+        expect(pkg.recipes).toEqual(
+          expect.arrayContaining([recipe1.id, recipe2.id]),
+        );
+      });
+
+      it('includes the package standards', async () => {
+        expect(pkg.standards).toEqual(
+          expect.arrayContaining([standard1.id, standard2.id]),
+        );
+      });
     });
   });
 
   describe('Package with only recipes', () => {
-    it('deploys package with only recipes', async () => {
+    let recipeOnlyPackage: Package;
+    let result: Awaited<
+      ReturnType<
+        ReturnType<typeof testApp.deploymentsHexa.getAdapter>['publishPackages']
+      >
+    >;
+    let fetchedPackage: Package;
+
+    beforeEach(async () => {
       const createResponse = await testApp.deploymentsHexa
         .getAdapter()
         .createPackage({
@@ -142,24 +189,13 @@ describe('Package deployment integration', () => {
           recipeIds: [recipe1.id],
           standardIds: [],
         });
+      recipeOnlyPackage = createResponse.package;
 
-      const recipeOnlyPackage = createResponse.package;
-
-      const result = await testApp.deploymentsHexa
-        .getAdapter()
-        .publishPackages({
-          ...dataFactory.packmindCommand(),
-          packageIds: [recipeOnlyPackage.id],
-          targetIds: [dataFactory.target.id],
-        });
-
-      // Unified Distribution: one per target containing all artifacts
-      expect(result).toHaveLength(1);
-      expect(result[0]).toHaveProperty('target');
-      expect(result[0]).toHaveProperty('status');
-      // With async deployment, status is in_progress until the background job completes
-      expect(result[0].status).toBe(DistributionStatus.in_progress);
-      // Note: commitToGit is now called asynchronously by the delayed job
+      result = await testApp.deploymentsHexa.getAdapter().publishPackages({
+        ...dataFactory.packmindCommand(),
+        packageIds: [recipeOnlyPackage.id],
+        targetIds: [dataFactory.target.id],
+      });
 
       const getResponse = await testApp.deploymentsHexa
         .getAdapter()
@@ -169,15 +205,36 @@ describe('Package deployment integration', () => {
           spaceId: dataFactory.space.id,
           packageId: recipeOnlyPackage.id,
         });
+      fetchedPackage = getResponse.package;
+    });
 
-      const fetchedPackage = getResponse.package;
+    it('returns one unified distribution per target', async () => {
+      expect(result).toHaveLength(1);
+    });
+
+    it('sets status to in_progress for async deployment', async () => {
+      expect(result[0].status).toBe(DistributionStatus.in_progress);
+    });
+
+    it('contains only recipes in fetched package', async () => {
       expect(fetchedPackage.recipes).toHaveLength(1);
+    });
+
+    it('contains no standards in fetched package', async () => {
       expect(fetchedPackage.standards).toHaveLength(0);
     });
   });
 
   describe('Package with only standards', () => {
-    it('deploys package with only standards', async () => {
+    let standardOnlyPackage: Package;
+    let result: Awaited<
+      ReturnType<
+        ReturnType<typeof testApp.deploymentsHexa.getAdapter>['publishPackages']
+      >
+    >;
+    let fetchedPackage: Package;
+
+    beforeEach(async () => {
       const createResponse = await testApp.deploymentsHexa
         .getAdapter()
         .createPackage({
@@ -189,24 +246,13 @@ describe('Package deployment integration', () => {
           recipeIds: [],
           standardIds: [standard1.id],
         });
+      standardOnlyPackage = createResponse.package;
 
-      const standardOnlyPackage = createResponse.package;
-
-      const result = await testApp.deploymentsHexa
-        .getAdapter()
-        .publishPackages({
-          ...dataFactory.packmindCommand(),
-          packageIds: [standardOnlyPackage.id],
-          targetIds: [dataFactory.target.id],
-        });
-
-      // Unified Distribution: one per target containing all artifacts
-      expect(result).toHaveLength(1);
-      expect(result[0]).toHaveProperty('target');
-      expect(result[0]).toHaveProperty('status');
-      // With async deployment, status is in_progress until the background job completes
-      expect(result[0].status).toBe(DistributionStatus.in_progress);
-      // Note: commitToGit is now called asynchronously by the delayed job
+      result = await testApp.deploymentsHexa.getAdapter().publishPackages({
+        ...dataFactory.packmindCommand(),
+        packageIds: [standardOnlyPackage.id],
+        targetIds: [dataFactory.target.id],
+      });
 
       const getResponse = await testApp.deploymentsHexa
         .getAdapter()
@@ -216,15 +262,34 @@ describe('Package deployment integration', () => {
           spaceId: dataFactory.space.id,
           packageId: standardOnlyPackage.id,
         });
+      fetchedPackage = getResponse.package;
+    });
 
-      const fetchedPackage = getResponse.package;
+    it('returns one unified distribution per target', async () => {
+      expect(result).toHaveLength(1);
+    });
+
+    it('sets status to in_progress for async deployment', async () => {
+      expect(result[0].status).toBe(DistributionStatus.in_progress);
+    });
+
+    it('contains no recipes in fetched package', async () => {
       expect(fetchedPackage.recipes).toHaveLength(0);
+    });
+
+    it('contains only standards in fetched package', async () => {
       expect(fetchedPackage.standards).toHaveLength(1);
     });
   });
 
   describe('Multiple packages deployment', () => {
-    it('deploys multiple packages successfully', async () => {
+    let result: Awaited<
+      ReturnType<
+        ReturnType<typeof testApp.deploymentsHexa.getAdapter>['publishPackages']
+      >
+    >;
+
+    beforeEach(async () => {
       const response1 = await testApp.deploymentsHexa
         .getAdapter()
         .createPackage({
@@ -252,26 +317,33 @@ describe('Package deployment integration', () => {
       const package1 = response1.package;
       const package2 = response2.package;
 
-      const result = await testApp.deploymentsHexa
-        .getAdapter()
-        .publishPackages({
-          ...dataFactory.packmindCommand(),
-          packageIds: [package1.id, package2.id],
-          targetIds: [dataFactory.target.id],
-        });
+      result = await testApp.deploymentsHexa.getAdapter().publishPackages({
+        ...dataFactory.packmindCommand(),
+        packageIds: [package1.id, package2.id],
+        targetIds: [dataFactory.target.id],
+      });
+    });
 
-      // Unified Distribution: one per target containing all artifacts (deduplicated)
+    it('returns one unified distribution per target', async () => {
       expect(result).toHaveLength(1);
+    });
+
+    it('includes target property in distribution', async () => {
       expect(result[0]).toHaveProperty('target');
+    });
+
+    it('includes status property in distribution', async () => {
       expect(result[0]).toHaveProperty('status');
-      // With async deployment, status is in_progress until the background job completes
+    });
+
+    it('sets status to in_progress for async deployment', async () => {
       expect(result[0].status).toBe(DistributionStatus.in_progress);
-      // Note: commitToGit is now called asynchronously by the delayed job
     });
   });
 
   describe('when a recipe in a package is deleted', () => {
     let packageWithRecipe: Package;
+    let afterDeletePackage: Package;
 
     beforeEach(async () => {
       const response = await testApp.deploymentsHexa
@@ -286,23 +358,7 @@ describe('Package deployment integration', () => {
           standardIds: [standard1.id],
         });
       packageWithRecipe = response.package;
-    });
 
-    it('removes the deleted recipe from the package', async () => {
-      // Verify initial state - package has 2 recipes
-      const beforeDelete = await testApp.deploymentsHexa
-        .getAdapter()
-        .getPackageById({
-          userId: dataFactory.user.id,
-          organizationId: dataFactory.organization.id,
-          spaceId: dataFactory.space.id,
-          packageId: packageWithRecipe.id,
-        });
-      expect(beforeDelete.package.recipes).toHaveLength(2);
-      expect(beforeDelete.package.recipes).toContain(recipe1.id);
-      expect(beforeDelete.package.recipes).toContain(recipe2.id);
-
-      // Delete recipe1
       await testApp.recipesHexa.getAdapter().deleteRecipe({
         recipeId: recipe1.id,
         spaceId: dataFactory.space.id,
@@ -310,10 +366,8 @@ describe('Package deployment integration', () => {
         organizationId: dataFactory.organization.id,
       });
 
-      // Wait a bit for the async event handler to complete
       await new Promise((resolve) => setTimeout(resolve, 50));
 
-      // Verify the recipe was removed from the package
       const afterDelete = await testApp.deploymentsHexa
         .getAdapter()
         .getPackageById({
@@ -322,15 +376,25 @@ describe('Package deployment integration', () => {
           spaceId: dataFactory.space.id,
           packageId: packageWithRecipe.id,
         });
+      afterDeletePackage = afterDelete.package;
+    });
 
-      expect(afterDelete.package.recipes).toHaveLength(1);
-      expect(afterDelete.package.recipes).not.toContain(recipe1.id);
-      expect(afterDelete.package.recipes).toContain(recipe2.id);
+    it('reduces recipe count by one', async () => {
+      expect(afterDeletePackage.recipes).toHaveLength(1);
+    });
+
+    it('removes the deleted recipe from the package', async () => {
+      expect(afterDeletePackage.recipes).not.toContain(recipe1.id);
+    });
+
+    it('retains the non-deleted recipe in the package', async () => {
+      expect(afterDeletePackage.recipes).toContain(recipe2.id);
     });
   });
 
   describe('when a standard in a package is deleted', () => {
     let packageWithStandard: Package;
+    let afterDeletePackage: Package;
 
     beforeEach(async () => {
       const response = await testApp.deploymentsHexa
@@ -345,33 +409,15 @@ describe('Package deployment integration', () => {
           standardIds: [standard1.id, standard2.id],
         });
       packageWithStandard = response.package;
-    });
 
-    it('removes the deleted standard from the package', async () => {
-      // Verify initial state - package has 2 standards
-      const beforeDelete = await testApp.deploymentsHexa
-        .getAdapter()
-        .getPackageById({
-          userId: dataFactory.user.id,
-          organizationId: dataFactory.organization.id,
-          spaceId: dataFactory.space.id,
-          packageId: packageWithStandard.id,
-        });
-      expect(beforeDelete.package.standards).toHaveLength(2);
-      expect(beforeDelete.package.standards).toContain(standard1.id);
-      expect(beforeDelete.package.standards).toContain(standard2.id);
-
-      // Delete standard1
       await testApp.standardsHexa.getAdapter().deleteStandard({
         standardId: standard1.id,
         userId: dataFactory.user.id.toString(),
         organizationId: dataFactory.organization.id.toString(),
       });
 
-      // Wait a bit for the async event handler to complete
       await new Promise((resolve) => setTimeout(resolve, 50));
 
-      // Verify the standard was removed from the package
       const afterDelete = await testApp.deploymentsHexa
         .getAdapter()
         .getPackageById({
@@ -380,16 +426,30 @@ describe('Package deployment integration', () => {
           spaceId: dataFactory.space.id,
           packageId: packageWithStandard.id,
         });
+      afterDeletePackage = afterDelete.package;
+    });
 
-      expect(afterDelete.package.standards).toHaveLength(1);
-      expect(afterDelete.package.standards).not.toContain(standard1.id);
-      expect(afterDelete.package.standards).toContain(standard2.id);
+    it('reduces standard count by one', async () => {
+      expect(afterDeletePackage.standards).toHaveLength(1);
+    });
+
+    it('removes the deleted standard from the package', async () => {
+      expect(afterDeletePackage.standards).not.toContain(standard1.id);
+    });
+
+    it('retains the non-deleted standard in the package', async () => {
+      expect(afterDeletePackage.standards).toContain(standard2.id);
     });
   });
 
   describe('Standard deployment with rules', () => {
-    it('deploys standard with rules correctly loaded', async () => {
-      // Create a standard with actual rules
+    let result: Awaited<
+      ReturnType<
+        ReturnType<typeof testApp.deploymentsHexa.getAdapter>['publishPackages']
+      >
+    >;
+
+    beforeEach(async () => {
       const standardWithRules = await testApp.standardsHexa
         .getAdapter()
         .createStandard({
@@ -419,22 +479,27 @@ describe('Package deployment integration', () => {
 
       const packageWithStandard = createResponse.package;
 
-      const result = await testApp.deploymentsHexa
-        .getAdapter()
-        .publishPackages({
-          ...dataFactory.packmindCommand(),
-          packageIds: [packageWithStandard.id],
-          targetIds: [dataFactory.target.id],
-        });
+      result = await testApp.deploymentsHexa.getAdapter().publishPackages({
+        ...dataFactory.packmindCommand(),
+        packageIds: [packageWithStandard.id],
+        targetIds: [dataFactory.target.id],
+      });
+    });
 
-      // Unified Distribution: one per target containing all artifacts
+    it('returns one unified distribution per target', async () => {
       expect(result).toHaveLength(1);
+    });
+
+    it('includes target property in distribution', async () => {
       expect(result[0]).toHaveProperty('target');
+    });
+
+    it('includes status property in distribution', async () => {
       expect(result[0]).toHaveProperty('status');
-      // With async deployment, status is in_progress until the background job completes
+    });
+
+    it('sets status to in_progress for async deployment', async () => {
       expect(result[0].status).toBe(DistributionStatus.in_progress);
-      // Note: commitToGit is now called asynchronously by the delayed job
-      // File content verification is covered by unit tests in PublishArtifactsUseCase.spec.ts
     });
   });
 });

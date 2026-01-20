@@ -184,50 +184,71 @@ class MyService {
   });
 
   describe('Standards Publishing: Example Mapping Scenario 1: Standard distributed to jetbrains target', () => {
-    it('deploys standard to jetbrains/.packmind/standards path', async () => {
-      // Create standard version
-      const standardVersions: StandardVersion[] = [
-        {
-          id: 'standard-version-1' as StandardVersionId,
-          standardId: standard.id,
-          name: standard.name,
-          slug: standard.slug,
-          description: standard.description,
-          version: standard.version,
-          summary: 'IDE code quality standards',
-          userId: user.id,
-          scope: standard.scope,
-        },
-      ];
+    describe('when deploying standard to jetbrains/.packmind/standards path', () => {
+      let standardUpdates: FileUpdates;
+      let standardFile: FileModification | undefined;
+      let indexFile: FileModification | undefined;
 
-      // Deploy to jetbrains target only
-      const standardUpdates =
-        await deployerService.aggregateStandardsDeployments(
+      beforeEach(async () => {
+        const standardVersions: StandardVersion[] = [
+          {
+            id: 'standard-version-1' as StandardVersionId,
+            standardId: standard.id,
+            name: standard.name,
+            slug: standard.slug,
+            description: standard.description,
+            version: standard.version,
+            summary: 'IDE code quality standards',
+            userId: user.id,
+            scope: standard.scope,
+          },
+        ];
+
+        standardUpdates = await deployerService.aggregateStandardsDeployments(
           standardVersions,
           gitRepo,
-          [jetbrainsTarget], // Only jetbrains target
-          ['packmind'], // Deploy to Packmind agent
+          [jetbrainsTarget],
+          ['packmind'],
         );
 
-      expect(standardUpdates.createOrUpdate).toHaveLength(2);
+        standardFile = standardUpdates.createOrUpdate.find((file) =>
+          file.path.includes('standards/ide-code-quality-standards.md'),
+        );
 
-      // Verify individual standard file is created in jetbrains path
-      const standardFile = standardUpdates.createOrUpdate.find((file) =>
-        file.path.includes('standards/ide-code-quality-standards.md'),
-      );
-      expect(standardFile).toBeDefined();
-      expect(standardFile?.path).toBe(
-        'jetbrains/.packmind/standards/ide-code-quality-standards.md',
-      );
-      expect(standardFile?.content).toContain('IDE Code Quality Standards');
+        indexFile = standardUpdates.createOrUpdate.find(
+          (file) => file.path === 'jetbrains/.packmind/standards-index.md',
+        );
+      });
 
-      // Verify standards index file is created in jetbrains path
-      const indexFile = standardUpdates.createOrUpdate.find(
-        (file) => file.path === 'jetbrains/.packmind/standards-index.md',
-      );
-      expect(indexFile).toBeDefined();
-      expect(indexFile?.content).toContain('IDE Code Quality Standards');
-      expect(indexFile?.content).toContain('ide-code-quality-standards.md');
+      it('creates two files', () => {
+        expect(standardUpdates.createOrUpdate).toHaveLength(2);
+      });
+
+      it('creates individual standard file in jetbrains path', () => {
+        expect(standardFile).toBeDefined();
+      });
+
+      it('places standard file at correct path', () => {
+        expect(standardFile?.path).toBe(
+          'jetbrains/.packmind/standards/ide-code-quality-standards.md',
+        );
+      });
+
+      it('includes standard name in content', () => {
+        expect(standardFile?.content).toContain('IDE Code Quality Standards');
+      });
+
+      it('creates standards index file in jetbrains path', () => {
+        expect(indexFile).toBeDefined();
+      });
+
+      it('includes standard name in index file', () => {
+        expect(indexFile?.content).toContain('IDE Code Quality Standards');
+      });
+
+      it('includes standard filename in index file', () => {
+        expect(indexFile?.content).toContain('ide-code-quality-standards.md');
+      });
     });
 
     describe('when deploying standard to jetbrains path for Claude agent', () => {
@@ -328,445 +349,624 @@ class MyService {
       });
     });
 
-    it('deploys standard to jetbrains path for Cursor agent', async () => {
-      const standardVersions: StandardVersion[] = [
-        {
-          id: 'standard-version-1' as StandardVersionId,
-          standardId: standard.id,
-          name: standard.name,
-          slug: standard.slug,
-          description: standard.description,
-          version: standard.version,
-          summary: 'IDE code quality standards',
-          userId: user.id,
-          scope: standard.scope,
-        },
-      ];
+    describe('when deploying standard to jetbrains path for Cursor agent', () => {
+      let standardUpdates: FileUpdates;
+      let deployedFile: FileModification;
 
-      // Deploy to jetbrains target for Cursor
-      const standardUpdates =
-        await deployerService.aggregateStandardsDeployments(
+      beforeEach(async () => {
+        const standardVersions: StandardVersion[] = [
+          {
+            id: 'standard-version-1' as StandardVersionId,
+            standardId: standard.id,
+            name: standard.name,
+            slug: standard.slug,
+            description: standard.description,
+            version: standard.version,
+            summary: 'IDE code quality standards',
+            userId: user.id,
+            scope: standard.scope,
+          },
+        ];
+
+        standardUpdates = await deployerService.aggregateStandardsDeployments(
           standardVersions,
           gitRepo,
           [jetbrainsTarget],
           ['cursor'],
         );
 
-      expect(standardUpdates.createOrUpdate).toHaveLength(1);
+        deployedFile = standardUpdates.createOrUpdate[0];
+      });
 
-      // Verify Cursor file is deployed to jetbrains/.cursor/rules/packmind/standard-*.mdc
-      const deployedFile = standardUpdates.createOrUpdate[0];
-      expect(deployedFile.path).toBe(
-        'jetbrains/.cursor/rules/packmind/standard-ide-code-quality-standards.mdc',
-      );
+      it('creates one file', () => {
+        expect(standardUpdates.createOrUpdate).toHaveLength(1);
+      });
 
-      expect(deployedFile.content).toContain(standard.name);
-      expect(deployedFile.content).toContain('IDE code quality standards :');
-      expect(deployedFile.content).toContain(
-        '* Always use meaningful variable names',
-      );
-      expect(deployedFile.content).toContain(
-        '* Write unit tests for all public methods',
-      );
-      expect(deployedFile.content).toContain(
-        '* Follow consistent indentation (2 or 4 spaces)',
-      );
-      expect(deployedFile.content).toContain(
-        'Full standard is available here for further request: [IDE Code Quality Standards](../../../.packmind/standards/ide-code-quality-standards.md)',
-      );
+      it('deploys to correct Cursor path', () => {
+        expect(deployedFile.path).toBe(
+          'jetbrains/.cursor/rules/packmind/standard-ide-code-quality-standards.mdc',
+        );
+      });
+
+      it('includes standard name in content', () => {
+        expect(deployedFile.content).toContain(standard.name);
+      });
+
+      it('includes summary in content', () => {
+        expect(deployedFile.content).toContain('IDE code quality standards :');
+      });
+
+      it('includes first rule', () => {
+        expect(deployedFile.content).toContain(
+          '* Always use meaningful variable names',
+        );
+      });
+
+      it('includes second rule', () => {
+        expect(deployedFile.content).toContain(
+          '* Write unit tests for all public methods',
+        );
+      });
+
+      it('includes third rule', () => {
+        expect(deployedFile.content).toContain(
+          '* Follow consistent indentation (2 or 4 spaces)',
+        );
+      });
+
+      it('includes full standard reference link', () => {
+        expect(deployedFile.content).toContain(
+          'Full standard is available here for further request: [IDE Code Quality Standards](../../../.packmind/standards/ide-code-quality-standards.md)',
+        );
+      });
     });
   });
 
   describe('Standards Publishing: Example Mapping Scenario 2: Standard isolation', () => {
-    it('standard distributed to jetbrains target does not appear in vscode deployment', async () => {
-      const jetbrainsStandardVersions: StandardVersion[] = [
-        {
-          id: 'jetbrains-standard-version-1' as StandardVersionId,
-          standardId: standard.id,
-          name: standard.name,
-          slug: standard.slug,
-          description: standard.description,
-          version: standard.version,
-          summary: 'IDE code quality standards',
-          userId: user.id,
-          scope: standard.scope,
-        },
-      ];
+    describe('when standard distributed to jetbrains target', () => {
+      let jetbrainsUpdates: FileUpdates;
+      let vscodeUpdates: FileUpdates;
+      let jetbrainsStandardFile: FileModification | undefined;
+      let jetbrainsIndexFile: FileModification | undefined;
 
-      // Deploy to jetbrains target
-      const jetbrainsUpdates =
-        await deployerService.aggregateStandardsDeployments(
+      beforeEach(async () => {
+        const jetbrainsStandardVersions: StandardVersion[] = [
+          {
+            id: 'jetbrains-standard-version-1' as StandardVersionId,
+            standardId: standard.id,
+            name: standard.name,
+            slug: standard.slug,
+            description: standard.description,
+            version: standard.version,
+            summary: 'IDE code quality standards',
+            userId: user.id,
+            scope: standard.scope,
+          },
+        ];
+
+        jetbrainsUpdates = await deployerService.aggregateStandardsDeployments(
           jetbrainsStandardVersions,
           gitRepo,
           [jetbrainsTarget],
           ['packmind'],
         );
 
-      // Simulate VSCode deployment with empty standards
-      const vscodeUpdates = await deployerService.aggregateStandardsDeployments(
-        [], // No standards for VSCode target
-        gitRepo,
-        [vscodeTarget],
-        ['packmind'],
-      );
+        vscodeUpdates = await deployerService.aggregateStandardsDeployments(
+          [],
+          gitRepo,
+          [vscodeTarget],
+          ['packmind'],
+        );
 
-      // Verify jetbrains deployment exists with both standard and index files
-      expect(jetbrainsUpdates.createOrUpdate).toHaveLength(2);
+        jetbrainsStandardFile = jetbrainsUpdates.createOrUpdate.find((file) =>
+          file.path.includes('standards/ide-code-quality-standards.md'),
+        );
 
-      const jetbrainsStandardFile = jetbrainsUpdates.createOrUpdate.find(
-        (file) => file.path.includes('standards/ide-code-quality-standards.md'),
-      );
-      expect(jetbrainsStandardFile).toBeDefined();
-      expect(jetbrainsStandardFile?.path.startsWith('jetbrains/')).toBe(true);
-      expect(jetbrainsStandardFile?.content).toContain(
-        'IDE Code Quality Standards',
-      );
+        jetbrainsIndexFile = jetbrainsUpdates.createOrUpdate.find(
+          (file) => file.path === 'jetbrains/.packmind/standards-index.md',
+        );
+      });
 
-      // Verify vscode deployment creates empty index (no actual standards, but still creates index file)
-      expect(vscodeUpdates.createOrUpdate).toHaveLength(1);
-      expect(vscodeUpdates.createOrUpdate[0].path).toBe(
-        'vscode/.packmind/standards-index.md',
-      );
-      expect(vscodeUpdates.createOrUpdate[0].content).toContain(
-        'No standards available',
-      );
+      it('creates two files for jetbrains deployment', () => {
+        expect(jetbrainsUpdates.createOrUpdate).toHaveLength(2);
+      });
 
-      // Verify the paths are completely separate
-      const jetbrainsIndexFile = jetbrainsUpdates.createOrUpdate.find(
-        (file) => file.path === 'jetbrains/.packmind/standards-index.md',
-      );
-      expect(jetbrainsIndexFile).toBeDefined();
-      expect(jetbrainsIndexFile?.path.startsWith('jetbrains/')).toBe(true);
-      expect(jetbrainsIndexFile?.path).not.toContain('vscode');
+      it('creates jetbrains standard file', () => {
+        expect(jetbrainsStandardFile).toBeDefined();
+      });
+
+      it('places jetbrains standard file in correct path', () => {
+        expect(jetbrainsStandardFile?.path.startsWith('jetbrains/')).toBe(true);
+      });
+
+      it('includes standard content in jetbrains file', () => {
+        expect(jetbrainsStandardFile?.content).toContain(
+          'IDE Code Quality Standards',
+        );
+      });
+
+      it('creates one file for vscode deployment (empty index)', () => {
+        expect(vscodeUpdates.createOrUpdate).toHaveLength(1);
+      });
+
+      it('places vscode index at correct path', () => {
+        expect(vscodeUpdates.createOrUpdate[0].path).toBe(
+          'vscode/.packmind/standards-index.md',
+        );
+      });
+
+      it('includes no standards message in vscode index', () => {
+        expect(vscodeUpdates.createOrUpdate[0].content).toContain(
+          'No standards available',
+        );
+      });
+
+      it('creates jetbrains index file', () => {
+        expect(jetbrainsIndexFile).toBeDefined();
+      });
+
+      it('places jetbrains index in correct path', () => {
+        expect(jetbrainsIndexFile?.path.startsWith('jetbrains/')).toBe(true);
+      });
+
+      it('keeps paths completely separate (no vscode in jetbrains path)', () => {
+        expect(jetbrainsIndexFile?.path).not.toContain('vscode');
+      });
     });
   });
 
   describe('Standards Publishing: Example Mapping Scenario 3: Standard distributed to multiple targets', () => {
-    it('standard distributed to both jetbrains and vscode targets appears in both paths', async () => {
-      // Create a universal standard that applies to both platforms
-      const universalStandard = await testApp.standardsHexa
-        .getAdapter()
-        .createStandard({
-          name: 'Universal Testing Standards',
-          description: 'Testing standards applicable to any IDE platform',
-          rules: [
-            { content: 'Write comprehensive unit tests' },
-            { content: 'Use descriptive test names' },
-            { content: 'Mock external dependencies' },
-          ],
-          organizationId: organization.id,
-          userId: user.id,
-          scope: 'universal',
-          spaceId: space.id,
-        });
+    describe('when standard distributed to both jetbrains and vscode targets', () => {
+      let multiTargetUpdates: FileUpdates;
+      let jetbrainsStandardFile: FileModification | undefined;
+      let jetbrainsIndexFile: FileModification | undefined;
+      let vscodeStandardFile: FileModification | undefined;
+      let vscodeIndexFile: FileModification | undefined;
 
-      const universalStandardVersions: StandardVersion[] = [
-        {
-          id: 'universal-standard-version-1' as StandardVersionId,
-          standardId: universalStandard.id,
-          name: universalStandard.name,
-          slug: universalStandard.slug,
-          description: universalStandard.description,
-          version: universalStandard.version,
-          summary: 'Universal testing standards for all platforms',
-          userId: user.id,
-          scope: universalStandard.scope,
-        },
-      ];
+      beforeEach(async () => {
+        const universalStandard = await testApp.standardsHexa
+          .getAdapter()
+          .createStandard({
+            name: 'Universal Testing Standards',
+            description: 'Testing standards applicable to any IDE platform',
+            rules: [
+              { content: 'Write comprehensive unit tests' },
+              { content: 'Use descriptive test names' },
+              { content: 'Mock external dependencies' },
+            ],
+            organizationId: organization.id,
+            userId: user.id,
+            scope: 'universal',
+            spaceId: space.id,
+          });
 
-      // Deploy to both jetbrains and vscode targets
-      const multiTargetUpdates =
-        await deployerService.aggregateStandardsDeployments(
-          universalStandardVersions,
-          gitRepo,
-          [jetbrainsTarget, vscodeTarget], // Both targets
-          ['packmind'],
+        const universalStandardVersions: StandardVersion[] = [
+          {
+            id: 'universal-standard-version-1' as StandardVersionId,
+            standardId: universalStandard.id,
+            name: universalStandard.name,
+            slug: universalStandard.slug,
+            description: universalStandard.description,
+            version: universalStandard.version,
+            summary: 'Universal testing standards for all platforms',
+            userId: user.id,
+            scope: universalStandard.scope,
+          },
+        ];
+
+        multiTargetUpdates =
+          await deployerService.aggregateStandardsDeployments(
+            universalStandardVersions,
+            gitRepo,
+            [jetbrainsTarget, vscodeTarget],
+            ['packmind'],
+          );
+
+        jetbrainsStandardFile = multiTargetUpdates.createOrUpdate.find(
+          (file) =>
+            file.path ===
+            'jetbrains/.packmind/standards/universal-testing-standards.md',
         );
+        jetbrainsIndexFile = multiTargetUpdates.createOrUpdate.find(
+          (file) => file.path === 'jetbrains/.packmind/standards-index.md',
+        );
+        vscodeStandardFile = multiTargetUpdates.createOrUpdate.find(
+          (file) =>
+            file.path ===
+            'vscode/.packmind/standards/universal-testing-standards.md',
+        );
+        vscodeIndexFile = multiTargetUpdates.createOrUpdate.find(
+          (file) => file.path === 'vscode/.packmind/standards-index.md',
+        );
+      });
 
-      // Should have 4 files - 2 for each target (standard file + index file)
-      expect(multiTargetUpdates.createOrUpdate).toHaveLength(4);
+      it('creates four files (2 for each target)', () => {
+        expect(multiTargetUpdates.createOrUpdate).toHaveLength(4);
+      });
 
-      // Find jetbrains files
-      const jetbrainsStandardFile = multiTargetUpdates.createOrUpdate.find(
-        (file) =>
-          file.path ===
-          'jetbrains/.packmind/standards/universal-testing-standards.md',
-      );
-      const jetbrainsIndexFile = multiTargetUpdates.createOrUpdate.find(
-        (file) => file.path === 'jetbrains/.packmind/standards-index.md',
-      );
+      it('creates jetbrains standard file', () => {
+        expect(jetbrainsStandardFile).toBeDefined();
+      });
 
-      // Find vscode files
-      const vscodeStandardFile = multiTargetUpdates.createOrUpdate.find(
-        (file) =>
-          file.path ===
-          'vscode/.packmind/standards/universal-testing-standards.md',
-      );
-      const vscodeIndexFile = multiTargetUpdates.createOrUpdate.find(
-        (file) => file.path === 'vscode/.packmind/standards-index.md',
-      );
+      it('creates jetbrains index file', () => {
+        expect(jetbrainsIndexFile).toBeDefined();
+      });
 
-      // Verify all files exist
-      expect(jetbrainsStandardFile).toBeDefined();
-      expect(jetbrainsIndexFile).toBeDefined();
-      expect(vscodeStandardFile).toBeDefined();
-      expect(vscodeIndexFile).toBeDefined();
+      it('creates vscode standard file', () => {
+        expect(vscodeStandardFile).toBeDefined();
+      });
 
-      // Verify jetbrains files contain the universal standard
-      expect(jetbrainsStandardFile?.content).toContain(
-        'Universal Testing Standards',
-      );
-      expect(jetbrainsIndexFile?.content).toContain(
-        'Universal Testing Standards',
-      );
+      it('creates vscode index file', () => {
+        expect(vscodeIndexFile).toBeDefined();
+      });
 
-      // Verify vscode files contain the universal standard
-      expect(vscodeStandardFile?.content).toContain(
-        'Universal Testing Standards',
-      );
-      expect(vscodeIndexFile?.content).toContain('Universal Testing Standards');
+      it('includes universal standard in jetbrains standard file', () => {
+        expect(jetbrainsStandardFile?.content).toContain(
+          'Universal Testing Standards',
+        );
+      });
+
+      it('includes universal standard in jetbrains index file', () => {
+        expect(jetbrainsIndexFile?.content).toContain(
+          'Universal Testing Standards',
+        );
+      });
+
+      it('includes universal standard in vscode standard file', () => {
+        expect(vscodeStandardFile?.content).toContain(
+          'Universal Testing Standards',
+        );
+      });
+
+      it('includes universal standard in vscode index file', () => {
+        expect(vscodeIndexFile?.content).toContain(
+          'Universal Testing Standards',
+        );
+      });
     });
 
-    it('Vincent opening exclusively JetBrains folder sees the universal standard', async () => {
-      // Create universal standard version
-      const universalStandardVersions: StandardVersion[] = [
-        {
-          id: 'universal-standard-version-1' as StandardVersionId,
-          standardId: standard.id,
-          name: 'Universal Testing Standards',
-          slug: 'universal-testing-standards',
-          description: 'Testing standards applicable to JetBrains and VSCode',
-          version: 1,
-          summary: 'Universal testing standards',
-          userId: user.id,
-          scope: 'universal',
-        },
-      ];
+    describe('when Vincent opens exclusively JetBrains folder', () => {
+      let jetbrainsOnlyUpdates: FileUpdates;
+      let jetbrainsIndexFile: FileModification | undefined;
 
-      // Deploy to both targets (as Cedric would do)
-      await deployerService.aggregateStandardsDeployments(
-        universalStandardVersions,
-        gitRepo,
-        [jetbrainsTarget, vscodeTarget],
-        ['packmind'],
-      );
+      beforeEach(async () => {
+        const universalStandardVersions: StandardVersion[] = [
+          {
+            id: 'universal-standard-version-1' as StandardVersionId,
+            standardId: standard.id,
+            name: 'Universal Testing Standards',
+            slug: 'universal-testing-standards',
+            description: 'Testing standards applicable to JetBrains and VSCode',
+            version: 1,
+            summary: 'Universal testing standards',
+            userId: user.id,
+            scope: 'universal',
+          },
+        ];
 
-      // Simulate Vincent opening only JetBrains folder
-      // He would only see the JetBrains-specific deployment
-      const jetbrainsOnlyUpdates =
         await deployerService.aggregateStandardsDeployments(
           universalStandardVersions,
           gitRepo,
-          [jetbrainsTarget], // Only JetBrains target
+          [jetbrainsTarget, vscodeTarget],
           ['packmind'],
         );
 
-      expect(jetbrainsOnlyUpdates.createOrUpdate).toHaveLength(2);
+        jetbrainsOnlyUpdates =
+          await deployerService.aggregateStandardsDeployments(
+            universalStandardVersions,
+            gitRepo,
+            [jetbrainsTarget],
+            ['packmind'],
+          );
 
-      // Find the jetbrains index file
-      const jetbrainsIndexFile = jetbrainsOnlyUpdates.createOrUpdate.find(
-        (file) => file.path === 'jetbrains/.packmind/standards-index.md',
-      );
-      expect(jetbrainsIndexFile).toBeDefined();
-      expect(jetbrainsIndexFile?.content).toContain(
-        'Universal Testing Standards',
-      );
+        jetbrainsIndexFile = jetbrainsOnlyUpdates.createOrUpdate.find(
+          (file) => file.path === 'jetbrains/.packmind/standards-index.md',
+        );
+      });
 
-      // Verify the path is specifically for JetBrains
-      expect(jetbrainsIndexFile?.path.startsWith('jetbrains/')).toBe(true);
-      expect(jetbrainsIndexFile?.path).not.toContain('vscode');
+      it('creates two files for jetbrains only', () => {
+        expect(jetbrainsOnlyUpdates.createOrUpdate).toHaveLength(2);
+      });
+
+      it('creates jetbrains index file', () => {
+        expect(jetbrainsIndexFile).toBeDefined();
+      });
+
+      it('includes universal standard in jetbrains index', () => {
+        expect(jetbrainsIndexFile?.content).toContain(
+          'Universal Testing Standards',
+        );
+      });
+
+      it('places index in jetbrains path', () => {
+        expect(jetbrainsIndexFile?.path.startsWith('jetbrains/')).toBe(true);
+      });
+
+      it('keeps paths separate (no vscode in path)', () => {
+        expect(jetbrainsIndexFile?.path).not.toContain('vscode');
+      });
     });
   });
 
   describe('Example Mapping Scenario 1: Recipe distributed to jetbrains target', () => {
-    it('deploys recipe to jetbrains/.packmind/recipes path', async () => {
-      // Create recipe version
-      const recipeVersions: RecipeVersion[] = [
-        {
-          id: 'recipe-version-1' as RecipeVersionId,
-          recipeId: recipe.id,
-          name: recipe.name,
-          slug: recipe.slug,
-          content: recipe.content,
-          version: recipe.version,
-          summary: 'JetBrains services best practices',
-          userId: user.id,
-        },
-      ];
+    describe('when deploying recipe to jetbrains/.packmind/recipes path', () => {
+      let recipeUpdates: FileUpdates;
+      let recipeFile: FileModification | undefined;
+      let indexFile: FileModification | undefined;
 
-      // Deploy to jetbrains target only
-      const recipeUpdates = await deployerService.aggregateRecipeDeployments(
-        recipeVersions,
-        gitRepo,
-        [jetbrainsTarget], // Only jetbrains target
-        ['packmind'], // Deploy to Packmind agent
-      );
+      beforeEach(async () => {
+        const recipeVersions: RecipeVersion[] = [
+          {
+            id: 'recipe-version-1' as RecipeVersionId,
+            recipeId: recipe.id,
+            name: recipe.name,
+            slug: recipe.slug,
+            content: recipe.content,
+            version: recipe.version,
+            summary: 'JetBrains services best practices',
+            userId: user.id,
+          },
+        ];
 
-      expect(recipeUpdates.createOrUpdate).toHaveLength(2);
+        recipeUpdates = await deployerService.aggregateRecipeDeployments(
+          recipeVersions,
+          gitRepo,
+          [jetbrainsTarget],
+          ['packmind'],
+        );
 
-      // Verify individual recipe file is created in jetbrains path
-      const recipeFile = recipeUpdates.createOrUpdate.find((file) =>
-        file.path.includes('commands/writing-good-jetbrains-services.md'),
-      );
-      expect(recipeFile).toBeDefined();
-      expect(recipeFile?.path).toBe(
-        'jetbrains/.packmind/commands/writing-good-jetbrains-services.md',
-      );
-      expect(recipeFile?.content).toContain('Writing Good JetBrains Services');
+        recipeFile = recipeUpdates.createOrUpdate.find((file) =>
+          file.path.includes('commands/writing-good-jetbrains-services.md'),
+        );
 
-      // Verify recipes index file is created in jetbrains path
-      const indexFile = recipeUpdates.createOrUpdate.find(
-        (file) => file.path === 'jetbrains/.packmind/commands-index.md',
-      );
-      expect(indexFile).toBeDefined();
-      expect(indexFile?.content).toContain('Writing Good JetBrains Services');
-      expect(indexFile?.content).toContain(
-        'writing-good-jetbrains-services.md',
-      );
+        indexFile = recipeUpdates.createOrUpdate.find(
+          (file) => file.path === 'jetbrains/.packmind/commands-index.md',
+        );
+      });
+
+      it('creates two files', () => {
+        expect(recipeUpdates.createOrUpdate).toHaveLength(2);
+      });
+
+      it('creates individual recipe file in jetbrains path', () => {
+        expect(recipeFile).toBeDefined();
+      });
+
+      it('places recipe file at correct path', () => {
+        expect(recipeFile?.path).toBe(
+          'jetbrains/.packmind/commands/writing-good-jetbrains-services.md',
+        );
+      });
+
+      it('includes recipe name in content', () => {
+        expect(recipeFile?.content).toContain(
+          'Writing Good JetBrains Services',
+        );
+      });
+
+      it('creates recipes index file in jetbrains path', () => {
+        expect(indexFile).toBeDefined();
+      });
+
+      it('includes recipe name in index file', () => {
+        expect(indexFile?.content).toContain('Writing Good JetBrains Services');
+      });
+
+      it('includes recipe filename in index file', () => {
+        expect(indexFile?.content).toContain(
+          'writing-good-jetbrains-services.md',
+        );
+      });
     });
 
-    it('deploys recipe to jetbrains path for Claude agent', async () => {
-      const recipeVersions: RecipeVersion[] = [
-        {
-          id: 'recipe-version-1' as RecipeVersionId,
-          recipeId: recipe.id,
-          name: recipe.name,
-          slug: recipe.slug,
-          content: recipe.content,
-          version: recipe.version,
-          summary: 'JetBrains services best practices',
-          userId: user.id,
-        },
-      ];
+    describe('when deploying recipe to jetbrains path for Claude agent', () => {
+      let recipeUpdates: FileUpdates;
+      let deployedFile: FileModification | undefined;
 
-      // Deploy to jetbrains target for Claude
-      const recipeUpdates = await deployerService.aggregateRecipeDeployments(
-        recipeVersions,
-        gitRepo,
-        [jetbrainsTarget],
-        ['claude'],
-      );
+      beforeEach(async () => {
+        const recipeVersions: RecipeVersion[] = [
+          {
+            id: 'recipe-version-1' as RecipeVersionId,
+            recipeId: recipe.id,
+            name: recipe.name,
+            slug: recipe.slug,
+            content: recipe.content,
+            version: recipe.version,
+            summary: 'JetBrains services best practices',
+            userId: user.id,
+          },
+        ];
 
-      expect(recipeUpdates.createOrUpdate).toHaveLength(2);
+        recipeUpdates = await deployerService.aggregateRecipeDeployments(
+          recipeVersions,
+          gitRepo,
+          [jetbrainsTarget],
+          ['claude'],
+        );
 
-      // Verify Claude command file is deployed to jetbrains/.claude/commands/packmind/{slug}.md
-      const deployedFile = recipeUpdates.createOrUpdate.find(
-        (f) =>
-          f.path === `jetbrains/.claude/commands/packmind/${recipe.slug}.md`,
-      );
-      expect(deployedFile).toBeDefined();
-      expect(deployedFile?.path).toBe(
-        `jetbrains/.claude/commands/packmind/${recipe.slug}.md`,
-      );
-      // Claude deployer creates individual command files with frontmatter
-      expect(deployedFile?.content).toContain('---');
-      expect(deployedFile?.content).toContain(
-        'description: JetBrains services best practices',
-      );
-      expect(deployedFile?.content).toContain(recipe.content);
+        deployedFile = recipeUpdates.createOrUpdate.find(
+          (f) =>
+            f.path === `jetbrains/.claude/commands/packmind/${recipe.slug}.md`,
+        );
+      });
+
+      it('creates two files', () => {
+        expect(recipeUpdates.createOrUpdate).toHaveLength(2);
+      });
+
+      it('creates Claude command file', () => {
+        expect(deployedFile).toBeDefined();
+      });
+
+      it('deploys to correct path', () => {
+        expect(deployedFile?.path).toBe(
+          `jetbrains/.claude/commands/packmind/${recipe.slug}.md`,
+        );
+      });
+
+      it('includes frontmatter delimiter', () => {
+        expect(deployedFile?.content).toContain('---');
+      });
+
+      it('includes description in frontmatter', () => {
+        expect(deployedFile?.content).toContain(
+          'description: JetBrains services best practices',
+        );
+      });
+
+      it('includes recipe content', () => {
+        expect(deployedFile?.content).toContain(recipe.content);
+      });
     });
 
-    it('deploys recipe to jetbrains path for Cursor agent', async () => {
-      const recipeVersions: RecipeVersion[] = [
-        {
-          id: 'recipe-version-1' as RecipeVersionId,
-          recipeId: recipe.id,
-          name: recipe.name,
-          slug: recipe.slug,
-          content: recipe.content,
-          version: recipe.version,
-          summary: 'JetBrains services best practices',
-          userId: user.id,
-        },
-      ];
+    describe('when deploying recipe to jetbrains path for Cursor agent', () => {
+      let recipeUpdates: FileUpdates;
+      let deployedFile: FileModification;
 
-      // Deploy to jetbrains target for Cursor
-      const recipeUpdates = await deployerService.aggregateRecipeDeployments(
-        recipeVersions,
-        gitRepo,
-        [jetbrainsTarget],
-        ['cursor'],
-      );
+      beforeEach(async () => {
+        const recipeVersions: RecipeVersion[] = [
+          {
+            id: 'recipe-version-1' as RecipeVersionId,
+            recipeId: recipe.id,
+            name: recipe.name,
+            slug: recipe.slug,
+            content: recipe.content,
+            version: recipe.version,
+            summary: 'JetBrains services best practices',
+            userId: user.id,
+          },
+        ];
 
-      expect(recipeUpdates.createOrUpdate).toHaveLength(1);
+        recipeUpdates = await deployerService.aggregateRecipeDeployments(
+          recipeVersions,
+          gitRepo,
+          [jetbrainsTarget],
+          ['cursor'],
+        );
 
-      // Verify Cursor command file is deployed to jetbrains/.cursor/commands/packmind/<slug>.md
-      const deployedFile = recipeUpdates.createOrUpdate[0];
-      expect(deployedFile.path).toBe(
-        `jetbrains/.cursor/commands/packmind/${recipe.slug}.md`,
-      );
-      expect(deployedFile.content).toBe(recipe.content);
+        deployedFile = recipeUpdates.createOrUpdate[0];
+      });
+
+      it('creates one file', () => {
+        expect(recipeUpdates.createOrUpdate).toHaveLength(1);
+      });
+
+      it('deploys to correct Cursor path', () => {
+        expect(deployedFile.path).toBe(
+          `jetbrains/.cursor/commands/packmind/${recipe.slug}.md`,
+        );
+      });
+
+      it('includes recipe content', () => {
+        expect(deployedFile.content).toBe(recipe.content);
+      });
     });
   });
 
   describe('Example Mapping Scenario 2: Recipe isolation - jetbrains recipe not in vscode work', () => {
-    it('recipe distributed to jetbrains target does not appear in vscode deployment', async () => {
-      const jetbrainsRecipeVersions: RecipeVersion[] = [
-        {
-          id: 'jetbrains-recipe-version-1' as RecipeVersionId,
-          recipeId: recipe.id,
-          name: recipe.name,
-          slug: recipe.slug,
-          content: recipe.content,
-          version: recipe.version,
-          summary: 'JetBrains services best practices',
-          userId: user.id,
-        },
-      ];
+    describe('when recipe distributed to jetbrains target', () => {
+      let jetbrainsUpdates: FileUpdates;
+      let vscodeUpdates: FileUpdates;
+      let jetbrainsRecipeFile: FileModification | undefined;
+      let jetbrainsIndexFile: FileModification | undefined;
 
-      // Deploy to jetbrains target
-      const jetbrainsUpdates = await deployerService.aggregateRecipeDeployments(
-        jetbrainsRecipeVersions,
-        gitRepo,
-        [jetbrainsTarget],
-        ['packmind'],
-      );
+      beforeEach(async () => {
+        const jetbrainsRecipeVersions: RecipeVersion[] = [
+          {
+            id: 'jetbrains-recipe-version-1' as RecipeVersionId,
+            recipeId: recipe.id,
+            name: recipe.name,
+            slug: recipe.slug,
+            content: recipe.content,
+            version: recipe.version,
+            summary: 'JetBrains services best practices',
+            userId: user.id,
+          },
+        ];
 
-      // Simulate Joan working on VSCode plugin - deploy to vscode target with empty recipes
-      const vscodeUpdates = await deployerService.aggregateRecipeDeployments(
-        [], // No recipes for VSCode target
-        gitRepo,
-        [vscodeTarget],
-        ['packmind'],
-      );
+        jetbrainsUpdates = await deployerService.aggregateRecipeDeployments(
+          jetbrainsRecipeVersions,
+          gitRepo,
+          [jetbrainsTarget],
+          ['packmind'],
+        );
 
-      // Verify jetbrains deployment exists with both recipe and index files
-      expect(jetbrainsUpdates.createOrUpdate).toHaveLength(2);
+        vscodeUpdates = await deployerService.aggregateRecipeDeployments(
+          [],
+          gitRepo,
+          [vscodeTarget],
+          ['packmind'],
+        );
 
-      const jetbrainsRecipeFile = jetbrainsUpdates.createOrUpdate.find((file) =>
-        file.path.includes('commands/writing-good-jetbrains-services.md'),
-      );
-      expect(jetbrainsRecipeFile).toBeDefined();
-      expect(jetbrainsRecipeFile?.path.startsWith('jetbrains/')).toBe(true);
-      expect(jetbrainsRecipeFile?.content).toContain(
-        'Writing Good JetBrains Services',
-      );
+        jetbrainsRecipeFile = jetbrainsUpdates.createOrUpdate.find((file) =>
+          file.path.includes('commands/writing-good-jetbrains-services.md'),
+        );
 
-      // Verify vscode deployment creates empty index (no actual recipes, but still creates index file)
-      expect(vscodeUpdates.createOrUpdate).toHaveLength(1);
-      expect(vscodeUpdates.createOrUpdate[0].path).toBe(
-        'vscode/.packmind/commands-index.md',
-      );
-      expect(vscodeUpdates.createOrUpdate[0].content).toContain(
-        'No commands available',
-      );
+        jetbrainsIndexFile = jetbrainsUpdates.createOrUpdate.find(
+          (file) => file.path === 'jetbrains/.packmind/commands-index.md',
+        );
+      });
 
-      // Verify the paths are completely separate
-      const jetbrainsIndexFile = jetbrainsUpdates.createOrUpdate.find(
-        (file) => file.path === 'jetbrains/.packmind/commands-index.md',
-      );
-      expect(jetbrainsIndexFile).toBeDefined();
-      expect(jetbrainsIndexFile?.path.startsWith('jetbrains/')).toBe(true);
-      expect(jetbrainsIndexFile?.path).not.toContain('vscode');
+      it('creates two files for jetbrains deployment', () => {
+        expect(jetbrainsUpdates.createOrUpdate).toHaveLength(2);
+      });
+
+      it('creates jetbrains recipe file', () => {
+        expect(jetbrainsRecipeFile).toBeDefined();
+      });
+
+      it('places jetbrains recipe file in correct path', () => {
+        expect(jetbrainsRecipeFile?.path.startsWith('jetbrains/')).toBe(true);
+      });
+
+      it('includes recipe content in jetbrains file', () => {
+        expect(jetbrainsRecipeFile?.content).toContain(
+          'Writing Good JetBrains Services',
+        );
+      });
+
+      it('creates one file for vscode deployment (empty index)', () => {
+        expect(vscodeUpdates.createOrUpdate).toHaveLength(1);
+      });
+
+      it('places vscode index at correct path', () => {
+        expect(vscodeUpdates.createOrUpdate[0].path).toBe(
+          'vscode/.packmind/commands-index.md',
+        );
+      });
+
+      it('includes no commands message in vscode index', () => {
+        expect(vscodeUpdates.createOrUpdate[0].content).toContain(
+          'No commands available',
+        );
+      });
+
+      it('creates jetbrains index file', () => {
+        expect(jetbrainsIndexFile).toBeDefined();
+      });
+
+      it('places jetbrains index in correct path', () => {
+        expect(jetbrainsIndexFile?.path.startsWith('jetbrains/')).toBe(true);
+      });
+
+      it('keeps paths completely separate (no vscode in jetbrains path)', () => {
+        expect(jetbrainsIndexFile?.path).not.toContain('vscode');
+      });
     });
   });
 
   describe('Example Mapping Scenario 3: Recipe distributed to multiple targets', () => {
-    it('recipe distributed to both jetbrains and vscode targets appears in both paths', async () => {
-      // Create a TDD recipe that applies to both platforms
-      const tddRecipe = await testApp.recipesHexa.getAdapter().captureRecipe({
-        name: 'Test-Driven Development (TDD) Best Practices',
-        content: `# Test-Driven Development (TDD) Best Practices
+    describe('when recipe distributed to both jetbrains and vscode targets', () => {
+      let multiTargetUpdates: FileUpdates;
+      let jetbrainsRecipeFile: FileModification | undefined;
+      let jetbrainsIndexFile: FileModification | undefined;
+      let vscodeRecipeFile: FileModification | undefined;
+      let vscodeIndexFile: FileModification | undefined;
+
+      beforeEach(async () => {
+        const tddRecipe = await testApp.recipesHexa.getAdapter().captureRecipe({
+          name: 'Test-Driven Development (TDD) Best Practices',
+          content: `# Test-Driven Development (TDD) Best Practices
 
 ## Overview
 This recipe provides TDD best practices applicable to any IDE platform.
@@ -781,197 +981,244 @@ This recipe provides TDD best practices applicable to any IDE platform.
 - JetBrains: Use JUnit or TestNG
 - VSCode: Use Jest, Mocha, or Vitest
 `,
-        userId: user.id,
-        organizationId: organization.id,
-        spaceId: space.id.toString(),
+          userId: user.id,
+          organizationId: organization.id,
+          spaceId: space.id.toString(),
+        });
+
+        const tddRecipeVersions: RecipeVersion[] = [
+          {
+            id: 'tdd-recipe-version-1' as RecipeVersionId,
+            recipeId: tddRecipe.id,
+            name: tddRecipe.name,
+            slug: tddRecipe.slug,
+            content: tddRecipe.content,
+            version: tddRecipe.version,
+            summary: 'TDD best practices for all platforms',
+            userId: user.id,
+          },
+        ];
+
+        multiTargetUpdates = await deployerService.aggregateRecipeDeployments(
+          tddRecipeVersions,
+          gitRepo,
+          [jetbrainsTarget, vscodeTarget],
+          ['packmind'],
+        );
+
+        jetbrainsRecipeFile = multiTargetUpdates.createOrUpdate.find(
+          (file) =>
+            file.path ===
+            'jetbrains/.packmind/commands/test-driven-development-tdd-best-practices.md',
+        );
+        jetbrainsIndexFile = multiTargetUpdates.createOrUpdate.find(
+          (file) => file.path === 'jetbrains/.packmind/commands-index.md',
+        );
+        vscodeRecipeFile = multiTargetUpdates.createOrUpdate.find(
+          (file) =>
+            file.path ===
+            'vscode/.packmind/commands/test-driven-development-tdd-best-practices.md',
+        );
+        vscodeIndexFile = multiTargetUpdates.createOrUpdate.find(
+          (file) => file.path === 'vscode/.packmind/commands-index.md',
+        );
       });
 
-      const tddRecipeVersions: RecipeVersion[] = [
-        {
-          id: 'tdd-recipe-version-1' as RecipeVersionId,
-          recipeId: tddRecipe.id,
-          name: tddRecipe.name,
-          slug: tddRecipe.slug,
-          content: tddRecipe.content,
-          version: tddRecipe.version,
-          summary: 'TDD best practices for all platforms',
-          userId: user.id,
-        },
-      ];
+      it('creates four files (2 for each target)', () => {
+        expect(multiTargetUpdates.createOrUpdate).toHaveLength(4);
+      });
 
-      // Deploy to both jetbrains and vscode targets
-      const multiTargetUpdates =
-        await deployerService.aggregateRecipeDeployments(
-          tddRecipeVersions,
-          gitRepo,
-          [jetbrainsTarget, vscodeTarget], // Both targets
-          ['packmind'],
+      it('creates jetbrains recipe file', () => {
+        expect(jetbrainsRecipeFile).toBeDefined();
+      });
+
+      it('creates jetbrains index file', () => {
+        expect(jetbrainsIndexFile).toBeDefined();
+      });
+
+      it('creates vscode recipe file', () => {
+        expect(vscodeRecipeFile).toBeDefined();
+      });
+
+      it('creates vscode index file', () => {
+        expect(vscodeIndexFile).toBeDefined();
+      });
+
+      it('includes TDD recipe in jetbrains recipe file', () => {
+        expect(jetbrainsRecipeFile?.content).toContain(
+          'Test-Driven Development (TDD) Best Practices',
         );
+      });
 
-      // Should have 4 files - 2 for each target (recipe file + index file)
-      expect(multiTargetUpdates.createOrUpdate).toHaveLength(4);
+      it('includes TDD recipe in jetbrains index file', () => {
+        expect(jetbrainsIndexFile?.content).toContain(
+          'Test-Driven Development (TDD) Best Practices',
+        );
+      });
 
-      // Find jetbrains files
-      const jetbrainsRecipeFile = multiTargetUpdates.createOrUpdate.find(
-        (file) =>
-          file.path ===
-          'jetbrains/.packmind/commands/test-driven-development-tdd-best-practices.md',
-      );
-      const jetbrainsIndexFile = multiTargetUpdates.createOrUpdate.find(
-        (file) => file.path === 'jetbrains/.packmind/commands-index.md',
-      );
+      it('includes TDD recipe in vscode recipe file', () => {
+        expect(vscodeRecipeFile?.content).toContain(
+          'Test-Driven Development (TDD) Best Practices',
+        );
+      });
 
-      // Find vscode files
-      const vscodeRecipeFile = multiTargetUpdates.createOrUpdate.find(
-        (file) =>
-          file.path ===
-          'vscode/.packmind/commands/test-driven-development-tdd-best-practices.md',
-      );
-      const vscodeIndexFile = multiTargetUpdates.createOrUpdate.find(
-        (file) => file.path === 'vscode/.packmind/commands-index.md',
-      );
-
-      // Verify all files exist
-      expect(jetbrainsRecipeFile).toBeDefined();
-      expect(jetbrainsIndexFile).toBeDefined();
-      expect(vscodeRecipeFile).toBeDefined();
-      expect(vscodeIndexFile).toBeDefined();
-
-      // Verify jetbrains files contain the TDD recipe
-      expect(jetbrainsRecipeFile?.content).toContain(
-        'Test-Driven Development (TDD) Best Practices',
-      );
-      expect(jetbrainsIndexFile?.content).toContain(
-        'Test-Driven Development (TDD) Best Practices',
-      );
-
-      // Verify vscode files contain the TDD recipe
-      expect(vscodeRecipeFile?.content).toContain(
-        'Test-Driven Development (TDD) Best Practices',
-      );
-      expect(vscodeIndexFile?.content).toContain(
-        'Test-Driven Development (TDD) Best Practices',
-      );
+      it('includes TDD recipe in vscode index file', () => {
+        expect(vscodeIndexFile?.content).toContain(
+          'Test-Driven Development (TDD) Best Practices',
+        );
+      });
     });
 
-    it('Vincent opening exclusively JetBrains folder sees the TDD recipe', async () => {
-      // Create TDD recipe version
-      const tddRecipeVersions: RecipeVersion[] = [
-        {
-          id: 'tdd-recipe-version-1' as RecipeVersionId,
-          recipeId: recipe.id,
-          name: 'Test-Driven Development (TDD) Best Practices',
-          slug: 'tdd-best-practices',
-          content: `# TDD Best Practices\n\nApplicable to JetBrains and VSCode.`,
-          version: 1,
-          summary: 'TDD best practices',
-          userId: user.id,
-        },
-      ];
+    describe('when Vincent opens exclusively JetBrains folder', () => {
+      let jetbrainsOnlyUpdates: FileUpdates;
+      let jetbrainsIndexFile: FileModification | undefined;
 
-      // Deploy to both targets (as Cedric would do)
-      await deployerService.aggregateRecipeDeployments(
-        tddRecipeVersions,
-        gitRepo,
-        [jetbrainsTarget, vscodeTarget],
-        ['packmind'],
-      );
+      beforeEach(async () => {
+        const tddRecipeVersions: RecipeVersion[] = [
+          {
+            id: 'tdd-recipe-version-1' as RecipeVersionId,
+            recipeId: recipe.id,
+            name: 'Test-Driven Development (TDD) Best Practices',
+            slug: 'tdd-best-practices',
+            content: `# TDD Best Practices\n\nApplicable to JetBrains and VSCode.`,
+            version: 1,
+            summary: 'TDD best practices',
+            userId: user.id,
+          },
+        ];
 
-      // Simulate Vincent opening only JetBrains folder
-      // He would only see the JetBrains-specific deployment
-      const jetbrainsOnlyUpdates =
         await deployerService.aggregateRecipeDeployments(
           tddRecipeVersions,
           gitRepo,
-          [jetbrainsTarget], // Only JetBrains target
+          [jetbrainsTarget, vscodeTarget],
           ['packmind'],
         );
 
-      expect(jetbrainsOnlyUpdates.createOrUpdate).toHaveLength(2);
+        jetbrainsOnlyUpdates = await deployerService.aggregateRecipeDeployments(
+          tddRecipeVersions,
+          gitRepo,
+          [jetbrainsTarget],
+          ['packmind'],
+        );
 
-      // Find the jetbrains index file
-      const jetbrainsIndexFile = jetbrainsOnlyUpdates.createOrUpdate.find(
-        (file) => file.path === 'jetbrains/.packmind/commands-index.md',
-      );
-      expect(jetbrainsIndexFile).toBeDefined();
-      expect(jetbrainsIndexFile?.content).toContain(
-        'Test-Driven Development (TDD) Best Practices',
-      );
+        jetbrainsIndexFile = jetbrainsOnlyUpdates.createOrUpdate.find(
+          (file) => file.path === 'jetbrains/.packmind/commands-index.md',
+        );
+      });
 
-      // Verify the path is specifically for JetBrains
-      expect(jetbrainsIndexFile?.path.startsWith('jetbrains/')).toBe(true);
-      expect(jetbrainsIndexFile?.path).not.toContain('vscode');
+      it('creates two files for jetbrains only', () => {
+        expect(jetbrainsOnlyUpdates.createOrUpdate).toHaveLength(2);
+      });
+
+      it('creates jetbrains index file', () => {
+        expect(jetbrainsIndexFile).toBeDefined();
+      });
+
+      it('includes TDD recipe in jetbrains index', () => {
+        expect(jetbrainsIndexFile?.content).toContain(
+          'Test-Driven Development (TDD) Best Practices',
+        );
+      });
+
+      it('places index in jetbrains path', () => {
+        expect(jetbrainsIndexFile?.path.startsWith('jetbrains/')).toBe(true);
+      });
+
+      it('keeps paths separate (no vscode in path)', () => {
+        expect(jetbrainsIndexFile?.path).not.toContain('vscode');
+      });
     });
   });
 
   describe('Path prefix behavior', () => {
-    it('removes leading slash from target path during prefixing', async () => {
-      const recipeVersions: RecipeVersion[] = [
-        {
-          id: 'recipe-version-1' as RecipeVersionId,
-          recipeId: recipe.id,
-          name: recipe.name,
-          slug: recipe.slug,
-          content: recipe.content,
-          version: recipe.version,
-          summary: 'Test recipe',
-          userId: user.id,
-        },
-      ];
+    describe('when removing leading slash from target path', () => {
+      let updates: FileUpdates;
+      let indexFile: FileModification | undefined;
 
-      // Deploy to jetbrains target (path: '/jetbrains/')
-      const updates = await deployerService.aggregateRecipeDeployments(
-        recipeVersions,
-        gitRepo,
-        [jetbrainsTarget],
-        ['packmind'],
-      );
+      beforeEach(async () => {
+        const recipeVersions: RecipeVersion[] = [
+          {
+            id: 'recipe-version-1' as RecipeVersionId,
+            recipeId: recipe.id,
+            name: recipe.name,
+            slug: recipe.slug,
+            content: recipe.content,
+            version: recipe.version,
+            summary: 'Test recipe',
+            userId: user.id,
+          },
+        ];
 
-      expect(updates.createOrUpdate).toHaveLength(2);
+        updates = await deployerService.aggregateRecipeDeployments(
+          recipeVersions,
+          gitRepo,
+          [jetbrainsTarget],
+          ['packmind'],
+        );
 
-      // Find the index file to verify path behavior
-      const indexFile = updates.createOrUpdate.find(
-        (file) => file.path === 'jetbrains/.packmind/commands-index.md',
-      );
-      expect(indexFile).toBeDefined();
+        indexFile = updates.createOrUpdate.find(
+          (file) => file.path === 'jetbrains/.packmind/commands-index.md',
+        );
+      });
 
-      // Verify the path doesn't have double slashes
-      expect(indexFile?.path).toBe('jetbrains/.packmind/commands-index.md');
-      expect(indexFile?.path).not.toContain('//');
+      it('creates two files', () => {
+        expect(updates.createOrUpdate).toHaveLength(2);
+      });
+
+      it('creates index file', () => {
+        expect(indexFile).toBeDefined();
+      });
+
+      it('places index at correct path', () => {
+        expect(indexFile?.path).toBe('jetbrains/.packmind/commands-index.md');
+      });
+
+      it('produces path without double slashes', () => {
+        expect(indexFile?.path).not.toContain('//');
+      });
     });
 
-    it('handles root target correctly', async () => {
-      const recipeVersions: RecipeVersion[] = [
-        {
-          id: 'recipe-version-1' as RecipeVersionId,
-          recipeId: recipe.id,
-          name: recipe.name,
-          slug: recipe.slug,
-          content: recipe.content,
-          version: recipe.version,
-          summary: 'Test recipe',
-          userId: user.id,
-        },
-      ];
+    describe('when handling root target', () => {
+      let updates: FileUpdates;
+      let indexFile: FileModification | undefined;
 
-      // Deploy to root target (path: '/')
-      const updates = await deployerService.aggregateRecipeDeployments(
-        recipeVersions,
-        gitRepo,
-        [rootTarget],
-        ['packmind'],
-      );
+      beforeEach(async () => {
+        const recipeVersions: RecipeVersion[] = [
+          {
+            id: 'recipe-version-1' as RecipeVersionId,
+            recipeId: recipe.id,
+            name: recipe.name,
+            slug: recipe.slug,
+            content: recipe.content,
+            version: recipe.version,
+            summary: 'Test recipe',
+            userId: user.id,
+          },
+        ];
 
-      expect(updates.createOrUpdate).toHaveLength(2);
+        updates = await deployerService.aggregateRecipeDeployments(
+          recipeVersions,
+          gitRepo,
+          [rootTarget],
+          ['packmind'],
+        );
 
-      // Find the index file to verify root path behavior
-      const indexFile = updates.createOrUpdate.find(
-        (file) => file.path === '.packmind/commands-index.md',
-      );
-      expect(indexFile).toBeDefined();
+        indexFile = updates.createOrUpdate.find(
+          (file) => file.path === '.packmind/commands-index.md',
+        );
+      });
 
-      // Verify root deployment has no prefix
-      expect(indexFile?.path).toBe('.packmind/commands-index.md');
+      it('creates two files', () => {
+        expect(updates.createOrUpdate).toHaveLength(2);
+      });
+
+      it('creates index file for root deployment', () => {
+        expect(indexFile).toBeDefined();
+      });
+
+      it('places index at root path without prefix', () => {
+        expect(indexFile?.path).toBe('.packmind/commands-index.md');
+      });
     });
   });
 });

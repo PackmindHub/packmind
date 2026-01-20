@@ -120,132 +120,190 @@ describe('Add rule to standard integration', () => {
     });
   });
 
-  test('The new standard version should contain the added rule', async () => {
+  describe('when adding a rule to a standard', () => {
     const newRuleContent = 'Always validate input parameters';
+    let initialVersion: number;
+    let newStandardVersion: StandardVersion;
+    let rules: { content: string }[];
+    let ruleContents: string[];
 
-    // Get the current version before adding the rule
-    const initialVersion = standard.version;
+    beforeEach(async () => {
+      initialVersion = standard.version;
+      const result = await testApp.standardsHexa
+        .getAdapter()
+        .addRuleToStandard({
+          standardSlug: standard.slug,
+          ruleContent: newRuleContent,
+          organizationId: organization.id,
+          userId: user.id,
+        });
+      newStandardVersion = result.standardVersion;
 
-    // Add the rule to the standard
-    const result = await testApp.standardsHexa.getAdapter().addRuleToStandard({
-      standardSlug: standard.slug,
-      ruleContent: newRuleContent,
-      organizationId: organization.id,
-      userId: user.id,
+      rules = await testApp.standardsHexa
+        .getAdapter()
+        .getRulesByStandardId(standard.id);
+      ruleContents = rules.map((rule) => rule.content);
     });
-    const newStandardVersion: StandardVersion = result.standardVersion;
 
-    // Verify the new version was created with incremented version number
-    expect(newStandardVersion.version).toBe(initialVersion + 1);
-    expect(newStandardVersion.standardId).toBe(standard.id);
-    expect(newStandardVersion.userId).toBe(user.id);
+    test('increments the version number', async () => {
+      expect(newStandardVersion.version).toBe(initialVersion + 1);
+    });
 
-    // Get the rules for the updated standard to verify the rule was added
-    const rules = await testApp.standardsHexa
-      .getAdapter()
-      .getRulesByStandardId(standard.id);
+    test('associates the new version with the correct standard', async () => {
+      expect(newStandardVersion.standardId).toBe(standard.id);
+    });
 
-    expect(rules).toBeDefined();
-    expect(rules).toHaveLength(3); // 2 original + 1 new
+    test('associates the new version with the correct user', async () => {
+      expect(newStandardVersion.userId).toBe(user.id);
+    });
 
-    // Verify the original rules are preserved
-    const ruleContents = rules.map((rule) => rule.content);
-    expect(ruleContents).toContain('Use meaningful variable names');
-    expect(ruleContents).toContain('Write unit tests for your code');
+    test('returns defined rules', async () => {
+      expect(rules).toBeDefined();
+    });
 
-    // Verify the new rule was added
-    expect(ruleContents).toContain(newRuleContent);
+    test('has three rules total', async () => {
+      expect(rules).toHaveLength(3);
+    });
 
-    // Verify that the main standard record was updated with the new version number
-    const updatedStandard = await testApp.standardsHexa
-      .getAdapter()
-      .getStandardById({
-        standardId: standard.id,
-        organizationId: organization.id,
-        spaceId: space.id,
-        userId: user.id,
-      });
-    assert(updatedStandard, 'Updated standard should exist');
-    assert(updatedStandard.standard, 'Updated standard.standard should exist');
-    expect(updatedStandard.standard.version).toBe(initialVersion + 1);
+    test('preserves the first original rule', async () => {
+      expect(ruleContents).toContain('Use meaningful variable names');
+    });
+
+    test('preserves the second original rule', async () => {
+      expect(ruleContents).toContain('Write unit tests for your code');
+    });
+
+    test('includes the new rule', async () => {
+      expect(ruleContents).toContain(newRuleContent);
+    });
+
+    test('updates the main standard record version', async () => {
+      const updatedStandard = await testApp.standardsHexa
+        .getAdapter()
+        .getStandardById({
+          standardId: standard.id,
+          organizationId: organization.id,
+          spaceId: space.id,
+          userId: user.id,
+        });
+      assert(updatedStandard, 'Updated standard should exist');
+      assert(
+        updatedStandard.standard,
+        'Updated standard.standard should exist',
+      );
+      expect(updatedStandard.standard.version).toBe(initialVersion + 1);
+    });
   });
 
-  test('Multiple rules can be added sequentially', async () => {
+  describe('when adding multiple rules sequentially', () => {
     const firstRuleContent = 'Use TypeScript strict mode';
     const secondRuleContent = 'Implement proper error handling';
+    let firstResult: { standardVersion: StandardVersion };
+    let secondResult: { standardVersion: StandardVersion };
+    let finalRules: { content: string }[];
+    let ruleContents: string[];
 
-    // Add first rule
-    const firstResult = await testApp.standardsHexa
-      .getAdapter()
-      .addRuleToStandard({
+    beforeEach(async () => {
+      firstResult = await testApp.standardsHexa.getAdapter().addRuleToStandard({
         standardSlug: standard.slug,
         ruleContent: firstRuleContent,
         organizationId: organization.id,
         userId: user.id,
       });
 
-    expect(firstResult.standardVersion.version).toBe(2); // Initial was 1
+      secondResult = await testApp.standardsHexa
+        .getAdapter()
+        .addRuleToStandard({
+          standardSlug: standard.slug,
+          ruleContent: secondRuleContent,
+          organizationId: organization.id,
+          userId: user.id,
+        });
 
-    // Add second rule
-    const secondResult = await testApp.standardsHexa
-      .getAdapter()
-      .addRuleToStandard({
-        standardSlug: standard.slug,
-        ruleContent: secondRuleContent,
-        organizationId: organization.id,
-        userId: user.id,
-      });
+      finalRules = await testApp.standardsHexa
+        .getAdapter()
+        .getRulesByStandardId(standard.id);
+      ruleContents = finalRules.map((rule) => rule.content);
+    });
 
-    expect(secondResult.standardVersion.version).toBe(3); // Incremented again
+    test('increments version to 2 after first rule', async () => {
+      expect(firstResult.standardVersion.version).toBe(2);
+    });
 
-    // Verify final state by getting rules for the standard
-    const finalRules = await testApp.standardsHexa
-      .getAdapter()
-      .getRulesByStandardId(standard.id);
+    test('increments version to 3 after second rule', async () => {
+      expect(secondResult.standardVersion.version).toBe(3);
+    });
 
-    expect(finalRules).toHaveLength(4); // 2 original + 2 new
+    test('has four rules total', async () => {
+      expect(finalRules).toHaveLength(4);
+    });
 
-    const ruleContents = finalRules.map((rule) => rule.content);
-    expect(ruleContents).toContain('Use meaningful variable names');
-    expect(ruleContents).toContain('Write unit tests for your code');
-    expect(ruleContents).toContain(firstRuleContent);
-    expect(ruleContents).toContain(secondRuleContent);
+    test('preserves the first original rule', async () => {
+      expect(ruleContents).toContain('Use meaningful variable names');
+    });
+
+    test('preserves the second original rule', async () => {
+      expect(ruleContents).toContain('Write unit tests for your code');
+    });
+
+    test('includes the first added rule', async () => {
+      expect(ruleContents).toContain(firstRuleContent);
+    });
+
+    test('includes the second added rule', async () => {
+      expect(ruleContents).toContain(secondRuleContent);
+    });
   });
 
-  test('Standard slug should be case-insensitive', async () => {
+  describe('when using a mixed-case slug', () => {
     const newRuleContent = 'Use consistent naming conventions';
+    let mixedCaseSlug: string;
+    let newStandardVersion: StandardVersion;
+    let initialVersion: number;
+    let rules: { content: string }[];
+    let ruleContents: string[];
 
-    // Test with mixed case version of the standard slug
-    const mixedCaseSlug = standard.slug
-      .split('-')
-      .map((part, index) =>
-        index === 0
-          ? part.charAt(0).toUpperCase() + part.slice(1)
-          : part.charAt(0).toUpperCase() + part.slice(1),
-      )
-      .join('-');
+    beforeEach(async () => {
+      initialVersion = standard.version;
+      mixedCaseSlug = standard.slug
+        .split('-')
+        .map((part, index) =>
+          index === 0
+            ? part.charAt(0).toUpperCase() + part.slice(1)
+            : part.charAt(0).toUpperCase() + part.slice(1),
+        )
+        .join('-');
 
-    // Ensure the mixed case slug is actually different from the original
-    expect(mixedCaseSlug).not.toBe(standard.slug);
+      const result = await testApp.standardsHexa
+        .getAdapter()
+        .addRuleToStandard({
+          standardSlug: mixedCaseSlug,
+          ruleContent: newRuleContent,
+          organizationId: organization.id,
+          userId: user.id,
+        });
+      newStandardVersion = result.standardVersion;
 
-    // Add rule using mixed case slug - this should work and normalize the slug internally
-    const result = await testApp.standardsHexa.getAdapter().addRuleToStandard({
-      standardSlug: mixedCaseSlug,
-      ruleContent: newRuleContent,
-      organizationId: organization.id,
-      userId: user.id,
+      rules = await testApp.standardsHexa
+        .getAdapter()
+        .getRulesByStandardId(standard.id);
+      ruleContents = rules.map((rule) => rule.content);
     });
-    const newStandardVersion = result.standardVersion;
 
-    // Verify the rule was added successfully
-    expect(newStandardVersion.version).toBe(standard.version + 1);
-    expect(newStandardVersion.standardId).toBe(standard.id);
+    test('transforms mixed-case slug differently from original', async () => {
+      expect(mixedCaseSlug).not.toBe(standard.slug);
+    });
 
-    // Verify the rule was actually added to the standard
-    const rules = await testApp.standardsHexa
-      .getAdapter()
-      .getRulesByStandardId(standard.id);
-    const ruleContents = rules.map((rule) => rule.content);
-    expect(ruleContents).toContain(newRuleContent);
+    test('increments the version number', async () => {
+      expect(newStandardVersion.version).toBe(initialVersion + 1);
+    });
+
+    test('associates the version with the correct standard', async () => {
+      expect(newStandardVersion.standardId).toBe(standard.id);
+    });
+
+    test('adds the rule to the standard', async () => {
+      expect(ruleContents).toContain(newRuleContent);
+    });
   });
 });
