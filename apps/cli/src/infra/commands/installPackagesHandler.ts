@@ -59,6 +59,48 @@ async function notifyDistributionIfInGitRepo(params: {
   }
 }
 
+/**
+ * Installs default skills if running at the root of a git repository.
+ * Silently ignores errors to not fail the main operation.
+ */
+async function installDefaultSkillsIfAtGitRoot(params: {
+  packmindCliHexa: PackmindCliHexa;
+  cwd: string;
+  log: (msg: string) => void;
+}): Promise<void> {
+  const { packmindCliHexa, cwd, log } = params;
+
+  const gitRoot = await packmindCliHexa.tryGetGitRepositoryRoot(cwd);
+
+  // Only install default skills if we are at the root of a git repository
+  if (!gitRoot || cwd !== gitRoot) {
+    return;
+  }
+
+  try {
+    log('\nInstalling default skills...');
+    const skillsResult = await packmindCliHexa.installDefaultSkills({});
+
+    if (skillsResult.errors.length > 0) {
+      skillsResult.errors.forEach((err) => {
+        log(`   Warning: ${err}`);
+      });
+    }
+
+    const totalSkillFiles =
+      skillsResult.filesCreated + skillsResult.filesUpdated;
+    if (totalSkillFiles > 0) {
+      log(
+        `Default skills: added ${skillsResult.filesCreated} files, changed ${skillsResult.filesUpdated} files`,
+      );
+    } else if (skillsResult.errors.length === 0) {
+      log('Default skills are already up to date');
+    }
+  } catch {
+    // Silently ignore default skills installation errors as it's a secondary operation
+  }
+}
+
 export type ListPackagesArgs = Record<string, never>;
 
 export async function listPackagesHandler(
@@ -568,6 +610,9 @@ export async function installPackagesHandler(
         log,
       });
     }
+
+    // Install default skills if running at the root of a git repository
+    await installDefaultSkillsIfAtGitRoot({ packmindCliHexa, cwd, log });
 
     return {
       filesCreated: result.filesCreated,

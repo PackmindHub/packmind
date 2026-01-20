@@ -38,6 +38,7 @@ describe('installPackagesHandler', () => {
       getCurrentBranch: jest.fn(),
       notifyDistribution: jest.fn(),
       findAllConfigsInTree: jest.fn(),
+      installDefaultSkills: jest.fn(),
     } as unknown as jest.Mocked<PackmindCliHexa>;
 
     mockExit = jest.fn();
@@ -449,6 +450,169 @@ describe('installPackagesHandler', () => {
           baseDirectory: '/project',
           packagesSlugs: ['backend', 'frontend', 'api'],
           previousPackagesSlugs: ['backend', 'frontend'],
+        });
+      });
+    });
+
+    describe('default skills installation', () => {
+      beforeEach(() => {
+        mockPackmindCliHexa.configExists.mockResolvedValue(true);
+        mockPackmindCliHexa.readConfig.mockResolvedValue(['backend']);
+        mockPackmindCliHexa.installPackages.mockResolvedValue({
+          filesCreated: 2,
+          filesUpdated: 1,
+          filesDeleted: 0,
+          recipesCount: 1,
+          standardsCount: 1,
+          skillsCount: 0,
+          errors: [],
+        });
+      });
+
+      describe('when at the root of a git repository', () => {
+        beforeEach(() => {
+          mockPackmindCliHexa.tryGetGitRepositoryRoot.mockResolvedValue(
+            '/project',
+          );
+          mockPackmindCliHexa.getGitRemoteUrlFromPath.mockReturnValue(
+            'git@github.com:org/repo.git',
+          );
+          mockPackmindCliHexa.getCurrentBranch.mockReturnValue('main');
+          mockPackmindCliHexa.notifyDistribution.mockResolvedValue({
+            deploymentId: 'deployment-123',
+          });
+        });
+
+        it('installs default skills', async () => {
+          mockPackmindCliHexa.installDefaultSkills.mockResolvedValue({
+            filesCreated: 2,
+            filesUpdated: 0,
+            errors: [],
+          });
+
+          await installPackagesHandler({ packagesSlugs: [] }, deps);
+
+          expect(mockPackmindCliHexa.installDefaultSkills).toHaveBeenCalledWith(
+            {},
+          );
+        });
+
+        it('logs installation start message', async () => {
+          mockPackmindCliHexa.installDefaultSkills.mockResolvedValue({
+            filesCreated: 2,
+            filesUpdated: 1,
+            errors: [],
+          });
+
+          await installPackagesHandler({ packagesSlugs: [] }, deps);
+
+          expect(mockLog).toHaveBeenCalledWith(
+            '\nInstalling default skills...',
+          );
+        });
+
+        it('logs files created and updated count', async () => {
+          mockPackmindCliHexa.installDefaultSkills.mockResolvedValue({
+            filesCreated: 2,
+            filesUpdated: 1,
+            errors: [],
+          });
+
+          await installPackagesHandler({ packagesSlugs: [] }, deps);
+
+          expect(mockLog).toHaveBeenCalledWith(
+            'Default skills: added 2 files, changed 1 files',
+          );
+        });
+
+        describe('when default skills are already up to date', () => {
+          it('logs up to date message', async () => {
+            mockPackmindCliHexa.installDefaultSkills.mockResolvedValue({
+              filesCreated: 0,
+              filesUpdated: 0,
+              errors: [],
+            });
+
+            await installPackagesHandler({ packagesSlugs: [] }, deps);
+
+            expect(mockLog).toHaveBeenCalledWith(
+              'Default skills are already up to date',
+            );
+          });
+        });
+
+        describe('when default skills installation has errors', () => {
+          beforeEach(() => {
+            mockPackmindCliHexa.installDefaultSkills.mockResolvedValue({
+              filesCreated: 1,
+              filesUpdated: 0,
+              errors: ['Failed to write file: permission denied'],
+            });
+          });
+
+          it('logs warnings', async () => {
+            await installPackagesHandler({ packagesSlugs: [] }, deps);
+
+            expect(mockLog).toHaveBeenCalledWith(
+              '   Warning: Failed to write file: permission denied',
+            );
+          });
+
+          it('does not fail the main install', async () => {
+            await installPackagesHandler({ packagesSlugs: [] }, deps);
+
+            expect(mockExit).not.toHaveBeenCalledWith(1);
+          });
+        });
+
+        describe('when default skills installation throws', () => {
+          beforeEach(() => {
+            mockPackmindCliHexa.installDefaultSkills.mockRejectedValue(
+              new Error('Network error'),
+            );
+          });
+
+          it('returns package install result unchanged', async () => {
+            const result = await installPackagesHandler(
+              { packagesSlugs: [] },
+              deps,
+            );
+
+            expect(result.filesCreated).toBe(2);
+          });
+
+          it('does not fail the main install', async () => {
+            await installPackagesHandler({ packagesSlugs: [] }, deps);
+
+            expect(mockExit).not.toHaveBeenCalledWith(1);
+          });
+        });
+      });
+
+      describe('when in a subdirectory of a git repository', () => {
+        it('does not install default skills', async () => {
+          mockGetCwd.mockReturnValue('/project/src/frontend');
+          mockPackmindCliHexa.tryGetGitRepositoryRoot.mockResolvedValue(
+            '/project',
+          );
+
+          await installPackagesHandler({ packagesSlugs: [] }, deps);
+
+          expect(
+            mockPackmindCliHexa.installDefaultSkills,
+          ).not.toHaveBeenCalled();
+        });
+      });
+
+      describe('when not in a git repository', () => {
+        it('does not install default skills', async () => {
+          mockPackmindCliHexa.tryGetGitRepositoryRoot.mockResolvedValue(null);
+
+          await installPackagesHandler({ packagesSlugs: [] }, deps);
+
+          expect(
+            mockPackmindCliHexa.installDefaultSkills,
+          ).not.toHaveBeenCalled();
         });
       });
     });
