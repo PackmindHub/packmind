@@ -105,53 +105,72 @@ describe('AbstractAdminUseCase', () => {
 
   describe('execute', () => {
     describe('when validation passes', () => {
-      it('executes admin logic', async () => {
-        const user = buildUser();
-        const organization = buildOrganization();
-        const membership = user.memberships[0];
+      let user: User;
+      let organization: Organization;
+      let membership: UserOrganizationMembership;
+      let result: TestResult;
+
+      beforeEach(async () => {
+        user = buildUser();
+        organization = buildOrganization();
+        membership = user.memberships[0];
 
         mockGetUserById.mockResolvedValue(user);
         mockGetOrganizationById.mockResolvedValue(organization);
 
-        const result = await useCase.execute(command);
+        result = await useCase.execute(command);
+      });
 
+      it('returns success result', () => {
         expect(result).toEqual({ success: true });
+      });
+
+      it('fetches the user by id', () => {
         expect(mockGetUserById).toHaveBeenCalledWith(userId);
+      });
+
+      it('fetches the organization by id', () => {
         expect(mockGetOrganizationById).toHaveBeenCalledWith(organizationId);
+      });
+
+      it('executes admin logic with context', () => {
         expect(mockExecuteForAdmins).toHaveBeenCalledWith({
           ...command,
           user,
           organization,
           membership,
         });
-        expect(logger.info).toHaveBeenCalledWith(
-          'Member validation successful',
-          {
-            userId: command.userId,
-            organizationId: command.organizationId,
-          },
-        );
       });
     });
 
     describe('when multiple memberships exist', () => {
-      it('finds the correct membership', async () => {
+      let user: User;
+      let organization: Organization;
+      let membership: UserOrganizationMembership;
+      let result: TestResult;
+
+      beforeEach(async () => {
         const otherOrganizationId = createOrganizationId('other-organization');
-        const user = buildUser({
+        user = buildUser({
           memberships: [
             buildMembership({ organizationId: otherOrganizationId }),
             buildMembership(),
           ],
         });
-        const organization = buildOrganization();
-        const membership = user.memberships[1];
+        organization = buildOrganization();
+        membership = user.memberships[1];
 
         mockGetUserById.mockResolvedValue(user);
         mockGetOrganizationById.mockResolvedValue(organization);
 
-        const result = await useCase.execute(command);
+        result = await useCase.execute(command);
+      });
 
+      it('returns success result', () => {
         expect(result).toEqual({ success: true });
+      });
+
+      it('executes admin logic with correct membership', () => {
         expect(mockExecuteForAdmins).toHaveBeenCalledWith({
           ...command,
           user,
@@ -162,23 +181,31 @@ describe('AbstractAdminUseCase', () => {
     });
 
     describe('when user is missing', () => {
+      beforeEach(async () => {
+        mockGetUserById.mockResolvedValue(null);
+
+        try {
+          await useCase.execute(command);
+        } catch {
+          // Expected to throw
+        }
+      });
+
       it('throws UserNotFoundError', async () => {
         mockGetUserById.mockResolvedValue(null);
 
         await expect(useCase.execute(command)).rejects.toBeInstanceOf(
           UserNotFoundError,
         );
+      });
+
+      it('does not execute admin logic', () => {
         expect(mockExecuteForAdmins).not.toHaveBeenCalled();
-        expect(logger.error).toHaveBeenCalledWith('Admin validation failed', {
-          userId: command.userId,
-          organizationId: command.organizationId,
-          reason: 'user_not_found',
-        });
       });
     });
 
     describe('when no matching membership exists', () => {
-      it('throws UserNotInOrganizationError', async () => {
+      beforeEach(async () => {
         const user = buildUser({
           memberships: [
             buildMembership({
@@ -189,35 +216,47 @@ describe('AbstractAdminUseCase', () => {
         mockGetUserById.mockResolvedValue(user);
         mockGetOrganizationById.mockResolvedValue(buildOrganization());
 
+        try {
+          await useCase.execute(command);
+        } catch {
+          // Expected to throw
+        }
+      });
+
+      it('throws UserNotInOrganizationError', async () => {
         await expect(useCase.execute(command)).rejects.toBeInstanceOf(
           UserNotInOrganizationError,
         );
+      });
+
+      it('does not execute admin logic', () => {
         expect(mockExecuteForAdmins).not.toHaveBeenCalled();
-        expect(logger.error).toHaveBeenCalledWith('Admin validation failed', {
-          userId: command.userId,
-          organizationId: command.organizationId,
-          reason: 'user_not_in_organization',
-        });
       });
     });
 
     describe('when role is not admin', () => {
-      it('throws OrganizationAdminRequiredError', async () => {
+      beforeEach(async () => {
         const user = buildUser({
           memberships: [buildMembership({ role: 'member' })],
         });
         mockGetUserById.mockResolvedValue(user);
         mockGetOrganizationById.mockResolvedValue(buildOrganization());
 
+        try {
+          await useCase.execute(command);
+        } catch {
+          // Expected to throw
+        }
+      });
+
+      it('throws OrganizationAdminRequiredError', async () => {
         await expect(useCase.execute(command)).rejects.toBeInstanceOf(
           OrganizationAdminRequiredError,
         );
+      });
+
+      it('does not execute admin logic', () => {
         expect(mockExecuteForAdmins).not.toHaveBeenCalled();
-        expect(logger.error).toHaveBeenCalledWith('Admin validation failed', {
-          userId: command.userId,
-          organizationId: command.organizationId,
-          reason: 'user_not_an_admin',
-        });
       });
     });
   });

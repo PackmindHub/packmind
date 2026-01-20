@@ -9,14 +9,30 @@ describe('EncryptionService', () => {
   });
 
   describe('encrypt', () => {
-    it('encrypts a plaintext value', () => {
-      const plaintext = 'test-token-12345';
-      const encrypted = encryptionService.encrypt(plaintext);
+    describe('when encrypting a plaintext value', () => {
+      let plaintext: string;
+      let encrypted: string;
 
-      expect(encrypted).toBeDefined();
-      expect(encrypted).not.toBe(plaintext);
-      expect(encrypted.includes(':')).toBe(true);
-      expect(encrypted.split(':').length).toBe(3);
+      beforeEach(() => {
+        plaintext = 'test-token-12345';
+        encrypted = encryptionService.encrypt(plaintext);
+      });
+
+      it('returns a defined value', () => {
+        expect(encrypted).toBeDefined();
+      });
+
+      it('returns a value different from the plaintext', () => {
+        expect(encrypted).not.toBe(plaintext);
+      });
+
+      it('returns a value containing colons', () => {
+        expect(encrypted.includes(':')).toBe(true);
+      });
+
+      it('returns a value with three colon-separated parts', () => {
+        expect(encrypted.split(':').length).toBe(3);
+      });
     });
 
     it('returns empty string for empty input', () => {
@@ -96,8 +112,11 @@ describe('EncryptionService', () => {
       expect(encryptionService.isEncrypted('')).toBe(false);
     });
 
-    it('returns false for values with wrong format', () => {
+    it('returns false for value with only two colon-separated parts', () => {
       expect(encryptionService.isEncrypted('invalid:format')).toBe(false);
+    });
+
+    it('returns false for value with more than three colon-separated parts', () => {
       expect(encryptionService.isEncrypted('too:many:colons:here')).toBe(false);
     });
   });
