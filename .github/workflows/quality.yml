@@ -153,6 +153,7 @@ jobs:
           - packages/accounts
           - packages/coding-agent
           - packages/git
+          - packages/integration-tests
 
     steps:
       - name: Checkout
