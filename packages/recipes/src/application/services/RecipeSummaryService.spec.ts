@@ -54,8 +54,10 @@ describe('RecipeSummaryService', () => {
       });
 
     describe('when AI service succeeds', () => {
-      it('generates and returns recipe summary', async () => {
-        const mockSummary = 'Generated recipe summary';
+      const mockSummary = 'Generated recipe summary';
+      let result: string;
+
+      beforeEach(async () => {
         const mockResult: AIPromptResult<string> = {
           success: true,
           data: mockSummary,
@@ -65,12 +67,17 @@ describe('RecipeSummaryService', () => {
 
         mockAIService.executePrompt.mockResolvedValue(mockResult);
 
-        const result = await recipeSummaryService.createRecipeSummary(
+        result = await recipeSummaryService.createRecipeSummary(
           testOrganizationId,
           mockRecipeVersionData,
         );
+      });
 
+      it('returns the generated summary', () => {
         expect(result).toBe(mockSummary);
+      });
+
+      it('calls executePrompt with the recipe content', () => {
         expect(mockAIService.executePrompt).toHaveBeenCalledWith(
           `${createRecipeSummaryPrompt}\n\n${mockRecipeVersionData.content}`,
         );
@@ -78,17 +85,29 @@ describe('RecipeSummaryService', () => {
     });
 
     describe('when AI service is not configured', () => {
-      it('throws AiNotConfigured error without calling executePrompt', async () => {
+      beforeEach(() => {
         mockAIService.isConfigured.mockResolvedValue(false);
+      });
 
+      it('throws AiNotConfigured error', async () => {
         await expect(
           recipeSummaryService.createRecipeSummary(
             testOrganizationId,
             mockRecipeVersionData,
           ),
         ).rejects.toThrow(AiNotConfigured);
+      });
 
-        expect(mockAIService.isConfigured).toHaveBeenCalledTimes(1);
+      it('does not call executePrompt', async () => {
+        try {
+          await recipeSummaryService.createRecipeSummary(
+            testOrganizationId,
+            mockRecipeVersionData,
+          );
+        } catch {
+          // Expected to throw
+        }
+
         expect(mockAIService.executePrompt).not.toHaveBeenCalled();
       });
     });

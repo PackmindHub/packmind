@@ -204,10 +204,12 @@ This cookbook contains all available coding recipes that can be used by AI agent
     });
 
     describe('when given a large number of recipes', () => {
-      it('handles multiple recipes with proper formatting', () => {
-        const recipes: WithTimestamps<RecipeVersion>[] = [];
+      let recipes: WithTimestamps<RecipeVersion>[];
+      let result: string;
 
-        // Create 5 recipes with different dates
+      beforeEach(() => {
+        recipes = [];
+
         for (let i = 0; i < 5; i++) {
           recipes.push(
             createRecipeVersionWithTimestamp(
@@ -225,18 +227,73 @@ This cookbook contains all available coding recipes that can be used by AI agent
           );
         }
 
-        const result = cookbookService.buildCookbook(recipes);
+        result = cookbookService.buildCookbook(recipes);
+      });
 
-        // Verify all recipes are included
-        for (let i = 0; i < 5; i++) {
-          expect(result).toContain(`Recipe ${i + 1}`);
-          expect(result).toContain(`recipes/recipe-${i + 1}.md`);
-          expect(result).toContain(`Summary for recipe ${i + 1}`);
-        }
+      it('includes recipe 1 name', () => {
+        expect(result).toContain('Recipe 1');
+      });
 
-        // Verify alphabetical sorting (Recipe 1 should come before Recipe 5)
+      it('includes recipe 2 name', () => {
+        expect(result).toContain('Recipe 2');
+      });
+
+      it('includes recipe 3 name', () => {
+        expect(result).toContain('Recipe 3');
+      });
+
+      it('includes recipe 4 name', () => {
+        expect(result).toContain('Recipe 4');
+      });
+
+      it('includes recipe 5 name', () => {
+        expect(result).toContain('Recipe 5');
+      });
+
+      it('includes recipe 1 link', () => {
+        expect(result).toContain('recipes/recipe-1.md');
+      });
+
+      it('includes recipe 2 link', () => {
+        expect(result).toContain('recipes/recipe-2.md');
+      });
+
+      it('includes recipe 3 link', () => {
+        expect(result).toContain('recipes/recipe-3.md');
+      });
+
+      it('includes recipe 4 link', () => {
+        expect(result).toContain('recipes/recipe-4.md');
+      });
+
+      it('includes recipe 5 link', () => {
+        expect(result).toContain('recipes/recipe-5.md');
+      });
+
+      it('includes recipe 1 summary', () => {
+        expect(result).toContain('Summary for recipe 1');
+      });
+
+      it('includes recipe 2 summary', () => {
+        expect(result).toContain('Summary for recipe 2');
+      });
+
+      it('includes recipe 3 summary', () => {
+        expect(result).toContain('Summary for recipe 3');
+      });
+
+      it('includes recipe 4 summary', () => {
+        expect(result).toContain('Summary for recipe 4');
+      });
+
+      it('includes recipe 5 summary', () => {
+        expect(result).toContain('Summary for recipe 5');
+      });
+
+      it('sorts recipes alphabetically', () => {
         const recipe1Index = result.indexOf('Recipe 1');
         const recipe5Index = result.indexOf('Recipe 5');
+
         expect(recipe1Index).toBeLessThan(recipe5Index);
       });
     });
@@ -283,53 +340,68 @@ This cookbook contains all available coding recipes that can be used by AI agent
         );
       });
 
-      it('sorts consistently regardless of input order', () => {
-        // Test that alphabetical sorting is stable and consistent
-        const recipes: WithTimestamps<RecipeVersion>[] = [
-          createRecipeVersionWithTimestamp(
-            {
-              name: 'C Recipe',
-              slug: 'c-recipe',
-              summary: null,
-            },
-            '2024-01-15T10:00:00.000Z',
-          ),
-          createRecipeVersionWithTimestamp(
-            {
-              name: 'A Recipe',
-              slug: 'a-recipe',
-              summary: null,
-            },
-            '2024-01-10T10:00:00.000Z',
-          ),
-          createRecipeVersionWithTimestamp(
-            {
-              name: 'B Recipe',
-              slug: 'b-recipe',
-              summary: null,
-            },
-            '2024-01-20T10:00:00.000Z',
-          ),
-        ];
+      describe('when sorting recipes regardless of input order', () => {
+        let recipes: WithTimestamps<RecipeVersion>[];
+        let result1: string;
+        let result2: string;
+        let result3: string;
 
-        // Run the sorting multiple times with different input orders to ensure consistency
-        const result1 = cookbookService.buildCookbook(recipes);
-        const result2 = cookbookService.buildCookbook([...recipes].reverse());
-        const result3 = cookbookService.buildCookbook(
-          [...recipes].sort(() => Math.random() - 0.5),
-        );
+        beforeEach(() => {
+          recipes = [
+            createRecipeVersionWithTimestamp(
+              {
+                name: 'C Recipe',
+                slug: 'c-recipe',
+                summary: null,
+              },
+              '2024-01-15T10:00:00.000Z',
+            ),
+            createRecipeVersionWithTimestamp(
+              {
+                name: 'A Recipe',
+                slug: 'a-recipe',
+                summary: null,
+              },
+              '2024-01-10T10:00:00.000Z',
+            ),
+            createRecipeVersionWithTimestamp(
+              {
+                name: 'B Recipe',
+                slug: 'b-recipe',
+                summary: null,
+              },
+              '2024-01-20T10:00:00.000Z',
+            ),
+          ];
 
-        // All results should be identical regardless of input order
-        expect(result1).toBe(result2);
-        expect(result2).toBe(result3);
+          result1 = cookbookService.buildCookbook(recipes);
+          result2 = cookbookService.buildCookbook([...recipes].reverse());
+          result3 = cookbookService.buildCookbook(
+            [...recipes].sort(() => Math.random() - 0.5),
+          );
+        });
 
-        // Should be sorted alphabetically by name (ignoring creation dates)
-        const aRecipeIndex = result1.indexOf('A Recipe');
-        const bRecipeIndex = result1.indexOf('B Recipe');
-        const cRecipeIndex = result1.indexOf('C Recipe');
+        it('produces identical output for original and reversed input order', () => {
+          expect(result1).toBe(result2);
+        });
 
-        expect(aRecipeIndex).toBeLessThan(bRecipeIndex);
-        expect(bRecipeIndex).toBeLessThan(cRecipeIndex);
+        it('produces identical output for reversed and shuffled input order', () => {
+          expect(result2).toBe(result3);
+        });
+
+        it('places A Recipe before B Recipe alphabetically', () => {
+          const aRecipeIndex = result1.indexOf('A Recipe');
+          const bRecipeIndex = result1.indexOf('B Recipe');
+
+          expect(aRecipeIndex).toBeLessThan(bRecipeIndex);
+        });
+
+        it('places B Recipe before C Recipe alphabetically', () => {
+          const bRecipeIndex = result1.indexOf('B Recipe');
+          const cRecipeIndex = result1.indexOf('C Recipe');
+
+          expect(bRecipeIndex).toBeLessThan(cRecipeIndex);
+        });
       });
     });
   });

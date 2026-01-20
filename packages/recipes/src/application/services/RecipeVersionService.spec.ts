@@ -131,49 +131,61 @@ describe('RecipeVersionService', () => {
       });
 
       it('returns version with null summary on generation failure', () => {
-        expect(result).toBeDefined();
         expect(result.summary).toBeNull();
       });
     });
   });
 
-  describe('other methods', () => {
-    beforeEach(() => {
+  describe('listRecipeVersions', () => {
+    let recipeId: ReturnType<typeof createRecipeId>;
+    let versions: RecipeVersion[];
+    let result: RecipeVersion[];
+
+    beforeEach(async () => {
       service = new RecipeVersionService(mockRepository, stubbedLogger);
+      recipeId = createRecipeId(uuidv4());
+      versions = [recipeVersionFactory(), recipeVersionFactory()];
+
+      mockRepository.findByRecipeId.mockResolvedValue(versions);
+
+      result = await service.listRecipeVersions(recipeId);
     });
 
-    describe('listRecipeVersions', () => {
-      it('delegates to repository', async () => {
-        const recipeId = createRecipeId(uuidv4());
-        const versions = [recipeVersionFactory(), recipeVersionFactory()];
-
-        mockRepository.findByRecipeId.mockResolvedValue(versions);
-
-        const result = await service.listRecipeVersions(recipeId);
-
-        expect(mockRepository.findByRecipeId).toHaveBeenCalledWith(recipeId);
-        expect(result).toEqual(versions);
-      });
+    it('calls repository with recipe id', () => {
+      expect(mockRepository.findByRecipeId).toHaveBeenCalledWith(recipeId);
     });
 
-    describe('getRecipeVersion', () => {
-      it('delegates to repository', async () => {
-        const recipeId = createRecipeId(uuidv4());
-        const version = 1;
-        const recipeVersion = recipeVersionFactory();
+    it('returns versions from repository', () => {
+      expect(result).toEqual(versions);
+    });
+  });
 
-        mockRepository.findByRecipeIdAndVersion.mockResolvedValue(
-          recipeVersion,
-        );
+  describe('getRecipeVersion', () => {
+    let recipeId: ReturnType<typeof createRecipeId>;
+    let version: number;
+    let recipeVersion: RecipeVersion;
+    let result: RecipeVersion | null;
 
-        const result = await service.getRecipeVersion(recipeId, version);
+    beforeEach(async () => {
+      service = new RecipeVersionService(mockRepository, stubbedLogger);
+      recipeId = createRecipeId(uuidv4());
+      version = 1;
+      recipeVersion = recipeVersionFactory();
 
-        expect(mockRepository.findByRecipeIdAndVersion).toHaveBeenCalledWith(
-          recipeId,
-          version,
-        );
-        expect(result).toEqual(recipeVersion);
-      });
+      mockRepository.findByRecipeIdAndVersion.mockResolvedValue(recipeVersion);
+
+      result = await service.getRecipeVersion(recipeId, version);
+    });
+
+    it('calls repository with recipe id and version', () => {
+      expect(mockRepository.findByRecipeIdAndVersion).toHaveBeenCalledWith(
+        recipeId,
+        version,
+      );
+    });
+
+    it('returns version from repository', () => {
+      expect(result).toEqual(recipeVersion);
     });
   });
 });

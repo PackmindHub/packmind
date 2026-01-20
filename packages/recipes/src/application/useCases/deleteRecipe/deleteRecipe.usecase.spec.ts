@@ -25,7 +25,6 @@ describe('DeleteRecipeUsecase', () => {
   let eventEmitterService: jest.Mocked<PackmindEventEmitterService>;
 
   beforeEach(() => {
-    // Mock RecipeService
     recipeService = {
       addRecipe: jest.fn(),
       publishToGit: jest.fn(),
@@ -37,7 +36,6 @@ describe('DeleteRecipeUsecase', () => {
       deleteRecipe: jest.fn(),
     } as unknown as jest.Mocked<RecipeService>;
 
-    // Mock RecipeVersionService
     recipeVersionService = {
       addRecipeVersion: jest.fn(),
       listRecipeVersions: jest.fn(),
@@ -135,13 +133,21 @@ describe('DeleteRecipeUsecase', () => {
         expect(recipeServiceCall).toBeLessThan(versionServiceCall);
       });
 
-      it('emits RecipeDeletedEvent with correct payload', () => {
+      it('emits a CommandDeletedEvent', () => {
         expect(eventEmitterService.emit).toHaveBeenCalledWith(
           expect.any(CommandDeletedEvent),
         );
+      });
+
+      it('emits event with correct recipe id in payload', () => {
         const emittedEvent = eventEmitterService.emit.mock
           .calls[0][0] as CommandDeletedEvent;
         expect(emittedEvent.payload.id).toBe(recipeId);
+      });
+
+      it('emits event with correct space id in payload', () => {
+        const emittedEvent = eventEmitterService.emit.mock
+          .calls[0][0] as CommandDeletedEvent;
         expect(emittedEvent.payload.spaceId).toBe(spaceId);
       });
     });
