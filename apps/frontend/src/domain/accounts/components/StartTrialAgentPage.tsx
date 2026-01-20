@@ -139,15 +139,15 @@ export const StartTrialAgentPage: React.FC<IStartTrialAgentPageProps> = ({
           p={6}
           borderRadius="lg"
           borderWidth="1px"
-          borderColor="gray.700"
-          bg="gray.800"
-          transition="all 0.2s"
-          _hover={{ borderColor: 'primary', shadow: 'md' }}
+          borderColor={mcpConnected ? 'green.500' : 'blue.500'}
+          bg={mcpConnected ? 'green.50' : 'blue.50'}
+          transition="all 0.3s"
+          _hover={{ shadow: 'md' }}
         >
           <PMHStack mb={3} gap={3}>
             <PMBadge
               size="lg"
-              colorScheme="primary"
+              colorScheme={mcpConnected ? 'green' : 'primary'}
               borderRadius="full"
               px={3}
               py={1}
@@ -158,11 +158,11 @@ export const StartTrialAgentPage: React.FC<IStartTrialAgentPageProps> = ({
             <PMIcon as={LuLink} size="xl" color="text.faded" />
           </PMHStack>
           <PMHeading level="h4" mb={2}>
-            Enable local analysis
+            Connect your AI assistant
           </PMHeading>
           <PMText as="p" mb={4} color="secondary">
-            Connect {agentLabel} to Packmind so your project can be analyzed
-            locally
+            Follow the setup instructions to connect {agentLabel} to your local
+            project analysis
           </PMText>
           {method && (
             <MethodContent method={method} token={token} url={mcpUrl} />
@@ -174,7 +174,7 @@ export const StartTrialAgentPage: React.FC<IStartTrialAgentPageProps> = ({
               size="sm"
               variant="outline"
             >
-              I've completed the setup
+              Setup completed
             </PMButton>
           )}
         </PMBox>
@@ -184,15 +184,15 @@ export const StartTrialAgentPage: React.FC<IStartTrialAgentPageProps> = ({
             p={6}
             borderRadius="lg"
             borderWidth="1px"
-            borderColor="gray.700"
-            bg="gray.800"
-            transition="all 0.2s"
-            _hover={{ borderColor: 'primary', shadow: 'md' }}
+            borderColor={playbookGenerated ? 'green.500' : 'blue.500'}
+            bg={playbookGenerated ? 'green.50' : 'blue.50'}
+            transition="all 0.3s"
+            _hover={{ shadow: 'md' }}
           >
             <PMHStack mb={3} gap={3}>
               <PMBadge
                 size="lg"
-                colorScheme="primary"
+                colorScheme={playbookGenerated ? 'green' : 'primary'}
                 borderRadius="full"
                 px={3}
                 py={1}
@@ -217,7 +217,7 @@ export const StartTrialAgentPage: React.FC<IStartTrialAgentPageProps> = ({
                 size="sm"
                 variant="outline"
               >
-                I've run the analysis
+                Analysis completed
               </PMButton>
             )}
           </PMBox>
@@ -228,10 +228,10 @@ export const StartTrialAgentPage: React.FC<IStartTrialAgentPageProps> = ({
             p={6}
             borderRadius="lg"
             borderWidth="1px"
-            borderColor="gray.700"
-            bg="gray.800"
-            transition="all 0.2s"
-            _hover={{ borderColor: 'primary', shadow: 'md' }}
+            borderColor="green.500"
+            bg="green.50"
+            transition="all 0.3s"
+            _hover={{ shadow: 'md' }}
           >
             <PMHStack mb={3} gap={3}>
               <PMBadge

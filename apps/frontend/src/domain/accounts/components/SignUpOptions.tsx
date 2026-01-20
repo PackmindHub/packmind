@@ -5,6 +5,7 @@ import {
   LuCheck,
   LuShield,
   LuFileText,
+  LuInfo,
 } from 'react-icons/lu';
 import {
   PMBox,
@@ -30,23 +31,29 @@ export function SignUpOptions() {
       <PMVStack gap={3} textAlign="center">
         <PMHeading level="h1">Get your agent code your way</PMHeading>
         <PMText color="secondary" fontSize="lg">
-          Packmind generates and manages rules, commands, and skills from your
-          codebase.
+          Packmind generates your AI playbook with standards, instructions, and
+          context from your codebase.
         </PMText>
       </PMVStack>
 
       <PMGrid
         gridTemplateColumns={{ base: '1fr', md: 'repeat(2, 1fr)' }}
-        gap={6}
-        mb={6}
+        gap={{ base: 4, md: 6 }}
+        mb={8}
+        alignItems="stretch"
       >
         {/* Run Locally Card - Recommended */}
         <PMCard.Root
-          borderWidth="2px"
-          borderRadius="xl"
-          borderColor="blue.500"
+          borderRadius="md"
           boxShadow="0 4px 20px rgba(59, 130, 246, 0.15)"
           position="relative"
+          borderColor="blue.800"
+          _hover={{
+            borderColor: 'blue.500',
+            boxShadow: '0 8px 30px rgba(59, 130, 246, 0.25)',
+            transform: 'translateY(-2px)',
+          }}
+          transition="all 0.3s ease"
         >
           <PMBadge
             position="absolute"
@@ -67,14 +74,22 @@ export function SignUpOptions() {
               <PMBox minHeight="160px">
                 <PMVStack gap={4} align="center">
                   <PMIcon as={LuMonitor} size="2xl" color="blue.500" />
-                  <PMTooltip label="Coding standards, agent instructions, and project-specific commands generated from your codebase">
-                    <PMHeading level="h3" textAlign="center" cursor="help">
-                      Generate your AI playbook locally
+                  <PMHStack align="center" justify="center">
+                    <PMHeading level="h3" textAlign="center">
+                      Build your AI playbook{' '}
+                      <PMTooltip label="Coding standards, agent instructions, and project-specific commands generated from your codebase">
+                        <PMIcon
+                          as={LuInfo}
+                          size="sm"
+                          color="gray.400"
+                          ml={1}
+                          cursor="help"
+                        />
+                      </PMTooltip>
                     </PMHeading>
-                  </PMTooltip>
+                  </PMHStack>
                   <PMText color="secondary" fontSize="md" textAlign="center">
-                    Generate your AI playbook directly from your codebase.{' '}
-                    <PMEm>No account required.</PMEm>
+                    Quick setup, no account required. <PMEm>Run locally</PMEm>
                   </PMText>
                 </PMVStack>
               </PMBox>
@@ -92,21 +107,21 @@ export function SignUpOptions() {
 
               <PMVStack gap={2} align="flex-start">
                 <PMHStack gap={2} alignItems="flex-start">
-                  <PMIcon as={LuShield} color="blue.500" marginTop={0.5} />
+                  <PMIcon as={LuShield} color="blue.600" marginTop={0.5} />
                   <PMText fontSize="sm" color="secondary">
-                    Your code never leaves your machine
+                    Code stays local
                   </PMText>
                 </PMHStack>
                 <PMHStack gap={2} alignItems="flex-start">
-                  <PMIcon as={LuFileText} color="blue.500" marginTop={0.5} />
+                  <PMIcon as={LuFileText} color="blue.600" marginTop={0.5} />
                   <PMText fontSize="sm" color="secondary">
-                    Playbook generated in 2 minutes
+                    Ready in 2 minutes
                   </PMText>
                 </PMHStack>
                 <PMHStack gap={2} alignItems="flex-start">
-                  <PMIcon as={LuCheck} color="blue.500" marginTop={0.5} />
+                  <PMIcon as={LuCheck} color="blue.600" marginTop={0.5} />
                   <PMText fontSize="sm" color="secondary">
-                    Save and reuse across projects later
+                    Reuse across projects
                   </PMText>
                 </PMHStack>
               </PMVStack>
@@ -117,21 +132,27 @@ export function SignUpOptions() {
         {/* Start with Account Card */}
         <PMCard.Root
           borderWidth="1px"
-          borderRadius="xl"
-          borderColor="border.secondary"
+          borderRadius="md"
           backgroundColor="background.secondary"
+          borderColor={'purple.800'}
+          boxShadow="0 4px 20px rgba(147, 51, 234, 0.15)"
+          _hover={{
+            borderColor: 'purple.400',
+            boxShadow: '0 8px 30px rgba(147, 51, 234, 0.25)',
+            transform: 'translateY(-2px)',
+          }}
+          transition="all 0.3s ease"
         >
           <PMCard.Body padding={8}>
             <PMVStack gap={6} align="stretch">
               <PMBox minHeight="160px">
                 <PMVStack gap={4} align="center">
                   <PMIcon as={LuUsers} size="2xl" color="purple.500" />
-                  <PMHeading level="h3" textAlign="center">
+                  <PMHeading level="h3" textAlign="center" color="primary">
                     Start with an account
                   </PMHeading>
                   <PMText color="secondary" fontSize="md" textAlign="center">
-                    Create your account first for team collaboration and
-                    governance
+                    For team collaboration and governance
                   </PMText>
                 </PMVStack>
               </PMBox>
@@ -151,19 +172,19 @@ export function SignUpOptions() {
                 <PMHStack gap={2} alignItems="flex-start">
                   <PMIcon as={LuCheck} color="purple.500" marginTop={0.5} />
                   <PMText fontSize="sm" color="secondary">
-                    Team collaboration features
+                    Team collaboration
                   </PMText>
                 </PMHStack>
                 <PMHStack gap={2} alignItems="flex-start">
                   <PMIcon as={LuCheck} color="purple.500" marginTop={0.5} />
                   <PMText fontSize="sm" color="secondary">
-                    Organization-level governance
+                    Organization governance
                   </PMText>
                 </PMHStack>
                 <PMHStack gap={2} alignItems="flex-start">
                   <PMIcon as={LuCheck} color="purple.500" marginTop={0.5} />
                   <PMText fontSize="sm" color="secondary">
-                    Free. No credit card required.
+                    Free, no credit card
                   </PMText>
                 </PMHStack>
               </PMVStack>

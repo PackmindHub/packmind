@@ -142,7 +142,7 @@ export function StartTrialAgentSelector({
         onClick={handleContinue}
         data-testid={StartTrialAgentSelectorDataTestIds.ContinueButton}
       >
-        Generate playbook for my AI assistant
+        {isPending ? 'Setting up...' : 'Continue with setup'}
       </PMButton>
 
       {error && (

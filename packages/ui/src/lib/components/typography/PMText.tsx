@@ -7,7 +7,10 @@ export type PMTextColors =
   | 'error'
   | 'faded'
   | 'warning'
-  | 'success';
+  | 'success'
+  | 'primaryLight'
+  | 'secondaryLight'
+  | 'tertiaryLight';
 
 export interface PMTextProps extends TextProps {
   as?: 'span' | 'p' | 'div';
