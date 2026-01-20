@@ -1,5 +1,6 @@
 import { PackmindLogger } from '@packmind/logger';
 import {
+  DeleteItemType,
   FileUpdates,
   GitRepo,
   IGitPort,
@@ -58,6 +59,7 @@ export class CopilotDeployer implements ICodingAgentDeployer {
     // Clean up legacy recipes-index.instructions.md file
     fileUpdates.delete.push({
       path: getTargetPrefixedPath(CopilotDeployer.RECIPES_INDEX_PATH, target),
+      type: DeleteItemType.File,
     });
 
     return fileUpdates;
@@ -118,6 +120,7 @@ export class CopilotDeployer implements ICodingAgentDeployer {
     // Clean up legacy recipes-index.instructions.md file
     fileUpdates.delete.push({
       path: CopilotDeployer.RECIPES_INDEX_PATH,
+      type: DeleteItemType.File,
     });
 
     return fileUpdates;
@@ -264,6 +267,7 @@ export class CopilotDeployer implements ICodingAgentDeployer {
     // Clean up legacy recipes-index.instructions.md file
     fileUpdates.delete.push({
       path: CopilotDeployer.RECIPES_INDEX_PATH,
+      type: DeleteItemType.File,
     });
 
     return fileUpdates;
@@ -299,6 +303,7 @@ export class CopilotDeployer implements ICodingAgentDeployer {
     for (const recipeVersion of removed.recipeVersions) {
       fileUpdates.delete.push({
         path: `.github/prompts/${recipeVersion.slug}.prompt.md`,
+        type: DeleteItemType.File,
       });
     }
 
@@ -310,6 +315,7 @@ export class CopilotDeployer implements ICodingAgentDeployer {
     ) {
       fileUpdates.delete.push({
         path: CopilotDeployer.RECIPES_INDEX_PATH,
+        type: DeleteItemType.File,
       });
     }
 
@@ -317,6 +323,7 @@ export class CopilotDeployer implements ICodingAgentDeployer {
     for (const standardVersion of removed.standardVersions) {
       fileUpdates.delete.push({
         path: `.github/instructions/packmind-${standardVersion.slug}.instructions.md`,
+        type: DeleteItemType.File,
       });
     }
 
@@ -324,6 +331,7 @@ export class CopilotDeployer implements ICodingAgentDeployer {
     for (const skillVersion of removed.skillVersions) {
       fileUpdates.delete.push({
         path: `.github/skills/${skillVersion.slug}`,
+        type: DeleteItemType.Directory,
       });
     }
 

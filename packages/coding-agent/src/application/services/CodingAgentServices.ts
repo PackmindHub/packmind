@@ -1,5 +1,6 @@
 import { PackmindLogger } from '@packmind/logger';
 import {
+  DeleteItemType,
   FileUpdates,
   GitRepo,
   RecipeVersion,
@@ -190,8 +191,14 @@ export class CodingAgentServices {
     ];
 
     for (const sv of allSkillVersions) {
-      result.delete.push({ path: `.claude/skills/${sv.slug}` });
-      result.delete.push({ path: `.github/skills/${sv.slug}` });
+      result.delete.push({
+        path: `.claude/skills/${sv.slug}`,
+        type: DeleteItemType.Directory,
+      });
+      result.delete.push({
+        path: `.github/skills/${sv.slug}`,
+        type: DeleteItemType.Directory,
+      });
     }
 
     if (allSkillVersions.length > 0) {

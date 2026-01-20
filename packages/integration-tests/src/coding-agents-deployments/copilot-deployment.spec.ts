@@ -8,6 +8,7 @@ import { spacesSchemas } from '@packmind/spaces';
 import { standardsSchemas } from '@packmind/standards';
 import { makeTestDatasource } from '@packmind/test-utils';
 import {
+  DeleteItemType,
   FileUpdates,
   GitProviderVendors,
   GitRepo,
@@ -232,6 +233,7 @@ describe('GitHub Copilot Deployment Integration', () => {
       it('deletes legacy recipes-index.instructions.md file', () => {
         expect(fileUpdates.delete).toContainEqual({
           path: '.github/instructions/packmind-recipes-index.instructions.md',
+          type: DeleteItemType.File,
         });
       });
     });
@@ -570,6 +572,7 @@ describe('GitHub Copilot Deployment Integration', () => {
       it('still deletes legacy recipes-index.instructions.md file', () => {
         expect(fileUpdates.delete).toContainEqual({
           path: '.github/instructions/packmind-recipes-index.instructions.md',
+          type: DeleteItemType.File,
         });
       });
     });
@@ -632,6 +635,7 @@ describe('GitHub Copilot Deployment Integration', () => {
       it('still deletes legacy recipes-index.instructions.md file', () => {
         expect(fileUpdates.delete).toContainEqual({
           path: '.github/instructions/packmind-recipes-index.instructions.md',
+          type: DeleteItemType.File,
         });
       });
 
@@ -1179,6 +1183,7 @@ See reference.md and forms.md for more information.`,
 
           expect(fileUpdates.delete).toContainEqual({
             path: `.github/skills/${skill.slug}`,
+            type: DeleteItemType.Directory,
           });
         });
       });

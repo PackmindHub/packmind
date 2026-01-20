@@ -4,6 +4,7 @@ import { GitProviderService } from '../../GitProviderService';
 import { createGitRepoId, GitRepo } from '@packmind/types';
 import {
   createGitProviderId,
+  DeleteItemType,
   GitProvider,
   GitProviderVendor,
   GitProviderVendors,
@@ -215,8 +216,8 @@ describe('CommitToGit', () => {
       it('passes deleteFiles parameter to commitFiles', async () => {
         const files = [{ path: 'test/file.txt', content: 'test content' }];
         const deleteFiles = [
-          { path: 'old/file1.txt' },
-          { path: 'old/file2.txt' },
+          { path: 'old/file1.txt', type: DeleteItemType.File },
+          { path: 'old/file2.txt', type: DeleteItemType.File },
         ];
 
         const commitDataFromGit = {
@@ -321,7 +322,7 @@ Some content
           expect(mockGithubRepository.commitFiles).toHaveBeenCalledWith(
             [],
             'Remove content',
-            [{ path: 'CLAUDE.md' }],
+            [{ path: 'CLAUDE.md', type: DeleteItemType.File }],
           );
         });
       });
@@ -429,7 +430,9 @@ Some content
             },
           ];
 
-          const deleteFiles = [{ path: 'old-file.txt' }];
+          const deleteFiles = [
+            { path: 'old-file.txt', type: DeleteItemType.File },
+          ];
 
           await commitToGit.commitToGit(
             mockGitRepo,
@@ -442,8 +445,8 @@ Some content
             [{ path: 'some-file.txt', content: 'keep this file' }],
             'Update files',
             expect.arrayContaining([
-              { path: 'old-file.txt' },
-              { path: 'CLAUDE.md' },
+              { path: 'old-file.txt', type: DeleteItemType.File },
+              { path: 'CLAUDE.md', type: DeleteItemType.File },
             ]),
           );
         });

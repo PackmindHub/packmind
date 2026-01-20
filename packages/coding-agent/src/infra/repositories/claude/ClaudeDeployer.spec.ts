@@ -15,6 +15,7 @@ import {
   SkillVersion,
   createSkillVersionId,
   createSkillFileId,
+  DeleteItemType,
 } from '@packmind/types';
 import { v4 as uuidv4 } from 'uuid';
 import { recipeFactory } from '@packmind/recipes/test';
@@ -3776,6 +3777,7 @@ describe('ClaudeDeployer', () => {
 
         expect(fileUpdates.delete).toContainEqual({
           path: `.claude/skills/${skillVersions[0].slug}`,
+          type: DeleteItemType.Directory,
         });
       });
     });

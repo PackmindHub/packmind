@@ -1,5 +1,6 @@
 import { PackmindLogger } from '@packmind/logger';
 import {
+  DeleteItemType,
   FileUpdates,
   GitRepo,
   IGitPort,
@@ -65,6 +66,7 @@ export class ContinueDeployer implements ICodingAgentDeployer {
         ContinueDeployer.LEGACY_RECIPES_INDEX_PATH,
         target,
       ),
+      type: DeleteItemType.File,
     });
 
     return fileUpdates;
@@ -125,6 +127,7 @@ export class ContinueDeployer implements ICodingAgentDeployer {
     // Delete legacy recipes-index.md file
     fileUpdates.delete.push({
       path: ContinueDeployer.LEGACY_RECIPES_INDEX_PATH,
+      type: DeleteItemType.File,
     });
 
     return fileUpdates;
@@ -213,6 +216,7 @@ export class ContinueDeployer implements ICodingAgentDeployer {
     // Delete legacy recipes-index.md file
     fileUpdates.delete.push({
       path: ContinueDeployer.LEGACY_RECIPES_INDEX_PATH,
+      type: DeleteItemType.File,
     });
 
     return fileUpdates;
@@ -247,6 +251,7 @@ export class ContinueDeployer implements ICodingAgentDeployer {
     for (const recipeVersion of removed.recipeVersions) {
       fileUpdates.delete.push({
         path: `${ContinueDeployer.COMMANDS_FOLDER_PATH}${recipeVersion.slug}.md`,
+        type: DeleteItemType.File,
       });
     }
 
@@ -255,10 +260,12 @@ export class ContinueDeployer implements ICodingAgentDeployer {
     if (hasRemovedRecipes && installed.recipeVersions.length === 0) {
       fileUpdates.delete.push({
         path: ContinueDeployer.COMMANDS_FOLDER_PATH,
+        type: DeleteItemType.Directory,
       });
       // Also delete the legacy recipes-index.md if it exists
       fileUpdates.delete.push({
         path: ContinueDeployer.LEGACY_RECIPES_INDEX_PATH,
+        type: DeleteItemType.File,
       });
     }
 
@@ -266,6 +273,7 @@ export class ContinueDeployer implements ICodingAgentDeployer {
     for (const standardVersion of removed.standardVersions) {
       fileUpdates.delete.push({
         path: `${ContinueDeployer.STANDARDS_FOLDER_PATH}standard-${standardVersion.slug}.md`,
+        type: DeleteItemType.File,
       });
     }
 
@@ -279,6 +287,7 @@ export class ContinueDeployer implements ICodingAgentDeployer {
     ) {
       fileUpdates.delete.push({
         path: ContinueDeployer.STANDARDS_FOLDER_PATH,
+        type: DeleteItemType.Directory,
       });
     }
 

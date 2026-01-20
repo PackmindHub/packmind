@@ -1,5 +1,6 @@
 import { PackmindLogger } from '@packmind/logger';
 import {
+  DeleteItem,
   FileModification,
   FileUpdates,
   GitRepo,
@@ -316,15 +317,17 @@ export class DeployerService {
     // Convert map back to array
     merged.createOrUpdate = Array.from(pathMap.values());
 
-    // Merge delete operations - deduplicate paths
-    const deleteSet = new Set<string>();
+    // Merge delete operations - deduplicate paths while preserving type
+    const deleteMap = new Map<string, DeleteItem>();
     for (const update of updates) {
       for (const file of update.delete) {
-        deleteSet.add(file.path);
+        if (!deleteMap.has(file.path)) {
+          deleteMap.set(file.path, file);
+        }
       }
     }
 
-    merged.delete = Array.from(deleteSet).map((path) => ({ path }));
+    merged.delete = Array.from(deleteMap.values());
 
     this.logger.debug('File updates merged', {
       uniqueCreateOrUpdate: merged.createOrUpdate.length,

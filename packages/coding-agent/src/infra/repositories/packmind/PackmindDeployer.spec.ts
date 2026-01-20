@@ -11,6 +11,7 @@ import {
   createStandardVersionId,
   createTargetId,
   createUserId,
+  DeleteItemType,
   FileUpdates,
   GitRepo,
   IStandardsPort,
@@ -91,6 +92,7 @@ describe('PackmindDeployer', () => {
       it('deletes legacy recipes-index.md file', () => {
         expect(result.delete).toContainEqual({
           path: '.packmind/recipes-index.md',
+          type: DeleteItemType.File,
         });
       });
 
@@ -210,6 +212,7 @@ describe('PackmindDeployer', () => {
       it('deletes legacy recipes-index.md file', () => {
         expect(result.delete).toContainEqual({
           path: '.packmind/recipes-index.md',
+          type: DeleteItemType.File,
         });
       });
 
@@ -641,36 +644,42 @@ describe('PackmindDeployer', () => {
       it('deletes the removed command file', () => {
         expect(result.delete).toContainEqual({
           path: '.packmind/commands/removed-recipe.md',
+          type: DeleteItemType.File,
         });
       });
 
       it('deletes the commands index file', () => {
         expect(result.delete).toContainEqual({
           path: '.packmind/commands-index.md',
+          type: DeleteItemType.File,
         });
       });
 
       it('deletes the standards index file', () => {
         expect(result.delete).toContainEqual({
           path: '.packmind/standards-index.md',
+          type: DeleteItemType.File,
         });
       });
 
       it('deletes the commands folder', () => {
         expect(result.delete).toContainEqual({
           path: '.packmind/commands/',
+          type: DeleteItemType.Directory,
         });
       });
 
       it('deletes the standards folder', () => {
         expect(result.delete).toContainEqual({
           path: '.packmind/standards/',
+          type: DeleteItemType.Directory,
         });
       });
 
       it('deletes the packmind folder', () => {
         expect(result.delete).toContainEqual({
           path: '.packmind/',
+          type: DeleteItemType.Directory,
         });
       });
 
@@ -730,12 +739,14 @@ describe('PackmindDeployer', () => {
       it('deletes the removed command file', () => {
         expect(result.delete).toContainEqual({
           path: '.packmind/commands/removed-recipe.md',
+          type: DeleteItemType.File,
         });
       });
 
       it('deletes the standards index file', () => {
         expect(result.delete).toContainEqual({
           path: '.packmind/standards-index.md',
+          type: DeleteItemType.File,
         });
       });
 
@@ -783,36 +794,42 @@ describe('PackmindDeployer', () => {
       it('deletes the removed standard file', () => {
         expect(result.delete).toContainEqual({
           path: '.packmind/standards/removed-standard.md',
+          type: DeleteItemType.File,
         });
       });
 
       it('deletes the standards index file', () => {
         expect(result.delete).toContainEqual({
           path: '.packmind/standards-index.md',
+          type: DeleteItemType.File,
         });
       });
 
       it('deletes the commands index file', () => {
         expect(result.delete).toContainEqual({
           path: '.packmind/commands-index.md',
+          type: DeleteItemType.File,
         });
       });
 
       it('deletes the commands folder', () => {
         expect(result.delete).toContainEqual({
           path: '.packmind/commands/',
+          type: DeleteItemType.Directory,
         });
       });
 
       it('deletes the standards folder', () => {
         expect(result.delete).toContainEqual({
           path: '.packmind/standards/',
+          type: DeleteItemType.Directory,
         });
       });
 
       it('deletes the packmind folder', () => {
         expect(result.delete).toContainEqual({
           path: '.packmind/',
+          type: DeleteItemType.Directory,
         });
       });
 
@@ -874,12 +891,14 @@ describe('PackmindDeployer', () => {
       it('deletes the removed standard file', () => {
         expect(result.delete).toContainEqual({
           path: '.packmind/standards/removed-standard.md',
+          type: DeleteItemType.File,
         });
       });
 
       it('deletes the commands index file', () => {
         expect(result.delete).toContainEqual({
           path: '.packmind/commands-index.md',
+          type: DeleteItemType.File,
         });
       });
 
@@ -949,48 +968,56 @@ describe('PackmindDeployer', () => {
       it('deletes the first removed command file', () => {
         expect(result.delete).toContainEqual({
           path: '.packmind/commands/removed-recipe-1.md',
+          type: DeleteItemType.File,
         });
       });
 
       it('deletes the second removed command file', () => {
         expect(result.delete).toContainEqual({
           path: '.packmind/commands/removed-recipe-2.md',
+          type: DeleteItemType.File,
         });
       });
 
       it('deletes the commands index file', () => {
         expect(result.delete).toContainEqual({
           path: '.packmind/commands-index.md',
+          type: DeleteItemType.File,
         });
       });
 
       it('deletes the removed standard file', () => {
         expect(result.delete).toContainEqual({
           path: '.packmind/standards/removed-standard.md',
+          type: DeleteItemType.File,
         });
       });
 
       it('deletes the standards index file', () => {
         expect(result.delete).toContainEqual({
           path: '.packmind/standards-index.md',
+          type: DeleteItemType.File,
         });
       });
 
       it('deletes the commands folder', () => {
         expect(result.delete).toContainEqual({
           path: '.packmind/commands/',
+          type: DeleteItemType.Directory,
         });
       });
 
       it('deletes the standards folder', () => {
         expect(result.delete).toContainEqual({
           path: '.packmind/standards/',
+          type: DeleteItemType.Directory,
         });
       });
 
       it('deletes the packmind folder', () => {
         expect(result.delete).toContainEqual({
           path: '.packmind/',
+          type: DeleteItemType.Directory,
         });
       });
 
@@ -1028,12 +1055,14 @@ describe('PackmindDeployer', () => {
       it('deletes the commands index file', () => {
         expect(result.delete).toContainEqual({
           path: '.packmind/commands-index.md',
+          type: DeleteItemType.File,
         });
       });
 
       it('deletes the standards index file', () => {
         expect(result.delete).toContainEqual({
           path: '.packmind/standards-index.md',
+          type: DeleteItemType.File,
         });
       });
     });

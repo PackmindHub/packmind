@@ -23,7 +23,7 @@ import { GitCommit } from '../GitCommit';
 import { GitProvider, GitProviderId } from '../GitProvider';
 import { GitRepo } from '../GitRepo';
 import { GitRepoId } from '../GitRepoId';
-import { FileModification } from '../../deployments/FileUpdates';
+import { DeleteItem, FileModification } from '../../deployments/FileUpdates';
 
 export const IGitPortName = 'IGitPort' as const;
 
@@ -67,7 +67,7 @@ export interface IGitPort {
     repo: GitRepo,
     files: FileModification[],
     commitMessage: string,
-    deleteFiles?: { path: string }[],
+    deleteFiles?: DeleteItem[],
   ): Promise<GitCommit>;
 
   /**

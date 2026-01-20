@@ -1,5 +1,6 @@
 import { PackmindLogger } from '@packmind/logger';
 import {
+  DeleteItemType,
   FileUpdates,
   GitRepo,
   IStandardsPort,
@@ -74,7 +75,10 @@ export class PackmindDeployer implements ICodingAgentDeployer {
       PackmindDeployer.LEGACY_RECIPES_INDEX_PATH,
       target,
     );
-    fileUpdates.delete.push({ path: legacyIndexPath });
+    fileUpdates.delete.push({
+      path: legacyIndexPath,
+      type: DeleteItemType.File,
+    });
 
     return fileUpdates;
   }
@@ -170,6 +174,7 @@ export class PackmindDeployer implements ICodingAgentDeployer {
     // Delete legacy recipes-index.md file
     fileUpdates.delete.push({
       path: PackmindDeployer.LEGACY_RECIPES_INDEX_PATH,
+      type: DeleteItemType.File,
     });
 
     return fileUpdates;
@@ -282,6 +287,7 @@ export class PackmindDeployer implements ICodingAgentDeployer {
       // Delete legacy recipes-index.md file
       fileUpdates.delete.push({
         path: PackmindDeployer.LEGACY_RECIPES_INDEX_PATH,
+        type: DeleteItemType.File,
       });
     }
 
@@ -350,24 +356,32 @@ export class PackmindDeployer implements ICodingAgentDeployer {
     for (const recipeVersion of removed.recipeVersions) {
       fileUpdates.delete.push({
         path: `.packmind/commands/${recipeVersion.slug}.md`,
+        type: DeleteItemType.File,
       });
     }
 
     // Delete commands index if no commands remain installed
     if (installed.recipeVersions.length === 0) {
-      fileUpdates.delete.push({ path: PackmindDeployer.COMMANDS_INDEX_PATH });
+      fileUpdates.delete.push({
+        path: PackmindDeployer.COMMANDS_INDEX_PATH,
+        type: DeleteItemType.File,
+      });
     }
 
     // Delete individual standard files for removed standards
     for (const standardVersion of removed.standardVersions) {
       fileUpdates.delete.push({
         path: `.packmind/standards/${standardVersion.slug}.md`,
+        type: DeleteItemType.File,
       });
     }
 
     // Delete standards index if no standards remain installed
     if (installed.standardVersions.length === 0) {
-      fileUpdates.delete.push({ path: '.packmind/standards-index.md' });
+      fileUpdates.delete.push({
+        path: '.packmind/standards-index.md',
+        type: DeleteItemType.File,
+      });
     }
 
     // Delete parent folders if all Packmind content is removed and something was actually removed
@@ -378,9 +392,18 @@ export class PackmindDeployer implements ICodingAgentDeployer {
       installed.recipeVersions.length === 0 &&
       installed.standardVersions.length === 0
     ) {
-      fileUpdates.delete.push({ path: '.packmind/commands/' });
-      fileUpdates.delete.push({ path: '.packmind/standards/' });
-      fileUpdates.delete.push({ path: '.packmind/' });
+      fileUpdates.delete.push({
+        path: '.packmind/commands/',
+        type: DeleteItemType.Directory,
+      });
+      fileUpdates.delete.push({
+        path: '.packmind/standards/',
+        type: DeleteItemType.Directory,
+      });
+      fileUpdates.delete.push({
+        path: '.packmind/',
+        type: DeleteItemType.Directory,
+      });
     }
 
     return fileUpdates;

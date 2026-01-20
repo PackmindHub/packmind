@@ -1,5 +1,6 @@
 import { PackmindLogger } from '@packmind/logger';
 import {
+  DeleteItemType,
   FileUpdates,
   GitRepo,
   IGitPort,
@@ -65,6 +66,7 @@ export class CursorDeployer implements ICodingAgentDeployer {
         CursorDeployer.LEGACY_RECIPES_INDEX_PATH,
         target,
       ),
+      type: DeleteItemType.File,
     });
 
     return fileUpdates;
@@ -125,6 +127,7 @@ export class CursorDeployer implements ICodingAgentDeployer {
     // Clean up legacy recipes-index.mdc file
     fileUpdates.delete.push({
       path: CursorDeployer.LEGACY_RECIPES_INDEX_PATH,
+      type: DeleteItemType.File,
     });
 
     return fileUpdates;
@@ -213,6 +216,7 @@ export class CursorDeployer implements ICodingAgentDeployer {
     // Clean up legacy recipes-index.mdc file
     fileUpdates.delete.push({
       path: CursorDeployer.LEGACY_RECIPES_INDEX_PATH,
+      type: DeleteItemType.File,
     });
 
     return fileUpdates;
@@ -247,6 +251,7 @@ export class CursorDeployer implements ICodingAgentDeployer {
     for (const recipeVersion of removed.recipeVersions) {
       fileUpdates.delete.push({
         path: `${CursorDeployer.COMMANDS_PATH}/${recipeVersion.slug}.md`,
+        type: DeleteItemType.File,
       });
     }
 
@@ -254,6 +259,7 @@ export class CursorDeployer implements ICodingAgentDeployer {
     for (const standardVersion of removed.standardVersions) {
       fileUpdates.delete.push({
         path: `.cursor/rules/packmind/standard-${standardVersion.slug}.mdc`,
+        type: DeleteItemType.File,
       });
     }
 
@@ -262,6 +268,7 @@ export class CursorDeployer implements ICodingAgentDeployer {
     if (hasRemovedRecipes && installed.recipeVersions.length === 0) {
       fileUpdates.delete.push({
         path: `${CursorDeployer.COMMANDS_PATH}/`,
+        type: DeleteItemType.Directory,
       });
     }
 
@@ -270,6 +277,7 @@ export class CursorDeployer implements ICodingAgentDeployer {
     if (hasRemovedStandards && installed.standardVersions.length === 0) {
       fileUpdates.delete.push({
         path: '.cursor/rules/packmind/',
+        type: DeleteItemType.Directory,
       });
     }
 

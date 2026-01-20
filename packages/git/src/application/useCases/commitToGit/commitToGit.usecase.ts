@@ -3,6 +3,8 @@ import {
   FileModification,
   GitCommit,
   GitProvider,
+  DeleteItem,
+  DeleteItemType,
 } from '@packmind/types';
 import { IGitRepo } from '../../../domain/repositories/IGitRepo';
 import { IGitRepoFactory } from '../../../domain/repositories/IGitRepoFactory';
@@ -23,7 +25,7 @@ export class CommitToGit {
     repo: GitRepo,
     files: FileModification[],
     commitMessage: string,
-    deleteFiles?: { path: string }[],
+    deleteFiles?: DeleteItem[],
   ): Promise<GitCommit> {
     this.logger.info('Committing multiple files to git repository', {
       owner: repo.owner,
@@ -56,7 +58,7 @@ export class CommitToGit {
 
     // Process files to handle section-based updates
     const processedFiles: { path: string; content: string }[] = [];
-    const filesToDelete: { path: string }[] = [];
+    const filesToDelete: DeleteItem[] = [];
 
     for (const file of files) {
       if (file.content !== undefined) {
@@ -91,7 +93,7 @@ export class CommitToGit {
               'File would be empty after section merge, marking for deletion',
               { path: file.path },
             );
-            filesToDelete.push({ path: file.path });
+            filesToDelete.push({ path: file.path, type: DeleteItemType.File });
           }
           // If file didn't exist, skip it entirely (nothing to create or delete)
         } else {
@@ -103,20 +105,19 @@ export class CommitToGit {
     // Combine passed-in deleteFiles with files that became empty
     const allFilesToDelete = [...(deleteFiles ?? []), ...filesToDelete];
 
-    const expandedFilesToDelete: { path: string }[] = [];
+    const expandedFilesToDelete: DeleteItem[] = [];
     for (const deleteFile of allFilesToDelete) {
-      // Check if path looks like a directory (no file extension)
-      const hasExtension = /\.[^/\\]+$/.test(deleteFile.path);
-      if (!hasExtension) {
+      if (deleteFile.type === DeleteItemType.Directory) {
         const filesInDir = await gitRepoInstance.listFilesInDirectory(
           deleteFile.path,
           repo.branch,
         );
         if (filesInDir.length > 0) {
-          expandedFilesToDelete.push(...filesInDir);
+          expandedFilesToDelete.push(
+            ...filesInDir.map((f) => ({ ...f, type: DeleteItemType.File })),
+          );
         }
       } else {
-        // This is a regular file path
         expandedFilesToDelete.push(deleteFile);
       }
     }
