@@ -832,3 +832,7 @@
   path: artefact-logger
   type: skill
   date: 2026-01-20T14:18:32+01:00
+- name: CLAUDE.md
+  path: CLAUDE.md
+  type: claude_md
+  date: 2026-01-20T14:46:15+01:00
