@@ -16,7 +16,17 @@ export type FileModification =
       sections: FileSection[];
     };
 
+export enum DeleteItemType {
+  File = 'file',
+  Directory = 'directory',
+}
+
+export type DeleteItem = {
+  path: string;
+  type: DeleteItemType;
+};
+
 export type FileUpdates = {
   createOrUpdate: FileModification[];
-  delete: { path: string }[];
+  delete: DeleteItem[];
 };

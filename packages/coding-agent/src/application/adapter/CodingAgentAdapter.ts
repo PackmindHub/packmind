@@ -2,6 +2,7 @@ import { IBaseAdapter } from '@packmind/node-utils';
 import { PackmindLogger } from '@packmind/logger';
 import {
   CodingAgent,
+  DeleteItem,
   DeployArtifactsForAgentsCommand,
   DeployArtifactsForAgentsResponse,
   FileModification,
@@ -187,14 +188,16 @@ export class CodingAgentAdapter
 
     merged.createOrUpdate = Array.from(pathMap.values());
 
-    const deleteSet = new Set<string>();
+    const deleteMap = new Map<string, DeleteItem>();
     for (const update of updates) {
       for (const file of update.delete) {
-        deleteSet.add(file.path);
+        if (!deleteMap.has(file.path)) {
+          deleteMap.set(file.path, file);
+        }
       }
     }
 
-    merged.delete = Array.from(deleteSet).map((path) => ({ path }));
+    merged.delete = Array.from(deleteMap.values());
 
     return merged;
   }

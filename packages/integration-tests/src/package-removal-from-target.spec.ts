@@ -1,6 +1,7 @@
 import { GitCommitSchema } from '@packmind/git';
 import { gitCommitFactory } from '@packmind/git/test';
 import {
+  DeleteItemType,
   GitCommit,
   Package,
   Recipe,
@@ -102,18 +103,39 @@ describe('Package removal from target integration', () => {
     it('deletes artifacts files for Cursor, Claude and Packmind', () => {
       expect(deleteFiles).toEqual(
         expect.arrayContaining([
-          { path: '.packmind/commands/recipe-1.md' },
-          { path: '.packmind/commands-index.md' },
-          { path: '.packmind/standards/standard-1.md' },
-          { path: '.packmind/standards-index.md' },
-          { path: '.cursor/commands/packmind/recipe-1.md' },
-          { path: '.cursor/commands/packmind/' },
-          { path: '.cursor/rules/packmind/standard-standard-1.mdc' },
-          { path: '.cursor/rules/packmind/' },
-          { path: '.claude/commands/packmind/recipe-1.md' },
-          { path: '.claude/commands/packmind/' },
-          { path: '.claude/rules/packmind/standard-standard-1.md' },
-          { path: '.claude/rules/packmind/' },
+          { path: '.packmind/commands/recipe-1.md', type: DeleteItemType.File },
+          { path: '.packmind/commands-index.md', type: DeleteItemType.File },
+          {
+            path: '.packmind/standards/standard-1.md',
+            type: DeleteItemType.File,
+          },
+          { path: '.packmind/standards-index.md', type: DeleteItemType.File },
+          {
+            path: '.cursor/commands/packmind/recipe-1.md',
+            type: DeleteItemType.File,
+          },
+          {
+            path: '.cursor/commands/packmind/',
+            type: DeleteItemType.Directory,
+          },
+          {
+            path: '.cursor/rules/packmind/standard-standard-1.mdc',
+            type: DeleteItemType.File,
+          },
+          { path: '.cursor/rules/packmind/', type: DeleteItemType.Directory },
+          {
+            path: '.claude/commands/packmind/recipe-1.md',
+            type: DeleteItemType.File,
+          },
+          {
+            path: '.claude/commands/packmind/',
+            type: DeleteItemType.Directory,
+          },
+          {
+            path: '.claude/rules/packmind/standard-standard-1.md',
+            type: DeleteItemType.File,
+          },
+          { path: '.claude/rules/packmind/', type: DeleteItemType.Directory },
         ]),
       );
     });
@@ -208,14 +230,19 @@ describe('Package removal from target integration', () => {
 
     it('deletes exclusive command files', () => {
       expect(deleteFiles).toEqual(
-        expect.arrayContaining([{ path: '.packmind/commands/recipe-1.md' }]),
+        expect.arrayContaining([
+          { path: '.packmind/commands/recipe-1.md', type: DeleteItemType.File },
+        ]),
       );
     });
 
     it('preserves shared command files', () => {
       expect(deleteFiles).not.toEqual(
         expect.arrayContaining([
-          { path: '.packmind/commands/shared-recipe.md' },
+          {
+            path: '.packmind/commands/shared-recipe.md',
+            type: DeleteItemType.File,
+          },
         ]),
       );
     });
@@ -223,7 +250,10 @@ describe('Package removal from target integration', () => {
     it('deletes exclusive recipe command file for Claude', () => {
       expect(deleteFiles).toEqual(
         expect.arrayContaining([
-          { path: '.claude/commands/packmind/recipe-1.md' },
+          {
+            path: '.claude/commands/packmind/recipe-1.md',
+            type: DeleteItemType.File,
+          },
         ]),
       );
     });
@@ -231,7 +261,10 @@ describe('Package removal from target integration', () => {
     it('does not delete shared recipe command file for Claude', () => {
       expect(deleteFiles).not.toEqual(
         expect.arrayContaining([
-          { path: '.claude/commands/packmind/shared-recipe.md' },
+          {
+            path: '.claude/commands/packmind/shared-recipe.md',
+            type: DeleteItemType.File,
+          },
         ]),
       );
     });
@@ -239,7 +272,12 @@ describe('Package removal from target integration', () => {
     describe('when recipes remain', () => {
       it('does not delete commands folder', () => {
         expect(deleteFiles).not.toEqual(
-          expect.arrayContaining([{ path: '.claude/commands/packmind/' }]),
+          expect.arrayContaining([
+            {
+              path: '.claude/commands/packmind/',
+              type: DeleteItemType.Directory,
+            },
+          ]),
         );
       });
     });

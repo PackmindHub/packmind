@@ -131,6 +131,7 @@ export function applyTargetPrefixingToFileUpdates(
     })),
     delete: fileUpdates.delete.map((file) => ({
       path: getTargetPrefixedPath(file.path, target),
+      type: file.type,
     })),
   };
 

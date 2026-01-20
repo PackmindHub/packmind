@@ -9,6 +9,7 @@ import { standardsSchemas } from '@packmind/standards';
 import { makeTestDatasource } from '@packmind/test-utils';
 import {
   createTargetId,
+  DeleteItemType,
   FileUpdates,
   GitProviderVendors,
   GitRepo,
@@ -196,6 +197,7 @@ describe('Cursor Deployment Integration', () => {
       it('deletes legacy recipes-index.mdc file', () => {
         expect(fileUpdates.delete).toContainEqual({
           path: '.cursor/rules/packmind/recipes-index.mdc',
+          type: DeleteItemType.File,
         });
       });
     });
@@ -472,6 +474,7 @@ describe('Cursor Deployment Integration', () => {
       it('still deletes legacy recipes-index.mdc file', () => {
         expect(fileUpdates.delete).toContainEqual({
           path: '.cursor/rules/packmind/recipes-index.mdc',
+          type: DeleteItemType.File,
         });
       });
     });

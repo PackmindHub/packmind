@@ -1,5 +1,6 @@
 import { PackmindLogger } from '@packmind/logger';
 import {
+  DeleteItemType,
   FileUpdates,
   GitRepo,
   IGitPort,
@@ -357,6 +358,7 @@ ${recipeVersion.content}`;
     for (const recipeVersion of removed.recipeVersions) {
       fileUpdates.delete.push({
         path: `${ClaudeDeployer.COMMANDS_FOLDER_PATH}${recipeVersion.slug}.md`,
+        type: DeleteItemType.File,
       });
     }
 
@@ -365,6 +367,7 @@ ${recipeVersion.content}`;
     if (hasRemovedRecipes && installed.recipeVersions.length === 0) {
       fileUpdates.delete.push({
         path: ClaudeDeployer.COMMANDS_FOLDER_PATH,
+        type: DeleteItemType.Directory,
       });
     }
 
@@ -372,6 +375,7 @@ ${recipeVersion.content}`;
     for (const standardVersion of removed.standardVersions) {
       fileUpdates.delete.push({
         path: `${ClaudeDeployer.STANDARDS_FOLDER_PATH}standard-${standardVersion.slug}.md`,
+        type: DeleteItemType.File,
       });
     }
 
@@ -385,6 +389,7 @@ ${recipeVersion.content}`;
     ) {
       fileUpdates.delete.push({
         path: ClaudeDeployer.STANDARDS_FOLDER_PATH,
+        type: DeleteItemType.Directory,
       });
     }
 
@@ -393,6 +398,7 @@ ${recipeVersion.content}`;
     for (const skillVersion of removed.skillVersions) {
       fileUpdates.delete.push({
         path: `.claude/skills/${skillVersion.slug}`,
+        type: DeleteItemType.Directory,
       });
     }
 
