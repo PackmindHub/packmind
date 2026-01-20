@@ -766,8 +766,7 @@ export class GitlabRepository implements IGitRepo {
 
       do {
         const url =
-          nextPage ||
-          `/projects/${this.encodedProjectPath}/repository/tree`;
+          nextPage || `/projects/${this.encodedProjectPath}/repository/tree`;
 
         const params: Record<string, string | number> = {
           ref: branch,
@@ -809,7 +808,8 @@ export class GitlabRepository implements IGitRepo {
 
       const files = allTreeItems
         .filter(
-          (item) => item.type === 'blob' && item.path.startsWith(normalizedPath),
+          (item) =>
+            item.type === 'blob' && item.path.startsWith(normalizedPath),
         )
         .map((item) => ({ path: item.path }));
 

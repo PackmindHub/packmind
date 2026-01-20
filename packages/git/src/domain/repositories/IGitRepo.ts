@@ -35,5 +35,8 @@ export interface IGitRepo {
 
   checkDirectoryExists(directoryPath: string, branch: string): Promise<boolean>;
 
-  listFilesInDirectory(path: string, branch: string): Promise<{ path: string }[]>;
+  listFilesInDirectory(
+    path: string,
+    branch: string,
+  ): Promise<{ path: string }[]>;
 }

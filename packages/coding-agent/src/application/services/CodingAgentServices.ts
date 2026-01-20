@@ -195,9 +195,12 @@ export class CodingAgentServices {
     }
 
     if (allSkillVersions.length > 0) {
-      this.logger.info('Skill directories marked for deletion (burn and rebuild)', {
-        skillCount: allSkillVersions.length,
-      });
+      this.logger.info(
+        'Skill directories marked for deletion (burn and rebuild)',
+        {
+          skillCount: allSkillVersions.length,
+        },
+      );
     }
 
     this.logger.info('Artifacts rendered successfully', {
