@@ -13,6 +13,7 @@ import {
 import { ICodingAgentDeployer } from '../../../domain/repository/ICodingAgentDeployer';
 import { GenericStandardSectionWriter } from '../genericSectionWriter/GenericStandardSectionWriter';
 import { getTargetPrefixedPath } from '../utils/FileUtils';
+import { DefaultSkillsDeployer } from '../defaultSkillsDeployer/DefaultSkillsDeployer';
 
 const origin = 'CopilotDeployer';
 
@@ -27,6 +28,14 @@ export class CopilotDeployer implements ICodingAgentDeployer {
     private readonly gitPort?: IGitPort,
   ) {
     this.logger = new PackmindLogger(origin);
+  }
+
+  async deployDefaultSkills() {
+    const defaultSkillsDeployer = new DefaultSkillsDeployer(
+      'CoPilot',
+      '.github/skills/',
+    );
+    return defaultSkillsDeployer.deployDefaultSkills();
   }
 
   async deployRecipes(
