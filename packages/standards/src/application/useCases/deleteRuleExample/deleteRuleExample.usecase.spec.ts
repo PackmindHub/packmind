@@ -127,65 +127,75 @@ describe('DeleteRuleExampleUsecase', () => {
     jest.clearAllMocks();
   });
 
-  it('deletes a rule example successfully', async () => {
-    const standardVersion = standardVersionFactory();
-    const rule = ruleFactory({ standardVersionId: standardVersion.id });
-    const existingExample = ruleExampleFactory({ ruleId: rule.id });
+  describe('when deleting a rule example successfully', () => {
+    let existingExample: ReturnType<typeof ruleExampleFactory>;
 
-    ruleExampleRepository.findById.mockResolvedValue(existingExample);
-    ruleExampleRepository.deleteById.mockResolvedValue(undefined);
-    ruleRepository.findById.mockResolvedValue(rule);
-    standardVersionRepository.findById.mockResolvedValue(standardVersion);
+    beforeEach(async () => {
+      const standardVersion = standardVersionFactory();
+      const rule = ruleFactory({ standardVersionId: standardVersion.id });
+      existingExample = ruleExampleFactory({ ruleId: rule.id });
 
-    const command = createCommand({
-      ruleExampleId: existingExample.id,
+      ruleExampleRepository.findById.mockResolvedValue(existingExample);
+      ruleExampleRepository.deleteById.mockResolvedValue(undefined);
+      ruleRepository.findById.mockResolvedValue(rule);
+      standardVersionRepository.findById.mockResolvedValue(standardVersion);
+
+      const command = createCommand({
+        ruleExampleId: existingExample.id,
+      });
+
+      await usecase.execute(command);
     });
 
-    await usecase.execute(command);
-
-    expect(ruleExampleRepository.findById).toHaveBeenCalledWith(
-      existingExample.id,
-    );
-    expect(ruleExampleRepository.deleteById).toHaveBeenCalledWith(
-      existingExample.id,
-    );
-  });
-
-  it('emits RuleUpdatedEvent after deleting', async () => {
-    const standardVersion = standardVersionFactory();
-    const rule = ruleFactory({ standardVersionId: standardVersion.id });
-    const existingExample = ruleExampleFactory({ ruleId: rule.id });
-
-    ruleExampleRepository.findById.mockResolvedValue(existingExample);
-    ruleExampleRepository.deleteById.mockResolvedValue(undefined);
-    ruleRepository.findById.mockResolvedValue(rule);
-    standardVersionRepository.findById.mockResolvedValue(standardVersion);
-
-    const command = createCommand({
-      ruleExampleId: existingExample.id,
+    it('finds the rule example by id', () => {
+      expect(ruleExampleRepository.findById).toHaveBeenCalledWith(
+        existingExample.id,
+      );
     });
 
-    await usecase.execute(command);
+    it('deletes the rule example by id', () => {
+      expect(ruleExampleRepository.deleteById).toHaveBeenCalledWith(
+        existingExample.id,
+      );
+    });
 
-    expect(eventEmitterService.emit).toHaveBeenCalledWith(
-      expect.any(RuleUpdatedEvent),
-    );
+    it('emits RuleUpdatedEvent', () => {
+      expect(eventEmitterService.emit).toHaveBeenCalledWith(
+        expect.any(RuleUpdatedEvent),
+      );
+    });
   });
 
   describe('when rule example does not exist', () => {
-    it('throws an error', async () => {
+    let thrownError: Error;
+
+    beforeEach(async () => {
       ruleExampleRepository.findById.mockResolvedValue(null);
 
       const command = createCommand({
         ruleExampleId: 'non-existent-id' as RuleExampleId,
       });
 
-      await expect(usecase.execute(command)).rejects.toThrow(
+      try {
+        await usecase.execute(command);
+      } catch (error) {
+        thrownError = error as Error;
+      }
+    });
+
+    it('throws an error', () => {
+      expect(thrownError.message).toBe(
         'Rule example with id non-existent-id not found',
       );
+    });
+
+    it('calls findById with the non-existent id', () => {
       expect(ruleExampleRepository.findById).toHaveBeenCalledWith(
         'non-existent-id',
       );
+    });
+
+    it('does not call deleteById', () => {
       expect(ruleExampleRepository.deleteById).not.toHaveBeenCalled();
     });
   });

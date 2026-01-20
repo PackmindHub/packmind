@@ -338,10 +338,13 @@ describe('UpdateStandardUsecase', () => {
         );
       });
 
-      it('calls generateStandardSummary method for updated standard version', () => {
+      it('calls generateStandardSummary method once', () => {
         expect(
           updateStandardUsecase.generateStandardSummary,
         ).toHaveBeenCalledTimes(1);
+      });
+
+      it('calls generateStandardSummary method with correct parameters', () => {
         expect(
           updateStandardUsecase.generateStandardSummary,
         ).toHaveBeenCalledWith(
@@ -374,12 +377,24 @@ describe('UpdateStandardUsecase', () => {
         );
       });
 
-      it('validates that userId is not null or undefined for new version creation', () => {
+      it('ensures userId is defined for new version creation', () => {
         const callArgs = (
           standardVersionService.addStandardVersion as jest.Mock
         ).mock.calls[0][0];
         expect(callArgs.userId).toBeDefined();
+      });
+
+      it('ensures userId is not null for new version creation', () => {
+        const callArgs = (
+          standardVersionService.addStandardVersion as jest.Mock
+        ).mock.calls[0][0];
         expect(callArgs.userId).not.toBeNull();
+      });
+
+      it('passes correct userId value for new version creation', () => {
+        const callArgs = (
+          standardVersionService.addStandardVersion as jest.Mock
+        ).mock.calls[0][0];
         expect(callArgs.userId).toEqual(createUserId(inputData.userId));
       });
 
@@ -470,10 +485,11 @@ describe('UpdateStandardUsecase', () => {
         expect(result).toEqual(existingStandard);
       });
 
-      it('does not call services with userId for unchanged content', () => {
-        // Verify that when content is unchanged, we don't make unnecessary calls
-        // but if we did, userId should still be properly handled
+      it('does not call updateStandard for unchanged content', () => {
         expect(standardService.updateStandard).not.toHaveBeenCalled();
+      });
+
+      it('does not call addStandardVersion for unchanged content', () => {
         expect(
           standardVersionService.addStandardVersion,
         ).not.toHaveBeenCalled();
@@ -696,11 +712,17 @@ describe('UpdateStandardUsecase', () => {
         );
       });
 
-      it('validates userId is not lost during error handling', () => {
+      it('ensures userId is defined during error handling', () => {
         const callArgs = (
           standardVersionService.addStandardVersion as jest.Mock
         ).mock.calls[0][0];
         expect(callArgs.userId).toBeDefined();
+      });
+
+      it('preserves correct userId value during error handling', () => {
+        const callArgs = (
+          standardVersionService.addStandardVersion as jest.Mock
+        ).mock.calls[0][0];
         expect(callArgs.userId).toEqual(createUserId(inputData.userId));
       });
     });
@@ -793,29 +815,53 @@ describe('UpdateStandardUsecase', () => {
         );
       });
 
-      it('ensures userId is never null for content changes', () => {
+      it('ensures userId is defined in standard update for content changes', () => {
         const standardUpdateArgs = (standardService.updateStandard as jest.Mock)
           .mock.calls[0][1];
+        expect(standardUpdateArgs.userId).toBeDefined();
+      });
+
+      it('ensures userId is not null in standard update for content changes', () => {
+        const standardUpdateArgs = (standardService.updateStandard as jest.Mock)
+          .mock.calls[0][1];
+        expect(standardUpdateArgs.userId).not.toBeNull();
+      });
+
+      it('ensures userId is defined in version creation for content changes', () => {
         const versionCreateArgs = (
           standardVersionService.addStandardVersion as jest.Mock
         ).mock.calls[0][0];
-
-        expect(standardUpdateArgs.userId).toBeDefined();
-        expect(standardUpdateArgs.userId).not.toBeNull();
         expect(versionCreateArgs.userId).toBeDefined();
+      });
+
+      it('ensures userId is not null in version creation for content changes', () => {
+        const versionCreateArgs = (
+          standardVersionService.addStandardVersion as jest.Mock
+        ).mock.calls[0][0];
         expect(versionCreateArgs.userId).not.toBeNull();
       });
 
-      it('maintains userId consistency between standard and version updates', () => {
+      it('passes expected userId to standard update', () => {
+        const standardUpdateArgs = (standardService.updateStandard as jest.Mock)
+          .mock.calls[0][1];
+        const expectedUserId = createUserId(inputData.userId);
+        expect(standardUpdateArgs.userId).toEqual(expectedUserId);
+      });
+
+      it('passes expected userId to version creation', () => {
+        const versionCreateArgs = (
+          standardVersionService.addStandardVersion as jest.Mock
+        ).mock.calls[0][0];
+        const expectedUserId = createUserId(inputData.userId);
+        expect(versionCreateArgs.userId).toEqual(expectedUserId);
+      });
+
+      it('uses consistent userId between standard and version updates', () => {
         const standardUpdateArgs = (standardService.updateStandard as jest.Mock)
           .mock.calls[0][1];
         const versionCreateArgs = (
           standardVersionService.addStandardVersion as jest.Mock
         ).mock.calls[0][0];
-
-        const expectedUserId = createUserId(inputData.userId);
-        expect(standardUpdateArgs.userId).toEqual(expectedUserId);
-        expect(versionCreateArgs.userId).toEqual(expectedUserId);
         expect(standardUpdateArgs.userId).toEqual(versionCreateArgs.userId);
       });
     });
@@ -844,216 +890,290 @@ describe('UpdateStandardUsecase', () => {
         );
       });
 
-      it('detects name changes', async () => {
-        const existingRules = [ruleFactory({ content: 'Same rule' })];
-        ruleRepository.findByStandardVersionId.mockResolvedValue(existingRules);
+      describe('when name changes', () => {
+        beforeEach(async () => {
+          const existingRules = [ruleFactory({ content: 'Same rule' })];
+          ruleRepository.findByStandardVersionId.mockResolvedValue(
+            existingRules,
+          );
 
-        const inputData: UpdateStandardCommand = {
-          standardId: standardId,
-          name: 'Different Name', // Changed
-          description: 'Original description',
-          rules: [{ id: createRuleId(uuidv4()), content: 'Same rule' }],
-          organizationId: organizationId,
-          userId: userId.toString(),
-          spaceId: spaceId,
-          scope: null,
-        };
+          const inputData: UpdateStandardCommand = {
+            standardId: standardId,
+            name: 'Different Name', // Changed
+            description: 'Original description',
+            rules: [{ id: createRuleId(uuidv4()), content: 'Same rule' }],
+            organizationId: organizationId,
+            userId: userId.toString(),
+            spaceId: spaceId,
+            scope: null,
+          };
 
-        const updatedStandard = standardFactory({ version: 2 });
-        const newVersion = standardVersionFactory({ version: 2 });
+          const updatedStandard = standardFactory({ version: 2 });
+          const newVersion = standardVersionFactory({ version: 2 });
 
-        standardService.updateStandard.mockResolvedValue(updatedStandard);
-        standardVersionService.addStandardVersion.mockResolvedValue(newVersion);
+          standardService.updateStandard.mockResolvedValue(updatedStandard);
+          standardVersionService.addStandardVersion.mockResolvedValue(
+            newVersion,
+          );
 
-        await updateStandardUsecase.execute(inputData);
-
-        expect(standardService.updateStandard).toHaveBeenCalled();
-        expect(standardVersionService.addStandardVersion).toHaveBeenCalled();
-      });
-
-      it('detects description changes', async () => {
-        const existingRules = [ruleFactory({ content: 'Same rule' })];
-        ruleRepository.findByStandardVersionId.mockResolvedValue(existingRules);
-
-        const inputData: UpdateStandardCommand = {
-          standardId: standardId,
-          name: 'Original Name',
-          description: 'Different description', // Changed
-          rules: [{ id: createRuleId(uuidv4()), content: 'Same rule' }],
-          organizationId: organizationId,
-          userId: userId.toString(),
-          spaceId: spaceId,
-          scope: null,
-        };
-
-        const updatedStandard = standardFactory({ version: 2 });
-        const newVersion = standardVersionFactory({ version: 2 });
-
-        standardService.updateStandard.mockResolvedValue(updatedStandard);
-        standardVersionService.addStandardVersion.mockResolvedValue(newVersion);
-
-        await updateStandardUsecase.execute(inputData);
-
-        expect(standardService.updateStandard).toHaveBeenCalled();
-        expect(standardVersionService.addStandardVersion).toHaveBeenCalled();
-      });
-
-      it('detects rule count changes', async () => {
-        const existingRules = [
-          ruleFactory({ content: 'Rule 1' }),
-          ruleFactory({ content: 'Rule 2' }),
-        ];
-        ruleRepository.findByStandardVersionId.mockResolvedValue(existingRules);
-
-        const inputData: UpdateStandardCommand = {
-          standardId: standardId,
-          name: 'Original Name',
-          description: 'Original description',
-          rules: [{ id: createRuleId(uuidv4()), content: 'Rule 1' }], // Fewer rules
-          organizationId: organizationId,
-          userId: userId.toString(),
-          spaceId: spaceId,
-          scope: null,
-        };
-
-        const updatedStandard = standardFactory({ version: 2 });
-        const newVersion = standardVersionFactory({ version: 2 });
-
-        standardService.updateStandard.mockResolvedValue(updatedStandard);
-        standardVersionService.addStandardVersion.mockResolvedValue(newVersion);
-
-        await updateStandardUsecase.execute(inputData);
-
-        expect(standardService.updateStandard).toHaveBeenCalled();
-        expect(standardVersionService.addStandardVersion).toHaveBeenCalled();
-      });
-
-      it('detects rule content changes', async () => {
-        const existingRules = [
-          ruleFactory({ content: 'Original rule content' }),
-        ];
-        ruleRepository.findByStandardVersionId.mockResolvedValue(existingRules);
-
-        const inputData: UpdateStandardCommand = {
-          standardId: standardId,
-          name: 'Original Name',
-          description: 'Original description',
-          rules: [
-            { id: createRuleId(uuidv4()), content: 'Modified rule content' },
-          ], // Changed content
-          organizationId: organizationId,
-          userId: userId.toString(),
-          spaceId: spaceId,
-          scope: null,
-        };
-
-        const updatedStandard = standardFactory({ version: 2 });
-        const newVersion = standardVersionFactory({ version: 2 });
-
-        standardService.updateStandard.mockResolvedValue(updatedStandard);
-        standardVersionService.addStandardVersion.mockResolvedValue(newVersion);
-
-        await updateStandardUsecase.execute(inputData);
-
-        expect(standardService.updateStandard).toHaveBeenCalled();
-        expect(standardVersionService.addStandardVersion).toHaveBeenCalled();
-      });
-
-      it('detects scope changes', async () => {
-        const existingRules = [ruleFactory({ content: 'Same rule' })];
-        ruleRepository.findByStandardVersionId.mockResolvedValue(existingRules);
-
-        // Update the latestVersion to have an original scope
-        latestVersion = standardVersionFactory({
-          standardId,
-          name: 'Original Name',
-          description: 'Original description',
-          scope: 'original-scope', // Original scope value
-          version: 1,
+          await updateStandardUsecase.execute(inputData);
         });
-        standardVersionService.getLatestStandardVersion.mockResolvedValue(
-          latestVersion,
-        );
 
-        const inputData: UpdateStandardCommand = {
-          standardId: standardId,
-          name: 'Original Name',
-          description: 'Original description',
-          rules: [{ id: createRuleId(uuidv4()), content: 'Same rule' }],
-          organizationId: organizationId,
-          userId: userId.toString(),
-          spaceId: spaceId,
-          scope: 'updated-scope', // Changed scope
-        };
+        it('calls updateStandard', () => {
+          expect(standardService.updateStandard).toHaveBeenCalled();
+        });
 
-        const updatedStandard = standardFactory({ version: 2 });
-        const newVersion = standardVersionFactory({ version: 2 });
+        it('calls addStandardVersion', () => {
+          expect(standardVersionService.addStandardVersion).toHaveBeenCalled();
+        });
+      });
 
-        standardService.updateStandard.mockResolvedValue(updatedStandard);
-        standardVersionService.addStandardVersion.mockResolvedValue(newVersion);
+      describe('when description changes', () => {
+        beforeEach(async () => {
+          const existingRules = [ruleFactory({ content: 'Same rule' })];
+          ruleRepository.findByStandardVersionId.mockResolvedValue(
+            existingRules,
+          );
 
-        await updateStandardUsecase.execute(inputData);
+          const inputData: UpdateStandardCommand = {
+            standardId: standardId,
+            name: 'Original Name',
+            description: 'Different description', // Changed
+            rules: [{ id: createRuleId(uuidv4()), content: 'Same rule' }],
+            organizationId: organizationId,
+            userId: userId.toString(),
+            spaceId: spaceId,
+            scope: null,
+          };
 
-        expect(standardService.updateStandard).toHaveBeenCalled();
-        expect(standardVersionService.addStandardVersion).toHaveBeenCalled();
+          const updatedStandard = standardFactory({ version: 2 });
+          const newVersion = standardVersionFactory({ version: 2 });
+
+          standardService.updateStandard.mockResolvedValue(updatedStandard);
+          standardVersionService.addStandardVersion.mockResolvedValue(
+            newVersion,
+          );
+
+          await updateStandardUsecase.execute(inputData);
+        });
+
+        it('calls updateStandard', () => {
+          expect(standardService.updateStandard).toHaveBeenCalled();
+        });
+
+        it('calls addStandardVersion', () => {
+          expect(standardVersionService.addStandardVersion).toHaveBeenCalled();
+        });
+      });
+
+      describe('when rule count changes', () => {
+        beforeEach(async () => {
+          const existingRules = [
+            ruleFactory({ content: 'Rule 1' }),
+            ruleFactory({ content: 'Rule 2' }),
+          ];
+          ruleRepository.findByStandardVersionId.mockResolvedValue(
+            existingRules,
+          );
+
+          const inputData: UpdateStandardCommand = {
+            standardId: standardId,
+            name: 'Original Name',
+            description: 'Original description',
+            rules: [{ id: createRuleId(uuidv4()), content: 'Rule 1' }], // Fewer rules
+            organizationId: organizationId,
+            userId: userId.toString(),
+            spaceId: spaceId,
+            scope: null,
+          };
+
+          const updatedStandard = standardFactory({ version: 2 });
+          const newVersion = standardVersionFactory({ version: 2 });
+
+          standardService.updateStandard.mockResolvedValue(updatedStandard);
+          standardVersionService.addStandardVersion.mockResolvedValue(
+            newVersion,
+          );
+
+          await updateStandardUsecase.execute(inputData);
+        });
+
+        it('calls updateStandard', () => {
+          expect(standardService.updateStandard).toHaveBeenCalled();
+        });
+
+        it('calls addStandardVersion', () => {
+          expect(standardVersionService.addStandardVersion).toHaveBeenCalled();
+        });
+      });
+
+      describe('when rule content changes', () => {
+        beforeEach(async () => {
+          const existingRules = [
+            ruleFactory({ content: 'Original rule content' }),
+          ];
+          ruleRepository.findByStandardVersionId.mockResolvedValue(
+            existingRules,
+          );
+
+          const inputData: UpdateStandardCommand = {
+            standardId: standardId,
+            name: 'Original Name',
+            description: 'Original description',
+            rules: [
+              { id: createRuleId(uuidv4()), content: 'Modified rule content' },
+            ], // Changed content
+            organizationId: organizationId,
+            userId: userId.toString(),
+            spaceId: spaceId,
+            scope: null,
+          };
+
+          const updatedStandard = standardFactory({ version: 2 });
+          const newVersion = standardVersionFactory({ version: 2 });
+
+          standardService.updateStandard.mockResolvedValue(updatedStandard);
+          standardVersionService.addStandardVersion.mockResolvedValue(
+            newVersion,
+          );
+
+          await updateStandardUsecase.execute(inputData);
+        });
+
+        it('calls updateStandard', () => {
+          expect(standardService.updateStandard).toHaveBeenCalled();
+        });
+
+        it('calls addStandardVersion', () => {
+          expect(standardVersionService.addStandardVersion).toHaveBeenCalled();
+        });
+      });
+
+      describe('when scope changes', () => {
+        beforeEach(async () => {
+          const existingRules = [ruleFactory({ content: 'Same rule' })];
+          ruleRepository.findByStandardVersionId.mockResolvedValue(
+            existingRules,
+          );
+
+          // Update the latestVersion to have an original scope
+          latestVersion = standardVersionFactory({
+            standardId,
+            name: 'Original Name',
+            description: 'Original description',
+            scope: 'original-scope', // Original scope value
+            version: 1,
+          });
+          standardVersionService.getLatestStandardVersion.mockResolvedValue(
+            latestVersion,
+          );
+
+          const inputData: UpdateStandardCommand = {
+            standardId: standardId,
+            name: 'Original Name',
+            description: 'Original description',
+            rules: [{ id: createRuleId(uuidv4()), content: 'Same rule' }],
+            organizationId: organizationId,
+            userId: userId.toString(),
+            spaceId: spaceId,
+            scope: 'updated-scope', // Changed scope
+          };
+
+          const updatedStandard = standardFactory({ version: 2 });
+          const newVersion = standardVersionFactory({ version: 2 });
+
+          standardService.updateStandard.mockResolvedValue(updatedStandard);
+          standardVersionService.addStandardVersion.mockResolvedValue(
+            newVersion,
+          );
+
+          await updateStandardUsecase.execute(inputData);
+        });
+
+        it('calls updateStandard', () => {
+          expect(standardService.updateStandard).toHaveBeenCalled();
+        });
+
+        it('calls addStandardVersion', () => {
+          expect(standardVersionService.addStandardVersion).toHaveBeenCalled();
+        });
       });
     });
 
     describe('userId edge cases', () => {
-      it('handles userId properly for updates with valid user context', async () => {
-        const inputData: UpdateStandardCommand = {
-          standardId: standardId,
-          name: 'Test Standard',
-          description: 'Test description',
-          rules: [{ id: createRuleId(uuidv4()), content: 'Test rule' }],
-          organizationId: organizationId,
-          userId: userId.toString(), // Valid userId
-          spaceId: spaceId,
-          scope: null,
-        };
+      describe('when updating with valid user context', () => {
+        let inputData: UpdateStandardCommand;
+        let updatedStandard: Standard;
+        let result: Standard;
 
-        const existingStandard = standardFactory({
-          id: standardId,
-          name: 'Original Name',
-          version: 1,
-          spaceId: spaceId,
+        beforeEach(async () => {
+          inputData = {
+            standardId: standardId,
+            name: 'Test Standard',
+            description: 'Test description',
+            rules: [{ id: createRuleId(uuidv4()), content: 'Test rule' }],
+            organizationId: organizationId,
+            userId: userId.toString(), // Valid userId
+            spaceId: spaceId,
+            scope: null,
+          };
+
+          const existingStandard = standardFactory({
+            id: standardId,
+            name: 'Original Name',
+            version: 1,
+            spaceId: spaceId,
+          });
+
+          const latestVersion = standardVersionFactory({
+            standardId,
+            name: 'Original Name',
+            description: 'Original description',
+            version: 1,
+          });
+
+          const existingRules = [ruleFactory({ content: 'Original rule' })];
+          updatedStandard = standardFactory({ version: 2 });
+          const newVersion = standardVersionFactory({ version: 2 });
+
+          standardService.getStandardById.mockResolvedValue(existingStandard);
+          standardVersionService.getLatestStandardVersion.mockResolvedValue(
+            latestVersion,
+          );
+          ruleRepository.findByStandardVersionId.mockResolvedValue(
+            existingRules,
+          );
+          standardService.updateStandard.mockResolvedValue(updatedStandard);
+          standardVersionService.addStandardVersion.mockResolvedValue(
+            newVersion,
+          );
+
+          const response = await updateStandardUsecase.execute(inputData);
+          result = response.standard;
         });
 
-        const latestVersion = standardVersionFactory({
-          standardId,
-          name: 'Original Name',
-          description: 'Original description',
-          version: 1,
+        it('passes correct userId to addStandardVersion', () => {
+          expect(
+            standardVersionService.addStandardVersion,
+          ).toHaveBeenCalledWith(
+            expect.objectContaining({
+              userId: createUserId(inputData.userId),
+            }),
+          );
         });
 
-        const existingRules = [ruleFactory({ content: 'Original rule' })];
-        const updatedStandard = standardFactory({ version: 2 });
-        const newVersion = standardVersionFactory({ version: 2 });
-
-        standardService.getStandardById.mockResolvedValue(existingStandard);
-        standardVersionService.getLatestStandardVersion.mockResolvedValue(
-          latestVersion,
-        );
-        ruleRepository.findByStandardVersionId.mockResolvedValue(existingRules);
-        standardService.updateStandard.mockResolvedValue(updatedStandard);
-        standardVersionService.addStandardVersion.mockResolvedValue(newVersion);
-
-        const response = await updateStandardUsecase.execute(inputData);
-        const result = response.standard;
-
-        expect(standardVersionService.addStandardVersion).toHaveBeenCalledWith(
-          expect.objectContaining({
-            userId: createUserId(inputData.userId),
-          }),
-        );
-        expect(result).toEqual(updatedStandard);
+        it('returns the updated standard', () => {
+          expect(result).toEqual(updatedStandard);
+        });
       });
     });
 
     describe('space validation', () => {
       describe('when space does not exist', () => {
-        it('throws error', async () => {
-          const inputData: UpdateStandardCommand = {
+        let inputData: UpdateStandardCommand;
+
+        beforeEach(() => {
+          inputData = {
             standardId: standardId,
             name: 'Test',
             description: 'Test',
@@ -1065,18 +1185,29 @@ describe('UpdateStandardUsecase', () => {
           };
 
           spacesPort.getSpaceById.mockResolvedValue(null);
+        });
 
+        it('throws error', async () => {
           await expect(
             updateStandardUsecase.execute(inputData),
           ).rejects.toThrow(`Space with id ${spaceId} not found`);
+        });
 
+        it('does not call getStandardById', async () => {
+          try {
+            await updateStandardUsecase.execute(inputData);
+          } catch {
+            // Expected to throw
+          }
           expect(standardService.getStandardById).not.toHaveBeenCalled();
         });
       });
 
       describe('when space does not belong to organization', () => {
-        it('throws error', async () => {
-          const inputData: UpdateStandardCommand = {
+        let inputData: UpdateStandardCommand;
+
+        beforeEach(() => {
+          inputData = {
             standardId: standardId,
             name: 'Test',
             description: 'Test',
@@ -1092,20 +1223,31 @@ describe('UpdateStandardUsecase', () => {
             ...mockSpace,
             organizationId: wrongOrgId,
           });
+        });
 
+        it('throws error', async () => {
           await expect(
             updateStandardUsecase.execute(inputData),
           ).rejects.toThrow(
             `Space ${spaceId} does not belong to organization ${organizationId}`,
           );
+        });
 
+        it('does not call getStandardById', async () => {
+          try {
+            await updateStandardUsecase.execute(inputData);
+          } catch {
+            // Expected to throw
+          }
           expect(standardService.getStandardById).not.toHaveBeenCalled();
         });
       });
 
       describe('when standard does not belong to space', () => {
-        it('throws error', async () => {
-          const inputData: UpdateStandardCommand = {
+        let inputData: UpdateStandardCommand;
+
+        beforeEach(() => {
+          inputData = {
             standardId: standardId,
             name: 'Test',
             description: 'Test',
@@ -1123,13 +1265,22 @@ describe('UpdateStandardUsecase', () => {
           });
 
           standardService.getStandardById.mockResolvedValue(existingStandard);
+        });
 
+        it('throws error', async () => {
           await expect(
             updateStandardUsecase.execute(inputData),
           ).rejects.toThrow(
             `Standard ${standardId} does not belong to space ${spaceId}`,
           );
+        });
 
+        it('does not call getLatestStandardVersion', async () => {
+          try {
+            await updateStandardUsecase.execute(inputData);
+          } catch {
+            // Expected to throw
+          }
           expect(
             standardVersionService.getLatestStandardVersion,
           ).not.toHaveBeenCalled();
@@ -1139,8 +1290,10 @@ describe('UpdateStandardUsecase', () => {
 
     describe('error handling', () => {
       describe('when standard does not exist', () => {
-        it('throws error', async () => {
-          const inputData: UpdateStandardCommand = {
+        let inputData: UpdateStandardCommand;
+
+        beforeEach(() => {
+          inputData = {
             standardId: standardId,
             name: 'Test',
             description: 'Test',
@@ -1152,11 +1305,20 @@ describe('UpdateStandardUsecase', () => {
           };
 
           standardService.getStandardById.mockResolvedValue(null);
+        });
 
+        it('throws error', async () => {
           await expect(
             updateStandardUsecase.execute(inputData),
           ).rejects.toThrow(`Standard with id ${standardId} not found`);
+        });
 
+        it('does not call getLatestStandardVersion', async () => {
+          try {
+            await updateStandardUsecase.execute(inputData);
+          } catch {
+            // Expected to throw
+          }
           expect(
             standardVersionService.getLatestStandardVersion,
           ).not.toHaveBeenCalled();

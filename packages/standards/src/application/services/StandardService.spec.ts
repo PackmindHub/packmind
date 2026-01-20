@@ -326,61 +326,80 @@ describe('StandardService', () => {
   });
 
   describe('listStandardsBySpace', () => {
-    it('returns standards for the specified space', async () => {
-      const spaceId = createSpaceId(uuidv4());
-      const standards = [
-        standardFactory({ spaceId }),
-        standardFactory({ spaceId }),
-      ];
+    let spaceId: ReturnType<typeof createSpaceId>;
+    let standards: Standard[];
+    let result: Standard[];
+
+    beforeEach(async () => {
+      spaceId = createSpaceId(uuidv4());
+      standards = [standardFactory({ spaceId }), standardFactory({ spaceId })];
 
       standardRepository.findBySpaceId = jest.fn().mockResolvedValue(standards);
 
-      const result = await standardService.listStandardsBySpace(spaceId);
+      result = await standardService.listStandardsBySpace(spaceId);
+    });
 
+    it('calls repository with correct spaceId', () => {
       expect(standardRepository.findBySpaceId).toHaveBeenCalledWith(spaceId);
+    });
+
+    it('returns standards for the specified space', () => {
       expect(result).toEqual(standards);
     });
   });
 
   describe('listStandardsByUser', () => {
-    it('returns standards for the specified user', async () => {
-      const userId = createUserId(uuidv4());
-      const standards = [
-        standardFactory({ userId }),
-        standardFactory({ userId }),
-      ];
+    let userId: UserId;
+    let standards: Standard[];
+    let result: Standard[];
+
+    beforeEach(async () => {
+      userId = createUserId(uuidv4());
+      standards = [standardFactory({ userId }), standardFactory({ userId })];
 
       standardRepository.findByUserId = jest.fn().mockResolvedValue(standards);
 
-      const result = await standardService.listStandardsByUser(userId);
+      result = await standardService.listStandardsByUser(userId);
+    });
 
+    it('calls repository with correct userId', () => {
       expect(standardRepository.findByUserId).toHaveBeenCalledWith(userId);
+    });
+
+    it('returns standards for the specified user', () => {
       expect(result).toEqual(standards);
     });
   });
 
   describe('listStandardsByOrganizationAndUser', () => {
-    it('returns standards for the specified organization and user', async () => {
-      const organizationId = createOrganizationId(uuidv4());
-      const userId = createUserId(uuidv4());
-      const standards = [
-        standardFactory({ userId }),
-        standardFactory({ userId }),
-      ];
+    let organizationId: OrganizationId;
+    let userId: UserId;
+    let standards: Standard[];
+    let result: Standard[];
+
+    beforeEach(async () => {
+      organizationId = createOrganizationId(uuidv4());
+      userId = createUserId(uuidv4());
+      standards = [standardFactory({ userId }), standardFactory({ userId })];
 
       standardRepository.findByOrganizationAndUser = jest
         .fn()
         .mockResolvedValue(standards);
 
-      const result = await standardService.listStandardsByOrganizationAndUser(
+      result = await standardService.listStandardsByOrganizationAndUser(
         organizationId,
         userId,
       );
+    });
 
+    it('calls repository with correct organizationId and userId', () => {
       expect(standardRepository.findByOrganizationAndUser).toHaveBeenCalledWith(
         organizationId,
         userId,
       );
+    });
+
+    it('returns standards for the specified organization and user', () => {
       expect(result).toEqual(standards);
     });
   });

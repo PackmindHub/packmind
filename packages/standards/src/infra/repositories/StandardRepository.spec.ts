@@ -166,62 +166,94 @@ describe('StandardRepository', () => {
     expect(foundStandards).toEqual([]);
   });
 
-  it('can find standards by space and organization with scope from latest version', async () => {
-    const spaceId = createSpaceId(uuidv4());
-    const standard = standardFactory({
-      spaceId,
-      scope: 'standard-scope',
-    });
-    await standardRepository.add(standard);
+  describe('when finding standards by space with versioned scopes', () => {
+    let spaceId: ReturnType<typeof createSpaceId>;
+    let standard: ReturnType<typeof standardFactory>;
+    let foundStandards: Standard[];
 
-    // Create standard versions with different scopes
-    const versionRepo = datasource.getRepository(StandardVersionSchema);
-    const version1 = standardVersionFactory({
-      standardId: standard.id,
-      version: 1,
-      scope: 'version-1-scope',
-    });
-    const version2 = standardVersionFactory({
-      standardId: standard.id,
-      version: 2,
-      scope: 'version-2-scope',
-    });
-    await versionRepo.save(version1);
-    await versionRepo.save(version2);
+    beforeEach(async () => {
+      spaceId = createSpaceId(uuidv4());
+      standard = standardFactory({
+        spaceId,
+        scope: 'standard-scope',
+      });
+      await standardRepository.add(standard);
 
-    const foundStandards = await standardRepository.findBySpaceId(spaceId);
+      // Create standard versions with different scopes
+      const versionRepo = datasource.getRepository(StandardVersionSchema);
+      const version1 = standardVersionFactory({
+        standardId: standard.id,
+        version: 1,
+        scope: 'version-1-scope',
+      });
+      const version2 = standardVersionFactory({
+        standardId: standard.id,
+        version: 2,
+        scope: 'version-2-scope',
+      });
+      await versionRepo.save(version1);
+      await versionRepo.save(version2);
 
-    expect(foundStandards).toHaveLength(1);
-    expect(foundStandards[0]).toMatchObject({
-      id: standard.id,
-      name: standard.name,
-      slug: standard.slug,
-      description: standard.description,
-      userId: standard.userId,
-      spaceId: spaceId,
-      scope: 'version-2-scope',
+      foundStandards = await standardRepository.findBySpaceId(spaceId);
+    });
+
+    it('returns one standard', () => {
+      expect(foundStandards).toHaveLength(1);
+    });
+
+    it('returns scope from latest version', () => {
+      expect(foundStandards[0]).toMatchObject({
+        id: standard.id,
+        name: standard.name,
+        slug: standard.slug,
+        description: standard.description,
+        userId: standard.userId,
+        spaceId: spaceId,
+        scope: 'version-2-scope',
+      });
     });
   });
 
-  it('can find multiple standards by space', async () => {
-    const spaceId = createSpaceId(uuidv4());
-    const standard1 = await standardRepository.add(
-      standardFactory({ spaceId, slug: 'slug-1' }),
-    );
-    const standard2 = await standardRepository.add(
-      standardFactory({ spaceId, slug: 'slug-2' }),
-    );
-    const standard3 = await standardRepository.add(
-      standardFactory({ spaceId, slug: 'slug-3' }),
-    );
+  describe('when finding multiple standards by space', () => {
+    let spaceId: ReturnType<typeof createSpaceId>;
+    let standard1: Standard;
+    let standard2: Standard;
+    let standard3: Standard;
+    let foundStandards: Standard[];
 
-    const foundStandards = await standardRepository.findBySpaceId(spaceId);
+    beforeEach(async () => {
+      spaceId = createSpaceId(uuidv4());
+      standard1 = await standardRepository.add(
+        standardFactory({ spaceId, slug: 'slug-1' }),
+      );
+      standard2 = await standardRepository.add(
+        standardFactory({ spaceId, slug: 'slug-2' }),
+      );
+      standard3 = await standardRepository.add(
+        standardFactory({ spaceId, slug: 'slug-3' }),
+      );
 
-    expect(foundStandards).toHaveLength(3);
-    const foundIds = foundStandards.map((s) => s.id);
-    expect(foundIds).toContain(standard1.id);
-    expect(foundIds).toContain(standard2.id);
-    expect(foundIds).toContain(standard3.id);
+      foundStandards = await standardRepository.findBySpaceId(spaceId);
+    });
+
+    it('returns all three standards', () => {
+      expect(foundStandards).toHaveLength(3);
+    });
+
+    it('includes the first standard', () => {
+      const foundIds = foundStandards.map((s) => s.id);
+      expect(foundIds).toContain(standard1.id);
+    });
+
+    it('includes the second standard', () => {
+      const foundIds = foundStandards.map((s) => s.id);
+      expect(foundIds).toContain(standard2.id);
+    });
+
+    it('includes the third standard', () => {
+      const foundIds = foundStandards.map((s) => s.id);
+      expect(foundIds).toContain(standard3.id);
+    });
   });
 
   describe('when searching for organization standards', () => {

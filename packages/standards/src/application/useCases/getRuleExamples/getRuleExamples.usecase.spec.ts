@@ -54,12 +54,16 @@ describe('GetRuleExamplesUsecase', () => {
 
   describe('getRuleExamples', () => {
     describe('when rule exists', () => {
-      it('returns rule examples successfully', async () => {
-        const ruleId = createRuleId(uuidv4());
+      let ruleId: ReturnType<typeof createRuleId>;
+      let mockRuleExamples: ReturnType<typeof ruleExampleFactory>[];
+      let result: ReturnType<typeof ruleExampleFactory>[];
+
+      beforeEach(async () => {
+        ruleId = createRuleId(uuidv4());
         const rule = ruleFactory({ id: ruleId });
         const request: GetRuleExamplesRequest = { ruleId };
 
-        const mockRuleExamples = [
+        mockRuleExamples = [
           ruleExampleFactory({
             ruleId,
             lang: ProgrammingLanguage.JAVASCRIPT,
@@ -77,77 +81,178 @@ describe('GetRuleExamplesUsecase', () => {
         ruleRepository.findById.mockResolvedValue(rule);
         ruleExampleRepository.findByRuleId.mockResolvedValue(mockRuleExamples);
 
-        const result = await getRuleExamplesUsecase.getRuleExamples(request);
+        result = await getRuleExamplesUsecase.getRuleExamples(request);
+      });
 
+      it('calls ruleRepository.findById with the ruleId', () => {
         expect(ruleRepository.findById).toHaveBeenCalledWith(ruleId);
+      });
+
+      it('calls ruleExampleRepository.findByRuleId with the ruleId', () => {
         expect(ruleExampleRepository.findByRuleId).toHaveBeenCalledWith(ruleId);
+      });
+
+      it('returns the rule examples', () => {
         expect(result).toEqual(mockRuleExamples);
       });
     });
 
     describe('when rule exists but has no examples', () => {
-      it('returns empty array', async () => {
-        const ruleId = createRuleId(uuidv4());
+      let ruleId: ReturnType<typeof createRuleId>;
+      let result: ReturnType<typeof ruleExampleFactory>[];
+
+      beforeEach(async () => {
+        ruleId = createRuleId(uuidv4());
         const rule = ruleFactory({ id: ruleId });
         const request: GetRuleExamplesRequest = { ruleId };
 
         ruleRepository.findById.mockResolvedValue(rule);
         ruleExampleRepository.findByRuleId.mockResolvedValue([]);
 
-        const result = await getRuleExamplesUsecase.getRuleExamples(request);
+        result = await getRuleExamplesUsecase.getRuleExamples(request);
+      });
 
+      it('calls ruleRepository.findById with the ruleId', () => {
         expect(ruleRepository.findById).toHaveBeenCalledWith(ruleId);
+      });
+
+      it('calls ruleExampleRepository.findByRuleId with the ruleId', () => {
         expect(ruleExampleRepository.findByRuleId).toHaveBeenCalledWith(ruleId);
+      });
+
+      it('returns an empty array', () => {
         expect(result).toEqual([]);
       });
     });
 
     describe('when rule does not exist', () => {
-      it('throws an error', async () => {
-        const ruleId = createRuleId(uuidv4());
-        const request: GetRuleExamplesRequest = { ruleId };
+      let ruleId: ReturnType<typeof createRuleId>;
 
+      beforeEach(() => {
+        ruleId = createRuleId(uuidv4());
         ruleRepository.findById.mockResolvedValue(null);
+      });
+
+      it('throws an error', async () => {
+        const request: GetRuleExamplesRequest = { ruleId };
 
         await expect(
           getRuleExamplesUsecase.getRuleExamples(request),
         ).rejects.toThrow(`Rule with id ${ruleId} not found`);
+      });
+
+      it('calls ruleRepository.findById with the ruleId', async () => {
+        const request: GetRuleExamplesRequest = { ruleId };
+
+        try {
+          await getRuleExamplesUsecase.getRuleExamples(request);
+        } catch {
+          // Expected to throw
+        }
 
         expect(ruleRepository.findById).toHaveBeenCalledWith(ruleId);
+      });
+
+      it('does not call ruleExampleRepository.findByRuleId', async () => {
+        const request: GetRuleExamplesRequest = { ruleId };
+
+        try {
+          await getRuleExamplesUsecase.getRuleExamples(request);
+        } catch {
+          // Expected to throw
+        }
+
         expect(ruleExampleRepository.findByRuleId).not.toHaveBeenCalled();
       });
     });
 
-    it('handles rule repository errors gracefully', async () => {
-      const ruleId = createRuleId(uuidv4());
-      const request: GetRuleExamplesRequest = { ruleId };
+    describe('when rule repository throws an error', () => {
+      let ruleId: ReturnType<typeof createRuleId>;
 
-      ruleRepository.findById.mockRejectedValue(new Error('Rule fetch error'));
+      beforeEach(() => {
+        ruleId = createRuleId(uuidv4());
+        ruleRepository.findById.mockRejectedValue(
+          new Error('Rule fetch error'),
+        );
+      });
 
-      await expect(
-        getRuleExamplesUsecase.getRuleExamples(request),
-      ).rejects.toThrow('Rule fetch error');
+      it('propagates the error', async () => {
+        const request: GetRuleExamplesRequest = { ruleId };
 
-      expect(ruleRepository.findById).toHaveBeenCalledWith(ruleId);
-      expect(ruleExampleRepository.findByRuleId).not.toHaveBeenCalled();
+        await expect(
+          getRuleExamplesUsecase.getRuleExamples(request),
+        ).rejects.toThrow('Rule fetch error');
+      });
+
+      it('calls ruleRepository.findById with the ruleId', async () => {
+        const request: GetRuleExamplesRequest = { ruleId };
+
+        try {
+          await getRuleExamplesUsecase.getRuleExamples(request);
+        } catch {
+          // Expected to throw
+        }
+
+        expect(ruleRepository.findById).toHaveBeenCalledWith(ruleId);
+      });
+
+      it('does not call ruleExampleRepository.findByRuleId', async () => {
+        const request: GetRuleExamplesRequest = { ruleId };
+
+        try {
+          await getRuleExamplesUsecase.getRuleExamples(request);
+        } catch {
+          // Expected to throw
+        }
+
+        expect(ruleExampleRepository.findByRuleId).not.toHaveBeenCalled();
+      });
     });
 
-    it('handles rule example repository errors gracefully', async () => {
-      const ruleId = createRuleId(uuidv4());
-      const rule = ruleFactory({ id: ruleId });
-      const request: GetRuleExamplesRequest = { ruleId };
+    describe('when rule example repository throws an error', () => {
+      let ruleId: ReturnType<typeof createRuleId>;
 
-      ruleRepository.findById.mockResolvedValue(rule);
-      ruleExampleRepository.findByRuleId.mockRejectedValue(
-        new Error('Database error'),
-      );
+      beforeEach(() => {
+        ruleId = createRuleId(uuidv4());
+        const rule = ruleFactory({ id: ruleId });
 
-      await expect(
-        getRuleExamplesUsecase.getRuleExamples(request),
-      ).rejects.toThrow('Database error');
+        ruleRepository.findById.mockResolvedValue(rule);
+        ruleExampleRepository.findByRuleId.mockRejectedValue(
+          new Error('Database error'),
+        );
+      });
 
-      expect(ruleRepository.findById).toHaveBeenCalledWith(ruleId);
-      expect(ruleExampleRepository.findByRuleId).toHaveBeenCalledWith(ruleId);
+      it('propagates the error', async () => {
+        const request: GetRuleExamplesRequest = { ruleId };
+
+        await expect(
+          getRuleExamplesUsecase.getRuleExamples(request),
+        ).rejects.toThrow('Database error');
+      });
+
+      it('calls ruleRepository.findById with the ruleId', async () => {
+        const request: GetRuleExamplesRequest = { ruleId };
+
+        try {
+          await getRuleExamplesUsecase.getRuleExamples(request);
+        } catch {
+          // Expected to throw
+        }
+
+        expect(ruleRepository.findById).toHaveBeenCalledWith(ruleId);
+      });
+
+      it('calls ruleExampleRepository.findByRuleId with the ruleId', async () => {
+        const request: GetRuleExamplesRequest = { ruleId };
+
+        try {
+          await getRuleExamplesUsecase.getRuleExamples(request);
+        } catch {
+          // Expected to throw
+        }
+
+        expect(ruleExampleRepository.findByRuleId).toHaveBeenCalledWith(ruleId);
+      });
     });
   });
 });

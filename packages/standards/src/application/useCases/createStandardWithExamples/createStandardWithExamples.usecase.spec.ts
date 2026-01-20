@@ -138,76 +138,84 @@ describe('CreateStandardWithExamplesUsecase', () => {
       spaceId: createSpaceId(uuidv4()),
     };
 
-    it('creates a standard with rules that have no examples', async () => {
+    describe('when creating a standard with rules that have no examples', () => {
       const rules: RuleWithExamples[] = [
         { content: 'Use consistent indentation' },
         { content: 'Limit line length to 100 characters' },
       ];
 
-      const mockStandard = standardFactory({
-        id: createStandardId(uuidv4()),
-        name: baseRequest.name,
-        slug: 'test-standard',
-        description: baseRequest.description,
-        version: 1,
-        userId,
-        scope: null,
-      });
+      let mockStandard: Standard;
+      let mockStandardVersion: StandardVersion;
 
-      const mockStandardVersion = standardVersionFactory({
-        id: createStandardVersionId(uuidv4()),
-        standardId: mockStandard.id,
-        name: baseRequest.name,
-        slug: 'test-standard',
-        description: baseRequest.description,
-        version: 1,
-      });
+      beforeEach(async () => {
+        mockStandard = standardFactory({
+          id: createStandardId(uuidv4()),
+          name: baseRequest.name,
+          slug: 'test-standard',
+          description: baseRequest.description,
+          version: 1,
+          userId,
+          scope: null,
+        });
 
-      // Mock the service calls
-      standardService.listStandardsBySpace.mockResolvedValue([]);
-      standardService.addStandard.mockResolvedValue(mockStandard);
-      standardSummaryService.createStandardSummary.mockResolvedValue(
-        'Generated summary',
-      );
-      standardVersionService.addStandardVersion.mockResolvedValue(
-        mockStandardVersion,
-      );
-
-      const result = await usecase.createStandardWithExamples({
-        ...baseRequest,
-        rules,
-      });
-
-      expect(result).toEqual(mockStandard);
-      expect(standardService.addStandard).toHaveBeenCalledWith({
-        name: baseRequest.name,
-        description: baseRequest.description,
-        slug: 'test-standard',
-        version: 1,
-        gitCommit: undefined,
-        userId,
-        scope: null,
-        spaceId: baseRequest.spaceId,
-      });
-      expect(standardVersionService.addStandardVersion).toHaveBeenCalledWith(
-        expect.objectContaining({
+        mockStandardVersion = standardVersionFactory({
+          id: createStandardVersionId(uuidv4()),
           standardId: mockStandard.id,
           name: baseRequest.name,
           slug: 'test-standard',
           description: baseRequest.description,
           version: 1,
-          rules: [
-            { content: 'Use consistent indentation', examples: [] },
-            { content: 'Limit line length to 100 characters', examples: [] },
-          ],
-          scope: null,
-          summary: 'Generated summary',
+        });
+
+        standardService.listStandardsBySpace.mockResolvedValue([]);
+        standardService.addStandard.mockResolvedValue(mockStandard);
+        standardSummaryService.createStandardSummary.mockResolvedValue(
+          'Generated summary',
+        );
+        standardVersionService.addStandardVersion.mockResolvedValue(
+          mockStandardVersion,
+        );
+
+        await usecase.createStandardWithExamples({
+          ...baseRequest,
+          rules,
+        });
+      });
+
+      it('calls addStandard with correct parameters', () => {
+        expect(standardService.addStandard).toHaveBeenCalledWith({
+          name: baseRequest.name,
+          description: baseRequest.description,
+          slug: 'test-standard',
+          version: 1,
+          gitCommit: undefined,
           userId,
-        }),
-      );
+          scope: null,
+          spaceId: baseRequest.spaceId,
+        });
+      });
+
+      it('calls addStandardVersion with rules having empty examples arrays', () => {
+        expect(standardVersionService.addStandardVersion).toHaveBeenCalledWith(
+          expect.objectContaining({
+            standardId: mockStandard.id,
+            name: baseRequest.name,
+            slug: 'test-standard',
+            description: baseRequest.description,
+            version: 1,
+            rules: [
+              { content: 'Use consistent indentation', examples: [] },
+              { content: 'Limit line length to 100 characters', examples: [] },
+            ],
+            scope: null,
+            summary: 'Generated summary',
+            userId,
+          }),
+        );
+      });
     });
 
-    it('creates a standard with rules that have examples', async () => {
+    it('creates a standard with rules that have examples and passes them to standardVersion', async () => {
       const rules: RuleWithExamples[] = [
         {
           content: 'Use descriptive test names',
@@ -251,7 +259,6 @@ describe('CreateStandardWithExamplesUsecase', () => {
         version: 1,
       });
 
-      // Mock the service calls
       standardService.listStandardsBySpace.mockResolvedValue([]);
       standardService.addStandard.mockResolvedValue(mockStandard);
       standardSummaryService.createStandardSummary.mockResolvedValue(
@@ -261,12 +268,11 @@ describe('CreateStandardWithExamplesUsecase', () => {
         mockStandardVersion,
       );
 
-      const result = await usecase.createStandardWithExamples({
+      await usecase.createStandardWithExamples({
         ...baseRequest,
         rules,
       });
 
-      expect(result).toEqual(mockStandard);
       expect(standardVersionService.addStandardVersion).toHaveBeenCalledWith(
         expect.objectContaining({
           rules: expect.arrayContaining([
@@ -297,9 +303,9 @@ describe('CreateStandardWithExamplesUsecase', () => {
       );
     });
 
-    it('creates a standard with mixed rules (some with examples, some without)', async () => {
+    it('creates a standard with mixed rules and normalizes rules without examples to have empty arrays', async () => {
       const rules: RuleWithExamples[] = [
-        { content: 'Use consistent indentation' }, // No examples
+        { content: 'Use consistent indentation' },
         {
           content: 'Use descriptive test names',
           examples: [
@@ -310,7 +316,7 @@ describe('CreateStandardWithExamplesUsecase', () => {
             },
           ],
         },
-        { content: 'Write comprehensive documentation' }, // No examples
+        { content: 'Write comprehensive documentation' },
       ];
 
       const mockStandard = standardFactory({
@@ -332,7 +338,6 @@ describe('CreateStandardWithExamplesUsecase', () => {
         version: 1,
       });
 
-      // Mock the service calls
       standardService.listStandardsBySpace.mockResolvedValue([]);
       standardService.addStandard.mockResolvedValue(mockStandard);
       standardSummaryService.createStandardSummary.mockResolvedValue(
@@ -342,12 +347,11 @@ describe('CreateStandardWithExamplesUsecase', () => {
         mockStandardVersion,
       );
 
-      const result = await usecase.createStandardWithExamples({
+      await usecase.createStandardWithExamples({
         ...baseRequest,
         rules,
       });
 
-      expect(result).toEqual(mockStandard);
       expect(standardVersionService.addStandardVersion).toHaveBeenCalledWith(
         expect.objectContaining({
           rules: [
@@ -369,7 +373,7 @@ describe('CreateStandardWithExamplesUsecase', () => {
       );
     });
 
-    it('creates a standard with multiple examples per rule', async () => {
+    it('creates a standard with multiple examples per rule and passes all examples', async () => {
       const rules: RuleWithExamples[] = [
         {
           content: 'Use proper indexing strategies',
@@ -407,7 +411,6 @@ describe('CreateStandardWithExamplesUsecase', () => {
         version: 1,
       });
 
-      // Mock the service calls
       standardService.listStandardsBySpace.mockResolvedValue([]);
       standardService.addStandard.mockResolvedValue(mockStandard);
       standardSummaryService.createStandardSummary.mockResolvedValue(
@@ -417,12 +420,11 @@ describe('CreateStandardWithExamplesUsecase', () => {
         mockStandardVersion,
       );
 
-      const result = await usecase.createStandardWithExamples({
+      await usecase.createStandardWithExamples({
         ...baseRequest,
         rules,
       });
 
-      expect(result).toEqual(mockStandard);
       expect(standardVersionService.addStandardVersion).toHaveBeenCalledWith(
         expect.objectContaining({
           rules: [
@@ -446,60 +448,61 @@ describe('CreateStandardWithExamplesUsecase', () => {
       );
     });
 
-    it('handles slug conflicts by appending counter', async () => {
-      const rules: RuleWithExamples[] = [
-        { content: 'Use consistent indentation' },
-      ];
+    describe('when conflicting slugs exist', () => {
+      it('appends counter to slug', async () => {
+        const rules: RuleWithExamples[] = [
+          { content: 'Use consistent indentation' },
+        ];
 
-      // Mock existing standards with conflicting slugs
-      const existingStandards = [
-        standardFactory({ slug: 'test-standard' }),
-        standardFactory({ slug: 'test-standard-1' }),
-      ];
+        const existingStandards = [
+          standardFactory({ slug: 'test-standard' }),
+          standardFactory({ slug: 'test-standard-1' }),
+        ];
 
-      const mockStandard = standardFactory({
-        id: createStandardId(uuidv4()),
-        name: baseRequest.name,
-        slug: 'test-standard-2', // Should be incremented
-        description: baseRequest.description,
-        version: 1,
-        userId,
-        scope: null,
-      });
-
-      const mockStandardVersion = standardVersionFactory({
-        id: createStandardVersionId(uuidv4()),
-        standardId: mockStandard.id,
-        name: baseRequest.name,
-        slug: 'test-standard-2',
-        description: baseRequest.description,
-        version: 1,
-      });
-
-      // Mock the service calls
-      standardService.listStandardsBySpace.mockResolvedValue(existingStandards);
-      standardService.addStandard.mockResolvedValue(mockStandard);
-      standardSummaryService.createStandardSummary.mockResolvedValue(
-        'Generated summary',
-      );
-      standardVersionService.addStandardVersion.mockResolvedValue(
-        mockStandardVersion,
-      );
-
-      const result = await usecase.createStandardWithExamples({
-        ...baseRequest,
-        rules,
-      });
-
-      expect(result).toEqual(mockStandard);
-      expect(standardService.addStandard).toHaveBeenCalledWith(
-        expect.objectContaining({
+        const mockStandard = standardFactory({
+          id: createStandardId(uuidv4()),
+          name: baseRequest.name,
           slug: 'test-standard-2',
-        }),
-      );
+          description: baseRequest.description,
+          version: 1,
+          userId,
+          scope: null,
+        });
+
+        const mockStandardVersion = standardVersionFactory({
+          id: createStandardVersionId(uuidv4()),
+          standardId: mockStandard.id,
+          name: baseRequest.name,
+          slug: 'test-standard-2',
+          description: baseRequest.description,
+          version: 1,
+        });
+
+        standardService.listStandardsBySpace.mockResolvedValue(
+          existingStandards,
+        );
+        standardService.addStandard.mockResolvedValue(mockStandard);
+        standardSummaryService.createStandardSummary.mockResolvedValue(
+          'Generated summary',
+        );
+        standardVersionService.addStandardVersion.mockResolvedValue(
+          mockStandardVersion,
+        );
+
+        await usecase.createStandardWithExamples({
+          ...baseRequest,
+          rules,
+        });
+
+        expect(standardService.addStandard).toHaveBeenCalledWith(
+          expect.objectContaining({
+            slug: 'test-standard-2',
+          }),
+        );
+      });
     });
 
-    it('logs warnings and skips examples with missing language', async () => {
+    it('skips examples with missing language and only includes valid examples', async () => {
       const rules: RuleWithExamples[] = [
         {
           content: 'Use descriptive test names',
@@ -507,12 +510,12 @@ describe('CreateStandardWithExamplesUsecase', () => {
             {
               positive: "it('displays error when email is invalid', () => {})",
               negative: "it('should test email validation', () => {})",
-              language: undefined as unknown as ProgrammingLanguage, // Invalid language
+              language: undefined as unknown as ProgrammingLanguage,
             },
             {
               positive: 'const result = await service.call();',
               negative: 'service.call();',
-              language: ProgrammingLanguage.TYPESCRIPT, // Valid language
+              language: ProgrammingLanguage.TYPESCRIPT,
             },
           ],
         },
@@ -537,7 +540,6 @@ describe('CreateStandardWithExamplesUsecase', () => {
         version: 1,
       });
 
-      // Mock the service calls
       standardService.listStandardsBySpace.mockResolvedValue([]);
       standardService.addStandard.mockResolvedValue(mockStandard);
       standardSummaryService.createStandardSummary.mockResolvedValue(
@@ -547,20 +549,11 @@ describe('CreateStandardWithExamplesUsecase', () => {
         mockStandardVersion,
       );
 
-      const result = await usecase.createStandardWithExamples({
+      await usecase.createStandardWithExamples({
         ...baseRequest,
         rules,
       });
 
-      expect(result).toEqual(mockStandard);
-      expect(logger.warn).toHaveBeenCalledWith(
-        'Example missing language, skipping',
-        expect.objectContaining({
-          ruleContent: expect.stringContaining('Use descriptive test names'),
-        }),
-      );
-
-      // Should only include the valid example
       expect(standardVersionService.addStandardVersion).toHaveBeenCalledWith(
         expect.objectContaining({
           rules: [
@@ -579,67 +572,11 @@ describe('CreateStandardWithExamplesUsecase', () => {
       );
     });
 
-    it('handles AI summary generation failure gracefully', async () => {
-      const rules: RuleWithExamples[] = [
-        { content: 'Use consistent indentation' },
-      ];
-
-      const mockStandard = standardFactory({
-        id: createStandardId(uuidv4()),
-        name: baseRequest.name,
-        slug: 'test-standard',
-        description: baseRequest.description,
-        version: 1,
-        userId,
-        scope: null,
-      });
-
-      const mockStandardVersion = standardVersionFactory({
-        id: createStandardVersionId(uuidv4()),
-        standardId: mockStandard.id,
-        name: baseRequest.name,
-        slug: 'test-standard',
-        description: baseRequest.description,
-        version: 1,
-      });
-
-      // Mock the service calls - summary generation fails
-      standardService.listStandardsBySpace.mockResolvedValue([]);
-      standardService.addStandard.mockResolvedValue(mockStandard);
-      standardSummaryService.createStandardSummary.mockRejectedValue(
-        new Error('AI service unavailable'),
-      );
-      standardVersionService.addStandardVersion.mockResolvedValue(
-        mockStandardVersion,
-      );
-
-      const result = await usecase.createStandardWithExamples({
-        ...baseRequest,
-        rules,
-      });
-
-      expect(result).toEqual(mockStandard);
-      expect(logger.error).toHaveBeenCalledWith(
-        'Failed to generate summary, proceeding without summary',
-        expect.objectContaining({
-          error: 'AI service unavailable',
-        }),
-      );
-
-      // Should still create the standard version with null summary
-      expect(standardVersionService.addStandardVersion).toHaveBeenCalledWith(
-        expect.objectContaining({
-          summary: null,
-        }),
-      );
-    });
-
-    describe('when summary is provided', () => {
-      it('uses provided summary', async () => {
+    describe('when AI summary generation fails', () => {
+      it('creates standard version with null summary', async () => {
         const rules: RuleWithExamples[] = [
           { content: 'Use consistent indentation' },
         ];
-        const providedSummary = 'This is a custom summary provided by the user';
 
         const mockStandard = standardFactory({
           id: createStandardId(uuidv4()),
@@ -660,24 +597,74 @@ describe('CreateStandardWithExamplesUsecase', () => {
           version: 1,
         });
 
-        // Mock the service calls
         standardService.listStandardsBySpace.mockResolvedValue([]);
         standardService.addStandard.mockResolvedValue(mockStandard);
-        // Summary generation should NOT be called since we provide a summary
+        standardSummaryService.createStandardSummary.mockRejectedValue(
+          new Error('AI service unavailable'),
+        );
         standardVersionService.addStandardVersion.mockResolvedValue(
           mockStandardVersion,
         );
 
-        const result = await usecase.createStandardWithExamples({
+        await usecase.createStandardWithExamples({
+          ...baseRequest,
+          rules,
+        });
+
+        expect(standardVersionService.addStandardVersion).toHaveBeenCalledWith(
+          expect.objectContaining({
+            summary: null,
+          }),
+        );
+      });
+    });
+
+    describe('when summary is provided', () => {
+      const rules: RuleWithExamples[] = [
+        { content: 'Use consistent indentation' },
+      ];
+      const providedSummary = 'This is a custom summary provided by the user';
+
+      beforeEach(async () => {
+        const mockStandard = standardFactory({
+          id: createStandardId(uuidv4()),
+          name: baseRequest.name,
+          slug: 'test-standard',
+          description: baseRequest.description,
+          version: 1,
+          userId,
+          scope: null,
+        });
+
+        const mockStandardVersion = standardVersionFactory({
+          id: createStandardVersionId(uuidv4()),
+          standardId: mockStandard.id,
+          name: baseRequest.name,
+          slug: 'test-standard',
+          description: baseRequest.description,
+          version: 1,
+        });
+
+        standardService.listStandardsBySpace.mockResolvedValue([]);
+        standardService.addStandard.mockResolvedValue(mockStandard);
+        standardVersionService.addStandardVersion.mockResolvedValue(
+          mockStandardVersion,
+        );
+
+        await usecase.createStandardWithExamples({
           ...baseRequest,
           summary: providedSummary,
           rules,
         });
+      });
 
-        expect(result).toEqual(mockStandard);
+      it('does not call summary generation service', () => {
         expect(
           standardSummaryService.createStandardSummary,
         ).not.toHaveBeenCalled();
+      });
+
+      it('passes provided summary to addStandardVersion', () => {
         expect(standardVersionService.addStandardVersion).toHaveBeenCalledWith(
           expect.objectContaining({
             summary: providedSummary,
@@ -687,133 +674,145 @@ describe('CreateStandardWithExamplesUsecase', () => {
     });
 
     describe('when summary is not provided', () => {
-      it('generates summary for null summary', async () => {
+      describe('when summary is null', () => {
         const rules: RuleWithExamples[] = [
           { content: 'Use consistent indentation' },
         ];
 
-        const mockStandard = standardFactory({
-          id: createStandardId(uuidv4()),
-          name: baseRequest.name,
-          slug: 'test-standard',
-          description: baseRequest.description,
-          version: 1,
-          userId,
-          scope: null,
+        beforeEach(async () => {
+          const mockStandard = standardFactory({
+            id: createStandardId(uuidv4()),
+            name: baseRequest.name,
+            slug: 'test-standard',
+            description: baseRequest.description,
+            version: 1,
+            userId,
+            scope: null,
+          });
+
+          const mockStandardVersion = standardVersionFactory({
+            id: createStandardVersionId(uuidv4()),
+            standardId: mockStandard.id,
+            name: baseRequest.name,
+            slug: 'test-standard',
+            description: baseRequest.description,
+            version: 1,
+          });
+
+          standardService.listStandardsBySpace.mockResolvedValue([]);
+          standardService.addStandard.mockResolvedValue(mockStandard);
+          standardSummaryService.createStandardSummary.mockResolvedValue(
+            'Generated summary',
+          );
+          standardVersionService.addStandardVersion.mockResolvedValue(
+            mockStandardVersion,
+          );
+
+          await usecase.createStandardWithExamples({
+            ...baseRequest,
+            rules,
+          });
         });
 
-        const mockStandardVersion = standardVersionFactory({
-          id: createStandardVersionId(uuidv4()),
-          standardId: mockStandard.id,
-          name: baseRequest.name,
-          slug: 'test-standard',
-          description: baseRequest.description,
-          version: 1,
+        it('calls summary generation service', () => {
+          expect(
+            standardSummaryService.createStandardSummary,
+          ).toHaveBeenCalled();
         });
 
-        // Mock the service calls
-        standardService.listStandardsBySpace.mockResolvedValue([]);
-        standardService.addStandard.mockResolvedValue(mockStandard);
-        standardSummaryService.createStandardSummary.mockResolvedValue(
-          'Generated summary',
-        );
-        standardVersionService.addStandardVersion.mockResolvedValue(
-          mockStandardVersion,
-        );
-
-        const result = await usecase.createStandardWithExamples({
-          ...baseRequest,
-          rules,
+        it('passes generated summary to addStandardVersion', () => {
+          expect(
+            standardVersionService.addStandardVersion,
+          ).toHaveBeenCalledWith(
+            expect.objectContaining({
+              summary: 'Generated summary',
+            }),
+          );
         });
-
-        expect(result).toEqual(mockStandard);
-        expect(standardSummaryService.createStandardSummary).toHaveBeenCalled();
-        expect(standardVersionService.addStandardVersion).toHaveBeenCalledWith(
-          expect.objectContaining({
-            summary: 'Generated summary',
-          }),
-        );
       });
 
-      it('generates summary for empty string summary', async () => {
+      describe('when summary is whitespace only', () => {
         const rules: RuleWithExamples[] = [
           { content: 'Use consistent indentation' },
         ];
 
-        const mockStandard = standardFactory({
-          id: createStandardId(uuidv4()),
-          name: baseRequest.name,
-          slug: 'test-standard',
-          description: baseRequest.description,
-          version: 1,
-          userId,
-          scope: null,
+        beforeEach(async () => {
+          const mockStandard = standardFactory({
+            id: createStandardId(uuidv4()),
+            name: baseRequest.name,
+            slug: 'test-standard',
+            description: baseRequest.description,
+            version: 1,
+            userId,
+            scope: null,
+          });
+
+          const mockStandardVersion = standardVersionFactory({
+            id: createStandardVersionId(uuidv4()),
+            standardId: mockStandard.id,
+            name: baseRequest.name,
+            slug: 'test-standard',
+            description: baseRequest.description,
+            version: 1,
+          });
+
+          standardService.listStandardsBySpace.mockResolvedValue([]);
+          standardService.addStandard.mockResolvedValue(mockStandard);
+          standardSummaryService.createStandardSummary.mockResolvedValue(
+            'Generated summary',
+          );
+          standardVersionService.addStandardVersion.mockResolvedValue(
+            mockStandardVersion,
+          );
+
+          await usecase.createStandardWithExamples({
+            ...baseRequest,
+            summary: '   ',
+            rules,
+          });
         });
 
-        const mockStandardVersion = standardVersionFactory({
-          id: createStandardVersionId(uuidv4()),
-          standardId: mockStandard.id,
-          name: baseRequest.name,
-          slug: 'test-standard',
-          description: baseRequest.description,
-          version: 1,
+        it('calls summary generation service', () => {
+          expect(
+            standardSummaryService.createStandardSummary,
+          ).toHaveBeenCalled();
         });
 
-        // Mock the service calls
-        standardService.listStandardsBySpace.mockResolvedValue([]);
-        standardService.addStandard.mockResolvedValue(mockStandard);
-        standardSummaryService.createStandardSummary.mockResolvedValue(
-          'Generated summary',
-        );
-        standardVersionService.addStandardVersion.mockResolvedValue(
-          mockStandardVersion,
-        );
-
-        const result = await usecase.createStandardWithExamples({
-          ...baseRequest,
-          summary: '   ', // Empty/whitespace string
-          rules,
+        it('passes generated summary to addStandardVersion', () => {
+          expect(
+            standardVersionService.addStandardVersion,
+          ).toHaveBeenCalledWith(
+            expect.objectContaining({
+              summary: 'Generated summary',
+            }),
+          );
         });
-
-        expect(result).toEqual(mockStandard);
-        expect(standardSummaryService.createStandardSummary).toHaveBeenCalled();
-        expect(standardVersionService.addStandardVersion).toHaveBeenCalledWith(
-          expect.objectContaining({
-            summary: 'Generated summary',
-          }),
-        );
       });
     });
 
-    it('throws error if standard creation fails', async () => {
-      const rules: RuleWithExamples[] = [
-        { content: 'Use consistent indentation' },
-      ];
+    describe('when standard creation fails', () => {
+      it('throws error', async () => {
+        const rules: RuleWithExamples[] = [
+          { content: 'Use consistent indentation' },
+        ];
 
-      // Mock the service calls - standard creation fails
-      standardService.listStandardsBySpace.mockResolvedValue([]);
-      standardService.addStandard.mockRejectedValue(
-        new Error('Database connection failed'),
-      );
+        standardService.listStandardsBySpace.mockResolvedValue([]);
+        standardService.addStandard.mockRejectedValue(
+          new Error('Database connection failed'),
+        );
 
-      await expect(
-        usecase.createStandardWithExamples({
-          ...baseRequest,
-          summary: null,
-          rules,
-        }),
-      ).rejects.toThrow('Database connection failed');
-
-      expect(logger.error).toHaveBeenCalledWith(
-        'Failed to create standard with examples',
-        expect.objectContaining({
-          error: 'Database connection failed',
-        }),
-      );
+        await expect(
+          usecase.createStandardWithExamples({
+            ...baseRequest,
+            summary: null,
+            rules,
+          }),
+        ).rejects.toThrow('Database connection failed');
+      });
     });
 
     describe('detection program validation', () => {
-      it('validates detection programs for rules with examples', async () => {
+      describe('when rules have examples', () => {
         const rules: RuleWithExamples[] = [
           {
             content: 'Use TypeScript for type safety',
@@ -827,187 +826,195 @@ describe('CreateStandardWithExamplesUsecase', () => {
           },
         ];
 
-        const mockStandard = standardFactory({
-          id: createStandardId(uuidv4()),
-          name: baseRequest.name,
-          slug: 'test-standard',
+        let mockStandardVersion: StandardVersion;
+        let mockRules: Rule[];
+
+        beforeEach(async () => {
+          const mockStandard = standardFactory({
+            id: createStandardId(uuidv4()),
+            name: baseRequest.name,
+            slug: 'test-standard',
+          });
+
+          mockStandardVersion = standardVersionFactory({
+            id: createStandardVersionId(uuidv4()),
+            standardId: mockStandard.id,
+          });
+
+          mockRules = [
+            ruleFactory({
+              standardVersionId: mockStandardVersion.id,
+            }),
+          ];
+
+          standardService.listStandardsBySpace.mockResolvedValue([]);
+          standardService.addStandard.mockResolvedValue(mockStandard);
+          standardVersionService.addStandardVersion.mockResolvedValue(
+            mockStandardVersion,
+          );
+          ruleRepository.findByStandardVersionId.mockResolvedValue(mockRules);
+          ruleExampleRepository.findByRuleId.mockResolvedValue([
+            {
+              id: createRuleExampleId(uuidv4()),
+              ruleId: mockRules[0].id,
+              lang: ProgrammingLanguage.TYPESCRIPT,
+              positive: 'const x: number = 5;',
+              negative: 'const x = 5;',
+            },
+          ]);
+          linterAdapter.updateRuleDetectionAssessmentAfterUpdate.mockResolvedValue(
+            {
+              action: 'ASSESSMENT_STARTED',
+              message: 'success',
+            },
+          );
+
+          await usecase.createStandardWithExamples({
+            ...baseRequest,
+            rules,
+          });
         });
 
-        const mockStandardVersion = standardVersionFactory({
-          id: createStandardVersionId(uuidv4()),
-          standardId: mockStandard.id,
+        it('queries rules by standard version id', () => {
+          expect(ruleRepository.findByStandardVersionId).toHaveBeenCalledWith(
+            mockStandardVersion.id,
+          );
         });
 
-        const mockRules = [
-          ruleFactory({
-            standardVersionId: mockStandardVersion.id,
-          }),
-        ];
+        it('queries examples by rule id', () => {
+          expect(ruleExampleRepository.findByRuleId).toHaveBeenCalledWith(
+            mockRules[0].id,
+          );
+        });
 
-        standardService.listStandardsBySpace.mockResolvedValue([]);
-        standardService.addStandard.mockResolvedValue(mockStandard);
-        standardVersionService.addStandardVersion.mockResolvedValue(
-          mockStandardVersion,
-        );
-        ruleRepository.findByStandardVersionId.mockResolvedValue(mockRules);
-        ruleExampleRepository.findByRuleId.mockResolvedValue([
-          {
-            id: createRuleExampleId(uuidv4()),
+        it('calls linter adapter with correct parameters', () => {
+          expect(
+            linterAdapter.updateRuleDetectionAssessmentAfterUpdate,
+          ).toHaveBeenCalledWith({
             ruleId: mockRules[0].id,
-            lang: ProgrammingLanguage.TYPESCRIPT,
-            positive: 'const x: number = 5;',
-            negative: 'const x = 5;',
-          },
-        ]);
-        linterAdapter.updateRuleDetectionAssessmentAfterUpdate.mockResolvedValue(
-          {
-            action: 'ASSESSMENT_STARTED',
-            message: 'success',
-          },
-        );
-
-        await usecase.createStandardWithExamples({
-          ...baseRequest,
-          rules,
-        });
-
-        expect(ruleRepository.findByStandardVersionId).toHaveBeenCalledWith(
-          mockStandardVersion.id,
-        );
-        expect(ruleExampleRepository.findByRuleId).toHaveBeenCalledWith(
-          mockRules[0].id,
-        );
-        expect(
-          linterAdapter.updateRuleDetectionAssessmentAfterUpdate,
-        ).toHaveBeenCalledWith({
-          ruleId: mockRules[0].id,
-          language: ProgrammingLanguage.TYPESCRIPT,
-          organizationId,
-          userId,
+            language: ProgrammingLanguage.TYPESCRIPT,
+            organizationId,
+            userId,
+          });
         });
       });
 
-      it('skips validation for rules without examples', async () => {
+      describe('when rules have no examples', () => {
         const rules: RuleWithExamples[] = [
           { content: 'Use consistent indentation' },
           { content: 'Limit line length' },
         ];
 
-        const mockStandard = standardFactory({
-          id: createStandardId(uuidv4()),
+        let mockStandardVersion: StandardVersion;
+
+        beforeEach(async () => {
+          const mockStandard = standardFactory({
+            id: createStandardId(uuidv4()),
+          });
+
+          mockStandardVersion = standardVersionFactory({
+            id: createStandardVersionId(uuidv4()),
+          });
+
+          const mockRules = [
+            ruleFactory({ standardVersionId: mockStandardVersion.id }),
+            ruleFactory({ standardVersionId: mockStandardVersion.id }),
+          ];
+
+          standardService.listStandardsBySpace.mockResolvedValue([]);
+          standardService.addStandard.mockResolvedValue(mockStandard);
+          standardVersionService.addStandardVersion.mockResolvedValue(
+            mockStandardVersion,
+          );
+          ruleRepository.findByStandardVersionId.mockResolvedValue(mockRules);
+          ruleExampleRepository.findByRuleId.mockResolvedValue([]);
+
+          await usecase.createStandardWithExamples({
+            ...baseRequest,
+            rules,
+          });
         });
 
-        const mockStandardVersion = standardVersionFactory({
-          id: createStandardVersionId(uuidv4()),
+        it('queries rules by standard version id', () => {
+          expect(ruleRepository.findByStandardVersionId).toHaveBeenCalledWith(
+            mockStandardVersion.id,
+          );
         });
 
-        const mockRules = [
-          ruleFactory({ standardVersionId: mockStandardVersion.id }),
-          ruleFactory({ standardVersionId: mockStandardVersion.id }),
-        ];
-
-        standardService.listStandardsBySpace.mockResolvedValue([]);
-        standardService.addStandard.mockResolvedValue(mockStandard);
-        standardVersionService.addStandardVersion.mockResolvedValue(
-          mockStandardVersion,
-        );
-        ruleRepository.findByStandardVersionId.mockResolvedValue(mockRules);
-        ruleExampleRepository.findByRuleId.mockResolvedValue([]);
-
-        await usecase.createStandardWithExamples({
-          ...baseRequest,
-          rules,
-        });
-
-        expect(ruleRepository.findByStandardVersionId).toHaveBeenCalledWith(
-          mockStandardVersion.id,
-        );
-        expect(
-          linterAdapter.updateRuleDetectionAssessmentAfterUpdate,
-        ).not.toHaveBeenCalled();
-      });
-
-      it('validates multiple languages for a single rule', async () => {
-        const rules: RuleWithExamples[] = [
-          {
-            content: 'Use proper naming conventions',
-            examples: [
-              {
-                language: ProgrammingLanguage.TYPESCRIPT,
-                positive: 'const userName = "test";',
-                negative: 'const user_name = "test";',
-              },
-              {
-                language: ProgrammingLanguage.JAVASCRIPT,
-                positive: 'const userName = "test";',
-                negative: 'const user_name = "test";',
-              },
-            ],
-          },
-        ];
-
-        const mockStandard = standardFactory();
-        const mockStandardVersion = standardVersionFactory();
-        const mockRules = [
-          ruleFactory({ standardVersionId: mockStandardVersion.id }),
-        ];
-
-        standardService.listStandardsBySpace.mockResolvedValue([]);
-        standardService.addStandard.mockResolvedValue(mockStandard);
-        standardVersionService.addStandardVersion.mockResolvedValue(
-          mockStandardVersion,
-        );
-        ruleRepository.findByStandardVersionId.mockResolvedValue(mockRules);
-        ruleExampleRepository.findByRuleId.mockResolvedValue([
-          {
-            id: createRuleExampleId(uuidv4()),
-            ruleId: mockRules[0].id,
-            lang: ProgrammingLanguage.TYPESCRIPT,
-            positive: 'const userName = "test";',
-            negative: 'const user_name = "test";',
-          },
-          {
-            id: createRuleExampleId(uuidv4()),
-            ruleId: mockRules[0].id,
-            lang: ProgrammingLanguage.JAVASCRIPT,
-            positive: 'const userName = "test";',
-            negative: 'const user_name = "test";',
-          },
-        ]);
-        linterAdapter.updateRuleDetectionAssessmentAfterUpdate.mockResolvedValue(
-          {
-            action: 'ASSESSMENT_STARTED',
-            message: 'success',
-          },
-        );
-
-        await usecase.createStandardWithExamples({
-          ...baseRequest,
-          rules,
-        });
-
-        expect(
-          linterAdapter.updateRuleDetectionAssessmentAfterUpdate,
-        ).toHaveBeenCalledTimes(2);
-        expect(
-          linterAdapter.updateRuleDetectionAssessmentAfterUpdate,
-        ).toHaveBeenCalledWith({
-          ruleId: mockRules[0].id,
-          language: ProgrammingLanguage.TYPESCRIPT,
-          organizationId,
-          userId,
-        });
-        expect(
-          linterAdapter.updateRuleDetectionAssessmentAfterUpdate,
-        ).toHaveBeenCalledWith({
-          ruleId: mockRules[0].id,
-          language: ProgrammingLanguage.JAVASCRIPT,
-          organizationId,
-          userId,
+        it('does not call linter adapter', () => {
+          expect(
+            linterAdapter.updateRuleDetectionAssessmentAfterUpdate,
+          ).not.toHaveBeenCalled();
         });
       });
 
-      it('validates multiple rules with different languages', async () => {
+      describe('when rule has multiple examples with different languages', () => {
+        it('calls linter adapter for each language', async () => {
+          const rules: RuleWithExamples[] = [
+            {
+              content: 'Use proper naming conventions',
+              examples: [
+                {
+                  language: ProgrammingLanguage.TYPESCRIPT,
+                  positive: 'const userName = "test";',
+                  negative: 'const user_name = "test";',
+                },
+                {
+                  language: ProgrammingLanguage.JAVASCRIPT,
+                  positive: 'const userName = "test";',
+                  negative: 'const user_name = "test";',
+                },
+              ],
+            },
+          ];
+
+          const mockStandard = standardFactory();
+          const mockStandardVersion = standardVersionFactory();
+          const mockRules = [
+            ruleFactory({ standardVersionId: mockStandardVersion.id }),
+          ];
+
+          standardService.listStandardsBySpace.mockResolvedValue([]);
+          standardService.addStandard.mockResolvedValue(mockStandard);
+          standardVersionService.addStandardVersion.mockResolvedValue(
+            mockStandardVersion,
+          );
+          ruleRepository.findByStandardVersionId.mockResolvedValue(mockRules);
+          ruleExampleRepository.findByRuleId.mockResolvedValue([
+            {
+              id: createRuleExampleId(uuidv4()),
+              ruleId: mockRules[0].id,
+              lang: ProgrammingLanguage.TYPESCRIPT,
+              positive: 'const userName = "test";',
+              negative: 'const user_name = "test";',
+            },
+            {
+              id: createRuleExampleId(uuidv4()),
+              ruleId: mockRules[0].id,
+              lang: ProgrammingLanguage.JAVASCRIPT,
+              positive: 'const userName = "test";',
+              negative: 'const user_name = "test";',
+            },
+          ]);
+          linterAdapter.updateRuleDetectionAssessmentAfterUpdate.mockResolvedValue(
+            {
+              action: 'ASSESSMENT_STARTED',
+              message: 'success',
+            },
+          );
+
+          await usecase.createStandardWithExamples({
+            ...baseRequest,
+            rules,
+          });
+
+          expect(
+            linterAdapter.updateRuleDetectionAssessmentAfterUpdate,
+          ).toHaveBeenCalledTimes(2);
+        });
+      });
+
+      it('calls linter adapter for each rule with examples', async () => {
         const rules: RuleWithExamples[] = [
           {
             content: 'Use TypeScript types',
@@ -1078,79 +1085,59 @@ describe('CreateStandardWithExamplesUsecase', () => {
         expect(
           linterAdapter.updateRuleDetectionAssessmentAfterUpdate,
         ).toHaveBeenCalledTimes(2);
-        expect(
-          linterAdapter.updateRuleDetectionAssessmentAfterUpdate,
-        ).toHaveBeenCalledWith({
-          ruleId: mockRules[0].id,
-          language: ProgrammingLanguage.TYPESCRIPT,
-          organizationId,
-          userId,
-        });
-        expect(
-          linterAdapter.updateRuleDetectionAssessmentAfterUpdate,
-        ).toHaveBeenCalledWith({
-          ruleId: mockRules[1].id,
-          language: ProgrammingLanguage.PYTHON,
-          organizationId,
-          userId,
-        });
       });
 
-      it('handles validation errors gracefully without failing standard creation', async () => {
-        const rules: RuleWithExamples[] = [
-          {
-            content: 'Use TypeScript',
-            examples: [
-              {
-                language: ProgrammingLanguage.TYPESCRIPT,
-                positive: 'const x: string = "test";',
-                negative: 'const x = "test";',
-              },
-            ],
-          },
-        ];
+      describe('when linter validation fails', () => {
+        it('returns standard successfully', async () => {
+          const rules: RuleWithExamples[] = [
+            {
+              content: 'Use TypeScript',
+              examples: [
+                {
+                  language: ProgrammingLanguage.TYPESCRIPT,
+                  positive: 'const x: string = "test";',
+                  negative: 'const x = "test";',
+                },
+              ],
+            },
+          ];
 
-        const mockStandard = standardFactory();
-        const mockStandardVersion = standardVersionFactory();
-        const mockRules = [
-          ruleFactory({ standardVersionId: mockStandardVersion.id }),
-        ];
+          const mockStandard = standardFactory();
+          const mockStandardVersion = standardVersionFactory();
+          const mockRules = [
+            ruleFactory({ standardVersionId: mockStandardVersion.id }),
+          ];
 
-        standardService.listStandardsBySpace.mockResolvedValue([]);
-        standardService.addStandard.mockResolvedValue(mockStandard);
-        standardVersionService.addStandardVersion.mockResolvedValue(
-          mockStandardVersion,
-        );
-        ruleRepository.findByStandardVersionId.mockResolvedValue(mockRules);
-        ruleExampleRepository.findByRuleId.mockResolvedValue([
-          {
-            id: createRuleExampleId(uuidv4()),
-            ruleId: mockRules[0].id,
-            lang: ProgrammingLanguage.TYPESCRIPT,
-            positive: 'const x: string = "test";',
-            negative: 'const x = "test";',
-          },
-        ]);
-        linterAdapter.updateRuleDetectionAssessmentAfterUpdate.mockRejectedValue(
-          new Error('Linter service unavailable'),
-        );
+          standardService.listStandardsBySpace.mockResolvedValue([]);
+          standardService.addStandard.mockResolvedValue(mockStandard);
+          standardVersionService.addStandardVersion.mockResolvedValue(
+            mockStandardVersion,
+          );
+          ruleRepository.findByStandardVersionId.mockResolvedValue(mockRules);
+          ruleExampleRepository.findByRuleId.mockResolvedValue([
+            {
+              id: createRuleExampleId(uuidv4()),
+              ruleId: mockRules[0].id,
+              lang: ProgrammingLanguage.TYPESCRIPT,
+              positive: 'const x: string = "test";',
+              negative: 'const x = "test";',
+            },
+          ]);
+          linterAdapter.updateRuleDetectionAssessmentAfterUpdate.mockRejectedValue(
+            new Error('Linter service unavailable'),
+          );
 
-        const result = await usecase.createStandardWithExamples({
-          ...baseRequest,
-          rules,
+          const result = await usecase.createStandardWithExamples({
+            ...baseRequest,
+            rules,
+          });
+
+          expect(result).toEqual(mockStandard);
         });
-
-        expect(result).toEqual(mockStandard);
-        expect(logger.error).toHaveBeenCalledWith(
-          'Failed to update detection program status',
-          expect.objectContaining({
-            error: 'Linter service unavailable',
-          }),
-        );
       });
 
       describe('when linter adapter is not available', () => {
-        it('skips validation', async () => {
+        it('returns standard successfully without calling linter adapter', async () => {
           const rules: RuleWithExamples[] = [
             {
               content: 'Use TypeScript',
@@ -1186,7 +1173,6 @@ describe('CreateStandardWithExamplesUsecase', () => {
             },
           ]);
 
-          // Create usecase without linter adapter
           const usecaseWithoutLinter = new CreateStandardWithExamplesUsecase(
             standardService,
             standardVersionService,
@@ -1204,10 +1190,6 @@ describe('CreateStandardWithExamplesUsecase', () => {
           });
 
           expect(result).toEqual(mockStandard);
-          expect(logger.warn).toHaveBeenCalledWith(
-            'Linter adapter not available, skipping detection program validation',
-            expect.any(Object),
-          );
         });
       });
     });

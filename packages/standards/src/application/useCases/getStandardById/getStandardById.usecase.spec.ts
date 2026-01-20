@@ -56,102 +56,138 @@ describe('GetStandardByIdUsecase', () => {
   });
 
   describe('retrieve standard by ID', () => {
-    it('returns standard that belongs to the user organization and space', async () => {
-      const userId = createUserId(uuidv4());
-      const organizationId = createOrganizationId(uuidv4());
-      const spaceId = createSpaceId(uuidv4());
-      const standardId = createStandardId(uuidv4());
+    describe('when standard belongs to user organization and space', () => {
+      let userId: ReturnType<typeof createUserId>;
+      let organizationId: ReturnType<typeof createOrganizationId>;
+      let spaceId: ReturnType<typeof createSpaceId>;
+      let standardId: ReturnType<typeof createStandardId>;
+      let standard: ReturnType<typeof standardFactory>;
+      let result: Awaited<ReturnType<typeof usecase.execute>>;
 
-      const user: User = {
-        id: userId,
-        email: 'test@example.com',
-        passwordHash: 'hashed_password',
-        memberships: [{ organizationId, role: 'member', userId }],
-        active: true,
-      };
-      const organization: Organization = {
-        id: organizationId,
-        name: 'Test Org',
-        slug: 'test-org',
-      };
-      const space: Space = {
-        id: spaceId,
-        name: 'Test Space',
-        slug: 'test-space',
-        organizationId,
-      };
+      beforeEach(async () => {
+        userId = createUserId(uuidv4());
+        organizationId = createOrganizationId(uuidv4());
+        spaceId = createSpaceId(uuidv4());
+        standardId = createStandardId(uuidv4());
 
-      const command: GetStandardByIdCommand = {
-        userId,
-        organizationId,
-        spaceId,
-        standardId,
-      };
+        const user: User = {
+          id: userId,
+          email: 'test@example.com',
+          passwordHash: 'hashed_password',
+          memberships: [{ organizationId, role: 'member', userId }],
+          active: true,
+        };
+        const organization: Organization = {
+          id: organizationId,
+          name: 'Test Org',
+          slug: 'test-org',
+        };
+        const space: Space = {
+          id: spaceId,
+          name: 'Test Space',
+          slug: 'test-space',
+          organizationId,
+        };
 
-      const standard = standardFactory({
-        id: standardId,
-        spaceId,
-        slug: 'test-standard',
+        const command: GetStandardByIdCommand = {
+          userId,
+          organizationId,
+          spaceId,
+          standardId,
+        };
+
+        standard = standardFactory({
+          id: standardId,
+          spaceId,
+          slug: 'test-standard',
+        });
+
+        accountsAdapter.getUserById.mockResolvedValue(user);
+        accountsAdapter.getOrganizationById.mockResolvedValue(organization);
+        spacesPort.getSpaceById.mockResolvedValue(space);
+        standardService.getStandardById.mockResolvedValue(standard);
+
+        result = await usecase.execute(command);
       });
 
-      accountsAdapter.getUserById.mockResolvedValue(user);
-      accountsAdapter.getOrganizationById.mockResolvedValue(organization);
-      spacesPort.getSpaceById.mockResolvedValue(space);
-      standardService.getStandardById.mockResolvedValue(standard);
+      it('calls getUserById with correct userId', () => {
+        expect(accountsAdapter.getUserById).toHaveBeenCalledWith(userId);
+      });
 
-      const result = await usecase.execute(command);
+      it('calls getOrganizationById with correct organizationId', () => {
+        expect(accountsAdapter.getOrganizationById).toHaveBeenCalledWith(
+          organizationId,
+        );
+      });
 
-      expect(accountsAdapter.getUserById).toHaveBeenCalledWith(userId);
-      expect(accountsAdapter.getOrganizationById).toHaveBeenCalledWith(
-        organizationId,
-      );
-      expect(spacesPort.getSpaceById).toHaveBeenCalledWith(spaceId);
-      expect(standardService.getStandardById).toHaveBeenCalledWith(standardId);
+      it('calls getSpaceById with correct spaceId', () => {
+        expect(spacesPort.getSpaceById).toHaveBeenCalledWith(spaceId);
+      });
 
-      expect(result.standard).toEqual(standard);
+      it('calls getStandardById with correct standardId', () => {
+        expect(standardService.getStandardById).toHaveBeenCalledWith(
+          standardId,
+        );
+      });
+
+      it('returns the standard', () => {
+        expect(result.standard).toEqual(standard);
+      });
     });
 
-    it('returns null if standard not found', async () => {
-      const userId = createUserId(uuidv4());
-      const organizationId = createOrganizationId(uuidv4());
-      const spaceId = createSpaceId(uuidv4());
-      const standardId = createStandardId(uuidv4());
+    describe('when standard not found', () => {
+      let standardId: ReturnType<typeof createStandardId>;
+      let result: Awaited<ReturnType<typeof usecase.execute>>;
 
-      const user: User = {
-        id: userId,
-        email: 'test@example.com',
-        passwordHash: 'hashed_password',
-        memberships: [{ organizationId, role: 'member', userId }],
-        active: true,
-      };
-      const organization: Organization = {
-        id: organizationId,
-        name: 'Test Org',
-        slug: 'test-org',
-      };
-      const space: Space = {
-        id: spaceId,
-        name: 'Test Space',
-        slug: 'test-space',
-        organizationId,
-      };
+      beforeEach(async () => {
+        const userId = createUserId(uuidv4());
+        const organizationId = createOrganizationId(uuidv4());
+        const spaceId = createSpaceId(uuidv4());
+        standardId = createStandardId(uuidv4());
 
-      const command: GetStandardByIdCommand = {
-        userId,
-        organizationId,
-        spaceId,
-        standardId,
-      };
+        const user: User = {
+          id: userId,
+          email: 'test@example.com',
+          passwordHash: 'hashed_password',
+          memberships: [{ organizationId, role: 'member', userId }],
+          active: true,
+        };
+        const organization: Organization = {
+          id: organizationId,
+          name: 'Test Org',
+          slug: 'test-org',
+        };
+        const space: Space = {
+          id: spaceId,
+          name: 'Test Space',
+          slug: 'test-space',
+          organizationId,
+        };
 
-      accountsAdapter.getUserById.mockResolvedValue(user);
-      accountsAdapter.getOrganizationById.mockResolvedValue(organization);
-      spacesPort.getSpaceById.mockResolvedValue(space);
-      standardService.getStandardById.mockResolvedValue(null);
+        const command: GetStandardByIdCommand = {
+          userId,
+          organizationId,
+          spaceId,
+          standardId,
+        };
 
-      const result = await usecase.execute(command);
+        accountsAdapter.getUserById.mockResolvedValue(user);
+        accountsAdapter.getOrganizationById.mockResolvedValue(organization);
+        spacesPort.getSpaceById.mockResolvedValue(space);
+        standardService.getStandardById.mockResolvedValue(null);
 
-      expect(standardService.getStandardById).toHaveBeenCalledWith(standardId);
-      expect(result.standard).toBeNull();
+        result = await usecase.execute(command);
+      });
+
+      it('calls getStandardById with correct standardId', () => {
+        expect(standardService.getStandardById).toHaveBeenCalledWith(
+          standardId,
+        );
+      });
+
+      it('returns null standard', () => {
+        expect(result.standard).toBeNull();
+      });
     });
 
     it('returns space-specific standard accessible from its space', async () => {
@@ -186,7 +222,6 @@ describe('GetStandardByIdUsecase', () => {
         standardId,
       };
 
-      // Standard belongs to the same space
       const standard = standardFactory({
         id: standardId,
         spaceId,
