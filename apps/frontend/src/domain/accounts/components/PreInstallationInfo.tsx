@@ -7,8 +7,11 @@ import {
   PMButton,
   PMIcon,
   PMAlert,
+  PMCard,
+  PMGrid,
+  PMTooltip,
 } from '@packmind/ui';
-import { LuArrowRight } from 'react-icons/lu';
+import { LuArrowRight, LuFileCode, LuBrain, LuTerminal } from 'react-icons/lu';
 
 interface IPreInstallationInfoProps {
   onContinue: () => void;
@@ -27,43 +30,72 @@ export const PreInstallationInfo: React.FC<IPreInstallationInfoProps> = ({
         </PMText>
       </PMVStack>
 
-      <PMVStack gap={6} align="flex-start">
-        <PMBox>
-          <PMHeading level="h4" mb={3}>
+      <PMVStack gap={6} align="stretch">
+        <PMBox
+          border={'solid 1px'}
+          borderColor={'blue.800'}
+          p={4}
+          borderRadius={'md'}
+          backgroundColor={'blue.1000'}
+        >
+          <PMHeading level="h6" mb={4} textTransform={'uppercase'}>
             Generated playbook
           </PMHeading>
-          <PMVStack gap={1} align="flex-start">
-            <PMText fontSize="sm" color="secondary">
-              • Coding standards
-            </PMText>
-            <PMText fontSize="sm" color="secondary">
-              • Agent instructions
-            </PMText>
-            <PMText fontSize="sm" color="secondary">
-              • Project-specific commands and context
-            </PMText>
-          </PMVStack>
+          <PMGrid gridTemplateColumns="repeat(3, 1fr)" gap={4}>
+            <PMTooltip label="Standards define the rules the AI should always follow — use them to ensure consistent behavior across all interactions.">
+              <PMCard.Root p={4} textAlign="center" cursor="help">
+                <PMVStack gap={2} align="center">
+                  <PMIcon as={LuFileCode} size="lg" color="blue.500" />
+                  <PMText fontSize="sm" fontWeight="medium">
+                    Standards
+                  </PMText>
+                </PMVStack>
+              </PMCard.Root>
+            </PMTooltip>
+
+            <PMTooltip label="Commands are shortcuts you can run to trigger a specific action — use them to quickly repeat common tasks.">
+              <PMCard.Root p={4} textAlign="center" cursor="help">
+                <PMVStack gap={2} align="center">
+                  <PMIcon as={LuTerminal} size="lg" color="purple.500" />
+                  <PMText fontSize="sm" fontWeight="medium">
+                    Commands
+                  </PMText>
+                </PMVStack>
+              </PMCard.Root>
+            </PMTooltip>
+
+            <PMTooltip label="Skills give the AI the ability to handle a type of task on its own — use them when a task requires structured know-how or multiple steps.">
+              <PMCard.Root p={4} textAlign="center" cursor="help">
+                <PMVStack gap={2} align="center">
+                  <PMIcon as={LuBrain} size="lg" color="green.500" />
+                  <PMText fontSize="sm" fontWeight="medium">
+                    Skills
+                  </PMText>
+                </PMVStack>
+              </PMCard.Root>
+            </PMTooltip>
+          </PMGrid>
         </PMBox>
 
-        <PMBox>
-          <PMHeading level="h4" mb={3}>
-            Your code stays local
-          </PMHeading>
-          <PMText fontSize="sm" color="secondary">
-            Packmind never receives your source code or proprietary logic.
-          </PMText>
-        </PMBox>
+        <PMAlert.Root status="success">
+          <PMAlert.Indicator />
+          <PMAlert.Content>
+            <PMAlert.Title>Your code stays local</PMAlert.Title>
+            <PMAlert.Description>
+              Packmind never receives your source code or proprietary logic.
+            </PMAlert.Description>
+          </PMAlert.Content>
+        </PMAlert.Root>
 
         <PMAlert.Root status="info">
-          <PMAlert.Indicator />
-          <PMAlert.Title>
+          <PMAlert.Description>
             A private workspace is created automatically. You can secure and
             share it later by creating an account.
-          </PMAlert.Title>
+          </PMAlert.Description>
         </PMAlert.Root>
       </PMVStack>
 
-      <PMBox textAlign="center">
+      <PMBox textAlign="center" mt={2}>
         <PMButton onClick={onContinue} size="lg" colorScheme="primary">
           Continue — select your AI assistant
           <PMIcon as={LuArrowRight} ml={2} />
