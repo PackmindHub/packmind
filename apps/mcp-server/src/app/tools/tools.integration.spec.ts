@@ -26,7 +26,6 @@ describe('tools.integration', () => {
     deploymentsHexa: () => unknown;
     recipesHexa: () => unknown;
     standardsHexa: () => unknown;
-    analyticsHexa: () => unknown;
     spacesHexa: () => unknown;
     accountsHexa: () => unknown;
   }>;
@@ -56,14 +55,12 @@ describe('tools.integration', () => {
       deploymentsHexa: jest.fn(),
       recipesHexa: jest.fn(),
       standardsHexa: jest.fn(),
-      analyticsHexa: jest.fn(),
       spacesHexa: jest.fn(),
       accountsHexa: jest.fn(),
     } as unknown as jest.Mocked<{
       deploymentsHexa: () => unknown;
       recipesHexa: () => unknown;
       standardsHexa: () => unknown;
-      analyticsHexa: () => unknown;
       spacesHexa: () => unknown;
       accountsHexa: () => unknown;
     }>;
