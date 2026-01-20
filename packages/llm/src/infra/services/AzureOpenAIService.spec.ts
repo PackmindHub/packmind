@@ -70,9 +70,12 @@ describe('AzureOpenAIService', () => {
   });
 
   describe('configuration', () => {
-    describe('using config values', () => {
-      it('uses endpoint from config over environment variable', async () => {
-        const serviceWithConfig = new AzureOpenAIService({
+    describe('when using config values for endpoint and apiKey', () => {
+      let serviceWithConfig: AzureOpenAIService;
+      let result: boolean;
+
+      beforeEach(async () => {
+        serviceWithConfig = new AzureOpenAIService({
           provider: LLMProvider.AZURE_OPENAI,
           model: 'gpt-4-deployment',
           fastestModel: 'gpt-35-turbo-deployment',
@@ -80,9 +83,14 @@ describe('AzureOpenAIService', () => {
           apiKey: 'custom-api-key',
         });
 
-        const result = await serviceWithConfig.isConfigured();
+        result = await serviceWithConfig.isConfigured();
+      });
 
+      it('returns true for isConfigured', () => {
         expect(result).toBe(true);
+      });
+
+      it('does not call Configuration.getConfig', () => {
         expect(MockedConfiguration.getConfig).not.toHaveBeenCalled();
       });
     });

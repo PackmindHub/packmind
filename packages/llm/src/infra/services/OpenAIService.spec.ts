@@ -62,63 +62,109 @@ describe('OpenAIService', () => {
       },
     };
 
-    it('executes prompt successfully and returns string result', async () => {
-      mockOpenAIInstance.chat.completions.create.mockResolvedValue(
-        mockResponse,
-      );
+    describe('when executing prompt successfully with string result', () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      let result: any;
 
-      const result = await service.executePrompt(mockPrompt);
+      beforeEach(async () => {
+        mockOpenAIInstance.chat.completions.create.mockResolvedValue(
+          mockResponse,
+        );
+        result = await service.executePrompt(mockPrompt);
+      });
 
-      expect(result.success).toBe(true);
-      expect(result.data).toBe('Test AI response');
-      expect(result.attempts).toBe(1);
-      expect(result.error).toBeUndefined();
+      it('returns success true', () => {
+        expect(result.success).toBe(true);
+      });
+
+      it('returns the AI response as data', () => {
+        expect(result.data).toBe('Test AI response');
+      });
+
+      it('records one attempt', () => {
+        expect(result.attempts).toBe(1);
+      });
+
+      it('does not return an error', () => {
+        expect(result.error).toBeUndefined();
+      });
     });
 
-    it('executes prompt successfully and returns parsed JSON object', async () => {
-      const jsonResponse = {
-        choices: [
-          {
-            message: {
-              content:
-                '{"summary": "Test summary", "keywords": ["test", "ai"]}',
-            },
-          },
-        ],
-        usage: { total_tokens: 30 },
-      };
-
-      mockOpenAIInstance.chat.completions.create.mockResolvedValue(
-        jsonResponse,
-      );
-
+    describe('when executing prompt successfully with JSON response', () => {
       interface TestResponse {
         summary: string;
         keywords: string[];
       }
 
-      const result = await service.executePrompt<TestResponse>(mockPrompt);
+      let result: {
+        success: boolean;
+        data: TestResponse | null;
+        attempts: number;
+      };
 
-      expect(result.success).toBe(true);
-      expect(result.data).toEqual({
-        summary: 'Test summary',
-        keywords: ['test', 'ai'],
+      beforeEach(async () => {
+        const jsonResponse = {
+          choices: [
+            {
+              message: {
+                content:
+                  '{"summary": "Test summary", "keywords": ["test", "ai"]}',
+              },
+            },
+          ],
+          usage: { total_tokens: 30 },
+        };
+
+        mockOpenAIInstance.chat.completions.create.mockResolvedValue(
+          jsonResponse,
+        );
+
+        result = await service.executePrompt<TestResponse>(mockPrompt);
       });
-      expect(result.attempts).toBe(1);
+
+      it('returns success true', () => {
+        expect(result.success).toBe(true);
+      });
+
+      it('returns parsed JSON object as data', () => {
+        expect(result.data).toEqual({
+          summary: 'Test summary',
+          keywords: ['test', 'ai'],
+        });
+      });
+
+      it('records one attempt', () => {
+        expect(result.attempts).toBe(1);
+      });
     });
 
-    it('handles missing API key gracefully', async () => {
-      const serviceWithoutKey = new OpenAIService({
-        provider: LLMProvider.OPENAI,
-        apiKey: '',
+    describe('when API key is missing', () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      let result: any;
+
+      beforeEach(async () => {
+        const serviceWithoutKey = new OpenAIService({
+          provider: LLMProvider.OPENAI,
+          apiKey: '',
+        });
+        result = await serviceWithoutKey.executePrompt(mockPrompt);
       });
 
-      const result = await serviceWithoutKey.executePrompt(mockPrompt);
+      it('returns success false', () => {
+        expect(result.success).toBe(false);
+      });
 
-      expect(result.success).toBe(false);
-      expect(result.data).toBeNull();
-      expect(result.error).toBe('OpenAIService not configured');
-      expect(result.attempts).toBe(1);
+      it('returns null data', () => {
+        expect(result.data).toBeNull();
+      });
+
+      it('returns configuration error message', () => {
+        expect(result.error).toBe('OpenAIService not configured');
+      });
+
+      it('records one attempt', () => {
+        expect(result.attempts).toBe(1);
+      });
     });
 
     describe('isConfigured', () => {
@@ -130,7 +176,7 @@ describe('OpenAIService', () => {
         });
       });
 
-      describe(' when API key is missing', () => {
+      describe('when API key is missing', () => {
         it('returns false', async () => {
           const serviceWithoutKey = new OpenAIService({
             provider: LLMProvider.OPENAI,
@@ -144,72 +190,136 @@ describe('OpenAIService', () => {
       });
     });
 
-    it('handles invalid OpenAI response', async () => {
-      const invalidResponse = {
-        choices: [],
-        usage: { total_tokens: 0 },
-      };
+    describe('when OpenAI returns invalid response', () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      let result: any;
 
-      mockOpenAIInstance.chat.completions.create.mockResolvedValue(
-        invalidResponse,
-      );
+      beforeEach(async () => {
+        const invalidResponse = {
+          choices: [],
+          usage: { total_tokens: 0 },
+        };
 
-      const result = await service.executePrompt(mockPrompt);
+        mockOpenAIInstance.chat.completions.create.mockResolvedValue(
+          invalidResponse,
+        );
 
-      expect(result.success).toBe(false);
-      expect(result.data).toBeNull();
-      expect(result.error).toContain('Invalid response from OpenAI');
-    });
-
-    it('retries on rate limit errors immediately', async () => {
-      const rateLimitError = new Error('Rate limit exceeded (429)');
-
-      mockOpenAIInstance.chat.completions.create
-        .mockRejectedValueOnce(rateLimitError)
-        .mockRejectedValueOnce(rateLimitError)
-        .mockResolvedValue(mockResponse);
-
-      const result = await service.executePrompt(mockPrompt);
-
-      expect(result.success).toBe(true);
-      expect(result.data).toBe('Test AI response');
-      expect(result.attempts).toBe(3);
-      expect(mockOpenAIInstance.chat.completions.create).toHaveBeenCalledTimes(
-        3,
-      );
-    });
-
-    it('stops retrying on authentication errors', async () => {
-      const authError = new Error('Unauthorized (401)');
-      mockOpenAIInstance.chat.completions.create.mockRejectedValue(authError);
-
-      const result = await service.executePrompt(mockPrompt);
-
-      expect(result.success).toBe(false);
-      expect(result.data).toBeNull();
-      expect(result.error).toBe('Unauthorized (401)');
-      expect(mockOpenAIInstance.chat.completions.create).toHaveBeenCalledTimes(
-        1,
-      );
-    });
-
-    it('fails after maximum retry attempts', async () => {
-      const networkError = new Error('Network timeout');
-      mockOpenAIInstance.chat.completions.create.mockRejectedValue(
-        networkError,
-      );
-
-      const result = await service.executePrompt(mockPrompt, {
-        retryAttempts: 3,
+        result = await service.executePrompt(mockPrompt);
       });
 
-      expect(result.success).toBe(false);
-      expect(result.data).toBeNull();
-      expect(result.error).toBe('Network timeout');
-      expect(result.attempts).toBe(3);
-      expect(mockOpenAIInstance.chat.completions.create).toHaveBeenCalledTimes(
-        3,
-      );
+      it('returns success false', () => {
+        expect(result.success).toBe(false);
+      });
+
+      it('returns null data', () => {
+        expect(result.data).toBeNull();
+      });
+
+      it('returns invalid response error message', () => {
+        expect(result.error).toContain('Invalid response from OpenAI');
+      });
+    });
+
+    describe('when rate limit error occurs', () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      let result: any;
+
+      beforeEach(async () => {
+        const rateLimitError = new Error('Rate limit exceeded (429)');
+
+        mockOpenAIInstance.chat.completions.create
+          .mockRejectedValueOnce(rateLimitError)
+          .mockRejectedValueOnce(rateLimitError)
+          .mockResolvedValue(mockResponse);
+
+        result = await service.executePrompt(mockPrompt);
+      });
+
+      it('returns success true after retries', () => {
+        expect(result.success).toBe(true);
+      });
+
+      it('returns the AI response as data', () => {
+        expect(result.data).toBe('Test AI response');
+      });
+
+      it('records three attempts', () => {
+        expect(result.attempts).toBe(3);
+      });
+
+      it('calls OpenAI API three times', () => {
+        expect(
+          mockOpenAIInstance.chat.completions.create,
+        ).toHaveBeenCalledTimes(3);
+      });
+    });
+
+    describe('when authentication error occurs', () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      let result: any;
+
+      beforeEach(async () => {
+        const authError = new Error('Unauthorized (401)');
+        mockOpenAIInstance.chat.completions.create.mockRejectedValue(authError);
+
+        result = await service.executePrompt(mockPrompt);
+      });
+
+      it('returns success false', () => {
+        expect(result.success).toBe(false);
+      });
+
+      it('returns null data', () => {
+        expect(result.data).toBeNull();
+      });
+
+      it('returns the authorization error message', () => {
+        expect(result.error).toBe('Unauthorized (401)');
+      });
+
+      it('calls OpenAI API only once without retrying', () => {
+        expect(
+          mockOpenAIInstance.chat.completions.create,
+        ).toHaveBeenCalledTimes(1);
+      });
+    });
+
+    describe('when maximum retry attempts are exhausted', () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      let result: any;
+
+      beforeEach(async () => {
+        const networkError = new Error('Network timeout');
+        mockOpenAIInstance.chat.completions.create.mockRejectedValue(
+          networkError,
+        );
+
+        result = await service.executePrompt(mockPrompt, {
+          retryAttempts: 3,
+        });
+      });
+
+      it('returns success false', () => {
+        expect(result.success).toBe(false);
+      });
+
+      it('returns null data', () => {
+        expect(result.data).toBeNull();
+      });
+
+      it('returns the network error message', () => {
+        expect(result.error).toBe('Network timeout');
+      });
+
+      it('records all retry attempts', () => {
+        expect(result.attempts).toBe(3);
+      });
+
+      it('calls OpenAI API for each retry attempt', () => {
+        expect(
+          mockOpenAIInstance.chat.completions.create,
+        ).toHaveBeenCalledTimes(3);
+      });
     });
   });
 
