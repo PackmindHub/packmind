@@ -1,12 +1,6 @@
 import { GitCommitSchema } from '@packmind/git';
 import { gitCommitFactory } from '@packmind/git/test';
-import {
-  DistributionStatus,
-  GitCommit,
-  Package,
-  Recipe,
-  Standard,
-} from '@packmind/types';
+import { DistributionStatus, Package, Recipe, Standard } from '@packmind/types';
 import { DataSource } from 'typeorm';
 import { DataFactory } from './helpers/DataFactory';
 import { makeIntegrationTestDataSource } from './helpers/makeIntegrationTestDataSource';
@@ -22,8 +16,6 @@ describe('Package deployment integration', () => {
   let standard2: Standard;
 
   let dataSource: DataSource;
-  let commit: GitCommit;
-  let commitToGit: jest.Mock;
 
   beforeEach(async () => {
     dataSource = await makeIntegrationTestDataSource();
@@ -43,10 +35,11 @@ describe('Package deployment integration', () => {
     standard1 = await dataFactory.withStandard({ name: 'Standard 1' });
     standard2 = await dataFactory.withStandard({ name: 'Standard 2' });
 
-    commit = await createGitCommit();
-    commitToGit = jest.fn().mockResolvedValue(commit);
+    // Mock the git commit to prevent actual git operations during tests
+    // With async deployment, the actual commit happens in the background job
+    const commit = await createGitCommit();
     const gitAdapter = testApp.gitHexa.getAdapter();
-    jest.spyOn(gitAdapter, 'commitToGit').mockImplementation(commitToGit);
+    jest.spyOn(gitAdapter, 'commitToGit').mockResolvedValue(commit);
   });
 
   afterEach(async () => {
@@ -90,8 +83,9 @@ describe('Package deployment integration', () => {
       expect(result).toHaveLength(1);
       expect(result[0]).toHaveProperty('target');
       expect(result[0]).toHaveProperty('status');
-      expect(result[0].status).toBe(DistributionStatus.success);
-      expect(commitToGit).toHaveBeenCalled();
+      // With async deployment, status is in_progress until the background job completes
+      expect(result[0].status).toBe(DistributionStatus.in_progress);
+      // Note: commitToGit is now called asynchronously by the delayed job
     });
 
     it('fetches package with recipe and standard IDs', async () => {
@@ -163,8 +157,9 @@ describe('Package deployment integration', () => {
       expect(result).toHaveLength(1);
       expect(result[0]).toHaveProperty('target');
       expect(result[0]).toHaveProperty('status');
-      expect(result[0].status).toBe(DistributionStatus.success);
-      expect(commitToGit).toHaveBeenCalled();
+      // With async deployment, status is in_progress until the background job completes
+      expect(result[0].status).toBe(DistributionStatus.in_progress);
+      // Note: commitToGit is now called asynchronously by the delayed job
 
       const getResponse = await testApp.deploymentsHexa
         .getAdapter()
@@ -209,8 +204,9 @@ describe('Package deployment integration', () => {
       expect(result).toHaveLength(1);
       expect(result[0]).toHaveProperty('target');
       expect(result[0]).toHaveProperty('status');
-      expect(result[0].status).toBe(DistributionStatus.success);
-      expect(commitToGit).toHaveBeenCalled();
+      // With async deployment, status is in_progress until the background job completes
+      expect(result[0].status).toBe(DistributionStatus.in_progress);
+      // Note: commitToGit is now called asynchronously by the delayed job
 
       const getResponse = await testApp.deploymentsHexa
         .getAdapter()
@@ -268,8 +264,9 @@ describe('Package deployment integration', () => {
       expect(result).toHaveLength(1);
       expect(result[0]).toHaveProperty('target');
       expect(result[0]).toHaveProperty('status');
-      expect(result[0].status).toBe(DistributionStatus.success);
-      expect(commitToGit).toHaveBeenCalled();
+      // With async deployment, status is in_progress until the background job completes
+      expect(result[0].status).toBe(DistributionStatus.in_progress);
+      // Note: commitToGit is now called asynchronously by the delayed job
     });
   });
 
@@ -434,28 +431,10 @@ describe('Package deployment integration', () => {
       expect(result).toHaveLength(1);
       expect(result[0]).toHaveProperty('target');
       expect(result[0]).toHaveProperty('status');
-      expect(result[0].status).toBe(DistributionStatus.success);
-      expect(commitToGit).toHaveBeenCalled();
-
-      // Verify the committed files contain the rules
-      const commitCall = commitToGit.mock.calls[0];
-      const fileUpdates = commitCall[1] as Array<{
-        path: string;
-        content: string;
-      }>; // Second parameter is the file updates
-
-      // Find the standard file in the updates
-      const standardFile = fileUpdates.find((file) =>
-        file.path.includes('.packmind/standards/standard-with-rules.md'),
-      );
-
-      expect(standardFile).toBeDefined();
-      expect(standardFile?.content).toContain(
-        'Always use TypeScript for type safety',
-      );
-      expect(standardFile?.content).toContain(
-        'Write unit tests for all business logic',
-      );
+      // With async deployment, status is in_progress until the background job completes
+      expect(result[0].status).toBe(DistributionStatus.in_progress);
+      // Note: commitToGit is now called asynchronously by the delayed job
+      // File content verification is covered by unit tests in PublishArtifactsUseCase.spec.ts
     });
   });
 });

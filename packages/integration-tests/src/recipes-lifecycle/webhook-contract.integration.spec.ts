@@ -61,21 +61,6 @@ jest.mock(
   },
 );
 
-jest.mock('@packmind/node-utils', () => {
-  const actual = jest.requireActual('@packmind/node-utils');
-  return {
-    ...actual,
-    Configuration: {
-      getConfig: jest.fn().mockImplementation((key: string) => {
-        if (key === 'ENCRYPTION_KEY') {
-          return Promise.resolve('random-encryption-key-for-testing');
-        }
-        return Promise.resolve(null);
-      }),
-    },
-  };
-});
-
 interface WebhookTestConfig<TPayload> {
   providerName: string;
   providerVendor: keyof typeof GitProviderVendors;
@@ -680,6 +665,8 @@ function contractWebhookTest<TPayload>(config: WebhookTestConfig<TPayload>) {
                   packageId: 'pkg-1' as never,
                   recipeVersions: [initialVersions[0]],
                   standardVersions: [],
+                  skillVersions: [],
+                  operation: 'add',
                 },
               ],
               target: {
@@ -693,6 +680,7 @@ function contractWebhookTest<TPayload>(config: WebhookTestConfig<TPayload>) {
               authorId: dataFactory.user.id,
               organizationId: dataFactory.organization.id,
               renderModes: [],
+              source: 'cli',
             },
           ]);
 
@@ -762,6 +750,8 @@ function contractWebhookTest<TPayload>(config: WebhookTestConfig<TPayload>) {
                   packageId: 'pkg-1' as never,
                   recipeVersions: [initialVersions[0]],
                   standardVersions: [],
+                  skillVersions: [],
+                  operation: 'add',
                 },
               ],
               target: {
@@ -775,6 +765,7 @@ function contractWebhookTest<TPayload>(config: WebhookTestConfig<TPayload>) {
               authorId: dataFactory.user.id,
               organizationId: dataFactory.organization.id,
               renderModes: [],
+              source: 'cli',
             },
           ]);
 
@@ -842,6 +833,8 @@ function contractWebhookTest<TPayload>(config: WebhookTestConfig<TPayload>) {
                       packageId: 'pkg-1' as never,
                       recipeVersions: [initialVersions[0]],
                       standardVersions: [],
+                      skillVersions: [],
+                      operation: 'add',
                     },
                   ],
                   target: jetbrainsTarget,
@@ -850,6 +843,7 @@ function contractWebhookTest<TPayload>(config: WebhookTestConfig<TPayload>) {
                   authorId: dataFactory.user.id,
                   organizationId: dataFactory.organization.id,
                   renderModes: [],
+                  source: 'cli',
                 },
               ],
             });
@@ -860,6 +854,7 @@ function contractWebhookTest<TPayload>(config: WebhookTestConfig<TPayload>) {
             recipeVersionIds: [initialVersions[0].id],
             standardVersionIds: [],
             packagesSlugs: [],
+            packageIds: [],
             ...dataFactory.packmindCommand(),
           });
 
@@ -879,6 +874,8 @@ function contractWebhookTest<TPayload>(config: WebhookTestConfig<TPayload>) {
                     packageId: 'pkg-1' as never,
                     recipeVersions: [initialVersions[0]],
                     standardVersions: [],
+                    skillVersions: [],
+                    operation: 'add',
                   },
                 ],
                 target: jetbrainsTarget,
@@ -887,6 +884,7 @@ function contractWebhookTest<TPayload>(config: WebhookTestConfig<TPayload>) {
                 authorId: dataFactory.user.id,
                 organizationId: dataFactory.organization.id,
                 renderModes: [],
+                source: 'cli',
               },
             ]);
 
@@ -908,6 +906,7 @@ function contractWebhookTest<TPayload>(config: WebhookTestConfig<TPayload>) {
                 authorId: createUserId('system'), // webhook deployments use system user
                 organizationId: dataFactory.organization.id,
                 renderModes: [],
+                source: 'cli',
               },
             ],
           });

@@ -11,6 +11,7 @@ import {
   createAssessmentStatusChangeEvent,
   createDetectionHeuristicsUpdatedEvent,
   createUserContextChangeEvent,
+  createDistributionStatusChangeEvent,
   type UserContextChangeType,
 } from '@packmind/types';
 import { UserOrganizationRole } from '@packmind/types';
@@ -234,6 +235,59 @@ export class SSEEventPublisher {
           userId,
           organizationId,
           changeType,
+          error: error instanceof Error ? error.message : String(error),
+        },
+      );
+      throw error;
+    }
+  }
+
+  /**
+   * Publish a distribution status change event for cache invalidation
+   * This triggers React Query to refetch the distribution data when status changes
+   */
+  static async publishDistributionStatusChangeEvent(
+    distributionId: string,
+    status: string,
+    organizationId: string,
+  ): Promise<void> {
+    SSEEventPublisher.logger.info(
+      'Publishing distribution status change event',
+      {
+        distributionId,
+        status,
+        organizationId,
+      },
+    );
+
+    try {
+      const event = createDistributionStatusChangeEvent(
+        distributionId,
+        status,
+        organizationId,
+      );
+
+      await SSEEventPublisher.publishEvent(
+        'DISTRIBUTION_STATUS_CHANGE',
+        [organizationId],
+        event,
+      );
+
+      SSEEventPublisher.logger.debug(
+        'Successfully published distribution status change event',
+        {
+          distributionId,
+          status,
+          organizationId,
+        },
+      );
+    } catch (error) {
+      SSEEventPublisher.logger.error(
+        'Failed to publish distribution status change event',
+        {
+          distributionId,
+          status,
+          organizationId,
           error: error instanceof Error ? error.message : String(error),
         },
       );

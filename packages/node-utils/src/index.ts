@@ -13,7 +13,7 @@ export * from './hexa/HexaRegistry';
 export { AbstractAIDelayedJob } from './jobs/application/AbstractAIDelayedJob';
 export * from './jobs/domain/IJobQueue';
 export * from './jobs/domain/IJobRegistry';
-export { IQueue, QueueListeners, WorkerListeners } from './jobs/domain/IQueue';
+export * from './jobs/domain/IQueue';
 export { queueFactory } from './jobs/infra/DelayedJobsFactory';
 export * from './jobs/JobsService';
 export * from './jobs/test';

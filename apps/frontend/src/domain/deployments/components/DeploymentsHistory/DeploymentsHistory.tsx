@@ -82,6 +82,8 @@ export const DeploymentsHistory: React.FC<DeploymentsHistoryProps> = ({
   }
 
   const getStatusBadge = (status: string, fallback?: string) => {
+    if (status === 'in_progress')
+      return <PMBadge colorPalette="blue">In Progress</PMBadge>;
     if (status === 'success')
       return <PMBadge colorPalette="green">Success</PMBadge>;
     if (status === 'failure')
@@ -139,6 +141,13 @@ export const DeploymentsHistory: React.FC<DeploymentsHistoryProps> = ({
   const getCommitLinks = (deployment: Distribution) => {
     const commit = deployment.gitCommit;
     if (!commit) {
+      if (deployment.status === 'in_progress') {
+        return (
+          <PMText as="span" variant="small" color="faded">
+            Pending...
+          </PMText>
+        );
+      }
       if (deployment.source === 'cli') {
         return (
           <PMTooltip

@@ -17,6 +17,7 @@ import {
 } from '@packmind/ui';
 import { useAuthContext } from '../src/domain/accounts/hooks';
 import { UserContextChangeSubscription } from '../src/domain/accounts/components/UserContextChangeSubscription';
+import { DistributionStatusChangeSubscription } from '../src/domain/deployments/components/DistributionStatusChangeSubscription';
 import { QueryProvider } from '../src/providers/QueryProvider';
 import { AuthProvider } from '../src/providers/AuthProvider';
 import { SSEProvider } from '../src/services/sse';
@@ -147,6 +148,7 @@ function AppContent() {
         mx="auto"
       >
         {isAuthenticated && <UserContextChangeSubscription />}
+        {isAuthenticated && <DistributionStatusChangeSubscription />}
         <Outlet />
         <PMToaster />
       </PMVStack>

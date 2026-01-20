@@ -6,7 +6,7 @@ export { queueFactory } from './infra/DelayedJobsFactory';
 // Generic job interfaces
 export * from './domain/IJobQueue';
 export * from './domain/IJobRegistry';
-export { IQueue, QueueListeners, WorkerListeners } from './domain/IQueue';
+export * from './domain/IQueue';
 
 // Test utilities
 export * from './test';
