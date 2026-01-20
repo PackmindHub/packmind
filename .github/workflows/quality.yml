@@ -154,6 +154,10 @@ jobs:
           - packages/coding-agent
           - packages/git
           - packages/integration-tests
+          - packages/linter-ast
+          - packages/linter-execution
+          - packages/llm
+          - packages/logger
 
     steps:
       - name: Checkout
