@@ -422,27 +422,55 @@ function contractWebhookTest<TPayload>(config: WebhookTestConfig<TPayload>) {
             ]);
           });
 
-          it('automatically deploys new recipe version to source repository', async () => {
-            const distributions = await testApp.deploymentsHexa
-              .getAdapter()
-              .listDistributionsByRecipe({
-                ...dataFactory.packmindCommand(),
-                recipeId: recipe.id,
-              });
+          describe('automatic deployment to source repository', () => {
+            let distributions: Awaited<
+              ReturnType<
+                typeof testApp.deploymentsHexa.getAdapter.prototype.listDistributionsByRecipe
+              >
+            >;
 
-            // Verify the initial distribution via package exists with the recipe
-            expect(distributions).toHaveLength(1);
-            expect(distributions[0]).toEqual(
-              expect.objectContaining({
-                target: expect.objectContaining({ id: dataFactory.target.id }),
-                authorId: dataFactory.user.id,
-                distributedPackages: expect.arrayContaining([
-                  expect.objectContaining({
-                    packageId: recipePackage.id,
+            beforeEach(async () => {
+              distributions = await testApp.deploymentsHexa
+                .getAdapter()
+                .listDistributionsByRecipe({
+                  ...dataFactory.packmindCommand(),
+                  recipeId: recipe.id,
+                });
+            });
+
+            it('has exactly one distribution', () => {
+              expect(distributions).toHaveLength(1);
+            });
+
+            it('targets the expected repository', () => {
+              expect(distributions[0]).toEqual(
+                expect.objectContaining({
+                  target: expect.objectContaining({
+                    id: dataFactory.target.id,
                   }),
-                ]),
-              }),
-            );
+                }),
+              );
+            });
+
+            it('is authored by the expected user', () => {
+              expect(distributions[0]).toEqual(
+                expect.objectContaining({
+                  authorId: dataFactory.user.id,
+                }),
+              );
+            });
+
+            it('includes the recipe package', () => {
+              expect(distributions[0]).toEqual(
+                expect.objectContaining({
+                  distributedPackages: expect.arrayContaining([
+                    expect.objectContaining({
+                      packageId: recipePackage.id,
+                    }),
+                  ]),
+                }),
+              );
+            });
           });
         });
 
@@ -513,27 +541,44 @@ function contractWebhookTest<TPayload>(config: WebhookTestConfig<TPayload>) {
             ]);
           });
 
-          it('handles multiple recipe updates in single webhook', async () => {
-            // Verify new versions were created for both recipes by the delayed job
-            const recipe1Versions = await testApp.recipesHexa
-              .getAdapter()
-              .listRecipeVersions(recipe.id);
-            const recipe2Versions = await testApp.recipesHexa
-              .getAdapter()
-              .listRecipeVersions(recipe2.id);
+          describe('multiple recipe updates in single webhook', () => {
+            let recipe1Versions: Awaited<
+              ReturnType<
+                typeof testApp.recipesHexa.getAdapter.prototype.listRecipeVersions
+              >
+            >;
+            let recipe2Versions: Awaited<
+              ReturnType<
+                typeof testApp.recipesHexa.getAdapter.prototype.listRecipeVersions
+              >
+            >;
 
-            expect(recipe1Versions).toHaveLength(2);
-            expect(recipe2Versions).toHaveLength(2);
+            beforeEach(async () => {
+              recipe1Versions = await testApp.recipesHexa
+                .getAdapter()
+                .listRecipeVersions(recipe.id);
+              recipe2Versions = await testApp.recipesHexa
+                .getAdapter()
+                .listRecipeVersions(recipe2.id);
+            });
 
-            // Check the new versions have the updated content
-            const recipe1V2 = recipe1Versions.find((v) => v.version === 2);
-            const recipe2V2 = recipe2Versions.find((v) => v.version === 2);
+            it('creates two versions for first recipe', () => {
+              expect(recipe1Versions).toHaveLength(2);
+            });
 
-            expect(recipe1V2).toBeDefined();
-            expect(recipe1V2?.content).toBe(updatedContent1);
+            it('creates two versions for second recipe', () => {
+              expect(recipe2Versions).toHaveLength(2);
+            });
 
-            expect(recipe2V2).toBeDefined();
-            expect(recipe2V2?.content).toBe(updatedContent2);
+            it('updates first recipe content to new version', () => {
+              const recipe1V2 = recipe1Versions.find((v) => v.version === 2);
+              expect(recipe1V2?.content).toBe(updatedContent1);
+            });
+
+            it('updates second recipe content to new version', () => {
+              const recipe2V2 = recipe2Versions.find((v) => v.version === 2);
+              expect(recipe2V2?.content).toBe(updatedContent2);
+            });
           });
         });
       });
@@ -632,179 +677,216 @@ function contractWebhookTest<TPayload>(config: WebhookTestConfig<TPayload>) {
         });
       });
 
-      it('creates new recipe version for recipe updated via target path', async () => {
-        // Verify initial state
-        const initialVersions = await testApp.recipesHexa
-          .getAdapter()
-          .listRecipeVersions(recipe.id);
-        expect(initialVersions).toHaveLength(1);
-        expect(initialVersions[0].version).toBe(1);
+      describe('when recipe is updated via deployed target path', () => {
+        const updatedContent = `# Target Path Test Recipe\\n\\nUpdated content in target path from webhook.`;
+        let matchingRecipes: Recipe[];
+        let allVersions: Awaited<
+          ReturnType<
+            typeof testApp.recipesHexa.getAdapter.prototype.listRecipeVersions
+          >
+        >;
 
-        // Mock webhook response with updated content in a target path
-        const updatedContent = `# Target Path Test Recipe\\n\\nUpdated content in target path from ${config.providerName} webhook.`;
-
-        await mockWebhookWithAsyncJobs([
-          {
-            filePath: '/jetbrains/.packmind/recipes/target-path-test-recipe.md',
-            fileContent: updatedContent,
-          },
-        ]);
-
-        jest
-          .spyOn(
-            testApp.deploymentsHexa.getAdapter(),
-            'listDistributionsByRecipe',
-          )
-          .mockResolvedValue([
-            {
-              id: createDistributionId('distribution-1'),
-              distributedPackages: [
-                {
-                  id: 'distributed-pkg-1' as never,
-                  distributionId: createDistributionId('distribution-1'),
-                  packageId: 'pkg-1' as never,
-                  recipeVersions: [initialVersions[0]],
-                  standardVersions: [],
-                  skillVersions: [],
-                  operation: 'add',
-                },
-              ],
-              target: {
-                id: createTargetId('target-1'),
-                name: 'JetBrains IDE',
-                path: '/jetbrains/',
-                gitRepoId: gitRepo.id,
-              },
-              status: DistributionStatus.success,
-              createdAt: new Date().toISOString(),
-              authorId: dataFactory.user.id,
-              organizationId: dataFactory.organization.id,
-              renderModes: [],
-              source: 'cli',
-            },
-          ]);
-
-        // Simulate webhook call
-        const webhookPayload = config.createPayload(
-          '/jetbrains/.packmind/recipes/target-path-test-recipe.md',
-        );
-        const updateMethod =
-          config.providerName === 'GitHub'
-            ? 'updateRecipesFromGitHub'
-            : 'updateRecipesFromGitLab';
-        const matchingRecipes = await testApp.recipesHexa
-          .getAdapter()
-          [updateMethod]({
-            payload: webhookPayload,
-            headers: config.headers,
-            ...dataFactory.packmindCommand(),
-          });
-
-        // Verify that matching recipe was returned (in current state, before update)
-        expect(matchingRecipes).toHaveLength(1);
-        expect(matchingRecipes[0].slug).toBe('target-path-test-recipe');
-        expect(matchingRecipes[0].version).toBe(1); // Still version 1 (current state)
-
-        // Verify that new version was created by the delayed job
-        const allVersions = await testApp.recipesHexa
-          .getAdapter()
-          .listRecipeVersions(recipe.id);
-        expect(allVersions).toHaveLength(2);
-
-        const newVersion = allVersions.find((v) => v.version === 2);
-        expect(newVersion).toBeDefined();
-        expect(newVersion?.content).toBe(updatedContent);
-      });
-
-      it('does not create new recipe version for recipe not deployed to target path', async () => {
-        // Verify initial state
-        const initialVersions = await testApp.recipesHexa
-          .getAdapter()
-          .listRecipeVersions(recipe.id);
-        expect(initialVersions).toHaveLength(1);
-        expect(initialVersions[0].version).toBe(1);
-
-        // Mock webhook response with updated content in a different target path
-        const updatedContent = `# Target Path Test Recipe\\n\\nUpdated content in non-deployed target from ${config.providerName} webhook.`;
-
-        await mockWebhookWithAsyncJobs([
-          {
-            filePath:
-              '/visual-studio/.packmind/recipes/target-path-test-recipe.md',
-            fileContent: updatedContent,
-          },
-        ]);
-
-        jest
-          .spyOn(
-            testApp.deploymentsHexa.getAdapter(),
-            'listDistributionsByRecipe',
-          )
-          .mockResolvedValue([
-            {
-              id: createDistributionId('distribution-1'),
-              distributedPackages: [
-                {
-                  id: 'distributed-pkg-1' as never,
-                  distributionId: createDistributionId('distribution-1'),
-                  packageId: 'pkg-1' as never,
-                  recipeVersions: [initialVersions[0]],
-                  standardVersions: [],
-                  skillVersions: [],
-                  operation: 'add',
-                },
-              ],
-              target: {
-                id: createTargetId('target-1'),
-                name: 'JetBrains IDE',
-                path: '/jetbrains/', // Only deployed to jetbrains, not visual-studio
-                gitRepoId: gitRepo.id,
-              },
-              status: DistributionStatus.success,
-              createdAt: new Date().toISOString(),
-              authorId: dataFactory.user.id,
-              organizationId: dataFactory.organization.id,
-              renderModes: [],
-              source: 'cli',
-            },
-          ]);
-
-        // Simulate webhook call
-        const webhookPayload = config.createPayload(
-          '/visual-studio/.packmind/recipes/target-path-test-recipe.md',
-        );
-        const updateMethod =
-          config.providerName === 'GitHub'
-            ? 'updateRecipesFromGitHub'
-            : 'updateRecipesFromGitLab';
-        const matchingRecipes = await testApp.recipesHexa
-          .getAdapter()
-          [updateMethod]({
-            payload: webhookPayload,
-            headers: config.headers,
-            ...dataFactory.packmindCommand(),
-          });
-
-        // Verify that no recipe was returned since it's not deployed to /visual-studio/ target
-        expect(matchingRecipes).toHaveLength(0);
-
-        // Verify that no new version was created
-        const allVersions = await testApp.recipesHexa
-          .getAdapter()
-          .listRecipeVersions(recipe.id);
-        expect(allVersions).toHaveLength(1);
-        expect(allVersions[0].version).toBe(1);
-      });
-
-      describe('when recipe is updated via target path', () => {
-        it('deploys updated recipe version to specific target only', async () => {
-          // Setup: Deploy recipe to multiple targets (/jetbrains/ and /vscode/)
+        beforeEach(async () => {
           const initialVersions = await testApp.recipesHexa
             .getAdapter()
             .listRecipeVersions(recipe.id);
 
-          // Define the targets
-          const jetbrainsTarget = {
+          await mockWebhookWithAsyncJobs([
+            {
+              filePath:
+                '/jetbrains/.packmind/recipes/target-path-test-recipe.md',
+              fileContent: updatedContent,
+            },
+          ]);
+
+          jest
+            .spyOn(
+              testApp.deploymentsHexa.getAdapter(),
+              'listDistributionsByRecipe',
+            )
+            .mockResolvedValue([
+              {
+                id: createDistributionId('distribution-1'),
+                distributedPackages: [
+                  {
+                    id: 'distributed-pkg-1' as never,
+                    distributionId: createDistributionId('distribution-1'),
+                    packageId: 'pkg-1' as never,
+                    recipeVersions: [initialVersions[0]],
+                    standardVersions: [],
+                    skillVersions: [],
+                    operation: 'add',
+                  },
+                ],
+                target: {
+                  id: createTargetId('target-1'),
+                  name: 'JetBrains IDE',
+                  path: '/jetbrains/',
+                  gitRepoId: gitRepo.id,
+                },
+                status: DistributionStatus.success,
+                createdAt: new Date().toISOString(),
+                authorId: dataFactory.user.id,
+                organizationId: dataFactory.organization.id,
+                renderModes: [],
+                source: 'cli',
+              },
+            ]);
+
+          const webhookPayload = config.createPayload(
+            '/jetbrains/.packmind/recipes/target-path-test-recipe.md',
+          );
+          const updateMethod =
+            config.providerName === 'GitHub'
+              ? 'updateRecipesFromGitHub'
+              : 'updateRecipesFromGitLab';
+          matchingRecipes = await testApp.recipesHexa
+            .getAdapter()
+            [updateMethod]({
+              payload: webhookPayload,
+              headers: config.headers,
+              ...dataFactory.packmindCommand(),
+            });
+
+          allVersions = await testApp.recipesHexa
+            .getAdapter()
+            .listRecipeVersions(recipe.id);
+        });
+
+        it('returns exactly one matching recipe', () => {
+          expect(matchingRecipes).toHaveLength(1);
+        });
+
+        it('returns recipe with correct slug', () => {
+          expect(matchingRecipes[0].slug).toBe('target-path-test-recipe');
+        });
+
+        it('returns recipe at version 1 before update completes', () => {
+          expect(matchingRecipes[0].version).toBe(1);
+        });
+
+        it('creates a new version in the delayed job', () => {
+          expect(allVersions).toHaveLength(2);
+        });
+
+        it('updates new version with correct content', () => {
+          const newVersion = allVersions.find((v) => v.version === 2);
+          expect(newVersion?.content).toBe(updatedContent);
+        });
+      });
+
+      describe('when recipe is not deployed to webhook target path', () => {
+        let matchingRecipes: Recipe[];
+        let allVersions: Awaited<
+          ReturnType<
+            typeof testApp.recipesHexa.getAdapter.prototype.listRecipeVersions
+          >
+        >;
+
+        beforeEach(async () => {
+          const initialVersions = await testApp.recipesHexa
+            .getAdapter()
+            .listRecipeVersions(recipe.id);
+
+          const updatedContent = `# Target Path Test Recipe\\n\\nUpdated content in non-deployed target from webhook.`;
+
+          await mockWebhookWithAsyncJobs([
+            {
+              filePath:
+                '/visual-studio/.packmind/recipes/target-path-test-recipe.md',
+              fileContent: updatedContent,
+            },
+          ]);
+
+          jest
+            .spyOn(
+              testApp.deploymentsHexa.getAdapter(),
+              'listDistributionsByRecipe',
+            )
+            .mockResolvedValue([
+              {
+                id: createDistributionId('distribution-1'),
+                distributedPackages: [
+                  {
+                    id: 'distributed-pkg-1' as never,
+                    distributionId: createDistributionId('distribution-1'),
+                    packageId: 'pkg-1' as never,
+                    recipeVersions: [initialVersions[0]],
+                    standardVersions: [],
+                    skillVersions: [],
+                    operation: 'add',
+                  },
+                ],
+                target: {
+                  id: createTargetId('target-1'),
+                  name: 'JetBrains IDE',
+                  path: '/jetbrains/',
+                  gitRepoId: gitRepo.id,
+                },
+                status: DistributionStatus.success,
+                createdAt: new Date().toISOString(),
+                authorId: dataFactory.user.id,
+                organizationId: dataFactory.organization.id,
+                renderModes: [],
+                source: 'cli',
+              },
+            ]);
+
+          const webhookPayload = config.createPayload(
+            '/visual-studio/.packmind/recipes/target-path-test-recipe.md',
+          );
+          const updateMethod =
+            config.providerName === 'GitHub'
+              ? 'updateRecipesFromGitHub'
+              : 'updateRecipesFromGitLab';
+          matchingRecipes = await testApp.recipesHexa
+            .getAdapter()
+            [updateMethod]({
+              payload: webhookPayload,
+              headers: config.headers,
+              ...dataFactory.packmindCommand(),
+            });
+
+          allVersions = await testApp.recipesHexa
+            .getAdapter()
+            .listRecipeVersions(recipe.id);
+        });
+
+        it('returns no matching recipes', () => {
+          expect(matchingRecipes).toHaveLength(0);
+        });
+
+        it('does not create new version', () => {
+          expect(allVersions).toHaveLength(1);
+        });
+
+        it('keeps original version unchanged', () => {
+          expect(allVersions[0].version).toBe(1);
+        });
+      });
+
+      describe('when recipe is updated via target path for deployment', () => {
+        const updatedContent = `# Target Path Test Recipe\\n\\nUpdated content in /jetbrains/ target from webhook V2.`;
+        let matchingRecipes: Recipe[];
+        let allVersions: Awaited<
+          ReturnType<
+            typeof testApp.recipesHexa.getAdapter.prototype.listRecipeVersions
+          >
+        >;
+        let publishArtifactsSpy: jest.SpyInstance;
+        let jetbrainsTarget: {
+          id: ReturnType<typeof createTargetId>;
+          name: string;
+          path: string;
+          gitRepoId: typeof gitRepo.id;
+        };
+
+        beforeEach(async () => {
+          const initialVersions = await testApp.recipesHexa
+            .getAdapter()
+            .listRecipeVersions(recipe.id);
+
+          jetbrainsTarget = {
             id: createTargetId('target-jetbrains'),
             name: 'JetBrains IDE',
             path: '/jetbrains/',
@@ -817,8 +899,7 @@ function contractWebhookTest<TPayload>(config: WebhookTestConfig<TPayload>) {
             gitRepoId: gitRepo.id,
           };
 
-          // Create initial deployment to multiple targets
-          const publishArtifactsSpy = jest
+          publishArtifactsSpy = jest
             .spyOn(testApp.deploymentsHexa.getAdapter(), 'publishArtifacts')
             .mockResolvedValueOnce({
               distributions: [
@@ -848,7 +929,6 @@ function contractWebhookTest<TPayload>(config: WebhookTestConfig<TPayload>) {
               ],
             });
 
-          // Deploy recipe V1 to both targets initially
           await testApp.deploymentsHexa.getAdapter().publishArtifacts({
             targetIds: [dataFactory.target.id],
             recipeVersionIds: [initialVersions[0].id],
@@ -858,7 +938,6 @@ function contractWebhookTest<TPayload>(config: WebhookTestConfig<TPayload>) {
             ...dataFactory.packmindCommand(),
           });
 
-          // Mock that recipe is deployed to jetbrains target
           jest
             .spyOn(
               testApp.deploymentsHexa.getAdapter(),
@@ -888,12 +967,10 @@ function contractWebhookTest<TPayload>(config: WebhookTestConfig<TPayload>) {
               },
             ]);
 
-          // Mock getTargetsByGitRepo to return both targets
           jest
             .spyOn(testApp.deploymentsHexa.getAdapter(), 'getTargetsByGitRepo')
             .mockResolvedValue([jetbrainsTarget, vscodeTarget]);
 
-          // Reset spy to track new deployment calls
           publishArtifactsSpy.mockReset();
           publishArtifactsSpy.mockResolvedValue({
             distributions: [
@@ -903,16 +980,13 @@ function contractWebhookTest<TPayload>(config: WebhookTestConfig<TPayload>) {
                 target: jetbrainsTarget,
                 status: DistributionStatus.failure,
                 createdAt: new Date().toISOString(),
-                authorId: createUserId('system'), // webhook deployments use system user
+                authorId: createUserId('system'),
                 organizationId: dataFactory.organization.id,
                 renderModes: [],
                 source: 'cli',
               },
             ],
           });
-
-          // Mock webhook response with updated content in /jetbrains/ target path
-          const updatedContent = `# Target Path Test Recipe\\n\\nUpdated content in /jetbrains/ target from ${config.providerName} webhook V2.`;
 
           await mockWebhookWithAsyncJobs([
             {
@@ -922,7 +996,6 @@ function contractWebhookTest<TPayload>(config: WebhookTestConfig<TPayload>) {
             },
           ]);
 
-          // Simulate webhook call for /jetbrains/ target
           const webhookPayload = config.createPayload(
             '/jetbrains/.packmind/recipes/target-path-test-recipe.md',
           );
@@ -930,7 +1003,7 @@ function contractWebhookTest<TPayload>(config: WebhookTestConfig<TPayload>) {
             config.providerName === 'GitHub'
               ? 'updateRecipesFromGitHub'
               : 'updateRecipesFromGitLab';
-          const matchingRecipes = await testApp.recipesHexa
+          matchingRecipes = await testApp.recipesHexa
             .getAdapter()
             [updateMethod]({
               payload: webhookPayload,
@@ -938,34 +1011,63 @@ function contractWebhookTest<TPayload>(config: WebhookTestConfig<TPayload>) {
               ...dataFactory.packmindCommand(),
             });
 
-          // Verify that matching recipe was returned (in current state, before update)
-          expect(matchingRecipes).toHaveLength(1);
-          expect(matchingRecipes[0].version).toBe(1); // Still version 1 (current state)
-
-          // Verify that new version was created by the delayed job
-          const allVersions = await testApp.recipesHexa
+          allVersions = await testApp.recipesHexa
             .getAdapter()
             .listRecipeVersions(recipe.id);
+        });
+
+        it('returns exactly one matching recipe', () => {
+          expect(matchingRecipes).toHaveLength(1);
+        });
+
+        it('returns recipe at version 1 before update', () => {
+          expect(matchingRecipes[0].version).toBe(1);
+        });
+
+        it('creates two versions after delayed job', () => {
           expect(allVersions).toHaveLength(2);
+        });
+
+        it('updates new version with correct content', () => {
           const newVersion = allVersions.find((v) => v.version === 2);
-          expect(newVersion).toBeDefined();
           expect(newVersion?.content).toBe(updatedContent);
+        });
 
-          // Verify that deployment was triggered automatically after recipe update
+        it('triggers deployment exactly once', () => {
           expect(publishArtifactsSpy).toHaveBeenCalledTimes(1);
+        });
+
+        it('deploys to jetbrains target only', () => {
           const deploymentCall = publishArtifactsSpy.mock.calls[0][0];
-
-          // Desired implementation (should use targetIds for target-specific deployment):
-          expect(deploymentCall.targetIds).toBeDefined();
           expect(deploymentCall.targetIds).toEqual([jetbrainsTarget.id]);
+        });
 
+        it('includes one recipe version in deployment', () => {
+          const deploymentCall = publishArtifactsSpy.mock.calls[0][0];
           expect(deploymentCall.recipeVersionIds).toHaveLength(1);
+        });
+
+        it('deploys the new version', () => {
+          const newVersion = allVersions.find((v) => v.version === 2);
+          const deploymentCall = publishArtifactsSpy.mock.calls[0][0];
           expect(deploymentCall.recipeVersionIds[0]).toBe(newVersion?.id);
+        });
+
+        it('includes no standard versions in deployment', () => {
+          const deploymentCall = publishArtifactsSpy.mock.calls[0][0];
           expect(deploymentCall.standardVersionIds).toEqual([]);
+        });
+
+        it('uses correct organization for deployment', () => {
+          const deploymentCall = publishArtifactsSpy.mock.calls[0][0];
           expect(deploymentCall.organizationId).toBe(
             dataFactory.organization.id,
           );
-          expect(deploymentCall.userId).toBe(createUserId('system')); // webhook deployments use system user
+        });
+
+        it('uses system user for webhook deployments', () => {
+          const deploymentCall = publishArtifactsSpy.mock.calls[0][0];
+          expect(deploymentCall.userId).toBe(createUserId('system'));
         });
       });
     });

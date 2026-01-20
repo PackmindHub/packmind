@@ -179,6 +179,30 @@ export class CodingAgentServices {
       this.logger.info('Removed artifacts processed');
     }
 
+    // "Burn and Rebuild" for skills: add skill directories to delete list
+    // The commit flow will:
+    // 1. Expand directories to individual files (via listFilesInDirectory)
+    // 2. Filter out files that are also in createOrUpdate list
+    // This ensures stale files are deleted when a skill is updated
+    const allSkillVersions = [
+      ...installed.skillVersions,
+      ...removed.skillVersions,
+    ];
+
+    for (const sv of allSkillVersions) {
+      result.delete.push({ path: `.claude/skills/${sv.slug}` });
+      result.delete.push({ path: `.github/skills/${sv.slug}` });
+    }
+
+    if (allSkillVersions.length > 0) {
+      this.logger.info(
+        'Skill directories marked for deletion (burn and rebuild)',
+        {
+          skillCount: allSkillVersions.length,
+        },
+      );
+    }
+
     this.logger.info('Artifacts rendered successfully', {
       filesCount: result.createOrUpdate.length + result.delete.length,
       createOrUpdateCount: result.createOrUpdate.length,

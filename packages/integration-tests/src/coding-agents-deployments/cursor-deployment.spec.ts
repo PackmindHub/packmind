@@ -200,179 +200,240 @@ describe('Cursor Deployment Integration', () => {
       });
     });
 
-    it('creates multiple .cursor/rules/packmind/standard-*.mdc files for standards', async () => {
-      const standardVersions: StandardVersion[] = [
-        {
-          id: 'standard-version-1' as StandardVersionId,
-          standardId: standard.id,
-          name: standard.name,
-          slug: standard.slug,
-          description: standard.description,
-          version: standard.version,
-          summary: 'Test standard for Cursor deployment',
-          userId: user.id,
-          scope: standard.scope,
-        },
-      ];
+    describe('when deploying standards', () => {
+      let fileUpdates: FileUpdates;
+      let cursorStandardFile: { path: string; content: string } | undefined;
 
-      const fileUpdates = await deployerService.aggregateStandardsDeployments(
-        standardVersions,
-        gitRepo,
-        [defaultTarget],
-        ['cursor'],
-      );
+      beforeEach(async () => {
+        const standardVersions: StandardVersion[] = [
+          {
+            id: 'standard-version-1' as StandardVersionId,
+            standardId: standard.id,
+            name: standard.name,
+            slug: standard.slug,
+            description: standard.description,
+            version: standard.version,
+            summary: 'Test standard for Cursor deployment',
+            userId: user.id,
+            scope: standard.scope,
+          },
+        ];
 
-      expect(fileUpdates.createOrUpdate).toHaveLength(1);
-      expect(fileUpdates.delete).toHaveLength(0);
-
-      const cursorStandardFile = fileUpdates.createOrUpdate.find(
-        (file) =>
-          file.path === `.cursor/rules/packmind/standard-${standard.slug}.mdc`,
-      );
-
-      expect(cursorStandardFile).toBeDefined();
-      if (cursorStandardFile) {
-        // Check Cursor configuration format
-        expect(cursorStandardFile.content).toContain('---');
-        expect(cursorStandardFile.content).toContain('globs: **/*.{ts,tsx}');
-        expect(cursorStandardFile.content).toContain('alwaysApply: false');
-        expect(cursorStandardFile.content).toContain('---');
-        expect(cursorStandardFile.content).toContain(
-          'Test standard for Cursor deployment :',
-        );
-        expect(cursorStandardFile.content).toContain(
-          '* Use meaningful variable names in TypeScript',
-        );
-        expect(cursorStandardFile.content).toContain(
-          '* Write comprehensive tests for all components',
-        );
-        expect(cursorStandardFile.content).toContain(
-          `Full standard is available here for further request: [${standard.name}](../../../.packmind/standards/${standard.slug}.md)`,
-        );
-      }
-    });
-
-    it('handles standard without scope (alwaysApply: true)', async () => {
-      // Create a standard without scope
-      const globalStandard = await testApp.standardsHexa
-        .getAdapter()
-        .createStandard({
-          name: 'Global Standard',
-          description: 'A global standard without scope',
-          rules: [{ content: 'Always use consistent formatting' }],
-          organizationId: organization.id,
-          userId: user.id,
-          scope: '', // Empty scope
-          spaceId: space.id,
-        });
-
-      const standardVersions: StandardVersion[] = [
-        {
-          id: 'standard-version-2' as StandardVersionId,
-          standardId: globalStandard.id,
-          name: globalStandard.name,
-          slug: globalStandard.slug,
-          description: globalStandard.description,
-          version: globalStandard.version,
-          summary: 'Global standard for all files',
-          userId: user.id,
-          scope: globalStandard.scope,
-        },
-      ];
-
-      const fileUpdates = await deployerService.aggregateStandardsDeployments(
-        standardVersions,
-        gitRepo,
-        [defaultTarget],
-        ['cursor'],
-      );
-
-      expect(fileUpdates.createOrUpdate).toHaveLength(1);
-
-      const cursorStandardFile = fileUpdates.createOrUpdate[0];
-      expect(cursorStandardFile.path).toBe(
-        `.cursor/rules/packmind/standard-${globalStandard.slug}.mdc`,
-      );
-
-      // Should use alwaysApply: true when no scope
-      expect(cursorStandardFile.content).toContain('alwaysApply: true');
-      expect(cursorStandardFile.content).not.toContain('globs:');
-      expect(cursorStandardFile.content).toContain(
-        'Global standard for all files :',
-      );
-      expect(cursorStandardFile.content).toContain(
-        '* Always use consistent formatting',
-      );
-      expect(cursorStandardFile.content).toContain(
-        `Full standard is available here for further request: [${globalStandard.name}](../../../.packmind/standards/${globalStandard.slug}.md)`,
-      );
-    });
-
-    it('combines recipes and standards deployments', async () => {
-      const recipeVersions: RecipeVersion[] = [
-        {
-          id: 'recipe-version-1' as RecipeVersionId,
-          recipeId: recipe.id,
-          name: recipe.name,
-          slug: recipe.slug,
-          content: recipe.content,
-          version: recipe.version,
-          summary: 'Test recipe for combined deployment',
-          userId: user.id,
-        },
-      ];
-
-      const standardVersions: StandardVersion[] = [
-        {
-          id: 'standard-version-1' as StandardVersionId,
-          standardId: standard.id,
-          name: standard.name,
-          slug: standard.slug,
-          description: standard.description,
-          version: standard.version,
-          summary: 'Test standard for combined deployment',
-          userId: user.id,
-          scope: standard.scope,
-        },
-      ];
-
-      // Create a default target for testing
-      const defaultTarget = {
-        id: createTargetId('default-target-id'),
-        name: 'Default',
-        path: '/',
-        gitRepoId: gitRepo.id,
-      };
-
-      // Deploy recipes
-      const recipeUpdates = await deployerService.aggregateRecipeDeployments(
-        recipeVersions,
-        gitRepo,
-        [defaultTarget],
-        ['cursor'],
-      );
-
-      // Deploy standards
-      const standardsUpdates =
-        await deployerService.aggregateStandardsDeployments(
+        fileUpdates = await deployerService.aggregateStandardsDeployments(
           standardVersions,
           gitRepo,
           [defaultTarget],
           ['cursor'],
         );
 
-      expect(recipeUpdates.createOrUpdate).toHaveLength(1);
-      expect(standardsUpdates.createOrUpdate).toHaveLength(1);
+        cursorStandardFile = fileUpdates.createOrUpdate.find(
+          (file) =>
+            file.path ===
+            `.cursor/rules/packmind/standard-${standard.slug}.mdc`,
+        );
+      });
 
-      // Recipes should create .cursor/commands/<slug>.md
-      expect(recipeUpdates.createOrUpdate[0].path).toBe(
-        `${CURSOR_COMMANDS_PATH}/${recipe.slug}.md`,
-      );
+      it('creates one standard file', () => {
+        expect(fileUpdates.createOrUpdate).toHaveLength(1);
+      });
 
-      // Standards should create .cursor/rules/packmind/standard-*.mdc
-      expect(standardsUpdates.createOrUpdate[0].path).toBe(
-        `.cursor/rules/packmind/standard-${standard.slug}.mdc`,
-      );
+      it('deletes no files', () => {
+        expect(fileUpdates.delete).toHaveLength(0);
+      });
+
+      it('creates standard file with correct path', () => {
+        expect(cursorStandardFile).toBeDefined();
+      });
+
+      it('includes frontmatter delimiters', () => {
+        expect(cursorStandardFile?.content).toContain('---');
+      });
+
+      it('includes globs configuration', () => {
+        expect(cursorStandardFile?.content).toContain('globs: **/*.{ts,tsx}');
+      });
+
+      it('sets alwaysApply to false', () => {
+        expect(cursorStandardFile?.content).toContain('alwaysApply: false');
+      });
+
+      it('includes standard summary', () => {
+        expect(cursorStandardFile?.content).toContain(
+          'Test standard for Cursor deployment :',
+        );
+      });
+
+      it('includes first rule content', () => {
+        expect(cursorStandardFile?.content).toContain(
+          '* Use meaningful variable names in TypeScript',
+        );
+      });
+
+      it('includes second rule content', () => {
+        expect(cursorStandardFile?.content).toContain(
+          '* Write comprehensive tests for all components',
+        );
+      });
+
+      it('includes link to full standard', () => {
+        expect(cursorStandardFile?.content).toContain(
+          `Full standard is available here for further request: [${standard.name}](../../../.packmind/standards/${standard.slug}.md)`,
+        );
+      });
+    });
+
+    describe('when deploying standard without scope', () => {
+      let fileUpdates: FileUpdates;
+      let cursorStandardFile: { path: string; content: string };
+      let globalStandard: Standard;
+
+      beforeEach(async () => {
+        globalStandard = await testApp.standardsHexa
+          .getAdapter()
+          .createStandard({
+            name: 'Global Standard',
+            description: 'A global standard without scope',
+            rules: [{ content: 'Always use consistent formatting' }],
+            organizationId: organization.id,
+            userId: user.id,
+            scope: '',
+            spaceId: space.id,
+          });
+
+        const standardVersions: StandardVersion[] = [
+          {
+            id: 'standard-version-2' as StandardVersionId,
+            standardId: globalStandard.id,
+            name: globalStandard.name,
+            slug: globalStandard.slug,
+            description: globalStandard.description,
+            version: globalStandard.version,
+            summary: 'Global standard for all files',
+            userId: user.id,
+            scope: globalStandard.scope,
+          },
+        ];
+
+        fileUpdates = await deployerService.aggregateStandardsDeployments(
+          standardVersions,
+          gitRepo,
+          [defaultTarget],
+          ['cursor'],
+        );
+
+        cursorStandardFile = fileUpdates.createOrUpdate[0];
+      });
+
+      it('creates one standard file', () => {
+        expect(fileUpdates.createOrUpdate).toHaveLength(1);
+      });
+
+      it('uses correct path for standard file', () => {
+        expect(cursorStandardFile.path).toBe(
+          `.cursor/rules/packmind/standard-${globalStandard.slug}.mdc`,
+        );
+      });
+
+      it('sets alwaysApply to true', () => {
+        expect(cursorStandardFile.content).toContain('alwaysApply: true');
+      });
+
+      it('does not include globs configuration', () => {
+        expect(cursorStandardFile.content).not.toContain('globs:');
+      });
+
+      it('includes standard summary', () => {
+        expect(cursorStandardFile.content).toContain(
+          'Global standard for all files :',
+        );
+      });
+
+      it('includes rule content', () => {
+        expect(cursorStandardFile.content).toContain(
+          '* Always use consistent formatting',
+        );
+      });
+
+      it('includes link to full standard', () => {
+        expect(cursorStandardFile.content).toContain(
+          `Full standard is available here for further request: [${globalStandard.name}](../../../.packmind/standards/${globalStandard.slug}.md)`,
+        );
+      });
+    });
+
+    describe('when combining recipes and standards deployments', () => {
+      let recipeUpdates: FileUpdates;
+      let standardsUpdates: FileUpdates;
+
+      beforeEach(async () => {
+        const recipeVersions: RecipeVersion[] = [
+          {
+            id: 'recipe-version-1' as RecipeVersionId,
+            recipeId: recipe.id,
+            name: recipe.name,
+            slug: recipe.slug,
+            content: recipe.content,
+            version: recipe.version,
+            summary: 'Test recipe for combined deployment',
+            userId: user.id,
+          },
+        ];
+
+        const standardVersions: StandardVersion[] = [
+          {
+            id: 'standard-version-1' as StandardVersionId,
+            standardId: standard.id,
+            name: standard.name,
+            slug: standard.slug,
+            description: standard.description,
+            version: standard.version,
+            summary: 'Test standard for combined deployment',
+            userId: user.id,
+            scope: standard.scope,
+          },
+        ];
+
+        const combinedTarget = {
+          id: createTargetId('default-target-id'),
+          name: 'Default',
+          path: '/',
+          gitRepoId: gitRepo.id,
+        };
+
+        recipeUpdates = await deployerService.aggregateRecipeDeployments(
+          recipeVersions,
+          gitRepo,
+          [combinedTarget],
+          ['cursor'],
+        );
+
+        standardsUpdates = await deployerService.aggregateStandardsDeployments(
+          standardVersions,
+          gitRepo,
+          [combinedTarget],
+          ['cursor'],
+        );
+      });
+
+      it('creates one recipe file', () => {
+        expect(recipeUpdates.createOrUpdate).toHaveLength(1);
+      });
+
+      it('creates one standard file', () => {
+        expect(standardsUpdates.createOrUpdate).toHaveLength(1);
+      });
+
+      it('uses correct path for recipe command file', () => {
+        expect(recipeUpdates.createOrUpdate[0].path).toBe(
+          `${CURSOR_COMMANDS_PATH}/${recipe.slug}.md`,
+        );
+      });
+
+      it('uses correct path for standard rule file', () => {
+        expect(standardsUpdates.createOrUpdate[0].path).toBe(
+          `.cursor/rules/packmind/standard-${standard.slug}.mdc`,
+        );
+      });
     });
   });
 
@@ -415,15 +476,24 @@ describe('Cursor Deployment Integration', () => {
       });
     });
 
-    it('handles empty standards list gracefully', async () => {
-      const fileUpdates = await cursorDeployer.deployStandards(
-        [],
-        gitRepo,
-        defaultTarget,
-      );
+    describe('when deploying empty standards list', () => {
+      let fileUpdates: FileUpdates;
 
-      expect(fileUpdates.createOrUpdate).toHaveLength(0);
-      expect(fileUpdates.delete).toHaveLength(0);
+      beforeEach(async () => {
+        fileUpdates = await cursorDeployer.deployStandards(
+          [],
+          gitRepo,
+          defaultTarget,
+        );
+      });
+
+      it('creates no standard files', () => {
+        expect(fileUpdates.createOrUpdate).toHaveLength(0);
+      });
+
+      it('deletes no files', () => {
+        expect(fileUpdates.delete).toHaveLength(0);
+      });
     });
 
     describe('when deploying multiple recipes', () => {
@@ -506,10 +576,15 @@ describe('Cursor Deployment Integration', () => {
       });
     });
 
-    it('generates multiple standard files correctly', async () => {
-      const standard1 = await testApp.standardsHexa
-        .getAdapter()
-        .createStandard({
+    describe('when deploying multiple standards', () => {
+      let fileUpdates: FileUpdates;
+      let standard1: Standard;
+      let standard2: Standard;
+      let frontendFile: { path: string; content: string } | undefined;
+      let backendFile: { path: string; content: string } | undefined;
+
+      beforeEach(async () => {
+        standard1 = await testApp.standardsHexa.getAdapter().createStandard({
           name: 'Frontend Standard',
           description: 'Frontend coding standard',
           rules: [{ content: 'Use TypeScript' }],
@@ -519,80 +594,110 @@ describe('Cursor Deployment Integration', () => {
           spaceId: space.id,
         });
 
-      const standard2 = await testApp.standardsHexa
-        .getAdapter()
-        .createStandard({
+        standard2 = await testApp.standardsHexa.getAdapter().createStandard({
           name: 'Backend Standard',
           description: 'Backend coding standard',
           rules: [{ content: 'Use dependency injection' }],
           organizationId: organization.id,
           userId: user.id,
-          scope: '', // No scope - applies to all files
+          scope: '',
           spaceId: space.id,
         });
 
-      const standardVersions: StandardVersion[] = [
-        {
-          id: 'standard-version-1' as StandardVersionId,
-          standardId: standard1.id,
-          name: standard1.name,
-          slug: standard1.slug,
-          description: standard1.description,
-          version: standard1.version,
-          summary: 'Frontend standard',
-          userId: user.id,
-          scope: standard1.scope,
-        },
-        {
-          id: 'standard-version-2' as StandardVersionId,
-          standardId: standard2.id,
-          name: standard2.name,
-          slug: standard2.slug,
-          description: standard2.description,
-          version: standard2.version,
-          summary: 'Backend standard',
-          userId: user.id,
-          scope: standard2.scope,
-        },
-      ];
+        const standardVersions: StandardVersion[] = [
+          {
+            id: 'standard-version-1' as StandardVersionId,
+            standardId: standard1.id,
+            name: standard1.name,
+            slug: standard1.slug,
+            description: standard1.description,
+            version: standard1.version,
+            summary: 'Frontend standard',
+            userId: user.id,
+            scope: standard1.scope,
+          },
+          {
+            id: 'standard-version-2' as StandardVersionId,
+            standardId: standard2.id,
+            name: standard2.name,
+            slug: standard2.slug,
+            description: standard2.description,
+            version: standard2.version,
+            summary: 'Backend standard',
+            userId: user.id,
+            scope: standard2.scope,
+          },
+        ];
 
-      const fileUpdates = await cursorDeployer.deployStandards(
-        standardVersions,
-        gitRepo,
-        defaultTarget,
-      );
+        fileUpdates = await cursorDeployer.deployStandards(
+          standardVersions,
+          gitRepo,
+          defaultTarget,
+        );
 
-      expect(fileUpdates.createOrUpdate).toHaveLength(2);
+        frontendFile = fileUpdates.createOrUpdate.find((file) =>
+          file.path.includes(standard1.slug),
+        );
+        backendFile = fileUpdates.createOrUpdate.find((file) =>
+          file.path.includes(standard2.slug),
+        );
+      });
 
-      // Check first standard (with scope)
-      const frontendFile = fileUpdates.createOrUpdate.find((file) =>
-        file.path.includes(standard1.slug),
-      );
-      expect(frontendFile).toBeDefined();
-      if (frontendFile) {
-        expect(frontendFile.content).toContain('globs: **/*.{ts,tsx,js,jsx}');
-        expect(frontendFile.content).toContain('alwaysApply: false');
-        expect(frontendFile.content).toContain('Frontend standard :');
-        expect(frontendFile.content).toContain('* Use TypeScript');
-        expect(frontendFile.content).toContain(
+      it('creates two standard files', () => {
+        expect(fileUpdates.createOrUpdate).toHaveLength(2);
+      });
+
+      it('creates frontend standard file', () => {
+        expect(frontendFile).toBeDefined();
+      });
+
+      it('includes globs for frontend standard', () => {
+        expect(frontendFile?.content).toContain('globs: **/*.{ts,tsx,js,jsx}');
+      });
+
+      it('sets alwaysApply to false for frontend standard', () => {
+        expect(frontendFile?.content).toContain('alwaysApply: false');
+      });
+
+      it('includes summary for frontend standard', () => {
+        expect(frontendFile?.content).toContain('Frontend standard :');
+      });
+
+      it('includes rule for frontend standard', () => {
+        expect(frontendFile?.content).toContain('* Use TypeScript');
+      });
+
+      it('includes link for frontend standard', () => {
+        expect(frontendFile?.content).toContain(
           `Full standard is available here for further request: [${standard1.name}](../../../.packmind/standards/${standard1.slug}.md)`,
         );
-      }
+      });
 
-      // Check second standard (no scope)
-      const backendFile = fileUpdates.createOrUpdate.find((file) =>
-        file.path.includes(standard2.slug),
-      );
-      expect(backendFile).toBeDefined();
-      if (backendFile) {
-        expect(backendFile.content).not.toContain('globs:');
-        expect(backendFile.content).toContain('alwaysApply: true');
-        expect(backendFile.content).toContain('Backend standard :');
-        expect(backendFile.content).toContain('* Use dependency injection');
-        expect(backendFile.content).toContain(
+      it('creates backend standard file', () => {
+        expect(backendFile).toBeDefined();
+      });
+
+      it('does not include globs for backend standard', () => {
+        expect(backendFile?.content).not.toContain('globs:');
+      });
+
+      it('sets alwaysApply to true for backend standard', () => {
+        expect(backendFile?.content).toContain('alwaysApply: true');
+      });
+
+      it('includes summary for backend standard', () => {
+        expect(backendFile?.content).toContain('Backend standard :');
+      });
+
+      it('includes rule for backend standard', () => {
+        expect(backendFile?.content).toContain('* Use dependency injection');
+      });
+
+      it('includes link for backend standard', () => {
+        expect(backendFile?.content).toContain(
           `Full standard is available here for further request: [${standard2.name}](../../../.packmind/standards/${standard2.slug}.md)`,
         );
-      }
+      });
     });
   });
 });

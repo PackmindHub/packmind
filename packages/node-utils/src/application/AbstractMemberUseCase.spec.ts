@@ -113,19 +113,35 @@ describe('AbstractMemberUseCase', () => {
   });
 
   describe('when membership exists', () => {
-    it('executes member logic', async () => {
-      const user = buildUser();
-      const organization = buildOrganization();
-      const membership = user.memberships[0];
+    let user: User;
+    let organization: Organization;
+    let membership: UserOrganizationMembership;
+    let result: TestResult;
+
+    beforeEach(async () => {
+      user = buildUser();
+      organization = buildOrganization();
+      membership = user.memberships[0];
 
       mockGetUserById.mockResolvedValue(user);
       mockGetOrganizationById.mockResolvedValue(organization);
 
-      const result = await useCase.execute(command);
+      result = await useCase.execute(command);
+    });
 
+    it('returns the expected result', () => {
       expect(result).toEqual({ success: true });
+    });
+
+    it('retrieves the user by id', () => {
       expect(mockGetUserById).toHaveBeenCalledWith(userId);
+    });
+
+    it('retrieves the organization by id', () => {
       expect(mockGetOrganizationById).toHaveBeenCalledWith(organizationId);
+    });
+
+    it('executes member logic with context', () => {
       expect(mockExecuteForMembers).toHaveBeenCalledWith({
         ...command,
         user,
@@ -136,19 +152,29 @@ describe('AbstractMemberUseCase', () => {
   });
 
   describe('when membership role is admin', () => {
-    it('accepts the membership as valid', async () => {
-      const user = buildUser({
+    let user: User;
+    let organization: Organization;
+    let membership: UserOrganizationMembership;
+    let result: TestResult;
+
+    beforeEach(async () => {
+      user = buildUser({
         memberships: [buildMembership({ role: 'admin' })],
       });
-      const organization = buildOrganization();
-      const membership = user.memberships[0];
+      organization = buildOrganization();
+      membership = user.memberships[0];
 
       mockGetUserById.mockResolvedValue(user);
       mockGetOrganizationById.mockResolvedValue(organization);
 
-      const result = await useCase.execute(command);
+      result = await useCase.execute(command);
+    });
 
+    it('returns the expected result', () => {
       expect(result).toEqual({ success: true });
+    });
+
+    it('executes member logic with context', () => {
       expect(mockExecuteForMembers).toHaveBeenCalledWith({
         ...command,
         user,
@@ -159,18 +185,26 @@ describe('AbstractMemberUseCase', () => {
   });
 
   describe('when user does not exist', () => {
-    it('throws UserNotFoundError', async () => {
+    beforeEach(async () => {
       mockGetUserById.mockResolvedValue(null);
+      await useCase.execute(command).catch(() => {
+        /* expected rejection */
+      });
+    });
 
+    it('throws UserNotFoundError', async () => {
       await expect(useCase.execute(command)).rejects.toBeInstanceOf(
         UserNotFoundError,
       );
+    });
+
+    it('does not execute member logic', () => {
       expect(mockExecuteForMembers).not.toHaveBeenCalled();
     });
   });
 
   describe('when membership is missing', () => {
-    it('throws UserNotInOrganizationError', async () => {
+    beforeEach(async () => {
       const user = buildUser({
         memberships: [
           buildMembership({
@@ -180,10 +214,18 @@ describe('AbstractMemberUseCase', () => {
       });
 
       mockGetUserById.mockResolvedValue(user);
+      await useCase.execute(command).catch(() => {
+        /* expected rejection */
+      });
+    });
 
+    it('throws UserNotInOrganizationError', async () => {
       await expect(useCase.execute(command)).rejects.toBeInstanceOf(
         UserNotInOrganizationError,
       );
+    });
+
+    it('does not execute member logic', () => {
       expect(mockExecuteForMembers).not.toHaveBeenCalled();
     });
   });

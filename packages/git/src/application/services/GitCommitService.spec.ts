@@ -25,44 +25,67 @@ describe('GitCommitService', () => {
   });
 
   describe('addCommit', () => {
-    it('adds a git commit and returns it', async () => {
-      const commitData = {
-        sha: 'abc123',
-        message: 'Initial commit',
-        author: 'test@example.com',
-        url: 'https://github.com/owner/repo/commit/abc123',
-      };
+    const commitData = {
+      sha: 'abc123',
+      message: 'Initial commit',
+      author: 'test@example.com',
+      url: 'https://github.com/owner/repo/commit/abc123',
+    };
+    let expectedCommit: ReturnType<typeof gitCommitFactory>;
+    let result: ReturnType<typeof gitCommitFactory>;
 
-      const expectedCommit = gitCommitFactory(commitData);
+    beforeEach(async () => {
+      expectedCommit = gitCommitFactory(commitData);
       mockGitCommitRepository.add.mockResolvedValue(expectedCommit);
+      result = await gitCommitService.addCommit(commitData);
+    });
 
-      const result = await gitCommitService.addCommit(commitData);
-
+    it('calls repository add with commit data', () => {
       expect(mockGitCommitRepository.add).toHaveBeenCalledWith(commitData);
+    });
+
+    it('returns the added commit', () => {
       expect(result).toEqual(expectedCommit);
     });
   });
 
   describe('getCommit', () => {
-    it('gets a git commit by id', async () => {
+    describe('when commit exists', () => {
       const commitId = createGitCommitId('test-id');
-      const expectedCommit = gitCommitFactory({ id: commitId });
-      mockGitCommitRepository.get.mockResolvedValue(expectedCommit);
+      let expectedCommit: ReturnType<typeof gitCommitFactory>;
+      let result: ReturnType<typeof gitCommitFactory> | null;
 
-      const result = await gitCommitService.getCommit(commitId);
+      beforeEach(async () => {
+        expectedCommit = gitCommitFactory({ id: commitId });
+        mockGitCommitRepository.get.mockResolvedValue(expectedCommit);
+        result = await gitCommitService.getCommit(commitId);
+      });
 
-      expect(mockGitCommitRepository.get).toHaveBeenCalledWith(commitId);
-      expect(result).toEqual(expectedCommit);
+      it('calls repository get with commit id', () => {
+        expect(mockGitCommitRepository.get).toHaveBeenCalledWith(commitId);
+      });
+
+      it('returns the commit', () => {
+        expect(result).toEqual(expectedCommit);
+      });
     });
 
-    it('returns null if commit is not found', async () => {
+    describe('when commit does not exist', () => {
       const commitId = createGitCommitId('non-existent-id');
-      mockGitCommitRepository.get.mockResolvedValue(null);
+      let result: ReturnType<typeof gitCommitFactory> | null;
 
-      const result = await gitCommitService.getCommit(commitId);
+      beforeEach(async () => {
+        mockGitCommitRepository.get.mockResolvedValue(null);
+        result = await gitCommitService.getCommit(commitId);
+      });
 
-      expect(mockGitCommitRepository.get).toHaveBeenCalledWith(commitId);
-      expect(result).toBeNull();
+      it('calls repository get with commit id', () => {
+        expect(mockGitCommitRepository.get).toHaveBeenCalledWith(commitId);
+      });
+
+      it('returns null', () => {
+        expect(result).toBeNull();
+      });
     });
   });
 });

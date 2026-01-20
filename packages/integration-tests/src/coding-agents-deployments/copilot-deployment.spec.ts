@@ -8,6 +8,7 @@ import { spacesSchemas } from '@packmind/spaces';
 import { standardsSchemas } from '@packmind/standards';
 import { makeTestDatasource } from '@packmind/test-utils';
 import {
+  FileUpdates,
   GitProviderVendors,
   GitRepo,
   IGitPort,
@@ -235,180 +236,234 @@ describe('GitHub Copilot Deployment Integration', () => {
       });
     });
 
-    it('creates multiple .github/instructions/packmind-*.instructions.md files for standards', async () => {
-      const standardVersions: StandardVersion[] = [
-        {
-          id: 'standard-version-1' as StandardVersionId,
-          standardId: standard.id,
-          name: standard.name,
-          slug: standard.slug,
-          description: standard.description,
-          version: standard.version,
-          summary: 'Test standard for GitHub Copilot deployment',
-          userId: user.id,
-          scope: standard.scope,
-        },
-      ];
+    describe('when deploying standards', () => {
+      let fileUpdates: FileUpdates;
+      let copilotStandardFile: { path: string; content: string } | undefined;
 
-      const fileUpdates = await deployerService.aggregateStandardsDeployments(
-        standardVersions,
-        gitRepo,
-        [defaultTarget],
-        ['copilot'],
-      );
+      beforeEach(async () => {
+        const standardVersions: StandardVersion[] = [
+          {
+            id: 'standard-version-1' as StandardVersionId,
+            standardId: standard.id,
+            name: standard.name,
+            slug: standard.slug,
+            description: standard.description,
+            version: standard.version,
+            summary: 'Test standard for GitHub Copilot deployment',
+            userId: user.id,
+            scope: standard.scope,
+          },
+        ];
 
-      expect(fileUpdates.createOrUpdate).toHaveLength(1);
-      expect(fileUpdates.delete).toHaveLength(0);
-
-      const copilotStandardFile = fileUpdates.createOrUpdate.find(
-        (file) =>
-          file.path ===
-          `.github/instructions/packmind-${standard.slug}.instructions.md`,
-      );
-
-      expect(copilotStandardFile).toBeDefined();
-      if (copilotStandardFile) {
-        // Check Copilot configuration format
-        expect(copilotStandardFile.content).toContain('---');
-        expect(copilotStandardFile.content).toContain(
-          "applyTo: '**/*.{js,ts}'",
-        );
-        expect(copilotStandardFile.content).toContain('---');
-        expect(copilotStandardFile.content).toContain(
-          'Test standard for GitHub Copilot deployment :',
-        );
-        expect(copilotStandardFile.content).toContain(
-          '* Use meaningful variable names in JavaScript',
-        );
-        expect(copilotStandardFile.content).toContain(
-          '* Write comprehensive tests for all functions',
-        );
-        expect(copilotStandardFile.content).toContain(
-          `Full standard is available here for further request: [${standard.name}](../../.packmind/standards/${standard.slug}.md)`,
-        );
-      }
-    });
-
-    it('handles standard without scope (uses ** as default)', async () => {
-      // Create a standard without scope
-      const globalStandard = await testApp.standardsHexa
-        .getAdapter()
-        .createStandard({
-          name: 'Global Standard',
-          description: 'A global standard without scope',
-          rules: [{ content: 'Always use consistent formatting' }],
-          organizationId: organization.id,
-          userId: user.id,
-          scope: '', // Empty scope
-          spaceId: space.id,
-        });
-
-      const standardVersions: StandardVersion[] = [
-        {
-          id: 'standard-version-2' as StandardVersionId,
-          standardId: globalStandard.id,
-          name: globalStandard.name,
-          slug: globalStandard.slug,
-          description: globalStandard.description,
-          version: globalStandard.version,
-          summary: 'Global standard for all files',
-          userId: user.id,
-          scope: globalStandard.scope,
-        },
-      ];
-
-      const fileUpdates = await deployerService.aggregateStandardsDeployments(
-        standardVersions,
-        gitRepo,
-        [defaultTarget],
-        ['copilot'],
-      );
-
-      expect(fileUpdates.createOrUpdate).toHaveLength(1);
-
-      const copilotStandardFile = fileUpdates.createOrUpdate[0];
-      expect(copilotStandardFile.path).toBe(
-        `.github/instructions/packmind-${globalStandard.slug}.instructions.md`,
-      );
-
-      // Should use ** when no scope
-      expect(copilotStandardFile.content).toContain("applyTo: '**'");
-      expect(copilotStandardFile.content).toContain(
-        'Global standard for all files :',
-      );
-      expect(copilotStandardFile.content).toContain(
-        '* Always use consistent formatting',
-      );
-      expect(copilotStandardFile.content).toContain(
-        `Full standard is available here for further request: [${globalStandard.name}](../../.packmind/standards/${globalStandard.slug}.md)`,
-      );
-    });
-
-    it('combines recipes and standards deployments', async () => {
-      const recipeVersions: RecipeVersion[] = [
-        {
-          id: 'recipe-version-1' as RecipeVersionId,
-          recipeId: recipe.id,
-          name: recipe.name,
-          slug: recipe.slug,
-          content: recipe.content,
-          version: recipe.version,
-          summary: 'Test recipe for combined deployment',
-          userId: user.id,
-        },
-      ];
-
-      const standardVersions: StandardVersion[] = [
-        {
-          id: 'standard-version-1' as StandardVersionId,
-          standardId: standard.id,
-          name: standard.name,
-          slug: standard.slug,
-          description: standard.description,
-          version: standard.version,
-          summary: 'Test standard for combined deployment',
-          userId: user.id,
-          scope: standard.scope,
-        },
-      ];
-
-      // Create a default target for testing
-      const defaultTarget = {
-        id: createTargetId('default-target-id'),
-        name: 'Default',
-        path: '/',
-        gitRepoId: gitRepo.id,
-      };
-
-      // Deploy recipes
-      const recipeUpdates = await deployerService.aggregateRecipeDeployments(
-        recipeVersions,
-        gitRepo,
-        [defaultTarget],
-        ['copilot'],
-      );
-
-      // Deploy standards
-      const standardsUpdates =
-        await deployerService.aggregateStandardsDeployments(
+        fileUpdates = await deployerService.aggregateStandardsDeployments(
           standardVersions,
           gitRepo,
           [defaultTarget],
           ['copilot'],
         );
 
-      expect(recipeUpdates.createOrUpdate).toHaveLength(1);
-      expect(standardsUpdates.createOrUpdate).toHaveLength(1);
+        copilotStandardFile = fileUpdates.createOrUpdate.find(
+          (file) =>
+            file.path ===
+            `.github/instructions/packmind-${standard.slug}.instructions.md`,
+        );
+      });
 
-      // Recipes should create individual .github/prompts/*.prompt.md files
-      expect(recipeUpdates.createOrUpdate[0].path).toBe(
-        `.github/prompts/${recipe.slug}.prompt.md`,
-      );
+      it('creates one standard file', () => {
+        expect(fileUpdates.createOrUpdate).toHaveLength(1);
+      });
 
-      // Standards should create .github/instructions/packmind-*.instructions.md
-      expect(standardsUpdates.createOrUpdate[0].path).toBe(
-        `.github/instructions/packmind-${standard.slug}.instructions.md`,
-      );
+      it('deletes no files', () => {
+        expect(fileUpdates.delete).toHaveLength(0);
+      });
+
+      it('creates file at correct path', () => {
+        expect(copilotStandardFile).toBeDefined();
+      });
+
+      it('includes YAML frontmatter opening delimiter', () => {
+        expect(copilotStandardFile?.content).toContain('---');
+      });
+
+      it('includes applyTo scope in YAML frontmatter', () => {
+        expect(copilotStandardFile?.content).toContain(
+          "applyTo: '**/*.{js,ts}'",
+        );
+      });
+
+      it('includes standard summary', () => {
+        expect(copilotStandardFile?.content).toContain(
+          'Test standard for GitHub Copilot deployment :',
+        );
+      });
+
+      it('includes first rule', () => {
+        expect(copilotStandardFile?.content).toContain(
+          '* Use meaningful variable names in JavaScript',
+        );
+      });
+
+      it('includes second rule', () => {
+        expect(copilotStandardFile?.content).toContain(
+          '* Write comprehensive tests for all functions',
+        );
+      });
+
+      it('includes link to full standard', () => {
+        expect(copilotStandardFile?.content).toContain(
+          `Full standard is available here for further request: [${standard.name}](../../.packmind/standards/${standard.slug}.md)`,
+        );
+      });
+    });
+
+    describe('when standard has no scope', () => {
+      let fileUpdates: FileUpdates;
+      let copilotStandardFile: { path: string; content: string };
+      let globalStandard: Standard;
+
+      beforeEach(async () => {
+        globalStandard = await testApp.standardsHexa
+          .getAdapter()
+          .createStandard({
+            name: 'Global Standard',
+            description: 'A global standard without scope',
+            rules: [{ content: 'Always use consistent formatting' }],
+            organizationId: organization.id,
+            userId: user.id,
+            scope: '',
+            spaceId: space.id,
+          });
+
+        const standardVersions: StandardVersion[] = [
+          {
+            id: 'standard-version-2' as StandardVersionId,
+            standardId: globalStandard.id,
+            name: globalStandard.name,
+            slug: globalStandard.slug,
+            description: globalStandard.description,
+            version: globalStandard.version,
+            summary: 'Global standard for all files',
+            userId: user.id,
+            scope: globalStandard.scope,
+          },
+        ];
+
+        fileUpdates = await deployerService.aggregateStandardsDeployments(
+          standardVersions,
+          gitRepo,
+          [defaultTarget],
+          ['copilot'],
+        );
+
+        copilotStandardFile = fileUpdates.createOrUpdate[0];
+      });
+
+      it('creates one standard file', () => {
+        expect(fileUpdates.createOrUpdate).toHaveLength(1);
+      });
+
+      it('uses correct file path', () => {
+        expect(copilotStandardFile.path).toBe(
+          `.github/instructions/packmind-${globalStandard.slug}.instructions.md`,
+        );
+      });
+
+      it('uses ** as default applyTo scope', () => {
+        expect(copilotStandardFile.content).toContain("applyTo: '**'");
+      });
+
+      it('includes standard summary', () => {
+        expect(copilotStandardFile.content).toContain(
+          'Global standard for all files :',
+        );
+      });
+
+      it('includes rule content', () => {
+        expect(copilotStandardFile.content).toContain(
+          '* Always use consistent formatting',
+        );
+      });
+
+      it('includes link to full standard', () => {
+        expect(copilotStandardFile.content).toContain(
+          `Full standard is available here for further request: [${globalStandard.name}](../../.packmind/standards/${globalStandard.slug}.md)`,
+        );
+      });
+    });
+
+    describe('when combining recipes and standards deployments', () => {
+      let recipeUpdates: FileUpdates;
+      let standardsUpdates: FileUpdates;
+
+      beforeEach(async () => {
+        const recipeVersions: RecipeVersion[] = [
+          {
+            id: 'recipe-version-1' as RecipeVersionId,
+            recipeId: recipe.id,
+            name: recipe.name,
+            slug: recipe.slug,
+            content: recipe.content,
+            version: recipe.version,
+            summary: 'Test recipe for combined deployment',
+            userId: user.id,
+          },
+        ];
+
+        const standardVersions: StandardVersion[] = [
+          {
+            id: 'standard-version-1' as StandardVersionId,
+            standardId: standard.id,
+            name: standard.name,
+            slug: standard.slug,
+            description: standard.description,
+            version: standard.version,
+            summary: 'Test standard for combined deployment',
+            userId: user.id,
+            scope: standard.scope,
+          },
+        ];
+
+        const combinedDefaultTarget = {
+          id: createTargetId('default-target-id'),
+          name: 'Default',
+          path: '/',
+          gitRepoId: gitRepo.id,
+        };
+
+        recipeUpdates = await deployerService.aggregateRecipeDeployments(
+          recipeVersions,
+          gitRepo,
+          [combinedDefaultTarget],
+          ['copilot'],
+        );
+
+        standardsUpdates = await deployerService.aggregateStandardsDeployments(
+          standardVersions,
+          gitRepo,
+          [combinedDefaultTarget],
+          ['copilot'],
+        );
+      });
+
+      it('creates one recipe file', () => {
+        expect(recipeUpdates.createOrUpdate).toHaveLength(1);
+      });
+
+      it('creates one standard file', () => {
+        expect(standardsUpdates.createOrUpdate).toHaveLength(1);
+      });
+
+      it('creates recipe file in .github/prompts directory', () => {
+        expect(recipeUpdates.createOrUpdate[0].path).toBe(
+          `.github/prompts/${recipe.slug}.prompt.md`,
+        );
+      });
+
+      it('creates standard file in .github/instructions directory', () => {
+        expect(standardsUpdates.createOrUpdate[0].path).toBe(
+          `.github/instructions/packmind-${standard.slug}.instructions.md`,
+        );
+      });
     });
   });
 
@@ -519,63 +574,91 @@ describe('GitHub Copilot Deployment Integration', () => {
       });
     });
 
-    it('handles empty standards list gracefully', async () => {
-      const fileUpdates = await copilotDeployer.deployStandards(
-        [],
-        gitRepo,
-        defaultTarget,
-      );
+    describe('when deploying empty standards list', () => {
+      let fileUpdates: FileUpdates;
 
-      expect(fileUpdates.createOrUpdate).toHaveLength(0);
-      expect(fileUpdates.delete).toHaveLength(0);
-    });
-
-    it('handles GitHexa errors gracefully', async () => {
-      jest
-        .spyOn(testApp.gitHexa.getAdapter(), 'getFileFromRepo')
-        .mockRejectedValue(new Error('GitHub API error'));
-
-      const recipeVersions: RecipeVersion[] = [
-        {
-          id: 'recipe-version-1' as RecipeVersionId,
-          recipeId: recipe.id,
-          name: recipe.name,
-          slug: recipe.slug,
-          content: recipe.content,
-          version: recipe.version,
-          summary: 'Test recipe',
-          userId: user.id,
-        },
-      ];
-
-      const fileUpdates = await copilotDeployer.deployRecipes(
-        recipeVersions,
-        gitRepo,
-        defaultTarget,
-      );
-
-      // Should still work despite the error, creating individual prompt files
-      expect(fileUpdates.createOrUpdate).toHaveLength(1);
-
-      // Verify legacy file deletion
-      expect(fileUpdates.delete).toContainEqual({
-        path: '.github/instructions/packmind-recipes-index.instructions.md',
+      beforeEach(async () => {
+        fileUpdates = await copilotDeployer.deployStandards(
+          [],
+          gitRepo,
+          defaultTarget,
+        );
       });
 
-      const copilotFile = fileUpdates.createOrUpdate[0];
-      // Check YAML frontmatter
-      expect(copilotFile.content).toContain("description: 'Test recipe'");
-      expect(copilotFile.content).toContain("agent: 'agent'");
-      // Check recipe content is included
-      expect(copilotFile.content).toContain(
-        'This is test recipe content for GitHub Copilot deployment',
-      );
+      it('creates no standard files', () => {
+        expect(fileUpdates.createOrUpdate).toHaveLength(0);
+      });
+
+      it('deletes no files', () => {
+        expect(fileUpdates.delete).toHaveLength(0);
+      });
     });
 
-    it('generates multiple standard files correctly', async () => {
-      const standard1 = await testApp.standardsHexa
-        .getAdapter()
-        .createStandard({
+    describe('when GitHexa throws an error', () => {
+      let fileUpdates: FileUpdates;
+      let copilotFile: { path: string; content: string };
+
+      beforeEach(async () => {
+        jest
+          .spyOn(testApp.gitHexa.getAdapter(), 'getFileFromRepo')
+          .mockRejectedValue(new Error('GitHub API error'));
+
+        const recipeVersions: RecipeVersion[] = [
+          {
+            id: 'recipe-version-1' as RecipeVersionId,
+            recipeId: recipe.id,
+            name: recipe.name,
+            slug: recipe.slug,
+            content: recipe.content,
+            version: recipe.version,
+            summary: 'Test recipe',
+            userId: user.id,
+          },
+        ];
+
+        fileUpdates = await copilotDeployer.deployRecipes(
+          recipeVersions,
+          gitRepo,
+          defaultTarget,
+        );
+
+        copilotFile = fileUpdates.createOrUpdate[0];
+      });
+
+      it('still creates one prompt file', () => {
+        expect(fileUpdates.createOrUpdate).toHaveLength(1);
+      });
+
+      it('still deletes legacy recipes-index.instructions.md file', () => {
+        expect(fileUpdates.delete).toContainEqual({
+          path: '.github/instructions/packmind-recipes-index.instructions.md',
+        });
+      });
+
+      it('includes description in YAML frontmatter', () => {
+        expect(copilotFile.content).toContain("description: 'Test recipe'");
+      });
+
+      it('includes agent mode in YAML frontmatter', () => {
+        expect(copilotFile.content).toContain("agent: 'agent'");
+      });
+
+      it('includes recipe content in file', () => {
+        expect(copilotFile.content).toContain(
+          'This is test recipe content for GitHub Copilot deployment',
+        );
+      });
+    });
+
+    describe('when generating multiple standard files', () => {
+      let fileUpdates: FileUpdates;
+      let frontendFile: { path: string; content: string } | undefined;
+      let backendFile: { path: string; content: string } | undefined;
+      let standard1: Standard;
+      let standard2: Standard;
+
+      beforeEach(async () => {
+        standard1 = await testApp.standardsHexa.getAdapter().createStandard({
           name: 'Frontend Standard',
           description: 'Frontend coding standard',
           rules: [{ content: 'Use TypeScript' }],
@@ -585,80 +668,104 @@ describe('GitHub Copilot Deployment Integration', () => {
           spaceId: space.id,
         });
 
-      const standard2 = await testApp.standardsHexa
-        .getAdapter()
-        .createStandard({
+        standard2 = await testApp.standardsHexa.getAdapter().createStandard({
           name: 'Backend Standard',
           description: 'Backend coding standard',
           rules: [{ content: 'Use dependency injection' }],
           organizationId: organization.id,
           userId: user.id,
-          scope: '', // No scope - uses **
+          scope: '',
           spaceId: space.id,
         });
 
-      const standardVersions: StandardVersion[] = [
-        {
-          id: 'standard-version-1' as StandardVersionId,
-          standardId: standard1.id,
-          name: standard1.name,
-          slug: standard1.slug,
-          description: standard1.description,
-          version: standard1.version,
-          summary: 'Frontend standard',
-          userId: user.id,
-          scope: standard1.scope,
-        },
-        {
-          id: 'standard-version-2' as StandardVersionId,
-          standardId: standard2.id,
-          name: standard2.name,
-          slug: standard2.slug,
-          description: standard2.description,
-          version: standard2.version,
-          summary: 'Backend standard',
-          userId: user.id,
-          scope: standard2.scope,
-        },
-      ];
+        const standardVersions: StandardVersion[] = [
+          {
+            id: 'standard-version-1' as StandardVersionId,
+            standardId: standard1.id,
+            name: standard1.name,
+            slug: standard1.slug,
+            description: standard1.description,
+            version: standard1.version,
+            summary: 'Frontend standard',
+            userId: user.id,
+            scope: standard1.scope,
+          },
+          {
+            id: 'standard-version-2' as StandardVersionId,
+            standardId: standard2.id,
+            name: standard2.name,
+            slug: standard2.slug,
+            description: standard2.description,
+            version: standard2.version,
+            summary: 'Backend standard',
+            userId: user.id,
+            scope: standard2.scope,
+          },
+        ];
 
-      const fileUpdates = await copilotDeployer.deployStandards(
-        standardVersions,
-        gitRepo,
-        defaultTarget,
-      );
+        fileUpdates = await copilotDeployer.deployStandards(
+          standardVersions,
+          gitRepo,
+          defaultTarget,
+        );
 
-      expect(fileUpdates.createOrUpdate).toHaveLength(2);
+        frontendFile = fileUpdates.createOrUpdate.find((file) =>
+          file.path.includes(standard1.slug),
+        );
+        backendFile = fileUpdates.createOrUpdate.find((file) =>
+          file.path.includes(standard2.slug),
+        );
+      });
 
-      // Check first standard (with scope)
-      const frontendFile = fileUpdates.createOrUpdate.find((file) =>
-        file.path.includes(standard1.slug),
-      );
-      expect(frontendFile).toBeDefined();
-      if (frontendFile) {
-        expect(frontendFile.content).toContain(
+      it('creates two standard files', () => {
+        expect(fileUpdates.createOrUpdate).toHaveLength(2);
+      });
+
+      it('creates frontend standard file', () => {
+        expect(frontendFile).toBeDefined();
+      });
+
+      it('includes applyTo scope in frontend standard', () => {
+        expect(frontendFile?.content).toContain(
           "applyTo: '**/*.{ts,tsx,js,jsx}'",
         );
-        expect(frontendFile.content).toContain('Frontend standard :');
-        expect(frontendFile.content).toContain('* Use TypeScript');
-        expect(frontendFile.content).toContain(
+      });
+
+      it('includes summary in frontend standard', () => {
+        expect(frontendFile?.content).toContain('Frontend standard :');
+      });
+
+      it('includes rule in frontend standard', () => {
+        expect(frontendFile?.content).toContain('* Use TypeScript');
+      });
+
+      it('includes link in frontend standard', () => {
+        expect(frontendFile?.content).toContain(
           `Full standard is available here for further request: [${standard1.name}](../../.packmind/standards/${standard1.slug}.md)`,
         );
-      }
+      });
 
-      // Check second standard (no scope - uses **)
-      const backendFile = fileUpdates.createOrUpdate.find((file) =>
-        file.path.includes(standard2.slug),
-      );
-      expect(backendFile).toBeDefined();
-      if (backendFile) {
-        expect(backendFile.content).toContain("applyTo: '**'");
-        expect(backendFile.content).toContain('Backend standard :');
-        expect(backendFile.content).toContain('* Use dependency injection');
-        expect(backendFile.content).toContain(
+      it('creates backend standard file', () => {
+        expect(backendFile).toBeDefined();
+      });
+
+      it('uses ** as default applyTo scope in backend standard', () => {
+        expect(backendFile?.content).toContain("applyTo: '**'");
+      });
+
+      it('includes summary in backend standard', () => {
+        expect(backendFile?.content).toContain('Backend standard :');
+      });
+
+      it('includes rule in backend standard', () => {
+        expect(backendFile?.content).toContain('* Use dependency injection');
+      });
+
+      it('includes link in backend standard', () => {
+        expect(backendFile?.content).toContain(
           `Full standard is available here for further request: [${standard2.name}](../../.packmind/standards/${standard2.slug}.md)`,
         );
-      }
+      });
     });
 
     describe('when deploying skills', () => {
@@ -694,8 +801,11 @@ describe('GitHub Copilot Deployment Integration', () => {
           );
         });
 
-        it('creates one SKILL.md file in a folder', () => {
+        it('creates one SKILL.md file', () => {
           expect(fileUpdates.createOrUpdate).toHaveLength(1);
+        });
+
+        it('uses correct SKILL.md file path', () => {
           expect(fileUpdates.createOrUpdate[0].path).toBe(
             `.github/skills/${skill.slug}/SKILL.md`,
           );
@@ -731,11 +841,17 @@ describe('GitHub Copilot Deployment Integration', () => {
           );
         });
 
-        it('includes metadata in frontmatter', () => {
+        it('includes metadata section in frontmatter', () => {
           expect(fileUpdates.createOrUpdate[0].content).toContain('metadata:');
+        });
+
+        it('includes metadata category in frontmatter', () => {
           expect(fileUpdates.createOrUpdate[0].content).toContain(
             "category: 'testing'",
           );
+        });
+
+        it('includes metadata version in frontmatter', () => {
           expect(fileUpdates.createOrUpdate[0].content).toContain(
             "version: '1.0'",
           );
@@ -747,9 +863,13 @@ describe('GitHub Copilot Deployment Integration', () => {
           );
         });
 
-        it('has proper YAML frontmatter structure', () => {
+        it('starts with YAML frontmatter delimiter', () => {
           const content = fileUpdates.createOrUpdate[0].content;
           expect(content).toMatch(/^---\n/);
+        });
+
+        it('has YAML frontmatter closing delimiter', () => {
+          const content = fileUpdates.createOrUpdate[0].content;
           expect(content).toMatch(/\n---\n/);
         });
       });
@@ -762,17 +882,28 @@ describe('GitHub Copilot Deployment Integration', () => {
             await copilotDeployer.generateFileUpdatesForSkills(skillVersions);
         });
 
-        it('creates one SKILL.md file', () => {
+        it('creates one file', () => {
           expect(fileUpdates.createOrUpdate).toHaveLength(1);
+        });
+
+        it('uses correct SKILL.md file path', () => {
           expect(fileUpdates.createOrUpdate[0].path).toBe(
             `.github/skills/${skill.slug}/SKILL.md`,
           );
         });
 
-        it('includes all frontmatter fields', () => {
+        it('includes name in frontmatter', () => {
           const content = fileUpdates.createOrUpdate[0].content;
           expect(content).toContain(`name: '${skill.name}'`);
+        });
+
+        it('includes description in frontmatter', () => {
+          const content = fileUpdates.createOrUpdate[0].content;
           expect(content).toContain(`description: '${skill.description}'`);
+        });
+
+        it('includes license in frontmatter', () => {
+          const content = fileUpdates.createOrUpdate[0].content;
           expect(content).toContain(`license: '${skill.license}'`);
         });
       });
@@ -806,20 +937,32 @@ describe('GitHub Copilot Deployment Integration', () => {
           ];
         });
 
-        it('creates multiple SKILL.md files in separate folders', async () => {
-          const fileUpdates = await copilotDeployer.deploySkills(
-            multipleSkillVersions,
-            gitRepo,
-            defaultTarget,
-          );
+        describe('when calling deploySkills', () => {
+          let fileUpdates: FileUpdates;
 
-          expect(fileUpdates.createOrUpdate).toHaveLength(2);
-          expect(fileUpdates.createOrUpdate[0].path).toBe(
-            `.github/skills/${skill.slug}/SKILL.md`,
-          );
-          expect(fileUpdates.createOrUpdate[1].path).toBe(
-            `.github/skills/${skill2.slug}/SKILL.md`,
-          );
+          beforeEach(async () => {
+            fileUpdates = await copilotDeployer.deploySkills(
+              multipleSkillVersions,
+              gitRepo,
+              defaultTarget,
+            );
+          });
+
+          it('creates two SKILL.md files', () => {
+            expect(fileUpdates.createOrUpdate).toHaveLength(2);
+          });
+
+          it('creates first skill file at correct path', () => {
+            expect(fileUpdates.createOrUpdate[0].path).toBe(
+              `.github/skills/${skill.slug}/SKILL.md`,
+            );
+          });
+
+          it('creates second skill file at correct path', () => {
+            expect(fileUpdates.createOrUpdate[1].path).toBe(
+              `.github/skills/${skill2.slug}/SKILL.md`,
+            );
+          });
         });
       });
 
@@ -920,47 +1063,61 @@ See reference.md and forms.md for more information.`,
           };
         });
 
-        it('creates SKILL.md and all additional files', async () => {
-          const fileUpdates = await copilotDeployer.deploySkills(
-            [skillVersionWithFiles],
-            gitRepo,
-            defaultTarget,
-          );
+        describe('when deploying skill with files', () => {
+          let fileUpdates: FileUpdates;
+          let paths: string[];
+          let referenceFile: { path: string; content: string } | undefined;
+          let formsFile: { path: string; content: string } | undefined;
 
-          expect(fileUpdates.createOrUpdate).toHaveLength(3);
+          beforeEach(async () => {
+            fileUpdates = await copilotDeployer.deploySkills(
+              [skillVersionWithFiles],
+              gitRepo,
+              defaultTarget,
+            );
 
-          const paths = fileUpdates.createOrUpdate.map((f) => f.path);
-          expect(paths).toContain(
-            `.github/skills/${skillWithFiles.slug}/SKILL.md`,
-          );
-          expect(paths).toContain(
-            `.github/skills/${skillWithFiles.slug}/reference.md`,
-          );
-          expect(paths).toContain(
-            `.github/skills/${skillWithFiles.slug}/forms.md`,
-          );
-        });
+            paths = fileUpdates.createOrUpdate.map((f) => f.path);
+            referenceFile = fileUpdates.createOrUpdate.find((f) =>
+              f.path.endsWith('reference.md'),
+            );
+            formsFile = fileUpdates.createOrUpdate.find((f) =>
+              f.path.endsWith('forms.md'),
+            );
+          });
 
-        it('includes correct content for each file', async () => {
-          const fileUpdates = await copilotDeployer.deploySkills(
-            [skillVersionWithFiles],
-            gitRepo,
-            defaultTarget,
-          );
+          it('creates three files', () => {
+            expect(fileUpdates.createOrUpdate).toHaveLength(3);
+          });
 
-          const referenceFile = fileUpdates.createOrUpdate.find((f) =>
-            f.path.endsWith('reference.md'),
-          );
-          expect(referenceFile?.content).toContain(
-            'This is additional reference documentation',
-          );
+          it('includes SKILL.md file', () => {
+            expect(paths).toContain(
+              `.github/skills/${skillWithFiles.slug}/SKILL.md`,
+            );
+          });
 
-          const formsFile = fileUpdates.createOrUpdate.find((f) =>
-            f.path.endsWith('forms.md'),
-          );
-          expect(formsFile?.content).toContain(
-            'Instructions for working with forms',
-          );
+          it('includes reference.md file', () => {
+            expect(paths).toContain(
+              `.github/skills/${skillWithFiles.slug}/reference.md`,
+            );
+          });
+
+          it('includes forms.md file', () => {
+            expect(paths).toContain(
+              `.github/skills/${skillWithFiles.slug}/forms.md`,
+            );
+          });
+
+          it('includes correct content in reference.md', () => {
+            expect(referenceFile?.content).toContain(
+              'This is additional reference documentation',
+            );
+          });
+
+          it('includes correct content in forms.md', () => {
+            expect(formsFile?.content).toContain(
+              'Instructions for working with forms',
+            );
+          });
         });
 
         it('places all files in the skill directory', async () => {
@@ -979,19 +1136,26 @@ See reference.md and forms.md for more information.`,
       });
 
       describe('when skill has no additional files', () => {
-        it('creates only SKILL.md', async () => {
+        let fileUpdates: FileUpdates;
+
+        beforeEach(async () => {
           const skillVersionWithoutFiles: SkillVersion = {
             ...skillVersions[0],
             files: undefined,
           };
 
-          const fileUpdates = await copilotDeployer.deploySkills(
+          fileUpdates = await copilotDeployer.deploySkills(
             [skillVersionWithoutFiles],
             gitRepo,
             defaultTarget,
           );
+        });
 
+        it('creates one file', () => {
           expect(fileUpdates.createOrUpdate).toHaveLength(1);
+        });
+
+        it('creates SKILL.md file at correct path', () => {
           expect(fileUpdates.createOrUpdate[0].path).toBe(
             `.github/skills/${skill.slug}/SKILL.md`,
           );
@@ -1062,11 +1226,17 @@ See reference.md and forms.md for more information.`,
           expect(fileUpdates.createOrUpdate).toHaveLength(3);
         });
 
-        it('creates skill file in correct location', () => {
+        it('includes skill file in output', () => {
           const skillFile = fileUpdates.createOrUpdate.find((file) =>
             file.path.includes('.github/skills/'),
           );
           expect(skillFile).toBeDefined();
+        });
+
+        it('places skill file at correct path', () => {
+          const skillFile = fileUpdates.createOrUpdate.find((file) =>
+            file.path.includes('.github/skills/'),
+          );
           expect(skillFile?.path).toBe(`.github/skills/${skill.slug}/SKILL.md`);
         });
 

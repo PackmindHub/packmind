@@ -14,6 +14,7 @@ export type IInstallPackagesResult = {
   recipesCount: number;
   standardsCount: number;
   skillsCount: number;
+  skillsSyncedToAgents: number;
 };
 
 export type IInstallPackagesUseCase = IPublicUseCase<

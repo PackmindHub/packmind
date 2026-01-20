@@ -18,6 +18,8 @@ import { DiffViolationFilterService } from './application/services/DiffViolation
 import { ExecuteLinterProgramsUseCase } from '@packmind/linter-execution';
 import { IInstallPackagesUseCase } from './domain/useCases/IInstallPackagesUseCase';
 import { InstallPackagesUseCase } from './application/useCases/InstallPackagesUseCase';
+import { IInstallDefaultSkillsUseCase } from './domain/useCases/IInstallDefaultSkillsUseCase';
+import { InstallDefaultSkillsUseCase } from './application/useCases/InstallDefaultSkillsUseCase';
 import { IListPackagesUseCase } from './domain/useCases/IListPackagesUseCase';
 import { ListPackagesUseCase } from './application/useCases/ListPackagesUseCase';
 import { IGetPackageSummaryUseCase } from './domain/useCases/IGetPackageSummaryUseCase';
@@ -33,6 +35,10 @@ import { SetupMcpUseCase } from './application/useCases/SetupMcpUseCase';
 import { McpConfigService } from './application/services/McpConfigService';
 import { ConfigFileRepository } from './infra/repositories/ConfigFileRepository';
 import { loadApiKey } from './infra/utils/credentialsLoader';
+import { IDeleteLocalSkillUseCase } from './domain/useCases/IDeleteLocalSkillUseCase';
+import { DeleteLocalSkillUseCase } from './application/useCases/DeleteLocalSkillUseCase';
+import { IUpdateLocalSkillUseCase } from './domain/useCases/IUpdateLocalSkillUseCase';
+import { UpdateLocalSkillUseCase } from './application/useCases/UpdateLocalSkillUseCase';
 
 export class PackmindCliHexaFactory {
   public repositories: IPackmindRepositories;
@@ -45,12 +51,15 @@ export class PackmindCliHexaFactory {
     lintFilesInDirectory: ILintFilesInDirectory;
     lintFilesLocally: ILintFilesLocally;
     installPackages: IInstallPackagesUseCase;
+    installDefaultSkills: IInstallDefaultSkillsUseCase;
     listPackages: IListPackagesUseCase;
     getPackageBySlug: IGetPackageSummaryUseCase;
     login: ILoginUseCase;
     logout: ILogoutUseCase;
     whoami: IWhoamiUseCase;
     setupMcp: ISetupMcpUseCase;
+    deleteLocalSkill: IDeleteLocalSkillUseCase;
+    updateLocalSkill: IUpdateLocalSkillUseCase;
   };
 
   constructor(private readonly logger: PackmindLogger) {
@@ -85,6 +94,9 @@ export class PackmindCliHexaFactory {
       installPackages: new InstallPackagesUseCase(
         this.repositories.packmindGateway,
       ),
+      installDefaultSkills: new InstallDefaultSkillsUseCase(
+        this.repositories.packmindGateway,
+      ),
       listPackages: new ListPackagesUseCase(this.repositories.packmindGateway),
       getPackageBySlug: new GetPackageSummaryUseCase(
         this.repositories.packmindGateway,
@@ -96,6 +108,8 @@ export class PackmindCliHexaFactory {
         gateway: this.repositories.packmindGateway,
         mcpConfigService: new McpConfigService(),
       }),
+      deleteLocalSkill: new DeleteLocalSkillUseCase(),
+      updateLocalSkill: new UpdateLocalSkillUseCase(),
     };
   }
 }

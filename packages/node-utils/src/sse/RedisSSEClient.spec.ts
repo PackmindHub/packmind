@@ -60,21 +60,29 @@ describe('RedisSSEClient', () => {
   });
 
   describe('publish', () => {
-    it('publishes a message to a Redis channel', async () => {
+    let subscriberCount: number;
+    let serializedMessage: string;
+
+    beforeEach(async () => {
       const testMessage = createSSESubscriptionMessage(
         'user123',
         'subscribe',
         'program_status',
         ['prog-456'],
       );
-      const serializedMessage = serializeSSERedisMessage(testMessage);
+      serializedMessage = serializeSSERedisMessage(testMessage);
 
-      const subscriberCount = await client.publish(
+      subscriberCount = await client.publish(
         SSE_REDIS_CHANNELS.SUBSCRIPTIONS,
         serializedMessage,
       );
+    });
 
+    it('returns the subscriber count', () => {
       expect(subscriberCount).toBe(1);
+    });
+
+    it('calls Redis publish with the correct channel and message', () => {
       expect(mockRedisInstance.publish).toHaveBeenCalledWith(
         SSE_REDIS_CHANNELS.SUBSCRIPTIONS,
         serializedMessage,
@@ -83,15 +91,18 @@ describe('RedisSSEClient', () => {
   });
 
   describe('subscribe', () => {
-    it('subscribes to a Redis channel and sets up message callback', async () => {
+    beforeEach(async () => {
       const mockCallback = jest.fn();
-
       await client.subscribe(SSE_REDIS_CHANNELS.EVENTS, mockCallback);
+    });
 
-      // Verify subscribe was called
+    it('calls Redis subscribe with the correct channel', () => {
       expect(mockRedisInstance.subscribe).toHaveBeenCalledWith(
         SSE_REDIS_CHANNELS.EVENTS,
       );
+    });
+
+    it('sets up message callback handler', () => {
       expect(mockRedisInstance.on).toHaveBeenCalledWith(
         'message',
         expect.any(Function),

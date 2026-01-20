@@ -89,7 +89,7 @@ describe('CommitToGit', () => {
       providerId: createGitProviderId('provider-id'),
     };
 
-    it('successfully commits multiple files to git and stores commit', async () => {
+    describe('when committing multiple files to git', () => {
       const files = [
         { path: 'test/file1.txt', content: 'test content 1' },
         { path: 'test/file2.txt', content: 'test content 2' },
@@ -102,37 +102,49 @@ describe('CommitToGit', () => {
         url: 'https://github.com/test-owner/test-repo/commit/abc123',
       };
 
-      const expectedCommit = gitCommitFactory(commitDataFromGit);
+      let expectedCommit: ReturnType<typeof gitCommitFactory>;
+      let result: Awaited<ReturnType<typeof commitToGit.commitToGit>>;
 
-      // Mock provider service to return the provider
-      mockGitProviderService.findGitProviderById.mockResolvedValue(
-        mockGitProvider,
-      );
+      beforeEach(async () => {
+        expectedCommit = gitCommitFactory(commitDataFromGit);
 
-      // Mock commitFiles to return actual commit data from git operation
-      mockGithubRepository.commitFiles.mockResolvedValue(commitDataFromGit);
-      mockGitCommitService.addCommit.mockResolvedValue(expectedCommit);
+        mockGitProviderService.findGitProviderById.mockResolvedValue(
+          mockGitProvider,
+        );
+        mockGithubRepository.commitFiles.mockResolvedValue(commitDataFromGit);
+        mockGitCommitService.addCommit.mockResolvedValue(expectedCommit);
 
-      const result = await commitToGit.commitToGit(
-        mockGitRepo,
-        files,
-        'Commit message',
-      );
+        result = await commitToGit.commitToGit(
+          mockGitRepo,
+          files,
+          'Commit message',
+        );
+      });
 
-      expect(mockGitRepoFactory.createGitRepo).toHaveBeenCalledWith(
-        mockGitRepo,
-        mockGitProvider,
-      );
+      it('creates git repo with correct provider', () => {
+        expect(mockGitRepoFactory.createGitRepo).toHaveBeenCalledWith(
+          mockGitRepo,
+          mockGitProvider,
+        );
+      });
 
-      expect(mockGithubRepository.commitFiles).toHaveBeenCalledWith(
-        files,
-        'Commit message',
-        undefined,
-      );
-      expect(mockGitCommitService.addCommit).toHaveBeenCalledWith(
-        commitDataFromGit,
-      );
-      expect(result).toEqual(expectedCommit);
+      it('commits files with correct parameters', () => {
+        expect(mockGithubRepository.commitFiles).toHaveBeenCalledWith(
+          files,
+          'Commit message',
+          undefined,
+        );
+      });
+
+      it('stores the commit in the service', () => {
+        expect(mockGitCommitService.addCommit).toHaveBeenCalledWith(
+          commitDataFromGit,
+        );
+      });
+
+      it('returns the expected commit', () => {
+        expect(result).toEqual(expectedCommit);
+      });
     });
 
     it('throws error for unsupported git provider', async () => {

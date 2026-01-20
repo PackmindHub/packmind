@@ -4,44 +4,99 @@ describe('PackmindLogger', () => {
   let logger: PackmindLogger;
 
   describe('constructor', () => {
-    it('creates logger with name and default INFO level', () => {
-      logger = new PackmindLogger('TestService');
-      expect(logger).toBeInstanceOf(PackmindLogger);
-      expect(logger.getName()).toBe('TestService');
+    describe('when creating logger with name and default INFO level', () => {
+      beforeEach(() => {
+        logger = new PackmindLogger('TestService');
+      });
+
+      it('creates a PackmindLogger instance', () => {
+        expect(logger).toBeInstanceOf(PackmindLogger);
+      });
+
+      it('returns the correct name', () => {
+        expect(logger.getName()).toBe('TestService');
+      });
     });
 
-    it('creates logger with name and specified level', () => {
-      logger = new PackmindLogger('TestRepository', LogLevel.DEBUG);
-      expect(logger).toBeInstanceOf(PackmindLogger);
-      expect(logger.getName()).toBe('TestRepository');
+    describe('when creating logger with name and specified level', () => {
+      beforeEach(() => {
+        logger = new PackmindLogger('TestRepository', LogLevel.DEBUG);
+      });
+
+      it('creates a PackmindLogger instance', () => {
+        expect(logger).toBeInstanceOf(PackmindLogger);
+      });
+
+      it('returns the correct name', () => {
+        expect(logger.getName()).toBe('TestRepository');
+      });
     });
   });
 
   describe('LogLevel enum', () => {
-    it('has all expected log levels', () => {
+    it('defines SILENT level as silent', () => {
       expect(LogLevel.SILENT).toBe('silent');
+    });
+
+    it('defines ERROR level as error', () => {
       expect(LogLevel.ERROR).toBe('error');
+    });
+
+    it('defines WARN level as warn', () => {
       expect(LogLevel.WARN).toBe('warn');
+    });
+
+    it('defines INFO level as info', () => {
       expect(LogLevel.INFO).toBe('info');
+    });
+
+    it('defines HTTP level as http', () => {
       expect(LogLevel.HTTP).toBe('http');
+    });
+
+    it('defines VERBOSE level as verbose', () => {
       expect(LogLevel.VERBOSE).toBe('verbose');
+    });
+
+    it('defines DEBUG level as debug', () => {
       expect(LogLevel.DEBUG).toBe('debug');
+    });
+
+    it('defines SILLY level as silly', () => {
       expect(LogLevel.SILLY).toBe('silly');
     });
   });
 
   describe('logging methods', () => {
     beforeEach(() => {
-      logger = new PackmindLogger('TestLogger', LogLevel.SILLY); // Allow all log levels
+      logger = new PackmindLogger('TestLogger', LogLevel.SILLY);
     });
 
-    it('executes logging methods without errors', () => {
+    it('executes error method without throwing', () => {
       expect(() => logger.error('Test error message')).not.toThrow();
+    });
+
+    it('executes warn method without throwing', () => {
       expect(() => logger.warn('Test warning message')).not.toThrow();
+    });
+
+    it('executes info method without throwing', () => {
       expect(() => logger.info('Test info message')).not.toThrow();
+    });
+
+    it('executes http method without throwing', () => {
       expect(() => logger.http('Test http message')).not.toThrow();
+    });
+
+    it('executes verbose method without throwing', () => {
       expect(() => logger.verbose('Test verbose message')).not.toThrow();
+    });
+
+    it('executes debug method without throwing', () => {
       expect(() => logger.debug('Test debug message')).not.toThrow();
+    });
+
+    it('executes silly method without throwing', () => {
       expect(() => logger.silly('Test silly message')).not.toThrow();
     });
 
@@ -82,64 +137,86 @@ describe('PackmindLogger', () => {
   });
 
   describe('SILENT level behavior', () => {
-    it('creates logger with SILENT level', () => {
-      logger = new PackmindLogger('SilentLogger', LogLevel.SILENT);
-      expect(logger).toBeInstanceOf(PackmindLogger);
-      expect(logger.getName()).toBe('SilentLogger');
+    describe('when creating logger with SILENT level', () => {
+      beforeEach(() => {
+        logger = new PackmindLogger('SilentLogger', LogLevel.SILENT);
+      });
+
+      it('creates a PackmindLogger instance', () => {
+        expect(logger).toBeInstanceOf(PackmindLogger);
+      });
+
+      it('returns the correct name', () => {
+        expect(logger.getName()).toBe('SilentLogger');
+      });
     });
 
-    it('does not execute logging methods in SILENT mode', () => {
-      logger = new PackmindLogger('SilentLogger', LogLevel.SILENT);
+    describe('when logging in SILENT mode', () => {
+      let consoleSpy: jest.SpyInstance;
 
-      // Mock console to capture any potential output
-      const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
+      beforeEach(() => {
+        logger = new PackmindLogger('SilentLogger', LogLevel.SILENT);
+        consoleSpy = jest.spyOn(console, 'log').mockImplementation();
+      });
 
-      // These should all execute without throwing and without logging
-      expect(() => {
+      afterEach(() => {
+        consoleSpy.mockRestore();
+      });
+
+      it('executes logging methods without throwing', () => {
+        expect(() => {
+          logger.error('Silent error');
+          logger.warn('Silent warn');
+          logger.info('Silent info');
+          logger.http('Silent http');
+          logger.verbose('Silent verbose');
+          logger.debug('Silent debug');
+          logger.silly('Silent silly');
+          logger.log(LogLevel.ERROR, 'Silent generic log');
+        }).not.toThrow();
+      });
+
+      it('does not produce console output', () => {
         logger.error('Silent error');
         logger.warn('Silent warn');
         logger.info('Silent info');
-        logger.http('Silent http');
-        logger.verbose('Silent verbose');
-        logger.debug('Silent debug');
-        logger.silly('Silent silly');
-        logger.log(LogLevel.ERROR, 'Silent generic log');
-      }).not.toThrow();
 
-      // Verify no console output occurred
-      expect(consoleSpy).not.toHaveBeenCalled();
-
-      consoleSpy.mockRestore();
+        expect(consoleSpy).not.toHaveBeenCalled();
+      });
     });
 
-    it('can switch to SILENT mode after construction', () => {
-      logger = new PackmindLogger('TestLogger', LogLevel.INFO);
+    describe('when switching to SILENT mode after construction', () => {
+      let consoleSpy: jest.SpyInstance;
 
-      // Mock console to capture any potential output
-      const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
+      beforeEach(() => {
+        logger = new PackmindLogger('TestLogger', LogLevel.INFO);
+        consoleSpy = jest.spyOn(console, 'log').mockImplementation();
+        logger.setLevel(LogLevel.SILENT);
+      });
 
-      // Switch to silent mode
-      logger.setLevel(LogLevel.SILENT);
+      afterEach(() => {
+        consoleSpy.mockRestore();
+      });
 
-      // These should not produce any output
-      expect(() => {
+      it('executes logging methods without throwing', () => {
+        expect(() => {
+          logger.error('Silent error after setLevel');
+          logger.info('Silent info after setLevel');
+        }).not.toThrow();
+      });
+
+      it('does not produce console output', () => {
         logger.error('Silent error after setLevel');
         logger.info('Silent info after setLevel');
-      }).not.toThrow();
 
-      // Verify no console output occurred
-      expect(consoleSpy).not.toHaveBeenCalled();
-
-      consoleSpy.mockRestore();
+        expect(consoleSpy).not.toHaveBeenCalled();
+      });
     });
 
     it('can switch from SILENT mode back to normal logging', () => {
       logger = new PackmindLogger('TestLogger', LogLevel.SILENT);
-
-      // Switch back to normal logging
       logger.setLevel(LogLevel.ERROR);
 
-      // This should work normally (though we can't easily test actual output)
       expect(() => {
         logger.error('Error after switching from silent');
       }).not.toThrow();
@@ -148,10 +225,8 @@ describe('PackmindLogger', () => {
 
   describe('integration test', () => {
     it('creates logger and logs messages at different levels', () => {
-      // This is more of an integration test to ensure the logger works end-to-end
       logger = new PackmindLogger('IntegrationTestLogger', LogLevel.INFO);
 
-      // These should all execute without throwing
       expect(() => {
         logger.error('Integration test error');
         logger.warn('Integration test warn');

@@ -2,9 +2,13 @@
 
 ## Added
 
+- Add blacklist filter to `skills add` to exclude unwanted files like `.DS_Store` (#71)
+
 ## Changed
 
 ## Fixed
+
+- Fix double-slash in login URLs when host ends with trailing slash (#100)
 
 ## Removed
 

@@ -1,4 +1,5 @@
 export * from './domain/CodingAgents';
+export * from './domain/AgentConfiguration';
 export * from './domain/repository/ICodingAgentDeployer';
 export * from './domain/repository/ICodingAgentDeployerRegistry';
 export * from './application/services/DeployerService';

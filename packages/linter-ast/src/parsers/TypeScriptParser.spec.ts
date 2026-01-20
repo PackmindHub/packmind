@@ -31,51 +31,93 @@ describe.skip('TypeScriptParser', () => {
   });
 
   describe('parse', () => {
-    it('parses valid TypeScript code', async () => {
+    describe('when parsing valid TypeScript code', () => {
       const sourceCode = 'const x: number = 42;';
+      let ast: Awaited<ReturnType<typeof parser.parse>>;
 
-      const ast = await parser.parse(sourceCode);
+      beforeEach(async () => {
+        ast = await parser.parse(sourceCode);
+      });
 
-      expect(ast).toBeDefined();
-      expect(ast.type).toBe('program');
-      expect(ast.children).toBeDefined();
-      expect(Array.isArray(ast.children)).toBe(true);
+      it('returns a defined AST', () => {
+        expect(ast).toBeDefined();
+      });
+
+      it('returns a program node type', () => {
+        expect(ast.type).toBe('program');
+      });
+
+      it('returns defined children', () => {
+        expect(ast.children).toBeDefined();
+      });
+
+      it('returns children as an array', () => {
+        expect(Array.isArray(ast.children)).toBe(true);
+      });
     });
 
-    it('auto-initializes if not initialized', async () => {
+    describe('when auto-initializing', () => {
       const sourceCode = 'const x = 42;';
+      let ast: Awaited<ReturnType<typeof parser.parse>>;
 
-      const ast = await parser.parse(sourceCode);
+      beforeEach(async () => {
+        ast = await parser.parse(sourceCode);
+      });
 
-      expect(ast).toBeDefined();
-      expect(parser['initialized']).toBe(true);
+      it('returns a defined AST', () => {
+        expect(ast).toBeDefined();
+      });
+
+      it('sets initialized flag to true', () => {
+        expect(parser['initialized']).toBe(true);
+      });
     });
 
-    it('parses empty string', async () => {
-      const ast = await parser.parse('');
+    describe('when parsing empty string', () => {
+      let ast: Awaited<ReturnType<typeof parser.parse>>;
 
-      expect(ast).toBeDefined();
-      expect(ast.type).toBe('program');
+      beforeEach(async () => {
+        ast = await parser.parse('');
+      });
+
+      it('returns a defined AST', () => {
+        expect(ast).toBeDefined();
+      });
+
+      it('returns a program node type', () => {
+        expect(ast.type).toBe('program');
+      });
     });
 
-    it('parses complex TypeScript code', async () => {
+    describe('when parsing complex TypeScript code', () => {
       const sourceCode = `
         interface Person {
           name: string;
           age: number;
         }
-        
+
         const person: Person = {
           name: 'John',
           age: 30
         };
       `;
+      let ast: Awaited<ReturnType<typeof parser.parse>>;
 
-      const ast = await parser.parse(sourceCode);
+      beforeEach(async () => {
+        ast = await parser.parse(sourceCode);
+      });
 
-      expect(ast).toBeDefined();
-      expect(ast.type).toBe('program');
-      expect(ast.children.length).toBeGreaterThan(0);
+      it('returns a defined AST', () => {
+        expect(ast).toBeDefined();
+      });
+
+      it('returns a program node type', () => {
+        expect(ast.type).toBe('program');
+      });
+
+      it('returns children with content', () => {
+        expect(ast.children.length).toBeGreaterThan(0);
+      });
     });
   });
 

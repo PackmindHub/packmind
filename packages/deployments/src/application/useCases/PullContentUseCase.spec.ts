@@ -105,6 +105,17 @@ describe('PullContentUseCase', () => {
       prepareRecipesDeployment: jest.fn(),
       prepareStandardsDeployment: jest.fn(),
       getDeployerRegistry: jest.fn().mockReturnValue(mockRegistry),
+      deployArtifactsForAgents: jest.fn().mockResolvedValue({
+        createOrUpdate: [],
+        delete: [],
+      }),
+      generateRemovalUpdatesForAgents: jest.fn().mockResolvedValue({
+        createOrUpdate: [],
+        delete: [],
+      }),
+      getAgentFilePath: jest.fn(),
+      getAgentSkillPath: jest.fn(),
+      getSupportedAgents: jest.fn(),
     } as unknown as jest.Mocked<ICodingAgentPort>;
 
     accountsPort = {
@@ -331,7 +342,7 @@ describe('PullContentUseCase', () => {
         standardsPort.listStandardVersions.mockResolvedValue([]);
         skillsPort.listSkillVersions.mockResolvedValue([]);
 
-        mockDeployer.deployArtifacts.mockResolvedValue({
+        codingAgentPort.deployArtifactsForAgents.mockResolvedValue({
           createOrUpdate: [],
           delete: [],
         } as FileUpdates);
@@ -376,7 +387,7 @@ describe('PullContentUseCase', () => {
       recipesPort.listRecipeVersions.mockResolvedValue([]);
       standardsPort.listStandardVersions.mockResolvedValue([]);
 
-      mockDeployer.deployArtifacts.mockResolvedValue({
+      codingAgentPort.deployArtifactsForAgents.mockResolvedValue({
         createOrUpdate: [],
         delete: [],
       } as FileUpdates);
@@ -442,7 +453,7 @@ describe('PullContentUseCase', () => {
         standardsPort.listStandardVersions.mockResolvedValue([]);
         skillsPort.listSkillVersions.mockResolvedValue([skillVersion]);
 
-        mockDeployer.deployArtifacts.mockResolvedValue({
+        codingAgentPort.deployArtifactsForAgents.mockResolvedValue({
           createOrUpdate: [],
           delete: [],
         } as FileUpdates);
@@ -454,14 +465,15 @@ describe('PullContentUseCase', () => {
         expect(skillsPort.listSkillVersions).toHaveBeenCalledWith(skill.id);
       });
 
-      it('passes skill versions to deployArtifacts', async () => {
+      it('passes skill versions to deployArtifactsForAgents', async () => {
         await useCase.execute(command);
 
-        expect(mockDeployer.deployArtifacts).toHaveBeenCalledWith(
-          [],
-          [],
-          [{ ...skillVersion, files: [] }],
-        );
+        expect(codingAgentPort.deployArtifactsForAgents).toHaveBeenCalledWith({
+          recipeVersions: [],
+          standardVersions: [],
+          skillVersions: [{ ...skillVersion, files: [] }],
+          codingAgents: [CodingAgents.packmind, CodingAgents.agents_md],
+        });
       });
 
       it('emits ArtifactsPulledEvent with skillCount', async () => {
@@ -529,11 +541,12 @@ describe('PullContentUseCase', () => {
 
         await useCase.execute(command);
 
-        expect(mockDeployer.deployArtifacts).toHaveBeenCalledWith(
-          [],
-          [],
-          [{ ...newerVersion, files: [] }],
-        );
+        expect(codingAgentPort.deployArtifactsForAgents).toHaveBeenCalledWith({
+          recipeVersions: [],
+          standardVersions: [],
+          skillVersions: [{ ...newerVersion, files: [] }],
+          codingAgents: [CodingAgents.packmind, CodingAgents.agents_md],
+        });
       });
     });
 
@@ -652,7 +665,7 @@ describe('PullContentUseCase', () => {
         standardsPort.listStandardVersions.mockResolvedValue([]);
         skillsPort.listSkillVersions.mockResolvedValue([]);
 
-        mockDeployer.deployArtifacts.mockResolvedValue({
+        codingAgentPort.deployArtifactsForAgents.mockResolvedValue({
           createOrUpdate: [],
           delete: [],
         } as FileUpdates);
@@ -711,7 +724,7 @@ describe('PullContentUseCase', () => {
         standardsPort.listStandardVersions.mockResolvedValue([]);
         skillsPort.listSkillVersions.mockResolvedValue([]);
 
-        mockDeployer.deployArtifacts.mockResolvedValue({
+        codingAgentPort.deployArtifactsForAgents.mockResolvedValue({
           createOrUpdate: [],
           delete: [],
         } as FileUpdates);
@@ -963,12 +976,12 @@ describe('PullContentUseCase', () => {
         mockRegistry,
       );
 
-      mockDeployer.deployArtifacts.mockResolvedValue({
+      codingAgentPort.deployArtifactsForAgents.mockResolvedValue({
         createOrUpdate: [],
         delete: [],
       });
 
-      mockDeployer.generateRemovalFileUpdates.mockResolvedValue({
+      codingAgentPort.generateRemovalUpdatesForAgents.mockResolvedValue({
         createOrUpdate: [],
         delete: [],
       });
@@ -1008,7 +1021,7 @@ describe('PullContentUseCase', () => {
           .mockResolvedValueOnce([sharedSkillVersion])
           .mockResolvedValueOnce([uniqueSkillVersion]);
 
-        mockDeployer.generateRemovalFileUpdates.mockResolvedValue({
+        codingAgentPort.generateRemovalUpdatesForAgents.mockResolvedValue({
           createOrUpdate: [],
           delete: [
             { path: '.packmind/commands/unique-recipe.md' },
@@ -1100,10 +1113,12 @@ describe('PullContentUseCase', () => {
         expect(result.fileUpdates.delete).toEqual([]);
       });
 
-      it('does not call generateRemovalFileUpdates', async () => {
+      it('does not call generateRemovalUpdatesForAgents', async () => {
         await useCase.execute(command);
 
-        expect(mockDeployer.generateRemovalFileUpdates).not.toHaveBeenCalled();
+        expect(
+          codingAgentPort.generateRemovalUpdatesForAgents,
+        ).not.toHaveBeenCalled();
       });
     });
 
@@ -1140,7 +1155,7 @@ describe('PullContentUseCase', () => {
         ]);
         skillsPort.listSkillVersions.mockResolvedValue([uniqueSkillVersion]);
 
-        mockDeployer.generateRemovalFileUpdates.mockResolvedValue({
+        codingAgentPort.generateRemovalUpdatesForAgents.mockResolvedValue({
           createOrUpdate: [],
           delete: [
             { path: '.packmind/commands/unique-recipe.md' },
@@ -1198,7 +1213,7 @@ describe('PullContentUseCase', () => {
           .mockResolvedValueOnce([sharedSkillVersion])
           .mockResolvedValueOnce([uniqueSkillVersion]);
 
-        mockDeployer.generateRemovalFileUpdates.mockResolvedValue({
+        codingAgentPort.generateRemovalUpdatesForAgents.mockResolvedValue({
           createOrUpdate: [],
           delete: [
             { path: '.packmind/commands/shared-recipe.md' },
@@ -1231,21 +1246,24 @@ describe('PullContentUseCase', () => {
         ).toHaveBeenCalledWith(['package-a'], organization.id);
       });
 
-      it('calls generateRemovalFileUpdates with all artifacts from removed package', async () => {
+      it('calls generateRemovalUpdatesForAgents with all artifacts from removed package', async () => {
         await useCase.execute(command);
 
-        expect(mockDeployer.generateRemovalFileUpdates).toHaveBeenCalledWith(
-          {
+        expect(
+          codingAgentPort.generateRemovalUpdatesForAgents,
+        ).toHaveBeenCalledWith({
+          removed: {
             recipeVersions: [sharedRecipeVersion, uniqueRecipeVersion],
             standardVersions: [sharedStandardVersion, uniqueStandardVersion],
             skillVersions: [sharedSkillVersion, uniqueSkillVersion],
           },
-          {
+          installed: {
             recipeVersions: [],
             standardVersions: [],
             skillVersions: [],
           },
-        );
+          codingAgents: [CodingAgents.packmind, CodingAgents.agents_md],
+        });
       });
 
       it('marks shared recipe for deletion', async () => {

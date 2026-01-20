@@ -710,42 +710,63 @@ describe('Claude Deployment Integration', () => {
       });
     });
 
-    it('handles GitHexa errors gracefully', async () => {
-      jest
-        .spyOn(testApp.gitHexa.getAdapter(), 'getFileFromRepo')
-        .mockRejectedValue(new Error('GitHub API error'));
+    describe('when GitHexa errors occur', () => {
+      let fileUpdates: {
+        createOrUpdate: FileModification[];
+        delete: { path: string }[];
+      };
+      let recipeFile: FileModification | undefined;
 
-      const recipeVersions: RecipeVersion[] = [
-        {
-          id: 'recipe-version-1' as RecipeVersionId,
-          recipeId: recipe.id,
-          name: recipe.name,
-          slug: recipe.slug,
-          content: recipe.content,
-          version: recipe.version,
-          summary: 'Test recipe',
-          userId: user.id,
-        },
-      ];
+      beforeEach(async () => {
+        jest
+          .spyOn(testApp.gitHexa.getAdapter(), 'getFileFromRepo')
+          .mockRejectedValue(new Error('GitHub API error'));
 
-      const fileUpdates = await claudeDeployer.deployRecipes(
-        recipeVersions,
-        gitRepo,
-        defaultTarget,
-      );
+        const recipeVersions: RecipeVersion[] = [
+          {
+            id: 'recipe-version-1' as RecipeVersionId,
+            recipeId: recipe.id,
+            name: recipe.name,
+            slug: recipe.slug,
+            content: recipe.content,
+            version: recipe.version,
+            summary: 'Test recipe',
+            userId: user.id,
+          },
+        ];
 
-      // Should still work despite the error, treating it as if file doesn't exist
-      expect(fileUpdates.createOrUpdate).toHaveLength(2);
-      expect(fileUpdates.delete).toHaveLength(0);
+        fileUpdates = await claudeDeployer.deployRecipes(
+          recipeVersions,
+          gitRepo,
+          defaultTarget,
+        );
 
-      const recipeFile = fileUpdates.createOrUpdate.find((f) =>
-        f.path.startsWith('.claude/commands/packmind/'),
-      );
-      expect(recipeFile?.path).toBe(
-        `.claude/commands/packmind/${recipe.slug}.md`,
-      );
-      expect(recipeFile?.content).toContain('---');
-      expect(recipeFile?.content).toContain('description: Test recipe');
+        recipeFile = fileUpdates.createOrUpdate.find((f) =>
+          f.path.startsWith('.claude/commands/packmind/'),
+        );
+      });
+
+      it('creates two files to update', () => {
+        expect(fileUpdates.createOrUpdate).toHaveLength(2);
+      });
+
+      it('has no files to delete', () => {
+        expect(fileUpdates.delete).toHaveLength(0);
+      });
+
+      it('sets correct recipe file path', () => {
+        expect(recipeFile?.path).toBe(
+          `.claude/commands/packmind/${recipe.slug}.md`,
+        );
+      });
+
+      it('includes frontmatter delimiter', () => {
+        expect(recipeFile?.content).toContain('---');
+      });
+
+      it('includes recipe description in frontmatter', () => {
+        expect(recipeFile?.content).toContain('description: Test recipe');
+      });
     });
   });
 });

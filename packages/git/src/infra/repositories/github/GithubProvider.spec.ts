@@ -30,7 +30,11 @@ describe('GithubProvider', () => {
 
   describe('listAvailableRepositories', () => {
     describe('when API call succeeds', () => {
-      it('returns formatted repository list', async () => {
+      let result: Awaited<
+        ReturnType<typeof githubProvider.listAvailableRepositories>
+      >;
+
+      beforeEach(async () => {
         const mockResponse = {
           data: [
             {
@@ -66,15 +70,19 @@ describe('GithubProvider', () => {
 
         mockAxiosInstance.get.mockResolvedValue(mockResponse);
 
-        const result = await githubProvider.listAvailableRepositories();
+        result = await githubProvider.listAvailableRepositories();
+      });
 
+      it('calls the correct API endpoint with expected parameters', () => {
         expect(mockAxiosInstance.get).toHaveBeenCalledWith('/user/repos', {
           params: {
             sort: 'updated',
             per_page: 100,
           },
         });
+      });
 
+      it('returns formatted repository list', () => {
         expect(result).toEqual([
           {
             name: 'test-repo',
@@ -315,7 +323,9 @@ describe('GithubProvider', () => {
     const branch = 'main';
 
     describe('when branch exists', () => {
-      it('returns true', async () => {
+      let result: boolean;
+
+      beforeEach(async () => {
         const mockResponse = {
           data: {
             name: 'main',
@@ -326,16 +336,16 @@ describe('GithubProvider', () => {
 
         mockAxiosInstance.get.mockResolvedValue(mockResponse);
 
-        const result = await githubProvider.checkBranchExists(
-          owner,
-          repo,
-          branch,
-        );
+        result = await githubProvider.checkBranchExists(owner, repo, branch);
+      });
 
+      it('calls the correct API endpoint', () => {
         expect(mockAxiosInstance.get).toHaveBeenCalledWith(
           `/repos/${owner}/${repo}/branches/${branch}`,
         );
+      });
 
+      it('returns true', () => {
         expect(result).toBe(true);
       });
     });

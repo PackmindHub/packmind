@@ -7,14 +7,14 @@ class TestUserCreatedEvent extends UserEvent<{
   userId: string;
   email: string;
 }> {
-  static readonly eventName = 'test.user.created';
+  static override readonly eventName = 'test.user.created';
 }
 
 class TestSyncCompletedEvent extends SystemEvent<{
   repositoryId: string;
   commitCount: number;
 }> {
-  static readonly eventName = 'test.sync.completed';
+  static override readonly eventName = 'test.sync.completed';
 }
 
 interface StubAdapter {
@@ -69,23 +69,19 @@ describe('PackmindListener', () => {
   });
 
   describe('initialize', () => {
-    it('stores event emitter service reference', () => {
-      const listener = new TestListener(stubAdapter);
+    let listener: TestListener;
 
+    beforeEach(() => {
+      listener = new TestListener(stubAdapter);
       listener.initialize(eventService);
-
-      expect(eventService.listenerCount(TestUserCreatedEvent)).toBe(1);
-      expect(eventService.listenerCount(TestSyncCompletedEvent)).toBe(1);
     });
 
-    it('calls registerHandlers', () => {
-      const listener = new TestListener(stubAdapter);
+    it('registers user created event handler', () => {
+      expect(eventService.listenerCount(TestUserCreatedEvent)).toBe(1);
+    });
 
-      listener.initialize(eventService);
-
-      expect(eventService.listenerCount(TestUserCreatedEvent)).toBeGreaterThan(
-        0,
-      );
+    it('registers sync completed event handler', () => {
+      expect(eventService.listenerCount(TestSyncCompletedEvent)).toBe(1);
     });
   });
 
@@ -121,31 +117,38 @@ describe('PackmindListener', () => {
       expect(stubAdapter.handleUserCreated).toHaveBeenCalledTimes(1);
     });
 
-    it('handles multiple event types', () => {
-      const listener = new TestListener(stubAdapter);
-      listener.initialize(eventService);
+    describe('when handling multiple event types', () => {
+      beforeEach(() => {
+        const listener = new TestListener(stubAdapter);
+        listener.initialize(eventService);
 
-      eventService.emit(
-        new TestUserCreatedEvent({
-          userId: 'user-123',
-          email: 'test@example.com',
-        }),
-      );
-      eventService.emit(
-        new TestSyncCompletedEvent({
-          repositoryId: 'repo-456',
-          commitCount: 5,
-        }),
-      );
+        eventService.emit(
+          new TestUserCreatedEvent({
+            userId: 'user-123',
+            email: 'test@example.com',
+          }),
+        );
+        eventService.emit(
+          new TestSyncCompletedEvent({
+            repositoryId: 'repo-456',
+            commitCount: 5,
+          }),
+        );
+      });
 
-      expect(stubAdapter.handleUserCreated).toHaveBeenCalledWith(
-        'user-123',
-        'test@example.com',
-      );
-      expect(stubAdapter.handleSyncCompleted).toHaveBeenCalledWith(
-        'repo-456',
-        5,
-      );
+      it('invokes user created handler with correct arguments', () => {
+        expect(stubAdapter.handleUserCreated).toHaveBeenCalledWith(
+          'user-123',
+          'test@example.com',
+        );
+      });
+
+      it('invokes sync completed handler with correct arguments', () => {
+        expect(stubAdapter.handleSyncCompleted).toHaveBeenCalledWith(
+          'repo-456',
+          5,
+        );
+      });
     });
   });
 
@@ -188,12 +191,15 @@ describe('PackmindListener', () => {
   });
 
   describe('multiple listeners', () => {
-    it('allows multiple listeners for same event', () => {
-      const adapter1: StubAdapter = {
+    let adapter1: StubAdapter;
+    let adapter2: StubAdapter;
+
+    beforeEach(() => {
+      adapter1 = {
         handleUserCreated: jest.fn(),
         handleSyncCompleted: jest.fn(),
       };
-      const adapter2: StubAdapter = {
+      adapter2 = {
         handleUserCreated: jest.fn(),
         handleSyncCompleted: jest.fn(),
       };
@@ -210,11 +216,16 @@ describe('PackmindListener', () => {
           email: 'shared@example.com',
         }),
       );
+    });
 
+    it('invokes first listener handler', () => {
       expect(adapter1.handleUserCreated).toHaveBeenCalledWith(
         'user-shared',
         'shared@example.com',
       );
+    });
+
+    it('invokes second listener handler', () => {
       expect(adapter2.handleUserCreated).toHaveBeenCalledWith(
         'user-shared',
         'shared@example.com',
@@ -223,31 +234,48 @@ describe('PackmindListener', () => {
   });
 
   describe('event type discrimination', () => {
-    it('distinguishes between UserEvent and SystemEvent', () => {
-      const listener = new TestListener(stubAdapter);
-      listener.initialize(eventService);
+    describe('when emitting UserEvent', () => {
+      beforeEach(() => {
+        const listener = new TestListener(stubAdapter);
+        listener.initialize(eventService);
 
-      eventService.emit(
-        new TestUserCreatedEvent({
-          userId: 'user-123',
-          email: 'test@example.com',
-        }),
-      );
+        eventService.emit(
+          new TestUserCreatedEvent({
+            userId: 'user-123',
+            email: 'test@example.com',
+          }),
+        );
+      });
 
-      expect(stubAdapter.handleUserCreated).toHaveBeenCalled();
-      expect(stubAdapter.handleSyncCompleted).not.toHaveBeenCalled();
+      it('invokes user created handler', () => {
+        expect(stubAdapter.handleUserCreated).toHaveBeenCalled();
+      });
 
-      jest.clearAllMocks();
+      it('does not invoke sync completed handler', () => {
+        expect(stubAdapter.handleSyncCompleted).not.toHaveBeenCalled();
+      });
+    });
 
-      eventService.emit(
-        new TestSyncCompletedEvent({
-          repositoryId: 'repo-123',
-          commitCount: 10,
-        }),
-      );
+    describe('when emitting SystemEvent', () => {
+      beforeEach(() => {
+        const listener = new TestListener(stubAdapter);
+        listener.initialize(eventService);
 
-      expect(stubAdapter.handleUserCreated).not.toHaveBeenCalled();
-      expect(stubAdapter.handleSyncCompleted).toHaveBeenCalled();
+        eventService.emit(
+          new TestSyncCompletedEvent({
+            repositoryId: 'repo-123',
+            commitCount: 10,
+          }),
+        );
+      });
+
+      it('invokes sync completed handler', () => {
+        expect(stubAdapter.handleSyncCompleted).toHaveBeenCalled();
+      });
+
+      it('does not invoke user created handler', () => {
+        expect(stubAdapter.handleUserCreated).not.toHaveBeenCalled();
+      });
     });
   });
 });

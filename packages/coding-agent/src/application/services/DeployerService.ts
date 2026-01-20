@@ -9,6 +9,7 @@ import {
   Target,
 } from '@packmind/types';
 import { CodingAgent } from '../../domain/CodingAgents';
+import { AGENT_FILE_PATHS } from '../../domain/AgentConfiguration';
 import { ICodingAgentRepositories } from '../../domain/repositories/ICodingAgentRepositories';
 
 const origin = 'DeployerService';
@@ -290,18 +291,7 @@ export class DeployerService {
   }
 
   private getFilePathForAgent(agent: CodingAgent): string {
-    const agentToFile: Record<CodingAgent, string> = {
-      claude: 'CLAUDE.md',
-      agents_md: 'AGENTS.md',
-      cursor: '.cursor/commands/packmind',
-      copilot: '.github/copilot-instructions.md',
-      junie: '.junie.md',
-      packmind: '.packmind.md',
-      gitlab_duo: '.gitlab/duo_chat.yml',
-      continue: '.continue/rules/packmind/recipes-index.md',
-    };
-
-    return agentToFile[agent];
+    return AGENT_FILE_PATHS[agent];
   }
 
   private mergeFileUpdates(updates: FileUpdates[]): FileUpdates {

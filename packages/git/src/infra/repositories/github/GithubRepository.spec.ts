@@ -175,34 +175,35 @@ describe('GithubRepository', () => {
     });
 
     describe('when files do not exist', () => {
-      beforeEach(() => {
-        // Mock getFileOnRepo to return null (files don't exist)
+      let result: Awaited<ReturnType<typeof githubRepository.commitFiles>>;
+
+      beforeEach(async () => {
         jest.spyOn(githubRepository, 'getFileOnRepo').mockResolvedValue(null);
+        result = await githubRepository.commitFiles(files, 'Commit message');
       });
 
-      it('creates new files with correct parameters and returns commit data', async () => {
-        const result = await githubRepository.commitFiles(
-          files,
-          'Commit message',
-        );
-
-        // Verify API calls
+      it('fetches the branch reference', () => {
         expect(mockAxiosInstance.get).toHaveBeenCalledWith(
           `/repos/${options.owner}/${options.repo}/git/refs/heads/main`,
         );
+      });
 
+      it('fetches the commit for the reference', () => {
         expect(mockAxiosInstance.get).toHaveBeenCalledWith(
           `/repos/${options.owner}/${options.repo}/git/commits/${refSha}`,
         );
+      });
 
+      it('checks if each file exists on the repo', () => {
         files.forEach((file) => {
           expect(githubRepository.getFileOnRepo).toHaveBeenCalledWith(
             file.path,
             'main',
           );
         });
+      });
 
-        // Verify tree creation
+      it('creates the tree with file contents', () => {
         expect(mockAxiosInstance.post).toHaveBeenCalledWith(
           `/repos/${options.owner}/${options.repo}/git/trees`,
           {
@@ -215,8 +216,9 @@ describe('GithubRepository', () => {
             })),
           },
         );
+      });
 
-        // Verify commit creation
+      it('creates the commit with the correct message', () => {
         expect(mockAxiosInstance.post).toHaveBeenCalledWith(
           `/repos/${options.owner}/${options.repo}/git/commits`,
           {
@@ -225,8 +227,9 @@ describe('GithubRepository', () => {
             parents: [refSha],
           },
         );
+      });
 
-        // Verify reference update
+      it('updates the branch reference', () => {
         expect(mockAxiosInstance.patch).toHaveBeenCalledWith(
           `/repos/${options.owner}/${options.repo}/git/refs/heads/main`,
           {
@@ -234,8 +237,9 @@ describe('GithubRepository', () => {
             force: false,
           },
         );
+      });
 
-        // Verify returned commit data
+      it('returns the commit data', () => {
         expect(result).toEqual({
           sha: newCommitSha,
           message: 'Commit message',
@@ -246,8 +250,9 @@ describe('GithubRepository', () => {
     });
 
     describe('when some files already exist', () => {
-      beforeEach(() => {
-        // Mock getFileOnRepo to return a file for the first file and null for the second
+      let result: Awaited<ReturnType<typeof githubRepository.commitFiles>>;
+
+      beforeEach(async () => {
         jest
           .spyOn(githubRepository, 'getFileOnRepo')
           .mockImplementation((path) => {
@@ -259,15 +264,10 @@ describe('GithubRepository', () => {
             }
             return Promise.resolve(null);
           });
+        result = await githubRepository.commitFiles(files, 'Commit message');
       });
 
-      it('updates existing files and creates new ones in a single commit', async () => {
-        const result = await githubRepository.commitFiles(
-          files,
-          'Commit message',
-        );
-
-        // Verify commit was created with the passed message
+      it('creates the commit with the correct message', () => {
         expect(mockAxiosInstance.post).toHaveBeenCalledWith(
           `/repos/${options.owner}/${options.repo}/git/commits`,
           {
@@ -276,8 +276,9 @@ describe('GithubRepository', () => {
             parents: [refSha],
           },
         );
+      });
 
-        // Verify returned commit data
+      it('returns the commit data', () => {
         expect(result).toEqual({
           sha: newCommitSha,
           message: 'Commit message',
@@ -289,8 +290,9 @@ describe('GithubRepository', () => {
 
     describe('when a branch is provided', () => {
       const customBranch = 'my-feature';
+      let result: Awaited<ReturnType<typeof githubRepository.commitFiles>>;
 
-      beforeEach(() => {
+      beforeEach(async () => {
         stubbedLogger = stubLogger();
         githubRepository = new GithubRepository(
           githubToken,
@@ -301,30 +303,26 @@ describe('GithubRepository', () => {
           stubbedLogger,
         );
 
-        // Mock getFileOnRepo to return null (files don't exist)
         jest.spyOn(githubRepository, 'getFileOnRepo').mockResolvedValue(null);
+        result = await githubRepository.commitFiles(files, 'Commit message');
       });
 
-      it('uses the specified branch for all operations', async () => {
-        const result = await githubRepository.commitFiles(
-          files,
-          'Commit message',
-        );
-
-        // Verify branch is used in API calls
+      it('fetches the custom branch reference', () => {
         expect(mockAxiosInstance.get).toHaveBeenCalledWith(
           `/repos/${options.owner}/${options.repo}/git/refs/heads/${customBranch}`,
         );
+      });
 
-        // Verify getFileOnRepo was called with the custom branch
+      it('checks if each file exists on the custom branch', () => {
         files.forEach((file) => {
           expect(githubRepository.getFileOnRepo).toHaveBeenCalledWith(
             file.path,
             customBranch,
           );
         });
+      });
 
-        // Verify reference update uses custom branch
+      it('updates the custom branch reference', () => {
         expect(mockAxiosInstance.patch).toHaveBeenCalledWith(
           `/repos/${options.owner}/${options.repo}/git/refs/heads/${customBranch}`,
           {
@@ -332,8 +330,9 @@ describe('GithubRepository', () => {
             force: false,
           },
         );
+      });
 
-        // Verify returned commit data
+      it('returns the commit data', () => {
         expect(result).toEqual({
           sha: newCommitSha,
           message: 'Commit message',
@@ -705,7 +704,9 @@ describe('GithubRepository', () => {
     const base64Content = Buffer.from(fileContent).toString('base64');
 
     describe('when file exists', () => {
-      beforeEach(() => {
+      let result: Awaited<ReturnType<typeof githubRepository.getFileOnRepo>>;
+
+      beforeEach(async () => {
         mockAxiosInstance.get = jest.fn().mockResolvedValue({
           data: {
             sha: fileSha,
@@ -713,16 +714,17 @@ describe('GithubRepository', () => {
             encoding: 'base64',
           },
         });
+        result = await githubRepository.getFileOnRepo(filePath);
       });
 
-      it('returns file data with sha and base64 content', async () => {
-        const result = await githubRepository.getFileOnRepo(filePath);
-
+      it('returns the file data with sha and content', () => {
         expect(result).toEqual({
           sha: fileSha,
           content: base64Content,
         });
+      });
 
+      it('calls the API with the correct path and default branch', () => {
         expect(mockAxiosInstance.get).toHaveBeenCalledWith(
           `/repos/${options.owner}/${options.repo}/contents/${filePath}`,
           { params: { ref: 'main' } },
@@ -730,18 +732,26 @@ describe('GithubRepository', () => {
       });
 
       describe('when custom branch is provided', () => {
-        it('uses the custom branch', async () => {
-          const customBranch = 'feature-branch';
-          const result = await githubRepository.getFileOnRepo(
+        const customBranch = 'feature-branch';
+        let customBranchResult: Awaited<
+          ReturnType<typeof githubRepository.getFileOnRepo>
+        >;
+
+        beforeEach(async () => {
+          customBranchResult = await githubRepository.getFileOnRepo(
             filePath,
             customBranch,
           );
+        });
 
-          expect(result).toEqual({
+        it('returns the file data', () => {
+          expect(customBranchResult).toEqual({
             sha: fileSha,
             content: base64Content,
           });
+        });
 
+        it('calls the API with the custom branch', () => {
           expect(mockAxiosInstance.get).toHaveBeenCalledWith(
             `/repos/${options.owner}/${options.repo}/contents/${filePath}`,
             { params: { ref: customBranch } },
@@ -751,23 +761,24 @@ describe('GithubRepository', () => {
     });
 
     describe('when file does not exist', () => {
-      beforeEach(() => {
+      let result: Awaited<ReturnType<typeof githubRepository.getFileOnRepo>>;
+
+      beforeEach(async () => {
         mockAxiosInstance.get = jest.fn().mockRejectedValue({
           response: { status: 404 },
         });
+        result = await githubRepository.getFileOnRepo(filePath);
       });
 
-      describe('when file is not found', () => {
-        it('returns null', async () => {
-          const result = await githubRepository.getFileOnRepo(filePath);
+      it('returns null', () => {
+        expect(result).toBeNull();
+      });
 
-          expect(result).toBeNull();
-
-          expect(mockAxiosInstance.get).toHaveBeenCalledWith(
-            `/repos/${options.owner}/${options.repo}/contents/${filePath}`,
-            { params: { ref: 'main' } },
-          );
-        });
+      it('calls the API with the correct path', () => {
+        expect(mockAxiosInstance.get).toHaveBeenCalledWith(
+          `/repos/${options.owner}/${options.repo}/contents/${filePath}`,
+          { params: { ref: 'main' } },
+        );
       });
     });
 
@@ -832,54 +843,70 @@ describe('GithubRepository', () => {
       });
     });
 
-    it('returns matching files with their content', async () => {
-      const result = await githubRepository.handlePushHook(
-        pushPayload,
-        fileMatcher,
-      );
+    describe('when processing a valid push payload', () => {
+      let result: Awaited<ReturnType<typeof githubRepository.handlePushHook>>;
 
-      expect(result).toHaveLength(2);
-      expect(result).toEqual(
-        expect.arrayContaining([
-          {
-            filepath: 'file2.txt',
-            fileContent: fileContent1,
-            author: 'John Doe',
-            gitSha: 'commit1',
-            gitRepo: 'https://github.com/test-owner/test-repo',
-            message: null,
-          },
-          {
-            filepath: 'file5.txt',
-            fileContent: fileContent2,
-            author: 'Jane Smith',
-            gitSha: 'commit2',
-            gitRepo: 'https://github.com/test-owner/test-repo',
-            message: null,
-          },
-        ]),
-      );
+      beforeEach(async () => {
+        result = await githubRepository.handlePushHook(
+          pushPayload,
+          fileMatcher,
+        );
+      });
 
-      // Verify API calls were made correctly
-      expect(mockAxiosInstance.get).toHaveBeenCalledWith(
-        `/repos/${options.owner}/${options.repo}/contents/file2.txt`,
-        { params: { ref: 'commit1' } },
-      );
-      expect(mockAxiosInstance.get).toHaveBeenCalledWith(
-        `/repos/${options.owner}/${options.repo}/contents/file5.txt`,
-        { params: { ref: 'commit2' } },
-      );
+      it('returns matching files with their content', () => {
+        expect(result).toEqual(
+          expect.arrayContaining([
+            {
+              filepath: 'file2.txt',
+              fileContent: fileContent1,
+              author: 'John Doe',
+              gitSha: 'commit1',
+              gitRepo: 'https://github.com/test-owner/test-repo',
+              message: null,
+            },
+            {
+              filepath: 'file5.txt',
+              fileContent: fileContent2,
+              author: 'Jane Smith',
+              gitSha: 'commit2',
+              gitRepo: 'https://github.com/test-owner/test-repo',
+              message: null,
+            },
+          ]),
+        );
+      });
+
+      it('fetches the content for file2.txt', () => {
+        expect(mockAxiosInstance.get).toHaveBeenCalledWith(
+          `/repos/${options.owner}/${options.repo}/contents/file2.txt`,
+          { params: { ref: 'commit1' } },
+        );
+      });
+
+      it('fetches the content for file5.txt', () => {
+        expect(mockAxiosInstance.get).toHaveBeenCalledWith(
+          `/repos/${options.owner}/${options.repo}/contents/file5.txt`,
+          { params: { ref: 'commit2' } },
+        );
+      });
     });
 
     describe('when no files match the pattern', () => {
-      it('returns an empty array', async () => {
-        const noMatchMatcher = /\.nonexistent$/;
-        const result = await githubRepository.handlePushHook(
+      const noMatchMatcher = /\.nonexistent$/;
+      let result: Awaited<ReturnType<typeof githubRepository.handlePushHook>>;
+
+      beforeEach(async () => {
+        result = await githubRepository.handlePushHook(
           pushPayload,
           noMatchMatcher,
         );
+      });
 
+      it('returns an empty array', () => {
         expect(result).toHaveLength(0);
+      });
+
+      it('does not call the API', () => {
         expect(mockAxiosInstance.get).not.toHaveBeenCalled();
       });
     });
@@ -892,19 +919,27 @@ describe('GithubRepository', () => {
       ).rejects.toThrow('Failed to process GitHub webhook: API Error');
     });
 
-    it('handles payload without commits array gracefully', async () => {
+    describe('when payload has no commits array', () => {
       const invalidPayload = { invalid: 'payload' };
+      let result: Awaited<ReturnType<typeof githubRepository.handlePushHook>>;
 
-      const result = await githubRepository.handlePushHook(
-        invalidPayload,
-        fileMatcher,
-      );
+      beforeEach(async () => {
+        result = await githubRepository.handlePushHook(
+          invalidPayload,
+          fileMatcher,
+        );
+      });
 
-      expect(result).toEqual([]);
-      expect(mockAxiosInstance.get).not.toHaveBeenCalled();
+      it('returns an empty array', () => {
+        expect(result).toEqual([]);
+      });
+
+      it('does not call the API', () => {
+        expect(mockAxiosInstance.get).not.toHaveBeenCalled();
+      });
     });
 
-    it('handles payload with empty commits array', async () => {
+    describe('when payload has empty commits array', () => {
       const emptyCommitsPayload = {
         ref: 'refs/heads/main',
         repository: {
@@ -915,17 +950,25 @@ describe('GithubRepository', () => {
         },
         commits: [],
       };
+      let result: Awaited<ReturnType<typeof githubRepository.handlePushHook>>;
 
-      const result = await githubRepository.handlePushHook(
-        emptyCommitsPayload,
-        fileMatcher,
-      );
+      beforeEach(async () => {
+        result = await githubRepository.handlePushHook(
+          emptyCommitsPayload,
+          fileMatcher,
+        );
+      });
 
-      expect(result).toEqual([]);
-      expect(mockAxiosInstance.get).not.toHaveBeenCalled();
+      it('returns an empty array', () => {
+        expect(result).toEqual([]);
+      });
+
+      it('does not call the API', () => {
+        expect(mockAxiosInstance.get).not.toHaveBeenCalled();
+      });
     });
 
-    it('returns empty array for non-main branch webhook', async () => {
+    describe('when webhook is for a non-main branch', () => {
       const nonMainBranchPayload = {
         ref: 'refs/heads/feature-branch',
         repository: {
@@ -947,18 +990,26 @@ describe('GithubRepository', () => {
           },
         ],
       };
+      let result: Awaited<ReturnType<typeof githubRepository.handlePushHook>>;
 
-      const result = await githubRepository.handlePushHook(
-        nonMainBranchPayload,
-        fileMatcher,
-      );
+      beforeEach(async () => {
+        result = await githubRepository.handlePushHook(
+          nonMainBranchPayload,
+          fileMatcher,
+        );
+      });
 
-      expect(result).toEqual([]);
-      expect(mockAxiosInstance.get).not.toHaveBeenCalled();
+      it('returns an empty array', () => {
+        expect(result).toEqual([]);
+      });
+
+      it('does not call the API', () => {
+        expect(mockAxiosInstance.get).not.toHaveBeenCalled();
+      });
     });
 
-    it('skips webhook for develop branch', async () => {
-      const nonMainBranchPayload = {
+    describe('when webhook is for develop branch', () => {
+      const developBranchPayload = {
         ref: 'refs/heads/develop',
         repository: {
           name: 'test-repo',
@@ -979,14 +1030,22 @@ describe('GithubRepository', () => {
           },
         ],
       };
+      let result: Awaited<ReturnType<typeof githubRepository.handlePushHook>>;
 
-      const result = await githubRepository.handlePushHook(
-        nonMainBranchPayload,
-        fileMatcher,
-      );
+      beforeEach(async () => {
+        result = await githubRepository.handlePushHook(
+          developBranchPayload,
+          fileMatcher,
+        );
+      });
 
-      expect(result).toEqual([]);
-      expect(mockAxiosInstance.get).not.toHaveBeenCalled();
+      it('returns an empty array', () => {
+        expect(result).toEqual([]);
+      });
+
+      it('does not call the API', () => {
+        expect(mockAxiosInstance.get).not.toHaveBeenCalled();
+      });
     });
 
     it('processes webhook for main branch normally', async () => {

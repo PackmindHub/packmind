@@ -3,11 +3,11 @@ import { DataSource } from 'typeorm';
 import { PackmindEventEmitterService } from './PackmindEventEmitterService';
 
 class TestUserCreatedEvent extends UserEvent<{ userId: string }> {
-  static readonly eventName = 'test.user.created';
+  static override readonly eventName = 'test.user.created';
 }
 
 class TestUserDeletedEvent extends UserEvent<{ userId: string }> {
-  static readonly eventName = 'test.user.deleted';
+  static override readonly eventName = 'test.user.deleted';
 }
 
 describe('PackmindEventEmitterService', () => {
@@ -82,28 +82,46 @@ describe('PackmindEventEmitterService', () => {
       expect(handler).toHaveBeenCalledTimes(1);
     });
 
-    it('allows multiple handlers for same event', () => {
-      const handler1 = jest.fn();
-      const handler2 = jest.fn();
+    describe('when multiple handlers registered for same event', () => {
+      let handler1: jest.Mock;
+      let handler2: jest.Mock;
 
-      service.on(TestUserCreatedEvent, handler1);
-      service.on(TestUserCreatedEvent, handler2);
-      service.emit(new TestUserCreatedEvent({ userId: 'user-123' }));
+      beforeEach(() => {
+        handler1 = jest.fn();
+        handler2 = jest.fn();
+        service.on(TestUserCreatedEvent, handler1);
+        service.on(TestUserCreatedEvent, handler2);
+        service.emit(new TestUserCreatedEvent({ userId: 'user-123' }));
+      });
 
-      expect(handler1).toHaveBeenCalledTimes(1);
-      expect(handler2).toHaveBeenCalledTimes(1);
+      it('calls first handler once', () => {
+        expect(handler1).toHaveBeenCalledTimes(1);
+      });
+
+      it('calls second handler once', () => {
+        expect(handler2).toHaveBeenCalledTimes(1);
+      });
     });
 
-    it('isolates handlers for different event types', () => {
-      const createdHandler = jest.fn();
-      const deletedHandler = jest.fn();
+    describe('when handlers registered for different event types', () => {
+      let createdHandler: jest.Mock;
+      let deletedHandler: jest.Mock;
 
-      service.on(TestUserCreatedEvent, createdHandler);
-      service.on(TestUserDeletedEvent, deletedHandler);
-      service.emit(new TestUserCreatedEvent({ userId: 'user-123' }));
+      beforeEach(() => {
+        createdHandler = jest.fn();
+        deletedHandler = jest.fn();
+        service.on(TestUserCreatedEvent, createdHandler);
+        service.on(TestUserDeletedEvent, deletedHandler);
+        service.emit(new TestUserCreatedEvent({ userId: 'user-123' }));
+      });
 
-      expect(createdHandler).toHaveBeenCalledTimes(1);
-      expect(deletedHandler).not.toHaveBeenCalled();
+      it('calls handler for emitted event type', () => {
+        expect(createdHandler).toHaveBeenCalledTimes(1);
+      });
+
+      it('does not call handler for other event types', () => {
+        expect(deletedHandler).not.toHaveBeenCalled();
+      });
     });
 
     it('returns service for chaining', () => {
@@ -125,16 +143,23 @@ describe('PackmindEventEmitterService', () => {
     });
 
     describe('when removing one handler', () => {
-      it('keeps other handlers', () => {
-        const handler1 = jest.fn();
-        const handler2 = jest.fn();
+      let handler1: jest.Mock;
+      let handler2: jest.Mock;
 
+      beforeEach(() => {
+        handler1 = jest.fn();
+        handler2 = jest.fn();
         service.on(TestUserCreatedEvent, handler1);
         service.on(TestUserCreatedEvent, handler2);
         service.off(TestUserCreatedEvent, handler1);
         service.emit(new TestUserCreatedEvent({ userId: 'user-123' }));
+      });
 
+      it('does not call removed handler', () => {
         expect(handler1).not.toHaveBeenCalled();
+      });
+
+      it('keeps other handlers active', () => {
         expect(handler2).toHaveBeenCalledTimes(1);
       });
     });
@@ -203,30 +228,45 @@ describe('PackmindEventEmitterService', () => {
       expect(count).toBe(3);
     });
 
-    it('counts listeners per event type', () => {
-      service.on(TestUserCreatedEvent, jest.fn());
-      service.on(TestUserCreatedEvent, jest.fn());
-      service.on(TestUserDeletedEvent, jest.fn());
+    describe('when multiple event types have listeners', () => {
+      beforeEach(() => {
+        service.on(TestUserCreatedEvent, jest.fn());
+        service.on(TestUserCreatedEvent, jest.fn());
+        service.on(TestUserDeletedEvent, jest.fn());
+      });
 
-      expect(service.listenerCount(TestUserCreatedEvent)).toBe(2);
-      expect(service.listenerCount(TestUserDeletedEvent)).toBe(1);
+      it('counts created event listeners correctly', () => {
+        expect(service.listenerCount(TestUserCreatedEvent)).toBe(2);
+      });
+
+      it('counts deleted event listeners correctly', () => {
+        expect(service.listenerCount(TestUserDeletedEvent)).toBe(1);
+      });
     });
   });
 
   describe('removeAllListeners', () => {
-    it('removes all listeners for all events', () => {
-      const handler1 = jest.fn();
-      const handler2 = jest.fn();
+    describe('when removing all listeners', () => {
+      let handler1: jest.Mock;
+      let handler2: jest.Mock;
 
-      service.on(TestUserCreatedEvent, handler1);
-      service.on(TestUserDeletedEvent, handler2);
-      service.removeAllListeners();
+      beforeEach(() => {
+        handler1 = jest.fn();
+        handler2 = jest.fn();
+        service.on(TestUserCreatedEvent, handler1);
+        service.on(TestUserDeletedEvent, handler2);
+        service.removeAllListeners();
+        service.emit(new TestUserCreatedEvent({ userId: 'user-123' }));
+        service.emit(new TestUserDeletedEvent({ userId: 'user-456' }));
+      });
 
-      service.emit(new TestUserCreatedEvent({ userId: 'user-123' }));
-      service.emit(new TestUserDeletedEvent({ userId: 'user-456' }));
+      it('does not call first event handler', () => {
+        expect(handler1).not.toHaveBeenCalled();
+      });
 
-      expect(handler1).not.toHaveBeenCalled();
-      expect(handler2).not.toHaveBeenCalled();
+      it('does not call second event handler', () => {
+        expect(handler2).not.toHaveBeenCalled();
+      });
     });
 
     it('returns service for chaining', () => {

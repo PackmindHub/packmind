@@ -201,127 +201,172 @@ describe('Junie Deployment Integration', () => {
       });
     });
 
-    it('create .junie/guidelines.md with standards instructions only', async () => {
-      const standardVersions: StandardVersion[] = [
-        {
-          id: 'standard-version-1' as StandardVersionId,
-          standardId: standard.id,
-          name: standard.name,
-          slug: standard.slug,
-          description: standard.description,
-          version: standard.version,
-          summary: 'Test standard for deployment',
-          userId: user.id,
-          scope: standard.scope,
-        },
-      ];
+    describe('when creating .junie/guidelines.md with standards instructions only', () => {
+      let fileUpdates: Awaited<
+        ReturnType<typeof deployerService.aggregateStandardsDeployments>
+      >;
+      let guidelinesFile:
+        | (typeof fileUpdates.createOrUpdate)[number]
+        | undefined;
 
-      const fileUpdates = await deployerService.aggregateStandardsDeployments(
-        standardVersions,
-        gitRepo,
-        [defaultTarget],
-        ['junie'],
-      );
+      beforeEach(async () => {
+        const standardVersions: StandardVersion[] = [
+          {
+            id: 'standard-version-1' as StandardVersionId,
+            standardId: standard.id,
+            name: standard.name,
+            slug: standard.slug,
+            description: standard.description,
+            version: standard.version,
+            summary: 'Test standard for deployment',
+            userId: user.id,
+            scope: standard.scope,
+          },
+        ];
 
-      expect(fileUpdates.createOrUpdate).toHaveLength(1);
-      expect(fileUpdates.delete).toHaveLength(0);
-
-      const guidelinesFile = fileUpdates.createOrUpdate.find(
-        (file) => file.path === '.junie/guidelines.md',
-      );
-
-      expect(guidelinesFile).toBeDefined();
-      if (guidelinesFile) {
-        expect(guidelinesFile.sections).toBeDefined();
-        const sectionContent = guidelinesFile.sections[0].content;
-        expect(sectionContent).toContain('# Packmind Standards');
-        expect(sectionContent).toContain('Test standard for deployment :');
-        expect(sectionContent).toContain('* Use meaningful variable names');
-        expect(sectionContent).toContain('* Write comprehensive tests');
-        expect(sectionContent).toContain(
-          'Full standard is available here for further request: [Test Standard](../.packmind/standards/test-standard.md)',
-        );
-
-        // Should NOT contain recipes content yet
-        expect(sectionContent).not.toContain('# Packmind Recipes');
-      }
-    });
-
-    it('merges recipes and standards for combined deployment', async () => {
-      const recipeVersions: RecipeVersion[] = [
-        {
-          id: 'recipe-version-1' as RecipeVersionId,
-          recipeId: recipe.id,
-          name: recipe.name,
-          slug: recipe.slug,
-          content: recipe.content,
-          version: recipe.version,
-          summary: 'Test recipe for deployment',
-          userId: user.id,
-        },
-      ];
-
-      const standardVersions: StandardVersion[] = [
-        {
-          id: 'standard-version-1' as StandardVersionId,
-          standardId: standard.id,
-          name: standard.name,
-          slug: standard.slug,
-          description: standard.description,
-          version: standard.version,
-          summary: 'Test standard for deployment',
-          userId: user.id,
-          scope: standard.scope,
-        },
-      ];
-
-      // Create a default target for testing
-      const defaultTarget = {
-        id: createTargetId('default-target-id'),
-        name: 'Default',
-        path: '/',
-        gitRepoId: gitRepo.id,
-      };
-
-      // Deploy recipes first
-      const recipeUpdates = await deployerService.aggregateRecipeDeployments(
-        recipeVersions,
-        gitRepo,
-        [defaultTarget],
-        ['junie'],
-      );
-
-      // Deploy standards second
-      const standardsUpdates =
-        await deployerService.aggregateStandardsDeployments(
+        fileUpdates = await deployerService.aggregateStandardsDeployments(
           standardVersions,
           gitRepo,
           [defaultTarget],
           ['junie'],
         );
 
-      // Simulate the file merging that DeployerService does
-      const allUpdates = [recipeUpdates, standardsUpdates];
-      const pathMap = new Map<string, FileModification>();
+        guidelinesFile = fileUpdates.createOrUpdate.find(
+          (file) => file.path === '.junie/guidelines.md',
+        );
+      });
 
-      for (const update of allUpdates) {
-        for (const file of update.createOrUpdate) {
-          pathMap.set(file.path, file);
-        }
-      }
+      it('returns exactly one file to create or update', () => {
+        expect(fileUpdates.createOrUpdate).toHaveLength(1);
+      });
 
-      // Since both write to the same file, the last one wins in this simulation
-      // This demonstrates the issue that was fixed by implementing content checking
-      expect(pathMap.size).toBe(1);
-      expect(pathMap.has('.junie/guidelines.md')).toBe(true);
+      it('returns no files to delete', () => {
+        expect(fileUpdates.delete).toHaveLength(0);
+      });
 
-      // The final content should be from the standards deployment (last one wins)
-      const finalFile = pathMap.get('.junie/guidelines.md');
-      expect(finalFile).toBeDefined();
-      if (finalFile && finalFile.sections) {
-        const sectionContent = finalFile.sections[0].content;
+      it('finds the guidelines file', () => {
+        expect(guidelinesFile).toBeDefined();
+      });
+
+      it('includes sections in the guidelines file', () => {
+        expect(guidelinesFile?.sections).toBeDefined();
+      });
+
+      it('contains Packmind Standards header', () => {
+        const sectionContent = guidelinesFile?.sections[0].content;
         expect(sectionContent).toContain('# Packmind Standards');
-      }
+      });
+
+      it('contains standard summary', () => {
+        const sectionContent = guidelinesFile?.sections[0].content;
+        expect(sectionContent).toContain('Test standard for deployment :');
+      });
+
+      it('contains first rule content', () => {
+        const sectionContent = guidelinesFile?.sections[0].content;
+        expect(sectionContent).toContain('* Use meaningful variable names');
+      });
+
+      it('contains second rule content', () => {
+        const sectionContent = guidelinesFile?.sections[0].content;
+        expect(sectionContent).toContain('* Write comprehensive tests');
+      });
+
+      it('contains link to full standard', () => {
+        const sectionContent = guidelinesFile?.sections[0].content;
+        expect(sectionContent).toContain(
+          'Full standard is available here for further request: [Test Standard](../.packmind/standards/test-standard.md)',
+        );
+      });
+
+      it('does not contain recipes content', () => {
+        const sectionContent = guidelinesFile?.sections[0].content;
+        expect(sectionContent).not.toContain('# Packmind Recipes');
+      });
+    });
+
+    describe('when merging recipes and standards for combined deployment', () => {
+      let pathMap: Map<string, FileModification>;
+      let finalFile: FileModification | undefined;
+
+      beforeEach(async () => {
+        const recipeVersions: RecipeVersion[] = [
+          {
+            id: 'recipe-version-1' as RecipeVersionId,
+            recipeId: recipe.id,
+            name: recipe.name,
+            slug: recipe.slug,
+            content: recipe.content,
+            version: recipe.version,
+            summary: 'Test recipe for deployment',
+            userId: user.id,
+          },
+        ];
+
+        const standardVersions: StandardVersion[] = [
+          {
+            id: 'standard-version-1' as StandardVersionId,
+            standardId: standard.id,
+            name: standard.name,
+            slug: standard.slug,
+            description: standard.description,
+            version: standard.version,
+            summary: 'Test standard for deployment',
+            userId: user.id,
+            scope: standard.scope,
+          },
+        ];
+
+        const localDefaultTarget = {
+          id: createTargetId('default-target-id'),
+          name: 'Default',
+          path: '/',
+          gitRepoId: gitRepo.id,
+        };
+
+        const recipeUpdates = await deployerService.aggregateRecipeDeployments(
+          recipeVersions,
+          gitRepo,
+          [localDefaultTarget],
+          ['junie'],
+        );
+
+        const standardsUpdates =
+          await deployerService.aggregateStandardsDeployments(
+            standardVersions,
+            gitRepo,
+            [localDefaultTarget],
+            ['junie'],
+          );
+
+        const allUpdates = [recipeUpdates, standardsUpdates];
+        pathMap = new Map<string, FileModification>();
+
+        for (const update of allUpdates) {
+          for (const file of update.createOrUpdate) {
+            pathMap.set(file.path, file);
+          }
+        }
+
+        finalFile = pathMap.get('.junie/guidelines.md');
+      });
+
+      it('merges to a single file path', () => {
+        expect(pathMap.size).toBe(1);
+      });
+
+      it('targets the .junie/guidelines.md file', () => {
+        expect(pathMap.has('.junie/guidelines.md')).toBe(true);
+      });
+
+      it('produces a defined final file', () => {
+        expect(finalFile).toBeDefined();
+      });
+
+      it('contains Packmind Standards in the final content', () => {
+        const sectionContent = finalFile?.sections?.[0].content;
+        expect(sectionContent).toContain('# Packmind Standards');
+      });
     });
   });
 
@@ -394,48 +439,80 @@ describe('Junie Deployment Integration', () => {
       });
     });
 
-    it('generates standards section content', async () => {
-      const standardVersions: StandardVersion[] = [
-        {
-          id: 'standard-version-1' as StandardVersionId,
-          standardId: standard.id,
-          name: standard.name,
-          slug: standard.slug,
-          description: standard.description,
-          version: standard.version,
-          summary: 'Test standard for deployment',
-          userId: user.id,
-          scope: standard.scope,
-        },
-      ];
+    describe('when generating standards section content', () => {
+      let fileUpdates: Awaited<
+        ReturnType<typeof deployerService.aggregateStandardsDeployments>
+      >;
+      let guidelinesFile: (typeof fileUpdates.createOrUpdate)[number];
+      let sectionContent: string;
 
-      const fileUpdates = await deployerService.aggregateStandardsDeployments(
-        standardVersions,
-        gitRepo,
-        [defaultTarget],
-        ['junie'],
-      );
+      beforeEach(async () => {
+        const standardVersions: StandardVersion[] = [
+          {
+            id: 'standard-version-1' as StandardVersionId,
+            standardId: standard.id,
+            name: standard.name,
+            slug: standard.slug,
+            description: standard.description,
+            version: standard.version,
+            summary: 'Test standard for deployment',
+            userId: user.id,
+            scope: standard.scope,
+          },
+        ];
 
-      expect(fileUpdates.createOrUpdate).toHaveLength(1);
-      expect(fileUpdates.delete).toHaveLength(0);
+        fileUpdates = await deployerService.aggregateStandardsDeployments(
+          standardVersions,
+          gitRepo,
+          [defaultTarget],
+          ['junie'],
+        );
 
-      const guidelinesFile = fileUpdates.createOrUpdate[0];
-      expect(guidelinesFile.path).toBe('.junie/guidelines.md');
+        guidelinesFile = fileUpdates.createOrUpdate[0];
+        sectionContent = guidelinesFile.sections[0].content;
+      });
 
-      expect(guidelinesFile.sections).toBeDefined();
-      const sectionContent = guidelinesFile.sections[0].content;
+      it('returns exactly one file to create or update', () => {
+        expect(fileUpdates.createOrUpdate).toHaveLength(1);
+      });
 
-      // Should generate standards section with Packmind content only
-      expect(sectionContent).toContain('# Packmind Standards');
-      expect(sectionContent).toContain(
-        'Before starting your work, make sure to review the coding standards relevant to your current task',
-      );
-      expect(sectionContent).toContain('* Use meaningful variable names');
-      expect(sectionContent).toContain('* Write comprehensive tests');
+      it('returns no files to delete', () => {
+        expect(fileUpdates.delete).toHaveLength(0);
+      });
 
-      // Should NOT contain user content (that's preserved by merge layer)
-      expect(sectionContent).not.toContain('# Some User Instructions');
-      expect(sectionContent).not.toContain('# Packmind Recipes');
+      it('targets the .junie/guidelines.md file', () => {
+        expect(guidelinesFile.path).toBe('.junie/guidelines.md');
+      });
+
+      it('includes sections in the guidelines file', () => {
+        expect(guidelinesFile.sections).toBeDefined();
+      });
+
+      it('contains Packmind Standards header', () => {
+        expect(sectionContent).toContain('# Packmind Standards');
+      });
+
+      it('contains standards review instruction', () => {
+        expect(sectionContent).toContain(
+          'Before starting your work, make sure to review the coding standards relevant to your current task',
+        );
+      });
+
+      it('contains first rule content', () => {
+        expect(sectionContent).toContain('* Use meaningful variable names');
+      });
+
+      it('contains second rule content', () => {
+        expect(sectionContent).toContain('* Write comprehensive tests');
+      });
+
+      it('does not contain user instructions', () => {
+        expect(sectionContent).not.toContain('# Some User Instructions');
+      });
+
+      it('does not contain recipes content', () => {
+        expect(sectionContent).not.toContain('# Packmind Recipes');
+      });
     });
   });
 

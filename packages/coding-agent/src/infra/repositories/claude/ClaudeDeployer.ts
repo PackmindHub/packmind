@@ -12,6 +12,7 @@ import {
 import { ICodingAgentDeployer } from '../../../domain/repository/ICodingAgentDeployer';
 import { GenericStandardSectionWriter } from '../genericSectionWriter/GenericStandardSectionWriter';
 import { getTargetPrefixedPath } from '../utils/FileUtils';
+import { DefaultSkillsDeployer } from '../defaultSkillsDeployer/DefaultSkillsDeployer';
 
 const origin = 'ClaudeDeployer';
 
@@ -27,6 +28,14 @@ export class ClaudeDeployer implements ICodingAgentDeployer {
     private readonly gitPort?: IGitPort,
   ) {
     this.logger = new PackmindLogger(origin);
+  }
+
+  async deployDefaultSkills() {
+    const defaultSkillsDeployer = new DefaultSkillsDeployer(
+      'Claude',
+      '.claude/skills/',
+    );
+    return defaultSkillsDeployer.deployDefaultSkills();
   }
 
   async deployRecipes(
@@ -380,6 +389,7 @@ ${recipeVersion.content}`;
     }
 
     // Delete skill directories for removed skills
+    // (git port will expand directory paths to individual files)
     for (const skillVersion of removed.skillVersions) {
       fileUpdates.delete.push({
         path: `.claude/skills/${skillVersion.slug}`,
@@ -509,12 +519,6 @@ ${instructionContent}`;
     content: string;
     isBase64?: boolean;
   }> {
-    this.logger.debug('Generating Claude skill files', {
-      skillSlug: skillVersion.slug,
-      skillName: skillVersion.name,
-      fileCount: (skillVersion.files?.length ?? 0) + 1,
-    });
-
     const files: Array<{ path: string; content: string; isBase64?: boolean }> =
       [];
 

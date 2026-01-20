@@ -65,92 +65,126 @@ describe('Configuration', () => {
     });
 
     describe('when INFISICAL_CLIENT_ID is missing', () => {
-      it('falls back to process.env', async () => {
+      beforeEach(() => {
         process.env['INFISICAL_CLIENT_SECRET'] = 'test-secret';
         process.env['INFISICAL_ENV'] = 'test-env';
         process.env['INFISICAL_PROJECT_ID'] = 'test-project';
-        process.env['TEST_KEY'] = 'fallback-value';
-        // INFISICAL_CLIENT_ID is intentionally missing
-
-        const result = await Configuration.getConfig('TEST_KEY');
-
-        expect(result).toBe('fallback-value');
-        expect(MockedInfisicalConfig).not.toHaveBeenCalled();
       });
 
-      it('returns null if key not in process.env', async () => {
-        process.env['INFISICAL_CLIENT_SECRET'] = 'test-secret';
-        process.env['INFISICAL_ENV'] = 'test-env';
-        process.env['INFISICAL_PROJECT_ID'] = 'test-project';
-        // INFISICAL_CLIENT_ID is intentionally missing
+      describe('when key exists in process.env', () => {
+        let result: string | null;
 
-        const result = await Configuration.getConfig('MISSING_KEY');
+        beforeEach(async () => {
+          process.env['TEST_KEY'] = 'fallback-value';
+          result = await Configuration.getConfig('TEST_KEY');
+        });
 
-        expect(result).toBeNull();
-        expect(MockedInfisicalConfig).not.toHaveBeenCalled();
+        it('returns the fallback value from process.env', () => {
+          expect(result).toBe('fallback-value');
+        });
+
+        it('does not instantiate InfisicalConfig', () => {
+          expect(MockedInfisicalConfig).not.toHaveBeenCalled();
+        });
+      });
+
+      describe('when key does not exist in process.env', () => {
+        let result: string | null;
+
+        beforeEach(async () => {
+          result = await Configuration.getConfig('MISSING_KEY');
+        });
+
+        it('returns null', () => {
+          expect(result).toBeNull();
+        });
+
+        it('does not instantiate InfisicalConfig', () => {
+          expect(MockedInfisicalConfig).not.toHaveBeenCalled();
+        });
       });
     });
 
     describe('when INFISICAL_CLIENT_SECRET is missing', () => {
-      it('falls back to process.env', async () => {
+      let result: string | null;
+
+      beforeEach(async () => {
         process.env['INFISICAL_CLIENT_ID'] = 'test-id';
         process.env['INFISICAL_ENV'] = 'test-env';
         process.env['INFISICAL_PROJECT_ID'] = 'test-project';
         process.env['TEST_KEY'] = 'fallback-value';
-        // INFISICAL_CLIENT_SECRET is intentionally missing
+        result = await Configuration.getConfig('TEST_KEY');
+      });
 
-        const result = await Configuration.getConfig('TEST_KEY');
-
+      it('returns the fallback value from process.env', () => {
         expect(result).toBe('fallback-value');
+      });
+
+      it('does not instantiate InfisicalConfig', () => {
         expect(MockedInfisicalConfig).not.toHaveBeenCalled();
       });
     });
 
     describe('when INFISICAL_ENV is missing', () => {
-      it('falls back to process.env', async () => {
+      let result: string | null;
+
+      beforeEach(async () => {
         process.env['INFISICAL_CLIENT_ID'] = 'test-id';
         process.env['INFISICAL_CLIENT_SECRET'] = 'test-secret';
         process.env['INFISICAL_PROJECT_ID'] = 'test-project';
         process.env['TEST_KEY'] = 'fallback-value';
-        // INFISICAL_ENV is intentionally missing
+        result = await Configuration.getConfig('TEST_KEY');
+      });
 
-        const result = await Configuration.getConfig('TEST_KEY');
-
+      it('returns the fallback value from process.env', () => {
         expect(result).toBe('fallback-value');
+      });
+
+      it('does not instantiate InfisicalConfig', () => {
         expect(MockedInfisicalConfig).not.toHaveBeenCalled();
       });
     });
 
     describe('when INFISICAL_PROJECT_ID is missing', () => {
-      it('falls back to process.env', async () => {
+      let result: string | null;
+
+      beforeEach(async () => {
         process.env['INFISICAL_CLIENT_ID'] = 'test-id';
         process.env['INFISICAL_CLIENT_SECRET'] = 'test-secret';
         process.env['INFISICAL_ENV'] = 'test-env';
         process.env['TEST_KEY'] = 'fallback-value';
-        // INFISICAL_PROJECT_ID is intentionally missing
+        result = await Configuration.getConfig('TEST_KEY');
+      });
 
-        const result = await Configuration.getConfig('TEST_KEY');
-
+      it('returns the fallback value from process.env', () => {
         expect(result).toBe('fallback-value');
+      });
+
+      it('does not instantiate InfisicalConfig', () => {
         expect(MockedInfisicalConfig).not.toHaveBeenCalled();
       });
     });
 
     describe('when all required env vars are set', () => {
-      it('instantiates InfisicalConfig', async () => {
+      beforeEach(async () => {
         process.env['INFISICAL_CLIENT_ID'] = 'test-client-id';
         process.env['INFISICAL_CLIENT_SECRET'] = 'test-client-secret';
         process.env['INFISICAL_ENV'] = 'test-env';
         process.env['INFISICAL_PROJECT_ID'] = 'test-project-id';
 
         await Configuration.getConfig('TEST_KEY');
+      });
 
+      it('instantiates InfisicalConfig with correct parameters', () => {
         expect(MockedInfisicalConfig).toHaveBeenCalledWith(
           'test-client-id',
           'test-client-secret',
           'test-env',
           'test-project-id',
         );
+      });
+
+      it('calls initClient', () => {
         expect(mockInitClient).toHaveBeenCalled();
       });
     });
@@ -169,70 +203,88 @@ describe('Configuration', () => {
   });
 
   describe('singleton behavior', () => {
-    it('only initializes once even with multiple sequential calls', async () => {
-      process.env['CONFIGURATION'] = 'infisical';
-      process.env['INFISICAL_CLIENT_ID'] = 'test-client-id';
-      process.env['INFISICAL_CLIENT_SECRET'] = 'test-client-secret';
-      process.env['INFISICAL_ENV'] = 'test-env';
-      process.env['INFISICAL_PROJECT_ID'] = 'test-project-id';
+    describe('when making multiple sequential calls', () => {
+      let mockInitClient: jest.Mock;
 
-      const mockInitClient = jest.fn();
-      const mockGetValue = jest.fn().mockResolvedValue('test-value');
-      MockedInfisicalConfig.mockImplementation(() => {
-        return {
-          initClient: mockInitClient,
-          getValue: mockGetValue,
-        } as Partial<InfisicalConfig> as InfisicalConfig;
+      beforeEach(async () => {
+        process.env['CONFIGURATION'] = 'infisical';
+        process.env['INFISICAL_CLIENT_ID'] = 'test-client-id';
+        process.env['INFISICAL_CLIENT_SECRET'] = 'test-client-secret';
+        process.env['INFISICAL_ENV'] = 'test-env';
+        process.env['INFISICAL_PROJECT_ID'] = 'test-project-id';
+
+        mockInitClient = jest.fn();
+        const mockGetValue = jest.fn().mockResolvedValue('test-value');
+        MockedInfisicalConfig.mockImplementation(() => {
+          return {
+            initClient: mockInitClient,
+            getValue: mockGetValue,
+          } as Partial<InfisicalConfig> as InfisicalConfig;
+        });
+
+        await Configuration.getConfig('TEST_KEY_1');
+        await Configuration.getConfig('TEST_KEY_2');
       });
 
-      await Configuration.getConfig('TEST_KEY_1');
-      await Configuration.getConfig('TEST_KEY_2');
+      it('instantiates InfisicalConfig only once', () => {
+        expect(MockedInfisicalConfig).toHaveBeenCalledTimes(1);
+      });
 
-      expect(MockedInfisicalConfig).toHaveBeenCalledTimes(1);
-      expect(mockInitClient).toHaveBeenCalledTimes(1);
+      it('calls initClient only once', () => {
+        expect(mockInitClient).toHaveBeenCalledTimes(1);
+      });
     });
 
-    it('only initializes once even with multiple concurrent calls', async () => {
-      process.env['CONFIGURATION'] = 'infisical';
-      process.env['INFISICAL_CLIENT_ID'] = 'test-client-id';
-      process.env['INFISICAL_CLIENT_SECRET'] = 'test-client-secret';
-      process.env['INFISICAL_ENV'] = 'test-env';
-      process.env['INFISICAL_PROJECT_ID'] = 'test-project-id';
+    describe('when making multiple concurrent calls', () => {
+      let mockInitClient: jest.Mock;
 
-      const mockInitClient = jest.fn().mockResolvedValue(undefined);
-      const mockGetValue = jest.fn().mockResolvedValue('test-value');
-      MockedInfisicalConfig.mockImplementation(() => {
-        return {
-          initClient: mockInitClient,
-          getValue: mockGetValue,
-        } as Partial<InfisicalConfig> as InfisicalConfig;
+      beforeEach(async () => {
+        process.env['CONFIGURATION'] = 'infisical';
+        process.env['INFISICAL_CLIENT_ID'] = 'test-client-id';
+        process.env['INFISICAL_CLIENT_SECRET'] = 'test-client-secret';
+        process.env['INFISICAL_ENV'] = 'test-env';
+        process.env['INFISICAL_PROJECT_ID'] = 'test-project-id';
+
+        mockInitClient = jest.fn().mockResolvedValue(undefined);
+        const mockGetValue = jest.fn().mockResolvedValue('test-value');
+        MockedInfisicalConfig.mockImplementation(() => {
+          return {
+            initClient: mockInitClient,
+            getValue: mockGetValue,
+          } as Partial<InfisicalConfig> as InfisicalConfig;
+        });
+
+        const promises = [
+          Configuration.getConfig('TEST_KEY_1'),
+          Configuration.getConfig('TEST_KEY_2'),
+          Configuration.getConfig('TEST_KEY_3'),
+        ];
+
+        await Promise.all(promises);
       });
 
-      // Simulate multiple concurrent calls to Configuration.getConfig
-      const promises = [
-        Configuration.getConfig('TEST_KEY_1'),
-        Configuration.getConfig('TEST_KEY_2'),
-        Configuration.getConfig('TEST_KEY_3'),
-      ];
+      it('instantiates InfisicalConfig only once', () => {
+        expect(MockedInfisicalConfig).toHaveBeenCalledTimes(1);
+      });
 
-      await Promise.all(promises);
-
-      expect(MockedInfisicalConfig).toHaveBeenCalledTimes(1);
-      expect(mockInitClient).toHaveBeenCalledTimes(1);
+      it('calls initClient only once', () => {
+        expect(mockInitClient).toHaveBeenCalledTimes(1);
+      });
     });
   });
 
   describe('fallback behavior', () => {
     describe('when Infisical initialization fails', () => {
-      it('falls back to process.env', async () => {
+      let mockInitClient: jest.Mock;
+
+      beforeEach(() => {
         process.env['CONFIGURATION'] = 'infisical';
         process.env['INFISICAL_CLIENT_ID'] = 'test-client-id';
         process.env['INFISICAL_CLIENT_SECRET'] = 'test-client-secret';
         process.env['INFISICAL_ENV'] = 'test-env';
         process.env['INFISICAL_PROJECT_ID'] = 'test-project-id';
-        process.env['TEST_KEY'] = 'fallback-value';
 
-        const mockInitClient = jest
+        mockInitClient = jest
           .fn()
           .mockRejectedValue(new Error('Infisical is down'));
         MockedInfisicalConfig.mockImplementation(() => {
@@ -241,38 +293,38 @@ describe('Configuration', () => {
             getValue: jest.fn(),
           } as Partial<InfisicalConfig> as InfisicalConfig;
         });
-
-        const result = await Configuration.getConfig('TEST_KEY');
-
-        expect(result).toBe('fallback-value');
-        expect(mockInitClient).toHaveBeenCalled();
       });
 
-      it('returns null if process.env does not have the key', async () => {
-        process.env['CONFIGURATION'] = 'infisical';
-        process.env['INFISICAL_CLIENT_ID'] = 'test-client-id';
-        process.env['INFISICAL_CLIENT_SECRET'] = 'test-client-secret';
-        process.env['INFISICAL_ENV'] = 'test-env';
-        process.env['INFISICAL_PROJECT_ID'] = 'test-project-id';
+      describe('when key exists in process.env', () => {
+        let result: string | null;
 
-        const mockInitClient = jest
-          .fn()
-          .mockRejectedValue(new Error('Infisical is down'));
-        MockedInfisicalConfig.mockImplementation(() => {
-          return {
-            initClient: mockInitClient,
-            getValue: jest.fn(),
-          } as Partial<InfisicalConfig> as InfisicalConfig;
+        beforeEach(async () => {
+          process.env['TEST_KEY'] = 'fallback-value';
+          result = await Configuration.getConfig('TEST_KEY');
         });
 
-        const result = await Configuration.getConfig('MISSING_KEY');
+        it('returns the fallback value from process.env', () => {
+          expect(result).toBe('fallback-value');
+        });
 
-        expect(result).toBeNull();
+        it('calls initClient', () => {
+          expect(mockInitClient).toHaveBeenCalled();
+        });
+      });
+
+      describe('when key does not exist in process.env', () => {
+        it('returns null', async () => {
+          const result = await Configuration.getConfig('MISSING_KEY');
+
+          expect(result).toBeNull();
+        });
       });
     });
 
     describe('when Infisical getValue fails at runtime', () => {
-      it('returns null if getValue throws an error', async () => {
+      let mockGetValue: jest.Mock;
+
+      beforeEach(() => {
         process.env['CONFIGURATION'] = 'infisical';
         process.env['INFISICAL_CLIENT_ID'] = 'test-client-id';
         process.env['INFISICAL_CLIENT_SECRET'] = 'test-client-secret';
@@ -280,44 +332,39 @@ describe('Configuration', () => {
         process.env['INFISICAL_PROJECT_ID'] = 'test-project-id';
 
         const mockInitClient = jest.fn().mockResolvedValue(undefined);
-        const mockGetValue = jest
-          .fn()
-          .mockRejectedValue(new Error('Network error'));
+        mockGetValue = jest.fn().mockRejectedValue(new Error('Network error'));
         MockedInfisicalConfig.mockImplementation(() => {
           return {
             initClient: mockInitClient,
             getValue: mockGetValue,
           } as Partial<InfisicalConfig> as InfisicalConfig;
         });
-
-        const result = await Configuration.getConfig('TEST_KEY');
-
-        expect(result).toBeNull();
-        expect(mockGetValue).toHaveBeenCalledWith('TEST_KEY');
       });
 
-      it('returns process.env value if present and getValue fails', async () => {
-        process.env['CONFIGURATION'] = 'infisical';
-        process.env['INFISICAL_CLIENT_ID'] = 'test-client-id';
-        process.env['INFISICAL_CLIENT_SECRET'] = 'test-client-secret';
-        process.env['INFISICAL_ENV'] = 'test-env';
-        process.env['INFISICAL_PROJECT_ID'] = 'test-project-id';
-        process.env['TEST_KEY'] = 'env-fallback-value';
+      describe('when key does not exist in process.env', () => {
+        let result: string | null;
 
-        const mockInitClient = jest.fn().mockResolvedValue(undefined);
-        const mockGetValue = jest
-          .fn()
-          .mockRejectedValue(new Error('Network error'));
-        MockedInfisicalConfig.mockImplementation(() => {
-          return {
-            initClient: mockInitClient,
-            getValue: mockGetValue,
-          } as Partial<InfisicalConfig> as InfisicalConfig;
+        beforeEach(async () => {
+          result = await Configuration.getConfig('TEST_KEY');
         });
 
-        const result = await Configuration.getConfig('TEST_KEY');
+        it('returns null', () => {
+          expect(result).toBeNull();
+        });
 
-        expect(result).toBe('env-fallback-value');
+        it('calls getValue with the key', () => {
+          expect(mockGetValue).toHaveBeenCalledWith('TEST_KEY');
+        });
+      });
+
+      describe('when key exists in process.env', () => {
+        it('returns the fallback value from process.env', async () => {
+          process.env['TEST_KEY'] = 'env-fallback-value';
+
+          const result = await Configuration.getConfig('TEST_KEY');
+
+          expect(result).toBe('env-fallback-value');
+        });
       });
     });
   });

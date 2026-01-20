@@ -91,96 +91,104 @@ describe('GitlabRepository', () => {
   });
 
   describe('commitFiles', () => {
-    it('commits multiple files successfully', async () => {
+    describe('when committing multiple new files', () => {
       const files = [
         { path: 'file1.txt', content: 'content1' },
         { path: 'file2.txt', content: 'content2' },
       ];
       const commitMessage = 'Test commit';
+      let result: Awaited<ReturnType<typeof gitlabRepository.commitFiles>>;
 
-      // Mock getFileOnRepo to return null (files don't exist)
-      mockAxiosInstance.get.mockResolvedValue({
-        status: 404,
+      beforeEach(async () => {
+        mockAxiosInstance.get.mockResolvedValue({
+          status: 404,
+        });
+
+        mockAxiosInstance.post.mockResolvedValue({
+          data: {
+            id: 'commit-sha-123',
+            author_email: 'test@example.com',
+            web_url:
+              'https://gitlab.com/testowner/testrepo/-/commit/commit-sha-123',
+          },
+        });
+
+        result = await gitlabRepository.commitFiles(files, commitMessage);
       });
 
-      // Mock successful commit
-      mockAxiosInstance.post.mockResolvedValue({
-        data: {
-          id: 'commit-sha-123',
-          author_email: 'test@example.com',
-          web_url:
-            'https://gitlab.com/testowner/testrepo/-/commit/commit-sha-123',
-        },
+      it('calls API with create actions for new files', () => {
+        expect(mockAxiosInstance.post).toHaveBeenCalledWith(
+          '/projects/testowner%2Ftestrepo/repository/commits',
+          {
+            branch: 'main',
+            commit_message: commitMessage,
+            actions: [
+              { action: 'create', file_path: 'file1.txt', content: 'content1' },
+              { action: 'create', file_path: 'file2.txt', content: 'content2' },
+            ],
+          },
+        );
       });
 
-      const result = await gitlabRepository.commitFiles(files, commitMessage);
-
-      expect(mockAxiosInstance.post).toHaveBeenCalledWith(
-        '/projects/testowner%2Ftestrepo/repository/commits',
-        {
-          branch: 'main',
-          commit_message: commitMessage,
-          actions: [
-            { action: 'create', file_path: 'file1.txt', content: 'content1' }, // New files use 'create'
-            { action: 'create', file_path: 'file2.txt', content: 'content2' }, // New files use 'create'
-          ],
-        },
-        // No params needed since we use PRIVATE-TOKEN header
-      );
-
-      expect(result).toEqual({
-        sha: 'commit-sha-123',
-        message: commitMessage,
-        author: 'test@example.com',
-        url: 'https://gitlab.com/testowner/testrepo/-/commit/commit-sha-123',
+      it('returns commit details', () => {
+        expect(result).toEqual({
+          sha: 'commit-sha-123',
+          message: commitMessage,
+          author: 'test@example.com',
+          url: 'https://gitlab.com/testowner/testrepo/-/commit/commit-sha-123',
+        });
       });
     });
 
-    it('uses update action for existing files', async () => {
+    describe('when committing existing files', () => {
       const files = [{ path: 'existing-file.txt', content: 'new-content' }];
       const commitMessage = 'Update existing file';
+      let result: Awaited<ReturnType<typeof gitlabRepository.commitFiles>>;
 
-      // Mock getFileOnRepo to return existing file
-      mockAxiosInstance.get.mockResolvedValue({
-        data: {
-          blob_id: 'existing-blob-id',
-          content: Buffer.from('old-content').toString('base64'),
-        },
+      beforeEach(async () => {
+        mockAxiosInstance.get.mockResolvedValue({
+          data: {
+            blob_id: 'existing-blob-id',
+            content: Buffer.from('old-content').toString('base64'),
+          },
+        });
+
+        mockAxiosInstance.post.mockResolvedValue({
+          data: {
+            id: 'commit-sha-456',
+            author_email: 'test@example.com',
+            web_url:
+              'https://gitlab.com/testowner/testrepo/-/commit/commit-sha-456',
+          },
+        });
+
+        result = await gitlabRepository.commitFiles(files, commitMessage);
       });
 
-      // Mock successful commit
-      mockAxiosInstance.post.mockResolvedValue({
-        data: {
-          id: 'commit-sha-456',
-          author_email: 'test@example.com',
-          web_url:
-            'https://gitlab.com/testowner/testrepo/-/commit/commit-sha-456',
-        },
+      it('calls API with update action for existing files', () => {
+        expect(mockAxiosInstance.post).toHaveBeenCalledWith(
+          '/projects/testowner%2Ftestrepo/repository/commits',
+          {
+            branch: 'main',
+            commit_message: commitMessage,
+            actions: [
+              {
+                action: 'update',
+                file_path: 'existing-file.txt',
+                content: 'new-content',
+              },
+            ],
+          },
+        );
       });
 
-      const result = await gitlabRepository.commitFiles(files, commitMessage);
-
-      expect(mockAxiosInstance.post).toHaveBeenCalledWith(
-        '/projects/testowner%2Ftestrepo/repository/commits',
-        {
-          branch: 'main',
-          commit_message: commitMessage,
-          actions: [
-            {
-              action: 'update',
-              file_path: 'existing-file.txt',
-              content: 'new-content',
-            }, // Existing files use 'update'
-          ],
-        },
-        // No params needed since we use PRIVATE-TOKEN header
-      );
-
-      expect(result).toEqual({
-        sha: 'commit-sha-456',
-        message: commitMessage,
-        author: 'test@example.com',
-        url: 'https://gitlab.com/testowner/testrepo/-/commit/commit-sha-456',
+      it('returns commit details', () => {
+        expect(result).toEqual({
+          sha: 'commit-sha-456',
+          message: commitMessage,
+          author: 'test@example.com',
+          url: 'https://gitlab.com/testowner/testrepo/-/commit/commit-sha-456',
+        });
       });
     });
 
@@ -452,21 +460,21 @@ describe('GitlabRepository', () => {
 
   describe('getFileOnRepo', () => {
     describe('when file exists', () => {
-      it('returns file content', async () => {
-        const mockFileData = {
-          blob_id: 'blob-id-123',
-          content: Buffer.from('file content').toString('base64'),
-        };
+      const mockFileData = {
+        blob_id: 'blob-id-123',
+        content: Buffer.from('file content').toString('base64'),
+      };
+      let result: Awaited<ReturnType<typeof gitlabRepository.getFileOnRepo>>;
 
+      beforeEach(async () => {
         mockAxiosInstance.get.mockResolvedValue({
           data: mockFileData,
         });
 
-        const result = await gitlabRepository.getFileOnRepo(
-          'test-file.txt',
-          'main',
-        );
+        result = await gitlabRepository.getFileOnRepo('test-file.txt', 'main');
+      });
 
+      it('calls API with correct parameters', () => {
         expect(mockAxiosInstance.get).toHaveBeenCalledWith(
           '/projects/testowner%2Ftestrepo/repository/files/test-file.txt',
           {
@@ -475,7 +483,9 @@ describe('GitlabRepository', () => {
             },
           },
         );
+      });
 
+      it('returns file content with sha', () => {
         expect(result).toEqual({
           sha: 'blob-id-123',
           content: Buffer.from('file content').toString('base64'),
@@ -504,7 +514,7 @@ describe('GitlabRepository', () => {
   });
 
   describe('handlePushHook', () => {
-    it('processes GitLab webhook payload successfully', async () => {
+    describe('when processing valid push webhook payload', () => {
       const mockPayload = {
         object_kind: 'push',
         event_name: 'push',
@@ -555,28 +565,35 @@ describe('GitlabRepository', () => {
         ],
         total_commits_count: 1,
       };
+      let result: Awaited<ReturnType<typeof gitlabRepository.handlePushHook>>;
 
-      // Mock file content retrieval
-      mockAxiosInstance.get.mockResolvedValue({
-        data: {
-          content: Buffer.from('# Test Recipe\nContent').toString('base64'),
-          encoding: 'base64',
-        },
+      beforeEach(async () => {
+        mockAxiosInstance.get.mockResolvedValue({
+          data: {
+            content: Buffer.from('# Test Recipe\nContent').toString('base64'),
+            encoding: 'base64',
+          },
+        });
+
+        result = await gitlabRepository.handlePushHook(
+          mockPayload,
+          /.packmind\/recipes\/.*\.md/,
+        );
       });
 
-      const result = await gitlabRepository.handlePushHook(
-        mockPayload,
-        /.packmind\/recipes\/.*\.md/,
-      );
+      it('returns one matching file', () => {
+        expect(result).toHaveLength(1);
+      });
 
-      expect(result).toHaveLength(1);
-      expect(result[0]).toEqual({
-        filepath: '.packmind/recipes/test-recipe.md',
-        fileContent: '# Test Recipe\nContent',
-        author: 'Test Author',
-        gitSha: 'commit-123',
-        gitRepo: 'https://gitlab.com/testowner/testrepo',
-        message: 'Test commit',
+      it('returns file details with correct content', () => {
+        expect(result[0]).toEqual({
+          filepath: '.packmind/recipes/test-recipe.md',
+          fileContent: '# Test Recipe\nContent',
+          author: 'Test Author',
+          gitSha: 'commit-123',
+          gitRepo: 'https://gitlab.com/testowner/testrepo',
+          message: 'Test commit',
+        });
       });
     });
 
@@ -722,11 +739,18 @@ describe('GitlabRepository', () => {
       expect(gitlabRepository.isValidBranch('refs/heads/main')).toBe(true);
     });
 
-    it('returns false for other branches', () => {
-      expect(gitlabRepository.isValidBranch('refs/heads/develop')).toBe(false);
-      expect(gitlabRepository.isValidBranch('refs/heads/feature-branch')).toBe(
-        false,
-      );
+    describe('when branch is not main', () => {
+      it('returns false for develop branch', () => {
+        expect(gitlabRepository.isValidBranch('refs/heads/develop')).toBe(
+          false,
+        );
+      });
+
+      it('returns false for feature branch', () => {
+        expect(
+          gitlabRepository.isValidBranch('refs/heads/feature-branch'),
+        ).toBe(false);
+      });
     });
   });
 

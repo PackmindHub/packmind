@@ -24,30 +24,53 @@ describe('SmtpMailService', () => {
 
   describe('getMaskedRecipient', () => {
     describe('when length is 6 or less', () => {
-      it('returns original string', () => {
+      it('returns original string for exactly 6 characters', () => {
         expect(service.getMaskedRecipient('a@b.co')).toBe('a@b.co');
+      });
+
+      it('returns original string for 4 characters', () => {
         expect(service.getMaskedRecipient('test')).toBe('test');
+      });
+
+      it('returns original string for empty string', () => {
         expect(service.getMaskedRecipient('')).toBe('');
+      });
+
+      it('returns original string for exactly 6 digits', () => {
         expect(service.getMaskedRecipient('123456')).toBe('123456');
       });
     });
 
     describe('when length is greater than 6', () => {
-      it('masks characters after first 6', () => {
+      it('masks characters after first 6 for standard email', () => {
         expect(service.getMaskedRecipient('user@example.com')).toBe(
           'user@e**********',
         );
+      });
+
+      it('masks characters after first 6 for long email', () => {
         expect(service.getMaskedRecipient('verylongemail@domain.com')).toBe(
           'verylo******************',
         );
+      });
+
+      it('masks single character after first 6', () => {
         expect(service.getMaskedRecipient('1234567')).toBe('123456*');
       });
     });
 
-    it('handles edge cases correctly', () => {
-      expect(service.getMaskedRecipient('a@b.com')).toBe('a@b.co*');
-      expect(service.getMaskedRecipient('admin@')).toBe('admin@');
-      expect(service.getMaskedRecipient('a')).toBe('a');
+    describe('when handling edge cases', () => {
+      it('masks one character for 7 character email', () => {
+        expect(service.getMaskedRecipient('a@b.com')).toBe('a@b.co*');
+      });
+
+      it('returns original for exactly 6 characters with trailing symbol', () => {
+        expect(service.getMaskedRecipient('admin@')).toBe('admin@');
+      });
+
+      it('returns original for single character', () => {
+        expect(service.getMaskedRecipient('a')).toBe('a');
+      });
     });
   });
 
@@ -71,22 +94,36 @@ Test content here
 **** END MESSAGE ****`);
     });
 
-    it('includes all components in correct format', () => {
-      const recipient = 'test@test.com';
-      const subject = 'Welcome';
-      const content = '<h1>Welcome!</h1>';
+    describe('when building message with HTML content', () => {
+      let result: string;
 
-      const result = service.buildMessageForLogging(
-        recipient,
-        subject,
-        content,
-      );
+      beforeEach(() => {
+        const recipient = 'test@test.com';
+        const subject = 'Welcome';
+        const content = '<h1>Welcome!</h1>';
 
-      expect(result).toContain('Message to be sent to test@t*******');
-      expect(result).toContain('**** BEGIN MESSAGE ****');
-      expect(result).toContain('SUBJECT: Welcome');
-      expect(result).toContain('<h1>Welcome!</h1>');
-      expect(result).toContain('**** END MESSAGE ****');
+        result = service.buildMessageForLogging(recipient, subject, content);
+      });
+
+      it('includes masked recipient', () => {
+        expect(result).toContain('Message to be sent to test@t*******');
+      });
+
+      it('includes begin message marker', () => {
+        expect(result).toContain('**** BEGIN MESSAGE ****');
+      });
+
+      it('includes subject', () => {
+        expect(result).toContain('SUBJECT: Welcome');
+      });
+
+      it('includes HTML content', () => {
+        expect(result).toContain('<h1>Welcome!</h1>');
+      });
+
+      it('includes end message marker', () => {
+        expect(result).toContain('**** END MESSAGE ****');
+      });
     });
   });
 
@@ -168,19 +205,28 @@ Test content here
           } as SentMessageInfo);
       });
 
-      it('sends email successfully and returns message id', async () => {
-        const result = await service.sendEmail({
-          recipient,
-          subject,
-          contentHtml,
+      describe('when sending email successfully', () => {
+        let result: string;
+
+        beforeEach(async () => {
+          result = await service.sendEmail({
+            recipient,
+            subject,
+            contentHtml,
+          });
         });
 
-        expect(result).toBe('test-message-id');
-        expect(callNodeMailerSpy).toHaveBeenCalledWith({
-          from: 'test@example.com',
-          to: recipient,
-          subject,
-          html: contentHtml,
+        it('returns message id', () => {
+          expect(result).toBe('test-message-id');
+        });
+
+        it('calls callNodeMailer with correct parameters', () => {
+          expect(callNodeMailerSpy).toHaveBeenCalledWith({
+            from: 'test@example.com',
+            to: recipient,
+            subject,
+            html: contentHtml,
+          });
         });
       });
 

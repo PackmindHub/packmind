@@ -96,7 +96,7 @@ describe('GitlabProvider', () => {
   });
 
   describe('listAvailableRepositories', () => {
-    it('returns mapped repositories with correct format', async () => {
+    describe('when fetching repositories', () => {
       const mockGitLabProjects = [
         {
           id: 1,
@@ -138,44 +138,54 @@ describe('GitlabProvider', () => {
         },
       ];
 
-      mockAxiosInstance.get.mockResolvedValue({
-        data: mockGitLabProjects,
+      let result: Awaited<
+        ReturnType<typeof gitlabProvider.listAvailableRepositories>
+      >;
+
+      beforeEach(async () => {
+        mockAxiosInstance.get.mockResolvedValue({
+          data: mockGitLabProjects,
+        });
+
+        result = await gitlabProvider.listAvailableRepositories();
       });
 
-      const result = await gitlabProvider.listAvailableRepositories();
-
-      expect(mockAxiosInstance.get).toHaveBeenCalledWith('/projects', {
-        params: {
-          membership: true,
-          archived: false,
-          order_by: 'last_activity_at',
-          per_page: 100,
-        },
+      it('calls API with correct parameters', () => {
+        expect(mockAxiosInstance.get).toHaveBeenCalledWith('/projects', {
+          params: {
+            membership: true,
+            archived: false,
+            order_by: 'last_activity_at',
+            per_page: 100,
+          },
+        });
       });
 
-      expect(result).toEqual([
-        {
-          name: 'test-repo',
-          owner: 'testuser', // Single level namespace
-          description: 'Test repository',
-          private: true,
-          defaultBranch: 'main',
-          language: undefined,
-          stars: 5,
-        },
-        {
-          name: 'public-repo',
-          owner: 'testorg/subgroup', // Multi-level namespace
-          description: undefined,
-          private: false,
-          defaultBranch: 'master',
-          language: undefined,
-          stars: 0,
-        },
-      ]);
+      it('returns mapped repositories with correct format', () => {
+        expect(result).toEqual([
+          {
+            name: 'test-repo',
+            owner: 'testuser', // Single level namespace
+            description: 'Test repository',
+            private: true,
+            defaultBranch: 'main',
+            language: undefined,
+            stars: 5,
+          },
+          {
+            name: 'public-repo',
+            owner: 'testorg/subgroup', // Multi-level namespace
+            description: undefined,
+            private: false,
+            defaultBranch: 'master',
+            language: undefined,
+            stars: 0,
+          },
+        ]);
+      });
     });
 
-    it('filters out projects with insufficient access level', async () => {
+    describe('when projects have insufficient access level', () => {
       const mockGitLabProjects = [
         {
           id: 1,
@@ -207,18 +217,28 @@ describe('GitlabProvider', () => {
         },
       ];
 
-      mockAxiosInstance.get.mockResolvedValue({
-        data: mockGitLabProjects,
+      let result: Awaited<
+        ReturnType<typeof gitlabProvider.listAvailableRepositories>
+      >;
+
+      beforeEach(async () => {
+        mockAxiosInstance.get.mockResolvedValue({
+          data: mockGitLabProjects,
+        });
+
+        result = await gitlabProvider.listAvailableRepositories();
       });
 
-      const result = await gitlabProvider.listAvailableRepositories();
+      it('filters out projects without write access', () => {
+        expect(result).toHaveLength(1);
+      });
 
-      // Only the maintainer-repo should be included since write access is mandatory
-      expect(result).toHaveLength(1);
-      expect(result[0].name).toBe('maintainer-repo');
+      it('includes only maintainer-level repositories', () => {
+        expect(result[0].name).toBe('maintainer-repo');
+      });
     });
 
-    it('correctly handles nested namespace paths', async () => {
+    describe('when handling nested namespace paths', () => {
       const mockGitLabProjects = [
         {
           id: 1,
@@ -241,21 +261,32 @@ describe('GitlabProvider', () => {
         },
       ];
 
-      mockAxiosInstance.get.mockResolvedValue({
-        data: mockGitLabProjects,
+      let result: Awaited<
+        ReturnType<typeof gitlabProvider.listAvailableRepositories>
+      >;
+
+      beforeEach(async () => {
+        mockAxiosInstance.get.mockResolvedValue({
+          data: mockGitLabProjects,
+        });
+
+        result = await gitlabProvider.listAvailableRepositories();
       });
 
-      const result = await gitlabProvider.listAvailableRepositories();
+      it('returns one repository', () => {
+        expect(result).toHaveLength(1);
+      });
 
-      expect(result).toHaveLength(1);
-      expect(result[0]).toEqual({
-        name: 'protomind', // Uses the path-friendly name from path_with_namespace
-        owner: 'promyze/sandbox', // Should extract the full namespace path
-        description: 'Nested project',
-        private: true,
-        defaultBranch: 'main',
-        language: undefined,
-        stars: 3,
+      it('correctly maps nested namespace path', () => {
+        expect(result[0]).toEqual({
+          name: 'protomind', // Uses the path-friendly name from path_with_namespace
+          owner: 'promyze/sandbox', // Should extract the full namespace path
+          description: 'Nested project',
+          private: true,
+          defaultBranch: 'main',
+          language: undefined,
+          stars: 3,
+        });
       });
     });
 
@@ -282,18 +313,25 @@ describe('GitlabProvider', () => {
 
   describe('checkBranchExists', () => {
     describe('when branch exists', () => {
-      it('returns true', async () => {
+      let result: boolean;
+
+      beforeEach(async () => {
         mockAxiosInstance.get.mockResolvedValue({
           data: { name: 'main' },
         });
 
-        const result = await gitlabProvider.checkBranchExists(
+        result = await gitlabProvider.checkBranchExists(
           'owner',
           'repo',
           'main',
         );
+      });
 
+      it('returns true', () => {
         expect(result).toBe(true);
+      });
+
+      it('calls API with encoded project path', () => {
         expect(mockAxiosInstance.get).toHaveBeenCalledWith(
           '/projects/owner%2Frepo/repository/branches/main',
         );

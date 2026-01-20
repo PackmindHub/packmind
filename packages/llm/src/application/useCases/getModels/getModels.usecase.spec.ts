@@ -112,16 +112,20 @@ describe('GetModelsUseCase', () => {
     });
 
     describe('when no models are available', () => {
-      beforeEach(() => {
-        mockGetModels.mockResolvedValue([]);
-      });
+      let result: Awaited<ReturnType<typeof useCase.executeForMembers>>;
 
-      it('returns success true with empty array', async () => {
-        const result = await useCase.executeForMembers(
+      beforeEach(async () => {
+        mockGetModels.mockResolvedValue([]);
+        result = await useCase.executeForMembers(
           createValidCommand({ provider: LLMProvider.ANTHROPIC }),
         );
+      });
 
+      it('returns success true', () => {
         expect(result.success).toBe(true);
+      });
+
+      it('returns empty array', () => {
         expect(result.models).toEqual([]);
       });
     });
@@ -148,7 +152,6 @@ describe('GetModelsUseCase', () => {
       it('includes error details', async () => {
         const result = await useCase.executeForMembers(createValidCommand());
 
-        expect(result.error).toBeDefined();
         expect(result.error?.message).toBe('Network error: Failed to fetch');
       });
 
@@ -193,39 +196,47 @@ describe('GetModelsUseCase', () => {
     });
 
     describe('when using Packmind provider', () => {
-      beforeEach(() => {
-        mockGetModels.mockResolvedValue([]);
-      });
+      let result: Awaited<ReturnType<typeof useCase.executeForMembers>>;
 
-      it('returns empty array', async () => {
-        const result = await useCase.executeForMembers(
+      beforeEach(async () => {
+        mockGetModels.mockResolvedValue([]);
+        result = await useCase.executeForMembers(
           createValidCommand({ provider: LLMProvider.PACKMIND }),
         );
+      });
 
+      it('returns success true', () => {
         expect(result.success).toBe(true);
+      });
+
+      it('returns empty array', () => {
         expect(result.models).toEqual([]);
       });
     });
 
     describe('when using Azure OpenAI provider', () => {
-      beforeEach(() => {
+      let result: Awaited<ReturnType<typeof useCase.executeForMembers>>;
+
+      beforeEach(async () => {
         mockGetModels.mockRejectedValue(
           new Error(
             'Method not implemented for this Provider. Azure OpenAI deployment names must be configured manually from Azure Portal.',
           ),
         );
-      });
-
-      it('returns error indicating method not implemented', async () => {
-        const result = await useCase.executeForMembers(
+        result = await useCase.executeForMembers(
           createValidCommand({
             provider: LLMProvider.AZURE_OPENAI,
             model: 'my-deployment',
             fastestModel: 'my-fast-deployment',
           }),
         );
+      });
 
+      it('returns success false', () => {
         expect(result.success).toBe(false);
+      });
+
+      it('includes error message indicating method not implemented', () => {
         expect(result.error?.message).toContain('Method not implemented');
       });
     });

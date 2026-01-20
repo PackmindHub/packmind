@@ -17,6 +17,8 @@ import {
   DeletePackagesBatchResponse,
   DeleteTargetCommand,
   DeleteTargetResponse,
+  DeployDefaultSkillsCommand,
+  DeployDefaultSkillsResponse,
   DeploymentOverview,
   Distribution,
   FindActiveStandardVersionsByTargetCommand,
@@ -86,6 +88,7 @@ import { UpdatePackageUsecase } from '../useCases/updatePackage/updatePackage.us
 import { CreateRenderModeConfigurationUseCase } from '../useCases/CreateRenderModeConfigurationUseCase';
 import { DeletePackagesBatchUsecase } from '../useCases/deletePackage/deletePackagesBatch.usecase';
 import { DeleteTargetUseCase } from '../useCases/DeleteTargetUseCase';
+import { DeployDefaultSkillsUseCase } from '../useCases/DeployDefaultSkillsUseCase';
 import { FindActiveStandardVersionsByTargetUseCase } from '../useCases/FindActiveStandardVersionsByTargetUseCase';
 import { GetDeploymentOverviewUseCase } from '../useCases/GetDeploymentOverviewUseCase';
 import { GetPackageByIdUsecase } from '../useCases/getPackageById/getPackageById.usecase';
@@ -155,6 +158,7 @@ export class DeploymentsAdapter
   private _addArtefactsToPackageUseCase!: AddArtefactsToPackageUsecase;
   private _notifyDistributionUseCase!: NotifyDistributionUseCase;
   private _removePackageFromTargetsUseCase!: RemovePackageFromTargetsUseCase;
+  private _deployDefaultSkillsUseCase!: DeployDefaultSkillsUseCase;
 
   constructor(
     private readonly deploymentsServices: DeploymentsServices,
@@ -410,6 +414,12 @@ export class DeploymentsAdapter
       this.codingAgentPort,
       this.deploymentsServices.getRenderModeConfigurationService(),
     );
+
+    this._deployDefaultSkillsUseCase = new DeployDefaultSkillsUseCase(
+      this.deploymentsServices.getRenderModeConfigurationService(),
+      this.codingAgentPort,
+      this.accountsPort,
+    );
   }
 
   /**
@@ -632,5 +642,11 @@ export class DeploymentsAdapter
     command: RemovePackageFromTargetsCommand,
   ): Promise<RemovePackageFromTargetsResponse> {
     return this._removePackageFromTargetsUseCase.execute(command);
+  }
+
+  async deployDefaultSkills(
+    command: DeployDefaultSkillsCommand,
+  ): Promise<DeployDefaultSkillsResponse> {
+    return this._deployDefaultSkillsUseCase.execute(command);
   }
 }

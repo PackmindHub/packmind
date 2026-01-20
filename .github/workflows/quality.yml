@@ -155,6 +155,13 @@ jobs:
           - packages/types
           - packages/accounts
           - packages/coding-agent
+          - packages/git
+          - packages/integration-tests
+          - packages/linter-ast
+          - packages/linter-execution
+          - packages/llm
+          - packages/logger
+          - packages/node-utils
 
     steps:
       - name: Checkout

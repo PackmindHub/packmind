@@ -13,11 +13,19 @@ class MockDeployer implements ICodingAgentDeployer {
     return { createOrUpdate: [], delete: [] };
   }
 
+  async deploySkills(): Promise<FileUpdates> {
+    return { createOrUpdate: [], delete: [] };
+  }
+
   async generateFileUpdatesForRecipes(): Promise<FileUpdates> {
     return { createOrUpdate: [], delete: [] };
   }
 
   async generateFileUpdatesForStandards(): Promise<FileUpdates> {
+    return { createOrUpdate: [], delete: [] };
+  }
+
+  async generateFileUpdatesForSkills(): Promise<FileUpdates> {
     return { createOrUpdate: [], delete: [] };
   }
 

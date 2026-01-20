@@ -1,4 +1,3 @@
-import { ICodingAgentDeployer } from '@packmind/coding-agent';
 import { LogLevel, PackmindLogger } from '@packmind/logger';
 import {
   AbstractMemberUseCase,
@@ -307,91 +306,80 @@ export class PullContentUseCase extends AbstractMemberUseCase<
         delete: [],
       };
 
-      // Get the deployer registry
-      const deployerRegistry = this.codingAgentPort.getDeployerRegistry();
+      // Deploy artifacts for all coding agents using the unified method
+      this.logger.info('Deploying artifacts for coding agents', {
+        codingAgents,
+      });
 
-      // For each coding agent, generate file updates
-      for (const codingAgent of codingAgents) {
-        this.logger.info('Processing coding agent', {
-          codingAgent,
+      const artifactFileUpdates =
+        await this.codingAgentPort.deployArtifactsForAgents({
+          recipeVersions,
+          standardVersions,
+          skillVersions,
+          codingAgents,
         });
 
-        const deployer = deployerRegistry.getDeployer(
-          codingAgent,
-        ) as ICodingAgentDeployer;
+      this.logger.info('Generated artifact file updates', {
+        createOrUpdateCount: artifactFileUpdates.createOrUpdate.length,
+        deleteCount: artifactFileUpdates.delete.length,
+      });
 
-        // Deploy recipes, standards, and skills together using deployArtifacts
-        // This ensures all sections are included in the same file
-        const artifactFileUpdates = await deployer.deployArtifacts(
+      this.mergeFileUpdates(mergedFileUpdates, artifactFileUpdates);
+
+      // Generate deletion paths for removed artifacts (excluding shared ones)
+      if (
+        removedRecipeVersions.length > 0 ||
+        removedStandardVersions.length > 0 ||
+        removedSkillVersions.length > 0
+      ) {
+        const {
+          recipeVersionsToDelete,
+          standardVersionsToDelete,
+          skillVersionsToDelete,
+        } = this.filterSharedArtifacts(
+          removedRecipeVersions,
+          removedStandardVersions,
+          removedSkillVersions,
           recipeVersions,
           standardVersions,
           skillVersions,
         );
 
-        this.logger.info('Generated artifact file updates', {
-          codingAgent,
-          createOrUpdateCount: artifactFileUpdates.createOrUpdate.length,
-          deleteCount: artifactFileUpdates.delete.length,
+        this.logger.info('Filtered shared artifacts from deletion', {
+          originalRemovedRecipes: removedRecipeVersions.length,
+          actualRecipesToDelete: recipeVersionsToDelete.length,
+          originalRemovedStandards: removedStandardVersions.length,
+          actualStandardsToDelete: standardVersionsToDelete.length,
+          originalRemovedSkills: removedSkillVersions.length,
+          actualSkillsToDelete: skillVersionsToDelete.length,
         });
 
-        this.mergeFileUpdates(mergedFileUpdates, artifactFileUpdates);
-
-        // Generate deletion paths for removed artifacts (excluding shared ones)
         if (
-          removedRecipeVersions.length > 0 ||
-          removedStandardVersions.length > 0 ||
-          removedSkillVersions.length > 0
+          recipeVersionsToDelete.length > 0 ||
+          standardVersionsToDelete.length > 0 ||
+          skillVersionsToDelete.length > 0
         ) {
-          const {
-            recipeVersionsToDelete,
-            standardVersionsToDelete,
-            skillVersionsToDelete,
-          } = this.filterSharedArtifacts(
-            removedRecipeVersions,
-            removedStandardVersions,
-            removedSkillVersions,
-            recipeVersions,
-            standardVersions,
-            skillVersions,
-          );
-
-          this.logger.info('Filtered shared artifacts from deletion', {
-            codingAgent,
-            originalRemovedRecipes: removedRecipeVersions.length,
-            actualRecipesToDelete: recipeVersionsToDelete.length,
-            originalRemovedStandards: removedStandardVersions.length,
-            actualStandardsToDelete: standardVersionsToDelete.length,
-            originalRemovedSkills: removedSkillVersions.length,
-            actualSkillsToDelete: skillVersionsToDelete.length,
-          });
-
-          if (
-            recipeVersionsToDelete.length > 0 ||
-            standardVersionsToDelete.length > 0 ||
-            skillVersionsToDelete.length > 0
-          ) {
-            const removalFileUpdates =
-              await deployer.generateRemovalFileUpdates(
-                {
-                  recipeVersions: recipeVersionsToDelete,
-                  standardVersions: standardVersionsToDelete,
-                  skillVersions: skillVersionsToDelete,
-                },
-                {
-                  recipeVersions: recipeVersions,
-                  standardVersions: standardVersions,
-                  skillVersions: skillVersions,
-                },
-              );
-
-            this.logger.info('Generated removal file updates', {
-              codingAgent,
-              createOrUpdateCount: removalFileUpdates.createOrUpdate.length,
-              deleteCount: removalFileUpdates.delete.length,
+          const removalFileUpdates =
+            await this.codingAgentPort.generateRemovalUpdatesForAgents({
+              removed: {
+                recipeVersions: recipeVersionsToDelete,
+                standardVersions: standardVersionsToDelete,
+                skillVersions: skillVersionsToDelete,
+              },
+              installed: {
+                recipeVersions,
+                standardVersions,
+                skillVersions,
+              },
+              codingAgents,
             });
 
-            this.mergeFileUpdates(mergedFileUpdates, removalFileUpdates);
-          }
+          this.logger.info('Generated removal file updates', {
+            createOrUpdateCount: removalFileUpdates.createOrUpdate.length,
+            deleteCount: removalFileUpdates.delete.length,
+          });
+
+          this.mergeFileUpdates(mergedFileUpdates, removalFileUpdates);
         }
       }
 

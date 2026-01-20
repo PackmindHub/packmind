@@ -750,6 +750,91 @@ export class GitlabRepository implements IGitRepo {
     }
   }
 
+  async listFilesInDirectory(
+    path: string,
+    branch: string,
+  ): Promise<{ path: string }[]> {
+    try {
+      // Normalize path to ensure it ends with /
+      const normalizedPath = path.endsWith('/') ? path : `${path}/`;
+
+      // Fetch the repository tree recursively
+      const allTreeItems: Array<{ path: string; type: string }> = [];
+      let nextPage: string | null = null;
+      let pageNumber = 1;
+      const perPage = 100;
+
+      do {
+        const url =
+          nextPage || `/projects/${this.encodedProjectPath}/repository/tree`;
+
+        const params: Record<string, string | number> = {
+          ref: branch,
+          recursive: 'true',
+          per_page: perPage,
+        };
+
+        if (!nextPage) {
+          params['page'] = pageNumber;
+        }
+
+        const response = await this.axiosInstance.get(url, {
+          params: nextPage ? undefined : params,
+        });
+
+        if (Array.isArray(response.data)) {
+          allTreeItems.push(...response.data);
+        }
+
+        // Check for pagination
+        const headers = response.headers as Record<string, string>;
+        nextPage = null;
+
+        const xNextPage = headers['x-next-page'];
+        if (xNextPage && xNextPage.trim() !== '') {
+          nextPage = `/projects/${this.encodedProjectPath}/repository/tree?ref=${branch}&recursive=true&per_page=${perPage}&page=${xNextPage}`;
+        } else {
+          const linkHeader = headers['link'];
+          if (linkHeader) {
+            const linkMatch = linkHeader.match(/<([^>]+)>;\s*rel="next"/);
+            if (linkMatch) {
+              nextPage = linkMatch[1];
+            }
+          }
+        }
+
+        pageNumber++;
+      } while (nextPage);
+
+      const files = allTreeItems
+        .filter(
+          (item) =>
+            item.type === 'blob' && item.path.startsWith(normalizedPath),
+        )
+        .map((item) => ({ path: item.path }));
+
+      this.logger.debug('Listed files in directory', {
+        path,
+        branch,
+        fileCount: files.length,
+      });
+
+      return files;
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      this.logger.error('Failed to list files in directory', {
+        path,
+        owner: this.options.owner,
+        repo: this.options.repo,
+        branch,
+        error: errorMessage,
+      });
+      // Return empty array if directory doesn't exist
+      return [];
+    }
+  }
+
   async handlePushHook(
     payload: unknown,
     fileMatcher: RegExp,

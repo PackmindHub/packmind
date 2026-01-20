@@ -64,7 +64,9 @@ describe('StandardUpdatedEvent integration', () => {
   });
 
   describe('when a standard is updated', () => {
-    it('emits StandardUpdatedEvent with correct payload', async () => {
+    let payload: StandardUpdatedPayload;
+
+    beforeEach(async () => {
       await testApp.standardsHexa.getAdapter().updateStandard({
         standardId: standard.id,
         name: 'Updated Standard Name',
@@ -76,14 +78,30 @@ describe('StandardUpdatedEvent integration', () => {
         scope: 'typescript',
       });
 
-      expect(stubAdapter.onStandardUpdated).toHaveBeenCalledTimes(1);
-      const payload: StandardUpdatedPayload =
-        stubAdapter.onStandardUpdated.mock.calls[0][0];
+      payload = stubAdapter.onStandardUpdated.mock.calls[0][0];
+    });
 
+    it('emits StandardUpdatedEvent exactly once', () => {
+      expect(stubAdapter.onStandardUpdated).toHaveBeenCalledTimes(1);
+    });
+
+    it('includes the correct standardId in the payload', () => {
       expect(payload.standardId).toBe(standard.id);
+    });
+
+    it('includes the correct spaceId in the payload', () => {
       expect(payload.spaceId).toBe(dataFactory.space.id);
+    });
+
+    it('includes the correct organizationId in the payload', () => {
       expect(payload.organizationId).toBe(dataFactory.organization.id);
+    });
+
+    it('includes the correct userId in the payload', () => {
       expect(payload.userId).toBe(dataFactory.user.id);
+    });
+
+    it('increments the version number to 2', () => {
       expect(payload.newVersion).toBe(2);
     });
   });

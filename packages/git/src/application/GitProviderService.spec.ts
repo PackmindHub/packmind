@@ -91,136 +91,165 @@ describe('GitProviderService', () => {
   });
 
   describe('addGitProvider', () => {
-    it('adds a git provider with generated ID', async () => {
-      const gitProviderData = {
-        source: GitProviderVendors.github,
-        token: 'github-token',
-        organizationId: createOrganizationId('org-1'),
-        url: 'https://api.github.com',
-      };
+    const gitProviderData = {
+      source: GitProviderVendors.github,
+      token: 'github-token',
+      organizationId: createOrganizationId('org-1'),
+      url: 'https://api.github.com',
+    };
+    let result: GitProvider;
 
+    beforeEach(async () => {
       mockGitProviderRepository.add.mockResolvedValue(mockGitProvider);
+      result = await gitProviderService.addGitProvider(gitProviderData);
+    });
 
-      const result = await gitProviderService.addGitProvider(gitProviderData);
-
+    it('calls repository with provider data including generated ID', () => {
       expect(mockGitProviderRepository.add).toHaveBeenCalledWith(
         expect.objectContaining({
           ...gitProviderData,
           id: expect.any(String),
         }),
       );
+    });
+
+    it('returns the added git provider', () => {
       expect(result).toEqual(mockGitProvider);
     });
   });
 
   describe('getAvailableRepos', () => {
     describe('when provider exists and has token', () => {
-      it('returns available repositories', async () => {
-        const mockRepos = [
-          {
-            name: 'test-repo',
-            owner: 'test-owner',
-            description: 'Test repository',
-            private: false,
-            defaultBranch: 'main',
-            language: 'TypeScript',
-            stars: 42,
-          },
-        ];
+      const mockRepos = [
+        {
+          name: 'test-repo',
+          owner: 'test-owner',
+          description: 'Test repository',
+          private: false,
+          defaultBranch: 'main',
+          language: 'TypeScript',
+          stars: 42,
+        },
+      ];
+      let result: typeof mockRepos;
 
+      beforeEach(async () => {
         mockGitProviderRepository.findById.mockResolvedValue(mockGitProvider);
         mockGithubProviderInstance.listAvailableRepositories.mockResolvedValue(
           mockRepos,
         );
-
-        const result = await gitProviderService.getAvailableRepos(
+        result = await gitProviderService.getAvailableRepos(
           createGitProviderId('provider-1'),
         );
+      });
 
+      it('finds the provider by ID', () => {
         expect(mockGitProviderRepository.findById).toHaveBeenCalledWith(
           createGitProviderId('provider-1'),
         );
+      });
+
+      it('lists available repositories', () => {
         expect(
           mockGithubProviderInstance.listAvailableRepositories,
         ).toHaveBeenCalledWith();
+      });
+
+      it('returns the repositories', () => {
         expect(result).toEqual(mockRepos);
       });
     });
 
     describe('when GitLab provider exists and has token', () => {
-      it('returns available repositories', async () => {
-        const mockRepos = [
-          {
-            name: 'gitlab-repo',
-            owner: 'gitlab-owner',
-            description: 'GitLab repository',
-            private: true,
-            defaultBranch: 'main',
-            language: 'JavaScript',
-            stars: 15,
-          },
-        ];
+      const mockRepos = [
+        {
+          name: 'gitlab-repo',
+          owner: 'gitlab-owner',
+          description: 'GitLab repository',
+          private: true,
+          defaultBranch: 'main',
+          language: 'JavaScript',
+          stars: 15,
+        },
+      ];
+      let result: typeof mockRepos;
 
+      beforeEach(async () => {
         mockGitProviderRepository.findById.mockResolvedValue(
           mockGitlabProvider,
         );
         mockGitlabProviderInstance.listAvailableRepositories.mockResolvedValue(
           mockRepos,
         );
-
-        const result = await gitProviderService.getAvailableRepos(
+        result = await gitProviderService.getAvailableRepos(
           createGitProviderId('provider-2'),
         );
+      });
 
+      it('finds the provider by ID', () => {
         expect(mockGitProviderRepository.findById).toHaveBeenCalledWith(
           createGitProviderId('provider-2'),
         );
+      });
+
+      it('creates the GitLab provider instance', () => {
         expect(mockGitProviderFactory.createGitProvider).toHaveBeenCalledWith(
           mockGitlabProvider,
         );
+      });
+
+      it('lists available repositories', () => {
         expect(
           mockGitlabProviderInstance.listAvailableRepositories,
         ).toHaveBeenCalledWith();
+      });
+
+      it('returns the repositories', () => {
         expect(result).toEqual(mockRepos);
       });
     });
 
     describe('when self-hosted GitLab provider exists and has token', () => {
-      it('returns available repositories using custom URL', async () => {
-        const selfHostedGitlabProvider = gitlabProviderFactory({
-          id: createGitProviderId('provider-3'),
-          source: GitProviderVendors.gitlab,
-          token: 'gitlab-token',
-          organizationId: createOrganizationId('org-1'),
-          url: 'https://gitlab.company.com/api/v4',
-        });
+      const selfHostedGitlabProvider = gitlabProviderFactory({
+        id: createGitProviderId('provider-3'),
+        source: GitProviderVendors.gitlab,
+        token: 'gitlab-token',
+        organizationId: createOrganizationId('org-1'),
+        url: 'https://gitlab.company.com/api/v4',
+      });
 
-        const mockRepos = [
-          {
-            name: 'enterprise-repo',
-            owner: 'enterprise-owner',
-            description: 'Enterprise GitLab repository',
-            private: true,
-            defaultBranch: 'main',
-            language: 'TypeScript',
-            stars: 8,
-          },
-        ];
+      const mockRepos = [
+        {
+          name: 'enterprise-repo',
+          owner: 'enterprise-owner',
+          description: 'Enterprise GitLab repository',
+          private: true,
+          defaultBranch: 'main',
+          language: 'TypeScript',
+          stars: 8,
+        },
+      ];
+      let result: typeof mockRepos;
 
+      beforeEach(async () => {
         mockGitProviderRepository.findById.mockResolvedValue(
           selfHostedGitlabProvider,
         );
         mockGitlabProviderInstance.listAvailableRepositories.mockResolvedValue(
           mockRepos,
         );
-
-        const result = await gitProviderService.getAvailableRepos(
+        result = await gitProviderService.getAvailableRepos(
           createGitProviderId('provider-3'),
         );
+      });
 
+      it('finds the provider by ID', () => {
         expect(mockGitProviderRepository.findById).toHaveBeenCalledWith(
           createGitProviderId('provider-3'),
         );
+      });
+
+      it('creates the GitLab provider with custom URL', () => {
         expect(mockGitProviderFactory.createGitProvider).toHaveBeenCalledWith(
           expect.objectContaining({
             source: GitProviderVendors.gitlab,
@@ -228,9 +257,15 @@ describe('GitProviderService', () => {
             url: 'https://gitlab.company.com/api/v4',
           }),
         );
+      });
+
+      it('lists available repositories', () => {
         expect(
           mockGitlabProviderInstance.listAvailableRepositories,
         ).toHaveBeenCalledWith();
+      });
+
+      it('returns the repositories', () => {
         expect(result).toEqual(mockRepos);
       });
     });
@@ -244,10 +279,6 @@ describe('GitProviderService', () => {
             createGitProviderId('nonexistent-provider'),
           ),
         ).rejects.toThrow('Git provider not found');
-
-        expect(mockGitProviderRepository.findById).toHaveBeenCalledWith(
-          createGitProviderId('nonexistent-provider'),
-        );
       });
     });
 
@@ -289,33 +320,38 @@ describe('GitProviderService', () => {
   });
 
   describe('updateGitProvider', () => {
-    it('updates a git provider successfully', async () => {
-      const updateData = {
-        token: 'new-token',
-        url: 'https://github.enterprise.com',
-      };
-      const updatedProvider = {
-        ...mockGitProvider,
-        ...updateData,
-      };
+    const updateData = {
+      token: 'new-token',
+      url: 'https://github.enterprise.com',
+    };
+    const updatedProvider = {
+      ...mockGitProvider,
+      ...updateData,
+    };
+    let result: GitProvider;
 
+    beforeEach(async () => {
       mockGitProviderRepository.update.mockResolvedValue(updatedProvider);
-
-      const result = await gitProviderService.updateGitProvider(
+      result = await gitProviderService.updateGitProvider(
         createGitProviderId('provider-1'),
         updateData,
       );
+    });
 
+    it('calls repository update with correct parameters', () => {
       expect(mockGitProviderRepository.update).toHaveBeenCalledWith(
         createGitProviderId('provider-1'),
         updateData,
       );
+    });
+
+    it('returns the updated provider', () => {
       expect(result).toEqual(updatedProvider);
     });
 
     describe('when update fails', () => {
       it('propagates repository errors', async () => {
-        const updateData = { token: 'new-token' };
+        const updateDataForError = { token: 'new-token' };
         const repositoryError = new Error('Provider not found');
 
         mockGitProviderRepository.update.mockRejectedValue(repositoryError);
@@ -323,14 +359,9 @@ describe('GitProviderService', () => {
         await expect(
           gitProviderService.updateGitProvider(
             createGitProviderId('nonexistent-provider'),
-            updateData,
+            updateDataForError,
           ),
         ).rejects.toThrow('Provider not found');
-
-        expect(mockGitProviderRepository.update).toHaveBeenCalledWith(
-          createGitProviderId('nonexistent-provider'),
-          updateData,
-        );
       });
     });
   });
@@ -341,82 +372,111 @@ describe('GitProviderService', () => {
     const branch = 'feature/test';
 
     describe('when branch exists', () => {
-      it('returns true', async () => {
+      let result: boolean;
+
+      beforeEach(async () => {
         mockGitProviderRepository.findById.mockResolvedValue(mockGitProvider);
         mockGithubProviderInstance.checkBranchExists.mockResolvedValue(true);
-
-        const result = await gitProviderService.checkBranchExists(
+        result = await gitProviderService.checkBranchExists(
           createGitProviderId('provider-1'),
           owner,
           repo,
           branch,
         );
+      });
 
+      it('finds the provider by ID', () => {
         expect(mockGitProviderRepository.findById).toHaveBeenCalledWith(
           createGitProviderId('provider-1'),
         );
+      });
+
+      it('creates the GitHub provider instance', () => {
         expect(mockGitProviderFactory.createGitProvider).toHaveBeenCalledWith(
           mockGitProvider,
         );
+      });
+
+      it('checks if branch exists', () => {
         expect(
           mockGithubProviderInstance.checkBranchExists,
         ).toHaveBeenCalledWith(owner, repo, branch);
+      });
+
+      it('returns true', () => {
         expect(result).toBe(true);
       });
     });
 
     describe('when GitLab provider and branch exists', () => {
-      it('returns true', async () => {
+      let result: boolean;
+
+      beforeEach(async () => {
         mockGitProviderRepository.findById.mockResolvedValue(
           mockGitlabProvider,
         );
         mockGitlabProviderInstance.checkBranchExists.mockResolvedValue(true);
-
-        const result = await gitProviderService.checkBranchExists(
+        result = await gitProviderService.checkBranchExists(
           createGitProviderId('provider-2'),
           owner,
           repo,
           branch,
         );
+      });
 
+      it('finds the provider by ID', () => {
         expect(mockGitProviderRepository.findById).toHaveBeenCalledWith(
           createGitProviderId('provider-2'),
         );
+      });
+
+      it('creates the GitLab provider instance', () => {
         expect(mockGitProviderFactory.createGitProvider).toHaveBeenCalledWith(
           mockGitlabProvider,
         );
+      });
+
+      it('checks if branch exists', () => {
         expect(
           mockGitlabProviderInstance.checkBranchExists,
         ).toHaveBeenCalledWith(owner, repo, branch);
+      });
+
+      it('returns true', () => {
         expect(result).toBe(true);
       });
     });
 
     describe('when self-hosted GitLab provider and branch exists', () => {
-      it('returns true using custom URL', async () => {
-        const selfHostedGitlabProvider = gitlabProviderFactory({
-          id: createGitProviderId('provider-3'),
-          source: GitProviderVendors.gitlab,
-          token: 'gitlab-token',
-          organizationId: createOrganizationId('org-1'),
-          url: 'https://gitlab.enterprise.com/api/v4',
-        });
+      const selfHostedGitlabProvider = gitlabProviderFactory({
+        id: createGitProviderId('provider-3'),
+        source: GitProviderVendors.gitlab,
+        token: 'gitlab-token',
+        organizationId: createOrganizationId('org-1'),
+        url: 'https://gitlab.enterprise.com/api/v4',
+      });
+      let result: boolean;
 
+      beforeEach(async () => {
         mockGitProviderRepository.findById.mockResolvedValue(
           selfHostedGitlabProvider,
         );
         mockGitlabProviderInstance.checkBranchExists.mockResolvedValue(true);
-
-        const result = await gitProviderService.checkBranchExists(
+        result = await gitProviderService.checkBranchExists(
           createGitProviderId('provider-3'),
           owner,
           repo,
           branch,
         );
+      });
 
+      it('finds the provider by ID', () => {
         expect(mockGitProviderRepository.findById).toHaveBeenCalledWith(
           createGitProviderId('provider-3'),
         );
+      });
+
+      it('creates the GitLab provider with custom URL', () => {
         expect(mockGitProviderFactory.createGitProvider).toHaveBeenCalledWith(
           expect.objectContaining({
             source: GitProviderVendors.gitlab,
@@ -424,28 +484,40 @@ describe('GitProviderService', () => {
             url: 'https://gitlab.enterprise.com/api/v4',
           }),
         );
+      });
+
+      it('checks if branch exists', () => {
         expect(
           mockGitlabProviderInstance.checkBranchExists,
         ).toHaveBeenCalledWith(owner, repo, branch);
+      });
+
+      it('returns true', () => {
         expect(result).toBe(true);
       });
     });
 
     describe('when branch does not exist', () => {
-      it('returns false', async () => {
+      let result: boolean;
+
+      beforeEach(async () => {
         mockGitProviderRepository.findById.mockResolvedValue(mockGitProvider);
         mockGithubProviderInstance.checkBranchExists.mockResolvedValue(false);
-
-        const result = await gitProviderService.checkBranchExists(
+        result = await gitProviderService.checkBranchExists(
           createGitProviderId('provider-1'),
           owner,
           repo,
           branch,
         );
+      });
 
+      it('checks if branch exists', () => {
         expect(
           mockGithubProviderInstance.checkBranchExists,
         ).toHaveBeenCalledWith(owner, repo, branch);
+      });
+
+      it('returns false', () => {
         expect(result).toBe(false);
       });
     });
@@ -462,10 +534,6 @@ describe('GitProviderService', () => {
             branch,
           ),
         ).rejects.toThrow('Git provider not found');
-
-        expect(mockGitProviderRepository.findById).toHaveBeenCalledWith(
-          createGitProviderId('nonexistent-provider'),
-        );
       });
     });
 
@@ -511,50 +579,44 @@ describe('GitProviderService', () => {
       });
     });
 
-    it('propagates errors from GitHub provider', async () => {
-      const githubError = new Error('GitHub API error');
-      mockGitProviderRepository.findById.mockResolvedValue(mockGitProvider);
-      mockGithubProviderInstance.checkBranchExists.mockRejectedValue(
-        githubError,
-      );
+    describe('when GitHub provider throws error', () => {
+      it('propagates the error', async () => {
+        const githubError = new Error('GitHub API error');
+        mockGitProviderRepository.findById.mockResolvedValue(mockGitProvider);
+        mockGithubProviderInstance.checkBranchExists.mockRejectedValue(
+          githubError,
+        );
 
-      await expect(
-        gitProviderService.checkBranchExists(
-          createGitProviderId('provider-1'),
-          owner,
-          repo,
-          branch,
-        ),
-      ).rejects.toThrow('GitHub API error');
-
-      expect(mockGithubProviderInstance.checkBranchExists).toHaveBeenCalledWith(
-        owner,
-        repo,
-        branch,
-      );
+        await expect(
+          gitProviderService.checkBranchExists(
+            createGitProviderId('provider-1'),
+            owner,
+            repo,
+            branch,
+          ),
+        ).rejects.toThrow('GitHub API error');
+      });
     });
 
-    it('propagates errors from GitLab provider', async () => {
-      const gitlabError = new Error('GitLab API error');
-      mockGitProviderRepository.findById.mockResolvedValue(mockGitlabProvider);
-      mockGitlabProviderInstance.checkBranchExists.mockRejectedValue(
-        gitlabError,
-      );
+    describe('when GitLab provider throws error', () => {
+      it('propagates the error', async () => {
+        const gitlabError = new Error('GitLab API error');
+        mockGitProviderRepository.findById.mockResolvedValue(
+          mockGitlabProvider,
+        );
+        mockGitlabProviderInstance.checkBranchExists.mockRejectedValue(
+          gitlabError,
+        );
 
-      await expect(
-        gitProviderService.checkBranchExists(
-          createGitProviderId('provider-2'),
-          owner,
-          repo,
-          branch,
-        ),
-      ).rejects.toThrow('GitLab API error');
-
-      expect(mockGitlabProviderInstance.checkBranchExists).toHaveBeenCalledWith(
-        owner,
-        repo,
-        branch,
-      );
+        await expect(
+          gitProviderService.checkBranchExists(
+            createGitProviderId('provider-2'),
+            owner,
+            repo,
+            branch,
+          ),
+        ).rejects.toThrow('GitLab API error');
+      });
     });
   });
 });

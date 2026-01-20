@@ -7,6 +7,7 @@ import { OrganizationDeploymentsModule } from './deployments/deployments.module'
 import { OrganizationGitModule } from './git/git.module';
 import { OrganizationLlmModule } from './llm/llm.module';
 import { OrganizationMcpModule } from './mcp/mcp.module';
+import { OrganizationSkillsModule } from './skills/skills.module';
 import { PackmindLogger, LogLevel } from '@packmind/logger';
 
 /**
@@ -36,6 +37,7 @@ import { PackmindLogger, LogLevel } from '@packmind/logger';
     OrganizationGitModule,
     OrganizationLlmModule,
     OrganizationMcpModule,
+    OrganizationSkillsModule,
   ],
   controllers: [OrganizationsController],
   providers: [

@@ -58,7 +58,7 @@ describe('AddGitProviderUseCase', () => {
     );
   });
 
-  it('adds git provider with organization association', async () => {
+  describe('when adding git provider with organization association', () => {
     const input = {
       gitProvider: {
         source: GitProviderVendors.github,
@@ -69,66 +69,101 @@ describe('AddGitProviderUseCase', () => {
       userId: adminUser.id,
     };
 
-    const expectedResult = gitProviderFactory({
-      id: createGitProviderId('provider-123'),
-      ...input.gitProvider,
-      organizationId: input.organizationId,
+    let result: Awaited<ReturnType<typeof useCase.execute>>;
+    let expectedResult: ReturnType<typeof gitProviderFactory>;
+
+    beforeEach(async () => {
+      expectedResult = gitProviderFactory({
+        id: createGitProviderId('provider-123'),
+        ...input.gitProvider,
+        organizationId: input.organizationId,
+      });
+
+      mockGitProviderService.addGitProvider.mockResolvedValue(expectedResult);
+
+      result = await useCase.execute(input);
     });
 
-    mockGitProviderService.addGitProvider.mockResolvedValue(expectedResult);
-
-    const result = await useCase.execute(input);
-
-    expect(result).toEqual(expectedResult);
-    expect(mockGitProviderService.addGitProvider).toHaveBeenCalledWith({
-      ...input.gitProvider,
-      organizationId: input.organizationId,
+    it('returns the created git provider', () => {
+      expect(result).toEqual(expectedResult);
     });
-    expect(accountsAdapter.getUserById).toHaveBeenCalledWith(input.userId);
+
+    it('calls addGitProvider with correct parameters', () => {
+      expect(mockGitProviderService.addGitProvider).toHaveBeenCalledWith({
+        ...input.gitProvider,
+        organizationId: input.organizationId,
+      });
+    });
+
+    it('retrieves user by id', () => {
+      expect(accountsAdapter.getUserById).toHaveBeenCalledWith(input.userId);
+    });
   });
 
   describe('when git provider token is missing', () => {
-    it('throws error', async () => {
-      const input = {
-        gitProvider: {
-          source: GitProviderVendors.github,
-          url: 'https://github.com',
-          token: '',
-        },
-        organizationId: organizationId,
-        userId: adminUser.id,
-      };
+    const input = {
+      gitProvider: {
+        source: GitProviderVendors.github,
+        url: 'https://github.com',
+        token: '',
+      },
+      organizationId: organizationId,
+      userId: adminUser.id,
+    };
 
-      await expect(useCase.execute(input)).rejects.toThrow(
-        'Git provider token is required',
-      );
+    let thrownError: Error | null = null;
 
+    beforeEach(async () => {
+      thrownError = null;
+      try {
+        await useCase.execute(input);
+      } catch (error) {
+        thrownError = error as Error;
+      }
+    });
+
+    it('throws error', () => {
+      expect(thrownError?.message).toBe('Git provider token is required');
+    });
+
+    it('does not call addGitProvider', () => {
       expect(mockGitProviderService.addGitProvider).not.toHaveBeenCalled();
     });
   });
 
   describe('when git provider source is missing', () => {
-    it('throws error', async () => {
-      const input = {
-        gitProvider: {
-          source: undefined as unknown as GitProviderVendor,
-          url: 'https://github.com',
-          token: 'test-token',
-        },
-        organizationId: organizationId,
-        userId: adminUser.id,
-      };
+    const input = {
+      gitProvider: {
+        source: undefined as unknown as GitProviderVendor,
+        url: 'https://github.com',
+        token: 'test-token',
+      },
+      organizationId: organizationId,
+      userId: adminUser.id,
+    };
 
-      await expect(useCase.execute(input)).rejects.toThrow(
-        'Git provider source is required',
-      );
+    let thrownError: Error | null = null;
 
+    beforeEach(async () => {
+      thrownError = null;
+      try {
+        await useCase.execute(input);
+      } catch (error) {
+        thrownError = error as Error;
+      }
+    });
+
+    it('throws error', () => {
+      expect(thrownError?.message).toBe('Git provider source is required');
+    });
+
+    it('does not call addGitProvider', () => {
       expect(mockGitProviderService.addGitProvider).not.toHaveBeenCalled();
     });
   });
 
   describe('allowTokenlessProvider flag', () => {
-    it('allows tokenless provider if allowTokenlessProvider is true', async () => {
+    describe('when allowTokenlessProvider is true', () => {
       const input = {
         gitProvider: {
           source: GitProviderVendors.github,
@@ -140,21 +175,31 @@ describe('AddGitProviderUseCase', () => {
         allowTokenlessProvider: true,
       };
 
-      const expectedResult = gitProviderFactory({
-        id: createGitProviderId('provider-123'),
-        ...input.gitProvider,
-        organizationId: input.organizationId,
+      let result: Awaited<ReturnType<typeof useCase.execute>>;
+      let expectedResult: ReturnType<typeof gitProviderFactory>;
+
+      beforeEach(async () => {
+        expectedResult = gitProviderFactory({
+          id: createGitProviderId('provider-123'),
+          ...input.gitProvider,
+          organizationId: input.organizationId,
+        });
+
+        mockGitProviderService.addGitProvider.mockResolvedValue(expectedResult);
+
+        result = await useCase.execute(input);
       });
 
-      mockGitProviderService.addGitProvider.mockResolvedValue(expectedResult);
+      it('returns the created git provider', () => {
+        expect(result).toEqual(expectedResult);
+      });
 
-      const result = await useCase.execute(input);
-
-      expect(result).toEqual(expectedResult);
-      expect(mockGitProviderService.addGitProvider).toHaveBeenCalled();
+      it('calls addGitProvider', () => {
+        expect(mockGitProviderService.addGitProvider).toHaveBeenCalled();
+      });
     });
 
-    it('rejects tokenless provider if allowTokenlessProvider is false', async () => {
+    describe('when allowTokenlessProvider is false', () => {
       const input = {
         gitProvider: {
           source: GitProviderVendors.github,
@@ -166,14 +211,27 @@ describe('AddGitProviderUseCase', () => {
         allowTokenlessProvider: false,
       };
 
-      await expect(useCase.execute(input)).rejects.toThrow(
-        'Git provider token is required',
-      );
+      let thrownError: Error | null = null;
 
-      expect(mockGitProviderService.addGitProvider).not.toHaveBeenCalled();
+      beforeEach(async () => {
+        thrownError = null;
+        try {
+          await useCase.execute(input);
+        } catch (error) {
+          thrownError = error as Error;
+        }
+      });
+
+      it('throws error', () => {
+        expect(thrownError?.message).toBe('Git provider token is required');
+      });
+
+      it('does not call addGitProvider', () => {
+        expect(mockGitProviderService.addGitProvider).not.toHaveBeenCalled();
+      });
     });
 
-    it('rejects tokenless provider if allowTokenlessProvider is not provided', async () => {
+    describe('when allowTokenlessProvider is not provided', () => {
       const input = {
         gitProvider: {
           source: GitProviderVendors.github,
@@ -184,11 +242,24 @@ describe('AddGitProviderUseCase', () => {
         userId: adminUser.id,
       };
 
-      await expect(useCase.execute(input)).rejects.toThrow(
-        'Git provider token is required',
-      );
+      let thrownError: Error | null = null;
 
-      expect(mockGitProviderService.addGitProvider).not.toHaveBeenCalled();
+      beforeEach(async () => {
+        thrownError = null;
+        try {
+          await useCase.execute(input);
+        } catch (error) {
+          thrownError = error as Error;
+        }
+      });
+
+      it('throws error', () => {
+        expect(thrownError?.message).toBe('Git provider token is required');
+      });
+
+      it('does not call addGitProvider', () => {
+        expect(mockGitProviderService.addGitProvider).not.toHaveBeenCalled();
+      });
     });
   });
 });

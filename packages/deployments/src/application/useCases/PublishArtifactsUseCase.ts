@@ -154,13 +154,32 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
           previousRecipeVersionsFromPackages,
           recipeVersions, // Compare against new versions from command, not combined
         );
+
         const removedStandardVersions = this.computeRemovedStandardVersions(
           previousStandardVersionsFromPackages,
           standardVersions, // Compare against new versions from command, not combined
         );
+
         const removedSkillVersions = this.computeRemovedSkillVersions(
           previousSkillVersionsFromPackages,
           skillVersions, // Compare against new versions from command, not combined
+        );
+
+        const renamedSkillVersions = this.computeRenamedSkillVersions(
+          previousSkillVersionsFromPackages,
+          skillVersions,
+        );
+
+        const skillVersionsToRemove = [
+          ...removedSkillVersions,
+          ...renamedSkillVersions,
+        ];
+
+        const removedSkillIds = new Set(
+          removedSkillVersions.map((sv) => sv.skillId),
+        );
+        const filteredSkillVersions = allSkillVersions.filter(
+          (sv) => !removedSkillIds.has(sv.skillId),
         );
 
         // Load rules for all standard versions that don't have them populated
@@ -186,13 +205,14 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
         this.logger.info('Combined artifact versions', {
           totalRecipes: allRecipeVersions.length,
           totalStandards: standardVersionsWithRules.length,
-          totalSkills: allSkillVersions.length,
+          totalSkills: filteredSkillVersions.length,
           newRecipes: recipeVersions.length,
           newStandards: standardVersions.length,
           newSkills: skillVersions.length,
           removedRecipes: removedRecipeVersions.length,
           removedStandards: removedStandardVersions.length,
           removedSkills: removedSkillVersions.length,
+          renamedSkills: renamedSkillVersions.length,
         });
 
         // Prepare unified deployment using renderArtifacts for ALL targets
@@ -201,10 +221,10 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
           command.organizationId as OrganizationId,
           allRecipeVersions,
           standardVersionsWithRules,
-          allSkillVersions,
+          filteredSkillVersions,
           removedRecipeVersions,
           removedStandardVersions,
-          removedSkillVersions,
+          skillVersionsToRemove,
           gitRepo,
           targets,
           codingAgents,
@@ -218,7 +238,7 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
           skillVersions,
           allRecipeVersions,
           standardVersionsWithRules,
-          allSkillVersions,
+          filteredSkillVersions,
           targets,
         );
 
@@ -760,6 +780,25 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
   ): SkillVersion[] {
     const currentSkillIds = new Set(currentVersions.map((skv) => skv.skillId));
     return previousVersions.filter((skv) => !currentSkillIds.has(skv.skillId));
+  }
+
+  /**
+   * Computes skill versions that were renamed (same skillId but different slug).
+   * Returns the PREVIOUS versions (with old slugs) so their directories can be deleted.
+   */
+  private computeRenamedSkillVersions(
+    previousVersions: SkillVersion[],
+    currentVersions: SkillVersion[],
+  ): SkillVersion[] {
+    const currentBySkillId = new Map(
+      currentVersions.map((sv) => [sv.skillId, sv]),
+    );
+
+    return previousVersions.filter((prevSv) => {
+      const currentSv = currentBySkillId.get(prevSv.skillId);
+      // Renamed: same skillId exists in current but slug has changed
+      return currentSv && currentSv.slug !== prevSv.slug;
+    });
   }
 
   private buildCommitMessage(

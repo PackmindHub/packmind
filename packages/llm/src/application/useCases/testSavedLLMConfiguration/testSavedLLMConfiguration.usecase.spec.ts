@@ -382,9 +382,15 @@ describe('TestSavedLLMConfigurationUseCase', () => {
   });
 
   describe('when user is not an admin', () => {
-    beforeEach(() => {
+    beforeEach(async () => {
       mockAccountsPort.getUserById.mockResolvedValue(memberUser);
       mockAccountsPort.getOrganizationById.mockResolvedValue(organization);
+
+      try {
+        await useCase.execute({ userId, organizationId });
+      } catch {
+        // Expected to throw
+      }
     });
 
     it('throws OrganizationAdminRequiredError', async () => {
@@ -393,11 +399,7 @@ describe('TestSavedLLMConfigurationUseCase', () => {
       );
     });
 
-    it('does not call repository', async () => {
-      await expect(
-        useCase.execute({ userId, organizationId }),
-      ).rejects.toThrow();
-
+    it('does not call repository', () => {
       expect(mockConfigurationRepository.get).not.toHaveBeenCalled();
     });
   });

@@ -125,9 +125,15 @@ describe('SaveLLMConfigurationUseCase', () => {
   });
 
   describe('when user is not an admin', () => {
-    beforeEach(() => {
+    beforeEach(async () => {
       mockAccountsPort.getUserById.mockResolvedValue(memberUser);
       mockAccountsPort.getOrganizationById.mockResolvedValue(organization);
+
+      try {
+        await useCase.execute(createCommand());
+      } catch {
+        // Expected to throw
+      }
     });
 
     it('throws OrganizationAdminRequiredError', async () => {
@@ -136,9 +142,7 @@ describe('SaveLLMConfigurationUseCase', () => {
       );
     });
 
-    it('does not save the configuration', async () => {
-      await expect(useCase.execute(createCommand())).rejects.toThrow();
-
+    it('does not save the configuration', () => {
       expect(mockConfigurationRepository.save).not.toHaveBeenCalled();
     });
   });

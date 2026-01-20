@@ -37,117 +37,158 @@ describe('GitRepoService', () => {
   });
 
   describe('addGitRepo', () => {
-    it('adds a git repository', async () => {
-      const newRepo: Omit<GitRepo, 'id'> = {
-        owner: mockGitRepo.owner,
-        repo: mockGitRepo.repo,
-        branch: mockGitRepo.branch,
-        providerId: mockGitRepo.providerId,
-      };
+    const newRepo: Omit<GitRepo, 'id'> = {
+      owner: 'test-owner',
+      repo: 'test-repo',
+      branch: 'main',
+      providerId: createGitProviderId('provider-1'),
+    };
+    let result: GitRepo;
 
+    beforeEach(async () => {
       mockGitRepoRepository.add.mockResolvedValue(mockGitRepo);
+      result = await gitRepoService.addGitRepo(newRepo);
+    });
 
-      const result = await gitRepoService.addGitRepo(newRepo);
-
+    it('calls repository add with correct parameters', () => {
       expect(mockGitRepoRepository.add).toHaveBeenCalledWith(
         expect.objectContaining({
           ...newRepo,
           id: expect.any(String),
         }),
       );
+    });
+
+    it('returns the added git repository', () => {
       expect(result).toEqual(mockGitRepo);
     });
   });
 
   describe('findGitRepoById', () => {
     describe('when repository exists', () => {
-      it('returns the git repository', async () => {
-        mockGitRepoRepository.findById.mockResolvedValue(mockGitRepo);
+      let result: GitRepo | null;
 
-        const result = await gitRepoService.findGitRepoById(
+      beforeEach(async () => {
+        mockGitRepoRepository.findById.mockResolvedValue(mockGitRepo);
+        result = await gitRepoService.findGitRepoById(
           createGitRepoId('repo-1'),
         );
+      });
 
+      it('calls repository findById with correct id', () => {
         expect(mockGitRepoRepository.findById).toHaveBeenCalledWith(
           createGitRepoId('repo-1'),
         );
+      });
+
+      it('returns the git repository', () => {
         expect(result).toEqual(mockGitRepo);
       });
     });
 
     describe('when repository does not exist', () => {
-      it('returns null', async () => {
-        mockGitRepoRepository.findById.mockResolvedValue(null);
+      let result: GitRepo | null;
 
-        const result = await gitRepoService.findGitRepoById(
+      beforeEach(async () => {
+        mockGitRepoRepository.findById.mockResolvedValue(null);
+        result = await gitRepoService.findGitRepoById(
           createGitRepoId('nonexistent-repo'),
         );
+      });
 
+      it('calls repository findById with correct id', () => {
         expect(mockGitRepoRepository.findById).toHaveBeenCalledWith(
           createGitRepoId('nonexistent-repo'),
         );
+      });
+
+      it('returns null', () => {
         expect(result).toBeNull();
       });
     });
   });
 
   describe('findGitReposByProviderId', () => {
-    it('returns repositories for a provider', async () => {
-      const mockRepos = [mockGitRepo];
-      mockGitRepoRepository.findByProviderId.mockResolvedValue(mockRepos);
+    const mockRepos = [mockGitRepo];
+    let result: GitRepo[];
 
-      const result = await gitRepoService.findGitReposByProviderId(
+    beforeEach(async () => {
+      mockGitRepoRepository.findByProviderId.mockResolvedValue(mockRepos);
+      result = await gitRepoService.findGitReposByProviderId(
         createGitProviderId('provider-1'),
       );
+    });
 
+    it('calls repository findByProviderId with correct provider id', () => {
       expect(mockGitRepoRepository.findByProviderId).toHaveBeenCalledWith(
         createGitProviderId('provider-1'),
       );
+    });
+
+    it('returns repositories for the provider', () => {
       expect(result).toEqual(mockRepos);
     });
   });
 
   describe('findGitReposByOrganizationId', () => {
-    it('returns repositories for an organization', async () => {
-      const mockRepos = [mockGitRepo];
-      mockGitRepoRepository.findByOrganizationId.mockResolvedValue(mockRepos);
+    const mockRepos = [mockGitRepo];
+    let result: GitRepo[];
 
-      const result = await gitRepoService.findGitReposByOrganizationId(
+    beforeEach(async () => {
+      mockGitRepoRepository.findByOrganizationId.mockResolvedValue(mockRepos);
+      result = await gitRepoService.findGitReposByOrganizationId(
         createOrganizationId('org-1'),
       );
+    });
 
+    it('calls repository findByOrganizationId with correct organization id', () => {
       expect(mockGitRepoRepository.findByOrganizationId).toHaveBeenCalledWith(
         createOrganizationId('org-1'),
       );
+    });
+
+    it('returns repositories for the organization', () => {
       expect(result).toEqual(mockRepos);
     });
   });
 
   describe('listGitRepos', () => {
-    describe('when organizationId is provided', () => {
-      it('returns repositories for the organization', async () => {
-        const mockRepos = [mockGitRepo];
-        mockGitRepoRepository.list.mockResolvedValue(mockRepos);
+    const mockRepos = [mockGitRepo];
 
-        const result = await gitRepoService.listGitRepos(
+    describe('when organizationId is provided', () => {
+      let result: GitRepo[];
+
+      beforeEach(async () => {
+        mockGitRepoRepository.list.mockResolvedValue(mockRepos);
+        result = await gitRepoService.listGitRepos(
           createOrganizationId('org-1'),
         );
+      });
 
+      it('calls repository list with the organization id', () => {
         expect(mockGitRepoRepository.list).toHaveBeenCalledWith(
           createOrganizationId('org-1'),
         );
+      });
+
+      it('returns repositories for the organization', () => {
         expect(result).toEqual(mockRepos);
       });
     });
 
     describe('when organizationId is not provided', () => {
-      it('returns all repositories', async () => {
-        const mockRepos = [mockGitRepo];
+      let result: GitRepo[];
+
+      beforeEach(async () => {
         mockGitRepoRepository.list.mockResolvedValue(mockRepos);
+        result = await gitRepoService.listGitRepos();
+      });
 
-        const result = await gitRepoService.listGitRepos();
-
+      it('calls repository list with undefined', () => {
         expect(mockGitRepoRepository.list).toHaveBeenCalledWith(undefined);
+      });
+
+      it('returns all repositories', () => {
         expect(result).toEqual(mockRepos);
       });
     });

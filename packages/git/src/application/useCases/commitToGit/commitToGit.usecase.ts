@@ -103,8 +103,31 @@ export class CommitToGit {
     // Combine passed-in deleteFiles with files that became empty
     const allFilesToDelete = [...(deleteFiles ?? []), ...filesToDelete];
 
+    const expandedFilesToDelete: { path: string }[] = [];
+    for (const deleteFile of allFilesToDelete) {
+      // Check if path looks like a directory (no file extension)
+      const hasExtension = /\.[^/\\]+$/.test(deleteFile.path);
+      if (!hasExtension) {
+        const filesInDir = await gitRepoInstance.listFilesInDirectory(
+          deleteFile.path,
+          repo.branch,
+        );
+        if (filesInDir.length > 0) {
+          expandedFilesToDelete.push(...filesInDir);
+        }
+      } else {
+        // This is a regular file path
+        expandedFilesToDelete.push(deleteFile);
+      }
+    }
+
+    const createPaths = new Set(processedFiles.map((f) => f.path));
+    const filteredFilesToDelete = expandedFilesToDelete.filter(
+      (f) => !createPaths.has(f.path),
+    );
+
     // Validate that we have something to commit (either files to update or delete)
-    if (processedFiles.length === 0 && allFilesToDelete.length === 0) {
+    if (processedFiles.length === 0 && filteredFilesToDelete.length === 0) {
       throw new Error('No files to commit');
     }
 
@@ -112,7 +135,7 @@ export class CommitToGit {
     const commitData = await gitRepoInstance.commitFiles(
       processedFiles,
       commitMessage,
-      allFilesToDelete.length > 0 ? allFilesToDelete : undefined,
+      filteredFilesToDelete.length > 0 ? filteredFilesToDelete : undefined,
     );
 
     // Check if no changes were detected (GitLab returns 'no-changes' as sha)
