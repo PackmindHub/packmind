@@ -33,7 +33,7 @@ export class ClaudeDeployer implements ICodingAgentDeployer {
   async deployDefaultSkills() {
     const defaultSkillsDeployer = new DefaultSkillsDeployer(
       'Claude',
-      '.claude/skills/packmind/',
+      '.claude/skills/',
     );
     return defaultSkillsDeployer.deployDefaultSkills();
   }

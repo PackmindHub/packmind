@@ -25,6 +25,10 @@ import {
   IInstallPackagesResult,
 } from './domain/useCases/IInstallPackagesUseCase';
 import {
+  IInstallDefaultSkillsCommand,
+  IInstallDefaultSkillsResult,
+} from './domain/useCases/IInstallDefaultSkillsUseCase';
+import {
   IListPackagesCommand,
   IListPackagesResult,
 } from './domain/useCases/IListPackagesUseCase';
@@ -257,6 +261,12 @@ export class PackmindCliHexa {
     command: UploadSkillCommand,
   ): Promise<UploadSkillResult> {
     return this.hexa.repositories.packmindGateway.uploadSkill(command);
+  }
+
+  public async installDefaultSkills(
+    command: IInstallDefaultSkillsCommand,
+  ): Promise<IInstallDefaultSkillsResult> {
+    return this.hexa.useCases.installDefaultSkills.execute(command);
   }
 
   public async deleteLocalSkill(

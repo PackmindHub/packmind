@@ -160,6 +160,26 @@ export type NotifyDistributionGateway = (
   command: NotifyDistributionCommand,
 ) => Promise<NotifyDistributionResult>;
 
+// Get Default Skills types
+export type GetDefaultSkillsCommand = PackmindCommand;
+
+export type GetDefaultSkillsResult = {
+  fileUpdates: {
+    createOrUpdate: Array<{
+      path: string;
+      content: string;
+    }>;
+    delete: Array<{
+      path: string;
+    }>;
+  };
+};
+
+export type IGetDefaultSkillsUseCase = IUseCase<
+  GetDefaultSkillsCommand,
+  GetDefaultSkillsResult
+>;
+
 // Upload Skill types
 export type UploadSkillCommand = PackmindCommand & {
   skillPath: string; // local directory path
@@ -192,4 +212,5 @@ export interface IPackmindGateway {
   getMcpUrl: Gateway<IGetMcpUrlUseCase>;
   notifyDistribution: NotifyDistributionGateway;
   uploadSkill: Gateway<IUploadSkillUseCase>;
+  getDefaultSkills: Gateway<IGetDefaultSkillsUseCase>;
 }
