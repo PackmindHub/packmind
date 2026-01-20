@@ -158,6 +158,7 @@ jobs:
           - packages/linter-execution
           - packages/llm
           - packages/logger
+          - packages/node-utils
 
     steps:
       - name: Checkout
