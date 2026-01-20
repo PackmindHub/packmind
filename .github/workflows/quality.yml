@@ -159,6 +159,7 @@ jobs:
           - packages/llm
           - packages/logger
           - packages/node-utils
+          - packages/recipes
 
     steps:
       - name: Checkout
