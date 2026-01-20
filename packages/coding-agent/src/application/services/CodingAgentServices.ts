@@ -1,6 +1,5 @@
 import { PackmindLogger } from '@packmind/logger';
 import {
-  DeleteItemType,
   FileUpdates,
   GitRepo,
   RecipeVersion,
@@ -180,35 +179,8 @@ export class CodingAgentServices {
       this.logger.info('Removed artifacts processed');
     }
 
-    // "Burn and Rebuild" for skills: add skill directories to delete list
-    // The commit flow will:
-    // 1. Expand directories to individual files (via listFilesInDirectory)
-    // 2. Filter out files that are also in createOrUpdate list
-    // This ensures stale files are deleted when a skill is updated
-    const allSkillVersions = [
-      ...installed.skillVersions,
-      ...removed.skillVersions,
-    ];
-
-    for (const sv of allSkillVersions) {
-      result.delete.push({
-        path: `.claude/skills/${sv.slug}`,
-        type: DeleteItemType.Directory,
-      });
-      result.delete.push({
-        path: `.github/skills/${sv.slug}`,
-        type: DeleteItemType.Directory,
-      });
-    }
-
-    if (allSkillVersions.length > 0) {
-      this.logger.info(
-        'Skill directories marked for deletion (burn and rebuild)',
-        {
-          skillCount: allSkillVersions.length,
-        },
-      );
-    }
+    // Note: Skill directory deletions are handled by each deployer's
+    // generateRemovalFileUpdates method (ClaudeDeployer, CopilotDeployer, etc.)
 
     this.logger.info('Artifacts rendered successfully', {
       filesCount: result.createOrUpdate.length + result.delete.length,

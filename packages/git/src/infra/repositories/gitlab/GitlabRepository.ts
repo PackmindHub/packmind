@@ -4,6 +4,7 @@ import { PackmindLogger } from '@packmind/logger';
 import { GitCommit } from '@packmind/types';
 import { GitlabRepositoryOptions } from './types';
 import { GitlabWebhookPushPayload } from '../../../domain/types/webhookPayloads';
+import { extractNextPageUrl } from './linkHeaderUtils';
 
 const origin = 'GitlabRepository';
 
@@ -617,9 +618,9 @@ export class GitlabRepository implements IGitRepo {
           // Check for keyset pagination (Link header)
           const linkHeader = headers['link'];
           if (linkHeader) {
-            const linkMatch = linkHeader.match(/<([^>]+)>;\s*rel="next"/);
-            if (linkMatch) {
-              nextPage = linkMatch[1];
+            const nextUrl = extractNextPageUrl(linkHeader);
+            if (nextUrl) {
+              nextPage = nextUrl;
             }
           }
         }
@@ -796,9 +797,9 @@ export class GitlabRepository implements IGitRepo {
         } else {
           const linkHeader = headers['link'];
           if (linkHeader) {
-            const linkMatch = linkHeader.match(/<([^>]+)>;\s*rel="next"/);
-            if (linkMatch) {
-              nextPage = linkMatch[1];
+            const nextUrl = extractNextPageUrl(linkHeader);
+            if (nextUrl) {
+              nextPage = nextUrl;
             }
           }
         }
