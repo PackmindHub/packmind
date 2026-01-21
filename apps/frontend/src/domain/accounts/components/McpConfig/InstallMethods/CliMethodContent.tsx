@@ -1,5 +1,5 @@
 import React from 'react';
-import { PMVStack, PMText } from '@packmind/ui';
+import { PMVStack, PMText, PMButton, PMBox } from '@packmind/ui';
 import { CopiableTextarea } from '../../../../../shared/components/inputs';
 import { IMethodContentProps } from './types';
 import { useAnalytics } from '@packmind/proprietary/frontend/domain/amplitude/providers/AnalyticsProvider';
@@ -9,6 +9,7 @@ export const CliMethodContent: React.FC<IMethodContentProps> = ({
   method,
   token,
   url,
+  onCantUseMcp,
 }) => {
   const command = method.getCliCommand?.(token, url);
   const analytics = useAnalytics();
@@ -29,6 +30,13 @@ export const CliMethodContent: React.FC<IMethodContentProps> = ({
           analytics.track('mcp_installed', { method: 'cli', agent })
         }
       />
+      {onCantUseMcp && (
+        <PMVStack width="full" alignItems="center">
+          <PMButton variant="tertiary" size="xs" onClick={onCantUseMcp}>
+            I can't use MCP
+          </PMButton>
+        </PMVStack>
+      )}
     </PMVStack>
   );
 };

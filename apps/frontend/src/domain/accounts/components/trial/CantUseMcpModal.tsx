@@ -13,12 +13,7 @@ import {
 import { StartTrialCommandAgents } from '@packmind/types';
 import { StartTrialAgentPageDataTestIds } from '@packmind/frontend';
 import { useAnalytics } from '@packmind/proprietary/frontend/domain/amplitude/providers/AnalyticsProvider';
-
-type McpUnavailableReason =
-  | 'cant-use-mcp'
-  | 'dont-want-mcp'
-  | 'dont-know-mcp'
-  | 'other';
+import { McpUnavailableReason } from '@packmind/proprietary/frontend/domain/amplitude/providers/types';
 
 interface IReasonOption {
   value: McpUnavailableReason;
@@ -26,10 +21,13 @@ interface IReasonOption {
 }
 
 const REASON_OPTIONS: IReasonOption[] = [
-  { value: 'cant-use-mcp', label: "I can't use MCP" },
-  { value: 'dont-want-mcp', label: "I don't want to use MCP" },
-  { value: 'dont-know-mcp', label: "I don't know what is MCP" },
-  { value: 'other', label: 'Other' },
+  { value: McpUnavailableReason.CantUseMcp, label: "I can't use MCP" },
+  { value: McpUnavailableReason.DontWantMcp, label: "I don't want to use MCP" },
+  {
+    value: McpUnavailableReason.DontKnowMcp,
+    label: "I don't know what is MCP",
+  },
+  { value: McpUnavailableReason.Other, label: 'Other' },
 ];
 
 interface ICantUseMcpModalProps {
@@ -51,12 +49,12 @@ export const CantUseMcpModal: React.FC<ICantUseMcpModalProps> = ({
   const handleSubmit = () => {
     if (!selectedReason) return;
 
+    const trimmedDetails = otherDetails.trim();
     analytics.track('mcp_unavailable_feedback', {
       reason: selectedReason,
-      ...(selectedReason === 'other' && otherDetails.trim()
-        ? { otherDetails: otherDetails.trim() }
-        : {}),
       selectedAgent,
+      ...(selectedReason === McpUnavailableReason.Other &&
+        trimmedDetails && { otherDetails: trimmedDetails }),
     });
 
     pmToaster.create({
@@ -128,7 +126,7 @@ export const CantUseMcpModal: React.FC<ICantUseMcpModalProps> = ({
                 </PMVStack>
               </PMRadioCard.Root>
 
-              {selectedReason === 'other' && (
+              {selectedReason === McpUnavailableReason.Other && (
                 <PMField.Root>
                   <PMField.Label>Please provide more details</PMField.Label>
                   <PMTextArea

@@ -51,6 +51,7 @@ export const MagicLinkMethodContent: React.FC<IMethodContentProps> = ({
   method,
   token,
   url,
+  onCantUseMcp,
 }) => {
   const magicLink = method.getMagicLink?.(token, url);
   if (!magicLink) return null;
@@ -64,9 +65,23 @@ export const MagicLinkMethodContent: React.FC<IMethodContentProps> = ({
       </PMText>
       <PMHStack gap={4}>
         {isVSCode ? (
-          <VSCodeInstallBadge href={magicLink} />
+          <>
+            <VSCodeInstallBadge href={magicLink} />
+            {onCantUseMcp && (
+              <PMButton variant="tertiary" onClick={onCantUseMcp}>
+                I can't use MCP
+              </PMButton>
+            )}
+          </>
         ) : (
-          <CursorInstallBadge href={magicLink} />
+          <>
+            <CursorInstallBadge href={magicLink} />
+            {onCantUseMcp && (
+              <PMButton variant="tertiary" size="xs" onClick={onCantUseMcp}>
+                I can't use MCP
+              </PMButton>
+            )}
+          </>
         )}
       </PMHStack>
     </PMVStack>
