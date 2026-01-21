@@ -143,6 +143,7 @@ jobs:
         target:
           - apps/api
           - apps/e2e-tests
+          - apps/frontend
           - apps/mcp-server
           - packages/editions
           - packages/frontend
