@@ -118,44 +118,60 @@ describe('ApiService', () => {
   });
 
   describe('GET requests', () => {
-    it('makes successful GET request', async () => {
+    describe('with successful response', () => {
       const mockData = { id: 1, name: 'Test' };
-      const mockResponse: AxiosResponse = {
-        data: mockData,
-        status: 200,
-        statusText: 'OK',
-        headers: {},
-        config: {} as AxiosResponse['config'],
-      };
+      let result: typeof mockData;
 
-      mockAxiosInstance.get.mockResolvedValue(mockResponse);
+      beforeEach(async () => {
+        const mockResponse: AxiosResponse = {
+          data: mockData,
+          status: 200,
+          statusText: 'OK',
+          headers: {},
+          config: {} as AxiosResponse['config'],
+        };
 
-      const result = await apiService.get('/users');
+        mockAxiosInstance.get.mockResolvedValue(mockResponse);
+        result = await apiService.get('/users');
+      });
 
-      expect(mockAxiosInstance.get).toHaveBeenCalledWith('/users', undefined);
-      expect(result).toEqual(mockData);
+      it('calls axios get with correct endpoint', () => {
+        expect(mockAxiosInstance.get).toHaveBeenCalledWith('/users', undefined);
+      });
+
+      it('returns response data', () => {
+        expect(result).toEqual(mockData);
+      });
     });
 
-    it('handles GET request with config', async () => {
+    describe('with config parameter', () => {
       const mockData = { id: 1, name: 'Test' };
-      const mockResponse: AxiosResponse = {
-        data: mockData,
-        status: 200,
-        statusText: 'OK',
-        headers: {},
-        config: {} as AxiosResponse['config'],
-      };
       const config = { params: { page: 1 } };
+      let result: typeof mockData;
 
-      mockAxiosInstance.get.mockResolvedValue(mockResponse);
+      beforeEach(async () => {
+        const mockResponse: AxiosResponse = {
+          data: mockData,
+          status: 200,
+          statusText: 'OK',
+          headers: {},
+          config: {} as AxiosResponse['config'],
+        };
 
-      const result = await apiService.get('/users', config);
+        mockAxiosInstance.get.mockResolvedValue(mockResponse);
+        result = await apiService.get('/users', config);
+      });
 
-      expect(mockAxiosInstance.get).toHaveBeenCalledWith('/users', config);
-      expect(result).toEqual(mockData);
+      it('calls axios get with config', () => {
+        expect(mockAxiosInstance.get).toHaveBeenCalledWith('/users', config);
+      });
+
+      it('returns response data', () => {
+        expect(result).toEqual(mockData);
+      });
     });
 
-    it('handles GET request errors', async () => {
+    it('throws error on request failure', async () => {
       const mockError = {
         response: {
           data: { message: 'Internal Server Error' },
@@ -173,30 +189,38 @@ describe('ApiService', () => {
   });
 
   describe('POST requests', () => {
-    it('handles successful POST request', async () => {
+    describe('with successful response', () => {
       const postData = { name: 'New User' };
       const mockResponseData = { id: 1, name: 'New User' };
-      const mockResponse: AxiosResponse = {
-        data: mockResponseData,
-        status: 201,
-        statusText: 'Created',
-        headers: {},
-        config: {} as AxiosResponse['config'],
-      };
+      let result: typeof mockResponseData;
 
-      mockAxiosInstance.post.mockResolvedValue(mockResponse);
+      beforeEach(async () => {
+        const mockResponse: AxiosResponse = {
+          data: mockResponseData,
+          status: 201,
+          statusText: 'Created',
+          headers: {},
+          config: {} as AxiosResponse['config'],
+        };
 
-      const result = await apiService.post('/users', postData);
+        mockAxiosInstance.post.mockResolvedValue(mockResponse);
+        result = await apiService.post('/users', postData);
+      });
 
-      expect(mockAxiosInstance.post).toHaveBeenCalledWith(
-        '/users',
-        postData,
-        undefined,
-      );
-      expect(result).toEqual(mockResponseData);
+      it('calls axios post with correct endpoint and data', () => {
+        expect(mockAxiosInstance.post).toHaveBeenCalledWith(
+          '/users',
+          postData,
+          undefined,
+        );
+      });
+
+      it('returns response data', () => {
+        expect(result).toEqual(mockResponseData);
+      });
     });
 
-    it('handles POST request errors', async () => {
+    it('throws error on request failure', async () => {
       const postData = { name: 'New User' };
       const mockError = {
         response: {
@@ -215,74 +239,98 @@ describe('ApiService', () => {
   });
 
   describe('PUT requests', () => {
-    it('handles successful PUT request', async () => {
+    describe('with successful response', () => {
       const putData = { id: 1, name: 'Updated User' };
-      const mockResponse: AxiosResponse = {
-        data: putData,
-        status: 200,
-        statusText: 'OK',
-        headers: {},
-        config: {} as AxiosResponse['config'],
-      };
+      let result: typeof putData;
 
-      mockAxiosInstance.put.mockResolvedValue(mockResponse);
+      beforeEach(async () => {
+        const mockResponse: AxiosResponse = {
+          data: putData,
+          status: 200,
+          statusText: 'OK',
+          headers: {},
+          config: {} as AxiosResponse['config'],
+        };
 
-      const result = await apiService.put('/users/1', putData);
+        mockAxiosInstance.put.mockResolvedValue(mockResponse);
+        result = await apiService.put('/users/1', putData);
+      });
 
-      expect(mockAxiosInstance.put).toHaveBeenCalledWith(
-        '/users/1',
-        putData,
-        undefined,
-      );
-      expect(result).toEqual(putData);
+      it('calls axios put with correct endpoint and data', () => {
+        expect(mockAxiosInstance.put).toHaveBeenCalledWith(
+          '/users/1',
+          putData,
+          undefined,
+        );
+      });
+
+      it('returns response data', () => {
+        expect(result).toEqual(putData);
+      });
     });
   });
 
   describe('DELETE requests', () => {
-    it('handles successful DELETE request', async () => {
+    describe('with successful response', () => {
       const mockResponseData = { message: 'User deleted' };
-      const mockResponse: AxiosResponse = {
-        data: mockResponseData,
-        status: 200,
-        statusText: 'OK',
-        headers: {},
-        config: {} as AxiosResponse['config'],
-      };
+      let result: typeof mockResponseData;
 
-      mockAxiosInstance.delete.mockResolvedValue(mockResponse);
+      beforeEach(async () => {
+        const mockResponse: AxiosResponse = {
+          data: mockResponseData,
+          status: 200,
+          statusText: 'OK',
+          headers: {},
+          config: {} as AxiosResponse['config'],
+        };
 
-      const result = await apiService.delete('/users/1');
+        mockAxiosInstance.delete.mockResolvedValue(mockResponse);
+        result = await apiService.delete('/users/1');
+      });
 
-      expect(mockAxiosInstance.delete).toHaveBeenCalledWith(
-        '/users/1',
-        undefined,
-      );
-      expect(result).toEqual(mockResponseData);
+      it('calls axios delete with correct endpoint', () => {
+        expect(mockAxiosInstance.delete).toHaveBeenCalledWith(
+          '/users/1',
+          undefined,
+        );
+      });
+
+      it('returns response data', () => {
+        expect(result).toEqual(mockResponseData);
+      });
     });
   });
 
   describe('PATCH requests', () => {
-    it('makes successful PATCH request', async () => {
+    describe('with successful response', () => {
       const patchData = { name: 'Patched User' };
       const mockResponseData = { id: 1, name: 'Patched User' };
-      const mockResponse: AxiosResponse = {
-        data: mockResponseData,
-        status: 200,
-        statusText: 'OK',
-        headers: {},
-        config: {} as AxiosResponse['config'],
-      };
+      let result: typeof mockResponseData;
 
-      mockAxiosInstance.patch.mockResolvedValue(mockResponse);
+      beforeEach(async () => {
+        const mockResponse: AxiosResponse = {
+          data: mockResponseData,
+          status: 200,
+          statusText: 'OK',
+          headers: {},
+          config: {} as AxiosResponse['config'],
+        };
 
-      const result = await apiService.patch('/users/1', patchData);
+        mockAxiosInstance.patch.mockResolvedValue(mockResponse);
+        result = await apiService.patch('/users/1', patchData);
+      });
 
-      expect(mockAxiosInstance.patch).toHaveBeenCalledWith(
-        '/users/1',
-        patchData,
-        undefined,
-      );
-      expect(result).toEqual(mockResponseData);
+      it('calls axios patch with correct endpoint and data', () => {
+        expect(mockAxiosInstance.patch).toHaveBeenCalledWith(
+          '/users/1',
+          patchData,
+          undefined,
+        );
+      });
+
+      it('returns response data', () => {
+        expect(result).toEqual(mockResponseData);
+      });
     });
   });
 
@@ -367,28 +415,42 @@ describe('ApiService', () => {
       email: string;
     }
 
-    it('works with TypeScript generics', async () => {
+    describe('with typed response', () => {
       const mockUser: User = {
         id: 1,
         name: 'Test User',
         email: 'test@example.com',
       };
-      const mockResponse: AxiosResponse = {
-        data: mockUser,
-        status: 200,
-        statusText: 'OK',
-        headers: {},
-        config: {} as AxiosResponse['config'],
-      };
+      let result: User;
 
-      mockAxiosInstance.get.mockResolvedValue(mockResponse);
+      beforeEach(async () => {
+        const mockResponse: AxiosResponse = {
+          data: mockUser,
+          status: 200,
+          statusText: 'OK',
+          headers: {},
+          config: {} as AxiosResponse['config'],
+        };
 
-      const result = await apiService.get<User>('/users/1');
+        mockAxiosInstance.get.mockResolvedValue(mockResponse);
+        result = await apiService.get<User>('/users/1');
+      });
 
-      expect(result).toEqual(mockUser);
-      expect(result.id).toBe(1);
-      expect(result.name).toBe('Test User');
-      expect(result.email).toBe('test@example.com');
+      it('returns correctly typed response', () => {
+        expect(result).toEqual(mockUser);
+      });
+
+      it('provides access to id property', () => {
+        expect(result.id).toBe(1);
+      });
+
+      it('provides access to name property', () => {
+        expect(result.name).toBe('Test User');
+      });
+
+      it('provides access to email property', () => {
+        expect(result.email).toBe('test@example.com');
+      });
     });
   });
 
