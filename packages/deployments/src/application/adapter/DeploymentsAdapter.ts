@@ -356,6 +356,9 @@ export class DeploymentsAdapter
       this.deploymentsServices.getRenderModeConfigurationService(),
       this.accountsPort,
       ports.eventEmitterService,
+      this.gitPort,
+      this.distributionRepository,
+      this.deploymentsServices.getTargetService(),
     );
 
     this._listPackagesBySpaceUseCase = new ListPackagesBySpaceUsecase(

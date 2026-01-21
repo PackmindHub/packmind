@@ -561,12 +561,40 @@ export async function installPackagesHandler(
       `Fetching ${packageCount} ${packageWord}: ${allPackages.join(', ')}...`,
     );
 
+    // Collect git info for distribution history lookup (to detect skills removed from packages)
+    let gitRemoteUrl: string | undefined;
+    let gitBranch: string | undefined;
+    let relativePath: string | undefined;
+
+    const gitRoot = await packmindCliHexa.tryGetGitRepositoryRoot(cwd);
+    if (gitRoot) {
+      try {
+        gitRemoteUrl = packmindCliHexa.getGitRemoteUrlFromPath(gitRoot);
+        gitBranch = packmindCliHexa.getCurrentBranch(gitRoot);
+
+        relativePath = cwd.startsWith(gitRoot)
+          ? cwd.slice(gitRoot.length)
+          : '/';
+        if (!relativePath.startsWith('/')) {
+          relativePath = '/' + relativePath;
+        }
+        if (!relativePath.endsWith('/')) {
+          relativePath = relativePath + '/';
+        }
+      } catch {
+        // Git info collection failed, continue without it
+      }
+    }
+
     // Execute the install operation to get counts first
     // Pass previous packages for change detection
     const result = await packmindCliHexa.installPackages({
       baseDirectory: cwd,
       packagesSlugs: allPackages,
       previousPackagesSlugs: configPackages, // Pass previous config for change detection
+      gitRemoteUrl,
+      gitBranch,
+      relativePath,
     });
 
     // Show installation message with counts
