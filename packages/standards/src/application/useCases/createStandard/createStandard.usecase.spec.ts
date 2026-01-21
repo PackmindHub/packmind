@@ -227,8 +227,11 @@ describe('CreateStandardUsecase', () => {
         );
       });
 
-      it('calls both services exactly once', () => {
+      it('calls StandardService.addStandard exactly once', () => {
         expect(standardService.addStandard).toHaveBeenCalledTimes(1);
+      });
+
+      it('calls StandardVersionService.addStandardVersion exactly once', () => {
         expect(standardVersionService.addStandardVersion).toHaveBeenCalledTimes(
           1,
         );
@@ -246,10 +249,13 @@ describe('CreateStandardUsecase', () => {
         expect(result).toEqual({ standard: createdStandard });
       });
 
-      it('creates initial version as version 1', () => {
+      it('creates standard with version 1', () => {
         expect(standardService.addStandard).toHaveBeenCalledWith(
           expect.objectContaining({ version: 1 }),
         );
+      });
+
+      it('creates standard version with version 1', () => {
         expect(standardVersionService.addStandardVersion).toHaveBeenCalledWith(
           expect.objectContaining({ version: 1 }),
         );
@@ -283,91 +289,109 @@ describe('CreateStandardUsecase', () => {
     });
 
     describe('with different standard names and slug generation', () => {
-      it('generates correct slug for standard with spaces', async () => {
-        const inputData: CreateStandardCommand = {
-          name: 'My Complex Standard Name',
-          description: 'Test description',
-          rules: [{ content: 'Test rule' }],
-          organizationId: testOrganizationId,
-          userId: testUserId.toString(),
-          spaceId: createSpaceId(uuidv4()),
-          scope: null,
-        };
+      describe('when standard name has spaces', () => {
+        let inputData: CreateStandardCommand;
 
-        const createdStandard = standardFactory({
-          name: inputData.name,
-          slug: 'my-complex-standard-name',
-          description: inputData.description,
+        beforeEach(async () => {
+          inputData = {
+            name: 'My Complex Standard Name',
+            description: 'Test description',
+            rules: [{ content: 'Test rule' }],
+            organizationId: testOrganizationId,
+            userId: testUserId.toString(),
+            spaceId: createSpaceId(uuidv4()),
+            scope: null,
+          };
+
+          const createdStandard = standardFactory({
+            name: inputData.name,
+            slug: 'my-complex-standard-name',
+            description: inputData.description,
+          });
+
+          const createdStandardVersion = standardVersionFactory({
+            standardId: createdStandard.id,
+            version: 1,
+          });
+
+          standardService.addStandard.mockResolvedValue(createdStandard);
+          standardVersionService.addStandardVersion.mockResolvedValue(
+            createdStandardVersion,
+          );
+
+          await createStandardUsecase.execute(inputData);
         });
 
-        const createdStandardVersion = standardVersionFactory({
-          standardId: createdStandard.id,
-          version: 1,
+        it('calls slug with the original name', () => {
+          expect(mockSlug).toHaveBeenCalledWith('My Complex Standard Name');
         });
 
-        standardService.addStandard.mockResolvedValue(createdStandard);
-        standardVersionService.addStandardVersion.mockResolvedValue(
-          createdStandardVersion,
-        );
-
-        await createStandardUsecase.execute(inputData);
-
-        expect(mockSlug).toHaveBeenCalledWith('My Complex Standard Name');
-        expect(standardService.addStandard).toHaveBeenCalledWith({
-          name: inputData.name,
-          description: inputData.description,
-          slug: 'my-complex-standard-name',
-          version: 1,
-          gitCommit: undefined,
-          userId: createUserId(inputData.userId),
-          spaceId: createSpaceId(inputData.spaceId),
-          scope: null,
+        it('calls addStandard with correct slug', () => {
+          expect(standardService.addStandard).toHaveBeenCalledWith({
+            name: inputData.name,
+            description: inputData.description,
+            slug: 'my-complex-standard-name',
+            version: 1,
+            gitCommit: undefined,
+            userId: createUserId(inputData.userId),
+            spaceId: createSpaceId(inputData.spaceId),
+            scope: null,
+          });
         });
       });
 
-      it('generates correct slug for standard with special characters', async () => {
-        const inputData: CreateStandardCommand = {
-          name: 'Standard with "Special" Characters!',
-          description: 'Test description',
-          rules: [{ content: 'Test rule' }],
-          organizationId: testOrganizationId,
-          userId: testUserId.toString(),
-          spaceId: createSpaceId(uuidv4()),
-          scope: null,
-        };
+      describe('when standard name has special characters', () => {
+        let inputData: CreateStandardCommand;
 
-        mockSlug.mockReturnValue('standard-with-special-characters');
+        beforeEach(async () => {
+          inputData = {
+            name: 'Standard with "Special" Characters!',
+            description: 'Test description',
+            rules: [{ content: 'Test rule' }],
+            organizationId: testOrganizationId,
+            userId: testUserId.toString(),
+            spaceId: createSpaceId(uuidv4()),
+            scope: null,
+          };
 
-        const createdStandard = standardFactory({
-          name: inputData.name,
-          slug: 'standard-with-special-characters',
-          description: inputData.description,
+          mockSlug.mockReturnValue('standard-with-special-characters');
+
+          const createdStandard = standardFactory({
+            name: inputData.name,
+            slug: 'standard-with-special-characters',
+            description: inputData.description,
+          });
+
+          const createdStandardVersion = standardVersionFactory({
+            standardId: createdStandard.id,
+            version: 1,
+          });
+
+          standardService.addStandard.mockResolvedValue(createdStandard);
+          standardVersionService.addStandardVersion.mockResolvedValue(
+            createdStandardVersion,
+          );
+
+          await createStandardUsecase.execute(inputData);
         });
 
-        const createdStandardVersion = standardVersionFactory({
-          standardId: createdStandard.id,
-          version: 1,
+        it('calls slug with the original name including special characters', () => {
+          expect(mockSlug).toHaveBeenCalledWith(
+            'Standard with "Special" Characters!',
+          );
         });
 
-        standardService.addStandard.mockResolvedValue(createdStandard);
-        standardVersionService.addStandardVersion.mockResolvedValue(
-          createdStandardVersion,
-        );
-
-        await createStandardUsecase.execute(inputData);
-
-        expect(mockSlug).toHaveBeenCalledWith(
-          'Standard with "Special" Characters!',
-        );
-        expect(standardService.addStandard).toHaveBeenCalledWith({
-          name: inputData.name,
-          description: inputData.description,
-          slug: 'standard-with-special-characters',
-          version: 1,
-          gitCommit: undefined,
-          userId: createUserId(inputData.userId),
-          spaceId: createSpaceId(inputData.spaceId),
-          scope: null,
+        it('calls addStandard with sanitized slug', () => {
+          expect(standardService.addStandard).toHaveBeenCalledWith({
+            name: inputData.name,
+            description: inputData.description,
+            slug: 'standard-with-special-characters',
+            version: 1,
+            gitCommit: undefined,
+            userId: createUserId(inputData.userId),
+            spaceId: createSpaceId(inputData.spaceId),
+            scope: null,
+          });
         });
       });
     });
@@ -505,8 +529,11 @@ describe('CreateStandardUsecase', () => {
     });
 
     describe('when standard creation fails', () => {
-      it('throws an error and logs the failure', async () => {
-        const inputData: CreateStandardCommand = {
+      let inputData: CreateStandardCommand;
+      let thrownError: Error | undefined;
+
+      beforeEach(async () => {
+        inputData = {
           name: 'Test Standard',
           description: 'Test description',
           rules: [{ content: 'Test rule' }],
@@ -519,10 +546,18 @@ describe('CreateStandardUsecase', () => {
         const error = new Error('Database connection failed');
         standardService.addStandard.mockRejectedValue(error);
 
-        await expect(createStandardUsecase.execute(inputData)).rejects.toThrow(
-          'Database connection failed',
-        );
+        try {
+          await createStandardUsecase.execute(inputData);
+        } catch (e) {
+          thrownError = e as Error;
+        }
+      });
 
+      it('throws an error with correct message', () => {
+        expect(thrownError?.message).toBe('Database connection failed');
+      });
+
+      it('calls addStandard with correct parameters', () => {
         expect(standardService.addStandard).toHaveBeenCalledWith({
           name: inputData.name,
           description: inputData.description,
@@ -533,8 +568,9 @@ describe('CreateStandardUsecase', () => {
           spaceId: createSpaceId(inputData.spaceId),
           scope: null,
         });
+      });
 
-        // Version service should not be called if standard creation fails
+      it('does not call addStandardVersion', () => {
         expect(
           standardVersionService.addStandardVersion,
         ).not.toHaveBeenCalled();
@@ -542,7 +578,9 @@ describe('CreateStandardUsecase', () => {
     });
 
     describe('when standard version creation fails', () => {
-      it('throws an error after standard creation', async () => {
+      let thrownError: Error | undefined;
+
+      beforeEach(async () => {
         const inputData: CreateStandardCommand = {
           name: 'Test Standard',
           description: 'Test description',
@@ -559,11 +597,22 @@ describe('CreateStandardUsecase', () => {
         const error = new Error('Rule creation failed');
         standardVersionService.addStandardVersion.mockRejectedValue(error);
 
-        await expect(createStandardUsecase.execute(inputData)).rejects.toThrow(
-          'Rule creation failed',
-        );
+        try {
+          await createStandardUsecase.execute(inputData);
+        } catch (e) {
+          thrownError = e as Error;
+        }
+      });
 
+      it('throws an error with correct message', () => {
+        expect(thrownError?.message).toBe('Rule creation failed');
+      });
+
+      it('calls addStandard exactly once', () => {
         expect(standardService.addStandard).toHaveBeenCalledTimes(1);
+      });
+
+      it('calls addStandardVersion exactly once', () => {
         expect(standardVersionService.addStandardVersion).toHaveBeenCalledTimes(
           1,
         );
@@ -571,8 +620,12 @@ describe('CreateStandardUsecase', () => {
     });
 
     describe('when summary generation fails', () => {
-      it('proceeds with standard creation using null summary', async () => {
-        const inputData: CreateStandardCommand = {
+      let inputData: CreateStandardCommand;
+      let createdStandard: Standard;
+      let result: CreateStandardResponse;
+
+      beforeEach(async () => {
+        inputData = {
           name: 'Test Standard',
           description: 'Test description',
           rules: [{ content: 'Test rule' }],
@@ -582,7 +635,7 @@ describe('CreateStandardUsecase', () => {
           scope: null,
         };
 
-        const createdStandard = standardFactory();
+        createdStandard = standardFactory();
         const createdStandardVersion = standardVersionFactory();
 
         standardService.addStandard.mockResolvedValue(createdStandard);
@@ -590,9 +643,14 @@ describe('CreateStandardUsecase', () => {
           createdStandardVersion,
         );
 
-        const result = await createStandardUsecase.execute(inputData);
+        result = await createStandardUsecase.execute(inputData);
+      });
 
+      it('returns created standard', () => {
         expect(result).toEqual({ standard: createdStandard });
+      });
+
+      it('queues summary generation job', () => {
         expect(generateStandardSummaryDelayedJob.addJob).toHaveBeenCalledTimes(
           1,
         );
@@ -849,122 +907,151 @@ describe('CreateStandardUsecase', () => {
         jest.clearAllMocks();
       });
 
-      it('uses base slug if no existing standards conflict', async () => {
-        const inputData: CreateStandardCommand = {
-          name: 'Unique Name',
-          description: 'Desc',
-          rules: [{ content: 'R1' }],
-          organizationId: testOrganizationId,
-          userId: testUserId.toString(),
-          spaceId: createSpaceId(uuidv4()),
-          scope: null,
-        };
+      describe('when no existing standards conflict', () => {
+        let inputData: CreateStandardCommand;
 
-        // No existing standards in the organization
-        standardService.listStandardsBySpace.mockResolvedValue([]);
+        beforeEach(async () => {
+          inputData = {
+            name: 'Unique Name',
+            description: 'Desc',
+            rules: [{ content: 'R1' }],
+            organizationId: testOrganizationId,
+            userId: testUserId.toString(),
+            spaceId: createSpaceId(uuidv4()),
+            scope: null,
+          };
 
-        const createdStandard = standardFactory({
-          slug: 'unique-name',
-          name: inputData.name,
-          description: inputData.description,
-          version: 1,
+          standardService.listStandardsBySpace.mockResolvedValue([]);
+
+          const createdStandard = standardFactory({
+            slug: 'unique-name',
+            name: inputData.name,
+            description: inputData.description,
+            version: 1,
+          });
+          const createdVersion = standardVersionFactory({
+            standardId: createdStandard.id,
+            slug: 'unique-name',
+            name: inputData.name,
+            description: inputData.description,
+            version: 1,
+          });
+
+          standardService.addStandard.mockResolvedValue(createdStandard);
+          standardVersionService.addStandardVersion.mockResolvedValue(
+            createdVersion,
+          );
+
+          await createStandardUsecase.execute(inputData);
         });
-        const createdVersion = standardVersionFactory({
-          standardId: createdStandard.id,
-          slug: 'unique-name',
-          name: inputData.name,
-          description: inputData.description,
-          version: 1,
+
+        it('queries standards by space', () => {
+          expect(standardService.listStandardsBySpace).toHaveBeenCalledWith(
+            inputData.spaceId,
+          );
         });
 
-        standardService.addStandard.mockResolvedValue(createdStandard);
-        standardVersionService.addStandardVersion.mockResolvedValue(
-          createdVersion,
-        );
+        it('uses base slug for standard', () => {
+          expect(standardService.addStandard).toHaveBeenCalledWith(
+            expect.objectContaining({ slug: 'unique-name' }),
+          );
+        });
 
-        await createStandardUsecase.execute(inputData);
-
-        expect(standardService.listStandardsBySpace).toHaveBeenCalledWith(
-          inputData.spaceId,
-        );
-        expect(standardService.addStandard).toHaveBeenCalledWith(
-          expect.objectContaining({ slug: 'unique-name' }),
-        );
-        expect(standardVersionService.addStandardVersion).toHaveBeenCalledWith(
-          expect.objectContaining({ slug: 'unique-name' }),
-        );
+        it('uses base slug for standard version', () => {
+          expect(
+            standardVersionService.addStandardVersion,
+          ).toHaveBeenCalledWith(
+            expect.objectContaining({ slug: 'unique-name' }),
+          );
+        });
       });
 
-      it('increments slug with -1 if base slug exists in organization', async () => {
-        const inputData: CreateStandardCommand = {
-          name: 'Test Standard', // base slug: test-standard
-          description: 'Desc',
-          rules: [{ content: 'R1' }],
-          organizationId: testOrganizationId,
-          userId: testUserId.toString(),
-          spaceId: createSpaceId(uuidv4()),
-          scope: null,
-        };
+      describe('when base slug exists in organization', () => {
+        beforeEach(async () => {
+          const inputData: CreateStandardCommand = {
+            name: 'Test Standard',
+            description: 'Desc',
+            rules: [{ content: 'R1' }],
+            organizationId: testOrganizationId,
+            userId: testUserId.toString(),
+            spaceId: createSpaceId(uuidv4()),
+            scope: null,
+          };
 
-        // Existing standard uses the base slug already
-        const existingA = standardFactory({ slug: 'test-standard' });
-        standardService.listStandardsBySpace.mockResolvedValue([existingA]);
+          const existingA = standardFactory({ slug: 'test-standard' });
+          standardService.listStandardsBySpace.mockResolvedValue([existingA]);
 
-        const createdStandard = standardFactory({ slug: 'test-standard-1' });
-        const createdVersion = standardVersionFactory({
-          slug: 'test-standard-1',
+          const createdStandard = standardFactory({ slug: 'test-standard-1' });
+          const createdVersion = standardVersionFactory({
+            slug: 'test-standard-1',
+          });
+
+          standardService.addStandard.mockResolvedValue(createdStandard);
+          standardVersionService.addStandardVersion.mockResolvedValue(
+            createdVersion,
+          );
+
+          await createStandardUsecase.execute(inputData);
         });
 
-        standardService.addStandard.mockResolvedValue(createdStandard);
-        standardVersionService.addStandardVersion.mockResolvedValue(
-          createdVersion,
-        );
+        it('increments slug with -1 for standard', () => {
+          expect(standardService.addStandard).toHaveBeenCalledWith(
+            expect.objectContaining({ slug: 'test-standard-1' }),
+          );
+        });
 
-        await createStandardUsecase.execute(inputData);
-
-        expect(standardService.addStandard).toHaveBeenCalledWith(
-          expect.objectContaining({ slug: 'test-standard-1' }),
-        );
-        expect(standardVersionService.addStandardVersion).toHaveBeenCalledWith(
-          expect.objectContaining({ slug: 'test-standard-1' }),
-        );
+        it('increments slug with -1 for standard version', () => {
+          expect(
+            standardVersionService.addStandardVersion,
+          ).toHaveBeenCalledWith(
+            expect.objectContaining({ slug: 'test-standard-1' }),
+          );
+        });
       });
 
-      it('increments slug with next available suffix if -1 is also taken', async () => {
-        const inputData: CreateStandardCommand = {
-          name: 'Test Standard', // base slug: test-standard
-          description: 'Desc',
-          rules: [{ content: 'R1' }],
-          organizationId: testOrganizationId,
-          userId: testUserId.toString(),
-          spaceId: createSpaceId(uuidv4()),
-          scope: null,
-        };
+      describe('when base slug and -1 are both taken', () => {
+        beforeEach(async () => {
+          const inputData: CreateStandardCommand = {
+            name: 'Test Standard',
+            description: 'Desc',
+            rules: [{ content: 'R1' }],
+            organizationId: testOrganizationId,
+            userId: testUserId.toString(),
+            spaceId: createSpaceId(uuidv4()),
+            scope: null,
+          };
 
-        // Existing standards occupy base and -1
-        const existingBase = standardFactory({ slug: 'test-standard' });
-        const existingOne = standardFactory({ slug: 'test-standard-1' });
-        standardService.listStandardsBySpace.mockResolvedValue([
-          existingBase,
-          existingOne,
-        ]);
+          const existingBase = standardFactory({ slug: 'test-standard' });
+          const existingOne = standardFactory({ slug: 'test-standard-1' });
+          standardService.listStandardsBySpace.mockResolvedValue([
+            existingBase,
+            existingOne,
+          ]);
 
-        const createdStandard = standardFactory();
-        const createdVersion = standardVersionFactory();
+          const createdStandard = standardFactory();
+          const createdVersion = standardVersionFactory();
 
-        standardService.addStandard.mockResolvedValue(createdStandard);
-        standardVersionService.addStandardVersion.mockResolvedValue(
-          createdVersion,
-        );
+          standardService.addStandard.mockResolvedValue(createdStandard);
+          standardVersionService.addStandardVersion.mockResolvedValue(
+            createdVersion,
+          );
 
-        await createStandardUsecase.execute(inputData);
+          await createStandardUsecase.execute(inputData);
+        });
 
-        expect(standardService.addStandard).toHaveBeenCalledWith(
-          expect.objectContaining({ slug: 'test-standard-2' }),
-        );
-        expect(standardVersionService.addStandardVersion).toHaveBeenCalledWith(
-          expect.objectContaining({ slug: 'test-standard-2' }),
-        );
+        it('increments slug with -2 for standard', () => {
+          expect(standardService.addStandard).toHaveBeenCalledWith(
+            expect.objectContaining({ slug: 'test-standard-2' }),
+          );
+        });
+
+        it('increments slug with -2 for standard version', () => {
+          expect(
+            standardVersionService.addStandardVersion,
+          ).toHaveBeenCalledWith(
+            expect.objectContaining({ slug: 'test-standard-2' }),
+          );
+        });
       });
     });
   });

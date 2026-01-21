@@ -74,11 +74,14 @@ describe('onboarding.tool', () => {
     });
 
     describe('when no workflow specified', () => {
-      it('returns mode selection', async () => {
+      let result: { content: { type: string; text: string }[] };
+
+      beforeEach(async () => {
         registerOnboardingTool(dependencies, mcpServer);
+        result = await toolHandler({});
+      });
 
-        const result = await toolHandler({});
-
+      it('returns mode selection title', async () => {
         expect(result).toEqual({
           content: [
             {
@@ -89,88 +92,131 @@ describe('onboarding.tool', () => {
             },
           ],
         });
+      });
+
+      it('includes method selection content', async () => {
         expect(result.content[0].text).toContain('Method Selection');
       });
     });
 
-    it('returns codebase-analysis workflow content', async () => {
-      registerOnboardingTool(dependencies, mcpServer);
+    describe('when codebase-analysis workflow specified', () => {
+      let result: { content: { type: string; text: string }[] };
 
-      const result = await toolHandler({ workflow: 'codebase-analysis' });
-
-      expect(result).toEqual({
-        content: [
-          {
-            type: 'text',
-            text: expect.any(String),
-          },
-        ],
+      beforeEach(async () => {
+        registerOnboardingTool(dependencies, mcpServer);
+        result = await toolHandler({ workflow: 'codebase-analysis' });
       });
-      expect(result.content[0].text.length).toBeGreaterThan(0);
+
+      it('returns content with text type', async () => {
+        expect(result).toEqual({
+          content: [
+            {
+              type: 'text',
+              text: expect.any(String),
+            },
+          ],
+        });
+      });
+
+      it('returns non-empty content', async () => {
+        expect(result.content[0].text.length).toBeGreaterThan(0);
+      });
     });
 
-    it('returns git-history workflow content', async () => {
-      registerOnboardingTool(dependencies, mcpServer);
+    describe('when git-history workflow specified', () => {
+      let result: { content: { type: string; text: string }[] };
 
-      const result = await toolHandler({ workflow: 'git-history' });
-
-      expect(result).toEqual({
-        content: [
-          {
-            type: 'text',
-            text: expect.any(String),
-          },
-        ],
+      beforeEach(async () => {
+        registerOnboardingTool(dependencies, mcpServer);
+        result = await toolHandler({ workflow: 'git-history' });
       });
-      expect(result.content[0].text.length).toBeGreaterThan(0);
+
+      it('returns content with text type', async () => {
+        expect(result).toEqual({
+          content: [
+            {
+              type: 'text',
+              text: expect.any(String),
+            },
+          ],
+        });
+      });
+
+      it('returns non-empty content', async () => {
+        expect(result.content[0].text.length).toBeGreaterThan(0);
+      });
     });
 
-    it('returns documentation workflow content', async () => {
-      registerOnboardingTool(dependencies, mcpServer);
+    describe('when documentation workflow specified', () => {
+      let result: { content: { type: string; text: string }[] };
 
-      const result = await toolHandler({ workflow: 'documentation' });
-
-      expect(result).toEqual({
-        content: [
-          {
-            type: 'text',
-            text: expect.any(String),
-          },
-        ],
+      beforeEach(async () => {
+        registerOnboardingTool(dependencies, mcpServer);
+        result = await toolHandler({ workflow: 'documentation' });
       });
-      expect(result.content[0].text.length).toBeGreaterThan(0);
+
+      it('returns content with text type', async () => {
+        expect(result).toEqual({
+          content: [
+            {
+              type: 'text',
+              text: expect.any(String),
+            },
+          ],
+        });
+      });
+
+      it('returns non-empty content', async () => {
+        expect(result.content[0].text.length).toBeGreaterThan(0);
+      });
     });
 
-    it('returns ai-instructions workflow content', async () => {
-      registerOnboardingTool(dependencies, mcpServer);
+    describe('when ai-instructions workflow specified', () => {
+      let result: { content: { type: string; text: string }[] };
 
-      const result = await toolHandler({ workflow: 'ai-instructions' });
-
-      expect(result).toEqual({
-        content: [
-          {
-            type: 'text',
-            text: expect.any(String),
-          },
-        ],
+      beforeEach(async () => {
+        registerOnboardingTool(dependencies, mcpServer);
+        result = await toolHandler({ workflow: 'ai-instructions' });
       });
-      expect(result.content[0].text.length).toBeGreaterThan(0);
+
+      it('returns content with text type', async () => {
+        expect(result).toEqual({
+          content: [
+            {
+              type: 'text',
+              text: expect.any(String),
+            },
+          ],
+        });
+      });
+
+      it('returns non-empty content', async () => {
+        expect(result.content[0].text.length).toBeGreaterThan(0);
+      });
     });
 
-    it('returns web-research workflow content', async () => {
-      registerOnboardingTool(dependencies, mcpServer);
+    describe('when web-research workflow specified', () => {
+      let result: { content: { type: string; text: string }[] };
 
-      const result = await toolHandler({ workflow: 'web-research' });
-
-      expect(result).toEqual({
-        content: [
-          {
-            type: 'text',
-            text: expect.any(String),
-          },
-        ],
+      beforeEach(async () => {
+        registerOnboardingTool(dependencies, mcpServer);
+        result = await toolHandler({ workflow: 'web-research' });
       });
-      expect(result.content[0].text.length).toBeGreaterThan(0);
+
+      it('returns content with text type', async () => {
+        expect(result).toEqual({
+          content: [
+            {
+              type: 'text',
+              text: expect.any(String),
+            },
+          ],
+        });
+      });
+
+      it('returns non-empty content', async () => {
+        expect(result.content[0].text.length).toBeGreaterThan(0);
+      });
     });
 
     describe('when invalid workflow name', () => {
@@ -221,13 +267,19 @@ describe('onboarding.tool', () => {
     });
 
     describe('when userContext is missing', () => {
-      it('does not track analytics', async () => {
+      let result: { content: { type: string; text: string }[] };
+
+      beforeEach(async () => {
         dependencies.userContext = undefined;
         registerOnboardingTool(dependencies, mcpServer);
+        result = await toolHandler({ workflow: 'codebase-analysis' });
+      });
 
-        const result = await toolHandler({ workflow: 'codebase-analysis' });
-
+      it('does not track analytics', async () => {
         expect(mockAnalyticsAdapter.trackEvent).not.toHaveBeenCalled();
+      });
+
+      it('still returns workflow content', async () => {
         expect(result).toEqual({
           content: [
             {
@@ -279,13 +331,19 @@ describe('onboarding.tool', () => {
     });
 
     describe('when userContext is missing for mode-selection', () => {
-      it('continues to work', async () => {
+      let result: { content: { type: string; text: string }[] };
+
+      beforeEach(async () => {
         dependencies.userContext = undefined;
         registerOnboardingTool(dependencies, mcpServer);
+        result = await toolHandler({});
+      });
 
-        const result = await toolHandler({});
-
+      it('does not track analytics', async () => {
         expect(mockAnalyticsAdapter.trackEvent).not.toHaveBeenCalled();
+      });
+
+      it('still returns mode selection content', async () => {
         expect(result).toEqual({
           content: [
             {

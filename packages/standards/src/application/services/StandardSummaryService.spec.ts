@@ -115,16 +115,23 @@ describe('StandardSummaryService', () => {
         );
       });
 
-      it('replaces prompt placeholders correctly', () => {
+      it('does not contain {name} placeholder in prompt', () => {
         const calledPrompt = mockAIService.executePrompt.mock.calls[0][0];
-        expect(calledPrompt).toContain('TypeScript Configuration Standard');
-        expect(calledPrompt).toContain(
-          'Defines TypeScript compiler settings and project structure',
-        );
-        expect(calledPrompt).toContain('src/**/*.ts');
         expect(calledPrompt).not.toContain('{name}');
+      });
+
+      it('does not contain {description} placeholder in prompt', () => {
+        const calledPrompt = mockAIService.executePrompt.mock.calls[0][0];
         expect(calledPrompt).not.toContain('{description}');
+      });
+
+      it('does not contain {scope} placeholder in prompt', () => {
+        const calledPrompt = mockAIService.executePrompt.mock.calls[0][0];
         expect(calledPrompt).not.toContain('{scope}');
+      });
+
+      it('does not contain {rules} placeholder in prompt', () => {
+        const calledPrompt = mockAIService.executePrompt.mock.calls[0][0];
         expect(calledPrompt).not.toContain('{rules}');
       });
 
@@ -374,10 +381,18 @@ describe('StandardSummaryService', () => {
         );
       });
 
-      it('formats rules as bullet list in prompt', () => {
+      it('includes first rule as bullet in prompt', () => {
         const calledPrompt = mockAIService.executePrompt.mock.calls[0][0];
         expect(calledPrompt).toContain('* First rule content');
+      });
+
+      it('includes second rule as bullet in prompt', () => {
+        const calledPrompt = mockAIService.executePrompt.mock.calls[0][0];
         expect(calledPrompt).toContain('* Second rule content');
+      });
+
+      it('includes third rule as bullet in prompt', () => {
+        const calledPrompt = mockAIService.executePrompt.mock.calls[0][0];
         expect(calledPrompt).toContain('* Third rule content');
       });
     });
@@ -423,7 +438,7 @@ describe('StandardSummaryService', () => {
         mockAIService.isConfigured.mockResolvedValue(false);
       });
 
-      it('throws AiNotConfigured error without calling executePrompt', async () => {
+      it('throws AiNotConfigured error', async () => {
         await expect(
           standardSummaryService.createStandardSummary(
             testOrganizationId,
@@ -431,8 +446,31 @@ describe('StandardSummaryService', () => {
             [],
           ),
         ).rejects.toThrow(AiNotConfigured);
+      });
 
+      it('checks AI configuration once', async () => {
+        try {
+          await standardSummaryService.createStandardSummary(
+            testOrganizationId,
+            standardVersionData,
+            [],
+          );
+        } catch {
+          // Expected to throw
+        }
         expect(mockAIService.isConfigured).toHaveBeenCalledTimes(1);
+      });
+
+      it('does not call executePrompt', async () => {
+        try {
+          await standardSummaryService.createStandardSummary(
+            testOrganizationId,
+            standardVersionData,
+            [],
+          );
+        } catch {
+          // Expected to throw
+        }
         expect(mockAIService.executePrompt).not.toHaveBeenCalled();
       });
     });

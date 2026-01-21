@@ -131,43 +131,57 @@ describe('UpdateRuleExampleUsecase', () => {
     jest.clearAllMocks();
   });
 
-  it('updates a rule example successfully', async () => {
-    const standardVersion = standardVersionFactory();
-    const rule = ruleFactory({ standardVersionId: standardVersion.id });
-    const existingExample = ruleExampleFactory({ ruleId: rule.id });
-    const updatedExample = {
-      ...existingExample,
-      lang: ProgrammingLanguage.JAVASCRIPT,
-      positive: 'updated positive',
-      negative: 'updated negative',
-    };
+  describe('when updating a rule example successfully', () => {
+    let existingExample: ReturnType<typeof ruleExampleFactory>;
+    let updatedExample: ReturnType<typeof ruleExampleFactory>;
+    let result: ReturnType<typeof ruleExampleFactory>;
 
-    ruleExampleRepository.findById.mockResolvedValue(existingExample);
-    ruleExampleRepository.updateById.mockResolvedValue(updatedExample);
-    ruleRepository.findById.mockResolvedValue(rule);
-    standardVersionRepository.findById.mockResolvedValue(standardVersion);
-
-    const command = createCommand({
-      ruleExampleId: existingExample.id,
-      lang: ProgrammingLanguage.JAVASCRIPT,
-      positive: 'updated positive',
-      negative: 'updated negative',
-    });
-
-    const result = await usecase.execute(command);
-
-    expect(ruleExampleRepository.findById).toHaveBeenCalledWith(
-      existingExample.id,
-    );
-    expect(ruleExampleRepository.updateById).toHaveBeenCalledWith(
-      existingExample.id,
-      {
+    beforeEach(async () => {
+      const standardVersion = standardVersionFactory();
+      const rule = ruleFactory({ standardVersionId: standardVersion.id });
+      existingExample = ruleExampleFactory({ ruleId: rule.id });
+      updatedExample = {
+        ...existingExample,
         lang: ProgrammingLanguage.JAVASCRIPT,
         positive: 'updated positive',
         negative: 'updated negative',
-      },
-    );
-    expect(result).toEqual(updatedExample);
+      };
+
+      ruleExampleRepository.findById.mockResolvedValue(existingExample);
+      ruleExampleRepository.updateById.mockResolvedValue(updatedExample);
+      ruleRepository.findById.mockResolvedValue(rule);
+      standardVersionRepository.findById.mockResolvedValue(standardVersion);
+
+      const command = createCommand({
+        ruleExampleId: existingExample.id,
+        lang: ProgrammingLanguage.JAVASCRIPT,
+        positive: 'updated positive',
+        negative: 'updated negative',
+      });
+
+      result = await usecase.execute(command);
+    });
+
+    it('finds the existing example by id', () => {
+      expect(ruleExampleRepository.findById).toHaveBeenCalledWith(
+        existingExample.id,
+      );
+    });
+
+    it('updates the example with provided fields', () => {
+      expect(ruleExampleRepository.updateById).toHaveBeenCalledWith(
+        existingExample.id,
+        {
+          lang: ProgrammingLanguage.JAVASCRIPT,
+          positive: 'updated positive',
+          negative: 'updated negative',
+        },
+      );
+    });
+
+    it('returns the updated example', () => {
+      expect(result).toEqual(updatedExample);
+    });
   });
 
   it('emits RuleUpdatedEvent after updating', async () => {
@@ -196,70 +210,92 @@ describe('UpdateRuleExampleUsecase', () => {
     );
   });
 
-  it('updates only specified fields', async () => {
-    const standardVersion = standardVersionFactory();
-    const rule = ruleFactory({ standardVersionId: standardVersion.id });
-    const existingExample = ruleExampleFactory({ ruleId: rule.id });
-    const updatedExample = {
-      ...existingExample,
-      lang: ProgrammingLanguage.PYTHON,
-    };
+  describe('when updating only the lang field', () => {
+    let existingExample: ReturnType<typeof ruleExampleFactory>;
+    let updatedExample: ReturnType<typeof ruleExampleFactory>;
+    let result: ReturnType<typeof ruleExampleFactory>;
 
-    ruleExampleRepository.findById.mockResolvedValue(existingExample);
-    ruleExampleRepository.updateById.mockResolvedValue(updatedExample);
-    ruleRepository.findById.mockResolvedValue(rule);
-    standardVersionRepository.findById.mockResolvedValue(standardVersion);
+    beforeEach(async () => {
+      const standardVersion = standardVersionFactory();
+      const rule = ruleFactory({ standardVersionId: standardVersion.id });
+      existingExample = ruleExampleFactory({ ruleId: rule.id });
+      updatedExample = {
+        ...existingExample,
+        lang: ProgrammingLanguage.PYTHON,
+      };
 
-    const command = createCommand({
-      ruleExampleId: existingExample.id,
-      lang: ProgrammingLanguage.PYTHON,
+      ruleExampleRepository.findById.mockResolvedValue(existingExample);
+      ruleExampleRepository.updateById.mockResolvedValue(updatedExample);
+      ruleRepository.findById.mockResolvedValue(rule);
+      standardVersionRepository.findById.mockResolvedValue(standardVersion);
+
+      const command = createCommand({
+        ruleExampleId: existingExample.id,
+        lang: ProgrammingLanguage.PYTHON,
+      });
+
+      result = await usecase.execute(command);
     });
 
-    const result = await usecase.execute(command);
+    it('updates only the specified field', () => {
+      expect(ruleExampleRepository.updateById).toHaveBeenCalledWith(
+        existingExample.id,
+        {
+          lang: ProgrammingLanguage.PYTHON,
+        },
+      );
+    });
 
-    expect(ruleExampleRepository.updateById).toHaveBeenCalledWith(
-      existingExample.id,
-      {
-        lang: ProgrammingLanguage.PYTHON,
-      },
-    );
-    expect(result).toEqual(updatedExample);
+    it('returns the updated example', () => {
+      expect(result).toEqual(updatedExample);
+    });
   });
 
-  it('allows empty positive and negative values', async () => {
-    const standardVersion = standardVersionFactory();
-    const rule = ruleFactory({ standardVersionId: standardVersion.id });
-    const existingExample = ruleExampleFactory({ ruleId: rule.id });
-    const updatedExample = {
-      ...existingExample,
-      lang: ProgrammingLanguage.JAVASCRIPT,
-      positive: '',
-      negative: '',
-    };
+  describe('when providing empty positive and negative values', () => {
+    let existingExample: ReturnType<typeof ruleExampleFactory>;
+    let updatedExample: ReturnType<typeof ruleExampleFactory>;
+    let result: ReturnType<typeof ruleExampleFactory>;
 
-    ruleExampleRepository.findById.mockResolvedValue(existingExample);
-    ruleExampleRepository.updateById.mockResolvedValue(updatedExample);
-    ruleRepository.findById.mockResolvedValue(rule);
-    standardVersionRepository.findById.mockResolvedValue(standardVersion);
-
-    const command = createCommand({
-      ruleExampleId: existingExample.id,
-      lang: ProgrammingLanguage.JAVASCRIPT,
-      positive: '',
-      negative: '',
-    });
-
-    const result = await usecase.execute(command);
-
-    expect(ruleExampleRepository.updateById).toHaveBeenCalledWith(
-      existingExample.id,
-      {
+    beforeEach(async () => {
+      const standardVersion = standardVersionFactory();
+      const rule = ruleFactory({ standardVersionId: standardVersion.id });
+      existingExample = ruleExampleFactory({ ruleId: rule.id });
+      updatedExample = {
+        ...existingExample,
         lang: ProgrammingLanguage.JAVASCRIPT,
         positive: '',
         negative: '',
-      },
-    );
-    expect(result).toEqual(updatedExample);
+      };
+
+      ruleExampleRepository.findById.mockResolvedValue(existingExample);
+      ruleExampleRepository.updateById.mockResolvedValue(updatedExample);
+      ruleRepository.findById.mockResolvedValue(rule);
+      standardVersionRepository.findById.mockResolvedValue(standardVersion);
+
+      const command = createCommand({
+        ruleExampleId: existingExample.id,
+        lang: ProgrammingLanguage.JAVASCRIPT,
+        positive: '',
+        negative: '',
+      });
+
+      result = await usecase.execute(command);
+    });
+
+    it('accepts empty strings for positive and negative fields', () => {
+      expect(ruleExampleRepository.updateById).toHaveBeenCalledWith(
+        existingExample.id,
+        {
+          lang: ProgrammingLanguage.JAVASCRIPT,
+          positive: '',
+          negative: '',
+        },
+      );
+    });
+
+    it('returns the updated example', () => {
+      expect(result).toEqual(updatedExample);
+    });
   });
 
   describe('when no fields are provided for update', () => {

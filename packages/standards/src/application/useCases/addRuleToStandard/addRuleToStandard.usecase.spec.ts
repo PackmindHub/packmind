@@ -349,34 +349,49 @@ describe('AddRuleToStandardUsecase', () => {
         expect(result).toEqual({ standardVersion: newVersion });
       });
 
-      it('throws error for standard belonging to different organization', async () => {
-        const inputData: AddRuleToStandardCommand = {
-          standardSlug: 'test-standard',
-          ruleContent: 'Test rule content',
-          userId,
-          organizationId,
-        };
+      describe('when standard belongs to different organization', () => {
+        let thrownError: Error | undefined;
 
-        // When searching for a standard by slug with the wrong organizationId,
-        // the repository will return null because it filters by organizationId
-        standardService.findStandardBySlug.mockResolvedValue(null);
+        beforeEach(async () => {
+          // When searching for a standard by slug with the wrong organizationId,
+          // the repository will return null because it filters by organizationId
+          standardService.findStandardBySlug.mockResolvedValue(null);
 
-        await expect(
-          addRuleToStandardUsecase.execute(inputData),
-        ).rejects.toThrow(
-          'Standard slug not found, please check current standards first',
-        );
+          const inputData: AddRuleToStandardCommand = {
+            standardSlug: 'test-standard',
+            ruleContent: 'Test rule content',
+            userId,
+            organizationId,
+          };
 
-        // Should not proceed to get latest version
-        expect(
-          standardVersionService.getLatestStandardVersion,
-        ).not.toHaveBeenCalled();
+          try {
+            await addRuleToStandardUsecase.execute(inputData);
+          } catch (error) {
+            thrownError = error as Error;
+          }
+        });
+
+        it('throws error', () => {
+          expect(thrownError?.message).toBe(
+            'Standard slug not found, please check current standards first',
+          );
+        });
+
+        it('does not proceed to get latest version', () => {
+          expect(
+            standardVersionService.getLatestStandardVersion,
+          ).not.toHaveBeenCalled();
+        });
       });
     });
 
     describe('error handling', () => {
       describe('when standard does not exist', () => {
-        it('throws error with appropriate message', async () => {
+        let thrownError: Error | undefined;
+
+        beforeEach(async () => {
+          standardService.findStandardBySlug.mockResolvedValue(null);
+
           const inputData: AddRuleToStandardCommand = {
             standardSlug: 'non-existent-standard',
             ruleContent: 'Test rule content',
@@ -384,14 +399,20 @@ describe('AddRuleToStandardUsecase', () => {
             organizationId,
           };
 
-          standardService.findStandardBySlug.mockResolvedValue(null);
+          try {
+            await addRuleToStandardUsecase.execute(inputData);
+          } catch (error) {
+            thrownError = error as Error;
+          }
+        });
 
-          await expect(
-            addRuleToStandardUsecase.execute(inputData),
-          ).rejects.toThrow(
+        it('throws error with appropriate message', () => {
+          expect(thrownError?.message).toBe(
             'Standard slug not found, please check current standards first',
           );
+        });
 
+        it('does not proceed to get latest version', () => {
           expect(
             standardVersionService.getLatestStandardVersion,
           ).not.toHaveBeenCalled();
@@ -462,15 +483,18 @@ describe('AddRuleToStandardUsecase', () => {
     });
 
     describe('version increment logic', () => {
-      it('correctly increments version from any starting version', async () => {
-        const inputData: AddRuleToStandardCommand = {
+      let inputData: AddRuleToStandardCommand;
+      let existingStandard: Standard;
+
+      beforeEach(async () => {
+        inputData = {
           standardSlug: 'test-standard',
           ruleContent: 'New rule content',
           userId,
           organizationId,
         };
 
-        const existingStandard = standardFactory({
+        existingStandard = standardFactory({
           slug: 'test-standard',
           version: 5, // Start from version 5
         });
@@ -499,14 +523,18 @@ describe('AddRuleToStandardUsecase', () => {
         standardVersionService.addStandardVersion.mockResolvedValue(newVersion);
 
         await addRuleToStandardUsecase.execute(inputData);
+      });
 
+      it('increments standard version correctly', () => {
         expect(standardService.updateStandard).toHaveBeenCalledWith(
           existingStandard.id,
           expect.objectContaining({
             version: 6, // Should be incremented to 6
           }),
         );
+      });
 
+      it('creates standard version with incremented version number', () => {
         expect(standardVersionService.addStandardVersion).toHaveBeenCalledWith(
           expect.objectContaining({
             version: 6, // Should be incremented to 6
@@ -681,30 +709,40 @@ describe('AddRuleToStandardUsecase', () => {
         );
       });
 
-      it('emits RuleAddedEvent and StandardUpdatedEvent', async () => {
-        inputData = {
-          standardSlug: 'frontend-testing',
-          ruleContent: 'Use descriptive test names',
-          userId,
-          organizationId,
-          examples: [
-            {
-              positive: 'it("calculates total correctly", () => {...})',
-              negative: 'it("test1", () => {...})',
-              language: ProgrammingLanguage.JAVASCRIPT,
-            },
-          ],
-        };
+      describe('when adding rule with examples for event emission', () => {
+        beforeEach(async () => {
+          inputData = {
+            standardSlug: 'frontend-testing',
+            ruleContent: 'Use descriptive test names',
+            userId,
+            organizationId,
+            examples: [
+              {
+                positive: 'it("calculates total correctly", () => {...})',
+                negative: 'it("test1", () => {...})',
+                language: ProgrammingLanguage.JAVASCRIPT,
+              },
+            ],
+          };
 
-        await addRuleToStandardUsecase.execute(inputData);
+          await addRuleToStandardUsecase.execute(inputData);
+        });
 
-        expect(eventEmitterService.emit).toHaveBeenCalledTimes(2);
-        expect(eventEmitterService.emit).toHaveBeenCalledWith(
-          expect.any(RuleAddedEvent),
-        );
-        expect(eventEmitterService.emit).toHaveBeenCalledWith(
-          expect.any(StandardUpdatedEvent),
-        );
+        it('emits exactly two events', () => {
+          expect(eventEmitterService.emit).toHaveBeenCalledTimes(2);
+        });
+
+        it('emits RuleAddedEvent', () => {
+          expect(eventEmitterService.emit).toHaveBeenCalledWith(
+            expect.any(RuleAddedEvent),
+          );
+        });
+
+        it('emits StandardUpdatedEvent', () => {
+          expect(eventEmitterService.emit).toHaveBeenCalledWith(
+            expect.any(StandardUpdatedEvent),
+          );
+        });
       });
 
       it('skips examples without language', async () => {

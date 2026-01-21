@@ -64,124 +64,180 @@ describe('getStandardDetails.tool', () => {
     );
   });
 
-  it('returns formatted standard details with rules and examples', async () => {
-    const mockStandard = {
-      id: 'std-123',
-      slug: 'test-standard',
-      name: 'Test Standard',
-      version: 1,
-      description: 'A test standard description',
-    };
+  describe('when standard has rules and examples', () => {
+    let resultText: string;
 
-    const mockRules = [
-      {
-        id: 'rule-1',
-        content: 'Always use TypeScript',
-      },
-    ];
+    beforeEach(async () => {
+      const mockStandard = {
+        id: 'std-123',
+        slug: 'test-standard',
+        name: 'Test Standard',
+        version: 1,
+        description: 'A test standard description',
+      };
 
-    const mockExamples = [
-      {
-        lang: 'TypeScript',
-        positive: 'const foo: string = "bar";',
-        negative: 'const foo = "bar";',
-      },
-    ];
+      const mockRules = [
+        {
+          id: 'rule-1',
+          content: 'Always use TypeScript',
+        },
+      ];
 
-    const mockStandardsAdapter = {
-      findStandardBySlug: jest.fn().mockResolvedValue(mockStandard),
-      getRulesByStandardId: jest.fn().mockResolvedValue(mockRules),
-      getRuleExamples: jest.fn().mockResolvedValue(mockExamples),
-    };
+      const mockExamples = [
+        {
+          lang: 'TypeScript',
+          positive: 'const foo: string = "bar";',
+          negative: 'const foo = "bar";',
+        },
+      ];
 
-    mockFastify.standardsHexa.mockReturnValue({
-      getAdapter: () => mockStandardsAdapter,
+      const mockStandardsAdapter = {
+        findStandardBySlug: jest.fn().mockResolvedValue(mockStandard),
+        getRulesByStandardId: jest.fn().mockResolvedValue(mockRules),
+        getRuleExamples: jest.fn().mockResolvedValue(mockExamples),
+      };
+
+      mockFastify.standardsHexa.mockReturnValue({
+        getAdapter: () => mockStandardsAdapter,
+      });
+
+      registerGetStandardDetailsTool(dependencies, mcpServer);
+
+      const result = await toolHandler({ standardSlug: 'test-standard' });
+      resultText = result.content[0].text;
     });
 
-    registerGetStandardDetailsTool(dependencies, mcpServer);
+    it('includes standard name as title', () => {
+      expect(resultText).toContain('# Test Standard');
+    });
 
-    const result = await toolHandler({ standardSlug: 'test-standard' });
+    it('includes standard slug', () => {
+      expect(resultText).toContain('**Slug:** test-standard');
+    });
 
-    expect(result.content[0].text).toContain('# Test Standard');
-    expect(result.content[0].text).toContain('**Slug:** test-standard');
-    expect(result.content[0].text).toContain('**Version:** 1');
-    expect(result.content[0].text).toContain('## Description');
-    expect(result.content[0].text).toContain('A test standard description');
-    expect(result.content[0].text).toContain('## Rules');
-    expect(result.content[0].text).toContain('### Rule: Always use TypeScript');
-    expect(result.content[0].text).toContain(
-      '**Positive Example (TypeScript):**',
-    );
-    expect(result.content[0].text).toContain('```typescript');
-    expect(result.content[0].text).toContain('const foo: string = "bar";');
-    expect(result.content[0].text).toContain(
-      '**Negative Example (TypeScript):**',
-    );
-    expect(result.content[0].text).toContain('const foo = "bar";');
+    it('includes standard version', () => {
+      expect(resultText).toContain('**Version:** 1');
+    });
+
+    it('includes description section', () => {
+      expect(resultText).toContain('## Description');
+    });
+
+    it('includes description content', () => {
+      expect(resultText).toContain('A test standard description');
+    });
+
+    it('includes rules section', () => {
+      expect(resultText).toContain('## Rules');
+    });
+
+    it('includes rule content as heading', () => {
+      expect(resultText).toContain('### Rule: Always use TypeScript');
+    });
+
+    it('includes positive example label', () => {
+      expect(resultText).toContain('**Positive Example (TypeScript):**');
+    });
+
+    it('includes code block with typescript language', () => {
+      expect(resultText).toContain('```typescript');
+    });
+
+    it('includes positive example code', () => {
+      expect(resultText).toContain('const foo: string = "bar";');
+    });
+
+    it('includes negative example label', () => {
+      expect(resultText).toContain('**Negative Example (TypeScript):**');
+    });
+
+    it('includes negative example code', () => {
+      expect(resultText).toContain('const foo = "bar";');
+    });
   });
 
-  it('returns formatted standard details with multiple rules and examples', async () => {
-    const mockStandard = {
-      id: 'std-456',
-      slug: 'multi-rule-standard',
-      name: 'Multi Rule Standard',
-      version: 2,
-      description: 'A standard with multiple rules',
+  describe('when standard has multiple rules and examples', () => {
+    let resultText: string;
+    let mockStandardsAdapter: {
+      findStandardBySlug: jest.Mock;
+      getRulesByStandardId: jest.Mock;
+      getRuleExamples: jest.Mock;
     };
 
-    const mockRules = [
-      {
-        id: 'rule-1',
-        content: 'Use const for constants',
-      },
-      {
-        id: 'rule-2',
-        content: 'Prefer arrow functions',
-      },
-    ];
+    beforeEach(async () => {
+      const mockStandard = {
+        id: 'std-456',
+        slug: 'multi-rule-standard',
+        name: 'Multi Rule Standard',
+        version: 2,
+        description: 'A standard with multiple rules',
+      };
 
-    const mockExamplesRule1 = [
-      {
-        lang: 'JavaScript',
-        positive: 'const PI = 3.14;',
-        negative: 'var PI = 3.14;',
-      },
-    ];
+      const mockRules = [
+        {
+          id: 'rule-1',
+          content: 'Use const for constants',
+        },
+        {
+          id: 'rule-2',
+          content: 'Prefer arrow functions',
+        },
+      ];
 
-    const mockExamplesRule2 = [
-      {
-        lang: 'JavaScript',
-        positive: 'const add = (a, b) => a + b;',
-        negative: 'function add(a, b) { return a + b; }',
-      },
-    ];
+      const mockExamplesRule1 = [
+        {
+          lang: 'JavaScript',
+          positive: 'const PI = 3.14;',
+          negative: 'var PI = 3.14;',
+        },
+      ];
 
-    const mockStandardsAdapter = {
-      findStandardBySlug: jest.fn().mockResolvedValue(mockStandard),
-      getRulesByStandardId: jest.fn().mockResolvedValue(mockRules),
-      getRuleExamples: jest
-        .fn()
-        .mockResolvedValueOnce(mockExamplesRule1)
-        .mockResolvedValueOnce(mockExamplesRule2),
-    };
+      const mockExamplesRule2 = [
+        {
+          lang: 'JavaScript',
+          positive: 'const add = (a, b) => a + b;',
+          negative: 'function add(a, b) { return a + b; }',
+        },
+      ];
 
-    mockFastify.standardsHexa.mockReturnValue({
-      getAdapter: () => mockStandardsAdapter,
+      mockStandardsAdapter = {
+        findStandardBySlug: jest.fn().mockResolvedValue(mockStandard),
+        getRulesByStandardId: jest.fn().mockResolvedValue(mockRules),
+        getRuleExamples: jest
+          .fn()
+          .mockResolvedValueOnce(mockExamplesRule1)
+          .mockResolvedValueOnce(mockExamplesRule2),
+      };
+
+      mockFastify.standardsHexa.mockReturnValue({
+        getAdapter: () => mockStandardsAdapter,
+      });
+
+      registerGetStandardDetailsTool(dependencies, mcpServer);
+
+      const result = await toolHandler({ standardSlug: 'multi-rule-standard' });
+      resultText = result.content[0].text;
     });
 
-    registerGetStandardDetailsTool(dependencies, mcpServer);
+    it('includes first rule content', () => {
+      expect(resultText).toContain('### Rule: Use const for constants');
+    });
 
-    const result = await toolHandler({ standardSlug: 'multi-rule-standard' });
+    it('includes second rule content', () => {
+      expect(resultText).toContain('### Rule: Prefer arrow functions');
+    });
 
-    expect(result.content[0].text).toContain(
-      '### Rule: Use const for constants',
-    );
-    expect(result.content[0].text).toContain(
-      '### Rule: Prefer arrow functions',
-    );
-    expect(result.content[0].text).toContain('const PI = 3.14;');
-    expect(result.content[0].text).toContain('const add = (a, b) => a + b;');
-    expect(mockStandardsAdapter.getRuleExamples).toHaveBeenCalledTimes(2);
+    it('includes first rule example code', () => {
+      expect(resultText).toContain('const PI = 3.14;');
+    });
+
+    it('includes second rule example code', () => {
+      expect(resultText).toContain('const add = (a, b) => a + b;');
+    });
+
+    it('fetches examples for each rule', () => {
+      expect(mockStandardsAdapter.getRuleExamples).toHaveBeenCalledTimes(2);
+    });
   });
 
   describe('when standard does not exist', () => {
@@ -283,33 +339,57 @@ describe('getStandardDetails.tool', () => {
     });
   });
 
-  it('handles standard with no rules', async () => {
-    const mockStandard = {
-      id: 'std-no-rules',
-      slug: 'no-rules-standard',
-      name: 'No Rules Standard',
-      version: 1,
-      description: 'A standard without any rules',
+  describe('when standard has no rules', () => {
+    let resultText: string;
+    let mockStandardsAdapter: {
+      findStandardBySlug: jest.Mock;
+      getRulesByStandardId: jest.Mock;
+      getRuleExamples: jest.Mock;
     };
 
-    const mockStandardsAdapter = {
-      findStandardBySlug: jest.fn().mockResolvedValue(mockStandard),
-      getRulesByStandardId: jest.fn().mockResolvedValue([]),
-      getRuleExamples: jest.fn(),
-    };
+    beforeEach(async () => {
+      const mockStandard = {
+        id: 'std-no-rules',
+        slug: 'no-rules-standard',
+        name: 'No Rules Standard',
+        version: 1,
+        description: 'A standard without any rules',
+      };
 
-    mockFastify.standardsHexa.mockReturnValue({
-      getAdapter: () => mockStandardsAdapter,
+      mockStandardsAdapter = {
+        findStandardBySlug: jest.fn().mockResolvedValue(mockStandard),
+        getRulesByStandardId: jest.fn().mockResolvedValue([]),
+        getRuleExamples: jest.fn(),
+      };
+
+      mockFastify.standardsHexa.mockReturnValue({
+        getAdapter: () => mockStandardsAdapter,
+      });
+
+      registerGetStandardDetailsTool(dependencies, mcpServer);
+
+      const result = await toolHandler({ standardSlug: 'no-rules-standard' });
+      resultText = result.content[0].text;
     });
 
-    registerGetStandardDetailsTool(dependencies, mcpServer);
+    it('includes standard name', () => {
+      expect(resultText).toContain('# No Rules Standard');
+    });
 
-    const result = await toolHandler({ standardSlug: 'no-rules-standard' });
+    it('includes standard slug', () => {
+      expect(resultText).toContain('**Slug:** no-rules-standard');
+    });
 
-    expect(result.content[0].text).toContain('# No Rules Standard');
-    expect(result.content[0].text).toContain('**Slug:** no-rules-standard');
-    expect(result.content[0].text).toContain('A standard without any rules');
-    expect(result.content[0].text).not.toContain('## Rules');
-    expect(mockStandardsAdapter.getRuleExamples).not.toHaveBeenCalled();
+    it('includes description content', () => {
+      expect(resultText).toContain('A standard without any rules');
+    });
+
+    it('omits rules section', () => {
+      expect(resultText).not.toContain('## Rules');
+    });
+
+    it('does not fetch rule examples', () => {
+      expect(mockStandardsAdapter.getRuleExamples).not.toHaveBeenCalled();
+    });
   });
 });

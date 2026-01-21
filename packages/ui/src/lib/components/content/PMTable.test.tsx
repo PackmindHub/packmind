@@ -44,86 +44,180 @@ describe('PMTable', () => {
   });
 
   describe('basic rendering', () => {
-    it('renders table with columns and data', () => {
-      renderPMTable({ columns: mockColumns, data: mockData });
+    describe('renders table with columns and data', () => {
+      beforeEach(() => {
+        renderPMTable({ columns: mockColumns, data: mockData });
+      });
 
-      // Check headers are rendered
-      expect(screen.getByText('Name')).toBeInTheDocument();
-      expect(screen.getByText('Email')).toBeInTheDocument();
-      expect(screen.getByText('Role')).toBeInTheDocument();
-      expect(screen.getByText('Status')).toBeInTheDocument();
+      it('renders Name header', () => {
+        expect(screen.getByText('Name')).toBeInTheDocument();
+      });
 
-      // Check data is rendered
-      expect(screen.getByText('John Doe')).toBeInTheDocument();
-      expect(screen.getByText('john@example.com')).toBeInTheDocument();
-      expect(screen.getByText('Admin')).toBeInTheDocument();
-      expect(screen.getByText('Active')).toBeInTheDocument();
-      expect(screen.getByText('Jane Smith')).toBeInTheDocument();
-      expect(screen.getByText('jane@example.com')).toBeInTheDocument();
-      expect(screen.getByText('User')).toBeInTheDocument();
-      expect(screen.getByText('Inactive')).toBeInTheDocument();
+      it('renders Email header', () => {
+        expect(screen.getByText('Email')).toBeInTheDocument();
+      });
+
+      it('renders Role header', () => {
+        expect(screen.getByText('Role')).toBeInTheDocument();
+      });
+
+      it('renders Status header', () => {
+        expect(screen.getByText('Status')).toBeInTheDocument();
+      });
+
+      it('renders first user name', () => {
+        expect(screen.getByText('John Doe')).toBeInTheDocument();
+      });
+
+      it('renders first user email', () => {
+        expect(screen.getByText('john@example.com')).toBeInTheDocument();
+      });
+
+      it('renders first user role', () => {
+        expect(screen.getByText('Admin')).toBeInTheDocument();
+      });
+
+      it('renders first user status', () => {
+        expect(screen.getByText('Active')).toBeInTheDocument();
+      });
+
+      it('renders second user name', () => {
+        expect(screen.getByText('Jane Smith')).toBeInTheDocument();
+      });
+
+      it('renders second user email', () => {
+        expect(screen.getByText('jane@example.com')).toBeInTheDocument();
+      });
+
+      it('renders second user role', () => {
+        expect(screen.getByText('User')).toBeInTheDocument();
+      });
+
+      it('renders second user status', () => {
+        expect(screen.getByText('Inactive')).toBeInTheDocument();
+      });
     });
 
-    it('renders empty table when no data provided', () => {
-      renderPMTable({ columns: mockColumns, data: [] });
+    describe('when no data provided', () => {
+      beforeEach(() => {
+        renderPMTable({ columns: mockColumns, data: [] });
+      });
 
-      // Headers should still be rendered
-      expect(screen.getByText('Name')).toBeInTheDocument();
-      expect(screen.getByText('Email')).toBeInTheDocument();
-      expect(screen.getByText('Role')).toBeInTheDocument();
-      expect(screen.getByText('Status')).toBeInTheDocument();
+      it('renders Name header', () => {
+        expect(screen.getByText('Name')).toBeInTheDocument();
+      });
 
-      // No data rows should be rendered
-      expect(screen.queryByText('John Doe')).not.toBeInTheDocument();
-      expect(screen.queryByText('Jane Smith')).not.toBeInTheDocument();
+      it('renders Email header', () => {
+        expect(screen.getByText('Email')).toBeInTheDocument();
+      });
+
+      it('renders Role header', () => {
+        expect(screen.getByText('Role')).toBeInTheDocument();
+      });
+
+      it('renders Status header', () => {
+        expect(screen.getByText('Status')).toBeInTheDocument();
+      });
+
+      it('does not render first user data', () => {
+        expect(screen.queryByText('John Doe')).not.toBeInTheDocument();
+      });
+
+      it('does not render second user data', () => {
+        expect(screen.queryByText('Jane Smith')).not.toBeInTheDocument();
+      });
     });
   });
 
   describe('column configuration', () => {
-    it('renders columns in correct order', () => {
-      renderPMTable({ columns: mockColumns, data: mockData });
+    describe('renders columns in correct order', () => {
+      let headers: HTMLElement[];
 
-      const headers = screen.getAllByRole('columnheader');
-      expect(headers).toHaveLength(4);
-      expect(headers[0]).toHaveTextContent('Name');
-      expect(headers[1]).toHaveTextContent('Email');
-      expect(headers[2]).toHaveTextContent('Role');
-      expect(headers[3]).toHaveTextContent('Status');
+      beforeEach(() => {
+        renderPMTable({ columns: mockColumns, data: mockData });
+        headers = screen.getAllByRole('columnheader');
+      });
+
+      it('renders four column headers', () => {
+        expect(headers).toHaveLength(4);
+      });
+
+      it('renders Name as first header', () => {
+        expect(headers[0]).toHaveTextContent('Name');
+      });
+
+      it('renders Email as second header', () => {
+        expect(headers[1]).toHaveTextContent('Email');
+      });
+
+      it('renders Role as third header', () => {
+        expect(headers[2]).toHaveTextContent('Role');
+      });
+
+      it('renders Status as fourth header', () => {
+        expect(headers[3]).toHaveTextContent('Status');
+      });
     });
 
-    it('renders data in correct column order', () => {
-      renderPMTable({ columns: mockColumns, data: mockData });
+    describe('renders data in correct column order', () => {
+      let cells: NodeListOf<HTMLTableCellElement>;
 
-      const rows = screen.getAllByRole('row');
-      // Skip header row (index 0)
-      const firstDataRow = rows[1];
-      const cells = firstDataRow.querySelectorAll('td');
+      beforeEach(() => {
+        renderPMTable({ columns: mockColumns, data: mockData });
+        const rows = screen.getAllByRole('row');
+        const firstDataRow = rows[1];
+        cells = firstDataRow.querySelectorAll('td');
+      });
 
-      expect(cells[0]).toHaveTextContent('John Doe');
-      expect(cells[1]).toHaveTextContent('john@example.com');
-      expect(cells[2]).toHaveTextContent('Admin');
-      expect(cells[3]).toHaveTextContent('Active');
+      it('renders name in first cell', () => {
+        expect(cells[0]).toHaveTextContent('John Doe');
+      });
+
+      it('renders email in second cell', () => {
+        expect(cells[1]).toHaveTextContent('john@example.com');
+      });
+
+      it('renders role in third cell', () => {
+        expect(cells[2]).toHaveTextContent('Admin');
+      });
+
+      it('renders status in fourth cell', () => {
+        expect(cells[3]).toHaveTextContent('Active');
+      });
     });
 
-    it('handles missing data keys gracefully', () => {
-      const incompleteData: PMTableRow[] = [
-        {
-          name: 'John Doe',
-          email: 'john@example.com',
-          // Missing role and status
-        },
-      ];
+    describe('handles missing data keys gracefully', () => {
+      let cells: NodeListOf<HTMLTableCellElement>;
 
-      renderPMTable({ columns: mockColumns, data: incompleteData });
+      beforeEach(() => {
+        const incompleteData: PMTableRow[] = [
+          {
+            name: 'John Doe',
+            email: 'john@example.com',
+          },
+        ];
 
-      expect(screen.getByText('John Doe')).toBeInTheDocument();
-      expect(screen.getByText('john@example.com')).toBeInTheDocument();
-      // Missing fields should render as empty cells
-      const rows = screen.getAllByRole('row');
-      const firstDataRow = rows[1];
-      const cells = firstDataRow.querySelectorAll('td');
-      expect(cells[2]).toHaveTextContent('');
-      expect(cells[3]).toHaveTextContent('');
+        renderPMTable({ columns: mockColumns, data: incompleteData });
+        const rows = screen.getAllByRole('row');
+        const firstDataRow = rows[1];
+        cells = firstDataRow.querySelectorAll('td');
+      });
+
+      it('renders available name', () => {
+        expect(screen.getByText('John Doe')).toBeInTheDocument();
+      });
+
+      it('renders available email', () => {
+        expect(screen.getByText('john@example.com')).toBeInTheDocument();
+      });
+
+      it('renders empty cell for missing role', () => {
+        expect(cells[2]).toHaveTextContent('');
+      });
+
+      it('renders empty cell for missing status', () => {
+        expect(cells[3]).toHaveTextContent('');
+      });
     });
   });
 
@@ -146,58 +240,124 @@ describe('PMTable', () => {
       },
     ];
 
-    it('renders table with growing columns', () => {
-      renderPMTable({ columns: growingColumns, data: growingData });
+    describe('renders table with growing columns', () => {
+      beforeEach(() => {
+        renderPMTable({ columns: growingColumns, data: growingData });
+      });
 
-      // Check that all columns are rendered
-      expect(screen.getByText('ID')).toBeInTheDocument();
-      expect(screen.getByText('Name')).toBeInTheDocument();
-      expect(screen.getByText('Description')).toBeInTheDocument();
-      expect(screen.getByText('Category')).toBeInTheDocument();
-      expect(screen.getByText('Actions')).toBeInTheDocument();
+      it('renders ID column', () => {
+        expect(screen.getByText('ID')).toBeInTheDocument();
+      });
 
-      // Check that data is rendered
-      expect(screen.getByText('1')).toBeInTheDocument();
-      expect(screen.getByText('Project Alpha')).toBeInTheDocument();
-      expect(
-        screen.getByText('A comprehensive project management system'),
-      ).toBeInTheDocument();
-      expect(screen.getByText('Software Development')).toBeInTheDocument();
-      expect(screen.getByText('Edit')).toBeInTheDocument();
+      it('renders Name column', () => {
+        expect(screen.getByText('Name')).toBeInTheDocument();
+      });
+
+      it('renders Description column', () => {
+        expect(screen.getByText('Description')).toBeInTheDocument();
+      });
+
+      it('renders Category column', () => {
+        expect(screen.getByText('Category')).toBeInTheDocument();
+      });
+
+      it('renders Actions column', () => {
+        expect(screen.getByText('Actions')).toBeInTheDocument();
+      });
+
+      it('renders id data', () => {
+        expect(screen.getByText('1')).toBeInTheDocument();
+      });
+
+      it('renders name data', () => {
+        expect(screen.getByText('Project Alpha')).toBeInTheDocument();
+      });
+
+      it('renders description data', () => {
+        expect(
+          screen.getByText('A comprehensive project management system'),
+        ).toBeInTheDocument();
+      });
+
+      it('renders category data', () => {
+        expect(screen.getByText('Software Development')).toBeInTheDocument();
+      });
+
+      it('renders actions data', () => {
+        expect(screen.getByText('Edit')).toBeInTheDocument();
+      });
     });
 
-    it('handles all growing columns', () => {
+    describe('handles all growing columns', () => {
       const allGrowingColumns: PMTableColumn[] = [
         { key: 'name', header: 'Name', grow: true },
         { key: 'email', header: 'Email', grow: true },
         { key: 'role', header: 'Role', grow: true },
       ];
 
-      renderPMTable({ columns: allGrowingColumns, data: mockData });
+      beforeEach(() => {
+        renderPMTable({ columns: allGrowingColumns, data: mockData });
+      });
 
-      expect(screen.getByText('Name')).toBeInTheDocument();
-      expect(screen.getByText('Email')).toBeInTheDocument();
-      expect(screen.getByText('Role')).toBeInTheDocument();
-      expect(screen.getByText('John Doe')).toBeInTheDocument();
-      expect(screen.getByText('john@example.com')).toBeInTheDocument();
-      expect(screen.getByText('Admin')).toBeInTheDocument();
+      it('renders Name header', () => {
+        expect(screen.getByText('Name')).toBeInTheDocument();
+      });
+
+      it('renders Email header', () => {
+        expect(screen.getByText('Email')).toBeInTheDocument();
+      });
+
+      it('renders Role header', () => {
+        expect(screen.getByText('Role')).toBeInTheDocument();
+      });
+
+      it('renders name data', () => {
+        expect(screen.getByText('John Doe')).toBeInTheDocument();
+      });
+
+      it('renders email data', () => {
+        expect(screen.getByText('john@example.com')).toBeInTheDocument();
+      });
+
+      it('renders role data', () => {
+        expect(screen.getByText('Admin')).toBeInTheDocument();
+      });
     });
 
-    it('handles all fixed columns', () => {
+    describe('handles all fixed columns', () => {
       const allFixedColumns: PMTableColumn[] = [
         { key: 'name', header: 'Name', width: '200px', grow: false },
         { key: 'email', header: 'Email', width: '250px', grow: false },
         { key: 'role', header: 'Role', width: '150px', grow: false },
       ];
 
-      renderPMTable({ columns: allFixedColumns, data: mockData });
+      beforeEach(() => {
+        renderPMTable({ columns: allFixedColumns, data: mockData });
+      });
 
-      expect(screen.getByText('Name')).toBeInTheDocument();
-      expect(screen.getByText('Email')).toBeInTheDocument();
-      expect(screen.getByText('Role')).toBeInTheDocument();
-      expect(screen.getByText('John Doe')).toBeInTheDocument();
-      expect(screen.getByText('john@example.com')).toBeInTheDocument();
-      expect(screen.getByText('Admin')).toBeInTheDocument();
+      it('renders Name header', () => {
+        expect(screen.getByText('Name')).toBeInTheDocument();
+      });
+
+      it('renders Email header', () => {
+        expect(screen.getByText('Email')).toBeInTheDocument();
+      });
+
+      it('renders Role header', () => {
+        expect(screen.getByText('Role')).toBeInTheDocument();
+      });
+
+      it('renders name data', () => {
+        expect(screen.getByText('John Doe')).toBeInTheDocument();
+      });
+
+      it('renders email data', () => {
+        expect(screen.getByText('john@example.com')).toBeInTheDocument();
+      });
+
+      it('renders role data', () => {
+        expect(screen.getByText('Admin')).toBeInTheDocument();
+      });
     });
   });
 
@@ -274,25 +434,37 @@ describe('PMTable', () => {
       renderPMTable({ columns: mockColumns, data: dataWithReactNodes });
 
       expect(screen.getByText('John Doe')).toBeInTheDocument();
-      expect(screen.getByText('john@example.com')).toBeInTheDocument();
-      expect(screen.getByText('Admin')).toBeInTheDocument();
-      expect(screen.getByText('Active')).toBeInTheDocument();
     });
 
-    it('handles large datasets', () => {
-      const largeData: PMTableRow[] = Array.from({ length: 100 }, (_, i) => ({
-        name: `User ${i + 1}`,
-        email: `user${i + 1}@example.com`,
-        role: i % 2 === 0 ? 'Admin' : 'User',
-        status: i % 3 === 0 ? 'Active' : 'Inactive',
-      }));
+    describe('handles large datasets', () => {
+      let largeData: PMTableRow[];
 
-      renderPMTable({ columns: mockColumns, data: largeData });
+      beforeEach(() => {
+        largeData = Array.from({ length: 100 }, (_, i) => ({
+          name: `User ${i + 1}`,
+          email: `user${i + 1}@example.com`,
+          role: i % 2 === 0 ? 'Admin' : 'User',
+          status: i % 3 === 0 ? 'Active' : 'Inactive',
+        }));
 
-      expect(screen.getByText('User 1')).toBeInTheDocument();
-      expect(screen.getByText('User 100')).toBeInTheDocument();
-      expect(screen.getByText('user1@example.com')).toBeInTheDocument();
-      expect(screen.getByText('user100@example.com')).toBeInTheDocument();
+        renderPMTable({ columns: mockColumns, data: largeData });
+      });
+
+      it('renders first user', () => {
+        expect(screen.getByText('User 1')).toBeInTheDocument();
+      });
+
+      it('renders last user', () => {
+        expect(screen.getByText('User 100')).toBeInTheDocument();
+      });
+
+      it('renders first user email', () => {
+        expect(screen.getByText('user1@example.com')).toBeInTheDocument();
+      });
+
+      it('renders last user email', () => {
+        expect(screen.getByText('user100@example.com')).toBeInTheDocument();
+      });
     });
 
     it('handles numeric and boolean values', () => {
@@ -301,102 +473,140 @@ describe('PMTable', () => {
           name: 'John Doe',
           email: 'john@example.com',
           role: 123,
-          status: 'true', // Convert boolean to string for React rendering
+          status: 'true',
         },
       ];
 
       renderPMTable({ columns: mockColumns, data: mixedData });
 
-      expect(screen.getByText('John Doe')).toBeInTheDocument();
-      expect(screen.getByText('john@example.com')).toBeInTheDocument();
       expect(screen.getByText('123')).toBeInTheDocument();
-      expect(screen.getByText('true')).toBeInTheDocument();
     });
   });
 
   describe('edge cases', () => {
-    it('handles empty columns array', () => {
-      renderPMTable({ columns: [], data: mockData });
+    describe('handles empty columns array', () => {
+      beforeEach(() => {
+        renderPMTable({ columns: [], data: mockData });
+      });
 
-      const table = screen.getByRole('table');
-      expect(table).toBeInTheDocument();
+      it('renders table element', () => {
+        const table = screen.getByRole('table');
+        expect(table).toBeInTheDocument();
+      });
 
-      // No headers should be rendered
-      const headers = screen.queryAllByRole('columnheader');
-      expect(headers).toHaveLength(0);
+      it('renders no column headers', () => {
+        const headers = screen.queryAllByRole('columnheader');
+        expect(headers).toHaveLength(0);
+      });
     });
 
-    it('handles undefined and null values', () => {
-      const dataWithNullValues: PMTableRow[] = [
-        {
-          name: 'John Doe',
-          email: null,
-          role: undefined,
-          status: '',
-        },
-      ];
+    describe('handles undefined and null values', () => {
+      let cells: NodeListOf<HTMLTableCellElement>;
 
-      renderPMTable({ columns: mockColumns, data: dataWithNullValues });
+      beforeEach(() => {
+        const dataWithNullValues: PMTableRow[] = [
+          {
+            name: 'John Doe',
+            email: null,
+            role: undefined,
+            status: '',
+          },
+        ];
 
-      expect(screen.getByText('John Doe')).toBeInTheDocument();
+        renderPMTable({ columns: mockColumns, data: dataWithNullValues });
 
-      const rows = screen.getAllByRole('row');
-      const firstDataRow = rows[1];
-      const cells = firstDataRow.querySelectorAll('td');
+        const rows = screen.getAllByRole('row');
+        const firstDataRow = rows[1];
+        cells = firstDataRow.querySelectorAll('td');
+      });
 
-      expect(cells[0]).toHaveTextContent('John Doe');
-      expect(cells[1]).toHaveTextContent(''); // null renders as empty
-      expect(cells[2]).toHaveTextContent(''); // undefined renders as empty
-      expect(cells[3]).toHaveTextContent(''); // empty string renders as empty
+      it('renders name correctly', () => {
+        expect(cells[0]).toHaveTextContent('John Doe');
+      });
+
+      it('renders null email as empty', () => {
+        expect(cells[1]).toHaveTextContent('');
+      });
+
+      it('renders undefined role as empty', () => {
+        expect(cells[2]).toHaveTextContent('');
+      });
+
+      it('renders empty string status as empty', () => {
+        expect(cells[3]).toHaveTextContent('');
+      });
     });
 
-    it('handles columns with no key specified', () => {
-      const columnsWithoutKey: PMTableColumn[] = [
-        { key: 'name', header: 'Name' },
-        { key: 'nonexistent', header: 'Non-existent' },
-      ];
+    describe('handles columns with non-existent key', () => {
+      let cells: NodeListOf<HTMLTableCellElement>;
 
-      renderPMTable({ columns: columnsWithoutKey, data: mockData });
+      beforeEach(() => {
+        const columnsWithoutKey: PMTableColumn[] = [
+          { key: 'name', header: 'Name' },
+          { key: 'nonexistent', header: 'Non-existent' },
+        ];
 
-      expect(screen.getByText('Name')).toBeInTheDocument();
-      expect(screen.getByText('Non-existent')).toBeInTheDocument();
-      expect(screen.getByText('John Doe')).toBeInTheDocument();
+        renderPMTable({ columns: columnsWithoutKey, data: mockData });
 
-      const rows = screen.getAllByRole('row');
-      const firstDataRow = rows[1];
-      const cells = firstDataRow.querySelectorAll('td');
+        const rows = screen.getAllByRole('row');
+        const firstDataRow = rows[1];
+        cells = firstDataRow.querySelectorAll('td');
+      });
 
-      expect(cells[0]).toHaveTextContent('John Doe');
-      expect(cells[1]).toHaveTextContent(''); // Non-existent key renders as empty
+      it('renders Name header', () => {
+        expect(screen.getByText('Name')).toBeInTheDocument();
+      });
+
+      it('renders Non-existent header', () => {
+        expect(screen.getByText('Non-existent')).toBeInTheDocument();
+      });
+
+      it('renders name data correctly', () => {
+        expect(cells[0]).toHaveTextContent('John Doe');
+      });
+
+      it('renders non-existent key as empty', () => {
+        expect(cells[1]).toHaveTextContent('');
+      });
     });
   });
 
   describe('selection functionality', () => {
-    it('renders without selection column by default', () => {
-      renderPMTable({ columns: mockColumns, data: mockData });
-
-      const headers = screen.getAllByRole('columnheader');
-      expect(headers).toHaveLength(4); // Only the 4 data columns
-
-      // No checkboxes should be present
-      const checkboxes = screen.queryAllByRole('checkbox');
-      expect(checkboxes).toHaveLength(0);
-    });
-
-    it('renders selection column when selectable is true', () => {
-      renderPMTable({
-        columns: mockColumns,
-        data: mockData,
-        selectable: true,
-        getRowId,
+    describe('renders without selection column by default', () => {
+      beforeEach(() => {
+        renderPMTable({ columns: mockColumns, data: mockData });
       });
 
-      const headers = screen.getAllByRole('columnheader');
-      expect(headers).toHaveLength(5); // Selection column + 4 data columns
+      it('renders only data column headers', () => {
+        const headers = screen.getAllByRole('columnheader');
+        expect(headers).toHaveLength(4);
+      });
 
-      // Should have select all checkbox + 2 row checkboxes
-      const checkboxes = screen.getAllByRole('checkbox');
-      expect(checkboxes).toHaveLength(3);
+      it('renders no checkboxes', () => {
+        const checkboxes = screen.queryAllByRole('checkbox');
+        expect(checkboxes).toHaveLength(0);
+      });
+    });
+
+    describe('when selectable is true', () => {
+      beforeEach(() => {
+        renderPMTable({
+          columns: mockColumns,
+          data: mockData,
+          selectable: true,
+          getRowId,
+        });
+      });
+
+      it('renders selection column header', () => {
+        const headers = screen.getAllByRole('columnheader');
+        expect(headers).toHaveLength(5);
+      });
+
+      it('renders select all and row checkboxes', () => {
+        const checkboxes = screen.getAllByRole('checkbox');
+        expect(checkboxes).toHaveLength(3);
+      });
     });
 
     it('handles individual row selection', () => {
@@ -411,88 +621,116 @@ describe('PMTable', () => {
       });
 
       const checkboxes = screen.getAllByRole('checkbox');
-      const firstRowCheckbox = checkboxes[1]; // Index 0 is select all
-
-      // Click the first row checkbox
-      fireEvent.click(firstRowCheckbox);
-
-      expect(onSelectionChange).toHaveBeenCalledWith(
-        new Set<string | number>(['user-1']),
-      );
-    });
-
-    it('handles multiple row selection', () => {
-      const onSelectionChange = jest.fn();
-      let selectedRows = new Set<string | number>();
-
-      const { rerender } = renderPMTable({
-        columns: mockColumns,
-        data: mockData,
-        selectable: true,
-        selectedRows,
-        onSelectionChange: (newSelection) => {
-          selectedRows = newSelection;
-          onSelectionChange(newSelection);
-        },
-        getRowId,
-      });
-
-      const getCheckboxes = () => screen.getAllByRole('checkbox');
-
-      // Select first row
-      fireEvent.click(getCheckboxes()[1]);
-      expect(onSelectionChange).toHaveBeenCalledWith(
-        new Set<string | number>(['user-1']),
-      );
-
-      // Rerender with updated state
-      rerender(
-        <UIProvider>
-          <PMTable
-            columns={mockColumns}
-            data={mockData}
-            selectable={true}
-            selectedRows={selectedRows}
-            onSelectionChange={(newSelection) => {
-              selectedRows = newSelection;
-              onSelectionChange(newSelection);
-            }}
-            getRowId={getRowId}
-          />
-        </UIProvider>,
-      );
-
-      // Select second row
-      fireEvent.click(getCheckboxes()[2]);
-      expect(onSelectionChange).toHaveBeenCalledWith(
-        new Set<string | number>(['user-1', 'user-2']),
-      );
-    });
-
-    it('handles row deselection', () => {
-      const onSelectionChange = jest.fn();
-
-      renderPMTable({
-        columns: mockColumns,
-        data: mockData,
-        selectable: true,
-        selectedRows: new Set<string | number>(['user-1']),
-        onSelectionChange,
-        getRowId,
-      });
-
-      const checkboxes = screen.getAllByRole('checkbox');
       const firstRowCheckbox = checkboxes[1];
 
-      // First row should be checked
-      expect(firstRowCheckbox).toBeChecked();
-
-      // Click to deselect
       fireEvent.click(firstRowCheckbox);
 
       expect(onSelectionChange).toHaveBeenCalledWith(
-        new Set<string | number>(),
+        new Set<string | number>(['user-1']),
       );
+    });
+
+    describe('handles multiple row selection', () => {
+      let onSelectionChange: jest.Mock;
+      let selectedRows: Set<string | number>;
+
+      beforeEach(() => {
+        onSelectionChange = jest.fn();
+        selectedRows = new Set<string | number>();
+      });
+
+      it('calls onSelectionChange with first row on first selection', () => {
+        renderPMTable({
+          columns: mockColumns,
+          data: mockData,
+          selectable: true,
+          selectedRows,
+          onSelectionChange: (newSelection) => {
+            selectedRows = newSelection;
+            onSelectionChange(newSelection);
+          },
+          getRowId,
+        });
+
+        const checkboxes = screen.getAllByRole('checkbox');
+        fireEvent.click(checkboxes[1]);
+
+        expect(onSelectionChange).toHaveBeenCalledWith(
+          new Set<string | number>(['user-1']),
+        );
+      });
+
+      it('calls onSelectionChange with both rows after selecting second', () => {
+        const { rerender } = renderPMTable({
+          columns: mockColumns,
+          data: mockData,
+          selectable: true,
+          selectedRows,
+          onSelectionChange: (newSelection) => {
+            selectedRows = newSelection;
+            onSelectionChange(newSelection);
+          },
+          getRowId,
+        });
+
+        fireEvent.click(screen.getAllByRole('checkbox')[1]);
+        selectedRows = new Set<string | number>(['user-1']);
+
+        rerender(
+          <UIProvider>
+            <PMTable
+              columns={mockColumns}
+              data={mockData}
+              selectable={true}
+              selectedRows={selectedRows}
+              onSelectionChange={(newSelection) => {
+                selectedRows = newSelection;
+                onSelectionChange(newSelection);
+              }}
+              getRowId={getRowId}
+            />
+          </UIProvider>,
+        );
+
+        fireEvent.click(screen.getAllByRole('checkbox')[2]);
+
+        expect(onSelectionChange).toHaveBeenCalledWith(
+          new Set<string | number>(['user-1', 'user-2']),
+        );
+      });
+    });
+
+    describe('handles row deselection', () => {
+      let onSelectionChange: jest.Mock;
+      let firstRowCheckbox: HTMLElement;
+
+      beforeEach(() => {
+        onSelectionChange = jest.fn();
+
+        renderPMTable({
+          columns: mockColumns,
+          data: mockData,
+          selectable: true,
+          selectedRows: new Set<string | number>(['user-1']),
+          onSelectionChange,
+          getRowId,
+        });
+
+        const checkboxes = screen.getAllByRole('checkbox');
+        firstRowCheckbox = checkboxes[1];
+      });
+
+      it('shows first row as checked initially', () => {
+        expect(firstRowCheckbox).toBeChecked();
+      });
+
+      it('calls onSelectionChange with empty set on deselect', () => {
+        fireEvent.click(firstRowCheckbox);
+
+        expect(onSelectionChange).toHaveBeenCalledWith(
+          new Set<string | number>(),
+        );
+      });
     });
 
     it('handles select all functionality', () => {
@@ -508,7 +746,6 @@ describe('PMTable', () => {
 
       const selectAllCheckbox = screen.getAllByRole('checkbox')[0];
 
-      // Click select all
       fireEvent.click(selectAllCheckbox);
 
       expect(onSelectionChange).toHaveBeenCalledWith(
@@ -516,151 +753,210 @@ describe('PMTable', () => {
       );
     });
 
-    it('handles deselect all functionality', () => {
-      const onSelectionChange = jest.fn();
+    describe('handles deselect all functionality', () => {
+      let onSelectionChange: jest.Mock;
+      let selectAllCheckbox: HTMLElement;
 
-      renderPMTable({
-        columns: mockColumns,
-        data: mockData,
-        selectable: true,
-        selectedRows: new Set<string | number>(['user-1', 'user-2']),
-        onSelectionChange,
-        getRowId,
+      beforeEach(() => {
+        onSelectionChange = jest.fn();
+
+        renderPMTable({
+          columns: mockColumns,
+          data: mockData,
+          selectable: true,
+          selectedRows: new Set<string | number>(['user-1', 'user-2']),
+          onSelectionChange,
+          getRowId,
+        });
+
+        selectAllCheckbox = screen.getAllByRole('checkbox')[0];
       });
 
-      const selectAllCheckbox = screen.getAllByRole('checkbox')[0];
-
-      // Should be checked when all rows are selected
-      expect(selectAllCheckbox).toBeChecked();
-
-      // Click to deselect all
-      fireEvent.click(selectAllCheckbox);
-
-      expect(onSelectionChange).toHaveBeenCalledWith(
-        new Set<string | number>(),
-      );
-    });
-
-    it('works in uncontrolled mode', () => {
-      renderPMTable({
-        columns: mockColumns,
-        data: mockData,
-        selectable: true,
-        getRowId,
+      it('shows select all checkbox as checked', () => {
+        expect(selectAllCheckbox).toBeChecked();
       });
 
-      const checkboxes = screen.getAllByRole('checkbox');
-      const firstRowCheckbox = checkboxes[1];
+      it('calls onSelectionChange with empty set on deselect all', () => {
+        fireEvent.click(selectAllCheckbox);
 
-      // Initially unchecked
-      expect(firstRowCheckbox).not.toBeChecked();
-
-      // Click to select
-      fireEvent.click(firstRowCheckbox);
-
-      // Should be checked now
-      expect(firstRowCheckbox).toBeChecked();
+        expect(onSelectionChange).toHaveBeenCalledWith(
+          new Set<string | number>(),
+        );
+      });
     });
 
-    it('uses custom getRowId when provided', () => {
-      const getRowId = jest.fn(
-        (row: PMTableRow, index: number) => row.id as string,
-      );
+    describe('works in uncontrolled mode', () => {
+      let firstRowCheckbox: HTMLElement;
 
-      renderPMTable({
-        columns: mockColumns,
-        data: mockData,
-        selectable: true,
-        getRowId,
+      beforeEach(() => {
+        renderPMTable({
+          columns: mockColumns,
+          data: mockData,
+          selectable: true,
+          getRowId,
+        });
+
+        const checkboxes = screen.getAllByRole('checkbox');
+        firstRowCheckbox = checkboxes[1];
       });
 
-      // getRowId should be called for each row
-      expect(getRowId).toHaveBeenCalledWith(mockData[0], 0);
-      expect(getRowId).toHaveBeenCalledWith(mockData[1], 1);
+      it('starts with checkbox unchecked', () => {
+        expect(firstRowCheckbox).not.toBeChecked();
+      });
+
+      it('becomes checked after click', () => {
+        fireEvent.click(firstRowCheckbox);
+
+        expect(firstRowCheckbox).toBeChecked();
+      });
     });
 
-    it('uses custom selectAllLabel when provided', () => {
+    describe('when custom getRowId provided', () => {
+      let customGetRowId: jest.Mock;
+
+      beforeEach(() => {
+        customGetRowId = jest.fn(
+          (row: PMTableRow, index: number) => row.id as string,
+        );
+
+        renderPMTable({
+          columns: mockColumns,
+          data: mockData,
+          selectable: true,
+          getRowId: customGetRowId,
+        });
+      });
+
+      it('calls getRowId for first row', () => {
+        expect(customGetRowId).toHaveBeenCalledWith(mockData[0], 0);
+      });
+
+      it('calls getRowId for second row', () => {
+        expect(customGetRowId).toHaveBeenCalledWith(mockData[1], 1);
+      });
+    });
+
+    describe('when custom selectAllLabel provided', () => {
       const customLabel = 'Select All Items';
 
-      renderPMTable({
-        columns: mockColumns,
-        data: mockData,
-        selectable: true,
-        selectAllLabel: customLabel,
-        getRowId,
+      beforeEach(() => {
+        renderPMTable({
+          columns: mockColumns,
+          data: mockData,
+          selectable: true,
+          selectAllLabel: customLabel,
+          getRowId,
+        });
       });
 
-      const selectAllCheckbox = screen.getByTestId('pmtable.selectAll');
-      expect(selectAllCheckbox).toHaveAttribute('aria-label', customLabel);
+      it('applies custom aria-label to select all checkbox', () => {
+        const selectAllCheckbox = screen.getByTestId('pmtable.selectAll');
+        expect(selectAllCheckbox).toHaveAttribute('aria-label', customLabel);
+      });
     });
 
-    it('handles empty data with selection enabled', () => {
-      renderPMTable({
-        columns: mockColumns,
-        data: [],
-        selectable: true,
-        getRowId,
+    describe('handles empty data with selection enabled', () => {
+      let headers: HTMLElement[];
+      let checkboxes: HTMLElement[];
+
+      beforeEach(() => {
+        renderPMTable({
+          columns: mockColumns,
+          data: [],
+          selectable: true,
+          getRowId,
+        });
+
+        headers = screen.getAllByRole('columnheader');
+        checkboxes = screen.getAllByRole('checkbox');
       });
 
-      const headers = screen.getAllByRole('columnheader');
-      expect(headers).toHaveLength(5); // Selection column + 4 data columns
+      it('renders selection column with data columns', () => {
+        expect(headers).toHaveLength(5);
+      });
 
-      // Should only have select all checkbox
-      const checkboxes = screen.getAllByRole('checkbox');
-      expect(checkboxes).toHaveLength(1);
+      it('renders only select all checkbox', () => {
+        expect(checkboxes).toHaveLength(1);
+      });
 
-      // Select all should be unchecked and not indeterminate
-      const selectAllCheckbox = checkboxes[0];
-      expect(selectAllCheckbox).not.toBeChecked();
-      expect(selectAllCheckbox).not.toBePartiallyChecked();
+      it('shows select all as unchecked', () => {
+        expect(checkboxes[0]).not.toBeChecked();
+      });
+
+      it('shows select all as not partially checked', () => {
+        expect(checkboxes[0]).not.toBePartiallyChecked();
+      });
     });
 
-    it('maintains selection state when data changes', () => {
-      const onSelectionChange = jest.fn();
-      const { rerender } = renderPMTable({
-        columns: mockColumns,
-        data: mockData,
-        selectable: true,
-        selectedRows: new Set<string | number>(['user-1']),
-        onSelectionChange,
-        getRowId,
+    describe('when data changes', () => {
+      let onSelectionChange: jest.Mock;
+      let rerender: ReturnType<typeof renderPMTable>['rerender'];
+
+      beforeEach(() => {
+        onSelectionChange = jest.fn();
+        const renderResult = renderPMTable({
+          columns: mockColumns,
+          data: mockData,
+          selectable: true,
+          selectedRows: new Set<string | number>(['user-1']),
+          onSelectionChange,
+          getRowId,
+        });
+        rerender = renderResult.rerender;
       });
 
-      // First row should be selected
-      const firstRowCheckbox = screen.getAllByRole('checkbox')[1];
-      expect(firstRowCheckbox).toBeChecked();
+      it('maintains selection for first row', () => {
+        const firstRowCheckbox = screen.getAllByRole('checkbox')[1];
+        expect(firstRowCheckbox).toBeChecked();
+      });
 
-      // Update with new data
-      const newData = [
-        ...mockData,
-        {
-          id: 'user-3',
-          name: 'Bob Wilson',
-          email: 'bob@example.com',
-          role: 'User',
-          status: 'Active',
-        },
-      ];
+      describe('after adding new data', () => {
+        beforeEach(() => {
+          const newData = [
+            ...mockData,
+            {
+              id: 'user-3',
+              name: 'Bob Wilson',
+              email: 'bob@example.com',
+              role: 'User',
+              status: 'Active',
+            },
+          ];
 
-      rerender(
-        <UIProvider>
-          <PMTable
-            columns={mockColumns}
-            data={newData}
-            selectable={true}
-            selectedRows={new Set<string | number>(['user-1'])}
-            onSelectionChange={onSelectionChange}
-            getRowId={getRowId}
-          />
-        </UIProvider>,
-      );
+          rerender(
+            <UIProvider>
+              <PMTable
+                columns={mockColumns}
+                data={newData}
+                selectable={true}
+                selectedRows={new Set<string | number>(['user-1'])}
+                onSelectionChange={onSelectionChange}
+                getRowId={getRowId}
+              />
+            </UIProvider>,
+          );
+        });
 
-      // Selection should be maintained
-      const checkboxes = screen.getAllByRole('checkbox');
-      expect(checkboxes).toHaveLength(4); // select all + 3 rows
-      expect(checkboxes[1]).toBeChecked(); // First row still selected
-      expect(checkboxes[2]).not.toBeChecked(); // Second row not selected
-      expect(checkboxes[3]).not.toBeChecked(); // Third row not selected
+        it('renders correct number of checkboxes', () => {
+          const checkboxes = screen.getAllByRole('checkbox');
+          expect(checkboxes).toHaveLength(4);
+        });
+
+        it('keeps first row selected', () => {
+          const checkboxes = screen.getAllByRole('checkbox');
+          expect(checkboxes[1]).toBeChecked();
+        });
+
+        it('keeps second row unselected', () => {
+          const checkboxes = screen.getAllByRole('checkbox');
+          expect(checkboxes[2]).not.toBeChecked();
+        });
+
+        it('keeps third row unselected', () => {
+          const checkboxes = screen.getAllByRole('checkbox');
+          expect(checkboxes[3]).not.toBeChecked();
+        });
+      });
     });
   });
 });

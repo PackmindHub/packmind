@@ -57,14 +57,6 @@ import {
   UploadSkillCommand,
   UploadSkillResult,
 } from './domain/repositories/IPackmindGateway';
-import {
-  IDeleteLocalSkillCommand,
-  IDeleteLocalSkillResult,
-} from './domain/useCases/IDeleteLocalSkillUseCase';
-import {
-  IUpdateLocalSkillCommand,
-  IUpdateLocalSkillResult,
-} from './domain/useCases/IUpdateLocalSkillUseCase';
 
 const origin = 'PackmindCliHexa';
 
@@ -267,17 +259,5 @@ export class PackmindCliHexa {
     command: IInstallDefaultSkillsCommand,
   ): Promise<IInstallDefaultSkillsResult> {
     return this.hexa.useCases.installDefaultSkills.execute(command);
-  }
-
-  public async deleteLocalSkill(
-    command: IDeleteLocalSkillCommand,
-  ): Promise<IDeleteLocalSkillResult> {
-    return this.hexa.useCases.deleteLocalSkill.execute(command);
-  }
-
-  public async updateLocalSkill(
-    command: IUpdateLocalSkillCommand,
-  ): Promise<IUpdateLocalSkillResult> {
-    return this.hexa.useCases.updateLocalSkill.execute(command);
   }
 }

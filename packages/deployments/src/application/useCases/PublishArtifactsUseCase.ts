@@ -11,6 +11,8 @@ import {
   IStandardsPort,
   ICodingAgentPort,
   IGitPort,
+  IAccountsPort,
+  IDeployDefaultSkillsUseCase,
   OrganizationId,
   UserId,
   DistributionStatus,
@@ -57,6 +59,8 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
     private readonly renderModeConfigurationService: RenderModeConfigurationService,
     private readonly eventEmitterService: PackmindEventEmitterService,
     private readonly publishArtifactsDelayedJob: PublishArtifactsDelayedJob,
+    private readonly accountsPort: IAccountsPort,
+    private readonly deployDefaultSkillsUseCase: IDeployDefaultSkillsUseCase,
     private readonly packmindConfigService: PackmindConfigService = new PackmindConfigService(),
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {}
@@ -427,6 +431,25 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
           existingPackages,
         );
       baseFileUpdates.createOrUpdate.push(configFile);
+
+      // Include default skills for root targets (Packmind users only)
+      if (target.path === '/') {
+        const shouldInclude = await this.shouldIncludeDefaultSkills(userId);
+        if (shouldInclude) {
+          this.logger.info(
+            'Including default skills for root target deployment',
+            {
+              targetId: target.id,
+              targetName: target.name,
+            },
+          );
+          await this.includeDefaultSkills(
+            userId,
+            organizationId,
+            baseFileUpdates,
+          );
+        }
+      }
 
       // Apply target path prefixing
       const prefixedFileUpdates = applyTargetPrefixingToFileUpdates(
@@ -859,5 +882,57 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
     }
 
     return parts.join('\n');
+  }
+
+  /**
+   * Checks if default skills should be included based on user email.
+   * Only users with @packmind.com email addresses can deploy default skills.
+   */
+  private async shouldIncludeDefaultSkills(userId: UserId): Promise<boolean> {
+    const user = await this.accountsPort.getUserById(userId);
+    return user?.email.endsWith('@packmind.com') ?? false;
+  }
+
+  /**
+   * Deploys default skills using the DeployDefaultSkillsUseCase and merges them
+   * into the provided file updates.
+   */
+  private async includeDefaultSkills(
+    userId: UserId,
+    organizationId: OrganizationId,
+    fileUpdates: FileUpdates,
+  ): Promise<void> {
+    const result = await this.deployDefaultSkillsUseCase.execute({
+      userId,
+      organizationId,
+    });
+
+    this.mergeFileUpdates(fileUpdates, result.fileUpdates);
+
+    this.logger.info('Default skills included via DeployDefaultSkillsUseCase', {
+      createOrUpdateCount: result.fileUpdates.createOrUpdate.length,
+      deleteCount: result.fileUpdates.delete.length,
+    });
+  }
+
+  /**
+   * Merges source file updates into target, avoiding duplicates by path.
+   */
+  private mergeFileUpdates(target: FileUpdates, source: FileUpdates): void {
+    const existingPaths = new Set(target.createOrUpdate.map((f) => f.path));
+    for (const file of source.createOrUpdate) {
+      if (!existingPaths.has(file.path)) {
+        target.createOrUpdate.push(file);
+        existingPaths.add(file.path);
+      }
+    }
+
+    const existingDeletePaths = new Set(target.delete.map((f) => f.path));
+    for (const file of source.delete) {
+      if (!existingDeletePaths.has(file.path)) {
+        target.delete.push(file);
+        existingDeletePaths.add(file.path);
+      }
+    }
   }
 }

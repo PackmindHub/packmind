@@ -125,99 +125,112 @@ describe('saveCommand.tool', () => {
       );
     });
 
-    it('creates command with all parameters', async () => {
-      const mockCommand = {
-        id: 'command-123' as RecipeId,
-        name: 'Test Command',
-        summary: 'A test command summary',
-        whenToUse: ['When testing'],
-        contextValidationCheckpoints: ['Ensure tests exist'],
-        steps: [
-          {
-            name: 'Step 1',
-            description: 'First step',
-            codeSnippet: undefined,
-          },
-        ],
-      };
+    describe('when creating command with all parameters', () => {
+      let result: { content: { type: string; text: string }[] };
+      let mockAdapter: { captureRecipe: jest.Mock };
 
-      const mockGlobalSpace: Space = {
-        id: createSpaceId('space-123'),
-        name: 'Global Space',
-        slug: 'global-space',
-        organizationId: createOrganizationId('org-123'),
-      };
+      beforeEach(async () => {
+        const mockCommand = {
+          id: 'command-123' as RecipeId,
+          name: 'Test Command',
+          summary: 'A test command summary',
+          whenToUse: ['When testing'],
+          contextValidationCheckpoints: ['Ensure tests exist'],
+          steps: [
+            {
+              name: 'Step 1',
+              description: 'First step',
+              codeSnippet: undefined,
+            },
+          ],
+        };
 
-      const mockAdapter = {
-        captureRecipe: jest.fn().mockResolvedValue(mockCommand),
-      };
+        const mockGlobalSpace: Space = {
+          id: createSpaceId('space-123'),
+          name: 'Global Space',
+          slug: 'global-space',
+          organizationId: createOrganizationId('org-123'),
+        };
 
-      mockGetGlobalSpace.mockResolvedValue(mockGlobalSpace);
-      mockFastify.recipesHexa.mockReturnValue({
-        getAdapter: () => mockAdapter,
+        mockAdapter = {
+          captureRecipe: jest.fn().mockResolvedValue(mockCommand),
+        };
+
+        mockGetGlobalSpace.mockResolvedValue(mockGlobalSpace);
+        mockFastify.recipesHexa.mockReturnValue({
+          getAdapter: () => mockAdapter,
+        });
+
+        registerSaveCommandTool(dependencies, mcpServer);
+
+        result = await toolHandler({
+          name: 'Test Command',
+          summary: 'A test command summary',
+          whenToUse: ['When testing'],
+          contextValidationCheckpoints: ['Ensure tests exist'],
+          steps: [
+            {
+              name: 'Step 1',
+              description: 'First step',
+            },
+          ],
+        });
       });
 
-      registerSaveCommandTool(dependencies, mcpServer);
-
-      const result = await toolHandler({
-        name: 'Test Command',
-        summary: 'A test command summary',
-        whenToUse: ['When testing'],
-        contextValidationCheckpoints: ['Ensure tests exist'],
-        steps: [
-          {
-            name: 'Step 1',
-            description: 'First step',
-          },
-        ],
+      it('calls captureRecipe with correct parameters', () => {
+        expect(mockAdapter.captureRecipe).toHaveBeenCalledWith({
+          name: 'Test Command',
+          summary: 'A test command summary',
+          whenToUse: ['When testing'],
+          contextValidationCheckpoints: ['Ensure tests exist'],
+          steps: [
+            {
+              name: 'Step 1',
+              description: 'First step',
+            },
+          ],
+          organizationId: createOrganizationId('org-123'),
+          userId: createUserId('user-123'),
+          spaceId: createSpaceId('space-123'),
+          source: 'mcp',
+        });
       });
 
-      expect(mockAdapter.captureRecipe).toHaveBeenCalledWith({
-        name: 'Test Command',
-        summary: 'A test command summary',
-        whenToUse: ['When testing'],
-        contextValidationCheckpoints: ['Ensure tests exist'],
-        steps: [
-          {
-            name: 'Step 1',
-            description: 'First step',
-          },
-        ],
-        organizationId: createOrganizationId('org-123'),
-        userId: createUserId('user-123'),
-        spaceId: createSpaceId('space-123'),
-        source: 'mcp',
-      });
-
-      expect(result).toEqual({
-        content: [
-          {
-            type: 'text',
-            text: "Command 'Test Command' has been created successfully.",
-          },
-        ],
+      it('returns success message', () => {
+        expect(result).toEqual({
+          content: [
+            {
+              type: 'text',
+              text: "Command 'Test Command' has been created successfully.",
+            },
+          ],
+        });
       });
     });
 
-    it('creates command with complex steps including code snippets', async () => {
-      const mockCommand = {
-        id: 'command-456' as RecipeId,
-        name: 'Complex Command',
-        summary: 'A complex command with code snippets',
-        whenToUse: [
-          'When creating TypeORM entities',
-          'When setting up database migrations',
-        ],
-        contextValidationCheckpoints: [
-          'Database connection is configured',
-          'TypeORM is installed',
-        ],
-        steps: [
-          {
-            name: 'Create Entity',
-            description:
-              'Define a TypeORM entity with proper decorators and types',
-            codeSnippet: `\`\`\`typescript
+    describe('when creating command with complex steps including code snippets', () => {
+      let result: { content: { type: string; text: string }[] };
+      let mockAdapter: { captureRecipe: jest.Mock };
+
+      beforeEach(async () => {
+        const mockCommand = {
+          id: 'command-456' as RecipeId,
+          name: 'Complex Command',
+          summary: 'A complex command with code snippets',
+          whenToUse: [
+            'When creating TypeORM entities',
+            'When setting up database migrations',
+          ],
+          contextValidationCheckpoints: [
+            'Database connection is configured',
+            'TypeORM is installed',
+          ],
+          steps: [
+            {
+              name: 'Create Entity',
+              description:
+                'Define a TypeORM entity with proper decorators and types',
+              codeSnippet: `\`\`\`typescript
 @Entity()
 export class User {
   @PrimaryGeneratedColumn()
@@ -227,50 +240,50 @@ export class User {
   name: string;
 }
 \`\`\``,
-          },
-          {
-            name: 'Generate Migration',
-            description: 'Run migration generation command',
-            codeSnippet: '```bash\nnpm run migration:generate\n```',
-          },
-        ],
-      };
+            },
+            {
+              name: 'Generate Migration',
+              description: 'Run migration generation command',
+              codeSnippet: '```bash\nnpm run migration:generate\n```',
+            },
+          ],
+        };
 
-      const mockGlobalSpace: Space = {
-        id: createSpaceId('space-456'),
-        name: 'Global Space',
-        slug: 'global-space',
-        organizationId: createOrganizationId('org-123'),
-      };
+        const mockGlobalSpace: Space = {
+          id: createSpaceId('space-456'),
+          name: 'Global Space',
+          slug: 'global-space',
+          organizationId: createOrganizationId('org-123'),
+        };
 
-      const mockAdapter = {
-        captureRecipe: jest.fn().mockResolvedValue(mockCommand),
-      };
+        mockAdapter = {
+          captureRecipe: jest.fn().mockResolvedValue(mockCommand),
+        };
 
-      mockGetGlobalSpace.mockResolvedValue(mockGlobalSpace);
-      mockFastify.recipesHexa.mockReturnValue({
-        getAdapter: () => mockAdapter,
-      });
+        mockGetGlobalSpace.mockResolvedValue(mockGlobalSpace);
+        mockFastify.recipesHexa.mockReturnValue({
+          getAdapter: () => mockAdapter,
+        });
 
-      registerSaveCommandTool(dependencies, mcpServer);
+        registerSaveCommandTool(dependencies, mcpServer);
 
-      const result = await toolHandler({
-        name: 'Complex Command',
-        summary: 'A complex command with code snippets',
-        whenToUse: [
-          'When creating TypeORM entities',
-          'When setting up database migrations',
-        ],
-        contextValidationCheckpoints: [
-          'Database connection is configured',
-          'TypeORM is installed',
-        ],
-        steps: [
-          {
-            name: 'Create Entity',
-            description:
-              'Define a TypeORM entity with proper decorators and types',
-            codeSnippet: `\`\`\`typescript
+        result = await toolHandler({
+          name: 'Complex Command',
+          summary: 'A complex command with code snippets',
+          whenToUse: [
+            'When creating TypeORM entities',
+            'When setting up database migrations',
+          ],
+          contextValidationCheckpoints: [
+            'Database connection is configured',
+            'TypeORM is installed',
+          ],
+          steps: [
+            {
+              name: 'Create Entity',
+              description:
+                'Define a TypeORM entity with proper decorators and types',
+              codeSnippet: `\`\`\`typescript
 @Entity()
 export class User {
   @PrimaryGeneratedColumn()
@@ -280,32 +293,34 @@ export class User {
   name: string;
 }
 \`\`\``,
-          },
-          {
-            name: 'Generate Migration',
-            description: 'Run migration generation command',
-            codeSnippet: '```bash\nnpm run migration:generate\n```',
-          },
-        ],
+            },
+            {
+              name: 'Generate Migration',
+              description: 'Run migration generation command',
+              codeSnippet: '```bash\nnpm run migration:generate\n```',
+            },
+          ],
+        });
       });
 
-      expect(mockAdapter.captureRecipe).toHaveBeenCalledWith({
-        name: 'Complex Command',
-        summary: 'A complex command with code snippets',
-        whenToUse: [
-          'When creating TypeORM entities',
-          'When setting up database migrations',
-        ],
-        contextValidationCheckpoints: [
-          'Database connection is configured',
-          'TypeORM is installed',
-        ],
-        steps: [
-          {
-            name: 'Create Entity',
-            description:
-              'Define a TypeORM entity with proper decorators and types',
-            codeSnippet: `\`\`\`typescript
+      it('calls captureRecipe with all step data including code snippets', () => {
+        expect(mockAdapter.captureRecipe).toHaveBeenCalledWith({
+          name: 'Complex Command',
+          summary: 'A complex command with code snippets',
+          whenToUse: [
+            'When creating TypeORM entities',
+            'When setting up database migrations',
+          ],
+          contextValidationCheckpoints: [
+            'Database connection is configured',
+            'TypeORM is installed',
+          ],
+          steps: [
+            {
+              name: 'Create Entity',
+              description:
+                'Define a TypeORM entity with proper decorators and types',
+              codeSnippet: `\`\`\`typescript
 @Entity()
 export class User {
   @PrimaryGeneratedColumn()
@@ -315,26 +330,29 @@ export class User {
   name: string;
 }
 \`\`\``,
-          },
-          {
-            name: 'Generate Migration',
-            description: 'Run migration generation command',
-            codeSnippet: '```bash\nnpm run migration:generate\n```',
-          },
-        ],
-        organizationId: createOrganizationId('org-123'),
-        userId: createUserId('user-123'),
-        spaceId: createSpaceId('space-456'),
-        source: 'mcp',
+            },
+            {
+              name: 'Generate Migration',
+              description: 'Run migration generation command',
+              codeSnippet: '```bash\nnpm run migration:generate\n```',
+            },
+          ],
+          organizationId: createOrganizationId('org-123'),
+          userId: createUserId('user-123'),
+          spaceId: createSpaceId('space-456'),
+          source: 'mcp',
+        });
       });
 
-      expect(result).toEqual({
-        content: [
-          {
-            type: 'text',
-            text: "Command 'Complex Command' has been created successfully.",
-          },
-        ],
+      it('returns success message', () => {
+        expect(result).toEqual({
+          content: [
+            {
+              type: 'text',
+              text: "Command 'Complex Command' has been created successfully.",
+            },
+          ],
+        });
       });
     });
 
@@ -545,7 +563,9 @@ export class User {
         });
 
         describe('when Default package does not exist', () => {
-          it('creates Default package with the command and returns install prompt', async () => {
+          let result: { content: { type: string; text: string }[] };
+
+          beforeEach(async () => {
             const mockCommand = {
               id: 'command-123',
               name: 'Test Command',
@@ -578,14 +598,16 @@ export class User {
 
             registerSaveCommandTool(dependencies, mcpServer);
 
-            const result = await toolHandler({
+            result = await toolHandler({
               name: 'Test Command',
               summary: 'A test command',
               whenToUse: ['When testing'],
               contextValidationCheckpoints: ['Test exists'],
               steps: [{ name: 'Step 1', description: 'Do something' }],
             });
+          });
 
+          it('creates Default package with correct parameters', () => {
             expect(mockDeploymentsAdapter.createPackage).toHaveBeenCalledWith({
               userId: 'user-123',
               organizationId: 'org-123',
@@ -597,19 +619,29 @@ export class User {
               standardIds: [],
               source: 'mcp',
             });
+          });
 
+          it('returns success message with command name', () => {
             expect(result.content[0].text).toContain(
               "Command 'Test Command' has been created successfully",
             );
+          });
+
+          it('returns install package prompt', () => {
             expect(result.content[0].text).toContain(
               '**IMPORTANT: You MUST now call packmind_install_package',
             );
+          });
+
+          it('indicates this is a required step', () => {
             expect(result.content[0].text).toContain('This is a required step');
           });
         });
 
         describe('when Default package already exists', () => {
-          it('adds command to existing Default package and returns install prompt', async () => {
+          let result: { content: { type: string; text: string }[] };
+
+          beforeEach(async () => {
             const mockCommand = {
               id: 'command-456',
               name: 'Another Command',
@@ -641,14 +673,16 @@ export class User {
 
             registerSaveCommandTool(dependencies, mcpServer);
 
-            const result = await toolHandler({
+            result = await toolHandler({
               name: 'Another Command',
               summary: 'Another test command',
               whenToUse: ['When testing'],
               contextValidationCheckpoints: ['Test exists'],
               steps: [{ name: 'Step 1', description: 'Do something' }],
             });
+          });
 
+          it('adds artefacts to existing package', () => {
             expect(
               mockDeploymentsAdapter.addArtefactsToPackage,
             ).toHaveBeenCalledWith({
@@ -659,12 +693,19 @@ export class User {
               standardIds: undefined,
               source: 'mcp',
             });
+          });
 
+          it('does not create a new package', () => {
             expect(mockDeploymentsAdapter.createPackage).not.toHaveBeenCalled();
+          });
 
+          it('returns success message with command name', () => {
             expect(result.content[0].text).toContain(
               "Command 'Another Command' has been created successfully",
             );
+          });
+
+          it('returns install package prompt with default slug', () => {
             expect(result.content[0].text).toContain(
               '**IMPORTANT: You MUST now call packmind_install_package with packageSlugs: ["default"]',
             );
@@ -673,15 +714,15 @@ export class User {
       });
 
       describe('when user is not a trial user', () => {
-        beforeEach(() => {
+        let result: { content: { type: string; text: string }[] };
+
+        beforeEach(async () => {
           mockAccountsAdapter.getUserById.mockResolvedValue({
             id: 'user-123',
             email: 'test@example.com',
             trial: false,
           });
-        });
 
-        it('does not create or add to Default package', async () => {
           const mockCommand = {
             id: 'command-789',
             name: 'Regular Command',
@@ -702,23 +743,36 @@ export class User {
 
           registerSaveCommandTool(dependencies, mcpServer);
 
-          const result = await toolHandler({
+          result = await toolHandler({
             name: 'Regular Command',
             summary: 'A regular command',
             whenToUse: ['When testing'],
             contextValidationCheckpoints: ['Test exists'],
             steps: [{ name: 'Step 1', description: 'Do something' }],
           });
+        });
 
+        it('does not list packages', () => {
           expect(mockDeploymentsAdapter.listPackages).not.toHaveBeenCalled();
+        });
+
+        it('does not create package', () => {
           expect(mockDeploymentsAdapter.createPackage).not.toHaveBeenCalled();
+        });
+
+        it('does not add artefacts to package', () => {
           expect(
             mockDeploymentsAdapter.addArtefactsToPackage,
           ).not.toHaveBeenCalled();
+        });
 
+        it('returns simple success message', () => {
           expect(result.content[0].text).toBe(
             "Command 'Regular Command' has been created successfully.",
           );
+        });
+
+        it('does not include install package prompt', () => {
           expect(result.content[0].text).not.toContain(
             'packmind_install_package',
           );

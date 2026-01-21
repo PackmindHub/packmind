@@ -48,23 +48,33 @@ describe('RuleRepository', () => {
     await datasource.destroy();
   });
 
-  it('can store and retrieve rules by standard version', async () => {
-    // Create standard and version first
-    const standard = await standardRepo.save(
-      standardFactory({ slug: `standard-${uuidv4()}` }),
-    );
-    const standardVersion = await standardVersionRepo.save(
-      standardVersionFactory({ standardId: standard.id }),
-    );
+  describe('when storing and retrieving rules by standard version', () => {
+    let rule: Rule;
+    let foundRules: Rule[];
 
-    const rule = ruleFactory({ standardVersionId: standardVersion.id });
-    await ruleRepository.add(rule);
+    beforeEach(async () => {
+      const standard = await standardRepo.save(
+        standardFactory({ slug: `standard-${uuidv4()}` }),
+      );
+      const standardVersion = await standardVersionRepo.save(
+        standardVersionFactory({ standardId: standard.id }),
+      );
 
-    const foundRules = await ruleRepository.findByStandardVersionId(
-      standardVersion.id,
-    );
-    expect(foundRules).toHaveLength(1);
-    expect(foundRules[0]).toEqual(rule);
+      rule = ruleFactory({ standardVersionId: standardVersion.id });
+      await ruleRepository.add(rule);
+
+      foundRules = await ruleRepository.findByStandardVersionId(
+        standardVersion.id,
+      );
+    });
+
+    it('returns one rule', () => {
+      expect(foundRules).toHaveLength(1);
+    });
+
+    it('returns the stored rule', () => {
+      expect(foundRules[0]).toEqual(rule);
+    });
   });
 
   it('can store and retrieve multiple rules by standard version', async () => {

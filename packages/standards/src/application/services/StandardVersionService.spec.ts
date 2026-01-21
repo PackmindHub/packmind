@@ -129,8 +129,11 @@ describe('StandardVersionService', () => {
       );
     });
 
-    it('creates rules for the version', () => {
+    it('creates two rules for the version', () => {
       expect(ruleRepository.add).toHaveBeenCalledTimes(2);
+    });
+
+    it('creates first rule with correct content', () => {
       expect(ruleRepository.add).toHaveBeenCalledWith(
         expect.objectContaining({
           id: expect.any(String),
@@ -138,6 +141,9 @@ describe('StandardVersionService', () => {
           standardVersionId: savedVersion.id,
         }),
       );
+    });
+
+    it('creates second rule with correct content', () => {
       expect(ruleRepository.add).toHaveBeenCalledWith(
         expect.objectContaining({
           id: expect.any(String),
@@ -311,9 +317,13 @@ describe('StandardVersionService', () => {
   });
 
   describe('listStandardVersions', () => {
-    it('returns versions for the specified standard', async () => {
-      const standardId = createStandardId(uuidv4());
-      const versions = [
+    let standardId: ReturnType<typeof createStandardId>;
+    let versions: StandardVersion[];
+    let result: StandardVersion[];
+
+    beforeEach(async () => {
+      standardId = createStandardId(uuidv4());
+      versions = [
         standardVersionFactory({ standardId, version: 2 }),
         standardVersionFactory({ standardId, version: 1 }),
       ];
@@ -322,21 +332,29 @@ describe('StandardVersionService', () => {
         .fn()
         .mockResolvedValue(versions);
 
-      const result =
-        await standardVersionService.listStandardVersions(standardId);
+      result = await standardVersionService.listStandardVersions(standardId);
+    });
 
+    it('calls repository with correct standard ID', () => {
       expect(standardVersionRepository.findByStandardId).toHaveBeenCalledWith(
         standardId,
       );
+    });
+
+    it('returns versions for the specified standard', () => {
       expect(result).toEqual(versions);
     });
   });
 
   describe('getLatestStandardVersion', () => {
     describe('when versions exist', () => {
-      it('returns the latest version', async () => {
-        const standardId = createStandardId(uuidv4());
-        const latestVersion = standardVersionFactory({
+      let standardId: ReturnType<typeof createStandardId>;
+      let latestVersion: StandardVersion;
+      let result: StandardVersion | null;
+
+      beforeEach(async () => {
+        standardId = createStandardId(uuidv4());
+        latestVersion = standardVersionFactory({
           standardId,
           version: 3,
         });
@@ -345,12 +363,17 @@ describe('StandardVersionService', () => {
           .fn()
           .mockResolvedValue(latestVersion);
 
-        const result =
+        result =
           await standardVersionService.getLatestStandardVersion(standardId);
+      });
 
+      it('calls repository with correct standard ID', () => {
         expect(
           standardVersionRepository.findLatestByStandardId,
         ).toHaveBeenCalledWith(standardId);
+      });
+
+      it('returns the latest version', () => {
         expect(result).toEqual(latestVersion);
       });
     });
@@ -373,23 +396,33 @@ describe('StandardVersionService', () => {
 
   describe('getStandardVersion', () => {
     describe('when the version exists', () => {
-      it('returns the specific version', async () => {
-        const standardId = createStandardId(uuidv4());
-        const version = 2;
-        const standardVersion = standardVersionFactory({ standardId, version });
+      let standardId: ReturnType<typeof createStandardId>;
+      let version: number;
+      let standardVersion: StandardVersion;
+      let result: StandardVersion | null;
+
+      beforeEach(async () => {
+        standardId = createStandardId(uuidv4());
+        version = 2;
+        standardVersion = standardVersionFactory({ standardId, version });
 
         standardVersionRepository.findByStandardIdAndVersion = jest
           .fn()
           .mockResolvedValue(standardVersion);
 
-        const result = await standardVersionService.getStandardVersion(
+        result = await standardVersionService.getStandardVersion(
           standardId,
           version,
         );
+      });
 
+      it('calls repository with correct parameters', () => {
         expect(
           standardVersionRepository.findByStandardIdAndVersion,
         ).toHaveBeenCalledWith(standardId, version);
+      });
+
+      it('returns the specific version', () => {
         expect(result).toEqual(standardVersion);
       });
     });
@@ -414,10 +447,15 @@ describe('StandardVersionService', () => {
   });
 
   describe('prepareForGitPublishing', () => {
-    it('prepares standard version data for Git publishing', async () => {
-      const standardId = createStandardId(uuidv4());
-      const version = 1;
-      const standardVersion = standardVersionFactory({
+    let standardId: ReturnType<typeof createStandardId>;
+    let version: number;
+    let standardVersion: StandardVersion;
+    let result: { filePath: string; content: string };
+
+    beforeEach(async () => {
+      standardId = createStandardId(uuidv4());
+      version = 1;
+      standardVersion = standardVersionFactory({
         standardId,
         version,
         name: 'Test Standard',
@@ -443,24 +481,41 @@ describe('StandardVersionService', () => {
         .fn()
         .mockResolvedValue(rules);
 
-      const result = await standardVersionService.prepareForGitPublishing(
+      result = await standardVersionService.prepareForGitPublishing(
         standardId,
         version,
       );
+    });
 
+    it('calls version repository with correct parameters', () => {
       expect(
         standardVersionRepository.findByStandardIdAndVersion,
       ).toHaveBeenCalledWith(standardId, version);
+    });
+
+    it('calls rule repository with correct version ID', () => {
       expect(ruleRepository.findByStandardVersionId).toHaveBeenCalledWith(
         standardVersion.id,
       );
+    });
 
-      expect(result).toEqual({
-        filePath: '.packmind/standards/test-standard.md',
-        content: expect.stringContaining('# Test Standard'),
-      });
+    it('returns correct file path', () => {
+      expect(result.filePath).toEqual('.packmind/standards/test-standard.md');
+    });
+
+    it('includes standard name in content', () => {
+      expect(result.content).toContain('# Test Standard');
+    });
+
+    it('includes description in content', () => {
       expect(result.content).toContain('Test description');
+    });
+
+    it('includes first rule in content', () => {
       expect(result.content).toContain('Rule 1');
+    });
+
+    it('includes second rule in content', () => {
       expect(result.content).toContain('Rule 2');
     });
 

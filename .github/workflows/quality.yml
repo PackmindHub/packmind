@@ -146,13 +146,16 @@ jobs:
         target:
           - apps/api
           - apps/e2e-tests
+          - apps/mcp-server
           - packages/editions
           - packages/frontend
           - packages/migrations
           - packages/skills
           - packages/spaces
+          - packages/standards
           - packages/test-utils
           - packages/types
+          - packages/ui
           - packages/accounts
           - packages/coding-agent
           - packages/git

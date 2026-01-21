@@ -2,6 +2,7 @@ import * as fs from 'fs/promises';
 
 import { IPackmindGateway } from '../../domain/repositories/IPackmindGateway';
 import { InstallPackagesUseCase } from './InstallPackagesUseCase';
+import { DeleteItemType } from '@packmind/types';
 
 jest.mock('fs/promises');
 
@@ -17,7 +18,7 @@ describe('InstallPackagesUseCase', () => {
       getDraftDetectionProgramsForRule: jest.fn(),
       getActiveDetectionProgramsForRule: jest.fn(),
       getPackageSummary: jest.fn(),
-    };
+    } as unknown as jest.Mocked<IPackmindGateway>;
 
     // Setup fs mocks using jest.Mock casting
     (fs.mkdir as jest.Mock).mockResolvedValue(undefined);
@@ -48,6 +49,7 @@ describe('InstallPackagesUseCase', () => {
           ],
           delete: [],
         },
+        skillFolders: [],
       });
 
       // File does not exist
@@ -82,6 +84,7 @@ describe('InstallPackagesUseCase', () => {
           ],
           delete: [],
         },
+        skillFolders: [],
       });
 
       // File exists
@@ -121,6 +124,7 @@ describe('InstallPackagesUseCase', () => {
           ],
           delete: [],
         },
+        skillFolders: [],
       });
 
       // File exists
@@ -179,6 +183,7 @@ Some footer text.`;
           ],
           delete: [],
         },
+        skillFolders: [],
       });
 
       // File exists
@@ -240,6 +245,7 @@ Footer text.`;
           ],
           delete: [],
         },
+        skillFolders: [],
       });
 
       // File exists
@@ -289,9 +295,11 @@ ${newSectionContent}
           delete: [
             {
               path: 'old-file.md',
+              type: DeleteItemType.File,
             },
           ],
         },
+        skillFolders: [],
       });
 
       // File exists and is a file
@@ -316,9 +324,11 @@ ${newSectionContent}
           delete: [
             {
               path: '.packmind',
+              type: DeleteItemType.Directory,
             },
           ],
         },
+        skillFolders: [],
       });
 
       // Path exists and is a directory
@@ -348,9 +358,11 @@ ${newSectionContent}
             delete: [
               {
                 path: 'non-existent.md',
+                type: DeleteItemType.File,
               },
             ],
           },
+          skillFolders: [],
         });
 
         // stat returns null when file does not exist (caught error)
@@ -384,6 +396,7 @@ ${newSectionContent}
             ],
             delete: [],
           },
+          skillFolders: [],
         });
 
         (fs.access as jest.Mock).mockRejectedValue(new Error('File not found'));
@@ -420,6 +433,7 @@ ${newSectionContent}
             ],
             delete: [],
           },
+          skillFolders: [],
         });
 
         // File exists
@@ -471,6 +485,7 @@ ${sectionContent}
             ],
             delete: [],
           },
+          skillFolders: [],
         });
 
         // File exists
@@ -521,6 +536,7 @@ Section content here
             ],
             delete: [],
           },
+          skillFolders: [],
         });
 
         // File exists
@@ -567,6 +583,7 @@ Section content here
             ],
             delete: [],
           },
+          skillFolders: [],
         });
       });
 
@@ -642,6 +659,7 @@ Section content here
             ],
             delete: [],
           },
+          skillFolders: [],
         });
 
         (fs.access as jest.Mock).mockRejectedValue(new Error('File not found'));
@@ -675,6 +693,7 @@ Section content here
             ],
             delete: [],
           },
+          skillFolders: [],
         });
 
         (fs.access as jest.Mock).mockRejectedValue(new Error('File not found'));
@@ -713,6 +732,7 @@ Section content here
             ],
             delete: [],
           },
+          skillFolders: [],
         });
 
         // File exists
@@ -754,6 +774,7 @@ Old packmind content
           ],
           delete: [],
         },
+        skillFolders: [],
       });
 
       // File exists
@@ -784,8 +805,6 @@ Old packmind content
   describe('when skills are installed', () => {
     beforeEach(() => {
       (fs.access as jest.Mock).mockRejectedValue(new Error('File not found'));
-      (fs.readdir as jest.Mock).mockResolvedValue([]);
-      (fs.copyFile as jest.Mock).mockResolvedValue(undefined);
     });
 
     describe('when skill files are present in package', () => {
@@ -804,72 +823,70 @@ Old packmind content
             ],
             delete: [],
           },
-        });
-
-        // Source skill directory exists
-        (fs.access as jest.Mock).mockImplementation((p: string) => {
-          if (p.includes('.packmind/skills/signal-capture')) {
-            return Promise.resolve();
-          }
-          return Promise.reject(new Error('Not found'));
-        });
-
-        // Return skill files when reading source directory
-        (fs.readdir as jest.Mock).mockImplementation((p: string) => {
-          if (p.includes('.packmind/skills/signal-capture')) {
-            return Promise.resolve([
-              {
-                name: 'SKILL.md',
-                isDirectory: () => false,
-                isFile: () => true,
-              },
-              {
-                name: 'helper.ts',
-                isDirectory: () => false,
-                isFile: () => true,
-              },
-            ]);
-          }
-          return Promise.resolve([]);
+          skillFolders: [
+            '.packmind/skills/signal-capture',
+            '.claude/skills/signal-capture',
+            '.github/skills/signal-capture',
+          ],
         });
       });
 
-      it('syncs skills to agent directories', async () => {
+      it('counts skill files correctly', async () => {
         const result = await useCase.execute({
           packagesSlugs: ['test-package'],
           baseDirectory: '/test',
         });
 
         expect(result.skillsCount).toBe(1);
-        expect(result.skillsSyncedToAgents).toBe(2); // claude and github
       });
 
-      it('copies files to .claude/skills directory', async () => {
+      it('delete skill directories before processing files', async () => {
+        const result = await useCase.execute({
+          packagesSlugs: ['test-package'],
+          baseDirectory: '/test',
+        });
+
+        expect(result.skillDirectoriesDeleted).toBe(3);
+      });
+
+      it('removes .packmind/skills folder', async () => {
         await useCase.execute({
           packagesSlugs: ['test-package'],
           baseDirectory: '/test',
         });
 
-        expect(fs.copyFile).toHaveBeenCalledWith(
-          '/test/.packmind/skills/signal-capture/SKILL.md',
-          '/test/.claude/skills/signal-capture/SKILL.md',
+        expect(fs.rm).toHaveBeenCalledWith(
+          '/test/.packmind/skills/signal-capture',
+          { recursive: true, force: true },
         );
       });
 
-      it('copies files to .github/skills directory', async () => {
+      it('removes .claude/skills folder', async () => {
         await useCase.execute({
           packagesSlugs: ['test-package'],
           baseDirectory: '/test',
         });
 
-        expect(fs.copyFile).toHaveBeenCalledWith(
-          '/test/.packmind/skills/signal-capture/SKILL.md',
-          '/test/.github/skills/signal-capture/SKILL.md',
+        expect(fs.rm).toHaveBeenCalledWith(
+          '/test/.claude/skills/signal-capture',
+          { recursive: true, force: true },
+        );
+      });
+
+      it('removes .github/skills folder', async () => {
+        await useCase.execute({
+          packagesSlugs: ['test-package'],
+          baseDirectory: '/test',
+        });
+
+        expect(fs.rm).toHaveBeenCalledWith(
+          '/test/.github/skills/signal-capture',
+          { recursive: true, force: true },
         );
       });
     });
 
-    describe('when skill source directory does not exist', () => {
+    describe('when skillFolders array is empty', () => {
       beforeEach(() => {
         mockGateway.getPullData.mockResolvedValue({
           fileUpdates: {
@@ -881,20 +898,55 @@ Old packmind content
             ],
             delete: [],
           },
+          skillFolders: [],
         });
-
-        // Source skill directory does not exist
-        (fs.access as jest.Mock).mockRejectedValue(new Error('Not found'));
       });
 
-      it('does not sync to agent directories', async () => {
+      it('does not delete any directories', async () => {
         const result = await useCase.execute({
           packagesSlugs: ['test-package'],
           baseDirectory: '/test',
         });
 
-        expect(result.skillsSyncedToAgents).toBe(0);
-        expect(fs.copyFile).not.toHaveBeenCalled();
+        expect(result.skillDirectoriesDeleted).toBe(0);
+      });
+    });
+
+    describe('when delete fails for some folders', () => {
+      beforeEach(() => {
+        mockGateway.getPullData.mockResolvedValue({
+          fileUpdates: {
+            createOrUpdate: [],
+            delete: [],
+          },
+          skillFolders: [
+            '.claude/skills/test-skill',
+            '.github/skills/test-skill',
+          ],
+        });
+
+        // First call succeeds, second fails
+        (fs.rm as jest.Mock)
+          .mockResolvedValueOnce(undefined)
+          .mockRejectedValueOnce(new Error('Permission denied'));
+      });
+
+      it('counts only successful deletions', async () => {
+        const result = await useCase.execute({
+          packagesSlugs: ['test-package'],
+          baseDirectory: '/test',
+        });
+
+        expect(result.skillDirectoriesDeleted).toBe(1);
+      });
+
+      it('does not add errors for failed deletions', async () => {
+        const result = await useCase.execute({
+          packagesSlugs: ['test-package'],
+          baseDirectory: '/test',
+        });
+
+        expect(result.errors).toEqual([]);
       });
     });
   });

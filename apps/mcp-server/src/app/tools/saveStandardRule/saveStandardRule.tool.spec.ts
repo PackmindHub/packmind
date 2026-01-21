@@ -117,183 +117,222 @@ describe('addRuleToStandard.tool', () => {
       );
     });
 
-    it('adds rule with standardSlug and ruleContent', async () => {
-      const mockAdapter = {
-        addRuleToStandard: jest.fn().mockResolvedValue({
-          standardVersion: {
-            standardId: 'standard-123',
-            version: '1.1.0',
-          },
-        }),
-      };
+    describe('when adding rule with standardSlug and ruleContent', () => {
+      let mockAdapter: { addRuleToStandard: jest.Mock };
+      let result: { content: { type: string; text: string }[] };
 
-      mockFastify.standardsHexa.mockReturnValue({
-        getAdapter: () => mockAdapter,
+      beforeEach(async () => {
+        mockAdapter = {
+          addRuleToStandard: jest.fn().mockResolvedValue({
+            standardVersion: {
+              standardId: 'standard-123',
+              version: '1.1.0',
+            },
+          }),
+        };
+
+        mockFastify.standardsHexa.mockReturnValue({
+          getAdapter: () => mockAdapter,
+        });
+
+        registerSaveStandardRuleTool(dependencies, mcpServer);
+
+        result = await toolHandler({
+          standardSlug: 'typescript-best-practices',
+          ruleContent: 'Use meaningful variable names',
+        });
       });
 
-      registerSaveStandardRuleTool(dependencies, mcpServer);
-
-      const result = await toolHandler({
-        standardSlug: 'typescript-best-practices',
-        ruleContent: 'Use meaningful variable names',
+      it('calls addRuleToStandard with correct parameters', () => {
+        expect(mockAdapter.addRuleToStandard).toHaveBeenCalledWith({
+          standardSlug: 'typescript-best-practices',
+          ruleContent: 'Use meaningful variable names',
+          organizationId: 'org-123',
+          userId: 'user-123',
+          examples: [],
+          source: 'mcp',
+        });
       });
 
-      expect(mockAdapter.addRuleToStandard).toHaveBeenCalledWith({
-        standardSlug: 'typescript-best-practices',
-        ruleContent: 'Use meaningful variable names',
-        organizationId: 'org-123',
-        userId: 'user-123',
-        examples: [],
-        source: 'mcp',
-      });
-
-      expect(result).toEqual({
-        content: [
-          {
-            type: 'text',
-            text: "Rule added successfully to standard 'typescript-best-practices'. New version 1.1.0 created.",
-          },
-        ],
-      });
-    });
-
-    it('adds rule with positive and negative examples and language', async () => {
-      const { extractCodeFromMarkdown } = jest.requireMock(
-        '@packmind/node-utils',
-      );
-      extractCodeFromMarkdown.mockImplementation((code: string) =>
-        code.replace(/```typescript\n|\n```/g, ''),
-      );
-
-      const mockAdapter = {
-        addRuleToStandard: jest.fn().mockResolvedValue({
-          standardVersion: {
-            standardId: 'standard-123',
-            version: '1.1.0',
-          },
-        }),
-      };
-
-      mockFastify.standardsHexa.mockReturnValue({
-        getAdapter: () => mockAdapter,
-      });
-
-      registerSaveStandardRuleTool(dependencies, mcpServer);
-
-      const result = await toolHandler({
-        standardSlug: 'typescript-best-practices',
-        ruleContent: 'Use const for immutable variables',
-        positiveExample: '```typescript\nconst PI = 3.14;\n```',
-        negativeExample: '```typescript\nlet PI = 3.14;\n```',
-        language: 'typescript',
-      });
-
-      expect(mockAdapter.addRuleToStandard).toHaveBeenCalledWith({
-        standardSlug: 'typescript-best-practices',
-        ruleContent: 'Use const for immutable variables',
-        organizationId: 'org-123',
-        userId: 'user-123',
-        examples: [
-          {
-            positive: 'const PI = 3.14;',
-            negative: 'let PI = 3.14;',
-            language: 'TYPESCRIPT',
-          },
-        ],
-        source: 'mcp',
-      });
-
-      expect(result).toEqual({
-        content: [
-          {
-            type: 'text',
-            text: "Rule added successfully to standard 'typescript-best-practices'. New version 1.1.0 created.",
-          },
-        ],
-      });
-    });
-
-    it('converts standardSlug to lowercase', async () => {
-      const mockAdapter = {
-        addRuleToStandard: jest.fn().mockResolvedValue({
-          standardVersion: {
-            standardId: 'standard-123',
-            version: '1.2.0',
-          },
-        }),
-      };
-
-      mockFastify.standardsHexa.mockReturnValue({
-        getAdapter: () => mockAdapter,
-      });
-
-      registerSaveStandardRuleTool(dependencies, mcpServer);
-
-      const result = await toolHandler({
-        standardSlug: 'TypeScript-Best-Practices',
-        ruleContent: 'Follow naming conventions',
-      });
-
-      expect(mockAdapter.addRuleToStandard).toHaveBeenCalledWith({
-        standardSlug: 'typescript-best-practices',
-        ruleContent: 'Follow naming conventions',
-        organizationId: 'org-123',
-        userId: 'user-123',
-        examples: [],
-        source: 'mcp',
-      });
-
-      expect(result.content[0].text).toContain('typescript-best-practices');
-    });
-
-    it('uses extractCodeFromMarkdown on examples', async () => {
-      const { extractCodeFromMarkdown } = jest.requireMock(
-        '@packmind/node-utils',
-      );
-      extractCodeFromMarkdown.mockImplementation((code: string) =>
-        code ? 'extracted: ' + code : '',
-      );
-
-      const mockAdapter = {
-        addRuleToStandard: jest.fn().mockResolvedValue({
-          standardVersion: {
-            standardId: 'standard-123',
-            version: '1.1.0',
-          },
-        }),
-      };
-
-      mockFastify.standardsHexa.mockReturnValue({
-        getAdapter: () => mockAdapter,
-      });
-
-      registerSaveStandardRuleTool(dependencies, mcpServer);
-
-      await toolHandler({
-        standardSlug: 'test-standard',
-        ruleContent: 'Test rule',
-        positiveExample: '```js\nconst x = 1;\n```',
-        negativeExample: '```js\nvar x = 1;\n```',
-        language: 'javascript',
-      });
-
-      expect(extractCodeFromMarkdown).toHaveBeenCalledWith(
-        '```js\nconst x = 1;\n```',
-      );
-      expect(extractCodeFromMarkdown).toHaveBeenCalledWith(
-        '```js\nvar x = 1;\n```',
-      );
-
-      expect(mockAdapter.addRuleToStandard).toHaveBeenCalledWith(
-        expect.objectContaining({
-          examples: [
-            expect.objectContaining({
-              positive: 'extracted: ```js\nconst x = 1;\n```',
-              negative: 'extracted: ```js\nvar x = 1;\n```',
-            }),
+      it('returns success message with new version', () => {
+        expect(result).toEqual({
+          content: [
+            {
+              type: 'text',
+              text: "Rule added successfully to standard 'typescript-best-practices'. New version 1.1.0 created.",
+            },
           ],
-        }),
-      );
+        });
+      });
+    });
+
+    describe('when adding rule with positive and negative examples and language', () => {
+      let mockAdapter: { addRuleToStandard: jest.Mock };
+      let result: { content: { type: string; text: string }[] };
+
+      beforeEach(async () => {
+        const { extractCodeFromMarkdown } = jest.requireMock(
+          '@packmind/node-utils',
+        );
+        extractCodeFromMarkdown.mockImplementation((code: string) =>
+          code.replace(/```typescript\n|\n```/g, ''),
+        );
+
+        mockAdapter = {
+          addRuleToStandard: jest.fn().mockResolvedValue({
+            standardVersion: {
+              standardId: 'standard-123',
+              version: '1.1.0',
+            },
+          }),
+        };
+
+        mockFastify.standardsHexa.mockReturnValue({
+          getAdapter: () => mockAdapter,
+        });
+
+        registerSaveStandardRuleTool(dependencies, mcpServer);
+
+        result = await toolHandler({
+          standardSlug: 'typescript-best-practices',
+          ruleContent: 'Use const for immutable variables',
+          positiveExample: '```typescript\nconst PI = 3.14;\n```',
+          negativeExample: '```typescript\nlet PI = 3.14;\n```',
+          language: 'typescript',
+        });
+      });
+
+      it('calls addRuleToStandard with extracted examples', () => {
+        expect(mockAdapter.addRuleToStandard).toHaveBeenCalledWith({
+          standardSlug: 'typescript-best-practices',
+          ruleContent: 'Use const for immutable variables',
+          organizationId: 'org-123',
+          userId: 'user-123',
+          examples: [
+            {
+              positive: 'const PI = 3.14;',
+              negative: 'let PI = 3.14;',
+              language: 'TYPESCRIPT',
+            },
+          ],
+          source: 'mcp',
+        });
+      });
+
+      it('returns success message with new version', () => {
+        expect(result).toEqual({
+          content: [
+            {
+              type: 'text',
+              text: "Rule added successfully to standard 'typescript-best-practices'. New version 1.1.0 created.",
+            },
+          ],
+        });
+      });
+    });
+
+    describe('when standardSlug has uppercase characters', () => {
+      let mockAdapter: { addRuleToStandard: jest.Mock };
+      let result: { content: { type: string; text: string }[] };
+
+      beforeEach(async () => {
+        mockAdapter = {
+          addRuleToStandard: jest.fn().mockResolvedValue({
+            standardVersion: {
+              standardId: 'standard-123',
+              version: '1.2.0',
+            },
+          }),
+        };
+
+        mockFastify.standardsHexa.mockReturnValue({
+          getAdapter: () => mockAdapter,
+        });
+
+        registerSaveStandardRuleTool(dependencies, mcpServer);
+
+        result = await toolHandler({
+          standardSlug: 'TypeScript-Best-Practices',
+          ruleContent: 'Follow naming conventions',
+        });
+      });
+
+      it('passes lowercase standardSlug to adapter', () => {
+        expect(mockAdapter.addRuleToStandard).toHaveBeenCalledWith({
+          standardSlug: 'typescript-best-practices',
+          ruleContent: 'Follow naming conventions',
+          organizationId: 'org-123',
+          userId: 'user-123',
+          examples: [],
+          source: 'mcp',
+        });
+      });
+
+      it('returns success message with lowercase slug', () => {
+        expect(result.content[0].text).toContain('typescript-best-practices');
+      });
+    });
+
+    describe('when examples are provided as markdown code blocks', () => {
+      let extractCodeFromMarkdown: jest.Mock;
+      let mockAdapter: { addRuleToStandard: jest.Mock };
+
+      beforeEach(async () => {
+        extractCodeFromMarkdown = jest.requireMock(
+          '@packmind/node-utils',
+        ).extractCodeFromMarkdown;
+        extractCodeFromMarkdown.mockImplementation((code: string) =>
+          code ? 'extracted: ' + code : '',
+        );
+
+        mockAdapter = {
+          addRuleToStandard: jest.fn().mockResolvedValue({
+            standardVersion: {
+              standardId: 'standard-123',
+              version: '1.1.0',
+            },
+          }),
+        };
+
+        mockFastify.standardsHexa.mockReturnValue({
+          getAdapter: () => mockAdapter,
+        });
+
+        registerSaveStandardRuleTool(dependencies, mcpServer);
+
+        await toolHandler({
+          standardSlug: 'test-standard',
+          ruleContent: 'Test rule',
+          positiveExample: '```js\nconst x = 1;\n```',
+          negativeExample: '```js\nvar x = 1;\n```',
+          language: 'javascript',
+        });
+      });
+
+      it('calls extractCodeFromMarkdown for positive example', () => {
+        expect(extractCodeFromMarkdown).toHaveBeenCalledWith(
+          '```js\nconst x = 1;\n```',
+        );
+      });
+
+      it('calls extractCodeFromMarkdown for negative example', () => {
+        expect(extractCodeFromMarkdown).toHaveBeenCalledWith(
+          '```js\nvar x = 1;\n```',
+        );
+      });
+
+      it('passes extracted code to addRuleToStandard', () => {
+        expect(mockAdapter.addRuleToStandard).toHaveBeenCalledWith(
+          expect.objectContaining({
+            examples: [
+              expect.objectContaining({
+                positive: 'extracted: ```js\nconst x = 1;\n```',
+                negative: 'extracted: ```js\nvar x = 1;\n```',
+              }),
+            ],
+          }),
+        );
+      });
     });
 
     it('tracks analytics event on success', async () => {
@@ -475,8 +514,11 @@ describe('addRuleToStandard.tool', () => {
     });
 
     describe('when language is not provided with examples', () => {
-      it('defaults to JAVASCRIPT language', async () => {
-        const mockAdapter = {
+      let mockAdapter: { addRuleToStandard: jest.Mock };
+      let result: { content: { type: string; text: string }[] };
+
+      beforeEach(async () => {
+        mockAdapter = {
           addRuleToStandard: jest.fn().mockResolvedValue({
             standardVersion: {
               standardId: 'standard-123',
@@ -491,12 +533,14 @@ describe('addRuleToStandard.tool', () => {
 
         registerSaveStandardRuleTool(dependencies, mcpServer);
 
-        const result = await toolHandler({
+        result = await toolHandler({
           standardSlug: 'test-standard',
           ruleContent: 'Test rule',
           positiveExample: 'const x = 1;',
         });
+      });
 
+      it('defaults to JAVASCRIPT language', () => {
         expect(mockAdapter.addRuleToStandard).toHaveBeenCalledWith(
           expect.objectContaining({
             examples: [
@@ -507,14 +551,19 @@ describe('addRuleToStandard.tool', () => {
             ],
           }),
         );
+      });
 
+      it('returns success message', () => {
         expect(result.content[0].text).toContain('Rule added successfully');
       });
     });
 
     describe('when invalid language is provided', () => {
-      it('returns error', async () => {
-        const mockAdapter = {
+      let mockAdapter: { addRuleToStandard: jest.Mock };
+      let result: { content: { type: string; text: string }[] };
+
+      beforeEach(async () => {
+        mockAdapter = {
           addRuleToStandard: jest.fn().mockResolvedValue({
             standardVersion: {
               standardId: 'standard-123',
@@ -529,16 +578,21 @@ describe('addRuleToStandard.tool', () => {
 
         registerSaveStandardRuleTool(dependencies, mcpServer);
 
-        const result = await toolHandler({
+        result = await toolHandler({
           standardSlug: 'test-standard',
           ruleContent: 'Test rule',
           positiveExample: 'const x = 1;',
           language: 'invalid-language',
         });
+      });
 
+      it('returns error message about unknown language', () => {
         expect(result.content[0].text).toContain(
           'Failed to add rule to standard: Unknown programming language',
         );
+      });
+
+      it('does not call addRuleToStandard', () => {
         expect(mockAdapter.addRuleToStandard).not.toHaveBeenCalled();
       });
     });
@@ -603,7 +657,9 @@ describe('addRuleToStandard.tool', () => {
         });
 
         describe('when Default package does not exist', () => {
-          it('creates Default package with the standard and returns install prompt', async () => {
+          let result: { content: { type: string; text: string }[] };
+
+          beforeEach(async () => {
             const mockAdapter = {
               addRuleToStandard: jest.fn().mockResolvedValue({
                 standardVersion: {
@@ -631,11 +687,13 @@ describe('addRuleToStandard.tool', () => {
 
             registerSaveStandardRuleTool(dependencies, mcpServer);
 
-            const result = await toolHandler({
+            result = await toolHandler({
               standardSlug: 'test-standard',
               ruleContent: 'Test rule',
             });
+          });
 
+          it('creates Default package with the standard', () => {
             expect(mockDeploymentsAdapter.createPackage).toHaveBeenCalledWith({
               userId: 'user-123',
               organizationId: 'org-123',
@@ -647,10 +705,15 @@ describe('addRuleToStandard.tool', () => {
               standardIds: ['standard-123'],
               source: 'mcp',
             });
+          });
 
+          it('returns success message with standard name', () => {
             expect(result.content[0].text).toContain(
               "Rule added successfully to standard 'test-standard'",
             );
+          });
+
+          it('returns install prompt', () => {
             expect(result.content[0].text).toContain(
               '**IMPORTANT: You MUST now call packmind_install_package',
             );
@@ -658,7 +721,9 @@ describe('addRuleToStandard.tool', () => {
         });
 
         describe('when Default package already exists', () => {
-          it('adds standard to existing Default package and returns install prompt', async () => {
+          let result: { content: { type: string; text: string }[] };
+
+          beforeEach(async () => {
             const mockAdapter = {
               addRuleToStandard: jest.fn().mockResolvedValue({
                 standardVersion: {
@@ -685,11 +750,13 @@ describe('addRuleToStandard.tool', () => {
 
             registerSaveStandardRuleTool(dependencies, mcpServer);
 
-            const result = await toolHandler({
+            result = await toolHandler({
               standardSlug: 'another-standard',
               ruleContent: 'Another rule',
             });
+          });
 
+          it('adds standard to existing Default package', () => {
             expect(
               mockDeploymentsAdapter.addArtefactsToPackage,
             ).toHaveBeenCalledWith({
@@ -699,12 +766,19 @@ describe('addRuleToStandard.tool', () => {
               standardIds: ['standard-456'],
               source: 'mcp',
             });
+          });
 
+          it('does not create a new package', () => {
             expect(mockDeploymentsAdapter.createPackage).not.toHaveBeenCalled();
+          });
 
+          it('returns success message with standard name', () => {
             expect(result.content[0].text).toContain(
               "Rule added successfully to standard 'another-standard'",
             );
+          });
+
+          it('returns install prompt with default package slug', () => {
             expect(result.content[0].text).toContain(
               '**IMPORTANT: You MUST now call packmind_install_package with packageSlugs: ["default"]',
             );
@@ -721,39 +795,56 @@ describe('addRuleToStandard.tool', () => {
           });
         });
 
-        it('does not create or add to Default package', async () => {
-          const mockAdapter = {
-            addRuleToStandard: jest.fn().mockResolvedValue({
-              standardVersion: {
-                standardId: 'standard-789',
-                version: '1.3.0',
-              },
-            }),
-          };
+        describe('when adding rule', () => {
+          let result: { content: { type: string; text: string }[] };
 
-          mockFastify.standardsHexa.mockReturnValue({
-            getAdapter: () => mockAdapter,
+          beforeEach(async () => {
+            const mockAdapter = {
+              addRuleToStandard: jest.fn().mockResolvedValue({
+                standardVersion: {
+                  standardId: 'standard-789',
+                  version: '1.3.0',
+                },
+              }),
+            };
+
+            mockFastify.standardsHexa.mockReturnValue({
+              getAdapter: () => mockAdapter,
+            });
+
+            registerSaveStandardRuleTool(dependencies, mcpServer);
+
+            result = await toolHandler({
+              standardSlug: 'regular-standard',
+              ruleContent: 'Regular rule',
+            });
           });
 
-          registerSaveStandardRuleTool(dependencies, mcpServer);
-
-          const result = await toolHandler({
-            standardSlug: 'regular-standard',
-            ruleContent: 'Regular rule',
+          it('does not list packages', () => {
+            expect(mockDeploymentsAdapter.listPackages).not.toHaveBeenCalled();
           });
 
-          expect(mockDeploymentsAdapter.listPackages).not.toHaveBeenCalled();
-          expect(mockDeploymentsAdapter.createPackage).not.toHaveBeenCalled();
-          expect(
-            mockDeploymentsAdapter.addArtefactsToPackage,
-          ).not.toHaveBeenCalled();
+          it('does not create a package', () => {
+            expect(mockDeploymentsAdapter.createPackage).not.toHaveBeenCalled();
+          });
 
-          expect(result.content[0].text).toBe(
-            "Rule added successfully to standard 'regular-standard'. New version 1.3.0 created.",
-          );
-          expect(result.content[0].text).not.toContain(
-            'packmind_install_package',
-          );
+          it('does not add artefacts to package', () => {
+            expect(
+              mockDeploymentsAdapter.addArtefactsToPackage,
+            ).not.toHaveBeenCalled();
+          });
+
+          it('returns success message without install prompt', () => {
+            expect(result.content[0].text).toBe(
+              "Rule added successfully to standard 'regular-standard'. New version 1.3.0 created.",
+            );
+          });
+
+          it('does not include install package instruction', () => {
+            expect(result.content[0].text).not.toContain(
+              'packmind_install_package',
+            );
+          });
         });
       });
     });

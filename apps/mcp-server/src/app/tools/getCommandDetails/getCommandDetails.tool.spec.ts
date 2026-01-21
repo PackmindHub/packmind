@@ -64,31 +64,49 @@ describe('getCommandDetails.tool', () => {
     );
   });
 
-  it('returns formatted command details', async () => {
-    const mockCommand = {
-      slug: 'test-command',
-      name: 'Test Command',
-      version: 1,
-      content: '## Steps\n\n1. Step one\n2. Step two',
-    };
+  describe('when command exists', () => {
+    let result: { content: { type: string; text: string }[] };
 
-    const mockCommandsAdapter = {
-      findRecipeBySlug: jest.fn().mockResolvedValue(mockCommand),
-    };
+    beforeEach(async () => {
+      const mockCommand = {
+        slug: 'test-command',
+        name: 'Test Command',
+        version: 1,
+        content: '## Steps\n\n1. Step one\n2. Step two',
+      };
 
-    mockFastify.recipesHexa.mockReturnValue({
-      getAdapter: () => mockCommandsAdapter,
+      const mockCommandsAdapter = {
+        findRecipeBySlug: jest.fn().mockResolvedValue(mockCommand),
+      };
+
+      mockFastify.recipesHexa.mockReturnValue({
+        getAdapter: () => mockCommandsAdapter,
+      });
+
+      registerGetCommandDetailsTool(dependencies, mcpServer);
+
+      result = await toolHandler({ slug: 'test-command' });
     });
 
-    registerGetCommandDetailsTool(dependencies, mcpServer);
+    it('includes command name in response', () => {
+      expect(result.content[0].text).toContain('# Test Command');
+    });
 
-    const result = await toolHandler({ slug: 'test-command' });
+    it('includes slug in response', () => {
+      expect(result.content[0].text).toContain('**Slug:** test-command');
+    });
 
-    expect(result.content[0].text).toContain('# Test Command');
-    expect(result.content[0].text).toContain('**Slug:** test-command');
-    expect(result.content[0].text).toContain('**Version:** 1');
-    expect(result.content[0].text).toContain('## Steps');
-    expect(result.content[0].text).toContain('1. Step one');
+    it('includes version in response', () => {
+      expect(result.content[0].text).toContain('**Version:** 1');
+    });
+
+    it('includes section headers from content', () => {
+      expect(result.content[0].text).toContain('## Steps');
+    });
+
+    it('includes step details from content', () => {
+      expect(result.content[0].text).toContain('1. Step one');
+    });
   });
 
   describe('when command does not exist', () => {
@@ -183,27 +201,36 @@ describe('getCommandDetails.tool', () => {
     });
   });
 
-  it('handles command with empty content', async () => {
-    const mockCommand = {
-      slug: 'empty-command',
-      name: 'Empty Command',
-      version: 1,
-      content: '',
-    };
+  describe('when command has empty content', () => {
+    let result: { content: { type: string; text: string }[] };
 
-    const mockCommandsAdapter = {
-      findRecipeBySlug: jest.fn().mockResolvedValue(mockCommand),
-    };
+    beforeEach(async () => {
+      const mockCommand = {
+        slug: 'empty-command',
+        name: 'Empty Command',
+        version: 1,
+        content: '',
+      };
 
-    mockFastify.recipesHexa.mockReturnValue({
-      getAdapter: () => mockCommandsAdapter,
+      const mockCommandsAdapter = {
+        findRecipeBySlug: jest.fn().mockResolvedValue(mockCommand),
+      };
+
+      mockFastify.recipesHexa.mockReturnValue({
+        getAdapter: () => mockCommandsAdapter,
+      });
+
+      registerGetCommandDetailsTool(dependencies, mcpServer);
+
+      result = await toolHandler({ slug: 'empty-command' });
     });
 
-    registerGetCommandDetailsTool(dependencies, mcpServer);
+    it('includes command name in response', () => {
+      expect(result.content[0].text).toContain('# Empty Command');
+    });
 
-    const result = await toolHandler({ slug: 'empty-command' });
-
-    expect(result.content[0].text).toContain('# Empty Command');
-    expect(result.content[0].text).toContain('**Slug:** empty-command');
+    it('includes slug in response', () => {
+      expect(result.content[0].text).toContain('**Slug:** empty-command');
+    });
   });
 });

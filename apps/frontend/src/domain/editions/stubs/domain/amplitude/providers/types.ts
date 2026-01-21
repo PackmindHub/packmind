@@ -27,6 +27,11 @@ export type AnalyticsEventMap = {
   onboarding_prompt_copied: {
     agent: StartTrialCommandAgents;
   };
+  mcp_unavailable_feedback: {
+    reason: 'cant-use-mcp' | 'dont-want-mcp' | 'dont-know-mcp' | 'other';
+    otherDetails?: string;
+    selectedAgent: StartTrialCommandAgents;
+  };
 };
 
 export type AnalyticsEventName = keyof AnalyticsEventMap;

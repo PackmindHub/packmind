@@ -9,6 +9,7 @@ import {
   FileUpdates,
   IAccountsPort,
   ICodingAgentPort,
+  IGitPort,
   IPullContentResponse,
   IRecipesPort,
   ISkillsPort,
@@ -26,6 +27,9 @@ import { PackmindConfigService } from '../services/PackmindConfigService';
 import { NoPackageSlugsProvidedError } from '../../domain/errors/NoPackageSlugsProvidedError';
 import { PackagesNotFoundError } from '../../domain/errors/PackagesNotFoundError';
 import { RenderModeConfigurationService } from '../services/RenderModeConfigurationService';
+import { IDistributionRepository } from '../../domain/repositories/IDistributionRepository';
+import { TargetService } from '../services/TargetService';
+import { parseGitRepoInfo } from './notifyDistribution/notifyDistribution.usecase';
 
 const origin = 'PullContentUseCase';
 
@@ -55,6 +59,9 @@ export class PullContentUseCase extends AbstractMemberUseCase<
     private readonly renderModeConfigurationService: RenderModeConfigurationService,
     accountsPort: IAccountsPort,
     private readonly eventEmitterService: PackmindEventEmitterService,
+    private readonly gitPort: IGitPort,
+    private readonly distributionRepository: IDistributionRepository,
+    private readonly targetService: TargetService,
     private readonly packmindConfigService: PackmindConfigService = new PackmindConfigService(),
     logger: PackmindLogger = new PackmindLogger(origin, LogLevel.INFO),
   ) {
@@ -106,13 +113,15 @@ export class PullContentUseCase extends AbstractMemberUseCase<
       let recipeVersions: RecipeVersion[] = [];
       let standardVersions: StandardVersion[] = [];
       let skillVersions: SkillVersion[] = [];
+      let packages: Awaited<
+        ReturnType<PackageService['getPackagesBySlugsWithArtefacts']>
+      > = [];
 
       if (!isRemovalOnlyOperation && command.packagesSlugs) {
-        const packages =
-          await this.packageService.getPackagesBySlugsWithArtefacts(
-            command.packagesSlugs,
-            command.organization.id,
-          );
+        packages = await this.packageService.getPackagesBySlugsWithArtefacts(
+          command.packagesSlugs,
+          command.organization.id,
+        );
 
         // Check if all requested slugs were found
         const foundSlugs = packages.map((pkg) => pkg.slug);
@@ -300,6 +309,37 @@ export class PullContentUseCase extends AbstractMemberUseCase<
         }
       }
 
+      if (
+        packages.length > 0 &&
+        command.gitRemoteUrl &&
+        command.gitBranch &&
+        command.relativePath
+      ) {
+        const currentPackageIds = packages.map((p) => p.id as string);
+        const previouslyDeployedSkills =
+          await this.findPreviouslyDeployedSkillVersions(
+            command.organization.id,
+            command.gitRemoteUrl,
+            command.gitBranch,
+            command.relativePath,
+            currentPackageIds,
+          );
+
+        if (previouslyDeployedSkills.length > 0) {
+          this.logger.info(
+            'Retrieved previously deployed skill versions from distribution history',
+            { count: previouslyDeployedSkills.length },
+          );
+
+          // Add to removed skills - they'll be filtered later by filterSharedArtifacts
+          // if they're still present in current package content
+          removedSkillVersions = [
+            ...removedSkillVersions,
+            ...previouslyDeployedSkills,
+          ];
+        }
+      }
+
       // Initialize the merged file updates
       const mergedFileUpdates: FileUpdates = {
         createOrUpdate: [],
@@ -422,7 +462,18 @@ export class PullContentUseCase extends AbstractMemberUseCase<
         }),
       );
 
-      return { fileUpdates: mergedFileUpdates };
+      // Generate skill folders for agents that support skills
+      const skillFolders = codingAgents.flatMap((agent) => {
+        const skillPath = this.codingAgentPort.getAgentSkillPath(agent);
+        if (skillPath === null) return [];
+        return skillVersions.map((sv) => `${skillPath}/${sv.slug}`);
+      });
+
+      this.logger.info('Generated skill folders', {
+        count: skillFolders.length,
+      });
+
+      return { fileUpdates: mergedFileUpdates, skillFolders };
     } catch (error) {
       this.logger.error('Failed to pull content', {
         organizationId: command.organizationId,
@@ -585,5 +636,101 @@ export class PullContentUseCase extends AbstractMemberUseCase<
     );
 
     return { recipeVersions, standardVersions, skillVersions };
+  }
+
+  /**
+   * Finds previously deployed skill versions for a target by querying distribution history.
+   * This is used to detect skills that were removed from packages between deployments.
+   */
+  private async findPreviouslyDeployedSkillVersions(
+    organizationId: OrganizationId,
+    gitRemoteUrl: string,
+    gitBranch: string,
+    relativePath: string,
+    currentPackageIds: string[],
+  ): Promise<SkillVersion[]> {
+    try {
+      // Parse git remote URL to find repo
+      const { owner, repo } = parseGitRepoInfo(gitRemoteUrl);
+
+      // List all providers for the organization
+      const providersResponse = await this.gitPort.listProviders({
+        userId: null as unknown as string, // Not needed for listing
+        organizationId,
+      });
+
+      // Find the git repo across all providers
+      let gitRepoId: string | null = null;
+      for (const provider of providersResponse.providers) {
+        const repos = await this.gitPort.listRepos(provider.id);
+        const matchingRepo = repos.find(
+          (r) =>
+            r.owner.toLowerCase() === owner.toLowerCase() &&
+            r.repo.toLowerCase() === repo.toLowerCase() &&
+            r.branch === gitBranch,
+        );
+        if (matchingRepo) {
+          gitRepoId = matchingRepo.id;
+          break;
+        }
+      }
+
+      if (!gitRepoId) {
+        this.logger.info(
+          'Git repo not found in distribution history, cannot query previous deployments',
+          { owner, repo, branch: gitBranch },
+        );
+        return [];
+      }
+
+      // Find the target by gitRepoId and relativePath (using TargetService)
+      const targets = await this.targetService.getTargetsByGitRepoId(
+        gitRepoId as ReturnType<
+          typeof import('@packmind/types').createGitRepoId
+        >,
+      );
+
+      // Normalize relativePath for comparison
+      let normalizedPath = relativePath;
+      if (!normalizedPath.startsWith('/')) {
+        normalizedPath = '/' + normalizedPath;
+      }
+      if (!normalizedPath.endsWith('/')) {
+        normalizedPath = normalizedPath + '/';
+      }
+
+      const target = targets.find((t) => t.path === normalizedPath);
+
+      if (!target) {
+        this.logger.info(
+          'Target not found in distribution history, cannot query previous deployments',
+          { gitRepoId, relativePath: normalizedPath },
+        );
+        return [];
+      }
+
+      // Query previously deployed skill versions for this target and packages
+      const previousSkillVersions =
+        await this.distributionRepository.findActiveSkillVersionsByTargetAndPackages(
+          organizationId,
+          target.id,
+          currentPackageIds as ReturnType<
+            typeof import('@packmind/types').createPackageId
+          >[],
+        );
+
+      this.logger.info(
+        'Found previously deployed skill versions from distribution history',
+        { targetId: target.id, count: previousSkillVersions.length },
+      );
+
+      return previousSkillVersions;
+    } catch (error) {
+      this.logger.info(
+        'Failed to query distribution history for previous skill versions',
+        { error: error instanceof Error ? error.message : String(error) },
+      );
+      return [];
+    }
   }
 }

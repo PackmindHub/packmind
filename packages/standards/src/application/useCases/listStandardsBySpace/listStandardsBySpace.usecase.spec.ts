@@ -55,10 +55,15 @@ describe('ListStandardsBySpaceUsecase', () => {
   });
 
   describe('when listing standards by space', () => {
-    it('returns standards from the space', async () => {
-      const userId = createUserId(uuidv4());
-      const organizationId = createOrganizationId(uuidv4());
-      const spaceId = createSpaceId(uuidv4());
+    let userId: ReturnType<typeof createUserId>;
+    let organizationId: ReturnType<typeof createOrganizationId>;
+    let spaceId: ReturnType<typeof createSpaceId>;
+    let result: Awaited<ReturnType<typeof usecase.execute>>;
+
+    beforeEach(async () => {
+      userId = createUserId(uuidv4());
+      organizationId = createOrganizationId(uuidv4());
+      spaceId = createSpaceId(uuidv4());
 
       const user: User = {
         id: userId,
@@ -95,20 +100,30 @@ describe('ListStandardsBySpaceUsecase', () => {
       spacesPort.getSpaceById.mockResolvedValue(space);
       standardService.listStandardsBySpace.mockResolvedValue(standardsInSpace);
 
-      const result = await usecase.execute(command);
+      result = await usecase.execute(command);
+    });
 
+    it('fetches user by id', () => {
       expect(accountsAdapter.getUserById).toHaveBeenCalledWith(userId);
+    });
+
+    it('fetches organization by id', () => {
       expect(accountsAdapter.getOrganizationById).toHaveBeenCalledWith(
         organizationId,
       );
+    });
+
+    it('lists standards by space id', () => {
       expect(standardService.listStandardsBySpace).toHaveBeenCalledWith(
         spaceId,
       );
+    });
 
-      expect(result.standards).toHaveLength(2);
-      const slugs = result.standards.map((s) => s.slug);
-      expect(slugs).toContain('space-standard-1');
-      expect(slugs).toContain('space-standard-2');
+    it('returns standards from the space', () => {
+      expect(result.standards.map((s) => s.slug)).toEqual([
+        'space-standard-1',
+        'space-standard-2',
+      ]);
     });
   });
 

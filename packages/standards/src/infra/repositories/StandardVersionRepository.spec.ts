@@ -53,48 +53,69 @@ describe('StandardVersionRepository', () => {
     await datasource.destroy();
   });
 
-  it('can store and retrieve standard versions by standard id', async () => {
-    // Create standard first
-    const standard = await standardRepo.save(
-      standardFactory({ slug: `standard-${uuidv4()}` }),
-    );
+  describe('when storing and retrieving standard versions by standard id', () => {
+    let standard: Standard;
+    let standardVersion: StandardVersion;
+    let foundVersions: StandardVersion[];
 
-    const standardVersion = standardVersionFactory({ standardId: standard.id });
-    await standardVersionRepository.add(standardVersion);
+    beforeEach(async () => {
+      standard = await standardRepo.save(
+        standardFactory({ slug: `standard-${uuidv4()}` }),
+      );
 
-    const foundVersions = await standardVersionRepository.findByStandardId(
-      standard.id,
-    );
-    expect(foundVersions).toHaveLength(1);
-    expect(foundVersions[0]).toMatchObject({
-      id: standardVersion.id,
-      standardId: standardVersion.standardId,
-      version: standardVersion.version,
-      name: standardVersion.name,
+      standardVersion = standardVersionFactory({ standardId: standard.id });
+      await standardVersionRepository.add(standardVersion);
+
+      foundVersions = await standardVersionRepository.findByStandardId(
+        standard.id,
+      );
+    });
+
+    it('returns exactly one version', () => {
+      expect(foundVersions).toHaveLength(1);
+    });
+
+    it('returns the stored version with correct properties', () => {
+      expect(foundVersions[0]).toMatchObject({
+        id: standardVersion.id,
+        standardId: standardVersion.standardId,
+        version: standardVersion.version,
+        name: standardVersion.name,
+      });
     });
   });
 
-  it('can store and retrieve multiple standard versions ordered by version desc', async () => {
-    // Create standard first
-    const standard = await standardRepo.save(
-      standardFactory({ slug: `standard-${uuidv4()}` }),
-    );
+  describe('when storing and retrieving multiple standard versions', () => {
+    let standard: Standard;
+    let foundVersions: StandardVersion[];
 
-    await standardVersionRepository.add(
-      standardVersionFactory({ standardId: standard.id, version: 1 }),
-    );
-    await standardVersionRepository.add(
-      standardVersionFactory({ standardId: standard.id, version: 3 }),
-    );
-    await standardVersionRepository.add(
-      standardVersionFactory({ standardId: standard.id, version: 2 }),
-    );
+    beforeEach(async () => {
+      standard = await standardRepo.save(
+        standardFactory({ slug: `standard-${uuidv4()}` }),
+      );
 
-    const foundVersions = await standardVersionRepository.findByStandardId(
-      standard.id,
-    );
-    expect(foundVersions).toHaveLength(3);
-    expect(foundVersions.map((v) => v.version)).toEqual([3, 2, 1]);
+      await standardVersionRepository.add(
+        standardVersionFactory({ standardId: standard.id, version: 1 }),
+      );
+      await standardVersionRepository.add(
+        standardVersionFactory({ standardId: standard.id, version: 3 }),
+      );
+      await standardVersionRepository.add(
+        standardVersionFactory({ standardId: standard.id, version: 2 }),
+      );
+
+      foundVersions = await standardVersionRepository.findByStandardId(
+        standard.id,
+      );
+    });
+
+    it('returns all three versions', () => {
+      expect(foundVersions).toHaveLength(3);
+    });
+
+    it('orders versions by version number descending', () => {
+      expect(foundVersions.map((v) => v.version)).toEqual([3, 2, 1]);
+    });
   });
 
   it('can find a standard version by id', async () => {
@@ -163,45 +184,65 @@ describe('StandardVersionRepository', () => {
   });
 
   describe('when multiple versions exist for same standard', () => {
-    it('returns correct version', async () => {
-      const standard = await standardRepo.save(
+    let standard: Standard;
+    let version1: StandardVersion;
+    let version2: StandardVersion;
+    let version3: StandardVersion;
+    let foundVersion1: StandardVersion | null;
+    let foundVersion2: StandardVersion | null;
+    let foundVersion3: StandardVersion | null;
+
+    beforeEach(async () => {
+      standard = await standardRepo.save(
         standardFactory({ slug: `standard-${uuidv4()}` }),
       );
 
-      const version1 = await standardVersionRepository.add(
+      version1 = await standardVersionRepository.add(
         standardVersionFactory({ standardId: standard.id, version: 1 }),
       );
-      const version2 = await standardVersionRepository.add(
+      version2 = await standardVersionRepository.add(
         standardVersionFactory({ standardId: standard.id, version: 2 }),
       );
-      const version3 = await standardVersionRepository.add(
+      version3 = await standardVersionRepository.add(
         standardVersionFactory({ standardId: standard.id, version: 3 }),
       );
 
-      const foundVersion1 =
+      foundVersion1 =
         await standardVersionRepository.findByStandardIdAndVersion(
           standard.id,
           1,
         );
-      const foundVersion2 =
+      foundVersion2 =
         await standardVersionRepository.findByStandardIdAndVersion(
           standard.id,
           2,
         );
-      const foundVersion3 =
+      foundVersion3 =
         await standardVersionRepository.findByStandardIdAndVersion(
           standard.id,
           3,
         );
+    });
 
-      expect(foundVersion1?.version).toBe(1);
-      expect(foundVersion1?.id).toBe(version1.id);
+    it('returns version 1 with correct id', () => {
+      expect(foundVersion1).toMatchObject({
+        version: 1,
+        id: version1.id,
+      });
+    });
 
-      expect(foundVersion2?.version).toBe(2);
-      expect(foundVersion2?.id).toBe(version2.id);
+    it('returns version 2 with correct id', () => {
+      expect(foundVersion2).toMatchObject({
+        version: 2,
+        id: version2.id,
+      });
+    });
 
-      expect(foundVersion3?.version).toBe(3);
-      expect(foundVersion3?.id).toBe(version3.id);
+    it('returns version 3 with correct id', () => {
+      expect(foundVersion3).toMatchObject({
+        version: 3,
+        id: version3.id,
+      });
     });
   });
 

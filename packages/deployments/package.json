@@ -6,6 +6,8 @@
   "main": "./src/index.js",
   "types": "./src/index.d.ts",
   "dependencies": {
+    "adm-zip": "^0.5.16",
+    "archiver": "^7.0.1",
     "bullmq": "^5.58.2",
     "tslib": "^2.3.0",
     "typeorm": "0.3.27",
@@ -21,5 +23,9 @@
     "@packmind/standards": "*",
     "@packmind/types": "*",
     "@packmind/test-utils": "0.0.1"
+  },
+  "devDependencies": {
+    "@types/adm-zip": "^0.5.7",
+    "@types/archiver": "^6.0.3"
   }
 }

@@ -123,24 +123,39 @@ describe('renderPackage.tool', () => {
       });
     });
 
-    it('returns prompt with file updates', async () => {
-      registerRenderPackageTool(dependencies, mcpServer);
+    describe('when rendering a package', () => {
+      let result: { content: { type: string; text: string }[] };
 
-      const result = await toolHandler({
-        packageSlug: 'my-package',
-        relativePath: '/',
-        gitRemoteUrl: '',
-        gitBranch: '',
+      beforeEach(async () => {
+        registerRenderPackageTool(dependencies, mcpServer);
+
+        result = await toolHandler({
+          packageSlug: 'my-package',
+          relativePath: '/',
+          gitRemoteUrl: '',
+          gitBranch: '',
+        });
       });
 
-      expect(result.content[0].text).toContain(
-        '# Package Rendering: my-package',
-      );
-      expect(result.content[0].text).toContain('createOrUpdate');
-      expect(result.content[0].text).toContain('delete');
-      expect(result.content[0].text).toContain(
-        'Apply ALL file changes listed above',
-      );
+      it('includes package name in title', () => {
+        expect(result.content[0].text).toContain(
+          '# Package Rendering: my-package',
+        );
+      });
+
+      it('includes createOrUpdate in response', () => {
+        expect(result.content[0].text).toContain('createOrUpdate');
+      });
+
+      it('includes delete in response', () => {
+        expect(result.content[0].text).toContain('delete');
+      });
+
+      it('includes apply instructions', () => {
+        expect(result.content[0].text).toContain(
+          'Apply ALL file changes listed above',
+        );
+      });
     });
 
     it('calls pullAllContent with correct parameters', async () => {
@@ -330,7 +345,9 @@ describe('renderPackage.tool', () => {
   });
 
   describe('when notifyDistribution fails', () => {
-    it('still returns file updates successfully', async () => {
+    let result: { content: { type: string; text: string }[] };
+
+    beforeEach(async () => {
       const mockAdapter = {
         pullAllContent: jest.fn().mockResolvedValue({
           fileUpdates: {
@@ -349,39 +366,20 @@ describe('renderPackage.tool', () => {
 
       registerRenderPackageTool(dependencies, mcpServer);
 
-      const result = await toolHandler({
+      result = await toolHandler({
         packageSlug: 'my-package',
         relativePath: '/',
         gitRemoteUrl: 'https://github.com/owner/repo',
         gitBranch: '',
       });
-
-      expect(result.content[0].text).toContain('# Package Rendering');
-      expect(result.content[0].text).toContain('test.md');
     });
 
-    it('does not fail', async () => {
-      const mockAdapter = {
-        pullAllContent: jest.fn().mockResolvedValue({
-          fileUpdates: { createOrUpdate: [], delete: [] },
-        }),
-        notifyDistribution: jest
-          .fn()
-          .mockRejectedValue(new Error('Distribution failed')),
-      };
+    it('returns package rendering title', () => {
+      expect(result.content[0].text).toContain('# Package Rendering');
+    });
 
-      mockFastify.deploymentsHexa.mockReturnValue({
-        getAdapter: () => mockAdapter,
-      });
-
-      registerRenderPackageTool(dependencies, mcpServer);
-
-      await toolHandler({
-        packageSlug: 'my-package',
-        relativePath: '/',
-        gitRemoteUrl: 'https://github.com/owner/repo',
-        gitBranch: '',
-      });
+    it('returns file updates', () => {
+      expect(result.content[0].text).toContain('test.md');
     });
   });
 
@@ -459,7 +457,9 @@ describe('renderPackage.tool', () => {
   });
 
   describe('when file updates include sections', () => {
-    it('includes sections in the response', async () => {
+    let result: { content: { type: string; text: string }[] };
+
+    beforeEach(async () => {
       const mockAdapter = {
         pullAllContent: jest.fn().mockResolvedValue({
           fileUpdates: {
@@ -483,49 +483,33 @@ describe('renderPackage.tool', () => {
 
       registerRenderPackageTool(dependencies, mcpServer);
 
-      const result = await toolHandler({
+      result = await toolHandler({
         packageSlug: 'my-package',
         relativePath: '/',
         gitRemoteUrl: '',
         gitBranch: '',
       });
+    });
 
+    it('includes sections key in the response', () => {
       expect(result.content[0].text).toContain('sections');
+    });
+
+    it('includes standards section in the response', () => {
       expect(result.content[0].text).toContain('standards');
     });
 
-    it('includes section handling instructions in the prompt', async () => {
-      const mockAdapter = {
-        pullAllContent: jest.fn().mockResolvedValue({
-          fileUpdates: {
-            createOrUpdate: [
-              {
-                path: 'CLAUDE.md',
-                sections: [{ key: 'standards', content: '# Standards' }],
-              },
-            ],
-            delete: [],
-          },
-        }),
-      };
-
-      mockFastify.deploymentsHexa.mockReturnValue({
-        getAdapter: () => mockAdapter,
-      });
-
-      registerRenderPackageTool(dependencies, mcpServer);
-
-      const result = await toolHandler({
-        packageSlug: 'my-package',
-        relativePath: '/',
-        gitRemoteUrl: '',
-        gitBranch: '',
-      });
-
+    it('includes start marker instruction', () => {
       expect(result.content[0].text).toContain(
         '<!-- start: ${section.key} -->',
       );
+    });
+
+    it('includes end marker instruction', () => {
       expect(result.content[0].text).toContain('<!-- end: ${section.key} -->');
+    });
+
+    it('includes append instruction for missing sections', () => {
       expect(result.content[0].text).toContain(
         'If the section does not exist, append to the end of the file',
       );
