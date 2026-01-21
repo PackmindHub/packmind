@@ -13,7 +13,7 @@ export function validatePlaybook(data: unknown): ValidationResult {
   const result = playbookDTOSchema.safeParse(data);
 
   if (!result.success) {
-    const errorList = result.error.issues || result.error.errors || [];
+    const errorList = result.error.issues;
     return {
       isValid: false,
       errors: errorList.map((e) => `${e.path.join('.')}: ${e.message}`),
