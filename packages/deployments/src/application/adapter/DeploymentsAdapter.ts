@@ -211,6 +211,13 @@ export class DeploymentsAdapter
     }
 
     // Step 4: Create all use cases with non-null ports
+    // DeployDefaultSkillsUseCase must be created first as it's used by PublishArtifactsUseCase
+    this._deployDefaultSkillsUseCase = new DeployDefaultSkillsUseCase(
+      this.deploymentsServices.getRenderModeConfigurationService(),
+      this.codingAgentPort,
+      this.accountsPort,
+    );
+
     this._publishArtifactsUseCase = new PublishArtifactsUseCase(
       this.recipesPort,
       this.standardsPort,
@@ -222,6 +229,8 @@ export class DeploymentsAdapter
       this.deploymentsServices.getRenderModeConfigurationService(),
       ports.eventEmitterService,
       this.deploymentsDelayedJobs.publishArtifactsDelayedJob,
+      this.accountsPort,
+      this._deployDefaultSkillsUseCase,
     );
 
     this._publishPackagesUseCase = new PublishPackagesUseCase(
@@ -413,12 +422,6 @@ export class DeploymentsAdapter
       this.gitPort,
       this.codingAgentPort,
       this.deploymentsServices.getRenderModeConfigurationService(),
-    );
-
-    this._deployDefaultSkillsUseCase = new DeployDefaultSkillsUseCase(
-      this.deploymentsServices.getRenderModeConfigurationService(),
-      this.codingAgentPort,
-      this.accountsPort,
     );
   }
 
