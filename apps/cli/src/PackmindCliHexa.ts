@@ -260,4 +260,8 @@ export class PackmindCliHexa {
   ): Promise<IInstallDefaultSkillsResult> {
     return this.hexa.useCases.installDefaultSkills.execute(command);
   }
+
+  public getPackmindGateway() {
+    return this.hexa.repositories.packmindGateway;
+  }
 }

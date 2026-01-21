@@ -1244,8 +1244,10 @@ export class PackmindGateway implements IPackmindGateway {
     error?: string;
   }> => {
     try {
-      const mcpUrl = await this.getMcpUrl();
-      const mcpTokenResult = await this.getMcpToken();
+      // Note: getMcpUrl and getMcpToken don't actually use the command params in CLI context
+      // They extract user info from the API key instead
+      const mcpUrl = await this.getMcpUrl({} as never);
+      const mcpTokenResult = await this.getMcpToken({} as never);
       const token = mcpTokenResult.access_token;
 
       const response = await fetch(`${mcpUrl.url}/tools/save_standard`, {
