@@ -226,6 +226,7 @@ export const RuleDetails = ({
               )}
               selectedLanguage={selectedLanguage}
               onNavigateToExamples={handleNavigateToExamples}
+              ruleExamples={examples}
             />
           </PMPageSection>
         </PMVStack>

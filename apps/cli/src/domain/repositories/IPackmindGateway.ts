@@ -199,6 +199,15 @@ export type IUploadSkillUseCase = IUseCase<
   UploadSkillCommand,
   UploadSkillResult
 >;
+// Track Linter Execution types
+export type TrackLinterExecutionCommand = {
+  targetCount: number;
+  standardCount: number;
+};
+
+export type TrackLinterExecution = (
+  command: TrackLinterExecutionCommand,
+) => Promise<void>;
 
 export interface IPackmindGateway {
   listExecutionPrograms: Gateway<ListDetectionPrograms>;
@@ -213,4 +222,5 @@ export interface IPackmindGateway {
   notifyDistribution: NotifyDistributionGateway;
   uploadSkill: Gateway<IUploadSkillUseCase>;
   getDefaultSkills: Gateway<IGetDefaultSkillsUseCase>;
+  trackLinterExecution: TrackLinterExecution;
 }
