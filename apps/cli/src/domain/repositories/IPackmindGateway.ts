@@ -213,4 +213,22 @@ export interface IPackmindGateway {
   notifyDistribution: NotifyDistributionGateway;
   uploadSkill: Gateway<IUploadSkillUseCase>;
   getDefaultSkills: Gateway<IGetDefaultSkillsUseCase>;
+  createStandardFromPlaybook(playbook: {
+    name: string;
+    description: string;
+    scope: string;
+    rules: Array<{
+      content: string;
+      examples?: {
+        positive: string;
+        negative: string;
+        language: string;
+      };
+    }>;
+  }): Promise<{
+    success: boolean;
+    standardId?: string;
+    name?: string;
+    error?: string;
+  }>;
 }
