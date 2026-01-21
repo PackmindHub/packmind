@@ -1,22 +1,20 @@
+import { PreInstallationInfoDataTestIds } from '@packmind/frontend';
 import { AbstractPackmindPage } from './AbstractPackmindPage';
-import { IStartTrialPage, IStartTrialAgentPage } from '../../domain/pages';
-import { StartTrialAgentSelectorDataTestIds } from '@packmind/frontend';
+import {
+  IStartTrialPage,
+  IStartTrialAgentSelectorPage,
+} from '../../domain/pages';
 
 export class StartTrialPage
   extends AbstractPackmindPage
   implements IStartTrialPage
 {
-  async selectAgent(agentValue: string): Promise<IStartTrialAgentPage> {
+  async continueToAgentSelection(): Promise<IStartTrialAgentSelectorPage> {
     await this.page
-      .getByTestId(
-        `${StartTrialAgentSelectorDataTestIds.AgentOption}.${agentValue}`,
-      )
-      .click();
-    await this.page
-      .getByTestId(StartTrialAgentSelectorDataTestIds.ContinueButton)
+      .getByTestId(PreInstallationInfoDataTestIds.ContinueButton)
       .click();
 
-    return this.pageFactory.getStartTrialAgentPage(agentValue);
+    return this.pageFactory.getStartTrialAgentSelectorPage();
   }
 
   expectedUrl(): RegExp {

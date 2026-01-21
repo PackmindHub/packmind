@@ -12,6 +12,7 @@ import {
   PMTooltip,
 } from '@packmind/ui';
 import { LuArrowRight, LuFileCode, LuBrain, LuTerminal } from 'react-icons/lu';
+import { PreInstallationInfoDataTestIds } from '@packmind/frontend';
 
 interface IPreInstallationInfoProps {
   onContinue: () => void;
@@ -21,7 +22,13 @@ export const PreInstallationInfo: React.FC<IPreInstallationInfoProps> = ({
   onContinue,
 }) => {
   return (
-    <PMVStack gap={8} align="stretch" maxW="2xl" mx="auto">
+    <PMVStack
+      gap={8}
+      align="stretch"
+      maxW="2xl"
+      mx="auto"
+      data-testid={PreInstallationInfoDataTestIds.Component}
+    >
       <PMVStack gap={4} textAlign="center">
         <PMHeading level="h2">Before you start</PMHeading>
         <PMText color="secondary" fontSize="lg">
@@ -96,7 +103,12 @@ export const PreInstallationInfo: React.FC<IPreInstallationInfoProps> = ({
       </PMVStack>
 
       <PMBox textAlign="center" mt={2}>
-        <PMButton onClick={onContinue} size="lg" colorScheme="primary">
+        <PMButton
+          onClick={onContinue}
+          size="lg"
+          colorScheme="primary"
+          data-testid={PreInstallationInfoDataTestIds.ContinueButton}
+        >
           Continue — select your AI assistant
           <PMIcon as={LuArrowRight} ml={2} />
         </PMButton>

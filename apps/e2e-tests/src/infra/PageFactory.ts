@@ -11,6 +11,7 @@ import {
   ISignUpPage,
   ISignUpOptionsPage,
   IStartTrialAgentPage,
+  IStartTrialAgentSelectorPage,
   IStartTrialPage,
   IUserSettingsPage,
   IUsersSettingsPage,
@@ -27,6 +28,7 @@ import { SettingsPage } from './pages/SettingsPage';
 import { GitSettings } from './pages/GitSettingsPage';
 import { InvitationPage } from './pages/InvitationPage';
 import { StartTrialPage } from './pages/StartTrialPage';
+import { StartTrialAgentSelectorPage } from './pages/StartTrialAgentSelectorPage';
 import { ClaudeStartTrialAgentPage } from './pages/ClaudeStartTrialAgentPage';
 import { ActivateAccountPage } from './pages/ActivateAccountPage';
 
@@ -86,6 +88,11 @@ export class PageFactory implements IPageFactory {
   async getStartTrialPage(): Promise<IStartTrialPage> {
     await this.page.goto('/quick-start');
     return this.getPageInstance(StartTrialPage);
+  }
+
+  async getStartTrialAgentSelectorPage(): Promise<IStartTrialAgentSelectorPage> {
+    await this.page.goto('/quick-start/select-agent');
+    return this.getPageInstance(StartTrialAgentSelectorPage);
   }
 
   async getStartTrialAgentPage(agent: string): Promise<IStartTrialAgentPage> {
