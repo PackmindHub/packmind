@@ -8,8 +8,26 @@ export async function apiStandardFactory(
   const spaces = await packmindApi.listSpaces();
   const spaceId = spaces[0].id;
 
-  return packmindApi.createStandard({
-    ...standardFactory({ spaceId }),
+  const standardData = standardFactory({ spaceId });
+
+  console.log('Creating standard with data:', {
+    spaceId,
+    name: standardData.name,
+    description: standardData.description,
+    scope: standardData.scope,
     rules: [],
   });
+
+  const response = await packmindApi.createStandard({
+    spaceId,
+    name: standardData.name,
+    description: standardData.description,
+    scope: standardData.scope,
+    rules: [],
+  });
+
+  console.log('CreateStandard response:', response);
+
+  // Return the response directly as it appears to be the standard object itself
+  return response;
 }
