@@ -1224,4 +1224,74 @@ export class PackmindGateway implements IPackmindGateway {
       );
     }
   };
+
+  public createStandardFromPlaybook = async (playbook: {
+    name: string;
+    description: string;
+    scope: string;
+    rules: Array<{
+      content: string;
+      examples?: {
+        positive: string;
+        negative: string;
+        language: string;
+      };
+    }>;
+  }): Promise<{
+    success: boolean;
+    standardId?: string;
+    name?: string;
+    error?: string;
+  }> => {
+    try {
+      const mcpUrl = await this.getMcpUrl();
+      const mcpTokenResult = await this.getMcpToken();
+      const token = mcpTokenResult.access_token;
+
+      const response = await fetch(`${mcpUrl.url}/tools/save_standard`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          name: playbook.name,
+          description: playbook.description,
+          summary: playbook.scope,
+          rules: playbook.rules.map((rule) => ({
+            content: rule.content,
+            examples: rule.examples
+              ? [
+                  {
+                    positive: rule.examples.positive,
+                    negative: rule.examples.negative,
+                    language: rule.examples.language,
+                  },
+                ]
+              : undefined,
+          })),
+        }),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        return {
+          success: false,
+          error: `Failed to create standard: ${response.status} ${errorText}`,
+        };
+      }
+
+      const result = await response.json();
+      return {
+        success: true,
+        standardId: result.standardId,
+        name: result.name,
+      };
+    } catch (e) {
+      return {
+        success: false,
+        error: `Error: ${e instanceof Error ? e.message : 'Unknown error'}`,
+      };
+    }
+  };
 }
