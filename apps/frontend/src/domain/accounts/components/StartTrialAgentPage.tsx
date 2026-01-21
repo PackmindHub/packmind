@@ -20,6 +20,7 @@ import { trialGateway } from '../api/gateways';
 import { StartTrialAgentPageDataTestIds } from '@packmind/frontend';
 import { useAnalytics } from '@packmind/proprietary/frontend/domain/amplitude/providers/AnalyticsProvider';
 import { useOnboardingAgent } from '../contexts';
+import { CantUseMcpModal } from './trial/CantUseMcpModal';
 
 interface IStartTrialAgentPageProps {
   agentLabel: string;
@@ -86,6 +87,8 @@ export const StartTrialAgentPage: React.FC<IStartTrialAgentPageProps> = ({
   preferredMethodLabel,
 }) => {
   const navigate = useNavigate();
+  const agent = useOnboardingAgent();
+  const [isCantUseMcpModalOpen, setIsCantUseMcpModalOpen] = useState(false);
 
   // Améliore le titre pour l'option "other"
   const getAgentTitle = (label: string) => {
@@ -159,7 +162,18 @@ export const StartTrialAgentPage: React.FC<IStartTrialAgentPageProps> = ({
             Get your agent talking to Packmind in 2 minutes
           </PMText>
           {method && (
-            <MethodContent method={method} token={token} url={mcpUrl} />
+            <PMVStack alignItems="flex-start">
+              <MethodContent method={method} token={token} url={mcpUrl} />
+              <PMButton
+                variant="tertiary"
+                size="xs"
+                mt={4}
+                onClick={() => setIsCantUseMcpModalOpen(true)}
+                data-testid={StartTrialAgentPageDataTestIds.CantUseMcpButton}
+              >
+                I can't use MCP
+              </PMButton>
+            </PMVStack>
           )}
         </PMBox>
 
@@ -242,6 +256,12 @@ export const StartTrialAgentPage: React.FC<IStartTrialAgentPageProps> = ({
           )}
         </PMBox>
       </PMVStack>
+
+      <CantUseMcpModal
+        isOpen={isCantUseMcpModalOpen}
+        onClose={() => setIsCantUseMcpModalOpen(false)}
+        selectedAgent={agent}
+      />
     </PMVStack>
   );
 };
