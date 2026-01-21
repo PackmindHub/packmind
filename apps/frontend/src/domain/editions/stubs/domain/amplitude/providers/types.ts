@@ -1,5 +1,12 @@
 import { StartTrialCommandAgents } from '@packmind/types';
 
+export enum McpUnavailableReason {
+  CantUseMcp = 'cant-use-mcp',
+  DontWantMcp = 'dont-want-mcp',
+  DontKnowMcp = 'dont-know-mcp',
+  Other = 'other',
+}
+
 export type AnalyticsEventMap = {
   page_view: {
     path: string;
@@ -28,7 +35,7 @@ export type AnalyticsEventMap = {
     agent: StartTrialCommandAgents;
   };
   mcp_unavailable_feedback: {
-    reason: 'cant-use-mcp' | 'dont-want-mcp' | 'dont-know-mcp' | 'other';
+    reason: McpUnavailableReason;
     otherDetails?: string;
     selectedAgent: StartTrialCommandAgents;
   };

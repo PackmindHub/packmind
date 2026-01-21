@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   PMDialog,
   PMVStack,
@@ -16,6 +16,7 @@ import {
 import { MethodContent } from './InstallMethods';
 import { StartTrialCommandAgents } from '@packmind/types';
 import { OnboardingAgentProvider } from '../../contexts';
+import { CantUseMcpModal } from '../trial/CantUseMcpModal';
 
 const mapAgentIdToAnalytics = (agentId: string): StartTrialCommandAgents => {
   const mapping: Record<string, StartTrialCommandAgents> = {
@@ -41,6 +42,7 @@ const createTabsFromMethods = (
   methodsByType: Record<string, IInstallMethod[]>,
   token: string,
   url: string,
+  onCantUseMcp?: () => void,
 ) => {
   // Define the desired order: magicLink (One-click install), cli (CLI), json (JSON)
   const orderedTypes = ['magicLink', 'cli', 'json'];
@@ -70,12 +72,22 @@ const createTabsFromMethods = (
                     <PMText as="p" fontWeight="bold">
                       {method.label}
                     </PMText>
-                    <MethodContent method={method} token={token} url={url} />
+                    <MethodContent
+                      method={method}
+                      token={token}
+                      url={url}
+                      onCantUseMcp={onCantUseMcp}
+                    />
                   </PMVStack>
                 ))}
               </PMVStack>
             ) : (
-              <MethodContent method={firstMethod} token={token} url={url} />
+              <MethodContent
+                method={firstMethod}
+                token={token}
+                url={url}
+                onCantUseMcp={onCantUseMcp}
+              />
             )}
           </PMVStack>
         ),
@@ -90,12 +102,15 @@ export const AgentModal: React.FunctionComponent<IAgentModalProps> = ({
   isOpen,
   onClose,
 }) => {
+  const [isCantUseMcpModalOpen, setIsCantUseMcpModalOpen] = useState(false);
   const availableMethods = useMemo(() => getAvailableMethods(agent), [agent]);
+
+  const handleCantUseMcp = () => setIsCantUseMcpModalOpen(true);
 
   const tabs = useMemo(() => {
     if (availableMethods.length === 0) return [];
     const methodsByType = groupMethodsByType(availableMethods);
-    return createTabsFromMethods(methodsByType, token, url);
+    return createTabsFromMethods(methodsByType, token, url, handleCantUseMcp);
   }, [availableMethods, token, url]);
 
   if (tabs.length === 0) return null;
@@ -104,39 +119,46 @@ export const AgentModal: React.FunctionComponent<IAgentModalProps> = ({
   const firstTab = tabs[0];
 
   return (
-    <PMDialog.Root
-      open={isOpen}
-      onOpenChange={(e) => !e.open && onClose()}
-      placement="center"
-    >
-      <PMDialog.Backdrop />
-      <PMDialog.Positioner>
-        <PMDialog.Content maxW="600px">
-          <PMDialog.Header>
-            <PMHStack justifyContent="space-between" width="100%">
-              <PMText as="p" fontWeight="bold">
-                {agent.name}
-              </PMText>
-              <PMDialog.CloseTrigger asChild>
-                <PMCloseButton size="sm" />
-              </PMDialog.CloseTrigger>
-            </PMHStack>
-          </PMDialog.Header>
-          <PMDialog.Body maxH="70vh" overflowY="auto">
-            <OnboardingAgentProvider agent={mapAgentIdToAnalytics(agent.id)}>
-              {hasSingleMethod ? (
-                firstTab.content
-              ) : (
-                <PMTabs
-                  width="100%"
-                  defaultValue={firstTab.value}
-                  tabs={tabs}
-                />
-              )}
-            </OnboardingAgentProvider>
-          </PMDialog.Body>
-        </PMDialog.Content>
-      </PMDialog.Positioner>
-    </PMDialog.Root>
+    <>
+      <PMDialog.Root
+        open={isOpen}
+        onOpenChange={(e) => !e.open && onClose()}
+        placement="center"
+      >
+        <PMDialog.Backdrop />
+        <PMDialog.Positioner>
+          <PMDialog.Content maxW="600px">
+            <PMDialog.Header>
+              <PMHStack justifyContent="space-between" width="100%">
+                <PMText as="p" fontWeight="bold">
+                  {agent.name}
+                </PMText>
+                <PMDialog.CloseTrigger asChild>
+                  <PMCloseButton size="sm" />
+                </PMDialog.CloseTrigger>
+              </PMHStack>
+            </PMDialog.Header>
+            <PMDialog.Body maxH="70vh" overflowY="auto">
+              <OnboardingAgentProvider agent={mapAgentIdToAnalytics(agent.id)}>
+                {hasSingleMethod ? (
+                  firstTab.content
+                ) : (
+                  <PMTabs
+                    width="100%"
+                    defaultValue={firstTab.value}
+                    tabs={tabs}
+                  />
+                )}
+              </OnboardingAgentProvider>
+            </PMDialog.Body>
+          </PMDialog.Content>
+        </PMDialog.Positioner>
+      </PMDialog.Root>
+      <CantUseMcpModal
+        isOpen={isCantUseMcpModalOpen}
+        onClose={() => setIsCantUseMcpModalOpen(false)}
+        selectedAgent={mapAgentIdToAnalytics(agent.id)}
+      />
+    </>
   );
 };

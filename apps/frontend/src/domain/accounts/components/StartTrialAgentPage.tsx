@@ -162,18 +162,12 @@ export const StartTrialAgentPage: React.FC<IStartTrialAgentPageProps> = ({
             Get your agent talking to Packmind in 2 minutes
           </PMText>
           {method && (
-            <PMVStack alignItems="flex-start">
-              <MethodContent method={method} token={token} url={mcpUrl} />
-              <PMButton
-                variant="tertiary"
-                size="xs"
-                mt={4}
-                onClick={() => setIsCantUseMcpModalOpen(true)}
-                data-testid={StartTrialAgentPageDataTestIds.CantUseMcpButton}
-              >
-                I can't use MCP
-              </PMButton>
-            </PMVStack>
+            <MethodContent
+              method={method}
+              token={token}
+              url={mcpUrl}
+              onCantUseMcp={() => setIsCantUseMcpModalOpen(true)}
+            />
           )}
         </PMBox>
 
