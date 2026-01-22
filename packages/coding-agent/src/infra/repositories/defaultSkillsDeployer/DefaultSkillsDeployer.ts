@@ -1,5 +1,5 @@
 import { FileUpdates } from '@packmind/types';
-import { SkillCreatorDeployer } from './SkillCreatorDeployer';
+import { CreateSkillDeployer } from './CreateSkillDeployer';
 
 export class DefaultSkillsDeployer {
   constructor(
@@ -12,7 +12,7 @@ export class DefaultSkillsDeployer {
   }
 
   private deploySkillsCreator(): FileUpdates {
-    return new SkillCreatorDeployer().deploy(
+    return new CreateSkillDeployer().deploy(
       this.agentName,
       this.skillsFolderPath,
     );
