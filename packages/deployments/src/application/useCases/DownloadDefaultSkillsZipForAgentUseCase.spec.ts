@@ -72,12 +72,28 @@ describe('DownloadDefaultSkillsZipForAgentUseCase', () => {
         expect(() => Buffer.from(result.fileContent, 'base64')).not.toThrow();
       });
 
-      it('creates a valid zip file', () => {
+      it('creates a valid zip file with README and skill files', () => {
         const buffer = Buffer.from(result.fileContent, 'base64');
         const zip = new AdmZip(buffer);
         const entries = zip.getEntries();
 
-        expect(entries).toHaveLength(2);
+        expect(entries).toHaveLength(3);
+      });
+
+      it('includes README.md file', () => {
+        const buffer = Buffer.from(result.fileContent, 'base64');
+        const zip = new AdmZip(buffer);
+        const entry = zip.getEntry('README.md');
+
+        expect(entry).toBeDefined();
+      });
+
+      it('includes README.md with agent-specific content', () => {
+        const buffer = Buffer.from(result.fileContent, 'base64');
+        const zip = new AdmZip(buffer);
+        const content = zip.readAsText('README.md');
+
+        expect(content).toContain('Packmind Default Skills for Claude');
       });
 
       it('includes skill file with correct path', () => {
@@ -136,12 +152,20 @@ describe('DownloadDefaultSkillsZipForAgentUseCase', () => {
         expect(result.fileName).toBe('packmind-claude-default-skills.zip');
       });
 
-      it('creates an empty zip file', () => {
+      it('creates a zip file with only README', () => {
         const buffer = Buffer.from(result.fileContent, 'base64');
         const zip = new AdmZip(buffer);
         const entries = zip.getEntries();
 
-        expect(entries).toHaveLength(0);
+        expect(entries).toHaveLength(1);
+      });
+
+      it('includes README.md file', () => {
+        const buffer = Buffer.from(result.fileContent, 'base64');
+        const zip = new AdmZip(buffer);
+        const entry = zip.getEntry('README.md');
+
+        expect(entry).toBeDefined();
       });
     });
 
@@ -198,6 +222,14 @@ describe('DownloadDefaultSkillsZipForAgentUseCase', () => {
         const entry = zip.getEntry('.github/skills/create-skill/SKILL.md');
 
         expect(entry).toBeDefined();
+      });
+
+      it('includes README.md with copilot-specific content', () => {
+        const buffer = Buffer.from(result.fileContent, 'base64');
+        const zip = new AdmZip(buffer);
+        const content = zip.readAsText('README.md');
+
+        expect(content).toContain('Packmind Default Skills for Copilot');
       });
     });
   });
