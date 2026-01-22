@@ -864,6 +864,22 @@
   path: artefact-logger
   type: skill
   date: 2026-01-20T15:32:24+01:00
+- name: CLAUDE.md
+  path: CLAUDE.md
+  type: claude_md
+  date: 2026-01-20T17:33:40+01:00
+- name: standard-typescript-code-standards.md
+  path: .claude/rules/packmind/standard-typescript-code-standards.md
+  type: rule
+  date: 2026-01-20T17:33:40+01:00
+- name: standard-tests-redaction.md
+  path: .claude/rules/packmind/standard-tests-redaction.md
+  type: rule
+  date: 2026-01-20T17:33:40+01:00
+- name: artefact-logger
+  path: artefact-logger
+  type: skill
+  date: 2026-01-20T17:33:40+01:00
 - name: skill-creator
   path: skill-creator
   type: skill

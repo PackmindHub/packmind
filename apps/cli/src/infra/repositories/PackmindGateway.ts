@@ -154,6 +154,17 @@ export class PackmindGateway implements IPackmindGateway {
       });
     }
 
+    // Add git target info for distribution history lookup
+    if (command.gitRemoteUrl) {
+      queryParams.append('gitRemoteUrl', command.gitRemoteUrl);
+    }
+    if (command.gitBranch) {
+      queryParams.append('gitBranch', command.gitBranch);
+    }
+    if (command.relativePath) {
+      queryParams.append('relativePath', command.relativePath);
+    }
+
     // Make API call to pull all content
     const url = `${host}/api/v0/organizations/${organizationId}/pull?${queryParams.toString()}`;
 

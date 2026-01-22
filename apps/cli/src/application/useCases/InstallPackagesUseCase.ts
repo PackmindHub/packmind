@@ -7,10 +7,6 @@ import { IPackmindGateway } from '../../domain/repositories/IPackmindGateway';
 import { mergeSectionsIntoFileContent } from '@packmind/node-utils';
 import * as fs from 'fs/promises';
 import * as path from 'path';
-import {
-  ALL_AGENTS,
-  AGENT_SKILL_PATHS,
-} from '../../domain/constants/AgentPaths';
 
 export class InstallPackagesUseCase implements IInstallPackagesUseCase {
   constructor(private readonly packmindGateway: IPackmindGateway) {}
@@ -28,15 +24,16 @@ export class InstallPackagesUseCase implements IInstallPackagesUseCase {
       recipesCount: 0,
       standardsCount: 0,
       skillsCount: 0,
-      skillsSyncedToAgents: 0,
+      skillDirectoriesDeleted: 0,
     };
 
-    // Track skill slugs for syncing to agent directories
-    const skillSlugs = new Set<string>();
     // Fetch data from the gateway
     const response = await this.packmindGateway.getPullData({
       packagesSlugs: command.packagesSlugs,
       previousPackagesSlugs: command.previousPackagesSlugs,
+      gitRemoteUrl: command.gitRemoteUrl,
+      gitBranch: command.gitBranch,
+      relativePath: command.relativePath,
     });
 
     // Deduplicate files by path (when multiple packages share standards/recipes)
@@ -67,19 +64,20 @@ export class InstallPackagesUseCase implements IInstallPackagesUseCase {
         file.path.endsWith('.md')
       ) {
         result.standardsCount++;
-      } else if (file.path.includes('.packmind/skills/')) {
-        // Extract skill slug from path (e.g., ".packmind/skills/signal-capture/SKILL.md" -> "signal-capture")
-        const skillSlug = this.extractSkillSlug(file.path);
-        if (skillSlug) {
-          skillSlugs.add(skillSlug);
-        }
-        if (file.path.endsWith('.md')) {
-          result.skillsCount++;
-        }
+      } else if (
+        file.path.includes('.packmind/skills/') &&
+        file.path.endsWith('.md')
+      ) {
+        result.skillsCount++;
       }
     }
 
     try {
+      // Delete all skill folders BEFORE processing files
+      result.skillDirectoriesDeleted = await this.deleteSkillFolders(
+        baseDirectory,
+        response.skillFolders,
+      );
       // Process createOrUpdate files (deduplicated)
       for (const file of uniqueFiles) {
         try {
@@ -101,23 +99,6 @@ export class InstallPackagesUseCase implements IInstallPackagesUseCase {
           const errorMsg =
             error instanceof Error ? error.message : String(error);
           result.errors.push(`Failed to delete ${file.path}: ${errorMsg}`);
-        }
-      }
-
-      // Sync skills to agent directories (.claude/skills, .github/skills)
-      for (const skillSlug of skillSlugs) {
-        try {
-          const syncedCount = await this.syncSkillToAgentDirectories(
-            baseDirectory,
-            skillSlug,
-          );
-          result.skillsSyncedToAgents += syncedCount;
-        } catch (error) {
-          const errorMsg =
-            error instanceof Error ? error.message : String(error);
-          result.errors.push(
-            `Failed to sync skill "${skillSlug}" to agent directories: ${errorMsg}`,
-          );
         }
       }
     } catch (error) {
@@ -351,110 +332,26 @@ export class InstallPackagesUseCase implements IInstallPackagesUseCase {
   }
 
   /**
-   * Extracts skill slug from a .packmind/skills path.
-   * E.g., ".packmind/skills/signal-capture/SKILL.md" -> "signal-capture"
+   * Deletes all skill folders before recreating them with fresh content.
+   * Returns the count of folders successfully deleted.
    */
-  private extractSkillSlug(filePath: string): string | null {
-    const match = filePath.match(/\.packmind\/skills\/([^/]+)\//);
-    return match ? match[1] : null;
-  }
-
-  /**
-   * Syncs a skill from .packmind/skills/{slug} to all agent directories.
-   * Returns the number of agent directories synced.
-   */
-  private async syncSkillToAgentDirectories(
+  private async deleteSkillFolders(
     baseDirectory: string,
-    skillSlug: string,
+    folders: string[],
   ): Promise<number> {
-    const sourcePath = path.join(baseDirectory, '.packmind/skills', skillSlug);
+    let deletedCount = 0;
 
-    // Check if source skill directory exists
-    const sourceExists = await this.fileExists(sourcePath);
-    if (!sourceExists) {
-      return 0;
-    }
-
-    let syncedCount = 0;
-
-    for (const agent of ALL_AGENTS) {
-      const targetPath = path.join(
-        baseDirectory,
-        AGENT_SKILL_PATHS[agent],
-        skillSlug,
-      );
+    for (const folder of folders) {
+      const fullPath = path.join(baseDirectory, folder);
 
       try {
-        // Read all files from source directory
-        const sourceFiles = await this.readDirectoryRecursive(sourcePath);
-
-        // Create target directory
-        await fs.mkdir(targetPath, { recursive: true });
-
-        // Copy each file
-        for (const file of sourceFiles) {
-          const sourceFilePath = path.join(sourcePath, file.relativePath);
-          const targetFilePath = path.join(targetPath, file.relativePath);
-          const targetFileDir = path.dirname(targetFilePath);
-
-          await fs.mkdir(targetFileDir, { recursive: true });
-          await fs.copyFile(sourceFilePath, targetFilePath);
-        }
-
-        // Delete files in target that no longer exist in source
-        const targetFiles = await this.readDirectoryRecursive(targetPath).catch(
-          () => [],
-        );
-        const sourceRelativePaths = new Set(
-          sourceFiles.map((f) => f.relativePath),
-        );
-
-        for (const targetFile of targetFiles) {
-          if (!sourceRelativePaths.has(targetFile.relativePath)) {
-            const targetFilePath = path.join(
-              targetPath,
-              targetFile.relativePath,
-            );
-            await fs.unlink(targetFilePath).catch(() => {
-              // Ignore errors when deleting files
-            });
-          }
-        }
-
-        syncedCount++;
+        await fs.rm(fullPath, { recursive: true, force: true });
+        deletedCount++;
       } catch {
-        // Continue with other agents even if one fails
+        // Ignore errors if folder doesn't exist or can't be deleted
       }
     }
 
-    return syncedCount;
-  }
-
-  /**
-   * Recursively reads all files in a directory.
-   * Returns an array of objects with relativePath property.
-   */
-  private async readDirectoryRecursive(
-    dirPath: string,
-  ): Promise<{ relativePath: string }[]> {
-    const files: { relativePath: string }[] = [];
-
-    const readDir = async (currentPath: string, basePath: string) => {
-      const entries = await fs.readdir(currentPath, { withFileTypes: true });
-
-      for (const entry of entries) {
-        const fullPath = path.join(currentPath, entry.name);
-        const relativePath = path.relative(basePath, fullPath);
-
-        if (entry.isDirectory()) {
-          await readDir(fullPath, basePath);
-        } else if (entry.isFile()) {
-          files.push({ relativePath: relativePath.replace(/\\/g, '/') });
-        }
-      }
-    };
-
-    await readDir(dirPath, dirPath);
-    return files;
+    return deletedCount;
   }
 }

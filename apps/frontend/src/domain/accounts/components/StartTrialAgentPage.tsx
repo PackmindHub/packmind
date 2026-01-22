@@ -27,6 +27,7 @@ import { trialGateway } from '../api/gateways';
 import { StartTrialAgentPageDataTestIds } from '@packmind/frontend';
 import { useAnalytics } from '@packmind/proprietary/frontend/domain/amplitude/providers/AnalyticsProvider';
 import { useOnboardingAgent } from '../contexts';
+import { CantUseMcpModal } from './trial/CantUseMcpModal';
 
 interface IStartTrialAgentPageProps {
   agentLabel: string;
@@ -93,6 +94,8 @@ export const StartTrialAgentPage: React.FC<IStartTrialAgentPageProps> = ({
   preferredMethodLabel,
 }) => {
   const navigate = useNavigate();
+  const agent = useOnboardingAgent();
+  const [isCantUseMcpModalOpen, setIsCantUseMcpModalOpen] = useState(false);
 
   // Améliore le titre pour l'option "other"
   const getAgentTitle = (label: string) => {
@@ -177,7 +180,12 @@ export const StartTrialAgentPage: React.FC<IStartTrialAgentPageProps> = ({
               local project analysis
             </PMText>
             {method && (
-              <MethodContent method={method} token={token} url={mcpUrl} />
+              <MethodContent
+                method={method}
+                token={token}
+                url={mcpUrl}
+                onCantUseMcp={() => setIsCantUseMcpModalOpen(true)}
+              />
             )}
           </PMBox>
           {!mcpConnected && (
@@ -319,6 +327,12 @@ export const StartTrialAgentPage: React.FC<IStartTrialAgentPageProps> = ({
           </PMBox>
         )}
       </PMVStack>
+
+      <CantUseMcpModal
+        isOpen={isCantUseMcpModalOpen}
+        onClose={() => setIsCantUseMcpModalOpen(false)}
+        selectedAgent={agent}
+      />
     </PMVStack>
   );
 };

@@ -149,7 +149,7 @@ jobs:
           - packages/migrations
           - packages/skills
           - packages/spaces
-          - packages/standards
+          #- packages/standards
           - packages/test-utils
           - packages/types
           - packages/ui

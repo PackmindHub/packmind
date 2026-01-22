@@ -4,6 +4,7 @@ import {
   FileUpdates,
   IAccountsPort,
   ICodingAgentPort,
+  IGitPort,
   IRecipesPort,
   ISkillsPort,
   IStandardsPort,
@@ -36,6 +37,8 @@ import { PackageService } from '../services/PackageService';
 import { PackmindConfigService } from '../services/PackmindConfigService';
 import { RenderModeConfigurationService } from '../services/RenderModeConfigurationService';
 import { PullContentUseCase } from './PullContentUseCase';
+import { IDistributionRepository } from '../../domain/repositories/IDistributionRepository';
+import { TargetService } from '../services/TargetService';
 
 const createUserWithMembership = (
   userId: string,
@@ -66,6 +69,9 @@ describe('PullContentUseCase', () => {
   let eventEmitterService: jest.Mocked<PackmindEventEmitterService>;
   let renderModeConfigurationService: jest.Mocked<RenderModeConfigurationService>;
   let packmindConfigService: jest.Mocked<PackmindConfigService>;
+  let gitPort: jest.Mocked<IGitPort>;
+  let distributionRepository: jest.Mocked<IDistributionRepository>;
+  let targetService: jest.Mocked<TargetService>;
   let useCase: PullContentUseCase;
   let command: PullContentCommand;
   let organizationId: OrganizationId;
@@ -146,6 +152,21 @@ describe('PullContentUseCase', () => {
       CodingAgents.agents_md,
     ]);
 
+    gitPort = {
+      listProviders: jest.fn().mockResolvedValue({ providers: [] }),
+      listRepos: jest.fn().mockResolvedValue([]),
+    } as unknown as jest.Mocked<IGitPort>;
+
+    distributionRepository = {
+      findActiveSkillVersionsByTargetAndPackages: jest
+        .fn()
+        .mockResolvedValue([]),
+    } as unknown as jest.Mocked<IDistributionRepository>;
+
+    targetService = {
+      getTargetsByGitRepoId: jest.fn().mockResolvedValue([]),
+    } as unknown as jest.Mocked<TargetService>;
+
     organizationId = createOrganizationId(uuidv4());
     organization = {
       id: organizationId,
@@ -173,6 +194,9 @@ describe('PullContentUseCase', () => {
       renderModeConfigurationService,
       accountsPort,
       eventEmitterService,
+      gitPort,
+      distributionRepository,
+      targetService,
       packmindConfigService,
       stubLogger(),
     );
@@ -192,6 +216,9 @@ describe('PullContentUseCase', () => {
           renderModeConfigurationService,
           accountsPort,
           eventEmitterService,
+          gitPort,
+          distributionRepository,
+          targetService,
           packmindConfigService,
           stubLogger(),
         );
@@ -778,6 +805,191 @@ describe('PullContentUseCase', () => {
             (file) => file.path === '.packmind/README.md',
           );
           expect(readmeFile).toBeUndefined();
+        });
+      });
+    });
+
+    describe('skillFolders generation', () => {
+      let testPackage: PackageWithArtefacts;
+      let skill: Skill;
+      let skillVersion: SkillVersion;
+
+      beforeEach(() => {
+        skill = {
+          id: createSkillId('skill-1'),
+          name: 'Test Skill',
+          slug: 'test-skill',
+          description: 'Test skill description',
+          prompt: 'Test prompt',
+          version: 1,
+          userId: createUserId('user-1'),
+          spaceId: createSpaceId('space-1'),
+        };
+
+        skillVersion = {
+          id: createSkillVersionId('skill-version-1'),
+          skillId: skill.id,
+          name: 'Test Skill',
+          slug: 'test-skill',
+          description: 'Test skill description',
+          prompt: 'Test prompt',
+          version: 1,
+          userId: createUserId('user-1'),
+        };
+
+        testPackage = {
+          id: createPackageId('test-package-id'),
+          slug: 'test-package',
+          name: 'Test Package',
+          description: 'Test package description',
+          spaceId: createSpaceId('space-1'),
+          createdBy: createUserId('user-1'),
+          recipes: [],
+          standards: [],
+          skills: [],
+        };
+
+        packageService.getPackagesBySlugsWithArtefacts.mockResolvedValue([
+          testPackage,
+        ]);
+
+        recipesPort.listRecipeVersions.mockResolvedValue([]);
+        standardsPort.listStandardVersions.mockResolvedValue([]);
+        skillsPort.listSkillVersions.mockResolvedValue([]);
+
+        codingAgentPort.deployArtifactsForAgents.mockResolvedValue({
+          createOrUpdate: [],
+          delete: [],
+        } as FileUpdates);
+      });
+
+      describe('when package has no skills', () => {
+        beforeEach(() => {
+          codingAgentPort.getAgentSkillPath.mockReturnValue('.claude/skills');
+        });
+
+        it('returns empty skillFolders array', async () => {
+          const result = await useCase.execute(command);
+
+          expect(result.skillFolders).toEqual([]);
+        });
+      });
+
+      describe('when agents support skills', () => {
+        beforeEach(() => {
+          testPackage.skills = [skill];
+          packageService.getPackagesBySlugsWithArtefacts.mockResolvedValue([
+            testPackage,
+          ]);
+          skillsPort.listSkillVersions.mockResolvedValue([skillVersion]);
+
+          renderModeConfigurationService.resolveActiveCodingAgents.mockResolvedValue(
+            [CodingAgents.claude],
+          );
+          codingAgentPort.getAgentSkillPath.mockReturnValue('.claude/skills');
+        });
+
+        it('returns skillFolders for the agent', async () => {
+          const result = await useCase.execute(command);
+
+          expect(result.skillFolders).toEqual(['.claude/skills/test-skill']);
+        });
+      });
+
+      describe('when agents do not support skills', () => {
+        beforeEach(() => {
+          testPackage.skills = [skill];
+          packageService.getPackagesBySlugsWithArtefacts.mockResolvedValue([
+            testPackage,
+          ]);
+          skillsPort.listSkillVersions.mockResolvedValue([skillVersion]);
+
+          codingAgentPort.getAgentSkillPath.mockReturnValue(null);
+        });
+
+        it('returns empty skillFolders array', async () => {
+          const result = await useCase.execute(command);
+
+          expect(result.skillFolders).toEqual([]);
+        });
+      });
+
+      describe('when multiple skills and agents are present', () => {
+        let skillA: Skill;
+        let skillB: Skill;
+        let skillVersionA: SkillVersion;
+        let skillVersionB: SkillVersion;
+
+        beforeEach(() => {
+          skillA = {
+            id: createSkillId('skill-a'),
+            name: 'Skill A',
+            slug: 'skill-a',
+            description: 'Skill A description',
+            prompt: 'Skill A prompt',
+            version: 1,
+            userId: createUserId('user-1'),
+            spaceId: createSpaceId('space-1'),
+          };
+
+          skillB = {
+            id: createSkillId('skill-b'),
+            name: 'Skill B',
+            slug: 'skill-b',
+            description: 'Skill B description',
+            prompt: 'Skill B prompt',
+            version: 1,
+            userId: createUserId('user-1'),
+            spaceId: createSpaceId('space-1'),
+          };
+
+          skillVersionA = {
+            id: createSkillVersionId('skill-version-a'),
+            skillId: skillA.id,
+            name: 'Skill A',
+            slug: 'skill-a',
+            description: 'Skill A description',
+            prompt: 'Skill A prompt',
+            version: 1,
+            userId: createUserId('user-1'),
+          };
+
+          skillVersionB = {
+            id: createSkillVersionId('skill-version-b'),
+            skillId: skillB.id,
+            name: 'Skill B',
+            slug: 'skill-b',
+            description: 'Skill B description',
+            prompt: 'Skill B prompt',
+            version: 1,
+            userId: createUserId('user-1'),
+          };
+
+          testPackage.skills = [skillA, skillB];
+          packageService.getPackagesBySlugsWithArtefacts.mockResolvedValue([
+            testPackage,
+          ]);
+          skillsPort.listSkillVersions
+            .mockResolvedValueOnce([skillVersionA])
+            .mockResolvedValueOnce([skillVersionB]);
+
+          renderModeConfigurationService.resolveActiveCodingAgents.mockResolvedValue(
+            [CodingAgents.claude, CodingAgents.copilot],
+          );
+          codingAgentPort.getAgentSkillPath
+            .mockReturnValueOnce('.claude/skills')
+            .mockReturnValueOnce('.github/skills');
+        });
+
+        it('returns skillFolders for all skill-agent combinations', async () => {
+          const result = await useCase.execute(command);
+
+          expect(result.skillFolders).toEqual([
+            '.claude/skills/skill-a',
+            '.claude/skills/skill-b',
+            '.github/skills/skill-a',
+            '.github/skills/skill-b',
+          ]);
         });
       });
     });

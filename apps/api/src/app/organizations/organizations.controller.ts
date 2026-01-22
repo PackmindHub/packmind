@@ -122,6 +122,9 @@ export class OrganizationsController {
     @Req() request: AuthenticatedRequest,
     @Query('packageSlug') packageSlug?: string | string[],
     @Query('previousPackageSlug') previousPackageSlug?: string | string[],
+    @Query('gitRemoteUrl') gitRemoteUrl?: string,
+    @Query('gitBranch') gitBranch?: string,
+    @Query('relativePath') relativePath?: string,
   ): Promise<IPullContentResponse> {
     const userId = request.user.userId;
 
@@ -146,6 +149,9 @@ export class OrganizationsController {
         userId,
         packagesSlugs,
         previousPackagesSlugs,
+        gitRemoteUrl,
+        gitBranch,
+        relativePath,
       },
     );
 
@@ -155,6 +161,9 @@ export class OrganizationsController {
         organizationId,
         packagesSlugs,
         previousPackagesSlugs,
+        gitRemoteUrl,
+        gitBranch,
+        relativePath,
         source: request.clientSource,
       });
     } catch (error) {
