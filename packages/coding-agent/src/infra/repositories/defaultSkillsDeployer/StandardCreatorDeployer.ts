@@ -1,5 +1,5 @@
 import { FileUpdates } from '@packmind/types';
-import { IDeploySkillsDeployer } from './IDefaultSkillDeployer';
+import { ISkillDeployer } from './IDefaultSkillDeployer';
 
 const VALID_LANGUAGES = [
   'AVRO',
@@ -945,7 +945,7 @@ const STANDARD_CREATOR_LICENSE = `
    END OF TERMS AND CONDITIONS
 `;
 
-export class StandardCreatorDeployer implements IDeploySkillsDeployer {
+export class StandardCreatorDeployer implements ISkillDeployer {
   deploy(agentName: string, skillsFolderPath: string): FileUpdates {
     const basePath = `${skillsFolderPath}packmind-standard-creator`;
 
