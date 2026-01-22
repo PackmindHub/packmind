@@ -50,4 +50,10 @@ export interface ICodingAgentDeployer {
     skillVersions?: SkillVersion[],
   ): Promise<FileUpdates>;
   deployDefaultSkills?(): Promise<FileUpdates> | FileUpdates;
+  /**
+   * Returns the base path for skills folder for this deployer.
+   * Returns undefined if skills are not supported by this agent.
+   * Used for "burn and rebuild" strategy to delete stale skill files.
+   */
+  getSkillsFolderPath(): string | undefined;
 }

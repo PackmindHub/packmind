@@ -1,6 +1,7 @@
 import { PackmindLogger } from '@packmind/logger';
 import {
   CodingAgent,
+  DeleteItemType,
   FileUpdates,
   IGitPort,
   IGitPortName,
@@ -271,7 +272,12 @@ describe('CodingAgentAdapter', () => {
     describe('with single agent', () => {
       const removalUpdates: FileUpdates = {
         createOrUpdate: [],
-        delete: [{ path: '.claude/skills/removed-skill.md' }],
+        delete: [
+          {
+            path: '.claude/skills/removed-skill.md',
+            type: DeleteItemType.File,
+          },
+        ],
       };
 
       const generateRemovalUpdates = async () => {
@@ -319,77 +325,127 @@ describe('CodingAgentAdapter', () => {
     });
   });
 
-  describe('getAgentFilePath', () => {
-    it('returns CLAUDE.md for claude agent', () => {
-      expect(adapter.getAgentFilePath('claude')).toBe('CLAUDE.md');
-    });
+  describe('getSkillsFolderPathForAgents', () => {
+    let mockDeployer: jest.Mocked<ICodingAgentDeployer>;
+    let mockDeployerRegistry: jest.Mocked<ICodingAgentDeployerRegistry>;
 
-    it('returns .github/copilot-instructions.md for copilot agent', () => {
-      expect(adapter.getAgentFilePath('copilot')).toBe(
-        '.github/copilot-instructions.md',
+    beforeEach(() => {
+      mockDeployer = {
+        deployArtifacts: jest.fn(),
+        deployRecipes: jest.fn(),
+        deployStandards: jest.fn(),
+        deploySkills: jest.fn(),
+        generateRemovalFileUpdates: jest.fn(),
+        getSkillsFolderPath: jest.fn(),
+      } as unknown as jest.Mocked<ICodingAgentDeployer>;
+
+      mockDeployerRegistry = {
+        getDeployer: jest.fn().mockReturnValue(mockDeployer),
+      } as unknown as jest.Mocked<ICodingAgentDeployerRegistry>;
+
+      (mockRepositories.getDeployerRegistry as jest.Mock).mockReturnValue(
+        mockDeployerRegistry,
       );
     });
 
-    it('returns AGENTS.md for agents_md agent', () => {
-      expect(adapter.getAgentFilePath('agents_md')).toBe('AGENTS.md');
-    });
-  });
-
-  describe('getAgentSkillPath', () => {
-    it('returns .claude/skills for claude agent', () => {
-      expect(adapter.getAgentSkillPath('claude')).toBe('.claude/skills');
-    });
-
-    it('returns .github/skills for copilot agent', () => {
-      expect(adapter.getAgentSkillPath('copilot')).toBe('.github/skills');
-    });
-
-    describe('when agent does not support skills', () => {
-      it('returns null for cursor agent', () => {
-        expect(adapter.getAgentSkillPath('cursor')).toBeNull();
+    describe('with single agent that supports skills', () => {
+      beforeEach(() => {
+        mockDeployer.getSkillsFolderPath.mockReturnValue('.claude/skills/');
       });
 
-      it('returns null for junie agent', () => {
-        expect(adapter.getAgentSkillPath('junie')).toBeNull();
+      it('returns map with skill folder path for claude', () => {
+        const result = adapter.getSkillsFolderPathForAgents(['claude']);
+
+        expect(result.get('claude')).toBe('.claude/skills/');
       });
 
-      it('returns null for packmind agent', () => {
-        expect(adapter.getAgentSkillPath('packmind')).toBeNull();
+      it('retrieves deployer for the agent', () => {
+        adapter.getSkillsFolderPathForAgents(['claude']);
+
+        expect(mockDeployerRegistry.getDeployer).toHaveBeenCalledWith('claude');
       });
     });
-  });
 
-  describe('getSupportedAgents', () => {
-    it('includes claude agent', () => {
-      expect(adapter.getSupportedAgents()).toContain('claude');
+    describe('with agent that does not support skills', () => {
+      beforeEach(() => {
+        mockDeployer.getSkillsFolderPath.mockReturnValue(undefined);
+      });
+
+      it('returns map with undefined for cursor', () => {
+        const result = adapter.getSkillsFolderPathForAgents(['cursor']);
+
+        expect(result.get('cursor')).toBeUndefined();
+      });
     });
 
-    it('includes copilot agent', () => {
-      expect(adapter.getSupportedAgents()).toContain('copilot');
+    describe('with multiple agents', () => {
+      it('returns map with paths for all requested agents', () => {
+        mockDeployer.getSkillsFolderPath
+          .mockReturnValueOnce('.claude/skills/')
+          .mockReturnValueOnce('.github/skills/')
+          .mockReturnValueOnce(undefined);
+
+        const result = adapter.getSkillsFolderPathForAgents([
+          'claude',
+          'copilot',
+          'cursor',
+        ]);
+
+        expect(result.size).toBe(3);
+      });
+
+      it('returns correct path for claude', () => {
+        mockDeployer.getSkillsFolderPath
+          .mockReturnValueOnce('.claude/skills/')
+          .mockReturnValueOnce('.github/skills/')
+          .mockReturnValueOnce(undefined);
+
+        const result = adapter.getSkillsFolderPathForAgents([
+          'claude',
+          'copilot',
+          'cursor',
+        ]);
+
+        expect(result.get('claude')).toBe('.claude/skills/');
+      });
+
+      it('returns correct path for copilot', () => {
+        mockDeployer.getSkillsFolderPath
+          .mockReturnValueOnce('.claude/skills/')
+          .mockReturnValueOnce('.github/skills/')
+          .mockReturnValueOnce(undefined);
+
+        const result = adapter.getSkillsFolderPathForAgents([
+          'claude',
+          'copilot',
+          'cursor',
+        ]);
+
+        expect(result.get('copilot')).toBe('.github/skills/');
+      });
+
+      it('returns undefined for cursor', () => {
+        mockDeployer.getSkillsFolderPath
+          .mockReturnValueOnce('.claude/skills/')
+          .mockReturnValueOnce('.github/skills/')
+          .mockReturnValueOnce(undefined);
+
+        const result = adapter.getSkillsFolderPathForAgents([
+          'claude',
+          'copilot',
+          'cursor',
+        ]);
+
+        expect(result.get('cursor')).toBeUndefined();
+      });
     });
 
-    it('includes cursor agent', () => {
-      expect(adapter.getSupportedAgents()).toContain('cursor');
-    });
+    describe('with empty agents array', () => {
+      it('returns empty map', () => {
+        const result = adapter.getSkillsFolderPathForAgents([]);
 
-    it('includes junie agent', () => {
-      expect(adapter.getSupportedAgents()).toContain('junie');
-    });
-
-    it('includes packmind agent', () => {
-      expect(adapter.getSupportedAgents()).toContain('packmind');
-    });
-
-    it('includes agents_md agent', () => {
-      expect(adapter.getSupportedAgents()).toContain('agents_md');
-    });
-
-    it('includes gitlab_duo agent', () => {
-      expect(adapter.getSupportedAgents()).toContain('gitlab_duo');
-    });
-
-    it('includes continue agent', () => {
-      expect(adapter.getSupportedAgents()).toContain('continue');
+        expect(result.size).toBe(0);
+      });
     });
   });
 });

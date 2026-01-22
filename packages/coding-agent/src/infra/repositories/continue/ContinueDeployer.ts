@@ -439,4 +439,9 @@ ${instructionContent}`;
       content,
     };
   }
+
+  getSkillsFolderPath(): undefined {
+    // Skills not supported for Continue deployer yet
+    return undefined;
+  }
 }

@@ -3965,4 +3965,10 @@ describe('ClaudeDeployer', () => {
       });
     });
   });
+
+  describe('getSkillsFolderPath', () => {
+    it('returns the Claude skills folder path', () => {
+      expect(deployer.getSkillsFolderPath()).toBe('.claude/skills/');
+    });
+  });
 });

@@ -319,6 +319,7 @@ export class PullContentUseCase extends AbstractMemberUseCase<
         const previouslyDeployedSkills =
           await this.findPreviouslyDeployedSkillVersions(
             command.organization.id,
+            command.userId,
             command.gitRemoteUrl,
             command.gitBranch,
             command.relativePath,
@@ -346,6 +347,9 @@ export class PullContentUseCase extends AbstractMemberUseCase<
         delete: [],
       };
 
+      // Track skill versions to delete for folder cleanup
+      let skillVersionsToDelete: SkillVersion[] = [];
+
       // Deploy artifacts for all coding agents using the unified method
       this.logger.info('Deploying artifacts for coding agents', {
         codingAgents,
@@ -372,11 +376,7 @@ export class PullContentUseCase extends AbstractMemberUseCase<
         removedStandardVersions.length > 0 ||
         removedSkillVersions.length > 0
       ) {
-        const {
-          recipeVersionsToDelete,
-          standardVersionsToDelete,
-          skillVersionsToDelete,
-        } = this.filterSharedArtifacts(
+        const filterResult = this.filterSharedArtifacts(
           removedRecipeVersions,
           removedStandardVersions,
           removedSkillVersions,
@@ -384,6 +384,9 @@ export class PullContentUseCase extends AbstractMemberUseCase<
           standardVersions,
           skillVersions,
         );
+        const recipeVersionsToDelete = filterResult.recipeVersionsToDelete;
+        const standardVersionsToDelete = filterResult.standardVersionsToDelete;
+        skillVersionsToDelete = filterResult.skillVersionsToDelete; // Assign to outer scope
 
         this.logger.info('Filtered shared artifacts from deletion', {
           originalRemovedRecipes: removedRecipeVersions.length,
@@ -463,14 +466,26 @@ export class PullContentUseCase extends AbstractMemberUseCase<
       );
 
       // Generate skill folders for agents that support skills
+      // Includes BOTH installed AND removed skills for folder cleanup
+      const skillFolderPaths =
+        this.codingAgentPort.getSkillsFolderPathForAgents(codingAgents);
+
+      // Combine installed and removed skills for folder cleanup
+      const allSkillsForFolderCleanup = [
+        ...skillVersions,
+        ...skillVersionsToDelete,
+      ];
+
       const skillFolders = codingAgents.flatMap((agent) => {
-        const skillPath = this.codingAgentPort.getAgentSkillPath(agent);
-        if (skillPath === null) return [];
-        return skillVersions.map((sv) => `${skillPath}/${sv.slug}`);
+        const skillPath = skillFolderPaths.get(agent);
+        if (!skillPath) return [];
+        return allSkillsForFolderCleanup.map((sv) => `${skillPath}${sv.slug}`);
       });
 
       this.logger.info('Generated skill folders', {
-        count: skillFolders.length,
+        installedSkillCount: skillVersions.length,
+        removedSkillCount: skillVersionsToDelete.length,
+        totalFolderCount: skillFolders.length,
       });
 
       return { fileUpdates: mergedFileUpdates, skillFolders };
@@ -644,6 +659,7 @@ export class PullContentUseCase extends AbstractMemberUseCase<
    */
   private async findPreviouslyDeployedSkillVersions(
     organizationId: OrganizationId,
+    userId: string,
     gitRemoteUrl: string,
     gitBranch: string,
     relativePath: string,
@@ -655,7 +671,7 @@ export class PullContentUseCase extends AbstractMemberUseCase<
 
       // List all providers for the organization
       const providersResponse = await this.gitPort.listProviders({
-        userId: null as unknown as string, // Not needed for listing
+        userId,
         organizationId,
       });
 

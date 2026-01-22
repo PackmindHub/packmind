@@ -450,12 +450,14 @@ async function executeInstallForDirectory(
       };
     }
 
-    // Notify distribution if files were created, updated or deleted
+    // Notify distribution if files were created, updated or deleted (including skill directories)
+    const skillDirsDeleted = result.skillDirectoriesDeleted || 0;
     let notificationSent = false;
     if (
       result.filesCreated > 0 ||
       result.filesUpdated > 0 ||
-      result.filesDeleted > 0
+      result.filesDeleted > 0 ||
+      skillDirsDeleted > 0
     ) {
       notificationSent = await notifyDistributionIfInGitRepo({
         packmindCliHexa,
@@ -471,7 +473,7 @@ async function executeInstallForDirectory(
       success: true,
       filesCreated: result.filesCreated,
       filesUpdated: result.filesUpdated,
-      filesDeleted: result.filesDeleted,
+      filesDeleted: result.filesDeleted + skillDirsDeleted,
       notificationSent,
     };
   } catch (err) {
@@ -605,9 +607,11 @@ export async function installPackagesHandler(
     if (result.skillsCount > 0) parts.push(`${result.skillsCount} skills`);
     log(`Installing ${parts.join(', ') || 'artifacts'}...`);
 
-    // Display results
+    // Display results (include skill directories in deletion count)
+    const skillDirsDeleted = result.skillDirectoriesDeleted || 0;
+    const totalDeleted = result.filesDeleted + skillDirsDeleted;
     log(
-      `\nadded ${result.filesCreated} files, changed ${result.filesUpdated} files, removed ${result.filesDeleted} files`,
+      `\nadded ${result.filesCreated} files, changed ${result.filesUpdated} files, removed ${totalDeleted} files`,
     );
 
     if (result.errors.length > 0) {
@@ -619,17 +623,18 @@ export async function installPackagesHandler(
       return {
         filesCreated: result.filesCreated,
         filesUpdated: result.filesUpdated,
-        filesDeleted: result.filesDeleted,
+        filesDeleted: totalDeleted,
         notificationSent: false,
       };
     }
 
-    // Notify distribution if files were created, updated or deleted
+    // Notify distribution if files were created, updated or deleted (including skill directories)
     let notificationSent = false;
     if (
       result.filesCreated > 0 ||
       result.filesUpdated > 0 ||
-      result.filesDeleted > 0
+      result.filesDeleted > 0 ||
+      skillDirsDeleted > 0
     ) {
       notificationSent = await notifyDistributionIfInGitRepo({
         packmindCliHexa,
@@ -645,7 +650,7 @@ export async function installPackagesHandler(
     return {
       filesCreated: result.filesCreated,
       filesUpdated: result.filesUpdated,
-      filesDeleted: result.filesDeleted,
+      filesDeleted: totalDeleted,
       notificationSent,
     };
   } catch (err) {

@@ -21,11 +21,6 @@ import {
 import { ICodingAgentRepositories } from '../../domain/repositories/ICodingAgentRepositories';
 import { CodingAgentServices } from '../services/CodingAgentServices';
 import { RenderArtifactsUseCase } from '../useCases/RenderArtifactsUseCase';
-import {
-  AGENT_FILE_PATHS,
-  AGENT_SKILL_PATHS,
-  SUPPORTED_AGENTS,
-} from '../../domain/AgentConfiguration';
 
 const origin = 'CodingAgentAdapter';
 
@@ -160,16 +155,16 @@ export class CodingAgentAdapter
     return this.mergeFileUpdates(allUpdates);
   }
 
-  getAgentFilePath(agent: CodingAgent): string {
-    return AGENT_FILE_PATHS[agent];
-  }
-
-  getAgentSkillPath(agent: CodingAgent): string | null {
-    return AGENT_SKILL_PATHS[agent];
-  }
-
-  getSupportedAgents(): CodingAgent[] {
-    return SUPPORTED_AGENTS;
+  getSkillsFolderPathForAgents(
+    agents: CodingAgent[],
+  ): Map<CodingAgent, string | undefined> {
+    const result = new Map<CodingAgent, string | undefined>();
+    const deployerRegistry = this.codingAgentRepositories.getDeployerRegistry();
+    for (const agent of agents) {
+      const deployer = deployerRegistry.getDeployer(agent);
+      result.set(agent, deployer.getSkillsFolderPath());
+    }
+    return result;
   }
 
   private mergeFileUpdates(updates: FileUpdates[]): FileUpdates {
