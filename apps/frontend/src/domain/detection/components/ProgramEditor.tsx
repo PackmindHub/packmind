@@ -368,9 +368,14 @@ const ProgramEditor: React.FC<ProgramEditorProps> = ({
   }, []);
 
   const handleSandboxCodeChange = useCallback((value: string) => {
-    // Enforce 10,000 character hard limit
-    if (value.length <= 10000) {
-      setSandboxCode(value);
+    setSandboxCode(value);
+
+    if (value.length > MAX_SANDBOX_CHARS) {
+      setSandboxValidationError(
+        `Code exceeds ${MAX_SANDBOX_CHARS.toLocaleString()} character limit (${value.length.toLocaleString()} characters)`,
+      );
+    } else {
+      setSandboxValidationError(null);
     }
   }, []);
 
