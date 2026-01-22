@@ -5,6 +5,8 @@ import {
   PMLink,
   PMIcon,
   PMSeparator,
+  PMBadge,
+  PMTooltip,
 } from '@packmind/ui';
 import { NavLink, useParams } from 'react-router';
 import { AuthContextOrganization } from '../../accounts/hooks/useAuthContext';
@@ -25,13 +27,17 @@ interface SidebarNavigationLinkProps {
   label: string;
   exact?: boolean;
   icon?: React.ReactNode;
+  badge?: {
+    text: string;
+    colorScheme?: string;
+  };
   'data-testid'?: string;
 }
 
 export function SidebarNavigationLink(
   props: Readonly<SidebarNavigationLinkProps>,
 ): React.ReactElement {
-  const { url, label, exact = false, icon } = props;
+  const { url, label, exact = false, icon, badge } = props;
   return (
     <NavLink to={url} end={exact} prefetch="intent">
       {({ isActive }) => (
@@ -40,9 +46,27 @@ export function SidebarNavigationLink(
           data-active={isActive ? 'true' : undefined}
           as="span"
           data-testid={props['data-testid']}
+          display="flex"
+          alignItems="center"
+          justifyContent="space-between"
+          width="100%"
         >
-          {icon && <PMIcon mr={2}>{icon}</PMIcon>}
-          {label}
+          <span style={{ display: 'flex', alignItems: 'center' }}>
+            {icon && <PMIcon mr={2}>{icon}</PMIcon>}
+            {label}
+          </span>
+          {badge && (
+            <PMTooltip label="Coming soon to the Enterprise plan">
+              <PMBadge
+                size="sm"
+                colorScheme={badge.colorScheme || "purple"}
+                ml={2}
+                fontSize="xs"
+              >
+                {badge.text}
+              </PMBadge>
+            </PMTooltip>
+          )}
         </PMLink>
       )}
     </NavLink>
@@ -126,6 +150,7 @@ export const SidebarNavigation: React.FunctionComponent<
             key="overview"
             url={routes.org.toDeployments(orgSlug)}
             label="Overview"
+            badge={{ text: "Enterprise", colorScheme: "purple" }}
           />,
         ]}
       />
