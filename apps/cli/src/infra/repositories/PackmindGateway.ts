@@ -1405,7 +1405,7 @@ export class PackmindGateway implements IPackmindGateway {
         error: `Error: ${err?.message || JSON.stringify(error)}`,
       };
     }
-  }
+  };
   /**
    * Track linter execution (fire-and-forget).
    * This method is called before running detection programs to track usage.
