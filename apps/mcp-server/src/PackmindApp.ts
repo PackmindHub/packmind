@@ -5,9 +5,8 @@ import {
 } from '@packmind/accounts';
 import { CodingAgentHexa } from '@packmind/coding-agent';
 import { DeploymentsHexa } from '@packmind/deployments';
-import { AmplitudeHexa } from '@packmind/amplitude';
+import { AmplitudeHexa, LinterHexa, mcpHexaPlugins } from '@packmind/editions';
 import { GitHexa } from '@packmind/git';
-import { LinterHexa } from '@packmind/linter';
 import { LlmHexa } from '@packmind/llm';
 import { LogLevel, PackmindLogger } from '@packmind/logger';
 import {
@@ -24,7 +23,6 @@ import { SkillsHexa } from '@packmind/skills';
 import { SpacesHexa } from '@packmind/spaces';
 import { StandardsHexa } from '@packmind/standards';
 import { DataSource } from 'typeorm';
-import { mcpHexaPlugins } from '@packmind/plugins';
 import jwt from 'jsonwebtoken';
 
 const logger = new PackmindLogger('PackmindApp', LogLevel.INFO);

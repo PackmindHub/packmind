@@ -10,7 +10,8 @@ testWithUserData.describe('Trial Process', () => {
       const pageFactory: IPageFactory = new PageFactory(page);
 
       const startTrialPage = await pageFactory.getStartTrialPage();
-      const startTrialAgentPage = await startTrialPage.selectAgent('claude');
+      const agentSelectorPage = await startTrialPage.continueToAgentSelection();
+      const startTrialAgentPage = await agentSelectorPage.selectAgent('claude');
 
       const mcpConfig = await startTrialAgentPage.getMcpConfig();
       // eslint-disable-next-line playwright/no-standalone-expect

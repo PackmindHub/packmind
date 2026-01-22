@@ -5,7 +5,7 @@ import { AccountsHexa } from '@packmind/accounts';
 import { CodingAgentHexa } from '@packmind/coding-agent';
 import { DeploymentsHexa } from '@packmind/deployments';
 import { GitHexa } from '@packmind/git';
-import { LinterHexa } from '@packmind/linter';
+import { LinterHexa } from '@packmind/editions';
 import { LlmHexa } from '@packmind/llm';
 import { PackmindLogger } from '@packmind/logger';
 import {

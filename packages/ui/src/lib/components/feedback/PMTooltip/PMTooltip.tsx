@@ -28,6 +28,8 @@ export interface PMTooltipProps {
   closeDelay?: number;
   /** Whether to show an arrow pointing to the trigger */
   showArrow?: boolean;
+  /** Custom z-index for the tooltip */
+  zIndex?: number;
 }
 
 export const PMTooltip: React.FC<PMTooltipProps> = ({
@@ -38,6 +40,7 @@ export const PMTooltip: React.FC<PMTooltipProps> = ({
   openDelay = 500,
   closeDelay = 0,
   showArrow = true,
+  zIndex = 9999,
 }) => {
   if (disabled || !label) {
     return children as React.ReactElement;
@@ -53,8 +56,8 @@ export const PMTooltip: React.FC<PMTooltipProps> = ({
       }}
     >
       <Tooltip.Trigger asChild>{children}</Tooltip.Trigger>
-      <Tooltip.Positioner>
-        <Tooltip.Content>
+      <Tooltip.Positioner zIndex={zIndex}>
+        <Tooltip.Content zIndex={zIndex}>
           {showArrow && (
             <Tooltip.Arrow>
               <Tooltip.ArrowTip />

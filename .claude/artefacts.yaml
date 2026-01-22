@@ -924,3 +924,7 @@
   path: .claude/skills/packmind/creating-end-user-documentation-for-packmind
   type: skill
   date: 2026-01-22T10:34:24+01:00
+- name: packmind-standard-creator
+  path: .claude/skills/packmind-standard-creator/SKILL.md
+  type: skill
+  date: 2026-01-21T18:05:39+01:00

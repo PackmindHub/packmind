@@ -1,17 +1,17 @@
 import archiver from 'archiver';
 import { PassThrough } from 'stream';
 import { LogLevel, PackmindLogger } from '@packmind/logger';
-import { AbstractMemberUseCase, MemberContext } from '@packmind/node-utils';
+import { ICodingAgentDeployer } from '@packmind/coding-agent';
 import {
-  DownloadDefaultSkillsZipFileCommand,
-  DownloadDefaultSkillsZipFileResponse,
+  CodingAgent,
+  DownloadDefaultSkillsZipForAgentCommand,
+  DownloadDefaultSkillsZipForAgentResponse,
   FileModification,
-  IAccountsPort,
+  ICodingAgentPort,
+  IDownloadDefaultSkillsZipForAgentUseCase,
 } from '@packmind/types';
-import { DeployDefaultSkillsUseCase } from './DeployDefaultSkillsUseCase';
 
-const origin = 'DownloadDefaultSkillsZipFileUseCase';
-const DEFAULT_SKILLS_ZIP_FILE_NAME = 'packmind-default-skills.zip';
+const origin = 'DownloadDefaultSkillsZipForAgentUseCase';
 
 type FileWithContent = {
   path: string;
@@ -23,43 +23,50 @@ function hasContent(file: FileModification): file is FileWithContent {
   return 'content' in file && typeof file.content === 'string';
 }
 
-export class DownloadDefaultSkillsZipFileUseCase extends AbstractMemberUseCase<
-  DownloadDefaultSkillsZipFileCommand,
-  DownloadDefaultSkillsZipFileResponse
-> {
-  constructor(
-    private readonly deployDefaultSkillsUseCase: DeployDefaultSkillsUseCase,
-    accountsPort: IAccountsPort,
-    logger: PackmindLogger = new PackmindLogger(origin, LogLevel.INFO),
-  ) {
-    super(accountsPort, logger);
+function getZipFileName(agent: CodingAgent): string {
+  return `packmind-${agent}-default-skills.zip`;
+}
+
+export class DownloadDefaultSkillsZipForAgentUseCase implements IDownloadDefaultSkillsZipForAgentUseCase {
+  private readonly logger: PackmindLogger;
+
+  constructor(private readonly codingAgentPort: ICodingAgentPort) {
+    this.logger = new PackmindLogger(origin, LogLevel.INFO);
   }
 
-  protected async executeForMembers(
-    command: DownloadDefaultSkillsZipFileCommand & MemberContext,
-  ): Promise<DownloadDefaultSkillsZipFileResponse> {
-    this.logger.info('Downloading default skills zip file', {
-      organizationId: command.organizationId,
-      userId: command.userId,
-    });
+  async execute(
+    command: DownloadDefaultSkillsZipForAgentCommand,
+  ): Promise<DownloadDefaultSkillsZipForAgentResponse> {
+    const { agent } = command;
 
-    const { fileUpdates } = await this.deployDefaultSkillsUseCase.execute({
-      userId: command.userId,
-      organizationId: command.organizationId,
-    });
+    this.logger.info('Downloading default skills zip for agent', { agent });
 
+    const deployerRegistry = this.codingAgentPort.getDeployerRegistry();
+    const deployer = deployerRegistry.getDeployer(
+      agent,
+    ) as ICodingAgentDeployer;
+
+    if (!deployer.deployDefaultSkills) {
+      this.logger.info('Agent does not support default skills', { agent });
+      return {
+        fileName: getZipFileName(agent),
+        fileContent: '',
+      };
+    }
+
+    const fileUpdates = await deployer.deployDefaultSkills();
     const filesWithContent = fileUpdates.createOrUpdate.filter(hasContent);
     const zipBuffer = await this.createZipFromFileUpdates(filesWithContent);
     const base64Content = zipBuffer.toString('base64');
 
-    this.logger.info('Default skills zip file created', {
-      organizationId: command.organizationId,
+    this.logger.info('Default skills zip file created for agent', {
+      agent,
       fileCount: filesWithContent.length,
       zipSizeBytes: zipBuffer.length,
     });
 
     return {
-      fileName: DEFAULT_SKILLS_ZIP_FILE_NAME,
+      fileName: getZipFileName(agent),
       fileContent: base64Content,
     };
   }

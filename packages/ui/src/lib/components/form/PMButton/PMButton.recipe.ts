@@ -40,6 +40,7 @@ export const pmButtonRecipe = defineRecipe({
       outline: {
         borderColor: '{colors.blue.200}',
         color: '{colors.blue.200}',
+        fontWeight: 'medium',
         _hover: {
           color: '{colors.blue.300}',
           borderColor: '{colors.blue.300}',

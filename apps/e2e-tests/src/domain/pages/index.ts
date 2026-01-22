@@ -87,6 +87,10 @@ export interface IInvitationPage extends IPackmindPage {
 }
 
 export interface IStartTrialPage extends IPackmindPage {
+  continueToAgentSelection(): Promise<IStartTrialAgentSelectorPage>;
+}
+
+export interface IStartTrialAgentSelectorPage extends IPackmindPage {
   selectAgent(agentValue: string): Promise<IStartTrialAgentPage>;
 }
 
@@ -122,6 +126,7 @@ export interface IPageFactory {
   getGitSettingsPage(): Promise<IGitSettingsPage>;
   getInvitationPage(token: string): Promise<IInvitationPage>;
   getStartTrialPage(): Promise<IStartTrialPage>;
+  getStartTrialAgentSelectorPage(): Promise<IStartTrialAgentSelectorPage>;
   getStartTrialAgentPage(agent: string): Promise<IStartTrialAgentPage>;
   getActivateAccountPage(): Promise<IActivateAccountPage>;
 }

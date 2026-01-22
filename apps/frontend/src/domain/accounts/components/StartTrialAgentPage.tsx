@@ -12,7 +12,14 @@ import {
   PMHStack,
   PMBadge,
 } from '@packmind/ui';
-import { LuLink, LuFileText, LuUsers, LuArrowRight } from 'react-icons/lu';
+import {
+  LuLink,
+  LuFileText,
+  LuShield,
+  LuArrowRight,
+  LuCheck,
+  LuPlay,
+} from 'react-icons/lu';
 import { CopiableTextarea } from '../../../shared/components/inputs';
 import { IAgentConfig } from './McpConfig/types';
 import { MethodContent } from './McpConfig/InstallMethods';
@@ -64,10 +71,10 @@ const PlaybookContent: React.FC = () => {
     <PMVStack align="flex-start" gap={4}>
       <PMField.Root width="full">
         <PMField.Label>
-          Prompt: Get started with on-boarding MCP tool
+          Prompt: Generate playbook for this project
         </PMField.Label>
         <CopiableTextarea
-          value="Run the Packmind on-boarding process"
+          value="Run the Packmind onboarding process"
           readOnly
           rows={1}
           width="full"
@@ -99,6 +106,8 @@ export const StartTrialAgentPage: React.FC<IStartTrialAgentPageProps> = ({
   };
   const [isCreatingAccount, setIsCreatingAccount] = useState(false);
   const [accountError, setAccountError] = useState<string | null>(null);
+  const [mcpConnected, setMcpConnected] = useState(false);
+  const [playbookGenerated, setPlaybookGenerated] = useState(false);
 
   const method = agentConfig
     ? getPreferredMethod(agentConfig, preferredMethodType, preferredMethodLabel)
@@ -126,129 +135,197 @@ export const StartTrialAgentPage: React.FC<IStartTrialAgentPageProps> = ({
   return (
     <PMVStack gap={6} align="stretch">
       <PMBox textAlign="center">
-        <PMHeading level="h2">{getAgentTitle(agentLabel)}</PMHeading>
+        <PMHeading level="h2">
+          Generate AI agent playbook from this project
+        </PMHeading>
         <PMText color="secondary" mt={2}>
-          Get up and running in 3 simple steps
+          Your project will be analyzed locally and a playbook will be generated
+          for {agentLabel}
         </PMText>
       </PMBox>
 
       <PMVStack gap={8} align="stretch">
         <PMBox
-          p={6}
           borderRadius="lg"
           borderWidth="1px"
-          borderColor="gray.700"
-          bg="gray.800"
-          transition="all 0.2s"
-          _hover={{ borderColor: 'primary', shadow: 'md' }}
+          borderColor={mcpConnected ? 'green.500' : 'blue.500'}
+          bg={mcpConnected ? 'green.1000' : 'blue.1000'}
+          transition="all 0.3s"
+          _hover={{ shadow: 'md' }}
+          overflow="hidden"
         >
-          <PMHStack mb={3} gap={3}>
-            <PMBadge
-              size="lg"
-              colorScheme="primary"
-              borderRadius="full"
-              px={3}
-              py={1}
-              fontWeight="bold"
+          <PMBox p={6}>
+            <PMHStack mb={3} gap={3}>
+              <PMBadge
+                size="lg"
+                colorScheme={mcpConnected ? 'green' : 'primary'}
+                borderRadius="full"
+                px={3}
+                py={1}
+                fontWeight="bold"
+              >
+                1
+              </PMBadge>
+              <PMIcon
+                as={LuLink}
+                size="xl"
+                color={mcpConnected ? 'green.600' : 'blue.600'}
+              />
+            </PMHStack>
+            <PMHeading level="h4" mb={2}>
+              Connect your AI assistant
+            </PMHeading>
+            <PMText as="p" mb={4} color="primary">
+              Follow the setup instructions to connect {agentLabel} to your
+              local project analysis
+            </PMText>
+            {method && (
+              <MethodContent
+                method={method}
+                token={token}
+                url={mcpUrl}
+                onCantUseMcp={() => setIsCantUseMcpModalOpen(true)}
+              />
+            )}
+          </PMBox>
+          {!mcpConnected && (
+            <PMBox
+              p={4}
+              bg={mcpConnected ? 'green.900' : 'blue.900'}
+              borderTopWidth="1px"
+              borderTopColor={mcpConnected ? 'green.700' : 'blue.700'}
+              textAlign={'center'}
             >
-              1
-            </PMBadge>
-            <PMIcon as={LuLink} size="xl" color="text.faded" />
-          </PMHStack>
-          <PMHeading level="h4" mb={2}>
-            Connect your AI assistant
-          </PMHeading>
-          <PMText as="p" mb={4} color="secondary">
-            Get your agent talking to Packmind in 2 minutes
-          </PMText>
-          {method && (
-            <MethodContent
-              method={method}
-              token={token}
-              url={mcpUrl}
-              onCantUseMcp={() => setIsCantUseMcpModalOpen(true)}
-            />
+              <PMButton
+                onClick={() => setMcpConnected(true)}
+                size="sm"
+                variant="outline"
+              >
+                <PMIcon as={LuCheck} mr={2} />
+                Setup completed
+              </PMButton>
+            </PMBox>
           )}
         </PMBox>
 
-        <PMBox
-          p={6}
-          borderRadius="lg"
-          borderWidth="1px"
-          borderColor="gray.700"
-          bg="gray.800"
-          transition="all 0.2s"
-          _hover={{ borderColor: 'primary', shadow: 'md' }}
-        >
-          <PMHStack mb={3} gap={3}>
-            <PMBadge
-              size="lg"
-              colorScheme="gray"
-              borderRadius="full"
-              px={3}
-              py={1}
-              fontWeight="bold"
-            >
-              2
-            </PMBadge>
-            <PMIcon as={LuFileText} size="xl" color="text.faded" />
-          </PMHStack>
-          <PMHeading level="h4" mb={2}>
-            Capture your first coding rule
-          </PMHeading>
-          <PMText as="p" mb={4} color="secondary">
-            Turn tribal knowledge into AI-ready instructions
-          </PMText>
-          <PlaybookContent />
-        </PMBox>
-
-        <PMBox
-          p={6}
-          borderRadius="lg"
-          borderWidth="1px"
-          borderColor="gray.700"
-          bg="gray.800"
-          transition="all 0.2s"
-          _hover={{ borderColor: 'primary', shadow: 'md' }}
-        >
-          <PMHStack mb={3} gap={3}>
-            <PMBadge
-              size="lg"
-              colorScheme="gray"
-              borderRadius="full"
-              px={3}
-              py={1}
-              fontWeight="bold"
-            >
-              3
-            </PMBadge>
-            <PMIcon as={LuUsers} size="xl" color="text.faded" />
-          </PMHStack>
-          <PMHeading level="h4" mb={2}>
-            Create your account
-          </PMHeading>
-          <PMText as="p" mb={4} color="secondary">
-            Save your work and share with your team
-          </PMText>
-          <PMButton
-            onClick={handleCreateAccount}
-            loading={isCreatingAccount}
-            disabled={isCreatingAccount}
-            data-testid={StartTrialAgentPageDataTestIds.CreateAccountButton}
-            size="lg"
-            width="full"
-            colorScheme="primary"
+        {mcpConnected && (
+          <PMBox
+            borderRadius="lg"
+            borderWidth="1px"
+            borderColor={playbookGenerated ? 'green.500' : 'blue.500'}
+            bg={playbookGenerated ? 'green.1000' : 'blue.1000'}
+            transition="all 0.3s"
+            _hover={{ shadow: 'md' }}
+            overflow="hidden"
           >
-            Create your account
-            <PMIcon as={LuArrowRight} ml={2} />
-          </PMButton>
-          {accountError && (
-            <PMAlert.Root status="error" mt={2}>
-              <PMAlert.Indicator />
-              <PMAlert.Title>{accountError}</PMAlert.Title>
-            </PMAlert.Root>
-          )}
-        </PMBox>
+            <PMBox p={6}>
+              <PMHStack mb={3} gap={3}>
+                <PMBadge
+                  size="lg"
+                  colorScheme={playbookGenerated ? 'green' : 'primary'}
+                  borderRadius="full"
+                  px={3}
+                  py={1}
+                  fontWeight="bold"
+                >
+                  2
+                </PMBadge>
+                <PMIcon
+                  as={LuFileText}
+                  size="xl"
+                  color={playbookGenerated ? 'green.600' : 'blue.600'}
+                />
+              </PMHStack>
+              <PMHeading level="h4" mb={2}>
+                Generate project playbook
+              </PMHeading>
+              <PMText as="p" mb={4} color="primary">
+                Run the analysis to generate coding standards and agent
+                instructions
+              </PMText>
+              <PlaybookContent />
+            </PMBox>
+            {!playbookGenerated && (
+              <PMBox
+                p={4}
+                bg={playbookGenerated ? 'green.900' : 'blue.900'}
+                borderTopWidth="1px"
+                borderTopColor={playbookGenerated ? 'green.700' : 'blue.700'}
+                textAlign={'center'}
+              >
+                <PMButton
+                  onClick={() => setPlaybookGenerated(true)}
+                  size="sm"
+                  variant="outline"
+                >
+                  <PMIcon as={LuPlay} mr={2} />
+                  Analysis completed
+                </PMButton>
+              </PMBox>
+            )}
+          </PMBox>
+        )}
+
+        {mcpConnected && playbookGenerated && (
+          <PMBox
+            borderRadius="lg"
+            borderWidth="1px"
+            borderColor="green.500"
+            bg="green.1000"
+            transition="all 0.3s"
+            _hover={{ shadow: 'md' }}
+            overflow="hidden"
+          >
+            <PMBox p={6}>
+              <PMHStack mb={3} gap={3}>
+                <PMBadge
+                  size="lg"
+                  colorScheme="green"
+                  borderRadius="full"
+                  px={3}
+                  py={1}
+                  fontWeight="bold"
+                >
+                  3
+                </PMBadge>
+                <PMIcon as={LuShield} size="xl" color="green.600" />
+              </PMHStack>
+              <PMHeading level="h4" mb={2}>
+                Playbook generated successfully
+              </PMHeading>
+              <PMText as="p" mb={4} color="primary">
+                Your project has been analyzed and your playbook is ready in
+                your IDE
+              </PMText>
+            </PMBox>
+            <PMBox
+              p={4}
+              bg="green.900"
+              borderTopWidth="1px"
+              borderTopColor="green.700"
+            >
+              <PMButton
+                onClick={handleCreateAccount}
+                loading={isCreatingAccount}
+                disabled={isCreatingAccount}
+                data-testid={StartTrialAgentPageDataTestIds.CreateAccountButton}
+                size="lg"
+                width="full"
+                colorScheme="primary"
+                mb={accountError ? 3 : 0}
+              >
+                Save and reuse across projects
+                <PMIcon as={LuArrowRight} ml={2} />
+              </PMButton>
+              {accountError && (
+                <PMAlert.Root status="error" mt={2}>
+                  <PMAlert.Indicator />
+                  <PMAlert.Title>{accountError}</PMAlert.Title>
+                </PMAlert.Root>
+              )}
+            </PMBox>
+          </PMBox>
+        )}
       </PMVStack>
 
       <CantUseMcpModal

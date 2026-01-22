@@ -210,6 +210,9 @@ export const packmindTheme = (preflight: boolean) =>
             error: { value: '{colors.red.500}' },
             warning: { value: '{colors.orange.500}' },
             success: { value: '{colors.green.500}' },
+            primaryLight: { value: '{colors.beige.900}' },
+            secondaryLight: { value: '{colors.beige.700}' },
+            tertiaryLight: { value: '{colors.beige.500}' },
           },
           border: {
             DEFAULT: { value: '{colors.beige.1000}' },

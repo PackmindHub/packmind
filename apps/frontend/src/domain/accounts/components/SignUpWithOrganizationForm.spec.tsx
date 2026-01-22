@@ -124,7 +124,7 @@ describe('SignUpWithOrganizationForm', () => {
       screen.getByPlaceholderText(/confirm your password/i),
     ).toBeInTheDocument();
     expect(
-      screen.getByRole('button', { name: /create account & organization/i }),
+      screen.getByRole('button', { name: /create account/i }),
     ).toBeInTheDocument();
   });
 
@@ -236,9 +236,7 @@ describe('SignUpWithOrganizationForm', () => {
     );
 
     // Submit the form
-    await user.click(
-      screen.getByRole('button', { name: /create account & organization/i }),
-    );
+    await user.click(screen.getByRole('button', { name: /create account/i }));
 
     await waitFor(() => {
       expect(mockSignUpMutation.mutate).toHaveBeenCalledWith(
@@ -296,9 +294,7 @@ describe('SignUpWithOrganizationForm', () => {
       screen.getByPlaceholderText(/confirm your password/i),
       'password123!@',
     );
-    await user.click(
-      screen.getByRole('button', { name: /create account & organization/i }),
-    );
+    await user.click(screen.getByRole('button', { name: /create account/i }));
 
     // Wait for signup to be called
     await waitFor(() => {
@@ -364,9 +360,7 @@ describe('SignUpWithOrganizationForm', () => {
       screen.getByPlaceholderText(/confirm your password/i),
       'password123!@',
     );
-    await user.click(
-      screen.getByRole('button', { name: /create account & organization/i }),
-    );
+    await user.click(screen.getByRole('button', { name: /create account/i }));
 
     await waitFor(() => {
       expect(mockSignUpMutation.mutate).toHaveBeenCalled();
@@ -426,9 +420,7 @@ describe('SignUpWithOrganizationForm', () => {
       screen.getByPlaceholderText(/confirm your password/i),
       'password123!@',
     );
-    await user.click(
-      screen.getByRole('button', { name: /create account & organization/i }),
-    );
+    await user.click(screen.getByRole('button', { name: /create account/i }));
 
     await waitFor(() => {
       expect(mockSignUpMutation.mutate).toHaveBeenCalled();

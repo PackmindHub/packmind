@@ -6,7 +6,7 @@ import dbConnection from 'typeorm-fastify-plugin';
 import { accountsSchemas } from '@packmind/accounts';
 import { deploymentsSchemas } from '@packmind/deployments';
 import { gitSchemas } from '@packmind/git';
-import { linterSchemas } from '@packmind/linter';
+import { linterSchemas } from '@packmind/editions';
 import { recipesSchemas } from '@packmind/recipes';
 import { llmSchemas } from '@packmind/llm';
 import { spacesSchemas } from '@packmind/spaces';

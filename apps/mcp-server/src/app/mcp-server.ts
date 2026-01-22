@@ -1,5 +1,5 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import { EventTrackingAdapter } from '@packmind/amplitude';
+import { EventTrackingAdapter } from '@packmind/editions';
 import { LogLevel, PackmindLogger } from '@packmind/logger';
 import { createUserId, IEventTrackingPort } from '@packmind/types';
 import { FastifyInstance } from 'fastify';

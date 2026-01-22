@@ -12,6 +12,7 @@ import { logoutCommand } from './infra/commands/LogoutCommand';
 import { whoamiCommand } from './infra/commands/WhoamiCommand';
 import { setupMcpCommand } from './infra/commands/SetupMcpCommand';
 import { skillsCommand } from './infra/commands/SkillsCommand';
+import { standardsCommand } from './infra/commands/StandardsCommand';
 import { GitService } from './application/services/GitService';
 import { logErrorConsole } from './infra/utils/consoleLogger';
 
@@ -95,6 +96,7 @@ const app = subcommands({
     whoami: whoamiCommand,
     'setup-mcp': setupMcpCommand,
     skills: skillsCommand,
+    standard: standardsCommand,
   },
 });
 

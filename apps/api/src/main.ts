@@ -13,7 +13,7 @@ import cookieParser from 'cookie-parser';
 import { AppModule } from './app/app.module';
 import { PackmindLogger, LogLevel } from '@packmind/logger';
 import { Configuration, Cache } from '@packmind/node-utils';
-import { enableAmplitudeProxy } from '@packmind/amplitude';
+import { enableAmplitudeProxy } from '@packmind/editions';
 import { pingPackmindSetup } from './startup/ping-packmind-setup';
 
 const logger = new PackmindLogger('PackmindAPI', LogLevel.INFO);
