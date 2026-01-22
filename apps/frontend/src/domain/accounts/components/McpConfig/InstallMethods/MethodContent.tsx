@@ -3,11 +3,13 @@ import { IMethodContentProps } from './types';
 import { CliMethodContent } from './CliMethodContent';
 import { MagicLinkMethodContent } from './MagicLinkMethodContent';
 import { JsonMethodContent } from './JsonMethodContent';
+import { InstallCliMethodContent } from './InstallCliMethodContent';
 
 export const MethodContent: React.FC<IMethodContentProps> = ({
   method,
   token,
   url,
+  cliLoginCode,
   onCantUseMcp,
 }) => {
   switch (method.type) {
@@ -17,6 +19,7 @@ export const MethodContent: React.FC<IMethodContentProps> = ({
           method={method}
           token={token}
           url={url}
+          cliLoginCode={cliLoginCode}
           onCantUseMcp={onCantUseMcp}
         />
       );
@@ -26,6 +29,7 @@ export const MethodContent: React.FC<IMethodContentProps> = ({
           method={method}
           token={token}
           url={url}
+          cliLoginCode={cliLoginCode}
           onCantUseMcp={onCantUseMcp}
         />
       );
@@ -35,6 +39,17 @@ export const MethodContent: React.FC<IMethodContentProps> = ({
           method={method}
           token={token}
           url={url}
+          cliLoginCode={cliLoginCode}
+          onCantUseMcp={onCantUseMcp}
+        />
+      );
+    case 'install-cli':
+      return (
+        <InstallCliMethodContent
+          method={method}
+          token={token}
+          url={url}
+          cliLoginCode={cliLoginCode}
           onCantUseMcp={onCantUseMcp}
         />
       );

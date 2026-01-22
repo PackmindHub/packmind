@@ -19,6 +19,8 @@ import {
   LuArrowRight,
   LuCheck,
   LuPlay,
+  LuTerminal,
+  LuSettings,
 } from 'react-icons/lu';
 import { CopiableTextarea } from '../../../shared/components/inputs';
 import { IAgentConfig } from './McpConfig/types';
@@ -34,33 +36,23 @@ interface IStartTrialAgentPageProps {
   agentConfig: IAgentConfig | null;
   token: string;
   mcpUrl: string;
-  preferredMethodType: 'magicLink' | 'cli' | 'json';
-  preferredMethodLabel?: string;
+  cliLoginCode?: string;
+  preferredMcpMethodType?: 'magicLink' | 'cli' | 'json';
+  preferredMcpMethodLabel?: string;
 }
 
-const getPreferredMethod = (
-  agentConfig: IAgentConfig,
-  preferredType: IStartTrialAgentPageProps['preferredMethodType'],
-  preferredLabel?: string,
-) => {
-  const availableMethods = agentConfig.installMethods.filter(
-    (m) => m.available,
+const getInstallCliMethod = (agentConfig: IAgentConfig) => {
+  return (
+    agentConfig.installMethods.find(
+      (m) => m.type === 'install-cli' && m.available,
+    ) ?? null
   );
+};
 
-  // Try to find the preferred method type with optional label match
-  const preferred = availableMethods.find(
-    (m) =>
-      m.type === preferredType &&
-      (!preferredLabel || m.label === preferredLabel),
+const getMcpConfigMethods = (agentConfig: IAgentConfig) => {
+  return agentConfig.installMethods.filter(
+    (m) => m.type !== 'install-cli' && m.available,
   );
-  if (preferred) return preferred;
-
-  // Fallback to just type match
-  const typeMatch = availableMethods.find((m) => m.type === preferredType);
-  if (typeMatch) return typeMatch;
-
-  // Fallback to first available method
-  return availableMethods[0] ?? null;
 };
 
 const PlaybookContent: React.FC = () => {
@@ -90,8 +82,9 @@ export const StartTrialAgentPage: React.FC<IStartTrialAgentPageProps> = ({
   agentConfig,
   token,
   mcpUrl,
-  preferredMethodType,
-  preferredMethodLabel,
+  cliLoginCode,
+  preferredMcpMethodType,
+  preferredMcpMethodLabel,
 }) => {
   const navigate = useNavigate();
   const agent = useOnboardingAgent();
@@ -109,9 +102,25 @@ export const StartTrialAgentPage: React.FC<IStartTrialAgentPageProps> = ({
   const [mcpConnected, setMcpConnected] = useState(false);
   const [playbookGenerated, setPlaybookGenerated] = useState(false);
 
-  const method = agentConfig
-    ? getPreferredMethod(agentConfig, preferredMethodType, preferredMethodLabel)
+  const isLocalDev =
+    typeof window !== 'undefined' &&
+    window.location.hostname === 'localhost' &&
+    window.location.port === '4200';
+
+  const installCliMethod = agentConfig
+    ? getInstallCliMethod(agentConfig)
     : null;
+  const mcpMethods = agentConfig ? getMcpConfigMethods(agentConfig) : [];
+  const preferredMcpMethod =
+    mcpMethods.length > 0
+      ? (mcpMethods.find(
+          (m) =>
+            m.type === preferredMcpMethodType &&
+            (!preferredMcpMethodLabel || m.label === preferredMcpMethodLabel),
+        ) ??
+        mcpMethods.find((m) => m.type === preferredMcpMethodType) ??
+        mcpMethods[0])
+      : null;
 
   const handleCreateAccount = async () => {
     setIsCreatingAccount(true);
@@ -179,14 +188,60 @@ export const StartTrialAgentPage: React.FC<IStartTrialAgentPageProps> = ({
               Follow the setup instructions to connect {agentLabel} to your
               local project analysis
             </PMText>
-            {method && (
-              <MethodContent
-                method={method}
-                token={token}
-                url={mcpUrl}
-                onCantUseMcp={() => setIsCantUseMcpModalOpen(true)}
-              />
-            )}
+            <PMVStack gap={4}>
+              {/* Install CLI Box - Only shown in local development */}
+              {isLocalDev && installCliMethod && (
+                <PMBox
+                  borderRadius="md"
+                  borderWidth="1px"
+                  borderColor="gray.700"
+                  bg="gray.900"
+                  p={4}
+                >
+                  <PMHStack mb={2} gap={2}>
+                    <PMIcon as={LuTerminal} color="blue.400" />
+                    <PMText fontWeight="semibold">Install Packmind CLI</PMText>
+                  </PMHStack>
+                  <PMText fontSize="sm" color="secondary" mb={3}>
+                    Install the CLI to automatically configure your AI assistant
+                  </PMText>
+                  <MethodContent
+                    method={installCliMethod}
+                    token={token}
+                    url={mcpUrl}
+                    cliLoginCode={cliLoginCode}
+                  />
+                </PMBox>
+              )}
+
+              {/* MCP Config Box */}
+              {preferredMcpMethod && (
+                <PMBox
+                  borderRadius="md"
+                  borderWidth="1px"
+                  borderColor="gray.700"
+                  bg="gray.900"
+                  p={4}
+                >
+                  <PMHStack mb={2} gap={2}>
+                    <PMIcon as={LuSettings} color="blue.400" />
+                    <PMText fontWeight="semibold">
+                      Manual MCP Configuration
+                    </PMText>
+                  </PMHStack>
+                  <PMText fontSize="sm" color="secondary" mb={3}>
+                    Or configure MCP manually using the method below
+                  </PMText>
+                  <MethodContent
+                    method={preferredMcpMethod}
+                    token={token}
+                    url={mcpUrl}
+                    cliLoginCode={cliLoginCode}
+                    onCantUseMcp={() => setIsCantUseMcpModalOpen(true)}
+                  />
+                </PMBox>
+              )}
+            </PMVStack>
           </PMBox>
           {!mcpConnected && (
             <PMBox

@@ -28,7 +28,7 @@ export type AnalyticsEventMap = {
   };
   cli_login_done: Record<string, never>;
   mcp_installed: {
-    method: 'cli' | 'magic-link' | 'json';
+    method: 'cli' | 'magic-link' | 'json' | 'install-cli';
     agent: StartTrialCommandAgents;
   };
   onboarding_prompt_copied: {

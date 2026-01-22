@@ -55,6 +55,7 @@ interface IStartTrialAgentSelectorProps {
     agent: StartTrialCommandAgents,
     token: string,
     mcpUrl: string,
+    cliLoginCode?: string,
   ) => void;
 }
 
@@ -81,7 +82,12 @@ export function StartTrialAgentSelector({
           }
 
           if (result.mcpToken && result.mcpUrl) {
-            onTokenAvailable(selectedAgent, result.mcpToken, result.mcpUrl);
+            onTokenAvailable(
+              selectedAgent,
+              result.mcpToken,
+              result.mcpUrl,
+              result.cliLoginCode,
+            );
           }
         },
         onError: () => {
