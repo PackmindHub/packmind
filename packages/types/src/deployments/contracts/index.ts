@@ -31,5 +31,4 @@ export * from './IAddArtefactsToPackageUseCase';
 export * from './INotifyDistributionUseCase';
 export * from './IRemovePackageFromTargetsUseCase';
 export * from './IDeployDefaultSkillsUseCase';
-export * from './IDownloadDefaultSkillsZipFile';
 export * from './IDownloadDefaultSkillsZipForAgent';
