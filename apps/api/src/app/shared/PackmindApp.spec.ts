@@ -9,6 +9,7 @@ import { GitHexa } from '@packmind/git';
 import { LlmHexa } from '@packmind/llm';
 import { PackmindLogger } from '@packmind/logger';
 import { JobsService } from '@packmind/node-utils';
+import { apiHexaPlugins } from '@packmind/plugins';
 import { RecipesHexa } from '@packmind/recipes';
 import { SkillsHexa } from '@packmind/skills';
 import { SpacesHexa } from '@packmind/spaces';

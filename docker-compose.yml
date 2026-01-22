@@ -50,7 +50,7 @@ services:
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: packmind
     ports:
-      - '5432:5432'
+      - '5433:5432'
     volumes:
       - dev-postgres-data:/var/lib/postgresql/data
     healthcheck:
@@ -63,7 +63,7 @@ services:
     image: redis:7.2.4
     container_name: ${COMPOSE_PROJECT_NAME:-dev}-${PACKMIND_EDITION:-oss}-redis
     ports:
-      - '6379:6379'
+      - '6380:6379'
     volumes:
       - dev-redis-data:/data
     healthcheck:
@@ -82,7 +82,7 @@ services:
       PGADMIN_DEFAULT_PASSWORD: password
       PGADMIN_LISTEN_PORT: 80
     ports:
-      - '2345:80'
+      - '2346:80'
     volumes:
       - dev-pgadmin:/var/lib/pgadmin
     depends_on:
@@ -157,7 +157,7 @@ services:
     container_name: ${COMPOSE_PROJECT_NAME:-dev}-${PACKMIND_EDITION:-oss}-packmind-frontend
     working_dir: /packmind
     ports:
-      - '4200:4200'
+      - '4201:4200'
     entrypoint: >
       sh -lc '
         set -eu

@@ -1,0 +1,14 @@
+---
+globs: apps/frontend/**/*.ts, apps/frontend/**/*.tsx
+alwaysApply: false
+---
+## Standard: Frontend data flow
+
+Establish a structured frontend data flow pattern using React Router v7, @react-router/fs-routes, and TanStack Query in the Packmind codebase to centralize data fetching logic and ensure data availability before rendering, enhancing maintainability and user experience across applications. :
+* Define "crumb" property in "handle" hook of RouteModule to define link for navigation breadcrumb
+* Don't use gateways directly in frontend route modules. Always access data via query or mutation hooks in these modules.
+* Queries options should be exported as well as hooks that use them
+* Resource associated to a route should be loaded by its RouteModule in clientLoader
+* Route module component name must end by "RouteModule"
+
+Full standard is available here for further request: [Frontend data flow](../../../.packmind/standards/frontend-data-flow.md)

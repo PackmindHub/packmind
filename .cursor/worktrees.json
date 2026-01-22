@@ -1,0 +1,8 @@
+{
+  "setup-worktree": [
+    "MAIN_WORKTREE=$(git worktree list --porcelain | grep -m1 '^worktree' | cut -d' ' -f2) && cp \"$MAIN_WORKTREE/.env\" .env 2>/dev/null || echo 'No .env file found in main worktree'",
+    "npm install",
+    "npm run chakra:typegen",
+    "node scripts/select-tsconfig.mjs"
+  ]
+}
