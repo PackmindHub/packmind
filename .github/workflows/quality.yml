@@ -142,6 +142,7 @@ jobs:
       matrix:
         target:
           - apps/api
+          - apps/cli
           - apps/e2e-tests
           - apps/frontend
           - apps/mcp-server
