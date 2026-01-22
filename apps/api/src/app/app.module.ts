@@ -16,15 +16,12 @@ import { SkillsHexa, skillsSchemas } from '@packmind/skills';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { HooksModule } from './hooks/hooks.module';
-
+import { AmplitudeModule } from '@packmind/amplitude';
 import {
-  AmplitudeModule,
   ImportLegacyModule,
   ImportPracticeLegacyHexa,
-  LinterHexa,
-  LinterModule,
-  linterSchemas,
-} from '@packmind/editions';
+} from '@packmind/import-practices-legacy';
+import { LinterHexa, LinterModule, linterSchemas } from '@packmind/linter';
 import { JobsService } from '@packmind/node-utils';
 import { OrganizationsModule as AccountsOrganizationsModule } from './accounts/organizations/organizations.module';
 import { AuthGuard } from './auth/auth.guard';
