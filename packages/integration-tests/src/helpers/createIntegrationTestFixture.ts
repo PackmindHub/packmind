@@ -1,55 +1,41 @@
 import { DataSource, EntitySchema } from 'typeorm';
-import { newDb } from 'pg-mem';
-
-export async function makeTestDatasource(
-  entities: EntitySchema[],
-): Promise<DataSource> {
-  const db = newDb({
-    autoCreateForeignKeyIndices: true,
-  });
-
-  db.public.registerFunction({
-    implementation: () => 'test',
-    name: 'current_database',
-  });
-
-  db.public.registerFunction({
-    implementation() {
-      return '17';
-    },
-    name: 'version',
-  });
-
-  return db.adapters.createTypeormDataSource({
-    type: 'postgres',
-    entities,
-  });
-}
+import { makeTestDatasource } from '@packmind/test-utils';
+import { TestApp } from './TestApp';
+import { DataFactory } from './DataFactory';
 
 /**
- * Test datasource fixture for repository tests.
+ * Integration test fixture for optimized test execution.
  *
- * Optimized pattern that initializes the database schema once per test file
- * instead of per test case. Uses table truncation for cleanup between tests,
- * which is significantly faster than recreating the schema.
+ * Initializes the database schema once per test file instead of per test case.
+ * Uses table truncation for cleanup between tests, which is significantly faster
+ * than recreating the schema.
  *
  * Usage:
  * ```typescript
- * describe('MyRepository', () => {
- *   const fixture = createTestDatasourceFixture([Schema1, Schema2]);
+ * describe('MyIntegration', () => {
+ *   const fixture = createIntegrationTestFixture([...schemas]);
+ *
+ *   let testApp: TestApp;
+ *   let dataFactory: DataFactory;
  *
  *   beforeAll(() => fixture.initialize());
- *   afterEach(() => fixture.cleanup());
- *   afterAll(() => fixture.destroy());
  *
- *   it('test case', async () => {
- *     const repo = fixture.datasource.getRepository(Schema1);
- *     // ...
+ *   beforeEach(async () => {
+ *     testApp = new TestApp(fixture.datasource);
+ *     await testApp.initialize();
+ *     dataFactory = new DataFactory(testApp);
  *   });
+ *
+ *   afterEach(async () => {
+ *     jest.clearAllMocks();
+ *     await fixture.cleanup();
+ *   });
+ *
+ *   afterAll(() => fixture.destroy());
  * });
  * ```
  */
-export function createTestDatasourceFixture(entities: EntitySchema[]) {
+export function createIntegrationTestFixture(entities: EntitySchema[]) {
   let datasource: DataSource | null = null;
   let tableNames: string[] = [];
 
@@ -106,6 +92,29 @@ export function createTestDatasourceFixture(entities: EntitySchema[]) {
       }
       datasource = null;
       tableNames = [];
+    },
+
+    /**
+     * Creates a new TestApp instance bound to the fixture's datasource.
+     * Call this in beforeEach to get a fresh TestApp for each test.
+     */
+    async createTestApp(): Promise<TestApp> {
+      const testApp = new TestApp(this.datasource);
+      await testApp.initialize();
+      return testApp;
+    },
+
+    /**
+     * Creates a new DataFactory instance with a fresh TestApp.
+     * Convenience method that combines createTestApp and DataFactory creation.
+     */
+    async createDataFactory(): Promise<{
+      testApp: TestApp;
+      dataFactory: DataFactory;
+    }> {
+      const testApp = await this.createTestApp();
+      const dataFactory = new DataFactory(testApp);
+      return { testApp, dataFactory };
     },
   };
 }

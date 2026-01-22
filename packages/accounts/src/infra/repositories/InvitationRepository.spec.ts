@@ -1,4 +1,3 @@
-import { DataSource } from 'typeorm';
 import { InvitationRepository } from './InvitationRepository';
 import {
   Invitation,
@@ -9,7 +8,7 @@ import { InvitationSchema } from '../schemas/InvitationSchema';
 import { UserSchema } from '../schemas/UserSchema';
 import { OrganizationSchema } from '../schemas/OrganizationSchema';
 import { UserOrganizationMembershipSchema } from '../schemas/UserOrganizationMembershipSchema';
-import { makeTestDatasource, stubLogger } from '@packmind/test-utils';
+import { createTestDatasourceFixture, stubLogger } from '@packmind/test-utils';
 import { PackmindLogger } from '@packmind/logger';
 import { Configuration } from '@packmind/node-utils';
 import { createOrganizationId, OrganizationId } from '@packmind/types';
@@ -28,7 +27,13 @@ jest.mock('@packmind/node-utils', () => ({
 }));
 
 describe('InvitationRepository', () => {
-  let dataSource: DataSource;
+  const fixture = createTestDatasourceFixture([
+    InvitationSchema,
+    UserSchema,
+    OrganizationSchema,
+    UserOrganizationMembershipSchema,
+  ]);
+
   let repository: InvitationRepository;
   let logger: jest.Mocked<PackmindLogger>;
   let user: User;
@@ -36,37 +41,25 @@ describe('InvitationRepository', () => {
 
   const mockConfiguration = Configuration as jest.Mocked<typeof Configuration>;
 
-  beforeAll(() => {
+  beforeAll(async () => {
     mockConfiguration.getConfig.mockResolvedValue('test-invitation-key');
-  });
-
-  afterEach(() => {
-    mockConfiguration.getConfig.mockClear();
+    await fixture.initialize();
   });
 
   beforeEach(async () => {
     logger = stubLogger();
-    dataSource = await makeTestDatasource([
-      InvitationSchema,
-      UserSchema,
-      OrganizationSchema,
-      UserOrganizationMembershipSchema,
-    ]);
-    await dataSource.initialize();
-    await dataSource.synchronize();
-
     repository = new InvitationRepository(
-      dataSource.getRepository(InvitationSchema),
+      fixture.datasource.getRepository(InvitationSchema),
       logger,
     );
 
-    const organization = await dataSource
+    const organization = await fixture.datasource
       .getRepository(OrganizationSchema)
       .save(organizationFactory());
     organizationId = createOrganizationId(organization.id);
 
     const userId = createUserId('123e4567-e89b-12d3-a456-426614174210');
-    user = await dataSource.getRepository(UserSchema).save(
+    user = await fixture.datasource.getRepository(UserSchema).save(
       userFactory({
         id: userId,
         email: 'primary-user@packmind.com',
@@ -82,8 +75,11 @@ describe('InvitationRepository', () => {
   });
 
   afterEach(async () => {
-    await dataSource.destroy();
+    mockConfiguration.getConfig.mockClear();
+    await fixture.cleanup();
   });
+
+  afterAll(() => fixture.destroy());
 
   describe('.add', () => {
     it('returns decrypted token after saving', async () => {
@@ -105,7 +101,7 @@ describe('InvitationRepository', () => {
 
       await repository.add(invitation);
 
-      const persisted = await dataSource
+      const persisted = await fixture.datasource
         .getRepository(InvitationSchema)
         .findOneByOrFail({ id: invitation.id });
 
@@ -120,7 +116,7 @@ describe('InvitationRepository', () => {
 
       await repository.add(invitation);
 
-      const persisted = await dataSource
+      const persisted = await fixture.datasource
         .getRepository(InvitationSchema)
         .findOneByOrFail({ id: invitation.id });
 
@@ -142,7 +138,7 @@ describe('InvitationRepository', () => {
         ];
 
         const secondUserId = invitations[1].userId;
-        await dataSource.getRepository(UserSchema).save(
+        await fixture.datasource.getRepository(UserSchema).save(
           userFactory({
             id: secondUserId,
             email: 'second-user@packmind.com',
@@ -247,7 +243,7 @@ describe('InvitationRepository', () => {
           '423e4567-e89b-12d3-a456-426614174213',
         );
 
-        await dataSource.getRepository(UserSchema).save(
+        await fixture.datasource.getRepository(UserSchema).save(
           userFactory({
             id: anotherUserId,
             email: 'another-user@packmind.com',

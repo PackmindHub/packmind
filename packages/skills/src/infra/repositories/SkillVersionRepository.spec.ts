@@ -1,7 +1,7 @@
 import { PackmindLogger } from '@packmind/logger';
-import { makeTestDatasource, stubLogger } from '@packmind/test-utils';
+import { createTestDatasourceFixture, stubLogger } from '@packmind/test-utils';
 import { SkillVersion } from '@packmind/types';
-import { DataSource, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
 import { skillFactory } from '../../../test/skillFactory';
 import { skillVersionFactory } from '../../../test/skillVersionFactory';
 import { SkillSchema } from '../schemas/SkillSchema';
@@ -10,34 +10,38 @@ import { SkillVersionRepository } from './SkillVersionRepository';
 import { SkillRepository } from './SkillRepository';
 
 describe('SkillVersionRepository', () => {
-  let datasource: DataSource;
+  const fixture = createTestDatasourceFixture([
+    SkillSchema,
+    SkillVersionSchema,
+  ]);
+
   let skillVersionRepository: SkillVersionRepository;
   let skillRepository: SkillRepository;
   let stubbedLogger: jest.Mocked<PackmindLogger>;
   let typeormRepo: Repository<SkillVersion>;
 
-  beforeEach(async () => {
-    datasource = await makeTestDatasource([SkillSchema, SkillVersionSchema]);
-    await datasource.initialize();
-    await datasource.synchronize();
+  beforeAll(() => fixture.initialize());
 
+  beforeEach(() => {
     stubbedLogger = stubLogger();
-    typeormRepo = datasource.getRepository(SkillVersionSchema);
+    typeormRepo = fixture.datasource.getRepository(SkillVersionSchema);
 
     skillVersionRepository = new SkillVersionRepository(
       typeormRepo,
       stubbedLogger,
     );
     skillRepository = new SkillRepository(
-      datasource.getRepository(SkillSchema),
+      fixture.datasource.getRepository(SkillSchema),
       stubbedLogger,
     );
   });
 
   afterEach(async () => {
     jest.clearAllMocks();
-    await datasource.destroy();
+    await fixture.cleanup();
   });
+
+  afterAll(() => fixture.destroy());
 
   describe('list', () => {
     it('returns all skill versions', async () => {

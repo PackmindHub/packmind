@@ -1,45 +1,43 @@
 import {
+  createTestDatasourceFixture,
   itHandlesDuplicateKeys,
   itHandlesSoftDelete,
+  stubLogger,
 } from '@packmind/test-utils';
-import { DataSource } from 'typeorm';
 import { OrganizationRepository } from './OrganizationRepository';
 import { createOrganizationId, Organization } from '@packmind/types';
 import { OrganizationSchema } from '../schemas/OrganizationSchema';
-import { makeTestDatasource } from '@packmind/test-utils';
 import { organizationFactory } from '../../../test';
 import { PackmindLogger } from '@packmind/logger';
-import { stubLogger } from '@packmind/test-utils';
 
 describe('OrganizationRepository', () => {
-  let dataSource: DataSource;
+  const fixture = createTestDatasourceFixture([OrganizationSchema]);
+
   let organizationRepository: OrganizationRepository;
   let logger: jest.Mocked<PackmindLogger>;
 
-  beforeEach(async () => {
+  beforeAll(() => fixture.initialize());
+
+  beforeEach(() => {
     logger = stubLogger();
-    dataSource = await makeTestDatasource([OrganizationSchema]);
-    await dataSource.initialize();
-    await dataSource.synchronize();
     organizationRepository = new OrganizationRepository(
-      dataSource.getRepository(OrganizationSchema),
+      fixture.datasource.getRepository(OrganizationSchema),
       logger,
     );
   });
 
-  afterEach(() => {
+  afterEach(async () => {
     jest.clearAllMocks();
+    await fixture.cleanup();
   });
 
-  afterEach(async () => {
-    await dataSource.destroy();
-  });
+  afterAll(() => fixture.destroy());
 
   itHandlesSoftDelete<Organization>({
     entityFactory: () => organizationFactory(),
     getRepository: () => organizationRepository,
     queryDeletedEntity: async (id) =>
-      dataSource.getRepository(OrganizationSchema).findOne({
+      fixture.datasource.getRepository(OrganizationSchema).findOne({
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         where: { id: id as any },
         withDeleted: true,

@@ -4,8 +4,8 @@ import { WithSoftDelete } from '@packmind/node-utils';
 import { SpaceSchema } from '@packmind/spaces';
 import { spaceFactory } from '@packmind/spaces/test';
 import {
+  createTestDatasourceFixture,
   itHandlesSoftDelete,
-  makeTestDatasource,
   stubLogger,
 } from '@packmind/test-utils';
 import {
@@ -15,7 +15,7 @@ import {
   createUserId,
   Standard,
 } from '@packmind/types';
-import { DataSource, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
 import { v4 as uuidv4 } from 'uuid';
 import { standardFactory } from '../../../test/standardFactory';
 import { standardVersionFactory } from '../../../test/standardVersionFactory';
@@ -25,32 +25,34 @@ import { StandardVersionSchema } from '../schemas/StandardVersionSchema';
 import { StandardRepository } from './StandardRepository';
 
 describe('StandardRepository', () => {
-  let datasource: DataSource;
+  // Use fixture pattern for faster test execution
+  // Schema is synchronized once per file, tables truncated between tests
+  const fixture = createTestDatasourceFixture([
+    StandardSchema,
+    StandardVersionSchema,
+    RuleSchema,
+    GitCommitSchema,
+    SpaceSchema,
+  ]);
+
   let standardRepository: StandardRepository;
   let stubbedLogger: jest.Mocked<PackmindLogger>;
   let typeormRepo: Repository<Standard>;
 
-  beforeEach(async () => {
-    datasource = await makeTestDatasource([
-      StandardSchema,
-      StandardVersionSchema,
-      RuleSchema,
-      GitCommitSchema,
-      SpaceSchema,
-    ]);
-    await datasource.initialize();
-    await datasource.synchronize();
+  beforeAll(() => fixture.initialize());
 
+  beforeEach(() => {
     stubbedLogger = stubLogger();
-    typeormRepo = datasource.getRepository(StandardSchema);
-
+    typeormRepo = fixture.datasource.getRepository(StandardSchema);
     standardRepository = new StandardRepository(typeormRepo, stubbedLogger);
   });
 
   afterEach(async () => {
     jest.clearAllMocks();
-    await datasource.destroy();
+    await fixture.cleanup();
   });
+
+  afterAll(() => fixture.destroy());
 
   it('can store and retrieve standards by organization with scope from latest version', async () => {
     const organizationId = createOrganizationId(uuidv4());
@@ -60,7 +62,7 @@ describe('StandardRepository', () => {
     await standardRepository.add(standard);
 
     // Create standard versions with different scopes
-    const versionRepo = datasource.getRepository(StandardVersionSchema);
+    const versionRepo = fixture.datasource.getRepository(StandardVersionSchema);
     const version1 = standardVersionFactory({
       standardId: standard.id,
       version: 1,
@@ -123,7 +125,7 @@ describe('StandardRepository', () => {
     const space = spaceFactory({ organizationId });
 
     // Create a space in the organization
-    const spaceRepo = datasource.getRepository(SpaceSchema);
+    const spaceRepo = fixture.datasource.getRepository(SpaceSchema);
     await spaceRepo.save(space);
 
     const standard = standardFactory({
@@ -180,7 +182,9 @@ describe('StandardRepository', () => {
       await standardRepository.add(standard);
 
       // Create standard versions with different scopes
-      const versionRepo = datasource.getRepository(StandardVersionSchema);
+      const versionRepo = fixture.datasource.getRepository(
+        StandardVersionSchema,
+      );
       const version1 = standardVersionFactory({
         standardId: standard.id,
         version: 1,

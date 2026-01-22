@@ -34,8 +34,8 @@ export default {
     '^@packmind/assets$': '<rootDir>/../../packages/assets/src/index.ts',
     '^@packmind/assets/(.*)$': '<rootDir>/../../packages/assets/src/$1',
   },
-  testTimeout: 30000,
+  testTimeout: 15000,
   // Workaround for macOS jest-worker EPERM errors
-  // Reduce maxWorkers to minimize cleanup issues
-  maxWorkers: 1,
+  // Use parallel workers in CI (Linux), single worker on macOS to avoid EPERM
+  maxWorkers: process.env.CI ? '50%' : 1,
 };

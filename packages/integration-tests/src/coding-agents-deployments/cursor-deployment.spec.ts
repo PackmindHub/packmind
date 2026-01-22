@@ -6,7 +6,6 @@ import { recipesSchemas } from '@packmind/recipes';
 import { skillsSchemas } from '@packmind/skills';
 import { spacesSchemas } from '@packmind/spaces';
 import { standardsSchemas } from '@packmind/standards';
-import { makeTestDatasource } from '@packmind/test-utils';
 import {
   createTargetId,
   DeleteItemType,
@@ -27,13 +26,22 @@ import {
   User,
 } from '@packmind/types';
 import assert from 'assert';
-import { DataSource } from 'typeorm';
+import { createIntegrationTestFixture } from '../helpers/createIntegrationTestFixture';
 import { TestApp } from '../helpers/TestApp';
 
 describe('Cursor Deployment Integration', () => {
+  const fixture = createIntegrationTestFixture([
+    ...accountsSchemas,
+    ...recipesSchemas,
+    ...standardsSchemas,
+    ...spacesSchemas,
+    ...gitSchemas,
+    ...deploymentsSchemas,
+    ...skillsSchemas,
+  ]);
+
   const CURSOR_COMMANDS_PATH = '.cursor/commands/packmind';
   let testApp: TestApp;
-  let dataSource: DataSource;
   let standardsPort: IStandardsPort;
   let gitPort: IGitPort;
   let deployerService: DeployerService;
@@ -45,22 +53,11 @@ describe('Cursor Deployment Integration', () => {
   let space: Space;
   let gitRepo: GitRepo;
 
-  beforeEach(async () => {
-    // Create test datasource with all necessary schemas
-    dataSource = await makeTestDatasource([
-      ...accountsSchemas,
-      ...recipesSchemas,
-      ...standardsSchemas,
-      ...spacesSchemas,
-      ...gitSchemas,
-      ...deploymentsSchemas,
-      ...skillsSchemas,
-    ]);
-    await dataSource.initialize();
-    await dataSource.synchronize();
+  beforeAll(() => fixture.initialize());
 
+  beforeEach(async () => {
     // Use TestApp which handles all hexa registration and initialization
-    testApp = new TestApp(dataSource);
+    testApp = new TestApp(fixture.datasource);
     await testApp.initialize();
 
     // Get deployer service from hexa
@@ -134,8 +131,11 @@ describe('Cursor Deployment Integration', () => {
   });
 
   afterEach(async () => {
-    await dataSource.destroy();
+    jest.clearAllMocks();
+    await fixture.cleanup();
   });
+
+  afterAll(() => fixture.destroy());
 
   describe('recipe deployment', () => {
     let defaultTarget: Target;

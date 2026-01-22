@@ -8,14 +8,16 @@ import { gitSchemas } from '@packmind/git';
 import { deploymentsSchemas } from '@packmind/deployments';
 import { skillsSchemas } from '@packmind/skills';
 
+export const integrationTestSchemas = [
+  ...accountsSchemas,
+  ...recipesSchemas,
+  ...standardsSchemas,
+  ...spacesSchemas,
+  ...gitSchemas,
+  ...deploymentsSchemas,
+  ...skillsSchemas,
+];
+
 export function makeIntegrationTestDataSource(): Promise<DataSource> {
-  return makeTestDatasource([
-    ...accountsSchemas,
-    ...recipesSchemas,
-    ...standardsSchemas,
-    ...spacesSchemas,
-    ...gitSchemas,
-    ...deploymentsSchemas,
-    ...skillsSchemas,
-  ]);
+  return makeTestDatasource(integrationTestSchemas);
 }
