@@ -44,21 +44,25 @@ describe('createStandardHandler', () => {
     );
   });
 
-  it('returns error when file is not found', async () => {
-    const result = await createStandardHandler(
-      '/nonexistent.json',
-      mockGateway,
-    );
-    expect(result.success).toBe(false);
-    expect(result.error).toBeDefined();
+  describe('when file is not found', () => {
+    it('returns error', async () => {
+      const result = await createStandardHandler(
+        '/nonexistent.json',
+        mockGateway,
+      );
+      expect(result.success).toBe(false);
+      expect(result.error).toBeDefined();
+    });
   });
 
-  it('returns error when playbook is invalid', async () => {
-    const filePath = path.join(tempDir, 'invalid.json');
-    await fs.writeFile(filePath, '{ "invalid": "structure" }');
+  describe('when playbook is invalid', () => {
+    it('returns error', async () => {
+      const filePath = path.join(tempDir, 'invalid.json');
+      await fs.writeFile(filePath, '{ "invalid": "structure" }');
 
-    const result = await createStandardHandler(filePath, mockGateway);
-    expect(result.success).toBe(false);
-    expect(result.error).toBeDefined();
+      const result = await createStandardHandler(filePath, mockGateway);
+      expect(result.success).toBe(false);
+      expect(result.error).toBeDefined();
+    });
   });
 });
