@@ -46,6 +46,7 @@ import { OrganizationLlmModule } from './organizations/llm/llm.module';
 import { OrganizationMcpModule } from './organizations/mcp/mcp.module';
 import { OrganizationSkillsModule } from './organizations/skills/skills.module';
 import { HexaRegistryModule } from './shared/HexaRegistryModule';
+import { PublicSkillsModule } from './skills/skills.module';
 import { SSEModule } from './sse/sse.module';
 import { TrialModule } from './trial/trial.module';
 
@@ -115,12 +116,17 @@ const logger = new PackmindLogger('AppModule', LogLevel.INFO);
     LinterModule,
     ImportLegacyModule,
     TrialModule,
+    PublicSkillsModule,
     // RouterModule configuration for organization-scoped routes
     // This must come after OrganizationsModule and its child modules are imported
     RouterModule.register([
       {
         path: 'quick-start',
         module: TrialModule,
+      },
+      {
+        path: 'skills',
+        module: PublicSkillsModule,
       },
       {
         path: 'organizations/:orgId',

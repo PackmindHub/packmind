@@ -23,6 +23,8 @@ import {
   Distribution,
   DownloadDefaultSkillsZipFileCommand,
   DownloadDefaultSkillsZipFileResponse,
+  DownloadDefaultSkillsZipForAgentCommand,
+  DownloadDefaultSkillsZipForAgentResponse,
   FindActiveStandardVersionsByTargetCommand,
   FindActiveStandardVersionsByTargetResponse,
   GetDeploymentOverviewCommand,
@@ -92,6 +94,7 @@ import { DeletePackagesBatchUsecase } from '../useCases/deletePackage/deletePack
 import { DeleteTargetUseCase } from '../useCases/DeleteTargetUseCase';
 import { DeployDefaultSkillsUseCase } from '../useCases/DeployDefaultSkillsUseCase';
 import { DownloadDefaultSkillsZipFileUseCase } from '../useCases/DownloadDefaultSkillsZipFileUseCase';
+import { DownloadDefaultSkillsZipForAgentUseCase } from '../useCases/DownloadDefaultSkillsZipForAgentUseCase';
 import { FindActiveStandardVersionsByTargetUseCase } from '../useCases/FindActiveStandardVersionsByTargetUseCase';
 import { GetDeploymentOverviewUseCase } from '../useCases/GetDeploymentOverviewUseCase';
 import { GetPackageByIdUsecase } from '../useCases/getPackageById/getPackageById.usecase';
@@ -163,6 +166,7 @@ export class DeploymentsAdapter
   private _removePackageFromTargetsUseCase!: RemovePackageFromTargetsUseCase;
   private _deployDefaultSkillsUseCase!: DeployDefaultSkillsUseCase;
   private _downloadDefaultSkillsZipFileUseCase!: DownloadDefaultSkillsZipFileUseCase;
+  private _downloadDefaultSkillsZipForAgentUseCase!: DownloadDefaultSkillsZipForAgentUseCase;
 
   constructor(
     private readonly deploymentsServices: DeploymentsServices,
@@ -227,6 +231,9 @@ export class DeploymentsAdapter
         this._deployDefaultSkillsUseCase,
         this.accountsPort,
       );
+
+    this._downloadDefaultSkillsZipForAgentUseCase =
+      new DownloadDefaultSkillsZipForAgentUseCase(this.codingAgentPort);
 
     this._publishArtifactsUseCase = new PublishArtifactsUseCase(
       this.recipesPort,
@@ -670,5 +677,11 @@ export class DeploymentsAdapter
     command: DownloadDefaultSkillsZipFileCommand,
   ): Promise<DownloadDefaultSkillsZipFileResponse> {
     return this._downloadDefaultSkillsZipFileUseCase.execute(command);
+  }
+
+  async downloadDefaultSkillsZipForAgent(
+    command: DownloadDefaultSkillsZipForAgentCommand,
+  ): Promise<DownloadDefaultSkillsZipForAgentResponse> {
+    return this._downloadDefaultSkillsZipForAgentUseCase.execute(command);
   }
 }
