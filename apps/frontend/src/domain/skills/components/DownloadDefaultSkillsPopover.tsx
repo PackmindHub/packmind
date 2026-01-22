@@ -10,14 +10,17 @@ import {
 import { CodingAgent } from '@packmind/types';
 import { RiClaudeLine } from 'react-icons/ri';
 import { VscVscode } from 'react-icons/vsc';
+import { useAnalytics } from '@packmind/proprietary/frontend/domain/amplitude/providers/AnalyticsProvider';
 
 export const DownloadDefaultSkillsPopover = () => {
   const [downloadingAgent, setDownloadingAgent] = useState<CodingAgent | null>(
     null,
   );
+  const analytics = useAnalytics();
 
   const handleDownloadSkillsForAgent = async (agent: CodingAgent) => {
     setDownloadingAgent(agent);
+    analytics.track('default_skills_downloaded', { agent });
     try {
       const response = await fetch(`/api/v0/skills/${agent}`);
       if (!response.ok) {
