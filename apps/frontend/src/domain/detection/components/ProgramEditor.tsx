@@ -572,6 +572,20 @@ const ProgramEditor: React.FC<ProgramEditorProps> = ({
                       }}
                     />
                   </PMBox>
+                  {sandboxValidationError && (
+                    <PMBox
+                      mt={2}
+                      p={2}
+                      bg="red.50"
+                      border="1px solid"
+                      borderColor="red.200"
+                      borderRadius="md"
+                    >
+                      <PMText color="error" fontSize="sm">
+                        {sandboxValidationError}
+                      </PMText>
+                    </PMBox>
+                  )}
                   {testResults !== null && (
                     <PMBox>
                       <PMHeading level="h6" mb={2}>
