@@ -27,8 +27,8 @@ export function SignUpOptions() {
   const navigate = useNavigate();
 
   return (
-    <PMVStack gap={10} align="stretch">
-      <PMVStack gap={3} textAlign="center">
+    <PMVStack gap={2} align="stretch">
+      <PMVStack gap={3} textAlign="center" mb={6}>
         <PMHeading level="h1">Get your agent code your way</PMHeading>
         <PMText color="secondary" fontSize="lg">
           Packmind manage your AI playbook with standards, commands, and skills
@@ -200,7 +200,7 @@ export function SignUpOptions() {
         </PMCard.Root>
       </PMGrid>
 
-      <PMBox mt={4} textAlign="center">
+      <PMBox textAlign="center">
         <PMText>Already have an account? </PMText>
         <Link to="/sign-in" prefetch="intent">
           <PMButton variant="tertiary" size={'xs'} tabIndex={-1}>
