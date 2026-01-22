@@ -31,8 +31,8 @@ export function SignUpOptions() {
       <PMVStack gap={3} textAlign="center">
         <PMHeading level="h1">Get your agent code your way</PMHeading>
         <PMText color="secondary" fontSize="lg">
-          Packmind generates your AI playbook with standards, instructions, and
-          context from your codebase.
+          Packmind manage your AI playbook with standards, commands, and skills
+          from your codebase.
         </PMText>
       </PMVStack>
 
@@ -48,10 +48,12 @@ export function SignUpOptions() {
           boxShadow="0 4px 20px rgba(59, 130, 246, 0.15)"
           position="relative"
           borderColor="blue.800"
+          zIndex={10}
           _hover={{
             borderColor: 'blue.500',
             boxShadow: '0 8px 30px rgba(59, 130, 246, 0.25)',
             transform: 'translateY(-2px)',
+            zIndex: 20,
           }}
           transition="all 0.3s ease"
         >
@@ -77,7 +79,10 @@ export function SignUpOptions() {
                   <PMHStack align="center" justify="center">
                     <PMHeading level="h3" textAlign="center">
                       Build your AI playbook{' '}
-                      <PMTooltip label="Coding standards, agent instructions, and project-specific commands generated from your codebase">
+                      <PMTooltip
+                        label="Coding standards, commands, and specific knowledge (skills) generated from your codebase"
+                        zIndex={10000}
+                      >
                         <PMIcon
                           as={LuInfo}
                           size="sm"
@@ -136,10 +141,12 @@ export function SignUpOptions() {
           backgroundColor="background.secondary"
           borderColor={'purple.800'}
           boxShadow="0 4px 20px rgba(147, 51, 234, 0.15)"
+          zIndex={1}
           _hover={{
             borderColor: 'purple.400',
             boxShadow: '0 8px 30px rgba(147, 51, 234, 0.25)',
             transform: 'translateY(-2px)',
+            zIndex: 5,
           }}
           transition="all 0.3s ease"
         >
