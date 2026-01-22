@@ -635,6 +635,49 @@ describe('GithubRepository', () => {
           });
         });
       });
+
+      describe('when files have identical content and delete files do not exist', () => {
+        const existingContent = 'existing content';
+        const filesWithIdenticalContent = [
+          { path: 'test/unchanged-file.txt', content: existingContent },
+        ];
+        const nonExistentDeleteFiles = [{ path: 'test/non-existent-file.txt' }];
+
+        beforeEach(() => {
+          jest.spyOn(githubRepository, 'getFileOnRepo').mockResolvedValue({
+            sha: 'existing-sha',
+            content: Buffer.from(existingContent).toString('base64'),
+          });
+        });
+
+        it('returns no-changes', async () => {
+          const result = await githubRepository.commitFiles(
+            filesWithIdenticalContent,
+            'Update files',
+            nonExistentDeleteFiles,
+          );
+
+          expect(result).toEqual({
+            sha: 'no-changes',
+            message: '',
+            author: '',
+            url: '',
+          });
+        });
+
+        it('does not create a commit', async () => {
+          await githubRepository.commitFiles(
+            filesWithIdenticalContent,
+            'Update files',
+            nonExistentDeleteFiles,
+          );
+
+          expect(mockAxiosInstance.post).not.toHaveBeenCalledWith(
+            expect.stringContaining('/git/commits'),
+            expect.anything(),
+          );
+        });
+      });
     });
   });
 
