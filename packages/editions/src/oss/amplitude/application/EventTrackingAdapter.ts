@@ -22,4 +22,13 @@ export class EventTrackingAdapter implements IEventTrackingPort {
   ): Promise<void> {
     //Nothing to do here
   }
+
+  async identifyOrganizationGroup(
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    organizationId: OrganizationId,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    name: string,
+  ): Promise<void> {
+    //Nothing to do here
+  }
 }

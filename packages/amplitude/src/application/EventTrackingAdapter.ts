@@ -36,4 +36,11 @@ export class EventTrackingAdapter implements IEventTrackingPort {
 
     await this.amplitudeService.pushEventToAmplitude(event);
   }
+
+  async identifyOrganizationGroup(
+    organizationId: OrganizationId,
+    name: string,
+  ): Promise<void> {
+    await this.amplitudeService.identifyOrganizationGroup(organizationId, name);
+  }
 }

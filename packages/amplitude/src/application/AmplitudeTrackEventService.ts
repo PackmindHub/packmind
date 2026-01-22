@@ -1,5 +1,10 @@
 import { AmplitudeNodeEvent } from '../domain/entities/AmplitudeNodeEvent';
-import { track, init } from '@amplitude/analytics-node';
+import {
+  track,
+  init,
+  groupIdentify,
+  Identify,
+} from '@amplitude/analytics-node';
 import { AmplitudeService } from '../nest-api/amplitude/amplitude.service';
 import { ServerZoneType } from '@amplitude/analytics-core/lib/esm/types/server-zone';
 import { PackmindLogger } from '@packmind/logger';
@@ -60,5 +65,21 @@ export class AmplitudeTrackEventService {
         groups: { organization: event.orgaId },
       },
     );
+  }
+
+  async identifyOrganizationGroup(orgId: string, name: string) {
+    await this.initializeAmplitude();
+
+    if (!this.initialized) {
+      return;
+    }
+
+    this.logger.info('Identifying organization group', {
+      orgId: orgId.substring(0, 6) + '*',
+    });
+
+    const identify = new Identify();
+    identify.set('name', name);
+    groupIdentify('organization', orgId, identify);
   }
 }

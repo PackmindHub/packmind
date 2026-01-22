@@ -224,6 +224,12 @@ export class AmplitudeEventListener extends PackmindListener<EventTrackingAdapte
   private onOrganizationCreatedEvent = async (
     event: OrganizationCreatedEvent,
   ): Promise<void> => {
+    const { organizationId, name } = event.payload;
+
+    // Set the organization group name in Amplitude
+    await this.adapter.identifyOrganizationGroup(organizationId, name);
+
+    // Track the event
     return this.emitAmplitudeEvent(
       event,
       'organization_created',
