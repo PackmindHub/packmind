@@ -1,14 +1,14 @@
 import { FileUpdates } from '@packmind/types';
-import { IDeploySkillsDeployer } from './IDefaultSkillDeployer';
+import { ISkillDeployer } from './IDefaultSkillDeployer';
 
-function getSkillCreatorSkillMd(agentName: string): string {
+function getCreateSkillSkillMd(agentName: string): string {
   return `---
-name: 'packmind-skill-creator'
+name: 'create-skill'
 description: "Guide for creating effective skills. This skill should be used when users want to create a new skill (or update an existing skill) that extends ${agentName}'s capabilities with specialized knowledge, workflows, or tool integrations."
 license: 'Complete terms in LICENSE.txt'
 ---
 
-# Skill Creator
+# Create skill
 
 This skill provides guidance for creating effective skills.
 
@@ -252,7 +252,7 @@ This command registers the skill with Packmind, making it available for deployme
 `;
 }
 
-const SKILL_CREATOR_LICENSE = `
+const CREATE_SKILL_LICENSE = `
                                  Apache License
                            Version 2.0, January 2004
                         http://www.apache.org/licenses/
@@ -456,7 +456,7 @@ const SKILL_CREATOR_LICENSE = `
    limitations under the License.
 `;
 
-function getSkillCreatorInitSkillPy(agentName: string): string {
+function getCreateSkillInitSkillPy(agentName: string): string {
   return `#!/usr/bin/env python3
 """
 Skill Initializer - Creates a new skill from template
@@ -763,7 +763,7 @@ if __name__ == "__main__":
 `;
 }
 
-const SKILL_CREATOR_QUICK_VALIDATE_PY = `#!/usr/bin/env python3
+const CREATE_SKILL_QUICK_VALIDATE_PY = `#!/usr/bin/env python3
 """
 Quick validation script for skills - minimal version
 """
@@ -830,7 +830,7 @@ if __name__ == "__main__":
     sys.exit(0 if valid else 1)
 `;
 
-const SKILL_CREATOR_README = `# Skill Creator
+const CREATE_SKILL_README = `# Create skill
 
 A skill that guides AI coding agents through the process of creating effective skills.
 
@@ -867,7 +867,7 @@ Before using this skill, ensure you have:
 ## Directory Structure
 
 \`\`\`
-packmind-skill-creator/
+create-skill/
 ├── SKILL.md           # Instructions for the AI agent
 ├── README.md          # This file (for humans)
 ├── LICENSE.txt        # Apache 2.0 license
@@ -885,31 +885,31 @@ This skill is based on the original [skill-creator](https://github.com/anthropic
 Apache 2.0 - See LICENSE.txt for details.
 `;
 
-export class SkillCreatorDeployer implements IDeploySkillsDeployer {
+export class CreateSkillDeployer implements ISkillDeployer {
   deploy(agentName: string, skillsFolderPath: string): FileUpdates {
-    const basePath = `${skillsFolderPath}packmind-skill-creator`;
+    const basePath = `${skillsFolderPath}create-skill`;
 
     return {
       createOrUpdate: [
         {
           path: `${basePath}/SKILL.md`,
-          content: getSkillCreatorSkillMd(agentName),
+          content: getCreateSkillSkillMd(agentName),
         },
         {
           path: `${basePath}/README.md`,
-          content: SKILL_CREATOR_README,
+          content: CREATE_SKILL_README,
         },
         {
           path: `${basePath}/LICENSE.txt`,
-          content: SKILL_CREATOR_LICENSE,
+          content: CREATE_SKILL_LICENSE,
         },
         {
           path: `${basePath}/scripts/init_skill.py`,
-          content: getSkillCreatorInitSkillPy(agentName),
+          content: getCreateSkillInitSkillPy(agentName),
         },
         {
           path: `${basePath}/scripts/quick_validate.py`,
-          content: SKILL_CREATOR_QUICK_VALIDATE_PY,
+          content: CREATE_SKILL_QUICK_VALIDATE_PY,
         },
       ],
       delete: [],
