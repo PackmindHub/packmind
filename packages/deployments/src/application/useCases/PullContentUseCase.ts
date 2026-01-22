@@ -463,10 +463,12 @@ export class PullContentUseCase extends AbstractMemberUseCase<
       );
 
       // Generate skill folders for agents that support skills
+      const skillFolderPaths =
+        this.codingAgentPort.getSkillsFolderPathForAgents(codingAgents);
       const skillFolders = codingAgents.flatMap((agent) => {
-        const skillPath = this.codingAgentPort.getAgentSkillPath(agent);
-        if (skillPath === null) return [];
-        return skillVersions.map((sv) => `${skillPath}/${sv.slug}`);
+        const skillPath = skillFolderPaths.get(agent);
+        if (!skillPath) return [];
+        return skillVersions.map((sv) => `${skillPath}${sv.slug}`);
       });
 
       this.logger.info('Generated skill folders', {

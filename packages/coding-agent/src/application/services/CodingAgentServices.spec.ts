@@ -1,8 +1,12 @@
 import { PackmindLogger } from '@packmind/logger';
 import { stubLogger } from '@packmind/test-utils';
 import {
+  DeleteItemType,
   FileUpdates,
   RecipeVersion,
+  SkillId,
+  SkillVersion,
+  SkillVersionId,
   StandardVersion,
   RecipeVersionId,
   RecipeId,
@@ -646,6 +650,288 @@ describe('CodingAgentServices', () => {
 
       it('returns result with empty delete array', () => {
         expect(result.delete).toHaveLength(0);
+      });
+    });
+
+    describe('burn and rebuild for skills', () => {
+      const createMockFileUpdates = (): FileUpdates => ({
+        createOrUpdate: [
+          {
+            path: '.claude/skills/my-skill/SKILL.md',
+            content: 'skill content',
+          },
+        ],
+        delete: [],
+      });
+
+      const mockSkillVersion: SkillVersion = {
+        id: 'skill-version-1' as SkillVersionId,
+        skillId: 'skill-1' as SkillId,
+        name: 'My Skill',
+        slug: 'my-skill',
+        description: 'A test skill',
+        prompt: 'Test prompt',
+        version: 1,
+        userId: 'user-1' as UserId,
+      };
+
+      describe('when installed skills exist', () => {
+        const mockDeployer = {
+          generateRemovalFileUpdates: jest.fn().mockResolvedValue({
+            createOrUpdate: [],
+            delete: [],
+          }),
+          getSkillsFolderPath: jest.fn().mockReturnValue('.claude/skills/'),
+        };
+
+        let result: FileUpdates;
+
+        beforeEach(async () => {
+          mockDeployerService.aggregateArtifactRendering.mockResolvedValue(
+            createMockFileUpdates(),
+          );
+
+          mockDeployerService.getDeployerForAgent.mockReturnValue(
+            mockDeployer as unknown as ReturnType<
+              DeployerService['getDeployerForAgent']
+            >,
+          );
+
+          result = await service.renderArtifacts(
+            {
+              recipeVersions: [],
+              standardVersions: [],
+              skillVersions: [mockSkillVersion],
+            },
+            {
+              recipeVersions: [],
+              standardVersions: [],
+              skillVersions: [],
+            },
+            ['claude'],
+            new Map(),
+          );
+        });
+
+        it('adds skill directory to delete list for burn and rebuild', () => {
+          expect(result.delete).toContainEqual({
+            path: '.claude/skills/my-skill',
+            type: DeleteItemType.Directory,
+          });
+        });
+
+        it('calls getSkillsFolderPath on the deployer', () => {
+          expect(mockDeployer.getSkillsFolderPath).toHaveBeenCalled();
+        });
+      });
+
+      describe('when skills are removed', () => {
+        const mockDeployer = {
+          generateRemovalFileUpdates: jest.fn().mockResolvedValue({
+            createOrUpdate: [],
+            delete: [],
+          }),
+          getSkillsFolderPath: jest.fn().mockReturnValue('.claude/skills/'),
+        };
+
+        const removedSkill: SkillVersion = {
+          id: 'skill-version-removed' as SkillVersionId,
+          skillId: 'skill-removed' as SkillId,
+          name: 'Removed Skill',
+          slug: 'removed-skill',
+          description: 'A removed skill',
+          prompt: 'Removed prompt',
+          version: 1,
+          userId: 'user-1' as UserId,
+        };
+
+        let result: FileUpdates;
+
+        beforeEach(async () => {
+          mockDeployerService.aggregateArtifactRendering.mockResolvedValue(
+            createMockFileUpdates(),
+          );
+
+          mockDeployerService.getDeployerForAgent.mockReturnValue(
+            mockDeployer as unknown as ReturnType<
+              DeployerService['getDeployerForAgent']
+            >,
+          );
+
+          result = await service.renderArtifacts(
+            {
+              recipeVersions: [],
+              standardVersions: [],
+              skillVersions: [mockSkillVersion],
+            },
+            {
+              recipeVersions: [],
+              standardVersions: [],
+              skillVersions: [removedSkill],
+            },
+            ['claude'],
+            new Map(),
+          );
+        });
+
+        it('adds installed skill directory to delete list', () => {
+          expect(result.delete).toContainEqual({
+            path: '.claude/skills/my-skill',
+            type: DeleteItemType.Directory,
+          });
+        });
+
+        it('adds removed skill directory to delete list', () => {
+          expect(result.delete).toContainEqual({
+            path: '.claude/skills/removed-skill',
+            type: DeleteItemType.Directory,
+          });
+        });
+      });
+
+      describe('when multiple agents are configured', () => {
+        const claudeDeployer = {
+          generateRemovalFileUpdates: jest.fn().mockResolvedValue({
+            createOrUpdate: [],
+            delete: [],
+          }),
+          getSkillsFolderPath: jest.fn().mockReturnValue('.claude/skills/'),
+        };
+
+        const copilotDeployer = {
+          generateRemovalFileUpdates: jest.fn().mockResolvedValue({
+            createOrUpdate: [],
+            delete: [],
+          }),
+          getSkillsFolderPath: jest.fn().mockReturnValue('.github/skills/'),
+        };
+
+        let result: FileUpdates;
+
+        beforeEach(async () => {
+          mockDeployerService.aggregateArtifactRendering.mockResolvedValue(
+            createMockFileUpdates(),
+          );
+
+          mockDeployerService.getDeployerForAgent.mockImplementation(
+            (agent: CodingAgent) => {
+              if (agent === 'claude') {
+                return claudeDeployer as unknown as ReturnType<
+                  DeployerService['getDeployerForAgent']
+                >;
+              }
+              return copilotDeployer as unknown as ReturnType<
+                DeployerService['getDeployerForAgent']
+              >;
+            },
+          );
+
+          result = await service.renderArtifacts(
+            {
+              recipeVersions: [],
+              standardVersions: [],
+              skillVersions: [mockSkillVersion],
+            },
+            {
+              recipeVersions: [],
+              standardVersions: [],
+              skillVersions: [],
+            },
+            ['claude', 'copilot'],
+            new Map(),
+          );
+        });
+
+        it('adds skill directories for Claude agent', () => {
+          expect(result.delete).toContainEqual({
+            path: '.claude/skills/my-skill',
+            type: DeleteItemType.Directory,
+          });
+        });
+
+        it('adds skill directories for Copilot agent', () => {
+          expect(result.delete).toContainEqual({
+            path: '.github/skills/my-skill',
+            type: DeleteItemType.Directory,
+          });
+        });
+      });
+
+      describe('when deployer does not support skills', () => {
+        const mockDeployer = {
+          generateRemovalFileUpdates: jest.fn().mockResolvedValue({
+            createOrUpdate: [],
+            delete: [],
+          }),
+          getSkillsFolderPath: jest.fn().mockReturnValue(undefined),
+        };
+
+        let result: FileUpdates;
+
+        beforeEach(async () => {
+          mockDeployerService.aggregateArtifactRendering.mockResolvedValue(
+            createMockFileUpdates(),
+          );
+
+          mockDeployerService.getDeployerForAgent.mockReturnValue(
+            mockDeployer as unknown as ReturnType<
+              DeployerService['getDeployerForAgent']
+            >,
+          );
+
+          result = await service.renderArtifacts(
+            {
+              recipeVersions: [],
+              standardVersions: [],
+              skillVersions: [mockSkillVersion],
+            },
+            {
+              recipeVersions: [],
+              standardVersions: [],
+              skillVersions: [],
+            },
+            ['cursor'],
+            new Map(),
+          );
+        });
+
+        it('does not add skill directories to delete list', () => {
+          expect(
+            result.delete.filter((d) => d.path.includes('skills')),
+          ).toHaveLength(0);
+        });
+      });
+
+      describe('when no skills exist', () => {
+        let result: FileUpdates;
+
+        beforeEach(async () => {
+          mockDeployerService.aggregateArtifactRendering.mockResolvedValue({
+            createOrUpdate: [],
+            delete: [],
+          });
+
+          result = await service.renderArtifacts(
+            {
+              recipeVersions: mockRecipeVersions,
+              standardVersions: mockStandardVersions,
+              skillVersions: [],
+            },
+            {
+              recipeVersions: [],
+              standardVersions: [],
+              skillVersions: [],
+            },
+            ['claude'],
+            new Map(),
+          );
+        });
+
+        it('does not add any skill directories to delete list', () => {
+          expect(
+            result.delete.filter((d) => d.path.includes('skills')),
+          ).toHaveLength(0);
+        });
       });
     });
   });

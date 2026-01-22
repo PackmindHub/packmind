@@ -355,4 +355,9 @@ ${instructionContent}`;
       content,
     };
   }
+
+  getSkillsFolderPath(): undefined {
+    // Skills not supported for Cursor deployer yet
+    return undefined;
+  }
 }

@@ -188,4 +188,10 @@ describe('CopilotDeployer', () => {
       });
     });
   });
+
+  describe('getSkillsFolderPath', () => {
+    it('returns the GitHub skills folder path', () => {
+      expect(deployer.getSkillsFolderPath()).toBe('.github/skills/');
+    });
+  });
 });

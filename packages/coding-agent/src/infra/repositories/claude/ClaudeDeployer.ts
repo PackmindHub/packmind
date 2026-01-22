@@ -620,4 +620,8 @@ ${skillVersion.prompt}`;
   private escapeSingleQuotes(value: string): string {
     return value.replace(/'/g, "''");
   }
+
+  getSkillsFolderPath(): string {
+    return ClaudeDeployer.SKILLS_FOLDER_PATH;
+  }
 }

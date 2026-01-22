@@ -928,3 +928,7 @@
   path: .claude/skills/packmind-standard-creator/SKILL.md
   type: skill
   date: 2026-01-21T18:05:39+01:00
+- name: CLAUDE.md
+  path: CLAUDE.md
+  type: claude_md
+  date: 2026-01-22T11:06:33+01:00

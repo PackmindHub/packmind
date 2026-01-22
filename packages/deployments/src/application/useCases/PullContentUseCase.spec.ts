@@ -122,6 +122,7 @@ describe('PullContentUseCase', () => {
       getAgentFilePath: jest.fn(),
       getAgentSkillPath: jest.fn(),
       getSupportedAgents: jest.fn(),
+      getSkillsFolderPathForAgents: jest.fn().mockReturnValue(new Map()),
     } as unknown as jest.Mocked<ICodingAgentPort>;
 
     accountsPort = {
@@ -865,7 +866,12 @@ describe('PullContentUseCase', () => {
 
       describe('when package has no skills', () => {
         beforeEach(() => {
-          codingAgentPort.getAgentSkillPath.mockReturnValue('.claude/skills');
+          codingAgentPort.getSkillsFolderPathForAgents.mockReturnValue(
+            new Map([
+              ['packmind', undefined],
+              ['agents_md', undefined],
+            ]),
+          );
         });
 
         it('returns empty skillFolders array', async () => {
@@ -886,7 +892,9 @@ describe('PullContentUseCase', () => {
           renderModeConfigurationService.resolveActiveCodingAgents.mockResolvedValue(
             [CodingAgents.claude],
           );
-          codingAgentPort.getAgentSkillPath.mockReturnValue('.claude/skills');
+          codingAgentPort.getSkillsFolderPathForAgents.mockReturnValue(
+            new Map([['claude', '.claude/skills/']]),
+          );
         });
 
         it('returns skillFolders for the agent', async () => {
@@ -904,7 +912,12 @@ describe('PullContentUseCase', () => {
           ]);
           skillsPort.listSkillVersions.mockResolvedValue([skillVersion]);
 
-          codingAgentPort.getAgentSkillPath.mockReturnValue(null);
+          codingAgentPort.getSkillsFolderPathForAgents.mockReturnValue(
+            new Map([
+              ['packmind', undefined],
+              ['agents_md', undefined],
+            ]),
+          );
         });
 
         it('returns empty skillFolders array', async () => {
@@ -976,9 +989,12 @@ describe('PullContentUseCase', () => {
           renderModeConfigurationService.resolveActiveCodingAgents.mockResolvedValue(
             [CodingAgents.claude, CodingAgents.copilot],
           );
-          codingAgentPort.getAgentSkillPath
-            .mockReturnValueOnce('.claude/skills')
-            .mockReturnValueOnce('.github/skills');
+          codingAgentPort.getSkillsFolderPathForAgents.mockReturnValue(
+            new Map([
+              ['claude', '.claude/skills/'],
+              ['copilot', '.github/skills/'],
+            ]),
+          );
         });
 
         it('returns skillFolders for all skill-agent combinations', async () => {
