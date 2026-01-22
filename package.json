@@ -23,8 +23,8 @@
     "prettier:write": "prettier -w .",
     "quality-gate": "npm run typecheck:frontend && npm run test:staged && npm run lint:staged && npm run build",
     "withEnv": "bash -c 'set -a; [ -f .env ] && source .env; set +a; eval \"$@\"' --",
-    "test": "npm run withEnv \"NODE_OPTIONS='--max-old-space-size=4096' nx run-many -t test --parallel=\\${NX_PARALLEL_TESTS:-3}\"",
-    "test:staged": "npm run withEnv \"NODE_OPTIONS='--max-old-space-size=4096' nx affected:test --parallel=\\${NX_PARALLEL_TESTS:-3}\"",
+    "test": "PACKMIND_LOG_LEVEL=silent npm run withEnv \"NODE_OPTIONS='--max-old-space-size=4096' nx run-many -t test --parallel=\\${NX_PARALLEL_TESTS:-3}\"",
+    "test:staged": "PACKMIND_LOG_LEVEL=silent npm run withEnv \"NODE_OPTIONS='--max-old-space-size=4096' nx affected:test --parallel=\\${NX_PARALLEL_TESTS:-3}\"",
     "test:memory-profile": "./scripts/test-memory-profile.sh",
     "typecheck:frontend": "nx run frontend:typecheck"
   },
