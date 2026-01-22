@@ -113,6 +113,8 @@ export function computeActiveConfigurationState(
  * Current implementation checks if the detection program has a "toReview" marker
  * or if the program data indicates it needs regeneration (from backend).
  */
+const MAX_SANDBOX_CHARS = 10000;
+
 function checkIfProgramNeedsReview(
   detectionProgram: LanguageDetectionPrograms['detectionProgram'] | null,
   draftProgram: LanguageDetectionPrograms['draftDetectionProgram'] | null,
@@ -167,6 +169,9 @@ const ProgramEditor: React.FC<ProgramEditorProps> = ({
   const [sandboxCode, setSandboxCode] = useState('');
   const [testResults, setTestResults] = useState<
     { line: number; character: number; rule: string; standard: string }[] | null
+  >(null);
+  const [sandboxValidationError, setSandboxValidationError] = useState<
+    string | null
   >(null);
 
   const generateProgram = useGenerateProgramMutation();
