@@ -87,17 +87,20 @@ export const PreInstallationInfo: React.FC<IPreInstallationInfoProps> = ({
         <PMAlert.Root status="success">
           <PMAlert.Indicator />
           <PMAlert.Content>
-            <PMAlert.Title>Your code stays local</PMAlert.Title>
+            <PMAlert.Title>Your code stays on your machine</PMAlert.Title>
             <PMAlert.Description>
-              Packmind never receives your source code or proprietary logic.
+              Packmind does not have access to your whole codebase. Only code
+              samples can be added to standards to illustrate how rules should
+              be applied.
             </PMAlert.Description>
           </PMAlert.Content>
         </PMAlert.Root>
 
         <PMAlert.Root status="info">
           <PMAlert.Description>
-            A private workspace is created automatically. You can secure and
-            share it later by creating an account.
+            A private workspace containing generated playbook is created
+            automatically. You can secure and share it later by creating an
+            account.
           </PMAlert.Description>
         </PMAlert.Root>
       </PMVStack>
