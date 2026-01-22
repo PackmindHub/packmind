@@ -59,7 +59,7 @@ export function SidebarNavigationLink(
             <PMTooltip label="Coming soon to the Enterprise plan">
               <PMBadge
                 size="sm"
-                colorScheme={badge.colorScheme || "purple"}
+                colorScheme={badge.colorScheme || 'purple'}
                 ml={2}
                 fontSize="xs"
               >
@@ -150,7 +150,7 @@ export const SidebarNavigation: React.FunctionComponent<
             key="overview"
             url={routes.org.toDeployments(orgSlug)}
             label="Overview"
-            badge={{ text: "Enterprise", colorScheme: "purple" }}
+            badge={{ text: 'Enterprise', colorScheme: 'purple' }}
           />,
         ]}
       />
