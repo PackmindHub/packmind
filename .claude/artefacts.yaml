@@ -900,3 +900,27 @@
   path: .claude/rules/packmind/standard-tests-redaction.md
   type: rule
   date: 2026-01-20T19:26:10+01:00
+- name: CLAUDE.md
+  path: CLAUDE.md
+  type: claude_md
+  date: 2026-01-22T10:27:38+01:00
+- name: standard-changelog.md
+  path: .claude/rules/packmind/standard-changelog.md
+  type: rule
+  date: 2026-01-22T10:27:38+01:00
+- name: standard-testing-good-practices.md
+  path: .claude/rules/packmind/standard-testing-good-practices.md
+  type: rule
+  date: 2026-01-22T10:27:38+01:00
+- name: standard-tests-redaction.md
+  path: .claude/rules/packmind/standard-tests-redaction.md
+  type: rule
+  date: 2026-01-22T10:27:38+01:00
+- name: standard-typescript-code-standards.md
+  path: .claude/rules/packmind/standard-typescript-code-standards.md
+  type: rule
+  date: 2026-01-22T10:27:38+01:00
+- name: packmind:creating-end-user-documentation-for-packmind
+  path: .claude/skills/packmind/creating-end-user-documentation-for-packmind
+  type: skill
+  date: 2026-01-22T10:34:24+01:00
