@@ -613,7 +613,9 @@ const ProgramEditor: React.FC<ProgramEditorProps> = ({
                 <PMButton
                   width="min"
                   onClick={handleTestSandbox}
-                  disabled={sandboxCode.length === 0}
+                  disabled={
+                    sandboxCode.length === 0 || sandboxValidationError !== null
+                  }
                   loading={testProgramExecution.isPending}
                 >
                   Test
