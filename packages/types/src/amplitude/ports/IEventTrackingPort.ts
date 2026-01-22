@@ -19,6 +19,16 @@ export interface IEventTrackingPort {
     eventName: string,
     metadata?: Record<string, string | number>,
   ): Promise<void>;
+
+  /**
+   * Identify an organization group in Amplitude with its display name
+   * @param organizationId - The organization ID to identify
+   * @param name - The display name for the organization group
+   */
+  identifyOrganizationGroup(
+    organizationId: OrganizationId,
+    name: string,
+  ): Promise<void>;
 }
 
 export const IEventTrackingPortName = 'IEventTrackingPort';
