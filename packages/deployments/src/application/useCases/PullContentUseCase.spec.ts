@@ -1008,6 +1008,343 @@ describe('PullContentUseCase', () => {
           ]);
         });
       });
+
+      describe('when skills are removed from packages', () => {
+        let installedSkill: Skill;
+        let removedSkill: Skill;
+        let installedSkillVersion: SkillVersion;
+        let removedSkillVersion: SkillVersion;
+        let currentPackage: PackageWithArtefacts;
+        let previousPackage: PackageWithArtefacts;
+
+        beforeEach(() => {
+          installedSkill = {
+            id: createSkillId('installed-skill'),
+            name: 'Installed Skill',
+            slug: 'installed-skill',
+            description: 'Installed skill description',
+            prompt: 'Installed prompt',
+            version: 1,
+            userId: createUserId('user-1'),
+            spaceId: createSpaceId('space-1'),
+          };
+
+          removedSkill = {
+            id: createSkillId('removed-skill'),
+            name: 'Removed Skill',
+            slug: 'removed-skill',
+            description: 'Removed skill description',
+            prompt: 'Removed prompt',
+            version: 1,
+            userId: createUserId('user-1'),
+            spaceId: createSpaceId('space-1'),
+          };
+
+          installedSkillVersion = {
+            id: createSkillVersionId('installed-skill-version'),
+            skillId: installedSkill.id,
+            name: 'Installed Skill',
+            slug: 'installed-skill',
+            description: 'Installed skill description',
+            prompt: 'Installed prompt',
+            version: 1,
+            userId: createUserId('user-1'),
+          };
+
+          removedSkillVersion = {
+            id: createSkillVersionId('removed-skill-version'),
+            skillId: removedSkill.id,
+            name: 'Removed Skill',
+            slug: 'removed-skill',
+            description: 'Removed skill description',
+            prompt: 'Removed prompt',
+            version: 1,
+            userId: createUserId('user-1'),
+          };
+
+          currentPackage = {
+            id: createPackageId('test-package-id'),
+            slug: 'test-package',
+            name: 'Test Package',
+            description: 'Test package description',
+            spaceId: createSpaceId('space-1'),
+            createdBy: createUserId('user-1'),
+            recipes: [],
+            standards: [],
+            skills: [installedSkill],
+          };
+
+          previousPackage = {
+            id: createPackageId('test-package-id'),
+            slug: 'test-package',
+            name: 'Test Package',
+            description: 'Test package description',
+            spaceId: createSpaceId('space-1'),
+            createdBy: createUserId('user-1'),
+            recipes: [],
+            standards: [],
+            skills: [installedSkill, removedSkill],
+          };
+
+          command = {
+            ...command,
+            packagesSlugs: ['test-package'],
+            previousPackagesSlugs: ['test-package'],
+          };
+
+          packageService.getPackagesBySlugsWithArtefacts
+            .mockResolvedValueOnce([currentPackage])
+            .mockResolvedValueOnce([previousPackage]);
+
+          recipesPort.listRecipeVersions.mockResolvedValue([]);
+          standardsPort.listStandardVersions.mockResolvedValue([]);
+          skillsPort.listSkillVersions
+            .mockResolvedValueOnce([installedSkillVersion])
+            .mockResolvedValueOnce([installedSkillVersion])
+            .mockResolvedValueOnce([removedSkillVersion]);
+
+          renderModeConfigurationService.resolveActiveCodingAgents.mockResolvedValue(
+            [CodingAgents.claude],
+          );
+          codingAgentPort.getSkillsFolderPathForAgents.mockReturnValue(
+            new Map([['claude', '.claude/skills/']]),
+          );
+
+          codingAgentPort.generateRemovalUpdatesForAgents.mockResolvedValue({
+            createOrUpdate: [],
+            delete: [{ path: '.claude/skills/removed-skill/SKILL.md' }],
+          });
+        });
+
+        it('includes installed skill folder in skillFolders', async () => {
+          const result = await useCase.execute(command);
+
+          expect(result.skillFolders).toContain(
+            '.claude/skills/installed-skill',
+          );
+        });
+
+        it('includes removed skill folder in skillFolders for cleanup', async () => {
+          const result = await useCase.execute(command);
+
+          expect(result.skillFolders).toContain('.claude/skills/removed-skill');
+        });
+      });
+
+      describe('when git info is provided for distribution history lookup', () => {
+        let testPackage: PackageWithArtefacts;
+        let currentSkill: Skill;
+        let previouslyDeployedSkill: Skill;
+        let currentSkillVersion: SkillVersion;
+        let previouslyDeployedSkillVersion: SkillVersion;
+
+        beforeEach(() => {
+          currentSkill = {
+            id: createSkillId('current-skill'),
+            name: 'Current Skill',
+            slug: 'current-skill',
+            description: 'Current skill description',
+            prompt: 'Current prompt',
+            version: 1,
+            userId: createUserId('user-1'),
+            spaceId: createSpaceId('space-1'),
+          };
+
+          previouslyDeployedSkill = {
+            id: createSkillId('previously-deployed-skill'),
+            name: 'Previously Deployed Skill',
+            slug: 'previously-deployed-skill',
+            description: 'Previously deployed skill description',
+            prompt: 'Previously deployed prompt',
+            version: 1,
+            userId: createUserId('user-1'),
+            spaceId: createSpaceId('space-1'),
+          };
+
+          currentSkillVersion = {
+            id: createSkillVersionId('current-skill-version'),
+            skillId: currentSkill.id,
+            name: 'Current Skill',
+            slug: 'current-skill',
+            description: 'Current skill description',
+            prompt: 'Current prompt',
+            version: 1,
+            userId: createUserId('user-1'),
+          };
+
+          previouslyDeployedSkillVersion = {
+            id: createSkillVersionId('previously-deployed-skill-version'),
+            skillId: previouslyDeployedSkill.id,
+            name: 'Previously Deployed Skill',
+            slug: 'previously-deployed-skill',
+            description: 'Previously deployed skill description',
+            prompt: 'Previously deployed prompt',
+            version: 1,
+            userId: createUserId('user-1'),
+          };
+
+          testPackage = {
+            id: createPackageId('test-package-id'),
+            slug: 'test-package',
+            name: 'Test Package',
+            description: 'Test package description',
+            spaceId: createSpaceId('space-1'),
+            createdBy: createUserId('user-1'),
+            recipes: [],
+            standards: [],
+            skills: [currentSkill],
+          };
+
+          command = {
+            ...command,
+            packagesSlugs: ['test-package'],
+            gitRemoteUrl: 'https://github.com/owner/repo.git',
+            gitBranch: 'main',
+            relativePath: '/',
+          };
+
+          packageService.getPackagesBySlugsWithArtefacts.mockResolvedValue([
+            testPackage,
+          ]);
+
+          recipesPort.listRecipeVersions.mockResolvedValue([]);
+          standardsPort.listStandardVersions.mockResolvedValue([]);
+          skillsPort.listSkillVersions.mockResolvedValue([currentSkillVersion]);
+
+          renderModeConfigurationService.resolveActiveCodingAgents.mockResolvedValue(
+            [CodingAgents.claude],
+          );
+          codingAgentPort.getSkillsFolderPathForAgents.mockReturnValue(
+            new Map([['claude', '.claude/skills/']]),
+          );
+
+          // Setup git port to return provider and repo
+          gitPort.listProviders.mockResolvedValue({
+            providers: [
+              {
+                id: 'provider-1',
+                type: 'github',
+                name: 'GitHub',
+                organizationId,
+              },
+            ],
+          });
+          gitPort.listRepos.mockResolvedValue([
+            {
+              id: 'git-repo-1',
+              owner: 'owner',
+              repo: 'repo',
+              branch: 'main',
+              name: 'owner/repo',
+              providerId: 'provider-1',
+            },
+          ]);
+
+          // Setup target service
+          targetService.getTargetsByGitRepoId.mockResolvedValue([
+            {
+              id: 'target-1',
+              name: 'Root',
+              path: '/',
+              gitRepoId: 'git-repo-1',
+            },
+          ]);
+        });
+
+        describe('when previously deployed skills exist in distribution history', () => {
+          beforeEach(() => {
+            // Distribution repository returns previously deployed skill
+            distributionRepository.findActiveSkillVersionsByTargetAndPackages.mockResolvedValue(
+              [previouslyDeployedSkillVersion],
+            );
+
+            codingAgentPort.generateRemovalUpdatesForAgents.mockResolvedValue({
+              createOrUpdate: [],
+              delete: [
+                { path: '.claude/skills/previously-deployed-skill/SKILL.md' },
+              ],
+            });
+          });
+
+          it('queries distribution history for previously deployed skills', async () => {
+            await useCase.execute(command);
+
+            expect(
+              distributionRepository.findActiveSkillVersionsByTargetAndPackages,
+            ).toHaveBeenCalledWith(organizationId, 'target-1', [
+              'test-package-id',
+            ]);
+          });
+
+          it('includes previously deployed skill folder in skillFolders for cleanup', async () => {
+            const result = await useCase.execute(command);
+
+            expect(result.skillFolders).toContain(
+              '.claude/skills/previously-deployed-skill',
+            );
+          });
+
+          it('includes current skill folder in skillFolders', async () => {
+            const result = await useCase.execute(command);
+
+            expect(result.skillFolders).toContain(
+              '.claude/skills/current-skill',
+            );
+          });
+        });
+
+        describe('when no previously deployed skills exist', () => {
+          beforeEach(() => {
+            distributionRepository.findActiveSkillVersionsByTargetAndPackages.mockResolvedValue(
+              [],
+            );
+          });
+
+          it('returns only current skill folders', async () => {
+            const result = await useCase.execute(command);
+
+            expect(result.skillFolders).toEqual([
+              '.claude/skills/current-skill',
+            ]);
+          });
+
+          it('does not call generateRemovalUpdatesForAgents', async () => {
+            await useCase.execute(command);
+
+            expect(
+              codingAgentPort.generateRemovalUpdatesForAgents,
+            ).not.toHaveBeenCalled();
+          });
+        });
+
+        describe('when git repo is not found in providers', () => {
+          beforeEach(() => {
+            gitPort.listRepos.mockResolvedValue([]);
+          });
+
+          it('does not query distribution repository', async () => {
+            await useCase.execute(command);
+
+            expect(
+              distributionRepository.findActiveSkillVersionsByTargetAndPackages,
+            ).not.toHaveBeenCalled();
+          });
+        });
+
+        describe('when target is not found for git repo', () => {
+          beforeEach(() => {
+            targetService.getTargetsByGitRepoId.mockResolvedValue([]);
+          });
+
+          it('does not query distribution repository', async () => {
+            await useCase.execute(command);
+
+            expect(
+              distributionRepository.findActiveSkillVersionsByTargetAndPackages,
+            ).not.toHaveBeenCalled();
+          });
+        });
+      });
     });
   });
 

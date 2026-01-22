@@ -29,6 +29,7 @@ describe('InstallPackagesUseCase', () => {
     (fs.unlink as jest.Mock).mockResolvedValue(undefined);
     (fs.stat as jest.Mock).mockResolvedValue(null);
     (fs.rm as jest.Mock).mockResolvedValue(undefined);
+    (fs.readdir as jest.Mock).mockResolvedValue([]);
 
     useCase = new InstallPackagesUseCase(mockGateway);
   });
@@ -809,6 +810,20 @@ Old packmind content
 
     describe('when skill files are present in package', () => {
       beforeEach(() => {
+        // Mock fs.access to resolve for skill folders (folders exist)
+        (fs.access as jest.Mock).mockImplementation((path: string) => {
+          if (path.includes('/skills/')) {
+            return Promise.resolve();
+          }
+          return Promise.reject(new Error('File not found'));
+        });
+
+        // Mock fs.readdir to return 2 files per skill folder
+        (fs.readdir as jest.Mock).mockResolvedValue([
+          { name: 'SKILL.md', isDirectory: () => false },
+          { name: 'helper.ts', isDirectory: () => false },
+        ]);
+
         mockGateway.getPullData.mockResolvedValue({
           fileUpdates: {
             createOrUpdate: [
@@ -840,13 +855,14 @@ Old packmind content
         expect(result.skillsCount).toBe(1);
       });
 
-      it('delete skill directories before processing files', async () => {
+      it('counts deleted files across all skill directories', async () => {
         const result = await useCase.execute({
           packagesSlugs: ['test-package'],
           baseDirectory: '/test',
         });
 
-        expect(result.skillDirectoriesDeleted).toBe(3);
+        // 3 folders x 2 files each = 6 files deleted
+        expect(result.skillDirectoriesDeleted).toBe(6);
       });
 
       it('removes .packmind/skills folder', async () => {
@@ -914,6 +930,20 @@ Old packmind content
 
     describe('when delete fails for some folders', () => {
       beforeEach(() => {
+        // Mock fs.access to resolve for skill folders (folders exist)
+        (fs.access as jest.Mock).mockImplementation((path: string) => {
+          if (path.includes('/skills/')) {
+            return Promise.resolve();
+          }
+          return Promise.reject(new Error('File not found'));
+        });
+
+        // Mock fs.readdir to return 2 files per skill folder
+        (fs.readdir as jest.Mock).mockResolvedValue([
+          { name: 'SKILL.md', isDirectory: () => false },
+          { name: 'helper.ts', isDirectory: () => false },
+        ]);
+
         mockGateway.getPullData.mockResolvedValue({
           fileUpdates: {
             createOrUpdate: [],
@@ -931,13 +961,14 @@ Old packmind content
           .mockRejectedValueOnce(new Error('Permission denied'));
       });
 
-      it('counts only successful deletions', async () => {
+      it('counts only files from successful deletions', async () => {
         const result = await useCase.execute({
           packagesSlugs: ['test-package'],
           baseDirectory: '/test',
         });
 
-        expect(result.skillDirectoriesDeleted).toBe(1);
+        // Only 1 folder deleted successfully x 2 files = 2 files deleted
+        expect(result.skillDirectoriesDeleted).toBe(2);
       });
 
       it('does not add errors for failed deletions', async () => {
