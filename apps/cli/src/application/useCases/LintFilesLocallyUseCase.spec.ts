@@ -275,172 +275,198 @@ describe('LintFilesLocallyUseCase', () => {
   });
 
   describe('when executing linting with target-based matching', () => {
-    it('returns violations from detection programs', async () => {
-      const allConfigs: AllConfigsResult = {
-        configs: [
-          {
-            targetPath: '/',
-            absoluteTargetPath: '/project',
-            packages: { frontend: '*' },
-          },
-        ],
-        hasConfigs: true,
-        basePath: '/project',
-      };
+    describe('when detection programs return violations', () => {
+      let result: Awaited<ReturnType<LintFilesLocallyUseCase['execute']>>;
 
-      const mockDetectionPrograms = {
-        targets: [
-          {
-            name: 'Root Target',
-            path: '/',
-            standards: [
-              {
-                name: 'Test Standard',
-                slug: 'test-standard',
-                scope: [],
-                rules: [
-                  {
-                    content: 'Test rule',
-                    activeDetectionPrograms: [
-                      {
-                        language: 'typescript',
-                        detectionProgram: {
-                          mode: 'ast',
-                          code: 'function checkSourceCode(ast) { return [1]; }',
-                          sourceCodeState: 'AST' as const,
+      beforeEach(async () => {
+        const allConfigs: AllConfigsResult = {
+          configs: [
+            {
+              targetPath: '/',
+              absoluteTargetPath: '/project',
+              packages: { frontend: '*' },
+            },
+          ],
+          hasConfigs: true,
+          basePath: '/project',
+        };
+
+        const mockDetectionPrograms = {
+          targets: [
+            {
+              name: 'Root Target',
+              path: '/',
+              standards: [
+                {
+                  name: 'Test Standard',
+                  slug: 'test-standard',
+                  scope: [],
+                  rules: [
+                    {
+                      content: 'Test rule',
+                      activeDetectionPrograms: [
+                        {
+                          language: 'typescript',
+                          detectionProgram: {
+                            mode: 'ast',
+                            code: 'function checkSourceCode(ast) { return [1]; }',
+                            sourceCodeState: 'AST' as const,
+                          },
                         },
-                      },
-                    ],
-                  },
-                ],
-              },
-            ],
-          },
-        ],
-      };
+                      ],
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        };
 
-      mockGitRemoteUrlService.tryGetGitRepositoryRoot.mockResolvedValue(
-        '/project',
-      );
-      mockConfigFileRepository.findAllConfigsInTree.mockResolvedValue(
-        allConfigs,
-      );
-      mockListFiles.listFilesInDirectory.mockResolvedValue([
-        { path: '/project/src/file.ts' },
-      ]);
-      mockListFiles.readFileContent.mockResolvedValue('const x = 1;');
-      mockPackmindGateway.getDetectionProgramsForPackages.mockResolvedValue(
-        mockDetectionPrograms,
-      );
+        mockGitRemoteUrlService.tryGetGitRepositoryRoot.mockResolvedValue(
+          '/project',
+        );
+        mockConfigFileRepository.findAllConfigsInTree.mockResolvedValue(
+          allConfigs,
+        );
+        mockListFiles.listFilesInDirectory.mockResolvedValue([
+          { path: '/project/src/file.ts' },
+        ]);
+        mockListFiles.readFileContent.mockResolvedValue('const x = 1;');
+        mockPackmindGateway.getDetectionProgramsForPackages.mockResolvedValue(
+          mockDetectionPrograms,
+        );
 
-      const result = await useCase.execute({ path: '/project' });
+        result = await useCase.execute({ path: '/project' });
+      });
 
-      expect(result.violations).toHaveLength(1);
-      expect(result.summary.totalFiles).toBe(1);
-      expect(result.summary.standardsChecked).toContain('test-standard');
+      it('returns one violation', () => {
+        expect(result.violations).toHaveLength(1);
+      });
+
+      it('reports total files as 1', () => {
+        expect(result.summary.totalFiles).toBe(1);
+      });
+
+      it('includes test-standard in standards checked', () => {
+        expect(result.summary.standardsChecked).toContain('test-standard');
+      });
     });
 
-    it('accumulates programs from multiple matching targets', async () => {
-      const allConfigs: AllConfigsResult = {
-        configs: [
-          {
-            targetPath: '/',
-            absoluteTargetPath: '/project',
-            packages: { generic: '*' },
-          },
-          {
-            targetPath: '/src',
-            absoluteTargetPath: '/project/src',
-            packages: { backend: '*' },
-          },
-        ],
-        hasConfigs: true,
-        basePath: '/project',
-      };
+    describe('when file matches multiple targets', () => {
+      let result: Awaited<ReturnType<LintFilesLocallyUseCase['execute']>>;
 
-      const genericPrograms = {
-        targets: [
-          {
-            name: 'Generic Target',
-            path: '/',
-            standards: [
-              {
-                name: 'Generic Standard',
-                slug: 'generic-standard',
-                scope: [],
-                rules: [
-                  {
-                    content: 'Generic rule',
-                    activeDetectionPrograms: [
-                      {
-                        language: 'typescript',
-                        detectionProgram: {
-                          mode: 'ast',
-                          code: 'function checkSourceCode(ast) { return [1]; }',
-                          sourceCodeState: 'AST' as const,
+      beforeEach(async () => {
+        const allConfigs: AllConfigsResult = {
+          configs: [
+            {
+              targetPath: '/',
+              absoluteTargetPath: '/project',
+              packages: { generic: '*' },
+            },
+            {
+              targetPath: '/src',
+              absoluteTargetPath: '/project/src',
+              packages: { backend: '*' },
+            },
+          ],
+          hasConfigs: true,
+          basePath: '/project',
+        };
+
+        const genericPrograms = {
+          targets: [
+            {
+              name: 'Generic Target',
+              path: '/',
+              standards: [
+                {
+                  name: 'Generic Standard',
+                  slug: 'generic-standard',
+                  scope: [],
+                  rules: [
+                    {
+                      content: 'Generic rule',
+                      activeDetectionPrograms: [
+                        {
+                          language: 'typescript',
+                          detectionProgram: {
+                            mode: 'ast',
+                            code: 'function checkSourceCode(ast) { return [1]; }',
+                            sourceCodeState: 'AST' as const,
+                          },
                         },
-                      },
-                    ],
-                  },
-                ],
-              },
-            ],
-          },
-        ],
-      };
+                      ],
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        };
 
-      const backendPrograms = {
-        targets: [
-          {
-            name: 'Backend Target',
-            path: '/',
-            standards: [
-              {
-                name: 'Backend Standard',
-                slug: 'backend-standard',
-                scope: [],
-                rules: [
-                  {
-                    content: 'Backend rule',
-                    activeDetectionPrograms: [
-                      {
-                        language: 'typescript',
-                        detectionProgram: {
-                          mode: 'ast',
-                          code: 'function checkSourceCode(ast) { return [2]; }',
-                          sourceCodeState: 'AST' as const,
+        const backendPrograms = {
+          targets: [
+            {
+              name: 'Backend Target',
+              path: '/',
+              standards: [
+                {
+                  name: 'Backend Standard',
+                  slug: 'backend-standard',
+                  scope: [],
+                  rules: [
+                    {
+                      content: 'Backend rule',
+                      activeDetectionPrograms: [
+                        {
+                          language: 'typescript',
+                          detectionProgram: {
+                            mode: 'ast',
+                            code: 'function checkSourceCode(ast) { return [2]; }',
+                            sourceCodeState: 'AST' as const,
+                          },
                         },
-                      },
-                    ],
-                  },
-                ],
-              },
-            ],
-          },
-        ],
-      };
+                      ],
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        };
 
-      mockGitRemoteUrlService.tryGetGitRepositoryRoot.mockResolvedValue(
-        '/project',
-      );
-      mockConfigFileRepository.findAllConfigsInTree.mockResolvedValue(
-        allConfigs,
-      );
-      mockListFiles.listFilesInDirectory.mockResolvedValue([
-        { path: '/project/src/file.ts' },
-      ]);
-      mockListFiles.readFileContent.mockResolvedValue('const x = 1;');
-      mockPackmindGateway.getDetectionProgramsForPackages
-        .mockResolvedValueOnce(genericPrograms)
-        .mockResolvedValueOnce(backendPrograms);
+        mockGitRemoteUrlService.tryGetGitRepositoryRoot.mockResolvedValue(
+          '/project',
+        );
+        mockConfigFileRepository.findAllConfigsInTree.mockResolvedValue(
+          allConfigs,
+        );
+        mockListFiles.listFilesInDirectory.mockResolvedValue([
+          { path: '/project/src/file.ts' },
+        ]);
+        mockListFiles.readFileContent.mockResolvedValue('const x = 1;');
+        mockPackmindGateway.getDetectionProgramsForPackages
+          .mockResolvedValueOnce(genericPrograms)
+          .mockResolvedValueOnce(backendPrograms);
 
-      const result = await useCase.execute({ path: '/project' });
+        result = await useCase.execute({ path: '/project' });
+      });
 
-      // File matches both targets, so both standards' programs should run
-      expect(result.violations).toHaveLength(1);
-      expect(result.violations[0].violations).toHaveLength(2);
-      expect(result.summary.standardsChecked).toContain('generic-standard');
-      expect(result.summary.standardsChecked).toContain('backend-standard');
+      it('returns one file with violations', () => {
+        expect(result.violations).toHaveLength(1);
+      });
+
+      it('accumulates violations from both targets', () => {
+        expect(result.violations[0].violations).toHaveLength(2);
+      });
+
+      it('includes generic-standard in standards checked', () => {
+        expect(result.summary.standardsChecked).toContain('generic-standard');
+      });
+
+      it('includes backend-standard in standards checked', () => {
+        expect(result.summary.standardsChecked).toContain('backend-standard');
+      });
     });
 
     it('caches API calls for identical package sets', async () => {
@@ -483,108 +509,124 @@ describe('LintFilesLocallyUseCase', () => {
       ).toHaveBeenCalledTimes(1);
     });
 
-    it('only applies programs to files under matching target', async () => {
-      const allConfigs: AllConfigsResult = {
-        configs: [
-          {
-            targetPath: '/',
-            absoluteTargetPath: '/project',
-            packages: { generic: '*' },
-          },
-          {
-            targetPath: '/apps/api',
-            absoluteTargetPath: '/project/apps/api',
-            packages: { backend: '*' },
-          },
-        ],
-        hasConfigs: true,
-        basePath: '/project',
-      };
+    describe('when file is outside a specific target path', () => {
+      let result: Awaited<ReturnType<LintFilesLocallyUseCase['execute']>>;
 
-      const genericPrograms = {
-        targets: [
-          {
-            name: 'Generic Target',
-            path: '/',
-            standards: [
-              {
-                name: 'Generic Standard',
-                slug: 'generic-standard',
-                scope: [],
-                rules: [
-                  {
-                    content: 'Generic rule',
-                    activeDetectionPrograms: [
-                      {
-                        language: 'typescript',
-                        detectionProgram: {
-                          mode: 'ast',
-                          code: 'function checkSourceCode(ast) { return [1]; }',
-                          sourceCodeState: 'AST' as const,
+      beforeEach(async () => {
+        const allConfigs: AllConfigsResult = {
+          configs: [
+            {
+              targetPath: '/',
+              absoluteTargetPath: '/project',
+              packages: { generic: '*' },
+            },
+            {
+              targetPath: '/apps/api',
+              absoluteTargetPath: '/project/apps/api',
+              packages: { backend: '*' },
+            },
+          ],
+          hasConfigs: true,
+          basePath: '/project',
+        };
+
+        const genericPrograms = {
+          targets: [
+            {
+              name: 'Generic Target',
+              path: '/',
+              standards: [
+                {
+                  name: 'Generic Standard',
+                  slug: 'generic-standard',
+                  scope: [],
+                  rules: [
+                    {
+                      content: 'Generic rule',
+                      activeDetectionPrograms: [
+                        {
+                          language: 'typescript',
+                          detectionProgram: {
+                            mode: 'ast',
+                            code: 'function checkSourceCode(ast) { return [1]; }',
+                            sourceCodeState: 'AST' as const,
+                          },
                         },
-                      },
-                    ],
-                  },
-                ],
-              },
-            ],
-          },
-        ],
-      };
+                      ],
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        };
 
-      const backendPrograms = {
-        targets: [
-          {
-            name: 'Backend Target',
-            path: '/',
-            standards: [
-              {
-                name: 'Backend Standard',
-                slug: 'backend-standard',
-                scope: [],
-                rules: [
-                  {
-                    content: 'Backend rule',
-                    activeDetectionPrograms: [
-                      {
-                        language: 'typescript',
-                        detectionProgram: {
-                          mode: 'ast',
-                          code: 'function checkSourceCode(ast) { return [2]; }',
-                          sourceCodeState: 'AST' as const,
+        const backendPrograms = {
+          targets: [
+            {
+              name: 'Backend Target',
+              path: '/',
+              standards: [
+                {
+                  name: 'Backend Standard',
+                  slug: 'backend-standard',
+                  scope: [],
+                  rules: [
+                    {
+                      content: 'Backend rule',
+                      activeDetectionPrograms: [
+                        {
+                          language: 'typescript',
+                          detectionProgram: {
+                            mode: 'ast',
+                            code: 'function checkSourceCode(ast) { return [2]; }',
+                            sourceCodeState: 'AST' as const,
+                          },
                         },
-                      },
-                    ],
-                  },
-                ],
-              },
-            ],
-          },
-        ],
-      };
+                      ],
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        };
 
-      mockGitRemoteUrlService.tryGetGitRepositoryRoot.mockResolvedValue(
-        '/project',
-      );
-      mockConfigFileRepository.findAllConfigsInTree.mockResolvedValue(
-        allConfigs,
-      );
-      // File in /libs - not under /apps/api
-      mockListFiles.listFilesInDirectory.mockResolvedValue([
-        { path: '/project/libs/utils.ts' },
-      ]);
-      mockListFiles.readFileContent.mockResolvedValue('const x = 1;');
-      mockPackmindGateway.getDetectionProgramsForPackages
-        .mockResolvedValueOnce(genericPrograms)
-        .mockResolvedValueOnce(backendPrograms);
+        mockGitRemoteUrlService.tryGetGitRepositoryRoot.mockResolvedValue(
+          '/project',
+        );
+        mockConfigFileRepository.findAllConfigsInTree.mockResolvedValue(
+          allConfigs,
+        );
+        // File in /libs - not under /apps/api
+        mockListFiles.listFilesInDirectory.mockResolvedValue([
+          { path: '/project/libs/utils.ts' },
+        ]);
+        mockListFiles.readFileContent.mockResolvedValue('const x = 1;');
+        mockPackmindGateway.getDetectionProgramsForPackages
+          .mockResolvedValueOnce(genericPrograms)
+          .mockResolvedValueOnce(backendPrograms);
 
-      const result = await useCase.execute({ path: '/project' });
+        result = await useCase.execute({ path: '/project' });
+      });
 
-      // File only matches root target, not /apps/api
-      expect(result.violations).toHaveLength(1);
-      expect(result.violations[0].violations).toHaveLength(1);
-      expect(result.summary.standardsChecked).toContain('generic-standard');
-      expect(result.summary.standardsChecked).not.toContain('backend-standard');
+      it('returns one file with violations', () => {
+        expect(result.violations).toHaveLength(1);
+      });
+
+      it('applies only programs from matching root target', () => {
+        expect(result.violations[0].violations).toHaveLength(1);
+      });
+
+      it('includes generic-standard in standards checked', () => {
+        expect(result.summary.standardsChecked).toContain('generic-standard');
+      });
+
+      it('excludes backend-standard from standards checked', () => {
+        expect(result.summary.standardsChecked).not.toContain(
+          'backend-standard',
+        );
+      });
     });
   });
 

@@ -16,47 +16,59 @@ describe('Standard Create E2E', () => {
   });
 
   describe('when creating a standard from complete playbook JSON', () => {
-    it('creates a standard with all features and returns success', async () => {
-      const playbook = {
-        name: 'Complete Test Standard',
-        description: 'A complete standard with all features',
-        scope: 'TypeScript and JavaScript files',
-        rules: [
-          {
-            content: 'Use const for variables that do not change',
-            examples: {
-              positive: 'const API_KEY = "secret";',
-              negative: 'let API_KEY = "secret";',
-              language: 'TYPESCRIPT',
-            },
-          },
-          {
-            content: 'Use arrow functions for callbacks',
-            examples: {
-              positive: 'array.map((item) => item.id)',
-              negative: 'array.map(function(item) { return item.id; })',
-              language: 'JAVASCRIPT',
-            },
-          },
-        ],
-      };
+    describe('when handler succeeds', () => {
+      let result: Awaited<ReturnType<typeof createStandardHandler>>;
 
-      const filePath = path.join(tempDir, 'complete-playbook.json');
-      await fs.writeFile(filePath, JSON.stringify(playbook, null, 2));
-
-      const mockGateway: IPackmindGateway = {
-        createStandardFromPlaybook: jest.fn().mockResolvedValue({
-          success: true,
-          standardId: 'std-complete-123',
+      beforeEach(async () => {
+        const playbook = {
           name: 'Complete Test Standard',
-        }),
-      } as unknown as IPackmindGateway;
+          description: 'A complete standard with all features',
+          scope: 'TypeScript and JavaScript files',
+          rules: [
+            {
+              content: 'Use const for variables that do not change',
+              examples: {
+                positive: 'const API_KEY = "secret";',
+                negative: 'let API_KEY = "secret";',
+                language: 'TYPESCRIPT',
+              },
+            },
+            {
+              content: 'Use arrow functions for callbacks',
+              examples: {
+                positive: 'array.map((item) => item.id)',
+                negative: 'array.map(function(item) { return item.id; })',
+                language: 'JAVASCRIPT',
+              },
+            },
+          ],
+        };
 
-      const result = await createStandardHandler(filePath, mockGateway);
+        const filePath = path.join(tempDir, 'complete-playbook.json');
+        await fs.writeFile(filePath, JSON.stringify(playbook, null, 2));
 
-      expect(result.success).toBe(true);
-      expect(result.standardId).toBe('std-complete-123');
-      expect(result.standardName).toBe('Complete Test Standard');
+        const mockGateway: IPackmindGateway = {
+          createStandardFromPlaybook: jest.fn().mockResolvedValue({
+            success: true,
+            standardId: 'std-complete-123',
+            name: 'Complete Test Standard',
+          }),
+        } as unknown as IPackmindGateway;
+
+        result = await createStandardHandler(filePath, mockGateway);
+      });
+
+      it('returns success as true', () => {
+        expect(result.success).toBe(true);
+      });
+
+      it('returns the standard id', () => {
+        expect(result.standardId).toBe('std-complete-123');
+      });
+
+      it('returns the standard name', () => {
+        expect(result.standardName).toBe('Complete Test Standard');
+      });
     });
 
     it('passes all rule data to gateway including examples', async () => {
@@ -110,41 +122,50 @@ describe('Standard Create E2E', () => {
   });
 
   describe('when handling multiple rules with optional examples', () => {
-    it('creates a standard from playbook with mixed examples', async () => {
-      const playbook = {
-        name: 'Mixed Examples Standard',
-        description: 'Some rules with examples, some without',
-        scope: 'Python files',
-        rules: [
-          {
-            content: 'Use type hints',
-            examples: {
-              positive: 'def greet(name: str) -> str:',
-              negative: 'def greet(name):',
-              language: 'PYTHON',
-            },
-          },
-          {
-            content: 'Document public functions',
-          },
-        ],
-      };
+    describe('when playbook has mixed examples', () => {
+      let result: Awaited<ReturnType<typeof createStandardHandler>>;
 
-      const filePath = path.join(tempDir, 'mixed-playbook.json');
-      await fs.writeFile(filePath, JSON.stringify(playbook));
-
-      const mockGateway: IPackmindGateway = {
-        createStandardFromPlaybook: jest.fn().mockResolvedValue({
-          success: true,
-          standardId: 'std-mixed-456',
+      beforeEach(async () => {
+        const playbook = {
           name: 'Mixed Examples Standard',
-        }),
-      } as unknown as IPackmindGateway;
+          description: 'Some rules with examples, some without',
+          scope: 'Python files',
+          rules: [
+            {
+              content: 'Use type hints',
+              examples: {
+                positive: 'def greet(name: str) -> str:',
+                negative: 'def greet(name):',
+                language: 'PYTHON',
+              },
+            },
+            {
+              content: 'Document public functions',
+            },
+          ],
+        };
 
-      const result = await createStandardHandler(filePath, mockGateway);
+        const filePath = path.join(tempDir, 'mixed-playbook.json');
+        await fs.writeFile(filePath, JSON.stringify(playbook));
 
-      expect(result.success).toBe(true);
-      expect(result.standardId).toBe('std-mixed-456');
+        const mockGateway: IPackmindGateway = {
+          createStandardFromPlaybook: jest.fn().mockResolvedValue({
+            success: true,
+            standardId: 'std-mixed-456',
+            name: 'Mixed Examples Standard',
+          }),
+        } as unknown as IPackmindGateway;
+
+        result = await createStandardHandler(filePath, mockGateway);
+      });
+
+      it('returns success as true', () => {
+        expect(result.success).toBe(true);
+      });
+
+      it('returns the standard id', () => {
+        expect(result.standardId).toBe('std-mixed-456');
+      });
     });
 
     it('handles rules without examples by passing undefined', async () => {
@@ -194,56 +215,76 @@ describe('Standard Create E2E', () => {
   });
 
   describe('when gateway returns an error', () => {
-    it('propagates gateway error to result', async () => {
-      const playbook = {
-        name: 'Test Standard',
-        description: 'Test',
-        scope: 'Test',
-        rules: [{ content: 'Use something' }],
-      };
+    describe('when gateway returns specific error message', () => {
+      let result: Awaited<ReturnType<typeof createStandardHandler>>;
 
-      const filePath = path.join(tempDir, 'playbook.json');
-      await fs.writeFile(filePath, JSON.stringify(playbook));
+      beforeEach(async () => {
+        const playbook = {
+          name: 'Test Standard',
+          description: 'Test',
+          scope: 'Test',
+          rules: [{ content: 'Use something' }],
+        };
 
-      const mockGateway: IPackmindGateway = {
-        createStandardFromPlaybook: jest.fn().mockResolvedValue({
-          success: false,
-          error: 'Standard with this name already exists',
-        }),
-      } as unknown as IPackmindGateway;
+        const filePath = path.join(tempDir, 'playbook.json');
+        await fs.writeFile(filePath, JSON.stringify(playbook));
 
-      const result = await createStandardHandler(filePath, mockGateway);
+        const mockGateway: IPackmindGateway = {
+          createStandardFromPlaybook: jest.fn().mockResolvedValue({
+            success: false,
+            error: 'Standard with this name already exists',
+          }),
+        } as unknown as IPackmindGateway;
 
-      expect(result.success).toBe(false);
-      expect(result.error).toBe('Standard with this name already exists');
+        result = await createStandardHandler(filePath, mockGateway);
+      });
+
+      it('returns success as false', () => {
+        expect(result.success).toBe(false);
+      });
+
+      it('returns the gateway error message', () => {
+        expect(result.error).toBe('Standard with this name already exists');
+      });
     });
 
-    it('handles gateway errors with fallback message', async () => {
-      const playbook = {
-        name: 'Test Standard',
-        description: 'Test',
-        scope: 'Test',
-        rules: [{ content: 'Use something' }],
-      };
+    describe('when gateway returns no error message', () => {
+      let result: Awaited<ReturnType<typeof createStandardHandler>>;
 
-      const filePath = path.join(tempDir, 'playbook.json');
-      await fs.writeFile(filePath, JSON.stringify(playbook));
+      beforeEach(async () => {
+        const playbook = {
+          name: 'Test Standard',
+          description: 'Test',
+          scope: 'Test',
+          rules: [{ content: 'Use something' }],
+        };
 
-      const mockGateway: IPackmindGateway = {
-        createStandardFromPlaybook: jest.fn().mockResolvedValue({
-          success: false,
-        }),
-      } as unknown as IPackmindGateway;
+        const filePath = path.join(tempDir, 'playbook.json');
+        await fs.writeFile(filePath, JSON.stringify(playbook));
 
-      const result = await createStandardHandler(filePath, mockGateway);
+        const mockGateway: IPackmindGateway = {
+          createStandardFromPlaybook: jest.fn().mockResolvedValue({
+            success: false,
+          }),
+        } as unknown as IPackmindGateway;
 
-      expect(result.success).toBe(false);
-      expect(result.error).toBe('Failed to create standard');
+        result = await createStandardHandler(filePath, mockGateway);
+      });
+
+      it('returns success as false', () => {
+        expect(result.success).toBe(false);
+      });
+
+      it('returns fallback error message', () => {
+        expect(result.error).toBe('Failed to create standard');
+      });
     });
   });
 
   describe('when gateway throws an exception', () => {
-    it('catches and returns error from gateway exception', async () => {
+    let result: Awaited<ReturnType<typeof createStandardHandler>>;
+
+    beforeEach(async () => {
       const playbook = {
         name: 'Test Standard',
         description: 'Test',
@@ -260,16 +301,28 @@ describe('Standard Create E2E', () => {
           .mockRejectedValue(new Error('Network error')),
       } as unknown as IPackmindGateway;
 
-      const result = await createStandardHandler(filePath, mockGateway);
+      result = await createStandardHandler(filePath, mockGateway);
+    });
 
+    it('returns success as false', () => {
       expect(result.success).toBe(false);
+    });
+
+    it('includes error creating standard message', () => {
       expect(result.error).toContain('Error creating standard');
+    });
+
+    it('includes the original error message', () => {
       expect(result.error).toContain('Network error');
     });
   });
 
   describe('when handling file system operations', () => {
-    it('reads a file from the file system and processes it', async () => {
+    let fileContent: string;
+    let result: Awaited<ReturnType<typeof createStandardHandler>>;
+    let mockGateway: IPackmindGateway;
+
+    beforeEach(async () => {
       const playbook = {
         name: 'File System Standard',
         description: 'Test reading from actual file',
@@ -289,11 +342,9 @@ describe('Standard Create E2E', () => {
       const filePath = path.join(tempDir, 'fs-playbook.json');
       await fs.writeFile(filePath, JSON.stringify(playbook));
 
-      // Verify file was written
-      const fileContent = await fs.readFile(filePath, 'utf-8');
-      expect(fileContent).toContain('File System Standard');
+      fileContent = await fs.readFile(filePath, 'utf-8');
 
-      const mockGateway: IPackmindGateway = {
+      mockGateway = {
         createStandardFromPlaybook: jest.fn().mockResolvedValue({
           success: true,
           standardId: 'std-fs-789',
@@ -301,9 +352,18 @@ describe('Standard Create E2E', () => {
         }),
       } as unknown as IPackmindGateway;
 
-      const result = await createStandardHandler(filePath, mockGateway);
+      result = await createStandardHandler(filePath, mockGateway);
+    });
 
+    it('writes the playbook file correctly', () => {
+      expect(fileContent).toContain('File System Standard');
+    });
+
+    it('returns success as true', () => {
       expect(result.success).toBe(true);
+    });
+
+    it('calls gateway createStandardFromPlaybook', () => {
       expect(mockGateway.createStandardFromPlaybook).toHaveBeenCalled();
     });
   });

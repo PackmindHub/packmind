@@ -16,67 +16,105 @@ describe('ListFiles', () => {
     await fs.rm(tempDir, { recursive: true, force: true });
   });
 
-  it('finds files with specified extensions recursively', async () => {
-    await fs.mkdir(path.join(tempDir, 'subdir'));
-    await fs.writeFile(path.join(tempDir, 'file1.ts'), 'content1');
-    await fs.writeFile(path.join(tempDir, 'file2.js'), 'content2');
-    await fs.writeFile(path.join(tempDir, 'file3.txt'), 'content3');
-    await fs.writeFile(path.join(tempDir, 'subdir', 'file4.ts'), 'content4');
-    await fs.writeFile(path.join(tempDir, 'subdir', 'file5.md'), 'content5');
+  describe('when finding files with specified extensions recursively', () => {
+    let result: Awaited<ReturnType<ListFiles['listFilesInDirectory']>>;
 
-    const result = await listFiles.listFilesInDirectory(tempDir, [
-      '.ts',
-      '.js',
-    ]);
+    beforeEach(async () => {
+      await fs.mkdir(path.join(tempDir, 'subdir'));
+      await fs.writeFile(path.join(tempDir, 'file1.ts'), 'content1');
+      await fs.writeFile(path.join(tempDir, 'file2.js'), 'content2');
+      await fs.writeFile(path.join(tempDir, 'file3.txt'), 'content3');
+      await fs.writeFile(path.join(tempDir, 'subdir', 'file4.ts'), 'content4');
+      await fs.writeFile(path.join(tempDir, 'subdir', 'file5.md'), 'content5');
 
-    expect(result).toHaveLength(3);
-    expect(result).toContainEqual({
-      path: path.join(tempDir, 'file1.ts'),
+      result = await listFiles.listFilesInDirectory(tempDir, ['.ts', '.js']);
     });
-    expect(result).toContainEqual({
-      path: path.join(tempDir, 'file2.js'),
+
+    it('returns 3 files', () => {
+      expect(result).toHaveLength(3);
     });
-    expect(result).toContainEqual({
-      path: path.join(tempDir, 'subdir', 'file4.ts'),
+
+    it('includes file1.ts', () => {
+      expect(result).toContainEqual({
+        path: path.join(tempDir, 'file1.ts'),
+      });
+    });
+
+    it('includes file2.js', () => {
+      expect(result).toContainEqual({
+        path: path.join(tempDir, 'file2.js'),
+      });
+    });
+
+    it('includes subdir/file4.ts', () => {
+      expect(result).toContainEqual({
+        path: path.join(tempDir, 'subdir', 'file4.ts'),
+      });
     });
   });
 
-  it('returns all files no extensions are provided', async () => {
-    await fs.mkdir(path.join(tempDir, 'subdir'));
-    await fs.writeFile(path.join(tempDir, 'file1.ts'), 'content1');
-    await fs.writeFile(path.join(tempDir, 'file2.js'), 'content2');
-    await fs.writeFile(path.join(tempDir, 'subdir', 'file3.json'), 'content3');
+  describe('when no extensions are provided', () => {
+    let result: Awaited<ReturnType<ListFiles['listFilesInDirectory']>>;
 
-    const result = await listFiles.listFilesInDirectory(tempDir, []);
+    beforeEach(async () => {
+      await fs.mkdir(path.join(tempDir, 'subdir'));
+      await fs.writeFile(path.join(tempDir, 'file1.ts'), 'content1');
+      await fs.writeFile(path.join(tempDir, 'file2.js'), 'content2');
+      await fs.writeFile(
+        path.join(tempDir, 'subdir', 'file3.json'),
+        'content3',
+      );
 
-    expect(result).toHaveLength(3);
-    expect(result).toEqual(
-      expect.arrayContaining([
-        {
-          path: path.join(tempDir, 'file1.ts'),
-        },
-        {
-          path: path.join(tempDir, 'file2.js'),
-        },
-        {
-          path: path.join(tempDir, 'subdir', 'file3.json'),
-        },
-      ]),
-    );
+      result = await listFiles.listFilesInDirectory(tempDir, []);
+    });
+
+    it('returns all 3 files', () => {
+      expect(result).toHaveLength(3);
+    });
+
+    it('includes file1.ts', () => {
+      expect(result).toContainEqual({
+        path: path.join(tempDir, 'file1.ts'),
+      });
+    });
+
+    it('includes file2.js', () => {
+      expect(result).toContainEqual({
+        path: path.join(tempDir, 'file2.js'),
+      });
+    });
+
+    it('includes subdir/file3.json', () => {
+      expect(result).toContainEqual({
+        path: path.join(tempDir, 'subdir', 'file3.json'),
+      });
+    });
   });
 
-  it('handles extensions with or without dots', async () => {
-    await fs.writeFile(path.join(tempDir, 'file.ts'), 'typescript file');
-    await fs.writeFile(path.join(tempDir, 'file.js'), 'javascript file');
+  describe('when extensions are provided without dots', () => {
+    let result: Awaited<ReturnType<ListFiles['listFilesInDirectory']>>;
 
-    const result = await listFiles.listFilesInDirectory(tempDir, ['ts', 'js']);
+    beforeEach(async () => {
+      await fs.writeFile(path.join(tempDir, 'file.ts'), 'typescript file');
+      await fs.writeFile(path.join(tempDir, 'file.js'), 'javascript file');
 
-    expect(result).toHaveLength(2);
-    expect(result).toContainEqual({
-      path: path.join(tempDir, 'file.ts'),
+      result = await listFiles.listFilesInDirectory(tempDir, ['ts', 'js']);
     });
-    expect(result).toContainEqual({
-      path: path.join(tempDir, 'file.js'),
+
+    it('returns 2 files', () => {
+      expect(result).toHaveLength(2);
+    });
+
+    it('includes file.ts', () => {
+      expect(result).toContainEqual({
+        path: path.join(tempDir, 'file.ts'),
+      });
+    });
+
+    it('includes file.js', () => {
+      expect(result).toContainEqual({
+        path: path.join(tempDir, 'file.js'),
+      });
     });
   });
 
@@ -99,132 +137,187 @@ describe('ListFiles', () => {
     expect(result).toHaveLength(0);
   });
 
-  it('handles deeply nested directories', async () => {
-    const deepPath = path.join(tempDir, 'a', 'b', 'c');
-    await fs.mkdir(deepPath, { recursive: true });
-    await fs.writeFile(path.join(deepPath, 'deep.ts'), 'deep content');
+  describe('when directory is deeply nested', () => {
+    let result: Awaited<ReturnType<ListFiles['listFilesInDirectory']>>;
+    let deepPath: string;
 
-    const result = await listFiles.listFilesInDirectory(tempDir, ['.ts']);
+    beforeEach(async () => {
+      deepPath = path.join(tempDir, 'a', 'b', 'c');
+      await fs.mkdir(deepPath, { recursive: true });
+      await fs.writeFile(path.join(deepPath, 'deep.ts'), 'deep content');
 
-    expect(result).toHaveLength(1);
-    expect(result[0]).toEqual({
-      path: path.join(deepPath, 'deep.ts'),
+      result = await listFiles.listFilesInDirectory(tempDir, ['.ts']);
+    });
+
+    it('returns 1 file', () => {
+      expect(result).toHaveLength(1);
+    });
+
+    it('includes the deeply nested file', () => {
+      expect(result[0]).toEqual({
+        path: path.join(deepPath, 'deep.ts'),
+      });
     });
   });
 
-  it('excludes files in simple directory patterns', async () => {
-    await fs.mkdir(path.join(tempDir, 'node_modules'));
-    await fs.mkdir(path.join(tempDir, 'dist'));
-    await fs.mkdir(path.join(tempDir, 'src'));
+  describe('when simple directory patterns are excluded', () => {
+    let result: Awaited<ReturnType<ListFiles['listFilesInDirectory']>>;
 
-    await fs.writeFile(path.join(tempDir, 'file.ts'), 'main file');
-    await fs.writeFile(
-      path.join(tempDir, 'node_modules', 'lib.ts'),
-      'node_modules file',
-    );
-    await fs.writeFile(path.join(tempDir, 'dist', 'build.ts'), 'dist file');
-    await fs.writeFile(path.join(tempDir, 'src', 'source.ts'), 'src file');
+    beforeEach(async () => {
+      await fs.mkdir(path.join(tempDir, 'node_modules'));
+      await fs.mkdir(path.join(tempDir, 'dist'));
+      await fs.mkdir(path.join(tempDir, 'src'));
 
-    const result = await listFiles.listFilesInDirectory(
-      tempDir,
-      ['.ts'],
-      ['node_modules', 'dist'],
-    );
+      await fs.writeFile(path.join(tempDir, 'file.ts'), 'main file');
+      await fs.writeFile(
+        path.join(tempDir, 'node_modules', 'lib.ts'),
+        'node_modules file',
+      );
+      await fs.writeFile(path.join(tempDir, 'dist', 'build.ts'), 'dist file');
+      await fs.writeFile(path.join(tempDir, 'src', 'source.ts'), 'src file');
 
-    expect(result).toHaveLength(2);
-    expect(result).toContainEqual({
-      path: path.join(tempDir, 'file.ts'),
-    });
-    expect(result).toContainEqual({
-      path: path.join(tempDir, 'src', 'source.ts'),
-    });
-  });
-
-  it('excludes files matching glob patterns', async () => {
-    await fs.mkdir(path.join(tempDir, 'packages', 'pkg1', 'infra'), {
-      recursive: true,
-    });
-    await fs.mkdir(path.join(tempDir, 'packages', 'pkg2', 'infra'), {
-      recursive: true,
-    });
-    await fs.mkdir(path.join(tempDir, 'packages', 'pkg1', 'src'), {
-      recursive: true,
+      result = await listFiles.listFilesInDirectory(
+        tempDir,
+        ['.ts'],
+        ['node_modules', 'dist'],
+      );
     });
 
-    await fs.writeFile(path.join(tempDir, 'main.ts'), 'main file');
-    await fs.writeFile(
-      path.join(tempDir, 'packages', 'pkg1', 'infra', 'repo.ts'),
-      'infra file 1',
-    );
-    await fs.writeFile(
-      path.join(tempDir, 'packages', 'pkg2', 'infra', 'repo.ts'),
-      'infra file 2',
-    );
-    await fs.writeFile(
-      path.join(tempDir, 'packages', 'pkg1', 'src', 'logic.ts'),
-      'src file',
-    );
-
-    const result = await listFiles.listFilesInDirectory(
-      tempDir,
-      ['.ts'],
-      ['packages/**/infra'],
-    );
-
-    expect(result).toHaveLength(2);
-    expect(result).toContainEqual({
-      path: path.join(tempDir, 'main.ts'),
+    it('returns 2 files', () => {
+      expect(result).toHaveLength(2);
     });
-    expect(result).toContainEqual({
-      path: path.join(tempDir, 'packages', 'pkg1', 'src', 'logic.ts'),
+
+    it('includes file.ts', () => {
+      expect(result).toContainEqual({
+        path: path.join(tempDir, 'file.ts'),
+      });
+    });
+
+    it('includes src/source.ts', () => {
+      expect(result).toContainEqual({
+        path: path.join(tempDir, 'src', 'source.ts'),
+      });
     });
   });
 
-  it('handles multiple exclude patterns', async () => {
-    await fs.mkdir(path.join(tempDir, 'node_modules', 'lib'), {
-      recursive: true,
-    });
-    await fs.mkdir(path.join(tempDir, 'dist'));
-    await fs.mkdir(path.join(tempDir, 'packages', 'pkg1', 'infra'), {
-      recursive: true,
-    });
-    await fs.mkdir(path.join(tempDir, 'src'));
+  describe('when glob patterns are excluded', () => {
+    let result: Awaited<ReturnType<ListFiles['listFilesInDirectory']>>;
 
-    await fs.writeFile(path.join(tempDir, 'main.ts'), 'main file');
-    await fs.writeFile(
-      path.join(tempDir, 'node_modules', 'lib', 'dep.ts'),
-      'dependency',
-    );
-    await fs.writeFile(path.join(tempDir, 'dist', 'build.ts'), 'build file');
-    await fs.writeFile(
-      path.join(tempDir, 'packages', 'pkg1', 'infra', 'repo.ts'),
-      'infra file',
-    );
-    await fs.writeFile(path.join(tempDir, 'src', 'code.ts'), 'source code');
+    beforeEach(async () => {
+      await fs.mkdir(path.join(tempDir, 'packages', 'pkg1', 'infra'), {
+        recursive: true,
+      });
+      await fs.mkdir(path.join(tempDir, 'packages', 'pkg2', 'infra'), {
+        recursive: true,
+      });
+      await fs.mkdir(path.join(tempDir, 'packages', 'pkg1', 'src'), {
+        recursive: true,
+      });
 
-    const result = await listFiles.listFilesInDirectory(
-      tempDir,
-      ['.ts'],
-      ['node_modules', 'dist', 'packages/**/infra'],
-    );
+      await fs.writeFile(path.join(tempDir, 'main.ts'), 'main file');
+      await fs.writeFile(
+        path.join(tempDir, 'packages', 'pkg1', 'infra', 'repo.ts'),
+        'infra file 1',
+      );
+      await fs.writeFile(
+        path.join(tempDir, 'packages', 'pkg2', 'infra', 'repo.ts'),
+        'infra file 2',
+      );
+      await fs.writeFile(
+        path.join(tempDir, 'packages', 'pkg1', 'src', 'logic.ts'),
+        'src file',
+      );
 
-    expect(result).toHaveLength(2);
-    expect(result).toContainEqual({
-      path: path.join(tempDir, 'main.ts'),
+      result = await listFiles.listFilesInDirectory(
+        tempDir,
+        ['.ts'],
+        ['packages/**/infra'],
+      );
     });
-    expect(result).toContainEqual({
-      path: path.join(tempDir, 'src', 'code.ts'),
+
+    it('returns 2 files', () => {
+      expect(result).toHaveLength(2);
+    });
+
+    it('includes main.ts', () => {
+      expect(result).toContainEqual({
+        path: path.join(tempDir, 'main.ts'),
+      });
+    });
+
+    it('includes packages/pkg1/src/logic.ts', () => {
+      expect(result).toContainEqual({
+        path: path.join(tempDir, 'packages', 'pkg1', 'src', 'logic.ts'),
+      });
     });
   });
 
-  it('works without exclude patterns', async () => {
-    await fs.writeFile(path.join(tempDir, 'file.ts'), 'content');
+  describe('when multiple exclude patterns are provided', () => {
+    let result: Awaited<ReturnType<ListFiles['listFilesInDirectory']>>;
 
-    const result = await listFiles.listFilesInDirectory(tempDir, ['.ts'], []);
+    beforeEach(async () => {
+      await fs.mkdir(path.join(tempDir, 'node_modules', 'lib'), {
+        recursive: true,
+      });
+      await fs.mkdir(path.join(tempDir, 'dist'));
+      await fs.mkdir(path.join(tempDir, 'packages', 'pkg1', 'infra'), {
+        recursive: true,
+      });
+      await fs.mkdir(path.join(tempDir, 'src'));
 
-    expect(result).toHaveLength(1);
-    expect(result[0]).toEqual({
-      path: path.join(tempDir, 'file.ts'),
+      await fs.writeFile(path.join(tempDir, 'main.ts'), 'main file');
+      await fs.writeFile(
+        path.join(tempDir, 'node_modules', 'lib', 'dep.ts'),
+        'dependency',
+      );
+      await fs.writeFile(path.join(tempDir, 'dist', 'build.ts'), 'build file');
+      await fs.writeFile(
+        path.join(tempDir, 'packages', 'pkg1', 'infra', 'repo.ts'),
+        'infra file',
+      );
+      await fs.writeFile(path.join(tempDir, 'src', 'code.ts'), 'source code');
+
+      result = await listFiles.listFilesInDirectory(
+        tempDir,
+        ['.ts'],
+        ['node_modules', 'dist', 'packages/**/infra'],
+      );
+    });
+
+    it('returns 2 files', () => {
+      expect(result).toHaveLength(2);
+    });
+
+    it('includes main.ts', () => {
+      expect(result).toContainEqual({
+        path: path.join(tempDir, 'main.ts'),
+      });
+    });
+
+    it('includes src/code.ts', () => {
+      expect(result).toContainEqual({
+        path: path.join(tempDir, 'src', 'code.ts'),
+      });
+    });
+  });
+
+  describe('when no exclude patterns are provided', () => {
+    let result: Awaited<ReturnType<ListFiles['listFilesInDirectory']>>;
+
+    beforeEach(async () => {
+      await fs.writeFile(path.join(tempDir, 'file.ts'), 'content');
+
+      result = await listFiles.listFilesInDirectory(tempDir, ['.ts'], []);
+    });
+
+    it('returns 1 file', () => {
+      expect(result).toHaveLength(1);
+    });
+
+    it('includes file.ts', () => {
+      expect(result[0]).toEqual({
+        path: path.join(tempDir, 'file.ts'),
+      });
     });
   });
 
