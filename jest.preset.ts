@@ -4,6 +4,8 @@ export const nxPreset = {
   resolver: '@nx/jest/plugins/resolver',
   moduleFileExtensions: ['ts', 'js', 'mjs', 'html'],
   coverageReporters: ['html'],
+  // setupFiles runs BEFORE modules are loaded - critical for preventing Winston memory leak
+  setupFiles: ['<rootDir>/../../jest.env-setup.ts'],
   setupFilesAfterEnv: ['<rootDir>/../../jest.setup.ts'],
   transform: {
     '^.+\\.(ts|js|html)$': [
@@ -35,7 +37,7 @@ export const nxPreset = {
   passWithNoTests: true, // Allow packages without tests to pass
 
   // Memory optimizations
-  maxWorkers: '25%', // Limit parallel workers to reduce memory pressure
+  maxWorkers: 3, // Limit parallel workers to reduce memory pressure
   workerIdleMemoryLimit: '512MB', // Kill workers using more than 512MB when idle
 
   // Force worker cleanup to prevent JSDOM hanging issues
@@ -49,8 +51,8 @@ export const nxPreset = {
   restoreMocks: true,
 
   // Detect memory leaks
-  detectLeaks: false, // Can be enabled for debugging, but slows down tests significantly
-  detectOpenHandles: false, // Can enable to find leaking handles, but adds overhead
+  detectLeaks: true, // Can be enabled for debugging, but slows down tests significantly
+  detectOpenHandles: true, // Can enable to find leaking handles, but adds overhead
 
   // Force garbage collection between test files (requires --expose-gc flag)
   // This is handled in the test script

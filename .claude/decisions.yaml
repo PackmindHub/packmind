@@ -151,3 +151,23 @@
     - 'optional-methods'
     - 'coding-agent'
     - 'typescript'
+
+- timestamp: 2026-01-22T10:30:00Z
+  file: jest.env-setup.ts
+  context: 'Creating missing Jest env setup file to fix tests hanging'
+  category: 'testing'
+  question: 'What content should jest.env-setup.ts contain for preventing Winston memory leak?'
+  decision: 'Set PACKMIND_LOG_LEVEL=silent before any modules load'
+  reasoning: 'The comment in jest.preset.ts mentioned Winston memory leak prevention. Setting log level to silent before Winston loggers initialize prevents verbose logging in tests which can cause memory issues.'
+  alternatives:
+    - 'Mock Winston entirely in the setup file'
+    - 'Disable Winston transports instead of setting log level'
+    - 'Use NODE_ENV=test and handle in Winston config'
+  impact: 'global'
+  confidence: 'medium'
+  source: 'inference'
+  tags:
+    - 'jest'
+    - 'testing'
+    - 'winston'
+    - 'memory-optimization'

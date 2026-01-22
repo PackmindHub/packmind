@@ -1,9 +1,8 @@
 import { AccountsHexa } from '@packmind/accounts';
 import { CodingAgentHexa } from '@packmind/coding-agent';
 import { DeploymentsHexa } from '@packmind/deployments';
-import { AmplitudeHexa } from '@packmind/amplitude';
+import { AmplitudeHexa, LinterHexa } from '@packmind/editions';
 import { GitHexa } from '@packmind/git';
-import { LinterHexa } from '@packmind/linter';
 import { LlmHexa } from '@packmind/llm';
 import { JobsService, PackmindEventEmitterService } from '@packmind/node-utils';
 import { RecipesHexa } from '@packmind/recipes';
