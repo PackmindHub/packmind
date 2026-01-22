@@ -137,73 +137,79 @@ describe('PackmindGateway.createStandardFromPlaybook', () => {
     });
   });
 
-  it('returns error when space resolution fails', async () => {
-    const playbook = {
-      name: 'Test',
-      description: 'Test',
-      scope: 'Test',
-      rules: [{ content: 'Use something' }],
-    };
+  describe('when space resolution fails', () => {
+    it('returns error', async () => {
+      const playbook = {
+        name: 'Test',
+        description: 'Test',
+        scope: 'Test',
+        rules: [{ content: 'Use something' }],
+      };
 
-    (global.fetch as jest.Mock).mockResolvedValueOnce({
-      ok: false,
-      status: 404,
-      statusText: 'Not Found',
+      (global.fetch as jest.Mock).mockResolvedValueOnce({
+        ok: false,
+        status: 404,
+        statusText: 'Not Found',
+      });
+
+      const result = await gateway.createStandardFromPlaybook(playbook);
+
+      expect(result.success).toBe(false);
+      expect(result.error).toContain('Failed to resolve global space');
     });
-
-    const result = await gateway.createStandardFromPlaybook(playbook);
-
-    expect(result.success).toBe(false);
-    expect(result.error).toContain('Failed to resolve global space');
   });
 
-  it('returns error when standard creation fails', async () => {
-    const playbook = {
-      name: 'Test',
-      description: 'Test',
-      scope: 'Test',
-      rules: [{ content: 'Use something' }],
-    };
+  describe('when standard creation fails', () => {
+    it('returns error', async () => {
+      const playbook = {
+        name: 'Test',
+        description: 'Test',
+        scope: 'Test',
+        rules: [{ content: 'Use something' }],
+      };
 
-    // Mock successful space resolution
-    (global.fetch as jest.Mock).mockResolvedValueOnce({
-      ok: true,
-      json: jest.fn().mockResolvedValue({
-        id: 'space-uuid-123',
-        slug: 'global',
-      }),
+      // Mock successful space resolution
+      (global.fetch as jest.Mock).mockResolvedValueOnce({
+        ok: true,
+        json: jest.fn().mockResolvedValue({
+          id: 'space-uuid-123',
+          slug: 'global',
+        }),
+      });
+
+      // Mock failed standard creation
+      (global.fetch as jest.Mock).mockResolvedValueOnce({
+        ok: false,
+        status: 500,
+        statusText: 'Internal Server Error',
+        json: jest.fn().mockResolvedValue({
+          message: 'Database error',
+        }),
+      });
+
+      const result = await gateway.createStandardFromPlaybook(playbook);
+
+      expect(result.success).toBe(false);
+      expect(result.error).toContain('Failed to create standard');
     });
-
-    // Mock failed standard creation
-    (global.fetch as jest.Mock).mockResolvedValueOnce({
-      ok: false,
-      status: 500,
-      statusText: 'Internal Server Error',
-      json: jest.fn().mockResolvedValue({
-        message: 'Database error',
-      }),
-    });
-
-    const result = await gateway.createStandardFromPlaybook(playbook);
-
-    expect(result.success).toBe(false);
-    expect(result.error).toContain('Failed to create standard');
   });
 
-  it('returns error when not logged in', async () => {
-    gateway = new PackmindGateway('');
+  describe('when not logged in', () => {
+    it('returns error', async () => {
+      gateway = new PackmindGateway('');
 
-    const playbook = {
-      name: 'Test',
-      description: 'Test',
-      scope: 'Test',
-      rules: [{ content: 'Use something' }],
-    };
+      const playbook = {
+        name: 'Test',
+        description: 'Test',
+        scope: 'Test',
+        rules: [{ content: 'Use something' }],
+      };
 
-    const result = await gateway.createStandardFromPlaybook(playbook);
+      const result = await gateway.createStandardFromPlaybook(playbook);
 
-    expect(result.success).toBe(false);
-    expect(result.error).toContain('Not logged in');
+      expect(result.success).toBe(false);
+      expect(result.error).toContain('Not logged in');
+    });
   });
 
   it('succeeds even if example creation fails', async () => {
