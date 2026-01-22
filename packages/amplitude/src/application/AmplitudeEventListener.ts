@@ -232,7 +232,7 @@ export class AmplitudeEventListener extends PackmindListener<EventTrackingAdapte
     // Track the event
     return this.emitAmplitudeEvent(
       event,
-      'organization_created',
+      'new_organization_created',
       (payload) => ({
         name: payload.name,
         method: payload.method,

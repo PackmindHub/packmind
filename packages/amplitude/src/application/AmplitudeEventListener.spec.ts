@@ -327,7 +327,7 @@ describe('AmplitudeEventListener', () => {
       );
     });
 
-    it('tracks organization_created event with correct payload', async () => {
+    it('tracks new_organization_created event with correct payload', async () => {
       const event = new OrganizationCreatedEvent({
         userId: createUserId('user-123'),
         organizationId: createOrganizationId('org-456'),
@@ -343,7 +343,7 @@ describe('AmplitudeEventListener', () => {
       expect(mockAdapter.trackEvent).toHaveBeenCalledWith(
         'user-123',
         'org-456',
-        'organization_created',
+        'new_organization_created',
         {
           name: 'trial-abc123',
           method: 'trial',
