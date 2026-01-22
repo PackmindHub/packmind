@@ -21,11 +21,17 @@ interface IReasonOption {
 }
 
 const REASON_OPTIONS: IReasonOption[] = [
-  { value: McpUnavailableReason.CantUseMcp, label: "I can't use MCP" },
-  { value: McpUnavailableReason.DontWantMcp, label: "I don't want to use MCP" },
+  {
+    value: McpUnavailableReason.CantUseMcp,
+    label: 'I can’t use MCP due to technical or security constraints',
+  },
+  {
+    value: McpUnavailableReason.DontWantMcp,
+    label: 'I decided not to use MCP',
+  },
   {
     value: McpUnavailableReason.DontKnowMcp,
-    label: "I don't know what is MCP",
+    label: 'I don’t know what MCP is',
   },
   { value: McpUnavailableReason.Other, label: 'Other' },
 ];
@@ -89,7 +95,9 @@ export const CantUseMcpModal: React.FC<ICantUseMcpModalProps> = ({
           data-testid={StartTrialAgentPageDataTestIds.CantUseMcpModal}
         >
           <PMDialog.Header>
-            <PMDialog.Title>Why can't you use MCP?</PMDialog.Title>
+            <PMDialog.Title>
+              What’s stopping you from using our MCP server?
+            </PMDialog.Title>
             <PMDialog.CloseTrigger asChild>
               <PMCloseButton />
             </PMDialog.CloseTrigger>
