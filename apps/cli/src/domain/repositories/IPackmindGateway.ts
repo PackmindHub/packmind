@@ -200,6 +200,35 @@ export type IUploadSkillUseCase = IUseCase<
   UploadSkillResult
 >;
 
+// Atomic gateway types for standard creation
+export type GetGlobalSpaceResult = {
+  id: string;
+  slug: string;
+};
+
+export type CreateStandardCommand = {
+  name: string;
+  description: string;
+  scope: string;
+  rules: Array<{ content: string }>;
+};
+
+export type CreateStandardResult = {
+  id: string;
+  name: string;
+};
+
+export type StandardRule = {
+  id: string;
+  content: string;
+};
+
+export type AddExampleCommand = {
+  language: string;
+  positive: string;
+  negative: string;
+};
+
 export interface IPackmindGateway {
   listExecutionPrograms: Gateway<ListDetectionPrograms>;
   getDraftDetectionProgramsForRule: Gateway<GetDraftDetectionProgramsForRule>;
@@ -231,4 +260,21 @@ export interface IPackmindGateway {
     name?: string;
     error?: string;
   }>;
+
+  // Atomic gateway methods for standard creation
+  getGlobalSpace(): Promise<GetGlobalSpaceResult>;
+  createStandard(
+    spaceId: string,
+    data: CreateStandardCommand,
+  ): Promise<CreateStandardResult>;
+  getRulesForStandard(
+    spaceId: string,
+    standardId: string,
+  ): Promise<StandardRule[]>;
+  addExampleToRule(
+    spaceId: string,
+    standardId: string,
+    ruleId: string,
+    example: AddExampleCommand,
+  ): Promise<void>;
 }
