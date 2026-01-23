@@ -67,25 +67,27 @@ describe('CreateStandardFromPlaybookUseCase', () => {
     });
   });
 
-  it('returns standard id and name when creating standard', async () => {
-    mockGateway.getGlobalSpace.mockResolvedValue({
-      id: 'space-1',
-      slug: 'global',
-    });
-    mockGateway.createStandard.mockResolvedValue({
-      id: 'std-1',
-      name: 'Test Standard',
-    });
-    mockGateway.getRulesForStandard.mockResolvedValue([]);
+  describe('when creating standard', () => {
+    it('returns standard id and name', async () => {
+      mockGateway.getGlobalSpace.mockResolvedValue({
+        id: 'space-1',
+        slug: 'global',
+      });
+      mockGateway.createStandard.mockResolvedValue({
+        id: 'std-1',
+        name: 'Test Standard',
+      });
+      mockGateway.getRulesForStandard.mockResolvedValue([]);
 
-    const result = await useCase.execute({
-      name: 'Test Standard',
-      description: 'Desc',
-      scope: 'test',
-      rules: [{ content: 'Rule 1' }],
-    });
+      const result = await useCase.execute({
+        name: 'Test Standard',
+        description: 'Desc',
+        scope: 'test',
+        rules: [{ content: 'Rule 1' }],
+      });
 
-    expect(result).toEqual({ standardId: 'std-1', name: 'Test Standard' });
+      expect(result).toEqual({ standardId: 'std-1', name: 'Test Standard' });
+    });
   });
 
   it('creates standard with examples', async () => {
