@@ -4,5 +4,6 @@ export interface IMethodContentProps {
   method: IInstallMethod;
   token: string;
   url: string;
+  cliLoginCode?: string;
   onCantUseMcp?: () => void;
 }

@@ -1,4 +1,30 @@
-import { IAgentConfig } from './types';
+import { IAgentConfig, IInstallMethod } from './types';
+
+const DEFAULT_HOST = 'https://app.packmind.ai';
+
+const getHostFromMcpUrl = (mcpUrl: string): string => {
+  try {
+    const url = new URL(mcpUrl);
+    return url.origin;
+  } catch {
+    return DEFAULT_HOST;
+  }
+};
+
+export const getInstallCliMethod = (): IInstallMethod => ({
+  type: 'install-cli',
+  label: 'Install CLI',
+  available: true,
+  getCliCommand: (_token: string, mcpUrl: string, cliLoginCode?: string) => {
+    const host = getHostFromMcpUrl(mcpUrl);
+    const needsHostExport = host !== DEFAULT_HOST;
+    const hostExport = needsHostExport ? `export PACKMIND_HOST=${host}\n` : '';
+    const codeExport = cliLoginCode
+      ? `export PACKMIND_LOGIN_CODE=${cliLoginCode}\n`
+      : '';
+    return `${hostExport}${codeExport}curl --proto '=https' --tlsv1.2 -sSf https://raw.githubusercontent.com/PackmindHub/packmind/main/apps/cli/scripts/install.sh | sh`;
+  },
+});
 
 export const getAgentsConfig = (): IAgentConfig[] => [
   {
@@ -6,6 +32,7 @@ export const getAgentsConfig = (): IAgentConfig[] => [
     name: 'Claude (Anthropic)',
     description: 'Install Packmind MCP for Claude Desktop',
     installMethods: [
+      getInstallCliMethod(),
       {
         type: 'cli',
         label: 'Packmind CLI',
@@ -178,6 +205,7 @@ mcpServers:
     name: 'MCP Generic',
     description: 'Generic MCP configuration for compatible clients',
     installMethods: [
+      getInstallCliMethod(),
       {
         type: 'json',
         label: 'JSON Configuration',

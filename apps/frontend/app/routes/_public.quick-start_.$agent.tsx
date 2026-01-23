@@ -27,8 +27,8 @@ const AGENT_TO_MCP_CONFIG: Record<Agent, string> = {
   other: 'generic',
 };
 
-// Map agent to preferred install method type and optional label
-const AGENT_TO_PREFERRED_METHOD: Record<
+// Map agent to preferred MCP config method type and optional label
+const AGENT_TO_PREFERRED_MCP_METHOD: Record<
   Agent,
   { type: 'magicLink' | 'cli' | 'json'; label?: string }
 > = {
@@ -47,6 +47,7 @@ export default function StartTrialAgentRouteModule() {
 
   const token = searchParams.get('token');
   const mcpUrl = searchParams.get('mcpUrl');
+  const cliLoginCode = searchParams.get('cliLoginCode');
 
   const agentConfig = useMemo(() => {
     if (!agent) return null;
@@ -66,7 +67,7 @@ export default function StartTrialAgentRouteModule() {
   }
 
   const agentLabel = AGENT_LABELS[agent as Agent] ?? agent;
-  const preferredMethod = AGENT_TO_PREFERRED_METHOD[agent as Agent] ?? {
+  const preferredMcpMethod = AGENT_TO_PREFERRED_MCP_METHOD[agent as Agent] ?? {
     type: 'json',
   };
 
@@ -77,8 +78,9 @@ export default function StartTrialAgentRouteModule() {
         agentConfig={agentConfig}
         token={token}
         mcpUrl={mcpUrl}
-        preferredMethodType={preferredMethod.type}
-        preferredMethodLabel={preferredMethod.label}
+        cliLoginCode={cliLoginCode ?? undefined}
+        preferredMcpMethodType={preferredMcpMethod.type}
+        preferredMcpMethodLabel={preferredMcpMethod.label}
       />
     </OnboardingAgentProvider>
   );

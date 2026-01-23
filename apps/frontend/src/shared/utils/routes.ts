@@ -101,7 +101,12 @@ export const routes = {
     toActivate: (token: string) => `/activate?token=${token}`,
     toStartTrial: () => '/quick-start',
     toStartTrialSelectAgent: () => '/quick-start/select-agent',
-    toStartTrialAgent: (agent: string, token: string, mcpUrl: string) =>
-      `/quick-start/${agent}?token=${token}&mcpUrl=${mcpUrl}`,
+    toStartTrialAgent: (
+      agent: string,
+      token: string,
+      mcpUrl: string,
+      cliLoginCode?: string,
+    ) =>
+      `/quick-start/${agent}?token=${token}&mcpUrl=${mcpUrl}${cliLoginCode ? `&cliLoginCode=${cliLoginCode}` : ''}`,
   },
 };

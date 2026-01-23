@@ -1,16 +1,17 @@
-export type InstallMethodType = 'json' | 'cli' | 'magicLink';
+export type InstallMethodType = 'json' | 'cli' | 'magicLink' | 'install-cli';
 
 export const METHOD_LABELS: Record<InstallMethodType, string> = {
   cli: 'CLI',
   magicLink: 'One-Click Install',
   json: 'JSON',
+  'install-cli': 'Install CLI',
 } as const;
 
 export interface IInstallMethod {
   type: InstallMethodType;
   label: string;
   available: boolean;
-  getCliCommand?: (token: string, url: string) => string;
+  getCliCommand?: (token: string, url: string, cliLoginCode?: string) => string;
   getJsonConfig?: (token: string, url: string) => string;
   getMagicLink?: (token: string, url: string) => string;
   magicLinkImageSrc?: string;

@@ -73,6 +73,12 @@ export class TrialController {
         role,
       );
 
+      const { code: cliLoginCode } =
+        await this.accountsAdapter.createCliLoginCode({
+          userId: user.id,
+          organizationId: organization.id,
+        });
+
       this.logger.info('Trial started successfully', { agent });
 
       return {
@@ -81,6 +87,7 @@ export class TrialController {
         role,
         mcpToken: tokenResponse.access_token,
         mcpUrl: await this.mcpService.getMcpUrl(),
+        cliLoginCode,
       };
     } catch (error) {
       this.logger.error('Failed to start trial', {
