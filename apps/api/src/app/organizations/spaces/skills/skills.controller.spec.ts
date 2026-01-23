@@ -9,6 +9,7 @@ import {
   createSkillId,
   createSpaceId,
   createUserId,
+  DeleteSkillResponse,
   Skill,
   UploadSkillFileInput,
 } from '@packmind/types';
@@ -24,6 +25,7 @@ describe('OrganizationsSpacesSkillsController', () => {
     skillsService = {
       getSkillsBySpace: jest.fn(),
       uploadSkill: jest.fn(),
+      deleteSkill: jest.fn(),
     } as unknown as jest.Mocked<SkillsService>;
 
     logger = stubLogger();
@@ -573,6 +575,77 @@ describe('OrganizationsSpacesSkillsController', () => {
             mockResponse,
           ),
         ).rejects.toThrow('Insufficient permissions');
+      });
+    });
+  });
+
+  describe('deleteSkill', () => {
+    const orgId = createOrganizationId('org-123');
+    const spaceId = createSpaceId('space-456');
+    const skillId = createSkillId('skill-789');
+    const userId = createUserId('user-1');
+    const request = {
+      organization: {
+        id: orgId,
+        name: 'Test Org',
+        slug: 'test-org',
+        role: 'admin',
+      },
+      user: {
+        userId,
+        name: 'Test User',
+      },
+      clientSource: 'ui',
+    } as unknown as AuthenticatedRequest;
+
+    describe('when deletion succeeds', () => {
+      it('calls service with correct parameters', async () => {
+        const deleteResponse: DeleteSkillResponse = { success: true };
+        skillsService.deleteSkill.mockResolvedValue(deleteResponse);
+
+        await controller.deleteSkill(orgId, spaceId, skillId, request);
+
+        expect(skillsService.deleteSkill).toHaveBeenCalledWith(
+          skillId,
+          spaceId,
+          orgId,
+          userId,
+          'ui',
+        );
+      });
+
+      it('returns void on successful deletion', async () => {
+        const deleteResponse: DeleteSkillResponse = { success: true };
+        skillsService.deleteSkill.mockResolvedValue(deleteResponse);
+
+        const result = await controller.deleteSkill(
+          orgId,
+          spaceId,
+          skillId,
+          request,
+        );
+
+        expect(result).toBeUndefined();
+      });
+    });
+
+    describe('when errors occur', () => {
+      it('propagates database errors from service', async () => {
+        const error = new Error('Database error');
+        skillsService.deleteSkill.mockRejectedValue(error);
+
+        await expect(
+          controller.deleteSkill(orgId, spaceId, skillId, request),
+        ).rejects.toThrow('Database error');
+      });
+
+      it('propagates skill not found errors', async () => {
+        const error = new Error('Skill not found');
+        skillsService.deleteSkill.mockRejectedValue(error);
+
+        await expect(
+          controller.deleteSkill(orgId, spaceId, skillId, request),
+        ).rejects.toThrow('Skill not found');
       });
     });
   });

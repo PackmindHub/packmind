@@ -2,6 +2,7 @@ import {
   BadRequestException,
   Body,
   Controller,
+  Delete,
   Get,
   HttpStatus,
   NotFoundException,
@@ -235,6 +236,42 @@ export class OrganizationsSpacesSkillsController {
         throw new BadRequestException(error.message);
       }
 
+      throw error;
+    }
+  }
+
+  /**
+   * Delete a skill within a space
+   * DELETE /organizations/:orgId/spaces/:spaceId/skills/:skillId
+   */
+  @Delete(':skillId')
+  async deleteSkill(
+    @Param('orgId') organizationId: OrganizationId,
+    @Param('spaceId') spaceId: SpaceId,
+    @Param('skillId') skillId: SkillId,
+    @Req() request: AuthenticatedRequest,
+  ): Promise<void> {
+    const userId = request.user.userId;
+
+    this.logger.info(
+      'DELETE /organizations/:orgId/spaces/:spaceId/skills/:skillId - Deleting skill',
+      { organizationId, spaceId, skillId },
+    );
+
+    try {
+      await this.skillsService.deleteSkill(
+        skillId,
+        spaceId,
+        organizationId,
+        userId,
+        request.clientSource,
+      );
+    } catch (error) {
+      const errorMessage = getErrorMessage(error);
+      this.logger.error(
+        'DELETE /organizations/:orgId/spaces/:spaceId/skills/:skillId - Failed to delete skill',
+        { organizationId, spaceId, skillId, error: errorMessage },
+      );
       throw error;
     }
   }
