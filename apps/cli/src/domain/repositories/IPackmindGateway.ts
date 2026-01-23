@@ -251,7 +251,7 @@ export interface IPackmindGateway {
   notifyDistribution: NotifyDistributionGateway;
   uploadSkill: Gateway<IUploadSkillUseCase>;
   getDefaultSkills: Gateway<IGetDefaultSkillsUseCase>;
-trackLinterExecution: TrackLinterExecution;
+  trackLinterExecution: TrackLinterExecution;
 
   // Atomic gateway methods for standard creation
   getGlobalSpace(): Promise<GetGlobalSpaceResult>;
