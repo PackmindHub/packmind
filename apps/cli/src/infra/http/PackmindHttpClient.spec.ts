@@ -62,4 +62,84 @@ describe('PackmindHttpClient', () => {
       });
     });
   });
+
+  describe('request', () => {
+    beforeEach(() => {
+      global.fetch = jest.fn();
+    });
+
+    afterEach(() => {
+      jest.clearAllMocks();
+    });
+
+    it('makes GET request with auth headers', async () => {
+      const client = new PackmindHttpClient(createTestApiKey());
+      (global.fetch as jest.Mock).mockResolvedValue({
+        ok: true,
+        json: jest.fn().mockResolvedValue({ data: 'test' }),
+      });
+
+      const result = await client.request<{ data: string }>('/test-path');
+
+      expect(global.fetch).toHaveBeenCalledWith(
+        'https://api.packmind.com/test-path',
+        expect.objectContaining({
+          method: 'GET',
+          headers: expect.objectContaining({
+            'Content-Type': 'application/json',
+            Authorization: expect.stringContaining('Bearer '),
+          }),
+        }),
+      );
+      expect(result).toEqual({ data: 'test' });
+    });
+
+    it('makes POST request with body', async () => {
+      const client = new PackmindHttpClient(createTestApiKey());
+      (global.fetch as jest.Mock).mockResolvedValue({
+        ok: true,
+        json: jest.fn().mockResolvedValue({ id: '123' }),
+      });
+
+      await client.request('/create', {
+        method: 'POST',
+        body: { name: 'test' },
+      });
+
+      expect(global.fetch).toHaveBeenCalledWith(
+        'https://api.packmind.com/create',
+        expect.objectContaining({
+          method: 'POST',
+          body: JSON.stringify({ name: 'test' }),
+        }),
+      );
+    });
+
+    describe('when response is not ok', () => {
+      it('throws error with message from response body', async () => {
+        const client = new PackmindHttpClient(createTestApiKey());
+        (global.fetch as jest.Mock).mockResolvedValue({
+          ok: false,
+          status: 400,
+          statusText: 'Bad Request',
+          json: jest.fn().mockResolvedValue({ message: 'Invalid data' }),
+        });
+
+        await expect(client.request('/test')).rejects.toThrow('Invalid data');
+      });
+    });
+
+    describe('when network error occurs', () => {
+      it('throws server not accessible error', async () => {
+        const client = new PackmindHttpClient(createTestApiKey());
+        (global.fetch as jest.Mock).mockRejectedValue(
+          new Error('Failed to fetch'),
+        );
+
+        await expect(client.request('/test')).rejects.toThrow(
+          'Packmind server is not accessible',
+        );
+      });
+    });
+  });
 });
