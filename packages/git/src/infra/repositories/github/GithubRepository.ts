@@ -70,7 +70,7 @@ export class GithubRepository implements IGitRepo {
       const { owner, repo, branch } = this.options;
       const targetBranch = branch || 'main';
 
-      // Check if there are any actual changes to commit
+      // Step 1: Check if there are any actual changes to commit (file modifications)
       const fileDifferenceCheck = await Promise.all(
         files.map(async (file) => {
           const existingFile = await this.getFileOnRepo(
@@ -94,11 +94,63 @@ export class GithubRepository implements IGitRepo {
         }),
       );
 
-      // Check if there are any changes to commit (file modifications or deletions)
+      // Step 2: Get the reference to the current branch
+      this.logger.debug('Getting reference to branch', {
+        owner,
+        repo,
+        branch: targetBranch,
+      });
+
+      const refResponse = await this.axiosInstance.get(
+        `/repos/${owner}/${repo}/git/refs/heads/${targetBranch}`,
+      );
+
+      const refSha = refResponse.data.object.sha;
+
+      // Step 3: Get the commit that the reference points to
+      this.logger.debug('Getting commit that reference points to', {
+        owner,
+        repo,
+        refSha,
+      });
+
+      const commitResponse = await this.axiosInstance.get(
+        `/repos/${owner}/${repo}/git/commits/${refSha}`,
+      );
+
+      const baseTreeSha = commitResponse.data.tree.sha;
+
+      // Step 4: Fetch full tree to know which files exist (for filtering deletions)
+      const treeResponse = await this.axiosInstance.get(
+        `/repos/${owner}/${repo}/git/trees/${baseTreeSha}`,
+        { params: { recursive: 1 } },
+      );
+      const existingPaths = new Set(
+        treeResponse.data.tree
+          .filter((item: { type: string }) => item.type === 'blob')
+          .map((item: { path: string }) => item.path),
+      );
+
+      // Step 5: Filter delete files to only those that exist in the repo
+      const existingDeleteFiles = deleteFiles
+        ? deleteFiles.filter((file) => existingPaths.has(file.path))
+        : [];
+
+      const skippedDeleteCount =
+        (deleteFiles?.length ?? 0) - existingDeleteFiles.length;
+      if (skippedDeleteCount > 0) {
+        this.logger.debug('Skipping deletion of non-existent files', {
+          skippedCount: skippedDeleteCount,
+          owner,
+          repo,
+        });
+      }
+
+      // Step 6: Check if there are any changes to commit (file modifications or deletions)
       const hasFileChanges = fileDifferenceCheck.some(
         (file) => file.hasChanges,
       );
-      const hasDeletions = deleteFiles && deleteFiles.length > 0;
+      const hasDeletions = existingDeleteFiles.length > 0;
       const hasChanges = hasFileChanges || hasDeletions;
 
       if (!hasChanges) {
@@ -118,52 +170,14 @@ export class GithubRepository implements IGitRepo {
         };
       }
 
-      // Step 1: Get the reference to the current branch
-      this.logger.debug('Getting reference to branch', {
-        owner,
-        repo,
-        branch: targetBranch,
-      });
-
-      const refResponse = await this.axiosInstance.get(
-        `/repos/${owner}/${repo}/git/refs/heads/${targetBranch}`,
-      );
-
-      const refSha = refResponse.data.object.sha;
-
-      // Step 2: Get the commit that the reference points to
-      this.logger.debug('Getting commit that reference points to', {
-        owner,
-        repo,
-        refSha,
-      });
-
-      const commitResponse = await this.axiosInstance.get(
-        `/repos/${owner}/${repo}/git/commits/${refSha}`,
-      );
-
-      const baseTreeSha = commitResponse.data.tree.sha;
-
-      // Step 3: Fetch full tree to know which files exist (for filtering deletions)
-      const treeResponse = await this.axiosInstance.get(
-        `/repos/${owner}/${repo}/git/trees/${baseTreeSha}`,
-        { params: { recursive: 1 } },
-      );
-      const existingPaths = new Set(
-        treeResponse.data.tree
-          .filter((item: { type: string }) => item.type === 'blob')
-          .map((item: { path: string }) => item.path),
-      );
-
-      // Step 4: Check if files exist and prepare tree items
-      this.logger.debug('Checking file existence and preparing tree items', {
+      // Step 7: Prepare tree items - only add files with actual changes
+      this.logger.debug('Preparing tree items', {
         owner,
         repo,
         baseTreeSha,
         fileCount: files.length,
       });
 
-      // Check existence of each file and prepare tree items
       const treeItems: {
         path: string;
         mode: '100644';
@@ -172,71 +186,38 @@ export class GithubRepository implements IGitRepo {
         sha?: null;
       }[] = [];
 
-      for (const file of files) {
-        await this.getFileOnRepo(file.path, targetBranch);
-
-        treeItems.push({
-          path: file.path,
-          mode: '100644', // Regular file mode
-          type: 'blob',
-          content: file.content,
-        });
+      // Add only files that have changes
+      for (let i = 0; i < files.length; i++) {
+        if (fileDifferenceCheck[i].hasChanges) {
+          treeItems.push({
+            path: files[i].path,
+            mode: '100644', // Regular file mode
+            type: 'blob',
+            content: files[i].content,
+          });
+        }
       }
 
       // Add delete items to tree (sha: null tells GitHub to delete the file)
-      // Filter out files that don't exist to avoid GitHub 422 errors
-      if (deleteFiles && deleteFiles.length > 0) {
-        const existingDeleteFiles = deleteFiles.filter((file) =>
-          existingPaths.has(file.path),
-        );
+      if (existingDeleteFiles.length > 0) {
+        this.logger.info('Adding files for deletion to commit', {
+          deleteFileCount: existingDeleteFiles.length,
+          skippedCount: skippedDeleteCount,
+          owner,
+          repo,
+        });
 
-        const skippedCount = deleteFiles.length - existingDeleteFiles.length;
-        if (skippedCount > 0) {
-          this.logger.debug('Skipping deletion of non-existent files', {
-            skippedCount,
-            owner,
-            repo,
+        for (const file of existingDeleteFiles) {
+          treeItems.push({
+            path: file.path,
+            mode: '100644',
+            type: 'blob',
+            sha: null,
           });
-        }
-
-        if (existingDeleteFiles.length > 0) {
-          this.logger.info('Adding files for deletion to commit', {
-            deleteFileCount: existingDeleteFiles.length,
-            skippedCount,
-            owner,
-            repo,
-          });
-
-          for (const file of existingDeleteFiles) {
-            treeItems.push({
-              path: file.path,
-              mode: '100644',
-              type: 'blob',
-              sha: null,
-            });
-          }
         }
       }
 
-      // Check if we have any actual changes after filtering
-      if (treeItems.length === 0) {
-        this.logger.info(
-          'No changes to commit after filtering non-existent files',
-          {
-            owner,
-            repo,
-            branch: targetBranch,
-          },
-        );
-        return {
-          sha: 'no-changes',
-          message: '',
-          author: '',
-          url: ``,
-        };
-      }
-
-      // Step 5: Create a new tree with all file changes
+      // Step 8: Create a new tree with all file changes
       this.logger.debug('Creating new tree with all file changes', {
         owner,
         repo,
@@ -255,7 +236,7 @@ export class GithubRepository implements IGitRepo {
 
       const newTreeSha = createTreeResponse.data.sha;
 
-      // Step 6: Create a new commit pointing to the new tree
+      // Step 9: Create a new commit pointing to the new tree
       this.logger.debug('Creating new commit pointing to the new tree', {
         owner,
         repo,
@@ -274,7 +255,7 @@ export class GithubRepository implements IGitRepo {
 
       const newCommitSha = createCommitResponse.data.sha;
 
-      // Step 7: Update the reference to point to the new commit
+      // Step 10: Update the reference to point to the new commit
       this.logger.debug('Updating reference to point to the new commit', {
         owner,
         repo,

@@ -27,6 +27,37 @@ function getZipFileName(agent: CodingAgent): string {
   return `packmind-${agent}-default-skills.zip`;
 }
 
+function getReadmeContent(agent: CodingAgent): string {
+  return `# Packmind Default Skills for ${agent.charAt(0).toUpperCase() + agent.slice(1)}
+
+## What's in this archive
+
+This archive contains default skills provided by Packmind to help you manage your coding standards and practices. These skills enable your AI coding assistant to:
+
+- Create and update coding standards
+- Create and manage skills
+- Follow your team's conventions
+
+## Installation
+
+1. Extract this archive at the root of your repository
+2. The contents will be placed in hidden folders (starting with a dot)
+
+## Important: Hidden folders
+
+The extracted folders (such as \`.claude\` or \`.github\`) are hidden by default in most file explorers.
+
+To see them:
+- **macOS Finder**: Press Cmd+Shift+. to toggle hidden files
+- **VS Code**: Hidden files are visible by default in the file explorer
+- **Terminal**: Use \`ls -la\` to list all files including hidden ones
+
+## Need help?
+
+Visit https://packmind.com for documentation and support.
+`;
+}
+
 export class DownloadDefaultSkillsZipForAgentUseCase implements IDownloadDefaultSkillsZipForAgentUseCase {
   private readonly logger: PackmindLogger;
 
@@ -56,7 +87,16 @@ export class DownloadDefaultSkillsZipForAgentUseCase implements IDownloadDefault
 
     const fileUpdates = await deployer.deployDefaultSkills();
     const filesWithContent = fileUpdates.createOrUpdate.filter(hasContent);
-    const zipBuffer = await this.createZipFromFileUpdates(filesWithContent);
+
+    const readmeFile: FileWithContent = {
+      path: 'README.md',
+      content: getReadmeContent(agent),
+    };
+
+    const zipBuffer = await this.createZipFromFileUpdates([
+      readmeFile,
+      ...filesWithContent,
+    ]);
     const base64Content = zipBuffer.toString('base64');
 
     this.logger.info('Default skills zip file created for agent', {

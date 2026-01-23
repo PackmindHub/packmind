@@ -21,6 +21,7 @@ export class CopilotDeployer implements ICodingAgentDeployer {
   /** @deprecated Legacy path to clean up during migration */
   private static readonly RECIPES_INDEX_PATH =
     '.github/instructions/packmind-recipes-index.instructions.md';
+  private static readonly SKILLS_FOLDER_PATH = '.github/skills/';
   private readonly logger: PackmindLogger;
 
   constructor(
@@ -553,5 +554,9 @@ ${skillVersion.prompt}`;
    */
   private escapeSingleQuotes(value: string): string {
     return value.replace(/'/g, "''");
+  }
+
+  getSkillsFolderPath(): string {
+    return CopilotDeployer.SKILLS_FOLDER_PATH;
   }
 }

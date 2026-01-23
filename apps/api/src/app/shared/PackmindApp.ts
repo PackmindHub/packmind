@@ -6,8 +6,9 @@ import {
 } from '@packmind/accounts';
 import { CodingAgentHexa } from '@packmind/coding-agent';
 import { DeploymentsHexa } from '@packmind/deployments';
-import { AmplitudeHexa, apiHexaPlugins, LinterHexa } from '@packmind/editions';
+import { AmplitudeHexa } from '@packmind/amplitude';
 import { GitHexa } from '@packmind/git';
+import { LinterHexa } from '@packmind/linter';
 import { LlmHexa } from '@packmind/llm';
 import {
   BaseHexa,
@@ -23,6 +24,7 @@ import { SkillsHexa } from '@packmind/skills';
 import { SpacesHexa } from '@packmind/spaces';
 import { StandardsHexa } from '@packmind/standards';
 import { DataSource } from 'typeorm';
+import { apiHexaPlugins } from '@packmind/plugins';
 
 /**
  * Configuration for PackmindApp API initialization.

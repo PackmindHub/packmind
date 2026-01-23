@@ -5,8 +5,12 @@ import {
 import { ExecuteSingleFileAstUseCase } from './ExecuteSingleFileAstUseCase';
 
 describe('ExecuteSingleFileAstUseCase', () => {
-  it('delegates execution to the linter execution use case', async () => {
-    const mockLinterExecutionUseCase = {
+  let mockLinterExecutionUseCase: jest.Mocked<IExecuteLinterProgramsUseCase>;
+  let useCase: ExecuteSingleFileAstUseCase;
+  let result: Awaited<ReturnType<ExecuteSingleFileAstUseCase['execute']>>;
+
+  beforeEach(async () => {
+    mockLinterExecutionUseCase = {
       execute: jest.fn().mockResolvedValue({
         file: 'cli-single-file',
         violations: [
@@ -15,14 +19,16 @@ describe('ExecuteSingleFileAstUseCase', () => {
       }),
     } as unknown as jest.Mocked<IExecuteLinterProgramsUseCase>;
 
-    const useCase = new ExecuteSingleFileAstUseCase(mockLinterExecutionUseCase);
+    useCase = new ExecuteSingleFileAstUseCase(mockLinterExecutionUseCase);
 
-    const result = await useCase.execute({
+    result = await useCase.execute({
       program: 'function checkSourceCode(ast) { return [5]; }',
       fileContent: 'interface Sample {}',
       language: ProgrammingLanguage.TYPESCRIPT,
     });
+  });
 
+  it('delegates execution to the linter execution use case', () => {
     expect(mockLinterExecutionUseCase.execute).toHaveBeenCalledWith({
       filePath: 'cli-single-file',
       fileContent: 'interface Sample {}',
@@ -37,6 +43,9 @@ describe('ExecuteSingleFileAstUseCase', () => {
         },
       ],
     });
+  });
+
+  it('returns violations with line and character', () => {
     expect(result).toEqual([{ line: 5, character: 0 }]);
   });
 });

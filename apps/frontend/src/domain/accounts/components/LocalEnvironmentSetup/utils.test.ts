@@ -76,13 +76,15 @@ describe('LocalEnvironmentSetup utils', () => {
       expect(detectUserOs()).toBe('macos-linux');
     });
 
-    it('defaults to macos-linux when navigator is undefined', () => {
-      Object.defineProperty(globalThis, 'navigator', {
-        value: undefined,
-        writable: true,
-        configurable: true,
+    describe('when navigator is undefined', () => {
+      it('defaults to macos-linux', () => {
+        Object.defineProperty(globalThis, 'navigator', {
+          value: undefined,
+          writable: true,
+          configurable: true,
+        });
+        expect(detectUserOs()).toBe('macos-linux');
       });
-      expect(detectUserOs()).toBe('macos-linux');
     });
   });
 });

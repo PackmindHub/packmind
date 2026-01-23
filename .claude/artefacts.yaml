@@ -903,29 +903,113 @@
 - name: CLAUDE.md
   path: CLAUDE.md
   type: claude_md
-  date: 2026-01-22T10:27:38+01:00
+  date: 2026-01-20T20:59:07+01:00
 - name: standard-changelog.md
   path: .claude/rules/packmind/standard-changelog.md
   type: rule
-  date: 2026-01-22T10:27:38+01:00
+  date: 2026-01-20T20:59:07+01:00
 - name: standard-testing-good-practices.md
   path: .claude/rules/packmind/standard-testing-good-practices.md
   type: rule
-  date: 2026-01-22T10:27:38+01:00
+  date: 2026-01-20T20:59:08+01:00
 - name: standard-tests-redaction.md
   path: .claude/rules/packmind/standard-tests-redaction.md
   type: rule
-  date: 2026-01-22T10:27:38+01:00
+  date: 2026-01-20T20:59:08+01:00
 - name: standard-typescript-code-standards.md
   path: .claude/rules/packmind/standard-typescript-code-standards.md
   type: rule
-  date: 2026-01-22T10:27:38+01:00
-- name: packmind:creating-end-user-documentation-for-packmind
-  path: .claude/skills/packmind/creating-end-user-documentation-for-packmind
+  date: 2026-01-20T20:59:08+01:00
+- name: CLAUDE.md
+  path: CLAUDE.md
+  type: claude_md
+  date: 2026-01-21T16:37:19+01:00
+- name: standard-changelog.md
+  path: .claude/rules/packmind/standard-changelog.md
+  type: rule
+  date: 2026-01-21T16:37:19+01:00
+- name: CLAUDE.md
+  path: CLAUDE.md
+  type: claude_md
+  date: 2026-01-21T16:37:20+01:00
+- name: standard-testing-good-practices.md
+  path: .claude/rules/packmind/standard-testing-good-practices.md
+  type: rule
+  date: 2026-01-21T16:37:20+01:00
+- name: standard-changelog.md
+  path: .claude/rules/packmind/standard-changelog.md
+  type: rule
+  date: 2026-01-21T16:37:20+01:00
+- name: standard-tests-redaction.md
+  path: .claude/rules/packmind/standard-tests-redaction.md
+  type: rule
+  date: 2026-01-21T16:37:20+01:00
+- name: standard-testing-good-practices.md
+  path: .claude/rules/packmind/standard-testing-good-practices.md
+  type: rule
+  date: 2026-01-21T16:37:21+01:00
+- name: standard-typescript-code-standards.md
+  path: .claude/rules/packmind/standard-typescript-code-standards.md
+  type: rule
+  date: 2026-01-21T16:37:21+01:00
+- name: standard-tests-redaction.md
+  path: .claude/rules/packmind/standard-tests-redaction.md
+  type: rule
+  date: 2026-01-21T16:37:21+01:00
+- name: standard-typescript-code-standards.md
+  path: .claude/rules/packmind/standard-typescript-code-standards.md
+  type: rule
+  date: 2026-01-21T16:37:22+01:00
+- name: handoff_20260122_cli_lint_remaining.md
+  path: tmp/handoffs/handoff_20260122_cli_lint_remaining.md
   type: skill
-  date: 2026-01-22T10:34:24+01:00
-- name: packmind-standard-creator
-  path: .claude/skills/packmind-standard-creator/SKILL.md
+  date: 2026-01-22T11:00:57+01:00
+- name: CLAUDE.md
+  path: CLAUDE.md
+  type: claude_md
+  date: 2026-01-22T11:03:00+01:00
+- name: CLAUDE.md
+  path: CLAUDE.md
+  type: claude_md
+  date: 2026-01-22T11:03:04+01:00
+- name: standard-changelog.md
+  path: .claude/rules/packmind/standard-changelog.md
+  type: rule
+  date: 2026-01-22T11:03:04+01:00
+- name: standard-testing-good-practices.md
+  path: .claude/rules/packmind/standard-testing-good-practices.md
+  type: rule
+  date: 2026-01-22T11:03:04+01:00
+- name: standard-tests-redaction.md
+  path: .claude/rules/packmind/standard-tests-redaction.md
+  type: rule
+  date: 2026-01-22T11:03:04+01:00
+- name: standard-typescript-code-standards.md
+  path: .claude/rules/packmind/standard-typescript-code-standards.md
+  type: rule
+  date: 2026-01-22T11:03:05+01:00
+- name: CLAUDE.md
+  path: CLAUDE.md
+  type: claude_md
+  date: 2026-01-22T11:04:17+01:00
+- name: standard-changelog.md
+  path: .claude/rules/packmind/standard-changelog.md
+  type: rule
+  date: 2026-01-22T11:04:17+01:00
+- name: standard-testing-good-practices.md
+  path: .claude/rules/packmind/standard-testing-good-practices.md
+  type: rule
+  date: 2026-01-22T11:04:17+01:00
+- name: standard-tests-redaction.md
+  path: .claude/rules/packmind/standard-tests-redaction.md
+  type: rule
+  date: 2026-01-22T11:04:18+01:00
+- name: standard-typescript-code-standards.md
+  path: .claude/rules/packmind/standard-typescript-code-standards.md
+  type: rule
+  date: 2026-01-22T11:04:18+01:00
+- name: artefact-logger
+  path: artefact-logger
   type: skill
   date: 2026-01-21T18:05:39+01:00
 - name: CLAUDE.md
@@ -940,3 +1024,31 @@
   path: artefact-logger
   type: skill
   date: 2026-01-22T16:18:19+01:00
+- name: CLAUDE.md
+  path: CLAUDE.md
+  type: claude_md
+  date: 2026-01-22T11:05:22+01:00
+- name: standard-changelog.md
+  path: .claude/rules/packmind/standard-changelog.md
+  type: rule
+  date: 2026-01-22T11:05:22+01:00
+- name: standard-testing-good-practices.md
+  path: .claude/rules/packmind/standard-testing-good-practices.md
+  type: rule
+  date: 2026-01-22T11:05:22+01:00
+- name: standard-tests-redaction.md
+  path: .claude/rules/packmind/standard-tests-redaction.md
+  type: rule
+  date: 2026-01-22T11:05:22+01:00
+- name: standard-typescript-code-standards.md
+  path: .claude/rules/packmind/standard-typescript-code-standards.md
+  type: rule
+  date: 2026-01-22T11:05:22+01:00
+- name: standard-cli.md
+  path: apps/cli/.claude/rules/packmind/standard-cli.md
+  type: rule
+  date: 2026-01-22T11:05:22+01:00
+- name: artefact-logger
+  path: artefact-logger
+  type: skill
+  date: 2026-01-22T11:05:23+01:00

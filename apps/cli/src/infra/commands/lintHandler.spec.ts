@@ -238,19 +238,29 @@ describe('lintHandler', () => {
     });
 
     describe('when logger is "human"', () => {
-      it('uses HumanReadableLogger', async () => {
+      beforeEach(async () => {
         await lintHandler(createArgs({ logger: Loggers.human }), deps);
+      });
 
+      it('calls HumanReadableLogger', () => {
         expect(mockHumanLogger.logViolations).toHaveBeenCalled();
+      });
+
+      it('does not call IDELintLogger', () => {
         expect(mockIDELogger.logViolations).not.toHaveBeenCalled();
       });
     });
 
     describe('when logger is "ide"', () => {
-      it('uses IDELintLogger', async () => {
+      beforeEach(async () => {
         await lintHandler(createArgs({ logger: Loggers.ide }), deps);
+      });
 
+      it('calls IDELintLogger', () => {
         expect(mockIDELogger.logViolations).toHaveBeenCalled();
+      });
+
+      it('does not call HumanReadableLogger', () => {
         expect(mockHumanLogger.logViolations).not.toHaveBeenCalled();
       });
     });
@@ -279,7 +289,7 @@ describe('lintHandler', () => {
       });
 
       describe('when config files exist and no arguments provided', () => {
-        it('uses local linting', async () => {
+        beforeEach(async () => {
           mockPackmindCliHexa.readHierarchicalConfig.mockResolvedValue({
             hasConfigs: true,
             configs: [{ path: '/project/packmind.json' }],
@@ -289,8 +299,13 @@ describe('lintHandler', () => {
           });
 
           await lintHandler(createArgs(), deps);
+        });
 
+        it('calls lintFilesLocally', () => {
           expect(mockPackmindCliHexa.lintFilesLocally).toHaveBeenCalled();
+        });
+
+        it('does not call lintFilesInDirectory', () => {
           expect(
             mockPackmindCliHexa.lintFilesInDirectory,
           ).not.toHaveBeenCalled();
@@ -298,7 +313,7 @@ describe('lintHandler', () => {
       });
 
       describe('when no config files exist', () => {
-        it('uses deployment linting', async () => {
+        beforeEach(async () => {
           mockPackmindCliHexa.readHierarchicalConfig.mockResolvedValue({
             hasConfigs: false,
             configs: [],
@@ -314,14 +329,19 @@ describe('lintHandler', () => {
           });
 
           await lintHandler(createArgs(), deps);
+        });
 
+        it('calls lintFilesInDirectory', () => {
           expect(mockPackmindCliHexa.lintFilesInDirectory).toHaveBeenCalled();
+        });
+
+        it('does not call lintFilesLocally', () => {
           expect(mockPackmindCliHexa.lintFilesLocally).not.toHaveBeenCalled();
         });
       });
 
       describe('when arguments are provided even if config exists', () => {
-        it('uses deployment linting', async () => {
+        beforeEach(async () => {
           mockPackmindCliHexa.readHierarchicalConfig.mockResolvedValue({
             hasConfigs: true,
             configs: [{ path: '/project/packmind.json' }],
@@ -343,8 +363,13 @@ describe('lintHandler', () => {
             }),
             deps,
           );
+        });
 
+        it('calls lintFilesInDirectory', () => {
           expect(mockPackmindCliHexa.lintFilesInDirectory).toHaveBeenCalled();
+        });
+
+        it('does not call lintFilesLocally', () => {
           expect(mockPackmindCliHexa.lintFilesLocally).not.toHaveBeenCalled();
         });
       });
@@ -425,16 +450,21 @@ describe('lintHandler', () => {
     });
 
     describe('when not logged in and flag is set', () => {
-      it('exits with code 0 and logs warning', async () => {
+      beforeEach(async () => {
         mockPackmindCliHexa.lintFilesInDirectory.mockRejectedValue(
           new NotLoggedInError(),
         );
 
         await lintHandler(createArgs({ continueOnMissingKey: true }), deps);
+      });
 
+      it('logs warning message', () => {
         expect(logWarningConsole).toHaveBeenCalledWith(
           'Warning: Not logged in to Packmind, linting is skipped. Run `packmind-cli login` to authenticate.',
         );
+      });
+
+      it('exits with code 0', () => {
         expect(mockExit).toHaveBeenCalledWith(0);
       });
     });
@@ -463,21 +493,28 @@ describe('lintHandler', () => {
       });
     });
 
-    it('handles not logged in error in local linting mode', async () => {
-      mockPackmindCliHexa.readHierarchicalConfig.mockResolvedValue({
-        hasConfigs: true,
-        configs: [{ path: '/project/packmind.json' }],
+    describe('when not logged in error occurs in local linting mode', () => {
+      beforeEach(async () => {
+        mockPackmindCliHexa.readHierarchicalConfig.mockResolvedValue({
+          hasConfigs: true,
+          configs: [{ path: '/project/packmind.json' }],
+        });
+        mockPackmindCliHexa.lintFilesLocally.mockRejectedValue(
+          new NotLoggedInError(),
+        );
+
+        await lintHandler(createArgs({ continueOnMissingKey: true }), deps);
       });
-      mockPackmindCliHexa.lintFilesLocally.mockRejectedValue(
-        new NotLoggedInError(),
-      );
 
-      await lintHandler(createArgs({ continueOnMissingKey: true }), deps);
+      it('logs warning message', () => {
+        expect(logWarningConsole).toHaveBeenCalledWith(
+          'Warning: Not logged in to Packmind, linting is skipped. Run `packmind-cli login` to authenticate.',
+        );
+      });
 
-      expect(logWarningConsole).toHaveBeenCalledWith(
-        'Warning: Not logged in to Packmind, linting is skipped. Run `packmind-cli login` to authenticate.',
-      );
-      expect(mockExit).toHaveBeenCalledWith(0);
+      it('exits with code 0', () => {
+        expect(mockExit).toHaveBeenCalledWith(0);
+      });
     });
   });
 });

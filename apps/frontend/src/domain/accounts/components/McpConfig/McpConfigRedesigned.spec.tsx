@@ -80,39 +80,50 @@ describe('McpConfigRedesigned', () => {
   });
 
   describe('Loading state', () => {
-    it('displays loading spinner when fetching token', () => {
-      mockUseGetMcpTokenMutation.mockReturnValue({
-        mutate: mockMutate,
-        isPending: true,
-        isError: false,
-        isSuccess: false,
-        error: null,
-        data: undefined,
-      } as ReturnType<typeof useGetMcpTokenMutation>);
+    describe('when fetching token', () => {
+      beforeEach(() => {
+        mockUseGetMcpTokenMutation.mockReturnValue({
+          mutate: mockMutate,
+          isPending: true,
+          isError: false,
+          isSuccess: false,
+          error: null,
+          data: undefined,
+        } as ReturnType<typeof useGetMcpTokenMutation>);
+      });
 
-      renderWithProviders(<McpConfigRedesigned />);
+      it('displays loading spinner', () => {
+        renderWithProviders(<McpConfigRedesigned />);
 
-      expect(
-        screen.getByText('Generating access token...'),
-      ).toBeInTheDocument();
+        expect(
+          screen.getByText('Generating access token...'),
+        ).toBeInTheDocument();
+      });
     });
   });
 
   describe('Error state', () => {
-    it('displays error message when mutation fails', () => {
-      mockUseGetMcpTokenMutation.mockReturnValue({
-        mutate: mockMutate,
-        isPending: false,
-        isError: true,
-        isSuccess: false,
-        error: new Error('Network error'),
-        data: undefined,
-      } as ReturnType<typeof useGetMcpTokenMutation>);
+    describe('when mutation fails', () => {
+      beforeEach(() => {
+        mockUseGetMcpTokenMutation.mockReturnValue({
+          mutate: mockMutate,
+          isPending: false,
+          isError: true,
+          isSuccess: false,
+          error: new Error('Network error'),
+          data: undefined,
+        } as ReturnType<typeof useGetMcpTokenMutation>);
 
-      renderWithProviders(<McpConfigRedesigned />);
+        renderWithProviders(<McpConfigRedesigned />);
+      });
 
-      expect(screen.getByText('Error!')).toBeInTheDocument();
-      expect(screen.getByText('Network error')).toBeInTheDocument();
+      it('displays error title', () => {
+        expect(screen.getByText('Error!')).toBeInTheDocument();
+      });
+
+      it('displays error message', () => {
+        expect(screen.getByText('Network error')).toBeInTheDocument();
+      });
     });
   });
 

@@ -1,9 +1,7 @@
-import { Controller, Get, Param, Req, Res, UseGuards } from '@nestjs/common';
-import { Response } from 'express';
+import { Controller, Get, Param, Req, UseGuards } from '@nestjs/common';
 import {
   DeployDefaultSkillsCommand,
   DeployDefaultSkillsResponse,
-  DownloadDefaultSkillsZipFileCommand,
   OrganizationId,
 } from '@packmind/types';
 import { OrganizationSkillsService } from './skills.service';
@@ -59,57 +57,6 @@ export class OrganizationSkillsController {
         error instanceof Error ? error.message : String(error);
       this.logger.error(
         'GET /organizations/:orgId/skills/default - Failed to fetch default skills',
-        {
-          organizationId,
-          error: errorMessage,
-        },
-      );
-      throw error;
-    }
-  }
-
-  @Get('default/zip')
-  async downloadDefaultSkillsZip(
-    @Param('orgId') organizationId: OrganizationId,
-    @Req() request: AuthenticatedRequest,
-    @Res() response: Response,
-  ): Promise<void> {
-    this.logger.info(
-      'GET /organizations/:orgId/skills/default/zip - Downloading default skills zip',
-      {
-        organizationId,
-      },
-    );
-
-    try {
-      const command: DownloadDefaultSkillsZipFileCommand = {
-        userId: request.user.userId,
-        organizationId,
-        source: request.clientSource,
-      };
-
-      const result = await this.skillsService.downloadDefaultSkillsZip(command);
-
-      this.logger.info(
-        'GET /organizations/:orgId/skills/default/zip - Default skills zip created successfully',
-        {
-          organizationId,
-          fileName: result.fileName,
-        },
-      );
-
-      response
-        .setHeader('Content-Type', 'application/zip')
-        .setHeader(
-          'Content-Disposition',
-          `attachment; filename="${result.fileName}"`,
-        )
-        .send(Buffer.from(result.fileContent, 'base64'));
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : String(error);
-      this.logger.error(
-        'GET /organizations/:orgId/skills/default/zip - Failed to download default skills zip',
         {
           organizationId,
           error: errorMessage,

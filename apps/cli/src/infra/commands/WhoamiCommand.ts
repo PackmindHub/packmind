@@ -5,6 +5,7 @@ import {
   logSuccessConsole,
   logErrorConsole,
   logInfoConsole,
+  logConsole,
 } from '../utils/consoleLogger';
 import { IWhoamiResult } from '../../domain/useCases/IWhoamiUseCase';
 
@@ -33,20 +34,20 @@ function formatExpiresAt(expiresAt: Date): string {
 function displayAuthInfo(
   result: IWhoamiResult & { isAuthenticated: true },
 ): void {
-  console.log(`\nHost: ${result.host}`);
+  logConsole(`\nHost: ${result.host}`);
   if (result.organizationName) {
-    console.log(`Organization: ${result.organizationName}`);
+    logConsole(`Organization: ${result.organizationName}`);
   }
   if (result.userName) {
-    console.log(`User: ${result.userName}`);
+    logConsole(`User: ${result.userName}`);
   }
   if (result.expiresAt) {
-    console.log(formatExpiresAt(result.expiresAt));
+    logConsole(formatExpiresAt(result.expiresAt));
   }
   logInfoConsole(`Source: ${result.source}`);
 
   if (result.isExpired) {
-    console.log('\nRun `packmind-cli login` to re-authenticate.');
+    logConsole('\nRun `packmind-cli login` to re-authenticate.');
   }
 }
 
@@ -62,12 +63,12 @@ export const whoamiCommand = command({
 
     if (!result.isAuthenticated) {
       logErrorConsole('Not authenticated');
-      console.log(
+      logConsole(
         `\nNo credentials found. Run \`packmind-cli login\` to authenticate.`,
       );
-      console.log(`\nCredentials are loaded from (in order of priority):`);
-      console.log(`  1. PACKMIND_API_KEY_V3 environment variable`);
-      console.log(`  2. ${result.credentialsPath}`);
+      logConsole(`\nCredentials are loaded from (in order of priority):`);
+      logConsole(`  1. PACKMIND_API_KEY_V3 environment variable`);
+      logConsole(`  2. ${result.credentialsPath}`);
       process.exit(1);
     }
 

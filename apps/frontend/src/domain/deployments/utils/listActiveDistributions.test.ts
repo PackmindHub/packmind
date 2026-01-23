@@ -70,47 +70,59 @@ describe('listActiveDistributions', () => {
   });
 
   describe('with single target', () => {
-    it('returns distribution when last operation is add', () => {
-      const distribution = createDistribution({
-        id: createDistributionId('dist-1'),
-        createdAt: '2024-01-01T10:00:00Z',
-        distributedPackages: [
-          {
-            id: createDistributedPackageId('dp-1'),
-            distributionId: createDistributionId('dist-1'),
-            packageId: createPackageId('package-1'),
-            recipeVersions: [],
-            standardVersions: [],
-            operation: 'add',
-          },
-        ],
+    describe('when last operation is add', () => {
+      let distribution: Distribution;
+      let result: Distribution[];
+
+      beforeEach(() => {
+        distribution = createDistribution({
+          id: createDistributionId('dist-1'),
+          createdAt: '2024-01-01T10:00:00Z',
+          distributedPackages: [
+            {
+              id: createDistributedPackageId('dp-1'),
+              distributionId: createDistributionId('dist-1'),
+              packageId: createPackageId('package-1'),
+              recipeVersions: [],
+              standardVersions: [],
+              operation: 'add',
+            },
+          ],
+        });
+
+        result = callListActiveDistributions([distribution]);
       });
 
-      const result = callListActiveDistributions([distribution]);
+      it('returns one distribution', () => {
+        expect(result).toHaveLength(1);
+      });
 
-      expect(result).toHaveLength(1);
-      expect(result[0].id).toEqual(distribution.id);
+      it('returns the distribution with correct id', () => {
+        expect(result[0].id).toEqual(distribution.id);
+      });
     });
 
-    it('returns empty when last operation is remove', () => {
-      const distribution = createDistribution({
-        id: createDistributionId('dist-1'),
-        createdAt: '2024-01-01T10:00:00Z',
-        distributedPackages: [
-          {
-            id: createDistributedPackageId('dp-1'),
-            distributionId: createDistributionId('dist-1'),
-            packageId: createPackageId('package-1'),
-            recipeVersions: [],
-            standardVersions: [],
-            operation: 'remove',
-          },
-        ],
+    describe('when last operation is remove', () => {
+      it('returns empty array', () => {
+        const distribution = createDistribution({
+          id: createDistributionId('dist-1'),
+          createdAt: '2024-01-01T10:00:00Z',
+          distributedPackages: [
+            {
+              id: createDistributedPackageId('dp-1'),
+              distributionId: createDistributionId('dist-1'),
+              packageId: createPackageId('package-1'),
+              recipeVersions: [],
+              standardVersions: [],
+              operation: 'remove',
+            },
+          ],
+        });
+
+        const result = callListActiveDistributions([distribution]);
+
+        expect(result).toEqual([]);
       });
-
-      const result = callListActiveDistributions([distribution]);
-
-      expect(result).toEqual([]);
     });
   });
 
@@ -118,129 +130,151 @@ describe('listActiveDistributions', () => {
     const targetId = createTargetId('target-1');
     const target = createTarget({ id: targetId });
 
-    it('returns latest distribution when last operation is add', () => {
-      const olderDistribution = createDistribution({
-        id: createDistributionId('dist-old'),
-        createdAt: '2024-01-01T10:00:00Z',
-        target,
-        distributedPackages: [
-          {
-            id: createDistributedPackageId('dp-1'),
-            distributionId: createDistributionId('dist-old'),
-            packageId: createPackageId('package-1'),
-            recipeVersions: [],
-            standardVersions: [],
-            operation: 'add',
-          },
-        ],
+    describe('when last operation is add', () => {
+      let newerDistribution: Distribution;
+      let result: Distribution[];
+
+      beforeEach(() => {
+        const olderDistribution = createDistribution({
+          id: createDistributionId('dist-old'),
+          createdAt: '2024-01-01T10:00:00Z',
+          target,
+          distributedPackages: [
+            {
+              id: createDistributedPackageId('dp-1'),
+              distributionId: createDistributionId('dist-old'),
+              packageId: createPackageId('package-1'),
+              recipeVersions: [],
+              standardVersions: [],
+              operation: 'add',
+            },
+          ],
+        });
+
+        newerDistribution = createDistribution({
+          id: createDistributionId('dist-new'),
+          createdAt: '2024-01-02T10:00:00Z',
+          target,
+          distributedPackages: [
+            {
+              id: createDistributedPackageId('dp-2'),
+              distributionId: createDistributionId('dist-new'),
+              packageId: createPackageId('package-1'),
+              recipeVersions: [],
+              standardVersions: [],
+              operation: 'add',
+            },
+          ],
+        });
+
+        result = callListActiveDistributions([
+          olderDistribution,
+          newerDistribution,
+        ]);
       });
 
-      const newerDistribution = createDistribution({
-        id: createDistributionId('dist-new'),
-        createdAt: '2024-01-02T10:00:00Z',
-        target,
-        distributedPackages: [
-          {
-            id: createDistributedPackageId('dp-2'),
-            distributionId: createDistributionId('dist-new'),
-            packageId: createPackageId('package-1'),
-            recipeVersions: [],
-            standardVersions: [],
-            operation: 'add',
-          },
-        ],
+      it('returns one distribution', () => {
+        expect(result).toHaveLength(1);
       });
 
-      const result = callListActiveDistributions([
-        olderDistribution,
-        newerDistribution,
-      ]);
-
-      expect(result).toHaveLength(1);
-      expect(result[0].id).toEqual(newerDistribution.id);
+      it('returns the latest distribution', () => {
+        expect(result[0].id).toEqual(newerDistribution.id);
+      });
     });
 
-    it('returns empty when last operation is remove after add', () => {
-      const addDistribution = createDistribution({
-        id: createDistributionId('dist-add'),
-        createdAt: '2024-01-01T10:00:00Z',
-        target,
-        distributedPackages: [
-          {
-            id: createDistributedPackageId('dp-1'),
-            distributionId: createDistributionId('dist-add'),
-            packageId: createPackageId('package-1'),
-            recipeVersions: [],
-            standardVersions: [],
-            operation: 'add',
-          },
-        ],
+    describe('when last operation is remove after add', () => {
+      it('returns empty array', () => {
+        const addDistribution = createDistribution({
+          id: createDistributionId('dist-add'),
+          createdAt: '2024-01-01T10:00:00Z',
+          target,
+          distributedPackages: [
+            {
+              id: createDistributedPackageId('dp-1'),
+              distributionId: createDistributionId('dist-add'),
+              packageId: createPackageId('package-1'),
+              recipeVersions: [],
+              standardVersions: [],
+              operation: 'add',
+            },
+          ],
+        });
+
+        const removeDistribution = createDistribution({
+          id: createDistributionId('dist-remove'),
+          createdAt: '2024-01-02T10:00:00Z',
+          target,
+          distributedPackages: [
+            {
+              id: createDistributedPackageId('dp-2'),
+              distributionId: createDistributionId('dist-remove'),
+              packageId: createPackageId('package-1'),
+              recipeVersions: [],
+              standardVersions: [],
+              operation: 'remove',
+            },
+          ],
+        });
+
+        const result = callListActiveDistributions([
+          addDistribution,
+          removeDistribution,
+        ]);
+
+        expect(result).toEqual([]);
       });
-
-      const removeDistribution = createDistribution({
-        id: createDistributionId('dist-remove'),
-        createdAt: '2024-01-02T10:00:00Z',
-        target,
-        distributedPackages: [
-          {
-            id: createDistributedPackageId('dp-2'),
-            distributionId: createDistributionId('dist-remove'),
-            packageId: createPackageId('package-1'),
-            recipeVersions: [],
-            standardVersions: [],
-            operation: 'remove',
-          },
-        ],
-      });
-
-      const result = callListActiveDistributions([
-        addDistribution,
-        removeDistribution,
-      ]);
-
-      expect(result).toEqual([]);
     });
 
-    it('returns distribution when add follows remove', () => {
-      const removeDistribution = createDistribution({
-        id: createDistributionId('dist-remove'),
-        createdAt: '2024-01-01T10:00:00Z',
-        target,
-        distributedPackages: [
-          {
-            id: createDistributedPackageId('dp-1'),
-            distributionId: createDistributionId('dist-remove'),
-            packageId: createPackageId('package-1'),
-            recipeVersions: [],
-            standardVersions: [],
-            operation: 'remove',
-          },
-        ],
+    describe('when add follows remove', () => {
+      let addDistribution: Distribution;
+      let result: Distribution[];
+
+      beforeEach(() => {
+        const removeDistribution = createDistribution({
+          id: createDistributionId('dist-remove'),
+          createdAt: '2024-01-01T10:00:00Z',
+          target,
+          distributedPackages: [
+            {
+              id: createDistributedPackageId('dp-1'),
+              distributionId: createDistributionId('dist-remove'),
+              packageId: createPackageId('package-1'),
+              recipeVersions: [],
+              standardVersions: [],
+              operation: 'remove',
+            },
+          ],
+        });
+
+        addDistribution = createDistribution({
+          id: createDistributionId('dist-add'),
+          createdAt: '2024-01-02T10:00:00Z',
+          target,
+          distributedPackages: [
+            {
+              id: createDistributedPackageId('dp-2'),
+              distributionId: createDistributionId('dist-add'),
+              packageId: createPackageId('package-1'),
+              recipeVersions: [],
+              standardVersions: [],
+              operation: 'add',
+            },
+          ],
+        });
+
+        result = callListActiveDistributions([
+          removeDistribution,
+          addDistribution,
+        ]);
       });
 
-      const addDistribution = createDistribution({
-        id: createDistributionId('dist-add'),
-        createdAt: '2024-01-02T10:00:00Z',
-        target,
-        distributedPackages: [
-          {
-            id: createDistributedPackageId('dp-2'),
-            distributionId: createDistributionId('dist-add'),
-            packageId: createPackageId('package-1'),
-            recipeVersions: [],
-            standardVersions: [],
-            operation: 'add',
-          },
-        ],
+      it('returns one distribution', () => {
+        expect(result).toHaveLength(1);
       });
 
-      const result = callListActiveDistributions([
-        removeDistribution,
-        addDistribution,
-      ]);
-
-      expect(result).toHaveLength(1);
-      expect(result[0].id).toEqual(addDistribution.id);
+      it('returns the add distribution', () => {
+        expect(result[0].id).toEqual(addDistribution.id);
+      });
     });
   });
 
@@ -248,300 +282,353 @@ describe('listActiveDistributions', () => {
     const target1 = createTarget({ id: createTargetId('target-1') });
     const target2 = createTarget({ id: createTargetId('target-2') });
 
-    it('returns distributions for all active targets', () => {
-      const dist1 = createDistribution({
-        id: createDistributionId('dist-1'),
-        createdAt: '2024-01-01T10:00:00Z',
-        target: target1,
-        distributedPackages: [
-          {
-            id: createDistributedPackageId('dp-1'),
-            distributionId: createDistributionId('dist-1'),
-            packageId: createPackageId('package-1'),
-            recipeVersions: [],
-            standardVersions: [],
-            operation: 'add',
-          },
-        ],
+    describe('with all active targets', () => {
+      let result: Distribution[];
+
+      beforeEach(() => {
+        const dist1 = createDistribution({
+          id: createDistributionId('dist-1'),
+          createdAt: '2024-01-01T10:00:00Z',
+          target: target1,
+          distributedPackages: [
+            {
+              id: createDistributedPackageId('dp-1'),
+              distributionId: createDistributionId('dist-1'),
+              packageId: createPackageId('package-1'),
+              recipeVersions: [],
+              standardVersions: [],
+              operation: 'add',
+            },
+          ],
+        });
+
+        const dist2 = createDistribution({
+          id: createDistributionId('dist-2'),
+          createdAt: '2024-01-01T10:00:00Z',
+          target: target2,
+          distributedPackages: [
+            {
+              id: createDistributedPackageId('dp-2'),
+              distributionId: createDistributionId('dist-2'),
+              packageId: createPackageId('package-1'),
+              recipeVersions: [],
+              standardVersions: [],
+              operation: 'add',
+            },
+          ],
+        });
+
+        result = callListActiveDistributions([dist1, dist2]);
       });
 
-      const dist2 = createDistribution({
-        id: createDistributionId('dist-2'),
-        createdAt: '2024-01-01T10:00:00Z',
-        target: target2,
-        distributedPackages: [
-          {
-            id: createDistributedPackageId('dp-2'),
-            distributionId: createDistributionId('dist-2'),
-            packageId: createPackageId('package-1'),
-            recipeVersions: [],
-            standardVersions: [],
-            operation: 'add',
-          },
-        ],
+      it('returns two distributions', () => {
+        expect(result).toHaveLength(2);
       });
 
-      const result = callListActiveDistributions([dist1, dist2]);
+      it('includes target1', () => {
+        expect(result.map((d) => d.target.id)).toContain(target1.id);
+      });
 
-      expect(result).toHaveLength(2);
-      expect(result.map((d) => d.target.id)).toContain(target1.id);
-      expect(result.map((d) => d.target.id)).toContain(target2.id);
+      it('includes target2', () => {
+        expect(result.map((d) => d.target.id)).toContain(target2.id);
+      });
     });
 
-    it('filters out targets with remove as last operation', () => {
-      const activeTarget1 = createDistribution({
-        id: createDistributionId('dist-1'),
-        createdAt: '2024-01-01T10:00:00Z',
-        target: target1,
-        distributedPackages: [
-          {
-            id: createDistributedPackageId('dp-1'),
-            distributionId: createDistributionId('dist-1'),
-            packageId: createPackageId('package-1'),
-            recipeVersions: [],
-            standardVersions: [],
-            operation: 'add',
-          },
-        ],
+    describe('with one target having remove as last operation', () => {
+      let result: Distribution[];
+
+      beforeEach(() => {
+        const activeTarget1 = createDistribution({
+          id: createDistributionId('dist-1'),
+          createdAt: '2024-01-01T10:00:00Z',
+          target: target1,
+          distributedPackages: [
+            {
+              id: createDistributedPackageId('dp-1'),
+              distributionId: createDistributionId('dist-1'),
+              packageId: createPackageId('package-1'),
+              recipeVersions: [],
+              standardVersions: [],
+              operation: 'add',
+            },
+          ],
+        });
+
+        const removedTarget2 = createDistribution({
+          id: createDistributionId('dist-2'),
+          createdAt: '2024-01-01T10:00:00Z',
+          target: target2,
+          distributedPackages: [
+            {
+              id: createDistributedPackageId('dp-2'),
+              distributionId: createDistributionId('dist-2'),
+              packageId: createPackageId('package-1'),
+              recipeVersions: [],
+              standardVersions: [],
+              operation: 'remove',
+            },
+          ],
+        });
+
+        result = callListActiveDistributions([activeTarget1, removedTarget2]);
       });
 
-      const removedTarget2 = createDistribution({
-        id: createDistributionId('dist-2'),
-        createdAt: '2024-01-01T10:00:00Z',
-        target: target2,
-        distributedPackages: [
-          {
-            id: createDistributedPackageId('dp-2'),
-            distributionId: createDistributionId('dist-2'),
-            packageId: createPackageId('package-1'),
-            recipeVersions: [],
-            standardVersions: [],
-            operation: 'remove',
-          },
-        ],
+      it('returns one distribution', () => {
+        expect(result).toHaveLength(1);
       });
 
-      const result = callListActiveDistributions([
-        activeTarget1,
-        removedTarget2,
-      ]);
-
-      expect(result).toHaveLength(1);
-      expect(result[0].target.id).toEqual(target1.id);
+      it('returns only the active target', () => {
+        expect(result[0].target.id).toEqual(target1.id);
+      });
     });
 
-    it('handles mixed history across targets', () => {
-      // Target 1: add -> remove (should be excluded)
-      const target1Add = createDistribution({
-        id: createDistributionId('dist-1-add'),
-        createdAt: '2024-01-01T10:00:00Z',
-        target: target1,
-        distributedPackages: [
-          {
-            id: createDistributedPackageId('dp-1'),
-            distributionId: createDistributionId('dist-1-add'),
-            packageId: createPackageId('package-1'),
-            recipeVersions: [],
-            standardVersions: [],
-            operation: 'add',
-          },
-        ],
+    describe('with mixed history across targets', () => {
+      let target2Add: Distribution;
+      let result: Distribution[];
+
+      beforeEach(() => {
+        // Target 1: add -> remove (should be excluded)
+        const target1Add = createDistribution({
+          id: createDistributionId('dist-1-add'),
+          createdAt: '2024-01-01T10:00:00Z',
+          target: target1,
+          distributedPackages: [
+            {
+              id: createDistributedPackageId('dp-1'),
+              distributionId: createDistributionId('dist-1-add'),
+              packageId: createPackageId('package-1'),
+              recipeVersions: [],
+              standardVersions: [],
+              operation: 'add',
+            },
+          ],
+        });
+
+        const target1Remove = createDistribution({
+          id: createDistributionId('dist-1-remove'),
+          createdAt: '2024-01-02T10:00:00Z',
+          target: target1,
+          distributedPackages: [
+            {
+              id: createDistributedPackageId('dp-2'),
+              distributionId: createDistributionId('dist-1-remove'),
+              packageId: createPackageId('package-1'),
+              recipeVersions: [],
+              standardVersions: [],
+              operation: 'remove',
+            },
+          ],
+        });
+
+        // Target 2: remove -> add (should be included)
+        const target2Remove = createDistribution({
+          id: createDistributionId('dist-2-remove'),
+          createdAt: '2024-01-01T10:00:00Z',
+          target: target2,
+          distributedPackages: [
+            {
+              id: createDistributedPackageId('dp-3'),
+              distributionId: createDistributionId('dist-2-remove'),
+              packageId: createPackageId('package-1'),
+              recipeVersions: [],
+              standardVersions: [],
+              operation: 'remove',
+            },
+          ],
+        });
+
+        target2Add = createDistribution({
+          id: createDistributionId('dist-2-add'),
+          createdAt: '2024-01-02T10:00:00Z',
+          target: target2,
+          distributedPackages: [
+            {
+              id: createDistributedPackageId('dp-4'),
+              distributionId: createDistributionId('dist-2-add'),
+              packageId: createPackageId('package-1'),
+              recipeVersions: [],
+              standardVersions: [],
+              operation: 'add',
+            },
+          ],
+        });
+
+        result = callListActiveDistributions([
+          target1Add,
+          target1Remove,
+          target2Remove,
+          target2Add,
+        ]);
       });
 
-      const target1Remove = createDistribution({
-        id: createDistributionId('dist-1-remove'),
-        createdAt: '2024-01-02T10:00:00Z',
-        target: target1,
-        distributedPackages: [
-          {
-            id: createDistributedPackageId('dp-2'),
-            distributionId: createDistributionId('dist-1-remove'),
-            packageId: createPackageId('package-1'),
-            recipeVersions: [],
-            standardVersions: [],
-            operation: 'remove',
-          },
-        ],
+      it('returns one distribution', () => {
+        expect(result).toHaveLength(1);
       });
 
-      // Target 2: remove -> add (should be included)
-      const target2Remove = createDistribution({
-        id: createDistributionId('dist-2-remove'),
-        createdAt: '2024-01-01T10:00:00Z',
-        target: target2,
-        distributedPackages: [
-          {
-            id: createDistributedPackageId('dp-3'),
-            distributionId: createDistributionId('dist-2-remove'),
-            packageId: createPackageId('package-1'),
-            recipeVersions: [],
-            standardVersions: [],
-            operation: 'remove',
-          },
-        ],
+      it('returns target2', () => {
+        expect(result[0].target.id).toEqual(target2.id);
       });
 
-      const target2Add = createDistribution({
-        id: createDistributionId('dist-2-add'),
-        createdAt: '2024-01-02T10:00:00Z',
-        target: target2,
-        distributedPackages: [
-          {
-            id: createDistributedPackageId('dp-4'),
-            distributionId: createDistributionId('dist-2-add'),
-            packageId: createPackageId('package-1'),
-            recipeVersions: [],
-            standardVersions: [],
-            operation: 'add',
-          },
-        ],
+      it('returns target2Add distribution', () => {
+        expect(result[0].id).toEqual(target2Add.id);
       });
-
-      const result = callListActiveDistributions([
-        target1Add,
-        target1Remove,
-        target2Remove,
-        target2Add,
-      ]);
-
-      expect(result).toHaveLength(1);
-      expect(result[0].target.id).toEqual(target2.id);
-      expect(result[0].id).toEqual(target2Add.id);
     });
   });
 
   describe('with distribution status handling', () => {
-    it('returns distribution when add operation succeeded', () => {
-      const distribution = createDistribution({
-        id: createDistributionId('dist-1'),
-        status: DistributionStatus.success,
-        distributedPackages: [
-          createDistributedPackage('dist-1', { operation: 'add' }),
-        ],
+    describe('when add operation succeeded', () => {
+      it('returns one distribution', () => {
+        const distribution = createDistribution({
+          id: createDistributionId('dist-1'),
+          status: DistributionStatus.success,
+          distributedPackages: [
+            createDistributedPackage('dist-1', { operation: 'add' }),
+          ],
+        });
+
+        const result = callListActiveDistributions([distribution]);
+
+        expect(result).toHaveLength(1);
       });
-
-      const result = callListActiveDistributions([distribution]);
-
-      expect(result).toHaveLength(1);
     });
 
-    it('returns distribution when add operation has no_changes status', () => {
-      const distribution = createDistribution({
-        id: createDistributionId('dist-1'),
-        status: DistributionStatus.no_changes,
-        distributedPackages: [
-          createDistributedPackage('dist-1', { operation: 'add' }),
-        ],
+    describe('when add operation has no_changes status', () => {
+      it('returns one distribution', () => {
+        const distribution = createDistribution({
+          id: createDistributionId('dist-1'),
+          status: DistributionStatus.no_changes,
+          distributedPackages: [
+            createDistributedPackage('dist-1', { operation: 'add' }),
+          ],
+        });
+
+        const result = callListActiveDistributions([distribution]);
+
+        expect(result).toHaveLength(1);
       });
-
-      const result = callListActiveDistributions([distribution]);
-
-      expect(result).toHaveLength(1);
     });
 
-    it('returns empty when add operation failed', () => {
-      const distribution = createDistribution({
-        id: createDistributionId('dist-1'),
-        status: DistributionStatus.failure,
-        distributedPackages: [
-          createDistributedPackage('dist-1', { operation: 'add' }),
-        ],
+    describe('when add operation failed', () => {
+      it('returns empty array', () => {
+        const distribution = createDistribution({
+          id: createDistributionId('dist-1'),
+          status: DistributionStatus.failure,
+          distributedPackages: [
+            createDistributedPackage('dist-1', { operation: 'add' }),
+          ],
+        });
+
+        const result = callListActiveDistributions([distribution]);
+
+        expect(result).toEqual([]);
       });
-
-      const result = callListActiveDistributions([distribution]);
-
-      expect(result).toEqual([]);
     });
 
-    it('returns empty when remove operation succeeded', () => {
-      const distribution = createDistribution({
-        id: createDistributionId('dist-1'),
-        status: DistributionStatus.success,
-        distributedPackages: [
-          createDistributedPackage('dist-1', { operation: 'remove' }),
-        ],
+    describe('when remove operation succeeded', () => {
+      it('returns empty array', () => {
+        const distribution = createDistribution({
+          id: createDistributionId('dist-1'),
+          status: DistributionStatus.success,
+          distributedPackages: [
+            createDistributedPackage('dist-1', { operation: 'remove' }),
+          ],
+        });
+
+        const result = callListActiveDistributions([distribution]);
+
+        expect(result).toEqual([]);
       });
-
-      const result = callListActiveDistributions([distribution]);
-
-      expect(result).toEqual([]);
     });
 
-    it('returns distribution when remove operation failed (package still deployed)', () => {
-      const distribution = createDistribution({
-        id: createDistributionId('dist-1'),
-        status: DistributionStatus.failure,
-        distributedPackages: [
-          createDistributedPackage('dist-1', { operation: 'remove' }),
-        ],
+    describe('when remove operation failed (package still deployed)', () => {
+      it('returns one distribution', () => {
+        const distribution = createDistribution({
+          id: createDistributionId('dist-1'),
+          status: DistributionStatus.failure,
+          distributedPackages: [
+            createDistributedPackage('dist-1', { operation: 'remove' }),
+          ],
+        });
+
+        const result = callListActiveDistributions([distribution]);
+
+        expect(result).toHaveLength(1);
       });
-
-      const result = callListActiveDistributions([distribution]);
-
-      expect(result).toHaveLength(1);
     });
 
-    it('handles add then failed remove scenario', () => {
-      const target = createTarget({ id: createTargetId('target-1') });
+    describe('with add then failed remove scenario', () => {
+      let failedRemoveDistribution: Distribution;
+      let result: Distribution[];
 
-      const addDistribution = createDistribution({
-        id: createDistributionId('dist-add'),
-        createdAt: '2024-01-01T10:00:00Z',
-        target,
-        status: DistributionStatus.success,
-        distributedPackages: [
-          createDistributedPackage('dist-add', { operation: 'add' }),
-        ],
+      beforeEach(() => {
+        const target = createTarget({ id: createTargetId('target-1') });
+
+        const addDistribution = createDistribution({
+          id: createDistributionId('dist-add'),
+          createdAt: '2024-01-01T10:00:00Z',
+          target,
+          status: DistributionStatus.success,
+          distributedPackages: [
+            createDistributedPackage('dist-add', { operation: 'add' }),
+          ],
+        });
+
+        failedRemoveDistribution = createDistribution({
+          id: createDistributionId('dist-remove'),
+          createdAt: '2024-01-02T10:00:00Z',
+          target,
+          status: DistributionStatus.failure,
+          distributedPackages: [
+            createDistributedPackage('dist-remove', { operation: 'remove' }),
+          ],
+        });
+
+        result = callListActiveDistributions([
+          addDistribution,
+          failedRemoveDistribution,
+        ]);
       });
 
-      const failedRemoveDistribution = createDistribution({
-        id: createDistributionId('dist-remove'),
-        createdAt: '2024-01-02T10:00:00Z',
-        target,
-        status: DistributionStatus.failure,
-        distributedPackages: [
-          createDistributedPackage('dist-remove', { operation: 'remove' }),
-        ],
+      it('returns one distribution', () => {
+        expect(result).toHaveLength(1);
       });
 
-      const result = callListActiveDistributions([
-        addDistribution,
-        failedRemoveDistribution,
-      ]);
-
-      expect(result).toHaveLength(1);
-      expect(result[0].id).toEqual(failedRemoveDistribution.id);
+      it('returns the failed remove distribution', () => {
+        expect(result[0].id).toEqual(failedRemoveDistribution.id);
+      });
     });
 
-    it('handles add then successful remove scenario', () => {
-      const target = createTarget({ id: createTargetId('target-1') });
+    describe('with add then successful remove scenario', () => {
+      it('returns empty array', () => {
+        const target = createTarget({ id: createTargetId('target-1') });
 
-      const addDistribution = createDistribution({
-        id: createDistributionId('dist-add'),
-        createdAt: '2024-01-01T10:00:00Z',
-        target,
-        status: DistributionStatus.success,
-        distributedPackages: [
-          createDistributedPackage('dist-add', { operation: 'add' }),
-        ],
+        const addDistribution = createDistribution({
+          id: createDistributionId('dist-add'),
+          createdAt: '2024-01-01T10:00:00Z',
+          target,
+          status: DistributionStatus.success,
+          distributedPackages: [
+            createDistributedPackage('dist-add', { operation: 'add' }),
+          ],
+        });
+
+        const successfulRemoveDistribution = createDistribution({
+          id: createDistributionId('dist-remove'),
+          createdAt: '2024-01-02T10:00:00Z',
+          target,
+          status: DistributionStatus.success,
+          distributedPackages: [
+            createDistributedPackage('dist-remove', { operation: 'remove' }),
+          ],
+        });
+
+        const result = callListActiveDistributions([
+          addDistribution,
+          successfulRemoveDistribution,
+        ]);
+
+        expect(result).toEqual([]);
       });
-
-      const successfulRemoveDistribution = createDistribution({
-        id: createDistributionId('dist-remove'),
-        createdAt: '2024-01-02T10:00:00Z',
-        target,
-        status: DistributionStatus.success,
-        distributedPackages: [
-          createDistributedPackage('dist-remove', { operation: 'remove' }),
-        ],
-      });
-
-      const result = callListActiveDistributions([
-        addDistribution,
-        successfulRemoveDistribution,
-      ]);
-
-      expect(result).toEqual([]);
     });
   });
 });

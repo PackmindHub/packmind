@@ -432,4 +432,9 @@ ${standardVersion.description}
 
     return header + rulesContent + footer;
   }
+
+  getSkillsFolderPath(): undefined {
+    // Skills not supported for Packmind deployer yet
+    return undefined;
+  }
 }

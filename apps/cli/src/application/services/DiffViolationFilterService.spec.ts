@@ -11,7 +11,9 @@ describe('DiffViolationFilterService', () => {
 
   describe('filterByFiles', () => {
     describe('when violations match modified files', () => {
-      it('returns matching violations', () => {
+      let result: LintViolation[];
+
+      beforeEach(() => {
         const violations: LintViolation[] = [
           {
             file: '/path/to/file1.ts',
@@ -28,9 +30,14 @@ describe('DiffViolationFilterService', () => {
         ];
         const modifiedFiles = ['/path/to/file1.ts'];
 
-        const result = service.filterByFiles(violations, modifiedFiles);
+        result = service.filterByFiles(violations, modifiedFiles);
+      });
 
+      it('returns one violation', () => {
         expect(result).toHaveLength(1);
+      });
+
+      it('returns the matching file', () => {
         expect(result[0].file).toBe('/path/to/file1.ts');
       });
     });
@@ -98,7 +105,9 @@ describe('DiffViolationFilterService', () => {
 
   describe('filterByLines', () => {
     describe('when violation is on a modified line', () => {
-      it('returns the violation', () => {
+      let result: LintViolation[];
+
+      beforeEach(() => {
         const violations: LintViolation[] = [
           {
             file: '/path/to/file.ts',
@@ -111,10 +120,18 @@ describe('DiffViolationFilterService', () => {
           { file: '/path/to/file.ts', startLine: 10, lineCount: 10 },
         ];
 
-        const result = service.filterByLines(violations, modifiedLines);
+        result = service.filterByLines(violations, modifiedLines);
+      });
 
+      it('returns one file with violations', () => {
         expect(result).toHaveLength(1);
+      });
+
+      it('returns one violation', () => {
         expect(result[0].violations).toHaveLength(1);
+      });
+
+      it('returns the violation on line 15', () => {
         expect(result[0].violations[0].line).toBe(15);
       });
     });
@@ -221,7 +238,9 @@ describe('DiffViolationFilterService', () => {
     });
 
     describe('when file has multiple modified ranges', () => {
-      it('includes violations in any modified range', () => {
+      let result: LintViolation[];
+
+      beforeEach(() => {
         const violations: LintViolation[] = [
           {
             file: '/path/to/file.ts',
@@ -237,17 +256,30 @@ describe('DiffViolationFilterService', () => {
           { file: '/path/to/file.ts', startLine: 20, lineCount: 10 },
         ];
 
-        const result = service.filterByLines(violations, modifiedLines);
+        result = service.filterByLines(violations, modifiedLines);
+      });
 
+      it('returns one file with violations', () => {
         expect(result).toHaveLength(1);
+      });
+
+      it('returns two violations', () => {
         expect(result[0].violations).toHaveLength(2);
+      });
+
+      it('includes violation on line 5 from first range', () => {
         expect(result[0].violations[0].line).toBe(5);
+      });
+
+      it('includes violation on line 25 from second range', () => {
         expect(result[0].violations[1].line).toBe(25);
       });
     });
 
     describe('when some violations match and some do not', () => {
-      it('returns only matching violations', () => {
+      let result: LintViolation[];
+
+      beforeEach(() => {
         const violations: LintViolation[] = [
           {
             file: '/path/to/file.ts',
@@ -261,10 +293,18 @@ describe('DiffViolationFilterService', () => {
           { file: '/path/to/file.ts', startLine: 10, lineCount: 10 },
         ];
 
-        const result = service.filterByLines(violations, modifiedLines);
+        result = service.filterByLines(violations, modifiedLines);
+      });
 
+      it('returns one file with violations', () => {
         expect(result).toHaveLength(1);
+      });
+
+      it('returns one matching violation', () => {
         expect(result[0].violations).toHaveLength(1);
+      });
+
+      it('returns the violation on line 15', () => {
         expect(result[0].violations[0].line).toBe(15);
       });
     });

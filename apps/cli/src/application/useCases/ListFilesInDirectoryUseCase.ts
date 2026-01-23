@@ -1,4 +1,5 @@
 import { ListFiles } from '../services/ListFiles';
+import { logErrorConsole } from '../../infra/utils/consoleLogger';
 
 export type ListFilesInDirectoryUseCaseCommand = {
   path: string;
@@ -35,7 +36,7 @@ export class ListFilesInDirectoryUseCase {
           content,
         });
       } catch (error) {
-        console.error(`Error reading file ${file.path}:`, error);
+        logErrorConsole(`Error reading file ${file.path}: ${error}`);
       }
     }
 
