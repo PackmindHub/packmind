@@ -18,10 +18,16 @@ import {
   UploadSkillResult,
   IGetDefaultSkillsUseCase,
   GetDefaultSkillsResult,
+  GetGlobalSpaceResult,
+  CreateStandardCommand,
+  CreateStandardResult,
+  StandardRule,
+  AddExampleCommand,
 } from '../../domain/repositories/IPackmindGateway';
 import { readSkillDirectory } from '../utils/readSkillDirectory';
 import { CommunityEditionError } from '../../domain/errors/CommunityEditionError';
 import { NotLoggedInError } from '../../domain/errors/NotLoggedInError';
+import { PackmindHttpClient } from '../http/PackmindHttpClient';
 import {
   RuleId,
   Gateway,
@@ -113,7 +119,12 @@ function decodeApiKey(apiKey: string): DecodedApiKey {
 }
 
 export class PackmindGateway implements IPackmindGateway {
-  constructor(private readonly apiKey: string) {}
+  private readonly httpClient: PackmindHttpClient;
+
+  constructor(private readonly apiKey: string) {
+    this.httpClient = new PackmindHttpClient(apiKey);
+  }
+
   public getPullData: Gateway<IPullContentUseCase> = async (command) => {
     // Decode the API key to get host and JWT
     const decodedApiKey = decodeApiKey(this.apiKey);
@@ -1405,5 +1416,53 @@ export class PackmindGateway implements IPackmindGateway {
         error: `Error: ${err?.message || JSON.stringify(error)}`,
       };
     }
+  };
+
+  public getGlobalSpace = async (): Promise<GetGlobalSpaceResult> => {
+    const { organizationId } = this.httpClient.getAuthContext();
+    return this.httpClient.request<GetGlobalSpaceResult>(
+      `/api/v0/organizations/${organizationId}/spaces/global`,
+    );
+  };
+
+  public createStandard = async (
+    spaceId: string,
+    data: CreateStandardCommand,
+  ): Promise<CreateStandardResult> => {
+    const { organizationId } = this.httpClient.getAuthContext();
+    return this.httpClient.request<CreateStandardResult>(
+      `/api/v0/organizations/${organizationId}/spaces/${spaceId}/standards`,
+      { method: 'POST', body: data },
+    );
+  };
+
+  public getRulesForStandard = async (
+    spaceId: string,
+    standardId: string,
+  ): Promise<StandardRule[]> => {
+    const { organizationId } = this.httpClient.getAuthContext();
+    return this.httpClient.request<StandardRule[]>(
+      `/api/v0/organizations/${organizationId}/spaces/${spaceId}/standards/${standardId}/rules`,
+    );
+  };
+
+  public addExampleToRule = async (
+    spaceId: string,
+    standardId: string,
+    ruleId: string,
+    example: AddExampleCommand,
+  ): Promise<void> => {
+    const { organizationId } = this.httpClient.getAuthContext();
+    await this.httpClient.request(
+      `/api/v0/organizations/${organizationId}/spaces/${spaceId}/standards/${standardId}/rules/${ruleId}/examples`,
+      {
+        method: 'POST',
+        body: {
+          lang: example.language,
+          positive: example.positive,
+          negative: example.negative,
+        },
+      },
+    );
   };
 }
