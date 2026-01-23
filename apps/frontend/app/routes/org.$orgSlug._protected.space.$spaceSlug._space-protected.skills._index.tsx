@@ -1,11 +1,4 @@
-import {
-  PMPage,
-  PMVStack,
-  PMHStack,
-  PMFeatureFlag,
-  DEFAULT_FEATURE_DOMAIN_MAP,
-  DOWNLOAD_DEFAULT_SKILLS_FEATURE_KEY,
-} from '@packmind/ui';
+import { PMPage, PMVStack, PMHStack } from '@packmind/ui';
 import { useAuthContext } from '../../src/domain/accounts/hooks/useAuthContext';
 import { SkillsList } from '../../src/domain/skills/components/SkillsList';
 import { AutobreadCrumb } from '../../src/shared/components/navigation/AutobreadCrumb';
@@ -32,13 +25,7 @@ export default function SkillsIndexRouteModule() {
       breadcrumbComponent={<AutobreadCrumb />}
       actions={
         <PMHStack gap={2}>
-          <PMFeatureFlag
-            featureKeys={[DOWNLOAD_DEFAULT_SKILLS_FEATURE_KEY]}
-            featureDomainMap={DEFAULT_FEATURE_DOMAIN_MAP}
-            userEmail={user?.email}
-          >
-            <DownloadDefaultSkillsPopover />
-          </PMFeatureFlag>
+          <DownloadDefaultSkillsPopover />
           {spaceSlug && (
             <GettingStartedLearnMoreDialog
               body={<SkillsLearnMoreContent />}

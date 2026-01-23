@@ -236,7 +236,6 @@ export class DeploymentsAdapter
       this.deploymentsServices.getRenderModeConfigurationService(),
       ports.eventEmitterService,
       this.deploymentsDelayedJobs.publishArtifactsDelayedJob,
-      this.accountsPort,
       this._deployDefaultSkillsUseCase,
     );
 

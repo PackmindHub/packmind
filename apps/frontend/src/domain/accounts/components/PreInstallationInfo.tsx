@@ -11,7 +11,13 @@ import {
   PMGrid,
   PMTooltip,
 } from '@packmind/ui';
-import { LuArrowRight, LuFileCode, LuBrain, LuTerminal } from 'react-icons/lu';
+import {
+  LuArrowRight,
+  LuFileCode,
+  LuBrain,
+  LuTerminal,
+  LuInfo,
+} from 'react-icons/lu';
 import { PreInstallationInfoDataTestIds } from '@packmind/frontend';
 
 interface IPreInstallationInfoProps {
@@ -53,8 +59,15 @@ export const PreInstallationInfo: React.FC<IPreInstallationInfoProps> = ({
               <PMCard.Root p={4} textAlign="center" cursor="help">
                 <PMVStack gap={2} align="center">
                   <PMIcon as={LuFileCode} size="lg" color="blue.500" />
-                  <PMText fontSize="sm" fontWeight="medium">
+                  <PMText
+                    fontSize="sm"
+                    fontWeight="medium"
+                    display="flex"
+                    alignItems="center"
+                    gap={1}
+                  >
                     Standards
+                    <PMIcon as={LuInfo} size="xs" color="gray.500" />
                   </PMText>
                 </PMVStack>
               </PMCard.Root>
@@ -64,8 +77,15 @@ export const PreInstallationInfo: React.FC<IPreInstallationInfoProps> = ({
               <PMCard.Root p={4} textAlign="center" cursor="help">
                 <PMVStack gap={2} align="center">
                   <PMIcon as={LuTerminal} size="lg" color="purple.500" />
-                  <PMText fontSize="sm" fontWeight="medium">
+                  <PMText
+                    fontSize="sm"
+                    fontWeight="medium"
+                    display="flex"
+                    alignItems="center"
+                    gap={1}
+                  >
                     Commands
+                    <PMIcon as={LuInfo} size="xs" color="gray.500" />
                   </PMText>
                 </PMVStack>
               </PMCard.Root>
@@ -75,8 +95,15 @@ export const PreInstallationInfo: React.FC<IPreInstallationInfoProps> = ({
               <PMCard.Root p={4} textAlign="center" cursor="help">
                 <PMVStack gap={2} align="center">
                   <PMIcon as={LuBrain} size="lg" color="green.500" />
-                  <PMText fontSize="sm" fontWeight="medium">
+                  <PMText
+                    fontSize="sm"
+                    fontWeight="medium"
+                    display="flex"
+                    alignItems="center"
+                    gap={1}
+                  >
                     Skills
+                    <PMIcon as={LuInfo} size="xs" color="gray.500" />
                   </PMText>
                 </PMVStack>
               </PMCard.Root>

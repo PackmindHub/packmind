@@ -1,7 +1,7 @@
 import { readPlaybookFile } from '../utils/readPlaybookFile';
-import { IPackmindGateway } from '../../domain/repositories/IPackmindGateway';
+import { ICreateStandardFromPlaybookUseCase } from '../../domain/useCases/ICreateStandardFromPlaybookUseCase';
 
-export interface CreateStandardResult {
+export interface ICreateStandardHandlerResult {
   success: boolean;
   standardId?: string;
   standardName?: string;
@@ -10,9 +10,8 @@ export interface CreateStandardResult {
 
 export async function createStandardHandler(
   filePath: string,
-  gateway: IPackmindGateway,
-): Promise<CreateStandardResult> {
-  // Read and validate playbook
+  useCase: ICreateStandardFromPlaybookUseCase,
+): Promise<ICreateStandardHandlerResult> {
   const readResult = await readPlaybookFile(filePath);
 
   if (!readResult.isValid) {
@@ -29,41 +28,14 @@ export async function createStandardHandler(
     };
   }
 
-  const playbook = readResult.data;
-
   try {
-    // Transform playbook to standard format
-    const standardData = {
-      name: playbook.name,
-      description: playbook.description,
-      scope: playbook.scope,
-      rules: playbook.rules.map((rule) => ({
-        content: rule.content,
-        examples: rule.examples
-          ? {
-              positive: rule.examples.positive,
-              negative: rule.examples.negative,
-              language: rule.examples.language,
-            }
-          : undefined,
-      })),
+    const result = await useCase.execute(readResult.data);
+
+    return {
+      success: true,
+      standardId: result.standardId,
+      standardName: result.name,
     };
-
-    // Call gateway to create standard
-    const result = await gateway.createStandardFromPlaybook(standardData);
-
-    if (result.success) {
-      return {
-        success: true,
-        standardId: result.standardId,
-        standardName: result.name,
-      };
-    } else {
-      return {
-        success: false,
-        error: result.error || 'Failed to create standard',
-      };
-    }
   } catch (e) {
     return {
       success: false,

@@ -3,6 +3,7 @@ import { PackmindCliHexa } from '../../PackmindCliHexa';
 import { createStandardHandler } from './createStandardHandler';
 import { logSuccessConsole, logErrorConsole } from '../utils/consoleLogger';
 import { PackmindLogger, LogLevel } from '@packmind/logger';
+import { CreateStandardFromPlaybookUseCase } from '../../application/useCases/CreateStandardFromPlaybookUseCase';
 
 export const createStandardCommand = command({
   name: 'create',
@@ -19,8 +20,9 @@ export const createStandardCommand = command({
       const packmindLogger = new PackmindLogger('PackmindCLI', LogLevel.INFO);
       const hexa = new PackmindCliHexa(packmindLogger);
       const gateway = hexa.getPackmindGateway();
+      const useCase = new CreateStandardFromPlaybookUseCase(gateway);
 
-      const result = await createStandardHandler(file, gateway);
+      const result = await createStandardHandler(file, useCase);
 
       if (result.success) {
         logSuccessConsole(

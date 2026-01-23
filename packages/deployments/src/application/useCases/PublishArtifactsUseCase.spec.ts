@@ -28,11 +28,9 @@ import {
   IStandardsPort,
   ICodingAgentPort,
   IGitPort,
-  IAccountsPort,
   IDeployDefaultSkillsUseCase,
   Rule,
   SkillFile,
-  User,
 } from '@packmind/types';
 import { PackmindLogger } from '@packmind/logger';
 import { PackmindEventEmitterService } from '@packmind/node-utils';
@@ -57,7 +55,6 @@ describe('PublishArtifactsUseCase', () => {
   let mockRenderModeConfigurationService: jest.Mocked<RenderModeConfigurationService>;
   let mockEventEmitterService: jest.Mocked<PackmindEventEmitterService>;
   let mockPublishArtifactsDelayedJob: jest.Mocked<PublishArtifactsDelayedJob>;
-  let mockAccountsPort: jest.Mocked<IAccountsPort>;
   let mockDeployDefaultSkillsUseCase: jest.Mocked<IDeployDefaultSkillsUseCase>;
   let mockLogger: PackmindLogger;
 
@@ -144,10 +141,6 @@ describe('PublishArtifactsUseCase', () => {
       addJob: jest.fn().mockResolvedValue(undefined),
     } as unknown as jest.Mocked<PublishArtifactsDelayedJob>;
 
-    mockAccountsPort = {
-      getUserById: jest.fn().mockResolvedValue(null),
-    } as unknown as jest.Mocked<IAccountsPort>;
-
     mockDeployDefaultSkillsUseCase = {
       execute: jest.fn().mockResolvedValue({
         fileUpdates: { createOrUpdate: [], delete: [] },
@@ -165,7 +158,6 @@ describe('PublishArtifactsUseCase', () => {
       mockRenderModeConfigurationService,
       mockEventEmitterService,
       mockPublishArtifactsDelayedJob,
-      mockAccountsPort,
       mockDeployDefaultSkillsUseCase,
       undefined,
       mockLogger,
@@ -310,12 +302,17 @@ describe('PublishArtifactsUseCase', () => {
       );
     });
 
-    it('uses coding agents mapped from render modes', async () => {
+    it('fetches active render modes for organization', async () => {
       await useCase.execute(command);
 
       expect(
         mockRenderModeConfigurationService.getActiveRenderModes,
       ).toHaveBeenCalledWith(organizationId);
+    });
+
+    it('maps render modes to coding agents', async () => {
+      await useCase.execute(command);
+
       expect(
         mockRenderModeConfigurationService.mapRenderModesToCodingAgents,
       ).toHaveBeenCalledWith(activeRenderModes);
@@ -361,14 +358,38 @@ describe('PublishArtifactsUseCase', () => {
       );
     });
 
-    it('includes both recipes and standards in commit message', async () => {
+    it('includes recipe name in commit message', async () => {
       await useCase.execute(command);
 
       const jobInput = mockPublishArtifactsDelayedJob.addJob.mock.calls[0][0];
       expect(jobInput.commitMessage).toContain('Test Recipe');
+    });
+
+    it('includes recipe slug in commit message', async () => {
+      await useCase.execute(command);
+
+      const jobInput = mockPublishArtifactsDelayedJob.addJob.mock.calls[0][0];
       expect(jobInput.commitMessage).toContain('test-recipe');
+    });
+
+    it('includes standard name in commit message', async () => {
+      await useCase.execute(command);
+
+      const jobInput = mockPublishArtifactsDelayedJob.addJob.mock.calls[0][0];
       expect(jobInput.commitMessage).toContain('Test Standard');
+    });
+
+    it('includes standard slug in commit message', async () => {
+      await useCase.execute(command);
+
+      const jobInput = mockPublishArtifactsDelayedJob.addJob.mock.calls[0][0];
       expect(jobInput.commitMessage).toContain('test-standard');
+    });
+
+    it('includes target name in commit message', async () => {
+      await useCase.execute(command);
+
+      const jobInput = mockPublishArtifactsDelayedJob.addJob.mock.calls[0][0];
       expect(jobInput.commitMessage).toContain('Production');
     });
 
@@ -439,10 +460,15 @@ describe('PublishArtifactsUseCase', () => {
       });
     });
 
-    it('creates distribution with empty distributedPackages', async () => {
+    it('creates one distribution', async () => {
       const result = await useCase.execute(command);
 
       expect(result.distributions).toHaveLength(1);
+    });
+
+    it('creates distribution with empty distributedPackages', async () => {
+      const result = await useCase.execute(command);
+
       expect(result.distributions[0].distributedPackages).toEqual([]);
     });
 
@@ -516,10 +542,15 @@ describe('PublishArtifactsUseCase', () => {
       });
     });
 
-    it('creates distribution with empty distributedPackages', async () => {
+    it('creates one distribution', async () => {
       const result = await useCase.execute(command);
 
       expect(result.distributions).toHaveLength(1);
+    });
+
+    it('creates distribution with empty distributedPackages', async () => {
+      const result = await useCase.execute(command);
+
       expect(result.distributions[0].distributedPackages).toEqual([]);
     });
 
@@ -792,11 +823,21 @@ describe('PublishArtifactsUseCase', () => {
       });
     });
 
-    it('creates one distribution per target', async () => {
+    it('creates two distributions', async () => {
       const result = await useCase.execute(command);
 
       expect(result.distributions).toHaveLength(2);
+    });
+
+    it('assigns first target to first distribution', async () => {
+      const result = await useCase.execute(command);
+
       expect(result.distributions[0].target.id).toBe(targetId1);
+    });
+
+    it('assigns second target to second distribution', async () => {
+      const result = await useCase.execute(command);
+
       expect(result.distributions[1].target.id).toBe(targetId2);
     });
 
@@ -840,11 +881,17 @@ describe('PublishArtifactsUseCase', () => {
       expect(mockCodingAgentPort.renderArtifacts).toHaveBeenCalledTimes(2);
     });
 
-    it('includes both targets in commit message', async () => {
+    it('includes Production target in commit message', async () => {
       await useCase.execute(command);
 
       const jobInput = mockPublishArtifactsDelayedJob.addJob.mock.calls[0][0];
       expect(jobInput.commitMessage).toContain('Production');
+    });
+
+    it('includes Staging target in commit message', async () => {
+      await useCase.execute(command);
+
+      const jobInput = mockPublishArtifactsDelayedJob.addJob.mock.calls[0][0];
       expect(jobInput.commitMessage).toContain('Staging');
     });
   });
@@ -1092,7 +1139,9 @@ describe('PublishArtifactsUseCase', () => {
   });
 
   describe('when configuration is missing', () => {
-    it('uses default render modes', async () => {
+    let result: Awaited<ReturnType<typeof useCase.execute>>;
+
+    beforeEach(async () => {
       const recipeVersion = recipeVersionFactory({
         id: createRecipeVersionId(uuidv4()),
       });
@@ -1141,11 +1190,16 @@ describe('PublishArtifactsUseCase', () => {
         delete: [],
       });
 
-      const result = await useCase.execute(command);
+      result = await useCase.execute(command);
+    });
 
+    it('maps default render modes to coding agents', () => {
       expect(
         mockRenderModeConfigurationService.mapRenderModesToCodingAgents,
       ).toHaveBeenCalledWith(DEFAULT_ACTIVE_RENDER_MODES);
+    });
+
+    it('stores default render modes in distribution', () => {
       expect(result.distributions[0].renderModes).toEqual(
         DEFAULT_ACTIVE_RENDER_MODES,
       );
@@ -2287,12 +2341,11 @@ describe('PublishArtifactsUseCase', () => {
     });
   });
 
-  describe('when deploying to root target with @packmind.com user', () => {
+  describe('when deploying to root target', () => {
     let command: PublishArtifactsCommand;
     let recipeVersion: ReturnType<typeof recipeVersionFactory>;
     let target: ReturnType<typeof targetFactory>;
     let gitRepo: GitRepo;
-    let packmindUser: User;
 
     beforeEach(() => {
       recipeVersion = recipeVersionFactory({
@@ -2317,13 +2370,6 @@ describe('PublishArtifactsUseCase', () => {
         path: '/',
       });
 
-      packmindUser = {
-        id: userId,
-        email: 'developer@packmind.com',
-        firstName: 'Test',
-        lastName: 'User',
-      } as User;
-
       command = {
         userId,
         organizationId,
@@ -2346,7 +2392,6 @@ describe('PublishArtifactsUseCase', () => {
         },
       });
 
-      mockAccountsPort.getUserById.mockResolvedValue(packmindUser);
       mockRecipesPort.getRecipeVersionById.mockResolvedValue(recipeVersion);
       mockTargetService.findById.mockResolvedValue(target);
       mockGitPort.getRepositoryById.mockResolvedValue(gitRepo);
@@ -2394,109 +2439,9 @@ describe('PublishArtifactsUseCase', () => {
         organizationId,
       });
     });
-
-    it('fetches user by userId to check email', async () => {
-      await useCase.execute(command);
-
-      expect(mockAccountsPort.getUserById).toHaveBeenCalledWith(userId);
-    });
   });
 
-  describe('when deploying to root target with non-@packmind.com user', () => {
-    let command: PublishArtifactsCommand;
-    let recipeVersion: ReturnType<typeof recipeVersionFactory>;
-    let target: ReturnType<typeof targetFactory>;
-    let gitRepo: GitRepo;
-    let externalUser: User;
-
-    beforeEach(() => {
-      recipeVersion = recipeVersionFactory({
-        id: createRecipeVersionId(uuidv4()),
-        name: 'Test Recipe',
-        slug: 'test-recipe',
-        version: 1,
-      });
-
-      gitRepo = {
-        id: createGitRepoId(uuidv4()),
-        owner: 'test-owner',
-        repo: 'test-repo',
-        branch: 'main',
-        providerId: createGitProviderId(uuidv4()),
-      };
-
-      target = targetFactory({
-        id: targetId,
-        gitRepoId: gitRepo.id,
-        name: 'Root Target',
-        path: '/',
-      });
-
-      externalUser = {
-        id: userId,
-        email: 'developer@external.com',
-        firstName: 'Test',
-        lastName: 'User',
-      } as User;
-
-      command = {
-        userId,
-        organizationId,
-        recipeVersionIds: [recipeVersion.id],
-        standardVersionIds: [],
-        targetIds: [targetId],
-        packagesSlugs: [],
-        packageIds: [],
-      };
-
-      mockAccountsPort.getUserById.mockResolvedValue(externalUser);
-      mockRecipesPort.getRecipeVersionById.mockResolvedValue(recipeVersion);
-      mockTargetService.findById.mockResolvedValue(target);
-      mockGitPort.getRepositoryById.mockResolvedValue(gitRepo);
-      mockDistributionRepository.findActiveRecipeVersionsByTarget.mockResolvedValue(
-        [],
-      );
-      mockDistributionRepository.findActiveStandardVersionsByTarget.mockResolvedValue(
-        [],
-      );
-      mockDistributionRepository.findActiveRecipeVersionsByTargetAndPackages.mockResolvedValue(
-        [],
-      );
-      mockDistributionRepository.findActiveStandardVersionsByTargetAndPackages.mockResolvedValue(
-        [],
-      );
-      mockGitPort.getFileFromRepo.mockResolvedValue(null);
-      mockCodingAgentPort.renderArtifacts.mockResolvedValue({
-        createOrUpdate: [
-          {
-            path: '.packmind/recipes/test-recipe.md',
-            content: 'recipe content',
-          },
-        ],
-        delete: [],
-      });
-    });
-
-    it('does not include default skills in file updates', async () => {
-      await useCase.execute(command);
-
-      const jobInput = mockPublishArtifactsDelayedJob.addJob.mock.calls[0][0];
-      const defaultSkillFile = jobInput.fileUpdates.createOrUpdate.find(
-        (f: { path: string }) =>
-          f.path.includes('.claude/skills/default-skill/SKILL.md'),
-      );
-
-      expect(defaultSkillFile).toBeUndefined();
-    });
-
-    it('does not call DeployDefaultSkillsUseCase', async () => {
-      await useCase.execute(command);
-
-      expect(mockDeployDefaultSkillsUseCase.execute).not.toHaveBeenCalled();
-    });
-  });
-
-  describe('when deploying to non-root target with @packmind.com user', () => {
+  describe('when deploying to non-root target', () => {
     let command: PublishArtifactsCommand;
     let recipeVersion: ReturnType<typeof recipeVersionFactory>;
     let target: ReturnType<typeof targetFactory>;
@@ -2578,12 +2523,6 @@ describe('PublishArtifactsUseCase', () => {
       await useCase.execute(command);
 
       expect(mockDeployDefaultSkillsUseCase.execute).not.toHaveBeenCalled();
-    });
-
-    it('does not check user email', async () => {
-      await useCase.execute(command);
-
-      expect(mockAccountsPort.getUserById).not.toHaveBeenCalled();
     });
   });
 });
