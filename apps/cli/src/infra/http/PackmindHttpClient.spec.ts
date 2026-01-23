@@ -17,14 +17,25 @@ describe('PackmindHttpClient', () => {
   };
 
   describe('getAuthContext', () => {
-    it('returns host, jwt and organizationId for valid API key', () => {
-      const client = new PackmindHttpClient(createTestApiKey('org-456'));
+    describe('when API key is valid', () => {
+      let context: ReturnType<PackmindHttpClient['getAuthContext']>;
 
-      const context = client.getAuthContext();
+      beforeEach(() => {
+        const client = new PackmindHttpClient(createTestApiKey('org-456'));
+        context = client.getAuthContext();
+      });
 
-      expect(context.host).toBe('https://api.packmind.com');
-      expect(context.organizationId).toBe('org-456');
-      expect(context.jwt).toContain('header.');
+      it('returns the host', () => {
+        expect(context.host).toBe('https://api.packmind.com');
+      });
+
+      it('returns the organizationId', () => {
+        expect(context.organizationId).toBe('org-456');
+      });
+
+      it('returns the jwt', () => {
+        expect(context.jwt).toContain('header.');
+      });
     });
 
     describe('when API key is empty', () => {
@@ -72,26 +83,35 @@ describe('PackmindHttpClient', () => {
       jest.clearAllMocks();
     });
 
-    it('makes GET request with auth headers', async () => {
-      const client = new PackmindHttpClient(createTestApiKey());
-      (global.fetch as jest.Mock).mockResolvedValue({
-        ok: true,
-        json: jest.fn().mockResolvedValue({ data: 'test' }),
+    describe('when making GET request', () => {
+      let result: { data: string };
+
+      beforeEach(async () => {
+        const client = new PackmindHttpClient(createTestApiKey());
+        (global.fetch as jest.Mock).mockResolvedValue({
+          ok: true,
+          json: jest.fn().mockResolvedValue({ data: 'test' }),
+        });
+
+        result = await client.request<{ data: string }>('/test-path');
       });
 
-      const result = await client.request<{ data: string }>('/test-path');
-
-      expect(global.fetch).toHaveBeenCalledWith(
-        'https://api.packmind.com/test-path',
-        expect.objectContaining({
-          method: 'GET',
-          headers: expect.objectContaining({
-            'Content-Type': 'application/json',
-            Authorization: expect.stringContaining('Bearer '),
+      it('calls fetch with correct URL and headers', () => {
+        expect(global.fetch).toHaveBeenCalledWith(
+          'https://api.packmind.com/test-path',
+          expect.objectContaining({
+            method: 'GET',
+            headers: expect.objectContaining({
+              'Content-Type': 'application/json',
+              Authorization: expect.stringContaining('Bearer '),
+            }),
           }),
-        }),
-      );
-      expect(result).toEqual({ data: 'test' });
+        );
+      });
+
+      it('returns the response data', () => {
+        expect(result).toEqual({ data: 'test' });
+      });
     });
 
     it('makes POST request with body', async () => {

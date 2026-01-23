@@ -16,7 +16,10 @@ describe('Standard Create E2E', () => {
   });
 
   describe('when creating a standard from complete playbook JSON', () => {
-    it('returns success with standard details', async () => {
+    let result: Awaited<ReturnType<typeof createStandardHandler>>;
+    let mockUseCase: jest.Mocked<ICreateStandardFromPlaybookUseCase>;
+
+    beforeEach(async () => {
       const playbook = {
         name: 'Complete Test Standard',
         description: 'A complete standard with all features',
@@ -44,17 +47,25 @@ describe('Standard Create E2E', () => {
       const filePath = path.join(tempDir, 'complete-playbook.json');
       await fs.writeFile(filePath, JSON.stringify(playbook, null, 2));
 
-      const mockUseCase: jest.Mocked<ICreateStandardFromPlaybookUseCase> = {
+      mockUseCase = {
         execute: jest.fn().mockResolvedValue({
           standardId: 'std-complete-123',
           name: 'Complete Test Standard',
         }),
       };
 
-      const result = await createStandardHandler(filePath, mockUseCase);
+      result = await createStandardHandler(filePath, mockUseCase);
+    });
 
+    it('returns success', () => {
       expect(result.success).toBe(true);
+    });
+
+    it('returns the standard id', () => {
       expect(result.standardId).toBe('std-complete-123');
+    });
+
+    it('returns the standard name', () => {
       expect(result.standardName).toBe('Complete Test Standard');
     });
 
@@ -108,7 +119,10 @@ describe('Standard Create E2E', () => {
   });
 
   describe('when handling multiple rules with optional examples', () => {
-    it('returns success for playbook with mixed examples', async () => {
+    let result: Awaited<ReturnType<typeof createStandardHandler>>;
+    let mockUseCase: jest.Mocked<ICreateStandardFromPlaybookUseCase>;
+
+    beforeEach(async () => {
       const playbook = {
         name: 'Mixed Examples Standard',
         description: 'Some rules with examples, some without',
@@ -131,16 +145,21 @@ describe('Standard Create E2E', () => {
       const filePath = path.join(tempDir, 'mixed-playbook.json');
       await fs.writeFile(filePath, JSON.stringify(playbook));
 
-      const mockUseCase: jest.Mocked<ICreateStandardFromPlaybookUseCase> = {
+      mockUseCase = {
         execute: jest.fn().mockResolvedValue({
           standardId: 'std-mixed-456',
           name: 'Mixed Examples Standard',
         }),
       };
 
-      const result = await createStandardHandler(filePath, mockUseCase);
+      result = await createStandardHandler(filePath, mockUseCase);
+    });
 
+    it('returns success for playbook with mixed examples', () => {
       expect(result.success).toBe(true);
+    });
+
+    it('returns the standard id', () => {
       expect(result.standardId).toBe('std-mixed-456');
     });
 
@@ -189,7 +208,9 @@ describe('Standard Create E2E', () => {
   });
 
   describe('when use case throws an exception', () => {
-    it('catches and returns error from use case exception', async () => {
+    let result: Awaited<ReturnType<typeof createStandardHandler>>;
+
+    beforeEach(async () => {
       const playbook = {
         name: 'Test Standard',
         description: 'Test',
@@ -204,16 +225,28 @@ describe('Standard Create E2E', () => {
         execute: jest.fn().mockRejectedValue(new Error('Network error')),
       };
 
-      const result = await createStandardHandler(filePath, mockUseCase);
+      result = await createStandardHandler(filePath, mockUseCase);
+    });
 
+    it('returns failure', () => {
       expect(result.success).toBe(false);
+    });
+
+    it('includes error creating standard message', () => {
       expect(result.error).toContain('Error creating standard');
+    });
+
+    it('includes the original error message', () => {
       expect(result.error).toContain('Network error');
     });
   });
 
   describe('when handling file system operations', () => {
-    it('reads the playbook file correctly and calls use case', async () => {
+    let result: Awaited<ReturnType<typeof createStandardHandler>>;
+    let mockUseCase: jest.Mocked<ICreateStandardFromPlaybookUseCase>;
+    let fileContent: string;
+
+    beforeEach(async () => {
       const playbook = {
         name: 'File System Standard',
         description: 'Test reading from actual file',
@@ -233,19 +266,27 @@ describe('Standard Create E2E', () => {
       const filePath = path.join(tempDir, 'fs-playbook.json');
       await fs.writeFile(filePath, JSON.stringify(playbook));
 
-      const fileContent = await fs.readFile(filePath, 'utf-8');
+      fileContent = await fs.readFile(filePath, 'utf-8');
 
-      const mockUseCase: jest.Mocked<ICreateStandardFromPlaybookUseCase> = {
+      mockUseCase = {
         execute: jest.fn().mockResolvedValue({
           standardId: 'std-fs-789',
           name: 'File System Standard',
         }),
       };
 
-      const result = await createStandardHandler(filePath, mockUseCase);
+      result = await createStandardHandler(filePath, mockUseCase);
+    });
 
+    it('reads the playbook file correctly', () => {
       expect(fileContent).toContain('File System Standard');
+    });
+
+    it('returns success', () => {
       expect(result.success).toBe(true);
+    });
+
+    it('calls the use case', () => {
       expect(mockUseCase.execute).toHaveBeenCalled();
     });
   });

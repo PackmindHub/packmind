@@ -25,21 +25,24 @@ const createTestApiKey = () => {
 
 describe('PackmindGateway.getGlobalSpace', () => {
   let gateway: PackmindGateway;
+  let result: Awaited<ReturnType<PackmindGateway['getGlobalSpace']>>;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     global.fetch = jest.fn();
     gateway = new PackmindGateway(createTestApiKey());
-  });
-
-  it('returns space id and slug', async () => {
     (global.fetch as jest.Mock).mockResolvedValueOnce({
       ok: true,
       json: jest.fn().mockResolvedValue({ id: 'space-uuid', slug: 'global' }),
     });
 
-    const result = await gateway.getGlobalSpace();
+    result = await gateway.getGlobalSpace();
+  });
 
+  it('returns space id and slug', () => {
     expect(result).toEqual({ id: 'space-uuid', slug: 'global' });
+  });
+
+  it('calls the correct API endpoint', () => {
     expect(global.fetch).toHaveBeenCalledWith(
       expect.stringContaining('/spaces/global'),
       expect.any(Object),
@@ -49,13 +52,11 @@ describe('PackmindGateway.getGlobalSpace', () => {
 
 describe('PackmindGateway.createStandard', () => {
   let gateway: PackmindGateway;
+  let result: Awaited<ReturnType<PackmindGateway['createStandard']>>;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     global.fetch = jest.fn();
     gateway = new PackmindGateway(createTestApiKey());
-  });
-
-  it('creates standard via API', async () => {
     (global.fetch as jest.Mock).mockResolvedValueOnce({
       ok: true,
       json: jest
@@ -63,14 +64,19 @@ describe('PackmindGateway.createStandard', () => {
         .mockResolvedValue({ id: 'std-123', name: 'Test Standard' }),
     });
 
-    const result = await gateway.createStandard('space-1', {
+    result = await gateway.createStandard('space-1', {
       name: 'Test Standard',
       description: 'Desc',
       scope: 'test',
       rules: [{ content: 'Rule 1' }],
     });
+  });
 
+  it('returns the created standard', () => {
     expect(result).toEqual({ id: 'std-123', name: 'Test Standard' });
+  });
+
+  it('calls the correct API endpoint with POST', () => {
     expect(global.fetch).toHaveBeenCalledWith(
       expect.stringContaining('/spaces/space-1/standards'),
       expect.objectContaining({ method: 'POST' }),
@@ -80,25 +86,28 @@ describe('PackmindGateway.createStandard', () => {
 
 describe('PackmindGateway.getRulesForStandard', () => {
   let gateway: PackmindGateway;
+  let result: Awaited<ReturnType<PackmindGateway['getRulesForStandard']>>;
+  const mockRules = [
+    { id: 'rule-1', content: 'Rule 1' },
+    { id: 'rule-2', content: 'Rule 2' },
+  ];
 
-  beforeEach(() => {
+  beforeEach(async () => {
     global.fetch = jest.fn();
     gateway = new PackmindGateway(createTestApiKey());
-  });
-
-  it('returns rules for a standard', async () => {
-    const mockRules = [
-      { id: 'rule-1', content: 'Rule 1' },
-      { id: 'rule-2', content: 'Rule 2' },
-    ];
     (global.fetch as jest.Mock).mockResolvedValueOnce({
       ok: true,
       json: jest.fn().mockResolvedValue(mockRules),
     });
 
-    const result = await gateway.getRulesForStandard('space-1', 'std-1');
+    result = await gateway.getRulesForStandard('space-1', 'std-1');
+  });
 
+  it('returns rules for a standard', () => {
     expect(result).toEqual(mockRules);
+  });
+
+  it('calls the correct API endpoint', () => {
     expect(global.fetch).toHaveBeenCalledWith(
       expect.stringContaining('/spaces/space-1/standards/std-1/rules'),
       expect.any(Object),
@@ -109,12 +118,9 @@ describe('PackmindGateway.getRulesForStandard', () => {
 describe('PackmindGateway.addExampleToRule', () => {
   let gateway: PackmindGateway;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     global.fetch = jest.fn();
     gateway = new PackmindGateway(createTestApiKey());
-  });
-
-  it('sends example with correct payload', async () => {
     (global.fetch as jest.Mock).mockResolvedValueOnce({
       ok: true,
       json: jest.fn().mockResolvedValue({ id: 'example-1' }),
@@ -125,13 +131,18 @@ describe('PackmindGateway.addExampleToRule', () => {
       positive: 'const x = 1;',
       negative: 'var x = 1;',
     });
+  });
 
+  it('calls the correct API endpoint with POST', () => {
     expect(global.fetch).toHaveBeenCalledWith(
       expect.stringContaining(
         '/spaces/space-1/standards/std-1/rules/rule-1/examples',
       ),
       expect.objectContaining({ method: 'POST' }),
     );
+  });
+
+  it('sends example with correct payload', () => {
     const callArgs = (global.fetch as jest.Mock).mock.calls[0];
     const body = JSON.parse(callArgs[1].body);
     expect(body).toEqual({

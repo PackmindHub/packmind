@@ -29,7 +29,45 @@ describe('CreateStandardFromPlaybookUseCase', () => {
     jest.clearAllMocks();
   });
 
-  it('creates standard without examples', async () => {
+  describe('when creating standard without examples', () => {
+    beforeEach(async () => {
+      mockGateway.getGlobalSpace.mockResolvedValue({
+        id: 'space-1',
+        slug: 'global',
+      });
+      mockGateway.createStandard.mockResolvedValue({
+        id: 'std-1',
+        name: 'Test Standard',
+      });
+      mockGateway.getRulesForStandard.mockResolvedValue([]);
+
+      await useCase.execute({
+        name: 'Test Standard',
+        description: 'Desc',
+        scope: 'test',
+        rules: [{ content: 'Rule 1' }],
+      });
+    });
+
+    it('fetches the global space', () => {
+      expect(mockGateway.getGlobalSpace).toHaveBeenCalled();
+    });
+
+    it('creates standard with provided data', () => {
+      expect(mockGateway.createStandard).toHaveBeenCalledWith('space-1', {
+        name: 'Test Standard',
+        description: 'Desc',
+        scope: 'test',
+        rules: [{ content: 'Rule 1' }],
+      });
+    });
+
+    it('does not add examples', () => {
+      expect(mockGateway.addExampleToRule).not.toHaveBeenCalled();
+    });
+  });
+
+  it('returns standard id and name when creating standard', async () => {
     mockGateway.getGlobalSpace.mockResolvedValue({
       id: 'space-1',
       slug: 'global',
@@ -48,14 +86,6 @@ describe('CreateStandardFromPlaybookUseCase', () => {
     });
 
     expect(result).toEqual({ standardId: 'std-1', name: 'Test Standard' });
-    expect(mockGateway.getGlobalSpace).toHaveBeenCalled();
-    expect(mockGateway.createStandard).toHaveBeenCalledWith('space-1', {
-      name: 'Test Standard',
-      description: 'Desc',
-      scope: 'test',
-      rules: [{ content: 'Rule 1' }],
-    });
-    expect(mockGateway.addExampleToRule).not.toHaveBeenCalled();
   });
 
   it('creates standard with examples', async () => {

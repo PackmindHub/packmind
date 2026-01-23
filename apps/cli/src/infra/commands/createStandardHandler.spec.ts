@@ -24,7 +24,9 @@ describe('createStandardHandler', () => {
   });
 
   describe('when creating a standard from valid playbook file', () => {
-    it('returns success with standard details', async () => {
+    let result: Awaited<ReturnType<typeof createStandardHandler>>;
+
+    beforeEach(async () => {
       const playbook = {
         name: 'Test Standard',
         description: 'Test',
@@ -35,11 +37,22 @@ describe('createStandardHandler', () => {
       const filePath = path.join(tempDir, 'playbook.json');
       await fs.writeFile(filePath, JSON.stringify(playbook));
 
-      const result = await createStandardHandler(filePath, mockUseCase);
+      result = await createStandardHandler(filePath, mockUseCase);
+    });
 
+    it('returns success', () => {
       expect(result.success).toBe(true);
+    });
+
+    it('returns the standard id', () => {
       expect(result.standardId).toBe('test-standard-123');
+    });
+
+    it('returns the standard name', () => {
       expect(result.standardName).toBe('Test Standard');
+    });
+
+    it('calls use case with playbook data', () => {
       expect(mockUseCase.execute).toHaveBeenCalledWith(
         expect.objectContaining({
           name: 'Test Standard',
@@ -52,33 +65,52 @@ describe('createStandardHandler', () => {
   });
 
   describe('when file is not found', () => {
-    it('returns error', async () => {
-      const result = await createStandardHandler(
-        '/nonexistent.json',
-        mockUseCase,
-      );
+    let result: Awaited<ReturnType<typeof createStandardHandler>>;
 
+    beforeEach(async () => {
+      result = await createStandardHandler('/nonexistent.json', mockUseCase);
+    });
+
+    it('returns failure', () => {
       expect(result.success).toBe(false);
+    });
+
+    it('returns an error', () => {
       expect(result.error).toBeDefined();
+    });
+
+    it('does not call use case', () => {
       expect(mockUseCase.execute).not.toHaveBeenCalled();
     });
   });
 
   describe('when playbook is invalid', () => {
-    it('returns error', async () => {
+    let result: Awaited<ReturnType<typeof createStandardHandler>>;
+
+    beforeEach(async () => {
       const filePath = path.join(tempDir, 'invalid.json');
       await fs.writeFile(filePath, '{ "invalid": "structure" }');
 
-      const result = await createStandardHandler(filePath, mockUseCase);
+      result = await createStandardHandler(filePath, mockUseCase);
+    });
 
+    it('returns failure', () => {
       expect(result.success).toBe(false);
+    });
+
+    it('returns an error', () => {
       expect(result.error).toBeDefined();
+    });
+
+    it('does not call use case', () => {
       expect(mockUseCase.execute).not.toHaveBeenCalled();
     });
   });
 
   describe('when use case throws error', () => {
-    it('returns error', async () => {
+    let result: Awaited<ReturnType<typeof createStandardHandler>>;
+
+    beforeEach(async () => {
       mockUseCase.execute.mockRejectedValue(new Error('API failed'));
       const playbook = {
         name: 'Test',
@@ -89,9 +121,14 @@ describe('createStandardHandler', () => {
       const filePath = path.join(tempDir, 'playbook.json');
       await fs.writeFile(filePath, JSON.stringify(playbook));
 
-      const result = await createStandardHandler(filePath, mockUseCase);
+      result = await createStandardHandler(filePath, mockUseCase);
+    });
 
+    it('returns failure', () => {
       expect(result.success).toBe(false);
+    });
+
+    it('returns the error message', () => {
       expect(result.error).toContain('API failed');
     });
   });
