@@ -364,6 +364,7 @@ const ProgramEditor: React.FC<ProgramEditorProps> = ({
     setIsTestModalOpen(false);
     setSelectedProgramForTest(null);
     setSandboxCode('');
+    setSandboxValidationError(null);
     setTestResults(null);
   }, []);
 
