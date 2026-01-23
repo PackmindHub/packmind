@@ -1,6 +1,6 @@
 ---
-name: 'packmind-standard-creator'
-description: "Guide for creating coding standards via the Packmind CLI. This skill should be used when users want to create a new coding standard (or add rules to an existing standard) that captures team conventions, best practices, or coding guidelines for distribution to CoPilot."
+name: 'packmind-standard-create'
+description: 'Guide for creating coding standards via the Packmind CLI. This skill should be used when users want to create a new coding standard (or add rules to an existing standard) that captures team conventions, best practices, or coding guidelines for distribution to Claude.'
 license: 'Complete terms in LICENSE.txt'
 ---
 
@@ -10,7 +10,7 @@ This skill provides a complete walkthrough for creating coding standards via the
 
 ## About Coding Standards
 
-Coding standards are collections of rules that capture team conventions, best practices, and coding guidelines. They help maintain consistency across codebases and enable CoPilot to follow your team's specific practices.
+Coding standards are collections of rules that capture team conventions, best practices, and coding guidelines. They help maintain consistency across codebases and enable Claude to follow your team's specific practices.
 
 ### What Standards Provide
 
@@ -54,6 +54,7 @@ python3 --version
 ```
 
 If not available, install it:
+
 - **macOS**: `brew install python3`
 - **Ubuntu/Debian**: `sudo apt-get install python3`
 - **Windows**: Download from https://python.org or use `winget install Python.Python.3`
@@ -98,7 +99,7 @@ To create an effective standard, clearly understand:
    - Existing developers maintaining consistency
 
 3. **Where does this standard apply?**
-   - Specific file types (e.g., "*.spec.ts files")
+   - Specific file types (e.g., "\*.spec.ts files")
    - Specific frameworks (e.g., "React components")
    - Specific domains (e.g., "API controllers")
 
@@ -123,11 +124,13 @@ Each rule should:
 3. **Focus on one concept** - One rule per convention
 
 **Good rules:**
+
 - "Use const instead of let for variables that are never reassigned"
 - "Prefix interface names with I (e.g., IUserService)"
 - "Include error messages in all thrown exceptions"
 
 **Bad rules:**
+
 - "Write good code" (too vague)
 - "Use const and prefix interfaces with I" (multiple concepts)
 - "Don't use var" (no positive guidance)
@@ -141,6 +144,7 @@ Examples dramatically improve rule effectiveness. For each rule, consider adding
 - **language**: The programming language for syntax highlighting
 
 Valid language values:
+
 - TYPESCRIPT, TYPESCRIPT_TSX
 - JAVASCRIPT, JAVASCRIPT_JSX
 - PYTHON, JAVA, GO, RUST, CSHARP
@@ -159,6 +163,7 @@ python3 scripts/init_playbook.py <standard-name> --path <output-directory>
 ```
 
 Example:
+
 ```bash
 python3 scripts/init_playbook.py typescript-conventions --path .
 ```
@@ -204,11 +209,13 @@ python3 scripts/validate_playbook.py <path-to-playbook.json>
 ```
 
 Example:
+
 ```bash
 python3 scripts/validate_playbook.py typescript-conventions.playbook.json
 ```
 
 The validator checks:
+
 - All required fields are present (name, description, scope, rules)
 - No TODO placeholders remain
 - Rules start with action verbs
@@ -217,7 +224,23 @@ The validator checks:
 
 If validation fails, fix the reported errors and run validation again before proceeding.
 
-### Step 4: Creating the Standard via CLI
+### Step 4: Review Before Submission
+
+**Before running the CLI command**, you MUST get explicit user approval:
+
+1. Show the user the complete playbook content in a formatted preview:
+   - Name
+   - Description
+   - Scope
+   - Each rule with its content and examples (if any)
+
+2. Ask: **"Here is the standard that will be created on Packmind. Do you approve?"**
+
+3. **Wait for explicit user confirmation** before proceeding to Step 5.
+
+4. If the user requests changes, go back to Step 2 or Step 3 to make adjustments.
+
+### Step 5: Creating the Standard via CLI
 
 Run the packmind-cli command to create the standard:
 
@@ -226,11 +249,13 @@ packmind-cli standard create <path-to-playbook.json>
 ```
 
 Example:
+
 ```bash
 packmind-cli standard create ./typescript-conventions.playbook.json
 ```
 
 Expected output on success:
+
 ```
 packmind-cli Standard "Your Standard Name" created successfully (ID: <uuid>)
 ```
@@ -238,20 +263,23 @@ packmind-cli Standard "Your Standard Name" created successfully (ID: <uuid>)
 #### Troubleshooting
 
 **"Not logged in" error:**
+
 ```bash
 packmind-cli login
 ```
 
 **"Failed to resolve global space" error:**
+
 - Verify your API key is valid
 - Check network connectivity to Packmind server
 
 **JSON validation errors:**
+
 - Ensure all required fields are present
 - Verify JSON syntax is valid (use a JSON validator)
 - Check that rules array has at least one entry
 
-### Step 5: Verifying the Standard
+### Step 6: Verifying the Standard
 
 After creation, verify the standard was created correctly:
 
@@ -259,7 +287,7 @@ After creation, verify the standard was created correctly:
 2. **Verify rules**: Ensure all rules appear with correct content
 3. **Check examples**: Confirm code examples are properly formatted
 
-### Step 6: Iterate and Improve
+### Step 7: Iterate and Improve
 
 Standards benefit from iteration. Consider:
 
@@ -275,6 +303,7 @@ To add rules to an existing standard, use the Packmind UI or API.
 Here's a complete example creating a TypeScript testing standard:
 
 **File: testing-conventions.playbook.json**
+
 ```json
 {
   "name": "TypeScript Testing Conventions",
@@ -313,20 +342,21 @@ Here's a complete example creating a TypeScript testing standard:
 ```
 
 **Creating the standard:**
+
 ```bash
 packmind-cli standard create testing-conventions.playbook.json
 ```
 
 ## Quick Reference
 
-| Field | Required | Description |
-|-------|----------|-------------|
-| name | Yes | Standard name |
-| description | Yes | What and why |
-| scope | Yes | Where it applies |
-| rules | Yes | At least one rule |
-| rules[].content | Yes | Rule text (verb-first) |
-| rules[].examples | No | Code examples |
-| examples.positive | If examples | Valid code |
-| examples.negative | If examples | Invalid code |
-| examples.language | If examples | Language ID |
+| Field             | Required    | Description            |
+| ----------------- | ----------- | ---------------------- |
+| name              | Yes         | Standard name          |
+| description       | Yes         | What and why           |
+| scope             | Yes         | Where it applies       |
+| rules             | Yes         | At least one rule      |
+| rules[].content   | Yes         | Rule text (verb-first) |
+| rules[].examples  | No          | Code examples          |
+| examples.positive | If examples | Valid code             |
+| examples.negative | If examples | Invalid code           |
+| examples.language | If examples | Language ID            |
