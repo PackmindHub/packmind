@@ -3,6 +3,7 @@
 ## Added
 
 - Render skills for GitHub Copilot and Claude Code (#71)
+- Provide downloadable skills to ease managing the playbook
 
 ## Changed
 

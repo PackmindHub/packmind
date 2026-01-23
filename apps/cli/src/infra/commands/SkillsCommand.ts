@@ -7,6 +7,6 @@ export const skillsCommand = subcommands({
   description: 'Manage skills in your Packmind organization',
   cmds: {
     add: addSkillCommand,
-    'install-default': installDefaultSkillsCommand,
+    init: installDefaultSkillsCommand,
   },
 });
