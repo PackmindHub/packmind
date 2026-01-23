@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import {
   NavLink,
   Outlet,
@@ -21,16 +21,28 @@ import {
   getSkillsBySpaceQueryOptions,
   useGetSkillBySlugQuery,
   useGetSkillsQuery,
+  useDeleteSkillMutation,
 } from '../../src/domain/skills/api/queries/SkillsQueries';
 import { getSpaceBySlugQueryOptions } from '../../src/domain/spaces/api/queries/SpacesQueries';
 import { queryClient } from '../../src/shared/data/queryClient';
 import { routes } from '../../src/shared/utils/routes';
 import { useAuthContext } from '../../src/domain/accounts/hooks/useAuthContext';
-import { PMPage, PMBox, PMText, PMGrid } from '@packmind/ui';
+import {
+  PMPage,
+  PMBox,
+  PMText,
+  PMGrid,
+  PMAlert,
+  PMFeatureFlag,
+  DEFAULT_FEATURE_DOMAIN_MAP,
+  SKILL_DELETION_FEATURE_KEY,
+} from '@packmind/ui';
 import { AutobreadCrumb } from '../../src/shared/components/navigation/AutobreadCrumb';
 import { SkillDetailsSidebar } from '../../src/domain/skills/components/SkillDetailsSidebar';
 import { SkillVersionHistoryHeader } from '../../src/domain/skills/components/SkillVersionHistoryHeader';
 import { useSkillSectionNavigation } from '../../src/domain/skills/hooks/useSkillSectionNavigation';
+import { SkillActions } from '../../src/domain/skills/components/SkillActions';
+import { SKILL_MESSAGES } from '../../src/domain/skills/constants/messages';
 
 const SKILL_MD_FILENAME = 'SKILL.md';
 
@@ -121,11 +133,18 @@ export default function SkillDetailLayoutRouteModule() {
     spaceSlug: string;
     skillSlug: string;
   }>();
-  const { organization } = useAuthContext();
+  const { organization, user } = useAuthContext();
+
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [deleteAlert, setDeleteAlert] = useState<{
+    type: 'success' | 'error';
+    message: string;
+  } | null>(null);
 
   const { data: skillWithFilesFromQuery } = useGetSkillBySlugQuery(skillSlug);
   const { data: skillsFromQuery, isLoading: skillsLoading } =
     useGetSkillsQuery();
+  const deleteSkillMutation = useDeleteSkillMutation();
 
   const skillWithFiles = skillWithFilesFromQuery ?? loaderData?.skill;
   const skills = skillsFromQuery ?? loaderData?.skills ?? [];
@@ -218,6 +237,36 @@ export default function SkillDetailLayoutRouteModule() {
     }
   };
 
+  const handleDelete = async () => {
+    if (!skillWithFiles) return;
+
+    try {
+      await deleteSkillMutation.mutateAsync(skillWithFiles.skill.id);
+      setDeleteModalOpen(false);
+
+      if (orgSlug && spaceSlug) {
+        navigate(routes.space.toSkills(orgSlug, spaceSlug));
+        return;
+      }
+      navigate('..');
+    } catch (error) {
+      console.error('Failed to delete skill:', error);
+      setDeleteAlert({
+        type: 'error',
+        message: SKILL_MESSAGES.error.deleteFailed,
+      });
+      setDeleteModalOpen(false);
+    }
+  };
+
+  const handleDeleteRequest = () => {
+    setDeleteModalOpen(true);
+  };
+
+  const handleDeleteDialogChange = (isOpen: boolean) => {
+    setDeleteModalOpen(isOpen);
+  };
+
   const outletContext: ISkillDetailsOutletContext = {
     skill: skillWithFiles.skill,
     files: skillWithFiles.files,
@@ -259,7 +308,31 @@ export default function SkillDetailLayoutRouteModule() {
             latestVersion={skillWithFiles.latestVersion}
           />
         }
+        actions={
+          <PMFeatureFlag
+            featureKeys={[SKILL_DELETION_FEATURE_KEY]}
+            featureDomainMap={DEFAULT_FEATURE_DOMAIN_MAP}
+            userEmail={user?.email}
+          >
+            <SkillActions
+              onDeleteRequest={handleDeleteRequest}
+              onDeleteDialogChange={handleDeleteDialogChange}
+              onConfirmDelete={handleDelete}
+              isDeleteDialogOpen={deleteModalOpen}
+              isDeleting={deleteSkillMutation.isPending}
+              deleteDialogMessage={SKILL_MESSAGES.confirmation.deleteSkill(
+                skillWithFiles.skill.name,
+              )}
+            />
+          </PMFeatureFlag>
+        }
       >
+        {deleteAlert && (
+          <PMAlert.Root status={deleteAlert.type} width="lg" mb={4}>
+            <PMAlert.Indicator />
+            <PMAlert.Title>{deleteAlert.message}</PMAlert.Title>
+          </PMAlert.Root>
+        )}
         <Outlet context={outletContext} />
       </PMPage>
     </PMGrid>

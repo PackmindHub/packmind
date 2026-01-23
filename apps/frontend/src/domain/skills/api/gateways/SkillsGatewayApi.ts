@@ -45,4 +45,14 @@ export class SkillsGatewayApi
       `/organizations/${organizationId}/spaces/${spaceId}/skills/${skillId}/versions`,
     );
   }
+
+  async deleteSkill(
+    organizationId: OrganizationId,
+    spaceId: SpaceId,
+    skillId: SkillId,
+  ): Promise<void> {
+    return this._api.delete<void>(
+      `/organizations/${organizationId}/spaces/${spaceId}/skills/${skillId}`,
+    );
+  }
 }
