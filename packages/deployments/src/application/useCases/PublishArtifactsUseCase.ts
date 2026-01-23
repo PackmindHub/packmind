@@ -11,7 +11,6 @@ import {
   IStandardsPort,
   ICodingAgentPort,
   IGitPort,
-  IAccountsPort,
   IDeployDefaultSkillsUseCase,
   OrganizationId,
   UserId,
@@ -59,7 +58,6 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
     private readonly renderModeConfigurationService: RenderModeConfigurationService,
     private readonly eventEmitterService: PackmindEventEmitterService,
     private readonly publishArtifactsDelayedJob: PublishArtifactsDelayedJob,
-    private readonly accountsPort: IAccountsPort,
     private readonly deployDefaultSkillsUseCase: IDeployDefaultSkillsUseCase,
     private readonly packmindConfigService: PackmindConfigService = new PackmindConfigService(),
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
@@ -432,23 +430,20 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
         );
       baseFileUpdates.createOrUpdate.push(configFile);
 
-      // Include default skills for root targets (Packmind users only)
+      // Include default skills for root targets
       if (target.path === '/') {
-        const shouldInclude = await this.shouldIncludeDefaultSkills(userId);
-        if (shouldInclude) {
-          this.logger.info(
-            'Including default skills for root target deployment',
-            {
-              targetId: target.id,
-              targetName: target.name,
-            },
-          );
-          await this.includeDefaultSkills(
-            userId,
-            organizationId,
-            baseFileUpdates,
-          );
-        }
+        this.logger.info(
+          'Including default skills for root target deployment',
+          {
+            targetId: target.id,
+            targetName: target.name,
+          },
+        );
+        await this.includeDefaultSkills(
+          userId,
+          organizationId,
+          baseFileUpdates,
+        );
       }
 
       // Apply target path prefixing
@@ -882,15 +877,6 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
     }
 
     return parts.join('\n');
-  }
-
-  /**
-   * Checks if default skills should be included based on user email.
-   * Only users with @packmind.com email addresses can deploy default skills.
-   */
-  private async shouldIncludeDefaultSkills(userId: UserId): Promise<boolean> {
-    const user = await this.accountsPort.getUserById(userId);
-    return user?.email.endsWith('@packmind.com') ?? false;
   }
 
   /**

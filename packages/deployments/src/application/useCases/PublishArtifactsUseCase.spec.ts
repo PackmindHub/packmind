@@ -28,11 +28,9 @@ import {
   IStandardsPort,
   ICodingAgentPort,
   IGitPort,
-  IAccountsPort,
   IDeployDefaultSkillsUseCase,
   Rule,
   SkillFile,
-  User,
 } from '@packmind/types';
 import { PackmindLogger } from '@packmind/logger';
 import { PackmindEventEmitterService } from '@packmind/node-utils';
@@ -57,7 +55,6 @@ describe('PublishArtifactsUseCase', () => {
   let mockRenderModeConfigurationService: jest.Mocked<RenderModeConfigurationService>;
   let mockEventEmitterService: jest.Mocked<PackmindEventEmitterService>;
   let mockPublishArtifactsDelayedJob: jest.Mocked<PublishArtifactsDelayedJob>;
-  let mockAccountsPort: jest.Mocked<IAccountsPort>;
   let mockDeployDefaultSkillsUseCase: jest.Mocked<IDeployDefaultSkillsUseCase>;
   let mockLogger: PackmindLogger;
 
@@ -144,10 +141,6 @@ describe('PublishArtifactsUseCase', () => {
       addJob: jest.fn().mockResolvedValue(undefined),
     } as unknown as jest.Mocked<PublishArtifactsDelayedJob>;
 
-    mockAccountsPort = {
-      getUserById: jest.fn().mockResolvedValue(null),
-    } as unknown as jest.Mocked<IAccountsPort>;
-
     mockDeployDefaultSkillsUseCase = {
       execute: jest.fn().mockResolvedValue({
         fileUpdates: { createOrUpdate: [], delete: [] },
@@ -165,7 +158,6 @@ describe('PublishArtifactsUseCase', () => {
       mockRenderModeConfigurationService,
       mockEventEmitterService,
       mockPublishArtifactsDelayedJob,
-      mockAccountsPort,
       mockDeployDefaultSkillsUseCase,
       undefined,
       mockLogger,
@@ -2287,12 +2279,11 @@ describe('PublishArtifactsUseCase', () => {
     });
   });
 
-  describe('when deploying to root target with @packmind.com user', () => {
+  describe('when deploying to root target', () => {
     let command: PublishArtifactsCommand;
     let recipeVersion: ReturnType<typeof recipeVersionFactory>;
     let target: ReturnType<typeof targetFactory>;
     let gitRepo: GitRepo;
-    let packmindUser: User;
 
     beforeEach(() => {
       recipeVersion = recipeVersionFactory({
@@ -2317,13 +2308,6 @@ describe('PublishArtifactsUseCase', () => {
         path: '/',
       });
 
-      packmindUser = {
-        id: userId,
-        email: 'developer@packmind.com',
-        firstName: 'Test',
-        lastName: 'User',
-      } as User;
-
       command = {
         userId,
         organizationId,
@@ -2346,7 +2330,6 @@ describe('PublishArtifactsUseCase', () => {
         },
       });
 
-      mockAccountsPort.getUserById.mockResolvedValue(packmindUser);
       mockRecipesPort.getRecipeVersionById.mockResolvedValue(recipeVersion);
       mockTargetService.findById.mockResolvedValue(target);
       mockGitPort.getRepositoryById.mockResolvedValue(gitRepo);
@@ -2394,109 +2377,9 @@ describe('PublishArtifactsUseCase', () => {
         organizationId,
       });
     });
-
-    it('fetches user by userId to check email', async () => {
-      await useCase.execute(command);
-
-      expect(mockAccountsPort.getUserById).toHaveBeenCalledWith(userId);
-    });
   });
 
-  describe('when deploying to root target with non-@packmind.com user', () => {
-    let command: PublishArtifactsCommand;
-    let recipeVersion: ReturnType<typeof recipeVersionFactory>;
-    let target: ReturnType<typeof targetFactory>;
-    let gitRepo: GitRepo;
-    let externalUser: User;
-
-    beforeEach(() => {
-      recipeVersion = recipeVersionFactory({
-        id: createRecipeVersionId(uuidv4()),
-        name: 'Test Recipe',
-        slug: 'test-recipe',
-        version: 1,
-      });
-
-      gitRepo = {
-        id: createGitRepoId(uuidv4()),
-        owner: 'test-owner',
-        repo: 'test-repo',
-        branch: 'main',
-        providerId: createGitProviderId(uuidv4()),
-      };
-
-      target = targetFactory({
-        id: targetId,
-        gitRepoId: gitRepo.id,
-        name: 'Root Target',
-        path: '/',
-      });
-
-      externalUser = {
-        id: userId,
-        email: 'developer@external.com',
-        firstName: 'Test',
-        lastName: 'User',
-      } as User;
-
-      command = {
-        userId,
-        organizationId,
-        recipeVersionIds: [recipeVersion.id],
-        standardVersionIds: [],
-        targetIds: [targetId],
-        packagesSlugs: [],
-        packageIds: [],
-      };
-
-      mockAccountsPort.getUserById.mockResolvedValue(externalUser);
-      mockRecipesPort.getRecipeVersionById.mockResolvedValue(recipeVersion);
-      mockTargetService.findById.mockResolvedValue(target);
-      mockGitPort.getRepositoryById.mockResolvedValue(gitRepo);
-      mockDistributionRepository.findActiveRecipeVersionsByTarget.mockResolvedValue(
-        [],
-      );
-      mockDistributionRepository.findActiveStandardVersionsByTarget.mockResolvedValue(
-        [],
-      );
-      mockDistributionRepository.findActiveRecipeVersionsByTargetAndPackages.mockResolvedValue(
-        [],
-      );
-      mockDistributionRepository.findActiveStandardVersionsByTargetAndPackages.mockResolvedValue(
-        [],
-      );
-      mockGitPort.getFileFromRepo.mockResolvedValue(null);
-      mockCodingAgentPort.renderArtifacts.mockResolvedValue({
-        createOrUpdate: [
-          {
-            path: '.packmind/recipes/test-recipe.md',
-            content: 'recipe content',
-          },
-        ],
-        delete: [],
-      });
-    });
-
-    it('does not include default skills in file updates', async () => {
-      await useCase.execute(command);
-
-      const jobInput = mockPublishArtifactsDelayedJob.addJob.mock.calls[0][0];
-      const defaultSkillFile = jobInput.fileUpdates.createOrUpdate.find(
-        (f: { path: string }) =>
-          f.path.includes('.claude/skills/default-skill/SKILL.md'),
-      );
-
-      expect(defaultSkillFile).toBeUndefined();
-    });
-
-    it('does not call DeployDefaultSkillsUseCase', async () => {
-      await useCase.execute(command);
-
-      expect(mockDeployDefaultSkillsUseCase.execute).not.toHaveBeenCalled();
-    });
-  });
-
-  describe('when deploying to non-root target with @packmind.com user', () => {
+  describe('when deploying to non-root target', () => {
     let command: PublishArtifactsCommand;
     let recipeVersion: ReturnType<typeof recipeVersionFactory>;
     let target: ReturnType<typeof targetFactory>;
@@ -2578,12 +2461,6 @@ describe('PublishArtifactsUseCase', () => {
       await useCase.execute(command);
 
       expect(mockDeployDefaultSkillsUseCase.execute).not.toHaveBeenCalled();
-    });
-
-    it('does not check user email', async () => {
-      await useCase.execute(command);
-
-      expect(mockAccountsPort.getUserById).not.toHaveBeenCalled();
     });
   });
 });
