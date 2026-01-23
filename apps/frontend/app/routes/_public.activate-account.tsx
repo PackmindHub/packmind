@@ -56,7 +56,7 @@ export default function ActivateAccountRoute() {
   return (
     <PMVStack gap={6} align="stretch">
       <PMBox textAlign="center">
-        <PMHeading level="h2">Activate Your Trial Account</PMHeading>
+        <PMHeading level="h2">Activate your account</PMHeading>
         <PMText color="secondary" mt={2}>
           Set up your organization, email, and password to complete your account
           activation.

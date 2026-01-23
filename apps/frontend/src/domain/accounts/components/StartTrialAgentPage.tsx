@@ -62,9 +62,7 @@ const PlaybookContent: React.FC = () => {
   return (
     <PMVStack align="flex-start" gap={4}>
       <PMField.Root width="full">
-        <PMField.Label>
-          Prompt: Generate playbook for this project
-        </PMField.Label>
+        <PMField.Label>Submit this prompt to your AI Agent</PMField.Label>
         <CopiableTextarea
           value="Run the Packmind onboarding process"
           readOnly
@@ -197,6 +195,7 @@ export const StartTrialAgentPage: React.FC<IStartTrialAgentPageProps> = ({
                   borderColor="gray.700"
                   bg="gray.900"
                   p={4}
+                  w={'full'}
                 >
                   <PMHStack mb={2} gap={2}>
                     <PMIcon as={LuTerminal} color="blue.400" />
@@ -222,16 +221,15 @@ export const StartTrialAgentPage: React.FC<IStartTrialAgentPageProps> = ({
                   borderColor="gray.700"
                   bg="gray.900"
                   p={4}
+                  w={'full'}
                 >
                   <PMHStack mb={2} gap={2}>
                     <PMIcon as={LuSettings} color="blue.400" />
                     <PMText fontWeight="semibold">
-                      Manual MCP Configuration
+                      Install Packmind MCP server
                     </PMText>
                   </PMHStack>
-                  <PMText fontSize="sm" color="secondary" mb={3}>
-                    Or configure MCP manually using the method below
-                  </PMText>
+
                   <MethodContent
                     method={preferredMcpMethod}
                     token={token}
