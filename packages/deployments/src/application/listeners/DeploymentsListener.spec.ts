@@ -2,10 +2,12 @@ import { PackmindEventEmitterService } from '@packmind/node-utils';
 import {
   createOrganizationId,
   createRecipeId,
+  createSkillId,
   createSpaceId,
   createStandardId,
   createUserId,
   CommandDeletedEvent,
+  SkillDeletedEvent,
   StandardDeletedEvent,
 } from '@packmind/types';
 import { DataSource } from 'typeorm';
@@ -31,6 +33,7 @@ describe('DeploymentsListener', () => {
     eventService = new PackmindEventEmitterService(mockDataSource);
     mockPackageRepository = {
       removeRecipeFromAllPackages: jest.fn().mockResolvedValue(undefined),
+      removeSkillFromAllPackages: jest.fn().mockResolvedValue(undefined),
       removeStandardFromAllPackages: jest.fn().mockResolvedValue(undefined),
       findBySpaceId: jest.fn(),
       findByOrganizationId: jest.fn(),
@@ -183,6 +186,72 @@ describe('DeploymentsListener', () => {
         expect(
           mockPackageRepository.removeStandardFromAllPackages,
         ).toHaveBeenCalledWith(standardId2);
+      });
+    });
+  });
+
+  describe('when SkillDeletedEvent is emitted', () => {
+    const skillId = createSkillId('skill-123');
+
+    it('calls removeSkillFromAllPackages with the skillId', async () => {
+      const event = new SkillDeletedEvent({
+        skillId,
+        spaceId,
+        organizationId,
+        userId,
+      });
+
+      eventService.emit(event);
+
+      // Wait for async handler to complete
+      await new Promise((resolve) => setTimeout(resolve, 10));
+
+      expect(
+        mockPackageRepository.removeSkillFromAllPackages,
+      ).toHaveBeenCalledWith(skillId);
+    });
+
+    describe('when multiple SkillDeletedEvents are emitted', () => {
+      const skillId2 = createSkillId('skill-456');
+
+      beforeEach(async () => {
+        eventService.emit(
+          new SkillDeletedEvent({
+            skillId,
+            spaceId,
+            organizationId,
+            userId,
+          }),
+        );
+
+        eventService.emit(
+          new SkillDeletedEvent({
+            skillId: skillId2,
+            spaceId,
+            organizationId,
+            userId,
+          }),
+        );
+
+        await new Promise((resolve) => setTimeout(resolve, 10));
+      });
+
+      it('calls removeSkillFromAllPackages twice', async () => {
+        expect(
+          mockPackageRepository.removeSkillFromAllPackages,
+        ).toHaveBeenCalledTimes(2);
+      });
+
+      it('calls removeSkillFromAllPackages with the first skillId', async () => {
+        expect(
+          mockPackageRepository.removeSkillFromAllPackages,
+        ).toHaveBeenCalledWith(skillId);
+      });
+
+      it('calls removeSkillFromAllPackages with the second skillId', async () => {
+        expect(
+          mockPackageRepository.removeSkillFromAllPackages,
+        ).toHaveBeenCalledWith(skillId2);
       });
     });
   });
