@@ -27,6 +27,44 @@ Skills follow the [Agent Skills specification](https://agentskills.io/home), an 
 
 For details on the SKILL.md format, frontmatter fields, and best practices, refer to the [Agent Skills specification](https://agentskills.io/home).
 
+## Create a Skill Using the AI Agent
+
+The easiest way to create a skill is using the built-in `/create-skill` command with your AI coding assistant.
+
+### Install Default Skills
+
+First, ensure the skill creation tools are available locally. Run:
+
+```bash
+packmind-cli skills init
+```
+
+This installs Packmind's default skills, including the `create-skill` skill that guides you through creating new skills.
+
+<Tip>
+  **Automatic installation** — Default skills are also installed automatically
+  when you install a package with `packmind-cli install` or when packages are
+  distributed to your repository.
+</Tip>
+
+### Create Your Skill
+
+Once default skills are installed, invoke the `/create-skill` command in your AI coding assistant:
+
+```
+/create-skill
+```
+
+The assistant will guide you through:
+
+1. **Defining the skill purpose** — Describe what capability you want to provide
+2. **Identifying triggers** — Specify when the AI should activate this skill
+3. **Planning resources** — Determine if you need scripts, templates, or references
+4. **Generating the skill** — Create the `SKILL.md` and supporting files
+5. **Validating** — Check the skill follows the specification
+
+After the assistant generates your skill, you can test it locally before uploading.
+
 ## How to Upload a Skill to Packmind
 
 Once you have a skill folder ready, upload it to Packmind using the CLI:

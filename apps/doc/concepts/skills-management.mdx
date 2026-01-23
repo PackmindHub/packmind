@@ -65,6 +65,36 @@ packmind-cli skills add ./my-skill
 
 For a complete walkthrough, see [Create Your First Skill](/getting-started/gs-create-skill).
 
+## Updating Skills
+
+When you upload a skill that already exists in your organization, Packmind automatically handles versioning:
+
+1. **Content comparison** — The CLI compares the uploaded content against the latest version
+2. **New version created** — If any content differs (changes to `SKILL.md`, new files, modified scripts, or updated assets), a new version is created
+3. **No duplicate versions** — If the content is identical to the current version, no new version is created
+
+To update an existing skill, simply upload it again:
+
+```bash
+packmind-cli skills add ./my-skill
+```
+
+The CLI will report:
+
+- **New skill created** — If this is a new skill
+- **New version created** — If changes were detected
+- **Skill already up to date** — If no changes were detected
+
+### Viewing Version History
+
+You can view all versions of a skill in the Packmind web app:
+
+1. Navigate to **Skills** in the main menu
+2. Click on the skill you want to inspect
+3. View the **Version history** section to see all versions
+
+Each version includes a timestamp, allowing you to track when changes were made.
+
 ## Viewing Skills
 
 Access your skills through the Packmind web app:
@@ -90,6 +120,13 @@ Skills can be added to packages alongside commands and standards. To add a skill
 4. Save the package
 
 When you distribute a package, all included skills are deployed together with your other artifacts.
+
+<Tip>
+  **Default skills included** — When packages are distributed (via the web app
+  push strategy or CLI install), Packmind's default skills are automatically
+  included. This ensures the `create-skill` skill is always available for
+  creating new skills with AI assistance.
+</Tip>
 
 ## Where Skills Appear After Distribution
 
