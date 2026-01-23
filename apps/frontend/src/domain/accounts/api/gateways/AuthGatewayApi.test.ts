@@ -32,7 +32,7 @@ describe('AuthGatewayApi', () => {
   });
 
   describe('signIn', () => {
-    it('calls API service with correct parameters', async () => {
+    describe('when signing in with valid credentials', () => {
       const signInRequest = {
         email: 'testuser@packmind.com',
         password: 'password123',
@@ -60,31 +60,41 @@ describe('AuthGatewayApi', () => {
         },
         accessToken: 'token123',
       };
-      mockApiPost.mockResolvedValue(mockResponse);
+      let result: Awaited<ReturnType<typeof gateway.signIn>>;
 
-      const result = await gateway.signIn(signInRequest);
+      beforeEach(async () => {
+        mockApiPost.mockResolvedValue(mockResponse);
+        result = await gateway.signIn(signInRequest);
+      });
 
-      expect(mockApiPost).toHaveBeenCalledWith('/auth/signin', signInRequest);
-      expect(result).toEqual(mockResponse);
+      it('calls API service with correct parameters', () => {
+        expect(mockApiPost).toHaveBeenCalledWith('/auth/signin', signInRequest);
+      });
+
+      it('returns the response', () => {
+        expect(result).toEqual(mockResponse);
+      });
     });
 
-    it('handles API errors', async () => {
-      const signInRequest = {
-        email: 'testuser@packmind.com',
-        password: 'wrongpassword',
-        organizationId: createOrganizationId('org-1'),
-      };
-      const error = new Error('Invalid credentials');
-      mockApiPost.mockRejectedValue(error);
+    describe('when API returns an error', () => {
+      it('propagates the error', async () => {
+        const signInRequest = {
+          email: 'testuser@packmind.com',
+          password: 'wrongpassword',
+          organizationId: createOrganizationId('org-1'),
+        };
+        const error = new Error('Invalid credentials');
+        mockApiPost.mockRejectedValue(error);
 
-      await expect(gateway.signIn(signInRequest)).rejects.toThrow(
-        'Invalid credentials',
-      );
+        await expect(gateway.signIn(signInRequest)).rejects.toThrow(
+          'Invalid credentials',
+        );
+      });
     });
   });
 
   describe('getMe', () => {
-    it('calls API service with correct endpoint', async () => {
+    describe('when user is authenticated', () => {
       const mockResponse = {
         message: 'User authenticated',
         authenticated: true,
@@ -107,24 +117,34 @@ describe('AuthGatewayApi', () => {
           role: 'admin',
         },
       };
-      mockApiGet.mockResolvedValue(mockResponse);
+      let result: Awaited<ReturnType<typeof gateway.getMe>>;
 
-      const result = await gateway.getMe();
+      beforeEach(async () => {
+        mockApiGet.mockResolvedValue(mockResponse);
+        result = await gateway.getMe();
+      });
 
-      expect(mockApiGet).toHaveBeenCalledWith('/auth/me');
-      expect(result).toEqual(mockResponse);
+      it('calls API service with correct endpoint', () => {
+        expect(mockApiGet).toHaveBeenCalledWith('/auth/me');
+      });
+
+      it('returns the response', () => {
+        expect(result).toEqual(mockResponse);
+      });
     });
 
-    it('handles authentication failure', async () => {
-      const mockResponse = {
-        message: 'Not authenticated',
-        authenticated: false,
-      };
-      mockApiGet.mockResolvedValue(mockResponse);
+    describe('when user is not authenticated', () => {
+      it('returns authentication failure response', async () => {
+        const mockResponse = {
+          message: 'Not authenticated',
+          authenticated: false,
+        };
+        mockApiGet.mockResolvedValue(mockResponse);
 
-      const result = await gateway.getMe();
+        const result = await gateway.getMe();
 
-      expect(result).toEqual(mockResponse);
+        expect(result).toEqual(mockResponse);
+      });
     });
   });
 });

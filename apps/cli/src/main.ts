@@ -14,7 +14,7 @@ import { setupMcpCommand } from './infra/commands/SetupMcpCommand';
 import { skillsCommand } from './infra/commands/SkillsCommand';
 import { standardsCommand } from './infra/commands/StandardsCommand';
 import { GitService } from './application/services/GitService';
-import { logErrorConsole } from './infra/utils/consoleLogger';
+import { logConsole, logErrorConsole } from './infra/utils/consoleLogger';
 
 // Read version from package.json (bundled by esbuild)
 // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -79,7 +79,7 @@ if (hasEmbeddedWasmFiles()) {
 // Check for --version or -v flag
 const args = process.argv.slice(2);
 if (args.includes('--version') || args.includes('-v')) {
-  console.log(`packmind-cli version ${CLI_VERSION}`);
+  logConsole(`packmind-cli version ${CLI_VERSION}`);
   process.exit(0);
 }
 

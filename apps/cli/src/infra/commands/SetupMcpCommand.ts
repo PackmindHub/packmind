@@ -11,6 +11,7 @@ import {
   logErrorConsole,
   logWarningConsole,
   formatBold,
+  logConsole,
 } from '../utils/consoleLogger';
 import { loadCredentials, getCredentialsPath } from '../utils/credentials';
 import { PackmindCliHexa } from '../../PackmindCliHexa';
@@ -128,18 +129,18 @@ export const setupMcpCommand = command({
 
     if (!credentials) {
       logErrorConsole('Not authenticated');
-      console.log('\nNo credentials found. You can authenticate by either:');
-      console.log('  1. Running `packmind-cli login`');
-      console.log('  2. Setting PACKMIND_API_KEY_V3 environment variable');
-      console.log(`\nCredentials are loaded from (in order of priority):`);
-      console.log(`  1. PACKMIND_API_KEY_V3 environment variable`);
-      console.log(`  2. ${getCredentialsPath()}`);
+      logConsole('\nNo credentials found. You can authenticate by either:');
+      logConsole('  1. Running `packmind-cli login`');
+      logConsole('  2. Setting PACKMIND_API_KEY_V3 environment variable');
+      logConsole(`\nCredentials are loaded from (in order of priority):`);
+      logConsole(`  1. PACKMIND_API_KEY_V3 environment variable`);
+      logConsole(`  2. ${getCredentialsPath()}`);
       process.exit(1);
     }
 
     if (credentials.isExpired) {
       logErrorConsole('Credentials expired');
-      console.log('\nRun `packmind-cli login` to re-authenticate.');
+      logConsole('\nRun `packmind-cli login` to re-authenticate.');
       process.exit(1);
     }
 
@@ -152,18 +153,18 @@ export const setupMcpCommand = command({
       selectedAgents = targets.map((t) => agentArgToType[t]);
     } else {
       // Interactive mode: detect and prompt
-      console.log('\nDetecting installed AI agents...\n');
+      logConsole('\nDetecting installed AI agents...\n');
 
       const detectedAgents = agentDetectionService.detectAgents();
 
       if (detectedAgents.length > 0) {
-        console.log('Found agents:');
+        logConsole('Found agents:');
         detectedAgents.forEach((detectedAgent) => {
-          console.log(`  - ${detectedAgent.name}`);
+          logConsole(`  - ${detectedAgent.name}`);
         });
-        console.log('');
+        logConsole('');
       } else {
-        console.log('No supported agents detected.\n');
+        logConsole('No supported agents detected.\n');
       }
 
       const detectedTypes = new Set(detectedAgents.map((a) => a.type));
@@ -201,14 +202,14 @@ export const setupMcpCommand = command({
       }
 
       if (promptedAgents.length === 0) {
-        console.log('\nNo agents selected. Exiting.');
+        logConsole('\nNo agents selected. Exiting.');
         process.exit(0);
       }
 
       selectedAgents = promptedAgents;
     }
 
-    console.log('\nFetching MCP configuration...\n');
+    logConsole('\nFetching MCP configuration...\n');
 
     const packmindLogger = new PackmindLogger('PackmindCLI', LogLevel.INFO);
     const packmindCliHexa = new PackmindCliHexa(packmindLogger);
@@ -219,7 +220,7 @@ export const setupMcpCommand = command({
     } catch (error) {
       logErrorConsole('Failed to fetch MCP configuration from server.');
       if (error instanceof Error) {
-        console.log(`  ${error.message}`);
+        logConsole(`  ${error.message}`);
       }
       process.exit(1);
     }
@@ -231,7 +232,7 @@ export const setupMcpCommand = command({
     }[] = [];
 
     for (const agentResult of result.results) {
-      console.log(`Installing MCP for ${agentResult.agentName}...`);
+      logConsole(`Installing MCP for ${agentResult.agentName}...`);
 
       if (agentResult.success) {
         logSuccessConsole(`  ${agentResult.agentName} configured successfully`);
@@ -245,33 +246,33 @@ export const setupMcpCommand = command({
       }
     }
 
-    console.log('');
+    logConsole('');
 
     if (failedAgents.length > 0) {
       for (const failed of failedAgents) {
         logWarningConsole(`Failed to configure ${failed.name}:`);
 
-        console.log(`\n  Error: ${failed.error}`);
+        logConsole(`\n  Error: ${failed.error}`);
 
         if (
           failed.error.includes('ENOENT') ||
           failed.error.includes('not found') ||
           failed.error.includes('command not found')
         ) {
-          console.log(
+          logConsole(
             `\n  Hint: Make sure the agent CLI is installed and available in your PATH.`,
           );
         }
 
-        console.log(`\n  Manual configuration:`);
-        console.log(result.manualConfigJson);
-        console.log('');
+        logConsole(`\n  Manual configuration:`);
+        logConsole(result.manualConfigJson ?? 'undefined');
+        logConsole('');
       }
     }
 
     if (successCount > 0) {
       const agentWord = successCount === 1 ? 'agent' : 'agents';
-      console.log(
+      logConsole(
         formatBold(`Done! MCP configured for ${successCount} ${agentWord}.`),
       );
     }

@@ -133,16 +133,22 @@ describe('decodeApiKey', () => {
     });
 
     describe('when JWT format is invalid', () => {
-      it('returns host with empty jwt', () => {
+      let result: ReturnType<typeof decodeApiKey>;
+
+      beforeEach(() => {
         const payload = {
           host: 'https://app.packmind.ai',
           jwt: 'invalid-jwt-format',
         };
         const apiKey = Buffer.from(JSON.stringify(payload)).toString('base64');
+        result = decodeApiKey(apiKey);
+      });
 
-        const result = decodeApiKey(apiKey);
-
+      it('returns host', () => {
         expect(result?.host).toBe('https://app.packmind.ai');
+      });
+
+      it('returns empty jwt', () => {
         expect(result?.jwt).toEqual({});
       });
     });

@@ -17,12 +17,18 @@ describe('GitService', () => {
 
   describe('getGitRepositoryRoot', () => {
     describe('when path is inside a git repository', () => {
-      it('returns repository root path', () => {
+      let result: string;
+
+      beforeEach(() => {
         gitRunner.mockReturnValue({ stdout: '/home/user/project\n' });
+        result = service.getGitRepositoryRoot('/home/user/project');
+      });
 
-        const result = service.getGitRepositoryRoot('/home/user/project');
-
+      it('returns repository root path', () => {
         expect(result).toBe('/home/user/project');
+      });
+
+      it('calls gitRunner with rev-parse command', () => {
         expect(gitRunner).toHaveBeenCalledWith('rev-parse --show-toplevel', {
           cwd: '/home/user/project',
         });
@@ -30,14 +36,18 @@ describe('GitService', () => {
     });
 
     describe('when path is a subdirectory', () => {
-      it('returns repository root path', () => {
+      let result: string;
+
+      beforeEach(() => {
         gitRunner.mockReturnValue({ stdout: '/home/user/project\n' });
+        result = service.getGitRepositoryRoot('/home/user/project/src/main');
+      });
 
-        const result = service.getGitRepositoryRoot(
-          '/home/user/project/src/main',
-        );
-
+      it('returns repository root path', () => {
         expect(result).toBe('/home/user/project');
+      });
+
+      it('calls gitRunner with subdirectory as cwd', () => {
         expect(gitRunner).toHaveBeenCalledWith('rev-parse --show-toplevel', {
           cwd: '/home/user/project/src/main',
         });
@@ -109,14 +119,20 @@ describe('GitService', () => {
 
   describe('getCurrentBranches', () => {
     describe('when on a single branch', () => {
-      it('returns the branch name', () => {
+      let result: ReturnType<typeof service.getCurrentBranches>;
+
+      beforeEach(() => {
         gitRunner.mockReturnValue({
           stdout: '* main\n  remotes/origin/main\n',
         });
+        result = service.getCurrentBranches('/repo');
+      });
 
-        const result = service.getCurrentBranches('/repo');
-
+      it('returns the branch name', () => {
         expect(result).toEqual({ branches: ['main'] });
+      });
+
+      it('calls gitRunner with branch command', () => {
         expect(gitRunner).toHaveBeenCalledWith('branch -a --contains HEAD', {
           cwd: '/repo',
         });
@@ -151,12 +167,18 @@ describe('GitService', () => {
 
   describe('getCurrentBranch', () => {
     describe('when on a branch', () => {
-      it('returns the current branch name', () => {
+      let result: ReturnType<typeof service.getCurrentBranch>;
+
+      beforeEach(() => {
         gitRunner.mockReturnValue({ stdout: 'main\n' });
+        result = service.getCurrentBranch('/repo');
+      });
 
-        const result = service.getCurrentBranch('/repo');
-
+      it('returns the current branch name', () => {
         expect(result).toEqual({ branch: 'main' });
+      });
+
+      it('calls gitRunner with rev-parse command', () => {
         expect(gitRunner).toHaveBeenCalledWith('rev-parse --abbrev-ref HEAD', {
           cwd: '/repo',
         });
@@ -198,17 +220,23 @@ describe('GitService', () => {
 
   describe('getGitRemoteUrl', () => {
     describe('when only one remote is available', () => {
-      it('returns single remote', () => {
+      let result: ReturnType<typeof service.getGitRemoteUrl>;
+
+      beforeEach(() => {
         gitRunner.mockReturnValue({
           stdout:
             'origin\tgit@github.com:PackmindHub/test-repo.git (fetch)\norigin\tgit@github.com:PackmindHub/test-repo.git (push)\n',
         });
+        result = service.getGitRemoteUrl('/repo');
+      });
 
-        const result = service.getGitRemoteUrl('/repo');
-
+      it('returns single remote', () => {
         expect(result).toEqual({
           gitRemoteUrl: 'git@github.com:PackmindHub/test-repo',
         });
+      });
+
+      it('calls gitRunner with remote command', () => {
         expect(gitRunner).toHaveBeenCalledWith('remote -v', { cwd: '/repo' });
       });
     });
@@ -404,14 +432,20 @@ describe('GitService', () => {
 
   describe('getUntrackedFiles', () => {
     describe('when there are no untracked files', () => {
-      it('returns empty array', () => {
+      let result: ReturnType<typeof service.getUntrackedFiles>;
+
+      beforeEach(() => {
         gitRunner
           .mockReturnValueOnce({ stdout: '/repo\n' })
           .mockReturnValueOnce({ stdout: '' });
+        result = service.getUntrackedFiles('/repo');
+      });
 
-        const result = service.getUntrackedFiles('/repo');
-
+      it('returns empty array', () => {
         expect(result).toEqual([]);
+      });
+
+      it('calls gitRunner with ls-files command', () => {
         expect(gitRunner).toHaveBeenLastCalledWith(
           'ls-files --others --exclude-standard',
           { cwd: '/repo' },

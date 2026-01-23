@@ -107,7 +107,7 @@ describe('RuleDetails - language selector and states', () => {
   });
 
   describe('when there are no rule examples', () => {
-    it('renders empty state', () => {
+    beforeEach(() => {
       mockUseGetRuleExamplesQuery.mockReturnValue({
         data: [],
         isLoading: false,
@@ -119,53 +119,69 @@ describe('RuleDetails - language selector and states', () => {
           rule={createRule()}
         />,
       );
+    });
 
+    it('displays empty state message', () => {
       expect(screen.getByText('No code examples yet')).toBeInTheDocument();
+    });
+
+    it('does not render the rule examples manager', () => {
       expect(
         screen.queryByTestId('rule-examples-manager'),
       ).not.toBeInTheDocument();
     });
   });
 
-  it('displays configured languages group and add language group in selector', async () => {
-    const examples: RuleExample[] = [
-      createRuleExample('ex-1', ProgrammingLanguage.JAVASCRIPT),
-      createRuleExample('ex-2', ProgrammingLanguage.PYTHON),
-    ];
+  describe('when opening the language selector with configured examples', () => {
+    beforeEach(async () => {
+      const examples: RuleExample[] = [
+        createRuleExample('ex-1', ProgrammingLanguage.JAVASCRIPT),
+        createRuleExample('ex-2', ProgrammingLanguage.PYTHON),
+      ];
 
-    mockUseGetRuleExamplesQuery.mockReturnValue({
-      data: examples,
-      isLoading: false,
-    } as unknown as ReturnType<typeof useGetRuleExamplesQuery>);
+      mockUseGetRuleExamplesQuery.mockReturnValue({
+        data: examples,
+        isLoading: false,
+      } as unknown as ReturnType<typeof useGetRuleExamplesQuery>);
 
-    const user = userEvent.setup({ pointerEventsCheck: 0 });
+      const user = userEvent.setup({ pointerEventsCheck: 0 });
 
-    renderWithProviders(
-      <RuleDetails
-        standardId={'standard-1' as StandardId}
-        rule={createRule()}
-      />,
-    );
+      renderWithProviders(
+        <RuleDetails
+          standardId={'standard-1' as StandardId}
+          rule={createRule()}
+        />,
+      );
 
-    const languageLabel = screen.getByText('Language :');
-    const languageContainer = languageLabel.closest('div');
-    expect(languageContainer).not.toBeNull();
+      const languageLabel = screen.getByText('Language :');
+      const languageContainer = languageLabel.closest('div') as HTMLElement;
+      const triggerCombobox = within(languageContainer).getByRole('combobox');
+      await user.click(triggerCombobox);
 
-    const triggerCombobox = within(languageContainer as HTMLElement).getByRole(
-      'combobox',
-    );
-    await user.click(triggerCombobox);
+      await waitFor(() => {
+        expect(screen.getByText('Configured Languages')).toBeInTheDocument();
+      });
+    });
 
-    await waitFor(() => {
+    it('displays the configured languages group', async () => {
       expect(screen.getByText('Configured Languages')).toBeInTheDocument();
     });
-    expect(screen.getByText('Add a language')).toBeInTheDocument();
-    expect(screen.getAllByText('JavaScript')[0]).toBeInTheDocument();
-    expect(screen.getByText('Python')).toBeInTheDocument();
+
+    it('displays the add language group', async () => {
+      expect(screen.getByText('Add a language')).toBeInTheDocument();
+    });
+
+    it('displays JavaScript in the configured languages', async () => {
+      expect(screen.getAllByText('JavaScript')[0]).toBeInTheDocument();
+    });
+
+    it('displays Python in the configured languages', async () => {
+      expect(screen.getByText('Python')).toBeInTheDocument();
+    });
   });
 
   describe('when selecting a language from the "Add a language" group', () => {
-    it('enables example creation', async () => {
+    beforeEach(async () => {
       const examples: RuleExample[] = [
         createRuleExample('ex-1', ProgrammingLanguage.JAVASCRIPT),
       ];
@@ -184,25 +200,27 @@ describe('RuleDetails - language selector and states', () => {
         />,
       );
 
-      // Initially, creation mode is not enabled
-      expect(screen.getByTestId('force-create')).toHaveTextContent('false');
-
       const languageLabel = screen.getByText('Language :');
       const languageContainer = languageLabel.closest('div') as HTMLElement;
       const triggerCombobox = within(languageContainer).getByRole('combobox');
       await user.click(triggerCombobox);
 
-      // Open "Add a language" group
       const addLanguageGroupLabel = screen.getByText('Add a language');
       await user.click(addLanguageGroupLabel);
 
-      // Select a language that is not configured yet (e.g. Python)
       const pythonOption = await screen.findByText('Python');
       await user.click(pythonOption);
 
       await waitFor(() => {
         expect(screen.getByTestId('force-create')).toHaveTextContent('true');
       });
+    });
+
+    it('enables creation mode', async () => {
+      expect(screen.getByTestId('force-create')).toHaveTextContent('true');
+    });
+
+    it('sets the selected language to PYTHON', async () => {
       expect(screen.getByTestId('selected-language')).toHaveTextContent(
         'PYTHON',
       );

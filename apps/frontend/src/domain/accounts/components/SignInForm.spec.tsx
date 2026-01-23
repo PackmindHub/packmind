@@ -91,95 +91,112 @@ describe('SignInForm', () => {
     );
 
   describe('Sign In Form', () => {
-    it('renders sign in form with all required fields', () => {
-      mockUseSignInMutation.mockReturnValue(createSignInMutation());
-      mockUseSelectOrganizationMutation.mockReturnValue(
-        createSelectOrganizationMutation(),
-      );
-      mockUseCreateOrganizationMutation.mockReturnValue(
-        createCreateOrganizationMutation(),
-      );
+    describe('when rendering the form', () => {
+      beforeEach(() => {
+        mockUseSignInMutation.mockReturnValue(createSignInMutation());
+        mockUseSelectOrganizationMutation.mockReturnValue(
+          createSelectOrganizationMutation(),
+        );
+        mockUseCreateOrganizationMutation.mockReturnValue(
+          createCreateOrganizationMutation(),
+        );
 
-      renderWithProviders(<SignInForm />);
+        renderWithProviders(<SignInForm />);
+      });
 
-      expect(
-        screen.getByPlaceholderText(/enter your email/i),
-      ).toBeInTheDocument();
-      expect(
-        screen.getByPlaceholderText(/enter your password/i),
-      ).toBeInTheDocument();
-      expect(
-        screen.getByRole('button', { name: /sign in/i }),
-      ).toBeInTheDocument();
-      expect(screen.getByText(/forgot password/i)).toBeInTheDocument();
+      it('displays email input field', () => {
+        expect(
+          screen.getByPlaceholderText(/enter your email/i),
+        ).toBeInTheDocument();
+      });
+
+      it('displays password input field', () => {
+        expect(
+          screen.getByPlaceholderText(/enter your password/i),
+        ).toBeInTheDocument();
+      });
+
+      it('displays sign in button', () => {
+        expect(
+          screen.getByRole('button', { name: /sign in/i }),
+        ).toBeInTheDocument();
+      });
+
+      it('displays forgot password link', () => {
+        expect(screen.getByText(/forgot password/i)).toBeInTheDocument();
+      });
     });
 
-    it('validates email is required', async () => {
-      const user = userEvent.setup();
-      const mockSignInMutation = createSignInMutation();
-      mockUseSignInMutation.mockReturnValue(mockSignInMutation);
-      mockUseSelectOrganizationMutation.mockReturnValue(
-        createSelectOrganizationMutation(),
-      );
-      mockUseCreateOrganizationMutation.mockReturnValue(
-        createCreateOrganizationMutation(),
-      );
+    describe('when email is empty', () => {
+      it('rejects form submission', async () => {
+        const user = userEvent.setup();
+        const mockSignInMutation = createSignInMutation();
+        mockUseSignInMutation.mockReturnValue(mockSignInMutation);
+        mockUseSelectOrganizationMutation.mockReturnValue(
+          createSelectOrganizationMutation(),
+        );
+        mockUseCreateOrganizationMutation.mockReturnValue(
+          createCreateOrganizationMutation(),
+        );
 
-      renderWithProviders(<SignInForm />);
+        renderWithProviders(<SignInForm />);
 
-      const signInButton = screen.getByRole('button', { name: /sign in/i });
-      await user.click(signInButton);
+        const signInButton = screen.getByRole('button', { name: /sign in/i });
+        await user.click(signInButton);
 
-      // When validation fails, the mutation should not be called
-      expect(mockSignInMutation.mutate).not.toHaveBeenCalled();
+        expect(mockSignInMutation.mutate).not.toHaveBeenCalled();
+      });
     });
 
-    it('validates email must be at least 3 characters', async () => {
-      const user = userEvent.setup();
-      const mockSignInMutation = createSignInMutation();
-      mockUseSignInMutation.mockReturnValue(mockSignInMutation);
-      mockUseSelectOrganizationMutation.mockReturnValue(
-        createSelectOrganizationMutation(),
-      );
-      mockUseCreateOrganizationMutation.mockReturnValue(
-        createCreateOrganizationMutation(),
-      );
+    describe('when email is less than 3 characters', () => {
+      it('rejects form submission', async () => {
+        const user = userEvent.setup();
+        const mockSignInMutation = createSignInMutation();
+        mockUseSignInMutation.mockReturnValue(mockSignInMutation);
+        mockUseSelectOrganizationMutation.mockReturnValue(
+          createSelectOrganizationMutation(),
+        );
+        mockUseCreateOrganizationMutation.mockReturnValue(
+          createCreateOrganizationMutation(),
+        );
 
-      renderWithProviders(<SignInForm />);
+        renderWithProviders(<SignInForm />);
 
-      const emailInput = screen.getByPlaceholderText(/enter your email/i);
-      const passwordInput = screen.getByPlaceholderText(/enter your password/i);
-      await user.type(emailInput, 'ab');
-      await user.type(passwordInput, 'password123');
+        const emailInput = screen.getByPlaceholderText(/enter your email/i);
+        const passwordInput =
+          screen.getByPlaceholderText(/enter your password/i);
+        await user.type(emailInput, 'ab');
+        await user.type(passwordInput, 'password123');
 
-      const signInButton = screen.getByRole('button', { name: /sign in/i });
-      await user.click(signInButton);
+        const signInButton = screen.getByRole('button', { name: /sign in/i });
+        await user.click(signInButton);
 
-      // When validation fails, the mutation should not be called
-      expect(mockSignInMutation.mutate).not.toHaveBeenCalled();
+        expect(mockSignInMutation.mutate).not.toHaveBeenCalled();
+      });
     });
 
-    it('validates password is required', async () => {
-      const user = userEvent.setup();
-      const mockSignInMutation = createSignInMutation();
-      mockUseSignInMutation.mockReturnValue(mockSignInMutation);
-      mockUseSelectOrganizationMutation.mockReturnValue(
-        createSelectOrganizationMutation(),
-      );
-      mockUseCreateOrganizationMutation.mockReturnValue(
-        createCreateOrganizationMutation(),
-      );
+    describe('when password is empty', () => {
+      it('rejects form submission', async () => {
+        const user = userEvent.setup();
+        const mockSignInMutation = createSignInMutation();
+        mockUseSignInMutation.mockReturnValue(mockSignInMutation);
+        mockUseSelectOrganizationMutation.mockReturnValue(
+          createSelectOrganizationMutation(),
+        );
+        mockUseCreateOrganizationMutation.mockReturnValue(
+          createCreateOrganizationMutation(),
+        );
 
-      renderWithProviders(<SignInForm />);
+        renderWithProviders(<SignInForm />);
 
-      const emailInput = screen.getByPlaceholderText(/enter your email/i);
-      await user.type(emailInput, 'test@example.com');
+        const emailInput = screen.getByPlaceholderText(/enter your email/i);
+        await user.type(emailInput, 'test@example.com');
 
-      const signInButton = screen.getByRole('button', { name: /sign in/i });
-      await user.click(signInButton);
+        const signInButton = screen.getByRole('button', { name: /sign in/i });
+        await user.click(signInButton);
 
-      // When validation fails, the mutation should not be called
-      expect(mockSignInMutation.mutate).not.toHaveBeenCalled();
+        expect(mockSignInMutation.mutate).not.toHaveBeenCalled();
+      });
     });
 
     it('submits form with valid credentials', async () => {
@@ -217,81 +234,94 @@ describe('SignInForm', () => {
       });
     });
 
-    it('displays error message on sign in failure', async () => {
-      const user = userEvent.setup();
-      const mockSignInMutation = createSignInMutation();
-      mockUseSignInMutation.mockReturnValue(mockSignInMutation);
-      mockUseSelectOrganizationMutation.mockReturnValue(
-        createSelectOrganizationMutation(),
-      );
-      mockUseCreateOrganizationMutation.mockReturnValue(
-        createCreateOrganizationMutation(),
-      );
+    describe('when sign in fails', () => {
+      let user: ReturnType<typeof userEvent.setup>;
+      let mockSignInMutation: ReturnType<typeof createSignInMutation>;
 
-      renderWithProviders(<SignInForm />);
+      beforeEach(async () => {
+        user = userEvent.setup();
+        mockSignInMutation = createSignInMutation();
+        mockUseSignInMutation.mockReturnValue(mockSignInMutation);
+        mockUseSelectOrganizationMutation.mockReturnValue(
+          createSelectOrganizationMutation(),
+        );
+        mockUseCreateOrganizationMutation.mockReturnValue(
+          createCreateOrganizationMutation(),
+        );
 
-      const emailInput = screen.getByPlaceholderText(/enter your email/i);
-      const passwordInput = screen.getByPlaceholderText(/enter your password/i);
-      await user.type(emailInput, 'test@example.com');
-      await user.type(passwordInput, 'wrongpassword');
+        renderWithProviders(<SignInForm />);
 
-      const signInButton = screen.getByRole('button', { name: /sign in/i });
-      await user.click(signInButton);
+        const emailInput = screen.getByPlaceholderText(/enter your email/i);
+        const passwordInput =
+          screen.getByPlaceholderText(/enter your password/i);
+        await user.type(emailInput, 'test@example.com');
+        await user.type(passwordInput, 'wrongpassword');
 
-      await waitFor(() => {
-        expect(mockSignInMutation.mutate).toHaveBeenCalled();
+        const signInButton = screen.getByRole('button', { name: /sign in/i });
+        await user.click(signInButton);
+
+        await waitFor(() => {
+          expect(mockSignInMutation.mutate).toHaveBeenCalled();
+        });
+
+        const signInCall = mockSignInMutation.mutate.mock.calls[0];
+        const onError = signInCall[1].onError;
+        onError(new Error('Invalid credentials'));
       });
 
-      const signInCall = mockSignInMutation.mutate.mock.calls[0];
-      const onError = signInCall[1].onError;
-      onError(new Error('Invalid credentials'));
-
-      await waitFor(() => {
-        expect(
-          screen.getByText('Invalid email or password'),
-        ).toBeInTheDocument();
+      it('displays error message', async () => {
+        await waitFor(() => {
+          expect(
+            screen.getByText('Invalid email or password'),
+          ).toBeInTheDocument();
+        });
       });
     });
 
-    it('navigates to organization page when user has single organization', async () => {
-      const user = userEvent.setup();
-      const mockSignInMutation = createSignInMutation();
-      mockUseSignInMutation.mockReturnValue(mockSignInMutation);
-      mockUseSelectOrganizationMutation.mockReturnValue(
-        createSelectOrganizationMutation(),
-      );
-      mockUseCreateOrganizationMutation.mockReturnValue(
-        createCreateOrganizationMutation(),
-      );
+    describe('when user has single organization', () => {
+      beforeEach(async () => {
+        const user = userEvent.setup();
+        const mockSignInMutation = createSignInMutation();
+        mockUseSignInMutation.mockReturnValue(mockSignInMutation);
+        mockUseSelectOrganizationMutation.mockReturnValue(
+          createSelectOrganizationMutation(),
+        );
+        mockUseCreateOrganizationMutation.mockReturnValue(
+          createCreateOrganizationMutation(),
+        );
 
-      const mockSignInResponse: SignInUserResponse = {
-        organization: {
-          id: 'org-1',
-          name: 'Test Organization',
-          slug: 'test-organization',
-          role: 'admin',
-        },
-      };
+        const mockSignInResponse: SignInUserResponse = {
+          organization: {
+            id: 'org-1',
+            name: 'Test Organization',
+            slug: 'test-organization',
+            role: 'admin',
+          },
+        };
 
-      renderWithProviders(<SignInForm />);
+        renderWithProviders(<SignInForm />);
 
-      const emailInput = screen.getByPlaceholderText(/enter your email/i);
-      const passwordInput = screen.getByPlaceholderText(/enter your password/i);
-      await user.type(emailInput, 'test@example.com');
-      await user.type(passwordInput, 'password123');
+        const emailInput = screen.getByPlaceholderText(/enter your email/i);
+        const passwordInput =
+          screen.getByPlaceholderText(/enter your password/i);
+        await user.type(emailInput, 'test@example.com');
+        await user.type(passwordInput, 'password123');
 
-      const signInButton = screen.getByRole('button', { name: /sign in/i });
-      await user.click(signInButton);
+        const signInButton = screen.getByRole('button', { name: /sign in/i });
+        await user.click(signInButton);
 
-      await waitFor(() => {
-        expect(mockSignInMutation.mutate).toHaveBeenCalled();
+        await waitFor(() => {
+          expect(mockSignInMutation.mutate).toHaveBeenCalled();
+        });
+
+        const signInCall = mockSignInMutation.mutate.mock.calls[0];
+        const onSuccess = signInCall[1].onSuccess;
+        onSuccess(mockSignInResponse);
       });
 
-      const signInCall = mockSignInMutation.mutate.mock.calls[0];
-      const onSuccess = signInCall[1].onSuccess;
-      onSuccess(mockSignInResponse);
-
-      expect(mockNavigate).toHaveBeenCalledWith('/org/test-organization');
+      it('navigates to organization page', () => {
+        expect(mockNavigate).toHaveBeenCalledWith('/org/test-organization');
+      });
     });
 
     it('prevents double submission', async () => {
@@ -352,430 +382,533 @@ describe('SignInForm', () => {
   });
 
   describe('Organization Selection', () => {
-    it('shows organization selection when user has multiple organizations', async () => {
-      const user = userEvent.setup();
-      const mockSignInMutation = createSignInMutation();
-      mockUseSignInMutation.mockReturnValue(mockSignInMutation);
-      mockUseSelectOrganizationMutation.mockReturnValue(
-        createSelectOrganizationMutation(),
-      );
-      mockUseCreateOrganizationMutation.mockReturnValue(
-        createCreateOrganizationMutation(),
-      );
+    describe('when user has multiple organizations', () => {
+      let user: ReturnType<typeof userEvent.setup>;
+      let mockSignInMutation: ReturnType<typeof createSignInMutation>;
 
-      const mockSignInResponse: SignInUserResponse = {
-        organizations: [
-          {
-            organization: {
-              id: 'org-1',
-              name: 'Organization 1',
-              slug: 'organization-1',
+      beforeEach(async () => {
+        user = userEvent.setup();
+        mockSignInMutation = createSignInMutation();
+        mockUseSignInMutation.mockReturnValue(mockSignInMutation);
+        mockUseSelectOrganizationMutation.mockReturnValue(
+          createSelectOrganizationMutation(),
+        );
+        mockUseCreateOrganizationMutation.mockReturnValue(
+          createCreateOrganizationMutation(),
+        );
+
+        const mockSignInResponse: SignInUserResponse = {
+          organizations: [
+            {
+              organization: {
+                id: 'org-1',
+                name: 'Organization 1',
+                slug: 'organization-1',
+              },
+              role: 'admin',
             },
-            role: 'admin',
-          },
-          {
-            organization: {
-              id: 'org-2',
-              name: 'Organization 2',
-              slug: 'organization-2',
+            {
+              organization: {
+                id: 'org-2',
+                name: 'Organization 2',
+                slug: 'organization-2',
+              },
+              role: 'member',
             },
-            role: 'member',
-          },
-        ],
-      };
+          ],
+        };
 
-      renderWithProviders(<SignInForm />);
+        renderWithProviders(<SignInForm />);
 
-      const emailInput = screen.getByPlaceholderText(/enter your email/i);
-      const passwordInput = screen.getByPlaceholderText(/enter your password/i);
-      await user.type(emailInput, 'test@example.com');
-      await user.type(passwordInput, 'password123');
+        const emailInput = screen.getByPlaceholderText(/enter your email/i);
+        const passwordInput =
+          screen.getByPlaceholderText(/enter your password/i);
+        await user.type(emailInput, 'test@example.com');
+        await user.type(passwordInput, 'password123');
 
-      const signInButton = screen.getByRole('button', { name: /sign in/i });
-      await user.click(signInButton);
+        const signInButton = screen.getByRole('button', { name: /sign in/i });
+        await user.click(signInButton);
 
-      await waitFor(() => {
-        expect(mockSignInMutation.mutate).toHaveBeenCalled();
+        await waitFor(() => {
+          expect(mockSignInMutation.mutate).toHaveBeenCalled();
+        });
+
+        const signInCall = mockSignInMutation.mutate.mock.calls[0];
+        const onSuccess = signInCall[1].onSuccess;
+
+        act(() => {
+          onSuccess(mockSignInResponse);
+        });
+
+        await waitFor(() => {
+          expect(screen.getByText('Select Organization')).toBeInTheDocument();
+        });
       });
 
-      const signInCall = mockSignInMutation.mutate.mock.calls[0];
-      const onSuccess = signInCall[1].onSuccess;
-
-      act(() => {
-        onSuccess(mockSignInResponse);
-      });
-
-      await waitFor(() => {
+      it('displays organization selection title', async () => {
         expect(screen.getByText('Select Organization')).toBeInTheDocument();
+      });
+
+      it('displays first organization option', async () => {
         expect(screen.getByText('Organization 1')).toBeInTheDocument();
+      });
+
+      it('displays second organization option', async () => {
         expect(screen.getByText('Organization 2')).toBeInTheDocument();
+      });
+
+      it('displays continue button', async () => {
         expect(
           screen.getByRole('button', { name: /continue to organization/i }),
         ).toBeInTheDocument();
       });
     });
 
-    it('validates organization selection is required', async () => {
-      const user = userEvent.setup();
-      const mockSignInMutation = createSignInMutation();
-      const mockSelectOrganizationMutation = createSelectOrganizationMutation();
-      mockUseSignInMutation.mockReturnValue(mockSignInMutation);
-      mockUseSelectOrganizationMutation.mockReturnValue(
-        mockSelectOrganizationMutation,
-      );
-      mockUseCreateOrganizationMutation.mockReturnValue(
-        createCreateOrganizationMutation(),
-      );
+    describe('when no organization is selected', () => {
+      let user: ReturnType<typeof userEvent.setup>;
 
-      const mockSignInResponse: SignInUserResponse = {
-        organizations: [
-          {
-            organization: {
-              id: 'org-1',
-              name: 'Organization 1',
-              slug: 'organization-1',
+      beforeEach(async () => {
+        user = userEvent.setup();
+        const mockSignInMutation = createSignInMutation();
+        const mockSelectOrganizationMutation =
+          createSelectOrganizationMutation();
+        mockUseSignInMutation.mockReturnValue(mockSignInMutation);
+        mockUseSelectOrganizationMutation.mockReturnValue(
+          mockSelectOrganizationMutation,
+        );
+        mockUseCreateOrganizationMutation.mockReturnValue(
+          createCreateOrganizationMutation(),
+        );
+
+        const mockSignInResponse: SignInUserResponse = {
+          organizations: [
+            {
+              organization: {
+                id: 'org-1',
+                name: 'Organization 1',
+                slug: 'organization-1',
+              },
+              role: 'admin',
             },
-            role: 'admin',
-          },
-        ],
-      };
+          ],
+        };
 
-      renderWithProviders(<SignInForm />);
+        renderWithProviders(<SignInForm />);
 
-      const emailInput = screen.getByPlaceholderText(/enter your email/i);
-      const passwordInput = screen.getByPlaceholderText(/enter your password/i);
-      await user.type(emailInput, 'test@example.com');
-      await user.type(passwordInput, 'password123');
+        const emailInput = screen.getByPlaceholderText(/enter your email/i);
+        const passwordInput =
+          screen.getByPlaceholderText(/enter your password/i);
+        await user.type(emailInput, 'test@example.com');
+        await user.type(passwordInput, 'password123');
 
-      const signInButton = screen.getByRole('button', { name: /sign in/i });
-      await user.click(signInButton);
+        const signInButton = screen.getByRole('button', { name: /sign in/i });
+        await user.click(signInButton);
 
-      await waitFor(() => {
-        expect(mockSignInMutation.mutate).toHaveBeenCalled();
+        await waitFor(() => {
+          expect(mockSignInMutation.mutate).toHaveBeenCalled();
+        });
+
+        const signInCall = mockSignInMutation.mutate.mock.calls[0];
+        const onSuccess = signInCall[1].onSuccess;
+
+        act(() => {
+          onSuccess(mockSignInResponse);
+        });
+
+        await waitFor(() => {
+          expect(screen.getByText('Select Organization')).toBeInTheDocument();
+        });
+
+        const continueButton = screen.getByRole('button', {
+          name: /continue to organization/i,
+        });
+        await user.click(continueButton);
       });
 
-      const signInCall = mockSignInMutation.mutate.mock.calls[0];
-      const onSuccess = signInCall[1].onSuccess;
-
-      act(() => {
-        onSuccess(mockSignInResponse);
-      });
-
-      await waitFor(() => {
-        expect(screen.getByText('Select Organization')).toBeInTheDocument();
-      });
-
-      const continueButton = screen.getByRole('button', {
-        name: /continue to organization/i,
-      });
-      await user.click(continueButton);
-
-      await waitFor(() => {
-        expect(
-          screen.getByText('Please select an organization'),
-        ).toBeInTheDocument();
+      it('displays validation error', async () => {
+        await waitFor(() => {
+          expect(
+            screen.getByText('Please select an organization'),
+          ).toBeInTheDocument();
+        });
       });
     });
 
-    it('selects organization and navigates', async () => {
-      const user = userEvent.setup();
-      const mockSignInMutation = createSignInMutation();
-      const mockSelectOrganizationMutation = createSelectOrganizationMutation({
-        mutateAsync: jest.fn().mockResolvedValue({}),
-      });
-      mockUseSignInMutation.mockReturnValue(mockSignInMutation);
-      mockUseSelectOrganizationMutation.mockReturnValue(
-        mockSelectOrganizationMutation,
-      );
-      mockUseCreateOrganizationMutation.mockReturnValue(
-        createCreateOrganizationMutation(),
-      );
+    describe('when organization is selected', () => {
+      let mockSelectOrganizationMutation: ReturnType<
+        typeof createSelectOrganizationMutation
+      >;
 
-      const mockSignInResponse: SignInUserResponse = {
-        organizations: [
-          {
-            organization: {
-              id: 'org-1',
-              name: 'Organization 1',
-              slug: 'organization-1',
-            },
-            role: 'admin',
-          },
-          {
-            organization: {
-              id: 'org-2',
-              name: 'Organization 2',
-              slug: 'organization-2',
-            },
-            role: 'member',
-          },
-        ],
-      };
-
-      renderWithProviders(<SignInForm />);
-
-      const emailInput = screen.getByPlaceholderText(/enter your email/i);
-      const passwordInput = screen.getByPlaceholderText(/enter your password/i);
-      await user.type(emailInput, 'test@example.com');
-      await user.type(passwordInput, 'password123');
-
-      const signInButton = screen.getByRole('button', { name: /sign in/i });
-      await user.click(signInButton);
-
-      await waitFor(() => {
-        expect(mockSignInMutation.mutate).toHaveBeenCalled();
-      });
-
-      const signInCall = mockSignInMutation.mutate.mock.calls[0];
-      const onSuccess = signInCall[1].onSuccess;
-
-      act(() => {
-        onSuccess(mockSignInResponse);
-      });
-
-      await waitFor(() => {
-        expect(screen.getByText('Select Organization')).toBeInTheDocument();
-      });
-
-      const organizationSelect = screen.getByRole('combobox');
-      await user.selectOptions(organizationSelect, 'organization-2');
-
-      const continueButton = screen.getByRole('button', {
-        name: /continue to organization/i,
-      });
-      await user.click(continueButton);
-
-      await waitFor(() => {
-        expect(mockSelectOrganizationMutation.mutateAsync).toHaveBeenCalledWith(
-          {
-            organizationId: 'org-2',
-          },
+      beforeEach(async () => {
+        const user = userEvent.setup();
+        const mockSignInMutation = createSignInMutation();
+        mockSelectOrganizationMutation = createSelectOrganizationMutation({
+          mutateAsync: jest.fn().mockResolvedValue({}),
+        });
+        mockUseSignInMutation.mockReturnValue(mockSignInMutation);
+        mockUseSelectOrganizationMutation.mockReturnValue(
+          mockSelectOrganizationMutation,
         );
+        mockUseCreateOrganizationMutation.mockReturnValue(
+          createCreateOrganizationMutation(),
+        );
+
+        const mockSignInResponse: SignInUserResponse = {
+          organizations: [
+            {
+              organization: {
+                id: 'org-1',
+                name: 'Organization 1',
+                slug: 'organization-1',
+              },
+              role: 'admin',
+            },
+            {
+              organization: {
+                id: 'org-2',
+                name: 'Organization 2',
+                slug: 'organization-2',
+              },
+              role: 'member',
+            },
+          ],
+        };
+
+        renderWithProviders(<SignInForm />);
+
+        const emailInput = screen.getByPlaceholderText(/enter your email/i);
+        const passwordInput =
+          screen.getByPlaceholderText(/enter your password/i);
+        await user.type(emailInput, 'test@example.com');
+        await user.type(passwordInput, 'password123');
+
+        const signInButton = screen.getByRole('button', { name: /sign in/i });
+        await user.click(signInButton);
+
+        await waitFor(() => {
+          expect(mockSignInMutation.mutate).toHaveBeenCalled();
+        });
+
+        const signInCall = mockSignInMutation.mutate.mock.calls[0];
+        const onSuccess = signInCall[1].onSuccess;
+
+        act(() => {
+          onSuccess(mockSignInResponse);
+        });
+
+        await waitFor(() => {
+          expect(screen.getByText('Select Organization')).toBeInTheDocument();
+        });
+
+        const organizationSelect = screen.getByRole('combobox');
+        await user.selectOptions(organizationSelect, 'organization-2');
+
+        const continueButton = screen.getByRole('button', {
+          name: /continue to organization/i,
+        });
+        await user.click(continueButton);
       });
 
-      await waitFor(() => {
-        expect(mockNavigate).toHaveBeenCalledWith('/org/organization-2');
+      it('calls select organization mutation', async () => {
+        await waitFor(() => {
+          expect(
+            mockSelectOrganizationMutation.mutateAsync,
+          ).toHaveBeenCalledWith({
+            organizationId: 'org-2',
+          });
+        });
+      });
+
+      it('navigates to organization page', async () => {
+        await waitFor(() => {
+          expect(mockNavigate).toHaveBeenCalledWith('/org/organization-2');
+        });
       });
     });
   });
 
   describe('Organization Creation', () => {
-    it('shows organization creation when user has no organizations', async () => {
-      const user = userEvent.setup();
-      const mockSignInMutation = createSignInMutation();
-      mockUseSignInMutation.mockReturnValue(mockSignInMutation);
-      mockUseSelectOrganizationMutation.mockReturnValue(
-        createSelectOrganizationMutation(),
-      );
-      mockUseCreateOrganizationMutation.mockReturnValue(
-        createCreateOrganizationMutation(),
-      );
+    describe('when user has no organizations', () => {
+      let user: ReturnType<typeof userEvent.setup>;
+      let mockSignInMutation: ReturnType<typeof createSignInMutation>;
 
-      const mockSignInResponse: SignInUserResponse = {
-        organizations: [],
-      };
+      beforeEach(async () => {
+        user = userEvent.setup();
+        mockSignInMutation = createSignInMutation();
+        mockUseSignInMutation.mockReturnValue(mockSignInMutation);
+        mockUseSelectOrganizationMutation.mockReturnValue(
+          createSelectOrganizationMutation(),
+        );
+        mockUseCreateOrganizationMutation.mockReturnValue(
+          createCreateOrganizationMutation(),
+        );
 
-      renderWithProviders(<SignInForm />);
+        const mockSignInResponse: SignInUserResponse = {
+          organizations: [],
+        };
 
-      const emailInput = screen.getByPlaceholderText(/enter your email/i);
-      const passwordInput = screen.getByPlaceholderText(/enter your password/i);
-      await user.type(emailInput, 'test@example.com');
-      await user.type(passwordInput, 'password123');
+        renderWithProviders(<SignInForm />);
 
-      const signInButton = screen.getByRole('button', { name: /sign in/i });
-      await user.click(signInButton);
+        const emailInput = screen.getByPlaceholderText(/enter your email/i);
+        const passwordInput =
+          screen.getByPlaceholderText(/enter your password/i);
+        await user.type(emailInput, 'test@example.com');
+        await user.type(passwordInput, 'password123');
 
-      await waitFor(() => {
-        expect(mockSignInMutation.mutate).toHaveBeenCalled();
+        const signInButton = screen.getByRole('button', { name: /sign in/i });
+        await user.click(signInButton);
+
+        await waitFor(() => {
+          expect(mockSignInMutation.mutate).toHaveBeenCalled();
+        });
+
+        const signInCall = mockSignInMutation.mutate.mock.calls[0];
+        const onSuccess = signInCall[1].onSuccess;
+
+        act(() => {
+          onSuccess(mockSignInResponse);
+        });
+
+        await waitFor(() => {
+          expect(
+            screen.getByRole('button', { name: /create organization/i }),
+          ).toBeInTheDocument();
+        });
       });
 
-      const signInCall = mockSignInMutation.mutate.mock.calls[0];
-      const onSuccess = signInCall[1].onSuccess;
-
-      act(() => {
-        onSuccess(mockSignInResponse);
-      });
-
-      await waitFor(() => {
+      it('displays organization name input field', async () => {
         expect(
           screen.getByPlaceholderText(/enter organization name/i),
         ).toBeInTheDocument();
+      });
+
+      it('displays create organization button', async () => {
         expect(
           screen.getByRole('button', { name: /create organization/i }),
         ).toBeInTheDocument();
       });
     });
 
-    it('validates organization name is required', async () => {
-      const user = userEvent.setup();
-      const mockSignInMutation = createSignInMutation();
-      const mockCreateOrganizationMutation = createCreateOrganizationMutation();
-      mockUseSignInMutation.mockReturnValue(mockSignInMutation);
-      mockUseSelectOrganizationMutation.mockReturnValue(
-        createSelectOrganizationMutation(),
-      );
-      mockUseCreateOrganizationMutation.mockReturnValue(
-        mockCreateOrganizationMutation,
-      );
+    describe('when organization name is empty', () => {
+      beforeEach(async () => {
+        const user = userEvent.setup();
+        const mockSignInMutation = createSignInMutation();
+        const mockCreateOrganizationMutation =
+          createCreateOrganizationMutation();
+        mockUseSignInMutation.mockReturnValue(mockSignInMutation);
+        mockUseSelectOrganizationMutation.mockReturnValue(
+          createSelectOrganizationMutation(),
+        );
+        mockUseCreateOrganizationMutation.mockReturnValue(
+          mockCreateOrganizationMutation,
+        );
 
-      const mockSignInResponse: SignInUserResponse = {
-        organizations: [],
-      };
+        const mockSignInResponse: SignInUserResponse = {
+          organizations: [],
+        };
 
-      renderWithProviders(<SignInForm />);
+        renderWithProviders(<SignInForm />);
 
-      const emailInput = screen.getByPlaceholderText(/enter your email/i);
-      const passwordInput = screen.getByPlaceholderText(/enter your password/i);
-      await user.type(emailInput, 'test@example.com');
-      await user.type(passwordInput, 'password123');
+        const emailInput = screen.getByPlaceholderText(/enter your email/i);
+        const passwordInput =
+          screen.getByPlaceholderText(/enter your password/i);
+        await user.type(emailInput, 'test@example.com');
+        await user.type(passwordInput, 'password123');
 
-      const signInButton = screen.getByRole('button', { name: /sign in/i });
-      await user.click(signInButton);
+        const signInButton = screen.getByRole('button', { name: /sign in/i });
+        await user.click(signInButton);
 
-      await waitFor(() => {
-        expect(mockSignInMutation.mutate).toHaveBeenCalled();
+        await waitFor(() => {
+          expect(mockSignInMutation.mutate).toHaveBeenCalled();
+        });
+
+        const signInCall = mockSignInMutation.mutate.mock.calls[0];
+        const onSuccess = signInCall[1].onSuccess;
+
+        act(() => {
+          onSuccess(mockSignInResponse);
+        });
+
+        await waitFor(() => {
+          expect(
+            screen.getByRole('button', { name: /create organization/i }),
+          ).toBeInTheDocument();
+        });
+
+        const createButton = screen.getByRole('button', {
+          name: /create organization/i,
+        });
+        await user.click(createButton);
       });
 
-      const signInCall = mockSignInMutation.mutate.mock.calls[0];
-      const onSuccess = signInCall[1].onSuccess;
-
-      act(() => {
-        onSuccess(mockSignInResponse);
-      });
-
-      await waitFor(() => {
-        expect(
-          screen.getByRole('button', { name: /create organization/i }),
-        ).toBeInTheDocument();
-      });
-
-      const createButton = screen.getByRole('button', {
-        name: /create organization/i,
-      });
-      await user.click(createButton);
-
-      await waitFor(() => {
-        expect(
-          screen.getByText('Organization name is required'),
-        ).toBeInTheDocument();
-      });
-    });
-
-    it('validates organization name must be at least 3 characters', async () => {
-      const user = userEvent.setup();
-      const mockSignInMutation = createSignInMutation();
-      const mockCreateOrganizationMutation = createCreateOrganizationMutation();
-      mockUseSignInMutation.mockReturnValue(mockSignInMutation);
-      mockUseSelectOrganizationMutation.mockReturnValue(
-        createSelectOrganizationMutation(),
-      );
-      mockUseCreateOrganizationMutation.mockReturnValue(
-        mockCreateOrganizationMutation,
-      );
-
-      const mockSignInResponse: SignInUserResponse = {
-        organizations: [],
-      };
-
-      renderWithProviders(<SignInForm />);
-
-      const emailInput = screen.getByPlaceholderText(/enter your email/i);
-      const passwordInput = screen.getByPlaceholderText(/enter your password/i);
-      await user.type(emailInput, 'test@example.com');
-      await user.type(passwordInput, 'password123');
-
-      const signInButton = screen.getByRole('button', { name: /sign in/i });
-      await user.click(signInButton);
-
-      await waitFor(() => {
-        expect(mockSignInMutation.mutate).toHaveBeenCalled();
-      });
-
-      const signInCall = mockSignInMutation.mutate.mock.calls[0];
-      const onSuccess = signInCall[1].onSuccess;
-
-      act(() => {
-        onSuccess(mockSignInResponse);
-      });
-
-      await waitFor(() => {
-        expect(
-          screen.getByRole('button', { name: /create organization/i }),
-        ).toBeInTheDocument();
-      });
-
-      const organizationNameInput = screen.getByPlaceholderText(
-        /enter organization name/i,
-      );
-      await user.type(organizationNameInput, 'ab');
-
-      const createButton = screen.getByRole('button', {
-        name: /create organization/i,
-      });
-      await user.click(createButton);
-
-      await waitFor(() => {
-        expect(
-          screen.getByText('Organization name must be at least 3 characters'),
-        ).toBeInTheDocument();
+      it('displays validation error', async () => {
+        await waitFor(() => {
+          expect(
+            screen.getByText('Organization name is required'),
+          ).toBeInTheDocument();
+        });
       });
     });
 
-    it('creates organization and navigates', async () => {
-      const user = userEvent.setup();
-      const mockSignInMutation = createSignInMutation();
-      const mockCreateOrganizationMutation = createCreateOrganizationMutation();
-      const mockSelectOrganizationMutation = createSelectOrganizationMutation();
-      mockUseSignInMutation.mockReturnValue(mockSignInMutation);
-      mockUseSelectOrganizationMutation.mockReturnValue(
-        mockSelectOrganizationMutation,
-      );
-      mockUseCreateOrganizationMutation.mockReturnValue(
-        mockCreateOrganizationMutation,
-      );
+    describe('when organization name is less than 3 characters', () => {
+      beforeEach(async () => {
+        const user = userEvent.setup();
+        const mockSignInMutation = createSignInMutation();
+        const mockCreateOrganizationMutation =
+          createCreateOrganizationMutation();
+        mockUseSignInMutation.mockReturnValue(mockSignInMutation);
+        mockUseSelectOrganizationMutation.mockReturnValue(
+          createSelectOrganizationMutation(),
+        );
+        mockUseCreateOrganizationMutation.mockReturnValue(
+          mockCreateOrganizationMutation,
+        );
 
-      const mockSignInResponse: SignInUserResponse = {
-        organizations: [],
-      };
+        const mockSignInResponse: SignInUserResponse = {
+          organizations: [],
+        };
 
-      renderWithProviders(<SignInForm />);
+        renderWithProviders(<SignInForm />);
 
-      const emailInput = screen.getByPlaceholderText(/enter your email/i);
-      const passwordInput = screen.getByPlaceholderText(/enter your password/i);
-      await user.type(emailInput, 'test@example.com');
-      await user.type(passwordInput, 'password123');
+        const emailInput = screen.getByPlaceholderText(/enter your email/i);
+        const passwordInput =
+          screen.getByPlaceholderText(/enter your password/i);
+        await user.type(emailInput, 'test@example.com');
+        await user.type(passwordInput, 'password123');
 
-      const signInButton = screen.getByRole('button', { name: /sign in/i });
-      await user.click(signInButton);
+        const signInButton = screen.getByRole('button', { name: /sign in/i });
+        await user.click(signInButton);
 
-      await waitFor(() => {
-        expect(mockSignInMutation.mutate).toHaveBeenCalled();
+        await waitFor(() => {
+          expect(mockSignInMutation.mutate).toHaveBeenCalled();
+        });
+
+        const signInCall = mockSignInMutation.mutate.mock.calls[0];
+        const onSuccess = signInCall[1].onSuccess;
+
+        act(() => {
+          onSuccess(mockSignInResponse);
+        });
+
+        await waitFor(() => {
+          expect(
+            screen.getByRole('button', { name: /create organization/i }),
+          ).toBeInTheDocument();
+        });
+
+        const organizationNameInput = screen.getByPlaceholderText(
+          /enter organization name/i,
+        );
+        await user.type(organizationNameInput, 'ab');
+
+        const createButton = screen.getByRole('button', {
+          name: /create organization/i,
+        });
+        await user.click(createButton);
       });
 
-      const signInCall = mockSignInMutation.mutate.mock.calls[0];
-      const onSuccess = signInCall[1].onSuccess;
+      it('displays validation error', async () => {
+        await waitFor(() => {
+          expect(
+            screen.getByText('Organization name must be at least 3 characters'),
+          ).toBeInTheDocument();
+        });
+      });
+    });
 
-      act(() => {
-        onSuccess(mockSignInResponse);
+    describe('when creating organization with valid name', () => {
+      let mockCreateOrganizationMutation: ReturnType<
+        typeof createCreateOrganizationMutation
+      >;
+      let mockSelectOrganizationMutation: ReturnType<
+        typeof createSelectOrganizationMutation
+      >;
+
+      beforeEach(async () => {
+        const user = userEvent.setup();
+        const mockSignInMutation = createSignInMutation();
+        mockCreateOrganizationMutation = createCreateOrganizationMutation();
+        mockSelectOrganizationMutation = createSelectOrganizationMutation();
+        mockUseSignInMutation.mockReturnValue(mockSignInMutation);
+        mockUseSelectOrganizationMutation.mockReturnValue(
+          mockSelectOrganizationMutation,
+        );
+        mockUseCreateOrganizationMutation.mockReturnValue(
+          mockCreateOrganizationMutation,
+        );
+
+        const mockSignInResponse: SignInUserResponse = {
+          organizations: [],
+        };
+
+        renderWithProviders(<SignInForm />);
+
+        const emailInput = screen.getByPlaceholderText(/enter your email/i);
+        const passwordInput =
+          screen.getByPlaceholderText(/enter your password/i);
+        await user.type(emailInput, 'test@example.com');
+        await user.type(passwordInput, 'password123');
+
+        const signInButton = screen.getByRole('button', { name: /sign in/i });
+        await user.click(signInButton);
+
+        await waitFor(() => {
+          expect(mockSignInMutation.mutate).toHaveBeenCalled();
+        });
+
+        const signInCall = mockSignInMutation.mutate.mock.calls[0];
+        const onSuccess = signInCall[1].onSuccess;
+
+        act(() => {
+          onSuccess(mockSignInResponse);
+        });
+
+        await waitFor(() => {
+          expect(
+            screen.getByRole('button', { name: /create organization/i }),
+          ).toBeInTheDocument();
+        });
+
+        const organizationNameInput = screen.getByPlaceholderText(
+          /enter organization name/i,
+        );
+        await user.type(organizationNameInput, 'New Organization');
+
+        const createButton = screen.getByRole('button', {
+          name: /create organization/i,
+        });
+        await user.click(createButton);
+
+        await waitFor(() => {
+          expect(mockCreateOrganizationMutation.mutate).toHaveBeenCalled();
+        });
+
+        const createOrgCall =
+          mockCreateOrganizationMutation.mutate.mock.calls[0];
+        const onCreateSuccess = createOrgCall[1].onSuccess;
+
+        act(() => {
+          onCreateSuccess({
+            id: 'org-1',
+            name: 'New Organization',
+            slug: 'new-organization',
+          });
+        });
+
+        await waitFor(() => {
+          expect(mockSelectOrganizationMutation.mutate).toHaveBeenCalled();
+        });
+
+        const selectOrgCall =
+          mockSelectOrganizationMutation.mutate.mock.calls[0];
+        const onSelectSuccess = selectOrgCall[1].onSuccess;
+
+        act(() => {
+          onSelectSuccess();
+        });
       });
 
-      await waitFor(() => {
-        expect(
-          screen.getByRole('button', { name: /create organization/i }),
-        ).toBeInTheDocument();
-      });
-
-      const organizationNameInput = screen.getByPlaceholderText(
-        /enter organization name/i,
-      );
-      await user.type(organizationNameInput, 'New Organization');
-
-      const createButton = screen.getByRole('button', {
-        name: /create organization/i,
-      });
-      await user.click(createButton);
-
-      await waitFor(() => {
+      it('calls create organization mutation with correct name', async () => {
         expect(mockCreateOrganizationMutation.mutate).toHaveBeenCalledWith(
           { name: 'New Organization' },
           expect.objectContaining({
@@ -785,18 +918,7 @@ describe('SignInForm', () => {
         );
       });
 
-      const createOrgCall = mockCreateOrganizationMutation.mutate.mock.calls[0];
-      const onCreateSuccess = createOrgCall[1].onSuccess;
-
-      act(() => {
-        onCreateSuccess({
-          id: 'org-1',
-          name: 'New Organization',
-          slug: 'new-organization',
-        });
-      });
-
-      await waitFor(() => {
+      it('calls select organization mutation with created organization id', async () => {
         expect(mockSelectOrganizationMutation.mutate).toHaveBeenCalledWith(
           { organizationId: 'org-1' },
           expect.objectContaining({
@@ -805,74 +927,78 @@ describe('SignInForm', () => {
         );
       });
 
-      const selectOrgCall = mockSelectOrganizationMutation.mutate.mock.calls[0];
-      const onSelectSuccess = selectOrgCall[1].onSuccess;
-
-      act(() => {
-        onSelectSuccess();
+      it('navigates to organization page', async () => {
+        expect(mockNavigate).toHaveBeenCalledWith('/org/new-organization');
       });
-
-      expect(mockNavigate).toHaveBeenCalledWith('/org/new-organization');
     });
 
-    it('trims organization name before creation', async () => {
-      const user = userEvent.setup();
-      const mockSignInMutation = createSignInMutation();
-      const mockCreateOrganizationMutation = createCreateOrganizationMutation();
-      mockUseSignInMutation.mockReturnValue(mockSignInMutation);
-      mockUseSelectOrganizationMutation.mockReturnValue(
-        createSelectOrganizationMutation(),
-      );
-      mockUseCreateOrganizationMutation.mockReturnValue(
-        mockCreateOrganizationMutation,
-      );
+    describe('when creating organization with whitespace in name', () => {
+      let mockCreateOrganizationMutation: ReturnType<
+        typeof createCreateOrganizationMutation
+      >;
 
-      const mockSignInResponse: SignInUserResponse = {
-        organizations: [],
-      };
-
-      renderWithProviders(<SignInForm />);
-
-      const emailInput = screen.getByPlaceholderText(/enter your email/i);
-      const passwordInput = screen.getByPlaceholderText(/enter your password/i);
-      await user.type(emailInput, 'test@example.com');
-      await user.type(passwordInput, 'password123');
-
-      const signInButton = screen.getByRole('button', { name: /sign in/i });
-      await user.click(signInButton);
-
-      await waitFor(() => {
-        expect(mockSignInMutation.mutate).toHaveBeenCalled();
-      });
-
-      const signInCall = mockSignInMutation.mutate.mock.calls[0];
-      const onSuccess = signInCall[1].onSuccess;
-
-      act(() => {
-        onSuccess(mockSignInResponse);
-      });
-
-      await waitFor(() => {
-        expect(
-          screen.getByRole('button', { name: /create organization/i }),
-        ).toBeInTheDocument();
-      });
-
-      const organizationNameInput = screen.getByPlaceholderText(
-        /enter organization name/i,
-      );
-      await user.type(organizationNameInput, '  New Organization  ');
-
-      const createButton = screen.getByRole('button', {
-        name: /create organization/i,
-      });
-      await user.click(createButton);
-
-      await waitFor(() => {
-        expect(mockCreateOrganizationMutation.mutate).toHaveBeenCalledWith(
-          { name: 'New Organization' },
-          expect.anything(),
+      beforeEach(async () => {
+        const user = userEvent.setup();
+        const mockSignInMutation = createSignInMutation();
+        mockCreateOrganizationMutation = createCreateOrganizationMutation();
+        mockUseSignInMutation.mockReturnValue(mockSignInMutation);
+        mockUseSelectOrganizationMutation.mockReturnValue(
+          createSelectOrganizationMutation(),
         );
+        mockUseCreateOrganizationMutation.mockReturnValue(
+          mockCreateOrganizationMutation,
+        );
+
+        const mockSignInResponse: SignInUserResponse = {
+          organizations: [],
+        };
+
+        renderWithProviders(<SignInForm />);
+
+        const emailInput = screen.getByPlaceholderText(/enter your email/i);
+        const passwordInput =
+          screen.getByPlaceholderText(/enter your password/i);
+        await user.type(emailInput, 'test@example.com');
+        await user.type(passwordInput, 'password123');
+
+        const signInButton = screen.getByRole('button', { name: /sign in/i });
+        await user.click(signInButton);
+
+        await waitFor(() => {
+          expect(mockSignInMutation.mutate).toHaveBeenCalled();
+        });
+
+        const signInCall = mockSignInMutation.mutate.mock.calls[0];
+        const onSuccess = signInCall[1].onSuccess;
+
+        act(() => {
+          onSuccess(mockSignInResponse);
+        });
+
+        await waitFor(() => {
+          expect(
+            screen.getByRole('button', { name: /create organization/i }),
+          ).toBeInTheDocument();
+        });
+
+        const organizationNameInput = screen.getByPlaceholderText(
+          /enter organization name/i,
+        );
+        await user.type(organizationNameInput, '  New Organization  ');
+
+        const createButton = screen.getByRole('button', {
+          name: /create organization/i,
+        });
+        await user.click(createButton);
+      });
+
+      it('trims organization name before creation', async () => {
+        await waitFor(() => {
+          expect(mockCreateOrganizationMutation.mutate).toHaveBeenCalledWith(
+            { name: 'New Organization' },
+            expect.anything(),
+          );
+        });
       });
     });
   });

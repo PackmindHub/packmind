@@ -23,6 +23,7 @@ import {
 import * as path from 'path';
 import * as fs from 'fs/promises';
 import { pathStartsWith } from '../utils/pathUtils';
+import { logErrorConsole } from '../../infra/utils/consoleLogger';
 
 const origin = 'LintFilesLocallyUseCase';
 
@@ -315,7 +316,7 @@ export class LintFilesLocallyUseCase implements ILintFilesLocally {
 
                   programsByLanguage.set(programLanguage, programsForLanguage);
                 } catch (error) {
-                  console.error(
+                  logErrorConsole(
                     `Error preparing program for file ${file.path}: ${error}`,
                   );
                 }
@@ -342,13 +343,13 @@ export class LintFilesLocallyUseCase implements ILintFilesLocally {
 
               fileViolations.push(...result);
             } catch (error) {
-              console.error(
+              logErrorConsole(
                 `Error executing programs for file ${file.path} (${language}): ${error}`,
               );
             }
           }
         } catch (error) {
-          console.error(
+          logErrorConsole(
             `Error reading file content for ${file.path}: ${error}`,
           );
         }

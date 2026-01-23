@@ -5,6 +5,7 @@ import {
   logSuccessConsole,
   logErrorConsole,
   logInfoConsole,
+  logConsole,
 } from '../utils/consoleLogger';
 
 export const logoutCommand = command({
@@ -25,21 +26,21 @@ export const logoutCommand = command({
 
       if (result.hadCredentialsFile) {
         logSuccessConsole('Logged out successfully.');
-        console.log(`Removed credentials from: ${result.credentialsPath}`);
+        logConsole(`Removed credentials from: ${result.credentialsPath}`);
       }
 
       if (result.hasEnvVar) {
         if (!result.hadCredentialsFile) {
           logInfoConsole('No stored credentials file found.');
         }
-        console.log(
+        logConsole(
           '\nNote: PACKMIND_API_KEY_V3 environment variable is still set.',
         );
-        console.log('To fully log out, run: unset PACKMIND_API_KEY_V3');
+        logConsole('To fully log out, run: unset PACKMIND_API_KEY_V3');
       }
     } catch (error) {
       logErrorConsole('Failed to remove credentials file.');
-      console.log(
+      logConsole(
         `Error: ${error instanceof Error ? error.message : String(error)}`,
       );
       process.exit(1);

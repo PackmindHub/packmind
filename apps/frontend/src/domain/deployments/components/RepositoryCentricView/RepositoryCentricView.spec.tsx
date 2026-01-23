@@ -119,199 +119,245 @@ describe('RepositoryCentricView', () => {
   });
 
   describe('filtering', () => {
-    it('filters repositories by search term', () => {
-      const repositories = [
-        createRepositoryDeploymentStatus({
-          gitRepo: gitRepoFactory({ owner: 'test-owner', repo: 'test-repo' }),
-        }),
-        createRepositoryDeploymentStatus({
-          gitRepo: gitRepoFactory({ owner: 'other-owner', repo: 'other-repo' }),
-        }),
-      ];
+    describe('when filtering by search term', () => {
+      beforeEach(() => {
+        const repositories = [
+          createRepositoryDeploymentStatus({
+            gitRepo: gitRepoFactory({ owner: 'test-owner', repo: 'test-repo' }),
+          }),
+          createRepositoryDeploymentStatus({
+            gitRepo: gitRepoFactory({
+              owner: 'other-owner',
+              repo: 'other-repo',
+            }),
+          }),
+        ];
 
-      renderWithProvider(
-        <RepositoryCentricView
-          recipeRepositories={repositories}
-          searchTerm="test"
-        />,
-      );
+        renderWithProvider(
+          <RepositoryCentricView
+            recipeRepositories={repositories}
+            searchTerm="test"
+          />,
+        );
+      });
 
-      expect(screen.getByText('test-owner/test-repo:main')).toBeInTheDocument();
-      expect(
-        screen.queryByText('other-owner/other-repo:main'),
-      ).not.toBeInTheDocument();
+      it('displays matching repositories', () => {
+        expect(
+          screen.getByText('test-owner/test-repo:main'),
+        ).toBeInTheDocument();
+      });
+
+      it('hides non-matching repositories', () => {
+        expect(
+          screen.queryByText('other-owner/other-repo:main'),
+        ).not.toBeInTheDocument();
+      });
     });
 
-    it('shows only outdated repositories with active filter (recipes)', () => {
-      const repositories = [
-        createRepositoryDeploymentStatus({
-          gitRepo: gitRepoFactory({
-            owner: 'outdated-owner',
-            repo: 'outdated-repo',
+    describe('when filtering outdated recipes', () => {
+      beforeEach(() => {
+        const repositories = [
+          createRepositoryDeploymentStatus({
+            gitRepo: gitRepoFactory({
+              owner: 'outdated-owner',
+              repo: 'outdated-repo',
+            }),
+            hasOutdatedRecipes: true,
           }),
-          hasOutdatedRecipes: true,
-        }),
-        createRepositoryDeploymentStatus({
-          gitRepo: gitRepoFactory({
-            owner: 'uptodate-owner',
-            repo: 'uptodate-repo',
+          createRepositoryDeploymentStatus({
+            gitRepo: gitRepoFactory({
+              owner: 'uptodate-owner',
+              repo: 'uptodate-repo',
+            }),
+            hasOutdatedRecipes: false,
           }),
-          hasOutdatedRecipes: false,
-        }),
-      ];
+        ];
 
-      renderWithProvider(
-        <RepositoryCentricView
-          recipeRepositories={repositories}
-          artifactStatusFilter="outdated"
-        />,
-      );
+        renderWithProvider(
+          <RepositoryCentricView
+            recipeRepositories={repositories}
+            artifactStatusFilter="outdated"
+          />,
+        );
+      });
 
-      expect(
-        screen.getByText('outdated-owner/outdated-repo:main'),
-      ).toBeInTheDocument();
-      expect(
-        screen.queryByText('uptodate-owner/uptodate-repo:main'),
-      ).not.toBeInTheDocument();
+      it('displays outdated repositories', () => {
+        expect(
+          screen.getByText('outdated-owner/outdated-repo:main'),
+        ).toBeInTheDocument();
+      });
+
+      it('hides up-to-date repositories', () => {
+        expect(
+          screen.queryByText('uptodate-owner/uptodate-repo:main'),
+        ).not.toBeInTheDocument();
+      });
     });
 
-    it('shows only outdated repositories with active filter (standards)', () => {
-      const repositories: RepositoryDeploymentStatus[] = [];
-      const standardRepositories = [
-        createRepositoryStandardDeploymentStatus({
-          gitRepo: gitRepoFactory({
-            owner: 'outdated-standards-owner',
-            repo: 'outdated-standards-repo',
+    describe('when filtering outdated standards', () => {
+      beforeEach(() => {
+        const repositories: RepositoryDeploymentStatus[] = [];
+        const standardRepositories = [
+          createRepositoryStandardDeploymentStatus({
+            gitRepo: gitRepoFactory({
+              owner: 'outdated-standards-owner',
+              repo: 'outdated-standards-repo',
+            }),
+            hasOutdatedStandards: true,
           }),
-          hasOutdatedStandards: true,
-        }),
-        createRepositoryStandardDeploymentStatus({
-          gitRepo: gitRepoFactory({
-            owner: 'uptodate-standards-owner',
-            repo: 'uptodate-standards-repo',
+          createRepositoryStandardDeploymentStatus({
+            gitRepo: gitRepoFactory({
+              owner: 'uptodate-standards-owner',
+              repo: 'uptodate-standards-repo',
+            }),
+            hasOutdatedStandards: false,
           }),
-          hasOutdatedStandards: false,
-        }),
-      ];
+        ];
 
-      renderWithProvider(
-        <RepositoryCentricView
-          recipeRepositories={repositories}
-          standardRepositories={standardRepositories}
-          artifactStatusFilter="outdated"
-        />,
-      );
+        renderWithProvider(
+          <RepositoryCentricView
+            recipeRepositories={repositories}
+            standardRepositories={standardRepositories}
+            artifactStatusFilter="outdated"
+          />,
+        );
+      });
 
-      expect(
-        screen.getByText(
-          'outdated-standards-owner/outdated-standards-repo:main',
-        ),
-      ).toBeInTheDocument();
-      expect(
-        screen.queryByText(
-          'uptodate-standards-owner/uptodate-standards-repo:main',
-        ),
-      ).not.toBeInTheDocument();
+      it('displays outdated standard repositories', () => {
+        expect(
+          screen.getByText(
+            'outdated-standards-owner/outdated-standards-repo:main',
+          ),
+        ).toBeInTheDocument();
+      });
+
+      it('hides up-to-date standard repositories', () => {
+        expect(
+          screen.queryByText(
+            'uptodate-standards-owner/uptodate-standards-repo:main',
+          ),
+        ).not.toBeInTheDocument();
+      });
     });
 
-    it('shows repositories with either outdated recipes OR outdated standards', () => {
-      const repositories = [
-        createRepositoryDeploymentStatus({
-          gitRepo: gitRepoFactory({
-            owner: 'outdated-recipes-owner',
-            repo: 'outdated-recipes-repo',
+    describe('when filtering outdated with mixed recipes and standards', () => {
+      beforeEach(() => {
+        const repositories = [
+          createRepositoryDeploymentStatus({
+            gitRepo: gitRepoFactory({
+              owner: 'outdated-recipes-owner',
+              repo: 'outdated-recipes-repo',
+            }),
+            hasOutdatedRecipes: true,
           }),
-          hasOutdatedRecipes: true,
-        }),
-        createRepositoryDeploymentStatus({
-          gitRepo: gitRepoFactory({
-            owner: 'uptodate-all-owner',
-            repo: 'uptodate-all-repo',
+          createRepositoryDeploymentStatus({
+            gitRepo: gitRepoFactory({
+              owner: 'uptodate-all-owner',
+              repo: 'uptodate-all-repo',
+            }),
+            hasOutdatedRecipes: false,
           }),
-          hasOutdatedRecipes: false,
-        }),
-      ];
+        ];
 
-      const standardRepositories = [
-        createRepositoryStandardDeploymentStatus({
-          gitRepo: gitRepoFactory({
-            owner: 'outdated-standards-owner',
-            repo: 'outdated-standards-repo',
+        const standardRepositories = [
+          createRepositoryStandardDeploymentStatus({
+            gitRepo: gitRepoFactory({
+              owner: 'outdated-standards-owner',
+              repo: 'outdated-standards-repo',
+            }),
+            hasOutdatedStandards: true,
           }),
-          hasOutdatedStandards: true,
-        }),
-        createRepositoryStandardDeploymentStatus({
-          gitRepo: gitRepoFactory({
-            owner: 'uptodate-all-owner',
-            repo: 'uptodate-all-repo',
+          createRepositoryStandardDeploymentStatus({
+            gitRepo: gitRepoFactory({
+              owner: 'uptodate-all-owner',
+              repo: 'uptodate-all-repo',
+            }),
+            hasOutdatedStandards: false,
           }),
-          hasOutdatedStandards: false,
-        }),
-      ];
+        ];
 
-      renderWithProvider(
-        <RepositoryCentricView
-          recipeRepositories={repositories}
-          standardRepositories={standardRepositories}
-          artifactStatusFilter="outdated"
-        />,
-      );
+        renderWithProvider(
+          <RepositoryCentricView
+            recipeRepositories={repositories}
+            standardRepositories={standardRepositories}
+            artifactStatusFilter="outdated"
+          />,
+        );
+      });
 
-      expect(
-        screen.getByText('outdated-recipes-owner/outdated-recipes-repo:main'),
-      ).toBeInTheDocument();
-      expect(
-        screen.getByText(
-          'outdated-standards-owner/outdated-standards-repo:main',
-        ),
-      ).toBeInTheDocument();
-      expect(
-        screen.queryByText('uptodate-all-owner/uptodate-all-repo:main'),
-      ).not.toBeInTheDocument();
+      it('displays repositories with outdated recipes', () => {
+        expect(
+          screen.getByText('outdated-recipes-owner/outdated-recipes-repo:main'),
+        ).toBeInTheDocument();
+      });
+
+      it('displays repositories with outdated standards', () => {
+        expect(
+          screen.getByText(
+            'outdated-standards-owner/outdated-standards-repo:main',
+          ),
+        ).toBeInTheDocument();
+      });
+
+      it('hides fully up-to-date repositories', () => {
+        expect(
+          screen.queryByText('uptodate-all-owner/uptodate-all-repo:main'),
+        ).not.toBeInTheDocument();
+      });
     });
 
-    it('applies both search and outdated filters together', () => {
-      const repositories = [
-        createRepositoryDeploymentStatus({
-          gitRepo: gitRepoFactory({
-            owner: 'test-owner',
-            repo: 'outdated-repo',
+    describe('when applying both search and outdated filters', () => {
+      beforeEach(() => {
+        const repositories = [
+          createRepositoryDeploymentStatus({
+            gitRepo: gitRepoFactory({
+              owner: 'test-owner',
+              repo: 'outdated-repo',
+            }),
+            hasOutdatedRecipes: true,
           }),
-          hasOutdatedRecipes: true,
-        }),
-        createRepositoryDeploymentStatus({
-          gitRepo: gitRepoFactory({
-            owner: 'test-owner',
-            repo: 'uptodate-repo',
+          createRepositoryDeploymentStatus({
+            gitRepo: gitRepoFactory({
+              owner: 'test-owner',
+              repo: 'uptodate-repo',
+            }),
+            hasOutdatedRecipes: false,
           }),
-          hasOutdatedRecipes: false,
-        }),
-        createRepositoryDeploymentStatus({
-          gitRepo: gitRepoFactory({
-            owner: 'other-owner',
-            repo: 'outdated-repo',
+          createRepositoryDeploymentStatus({
+            gitRepo: gitRepoFactory({
+              owner: 'other-owner',
+              repo: 'outdated-repo',
+            }),
+            hasOutdatedRecipes: true,
           }),
-          hasOutdatedRecipes: true,
-        }),
-      ];
+        ];
 
-      renderWithProvider(
-        <RepositoryCentricView
-          recipeRepositories={repositories}
-          searchTerm="test"
-          artifactStatusFilter="outdated"
-        />,
-      );
+        renderWithProvider(
+          <RepositoryCentricView
+            recipeRepositories={repositories}
+            searchTerm="test"
+            artifactStatusFilter="outdated"
+          />,
+        );
+      });
 
-      expect(
-        screen.getByText('test-owner/outdated-repo:main'),
-      ).toBeInTheDocument();
-      expect(
-        screen.queryByText('test-owner/uptodate-repo:main'),
-      ).not.toBeInTheDocument();
-      expect(
-        screen.queryByText('other-owner/outdated-repo:main'),
-      ).not.toBeInTheDocument();
+      it('displays repositories matching both filters', () => {
+        expect(
+          screen.getByText('test-owner/outdated-repo:main'),
+        ).toBeInTheDocument();
+      });
+
+      it('hides up-to-date repositories', () => {
+        expect(
+          screen.queryByText('test-owner/uptodate-repo:main'),
+        ).not.toBeInTheDocument();
+      });
+
+      it('hides repositories not matching search term', () => {
+        expect(
+          screen.queryByText('other-owner/outdated-repo:main'),
+        ).not.toBeInTheDocument();
+      });
     });
 
     describe('target filtering', () => {
@@ -657,58 +703,79 @@ describe('RepositoryCentricView', () => {
   });
 
   describe('empty states', () => {
-    it('displays empty state for no matching repositories', () => {
-      const repositories = [
-        createRepositoryDeploymentStatus({
-          gitRepo: gitRepoFactory({ owner: 'test-owner', repo: 'test-repo' }),
-        }),
-      ];
+    describe('when no repositories match search', () => {
+      beforeEach(() => {
+        const repositories = [
+          createRepositoryDeploymentStatus({
+            gitRepo: gitRepoFactory({ owner: 'test-owner', repo: 'test-repo' }),
+          }),
+        ];
 
-      renderWithProvider(
-        <RepositoryCentricView
-          recipeRepositories={repositories}
-          searchTerm="nomatch"
-        />,
-      );
+        renderWithProvider(
+          <RepositoryCentricView
+            recipeRepositories={repositories}
+            searchTerm="nomatch"
+          />,
+        );
+      });
 
-      expect(screen.getByText('No repositories found')).toBeInTheDocument();
-      expect(
-        screen.getByText('No repositories match your search "nomatch"'),
-      ).toBeInTheDocument();
+      it('displays empty state title', () => {
+        expect(screen.getByText('No repositories found')).toBeInTheDocument();
+      });
+
+      it('displays empty state description', () => {
+        expect(
+          screen.getByText('No repositories match your search "nomatch"'),
+        ).toBeInTheDocument();
+      });
     });
 
-    it('displays empty state for no outdated targets', () => {
-      const repositories = [
-        createRepositoryDeploymentStatus({
-          gitRepo: gitRepoFactory({ owner: 'test-owner', repo: 'test-repo' }),
-          hasOutdatedRecipes: false,
-        }),
-      ];
+    describe('when no outdated targets exist', () => {
+      beforeEach(() => {
+        const repositories = [
+          createRepositoryDeploymentStatus({
+            gitRepo: gitRepoFactory({ owner: 'test-owner', repo: 'test-repo' }),
+            hasOutdatedRecipes: false,
+          }),
+        ];
 
-      renderWithProvider(
-        <RepositoryCentricView
-          recipeRepositories={repositories}
-          artifactStatusFilter="outdated"
-        />,
-      );
+        renderWithProvider(
+          <RepositoryCentricView
+            recipeRepositories={repositories}
+            artifactStatusFilter="outdated"
+          />,
+        );
+      });
 
-      expect(screen.getByText('No outdated targets')).toBeInTheDocument();
-      expect(
-        screen.getByText(
-          'All targets have up-to-date recipes and standards distributed',
-        ),
-      ).toBeInTheDocument();
+      it('displays empty state title', () => {
+        expect(screen.getByText('No outdated targets')).toBeInTheDocument();
+      });
+
+      it('displays empty state description', () => {
+        expect(
+          screen.getByText(
+            'All targets have up-to-date recipes and standards distributed',
+          ),
+        ).toBeInTheDocument();
+      });
     });
 
-    it('displays empty state when no repositories exist', () => {
-      renderWithProvider(<RepositoryCentricView recipeRepositories={[]} />);
+    describe('when no repositories exist', () => {
+      beforeEach(() => {
+        renderWithProvider(<RepositoryCentricView recipeRepositories={[]} />);
+      });
 
-      expect(screen.getByText('No repositories')).toBeInTheDocument();
-      expect(
-        screen.getByText(
-          'No repositories with distributed recipes or standards found',
-        ),
-      ).toBeInTheDocument();
+      it('displays empty state title', () => {
+        expect(screen.getByText('No repositories')).toBeInTheDocument();
+      });
+
+      it('displays empty state description', () => {
+        expect(
+          screen.getByText(
+            'No repositories with distributed recipes or standards found',
+          ),
+        ).toBeInTheDocument();
+      });
     });
 
     // legacy empty message removed; in target-only view this case is not rendered

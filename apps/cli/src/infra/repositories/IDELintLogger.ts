@@ -1,5 +1,6 @@
 import { LintViolation } from '../../domain/entities/LintViolation';
 import { ILogger } from '../../domain/repositories/ILogger';
+import { logConsole } from '../utils/consoleLogger';
 
 export class IDELintLogger implements ILogger {
   logViolations(violations: LintViolation[]) {
@@ -10,7 +11,7 @@ export class IDELintLogger implements ILogger {
 
   logViolation(violation: LintViolation) {
     violation.violations.forEach(({ line, character, standard, rule }) => {
-      console.log(
+      logConsole(
         `${violation.file}:${line}:${character}:error:@${standard}/${rule}`,
       );
     });

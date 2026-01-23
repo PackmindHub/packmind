@@ -24,22 +24,40 @@ describe('ConfigFileRepository', () => {
 
   describe('readHierarchicalConfig', () => {
     describe('when no packmind.json exists in hierarchy', () => {
-      it('returns empty result with hasConfigs false', async () => {
+      type ResultType = Awaited<
+        ReturnType<ConfigFileRepository['readHierarchicalConfig']>
+      >;
+      let result: ResultType;
+
+      beforeEach(async () => {
         mockFs.readFile.mockRejectedValue({ code: 'ENOENT' });
 
-        const result = await repository.readHierarchicalConfig(
+        result = await repository.readHierarchicalConfig(
           '/project/apps/api/src',
           '/project',
         );
+      });
 
+      it('returns hasConfigs as false', () => {
         expect(result.hasConfigs).toBe(false);
+      });
+
+      it('returns empty configPaths', () => {
         expect(result.configPaths).toHaveLength(0);
+      });
+
+      it('returns empty packages', () => {
         expect(Object.keys(result.packages)).toHaveLength(0);
       });
     });
 
     describe('when single packmind.json exists at root', () => {
-      it('returns packages from root config', async () => {
+      type ResultType = Awaited<
+        ReturnType<ConfigFileRepository['readHierarchicalConfig']>
+      >;
+      let result: ResultType;
+
+      beforeEach(async () => {
         mockFs.readFile.mockImplementation(async (filePath: unknown) => {
           if (filePath === '/project/packmind.json') {
             return JSON.stringify({ packages: { generic: '*' } });
@@ -47,19 +65,32 @@ describe('ConfigFileRepository', () => {
           throw { code: 'ENOENT' };
         });
 
-        const result = await repository.readHierarchicalConfig(
+        result = await repository.readHierarchicalConfig(
           '/project/apps/api',
           '/project',
         );
+      });
 
+      it('returns hasConfigs as true', () => {
         expect(result.hasConfigs).toBe(true);
+      });
+
+      it('returns packages from root config', () => {
         expect(result.packages).toEqual({ generic: '*' });
+      });
+
+      it('includes root config path', () => {
         expect(result.configPaths).toContain('/project/packmind.json');
       });
     });
 
     describe('when single packmind.json exists in subdirectory', () => {
-      it('returns packages from subdirectory config only', async () => {
+      type ResultType = Awaited<
+        ReturnType<ConfigFileRepository['readHierarchicalConfig']>
+      >;
+      let result: ResultType;
+
+      beforeEach(async () => {
         mockFs.readFile.mockImplementation(async (filePath: unknown) => {
           if (filePath === '/project/apps/api/packmind.json') {
             return JSON.stringify({ packages: { backend: '*' } });
@@ -67,19 +98,32 @@ describe('ConfigFileRepository', () => {
           throw { code: 'ENOENT' };
         });
 
-        const result = await repository.readHierarchicalConfig(
+        result = await repository.readHierarchicalConfig(
           '/project/apps/api',
           '/project',
         );
+      });
 
+      it('returns hasConfigs as true', () => {
         expect(result.hasConfigs).toBe(true);
+      });
+
+      it('returns packages from subdirectory config', () => {
         expect(result.packages).toEqual({ backend: '*' });
+      });
+
+      it('returns only subdirectory config path', () => {
         expect(result.configPaths).toEqual(['/project/apps/api/packmind.json']);
       });
     });
 
     describe('when multiple packmind.json files exist', () => {
-      it('merges packages from all configs', async () => {
+      type ResultType = Awaited<
+        ReturnType<ConfigFileRepository['readHierarchicalConfig']>
+      >;
+      let result: ResultType;
+
+      beforeEach(async () => {
         mockFs.readFile.mockImplementation(async (filePath: unknown) => {
           if (filePath === '/project/packmind.json') {
             return JSON.stringify({ packages: { generic: '*' } });
@@ -90,17 +134,27 @@ describe('ConfigFileRepository', () => {
           throw { code: 'ENOENT' };
         });
 
-        const result = await repository.readHierarchicalConfig(
+        result = await repository.readHierarchicalConfig(
           '/project/apps/api',
           '/project',
         );
-
-        expect(result.hasConfigs).toBe(true);
-        expect(result.packages).toEqual({ generic: '*', backend: '*' });
-        expect(result.configPaths).toHaveLength(2);
       });
 
-      it('gives precedence to deeper config for same package slug', async () => {
+      it('returns hasConfigs as true', () => {
+        expect(result.hasConfigs).toBe(true);
+      });
+
+      it('merges packages from all configs', () => {
+        expect(result.packages).toEqual({ generic: '*', backend: '*' });
+      });
+
+      it('returns both config paths', () => {
+        expect(result.configPaths).toHaveLength(2);
+      });
+    });
+
+    describe('when multiple configs have same package slug', () => {
+      it('gives precedence to deeper config', async () => {
         mockFs.readFile.mockImplementation(async (filePath: unknown) => {
           if (filePath === '/project/packmind.json') {
             return JSON.stringify({ packages: { shared: '1.0.0' } });
@@ -121,7 +175,12 @@ describe('ConfigFileRepository', () => {
     });
 
     describe('when start and stop directories are the same', () => {
-      it('reads only from that directory', async () => {
+      type ResultType = Awaited<
+        ReturnType<ConfigFileRepository['readHierarchicalConfig']>
+      >;
+      let result: ResultType;
+
+      beforeEach(async () => {
         mockFs.readFile.mockImplementation(async (filePath: unknown) => {
           if (filePath === '/project/packmind.json') {
             return JSON.stringify({ packages: { only: '*' } });
@@ -129,19 +188,30 @@ describe('ConfigFileRepository', () => {
           throw { code: 'ENOENT' };
         });
 
-        const result = await repository.readHierarchicalConfig(
+        result = await repository.readHierarchicalConfig(
           '/project',
           '/project',
         );
+      });
 
+      it('returns packages from that directory', () => {
         expect(result.packages).toEqual({ only: '*' });
+      });
+
+      it('returns single config path', () => {
         expect(result.configPaths).toHaveLength(1);
       });
     });
 
     describe('when config file has malformed JSON', () => {
-      it('logs warning once and returns empty result', async () => {
-        const consoleWarnSpy = jest
+      type ResultType = Awaited<
+        ReturnType<ConfigFileRepository['readHierarchicalConfig']>
+      >;
+      let result: ResultType;
+      let consoleWarnSpy: jest.SpyInstance;
+
+      beforeEach(async () => {
+        consoleWarnSpy = jest
           .spyOn(console, 'warn')
           .mockImplementation(jest.fn());
 
@@ -154,20 +224,33 @@ describe('ConfigFileRepository', () => {
 
         // Call twice to verify warning is only shown once
         await repository.readHierarchicalConfig('/project', '/project');
-        const result = await repository.readHierarchicalConfig(
+        result = await repository.readHierarchicalConfig(
           '/project',
           '/project',
         );
+      });
 
+      afterEach(() => {
+        consoleWarnSpy.mockRestore();
+      });
+
+      it('returns hasConfigs as false', () => {
         expect(result.hasConfigs).toBe(false);
+      });
+
+      it('returns empty configPaths', () => {
         expect(result.configPaths).toHaveLength(0);
+      });
+
+      it('logs warning only once', () => {
         expect(consoleWarnSpy).toHaveBeenCalledTimes(1);
+      });
+
+      it('logs warning with config path', () => {
         expect(consoleWarnSpy).toHaveBeenCalledWith(
           expect.anything(),
           expect.stringContaining('/project/packmind.json'),
         );
-
-        consoleWarnSpy.mockRestore();
       });
     });
 
@@ -200,7 +283,12 @@ describe('ConfigFileRepository', () => {
     });
 
     describe('when stopDirectory is null', () => {
-      it('walks up to filesystem root', async () => {
+      type ResultType = Awaited<
+        ReturnType<ConfigFileRepository['readHierarchicalConfig']>
+      >;
+      let result: ResultType;
+
+      beforeEach(async () => {
         mockFs.readFile.mockImplementation(async (filePath: unknown) => {
           if (filePath === '/home/user/packmind.json') {
             return JSON.stringify({ packages: { home: '*' } });
@@ -211,16 +299,27 @@ describe('ConfigFileRepository', () => {
           throw { code: 'ENOENT' };
         });
 
-        const result = await repository.readHierarchicalConfig(
+        result = await repository.readHierarchicalConfig(
           '/home/user/project',
           null,
         );
+      });
 
+      it('returns hasConfigs as true', () => {
         expect(result.hasConfigs).toBe(true);
+      });
+
+      it('merges packages from all configs up to root', () => {
         expect(result.packages).toEqual({ home: '*', project: '*' });
+      });
+
+      it('includes project config path', () => {
         expect(result.configPaths).toContain(
           '/home/user/project/packmind.json',
         );
+      });
+
+      it('includes home config path', () => {
         expect(result.configPaths).toContain('/home/user/packmind.json');
       });
     });
@@ -266,7 +365,12 @@ describe('ConfigFileRepository', () => {
     });
 
     describe('when packmind.json exists in nested directories', () => {
-      it('returns all directory paths', async () => {
+      type ResultType = Awaited<
+        ReturnType<ConfigFileRepository['findDescendantConfigs']>
+      >;
+      let result: ResultType;
+
+      beforeEach(async () => {
         mockFs.readdir
           .mockResolvedValueOnce([
             { name: 'apps', isDirectory: () => true },
@@ -289,10 +393,18 @@ describe('ConfigFileRepository', () => {
           throw { code: 'ENOENT' };
         });
 
-        const result = await repository.findDescendantConfigs('/project');
+        result = await repository.findDescendantConfigs('/project');
+      });
 
+      it('includes apps directory', () => {
         expect(result).toContain('/project/apps');
+      });
+
+      it('includes nested api directory', () => {
         expect(result).toContain('/project/apps/api');
+      });
+
+      it('includes packages directory', () => {
         expect(result).toContain('/project/packages');
       });
     });
@@ -324,8 +436,14 @@ describe('ConfigFileRepository', () => {
     });
 
     describe('when descendant has malformed JSON', () => {
-      it('logs warning and skips malformed config', async () => {
-        const consoleWarnSpy = jest
+      type ResultType = Awaited<
+        ReturnType<ConfigFileRepository['findDescendantConfigs']>
+      >;
+      let result: ResultType;
+      let consoleWarnSpy: jest.SpyInstance;
+
+      beforeEach(async () => {
+        consoleWarnSpy = jest
           .spyOn(console, 'warn')
           .mockImplementation(jest.fn());
 
@@ -345,15 +463,22 @@ describe('ConfigFileRepository', () => {
           throw { code: 'ENOENT' };
         });
 
-        const result = await repository.findDescendantConfigs('/project');
+        result = await repository.findDescendantConfigs('/project');
+      });
 
+      afterEach(() => {
+        consoleWarnSpy.mockRestore();
+      });
+
+      it('returns only valid config paths', () => {
         expect(result).toEqual(['/project/valid']);
+      });
+
+      it('logs warning for malformed config', () => {
         expect(consoleWarnSpy).toHaveBeenCalledWith(
           expect.anything(),
           expect.stringContaining('/project/invalid/packmind.json'),
         );
-
-        consoleWarnSpy.mockRestore();
       });
     });
   });
@@ -364,22 +489,40 @@ describe('ConfigFileRepository', () => {
     });
 
     describe('when no packmind.json exists anywhere', () => {
-      it('returns empty configs with hasConfigs false', async () => {
+      type ResultType = Awaited<
+        ReturnType<ConfigFileRepository['findAllConfigsInTree']>
+      >;
+      let result: ResultType;
+
+      beforeEach(async () => {
         mockFs.readFile.mockRejectedValue({ code: 'ENOENT' });
 
-        const result = await repository.findAllConfigsInTree(
+        result = await repository.findAllConfigsInTree(
           '/project/apps/api',
           '/project',
         );
+      });
 
+      it('returns hasConfigs as false', () => {
         expect(result.hasConfigs).toBe(false);
+      });
+
+      it('returns empty configs array', () => {
         expect(result.configs).toHaveLength(0);
+      });
+
+      it('returns basePath as stopDirectory', () => {
         expect(result.basePath).toBe('/project');
       });
     });
 
     describe('when packmind.json exists only at root', () => {
-      it('returns root config with target path "/"', async () => {
+      type ResultType = Awaited<
+        ReturnType<ConfigFileRepository['findAllConfigsInTree']>
+      >;
+      let result: ResultType;
+
+      beforeEach(async () => {
         mockFs.readFile.mockImplementation(async (filePath: unknown) => {
           if (filePath === '/project/packmind.json') {
             return JSON.stringify({ packages: { generic: '*' } });
@@ -387,13 +530,21 @@ describe('ConfigFileRepository', () => {
           throw { code: 'ENOENT' };
         });
 
-        const result = await repository.findAllConfigsInTree(
+        result = await repository.findAllConfigsInTree(
           '/project/apps/api',
           '/project',
         );
+      });
 
+      it('returns hasConfigs as true', () => {
         expect(result.hasConfigs).toBe(true);
+      });
+
+      it('returns single config', () => {
         expect(result.configs).toHaveLength(1);
+      });
+
+      it('returns root config with correct properties', () => {
         expect(result.configs[0]).toEqual({
           targetPath: '/',
           absoluteTargetPath: '/project',
@@ -403,7 +554,12 @@ describe('ConfigFileRepository', () => {
     });
 
     describe('when packmind.json exists in ancestor directories', () => {
-      it('returns all ancestor configs with correct target paths', async () => {
+      type ResultType = Awaited<
+        ReturnType<ConfigFileRepository['findAllConfigsInTree']>
+      >;
+      let result: ResultType;
+
+      beforeEach(async () => {
         mockFs.readFile.mockImplementation(async (filePath: unknown) => {
           if (filePath === '/project/packmind.json') {
             return JSON.stringify({ packages: { generic: '*' } });
@@ -414,24 +570,33 @@ describe('ConfigFileRepository', () => {
           throw { code: 'ENOENT' };
         });
 
-        const result = await repository.findAllConfigsInTree(
+        result = await repository.findAllConfigsInTree(
           '/project/apps/api',
           '/project',
         );
+      });
 
+      it('returns hasConfigs as true', () => {
         expect(result.hasConfigs).toBe(true);
+      });
+
+      it('returns both configs', () => {
         expect(result.configs).toHaveLength(2);
+      });
 
+      it('returns root config with correct properties', () => {
         const rootConfig = result.configs.find((c) => c.targetPath === '/');
-        const apiConfig = result.configs.find(
-          (c) => c.targetPath === '/apps/api',
-        );
-
         expect(rootConfig).toEqual({
           targetPath: '/',
           absoluteTargetPath: '/project',
           packages: { generic: '*' },
         });
+      });
+
+      it('returns api config with correct properties', () => {
+        const apiConfig = result.configs.find(
+          (c) => c.targetPath === '/apps/api',
+        );
         expect(apiConfig).toEqual({
           targetPath: '/apps/api',
           absoluteTargetPath: '/project/apps/api',
@@ -441,7 +606,12 @@ describe('ConfigFileRepository', () => {
     });
 
     describe('when packmind.json exists in descendant directories', () => {
-      it('returns descendant configs with correct target paths', async () => {
+      type ResultType = Awaited<
+        ReturnType<ConfigFileRepository['findAllConfigsInTree']>
+      >;
+      let result: ResultType;
+
+      beforeEach(async () => {
         mockFs.readdir
           .mockResolvedValueOnce([
             { name: 'apps', isDirectory: () => true },
@@ -464,30 +634,44 @@ describe('ConfigFileRepository', () => {
           throw { code: 'ENOENT' };
         });
 
-        const result = await repository.findAllConfigsInTree(
-          '/project',
-          '/project',
-        );
+        result = await repository.findAllConfigsInTree('/project', '/project');
+      });
 
+      it('returns hasConfigs as true', () => {
         expect(result.hasConfigs).toBe(true);
-        expect(result.configs).toHaveLength(3);
+      });
 
+      it('returns three configs', () => {
+        expect(result.configs).toHaveLength(3);
+      });
+
+      it('returns root config with correct packages', () => {
         const rootConfig = result.configs.find((c) => c.targetPath === '/');
+        expect(rootConfig?.packages).toEqual({ generic: '*' });
+      });
+
+      it('returns api config with correct packages', () => {
         const apiConfig = result.configs.find(
           (c) => c.targetPath === '/apps/api',
         );
+        expect(apiConfig?.packages).toEqual({ backend: '*' });
+      });
+
+      it('returns web config with correct packages', () => {
         const webConfig = result.configs.find(
           (c) => c.targetPath === '/apps/web',
         );
-
-        expect(rootConfig?.packages).toEqual({ generic: '*' });
-        expect(apiConfig?.packages).toEqual({ backend: '*' });
         expect(webConfig?.packages).toEqual({ frontend: '*' });
       });
     });
 
     describe('when packmind.json exists in both ancestors and descendants', () => {
-      it('returns all configs without duplicates', async () => {
+      type ResultType = Awaited<
+        ReturnType<ConfigFileRepository['findAllConfigsInTree']>
+      >;
+      let result: ResultType;
+
+      beforeEach(async () => {
         mockFs.readdir
           .mockResolvedValueOnce([
             { name: 'apps', isDirectory: () => true },
@@ -512,21 +696,33 @@ describe('ConfigFileRepository', () => {
 
         // Start from /project/apps/api, so it's an ancestor
         // /project/libs is a descendant from /project root
-        const result = await repository.findAllConfigsInTree(
+        result = await repository.findAllConfigsInTree(
           '/project/apps/api',
           '/project',
         );
+      });
 
+      it('returns hasConfigs as true', () => {
         expect(result.hasConfigs).toBe(true);
-        expect(result.configs).toHaveLength(3);
+      });
 
+      it('returns three configs', () => {
+        expect(result.configs).toHaveLength(3);
+      });
+
+      it('returns all expected target paths', () => {
         const targetPaths = result.configs.map((c) => c.targetPath).sort();
         expect(targetPaths).toEqual(['/', '/apps/api', '/libs']);
       });
     });
 
     describe('when stopDirectory is null', () => {
-      it('uses startDirectory as basePath', async () => {
+      type ResultType = Awaited<
+        ReturnType<ConfigFileRepository['findAllConfigsInTree']>
+      >;
+      let result: ResultType;
+
+      beforeEach(async () => {
         mockFs.readFile.mockImplementation(async (filePath: unknown) => {
           if (filePath === '/home/user/project/packmind.json') {
             return JSON.stringify({ packages: { project: '*' } });
@@ -534,19 +730,32 @@ describe('ConfigFileRepository', () => {
           throw { code: 'ENOENT' };
         });
 
-        const result = await repository.findAllConfigsInTree(
+        result = await repository.findAllConfigsInTree(
           '/home/user/project',
           null,
         );
+      });
 
+      it('uses startDirectory as basePath', () => {
         expect(result.basePath).toBe('/home/user/project');
+      });
+
+      it('returns hasConfigs as true', () => {
         expect(result.hasConfigs).toBe(true);
+      });
+
+      it('returns config with root target path', () => {
         expect(result.configs[0].targetPath).toBe('/');
       });
     });
 
     describe('when configs have same packages', () => {
-      it('keeps each config separate with its own packages', async () => {
+      type ResultType = Awaited<
+        ReturnType<ConfigFileRepository['findAllConfigsInTree']>
+      >;
+      let result: ResultType;
+
+      beforeEach(async () => {
         mockFs.readdir
           .mockResolvedValueOnce([
             { name: 'apps', isDirectory: () => true },
@@ -562,17 +771,20 @@ describe('ConfigFileRepository', () => {
           throw { code: 'ENOENT' };
         });
 
-        const result = await repository.findAllConfigsInTree(
-          '/project',
-          '/project',
-        );
+        result = await repository.findAllConfigsInTree('/project', '/project');
+      });
 
+      it('returns two configs', () => {
         expect(result.configs).toHaveLength(2);
+      });
 
+      it('keeps root config with its own package version', () => {
         const rootConfig = result.configs.find((c) => c.targetPath === '/');
-        const appsConfig = result.configs.find((c) => c.targetPath === '/apps');
-
         expect(rootConfig?.packages).toEqual({ shared: '1.0.0' });
+      });
+
+      it('keeps apps config with its own package version', () => {
+        const appsConfig = result.configs.find((c) => c.targetPath === '/apps');
         expect(appsConfig?.packages).toEqual({ shared: '2.0.0' });
       });
     });

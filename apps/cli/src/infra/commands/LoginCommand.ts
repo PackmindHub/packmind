@@ -6,6 +6,7 @@ import {
   logSuccessConsole,
   logErrorConsole,
   logInfoConsole,
+  logConsole,
 } from '../utils/consoleLogger';
 
 const DEFAULT_HOST = 'https://app.packmind.ai';
@@ -40,9 +41,9 @@ export const loginCommand = command({
 
     try {
       if (!code) {
-        console.log('\nOpening browser for authentication...');
+        logConsole('\nOpening browser for authentication...');
         const normalizedHost = removeTrailingSlash(host);
-        console.log(
+        logConsole(
           `\nIf the browser doesn't open, visit: ${normalizedHost}/cli-login?callback_url=${encodeURIComponent('http://127.0.0.1:19284')}\n`,
         );
         logInfoConsole('Waiting for browser authentication...');
@@ -53,8 +54,8 @@ export const loginCommand = command({
       const result = await packmindCliHexa.login({ host, code });
 
       logSuccessConsole('Login successful!');
-      console.log(`\nCredentials saved to: ${result.credentialsPath}`);
-      console.log(
+      logConsole(`\nCredentials saved to: ${result.credentialsPath}`);
+      logConsole(
         '\nYou can now use packmind-cli commands with your authenticated account.',
       );
     } catch (error) {

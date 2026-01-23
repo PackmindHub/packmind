@@ -62,268 +62,363 @@ describe('RecipeCentricView', () => {
     expect(screen.getByText('Up-to-date')).toBeInTheDocument();
   });
 
-  it('displays undeployed recipes with appropriate message', () => {
-    const recipes = [
-      createRecipeDeploymentStatus({
-        recipe: recipeFactory({ name: 'Undeployed Recipe' }),
-        deployments: [],
-        targetDeployments: [], // Ensure both are empty
-        hasOutdatedDeployments: false,
-      }),
-    ];
+  describe('when recipe is undeployed', () => {
+    beforeEach(() => {
+      const recipes = [
+        createRecipeDeploymentStatus({
+          recipe: recipeFactory({ name: 'Undeployed Recipe' }),
+          deployments: [],
+          targetDeployments: [], // Ensure both are empty
+          hasOutdatedDeployments: false,
+        }),
+      ];
 
-    renderWithProvider(<RecipeCentricView recipes={recipes} />);
+      renderWithProvider(<RecipeCentricView recipes={recipes} />);
+    });
 
-    expect(screen.getByText('Undeployed Recipe')).toBeInTheDocument();
-    expect(
-      screen.getByText('This recipe has not been distributed yet'),
-    ).toBeInTheDocument();
+    it('displays the recipe name', () => {
+      expect(screen.getByText('Undeployed Recipe')).toBeInTheDocument();
+    });
+
+    it('displays the not distributed message', () => {
+      expect(
+        screen.getByText('This recipe has not been distributed yet'),
+      ).toBeInTheDocument();
+    });
   });
 
   describe('filtering', () => {
-    it('filters recipes by search term', () => {
-      const recipes = [
-        createRecipeDeploymentStatus({
-          recipe: recipeFactory({ name: 'Test Recipe' }),
-        }),
-        createRecipeDeploymentStatus({
-          recipe: recipeFactory({ name: 'Other Recipe' }),
-        }),
-      ];
+    describe('when filtering by search term', () => {
+      beforeEach(() => {
+        const recipes = [
+          createRecipeDeploymentStatus({
+            recipe: recipeFactory({ name: 'Test Recipe' }),
+          }),
+          createRecipeDeploymentStatus({
+            recipe: recipeFactory({ name: 'Other Recipe' }),
+          }),
+        ];
 
-      renderWithProvider(
-        <RecipeCentricView recipes={recipes} searchTerm="test" />,
-      );
+        renderWithProvider(
+          <RecipeCentricView recipes={recipes} searchTerm="test" />,
+        );
+      });
 
-      expect(screen.getByText('Test Recipe')).toBeInTheDocument();
-      expect(screen.queryByText('Other Recipe')).not.toBeInTheDocument();
+      it('displays matching recipes', () => {
+        expect(screen.getByText('Test Recipe')).toBeInTheDocument();
+      });
+
+      it('hides non-matching recipes', () => {
+        expect(screen.queryByText('Other Recipe')).not.toBeInTheDocument();
+      });
     });
 
-    it('shows only outdated recipes with active filter', () => {
-      const recipes = [
-        createRecipeDeploymentStatus({
-          recipe: recipeFactory({ name: 'Outdated Recipe' }),
-          hasOutdatedDeployments: true,
-        }),
-        createRecipeDeploymentStatus({
-          recipe: recipeFactory({ name: 'Up-to-date Recipe' }),
-          hasOutdatedDeployments: false,
-        }),
-      ];
+    describe('when filtering by outdated status', () => {
+      beforeEach(() => {
+        const recipes = [
+          createRecipeDeploymentStatus({
+            recipe: recipeFactory({ name: 'Outdated Recipe' }),
+            hasOutdatedDeployments: true,
+          }),
+          createRecipeDeploymentStatus({
+            recipe: recipeFactory({ name: 'Up-to-date Recipe' }),
+            hasOutdatedDeployments: false,
+          }),
+        ];
 
-      renderWithProvider(
-        <RecipeCentricView recipes={recipes} showOnlyOutdated={true} />,
-      );
+        renderWithProvider(
+          <RecipeCentricView recipes={recipes} showOnlyOutdated={true} />,
+        );
+      });
 
-      expect(screen.getByText('Outdated Recipe')).toBeInTheDocument();
-      expect(screen.queryByText('Up-to-date Recipe')).not.toBeInTheDocument();
+      it('displays outdated recipes', () => {
+        expect(screen.getByText('Outdated Recipe')).toBeInTheDocument();
+      });
+
+      it('hides up-to-date recipes', () => {
+        expect(screen.queryByText('Up-to-date Recipe')).not.toBeInTheDocument();
+      });
     });
 
-    it('applies both search and outdated filters together', () => {
-      const recipes = [
-        createRecipeDeploymentStatus({
-          recipe: recipeFactory({ name: 'Test Outdated Recipe' }),
-          hasOutdatedDeployments: true,
-        }),
-        createRecipeDeploymentStatus({
-          recipe: recipeFactory({ name: 'Test Up-to-date Recipe' }),
-          hasOutdatedDeployments: false,
-        }),
-        createRecipeDeploymentStatus({
-          recipe: recipeFactory({ name: 'Other Outdated Recipe' }),
-          hasOutdatedDeployments: true,
-        }),
-      ];
+    describe('when filtering by both search and outdated status', () => {
+      beforeEach(() => {
+        const recipes = [
+          createRecipeDeploymentStatus({
+            recipe: recipeFactory({ name: 'Test Outdated Recipe' }),
+            hasOutdatedDeployments: true,
+          }),
+          createRecipeDeploymentStatus({
+            recipe: recipeFactory({ name: 'Test Up-to-date Recipe' }),
+            hasOutdatedDeployments: false,
+          }),
+          createRecipeDeploymentStatus({
+            recipe: recipeFactory({ name: 'Other Outdated Recipe' }),
+            hasOutdatedDeployments: true,
+          }),
+        ];
 
-      renderWithProvider(
-        <RecipeCentricView
-          recipes={recipes}
-          searchTerm="test"
-          showOnlyOutdated={true}
-        />,
-      );
+        renderWithProvider(
+          <RecipeCentricView
+            recipes={recipes}
+            searchTerm="test"
+            showOnlyOutdated={true}
+          />,
+        );
+      });
 
-      expect(screen.getByText('Test Outdated Recipe')).toBeInTheDocument();
-      expect(
-        screen.queryByText('Test Up-to-date Recipe'),
-      ).not.toBeInTheDocument();
-      expect(
-        screen.queryByText('Other Outdated Recipe'),
-      ).not.toBeInTheDocument();
+      it('displays recipes matching both filters', () => {
+        expect(screen.getByText('Test Outdated Recipe')).toBeInTheDocument();
+      });
+
+      it('hides up-to-date recipes', () => {
+        expect(
+          screen.queryByText('Test Up-to-date Recipe'),
+        ).not.toBeInTheDocument();
+      });
+
+      it('hides recipes not matching search', () => {
+        expect(
+          screen.queryByText('Other Outdated Recipe'),
+        ).not.toBeInTheDocument();
+      });
     });
 
-    it('shows only undeployed recipes with active filter', () => {
-      const recipes = [
-        createRecipeDeploymentStatus({
-          recipe: recipeFactory({ name: 'Distributed Recipe' }),
-          deployments: [createRepositoryDeploymentInfo()],
-        }),
-        createRecipeDeploymentStatus({
-          recipe: recipeFactory({ name: 'Undeployed Recipe 1' }),
-          deployments: [],
-          hasOutdatedDeployments: false,
-        }),
-        createRecipeDeploymentStatus({
-          recipe: recipeFactory({ name: 'Undeployed Recipe 2' }),
-          deployments: [],
-          hasOutdatedDeployments: false,
-        }),
-      ];
+    describe('when filtering by undeployed status', () => {
+      beforeEach(() => {
+        const recipes = [
+          createRecipeDeploymentStatus({
+            recipe: recipeFactory({ name: 'Distributed Recipe' }),
+            deployments: [createRepositoryDeploymentInfo()],
+          }),
+          createRecipeDeploymentStatus({
+            recipe: recipeFactory({ name: 'Undeployed Recipe 1' }),
+            deployments: [],
+            hasOutdatedDeployments: false,
+          }),
+          createRecipeDeploymentStatus({
+            recipe: recipeFactory({ name: 'Undeployed Recipe 2' }),
+            deployments: [],
+            hasOutdatedDeployments: false,
+          }),
+        ];
 
-      renderWithProvider(
-        <RecipeCentricView recipes={recipes} showOnlyUndeployed={true} />,
-      );
+        renderWithProvider(
+          <RecipeCentricView recipes={recipes} showOnlyUndeployed={true} />,
+        );
+      });
 
-      expect(screen.queryByText('Distributed Recipe')).not.toBeInTheDocument();
-      expect(screen.getByText('Undeployed Recipe 1')).toBeInTheDocument();
-      expect(screen.getByText('Undeployed Recipe 2')).toBeInTheDocument();
+      it('hides distributed recipes', () => {
+        expect(
+          screen.queryByText('Distributed Recipe'),
+        ).not.toBeInTheDocument();
+      });
+
+      it('displays first undeployed recipe', () => {
+        expect(screen.getByText('Undeployed Recipe 1')).toBeInTheDocument();
+      });
+
+      it('displays second undeployed recipe', () => {
+        expect(screen.getByText('Undeployed Recipe 2')).toBeInTheDocument();
+      });
     });
 
-    it('applies search and undeployed filters together', () => {
-      const recipes = [
-        createRecipeDeploymentStatus({
-          recipe: recipeFactory({ name: 'Test Distributed Recipe' }),
-          deployments: [createRepositoryDeploymentInfo()],
-        }),
-        createRecipeDeploymentStatus({
-          recipe: recipeFactory({ name: 'Test Undeployed Recipe' }),
-          deployments: [],
-          hasOutdatedDeployments: false,
-        }),
-        createRecipeDeploymentStatus({
-          recipe: recipeFactory({ name: 'Other Undeployed Recipe' }),
-          deployments: [],
-          hasOutdatedDeployments: false,
-        }),
-      ];
+    describe('when filtering by both search and undeployed status', () => {
+      beforeEach(() => {
+        const recipes = [
+          createRecipeDeploymentStatus({
+            recipe: recipeFactory({ name: 'Test Distributed Recipe' }),
+            deployments: [createRepositoryDeploymentInfo()],
+          }),
+          createRecipeDeploymentStatus({
+            recipe: recipeFactory({ name: 'Test Undeployed Recipe' }),
+            deployments: [],
+            hasOutdatedDeployments: false,
+          }),
+          createRecipeDeploymentStatus({
+            recipe: recipeFactory({ name: 'Other Undeployed Recipe' }),
+            deployments: [],
+            hasOutdatedDeployments: false,
+          }),
+        ];
 
-      renderWithProvider(
-        <RecipeCentricView
-          recipes={recipes}
-          searchTerm="test"
-          showOnlyUndeployed={true}
-        />,
-      );
+        renderWithProvider(
+          <RecipeCentricView
+            recipes={recipes}
+            searchTerm="test"
+            showOnlyUndeployed={true}
+          />,
+        );
+      });
 
-      expect(
-        screen.queryByText('Test Distributed Recipe'),
-      ).not.toBeInTheDocument();
-      expect(screen.getByText('Test Undeployed Recipe')).toBeInTheDocument();
-      expect(
-        screen.queryByText('Other Undeployed Recipe'),
-      ).not.toBeInTheDocument();
+      it('hides distributed recipes', () => {
+        expect(
+          screen.queryByText('Test Distributed Recipe'),
+        ).not.toBeInTheDocument();
+      });
+
+      it('displays matching undeployed recipes', () => {
+        expect(screen.getByText('Test Undeployed Recipe')).toBeInTheDocument();
+      });
+
+      it('hides non-matching undeployed recipes', () => {
+        expect(
+          screen.queryByText('Other Undeployed Recipe'),
+        ).not.toBeInTheDocument();
+      });
     });
   });
 
   describe('empty states', () => {
-    it('displays empty state for no matching recipes', () => {
-      const recipes = [
-        createRecipeDeploymentStatus({
-          recipe: recipeFactory({ name: 'Test Recipe' }),
-        }),
-      ];
+    describe('when no recipes match search term', () => {
+      beforeEach(() => {
+        const recipes = [
+          createRecipeDeploymentStatus({
+            recipe: recipeFactory({ name: 'Test Recipe' }),
+          }),
+        ];
 
-      renderWithProvider(
-        <RecipeCentricView recipes={recipes} searchTerm="nomatch" />,
-      );
+        renderWithProvider(
+          <RecipeCentricView recipes={recipes} searchTerm="nomatch" />,
+        );
+      });
 
-      expect(screen.getByText('No recipes found')).toBeInTheDocument();
-      expect(
-        screen.getByText('No recipes match your search "nomatch"'),
-      ).toBeInTheDocument();
+      it('displays the no recipes found title', () => {
+        expect(screen.getByText('No recipes found')).toBeInTheDocument();
+      });
+
+      it('displays the search term in message', () => {
+        expect(
+          screen.getByText('No recipes match your search "nomatch"'),
+        ).toBeInTheDocument();
+      });
     });
 
-    it('displays empty state for no outdated recipes', () => {
-      const recipes = [
-        createRecipeDeploymentStatus({
-          recipe: recipeFactory({ name: 'Test Recipe' }),
-          hasOutdatedDeployments: false,
-        }),
-      ];
+    describe('when no outdated recipes exist', () => {
+      beforeEach(() => {
+        const recipes = [
+          createRecipeDeploymentStatus({
+            recipe: recipeFactory({ name: 'Test Recipe' }),
+            hasOutdatedDeployments: false,
+          }),
+        ];
 
-      renderWithProvider(
-        <RecipeCentricView recipes={recipes} showOnlyOutdated={true} />,
-      );
+        renderWithProvider(
+          <RecipeCentricView recipes={recipes} showOnlyOutdated={true} />,
+        );
+      });
 
-      expect(screen.getByText('No outdated recipes')).toBeInTheDocument();
-      expect(
-        screen.getByText('All recipes have up-to-date deployments'),
-      ).toBeInTheDocument();
+      it('displays the no outdated recipes title', () => {
+        expect(screen.getByText('No outdated recipes')).toBeInTheDocument();
+      });
+
+      it('displays the all up-to-date message', () => {
+        expect(
+          screen.getByText('All recipes have up-to-date deployments'),
+        ).toBeInTheDocument();
+      });
     });
 
-    it('displays empty state for no undeployed recipes', () => {
-      const recipes = [
-        createRecipeDeploymentStatus({
-          recipe: recipeFactory({ name: 'Test Recipe' }),
-          deployments: [createRepositoryDeploymentInfo()],
-        }),
-      ];
+    describe('when no undeployed recipes exist', () => {
+      beforeEach(() => {
+        const recipes = [
+          createRecipeDeploymentStatus({
+            recipe: recipeFactory({ name: 'Test Recipe' }),
+            deployments: [createRepositoryDeploymentInfo()],
+          }),
+        ];
 
-      renderWithProvider(
-        <RecipeCentricView recipes={recipes} showOnlyUndeployed={true} />,
-      );
+        renderWithProvider(
+          <RecipeCentricView recipes={recipes} showOnlyUndeployed={true} />,
+        );
+      });
 
-      expect(screen.getByText('No undeployed recipes')).toBeInTheDocument();
-      expect(
-        screen.getByText(
-          'All recipes have been distributed to at least one repository',
-        ),
-      ).toBeInTheDocument();
+      it('displays the no undeployed recipes title', () => {
+        expect(screen.getByText('No undeployed recipes')).toBeInTheDocument();
+      });
+
+      it('displays the all distributed message', () => {
+        expect(
+          screen.getByText(
+            'All recipes have been distributed to at least one repository',
+          ),
+        ).toBeInTheDocument();
+      });
     });
 
-    it('displays empty state when no recipes exist', () => {
-      renderWithProvider(<RecipeCentricView recipes={[]} />);
+    describe('when no recipes exist', () => {
+      beforeEach(() => {
+        renderWithProvider(<RecipeCentricView recipes={[]} />);
+      });
 
-      expect(screen.getByText('No recipes')).toBeInTheDocument();
-      expect(
-        screen.getByText('No recipes found in your organization'),
-      ).toBeInTheDocument();
+      it('displays the no recipes title', () => {
+        expect(screen.getByText('No recipes')).toBeInTheDocument();
+      });
+
+      it('displays the no recipes in organization message', () => {
+        expect(
+          screen.getByText('No recipes found in your organization'),
+        ).toBeInTheDocument();
+      });
     });
 
-    it('displays search empty state with priority over filter empty states', () => {
-      const recipes = [
-        createRecipeDeploymentStatus({
-          recipe: recipeFactory({ name: 'Test Recipe' }),
-          hasOutdatedDeployments: false,
-          deployments: [createRepositoryDeploymentInfo()],
-        }),
-      ];
+    describe('when search term produces no matches with outdated filter', () => {
+      beforeEach(() => {
+        const recipes = [
+          createRecipeDeploymentStatus({
+            recipe: recipeFactory({ name: 'Test Recipe' }),
+            hasOutdatedDeployments: false,
+            deployments: [createRepositoryDeploymentInfo()],
+          }),
+        ];
 
-      renderWithProvider(
-        <RecipeCentricView
-          recipes={recipes}
-          searchTerm="nomatch"
-          showOnlyOutdated={true}
-        />,
-      );
+        renderWithProvider(
+          <RecipeCentricView
+            recipes={recipes}
+            searchTerm="nomatch"
+            showOnlyOutdated={true}
+          />,
+        );
+      });
 
-      expect(screen.getByText('No recipes found')).toBeInTheDocument();
-      expect(
-        screen.getByText('No recipes match your search "nomatch"'),
-      ).toBeInTheDocument();
+      it('displays the no recipes found title', () => {
+        expect(screen.getByText('No recipes found')).toBeInTheDocument();
+      });
+
+      it('displays the search term in message', () => {
+        expect(
+          screen.getByText('No recipes match your search "nomatch"'),
+        ).toBeInTheDocument();
+      });
     });
 
-    it('displays outdated empty state with priority over undeployed when both filters are false', () => {
-      const recipes = [
-        createRecipeDeploymentStatus({
-          recipe: recipeFactory({ name: 'Test Recipe' }),
-          hasOutdatedDeployments: false,
-          deployments: [createRepositoryDeploymentInfo()],
-        }),
-      ];
+    describe('when outdated filter is active but undeployed is false', () => {
+      beforeEach(() => {
+        const recipes = [
+          createRecipeDeploymentStatus({
+            recipe: recipeFactory({ name: 'Test Recipe' }),
+            hasOutdatedDeployments: false,
+            deployments: [createRepositoryDeploymentInfo()],
+          }),
+        ];
 
-      renderWithProvider(
-        <RecipeCentricView
-          recipes={recipes}
-          showOnlyOutdated={true}
-          showOnlyUndeployed={false}
-        />,
-      );
+        renderWithProvider(
+          <RecipeCentricView
+            recipes={recipes}
+            showOnlyOutdated={true}
+            showOnlyUndeployed={false}
+          />,
+        );
+      });
 
-      expect(screen.getByText('No outdated recipes')).toBeInTheDocument();
-      expect(
-        screen.getByText('All recipes have up-to-date deployments'),
-      ).toBeInTheDocument();
+      it('displays the no outdated recipes title', () => {
+        expect(screen.getByText('No outdated recipes')).toBeInTheDocument();
+      });
+
+      it('displays the all up-to-date message', () => {
+        expect(
+          screen.getByText('All recipes have up-to-date deployments'),
+        ).toBeInTheDocument();
+      });
     });
   });
 });

@@ -17,6 +17,8 @@ import { resolve, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import { existsSync, mkdirSync, unlinkSync } from 'fs';
 
+const logger = console;
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
@@ -105,7 +107,7 @@ if (!targetArg) {
     (t) => t.os === os && t.arch === arch && !t.target.includes('baseline'),
   );
   if (targetsToBuild.length === 0) {
-    console.error(`❌ No target found for platform: ${os}-${arch}`);
+    logger.error(`❌ No target found for platform: ${os}-${arch}`);
     process.exit(1);
   }
 } else if (targetArg === 'all') {
@@ -131,14 +133,14 @@ if (!targetArg) {
     (t) => t.target === targetArg || t.target === `bun-${targetArg}`,
   );
   if (!found) {
-    console.error(`❌ Unknown target: ${targetArg}`);
-    console.log('\nAvailable targets:');
-    console.log('  - all (all platforms)');
-    console.log('  - linux (Linux x64 + arm64)');
-    console.log('  - macos/darwin (macOS x64 + arm64)');
-    console.log('  - windows (Windows x64)');
-    console.log('  Or specific targets:');
-    AVAILABLE_TARGETS.forEach((t) => console.log(`  - ${t.target}`));
+    logger.error(`❌ Unknown target: ${targetArg}`);
+    logger.log('\nAvailable targets:');
+    logger.log('  - all (all platforms)');
+    logger.log('  - linux (Linux x64 + arm64)');
+    logger.log('  - macos/darwin (macOS x64 + arm64)');
+    logger.log('  - windows (Windows x64)');
+    logger.log('  Or specific targets:');
+    AVAILABLE_TARGETS.forEach((t) => logger.log(`  - ${t.target}`));
     process.exit(1);
   }
   targetsToBuild = [found];
@@ -150,7 +152,7 @@ if (!existsSync(OUTPUT_DIR)) {
 }
 
 // Step 0: Embed WASM files before building
-console.log('🔧 Embedding WASM files...');
+logger.log('🔧 Embedding WASM files...');
 const embedWasmScript = resolve(__dirname, 'scripts/embed-wasm-files.ts');
 const embedResult = await Bun.spawn(['bun', 'run', embedWasmScript], {
   stdio: ['inherit', 'inherit', 'inherit'],
@@ -158,22 +160,22 @@ const embedResult = await Bun.spawn(['bun', 'run', embedWasmScript], {
 await embedResult.exited;
 
 if (embedResult.exitCode !== 0) {
-  console.error('❌ Failed to embed WASM files');
+  logger.error('❌ Failed to embed WASM files');
   process.exit(1);
 }
 
-console.log('\n🚀 Building Packmind CLI with Bun...');
-console.log(`📦 Targets: ${targetsToBuild.map((t) => t.target).join(', ')}`);
-console.log('');
+logger.log('\n🚀 Building Packmind CLI with Bun...');
+logger.log(`📦 Targets: ${targetsToBuild.map((t) => t.target).join(', ')}`);
+logger.log('');
 
 async function buildForTarget(targetConfig: BuildTarget) {
   const { target, outputName } = targetConfig;
 
-  console.log(`\n🎯 Building for ${target}...`);
+  logger.log(`\n🎯 Building for ${target}...`);
 
   try {
     // Step 1: Bundle with aliases for stub modules
-    console.log(`📦 Bundling...`);
+    logger.log(`📦 Bundling...`);
     const result = await build({
       entrypoints: [CLI_ENTRY],
       outdir: OUTPUT_DIR,
@@ -194,14 +196,14 @@ async function buildForTarget(targetConfig: BuildTarget) {
     });
 
     if (!result.success) {
-      console.error(`❌ Bundle failed for ${target}:`, result.logs);
+      logger.error(`❌ Bundle failed for ${target}:`, result.logs);
       return false;
     }
 
     const bundledFile = result.outputs[0].path;
 
     // Step 2: Compile the bundle to executable
-    console.log(`🔨 Compiling to executable...`);
+    logger.log(`🔨 Compiling to executable...`);
     const bunPath = process.argv[0];
     const compileResult = await Bun.spawn(
       [
@@ -221,7 +223,7 @@ async function buildForTarget(targetConfig: BuildTarget) {
     await compileResult.exited;
 
     if (compileResult.exitCode !== 0) {
-      console.error(`❌ Compilation failed for ${target}`);
+      logger.error(`❌ Compilation failed for ${target}`);
       return false;
     }
 
@@ -236,10 +238,10 @@ async function buildForTarget(targetConfig: BuildTarget) {
       // Ignore cleanup errors
     }
 
-    console.log(`✅ Built: ${OUTPUT_DIR}/${outputName}`);
+    logger.log(`✅ Built: ${OUTPUT_DIR}/${outputName}`);
     return true;
   } catch (error) {
-    console.error(`❌ Build error for ${target}:`, error);
+    logger.error(`❌ Build error for ${target}:`, error);
     return false;
   }
 }
@@ -253,19 +255,19 @@ for (const targetConfig of targetsToBuild) {
 }
 
 // Summary
-console.log('\n📊 Build Summary:');
+logger.log('\n📊 Build Summary:');
 results.forEach(({ target, success }) => {
-  console.log(`  ${success ? '✅' : '❌'} ${target}`);
+  logger.log(`  ${success ? '✅' : '❌'} ${target}`);
 });
 
 const allSuccess = results.every((r) => r.success);
 if (allSuccess) {
-  console.log('\n🎉 All builds completed successfully!');
-  console.log('\n🧪 Test executables with:');
+  logger.log('\n🎉 All builds completed successfully!');
+  logger.log('\n🧪 Test executables with:');
   targetsToBuild.forEach((t) => {
-    console.log(`   ${OUTPUT_DIR}/${t.outputName} lint --help`);
+    logger.log(`   ${OUTPUT_DIR}/${t.outputName} lint --help`);
   });
 } else {
-  console.log('\n⚠️  Some builds failed');
+  logger.log('\n⚠️  Some builds failed');
   process.exit(1);
 }

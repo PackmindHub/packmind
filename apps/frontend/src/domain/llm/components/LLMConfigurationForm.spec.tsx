@@ -83,24 +83,40 @@ describe('LLMConfigurationForm', () => {
       expect(screen.getByText('OpenAI-Compatible')).toBeInTheDocument();
     });
 
-    it('shows form fields when provider is selected', async () => {
-      const user = userEvent.setup();
-      renderWithProvider(
-        <LLMConfigurationForm
-          organizationId={mockOrganizationId}
-          onTestConnection={mockOnTestConnection}
-          onSaveConfiguration={mockOnSaveConfiguration}
-          providers={mockProviders}
-        />,
-      );
+    describe('when provider is selected', () => {
+      beforeEach(async () => {
+        const user = userEvent.setup();
+        renderWithProvider(
+          <LLMConfigurationForm
+            organizationId={mockOrganizationId}
+            onTestConnection={mockOnTestConnection}
+            onSaveConfiguration={mockOnSaveConfiguration}
+            providers={mockProviders}
+          />,
+        );
 
-      const select = screen.getByRole('combobox');
-      await user.selectOptions(select, LLMProvider.OPENAI);
+        const select = screen.getByRole('combobox');
+        await user.selectOptions(select, LLMProvider.OPENAI);
+      });
 
-      await waitFor(() => {
-        expect(screen.getByPlaceholderText('sk-...')).toBeInTheDocument();
-        expect(screen.getByPlaceholderText('gpt-5.1')).toBeInTheDocument();
-        expect(screen.getByPlaceholderText('gpt-4.1-mini')).toBeInTheDocument();
+      it('displays API key input field', async () => {
+        await waitFor(() => {
+          expect(screen.getByPlaceholderText('sk-...')).toBeInTheDocument();
+        });
+      });
+
+      it('displays model input field', async () => {
+        await waitFor(() => {
+          expect(screen.getByPlaceholderText('gpt-5.1')).toBeInTheDocument();
+        });
+      });
+
+      it('displays fastest model input field', async () => {
+        await waitFor(() => {
+          expect(
+            screen.getByPlaceholderText('gpt-4.1-mini'),
+          ).toBeInTheDocument();
+        });
       });
     });
 
@@ -133,199 +149,236 @@ describe('LLMConfigurationForm', () => {
   });
 
   describe('form validation', () => {
-    it('shows error when required field is empty on test connection', async () => {
-      const user = userEvent.setup();
-      renderWithProvider(
-        <LLMConfigurationForm
-          organizationId={mockOrganizationId}
-          onTestConnection={mockOnTestConnection}
-          onSaveConfiguration={mockOnSaveConfiguration}
-          providers={mockProviders}
-        />,
-      );
+    describe('when required field is empty on test connection', () => {
+      beforeEach(async () => {
+        const user = userEvent.setup();
+        renderWithProvider(
+          <LLMConfigurationForm
+            organizationId={mockOrganizationId}
+            onTestConnection={mockOnTestConnection}
+            onSaveConfiguration={mockOnSaveConfiguration}
+            providers={mockProviders}
+          />,
+        );
 
-      const select = screen.getByRole('combobox');
-      await user.selectOptions(select, LLMProvider.OPENAI);
+        const select = screen.getByRole('combobox');
+        await user.selectOptions(select, LLMProvider.OPENAI);
 
-      const testButton = screen.getByTestId('test-connection-button');
-      await user.click(testButton);
-
-      await waitFor(() => {
-        expect(screen.getByText('API Key is required')).toBeInTheDocument();
+        const testButton = screen.getByTestId('test-connection-button');
+        await user.click(testButton);
       });
-      expect(mockOnTestConnection).not.toHaveBeenCalled();
+
+      it('displays error message', async () => {
+        await waitFor(() => {
+          expect(screen.getByText('API Key is required')).toBeInTheDocument();
+        });
+      });
+
+      it('does not call onTestConnection', () => {
+        expect(mockOnTestConnection).not.toHaveBeenCalled();
+      });
     });
 
-    it('clears error when user starts typing', async () => {
-      const user = userEvent.setup();
-      renderWithProvider(
-        <LLMConfigurationForm
-          organizationId={mockOrganizationId}
-          onTestConnection={mockOnTestConnection}
-          onSaveConfiguration={mockOnSaveConfiguration}
-          providers={mockProviders}
-        />,
-      );
+    describe('when user starts typing after validation error', () => {
+      beforeEach(async () => {
+        const user = userEvent.setup();
+        renderWithProvider(
+          <LLMConfigurationForm
+            organizationId={mockOrganizationId}
+            onTestConnection={mockOnTestConnection}
+            onSaveConfiguration={mockOnSaveConfiguration}
+            providers={mockProviders}
+          />,
+        );
 
-      const select = screen.getByRole('combobox');
-      await user.selectOptions(select, LLMProvider.OPENAI);
+        const select = screen.getByRole('combobox');
+        await user.selectOptions(select, LLMProvider.OPENAI);
 
-      const testButton = screen.getByTestId('test-connection-button');
-      await user.click(testButton);
+        const testButton = screen.getByTestId('test-connection-button');
+        await user.click(testButton);
 
-      await waitFor(() => {
-        expect(screen.getByText('API Key is required')).toBeInTheDocument();
+        await waitFor(() => {
+          expect(screen.getByText('API Key is required')).toBeInTheDocument();
+        });
+
+        const apiKeyInput = screen.getByPlaceholderText('sk-...');
+        await user.type(apiKeyInput, 'sk-test');
       });
 
-      const apiKeyInput = screen.getByPlaceholderText('sk-...');
-      await user.type(apiKeyInput, 'sk-test');
-
-      await waitFor(() => {
-        expect(
-          screen.queryByText('API Key is required'),
-        ).not.toBeInTheDocument();
+      it('clears the error message', async () => {
+        await waitFor(() => {
+          expect(
+            screen.queryByText('API Key is required'),
+          ).not.toBeInTheDocument();
+        });
       });
     });
   });
 
   describe('test connection', () => {
-    it('calls onTestConnection with correct config when valid', async () => {
-      const user = userEvent.setup();
-      const mockResponse: TestLLMConnectionResponse = {
-        provider: LLMProvider.OPENAI,
-        standardModel: { model: 'gpt-4', success: true },
-        overallSuccess: true,
-      };
-      mockOnTestConnection.mockResolvedValue(mockResponse);
-
-      renderWithProvider(
-        <LLMConfigurationForm
-          organizationId={mockOrganizationId}
-          onTestConnection={mockOnTestConnection}
-          onSaveConfiguration={mockOnSaveConfiguration}
-          providers={mockProviders}
-        />,
-      );
-
-      const select = screen.getByRole('combobox');
-      await user.selectOptions(select, LLMProvider.OPENAI);
-
-      const apiKeyInput = screen.getByPlaceholderText('sk-...');
-      await user.type(apiKeyInput, 'sk-test-key-123');
-
-      const testButton = screen.getByTestId('test-connection-button');
-      await user.click(testButton);
-
-      await waitFor(() => {
-        expect(mockOnTestConnection).toHaveBeenCalledWith({
+    describe('when config is valid', () => {
+      it('calls onTestConnection with correct config', async () => {
+        const user = userEvent.setup();
+        const mockResponse: TestLLMConnectionResponse = {
           provider: LLMProvider.OPENAI,
-          apiKey: 'sk-test-key-123',
-          model: 'gpt-5.1',
-          fastestModel: 'gpt-4.1-mini',
+          standardModel: { model: 'gpt-4', success: true },
+          overallSuccess: true,
+        };
+        mockOnTestConnection.mockResolvedValue(mockResponse);
+
+        renderWithProvider(
+          <LLMConfigurationForm
+            organizationId={mockOrganizationId}
+            onTestConnection={mockOnTestConnection}
+            onSaveConfiguration={mockOnSaveConfiguration}
+            providers={mockProviders}
+          />,
+        );
+
+        const select = screen.getByRole('combobox');
+        await user.selectOptions(select, LLMProvider.OPENAI);
+
+        const apiKeyInput = screen.getByPlaceholderText('sk-...');
+        await user.type(apiKeyInput, 'sk-test-key-123');
+
+        const testButton = screen.getByTestId('test-connection-button');
+        await user.click(testButton);
+
+        await waitFor(() => {
+          expect(mockOnTestConnection).toHaveBeenCalledWith({
+            provider: LLMProvider.OPENAI,
+            apiKey: 'sk-test-key-123',
+            model: 'gpt-5.1',
+            fastestModel: 'gpt-4.1-mini',
+          });
         });
       });
     });
 
-    it('shows success alert when connection succeeds', async () => {
-      const user = userEvent.setup();
-      const mockResponse: TestLLMConnectionResponse = {
-        provider: LLMProvider.OPENAI,
-        standardModel: { model: 'gpt-4', success: true },
-        overallSuccess: true,
-      };
-      mockOnTestConnection.mockResolvedValue(mockResponse);
+    describe('when connection succeeds', () => {
+      it('displays success alert', async () => {
+        const user = userEvent.setup();
+        const mockResponse: TestLLMConnectionResponse = {
+          provider: LLMProvider.OPENAI,
+          standardModel: { model: 'gpt-4', success: true },
+          overallSuccess: true,
+        };
+        mockOnTestConnection.mockResolvedValue(mockResponse);
 
-      renderWithProvider(
-        <LLMConfigurationForm
-          organizationId={mockOrganizationId}
-          onTestConnection={mockOnTestConnection}
-          onSaveConfiguration={mockOnSaveConfiguration}
-          providers={mockProviders}
-        />,
-      );
+        renderWithProvider(
+          <LLMConfigurationForm
+            organizationId={mockOrganizationId}
+            onTestConnection={mockOnTestConnection}
+            onSaveConfiguration={mockOnSaveConfiguration}
+            providers={mockProviders}
+          />,
+        );
 
-      const select = screen.getByRole('combobox');
-      await user.selectOptions(select, LLMProvider.OPENAI);
+        const select = screen.getByRole('combobox');
+        await user.selectOptions(select, LLMProvider.OPENAI);
 
-      const apiKeyInput = screen.getByPlaceholderText('sk-...');
-      await user.type(apiKeyInput, 'sk-test-key-123');
+        const apiKeyInput = screen.getByPlaceholderText('sk-...');
+        await user.type(apiKeyInput, 'sk-test-key-123');
 
-      const testButton = screen.getByTestId('test-connection-button');
-      await user.click(testButton);
+        const testButton = screen.getByTestId('test-connection-button');
+        await user.click(testButton);
 
-      await waitFor(() => {
-        expect(screen.getByText('Connection Successful')).toBeInTheDocument();
+        await waitFor(() => {
+          expect(screen.getByText('Connection Successful')).toBeInTheDocument();
+        });
       });
     });
 
-    it('shows error alert when connection fails', async () => {
-      const user = userEvent.setup();
-      mockOnTestConnection.mockRejectedValue(new Error('Invalid API key'));
+    describe('when connection fails', () => {
+      beforeEach(async () => {
+        const user = userEvent.setup();
+        mockOnTestConnection.mockRejectedValue(new Error('Invalid API key'));
 
-      renderWithProvider(
-        <LLMConfigurationForm
-          organizationId={mockOrganizationId}
-          onTestConnection={mockOnTestConnection}
-          onSaveConfiguration={mockOnSaveConfiguration}
-          providers={mockProviders}
-        />,
-      );
+        renderWithProvider(
+          <LLMConfigurationForm
+            organizationId={mockOrganizationId}
+            onTestConnection={mockOnTestConnection}
+            onSaveConfiguration={mockOnSaveConfiguration}
+            providers={mockProviders}
+          />,
+        );
 
-      const select = screen.getByRole('combobox');
-      await user.selectOptions(select, LLMProvider.OPENAI);
+        const select = screen.getByRole('combobox');
+        await user.selectOptions(select, LLMProvider.OPENAI);
 
-      const apiKeyInput = screen.getByPlaceholderText('sk-...');
-      await user.type(apiKeyInput, 'sk-invalid-key');
+        const apiKeyInput = screen.getByPlaceholderText('sk-...');
+        await user.type(apiKeyInput, 'sk-invalid-key');
 
-      const testButton = screen.getByTestId('test-connection-button');
-      await user.click(testButton);
+        const testButton = screen.getByTestId('test-connection-button');
+        await user.click(testButton);
+      });
 
-      await waitFor(() => {
-        expect(screen.getByText('Connection Test Failed')).toBeInTheDocument();
-        expect(screen.getByText('Invalid API key')).toBeInTheDocument();
+      it('displays error alert title', async () => {
+        await waitFor(() => {
+          expect(
+            screen.getByText('Connection Test Failed'),
+          ).toBeInTheDocument();
+        });
+      });
+
+      it('displays error message', async () => {
+        await waitFor(() => {
+          expect(screen.getByText('Invalid API key')).toBeInTheDocument();
+        });
       });
     });
 
-    it('displays user-friendly error message from backend', async () => {
-      const user = userEvent.setup();
-      // Backend now extracts and returns clean error messages
+    describe('when backend returns user-friendly error message', () => {
       const cleanError = 'API key not valid. Please pass a valid API key.';
-      const mockResponse: TestLLMConnectionResponse = {
-        provider: LLMProvider.GEMINI,
-        standardModel: {
-          model: 'gemini-3-pro-preview',
-          success: false,
-          error: { type: 'API_ERROR', message: cleanError },
-        },
-        overallSuccess: false,
-      };
-      mockOnTestConnection.mockResolvedValue(mockResponse);
 
-      renderWithProvider(
-        <LLMConfigurationForm
-          organizationId={mockOrganizationId}
-          onTestConnection={mockOnTestConnection}
-          onSaveConfiguration={mockOnSaveConfiguration}
-          providers={mockProviders}
-        />,
-      );
+      beforeEach(async () => {
+        const user = userEvent.setup();
+        const mockResponse: TestLLMConnectionResponse = {
+          provider: LLMProvider.GEMINI,
+          standardModel: {
+            model: 'gemini-3-pro-preview',
+            success: false,
+            error: { type: 'API_ERROR', message: cleanError },
+          },
+          overallSuccess: false,
+        };
+        mockOnTestConnection.mockResolvedValue(mockResponse);
 
-      const select = screen.getByRole('combobox');
-      await user.selectOptions(select, LLMProvider.GEMINI);
+        renderWithProvider(
+          <LLMConfigurationForm
+            organizationId={mockOrganizationId}
+            onTestConnection={mockOnTestConnection}
+            onSaveConfiguration={mockOnSaveConfiguration}
+            providers={mockProviders}
+          />,
+        );
 
-      const apiKeyInput = screen.getByPlaceholderText('AIza...');
-      await user.type(apiKeyInput, 'invalid-key');
+        const select = screen.getByRole('combobox');
+        await user.selectOptions(select, LLMProvider.GEMINI);
 
-      const testButton = screen.getByTestId('test-connection-button');
-      await user.click(testButton);
+        const apiKeyInput = screen.getByPlaceholderText('AIza...');
+        await user.type(apiKeyInput, 'invalid-key');
 
-      await waitFor(() => {
-        expect(
-          screen.getByText('Partial Connection Issues'),
-        ).toBeInTheDocument();
-        expect(
-          screen.getByText(/API key not valid\. Please pass a valid API key\./),
-        ).toBeInTheDocument();
+        const testButton = screen.getByTestId('test-connection-button');
+        await user.click(testButton);
+      });
+
+      it('displays partial connection issues alert', async () => {
+        await waitFor(() => {
+          expect(
+            screen.getByText('Partial Connection Issues'),
+          ).toBeInTheDocument();
+        });
+      });
+
+      it('displays user-friendly error message', async () => {
+        await waitFor(() => {
+          expect(
+            screen.getByText(
+              /API key not valid\. Please pass a valid API key\./,
+            ),
+          ).toBeInTheDocument();
+        });
       });
     });
 
@@ -389,274 +442,269 @@ describe('LLMConfigurationForm', () => {
       expect(saveButton).toBeDisabled();
     });
 
-    it('shows tooltip on disabled save button when test has not been made', async () => {
-      const user = userEvent.setup();
-      renderWithProvider(
-        <LLMConfigurationForm
-          organizationId={mockOrganizationId}
-          onTestConnection={mockOnTestConnection}
-          onSaveConfiguration={mockOnSaveConfiguration}
-          providers={mockProviders}
-        />,
-      );
+    describe('when test has not been made', () => {
+      it('displays tooltip on disabled save button', async () => {
+        const user = userEvent.setup();
+        renderWithProvider(
+          <LLMConfigurationForm
+            organizationId={mockOrganizationId}
+            onTestConnection={mockOnTestConnection}
+            onSaveConfiguration={mockOnSaveConfiguration}
+            providers={mockProviders}
+          />,
+        );
 
-      const select = screen.getByRole('combobox');
-      await user.selectOptions(select, LLMProvider.OPENAI);
+        const select = screen.getByRole('combobox');
+        await user.selectOptions(select, LLMProvider.OPENAI);
 
-      const saveButton = screen.getByTestId('save-configuration-button');
-      await user.hover(saveButton);
+        const saveButton = screen.getByTestId('save-configuration-button');
+        await user.hover(saveButton);
 
-      await waitFor(() => {
-        expect(
-          screen.getByText('Test connection before saving'),
-        ).toBeInTheDocument();
-      });
-    });
-
-    it('enables save button after successful test connection', async () => {
-      const user = userEvent.setup();
-      const mockResponse: TestLLMConnectionResponse = {
-        provider: LLMProvider.OPENAI,
-        standardModel: { model: 'gpt-4', success: true },
-        overallSuccess: true,
-      };
-      mockOnTestConnection.mockResolvedValue(mockResponse);
-
-      renderWithProvider(
-        <LLMConfigurationForm
-          organizationId={mockOrganizationId}
-          onTestConnection={mockOnTestConnection}
-          onSaveConfiguration={mockOnSaveConfiguration}
-          providers={mockProviders}
-        />,
-      );
-
-      const select = screen.getByRole('combobox');
-      await user.selectOptions(select, LLMProvider.OPENAI);
-
-      const apiKeyInput = screen.getByPlaceholderText('sk-...');
-      await user.type(apiKeyInput, 'sk-test-key-123');
-
-      const testButton = screen.getByTestId('test-connection-button');
-      await user.click(testButton);
-
-      await waitFor(() => {
-        expect(screen.getByText('Connection Successful')).toBeInTheDocument();
-      });
-
-      const saveButton = screen.getByTestId('save-configuration-button');
-      expect(saveButton).toBeEnabled();
-    });
-
-    it('calls onSaveConfiguration with correct config after successful test', async () => {
-      const user = userEvent.setup();
-      const mockResponse: TestLLMConnectionResponse = {
-        provider: LLMProvider.OPENAI,
-        standardModel: { model: 'gpt-4', success: true },
-        overallSuccess: true,
-      };
-      mockOnTestConnection.mockResolvedValue(mockResponse);
-      mockOnSaveConfiguration.mockResolvedValue(undefined);
-
-      renderWithProvider(
-        <LLMConfigurationForm
-          organizationId={mockOrganizationId}
-          onTestConnection={mockOnTestConnection}
-          onSaveConfiguration={mockOnSaveConfiguration}
-          providers={mockProviders}
-        />,
-      );
-
-      const select = screen.getByRole('combobox');
-      await user.selectOptions(select, LLMProvider.OPENAI);
-
-      const apiKeyInput = screen.getByPlaceholderText('sk-...');
-      await user.type(apiKeyInput, 'sk-test-key-123');
-
-      // First test connection
-      const testButton = screen.getByTestId('test-connection-button');
-      await user.click(testButton);
-
-      await waitFor(() => {
-        expect(screen.getByText('Connection Successful')).toBeInTheDocument();
-      });
-
-      // Then save
-      const saveButton = screen.getByTestId('save-configuration-button');
-      await user.click(saveButton);
-
-      await waitFor(() => {
-        expect(mockOnSaveConfiguration).toHaveBeenCalledWith({
-          provider: LLMProvider.OPENAI,
-          apiKey: 'sk-test-key-123',
-          model: 'gpt-5.1',
-          fastestModel: 'gpt-4.1-mini',
+        await waitFor(() => {
+          expect(
+            screen.getByText('Test connection before saving'),
+          ).toBeInTheDocument();
         });
       });
     });
 
-    it('calls onSaveSuccess after successful save', async () => {
-      const user = userEvent.setup();
-      const mockResponse: TestLLMConnectionResponse = {
-        provider: LLMProvider.OPENAI,
-        standardModel: { model: 'gpt-4', success: true },
-        overallSuccess: true,
-      };
-      mockOnTestConnection.mockResolvedValue(mockResponse);
-      mockOnSaveConfiguration.mockResolvedValue(undefined);
-      const mockOnSaveSuccess = jest.fn();
+    describe('when test connection succeeds', () => {
+      beforeEach(async () => {
+        const user = userEvent.setup();
+        const mockResponse: TestLLMConnectionResponse = {
+          provider: LLMProvider.OPENAI,
+          standardModel: { model: 'gpt-4', success: true },
+          overallSuccess: true,
+        };
+        mockOnTestConnection.mockResolvedValue(mockResponse);
 
-      renderWithProvider(
-        <LLMConfigurationForm
-          organizationId={mockOrganizationId}
-          onTestConnection={mockOnTestConnection}
-          onSaveConfiguration={mockOnSaveConfiguration}
-          providers={mockProviders}
-          onSaveSuccess={mockOnSaveSuccess}
-        />,
-      );
+        renderWithProvider(
+          <LLMConfigurationForm
+            organizationId={mockOrganizationId}
+            onTestConnection={mockOnTestConnection}
+            onSaveConfiguration={mockOnSaveConfiguration}
+            providers={mockProviders}
+          />,
+        );
 
-      const select = screen.getByRole('combobox');
-      await user.selectOptions(select, LLMProvider.OPENAI);
+        const select = screen.getByRole('combobox');
+        await user.selectOptions(select, LLMProvider.OPENAI);
 
-      const apiKeyInput = screen.getByPlaceholderText('sk-...');
-      await user.type(apiKeyInput, 'sk-test-key-123');
+        const apiKeyInput = screen.getByPlaceholderText('sk-...');
+        await user.type(apiKeyInput, 'sk-test-key-123');
 
-      // First test connection
-      const testButton = screen.getByTestId('test-connection-button');
-      await user.click(testButton);
+        const testButton = screen.getByTestId('test-connection-button');
+        await user.click(testButton);
 
-      await waitFor(() => {
-        expect(screen.getByText('Connection Successful')).toBeInTheDocument();
+        await waitFor(() => {
+          expect(screen.getByText('Connection Successful')).toBeInTheDocument();
+        });
       });
 
-      // Then save
-      const saveButton = screen.getByTestId('save-configuration-button');
-      await user.click(saveButton);
-
-      await waitFor(() => {
-        expect(mockOnSaveSuccess).toHaveBeenCalled();
+      it('enables the save button', () => {
+        const saveButton = screen.getByTestId('save-configuration-button');
+        expect(saveButton).toBeEnabled();
       });
     });
 
-    it('shows confirmation dialog when existing configuration exists', async () => {
-      const user = userEvent.setup();
-      const mockResponse: TestLLMConnectionResponse = {
-        provider: LLMProvider.OPENAI,
-        standardModel: { model: 'gpt-4', success: true },
-        overallSuccess: true,
-      };
-      mockOnTestConnection.mockResolvedValue(mockResponse);
+    describe('when saving after successful test', () => {
+      it('calls onSaveConfiguration with correct config', async () => {
+        const user = userEvent.setup();
+        const mockResponse: TestLLMConnectionResponse = {
+          provider: LLMProvider.OPENAI,
+          standardModel: { model: 'gpt-4', success: true },
+          overallSuccess: true,
+        };
+        mockOnTestConnection.mockResolvedValue(mockResponse);
+        mockOnSaveConfiguration.mockResolvedValue(undefined);
 
-      const existingConfig: LLMConfigurationDTO = {
-        provider: LLMProvider.OPENAI,
-        model: 'gpt-4',
-        fastestModel: 'gpt-4-mini',
-      };
+        renderWithProvider(
+          <LLMConfigurationForm
+            organizationId={mockOrganizationId}
+            onTestConnection={mockOnTestConnection}
+            onSaveConfiguration={mockOnSaveConfiguration}
+            providers={mockProviders}
+          />,
+        );
 
-      renderWithProvider(
-        <LLMConfigurationForm
-          organizationId={mockOrganizationId}
-          onTestConnection={mockOnTestConnection}
-          onSaveConfiguration={mockOnSaveConfiguration}
-          existingConfiguration={existingConfig}
-          providers={mockProviders}
-        />,
-      );
+        const select = screen.getByRole('combobox');
+        await user.selectOptions(select, LLMProvider.OPENAI);
 
-      const apiKeyInput = screen.getByPlaceholderText('sk-...');
-      await user.type(apiKeyInput, 'sk-test-key-123');
+        const apiKeyInput = screen.getByPlaceholderText('sk-...');
+        await user.type(apiKeyInput, 'sk-test-key-123');
 
-      // First test connection
-      const testButton = screen.getByTestId('test-connection-button');
-      await user.click(testButton);
+        const testButton = screen.getByTestId('test-connection-button');
+        await user.click(testButton);
 
-      await waitFor(() => {
-        expect(screen.getByText('Connection Successful')).toBeInTheDocument();
+        await screen.findByText('Connection Successful');
+
+        const saveButton = screen.getByTestId('save-configuration-button');
+        await user.click(saveButton);
+
+        await waitFor(() => {
+          expect(mockOnSaveConfiguration).toHaveBeenCalledWith({
+            provider: LLMProvider.OPENAI,
+            apiKey: 'sk-test-key-123',
+            model: 'gpt-5.1',
+            fastestModel: 'gpt-4.1-mini',
+          });
+        });
       });
 
-      // Then try to save
-      const saveButton = screen.getByTestId('save-configuration-button');
-      await user.click(saveButton);
+      it('calls onSaveSuccess after successful save', async () => {
+        const user = userEvent.setup();
+        const mockResponse: TestLLMConnectionResponse = {
+          provider: LLMProvider.OPENAI,
+          standardModel: { model: 'gpt-4', success: true },
+          overallSuccess: true,
+        };
+        mockOnTestConnection.mockResolvedValue(mockResponse);
+        mockOnSaveConfiguration.mockResolvedValue(undefined);
+        const mockOnSaveSuccess = jest.fn();
 
-      await waitFor(() => {
-        expect(screen.getByText('Overwrite Configuration')).toBeInTheDocument();
-      });
-    });
+        renderWithProvider(
+          <LLMConfigurationForm
+            organizationId={mockOrganizationId}
+            onTestConnection={mockOnTestConnection}
+            onSaveConfiguration={mockOnSaveConfiguration}
+            providers={mockProviders}
+            onSaveSuccess={mockOnSaveSuccess}
+          />,
+        );
 
-    it('calls onSaveSuccess after confirming overwrite dialog', async () => {
-      const user = userEvent.setup();
-      const mockResponse: TestLLMConnectionResponse = {
-        provider: LLMProvider.OPENAI,
-        standardModel: { model: 'gpt-4', success: true },
-        overallSuccess: true,
-      };
-      mockOnTestConnection.mockResolvedValue(mockResponse);
-      mockOnSaveConfiguration.mockResolvedValue(undefined);
-      const mockOnSaveSuccess = jest.fn();
+        const select = screen.getByRole('combobox');
+        await user.selectOptions(select, LLMProvider.OPENAI);
 
-      const existingConfig: LLMConfigurationDTO = {
-        provider: LLMProvider.OPENAI,
-        model: 'gpt-4',
-        fastestModel: 'gpt-4-mini',
-      };
+        const apiKeyInput = screen.getByPlaceholderText('sk-...');
+        await user.type(apiKeyInput, 'sk-test-key-123');
 
-      renderWithProvider(
-        <LLMConfigurationForm
-          organizationId={mockOrganizationId}
-          onTestConnection={mockOnTestConnection}
-          onSaveConfiguration={mockOnSaveConfiguration}
-          existingConfiguration={existingConfig}
-          providers={mockProviders}
-          onSaveSuccess={mockOnSaveSuccess}
-        />,
-      );
+        const testButton = screen.getByTestId('test-connection-button');
+        await user.click(testButton);
 
-      const apiKeyInput = screen.getByPlaceholderText('sk-...');
-      await user.type(apiKeyInput, 'sk-test-key-123');
+        await screen.findByText('Connection Successful');
 
-      // First test connection
-      const testButton = screen.getByTestId('test-connection-button');
-      await user.click(testButton);
+        const saveButton = screen.getByTestId('save-configuration-button');
+        await user.click(saveButton);
 
-      await waitFor(() => {
-        expect(screen.getByText('Connection Successful')).toBeInTheDocument();
-      });
-
-      // Click save to open dialog
-      const saveButton = screen.getByTestId('save-configuration-button');
-      await user.click(saveButton);
-
-      await waitFor(() => {
-        expect(screen.getByText('Overwrite Configuration')).toBeInTheDocument();
-      });
-
-      // Confirm overwrite
-      const confirmButton = screen.getByRole('button', { name: 'Overwrite' });
-      await user.click(confirmButton);
-
-      await waitFor(() => {
-        expect(mockOnSaveSuccess).toHaveBeenCalled();
+        await waitFor(() => {
+          expect(mockOnSaveSuccess).toHaveBeenCalled();
+        });
       });
     });
 
-    it('disables save button when isSaving is true', async () => {
-      const user = userEvent.setup();
-      renderWithProvider(
-        <LLMConfigurationForm
-          organizationId={mockOrganizationId}
-          onTestConnection={mockOnTestConnection}
-          onSaveConfiguration={mockOnSaveConfiguration}
-          providers={mockProviders}
-          isSaving={true}
-        />,
-      );
+    describe('when existing configuration exists and saving', () => {
+      it('displays confirmation dialog', async () => {
+        const user = userEvent.setup();
+        const mockResponse: TestLLMConnectionResponse = {
+          provider: LLMProvider.OPENAI,
+          standardModel: { model: 'gpt-4', success: true },
+          overallSuccess: true,
+        };
+        mockOnTestConnection.mockResolvedValue(mockResponse);
 
-      const select = screen.getByRole('combobox');
-      await user.selectOptions(select, LLMProvider.OPENAI);
+        const existingConfig: LLMConfigurationDTO = {
+          provider: LLMProvider.OPENAI,
+          model: 'gpt-4',
+          fastestModel: 'gpt-4-mini',
+        };
 
-      const saveButton = screen.getByTestId('save-configuration-button');
-      expect(saveButton).toBeDisabled();
+        renderWithProvider(
+          <LLMConfigurationForm
+            organizationId={mockOrganizationId}
+            onTestConnection={mockOnTestConnection}
+            onSaveConfiguration={mockOnSaveConfiguration}
+            existingConfiguration={existingConfig}
+            providers={mockProviders}
+          />,
+        );
+
+        const apiKeyInput = screen.getByPlaceholderText('sk-...');
+        await user.type(apiKeyInput, 'sk-test-key-123');
+
+        const testButton = screen.getByTestId('test-connection-button');
+        await user.click(testButton);
+
+        await screen.findByText('Connection Successful');
+
+        const saveButton = screen.getByTestId('save-configuration-button');
+        await user.click(saveButton);
+
+        await waitFor(() => {
+          expect(
+            screen.getByText('Overwrite Configuration'),
+          ).toBeInTheDocument();
+        });
+      });
+
+      it('calls onSaveSuccess after confirming overwrite dialog', async () => {
+        const user = userEvent.setup();
+        const mockResponse: TestLLMConnectionResponse = {
+          provider: LLMProvider.OPENAI,
+          standardModel: { model: 'gpt-4', success: true },
+          overallSuccess: true,
+        };
+        mockOnTestConnection.mockResolvedValue(mockResponse);
+        mockOnSaveConfiguration.mockResolvedValue(undefined);
+        const mockOnSaveSuccess = jest.fn();
+
+        const existingConfig: LLMConfigurationDTO = {
+          provider: LLMProvider.OPENAI,
+          model: 'gpt-4',
+          fastestModel: 'gpt-4-mini',
+        };
+
+        renderWithProvider(
+          <LLMConfigurationForm
+            organizationId={mockOrganizationId}
+            onTestConnection={mockOnTestConnection}
+            onSaveConfiguration={mockOnSaveConfiguration}
+            existingConfiguration={existingConfig}
+            providers={mockProviders}
+            onSaveSuccess={mockOnSaveSuccess}
+          />,
+        );
+
+        const apiKeyInput = screen.getByPlaceholderText('sk-...');
+        await user.type(apiKeyInput, 'sk-test-key-123');
+
+        const testButton = screen.getByTestId('test-connection-button');
+        await user.click(testButton);
+
+        await screen.findByText('Connection Successful');
+
+        const saveButton = screen.getByTestId('save-configuration-button');
+        await user.click(saveButton);
+
+        await screen.findByText('Overwrite Configuration');
+
+        const confirmButton = screen.getByRole('button', { name: 'Overwrite' });
+        await user.click(confirmButton);
+
+        await waitFor(() => {
+          expect(mockOnSaveSuccess).toHaveBeenCalled();
+        });
+      });
+    });
+
+    describe('when isSaving is true', () => {
+      it('disables save button', async () => {
+        const user = userEvent.setup();
+        renderWithProvider(
+          <LLMConfigurationForm
+            organizationId={mockOrganizationId}
+            onTestConnection={mockOnTestConnection}
+            onSaveConfiguration={mockOnSaveConfiguration}
+            providers={mockProviders}
+            isSaving={true}
+          />,
+        );
+
+        const select = screen.getByRole('combobox');
+        await user.selectOptions(select, LLMProvider.OPENAI);
+
+        const saveButton = screen.getByTestId('save-configuration-button');
+        expect(saveButton).toBeDisabled();
+      });
     });
   });
 });

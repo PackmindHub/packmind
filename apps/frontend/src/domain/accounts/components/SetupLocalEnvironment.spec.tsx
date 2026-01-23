@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import '@testing-library/jest-dom';
 import { UIProvider } from '@packmind/ui';
@@ -69,81 +69,105 @@ describe('SetupLocalEnvironment', () => {
     );
   });
 
-  it('automatically generates install command on mount', () => {
-    const mutateMock = jest.fn();
-    mockUseCreateCliLoginCodeMutation.mockReturnValue({
-      ...defaultMutationResult,
-      mutate: mutateMock,
-    } as ReturnType<typeof useCreateCliLoginCodeMutation>);
+  describe('when mounting', () => {
+    it('automatically generates install command', () => {
+      const mutateMock = jest.fn();
+      mockUseCreateCliLoginCodeMutation.mockReturnValue({
+        ...defaultMutationResult,
+        mutate: mutateMock,
+      } as ReturnType<typeof useCreateCliLoginCodeMutation>);
 
-    renderWithQueryClient(<SetupLocalEnvironment />);
+      renderWithQueryClient(<SetupLocalEnvironment />);
 
-    expect(mutateMock).toHaveBeenCalledTimes(1);
+      expect(mutateMock).toHaveBeenCalledTimes(1);
+    });
   });
 
-  it('displays loading state while generating command', () => {
-    mockUseCreateCliLoginCodeMutation.mockReturnValue({
-      ...defaultMutationResult,
-      isPending: true,
-    } as ReturnType<typeof useCreateCliLoginCodeMutation>);
+  describe('when generating command', () => {
+    it('displays loading state', () => {
+      mockUseCreateCliLoginCodeMutation.mockReturnValue({
+        ...defaultMutationResult,
+        isPending: true,
+      } as ReturnType<typeof useCreateCliLoginCodeMutation>);
 
-    renderWithQueryClient(<SetupLocalEnvironment />);
+      renderWithQueryClient(<SetupLocalEnvironment />);
 
-    expect(
-      screen.getByText('Generating install command...'),
-    ).toBeInTheDocument();
+      expect(
+        screen.getByText('Generating install command...'),
+      ).toBeInTheDocument();
+    });
   });
 
-  it('displays install command when successfully generated', () => {
+  describe('when command is successfully generated', () => {
     const mockCode = 'test-login-code-123';
     const mockExpiresAt = new Date(Date.now() + 5 * 60 * 1000).toISOString();
 
-    mockUseCreateCliLoginCodeMutation.mockReturnValue({
-      ...defaultMutationResult,
-      isSuccess: true,
-      data: { code: mockCode, expiresAt: mockExpiresAt },
-    } as ReturnType<typeof useCreateCliLoginCodeMutation>);
+    beforeEach(() => {
+      mockUseCreateCliLoginCodeMutation.mockReturnValue({
+        ...defaultMutationResult,
+        isSuccess: true,
+        data: { code: mockCode, expiresAt: mockExpiresAt },
+      } as ReturnType<typeof useCreateCliLoginCodeMutation>);
 
-    renderWithQueryClient(<SetupLocalEnvironment />);
+      renderWithQueryClient(<SetupLocalEnvironment />);
+    });
 
-    expect(screen.getByTestId('install-command')).toBeInTheDocument();
-    expect(screen.getByText(/Code expires in \d+ minute/)).toBeInTheDocument();
-    expect(screen.getByText('Generate New Command')).toBeInTheDocument();
+    it('displays install command', () => {
+      expect(screen.getByTestId('install-command')).toBeInTheDocument();
+    });
+
+    it('displays expiration countdown', () => {
+      expect(
+        screen.getByText(/Code expires in \d+ minute/),
+      ).toBeInTheDocument();
+    });
+
+    it('displays generate new command button', () => {
+      expect(screen.getByText('Generate New Command')).toBeInTheDocument();
+    });
   });
 
-  it('allows generating a new command', () => {
-    const mutateMock = jest.fn();
-    const mockCode = 'test-login-code-123';
-    const mockExpiresAt = new Date(Date.now() + 5 * 60 * 1000).toISOString();
+  describe('when clicking generate new command button', () => {
+    it('calls mutate function', () => {
+      const mutateMock = jest.fn();
+      const mockCode = 'test-login-code-123';
+      const mockExpiresAt = new Date(Date.now() + 5 * 60 * 1000).toISOString();
 
-    mockUseCreateCliLoginCodeMutation.mockReturnValue({
-      ...defaultMutationResult,
-      mutate: mutateMock,
-      isSuccess: true,
-      data: { code: mockCode, expiresAt: mockExpiresAt },
-    } as ReturnType<typeof useCreateCliLoginCodeMutation>);
+      mockUseCreateCliLoginCodeMutation.mockReturnValue({
+        ...defaultMutationResult,
+        mutate: mutateMock,
+        isSuccess: true,
+        data: { code: mockCode, expiresAt: mockExpiresAt },
+      } as ReturnType<typeof useCreateCliLoginCodeMutation>);
 
-    renderWithQueryClient(<SetupLocalEnvironment />);
+      renderWithQueryClient(<SetupLocalEnvironment />);
 
-    const button = screen.getByText('Generate New Command');
-    fireEvent.click(button);
+      const button = screen.getByText('Generate New Command');
+      fireEvent.click(button);
 
-    // Should only be called once from the button click, not on mount (since data exists)
-    expect(mutateMock).toHaveBeenCalledTimes(1);
+      expect(mutateMock).toHaveBeenCalledTimes(1);
+    });
   });
 
-  it('displays error when generation fails', () => {
+  describe('when generation fails', () => {
     const mockError = new Error('Failed to generate code');
 
-    mockUseCreateCliLoginCodeMutation.mockReturnValue({
-      ...defaultMutationResult,
-      isError: true,
-      error: mockError,
-    } as ReturnType<typeof useCreateCliLoginCodeMutation>);
+    beforeEach(() => {
+      mockUseCreateCliLoginCodeMutation.mockReturnValue({
+        ...defaultMutationResult,
+        isError: true,
+        error: mockError,
+      } as ReturnType<typeof useCreateCliLoginCodeMutation>);
 
-    renderWithQueryClient(<SetupLocalEnvironment />);
+      renderWithQueryClient(<SetupLocalEnvironment />);
+    });
 
-    expect(screen.getByText('Error')).toBeInTheDocument();
-    expect(screen.getByText('Failed to generate code')).toBeInTheDocument();
+    it('displays error title', () => {
+      expect(screen.getByText('Error')).toBeInTheDocument();
+    });
+
+    it('displays error message', () => {
+      expect(screen.getByText('Failed to generate code')).toBeInTheDocument();
+    });
   });
 });

@@ -31,114 +31,153 @@ describe('PackmindGateway.createStandardFromPlaybook', () => {
     gateway = new PackmindGateway(createTestApiKey());
   });
 
-  it('successfully creates a standard from playbook via API', async () => {
-    const playbook = {
-      name: 'Test Standard',
-      description: 'Test description',
-      scope: 'Test scope',
-      rules: [
-        {
-          content: 'Use something',
-        },
-      ],
-    };
+  describe('when creating a standard from playbook via API', () => {
+    let result: Awaited<
+      ReturnType<PackmindGateway['createStandardFromPlaybook']>
+    >;
 
-    // Mock the space resolution call
-    (global.fetch as jest.Mock).mockResolvedValueOnce({
-      ok: true,
-      json: jest.fn().mockResolvedValue({
-        id: 'space-uuid-123',
-        slug: 'global',
-      }),
-    });
-
-    // Mock the standard creation call
-    (global.fetch as jest.Mock).mockResolvedValueOnce({
-      ok: true,
-      json: jest.fn().mockResolvedValue({
-        id: 'std-123',
+    beforeEach(async () => {
+      const playbook = {
         name: 'Test Standard',
-      }),
+        description: 'Test description',
+        scope: 'Test scope',
+        rules: [
+          {
+            content: 'Use something',
+          },
+        ],
+      };
+
+      // Mock the space resolution call
+      (global.fetch as jest.Mock).mockResolvedValueOnce({
+        ok: true,
+        json: jest.fn().mockResolvedValue({
+          id: 'space-uuid-123',
+          slug: 'global',
+        }),
+      });
+
+      // Mock the standard creation call
+      (global.fetch as jest.Mock).mockResolvedValueOnce({
+        ok: true,
+        json: jest.fn().mockResolvedValue({
+          id: 'std-123',
+          name: 'Test Standard',
+        }),
+      });
+
+      result = await gateway.createStandardFromPlaybook(playbook);
     });
 
-    const result = await gateway.createStandardFromPlaybook(playbook);
+    it('returns success', () => {
+      expect(result.success).toBe(true);
+    });
 
-    expect(result.success).toBe(true);
-    expect(result.standardId).toBe('std-123');
-    expect(result.name).toBe('Test Standard');
-    expect(global.fetch).toHaveBeenCalledTimes(2);
+    it('returns the standard id', () => {
+      expect(result.standardId).toBe('std-123');
+    });
+
+    it('returns the standard name', () => {
+      expect(result.name).toBe('Test Standard');
+    });
+
+    it('calls fetch twice for space and standard creation', () => {
+      expect(global.fetch).toHaveBeenCalledTimes(2);
+    });
   });
 
-  it('creates examples for rules that have them', async () => {
-    const playbook = {
-      name: 'Test Standard',
-      description: 'Test description',
-      scope: 'Test scope',
-      rules: [
-        {
-          content: 'Use something',
-          examples: {
-            positive: 'const x = 1;',
-            negative: 'var x = 1;',
-            language: 'TYPESCRIPT',
-          },
-        },
-      ],
-    };
+  describe('when creating examples for rules that have them', () => {
+    let result: Awaited<
+      ReturnType<PackmindGateway['createStandardFromPlaybook']>
+    >;
+    let exampleCall: [string, RequestInit];
 
-    // Mock the space resolution call
-    (global.fetch as jest.Mock).mockResolvedValueOnce({
-      ok: true,
-      json: jest.fn().mockResolvedValue({
-        id: 'space-uuid-123',
-        slug: 'global',
-      }),
-    });
-
-    // Mock the standard creation call
-    (global.fetch as jest.Mock).mockResolvedValueOnce({
-      ok: true,
-      json: jest.fn().mockResolvedValue({
-        id: 'std-123',
+    beforeEach(async () => {
+      const playbook = {
         name: 'Test Standard',
-      }),
+        description: 'Test description',
+        scope: 'Test scope',
+        rules: [
+          {
+            content: 'Use something',
+            examples: {
+              positive: 'const x = 1;',
+              negative: 'var x = 1;',
+              language: 'TYPESCRIPT',
+            },
+          },
+        ],
+      };
+
+      // Mock the space resolution call
+      (global.fetch as jest.Mock).mockResolvedValueOnce({
+        ok: true,
+        json: jest.fn().mockResolvedValue({
+          id: 'space-uuid-123',
+          slug: 'global',
+        }),
+      });
+
+      // Mock the standard creation call
+      (global.fetch as jest.Mock).mockResolvedValueOnce({
+        ok: true,
+        json: jest.fn().mockResolvedValue({
+          id: 'std-123',
+          name: 'Test Standard',
+        }),
+      });
+
+      // Mock the rules fetch call
+      (global.fetch as jest.Mock).mockResolvedValueOnce({
+        ok: true,
+        json: jest
+          .fn()
+          .mockResolvedValue([{ id: 'rule-1', content: 'Use something' }]),
+      });
+
+      // Mock the example creation call
+      (global.fetch as jest.Mock).mockResolvedValueOnce({
+        ok: true,
+        json: jest.fn().mockResolvedValue({
+          id: 'example-1',
+        }),
+      });
+
+      result = await gateway.createStandardFromPlaybook(playbook);
+      exampleCall = (global.fetch as jest.Mock).mock.calls[3];
     });
 
-    // Mock the rules fetch call
-    (global.fetch as jest.Mock).mockResolvedValueOnce({
-      ok: true,
-      json: jest
-        .fn()
-        .mockResolvedValue([{ id: 'rule-1', content: 'Use something' }]),
+    it('returns success', () => {
+      expect(result.success).toBe(true);
     });
 
-    // Mock the example creation call
-    (global.fetch as jest.Mock).mockResolvedValueOnce({
-      ok: true,
-      json: jest.fn().mockResolvedValue({
-        id: 'example-1',
-      }),
+    it('returns the standard id', () => {
+      expect(result.standardId).toBe('std-123');
     });
 
-    const result = await gateway.createStandardFromPlaybook(playbook);
+    it('calls fetch four times for space, standard, rules, and example', () => {
+      expect(global.fetch).toHaveBeenCalledTimes(4);
+    });
 
-    expect(result.success).toBe(true);
-    expect(result.standardId).toBe('std-123');
-    // 4 calls: space, create standard, get rules, create example
-    expect(global.fetch).toHaveBeenCalledTimes(4);
+    it('calls the example creation endpoint with the rule id', () => {
+      expect(exampleCall[0]).toContain('/rules/rule-1/examples');
+    });
 
-    // Verify the example creation call
-    const exampleCall = (global.fetch as jest.Mock).mock.calls[3];
-    expect(exampleCall[0]).toContain('/rules/rule-1/examples');
-    expect(JSON.parse(exampleCall[1].body)).toEqual({
-      lang: 'TYPESCRIPT',
-      positive: 'const x = 1;',
-      negative: 'var x = 1;',
+    it('sends the example data in the request body', () => {
+      expect(JSON.parse(exampleCall[1].body as string)).toEqual({
+        lang: 'TYPESCRIPT',
+        positive: 'const x = 1;',
+        negative: 'var x = 1;',
+      });
     });
   });
 
   describe('when space resolution fails', () => {
-    it('returns error', async () => {
+    let result: Awaited<
+      ReturnType<PackmindGateway['createStandardFromPlaybook']>
+    >;
+
+    beforeEach(async () => {
       const playbook = {
         name: 'Test',
         description: 'Test',
@@ -152,15 +191,24 @@ describe('PackmindGateway.createStandardFromPlaybook', () => {
         statusText: 'Not Found',
       });
 
-      const result = await gateway.createStandardFromPlaybook(playbook);
+      result = await gateway.createStandardFromPlaybook(playbook);
+    });
 
+    it('returns failure', () => {
       expect(result.success).toBe(false);
+    });
+
+    it('returns error message about space resolution', () => {
       expect(result.error).toContain('Failed to resolve global space');
     });
   });
 
   describe('when standard creation fails', () => {
-    it('returns error', async () => {
+    let result: Awaited<
+      ReturnType<PackmindGateway['createStandardFromPlaybook']>
+    >;
+
+    beforeEach(async () => {
       const playbook = {
         name: 'Test',
         description: 'Test',
@@ -187,15 +235,24 @@ describe('PackmindGateway.createStandardFromPlaybook', () => {
         }),
       });
 
-      const result = await gateway.createStandardFromPlaybook(playbook);
+      result = await gateway.createStandardFromPlaybook(playbook);
+    });
 
+    it('returns failure', () => {
       expect(result.success).toBe(false);
+    });
+
+    it('returns error message about standard creation', () => {
       expect(result.error).toContain('Failed to create standard');
     });
   });
 
   describe('when not logged in', () => {
-    it('returns error', async () => {
+    let result: Awaited<
+      ReturnType<PackmindGateway['createStandardFromPlaybook']>
+    >;
+
+    beforeEach(async () => {
       gateway = new PackmindGateway('');
 
       const playbook = {
@@ -205,67 +262,82 @@ describe('PackmindGateway.createStandardFromPlaybook', () => {
         rules: [{ content: 'Use something' }],
       };
 
-      const result = await gateway.createStandardFromPlaybook(playbook);
+      result = await gateway.createStandardFromPlaybook(playbook);
+    });
 
+    it('returns failure', () => {
       expect(result.success).toBe(false);
+    });
+
+    it('returns error message about not being logged in', () => {
       expect(result.error).toContain('Not logged in');
     });
   });
 
-  it('succeeds even if example creation fails', async () => {
-    const playbook = {
-      name: 'Test Standard',
-      description: 'Test description',
-      scope: 'Test scope',
-      rules: [
-        {
-          content: 'Use something',
-          examples: {
-            positive: 'const x = 1;',
-            negative: 'var x = 1;',
-            language: 'TYPESCRIPT',
-          },
-        },
-      ],
-    };
+  describe('when example creation fails', () => {
+    let result: Awaited<
+      ReturnType<PackmindGateway['createStandardFromPlaybook']>
+    >;
 
-    // Mock the space resolution call
-    (global.fetch as jest.Mock).mockResolvedValueOnce({
-      ok: true,
-      json: jest.fn().mockResolvedValue({
-        id: 'space-uuid-123',
-        slug: 'global',
-      }),
-    });
-
-    // Mock the standard creation call
-    (global.fetch as jest.Mock).mockResolvedValueOnce({
-      ok: true,
-      json: jest.fn().mockResolvedValue({
-        id: 'std-123',
+    beforeEach(async () => {
+      const playbook = {
         name: 'Test Standard',
-      }),
+        description: 'Test description',
+        scope: 'Test scope',
+        rules: [
+          {
+            content: 'Use something',
+            examples: {
+              positive: 'const x = 1;',
+              negative: 'var x = 1;',
+              language: 'TYPESCRIPT',
+            },
+          },
+        ],
+      };
+
+      // Mock the space resolution call
+      (global.fetch as jest.Mock).mockResolvedValueOnce({
+        ok: true,
+        json: jest.fn().mockResolvedValue({
+          id: 'space-uuid-123',
+          slug: 'global',
+        }),
+      });
+
+      // Mock the standard creation call
+      (global.fetch as jest.Mock).mockResolvedValueOnce({
+        ok: true,
+        json: jest.fn().mockResolvedValue({
+          id: 'std-123',
+          name: 'Test Standard',
+        }),
+      });
+
+      // Mock the rules fetch call
+      (global.fetch as jest.Mock).mockResolvedValueOnce({
+        ok: true,
+        json: jest
+          .fn()
+          .mockResolvedValue([{ id: 'rule-1', content: 'Use something' }]),
+      });
+
+      // Mock failed example creation
+      (global.fetch as jest.Mock).mockResolvedValueOnce({
+        ok: false,
+        status: 500,
+        statusText: 'Internal Server Error',
+      });
+
+      result = await gateway.createStandardFromPlaybook(playbook);
     });
 
-    // Mock the rules fetch call
-    (global.fetch as jest.Mock).mockResolvedValueOnce({
-      ok: true,
-      json: jest
-        .fn()
-        .mockResolvedValue([{ id: 'rule-1', content: 'Use something' }]),
+    it('still returns success for standard creation', () => {
+      expect(result.success).toBe(true);
     });
 
-    // Mock failed example creation
-    (global.fetch as jest.Mock).mockResolvedValueOnce({
-      ok: false,
-      status: 500,
-      statusText: 'Internal Server Error',
+    it('returns the standard id', () => {
+      expect(result.standardId).toBe('std-123');
     });
-
-    const result = await gateway.createStandardFromPlaybook(playbook);
-
-    // Standard creation should still succeed
-    expect(result.success).toBe(true);
-    expect(result.standardId).toBe('std-123');
   });
 });

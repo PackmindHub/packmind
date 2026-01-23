@@ -154,11 +154,18 @@ describe('DeploymentsPage', () => {
     jest.clearAllMocks();
   });
 
-  it('displays view toggle buttons', async () => {
-    await renderWithProvider(<DeploymentsPage />);
+  describe('view toggle buttons', () => {
+    beforeEach(async () => {
+      await renderWithProvider(<DeploymentsPage />);
+    });
 
-    expect(screen.getByText('Repositories')).toBeInTheDocument();
-    expect(screen.getByText('Artifacts')).toBeInTheDocument();
+    it('displays Repositories button', async () => {
+      expect(screen.getByText('Repositories')).toBeInTheDocument();
+    });
+
+    it('displays Artifacts button', async () => {
+      expect(screen.getByText('Artifacts')).toBeInTheDocument();
+    });
   });
 
   it('shows loading state initially', async () => {
@@ -220,186 +227,202 @@ describe('DeploymentsPage', () => {
 
   // Removed recipe view; artifacts view now hosts the text search and status filter
 
-  it('shows repository status dropdown in repository view', async () => {
-    await renderWithProvider(<DeploymentsPage />);
+  describe('repository view', () => {
+    beforeEach(async () => {
+      await renderWithProvider(<DeploymentsPage />);
+    });
 
-    // In repository view (default) - the repository status select should be visible
-    expect(screen.getByText('All statuses')).toBeInTheDocument();
-    expect(screen.queryByText('Undeployed recipes')).not.toBeInTheDocument();
+    it('displays repository status dropdown', async () => {
+      expect(screen.getByText('All statuses')).toBeInTheDocument();
+    });
+
+    it('hides undeployed recipes option', async () => {
+      expect(screen.queryByText('Undeployed recipes')).not.toBeInTheDocument();
+    });
   });
 
-  it('calls setSearchParams when switching views', async () => {
-    const user = userEvent.setup();
-    await renderWithProvider(<DeploymentsPage />);
+  describe('when switching views', () => {
+    let user: ReturnType<typeof userEvent.setup>;
 
-    // Initially in repository view
-    expect(screen.getByPlaceholderText('All repositories')).toBeInTheDocument();
+    beforeEach(async () => {
+      user = userEvent.setup();
+      await renderWithProvider(<DeploymentsPage />);
+    });
 
-    // Switch to artifacts view - should call setSearchParams
-    await user.click(screen.getByText('Artifacts'));
-    expect(mockSetSearchParams).toHaveBeenCalled();
+    it('starts in repository view', async () => {
+      expect(
+        screen.getByPlaceholderText('All repositories'),
+      ).toBeInTheDocument();
+    });
+
+    it('calls setSearchParams after clicking Artifacts', async () => {
+      await user.click(screen.getByText('Artifacts'));
+      expect(mockSetSearchParams).toHaveBeenCalled();
+    });
   });
 
   describe('when typing in the search field', () => {
-    beforeEach(() => jest.useFakeTimers());
+    let user: ReturnType<typeof userEvent.setup>;
 
-    afterEach(() => jest.useRealTimers());
-
-    it('debounces setSearchParams calls to avoid URL history pollution', async () => {
-      const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
+    beforeEach(async () => {
+      jest.useFakeTimers();
+      user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
       // Start directly in artifacts view to avoid extra setSearchParams from tab switch
       mockSearchParams.set('view', 'artifacts');
       await renderWithProvider(<DeploymentsPage />);
       const searchInput = screen.getByRole('textbox');
       await user.type(searchInput, 'test-search');
+    });
 
-      // Initially, setSearchParams should not have been called due to debouncing
+    afterEach(() => jest.useRealTimers());
+
+    it('debounces setSearchParams calls initially', async () => {
       expect(mockSetSearchParams).not.toHaveBeenCalled();
+    });
 
-      // Fast-forward time to trigger the debounced function
+    it('calls setSearchParams after debounce timeout', async () => {
       jest.advanceTimersByTime(500);
-
-      // Now setSearchParams should have been called
       expect(mockSetSearchParams).toHaveBeenCalled();
     });
   });
 
-  it('calls setSearchParams when changing repository status filter', async () => {
-    const user = userEvent.setup({ pointerEventsCheck: 0 });
-    await renderWithProvider(<DeploymentsPage />);
+  describe('when changing repository status filter', () => {
+    it('calls setSearchParams', async () => {
+      const user = userEvent.setup({ pointerEventsCheck: 0 });
+      await renderWithProvider(<DeploymentsPage />);
 
-    // Open the combobox via trigger button (more reliable than portal clicking)
-    const comboPlaceholder = screen.getByText('All statuses');
-    await user.click(comboPlaceholder);
-    // Move to 'Outdated' (2nd item) and select
-    await user.keyboard('{ArrowDown}{ArrowDown}{Enter}');
+      // Open the combobox via trigger button (more reliable than portal clicking)
+      const comboPlaceholder = screen.getByText('All statuses');
+      await user.click(comboPlaceholder);
+      // Move to 'Outdated' (2nd item) and select
+      await user.keyboard('{ArrowDown}{ArrowDown}{Enter}');
 
-    await waitFor(() => expect(mockSetSearchParams).toHaveBeenCalled());
+      await waitFor(() => expect(mockSetSearchParams).toHaveBeenCalled());
+    });
   });
 
-  it('maintains search state when switching views', async () => {
-    const user = userEvent.setup();
+  describe('when switching views with existing search state', () => {
+    let user: ReturnType<typeof userEvent.setup>;
 
-    // Mock URL params to simulate search state
-    mockSearchParams.set('search', 'test-search');
+    beforeEach(async () => {
+      user = userEvent.setup();
+      // Mock URL params to simulate search state
+      mockSearchParams.set('search', 'test-search');
+      await renderWithProvider(<DeploymentsPage />);
+      // Switch to artifacts view where the text search input is displayed
+      await user.click(screen.getByText('Artifacts'));
+    });
 
-    await renderWithProvider(<DeploymentsPage />);
-    // Switch to artifacts view where the text search input is displayed
-    await user.click(screen.getByText('Artifacts'));
-    // Verify initial search term by value
-    expect(screen.getByDisplayValue('test-search')).toBeInTheDocument();
+    it('maintains search term in artifacts view', async () => {
+      expect(screen.getByDisplayValue('test-search')).toBeInTheDocument();
+    });
 
-    // Switch to artifacts view again - this should call setSearchParams
-    await user.click(screen.getByText('Artifacts'));
-
-    // Verify that setSearchParams was called to update the view
-    expect(mockSetSearchParams).toHaveBeenCalled();
+    it('calls setSearchParams after clicking Artifacts again', async () => {
+      await user.click(screen.getByText('Artifacts'));
+      expect(mockSetSearchParams).toHaveBeenCalled();
+    });
   });
 
   describe('target filter state management', () => {
-    it('automatically cleans up invalid target names when data updates', async () => {
-      // Set up initial data with specific targets
+    describe('when data updates with mixed valid and invalid target names', () => {
       const initialData = createDeploymentOverview();
       const validTargetName =
         initialData.targets[0]?.target.name || 'Production';
       const invalidTargetName = 'invalid-target-name';
 
-      // Mock URL params with both valid and invalid target names
-      mockSearchParams.set(
-        'targetFilter',
-        `${validTargetName},${invalidTargetName}`,
-      );
+      beforeEach(async () => {
+        mockSearchParams.set(
+          'targetFilter',
+          `${validTargetName},${invalidTargetName}`,
+        );
 
-      mockUseGetRecipesDeploymentOverview.mockReturnValue({
-        data: initialData,
-        isLoading: false,
-        error: null,
-        isError: false,
-        isPending: false,
-        isSuccess: true,
-        refetch: jest.fn(),
-      } as Partial<UseQueryResult<DeploymentOverview, Error>> as UseQueryResult<
-        DeploymentOverview,
-        Error
-      >);
+        mockUseGetRecipesDeploymentOverview.mockReturnValue({
+          data: initialData,
+          isLoading: false,
+          error: null,
+          isError: false,
+          isPending: false,
+          isSuccess: true,
+          refetch: jest.fn(),
+        } as Partial<
+          UseQueryResult<DeploymentOverview, Error>
+        > as UseQueryResult<DeploymentOverview, Error>);
 
-      await renderWithProvider(<DeploymentsPage />);
+        await renderWithProvider(<DeploymentsPage />);
+      });
 
-      // Verify that setSearchParams was called to clean up invalid target names
-      expect(mockSetSearchParams).toHaveBeenCalledWith(expect.any(Function));
+      it('calls setSearchParams to clean up invalid target names', async () => {
+        expect(mockSetSearchParams).toHaveBeenCalledWith(expect.any(Function));
+      });
 
-      // Simulate the URL update by calling the function passed to setSearchParams
-      const updateFunction = mockSetSearchParams.mock.calls[0][0];
-      const updatedParams = updateFunction(mockSearchParams);
-
-      // The updated params should only contain the valid target name
-      expect(updatedParams.get('targetFilter')).toBe(validTargetName);
+      it('keeps only valid target name in updated params', async () => {
+        const updateFunction = mockSetSearchParams.mock.calls[0][0];
+        const updatedParams = updateFunction(mockSearchParams);
+        expect(updatedParams.get('targetFilter')).toBe(validTargetName);
+      });
     });
 
-    it('removes targetFilter param when all selected targets become invalid', async () => {
-      // Set up initial data
-      const initialData = createDeploymentOverview();
-      const invalidTargetName1 = 'invalid-target-1';
-      const invalidTargetName2 = 'invalid-target-2';
+    describe('when all selected targets become invalid', () => {
+      beforeEach(async () => {
+        const initialData = createDeploymentOverview();
+        const invalidTargetName1 = 'invalid-target-1';
+        const invalidTargetName2 = 'invalid-target-2';
 
-      // Mock URL params with only invalid target names
-      mockSearchParams.set(
-        'targetFilter',
-        `${invalidTargetName1},${invalidTargetName2}`,
-      );
+        mockSearchParams.set(
+          'targetFilter',
+          `${invalidTargetName1},${invalidTargetName2}`,
+        );
 
-      mockUseGetRecipesDeploymentOverview.mockReturnValue({
-        data: initialData,
-        isLoading: false,
-        error: null,
-        isError: false,
-        isPending: false,
-        isSuccess: true,
-        refetch: jest.fn(),
-      } as Partial<UseQueryResult<DeploymentOverview, Error>> as UseQueryResult<
-        DeploymentOverview,
-        Error
-      >);
+        mockUseGetRecipesDeploymentOverview.mockReturnValue({
+          data: initialData,
+          isLoading: false,
+          error: null,
+          isError: false,
+          isPending: false,
+          isSuccess: true,
+          refetch: jest.fn(),
+        } as Partial<
+          UseQueryResult<DeploymentOverview, Error>
+        > as UseQueryResult<DeploymentOverview, Error>);
 
-      await renderWithProvider(<DeploymentsPage />);
+        await renderWithProvider(<DeploymentsPage />);
+      });
 
-      // Verify that setSearchParams was called to clean up invalid target names
-      expect(mockSetSearchParams).toHaveBeenCalledWith(expect.any(Function));
+      it('calls setSearchParams to clean up invalid target names', async () => {
+        expect(mockSetSearchParams).toHaveBeenCalledWith(expect.any(Function));
+      });
 
-      // Simulate the URL update by calling the function passed to setSearchParams
-      const updateFunction = mockSetSearchParams.mock.calls[0][0];
-      const updatedParams = updateFunction(mockSearchParams);
-
-      // The targetFilter param should be removed when no valid targets remain
-      expect(updatedParams.has('targetFilter')).toBe(false);
+      it('removes targetFilter param from updated params', async () => {
+        const updateFunction = mockSetSearchParams.mock.calls[0][0];
+        const updatedParams = updateFunction(mockSearchParams);
+        expect(updatedParams.has('targetFilter')).toBe(false);
+      });
     });
 
-    it('does not update URL when all selected targets are valid', async () => {
-      // Set up initial data with specific targets
-      const initialData = createDeploymentOverview();
-      const validTargetName =
-        initialData.targets[0]?.target.name || 'Production';
+    describe('when all selected targets are valid', () => {
+      it('does not call setSearchParams', async () => {
+        const initialData = createDeploymentOverview();
+        const validTargetName =
+          initialData.targets[0]?.target.name || 'Production';
 
-      // Mock URL params with only valid target names
-      mockSearchParams.set('targetFilter', validTargetName);
+        mockSearchParams.set('targetFilter', validTargetName);
 
-      mockUseGetRecipesDeploymentOverview.mockReturnValue({
-        data: initialData,
-        isLoading: false,
-        error: null,
-        isError: false,
-        isPending: false,
-        isSuccess: true,
-        refetch: jest.fn(),
-      } as Partial<UseQueryResult<DeploymentOverview, Error>> as UseQueryResult<
-        DeploymentOverview,
-        Error
-      >);
+        mockUseGetRecipesDeploymentOverview.mockReturnValue({
+          data: initialData,
+          isLoading: false,
+          error: null,
+          isError: false,
+          isPending: false,
+          isSuccess: true,
+          refetch: jest.fn(),
+        } as Partial<
+          UseQueryResult<DeploymentOverview, Error>
+        > as UseQueryResult<DeploymentOverview, Error>);
 
-      await renderWithProvider(<DeploymentsPage />);
+        await renderWithProvider(<DeploymentsPage />);
 
-      // setSearchParams should not be called when all targets are valid
-      expect(mockSetSearchParams).not.toHaveBeenCalled();
+        expect(mockSetSearchParams).not.toHaveBeenCalled();
+      });
     });
   });
 });

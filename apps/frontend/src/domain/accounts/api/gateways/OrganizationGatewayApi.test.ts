@@ -36,90 +36,120 @@ describe('OrganizationGatewayApi', () => {
   });
 
   describe('createOrganization', () => {
-    it('calls API service with correct parameters', async () => {
+    describe('when API call succeeds', () => {
       const mockResponse = { id: '1', name: 'Test Org', slug: 'test-org' };
-      mockApiPost.mockResolvedValue(mockResponse);
+      let result: typeof mockResponse;
 
-      const result = await gateway.createOrganization({ name: 'Test Org' });
-
-      expect(mockApiPost).toHaveBeenCalledWith('/organizations', {
-        name: 'Test Org',
+      beforeEach(async () => {
+        mockApiPost.mockResolvedValue(mockResponse);
+        result = await gateway.createOrganization({ name: 'Test Org' });
       });
-      expect(result).toEqual(mockResponse);
+
+      it('calls API service with correct parameters', () => {
+        expect(mockApiPost).toHaveBeenCalledWith('/organizations', {
+          name: 'Test Org',
+        });
+      });
+
+      it('returns the API response', () => {
+        expect(result).toEqual(mockResponse);
+      });
     });
 
-    it('handles API errors', async () => {
-      const error = new Error('Network error');
-      mockApiPost.mockRejectedValue(error);
+    describe('when API call fails', () => {
+      it('throws the error', async () => {
+        const error = new Error('Network error');
+        mockApiPost.mockRejectedValue(error);
 
-      await expect(
-        gateway.createOrganization({ name: 'Test Org' }),
-      ).rejects.toThrow('Network error');
+        await expect(
+          gateway.createOrganization({ name: 'Test Org' }),
+        ).rejects.toThrow('Network error');
+      });
     });
   });
 
   describe('inviteUsers', () => {
-    it('calls API service with correct parameters', async () => {
+    describe('when API call succeeds', () => {
       const mockResponse = {
         created: [{ email: 'test@example.com', userId: 'user123' }],
         organizationInvitations: [],
         skipped: [],
       };
-      mockApiPost.mockResolvedValue(mockResponse);
+      let result: typeof mockResponse;
 
-      const result = await gateway.inviteUsers({
-        organizationId: 'org123',
-        emails: ['test@example.com'],
-        role: 'member',
+      beforeEach(async () => {
+        mockApiPost.mockResolvedValue(mockResponse);
+        result = await gateway.inviteUsers({
+          organizationId: 'org123',
+          emails: ['test@example.com'],
+          role: 'member',
+        });
       });
 
-      expect(mockApiPost).toHaveBeenCalledWith(
-        '/organizations/org123/users/invite',
-        { emails: ['test@example.com'], role: 'member' },
-      );
-      expect(result).toEqual(mockResponse);
+      it('calls API service with correct parameters', () => {
+        expect(mockApiPost).toHaveBeenCalledWith(
+          '/organizations/org123/users/invite',
+          { emails: ['test@example.com'], role: 'member' },
+        );
+      });
+
+      it('returns the API response', () => {
+        expect(result).toEqual(mockResponse);
+      });
     });
 
-    it('handles API errors', async () => {
-      const error = new Error('Invalid email');
-      mockApiPost.mockRejectedValue(error);
+    describe('when API call fails', () => {
+      it('throws the error', async () => {
+        const error = new Error('Invalid email');
+        mockApiPost.mockRejectedValue(error);
 
-      await expect(
-        gateway.inviteUsers({
-          organizationId: 'org123',
-          emails: ['invalid-email'],
-          role: 'member',
-        }),
-      ).rejects.toThrow('Invalid email');
+        await expect(
+          gateway.inviteUsers({
+            organizationId: 'org123',
+            emails: ['invalid-email'],
+            role: 'member',
+          }),
+        ).rejects.toThrow('Invalid email');
+      });
     });
   });
 
   describe('removeUser', () => {
-    it('calls API service with correct parameters', async () => {
+    describe('when API call succeeds', () => {
       const mockResponse = { removed: true };
-      mockApiDelete.mockResolvedValue(mockResponse);
+      let result: typeof mockResponse;
 
-      const result = await gateway.removeUser({
-        organizationId: 'org123',
-        targetUserId: 'user456',
-      });
-
-      expect(mockApiDelete).toHaveBeenCalledWith(
-        '/organizations/org123/users/user456',
-      );
-      expect(result).toEqual(mockResponse);
-    });
-
-    it('handles API errors', async () => {
-      const error = new Error('User not found');
-      mockApiDelete.mockRejectedValue(error);
-
-      await expect(
-        gateway.removeUser({
+      beforeEach(async () => {
+        mockApiDelete.mockResolvedValue(mockResponse);
+        result = await gateway.removeUser({
           organizationId: 'org123',
           targetUserId: 'user456',
-        }),
-      ).rejects.toThrow('User not found');
+        });
+      });
+
+      it('calls API service with correct parameters', () => {
+        expect(mockApiDelete).toHaveBeenCalledWith(
+          '/organizations/org123/users/user456',
+        );
+      });
+
+      it('returns the API response', () => {
+        expect(result).toEqual(mockResponse);
+      });
+    });
+
+    describe('when API call fails', () => {
+      it('throws the error', async () => {
+        const error = new Error('User not found');
+        mockApiDelete.mockRejectedValue(error);
+
+        await expect(
+          gateway.removeUser({
+            organizationId: 'org123',
+            targetUserId: 'user456',
+          }),
+        ).rejects.toThrow('User not found');
+      });
     });
   });
 });

@@ -37,7 +37,9 @@ describe('organization resource loaders', () => {
   });
 
   describe('when a standard does not belong to the current space', () => {
-    it('redirects to dashboard', async () => {
+    let redirectResponse: Response | null = null;
+
+    beforeEach(async () => {
       ensureQueryDataMock
         .mockResolvedValueOnce({
           organization: { id: 'org-1', slug: 'org-slug', name: 'Org Name' },
@@ -45,7 +47,6 @@ describe('organization resource loaders', () => {
         .mockResolvedValueOnce({ id: 'space-1' })
         .mockResolvedValueOnce({ standards: [] });
 
-      let redirectResponse: Response | null = null;
       try {
         await standardLoader({
           params: {
@@ -56,15 +57,25 @@ describe('organization resource loaders', () => {
       } catch (response) {
         redirectResponse = response as Response;
       }
+    });
 
+    it('redirects to dashboard', () => {
       expect(redirectResponse).toBeTruthy();
+    });
+
+    it('does not display an error toast', () => {
       expect(pmToasterErrorMock).not.toHaveBeenCalled();
+    });
+
+    it('calls ensureQueryData twice', () => {
       expect(ensureQueryDataMock).toHaveBeenCalledTimes(2);
     });
   });
 
   describe('when a package does not belong to the current space', () => {
-    it('redirects to dashboard', async () => {
+    let redirectResponse: Response | null = null;
+
+    beforeEach(async () => {
       ensureQueryDataMock
         .mockResolvedValueOnce({
           organization: { id: 'org-1', slug: 'org-slug', name: 'Org Name' },
@@ -72,7 +83,6 @@ describe('organization resource loaders', () => {
         .mockResolvedValueOnce({ id: 'space-1' })
         .mockResolvedValueOnce({ packages: [] });
 
-      let redirectResponse: Response | null = null;
       try {
         await packageLoader({
           params: {
@@ -84,15 +94,25 @@ describe('organization resource loaders', () => {
       } catch (response) {
         redirectResponse = response as Response;
       }
+    });
 
+    it('redirects to dashboard', () => {
       expect(redirectResponse).toBeTruthy();
+    });
+
+    it('does not display an error toast', () => {
       expect(pmToasterErrorMock).not.toHaveBeenCalled();
+    });
+
+    it('calls ensureQueryData three times', () => {
       expect(ensureQueryDataMock).toHaveBeenCalledTimes(3);
     });
   });
 
   describe('when a recipe does not belong to the current space', () => {
-    it('redirects to dashboard', async () => {
+    let redirectResponse: Response | null = null;
+
+    beforeEach(async () => {
       ensureQueryDataMock
         .mockResolvedValueOnce({
           organization: { id: 'org-1', slug: 'org-slug', name: 'Org Name' },
@@ -100,7 +120,6 @@ describe('organization resource loaders', () => {
         .mockResolvedValueOnce({ id: 'space-1' })
         .mockResolvedValueOnce({ recipes: [] });
 
-      let redirectResponse: Response | null = null;
       try {
         await recipeLoader({
           params: {
@@ -112,9 +131,17 @@ describe('organization resource loaders', () => {
       } catch (response) {
         redirectResponse = response as Response;
       }
+    });
 
+    it('redirects to dashboard', () => {
       expect(redirectResponse).toBeTruthy();
+    });
+
+    it('does not display an error toast', () => {
       expect(pmToasterErrorMock).not.toHaveBeenCalled();
+    });
+
+    it('calls ensureQueryData three times', () => {
       expect(ensureQueryDataMock).toHaveBeenCalledTimes(3);
     });
   });

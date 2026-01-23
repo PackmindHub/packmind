@@ -41,21 +41,34 @@ describe('FileCredentialsProvider', () => {
   });
 
   describe('getCredentialsPath', () => {
-    it('returns path in home directory with .packmind/credentials.json', () => {
-      const result = getCredentialsPath();
+    let result: string;
 
+    beforeEach(() => {
+      result = getCredentialsPath();
+    });
+
+    it('returns path containing .packmind', () => {
       expect(result).toContain('.packmind');
+    });
+
+    it('returns path containing credentials.json', () => {
       expect(result).toContain('credentials.json');
     });
   });
 
   describe('getSourceName', () => {
-    it('returns the credentials file path', () => {
+    let sourceName: string;
+
+    beforeEach(() => {
       const provider = new FileCredentialsProvider();
+      sourceName = provider.getSourceName();
+    });
 
-      const sourceName = provider.getSourceName();
-
+    it('returns source name containing .packmind', () => {
       expect(sourceName).toContain('.packmind');
+    });
+
+    it('returns source name containing credentials.json', () => {
       expect(sourceName).toContain('credentials.json');
     });
   });

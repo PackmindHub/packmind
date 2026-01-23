@@ -23,45 +23,67 @@ describe('createStandardHandler', () => {
     await fs.rm(tempDir, { recursive: true, force: true });
   });
 
-  it('creates a standard from valid playbook file', async () => {
-    const playbook = {
-      name: 'Test Standard',
-      description: 'Test',
-      scope: 'Test',
-      rules: [{ content: 'Use something' }],
-    };
+  describe('when creating a standard from valid playbook file', () => {
+    let result: Awaited<ReturnType<typeof createStandardHandler>>;
 
-    const filePath = path.join(tempDir, 'playbook.json');
-    await fs.writeFile(filePath, JSON.stringify(playbook));
-
-    const result = await createStandardHandler(filePath, mockGateway);
-
-    expect(result.success).toBe(true);
-    expect(mockGateway.createStandardFromPlaybook).toHaveBeenCalledWith(
-      expect.objectContaining({
+    beforeEach(async () => {
+      const playbook = {
         name: 'Test Standard',
-      }),
-    );
+        description: 'Test',
+        scope: 'Test',
+        rules: [{ content: 'Use something' }],
+      };
+
+      const filePath = path.join(tempDir, 'playbook.json');
+      await fs.writeFile(filePath, JSON.stringify(playbook));
+
+      result = await createStandardHandler(filePath, mockGateway);
+    });
+
+    it('returns success', () => {
+      expect(result.success).toBe(true);
+    });
+
+    it('calls gateway with correct playbook data', () => {
+      expect(mockGateway.createStandardFromPlaybook).toHaveBeenCalledWith(
+        expect.objectContaining({
+          name: 'Test Standard',
+        }),
+      );
+    });
   });
 
   describe('when file is not found', () => {
-    it('returns error', async () => {
-      const result = await createStandardHandler(
-        '/nonexistent.json',
-        mockGateway,
-      );
+    let result: Awaited<ReturnType<typeof createStandardHandler>>;
+
+    beforeEach(async () => {
+      result = await createStandardHandler('/nonexistent.json', mockGateway);
+    });
+
+    it('returns failure', () => {
       expect(result.success).toBe(false);
+    });
+
+    it('includes error details', () => {
       expect(result.error).toBeDefined();
     });
   });
 
   describe('when playbook is invalid', () => {
-    it('returns error', async () => {
+    let result: Awaited<ReturnType<typeof createStandardHandler>>;
+
+    beforeEach(async () => {
       const filePath = path.join(tempDir, 'invalid.json');
       await fs.writeFile(filePath, '{ "invalid": "structure" }');
 
-      const result = await createStandardHandler(filePath, mockGateway);
+      result = await createStandardHandler(filePath, mockGateway);
+    });
+
+    it('returns failure', () => {
       expect(result.success).toBe(false);
+    });
+
+    it('includes error details', () => {
       expect(result.error).toBeDefined();
     });
   });
