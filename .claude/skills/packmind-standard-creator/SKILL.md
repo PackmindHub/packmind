@@ -224,7 +224,23 @@ The validator checks:
 
 If validation fails, fix the reported errors and run validation again before proceeding.
 
-### Step 4: Creating the Standard via CLI
+### Step 4: Review Before Submission
+
+**Before running the CLI command**, you MUST get explicit user approval:
+
+1. Show the user the complete playbook content in a formatted preview:
+   - Name
+   - Description
+   - Scope
+   - Each rule with its content and examples (if any)
+
+2. Ask: **"Here is the standard that will be created on Packmind. Do you approve?"**
+
+3. **Wait for explicit user confirmation** before proceeding to Step 5.
+
+4. If the user requests changes, go back to Step 2 or Step 3 to make adjustments.
+
+### Step 5: Creating the Standard via CLI
 
 Run the packmind-cli command to create the standard:
 
@@ -263,7 +279,7 @@ packmind-cli login
 - Verify JSON syntax is valid (use a JSON validator)
 - Check that rules array has at least one entry
 
-### Step 5: Verifying the Standard
+### Step 6: Verifying the Standard
 
 After creation, verify the standard was created correctly:
 
@@ -271,7 +287,7 @@ After creation, verify the standard was created correctly:
 2. **Verify rules**: Ensure all rules appear with correct content
 3. **Check examples**: Confirm code examples are properly formatted
 
-### Step 6: Iterate and Improve
+### Step 7: Iterate and Improve
 
 Standards benefit from iteration. Consider:
 
