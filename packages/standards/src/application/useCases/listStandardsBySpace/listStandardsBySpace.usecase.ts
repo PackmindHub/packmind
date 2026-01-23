@@ -66,6 +66,7 @@ export class ListStandardsBySpaceUsecase
       // Standards are now always space-specific, no organization-level standards
       const standardsInSpace = await this.standardService.listStandardsBySpace(
         command.spaceId,
+        { includeDeleted: command.includeDeleted },
       );
 
       const sortedStandards = standardsInSpace.sort((a, b) =>

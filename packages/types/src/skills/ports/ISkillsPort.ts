@@ -1,4 +1,5 @@
 import { OrganizationId } from '../../accounts/Organization';
+import type { QueryOption } from '../../database/types';
 import { SpaceId } from '../../spaces/SpaceId';
 import { Skill } from '../Skill';
 import { SkillFile } from '../SkillFile';
@@ -17,6 +18,7 @@ export interface ISkillsPort {
     spaceId: SpaceId,
     organizationId: OrganizationId,
     userId: string,
+    opts?: Pick<QueryOption, 'includeDeleted'>,
   ): Promise<Skill[]>;
   findSkillBySlug(
     slug: string,

@@ -1,4 +1,5 @@
 import { OrganizationId } from '../../accounts/Organization';
+import type { QueryOption } from '../../database/types';
 import { SpaceId } from '../../spaces/SpaceId';
 import { Rule } from '../Rule';
 import { RuleExample } from '../RuleExample';
@@ -27,6 +28,7 @@ export interface IStandardsPort {
     spaceId: SpaceId,
     organizationId: OrganizationId,
     userId: string,
+    opts?: Pick<QueryOption, 'includeDeleted'>,
   ): Promise<Standard[]>;
   getRuleCodeExamples(id: RuleId): Promise<RuleExample[]>;
   findStandardBySlug(

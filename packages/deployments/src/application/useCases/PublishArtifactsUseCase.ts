@@ -130,6 +130,7 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
 
         // Get previous deployments for all targets in this repo
         const {
+          previous: previousRecipeVersions,
           previousFromPackages: previousRecipeVersionsFromPackages,
           combined: allRecipeVersions,
         } = await this.collectAllRecipeVersions(
@@ -138,6 +139,7 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
           recipeVersions,
         );
         const {
+          previous: previousStandardVersions,
           previousFromPackages: previousStandardVersionsFromPackages,
           combined: allStandardVersions,
         } = await this.collectAllStandardVersions(
@@ -146,26 +148,76 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
           standardVersions,
         );
         const {
+          previous: previousSkillVersions,
           previousFromPackages: previousSkillVersionsFromPackages,
           combined: allSkillVersions,
         } = await this.collectAllSkillVersions(command, targets, skillVersions);
 
         // Compute removed artifacts (previously deployed from the same packages but not in new deployment command)
         // Only compare against artifacts from the packages being deployed to avoid removing artifacts from other packages
-        const removedRecipeVersions = this.computeRemovedRecipeVersions(
-          previousRecipeVersionsFromPackages,
-          recipeVersions, // Compare against new versions from command, not combined
+        const removedRecipeVersionsFromDeployedPackages =
+          this.computeRemovedRecipeVersions(
+            previousRecipeVersionsFromPackages,
+            recipeVersions,
+          );
+        // Artifacts from other packages = in previous (all packages) but NOT from the deployed packages
+        const recipeVersionsFromOtherPackages = previousRecipeVersions.filter(
+          (pv) =>
+            !previousRecipeVersionsFromPackages.some(
+              (pfp) => pfp.recipeId === pv.recipeId,
+            ),
         );
+        // Only truly remove if not still present via other packages
+        const removedRecipeVersions =
+          removedRecipeVersionsFromDeployedPackages.filter(
+            (rrv) =>
+              !recipeVersionsFromOtherPackages.some(
+                (rv) => rv.recipeId === rrv.recipeId,
+              ),
+          );
 
-        const removedStandardVersions = this.computeRemovedStandardVersions(
-          previousStandardVersionsFromPackages,
-          standardVersions, // Compare against new versions from command, not combined
-        );
+        const removedStandardVersionsFromDeployedPackages =
+          this.computeRemovedStandardVersions(
+            previousStandardVersionsFromPackages,
+            standardVersions,
+          );
+        // Artifacts from other packages = in previous (all packages) but NOT from the deployed packages
+        const standardVersionsFromOtherPackages =
+          previousStandardVersions.filter(
+            (pv) =>
+              !previousStandardVersionsFromPackages.some(
+                (pfp) => pfp.standardId === pv.standardId,
+              ),
+          );
+        // Only truly remove if not still present via other packages
+        const removedStandardVersions =
+          removedStandardVersionsFromDeployedPackages.filter(
+            (rsv) =>
+              !standardVersionsFromOtherPackages.some(
+                (sv) => sv.standardId === rsv.standardId,
+              ),
+          );
 
-        const removedSkillVersions = this.computeRemovedSkillVersions(
-          previousSkillVersionsFromPackages,
-          skillVersions, // Compare against new versions from command, not combined
+        const removedSkillVersionsFromDeployedPackages =
+          this.computeRemovedSkillVersions(
+            previousSkillVersionsFromPackages,
+            skillVersions,
+          );
+        // Artifacts from other packages = in previous (all packages) but NOT from the deployed packages
+        const skillVersionsFromOtherPackages = previousSkillVersions.filter(
+          (pv) =>
+            !previousSkillVersionsFromPackages.some(
+              (pfp) => pfp.skillId === pv.skillId,
+            ),
         );
+        // Only truly remove if not still present via other packages
+        const removedSkillVersions =
+          removedSkillVersionsFromDeployedPackages.filter(
+            (rsv) =>
+              !skillVersionsFromOtherPackages.some(
+                (sv) => sv.skillId === rsv.skillId,
+              ),
+          );
 
         const renamedSkillVersions = this.computeRenamedSkillVersions(
           previousSkillVersionsFromPackages,
@@ -177,6 +229,7 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
           ...renamedSkillVersions,
         ];
 
+        // Filter out removed skills from installed list
         const removedSkillIds = new Set(
           removedSkillVersions.map((sv) => sv.skillId),
         );

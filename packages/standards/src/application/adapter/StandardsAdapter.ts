@@ -28,6 +28,7 @@ import {
   ListStandardsBySpaceCommand,
   OrganizationId,
   PackmindEventSource,
+  QueryOption,
   Rule,
   RuleExample,
   RuleId,
@@ -387,11 +388,13 @@ export class StandardsAdapter
     spaceId: SpaceId,
     organizationId: OrganizationId,
     userId: string,
+    opts?: Pick<QueryOption, 'includeDeleted'>,
   ): Promise<Standard[]> {
     const command: ListStandardsBySpaceCommand = {
       userId,
       organizationId,
       spaceId,
+      includeDeleted: opts?.includeDeleted,
     };
     const response = await this._listStandardsBySpace.execute(command);
     return response.standards;

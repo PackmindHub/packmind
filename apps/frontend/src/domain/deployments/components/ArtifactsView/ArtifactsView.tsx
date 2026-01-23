@@ -77,12 +77,16 @@ const filterAndSortDeployments = <
 >(
   deployments: ReadonlyArray<T> | undefined,
   artifactStatusFilter: ArtifactStatus,
+  isDeleted?: boolean,
 ): T[] => {
   return (deployments || [])
     .filter((td) => {
+      // Deleted artifacts: treat all deployments as "outdated" (needs removal)
+      const effectivelyUpToDate = isDeleted ? false : td.isUpToDate;
+
       if (artifactStatusFilter === 'all') return true;
-      if (artifactStatusFilter === 'outdated') return !td.isUpToDate;
-      return td.isUpToDate; // up-to-date
+      if (artifactStatusFilter === 'outdated') return !effectivelyUpToDate;
+      return effectivelyUpToDate; // up-to-date
     })
     .sort((a, b) => a.target.name.localeCompare(b.target.name));
 };
@@ -90,7 +94,16 @@ const filterAndSortDeployments = <
 const renderStatusNode = (
   artifactStatusFilter: ArtifactStatus,
   upToDate: boolean,
+  isDeleted?: boolean,
 ) => {
+  // Deleted artifacts need removal (treated as a type of "outdated")
+  if (isDeleted) {
+    return (
+      <PMBadge colorPalette="red" size="sm">
+        Needs removal
+      </PMBadge>
+    );
+  }
   if (artifactStatusFilter === 'outdated') {
     return (
       <PMBadge colorPalette="red" size="sm">
@@ -157,9 +170,11 @@ const buildRecipeBlocks = (
 ) =>
   recipes
     .map((recipe) => {
+      const recipeIsDeleted = recipe.isDeleted;
       const rows: PMTableRow[] = filterAndSortDeployments(
         recipe.targetDeployments,
         artifactStatusFilter,
+        recipeIsDeleted,
       ).map((td) => {
         const upToDate = td.isUpToDate;
         const version = renderVersionNode(
@@ -168,7 +183,11 @@ const buildRecipeBlocks = (
           td.deployedVersion.version,
           recipe.latestVersion.version,
         );
-        const status = renderStatusNode(artifactStatusFilter, upToDate);
+        const status = renderStatusNode(
+          artifactStatusFilter,
+          upToDate,
+          recipeIsDeleted,
+        );
         const repoLabel = formatRepoLabel(td);
 
         return {
@@ -181,6 +200,8 @@ const buildRecipeBlocks = (
 
       if (rows.length === 0) return null;
 
+      const isDeleted = recipe.isDeleted;
+
       return (
         <PMVStack
           key={`recipe-${recipe.recipe.id}`}
@@ -191,7 +212,7 @@ const buildRecipeBlocks = (
           padding={6}
         >
           <PMHeading level="h3">
-            {orgSlug && spaceSlug ? (
+            {orgSlug && spaceSlug && !isDeleted ? (
               <PMLink asChild color="text.primary">
                 <Link
                   to={routes.space.toCommand(
@@ -205,6 +226,11 @@ const buildRecipeBlocks = (
               </PMLink>
             ) : (
               recipe.recipe.name
+            )}
+            {isDeleted && (
+              <PMBadge colorPalette="gray" size="sm" ml={2}>
+                Deleted
+              </PMBadge>
             )}
           </PMHeading>
           <PMTable columns={columns} data={rows} size="sm" />
@@ -222,9 +248,11 @@ const buildStandardBlocks = (
 ) =>
   standards
     .map((standard) => {
+      const standardIsDeleted = standard.isDeleted;
       const rows: PMTableRow[] = filterAndSortDeployments(
         standard.targetDeployments,
         artifactStatusFilter,
+        standardIsDeleted,
       ).map((td) => {
         const upToDate = td.isUpToDate;
         const version = renderVersionNode(
@@ -233,7 +261,11 @@ const buildStandardBlocks = (
           td.deployedVersion.version,
           standard.latestVersion.version,
         );
-        const status = renderStatusNode(artifactStatusFilter, upToDate);
+        const status = renderStatusNode(
+          artifactStatusFilter,
+          upToDate,
+          standardIsDeleted,
+        );
         const repoLabel = formatRepoLabel(td);
 
         return {
@@ -246,6 +278,8 @@ const buildStandardBlocks = (
 
       if (rows.length === 0) return null;
 
+      const isDeleted = standardIsDeleted;
+
       return (
         <PMVStack
           key={`standard-${standard.standard.id}`}
@@ -256,7 +290,7 @@ const buildStandardBlocks = (
           padding={6}
         >
           <PMHeading level="h3">
-            {orgSlug && spaceSlug ? (
+            {orgSlug && spaceSlug && !isDeleted ? (
               <PMLink asChild color="text.primary">
                 <Link
                   to={routes.space.toStandard(
@@ -270,6 +304,11 @@ const buildStandardBlocks = (
               </PMLink>
             ) : (
               standard.standard.name
+            )}
+            {isDeleted && (
+              <PMBadge colorPalette="gray" size="sm" ml={2}>
+                Deleted
+              </PMBadge>
             )}
           </PMHeading>
           <PMTable columns={columns} data={rows} size="sm" />
@@ -287,9 +326,11 @@ const buildSkillBlocks = (
 ) =>
   skills
     .map((skill) => {
+      const skillIsDeleted = skill.isDeleted;
       const rows: PMTableRow[] = filterAndSortDeployments(
         skill.targetDeployments,
         artifactStatusFilter,
+        skillIsDeleted,
       ).map((td) => {
         const upToDate = td.isUpToDate;
         const version = renderVersionNode(
@@ -298,7 +339,11 @@ const buildSkillBlocks = (
           td.deployedVersion.version,
           skill.latestVersion.version,
         );
-        const status = renderStatusNode(artifactStatusFilter, upToDate);
+        const status = renderStatusNode(
+          artifactStatusFilter,
+          upToDate,
+          skillIsDeleted,
+        );
         const repoLabel = formatRepoLabel(td);
 
         return {
@@ -311,6 +356,8 @@ const buildSkillBlocks = (
 
       if (rows.length === 0) return null;
 
+      const isDeleted = skillIsDeleted;
+
       return (
         <PMVStack
           key={`skill-${skill.skill.id}`}
@@ -320,7 +367,14 @@ const buildSkillBlocks = (
           borderRadius={'lg'}
           padding={6}
         >
-          <PMHeading level="h3">{skill.skill.name}</PMHeading>
+          <PMHeading level="h3">
+            {skill.skill.name}
+            {isDeleted && (
+              <PMBadge colorPalette="gray" size="sm" ml={2}>
+                Deleted
+              </PMBadge>
+            )}
+          </PMHeading>
           <PMTable columns={columns} data={rows} size="sm" />
         </PMVStack>
       );

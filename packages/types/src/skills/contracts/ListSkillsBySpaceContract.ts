@@ -3,6 +3,7 @@ import { Skill } from '../Skill';
 
 export type ListSkillsBySpaceCommand = PackmindCommand & {
   spaceId: string;
+  includeDeleted?: boolean;
 };
 
 export type ListSkillsBySpaceResponse = Skill[];

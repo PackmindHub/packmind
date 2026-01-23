@@ -624,5 +624,108 @@ describe('GetDeploymentOverviewUseCase', () => {
         });
       });
     });
+
+    describe('when a deployed recipe has been deleted', () => {
+      const mockGitRepo = gitRepoFactory();
+      const mockTarget = targetFactory({ gitRepoId: mockGitRepo.id });
+      const mockActiveRecipe = recipeFactory({
+        name: 'Active Recipe',
+        slug: 'active-recipe',
+        content: 'Active recipe content',
+        version: 1,
+      });
+      const mockDeletedRecipe = recipeFactory({
+        name: 'Deleted Recipe',
+        slug: 'deleted-recipe',
+        content: 'Deleted recipe content',
+        version: 1,
+      });
+
+      let result: DeploymentOverview;
+
+      beforeEach(async () => {
+        const activeRecipeVersion = recipeVersionFactory({
+          recipeId: mockActiveRecipe.id,
+          version: 1,
+        });
+
+        const deletedRecipeVersion = recipeVersionFactory({
+          recipeId: mockDeletedRecipe.id,
+          version: 1,
+        });
+
+        const mockDistribution = createDistribution({
+          organizationId,
+          target: mockTarget,
+          status: DistributionStatus.success,
+          recipeVersions: [activeRecipeVersion, deletedRecipeVersion],
+        });
+
+        const space = {
+          id: createSpaceId('space-1'),
+          name: 'Global',
+          slug: 'global',
+          organizationId,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        };
+
+        distributionRepository.listByOrganizationIdWithStatus.mockResolvedValue(
+          [mockDistribution],
+        );
+        spacesPort.listSpacesByOrganization.mockResolvedValue([space]);
+
+        // First call returns only active recipes
+        // Second call (with includeDeleted) returns all recipes
+        recipesPort.listRecipesBySpace
+          .mockResolvedValueOnce([mockActiveRecipe])
+          .mockResolvedValueOnce([mockActiveRecipe, mockDeletedRecipe]);
+
+        gitPort.getOrganizationRepositories.mockResolvedValue([mockGitRepo]);
+        getTargetsByOrganizationUseCase.execute.mockResolvedValue([
+          {
+            ...mockTarget,
+            repository: {
+              owner: mockGitRepo.owner,
+              repo: mockGitRepo.repo,
+              branch: mockGitRepo.branch,
+            },
+          },
+        ]);
+
+        result = await useCase.execute(command);
+      });
+
+      it('returns two recipes', () => {
+        expect(result.recipes).toHaveLength(2);
+      });
+
+      it('marks active recipe as not deleted', () => {
+        const activeRecipeStatus = result.recipes.find(
+          (r) => r.recipe.id === mockActiveRecipe.id,
+        );
+        expect(activeRecipeStatus?.isDeleted).toBeUndefined();
+      });
+
+      it('marks deleted recipe with isDeleted true', () => {
+        const deletedRecipeStatus = result.recipes.find(
+          (r) => r.recipe.id === mockDeletedRecipe.id,
+        );
+        expect(deletedRecipeStatus?.isDeleted).toBe(true);
+      });
+
+      it('calls listRecipesBySpace twice to fetch deleted recipes', () => {
+        expect(recipesPort.listRecipesBySpace).toHaveBeenCalledTimes(2);
+      });
+
+      it('calls listRecipesBySpace with includeDeleted option', () => {
+        expect(recipesPort.listRecipesBySpace).toHaveBeenNthCalledWith(2, {
+          spaceId: createSpaceId('space-1'),
+          organizationId,
+          userId: createUserId(command.userId),
+          includeDeleted: true,
+        });
+      });
+    });
   });
 });

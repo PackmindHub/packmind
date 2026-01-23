@@ -6,6 +6,7 @@ import {
   createStandardId,
   GitCommit,
   OrganizationId,
+  QueryOption,
   SpaceId,
   Standard,
   StandardId,
@@ -77,13 +78,20 @@ export class StandardService {
     }
   }
 
-  async listStandardsBySpace(spaceId: SpaceId): Promise<Standard[]> {
+  async listStandardsBySpace(
+    spaceId: SpaceId,
+    opts?: Pick<QueryOption, 'includeDeleted'>,
+  ): Promise<Standard[]> {
     this.logger.info('Listing standards with scope by space', {
       spaceId,
+      includeDeleted: opts?.includeDeleted ?? false,
     });
 
     try {
-      const standards = await this.standardRepository.findBySpaceId(spaceId);
+      const standards = await this.standardRepository.findBySpaceId(
+        spaceId,
+        opts,
+      );
       this.logger.info('Standards with scope retrieved by space successfully', {
         spaceId,
         count: standards.length,

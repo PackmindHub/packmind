@@ -2441,6 +2441,298 @@ describe('PublishArtifactsUseCase', () => {
     });
   });
 
+  describe('when skill exists only via another package', () => {
+    let command: PublishArtifactsCommand;
+    let skillVersionFromOtherPackage: ReturnType<typeof skillVersionFactory>;
+    let target: ReturnType<typeof targetFactory>;
+    let gitRepo: GitRepo;
+    const sharedSkillId = createSkillId('shared-skill-id');
+
+    beforeEach(() => {
+      // Skill version that exists ONLY in Package B (not in Package A)
+      skillVersionFromOtherPackage = skillVersionFactory({
+        id: createSkillVersionId(uuidv4()),
+        skillId: sharedSkillId,
+        name: 'Shared Skill',
+        slug: 'shared-skill',
+        version: 1,
+      });
+
+      gitRepo = {
+        id: createGitRepoId(uuidv4()),
+        owner: 'test-owner',
+        repo: 'test-repo',
+        branch: 'main',
+        providerId: createGitProviderId(uuidv4()),
+      };
+
+      target = targetFactory({ id: targetId, gitRepoId: gitRepo.id });
+
+      // Package A is being redistributed (no skills in command)
+      command = {
+        userId,
+        organizationId,
+        recipeVersionIds: [],
+        standardVersionIds: [],
+        skillVersionIds: [],
+        targetIds: [targetId],
+        packagesSlugs: ['package-a'],
+        packageIds: ['package-a-id'],
+      };
+
+      mockTargetService.findById.mockResolvedValue(target);
+      mockGitPort.getRepositoryById.mockResolvedValue(gitRepo);
+      mockDistributionRepository.findActiveRecipeVersionsByTarget.mockResolvedValue(
+        [],
+      );
+      mockDistributionRepository.findActiveStandardVersionsByTarget.mockResolvedValue(
+        [],
+      );
+      // Skill exists on target via Package B (all packages view)
+      mockDistributionRepository.findActiveSkillVersionsByTarget.mockResolvedValue(
+        [skillVersionFromOtherPackage],
+      );
+      mockDistributionRepository.findActiveRecipeVersionsByTargetAndPackages.mockResolvedValue(
+        [],
+      );
+      mockDistributionRepository.findActiveStandardVersionsByTargetAndPackages.mockResolvedValue(
+        [],
+      );
+      // Package A has NO skills in its distribution (skill is only via Package B)
+      mockDistributionRepository.findActiveSkillVersionsByTargetAndPackages.mockResolvedValue(
+        [],
+      );
+      mockGitPort.getFileFromRepo.mockResolvedValue(null);
+      mockCodingAgentPort.renderArtifacts.mockResolvedValue({
+        createOrUpdate: [],
+        delete: [],
+      });
+    });
+
+    it('does not pass skill to removed.skillVersions since it exists in another package', async () => {
+      await useCase.execute(command);
+
+      expect(mockCodingAgentPort.renderArtifacts).toHaveBeenCalledWith(
+        expect.objectContaining({
+          removed: expect.objectContaining({
+            skillVersions: [],
+          }),
+        }),
+      );
+    });
+
+    it('keeps skill in installed.skillVersions', async () => {
+      await useCase.execute(command);
+
+      expect(mockCodingAgentPort.renderArtifacts).toHaveBeenCalledWith(
+        expect.objectContaining({
+          installed: expect.objectContaining({
+            skillVersions: expect.arrayContaining([
+              expect.objectContaining({
+                skillId: sharedSkillId,
+              }),
+            ]),
+          }),
+        }),
+      );
+    });
+  });
+
+  describe('when recipe exists only via another package', () => {
+    let command: PublishArtifactsCommand;
+    let recipeVersionFromOtherPackage: ReturnType<typeof recipeVersionFactory>;
+    let target: ReturnType<typeof targetFactory>;
+    let gitRepo: GitRepo;
+    const sharedRecipeId = createRecipeId('shared-recipe-id');
+
+    beforeEach(() => {
+      // Recipe version that exists ONLY in Package B (not in Package A)
+      recipeVersionFromOtherPackage = recipeVersionFactory({
+        id: createRecipeVersionId(uuidv4()),
+        recipeId: sharedRecipeId,
+        name: 'Shared Recipe',
+        slug: 'shared-recipe',
+        version: 1,
+      });
+
+      gitRepo = {
+        id: createGitRepoId(uuidv4()),
+        owner: 'test-owner',
+        repo: 'test-repo',
+        branch: 'main',
+        providerId: createGitProviderId(uuidv4()),
+      };
+
+      target = targetFactory({ id: targetId, gitRepoId: gitRepo.id });
+
+      // Package A is being redistributed (no recipes in command)
+      command = {
+        userId,
+        organizationId,
+        recipeVersionIds: [],
+        standardVersionIds: [],
+        targetIds: [targetId],
+        packagesSlugs: ['package-a'],
+        packageIds: ['package-a-id'],
+      };
+
+      mockTargetService.findById.mockResolvedValue(target);
+      mockGitPort.getRepositoryById.mockResolvedValue(gitRepo);
+      // Recipe exists on target via Package B (all packages view)
+      mockDistributionRepository.findActiveRecipeVersionsByTarget.mockResolvedValue(
+        [recipeVersionFromOtherPackage],
+      );
+      mockDistributionRepository.findActiveStandardVersionsByTarget.mockResolvedValue(
+        [],
+      );
+      mockDistributionRepository.findActiveSkillVersionsByTarget.mockResolvedValue(
+        [],
+      );
+      // Package A has NO recipes in its distribution (recipe is only via Package B)
+      mockDistributionRepository.findActiveRecipeVersionsByTargetAndPackages.mockResolvedValue(
+        [],
+      );
+      mockDistributionRepository.findActiveStandardVersionsByTargetAndPackages.mockResolvedValue(
+        [],
+      );
+      mockDistributionRepository.findActiveSkillVersionsByTargetAndPackages.mockResolvedValue(
+        [],
+      );
+      mockGitPort.getFileFromRepo.mockResolvedValue(null);
+      mockCodingAgentPort.renderArtifacts.mockResolvedValue({
+        createOrUpdate: [],
+        delete: [],
+      });
+    });
+
+    it('does not pass recipe to removed.recipeVersions since it exists in another package', async () => {
+      await useCase.execute(command);
+
+      expect(mockCodingAgentPort.renderArtifacts).toHaveBeenCalledWith(
+        expect.objectContaining({
+          removed: expect.objectContaining({
+            recipeVersions: [],
+          }),
+        }),
+      );
+    });
+
+    it('keeps recipe in installed.recipeVersions', async () => {
+      await useCase.execute(command);
+
+      expect(mockCodingAgentPort.renderArtifacts).toHaveBeenCalledWith(
+        expect.objectContaining({
+          installed: expect.objectContaining({
+            recipeVersions: expect.arrayContaining([
+              expect.objectContaining({
+                recipeId: sharedRecipeId,
+              }),
+            ]),
+          }),
+        }),
+      );
+    });
+  });
+
+  describe('when standard exists only via another package', () => {
+    let command: PublishArtifactsCommand;
+    let standardVersionFromOtherPackage: ReturnType<
+      typeof standardVersionFactory
+    >;
+    let target: ReturnType<typeof targetFactory>;
+    let gitRepo: GitRepo;
+    const sharedStandardId = createStandardId('shared-standard-id');
+
+    beforeEach(() => {
+      // Standard version that exists ONLY in Package B (not in Package A)
+      standardVersionFromOtherPackage = standardVersionFactory({
+        id: createStandardVersionId(uuidv4()),
+        standardId: sharedStandardId,
+        name: 'Shared Standard',
+        slug: 'shared-standard',
+        version: 1,
+        rules: [],
+      });
+
+      gitRepo = {
+        id: createGitRepoId(uuidv4()),
+        owner: 'test-owner',
+        repo: 'test-repo',
+        branch: 'main',
+        providerId: createGitProviderId(uuidv4()),
+      };
+
+      target = targetFactory({ id: targetId, gitRepoId: gitRepo.id });
+
+      // Package A is being redistributed (no standards in command)
+      command = {
+        userId,
+        organizationId,
+        recipeVersionIds: [],
+        standardVersionIds: [],
+        targetIds: [targetId],
+        packagesSlugs: ['package-a'],
+        packageIds: ['package-a-id'],
+      };
+
+      mockTargetService.findById.mockResolvedValue(target);
+      mockGitPort.getRepositoryById.mockResolvedValue(gitRepo);
+      mockDistributionRepository.findActiveRecipeVersionsByTarget.mockResolvedValue(
+        [],
+      );
+      // Standard exists on target via Package B (all packages view)
+      mockDistributionRepository.findActiveStandardVersionsByTarget.mockResolvedValue(
+        [standardVersionFromOtherPackage],
+      );
+      mockDistributionRepository.findActiveSkillVersionsByTarget.mockResolvedValue(
+        [],
+      );
+      mockDistributionRepository.findActiveRecipeVersionsByTargetAndPackages.mockResolvedValue(
+        [],
+      );
+      // Package A has NO standards in its distribution (standard is only via Package B)
+      mockDistributionRepository.findActiveStandardVersionsByTargetAndPackages.mockResolvedValue(
+        [],
+      );
+      mockDistributionRepository.findActiveSkillVersionsByTargetAndPackages.mockResolvedValue(
+        [],
+      );
+      mockGitPort.getFileFromRepo.mockResolvedValue(null);
+      mockCodingAgentPort.renderArtifacts.mockResolvedValue({
+        createOrUpdate: [],
+        delete: [],
+      });
+    });
+
+    it('does not pass standard to removed.standardVersions since it exists in another package', async () => {
+      await useCase.execute(command);
+
+      expect(mockCodingAgentPort.renderArtifacts).toHaveBeenCalledWith(
+        expect.objectContaining({
+          removed: expect.objectContaining({
+            standardVersions: [],
+          }),
+        }),
+      );
+    });
+
+    it('keeps standard in installed.standardVersions', async () => {
+      await useCase.execute(command);
+
+      expect(mockCodingAgentPort.renderArtifacts).toHaveBeenCalledWith(
+        expect.objectContaining({
+          installed: expect.objectContaining({
+            standardVersions: expect.arrayContaining([
+              expect.objectContaining({
+                standardId: sharedStandardId,
+              }),
+            ]),
+          }),
+        }),
+      );
+    });
+  });
+
   describe('when deploying to non-root target', () => {
     let command: PublishArtifactsCommand;
     let recipeVersion: ReturnType<typeof recipeVersionFactory>;
