@@ -35,7 +35,7 @@ describe('ErrorBoundary', () => {
   });
 
   describe('Error Catching', () => {
-    it('should render children when no error occurs', () => {
+    it('renders children when no error occurs', () => {
       renderWithUI(
         <ErrorBoundary>
           <div>Test content</div>
@@ -45,7 +45,7 @@ describe('ErrorBoundary', () => {
       expect(screen.getByText('Test content')).toBeInTheDocument();
     });
 
-    it('should catch rendering errors and display fallback UI', () => {
+    it('catches rendering errors and displays fallback UI', () => {
       renderWithUI(
         <ErrorBoundary>
           <ThrowError />
@@ -55,7 +55,7 @@ describe('ErrorBoundary', () => {
       expect(screen.getByText(/Something went wrong/i)).toBeInTheDocument();
     });
 
-    it('should display error message in fallback UI', () => {
+    it('displays error message in fallback UI', () => {
       renderWithUI(
         <ErrorBoundary>
           <ThrowError />
@@ -67,25 +67,27 @@ describe('ErrorBoundary', () => {
   });
 
   describe('Sentry Integration', () => {
-    it('should log errors to Sentry when error is caught', () => {
-      renderWithUI(
-        <ErrorBoundary level="app">
-          <ThrowError />
-        </ErrorBoundary>,
-      );
+    describe('when error is caught', () => {
+      it('logs errors to Sentry', () => {
+        renderWithUI(
+          <ErrorBoundary level="app">
+            <ThrowError />
+          </ErrorBoundary>,
+        );
 
-      expect(Sentry.captureException).toHaveBeenCalledWith(
-        expect.any(Error),
-        expect.objectContaining({
-          tags: {
-            errorBoundary: 'app',
-          },
-          level: 'error',
-        }),
-      );
+        expect(Sentry.captureException).toHaveBeenCalledWith(
+          expect.any(Error),
+          expect.objectContaining({
+            tags: {
+              errorBoundary: 'app',
+            },
+            level: 'error',
+          }),
+        );
+      });
     });
 
-    it('should include correct error boundary level in Sentry tags', () => {
+    it('includes correct error boundary level in Sentry tags', () => {
       renderWithUI(
         <ErrorBoundary level="route">
           <ThrowError />
@@ -104,33 +106,53 @@ describe('ErrorBoundary', () => {
   });
 
   describe('Fallback UI Levels', () => {
-    it('should render app-level fallback UI when level is "app"', () => {
-      renderWithUI(
-        <ErrorBoundary level="app">
-          <ThrowError />
-        </ErrorBoundary>,
-      );
+    describe('when level is "app"', () => {
+      beforeEach(() => {
+        renderWithUI(
+          <ErrorBoundary level="app">
+            <ThrowError />
+          </ErrorBoundary>,
+        );
+      });
 
-      expect(screen.getByText(/Something went wrong/i)).toBeInTheDocument();
-      expect(screen.getByText('Reload Application')).toBeInTheDocument();
-      expect(screen.getByText('Try Again')).toBeInTheDocument();
+      it('renders error message', () => {
+        expect(screen.getByText(/Something went wrong/i)).toBeInTheDocument();
+      });
+
+      it('renders Reload Application button', () => {
+        expect(screen.getByText('Reload Application')).toBeInTheDocument();
+      });
+
+      it('renders Try Again button', () => {
+        expect(screen.getByText('Try Again')).toBeInTheDocument();
+      });
     });
 
-    it('should render route-level fallback UI when level is "route"', () => {
-      renderWithUI(
-        <ErrorBoundary level="route">
-          <ThrowError />
-        </ErrorBoundary>,
-      );
+    describe('when level is "route"', () => {
+      beforeEach(() => {
+        renderWithUI(
+          <ErrorBoundary level="route">
+            <ThrowError />
+          </ErrorBoundary>,
+        );
+      });
 
-      expect(screen.getByText('Page Error')).toBeInTheDocument();
-      expect(screen.getByText('Go Back')).toBeInTheDocument();
-      expect(screen.getByText('Reload Page')).toBeInTheDocument();
+      it('renders Page Error message', () => {
+        expect(screen.getByText('Page Error')).toBeInTheDocument();
+      });
+
+      it('renders Go Back button', () => {
+        expect(screen.getByText('Go Back')).toBeInTheDocument();
+      });
+
+      it('renders Reload Page button', () => {
+        expect(screen.getByText('Reload Page')).toBeInTheDocument();
+      });
     });
   });
 
   describe('Custom Fallback', () => {
-    it('should render custom fallback when provided', () => {
+    it('renders custom fallback when provided', () => {
       renderWithUI(
         <ErrorBoundary fallback={<div>Custom error message</div>}>
           <ThrowError />
@@ -142,53 +164,65 @@ describe('ErrorBoundary', () => {
   });
 
   describe('Error Recovery', () => {
-    it('should allow recovery by resetting error state', () => {
-      const { rerender } = renderWithUI(
-        <ErrorBoundary>
-          <ThrowError shouldThrow={true} />
-        </ErrorBoundary>,
-      );
-
-      expect(screen.getByText(/Something went wrong/i)).toBeInTheDocument();
-
-      // Click Try Again button
-      const tryAgainButton = screen.getByText('Try Again');
-      tryAgainButton.click();
-
-      // Re-render with no error
-      rerender(
-        <UIProvider>
+    describe('when error occurs', () => {
+      it('displays error state initially', () => {
+        renderWithUI(
           <ErrorBoundary>
-            <ThrowError shouldThrow={false} />
-          </ErrorBoundary>
-        </UIProvider>,
-      );
+            <ThrowError shouldThrow={true} />
+          </ErrorBoundary>,
+        );
 
-      expect(screen.getByText('No error')).toBeInTheDocument();
+        expect(screen.getByText(/Something went wrong/i)).toBeInTheDocument();
+      });
+    });
+
+    describe('when Try Again is clicked and component re-renders without error', () => {
+      it('recovers to normal state', () => {
+        const { rerender } = renderWithUI(
+          <ErrorBoundary>
+            <ThrowError shouldThrow={true} />
+          </ErrorBoundary>,
+        );
+
+        const tryAgainButton = screen.getByText('Try Again');
+        tryAgainButton.click();
+
+        rerender(
+          <UIProvider>
+            <ErrorBoundary>
+              <ThrowError shouldThrow={false} />
+            </ErrorBoundary>
+          </UIProvider>,
+        );
+
+        expect(screen.getByText('No error')).toBeInTheDocument();
+      });
     });
   });
 
   describe('Custom Error Handler', () => {
-    it('should call custom onError handler when provided', () => {
-      const onError = jest.fn();
+    describe('when onError handler is provided', () => {
+      it('calls custom onError handler', () => {
+        const onError = jest.fn();
 
-      renderWithUI(
-        <ErrorBoundary onError={onError}>
-          <ThrowError />
-        </ErrorBoundary>,
-      );
+        renderWithUI(
+          <ErrorBoundary onError={onError}>
+            <ThrowError />
+          </ErrorBoundary>,
+        );
 
-      expect(onError).toHaveBeenCalledWith(
-        expect.any(Error),
-        expect.objectContaining({
-          componentStack: expect.any(String),
-        }),
-      );
+        expect(onError).toHaveBeenCalledWith(
+          expect.any(Error),
+          expect.objectContaining({
+            componentStack: expect.any(String),
+          }),
+        );
+      });
     });
   });
 
   describe('Error Message Display', () => {
-    it('should display specific error message from thrown error', () => {
+    it('displays specific error message from thrown error', () => {
       const SpecificError = () => {
         throw new Error('Specific error message');
       };
@@ -202,21 +236,23 @@ describe('ErrorBoundary', () => {
       expect(screen.getByText('Specific error message')).toBeInTheDocument();
     });
 
-    it('should display generic message when error has no message', () => {
-      const NoMessageError = () => {
-        // eslint-disable-next-line no-throw-literal
-        throw null;
-      };
+    describe('when error has no message', () => {
+      it('displays generic message', () => {
+        const NoMessageError = () => {
+          // eslint-disable-next-line no-throw-literal
+          throw null;
+        };
 
-      renderWithUI(
-        <ErrorBoundary>
-          <NoMessageError />
-        </ErrorBoundary>,
-      );
+        renderWithUI(
+          <ErrorBoundary>
+            <NoMessageError />
+          </ErrorBoundary>,
+        );
 
-      expect(
-        screen.getByText(/An unknown error occurred/i),
-      ).toBeInTheDocument();
+        expect(
+          screen.getByText(/An unknown error occurred/i),
+        ).toBeInTheDocument();
+      });
     });
   });
 });

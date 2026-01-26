@@ -1,6 +1,6 @@
 ---
-name: 'packmind-standard-creator'
-description: "Guide for creating coding standards via the Packmind CLI. This skill should be used when users want to create a new coding standard (or add rules to an existing standard) that captures team conventions, best practices, or coding guidelines for distribution to CoPilot."
+name: 'create-standard'
+description: 'Guide for creating coding standards via the Packmind CLI. This skill should be used when users want to create a new coding standard (or add rules to an existing standard) that captures team conventions, best practices, or coding guidelines for distribution to Claude.'
 license: 'Complete terms in LICENSE.txt'
 ---
 
@@ -10,7 +10,7 @@ This skill provides a complete walkthrough for creating coding standards via the
 
 ## About Coding Standards
 
-Coding standards are collections of rules that capture team conventions, best practices, and coding guidelines. They help maintain consistency across codebases and enable CoPilot to follow your team's specific practices.
+Coding standards are collections of rules that capture team conventions, best practices, and coding guidelines. They help maintain consistency across codebases and enable Claude to follow your team's specific practices.
 
 ### What Standards Provide
 
@@ -27,7 +27,8 @@ Every standard consists of:
 {
   "name": "Standard Name",
   "description": "What the standard covers and why",
-  "scope": "Where/when the standard applies",
+  "summary": "One-sentence description of when to apply the rules (optional)",
+  "scope": "Where/when the standard applies (e.g., 'TypeScript files', 'React components')",
   "rules": [
     {
       "content": "Rule description starting with action verb",
@@ -40,6 +41,15 @@ Every standard consists of:
   ]
 }
 ```
+
+**Note**: The Packmind CLI currently requires the `scope` field. The `summary` field is used in other workflows (like MCP) but not yet supported by the CLI.
+
+#### Understanding `scope` vs `summary`
+
+- **`scope`** (required by CLI): **WHERE** the standard applies - file patterns, technologies, specific locations
+  - Examples: `"TypeScript test files (*.spec.ts, *.test.ts)"`, `"React functional components"`
+- **`summary`** (optional, not yet CLI-supported): **WHEN/WHY** to apply - high-level purpose and trigger condition
+  - Examples: `"Apply when writing tests to ensure consistency"`, `"Use when handling user data for privacy compliance"`
 
 ## Prerequisites
 
@@ -54,6 +64,7 @@ python3 --version
 ```
 
 If not available, install it:
+
 - **macOS**: `brew install python3`
 - **Ubuntu/Debian**: `sudo apt-get install python3`
 - **Windows**: Download from https://python.org or use `winget install Python.Python.3`
@@ -98,7 +109,7 @@ To create an effective standard, clearly understand:
    - Existing developers maintaining consistency
 
 3. **Where does this standard apply?**
-   - Specific file types (e.g., "*.spec.ts files")
+   - Specific file types (e.g., "\*.spec.ts files")
    - Specific frameworks (e.g., "React components")
    - Specific domains (e.g., "API controllers")
 
@@ -116,18 +127,69 @@ Transform the understanding from Step 1 into concrete rules.
 
 #### Rule Writing Guidelines
 
-Each rule should:
+Each rule should follow these format requirements:
 
 1. **Start with an action verb** - Use imperative form (e.g., "Use", "Avoid", "Prefer", "Include")
-2. **Be specific and actionable** - Avoid vague guidance
-3. **Focus on one concept** - One rule per convention
+2. **Be concise** - Max ~25 words per rule
+3. **Be specific and actionable** - Avoid vague guidance
+4. **Focus on one concept** - One rule per convention
 
-**Good rules:**
+##### Avoid Rationale Phrases
+
+Rules describe **WHAT** to do, not **WHY**. Strip justifications and benefits—let examples demonstrate value.
+
+**Common fluff patterns to remove:**
+
+- "to improve/provide/ensure..." (benefit phrases)
+- "while maintaining/preserving..." (secondary concerns)
+- "for better/enhanced..." (quality claims)
+- "and enable/allow..." (future benefits)
+
+**Bad (includes rationale):**
+
+> Document props with JSDoc comments to provide IDE intellisense and improve developer experience.
+
+**Good (action only):**
+
+> Document component props with JSDoc comments (`/** ... */`) describing purpose, expected values, and defaults.
+
+##### Rule Splitting
+
+If a rule addresses 2+ distinct concerns, **proactively split** it into separate rules:
+
+**Bad (too broad):**
+
+> Create centralized color constants in dedicated files for consistent palettes, using semantic naming based on purpose rather than specific color values.
+
+**Good (split into focused rules):**
+
+- Define color constants in `theme/colors.ts` using semantic names (e.g., `primary`, `error`)
+- Use semantic color tokens instead of literal hex values in components
+
+##### Inline Examples in Rules
+
+Inline examples (code, paths, patterns) within the rule content are **optional**. Only include them when they clarify something not obvious from the rule text.
+
+**Types of useful inline examples:**
+
+- Code syntax: `const`, `async/await`, `/** ... */`
+- File paths: `infra/repositories/`, `domain/entities/`
+- Naming patterns: `.spec.ts`, `I{Name}` prefix
+
+**Good rules with inline examples:**
+
 - "Use const instead of let for variables that are never reassigned"
-- "Prefix interface names with I (e.g., IUserService)"
-- "Include error messages in all thrown exceptions"
+- "Prefix interface names with I (e.g., `IUserService`)"
+- "Place repository implementations in `infra/repositories/`"
+
+**Good rules without inline examples:**
+
+- "Name root describe block after the class or function under test"
+- "Run linting before committing changes"
+- "Keep business logic out of controllers"
 
 **Bad rules:**
+
 - "Write good code" (too vague)
 - "Use const and prefix interfaces with I" (multiple concepts)
 - "Don't use var" (no positive guidance)
@@ -141,6 +203,7 @@ Examples dramatically improve rule effectiveness. For each rule, consider adding
 - **language**: The programming language for syntax highlighting
 
 Valid language values:
+
 - TYPESCRIPT, TYPESCRIPT_TSX
 - JAVASCRIPT, JAVASCRIPT_JSX
 - PYTHON, JAVA, GO, RUST, CSHARP
@@ -159,6 +222,7 @@ python3 scripts/init_playbook.py <standard-name> --path <output-directory>
 ```
 
 Example:
+
 ```bash
 python3 scripts/init_playbook.py typescript-conventions --path .
 ```
@@ -190,9 +254,10 @@ The script generates a JSON file (named `<standard-name>.playbook.json`) with th
 
 - **name**: Non-empty string
 - **description**: Non-empty string explaining purpose
-- **scope**: Non-empty string describing applicability
+- **scope**: Non-empty string describing applicability (required by CLI)
+- **summary**: One-sentence description (optional, not yet supported by CLI)
 - **rules**: Array with at least one rule
-- **rules[].content**: Non-empty string starting with action verb
+- **rules[].content**: Non-empty string starting with action verb (max ~25 words)
 - **rules[].examples** (optional): If provided, must include positive, negative, and language
 
 #### Validating the Playbook
@@ -204,11 +269,13 @@ python3 scripts/validate_playbook.py <path-to-playbook.json>
 ```
 
 Example:
+
 ```bash
 python3 scripts/validate_playbook.py typescript-conventions.playbook.json
 ```
 
 The validator checks:
+
 - All required fields are present (name, description, scope, rules)
 - No TODO placeholders remain
 - Rules start with action verbs
@@ -217,7 +284,23 @@ The validator checks:
 
 If validation fails, fix the reported errors and run validation again before proceeding.
 
-### Step 4: Creating the Standard via CLI
+### Step 4: Review Before Submission
+
+**Before running the CLI command**, you MUST get explicit user approval:
+
+1. Show the user the complete playbook content in a formatted preview:
+   - Name
+   - Description
+   - Scope
+   - Each rule with its content and examples (if any)
+
+2. Ask: **"Here is the standard that will be created on Packmind. Do you approve?"**
+
+3. **Wait for explicit user confirmation** before proceeding to Step 5.
+
+4. If the user requests changes, go back to Step 2 or Step 3 to make adjustments.
+
+### Step 5: Creating the Standard via CLI
 
 Run the packmind-cli command to create the standard:
 
@@ -226,11 +309,13 @@ packmind-cli standard create <path-to-playbook.json>
 ```
 
 Example:
+
 ```bash
 packmind-cli standard create ./typescript-conventions.playbook.json
 ```
 
 Expected output on success:
+
 ```
 packmind-cli Standard "Your Standard Name" created successfully (ID: <uuid>)
 ```
@@ -238,20 +323,23 @@ packmind-cli Standard "Your Standard Name" created successfully (ID: <uuid>)
 #### Troubleshooting
 
 **"Not logged in" error:**
+
 ```bash
 packmind-cli login
 ```
 
 **"Failed to resolve global space" error:**
+
 - Verify your API key is valid
 - Check network connectivity to Packmind server
 
 **JSON validation errors:**
+
 - Ensure all required fields are present
 - Verify JSON syntax is valid (use a JSON validator)
 - Check that rules array has at least one entry
 
-### Step 5: Verifying the Standard
+### Step 6: Verifying the Standard
 
 After creation, verify the standard was created correctly:
 
@@ -259,7 +347,7 @@ After creation, verify the standard was created correctly:
 2. **Verify rules**: Ensure all rules appear with correct content
 3. **Check examples**: Confirm code examples are properly formatted
 
-### Step 6: Iterate and Improve
+### Step 7: Iterate and Improve
 
 Standards benefit from iteration. Consider:
 
@@ -275,6 +363,7 @@ To add rules to an existing standard, use the Packmind UI or API.
 Here's a complete example creating a TypeScript testing standard:
 
 **File: testing-conventions.playbook.json**
+
 ```json
 {
   "name": "TypeScript Testing Conventions",
@@ -313,20 +402,22 @@ Here's a complete example creating a TypeScript testing standard:
 ```
 
 **Creating the standard:**
+
 ```bash
 packmind-cli standard create testing-conventions.playbook.json
 ```
 
 ## Quick Reference
 
-| Field | Required | Description |
-|-------|----------|-------------|
-| name | Yes | Standard name |
-| description | Yes | What and why |
-| scope | Yes | Where it applies |
-| rules | Yes | At least one rule |
-| rules[].content | Yes | Rule text (verb-first) |
-| rules[].examples | No | Code examples |
-| examples.positive | If examples | Valid code |
-| examples.negative | If examples | Invalid code |
-| examples.language | If examples | Language ID |
+| Field             | Required    | Description                             |
+| ----------------- | ----------- | --------------------------------------- |
+| name              | Yes         | Standard name                           |
+| description       | Yes         | What and why                            |
+| summary           | No          | One-sentence (not yet supported by CLI) |
+| scope             | Yes (CLI)   | Where it applies                        |
+| rules             | Yes         | At least one rule                       |
+| rules[].content   | Yes         | Rule text (verb-first, max ~25 words)   |
+| rules[].examples  | No          | Code examples                           |
+| examples.positive | If examples | Valid code                              |
+| examples.negative | If examples | Invalid code                            |
+| examples.language | If examples | Language ID                             |

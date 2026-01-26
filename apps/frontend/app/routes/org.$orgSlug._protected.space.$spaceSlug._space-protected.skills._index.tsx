@@ -1,18 +1,10 @@
-import { useState } from 'react';
-import {
-  PMPage,
-  PMVStack,
-  PMButton,
-  PMHStack,
-  PMFeatureFlag,
-  DEFAULT_FEATURE_DOMAIN_MAP,
-  DOWNLOAD_DEFAULT_SKILLS_FEATURE_KEY,
-} from '@packmind/ui';
+import { PMPage, PMVStack, PMHStack } from '@packmind/ui';
 import { useAuthContext } from '../../src/domain/accounts/hooks/useAuthContext';
 import { SkillsList } from '../../src/domain/skills/components/SkillsList';
 import { AutobreadCrumb } from '../../src/shared/components/navigation/AutobreadCrumb';
 import { GettingStartedLearnMoreDialog } from '../../src/domain/organizations/components/dashboard/GettingStartedLearnMoreDialog';
 import { SkillsLearnMoreContent } from '../../src/domain/skills/components/SkillsLearnMoreContent';
+import { DownloadDefaultSkillsPopover } from '../../src/domain/skills/components/DownloadDefaultSkillsPopover';
 import { useParams } from 'react-router';
 
 export default function SkillsIndexRouteModule() {
@@ -21,35 +13,10 @@ export default function SkillsIndexRouteModule() {
     orgSlug: string;
     spaceSlug: string;
   }>();
-  const [isDownloading, setIsDownloading] = useState(false);
 
   if (!organization) {
     return null;
   }
-
-  const handleDownloadDefaultSkillsZip = async () => {
-    setIsDownloading(true);
-    try {
-      const response = await fetch(
-        `/api/v0/organizations/${organization.id}/skills/default/zip`,
-        { credentials: 'include' },
-      );
-      if (!response.ok) {
-        throw new Error(`Download failed: ${response.statusText}`);
-      }
-      const blob = await response.blob();
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'packmind-default-skills.zip';
-      a.click();
-      URL.revokeObjectURL(url);
-    } catch (error) {
-      console.error('Failed to download default skills zip:', error);
-    } finally {
-      setIsDownloading(false);
-    }
-  };
 
   return (
     <PMPage
@@ -58,20 +25,7 @@ export default function SkillsIndexRouteModule() {
       breadcrumbComponent={<AutobreadCrumb />}
       actions={
         <PMHStack gap={2}>
-          <PMFeatureFlag
-            featureKeys={[DOWNLOAD_DEFAULT_SKILLS_FEATURE_KEY]}
-            featureDomainMap={DEFAULT_FEATURE_DOMAIN_MAP}
-            userEmail={user?.email}
-          >
-            <PMButton
-              variant="outline"
-              size="md"
-              onClick={handleDownloadDefaultSkillsZip}
-              loading={isDownloading}
-            >
-              Download Default Skills
-            </PMButton>
-          </PMFeatureFlag>
+          <DownloadDefaultSkillsPopover />
           {spaceSlug && (
             <GettingStartedLearnMoreDialog
               body={<SkillsLearnMoreContent />}

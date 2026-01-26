@@ -27,10 +27,10 @@ export default function CreateAccountRouteModule() {
   return (
     <PMVStack gap={6} align="stretch">
       <PMBox textAlign="center">
-        <PMHeading level="h2">Create your account</PMHeading>
+        <PMHeading level="h2">Manage your organization's AI playbook</PMHeading>
         <PMText color="secondary" mt={2}>
-          Start your journey with Packmind by creating your organization and
-          account
+          Create your account to save, share, and collaborate on your AI
+          playbook with your team
         </PMText>
       </PMBox>
 

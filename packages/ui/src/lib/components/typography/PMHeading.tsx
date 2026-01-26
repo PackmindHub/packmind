@@ -2,7 +2,14 @@ import { Heading, HeadingProps } from '@chakra-ui/react';
 
 export type PMHeadingProps = {
   level?: 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6';
-  color?: 'primary' | 'secondary' | 'tertiary' | 'faded';
+  color?:
+    | 'primary'
+    | 'secondary'
+    | 'tertiary'
+    | 'faded'
+    | 'primaryLight'
+    | 'secondaryLight'
+    | 'tertiaryLight';
   children: React.ReactNode;
 } & HeadingProps;
 

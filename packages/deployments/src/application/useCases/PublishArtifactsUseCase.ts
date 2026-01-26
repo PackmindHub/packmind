@@ -11,7 +11,6 @@ import {
   IStandardsPort,
   ICodingAgentPort,
   IGitPort,
-  IAccountsPort,
   IDeployDefaultSkillsUseCase,
   OrganizationId,
   UserId,
@@ -59,7 +58,6 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
     private readonly renderModeConfigurationService: RenderModeConfigurationService,
     private readonly eventEmitterService: PackmindEventEmitterService,
     private readonly publishArtifactsDelayedJob: PublishArtifactsDelayedJob,
-    private readonly accountsPort: IAccountsPort,
     private readonly deployDefaultSkillsUseCase: IDeployDefaultSkillsUseCase,
     private readonly packmindConfigService: PackmindConfigService = new PackmindConfigService(),
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
@@ -220,20 +218,21 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
         });
 
         // Prepare unified deployment using renderArtifacts for ALL targets
-        const fileUpdatesPerTarget = await this.prepareUnifiedDeployment(
-          command.userId as UserId,
-          command.organizationId as OrganizationId,
-          allRecipeVersions,
-          standardVersionsWithRules,
-          filteredSkillVersions,
-          removedRecipeVersions,
-          removedStandardVersions,
-          skillVersionsToRemove,
-          gitRepo,
-          targets,
-          codingAgents,
-          command.packagesSlugs,
-        );
+        const { fileUpdatesPerTarget, addedPackmindSkills } =
+          await this.prepareUnifiedDeployment(
+            command.userId as UserId,
+            command.organizationId as OrganizationId,
+            allRecipeVersions,
+            standardVersionsWithRules,
+            filteredSkillVersions,
+            removedRecipeVersions,
+            removedStandardVersions,
+            skillVersionsToRemove,
+            gitRepo,
+            targets,
+            codingAgents,
+            command.packagesSlugs,
+          );
 
         // Build commit message for the job
         const commitMessage = this.buildCommitMessage(
@@ -244,6 +243,7 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
           standardVersionsWithRules,
           filteredSkillVersions,
           targets,
+          addedPackmindSkills,
         );
 
         // Get file updates from first target (they're all the same for multi-target repos)
@@ -371,7 +371,7 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
 
   /**
    * Prepares unified deployment using renderArtifacts for all targets
-   * Returns a map of targetId -> FileUpdates
+   * Returns a map of targetId -> FileUpdates and names of newly added Packmind skills
    */
   private async prepareUnifiedDeployment(
     userId: UserId,
@@ -386,8 +386,12 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
     targets: Target[],
     codingAgents: CodingAgent[],
     packagesSlugs: string[],
-  ): Promise<Map<string, FileUpdates>> {
+  ): Promise<{
+    fileUpdatesPerTarget: Map<string, FileUpdates>;
+    addedPackmindSkills: string[];
+  }> {
     const fileUpdatesPerTarget = new Map<string, FileUpdates>();
+    let addedPackmindSkills: string[] = [];
 
     for (const target of targets) {
       // Fetch existing files from git
@@ -432,23 +436,21 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
         );
       baseFileUpdates.createOrUpdate.push(configFile);
 
-      // Include default skills for root targets (Packmind users only)
+      // Include default skills for root targets
       if (target.path === '/') {
-        const shouldInclude = await this.shouldIncludeDefaultSkills(userId);
-        if (shouldInclude) {
-          this.logger.info(
-            'Including default skills for root target deployment',
-            {
-              targetId: target.id,
-              targetName: target.name,
-            },
-          );
-          await this.includeDefaultSkills(
-            userId,
-            organizationId,
-            baseFileUpdates,
-          );
-        }
+        this.logger.info(
+          'Including default skills for root target deployment',
+          {
+            targetId: target.id,
+            targetName: target.name,
+          },
+        );
+        addedPackmindSkills = await this.includeDefaultSkills(
+          userId,
+          organizationId,
+          baseFileUpdates,
+          gitRepo,
+        );
       }
 
       // Apply target path prefixing
@@ -466,7 +468,7 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
       });
     }
 
-    return fileUpdatesPerTarget;
+    return { fileUpdatesPerTarget, addedPackmindSkills };
   }
 
   /**
@@ -832,6 +834,7 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
     allStandardVersions: StandardVersion[],
     allSkillVersions: SkillVersion[],
     targets: Target[],
+    addedPackmindSkills: string[],
   ): string {
     const parts: string[] = [
       '[PACKMIND] Update artifacts (commands + standards + skills)',
@@ -853,6 +856,12 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
     if (skillVersions.length > 0) {
       parts.push(`- Updated ${skillVersions.length} skill(s)`);
       parts.push(`- Total skills in repository: ${allSkillVersions.length}`);
+    }
+
+    if (addedPackmindSkills.length > 0) {
+      parts.push(
+        `- Added ${addedPackmindSkills.length} Packmind skill(s): ${addedPackmindSkills.join(', ')}`,
+      );
     }
 
     parts.push(`- Targets: ${targets.map((t) => t.name).join(', ')}`);
@@ -885,34 +894,68 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
   }
 
   /**
-   * Checks if default skills should be included based on user email.
-   * Only users with @packmind.com email addresses can deploy default skills.
-   */
-  private async shouldIncludeDefaultSkills(userId: UserId): Promise<boolean> {
-    const user = await this.accountsPort.getUserById(userId);
-    return user?.email.endsWith('@packmind.com') ?? false;
-  }
-
-  /**
    * Deploys default skills using the DeployDefaultSkillsUseCase and merges them
    * into the provided file updates.
+   * Returns the names of newly added Packmind skills (skills not already in the repository).
    */
   private async includeDefaultSkills(
     userId: UserId,
     organizationId: OrganizationId,
     fileUpdates: FileUpdates,
-  ): Promise<void> {
+    gitRepo: GitRepo,
+  ): Promise<string[]> {
     const result = await this.deployDefaultSkillsUseCase.execute({
       userId,
       organizationId,
     });
 
+    // Extract skill names from paths and determine which are new
+    const addedSkillNames = await this.extractNewlyAddedSkillNames(
+      result.fileUpdates,
+      gitRepo,
+    );
+
     this.mergeFileUpdates(fileUpdates, result.fileUpdates);
 
-    this.logger.info('Default skills included via DeployDefaultSkillsUseCase', {
-      createOrUpdateCount: result.fileUpdates.createOrUpdate.length,
-      deleteCount: result.fileUpdates.delete.length,
-    });
+    this.logger.info(
+      'Packmind skills included via DeployDefaultSkillsUseCase',
+      {
+        createOrUpdateCount: result.fileUpdates.createOrUpdate.length,
+        deleteCount: result.fileUpdates.delete.length,
+        addedSkillNames,
+      },
+    );
+
+    return addedSkillNames;
+  }
+
+  /**
+   * Extracts names of skills that are newly added (SKILL.md doesn't exist in repo).
+   * Parses skill names from paths like `.claude/skills/{skill-name}/SKILL.md`.
+   */
+  private async extractNewlyAddedSkillNames(
+    defaultSkillsUpdates: FileUpdates,
+    gitRepo: GitRepo,
+  ): Promise<string[]> {
+    const skillPattern = /\.claude\/skills\/([^/]+)\/SKILL\.md$/;
+    const addedSkills: string[] = [];
+
+    for (const file of defaultSkillsUpdates.createOrUpdate) {
+      const match = skillPattern.exec(file.path);
+      if (match) {
+        const skillName = match[1];
+        // Check if the SKILL.md already exists in the repository
+        const existingFile = await this.gitPort.getFileFromRepo(
+          gitRepo,
+          file.path,
+        );
+        if (!existingFile) {
+          addedSkills.push(skillName);
+        }
+      }
+    }
+
+    return addedSkills.sort((a, b) => a.localeCompare(b));
   }
 
   /**

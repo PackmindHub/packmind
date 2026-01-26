@@ -13,6 +13,7 @@ The Packmind CLI provides the following commands:
 - **`install`** - Download packages locally
 - **`lint`** - Run detection programs (Enterprise only)
 - **`skills add`** - Import skills into Packmind
+- **`skills init`** - Install default Packmind skills locally
 
 ## Installation
 
@@ -296,6 +297,12 @@ packmind-cli install backend frontend
 
 This downloads all commands, standards, and skills from the specified packages and creates the appropriate files for your AI coding assistant.
 
+<Note>
+  **Default skills included** — When you install packages, Packmind's default
+  skills (including the `create-skill` skill) are automatically installed
+  alongside your package contents.
+</Note>
+
 ### Recursive Install (Monorepos)
 
 For monorepos or projects with multiple `packmind.json` files, use the recursive flag to install packages across all locations:
@@ -444,7 +451,26 @@ packmind-cli lint . --logger=ide
 
 ## Skills Command
 
-Import skills into your Packmind organization. Skills are reusable prompts that can be invoked by AI coding assistants.
+Manage skills in your Packmind organization. Skills are reusable knowledge packages that AI coding assistants can discover and use.
+
+### Initialize Default Skills
+
+```bash
+packmind-cli skills init
+```
+
+This command installs Packmind's default skills locally, including:
+
+- **create-skill** — A skill that guides you through creating new skills with AI assistance
+- **packmind-standard-create** — A skill for creating coding standards
+
+After running this command, you can use the `/create-skill` command in your AI coding assistant to create new skills interactively.
+
+<Tip>
+  **Automatic installation** — Default skills are also installed automatically
+  when you install a package with `packmind-cli install` or when packages are
+  distributed to your repository via the web app.
+</Tip>
 
 ### Add a Skill
 
@@ -463,6 +489,13 @@ packmind-cli skills add ./my-skill
 ```
 
 This uploads the skill to your Packmind organization, making it available for distribution to repositories.
+
+When uploading a skill that already exists, Packmind automatically compares the content:
+
+- If changes are detected, a new version is created
+- If the content is identical, no new version is created
+
+See [Skills Management](/concepts/skills-management) for details on versioning.
 
 ## Related Documentation
 

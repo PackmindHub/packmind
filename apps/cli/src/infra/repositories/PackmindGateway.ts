@@ -18,10 +18,16 @@ import {
   UploadSkillResult,
   IGetDefaultSkillsUseCase,
   GetDefaultSkillsResult,
+  GetGlobalSpaceResult,
+  CreateStandardCommand,
+  CreateStandardResult,
+  StandardRule,
+  AddExampleCommand,
 } from '../../domain/repositories/IPackmindGateway';
 import { readSkillDirectory } from '../utils/readSkillDirectory';
 import { CommunityEditionError } from '../../domain/errors/CommunityEditionError';
 import { NotLoggedInError } from '../../domain/errors/NotLoggedInError';
+import { PackmindHttpClient } from '../http/PackmindHttpClient';
 import {
   RuleId,
   Gateway,
@@ -113,7 +119,12 @@ function decodeApiKey(apiKey: string): DecodedApiKey {
 }
 
 export class PackmindGateway implements IPackmindGateway {
-  constructor(private readonly apiKey: string) {}
+  private readonly httpClient: PackmindHttpClient;
+
+  constructor(private readonly apiKey: string) {
+    this.httpClient = new PackmindHttpClient(apiKey);
+  }
+
   public getPullData: Gateway<IPullContentUseCase> = async (command) => {
     // Decode the API key to get host and JWT
     const decodedApiKey = decodeApiKey(this.apiKey);
@@ -1225,185 +1236,51 @@ export class PackmindGateway implements IPackmindGateway {
     }
   };
 
-  public createStandardFromPlaybook = async (playbook: {
-    name: string;
-    description: string;
-    scope: string;
-    rules: Array<{
-      content: string;
-      examples?: {
-        positive: string;
-        negative: string;
-        language: string;
-      };
-    }>;
-  }): Promise<{
-    success: boolean;
-    standardId?: string;
-    name?: string;
-    error?: string;
-  }> => {
-    const decodedApiKey = decodeApiKey(this.apiKey);
+  public getGlobalSpace = async (): Promise<GetGlobalSpaceResult> => {
+    const { organizationId } = this.httpClient.getAuthContext();
+    return this.httpClient.request<GetGlobalSpaceResult>(
+      `/api/v0/organizations/${organizationId}/spaces/global`,
+    );
+  };
 
-    if (!decodedApiKey.isValid) {
-      if (decodedApiKey.error === 'NOT_LOGGED_IN') {
-        return {
-          success: false,
-          error: 'Not logged in. Please run `packmind-cli login` first.',
-        };
-      }
-      return {
-        success: false,
-        error: `Invalid API key: ${decodedApiKey.error}`,
-      };
-    }
+  public createStandard = async (
+    spaceId: string,
+    data: CreateStandardCommand,
+  ): Promise<CreateStandardResult> => {
+    const { organizationId } = this.httpClient.getAuthContext();
+    return this.httpClient.request<CreateStandardResult>(
+      `/api/v0/organizations/${organizationId}/spaces/${spaceId}/standards`,
+      { method: 'POST', body: data },
+    );
+  };
 
-    const { host, jwt } = decodedApiKey.payload;
-    const jwtPayload = decodeJwt(jwt);
+  public getRulesForStandard = async (
+    spaceId: string,
+    standardId: string,
+  ): Promise<StandardRule[]> => {
+    const { organizationId } = this.httpClient.getAuthContext();
+    return this.httpClient.request<StandardRule[]>(
+      `/api/v0/organizations/${organizationId}/spaces/${spaceId}/standards/${standardId}/rules`,
+    );
+  };
 
-    if (!jwtPayload?.organization?.id) {
-      return {
-        success: false,
-        error: 'Invalid API key: missing organizationId in JWT',
-      };
-    }
-
-    const organizationId = jwtPayload.organization.id;
-
-    try {
-      // Step 1: Resolve 'global' space slug to UUID
-      const spacesUrl = `${host}/api/v0/organizations/${organizationId}/spaces/global`;
-      const spaceResponse = await fetch(spacesUrl, {
-        method: 'GET',
-        headers: {
-          Authorization: `Bearer ${this.apiKey}`,
-        },
-      });
-
-      if (!spaceResponse.ok) {
-        return {
-          success: false,
-          error: `Failed to resolve global space: ${spaceResponse.status} ${spaceResponse.statusText}`,
-        };
-      }
-
-      const space = await spaceResponse.json();
-      const spaceId = space.id;
-
-      // Step 2: Create the standard via API
-      const standardsUrl = `${host}/api/v0/organizations/${organizationId}/spaces/${spaceId}/standards`;
-
-      const createResponse = await fetch(standardsUrl, {
+  public addExampleToRule = async (
+    spaceId: string,
+    standardId: string,
+    ruleId: string,
+    example: AddExampleCommand,
+  ): Promise<void> => {
+    const { organizationId } = this.httpClient.getAuthContext();
+    await this.httpClient.request(
+      `/api/v0/organizations/${organizationId}/spaces/${spaceId}/standards/${standardId}/rules/${ruleId}/examples`,
+      {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${this.apiKey}`,
+        body: {
+          lang: example.language,
+          positive: example.positive,
+          negative: example.negative,
         },
-        body: JSON.stringify({
-          name: playbook.name,
-          description: playbook.description,
-          scope: playbook.scope,
-          rules: playbook.rules.map((rule) => ({
-            content: rule.content,
-          })),
-        }),
-      });
-
-      if (!createResponse.ok) {
-        let errorMsg = `${createResponse.status} ${createResponse.statusText}`;
-        try {
-          const errorBody = await createResponse.json();
-          if (errorBody?.message) {
-            errorMsg = errorBody.message;
-          }
-        } catch {
-          // ignore
-        }
-        return {
-          success: false,
-          error: `Failed to create standard: ${errorMsg}`,
-        };
-      }
-
-      const createdStandard = await createResponse.json();
-      const standardId = createdStandard.id;
-
-      // Step 3: Check if any rules have examples
-      const rulesWithExamples = playbook.rules.filter((rule) => rule.examples);
-
-      if (rulesWithExamples.length > 0) {
-        // Step 4: Fetch the created rules to get their IDs
-        const rulesUrl = `${host}/api/v0/organizations/${organizationId}/spaces/${spaceId}/standards/${standardId}/rules`;
-        const rulesResponse = await fetch(rulesUrl, {
-          method: 'GET',
-          headers: {
-            Authorization: `Bearer ${this.apiKey}`,
-          },
-        });
-
-        if (rulesResponse.ok) {
-          const createdRules = (await rulesResponse.json()) as Array<{
-            id: string;
-            content: string;
-          }>;
-
-          // Step 5: Match rules by index and create examples
-          for (let i = 0; i < playbook.rules.length; i++) {
-            const playbookRule = playbook.rules[i];
-            if (playbookRule.examples && createdRules[i]) {
-              const ruleId = createdRules[i].id;
-              const examplesUrl = `${host}/api/v0/organizations/${organizationId}/spaces/${spaceId}/standards/${standardId}/rules/${ruleId}/examples`;
-
-              await fetch(examplesUrl, {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json',
-                  Authorization: `Bearer ${this.apiKey}`,
-                },
-                body: JSON.stringify({
-                  lang: playbookRule.examples.language,
-                  positive: playbookRule.examples.positive,
-                  negative: playbookRule.examples.negative,
-                }),
-              });
-              // Note: We don't fail if example creation fails - the standard is still created
-            }
-          }
-        }
-      }
-
-      return {
-        success: true,
-        standardId: standardId,
-        name: createdStandard.name,
-      };
-    } catch (error: unknown) {
-      const err = error as {
-        code?: string;
-        name?: string;
-        message?: string;
-        cause?: { code?: string };
-      };
-      const code = err?.code || err?.cause?.code;
-      if (
-        code === 'ECONNREFUSED' ||
-        code === 'ENOTFOUND' ||
-        err?.name === 'FetchError' ||
-        (typeof err?.message === 'string' &&
-          (err.message.includes('Failed to fetch') ||
-            err.message.includes('network') ||
-            err.message.includes('NetworkError')))
-      ) {
-        return {
-          success: false,
-          error: `Packmind server is not accessible at ${host}. Please check your network connection or the server URL.`,
-        };
-      }
-
-      return {
-        success: false,
-        error: `Error: ${err?.message || JSON.stringify(error)}`,
-      };
-    }
+      },
+    );
   };
 }

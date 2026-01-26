@@ -19,6 +19,7 @@ export type StartTrialResult = {
   role: UserOrganizationRole;
   mcpToken?: string;
   mcpUrl?: string;
+  cliLoginCode?: string;
 };
 
 export type IStartTrial = IPublicUseCase<StartTrialCommand, StartTrialResult>;

@@ -22,51 +22,71 @@ describe('ListFilesInDirectoryUseCase', () => {
     jest.clearAllMocks();
   });
 
-  it('delegates to ListFiles service with correct parameters', async () => {
-    const mockFiles = [
-      { path: '/path/to/file.ts' },
-      { path: '/path/to/file.js' },
-    ];
-    mockListFiles.listFilesInDirectory.mockResolvedValue(mockFiles);
-    mockListFiles.readFileContent.mockImplementation(async (filePath) => {
-      if (filePath === '/path/to/file.ts') return 'content1';
-      if (filePath === '/path/to/file.js') return 'content2';
-      return '';
+  describe('when executing with multiple files', () => {
+    let result: Awaited<ReturnType<typeof useCase.execute>>;
+
+    beforeEach(async () => {
+      const mockFiles = [
+        { path: '/path/to/file.ts' },
+        { path: '/path/to/file.js' },
+      ];
+      mockListFiles.listFilesInDirectory.mockResolvedValue(mockFiles);
+      mockListFiles.readFileContent.mockImplementation(async (filePath) => {
+        if (filePath === '/path/to/file.ts') return 'content1';
+        if (filePath === '/path/to/file.js') return 'content2';
+        return '';
+      });
+
+      result = await useCase.execute({
+        path: '/test/path',
+        extensions: ['.ts', '.js'],
+        excludes: ['node_modules'],
+      });
     });
 
-    const result = await useCase.execute({
-      path: '/test/path',
-      extensions: ['.ts', '.js'],
-      excludes: ['node_modules'],
+    it('delegates to ListFiles service with correct parameters', () => {
+      expect(mockListFiles.listFilesInDirectory).toHaveBeenCalledWith(
+        '/test/path',
+        ['.ts', '.js'],
+        ['node_modules'],
+      );
     });
 
-    expect(mockListFiles.listFilesInDirectory).toHaveBeenCalledWith(
-      '/test/path',
-      ['.ts', '.js'],
-      ['node_modules'],
-    );
-    expect(result).toEqual([
-      { path: '/path/to/file.ts', content: 'content1' },
-      { path: '/path/to/file.js', content: 'content2' },
-    ]);
+    it('returns files with content', () => {
+      expect(result).toEqual([
+        { path: '/path/to/file.ts', content: 'content1' },
+        { path: '/path/to/file.js', content: 'content2' },
+      ]);
+    });
   });
 
-  it('uses empty array as default for excludes parameter', async () => {
-    const mockFiles = [{ path: '/path/to/file.ts' }];
-    mockListFiles.listFilesInDirectory.mockResolvedValue(mockFiles);
-    mockListFiles.readFileContent.mockResolvedValue('content');
+  describe('when excludes parameter is not provided', () => {
+    let result: Awaited<ReturnType<typeof useCase.execute>>;
 
-    const result = await useCase.execute({
-      path: '/test/path',
-      extensions: ['.ts'],
+    beforeEach(async () => {
+      const mockFiles = [{ path: '/path/to/file.ts' }];
+      mockListFiles.listFilesInDirectory.mockResolvedValue(mockFiles);
+      mockListFiles.readFileContent.mockResolvedValue('content');
+
+      result = await useCase.execute({
+        path: '/test/path',
+        extensions: ['.ts'],
+      });
     });
 
-    expect(mockListFiles.listFilesInDirectory).toHaveBeenCalledWith(
-      '/test/path',
-      ['.ts'],
-      [],
-    );
-    expect(result).toEqual([{ path: '/path/to/file.ts', content: 'content' }]);
+    it('uses empty array as default for excludes', () => {
+      expect(mockListFiles.listFilesInDirectory).toHaveBeenCalledWith(
+        '/test/path',
+        ['.ts'],
+        [],
+      );
+    });
+
+    it('returns file with content', () => {
+      expect(result).toEqual([
+        { path: '/path/to/file.ts', content: 'content' },
+      ]);
+    });
   });
 
   it('returns result from ListFiles service', async () => {

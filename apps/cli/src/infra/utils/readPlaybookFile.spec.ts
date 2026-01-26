@@ -1,4 +1,4 @@
-import { readPlaybookFile } from './readPlaybookFile';
+import { readPlaybookFile, ReadPlaybookResult } from './readPlaybookFile';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import * as os from 'os';
@@ -14,7 +14,8 @@ describe('readPlaybookFile', () => {
     await fs.rm(tempDir, { recursive: true, force: true });
   });
 
-  it('reads and parses a valid playbook JSON file', async () => {
+  describe('when reading a valid playbook JSON file', () => {
+    let result: ReadPlaybookResult;
     const playbook = {
       name: 'Test',
       description: 'Test description',
@@ -22,40 +23,74 @@ describe('readPlaybookFile', () => {
       rules: [{ content: 'Use something' }],
     };
 
-    const filePath = path.join(tempDir, 'playbook.json');
-    await fs.writeFile(filePath, JSON.stringify(playbook));
+    beforeEach(async () => {
+      const filePath = path.join(tempDir, 'playbook.json');
+      await fs.writeFile(filePath, JSON.stringify(playbook));
+      result = await readPlaybookFile(filePath);
+    });
 
-    const result = await readPlaybookFile(filePath);
-    expect(result.isValid).toBe(true);
-    expect(result.data).toEqual(playbook);
+    it('returns valid status', () => {
+      expect(result.isValid).toBe(true);
+    });
+
+    it('returns parsed playbook data', () => {
+      expect(result.data).toEqual(playbook);
+    });
   });
 
-  it('returns error for missing file', async () => {
-    const result = await readPlaybookFile('/nonexistent/path.json');
-    expect(result.isValid).toBe(false);
-    expect(result.errors).toBeDefined();
+  describe('when reading a missing file', () => {
+    let result: ReadPlaybookResult;
+
+    beforeEach(async () => {
+      result = await readPlaybookFile('/nonexistent/path.json');
+    });
+
+    it('returns invalid status', () => {
+      expect(result.isValid).toBe(false);
+    });
+
+    it('returns errors', () => {
+      expect(result.errors).toBeDefined();
+    });
   });
 
-  it('returns error for invalid JSON', async () => {
-    const filePath = path.join(tempDir, 'invalid.json');
-    await fs.writeFile(filePath, '{invalid json}');
+  describe('when reading invalid JSON', () => {
+    let result: ReadPlaybookResult;
 
-    const result = await readPlaybookFile(filePath);
-    expect(result.isValid).toBe(false);
-    expect(result.errors).toBeDefined();
+    beforeEach(async () => {
+      const filePath = path.join(tempDir, 'invalid.json');
+      await fs.writeFile(filePath, '{invalid json}');
+      result = await readPlaybookFile(filePath);
+    });
+
+    it('returns invalid status', () => {
+      expect(result.isValid).toBe(false);
+    });
+
+    it('returns errors', () => {
+      expect(result.errors).toBeDefined();
+    });
   });
 
-  it('returns error for invalid playbook structure', async () => {
-    const playbook = {
-      name: 'Test',
-      // missing required fields
-    };
+  describe('when reading an invalid playbook structure', () => {
+    let result: ReadPlaybookResult;
 
-    const filePath = path.join(tempDir, 'incomplete.json');
-    await fs.writeFile(filePath, JSON.stringify(playbook));
+    beforeEach(async () => {
+      const playbook = {
+        name: 'Test',
+        // missing required fields
+      };
+      const filePath = path.join(tempDir, 'incomplete.json');
+      await fs.writeFile(filePath, JSON.stringify(playbook));
+      result = await readPlaybookFile(filePath);
+    });
 
-    const result = await readPlaybookFile(filePath);
-    expect(result.isValid).toBe(false);
-    expect(result.errors).toBeDefined();
+    it('returns invalid status', () => {
+      expect(result.isValid).toBe(false);
+    });
+
+    it('returns errors', () => {
+      expect(result.errors).toBeDefined();
+    });
   });
 });

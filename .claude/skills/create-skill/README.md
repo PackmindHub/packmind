@@ -1,4 +1,4 @@
-# Skill Creator
+# Create skill
 
 A skill that guides AI coding agents through the process of creating effective skills.
 
@@ -35,7 +35,7 @@ Before using this skill, ensure you have:
 ## Directory Structure
 
 ```
-packmind-skill-creator/
+create-skill/
 ├── SKILL.md           # Instructions for the AI agent
 ├── README.md          # This file (for humans)
 ├── LICENSE.txt        # Apache 2.0 license

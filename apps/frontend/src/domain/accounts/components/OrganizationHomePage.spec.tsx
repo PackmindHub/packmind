@@ -193,92 +193,102 @@ describe('OrganizationHomePage', () => {
   });
 
   describe('Onboarding incomplete', () => {
-    it('renders OnboardingSteps when hasDeployed is false', () => {
-      mockUseGetOnboardingStatusQuery.mockReturnValue({
-        data: {
-          hasDeployed: false,
-          hasConnectedGitProvider: false,
-          hasConnectedGitRepo: false,
-          hasCreatedStandard: false,
-          hasInvitedColleague: false,
-        },
-        isLoading: false,
-        isError: false,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      } as any);
+    describe('when hasDeployed is false', () => {
+      beforeEach(() => {
+        mockUseGetOnboardingStatusQuery.mockReturnValue({
+          data: {
+            hasDeployed: false,
+            hasConnectedGitProvider: false,
+            hasConnectedGitRepo: false,
+            hasCreatedStandard: false,
+            hasInvitedColleague: false,
+          },
+          isLoading: false,
+          isError: false,
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        } as any);
 
-      renderWithProviders(<OrganizationHomePage />);
+        renderWithProviders(<OrganizationHomePage />);
+      });
 
-      expect(
-        screen.getByText(/Configure your local environment/),
-      ).toBeInTheDocument();
-      expect(screen.getByText(/Build your playbook/)).toBeInTheDocument();
-      expect(screen.getByText(/Vibe code with confidence/)).toBeInTheDocument();
+      it('displays local environment configuration step', () => {
+        expect(
+          screen.getByText(/Configure your local environment/),
+        ).toBeInTheDocument();
+      });
+
+      it('displays build playbook step', () => {
+        expect(screen.getByText(/Build your playbook/)).toBeInTheDocument();
+      });
+
+      it('displays vibe code step', () => {
+        expect(
+          screen.getByText(/Vibe code with confidence/),
+        ).toBeInTheDocument();
+      });
     });
 
-    it('renders OnboardingSteps when hasDeployed is undefined', () => {
-      mockUseGetOnboardingStatusQuery.mockReturnValue({
-        data: undefined,
-        isLoading: false,
-        isError: false,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      } as any);
+    describe('when hasDeployed is undefined', () => {
+      beforeEach(() => {
+        mockUseGetOnboardingStatusQuery.mockReturnValue({
+          data: undefined,
+          isLoading: false,
+          isError: false,
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        } as any);
 
-      renderWithProviders(<OrganizationHomePage />);
+        renderWithProviders(<OrganizationHomePage />);
+      });
 
-      expect(
-        screen.getByText(/Configure your local environment/),
-      ).toBeInTheDocument();
+      it('displays OnboardingSteps', () => {
+        expect(
+          screen.getByText(/Configure your local environment/),
+        ).toBeInTheDocument();
+      });
     });
   });
 
   describe('Onboarding complete', () => {
-    it('renders dashboard when hasDeployed is true', async () => {
-      mockUseGetOnboardingStatusQuery.mockReturnValue({
-        data: {
-          hasDeployed: true,
-          hasConnectedGitProvider: true,
-          hasConnectedGitRepo: true,
-          hasCreatedStandard: true,
-          hasInvitedColleague: true,
-        },
-        isLoading: false,
-        isError: false,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      } as any);
+    describe('when hasDeployed is true', () => {
+      beforeEach(() => {
+        mockUseGetOnboardingStatusQuery.mockReturnValue({
+          data: {
+            hasDeployed: true,
+            hasConnectedGitProvider: true,
+            hasConnectedGitRepo: true,
+            hasCreatedStandard: true,
+            hasInvitedColleague: true,
+          },
+          isLoading: false,
+          isError: false,
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        } as any);
 
-      renderWithProviders(<OrganizationHomePage />);
-
-      await waitFor(() => {
-        expect(screen.getByTestId('dashboard-kpi')).toBeInTheDocument();
-        expect(screen.getByTestId('outdated-targets')).toBeInTheDocument();
+        renderWithProviders(<OrganizationHomePage />);
       });
-    });
 
-    it('does not render OnboardingSteps when onboarding is complete', () => {
-      mockUseGetOnboardingStatusQuery.mockReturnValue({
-        data: {
-          hasDeployed: true,
-          hasConnectedGitProvider: true,
-          hasConnectedGitRepo: true,
-          hasCreatedStandard: true,
-          hasInvitedColleague: true,
-        },
-        isLoading: false,
-        isError: false,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      } as any);
+      it('displays dashboard KPI section', async () => {
+        await waitFor(() => {
+          expect(screen.getByTestId('dashboard-kpi')).toBeInTheDocument();
+        });
+      });
 
-      renderWithProviders(<OrganizationHomePage />);
+      it('displays outdated targets section', async () => {
+        await waitFor(() => {
+          expect(screen.getByTestId('outdated-targets')).toBeInTheDocument();
+        });
+      });
 
-      expect(
-        screen.queryByText(/Configure your local environment/),
-      ).not.toBeInTheDocument();
+      it('hides OnboardingSteps', () => {
+        expect(
+          screen.queryByText(/Configure your local environment/),
+        ).not.toBeInTheDocument();
+      });
     });
   });
 
   describe('Page title', () => {
-    it('renders the welcome title', () => {
+    beforeEach(() => {
       mockUseGetOnboardingStatusQuery.mockReturnValue({
         data: {
           hasDeployed: false,
@@ -293,7 +303,9 @@ describe('OrganizationHomePage', () => {
       } as any);
 
       renderWithProviders(<OrganizationHomePage />);
+    });
 
+    it('displays welcome title', () => {
       expect(
         screen.getByText('👋 Welcome to your dashboard'),
       ).toBeInTheDocument();

@@ -14,6 +14,7 @@
     "build": {
       "executor": "nx:run-commands",
       "cache": true,
+      "inputs": ["default", "^default"],
       "outputs": ["{workspaceRoot}/dist/apps/api"],
       "options": {
         "command": "webpack",

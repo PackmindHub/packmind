@@ -21,8 +21,6 @@ import {
   DeployDefaultSkillsResponse,
   DeploymentOverview,
   Distribution,
-  DownloadDefaultSkillsZipFileCommand,
-  DownloadDefaultSkillsZipFileResponse,
   DownloadDefaultSkillsZipForAgentCommand,
   DownloadDefaultSkillsZipForAgentResponse,
   FindActiveStandardVersionsByTargetCommand,
@@ -93,7 +91,6 @@ import { CreateRenderModeConfigurationUseCase } from '../useCases/CreateRenderMo
 import { DeletePackagesBatchUsecase } from '../useCases/deletePackage/deletePackagesBatch.usecase';
 import { DeleteTargetUseCase } from '../useCases/DeleteTargetUseCase';
 import { DeployDefaultSkillsUseCase } from '../useCases/DeployDefaultSkillsUseCase';
-import { DownloadDefaultSkillsZipFileUseCase } from '../useCases/DownloadDefaultSkillsZipFileUseCase';
 import { DownloadDefaultSkillsZipForAgentUseCase } from '../useCases/DownloadDefaultSkillsZipForAgentUseCase';
 import { FindActiveStandardVersionsByTargetUseCase } from '../useCases/FindActiveStandardVersionsByTargetUseCase';
 import { GetDeploymentOverviewUseCase } from '../useCases/GetDeploymentOverviewUseCase';
@@ -165,7 +162,6 @@ export class DeploymentsAdapter
   private _notifyDistributionUseCase!: NotifyDistributionUseCase;
   private _removePackageFromTargetsUseCase!: RemovePackageFromTargetsUseCase;
   private _deployDefaultSkillsUseCase!: DeployDefaultSkillsUseCase;
-  private _downloadDefaultSkillsZipFileUseCase!: DownloadDefaultSkillsZipFileUseCase;
   private _downloadDefaultSkillsZipForAgentUseCase!: DownloadDefaultSkillsZipForAgentUseCase;
 
   constructor(
@@ -219,18 +215,12 @@ export class DeploymentsAdapter
     }
 
     // Step 4: Create all use cases with non-null ports
-    // DeployDefaultSkillsUseCase must be created first as it's used by PublishArtifactsUseCase and DownloadDefaultSkillsZipFileUseCase
+    // DeployDefaultSkillsUseCase must be created first as it's used by PublishArtifactsUseCase
     this._deployDefaultSkillsUseCase = new DeployDefaultSkillsUseCase(
       this.deploymentsServices.getRenderModeConfigurationService(),
       this.codingAgentPort,
       this.accountsPort,
     );
-
-    this._downloadDefaultSkillsZipFileUseCase =
-      new DownloadDefaultSkillsZipFileUseCase(
-        this._deployDefaultSkillsUseCase,
-        this.accountsPort,
-      );
 
     this._downloadDefaultSkillsZipForAgentUseCase =
       new DownloadDefaultSkillsZipForAgentUseCase(this.codingAgentPort);
@@ -246,7 +236,6 @@ export class DeploymentsAdapter
       this.deploymentsServices.getRenderModeConfigurationService(),
       ports.eventEmitterService,
       this.deploymentsDelayedJobs.publishArtifactsDelayedJob,
-      this.accountsPort,
       this._deployDefaultSkillsUseCase,
     );
 
@@ -671,12 +660,6 @@ export class DeploymentsAdapter
     command: DeployDefaultSkillsCommand,
   ): Promise<DeployDefaultSkillsResponse> {
     return this._deployDefaultSkillsUseCase.execute(command);
-  }
-
-  async downloadDefaultSkillsZipFile(
-    command: DownloadDefaultSkillsZipFileCommand,
-  ): Promise<DownloadDefaultSkillsZipFileResponse> {
-    return this._downloadDefaultSkillsZipFileUseCase.execute(command);
   }
 
   async downloadDefaultSkillsZipForAgent(

@@ -13,11 +13,13 @@ import {
 import { ICodingAgentDeployer } from '../../../domain/repository/ICodingAgentDeployer';
 import { GenericStandardSectionWriter } from '../genericSectionWriter/GenericStandardSectionWriter';
 import { getTargetPrefixedPath } from '../utils/FileUtils';
+import { DefaultSkillsDeployer } from '../defaultSkillsDeployer/DefaultSkillsDeployer';
 
 const origin = 'CursorDeployer';
 
 export class CursorDeployer implements ICodingAgentDeployer {
   private static readonly COMMANDS_PATH = '.cursor/commands/packmind';
+  private static readonly SKILLS_FOLDER_PATH = '.cursor/skills/';
   /** @deprecated Legacy path to clean up during migration */
   private static readonly LEGACY_RECIPES_INDEX_PATH =
     '.cursor/rules/packmind/recipes-index.mdc';
@@ -28,6 +30,14 @@ export class CursorDeployer implements ICodingAgentDeployer {
     private readonly gitPort?: IGitPort,
   ) {
     this.logger = new PackmindLogger(origin);
+  }
+
+  async deployDefaultSkills() {
+    const defaultSkillsDeployer = new DefaultSkillsDeployer(
+      'Cursor',
+      '.cursor/skills/',
+    );
+    return defaultSkillsDeployer.deployDefaultSkills();
   }
 
   async deployRecipes(
@@ -159,35 +169,78 @@ export class CursorDeployer implements ICodingAgentDeployer {
   }
 
   async deploySkills(
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     skillVersions: SkillVersion[],
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     gitRepo: GitRepo,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     target: Target,
   ): Promise<FileUpdates> {
-    // Skills not supported for Cursor deployer yet
-    return { createOrUpdate: [], delete: [] };
+    this.logger.info('Deploying skills for Cursor', {
+      skillsCount: skillVersions.length,
+      gitRepoId: gitRepo.id,
+      targetId: target.id,
+      targetPath: target.path,
+    });
+
+    const fileUpdates: FileUpdates = {
+      createOrUpdate: [],
+      delete: [],
+    };
+
+    // Generate individual Cursor skill files for each skill
+    for (const skillVersion of skillVersions) {
+      const skillFiles = this.generateCursorSkillFiles(skillVersion);
+      for (const file of skillFiles) {
+        const targetPrefixedPath = getTargetPrefixedPath(file.path, target);
+        fileUpdates.createOrUpdate.push({
+          path: targetPrefixedPath,
+          content: file.content,
+          isBase64: file.isBase64,
+        });
+      }
+    }
+
+    return fileUpdates;
   }
 
   async generateFileUpdatesForSkills(
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     skillVersions: SkillVersion[],
   ): Promise<FileUpdates> {
-    // Skills not supported for Cursor deployer yet
-    return { createOrUpdate: [], delete: [] };
+    this.logger.info('Generating file updates for skills (Cursor)', {
+      skillsCount: skillVersions.length,
+    });
+
+    const fileUpdates: FileUpdates = {
+      createOrUpdate: [],
+      delete: [],
+    };
+
+    // Generate individual Cursor skill files for each skill (without target prefix)
+    for (const skillVersion of skillVersions) {
+      const skillFiles = this.generateCursorSkillFiles(skillVersion);
+      for (const file of skillFiles) {
+        fileUpdates.createOrUpdate.push({
+          path: file.path,
+          content: file.content,
+          isBase64: file.isBase64,
+        });
+      }
+    }
+
+    return fileUpdates;
   }
 
   async deployArtifacts(
     recipeVersions: RecipeVersion[],
     standardVersions: StandardVersion[],
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     skillVersions: SkillVersion[] = [],
   ): Promise<FileUpdates> {
-    this.logger.info('Deploying artifacts (recipes + standards) for Cursor', {
-      recipesCount: recipeVersions.length,
-      standardsCount: standardVersions.length,
-    });
+    this.logger.info(
+      'Deploying artifacts (recipes + standards + skills) for Cursor',
+      {
+        recipesCount: recipeVersions.length,
+        standardsCount: standardVersions.length,
+        skillsCount: skillVersions.length,
+      },
+    );
 
     const fileUpdates: FileUpdates = {
       createOrUpdate: [],
@@ -211,6 +264,18 @@ export class CursorDeployer implements ICodingAgentDeployer {
         path: configFile.path,
         content: configFile.content,
       });
+    }
+
+    // Generate individual Cursor skill files for each skill
+    for (const skillVersion of skillVersions) {
+      const skillFiles = this.generateCursorSkillFiles(skillVersion);
+      for (const file of skillFiles) {
+        fileUpdates.createOrUpdate.push({
+          path: file.path,
+          content: file.content,
+          isBase64: file.isBase64,
+        });
+      }
     }
 
     // Clean up legacy recipes-index.mdc file
@@ -240,6 +305,7 @@ export class CursorDeployer implements ICodingAgentDeployer {
       removedSkillsCount: removed.skillVersions.length,
       installedRecipesCount: installed.recipeVersions.length,
       installedStandardsCount: installed.standardVersions.length,
+      installedSkillsCount: installed.skillVersions.length,
     });
 
     const fileUpdates: FileUpdates = {
@@ -277,6 +343,15 @@ export class CursorDeployer implements ICodingAgentDeployer {
     if (hasRemovedStandards && installed.standardVersions.length === 0) {
       fileUpdates.delete.push({
         path: '.cursor/rules/packmind/',
+        type: DeleteItemType.Directory,
+      });
+    }
+
+    // Delete skill directories for removed skills
+    // (git port will expand directory paths to individual files)
+    for (const skillVersion of removed.skillVersions) {
+      fileUpdates.delete.push({
+        path: `.cursor/skills/${skillVersion.slug}`,
         type: DeleteItemType.Directory,
       });
     }
@@ -354,5 +429,110 @@ ${instructionContent}`;
       path,
       content,
     };
+  }
+
+  getSkillsFolderPath(): string {
+    return CursorDeployer.SKILLS_FOLDER_PATH;
+  }
+
+  private generateCursorSkillFiles(skillVersion: SkillVersion): Array<{
+    path: string;
+    content: string;
+    isBase64?: boolean;
+  }> {
+    const files: Array<{ path: string; content: string; isBase64?: boolean }> =
+      [];
+
+    // Generate SKILL.md (main skill file)
+    const skillMdContent = this.generateSkillMdContent(skillVersion);
+    files.push({
+      path: `.cursor/skills/${skillVersion.slug}/SKILL.md`,
+      content: skillMdContent,
+    });
+
+    // Add additional skill files if they exist (excluding SKILL.md which we already generated)
+    if (skillVersion.files && skillVersion.files.length > 0) {
+      for (const file of skillVersion.files) {
+        // Skip SKILL.md as it's already generated from the prompt
+        if (file.path.toUpperCase() === 'SKILL.MD') {
+          continue;
+        }
+        files.push({
+          path: `.cursor/skills/${skillVersion.slug}/${file.path}`,
+          content: file.content,
+          isBase64: file.isBase64,
+        });
+      }
+    }
+
+    return files;
+  }
+
+  /**
+   * Generate the SKILL.md content with frontmatter for a specific skill version
+   */
+  private generateSkillMdContent(skillVersion: SkillVersion): string {
+    // Build frontmatter according to Agent Skills specification
+    const frontmatterFields: string[] = [];
+
+    if (skillVersion.name) {
+      frontmatterFields.push(
+        `name: '${this.escapeSingleQuotes(skillVersion.name)}'`,
+      );
+    }
+
+    if (skillVersion.description) {
+      frontmatterFields.push(
+        `description: '${this.escapeSingleQuotes(skillVersion.description)}'`,
+      );
+    }
+
+    if (skillVersion.license) {
+      frontmatterFields.push(
+        `license: '${this.escapeSingleQuotes(skillVersion.license)}'`,
+      );
+    }
+
+    if (skillVersion.compatibility) {
+      frontmatterFields.push(
+        `compatibility: '${this.escapeSingleQuotes(skillVersion.compatibility)}'`,
+      );
+    }
+
+    if (skillVersion.allowedTools) {
+      frontmatterFields.push(
+        `allowed-tools: '${this.escapeSingleQuotes(skillVersion.allowedTools)}'`,
+      );
+    }
+
+    if (
+      skillVersion.metadata &&
+      Object.keys(skillVersion.metadata).length > 0
+    ) {
+      // Metadata is stored as JSONB, convert to YAML format
+      const metadataYaml = Object.entries(skillVersion.metadata)
+        .map(
+          ([key, value]) =>
+            `  ${key}: '${this.escapeSingleQuotes(String(value))}'`,
+        )
+        .join('\n');
+      frontmatterFields.push(`metadata:\n${metadataYaml}`);
+    }
+
+    const frontmatter = `---
+${frontmatterFields.join('\n')}
+---`;
+
+    // Content is the skill prompt (body)
+    return `${frontmatter}
+
+${skillVersion.prompt}`;
+  }
+
+  /**
+   * Escape single quotes in YAML values to prevent parsing errors
+   */
+  private escapeSingleQuotes(value: string): string {
+    return value.replace(/'/g, "''");
   }
 }

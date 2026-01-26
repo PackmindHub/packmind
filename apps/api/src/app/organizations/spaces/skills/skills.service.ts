@@ -2,6 +2,7 @@ import { Injectable, Inject } from '@nestjs/common';
 import { SkillsHexa } from '@packmind/skills';
 import {
   ClientSource,
+  DeleteSkillResponse,
   OrganizationId,
   Skill,
   SkillId,
@@ -75,5 +76,20 @@ export class SkillsService {
       userId,
     });
     return result.versions;
+  }
+
+  async deleteSkill(
+    skillId: SkillId,
+    spaceId: SpaceId,
+    organizationId: OrganizationId,
+    userId: UserId,
+    source: ClientSource,
+  ): Promise<DeleteSkillResponse> {
+    return this.skillsHexa.getAdapter().deleteSkill({
+      skillId,
+      organizationId,
+      userId,
+      source,
+    });
   }
 }

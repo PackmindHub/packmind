@@ -37,29 +37,45 @@ describe('CredentialsService', () => {
       });
     });
 
-    it('returns credentials from first provider that has them', () => {
-      const credentials1: DecodedCredentials = {
-        apiKey: 'api-key-1',
-        host: 'https://host1.com',
-        userName: 'User 1',
-      };
-      const credentials2: DecodedCredentials = {
-        apiKey: 'api-key-2',
-        host: 'https://host2.com',
-        userName: 'User 2',
-      };
-      const provider1 = new MockCredentialsProvider('Provider 1', credentials1);
-      const provider2 = new MockCredentialsProvider('Provider 2', credentials2);
-      const service = new CredentialsService([provider1, provider2]);
+    describe('when first provider has credentials', () => {
+      let result: ReturnType<CredentialsService['loadCredentials']>;
 
-      const result = service.loadCredentials();
+      beforeEach(() => {
+        const credentials1: DecodedCredentials = {
+          apiKey: 'api-key-1',
+          host: 'https://host1.com',
+          userName: 'User 1',
+        };
+        const credentials2: DecodedCredentials = {
+          apiKey: 'api-key-2',
+          host: 'https://host2.com',
+          userName: 'User 2',
+        };
+        const provider1 = new MockCredentialsProvider(
+          'Provider 1',
+          credentials1,
+        );
+        const provider2 = new MockCredentialsProvider(
+          'Provider 2',
+          credentials2,
+        );
+        const service = new CredentialsService([provider1, provider2]);
+        result = service.loadCredentials();
+      });
 
-      expect(result?.apiKey).toBe('api-key-1');
-      expect(result?.host).toBe('https://host1.com');
+      it('returns apiKey from first provider', () => {
+        expect(result?.apiKey).toBe('api-key-1');
+      });
+
+      it('returns host from first provider', () => {
+        expect(result?.host).toBe('https://host1.com');
+      });
     });
 
     describe('when first provider has no credentials', () => {
-      it('falls back to second provider', () => {
+      let result: ReturnType<CredentialsService['loadCredentials']>;
+
+      beforeEach(() => {
         const credentials2: DecodedCredentials = {
           apiKey: 'api-key-2',
           host: 'https://host2.com',
@@ -71,10 +87,14 @@ describe('CredentialsService', () => {
           credentials2,
         );
         const service = new CredentialsService([provider1, provider2]);
+        result = service.loadCredentials();
+      });
 
-        const result = service.loadCredentials();
-
+      it('returns apiKey from second provider', () => {
         expect(result?.apiKey).toBe('api-key-2');
+      });
+
+      it('returns host from second provider', () => {
         expect(result?.host).toBe('https://host2.com');
       });
     });

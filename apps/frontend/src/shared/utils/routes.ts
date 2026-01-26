@@ -100,7 +100,13 @@ export const routes = {
       token ? `/reset-password?token=${token}` : '/reset-password',
     toActivate: (token: string) => `/activate?token=${token}`,
     toStartTrial: () => '/quick-start',
-    toStartTrialAgent: (agent: string, token: string, mcpUrl: string) =>
-      `/quick-start/${agent}?token=${token}&mcpUrl=${mcpUrl}`,
+    toStartTrialSelectAgent: () => '/quick-start/select-agent',
+    toStartTrialAgent: (
+      agent: string,
+      token: string,
+      mcpUrl: string,
+      cliLoginCode?: string,
+    ) =>
+      `/quick-start/${agent}?token=${token}&mcpUrl=${mcpUrl}${cliLoginCode ? `&cliLoginCode=${cliLoginCode}` : ''}`,
   },
 };

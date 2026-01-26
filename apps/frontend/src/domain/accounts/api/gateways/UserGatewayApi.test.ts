@@ -29,7 +29,7 @@ describe('UserGatewayApi', () => {
   describe('getUsersInMyOrganization', () => {
     const organizationId = createOrganizationId('org-123');
 
-    it('calls API service with correct parameters', async () => {
+    describe('when fetching users successfully', () => {
       const mockUsers = [
         {
           id: '1',
@@ -58,30 +58,48 @@ describe('UserGatewayApi', () => {
           ],
         },
       ];
-      mockApiGet.mockResolvedValue(mockUsers);
+      let result: typeof mockUsers;
 
-      const result = await gateway.getUsersInMyOrganization({ organizationId });
+      beforeEach(async () => {
+        mockApiGet.mockResolvedValue(mockUsers);
+        result = await gateway.getUsersInMyOrganization({ organizationId });
+      });
 
-      expect(mockApiGet).toHaveBeenCalledWith('/organizations/org-123/users');
-      expect(result).toEqual(mockUsers);
+      it('calls API with correct endpoint', () => {
+        expect(mockApiGet).toHaveBeenCalledWith('/organizations/org-123/users');
+      });
+
+      it('returns the users from API response', () => {
+        expect(result).toEqual(mockUsers);
+      });
     });
 
-    it('handles API errors', async () => {
-      const error = new Error('Network error');
-      mockApiGet.mockRejectedValue(error);
+    describe('when API returns an error', () => {
+      it('propagates the error', async () => {
+        const error = new Error('Network error');
+        mockApiGet.mockRejectedValue(error);
 
-      await expect(
-        gateway.getUsersInMyOrganization({ organizationId }),
-      ).rejects.toThrow('Network error');
+        await expect(
+          gateway.getUsersInMyOrganization({ organizationId }),
+        ).rejects.toThrow('Network error');
+      });
     });
 
-    it('returns empty array when no users found', async () => {
-      mockApiGet.mockResolvedValue([]);
+    describe('when no users exist', () => {
+      let result: unknown[];
 
-      const result = await gateway.getUsersInMyOrganization({ organizationId });
+      beforeEach(async () => {
+        mockApiGet.mockResolvedValue([]);
+        result = await gateway.getUsersInMyOrganization({ organizationId });
+      });
 
-      expect(mockApiGet).toHaveBeenCalledWith('/organizations/org-123/users');
-      expect(result).toEqual([]);
+      it('calls API with correct endpoint', () => {
+        expect(mockApiGet).toHaveBeenCalledWith('/organizations/org-123/users');
+      });
+
+      it('returns an empty array', () => {
+        expect(result).toEqual([]);
+      });
     });
   });
 });

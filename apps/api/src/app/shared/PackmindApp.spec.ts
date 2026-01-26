@@ -2,11 +2,9 @@ import { JwtService } from '@nestjs/jwt';
 import { AccountsHexa } from '@packmind/accounts';
 import { CodingAgentHexa } from '@packmind/coding-agent';
 import { DeploymentsHexa } from '@packmind/deployments';
-import {
-  AmplitudeHexa,
-  ImportPracticeLegacyHexa,
-  LinterHexa,
-} from '@packmind/editions';
+import { LinterHexa } from '@packmind/linter';
+import { AmplitudeHexa } from '@packmind/amplitude';
+import { apiHexaPlugins } from '@packmind/plugins';
 import { GitHexa } from '@packmind/git';
 import { LlmHexa } from '@packmind/llm';
 import { PackmindLogger } from '@packmind/logger';
@@ -62,7 +60,7 @@ describe('PackmindApp API', () => {
         SkillsHexa,
         CodingAgentHexa,
         DeploymentsHexa,
-        ImportPracticeLegacyHexa,
+        ...apiHexaPlugins,
       ]);
     });
 
@@ -83,6 +81,7 @@ describe('PackmindApp API', () => {
       );
 
       const registry = await initializePackmindApp(dataSource, {
+        jwtService: undefined,
         apiKeyService,
       });
 
@@ -98,6 +97,7 @@ describe('PackmindApp API', () => {
       );
 
       const registry = await initializePackmindApp(dataSource, {
+        jwtService: undefined,
         apiKeyService,
       });
 
@@ -113,6 +113,7 @@ describe('PackmindApp API', () => {
       );
 
       const registry = await initializePackmindApp(dataSource, {
+        jwtService: undefined,
         apiKeyService,
       });
 
@@ -128,6 +129,7 @@ describe('PackmindApp API', () => {
       );
 
       const registry = await initializePackmindApp(dataSource, {
+        jwtService: undefined,
         apiKeyService,
       });
 
@@ -143,6 +145,7 @@ describe('PackmindApp API', () => {
       );
 
       const registry = await initializePackmindApp(dataSource, {
+        jwtService: undefined,
         apiKeyService,
       });
 
@@ -158,6 +161,7 @@ describe('PackmindApp API', () => {
       );
 
       const registry = await initializePackmindApp(dataSource, {
+        jwtService: undefined,
         apiKeyService,
       });
 
@@ -173,6 +177,7 @@ describe('PackmindApp API', () => {
       );
 
       const registry = await initializePackmindApp(dataSource, {
+        jwtService: undefined,
         apiKeyService,
       });
 
@@ -188,6 +193,7 @@ describe('PackmindApp API', () => {
       );
 
       const registry = await initializePackmindApp(dataSource, {
+        jwtService: undefined,
         apiKeyService,
       });
 
@@ -203,6 +209,7 @@ describe('PackmindApp API', () => {
       );
 
       const registry = await initializePackmindApp(dataSource, {
+        jwtService: undefined,
         apiKeyService,
       });
 
@@ -218,6 +225,7 @@ describe('PackmindApp API', () => {
       );
 
       const registry = await initializePackmindApp(dataSource, {
+        jwtService: undefined,
         apiKeyService,
       });
 
@@ -233,6 +241,7 @@ describe('PackmindApp API', () => {
       );
 
       const registry = await initializePackmindApp(dataSource, {
+        jwtService: undefined,
         apiKeyService,
       });
 
@@ -249,6 +258,7 @@ describe('PackmindApp API', () => {
       );
 
       const registry = await initializePackmindApp(dataSource, {
+        jwtService: undefined,
         apiKeyService,
       });
 
@@ -265,6 +275,7 @@ describe('PackmindApp API', () => {
       );
 
       const registry = await initializePackmindApp(dataSource, {
+        jwtService: undefined,
         apiKeyService,
       });
 
@@ -281,6 +292,7 @@ describe('PackmindApp API', () => {
       );
 
       const registry = await initializePackmindApp(dataSource, {
+        jwtService: undefined,
         apiKeyService,
       });
 
@@ -297,6 +309,7 @@ describe('PackmindApp API', () => {
       );
 
       const registry = await initializePackmindApp(dataSource, {
+        jwtService: undefined,
         apiKeyService,
       });
 

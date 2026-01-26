@@ -124,176 +124,222 @@ describe('CliAuthentication', () => {
     jest.clearAllMocks();
   });
 
-  it('renders tabs with Login Command and Environment Variable', () => {
-    const mockQueryResult = {
-      data: { hasApiKey: false },
-      isLoading: false,
-      isError: false,
-    };
+  describe('when rendering with no API key', () => {
+    beforeEach(() => {
+      const mockQueryResult = {
+        data: { hasApiKey: false },
+        isLoading: false,
+        isError: false,
+      };
 
-    mockUseGetCurrentApiKeyQuery.mockReturnValue(
-      mockQueryResult as ReturnType<typeof useGetCurrentApiKeyQuery>,
-    );
-    mockUseGenerateApiKeyMutation.mockReturnValue(
-      defaultMutationResult as ReturnType<typeof useGenerateApiKeyMutation>,
-    );
+      mockUseGetCurrentApiKeyQuery.mockReturnValue(
+        mockQueryResult as ReturnType<typeof useGetCurrentApiKeyQuery>,
+      );
+      mockUseGenerateApiKeyMutation.mockReturnValue(
+        defaultMutationResult as ReturnType<typeof useGenerateApiKeyMutation>,
+      );
 
-    renderWithQueryClient(<CliAuthentication />);
+      renderWithQueryClient(<CliAuthentication />);
+    });
 
-    expect(screen.getByText('Login Command')).toBeInTheDocument();
-    expect(screen.getByText('Environment Variable')).toBeInTheDocument();
+    it('displays Login Command tab', () => {
+      expect(screen.getByText('Login Command')).toBeInTheDocument();
+    });
+
+    it('displays Environment Variable tab', () => {
+      expect(screen.getByText('Environment Variable')).toBeInTheDocument();
+    });
+
+    it('displays terminal instruction text', () => {
+      expect(
+        screen.getByText(/Run this command in your terminal/),
+      ).toBeInTheDocument();
+    });
+
+    it('displays packmind-cli login command', () => {
+      expect(
+        screen.getByDisplayValue(/packmind-cli login/),
+      ).toBeInTheDocument();
+    });
   });
 
-  it('displays login command in Login Command tab', () => {
-    const mockQueryResult = {
-      data: { hasApiKey: false },
-      isLoading: false,
-      isError: false,
-    };
-
-    mockUseGetCurrentApiKeyQuery.mockReturnValue(
-      mockQueryResult as ReturnType<typeof useGetCurrentApiKeyQuery>,
-    );
-    mockUseGenerateApiKeyMutation.mockReturnValue(
-      defaultMutationResult as ReturnType<typeof useGenerateApiKeyMutation>,
-    );
-
-    renderWithQueryClient(<CliAuthentication />);
-
-    expect(
-      screen.getByText(/Run this command in your terminal/),
-    ).toBeInTheDocument();
-    expect(screen.getByDisplayValue(/packmind-cli login/)).toBeInTheDocument();
-  });
-
-  it('displays active API key info when user has a key', async () => {
+  describe('when user has an active API key', () => {
     const expirationDate = '2024-12-31T23:59:59.000Z';
 
-    const mockQueryResult = {
-      data: { hasApiKey: true, expiresAt: expirationDate },
-      isLoading: false,
-      isError: false,
-    };
+    beforeEach(async () => {
+      const mockQueryResult = {
+        data: { hasApiKey: true, expiresAt: expirationDate },
+        isLoading: false,
+        isError: false,
+      };
 
-    mockUseGetCurrentApiKeyQuery.mockReturnValue(
-      mockQueryResult as ReturnType<typeof useGetCurrentApiKeyQuery>,
-    );
-    mockUseGenerateApiKeyMutation.mockReturnValue(
-      defaultMutationResult as ReturnType<typeof useGenerateApiKeyMutation>,
-    );
+      mockUseGetCurrentApiKeyQuery.mockReturnValue(
+        mockQueryResult as ReturnType<typeof useGetCurrentApiKeyQuery>,
+      );
+      mockUseGenerateApiKeyMutation.mockReturnValue(
+        defaultMutationResult as ReturnType<typeof useGenerateApiKeyMutation>,
+      );
 
-    renderWithQueryClient(<CliAuthentication />);
+      renderWithQueryClient(<CliAuthentication />);
 
-    const envVarTab = screen.getByText('Environment Variable');
-    fireEvent.click(envVarTab);
+      const envVarTab = screen.getByText('Environment Variable');
+      fireEvent.click(envVarTab);
+    });
 
-    await waitFor(() => {
-      expect(screen.getByText('Active API Key')).toBeInTheDocument();
-      expect(
-        screen.getByText(/You have an active API key that expires on/),
-      ).toBeInTheDocument();
-      expect(screen.getByText('Generate New API Key')).toBeInTheDocument();
+    it('displays Active API Key heading', async () => {
+      await waitFor(() => {
+        expect(screen.getByText('Active API Key')).toBeInTheDocument();
+      });
+    });
+
+    it('displays expiration message', async () => {
+      await waitFor(() => {
+        expect(
+          screen.getByText(/You have an active API key that expires on/),
+        ).toBeInTheDocument();
+      });
+    });
+
+    it('displays Generate New API Key button', async () => {
+      await waitFor(() => {
+        expect(screen.getByText('Generate New API Key')).toBeInTheDocument();
+      });
     });
   });
 
-  it('confirms before generating new key when user has existing key', async () => {
-    const mockQueryResult = {
-      data: { hasApiKey: true, expiresAt: '2024-12-31T23:59:59.000Z' },
-      isLoading: false,
-      isError: false,
-    };
+  describe('when user clicks Generate New API Key with existing key', () => {
+    beforeEach(async () => {
+      const mockQueryResult = {
+        data: { hasApiKey: true, expiresAt: '2024-12-31T23:59:59.000Z' },
+        isLoading: false,
+        isError: false,
+      };
 
-    mockUseGetCurrentApiKeyQuery.mockReturnValue(
-      mockQueryResult as ReturnType<typeof useGetCurrentApiKeyQuery>,
-    );
-    mockUseGenerateApiKeyMutation.mockReturnValue(
-      defaultMutationResult as ReturnType<typeof useGenerateApiKeyMutation>,
-    );
+      mockUseGetCurrentApiKeyQuery.mockReturnValue(
+        mockQueryResult as ReturnType<typeof useGetCurrentApiKeyQuery>,
+      );
+      mockUseGenerateApiKeyMutation.mockReturnValue(
+        defaultMutationResult as ReturnType<typeof useGenerateApiKeyMutation>,
+      );
 
-    renderWithQueryClient(<CliAuthentication />);
+      renderWithQueryClient(<CliAuthentication />);
 
-    const envVarTab = screen.getByText('Environment Variable');
-    fireEvent.click(envVarTab);
+      const envVarTab = screen.getByText('Environment Variable');
+      fireEvent.click(envVarTab);
 
-    await waitFor(() => {
-      expect(screen.getByText('Generate New API Key')).toBeInTheDocument();
+      await waitFor(() => {
+        expect(screen.getByText('Generate New API Key')).toBeInTheDocument();
+      });
+
+      const generateButton = screen.getByText('Generate New API Key');
+      fireEvent.click(generateButton);
     });
 
-    const generateButton = screen.getByText('Generate New API Key');
-    fireEvent.click(generateButton);
+    it('displays confirmation dialog title', async () => {
+      await waitFor(() => {
+        expect(
+          screen.getByText('Replace Existing API Key?'),
+        ).toBeInTheDocument();
+      });
+    });
 
-    await waitFor(() => {
-      expect(screen.getByText('Replace Existing API Key?')).toBeInTheDocument();
-      expect(
-        screen.getByText(/This will invalidate your current API key/),
-      ).toBeInTheDocument();
-      expect(screen.getByText('Yes, Generate New Key')).toBeInTheDocument();
-      expect(screen.getByText('Cancel')).toBeInTheDocument();
+    it('displays invalidation warning message', async () => {
+      await waitFor(() => {
+        expect(
+          screen.getByText(/This will invalidate your current API key/),
+        ).toBeInTheDocument();
+      });
+    });
+
+    it('displays confirm button', async () => {
+      await waitFor(() => {
+        expect(screen.getByText('Yes, Generate New Key')).toBeInTheDocument();
+      });
+    });
+
+    it('displays cancel button', async () => {
+      await waitFor(() => {
+        expect(screen.getByText('Cancel')).toBeInTheDocument();
+      });
     });
   });
 
-  it('generates API key when button is clicked', async () => {
+  describe('when user clicks Generate API Key button', () => {
     const mutateMock = jest.fn();
-    const mockQueryResult = {
-      data: { hasApiKey: false },
-      isLoading: false,
-      isError: false,
-    };
 
-    mockUseGetCurrentApiKeyQuery.mockReturnValue(
-      mockQueryResult as ReturnType<typeof useGetCurrentApiKeyQuery>,
-    );
-    mockUseGenerateApiKeyMutation.mockReturnValue({
-      ...defaultMutationResult,
-      mutate: mutateMock,
-    } as ReturnType<typeof useGenerateApiKeyMutation>);
+    beforeEach(async () => {
+      const mockQueryResult = {
+        data: { hasApiKey: false },
+        isLoading: false,
+        isError: false,
+      };
 
-    renderWithQueryClient(<CliAuthentication />);
+      mockUseGetCurrentApiKeyQuery.mockReturnValue(
+        mockQueryResult as ReturnType<typeof useGetCurrentApiKeyQuery>,
+      );
+      mockUseGenerateApiKeyMutation.mockReturnValue({
+        ...defaultMutationResult,
+        mutate: mutateMock,
+      } as ReturnType<typeof useGenerateApiKeyMutation>);
 
-    const envVarTab = screen.getByText('Environment Variable');
-    fireEvent.click(envVarTab);
+      renderWithQueryClient(<CliAuthentication />);
 
-    await waitFor(() => {
-      expect(screen.getByText('Generate API Key')).toBeInTheDocument();
+      const envVarTab = screen.getByText('Environment Variable');
+      fireEvent.click(envVarTab);
+
+      await waitFor(() => {
+        screen.getByText('Generate API Key');
+      });
+
+      const generateButton = screen.getByText('Generate API Key');
+      fireEvent.click(generateButton);
     });
 
-    const generateButton = screen.getByText('Generate API Key');
-    fireEvent.click(generateButton);
-
-    expect(mutateMock).toHaveBeenCalledTimes(1);
+    it('calls mutate function', () => {
+      expect(mutateMock).toHaveBeenCalledTimes(1);
+    });
   });
 
-  it('displays generated API key after successful generation', async () => {
+  describe('when API key generation succeeds', () => {
     const mockApiKey = 'test-api-key-123';
     const mockExpiresAt = '2024-12-31T23:59:59.000Z';
 
-    const mockQueryResult = {
-      data: { hasApiKey: false },
-      isLoading: false,
-      isError: false,
-    };
+    beforeEach(async () => {
+      const mockQueryResult = {
+        data: { hasApiKey: false },
+        isLoading: false,
+        isError: false,
+      };
 
-    mockUseGetCurrentApiKeyQuery.mockReturnValue(
-      mockQueryResult as ReturnType<typeof useGetCurrentApiKeyQuery>,
-    );
-    mockUseGenerateApiKeyMutation.mockReturnValue({
-      ...defaultMutationResult,
-      isSuccess: true,
-      data: { apiKey: mockApiKey, expiresAt: mockExpiresAt },
-    } as ReturnType<typeof useGenerateApiKeyMutation>);
+      mockUseGetCurrentApiKeyQuery.mockReturnValue(
+        mockQueryResult as ReturnType<typeof useGetCurrentApiKeyQuery>,
+      );
+      mockUseGenerateApiKeyMutation.mockReturnValue({
+        ...defaultMutationResult,
+        isSuccess: true,
+        data: { apiKey: mockApiKey, expiresAt: mockExpiresAt },
+      } as ReturnType<typeof useGenerateApiKeyMutation>);
 
-    renderWithQueryClient(<CliAuthentication />);
+      renderWithQueryClient(<CliAuthentication />);
 
-    const envVarTab = screen.getByText('Environment Variable');
-    fireEvent.click(envVarTab);
+      const envVarTab = screen.getByText('Environment Variable');
+      fireEvent.click(envVarTab);
+    });
 
-    await waitFor(() => {
-      expect(
-        screen.getByText('API Key Generated Successfully!'),
-      ).toBeInTheDocument();
-      expect(
-        screen.getByTestId(CliAuthenticationDataTestIds.ApiKeyInput),
-      ).toHaveValue(mockApiKey);
+    it('displays success message', async () => {
+      await waitFor(() => {
+        expect(
+          screen.getByText('API Key Generated Successfully!'),
+        ).toBeInTheDocument();
+      });
+    });
+
+    it('displays generated API key in input field', async () => {
+      await waitFor(() => {
+        expect(
+          screen.getByTestId(CliAuthenticationDataTestIds.ApiKeyInput),
+        ).toHaveValue(mockApiKey);
+      });
     });
   });
 });

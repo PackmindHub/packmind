@@ -259,7 +259,7 @@ jobs:
 
   e2e-tests:
     runs-on: ${{ vars.ACTION_RUNNER_TAG || 'self-hosted' }}
-    timeout-minutes: 10
+    timeout-minutes: 15
     strategy:
       matrix:
         node-version: ['${{ inputs.node-version }}']
@@ -331,4 +331,3 @@ jobs:
         env:
           COMPOSE_PROJECT_NAME: ci-${{ github.run_number }}
         run: docker compose --profile=e2e down -v --remove-orphans
-

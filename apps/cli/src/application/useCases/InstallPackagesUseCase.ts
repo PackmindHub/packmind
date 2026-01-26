@@ -333,25 +333,48 @@ export class InstallPackagesUseCase implements IInstallPackagesUseCase {
 
   /**
    * Deletes all skill folders before recreating them with fresh content.
-   * Returns the count of folders successfully deleted.
+   * Returns the count of files that were actually deleted.
    */
   private async deleteSkillFolders(
     baseDirectory: string,
     folders: string[],
   ): Promise<number> {
-    let deletedCount = 0;
+    let deletedFilesCount = 0;
 
     for (const folder of folders) {
       const fullPath = path.join(baseDirectory, folder);
 
       try {
+        // Check if folder exists before deleting
+        await fs.access(fullPath);
+        // Count files in the folder before deleting
+        const fileCount = await this.countFilesInDirectory(fullPath);
         await fs.rm(fullPath, { recursive: true, force: true });
-        deletedCount++;
+        deletedFilesCount += fileCount;
       } catch {
         // Ignore errors if folder doesn't exist or can't be deleted
       }
     }
 
-    return deletedCount;
+    return deletedFilesCount;
+  }
+
+  /**
+   * Recursively counts all files in a directory.
+   */
+  private async countFilesInDirectory(dirPath: string): Promise<number> {
+    let count = 0;
+    const entries = await fs.readdir(dirPath, { withFileTypes: true });
+
+    for (const entry of entries) {
+      const entryPath = path.join(dirPath, entry.name);
+      if (entry.isDirectory()) {
+        count += await this.countFilesInDirectory(entryPath);
+      } else {
+        count++;
+      }
+    }
+
+    return count;
   }
 }

@@ -19,4 +19,9 @@ export interface ISkillsGateway {
     spaceId: SpaceId,
     skillId: SkillId,
   ): Promise<SkillVersion[]>;
+  deleteSkill(
+    organizationId: OrganizationId,
+    spaceId: SpaceId,
+    skillId: SkillId,
+  ): Promise<void>;
 }

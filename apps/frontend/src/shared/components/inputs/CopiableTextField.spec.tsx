@@ -39,32 +39,38 @@ describe('CopiableTextField', () => {
     expect(screen.getByText('Test Label')).toBeInTheDocument();
   });
 
-  it('calls onValueChange when input value changes and not readonly', () => {
-    const mockOnValueChange = jest.fn();
-    renderWithUI(
-      <CopiableTextField value="" onValueChange={mockOnValueChange} />,
-    );
+  describe('onValueChange', () => {
+    describe('when input value changes and not readonly', () => {
+      it('calls onValueChange callback', () => {
+        const mockOnValueChange = jest.fn();
+        renderWithUI(
+          <CopiableTextField value="" onValueChange={mockOnValueChange} />,
+        );
 
-    const input = screen.getByRole('textbox');
-    fireEvent.change(input, { target: { value: 'new value' } });
+        const input = screen.getByRole('textbox');
+        fireEvent.change(input, { target: { value: 'new value' } });
 
-    expect(mockOnValueChange).toHaveBeenCalledWith('new value');
-  });
+        expect(mockOnValueChange).toHaveBeenCalledWith('new value');
+      });
+    });
 
-  it('does not call onValueChange when readonly', () => {
-    const mockOnValueChange = jest.fn();
-    renderWithUI(
-      <CopiableTextField
-        value="test"
-        onValueChange={mockOnValueChange}
-        readOnly
-      />,
-    );
+    describe('when readonly', () => {
+      it('does not call onValueChange callback', () => {
+        const mockOnValueChange = jest.fn();
+        renderWithUI(
+          <CopiableTextField
+            value="test"
+            onValueChange={mockOnValueChange}
+            readOnly
+          />,
+        );
 
-    const input = screen.getByRole('textbox');
-    fireEvent.change(input, { target: { value: 'new value' } });
+        const input = screen.getByRole('textbox');
+        fireEvent.change(input, { target: { value: 'new value' } });
 
-    expect(mockOnValueChange).not.toHaveBeenCalled();
+        expect(mockOnValueChange).not.toHaveBeenCalled();
+      });
+    });
   });
 
   it('renders copy button with copy icon', () => {

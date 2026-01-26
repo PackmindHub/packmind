@@ -92,7 +92,7 @@ export default function SignUpWithOrganizationForm() {
   const getButtonText = () => {
     if (signUpWithOrganizationMutation.isPending) return 'Creating Account...';
     if (signInMutation.isPending) return 'Signing In...';
-    return 'Create Account & Organization';
+    return 'Create Account';
   };
 
   const validateForm = () => {

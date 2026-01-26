@@ -6,6 +6,7 @@ import {
   formatFilePath,
   formatError,
   formatBold,
+  logConsole,
 } from '../utils/consoleLogger';
 
 export class HumanReadableLogger implements ILogger {
@@ -28,9 +29,9 @@ export class HumanReadableLogger implements ILogger {
   }
 
   logViolation(violation: LintViolation) {
-    console.log(formatFilePath(violation.file));
+    logConsole(formatFilePath(violation.file));
     violation.violations.forEach(({ line, character, standard, rule }) => {
-      console.log(
+      logConsole(
         formatError(`\t${line}:${character}\terror\t@${standard}/${rule}`),
       );
     });

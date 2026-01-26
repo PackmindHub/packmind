@@ -1,64 +1,135 @@
 import { createStandardHandler } from './createStandardHandler';
-import { IPackmindGateway } from '../../domain/repositories/IPackmindGateway';
+import { ICreateStandardFromPlaybookUseCase } from '../../domain/useCases/ICreateStandardFromPlaybookUseCase';
 import * as path from 'path';
 import * as fs from 'fs/promises';
 import * as os from 'os';
 
 describe('createStandardHandler', () => {
-  let mockGateway: IPackmindGateway;
+  let mockUseCase: jest.Mocked<ICreateStandardFromPlaybookUseCase>;
   let tempDir: string;
 
   beforeEach(async () => {
     tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'handler-test-'));
-    mockGateway = {
-      createStandardFromPlaybook: jest.fn().mockResolvedValue({
-        success: true,
+    mockUseCase = {
+      execute: jest.fn().mockResolvedValue({
         standardId: 'test-standard-123',
         name: 'Test Standard',
       }),
-    } as unknown as IPackmindGateway;
+    };
   });
 
   afterEach(async () => {
     await fs.rm(tempDir, { recursive: true, force: true });
+    jest.clearAllMocks();
   });
 
-  it('creates a standard from valid playbook file', async () => {
-    const playbook = {
-      name: 'Test Standard',
-      description: 'Test',
-      scope: 'Test',
-      rules: [{ content: 'Use something' }],
-    };
+  describe('when creating a standard from valid playbook file', () => {
+    let result: Awaited<ReturnType<typeof createStandardHandler>>;
 
-    const filePath = path.join(tempDir, 'playbook.json');
-    await fs.writeFile(filePath, JSON.stringify(playbook));
-
-    const result = await createStandardHandler(filePath, mockGateway);
-
-    expect(result.success).toBe(true);
-    expect(mockGateway.createStandardFromPlaybook).toHaveBeenCalledWith(
-      expect.objectContaining({
+    beforeEach(async () => {
+      const playbook = {
         name: 'Test Standard',
-      }),
-    );
+        description: 'Test',
+        scope: 'Test',
+        rules: [{ content: 'Use something' }],
+      };
+
+      const filePath = path.join(tempDir, 'playbook.json');
+      await fs.writeFile(filePath, JSON.stringify(playbook));
+
+      result = await createStandardHandler(filePath, mockUseCase);
+    });
+
+    it('returns success', () => {
+      expect(result.success).toBe(true);
+    });
+
+    it('returns the standard id', () => {
+      expect(result.standardId).toBe('test-standard-123');
+    });
+
+    it('returns the standard name', () => {
+      expect(result.standardName).toBe('Test Standard');
+    });
+
+    it('calls use case with playbook data', () => {
+      expect(mockUseCase.execute).toHaveBeenCalledWith(
+        expect.objectContaining({
+          name: 'Test Standard',
+          description: 'Test',
+          scope: 'Test',
+          rules: [{ content: 'Use something' }],
+        }),
+      );
+    });
   });
 
-  it('returns error when file is not found', async () => {
-    const result = await createStandardHandler(
-      '/nonexistent.json',
-      mockGateway,
-    );
-    expect(result.success).toBe(false);
-    expect(result.error).toBeDefined();
+  describe('when file is not found', () => {
+    let result: Awaited<ReturnType<typeof createStandardHandler>>;
+
+    beforeEach(async () => {
+      result = await createStandardHandler('/nonexistent.json', mockUseCase);
+    });
+
+    it('returns failure', () => {
+      expect(result.success).toBe(false);
+    });
+
+    it('returns an error', () => {
+      expect(result.error).toBeDefined();
+    });
+
+    it('does not call use case', () => {
+      expect(mockUseCase.execute).not.toHaveBeenCalled();
+    });
   });
 
-  it('returns error when playbook is invalid', async () => {
-    const filePath = path.join(tempDir, 'invalid.json');
-    await fs.writeFile(filePath, '{ "invalid": "structure" }');
+  describe('when playbook is invalid', () => {
+    let result: Awaited<ReturnType<typeof createStandardHandler>>;
 
-    const result = await createStandardHandler(filePath, mockGateway);
-    expect(result.success).toBe(false);
-    expect(result.error).toBeDefined();
+    beforeEach(async () => {
+      const filePath = path.join(tempDir, 'invalid.json');
+      await fs.writeFile(filePath, '{ "invalid": "structure" }');
+
+      result = await createStandardHandler(filePath, mockUseCase);
+    });
+
+    it('returns failure', () => {
+      expect(result.success).toBe(false);
+    });
+
+    it('returns an error', () => {
+      expect(result.error).toBeDefined();
+    });
+
+    it('does not call use case', () => {
+      expect(mockUseCase.execute).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('when use case throws error', () => {
+    let result: Awaited<ReturnType<typeof createStandardHandler>>;
+
+    beforeEach(async () => {
+      mockUseCase.execute.mockRejectedValue(new Error('API failed'));
+      const playbook = {
+        name: 'Test',
+        description: 'Test',
+        scope: 'Test',
+        rules: [{ content: 'Rule' }],
+      };
+      const filePath = path.join(tempDir, 'playbook.json');
+      await fs.writeFile(filePath, JSON.stringify(playbook));
+
+      result = await createStandardHandler(filePath, mockUseCase);
+    });
+
+    it('returns failure', () => {
+      expect(result.success).toBe(false);
+    });
+
+    it('returns the error message', () => {
+      expect(result.error).toContain('API failed');
+    });
   });
 });

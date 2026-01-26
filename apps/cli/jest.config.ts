@@ -11,4 +11,7 @@ export default {
   transform: swcTransformWithDefineFields,
   moduleFileExtensions: standardModuleFileExtensions,
   coverageDirectory: '../../coverage/apps/cli',
+  transformIgnorePatterns: [
+    '/node_modules/(?!(chalk|#ansi-styles|#supports-color)/)',
+  ],
 };

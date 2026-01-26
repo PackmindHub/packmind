@@ -23,27 +23,35 @@ describe.skip('domain generator', () => {
     });
   });
 
-  it('creates files with the name parameter inside', async () => {
-    await domainGenerator(tree, options);
-
-    // Check that files are created
+  describe('when generating files', () => {
     const modelFile =
       'apps/test-app/src/domain/user profile/user-profile.model.ts';
     const serviceFile =
       'apps/test-app/src/domain/user profile/user-profile.service.ts';
 
-    expect(tree.exists(modelFile)).toBe(true);
-    expect(tree.exists(serviceFile)).toBe(true);
+    beforeEach(async () => {
+      await domainGenerator(tree, options);
+    });
 
-    // Check that the content contains the name parameter
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    const modelContent = tree.read(modelFile, 'utf-8')!;
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    const serviceContent = tree.read(serviceFile, 'utf-8')!;
+    it('creates the model file', () => {
+      expect(tree.exists(modelFile)).toBe(true);
+    });
 
-    // Basic check that the name appears in the content
-    expect(modelContent).toContain('user profile');
-    expect(serviceContent).toContain('user profile');
+    it('creates the service file', () => {
+      expect(tree.exists(serviceFile)).toBe(true);
+    });
+
+    it('includes the name parameter in model content', () => {
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      const modelContent = tree.read(modelFile, 'utf-8')!;
+      expect(modelContent).toContain('user profile');
+    });
+
+    it('includes the name parameter in service content', () => {
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      const serviceContent = tree.read(serviceFile, 'utf-8')!;
+      expect(serviceContent).toContain('user profile');
+    });
   });
 
   it('applies capitalize transformation to the name', async () => {
@@ -58,54 +66,70 @@ describe.skip('domain generator', () => {
     expect(modelContent).toContain('UserProfile'); // This should be the capitalized version
   });
 
-  it('creates files with capitalized filename', async () => {
-    await domainGenerator(tree, options);
-
-    // Check that a file with capitalized filename is created
+  describe('when creating files with capitalized filename', () => {
     const componentFile =
       'apps/test-app/src/domain/user profile/UserProfile.component.ts';
-    expect(tree.exists(componentFile)).toBe(true);
 
-    // Check that the content is correct
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    const componentContent = tree.read(componentFile, 'utf-8')!;
-    expect(componentContent).toContain('UserProfileComponent');
-    expect(componentContent).toContain('Component for: user profile');
+    beforeEach(async () => {
+      await domainGenerator(tree, options);
+    });
+
+    it('creates the component file', () => {
+      expect(tree.exists(componentFile)).toBe(true);
+    });
+
+    it('includes UserProfileComponent in content', () => {
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      const componentContent = tree.read(componentFile, 'utf-8')!;
+      expect(componentContent).toContain('UserProfileComponent');
+    });
+
+    it('includes the component description in content', () => {
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      const componentContent = tree.read(componentFile, 'utf-8')!;
+      expect(componentContent).toContain('Component for: user profile');
+    });
   });
 
-  it('does not overwrite existing files', async () => {
+  describe('when existing files are present', () => {
     const modelFile =
       'apps/test-app/src/domain/user profile/user-profile.model.ts';
-    const originalContent =
-      'This is my existing content that should not be overwritten';
-
-    // Create the file with existing content
-    tree.write(modelFile, originalContent);
-
-    // Run the generator
-    await domainGenerator(tree, options);
-
-    // Check that the existing file was not overwritten
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    const finalContent = tree.read(modelFile, 'utf-8')!;
-    expect(finalContent).toBe(originalContent);
-
-    // Check that other files were still created
     const serviceFile =
       'apps/test-app/src/domain/user profile/user-profile.service.ts';
     const componentFile =
       'apps/test-app/src/domain/user profile/UserProfile.component.ts';
+    const originalContent =
+      'This is my existing content that should not be overwritten';
 
-    expect(tree.exists(serviceFile)).toBe(true);
-    expect(tree.exists(componentFile)).toBe(true);
+    beforeEach(async () => {
+      tree.write(modelFile, originalContent);
+      await domainGenerator(tree, options);
+    });
 
-    // Verify the new files have the expected content
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    const serviceContent = tree.read(serviceFile, 'utf-8')!;
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    const componentContent = tree.read(componentFile, 'utf-8')!;
+    it('does not overwrite existing model file', () => {
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      const finalContent = tree.read(modelFile, 'utf-8')!;
+      expect(finalContent).toBe(originalContent);
+    });
 
-    expect(serviceContent).toContain('user profile');
-    expect(componentContent).toContain('UserProfileComponent');
+    it('creates the service file', () => {
+      expect(tree.exists(serviceFile)).toBe(true);
+    });
+
+    it('creates the component file', () => {
+      expect(tree.exists(componentFile)).toBe(true);
+    });
+
+    it('includes name parameter in service content', () => {
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      const serviceContent = tree.read(serviceFile, 'utf-8')!;
+      expect(serviceContent).toContain('user profile');
+    });
+
+    it('includes UserProfileComponent in component content', () => {
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      const componentContent = tree.read(componentFile, 'utf-8')!;
+      expect(componentContent).toContain('UserProfileComponent');
+    });
   });
 });

@@ -24,6 +24,7 @@ export const distributionFactory: Factory<Distribution> = (
         packageId: createPackageId(uuidv4()),
         recipeVersions: [],
         standardVersions: [],
+        skillVersions: [],
         operation: 'add',
       },
     ],

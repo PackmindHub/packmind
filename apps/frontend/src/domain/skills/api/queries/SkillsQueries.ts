@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { OrganizationId, Skill, SkillId, SpaceId } from '@packmind/types';
 import { skillsGateway } from '../gateways';
 import {
@@ -8,6 +8,10 @@ import {
 } from '../queryKeys';
 import { useAuthContext } from '../../../accounts/hooks/useAuthContext';
 import { useCurrentSpace } from '../../../spaces/hooks/useCurrentSpace';
+import {
+  GET_SKILLS_DEPLOYMENT_OVERVIEW_KEY,
+  LIST_PACKAGES_BY_SPACE_KEY,
+} from '../../../deployments/api/queryKeys';
 
 export const getSkillsBySpaceQueryOptions = (
   organizationId: OrganizationId | undefined,
@@ -91,4 +95,41 @@ export const useGetSkillVersionsQuery = (skillId: SkillId | undefined) => {
   return useQuery(
     getSkillVersionsQueryOptions(organization?.id, spaceId, skillId),
   );
+};
+
+const DELETE_SKILL_MUTATION_KEY = 'deleteSkill';
+
+export const useDeleteSkillMutation = () => {
+  const queryClient = useQueryClient();
+  const { spaceId } = useCurrentSpace();
+  const { organization } = useAuthContext();
+
+  return useMutation({
+    mutationKey: [DELETE_SKILL_MUTATION_KEY],
+    mutationFn: async (skillId: SkillId) => {
+      if (!organization?.id || !spaceId) {
+        throw new Error('Organization and space context required');
+      }
+      return skillsGateway.deleteSkill(organization.id, spaceId, skillId);
+    },
+    onSuccess: async () => {
+      // Invalidate skills list
+      await queryClient.invalidateQueries({
+        queryKey: GET_SKILLS_KEY,
+      });
+
+      // Invalidate skills deployment overview
+      await queryClient.invalidateQueries({
+        queryKey: GET_SKILLS_DEPLOYMENT_OVERVIEW_KEY,
+      });
+
+      // Packages containing the deleted skill need to be refreshed
+      await queryClient.invalidateQueries({
+        queryKey: LIST_PACKAGES_BY_SPACE_KEY,
+      });
+    },
+    onError: (error) => {
+      console.error('Error deleting skill:', error);
+    },
+  });
 };

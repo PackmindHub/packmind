@@ -31,18 +31,9 @@ describe('PackmindGateway', () => {
       }
     }
 
-    it('successfully fetches detection programs with valid API key', async () => {
-      // Create a valid base64-encoded API key
-      const validApiKeyPayload = {
-        host: mockHost,
-        jwt: mockJwt,
-      };
-      const validApiKey = Buffer.from(
-        JSON.stringify(validApiKeyPayload),
-      ).toString('base64');
-      gateway = new PackmindGateway(validApiKey);
-
-      // Mock API response
+    describe('when fetching detection programs with valid API key', () => {
+      let result: Awaited<ReturnType<PackmindGateway['listExecutionPrograms']>>;
+      let validApiKey: string;
       const mockApiResponse = {
         standards: [
           {
@@ -67,90 +58,149 @@ describe('PackmindGateway', () => {
         ],
       };
 
-      mockFetch.mockResolvedValue({
-        ok: true,
-        json: jest.fn().mockResolvedValue(mockApiResponse),
-      } as unknown as Response);
+      beforeEach(async () => {
+        const validApiKeyPayload = {
+          host: mockHost,
+          jwt: mockJwt,
+        };
+        validApiKey = Buffer.from(JSON.stringify(validApiKeyPayload)).toString(
+          'base64',
+        );
+        gateway = new PackmindGateway(validApiKey);
 
-      const result = await gateway.listExecutionPrograms({
-        gitRemoteUrl: 'github.com/user/repo',
-        branches: ['main', 'develop'],
+        mockFetch.mockResolvedValue({
+          ok: true,
+          json: jest.fn().mockResolvedValue(mockApiResponse),
+        } as unknown as Response);
+
+        result = await gateway.listExecutionPrograms({
+          gitRemoteUrl: 'github.com/user/repo',
+          branches: ['main', 'develop'],
+        });
       });
 
-      // Verify API call was made correctly
-      expect(mockFetch).toHaveBeenCalledWith(
-        `${mockHost}/api/v0/list-detection-program`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${validApiKey}`,
+      it('calls the API with correct parameters', () => {
+        expect(mockFetch).toHaveBeenCalledWith(
+          `${mockHost}/api/v0/list-detection-program`,
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${validApiKey}`,
+            },
+            body: JSON.stringify({
+              gitRemoteUrl: 'github.com/user/repo',
+              branches: ['main', 'develop'],
+            }),
           },
-          body: JSON.stringify({
+        );
+      });
+
+      it('returns the API response', () => {
+        expect(result).toEqual(mockApiResponse);
+      });
+    });
+
+    describe('when API key format is invalid', () => {
+      beforeEach(() => {
+        gateway = new PackmindGateway('invalid-api-key');
+      });
+
+      it('throws error', async () => {
+        await expect(
+          gateway.listExecutionPrograms({
             gitRemoteUrl: 'github.com/user/repo',
-            branches: ['main', 'develop'],
+            branches: ['main'],
           }),
-        },
-      );
+        ).rejects.toThrow('Invalid API key: Failed to decode API key:');
+      });
 
-      expect(result).toEqual(mockApiResponse);
+      it('does not call fetch', async () => {
+        try {
+          await gateway.listExecutionPrograms({
+            gitRemoteUrl: 'github.com/user/repo',
+            branches: ['main'],
+          });
+        } catch {
+          // Expected to throw
+        }
+
+        expect(mockFetch).not.toHaveBeenCalled();
+      });
     });
 
-    it('throws error for invalid API key format', async () => {
-      gateway = new PackmindGateway('invalid-api-key');
+    describe('when API key is missing host field', () => {
+      beforeEach(() => {
+        const invalidApiKeyPayload = {
+          jwt: mockJwt,
+          // missing host field
+        };
+        const invalidApiKey = Buffer.from(
+          JSON.stringify(invalidApiKeyPayload),
+        ).toString('base64');
+        gateway = new PackmindGateway(invalidApiKey);
+      });
 
-      await expect(
-        gateway.listExecutionPrograms({
-          gitRemoteUrl: 'github.com/user/repo',
-          branches: ['main'],
-        }),
-      ).rejects.toThrow('Invalid API key: Failed to decode API key:');
+      it('throws error', async () => {
+        await expect(
+          gateway.listExecutionPrograms({
+            gitRemoteUrl: 'github.com/user/repo',
+            branches: ['main'],
+          }),
+        ).rejects.toThrow(
+          'Invalid API key: Invalid API key: missing or invalid host field',
+        );
+      });
 
-      expect(mockFetch).not.toHaveBeenCalled();
+      it('does not call fetch', async () => {
+        try {
+          await gateway.listExecutionPrograms({
+            gitRemoteUrl: 'github.com/user/repo',
+            branches: ['main'],
+          });
+        } catch {
+          // Expected to throw
+        }
+
+        expect(mockFetch).not.toHaveBeenCalled();
+      });
     });
 
-    it('throws error for API key missing host field', async () => {
-      const invalidApiKeyPayload = {
-        jwt: mockJwt,
-        // missing host field
-      };
-      const invalidApiKey = Buffer.from(
-        JSON.stringify(invalidApiKeyPayload),
-      ).toString('base64');
-      gateway = new PackmindGateway(invalidApiKey);
+    describe('when API key is missing jwt field', () => {
+      beforeEach(() => {
+        const invalidApiKeyPayload = {
+          host: mockHost,
+          // missing jwt field
+        };
+        const invalidApiKey = Buffer.from(
+          JSON.stringify(invalidApiKeyPayload),
+        ).toString('base64');
+        gateway = new PackmindGateway(invalidApiKey);
+      });
 
-      await expect(
-        gateway.listExecutionPrograms({
-          gitRemoteUrl: 'github.com/user/repo',
-          branches: ['main'],
-        }),
-      ).rejects.toThrow(
-        'Invalid API key: Invalid API key: missing or invalid host field',
-      );
+      it('throws error', async () => {
+        await expect(
+          gateway.listExecutionPrograms({
+            gitRemoteUrl: 'github.com/user/repo',
+            branches: ['main'],
+          }),
+        ).rejects.toThrow(
+          'Invalid API key: Invalid API key: missing or invalid jwt field',
+        );
+      });
 
-      expect(mockFetch).not.toHaveBeenCalled();
-    });
+      it('does not call fetch', async () => {
+        try {
+          await gateway.listExecutionPrograms({
+            gitRemoteUrl: 'github.com/user/repo',
+            branches: ['main'],
+          });
+        } catch {
+          // Expected to throw
+        }
 
-    it('throws error for API key missing jwt field', async () => {
-      const invalidApiKeyPayload = {
-        host: mockHost,
-        // missing jwt field
-      };
-      const invalidApiKey = Buffer.from(
-        JSON.stringify(invalidApiKeyPayload),
-      ).toString('base64');
-      gateway = new PackmindGateway(invalidApiKey);
-
-      await expect(
-        gateway.listExecutionPrograms({
-          gitRemoteUrl: 'github.com/user/repo',
-          branches: ['main'],
-        }),
-      ).rejects.toThrow(
-        'Invalid API key: Invalid API key: missing or invalid jwt field',
-      );
-
-      expect(mockFetch).not.toHaveBeenCalled();
+        expect(mockFetch).not.toHaveBeenCalled();
+      });
     });
 
     it('throws error for failed API request', async () => {
@@ -332,16 +382,11 @@ describe('PackmindGateway', () => {
   });
 
   describe('getDraftDetectionProgramsForRule', () => {
-    it('successfully fetches draft detection programs with valid API key', async () => {
-      const validApiKeyPayload = {
-        host: mockHost,
-        jwt: mockJwt,
-      };
-      const validApiKey = Buffer.from(
-        JSON.stringify(validApiKeyPayload),
-      ).toString('base64');
-      gateway = new PackmindGateway(validApiKey);
-
+    describe('when fetching draft detection programs with valid API key', () => {
+      let result: Awaited<
+        ReturnType<PackmindGateway['getDraftDetectionProgramsForRule']>
+      >;
+      let validApiKey: string;
       const mockApiResponse = {
         programs: [
           {
@@ -364,48 +409,63 @@ describe('PackmindGateway', () => {
         ruleContent: 'Test rule content',
       };
 
-      mockFetch.mockResolvedValue({
-        ok: true,
-        json: jest.fn().mockResolvedValue(mockApiResponse),
-      } as unknown as Response);
+      beforeEach(async () => {
+        const validApiKeyPayload = {
+          host: mockHost,
+          jwt: mockJwt,
+        };
+        validApiKey = Buffer.from(JSON.stringify(validApiKeyPayload)).toString(
+          'base64',
+        );
+        gateway = new PackmindGateway(validApiKey);
 
-      const result = await gateway.getDraftDetectionProgramsForRule({
-        standardSlug: 'my-standard',
-        ruleId: 'rule-123' as RuleId,
+        mockFetch.mockResolvedValue({
+          ok: true,
+          json: jest.fn().mockResolvedValue(mockApiResponse),
+        } as unknown as Response);
+
+        result = await gateway.getDraftDetectionProgramsForRule({
+          standardSlug: 'my-standard',
+          ruleId: 'rule-123' as RuleId,
+        });
       });
 
-      expect(mockFetch).toHaveBeenCalledWith(
-        `${mockHost}/api/v0/list-draft-detection-program`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${validApiKey}`,
+      it('calls the API with correct parameters', () => {
+        expect(mockFetch).toHaveBeenCalledWith(
+          `${mockHost}/api/v0/list-draft-detection-program`,
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${validApiKey}`,
+            },
+            body: JSON.stringify({
+              standardSlug: 'my-standard',
+              ruleId: 'rule-123',
+            }),
           },
-          body: JSON.stringify({
-            standardSlug: 'my-standard',
-            ruleId: 'rule-123',
-          }),
-        },
-      );
+        );
+      });
 
-      expect(result).toEqual({
-        programs: [
-          {
-            language: 'typescript',
-            code: 'function test() {}',
-            mode: 'singleAst',
-            sourceCodeState: 'AST',
-          },
-          {
-            language: 'javascript',
-            code: 'function test2() {}',
-            mode: 'regexp',
-            sourceCodeState: 'RAW',
-          },
-        ],
-        ruleContent: 'Test rule content',
-        standardSlug: 'my-standard',
+      it('returns the transformed API response', () => {
+        expect(result).toEqual({
+          programs: [
+            {
+              language: 'typescript',
+              code: 'function test() {}',
+              mode: 'singleAst',
+              sourceCodeState: 'AST',
+            },
+            {
+              language: 'javascript',
+              code: 'function test2() {}',
+              mode: 'regexp',
+              sourceCodeState: 'RAW',
+            },
+          ],
+          ruleContent: 'Test rule content',
+          standardSlug: 'my-standard',
+        });
       });
     });
 
@@ -436,17 +496,32 @@ describe('PackmindGateway', () => {
       });
     });
 
-    it('throws error for invalid API key', async () => {
-      gateway = new PackmindGateway('invalid-key');
+    describe('when API key is invalid', () => {
+      beforeEach(() => {
+        gateway = new PackmindGateway('invalid-key');
+      });
 
-      await expect(
-        gateway.getDraftDetectionProgramsForRule({
-          standardSlug: 'my-standard',
-          ruleId: 'rule-123' as RuleId,
-        }),
-      ).rejects.toThrow('Invalid API key:');
+      it('throws error', async () => {
+        await expect(
+          gateway.getDraftDetectionProgramsForRule({
+            standardSlug: 'my-standard',
+            ruleId: 'rule-123' as RuleId,
+          }),
+        ).rejects.toThrow('Invalid API key:');
+      });
 
-      expect(mockFetch).not.toHaveBeenCalled();
+      it('does not call fetch', async () => {
+        try {
+          await gateway.getDraftDetectionProgramsForRule({
+            standardSlug: 'my-standard',
+            ruleId: 'rule-123' as RuleId,
+          });
+        } catch {
+          // Expected to throw
+        }
+
+        expect(mockFetch).not.toHaveBeenCalled();
+      });
     });
 
     it('throws error for failed API request', async () => {
@@ -529,26 +604,30 @@ describe('PackmindGateway', () => {
     };
 
     describe('when notification succeeds', () => {
-      it('returns the deployment ID', async () => {
-        const validApiKey = createValidApiKey('org-123');
-        gateway = new PackmindGateway(validApiKey);
+      let result: Awaited<ReturnType<PackmindGateway['notifyDistribution']>>;
+      let validApiKey: string;
+      const mockApiResponse = {
+        deploymentId: 'deployment-456',
+      };
 
-        const mockApiResponse = {
-          deploymentId: 'deployment-456',
-        };
+      beforeEach(async () => {
+        validApiKey = createValidApiKey('org-123');
+        gateway = new PackmindGateway(validApiKey);
 
         mockFetch.mockResolvedValue({
           ok: true,
           json: jest.fn().mockResolvedValue(mockApiResponse),
         } as unknown as Response);
 
-        const result = await gateway.notifyDistribution({
+        result = await gateway.notifyDistribution({
           distributedPackages: ['backend', 'frontend'],
           gitRemoteUrl: 'github.com/user/repo',
           gitBranch: 'main',
           relativePath: '/src/',
         });
+      });
 
+      it('calls the API with correct parameters', () => {
         expect(mockFetch).toHaveBeenCalledWith(
           `${mockHost}/api/v0/organizations/org-123/deployments`,
           {
@@ -565,15 +644,19 @@ describe('PackmindGateway', () => {
             }),
           },
         );
+      });
 
+      it('returns the deployment ID', () => {
         expect(result).toEqual({ deploymentId: 'deployment-456' });
       });
     });
 
     describe('when API key is invalid', () => {
-      it('throws error', async () => {
+      beforeEach(() => {
         gateway = new PackmindGateway('invalid-key');
+      });
 
+      it('throws error', async () => {
         await expect(
           gateway.notifyDistribution({
             distributedPackages: ['backend'],
@@ -582,13 +665,26 @@ describe('PackmindGateway', () => {
             relativePath: '/',
           }),
         ).rejects.toThrow('Invalid API key:');
+      });
+
+      it('does not call fetch', async () => {
+        try {
+          await gateway.notifyDistribution({
+            distributedPackages: ['backend'],
+            gitRemoteUrl: 'github.com/user/repo',
+            gitBranch: 'main',
+            relativePath: '/',
+          });
+        } catch {
+          // Expected to throw
+        }
 
         expect(mockFetch).not.toHaveBeenCalled();
       });
     });
 
     describe('when API key is missing organization ID', () => {
-      it('throws error', async () => {
+      beforeEach(() => {
         // JWT without organization.id
         const jwtPayloadBase64 = Buffer.from(
           JSON.stringify({ user: 'test' }),
@@ -599,7 +695,9 @@ describe('PackmindGateway', () => {
           JSON.stringify(apiKeyPayload),
         ).toString('base64');
         gateway = new PackmindGateway(invalidApiKey);
+      });
 
+      it('throws error', async () => {
         await expect(
           gateway.notifyDistribution({
             distributedPackages: ['backend'],
@@ -608,6 +706,19 @@ describe('PackmindGateway', () => {
             relativePath: '/',
           }),
         ).rejects.toThrow('Invalid API key: missing organizationId in JWT');
+      });
+
+      it('does not call fetch', async () => {
+        try {
+          await gateway.notifyDistribution({
+            distributedPackages: ['backend'],
+            gitRemoteUrl: 'github.com/user/repo',
+            gitBranch: 'main',
+            relativePath: '/',
+          });
+        } catch {
+          // Expected to throw
+        }
 
         expect(mockFetch).not.toHaveBeenCalled();
       });
