@@ -1,5 +1,4 @@
 import * as fs from 'fs';
-import * as path from 'path';
 import { ProjectScannerService } from './ProjectScannerService';
 
 jest.mock('fs');
@@ -23,6 +22,19 @@ describe('ProjectScannerService', () => {
         const result = await service.scanProject('/test-project');
 
         expect(result.languages).toContain('TypeScript');
+        expect(result.hasTypeScript).toBe(true);
+      });
+
+      it('returns false for hasTypeScript when tsconfig.json is missing', async () => {
+        mockFs.existsSync.mockImplementation((filePath: fs.PathLike) => {
+          return filePath.toString().endsWith('package.json');
+        });
+        mockFs.readFileSync.mockReturnValue('{}');
+        const service = new ProjectScannerService();
+
+        const result = await service.scanProject('/test-project');
+
+        expect(result.hasTypeScript).toBe(false);
       });
     });
 
@@ -223,6 +235,7 @@ describe('ProjectScannerService', () => {
         const result = await service.scanProject('/test-project');
 
         expect(result.tools).toContain('ESLint');
+        expect(result.hasLinting).toBe(true);
       });
 
       it('detects Nx from nx.json', async () => {
@@ -238,6 +251,18 @@ describe('ProjectScannerService', () => {
         const result = await service.scanProject('/test-project');
 
         expect(result.tools).toContain('Nx');
+      });
+
+      it('returns false for hasLinting when ESLint is not detected', async () => {
+        mockFs.existsSync.mockImplementation((filePath: fs.PathLike) => {
+          return filePath.toString().endsWith('package.json');
+        });
+        mockFs.readFileSync.mockReturnValue('{}');
+        const service = new ProjectScannerService();
+
+        const result = await service.scanProject('/test-project');
+
+        expect(result.hasLinting).toBe(false);
       });
     });
 

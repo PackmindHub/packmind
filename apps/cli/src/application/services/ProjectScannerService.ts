@@ -12,6 +12,8 @@ export interface IProjectScanResult {
   };
   testFramework?: string;
   packageManager?: string;
+  hasTypeScript: boolean;
+  hasLinting: boolean;
 }
 
 export class ProjectScannerService {
@@ -25,6 +27,8 @@ export class ProjectScannerService {
         hasTests: false,
         hasSrcDirectory: false,
       },
+      hasTypeScript: false,
+      hasLinting: false,
     };
 
     // Detect languages
@@ -44,6 +48,14 @@ export class ProjectScannerService {
 
     // Detect tools from config files
     this.detectToolsFromConfigFiles(projectPath, result);
+
+    // Set hasTypeScript flag
+    result.hasTypeScript = fs.existsSync(
+      path.join(projectPath, 'tsconfig.json'),
+    );
+
+    // Set hasLinting flag
+    result.hasLinting = result.tools.includes('ESLint');
 
     return result;
   }
@@ -148,7 +160,7 @@ export class ProjectScannerService {
       } else if (allDeps['mocha']) {
         result.testFramework = 'mocha';
       }
-    } catch (error) {
+    } catch {
       // Ignore parse errors
     }
   }
@@ -206,18 +218,22 @@ export class ProjectScannerService {
     projectPath: string,
     result: IProjectScanResult,
   ): void {
-    // Nx
-    if (fs.existsSync(path.join(projectPath, 'nx.json'))) {
-      if (!result.tools.includes('Nx')) {
-        result.tools.push('Nx');
+    try {
+      // Nx
+      if (fs.existsSync(path.join(projectPath, 'nx.json'))) {
+        if (!result.tools.includes('Nx')) {
+          result.tools.push('Nx');
+        }
       }
-    }
 
-    // Turbo
-    if (fs.existsSync(path.join(projectPath, 'turbo.json'))) {
-      if (!result.tools.includes('Turbo')) {
-        result.tools.push('Turbo');
+      // Turbo
+      if (fs.existsSync(path.join(projectPath, 'turbo.json'))) {
+        if (!result.tools.includes('Turbo')) {
+          result.tools.push('Turbo');
+        }
       }
+    } catch {
+      // Ignore file system errors
     }
   }
 }
