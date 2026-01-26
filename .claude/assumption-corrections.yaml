@@ -30,3 +30,25 @@
   tags:
     - 'example'
     - 'skill-initialization'
+
+- timestamp: 2026-01-23T14:10:00Z
+  category: 'configuration'
+  assumption: 'Assumed dist/apps/cli/main.cjs was a self-contained bundle that could run independently without npm install'
+  reality: 'The build target uses generatePackageJson: true and marks dependencies as external (via esbuild-publish.config.js), requiring node_modules to be present. The bundle target and build-executable targets are the ones that create fully self-contained artifacts.'
+  discovery_point: 'User reported "Cannot find module winston" error when running main.cjs in another project without dependencies installed'
+  impact: 'medium'
+  misleading_signals:
+    - 'File is 34MB suggesting everything is bundled'
+    - 'bundle: true in project.json options'
+    - 'File has .cjs extension implying standalone CommonJS module'
+  documentation_gap: 'CLAUDE.md or CLI README should clarify the difference between build targets: build (npm publish with external deps), bundle (self-contained), build-executable (standalone binary)'
+  files_explored:
+    - apps/cli/project.json
+    - apps/cli/esbuild-publish.config.js
+    - packages/logger/package.json
+  tags:
+    - 'cli'
+    - 'build'
+    - 'bundling'
+    - 'esbuild'
+    - 'dependencies'
