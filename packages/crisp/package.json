@@ -11,6 +11,7 @@
     "typeorm": "^0.3.20",
     "@packmind/logger": "*",
     "@packmind/node-utils": "*",
-    "@packmind/types": "*"
+    "@packmind/types": "*",
+    "@packmind/test-utils": "0.0.1"
   }
 }

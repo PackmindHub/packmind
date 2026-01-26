@@ -1,6 +1,7 @@
 import { Crisp } from 'crisp-api';
 import { maskEmail, PackmindLogger } from '@packmind/logger';
 import { Configuration, getErrorMessage } from '@packmind/node-utils';
+import { isTrialEmail } from './utils/email.utils';
 
 const origin = 'CrispTrackEventService';
 
@@ -41,6 +42,14 @@ export class CrispTrackEventService {
   }
 
   async createPeopleIfNotAlreadyExists(email: string) {
+    // Early return for trial emails
+    if (isTrialEmail(email)) {
+      this.logger.info(
+        `[Crisp API] Skipping profile creation for trial email ${maskEmail(email)}`,
+      );
+      return;
+    }
+
     if (!this.configurationChecked) {
       await this.initializeCrisp();
     }
@@ -88,6 +97,14 @@ export class CrispTrackEventService {
   }
 
   async addPeopleEvent(email: string, eventName: string) {
+    // Early return for trial emails
+    if (isTrialEmail(email)) {
+      this.logger.info(
+        `[Crisp API] Skipping event '${eventName}' for trial email ${maskEmail(email)}`,
+      );
+      return;
+    }
+
     if (!this.configurationChecked) {
       await this.initializeCrisp();
     }
