@@ -379,7 +379,7 @@ if __name__ == "__main__":
 
 function getStandardCreatorSkillMd(agentName: string): string {
   return `---
-name: 'create-standard'
+name: 'packmind-create-standard'
 description: "Guide for creating coding standards via the Packmind CLI. This skill should be used when users want to create a new coding standard (or add rules to an existing standard) that captures team conventions, best practices, or coding guidelines for distribution to ${agentName}."
 license: 'Complete terms in LICENSE.txt'
 ---
@@ -1017,7 +1017,7 @@ const STANDARD_CREATOR_LICENSE = `
 
 export class CreateStandardDeployer implements ISkillDeployer {
   deploy(agentName: string, skillsFolderPath: string): FileUpdates {
-    const basePath = `${skillsFolderPath}create-standard`;
+    const basePath = `${skillsFolderPath}packmind-create-standard`;
 
     return {
       createOrUpdate: [
