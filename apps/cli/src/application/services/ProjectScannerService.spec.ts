@@ -307,5 +307,296 @@ describe('ProjectScannerService', () => {
         expect(result.structure.hasTests).toBe(true);
       });
     });
+
+    describe('when detecting Python ecosystem', () => {
+      it('detects Python language from requirements.txt', async () => {
+        mockFs.existsSync.mockImplementation((filePath: fs.PathLike) => {
+          return filePath.toString().endsWith('requirements.txt');
+        });
+        mockFs.readFileSync.mockReturnValue('');
+        const service = new ProjectScannerService();
+
+        const result = await service.scanProject('/test-project');
+
+        expect(result.languages).toContain('Python');
+      });
+
+      it('detects Django from requirements.txt', async () => {
+        mockFs.existsSync.mockImplementation((filePath: fs.PathLike) => {
+          return filePath.toString().endsWith('requirements.txt');
+        });
+        mockFs.readFileSync.mockReturnValue('django==4.2.0\npytest==7.0.0');
+        const service = new ProjectScannerService();
+
+        const result = await service.scanProject('/test-project');
+
+        expect(result.frameworks).toContain('Django');
+        expect(result.testFramework).toBe('pytest');
+      });
+
+      it('detects Flask and FastAPI from pyproject.toml', async () => {
+        mockFs.existsSync.mockImplementation((filePath: fs.PathLike) => {
+          return filePath.toString().endsWith('pyproject.toml');
+        });
+        mockFs.readFileSync.mockReturnValue(
+          'flask = "^2.0.0"\nfastapi = "^0.95.0"\npoetry',
+        );
+        const service = new ProjectScannerService();
+
+        const result = await service.scanProject('/test-project');
+
+        expect(result.frameworks).toContain('Flask');
+        expect(result.frameworks).toContain('FastAPI');
+        expect(result.tools).toContain('Poetry');
+      });
+
+      it('detects Python tools from requirements.txt', async () => {
+        mockFs.existsSync.mockImplementation((filePath: fs.PathLike) => {
+          return filePath.toString().endsWith('requirements.txt');
+        });
+        mockFs.readFileSync.mockReturnValue('pylint\nblack\nmypy');
+        const service = new ProjectScannerService();
+
+        const result = await service.scanProject('/test-project');
+
+        expect(result.tools).toContain('Pylint');
+        expect(result.tools).toContain('Black');
+        expect(result.tools).toContain('Mypy');
+        expect(result.hasLinting).toBe(true);
+      });
+    });
+
+    describe('when detecting Java ecosystem', () => {
+      it('detects Java language from pom.xml', async () => {
+        mockFs.existsSync.mockImplementation((filePath: fs.PathLike) => {
+          return filePath.toString().endsWith('pom.xml');
+        });
+        mockFs.readFileSync.mockReturnValue('<project></project>');
+        const service = new ProjectScannerService();
+
+        const result = await service.scanProject('/test-project');
+
+        expect(result.languages).toContain('Java');
+      });
+
+      it('detects Spring Boot from pom.xml', async () => {
+        mockFs.existsSync.mockImplementation((filePath: fs.PathLike) => {
+          return filePath.toString().endsWith('pom.xml');
+        });
+        mockFs.readFileSync.mockReturnValue(
+          '<dependency><artifactId>spring-boot-starter</artifactId></dependency>',
+        );
+        const service = new ProjectScannerService();
+
+        const result = await service.scanProject('/test-project');
+
+        expect(result.frameworks).toContain('Spring Boot');
+        expect(result.tools).toContain('Maven');
+      });
+
+      it('detects Kotlin and frameworks from build.gradle.kts', async () => {
+        mockFs.existsSync.mockImplementation((filePath: fs.PathLike) => {
+          return filePath.toString().endsWith('build.gradle.kts');
+        });
+        mockFs.readFileSync.mockReturnValue(
+          'implementation("org.springframework.boot:spring-boot-starter")\nimplementation("io.quarkus:quarkus-core")',
+        );
+        const service = new ProjectScannerService();
+
+        const result = await service.scanProject('/test-project');
+
+        expect(result.languages).toContain('Kotlin');
+        expect(result.frameworks).toContain('Spring Boot');
+        expect(result.frameworks).toContain('Quarkus');
+        expect(result.tools).toContain('Gradle');
+      });
+
+      it('detects JUnit from pom.xml', async () => {
+        mockFs.existsSync.mockImplementation((filePath: fs.PathLike) => {
+          return filePath.toString().endsWith('pom.xml');
+        });
+        mockFs.readFileSync.mockReturnValue(
+          '<dependency><artifactId>junit</artifactId></dependency>',
+        );
+        const service = new ProjectScannerService();
+
+        const result = await service.scanProject('/test-project');
+
+        expect(result.testFramework).toBe('JUnit');
+      });
+    });
+
+    describe('when detecting Go ecosystem', () => {
+      it('detects Go language from go.mod', async () => {
+        mockFs.existsSync.mockImplementation((filePath: fs.PathLike) => {
+          return filePath.toString().endsWith('go.mod');
+        });
+        mockFs.readFileSync.mockReturnValue('module example.com/myapp');
+        const service = new ProjectScannerService();
+
+        const result = await service.scanProject('/test-project');
+
+        expect(result.languages).toContain('Go');
+        expect(result.testFramework).toBe('go test');
+      });
+
+      it('detects Gin framework from go.mod', async () => {
+        mockFs.existsSync.mockImplementation((filePath: fs.PathLike) => {
+          return filePath.toString().endsWith('go.mod');
+        });
+        mockFs.readFileSync.mockReturnValue(
+          'require github.com/gin-gonic/gin v1.9.0',
+        );
+        const service = new ProjectScannerService();
+
+        const result = await service.scanProject('/test-project');
+
+        expect(result.frameworks).toContain('Gin');
+      });
+
+      it('detects Echo and Fiber frameworks from go.mod', async () => {
+        mockFs.existsSync.mockImplementation((filePath: fs.PathLike) => {
+          return filePath.toString().endsWith('go.mod');
+        });
+        mockFs.readFileSync.mockReturnValue(
+          'require (\n  github.com/labstack/echo v4.10.0\n  github.com/gofiber/fiber v2.42.0\n)',
+        );
+        const service = new ProjectScannerService();
+
+        const result = await service.scanProject('/test-project');
+
+        expect(result.frameworks).toContain('Echo');
+        expect(result.frameworks).toContain('Fiber');
+      });
+    });
+
+    describe('when detecting Rust ecosystem', () => {
+      it('detects Rust language from Cargo.toml', async () => {
+        mockFs.existsSync.mockImplementation((filePath: fs.PathLike) => {
+          return filePath.toString().endsWith('Cargo.toml');
+        });
+        mockFs.readFileSync.mockReturnValue('[package]\nname = "myapp"');
+        const service = new ProjectScannerService();
+
+        const result = await service.scanProject('/test-project');
+
+        expect(result.languages).toContain('Rust');
+        expect(result.tools).toContain('Cargo');
+      });
+
+      it('detects Actix framework from Cargo.toml', async () => {
+        mockFs.existsSync.mockImplementation((filePath: fs.PathLike) => {
+          return filePath.toString().endsWith('Cargo.toml');
+        });
+        mockFs.readFileSync.mockReturnValue('actix-web = "4.3.0"');
+        const service = new ProjectScannerService();
+
+        const result = await service.scanProject('/test-project');
+
+        expect(result.frameworks).toContain('Actix');
+      });
+
+      it('detects Rocket and Axum frameworks from Cargo.toml', async () => {
+        mockFs.existsSync.mockImplementation((filePath: fs.PathLike) => {
+          return filePath.toString().endsWith('Cargo.toml');
+        });
+        mockFs.readFileSync.mockReturnValue('rocket = "0.5.0"\naxum = "0.6.0"');
+        const service = new ProjectScannerService();
+
+        const result = await service.scanProject('/test-project');
+
+        expect(result.frameworks).toContain('Rocket');
+        expect(result.frameworks).toContain('Axum');
+      });
+    });
+
+    describe('when detecting PHP ecosystem', () => {
+      it('detects PHP language from composer.json', async () => {
+        mockFs.existsSync.mockImplementation((filePath: fs.PathLike) => {
+          return filePath.toString().endsWith('composer.json');
+        });
+        mockFs.readFileSync.mockReturnValue('{}');
+        const service = new ProjectScannerService();
+
+        const result = await service.scanProject('/test-project');
+
+        expect(result.languages).toContain('PHP');
+        expect(result.tools).toContain('Composer');
+      });
+
+      it('detects Laravel from composer.json', async () => {
+        mockFs.existsSync.mockImplementation((filePath: fs.PathLike) => {
+          return filePath.toString().endsWith('composer.json');
+        });
+        mockFs.readFileSync.mockReturnValue(
+          JSON.stringify({
+            require: { 'laravel/framework': '^10.0' },
+          }),
+        );
+        const service = new ProjectScannerService();
+
+        const result = await service.scanProject('/test-project');
+
+        expect(result.frameworks).toContain('Laravel');
+      });
+
+      it('detects Symfony and PHPUnit from composer.json', async () => {
+        mockFs.existsSync.mockImplementation((filePath: fs.PathLike) => {
+          return filePath.toString().endsWith('composer.json');
+        });
+        mockFs.readFileSync.mockReturnValue(
+          JSON.stringify({
+            require: { 'symfony/symfony': '^6.0' },
+            'require-dev': { 'phpunit/phpunit': '^10.0' },
+          }),
+        );
+        const service = new ProjectScannerService();
+
+        const result = await service.scanProject('/test-project');
+
+        expect(result.frameworks).toContain('Symfony');
+        expect(result.testFramework).toBe('PHPUnit');
+      });
+    });
+
+    describe('when detecting Ruby ecosystem', () => {
+      it('detects Ruby language from Gemfile', async () => {
+        mockFs.existsSync.mockImplementation((filePath: fs.PathLike) => {
+          return filePath.toString().endsWith('Gemfile');
+        });
+        mockFs.readFileSync.mockReturnValue('source "https://rubygems.org"');
+        const service = new ProjectScannerService();
+
+        const result = await service.scanProject('/test-project');
+
+        expect(result.languages).toContain('Ruby');
+        expect(result.tools).toContain('Bundler');
+      });
+
+      it('detects Rails from Gemfile', async () => {
+        mockFs.existsSync.mockImplementation((filePath: fs.PathLike) => {
+          return filePath.toString().endsWith('Gemfile');
+        });
+        mockFs.readFileSync.mockReturnValue('gem "rails", "~> 7.0"');
+        const service = new ProjectScannerService();
+
+        const result = await service.scanProject('/test-project');
+
+        expect(result.frameworks).toContain('Rails');
+      });
+
+      it('detects Sinatra and RSpec from Gemfile', async () => {
+        mockFs.existsSync.mockImplementation((filePath: fs.PathLike) => {
+          return filePath.toString().endsWith('Gemfile');
+        });
+        mockFs.readFileSync.mockReturnValue('gem "sinatra"\ngem "rspec"');
+        const service = new ProjectScannerService();
+
+        const result = await service.scanProject('/test-project');
+
+        expect(result.frameworks).toContain('Sinatra');
+        expect(result.testFramework).toBe('RSpec');
+      });
+    });
   });
 });
