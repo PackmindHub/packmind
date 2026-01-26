@@ -1,5 +1,4 @@
 import * as fs from 'fs';
-import * as path from 'path';
 import { DocumentationScannerService } from './DocumentationScannerService';
 
 jest.mock('fs');
@@ -205,7 +204,7 @@ Some paragraph text.`;
       >;
 
       beforeEach(async () => {
-        mockFs.existsSync.mockImplementation((filePath: any) => {
+        mockFs.existsSync.mockImplementation((filePath: fs.PathLike) => {
           return filePath === '/project/CLAUDE.md';
         });
         mockFs.readFileSync.mockReturnValue(`# CLAUDE.md
@@ -233,7 +232,7 @@ Some paragraph text.`;
       >;
 
       beforeEach(async () => {
-        mockFs.existsSync.mockImplementation((filePath: any) => {
+        mockFs.existsSync.mockImplementation((filePath: fs.PathLike) => {
           return filePath === '/project/CONTRIBUTING.md';
         });
         mockFs.readFileSync.mockReturnValue(`# Contributing
@@ -257,7 +256,7 @@ Some paragraph text.`;
 
     describe('when project has .cursorrules', () => {
       it('scans .cursorrules file', async () => {
-        mockFs.existsSync.mockImplementation((filePath: any) => {
+        mockFs.existsSync.mockImplementation((filePath: fs.PathLike) => {
           return filePath === '/project/.cursorrules';
         });
         mockFs.readFileSync.mockReturnValue(`- Always use async/await`);
@@ -272,7 +271,7 @@ Some paragraph text.`;
 
     describe('when project has CONVENTIONS.md', () => {
       it('scans CONVENTIONS.md file', async () => {
-        mockFs.existsSync.mockImplementation((filePath: any) => {
+        mockFs.existsSync.mockImplementation((filePath: fs.PathLike) => {
           return filePath === '/project/CONVENTIONS.md';
         });
         mockFs.readFileSync.mockReturnValue(`- Naming convention: camelCase`);
@@ -287,7 +286,7 @@ Some paragraph text.`;
 
     describe('when project has CODE_STYLE.md', () => {
       it('scans CODE_STYLE.md file', async () => {
-        mockFs.existsSync.mockImplementation((filePath: any) => {
+        mockFs.existsSync.mockImplementation((filePath: fs.PathLike) => {
           return filePath === '/project/CODE_STYLE.md';
         });
         mockFs.readFileSync.mockReturnValue(`- Indent with 2 spaces`);
@@ -301,14 +300,14 @@ Some paragraph text.`;
 
     describe('when project has docs/standards directory', () => {
       it('scans markdown files in docs/standards', async () => {
-        mockFs.existsSync.mockImplementation((filePath: any) => {
+        mockFs.existsSync.mockImplementation((filePath: fs.PathLike) => {
           return (
             filePath === '/project/docs/standards' ||
             filePath === '/project/docs/standards/api.md'
           );
         });
-        mockFs.readdirSync.mockReturnValue(['api.md'] as any);
-        mockFs.statSync.mockReturnValue({ isFile: () => true } as any);
+        mockFs.readdirSync.mockReturnValue(['api.md'] as unknown);
+        mockFs.statSync.mockReturnValue({ isFile: () => true } as unknown);
         mockFs.readFileSync.mockReturnValue(`- Use REST conventions`);
 
         const service = new DocumentationScannerService();
@@ -321,14 +320,14 @@ Some paragraph text.`;
 
     describe('when project has docs/conventions directory', () => {
       it('scans markdown files in docs/conventions', async () => {
-        mockFs.existsSync.mockImplementation((filePath: any) => {
+        mockFs.existsSync.mockImplementation((filePath: fs.PathLike) => {
           return (
             filePath === '/project/docs/conventions' ||
             filePath === '/project/docs/conventions/naming.md'
           );
         });
-        mockFs.readdirSync.mockReturnValue(['naming.md'] as any);
-        mockFs.statSync.mockReturnValue({ isFile: () => true } as any);
+        mockFs.readdirSync.mockReturnValue(['naming.md'] as unknown);
+        mockFs.statSync.mockReturnValue({ isFile: () => true } as unknown);
         mockFs.readFileSync.mockReturnValue(`- Use snake_case for files`);
 
         const service = new DocumentationScannerService();
@@ -340,14 +339,14 @@ Some paragraph text.`;
 
     describe('when project has .claude/rules directory', () => {
       it('scans markdown files in .claude/rules', async () => {
-        mockFs.existsSync.mockImplementation((filePath: any) => {
+        mockFs.existsSync.mockImplementation((filePath: fs.PathLike) => {
           return (
             filePath === '/project/.claude/rules' ||
             filePath === '/project/.claude/rules/testing.md'
           );
         });
-        mockFs.readdirSync.mockReturnValue(['testing.md'] as any);
-        mockFs.statSync.mockReturnValue({ isFile: () => true } as any);
+        mockFs.readdirSync.mockReturnValue(['testing.md'] as unknown);
+        mockFs.statSync.mockReturnValue({ isFile: () => true } as unknown);
         mockFs.readFileSync.mockReturnValue(`- Write tests first`);
 
         const service = new DocumentationScannerService();
@@ -359,14 +358,14 @@ Some paragraph text.`;
 
     describe('when project has .packmind/standards directory', () => {
       it('scans markdown files in .packmind/standards', async () => {
-        mockFs.existsSync.mockImplementation((filePath: any) => {
+        mockFs.existsSync.mockImplementation((filePath: fs.PathLike) => {
           return (
             filePath === '/project/.packmind/standards' ||
             filePath === '/project/.packmind/standards/quality.md'
           );
         });
-        mockFs.readdirSync.mockReturnValue(['quality.md'] as any);
-        mockFs.statSync.mockReturnValue({ isFile: () => true } as any);
+        mockFs.readdirSync.mockReturnValue(['quality.md'] as unknown);
+        mockFs.statSync.mockReturnValue({ isFile: () => true } as unknown);
         mockFs.readFileSync.mockReturnValue(`- Run quality gate before commit`);
 
         const service = new DocumentationScannerService();
@@ -384,13 +383,13 @@ Some paragraph text.`;
       >;
 
       beforeEach(async () => {
-        mockFs.existsSync.mockImplementation((filePath: any) => {
+        mockFs.existsSync.mockImplementation((filePath: fs.PathLike) => {
           return (
             filePath === '/project/CLAUDE.md' ||
             filePath === '/project/CONTRIBUTING.md'
           );
         });
-        mockFs.readFileSync.mockImplementation((filePath: any) => {
+        mockFs.readFileSync.mockImplementation((filePath: fs.PathLike) => {
           if (filePath === '/project/CLAUDE.md') {
             return `- Use TypeScript\n- Use TypeScript`;
           }
@@ -435,7 +434,7 @@ Some paragraph text.`;
 
     describe('when extracting conventions from documentation', () => {
       it('separates conventions into their own list', async () => {
-        mockFs.existsSync.mockImplementation((filePath: any) => {
+        mockFs.existsSync.mockImplementation((filePath: fs.PathLike) => {
           return filePath === '/project/CLAUDE.md';
         });
         mockFs.readFileSync.mockReturnValue(`# Conventions
@@ -456,7 +455,7 @@ Some paragraph text.`;
 
     describe('when extracting workflows from documentation', () => {
       it('identifies multi-step workflows', async () => {
-        mockFs.existsSync.mockImplementation((filePath: any) => {
+        mockFs.existsSync.mockImplementation((filePath: fs.PathLike) => {
           return filePath === '/project/CONTRIBUTING.md';
         });
         mockFs.readFileSync.mockReturnValue(`# Release Process

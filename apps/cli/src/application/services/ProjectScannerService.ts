@@ -67,10 +67,10 @@ export class ProjectScannerService {
     // Detect tools from config files
     await this.detectToolsFromConfigFiles(projectPath, result);
 
-    // Set hasTypeScript flag
-    result.hasTypeScript = await this.fileExists(
-      path.join(projectPath, 'tsconfig.json'),
-    );
+    // Set hasTypeScript flag (check for tsconfig.json or tsconfig.base.json)
+    result.hasTypeScript =
+      (await this.fileExists(path.join(projectPath, 'tsconfig.json'))) ||
+      (await this.fileExists(path.join(projectPath, 'tsconfig.base.json')));
 
     // Set hasLinting flag
     result.hasLinting =
@@ -95,8 +95,11 @@ export class ProjectScannerService {
     projectPath: string,
     result: IProjectScanResult,
   ): Promise<void> {
-    // TypeScript
-    if (await this.fileExists(path.join(projectPath, 'tsconfig.json'))) {
+    // TypeScript (check for tsconfig.json or tsconfig.base.json for monorepos)
+    if (
+      (await this.fileExists(path.join(projectPath, 'tsconfig.json'))) ||
+      (await this.fileExists(path.join(projectPath, 'tsconfig.base.json')))
+    ) {
       result.languages.push('TypeScript');
     }
 
