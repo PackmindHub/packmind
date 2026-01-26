@@ -1052,3 +1052,7 @@
   path: artefact-logger
   type: skill
   date: 2026-01-22T11:05:23+01:00
+- name: packmind:creating-end-user-documentation-for-packmind
+  path: packmind:creating-end-user-documentation-for-packmind
+  type: skill
+  date: 2026-01-23T12:57:21+01:00
