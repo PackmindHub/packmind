@@ -527,29 +527,6 @@ ${skillVersion.prompt}`;
   }
 
   /**
-   * @deprecated Use generateCopilotSkillFiles instead
-   * Generate GitHub Copilot skill file for a specific skill version
-   * Skills are deployed to .github/skills/{skill-slug}/SKILL.md following the Agent Skills specification
-   */
-  private generateCopilotSkillFile(skillVersion: SkillVersion): {
-    path: string;
-    content: string;
-  } {
-    this.logger.debug('Generating Copilot skill file', {
-      skillSlug: skillVersion.slug,
-      skillName: skillVersion.name,
-    });
-
-    const skillMdContent = this.generateSkillMdContent(skillVersion);
-    const path = `.github/skills/${skillVersion.slug}/SKILL.md`;
-
-    return {
-      path,
-      content: skillMdContent,
-    };
-  }
-
-  /**
    * Escape single quotes in YAML values to prevent parsing errors
    */
   private escapeSingleQuotes(value: string): string {
