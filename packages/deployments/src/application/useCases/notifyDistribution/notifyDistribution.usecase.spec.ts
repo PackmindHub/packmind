@@ -1950,4 +1950,59 @@ describe('parseGitRepoInfo', () => {
       'Unable to parse git remote URL: invalid-url',
     );
   });
+
+  it('parses deeply nested GitLab HTTPS URL with full namespace path', () => {
+    const result = parseGitRepoInfo(
+      'https://gitlab1.my-company.net/group/subgroup/subsubgroup/subsubsubgroup/subsubsubsubgroup/myrepo.git',
+    );
+
+    expect(result).toEqual({
+      owner: 'group/subgroup/subsubgroup/subsubsubgroup/subsubsubsubgroup',
+      repo: 'myrepo',
+    });
+  });
+
+  it('parses nested GitLab group HTTPS URL with 3 levels', () => {
+    const result = parseGitRepoInfo(
+      'https://gitlab.com/group/subgroup/project.git',
+    );
+
+    expect(result).toEqual({
+      owner: 'group/subgroup',
+      repo: 'project',
+    });
+  });
+
+  it('parses deeply nested GitLab SSH URL with full namespace path', () => {
+    const result = parseGitRepoInfo(
+      'git@gitlab.example.com:org/team/project/repo-name.git',
+    );
+
+    expect(result).toEqual({
+      owner: 'org/team/project',
+      repo: 'repo-name',
+    });
+  });
+
+  it('parses nested GitLab URL without .git suffix', () => {
+    const result = parseGitRepoInfo(
+      'https://gitlab.com/group/subgroup/project',
+    );
+
+    expect(result).toEqual({
+      owner: 'group/subgroup',
+      repo: 'project',
+    });
+  });
+
+  it('parses nested GitLab URL with trailing slash', () => {
+    const result = parseGitRepoInfo(
+      'https://gitlab.com/group/subgroup/project/',
+    );
+
+    expect(result).toEqual({
+      owner: 'group/subgroup',
+      repo: 'project',
+    });
+  });
 });
