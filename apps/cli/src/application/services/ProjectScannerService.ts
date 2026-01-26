@@ -1,4 +1,4 @@
-import * as fs from 'fs';
+import * as fs from 'fs/promises';
 import * as path from 'path';
 
 export interface IProjectScanResult {
@@ -32,43 +32,43 @@ export class ProjectScannerService {
     };
 
     // Detect languages
-    this.detectLanguages(projectPath, result);
+    await this.detectLanguages(projectPath, result);
 
     // Detect frameworks and tools from package.json (JavaScript/Node.js)
-    this.detectFromPackageJson(projectPath, result);
+    await this.detectFromPackageJson(projectPath, result);
 
     // Detect Python ecosystem
-    this.detectPythonEcosystem(projectPath, result);
+    await this.detectPythonEcosystem(projectPath, result);
 
     // Detect Java/Kotlin ecosystem
-    this.detectJavaEcosystem(projectPath, result);
+    await this.detectJavaEcosystem(projectPath, result);
 
     // Detect Go ecosystem
-    this.detectGoEcosystem(projectPath, result);
+    await this.detectGoEcosystem(projectPath, result);
 
     // Detect Rust ecosystem
-    this.detectRustEcosystem(projectPath, result);
+    await this.detectRustEcosystem(projectPath, result);
 
     // Detect PHP ecosystem
-    this.detectPhpEcosystem(projectPath, result);
+    await this.detectPhpEcosystem(projectPath, result);
 
     // Detect Ruby ecosystem
-    this.detectRubyEcosystem(projectPath, result);
+    await this.detectRubyEcosystem(projectPath, result);
 
     // Detect monorepo structure
-    this.detectMonorepoStructure(projectPath, result);
+    await this.detectMonorepoStructure(projectPath, result);
 
     // Detect package manager
-    this.detectPackageManager(projectPath, result);
+    await this.detectPackageManager(projectPath, result);
 
     // Detect structure details
-    this.detectStructureDetails(projectPath, result);
+    await this.detectStructureDetails(projectPath, result);
 
     // Detect tools from config files
-    this.detectToolsFromConfigFiles(projectPath, result);
+    await this.detectToolsFromConfigFiles(projectPath, result);
 
     // Set hasTypeScript flag
-    result.hasTypeScript = fs.existsSync(
+    result.hasTypeScript = await this.fileExists(
       path.join(projectPath, 'tsconfig.json'),
     );
 
@@ -82,74 +82,84 @@ export class ProjectScannerService {
     return result;
   }
 
-  private detectLanguages(
+  private async fileExists(filePath: string): Promise<boolean> {
+    try {
+      await fs.access(filePath);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  private async detectLanguages(
     projectPath: string,
     result: IProjectScanResult,
-  ): void {
+  ): Promise<void> {
     // TypeScript
-    if (fs.existsSync(path.join(projectPath, 'tsconfig.json'))) {
+    if (await this.fileExists(path.join(projectPath, 'tsconfig.json'))) {
       result.languages.push('TypeScript');
     }
 
     // JavaScript
-    if (fs.existsSync(path.join(projectPath, 'package.json'))) {
+    if (await this.fileExists(path.join(projectPath, 'package.json'))) {
       result.languages.push('JavaScript');
     }
 
     // Python
     if (
-      fs.existsSync(path.join(projectPath, 'requirements.txt')) ||
-      fs.existsSync(path.join(projectPath, 'setup.py')) ||
-      fs.existsSync(path.join(projectPath, 'pyproject.toml')) ||
-      fs.existsSync(path.join(projectPath, 'Pipfile'))
+      (await this.fileExists(path.join(projectPath, 'requirements.txt'))) ||
+      (await this.fileExists(path.join(projectPath, 'setup.py'))) ||
+      (await this.fileExists(path.join(projectPath, 'pyproject.toml'))) ||
+      (await this.fileExists(path.join(projectPath, 'Pipfile')))
     ) {
       result.languages.push('Python');
     }
 
     // Java/Kotlin
     if (
-      fs.existsSync(path.join(projectPath, 'pom.xml')) ||
-      fs.existsSync(path.join(projectPath, 'build.gradle')) ||
-      fs.existsSync(path.join(projectPath, 'build.gradle.kts'))
+      (await this.fileExists(path.join(projectPath, 'pom.xml'))) ||
+      (await this.fileExists(path.join(projectPath, 'build.gradle'))) ||
+      (await this.fileExists(path.join(projectPath, 'build.gradle.kts')))
     ) {
       result.languages.push('Java');
     }
 
     // Go
-    if (fs.existsSync(path.join(projectPath, 'go.mod'))) {
+    if (await this.fileExists(path.join(projectPath, 'go.mod'))) {
       result.languages.push('Go');
     }
 
     // Rust
-    if (fs.existsSync(path.join(projectPath, 'Cargo.toml'))) {
+    if (await this.fileExists(path.join(projectPath, 'Cargo.toml'))) {
       result.languages.push('Rust');
     }
 
     // PHP
-    if (fs.existsSync(path.join(projectPath, 'composer.json'))) {
+    if (await this.fileExists(path.join(projectPath, 'composer.json'))) {
       result.languages.push('PHP');
     }
 
     // Ruby
     if (
-      fs.existsSync(path.join(projectPath, 'Gemfile')) ||
-      fs.existsSync(path.join(projectPath, 'Rakefile'))
+      (await this.fileExists(path.join(projectPath, 'Gemfile'))) ||
+      (await this.fileExists(path.join(projectPath, 'Rakefile')))
     ) {
       result.languages.push('Ruby');
     }
   }
 
-  private detectFromPackageJson(
+  private async detectFromPackageJson(
     projectPath: string,
     result: IProjectScanResult,
-  ): void {
+  ): Promise<void> {
     const packageJsonPath = path.join(projectPath, 'package.json');
-    if (!fs.existsSync(packageJsonPath)) {
+    if (!(await this.fileExists(packageJsonPath))) {
       return;
     }
 
     try {
-      const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf-8'));
+      const content = await fs.readFile(packageJsonPath, 'utf-8');
+      const packageJson = JSON.parse(content);
       const allDeps = {
         ...packageJson.dependencies,
         ...packageJson.devDependencies,
@@ -205,17 +215,17 @@ export class ProjectScannerService {
     }
   }
 
-  private detectPythonEcosystem(
+  private async detectPythonEcosystem(
     projectPath: string,
     result: IProjectScanResult,
-  ): void {
+  ): Promise<void> {
     // Check requirements.txt
     const requirementsPath = path.join(projectPath, 'requirements.txt');
-    if (fs.existsSync(requirementsPath)) {
+    if (await this.fileExists(requirementsPath)) {
       try {
-        const content = fs
-          .readFileSync(requirementsPath, 'utf-8')
-          .toLowerCase();
+        const content = (
+          await fs.readFile(requirementsPath, 'utf-8')
+        ).toLowerCase();
 
         // Detect frameworks
         if (content.includes('django')) {
@@ -248,9 +258,11 @@ export class ProjectScannerService {
 
     // Check pyproject.toml
     const pyprojectPath = path.join(projectPath, 'pyproject.toml');
-    if (fs.existsSync(pyprojectPath)) {
+    if (await this.fileExists(pyprojectPath)) {
       try {
-        const content = fs.readFileSync(pyprojectPath, 'utf-8').toLowerCase();
+        const content = (
+          await fs.readFile(pyprojectPath, 'utf-8')
+        ).toLowerCase();
 
         // Detect frameworks
         if (content.includes('django')) {
@@ -286,9 +298,9 @@ export class ProjectScannerService {
 
     // Check Pipfile
     const pipfilePath = path.join(projectPath, 'Pipfile');
-    if (fs.existsSync(pipfilePath)) {
+    if (await this.fileExists(pipfilePath)) {
       try {
-        const content = fs.readFileSync(pipfilePath, 'utf-8').toLowerCase();
+        const content = (await fs.readFile(pipfilePath, 'utf-8')).toLowerCase();
 
         // Detect frameworks
         if (content.includes('django')) {
@@ -313,15 +325,15 @@ export class ProjectScannerService {
     result.tools = [...new Set(result.tools)];
   }
 
-  private detectJavaEcosystem(
+  private async detectJavaEcosystem(
     projectPath: string,
     result: IProjectScanResult,
-  ): void {
+  ): Promise<void> {
     // Check pom.xml (Maven)
     const pomPath = path.join(projectPath, 'pom.xml');
-    if (fs.existsSync(pomPath)) {
+    if (await this.fileExists(pomPath)) {
       try {
-        const content = fs.readFileSync(pomPath, 'utf-8').toLowerCase();
+        const content = (await fs.readFile(pomPath, 'utf-8')).toLowerCase();
 
         // Detect frameworks
         if (content.includes('spring-boot')) {
@@ -347,10 +359,12 @@ export class ProjectScannerService {
     // Check build.gradle or build.gradle.kts (Gradle)
     const gradlePath = path.join(projectPath, 'build.gradle');
     const gradleKtsPath = path.join(projectPath, 'build.gradle.kts');
-    if (fs.existsSync(gradlePath) || fs.existsSync(gradleKtsPath)) {
+    const hasGradle = await this.fileExists(gradlePath);
+    const hasGradleKts = await this.fileExists(gradleKtsPath);
+    if (hasGradle || hasGradleKts) {
       try {
-        const filePath = fs.existsSync(gradlePath) ? gradlePath : gradleKtsPath;
-        const content = fs.readFileSync(filePath, 'utf-8').toLowerCase();
+        const filePath = hasGradle ? gradlePath : gradleKtsPath;
+        const content = (await fs.readFile(filePath, 'utf-8')).toLowerCase();
 
         // Detect Kotlin
         if (filePath.endsWith('.kts') || content.includes('kotlin')) {
@@ -385,17 +399,17 @@ export class ProjectScannerService {
     result.tools = [...new Set(result.tools)];
   }
 
-  private detectGoEcosystem(
+  private async detectGoEcosystem(
     projectPath: string,
     result: IProjectScanResult,
-  ): void {
+  ): Promise<void> {
     const goModPath = path.join(projectPath, 'go.mod');
-    if (!fs.existsSync(goModPath)) {
+    if (!(await this.fileExists(goModPath))) {
       return;
     }
 
     try {
-      const content = fs.readFileSync(goModPath, 'utf-8').toLowerCase();
+      const content = (await fs.readFile(goModPath, 'utf-8')).toLowerCase();
 
       // Detect frameworks
       if (content.includes('github.com/gin-gonic/gin')) {
@@ -418,17 +432,17 @@ export class ProjectScannerService {
     result.frameworks = [...new Set(result.frameworks)];
   }
 
-  private detectRustEcosystem(
+  private async detectRustEcosystem(
     projectPath: string,
     result: IProjectScanResult,
-  ): void {
+  ): Promise<void> {
     const cargoTomlPath = path.join(projectPath, 'Cargo.toml');
-    if (!fs.existsSync(cargoTomlPath)) {
+    if (!(await this.fileExists(cargoTomlPath))) {
       return;
     }
 
     try {
-      const content = fs.readFileSync(cargoTomlPath, 'utf-8').toLowerCase();
+      const content = (await fs.readFile(cargoTomlPath, 'utf-8')).toLowerCase();
 
       // Detect frameworks
       if (content.includes('actix-web')) {
@@ -452,19 +466,18 @@ export class ProjectScannerService {
     result.tools = [...new Set(result.tools)];
   }
 
-  private detectPhpEcosystem(
+  private async detectPhpEcosystem(
     projectPath: string,
     result: IProjectScanResult,
-  ): void {
+  ): Promise<void> {
     const composerJsonPath = path.join(projectPath, 'composer.json');
-    if (!fs.existsSync(composerJsonPath)) {
+    if (!(await this.fileExists(composerJsonPath))) {
       return;
     }
 
     try {
-      const composerJson = JSON.parse(
-        fs.readFileSync(composerJsonPath, 'utf-8'),
-      );
+      const content = await fs.readFile(composerJsonPath, 'utf-8');
+      const composerJson = JSON.parse(content);
       const allDeps = {
         ...composerJson.require,
         ...composerJson['require-dev'],
@@ -495,17 +508,17 @@ export class ProjectScannerService {
     result.tools = [...new Set(result.tools)];
   }
 
-  private detectRubyEcosystem(
+  private async detectRubyEcosystem(
     projectPath: string,
     result: IProjectScanResult,
-  ): void {
+  ): Promise<void> {
     const gemfilePath = path.join(projectPath, 'Gemfile');
-    if (!fs.existsSync(gemfilePath)) {
+    if (!(await this.fileExists(gemfilePath))) {
       return;
     }
 
     try {
-      const content = fs.readFileSync(gemfilePath, 'utf-8').toLowerCase();
+      const content = (await fs.readFile(gemfilePath, 'utf-8')).toLowerCase();
 
       // Detect frameworks
       if (content.includes('rails')) {
@@ -529,41 +542,52 @@ export class ProjectScannerService {
     result.tools = [...new Set(result.tools)];
   }
 
-  private detectMonorepoStructure(
+  private async detectMonorepoStructure(
     projectPath: string,
     result: IProjectScanResult,
-  ): void {
+  ): Promise<void> {
     const packagesDir = path.join(projectPath, 'packages');
     const appsDir = path.join(projectPath, 'apps');
 
-    if (
-      (fs.existsSync(packagesDir) && fs.statSync(packagesDir).isDirectory()) ||
-      (fs.existsSync(appsDir) && fs.statSync(appsDir).isDirectory())
-    ) {
+    const hasPackagesDir = await this.isDirectory(packagesDir);
+    const hasAppsDir = await this.isDirectory(appsDir);
+
+    if (hasPackagesDir || hasAppsDir) {
       result.structure.isMonorepo = true;
     }
   }
 
-  private detectPackageManager(
+  private async isDirectory(filePath: string): Promise<boolean> {
+    try {
+      const stats = await fs.stat(filePath);
+      return stats.isDirectory();
+    } catch {
+      return false;
+    }
+  }
+
+  private async detectPackageManager(
     projectPath: string,
     result: IProjectScanResult,
-  ): void {
-    if (fs.existsSync(path.join(projectPath, 'pnpm-lock.yaml'))) {
+  ): Promise<void> {
+    if (await this.fileExists(path.join(projectPath, 'pnpm-lock.yaml'))) {
       result.packageManager = 'pnpm';
-    } else if (fs.existsSync(path.join(projectPath, 'yarn.lock'))) {
+    } else if (await this.fileExists(path.join(projectPath, 'yarn.lock'))) {
       result.packageManager = 'yarn';
-    } else if (fs.existsSync(path.join(projectPath, 'package-lock.json'))) {
+    } else if (
+      await this.fileExists(path.join(projectPath, 'package-lock.json'))
+    ) {
       result.packageManager = 'npm';
     }
   }
 
-  private detectStructureDetails(
+  private async detectStructureDetails(
     projectPath: string,
     result: IProjectScanResult,
-  ): void {
+  ): Promise<void> {
     // Detect src directory
     const srcDir = path.join(projectPath, 'src');
-    if (fs.existsSync(srcDir) && fs.statSync(srcDir).isDirectory()) {
+    if (await this.isDirectory(srcDir)) {
       result.structure.hasSrcDirectory = true;
     }
 
@@ -571,27 +595,27 @@ export class ProjectScannerService {
     const testDirs = ['test', 'tests', '__tests__'];
     for (const testDir of testDirs) {
       const fullPath = path.join(projectPath, testDir);
-      if (fs.existsSync(fullPath) && fs.statSync(fullPath).isDirectory()) {
+      if (await this.isDirectory(fullPath)) {
         result.structure.hasTests = true;
         break;
       }
     }
   }
 
-  private detectToolsFromConfigFiles(
+  private async detectToolsFromConfigFiles(
     projectPath: string,
     result: IProjectScanResult,
-  ): void {
+  ): Promise<void> {
     try {
       // Nx
-      if (fs.existsSync(path.join(projectPath, 'nx.json'))) {
+      if (await this.fileExists(path.join(projectPath, 'nx.json'))) {
         if (!result.tools.includes('Nx')) {
           result.tools.push('Nx');
         }
       }
 
       // Turbo
-      if (fs.existsSync(path.join(projectPath, 'turbo.json'))) {
+      if (await this.fileExists(path.join(projectPath, 'turbo.json'))) {
         if (!result.tools.includes('Turbo')) {
           result.tools.push('Turbo');
         }
