@@ -1,7 +1,7 @@
-import * as fs from 'fs';
+import * as fs from 'fs/promises';
 import { ProjectScannerService } from './ProjectScannerService';
 
-jest.mock('fs');
+jest.mock('fs/promises');
 
 describe('ProjectScannerService', () => {
   const mockFs = fs as jest.Mocked<typeof fs>;
@@ -13,10 +13,13 @@ describe('ProjectScannerService', () => {
   describe('scanProject', () => {
     describe('when detecting TypeScript', () => {
       it('detects TypeScript from tsconfig.json', async () => {
-        mockFs.existsSync.mockImplementation((filePath: fs.PathLike) => {
-          return filePath.toString().endsWith('tsconfig.json');
+        (mockFs.access as jest.Mock).mockImplementation((filePath: string) => {
+          if (filePath.toString().endsWith('tsconfig.json')) {
+            return Promise.resolve();
+          }
+          return Promise.reject(new Error('File not found'));
         });
-        mockFs.readFileSync.mockReturnValue('{}');
+        (mockFs.readFile as jest.Mock).mockResolvedValue('{}');
         const service = new ProjectScannerService();
 
         const result = await service.scanProject('/test-project');
@@ -26,10 +29,13 @@ describe('ProjectScannerService', () => {
       });
 
       it('returns false for hasTypeScript when tsconfig.json is missing', async () => {
-        mockFs.existsSync.mockImplementation((filePath: fs.PathLike) => {
-          return filePath.toString().endsWith('package.json');
+        (mockFs.access as jest.Mock).mockImplementation((filePath: string) => {
+          if (filePath.toString().endsWith('package.json')) {
+            return Promise.resolve();
+          }
+          return Promise.reject(new Error('File not found'));
         });
-        mockFs.readFileSync.mockReturnValue('{}');
+        (mockFs.readFile as jest.Mock).mockResolvedValue('{}');
         const service = new ProjectScannerService();
 
         const result = await service.scanProject('/test-project');
@@ -41,17 +47,24 @@ describe('ProjectScannerService', () => {
     describe('when detecting frameworks', () => {
       describe('when NestJS is present', () => {
         it('detects NestJS from package.json', async () => {
-          mockFs.existsSync.mockImplementation((filePath: fs.PathLike) => {
-            return filePath.toString().endsWith('package.json');
-          });
-          mockFs.readFileSync.mockImplementation(
-            (filePath: fs.PathOrFileDescriptor) => {
+          (mockFs.access as jest.Mock).mockImplementation(
+            (filePath: string) => {
               if (filePath.toString().endsWith('package.json')) {
-                return JSON.stringify({
-                  dependencies: { '@nestjs/core': '^10.0.0' },
-                });
+                return Promise.resolve();
               }
-              return '{}';
+              return Promise.reject(new Error('File not found'));
+            },
+          );
+          (mockFs.readFile as jest.Mock).mockImplementation(
+            (filePath: string) => {
+              if (filePath.toString().endsWith('package.json')) {
+                return Promise.resolve(
+                  JSON.stringify({
+                    dependencies: { '@nestjs/core': '^10.0.0' },
+                  }),
+                );
+              }
+              return Promise.resolve('{}');
             },
           );
           const service = new ProjectScannerService();
@@ -64,17 +77,24 @@ describe('ProjectScannerService', () => {
 
       describe('when React is present', () => {
         it('detects React from package.json', async () => {
-          mockFs.existsSync.mockImplementation((filePath: fs.PathLike) => {
-            return filePath.toString().endsWith('package.json');
-          });
-          mockFs.readFileSync.mockImplementation(
-            (filePath: fs.PathOrFileDescriptor) => {
+          (mockFs.access as jest.Mock).mockImplementation(
+            (filePath: string) => {
               if (filePath.toString().endsWith('package.json')) {
-                return JSON.stringify({
-                  dependencies: { react: '^18.0.0' },
-                });
+                return Promise.resolve();
               }
-              return '{}';
+              return Promise.reject(new Error('File not found'));
+            },
+          );
+          (mockFs.readFile as jest.Mock).mockImplementation(
+            (filePath: string) => {
+              if (filePath.toString().endsWith('package.json')) {
+                return Promise.resolve(
+                  JSON.stringify({
+                    dependencies: { react: '^18.0.0' },
+                  }),
+                );
+              }
+              return Promise.resolve('{}');
             },
           );
           const service = new ProjectScannerService();
@@ -88,16 +108,20 @@ describe('ProjectScannerService', () => {
 
     describe('when detecting monorepo structure', () => {
       it('detects monorepo from packages directory', async () => {
-        mockFs.existsSync.mockImplementation((filePath: fs.PathLike) => {
+        (mockFs.access as jest.Mock).mockImplementation((filePath: string) => {
           const pathStr = filePath.toString();
-          return (
-            pathStr.endsWith('packages') || pathStr.endsWith('package.json')
-          );
+          if (
+            pathStr.endsWith('packages') ||
+            pathStr.endsWith('package.json')
+          ) {
+            return Promise.resolve();
+          }
+          return Promise.reject(new Error('File not found'));
         });
-        mockFs.statSync.mockReturnValue({
+        (mockFs.stat as jest.Mock).mockResolvedValue({
           isDirectory: () => true,
-        } as fs.Stats);
-        mockFs.readFileSync.mockReturnValue('{}');
+        });
+        (mockFs.readFile as jest.Mock).mockResolvedValue('{}');
         const service = new ProjectScannerService();
 
         const result = await service.scanProject('/test-project');
@@ -106,14 +130,17 @@ describe('ProjectScannerService', () => {
       });
 
       it('detects monorepo from apps directory', async () => {
-        mockFs.existsSync.mockImplementation((filePath: fs.PathLike) => {
+        (mockFs.access as jest.Mock).mockImplementation((filePath: string) => {
           const pathStr = filePath.toString();
-          return pathStr.endsWith('apps') || pathStr.endsWith('package.json');
+          if (pathStr.endsWith('apps') || pathStr.endsWith('package.json')) {
+            return Promise.resolve();
+          }
+          return Promise.reject(new Error('File not found'));
         });
-        mockFs.statSync.mockReturnValue({
+        (mockFs.stat as jest.Mock).mockResolvedValue({
           isDirectory: () => true,
-        } as fs.Stats);
-        mockFs.readFileSync.mockReturnValue('{}');
+        });
+        (mockFs.readFile as jest.Mock).mockResolvedValue('{}');
         const service = new ProjectScannerService();
 
         const result = await service.scanProject('/test-project');
@@ -124,17 +151,22 @@ describe('ProjectScannerService', () => {
 
     describe('when detecting test framework', () => {
       it('detects Vitest from package.json', async () => {
-        mockFs.existsSync.mockImplementation((filePath: fs.PathLike) => {
-          return filePath.toString().endsWith('package.json');
+        (mockFs.access as jest.Mock).mockImplementation((filePath: string) => {
+          if (filePath.toString().endsWith('package.json')) {
+            return Promise.resolve();
+          }
+          return Promise.reject(new Error('File not found'));
         });
-        mockFs.readFileSync.mockImplementation(
-          (filePath: fs.PathOrFileDescriptor) => {
+        (mockFs.readFile as jest.Mock).mockImplementation(
+          (filePath: string) => {
             if (filePath.toString().endsWith('package.json')) {
-              return JSON.stringify({
-                devDependencies: { vitest: '^1.0.0' },
-              });
+              return Promise.resolve(
+                JSON.stringify({
+                  devDependencies: { vitest: '^1.0.0' },
+                }),
+              );
             }
-            return '{}';
+            return Promise.resolve('{}');
           },
         );
         const service = new ProjectScannerService();
@@ -145,17 +177,22 @@ describe('ProjectScannerService', () => {
       });
 
       it('detects Jest from package.json', async () => {
-        mockFs.existsSync.mockImplementation((filePath: fs.PathLike) => {
-          return filePath.toString().endsWith('package.json');
+        (mockFs.access as jest.Mock).mockImplementation((filePath: string) => {
+          if (filePath.toString().endsWith('package.json')) {
+            return Promise.resolve();
+          }
+          return Promise.reject(new Error('File not found'));
         });
-        mockFs.readFileSync.mockImplementation(
-          (filePath: fs.PathOrFileDescriptor) => {
+        (mockFs.readFile as jest.Mock).mockImplementation(
+          (filePath: string) => {
             if (filePath.toString().endsWith('package.json')) {
-              return JSON.stringify({
-                devDependencies: { jest: '^29.0.0' },
-              });
+              return Promise.resolve(
+                JSON.stringify({
+                  devDependencies: { jest: '^29.0.0' },
+                }),
+              );
             }
-            return '{}';
+            return Promise.resolve('{}');
           },
         );
         const service = new ProjectScannerService();
@@ -168,14 +205,17 @@ describe('ProjectScannerService', () => {
 
     describe('when detecting package manager', () => {
       it('detects pnpm from pnpm-lock.yaml', async () => {
-        mockFs.existsSync.mockImplementation((filePath: fs.PathLike) => {
+        (mockFs.access as jest.Mock).mockImplementation((filePath: string) => {
           const pathStr = filePath.toString();
-          return (
+          if (
             pathStr.endsWith('pnpm-lock.yaml') ||
             pathStr.endsWith('package.json')
-          );
+          ) {
+            return Promise.resolve();
+          }
+          return Promise.reject(new Error('File not found'));
         });
-        mockFs.readFileSync.mockReturnValue('{}');
+        (mockFs.readFile as jest.Mock).mockResolvedValue('{}');
         const service = new ProjectScannerService();
 
         const result = await service.scanProject('/test-project');
@@ -184,13 +224,17 @@ describe('ProjectScannerService', () => {
       });
 
       it('detects yarn from yarn.lock', async () => {
-        mockFs.existsSync.mockImplementation((filePath: fs.PathLike) => {
+        (mockFs.access as jest.Mock).mockImplementation((filePath: string) => {
           const pathStr = filePath.toString();
-          return (
-            pathStr.endsWith('yarn.lock') || pathStr.endsWith('package.json')
-          );
+          if (
+            pathStr.endsWith('yarn.lock') ||
+            pathStr.endsWith('package.json')
+          ) {
+            return Promise.resolve();
+          }
+          return Promise.reject(new Error('File not found'));
         });
-        mockFs.readFileSync.mockReturnValue('{}');
+        (mockFs.readFile as jest.Mock).mockResolvedValue('{}');
         const service = new ProjectScannerService();
 
         const result = await service.scanProject('/test-project');
@@ -199,14 +243,17 @@ describe('ProjectScannerService', () => {
       });
 
       it('detects npm from package-lock.json', async () => {
-        mockFs.existsSync.mockImplementation((filePath: fs.PathLike) => {
+        (mockFs.access as jest.Mock).mockImplementation((filePath: string) => {
           const pathStr = filePath.toString();
-          return (
+          if (
             pathStr.endsWith('package-lock.json') ||
             pathStr.endsWith('package.json')
-          );
+          ) {
+            return Promise.resolve();
+          }
+          return Promise.reject(new Error('File not found'));
         });
-        mockFs.readFileSync.mockReturnValue('{}');
+        (mockFs.readFile as jest.Mock).mockResolvedValue('{}');
         const service = new ProjectScannerService();
 
         const result = await service.scanProject('/test-project');
@@ -217,17 +264,22 @@ describe('ProjectScannerService', () => {
 
     describe('when detecting tools', () => {
       it('detects ESLint from package.json', async () => {
-        mockFs.existsSync.mockImplementation((filePath: fs.PathLike) => {
-          return filePath.toString().endsWith('package.json');
+        (mockFs.access as jest.Mock).mockImplementation((filePath: string) => {
+          if (filePath.toString().endsWith('package.json')) {
+            return Promise.resolve();
+          }
+          return Promise.reject(new Error('File not found'));
         });
-        mockFs.readFileSync.mockImplementation(
-          (filePath: fs.PathOrFileDescriptor) => {
+        (mockFs.readFile as jest.Mock).mockImplementation(
+          (filePath: string) => {
             if (filePath.toString().endsWith('package.json')) {
-              return JSON.stringify({
-                devDependencies: { eslint: '^8.0.0' },
-              });
+              return Promise.resolve(
+                JSON.stringify({
+                  devDependencies: { eslint: '^8.0.0' },
+                }),
+              );
             }
-            return '{}';
+            return Promise.resolve('{}');
           },
         );
         const service = new ProjectScannerService();
@@ -239,13 +291,14 @@ describe('ProjectScannerService', () => {
       });
 
       it('detects Nx from nx.json', async () => {
-        mockFs.existsSync.mockImplementation((filePath: fs.PathLike) => {
+        (mockFs.access as jest.Mock).mockImplementation((filePath: string) => {
           const pathStr = filePath.toString();
-          return (
-            pathStr.endsWith('nx.json') || pathStr.endsWith('package.json')
-          );
+          if (pathStr.endsWith('nx.json') || pathStr.endsWith('package.json')) {
+            return Promise.resolve();
+          }
+          return Promise.reject(new Error('File not found'));
         });
-        mockFs.readFileSync.mockReturnValue('{}');
+        (mockFs.readFile as jest.Mock).mockResolvedValue('{}');
         const service = new ProjectScannerService();
 
         const result = await service.scanProject('/test-project');
@@ -254,10 +307,13 @@ describe('ProjectScannerService', () => {
       });
 
       it('returns false for hasLinting when ESLint is not detected', async () => {
-        mockFs.existsSync.mockImplementation((filePath: fs.PathLike) => {
-          return filePath.toString().endsWith('package.json');
+        (mockFs.access as jest.Mock).mockImplementation((filePath: string) => {
+          if (filePath.toString().endsWith('package.json')) {
+            return Promise.resolve();
+          }
+          return Promise.reject(new Error('File not found'));
         });
-        mockFs.readFileSync.mockReturnValue('{}');
+        (mockFs.readFile as jest.Mock).mockResolvedValue('{}');
         const service = new ProjectScannerService();
 
         const result = await service.scanProject('/test-project');
@@ -268,17 +324,20 @@ describe('ProjectScannerService', () => {
 
     describe('when detecting structure details', () => {
       it('detects src directory', async () => {
-        mockFs.existsSync.mockImplementation((filePath: fs.PathLike) => {
+        (mockFs.access as jest.Mock).mockImplementation((filePath: string) => {
           const pathStr = filePath.toString();
-          return pathStr.endsWith('src') || pathStr.endsWith('package.json');
-        });
-        mockFs.statSync.mockImplementation((filePath: fs.PathLike) => {
-          if (filePath.toString().endsWith('src')) {
-            return { isDirectory: () => true } as fs.Stats;
+          if (pathStr.endsWith('src') || pathStr.endsWith('package.json')) {
+            return Promise.resolve();
           }
-          return { isDirectory: () => false } as fs.Stats;
+          return Promise.reject(new Error('File not found'));
         });
-        mockFs.readFileSync.mockReturnValue('{}');
+        (mockFs.stat as jest.Mock).mockImplementation((filePath: string) => {
+          if (filePath.toString().endsWith('src')) {
+            return Promise.resolve({ isDirectory: () => true });
+          }
+          return Promise.resolve({ isDirectory: () => false });
+        });
+        (mockFs.readFile as jest.Mock).mockResolvedValue('{}');
         const service = new ProjectScannerService();
 
         const result = await service.scanProject('/test-project');
@@ -287,19 +346,22 @@ describe('ProjectScannerService', () => {
       });
 
       it('detects test files', async () => {
-        mockFs.existsSync.mockImplementation((filePath: fs.PathLike) => {
+        (mockFs.access as jest.Mock).mockImplementation((filePath: string) => {
           const pathStr = filePath.toString();
-          return (
+          if (
             pathStr.endsWith('test') ||
             pathStr.endsWith('tests') ||
             pathStr.endsWith('__tests__') ||
             pathStr.endsWith('package.json')
-          );
+          ) {
+            return Promise.resolve();
+          }
+          return Promise.reject(new Error('File not found'));
         });
-        mockFs.statSync.mockReturnValue({
+        (mockFs.stat as jest.Mock).mockResolvedValue({
           isDirectory: () => true,
-        } as fs.Stats);
-        mockFs.readFileSync.mockReturnValue('{}');
+        });
+        (mockFs.readFile as jest.Mock).mockResolvedValue('{}');
         const service = new ProjectScannerService();
 
         const result = await service.scanProject('/test-project');
@@ -310,10 +372,13 @@ describe('ProjectScannerService', () => {
 
     describe('when detecting Python ecosystem', () => {
       it('detects Python language from requirements.txt', async () => {
-        mockFs.existsSync.mockImplementation((filePath: fs.PathLike) => {
-          return filePath.toString().endsWith('requirements.txt');
+        (mockFs.access as jest.Mock).mockImplementation((filePath: string) => {
+          if (filePath.toString().endsWith('requirements.txt')) {
+            return Promise.resolve();
+          }
+          return Promise.reject(new Error('File not found'));
         });
-        mockFs.readFileSync.mockReturnValue('');
+        (mockFs.readFile as jest.Mock).mockResolvedValue('');
         const service = new ProjectScannerService();
 
         const result = await service.scanProject('/test-project');
@@ -322,10 +387,15 @@ describe('ProjectScannerService', () => {
       });
 
       it('detects Django from requirements.txt', async () => {
-        mockFs.existsSync.mockImplementation((filePath: fs.PathLike) => {
-          return filePath.toString().endsWith('requirements.txt');
+        (mockFs.access as jest.Mock).mockImplementation((filePath: string) => {
+          if (filePath.toString().endsWith('requirements.txt')) {
+            return Promise.resolve();
+          }
+          return Promise.reject(new Error('File not found'));
         });
-        mockFs.readFileSync.mockReturnValue('django==4.2.0\npytest==7.0.0');
+        (mockFs.readFile as jest.Mock).mockResolvedValue(
+          'django==4.2.0\npytest==7.0.0',
+        );
         const service = new ProjectScannerService();
 
         const result = await service.scanProject('/test-project');
@@ -335,10 +405,13 @@ describe('ProjectScannerService', () => {
       });
 
       it('detects Flask and FastAPI from pyproject.toml', async () => {
-        mockFs.existsSync.mockImplementation((filePath: fs.PathLike) => {
-          return filePath.toString().endsWith('pyproject.toml');
+        (mockFs.access as jest.Mock).mockImplementation((filePath: string) => {
+          if (filePath.toString().endsWith('pyproject.toml')) {
+            return Promise.resolve();
+          }
+          return Promise.reject(new Error('File not found'));
         });
-        mockFs.readFileSync.mockReturnValue(
+        (mockFs.readFile as jest.Mock).mockResolvedValue(
           'flask = "^2.0.0"\nfastapi = "^0.95.0"\npoetry',
         );
         const service = new ProjectScannerService();
@@ -351,10 +424,13 @@ describe('ProjectScannerService', () => {
       });
 
       it('detects Python tools from requirements.txt', async () => {
-        mockFs.existsSync.mockImplementation((filePath: fs.PathLike) => {
-          return filePath.toString().endsWith('requirements.txt');
+        (mockFs.access as jest.Mock).mockImplementation((filePath: string) => {
+          if (filePath.toString().endsWith('requirements.txt')) {
+            return Promise.resolve();
+          }
+          return Promise.reject(new Error('File not found'));
         });
-        mockFs.readFileSync.mockReturnValue('pylint\nblack\nmypy');
+        (mockFs.readFile as jest.Mock).mockResolvedValue('pylint\nblack\nmypy');
         const service = new ProjectScannerService();
 
         const result = await service.scanProject('/test-project');
@@ -368,10 +444,13 @@ describe('ProjectScannerService', () => {
 
     describe('when detecting Java ecosystem', () => {
       it('detects Java language from pom.xml', async () => {
-        mockFs.existsSync.mockImplementation((filePath: fs.PathLike) => {
-          return filePath.toString().endsWith('pom.xml');
+        (mockFs.access as jest.Mock).mockImplementation((filePath: string) => {
+          if (filePath.toString().endsWith('pom.xml')) {
+            return Promise.resolve();
+          }
+          return Promise.reject(new Error('File not found'));
         });
-        mockFs.readFileSync.mockReturnValue('<project></project>');
+        (mockFs.readFile as jest.Mock).mockResolvedValue('<project></project>');
         const service = new ProjectScannerService();
 
         const result = await service.scanProject('/test-project');
@@ -380,10 +459,13 @@ describe('ProjectScannerService', () => {
       });
 
       it('detects Spring Boot from pom.xml', async () => {
-        mockFs.existsSync.mockImplementation((filePath: fs.PathLike) => {
-          return filePath.toString().endsWith('pom.xml');
+        (mockFs.access as jest.Mock).mockImplementation((filePath: string) => {
+          if (filePath.toString().endsWith('pom.xml')) {
+            return Promise.resolve();
+          }
+          return Promise.reject(new Error('File not found'));
         });
-        mockFs.readFileSync.mockReturnValue(
+        (mockFs.readFile as jest.Mock).mockResolvedValue(
           '<dependency><artifactId>spring-boot-starter</artifactId></dependency>',
         );
         const service = new ProjectScannerService();
@@ -395,10 +477,13 @@ describe('ProjectScannerService', () => {
       });
 
       it('detects Kotlin and frameworks from build.gradle.kts', async () => {
-        mockFs.existsSync.mockImplementation((filePath: fs.PathLike) => {
-          return filePath.toString().endsWith('build.gradle.kts');
+        (mockFs.access as jest.Mock).mockImplementation((filePath: string) => {
+          if (filePath.toString().endsWith('build.gradle.kts')) {
+            return Promise.resolve();
+          }
+          return Promise.reject(new Error('File not found'));
         });
-        mockFs.readFileSync.mockReturnValue(
+        (mockFs.readFile as jest.Mock).mockResolvedValue(
           'implementation("org.springframework.boot:spring-boot-starter")\nimplementation("io.quarkus:quarkus-core")',
         );
         const service = new ProjectScannerService();
@@ -412,10 +497,13 @@ describe('ProjectScannerService', () => {
       });
 
       it('detects JUnit from pom.xml', async () => {
-        mockFs.existsSync.mockImplementation((filePath: fs.PathLike) => {
-          return filePath.toString().endsWith('pom.xml');
+        (mockFs.access as jest.Mock).mockImplementation((filePath: string) => {
+          if (filePath.toString().endsWith('pom.xml')) {
+            return Promise.resolve();
+          }
+          return Promise.reject(new Error('File not found'));
         });
-        mockFs.readFileSync.mockReturnValue(
+        (mockFs.readFile as jest.Mock).mockResolvedValue(
           '<dependency><artifactId>junit</artifactId></dependency>',
         );
         const service = new ProjectScannerService();
@@ -428,10 +516,15 @@ describe('ProjectScannerService', () => {
 
     describe('when detecting Go ecosystem', () => {
       it('detects Go language from go.mod', async () => {
-        mockFs.existsSync.mockImplementation((filePath: fs.PathLike) => {
-          return filePath.toString().endsWith('go.mod');
+        (mockFs.access as jest.Mock).mockImplementation((filePath: string) => {
+          if (filePath.toString().endsWith('go.mod')) {
+            return Promise.resolve();
+          }
+          return Promise.reject(new Error('File not found'));
         });
-        mockFs.readFileSync.mockReturnValue('module example.com/myapp');
+        (mockFs.readFile as jest.Mock).mockResolvedValue(
+          'module example.com/myapp',
+        );
         const service = new ProjectScannerService();
 
         const result = await service.scanProject('/test-project');
@@ -441,10 +534,13 @@ describe('ProjectScannerService', () => {
       });
 
       it('detects Gin framework from go.mod', async () => {
-        mockFs.existsSync.mockImplementation((filePath: fs.PathLike) => {
-          return filePath.toString().endsWith('go.mod');
+        (mockFs.access as jest.Mock).mockImplementation((filePath: string) => {
+          if (filePath.toString().endsWith('go.mod')) {
+            return Promise.resolve();
+          }
+          return Promise.reject(new Error('File not found'));
         });
-        mockFs.readFileSync.mockReturnValue(
+        (mockFs.readFile as jest.Mock).mockResolvedValue(
           'require github.com/gin-gonic/gin v1.9.0',
         );
         const service = new ProjectScannerService();
@@ -455,10 +551,13 @@ describe('ProjectScannerService', () => {
       });
 
       it('detects Echo and Fiber frameworks from go.mod', async () => {
-        mockFs.existsSync.mockImplementation((filePath: fs.PathLike) => {
-          return filePath.toString().endsWith('go.mod');
+        (mockFs.access as jest.Mock).mockImplementation((filePath: string) => {
+          if (filePath.toString().endsWith('go.mod')) {
+            return Promise.resolve();
+          }
+          return Promise.reject(new Error('File not found'));
         });
-        mockFs.readFileSync.mockReturnValue(
+        (mockFs.readFile as jest.Mock).mockResolvedValue(
           'require (\n  github.com/labstack/echo v4.10.0\n  github.com/gofiber/fiber v2.42.0\n)',
         );
         const service = new ProjectScannerService();
@@ -472,10 +571,15 @@ describe('ProjectScannerService', () => {
 
     describe('when detecting Rust ecosystem', () => {
       it('detects Rust language from Cargo.toml', async () => {
-        mockFs.existsSync.mockImplementation((filePath: fs.PathLike) => {
-          return filePath.toString().endsWith('Cargo.toml');
+        (mockFs.access as jest.Mock).mockImplementation((filePath: string) => {
+          if (filePath.toString().endsWith('Cargo.toml')) {
+            return Promise.resolve();
+          }
+          return Promise.reject(new Error('File not found'));
         });
-        mockFs.readFileSync.mockReturnValue('[package]\nname = "myapp"');
+        (mockFs.readFile as jest.Mock).mockResolvedValue(
+          '[package]\nname = "myapp"',
+        );
         const service = new ProjectScannerService();
 
         const result = await service.scanProject('/test-project');
@@ -485,10 +589,13 @@ describe('ProjectScannerService', () => {
       });
 
       it('detects Actix framework from Cargo.toml', async () => {
-        mockFs.existsSync.mockImplementation((filePath: fs.PathLike) => {
-          return filePath.toString().endsWith('Cargo.toml');
+        (mockFs.access as jest.Mock).mockImplementation((filePath: string) => {
+          if (filePath.toString().endsWith('Cargo.toml')) {
+            return Promise.resolve();
+          }
+          return Promise.reject(new Error('File not found'));
         });
-        mockFs.readFileSync.mockReturnValue('actix-web = "4.3.0"');
+        (mockFs.readFile as jest.Mock).mockResolvedValue('actix-web = "4.3.0"');
         const service = new ProjectScannerService();
 
         const result = await service.scanProject('/test-project');
@@ -497,10 +604,15 @@ describe('ProjectScannerService', () => {
       });
 
       it('detects Rocket and Axum frameworks from Cargo.toml', async () => {
-        mockFs.existsSync.mockImplementation((filePath: fs.PathLike) => {
-          return filePath.toString().endsWith('Cargo.toml');
+        (mockFs.access as jest.Mock).mockImplementation((filePath: string) => {
+          if (filePath.toString().endsWith('Cargo.toml')) {
+            return Promise.resolve();
+          }
+          return Promise.reject(new Error('File not found'));
         });
-        mockFs.readFileSync.mockReturnValue('rocket = "0.5.0"\naxum = "0.6.0"');
+        (mockFs.readFile as jest.Mock).mockResolvedValue(
+          'rocket = "0.5.0"\naxum = "0.6.0"',
+        );
         const service = new ProjectScannerService();
 
         const result = await service.scanProject('/test-project');
@@ -512,10 +624,13 @@ describe('ProjectScannerService', () => {
 
     describe('when detecting PHP ecosystem', () => {
       it('detects PHP language from composer.json', async () => {
-        mockFs.existsSync.mockImplementation((filePath: fs.PathLike) => {
-          return filePath.toString().endsWith('composer.json');
+        (mockFs.access as jest.Mock).mockImplementation((filePath: string) => {
+          if (filePath.toString().endsWith('composer.json')) {
+            return Promise.resolve();
+          }
+          return Promise.reject(new Error('File not found'));
         });
-        mockFs.readFileSync.mockReturnValue('{}');
+        (mockFs.readFile as jest.Mock).mockResolvedValue('{}');
         const service = new ProjectScannerService();
 
         const result = await service.scanProject('/test-project');
@@ -525,10 +640,13 @@ describe('ProjectScannerService', () => {
       });
 
       it('detects Laravel from composer.json', async () => {
-        mockFs.existsSync.mockImplementation((filePath: fs.PathLike) => {
-          return filePath.toString().endsWith('composer.json');
+        (mockFs.access as jest.Mock).mockImplementation((filePath: string) => {
+          if (filePath.toString().endsWith('composer.json')) {
+            return Promise.resolve();
+          }
+          return Promise.reject(new Error('File not found'));
         });
-        mockFs.readFileSync.mockReturnValue(
+        (mockFs.readFile as jest.Mock).mockResolvedValue(
           JSON.stringify({
             require: { 'laravel/framework': '^10.0' },
           }),
@@ -541,10 +659,13 @@ describe('ProjectScannerService', () => {
       });
 
       it('detects Symfony and PHPUnit from composer.json', async () => {
-        mockFs.existsSync.mockImplementation((filePath: fs.PathLike) => {
-          return filePath.toString().endsWith('composer.json');
+        (mockFs.access as jest.Mock).mockImplementation((filePath: string) => {
+          if (filePath.toString().endsWith('composer.json')) {
+            return Promise.resolve();
+          }
+          return Promise.reject(new Error('File not found'));
         });
-        mockFs.readFileSync.mockReturnValue(
+        (mockFs.readFile as jest.Mock).mockResolvedValue(
           JSON.stringify({
             require: { 'symfony/symfony': '^6.0' },
             'require-dev': { 'phpunit/phpunit': '^10.0' },
@@ -561,10 +682,15 @@ describe('ProjectScannerService', () => {
 
     describe('when detecting Ruby ecosystem', () => {
       it('detects Ruby language from Gemfile', async () => {
-        mockFs.existsSync.mockImplementation((filePath: fs.PathLike) => {
-          return filePath.toString().endsWith('Gemfile');
+        (mockFs.access as jest.Mock).mockImplementation((filePath: string) => {
+          if (filePath.toString().endsWith('Gemfile')) {
+            return Promise.resolve();
+          }
+          return Promise.reject(new Error('File not found'));
         });
-        mockFs.readFileSync.mockReturnValue('source "https://rubygems.org"');
+        (mockFs.readFile as jest.Mock).mockResolvedValue(
+          'source "https://rubygems.org"',
+        );
         const service = new ProjectScannerService();
 
         const result = await service.scanProject('/test-project');
@@ -574,10 +700,15 @@ describe('ProjectScannerService', () => {
       });
 
       it('detects Rails from Gemfile', async () => {
-        mockFs.existsSync.mockImplementation((filePath: fs.PathLike) => {
-          return filePath.toString().endsWith('Gemfile');
+        (mockFs.access as jest.Mock).mockImplementation((filePath: string) => {
+          if (filePath.toString().endsWith('Gemfile')) {
+            return Promise.resolve();
+          }
+          return Promise.reject(new Error('File not found'));
         });
-        mockFs.readFileSync.mockReturnValue('gem "rails", "~> 7.0"');
+        (mockFs.readFile as jest.Mock).mockResolvedValue(
+          'gem "rails", "~> 7.0"',
+        );
         const service = new ProjectScannerService();
 
         const result = await service.scanProject('/test-project');
@@ -586,10 +717,15 @@ describe('ProjectScannerService', () => {
       });
 
       it('detects Sinatra and RSpec from Gemfile', async () => {
-        mockFs.existsSync.mockImplementation((filePath: fs.PathLike) => {
-          return filePath.toString().endsWith('Gemfile');
+        (mockFs.access as jest.Mock).mockImplementation((filePath: string) => {
+          if (filePath.toString().endsWith('Gemfile')) {
+            return Promise.resolve();
+          }
+          return Promise.reject(new Error('File not found'));
         });
-        mockFs.readFileSync.mockReturnValue('gem "sinatra"\ngem "rspec"');
+        (mockFs.readFile as jest.Mock).mockResolvedValue(
+          'gem "sinatra"\ngem "rspec"',
+        );
         const service = new ProjectScannerService();
 
         const result = await service.scanProject('/test-project');
