@@ -37,14 +37,35 @@ export const PreInstallationInfo: React.FC<IPreInstallationInfoProps> = ({
     >
       <PMVStack gap={4} textAlign="center">
         <PMHeading level="h2">Before you start</PMHeading>
-        <PMText color="secondary" fontSize="lg">
-          Packmind runs locally to generate the playbook AI coding agents need
-          to work in context.
-        </PMText>
+        <div
+          style={{
+            position: 'relative',
+            paddingBottom: '56.25%',
+            height: 0,
+            overflow: 'hidden',
+            borderRadius: '12px',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+          }}
+        >
+          <iframe
+            src="https://www.youtube.com/embed/WGRz75_UmRQ?si=HtgsStA7b--4LiGg"
+            title="Démo du flow d'onboarding Packmind"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowFullScreen
+            style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              width: '100%',
+              height: '100%',
+              border: 0,
+            }}
+          />
+        </div>
       </PMVStack>
 
       <PMVStack gap={6} align="stretch">
-        <PMBox
+        {/* <PMBox
           border={'solid 1px'}
           borderColor={'blue.800'}
           p={4}
@@ -109,7 +130,7 @@ export const PreInstallationInfo: React.FC<IPreInstallationInfoProps> = ({
               </PMCard.Root>
             </PMTooltip>
           </PMGrid>
-        </PMBox>
+        </PMBox> */}
 
         <PMAlert.Root status="success">
           <PMAlert.Indicator />
