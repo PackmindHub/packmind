@@ -55,6 +55,9 @@ export class ProjectScannerService {
     // Detect Ruby ecosystem
     await this.detectRubyEcosystem(projectPath, result);
 
+    // Detect .NET ecosystem
+    await this.detectDotNetEcosystem(projectPath, result);
+
     // Detect monorepo structure
     await this.detectMonorepoStructure(projectPath, result);
 
@@ -148,6 +151,26 @@ export class ProjectScannerService {
       (await this.fileExists(path.join(projectPath, 'Rakefile')))
     ) {
       result.languages.push('Ruby');
+    }
+
+    // C# (.NET)
+    if (
+      (await this.hasFilesWithExtension(projectPath, '.csproj')) ||
+      (await this.hasFilesWithExtension(projectPath, '.sln'))
+    ) {
+      result.languages.push('C#');
+    }
+  }
+
+  private async hasFilesWithExtension(
+    dirPath: string,
+    extension: string,
+  ): Promise<boolean> {
+    try {
+      const entries = await fs.readdir(dirPath);
+      return entries.some((entry) => entry.endsWith(extension));
+    } catch {
+      return false;
     }
   }
 
@@ -536,6 +559,51 @@ export class ProjectScannerService {
       if (content.includes('rspec')) {
         result.testFramework = result.testFramework || 'RSpec';
       }
+    } catch {
+      // Ignore read errors
+    }
+
+    // Deduplicate frameworks and tools
+    result.frameworks = [...new Set(result.frameworks)];
+    result.tools = [...new Set(result.tools)];
+  }
+
+  private async detectDotNetEcosystem(
+    projectPath: string,
+    result: IProjectScanResult,
+  ): Promise<void> {
+    // Look for .csproj files
+    try {
+      const entries = await fs.readdir(projectPath);
+      const csprojFiles = entries.filter((e) => e.endsWith('.csproj'));
+
+      for (const csprojFile of csprojFiles) {
+        const csprojPath = path.join(projectPath, csprojFile);
+        const content = (await fs.readFile(csprojPath, 'utf-8')).toLowerCase();
+
+        // Detect frameworks
+        if (
+          content.includes('microsoft.aspnetcore') ||
+          content.includes('aspnetcore')
+        ) {
+          result.frameworks.push('ASP.NET Core');
+        }
+        if (content.includes('microsoft.entityframeworkcore')) {
+          result.tools.push('Entity Framework Core');
+        }
+        if (content.includes('xunit')) {
+          result.testFramework = result.testFramework || 'xUnit';
+        }
+        if (content.includes('nunit')) {
+          result.testFramework = result.testFramework || 'NUnit';
+        }
+        if (content.includes('mstest')) {
+          result.testFramework = result.testFramework || 'MSTest';
+        }
+      }
+
+      // Detect tools
+      result.tools.push('.NET CLI');
     } catch {
       // Ignore read errors
     }
