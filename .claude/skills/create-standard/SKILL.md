@@ -1,5 +1,5 @@
 ---
-name: 'packmind-standard-create'
+name: 'create-standard'
 description: 'Guide for creating coding standards via the Packmind CLI. This skill should be used when users want to create a new coding standard (or add rules to an existing standard) that captures team conventions, best practices, or coding guidelines for distribution to Claude.'
 license: 'Complete terms in LICENSE.txt'
 ---
@@ -27,7 +27,8 @@ Every standard consists of:
 {
   "name": "Standard Name",
   "description": "What the standard covers and why",
-  "scope": "Where/when the standard applies",
+  "summary": "One-sentence description of when to apply the rules (optional)",
+  "scope": "Where/when the standard applies (e.g., 'TypeScript files', 'React components')",
   "rules": [
     {
       "content": "Rule description starting with action verb",
@@ -40,6 +41,15 @@ Every standard consists of:
   ]
 }
 ```
+
+**Note**: The Packmind CLI currently requires the `scope` field. The `summary` field is used in other workflows (like MCP) but not yet supported by the CLI.
+
+#### Understanding `scope` vs `summary`
+
+- **`scope`** (required by CLI): **WHERE** the standard applies - file patterns, technologies, specific locations
+  - Examples: `"TypeScript test files (*.spec.ts, *.test.ts)"`, `"React functional components"`
+- **`summary`** (optional, not yet CLI-supported): **WHEN/WHY** to apply - high-level purpose and trigger condition
+  - Examples: `"Apply when writing tests to ensure consistency"`, `"Use when handling user data for privacy compliance"`
 
 ## Prerequisites
 
@@ -117,17 +127,66 @@ Transform the understanding from Step 1 into concrete rules.
 
 #### Rule Writing Guidelines
 
-Each rule should:
+Each rule should follow these format requirements:
 
 1. **Start with an action verb** - Use imperative form (e.g., "Use", "Avoid", "Prefer", "Include")
-2. **Be specific and actionable** - Avoid vague guidance
-3. **Focus on one concept** - One rule per convention
+2. **Be concise** - Max ~25 words per rule
+3. **Be specific and actionable** - Avoid vague guidance
+4. **Focus on one concept** - One rule per convention
 
-**Good rules:**
+##### Avoid Rationale Phrases
+
+Rules describe **WHAT** to do, not **WHY**. Strip justifications and benefits—let examples demonstrate value.
+
+**Common fluff patterns to remove:**
+
+- "to improve/provide/ensure..." (benefit phrases)
+- "while maintaining/preserving..." (secondary concerns)
+- "for better/enhanced..." (quality claims)
+- "and enable/allow..." (future benefits)
+
+**Bad (includes rationale):**
+
+> Document props with JSDoc comments to provide IDE intellisense and improve developer experience.
+
+**Good (action only):**
+
+> Document component props with JSDoc comments (`/** ... */`) describing purpose, expected values, and defaults.
+
+##### Rule Splitting
+
+If a rule addresses 2+ distinct concerns, **proactively split** it into separate rules:
+
+**Bad (too broad):**
+
+> Create centralized color constants in dedicated files for consistent palettes, using semantic naming based on purpose rather than specific color values.
+
+**Good (split into focused rules):**
+
+- Define color constants in `theme/colors.ts` using semantic names (e.g., `primary`, `error`)
+- Use semantic color tokens instead of literal hex values in components
+
+##### Inline Examples in Rules
+
+Inline examples (code, paths, patterns) within the rule content are **optional**. Only include them when they clarify something not obvious from the rule text.
+
+**Types of useful inline examples:**
+
+- Code syntax: `const`, `async/await`, `/** ... */`
+- File paths: `infra/repositories/`, `domain/entities/`
+- Naming patterns: `.spec.ts`, `I{Name}` prefix
+
+**Good rules with inline examples:**
 
 - "Use const instead of let for variables that are never reassigned"
-- "Prefix interface names with I (e.g., IUserService)"
-- "Include error messages in all thrown exceptions"
+- "Prefix interface names with I (e.g., `IUserService`)"
+- "Place repository implementations in `infra/repositories/`"
+
+**Good rules without inline examples:**
+
+- "Name root describe block after the class or function under test"
+- "Run linting before committing changes"
+- "Keep business logic out of controllers"
 
 **Bad rules:**
 
@@ -195,9 +254,10 @@ The script generates a JSON file (named `<standard-name>.playbook.json`) with th
 
 - **name**: Non-empty string
 - **description**: Non-empty string explaining purpose
-- **scope**: Non-empty string describing applicability
+- **scope**: Non-empty string describing applicability (required by CLI)
+- **summary**: One-sentence description (optional, not yet supported by CLI)
 - **rules**: Array with at least one rule
-- **rules[].content**: Non-empty string starting with action verb
+- **rules[].content**: Non-empty string starting with action verb (max ~25 words)
 - **rules[].examples** (optional): If provided, must include positive, negative, and language
 
 #### Validating the Playbook
@@ -349,14 +409,15 @@ packmind-cli standard create testing-conventions.playbook.json
 
 ## Quick Reference
 
-| Field             | Required    | Description            |
-| ----------------- | ----------- | ---------------------- |
-| name              | Yes         | Standard name          |
-| description       | Yes         | What and why           |
-| scope             | Yes         | Where it applies       |
-| rules             | Yes         | At least one rule      |
-| rules[].content   | Yes         | Rule text (verb-first) |
-| rules[].examples  | No          | Code examples          |
-| examples.positive | If examples | Valid code             |
-| examples.negative | If examples | Invalid code           |
-| examples.language | If examples | Language ID            |
+| Field             | Required    | Description                             |
+| ----------------- | ----------- | --------------------------------------- |
+| name              | Yes         | Standard name                           |
+| description       | Yes         | What and why                            |
+| summary           | No          | One-sentence (not yet supported by CLI) |
+| scope             | Yes (CLI)   | Where it applies                        |
+| rules             | Yes         | At least one rule                       |
+| rules[].content   | Yes         | Rule text (verb-first, max ~25 words)   |
+| rules[].examples  | No          | Code examples                           |
+| examples.positive | If examples | Valid code                              |
+| examples.negative | If examples | Invalid code                            |
+| examples.language | If examples | Language ID                             |
