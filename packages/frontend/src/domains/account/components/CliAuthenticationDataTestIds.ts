@@ -4,4 +4,6 @@ export enum CliAuthenticationDataTestIds {
   EnvironmentVariableTab = 'CliAuthenticationDataTestIds.EnvironmentVariableTab',
   GenerateApiKeyCTA = 'CliAuthenticationDataTestIds.GenerateApiKeyCTA',
   ApiKeyInput = 'CliAuthenticationDataTestIds.ApiKeyTextarea',
+  AuthMethodLoginCommand = 'CliAuthenticationDataTestIds.AuthMethodLoginCommand',
+  AuthMethodApiKey = 'CliAuthenticationDataTestIds.AuthMethodApiKey',
 }

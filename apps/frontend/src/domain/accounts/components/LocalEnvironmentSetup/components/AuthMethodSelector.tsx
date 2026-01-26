@@ -1,10 +1,19 @@
 import React from 'react';
 import { PMHStack, PMRadioCard } from '@packmind/ui';
+import { CliAuthenticationDataTestIds } from '@packmind/frontend';
 import { AuthMethod, IAuthMethodSelectorProps } from '../types';
 
-const AUTH_OPTIONS: { value: AuthMethod; label: string }[] = [
-  { value: 'login-command', label: 'Login command' },
-  { value: 'api-key', label: 'API key' },
+const AUTH_OPTIONS: { value: AuthMethod; label: string; testId: string }[] = [
+  {
+    value: 'login-command',
+    label: 'Login command',
+    testId: CliAuthenticationDataTestIds.AuthMethodLoginCommand,
+  },
+  {
+    value: 'api-key',
+    label: 'API key',
+    testId: CliAuthenticationDataTestIds.AuthMethodApiKey,
+  },
 ];
 
 export const AuthMethodSelector: React.FC<IAuthMethodSelectorProps> = ({
@@ -21,7 +30,11 @@ export const AuthMethodSelector: React.FC<IAuthMethodSelectorProps> = ({
   >
     <PMHStack gap={2} alignItems="stretch" justify="center">
       {AUTH_OPTIONS.map((option) => (
-        <PMRadioCard.Item key={option.value} value={option.value}>
+        <PMRadioCard.Item
+          key={option.value}
+          value={option.value}
+          data-testid={option.testId}
+        >
           <PMRadioCard.ItemHiddenInput />
           <PMRadioCard.ItemControl>
             <PMRadioCard.ItemText>{option.label}</PMRadioCard.ItemText>
