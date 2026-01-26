@@ -133,3 +133,44 @@ export const useDeleteSkillMutation = () => {
     },
   });
 };
+
+const DELETE_SKILLS_BATCH_MUTATION_KEY = 'deleteSkillsBatch';
+
+export const useDeleteSkillsBatchMutation = () => {
+  const queryClient = useQueryClient();
+  const { spaceId } = useCurrentSpace();
+  const { organization } = useAuthContext();
+
+  return useMutation({
+    mutationKey: [DELETE_SKILLS_BATCH_MUTATION_KEY],
+    mutationFn: async (skillIds: SkillId[]) => {
+      if (!organization?.id || !spaceId) {
+        throw new Error('Organization and space context required');
+      }
+      return skillsGateway.deleteSkillsBatch(
+        organization.id,
+        spaceId,
+        skillIds,
+      );
+    },
+    onSuccess: async () => {
+      // Invalidate skills list
+      await queryClient.invalidateQueries({
+        queryKey: GET_SKILLS_KEY,
+      });
+
+      // Invalidate skills deployment overview
+      await queryClient.invalidateQueries({
+        queryKey: GET_SKILLS_DEPLOYMENT_OVERVIEW_KEY,
+      });
+
+      // Packages containing deleted skills need to be refreshed
+      await queryClient.invalidateQueries({
+        queryKey: LIST_PACKAGES_BY_SPACE_KEY,
+      });
+    },
+    onError: (error) => {
+      console.error('Error deleting skills batch:', error);
+    },
+  });
+};
