@@ -162,6 +162,12 @@ describe('PullContentUseCase', () => {
       findActiveSkillVersionsByTargetAndPackages: jest
         .fn()
         .mockResolvedValue([]),
+      findActiveStandardVersionsByTargetAndPackages: jest
+        .fn()
+        .mockResolvedValue([]),
+      findActiveRecipeVersionsByTargetAndPackages: jest
+        .fn()
+        .mockResolvedValue([]),
     } as unknown as jest.Mocked<IDistributionRepository>;
 
     targetService = {
@@ -1343,6 +1349,396 @@ describe('PullContentUseCase', () => {
               distributionRepository.findActiveSkillVersionsByTargetAndPackages,
             ).not.toHaveBeenCalled();
           });
+        });
+      });
+    });
+
+    describe('when git info is provided for standard distribution history lookup', () => {
+      let testPackage: PackageWithArtefacts;
+      let currentStandard: Standard;
+      let previouslyDeployedStandard: Standard;
+      let currentStandardVersion: StandardVersion;
+      let previouslyDeployedStandardVersion: StandardVersion;
+
+      beforeEach(() => {
+        currentStandard = {
+          id: createStandardId('current-standard'),
+          name: 'Current Standard',
+          slug: 'current-standard',
+          description: 'Current standard description',
+          version: 1,
+          userId: createUserId('user-1'),
+          spaceId: createSpaceId('space-1'),
+          scope: null,
+        };
+
+        previouslyDeployedStandard = {
+          id: createStandardId('previously-deployed-standard'),
+          name: 'Previously Deployed Standard',
+          slug: 'previously-deployed-standard',
+          description: 'Previously deployed standard description',
+          version: 1,
+          userId: createUserId('user-1'),
+          spaceId: createSpaceId('space-1'),
+          scope: null,
+        };
+
+        currentStandardVersion = {
+          id: createStandardVersionId('current-standard-version'),
+          standardId: currentStandard.id,
+          name: 'Current Standard',
+          slug: 'current-standard',
+          description: 'Current standard description',
+          version: 1,
+          scope: null,
+        };
+
+        previouslyDeployedStandardVersion = {
+          id: createStandardVersionId('previously-deployed-standard-version'),
+          standardId: previouslyDeployedStandard.id,
+          name: 'Previously Deployed Standard',
+          slug: 'previously-deployed-standard',
+          description: 'Previously deployed standard description',
+          version: 1,
+          scope: null,
+        };
+
+        testPackage = {
+          id: createPackageId('test-package-id'),
+          slug: 'test-package',
+          name: 'Test Package',
+          description: 'Test package description',
+          spaceId: createSpaceId('space-1'),
+          createdBy: createUserId('user-1'),
+          recipes: [],
+          standards: [currentStandard],
+          skills: [],
+        };
+
+        command = {
+          ...command,
+          packagesSlugs: ['test-package'],
+          gitRemoteUrl: 'https://github.com/owner/repo.git',
+          gitBranch: 'main',
+          relativePath: '/',
+        };
+
+        packageService.getPackagesBySlugsWithArtefacts.mockResolvedValue([
+          testPackage,
+        ]);
+
+        recipesPort.listRecipeVersions.mockResolvedValue([]);
+        standardsPort.listStandardVersions.mockResolvedValue([
+          currentStandardVersion,
+        ]);
+        skillsPort.listSkillVersions.mockResolvedValue([]);
+
+        renderModeConfigurationService.resolveActiveCodingAgents.mockResolvedValue(
+          [CodingAgents.packmind],
+        );
+        codingAgentPort.getSkillsFolderPathForAgents.mockReturnValue(new Map());
+
+        // Setup git port to return provider and repo
+        gitPort.listProviders.mockResolvedValue({
+          providers: [
+            {
+              id: 'provider-1',
+              type: 'github',
+              name: 'GitHub',
+              organizationId,
+            },
+          ],
+        });
+        gitPort.listRepos.mockResolvedValue([
+          {
+            id: 'git-repo-1',
+            owner: 'owner',
+            repo: 'repo',
+            branch: 'main',
+            name: 'owner/repo',
+            providerId: 'provider-1',
+          },
+        ]);
+
+        // Setup target service
+        targetService.getTargetsByGitRepoId.mockResolvedValue([
+          {
+            id: 'target-1',
+            name: 'Root',
+            path: '/',
+            gitRepoId: 'git-repo-1',
+          },
+        ]);
+
+        // Default: no previously deployed artifacts
+        distributionRepository.findActiveStandardVersionsByTargetAndPackages.mockResolvedValue(
+          [],
+        );
+        distributionRepository.findActiveRecipeVersionsByTargetAndPackages.mockResolvedValue(
+          [],
+        );
+        distributionRepository.findActiveSkillVersionsByTargetAndPackages.mockResolvedValue(
+          [],
+        );
+      });
+
+      describe('when previously deployed standards exist in distribution history', () => {
+        beforeEach(() => {
+          distributionRepository.findActiveStandardVersionsByTargetAndPackages.mockResolvedValue(
+            [previouslyDeployedStandardVersion],
+          );
+
+          codingAgentPort.generateRemovalUpdatesForAgents.mockResolvedValue({
+            createOrUpdate: [],
+            delete: [
+              { path: '.packmind/standards/previously-deployed-standard.md' },
+            ],
+          });
+        });
+
+        it('queries distribution history for previously deployed standards', async () => {
+          await useCase.execute(command);
+
+          expect(
+            distributionRepository.findActiveStandardVersionsByTargetAndPackages,
+          ).toHaveBeenCalledWith(organizationId, 'target-1', [
+            'test-package-id',
+          ]);
+        });
+
+        it('calls generateRemovalUpdatesForAgents with previously deployed standards', async () => {
+          await useCase.execute(command);
+
+          expect(
+            codingAgentPort.generateRemovalUpdatesForAgents,
+          ).toHaveBeenCalledWith(
+            expect.objectContaining({
+              removed: expect.objectContaining({
+                standardVersions: expect.arrayContaining([
+                  previouslyDeployedStandardVersion,
+                ]),
+              }),
+            }),
+          );
+        });
+
+        it('includes deletion paths for previously deployed standards', async () => {
+          const result = await useCase.execute(command);
+
+          const deletedPaths = result.fileUpdates.delete.map((f) => f.path);
+          expect(deletedPaths).toContain(
+            '.packmind/standards/previously-deployed-standard.md',
+          );
+        });
+      });
+
+      describe('when no previously deployed standards exist', () => {
+        beforeEach(() => {
+          distributionRepository.findActiveStandardVersionsByTargetAndPackages.mockResolvedValue(
+            [],
+          );
+        });
+
+        it('does not call generateRemovalUpdatesForAgents', async () => {
+          await useCase.execute(command);
+
+          expect(
+            codingAgentPort.generateRemovalUpdatesForAgents,
+          ).not.toHaveBeenCalled();
+        });
+      });
+    });
+
+    describe('when git info is provided for recipe distribution history lookup', () => {
+      let testPackage: PackageWithArtefacts;
+      let currentRecipe: Recipe;
+      let previouslyDeployedRecipe: Recipe;
+      let currentRecipeVersion: RecipeVersion;
+      let previouslyDeployedRecipeVersion: RecipeVersion;
+
+      beforeEach(() => {
+        currentRecipe = {
+          id: createRecipeId('current-recipe'),
+          name: 'Current Recipe',
+          slug: 'current-recipe',
+          content: 'Current recipe content',
+          version: 1,
+          userId: createUserId('user-1'),
+          spaceId: createSpaceId('space-1'),
+        };
+
+        previouslyDeployedRecipe = {
+          id: createRecipeId('previously-deployed-recipe'),
+          name: 'Previously Deployed Recipe',
+          slug: 'previously-deployed-recipe',
+          content: 'Previously deployed recipe content',
+          version: 1,
+          userId: createUserId('user-1'),
+          spaceId: createSpaceId('space-1'),
+        };
+
+        currentRecipeVersion = {
+          id: createRecipeVersionId('current-recipe-version'),
+          recipeId: currentRecipe.id,
+          name: 'Current Recipe',
+          slug: 'current-recipe',
+          content: 'Current recipe content',
+          version: 1,
+          userId: null,
+        };
+
+        previouslyDeployedRecipeVersion = {
+          id: createRecipeVersionId('previously-deployed-recipe-version'),
+          recipeId: previouslyDeployedRecipe.id,
+          name: 'Previously Deployed Recipe',
+          slug: 'previously-deployed-recipe',
+          content: 'Previously deployed recipe content',
+          version: 1,
+          userId: null,
+        };
+
+        testPackage = {
+          id: createPackageId('test-package-id'),
+          slug: 'test-package',
+          name: 'Test Package',
+          description: 'Test package description',
+          spaceId: createSpaceId('space-1'),
+          createdBy: createUserId('user-1'),
+          recipes: [currentRecipe],
+          standards: [],
+          skills: [],
+        };
+
+        command = {
+          ...command,
+          packagesSlugs: ['test-package'],
+          gitRemoteUrl: 'https://github.com/owner/repo.git',
+          gitBranch: 'main',
+          relativePath: '/',
+        };
+
+        packageService.getPackagesBySlugsWithArtefacts.mockResolvedValue([
+          testPackage,
+        ]);
+
+        recipesPort.listRecipeVersions.mockResolvedValue([
+          currentRecipeVersion,
+        ]);
+        standardsPort.listStandardVersions.mockResolvedValue([]);
+        skillsPort.listSkillVersions.mockResolvedValue([]);
+
+        renderModeConfigurationService.resolveActiveCodingAgents.mockResolvedValue(
+          [CodingAgents.packmind],
+        );
+        codingAgentPort.getSkillsFolderPathForAgents.mockReturnValue(new Map());
+
+        // Setup git port to return provider and repo
+        gitPort.listProviders.mockResolvedValue({
+          providers: [
+            {
+              id: 'provider-1',
+              type: 'github',
+              name: 'GitHub',
+              organizationId,
+            },
+          ],
+        });
+        gitPort.listRepos.mockResolvedValue([
+          {
+            id: 'git-repo-1',
+            owner: 'owner',
+            repo: 'repo',
+            branch: 'main',
+            name: 'owner/repo',
+            providerId: 'provider-1',
+          },
+        ]);
+
+        // Setup target service
+        targetService.getTargetsByGitRepoId.mockResolvedValue([
+          {
+            id: 'target-1',
+            name: 'Root',
+            path: '/',
+            gitRepoId: 'git-repo-1',
+          },
+        ]);
+
+        // Default: no previously deployed artifacts
+        distributionRepository.findActiveStandardVersionsByTargetAndPackages.mockResolvedValue(
+          [],
+        );
+        distributionRepository.findActiveRecipeVersionsByTargetAndPackages.mockResolvedValue(
+          [],
+        );
+        distributionRepository.findActiveSkillVersionsByTargetAndPackages.mockResolvedValue(
+          [],
+        );
+      });
+
+      describe('when previously deployed recipes exist in distribution history', () => {
+        beforeEach(() => {
+          distributionRepository.findActiveRecipeVersionsByTargetAndPackages.mockResolvedValue(
+            [previouslyDeployedRecipeVersion],
+          );
+
+          codingAgentPort.generateRemovalUpdatesForAgents.mockResolvedValue({
+            createOrUpdate: [],
+            delete: [
+              { path: '.packmind/commands/previously-deployed-recipe.md' },
+            ],
+          });
+        });
+
+        it('queries distribution history for previously deployed recipes', async () => {
+          await useCase.execute(command);
+
+          expect(
+            distributionRepository.findActiveRecipeVersionsByTargetAndPackages,
+          ).toHaveBeenCalledWith(organizationId, 'target-1', [
+            'test-package-id',
+          ]);
+        });
+
+        it('calls generateRemovalUpdatesForAgents with previously deployed recipes', async () => {
+          await useCase.execute(command);
+
+          expect(
+            codingAgentPort.generateRemovalUpdatesForAgents,
+          ).toHaveBeenCalledWith(
+            expect.objectContaining({
+              removed: expect.objectContaining({
+                recipeVersions: expect.arrayContaining([
+                  previouslyDeployedRecipeVersion,
+                ]),
+              }),
+            }),
+          );
+        });
+
+        it('includes deletion paths for previously deployed recipes', async () => {
+          const result = await useCase.execute(command);
+
+          const deletedPaths = result.fileUpdates.delete.map((f) => f.path);
+          expect(deletedPaths).toContain(
+            '.packmind/commands/previously-deployed-recipe.md',
+          );
+        });
+      });
+
+      describe('when no previously deployed recipes exist', () => {
+        beforeEach(() => {
+          distributionRepository.findActiveRecipeVersionsByTargetAndPackages.mockResolvedValue(
+            [],
+          );
+        });
+
+        it('does not call generateRemovalUpdatesForAgents', async () => {
+          await useCase.execute(command);
+
+          expect(
+            codingAgentPort.generateRemovalUpdatesForAgents,
+          ).not.toHaveBeenCalled();
         });
       });
     });

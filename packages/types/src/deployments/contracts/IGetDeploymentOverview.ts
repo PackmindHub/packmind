@@ -42,6 +42,7 @@ export interface DeployedRecipeTargetInfo {
   latestVersion: RecipeVersion;
   isUpToDate: boolean;
   deploymentDate: string;
+  isDeleted?: boolean;
 }
 
 export interface RecipeDeploymentStatus {
@@ -50,6 +51,7 @@ export interface RecipeDeploymentStatus {
   deployments: RepositoryDeploymentInfo[]; // Legacy support
   targetDeployments: TargetDeploymentInfo[]; // New target-based deployments
   hasOutdatedDeployments: boolean;
+  isDeleted?: boolean;
 }
 
 export interface RepositoryDeploymentInfo {

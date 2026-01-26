@@ -6,6 +6,7 @@ import { SpaceId } from '../../spaces/SpaceId';
 export type ListRecipesBySpaceCommand = PackmindCommand & {
   spaceId: SpaceId;
   organizationId: OrganizationId;
+  includeDeleted?: boolean;
 };
 
 export type ListRecipesBySpaceResponse = {

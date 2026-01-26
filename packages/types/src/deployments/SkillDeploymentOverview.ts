@@ -36,6 +36,7 @@ export interface DeployedSkillTargetInfo {
   latestVersion: SkillVersion;
   isUpToDate: boolean;
   deploymentDate: string;
+  isDeleted?: boolean;
 }
 
 export interface SkillDeploymentStatus {
@@ -44,6 +45,7 @@ export interface SkillDeploymentStatus {
   deployments: RepositorySkillDeploymentInfo[]; // Legacy support
   targetDeployments: TargetSkillDeploymentInfo[]; // New target-based deployments
   hasOutdatedDeployments: boolean;
+  isDeleted?: boolean;
 }
 
 export interface RepositorySkillDeploymentInfo {

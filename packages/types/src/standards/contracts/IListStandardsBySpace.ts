@@ -7,6 +7,7 @@ export type ListStandardsBySpaceCommand = {
   userId: string;
   organizationId: OrganizationId;
   spaceId: SpaceId;
+  includeDeleted?: boolean;
 };
 
 export type ListStandardsBySpaceResponse = {

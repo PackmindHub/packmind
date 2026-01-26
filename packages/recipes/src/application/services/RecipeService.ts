@@ -97,13 +97,17 @@ export class RecipeService {
     }
   }
 
-  async listRecipesBySpace(spaceId: SpaceId): Promise<Recipe[]> {
+  async listRecipesBySpace(
+    spaceId: SpaceId,
+    opts?: Pick<QueryOption, 'includeDeleted'>,
+  ): Promise<Recipe[]> {
     this.logger.info('Listing recipes by space', {
       spaceId,
+      includeDeleted: opts?.includeDeleted ?? false,
     });
 
     try {
-      const recipes = await this.recipeRepository.findBySpaceId(spaceId);
+      const recipes = await this.recipeRepository.findBySpaceId(spaceId, opts);
       this.logger.info('Recipes retrieved by space successfully', {
         spaceId,
         count: recipes.length,

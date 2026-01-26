@@ -55,6 +55,10 @@ export class PublishArtifactsDelayedJob extends AbstractAIDelayedJob<
         gitRepoId: input.gitRepoId,
         filesCount: input.fileUpdates.createOrUpdate.length,
         deleteFilesCount: input.fileUpdates.delete.length,
+        deletePaths: input.fileUpdates.delete.map((d) => d.path),
+        createOrUpdatePaths: input.fileUpdates.createOrUpdate.map(
+          (f) => f.path,
+        ),
       },
     );
 

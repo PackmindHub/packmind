@@ -36,6 +36,7 @@ export interface DeployedStandardTargetInfo {
   latestVersion: StandardVersion;
   isUpToDate: boolean;
   deploymentDate: string;
+  isDeleted?: boolean;
 }
 
 export interface StandardDeploymentStatus {
@@ -44,6 +45,7 @@ export interface StandardDeploymentStatus {
   deployments: RepositoryStandardDeploymentInfo[]; // Legacy support
   targetDeployments: TargetStandardDeploymentInfo[]; // New target-based deployments
   hasOutdatedDeployments: boolean;
+  isDeleted?: boolean;
 }
 
 export interface RepositoryStandardDeploymentInfo {

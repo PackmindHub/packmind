@@ -340,7 +340,10 @@ describe('StandardService', () => {
     });
 
     it('calls repository with correct spaceId', () => {
-      expect(standardRepository.findBySpaceId).toHaveBeenCalledWith(spaceId);
+      expect(standardRepository.findBySpaceId).toHaveBeenCalledWith(
+        spaceId,
+        undefined,
+      );
     });
 
     it('returns standards for the specified space', () => {

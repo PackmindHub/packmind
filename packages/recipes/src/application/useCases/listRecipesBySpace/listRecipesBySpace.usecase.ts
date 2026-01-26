@@ -61,6 +61,7 @@ export class ListRecipesBySpaceUsecase
       // Recipes are now always space-specific, no organization-level recipes
       const recipes = await this.recipeService.listRecipesBySpace(
         command.spaceId,
+        { includeDeleted: command.includeDeleted },
       );
 
       this.logger.info('Recipes listed by space successfully', {

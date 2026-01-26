@@ -1,6 +1,7 @@
 import {
   IRepository,
   OrganizationId,
+  QueryOption,
   SpaceId,
   Standard,
   UserId,
@@ -13,7 +14,10 @@ export interface IStandardRepository extends IRepository<Standard> {
   ): Promise<Standard | null>;
   findByOrganizationId(organizationId: OrganizationId): Promise<Standard[]>;
 
-  findBySpaceId(spaceId: SpaceId): Promise<Standard[]>;
+  findBySpaceId(
+    spaceId: SpaceId,
+    opts?: Pick<QueryOption, 'includeDeleted'>,
+  ): Promise<Standard[]>;
   findByUserId(userId: UserId): Promise<Standard[]>;
   findByOrganizationAndUser(
     organizationId: OrganizationId,

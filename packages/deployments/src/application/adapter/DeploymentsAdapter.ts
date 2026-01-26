@@ -428,6 +428,7 @@ export class DeploymentsAdapter
       this.distributedPackageRepository,
       this.recipesPort,
       this.standardsPort,
+      this.skillsPort,
       this.gitPort,
       this.codingAgentPort,
       this.deploymentsServices.getRenderModeConfigurationService(),

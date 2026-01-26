@@ -63,7 +63,9 @@ export class ListSkillsBySpaceUsecase
         );
       }
 
-      const skills = await this.skillService.listSkillsBySpace(spaceId);
+      const skills = await this.skillService.listSkillsBySpace(spaceId, {
+        includeDeleted: command.includeDeleted,
+      });
 
       this.logger.info('Skills retrieved successfully', {
         spaceId: command.spaceId,

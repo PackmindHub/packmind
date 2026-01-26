@@ -20,5 +20,8 @@ export interface IRecipeRepository extends IRepository<Recipe> {
     userId: UserId,
   ): Promise<Recipe[]>;
 
-  findBySpaceId(spaceId: SpaceId): Promise<Recipe[]>;
+  findBySpaceId(
+    spaceId: SpaceId,
+    opts?: Pick<QueryOption, 'includeDeleted'>,
+  ): Promise<Recipe[]>;
 }

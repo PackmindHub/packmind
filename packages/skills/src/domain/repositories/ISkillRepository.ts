@@ -1,6 +1,7 @@
 import {
   IRepository,
   OrganizationId,
+  QueryOption,
   Skill,
   SpaceId,
   UserId,
@@ -12,7 +13,10 @@ export interface ISkillRepository extends IRepository<Skill> {
     organizationId: OrganizationId,
   ): Promise<Skill | null>;
   findByOrganizationId(organizationId: OrganizationId): Promise<Skill[]>;
-  findBySpaceId(spaceId: SpaceId): Promise<Skill[]>;
+  findBySpaceId(
+    spaceId: SpaceId,
+    opts?: Pick<QueryOption, 'includeDeleted'>,
+  ): Promise<Skill[]>;
   findByUserId(userId: UserId): Promise<Skill[]>;
   findByOrganizationAndUser(
     organizationId: OrganizationId,

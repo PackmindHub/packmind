@@ -4,6 +4,7 @@ import { PackmindLogger } from '@packmind/logger';
 import {
   createSkillId,
   OrganizationId,
+  QueryOption,
   SpaceId,
   Skill,
   SkillId,
@@ -139,13 +140,17 @@ export class SkillService {
     }
   }
 
-  async listSkillsBySpace(spaceId: SpaceId): Promise<Skill[]> {
+  async listSkillsBySpace(
+    spaceId: SpaceId,
+    opts?: Pick<QueryOption, 'includeDeleted'>,
+  ): Promise<Skill[]> {
     this.logger.info('Listing skills by space', {
       spaceId,
+      includeDeleted: opts?.includeDeleted ?? false,
     });
 
     try {
-      const skills = await this.skillRepository.findBySpaceId(spaceId);
+      const skills = await this.skillRepository.findBySpaceId(spaceId, opts);
       this.logger.info('Skills retrieved by space successfully', {
         spaceId,
         count: skills.length,

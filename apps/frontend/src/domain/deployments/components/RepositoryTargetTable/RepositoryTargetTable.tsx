@@ -58,9 +58,13 @@ export const RepositoryTargetTable: React.FC<RepositoryTargetTableProps> = ({
 }) => {
   const { spaceSlug } = useCurrentSpace();
 
-  const filterItems = <T extends { isUpToDate: boolean }>(items: T[]) => {
-    if (mode === 'outdated') return items.filter((i) => !i.isUpToDate);
-    if (mode === 'up-to-date') return items.filter((i) => i.isUpToDate);
+  const filterItems = <T extends { isUpToDate: boolean; isDeleted?: boolean }>(
+    items: T[],
+  ) => {
+    if (mode === 'outdated')
+      return items.filter((i) => !i.isUpToDate || i.isDeleted);
+    if (mode === 'up-to-date')
+      return items.filter((i) => i.isUpToDate && !i.isDeleted);
     return items;
   };
 
@@ -94,7 +98,13 @@ export const RepositoryTargetTable: React.FC<RepositoryTargetTableProps> = ({
         );
 
       let statusNode: React.ReactNode;
-      if (mode === 'outdated') {
+      if (d.isDeleted) {
+        statusNode = (
+          <PMBadge colorPalette="red" size="sm">
+            Deleted
+          </PMBadge>
+        );
+      } else if (mode === 'outdated') {
         statusNode = (
           <PMBadge colorPalette="red" size="sm">
             Outdated
@@ -165,7 +175,13 @@ export const RepositoryTargetTable: React.FC<RepositoryTargetTableProps> = ({
         );
 
       let statusNode: React.ReactNode;
-      if (mode === 'outdated') {
+      if (d.isDeleted) {
+        statusNode = (
+          <PMBadge colorPalette="red" size="sm">
+            Deleted
+          </PMBadge>
+        );
+      } else if (mode === 'outdated') {
         statusNode = (
           <PMBadge colorPalette="red" size="sm">
             Outdated
@@ -240,7 +256,13 @@ export const RepositoryTargetTable: React.FC<RepositoryTargetTableProps> = ({
         );
 
       let statusNode: React.ReactNode;
-      if (mode === 'outdated') {
+      if (d.isDeleted) {
+        statusNode = (
+          <PMBadge colorPalette="red" size="sm">
+            Deleted
+          </PMBadge>
+        );
+      } else if (mode === 'outdated') {
         statusNode = (
           <PMBadge colorPalette="red" size="sm">
             Outdated

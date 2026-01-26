@@ -21,6 +21,7 @@ import {
   ListSkillVersionsCommand,
   ListSkillVersionsResponse,
   OrganizationId,
+  QueryOption,
   Skill,
   SkillFile,
   SkillId,
@@ -228,13 +229,15 @@ export class SkillsAdapter implements IBaseAdapter<ISkillsPort>, ISkillsPort {
     spaceId: SpaceId,
     organizationId: OrganizationId,
     userId: string,
+    opts?: Pick<QueryOption, 'includeDeleted'>,
   ): Promise<Skill[]> {
     this.logger.info('listSkillsBySpace called via port', {
       spaceId,
       organizationId,
       userId: userId.substring(0, 6) + '*',
+      includeDeleted: opts?.includeDeleted ?? false,
     });
-    return this.services.getSkillService().listSkillsBySpace(spaceId);
+    return this.services.getSkillService().listSkillsBySpace(spaceId, opts);
   }
 
   async findSkillBySlug(

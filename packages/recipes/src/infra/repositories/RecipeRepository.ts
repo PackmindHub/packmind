@@ -174,15 +174,20 @@ export class RecipeRepository
     */
   }
 
-  async findBySpaceId(spaceId: SpaceId): Promise<Recipe[]> {
+  async findBySpaceId(
+    spaceId: SpaceId,
+    opts?: Pick<QueryOption, 'includeDeleted'>,
+  ): Promise<Recipe[]> {
     this.logger.info('Finding recipes by space ID', {
       spaceId,
+      includeDeleted: opts?.includeDeleted ?? false,
     });
 
     try {
       const recipes = await this.repository.find({
         where: { spaceId },
         relations: ['gitCommit'],
+        withDeleted: opts?.includeDeleted ?? false,
       });
 
       this.logger.info('Recipes found by space ID', {

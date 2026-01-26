@@ -755,4 +755,99 @@ describe('GetStandardDeploymentOverviewUseCase', () => {
       });
     });
   });
+
+  describe('when a deployed standard has been deleted', () => {
+    const mockGitRepo = gitRepoFactory();
+    const mockTarget = targetFactory({ gitRepoId: mockGitRepo.id });
+    const mockActiveStandard = createMockStandard({
+      id: createStandardId('active-std'),
+      name: 'Active Standard',
+      version: 1,
+    });
+    const mockDeletedStandard = createMockStandard({
+      id: createStandardId('deleted-std'),
+      name: 'Deleted Standard',
+      version: 1,
+    });
+
+    const mockSpace: Space = {
+      id: createSpaceId('space-1'),
+      name: 'Global',
+      slug: 'global',
+      organizationId,
+    };
+
+    let result: StandardDeploymentOverview;
+
+    beforeEach(async () => {
+      const command: GetStandardDeploymentOverviewCommand = {
+        organizationId,
+        userId,
+      };
+
+      const activeStandardVersion = createMockStandardVersion({
+        standardId: mockActiveStandard.id,
+        version: 1,
+      });
+
+      const deletedStandardVersion = createMockStandardVersion({
+        standardId: mockDeletedStandard.id,
+        version: 1,
+      });
+
+      const mockDistribution = createDistributionWithStandards({
+        organizationId,
+        target: mockTarget,
+        status: DistributionStatus.success,
+        standardVersions: [activeStandardVersion, deletedStandardVersion],
+      });
+
+      mockDistributionRepository.listByOrganizationIdWithStatus.mockResolvedValue(
+        [mockDistribution],
+      );
+      mockSpacesPort.listSpacesByOrganization.mockResolvedValue([mockSpace]);
+
+      // First call returns only active standards
+      // Second call (with includeDeleted) returns all standards
+      mockStandardsPort.listStandardsBySpace
+        .mockResolvedValueOnce([mockActiveStandard])
+        .mockResolvedValueOnce([mockActiveStandard, mockDeletedStandard]);
+
+      mockGitPort.getOrganizationRepositories.mockResolvedValue([mockGitRepo]);
+
+      result = await useCase.execute(command);
+    });
+
+    it('returns two standards', () => {
+      expect(result.standards).toHaveLength(2);
+    });
+
+    it('marks active standard as not deleted', () => {
+      const activeStandardStatus = result.standards.find(
+        (s) => s.standard.id === mockActiveStandard.id,
+      );
+      expect(activeStandardStatus?.isDeleted).toBeUndefined();
+    });
+
+    it('marks deleted standard with isDeleted true', () => {
+      const deletedStandardStatus = result.standards.find(
+        (s) => s.standard.id === mockDeletedStandard.id,
+      );
+      expect(deletedStandardStatus?.isDeleted).toBe(true);
+    });
+
+    it('calls listStandardsBySpace twice to fetch deleted standards', () => {
+      expect(mockStandardsPort.listStandardsBySpace).toHaveBeenCalledTimes(2);
+    });
+
+    it('calls listStandardsBySpace with includeDeleted option', () => {
+      expect(mockStandardsPort.listStandardsBySpace).toHaveBeenNthCalledWith(
+        2,
+        mockSpace.id,
+        organizationId,
+        userId,
+        { includeDeleted: true },
+      );
+    });
+  });
 });

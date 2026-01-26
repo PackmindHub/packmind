@@ -21,6 +21,7 @@ import {
   DeployedSkillInfo,
   RepositorySkillDeploymentInfo,
   GitRepo,
+  PackageId,
 } from '@packmind/types';
 import { IDistributionRepository } from '../../domain/repositories/IDistributionRepository';
 
@@ -55,8 +56,8 @@ export class GetSkillsDeploymentOverviewUseCase implements IGetSkillDeploymentOv
         command.organizationId as OrganizationId,
       );
 
-      // Get all skills across all spaces and git repos
-      const [skillsPerSpace, gitRepos] = await Promise.all([
+      // Get all skills across all spaces (active only for the base list)
+      const [activeSkillsPerSpace, gitRepos] = await Promise.all([
         Promise.all(
           spaces.map((space) =>
             this.skillsPort.listSkillsBySpace(
@@ -71,14 +72,57 @@ export class GetSkillsDeploymentOverviewUseCase implements IGetSkillDeploymentOv
         ),
       ]);
 
-      // Flatten skills from all spaces
-      const skills = skillsPerSpace.flat();
+      // Flatten active skills from all spaces
+      const activeSkills = activeSkillsPerSpace.flat();
+      const activeSkillIds = new Set(activeSkills.map((s) => s.id));
+
+      // Extract all skill IDs from distributions to identify deleted skills
+      const distributedSkillIds = new Set<SkillId>();
+      for (const distribution of distributions) {
+        for (const dp of distribution.distributedPackages) {
+          if (dp.skillVersions) {
+            for (const sv of dp.skillVersions) {
+              if (sv && sv.skillId) {
+                distributedSkillIds.add(sv.skillId);
+              }
+            }
+          }
+        }
+      }
+
+      // Find skill IDs that were distributed but are no longer active (deleted)
+      const deletedSkillIds = Array.from(distributedSkillIds).filter(
+        (id) => !activeSkillIds.has(id),
+      );
+
+      // Fetch deleted skills if any exist
+      let deletedSkills: Skill[] = [];
+      if (deletedSkillIds.length > 0) {
+        const allSkillsPerSpace = await Promise.all(
+          spaces.map((space) =>
+            this.skillsPort.listSkillsBySpace(
+              space.id,
+              command.organizationId as OrganizationId,
+              command.userId,
+              { includeDeleted: true },
+            ),
+          ),
+        );
+        const allSkills = allSkillsPerSpace.flat();
+        deletedSkills = allSkills.filter(
+          (s) => deletedSkillIds.includes(s.id) && !activeSkillIds.has(s.id),
+        );
+      }
+
+      // Combine active and deleted skills for building the overview
+      const allSkills = [...activeSkills, ...deletedSkills];
 
       // Build the overview using the distribution data
       const overview = this.buildOverviewFromDistributions(
         distributions,
-        skills,
+        allSkills,
         gitRepos,
+        activeSkillIds,
       );
 
       this.logger.info('Successfully retrieved skills deployment overview', {
@@ -101,6 +145,7 @@ export class GetSkillsDeploymentOverviewUseCase implements IGetSkillDeploymentOv
     distributions: Distribution[],
     skills: Skill[],
     gitRepos: GitRepo[],
+    activeSkillIds?: Set<SkillId>,
   ): SkillDeploymentOverview {
     // Create a map of the latest skill versions for easy lookup
     const latestSkillVersionMap = this.buildLatestSkillVersionMap(skills);
@@ -163,13 +208,24 @@ export class GetSkillsDeploymentOverviewUseCase implements IGetSkillDeploymentOv
           gitRepos,
         );
 
-        return {
+        // Determine if skill is deleted (not in active skills set)
+        const isDeleted = activeSkillIds
+          ? !activeSkillIds.has(skill.id as SkillId)
+          : undefined;
+
+        const status: SkillDeploymentStatus = {
           skill,
           latestVersion,
           deployments: deploymentInfos,
           targetDeployments,
           hasOutdatedDeployments,
         };
+
+        if (isDeleted) {
+          status.isDeleted = true;
+        }
+
+        return status;
       })
       .filter((status): status is SkillDeploymentStatus => status !== null);
 
@@ -178,6 +234,7 @@ export class GetSkillsDeploymentOverviewUseCase implements IGetSkillDeploymentOv
       distributions,
       skills,
       gitRepos,
+      activeSkillIds,
     );
 
     return {
@@ -191,6 +248,7 @@ export class GetSkillsDeploymentOverviewUseCase implements IGetSkillDeploymentOv
     distributions: Distribution[],
     skills: Skill[],
     gitRepos: GitRepo[],
+    activeSkillIds?: Set<SkillId>,
   ): TargetSkillDeploymentStatus[] {
     // Group distributions by target
     const targetMap = new Map<string, Distribution[]>();
@@ -222,24 +280,54 @@ export class GetSkillsDeploymentOverviewUseCase implements IGetSkillDeploymentOv
       const deployedSkills: DeployedSkillTargetInfo[] = [];
       let hasOutdatedSkills = false;
 
-      // Process each skill deployed to this target
+      // Sort distributions newest first to find the latest distribution per package
+      const sortedDistributions = [...targetDistributions].sort(
+        (a, b) =>
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+      );
+
+      // First pass: Track the latest distribution for each package
+      const latestDistributionPerPackage = new Map<
+        PackageId,
+        { skillVersions: SkillVersion[]; deploymentDate: string }
+      >();
+
+      for (const distribution of sortedDistributions) {
+        for (const dp of distribution.distributedPackages) {
+          if (!dp || !dp.skillVersions) continue;
+          // Only keep the first (latest) occurrence of each package
+          if (!latestDistributionPerPackage.has(dp.packageId)) {
+            // Skip packages with 'remove' operation - they should not contribute skills
+            if (dp.operation === 'remove') {
+              latestDistributionPerPackage.set(dp.packageId, {
+                skillVersions: [],
+                deploymentDate: distribution.createdAt,
+              });
+            } else {
+              latestDistributionPerPackage.set(dp.packageId, {
+                skillVersions: dp.skillVersions.filter(
+                  (sv) => sv && sv.skillId,
+                ),
+                deploymentDate: distribution.createdAt,
+              });
+            }
+          }
+        }
+      }
+
+      // Second pass: Extract skill versions from latest distributions only
       const skillVersionsMap = new Map<
         SkillId,
         SkillVersion & { deploymentDate: string }
       >();
 
-      for (const distribution of targetDistributions) {
-        // All distributions are successful since we filtered at query level
-        const skillVersions = distribution.distributedPackages
-          .filter((dp) => dp && dp.skillVersions)
-          .flatMap((dp) => dp.skillVersions)
-          .filter((sv) => sv && sv.skillId);
-        for (const skillVersion of skillVersions) {
+      for (const [, data] of latestDistributionPerPackage) {
+        for (const skillVersion of data.skillVersions) {
           const existing = skillVersionsMap.get(skillVersion.skillId);
           if (!existing || skillVersion.version > existing.version) {
             skillVersionsMap.set(skillVersion.skillId, {
               ...skillVersion,
-              deploymentDate: distribution.createdAt,
+              deploymentDate: data.deploymentDate,
             });
           }
         }
@@ -267,7 +355,11 @@ export class GetSkillsDeploymentOverviewUseCase implements IGetSkillDeploymentOv
         };
         const isUpToDate = deployedVersion.version >= latestVersion.version;
 
-        if (!isUpToDate) {
+        const isDeleted = activeSkillIds
+          ? !activeSkillIds.has(skill.id as SkillId)
+          : undefined;
+
+        if (!isUpToDate || isDeleted) {
           hasOutdatedSkills = true;
         }
 
@@ -277,6 +369,7 @@ export class GetSkillsDeploymentOverviewUseCase implements IGetSkillDeploymentOv
           latestVersion,
           isUpToDate,
           deploymentDate: deployedVersion.deploymentDate,
+          ...(isDeleted && { isDeleted }),
         });
       }
 
@@ -296,17 +389,10 @@ export class GetSkillsDeploymentOverviewUseCase implements IGetSkillDeploymentOv
     allDistributions: Distribution[],
     gitRepos: GitRepo[],
   ): TargetSkillDeploymentInfo[] {
-    // Filter distributions for this specific skill
-    const skillDistributions = allDistributions.filter((distribution) =>
-      distribution.distributedPackages.some((dp) =>
-        dp.skillVersions.some((sv) => sv.skillId === skill.id),
-      ),
-    );
-
-    // Group by target
+    // Group ALL distributions by target (not just those containing the skill)
     const targetDistributionMap = new Map<string, Distribution[]>();
 
-    for (const distribution of skillDistributions) {
+    for (const distribution of allDistributions) {
       if (distribution.target) {
         const targetId = distribution.target.id;
         if (!targetDistributionMap.has(targetId)) {
@@ -328,23 +414,54 @@ export class GetSkillsDeploymentOverviewUseCase implements IGetSkillDeploymentOv
 
       if (!gitRepo) continue;
 
-      // Find the latest deployed version for this skill on this target
+      // Sort distributions newest first to find the latest distribution per package
+      const sortedDistributions = [...targetDistributions].sort(
+        (a, b) =>
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+      );
+
+      // First pass: Track the latest distribution for each package
+      const latestDistributionPerPackage = new Map<
+        PackageId,
+        { skillVersions: SkillVersion[]; deploymentDate: string }
+      >();
+
+      for (const distribution of sortedDistributions) {
+        for (const dp of distribution.distributedPackages) {
+          if (!dp || !dp.skillVersions) continue;
+          // Only keep the first (latest) occurrence of each package
+          if (!latestDistributionPerPackage.has(dp.packageId)) {
+            // Skip packages with 'remove' operation - they should not contribute skills
+            if (dp.operation === 'remove') {
+              latestDistributionPerPackage.set(dp.packageId, {
+                skillVersions: [],
+                deploymentDate: distribution.createdAt,
+              });
+            } else {
+              latestDistributionPerPackage.set(dp.packageId, {
+                skillVersions: dp.skillVersions.filter(
+                  (sv) => sv && sv.skillId,
+                ),
+                deploymentDate: distribution.createdAt,
+              });
+            }
+          }
+        }
+      }
+
+      // Second pass: Find the skill in the latest distributions
       let latestDeployedVersion: SkillVersion | null = null;
       let latestDeploymentDate = '';
 
-      for (const distribution of targetDistributions) {
-        const skillVersions = distribution.distributedPackages
-          .filter((dp) => dp && dp.skillVersions)
-          .flatMap((dp) => dp.skillVersions)
-          .filter((sv) => sv && sv.skillId);
-        for (const skillVersion of skillVersions) {
+      for (const [, data] of latestDistributionPerPackage) {
+        for (const skillVersion of data.skillVersions) {
           if (skillVersion.skillId === skill.id) {
             if (
               !latestDeployedVersion ||
               skillVersion.version > latestDeployedVersion.version
             ) {
               latestDeployedVersion = skillVersion;
-              latestDeploymentDate = distribution.createdAt;
+              latestDeploymentDate = data.deploymentDate;
             }
           }
         }

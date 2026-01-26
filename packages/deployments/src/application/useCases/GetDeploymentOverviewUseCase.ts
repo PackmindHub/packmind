@@ -18,6 +18,7 @@ import {
   DistributionStatus,
   TargetWithRepository,
   GitRepoId,
+  PackageId,
 } from '@packmind/types';
 import {
   GitRepo,
@@ -59,25 +60,68 @@ export class GetDeploymentOverviewUseCase implements IGetDeploymentOverview {
         throw new Error('RecipesPort.listRecipesBySpace is not available');
       }
 
-      const [distributions, recipesPerSpace, gitRepos] = await Promise.all([
-        this.distributionRepository.listByOrganizationIdWithStatus(
-          organizationId,
-          DistributionStatus.success,
-        ),
-        Promise.all(
+      const [distributions, activeRecipesPerSpace, gitRepos] =
+        await Promise.all([
+          this.distributionRepository.listByOrganizationIdWithStatus(
+            organizationId,
+            DistributionStatus.success,
+          ),
+          Promise.all(
+            spaces.map((space) =>
+              this.recipesPort.listRecipesBySpace({
+                spaceId: space.id,
+                organizationId,
+                userId: createUserId(command.userId),
+              }),
+            ),
+          ),
+          this.gitPort.getOrganizationRepositories(organizationId),
+        ]);
+
+      // Flatten active recipes from all spaces
+      const activeRecipes = activeRecipesPerSpace.flat();
+      const activeRecipeIds = new Set(activeRecipes.map((r) => r.id));
+
+      // Extract all recipe IDs from distributions to identify deleted recipes
+      const distributedRecipeIds = new Set<RecipeId>();
+      for (const distribution of distributions) {
+        for (const dp of distribution.distributedPackages) {
+          if (dp.recipeVersions) {
+            for (const rv of dp.recipeVersions) {
+              if (rv && rv.recipeId) {
+                distributedRecipeIds.add(rv.recipeId);
+              }
+            }
+          }
+        }
+      }
+
+      // Find recipe IDs that were distributed but are no longer active (deleted)
+      const deletedRecipeIds = Array.from(distributedRecipeIds).filter(
+        (id) => !activeRecipeIds.has(id),
+      );
+
+      // Fetch deleted recipes if any exist
+      let deletedRecipes: Recipe[] = [];
+      if (deletedRecipeIds.length > 0) {
+        const allRecipesPerSpace = await Promise.all(
           spaces.map((space) =>
             this.recipesPort.listRecipesBySpace({
               spaceId: space.id,
               organizationId,
               userId: createUserId(command.userId),
+              includeDeleted: true,
             }),
           ),
-        ),
-        this.gitPort.getOrganizationRepositories(organizationId),
-      ]);
+        );
+        const allRecipes = allRecipesPerSpace.flat();
+        deletedRecipes = allRecipes.filter(
+          (r) => deletedRecipeIds.includes(r.id) && !activeRecipeIds.has(r.id),
+        );
+      }
 
-      // Flatten recipes from all spaces
-      const recipes = recipesPerSpace.flat();
+      // Combine active and deleted recipes for building the overview
+      const allRecipes = [...activeRecipes, ...deletedRecipes];
 
       // Build a map of latest recipe versions per target (target-centric approach)
       const latestRecipeVersionsMap = new Map<
@@ -118,16 +162,17 @@ export class GetDeploymentOverviewUseCase implements IGetDeploymentOverview {
       // Transform data for repository-centric view
       const repositories = await this.getRepositories(
         gitRepos,
-        recipes,
+        allRecipes,
         latestRecipeVersionsMap,
       );
 
       // Transform data for recipe-centric view
       const recipeDeployments = await this.getRecipesDeploymentStatus(
         gitRepos,
-        recipes,
+        allRecipes,
         latestRecipeVersionsMap,
         distributions,
+        activeRecipeIds,
       );
 
       // Get all targets for the organization (including those with no deployments)
@@ -141,8 +186,9 @@ export class GetDeploymentOverviewUseCase implements IGetDeploymentOverview {
       const targets = await this.getTargetDeploymentStatus(
         distributions,
         gitRepos,
-        recipes,
+        allRecipes,
         allTargetsWithRepository,
+        activeRecipeIds,
       );
 
       // Log undeployed recipes
@@ -259,6 +305,7 @@ export class GetDeploymentOverviewUseCase implements IGetDeploymentOverview {
     recipes: Recipe[],
     latestRecipeVersionsMap: Map<GitRepoId, WithTimestamps<RecipeVersion>[]>,
     allDistributions: Distribution[],
+    activeRecipeIds?: Set<RecipeId>,
   ): Promise<RecipeDeploymentStatus[]> {
     return recipes.map((recipe) => {
       const deployments = [];
@@ -306,13 +353,24 @@ export class GetDeploymentOverviewUseCase implements IGetDeploymentOverview {
         gitRepos,
       );
 
-      return {
+      // Determine if recipe is deleted (not in active recipes set)
+      const isDeleted = activeRecipeIds
+        ? !activeRecipeIds.has(recipe.id)
+        : undefined;
+
+      const status: RecipeDeploymentStatus = {
         recipe,
         latestVersion,
         deployments,
         targetDeployments,
         hasOutdatedDeployments,
       };
+
+      if (isDeleted) {
+        status.isDeleted = true;
+      }
+
+      return status;
     });
   }
 
@@ -321,17 +379,10 @@ export class GetDeploymentOverviewUseCase implements IGetDeploymentOverview {
     allDistributions: Distribution[],
     gitRepos: GitRepo[],
   ): TargetDeploymentInfo[] {
-    // Filter distributions for this specific recipe
-    const recipeDistributions = allDistributions.filter((distribution) =>
-      distribution.distributedPackages.some((dp) =>
-        dp.recipeVersions.some((rv) => rv.recipeId === recipe.id),
-      ),
-    );
-
-    // Group by target
+    // Group ALL distributions by target (not just those containing the recipe)
     const targetDistributionMap = new Map<string, Distribution[]>();
 
-    for (const distribution of recipeDistributions) {
+    for (const distribution of allDistributions) {
       if (distribution.target) {
         const targetId = distribution.target.id;
         if (!targetDistributionMap.has(targetId)) {
@@ -353,22 +404,54 @@ export class GetDeploymentOverviewUseCase implements IGetDeploymentOverview {
 
       if (!gitRepo) continue;
 
-      // Find the latest deployed version for this recipe on this target
+      // Sort distributions newest first to find the latest distribution per package
+      const sortedDistributions = [...targetDistributions].sort(
+        (a, b) =>
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+      );
+
+      // First pass: Track the latest distribution for each package
+      const latestDistributionPerPackage = new Map<
+        PackageId,
+        { recipeVersions: RecipeVersion[]; deploymentDate: string }
+      >();
+
+      for (const distribution of sortedDistributions) {
+        for (const dp of distribution.distributedPackages) {
+          if (!dp || !dp.recipeVersions) continue;
+          // Only keep the first (latest) occurrence of each package
+          if (!latestDistributionPerPackage.has(dp.packageId)) {
+            // Skip packages with 'remove' operation - they should not contribute recipes
+            if (dp.operation === 'remove') {
+              latestDistributionPerPackage.set(dp.packageId, {
+                recipeVersions: [],
+                deploymentDate: distribution.createdAt,
+              });
+            } else {
+              latestDistributionPerPackage.set(dp.packageId, {
+                recipeVersions: dp.recipeVersions.filter(
+                  (rv) => rv && rv.recipeId,
+                ),
+                deploymentDate: distribution.createdAt,
+              });
+            }
+          }
+        }
+      }
+
+      // Second pass: Find the recipe in the latest distributions
       let latestDeployedVersion: RecipeVersion | null = null;
       let latestDeploymentDate = '';
 
-      for (const distribution of targetDistributions) {
-        const recipeVersions = distribution.distributedPackages.flatMap(
-          (dp) => dp.recipeVersions,
-        );
-        for (const recipeVersion of recipeVersions) {
+      for (const [, data] of latestDistributionPerPackage) {
+        for (const recipeVersion of data.recipeVersions) {
           if (recipeVersion.recipeId === recipe.id) {
             if (
               !latestDeployedVersion ||
               recipeVersion.version > latestDeployedVersion.version
             ) {
               latestDeployedVersion = recipeVersion;
-              latestDeploymentDate = distribution.createdAt;
+              latestDeploymentDate = data.deploymentDate;
             }
           }
         }
@@ -418,6 +501,7 @@ export class GetDeploymentOverviewUseCase implements IGetDeploymentOverview {
     gitRepos: GitRepo[],
     recipes: Recipe[],
     allTargetsWithRepository?: TargetWithRepository[], // All targets including those with no deployments
+    activeRecipeIds?: Set<RecipeId>,
   ): Promise<TargetDeploymentStatus[]> {
     // Group distributions by target
     const targetMap = new Map<string, Distribution[]>();
@@ -473,23 +557,54 @@ export class GetDeploymentOverviewUseCase implements IGetDeploymentOverview {
       const deployedRecipes: DeployedRecipeTargetInfo[] = [];
       let hasOutdatedRecipes = false;
 
-      // Process each recipe deployed to this target
+      // Sort distributions newest first to find the latest distribution per package
+      const sortedDistributions = [...targetDistributions].sort(
+        (a, b) =>
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+      );
+
+      // First pass: Track the latest distribution for each package
+      const latestDistributionPerPackage = new Map<
+        PackageId,
+        { recipeVersions: RecipeVersion[]; deploymentDate: string }
+      >();
+
+      for (const distribution of sortedDistributions) {
+        for (const dp of distribution.distributedPackages) {
+          if (!dp || !dp.recipeVersions) continue;
+          // Only keep the first (latest) occurrence of each package
+          if (!latestDistributionPerPackage.has(dp.packageId)) {
+            // Skip packages with 'remove' operation - they should not contribute recipes
+            if (dp.operation === 'remove') {
+              latestDistributionPerPackage.set(dp.packageId, {
+                recipeVersions: [],
+                deploymentDate: distribution.createdAt,
+              });
+            } else {
+              latestDistributionPerPackage.set(dp.packageId, {
+                recipeVersions: dp.recipeVersions.filter(
+                  (rv) => rv && rv.recipeId,
+                ),
+                deploymentDate: distribution.createdAt,
+              });
+            }
+          }
+        }
+      }
+
+      // Second pass: Extract recipe versions from latest distributions only
       const recipeVersionsMap = new Map<
         RecipeId,
         RecipeVersion & { deploymentDate: string }
       >();
 
-      for (const distribution of targetDistributions) {
-        // All distributions are successful since we filtered at query level
-        const recipeVersions = distribution.distributedPackages.flatMap(
-          (dp) => dp.recipeVersions,
-        );
-        for (const recipeVersion of recipeVersions) {
+      for (const [, data] of latestDistributionPerPackage) {
+        for (const recipeVersion of data.recipeVersions) {
           const existing = recipeVersionsMap.get(recipeVersion.recipeId);
           if (!existing || recipeVersion.version > existing.version) {
             recipeVersionsMap.set(recipeVersion.recipeId, {
               ...recipeVersion,
-              deploymentDate: distribution.createdAt,
+              deploymentDate: data.deploymentDate,
             });
           }
         }
@@ -513,7 +628,11 @@ export class GetDeploymentOverviewUseCase implements IGetDeploymentOverview {
 
         const isUpToDate = deployedVersion.version >= latestVersion.version;
 
-        if (!isUpToDate) {
+        const isDeleted = activeRecipeIds
+          ? !activeRecipeIds.has(recipe.id)
+          : undefined;
+
+        if (!isUpToDate || isDeleted) {
           hasOutdatedRecipes = true;
         }
 
@@ -523,6 +642,7 @@ export class GetDeploymentOverviewUseCase implements IGetDeploymentOverview {
           latestVersion,
           isUpToDate,
           deploymentDate: deployedVersion.deploymentDate,
+          ...(isDeleted && { isDeleted }),
         });
       }
 

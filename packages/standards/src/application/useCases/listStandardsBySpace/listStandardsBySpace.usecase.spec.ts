@@ -116,6 +116,7 @@ describe('ListStandardsBySpaceUsecase', () => {
     it('lists standards by space id', () => {
       expect(standardService.listStandardsBySpace).toHaveBeenCalledWith(
         spaceId,
+        { includeDeleted: undefined },
       );
     });
 
@@ -241,6 +242,71 @@ describe('ListStandardsBySpaceUsecase', () => {
       await expect(usecase.execute(command)).rejects.toThrow(
         `Space ${spaceId} does not belong to organization ${organizationId}`,
       );
+    });
+  });
+
+  describe('when includeDeleted is true', () => {
+    let userId: ReturnType<typeof createUserId>;
+    let organizationId: ReturnType<typeof createOrganizationId>;
+    let spaceId: ReturnType<typeof createSpaceId>;
+    let result: Awaited<ReturnType<typeof usecase.execute>>;
+
+    beforeEach(async () => {
+      userId = createUserId(uuidv4());
+      organizationId = createOrganizationId(uuidv4());
+      spaceId = createSpaceId(uuidv4());
+
+      const user: User = {
+        id: userId,
+        email: 'test@example.com',
+        passwordHash: 'hashed_password',
+        memberships: [{ organizationId, role: 'member', userId }],
+        active: true,
+      };
+      const organization: Organization = {
+        id: organizationId,
+        name: 'Test Org',
+        slug: 'test-org',
+      };
+      const space: Space = {
+        id: spaceId,
+        name: 'Test Space',
+        slug: 'test-space',
+        organizationId,
+      };
+
+      const command: ListStandardsBySpaceCommand = {
+        userId,
+        organizationId,
+        spaceId,
+        includeDeleted: true,
+      };
+
+      const standardsInSpace = [
+        standardFactory({ spaceId, slug: 'space-standard-1' }),
+        standardFactory({ spaceId, slug: 'space-standard-2' }),
+      ];
+
+      accountsAdapter.getUserById.mockResolvedValue(user);
+      accountsAdapter.getOrganizationById.mockResolvedValue(organization);
+      spacesPort.getSpaceById.mockResolvedValue(space);
+      standardService.listStandardsBySpace.mockResolvedValue(standardsInSpace);
+
+      result = await usecase.execute(command);
+    });
+
+    it('passes includeDeleted option to service', () => {
+      expect(standardService.listStandardsBySpace).toHaveBeenCalledWith(
+        spaceId,
+        { includeDeleted: true },
+      );
+    });
+
+    it('returns standards from the space', () => {
+      expect(result.standards.map((s) => s.slug)).toEqual([
+        'space-standard-1',
+        'space-standard-2',
+      ]);
     });
   });
 });

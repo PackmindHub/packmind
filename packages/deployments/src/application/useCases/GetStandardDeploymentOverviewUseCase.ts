@@ -21,6 +21,7 @@ import {
   DeployedStandardInfo,
   RepositoryStandardDeploymentInfo,
   GitRepo,
+  PackageId,
 } from '@packmind/types';
 import { IDistributionRepository } from '../../domain/repositories/IDistributionRepository';
 
@@ -55,8 +56,8 @@ export class GetStandardDeploymentOverviewUseCase implements IGetStandardDeploym
         command.organizationId as OrganizationId,
       );
 
-      // Get all standards across all spaces and git repos
-      const [standardsPerSpace, gitRepos] = await Promise.all([
+      // Get all active standards across all spaces
+      const [activeStandardsPerSpace, gitRepos] = await Promise.all([
         Promise.all(
           spaces.map((space) =>
             this.standardsPort.listStandardsBySpace(
@@ -71,14 +72,59 @@ export class GetStandardDeploymentOverviewUseCase implements IGetStandardDeploym
         ),
       ]);
 
-      // Flatten standards from all spaces
-      const standards = standardsPerSpace.flat();
+      // Flatten active standards from all spaces
+      const activeStandards = activeStandardsPerSpace.flat();
+      const activeStandardIds = new Set(activeStandards.map((s) => s.id));
+
+      // Extract all standard IDs from distributions to identify deleted standards
+      const distributedStandardIds = new Set<StandardId>();
+      for (const distribution of distributions) {
+        for (const dp of distribution.distributedPackages) {
+          if (dp.standardVersions) {
+            for (const sv of dp.standardVersions) {
+              if (sv && sv.standardId) {
+                distributedStandardIds.add(sv.standardId);
+              }
+            }
+          }
+        }
+      }
+
+      // Find standard IDs that were distributed but are no longer active (deleted)
+      const deletedStandardIds = Array.from(distributedStandardIds).filter(
+        (id) => !activeStandardIds.has(id),
+      );
+
+      // Fetch deleted standards if any exist
+      let deletedStandards: Standard[] = [];
+      if (deletedStandardIds.length > 0) {
+        const allStandardsPerSpace = await Promise.all(
+          spaces.map((space) =>
+            this.standardsPort.listStandardsBySpace(
+              space.id,
+              command.organizationId as OrganizationId,
+              command.userId,
+              { includeDeleted: true },
+            ),
+          ),
+        );
+        const allStandards = allStandardsPerSpace.flat();
+        deletedStandards = allStandards.filter(
+          (s) =>
+            deletedStandardIds.includes(s.id as StandardId) &&
+            !activeStandardIds.has(s.id),
+        );
+      }
+
+      // Combine active and deleted standards for building the overview
+      const allStandards = [...activeStandards, ...deletedStandards];
 
       // Build the overview using the distribution data
       const overview = this.buildOverviewFromDistributions(
         distributions,
-        standards,
+        allStandards,
         gitRepos,
+        activeStandardIds,
       );
 
       this.logger.info('Successfully retrieved standard deployment overview', {
@@ -101,6 +147,7 @@ export class GetStandardDeploymentOverviewUseCase implements IGetStandardDeploym
     distributions: Distribution[],
     standards: Standard[],
     gitRepos: GitRepo[],
+    activeStandardIds?: Set<StandardId>,
   ): StandardDeploymentOverview {
     // Create a map of the latest standard versions for easy lookup
     const latestStandardVersionMap =
@@ -164,13 +211,24 @@ export class GetStandardDeploymentOverviewUseCase implements IGetStandardDeploym
           gitRepos,
         );
 
-        return {
+        // Determine if standard is deleted (not in active standards set)
+        const isDeleted = activeStandardIds
+          ? !activeStandardIds.has(standard.id)
+          : undefined;
+
+        const status: StandardDeploymentStatus = {
           standard,
           latestVersion,
           deployments: deploymentInfos,
           targetDeployments,
           hasOutdatedDeployments,
         };
+
+        if (isDeleted) {
+          status.isDeleted = true;
+        }
+
+        return status;
       })
       .filter((status): status is StandardDeploymentStatus => status !== null);
 
@@ -179,6 +237,7 @@ export class GetStandardDeploymentOverviewUseCase implements IGetStandardDeploym
       distributions,
       standards,
       gitRepos,
+      activeStandardIds,
     );
 
     return {
@@ -192,6 +251,7 @@ export class GetStandardDeploymentOverviewUseCase implements IGetStandardDeploym
     distributions: Distribution[],
     standards: Standard[],
     gitRepos: GitRepo[],
+    activeStandardIds?: Set<StandardId>,
   ): TargetStandardDeploymentStatus[] {
     // Group distributions by target
     const targetMap = new Map<string, Distribution[]>();
@@ -223,23 +283,54 @@ export class GetStandardDeploymentOverviewUseCase implements IGetStandardDeploym
       const deployedStandards: DeployedStandardTargetInfo[] = [];
       let hasOutdatedStandards = false;
 
-      // Process each standard deployed to this target
+      // Sort distributions newest first to find the latest distribution per package
+      const sortedDistributions = [...targetDistributions].sort(
+        (a, b) =>
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+      );
+
+      // First pass: Track the latest distribution for each package
+      const latestDistributionPerPackage = new Map<
+        PackageId,
+        { standardVersions: StandardVersion[]; deploymentDate: string }
+      >();
+
+      for (const distribution of sortedDistributions) {
+        for (const dp of distribution.distributedPackages) {
+          if (!dp || !dp.standardVersions) continue;
+          // Only keep the first (latest) occurrence of each package
+          if (!latestDistributionPerPackage.has(dp.packageId)) {
+            // Skip packages with 'remove' operation - they should not contribute standards
+            if (dp.operation === 'remove') {
+              latestDistributionPerPackage.set(dp.packageId, {
+                standardVersions: [],
+                deploymentDate: distribution.createdAt,
+              });
+            } else {
+              latestDistributionPerPackage.set(dp.packageId, {
+                standardVersions: dp.standardVersions.filter(
+                  (sv) => sv && sv.standardId,
+                ),
+                deploymentDate: distribution.createdAt,
+              });
+            }
+          }
+        }
+      }
+
+      // Second pass: Extract standard versions from latest distributions only
       const standardVersionsMap = new Map<
         StandardId,
         StandardVersion & { deploymentDate: string }
       >();
 
-      for (const distribution of targetDistributions) {
-        // All distributions are successful since we filtered at query level
-        const standardVersions = distribution.distributedPackages.flatMap(
-          (dp) => dp.standardVersions,
-        );
-        for (const standardVersion of standardVersions) {
+      for (const [, data] of latestDistributionPerPackage) {
+        for (const standardVersion of data.standardVersions) {
           const existing = standardVersionsMap.get(standardVersion.standardId);
           if (!existing || standardVersion.version > existing.version) {
             standardVersionsMap.set(standardVersion.standardId, {
               ...standardVersion,
-              deploymentDate: distribution.createdAt,
+              deploymentDate: data.deploymentDate,
             });
           }
         }
@@ -268,7 +359,11 @@ export class GetStandardDeploymentOverviewUseCase implements IGetStandardDeploym
         };
         const isUpToDate = deployedVersion.version >= latestVersion.version;
 
-        if (!isUpToDate) {
+        const isDeleted = activeStandardIds
+          ? !activeStandardIds.has(standard.id as StandardId)
+          : undefined;
+
+        if (!isUpToDate || isDeleted) {
           hasOutdatedStandards = true;
         }
 
@@ -278,6 +373,7 @@ export class GetStandardDeploymentOverviewUseCase implements IGetStandardDeploym
           latestVersion,
           isUpToDate,
           deploymentDate: deployedVersion.deploymentDate,
+          ...(isDeleted && { isDeleted }),
         });
       }
 
@@ -297,17 +393,10 @@ export class GetStandardDeploymentOverviewUseCase implements IGetStandardDeploym
     allDistributions: Distribution[],
     gitRepos: GitRepo[],
   ): TargetStandardDeploymentInfo[] {
-    // Filter distributions for this specific standard
-    const standardDistributions = allDistributions.filter((distribution) =>
-      distribution.distributedPackages.some((dp) =>
-        dp.standardVersions.some((sv) => sv.standardId === standard.id),
-      ),
-    );
-
-    // Group by target
+    // Group ALL distributions by target (not just those containing the standard)
     const targetDistributionMap = new Map<string, Distribution[]>();
 
-    for (const distribution of standardDistributions) {
+    for (const distribution of allDistributions) {
       if (distribution.target) {
         const targetId = distribution.target.id;
         if (!targetDistributionMap.has(targetId)) {
@@ -329,22 +418,54 @@ export class GetStandardDeploymentOverviewUseCase implements IGetStandardDeploym
 
       if (!gitRepo) continue;
 
-      // Find the latest deployed version for this standard on this target
+      // Sort distributions newest first to find the latest distribution per package
+      const sortedDistributions = [...targetDistributions].sort(
+        (a, b) =>
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+      );
+
+      // First pass: Track the latest distribution for each package
+      const latestDistributionPerPackage = new Map<
+        PackageId,
+        { standardVersions: StandardVersion[]; deploymentDate: string }
+      >();
+
+      for (const distribution of sortedDistributions) {
+        for (const dp of distribution.distributedPackages) {
+          if (!dp || !dp.standardVersions) continue;
+          // Only keep the first (latest) occurrence of each package
+          if (!latestDistributionPerPackage.has(dp.packageId)) {
+            // Skip packages with 'remove' operation - they should not contribute standards
+            if (dp.operation === 'remove') {
+              latestDistributionPerPackage.set(dp.packageId, {
+                standardVersions: [],
+                deploymentDate: distribution.createdAt,
+              });
+            } else {
+              latestDistributionPerPackage.set(dp.packageId, {
+                standardVersions: dp.standardVersions.filter(
+                  (sv) => sv && sv.standardId,
+                ),
+                deploymentDate: distribution.createdAt,
+              });
+            }
+          }
+        }
+      }
+
+      // Second pass: Find the standard in the latest distributions
       let latestDeployedVersion: StandardVersion | null = null;
       let latestDeploymentDate = '';
 
-      for (const distribution of targetDistributions) {
-        const standardVersions = distribution.distributedPackages.flatMap(
-          (dp) => dp.standardVersions,
-        );
-        for (const standardVersion of standardVersions) {
+      for (const [, data] of latestDistributionPerPackage) {
+        for (const standardVersion of data.standardVersions) {
           if (standardVersion.standardId === standard.id) {
             if (
               !latestDeployedVersion ||
               standardVersion.version > latestDeployedVersion.version
             ) {
               latestDeployedVersion = standardVersion;
-              latestDeploymentDate = distribution.createdAt;
+              latestDeploymentDate = data.deploymentDate;
             }
           }
         }

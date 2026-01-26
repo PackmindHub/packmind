@@ -3,7 +3,13 @@ import { SkillSchema } from '../schemas/SkillSchema';
 import { Repository } from 'typeorm';
 import { PackmindLogger } from '@packmind/logger';
 import { localDataSource, AbstractRepository } from '@packmind/node-utils';
-import { OrganizationId, Skill, SpaceId, UserId } from '@packmind/types';
+import {
+  OrganizationId,
+  QueryOption,
+  Skill,
+  SpaceId,
+  UserId,
+} from '@packmind/types';
 
 const origin = 'SkillRepository';
 
@@ -81,14 +87,19 @@ export class SkillRepository
     return [];
   }
 
-  async findBySpaceId(spaceId: SpaceId): Promise<Skill[]> {
+  async findBySpaceId(
+    spaceId: SpaceId,
+    opts?: Pick<QueryOption, 'includeDeleted'>,
+  ): Promise<Skill[]> {
     this.logger.info('Finding skills by space ID', {
       spaceId,
+      includeDeleted: opts?.includeDeleted ?? false,
     });
 
     try {
       const skills = await this.repository.find({
         where: { spaceId },
+        withDeleted: opts?.includeDeleted ?? false,
       });
 
       this.logger.info('Skills found by space ID', {

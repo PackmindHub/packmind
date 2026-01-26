@@ -6,6 +6,7 @@ import { PackmindLogger } from '@packmind/logger';
 import { localDataSource, AbstractRepository } from '@packmind/node-utils';
 import {
   OrganizationId,
+  QueryOption,
   SpaceId,
   Standard,
   StandardVersion,
@@ -154,9 +155,13 @@ export class StandardRepository
     */
   }
 
-  async findBySpaceId(spaceId: SpaceId): Promise<Standard[]> {
+  async findBySpaceId(
+    spaceId: SpaceId,
+    opts?: Pick<QueryOption, 'includeDeleted'>,
+  ): Promise<Standard[]> {
     this.logger.info('Finding standards with scope by space ID', {
       spaceId,
+      includeDeleted: opts?.includeDeleted ?? false,
     });
 
     try {
@@ -164,6 +169,7 @@ export class StandardRepository
       const standards = await this.repository.find({
         where: { spaceId },
         relations: ['gitCommit'],
+        withDeleted: opts?.includeDeleted ?? false,
       });
 
       // For each standard, get the latest version to retrieve scope

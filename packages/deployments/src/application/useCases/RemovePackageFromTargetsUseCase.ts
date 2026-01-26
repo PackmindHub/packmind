@@ -10,11 +10,13 @@ import {
   TargetId,
   RecipeVersionId,
   StandardVersionId,
+  SkillVersionId,
   Package,
   Target,
   GitRepo,
   RecipeVersion,
   StandardVersion,
+  SkillVersion,
   Distribution,
   DistributionStatus,
   DistributionOperation,
@@ -23,6 +25,7 @@ import {
   createDistributedPackageId,
   IRecipesPort,
   IStandardsPort,
+  ISkillsPort,
   IGitPort,
   ICodingAgentPort,
   PackmindFileConfig,
@@ -50,6 +53,7 @@ type TargetRemovalData = {
   fileUpdates: FileUpdates;
   removedRecipeVersions: RecipeVersion[];
   removedStandardVersions: StandardVersion[];
+  removedSkillVersions: SkillVersion[];
 };
 
 export class RemovePackageFromTargetsUseCase implements IRemovePackageFromTargetsUseCase {
@@ -60,6 +64,7 @@ export class RemovePackageFromTargetsUseCase implements IRemovePackageFromTarget
     private readonly distributedPackageRepository: IDistributedPackageRepository,
     private readonly recipesPort: IRecipesPort,
     private readonly standardsPort: IStandardsPort,
+    private readonly skillsPort: ISkillsPort,
     private readonly gitPort: IGitPort,
     private readonly codingAgentPort: ICodingAgentPort,
     private readonly renderModeConfigurationService: RenderModeConfigurationService,
@@ -173,6 +178,7 @@ export class RemovePackageFromTargetsUseCase implements IRemovePackageFromTarget
             pkg,
             targetData.removedRecipeVersions,
             targetData.removedStandardVersions,
+            targetData.removedSkillVersions,
             gitCommit,
           );
 
@@ -204,6 +210,7 @@ export class RemovePackageFromTargetsUseCase implements IRemovePackageFromTarget
             activeRenderModes,
             DistributionStatus.failure,
             pkg,
+            [],
             [],
             [],
             undefined,
@@ -287,20 +294,26 @@ export class RemovePackageFromTargetsUseCase implements IRemovePackageFromTarget
         this.logger,
       );
 
-      // Fetch recipe and standard versions for installed (remaining) artifacts
+      // Fetch recipe, standard, and skill versions for installed (remaining) artifacts
       const installedRecipeVersions = await this.fetchRecipeVersionsByIds(
         resolution.remainingArtifacts.recipeVersionIds,
       );
       const installedStandardVersions = await this.fetchStandardVersionsByIds(
         resolution.remainingArtifacts.standardVersionIds,
       );
+      const installedSkillVersions = await this.fetchSkillVersionsByIds(
+        resolution.remainingArtifacts.skillVersionIds,
+      );
 
-      // Fetch recipe and standard versions for removed (exclusive) artifacts
+      // Fetch recipe, standard, and skill versions for removed (exclusive) artifacts
       const removedRecipeVersions = await this.fetchRecipeVersionsByIds(
         resolution.exclusiveArtifacts.recipeVersionIds,
       );
       const removedStandardVersions = await this.fetchStandardVersionsByIds(
         resolution.exclusiveArtifacts.standardVersionIds,
+      );
+      const removedSkillVersions = await this.fetchSkillVersionsByIds(
+        resolution.exclusiveArtifacts.skillVersionIds,
       );
 
       // Call renderArtifacts with remaining as installed and exclusive as removed
@@ -310,12 +323,12 @@ export class RemovePackageFromTargetsUseCase implements IRemovePackageFromTarget
         installed: {
           recipeVersions: installedRecipeVersions,
           standardVersions: installedStandardVersions,
-          skillVersions: [], // TODO: Add skill support in RemovePackageFromTargetsUseCase
+          skillVersions: installedSkillVersions,
         },
         removed: {
           recipeVersions: removedRecipeVersions,
           standardVersions: removedStandardVersions,
-          skillVersions: [], // TODO: Add skill support in RemovePackageFromTargetsUseCase
+          skillVersions: removedSkillVersions,
         },
         codingAgents,
         existingFiles,
@@ -347,6 +360,7 @@ export class RemovePackageFromTargetsUseCase implements IRemovePackageFromTarget
         fileUpdates: prefixedFileUpdates,
         removedRecipeVersions,
         removedStandardVersions,
+        removedSkillVersions,
       });
 
       this.logger.debug('Prepared removal deployment for target', {
@@ -355,6 +369,7 @@ export class RemovePackageFromTargetsUseCase implements IRemovePackageFromTarget
         filesDeletedCount: prefixedFileUpdates.delete.length,
         removedRecipes: removedRecipeVersions.length,
         removedStandards: removedStandardVersions.length,
+        removedSkills: removedSkillVersions.length,
       });
     }
 
@@ -459,6 +474,22 @@ export class RemovePackageFromTargetsUseCase implements IRemovePackageFromTarget
   }
 
   /**
+   * Fetches skill versions by their IDs
+   */
+  private async fetchSkillVersionsByIds(
+    skillVersionIds: SkillVersionId[],
+  ): Promise<SkillVersion[]> {
+    const versions: SkillVersion[] = [];
+    for (const id of skillVersionIds) {
+      const version = await this.skillsPort.getSkillVersion(id);
+      if (version) {
+        versions.push(version);
+      }
+    }
+    return versions.sort((a, b) => a.name.localeCompare(b.name));
+  }
+
+  /**
    * Builds the commit message for package removal
    */
   private buildRemovalCommitMessage(
@@ -484,6 +515,7 @@ export class RemovePackageFromTargetsUseCase implements IRemovePackageFromTarget
     pkg: Package,
     removedRecipeVersions: RecipeVersion[],
     removedStandardVersions: StandardVersion[],
+    removedSkillVersions: SkillVersion[],
     gitCommit?: GitCommit,
     error?: string,
   ): Promise<Distribution> {
@@ -534,6 +566,14 @@ export class RemovePackageFromTargetsUseCase implements IRemovePackageFromTarget
       );
     }
 
+    // Link skill versions
+    if (removedSkillVersions.length > 0) {
+      await this.distributedPackageRepository.addSkillVersions(
+        distributedPackageId,
+        removedSkillVersions.map((sv) => sv.id),
+      );
+    }
+
     return distribution;
   }
 
@@ -567,6 +607,7 @@ export class RemovePackageFromTargetsUseCase implements IRemovePackageFromTarget
         operation: DistributionOperation;
         recipeVersions: RecipeVersion[];
         standardVersions: StandardVersion[];
+        skillVersions: SkillVersion[];
       }
     >();
 
@@ -578,6 +619,7 @@ export class RemovePackageFromTargetsUseCase implements IRemovePackageFromTarget
             operation: distributedPackage.operation ?? 'add',
             recipeVersions: distributedPackage.recipeVersions,
             standardVersions: distributedPackage.standardVersions,
+            skillVersions: distributedPackage.skillVersions,
           });
         }
       }
@@ -586,8 +628,10 @@ export class RemovePackageFromTargetsUseCase implements IRemovePackageFromTarget
     // Classify artifacts based on latest state
     const removedPackageRecipeVersionIds = new Set<RecipeVersionId>();
     const removedPackageStandardVersionIds = new Set<StandardVersionId>();
+    const removedPackageSkillVersionIds = new Set<SkillVersionId>();
     const remainingPackageRecipeVersionIds = new Set<RecipeVersionId>();
     const remainingPackageStandardVersionIds = new Set<StandardVersionId>();
+    const remainingPackageSkillVersionIds = new Set<SkillVersionId>();
 
     for (const [packageId, data] of latestDistributionPerPackage) {
       // Skip packages whose latest distribution was a removal
@@ -612,6 +656,14 @@ export class RemovePackageFromTargetsUseCase implements IRemovePackageFromTarget
           remainingPackageStandardVersionIds.add(standardVersion.id);
         }
       }
+
+      for (const skillVersion of data.skillVersions) {
+        if (isRemovedPackage) {
+          removedPackageSkillVersionIds.add(skillVersion.id);
+        } else {
+          remainingPackageSkillVersionIds.add(skillVersion.id);
+        }
+      }
     }
 
     // Compute exclusive artifacts (only in removed package)
@@ -623,15 +675,21 @@ export class RemovePackageFromTargetsUseCase implements IRemovePackageFromTarget
       removedPackageStandardVersionIds,
     ).filter((id) => !remainingPackageStandardVersionIds.has(id));
 
+    const exclusiveSkillVersionIds = Array.from(
+      removedPackageSkillVersionIds,
+    ).filter((id) => !remainingPackageSkillVersionIds.has(id));
+
     return {
       targetId,
       exclusiveArtifacts: {
         recipeVersionIds: exclusiveRecipeVersionIds,
         standardVersionIds: exclusiveStandardVersionIds,
+        skillVersionIds: exclusiveSkillVersionIds,
       },
       remainingArtifacts: {
         recipeVersionIds: Array.from(remainingPackageRecipeVersionIds),
         standardVersionIds: Array.from(remainingPackageStandardVersionIds),
+        skillVersionIds: Array.from(remainingPackageSkillVersionIds),
       },
     };
   }
