@@ -17,9 +17,8 @@ export class UserSettingsPage
   async getApiKey(): Promise<string> {
     // Navigate to Authenticate tab
     await this.page.getByRole('tab', { name: '2. Authenticate' }).click();
-    // Select API key auth method, with a more resilient selector and wait pattern
-    await this.page.waitForSelector('text=API key', { timeout: 20000 });
-    await this.page.click('text=API key');
+    // Select API key auth method
+    await this.page.getByText('API key', { exact: true }).click();
     // Generate API key
     await this.page
       .getByTestId(CliAuthenticationDataTestIds.GenerateApiKeyCTA)
