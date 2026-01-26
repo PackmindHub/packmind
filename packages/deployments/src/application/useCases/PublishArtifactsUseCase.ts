@@ -237,11 +237,27 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
           (sv) => !removedSkillIds.has(sv.skillId),
         );
 
+        // Filter out removed standards from installed list
+        const removedStandardIds = new Set(
+          removedStandardVersions.map((sv) => sv.standardId),
+        );
+        const filteredStandardVersions = allStandardVersions.filter(
+          (sv) => !removedStandardIds.has(sv.standardId),
+        );
+
+        // Filter out removed recipes from installed list
+        const removedRecipeIds = new Set(
+          removedRecipeVersions.map((rv) => rv.recipeId),
+        );
+        const filteredRecipeVersions = allRecipeVersions.filter(
+          (rv) => !removedRecipeIds.has(rv.recipeId),
+        );
+
         // Load rules for all standard versions that don't have them populated
         // This is critical for previously deployed standards which come from the database
         // without their rules relation loaded
         const standardVersionsWithRules = await Promise.all(
-          allStandardVersions.map(async (sv) => {
+          filteredStandardVersions.map(async (sv) => {
             if (sv.rules === undefined || sv.rules === null) {
               this.logger.debug('Loading rules for standard version', {
                 standardVersionId: sv.id,
@@ -257,25 +273,12 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
           }),
         );
 
-        this.logger.info('Combined artifact versions', {
-          totalRecipes: allRecipeVersions.length,
-          totalStandards: standardVersionsWithRules.length,
-          totalSkills: filteredSkillVersions.length,
-          newRecipes: recipeVersions.length,
-          newStandards: standardVersions.length,
-          newSkills: skillVersions.length,
-          removedRecipes: removedRecipeVersions.length,
-          removedStandards: removedStandardVersions.length,
-          removedSkills: removedSkillVersions.length,
-          renamedSkills: renamedSkillVersions.length,
-        });
-
         // Prepare unified deployment using renderArtifacts for ALL targets
         const { fileUpdatesPerTarget, addedPackmindSkills } =
           await this.prepareUnifiedDeployment(
             command.userId as UserId,
             command.organizationId as OrganizationId,
-            allRecipeVersions,
+            filteredRecipeVersions,
             standardVersionsWithRules,
             filteredSkillVersions,
             removedRecipeVersions,
@@ -292,7 +295,7 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
           recipeVersions,
           standardVersions,
           skillVersions,
-          allRecipeVersions,
+          filteredRecipeVersions,
           standardVersionsWithRules,
           filteredSkillVersions,
           targets,

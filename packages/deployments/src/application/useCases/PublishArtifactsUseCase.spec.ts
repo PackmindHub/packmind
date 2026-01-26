@@ -1337,41 +1337,57 @@ describe('PublishArtifactsUseCase', () => {
       );
     });
 
-    it('includes both new and previously deployed recipes in installed', async () => {
+    it('includes new recipes in installed', async () => {
       await useCase.execute(command);
 
-      expect(mockCodingAgentPort.renderArtifacts).toHaveBeenCalledWith(
-        expect.objectContaining({
-          installed: expect.objectContaining({
-            recipeVersions: expect.arrayContaining([
-              expect.objectContaining({
-                recipeId: newRecipeVersion.recipeId,
-              }),
-              expect.objectContaining({
-                recipeId: previousRecipeVersion.recipeId,
-              }),
-            ]),
-          }),
-        }),
-      );
+      const renderArtifactsCall =
+        mockCodingAgentPort.renderArtifacts.mock.calls[0][0];
+      const installedRecipeIds =
+        renderArtifactsCall.installed.recipeVersions.map(
+          (rv: { recipeId: string }) => rv.recipeId,
+        );
+
+      expect(installedRecipeIds).toContain(newRecipeVersion.recipeId);
     });
 
-    it('includes both new and previously deployed standards in installed', async () => {
+    it('excludes removed recipes from installed', async () => {
       await useCase.execute(command);
 
-      expect(mockCodingAgentPort.renderArtifacts).toHaveBeenCalledWith(
-        expect.objectContaining({
-          installed: expect.objectContaining({
-            standardVersions: expect.arrayContaining([
-              expect.objectContaining({
-                standardId: newStandardVersion.standardId,
-              }),
-              expect.objectContaining({
-                standardId: previousStandardVersion.standardId,
-              }),
-            ]),
-          }),
-        }),
+      const renderArtifactsCall =
+        mockCodingAgentPort.renderArtifacts.mock.calls[0][0];
+      const installedRecipeIds =
+        renderArtifactsCall.installed.recipeVersions.map(
+          (rv: { recipeId: string }) => rv.recipeId,
+        );
+
+      expect(installedRecipeIds).not.toContain(previousRecipeVersion.recipeId);
+    });
+
+    it('includes new standards in installed', async () => {
+      await useCase.execute(command);
+
+      const renderArtifactsCall =
+        mockCodingAgentPort.renderArtifacts.mock.calls[0][0];
+      const installedStandardIds =
+        renderArtifactsCall.installed.standardVersions.map(
+          (sv: { standardId: string }) => sv.standardId,
+        );
+
+      expect(installedStandardIds).toContain(newStandardVersion.standardId);
+    });
+
+    it('excludes removed standards from installed', async () => {
+      await useCase.execute(command);
+
+      const renderArtifactsCall =
+        mockCodingAgentPort.renderArtifacts.mock.calls[0][0];
+      const installedStandardIds =
+        renderArtifactsCall.installed.standardVersions.map(
+          (sv: { standardId: string }) => sv.standardId,
+        );
+
+      expect(installedStandardIds).not.toContain(
+        previousStandardVersion.standardId,
       );
     });
   });
