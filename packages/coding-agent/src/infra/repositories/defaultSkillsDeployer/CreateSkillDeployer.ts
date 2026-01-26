@@ -3,7 +3,7 @@ import { ISkillDeployer } from './IDefaultSkillDeployer';
 
 function getCreateSkillSkillMd(agentName: string): string {
   return `---
-name: 'create-skill'
+name: 'packmind-create-skill'
 description: "Guide for creating effective skills. This skill should be used when users want to create a new skill (or update an existing skill) that extends ${agentName}'s capabilities with specialized knowledge, workflows, or tool integrations."
 license: 'Complete terms in LICENSE.txt'
 ---
@@ -887,7 +887,7 @@ Apache 2.0 - See LICENSE.txt for details.
 
 export class CreateSkillDeployer implements ISkillDeployer {
   deploy(agentName: string, skillsFolderPath: string): FileUpdates {
-    const basePath = `${skillsFolderPath}create-skill`;
+    const basePath = `${skillsFolderPath}packmind-create-skill`;
 
     return {
       createOrUpdate: [
