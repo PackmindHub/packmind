@@ -48,11 +48,11 @@ describe('DownloadDefaultSkillsZipForAgentUseCase', () => {
       const fileUpdates: FileUpdates = {
         createOrUpdate: [
           {
-            path: '.claude/skills/create-skill/SKILL.md',
+            path: '.claude/skills/packmind-create-skill/SKILL.md',
             content: '# Create Skill',
           },
           {
-            path: '.claude/skills/create-skill/scripts/init.py',
+            path: '.claude/skills/packmind-create-skill/scripts/init.py',
             content: 'print("hello")',
           },
         ],
@@ -99,7 +99,9 @@ describe('DownloadDefaultSkillsZipForAgentUseCase', () => {
       it('includes skill file with correct path', () => {
         const buffer = Buffer.from(result.fileContent, 'base64');
         const zip = new AdmZip(buffer);
-        const entry = zip.getEntry('.claude/skills/create-skill/SKILL.md');
+        const entry = zip.getEntry(
+          '.claude/skills/packmind-create-skill/SKILL.md',
+        );
 
         expect(entry).toBeDefined();
       });
@@ -107,7 +109,9 @@ describe('DownloadDefaultSkillsZipForAgentUseCase', () => {
       it('includes skill file with correct content', () => {
         const buffer = Buffer.from(result.fileContent, 'base64');
         const zip = new AdmZip(buffer);
-        const content = zip.readAsText('.claude/skills/create-skill/SKILL.md');
+        const content = zip.readAsText(
+          '.claude/skills/packmind-create-skill/SKILL.md',
+        );
 
         expect(content).toBe('# Create Skill');
       });
@@ -116,7 +120,7 @@ describe('DownloadDefaultSkillsZipForAgentUseCase', () => {
         const buffer = Buffer.from(result.fileContent, 'base64');
         const zip = new AdmZip(buffer);
         const entry = zip.getEntry(
-          '.claude/skills/create-skill/scripts/init.py',
+          '.claude/skills/packmind-create-skill/scripts/init.py',
         );
 
         expect(entry).toBeDefined();
@@ -126,7 +130,7 @@ describe('DownloadDefaultSkillsZipForAgentUseCase', () => {
         const buffer = Buffer.from(result.fileContent, 'base64');
         const zip = new AdmZip(buffer);
         const content = zip.readAsText(
-          '.claude/skills/create-skill/scripts/init.py',
+          '.claude/skills/packmind-create-skill/scripts/init.py',
         );
 
         expect(content).toBe('print("hello")');
@@ -196,7 +200,7 @@ describe('DownloadDefaultSkillsZipForAgentUseCase', () => {
       const fileUpdates: FileUpdates = {
         createOrUpdate: [
           {
-            path: '.github/skills/create-skill/SKILL.md',
+            path: '.github/skills/packmind-create-skill/SKILL.md',
             content: '# Create Skill for Copilot',
           },
         ],
@@ -219,7 +223,9 @@ describe('DownloadDefaultSkillsZipForAgentUseCase', () => {
       it('includes skill file with correct copilot path', () => {
         const buffer = Buffer.from(result.fileContent, 'base64');
         const zip = new AdmZip(buffer);
-        const entry = zip.getEntry('.github/skills/create-skill/SKILL.md');
+        const entry = zip.getEntry(
+          '.github/skills/packmind-create-skill/SKILL.md',
+        );
 
         expect(entry).toBeDefined();
       });
