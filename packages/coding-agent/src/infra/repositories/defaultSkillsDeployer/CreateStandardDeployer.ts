@@ -1,382 +1,7 @@
 import { FileUpdates } from '@packmind/types';
 import { ISkillDeployer } from './IDefaultSkillDeployer';
 
-const VALID_LANGUAGES = [
-  'AVRO',
-  'JAVASCRIPT',
-  'JAVASCRIPT_JSX',
-  'TYPESCRIPT',
-  'TYPESCRIPT_TSX',
-  'PYTHON',
-  'PHP',
-  'JAVA',
-  'SCSS',
-  'HTML',
-  'CSHARP',
-  'GENERIC',
-  'GO',
-  'C',
-  'CPP',
-  'SQL',
-  'KOTLIN',
-  'VUE',
-  'CSS',
-  'YAML',
-  'JSON',
-  'XML',
-  'BASH',
-  'MARKDOWN',
-  'RUBY',
-  'RUST',
-  'SAP_ABAP',
-  'SAP_CDS',
-  'SAP_HANA_SQL',
-  'SWIFT',
-  'PROPERTIES',
-];
-
-function getInitPlaybookPy(): string {
-  return `#!/usr/bin/env python3
-"""
-Playbook Initializer - Creates a new playbook template for coding standards
-
-Usage:
-    init_playbook.py <standard-name> --path <path>
-
-Examples:
-    init_playbook.py typescript-conventions --path .
-    init_playbook.py react-patterns --path ./standards
-    init_playbook.py api-guidelines --path /custom/location
-"""
-
-import sys
-import json
-from pathlib import Path
-
-
-PLAYBOOK_TEMPLATE = {
-    "name": "[TODO: Standard Name]",
-    "description": "[TODO: A clear description of what this standard covers, why it exists, and what problems it solves.]",
-    "scope": "[TODO: Where this standard applies (e.g., 'TypeScript files', 'React components', '*.spec.ts test files')]",
-    "rules": [
-        {
-            "content": "[TODO: First rule starting with action verb (e.g., 'Use', 'Avoid', 'Prefer')]"
-        },
-        {
-            "content": "[TODO: Second rule with examples]",
-            "examples": {
-                "positive": "[TODO: Code that correctly follows the rule]",
-                "negative": "[TODO: Code that violates the rule]",
-                "language": "TYPESCRIPT"
-            }
-        }
-    ]
-}
-
-
-def title_case_name(name):
-    """Convert hyphenated name to Title Case for display."""
-    return ' '.join(word.capitalize() for word in name.split('-'))
-
-
-def init_playbook(standard_name, path):
-    """
-    Initialize a new playbook JSON file from template.
-
-    Args:
-        standard_name: Name of the standard (used for filename)
-        path: Path where the playbook file should be created
-
-    Returns:
-        Path to created playbook file, or None if error
-    """
-    output_path = Path(path).resolve()
-
-    # Ensure output directory exists
-    if not output_path.exists():
-        try:
-            output_path.mkdir(parents=True, exist_ok=True)
-            print(f"✅ Created directory: {output_path}")
-        except Exception as e:
-            print(f"❌ Error creating directory: {e}")
-            return None
-
-    # Create playbook filename
-    filename = f"{standard_name}.playbook.json"
-    playbook_path = output_path / filename
-
-    # Check if file already exists
-    if playbook_path.exists():
-        print(f"❌ Error: Playbook file already exists: {playbook_path}")
-        return None
-
-    # Create playbook from template
-    playbook = PLAYBOOK_TEMPLATE.copy()
-    playbook["name"] = title_case_name(standard_name)
-
-    try:
-        with open(playbook_path, 'w', encoding='utf-8') as f:
-            json.dump(playbook, f, indent=2, ensure_ascii=False)
-        print(f"✅ Created playbook: {playbook_path}")
-    except Exception as e:
-        print(f"❌ Error creating playbook: {e}")
-        return None
-
-    # Print next steps
-    print(f"\\n✅ Playbook '{standard_name}' initialized successfully")
-    print("\\nNext steps:")
-    print("1. Edit the playbook to replace all [TODO:...] placeholders")
-    print("2. Add more rules as needed (each rule should start with an action verb)")
-    print("3. Add examples to rules where helpful (positive, negative, language)")
-    print("4. Run the validator to check the playbook format:")
-    print(f"   python3 scripts/validate_playbook.py {playbook_path}")
-    print("5. Create the standard via CLI:")
-    print(f"   packmind-cli standard create {playbook_path}")
-
-    return playbook_path
-
-
-def main():
-    if len(sys.argv) < 4 or sys.argv[2] != '--path':
-        print("Usage: init_playbook.py <standard-name> --path <path>")
-        print("\\nStandard name requirements:")
-        print("  - Hyphen-case identifier (e.g., 'typescript-conventions')")
-        print("  - Will be converted to Title Case for the standard name")
-        print("\\nExamples:")
-        print("  init_playbook.py typescript-conventions --path .")
-        print("  init_playbook.py react-patterns --path ./standards")
-        print("  init_playbook.py api-guidelines --path /custom/location")
-        sys.exit(1)
-
-    standard_name = sys.argv[1]
-    path = sys.argv[3]
-
-    print(f"🚀 Initializing playbook: {standard_name}")
-    print(f"   Location: {path}")
-    print()
-
-    result = init_playbook(standard_name, path)
-
-    if result:
-        sys.exit(0)
-    else:
-        sys.exit(1)
-
-
-if __name__ == "__main__":
-    main()
-`;
-}
-
-function getValidatePlaybookPy(): string {
-  const validLanguagesJson = JSON.stringify(VALID_LANGUAGES);
-  return `#!/usr/bin/env python3
-"""
-Playbook Validator - Validates playbook JSON format for coding standards
-
-Usage:
-    validate_playbook.py <playbook.json>
-
-Examples:
-    validate_playbook.py typescript-conventions.playbook.json
-    validate_playbook.py ./standards/react-patterns.playbook.json
-"""
-
-import sys
-import json
-import re
-from pathlib import Path
-
-
-VALID_LANGUAGES = ${validLanguagesJson}
-
-# Action verbs that rules should start with
-ACTION_VERBS = [
-    'use', 'avoid', 'prefer', 'include', 'exclude', 'apply', 'implement',
-    'follow', 'ensure', 'define', 'declare', 'create', 'add', 'remove',
-    'replace', 'convert', 'validate', 'check', 'verify', 'test', 'handle',
-    'catch', 'throw', 'return', 'call', 'invoke', 'import', 'export',
-    'extend', 'inherit', 'override', 'implement', 'abstract', 'wrap',
-    'extract', 'refactor', 'rename', 'move', 'copy', 'delete', 'update',
-    'keep', 'maintain', 'organize', 'structure', 'format', 'indent',
-    'align', 'space', 'name', 'prefix', 'suffix', 'capitalize', 'lowercase',
-    'separate', 'combine', 'merge', 'split', 'group', 'nest', 'flatten',
-    'limit', 'restrict', 'allow', 'enable', 'disable', 'require', 'enforce',
-    'set', 'configure', 'initialize', 'setup', 'register', 'inject', 'provide',
-    'specify', 'annotate', 'document', 'comment', 'log', 'debug', 'trace',
-    'write', 'read', 'parse', 'serialize', 'deserialize', 'encode', 'decode',
-    'encrypt', 'decrypt', 'hash', 'sign', 'authenticate', 'authorize',
-    'sanitize', 'escape', 'quote', 'unquote', 'trim', 'strip', 'pad',
-    'always', 'never', 'only', 'do', 'don\\'t', 'must', 'should', 'shall',
-]
-
-
-def validate_playbook(playbook_path):
-    """
-    Validate a playbook JSON file.
-
-    Args:
-        playbook_path: Path to the playbook JSON file
-
-    Returns:
-        Tuple of (is_valid, list of error messages)
-    """
-    playbook_path = Path(playbook_path)
-    errors = []
-    warnings = []
-
-    # Check file exists
-    if not playbook_path.exists():
-        return False, [f"File not found: {playbook_path}"]
-
-    # Check file extension
-    if not playbook_path.suffix == '.json':
-        warnings.append(f"Warning: File extension is '{playbook_path.suffix}', expected '.json'")
-
-    # Read and parse JSON
-    try:
-        with open(playbook_path, 'r', encoding='utf-8') as f:
-            playbook = json.load(f)
-    except json.JSONDecodeError as e:
-        return False, [f"Invalid JSON: {e}"]
-    except Exception as e:
-        return False, [f"Error reading file: {e}"]
-
-    # Validate required fields
-    if not isinstance(playbook, dict):
-        return False, ["Playbook must be a JSON object"]
-
-    # Check 'name' field
-    if 'name' not in playbook:
-        errors.append("Missing required field: 'name'")
-    elif not isinstance(playbook['name'], str) or not playbook['name'].strip():
-        errors.append("'name' must be a non-empty string")
-    elif playbook['name'].startswith('[TODO:'):
-        errors.append("'name' still contains TODO placeholder")
-
-    # Check 'description' field
-    if 'description' not in playbook:
-        errors.append("Missing required field: 'description'")
-    elif not isinstance(playbook['description'], str) or not playbook['description'].strip():
-        errors.append("'description' must be a non-empty string")
-    elif playbook['description'].startswith('[TODO:'):
-        errors.append("'description' still contains TODO placeholder")
-
-    # Check 'scope' field
-    if 'scope' not in playbook:
-        errors.append("Missing required field: 'scope'")
-    elif not isinstance(playbook['scope'], str) or not playbook['scope'].strip():
-        errors.append("'scope' must be a non-empty string")
-    elif playbook['scope'].startswith('[TODO:'):
-        errors.append("'scope' still contains TODO placeholder")
-
-    # Check 'rules' field
-    if 'rules' not in playbook:
-        errors.append("Missing required field: 'rules'")
-    elif not isinstance(playbook['rules'], list):
-        errors.append("'rules' must be an array")
-    elif len(playbook['rules']) == 0:
-        errors.append("'rules' must contain at least one rule")
-    else:
-        # Validate each rule
-        for i, rule in enumerate(playbook['rules']):
-            rule_prefix = f"rules[{i}]"
-
-            if not isinstance(rule, dict):
-                errors.append(f"{rule_prefix}: must be an object")
-                continue
-
-            # Check 'content' field
-            if 'content' not in rule:
-                errors.append(f"{rule_prefix}: missing required field 'content'")
-            elif not isinstance(rule['content'], str) or not rule['content'].strip():
-                errors.append(f"{rule_prefix}: 'content' must be a non-empty string")
-            elif rule['content'].startswith('[TODO:'):
-                errors.append(f"{rule_prefix}: 'content' still contains TODO placeholder")
-            else:
-                # Check if rule starts with action verb
-                first_word = rule['content'].split()[0].lower().rstrip(':,')
-                if first_word not in ACTION_VERBS:
-                    warnings.append(f"{rule_prefix}: 'content' should start with an action verb (e.g., 'Use', 'Avoid', 'Prefer'). Found: '{first_word}'")
-
-            # Validate examples if present
-            if 'examples' in rule:
-                examples = rule['examples']
-                example_prefix = f"{rule_prefix}.examples"
-
-                if not isinstance(examples, dict):
-                    errors.append(f"{example_prefix}: must be an object")
-                else:
-                    # Check required example fields
-                    if 'positive' not in examples:
-                        errors.append(f"{example_prefix}: missing required field 'positive'")
-                    elif not isinstance(examples['positive'], str):
-                        errors.append(f"{example_prefix}: 'positive' must be a string")
-                    elif examples['positive'].startswith('[TODO:'):
-                        errors.append(f"{example_prefix}: 'positive' still contains TODO placeholder")
-
-                    if 'negative' not in examples:
-                        errors.append(f"{example_prefix}: missing required field 'negative'")
-                    elif not isinstance(examples['negative'], str):
-                        errors.append(f"{example_prefix}: 'negative' must be a string")
-                    elif examples['negative'].startswith('[TODO:'):
-                        errors.append(f"{example_prefix}: 'negative' still contains TODO placeholder")
-
-                    if 'language' not in examples:
-                        errors.append(f"{example_prefix}: missing required field 'language'")
-                    elif not isinstance(examples['language'], str):
-                        errors.append(f"{example_prefix}: 'language' must be a string")
-                    elif examples['language'] not in VALID_LANGUAGES:
-                        errors.append(f"{example_prefix}: 'language' must be one of: {', '.join(VALID_LANGUAGES[:10])}... (see full list in validator)")
-
-    return len(errors) == 0, errors, warnings
-
-
-def main():
-    if len(sys.argv) != 2:
-        print("Usage: validate_playbook.py <playbook.json>")
-        print("\\nExamples:")
-        print("  validate_playbook.py typescript-conventions.playbook.json")
-        print("  validate_playbook.py ./standards/react-patterns.playbook.json")
-        sys.exit(1)
-
-    playbook_path = sys.argv[1]
-    print(f"🔍 Validating playbook: {playbook_path}")
-    print()
-
-    result = validate_playbook(playbook_path)
-
-    if len(result) == 3:
-        is_valid, errors, warnings = result
-    else:
-        is_valid, errors = result
-        warnings = []
-
-    # Print warnings
-    if warnings:
-        print("⚠️  Warnings:")
-        for warning in warnings:
-            print(f"   {warning}")
-        print()
-
-    # Print errors
-    if errors:
-        print("❌ Validation errors:")
-        for error in errors:
-            print(f"   {error}")
-        print()
-        print("❌ Playbook validation failed")
-        sys.exit(1)
-    else:
-        print("✅ Playbook is valid!")
-        sys.exit(0)
-
-
-if __name__ == "__main__":
-    main()
-`;
-}
-
+// Python scripts removed - agent creates JSON directly
 function getStandardCreatorSkillMd(agentName: string): string {
   return `---
 name: 'packmind-create-standard'
@@ -433,22 +58,7 @@ Every standard consists of:
 
 ## Prerequisites
 
-Before creating a standard, verify that the required tools are available:
-
-### Python 3
-
-Check if Python 3 is installed:
-
-\`\`\`bash
-python3 --version
-\`\`\`
-
-If not available, install it:
-- **macOS**: \`brew install python3\`
-- **Ubuntu/Debian**: \`sudo apt-get install python3\`
-- **Windows**: Download from https://python.org or use \`winget install Python.Python.3\`
-
-### Packmind CLI
+Before creating a standard, verify that packmind-cli is available:
 
 Check if packmind-cli is installed:
 
@@ -472,44 +82,7 @@ packmind-cli login
 
 To create a standard, follow this process in order, skipping steps only if there is a clear reason why they are not applicable.
 
-### Step 1: Check for Similar Standards
-
-Before creating a new standard, check if similar standards already exist to avoid duplication.
-
-#### Checking Process
-
-1. Run \`packmind-cli standard list\` to retrieve existing standards
-2. Analyze the user's request to understand the intent
-3. Compare with existing standards' names and topics
-
-#### Decision Logic
-
-**If similar standards exist:**
-- Present them to the user with this format:
-  \`\`\`
-  I found these existing standards that might be similar:
-  • [name]
-  • [name]
-
-  Do you still want to create a new standard?
-  \`\`\`
-- Wait for the user's decision
-- If user confirms, continue to Step 2
-- If user cancels, stop the workflow
-
-**If no similar standards exist:**
-- Proceed directly to Step 2
-
-#### Similarity Guidelines
-
-Consider standards similar if they:
-- Target the same technology or framework (e.g., both about TypeScript, both about React)
-- Address the same concern (e.g., both about testing, both about error handling)
-- Have overlapping scope (e.g., both about backend architecture, both about frontend patterns)
-
-Be conservative: only flag standards that truly overlap.
-
-### Step 2: Clarify the Request
+### Step 1: Clarify the Request
 
 Gather essential information before drafting the standard.
 
@@ -540,9 +113,9 @@ Take brief notes on:
 
 Keep notes concise—just enough to unlock drafting.
 
-### Step 3: Draft Rules and Iterate (Phase 1)
+### Step 2: Draft Rules
 
-Transform the understanding into concrete rules and iterate with the user. **Do not add examples yet** - examples will be added in Phase 2 (Step 4) after rules are validated.
+Transform the understanding into concrete rules. **Do not add examples yet** - examples will be added in Step 3.
 
 #### Draft Creation (Rules Only)
 
@@ -614,21 +187,17 @@ Inline examples (code, paths, patterns) within the rule content are **optional**
 - "Use const and prefix interfaces with I" (multiple concepts)
 - "Don't use var" (no positive guidance)
 
-#### TL;DR and Review Loop (Rules Only)
+#### Draft Summary
 
-1. After saving the draft file, write a concise TL;DR that captures:
-   - One sentence summarizing the standard's purpose
-   - A bullet list of all rules (each rule ~22 words max, imperative form, with inline code if helpful)
-   - **Do not add any additional explanatory paragraphs or duplicate content after the TL;DR**
-2. Share the TL;DR with the user only after the draft file exists
-3. Ask for precise feedback on the rules and apply requested changes in the draft file while keeping the TL;DR aligned
-4. Restate what changed after each iteration and confirm the draft remains accurate
-5. Repeat until the user explicitly approves the rules
-6. **Only after rules are approved**, inform the user you will now proceed to Step 4 to add examples
+After saving the draft file, write a concise summary that captures:
+- One sentence summarizing the standard's purpose
+- A bullet list of all rules (each rule ~22 words max, imperative form, with inline code if helpful)
 
-### Step 4: Add Examples (Phase 2)
+Then proceed directly to Step 3.
 
-After rules are approved, add illustrative examples to each rule in the draft file.
+### Step 3: Add Examples
+
+Add illustrative examples to each rule in the draft file.
 
 #### Examples Creation
 
@@ -637,14 +206,13 @@ After rules are approved, add illustrative examples to each rule in the draft fi
    - \`### Negative Example\` highlighting the anti-pattern to avoid
    - Annotate every code block with its language (e.g., \`typescript\`, \`sql\`, \`javascript\`)
    - Keep examples concise and focused on demonstrating the specific rule
-2. After updating the file, tell the user what examples were added
+2. If a rule doesn't benefit from code examples (e.g., process or organizational rules), skip examples for that rule
 
 #### Examples Guidelines
 
 - Examples should be realistic and directly relevant to this codebase
 - Each example should clearly demonstrate why the rule matters
 - Keep code snippets minimal—only include what's necessary to illustrate the point
-- If a rule doesn't benefit from code examples (e.g., process or organizational rules), explain this and skip examples for that rule
 
 Valid language values for code blocks:
 - TYPESCRIPT, TYPESCRIPT_TSX
@@ -654,29 +222,11 @@ Valid language values for code blocks:
 - HTML, CSS, SCSS, YAML, JSON
 - MARKDOWN, BASH, GENERIC
 
-#### Review Loop (Examples)
+Then proceed directly to Step 4.
 
-1. Share a summary of the examples added for each rule
-2. Ask for feedback on the examples
-3. Apply requested changes and iterate until the user approves
-4. Restate what changed after each iteration
+### Step 4: Creating the Playbook File
 
-### Step 5: Creating the Playbook File
-
-**Before running the script**, verify that python3 is available (see Prerequisites section). If not installed, install it first.
-
-When creating a new standard from scratch, use the \`init_playbook.py\` script to generate a template playbook file:
-
-\`\`\`bash
-python3 scripts/init_playbook.py <standard-name> --path <output-directory>
-\`\`\`
-
-Example:
-\`\`\`bash
-python3 scripts/init_playbook.py typescript-conventions --path .
-\`\`\`
-
-The script generates a JSON file (named \`<standard-name>.playbook.json\`) with the following structure:
+Create a JSON playbook file named \`<standard-name>.playbook.json\` based on the draft content:
 
 \`\`\`json
 {
@@ -699,39 +249,20 @@ The script generates a JSON file (named \`<standard-name>.playbook.json\`) with 
 }
 \`\`\`
 
-#### Validation Requirements
+#### Playbook Requirements
 
 - **name**: Non-empty string
 - **description**: Non-empty string explaining purpose
-- **scope**: Non-empty string describing applicability (required by CLI)
-- **summary**: One-sentence description (optional, not yet supported by CLI)
+- **scope**: Non-empty string describing applicability
 - **rules**: Array with at least one rule
 - **rules[].content**: Non-empty string starting with action verb (max ~25 words)
 - **rules[].examples** (optional): If provided, must include positive, negative, and language
 
-#### Validating the Playbook
+#### Valid Language Values
 
-Before creating the standard via CLI, validate the playbook to catch errors early:
+TYPESCRIPT, TYPESCRIPT_TSX, JAVASCRIPT, JAVASCRIPT_JSX, PYTHON, JAVA, GO, RUST, CSHARP, PHP, RUBY, KOTLIN, SWIFT, SQL, HTML, CSS, SCSS, YAML, JSON, MARKDOWN, BASH, GENERIC
 
-\`\`\`bash
-python3 scripts/validate_playbook.py <path-to-playbook.json>
-\`\`\`
-
-Example:
-\`\`\`bash
-python3 scripts/validate_playbook.py typescript-conventions.playbook.json
-\`\`\`
-
-The validator checks:
-- All required fields are present (name, description, scope, rules)
-- No TODO placeholders remain
-- Rules start with action verbs
-- Example fields are complete when provided
-- Language values are valid
-
-If validation fails, fix the reported errors and run validation again before proceeding.
-
-### Step 6: Review Before Submission
+### Step 5: Review Before Submission
 
 **Before running the CLI command**, you MUST get explicit user approval:
 
@@ -743,31 +274,11 @@ If validation fails, fix the reported errors and run validation again before pro
 
 2. Ask: **"Here is the standard that will be created on Packmind. Do you approve?"**
 
-3. **Wait for explicit user confirmation** before proceeding to Step 7.
+3. **Wait for explicit user confirmation** before proceeding to Step 6.
 
 4. If the user requests changes, go back to earlier steps to make adjustments.
 
-### Step 7: Package Selection (Optional)
-
-After the user approves the playbook, determine if this standard should be added to any packages.
-
-#### Selection Process
-
-1. Run \`packmind-cli package list\` to see available packages
-2. Analyze the standard's scope and topic (e.g., "frontend", "backend", "testing", "TypeScript")
-3. **If matching packages are found:**
-   - Suggest 2-3 relevant packages based on keyword matching
-   - Ask: "Would you like to add this standard to any packages? Here are some suggestions: [suggestions]. You can also choose from all available packages: [list]"
-4. **If packages exist but none match well:**
-   - Ask: "Would you like to add this standard to any of the existing packages? Available: [list]"
-5. **If no packages exist:**
-   - Skip package selection entirely
-
-#### Important Note
-
-**The CLI currently does not support a \`--packages\` flag for \`packmind-cli standard create\`.** Package associations must be configured after standard creation through the Packmind UI or via separate CLI commands. Document the user's package preferences and remind them to add the standard to packages manually after creation.
-
-### Step 8: Creating the Standard via CLI
+### Step 6: Creating the Standard via CLI
 
 Run the packmind-cli command to create the standard:
 
@@ -800,26 +311,6 @@ packmind-cli login
 - Ensure all required fields are present
 - Verify JSON syntax is valid (use a JSON validator)
 - Check that rules array has at least one entry
-
-### Step 9: Verifying the Standard
-
-After creation, verify the standard was created correctly:
-
-1. **Check in Packmind UI**: Navigate to your organization's standards to see the new standard
-2. **Verify rules**: Ensure all rules appear with correct content
-3. **Check examples**: Confirm code examples are properly formatted
-4. **Add to packages**: If the user wanted to add this to packages (from Step 7), do so now via the Packmind UI
-
-### Step 10: Iterate and Improve
-
-Standards benefit from iteration. Consider:
-
-1. **Add more rules** as new conventions emerge
-2. **Add examples** to rules that lack them
-3. **Refine rule wording** based on how AI agents interpret them
-4. **Update scope** as the standard's applicability becomes clearer
-
-To add rules to an existing standard, use the Packmind UI or API.
 
 ## Complete Example
 
@@ -908,30 +399,16 @@ The AI agent will:
 
 1. Ask clarifying questions to understand the standard's purpose
 2. Help you define rules with proper formatting
-3. Initialize a playbook template using the bundled scripts
-4. Validate the playbook before submission
+3. Create a playbook JSON file
+4. Get your approval before submission
 5. Run the CLI command to create the standard
-6. Verify the standard was created correctly
 
 ## Prerequisites
 
 Before using this skill, ensure you have:
 
-- **Python 3**: Required for playbook initialization and validation
 - **packmind-cli**: Required for standard creation
 - **Packmind account**: Login via \`packmind-cli login\`
-
-## Directory Structure
-
-\`\`\`
-create-standard/
-├── SKILL.md           # Instructions for the AI agent
-├── README.md          # This file (for humans)
-├── LICENSE.txt        # Apache 2.0 license
-└── scripts/
-    ├── init_playbook.py      # Initialize a new playbook from template
-    └── validate_playbook.py  # Validate playbook format and rules
-\`\`\`
 
 ## License
 
@@ -1134,14 +611,6 @@ export class CreateStandardDeployer implements ISkillDeployer {
         {
           path: `${basePath}/LICENSE.txt`,
           content: STANDARD_CREATOR_LICENSE,
-        },
-        {
-          path: `${basePath}/scripts/init_playbook.py`,
-          content: getInitPlaybookPy(),
-        },
-        {
-          path: `${basePath}/scripts/validate_playbook.py`,
-          content: getValidatePlaybookPy(),
         },
       ],
       delete: [],
