@@ -3,6 +3,7 @@ import { SkillsHexa } from '@packmind/skills';
 import {
   ClientSource,
   DeleteSkillResponse,
+  DeleteSkillsBatchResponse,
   OrganizationId,
   Skill,
   SkillId,
@@ -87,6 +88,20 @@ export class SkillsService {
   ): Promise<DeleteSkillResponse> {
     return this.skillsHexa.getAdapter().deleteSkill({
       skillId,
+      organizationId,
+      userId,
+      source,
+    });
+  }
+
+  async deleteSkillsBatch(
+    skillIds: SkillId[],
+    organizationId: OrganizationId,
+    userId: UserId,
+    source: ClientSource,
+  ): Promise<DeleteSkillsBatchResponse> {
+    return this.skillsHexa.getAdapter().deleteSkillsBatch({
+      skillIds,
       organizationId,
       userId,
       source,

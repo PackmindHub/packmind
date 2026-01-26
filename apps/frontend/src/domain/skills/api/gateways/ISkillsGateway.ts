@@ -1,4 +1,5 @@
 import {
+  DeleteSkillsBatchResponse,
   OrganizationId,
   Skill,
   SkillId,
@@ -24,4 +25,9 @@ export interface ISkillsGateway {
     spaceId: SpaceId,
     skillId: SkillId,
   ): Promise<void>;
+  deleteSkillsBatch(
+    organizationId: OrganizationId,
+    spaceId: SpaceId,
+    skillIds: SkillId[],
+  ): Promise<DeleteSkillsBatchResponse>;
 }

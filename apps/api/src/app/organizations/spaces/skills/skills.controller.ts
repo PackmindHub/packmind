@@ -17,6 +17,7 @@ import { LogLevel, PackmindLogger } from '@packmind/logger';
 import { AuthenticatedRequest } from '@packmind/node-utils';
 import { SkillValidationError, SkillParseError } from '@packmind/skills';
 import {
+  DeleteSkillsBatchResponse,
   OrganizationId,
   Skill,
   SkillId,
@@ -271,6 +272,52 @@ export class OrganizationsSpacesSkillsController {
       this.logger.error(
         'DELETE /organizations/:orgId/spaces/:spaceId/skills/:skillId - Failed to delete skill',
         { organizationId, spaceId, skillId, error: errorMessage },
+      );
+      throw error;
+    }
+  }
+
+  /**
+   * Delete multiple skills within a space
+   * POST /organizations/:orgId/spaces/:spaceId/skills/delete
+   */
+  @Post('delete')
+  async deleteSkillsBatch(
+    @Param('orgId') organizationId: OrganizationId,
+    @Param('spaceId') spaceId: SpaceId,
+    @Body() body: { skillIds: SkillId[] },
+    @Req() request: AuthenticatedRequest,
+  ): Promise<DeleteSkillsBatchResponse> {
+    const userId = request.user.userId;
+
+    if (!body.skillIds || body.skillIds.length === 0) {
+      throw new BadRequestException(
+        'skillIds array is required and must not be empty',
+      );
+    }
+
+    this.logger.info(
+      'POST /organizations/:orgId/spaces/:spaceId/skills/delete - Deleting skills batch',
+      { organizationId, spaceId, skillCount: body.skillIds.length },
+    );
+
+    try {
+      return await this.skillsService.deleteSkillsBatch(
+        body.skillIds,
+        organizationId,
+        userId,
+        request.clientSource,
+      );
+    } catch (error) {
+      const errorMessage = getErrorMessage(error);
+      this.logger.error(
+        'POST /organizations/:orgId/spaces/:spaceId/skills/delete - Failed to delete skills batch',
+        {
+          organizationId,
+          spaceId,
+          skillCount: body.skillIds.length,
+          error: errorMessage,
+        },
       );
       throw error;
     }

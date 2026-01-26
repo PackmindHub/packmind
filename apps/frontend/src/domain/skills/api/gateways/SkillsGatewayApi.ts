@@ -1,4 +1,5 @@
 import {
+  DeleteSkillsBatchResponse,
   OrganizationId,
   Skill,
   SkillId,
@@ -53,6 +54,17 @@ export class SkillsGatewayApi
   ): Promise<void> {
     return this._api.delete<void>(
       `/organizations/${organizationId}/spaces/${spaceId}/skills/${skillId}`,
+    );
+  }
+
+  async deleteSkillsBatch(
+    organizationId: OrganizationId,
+    spaceId: SpaceId,
+    skillIds: SkillId[],
+  ): Promise<DeleteSkillsBatchResponse> {
+    return this._api.post<DeleteSkillsBatchResponse>(
+      `/organizations/${organizationId}/spaces/${spaceId}/skills/delete`,
+      { skillIds },
     );
   }
 }

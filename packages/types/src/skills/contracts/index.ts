@@ -1,6 +1,7 @@
 export * from './CreateSkillUseCase';
 export * from './UpdateSkillUseCase';
 export * from './DeleteSkillUseCase';
+export * from './DeleteSkillsBatchUseCase';
 export * from './GetSkillByIdContract';
 export * from './GetSkillWithFilesContract';
 export * from './ListSkillsBySpaceContract';
