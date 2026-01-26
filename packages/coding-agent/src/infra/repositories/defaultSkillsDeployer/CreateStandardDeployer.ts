@@ -472,37 +472,87 @@ packmind-cli login
 
 To create a standard, follow this process in order, skipping steps only if there is a clear reason why they are not applicable.
 
-### Step 1: Understanding the Standard's Purpose
+### Step 1: Check for Similar Standards
 
-Skip this step only when the standard's scope and rules are already clearly defined. It remains valuable even when working with an existing standard.
+Before creating a new standard, check if similar standards already exist to avoid duplication.
 
-To create an effective standard, clearly understand:
+#### Checking Process
 
-1. **What problem does this standard solve?**
-   - Example: "Inconsistent error handling across services"
-   - Example: "New team members don't know our naming conventions"
+1. Run \`packmind-cli standard list\` to retrieve existing standards
+2. Analyze the user's request to understand the intent
+3. Compare with existing standards' names and topics
 
-2. **Who will benefit from this standard?**
-   - AI coding agents working on this codebase
-   - New team members onboarding
-   - Existing developers maintaining consistency
+#### Decision Logic
 
-3. **Where does this standard apply?**
-   - Specific file types (e.g., "*.spec.ts files")
-   - Specific frameworks (e.g., "React components")
-   - Specific domains (e.g., "API controllers")
+**If similar standards exist:**
+- Present them to the user with this format:
+  \`\`\`
+  I found these existing standards that might be similar:
+  • [name]
+  • [name]
 
-Example clarifying questions:
+  Do you still want to create a new standard?
+  \`\`\`
+- Wait for the user's decision
+- If user confirms, continue to Step 2
+- If user cancels, stop the workflow
 
-- "What coding conventions do you want to enforce?"
-- "Can you give examples of code that follows vs violates these rules?"
-- "Which file types or areas of the codebase should this standard apply to?"
+**If no similar standards exist:**
+- Proceed directly to Step 2
 
-Conclude this step when there is a clear sense of the standard's purpose and scope.
+#### Similarity Guidelines
 
-### Step 2: Gathering and Writing Rules
+Consider standards similar if they:
+- Target the same technology or framework (e.g., both about TypeScript, both about React)
+- Address the same concern (e.g., both about testing, both about error handling)
+- Have overlapping scope (e.g., both about backend architecture, both about frontend patterns)
 
-Transform the understanding from Step 1 into concrete rules.
+Be conservative: only flag standards that truly overlap.
+
+### Step 2: Clarify the Request
+
+Gather essential information before drafting the standard.
+
+#### Clarification Flow
+
+Study the user's request and identify critical gaps. The number of questions should match the request clarity:
+- **1-2 questions** when the request is well-defined (clear scope, specific examples, detailed context)
+- **3-5 questions** when the context is unclear or the request is vague
+
+**Examples of focused questions:**
+- "Which service or file shows the expected pattern?"
+- "Is there an existing doc or rule we must stay aligned with?"
+- "What specific aspect matters most (mocking guidelines, naming conventions, assertion style)?"
+
+Introduce questions with a simple phrase about needing clarification, then list as bullet points—no numbering, no category headers.
+
+#### Repository Access Guardrail
+
+**Do not open or scan repository files unless the user explicitly points to them** (provides file paths or requests project-wide review). If source references are needed, ask the user to supply them.
+
+#### What to Capture
+
+Take brief notes on:
+- Title or slug (if mentioned)
+- Scope guardrails
+- Key references
+- Expected outcomes
+
+Keep notes concise—just enough to unlock drafting.
+
+### Step 3: Draft Rules and Iterate (Phase 1)
+
+Transform the understanding into concrete rules and iterate with the user. **Do not add examples yet** - examples will be added in Phase 2 (Step 4) after rules are validated.
+
+#### Draft Creation (Rules Only)
+
+1. Create a draft markdown file in \`.packmind/standards/_drafts/\` (create the folder if missing) using filename \`<slug>-draft.md\` (lowercase with hyphens)
+2. Initial draft structure:
+   - \`# <Standard Title>\`
+   - Context paragraph explaining when/why to apply the standard
+   - Optional **Key References** list citing files or authoritative sources
+   - \`## Rules\` as bullet points following the Rule Writing Guidelines below
+   - **DO NOT include examples yet** - examples will be added in Phase 2
 
 #### Rule Writing Guidelines
 
@@ -564,15 +614,39 @@ Inline examples (code, paths, patterns) within the rule content are **optional**
 - "Use const and prefix interfaces with I" (multiple concepts)
 - "Don't use var" (no positive guidance)
 
-#### Adding Examples (Recommended)
+#### TL;DR and Review Loop (Rules Only)
 
-Examples dramatically improve rule effectiveness. For each rule, consider adding:
+1. After saving the draft file, write a concise TL;DR that captures:
+   - One sentence summarizing the standard's purpose
+   - A bullet list of all rules (each rule ~22 words max, imperative form, with inline code if helpful)
+   - **Do not add any additional explanatory paragraphs or duplicate content after the TL;DR**
+2. Share the TL;DR with the user only after the draft file exists
+3. Ask for precise feedback on the rules and apply requested changes in the draft file while keeping the TL;DR aligned
+4. Restate what changed after each iteration and confirm the draft remains accurate
+5. Repeat until the user explicitly approves the rules
+6. **Only after rules are approved**, inform the user you will now proceed to Step 4 to add examples
 
-- **positive**: Code that correctly follows the rule
-- **negative**: Code that violates the rule
-- **language**: The programming language for syntax highlighting
+### Step 4: Add Examples (Phase 2)
 
-Valid language values:
+After rules are approved, add illustrative examples to each rule in the draft file.
+
+#### Examples Creation
+
+1. Open the existing draft file and add examples to each rule:
+   - \`### Positive Example\` showing the compliant approach
+   - \`### Negative Example\` highlighting the anti-pattern to avoid
+   - Annotate every code block with its language (e.g., \`typescript\`, \`sql\`, \`javascript\`)
+   - Keep examples concise and focused on demonstrating the specific rule
+2. After updating the file, tell the user what examples were added
+
+#### Examples Guidelines
+
+- Examples should be realistic and directly relevant to this codebase
+- Each example should clearly demonstrate why the rule matters
+- Keep code snippets minimal—only include what's necessary to illustrate the point
+- If a rule doesn't benefit from code examples (e.g., process or organizational rules), explain this and skip examples for that rule
+
+Valid language values for code blocks:
 - TYPESCRIPT, TYPESCRIPT_TSX
 - JAVASCRIPT, JAVASCRIPT_JSX
 - PYTHON, JAVA, GO, RUST, CSHARP
@@ -580,7 +654,14 @@ Valid language values:
 - HTML, CSS, SCSS, YAML, JSON
 - MARKDOWN, BASH, GENERIC
 
-### Step 3: Creating the Playbook File
+#### Review Loop (Examples)
+
+1. Share a summary of the examples added for each rule
+2. Ask for feedback on the examples
+3. Apply requested changes and iterate until the user approves
+4. Restate what changed after each iteration
+
+### Step 5: Creating the Playbook File
 
 **Before running the script**, verify that python3 is available (see Prerequisites section). If not installed, install it first.
 
@@ -650,7 +731,7 @@ The validator checks:
 
 If validation fails, fix the reported errors and run validation again before proceeding.
 
-### Step 4: Review Before Submission
+### Step 6: Review Before Submission
 
 **Before running the CLI command**, you MUST get explicit user approval:
 
@@ -662,11 +743,31 @@ If validation fails, fix the reported errors and run validation again before pro
 
 2. Ask: **"Here is the standard that will be created on Packmind. Do you approve?"**
 
-3. **Wait for explicit user confirmation** before proceeding to Step 5.
+3. **Wait for explicit user confirmation** before proceeding to Step 7.
 
-4. If the user requests changes, go back to Step 2 or Step 3 to make adjustments.
+4. If the user requests changes, go back to earlier steps to make adjustments.
 
-### Step 5: Creating the Standard via CLI
+### Step 7: Package Selection (Optional)
+
+After the user approves the playbook, determine if this standard should be added to any packages.
+
+#### Selection Process
+
+1. Run \`packmind-cli package list\` to see available packages
+2. Analyze the standard's scope and topic (e.g., "frontend", "backend", "testing", "TypeScript")
+3. **If matching packages are found:**
+   - Suggest 2-3 relevant packages based on keyword matching
+   - Ask: "Would you like to add this standard to any packages? Here are some suggestions: [suggestions]. You can also choose from all available packages: [list]"
+4. **If packages exist but none match well:**
+   - Ask: "Would you like to add this standard to any of the existing packages? Available: [list]"
+5. **If no packages exist:**
+   - Skip package selection entirely
+
+#### Important Note
+
+**The CLI currently does not support a \`--packages\` flag for \`packmind-cli standard create\`.** Package associations must be configured after standard creation through the Packmind UI or via separate CLI commands. Document the user's package preferences and remind them to add the standard to packages manually after creation.
+
+### Step 8: Creating the Standard via CLI
 
 Run the packmind-cli command to create the standard:
 
@@ -700,15 +801,16 @@ packmind-cli login
 - Verify JSON syntax is valid (use a JSON validator)
 - Check that rules array has at least one entry
 
-### Step 6: Verifying the Standard
+### Step 9: Verifying the Standard
 
 After creation, verify the standard was created correctly:
 
 1. **Check in Packmind UI**: Navigate to your organization's standards to see the new standard
 2. **Verify rules**: Ensure all rules appear with correct content
 3. **Check examples**: Confirm code examples are properly formatted
+4. **Add to packages**: If the user wanted to add this to packages (from Step 7), do so now via the Packmind UI
 
-### Step 7: Iterate and Improve
+### Step 10: Iterate and Improve
 
 Standards benefit from iteration. Consider:
 
