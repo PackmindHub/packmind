@@ -91,14 +91,13 @@ Skills are folders of instructions, scripts, and resources that AI agents can di
 | -------------- | -------------------------------------- |
 | GitHub Copilot | `.github/skills/{skill-slug}/SKILL.md` |
 | Claude Code    | `.claude/skills/{skill-slug}/SKILL.md` |
-| Cursor         | Uses Claude Code skills                |
+| Cursor         | `.cursor/skills/{skill-slug}/SKILL.md` |
 
 Skills contain YAML frontmatter with metadata (name, description, license, compatibility, allowed-tools) followed by the skill instructions.
 
 <Note>
-  Skills are currently only available for GitHub Copilot and Claude Code. Cursor
-  uses the Claude Code skills. Other AI assistants do not support skill
-  rendering.
+  Skills are currently available for GitHub Copilot, Claude Code, and Cursor.
+  Other AI assistants do not support skill rendering.
 </Note>
 
 ## The Source Files
@@ -146,10 +145,11 @@ These source files are the single source of truth. The files in AI assistant-spe
 
 **Solution**:
 
-1. Skills are only rendered for GitHub Copilot and Claude Code (Cursor uses Claude Code skills)
+1. Skills are only rendered for GitHub Copilot, Claude Code, and Cursor
 2. Check the `.packmind/skills/` folder for the source files
 3. For GitHub Copilot: Check `.github/skills/{skill-slug}/SKILL.md`
-4. For Claude Code/Cursor: Check `.claude/skills/{skill-slug}/SKILL.md`
+4. For Claude Code: Check `.claude/skills/{skill-slug}/SKILL.md`
+5. For Cursor: Check `.cursor/skills/{skill-slug}/SKILL.md`
 
 ## Related Documentation
 
