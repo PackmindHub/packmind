@@ -1328,6 +1328,8 @@ export class PackmindGateway implements IPackmindGateway {
     }
 
     return { id: standard.id, name: standard.name };
+  };
+  
   /**
    * Track linter execution (fire-and-forget).
    * This method is called before running detection programs to track usage.
