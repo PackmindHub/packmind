@@ -866,4 +866,53 @@ export class AuthService {
       throw error;
     }
   }
+
+  /**
+   * Gets the onboarding status for a user's organization
+   * @param userId User ID
+   * @param organizationId Organization ID
+   * @returns Onboarding status including hasDeployed flag
+   */
+  async getOnboardingStatus(
+    userId: UserId,
+    organizationId: OrganizationId,
+  ): Promise<{ hasDeployed: boolean }> {
+    this.logger.log('Fetching onboarding status', {
+      userId,
+      organizationId,
+    });
+
+    try {
+      const status = await this.accountsAdapter.getOrganizationOnboardingStatus(
+        {
+          userId,
+          organizationId,
+        },
+      );
+
+      this.logger.log('Onboarding status fetched successfully', {
+        userId,
+        organizationId,
+        hasDeployed: status.hasDeployed,
+      });
+
+      return { hasDeployed: status.hasDeployed };
+    } catch (error) {
+      this.logger.error('Failed to fetch onboarding status', {
+        userId,
+        organizationId,
+        error: getErrorMessage(error),
+      });
+      throw error;
+    }
+  }
+
+  /**
+   * Verifies a JWT token and returns the payload
+   * @param token JWT token to verify
+   * @returns Decoded JWT payload
+   */
+  verifyToken(token: string): JwtPayload {
+    return this.jwtService.verify<JwtPayload>(token);
+  }
 }
