@@ -268,7 +268,7 @@ jobs:
       - name: Test login command with Node.js 20 (ESM import test)
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '20.10.0'
 
       - name: Verify Node.js 20 is active
         run: |
