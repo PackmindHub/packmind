@@ -86,6 +86,7 @@ Co-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>
 
 | Element             | Rule                                                                                                |
 | ------------------- | --------------------------------------------------------------------------------------------------- |
+| **Language**        | Required. All commit messages MUST be written in English                                            |
 | **Gitmoji**         | Required. Must match the commit type                                                                |
 | **Type**            | Required. One of: feat, fix, refactor, docs, test, chore, style, perf, security, remove, move, deps |
 | **Scope**           | Optional. Component or module affected (e.g., auth, api, ui)                                        |
@@ -305,6 +306,7 @@ Co-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>
 
 ### DO
 
+- ✅ Always write commit messages in English
 - ✅ Always run `npm run quality-gate` before committing
 - ✅ Always ask for user permission before committing
 - ✅ Always use gitmoji matching the commit type
@@ -317,6 +319,7 @@ Co-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>
 
 ### DO NOT
 
+- ❌ Never write commit messages in languages other than English (e.g., French, Spanish, etc.)
 - ❌ Never commit without user approval
 - ❌ Never use `--no-verify` flag
 - ❌ Never use "Close", "Fix", or "Resolve" before issue numbers
@@ -350,6 +353,7 @@ Co-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>
 │   6. git log -1 (verify)                                    │
 │                                                             │
 │ RULES:                                                      │
+│   • Always write in English                                 │
 │   • Always ask permission before committing                 │
 │   • Never use Close/Fix/Resolve before #issue               │
 │   • Never use --no-verify                                   │
