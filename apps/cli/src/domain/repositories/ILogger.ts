@@ -1,6 +1,6 @@
 import { LintViolation } from '../entities/LintViolation';
 
 export interface ILogger {
-  logViolations: (violations: LintViolation[]) => void;
-  logViolation: (violation: LintViolation) => void;
+  logViolations: (violations: LintViolation[]) => Promise<void>;
+  logViolation: (violation: LintViolation) => Promise<void>;
 }

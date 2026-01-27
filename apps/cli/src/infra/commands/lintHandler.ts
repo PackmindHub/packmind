@@ -119,27 +119,27 @@ export async function lintHandler(
     }
   } catch (error) {
     if (isNotLoggedInError(error) && continueOnMissingKey) {
-      logWarningConsole(
+      await logWarningConsole(
         'Warning: Not logged in to Packmind, linting is skipped. Run `packmind-cli login` to authenticate.',
       );
       exit(0);
       return;
     }
     if (error instanceof CommunityEditionError) {
-      logInfoConsole(`packmind-cli ${error.message}`);
-      logInfoConsole('Linting skipped.');
+      await logInfoConsole(`packmind-cli ${error.message}`);
+      await logInfoConsole('Linting skipped.');
       exit(0);
       return;
     }
     throw error;
   }
 
-  (logger === Loggers.ide ? ideLintLogger : humanReadableLogger).logViolations(
-    violations,
-  );
+  await (
+    logger === Loggers.ide ? ideLintLogger : humanReadableLogger
+  ).logViolations(violations);
 
   const durationSeconds = (Date.now() - startedAt) / 1000;
-  logInfoConsole(`Lint completed in ${durationSeconds.toFixed(2)}s`);
+  await logInfoConsole(`Lint completed in ${durationSeconds.toFixed(2)}s`);
 
   if (violations.length > 0 && !continueOnError) {
     exit(1);

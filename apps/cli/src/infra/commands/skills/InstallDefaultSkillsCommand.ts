@@ -16,13 +16,13 @@ export const installDefaultSkillsCommand = command({
     const packmindCliHexa = new PackmindCliHexa(packmindLogger);
 
     try {
-      logInfoConsole('Installing default skills...');
+      await logInfoConsole('Installing default skills...');
 
       const result = await packmindCliHexa.installDefaultSkills({});
 
       if (result.errors.length > 0) {
         for (const error of result.errors) {
-          logErrorConsole(`Error: ${error}`);
+          await logErrorConsole(`Error: ${error}`);
         }
         process.exit(1);
       }
@@ -30,21 +30,21 @@ export const installDefaultSkillsCommand = command({
       const totalFiles = result.filesCreated + result.filesUpdated;
 
       if (totalFiles === 0) {
-        logInfoConsole('Default skills are already up to date.');
+        await logInfoConsole('Default skills are already up to date.');
       } else {
-        logSuccessConsole('Default skills installed successfully!');
+        await logSuccessConsole('Default skills installed successfully!');
         if (result.filesCreated > 0) {
-          logInfoConsole(`  Files created: ${result.filesCreated}`);
+          await logInfoConsole(`  Files created: ${result.filesCreated}`);
         }
         if (result.filesUpdated > 0) {
-          logInfoConsole(`  Files updated: ${result.filesUpdated}`);
+          await logInfoConsole(`  Files updated: ${result.filesUpdated}`);
         }
       }
     } catch (error) {
       if (error instanceof Error) {
-        logErrorConsole(`Installation failed: ${error.message}`);
+        await logErrorConsole(`Installation failed: ${error.message}`);
       } else {
-        logErrorConsole(`Installation failed: ${String(error)}`);
+        await logErrorConsole(`Installation failed: ${String(error)}`);
       }
       process.exit(1);
     }

@@ -25,16 +25,16 @@ export const createStandardCommand = command({
       const result = await createStandardHandler(file, useCase);
 
       if (result.success) {
-        logSuccessConsole(
+        await logSuccessConsole(
           `Standard "${result.standardName}" created successfully (ID: ${result.standardId})`,
         );
         process.exit(0);
       } else {
-        logErrorConsole(`Failed to create standard: ${result.error}`);
+        await logErrorConsole(`Failed to create standard: ${result.error}`);
         process.exit(1);
       }
     } catch (e) {
-      logErrorConsole(
+      await logErrorConsole(
         `Error: ${e instanceof Error ? e.message : 'Unknown error'}`,
       );
       process.exit(1);

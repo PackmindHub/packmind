@@ -31,9 +31,9 @@ function formatExpiresAt(expiresAt: Date): string {
   return 'Expires soon';
 }
 
-function displayAuthInfo(
+async function displayAuthInfo(
   result: IWhoamiResult & { isAuthenticated: true },
-): void {
+): Promise<void> {
   logConsole(`\nHost: ${result.host}`);
   if (result.organizationName) {
     logConsole(`Organization: ${result.organizationName}`);
@@ -44,7 +44,7 @@ function displayAuthInfo(
   if (result.expiresAt) {
     logConsole(formatExpiresAt(result.expiresAt));
   }
-  logInfoConsole(`Source: ${result.source}`);
+  await logInfoConsole(`Source: ${result.source}`);
 
   if (result.isExpired) {
     logConsole('\nRun `packmind-cli login` to re-authenticate.');
@@ -62,7 +62,7 @@ export const whoamiCommand = command({
     const result = await packmindCliHexa.whoami({});
 
     if (!result.isAuthenticated) {
-      logErrorConsole('Not authenticated');
+      await logErrorConsole('Not authenticated');
       logConsole(
         `\nNo credentials found. Run \`packmind-cli login\` to authenticate.`,
       );
@@ -73,12 +73,12 @@ export const whoamiCommand = command({
     }
 
     if (result.isExpired) {
-      logErrorConsole('Credentials expired');
+      await logErrorConsole('Credentials expired');
     } else {
-      logSuccessConsole('Authenticated');
+      await logSuccessConsole('Authenticated');
     }
 
-    displayAuthInfo(result);
+    await displayAuthInfo(result);
 
     if (result.isExpired) {
       process.exit(1);

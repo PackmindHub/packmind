@@ -452,7 +452,7 @@ export class LintFilesInDirectoryUseCase implements ILintFilesInDirectory {
                 );
 
                 if (!programLanguage) {
-                  logErrorConsole(
+                  await logErrorConsole(
                     `Unsupported language "${activeProgram.language}" for file ${file.path}`,
                   );
                   continue;
@@ -478,7 +478,7 @@ export class LintFilesInDirectoryUseCase implements ILintFilesInDirectory {
                 programsByLanguage.set(programLanguage, programsForLanguage);
               } catch (error) {
                 // Log error but continue with other programs
-                logErrorConsole(
+                await logErrorConsole(
                   `Error preparing program for file ${file.path}: ${error}`,
                 );
               }
@@ -505,13 +505,13 @@ export class LintFilesInDirectoryUseCase implements ILintFilesInDirectory {
 
               fileViolations.push(...result);
             } catch (error) {
-              logErrorConsole(
+              await logErrorConsole(
                 `Error executing programs for file ${file.path} (${language}): ${error}`,
               );
             }
           }
         } catch (error) {
-          logErrorConsole(
+          await logErrorConsole(
             `Error reading file content for ${file.path}: ${error}`,
           );
         }

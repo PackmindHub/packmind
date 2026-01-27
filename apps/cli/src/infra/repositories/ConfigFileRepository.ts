@@ -70,7 +70,9 @@ export class ConfigFileRepository {
       // Malformed JSON or invalid structure - warn once and skip
       if (!this.warnedFiles.has(configPath)) {
         this.warnedFiles.add(configPath);
-        logWarningConsole(`⚠ Skipping malformed config file: ${configPath}`);
+        await logWarningConsole(
+          `⚠ Skipping malformed config file: ${configPath}`,
+        );
       }
       return null;
     }
