@@ -220,9 +220,24 @@ export type CreateStandardWithExamplesResult = {
   name: string;
 };
 
-// Global space type
+// Global space type (used by createCommand)
 export type GetGlobalSpaceResult = {
   id: string;
+  slug: string;
+};
+
+// Create command types
+export type CreateCommandCommand = {
+  name: string;
+  summary: string;
+  whenToUse: string[];
+  contextValidationCheckpoints: string[];
+  steps: Array<{ name: string; description: string; codeSnippet?: string }>;
+};
+
+export type CreateCommandResult = {
+  id: string;
+  name: string;
   slug: string;
 };
 
@@ -240,11 +255,17 @@ export interface IPackmindGateway {
   uploadSkill: Gateway<IUploadSkillUseCase>;
   getDefaultSkills: Gateway<IGetDefaultSkillsUseCase>;
 
-  // Atomic gateway for getGlobalSpace
+  // Atomic gateway for getGlobalSpace (used by createCommand)
   getGlobalSpace(): Promise<GetGlobalSpaceResult>;
 
   // Consolidated standard creation
   createStandard(
     data: CreateStandardWithExamplesCommand,
   ): Promise<CreateStandardWithExamplesResult>;
+
+  // Atomic gateway for command creation
+  createCommand(
+    spaceId: string,
+    data: CreateCommandCommand,
+  ): Promise<CreateCommandResult>;
 }
