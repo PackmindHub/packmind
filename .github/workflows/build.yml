@@ -331,3 +331,34 @@ jobs:
         env:
           COMPOSE_PROJECT_NAME: ci-${{ github.run_number }}
         run: docker compose --profile=e2e down -v --remove-orphans
+
+  test-cli-cross-platform:
+    needs: build-cli
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: depot-windows-2025-8
+            executable: packmind-cli-windows-x64.exe
+          - os: depot-macos-15
+            executable: packmind-cli-macos-arm64
+
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Download CLI executables
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ needs.build-cli.outputs.cli-executables-artifact }}
+          path: cli-executables
+
+      - name: List downloaded files
+        run: ls -la cli-executables/
+        shell: bash
+
+      - name: Make executable (Unix only)
+        if: runner.os != 'Windows'
+        run: chmod +x cli-executables/${{ matrix.executable }}
+
+      - name: Test CLI executable
+        run: ./cli-executables/${{ matrix.executable }} --version
+        shell: bash
