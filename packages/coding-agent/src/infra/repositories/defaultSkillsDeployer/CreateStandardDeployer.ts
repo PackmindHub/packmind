@@ -272,11 +272,13 @@ TYPESCRIPT, TYPESCRIPT_TSX, JAVASCRIPT, JAVASCRIPT_JSX, PYTHON, JAVA, GO, RUST, 
    - Scope
    - Each rule with its content and examples (if any)
 
-2. Ask: **"Here is the standard that will be created on Packmind. Do you approve?"**
+2. **Provide the file path** to the playbook JSON file so users can open and edit it directly if needed.
 
-3. **Wait for explicit user confirmation** before proceeding to Step 6.
+3. Ask: **"Here is the standard that will be created on Packmind. The playbook file is at \`<path>\` if you want to review or edit it. Do you approve?"**
 
-4. If the user requests changes, go back to earlier steps to make adjustments.
+4. **Wait for explicit user confirmation** before proceeding to Step 6.
+
+5. If the user requests changes, go back to earlier steps to make adjustments.
 
 ### Step 6: Creating the Standard via CLI
 
