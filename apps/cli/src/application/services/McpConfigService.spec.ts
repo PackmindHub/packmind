@@ -1,4 +1,5 @@
 import * as fs from 'fs';
+import * as path from 'path';
 import { execSync } from 'child_process';
 import { McpConfigService } from './McpConfigService';
 
@@ -163,9 +164,12 @@ describe('McpConfigService', () => {
         });
 
         it('creates .vscode directory recursively', () => {
-          expect(mockFs.mkdirSync).toHaveBeenCalledWith('/project/.vscode', {
-            recursive: true,
-          });
+          expect(mockFs.mkdirSync).toHaveBeenCalledWith(
+            path.join('/project', '.vscode'),
+            {
+              recursive: true,
+            },
+          );
         });
       });
 
