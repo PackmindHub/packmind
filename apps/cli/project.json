@@ -30,12 +30,12 @@
           }
         ],
         "generatePackageJson": true,
-        "esbuildConfig": "apps/cli/esbuild-publish.config.js"
+        "esbuildConfig": "apps/cli/esbuild-publish.config.cjs"
       },
       "configurations": {
         "development": {},
         "production": {
-          "esbuildConfig": "apps/cli/esbuild-publish.config.js"
+          "esbuildConfig": "apps/cli/esbuild-publish.config.cjs"
         }
       }
     },
@@ -64,7 +64,7 @@
         "main": "apps/cli/src/main.ts",
         "tsConfig": "apps/cli/tsconfig.app.json",
         "generatePackageJson": false,
-        "esbuildConfig": "apps/cli/esbuild.config.js"
+        "esbuildConfig": "apps/cli/esbuild-publish.config.cjs"
       },
       "configurations": {
         "development": {},
