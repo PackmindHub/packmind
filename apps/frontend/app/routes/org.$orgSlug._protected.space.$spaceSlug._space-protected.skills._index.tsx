@@ -5,6 +5,7 @@ import { AutobreadCrumb } from '../../src/shared/components/navigation/Autobread
 import { GettingStartedLearnMoreDialog } from '../../src/domain/organizations/components/dashboard/GettingStartedLearnMoreDialog';
 import { SkillsLearnMoreContent } from '../../src/domain/skills/components/SkillsLearnMoreContent';
 import { DownloadDefaultSkillsPopover } from '../../src/domain/skills/components/DownloadDefaultSkillsPopover';
+import { useGetSkillsQuery } from '../../src/domain/skills/api/queries/SkillsQueries';
 import { useParams } from 'react-router';
 
 export default function SkillsIndexRouteModule() {
@@ -13,6 +14,9 @@ export default function SkillsIndexRouteModule() {
     orgSlug: string;
     spaceSlug: string;
   }>();
+  const { data: skills } = useGetSkillsQuery();
+
+  const hasSkills = skills && skills.length > 0;
 
   if (!organization) {
     return null;
@@ -25,7 +29,7 @@ export default function SkillsIndexRouteModule() {
       breadcrumbComponent={<AutobreadCrumb />}
       actions={
         <PMHStack gap={2}>
-          <DownloadDefaultSkillsPopover />
+          {hasSkills && <DownloadDefaultSkillsPopover />}
           {spaceSlug && (
             <GettingStartedLearnMoreDialog
               body={<SkillsLearnMoreContent />}
