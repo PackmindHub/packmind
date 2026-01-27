@@ -9,6 +9,7 @@ import {
   PMDialog,
   PMCodeMirror,
   PMBadge,
+  PMAlert,
   DEFAULT_FEATURE_DOMAIN_MAP,
   isFeatureFlagEnabled,
 } from '@packmind/ui';
@@ -373,7 +374,7 @@ const ProgramEditor: React.FC<ProgramEditorProps> = ({
 
     if (value.length > MAX_SANDBOX_CHARS) {
       setSandboxValidationError(
-        `Code exceeds ${MAX_SANDBOX_CHARS.toLocaleString()} character limit (${value.length.toLocaleString()} characters)`,
+        `Code exceeds ${MAX_SANDBOX_CHARS.toLocaleString('de-DE')} character limit (${value.length.toLocaleString('de-DE')} characters)`,
       );
     } else {
       setSandboxValidationError(null);
@@ -549,7 +550,7 @@ const ProgramEditor: React.FC<ProgramEditorProps> = ({
                   <PMHStack justify="space-between" align="center">
                     <PMHeading level="h5">Sandbox</PMHeading>
                     <PMText color="faded" fontSize="sm">
-                      {sandboxCode.length} / 10,000 characters
+                      {sandboxCode.length} / 10.000 characters
                     </PMText>
                   </PMHStack>
                   <PMBox>
@@ -574,18 +575,14 @@ const ProgramEditor: React.FC<ProgramEditorProps> = ({
                     />
                   </PMBox>
                   {sandboxValidationError && (
-                    <PMBox
-                      mt={2}
-                      p={2}
-                      bg="red.50"
-                      border="1px solid"
-                      borderColor="red.200"
-                      borderRadius="md"
-                    >
-                      <PMText color="error" fontSize="sm">
-                        {sandboxValidationError}
-                      </PMText>
-                    </PMBox>
+                    <PMAlert.Root status="error" mt={2}>
+                      <PMAlert.Indicator />
+                      <PMAlert.Content>
+                        <PMAlert.Description>
+                          {sandboxValidationError}
+                        </PMAlert.Description>
+                      </PMAlert.Content>
+                    </PMAlert.Root>
                   )}
                   {testResults !== null && (
                     <PMBox>
