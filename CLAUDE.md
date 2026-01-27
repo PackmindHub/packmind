@@ -57,3 +57,35 @@ At the end of your response, after completing the main task:
 4. If none apply, state "Skills check: none applicable"
 
 **FAILURE TO RUN THIS CHECK IS A VIOLATION OF PROJECT GUIDELINES.**
+
+# Nx Monorepo Structure
+
+This is an Nx monorepo containing applications and reusable packages.
+
+## Core Technologies
+
+- **Runtime**: Node.js (version specified in `.nvmrc`)
+- **Language**: TypeScript
+- **Database**: PostgreSQL with TypeORM for entity persistence
+- **Cache**: Redis for caching
+- **Background Jobs**: BullMQ for job queue management
+- **Testing**: Jest with @swc/jest as test runner
+
+## Directory Structure
+
+- `apps/` - Deployable applications (API, frontend, CLI, MCP server, e2e tests, docs)
+- `packages/` - Reusable domain and infrastructure packages shared across apps
+- `.github/workflows/` - CI/CD pipelines for build, test, quality checks, and deployment
+
+## Working with Nx
+
+- Test a project: `nx test <project-name>`
+- Lint a project: `nx lint <project-name>`
+- Build a project: `nx build <project-name>`
+- Test affected projects: `npm run test:staged`
+- Lint affected projects: `npm run lint:staged`
+
+## Application & Package Guidance
+
+- See `apps/CLAUDE.md` for application-specific guidance
+- See `packages/CLAUDE.md` for package structure and responsibilities
