@@ -606,8 +606,10 @@ export class ProjectScannerService implements IProjectScannerService {
         }
       }
 
-      // Detect tools
-      result.tools.push('.NET CLI');
+      // Only add .NET CLI if we found .csproj files
+      if (csprojFiles.length > 0) {
+        result.tools.push('.NET CLI');
+      }
     } catch {
       // Ignore read errors
     }

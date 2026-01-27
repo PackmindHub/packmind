@@ -42,6 +42,7 @@ import { DocumentationScannerService } from './application/services/Documentatio
 import { StandardsGeneratorService } from './application/services/StandardsGeneratorService';
 import { CommandsGeneratorService } from './application/services/CommandsGeneratorService';
 import { SkillsGeneratorService } from './application/services/SkillsGeneratorService';
+import { SkillsScannerService } from './application/services/SkillsScannerService';
 import { ContentPreviewService } from './application/services/ContentPreviewService';
 
 export class PackmindCliHexaFactory {
@@ -117,6 +118,7 @@ export class PackmindCliHexaFactory {
         new StandardsGeneratorService(),
         new CommandsGeneratorService(),
         new SkillsGeneratorService(),
+        new SkillsScannerService(),
         new ContentPreviewService(),
       ),
     };

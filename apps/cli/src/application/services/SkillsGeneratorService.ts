@@ -1,3 +1,4 @@
+import * as path from 'path';
 import { IProjectScanResult } from './ProjectScannerService';
 
 export interface IGeneratedSkill {
@@ -7,12 +8,22 @@ export interface IGeneratedSkill {
 }
 
 export interface ISkillsGeneratorService {
-  generateSkills(scanResult: IProjectScanResult): IGeneratedSkill[];
+  generateSkills(
+    scanResult: IProjectScanResult,
+    projectPath: string,
+  ): IGeneratedSkill[];
 }
 
 export class SkillsGeneratorService implements ISkillsGeneratorService {
-  generateSkills(scanResult: IProjectScanResult): IGeneratedSkill[] {
+  generateSkills(
+    scanResult: IProjectScanResult,
+    projectPath: string,
+  ): IGeneratedSkill[] {
     const skills: IGeneratedSkill[] = [];
+    const projectName = path.basename(projectPath);
+
+    // Always generate project overview skill first
+    skills.push(this.generateProjectOverviewSkill(projectName, scanResult));
 
     if (scanResult.testFramework) {
       skills.push(this.generateDebuggingSkill(scanResult.testFramework));
@@ -255,6 +266,114 @@ Useful commands:
 - \`go build -gcflags="-m"\` - See escape analysis
 - \`go vet ./...\` - Static analysis
 - \`golangci-lint run\` - Comprehensive linting`,
+    };
+  }
+
+  private generateProjectOverviewSkill(
+    projectName: string,
+    scanResult: IProjectScanResult,
+  ): IGeneratedSkill {
+    const skillName = `${projectName}-overview`;
+
+    // Build tools section
+    const toolsLines: string[] = [];
+    if (scanResult.languages.length > 0) {
+      toolsLines.push(`- **Languages**: ${scanResult.languages.join(', ')}`);
+    }
+    if (scanResult.frameworks.length > 0) {
+      toolsLines.push(`- **Frameworks**: ${scanResult.frameworks.join(', ')}`);
+    }
+    if (scanResult.tools.length > 0) {
+      toolsLines.push(`- **Tools**: ${scanResult.tools.join(', ')}`);
+    }
+    if (scanResult.testFramework) {
+      toolsLines.push(`- **Test Framework**: ${scanResult.testFramework}`);
+    }
+    if (scanResult.packageManager) {
+      toolsLines.push(`- **Package Manager**: ${scanResult.packageManager}`);
+    }
+
+    // Build architecture section
+    const archLines: string[] = [];
+    if (scanResult.structure.isMonorepo) {
+      archLines.push('- **Structure**: Monorepo');
+      archLines.push(
+        '- Multiple packages/apps organized in a single repository',
+      );
+    }
+    if (scanResult.structure.hasSrcDirectory) {
+      archLines.push('- **Source Code**: Located in `src/` directory');
+    }
+    if (scanResult.structure.hasTests) {
+      archLines.push('- **Tests**: Project includes test files');
+    }
+
+    // Build framework-specific architecture notes
+    const frameworkNotes: string[] = [];
+    if (scanResult.frameworks.includes('NestJS')) {
+      frameworkNotes.push(
+        '- **NestJS**: Follows modular architecture with controllers, services, and modules',
+      );
+    }
+    if (scanResult.frameworks.includes('React')) {
+      frameworkNotes.push(
+        '- **React**: Component-based UI architecture with hooks',
+      );
+    }
+    if (scanResult.frameworks.includes('Django')) {
+      frameworkNotes.push(
+        '- **Django**: MTV (Model-Template-View) architecture with apps',
+      );
+    }
+    if (scanResult.frameworks.includes('FastAPI')) {
+      frameworkNotes.push(
+        '- **FastAPI**: Router-based API with Pydantic models',
+      );
+    }
+    if (scanResult.frameworks.includes('Spring Boot')) {
+      frameworkNotes.push(
+        '- **Spring Boot**: Layered architecture (Controller-Service-Repository)',
+      );
+    }
+    if (scanResult.frameworks.includes('ASP.NET Core')) {
+      frameworkNotes.push(
+        '- **ASP.NET Core**: Clean Architecture with dependency injection',
+      );
+    }
+
+    const prompt = `# ${projectName} Project Overview
+
+This skill provides context about the ${projectName} project to help you work effectively within its codebase.
+
+## Technology Stack
+
+${toolsLines.join('\\n')}
+
+## Architecture
+
+${archLines.length > 0 ? archLines.join('\\n') : '- Standard project structure'}
+
+${frameworkNotes.length > 0 ? '## Framework Patterns\\n\\n' + frameworkNotes.join('\\n') : ''}
+
+## Working with this Project
+
+When making changes to ${projectName}:
+
+1. **Understand the stack**: This project uses ${scanResult.languages.join(', ')}${scanResult.frameworks.length > 0 ? ' with ' + scanResult.frameworks.join(', ') : ''}
+2. **Follow existing patterns**: Look for similar implementations in the codebase before creating new patterns
+3. **Run tests**: ${scanResult.testFramework ? `Use \`${scanResult.packageManager || 'npm'} test\` to run the ${scanResult.testFramework} test suite` : 'Check for existing test patterns'}
+4. **Check linting**: ${scanResult.tools.includes('ESLint') ? 'Run ESLint before committing' : 'Follow the project code style'}
+
+## Key Directories
+
+${scanResult.structure.isMonorepo ? '- Look for `packages/` or `apps/` for different modules' : ''}
+${scanResult.structure.hasSrcDirectory ? '- Main source code is in `src/`' : ''}
+- Check for configuration files at the project root`;
+
+    return {
+      name: skillName,
+      description: `Overview of ${projectName} project: tools, architecture, and working guidelines`,
+      prompt,
     };
   }
 }
