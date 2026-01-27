@@ -95,6 +95,37 @@ You can view all versions of a skill in the Packmind web app:
 
 Each version includes a timestamp, allowing you to track when changes were made.
 
+## Deleting Skills
+
+You can delete skills that are no longer needed through the Packmind web app.
+
+### Delete a Single Skill
+
+1. Navigate to **Skills** in the main menu
+2. Click on the skill you want to delete
+3. Click the **Delete** button
+4. Confirm the deletion in the dialog
+
+### Delete Multiple Skills
+
+To delete multiple skills at once:
+
+1. Navigate to **Skills** in the main menu
+2. Select the skills you want to delete using the checkboxes
+3. Click **Delete selected**
+4. Confirm the batch deletion in the dialog
+
+<Warning>
+  **Impact on packages** — When you delete a skill that's included in one or
+  more packages, those packages will be updated. You'll need to redistribute the
+  affected packages to remove the skill from your repositories.
+</Warning>
+
+<Note>
+  Skill deletion is only available through the web interface. There is currently
+  no CLI command for deleting skills.
+</Note>
+
 ## Viewing Skills
 
 Access your skills through the Packmind web app:

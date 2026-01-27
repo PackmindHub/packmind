@@ -4,8 +4,11 @@
 
 - Render skills for GitHub Copilot, Claude Code and Skills (#71)
 - Provide downloadable skills to ease managing the playbook
+- Delete skills from the webapp
 
 ## Changed
+
+- Overview now displays artifacts that need removal from repositories
 
 ## Fixed
 
