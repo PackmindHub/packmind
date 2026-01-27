@@ -25,13 +25,17 @@ export class ConfigFileRepository {
     baseDirectory: string,
     config: PackmindFileConfig,
   ): Promise<void> {
-    const configPath = path.join(baseDirectory, this.CONFIG_FILENAME);
+    const configPath = normalizePath(
+      path.join(baseDirectory, this.CONFIG_FILENAME),
+    );
     const configContent = JSON.stringify(config, null, 2) + '\n';
     await fs.writeFile(configPath, configContent, 'utf-8');
   }
 
   async configExists(baseDirectory: string): Promise<boolean> {
-    const configPath = path.join(baseDirectory, this.CONFIG_FILENAME);
+    const configPath = normalizePath(
+      path.join(baseDirectory, this.CONFIG_FILENAME),
+    );
     try {
       await fs.access(configPath);
       return true;
@@ -41,7 +45,9 @@ export class ConfigFileRepository {
   }
 
   async readConfig(baseDirectory: string): Promise<PackmindFileConfig | null> {
-    const configPath = path.join(baseDirectory, this.CONFIG_FILENAME);
+    const configPath = normalizePath(
+      path.join(baseDirectory, this.CONFIG_FILENAME),
+    );
 
     try {
       const configContent = await fs.readFile(configPath, 'utf-8');

@@ -1,4 +1,5 @@
 import * as fs from 'fs';
+import * as path from 'path';
 import { execSync } from 'child_process';
 import { AgentDetectionService } from './AgentDetectionService';
 
@@ -87,7 +88,9 @@ describe('AgentDetectionService', () => {
       });
 
       it('checks the .vscode directory in project', () => {
-        expect(mockFs.existsSync).toHaveBeenCalledWith('/project/.vscode');
+        expect(mockFs.existsSync).toHaveBeenCalledWith(
+          path.join('/project', '.vscode'),
+        );
       });
     });
 
@@ -118,7 +121,9 @@ describe('AgentDetectionService', () => {
       });
 
       it('checks the .continue directory in project', () => {
-        expect(mockFs.existsSync).toHaveBeenCalledWith('/project/.continue');
+        expect(mockFs.existsSync).toHaveBeenCalledWith(
+          path.join('/project', '.continue'),
+        );
       });
     });
 

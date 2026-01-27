@@ -1,4 +1,5 @@
 import * as fs from 'fs/promises';
+import * as path from 'path';
 
 import { IPackmindGateway } from '../../domain/repositories/IPackmindGateway';
 import { InstallPackagesUseCase } from './InstallPackagesUseCase';
@@ -66,7 +67,7 @@ describe('InstallPackagesUseCase', () => {
 
     it('writes new file with content', () => {
       expect(fs.writeFile).toHaveBeenCalledWith(
-        '/test/CLAUDE.md',
+        path.join('/test', 'CLAUDE.md'),
         '# New content',
         'utf-8',
       );
@@ -114,7 +115,7 @@ describe('InstallPackagesUseCase', () => {
 
     it('writes file with new content', () => {
       expect(fs.writeFile).toHaveBeenCalledWith(
-        '/test/CLAUDE.md',
+        path.join('/test', 'CLAUDE.md'),
         newContent,
         'utf-8',
       );
@@ -184,7 +185,7 @@ Some footer text.`;
 
       it('writes file with replaced section content', () => {
         expect(fs.writeFile).toHaveBeenCalledWith(
-          '/test/CLAUDE.md',
+          path.join('/test', 'CLAUDE.md'),
           expectedContent,
           'utf-8',
         );
@@ -255,7 +256,7 @@ Footer text.`;
 
       it('writes file with updated section while preserving other sections', () => {
         expect(fs.writeFile).toHaveBeenCalledWith(
-          '/test/CLAUDE.md',
+          path.join('/test', 'CLAUDE.md'),
           expectedContent,
           'utf-8',
         );
@@ -318,7 +319,7 @@ Some existing content here.
 
     it('writes file with appended section', () => {
       expect(fs.writeFile).toHaveBeenCalledWith(
-        '/test/CLAUDE.md',
+        path.join('/test', 'CLAUDE.md'),
         expectedContent,
         'utf-8',
       );
@@ -360,7 +361,9 @@ Some existing content here.
       });
 
       it('calls unlink with correct path', () => {
-        expect(fs.unlink).toHaveBeenCalledWith('/test/old-file.md');
+        expect(fs.unlink).toHaveBeenCalledWith(
+          path.join('/test', 'old-file.md'),
+        );
       });
 
       it('counts as file deleted', () => {
@@ -398,7 +401,7 @@ Some existing content here.
       });
 
       it('calls rm with recursive and force options', () => {
-        expect(fs.rm).toHaveBeenCalledWith('/test/.packmind', {
+        expect(fs.rm).toHaveBeenCalledWith(path.join('/test', '.packmind'), {
           recursive: true,
           force: true,
         });
@@ -689,7 +692,7 @@ Section content here
           });
 
           expect(fs.writeFile).toHaveBeenCalledWith(
-            '/test/images/logo.png',
+            path.join('/test', 'images', 'logo.png'),
             Buffer.from(base64Content, 'base64'),
           );
         });
@@ -716,7 +719,7 @@ Section content here
           });
 
           expect(fs.writeFile).toHaveBeenCalledWith(
-            '/test/images/logo.png',
+            path.join('/test', 'images', 'logo.png'),
             Buffer.from(base64Content, 'base64'),
           );
         });
@@ -760,7 +763,7 @@ Section content here
         });
 
         expect(fs.writeFile).toHaveBeenCalledWith(
-          '/test/README.md',
+          path.join('/test', 'README.md'),
           textContent,
           'utf-8',
         );
@@ -794,7 +797,7 @@ Section content here
         });
 
         expect(fs.writeFile).toHaveBeenCalledWith(
-          '/test/README.md',
+          path.join('/test', 'README.md'),
           textContent,
           'utf-8',
         );
@@ -842,7 +845,7 @@ Old packmind content
 
       it('calls unlink to delete the file', () => {
         expect(fs.unlink).toHaveBeenCalledWith(
-          '/test/.cursor/rules/config.mdc',
+          path.join('/test', '.cursor', 'rules', 'config.mdc'),
         );
       });
 
@@ -926,8 +929,10 @@ Old packmind content
     describe('when skill files are present in package', () => {
       beforeEach(() => {
         // Mock fs.access to resolve for skill folders (folders exist)
-        (fs.access as jest.Mock).mockImplementation((path: string) => {
-          if (path.includes('/skills/')) {
+        (fs.access as jest.Mock).mockImplementation((p: string) => {
+          // Normalize path separators for cross-platform compatibility
+          const normalizedPath = p.replace(/\\/g, '/');
+          if (normalizedPath.includes('/skills/')) {
             return Promise.resolve();
           }
           return Promise.reject(new Error('File not found'));
@@ -987,7 +992,7 @@ Old packmind content
         });
 
         expect(fs.rm).toHaveBeenCalledWith(
-          '/test/.packmind/skills/signal-capture',
+          path.join('/test', '.packmind', 'skills', 'signal-capture'),
           { recursive: true, force: true },
         );
       });
@@ -999,7 +1004,7 @@ Old packmind content
         });
 
         expect(fs.rm).toHaveBeenCalledWith(
-          '/test/.claude/skills/signal-capture',
+          path.join('/test', '.claude', 'skills', 'signal-capture'),
           { recursive: true, force: true },
         );
       });
@@ -1011,7 +1016,7 @@ Old packmind content
         });
 
         expect(fs.rm).toHaveBeenCalledWith(
-          '/test/.github/skills/signal-capture',
+          path.join('/test', '.github', 'skills', 'signal-capture'),
           { recursive: true, force: true },
         );
       });
@@ -1046,8 +1051,10 @@ Old packmind content
     describe('when delete fails for some folders', () => {
       beforeEach(() => {
         // Mock fs.access to resolve for skill folders (folders exist)
-        (fs.access as jest.Mock).mockImplementation((path: string) => {
-          if (path.includes('/skills/')) {
+        (fs.access as jest.Mock).mockImplementation((p: string) => {
+          // Normalize path separators for cross-platform compatibility
+          const normalizedPath = p.replace(/\\/g, '/');
+          if (normalizedPath.includes('/skills/')) {
             return Promise.resolve();
           }
           return Promise.reject(new Error('File not found'));
