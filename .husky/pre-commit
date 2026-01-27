@@ -1,2 +1,2 @@
 npx pretty-quick --staged
-npm run packmind-cli:v3:pre-commit
+npm run packmind-cli:pre-commit

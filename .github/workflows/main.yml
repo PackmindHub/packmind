@@ -39,7 +39,6 @@ jobs:
     secrets:
       GITGUARDIAN_API_KEY: ${{ secrets.GITGUARDIAN_API_KEY }}
       SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-      PACKMIND_API_KEY: ${{ secrets.PACKMIND_API_KEY }}
       PACKMIND_API_KEY_V3: ${{ secrets.PACKMIND_API_KEY_V3 }}
 
   # Stage 3: Docker Images (on main branch, and release tags)
