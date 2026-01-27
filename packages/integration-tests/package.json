@@ -10,6 +10,7 @@
     "jsonwebtoken": "^9.0.2",
     "tslib": "^2.3.0",
     "@packmind/accounts": "*",
+    "@packmind/amplitude": "*",
     "@packmind/editions": "*",
     "@packmind/recipes": "*",
     "@packmind/git": "*",
@@ -23,6 +24,7 @@
     "@packmind/deployments": "*",
     "uuid": "11.1.0",
     "@packmind/test-utils": "*",
-    "@packmind/llm": "*"
+    "@packmind/llm": "*",
+    "@packmind/linter": "*"
   }
 }
