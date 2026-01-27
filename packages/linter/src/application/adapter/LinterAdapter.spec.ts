@@ -113,24 +113,52 @@ describe('LinterAdapter', () => {
       });
     });
 
-    it('initializes successfully with all required ports', async () => {
-      await expect(
-        adapter.initialize({
+    describe('when all required ports are provided', () => {
+      it('completes without error', async () => {
+        await expect(
+          adapter.initialize({
+            [IGitPortName]: mockGitPort,
+            [IStandardsPortName]: mockStandardsPort,
+            [IAccountsPortName]: mockAccountsPort,
+            [IEventTrackingPortName]: null,
+            llmPort: null,
+            linterDelayedJobs: mockLinterDelayedJobs,
+          }),
+        ).resolves.not.toThrow();
+      });
+
+      it('sets adapter to ready state', async () => {
+        await adapter.initialize({
           [IGitPortName]: mockGitPort,
           [IStandardsPortName]: mockStandardsPort,
           [IAccountsPortName]: mockAccountsPort,
           [IEventTrackingPortName]: null,
           llmPort: null,
           linterDelayedJobs: mockLinterDelayedJobs,
-        }),
-      ).resolves.not.toThrow();
+        });
 
-      expect(adapter.isReady()).toBe(true);
+        expect(adapter.isReady()).toBe(true);
+      });
     });
 
-    it('initializes successfully with optional ports', async () => {
-      await expect(
-        adapter.initialize({
+    describe('when optional ports are also provided', () => {
+      it('completes without error', async () => {
+        await expect(
+          adapter.initialize({
+            [IGitPortName]: mockGitPort,
+            [IStandardsPortName]: mockStandardsPort,
+            [IAccountsPortName]: mockAccountsPort,
+            [IDeploymentPortName]: mockDeploymentsPort,
+            [ISpacesPortName]: mockSpacesPort,
+            [IEventTrackingPortName]: null,
+            llmPort: null,
+            linterDelayedJobs: mockLinterDelayedJobs,
+          }),
+        ).resolves.not.toThrow();
+      });
+
+      it('sets adapter to ready state', async () => {
+        await adapter.initialize({
           [IGitPortName]: mockGitPort,
           [IStandardsPortName]: mockStandardsPort,
           [IAccountsPortName]: mockAccountsPort,
@@ -139,10 +167,10 @@ describe('LinterAdapter', () => {
           [IEventTrackingPortName]: null,
           llmPort: null,
           linterDelayedJobs: mockLinterDelayedJobs,
-        }),
-      ).resolves.not.toThrow();
+        });
 
-      expect(adapter.isReady()).toBe(true);
+        expect(adapter.isReady()).toBe(true);
+      });
     });
   });
 

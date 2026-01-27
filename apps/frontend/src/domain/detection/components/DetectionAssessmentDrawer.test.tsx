@@ -199,10 +199,13 @@ describe('DetectionAssessmentDrawer', () => {
         screen = renderWithContext();
       });
 
-      it('displays the assessment details', () => {
+      it('displays the assessment details header', () => {
         expect(
           screen.getByText('Why this rule cannot be detected:'),
         ).toBeInTheDocument();
+      });
+
+      it('displays the assessment details content', () => {
         expect(screen.getByText(assessment.details)).toBeInTheDocument();
       });
     });
@@ -259,11 +262,17 @@ describe('DetectionAssessmentDrawer', () => {
         screen = renderWithContext();
       });
 
-      it('shows empty textarea when heuristics are not available', () => {
+      it('renders the textarea', () => {
         const textarea = screen.getByPlaceholderText(
           'Enter detection heuristics...',
         );
         expect(textarea).toBeInTheDocument();
+      });
+
+      it('displays empty value in textarea', () => {
+        const textarea = screen.getByPlaceholderText(
+          'Enter detection heuristics...',
+        );
         expect(textarea).toHaveValue('');
       });
     });
@@ -276,11 +285,17 @@ describe('DetectionAssessmentDrawer', () => {
         screen = renderWithContext();
       });
 
-      it('displays the heuristics textarea', () => {
+      it('renders the textarea', () => {
         const textarea = screen.getByPlaceholderText(
           'Enter detection heuristics...',
         );
         expect(textarea).toBeInTheDocument();
+      });
+
+      it('displays the heuristics value in textarea', () => {
+        const textarea = screen.getByPlaceholderText(
+          'Enter detection heuristics...',
+        );
         expect(textarea).toHaveValue(detectionHeuristics.heuristics.join('\n'));
       });
 
@@ -317,19 +332,30 @@ describe('DetectionAssessmentDrawer', () => {
             expect(textarea).toHaveValue('Updated heuristics');
           });
 
-          it('enables Save button when text is changed', async () => {
-            const user = userEvent.setup();
-            const textarea = screen.getByPlaceholderText(
-              'Enter detection heuristics...',
-            );
-            const saveButton = screen.getByText('Save Changes');
+          describe('when text has not been changed', () => {
+            it('disables Save button', () => {
+              const saveButton = screen.getByText('Save Changes');
 
-            expect(saveButton).toBeDisabled();
+              expect(saveButton).toBeDisabled();
+            });
+          });
 
-            await user.clear(textarea);
-            await user.type(textarea, 'New heuristics');
+          describe('when text has been changed', () => {
+            beforeEach(async () => {
+              const user = userEvent.setup();
+              const textarea = screen.getByPlaceholderText(
+                'Enter detection heuristics...',
+              );
 
-            expect(saveButton).not.toBeDisabled();
+              await user.clear(textarea);
+              await user.type(textarea, 'New heuristics');
+            });
+
+            it('enables Save button', () => {
+              const saveButton = screen.getByText('Save Changes');
+
+              expect(saveButton).not.toBeDisabled();
+            });
           });
         });
 
@@ -674,40 +700,44 @@ describe('DetectionAssessmentDrawer', () => {
       });
 
       describe('when status changes to SUCCESS', () => {
-        it('prevents auto-close when drawer attempts to close', () => {
-          if (screen) {
-            screen.unmount();
-          }
-          assessment.status = RuleDetectionAssessmentStatus.IN_PROGRESS;
-          screen = renderWithContext();
+        describe('when drawer attempts to close', () => {
+          it('prevents auto-close', () => {
+            if (screen) {
+              screen.unmount();
+            }
+            assessment.status = RuleDetectionAssessmentStatus.IN_PROGRESS;
+            screen = renderWithContext();
 
-          // Simulate status change to SUCCESS
-          assessment.status = RuleDetectionAssessmentStatus.SUCCESS;
-          screen.rerender(
-            <UIProvider>
-              <QueryClientProvider client={queryClient}>
-                <DetectionAssessmentDrawer {...props} />
-              </QueryClientProvider>
-            </UIProvider>,
-          );
+            // Simulate status change to SUCCESS
+            assessment.status = RuleDetectionAssessmentStatus.SUCCESS;
+            screen.rerender(
+              <UIProvider>
+                <QueryClientProvider client={queryClient}>
+                  <DetectionAssessmentDrawer {...props} />
+                </QueryClientProvider>
+              </UIProvider>,
+            );
 
-          expect(onCloseSpy).not.toHaveBeenCalled();
+            expect(onCloseSpy).not.toHaveBeenCalled();
+          });
         });
       });
 
       describe('when status is already SUCCESS', () => {
-        it('allows closing when drawer close is triggered', async () => {
-          if (screen) {
-            screen.unmount();
-          }
-          assessment.status = RuleDetectionAssessmentStatus.SUCCESS;
-          screen = renderWithContext();
+        describe('when drawer close is triggered', () => {
+          it('allows closing', async () => {
+            if (screen) {
+              screen.unmount();
+            }
+            assessment.status = RuleDetectionAssessmentStatus.SUCCESS;
+            screen = renderWithContext();
 
-          const closeButton = screen.getByRole('button', { name: /close/i });
-          const user = userEvent.setup();
-          await user.click(closeButton);
+            const closeButton = screen.getByRole('button', { name: /close/i });
+            const user = userEvent.setup();
+            await user.click(closeButton);
 
-          expect(onCloseSpy).toHaveBeenCalled();
+            expect(onCloseSpy).toHaveBeenCalled();
+          });
         });
       });
     });

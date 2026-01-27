@@ -105,31 +105,42 @@ describe('ListDetectionProgramUseCase', () => {
 
     describe('when matching repo is found with first branch', () => {
       describe('when no targets found', () => {
-        it('returns error', async () => {
-          const gitRepoId = createGitRepoId('git-repo-1');
-          const mockGitRepo = {
-            id: gitRepoId,
-            owner: 'owner',
-            repo: 'repo',
-            branch: 'main',
-            providerId: createGitProviderId('provider-1'),
-          };
+        const gitRepoId = createGitRepoId('git-repo-1');
+        const mockGitRepo = {
+          id: gitRepoId,
+          owner: 'owner',
+          repo: 'repo',
+          branch: 'main',
+          providerId: createGitProviderId('provider-1'),
+        };
+        let command: ListDetectionProgramCommand;
 
+        beforeEach(() => {
           mockGitPort.findGitRepoByOwnerRepoAndBranchInOrganization.mockResolvedValue(
             { gitRepo: mockGitRepo },
           );
           mockDeploymentsAdapter.getTargetsByGitRepo.mockResolvedValue([]);
 
-          const command: ListDetectionProgramCommand = {
+          command = {
             organizationId,
             userId,
             gitRemoteUrl: 'github.com/owner/repo',
             branches: ['main', 'develop'],
           };
+        });
 
+        it('throws an error', async () => {
           await expect(useCase.execute(command)).rejects.toThrow(
             'No targets are found on the git repo owner/repo',
           );
+        });
+
+        it('calls findGitRepoByOwnerRepoAndBranchInOrganization with correct parameters', async () => {
+          try {
+            await useCase.execute(command);
+          } catch {
+            // Expected error
+          }
 
           expect(
             mockGitPort.findGitRepoByOwnerRepoAndBranchInOrganization,
@@ -140,6 +151,15 @@ describe('ListDetectionProgramUseCase', () => {
             organizationId,
             userId,
           });
+        });
+
+        it('calls findGitRepoByOwnerRepoAndBranchInOrganization only once', async () => {
+          try {
+            await useCase.execute(command);
+          } catch {
+            // Expected error
+          }
+
           expect(
             mockGitPort.findGitRepoByOwnerRepoAndBranchInOrganization,
           ).toHaveBeenCalledTimes(1);
@@ -148,49 +168,63 @@ describe('ListDetectionProgramUseCase', () => {
     });
 
     describe('when matching repo is found with second branch', () => {
-      it('tries first branch then finds repo with second branch', async () => {
-        const gitRepoId = createGitRepoId('git-repo-2');
-        const mockGitRepo = {
-          id: gitRepoId,
-          owner: 'owner',
-          repo: 'repo',
-          branch: 'develop',
-          providerId: createGitProviderId('provider-2'),
-        };
+      const gitRepoId = createGitRepoId('git-repo-2');
+      const mockGitRepo = {
+        id: gitRepoId,
+        owner: 'owner',
+        repo: 'repo',
+        branch: 'develop',
+        providerId: createGitProviderId('provider-2'),
+      };
+      let command: ListDetectionProgramCommand;
 
+      beforeEach(() => {
         mockGitPort.findGitRepoByOwnerRepoAndBranchInOrganization
           .mockResolvedValueOnce({ gitRepo: null })
           .mockResolvedValueOnce({ gitRepo: mockGitRepo });
         mockDeploymentsAdapter.getTargetsByGitRepo.mockResolvedValue([]);
 
-        const command: ListDetectionProgramCommand = {
+        command = {
           organizationId,
           userId,
           gitRemoteUrl: 'github.com/owner/repo',
           branches: ['main', 'develop'],
         };
+      });
 
-        await expect(useCase.execute(command)).rejects.toThrow(
-          'No targets are found on the git repo owner/repo',
-        );
+      describe('when no targets found', () => {
+        it('throws an error', async () => {
+          await expect(useCase.execute(command)).rejects.toThrow(
+            'No targets are found on the git repo owner/repo',
+          );
+        });
 
-        expect(
-          mockGitPort.findGitRepoByOwnerRepoAndBranchInOrganization,
-        ).toHaveBeenCalledTimes(2);
+        it('calls findGitRepoByOwnerRepoAndBranchInOrganization twice', async () => {
+          try {
+            await useCase.execute(command);
+          } catch {
+            // Expected error
+          }
+
+          expect(
+            mockGitPort.findGitRepoByOwnerRepoAndBranchInOrganization,
+          ).toHaveBeenCalledTimes(2);
+        });
       });
     });
 
     describe('when no branch matches but organization-level repo exists', () => {
-      it('falls back to organization repository search', async () => {
-        const gitRepoId = createGitRepoId('git-repo-3');
-        const mockGitRepo = {
-          id: gitRepoId,
-          owner: 'owner',
-          repo: 'repo',
-          branch: 'feature',
-          providerId: createGitProviderId('provider-3'),
-        };
+      const gitRepoId = createGitRepoId('git-repo-3');
+      const mockGitRepo = {
+        id: gitRepoId,
+        owner: 'owner',
+        repo: 'repo',
+        branch: 'feature',
+        providerId: createGitProviderId('provider-3'),
+      };
+      let command: ListDetectionProgramCommand;
 
+      beforeEach(() => {
         mockGitPort.findGitRepoByOwnerRepoAndBranchInOrganization.mockResolvedValue(
           { gitRepo: null },
         );
@@ -199,44 +233,57 @@ describe('ListDetectionProgramUseCase', () => {
         ]);
         mockDeploymentsAdapter.getTargetsByGitRepo.mockResolvedValue([]);
 
-        const command: ListDetectionProgramCommand = {
+        command = {
           organizationId,
           userId,
           gitRemoteUrl: 'github.com/owner/repo',
           branches: ['main', 'develop'],
         };
+      });
 
-        await expect(useCase.execute(command)).rejects.toThrow(
-          'No targets are found on the git repo owner/repo',
-        );
+      describe('when no targets found', () => {
+        it('throws an error', async () => {
+          await expect(useCase.execute(command)).rejects.toThrow(
+            'No targets are found on the git repo owner/repo',
+          );
+        });
 
-        expect(mockGitPort.getOrganizationRepositories).toHaveBeenCalledWith(
-          organizationId,
-        );
+        it('calls getOrganizationRepositories with organization ID', async () => {
+          try {
+            await useCase.execute(command);
+          } catch {
+            // Expected error
+          }
+
+          expect(mockGitPort.getOrganizationRepositories).toHaveBeenCalledWith(
+            organizationId,
+          );
+        });
       });
     });
 
     describe('when organization has multiple repos with same owner/repo', () => {
-      it('sorts by createdAt and takes the first one', async () => {
-        const gitRepoId1 = createGitRepoId('git-repo-4');
-        const gitRepoId2 = createGitRepoId('git-repo-5');
-        const olderRepo = {
-          id: gitRepoId1,
-          owner: 'owner',
-          repo: 'repo',
-          branch: 'branch1',
-          providerId: createGitProviderId('provider-4'),
-          createdAt: new Date('2020-01-01'),
-        };
-        const newerRepo = {
-          id: gitRepoId2,
-          owner: 'owner',
-          repo: 'repo',
-          branch: 'branch2',
-          providerId: createGitProviderId('provider-5'),
-          createdAt: new Date('2021-01-01'),
-        };
+      const gitRepoId1 = createGitRepoId('git-repo-4');
+      const gitRepoId2 = createGitRepoId('git-repo-5');
+      const olderRepo = {
+        id: gitRepoId1,
+        owner: 'owner',
+        repo: 'repo',
+        branch: 'branch1',
+        providerId: createGitProviderId('provider-4'),
+        createdAt: new Date('2020-01-01'),
+      };
+      const newerRepo = {
+        id: gitRepoId2,
+        owner: 'owner',
+        repo: 'repo',
+        branch: 'branch2',
+        providerId: createGitProviderId('provider-5'),
+        createdAt: new Date('2021-01-01'),
+      };
+      let command: ListDetectionProgramCommand;
 
+      beforeEach(() => {
         mockGitPort.findGitRepoByOwnerRepoAndBranchInOrganization.mockResolvedValue(
           { gitRepo: null },
         );
@@ -246,24 +293,36 @@ describe('ListDetectionProgramUseCase', () => {
         ]);
         mockDeploymentsAdapter.getTargetsByGitRepo.mockResolvedValue([]);
 
-        const command: ListDetectionProgramCommand = {
+        command = {
           organizationId,
           userId,
           gitRemoteUrl: 'github.com/owner/repo',
           branches: ['main'],
         };
+      });
 
-        await expect(useCase.execute(command)).rejects.toThrow(
-          'No targets are found on the git repo owner/repo',
-        );
+      describe('when no targets found', () => {
+        it('throws an error', async () => {
+          await expect(useCase.execute(command)).rejects.toThrow(
+            'No targets are found on the git repo owner/repo',
+          );
+        });
 
-        expect(mockDeploymentsAdapter.getTargetsByGitRepo).toHaveBeenCalledWith(
-          {
+        it('calls getTargetsByGitRepo with the older repo ID', async () => {
+          try {
+            await useCase.execute(command);
+          } catch {
+            // Expected error
+          }
+
+          expect(
+            mockDeploymentsAdapter.getTargetsByGitRepo,
+          ).toHaveBeenCalledWith({
             organizationId,
             userId,
             gitRepoId: gitRepoId1,
-          },
-        );
+          });
+        });
       });
     });
 

@@ -101,28 +101,55 @@ function checkSourceCode(ast) {
     expect(code).toEqual(input);
   });
 
-  it('parses JSON from OpenAI answer without raising errors', () => {
+  describe('when parsing JSON with answer and details properties', () => {
     const output =
       '```json\n{\n  "answer": "semantic",\n  "details": "Detecting exclamation marks within the text content of <Alert> components requires understanding both static and dynamic content. While static text can be analyzed syntactically, many applications use variables, functions, or expressions to generate alert messages. For example, the text might come from a variable like `message`, a function call, or template literals with interpolated values. Syntax analysis would not capture exclamation marks embedded in these dynamic sources. Therefore, semantic analysis is necessary to evaluate the actual text content that will be displayed at runtime, ensuring that exclamation marks are detected regardless of how the message is constructed."\n}\n```';
-    const result = parseCodeOrJsonFromAIAnswer(output);
+    let result: string;
+    let jsonObject: Record<string, unknown>;
 
-    expect(() => JSON.parse(result)).not.toThrow();
+    beforeEach(() => {
+      result = parseCodeOrJsonFromAIAnswer(output);
+      jsonObject = JSON.parse(result);
+    });
 
-    const jsonObject = JSON.parse(result);
-    expect(jsonObject).toEqual(expect.any(Object));
-    expect(jsonObject).toHaveProperty('answer');
-    expect(jsonObject).toHaveProperty('details');
+    it('parses without throwing errors', () => {
+      expect(() => JSON.parse(result)).not.toThrow();
+    });
+
+    it('returns an object', () => {
+      expect(jsonObject).toEqual(expect.any(Object));
+    });
+
+    it('contains answer property', () => {
+      expect(jsonObject).toHaveProperty('answer');
+    });
+
+    it('contains details property', () => {
+      expect(jsonObject).toHaveProperty('details');
+    });
   });
 
-  it('parses JSON from OpenAI answer without raising errors', () => {
+  describe('when parsing JSON with quoted strings in answer', () => {
     const output = '```json\n{\n  "answer": "`message` or \'message\'"\n}\n```';
-    const result = parseCodeOrJsonFromAIAnswer(output);
+    let result: string;
+    let jsonObject: Record<string, unknown>;
 
-    expect(() => JSON.parse(result)).not.toThrow();
+    beforeEach(() => {
+      result = parseCodeOrJsonFromAIAnswer(output);
+      jsonObject = JSON.parse(result);
+    });
 
-    const jsonObject = JSON.parse(result);
-    expect(jsonObject).toEqual(expect.any(Object));
-    expect(jsonObject).toHaveProperty('answer');
+    it('parses without throwing errors', () => {
+      expect(() => JSON.parse(result)).not.toThrow();
+    });
+
+    it('returns an object', () => {
+      expect(jsonObject).toEqual(expect.any(Object));
+    });
+
+    it('contains answer property', () => {
+      expect(jsonObject).toHaveProperty('answer');
+    });
   });
 });
 
@@ -139,7 +166,7 @@ describe('parseCodeOrYamlFromAIAnswer', () => {
     expect(result).toEqual(expected);
   });
 
-  it('parses whole guidelines from OpenAI answer', () => {
+  describe('when parsing whole guidelines from OpenAI answer', () => {
     const output = `\`\`\`yaml
 guidelines: |
   - Detection Context: The practice should be detected in any part of the code where internationalization (i18n) keys are used, particularly within functions and components that interact with translation libraries.
@@ -166,12 +193,27 @@ negative_examples:
 
 location: "A violation should be raised on any use of constructed strings or variables for i18n keys in translation function calls."
 \`\`\``;
+    let result: Record<string, unknown>;
 
-    const result = Yaml.parse(parseCodeOrYamlFromAIAnswer(output));
-    expect(typeof result.guidelines).toEqual('string');
-    expect(typeof result.positive_example).toEqual('string');
-    expect(Array.isArray(result.negative_examples)).toBe(true);
-    expect(result.negative_examples).toHaveLength(2);
+    beforeEach(() => {
+      result = Yaml.parse(parseCodeOrYamlFromAIAnswer(output));
+    });
+
+    it('parses guidelines as string', () => {
+      expect(typeof result.guidelines).toEqual('string');
+    });
+
+    it('parses positive_example as string', () => {
+      expect(typeof result.positive_example).toEqual('string');
+    });
+
+    it('parses negative_examples as array', () => {
+      expect(Array.isArray(result.negative_examples)).toBe(true);
+    });
+
+    it('contains two negative examples', () => {
+      expect(result.negative_examples).toHaveLength(2);
+    });
   });
 
   it('produces a string from guidelines that have incorrect indentation and thus 2 objects', () => {
@@ -215,8 +257,7 @@ Audience Consideration: Emphasize understanding block scopes introduced by ES6+ 
   });
 
   describe('when code examples contain backticks', () => {
-    it('correctly parses the guidelines from the output', () => {
-      const output = `
+    const output = `
 Based on the coding practice description, here are the guidelines for detecting violations:
 \`\`\`yaml
 guidelines:
@@ -246,16 +287,31 @@ location: A violation should be raised on any \`withContext\` function call that
   uses \`Dispatchers.Default\` directly as the parameter.
 \`\`\`
 `;
+    let guidelinesInString: string;
+    let positiveExample: unknown;
+    let negativeExamples: unknown[];
+
+    beforeEach(() => {
       const parsedYaml = parseCodeOrYamlFromAIAnswer(output);
       const result = Yaml.parse(parsedYaml);
-      const guidelinesInString = extractStringOrObjectOfString(
-        result.guidelines,
-      );
-      const positiveExample = result.positive_example;
-      const negativeExamples = result.negative_examples;
+      guidelinesInString = extractStringOrObjectOfString(result.guidelines);
+      positiveExample = result.positive_example;
+      negativeExamples = result.negative_examples;
+    });
+
+    it('parses guidelines as string', () => {
       expect(typeof guidelinesInString).toEqual('string');
+    });
+
+    it('parses positive_example as string', () => {
       expect(typeof positiveExample).toEqual('string');
+    });
+
+    it('parses negative_examples as array', () => {
       expect(Array.isArray(negativeExamples)).toBe(true);
+    });
+
+    it('contains one negative example', () => {
       expect(negativeExamples).toHaveLength(1);
     });
   });

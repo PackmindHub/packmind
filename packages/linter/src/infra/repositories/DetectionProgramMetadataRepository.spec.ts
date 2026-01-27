@@ -137,125 +137,185 @@ describe('DetectionProgramMetadataRepository', () => {
   });
 
   describe('addLog', () => {
-    it('adds execution log to existing metadata', async () => {
-      const rule = await createRuleWithHierarchy();
-      const detectionProgram = detectionProgramFactory({ ruleId: rule.id });
-      await detectionProgramRepo.save(detectionProgram);
+    describe('when metadata already exists', () => {
+      let detectionProgram: DetectionProgram;
+      let foundMetadata: DetectionProgramMetadata | null;
 
-      const metadata = detectionProgramMetadataFactory({
-        detectionProgramId: detectionProgram.id,
+      beforeEach(async () => {
+        const rule = await createRuleWithHierarchy();
+        detectionProgram = detectionProgramFactory({ ruleId: rule.id });
+        await detectionProgramRepo.save(detectionProgram);
+
+        const metadata = detectionProgramMetadataFactory({
+          detectionProgramId: detectionProgram.id,
+        });
+        await metadataRepository.add(metadata);
+
+        const log = executionLogFactory({ message: 'Test log entry' });
+        await metadataRepository.addLog(log, detectionProgram.id);
+
+        foundMetadata = await metadataRepository.findByDetectionProgramId(
+          detectionProgram.id,
+        );
       });
-      await metadataRepository.add(metadata);
 
-      const log = executionLogFactory({ message: 'Test log entry' });
-      await metadataRepository.addLog(log, detectionProgram.id);
+      it('adds one execution log', async () => {
+        expect(foundMetadata?.logs).toHaveLength(1);
+      });
 
-      const foundMetadata = await metadataRepository.findByDetectionProgramId(
-        detectionProgram.id,
-      );
-      expect(foundMetadata?.logs).toHaveLength(1);
-      expect(foundMetadata?.logs?.[0]).toMatchObject({
-        message: 'Test log entry',
+      it('stores the log message correctly', async () => {
+        expect(foundMetadata?.logs?.[0]).toMatchObject({
+          message: 'Test log entry',
+        });
       });
     });
 
-    it('creates metadata automatically for new detection program', async () => {
-      const rule = await createRuleWithHierarchy();
-      const detectionProgram = detectionProgramFactory({ ruleId: rule.id });
-      await detectionProgramRepo.save(detectionProgram);
+    describe('when metadata does not exist', () => {
+      let detectionProgram: DetectionProgram;
+      let foundMetadata: DetectionProgramMetadata | null;
 
-      const log = executionLogFactory({ message: 'Auto-created log' });
-      await metadataRepository.addLog(log, detectionProgram.id);
+      beforeEach(async () => {
+        const rule = await createRuleWithHierarchy();
+        detectionProgram = detectionProgramFactory({ ruleId: rule.id });
+        await detectionProgramRepo.save(detectionProgram);
 
-      const foundMetadata = await metadataRepository.findByDetectionProgramId(
-        detectionProgram.id,
-      );
-      expect(foundMetadata).not.toBeNull();
-      expect(foundMetadata?.detectionProgramId).toBe(detectionProgram.id);
-      expect(foundMetadata?.logs).toHaveLength(1);
-      expect(foundMetadata?.logs?.[0]).toMatchObject({
-        message: 'Auto-created log',
+        const log = executionLogFactory({ message: 'Auto-created log' });
+        await metadataRepository.addLog(log, detectionProgram.id);
+
+        foundMetadata = await metadataRepository.findByDetectionProgramId(
+          detectionProgram.id,
+        );
+      });
+
+      it('creates metadata automatically', async () => {
+        expect(foundMetadata).not.toBeNull();
+      });
+
+      it('links metadata to the detection program', async () => {
+        expect(foundMetadata?.detectionProgramId).toBe(detectionProgram.id);
+      });
+
+      it('adds one execution log', async () => {
+        expect(foundMetadata?.logs).toHaveLength(1);
+      });
+
+      it('stores the log message correctly', async () => {
+        expect(foundMetadata?.logs?.[0]).toMatchObject({
+          message: 'Auto-created log',
+        });
       });
     });
   });
 
   describe('updateProgramDescription', () => {
-    it('updates program description for existing metadata', async () => {
-      const rule = await createRuleWithHierarchy();
-      const detectionProgram = detectionProgramFactory({ ruleId: rule.id });
-      await detectionProgramRepo.save(detectionProgram);
+    describe('when metadata already exists', () => {
+      it('updates program description', async () => {
+        const rule = await createRuleWithHierarchy();
+        const detectionProgram = detectionProgramFactory({ ruleId: rule.id });
+        await detectionProgramRepo.save(detectionProgram);
 
-      const metadata = detectionProgramMetadataFactory({
-        detectionProgramId: detectionProgram.id,
-        programDescription: 'Original description',
+        const metadata = detectionProgramMetadataFactory({
+          detectionProgramId: detectionProgram.id,
+          programDescription: 'Original description',
+        });
+        await metadataRepository.add(metadata);
+
+        await metadataRepository.updateProgramDescription(
+          'Updated description',
+          detectionProgram.id,
+        );
+
+        const foundMetadata = await metadataRepository.findByDetectionProgramId(
+          detectionProgram.id,
+        );
+        expect(foundMetadata?.programDescription).toBe('Updated description');
       });
-      await metadataRepository.add(metadata);
-
-      await metadataRepository.updateProgramDescription(
-        'Updated description',
-        detectionProgram.id,
-      );
-
-      const foundMetadata = await metadataRepository.findByDetectionProgramId(
-        detectionProgram.id,
-      );
-      expect(foundMetadata?.programDescription).toBe('Updated description');
     });
 
-    it('creates metadata automatically for new detection program', async () => {
-      const rule = await createRuleWithHierarchy();
-      const detectionProgram = detectionProgramFactory({ ruleId: rule.id });
-      await detectionProgramRepo.save(detectionProgram);
+    describe('when metadata does not exist', () => {
+      let detectionProgram: DetectionProgram;
+      let foundMetadata: DetectionProgramMetadata | null;
 
-      await metadataRepository.updateProgramDescription(
-        'New description',
-        detectionProgram.id,
-      );
+      beforeEach(async () => {
+        const rule = await createRuleWithHierarchy();
+        detectionProgram = detectionProgramFactory({ ruleId: rule.id });
+        await detectionProgramRepo.save(detectionProgram);
 
-      const foundMetadata = await metadataRepository.findByDetectionProgramId(
-        detectionProgram.id,
-      );
-      expect(foundMetadata).not.toBeNull();
-      expect(foundMetadata?.detectionProgramId).toBe(detectionProgram.id);
-      expect(foundMetadata?.programDescription).toBe('New description');
+        await metadataRepository.updateProgramDescription(
+          'New description',
+          detectionProgram.id,
+        );
+
+        foundMetadata = await metadataRepository.findByDetectionProgramId(
+          detectionProgram.id,
+        );
+      });
+
+      it('creates metadata automatically', async () => {
+        expect(foundMetadata).not.toBeNull();
+      });
+
+      it('links metadata to the detection program', async () => {
+        expect(foundMetadata?.detectionProgramId).toBe(detectionProgram.id);
+      });
+
+      it('sets the program description correctly', async () => {
+        expect(foundMetadata?.programDescription).toBe('New description');
+      });
     });
   });
 
   describe('updateTokensUsed', () => {
-    it('updates tokens used for existing metadata', async () => {
-      const rule = await createRuleWithHierarchy();
-      const detectionProgram = detectionProgramFactory({ ruleId: rule.id });
-      await detectionProgramRepo.save(detectionProgram);
+    describe('when metadata already exists', () => {
+      it('updates tokens used', async () => {
+        const rule = await createRuleWithHierarchy();
+        const detectionProgram = detectionProgramFactory({ ruleId: rule.id });
+        await detectionProgramRepo.save(detectionProgram);
 
-      const metadata = detectionProgramMetadataFactory({
-        detectionProgramId: detectionProgram.id,
-        tokens: null,
+        const metadata = detectionProgramMetadataFactory({
+          detectionProgramId: detectionProgram.id,
+          tokens: null,
+        });
+        await metadataRepository.add(metadata);
+
+        const tokens = { input: 100, output: 50 };
+        await metadataRepository.updateTokensUsed(tokens, detectionProgram.id);
+
+        const foundMetadata = await metadataRepository.findByDetectionProgramId(
+          detectionProgram.id,
+        );
+        expect(foundMetadata?.tokens).toEqual(tokens);
       });
-      await metadataRepository.add(metadata);
-
-      const tokens = { input: 100, output: 50 };
-      await metadataRepository.updateTokensUsed(tokens, detectionProgram.id);
-
-      const foundMetadata = await metadataRepository.findByDetectionProgramId(
-        detectionProgram.id,
-      );
-      expect(foundMetadata?.tokens).toEqual(tokens);
     });
 
-    it('creates metadata automatically for new detection program', async () => {
-      const rule = await createRuleWithHierarchy();
-      const detectionProgram = detectionProgramFactory({ ruleId: rule.id });
-      await detectionProgramRepo.save(detectionProgram);
-
+    describe('when metadata does not exist', () => {
+      let detectionProgram: DetectionProgram;
+      let foundMetadata: DetectionProgramMetadata | null;
       const tokens = { input: 100, output: 50 };
-      await metadataRepository.updateTokensUsed(tokens, detectionProgram.id);
 
-      const foundMetadata = await metadataRepository.findByDetectionProgramId(
-        detectionProgram.id,
-      );
-      expect(foundMetadata).not.toBeNull();
-      expect(foundMetadata?.detectionProgramId).toBe(detectionProgram.id);
-      expect(foundMetadata?.tokens).toEqual(tokens);
+      beforeEach(async () => {
+        const rule = await createRuleWithHierarchy();
+        detectionProgram = detectionProgramFactory({ ruleId: rule.id });
+        await detectionProgramRepo.save(detectionProgram);
+
+        await metadataRepository.updateTokensUsed(tokens, detectionProgram.id);
+
+        foundMetadata = await metadataRepository.findByDetectionProgramId(
+          detectionProgram.id,
+        );
+      });
+
+      it('creates metadata automatically', async () => {
+        expect(foundMetadata).not.toBeNull();
+      });
+
+      it('links metadata to the detection program', async () => {
+        expect(foundMetadata?.detectionProgramId).toBe(detectionProgram.id);
+      });
+
+      it('sets the tokens correctly', async () => {
+        expect(foundMetadata?.tokens).toEqual(tokens);
+      });
     });
   });
 

@@ -13,6 +13,7 @@ import {
   createDetectionProgramId,
   DetectionModeEnum,
   GetDraftDetectionProgramForRuleCommand,
+  GetDraftDetectionProgramForRuleResponse,
 } from '@packmind/types';
 import { stubLogger } from '@packmind/test-utils';
 import {
@@ -60,7 +61,7 @@ describe('GetDraftDetectionProgramForRuleUseCase', () => {
 
   describe('execute', () => {
     describe('when draft detection programs exist', () => {
-      it('returns draft detection programs for valid standard slug and rule id', async () => {
+      describe('when valid standard slug and rule id provided', () => {
         const organizationId = createOrganizationId(uuidv4());
         const userId = createUserId(uuidv4());
         const ruleId = createRuleId(uuidv4());
@@ -113,46 +114,75 @@ describe('GetDraftDetectionProgramForRuleUseCase', () => {
           detectionProgramDraftVersion: draftProgram2.id,
         });
 
-        standardsAdapter.findStandardBySlug.mockResolvedValue(existingStandard);
-        standardsAdapter.getRule.mockResolvedValue(existingRule);
-        standardsAdapter.getLatestRulesByStandardId.mockResolvedValue([
-          existingRule,
-        ]);
-        detectionProgramService.findActiveByRuleIdWithPrograms.mockResolvedValue(
-          [
-            {
-              ...activeProgram1,
-              detectionProgram: null,
-              draftDetectionProgram: draftProgram1,
-            },
-            {
-              ...activeProgram2,
-              detectionProgram: null,
-              draftDetectionProgram: draftProgram2,
-            },
-          ],
-        );
+        let result: GetDraftDetectionProgramForRuleResponse;
 
-        const result = await useCase.execute(command);
+        beforeEach(async () => {
+          standardsAdapter.findStandardBySlug.mockResolvedValue(
+            existingStandard,
+          );
+          standardsAdapter.getRule.mockResolvedValue(existingRule);
+          standardsAdapter.getLatestRulesByStandardId.mockResolvedValue([
+            existingRule,
+          ]);
+          detectionProgramService.findActiveByRuleIdWithPrograms.mockResolvedValue(
+            [
+              {
+                ...activeProgram1,
+                detectionProgram: null,
+                draftDetectionProgram: draftProgram1,
+              },
+              {
+                ...activeProgram2,
+                detectionProgram: null,
+                draftDetectionProgram: draftProgram2,
+              },
+            ],
+          );
 
-        expect(standardsAdapter.findStandardBySlug).toHaveBeenCalledWith(
-          standardSlug,
-          organizationId,
-        );
-        expect(standardsAdapter.getRule).toHaveBeenCalledWith(ruleId);
-        expect(
-          standardsAdapter.getLatestRulesByStandardId,
-        ).toHaveBeenCalledWith(existingStandard.id);
-        expect(
-          detectionProgramService.findActiveByRuleIdWithPrograms,
-        ).toHaveBeenCalledWith(ruleId);
-        expect(result.programs).toHaveLength(2);
-        expect(result.programs[0]).toEqual(draftProgram1);
-        expect(result.programs[1]).toEqual(draftProgram2);
-        expect(result.scope).toBe(existingStandard.scope);
+          result = await useCase.execute(command);
+        });
+
+        it('calls findStandardBySlug with correct parameters', () => {
+          expect(standardsAdapter.findStandardBySlug).toHaveBeenCalledWith(
+            standardSlug,
+            organizationId,
+          );
+        });
+
+        it('calls getRule with correct ruleId', () => {
+          expect(standardsAdapter.getRule).toHaveBeenCalledWith(ruleId);
+        });
+
+        it('calls getLatestRulesByStandardId with correct standardId', () => {
+          expect(
+            standardsAdapter.getLatestRulesByStandardId,
+          ).toHaveBeenCalledWith(existingStandard.id);
+        });
+
+        it('calls findActiveByRuleIdWithPrograms with correct ruleId', () => {
+          expect(
+            detectionProgramService.findActiveByRuleIdWithPrograms,
+          ).toHaveBeenCalledWith(ruleId);
+        });
+
+        it('returns two draft programs', () => {
+          expect(result.programs).toHaveLength(2);
+        });
+
+        it('returns first draft program correctly', () => {
+          expect(result.programs[0]).toEqual(draftProgram1);
+        });
+
+        it('returns second draft program correctly', () => {
+          expect(result.programs[1]).toEqual(draftProgram2);
+        });
+
+        it('returns correct scope from standard', () => {
+          expect(result.scope).toBe(existingStandard.scope);
+        });
       });
 
-      it('returns multiple drafts for different languages', async () => {
+      describe('when multiple drafts exist for different languages', () => {
         const organizationId = createOrganizationId(uuidv4());
         const ruleId = createRuleId(uuidv4());
         const standardSlug = 'test-standard';
@@ -180,50 +210,67 @@ describe('GetDraftDetectionProgramForRuleUseCase', () => {
           language: ProgrammingLanguage.PYTHON,
         });
 
-        standardsAdapter.findStandardBySlug.mockResolvedValue(existingStandard);
-        standardsAdapter.getRule.mockResolvedValue(existingRule);
-        standardsAdapter.getLatestRulesByStandardId.mockResolvedValue([
-          existingRule,
-        ]);
-        detectionProgramService.findActiveByRuleIdWithPrograms.mockResolvedValue(
-          [
-            {
-              ...activeDetectionProgramFactory({
-                ruleId,
-                language: ProgrammingLanguage.JAVASCRIPT,
-              }),
-              detectionProgram: null,
-              draftDetectionProgram: jsDraft,
-            },
-            {
-              ...activeDetectionProgramFactory({
-                ruleId,
-                language: ProgrammingLanguage.TYPESCRIPT,
-              }),
-              detectionProgram: null,
-              draftDetectionProgram: tsDraft,
-            },
-            {
-              ...activeDetectionProgramFactory({
-                ruleId,
-                language: ProgrammingLanguage.PYTHON,
-              }),
-              detectionProgram: null,
-              draftDetectionProgram: pyDraft,
-            },
-          ],
-        );
+        let result: GetDraftDetectionProgramForRuleResponse;
 
-        const result = await useCase.execute(command);
+        beforeEach(async () => {
+          standardsAdapter.findStandardBySlug.mockResolvedValue(
+            existingStandard,
+          );
+          standardsAdapter.getRule.mockResolvedValue(existingRule);
+          standardsAdapter.getLatestRulesByStandardId.mockResolvedValue([
+            existingRule,
+          ]);
+          detectionProgramService.findActiveByRuleIdWithPrograms.mockResolvedValue(
+            [
+              {
+                ...activeDetectionProgramFactory({
+                  ruleId,
+                  language: ProgrammingLanguage.JAVASCRIPT,
+                }),
+                detectionProgram: null,
+                draftDetectionProgram: jsDraft,
+              },
+              {
+                ...activeDetectionProgramFactory({
+                  ruleId,
+                  language: ProgrammingLanguage.TYPESCRIPT,
+                }),
+                detectionProgram: null,
+                draftDetectionProgram: tsDraft,
+              },
+              {
+                ...activeDetectionProgramFactory({
+                  ruleId,
+                  language: ProgrammingLanguage.PYTHON,
+                }),
+                detectionProgram: null,
+                draftDetectionProgram: pyDraft,
+              },
+            ],
+          );
 
-        expect(result.programs).toHaveLength(3);
-        expect(result.programs[0].language).toBe(
-          ProgrammingLanguage.JAVASCRIPT,
-        );
-        expect(result.programs[1].language).toBe(
-          ProgrammingLanguage.TYPESCRIPT,
-        );
-        expect(result.programs[2].language).toBe(ProgrammingLanguage.PYTHON);
+          result = await useCase.execute(command);
+        });
+
+        it('returns three draft programs', () => {
+          expect(result.programs).toHaveLength(3);
+        });
+
+        it('returns JavaScript draft first', () => {
+          expect(result.programs[0].language).toBe(
+            ProgrammingLanguage.JAVASCRIPT,
+          );
+        });
+
+        it('returns TypeScript draft second', () => {
+          expect(result.programs[1].language).toBe(
+            ProgrammingLanguage.TYPESCRIPT,
+          );
+        });
+
+        it('returns Python draft third', () => {
+          expect(result.programs[2].language).toBe(ProgrammingLanguage.PYTHON);
+        });
       });
     });
 
@@ -310,29 +357,47 @@ describe('GetDraftDetectionProgramForRuleUseCase', () => {
     });
 
     describe('when standard not found', () => {
-      it('throws error', async () => {
-        const organizationId = createOrganizationId(uuidv4());
-        const ruleId = createRuleId(uuidv4());
-        const standardSlug = 'nonexistent-standard';
+      const organizationId = createOrganizationId(uuidv4());
+      const ruleId = createRuleId(uuidv4());
+      const standardSlug = 'nonexistent-standard';
 
-        const command: GetDraftDetectionProgramForRuleCommand = {
-          standardSlug,
-          ruleId,
-          userId: createUserId(uuidv4()),
-          organizationId,
-        };
+      const command: GetDraftDetectionProgramForRuleCommand = {
+        standardSlug,
+        ruleId,
+        userId: createUserId(uuidv4()),
+        organizationId,
+      };
 
+      let thrownError: Error;
+
+      beforeEach(async () => {
         standardsAdapter.findStandardBySlug.mockResolvedValue(null);
 
-        await expect(useCase.execute(command)).rejects.toThrow(
+        try {
+          await useCase.execute(command);
+        } catch (error) {
+          thrownError = error as Error;
+        }
+      });
+
+      it('throws error with standard not found message', () => {
+        expect(thrownError.message).toBe(
           `Standard with slug '${standardSlug}' not found`,
         );
+      });
 
+      it('calls findStandardBySlug with correct parameters', () => {
         expect(standardsAdapter.findStandardBySlug).toHaveBeenCalledWith(
           standardSlug,
           organizationId,
         );
+      });
+
+      it('does not call getRule', () => {
         expect(standardsAdapter.getRule).not.toHaveBeenCalled();
+      });
+
+      it('does not call findActiveByRuleIdWithPrograms', () => {
         expect(
           detectionProgramService.findActiveByRuleIdWithPrograms,
         ).not.toHaveBeenCalled();
@@ -340,32 +405,48 @@ describe('GetDraftDetectionProgramForRuleUseCase', () => {
     });
 
     describe('when rule not found', () => {
-      it('throws error', async () => {
-        const organizationId = createOrganizationId(uuidv4());
-        const ruleId = createRuleId(uuidv4());
-        const standardSlug = 'my-standard';
+      const organizationId = createOrganizationId(uuidv4());
+      const ruleId = createRuleId(uuidv4());
+      const standardSlug = 'my-standard';
 
-        const command: GetDraftDetectionProgramForRuleCommand = {
-          standardSlug,
-          ruleId,
-          userId: createUserId(uuidv4()),
-          organizationId,
-        };
+      const command: GetDraftDetectionProgramForRuleCommand = {
+        standardSlug,
+        ruleId,
+        userId: createUserId(uuidv4()),
+        organizationId,
+      };
 
-        const existingStandard = standardFactory({ slug: standardSlug });
+      const existingStandard = standardFactory({ slug: standardSlug });
 
+      let thrownError: Error;
+
+      beforeEach(async () => {
         standardsAdapter.findStandardBySlug.mockResolvedValue(existingStandard);
         standardsAdapter.getRule.mockResolvedValue(null);
 
-        await expect(useCase.execute(command)).rejects.toThrow(
-          `Rule with id '${ruleId}' not found`,
-        );
+        try {
+          await useCase.execute(command);
+        } catch (error) {
+          thrownError = error as Error;
+        }
+      });
 
+      it('throws error with rule not found message', () => {
+        expect(thrownError.message).toBe(`Rule with id '${ruleId}' not found`);
+      });
+
+      it('calls findStandardBySlug with correct parameters', () => {
         expect(standardsAdapter.findStandardBySlug).toHaveBeenCalledWith(
           standardSlug,
           organizationId,
         );
+      });
+
+      it('calls getRule with correct ruleId', () => {
         expect(standardsAdapter.getRule).toHaveBeenCalledWith(ruleId);
+      });
+
+      it('does not call findActiveByRuleIdWithPrograms', () => {
         expect(
           detectionProgramService.findActiveByRuleIdWithPrograms,
         ).not.toHaveBeenCalled();
@@ -373,42 +454,62 @@ describe('GetDraftDetectionProgramForRuleUseCase', () => {
     });
 
     describe('when rule does not belong to standard', () => {
-      it('throws error', async () => {
-        const organizationId = createOrganizationId(uuidv4());
-        const ruleId = createRuleId(uuidv4());
-        const otherRuleId = createRuleId(uuidv4());
-        const standardSlug = 'my-standard';
+      const organizationId = createOrganizationId(uuidv4());
+      const ruleId = createRuleId(uuidv4());
+      const otherRuleId = createRuleId(uuidv4());
+      const standardSlug = 'my-standard';
 
-        const command: GetDraftDetectionProgramForRuleCommand = {
-          standardSlug,
-          ruleId,
-          userId: createUserId(uuidv4()),
-          organizationId,
-        };
+      const command: GetDraftDetectionProgramForRuleCommand = {
+        standardSlug,
+        ruleId,
+        userId: createUserId(uuidv4()),
+        organizationId,
+      };
 
-        const existingStandard = standardFactory({ slug: standardSlug });
-        const existingRule = ruleFactory({ id: ruleId });
-        const otherRule = ruleFactory({ id: otherRuleId });
+      const existingStandard = standardFactory({ slug: standardSlug });
+      const existingRule = ruleFactory({ id: ruleId });
+      const otherRule = ruleFactory({ id: otherRuleId });
 
+      let thrownError: Error;
+
+      beforeEach(async () => {
         standardsAdapter.findStandardBySlug.mockResolvedValue(existingStandard);
         standardsAdapter.getRule.mockResolvedValue(existingRule);
-        // Return a different rule that doesn't match our ruleId
         standardsAdapter.getLatestRulesByStandardId.mockResolvedValue([
           otherRule,
         ]);
 
-        await expect(useCase.execute(command)).rejects.toThrow(
+        try {
+          await useCase.execute(command);
+        } catch (error) {
+          thrownError = error as Error;
+        }
+      });
+
+      it('throws error with rule does not belong message', () => {
+        expect(thrownError.message).toBe(
           `Rule '${ruleId}' does not belong to standard '${standardSlug}'`,
         );
+      });
 
+      it('calls findStandardBySlug with correct parameters', () => {
         expect(standardsAdapter.findStandardBySlug).toHaveBeenCalledWith(
           standardSlug,
           organizationId,
         );
+      });
+
+      it('calls getRule with correct ruleId', () => {
         expect(standardsAdapter.getRule).toHaveBeenCalledWith(ruleId);
+      });
+
+      it('calls getLatestRulesByStandardId with correct standardId', () => {
         expect(
           standardsAdapter.getLatestRulesByStandardId,
         ).toHaveBeenCalledWith(existingStandard.id);
+      });
+
+      it('does not call findActiveByRuleIdWithPrograms', () => {
         expect(
           detectionProgramService.findActiveByRuleIdWithPrograms,
         ).not.toHaveBeenCalled();
@@ -416,40 +517,42 @@ describe('GetDraftDetectionProgramForRuleUseCase', () => {
     });
 
     describe('when language filter is specified', () => {
-      it('returns only draft programs for the specified language', async () => {
-        const organizationId = createOrganizationId(uuidv4());
-        const ruleId = createRuleId(uuidv4());
-        const standardSlug = 'my-standard';
+      const organizationId = createOrganizationId(uuidv4());
+      const ruleId = createRuleId(uuidv4());
+      const standardSlug = 'my-standard';
 
-        const command: GetDraftDetectionProgramForRuleCommand = {
-          standardSlug,
-          ruleId,
-          userId: createUserId(uuidv4()),
-          organizationId,
-          language: 'TypeScript',
-        };
+      const command: GetDraftDetectionProgramForRuleCommand = {
+        standardSlug,
+        ruleId,
+        userId: createUserId(uuidv4()),
+        organizationId,
+        language: 'TypeScript',
+      };
 
-        const existingStandard = standardFactory({ slug: standardSlug });
-        const existingRule = ruleFactory({ id: ruleId });
+      const existingStandard = standardFactory({ slug: standardSlug });
+      const existingRule = ruleFactory({ id: ruleId });
 
-        const jsDraft = detectionProgramFactory({
-          ruleId,
-          language: ProgrammingLanguage.JAVASCRIPT,
-          code: 'javascript draft code',
-        });
+      const jsDraft = detectionProgramFactory({
+        ruleId,
+        language: ProgrammingLanguage.JAVASCRIPT,
+        code: 'javascript draft code',
+      });
 
-        const tsDraft = detectionProgramFactory({
-          ruleId,
-          language: ProgrammingLanguage.TYPESCRIPT,
-          code: 'typescript draft code',
-        });
+      const tsDraft = detectionProgramFactory({
+        ruleId,
+        language: ProgrammingLanguage.TYPESCRIPT,
+        code: 'typescript draft code',
+      });
 
-        const pyDraft = detectionProgramFactory({
-          ruleId,
-          language: ProgrammingLanguage.PYTHON,
-          code: 'python draft code',
-        });
+      const pyDraft = detectionProgramFactory({
+        ruleId,
+        language: ProgrammingLanguage.PYTHON,
+        code: 'python draft code',
+      });
 
+      let result: GetDraftDetectionProgramForRuleResponse;
+
+      beforeEach(async () => {
         standardsAdapter.findStandardBySlug.mockResolvedValue(existingStandard);
         standardsAdapter.getRule.mockResolvedValue(existingRule);
         standardsAdapter.getLatestRulesByStandardId.mockResolvedValue([
@@ -484,45 +587,58 @@ describe('GetDraftDetectionProgramForRuleUseCase', () => {
           ],
         );
 
-        const result = await useCase.execute(command);
+        result = await useCase.execute(command);
+      });
 
+      it('returns only one draft program', () => {
         expect(result.programs).toHaveLength(1);
+      });
+
+      it('returns the TypeScript draft program', () => {
         expect(result.programs[0]).toEqual(tsDraft);
+      });
+
+      it('returns program with TypeScript language', () => {
         expect(result.programs[0].language).toBe(
           ProgrammingLanguage.TYPESCRIPT,
         );
+      });
+
+      it('returns program with correct code', () => {
         expect(result.programs[0].code).toBe('typescript draft code');
       });
     });
 
     describe('mixed scenarios', () => {
       describe('when some have drafts and others do not', () => {
-        it('returns only draft programs', async () => {
-          const organizationId = createOrganizationId(uuidv4());
-          const ruleId = createRuleId(uuidv4());
-          const standardSlug = 'my-standard';
+        const organizationId = createOrganizationId(uuidv4());
+        const ruleId = createRuleId(uuidv4());
+        const standardSlug = 'my-standard';
 
-          const command: GetDraftDetectionProgramForRuleCommand = {
-            standardSlug,
-            ruleId,
-            userId: createUserId(uuidv4()),
-            organizationId,
-          };
+        const command: GetDraftDetectionProgramForRuleCommand = {
+          standardSlug,
+          ruleId,
+          userId: createUserId(uuidv4()),
+          organizationId,
+        };
 
-          const existingStandard = standardFactory({ slug: standardSlug });
-          const existingRule = ruleFactory({ id: ruleId });
+        const existingStandard = standardFactory({ slug: standardSlug });
+        const existingRule = ruleFactory({ id: ruleId });
 
-          const publishedProgram = detectionProgramFactory({
-            ruleId,
-            language: ProgrammingLanguage.JAVASCRIPT,
-          });
+        const publishedProgram = detectionProgramFactory({
+          ruleId,
+          language: ProgrammingLanguage.JAVASCRIPT,
+        });
 
-          const draftProgram = detectionProgramFactory({
-            ruleId,
-            language: ProgrammingLanguage.TYPESCRIPT,
-            code: 'typescript draft',
-          });
+        const draftProgram = detectionProgramFactory({
+          ruleId,
+          language: ProgrammingLanguage.TYPESCRIPT,
+          code: 'typescript draft',
+        });
 
+        let result: GetDraftDetectionProgramForRuleResponse;
+
+        beforeEach(async () => {
           standardsAdapter.findStandardBySlug.mockResolvedValue(
             existingStandard,
           );
@@ -551,10 +667,18 @@ describe('GetDraftDetectionProgramForRuleUseCase', () => {
             ],
           );
 
-          const result = await useCase.execute(command);
+          result = await useCase.execute(command);
+        });
 
+        it('returns only one draft program', () => {
           expect(result.programs).toHaveLength(1);
+        });
+
+        it('returns the draft program', () => {
           expect(result.programs[0]).toEqual(draftProgram);
+        });
+
+        it('returns program with TypeScript language', () => {
           expect(result.programs[0].language).toBe(
             ProgrammingLanguage.TYPESCRIPT,
           );

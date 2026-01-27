@@ -30,7 +30,7 @@ describe('TrackLinterExecutionUseCase', () => {
     const organizationId = createOrganizationId('org-123');
     const userId = createUserId('user-123');
 
-    it('emits LinterCalledEvent with correct payload', async () => {
+    describe('when called with valid command', () => {
       const command = {
         organizationId,
         userId,
@@ -38,23 +38,36 @@ describe('TrackLinterExecutionUseCase', () => {
         standardCount: 5,
       };
 
-      await useCase.execute(command);
+      beforeEach(async () => {
+        await useCase.execute(command);
+      });
 
-      expect(mockEventEmitterService.emit).toHaveBeenCalledTimes(1);
+      it('emits exactly one event', () => {
+        expect(mockEventEmitterService.emit).toHaveBeenCalledTimes(1);
+      });
 
-      const emittedEvent = (mockEventEmitterService.emit as jest.Mock).mock
-        .calls[0][0];
-      expect(emittedEvent).toBeInstanceOf(LinterCalledEvent);
-      expect(emittedEvent.payload).toEqual({
-        userId: createUserId(userId),
-        organizationId: createOrganizationId(organizationId),
-        targetCount: 2,
-        standardCount: 5,
-        source: 'cli',
+      it('emits a LinterCalledEvent instance', () => {
+        const emittedEvent = (mockEventEmitterService.emit as jest.Mock).mock
+          .calls[0][0];
+
+        expect(emittedEvent).toBeInstanceOf(LinterCalledEvent);
+      });
+
+      it('includes correct payload in the event', () => {
+        const emittedEvent = (mockEventEmitterService.emit as jest.Mock).mock
+          .calls[0][0];
+
+        expect(emittedEvent.payload).toEqual({
+          userId: createUserId(userId),
+          organizationId: createOrganizationId(organizationId),
+          targetCount: 2,
+          standardCount: 5,
+          source: 'cli',
+        });
       });
     });
 
-    it('emits event with zero counts', async () => {
+    describe('when called with zero counts', () => {
       const command = {
         organizationId,
         userId,
@@ -62,14 +75,27 @@ describe('TrackLinterExecutionUseCase', () => {
         standardCount: 0,
       };
 
-      await useCase.execute(command);
+      beforeEach(async () => {
+        await useCase.execute(command);
+      });
 
-      expect(mockEventEmitterService.emit).toHaveBeenCalledTimes(1);
+      it('emits exactly one event', () => {
+        expect(mockEventEmitterService.emit).toHaveBeenCalledTimes(1);
+      });
 
-      const emittedEvent = (mockEventEmitterService.emit as jest.Mock).mock
-        .calls[0][0];
-      expect(emittedEvent.payload.targetCount).toBe(0);
-      expect(emittedEvent.payload.standardCount).toBe(0);
+      it('includes zero targetCount in the payload', () => {
+        const emittedEvent = (mockEventEmitterService.emit as jest.Mock).mock
+          .calls[0][0];
+
+        expect(emittedEvent.payload.targetCount).toBe(0);
+      });
+
+      it('includes zero standardCount in the payload', () => {
+        const emittedEvent = (mockEventEmitterService.emit as jest.Mock).mock
+          .calls[0][0];
+
+        expect(emittedEvent.payload.standardCount).toBe(0);
+      });
     });
   });
 });

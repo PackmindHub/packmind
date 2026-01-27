@@ -109,10 +109,15 @@ describe('CreateDetectionHeuristicsUseCase', () => {
       );
     });
 
-    it('returns heuristics with non-null ID', async () => {
+    it('returns heuristics with defined ID', async () => {
       const result = await useCase.execute(command);
 
       expect(result.detectionHeuristics.id).toBeDefined();
+    });
+
+    it('returns heuristics with string ID', async () => {
+      const result = await useCase.execute(command);
+
       expect(typeof result.detectionHeuristics.id).toBe('string');
     });
   });
@@ -177,50 +182,72 @@ describe('CreateDetectionHeuristicsUseCase', () => {
   describe('when querying different languages for same rule', () => {
     const ruleId = createRuleId(uuidv4());
 
-    it('creates TypeScript heuristics independently', async () => {
-      heuristicsRepository.getHeuristicsForRule.mockResolvedValue(null);
+    describe('when creating TypeScript heuristics', () => {
+      let tsCommand: CreateDetectionHeuristicsCommand;
 
-      const tsCommand: CreateDetectionHeuristicsCommand = {
-        userId: createUserId(uuidv4()),
-        organizationId: createOrganizationId(uuidv4()),
-        ruleId,
-        language: ProgrammingLanguage.TYPESCRIPT,
-      };
+      beforeEach(() => {
+        heuristicsRepository.getHeuristicsForRule.mockResolvedValue(null);
 
-      const result = await useCase.execute(tsCommand);
-
-      expect(result.detectionHeuristics.language).toBe(
-        ProgrammingLanguage.TYPESCRIPT,
-      );
-      expect(heuristicsRepository.upsertHeuristics).toHaveBeenCalledWith(
-        expect.objectContaining({
+        tsCommand = {
+          userId: createUserId(uuidv4()),
+          organizationId: createOrganizationId(uuidv4()),
           ruleId,
           language: ProgrammingLanguage.TYPESCRIPT,
-        }),
-      );
+        };
+      });
+
+      it('returns heuristics with TypeScript language', async () => {
+        const result = await useCase.execute(tsCommand);
+
+        expect(result.detectionHeuristics.language).toBe(
+          ProgrammingLanguage.TYPESCRIPT,
+        );
+      });
+
+      it('upserts heuristics with TypeScript language', async () => {
+        await useCase.execute(tsCommand);
+
+        expect(heuristicsRepository.upsertHeuristics).toHaveBeenCalledWith(
+          expect.objectContaining({
+            ruleId,
+            language: ProgrammingLanguage.TYPESCRIPT,
+          }),
+        );
+      });
     });
 
-    it('creates JavaScript heuristics independently', async () => {
-      heuristicsRepository.getHeuristicsForRule.mockResolvedValue(null);
+    describe('when creating JavaScript heuristics', () => {
+      let jsCommand: CreateDetectionHeuristicsCommand;
 
-      const jsCommand: CreateDetectionHeuristicsCommand = {
-        userId: createUserId(uuidv4()),
-        organizationId: createOrganizationId(uuidv4()),
-        ruleId,
-        language: ProgrammingLanguage.JAVASCRIPT,
-      };
+      beforeEach(() => {
+        heuristicsRepository.getHeuristicsForRule.mockResolvedValue(null);
 
-      const result = await useCase.execute(jsCommand);
-
-      expect(result.detectionHeuristics.language).toBe(
-        ProgrammingLanguage.JAVASCRIPT,
-      );
-      expect(heuristicsRepository.upsertHeuristics).toHaveBeenCalledWith(
-        expect.objectContaining({
+        jsCommand = {
+          userId: createUserId(uuidv4()),
+          organizationId: createOrganizationId(uuidv4()),
           ruleId,
           language: ProgrammingLanguage.JAVASCRIPT,
-        }),
-      );
+        };
+      });
+
+      it('returns heuristics with JavaScript language', async () => {
+        const result = await useCase.execute(jsCommand);
+
+        expect(result.detectionHeuristics.language).toBe(
+          ProgrammingLanguage.JAVASCRIPT,
+        );
+      });
+
+      it('upserts heuristics with JavaScript language', async () => {
+        await useCase.execute(jsCommand);
+
+        expect(heuristicsRepository.upsertHeuristics).toHaveBeenCalledWith(
+          expect.objectContaining({
+            ruleId,
+            language: ProgrammingLanguage.JAVASCRIPT,
+          }),
+        );
+      });
     });
   });
 });

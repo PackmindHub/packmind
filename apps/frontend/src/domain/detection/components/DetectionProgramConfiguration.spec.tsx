@@ -165,10 +165,13 @@ describe('DetectionProgramConfiguration', () => {
       screen = renderWithContext();
     });
 
-    it('renders empty state for no examples', () => {
+    it('renders empty state message for no examples', () => {
       expect(
         screen.getByText('No code examples for this language'),
       ).toBeInTheDocument();
+    });
+
+    it('renders Add button', () => {
       expect(screen.getByRole('button', { name: /add/i })).toBeInTheDocument();
     });
   });
@@ -189,9 +192,15 @@ describe('DetectionProgramConfiguration', () => {
         screen = renderWithContext();
       });
 
-      it('renders empty state instead of accordions', () => {
+      it('hides Detectability accordion', () => {
         expect(screen.queryByText('Detectability')).not.toBeInTheDocument();
+      });
+
+      it('hides Program accordion', () => {
         expect(screen.queryByText('Program')).not.toBeInTheDocument();
+      });
+
+      it('renders empty state message', () => {
         expect(
           screen.getByText('No code examples for this language'),
         ).toBeInTheDocument();
@@ -202,18 +211,19 @@ describe('DetectionProgramConfiguration', () => {
         expect(addButton).toBeInTheDocument();
       });
 
-      it('calls onNavigateToExamples when Add button is clicked', () => {
-        const onNavigateToExamples = jest.fn();
-        props.onNavigateToExamples = onNavigateToExamples;
+      describe('when Add button is clicked', () => {
+        it('calls onNavigateToExamples', () => {
+          const onNavigateToExamples = jest.fn();
+          props.onNavigateToExamples = onNavigateToExamples;
 
-        // Re-render with the callback
-        screen.unmount();
-        screen = renderWithContext();
+          screen.unmount();
+          screen = renderWithContext();
 
-        const addButton = screen.getByRole('button', { name: /add/i });
-        addButton.click();
+          const addButton = screen.getByRole('button', { name: /add/i });
+          addButton.click();
 
-        expect(onNavigateToExamples).toHaveBeenCalledTimes(1);
+          expect(onNavigateToExamples).toHaveBeenCalledTimes(1);
+        });
       });
     });
 
@@ -223,8 +233,11 @@ describe('DetectionProgramConfiguration', () => {
         screen = renderWithContext();
       });
 
-      it('renders detectability accordion with failed status', () => {
+      it('renders detectability accordion', () => {
         expect(screen.getByText('Detectability')).toBeInTheDocument();
+      });
+
+      it('displays Failed status', () => {
         expect(screen.getByText('Failed')).toBeInTheDocument();
       });
 
@@ -240,9 +253,11 @@ describe('DetectionProgramConfiguration', () => {
         screen = renderWithContext();
       });
 
-      it('renders detectability accordion with success status', () => {
+      it('renders detectability accordion', () => {
         expect(screen.getByText('Detectability')).toBeInTheDocument();
-        // There may be multiple "Active" texts: one in Detectability badge and one in Program action buttons
+      });
+
+      it('displays Active status badge', () => {
         const activeElements = screen.getAllByText('Active');
         expect(activeElements.length).toBeGreaterThanOrEqual(1);
       });
@@ -259,8 +274,11 @@ describe('DetectionProgramConfiguration', () => {
         screen = renderWithContext();
       });
 
-      it('renders detectability accordion with in progress status', () => {
+      it('renders detectability accordion', () => {
         expect(screen.getByText('Detectability')).toBeInTheDocument();
+      });
+
+      it('displays In progress status', () => {
         expect(screen.getByText('In progress')).toBeInTheDocument();
       });
 
@@ -277,8 +295,7 @@ describe('DetectionProgramConfiguration', () => {
           screen = renderWithContext();
         });
 
-        it('does not display Generate new draft action when generating', () => {
-          // When generating, the "Generate new draft" action should not be available
+        it('hides Generate new draft action', () => {
           expect(
             screen.queryByText('Generate new draft'),
           ).not.toBeInTheDocument();

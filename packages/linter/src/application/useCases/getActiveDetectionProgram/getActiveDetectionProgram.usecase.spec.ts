@@ -236,7 +236,9 @@ describe('GetActiveDetectionProgramUseCase', () => {
     });
 
     describe('when rule has examples but no active detection programs', () => {
-      it('returns placeholder entries for each language with examples', async () => {
+      let result: GetActiveDetectionProgramResponse;
+
+      beforeEach(async () => {
         const organizationId = createOrganizationId(uuidv4());
         const ruleId = createRuleId(uuidv4());
 
@@ -273,37 +275,82 @@ describe('GetActiveDetectionProgramUseCase', () => {
           [],
         );
 
-        const result = await getActiveDetectionProgramUseCase.execute(command);
+        result = await getActiveDetectionProgramUseCase.execute(command);
+      });
+
+      it('returns two placeholder entries', () => {
         const programs = result.programs ?? [];
 
         expect(programs).toHaveLength(2);
-        const languages = programs.map((program) => program.language);
-        expect(languages).toContain(ProgrammingLanguage.TYPESCRIPT);
-        expect(languages).toContain(ProgrammingLanguage.JAVA);
+      });
 
+      it('includes TypeScript language', () => {
+        const programs = result.programs ?? [];
+        const languages = programs.map((program) => program.language);
+
+        expect(languages).toContain(ProgrammingLanguage.TYPESCRIPT);
+      });
+
+      it('includes Java language', () => {
+        const programs = result.programs ?? [];
+        const languages = programs.map((program) => program.language);
+
+        expect(languages).toContain(ProgrammingLanguage.JAVA);
+      });
+
+      it('sets detectionProgram to null for TypeScript placeholder', () => {
+        const programs = result.programs ?? [];
         const typescriptProgram = programs.find(
           (program) => program.language === ProgrammingLanguage.TYPESCRIPT,
         );
 
         expect(typescriptProgram?.detectionProgram).toBeNull();
+      });
+
+      it('sets draftDetectionProgram to null for TypeScript placeholder', () => {
+        const programs = result.programs ?? [];
+        const typescriptProgram = programs.find(
+          (program) => program.language === ProgrammingLanguage.TYPESCRIPT,
+        );
+
         expect(typescriptProgram?.draftDetectionProgram).toBeNull();
+      });
+
+      it('marks TypeScript placeholder as example only', () => {
+        const programs = result.programs ?? [];
+        const typescriptProgram = programs.find(
+          (program) => program.language === ProgrammingLanguage.TYPESCRIPT,
+        );
+
         expect(typescriptProgram?.isExampleOnly).toBe(true);
       });
     });
 
     describe('when rule does not exist', () => {
-      it('throws an error', async () => {
-        const command: GetActiveDetectionProgramCommand = {
+      let command: GetActiveDetectionProgramCommand;
+
+      beforeEach(() => {
+        command = {
           ruleId: createRuleId(uuidv4()),
           organizationId: createOrganizationId(uuidv4()),
           userId: createUserId(uuidv4()),
         };
 
         standardsAdapter.getRule.mockResolvedValue(null);
+      });
 
+      it('throws an error', async () => {
         await expect(
           getActiveDetectionProgramUseCase.execute(command),
         ).rejects.toThrow('Rule not found');
+      });
+
+      it('does not query the repository', async () => {
+        try {
+          await getActiveDetectionProgramUseCase.execute(command);
+        } catch {
+          // Expected to throw
+        }
 
         expect(
           activeDetectionProgramRepository.findByRuleIdWithPrograms,
@@ -398,192 +445,245 @@ describe('GetActiveDetectionProgramUseCase', () => {
     });
 
     describe('with different detection program modes', () => {
-      it('returns active program with REGEXP mode detection program', async () => {
-        const organizationId = createOrganizationId(uuidv4());
-        const ruleId = createRuleId(uuidv4());
-        const detectionProgramId = createDetectionProgramId(uuidv4());
+      describe('when mode is REGEXP', () => {
+        let result: GetActiveDetectionProgramResponse;
 
-        const command: GetActiveDetectionProgramCommand = {
-          ruleId,
-          organizationId,
-          userId: createUserId(uuidv4()),
-        };
+        beforeEach(async () => {
+          const organizationId = createOrganizationId(uuidv4());
+          const ruleId = createRuleId(uuidv4());
+          const detectionProgramId = createDetectionProgramId(uuidv4());
 
-        const existingRule = ruleFactory({
-          id: ruleId,
+          const command: GetActiveDetectionProgramCommand = {
+            ruleId,
+            organizationId,
+            userId: createUserId(uuidv4()),
+          };
+
+          const existingRule = ruleFactory({
+            id: ruleId,
+          });
+
+          const detectionProgram = detectionProgramFactory({
+            id: detectionProgramId,
+            ruleId,
+            code: '/Controller$/.test(className)',
+            mode: DetectionModeEnum.REGEXP,
+          });
+
+          const activeProgram = activeDetectionProgramFactory({
+            detectionProgramVersion: detectionProgramId,
+            ruleId,
+            language: ProgrammingLanguage.JAVASCRIPT,
+          });
+
+          standardsAdapter.getRule.mockResolvedValue(existingRule);
+          activeDetectionProgramRepository.findByRuleIdWithPrograms.mockResolvedValue(
+            [
+              {
+                ...activeProgram,
+                detectionProgram,
+                draftDetectionProgram: null,
+              },
+            ],
+          );
+
+          result = await getActiveDetectionProgramUseCase.execute(command);
         });
 
-        const detectionProgram = detectionProgramFactory({
-          id: detectionProgramId,
-          ruleId,
-          code: '/Controller$/.test(className)',
-          mode: DetectionModeEnum.REGEXP,
+        it('returns detection program with REGEXP mode', () => {
+          const resultArray = result.programs as (ActiveDetectionProgram & {
+            detectionProgram: DetectionProgram;
+          })[];
+
+          expect(resultArray[0].detectionProgram.mode).toBe(
+            DetectionModeEnum.REGEXP,
+          );
         });
 
-        const activeProgram = activeDetectionProgramFactory({
-          detectionProgramVersion: detectionProgramId,
-          ruleId,
-          language: ProgrammingLanguage.JAVASCRIPT,
+        it('returns detection program with correct code', () => {
+          const resultArray = result.programs as (ActiveDetectionProgram & {
+            detectionProgram: DetectionProgram;
+          })[];
+
+          expect(resultArray[0].detectionProgram.code).toBe(
+            '/Controller$/.test(className)',
+          );
         });
-
-        standardsAdapter.getRule.mockResolvedValue(existingRule);
-        activeDetectionProgramRepository.findByRuleIdWithPrograms.mockResolvedValue(
-          [{ ...activeProgram, detectionProgram, draftDetectionProgram: null }],
-        );
-
-        const result = await getActiveDetectionProgramUseCase.execute(command);
-
-        expect(result.programs).not.toBeNull();
-        expect(Array.isArray(result.programs)).toBe(true);
-        const resultArray = result.programs as (ActiveDetectionProgram & {
-          detectionProgram: DetectionProgram;
-        })[];
-        expect(resultArray[0].detectionProgram.mode).toBe(
-          DetectionModeEnum.REGEXP,
-        );
-        expect(resultArray[0].detectionProgram.code).toBe(
-          '/Controller$/.test(className)',
-        );
       });
 
-      it('returns active program with FILE_SYSTEM mode detection program', async () => {
-        const organizationId = createOrganizationId(uuidv4());
-        const ruleId = createRuleId(uuidv4());
-        const detectionProgramId = createDetectionProgramId(uuidv4());
+      describe('when mode is FILE_SYSTEM', () => {
+        let result: GetActiveDetectionProgramResponse;
 
-        const command: GetActiveDetectionProgramCommand = {
-          ruleId,
-          organizationId,
-          userId: createUserId(uuidv4()),
-        };
+        beforeEach(async () => {
+          const organizationId = createOrganizationId(uuidv4());
+          const ruleId = createRuleId(uuidv4());
+          const detectionProgramId = createDetectionProgramId(uuidv4());
 
-        const existingRule = ruleFactory({
-          id: ruleId,
+          const command: GetActiveDetectionProgramCommand = {
+            ruleId,
+            organizationId,
+            userId: createUserId(uuidv4()),
+          };
+
+          const existingRule = ruleFactory({
+            id: ruleId,
+          });
+
+          const detectionProgram = detectionProgramFactory({
+            id: detectionProgramId,
+            ruleId,
+            code: 'const files = fs.readdirSync(directory);',
+            mode: DetectionModeEnum.FILE_SYSTEM,
+          });
+
+          const activeProgram = activeDetectionProgramFactory({
+            detectionProgramVersion: detectionProgramId,
+            ruleId,
+            language: ProgrammingLanguage.JAVASCRIPT,
+          });
+
+          standardsAdapter.getRule.mockResolvedValue(existingRule);
+          activeDetectionProgramRepository.findByRuleIdWithPrograms.mockResolvedValue(
+            [
+              {
+                ...activeProgram,
+                detectionProgram,
+                draftDetectionProgram: null,
+              },
+            ],
+          );
+
+          result = await getActiveDetectionProgramUseCase.execute(command);
         });
 
-        const detectionProgram = detectionProgramFactory({
-          id: detectionProgramId,
-          ruleId,
-          code: 'const files = fs.readdirSync(directory);',
-          mode: DetectionModeEnum.FILE_SYSTEM,
+        it('returns detection program with FILE_SYSTEM mode', () => {
+          const resultArray = result.programs as (ActiveDetectionProgram & {
+            detectionProgram: DetectionProgram;
+          })[];
+
+          expect(resultArray[0].detectionProgram.mode).toBe(
+            DetectionModeEnum.FILE_SYSTEM,
+          );
         });
 
-        const activeProgram = activeDetectionProgramFactory({
-          detectionProgramVersion: detectionProgramId,
-          ruleId,
-          language: ProgrammingLanguage.JAVASCRIPT,
+        it('returns detection program with correct code', () => {
+          const resultArray = result.programs as (ActiveDetectionProgram & {
+            detectionProgram: DetectionProgram;
+          })[];
+
+          expect(resultArray[0].detectionProgram.code).toBe(
+            'const files = fs.readdirSync(directory);',
+          );
         });
-
-        standardsAdapter.getRule.mockResolvedValue(existingRule);
-        activeDetectionProgramRepository.findByRuleIdWithPrograms.mockResolvedValue(
-          [{ ...activeProgram, detectionProgram, draftDetectionProgram: null }],
-        );
-
-        const result = await getActiveDetectionProgramUseCase.execute(command);
-
-        expect(result.programs).not.toBeNull();
-        expect(Array.isArray(result.programs)).toBe(true);
-        const resultArray = result.programs as (ActiveDetectionProgram & {
-          detectionProgram: DetectionProgram;
-        })[];
-        expect(resultArray[0].detectionProgram.mode).toBe(
-          DetectionModeEnum.FILE_SYSTEM,
-        );
-        expect(resultArray[0].detectionProgram.code).toBe(
-          'const files = fs.readdirSync(directory);',
-        );
       });
     });
 
     describe('with different programming languages', () => {
-      it('returns active program for TypeScript', async () => {
-        const organizationId = createOrganizationId(uuidv4());
-        const ruleId = createRuleId(uuidv4());
-        const detectionProgramId = createDetectionProgramId(uuidv4());
+      describe('when language is TypeScript', () => {
+        it('returns active program with TypeScript language', async () => {
+          const organizationId = createOrganizationId(uuidv4());
+          const ruleId = createRuleId(uuidv4());
+          const detectionProgramId = createDetectionProgramId(uuidv4());
 
-        const command: GetActiveDetectionProgramCommand = {
-          ruleId,
-          organizationId,
-          userId: createUserId(uuidv4()),
-        };
+          const command: GetActiveDetectionProgramCommand = {
+            ruleId,
+            organizationId,
+            userId: createUserId(uuidv4()),
+          };
 
-        const existingRule = ruleFactory({
-          id: ruleId,
+          const existingRule = ruleFactory({
+            id: ruleId,
+          });
+
+          const detectionProgram = detectionProgramFactory({
+            id: detectionProgramId,
+            ruleId,
+          });
+
+          const activeProgram = activeDetectionProgramFactory({
+            detectionProgramVersion: detectionProgramId,
+            ruleId,
+            language: ProgrammingLanguage.TYPESCRIPT,
+          });
+
+          standardsAdapter.getRule.mockResolvedValue(existingRule);
+          activeDetectionProgramRepository.findByRuleIdWithPrograms.mockResolvedValue(
+            [
+              {
+                ...activeProgram,
+                detectionProgram,
+                draftDetectionProgram: null,
+              },
+            ],
+          );
+
+          const result =
+            await getActiveDetectionProgramUseCase.execute(command);
+
+          const resultArray = result.programs as (ActiveDetectionProgram & {
+            detectionProgram: DetectionProgram;
+          })[];
+          expect(resultArray[0].language).toBe(ProgrammingLanguage.TYPESCRIPT);
         });
-
-        const detectionProgram = detectionProgramFactory({
-          id: detectionProgramId,
-          ruleId,
-        });
-
-        const activeProgram = activeDetectionProgramFactory({
-          detectionProgramVersion: detectionProgramId,
-          ruleId,
-          language: ProgrammingLanguage.TYPESCRIPT,
-        });
-
-        standardsAdapter.getRule.mockResolvedValue(existingRule);
-        activeDetectionProgramRepository.findByRuleIdWithPrograms.mockResolvedValue(
-          [{ ...activeProgram, detectionProgram, draftDetectionProgram: null }],
-        );
-
-        const result = await getActiveDetectionProgramUseCase.execute(command);
-
-        expect(result.programs).not.toBeNull();
-        expect(Array.isArray(result.programs)).toBe(true);
-        const resultArray = result.programs as (ActiveDetectionProgram & {
-          detectionProgram: DetectionProgram;
-        })[];
-        expect(resultArray[0].language).toBe(ProgrammingLanguage.TYPESCRIPT);
       });
 
-      it('returns active program for Python', async () => {
-        const organizationId = createOrganizationId(uuidv4());
-        const ruleId = createRuleId(uuidv4());
-        const detectionProgramId = createDetectionProgramId(uuidv4());
+      describe('when language is Python', () => {
+        it('returns active program with Python language', async () => {
+          const organizationId = createOrganizationId(uuidv4());
+          const ruleId = createRuleId(uuidv4());
+          const detectionProgramId = createDetectionProgramId(uuidv4());
 
-        const command: GetActiveDetectionProgramCommand = {
-          ruleId,
-          organizationId,
-          userId: createUserId(uuidv4()),
-        };
+          const command: GetActiveDetectionProgramCommand = {
+            ruleId,
+            organizationId,
+            userId: createUserId(uuidv4()),
+          };
 
-        const existingRule = ruleFactory({
-          id: ruleId,
+          const existingRule = ruleFactory({
+            id: ruleId,
+          });
+
+          const detectionProgram = detectionProgramFactory({
+            id: detectionProgramId,
+            ruleId,
+          });
+
+          const activeProgram = activeDetectionProgramFactory({
+            detectionProgramVersion: detectionProgramId,
+            ruleId,
+            language: ProgrammingLanguage.PYTHON,
+          });
+
+          standardsAdapter.getRule.mockResolvedValue(existingRule);
+          activeDetectionProgramRepository.findByRuleIdWithPrograms.mockResolvedValue(
+            [
+              {
+                ...activeProgram,
+                detectionProgram,
+                draftDetectionProgram: null,
+              },
+            ],
+          );
+
+          const result =
+            await getActiveDetectionProgramUseCase.execute(command);
+
+          const resultArray = result.programs as (ActiveDetectionProgram & {
+            detectionProgram: DetectionProgram;
+          })[];
+          expect(resultArray[0].language).toBe(ProgrammingLanguage.PYTHON);
         });
-
-        const detectionProgram = detectionProgramFactory({
-          id: detectionProgramId,
-          ruleId,
-        });
-
-        const activeProgram = activeDetectionProgramFactory({
-          detectionProgramVersion: detectionProgramId,
-          ruleId,
-          language: ProgrammingLanguage.PYTHON,
-        });
-
-        standardsAdapter.getRule.mockResolvedValue(existingRule);
-        activeDetectionProgramRepository.findByRuleIdWithPrograms.mockResolvedValue(
-          [{ ...activeProgram, detectionProgram, draftDetectionProgram: null }],
-        );
-
-        const result = await getActiveDetectionProgramUseCase.execute(command);
-
-        expect(result.programs).not.toBeNull();
-        expect(Array.isArray(result.programs)).toBe(true);
-        const resultArray = result.programs as (ActiveDetectionProgram & {
-          detectionProgram: DetectionProgram;
-        })[];
-        expect(resultArray[0].language).toBe(ProgrammingLanguage.PYTHON);
       });
     });
 
     describe('with version information', () => {
-      it('returns detection program with correct version information', async () => {
+      let result: GetActiveDetectionProgramResponse;
+      let detectionProgramId: ReturnType<typeof createDetectionProgramId>;
+
+      beforeEach(async () => {
         const organizationId = createOrganizationId(uuidv4());
         const ruleId = createRuleId(uuidv4());
-        const detectionProgramId = createDetectionProgramId(uuidv4());
+        detectionProgramId = createDetectionProgramId(uuidv4());
 
         const command: GetActiveDetectionProgramCommand = {
           ruleId,
@@ -598,7 +698,7 @@ describe('GetActiveDetectionProgramUseCase', () => {
         const detectionProgram = detectionProgramFactory({
           id: detectionProgramId,
           ruleId,
-          version: 5, // Specific version
+          version: 5,
         });
 
         const activeProgram = activeDetectionProgramFactory({
@@ -611,14 +711,22 @@ describe('GetActiveDetectionProgramUseCase', () => {
           [{ ...activeProgram, detectionProgram, draftDetectionProgram: null }],
         );
 
-        const result = await getActiveDetectionProgramUseCase.execute(command);
+        result = await getActiveDetectionProgramUseCase.execute(command);
+      });
 
-        expect(result.programs).not.toBeNull();
-        expect(Array.isArray(result.programs)).toBe(true);
+      it('returns detection program with correct version', () => {
         const resultArray = result.programs as (ActiveDetectionProgram & {
           detectionProgram: DetectionProgram;
         })[];
+
         expect(resultArray[0].detectionProgram.version).toBe(5);
+      });
+
+      it('returns detection program with correct id', () => {
+        const resultArray = result.programs as (ActiveDetectionProgram & {
+          detectionProgram: DetectionProgram;
+        })[];
+
         expect(resultArray[0].detectionProgram.id).toBe(detectionProgramId);
       });
     });
@@ -650,11 +758,16 @@ describe('GetActiveDetectionProgramUseCase', () => {
     });
 
     describe('response structure validation', () => {
-      it('returns properly structured response with all required fields', async () => {
+      let result: GetActiveDetectionProgramResponse;
+      let ruleId: ReturnType<typeof createRuleId>;
+      let detectionProgramId: ReturnType<typeof createDetectionProgramId>;
+      let activeProgramId: ReturnType<typeof createActiveDetectionProgramId>;
+
+      beforeEach(async () => {
         const organizationId = createOrganizationId(uuidv4());
-        const ruleId = createRuleId(uuidv4());
-        const detectionProgramId = createDetectionProgramId(uuidv4());
-        const activeProgramId = createActiveDetectionProgramId(uuidv4());
+        ruleId = createRuleId(uuidv4());
+        detectionProgramId = createDetectionProgramId(uuidv4());
+        activeProgramId = createActiveDetectionProgramId(uuidv4());
 
         const command: GetActiveDetectionProgramCommand = {
           ruleId,
@@ -686,39 +799,97 @@ describe('GetActiveDetectionProgramUseCase', () => {
           [{ ...activeProgram, detectionProgram, draftDetectionProgram: null }],
         );
 
-        const result = await getActiveDetectionProgramUseCase.execute(command);
+        result = await getActiveDetectionProgramUseCase.execute(command);
+      });
 
-        // Validate response structure
-        expect(result.programs).not.toBeNull();
-        expect(Array.isArray(result.programs)).toBe(true);
+      it('returns one program in the array', () => {
+        expect(result.programs).toHaveLength(1);
+      });
+
+      it('returns active program with correct id', () => {
         const resultArray = result.programs as (ActiveDetectionProgram & {
           detectionProgram: DetectionProgram;
         })[];
-        expect(resultArray).toHaveLength(1);
+
         expect(resultArray[0]).toHaveProperty('id', activeProgramId);
+      });
+
+      it('returns active program with correct detectionProgramVersion', () => {
+        const resultArray = result.programs as (ActiveDetectionProgram & {
+          detectionProgram: DetectionProgram;
+        })[];
+
         expect(resultArray[0]).toHaveProperty(
           'detectionProgramVersion',
           detectionProgramId,
         );
+      });
+
+      it('returns active program with correct ruleId', () => {
+        const resultArray = result.programs as (ActiveDetectionProgram & {
+          detectionProgram: DetectionProgram;
+        })[];
+
         expect(resultArray[0]).toHaveProperty('ruleId', ruleId);
+      });
+
+      it('returns active program with correct language', () => {
+        const resultArray = result.programs as (ActiveDetectionProgram & {
+          detectionProgram: DetectionProgram;
+        })[];
+
         expect(resultArray[0]).toHaveProperty(
           'language',
           ProgrammingLanguage.JAVASCRIPT,
         );
-        expect(resultArray[0]).toHaveProperty('detectionProgram');
+      });
+
+      it('returns detection program with correct id', () => {
+        const resultArray = result.programs as (ActiveDetectionProgram & {
+          detectionProgram: DetectionProgram;
+        })[];
+
         expect(resultArray[0].detectionProgram).toHaveProperty(
           'id',
           detectionProgramId,
         );
+      });
+
+      it('returns detection program with correct ruleId', () => {
+        const resultArray = result.programs as (ActiveDetectionProgram & {
+          detectionProgram: DetectionProgram;
+        })[];
+
         expect(resultArray[0].detectionProgram).toHaveProperty(
           'ruleId',
           ruleId,
         );
+      });
+
+      it('returns detection program with correct code', () => {
+        const resultArray = result.programs as (ActiveDetectionProgram & {
+          detectionProgram: DetectionProgram;
+        })[];
+
         expect(resultArray[0].detectionProgram).toHaveProperty(
           'code',
           'test code',
         );
+      });
+
+      it('returns detection program with correct version', () => {
+        const resultArray = result.programs as (ActiveDetectionProgram & {
+          detectionProgram: DetectionProgram;
+        })[];
+
         expect(resultArray[0].detectionProgram).toHaveProperty('version', 1);
+      });
+
+      it('returns detection program with correct mode', () => {
+        const resultArray = result.programs as (ActiveDetectionProgram & {
+          detectionProgram: DetectionProgram;
+        })[];
+
         expect(resultArray[0].detectionProgram).toHaveProperty(
           'mode',
           DetectionModeEnum.REGEXP,
@@ -727,243 +898,328 @@ describe('GetActiveDetectionProgramUseCase', () => {
     });
 
     describe('multi-language support scenarios', () => {
-      it('returns specific language wh language parameter is provided', async () => {
-        const organizationId = createOrganizationId(uuidv4());
-        const ruleId = createRuleId(uuidv4());
-        const detectionProgramId = createDetectionProgramId(uuidv4());
+      describe('when language parameter is provided', () => {
+        let result: GetActiveDetectionProgramResponse;
+        let ruleId: ReturnType<typeof createRuleId>;
 
-        const command: GetActiveDetectionProgramCommand = {
-          ruleId,
-          language: ProgrammingLanguage.TYPESCRIPT,
-          organizationId,
-          userId: createUserId(uuidv4()),
-        };
+        beforeEach(async () => {
+          const organizationId = createOrganizationId(uuidv4());
+          ruleId = createRuleId(uuidv4());
+          const detectionProgramId = createDetectionProgramId(uuidv4());
 
-        const existingRule = ruleFactory({
-          id: ruleId,
+          const command: GetActiveDetectionProgramCommand = {
+            ruleId,
+            language: ProgrammingLanguage.TYPESCRIPT,
+            organizationId,
+            userId: createUserId(uuidv4()),
+          };
+
+          const existingRule = ruleFactory({
+            id: ruleId,
+          });
+
+          const detectionProgram = detectionProgramFactory({
+            id: detectionProgramId,
+            ruleId,
+          });
+
+          const typescriptActiveProgram = activeDetectionProgramFactory({
+            detectionProgramVersion: detectionProgramId,
+            ruleId,
+            language: ProgrammingLanguage.TYPESCRIPT,
+          });
+
+          standardsAdapter.getRule.mockResolvedValue(existingRule);
+          activeDetectionProgramRepository.findByRuleIdAndLanguage.mockResolvedValue(
+            typescriptActiveProgram,
+          );
+          activeDetectionProgramRepository.findByRuleIdWithPrograms.mockResolvedValue(
+            [
+              {
+                ...typescriptActiveProgram,
+                detectionProgram,
+                draftDetectionProgram: null,
+              },
+            ],
+          );
+
+          result = await getActiveDetectionProgramUseCase.execute(command);
         });
 
-        const detectionProgram = detectionProgramFactory({
-          id: detectionProgramId,
-          ruleId,
+        it('queries repository with language filter', () => {
+          expect(
+            activeDetectionProgramRepository.findByRuleIdAndLanguage,
+          ).toHaveBeenCalledWith(ruleId, ProgrammingLanguage.TYPESCRIPT);
         });
 
-        const typescriptActiveProgram = activeDetectionProgramFactory({
-          detectionProgramVersion: detectionProgramId,
-          ruleId,
-          language: ProgrammingLanguage.TYPESCRIPT,
+        it('returns one program', () => {
+          expect(result.programs).toHaveLength(1);
         });
 
-        standardsAdapter.getRule.mockResolvedValue(existingRule);
-        activeDetectionProgramRepository.findByRuleIdAndLanguage.mockResolvedValue(
-          typescriptActiveProgram,
-        );
-        activeDetectionProgramRepository.findByRuleIdWithPrograms.mockResolvedValue(
-          [
+        it('returns program with correct language', () => {
+          const resultArray = result.programs as (ActiveDetectionProgram & {
+            detectionProgram: DetectionProgram;
+          })[];
+
+          expect(resultArray[0].language).toBe(ProgrammingLanguage.TYPESCRIPT);
+        });
+      });
+
+      describe('when no language parameter is provided', () => {
+        let result: GetActiveDetectionProgramResponse;
+        let ruleId: ReturnType<typeof createRuleId>;
+
+        beforeEach(async () => {
+          const organizationId = createOrganizationId(uuidv4());
+          ruleId = createRuleId(uuidv4());
+          const detectionProgramId1 = createDetectionProgramId(uuidv4());
+          const detectionProgramId2 = createDetectionProgramId(uuidv4());
+
+          const command: GetActiveDetectionProgramCommand = {
+            ruleId,
+            organizationId,
+            userId: createUserId(uuidv4()),
+          };
+
+          const existingRule = ruleFactory({
+            id: ruleId,
+          });
+
+          const detectionProgram1 = detectionProgramFactory({
+            id: detectionProgramId1,
+            ruleId,
+          });
+
+          const detectionProgram2 = detectionProgramFactory({
+            id: detectionProgramId2,
+            ruleId,
+          });
+
+          const javascriptActiveProgram = activeDetectionProgramFactory({
+            detectionProgramVersion: detectionProgramId1,
+            ruleId,
+            language: ProgrammingLanguage.JAVASCRIPT,
+          });
+
+          const typescriptActiveProgram = activeDetectionProgramFactory({
+            detectionProgramVersion: detectionProgramId2,
+            ruleId,
+            language: ProgrammingLanguage.TYPESCRIPT,
+          });
+
+          const activeProgramsWithDetectionPrograms = [
             {
-              ...typescriptActiveProgram,
-              detectionProgram,
+              ...javascriptActiveProgram,
+              detectionProgram: detectionProgram1,
               draftDetectionProgram: null,
             },
-          ],
-        );
+            {
+              ...typescriptActiveProgram,
+              detectionProgram: detectionProgram2,
+              draftDetectionProgram: null,
+            },
+          ];
 
-        const result = await getActiveDetectionProgramUseCase.execute(command);
+          standardsAdapter.getRule.mockResolvedValue(existingRule);
+          activeDetectionProgramRepository.findByRuleIdWithPrograms.mockResolvedValue(
+            activeProgramsWithDetectionPrograms,
+          );
 
-        expect(
-          activeDetectionProgramRepository.findByRuleIdAndLanguage,
-        ).toHaveBeenCalledWith(ruleId, ProgrammingLanguage.TYPESCRIPT);
-        expect(result.programs).not.toBeNull();
-        expect(Array.isArray(result.programs)).toBe(true);
-        const resultArray = result.programs as (ActiveDetectionProgram & {
-          detectionProgram: DetectionProgram;
-        })[];
-        expect(resultArray).toHaveLength(1);
-        expect(resultArray[0].language).toBe(ProgrammingLanguage.TYPESCRIPT);
+          result = await getActiveDetectionProgramUseCase.execute(command);
+        });
+
+        it('queries repository with rule id only', () => {
+          expect(
+            activeDetectionProgramRepository.findByRuleIdWithPrograms,
+          ).toHaveBeenCalledWith(ruleId);
+        });
+
+        it('does not query by language', () => {
+          expect(
+            activeDetectionProgramRepository.findByRuleIdAndLanguage,
+          ).not.toHaveBeenCalled();
+        });
+
+        it('returns two programs', () => {
+          expect(result.programs).toHaveLength(2);
+        });
+
+        it('returns JavaScript program first', () => {
+          const resultArray = result.programs as (ActiveDetectionProgram & {
+            detectionProgram: DetectionProgram;
+          })[];
+
+          expect(resultArray[0].language).toBe(ProgrammingLanguage.JAVASCRIPT);
+        });
+
+        it('returns TypeScript program second', () => {
+          const resultArray = result.programs as (ActiveDetectionProgram & {
+            detectionProgram: DetectionProgram;
+          })[];
+
+          expect(resultArray[1].language).toBe(ProgrammingLanguage.TYPESCRIPT);
+        });
       });
 
-      it('returns all languages wh no language parameter is provided', async () => {
-        const organizationId = createOrganizationId(uuidv4());
-        const ruleId = createRuleId(uuidv4());
-        const detectionProgramId1 = createDetectionProgramId(uuidv4());
-        const detectionProgramId2 = createDetectionProgramId(uuidv4());
+      describe('when specific language has no active program', () => {
+        let result: GetActiveDetectionProgramResponse;
+        let ruleId: ReturnType<typeof createRuleId>;
 
-        const command: GetActiveDetectionProgramCommand = {
-          ruleId,
-          // No language parameter
-          organizationId,
-          userId: createUserId(uuidv4()),
-        };
+        beforeEach(async () => {
+          const organizationId = createOrganizationId(uuidv4());
+          ruleId = createRuleId(uuidv4());
 
-        const existingRule = ruleFactory({
-          id: ruleId,
+          const command: GetActiveDetectionProgramCommand = {
+            ruleId,
+            language: ProgrammingLanguage.PYTHON,
+            organizationId,
+            userId: createUserId(uuidv4()),
+          };
+
+          const existingRule = ruleFactory({
+            id: ruleId,
+          });
+
+          standardsAdapter.getRule.mockResolvedValue(existingRule);
+          activeDetectionProgramRepository.findByRuleIdAndLanguage.mockResolvedValue(
+            null,
+          );
+
+          result = await getActiveDetectionProgramUseCase.execute(command);
         });
 
-        const detectionProgram1 = detectionProgramFactory({
-          id: detectionProgramId1,
-          ruleId,
+        it('queries repository with Python language', () => {
+          expect(
+            activeDetectionProgramRepository.findByRuleIdAndLanguage,
+          ).toHaveBeenCalledWith(ruleId, ProgrammingLanguage.PYTHON);
         });
 
-        const detectionProgram2 = detectionProgramFactory({
-          id: detectionProgramId2,
-          ruleId,
+        it('returns null programs', () => {
+          expect(result).toEqual({ programs: null });
         });
-
-        const javascriptActiveProgram = activeDetectionProgramFactory({
-          detectionProgramVersion: detectionProgramId1,
-          ruleId,
-          language: ProgrammingLanguage.JAVASCRIPT,
-        });
-
-        const typescriptActiveProgram = activeDetectionProgramFactory({
-          detectionProgramVersion: detectionProgramId2,
-          ruleId,
-          language: ProgrammingLanguage.TYPESCRIPT,
-        });
-
-        const activeProgramsWithDetectionPrograms = [
-          {
-            ...javascriptActiveProgram,
-            detectionProgram: detectionProgram1,
-            draftDetectionProgram: null,
-          },
-          {
-            ...typescriptActiveProgram,
-            detectionProgram: detectionProgram2,
-            draftDetectionProgram: null,
-          },
-        ];
-
-        standardsAdapter.getRule.mockResolvedValue(existingRule);
-        activeDetectionProgramRepository.findByRuleIdWithPrograms.mockResolvedValue(
-          activeProgramsWithDetectionPrograms,
-        );
-
-        const result = await getActiveDetectionProgramUseCase.execute(command);
-
-        expect(
-          activeDetectionProgramRepository.findByRuleIdWithPrograms,
-        ).toHaveBeenCalledWith(ruleId);
-        expect(
-          activeDetectionProgramRepository.findByRuleIdAndLanguage,
-        ).not.toHaveBeenCalled();
-        // Should return all programs when no language specified
-        expect(result.programs).not.toBeNull();
-        expect(Array.isArray(result.programs)).toBe(true);
-        const resultArray = result.programs as (ActiveDetectionProgram & {
-          detectionProgram: DetectionProgram;
-        })[];
-        expect(resultArray).toHaveLength(2);
-        expect(resultArray[0].language).toBe(ProgrammingLanguage.JAVASCRIPT);
-        expect(resultArray[1].language).toBe(ProgrammingLanguage.TYPESCRIPT);
       });
 
-      it('returns null wh specific language has no active program', async () => {
-        const organizationId = createOrganizationId(uuidv4());
-        const ruleId = createRuleId(uuidv4());
+      describe('when multiple languages have different detection program versions', () => {
+        let result: GetActiveDetectionProgramResponse;
 
-        const command: GetActiveDetectionProgramCommand = {
-          ruleId,
-          language: ProgrammingLanguage.PYTHON,
-          organizationId,
-          userId: createUserId(uuidv4()),
-        };
+        beforeEach(async () => {
+          const organizationId = createOrganizationId(uuidv4());
+          const ruleId = createRuleId(uuidv4());
+          const detectionProgramId1 = createDetectionProgramId(uuidv4());
+          const detectionProgramId2 = createDetectionProgramId(uuidv4());
 
-        const existingRule = ruleFactory({
-          id: ruleId,
+          const command: GetActiveDetectionProgramCommand = {
+            ruleId,
+            organizationId,
+            userId: createUserId(uuidv4()),
+          };
+
+          const existingRule = ruleFactory({
+            id: ruleId,
+          });
+
+          const detectionProgram1 = detectionProgramFactory({
+            id: detectionProgramId1,
+            ruleId,
+            version: 1,
+            mode: DetectionModeEnum.REGEXP,
+          });
+
+          const detectionProgram2 = detectionProgramFactory({
+            id: detectionProgramId2,
+            ruleId,
+            version: 3,
+            mode: DetectionModeEnum.SINGLE_AST,
+          });
+
+          const javascriptActiveProgram = activeDetectionProgramFactory({
+            detectionProgramVersion: detectionProgramId1,
+            ruleId,
+            language: ProgrammingLanguage.JAVASCRIPT,
+          });
+
+          const pythonActiveProgram = activeDetectionProgramFactory({
+            detectionProgramVersion: detectionProgramId2,
+            ruleId,
+            language: ProgrammingLanguage.PYTHON,
+          });
+
+          const activeProgramsWithDetectionPrograms = [
+            {
+              ...javascriptActiveProgram,
+              detectionProgram: detectionProgram1,
+              draftDetectionProgram: null,
+            },
+            {
+              ...pythonActiveProgram,
+              detectionProgram: detectionProgram2,
+              draftDetectionProgram: null,
+            },
+          ];
+
+          standardsAdapter.getRule.mockResolvedValue(existingRule);
+          activeDetectionProgramRepository.findByRuleIdWithPrograms.mockResolvedValue(
+            activeProgramsWithDetectionPrograms,
+          );
+
+          result = await getActiveDetectionProgramUseCase.execute(command);
         });
 
-        standardsAdapter.getRule.mockResolvedValue(existingRule);
-        activeDetectionProgramRepository.findByRuleIdAndLanguage.mockResolvedValue(
-          null,
-        );
-
-        const result = await getActiveDetectionProgramUseCase.execute(command);
-
-        expect(
-          activeDetectionProgramRepository.findByRuleIdAndLanguage,
-        ).toHaveBeenCalledWith(ruleId, ProgrammingLanguage.PYTHON);
-        expect(result).toEqual({ programs: null });
-      });
-
-      it('handles multiple languages with different detection program versions', async () => {
-        const organizationId = createOrganizationId(uuidv4());
-        const ruleId = createRuleId(uuidv4());
-        const detectionProgramId1 = createDetectionProgramId(uuidv4());
-        const detectionProgramId2 = createDetectionProgramId(uuidv4());
-
-        const command: GetActiveDetectionProgramCommand = {
-          ruleId,
-          organizationId,
-          userId: createUserId(uuidv4()),
-        };
-
-        const existingRule = ruleFactory({
-          id: ruleId,
+        it('returns two programs', () => {
+          expect(result.programs).toHaveLength(2);
         });
 
-        const detectionProgram1 = detectionProgramFactory({
-          id: detectionProgramId1,
-          ruleId,
-          version: 1,
-          mode: DetectionModeEnum.REGEXP,
+        it('returns JavaScript program with correct language', () => {
+          const resultArray = result.programs as (ActiveDetectionProgram & {
+            detectionProgram: DetectionProgram;
+          })[];
+
+          expect(resultArray[0].language).toBe(ProgrammingLanguage.JAVASCRIPT);
         });
 
-        const detectionProgram2 = detectionProgramFactory({
-          id: detectionProgramId2,
-          ruleId,
-          version: 3,
-          mode: DetectionModeEnum.SINGLE_AST,
+        it('returns JavaScript program with version 1', () => {
+          const resultArray = result.programs as (ActiveDetectionProgram & {
+            detectionProgram: DetectionProgram;
+          })[];
+
+          expect(resultArray[0].detectionProgram.version).toBe(1);
         });
 
-        const javascriptActiveProgram = activeDetectionProgramFactory({
-          detectionProgramVersion: detectionProgramId1,
-          ruleId,
-          language: ProgrammingLanguage.JAVASCRIPT,
+        it('returns JavaScript program with REGEXP mode', () => {
+          const resultArray = result.programs as (ActiveDetectionProgram & {
+            detectionProgram: DetectionProgram;
+          })[];
+
+          expect(resultArray[0].detectionProgram.mode).toBe(
+            DetectionModeEnum.REGEXP,
+          );
         });
 
-        const pythonActiveProgram = activeDetectionProgramFactory({
-          detectionProgramVersion: detectionProgramId2,
-          ruleId,
-          language: ProgrammingLanguage.PYTHON,
+        it('returns Python program with correct language', () => {
+          const resultArray = result.programs as (ActiveDetectionProgram & {
+            detectionProgram: DetectionProgram;
+          })[];
+
+          expect(resultArray[1].language).toBe(ProgrammingLanguage.PYTHON);
         });
 
-        const activeProgramsWithDetectionPrograms = [
-          {
-            ...javascriptActiveProgram,
-            detectionProgram: detectionProgram1,
-            draftDetectionProgram: null,
-          },
-          {
-            ...pythonActiveProgram,
-            detectionProgram: detectionProgram2,
-            draftDetectionProgram: null,
-          },
-        ];
+        it('returns Python program with version 3', () => {
+          const resultArray = result.programs as (ActiveDetectionProgram & {
+            detectionProgram: DetectionProgram;
+          })[];
 
-        standardsAdapter.getRule.mockResolvedValue(existingRule);
-        activeDetectionProgramRepository.findByRuleIdWithPrograms.mockResolvedValue(
-          activeProgramsWithDetectionPrograms,
-        );
+          expect(resultArray[1].detectionProgram.version).toBe(3);
+        });
 
-        const result = await getActiveDetectionProgramUseCase.execute(command);
+        it('returns Python program with SINGLE_AST mode', () => {
+          const resultArray = result.programs as (ActiveDetectionProgram & {
+            detectionProgram: DetectionProgram;
+          })[];
 
-        expect(result.programs).not.toBeNull();
-        expect(Array.isArray(result.programs)).toBe(true);
-        const resultArray = result.programs as (ActiveDetectionProgram & {
-          detectionProgram: DetectionProgram;
-        })[];
-        expect(resultArray).toHaveLength(2);
-        expect(resultArray[0].language).toBe(ProgrammingLanguage.JAVASCRIPT);
-        expect(resultArray[0].detectionProgram.version).toBe(1);
-        expect(resultArray[0].detectionProgram.mode).toBe(
-          DetectionModeEnum.REGEXP,
-        );
-        expect(resultArray[1].language).toBe(ProgrammingLanguage.PYTHON);
-        expect(resultArray[1].detectionProgram.version).toBe(3);
-        expect(resultArray[1].detectionProgram.mode).toBe(
-          DetectionModeEnum.SINGLE_AST,
-        );
+          expect(resultArray[1].detectionProgram.mode).toBe(
+            DetectionModeEnum.SINGLE_AST,
+          );
+        });
       });
     });
   });

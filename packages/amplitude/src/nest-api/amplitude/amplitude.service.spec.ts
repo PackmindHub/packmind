@@ -49,6 +49,18 @@ describe('AmplitudeService', () => {
         amplitudeKey: mockKey,
         amplitudeRegion: mockRegion,
       });
+    });
+
+    it('calls Configuration.getConfig twice', async () => {
+      const mockKey = 'test-api-key';
+      const mockRegion = 'EU';
+
+      (Configuration.getConfig as jest.Mock)
+        .mockResolvedValueOnce(mockKey)
+        .mockResolvedValueOnce(mockRegion);
+
+      await service.getConfig();
+
       expect(Configuration.getConfig).toHaveBeenCalledTimes(2);
     });
 

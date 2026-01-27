@@ -148,10 +148,10 @@ describe('UpdateDetectionProgramStatusUseCase', () => {
 
   describe('execute', () => {
     describe('when both programs pass validation', () => {
-      it('updates both program statuses to READY', async () => {
-        const activeProgramId = createDetectionProgramId(uuidv4());
-        const draftProgramId = createDetectionProgramId(uuidv4());
+      const activeProgramId = createDetectionProgramId(uuidv4());
+      const draftProgramId = createDetectionProgramId(uuidv4());
 
+      beforeEach(async () => {
         const activeDetectionProgram = activeDetectionProgramFactory({
           ruleId,
           language: ProgrammingLanguage.JAVASCRIPT,
@@ -207,11 +207,16 @@ describe('UpdateDetectionProgramStatusUseCase', () => {
         };
 
         await useCase.execute(command);
+      });
 
+      it('updates active program status to READY', () => {
         expect(detectionProgramRepository.updateStatus).toHaveBeenCalledWith(
           activeProgramId,
           DetectionStatus.READY,
         );
+      });
+
+      it('updates draft program status to READY', () => {
         expect(detectionProgramRepository.updateStatus).toHaveBeenCalledWith(
           draftProgramId,
           DetectionStatus.READY,
@@ -332,10 +337,10 @@ describe('UpdateDetectionProgramStatusUseCase', () => {
     });
 
     describe('when draft program fails validation independently', () => {
-      it('updates only draft program status to TO_REVIEW', async () => {
-        const activeProgramId = createDetectionProgramId(uuidv4());
-        const draftProgramId = createDetectionProgramId(uuidv4());
+      const activeProgramId = createDetectionProgramId(uuidv4());
+      const draftProgramId = createDetectionProgramId(uuidv4());
 
+      beforeEach(async () => {
         const activeDetectionProgram = activeDetectionProgramFactory({
           ruleId,
           language: ProgrammingLanguage.JAVASCRIPT,
@@ -405,14 +410,22 @@ describe('UpdateDetectionProgramStatusUseCase', () => {
         };
 
         await useCase.execute(command);
+      });
 
+      it('calls updateStatus twice', () => {
         expect(detectionProgramRepository.updateStatus).toHaveBeenCalledTimes(
           2,
         );
+      });
+
+      it('updates active program status to READY', () => {
         expect(detectionProgramRepository.updateStatus).toHaveBeenCalledWith(
           activeProgramId,
           DetectionStatus.READY,
         );
+      });
+
+      it('updates draft program status to TO_REVIEW', () => {
         expect(detectionProgramRepository.updateStatus).toHaveBeenCalledWith(
           draftProgramId,
           DetectionStatus.TO_REVIEW,
@@ -421,10 +434,10 @@ describe('UpdateDetectionProgramStatusUseCase', () => {
     });
 
     describe('when both programs fail validation', () => {
-      it('updates both program statuses to TO_REVIEW', async () => {
-        const activeProgramId = createDetectionProgramId(uuidv4());
-        const draftProgramId = createDetectionProgramId(uuidv4());
+      const activeProgramId = createDetectionProgramId(uuidv4());
+      const draftProgramId = createDetectionProgramId(uuidv4());
 
+      beforeEach(async () => {
         const activeDetectionProgram = activeDetectionProgramFactory({
           ruleId,
           language: ProgrammingLanguage.JAVASCRIPT,
@@ -474,15 +487,22 @@ describe('UpdateDetectionProgramStatusUseCase', () => {
         };
 
         await useCase.execute(command);
+      });
 
+      it('calls updateStatus twice', () => {
         expect(detectionProgramRepository.updateStatus).toHaveBeenCalledTimes(
           2,
         );
-        // Both programs should be updated to TO_REVIEW status
+      });
+
+      it('updates active program status to TO_REVIEW', () => {
         expect(detectionProgramRepository.updateStatus).toHaveBeenCalledWith(
           activeProgramId,
           DetectionStatus.TO_REVIEW,
         );
+      });
+
+      it('updates draft program status to TO_REVIEW', () => {
         expect(detectionProgramRepository.updateStatus).toHaveBeenCalledWith(
           draftProgramId,
           DetectionStatus.TO_REVIEW,
@@ -491,7 +511,7 @@ describe('UpdateDetectionProgramStatusUseCase', () => {
     });
 
     describe('when program has sourceCodeState NONE', () => {
-      it('skips the program without updating', async () => {
+      beforeEach(async () => {
         const activeProgramId = createDetectionProgramId(uuidv4());
 
         const activeDetectionProgram = activeDetectionProgramFactory({
@@ -525,17 +545,22 @@ describe('UpdateDetectionProgramStatusUseCase', () => {
         };
 
         await useCase.execute(command);
+      });
 
+      it('does not execute linter programs', () => {
         expect(executeLinterProgramsUseCase.execute).not.toHaveBeenCalled();
+      });
+
+      it('does not add detection program', () => {
         expect(detectionProgramRepository.add).not.toHaveBeenCalled();
       });
     });
 
     describe('when no examples exist for language', () => {
-      it('updates all programs to TO_REVIEW', async () => {
-        const activeProgramId = createDetectionProgramId(uuidv4());
-        const draftProgramId = createDetectionProgramId(uuidv4());
+      const activeProgramId = createDetectionProgramId(uuidv4());
+      const draftProgramId = createDetectionProgramId(uuidv4());
 
+      beforeEach(async () => {
         const activeDetectionProgram = activeDetectionProgramFactory({
           ruleId,
           language: ProgrammingLanguage.JAVASCRIPT,
@@ -577,28 +602,41 @@ describe('UpdateDetectionProgramStatusUseCase', () => {
         };
 
         await useCase.execute(command);
+      });
 
+      it('calls updateStatus twice', () => {
         expect(detectionProgramRepository.updateStatus).toHaveBeenCalledTimes(
           2,
         );
+      });
+
+      it('updates active program status to TO_REVIEW', () => {
         expect(detectionProgramRepository.updateStatus).toHaveBeenCalledWith(
           activeProgramId,
           DetectionStatus.TO_REVIEW,
         );
+      });
+
+      it('updates draft program status to TO_REVIEW', () => {
         expect(detectionProgramRepository.updateStatus).toHaveBeenCalledWith(
           draftProgramId,
           DetectionStatus.TO_REVIEW,
         );
+      });
+
+      it('does not execute linter programs', () => {
         expect(executeLinterProgramsUseCase.execute).not.toHaveBeenCalled();
       });
     });
 
     describe('when active detection program is not found', () => {
-      it('logs and returns without error', async () => {
+      beforeEach(() => {
         activeDetectionProgramRepository.findByRuleIdAndLanguage.mockResolvedValue(
           null,
         );
+      });
 
+      it('resolves without error', async () => {
         const command: UpdateDetectionProgramStatusCommand = {
           ruleId,
           language: ProgrammingLanguage.JAVASCRIPT,
@@ -607,6 +645,18 @@ describe('UpdateDetectionProgramStatusUseCase', () => {
         };
 
         await expect(useCase.execute(command)).resolves.not.toThrow();
+      });
+
+      it('does not update detection program status', async () => {
+        const command: UpdateDetectionProgramStatusCommand = {
+          ruleId,
+          language: ProgrammingLanguage.JAVASCRIPT,
+          organizationId: organizationId as unknown as string,
+          userId: organizationId as unknown as string,
+        };
+
+        await useCase.execute(command);
+
         expect(detectionProgramRepository.updateStatus).not.toHaveBeenCalled();
       });
     });

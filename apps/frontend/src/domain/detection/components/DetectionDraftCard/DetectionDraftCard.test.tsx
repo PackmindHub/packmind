@@ -186,8 +186,11 @@ describe('ProgramGenerationTimeline', () => {
           ).toBeInTheDocument();
         });
 
-        it('shows "Generating program" as active with description', () => {
+        it('shows "Generating program" as active', () => {
           expect(screen.getByText('Generating program')).toBeInTheDocument();
+        });
+
+        it('shows the generating program description', () => {
           expect(
             screen.getByText(
               /Packmind AI generates a program that comply with rule specifications/,
@@ -214,8 +217,11 @@ describe('ProgramGenerationTimeline', () => {
           ).toBeInTheDocument();
         });
 
-        it('shows "Program needs update" as active with description', () => {
+        it('shows "Program needs update" as active', () => {
           expect(screen.getByText('Program needs update')).toBeInTheDocument();
+        });
+
+        it('shows the program needs update description', () => {
           expect(
             screen.getByText(
               /The rule specifications or examples have been modified since this program was generated/,
@@ -223,8 +229,11 @@ describe('ProgramGenerationTimeline', () => {
           ).toBeInTheDocument();
         });
 
-        it('shows "Regenerate" and "Show program" buttons', () => {
+        it('shows "Regenerate" button', () => {
           expect(screen.getByText('Regenerate')).toBeInTheDocument();
+        });
+
+        it('shows "Show program" button', () => {
           expect(screen.getByText('Show program')).toBeInTheDocument();
         });
 
@@ -255,12 +264,13 @@ describe('ProgramGenerationTimeline', () => {
           expect(screen.getByText('Ready to use')).toBeInTheDocument();
         });
 
-        it('opens logs drawer when "Show log" button is clicked', async () => {
-          const showLogButton = screen.getByText('Show log');
-          fireEvent.click(showLogButton);
-          // ExecutionLogsDrawer should be visible after clicking
-          await waitFor(() => {
-            expect(onShowLogs).toHaveBeenCalled();
+        describe('when "Show log" button is clicked', () => {
+          it('opens logs drawer', async () => {
+            const showLogButton = screen.getByText('Show log');
+            fireEvent.click(showLogButton);
+            await waitFor(() => {
+              expect(onShowLogs).toHaveBeenCalled();
+            });
           });
         });
       });
@@ -290,17 +300,22 @@ describe('ProgramGenerationTimeline', () => {
             expect(screen.getByText('Ready to use')).toBeInTheDocument();
           });
 
-          it('opens logs drawer when "Show log" button is clicked', async () => {
-            const showLogButton = screen.getByText('Show log');
-            fireEvent.click(showLogButton);
-            await waitFor(() => {
-              expect(onShowLogs).toHaveBeenCalled();
+          describe('when "Show log" button is clicked', () => {
+            it('opens logs drawer', async () => {
+              const showLogButton = screen.getByText('Show log');
+              fireEvent.click(showLogButton);
+              await waitFor(() => {
+                expect(onShowLogs).toHaveBeenCalled();
+              });
             });
           });
 
-          it('calls onRetryDraft when "Retry" button is clicked', () => {
-            const retryButton = screen.getByText('Retry');
-            fireEvent.click(retryButton);
+          describe('when "Retry" button is clicked', () => {
+            it('calls onRetryDraft', () => {
+              const retryButton = screen.getByText('Retry');
+              fireEvent.click(retryButton);
+              expect(onRetryDraft).toHaveBeenCalled();
+            });
           });
         });
 
@@ -332,87 +347,112 @@ describe('ProgramGenerationTimeline', () => {
               expect(screen.getByText('Ready to use')).toBeInTheDocument();
             });
 
-            it('opens logs drawer when "Show log" button is clicked', async () => {
-              const showLogButton = screen.getByText('Show log');
-              fireEvent.click(showLogButton);
-              await waitFor(() => {
-                expect(onShowLogs).toHaveBeenCalled();
+            describe('when "Show log" button is clicked', () => {
+              it('opens logs drawer', async () => {
+                const showLogButton = screen.getByText('Show log');
+                fireEvent.click(showLogButton);
+                await waitFor(() => {
+                  expect(onShowLogs).toHaveBeenCalled();
+                });
               });
             });
 
-            it('opens program drawer when "Show program" button is clicked', async () => {
-              const showProgramButton = screen.getByText('Show program');
-              fireEvent.click(showProgramButton);
-              await waitFor(() => {
-                expect(onShowProgram).toHaveBeenCalled();
+            describe('when "Show program" button is clicked', () => {
+              it('opens program drawer', async () => {
+                const showProgramButton = screen.getByText('Show program');
+                fireEvent.click(showProgramButton);
+                await waitFor(() => {
+                  expect(onShowProgram).toHaveBeenCalled();
+                });
               });
             });
 
-            it('calls onTestDraft when "Test draft program" button is clicked', async () => {
-              const testDraftButton = screen.getByText('Test draft program');
-              fireEvent.click(testDraftButton);
+            describe('when "Test draft program" button is clicked', () => {
+              it('calls onTestDraft', async () => {
+                const testDraftButton = screen.getByText('Test draft program');
+                fireEvent.click(testDraftButton);
 
-              await waitFor(() => {
-                expect(onTestDraft).toHaveBeenCalled();
+                await waitFor(() => {
+                  expect(onTestDraft).toHaveBeenCalled();
+                });
               });
             });
 
-            it('shows confirmation dialog when "Set as active" button is clicked', async () => {
-              const setActiveButton = screen.getByText('Set as active');
-              fireEvent.click(setActiveButton);
-              await waitFor(() => {
-                expect(
-                  screen.getByText('Activate Detection Program'),
-                ).toBeInTheDocument();
-                expect(
-                  screen.getByText(
-                    'Are you sure you want to activate this typescript detection program (v1)? This will replace the current active program.',
-                  ),
-                ).toBeInTheDocument();
-              });
-            });
-
-            it('calls onMakeActive when confirmation dialog is confirmed', async () => {
-              const setActiveButton = screen.getByText('Set as active');
-              fireEvent.click(setActiveButton);
-
-              await waitFor(() => {
-                expect(
-                  screen.getByText('Activate Detection Program'),
-                ).toBeInTheDocument();
+            describe('when "Set as active" button is clicked', () => {
+              it('shows confirmation dialog title', async () => {
+                const setActiveButton = screen.getByText('Set as active');
+                fireEvent.click(setActiveButton);
+                await waitFor(() => {
+                  expect(
+                    screen.getByText('Activate Detection Program'),
+                  ).toBeInTheDocument();
+                });
               });
 
-              const activateButton = screen.getByRole('button', {
-                name: 'Activate',
-              });
-              fireEvent.click(activateButton);
-
-              await waitFor(() => {
-                expect(onMakeActive).toHaveBeenCalled();
-              });
-            });
-
-            it('does not call onMakeActive when confirmation dialog is cancelled', async () => {
-              const setActiveButton = screen.getByText('Set as active');
-              fireEvent.click(setActiveButton);
-
-              await waitFor(() => {
-                expect(
-                  screen.getByText('Activate Detection Program'),
-                ).toBeInTheDocument();
+              it('shows confirmation dialog message', async () => {
+                const setActiveButton = screen.getByText('Set as active');
+                fireEvent.click(setActiveButton);
+                await waitFor(() => {
+                  expect(
+                    screen.getByText(
+                      'Are you sure you want to activate this typescript detection program (v1)? This will replace the current active program.',
+                    ),
+                  ).toBeInTheDocument();
+                });
               });
 
-              const cancelButton = screen.getByRole('button', {
-                name: 'Cancel',
-              });
-              fireEvent.click(cancelButton);
+              describe('when confirmation dialog is confirmed', () => {
+                it('calls onMakeActive', async () => {
+                  const setActiveButton = screen.getByText('Set as active');
+                  fireEvent.click(setActiveButton);
 
-              await waitFor(() => {
-                expect(
-                  screen.queryByText('Activate Detection Program'),
-                ).not.toBeInTheDocument();
+                  await screen.findByText('Activate Detection Program');
+
+                  const activateButton = screen.getByRole('button', {
+                    name: 'Activate',
+                  });
+                  fireEvent.click(activateButton);
+
+                  await waitFor(() => {
+                    expect(onMakeActive).toHaveBeenCalled();
+                  });
+                });
               });
-              expect(onMakeActive).not.toHaveBeenCalled();
+
+              describe('when confirmation dialog is cancelled', () => {
+                it('closes the dialog', async () => {
+                  const setActiveButton = screen.getByText('Set as active');
+                  fireEvent.click(setActiveButton);
+
+                  await screen.findByText('Activate Detection Program');
+
+                  const cancelButton = screen.getByRole('button', {
+                    name: 'Cancel',
+                  });
+                  fireEvent.click(cancelButton);
+
+                  await waitFor(() => {
+                    expect(
+                      screen.queryByText('Activate Detection Program'),
+                    ).not.toBeInTheDocument();
+                  });
+                });
+
+                it('does not call onMakeActive', async () => {
+                  const setActiveButton = screen.getByText('Set as active');
+                  fireEvent.click(setActiveButton);
+
+                  await screen.findByText('Activate Detection Program');
+
+                  const cancelButton = screen.getByRole('button', {
+                    name: 'Cancel',
+                  });
+                  fireEvent.click(cancelButton);
+
+                  await screen.findByRole('button', { name: 'Set as active' });
+                  expect(onMakeActive).not.toHaveBeenCalled();
+                });
+              });
             });
           });
 
@@ -424,16 +464,24 @@ describe('ProgramGenerationTimeline', () => {
               );
             });
 
-            it('calls onMakeActive directly without confirmation dialog', async () => {
-              const setActiveButton = screen.getByText('Set as active');
-              fireEvent.click(setActiveButton);
+            describe('when "Set as active" button is clicked', () => {
+              it('calls onMakeActive directly', async () => {
+                const setActiveButton = screen.getByText('Set as active');
+                fireEvent.click(setActiveButton);
 
-              await waitFor(() => {
-                expect(onMakeActive).toHaveBeenCalled();
+                await waitFor(() => {
+                  expect(onMakeActive).toHaveBeenCalled();
+                });
               });
-              expect(
-                screen.queryByText('Activate Detection Program'),
-              ).not.toBeInTheDocument();
+
+              it('does not show confirmation dialog', () => {
+                const setActiveButton = screen.getByText('Set as active');
+                fireEvent.click(setActiveButton);
+
+                expect(
+                  screen.queryByText('Activate Detection Program'),
+                ).not.toBeInTheDocument();
+              });
             });
           });
         });

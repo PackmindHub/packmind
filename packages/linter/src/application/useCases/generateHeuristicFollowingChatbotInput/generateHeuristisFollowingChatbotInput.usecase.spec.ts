@@ -270,10 +270,15 @@ describe('UpdateHeuristicsFollowingChatbotInputUseCase', () => {
       );
     });
 
-    it('does not call repository update methods', async () => {
+    it('does not call repository updateHeuristics method', async () => {
       await useCase.execute(command);
 
       expect(heuristicsRepository.updateHeuristics).not.toHaveBeenCalled();
+    });
+
+    it('does not call repository upsertHeuristics method', async () => {
+      await useCase.execute(command);
+
       expect(heuristicsRepository.upsertHeuristics).not.toHaveBeenCalled();
     });
 

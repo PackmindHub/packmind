@@ -87,7 +87,7 @@ describe('GetRuleDetectionAssessmentUseCase', () => {
     jest.clearAllMocks();
   });
 
-  it('returns assessment for given rule and language', async () => {
+  describe('when assessment exists for rule and language', () => {
     const mockAssessment: RuleDetectionAssessment = {
       id: createRuleDetectionAssessmentId('assessment-1'),
       ruleId: mockRuleId,
@@ -99,26 +99,44 @@ describe('GetRuleDetectionAssessmentUseCase', () => {
       clarificationAnswers: [],
     };
 
-    mockRuleDetectionAssessmentRepository.get.mockResolvedValue(mockAssessment);
-
-    const result = await useCase.execute({
-      ruleId: mockRuleId,
-      language: ProgrammingLanguage.TYPESCRIPT,
-      organizationId: mockOrganizationId,
-      userId: mockUserId,
+    beforeEach(() => {
+      mockRuleDetectionAssessmentRepository.get.mockResolvedValue(
+        mockAssessment,
+      );
     });
 
-    expect(result.assessment).toEqual(mockAssessment);
-    expect(mockRuleDetectionAssessmentRepository.get).toHaveBeenCalledWith(
-      mockRuleId,
-      ProgrammingLanguage.TYPESCRIPT,
-    );
+    it('returns the assessment', async () => {
+      const result = await useCase.execute({
+        ruleId: mockRuleId,
+        language: ProgrammingLanguage.TYPESCRIPT,
+        organizationId: mockOrganizationId,
+        userId: mockUserId,
+      });
+
+      expect(result.assessment).toEqual(mockAssessment);
+    });
+
+    it('queries the repository with rule and language', async () => {
+      await useCase.execute({
+        ruleId: mockRuleId,
+        language: ProgrammingLanguage.TYPESCRIPT,
+        organizationId: mockOrganizationId,
+        userId: mockUserId,
+      });
+
+      expect(mockRuleDetectionAssessmentRepository.get).toHaveBeenCalledWith(
+        mockRuleId,
+        ProgrammingLanguage.TYPESCRIPT,
+      );
+    });
   });
 
   describe('when assessment does not exist', () => {
-    it('returns null', async () => {
+    beforeEach(() => {
       mockRuleDetectionAssessmentRepository.get.mockResolvedValue(null);
+    });
 
+    it('returns null', async () => {
       const result = await useCase.execute({
         ruleId: mockRuleId,
         language: ProgrammingLanguage.PYTHON,
@@ -127,6 +145,16 @@ describe('GetRuleDetectionAssessmentUseCase', () => {
       });
 
       expect(result.assessment).toBeNull();
+    });
+
+    it('queries the repository with rule and language', async () => {
+      await useCase.execute({
+        ruleId: mockRuleId,
+        language: ProgrammingLanguage.PYTHON,
+        organizationId: mockOrganizationId,
+        userId: mockUserId,
+      });
+
       expect(mockRuleDetectionAssessmentRepository.get).toHaveBeenCalledWith(
         mockRuleId,
         ProgrammingLanguage.PYTHON,

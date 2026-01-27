@@ -45,13 +45,15 @@ describe('FalsePositivesSection', () => {
       expect(screen.getByText('Code examples')).toBeInTheDocument();
     });
 
-    it('calls onCodeExamplesClick when "Code examples" button is clicked', async () => {
-      const user = userEvent.setup();
-      const button = screen.getByText('Code examples');
+    describe('when "Code examples" button is clicked', () => {
+      it('calls onCodeExamplesClick', async () => {
+        const user = userEvent.setup();
+        const button = screen.getByText('Code examples');
 
-      await user.click(button);
+        await user.click(button);
 
-      expect(onCodeExamplesClick).toHaveBeenCalledTimes(1);
+        expect(onCodeExamplesClick).toHaveBeenCalledTimes(1);
+      });
     });
   });
 });

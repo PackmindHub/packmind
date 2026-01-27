@@ -91,38 +91,56 @@ describe('DetectionProgramRepository', () => {
     });
   });
 
-  it('can find detection programs by rule id', async () => {
-    const rule = await createRuleWithHierarchy();
-    const otherRule = await createRuleWithHierarchy();
+  describe('when finding detection programs by rule id', () => {
+    let rule: Rule;
+    let otherRule: Rule;
+    let program1: DetectionProgram;
+    let program2: DetectionProgram;
+    let program3: DetectionProgram;
+    let foundPrograms: DetectionProgram[];
 
-    const program1 = detectionProgramFactory({
-      ruleId: rule.id,
-      version: 1,
+    beforeEach(async () => {
+      rule = await createRuleWithHierarchy();
+      otherRule = await createRuleWithHierarchy();
+
+      program1 = detectionProgramFactory({
+        ruleId: rule.id,
+        version: 1,
+      });
+      program2 = detectionProgramFactory({
+        ruleId: rule.id,
+        version: 2,
+      });
+      program3 = detectionProgramFactory({ ruleId: otherRule.id });
+
+      await detectionProgramRepository.add(program1);
+      await detectionProgramRepository.add(program2);
+      await detectionProgramRepository.add(program3);
+
+      foundPrograms = await detectionProgramRepository.findByRuleId(rule.id);
     });
-    const program2 = detectionProgramFactory({
-      ruleId: rule.id,
-      version: 2,
+
+    it('returns the correct number of programs', async () => {
+      expect(foundPrograms).toHaveLength(2);
     });
-    const program3 = detectionProgramFactory({ ruleId: otherRule.id }); // Different rule
 
-    await detectionProgramRepository.add(program1);
-    await detectionProgramRepository.add(program2);
-    await detectionProgramRepository.add(program3);
+    it('includes first program for the rule', async () => {
+      expect(foundPrograms.map((p: DetectionProgram) => p.id)).toContain(
+        program1.id,
+      );
+    });
 
-    const foundPrograms = await detectionProgramRepository.findByRuleId(
-      rule.id,
-    );
+    it('includes second program for the rule', async () => {
+      expect(foundPrograms.map((p: DetectionProgram) => p.id)).toContain(
+        program2.id,
+      );
+    });
 
-    expect(foundPrograms).toHaveLength(2);
-    expect(foundPrograms.map((p: DetectionProgram) => p.id)).toContain(
-      program1.id,
-    );
-    expect(foundPrograms.map((p: DetectionProgram) => p.id)).toContain(
-      program2.id,
-    );
-    expect(foundPrograms.map((p: DetectionProgram) => p.id)).not.toContain(
-      program3.id,
-    );
+    it('excludes programs from other rules', async () => {
+      expect(foundPrograms.map((p: DetectionProgram) => p.id)).not.toContain(
+        program3.id,
+      );
+    });
   });
 
   it('can find detection program by rule id and version', async () => {
@@ -173,57 +191,86 @@ describe('DetectionProgramRepository', () => {
   });
 
   describe('when multiple versions exist for same rule', () => {
-    it('returns programs ordered by version', async () => {
-      const rule = await createRuleWithHierarchy();
+    describe('when listing programs by rule id', () => {
+      let rule: Rule;
+      let foundPrograms: DetectionProgram[];
 
-      await detectionProgramRepository.add(
-        detectionProgramFactory({ ruleId: rule.id, version: 1 }),
-      );
-      await detectionProgramRepository.add(
-        detectionProgramFactory({ ruleId: rule.id, version: 3 }),
-      );
-      await detectionProgramRepository.add(
-        detectionProgramFactory({ ruleId: rule.id, version: 2 }),
-      );
+      beforeEach(async () => {
+        rule = await createRuleWithHierarchy();
 
-      const foundPrograms = await detectionProgramRepository.findByRuleId(
-        rule.id,
-      );
+        await detectionProgramRepository.add(
+          detectionProgramFactory({ ruleId: rule.id, version: 1 }),
+        );
+        await detectionProgramRepository.add(
+          detectionProgramFactory({ ruleId: rule.id, version: 3 }),
+        );
+        await detectionProgramRepository.add(
+          detectionProgramFactory({ ruleId: rule.id, version: 2 }),
+        );
 
-      expect(foundPrograms).toHaveLength(3);
-      expect(foundPrograms.map((p: DetectionProgram) => p.version)).toEqual([
-        3, 2, 1,
-      ]);
+        foundPrograms = await detectionProgramRepository.findByRuleId(rule.id);
+      });
+
+      it('returns correct number of programs', async () => {
+        expect(foundPrograms).toHaveLength(3);
+      });
+
+      it('returns programs ordered by version descending', async () => {
+        expect(foundPrograms.map((p: DetectionProgram) => p.version)).toEqual([
+          3, 2, 1,
+        ]);
+      });
     });
 
-    it('returns correct program for specific version', async () => {
-      const rule = await createRuleWithHierarchy();
+    describe('when finding by specific version', () => {
+      let rule: Rule;
+      let program1: DetectionProgram;
+      let program2: DetectionProgram;
+      let program3: DetectionProgram;
 
-      const program1 = await detectionProgramRepository.add(
-        detectionProgramFactory({ ruleId: rule.id, version: 1 }),
-      );
-      const program2 = await detectionProgramRepository.add(
-        detectionProgramFactory({ ruleId: rule.id, version: 2 }),
-      );
-      const program3 = await detectionProgramRepository.add(
-        detectionProgramFactory({ ruleId: rule.id, version: 3 }),
-      );
+      beforeEach(async () => {
+        rule = await createRuleWithHierarchy();
 
-      const foundProgram1 =
-        await detectionProgramRepository.findByRuleIdAndVersion(rule.id, 1);
-      const foundProgram2 =
-        await detectionProgramRepository.findByRuleIdAndVersion(rule.id, 2);
-      const foundProgram3 =
-        await detectionProgramRepository.findByRuleIdAndVersion(rule.id, 3);
+        program1 = await detectionProgramRepository.add(
+          detectionProgramFactory({ ruleId: rule.id, version: 1 }),
+        );
+        program2 = await detectionProgramRepository.add(
+          detectionProgramFactory({ ruleId: rule.id, version: 2 }),
+        );
+        program3 = await detectionProgramRepository.add(
+          detectionProgramFactory({ ruleId: rule.id, version: 3 }),
+        );
+      });
 
-      expect(foundProgram1?.version).toBe(1);
-      expect(foundProgram1?.id).toBe(program1.id);
+      it('returns program with version 1', async () => {
+        const foundProgram =
+          await detectionProgramRepository.findByRuleIdAndVersion(rule.id, 1);
 
-      expect(foundProgram2?.version).toBe(2);
-      expect(foundProgram2?.id).toBe(program2.id);
+        expect(foundProgram).toMatchObject({
+          id: program1.id,
+          version: 1,
+        });
+      });
 
-      expect(foundProgram3?.version).toBe(3);
-      expect(foundProgram3?.id).toBe(program3.id);
+      it('returns program with version 2', async () => {
+        const foundProgram =
+          await detectionProgramRepository.findByRuleIdAndVersion(rule.id, 2);
+
+        expect(foundProgram).toMatchObject({
+          id: program2.id,
+          version: 2,
+        });
+      });
+
+      it('returns program with version 3', async () => {
+        const foundProgram =
+          await detectionProgramRepository.findByRuleIdAndVersion(rule.id, 3);
+
+        expect(foundProgram).toMatchObject({
+          id: program3.id,
+          version: 3,
+        });
+      });
     });
   });
 

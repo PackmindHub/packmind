@@ -169,11 +169,8 @@ export class ActiveDetectionProgramRepository
         )
         .where('active_detection_program.ruleId = :ruleId', { ruleId });
 
-      if (!opts?.includeDeleted) {
-        queryBuilder
-          .andWhere('active_detection_program.deletedAt IS NULL')
-          .andWhere('detection_program.deletedAt IS NULL')
-          .andWhere('draft_detection_program.deletedAt IS NULL');
+      if (opts?.includeDeleted) {
+        queryBuilder.withDeleted();
       }
 
       const programs = await queryBuilder.getMany();

@@ -171,8 +171,7 @@ describe('AccordionProgramActionButtons', () => {
         });
       });
 
-      it('does not auto-switch mode when both exist', () => {
-        // Component is controlled, doesn't auto-switch when both exist
+      it('does not auto-switch mode', () => {
         expect(onViewModeChange).not.toHaveBeenCalled();
       });
     });

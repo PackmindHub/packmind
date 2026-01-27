@@ -4,13 +4,12 @@ import {
   GetStandardRulesDetectionStatusCommand,
   GetStandardRulesDetectionStatusResponse,
   IAccountsPort,
+  IComputeRuleLanguageDetectionStatusUseCase,
   IStandardsPort,
   ProgrammingLanguage,
   RuleDetectionStatusSummary,
   RuleLanguageStatus,
 } from '@packmind/types';
-import { ILinterRepositories } from '../../../domain/repositories/ILinterRepositories';
-import { ComputeRuleLanguageDetectionStatusUseCase } from '../computeRuleLanguageDetectionStatus/computeRuleLanguageDetectionStatus.usecase';
 
 const origin = 'GetStandardRulesDetectionStatusUseCase';
 
@@ -20,8 +19,8 @@ export class GetStandardRulesDetectionStatusUseCase extends AbstractMemberUseCas
 > {
   constructor(
     accountsPort: IAccountsPort,
-    private readonly repositories: ILinterRepositories,
     private readonly standardsAdapter: IStandardsPort,
+    private readonly computeRuleLanguageDetectionStatusUseCase: IComputeRuleLanguageDetectionStatusUseCase,
     logger: PackmindLogger = new PackmindLogger(origin),
   ) {
     super(accountsPort, logger);
@@ -63,14 +62,12 @@ export class GetStandardRulesDetectionStatusUseCase extends AbstractMemberUseCas
         const languages = Array.from(languagesSet);
 
         // Compute detection status for each language in parallel
-        const computeDetectionStatusUseCase =
-          new ComputeRuleLanguageDetectionStatusUseCase(this.repositories);
-
         const languageStatusPromises = languages.map(async (language) => {
-          const statusResponse = await computeDetectionStatusUseCase.execute({
-            ruleId: rule.id,
-            language,
-          });
+          const statusResponse =
+            await this.computeRuleLanguageDetectionStatusUseCase.execute({
+              ruleId: rule.id,
+              language,
+            });
 
           const languageStatus: RuleLanguageStatus = {
             language,

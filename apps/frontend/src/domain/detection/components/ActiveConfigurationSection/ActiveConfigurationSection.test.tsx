@@ -244,7 +244,7 @@ describe('ActivateConfigurationCard', () => {
         screen = renderWithContext();
       });
 
-      it('shows the ToReview section when configuration needs review', () => {
+      it('shows the ToReview section', () => {
         expect(
           screen.getAllByText(/Program is outdated/i)[0],
         ).toBeInTheDocument();
@@ -322,25 +322,33 @@ describe('ActivateConfigurationCard', () => {
           screen = renderWithContext();
         });
 
-        it('shows active configuration sections with ToReview section', () => {
+        it('shows "Program is outdated" message', () => {
           expect(
             screen.getAllByText(/Program is outdated/i)[0],
           ).toBeInTheDocument();
+        });
+
+        it('shows "Test active version" section', () => {
           expect(
             screen.getAllByText(/Test active version/i)[0],
           ).toBeInTheDocument();
+        });
+
+        it('shows "Deal with false-positives" section', () => {
           expect(
             screen.getAllByText(/Deal with false-positives/i)[0],
           ).toBeInTheDocument();
         });
 
-        it('shows "Generate new program" button in ToReview section', async () => {
-          const user = userEvent.setup();
-          await user.click(screen.getAllByText('Generate new program')[0]);
+        describe('when clicking "Generate new program" button', () => {
+          it('triggers onGenerateProgram', async () => {
+            const user = userEvent.setup();
+            await user.click(screen.getAllByText('Generate new program')[0]);
 
-          expect(onGenerateProgramSpy).toHaveBeenCalledWith(
-            configuration.language,
-          );
+            expect(onGenerateProgramSpy).toHaveBeenCalledWith(
+              configuration.language,
+            );
+          });
         });
       });
 
@@ -361,25 +369,33 @@ describe('ActivateConfigurationCard', () => {
           screen = renderWithContext();
         });
 
-        it('shows active configuration sections with ToReview section', () => {
+        it('shows "Program is outdated" message', () => {
           expect(
             screen.getAllByText(/Program is outdated/i)[0],
           ).toBeInTheDocument();
+        });
+
+        it('shows "Test active version" section', () => {
           expect(
             screen.getAllByText(/Test active version/i)[0],
           ).toBeInTheDocument();
+        });
+
+        it('shows "Deal with false-positives" section', () => {
           expect(
             screen.getAllByText(/Deal with false-positives/i)[0],
           ).toBeInTheDocument();
         });
 
-        it('shows "Generate new program" button in ToReview section', async () => {
-          const user = userEvent.setup();
-          await user.click(screen.getAllByText('Generate new program')[0]);
+        describe('when clicking "Generate new program" button', () => {
+          it('triggers onGenerateProgram', async () => {
+            const user = userEvent.setup();
+            await user.click(screen.getAllByText('Generate new program')[0]);
 
-          expect(onGenerateProgramSpy).toHaveBeenCalledWith(
-            configuration.language,
-          );
+            expect(onGenerateProgramSpy).toHaveBeenCalledWith(
+              configuration.language,
+            );
+          });
         });
       });
 
@@ -400,25 +416,33 @@ describe('ActivateConfigurationCard', () => {
           screen = renderWithContext();
         });
 
-        it('shows active configuration sections with ToReview section', () => {
+        it('shows "Program is outdated" message', () => {
           expect(
             screen.getAllByText(/Program is outdated/i)[0],
           ).toBeInTheDocument();
+        });
+
+        it('shows "Test active version" section', () => {
           expect(
             screen.getAllByText(/Test active version/i)[0],
           ).toBeInTheDocument();
+        });
+
+        it('shows "Deal with false-positives" section', () => {
           expect(
             screen.getAllByText(/Deal with false-positives/i)[0],
           ).toBeInTheDocument();
         });
 
-        it('shows "Generate new program" button in ToReview section', async () => {
-          const user = userEvent.setup();
-          await user.click(screen.getAllByText('Generate new program')[0]);
+        describe('when clicking "Generate new program" button', () => {
+          it('triggers onGenerateProgram', async () => {
+            const user = userEvent.setup();
+            await user.click(screen.getAllByText('Generate new program')[0]);
 
-          expect(onGenerateProgramSpy).toHaveBeenCalledWith(
-            configuration.language,
-          );
+            expect(onGenerateProgramSpy).toHaveBeenCalledWith(
+              configuration.language,
+            );
+          });
         });
       });
     });
@@ -435,9 +459,11 @@ describe('ActivateConfigurationCard', () => {
         screen = renderWithContext();
       });
 
-      it('shows the detectability and active program sections', () => {
-        // For OK state, we show detectability and other active program sections
+      it('shows "Rule is detectable" section', () => {
         expect(screen.getByText(/Rule is detectable/i)).toBeInTheDocument();
+      });
+
+      it('shows "Test active version" section', () => {
         expect(screen.getByText(/Test active version/i)).toBeInTheDocument();
       });
 

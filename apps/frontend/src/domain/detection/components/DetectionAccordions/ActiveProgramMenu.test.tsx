@@ -126,8 +126,7 @@ describe('ActiveProgramMenu', () => {
         });
       });
 
-      it('does not render menu when generating without active program', () => {
-        // Menu should not render when there's no active program and we're generating
+      it('does not render menu', () => {
         expect(screen.queryByText('Active')).not.toBeInTheDocument();
       });
     });
@@ -142,41 +141,50 @@ describe('ActiveProgramMenu', () => {
         });
       });
 
-      it('shows "Test program", "Generation details" and "Generate new draft" actions', async () => {
-        const trigger = screen.getByText('Active');
-        fireEvent.click(trigger);
+      describe('when menu is opened', () => {
+        beforeEach(async () => {
+          const trigger = screen.getByText('Active');
+          fireEvent.click(trigger);
+          await waitFor(() => {
+            screen.getByText('Test program');
+          });
+        });
 
-        await waitFor(() => {
+        it('displays "Test program" action', () => {
           expect(screen.getByText('Test program')).toBeInTheDocument();
+        });
+
+        it('displays "Generation details" action', () => {
           expect(screen.getByText('Generation details')).toBeInTheDocument();
+        });
+
+        it('displays "Generate new draft" action', () => {
           expect(screen.getByText('Generate new draft')).toBeInTheDocument();
         });
-      });
 
-      it('calls onTestProgram when "Test program" is clicked', async () => {
-        const trigger = screen.getByText('Active');
-        fireEvent.click(trigger);
+        describe('when "Test program" is clicked', () => {
+          beforeEach(() => {
+            const testItem = screen.getByText('Test program');
+            fireEvent.click(testItem);
+          });
 
-        await waitFor(() => {
-          const testItem = screen.getByText('Test program');
-          fireEvent.click(testItem);
+          it('calls onTestProgram callback', () => {
+            expect(onTestProgram).toHaveBeenCalled();
+          });
         });
 
-        expect(onTestProgram).toHaveBeenCalled();
-      });
+        describe('when "Generate new draft" is clicked', () => {
+          beforeEach(() => {
+            const generateItem = screen.getByText('Generate new draft');
+            fireEvent.click(generateItem);
+          });
 
-      it('calls onGenerateProgram when "Generate new draft" is clicked', async () => {
-        const trigger = screen.getByText('Active');
-        fireEvent.click(trigger);
-
-        await waitFor(() => {
-          const generateItem = screen.getByText('Generate new draft');
-          fireEvent.click(generateItem);
+          it('calls onGenerateProgram callback with the language', () => {
+            expect(onGenerateProgram).toHaveBeenCalledWith(
+              ProgrammingLanguage.TYPESCRIPT,
+            );
+          });
         });
-
-        expect(onGenerateProgram).toHaveBeenCalledWith(
-          ProgrammingLanguage.TYPESCRIPT,
-        );
       });
     });
 
@@ -188,13 +196,24 @@ describe('ActiveProgramMenu', () => {
         });
       });
 
-      it('shows "Generation details" and "Generate new draft" actions (no Test for TO_REVIEW)', async () => {
-        const trigger = screen.getByText('To review');
-        fireEvent.click(trigger);
+      describe('when menu is opened', () => {
+        beforeEach(async () => {
+          const trigger = screen.getByText('To review');
+          fireEvent.click(trigger);
+          await waitFor(() => {
+            screen.getByText('Generation details');
+          });
+        });
 
-        await waitFor(() => {
+        it('does not display "Test program" action', () => {
           expect(screen.queryByText('Test program')).not.toBeInTheDocument();
+        });
+
+        it('displays "Generation details" action', () => {
           expect(screen.getByText('Generation details')).toBeInTheDocument();
+        });
+
+        it('displays "Generate new draft" action', () => {
           expect(screen.getByText('Generate new draft')).toBeInTheDocument();
         });
       });
@@ -208,14 +227,25 @@ describe('ActiveProgramMenu', () => {
         });
       });
 
-      it('shows "Generate new draft" action as disabled', async () => {
-        const trigger = screen.getByText('Active');
-        fireEvent.click(trigger);
+      describe('when menu is opened', () => {
+        beforeEach(async () => {
+          const trigger = screen.getByText('Active');
+          fireEvent.click(trigger);
+          await waitFor(() => {
+            screen.getByText('Test program');
+          });
+        });
 
-        await waitFor(() => {
+        it('displays "Test program" action', () => {
           expect(screen.getByText('Test program')).toBeInTheDocument();
+        });
+
+        it('displays "Generate new draft" action', () => {
+          expect(screen.getByText('Generate new draft')).toBeInTheDocument();
+        });
+
+        it('disables "Generate new draft" action', () => {
           const generateItem = screen.getByText('Generate new draft');
-          expect(generateItem).toBeInTheDocument();
           expect(generateItem.closest('[data-disabled]')).toBeInTheDocument();
         });
       });

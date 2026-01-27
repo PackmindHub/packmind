@@ -40,17 +40,24 @@ describe('AmplitudeController', () => {
   });
 
   describe('getConfig', () => {
-    it('returns amplitude configuration from service', async () => {
-      const mockConfig = {
-        amplitudeKey: 'test-key',
-        amplitudeRegion: 'EU',
-      };
+    const mockConfig = {
+      amplitudeKey: 'test-key',
+      amplitudeRegion: 'EU',
+    };
 
+    beforeEach(() => {
       jest.spyOn(service, 'getConfig').mockResolvedValue(mockConfig);
+    });
 
+    it('returns amplitude configuration from service', async () => {
       const result = await controller.getConfig();
 
       expect(result).toEqual(mockConfig);
+    });
+
+    it('calls the service getConfig method once', async () => {
+      await controller.getConfig();
+
       expect(service.getConfig).toHaveBeenCalledTimes(1);
     });
   });

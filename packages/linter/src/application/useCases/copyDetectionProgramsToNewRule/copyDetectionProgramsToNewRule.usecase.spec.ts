@@ -77,221 +77,330 @@ describe('CopyDetectionProgramsToNewRuleUseCase', () => {
   });
 
   describe('when old rule has detection programs', () => {
-    it('copies all detection programs with preserved versions and new rule ID', async () => {
-      const detectionProgram1 = detectionProgramFactory({
-        ruleId: oldRuleId,
-        language: ProgrammingLanguage.TYPESCRIPT,
-        version: 1,
+    describe('when copying all detection programs', () => {
+      let result: { copiedProgramsCount: number };
+      let detectionProgram1: DetectionProgram;
+      let detectionProgram2: DetectionProgram;
+
+      beforeEach(async () => {
+        detectionProgram1 = detectionProgramFactory({
+          ruleId: oldRuleId,
+          language: ProgrammingLanguage.TYPESCRIPT,
+          version: 1,
+        });
+        detectionProgram2 = detectionProgramFactory({
+          ruleId: oldRuleId,
+          language: ProgrammingLanguage.PYTHON,
+          version: 1,
+        });
+
+        detectionProgramRepository.findByRuleId.mockResolvedValue([
+          detectionProgram1,
+          detectionProgram2,
+        ]);
+        activeDetectionProgramRepository.findByRuleIdWithPrograms.mockResolvedValue(
+          [],
+        );
+
+        detectionProgramRepository.add.mockImplementation(
+          async (program: DetectionProgram) => program,
+        );
+
+        result = await useCase.execute({
+          oldRuleId,
+          newRuleId,
+          organizationId,
+          userId,
+        });
       });
-      const detectionProgram2 = detectionProgramFactory({
-        ruleId: oldRuleId,
-        language: ProgrammingLanguage.PYTHON,
-        version: 1,
+
+      it('returns copied programs count of 2', () => {
+        expect(result.copiedProgramsCount).toBe(2);
       });
 
-      detectionProgramRepository.findByRuleId.mockResolvedValue([
-        detectionProgram1,
-        detectionProgram2,
-      ]);
-      activeDetectionProgramRepository.findByRuleIdWithPrograms.mockResolvedValue(
-        [],
-      );
-
-      detectionProgramRepository.add.mockImplementation(
-        async (program: DetectionProgram) => program,
-      );
-
-      const result = await useCase.execute({
-        oldRuleId,
-        newRuleId,
-        organizationId,
-        userId,
+      it('calls add on detection program repository twice', () => {
+        expect(detectionProgramRepository.add).toHaveBeenCalledTimes(2);
       });
 
-      expect(result.copiedProgramsCount).toBe(2);
-      expect(detectionProgramRepository.add).toHaveBeenCalledTimes(2);
+      it('assigns new rule ID to first copied program', () => {
+        const firstCall = detectionProgramRepository.add.mock.calls[0][0];
+        expect(firstCall.ruleId).toBe(newRuleId);
+      });
 
-      // Verify first program was copied correctly
-      const firstCall = detectionProgramRepository.add.mock.calls[0][0];
-      expect(firstCall.ruleId).toBe(newRuleId);
-      expect(firstCall.version).toBe(1);
-      expect(firstCall.language).toBe(ProgrammingLanguage.TYPESCRIPT);
-      expect(firstCall.id).not.toBe(detectionProgram1.id);
+      it('preserves version of first copied program', () => {
+        const firstCall = detectionProgramRepository.add.mock.calls[0][0];
+        expect(firstCall.version).toBe(1);
+      });
 
-      // Verify second program was copied correctly
-      const secondCall = detectionProgramRepository.add.mock.calls[1][0];
-      expect(secondCall.ruleId).toBe(newRuleId);
-      expect(secondCall.version).toBe(1);
-      expect(secondCall.language).toBe(ProgrammingLanguage.PYTHON);
-      expect(secondCall.id).not.toBe(detectionProgram2.id);
+      it('preserves language of first copied program', () => {
+        const firstCall = detectionProgramRepository.add.mock.calls[0][0];
+        expect(firstCall.language).toBe(ProgrammingLanguage.TYPESCRIPT);
+      });
+
+      it('generates new ID for first copied program', () => {
+        const firstCall = detectionProgramRepository.add.mock.calls[0][0];
+        expect(firstCall.id).not.toBe(detectionProgram1.id);
+      });
+
+      it('assigns new rule ID to second copied program', () => {
+        const secondCall = detectionProgramRepository.add.mock.calls[1][0];
+        expect(secondCall.ruleId).toBe(newRuleId);
+      });
+
+      it('preserves version of second copied program', () => {
+        const secondCall = detectionProgramRepository.add.mock.calls[1][0];
+        expect(secondCall.version).toBe(1);
+      });
+
+      it('preserves language of second copied program', () => {
+        const secondCall = detectionProgramRepository.add.mock.calls[1][0];
+        expect(secondCall.language).toBe(ProgrammingLanguage.PYTHON);
+      });
+
+      it('generates new ID for second copied program', () => {
+        const secondCall = detectionProgramRepository.add.mock.calls[1][0];
+        expect(secondCall.id).not.toBe(detectionProgram2.id);
+      });
     });
 
-    it('copies active detection programs with correct references to new programs', async () => {
-      const detectionProgram = detectionProgramFactory({
-        ruleId: oldRuleId,
-        language: ProgrammingLanguage.TYPESCRIPT,
-        version: 1,
+    describe('when copying active detection programs', () => {
+      let detectionProgram: DetectionProgram;
+      let activeProgram: LanguageDetectionPrograms;
+
+      beforeEach(async () => {
+        detectionProgram = detectionProgramFactory({
+          ruleId: oldRuleId,
+          language: ProgrammingLanguage.TYPESCRIPT,
+          version: 1,
+        });
+
+        activeProgram = activeDetectionProgramFactory({
+          ruleId: oldRuleId,
+          language: ProgrammingLanguage.TYPESCRIPT,
+          detectionProgramVersion: detectionProgram.id,
+          detectionProgramDraftVersion: null,
+        }) as LanguageDetectionPrograms;
+
+        detectionProgramRepository.findByRuleId.mockResolvedValue([
+          detectionProgram,
+        ]);
+        activeDetectionProgramRepository.findByRuleIdWithPrograms.mockResolvedValue(
+          [activeProgram],
+        );
+
+        detectionProgramRepository.add.mockImplementation(
+          async (program: DetectionProgram) => program,
+        );
+        activeDetectionProgramRepository.add.mockImplementation(
+          async (active) => active,
+        );
+
+        await useCase.execute({
+          oldRuleId,
+          newRuleId,
+          organizationId,
+          userId,
+        });
       });
 
-      const activeProgram = activeDetectionProgramFactory({
-        ruleId: oldRuleId,
-        language: ProgrammingLanguage.TYPESCRIPT,
-        detectionProgramVersion: detectionProgram.id,
-        detectionProgramDraftVersion: null,
-      }) as LanguageDetectionPrograms;
-
-      detectionProgramRepository.findByRuleId.mockResolvedValue([
-        detectionProgram,
-      ]);
-      activeDetectionProgramRepository.findByRuleIdWithPrograms.mockResolvedValue(
-        [activeProgram],
-      );
-
-      detectionProgramRepository.add.mockImplementation(
-        async (program: DetectionProgram) => program,
-      );
-      activeDetectionProgramRepository.add.mockImplementation(
-        async (active) => active,
-      );
-
-      await useCase.execute({
-        oldRuleId,
-        newRuleId,
-        organizationId,
-        userId,
+      it('calls add on active detection program repository once', () => {
+        expect(activeDetectionProgramRepository.add).toHaveBeenCalledTimes(1);
       });
 
-      expect(activeDetectionProgramRepository.add).toHaveBeenCalledTimes(1);
+      it('assigns new rule ID to copied active program', () => {
+        const activeCall =
+          activeDetectionProgramRepository.add.mock.calls[0][0];
+        expect(activeCall.ruleId).toBe(newRuleId);
+      });
 
-      const activeCall = activeDetectionProgramRepository.add.mock.calls[0][0];
-      expect(activeCall.ruleId).toBe(newRuleId);
-      expect(activeCall.language).toBe(ProgrammingLanguage.TYPESCRIPT);
-      expect(activeCall.id).not.toBe(activeProgram.id);
-      expect(activeCall.detectionProgramVersion).not.toBe(detectionProgram.id);
-      expect(activeCall.detectionProgramVersion).toBeTruthy();
+      it('preserves language of copied active program', () => {
+        const activeCall =
+          activeDetectionProgramRepository.add.mock.calls[0][0];
+        expect(activeCall.language).toBe(ProgrammingLanguage.TYPESCRIPT);
+      });
+
+      it('generates new ID for copied active program', () => {
+        const activeCall =
+          activeDetectionProgramRepository.add.mock.calls[0][0];
+        expect(activeCall.id).not.toBe(activeProgram.id);
+      });
+
+      it('updates detection program version reference to new program', () => {
+        const activeCall =
+          activeDetectionProgramRepository.add.mock.calls[0][0];
+        expect(activeCall.detectionProgramVersion).not.toBe(
+          detectionProgram.id,
+        );
+      });
+
+      it('sets a truthy detection program version reference', () => {
+        const activeCall =
+          activeDetectionProgramRepository.add.mock.calls[0][0];
+        expect(activeCall.detectionProgramVersion).toBeTruthy();
+      });
     });
 
-    it('handles active programs with both active and draft versions', async () => {
-      const detectionProgram1 = detectionProgramFactory({
-        ruleId: oldRuleId,
-        language: ProgrammingLanguage.TYPESCRIPT,
-        version: 1,
+    describe('when active programs have both active and draft versions', () => {
+      let activeCall: LanguageDetectionPrograms;
+
+      beforeEach(async () => {
+        const detectionProgram1 = detectionProgramFactory({
+          ruleId: oldRuleId,
+          language: ProgrammingLanguage.TYPESCRIPT,
+          version: 1,
+        });
+        const detectionProgram2 = detectionProgramFactory({
+          ruleId: oldRuleId,
+          language: ProgrammingLanguage.TYPESCRIPT,
+          version: 2,
+        });
+
+        const activeProgram = activeDetectionProgramFactory({
+          ruleId: oldRuleId,
+          language: ProgrammingLanguage.TYPESCRIPT,
+          detectionProgramVersion: detectionProgram1.id,
+          detectionProgramDraftVersion: detectionProgram2.id,
+        }) as LanguageDetectionPrograms;
+
+        detectionProgramRepository.findByRuleId.mockResolvedValue([
+          detectionProgram1,
+          detectionProgram2,
+        ]);
+        activeDetectionProgramRepository.findByRuleIdWithPrograms.mockResolvedValue(
+          [activeProgram],
+        );
+
+        detectionProgramRepository.add.mockImplementation(
+          async (program: DetectionProgram) => program,
+        );
+        activeDetectionProgramRepository.add.mockImplementation(
+          async (active) => active,
+        );
+
+        await useCase.execute({
+          oldRuleId,
+          newRuleId,
+          organizationId,
+          userId,
+        });
+
+        activeCall = activeDetectionProgramRepository.add.mock.calls[0][0];
       });
-      const detectionProgram2 = detectionProgramFactory({
-        ruleId: oldRuleId,
-        language: ProgrammingLanguage.TYPESCRIPT,
-        version: 2,
+
+      it('sets truthy detection program version', () => {
+        expect(activeCall.detectionProgramVersion).toBeTruthy();
       });
 
-      const activeProgram = activeDetectionProgramFactory({
-        ruleId: oldRuleId,
-        language: ProgrammingLanguage.TYPESCRIPT,
-        detectionProgramVersion: detectionProgram1.id,
-        detectionProgramDraftVersion: detectionProgram2.id,
-      }) as LanguageDetectionPrograms;
-
-      detectionProgramRepository.findByRuleId.mockResolvedValue([
-        detectionProgram1,
-        detectionProgram2,
-      ]);
-      activeDetectionProgramRepository.findByRuleIdWithPrograms.mockResolvedValue(
-        [activeProgram],
-      );
-
-      detectionProgramRepository.add.mockImplementation(
-        async (program: DetectionProgram) => program,
-      );
-      activeDetectionProgramRepository.add.mockImplementation(
-        async (active) => active,
-      );
-
-      await useCase.execute({
-        oldRuleId,
-        newRuleId,
-        organizationId,
-        userId,
+      it('sets truthy detection program draft version', () => {
+        expect(activeCall.detectionProgramDraftVersion).toBeTruthy();
       });
 
-      const activeCall = activeDetectionProgramRepository.add.mock.calls[0][0];
-      expect(activeCall.detectionProgramVersion).toBeTruthy();
-      expect(activeCall.detectionProgramDraftVersion).toBeTruthy();
-      expect(activeCall.detectionProgramVersion).not.toBe(
-        activeCall.detectionProgramDraftVersion,
-      );
+      it('uses different IDs for active and draft versions', () => {
+        expect(activeCall.detectionProgramVersion).not.toBe(
+          activeCall.detectionProgramDraftVersion,
+        );
+      });
     });
 
-    it('handles multiple languages per rule', async () => {
-      const tsProgram = detectionProgramFactory({
-        ruleId: oldRuleId,
-        language: ProgrammingLanguage.TYPESCRIPT,
+    describe('when handling multiple languages per rule', () => {
+      let result: { copiedProgramsCount: number };
+
+      beforeEach(async () => {
+        const tsProgram = detectionProgramFactory({
+          ruleId: oldRuleId,
+          language: ProgrammingLanguage.TYPESCRIPT,
+        });
+        const pyProgram = detectionProgramFactory({
+          ruleId: oldRuleId,
+          language: ProgrammingLanguage.PYTHON,
+        });
+
+        const tsActiveProgram = activeDetectionProgramFactory({
+          ruleId: oldRuleId,
+          language: ProgrammingLanguage.TYPESCRIPT,
+          detectionProgramVersion: tsProgram.id,
+        }) as LanguageDetectionPrograms;
+
+        const pyActiveProgram = activeDetectionProgramFactory({
+          ruleId: oldRuleId,
+          language: ProgrammingLanguage.PYTHON,
+          detectionProgramVersion: pyProgram.id,
+        }) as LanguageDetectionPrograms;
+
+        detectionProgramRepository.findByRuleId.mockResolvedValue([
+          tsProgram,
+          pyProgram,
+        ]);
+        activeDetectionProgramRepository.findByRuleIdWithPrograms.mockResolvedValue(
+          [tsActiveProgram, pyActiveProgram],
+        );
+
+        detectionProgramRepository.add.mockImplementation(
+          async (program: DetectionProgram) => program,
+        );
+        activeDetectionProgramRepository.add.mockImplementation(
+          async (active) => active,
+        );
+
+        result = await useCase.execute({
+          oldRuleId,
+          newRuleId,
+          organizationId,
+          userId,
+        });
       });
-      const pyProgram = detectionProgramFactory({
-        ruleId: oldRuleId,
-        language: ProgrammingLanguage.PYTHON,
+
+      it('returns copied programs count of 2', () => {
+        expect(result.copiedProgramsCount).toBe(2);
       });
 
-      const tsActiveProgram = activeDetectionProgramFactory({
-        ruleId: oldRuleId,
-        language: ProgrammingLanguage.TYPESCRIPT,
-        detectionProgramVersion: tsProgram.id,
-      }) as LanguageDetectionPrograms;
-
-      const pyActiveProgram = activeDetectionProgramFactory({
-        ruleId: oldRuleId,
-        language: ProgrammingLanguage.PYTHON,
-        detectionProgramVersion: pyProgram.id,
-      }) as LanguageDetectionPrograms;
-
-      detectionProgramRepository.findByRuleId.mockResolvedValue([
-        tsProgram,
-        pyProgram,
-      ]);
-      activeDetectionProgramRepository.findByRuleIdWithPrograms.mockResolvedValue(
-        [tsActiveProgram, pyActiveProgram],
-      );
-
-      detectionProgramRepository.add.mockImplementation(
-        async (program: DetectionProgram) => program,
-      );
-      activeDetectionProgramRepository.add.mockImplementation(
-        async (active) => active,
-      );
-
-      const result = await useCase.execute({
-        oldRuleId,
-        newRuleId,
-        organizationId,
-        userId,
+      it('calls add on detection program repository twice', () => {
+        expect(detectionProgramRepository.add).toHaveBeenCalledTimes(2);
       });
 
-      expect(result.copiedProgramsCount).toBe(2);
-      expect(detectionProgramRepository.add).toHaveBeenCalledTimes(2);
-      expect(activeDetectionProgramRepository.add).toHaveBeenCalledTimes(2);
+      it('calls add on active detection program repository twice', () => {
+        expect(activeDetectionProgramRepository.add).toHaveBeenCalledTimes(2);
+      });
     });
   });
 
   describe('when old rule has no detection programs', () => {
-    it('returns zero count without attempting to copy anything', async () => {
+    let result: { copiedProgramsCount: number };
+
+    beforeEach(async () => {
       detectionProgramRepository.findByRuleId.mockResolvedValue([]);
 
-      const result = await useCase.execute({
+      result = await useCase.execute({
         oldRuleId,
         newRuleId,
         organizationId,
         userId,
       });
+    });
 
+    it('returns zero copied programs count', () => {
       expect(result.copiedProgramsCount).toBe(0);
+    });
+
+    it('does not call add on detection program repository', () => {
       expect(detectionProgramRepository.add).not.toHaveBeenCalled();
+    });
+
+    it('does not call findByRuleIdWithPrograms on active detection program repository', () => {
       expect(
         activeDetectionProgramRepository.findByRuleIdWithPrograms,
       ).not.toHaveBeenCalled();
+    });
+
+    it('does not call add on active detection program repository', () => {
       expect(activeDetectionProgramRepository.add).not.toHaveBeenCalled();
     });
   });
 
   describe('when old rule has detection programs but no active programs', () => {
-    it('copies detection programs but not active programs', async () => {
+    let result: { copiedProgramsCount: number };
+
+    beforeEach(async () => {
       const detectionProgram = detectionProgramFactory({
         ruleId: oldRuleId,
         language: ProgrammingLanguage.TYPESCRIPT,
@@ -308,15 +417,23 @@ describe('CopyDetectionProgramsToNewRuleUseCase', () => {
         async (program: DetectionProgram) => program,
       );
 
-      const result = await useCase.execute({
+      result = await useCase.execute({
         oldRuleId,
         newRuleId,
         organizationId,
         userId,
       });
+    });
 
+    it('returns copied programs count of 1', () => {
       expect(result.copiedProgramsCount).toBe(1);
+    });
+
+    it('calls add on detection program repository once', () => {
       expect(detectionProgramRepository.add).toHaveBeenCalledTimes(1);
+    });
+
+    it('does not call add on active detection program repository', () => {
       expect(activeDetectionProgramRepository.add).not.toHaveBeenCalled();
     });
   });

@@ -92,13 +92,23 @@ describe('resolveActiveConfigurationView', () => {
     });
   });
 
-  it('falls back to error descriptor', () => {
-    const descriptor = resolveActiveConfigurationView({
-      ...baseConfig,
-      state: ActiveConfigurationState.ERROR,
+  describe('when state is error', () => {
+    it('returns error view state', () => {
+      const descriptor = resolveActiveConfigurationView({
+        ...baseConfig,
+        state: ActiveConfigurationState.ERROR,
+      });
+
+      expect(descriptor.viewState).toBe(ActiveConfigurationViewState.ERROR);
     });
 
-    expect(descriptor.viewState).toBe(ActiveConfigurationViewState.ERROR);
-    expect(descriptor.sectionKeys).toEqual([]);
+    it('returns empty section keys', () => {
+      const descriptor = resolveActiveConfigurationView({
+        ...baseConfig,
+        state: ActiveConfigurationState.ERROR,
+      });
+
+      expect(descriptor.sectionKeys).toEqual([]);
+    });
   });
 });

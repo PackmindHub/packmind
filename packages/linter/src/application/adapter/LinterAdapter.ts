@@ -334,8 +334,8 @@ export class LinterAdapter implements IBaseAdapter<ILinterPort>, ILinterPort {
     this._getStandardRulesDetectionStatusUseCase =
       new GetStandardRulesDetectionStatusUseCase(
         this.accountsPort,
-        this.repositories,
         this.standardsPort,
+        this._computeRuleLanguageDetectionStatusUseCase,
       );
 
     this._testProgramExecutionUseCase = new TestProgramExecutionUseCase(

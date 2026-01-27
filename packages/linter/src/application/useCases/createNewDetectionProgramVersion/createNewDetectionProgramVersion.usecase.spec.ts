@@ -99,80 +99,82 @@ describe('CreateNewDetectionProgramVersionUsecase', () => {
 
   describe('execute', () => {
     describe('when updateActiveDetectionProgram is true', () => {
-      it('creates new detection program and updates active detection program', async () => {
-        const organizationId = createOrganizationId(uuidv4());
-        const userId = createUserId(uuidv4());
-        const ruleId = createRuleId(uuidv4());
-        const standardVersionId = createStandardVersionId(uuidv4());
-        const standardId = createStandardId(uuidv4());
-        const activeDetectionProgramId =
-          createActiveDetectionProgramId(uuidv4());
-        const currentDetectionProgramId = createDetectionProgramId(uuidv4());
-        const newDetectionProgramId = createDetectionProgramId(uuidv4());
+      const organizationId = createOrganizationId(uuidv4());
+      const userId = createUserId(uuidv4());
+      const ruleId = createRuleId(uuidv4());
+      const standardVersionId = createStandardVersionId(uuidv4());
+      const standardId = createStandardId(uuidv4());
+      const activeDetectionProgramId = createActiveDetectionProgramId(uuidv4());
+      const currentDetectionProgramId = createDetectionProgramId(uuidv4());
+      const newDetectionProgramId = createDetectionProgramId(uuidv4());
 
-        const command: CreateNewDetectionProgramVersionCommand = {
-          activeDetectionProgramId,
-          code: 'updated code',
-          mode: DetectionModeEnum.SINGLE_AST,
-          status: DetectionStatus.READY,
-          updateActiveDetectionProgram: true,
-          userId,
-          organizationId,
-        };
+      const command: CreateNewDetectionProgramVersionCommand = {
+        activeDetectionProgramId,
+        code: 'updated code',
+        mode: DetectionModeEnum.SINGLE_AST,
+        status: DetectionStatus.READY,
+        updateActiveDetectionProgram: true,
+        userId,
+        organizationId,
+      };
 
-        const existingRule = ruleFactory({
-          id: ruleId,
-          standardVersionId,
-        });
+      const existingRule = ruleFactory({
+        id: ruleId,
+        standardVersionId,
+      });
 
-        const existingStandardVersion = {
-          id: standardVersionId,
-          standardId,
-          name: 'Test Standard',
-          slug: 'test-standard',
-          description: 'Test Description',
-          version: 1,
-          scope: null,
-        };
+      const existingStandardVersion = {
+        id: standardVersionId,
+        standardId,
+        name: 'Test Standard',
+        slug: 'test-standard',
+        description: 'Test Description',
+        version: 1,
+        scope: null,
+      };
 
-        const existingStandard = standardFactory({
-          id: standardId,
-          name: 'Test Standard',
-          slug: 'test-standard',
-          userId,
-          scope: null,
-        });
+      const existingStandard = standardFactory({
+        id: standardId,
+        name: 'Test Standard',
+        slug: 'test-standard',
+        userId,
+        scope: null,
+      });
 
-        const activeDetectionProgram = activeDetectionProgramFactory({
-          id: activeDetectionProgramId,
-          detectionProgramVersion: currentDetectionProgramId,
-          ruleId,
-          language: ProgrammingLanguage.JAVASCRIPT,
-        });
+      const activeDetectionProgram = activeDetectionProgramFactory({
+        id: activeDetectionProgramId,
+        detectionProgramVersion: currentDetectionProgramId,
+        ruleId,
+        language: ProgrammingLanguage.JAVASCRIPT,
+      });
 
-        const currentDetectionProgram = detectionProgramFactory({
-          id: currentDetectionProgramId,
-          ruleId,
-          version: 2,
-          mode: DetectionModeEnum.REGEXP,
-          status: DetectionStatus.READY,
-        });
+      const currentDetectionProgram = detectionProgramFactory({
+        id: currentDetectionProgramId,
+        ruleId,
+        version: 2,
+        mode: DetectionModeEnum.REGEXP,
+        status: DetectionStatus.READY,
+      });
 
-        const newDetectionProgram = detectionProgramFactory({
-          id: newDetectionProgramId,
-          ruleId,
-          code: command.code,
-          version: 3,
-          mode: command.mode,
-          status: command.status,
-        });
+      const newDetectionProgram = detectionProgramFactory({
+        id: newDetectionProgramId,
+        ruleId,
+        code: command.code,
+        version: 3,
+        mode: command.mode,
+        status: command.status,
+      });
 
-        const updatedActiveProgram = {
-          ...activeDetectionProgram,
-          detectionProgramVersion: newDetectionProgramId,
-        };
+      const updatedActiveProgram = {
+        ...activeDetectionProgram,
+        detectionProgramVersion: newDetectionProgramId,
+      };
 
-        // Setup mocks
+      let result: Awaited<
+        ReturnType<typeof createNewDetectionProgramVersionUsecase.execute>
+      >;
+
+      beforeEach(async () => {
         activeDetectionProgramRepository.findById.mockResolvedValue(
           activeDetectionProgram,
         );
@@ -192,9 +194,10 @@ describe('CreateNewDetectionProgramVersionUsecase', () => {
           updatedActiveProgram,
         );
 
-        const result =
-          await createNewDetectionProgramVersionUsecase.execute(command);
+        result = await createNewDetectionProgramVersionUsecase.execute(command);
+      });
 
+      it('adds new detection program with correct properties', () => {
         expect(detectionProgramRepository.add).toHaveBeenCalledWith(
           expect.objectContaining({
             ruleId,
@@ -204,6 +207,9 @@ describe('CreateNewDetectionProgramVersionUsecase', () => {
             status: command.status,
           }),
         );
+      });
+
+      it('updates active detection program with new version', () => {
         expect(
           activeDetectionProgramRepository.updateActiveDetectionProgram,
         ).toHaveBeenCalledWith(
@@ -211,74 +217,79 @@ describe('CreateNewDetectionProgramVersionUsecase', () => {
             detectionProgramVersion: newDetectionProgramId,
           }),
         );
+      });
+
+      it('returns the new detection program', () => {
         expect(result).toEqual(newDetectionProgram);
       });
     });
 
     describe('when updateActiveDetectionProgram is false', () => {
-      it('creates new detection program but does not update active detection program', async () => {
-        const organizationId = createOrganizationId(uuidv4());
-        const userId = createUserId(uuidv4());
-        const ruleId = createRuleId(uuidv4());
-        const standardVersionId = createStandardVersionId(uuidv4());
-        const standardId = createStandardId(uuidv4());
-        const activeDetectionProgramId =
-          createActiveDetectionProgramId(uuidv4());
-        const currentDetectionProgramId = createDetectionProgramId(uuidv4());
-        const newDetectionProgramId = createDetectionProgramId(uuidv4());
+      const organizationId = createOrganizationId(uuidv4());
+      const userId = createUserId(uuidv4());
+      const ruleId = createRuleId(uuidv4());
+      const standardVersionId = createStandardVersionId(uuidv4());
+      const standardId = createStandardId(uuidv4());
+      const activeDetectionProgramId = createActiveDetectionProgramId(uuidv4());
+      const currentDetectionProgramId = createDetectionProgramId(uuidv4());
+      const newDetectionProgramId = createDetectionProgramId(uuidv4());
 
-        const command: CreateNewDetectionProgramVersionCommand = {
-          activeDetectionProgramId,
-          code: 'updated code',
-          updateActiveDetectionProgram: false,
-          organizationId,
-          userId,
-        };
+      const command: CreateNewDetectionProgramVersionCommand = {
+        activeDetectionProgramId,
+        code: 'updated code',
+        updateActiveDetectionProgram: false,
+        organizationId,
+        userId,
+      };
 
-        const existingRule = ruleFactory({
-          id: ruleId,
-          standardVersionId,
-        });
+      const existingRule = ruleFactory({
+        id: ruleId,
+        standardVersionId,
+      });
 
-        const existingStandardVersion = {
-          id: standardVersionId,
-          standardId,
-          name: 'Test Standard',
-          slug: 'test-standard',
-          description: 'Test Description',
-          version: 1,
-          scope: null,
-        };
+      const existingStandardVersion = {
+        id: standardVersionId,
+        standardId,
+        name: 'Test Standard',
+        slug: 'test-standard',
+        description: 'Test Description',
+        version: 1,
+        scope: null,
+      };
 
-        const existingStandard = standardFactory({
-          id: standardId,
-          name: 'Test Standard',
-          slug: 'test-standard',
-          userId,
-          scope: null,
-        });
+      const existingStandard = standardFactory({
+        id: standardId,
+        name: 'Test Standard',
+        slug: 'test-standard',
+        userId,
+        scope: null,
+      });
 
-        const activeDetectionProgram = activeDetectionProgramFactory({
-          id: activeDetectionProgramId,
-          detectionProgramVersion: currentDetectionProgramId,
-          ruleId,
-          language: ProgrammingLanguage.JAVASCRIPT,
-        });
+      const activeDetectionProgram = activeDetectionProgramFactory({
+        id: activeDetectionProgramId,
+        detectionProgramVersion: currentDetectionProgramId,
+        ruleId,
+        language: ProgrammingLanguage.JAVASCRIPT,
+      });
 
-        const currentDetectionProgram = detectionProgramFactory({
-          id: currentDetectionProgramId,
-          ruleId,
-          version: 2,
-        });
+      const currentDetectionProgram = detectionProgramFactory({
+        id: currentDetectionProgramId,
+        ruleId,
+        version: 2,
+      });
 
-        const newDetectionProgram = detectionProgramFactory({
-          id: newDetectionProgramId,
-          ruleId,
-          code: command.code,
-          version: 3,
-        });
+      const newDetectionProgram = detectionProgramFactory({
+        id: newDetectionProgramId,
+        ruleId,
+        code: command.code,
+        version: 3,
+      });
 
-        // Setup mocks
+      let result: Awaited<
+        ReturnType<typeof createNewDetectionProgramVersionUsecase.execute>
+      >;
+
+      beforeEach(async () => {
         activeDetectionProgramRepository.findById.mockResolvedValue(
           activeDetectionProgram,
         );
@@ -295,9 +306,10 @@ describe('CreateNewDetectionProgramVersionUsecase', () => {
         );
         detectionProgramRepository.add.mockResolvedValue(newDetectionProgram);
 
-        const result =
-          await createNewDetectionProgramVersionUsecase.execute(command);
+        result = await createNewDetectionProgramVersionUsecase.execute(command);
+      });
 
+      it('adds new detection program with correct properties', () => {
         expect(detectionProgramRepository.add).toHaveBeenCalledWith(
           expect.objectContaining({
             ruleId,
@@ -305,76 +317,84 @@ describe('CreateNewDetectionProgramVersionUsecase', () => {
             version: 3,
           }),
         );
+      });
+
+      it('does not update active detection program', () => {
         expect(
           activeDetectionProgramRepository.updateActiveDetectionProgram,
         ).not.toHaveBeenCalled();
+      });
+
+      it('returns the new detection program', () => {
         expect(result).toEqual(newDetectionProgram);
       });
     });
 
     describe('when updateActiveDetectionProgram is undefined', () => {
-      it('creates new detection program but does not update active detection program', async () => {
-        const organizationId = createOrganizationId(uuidv4());
-        const userId = createUserId(uuidv4());
-        const ruleId = createRuleId(uuidv4());
-        const standardVersionId = createStandardVersionId(uuidv4());
-        const standardId = createStandardId(uuidv4());
-        const activeDetectionProgramId =
-          createActiveDetectionProgramId(uuidv4());
-        const currentDetectionProgramId = createDetectionProgramId(uuidv4());
-        const newDetectionProgramId = createDetectionProgramId(uuidv4());
+      const organizationId = createOrganizationId(uuidv4());
+      const userId = createUserId(uuidv4());
+      const ruleId = createRuleId(uuidv4());
+      const standardVersionId = createStandardVersionId(uuidv4());
+      const standardId = createStandardId(uuidv4());
+      const activeDetectionProgramId = createActiveDetectionProgramId(uuidv4());
+      const currentDetectionProgramId = createDetectionProgramId(uuidv4());
+      const newDetectionProgramId = createDetectionProgramId(uuidv4());
 
-        const command: CreateNewDetectionProgramVersionCommand = {
-          activeDetectionProgramId,
-          code: 'updated code',
-          organizationId,
-          userId,
-        };
+      const command: CreateNewDetectionProgramVersionCommand = {
+        activeDetectionProgramId,
+        code: 'updated code',
+        organizationId,
+        userId,
+      };
 
-        const existingRule = ruleFactory({
-          id: ruleId,
-          standardVersionId,
-        });
+      const existingRule = ruleFactory({
+        id: ruleId,
+        standardVersionId,
+      });
 
-        const existingStandardVersion = {
-          id: standardVersionId,
-          standardId,
-          name: 'Test Standard',
-          slug: 'test-standard',
-          description: 'Test Description',
-          version: 1,
-          scope: null,
-        };
+      const existingStandardVersion = {
+        id: standardVersionId,
+        standardId,
+        name: 'Test Standard',
+        slug: 'test-standard',
+        description: 'Test Description',
+        version: 1,
+        scope: null,
+      };
 
-        const existingStandard = standardFactory({
-          id: standardId,
-          name: 'Test Standard',
-          slug: 'test-standard',
-          userId,
-          scope: null,
-        });
+      const existingStandard = standardFactory({
+        id: standardId,
+        name: 'Test Standard',
+        slug: 'test-standard',
+        userId,
+        scope: null,
+      });
 
-        const activeDetectionProgram = activeDetectionProgramFactory({
-          id: activeDetectionProgramId,
-          detectionProgramVersion: currentDetectionProgramId,
-          ruleId,
-          language: ProgrammingLanguage.JAVASCRIPT,
-        });
+      const activeDetectionProgram = activeDetectionProgramFactory({
+        id: activeDetectionProgramId,
+        detectionProgramVersion: currentDetectionProgramId,
+        ruleId,
+        language: ProgrammingLanguage.JAVASCRIPT,
+      });
 
-        const currentDetectionProgram = detectionProgramFactory({
-          id: currentDetectionProgramId,
-          ruleId,
-          version: 2,
-        });
+      const currentDetectionProgram = detectionProgramFactory({
+        id: currentDetectionProgramId,
+        ruleId,
+        version: 2,
+      });
 
-        const newDetectionProgram = detectionProgramFactory({
-          id: newDetectionProgramId,
-          ruleId,
-          code: command.code,
-          version: 3,
-        });
+      const newDetectionProgram = detectionProgramFactory({
+        id: newDetectionProgramId,
+        ruleId,
+        code: command.code,
+        version: 3,
+      });
 
-        // Setup mocks
+      let result: Awaited<
+        ReturnType<typeof createNewDetectionProgramVersionUsecase.execute>
+      >;
+
+      beforeEach(async () => {
         activeDetectionProgramRepository.findById.mockResolvedValue(
           activeDetectionProgram,
         );
@@ -391,81 +411,87 @@ describe('CreateNewDetectionProgramVersionUsecase', () => {
         );
         detectionProgramRepository.add.mockResolvedValue(newDetectionProgram);
 
-        const result =
-          await createNewDetectionProgramVersionUsecase.execute(command);
+        result = await createNewDetectionProgramVersionUsecase.execute(command);
+      });
 
+      it('does not update active detection program', () => {
         expect(
           activeDetectionProgramRepository.updateActiveDetectionProgram,
         ).not.toHaveBeenCalled();
+      });
+
+      it('returns the new detection program', () => {
         expect(result).toEqual(newDetectionProgram);
       });
     });
 
     describe('when active detection program has draft version only', () => {
-      it('uses draft version as reference for updating', async () => {
-        const organizationId = createOrganizationId(uuidv4());
-        const userId = createUserId(uuidv4());
-        const ruleId = createRuleId(uuidv4());
-        const standardVersionId = createStandardVersionId(uuidv4());
-        const standardId = createStandardId(uuidv4());
-        const activeDetectionProgramId =
-          createActiveDetectionProgramId(uuidv4());
-        const draftDetectionProgramId = createDetectionProgramId(uuidv4());
-        const newDetectionProgramId = createDetectionProgramId(uuidv4());
+      const organizationId = createOrganizationId(uuidv4());
+      const userId = createUserId(uuidv4());
+      const ruleId = createRuleId(uuidv4());
+      const standardVersionId = createStandardVersionId(uuidv4());
+      const standardId = createStandardId(uuidv4());
+      const activeDetectionProgramId = createActiveDetectionProgramId(uuidv4());
+      const draftDetectionProgramId = createDetectionProgramId(uuidv4());
+      const newDetectionProgramId = createDetectionProgramId(uuidv4());
 
-        const command: CreateNewDetectionProgramVersionCommand = {
-          activeDetectionProgramId,
-          code: 'updated code',
-          updateActiveDetectionProgram: true,
-          organizationId,
-          userId,
-        };
+      const command: CreateNewDetectionProgramVersionCommand = {
+        activeDetectionProgramId,
+        code: 'updated code',
+        updateActiveDetectionProgram: true,
+        organizationId,
+        userId,
+      };
 
-        const existingRule = ruleFactory({
-          id: ruleId,
-          standardVersionId,
-        });
+      const existingRule = ruleFactory({
+        id: ruleId,
+        standardVersionId,
+      });
 
-        const existingStandardVersion = {
-          id: standardVersionId,
-          standardId,
-          name: 'Test Standard',
-          slug: 'test-standard',
-          description: 'Test Description',
-          version: 1,
-          scope: null,
-        };
+      const existingStandardVersion = {
+        id: standardVersionId,
+        standardId,
+        name: 'Test Standard',
+        slug: 'test-standard',
+        description: 'Test Description',
+        version: 1,
+        scope: null,
+      };
 
-        const existingStandard = standardFactory({
-          id: standardId,
-          name: 'Test Standard',
-          slug: 'test-standard',
-          userId,
-          scope: null,
-        });
+      const existingStandard = standardFactory({
+        id: standardId,
+        name: 'Test Standard',
+        slug: 'test-standard',
+        userId,
+        scope: null,
+      });
 
-        const activeDetectionProgram = activeDetectionProgramFactory({
-          id: activeDetectionProgramId,
-          detectionProgramVersion: null, // No regular version
-          detectionProgramDraftVersion: draftDetectionProgramId, // Has draft version
-          ruleId,
-          language: ProgrammingLanguage.JAVASCRIPT,
-        });
+      const activeDetectionProgram = activeDetectionProgramFactory({
+        id: activeDetectionProgramId,
+        detectionProgramVersion: null, // No regular version
+        detectionProgramDraftVersion: draftDetectionProgramId, // Has draft version
+        ruleId,
+        language: ProgrammingLanguage.JAVASCRIPT,
+      });
 
-        const draftDetectionProgram = detectionProgramFactory({
-          id: draftDetectionProgramId,
-          ruleId,
-          version: 1,
-        });
+      const draftDetectionProgram = detectionProgramFactory({
+        id: draftDetectionProgramId,
+        ruleId,
+        version: 1,
+      });
 
-        const newDetectionProgram = detectionProgramFactory({
-          id: newDetectionProgramId,
-          ruleId,
-          code: command.code,
-          version: 2,
-        });
+      const newDetectionProgram = detectionProgramFactory({
+        id: newDetectionProgramId,
+        ruleId,
+        code: command.code,
+        version: 2,
+      });
 
-        // Setup mocks
+      let result: Awaited<
+        ReturnType<typeof createNewDetectionProgramVersionUsecase.execute>
+      >;
+
+      beforeEach(async () => {
         activeDetectionProgramRepository.findById.mockResolvedValue(
           activeDetectionProgram,
         );
@@ -482,12 +508,16 @@ describe('CreateNewDetectionProgramVersionUsecase', () => {
         );
         detectionProgramRepository.add.mockResolvedValue(newDetectionProgram);
 
-        const result =
-          await createNewDetectionProgramVersionUsecase.execute(command);
+        result = await createNewDetectionProgramVersionUsecase.execute(command);
+      });
 
+      it('fetches the draft detection program', () => {
         expect(detectionProgramRepository.findById).toHaveBeenCalledWith(
           draftDetectionProgramId,
         );
+      });
+
+      it('returns the new detection program', () => {
         expect(result).toEqual(newDetectionProgram);
       });
     });

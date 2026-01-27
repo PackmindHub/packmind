@@ -43,13 +43,15 @@ describe('TestActiveVersionSection', () => {
       expect(screen.getByText('Test')).toBeInTheDocument();
     });
 
-    it('calls onTestClick when "Test" button is clicked', async () => {
-      const user = userEvent.setup();
-      const button = screen.getByText('Test');
+    describe('when "Test" button is clicked', () => {
+      it('calls onTestClick', async () => {
+        const user = userEvent.setup();
+        const button = screen.getByText('Test');
 
-      await user.click(button);
+        await user.click(button);
 
-      expect(onTestClick).toHaveBeenCalledTimes(1);
+        expect(onTestClick).toHaveBeenCalledTimes(1);
+      });
     });
   });
 });

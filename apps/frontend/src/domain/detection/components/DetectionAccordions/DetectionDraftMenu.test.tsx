@@ -211,16 +211,18 @@ describe('DetectionDraftMenu', () => {
         });
       });
 
-      it('calls onShowLogs when "Show log" is clicked', async () => {
-        const trigger = screen.getByText('Draft: Pending');
-        fireEvent.click(trigger);
+      describe('when "Show log" is clicked', () => {
+        it('calls onShowLogs', async () => {
+          const trigger = screen.getByText('Draft: Pending');
+          fireEvent.click(trigger);
 
-        await waitFor(() => {
-          const showLogItem = screen.getAllByText('Show log')[0];
-          fireEvent.click(showLogItem);
+          await waitFor(() => {
+            const showLogItem = screen.getAllByText('Show log')[0];
+            fireEvent.click(showLogItem);
+          });
+
+          expect(onShowLogs).toHaveBeenCalled();
         });
-
-        expect(onShowLogs).toHaveBeenCalled();
       });
     });
 
@@ -232,27 +234,37 @@ describe('DetectionDraftMenu', () => {
         );
       });
 
-      it('shows "Retry" and "Show log" actions in menu', async () => {
+      it('shows "Retry" action in menu', async () => {
         const trigger = screen.getByText('Draft: Error');
         fireEvent.click(trigger);
 
         await waitFor(() => {
           expect(screen.getByText('Retry')).toBeInTheDocument();
+        });
+      });
+
+      it('shows "Show log" action in menu', async () => {
+        const trigger = screen.getByText('Draft: Error');
+        fireEvent.click(trigger);
+
+        await waitFor(() => {
           const showLogItems = screen.getAllByText('Show log');
           expect(showLogItems.length).toBeGreaterThan(0);
         });
       });
 
-      it('calls onRetryDraft when "Retry" is clicked', async () => {
-        const trigger = screen.getByText('Draft: Error');
-        fireEvent.click(trigger);
+      describe('when "Retry" is clicked', () => {
+        it('calls onRetryDraft with the draft', async () => {
+          const trigger = screen.getByText('Draft: Error');
+          fireEvent.click(trigger);
 
-        await waitFor(() => {
-          const retryItem = screen.getByText('Retry');
-          fireEvent.click(retryItem);
+          await waitFor(() => {
+            const retryItem = screen.getByText('Retry');
+            fireEvent.click(retryItem);
+          });
+
+          expect(onRetryDraft).toHaveBeenCalledWith(baseDraft);
         });
-
-        expect(onRetryDraft).toHaveBeenCalledWith(baseDraft);
       });
     });
 
@@ -268,112 +280,173 @@ describe('DetectionDraftMenu', () => {
           );
         });
 
-        it('shows all available actions in menu', async () => {
+        it('shows "Show log" action in menu', async () => {
           const trigger = screen.getByText('Draft: OK');
           fireEvent.click(trigger);
 
           await waitFor(() => {
             expect(screen.getByText('Show log')).toBeInTheDocument();
+          });
+        });
+
+        it('shows "Show program" action in menu', async () => {
+          const trigger = screen.getByText('Draft: OK');
+          fireEvent.click(trigger);
+
+          await waitFor(() => {
             expect(screen.getByText('Show program')).toBeInTheDocument();
+          });
+        });
+
+        it('shows "Test draft program" action in menu', async () => {
+          const trigger = screen.getByText('Draft: OK');
+          fireEvent.click(trigger);
+
+          await waitFor(() => {
             expect(screen.getByText('Test draft program')).toBeInTheDocument();
+          });
+        });
+
+        it('shows "Set as active" action in menu', async () => {
+          const trigger = screen.getByText('Draft: OK');
+          fireEvent.click(trigger);
+
+          await waitFor(() => {
             expect(screen.getByText('Set as active')).toBeInTheDocument();
           });
         });
 
-        it('calls onShowProgram when "Show program" is clicked', async () => {
-          const trigger = screen.getByText('Draft: OK');
-          fireEvent.click(trigger);
+        describe('when "Show program" is clicked', () => {
+          it('calls onShowProgram', async () => {
+            const trigger = screen.getByText('Draft: OK');
+            fireEvent.click(trigger);
 
-          await waitFor(() => {
-            const showProgramItem = screen.getByText('Show program');
-            fireEvent.click(showProgramItem);
-          });
+            await waitFor(() => {
+              const showProgramItem = screen.getByText('Show program');
+              fireEvent.click(showProgramItem);
+            });
 
-          expect(onShowProgram).toHaveBeenCalled();
-        });
-
-        it('calls onTestDraft when "Test draft program" is clicked', async () => {
-          const trigger = screen.getByText('Draft: OK');
-          fireEvent.click(trigger);
-
-          await waitFor(() => {
-            const testDraftItem = screen.getByText('Test draft program');
-            fireEvent.click(testDraftItem);
-          });
-
-          expect(onTestDraft).toHaveBeenCalledWith(baseDraft);
-        });
-
-        it('shows confirmation dialog when "Set as active" is clicked', async () => {
-          const trigger = screen.getByText('Draft: OK');
-          fireEvent.click(trigger);
-
-          await waitFor(() => {
-            const setActiveItem = screen.getByText('Set as active');
-            fireEvent.click(setActiveItem);
-          });
-
-          await waitFor(() => {
-            expect(
-              screen.getByText('Activate Detection Program'),
-            ).toBeInTheDocument();
-            expect(
-              screen.getByText(
-                'Are you sure you want to activate this typescript detection program (v1)? This will replace the current active program.',
-              ),
-            ).toBeInTheDocument();
+            expect(onShowProgram).toHaveBeenCalled();
           });
         });
 
-        it('calls onMakeActive when confirmation dialog is confirmed', async () => {
-          const trigger = screen.getByText('Draft: OK');
-          fireEvent.click(trigger);
+        describe('when "Test draft program" is clicked', () => {
+          it('calls onTestDraft with the draft', async () => {
+            const trigger = screen.getByText('Draft: OK');
+            fireEvent.click(trigger);
 
-          await waitFor(() => {
-            const setActiveItem = screen.getByText('Set as active');
-            fireEvent.click(setActiveItem);
-          });
+            await waitFor(() => {
+              const testDraftItem = screen.getByText('Test draft program');
+              fireEvent.click(testDraftItem);
+            });
 
-          await waitFor(() => {
-            expect(
-              screen.getByText('Activate Detection Program'),
-            ).toBeInTheDocument();
-          });
-
-          const activateButton = screen.getByRole('button', {
-            name: 'Activate',
-          });
-          fireEvent.click(activateButton);
-
-          await waitFor(() => {
-            expect(onMakeActive).toHaveBeenCalledWith(baseDraft);
+            expect(onTestDraft).toHaveBeenCalledWith(baseDraft);
           });
         });
 
-        it('does not call onMakeActive when confirmation dialog is cancelled', async () => {
-          const trigger = screen.getByText('Draft: OK');
-          fireEvent.click(trigger);
+        describe('when "Set as active" is clicked', () => {
+          it('shows confirmation dialog title', async () => {
+            const trigger = screen.getByText('Draft: OK');
+            fireEvent.click(trigger);
 
-          await waitFor(() => {
-            const setActiveItem = screen.getByText('Set as active');
-            fireEvent.click(setActiveItem);
+            await waitFor(() => {
+              const setActiveItem = screen.getByText('Set as active');
+              fireEvent.click(setActiveItem);
+            });
+
+            await waitFor(() => {
+              expect(
+                screen.getByText('Activate Detection Program'),
+              ).toBeInTheDocument();
+            });
           });
 
-          await waitFor(() => {
-            expect(
-              screen.getByText('Activate Detection Program'),
-            ).toBeInTheDocument();
+          it('shows confirmation dialog message', async () => {
+            const trigger = screen.getByText('Draft: OK');
+            fireEvent.click(trigger);
+
+            await waitFor(() => {
+              const setActiveItem = screen.getByText('Set as active');
+              fireEvent.click(setActiveItem);
+            });
+
+            await waitFor(() => {
+              expect(
+                screen.getByText(
+                  'Are you sure you want to activate this typescript detection program (v1)? This will replace the current active program.',
+                ),
+              ).toBeInTheDocument();
+            });
           });
 
-          const cancelButton = screen.getByRole('button', { name: 'Cancel' });
-          fireEvent.click(cancelButton);
+          describe('when confirmation dialog is confirmed', () => {
+            async function openDialogAndConfirm() {
+              const trigger = screen.getByText('Draft: OK');
+              fireEvent.click(trigger);
 
-          await waitFor(() => {
-            expect(
-              screen.queryByText('Activate Detection Program'),
-            ).not.toBeInTheDocument();
+              await waitFor(() => {
+                const setActiveItem = screen.getByText('Set as active');
+                fireEvent.click(setActiveItem);
+              });
+
+              await waitFor(() => {
+                screen.getByText('Activate Detection Program');
+              });
+
+              const activateButton = screen.getByRole('button', {
+                name: 'Activate',
+              });
+              fireEvent.click(activateButton);
+            }
+
+            it('calls onMakeActive with the draft', async () => {
+              await openDialogAndConfirm();
+
+              await waitFor(() => {
+                expect(onMakeActive).toHaveBeenCalledWith(baseDraft);
+              });
+            });
           });
-          expect(onMakeActive).not.toHaveBeenCalled();
+
+          describe('when confirmation dialog is cancelled', () => {
+            async function openDialogAndCancel() {
+              const trigger = screen.getByText('Draft: OK');
+              fireEvent.click(trigger);
+
+              await waitFor(() => {
+                const setActiveItem = screen.getByText('Set as active');
+                fireEvent.click(setActiveItem);
+              });
+
+              await waitFor(() => {
+                screen.getByText('Activate Detection Program');
+              });
+
+              const cancelButton = screen.getByRole('button', {
+                name: 'Cancel',
+              });
+              fireEvent.click(cancelButton);
+
+              await waitFor(() => {
+                const dialog = screen.queryByText('Activate Detection Program');
+                return dialog === null;
+              });
+            }
+
+            it('closes the dialog', async () => {
+              await openDialogAndCancel();
+
+              expect(
+                screen.queryByText('Activate Detection Program'),
+              ).not.toBeInTheDocument();
+            });
+
+            it('does not call onMakeActive', async () => {
+              await openDialogAndCancel();
+
+              expect(onMakeActive).not.toHaveBeenCalled();
+            });
+          });
         });
       });
 
@@ -385,21 +458,34 @@ describe('DetectionDraftMenu', () => {
           );
         });
 
-        it('calls onMakeActive directly without confirmation dialog', async () => {
-          const trigger = screen.getByText('Draft: OK');
-          fireEvent.click(trigger);
+        describe('when "Set as active" is clicked', () => {
+          async function clickSetAsActive() {
+            const trigger = screen.getByText('Draft: OK');
+            fireEvent.click(trigger);
 
-          await waitFor(() => {
-            const setActiveItem = screen.getByText('Set as active');
-            fireEvent.click(setActiveItem);
-          });
+            await waitFor(() => {
+              const setActiveItem = screen.getByText('Set as active');
+              fireEvent.click(setActiveItem);
+            });
 
-          await waitFor(() => {
+            await waitFor(() => {
+              return onMakeActive.mock.calls.length > 0;
+            });
+          }
+
+          it('calls onMakeActive with the draft', async () => {
+            await clickSetAsActive();
+
             expect(onMakeActive).toHaveBeenCalledWith(baseDraft);
           });
-          expect(
-            screen.queryByText('Activate Detection Program'),
-          ).not.toBeInTheDocument();
+
+          it('does not show confirmation dialog', async () => {
+            await clickSetAsActive();
+
+            expect(
+              screen.queryByText('Activate Detection Program'),
+            ).not.toBeInTheDocument();
+          });
         });
       });
     });

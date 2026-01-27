@@ -104,54 +104,73 @@ describe('ActiveDetectionProgramRepository', () => {
     });
   });
 
-  it('can find active detection programs by rule id', async () => {
-    // Create rules and detection programs first
-    const rule1 = await createRuleWithHierarchy();
-    const rule2 = await createRuleWithHierarchy();
-    const detectionProgram1 = await detectionProgramRepo.save(
-      detectionProgramFactory({ ruleId: rule1.id, version: 1 }),
-    );
-    const detectionProgram2 = await detectionProgramRepo.save(
-      detectionProgramFactory({ ruleId: rule1.id, version: 2 }),
-    );
-    const detectionProgram3 = await detectionProgramRepo.save(
-      detectionProgramFactory({ ruleId: rule2.id, version: 1 }),
-    );
+  describe('when finding active detection programs by rule id', () => {
+    let rule1: Rule;
+    let rule2: Rule;
+    let activeProgram1: ActiveDetectionProgram;
+    let activeProgram2: ActiveDetectionProgram;
+    let activeProgram3: ActiveDetectionProgram;
+    let foundPrograms: ActiveDetectionProgram[];
 
-    const activeProgram1 = activeDetectionProgramFactory({
-      ruleId: rule1.id,
-      detectionProgramVersion: detectionProgram1.id,
-      language: ProgrammingLanguage.JAVASCRIPT,
+    beforeEach(async () => {
+      rule1 = await createRuleWithHierarchy();
+      rule2 = await createRuleWithHierarchy();
+      const detectionProgram1 = await detectionProgramRepo.save(
+        detectionProgramFactory({ ruleId: rule1.id, version: 1 }),
+      );
+      const detectionProgram2 = await detectionProgramRepo.save(
+        detectionProgramFactory({ ruleId: rule1.id, version: 2 }),
+      );
+      const detectionProgram3 = await detectionProgramRepo.save(
+        detectionProgramFactory({ ruleId: rule2.id, version: 1 }),
+      );
+
+      activeProgram1 = activeDetectionProgramFactory({
+        ruleId: rule1.id,
+        detectionProgramVersion: detectionProgram1.id,
+        language: ProgrammingLanguage.JAVASCRIPT,
+      });
+      activeProgram2 = activeDetectionProgramFactory({
+        ruleId: rule1.id,
+        detectionProgramVersion: detectionProgram2.id,
+        language: ProgrammingLanguage.TYPESCRIPT,
+      });
+      activeProgram3 = activeDetectionProgramFactory({
+        ruleId: rule2.id,
+        detectionProgramVersion: detectionProgram3.id,
+        language: ProgrammingLanguage.JAVASCRIPT,
+      });
+
+      await activeDetectionProgramRepository.add(activeProgram1);
+      await activeDetectionProgramRepository.add(activeProgram2);
+      await activeDetectionProgramRepository.add(activeProgram3);
+
+      foundPrograms = await activeDetectionProgramRepository.findByRuleId(
+        rule1.id,
+      );
     });
-    const activeProgram2 = activeDetectionProgramFactory({
-      ruleId: rule1.id,
-      detectionProgramVersion: detectionProgram2.id,
-      language: ProgrammingLanguage.TYPESCRIPT,
-    });
-    const activeProgram3 = activeDetectionProgramFactory({
-      ruleId: rule2.id,
-      detectionProgramVersion: detectionProgram3.id,
-      language: ProgrammingLanguage.JAVASCRIPT,
+
+    it('returns the correct number of programs for the rule', async () => {
+      expect(foundPrograms).toHaveLength(2);
     });
 
-    await activeDetectionProgramRepository.add(activeProgram1);
-    await activeDetectionProgramRepository.add(activeProgram2);
-    await activeDetectionProgramRepository.add(activeProgram3);
+    it('includes the first program for the rule', async () => {
+      expect(foundPrograms.map((p: ActiveDetectionProgram) => p.id)).toContain(
+        activeProgram1.id,
+      );
+    });
 
-    const foundPrograms = await activeDetectionProgramRepository.findByRuleId(
-      rule1.id,
-    );
+    it('includes the second program for the rule', async () => {
+      expect(foundPrograms.map((p: ActiveDetectionProgram) => p.id)).toContain(
+        activeProgram2.id,
+      );
+    });
 
-    expect(foundPrograms).toHaveLength(2);
-    expect(foundPrograms.map((p: ActiveDetectionProgram) => p.id)).toContain(
-      activeProgram1.id,
-    );
-    expect(foundPrograms.map((p: ActiveDetectionProgram) => p.id)).toContain(
-      activeProgram2.id,
-    );
-    expect(
-      foundPrograms.map((p: ActiveDetectionProgram) => p.id),
-    ).not.toContain(activeProgram3.id);
+    it('excludes programs from other rules', async () => {
+      expect(
+        foundPrograms.map((p: ActiveDetectionProgram) => p.id),
+      ).not.toContain(activeProgram3.id);
+    });
   });
 
   it('can find active detection program by rule id and language', async () => {
@@ -195,86 +214,110 @@ describe('ActiveDetectionProgramRepository', () => {
     });
   });
 
-  it('can find active detection programs with associated detection programs', async () => {
-    // Create rule and detection program first
-    const rule = await createRuleWithHierarchy();
-    const detectionProgram = await detectionProgramRepo.save(
-      detectionProgramFactory({ ruleId: rule.id, version: 1 }),
-    );
-    const draftDetectionProgram = await detectionProgramRepo.save(
-      detectionProgramFactory({ ruleId: rule.id, version: 2 }),
-    );
+  describe('when finding active detection programs with associated detection programs', () => {
+    let rule: Rule;
+    let detectionProgram: DetectionProgram;
+    let draftDetectionProgram: DetectionProgram;
+    let activeProgram: ActiveDetectionProgram;
+    let foundPrograms: ActiveDetectionProgram[];
 
-    const activeProgram = activeDetectionProgramFactory({
-      ruleId: rule.id,
-      detectionProgramVersion: detectionProgram.id,
-      detectionProgramDraftVersion: draftDetectionProgram.id,
-      language: ProgrammingLanguage.JAVASCRIPT,
+    beforeEach(async () => {
+      rule = await createRuleWithHierarchy();
+      detectionProgram = await detectionProgramRepo.save(
+        detectionProgramFactory({ ruleId: rule.id, version: 1 }),
+      );
+      draftDetectionProgram = await detectionProgramRepo.save(
+        detectionProgramFactory({ ruleId: rule.id, version: 2 }),
+      );
+
+      activeProgram = activeDetectionProgramFactory({
+        ruleId: rule.id,
+        detectionProgramVersion: detectionProgram.id,
+        detectionProgramDraftVersion: draftDetectionProgram.id,
+        language: ProgrammingLanguage.JAVASCRIPT,
+      });
+      await activeDetectionProgramRepository.add(activeProgram);
+
+      foundPrograms =
+        await activeDetectionProgramRepository.findByRuleIdWithPrograms(
+          rule.id,
+        );
     });
-    await activeDetectionProgramRepository.add(activeProgram);
 
-    const foundPrograms =
-      await activeDetectionProgramRepository.findByRuleIdWithPrograms(rule.id);
+    it('returns the correct number of programs', async () => {
+      expect(foundPrograms).toHaveLength(1);
+    });
 
-    expect(foundPrograms).toHaveLength(1);
-    expect(foundPrograms[0]).toMatchObject({
-      id: activeProgram.id,
-      language: activeProgram.language,
-      ruleId: activeProgram.ruleId,
-      detectionProgram: {
-        id: detectionProgram.id,
-        code: detectionProgram.code,
-        version: detectionProgram.version,
-        mode: detectionProgram.mode,
-      },
-      draftDetectionProgram: {
-        id: draftDetectionProgram.id,
-        code: draftDetectionProgram.code,
-        version: draftDetectionProgram.version,
-        mode: draftDetectionProgram.mode,
-      },
+    it('includes the associated detection program and draft', async () => {
+      expect(foundPrograms[0]).toMatchObject({
+        id: activeProgram.id,
+        language: activeProgram.language,
+        ruleId: activeProgram.ruleId,
+        detectionProgram: {
+          id: detectionProgram.id,
+          code: detectionProgram.code,
+          version: detectionProgram.version,
+          mode: detectionProgram.mode,
+        },
+        draftDetectionProgram: {
+          id: draftDetectionProgram.id,
+          code: draftDetectionProgram.code,
+          version: draftDetectionProgram.version,
+          mode: draftDetectionProgram.mode,
+        },
+      });
     });
   });
 
-  it('can delete active detection programs by rule id', async () => {
-    // Create rules and detection programs first
-    const rule1 = await createRuleWithHierarchy();
-    const rule2 = await createRuleWithHierarchy();
-    const detectionProgram1 = await detectionProgramRepo.save(
-      detectionProgramFactory({ ruleId: rule1.id, version: 1 }),
-    );
-    const detectionProgram2 = await detectionProgramRepo.save(
-      detectionProgramFactory({ ruleId: rule1.id, version: 2 }),
-    );
-    const detectionProgram3 = await detectionProgramRepo.save(
-      detectionProgramFactory({ ruleId: rule2.id, version: 1 }),
-    );
+  describe('when deleting active detection programs by rule id', () => {
+    let activeProgram3: ActiveDetectionProgram;
+    let remainingPrograms: ActiveDetectionProgram[];
 
-    const activeProgram1 = activeDetectionProgramFactory({
-      ruleId: rule1.id,
-      detectionProgramVersion: detectionProgram1.id,
-      language: ProgrammingLanguage.JAVASCRIPT,
+    beforeEach(async () => {
+      const rule1 = await createRuleWithHierarchy();
+      const rule2 = await createRuleWithHierarchy();
+      const detectionProgram1 = await detectionProgramRepo.save(
+        detectionProgramFactory({ ruleId: rule1.id, version: 1 }),
+      );
+      const detectionProgram2 = await detectionProgramRepo.save(
+        detectionProgramFactory({ ruleId: rule1.id, version: 2 }),
+      );
+      const detectionProgram3 = await detectionProgramRepo.save(
+        detectionProgramFactory({ ruleId: rule2.id, version: 1 }),
+      );
+
+      const activeProgram1 = activeDetectionProgramFactory({
+        ruleId: rule1.id,
+        detectionProgramVersion: detectionProgram1.id,
+        language: ProgrammingLanguage.JAVASCRIPT,
+      });
+      const activeProgram2 = activeDetectionProgramFactory({
+        ruleId: rule1.id,
+        detectionProgramVersion: detectionProgram2.id,
+        language: ProgrammingLanguage.TYPESCRIPT,
+      });
+      activeProgram3 = activeDetectionProgramFactory({
+        ruleId: rule2.id,
+        detectionProgramVersion: detectionProgram3.id,
+        language: ProgrammingLanguage.JAVASCRIPT,
+      });
+
+      await activeDetectionProgramRepository.add(activeProgram1);
+      await activeDetectionProgramRepository.add(activeProgram2);
+      await activeDetectionProgramRepository.add(activeProgram3);
+
+      await activeDetectionProgramRepository.deleteByRuleId(rule1.id);
+
+      remainingPrograms = await activeDetectionProgramRepository.list();
     });
-    const activeProgram2 = activeDetectionProgramFactory({
-      ruleId: rule1.id,
-      detectionProgramVersion: detectionProgram2.id,
-      language: ProgrammingLanguage.TYPESCRIPT,
-    });
-    const activeProgram3 = activeDetectionProgramFactory({
-      ruleId: rule2.id,
-      detectionProgramVersion: detectionProgram3.id,
-      language: ProgrammingLanguage.JAVASCRIPT,
+
+    it('removes programs for the specified rule', async () => {
+      expect(remainingPrograms).toHaveLength(1);
     });
 
-    await activeDetectionProgramRepository.add(activeProgram1);
-    await activeDetectionProgramRepository.add(activeProgram2);
-    await activeDetectionProgramRepository.add(activeProgram3);
-
-    await activeDetectionProgramRepository.deleteByRuleId(rule1.id);
-
-    const remainingPrograms = await activeDetectionProgramRepository.list();
-    expect(remainingPrograms).toHaveLength(1);
-    expect(remainingPrograms[0].id).toBe(activeProgram3.id);
+    it('keeps programs from other rules', async () => {
+      expect(remainingPrograms[0].id).toBe(activeProgram3.id);
+    });
   });
 
   it('can list all active detection programs', async () => {
@@ -366,74 +409,105 @@ describe('ActiveDetectionProgramRepository', () => {
       ).rejects.toThrow();
     });
 
-    it('allows same rule with different languages', async () => {
-      const rule = await createRuleWithHierarchy();
-      const detectionProgram1 = await detectionProgramRepo.save(
-        detectionProgramFactory({ ruleId: rule.id, version: 1 }),
-      );
-      const detectionProgram2 = await detectionProgramRepo.save(
-        detectionProgramFactory({ ruleId: rule.id, version: 2 }),
-      );
+    describe('when same rule has different languages', () => {
+      let foundPrograms: ActiveDetectionProgram[];
 
-      const javascriptActiveProgram = activeDetectionProgramFactory({
-        ruleId: rule.id,
-        detectionProgramVersion: detectionProgram1.id,
-        language: ProgrammingLanguage.JAVASCRIPT,
+      beforeEach(async () => {
+        const rule = await createRuleWithHierarchy();
+        const detectionProgram1 = await detectionProgramRepo.save(
+          detectionProgramFactory({ ruleId: rule.id, version: 1 }),
+        );
+        const detectionProgram2 = await detectionProgramRepo.save(
+          detectionProgramFactory({ ruleId: rule.id, version: 2 }),
+        );
+
+        const javascriptActiveProgram = activeDetectionProgramFactory({
+          ruleId: rule.id,
+          detectionProgramVersion: detectionProgram1.id,
+          language: ProgrammingLanguage.JAVASCRIPT,
+        });
+        const typescriptActiveProgram = activeDetectionProgramFactory({
+          ruleId: rule.id,
+          detectionProgramVersion: detectionProgram2.id,
+          language: ProgrammingLanguage.TYPESCRIPT,
+        });
+
+        await activeDetectionProgramRepository.add(javascriptActiveProgram);
+        await activeDetectionProgramRepository.add(typescriptActiveProgram);
+
+        foundPrograms = await activeDetectionProgramRepository.findByRuleId(
+          rule.id,
+        );
       });
-      const typescriptActiveProgram = activeDetectionProgramFactory({
-        ruleId: rule.id,
-        detectionProgramVersion: detectionProgram2.id,
-        language: ProgrammingLanguage.TYPESCRIPT, // Different language
+
+      it('allows storing both programs', async () => {
+        expect(foundPrograms).toHaveLength(2);
       });
 
-      await activeDetectionProgramRepository.add(javascriptActiveProgram);
-      await activeDetectionProgramRepository.add(typescriptActiveProgram);
+      it('includes the JavaScript program', async () => {
+        expect(foundPrograms.map((p) => p.language)).toContain(
+          ProgrammingLanguage.JAVASCRIPT,
+        );
+      });
 
-      const foundPrograms = await activeDetectionProgramRepository.findByRuleId(
-        rule.id,
-      );
-      expect(foundPrograms).toHaveLength(2);
-      expect(foundPrograms.map((p) => p.language)).toContain(
-        ProgrammingLanguage.JAVASCRIPT,
-      );
-      expect(foundPrograms.map((p) => p.language)).toContain(
-        ProgrammingLanguage.TYPESCRIPT,
-      );
+      it('includes the TypeScript program', async () => {
+        expect(foundPrograms.map((p) => p.language)).toContain(
+          ProgrammingLanguage.TYPESCRIPT,
+        );
+      });
     });
 
-    it('allows different rules with same language', async () => {
-      const rule1 = await createRuleWithHierarchy();
-      const rule2 = await createRuleWithHierarchy();
-      const detectionProgram1 = await detectionProgramRepo.save(
-        detectionProgramFactory({ ruleId: rule1.id, version: 1 }),
-      );
-      const detectionProgram2 = await detectionProgramRepo.save(
-        detectionProgramFactory({ ruleId: rule2.id, version: 1 }),
-      );
+    describe('when different rules have the same language', () => {
+      let foundPrograms1: ActiveDetectionProgram[];
+      let foundPrograms2: ActiveDetectionProgram[];
 
-      const activeProgram1 = activeDetectionProgramFactory({
-        ruleId: rule1.id,
-        detectionProgramVersion: detectionProgram1.id,
-        language: ProgrammingLanguage.JAVASCRIPT,
+      beforeEach(async () => {
+        const rule1 = await createRuleWithHierarchy();
+        const rule2 = await createRuleWithHierarchy();
+        const detectionProgram1 = await detectionProgramRepo.save(
+          detectionProgramFactory({ ruleId: rule1.id, version: 1 }),
+        );
+        const detectionProgram2 = await detectionProgramRepo.save(
+          detectionProgramFactory({ ruleId: rule2.id, version: 1 }),
+        );
+
+        const activeProgram1 = activeDetectionProgramFactory({
+          ruleId: rule1.id,
+          detectionProgramVersion: detectionProgram1.id,
+          language: ProgrammingLanguage.JAVASCRIPT,
+        });
+        const activeProgram2 = activeDetectionProgramFactory({
+          ruleId: rule2.id,
+          detectionProgramVersion: detectionProgram2.id,
+          language: ProgrammingLanguage.JAVASCRIPT,
+        });
+
+        await activeDetectionProgramRepository.add(activeProgram1);
+        await activeDetectionProgramRepository.add(activeProgram2);
+
+        foundPrograms1 = await activeDetectionProgramRepository.findByRuleId(
+          rule1.id,
+        );
+        foundPrograms2 = await activeDetectionProgramRepository.findByRuleId(
+          rule2.id,
+        );
       });
-      const activeProgram2 = activeDetectionProgramFactory({
-        ruleId: rule2.id,
-        detectionProgramVersion: detectionProgram2.id,
-        language: ProgrammingLanguage.JAVASCRIPT, // Same language, different rule
+
+      it('returns one program for the first rule', async () => {
+        expect(foundPrograms1).toHaveLength(1);
       });
 
-      await activeDetectionProgramRepository.add(activeProgram1);
-      await activeDetectionProgramRepository.add(activeProgram2);
+      it('returns one program for the second rule', async () => {
+        expect(foundPrograms2).toHaveLength(1);
+      });
 
-      const foundPrograms1 =
-        await activeDetectionProgramRepository.findByRuleId(rule1.id);
-      const foundPrograms2 =
-        await activeDetectionProgramRepository.findByRuleId(rule2.id);
+      it('first rule program has JavaScript language', async () => {
+        expect(foundPrograms1[0].language).toBe(ProgrammingLanguage.JAVASCRIPT);
+      });
 
-      expect(foundPrograms1).toHaveLength(1);
-      expect(foundPrograms2).toHaveLength(1);
-      expect(foundPrograms1[0].language).toBe(ProgrammingLanguage.JAVASCRIPT);
-      expect(foundPrograms2[0].language).toBe(ProgrammingLanguage.JAVASCRIPT);
+      it('second rule program has JavaScript language', async () => {
+        expect(foundPrograms2[0].language).toBe(ProgrammingLanguage.JAVASCRIPT);
+      });
     });
   });
 
@@ -457,25 +531,36 @@ describe('ActiveDetectionProgramRepository', () => {
       expect(foundPrograms).toEqual([]);
     });
 
-    it('includes soft deleted programs with withDeleted option', async () => {
-      const rule = await createRuleWithHierarchy();
-      const detectionProgram = await detectionProgramRepo.save(
-        detectionProgramFactory({ ruleId: rule.id, version: 1 }),
-      );
+    describe('when includeDeleted option is used', () => {
+      let activeProgram: ActiveDetectionProgram;
+      let foundPrograms: ActiveDetectionProgram[];
 
-      const activeProgram = activeDetectionProgramFactory({
-        ruleId: rule.id,
-        detectionProgramVersion: detectionProgram.id,
+      beforeEach(async () => {
+        const rule = await createRuleWithHierarchy();
+        const detectionProgram = await detectionProgramRepo.save(
+          detectionProgramFactory({ ruleId: rule.id, version: 1 }),
+        );
+
+        activeProgram = activeDetectionProgramFactory({
+          ruleId: rule.id,
+          detectionProgramVersion: detectionProgram.id,
+        });
+        await activeDetectionProgramRepository.add(activeProgram);
+        await activeDetectionProgramRepository.deleteById(activeProgram.id);
+
+        foundPrograms = await activeDetectionProgramRepository.findByRuleId(
+          rule.id,
+          { includeDeleted: true },
+        );
       });
-      await activeDetectionProgramRepository.add(activeProgram);
-      await activeDetectionProgramRepository.deleteById(activeProgram.id);
 
-      const foundPrograms = await activeDetectionProgramRepository.findByRuleId(
-        rule.id,
-        { includeDeleted: true },
-      );
-      expect(foundPrograms).toHaveLength(1);
-      expect(foundPrograms[0].id).toBe(activeProgram.id);
+      it('includes the soft deleted program', async () => {
+        expect(foundPrograms).toHaveLength(1);
+      });
+
+      it('returns the correct program', async () => {
+        expect(foundPrograms[0].id).toBe(activeProgram.id);
+      });
     });
   });
 
@@ -498,167 +583,229 @@ describe('ActiveDetectionProgramRepository', () => {
       );
     });
 
-    it('can find active programs for multiple languages', async () => {
-      const javascriptProgram = activeDetectionProgramFactory({
-        ruleId: testRule.id,
-        detectionProgramVersion: detectionProgram1.id,
-        language: ProgrammingLanguage.JAVASCRIPT,
-      });
-      const typescriptProgram = activeDetectionProgramFactory({
-        ruleId: testRule.id,
-        detectionProgramVersion: detectionProgram2.id,
-        language: ProgrammingLanguage.TYPESCRIPT,
-      });
-      const pythonProgram = activeDetectionProgramFactory({
-        ruleId: testRule.id,
-        detectionProgramVersion: detectionProgram3.id,
-        language: ProgrammingLanguage.PYTHON,
-      });
+    describe('when finding active programs for multiple languages', () => {
+      let foundPrograms: ActiveDetectionProgram[];
 
-      await activeDetectionProgramRepository.add(javascriptProgram);
-      await activeDetectionProgramRepository.add(typescriptProgram);
-      await activeDetectionProgramRepository.add(pythonProgram);
+      beforeEach(async () => {
+        const javascriptProgram = activeDetectionProgramFactory({
+          ruleId: testRule.id,
+          detectionProgramVersion: detectionProgram1.id,
+          language: ProgrammingLanguage.JAVASCRIPT,
+        });
+        const typescriptProgram = activeDetectionProgramFactory({
+          ruleId: testRule.id,
+          detectionProgramVersion: detectionProgram2.id,
+          language: ProgrammingLanguage.TYPESCRIPT,
+        });
+        const pythonProgram = activeDetectionProgramFactory({
+          ruleId: testRule.id,
+          detectionProgramVersion: detectionProgram3.id,
+          language: ProgrammingLanguage.PYTHON,
+        });
 
-      const foundPrograms = await activeDetectionProgramRepository.findByRuleId(
-        testRule.id,
-      );
+        await activeDetectionProgramRepository.add(javascriptProgram);
+        await activeDetectionProgramRepository.add(typescriptProgram);
+        await activeDetectionProgramRepository.add(pythonProgram);
 
-      expect(foundPrograms).toHaveLength(3);
-      const languages = foundPrograms.map((p) => p.language);
-      expect(languages).toContain(ProgrammingLanguage.JAVASCRIPT);
-      expect(languages).toContain(ProgrammingLanguage.TYPESCRIPT);
-      expect(languages).toContain(ProgrammingLanguage.PYTHON);
-    });
-
-    it('can find specific language program', async () => {
-      const javascriptProgram = activeDetectionProgramFactory({
-        ruleId: testRule.id,
-        detectionProgramVersion: detectionProgram1.id,
-        language: ProgrammingLanguage.JAVASCRIPT,
-      });
-      const typescriptProgram = activeDetectionProgramFactory({
-        ruleId: testRule.id,
-        detectionProgramVersion: detectionProgram2.id,
-        language: ProgrammingLanguage.TYPESCRIPT,
-      });
-
-      await activeDetectionProgramRepository.add(javascriptProgram);
-      await activeDetectionProgramRepository.add(typescriptProgram);
-
-      const foundJavaScript =
-        await activeDetectionProgramRepository.findByRuleIdAndLanguage(
-          testRule.id,
-          ProgrammingLanguage.JAVASCRIPT,
-        );
-      const foundTypeScript =
-        await activeDetectionProgramRepository.findByRuleIdAndLanguage(
-          testRule.id,
-          ProgrammingLanguage.TYPESCRIPT,
-        );
-      const foundPython =
-        await activeDetectionProgramRepository.findByRuleIdAndLanguage(
-          testRule.id,
-          ProgrammingLanguage.PYTHON,
-        );
-
-      expect(foundJavaScript).toMatchObject({
-        id: javascriptProgram.id,
-        language: ProgrammingLanguage.JAVASCRIPT,
-        detectionProgramVersion: detectionProgram1.id,
-      });
-      expect(foundTypeScript).toMatchObject({
-        id: typescriptProgram.id,
-        language: ProgrammingLanguage.TYPESCRIPT,
-        detectionProgramVersion: detectionProgram2.id,
-      });
-      expect(foundPython).toBeNull();
-    });
-
-    it('can find programs with detection program data for multiple languages', async () => {
-      const javascriptProgram = activeDetectionProgramFactory({
-        ruleId: testRule.id,
-        detectionProgramVersion: detectionProgram1.id,
-        language: ProgrammingLanguage.JAVASCRIPT,
-      });
-      const typescriptProgram = activeDetectionProgramFactory({
-        ruleId: testRule.id,
-        detectionProgramVersion: detectionProgram2.id,
-        language: ProgrammingLanguage.TYPESCRIPT,
-      });
-
-      await activeDetectionProgramRepository.add(javascriptProgram);
-      await activeDetectionProgramRepository.add(typescriptProgram);
-
-      const foundPrograms =
-        await activeDetectionProgramRepository.findByRuleIdWithPrograms(
+        foundPrograms = await activeDetectionProgramRepository.findByRuleId(
           testRule.id,
         );
-
-      expect(foundPrograms).toHaveLength(2);
-
-      const jsProgram = foundPrograms.find(
-        (p) => p.language === ProgrammingLanguage.JAVASCRIPT,
-      );
-      const tsProgram = foundPrograms.find(
-        (p) => p.language === ProgrammingLanguage.TYPESCRIPT,
-      );
-
-      expect(jsProgram).toMatchObject({
-        id: javascriptProgram.id,
-        language: ProgrammingLanguage.JAVASCRIPT,
-        detectionProgram: {
-          id: detectionProgram1.id,
-          version: detectionProgram1.version,
-        },
       });
-      expect(tsProgram).toMatchObject({
-        id: typescriptProgram.id,
-        language: ProgrammingLanguage.TYPESCRIPT,
-        detectionProgram: {
-          id: detectionProgram2.id,
-          version: detectionProgram2.version,
-        },
+
+      it('returns all three programs', async () => {
+        expect(foundPrograms).toHaveLength(3);
+      });
+
+      it('includes JavaScript program', async () => {
+        const languages = foundPrograms.map((p) => p.language);
+        expect(languages).toContain(ProgrammingLanguage.JAVASCRIPT);
+      });
+
+      it('includes TypeScript program', async () => {
+        const languages = foundPrograms.map((p) => p.language);
+        expect(languages).toContain(ProgrammingLanguage.TYPESCRIPT);
+      });
+
+      it('includes Python program', async () => {
+        const languages = foundPrograms.map((p) => p.language);
+        expect(languages).toContain(ProgrammingLanguage.PYTHON);
       });
     });
 
-    it('handles language-specific soft delete correctly', async () => {
-      const javascriptProgram = activeDetectionProgramFactory({
-        ruleId: testRule.id,
-        detectionProgramVersion: detectionProgram1.id,
-        language: ProgrammingLanguage.JAVASCRIPT,
+    describe('when finding specific language program', () => {
+      let javascriptProgram: ActiveDetectionProgram;
+      let typescriptProgram: ActiveDetectionProgram;
+      let foundJavaScript: ActiveDetectionProgram | null;
+      let foundTypeScript: ActiveDetectionProgram | null;
+      let foundPython: ActiveDetectionProgram | null;
+
+      beforeEach(async () => {
+        javascriptProgram = activeDetectionProgramFactory({
+          ruleId: testRule.id,
+          detectionProgramVersion: detectionProgram1.id,
+          language: ProgrammingLanguage.JAVASCRIPT,
+        });
+        typescriptProgram = activeDetectionProgramFactory({
+          ruleId: testRule.id,
+          detectionProgramVersion: detectionProgram2.id,
+          language: ProgrammingLanguage.TYPESCRIPT,
+        });
+
+        await activeDetectionProgramRepository.add(javascriptProgram);
+        await activeDetectionProgramRepository.add(typescriptProgram);
+
+        foundJavaScript =
+          await activeDetectionProgramRepository.findByRuleIdAndLanguage(
+            testRule.id,
+            ProgrammingLanguage.JAVASCRIPT,
+          );
+        foundTypeScript =
+          await activeDetectionProgramRepository.findByRuleIdAndLanguage(
+            testRule.id,
+            ProgrammingLanguage.TYPESCRIPT,
+          );
+        foundPython =
+          await activeDetectionProgramRepository.findByRuleIdAndLanguage(
+            testRule.id,
+            ProgrammingLanguage.PYTHON,
+          );
       });
-      const typescriptProgram = activeDetectionProgramFactory({
-        ruleId: testRule.id,
-        detectionProgramVersion: detectionProgram2.id,
-        language: ProgrammingLanguage.TYPESCRIPT,
+
+      it('returns the JavaScript program', async () => {
+        expect(foundJavaScript).toMatchObject({
+          id: javascriptProgram.id,
+          language: ProgrammingLanguage.JAVASCRIPT,
+          detectionProgramVersion: detectionProgram1.id,
+        });
       });
 
-      await activeDetectionProgramRepository.add(javascriptProgram);
-      await activeDetectionProgramRepository.add(typescriptProgram);
+      it('returns the TypeScript program', async () => {
+        expect(foundTypeScript).toMatchObject({
+          id: typescriptProgram.id,
+          language: ProgrammingLanguage.TYPESCRIPT,
+          detectionProgramVersion: detectionProgram2.id,
+        });
+      });
 
-      // Soft delete only the JavaScript program
-      await activeDetectionProgramRepository.deleteById(javascriptProgram.id);
+      it('returns null for non-existent Python program', async () => {
+        expect(foundPython).toBeNull();
+      });
+    });
 
-      const foundPrograms = await activeDetectionProgramRepository.findByRuleId(
-        testRule.id,
-      );
-      const foundJavaScript =
-        await activeDetectionProgramRepository.findByRuleIdAndLanguage(
-          testRule.id,
-          ProgrammingLanguage.JAVASCRIPT,
+    describe('when finding programs with detection program data for multiple languages', () => {
+      let javascriptProgram: ActiveDetectionProgram;
+      let typescriptProgram: ActiveDetectionProgram;
+      let foundPrograms: ActiveDetectionProgram[];
+
+      beforeEach(async () => {
+        javascriptProgram = activeDetectionProgramFactory({
+          ruleId: testRule.id,
+          detectionProgramVersion: detectionProgram1.id,
+          language: ProgrammingLanguage.JAVASCRIPT,
+        });
+        typescriptProgram = activeDetectionProgramFactory({
+          ruleId: testRule.id,
+          detectionProgramVersion: detectionProgram2.id,
+          language: ProgrammingLanguage.TYPESCRIPT,
+        });
+
+        await activeDetectionProgramRepository.add(javascriptProgram);
+        await activeDetectionProgramRepository.add(typescriptProgram);
+
+        foundPrograms =
+          await activeDetectionProgramRepository.findByRuleIdWithPrograms(
+            testRule.id,
+          );
+      });
+
+      it('returns both programs', async () => {
+        expect(foundPrograms).toHaveLength(2);
+      });
+
+      it('includes JavaScript program with detection program data', async () => {
+        const jsProgram = foundPrograms.find(
+          (p) => p.language === ProgrammingLanguage.JAVASCRIPT,
         );
-      const foundTypeScript =
-        await activeDetectionProgramRepository.findByRuleIdAndLanguage(
-          testRule.id,
-          ProgrammingLanguage.TYPESCRIPT,
-        );
+        expect(jsProgram).toMatchObject({
+          id: javascriptProgram.id,
+          language: ProgrammingLanguage.JAVASCRIPT,
+          detectionProgram: {
+            id: detectionProgram1.id,
+            version: detectionProgram1.version,
+          },
+        });
+      });
 
-      expect(foundPrograms).toHaveLength(1);
-      expect(foundPrograms[0].language).toBe(ProgrammingLanguage.TYPESCRIPT);
-      expect(foundJavaScript).toBeNull();
-      expect(foundTypeScript).toMatchObject({
-        id: typescriptProgram.id,
-        language: ProgrammingLanguage.TYPESCRIPT,
+      it('includes TypeScript program with detection program data', async () => {
+        const tsProgram = foundPrograms.find(
+          (p) => p.language === ProgrammingLanguage.TYPESCRIPT,
+        );
+        expect(tsProgram).toMatchObject({
+          id: typescriptProgram.id,
+          language: ProgrammingLanguage.TYPESCRIPT,
+          detectionProgram: {
+            id: detectionProgram2.id,
+            version: detectionProgram2.version,
+          },
+        });
+      });
+    });
+
+    describe('when handling language-specific soft delete', () => {
+      let typescriptProgram: ActiveDetectionProgram;
+      let foundPrograms: ActiveDetectionProgram[];
+      let foundJavaScript: ActiveDetectionProgram | null;
+      let foundTypeScript: ActiveDetectionProgram | null;
+
+      beforeEach(async () => {
+        const javascriptProgram = activeDetectionProgramFactory({
+          ruleId: testRule.id,
+          detectionProgramVersion: detectionProgram1.id,
+          language: ProgrammingLanguage.JAVASCRIPT,
+        });
+        typescriptProgram = activeDetectionProgramFactory({
+          ruleId: testRule.id,
+          detectionProgramVersion: detectionProgram2.id,
+          language: ProgrammingLanguage.TYPESCRIPT,
+        });
+
+        await activeDetectionProgramRepository.add(javascriptProgram);
+        await activeDetectionProgramRepository.add(typescriptProgram);
+
+        await activeDetectionProgramRepository.deleteById(javascriptProgram.id);
+
+        foundPrograms = await activeDetectionProgramRepository.findByRuleId(
+          testRule.id,
+        );
+        foundJavaScript =
+          await activeDetectionProgramRepository.findByRuleIdAndLanguage(
+            testRule.id,
+            ProgrammingLanguage.JAVASCRIPT,
+          );
+        foundTypeScript =
+          await activeDetectionProgramRepository.findByRuleIdAndLanguage(
+            testRule.id,
+            ProgrammingLanguage.TYPESCRIPT,
+          );
+      });
+
+      it('excludes the deleted program from findByRuleId', async () => {
+        expect(foundPrograms).toHaveLength(1);
+      });
+
+      it('only returns the non-deleted TypeScript program', async () => {
+        expect(foundPrograms[0].language).toBe(ProgrammingLanguage.TYPESCRIPT);
+      });
+
+      it('returns null for the deleted JavaScript program', async () => {
+        expect(foundJavaScript).toBeNull();
+      });
+
+      it('returns the non-deleted TypeScript program', async () => {
+        expect(foundTypeScript).toMatchObject({
+          id: typescriptProgram.id,
+          language: ProgrammingLanguage.TYPESCRIPT,
+        });
       });
     });
 

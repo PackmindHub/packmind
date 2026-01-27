@@ -197,7 +197,7 @@ describe('StartRuleDetectionAssessmentUseCase', () => {
       );
     });
 
-    it('returns the created assessment', async () => {
+    it('returns the created assessment with expected properties', async () => {
       const rule = ruleFactory({
         id: createRuleId(uuidv4()),
         content: 'Use const instead of var',
@@ -218,12 +218,9 @@ describe('StartRuleDetectionAssessmentUseCase', () => {
         detectionMode: DetectionModeEnum.SINGLE_AST,
         details: 'Assessment in progress...',
       });
-      expect(result.id).toBeDefined();
     });
-  });
 
-  describe('when assessment already exists', () => {
-    it('updates assessment to IN_PROGRESS and enqueues job', async () => {
+    it('returns an assessment with a defined id', async () => {
       const rule = ruleFactory({
         id: createRuleId(uuidv4()),
         content: 'Use const instead of var',
@@ -235,7 +232,36 @@ describe('StartRuleDetectionAssessmentUseCase', () => {
         language: ProgrammingLanguage.TYPESCRIPT,
       };
 
-      const existingAssessment: RuleDetectionAssessment = {
+      const result = await startRuleDetectionAssessmentUseCase.execute(input);
+
+      expect(result.id).toBeDefined();
+    });
+  });
+
+  describe('when assessment already exists', () => {
+    let rule: ReturnType<typeof ruleFactory>;
+    let input: {
+      rule: ReturnType<typeof ruleFactory>;
+      organizationId: ReturnType<typeof createOrganizationId>;
+      userId: ReturnType<typeof createUserId>;
+      language: ProgrammingLanguage;
+    };
+    let existingAssessment: RuleDetectionAssessment;
+    let result: RuleDetectionAssessment;
+
+    beforeEach(async () => {
+      rule = ruleFactory({
+        id: createRuleId(uuidv4()),
+        content: 'Use const instead of var',
+      });
+      input = {
+        rule,
+        organizationId: createOrganizationId(uuidv4()),
+        userId: createUserId(uuidv4()),
+        language: ProgrammingLanguage.TYPESCRIPT,
+      };
+
+      existingAssessment = {
         id: createRuleDetectionAssessmentId(uuidv4()),
         ruleId: rule.id,
         language: ProgrammingLanguage.TYPESCRIPT,
@@ -250,14 +276,25 @@ describe('StartRuleDetectionAssessmentUseCase', () => {
         existingAssessment,
       );
 
-      const result = await startRuleDetectionAssessmentUseCase.execute(input);
+      result = await startRuleDetectionAssessmentUseCase.execute(input);
+    });
 
+    it('returns assessment with IN_PROGRESS status', () => {
       expect(result.status).toBe(RuleDetectionAssessmentStatus.IN_PROGRESS);
+    });
+
+    it('returns assessment with in-progress details message', () => {
       expect(result.details).toBe('Assessment in progress...');
+    });
+
+    it('retrieves existing assessment by rule id and language', () => {
       expect(ruleDetectionAssessmentRepository.get).toHaveBeenCalledWith(
         rule.id,
         ProgrammingLanguage.TYPESCRIPT,
       );
+    });
+
+    it('saves updated assessment with IN_PROGRESS status', () => {
       expect(ruleDetectionAssessmentRepository.add).toHaveBeenCalledWith(
         expect.objectContaining({
           id: existingAssessment.id,
@@ -265,6 +302,9 @@ describe('StartRuleDetectionAssessmentUseCase', () => {
           details: 'Assessment in progress...',
         }),
       );
+    });
+
+    it('enqueues job with existing assessment id', () => {
       expect(mockAssessRuleDetectionDelayedJob.addJob).toHaveBeenCalledWith(
         expect.objectContaining({
           rule,

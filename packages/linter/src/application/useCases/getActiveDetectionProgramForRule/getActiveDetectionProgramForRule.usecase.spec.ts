@@ -60,28 +60,38 @@ describe('GetActiveDetectionProgramForRuleUseCase', () => {
 
   describe('execute', () => {
     describe('when active detection programs exist', () => {
-      it('returns active detection programs for valid standard slug and rule id', async () => {
-        const organizationId = createOrganizationId(uuidv4());
-        const userId = createUserId(uuidv4());
-        const ruleId = createRuleId(uuidv4());
-        const standardSlug = 'my-standard';
+      let organizationId: ReturnType<typeof createOrganizationId>;
+      let userId: ReturnType<typeof createUserId>;
+      let ruleId: ReturnType<typeof createRuleId>;
+      let standardSlug: string;
+      let command: GetActiveDetectionProgramForRuleCommand;
+      let existingStandard: ReturnType<typeof standardFactory>;
+      let existingRule: ReturnType<typeof ruleFactory>;
+      let activeProgram1: ReturnType<typeof detectionProgramFactory>;
+      let activeProgram2: ReturnType<typeof detectionProgramFactory>;
 
-        const command: GetActiveDetectionProgramForRuleCommand = {
+      beforeEach(() => {
+        organizationId = createOrganizationId(uuidv4());
+        userId = createUserId(uuidv4());
+        ruleId = createRuleId(uuidv4());
+        standardSlug = 'my-standard';
+
+        command = {
           standardSlug,
           ruleId,
           organizationId,
           userId,
         };
 
-        const existingStandard = standardFactory({
+        existingStandard = standardFactory({
           slug: standardSlug,
         });
 
-        const existingRule = ruleFactory({
+        existingRule = ruleFactory({
           id: ruleId,
         });
 
-        const activeProgram1 = detectionProgramFactory({
+        activeProgram1 = detectionProgramFactory({
           id: createDetectionProgramId(uuidv4()),
           ruleId,
           code: 'active code for javascript',
@@ -90,7 +100,7 @@ describe('GetActiveDetectionProgramForRuleUseCase', () => {
           language: ProgrammingLanguage.JAVASCRIPT,
         });
 
-        const activeProgram2 = detectionProgramFactory({
+        activeProgram2 = detectionProgramFactory({
           id: createDetectionProgramId(uuidv4()),
           ruleId,
           code: 'active code for typescript',
@@ -132,32 +142,77 @@ describe('GetActiveDetectionProgramForRuleUseCase', () => {
             },
           ],
         );
+      });
 
-        const result = await useCase.execute(command);
+      it('calls findStandardBySlug with standard slug and organization id', async () => {
+        await useCase.execute(command);
 
         expect(standardsAdapter.findStandardBySlug).toHaveBeenCalledWith(
           standardSlug,
           organizationId,
         );
+      });
+
+      it('calls getRule with rule id', async () => {
+        await useCase.execute(command);
+
         expect(standardsAdapter.getRule).toHaveBeenCalledWith(ruleId);
+      });
+
+      it('calls getLatestRulesByStandardId with standard id', async () => {
+        await useCase.execute(command);
+
         expect(
           standardsAdapter.getLatestRulesByStandardId,
         ).toHaveBeenCalledWith(existingStandard.id);
+      });
+
+      it('calls findActiveByRuleIdWithPrograms with rule id', async () => {
+        await useCase.execute(command);
+
         expect(
           detectionProgramService.findActiveByRuleIdWithPrograms,
         ).toHaveBeenCalledWith(ruleId);
-        expect(result.programs).toHaveLength(2);
-        expect(result.programs[0]).toEqual(activeProgram1);
-        expect(result.programs[1]).toEqual(activeProgram2);
-        expect(result.scope).toBe(existingStandard.scope);
       });
 
-      it('returns multiple active programs for different languages', async () => {
+      it('returns two active programs', async () => {
+        const result = await useCase.execute(command);
+
+        expect(result.programs).toHaveLength(2);
+      });
+
+      it('returns first active program matching javascript', async () => {
+        const result = await useCase.execute(command);
+
+        expect(result.programs[0]).toEqual(activeProgram1);
+      });
+
+      it('returns second active program matching typescript', async () => {
+        const result = await useCase.execute(command);
+
+        expect(result.programs[1]).toEqual(activeProgram2);
+      });
+
+      it('returns scope from existing standard', async () => {
+        const result = await useCase.execute(command);
+
+        expect(result.scope).toBe(existingStandard.scope);
+      });
+    });
+
+    describe('when multiple active programs exist for different languages', () => {
+      let ruleId: ReturnType<typeof createRuleId>;
+      let command: GetActiveDetectionProgramForRuleCommand;
+      let jsActive: ReturnType<typeof detectionProgramFactory>;
+      let tsActive: ReturnType<typeof detectionProgramFactory>;
+      let pyActive: ReturnType<typeof detectionProgramFactory>;
+
+      beforeEach(() => {
         const organizationId = createOrganizationId(uuidv4());
-        const ruleId = createRuleId(uuidv4());
+        ruleId = createRuleId(uuidv4());
         const standardSlug = 'test-standard';
 
-        const command: GetActiveDetectionProgramForRuleCommand = {
+        command = {
           standardSlug,
           ruleId,
           organizationId,
@@ -167,15 +222,15 @@ describe('GetActiveDetectionProgramForRuleUseCase', () => {
         const existingStandard = standardFactory({ slug: standardSlug });
         const existingRule = ruleFactory({ id: ruleId });
 
-        const jsActive = detectionProgramFactory({
+        jsActive = detectionProgramFactory({
           ruleId,
           language: ProgrammingLanguage.JAVASCRIPT,
         });
-        const tsActive = detectionProgramFactory({
+        tsActive = detectionProgramFactory({
           ruleId,
           language: ProgrammingLanguage.TYPESCRIPT,
         });
-        const pyActive = detectionProgramFactory({
+        pyActive = detectionProgramFactory({
           ruleId,
           language: ProgrammingLanguage.PYTHON,
         });
@@ -213,16 +268,33 @@ describe('GetActiveDetectionProgramForRuleUseCase', () => {
             },
           ],
         );
+      });
 
+      it('returns three active programs', async () => {
         const result = await useCase.execute(command);
 
         expect(result.programs).toHaveLength(3);
+      });
+
+      it('returns first program as JavaScript', async () => {
+        const result = await useCase.execute(command);
+
         expect(result.programs[0].language).toBe(
           ProgrammingLanguage.JAVASCRIPT,
         );
+      });
+
+      it('returns second program as TypeScript', async () => {
+        const result = await useCase.execute(command);
+
         expect(result.programs[1].language).toBe(
           ProgrammingLanguage.TYPESCRIPT,
         );
+      });
+
+      it('returns third program as Python', async () => {
+        const result = await useCase.execute(command);
+
         expect(result.programs[2].language).toBe(ProgrammingLanguage.PYTHON);
       });
     });
@@ -310,10 +382,15 @@ describe('GetActiveDetectionProgramForRuleUseCase', () => {
     });
 
     describe('when standard not found', () => {
-      it('throws error', async () => {
-        const organizationId = createOrganizationId(uuidv4());
-        const ruleId = createRuleId(uuidv4());
-        const standardSlug = 'nonexistent-standard';
+      let organizationId: ReturnType<typeof createOrganizationId>;
+      let ruleId: ReturnType<typeof createRuleId>;
+      let standardSlug: string;
+      let thrownError: Error | null;
+
+      beforeEach(async () => {
+        organizationId = createOrganizationId(uuidv4());
+        ruleId = createRuleId(uuidv4());
+        standardSlug = 'nonexistent-standard';
 
         const command: GetActiveDetectionProgramForRuleCommand = {
           standardSlug,
@@ -324,15 +401,32 @@ describe('GetActiveDetectionProgramForRuleUseCase', () => {
 
         standardsAdapter.findStandardBySlug.mockResolvedValue(null);
 
-        await expect(useCase.execute(command)).rejects.toThrow(
+        thrownError = null;
+        try {
+          await useCase.execute(command);
+        } catch (error) {
+          thrownError = error as Error;
+        }
+      });
+
+      it('throws error with standard slug in message', () => {
+        expect(thrownError?.message).toBe(
           `Standard with slug '${standardSlug}' not found`,
         );
+      });
 
+      it('calls findStandardBySlug with standard slug and organization id', () => {
         expect(standardsAdapter.findStandardBySlug).toHaveBeenCalledWith(
           standardSlug,
           organizationId,
         );
+      });
+
+      it('does not call getRule', () => {
         expect(standardsAdapter.getRule).not.toHaveBeenCalled();
+      });
+
+      it('does not call findActiveByRuleIdWithPrograms', () => {
         expect(
           detectionProgramService.findActiveByRuleIdWithPrograms,
         ).not.toHaveBeenCalled();
@@ -340,10 +434,15 @@ describe('GetActiveDetectionProgramForRuleUseCase', () => {
     });
 
     describe('when rule not found', () => {
-      it('throws error', async () => {
-        const organizationId = createOrganizationId(uuidv4());
-        const ruleId = createRuleId(uuidv4());
-        const standardSlug = 'my-standard';
+      let organizationId: ReturnType<typeof createOrganizationId>;
+      let ruleId: ReturnType<typeof createRuleId>;
+      let standardSlug: string;
+      let thrownError: Error | null;
+
+      beforeEach(async () => {
+        organizationId = createOrganizationId(uuidv4());
+        ruleId = createRuleId(uuidv4());
+        standardSlug = 'my-standard';
 
         const command: GetActiveDetectionProgramForRuleCommand = {
           standardSlug,
@@ -357,15 +456,30 @@ describe('GetActiveDetectionProgramForRuleUseCase', () => {
         standardsAdapter.findStandardBySlug.mockResolvedValue(existingStandard);
         standardsAdapter.getRule.mockResolvedValue(null);
 
-        await expect(useCase.execute(command)).rejects.toThrow(
-          `Rule with id '${ruleId}' not found`,
-        );
+        thrownError = null;
+        try {
+          await useCase.execute(command);
+        } catch (error) {
+          thrownError = error as Error;
+        }
+      });
 
+      it('throws error with rule id in message', () => {
+        expect(thrownError?.message).toBe(`Rule with id '${ruleId}' not found`);
+      });
+
+      it('calls findStandardBySlug with standard slug and organization id', () => {
         expect(standardsAdapter.findStandardBySlug).toHaveBeenCalledWith(
           standardSlug,
           organizationId,
         );
+      });
+
+      it('calls getRule with rule id', () => {
         expect(standardsAdapter.getRule).toHaveBeenCalledWith(ruleId);
+      });
+
+      it('does not call findActiveByRuleIdWithPrograms', () => {
         expect(
           detectionProgramService.findActiveByRuleIdWithPrograms,
         ).not.toHaveBeenCalled();
@@ -373,11 +487,17 @@ describe('GetActiveDetectionProgramForRuleUseCase', () => {
     });
 
     describe('when rule does not belong to standard', () => {
-      it('throws error', async () => {
-        const organizationId = createOrganizationId(uuidv4());
-        const ruleId = createRuleId(uuidv4());
+      let organizationId: ReturnType<typeof createOrganizationId>;
+      let ruleId: ReturnType<typeof createRuleId>;
+      let standardSlug: string;
+      let existingStandard: ReturnType<typeof standardFactory>;
+      let thrownError: Error | null;
+
+      beforeEach(async () => {
+        organizationId = createOrganizationId(uuidv4());
+        ruleId = createRuleId(uuidv4());
         const otherRuleId = createRuleId(uuidv4());
-        const standardSlug = 'my-standard';
+        standardSlug = 'my-standard';
 
         const command: GetActiveDetectionProgramForRuleCommand = {
           standardSlug,
@@ -386,29 +506,48 @@ describe('GetActiveDetectionProgramForRuleUseCase', () => {
           userId: createUserId(uuidv4()),
         };
 
-        const existingStandard = standardFactory({ slug: standardSlug });
+        existingStandard = standardFactory({ slug: standardSlug });
         const existingRule = ruleFactory({ id: ruleId });
         const otherRule = ruleFactory({ id: otherRuleId });
 
         standardsAdapter.findStandardBySlug.mockResolvedValue(existingStandard);
         standardsAdapter.getRule.mockResolvedValue(existingRule);
-        // Return a different rule that doesn't match our ruleId
         standardsAdapter.getLatestRulesByStandardId.mockResolvedValue([
           otherRule,
         ]);
 
-        await expect(useCase.execute(command)).rejects.toThrow(
+        thrownError = null;
+        try {
+          await useCase.execute(command);
+        } catch (error) {
+          thrownError = error as Error;
+        }
+      });
+
+      it('throws error with rule id and standard slug in message', () => {
+        expect(thrownError?.message).toBe(
           `Rule '${ruleId}' does not belong to standard '${standardSlug}'`,
         );
+      });
 
+      it('calls findStandardBySlug with standard slug and organization id', () => {
         expect(standardsAdapter.findStandardBySlug).toHaveBeenCalledWith(
           standardSlug,
           organizationId,
         );
+      });
+
+      it('calls getRule with rule id', () => {
         expect(standardsAdapter.getRule).toHaveBeenCalledWith(ruleId);
+      });
+
+      it('calls getLatestRulesByStandardId with standard id', () => {
         expect(
           standardsAdapter.getLatestRulesByStandardId,
         ).toHaveBeenCalledWith(existingStandard.id);
+      });
+
+      it('does not call findActiveByRuleIdWithPrograms', () => {
         expect(
           detectionProgramService.findActiveByRuleIdWithPrograms,
         ).not.toHaveBeenCalled();
@@ -416,12 +555,16 @@ describe('GetActiveDetectionProgramForRuleUseCase', () => {
     });
 
     describe('when language filter is specified', () => {
-      it('returns only active programs for the specified language', async () => {
+      let ruleId: ReturnType<typeof createRuleId>;
+      let command: GetActiveDetectionProgramForRuleCommand;
+      let tsActive: ReturnType<typeof detectionProgramFactory>;
+
+      beforeEach(() => {
         const organizationId = createOrganizationId(uuidv4());
-        const ruleId = createRuleId(uuidv4());
+        ruleId = createRuleId(uuidv4());
         const standardSlug = 'my-standard';
 
-        const command: GetActiveDetectionProgramForRuleCommand = {
+        command = {
           standardSlug,
           ruleId,
           organizationId,
@@ -438,7 +581,7 @@ describe('GetActiveDetectionProgramForRuleUseCase', () => {
           code: 'javascript active code',
         });
 
-        const tsActive = detectionProgramFactory({
+        tsActive = detectionProgramFactory({
           ruleId,
           language: ProgrammingLanguage.TYPESCRIPT,
           code: 'typescript active code',
@@ -483,26 +626,47 @@ describe('GetActiveDetectionProgramForRuleUseCase', () => {
             },
           ],
         );
+      });
 
+      it('returns only one program', async () => {
         const result = await useCase.execute(command);
 
         expect(result.programs).toHaveLength(1);
+      });
+
+      it('returns the typescript active program', async () => {
+        const result = await useCase.execute(command);
+
         expect(result.programs[0]).toEqual(tsActive);
+      });
+
+      it('returns program with TypeScript language', async () => {
+        const result = await useCase.execute(command);
+
         expect(result.programs[0].language).toBe(
           ProgrammingLanguage.TYPESCRIPT,
         );
+      });
+
+      it('returns program with typescript active code', async () => {
+        const result = await useCase.execute(command);
+
         expect(result.programs[0].code).toBe('typescript active code');
       });
     });
 
     describe('mixed scenarios', () => {
       describe('when some have active programs and others have only drafts', () => {
-        it('returns only active programs', async () => {
+        let ruleId: ReturnType<typeof createRuleId>;
+        let command: GetActiveDetectionProgramForRuleCommand;
+        let activeProgram: ReturnType<typeof detectionProgramFactory>;
+
+        beforeEach(() => {
           const organizationId = createOrganizationId(uuidv4());
-          const ruleId = createRuleId(uuidv4());
+          ruleId = createRuleId(uuidv4());
           const standardSlug = 'my-standard';
 
-          const command: GetActiveDetectionProgramForRuleCommand = {
+          command = {
             standardSlug,
             ruleId,
             organizationId,
@@ -512,7 +676,7 @@ describe('GetActiveDetectionProgramForRuleUseCase', () => {
           const existingStandard = standardFactory({ slug: standardSlug });
           const existingRule = ruleFactory({ id: ruleId });
 
-          const activeProgram = detectionProgramFactory({
+          activeProgram = detectionProgramFactory({
             ruleId,
             language: ProgrammingLanguage.JAVASCRIPT,
           });
@@ -550,11 +714,23 @@ describe('GetActiveDetectionProgramForRuleUseCase', () => {
               },
             ],
           );
+        });
 
+        it('returns only one program', async () => {
           const result = await useCase.execute(command);
 
           expect(result.programs).toHaveLength(1);
+        });
+
+        it('returns the active program', async () => {
+          const result = await useCase.execute(command);
+
           expect(result.programs[0]).toEqual(activeProgram);
+        });
+
+        it('returns the JavaScript active program', async () => {
+          const result = await useCase.execute(command);
+
           expect(result.programs[0].language).toBe(
             ProgrammingLanguage.JAVASCRIPT,
           );

@@ -58,13 +58,15 @@ describe('ToReviewSection', () => {
       expect(screen.getByText('Generate new program')).toBeInTheDocument();
     });
 
-    it('calls onGenerateProgramClick when "Generate new program" button is clicked', async () => {
-      const user = userEvent.setup();
-      const button = screen.getByText('Generate new program');
+    describe('when "Generate new program" button is clicked', () => {
+      it('calls onGenerateProgramClick', async () => {
+        const user = userEvent.setup();
+        const button = screen.getByText('Generate new program');
 
-      await user.click(button);
+        await user.click(button);
 
-      expect(onGenerateProgramClick).toHaveBeenCalledTimes(1);
+        expect(onGenerateProgramClick).toHaveBeenCalledTimes(1);
+      });
     });
   });
 

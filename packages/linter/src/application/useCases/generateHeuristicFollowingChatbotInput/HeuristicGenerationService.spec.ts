@@ -186,47 +186,80 @@ describe('HeuristicGenerationService', () => {
   });
 
   describe('when AI service fails', () => {
-    it('retries up to MAX_RETRY times', async () => {
-      mockAiService.executePromptWithHistory
-        .mockRejectedValueOnce(new Error('Network error'))
-        .mockRejectedValueOnce(new Error('Network error'))
-        .mockResolvedValueOnce({
-          data: 'Valid heuristic',
-          success: true,
-          attempts: 3,
-          model: 'test-model',
-        });
+    describe('when retrying after network errors', () => {
+      beforeEach(() => {
+        mockAiService.executePromptWithHistory
+          .mockRejectedValueOnce(new Error('Network error'))
+          .mockRejectedValueOnce(new Error('Network error'))
+          .mockResolvedValueOnce({
+            data: 'Valid heuristic',
+            success: true,
+            attempts: 3,
+            model: 'test-model',
+          });
+      });
 
-      const result = await service.generateHeuristic(
-        mockRule,
-        mockExamples,
-        [],
-        'Question',
-        'Answer',
-      );
-
-      expect(result).toBe('Valid heuristic');
-      expect(mockAiService.executePromptWithHistory).toHaveBeenCalledTimes(3);
-    });
-
-    it('throws error after MAX_RETRY attempts', async () => {
-      mockAiService.executePromptWithHistory.mockRejectedValue(
-        new Error('Network error'),
-      );
-
-      await expect(
-        service.generateHeuristic(
+      it('returns valid heuristic after successful retry', async () => {
+        const result = await service.generateHeuristic(
           mockRule,
           mockExamples,
           [],
           'Question',
           'Answer',
-        ),
-      ).rejects.toThrow('Failed to generate heuristic after maximum retries');
+        );
 
-      // AIRequestEmitter has MAX_RETRY=2 (3 attempts total), HeuristicGenerationService has MAX_RETRY=3 (3 attempts)
-      // So total calls = 3 * 3 = 9
-      expect(mockAiService.executePromptWithHistory).toHaveBeenCalled();
+        expect(result).toBe('Valid heuristic');
+      });
+
+      it('calls AI service multiple times until success', async () => {
+        await service.generateHeuristic(
+          mockRule,
+          mockExamples,
+          [],
+          'Question',
+          'Answer',
+        );
+
+        expect(mockAiService.executePromptWithHistory).toHaveBeenCalledTimes(3);
+      });
+    });
+
+    describe('when all retries fail', () => {
+      beforeEach(() => {
+        mockAiService.executePromptWithHistory.mockRejectedValue(
+          new Error('Network error'),
+        );
+      });
+
+      it('throws error after MAX_RETRY attempts', async () => {
+        await expect(
+          service.generateHeuristic(
+            mockRule,
+            mockExamples,
+            [],
+            'Question',
+            'Answer',
+          ),
+        ).rejects.toThrow('Failed to generate heuristic after maximum retries');
+      });
+
+      it('calls AI service multiple times before failing', async () => {
+        try {
+          await service.generateHeuristic(
+            mockRule,
+            mockExamples,
+            [],
+            'Question',
+            'Answer',
+          );
+        } catch {
+          // Expected to throw
+        }
+
+        // AIRequestEmitter has MAX_RETRY=2 (3 attempts total), HeuristicGenerationService has MAX_RETRY=3 (3 attempts)
+        // So total calls = 3 * 3 = 9
+        expect(mockAiService.executePromptWithHistory).toHaveBeenCalled();
+      });
     });
 
     describe('when AI returns no data', () => {

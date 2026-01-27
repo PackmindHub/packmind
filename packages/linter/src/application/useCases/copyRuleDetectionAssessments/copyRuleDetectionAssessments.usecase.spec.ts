@@ -47,178 +47,285 @@ describe('CopyRuleDetectionAssessmentsUseCase', () => {
   });
 
   describe('when old rule has detection assessments', () => {
-    it('copies all assessments with new IDs and new ruleId', async () => {
-      const assessment1 = ruleDetectionAssessmentFactory({
-        ruleId: oldRuleId,
-        language: ProgrammingLanguage.TYPESCRIPT,
-        status: RuleDetectionAssessmentStatus.SUCCESS,
+    describe('when copying multiple assessments', () => {
+      let assessment1: RuleDetectionAssessment;
+      let assessment2: RuleDetectionAssessment;
+
+      beforeEach(async () => {
+        assessment1 = ruleDetectionAssessmentFactory({
+          ruleId: oldRuleId,
+          language: ProgrammingLanguage.TYPESCRIPT,
+          status: RuleDetectionAssessmentStatus.SUCCESS,
+        });
+        assessment2 = ruleDetectionAssessmentFactory({
+          ruleId: oldRuleId,
+          language: ProgrammingLanguage.PYTHON,
+          status: RuleDetectionAssessmentStatus.NOT_STARTED,
+        });
+
+        ruleDetectionAssessmentRepository.findByRuleId.mockResolvedValue([
+          assessment1,
+          assessment2,
+        ]);
+        ruleDetectionAssessmentRepository.add.mockImplementation(
+          async (assessment: RuleDetectionAssessment) => assessment,
+        );
+
+        await useCase.execute({
+          oldRuleId,
+          newRuleId,
+          organizationId,
+          userId,
+        });
       });
-      const assessment2 = ruleDetectionAssessmentFactory({
-        ruleId: oldRuleId,
-        language: ProgrammingLanguage.PYTHON,
-        status: RuleDetectionAssessmentStatus.NOT_STARTED,
+
+      it('returns correct copied assessments count', async () => {
+        const result = await useCase.execute({
+          oldRuleId,
+          newRuleId,
+          organizationId,
+          userId,
+        });
+
+        expect(result.copiedAssessmentsCount).toBe(2);
       });
 
-      ruleDetectionAssessmentRepository.findByRuleId.mockResolvedValue([
-        assessment1,
-        assessment2,
-      ]);
-      ruleDetectionAssessmentRepository.add.mockImplementation(
-        async (assessment: RuleDetectionAssessment) => assessment,
-      );
-
-      const result = await useCase.execute({
-        oldRuleId,
-        newRuleId,
-        organizationId,
-        userId,
+      it('calls add for each assessment', () => {
+        expect(ruleDetectionAssessmentRepository.add).toHaveBeenCalledTimes(2);
       });
 
-      expect(result.copiedAssessmentsCount).toBe(2);
-      expect(ruleDetectionAssessmentRepository.add).toHaveBeenCalledTimes(2);
+      it('sets new ruleId on first copied assessment', () => {
+        const firstCall =
+          ruleDetectionAssessmentRepository.add.mock.calls[0][0];
 
-      const firstCall = ruleDetectionAssessmentRepository.add.mock.calls[0][0];
-      expect(firstCall.ruleId).toBe(newRuleId);
-      expect(firstCall.language).toBe(ProgrammingLanguage.TYPESCRIPT);
-      expect(firstCall.status).toBe(RuleDetectionAssessmentStatus.SUCCESS);
-      expect(firstCall.id).not.toBe(assessment1.id);
+        expect(firstCall.ruleId).toBe(newRuleId);
+      });
 
-      const secondCall = ruleDetectionAssessmentRepository.add.mock.calls[1][0];
-      expect(secondCall.ruleId).toBe(newRuleId);
-      expect(secondCall.language).toBe(ProgrammingLanguage.PYTHON);
-      expect(secondCall.status).toBe(RuleDetectionAssessmentStatus.NOT_STARTED);
-      expect(secondCall.id).not.toBe(assessment2.id);
+      it('preserves language on first copied assessment', () => {
+        const firstCall =
+          ruleDetectionAssessmentRepository.add.mock.calls[0][0];
+
+        expect(firstCall.language).toBe(ProgrammingLanguage.TYPESCRIPT);
+      });
+
+      it('preserves status on first copied assessment', () => {
+        const firstCall =
+          ruleDetectionAssessmentRepository.add.mock.calls[0][0];
+
+        expect(firstCall.status).toBe(RuleDetectionAssessmentStatus.SUCCESS);
+      });
+
+      it('generates new id for first copied assessment', () => {
+        const firstCall =
+          ruleDetectionAssessmentRepository.add.mock.calls[0][0];
+
+        expect(firstCall.id).not.toBe(assessment1.id);
+      });
+
+      it('sets new ruleId on second copied assessment', () => {
+        const secondCall =
+          ruleDetectionAssessmentRepository.add.mock.calls[1][0];
+
+        expect(secondCall.ruleId).toBe(newRuleId);
+      });
+
+      it('preserves language on second copied assessment', () => {
+        const secondCall =
+          ruleDetectionAssessmentRepository.add.mock.calls[1][0];
+
+        expect(secondCall.language).toBe(ProgrammingLanguage.PYTHON);
+      });
+
+      it('preserves status on second copied assessment', () => {
+        const secondCall =
+          ruleDetectionAssessmentRepository.add.mock.calls[1][0];
+
+        expect(secondCall.status).toBe(
+          RuleDetectionAssessmentStatus.NOT_STARTED,
+        );
+      });
+
+      it('generates new id for second copied assessment', () => {
+        const secondCall =
+          ruleDetectionAssessmentRepository.add.mock.calls[1][0];
+
+        expect(secondCall.id).not.toBe(assessment2.id);
+      });
     });
 
-    it('preserves status as SUCCESS', async () => {
-      const assessment = ruleDetectionAssessmentFactory({
-        ruleId: oldRuleId,
-        language: ProgrammingLanguage.TYPESCRIPT,
-        status: RuleDetectionAssessmentStatus.SUCCESS,
-        detectionMode: DetectionModeEnum.SINGLE_AST,
-        details: 'Assessment succeeded',
+    describe('when copying assessment with SUCCESS status', () => {
+      beforeEach(async () => {
+        const assessment = ruleDetectionAssessmentFactory({
+          ruleId: oldRuleId,
+          language: ProgrammingLanguage.TYPESCRIPT,
+          status: RuleDetectionAssessmentStatus.SUCCESS,
+          detectionMode: DetectionModeEnum.SINGLE_AST,
+          details: 'Assessment succeeded',
+        });
+
+        ruleDetectionAssessmentRepository.findByRuleId.mockResolvedValue([
+          assessment,
+        ]);
+        ruleDetectionAssessmentRepository.add.mockImplementation(
+          async (assessment: RuleDetectionAssessment) => assessment,
+        );
+
+        await useCase.execute({
+          oldRuleId,
+          newRuleId,
+          organizationId,
+          userId,
+        });
       });
 
-      ruleDetectionAssessmentRepository.findByRuleId.mockResolvedValue([
-        assessment,
-      ]);
-      ruleDetectionAssessmentRepository.add.mockImplementation(
-        async (assessment: RuleDetectionAssessment) => assessment,
-      );
+      it('preserves SUCCESS status', () => {
+        const copiedAssessment =
+          ruleDetectionAssessmentRepository.add.mock.calls[0][0];
 
-      await useCase.execute({
-        oldRuleId,
-        newRuleId,
-        organizationId,
-        userId,
+        expect(copiedAssessment.status).toBe(
+          RuleDetectionAssessmentStatus.SUCCESS,
+        );
       });
 
-      const copiedAssessment =
-        ruleDetectionAssessmentRepository.add.mock.calls[0][0];
-      expect(copiedAssessment.status).toBe(
-        RuleDetectionAssessmentStatus.SUCCESS,
-      );
-      expect(copiedAssessment.details).toBe('Assessment succeeded');
+      it('preserves details', () => {
+        const copiedAssessment =
+          ruleDetectionAssessmentRepository.add.mock.calls[0][0];
+
+        expect(copiedAssessment.details).toBe('Assessment succeeded');
+      });
     });
 
-    it('preserves status as FAILED', async () => {
-      const assessment = ruleDetectionAssessmentFactory({
-        ruleId: oldRuleId,
-        language: ProgrammingLanguage.JAVA,
-        status: RuleDetectionAssessmentStatus.FAILED,
-        detectionMode: DetectionModeEnum.REGEXP,
-        details: 'Assessment failed',
+    describe('when copying assessment with FAILED status', () => {
+      beforeEach(async () => {
+        const assessment = ruleDetectionAssessmentFactory({
+          ruleId: oldRuleId,
+          language: ProgrammingLanguage.JAVA,
+          status: RuleDetectionAssessmentStatus.FAILED,
+          detectionMode: DetectionModeEnum.REGEXP,
+          details: 'Assessment failed',
+        });
+
+        ruleDetectionAssessmentRepository.findByRuleId.mockResolvedValue([
+          assessment,
+        ]);
+        ruleDetectionAssessmentRepository.add.mockImplementation(
+          async (assessment: RuleDetectionAssessment) => assessment,
+        );
+
+        await useCase.execute({
+          oldRuleId,
+          newRuleId,
+          organizationId,
+          userId,
+        });
       });
 
-      ruleDetectionAssessmentRepository.findByRuleId.mockResolvedValue([
-        assessment,
-      ]);
-      ruleDetectionAssessmentRepository.add.mockImplementation(
-        async (assessment: RuleDetectionAssessment) => assessment,
-      );
+      it('preserves FAILED status', () => {
+        const copiedAssessment =
+          ruleDetectionAssessmentRepository.add.mock.calls[0][0];
 
-      await useCase.execute({
-        oldRuleId,
-        newRuleId,
-        organizationId,
-        userId,
+        expect(copiedAssessment.status).toBe(
+          RuleDetectionAssessmentStatus.FAILED,
+        );
       });
 
-      const copiedAssessment =
-        ruleDetectionAssessmentRepository.add.mock.calls[0][0];
-      expect(copiedAssessment.status).toBe(
-        RuleDetectionAssessmentStatus.FAILED,
-      );
-      expect(copiedAssessment.details).toBe('Assessment failed');
+      it('preserves details', () => {
+        const copiedAssessment =
+          ruleDetectionAssessmentRepository.add.mock.calls[0][0];
+
+        expect(copiedAssessment.details).toBe('Assessment failed');
+      });
     });
 
-    it('preserves status as NOT_STARTED', async () => {
-      const assessment = ruleDetectionAssessmentFactory({
-        ruleId: oldRuleId,
-        language: ProgrammingLanguage.GO,
-        status: RuleDetectionAssessmentStatus.NOT_STARTED,
-        detectionMode: DetectionModeEnum.SINGLE_AST,
-        details: '',
+    describe('when copying assessment with NOT_STARTED status', () => {
+      it('preserves NOT_STARTED status', async () => {
+        const assessment = ruleDetectionAssessmentFactory({
+          ruleId: oldRuleId,
+          language: ProgrammingLanguage.GO,
+          status: RuleDetectionAssessmentStatus.NOT_STARTED,
+          detectionMode: DetectionModeEnum.SINGLE_AST,
+          details: '',
+        });
+
+        ruleDetectionAssessmentRepository.findByRuleId.mockResolvedValue([
+          assessment,
+        ]);
+        ruleDetectionAssessmentRepository.add.mockImplementation(
+          async (assessment: RuleDetectionAssessment) => assessment,
+        );
+
+        await useCase.execute({
+          oldRuleId,
+          newRuleId,
+          organizationId,
+          userId,
+        });
+
+        const copiedAssessment =
+          ruleDetectionAssessmentRepository.add.mock.calls[0][0];
+
+        expect(copiedAssessment.status).toBe(
+          RuleDetectionAssessmentStatus.NOT_STARTED,
+        );
       });
-
-      ruleDetectionAssessmentRepository.findByRuleId.mockResolvedValue([
-        assessment,
-      ]);
-      ruleDetectionAssessmentRepository.add.mockImplementation(
-        async (assessment: RuleDetectionAssessment) => assessment,
-      );
-
-      await useCase.execute({
-        oldRuleId,
-        newRuleId,
-        organizationId,
-        userId,
-      });
-
-      const copiedAssessment =
-        ruleDetectionAssessmentRepository.add.mock.calls[0][0];
-      expect(copiedAssessment.status).toBe(
-        RuleDetectionAssessmentStatus.NOT_STARTED,
-      );
     });
 
-    it('preserves language, detectionMode, and details', async () => {
-      const assessment = ruleDetectionAssessmentFactory({
-        ruleId: oldRuleId,
-        language: ProgrammingLanguage.RUST,
-        status: RuleDetectionAssessmentStatus.SUCCESS,
-        detectionMode: DetectionModeEnum.FILE_SYSTEM,
-        details: 'Detailed assessment results',
+    describe('when copying assessment with all properties', () => {
+      beforeEach(async () => {
+        const assessment = ruleDetectionAssessmentFactory({
+          ruleId: oldRuleId,
+          language: ProgrammingLanguage.RUST,
+          status: RuleDetectionAssessmentStatus.SUCCESS,
+          detectionMode: DetectionModeEnum.FILE_SYSTEM,
+          details: 'Detailed assessment results',
+        });
+
+        ruleDetectionAssessmentRepository.findByRuleId.mockResolvedValue([
+          assessment,
+        ]);
+        ruleDetectionAssessmentRepository.add.mockImplementation(
+          async (assessment: RuleDetectionAssessment) => assessment,
+        );
+
+        await useCase.execute({
+          oldRuleId,
+          newRuleId,
+          organizationId,
+          userId,
+        });
       });
 
-      ruleDetectionAssessmentRepository.findByRuleId.mockResolvedValue([
-        assessment,
-      ]);
-      ruleDetectionAssessmentRepository.add.mockImplementation(
-        async (assessment: RuleDetectionAssessment) => assessment,
-      );
+      it('preserves language', () => {
+        const copiedAssessment =
+          ruleDetectionAssessmentRepository.add.mock.calls[0][0];
 
-      await useCase.execute({
-        oldRuleId,
-        newRuleId,
-        organizationId,
-        userId,
+        expect(copiedAssessment.language).toBe(ProgrammingLanguage.RUST);
       });
 
-      const copiedAssessment =
-        ruleDetectionAssessmentRepository.add.mock.calls[0][0];
-      expect(copiedAssessment.language).toBe(ProgrammingLanguage.RUST);
-      expect(copiedAssessment.detectionMode).toBe(
-        DetectionModeEnum.FILE_SYSTEM,
-      );
-      expect(copiedAssessment.details).toBe('Detailed assessment results');
+      it('preserves detectionMode', () => {
+        const copiedAssessment =
+          ruleDetectionAssessmentRepository.add.mock.calls[0][0];
+
+        expect(copiedAssessment.detectionMode).toBe(
+          DetectionModeEnum.FILE_SYSTEM,
+        );
+      });
+
+      it('preserves details', () => {
+        const copiedAssessment =
+          ruleDetectionAssessmentRepository.add.mock.calls[0][0];
+
+        expect(copiedAssessment.details).toBe('Detailed assessment results');
+      });
     });
   });
 
   describe('when old rule has no detection assessments', () => {
-    it('returns 0 without attempting to copy', async () => {
+    beforeEach(() => {
       ruleDetectionAssessmentRepository.findByRuleId.mockResolvedValue([]);
+    });
 
+    it('returns 0 copied assessments count', async () => {
       const result = await useCase.execute({
         oldRuleId,
         newRuleId,
@@ -227,12 +334,22 @@ describe('CopyRuleDetectionAssessmentsUseCase', () => {
       });
 
       expect(result.copiedAssessmentsCount).toBe(0);
+    });
+
+    it('does not call add', async () => {
+      await useCase.execute({
+        oldRuleId,
+        newRuleId,
+        organizationId,
+        userId,
+      });
+
       expect(ruleDetectionAssessmentRepository.add).not.toHaveBeenCalled();
     });
   });
 
   describe('when repository throws error', () => {
-    it('logs error and re-throws', async () => {
+    it('re-throws the error', async () => {
       const error = new Error('Database connection failed');
       ruleDetectionAssessmentRepository.findByRuleId.mockRejectedValue(error);
 

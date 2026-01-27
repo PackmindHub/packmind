@@ -37,14 +37,27 @@ describe('DetectabilitySection', () => {
       expect(screen.getByText('Linter usage')).toBeInTheDocument();
     });
 
-    it('renders "Linter usage" as a link to documentation', () => {
-      const link = screen.getByRole('link', { name: 'Linter usage' });
-      expect(link).toHaveAttribute(
-        'href',
-        'https://packmindhub.github.io/packmind/linter',
-      );
-      expect(link).toHaveAttribute('target', '_blank');
-      expect(link).toHaveAttribute('rel', 'noopener noreferrer');
+    describe('when clicking "Linter usage" link', () => {
+      it('links to documentation URL', () => {
+        const link = screen.getByRole('link', { name: 'Linter usage' });
+
+        expect(link).toHaveAttribute(
+          'href',
+          'https://packmindhub.github.io/packmind/linter',
+        );
+      });
+
+      it('opens in a new tab', () => {
+        const link = screen.getByRole('link', { name: 'Linter usage' });
+
+        expect(link).toHaveAttribute('target', '_blank');
+      });
+
+      it('prevents security vulnerabilities with proper rel attribute', () => {
+        const link = screen.getByRole('link', { name: 'Linter usage' });
+
+        expect(link).toHaveAttribute('rel', 'noopener noreferrer');
+      });
     });
   });
 

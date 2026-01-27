@@ -207,11 +207,17 @@ describe('CreateDetectionProgramUseCase', () => {
         result = await createDetectionProgramUseCase.execute(command);
       });
 
-      it('validates rule exists and belongs to organization', () => {
+      it('fetches the rule by id', () => {
         expect(standardsAdapter.getRule).toHaveBeenCalledWith(command.ruleId);
+      });
+
+      it('fetches the standard version for the rule', () => {
         expect(standardsAdapter.getStandardVersion).toHaveBeenCalledWith(
           existingRule.standardVersionId,
         );
+      });
+
+      it('fetches the standard for the standard version', () => {
         expect(standardsAdapter.getStandard).toHaveBeenCalledWith(
           existingStandardVersion.standardId,
         );
@@ -344,9 +350,11 @@ describe('CreateDetectionProgramUseCase', () => {
     });
 
     describe('when rule does not exist', () => {
-      it('throws an error', async () => {
+      let command: CreateDetectionProgramCommand;
+
+      beforeEach(() => {
         const organizationId = createOrganizationId(uuidv4());
-        const command: CreateDetectionProgramCommand = {
+        command = {
           ruleId: createRuleId(uuidv4()),
           code: 'test code',
           language: ProgrammingLanguage.JAVASCRIPT,
@@ -356,89 +364,154 @@ describe('CreateDetectionProgramUseCase', () => {
         };
 
         standardsAdapter.getRule.mockResolvedValue(null);
+      });
 
+      it('throws an error', async () => {
         await expect(
           createDetectionProgramUseCase.execute(command),
         ).rejects.toThrow('Rule not found');
+      });
+
+      it('does not create detection program', async () => {
+        try {
+          await createDetectionProgramUseCase.execute(command);
+        } catch {
+          // Expected to throw
+        }
 
         expect(detectionProgramRepository.add).not.toHaveBeenCalled();
+      });
+
+      it('does not create active detection program', async () => {
+        try {
+          await createDetectionProgramUseCase.execute(command);
+        } catch {
+          // Expected to throw
+        }
+
         expect(activeDetectionProgramRepository.add).not.toHaveBeenCalled();
       });
     });
 
     describe('when rule does not belong to user organization', () => {
-      it('throws an error standard version not found', async () => {
-        const organizationId = createOrganizationId(uuidv4());
-        const ruleId = createRuleId(uuidv4());
-        const standardVersionId = createStandardVersionId(uuidv4());
+      describe('when standard version is not found', () => {
+        let command: CreateDetectionProgramCommand;
 
-        const command: CreateDetectionProgramCommand = {
-          ruleId,
-          code: 'test code',
-          language: ProgrammingLanguage.JAVASCRIPT,
-          mode: DetectionModeEnum.REGEXP,
-          userId: createUserId(uuidv4()),
-          organizationId,
-        };
+        beforeEach(() => {
+          const organizationId = createOrganizationId(uuidv4());
+          const ruleId = createRuleId(uuidv4());
+          const standardVersionId = createStandardVersionId(uuidv4());
 
-        const existingRule = ruleFactory({
-          id: ruleId,
-          standardVersionId,
+          command = {
+            ruleId,
+            code: 'test code',
+            language: ProgrammingLanguage.JAVASCRIPT,
+            mode: DetectionModeEnum.REGEXP,
+            userId: createUserId(uuidv4()),
+            organizationId,
+          };
+
+          const existingRule = ruleFactory({
+            id: ruleId,
+            standardVersionId,
+          });
+
+          standardsAdapter.getRule.mockResolvedValue(existingRule);
+          standardsAdapter.getStandardVersion.mockResolvedValue(null);
         });
 
-        standardsAdapter.getRule.mockResolvedValue(existingRule);
-        standardsAdapter.getStandardVersion.mockResolvedValue(null);
+        it('throws an error', async () => {
+          await expect(
+            createDetectionProgramUseCase.execute(command),
+          ).rejects.toThrow('Standard version not found for rule');
+        });
 
-        await expect(
-          createDetectionProgramUseCase.execute(command),
-        ).rejects.toThrow('Standard version not found for rule');
+        it('does not create detection program', async () => {
+          try {
+            await createDetectionProgramUseCase.execute(command);
+          } catch {
+            // Expected to throw
+          }
 
-        expect(detectionProgramRepository.add).not.toHaveBeenCalled();
-        expect(activeDetectionProgramRepository.add).not.toHaveBeenCalled();
+          expect(detectionProgramRepository.add).not.toHaveBeenCalled();
+        });
+
+        it('does not create active detection program', async () => {
+          try {
+            await createDetectionProgramUseCase.execute(command);
+          } catch {
+            // Expected to throw
+          }
+
+          expect(activeDetectionProgramRepository.add).not.toHaveBeenCalled();
+        });
       });
 
-      it('throws an error standard not found', async () => {
-        const organizationId = createOrganizationId(uuidv4());
-        const ruleId = createRuleId(uuidv4());
-        const standardVersionId = createStandardVersionId(uuidv4());
-        const standardId = createStandardId(uuidv4());
+      describe('when standard is not found', () => {
+        let command: CreateDetectionProgramCommand;
 
-        const command: CreateDetectionProgramCommand = {
-          ruleId,
-          code: 'test code',
-          language: ProgrammingLanguage.JAVASCRIPT,
-          mode: DetectionModeEnum.REGEXP,
-          userId: createUserId(uuidv4()),
-          organizationId,
-        };
+        beforeEach(() => {
+          const organizationId = createOrganizationId(uuidv4());
+          const ruleId = createRuleId(uuidv4());
+          const standardVersionId = createStandardVersionId(uuidv4());
+          const standardId = createStandardId(uuidv4());
 
-        const existingRule = ruleFactory({
-          id: ruleId,
-          standardVersionId,
+          command = {
+            ruleId,
+            code: 'test code',
+            language: ProgrammingLanguage.JAVASCRIPT,
+            mode: DetectionModeEnum.REGEXP,
+            userId: createUserId(uuidv4()),
+            organizationId,
+          };
+
+          const existingRule = ruleFactory({
+            id: ruleId,
+            standardVersionId,
+          });
+
+          const existingStandardVersion = {
+            id: standardVersionId,
+            standardId,
+            name: 'Test Standard',
+            slug: 'test-standard',
+            description: 'Test Description',
+            version: 1,
+            scope: null,
+          };
+
+          standardsAdapter.getRule.mockResolvedValue(existingRule);
+          standardsAdapter.getStandardVersion.mockResolvedValue(
+            existingStandardVersion,
+          );
+          standardsAdapter.getStandard.mockResolvedValue(null);
         });
 
-        const existingStandardVersion = {
-          id: standardVersionId,
-          standardId,
-          name: 'Test Standard',
-          slug: 'test-standard',
-          description: 'Test Description',
-          version: 1,
-          scope: null,
-        };
+        it('throws an error', async () => {
+          await expect(
+            createDetectionProgramUseCase.execute(command),
+          ).rejects.toThrow('Standard not found for rule');
+        });
 
-        standardsAdapter.getRule.mockResolvedValue(existingRule);
-        standardsAdapter.getStandardVersion.mockResolvedValue(
-          existingStandardVersion,
-        );
-        standardsAdapter.getStandard.mockResolvedValue(null);
+        it('does not create detection program', async () => {
+          try {
+            await createDetectionProgramUseCase.execute(command);
+          } catch {
+            // Expected to throw
+          }
 
-        await expect(
-          createDetectionProgramUseCase.execute(command),
-        ).rejects.toThrow('Standard not found for rule');
+          expect(detectionProgramRepository.add).not.toHaveBeenCalled();
+        });
 
-        expect(detectionProgramRepository.add).not.toHaveBeenCalled();
-        expect(activeDetectionProgramRepository.add).not.toHaveBeenCalled();
+        it('does not create active detection program', async () => {
+          try {
+            await createDetectionProgramUseCase.execute(command);
+          } catch {
+            // Expected to throw
+          }
+
+          expect(activeDetectionProgramRepository.add).not.toHaveBeenCalled();
+        });
       });
 
       // Note: Organization-level validation was removed as standards are now space-scoped
@@ -446,163 +519,213 @@ describe('CreateDetectionProgramUseCase', () => {
     });
 
     describe('when existing active detection program exists for same rule and language', () => {
-      it('throws an error to prevent overwriting existing detection program', async () => {
-        const organizationId = createOrganizationId(uuidv4());
-        const userId = createUserId(uuidv4());
-        const ruleId = createRuleId(uuidv4());
+      describe('when trying to overwrite existing detection program', () => {
+        let command: CreateDetectionProgramCommand;
+        let ruleId: ReturnType<typeof createRuleId>;
 
-        const command: CreateDetectionProgramCommand = {
-          ruleId,
-          code: 'new detection code',
-          language: ProgrammingLanguage.JAVASCRIPT,
-          mode: DetectionModeEnum.SINGLE_AST,
-          userId,
-          organizationId,
-        };
+        beforeEach(() => {
+          const organizationId = createOrganizationId(uuidv4());
+          const userId = createUserId(uuidv4());
+          ruleId = createRuleId(uuidv4());
 
-        const standardVersionId = createStandardVersionId(uuidv4());
-        const standardId = createStandardId(uuidv4());
+          command = {
+            ruleId,
+            code: 'new detection code',
+            language: ProgrammingLanguage.JAVASCRIPT,
+            mode: DetectionModeEnum.SINGLE_AST,
+            userId,
+            organizationId,
+          };
 
-        const existingRule = ruleFactory({
-          id: ruleId,
-          standardVersionId,
+          const standardVersionId = createStandardVersionId(uuidv4());
+          const standardId = createStandardId(uuidv4());
+
+          const existingRule = ruleFactory({
+            id: ruleId,
+            standardVersionId,
+          });
+
+          const existingStandardVersion = {
+            id: standardVersionId,
+            standardId,
+            name: 'Test Standard',
+            slug: 'test-standard',
+            description: 'Test Description',
+            version: 1,
+            scope: null,
+          };
+
+          const existingStandard = standardFactory({
+            id: standardId,
+            name: 'Test Standard',
+            slug: 'test-standard',
+            userId,
+            scope: null,
+          });
+
+          const existingActiveProgram = activeDetectionProgramFactory({
+            ruleId,
+            language: ProgrammingLanguage.JAVASCRIPT,
+          });
+
+          standardsAdapter.getRule.mockResolvedValue(existingRule);
+          standardsAdapter.getStandardVersion.mockResolvedValue(
+            existingStandardVersion,
+          );
+          standardsAdapter.getStandard.mockResolvedValue(existingStandard);
+          activeDetectionProgramRepository.findByRuleIdAndLanguage.mockResolvedValue(
+            existingActiveProgram,
+          );
         });
 
-        const existingStandardVersion = {
-          id: standardVersionId,
-          standardId,
-          name: 'Test Standard',
-          slug: 'test-standard',
-          description: 'Test Description',
-          version: 1,
-          scope: null,
-        };
-
-        const existingStandard = standardFactory({
-          id: standardId,
-          name: 'Test Standard',
-          slug: 'test-standard',
-          userId,
-          scope: null,
+        it('throws an error', async () => {
+          await expect(
+            createDetectionProgramUseCase.execute(command),
+          ).rejects.toThrow(
+            'Active detection program already exists for this rule and language',
+          );
         });
 
-        const existingActiveProgram = activeDetectionProgramFactory({
-          ruleId,
-          language: ProgrammingLanguage.JAVASCRIPT,
+        it('checks for existing active program by rule id and language', async () => {
+          try {
+            await createDetectionProgramUseCase.execute(command);
+          } catch {
+            // Expected to throw
+          }
+
+          expect(
+            activeDetectionProgramRepository.findByRuleIdAndLanguage,
+          ).toHaveBeenCalledWith(ruleId, ProgrammingLanguage.JAVASCRIPT);
         });
 
-        standardsAdapter.getRule.mockResolvedValue(existingRule);
-        standardsAdapter.getStandardVersion.mockResolvedValue(
-          existingStandardVersion,
-        );
-        standardsAdapter.getStandard.mockResolvedValue(existingStandard);
-        activeDetectionProgramRepository.findByRuleIdAndLanguage.mockResolvedValue(
-          existingActiveProgram,
-        );
+        it('does not create detection program', async () => {
+          try {
+            await createDetectionProgramUseCase.execute(command);
+          } catch {
+            // Expected to throw
+          }
 
-        await expect(
-          createDetectionProgramUseCase.execute(command),
-        ).rejects.toThrow(
-          'Active detection program already exists for this rule and language',
-        );
+          expect(detectionProgramRepository.add).not.toHaveBeenCalled();
+        });
 
-        expect(
-          activeDetectionProgramRepository.findByRuleIdAndLanguage,
-        ).toHaveBeenCalledWith(ruleId, ProgrammingLanguage.JAVASCRIPT);
-        expect(detectionProgramRepository.add).not.toHaveBeenCalled();
-        expect(activeDetectionProgramRepository.add).not.toHaveBeenCalled();
+        it('does not create active detection program', async () => {
+          try {
+            await createDetectionProgramUseCase.execute(command);
+          } catch {
+            // Expected to throw
+          }
+
+          expect(activeDetectionProgramRepository.add).not.toHaveBeenCalled();
+        });
       });
 
-      it('allows creating detection program for different language on same rule', async () => {
-        const organizationId = createOrganizationId(uuidv4());
-        const userId = createUserId(uuidv4());
-        const ruleId = createRuleId(uuidv4());
+      describe('when creating detection program for different language on same rule', () => {
+        let command: CreateDetectionProgramCommand;
+        let ruleId: ReturnType<typeof createRuleId>;
+        let createdDetectionProgram: DetectionProgram;
+        let result: DetectionProgram;
 
-        const command: CreateDetectionProgramCommand = {
-          ruleId,
-          code: 'typescript detection code',
-          language: ProgrammingLanguage.TYPESCRIPT,
-          mode: DetectionModeEnum.SINGLE_AST,
-          userId,
-          organizationId,
-        };
+        beforeEach(async () => {
+          const organizationId = createOrganizationId(uuidv4());
+          const userId = createUserId(uuidv4());
+          ruleId = createRuleId(uuidv4());
 
-        const standardVersionId = createStandardVersionId(uuidv4());
-        const standardId = createStandardId(uuidv4());
+          command = {
+            ruleId,
+            code: 'typescript detection code',
+            language: ProgrammingLanguage.TYPESCRIPT,
+            mode: DetectionModeEnum.SINGLE_AST,
+            userId,
+            organizationId,
+          };
 
-        const existingRule = ruleFactory({
-          id: ruleId,
-          standardVersionId,
-        });
+          const standardVersionId = createStandardVersionId(uuidv4());
+          const standardId = createStandardId(uuidv4());
 
-        const existingStandardVersion = {
-          id: standardVersionId,
-          standardId,
-          name: 'Test Standard',
-          slug: 'test-standard',
-          description: 'Test Description',
-          version: 1,
-          scope: null,
-        };
+          const existingRule = ruleFactory({
+            id: ruleId,
+            standardVersionId,
+          });
 
-        const existingStandard = standardFactory({
-          id: standardId,
-          name: 'Test Standard',
-          slug: 'test-standard',
-          userId,
-          scope: null,
-        });
+          const existingStandardVersion = {
+            id: standardVersionId,
+            standardId,
+            name: 'Test Standard',
+            slug: 'test-standard',
+            description: 'Test Description',
+            version: 1,
+            scope: null,
+          };
 
-        const createdDetectionProgram = detectionProgramFactory({
-          ruleId,
-          code: command.code,
-          version: 1,
-          mode: command.mode,
-        });
+          const existingStandard = standardFactory({
+            id: standardId,
+            name: 'Test Standard',
+            slug: 'test-standard',
+            userId,
+            scope: null,
+          });
 
-        const createdActiveProgram = activeDetectionProgramFactory({
-          detectionProgramVersion: createdDetectionProgram.id,
-          ruleId,
-          language: ProgrammingLanguage.TYPESCRIPT,
-        });
-
-        standardsAdapter.getRule.mockResolvedValue(existingRule);
-        standardsAdapter.getStandardVersion.mockResolvedValue(
-          existingStandardVersion,
-        );
-        standardsAdapter.getStandard.mockResolvedValue(existingStandard);
-        // No existing active program for TypeScript
-        activeDetectionProgramRepository.findByRuleIdAndLanguage.mockResolvedValue(
-          null,
-        );
-        detectionProgramRepository.add.mockResolvedValue(
-          createdDetectionProgram,
-        );
-        activeDetectionProgramRepository.add.mockResolvedValue(
-          createdActiveProgram,
-        );
-
-        const result = await createDetectionProgramUseCase.execute(command);
-
-        expect(
-          activeDetectionProgramRepository.findByRuleIdAndLanguage,
-        ).toHaveBeenCalledWith(ruleId, ProgrammingLanguage.TYPESCRIPT);
-        expect(detectionProgramRepository.add).toHaveBeenCalledWith(
-          expect.objectContaining({
+          createdDetectionProgram = detectionProgramFactory({
             ruleId,
             code: command.code,
             version: 1,
             mode: command.mode,
-          }),
-        );
-        expect(activeDetectionProgramRepository.add).toHaveBeenCalledWith(
-          expect.objectContaining({
+          });
+
+          const createdActiveProgram = activeDetectionProgramFactory({
             detectionProgramVersion: createdDetectionProgram.id,
             ruleId,
             language: ProgrammingLanguage.TYPESCRIPT,
-          }),
-        );
-        expect(result).toEqual(createdDetectionProgram);
+          });
+
+          standardsAdapter.getRule.mockResolvedValue(existingRule);
+          standardsAdapter.getStandardVersion.mockResolvedValue(
+            existingStandardVersion,
+          );
+          standardsAdapter.getStandard.mockResolvedValue(existingStandard);
+          activeDetectionProgramRepository.findByRuleIdAndLanguage.mockResolvedValue(
+            null,
+          );
+          detectionProgramRepository.add.mockResolvedValue(
+            createdDetectionProgram,
+          );
+          activeDetectionProgramRepository.add.mockResolvedValue(
+            createdActiveProgram,
+          );
+
+          result = await createDetectionProgramUseCase.execute(command);
+        });
+
+        it('checks for existing active program by rule id and language', () => {
+          expect(
+            activeDetectionProgramRepository.findByRuleIdAndLanguage,
+          ).toHaveBeenCalledWith(ruleId, ProgrammingLanguage.TYPESCRIPT);
+        });
+
+        it('creates detection program with correct data', () => {
+          expect(detectionProgramRepository.add).toHaveBeenCalledWith(
+            expect.objectContaining({
+              ruleId,
+              code: command.code,
+              version: 1,
+              mode: command.mode,
+            }),
+          );
+        });
+
+        it('creates active detection program with correct data', () => {
+          expect(activeDetectionProgramRepository.add).toHaveBeenCalledWith(
+            expect.objectContaining({
+              detectionProgramVersion: createdDetectionProgram.id,
+              ruleId,
+              language: ProgrammingLanguage.TYPESCRIPT,
+            }),
+          );
+        });
+
+        it('returns the created detection program', () => {
+          expect(result).toEqual(createdDetectionProgram);
+        });
       });
     });
 
@@ -865,13 +988,15 @@ describe('CreateDetectionProgramUseCase', () => {
     });
 
     describe('when detection program creation fails', () => {
-      it('throws an error and does not create active detection program', async () => {
+      let command: CreateDetectionProgramCommand;
+
+      beforeEach(() => {
         const organizationId = createOrganizationId(uuidv4());
         const ruleId = createRuleId(uuidv4());
         const standardVersionId = createStandardVersionId(uuidv4());
         const standardId = createStandardId(uuidv4());
 
-        const command: CreateDetectionProgramCommand = {
+        command = {
           ruleId,
           code: 'test code',
           language: ProgrammingLanguage.JAVASCRIPT,
@@ -913,23 +1038,35 @@ describe('CreateDetectionProgramUseCase', () => {
         detectionProgramRepository.add.mockRejectedValue(
           new Error('Database connection failed'),
         );
+      });
 
+      it('throws an error', async () => {
         await expect(
           createDetectionProgramUseCase.execute(command),
         ).rejects.toThrow('Database connection failed');
+      });
+
+      it('does not create active detection program', async () => {
+        try {
+          await createDetectionProgramUseCase.execute(command);
+        } catch {
+          // Expected to throw
+        }
 
         expect(activeDetectionProgramRepository.add).not.toHaveBeenCalled();
       });
     });
 
     describe('when active detection program creation fails', () => {
-      it('throws an error after detection program creation', async () => {
+      let command: CreateDetectionProgramCommand;
+
+      beforeEach(() => {
         const organizationId = createOrganizationId(uuidv4());
         const ruleId = createRuleId(uuidv4());
         const standardVersionId = createStandardVersionId(uuidv4());
         const standardId = createStandardId(uuidv4());
 
-        const command: CreateDetectionProgramCommand = {
+        command = {
           ruleId,
           code: 'test code',
           language: ProgrammingLanguage.JAVASCRIPT,
@@ -976,12 +1113,31 @@ describe('CreateDetectionProgramUseCase', () => {
         activeDetectionProgramRepository.add.mockRejectedValue(
           new Error('Active program creation failed'),
         );
+      });
 
+      it('throws an error', async () => {
         await expect(
           createDetectionProgramUseCase.execute(command),
         ).rejects.toThrow('Active program creation failed');
+      });
+
+      it('attempts to create detection program before failing', async () => {
+        try {
+          await createDetectionProgramUseCase.execute(command);
+        } catch {
+          // Expected to throw
+        }
 
         expect(detectionProgramRepository.add).toHaveBeenCalledTimes(1);
+      });
+
+      it('attempts to create active detection program', async () => {
+        try {
+          await createDetectionProgramUseCase.execute(command);
+        } catch {
+          // Expected to throw
+        }
+
         expect(activeDetectionProgramRepository.add).toHaveBeenCalledTimes(1);
       });
     });
@@ -1141,45 +1297,72 @@ describe('CreateDetectionProgramUseCase', () => {
     });
 
     describe('command validation', () => {
-      it('validates required fields are present', async () => {
-        const organizationId = createOrganizationId(uuidv4());
-        const ruleId = createRuleId(uuidv4());
+      describe('when code is missing', () => {
+        let commandWithoutCode: CreateDetectionProgramCommand;
 
-        // Test missing code
-        const commandWithoutCode = {
-          ruleId,
-          code: '',
-          language: ProgrammingLanguage.JAVASCRIPT,
-          mode: DetectionModeEnum.REGEXP,
-          organizationId,
-          userId: createUserId(uuidv4()),
-        } as CreateDetectionProgramCommand;
+        beforeEach(() => {
+          const organizationId = createOrganizationId(uuidv4());
+          const ruleId = createRuleId(uuidv4());
 
-        await expect(
-          createDetectionProgramUseCase.execute(commandWithoutCode),
-        ).rejects.toThrow('Code is required');
+          commandWithoutCode = {
+            ruleId,
+            code: '',
+            language: ProgrammingLanguage.JAVASCRIPT,
+            mode: DetectionModeEnum.REGEXP,
+            organizationId,
+            userId: createUserId(uuidv4()),
+          } as CreateDetectionProgramCommand;
+        });
 
-        expect(detectionProgramRepository.add).not.toHaveBeenCalled();
+        it('throws an error', async () => {
+          await expect(
+            createDetectionProgramUseCase.execute(commandWithoutCode),
+          ).rejects.toThrow('Code is required');
+        });
+
+        it('does not create detection program', async () => {
+          try {
+            await createDetectionProgramUseCase.execute(commandWithoutCode);
+          } catch {
+            // Expected to throw
+          }
+
+          expect(detectionProgramRepository.add).not.toHaveBeenCalled();
+        });
       });
 
-      it('validates language is provided', async () => {
-        const organizationId = createOrganizationId(uuidv4());
-        const ruleId = createRuleId(uuidv4());
+      describe('when language is missing', () => {
+        let commandWithoutLanguage: CreateDetectionProgramCommand;
 
-        const commandWithoutLanguage = {
-          ruleId,
-          code: 'test code',
-          language: null,
-          mode: DetectionModeEnum.REGEXP,
-          organizationId,
-          userId: createUserId(uuidv4()),
-        } as unknown as CreateDetectionProgramCommand;
+        beforeEach(() => {
+          const organizationId = createOrganizationId(uuidv4());
+          const ruleId = createRuleId(uuidv4());
 
-        await expect(
-          createDetectionProgramUseCase.execute(commandWithoutLanguage),
-        ).rejects.toThrow('Language is required');
+          commandWithoutLanguage = {
+            ruleId,
+            code: 'test code',
+            language: null,
+            mode: DetectionModeEnum.REGEXP,
+            organizationId,
+            userId: createUserId(uuidv4()),
+          } as unknown as CreateDetectionProgramCommand;
+        });
 
-        expect(detectionProgramRepository.add).not.toHaveBeenCalled();
+        it('throws an error', async () => {
+          await expect(
+            createDetectionProgramUseCase.execute(commandWithoutLanguage),
+          ).rejects.toThrow('Language is required');
+        });
+
+        it('does not create detection program', async () => {
+          try {
+            await createDetectionProgramUseCase.execute(commandWithoutLanguage);
+          } catch {
+            // Expected to throw
+          }
+
+          expect(detectionProgramRepository.add).not.toHaveBeenCalled();
+        });
       });
     });
   });

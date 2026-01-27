@@ -73,30 +73,43 @@ describe('UpdateActiveDetectionProgramUseCase', () => {
 
   describe('execute', () => {
     describe('when updating detectionProgramVersion only', () => {
-      it('updates the detectionProgramVersion successfully', async () => {
-        const activeDetectionProgramId =
-          createActiveDetectionProgramId(uuidv4());
-        const newDetectionProgramVersion = createDetectionProgramId(uuidv4());
-        const organizationId = createOrganizationId(uuidv4());
-        const userId = createUserId(uuidv4());
+      let activeDetectionProgramId: ReturnType<
+        typeof createActiveDetectionProgramId
+      >;
+      let newDetectionProgramVersion: ReturnType<
+        typeof createDetectionProgramId
+      >;
+      let organizationId: ReturnType<typeof createOrganizationId>;
+      let userId: ReturnType<typeof createUserId>;
+      let existingActiveProgram: ActiveDetectionProgram;
+      let detectionProgram: ReturnType<typeof detectionProgramFactory>;
+      let expectedUpdatedProgram: ActiveDetectionProgram;
+      let command: UpdateActiveDetectionProgramCommand;
+      let result: ActiveDetectionProgram;
 
-        const existingActiveProgram = activeDetectionProgramFactory({
+      beforeEach(async () => {
+        activeDetectionProgramId = createActiveDetectionProgramId(uuidv4());
+        newDetectionProgramVersion = createDetectionProgramId(uuidv4());
+        organizationId = createOrganizationId(uuidv4());
+        userId = createUserId(uuidv4());
+
+        existingActiveProgram = activeDetectionProgramFactory({
           id: activeDetectionProgramId,
           detectionProgramVersion: createDetectionProgramId(uuidv4()),
           detectionProgramDraftVersion: null,
         });
 
-        const detectionProgram = detectionProgramFactory({
+        detectionProgram = detectionProgramFactory({
           id: newDetectionProgramVersion,
           status: DetectionStatus.READY,
         });
 
-        const expectedUpdatedProgram: ActiveDetectionProgram = {
+        expectedUpdatedProgram = {
           ...existingActiveProgram,
           detectionProgramVersion: newDetectionProgramVersion,
         };
 
-        const command: UpdateActiveDetectionProgramCommand = {
+        command = {
           activeDetectionProgram: existingActiveProgram,
           newDetectionProgramVersion,
           organizationId,
@@ -108,40 +121,58 @@ describe('UpdateActiveDetectionProgramUseCase', () => {
           expectedUpdatedProgram,
         );
 
-        const result =
-          await updateActiveDetectionProgramUseCase.execute(command);
+        result = await updateActiveDetectionProgramUseCase.execute(command);
+      });
 
+      it('finds the detection program by id', () => {
         expect(detectionProgramRepository.findById).toHaveBeenCalledWith(
           newDetectionProgramVersion,
         );
+      });
+
+      it('updates the active detection program', () => {
         expect(
           activeDetectionProgramRepository.updateActiveDetectionProgram,
         ).toHaveBeenCalledWith(expectedUpdatedProgram);
+      });
+
+      it('returns the updated program', () => {
         expect(result).toEqual(expectedUpdatedProgram);
       });
     });
 
     describe('when updating detectionProgramDraftVersion only', () => {
-      it('updates the detectionProgramDraftVersion successfully', async () => {
-        const activeDetectionProgramId =
-          createActiveDetectionProgramId(uuidv4());
-        const newDetectionProgramDraftVersion =
-          createDetectionProgramId(uuidv4());
-        const organizationId = createOrganizationId(uuidv4());
-        const userId = createUserId(uuidv4());
+      let activeDetectionProgramId: ReturnType<
+        typeof createActiveDetectionProgramId
+      >;
+      let newDetectionProgramDraftVersion: ReturnType<
+        typeof createDetectionProgramId
+      >;
+      let organizationId: ReturnType<typeof createOrganizationId>;
+      let userId: ReturnType<typeof createUserId>;
+      let existingActiveProgram: ActiveDetectionProgram;
+      let expectedUpdatedProgram: ActiveDetectionProgram;
+      let command: UpdateActiveDetectionProgramCommand;
+      let result: ActiveDetectionProgram;
 
-        const existingActiveProgram = activeDetectionProgramFactory({
+      beforeEach(async () => {
+        activeDetectionProgramId = createActiveDetectionProgramId(uuidv4());
+        newDetectionProgramDraftVersion = createDetectionProgramId(uuidv4());
+        organizationId = createOrganizationId(uuidv4());
+        userId = createUserId(uuidv4());
+
+        existingActiveProgram = activeDetectionProgramFactory({
           id: activeDetectionProgramId,
           detectionProgramVersion: createDetectionProgramId(uuidv4()),
           detectionProgramDraftVersion: null,
         });
 
-        const expectedUpdatedProgram: ActiveDetectionProgram = {
+        expectedUpdatedProgram = {
           ...existingActiveProgram,
           detectionProgramDraftVersion: newDetectionProgramDraftVersion,
         };
 
-        const command: UpdateActiveDetectionProgramCommand = {
+        command = {
           activeDetectionProgram: existingActiveProgram,
           newDetectionProgramDraftVersion,
           organizationId,
@@ -152,44 +183,63 @@ describe('UpdateActiveDetectionProgramUseCase', () => {
           expectedUpdatedProgram,
         );
 
-        const result =
-          await updateActiveDetectionProgramUseCase.execute(command);
+        result = await updateActiveDetectionProgramUseCase.execute(command);
+      });
 
+      it('updates the active detection program', () => {
         expect(
           activeDetectionProgramRepository.updateActiveDetectionProgram,
         ).toHaveBeenCalledWith(expectedUpdatedProgram);
+      });
+
+      it('returns the updated program', () => {
         expect(result).toEqual(expectedUpdatedProgram);
       });
     });
 
     describe('when updating both fields', () => {
-      it('updates both detectionProgramVersion and detectionProgramDraftVersion', async () => {
-        const activeDetectionProgramId =
-          createActiveDetectionProgramId(uuidv4());
-        const newDetectionProgramVersion = createDetectionProgramId(uuidv4());
-        const newDetectionProgramDraftVersion =
-          createDetectionProgramId(uuidv4());
-        const organizationId = createOrganizationId(uuidv4());
-        const userId = createUserId(uuidv4());
+      let activeDetectionProgramId: ReturnType<
+        typeof createActiveDetectionProgramId
+      >;
+      let newDetectionProgramVersion: ReturnType<
+        typeof createDetectionProgramId
+      >;
+      let newDetectionProgramDraftVersion: ReturnType<
+        typeof createDetectionProgramId
+      >;
+      let organizationId: ReturnType<typeof createOrganizationId>;
+      let userId: ReturnType<typeof createUserId>;
+      let existingActiveProgram: ActiveDetectionProgram;
+      let detectionProgram: ReturnType<typeof detectionProgramFactory>;
+      let expectedUpdatedProgram: ActiveDetectionProgram;
+      let command: UpdateActiveDetectionProgramCommand;
+      let result: ActiveDetectionProgram;
 
-        const existingActiveProgram = activeDetectionProgramFactory({
+      beforeEach(async () => {
+        activeDetectionProgramId = createActiveDetectionProgramId(uuidv4());
+        newDetectionProgramVersion = createDetectionProgramId(uuidv4());
+        newDetectionProgramDraftVersion = createDetectionProgramId(uuidv4());
+        organizationId = createOrganizationId(uuidv4());
+        userId = createUserId(uuidv4());
+
+        existingActiveProgram = activeDetectionProgramFactory({
           id: activeDetectionProgramId,
           detectionProgramVersion: createDetectionProgramId(uuidv4()),
           detectionProgramDraftVersion: null,
         });
 
-        const detectionProgram = detectionProgramFactory({
+        detectionProgram = detectionProgramFactory({
           id: newDetectionProgramVersion,
           status: DetectionStatus.READY,
         });
 
-        const expectedUpdatedProgram: ActiveDetectionProgram = {
+        expectedUpdatedProgram = {
           ...existingActiveProgram,
           detectionProgramVersion: newDetectionProgramVersion,
           detectionProgramDraftVersion: newDetectionProgramDraftVersion,
         };
 
-        const command: UpdateActiveDetectionProgramCommand = {
+        command = {
           activeDetectionProgram: existingActiveProgram,
           newDetectionProgramVersion,
           newDetectionProgramDraftVersion,
@@ -202,15 +252,22 @@ describe('UpdateActiveDetectionProgramUseCase', () => {
           expectedUpdatedProgram,
         );
 
-        const result =
-          await updateActiveDetectionProgramUseCase.execute(command);
+        result = await updateActiveDetectionProgramUseCase.execute(command);
+      });
 
+      it('finds the detection program by id', () => {
         expect(detectionProgramRepository.findById).toHaveBeenCalledWith(
           newDetectionProgramVersion,
         );
+      });
+
+      it('updates the active detection program', () => {
         expect(
           activeDetectionProgramRepository.updateActiveDetectionProgram,
         ).toHaveBeenCalledWith(expectedUpdatedProgram);
+      });
+
+      it('returns the updated program', () => {
         expect(result).toEqual(expectedUpdatedProgram);
       });
     });
@@ -253,27 +310,44 @@ describe('UpdateActiveDetectionProgramUseCase', () => {
 
     describe('error cases', () => {
       describe('when no update fields are provided', () => {
-        it('throws error', async () => {
-          const activeDetectionProgramId =
-            createActiveDetectionProgramId(uuidv4());
-          const organizationId = createOrganizationId(uuidv4());
-          const userId = createUserId(uuidv4());
+        let activeDetectionProgramId: ReturnType<
+          typeof createActiveDetectionProgramId
+        >;
+        let organizationId: ReturnType<typeof createOrganizationId>;
+        let userId: ReturnType<typeof createUserId>;
+        let existingActiveProgram: ActiveDetectionProgram;
+        let command: UpdateActiveDetectionProgramCommand;
 
-          const existingActiveProgram = activeDetectionProgramFactory({
+        beforeEach(() => {
+          activeDetectionProgramId = createActiveDetectionProgramId(uuidv4());
+          organizationId = createOrganizationId(uuidv4());
+          userId = createUserId(uuidv4());
+
+          existingActiveProgram = activeDetectionProgramFactory({
             id: activeDetectionProgramId,
           });
 
-          const command: UpdateActiveDetectionProgramCommand = {
+          command = {
             activeDetectionProgram: existingActiveProgram,
             organizationId,
             userId,
           };
+        });
 
+        it('throws error with correct message', async () => {
           await expect(
             updateActiveDetectionProgramUseCase.execute(command),
           ).rejects.toThrow(
             'At least one of newDetectionProgramVersion or newDetectionProgramDraftVersion must be provided',
           );
+        });
+
+        it('does not call updateActiveDetectionProgram', async () => {
+          try {
+            await updateActiveDetectionProgramUseCase.execute(command);
+          } catch {
+            // Expected to throw
+          }
 
           expect(
             activeDetectionProgramRepository.updateActiveDetectionProgram,
@@ -321,18 +395,28 @@ describe('UpdateActiveDetectionProgramUseCase', () => {
       });
 
       describe('when detection program is not found', () => {
-        it('throws error', async () => {
-          const activeDetectionProgramId =
-            createActiveDetectionProgramId(uuidv4());
-          const newDetectionProgramVersion = createDetectionProgramId(uuidv4());
-          const organizationId = createOrganizationId(uuidv4());
-          const userId = createUserId(uuidv4());
+        let activeDetectionProgramId: ReturnType<
+          typeof createActiveDetectionProgramId
+        >;
+        let newDetectionProgramVersion: ReturnType<
+          typeof createDetectionProgramId
+        >;
+        let organizationId: ReturnType<typeof createOrganizationId>;
+        let userId: ReturnType<typeof createUserId>;
+        let existingActiveProgram: ActiveDetectionProgram;
+        let command: UpdateActiveDetectionProgramCommand;
 
-          const existingActiveProgram = activeDetectionProgramFactory({
+        beforeEach(() => {
+          activeDetectionProgramId = createActiveDetectionProgramId(uuidv4());
+          newDetectionProgramVersion = createDetectionProgramId(uuidv4());
+          organizationId = createOrganizationId(uuidv4());
+          userId = createUserId(uuidv4());
+
+          existingActiveProgram = activeDetectionProgramFactory({
             id: activeDetectionProgramId,
           });
 
-          const command: UpdateActiveDetectionProgramCommand = {
+          command = {
             activeDetectionProgram: existingActiveProgram,
             newDetectionProgramVersion,
             organizationId,
@@ -340,12 +424,22 @@ describe('UpdateActiveDetectionProgramUseCase', () => {
           };
 
           detectionProgramRepository.findById.mockResolvedValue(null);
+        });
 
+        it('throws error with correct message', async () => {
           await expect(
             updateActiveDetectionProgramUseCase.execute(command),
           ).rejects.toThrow(
             `Detection program ${newDetectionProgramVersion} not found`,
           );
+        });
+
+        it('does not call updateActiveDetectionProgram', async () => {
+          try {
+            await updateActiveDetectionProgramUseCase.execute(command);
+          } catch {
+            // Expected to throw
+          }
 
           expect(
             activeDetectionProgramRepository.updateActiveDetectionProgram,
@@ -354,118 +448,189 @@ describe('UpdateActiveDetectionProgramUseCase', () => {
       });
 
       describe('when detection program status is not READY', () => {
-        it('throws InvalidDetectionProgramStatusError for IN_PROGRESS status', async () => {
-          const activeDetectionProgramId =
-            createActiveDetectionProgramId(uuidv4());
-          const newDetectionProgramVersion = createDetectionProgramId(uuidv4());
-          const organizationId = createOrganizationId(uuidv4());
-          const userId = createUserId(uuidv4());
+        describe('when status is IN_PROGRESS', () => {
+          let activeDetectionProgramId: ReturnType<
+            typeof createActiveDetectionProgramId
+          >;
+          let newDetectionProgramVersion: ReturnType<
+            typeof createDetectionProgramId
+          >;
+          let organizationId: ReturnType<typeof createOrganizationId>;
+          let userId: ReturnType<typeof createUserId>;
+          let existingActiveProgram: ActiveDetectionProgram;
+          let detectionProgram: ReturnType<typeof detectionProgramFactory>;
+          let command: UpdateActiveDetectionProgramCommand;
 
-          const existingActiveProgram = activeDetectionProgramFactory({
-            id: activeDetectionProgramId,
+          beforeEach(() => {
+            activeDetectionProgramId = createActiveDetectionProgramId(uuidv4());
+            newDetectionProgramVersion = createDetectionProgramId(uuidv4());
+            organizationId = createOrganizationId(uuidv4());
+            userId = createUserId(uuidv4());
+
+            existingActiveProgram = activeDetectionProgramFactory({
+              id: activeDetectionProgramId,
+            });
+
+            detectionProgram = detectionProgramFactory({
+              id: newDetectionProgramVersion,
+              status: DetectionStatus.IN_PROGRESS,
+            });
+
+            command = {
+              activeDetectionProgram: existingActiveProgram,
+              newDetectionProgramVersion,
+              organizationId,
+              userId,
+            };
+
+            detectionProgramRepository.findById.mockResolvedValue(
+              detectionProgram,
+            );
           });
 
-          const detectionProgram = detectionProgramFactory({
-            id: newDetectionProgramVersion,
-            status: DetectionStatus.IN_PROGRESS,
+          it('throws InvalidDetectionProgramStatusError', async () => {
+            await expect(
+              updateActiveDetectionProgramUseCase.execute(command),
+            ).rejects.toThrow(InvalidDetectionProgramStatusError);
           });
 
-          const command: UpdateActiveDetectionProgramCommand = {
-            activeDetectionProgram: existingActiveProgram,
-            newDetectionProgramVersion,
-            organizationId,
-            userId,
-          };
+          it('throws error with correct message', async () => {
+            await expect(
+              updateActiveDetectionProgramUseCase.execute(command),
+            ).rejects.toThrow(
+              `Detection program ${newDetectionProgramVersion} cannot be promoted as active. Current status: ${DetectionStatus.IN_PROGRESS}, required status: ${DetectionStatus.READY}`,
+            );
+          });
 
-          detectionProgramRepository.findById.mockResolvedValue(
-            detectionProgram,
-          );
+          it('does not call updateActiveDetectionProgram', async () => {
+            try {
+              await updateActiveDetectionProgramUseCase.execute(command);
+            } catch {
+              // Expected to throw
+            }
 
-          await expect(
-            updateActiveDetectionProgramUseCase.execute(command),
-          ).rejects.toThrow(InvalidDetectionProgramStatusError);
-
-          await expect(
-            updateActiveDetectionProgramUseCase.execute(command),
-          ).rejects.toThrow(
-            `Detection program ${newDetectionProgramVersion} cannot be promoted as active. Current status: ${DetectionStatus.IN_PROGRESS}, required status: ${DetectionStatus.READY}`,
-          );
-
-          expect(
-            activeDetectionProgramRepository.updateActiveDetectionProgram,
-          ).not.toHaveBeenCalled();
+            expect(
+              activeDetectionProgramRepository.updateActiveDetectionProgram,
+            ).not.toHaveBeenCalled();
+          });
         });
 
-        it('throws InvalidDetectionProgramStatusError for TO_REVIEW status', async () => {
-          const activeDetectionProgramId =
-            createActiveDetectionProgramId(uuidv4());
-          const newDetectionProgramVersion = createDetectionProgramId(uuidv4());
-          const organizationId = createOrganizationId(uuidv4());
-          const userId = createUserId(uuidv4());
+        describe('when status is TO_REVIEW', () => {
+          let activeDetectionProgramId: ReturnType<
+            typeof createActiveDetectionProgramId
+          >;
+          let newDetectionProgramVersion: ReturnType<
+            typeof createDetectionProgramId
+          >;
+          let organizationId: ReturnType<typeof createOrganizationId>;
+          let userId: ReturnType<typeof createUserId>;
+          let existingActiveProgram: ActiveDetectionProgram;
+          let detectionProgram: ReturnType<typeof detectionProgramFactory>;
+          let command: UpdateActiveDetectionProgramCommand;
 
-          const existingActiveProgram = activeDetectionProgramFactory({
-            id: activeDetectionProgramId,
+          beforeEach(() => {
+            activeDetectionProgramId = createActiveDetectionProgramId(uuidv4());
+            newDetectionProgramVersion = createDetectionProgramId(uuidv4());
+            organizationId = createOrganizationId(uuidv4());
+            userId = createUserId(uuidv4());
+
+            existingActiveProgram = activeDetectionProgramFactory({
+              id: activeDetectionProgramId,
+            });
+
+            detectionProgram = detectionProgramFactory({
+              id: newDetectionProgramVersion,
+              status: DetectionStatus.TO_REVIEW,
+            });
+
+            command = {
+              activeDetectionProgram: existingActiveProgram,
+              newDetectionProgramVersion,
+              organizationId,
+              userId,
+            };
+
+            detectionProgramRepository.findById.mockResolvedValue(
+              detectionProgram,
+            );
           });
 
-          const detectionProgram = detectionProgramFactory({
-            id: newDetectionProgramVersion,
-            status: DetectionStatus.TO_REVIEW,
+          it('throws InvalidDetectionProgramStatusError', async () => {
+            await expect(
+              updateActiveDetectionProgramUseCase.execute(command),
+            ).rejects.toThrow(InvalidDetectionProgramStatusError);
           });
 
-          const command: UpdateActiveDetectionProgramCommand = {
-            activeDetectionProgram: existingActiveProgram,
-            newDetectionProgramVersion,
-            organizationId,
-            userId,
-          };
+          it('does not call updateActiveDetectionProgram', async () => {
+            try {
+              await updateActiveDetectionProgramUseCase.execute(command);
+            } catch {
+              // Expected to throw
+            }
 
-          detectionProgramRepository.findById.mockResolvedValue(
-            detectionProgram,
-          );
-
-          await expect(
-            updateActiveDetectionProgramUseCase.execute(command),
-          ).rejects.toThrow(InvalidDetectionProgramStatusError);
-
-          expect(
-            activeDetectionProgramRepository.updateActiveDetectionProgram,
-          ).not.toHaveBeenCalled();
+            expect(
+              activeDetectionProgramRepository.updateActiveDetectionProgram,
+            ).not.toHaveBeenCalled();
+          });
         });
 
-        it('throws InvalidDetectionProgramStatusError for ERROR status', async () => {
-          const activeDetectionProgramId =
-            createActiveDetectionProgramId(uuidv4());
-          const newDetectionProgramVersion = createDetectionProgramId(uuidv4());
-          const organizationId = createOrganizationId(uuidv4());
-          const userId = createUserId(uuidv4());
+        describe('when status is ERROR', () => {
+          let activeDetectionProgramId: ReturnType<
+            typeof createActiveDetectionProgramId
+          >;
+          let newDetectionProgramVersion: ReturnType<
+            typeof createDetectionProgramId
+          >;
+          let organizationId: ReturnType<typeof createOrganizationId>;
+          let userId: ReturnType<typeof createUserId>;
+          let existingActiveProgram: ActiveDetectionProgram;
+          let detectionProgram: ReturnType<typeof detectionProgramFactory>;
+          let command: UpdateActiveDetectionProgramCommand;
 
-          const existingActiveProgram = activeDetectionProgramFactory({
-            id: activeDetectionProgramId,
+          beforeEach(() => {
+            activeDetectionProgramId = createActiveDetectionProgramId(uuidv4());
+            newDetectionProgramVersion = createDetectionProgramId(uuidv4());
+            organizationId = createOrganizationId(uuidv4());
+            userId = createUserId(uuidv4());
+
+            existingActiveProgram = activeDetectionProgramFactory({
+              id: activeDetectionProgramId,
+            });
+
+            detectionProgram = detectionProgramFactory({
+              id: newDetectionProgramVersion,
+              status: DetectionStatus.ERROR,
+            });
+
+            command = {
+              activeDetectionProgram: existingActiveProgram,
+              newDetectionProgramVersion,
+              organizationId,
+              userId,
+            };
+
+            detectionProgramRepository.findById.mockResolvedValue(
+              detectionProgram,
+            );
           });
 
-          const detectionProgram = detectionProgramFactory({
-            id: newDetectionProgramVersion,
-            status: DetectionStatus.ERROR,
+          it('throws InvalidDetectionProgramStatusError', async () => {
+            await expect(
+              updateActiveDetectionProgramUseCase.execute(command),
+            ).rejects.toThrow(InvalidDetectionProgramStatusError);
           });
 
-          const command: UpdateActiveDetectionProgramCommand = {
-            activeDetectionProgram: existingActiveProgram,
-            newDetectionProgramVersion,
-            organizationId,
-            userId,
-          };
+          it('does not call updateActiveDetectionProgram', async () => {
+            try {
+              await updateActiveDetectionProgramUseCase.execute(command);
+            } catch {
+              // Expected to throw
+            }
 
-          detectionProgramRepository.findById.mockResolvedValue(
-            detectionProgram,
-          );
-
-          await expect(
-            updateActiveDetectionProgramUseCase.execute(command),
-          ).rejects.toThrow(InvalidDetectionProgramStatusError);
-
-          expect(
-            activeDetectionProgramRepository.updateActiveDetectionProgram,
-          ).not.toHaveBeenCalled();
+            expect(
+              activeDetectionProgramRepository.updateActiveDetectionProgram,
+            ).not.toHaveBeenCalled();
+          });
         });
       });
     });

@@ -6,6 +6,7 @@ import {
   createStandardVersionId,
   createUserId,
   IAccountsPort,
+  IComputeRuleLanguageDetectionStatusUseCase,
   IStandardsPort,
   Organization,
   ProgrammingLanguage,
@@ -16,59 +17,21 @@ import {
 } from '@packmind/types';
 import { stubLogger } from '@packmind/test-utils';
 import { GetStandardRulesDetectionStatusUseCase } from './getStandardRulesDetectionStatus.usecase';
-import { ILinterRepositories } from '../../../domain/repositories/ILinterRepositories';
-import { IRuleDetectionAssessmentRepository } from '../../../domain/repositories/IRuleDetectionAssessmentRepository';
-import { IActiveDetectionProgramRepository } from '../../../domain/repositories/IActiveDetectionProgramRepository';
 
 describe('GetStandardRulesDetectionStatusUseCase', () => {
   let useCase: GetStandardRulesDetectionStatusUseCase;
-  let mockLinterRepositories: jest.Mocked<ILinterRepositories>;
   let mockStandardsAdapter: jest.Mocked<IStandardsPort>;
   let mockAccountsPort: jest.Mocked<IAccountsPort>;
-  let mockRuleDetectionAssessmentRepository: jest.Mocked<IRuleDetectionAssessmentRepository>;
-  let mockActiveDetectionProgramRepository: jest.Mocked<IActiveDetectionProgramRepository>;
+  let mockComputeRuleLanguageDetectionStatusUseCase: jest.Mocked<IComputeRuleLanguageDetectionStatusUseCase>;
 
   const mockStandardId = createStandardId('standard-123');
   const mockOrganizationId = createOrganizationId('org-123');
   const mockUserId = createUserId('user-123');
 
   beforeEach(() => {
-    mockRuleDetectionAssessmentRepository = {
-      get: jest.fn(),
-      update: jest.fn(),
-      add: jest.fn(),
-      findById: jest.fn(),
-      list: jest.fn(),
-      delete: jest.fn(),
-      deleteById: jest.fn(),
-      restoreById: jest.fn(),
-    } as unknown as jest.Mocked<IRuleDetectionAssessmentRepository>;
-
-    mockActiveDetectionProgramRepository = {
-      findByRuleIdWithPrograms: jest.fn(),
-      findByRuleId: jest.fn(),
-      findByRuleIdAndLanguage: jest.fn(),
-      updateActiveDetectionProgram: jest.fn(),
-      deleteByRuleId: jest.fn(),
-      add: jest.fn(),
-      findById: jest.fn(),
-      list: jest.fn(),
-      delete: jest.fn(),
-      deleteById: jest.fn(),
-      restoreById: jest.fn(),
-    } as unknown as jest.Mocked<IActiveDetectionProgramRepository>;
-
-    mockLinterRepositories = {
-      getRuleDetectionAssessmentRepository: jest.fn(
-        () => mockRuleDetectionAssessmentRepository,
-      ),
-      getActiveDetectionProgramRepository: jest.fn(
-        () => mockActiveDetectionProgramRepository,
-      ),
-      getDetectionProgramRepository: jest.fn(),
-      getDetectionProgramMetadataRepository: jest.fn(),
-      getRuleDetectionHeuristicsRepository: jest.fn(),
-    } as unknown as jest.Mocked<ILinterRepositories>;
+    mockComputeRuleLanguageDetectionStatusUseCase = {
+      execute: jest.fn(),
+    } as jest.Mocked<IComputeRuleLanguageDetectionStatusUseCase>;
 
     mockStandardsAdapter = {
       getStandardVersion: jest.fn(),
@@ -114,15 +77,14 @@ describe('GetStandardRulesDetectionStatusUseCase', () => {
     mockAccountsPort.getUserById.mockResolvedValue(user);
     mockAccountsPort.getOrganizationById.mockResolvedValue(organization);
 
-    mockActiveDetectionProgramRepository.findByRuleIdWithPrograms.mockResolvedValue(
-      [],
-    );
-    mockRuleDetectionAssessmentRepository.get.mockResolvedValue(null);
+    mockComputeRuleLanguageDetectionStatusUseCase.execute.mockResolvedValue({
+      status: RuleLanguageDetectionStatus.NONE,
+    });
 
     useCase = new GetStandardRulesDetectionStatusUseCase(
       mockAccountsPort,
-      mockLinterRepositories,
       mockStandardsAdapter,
+      mockComputeRuleLanguageDetectionStatusUseCase,
       stubLogger(),
     );
   });
@@ -131,7 +93,7 @@ describe('GetStandardRulesDetectionStatusUseCase', () => {
     jest.clearAllMocks();
   });
 
-  it('returns detection status for all rules in a standard', async () => {
+  describe('when standard has multiple rules with examples', () => {
     const rule1: Rule = {
       id: createRuleId('rule-1'),
       content: 'Use const instead of var',
@@ -171,46 +133,58 @@ describe('GetStandardRulesDetectionStatusUseCase', () => {
       },
     ];
 
-    mockStandardsAdapter.getLatestRulesByStandardId.mockResolvedValue([
-      rule1,
-      rule2,
-    ]);
-    mockStandardsAdapter.getRuleCodeExamples
-      .mockResolvedValueOnce(rule1Examples)
-      .mockResolvedValueOnce(rule2Examples);
+    let result: Awaited<ReturnType<typeof useCase.execute>>;
 
-    const result = await useCase.execute({
-      standardId: mockStandardId,
-      organizationId: mockOrganizationId,
-      userId: mockUserId,
+    beforeEach(async () => {
+      mockStandardsAdapter.getLatestRulesByStandardId.mockResolvedValue([
+        rule1,
+        rule2,
+      ]);
+      mockStandardsAdapter.getRuleCodeExamples
+        .mockResolvedValueOnce(rule1Examples)
+        .mockResolvedValueOnce(rule2Examples);
+
+      result = await useCase.execute({
+        standardId: mockStandardId,
+        organizationId: mockOrganizationId,
+        userId: mockUserId,
+      });
     });
 
-    expect(result.rules).toHaveLength(2);
-    expect(result.rules[0]).toEqual({
-      ruleId: rule1.id,
-      languages: [
-        {
-          language: ProgrammingLanguage.JAVASCRIPT,
-          status: RuleLanguageDetectionStatus.NONE,
-        },
-        {
-          language: ProgrammingLanguage.TYPESCRIPT,
-          status: RuleLanguageDetectionStatus.NONE,
-        },
-      ],
+    it('returns detection status for all rules', async () => {
+      expect(result.rules).toHaveLength(2);
     });
-    expect(result.rules[1]).toEqual({
-      ruleId: rule2.id,
-      languages: [
-        {
-          language: ProgrammingLanguage.JAVASCRIPT,
-          status: RuleLanguageDetectionStatus.NONE,
-        },
-      ],
+
+    it('returns first rule with correct languages and status', async () => {
+      expect(result.rules[0]).toEqual({
+        ruleId: rule1.id,
+        languages: [
+          {
+            language: ProgrammingLanguage.JAVASCRIPT,
+            status: RuleLanguageDetectionStatus.NONE,
+          },
+          {
+            language: ProgrammingLanguage.TYPESCRIPT,
+            status: RuleLanguageDetectionStatus.NONE,
+          },
+        ],
+      });
+    });
+
+    it('returns second rule with correct languages and status', async () => {
+      expect(result.rules[1]).toEqual({
+        ruleId: rule2.id,
+        languages: [
+          {
+            language: ProgrammingLanguage.JAVASCRIPT,
+            status: RuleLanguageDetectionStatus.NONE,
+          },
+        ],
+      });
     });
   });
 
-  it('extracts unique languages from rule examples', async () => {
+  describe('when rule has duplicate language examples', () => {
     const rule: Rule = {
       id: createRuleId('rule-1'),
       content: 'Test rule',
@@ -241,22 +215,34 @@ describe('GetStandardRulesDetectionStatusUseCase', () => {
       },
     ];
 
-    mockStandardsAdapter.getLatestRulesByStandardId.mockResolvedValue([rule]);
-    mockStandardsAdapter.getRuleCodeExamples.mockResolvedValue(examples);
+    let result: Awaited<ReturnType<typeof useCase.execute>>;
 
-    const result = await useCase.execute({
-      standardId: mockStandardId,
-      organizationId: mockOrganizationId,
-      userId: mockUserId,
+    beforeEach(async () => {
+      mockStandardsAdapter.getLatestRulesByStandardId.mockResolvedValue([rule]);
+      mockStandardsAdapter.getRuleCodeExamples.mockResolvedValue(examples);
+
+      result = await useCase.execute({
+        standardId: mockStandardId,
+        organizationId: mockOrganizationId,
+        userId: mockUserId,
+      });
     });
 
-    expect(result.rules[0].languages).toHaveLength(2);
-    expect(result.rules[0].languages[0].language).toBe(
-      ProgrammingLanguage.JAVASCRIPT,
-    );
-    expect(result.rules[0].languages[1].language).toBe(
-      ProgrammingLanguage.TYPESCRIPT,
-    );
+    it('extracts unique languages count', async () => {
+      expect(result.rules[0].languages).toHaveLength(2);
+    });
+
+    it('includes JavaScript as first language', async () => {
+      expect(result.rules[0].languages[0].language).toBe(
+        ProgrammingLanguage.JAVASCRIPT,
+      );
+    });
+
+    it('includes TypeScript as second language', async () => {
+      expect(result.rules[0].languages[1].language).toBe(
+        ProgrammingLanguage.TYPESCRIPT,
+      );
+    });
   });
 
   describe('when standard has no rules', () => {
@@ -274,23 +260,30 @@ describe('GetStandardRulesDetectionStatusUseCase', () => {
   });
 
   describe('when rule has no examples', () => {
-    it('returns rule with empty languages array', async () => {
-      const rule: Rule = {
-        id: createRuleId('rule-1'),
-        content: 'Test rule',
-        standardVersionId: createStandardVersionId('version-id'),
-      };
+    const rule: Rule = {
+      id: createRuleId('rule-1'),
+      content: 'Test rule',
+      standardVersionId: createStandardVersionId('version-id'),
+    };
 
+    let result: Awaited<ReturnType<typeof useCase.execute>>;
+
+    beforeEach(async () => {
       mockStandardsAdapter.getLatestRulesByStandardId.mockResolvedValue([rule]);
       mockStandardsAdapter.getRuleCodeExamples.mockResolvedValue([]);
 
-      const result = await useCase.execute({
+      result = await useCase.execute({
         standardId: mockStandardId,
         organizationId: mockOrganizationId,
         userId: mockUserId,
       });
+    });
 
+    it('returns one rule', async () => {
       expect(result.rules).toHaveLength(1);
+    });
+
+    it('returns rule with empty languages array', async () => {
       expect(result.rules[0]).toEqual({
         ruleId: rule.id,
         languages: [],

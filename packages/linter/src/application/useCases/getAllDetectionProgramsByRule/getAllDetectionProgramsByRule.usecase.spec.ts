@@ -56,7 +56,7 @@ describe('GetAllDetectionProgramsByRuleUseCase', () => {
     jest.clearAllMocks();
   });
 
-  it('returns all detection programs for a given rule', async () => {
+  describe('when programs exist for a rule', () => {
     const mockPrograms: DetectionProgram[] = [
       {
         id: createDetectionProgramId('prog-1'),
@@ -82,21 +82,36 @@ describe('GetAllDetectionProgramsByRuleUseCase', () => {
       },
     ];
 
-    mockDetectionProgramRepository.findByRuleId.mockResolvedValue(mockPrograms);
-
-    const result = await useCase.execute({
-      ruleId: mockRuleId,
-      organizationId: mockOrganizationId,
-      userId: mockUserId,
+    beforeEach(() => {
+      mockDetectionProgramRepository.findByRuleId.mockResolvedValue(
+        mockPrograms,
+      );
     });
 
-    expect(result.programs).toEqual(mockPrograms);
-    expect(mockDetectionProgramRepository.findByRuleId).toHaveBeenCalledWith(
-      mockRuleId,
-    );
+    it('returns all detection programs for the rule', async () => {
+      const result = await useCase.execute({
+        ruleId: mockRuleId,
+        organizationId: mockOrganizationId,
+        userId: mockUserId,
+      });
+
+      expect(result.programs).toEqual(mockPrograms);
+    });
+
+    it('calls repository with the correct rule id', async () => {
+      await useCase.execute({
+        ruleId: mockRuleId,
+        organizationId: mockOrganizationId,
+        userId: mockUserId,
+      });
+
+      expect(mockDetectionProgramRepository.findByRuleId).toHaveBeenCalledWith(
+        mockRuleId,
+      );
+    });
   });
 
-  it('returns programs with multiple languages and versions', async () => {
+  describe('when programs with multiple languages exist', () => {
     const mockPrograms: DetectionProgram[] = [
       {
         id: createDetectionProgramId('prog-1'),
@@ -133,22 +148,29 @@ describe('GetAllDetectionProgramsByRuleUseCase', () => {
       },
     ];
 
-    mockDetectionProgramRepository.findByRuleId.mockResolvedValue(mockPrograms);
-
-    const result = await useCase.execute({
-      ruleId: mockRuleId,
-      organizationId: mockOrganizationId,
-      userId: mockUserId,
+    beforeEach(() => {
+      mockDetectionProgramRepository.findByRuleId.mockResolvedValue(
+        mockPrograms,
+      );
     });
 
-    expect(result.programs).toHaveLength(3);
-    expect(result.programs).toEqual(mockPrograms);
+    it('returns all programs including multiple languages', async () => {
+      const result = await useCase.execute({
+        ruleId: mockRuleId,
+        organizationId: mockOrganizationId,
+        userId: mockUserId,
+      });
+
+      expect(result.programs).toEqual(mockPrograms);
+    });
   });
 
   describe('when no programs exist', () => {
-    it('returns empty array', async () => {
+    beforeEach(() => {
       mockDetectionProgramRepository.findByRuleId.mockResolvedValue([]);
+    });
 
+    it('returns empty array', async () => {
       const result = await useCase.execute({
         ruleId: mockRuleId,
         organizationId: mockOrganizationId,
@@ -156,6 +178,15 @@ describe('GetAllDetectionProgramsByRuleUseCase', () => {
       });
 
       expect(result.programs).toEqual([]);
+    });
+
+    it('calls repository with the correct rule id', async () => {
+      await useCase.execute({
+        ruleId: mockRuleId,
+        organizationId: mockOrganizationId,
+        userId: mockUserId,
+      });
+
       expect(mockDetectionProgramRepository.findByRuleId).toHaveBeenCalledWith(
         mockRuleId,
       );

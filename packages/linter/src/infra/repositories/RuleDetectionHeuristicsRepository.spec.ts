@@ -114,42 +114,60 @@ describe('RuleDetectionHeuristicsRepository', () => {
     });
   });
 
-  it('can get all heuristics for a rule across languages', async () => {
-    const rule = await createRuleWithHierarchy();
+  describe('when getting all heuristics for a rule across languages', () => {
+    let rule: Rule;
+    let allHeuristics: DetectionHeuristics[];
 
-    const heuristics1 = detectionHeuristicsFactory({
-      ruleId: rule.id,
-      language: ProgrammingLanguage.TYPESCRIPT,
-      heuristics: ['typescript-heuristic'],
+    beforeEach(async () => {
+      rule = await createRuleWithHierarchy();
+
+      const heuristics1 = detectionHeuristicsFactory({
+        ruleId: rule.id,
+        language: ProgrammingLanguage.TYPESCRIPT,
+        heuristics: ['typescript-heuristic'],
+      });
+      const heuristics2 = detectionHeuristicsFactory({
+        ruleId: rule.id,
+        language: ProgrammingLanguage.JAVASCRIPT,
+        heuristics: ['javascript-heuristic'],
+      });
+      const heuristics3 = detectionHeuristicsFactory({
+        ruleId: rule.id,
+        language: ProgrammingLanguage.PYTHON,
+        heuristics: ['python-heuristic'],
+      });
+
+      await ruleDetectionHeuristicsRepository.upsertHeuristics(heuristics1);
+      await ruleDetectionHeuristicsRepository.upsertHeuristics(heuristics2);
+      await ruleDetectionHeuristicsRepository.upsertHeuristics(heuristics3);
+
+      allHeuristics =
+        await ruleDetectionHeuristicsRepository.getAllHeuristicsForRule(
+          rule.id,
+        );
     });
-    const heuristics2 = detectionHeuristicsFactory({
-      ruleId: rule.id,
-      language: ProgrammingLanguage.JAVASCRIPT,
-      heuristics: ['javascript-heuristic'],
-    });
-    const heuristics3 = detectionHeuristicsFactory({
-      ruleId: rule.id,
-      language: ProgrammingLanguage.PYTHON,
-      heuristics: ['python-heuristic'],
+
+    it('returns all three heuristics', async () => {
+      expect(allHeuristics).toHaveLength(3);
     });
 
-    await ruleDetectionHeuristicsRepository.upsertHeuristics(heuristics1);
-    await ruleDetectionHeuristicsRepository.upsertHeuristics(heuristics2);
-    await ruleDetectionHeuristicsRepository.upsertHeuristics(heuristics3);
+    it('includes TypeScript heuristics', async () => {
+      expect(allHeuristics.map((h) => h.language)).toContain(
+        ProgrammingLanguage.TYPESCRIPT,
+      );
+    });
 
-    const allHeuristics =
-      await ruleDetectionHeuristicsRepository.getAllHeuristicsForRule(rule.id);
+    it('includes JavaScript heuristics', async () => {
+      expect(allHeuristics.map((h) => h.language)).toContain(
+        ProgrammingLanguage.JAVASCRIPT,
+      );
+    });
 
-    expect(allHeuristics).toHaveLength(3);
-    expect(allHeuristics.map((h) => h.language)).toContain(
-      ProgrammingLanguage.TYPESCRIPT,
-    );
-    expect(allHeuristics.map((h) => h.language)).toContain(
-      ProgrammingLanguage.JAVASCRIPT,
-    );
-    expect(allHeuristics.map((h) => h.language)).toContain(
-      ProgrammingLanguage.PYTHON,
-    );
+    it('includes Python heuristics', async () => {
+      expect(allHeuristics.map((h) => h.language)).toContain(
+        ProgrammingLanguage.PYTHON,
+      );
+    });
   });
 
   it('can update existing heuristics', async () => {
@@ -201,8 +219,11 @@ describe('RuleDetectionHeuristicsRepository', () => {
   });
 
   describe('when multiple heuristics exist for same rule', () => {
-    it('returns all heuristics with different languages', async () => {
-      const rule = await createRuleWithHierarchy();
+    let rule: Rule;
+    let allHeuristics: DetectionHeuristics[];
+
+    beforeEach(async () => {
+      rule = await createRuleWithHierarchy();
 
       const heuristics1 = detectionHeuristicsFactory({
         ruleId: rule.id,
@@ -224,28 +245,37 @@ describe('RuleDetectionHeuristicsRepository', () => {
       await ruleDetectionHeuristicsRepository.upsertHeuristics(heuristics2);
       await ruleDetectionHeuristicsRepository.upsertHeuristics(heuristics3);
 
-      const allHeuristics =
+      allHeuristics =
         await ruleDetectionHeuristicsRepository.getAllHeuristicsForRule(
           rule.id,
         );
+    });
 
+    it('returns all three heuristics', async () => {
       expect(allHeuristics).toHaveLength(3);
+    });
 
+    it('returns correct TypeScript heuristics content', async () => {
       const tsHeuristic = allHeuristics.find(
         (h) => h.language === ProgrammingLanguage.TYPESCRIPT,
       );
-      const jsHeuristic = allHeuristics.find(
-        (h) => h.language === ProgrammingLanguage.JAVASCRIPT,
-      );
-      const pyHeuristic = allHeuristics.find(
-        (h) => h.language === ProgrammingLanguage.PYTHON,
-      );
-
       expect(tsHeuristic?.heuristics).toEqual([
         'ts-heuristic-1',
         'ts-heuristic-2',
       ]);
+    });
+
+    it('returns correct JavaScript heuristics content', async () => {
+      const jsHeuristic = allHeuristics.find(
+        (h) => h.language === ProgrammingLanguage.JAVASCRIPT,
+      );
       expect(jsHeuristic?.heuristics).toEqual(['js-heuristic-1']);
+    });
+
+    it('returns correct Python heuristics content', async () => {
+      const pyHeuristic = allHeuristics.find(
+        (h) => h.language === ProgrammingLanguage.PYTHON,
+      );
       expect(pyHeuristic?.heuristics).toEqual([
         'py-heuristic-1',
         'py-heuristic-2',
@@ -290,71 +320,104 @@ describe('RuleDetectionHeuristicsRepository', () => {
       ).rejects.toThrow();
     });
 
-    it('allows same rule with different languages', async () => {
-      const rule = await createRuleWithHierarchy();
+    describe('when same rule has different languages', () => {
+      let allHeuristics: DetectionHeuristics[];
 
-      const typescriptHeuristics = detectionHeuristicsFactory({
-        ruleId: rule.id,
-        language: ProgrammingLanguage.TYPESCRIPT,
-        heuristics: ['ts-heuristic'],
-      });
-      const javascriptHeuristics = detectionHeuristicsFactory({
-        ruleId: rule.id,
-        language: ProgrammingLanguage.JAVASCRIPT, // Different language
-        heuristics: ['js-heuristic'],
-      });
+      beforeEach(async () => {
+        const rule = await createRuleWithHierarchy();
 
-      await ruleDetectionHeuristicsRepository.upsertHeuristics(
-        typescriptHeuristics,
-      );
-      await ruleDetectionHeuristicsRepository.upsertHeuristics(
-        javascriptHeuristics,
-      );
+        const typescriptHeuristics = detectionHeuristicsFactory({
+          ruleId: rule.id,
+          language: ProgrammingLanguage.TYPESCRIPT,
+          heuristics: ['ts-heuristic'],
+        });
+        const javascriptHeuristics = detectionHeuristicsFactory({
+          ruleId: rule.id,
+          language: ProgrammingLanguage.JAVASCRIPT, // Different language
+          heuristics: ['js-heuristic'],
+        });
 
-      const allHeuristics =
-        await ruleDetectionHeuristicsRepository.getAllHeuristicsForRule(
-          rule.id,
+        await ruleDetectionHeuristicsRepository.upsertHeuristics(
+          typescriptHeuristics,
         );
-      expect(allHeuristics).toHaveLength(2);
-      expect(allHeuristics.map((h) => h.language)).toContain(
-        ProgrammingLanguage.TYPESCRIPT,
-      );
-      expect(allHeuristics.map((h) => h.language)).toContain(
-        ProgrammingLanguage.JAVASCRIPT,
-      );
+        await ruleDetectionHeuristicsRepository.upsertHeuristics(
+          javascriptHeuristics,
+        );
+
+        allHeuristics =
+          await ruleDetectionHeuristicsRepository.getAllHeuristicsForRule(
+            rule.id,
+          );
+      });
+
+      it('allows both heuristics to be stored', async () => {
+        expect(allHeuristics).toHaveLength(2);
+      });
+
+      it('includes TypeScript heuristics', async () => {
+        expect(allHeuristics.map((h) => h.language)).toContain(
+          ProgrammingLanguage.TYPESCRIPT,
+        );
+      });
+
+      it('includes JavaScript heuristics', async () => {
+        expect(allHeuristics.map((h) => h.language)).toContain(
+          ProgrammingLanguage.JAVASCRIPT,
+        );
+      });
     });
 
-    it('allows different rules with same language', async () => {
-      const rule1 = await createRuleWithHierarchy();
-      const rule2 = await createRuleWithHierarchy();
+    describe('when different rules have same language', () => {
+      let rule1Heuristics: DetectionHeuristics[];
+      let rule2Heuristics: DetectionHeuristics[];
 
-      const heuristics1 = detectionHeuristicsFactory({
-        ruleId: rule1.id,
-        language: ProgrammingLanguage.TYPESCRIPT,
-        heuristics: ['heuristic-rule-1'],
+      beforeEach(async () => {
+        const rule1 = await createRuleWithHierarchy();
+        const rule2 = await createRuleWithHierarchy();
+
+        const heuristics1 = detectionHeuristicsFactory({
+          ruleId: rule1.id,
+          language: ProgrammingLanguage.TYPESCRIPT,
+          heuristics: ['heuristic-rule-1'],
+        });
+        const heuristics2 = detectionHeuristicsFactory({
+          ruleId: rule2.id,
+          language: ProgrammingLanguage.TYPESCRIPT, // Same language, different rule
+          heuristics: ['heuristic-rule-2'],
+        });
+
+        await ruleDetectionHeuristicsRepository.upsertHeuristics(heuristics1);
+        await ruleDetectionHeuristicsRepository.upsertHeuristics(heuristics2);
+
+        rule1Heuristics =
+          await ruleDetectionHeuristicsRepository.getAllHeuristicsForRule(
+            rule1.id,
+          );
+        rule2Heuristics =
+          await ruleDetectionHeuristicsRepository.getAllHeuristicsForRule(
+            rule2.id,
+          );
       });
-      const heuristics2 = detectionHeuristicsFactory({
-        ruleId: rule2.id,
-        language: ProgrammingLanguage.TYPESCRIPT, // Same language, different rule
-        heuristics: ['heuristic-rule-2'],
+
+      it('stores exactly one heuristic for rule1', async () => {
+        expect(rule1Heuristics).toHaveLength(1);
       });
 
-      await ruleDetectionHeuristicsRepository.upsertHeuristics(heuristics1);
-      await ruleDetectionHeuristicsRepository.upsertHeuristics(heuristics2);
+      it('stores exactly one heuristic for rule2', async () => {
+        expect(rule2Heuristics).toHaveLength(1);
+      });
 
-      const rule1Heuristics =
-        await ruleDetectionHeuristicsRepository.getAllHeuristicsForRule(
-          rule1.id,
+      it('assigns TypeScript language to rule1 heuristic', async () => {
+        expect(rule1Heuristics[0].language).toBe(
+          ProgrammingLanguage.TYPESCRIPT,
         );
-      const rule2Heuristics =
-        await ruleDetectionHeuristicsRepository.getAllHeuristicsForRule(
-          rule2.id,
-        );
+      });
 
-      expect(rule1Heuristics).toHaveLength(1);
-      expect(rule2Heuristics).toHaveLength(1);
-      expect(rule1Heuristics[0].language).toBe(ProgrammingLanguage.TYPESCRIPT);
-      expect(rule2Heuristics[0].language).toBe(ProgrammingLanguage.TYPESCRIPT);
+      it('assigns TypeScript language to rule2 heuristic', async () => {
+        expect(rule2Heuristics[0].language).toBe(
+          ProgrammingLanguage.TYPESCRIPT,
+        );
+      });
     });
   });
 

@@ -213,12 +213,14 @@ describe('UpdateRuleDetectionHeuristicsUseCase', () => {
       );
     });
 
-    describe('when heuristics not found', () => {
-      it('does not call update', async () => {
-        await expect(useCase.execute(command)).rejects.toThrow();
+    it('does not call update', async () => {
+      try {
+        await useCase.execute(command);
+      } catch {
+        // Expected to throw
+      }
 
-        expect(heuristicsRepository.updateHeuristics).not.toHaveBeenCalled();
-      });
+      expect(heuristicsRepository.updateHeuristics).not.toHaveBeenCalled();
     });
   });
 
@@ -564,34 +566,52 @@ describe('UpdateRuleDetectionHeuristicsUseCase', () => {
       };
     });
 
-    it('skips clarification if question is empty', async () => {
-      command.clarificationQuestion = {
-        question: '',
-        answer: 'test',
-      };
+    describe('when question is empty', () => {
+      beforeEach(() => {
+        command.clarificationQuestion = {
+          question: '',
+          answer: 'test',
+        };
+      });
 
-      await useCase.execute(command);
+      it('does not call chatbot use case', async () => {
+        await useCase.execute(command);
 
-      expect(mockChatbotUseCase.execute).not.toHaveBeenCalled();
-      expect(heuristicsRepository.updateHeuristics).toHaveBeenCalledWith(
-        heuristicsId,
-        ['old heuristics'],
-      );
+        expect(mockChatbotUseCase.execute).not.toHaveBeenCalled();
+      });
+
+      it('updates heuristics without generated content', async () => {
+        await useCase.execute(command);
+
+        expect(heuristicsRepository.updateHeuristics).toHaveBeenCalledWith(
+          heuristicsId,
+          ['old heuristics'],
+        );
+      });
     });
 
-    it('skips clarification if answer is empty', async () => {
-      command.clarificationQuestion = {
-        question: 'test question',
-        answer: '',
-      };
+    describe('when answer is empty', () => {
+      beforeEach(() => {
+        command.clarificationQuestion = {
+          question: 'test question',
+          answer: '',
+        };
+      });
 
-      await useCase.execute(command);
+      it('does not call chatbot use case', async () => {
+        await useCase.execute(command);
 
-      expect(mockChatbotUseCase.execute).not.toHaveBeenCalled();
-      expect(heuristicsRepository.updateHeuristics).toHaveBeenCalledWith(
-        heuristicsId,
-        ['old heuristics'],
-      );
+        expect(mockChatbotUseCase.execute).not.toHaveBeenCalled();
+      });
+
+      it('updates heuristics without generated content', async () => {
+        await useCase.execute(command);
+
+        expect(heuristicsRepository.updateHeuristics).toHaveBeenCalledWith(
+          heuristicsId,
+          ['old heuristics'],
+        );
+      });
     });
 
     it('appends generated heuristic to heuristics array', async () => {
