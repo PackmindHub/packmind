@@ -265,11 +265,23 @@ jobs:
         run: node dist/apps/cli/main.cjs --version
         shell: bash
 
-      - name: Test login command (ESM import test)
+      - name: Test login command with Node.js 20 (ESM import test)
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Verify Node.js 20 is active
+        run: |
+          echo "Testing with Node.js version:"
+          node --version
+        shell: bash
+
+      - name: Test login command (reproduces ERR_REQUIRE_ESM on Node.js 20 if not fixed)
         run: |
           # Run login command with a short timeout
-          # On the unfixed version, this will fail immediately with ERR_REQUIRE_ESM
-          # On the fixed version, it will timeout waiting for user input (which is expected)
+          # On Node.js 20 with static import: fails with ERR_REQUIRE_ESM
+          # On Node.js 20 with dynamic import (fixed): works
+          # On Node.js 22+: works regardless (new CJS/ESM interop)
           node -e "
             const { spawn } = require('child_process');
             const proc = spawn('node', ['dist/apps/cli/main.cjs', 'login'], {
@@ -296,6 +308,12 @@ jobs:
             });
           "
         shell: bash
+
+      - name: Restore Node.js version
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
 
       - name: Test native executable (Linux)
         if: matrix.is-primary
