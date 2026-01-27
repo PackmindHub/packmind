@@ -27,10 +27,16 @@ export class SignupPage extends AbstractPackmindPage implements ISignUpPage {
       .getByTestId(SignUpWithOrganizationFormDataTestIds.Submit)
       .click();
 
+    // Wait for redirect to onboarding reason page
+    await this.page.waitForURL('**/sign-up/onboarding-reason');
+
+    // Skip the onboarding reason step
+    await this.page.getByTestId('OnboardingReason.SkipButton').click();
+
     return this.pageFactory.getDashboardPage();
   }
 
   expectedUrl(): string {
-    return '/create-account';
+    return '/sign-up/create-account';
   }
 }

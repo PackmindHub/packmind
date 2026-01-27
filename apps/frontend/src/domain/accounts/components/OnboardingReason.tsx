@@ -34,7 +34,7 @@ export const ONBOARDING_REASONS: OnboardingReasonChoice[] = [
   },
   {
     key: 'instruction_impact',
-    label: 'I want to understand the impact of instructions on generated code',
+    label: 'I want to be confident in the instructions my AI agents rely on',
   },
   {
     key: 'exploring',
