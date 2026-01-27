@@ -129,7 +129,7 @@
     "@amplitude/analytics-node": "^1.5.18",
     "@anthropic-ai/sdk": "^0.71.2",
     "@azure/openai": "^2.0.0",
-    "@chakra-ui/react": "3.27",
+    "@chakra-ui/react": "^3.31.0",
     "@codemirror/lang-cpp": "^6.0.3",
     "@codemirror/lang-go": "^6.0.1",
     "@codemirror/lang-html": "^6.4.9",
