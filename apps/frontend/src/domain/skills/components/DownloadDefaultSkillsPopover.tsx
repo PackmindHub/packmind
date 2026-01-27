@@ -5,6 +5,7 @@ import {
   PMIcon,
   PMPopover,
   PMText,
+  PMTooltip,
   PMVStack,
 } from '@packmind/ui';
 import { CodingAgent } from '@packmind/types';
@@ -43,11 +44,13 @@ export const DownloadDefaultSkillsPopover = () => {
 
   return (
     <PMPopover.Root positioning={{ placement: 'bottom-end' }}>
-      <PMPopover.Trigger asChild>
-        <PMButton variant="outline" size="md">
-          Get Packmind Skills
-        </PMButton>
-      </PMPopover.Trigger>
+      <PMTooltip label="Download skills to create standards and skills with your AI Agent.">
+        <PMPopover.Trigger asChild>
+          <PMButton variant="outline" size="md">
+            Get Packmind Skills
+          </PMButton>
+        </PMPopover.Trigger>
+      </PMTooltip>
       <PMPopover.Positioner>
         <PMPopover.Content width="380px">
           <PMPopover.Arrow>
