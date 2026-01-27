@@ -2,6 +2,7 @@
 
 ## Added
 
+- Add `standards add` command to import standards in Packmind (#71)
 - Add blacklist filter to `skills add` to exclude unwanted files like `.DS_Store` (#71)
 - Added `packmind-cli skills init` to install skills to manage the playbook
 
