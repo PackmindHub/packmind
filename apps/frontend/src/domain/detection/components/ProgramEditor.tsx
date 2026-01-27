@@ -115,6 +115,7 @@ export function computeActiveConfigurationState(
  * or if the program data indicates it needs regeneration (from backend).
  */
 const MAX_SANDBOX_CHARS = 10000;
+const numberFormatter = new Intl.NumberFormat('en-US');
 
 function checkIfProgramNeedsReview(
   detectionProgram: LanguageDetectionPrograms['detectionProgram'] | null,
@@ -374,7 +375,7 @@ const ProgramEditor: React.FC<ProgramEditorProps> = ({
 
     if (value.length > MAX_SANDBOX_CHARS) {
       setSandboxValidationError(
-        `Code exceeds ${MAX_SANDBOX_CHARS.toLocaleString('de-DE')} character limit (${value.length.toLocaleString('de-DE')} characters)`,
+        `Code exceeds ${numberFormatter.format(MAX_SANDBOX_CHARS)} character limit (${numberFormatter.format(value.length)} characters)`,
       );
     } else {
       setSandboxValidationError(null);
@@ -550,7 +551,8 @@ const ProgramEditor: React.FC<ProgramEditorProps> = ({
                   <PMHStack justify="space-between" align="center">
                     <PMHeading level="h5">Sandbox</PMHeading>
                     <PMText color="faded" fontSize="sm">
-                      {sandboxCode.length} / 10.000 characters
+                      {numberFormatter.format(sandboxCode.length)} /{' '}
+                      {numberFormatter.format(MAX_SANDBOX_CHARS)} characters
                     </PMText>
                   </PMHStack>
                   <PMBox>
