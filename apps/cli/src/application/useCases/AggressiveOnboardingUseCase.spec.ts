@@ -4,6 +4,7 @@ import { IDocumentationScannerService } from '../services/DocumentationScannerSe
 import { IStandardsGeneratorService } from '../services/StandardsGeneratorService';
 import { ICommandsGeneratorService } from '../services/CommandsGeneratorService';
 import { ISkillsGeneratorService } from '../services/SkillsGeneratorService';
+import { ISkillsScannerService } from '../services/SkillsScannerService';
 import { IContentPreviewService } from '../services/ContentPreviewService';
 
 describe('AggressiveOnboardingUseCase', () => {
@@ -13,6 +14,7 @@ describe('AggressiveOnboardingUseCase', () => {
   let mockStandardsGen: jest.Mocked<IStandardsGeneratorService>;
   let mockCommandsGen: jest.Mocked<ICommandsGeneratorService>;
   let mockSkillsGen: jest.Mocked<ISkillsGeneratorService>;
+  let mockSkillsScanner: jest.Mocked<ISkillsScannerService>;
   let mockPreview: jest.Mocked<IContentPreviewService>;
 
   beforeEach(() => {
@@ -31,6 +33,9 @@ describe('AggressiveOnboardingUseCase', () => {
     mockSkillsGen = {
       generateSkills: jest.fn(),
     };
+    mockSkillsScanner = {
+      scanExistingSkills: jest.fn(),
+    };
     mockPreview = {
       formatPreview: jest.fn(),
     };
@@ -41,6 +46,7 @@ describe('AggressiveOnboardingUseCase', () => {
       mockStandardsGen,
       mockCommandsGen,
       mockSkillsGen,
+      mockSkillsScanner,
       mockPreview,
     );
   });
@@ -92,11 +98,17 @@ describe('AggressiveOnboardingUseCase', () => {
         },
       ];
 
+      const skillsScanResult = {
+        skills: [],
+        skippedPackmindSkills: [],
+      };
+
       mockScanner.scanProject.mockResolvedValue(scanResult);
       mockDocScanner.scanExistingDocumentation.mockResolvedValue(docResult);
       mockStandardsGen.generateStandards.mockReturnValue(standards);
       mockCommandsGen.generateCommands.mockReturnValue(commands);
       mockSkillsGen.generateSkills.mockReturnValue(skills);
+      mockSkillsScanner.scanExistingSkills.mockResolvedValue(skillsScanResult);
       mockPreview.formatPreview.mockReturnValue('Preview output');
 
       const result = await useCase.execute({ projectPath: '/test/path' });
@@ -105,15 +117,22 @@ describe('AggressiveOnboardingUseCase', () => {
       expect(mockDocScanner.scanExistingDocumentation).toHaveBeenCalledWith(
         '/test/path',
       );
+      expect(mockSkillsScanner.scanExistingSkills).toHaveBeenCalledWith(
+        '/test/path',
+      );
       expect(mockStandardsGen.generateStandards).toHaveBeenCalledWith(
         scanResult,
         docResult,
       );
       expect(mockCommandsGen.generateCommands).toHaveBeenCalledWith(scanResult);
-      expect(mockSkillsGen.generateSkills).toHaveBeenCalledWith(scanResult);
+      expect(mockSkillsGen.generateSkills).toHaveBeenCalledWith(
+        scanResult,
+        '/test/path',
+      );
       expect(result.content.standards).toEqual(standards);
       expect(result.content.commands).toEqual(commands);
       expect(result.content.skills).toEqual(skills);
+      expect(result.content.discoveredSkills).toEqual([]);
       expect(result.preview).toBe('Preview output');
     });
 
@@ -143,6 +162,10 @@ describe('AggressiveOnboardingUseCase', () => {
       mockStandardsGen.generateStandards.mockReturnValue([]);
       mockCommandsGen.generateCommands.mockReturnValue([]);
       mockSkillsGen.generateSkills.mockReturnValue([]);
+      mockSkillsScanner.scanExistingSkills.mockResolvedValue({
+        skills: [],
+        skippedPackmindSkills: [],
+      });
       mockPreview.formatPreview.mockReturnValue('Empty preview');
 
       await useCase.execute({});
@@ -174,11 +197,61 @@ describe('AggressiveOnboardingUseCase', () => {
       mockStandardsGen.generateStandards.mockReturnValue([]);
       mockCommandsGen.generateCommands.mockReturnValue([]);
       mockSkillsGen.generateSkills.mockReturnValue([]);
+      mockSkillsScanner.scanExistingSkills.mockResolvedValue({
+        skills: [],
+        skippedPackmindSkills: [],
+      });
       mockPreview.formatPreview.mockReturnValue('Preview');
 
       const result = await useCase.execute({ projectPath: '/test' });
 
       expect(result.scanResult).toEqual(scanResult);
+    });
+
+    it('includes discovered skills in content', async () => {
+      const scanResult = {
+        languages: ['TypeScript'],
+        frameworks: [],
+        tools: [],
+        structure: {
+          isMonorepo: false,
+          hasTests: false,
+          hasSrcDirectory: false,
+        },
+        hasTypeScript: true,
+        hasLinting: false,
+      };
+
+      const docResult = {
+        extractedRules: [],
+        extractedConventions: [],
+        extractedWorkflows: [],
+        sourceFiles: [],
+      };
+
+      const discoveredSkills = [
+        {
+          name: 'custom-skill',
+          description: 'A custom team skill',
+          prompt: '# Custom skill content',
+          sourcePath: '/test/.claude/skills/custom-skill/SKILL.md',
+        },
+      ];
+
+      mockScanner.scanProject.mockResolvedValue(scanResult);
+      mockDocScanner.scanExistingDocumentation.mockResolvedValue(docResult);
+      mockStandardsGen.generateStandards.mockReturnValue([]);
+      mockCommandsGen.generateCommands.mockReturnValue([]);
+      mockSkillsGen.generateSkills.mockReturnValue([]);
+      mockSkillsScanner.scanExistingSkills.mockResolvedValue({
+        skills: discoveredSkills,
+        skippedPackmindSkills: ['packmind-create-standard'],
+      });
+      mockPreview.formatPreview.mockReturnValue('Preview');
+
+      const result = await useCase.execute({ projectPath: '/test' });
+
+      expect(result.content.discoveredSkills).toEqual(discoveredSkills);
     });
   });
 });

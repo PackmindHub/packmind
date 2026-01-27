@@ -21,6 +21,7 @@ describe('ContentPreviewService', () => {
         ],
         commands: [],
         skills: [],
+        discoveredSkills: [],
       };
 
       const preview = service.formatPreview(content);
@@ -45,6 +46,7 @@ describe('ContentPreviewService', () => {
           },
         ],
         skills: [],
+        discoveredSkills: [],
       };
 
       const preview = service.formatPreview(content);
@@ -53,7 +55,7 @@ describe('ContentPreviewService', () => {
       expect(preview).toContain('2 steps');
     });
 
-    it('formats skills with descriptions', () => {
+    it('formats generated skills with descriptions', () => {
       const content: IGeneratedContent = {
         standards: [],
         commands: [],
@@ -64,12 +66,37 @@ describe('ContentPreviewService', () => {
             prompt: '# Debugging guide',
           },
         ],
+        discoveredSkills: [],
       };
 
       const preview = service.formatPreview(content);
 
       expect(preview).toContain('debugging-skill');
       expect(preview).toContain('Debug applications');
+      expect(preview).toContain('SKILLS (generated)');
+    });
+
+    it('formats discovered skills with source paths', () => {
+      const content: IGeneratedContent = {
+        standards: [],
+        commands: [],
+        skills: [],
+        discoveredSkills: [
+          {
+            name: 'custom-skill',
+            description: 'A custom team skill',
+            prompt: '# Custom content',
+            sourcePath: '/project/.claude/skills/custom-skill/SKILL.md',
+          },
+        ],
+      };
+
+      const preview = service.formatPreview(content);
+
+      expect(preview).toContain('custom-skill');
+      expect(preview).toContain('A custom team skill');
+      expect(preview).toContain('SKILLS (discovered from project)');
+      expect(preview).toContain('Source:');
     });
 
     it('shows summary totals', () => {
@@ -104,6 +131,7 @@ describe('ContentPreviewService', () => {
             prompt: 'Prompt',
           },
         ],
+        discoveredSkills: [],
       };
 
       const preview = service.formatPreview(content);
@@ -113,11 +141,45 @@ describe('ContentPreviewService', () => {
       expect(preview).toContain('1 skill');
     });
 
+    it('counts both generated and discovered skills in total', () => {
+      const content: IGeneratedContent = {
+        standards: [],
+        commands: [],
+        skills: [
+          {
+            name: 'generated-skill',
+            description: 'Generated',
+            prompt: 'Prompt',
+          },
+        ],
+        discoveredSkills: [
+          {
+            name: 'discovered-skill',
+            description: 'Discovered',
+            prompt: 'Prompt',
+            sourcePath: '/path',
+          },
+          {
+            name: 'another-discovered',
+            description: 'Another',
+            prompt: 'Prompt',
+            sourcePath: '/path2',
+          },
+        ],
+      };
+
+      const preview = service.formatPreview(content);
+
+      expect(preview).toContain('3 skills');
+      expect(preview).toContain('Total: 3 items');
+    });
+
     it('returns empty message when no content generated', () => {
       const content: IGeneratedContent = {
         standards: [],
         commands: [],
         skills: [],
+        discoveredSkills: [],
       };
 
       const preview = service.formatPreview(content);

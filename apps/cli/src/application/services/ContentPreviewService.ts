@@ -1,11 +1,13 @@
 import { IGeneratedStandard } from './StandardsGeneratorService';
 import { IGeneratedCommand } from './CommandsGeneratorService';
 import { IGeneratedSkill } from './SkillsGeneratorService';
+import { IDiscoveredSkill } from './SkillsScannerService';
 
 export interface IGeneratedContent {
   standards: IGeneratedStandard[];
   commands: IGeneratedCommand[];
   skills: IGeneratedSkill[];
+  discoveredSkills: IDiscoveredSkill[];
 }
 
 export interface IContentPreviewService {
@@ -15,10 +17,12 @@ export interface IContentPreviewService {
 export class ContentPreviewService implements IContentPreviewService {
   formatPreview(content: IGeneratedContent): string {
     const lines: string[] = [];
+    const discoveredSkillsCount = content.discoveredSkills?.length || 0;
     const totalItems =
       content.standards.length +
       content.commands.length +
-      content.skills.length;
+      content.skills.length +
+      discoveredSkillsCount;
 
     if (totalItems === 0) {
       return '\nNo content generated. Your project may not have detectable patterns.\n';
@@ -57,11 +61,22 @@ export class ContentPreviewService implements IContentPreviewService {
     }
 
     if (content.skills.length > 0) {
-      lines.push('SKILLS:');
+      lines.push('SKILLS (generated):');
       lines.push('');
       content.skills.forEach((skill, idx) => {
         lines.push(`  ${idx + 1}. ${skill.name}`);
         lines.push(`     ${skill.description}`);
+        lines.push('');
+      });
+    }
+
+    if (discoveredSkillsCount > 0) {
+      lines.push('SKILLS (discovered from project):');
+      lines.push('');
+      content.discoveredSkills.forEach((skill, idx) => {
+        lines.push(`  ${idx + 1}. ${skill.name}`);
+        lines.push(`     ${skill.description}`);
+        lines.push(`     Source: ${skill.sourcePath}`);
         lines.push('');
       });
     }
@@ -78,10 +93,8 @@ export class ContentPreviewService implements IContentPreviewService {
       content.commands.length === 1
         ? '1 command'
         : `${content.commands.length} commands`;
-    const skillsText =
-      content.skills.length === 1
-        ? '1 skill'
-        : `${content.skills.length} skills`;
+    const totalSkills = content.skills.length + discoveredSkillsCount;
+    const skillsText = totalSkills === 1 ? '1 skill' : `${totalSkills} skills`;
 
     lines.push(`  ${standardsText}, ${commandsText}, ${skillsText}`);
     lines.push(`  Total: ${totalItems} items`);
