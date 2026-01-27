@@ -14,6 +14,7 @@ import { setupMcpCommand } from './infra/commands/SetupMcpCommand';
 import { skillsCommand } from './infra/commands/SkillsCommand';
 import { standardsCommand } from './infra/commands/StandardsCommand';
 import { commandsCommand } from './infra/commands/CommandsCommand';
+import { onboardCommand } from './infra/commands/OnboardCommand';
 import { GitService } from './application/services/GitService';
 import { logConsole, logErrorConsole } from './infra/utils/consoleLogger';
 
@@ -97,8 +98,9 @@ const app = subcommands({
     whoami: whoamiCommand,
     'setup-mcp': setupMcpCommand,
     skills: skillsCommand,
-    standards: standardsCommand,
+    standard: standardsCommand,
     commands: commandsCommand,
+    onboard: onboardCommand,
   },
 });
 

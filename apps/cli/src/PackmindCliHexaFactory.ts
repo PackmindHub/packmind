@@ -35,6 +35,14 @@ import { SetupMcpUseCase } from './application/useCases/SetupMcpUseCase';
 import { McpConfigService } from './application/services/McpConfigService';
 import { ConfigFileRepository } from './infra/repositories/ConfigFileRepository';
 import { loadApiKey } from './infra/utils/credentialsLoader';
+import { IAggressiveOnboardingUseCase } from './domain/useCases/IAggressiveOnboardingUseCase';
+import { AggressiveOnboardingUseCase } from './application/useCases/AggressiveOnboardingUseCase';
+import { ProjectScannerService } from './application/services/ProjectScannerService';
+import { DocumentationScannerService } from './application/services/DocumentationScannerService';
+import { StandardsGeneratorService } from './application/services/StandardsGeneratorService';
+import { CommandsGeneratorService } from './application/services/CommandsGeneratorService';
+import { SkillsGeneratorService } from './application/services/SkillsGeneratorService';
+import { ContentPreviewService } from './application/services/ContentPreviewService';
 
 export class PackmindCliHexaFactory {
   public repositories: IPackmindRepositories;
@@ -54,6 +62,7 @@ export class PackmindCliHexaFactory {
     logout: ILogoutUseCase;
     whoami: IWhoamiUseCase;
     setupMcp: ISetupMcpUseCase;
+    aggressiveOnboarding: IAggressiveOnboardingUseCase;
   };
 
   constructor(private readonly logger: PackmindLogger) {
@@ -102,6 +111,14 @@ export class PackmindCliHexaFactory {
         gateway: this.repositories.packmindGateway,
         mcpConfigService: new McpConfigService(),
       }),
+      aggressiveOnboarding: new AggressiveOnboardingUseCase(
+        new ProjectScannerService(),
+        new DocumentationScannerService(),
+        new StandardsGeneratorService(),
+        new CommandsGeneratorService(),
+        new SkillsGeneratorService(),
+        new ContentPreviewService(),
+      ),
     };
   }
 }
