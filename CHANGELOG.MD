@@ -12,6 +12,8 @@
 
 ## Fixed
 
+- Files were ignored in linting if multiple scopes were provided #127
+
 ## Removed
 
 # [1.7.0] - 2025-01-07
