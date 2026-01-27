@@ -43,16 +43,29 @@ let content = fs.readFileSync(mainJsPath, 'utf8');
 
 // Check if already has setup
 if (!content.includes('Add stubs directory')) {
-  // Find where to insert (after shebang if present)
-  const lines = content.split('\n');
-  let insertIndex = 0;
+  // Find where to insert (after the esbuild banner that defines __dirname)
+  // The banner ends with: const __dirname = __dirname_fn(__filename);
+  const bannerEndMarker = 'const __dirname = __dirname_fn(__filename);';
+  const bannerEndIndex = content.indexOf(bannerEndMarker);
 
-  if (lines[0].startsWith('#!')) {
-    insertIndex = 1;
+  if (bannerEndIndex !== -1) {
+    // Insert after the banner end line
+    const insertPosition = bannerEndIndex + bannerEndMarker.length;
+    content =
+      content.slice(0, insertPosition) +
+      '\n' +
+      modulePathSetup +
+      content.slice(insertPosition);
+  } else {
+    // Fallback: insert after shebang if no banner found
+    const lines = content.split('\n');
+    let insertIndex = 0;
+    if (lines[0].startsWith('#!')) {
+      insertIndex = 1;
+    }
+    lines.splice(insertIndex, 0, modulePathSetup);
+    content = lines.join('\n');
   }
-
-  lines.splice(insertIndex, 0, modulePathSetup);
-  content = lines.join('\n');
 
   fs.writeFileSync(mainJsPath, content);
   console.log('✅ Added module path setup to main.js');
