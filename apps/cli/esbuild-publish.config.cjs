@@ -24,6 +24,10 @@ module.exports = (options) => {
   // Some CJS dependencies (like debug) use dynamic require for these
   const nodeBuiltins = builtinModules.flatMap((m) => [m, `node:${m}`]);
 
+  // Packages that use dynamic require and need to be external
+  // debug is a dependency of cmd-ts that uses dynamic require('tty')
+  const dynamicRequirePackages = ['debug'];
+
   // Banner to provide require() function for ESM output
   // This is needed for any remaining dynamic requires
   const esmBanner = `
@@ -37,10 +41,10 @@ const __dirname = __dirname_fn(__filename);
 
   return {
     ...options,
-    // Mark web-tree-sitter, backend modules, and Node.js built-ins as external
+    // Mark web-tree-sitter, backend modules, Node.js built-ins, and dynamic require packages as external
     // Node.js built-ins are external to avoid dynamic require issues in ESM
     // Stub modules will be created by create-stubs.js script for backend modules
-    external: ['web-tree-sitter', ...backendModules, ...nodeBuiltins],
+    external: ['web-tree-sitter', ...backendModules, ...nodeBuiltins, ...dynamicRequirePackages],
     platform: 'node',
     banner: {
       js: esmBanner,
