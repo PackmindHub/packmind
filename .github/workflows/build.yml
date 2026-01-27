@@ -184,14 +184,28 @@ jobs:
         run: ./node_modules/.bin/nx run-many -t test -p packages/* --passWithNoTests
 
   build-cli:
-    runs-on: ${{ vars.ACTION_RUNNER_TAG || 'self-hosted' }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ${{ vars.ACTION_RUNNER_TAG || 'self-hosted' }}
+            node-version: ${{ inputs.node-version }}
+            is-primary: true
+            test-executable: packmind-cli-linux-x64
+          - os: depot-windows-2025-8
+            node-version: ${{ inputs.node-version }}
+            is-primary: false
+            test-executable: packmind-cli-windows-x64.exe
+          - os: depot-macos-15
+            node-version: ${{ inputs.node-version }}
+            is-primary: false
+            test-executable: packmind-cli-macos-arm64
+
+    runs-on: ${{ matrix.os }}
     outputs:
       artifact-name: cli-dist-${{ vars.PACKMIND_EDITION }}-${{ github.run_number }}-${{ github.sha }}
       cli-executables-artifact: cli-executables-${{ steps.get-version.outputs.version }}
       version: ${{ steps.get-version.outputs.version }}
-    strategy:
-      matrix:
-        node-version: ['${{ inputs.node-version }}']
 
     steps:
       - uses: actions/checkout@v4
@@ -209,6 +223,7 @@ jobs:
       - name: Get package version
         id: get-version
         run: echo "version=$(node -p "require('./apps/cli/package.json').version")" >> $GITHUB_OUTPUT
+        shell: bash
 
       - run: npm ci
       - name: Generate tsconfig
@@ -219,34 +234,43 @@ jobs:
         env:
           PACKMIND_EDITION: ${{ vars.PACKMIND_EDITION }}
         run: ./node_modules/.bin/nx build-publish packmind-cli
+        shell: bash
       - name: Test CLI
         env:
           PACKMIND_EDITION: ${{ vars.PACKMIND_EDITION }}
         run: ./node_modules/.bin/nx test packmind-cli
+        shell: bash
 
       - name: Upload CLI build artifacts
+        if: matrix.is-primary
         uses: actions/upload-artifact@v4
         with:
           name: cli-dist-${{ vars.PACKMIND_EDITION }}-${{ github.run_number }}-${{ github.sha }}
           path: dist/apps/cli/
 
       - name: Build CLI executables for all platforms
+        if: matrix.is-primary
         run: |
           echo "📦 Building CLI executables with embedded WASM files..."
           bun --version
           bun run apps/cli/bun-build.ts --target=all
 
       - name: List built executables
+        if: matrix.is-primary
         run: |
           echo "Built executables (with embedded WASM files):"
           ls -lh dist/apps/cli-executables/
 
-      - name: Test executables
-        run: |
-          node dist/apps/cli/main.cjs --version
-          ./dist/apps/cli-executables/packmind-cli-linux-x64 --version
+      - name: Test Node.js bundle
+        run: node dist/apps/cli/main.cjs --version
+        shell: bash
+
+      - name: Test native executable (Linux)
+        if: matrix.is-primary
+        run: ./dist/apps/cli-executables/${{ matrix.test-executable }} --version
 
       - name: Upload CLI executables
+        if: matrix.is-primary
         uses: actions/upload-artifact@v4
         with:
           name: cli-executables-${{ steps.get-version.outputs.version }}
@@ -331,34 +355,3 @@ jobs:
         env:
           COMPOSE_PROJECT_NAME: ci-${{ github.run_number }}
         run: docker compose --profile=e2e down -v --remove-orphans
-
-  test-cli-cross-platform:
-    needs: build-cli
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - os: depot-windows-2025-8
-            executable: packmind-cli-windows-x64.exe
-          - os: depot-macos-15
-            executable: packmind-cli-macos-arm64
-
-    runs-on: ${{ matrix.os }}
-    steps:
-      - name: Download CLI executables
-        uses: actions/download-artifact@v4
-        with:
-          name: ${{ needs.build-cli.outputs.cli-executables-artifact }}
-          path: cli-executables
-
-      - name: List downloaded files
-        run: ls -la cli-executables/
-        shell: bash
-
-      - name: Make executable (Unix only)
-        if: runner.os != 'Windows'
-        run: chmod +x cli-executables/${{ matrix.executable }}
-
-      - name: Test CLI executable
-        run: ./cli-executables/${{ matrix.executable }} --version
-        shell: bash
