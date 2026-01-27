@@ -80,6 +80,7 @@
         "group": "Administration",
         "icon": "gear",
         "pages": [
+          "administration/manage-organizations",
           "administration/manage-users",
           "administration/manage-ai-agents",
           "administration/llm-configuration"

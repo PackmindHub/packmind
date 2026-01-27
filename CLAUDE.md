@@ -1,3 +1,43 @@
+# Nx Monorepo Structure
+
+This is an Nx monorepo containing applications and reusable packages.
+
+## Core Technologies
+
+- **Runtime**: Node.js (version specified in `.nvmrc`)
+- **Language**: TypeScript
+- **Database**: PostgreSQL with TypeORM for entity persistence
+- **Cache**: Redis for caching
+- **Background Jobs**: BullMQ for job queue management
+- **Testing**: Jest with @swc/jest as test runner
+
+## Directory Structure
+
+- `apps/` - Deployable applications (API, frontend, CLI, MCP server, e2e tests, docs)
+- `packages/` - Reusable domain and infrastructure packages shared across apps
+- `.github/workflows/` - CI/CD pipelines for build, test, quality checks, and deployment
+
+## Local Development Environment
+
+Local development uses Docker Compose to run all services (API, frontend, database, Redis, etc.):
+
+```bash
+docker compose up
+```
+
+This starts the entire development environment. Do not use `nx serve` commands directly for local development.
+
+## Working with Nx
+
+The following commands apply for both NX apps and packages:
+- Test a project : `nx test <project-name>`
+- Lint a project: `nx lint <project-name>`
+- Build a project: `nx build <project-name>`
+- Test affected projects: `npm run test:staged`
+- Lint affected projects: `npm run lint:staged`
+
+## Commands
+
 - When running commands, ensure you use the correct Node version (see .nvmrc at the project's root level)
 - When renaming or moving a file that is commited to git, use `git mv` instead of `mv`
 - ensure the env variable `PACKMIND_EDITION` is properly set to `oss`
@@ -10,7 +50,7 @@ After reading `CLAUDE.md`, `.claude/rules/**`, `.claude/skills/**`, `.skills/com
 
 - For any task you perform, you MUST split it into multiple into sub-tasks which have a logical increment (eg: new endpoint, new component, new use case etc). When a task is done, run all the validation steps (lint, test, packmind etc) and ask me for validation of the work you did.
 - Each sub task MUST have its own commit.
-- Before commiting anything, you must ensure that `npm run quality-gate` does not raise any issue.
+- Use the `lint` and `test` commands on the apps and packages you've edited
 
 # ⚠️ STOP - Post-Task Skills Check (REQUIRED)
 
@@ -57,3 +97,4 @@ At the end of your response, after completing the main task:
 4. If none apply, state "Skills check: none applicable"
 
 **FAILURE TO RUN THIS CHECK IS A VIOLATION OF PROJECT GUIDELINES.**
+
