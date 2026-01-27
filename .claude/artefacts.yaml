@@ -1080,3 +1080,19 @@
   path: git-commit-guidelines
   type: skill
   date: 2026-01-27T09:23:44+01:00
+- name: CLAUDE.md
+  path: CLAUDE.md
+  type: claude_md
+  date: 2026-01-27T10:56:24+01:00
+- name: standard-typescript-code-standards.md
+  path: .claude/rules/packmind/standard-typescript-code-standards.md
+  type: rule
+  date: 2026-01-27T10:56:24+01:00
+- name: standard-tests-redaction.md
+  path: .claude/rules/packmind/standard-tests-redaction.md
+  type: rule
+  date: 2026-01-27T10:56:24+01:00
+- name: packages/CLAUDE.md
+  path: packages/CLAUDE.md
+  type: claude_md
+  date: 2026-01-27T10:56:24+01:00
