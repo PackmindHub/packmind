@@ -9,6 +9,7 @@ import {
   PMTableColumn,
   PMTableRow,
   PMText,
+  PMTooltip,
   PMVStack,
 } from '@packmind/ui';
 import { Link } from 'react-router';
@@ -100,9 +101,14 @@ export const RepositoryTargetTable: React.FC<RepositoryTargetTableProps> = ({
       let statusNode: React.ReactNode;
       if (d.isDeleted) {
         statusNode = (
-          <PMBadge colorPalette="red" size="sm">
-            Needs removal
-          </PMBadge>
+          <PMTooltip
+            label="The command deletion will be effective on the repository after a `packmind-cli install` or git distribution from web app"
+            placement="top"
+          >
+            <PMBadge colorPalette="red" size="sm">
+              Needs removal
+            </PMBadge>
+          </PMTooltip>
         );
       } else if (mode === 'outdated') {
         statusNode = (
@@ -177,9 +183,14 @@ export const RepositoryTargetTable: React.FC<RepositoryTargetTableProps> = ({
       let statusNode: React.ReactNode;
       if (d.isDeleted) {
         statusNode = (
-          <PMBadge colorPalette="red" size="sm">
-            Needs removal
-          </PMBadge>
+          <PMTooltip
+            label="The standard deletion will be effective on the repository after a `packmind-cli install` or git distribution from web app"
+            placement="top"
+          >
+            <PMBadge colorPalette="red" size="sm">
+              Needs removal
+            </PMBadge>
+          </PMTooltip>
         );
       } else if (mode === 'outdated') {
         statusNode = (
@@ -258,9 +269,14 @@ export const RepositoryTargetTable: React.FC<RepositoryTargetTableProps> = ({
       let statusNode: React.ReactNode;
       if (d.isDeleted) {
         statusNode = (
-          <PMBadge colorPalette="red" size="sm">
-            Needs removal
-          </PMBadge>
+          <PMTooltip
+            label="The skill deletion will be effective on the repository after a `packmind-cli install` or git distribution from web app"
+            placement="top"
+          >
+            <PMBadge colorPalette="red" size="sm">
+              Needs removal
+            </PMBadge>
+          </PMTooltip>
         );
       } else if (mode === 'outdated') {
         statusNode = (

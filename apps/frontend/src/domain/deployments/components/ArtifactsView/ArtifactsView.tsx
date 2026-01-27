@@ -10,6 +10,7 @@ import {
   PMTableColumn,
   PMTableRow,
   PMText,
+  PMTooltip,
   PMVStack,
 } from '@packmind/ui';
 import { Link } from 'react-router';
@@ -95,13 +96,19 @@ const renderStatusNode = (
   artifactStatusFilter: ArtifactStatus,
   upToDate: boolean,
   isDeleted?: boolean,
+  artifactType?: 'command' | 'standard' | 'skill',
 ) => {
   // Deleted artifacts need removal (treated as a type of "outdated")
   if (isDeleted) {
     return (
-      <PMBadge colorPalette="red" size="sm">
-        Needs removal
-      </PMBadge>
+      <PMTooltip
+        label={`The ${artifactType} deletion will be effective on the repository after a \`packmind-cli install\` or git distribution from web app`}
+        placement="top"
+      >
+        <PMBadge colorPalette="red" size="sm">
+          Needs removal
+        </PMBadge>
+      </PMTooltip>
     );
   }
   if (artifactStatusFilter === 'outdated') {
@@ -187,6 +194,7 @@ const buildRecipeBlocks = (
           artifactStatusFilter,
           upToDate,
           recipeIsDeleted,
+          'command',
         );
         const repoLabel = formatRepoLabel(td);
 
@@ -265,6 +273,7 @@ const buildStandardBlocks = (
           artifactStatusFilter,
           upToDate,
           standardIsDeleted,
+          'standard',
         );
         const repoLabel = formatRepoLabel(td);
 
@@ -343,6 +352,7 @@ const buildSkillBlocks = (
           artifactStatusFilter,
           upToDate,
           skillIsDeleted,
+          'skill',
         );
         const repoLabel = formatRepoLabel(td);
 
