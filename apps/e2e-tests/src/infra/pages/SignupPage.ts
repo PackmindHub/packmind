@@ -4,16 +4,9 @@ import { IDashboardPage, ISignUpPage } from '../../domain/pages';
 import { SignUpWithOrganizationFormDataTestIds } from '@packmind/frontend';
 
 export class SignupPage extends AbstractPackmindPage implements ISignUpPage {
-  async signup(
-    email: string,
-    password: string,
-    organizationName: string,
-  ): Promise<IDashboardPage> {
+  async signup(email: string, password: string): Promise<IDashboardPage> {
     console.log(`Creating user ${email} with password ${password}`);
 
-    await this.page
-      .getByTestId(SignUpWithOrganizationFormDataTestIds.OrganizationField)
-      .fill(organizationName);
     await this.page
       .getByTestId(SignUpWithOrganizationFormDataTestIds.EmailField)
       .fill(email);

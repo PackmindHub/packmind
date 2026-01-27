@@ -114,17 +114,8 @@ export class AuthService {
     });
 
     try {
-      if (!signUpRequest.organizationName) {
-        throw new Error('organizationName is required');
-      }
-
-      const command: SignUpWithOrganizationCommand = {
-        organizationName: signUpRequest.organizationName,
-        email: signUpRequest.email,
-        password: signUpRequest.password,
-      };
-
-      const result = await this.accountsAdapter.signUpWithOrganization(command);
+      const result =
+        await this.accountsAdapter.signUpWithOrganization(signUpRequest);
       this.logger.log('User signed up with organization successfully', {
         email: maskEmail(result.user.email),
       });

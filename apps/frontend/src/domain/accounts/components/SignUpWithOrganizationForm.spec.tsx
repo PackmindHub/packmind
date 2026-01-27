@@ -11,20 +11,12 @@ import {
   useSignInMutation,
   useCheckEmailAvailabilityMutation,
 } from '../api/queries/AuthQueries';
-import { organizationGateway } from '../api/gateways';
 
 // Mock the queries
 jest.mock('../api/queries/AuthQueries', () => ({
   useSignUpWithOrganizationMutation: jest.fn(),
   useSignInMutation: jest.fn(),
   useCheckEmailAvailabilityMutation: jest.fn(),
-}));
-
-// Mock the organization gateway
-jest.mock('../api/gateways', () => ({
-  organizationGateway: {
-    getByName: jest.fn(),
-  },
 }));
 
 // Mock the error utility
@@ -113,12 +105,6 @@ describe('SignUpWithOrganizationForm', () => {
       renderWithProviders(<SignUpWithOrganizationForm />);
     });
 
-    it('displays organization name input', () => {
-      expect(
-        screen.getByPlaceholderText(/enter organization name/i),
-      ).toBeInTheDocument();
-    });
-
     it('displays email input', () => {
       expect(
         screen.getByPlaceholderText(/enter your email/i),
@@ -175,73 +161,17 @@ describe('SignUpWithOrganizationForm', () => {
     ).toBeInTheDocument();
   });
 
-  describe('when typing an existing organization name', () => {
-    let mockOrganizationGateway: jest.Mocked<typeof organizationGateway>;
-
-    beforeEach(async () => {
-      const user = userEvent.setup();
-      const mockSignUpMutation = createSignUpMutation();
-      const mockSignInMutation = createSignInMutation();
-      mockOrganizationGateway = organizationGateway as jest.Mocked<
-        typeof organizationGateway
-      >;
-
-      mockUseSignUpWithOrganizationMutation.mockReturnValue(mockSignUpMutation);
-      mockUseSignInMutation.mockReturnValue(mockSignInMutation);
-
-      mockOrganizationGateway.getByName.mockResolvedValue({
-        id: 'org-1',
-        name: 'Existing Organization',
-        slug: 'existing-organization',
-      });
-
-      renderWithProviders(<SignUpWithOrganizationForm />);
-
-      const organizationNameInput = screen.getByPlaceholderText(
-        /enter organization name/i,
-      );
-      await user.type(organizationNameInput, 'Existing Organization');
-
-      await waitFor(
-        () => {
-          expect(mockOrganizationGateway.getByName).toHaveBeenCalledWith(
-            'Existing Organization',
-          );
-        },
-        { timeout: 1000 },
-      );
-    });
-
-    it('displays organization name already exists error', async () => {
-      await waitFor(() => {
-        expect(
-          screen.getByText('Organization name already exists'),
-        ).toBeInTheDocument();
-      });
-    });
-  });
-
   it('submits form with valid data', async () => {
     const user = userEvent.setup();
     const mockSignUpMutation = createSignUpMutation();
     const mockSignInMutation = createSignInMutation();
-    const mockOrganizationGateway = organizationGateway as jest.Mocked<
-      typeof organizationGateway
-    >;
 
     mockUseSignUpWithOrganizationMutation.mockReturnValue(mockSignUpMutation);
     mockUseSignInMutation.mockReturnValue(mockSignInMutation);
 
-    // Mock organization doesn't exist
-    mockOrganizationGateway.getByName.mockRejectedValue(new Error('Not found'));
-
     renderWithProviders(<SignUpWithOrganizationForm />);
 
     // Fill out the form
-    await user.type(
-      screen.getByPlaceholderText(/enter organization name/i),
-      'Test Organization',
-    );
     await user.type(
       screen.getByPlaceholderText(/enter your email/i),
       'test@example.com',
@@ -261,13 +191,11 @@ describe('SignUpWithOrganizationForm', () => {
     await waitFor(() => {
       expect(mockSignUpMutation.mutate).toHaveBeenCalledWith(
         {
-          organizationName: 'Test Organization',
           email: 'test@example.com',
           password: 'password123!@',
         },
         expect.objectContaining({
           onSuccess: expect.any(Function),
-          onError: expect.any(Function),
         }),
       );
     });
@@ -285,8 +213,8 @@ describe('SignUpWithOrganizationForm', () => {
       },
       organization: {
         id: 'org-1',
-        name: 'Test Organization',
-        slug: 'test-organization',
+        name: "test's organization",
+        slug: 'tests-organization',
       },
     };
 
@@ -300,10 +228,6 @@ describe('SignUpWithOrganizationForm', () => {
 
       renderWithProviders(<SignUpWithOrganizationForm />);
 
-      await user.type(
-        screen.getByPlaceholderText(/enter organization name/i),
-        'Test Organization',
-      );
       await user.type(
         screen.getByPlaceholderText(/enter your email/i),
         'test@example.com',

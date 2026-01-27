@@ -60,7 +60,6 @@ export class AuthController {
   ): Promise<SignUpWithOrganizationResponse> {
     this.logger.log(`POST /auth/signup - Signing up user`, {
       email: maskEmail(signUpRequest.email),
-      organizationName: signUpRequest.organizationName,
     });
 
     try {

@@ -19,11 +19,7 @@ export interface ISignUpOptionsPage extends IPackmindPage {
 }
 
 export interface ISignUpPage extends IPackmindPage {
-  signup(
-    email: string,
-    password: string,
-    organizationName: string,
-  ): Promise<IDashboardPage>;
+  signup(email: string, password: string): Promise<IDashboardPage>;
 }
 
 export interface IDashboardPage extends IPackmindAppPage {
