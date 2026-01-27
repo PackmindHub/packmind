@@ -61,6 +61,10 @@ import {
   UploadSkillCommand,
   UploadSkillResult,
 } from './domain/repositories/IPackmindGateway';
+import { IContentWriteResult } from './application/services/ContentWriterService';
+import { IGeneratedStandard } from './application/services/StandardsGeneratorService';
+import { IGeneratedCommand } from './application/services/CommandsGeneratorService';
+import { IGeneratedSkill } from './application/services/SkillsGeneratorService';
 
 const origin = 'PackmindCliHexa';
 
@@ -273,5 +277,16 @@ export class PackmindCliHexa {
     command: IAggressiveOnboardingCommand,
   ): Promise<IAggressiveOnboardingResult> {
     return this.hexa.useCases.aggressiveOnboarding.execute(command);
+  }
+
+  public async writeContent(
+    projectPath: string,
+    content: {
+      standards: IGeneratedStandard[];
+      commands: IGeneratedCommand[];
+      skills: IGeneratedSkill[];
+    },
+  ): Promise<IContentWriteResult> {
+    return this.hexa.services.contentWriter.writeContent(projectPath, content);
   }
 }

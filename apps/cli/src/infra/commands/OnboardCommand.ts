@@ -1,4 +1,4 @@
-import { command, option, string, optional } from 'cmd-ts';
+import { command, option, string, optional, boolean, flag } from 'cmd-ts';
 import { PackmindCliHexa } from '../../PackmindCliHexa';
 import { PackmindLogger, LogLevel } from '@packmind/logger';
 import {
@@ -6,6 +6,7 @@ import {
   logErrorConsole,
   logInfoConsole,
   logConsole,
+  logWarningConsole,
 } from '../utils/consoleLogger';
 
 export const onboardCommand = command({
@@ -19,17 +20,24 @@ export const onboardCommand = command({
       short: 'p',
       description: 'Project path to scan (defaults to current directory)',
     }),
+    dryRun: flag({
+      type: boolean,
+      long: 'dry-run',
+      short: 'd',
+      description: 'Preview generated content without writing files',
+    }),
   },
-  handler: async ({ path: projectPath }) => {
+  handler: async ({ path: projectPath, dryRun }) => {
     const packmindLogger = new PackmindLogger('PackmindCLI', LogLevel.INFO);
     const packmindCliHexa = new PackmindCliHexa(packmindLogger);
+    const targetPath = projectPath || process.cwd();
 
     try {
       logConsole('\n');
       logInfoConsole('Scanning project...');
 
       const result = await packmindCliHexa.aggressiveOnboarding({
-        projectPath: projectPath || process.cwd(),
+        projectPath: targetPath,
       });
 
       // Display scan results
@@ -74,14 +82,55 @@ export const onboardCommand = command({
         logConsole(
           '\nTip: Add a CLAUDE.md, CONTRIBUTING.md, or similar documentation files to help generate more relevant content.',
         );
+        return;
+      }
+
+      // Write content to files unless dry-run
+      if (dryRun) {
+        logInfoConsole(`Dry run: ${totalItems} items would be created`);
+        logConsole('\nRun without --dry-run to write files to disk.');
       } else {
-        logSuccessConsole(
-          `Generated ${totalItems} items ready to push to Packmind`,
-        );
         logConsole('\n');
-        logInfoConsole(
-          'To push this content to your Packmind space, use: packmind install <package> --auto-onboard',
+        logInfoConsole('Writing generated content to files...');
+
+        const writeResult = await packmindCliHexa.writeContent(
+          targetPath,
+          result.content,
         );
+
+        if (writeResult.errors.length > 0) {
+          for (const error of writeResult.errors) {
+            logWarningConsole(error);
+          }
+        }
+
+        logConsole('\n');
+        logSuccessConsole(`Created ${writeResult.filesCreated} files:`);
+
+        // Show created file paths
+        if (writeResult.paths.standards.length > 0) {
+          logConsole('\n  Standards:');
+          for (const filePath of writeResult.paths.standards) {
+            logConsole(`    - ${filePath}`);
+          }
+        }
+
+        if (writeResult.paths.commands.length > 0) {
+          logConsole('\n  Commands:');
+          for (const filePath of writeResult.paths.commands) {
+            logConsole(`    - ${filePath}`);
+          }
+        }
+
+        if (writeResult.paths.skills.length > 0) {
+          logConsole('\n  Skills:');
+          for (const filePath of writeResult.paths.skills) {
+            logConsole(`    - ${filePath}`);
+          }
+        }
+
+        logConsole('\n');
+        logSuccessConsole('Onboarding complete!');
       }
     } catch (error) {
       if (error instanceof Error) {
