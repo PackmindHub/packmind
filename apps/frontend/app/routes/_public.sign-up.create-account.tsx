@@ -25,9 +25,9 @@ export default function CreateAccountRouteModule() {
       <SignUpWithOrganizationForm />
 
       <PMHStack justifyContent="center" paddingX={6}>
-        <PMText>Already have an account?</PMText>
+        <PMText color="secondary">Already have an account?</PMText>
         <PMButton
-          variant="tertiary"
+          variant="ghost"
           size="xs"
           onClick={() => navigate('/sign-in')}
         >

@@ -7,6 +7,7 @@ import {
   PMCarousel,
   PMIconButton,
   PMIcon,
+  PMHStack,
 } from '@packmind/ui';
 import {
   LuChevronLeft,
@@ -18,8 +19,10 @@ import {
 
 export function SignUpSplashScreen({
   onGetStarted,
+  onSignIn,
 }: Readonly<{
   onGetStarted: () => void;
+  onSignIn: () => void;
 }>) {
   const features = [
     {
@@ -50,7 +53,14 @@ export function SignUpSplashScreen({
         </PMHeading>
       </PMBox>
 
-      <PMCarousel.Root slideCount={features.length} width="100%" maxW="600px">
+      <PMCarousel.Root
+        slideCount={features.length}
+        width="100%"
+        maxW="600px"
+        borderRadius="xl"
+        border="solid 1px"
+        borderColor="blue.800"
+      >
         <PMCarousel.ItemGroup>
           {features.map((feature, index) => (
             <PMCarousel.Item key={index} index={index}>
@@ -63,10 +73,6 @@ export function SignUpSplashScreen({
                 alignItems="center"
                 justifyContent="center"
                 gap={6}
-                backgroundColor={'{colors.background.secondary}'}
-                borderRadius="xl"
-                border="solid 1px"
-                borderColor="border.tertiary"
                 shadow="sm"
                 transition="all 0.3s"
                 _hover={{
@@ -87,7 +93,7 @@ export function SignUpSplashScreen({
                   </PMIcon>
                 </PMBox>
                 <PMBox>
-                  <PMHeading level="h5" mb={3}>
+                  <PMHeading level="h3" mb={3}>
                     {feature.title}
                   </PMHeading>
                   <PMText fontSize="md" lineHeight="tall">
@@ -99,7 +105,7 @@ export function SignUpSplashScreen({
           ))}
         </PMCarousel.ItemGroup>
 
-        <PMCarousel.Control justifyContent="center" gap={4} mt={6}>
+        <PMCarousel.Control justifyContent="center" gap={4} mb={2} pb={2}>
           <PMCarousel.PrevTrigger asChild>
             <PMIconButton size="sm" variant="ghost" aria-label="Previous">
               <LuChevronLeft />
@@ -118,6 +124,7 @@ export function SignUpSplashScreen({
       </PMCarousel.Root>
 
       <PMButton
+        w={'full'}
         size="lg"
         variant="primary"
         onClick={onGetStarted}
@@ -125,6 +132,13 @@ export function SignUpSplashScreen({
       >
         Get started
       </PMButton>
+
+      <PMHStack justifyContent="center" paddingX={4}>
+        <PMText color="secondary">Already have an account?</PMText>
+        <PMButton variant="ghost" size="xs" onClick={onSignIn}>
+          Sign in
+        </PMButton>
+      </PMHStack>
     </PMVStack>
   );
 }

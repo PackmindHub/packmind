@@ -21,6 +21,9 @@ export default function SignUpIndexRouteModule() {
       onGetStarted={() => {
         navigate('/sign-up/create-account');
       }}
+      onSignIn={() => {
+        navigate('/sign-in');
+      }}
     />
   );
 }
