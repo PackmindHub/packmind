@@ -23,7 +23,7 @@ export function SignUpSplashScreen({
 }>) {
   const features = [
     {
-      title: 'A single place for your knowledge',
+      title: 'Your knowledge in one place',
       description:
         'Capture your team standards, patterns, and coding preferences as they emerge from your work.',
       icon: LuLightbulb,
@@ -43,10 +43,10 @@ export function SignUpSplashScreen({
   ];
 
   return (
-    <PMVStack align="center" justify="center" minH="30vh" gap={6}>
+    <PMVStack align="center" justify="center" gap={6}>
       <PMBox textAlign="center">
-        <PMHeading level="h2" textAlign="center">
-          Get your agent code your way
+        <PMHeading level="h2" textAlign="center" mt={4}>
+          Trust your AI agents to code right
         </PMHeading>
       </PMBox>
 
