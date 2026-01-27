@@ -12,7 +12,7 @@
       "options": {
         "platform": "node",
         "outputPath": "dist/apps/cli",
-        "format": ["cjs"],
+        "format": ["esm"],
         "bundle": true,
         "main": "apps/cli/src/main.ts",
         "tsConfig": "apps/cli/tsconfig.app.json",
@@ -58,7 +58,7 @@
       "options": {
         "platform": "node",
         "outputPath": "dist/apps/cli-bundle",
-        "format": ["cjs"],
+        "format": ["esm"],
         "bundle": true,
         "minify": false,
         "main": "apps/cli/src/main.ts",

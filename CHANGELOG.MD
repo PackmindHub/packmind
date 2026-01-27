@@ -12,6 +12,8 @@
 
 ## Fixed
 
+- Migrate CLI from CommonJS to ESM to fix runtime errors with ESM-only dependencies on Windows (#96)
+
 ## Removed
 
 # [1.7.0] - 2025-01-07

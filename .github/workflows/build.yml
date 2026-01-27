@@ -243,7 +243,7 @@ jobs:
 
       - name: Test executables
         run: |
-          node dist/apps/cli/main.cjs --version
+          node dist/apps/cli/main.js --version
           ./dist/apps/cli-executables/packmind-cli-linux-x64 --version
 
       - name: Upload CLI executables

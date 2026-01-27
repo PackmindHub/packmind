@@ -55,7 +55,7 @@ backendModules.forEach((moduleName) => {
     fs.mkdirSync(moduleDir, { recursive: true });
   }
 
-  // Create a stub index.js that exports safe defaults
+  // Create a stub index.js that exports safe defaults (ESM format)
   const stubContent = `
 // Stub module for ${moduleName}
 // This module is not actually used by the CLI but is imported by shared dependencies
@@ -81,17 +81,18 @@ const createStub = () => {
 };
 
 const stub = createStub();
-module.exports = stub;
-module.exports.default = stub;
+export default stub;
+export { stub };
 `;
 
   fs.writeFileSync(path.join(moduleDir, 'index.js'), stubContent.trim());
 
-  // Create a minimal package.json
+  // Create a minimal package.json with ESM type
   const packageJson = {
     name: moduleName,
     version: '0.0.0-stub',
     description: `Stub for ${moduleName} - not actually used by CLI`,
+    type: 'module',
     main: 'index.js',
   };
 
