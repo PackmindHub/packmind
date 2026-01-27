@@ -14,7 +14,15 @@ import { VscVscode } from 'react-icons/vsc';
 import { CursorIcon } from '@packmind/assets/icons/CursorIcon';
 import { useAnalytics } from '@packmind/proprietary/frontend/domain/amplitude/providers/AnalyticsProvider';
 
-export const DownloadDefaultSkillsPopover = () => {
+interface IDownloadDefaultSkillsPopoverProps {
+  buttonVariant?: 'primary' | 'outline' | 'secondary';
+  placement?: 'bottom' | 'bottom-end' | 'bottom-start';
+}
+
+export const DownloadDefaultSkillsPopover = ({
+  buttonVariant = 'outline',
+  placement = 'bottom-end',
+}: IDownloadDefaultSkillsPopoverProps) => {
   const [downloadingAgent, setDownloadingAgent] = useState<CodingAgent | null>(
     null,
   );
@@ -43,14 +51,18 @@ export const DownloadDefaultSkillsPopover = () => {
   };
 
   return (
-    <PMPopover.Root positioning={{ placement: 'bottom-end' }}>
-      <PMTooltip label="Download skills to create standards and skills with your AI Agent.">
-        <PMPopover.Trigger asChild>
-          <PMButton variant="outline" size="md">
-            Get Packmind Skills
-          </PMButton>
-        </PMPopover.Trigger>
-      </PMTooltip>
+    <PMPopover.Root positioning={{ placement }}>
+      <PMPopover.Trigger asChild>
+        <PMButton
+          variant={buttonVariant}
+          size="md"
+          title={
+            'Download skills to create standards and skills with your AI Agent.'
+          }
+        >
+          Get Packmind Skills
+        </PMButton>
+      </PMPopover.Trigger>
       <PMPopover.Positioner>
         <PMPopover.Content width="380px">
           <PMPopover.Arrow>
