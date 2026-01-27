@@ -16,7 +16,11 @@ export interface IProjectScanResult {
   hasLinting: boolean;
 }
 
-export class ProjectScannerService {
+export interface IProjectScannerService {
+  scanProject(projectPath: string): Promise<IProjectScanResult>;
+}
+
+export class ProjectScannerService implements IProjectScannerService {
   async scanProject(projectPath: string): Promise<IProjectScanResult> {
     const result: IProjectScanResult = {
       languages: [],
