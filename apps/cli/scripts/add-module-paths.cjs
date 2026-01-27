@@ -15,14 +15,15 @@ const mainJsPath = path.join(distDir, 'main.js');
 // Code to prepend that adds stubs directory to module resolution paths (ESM version)
 // This code checks if NODE_PATH includes the stubs directory, and if not,
 // re-launches the script with NODE_PATH set appropriately
-// Note: __dirname is already defined by the esbuild banner
+// Defines its own __dirname to avoid dependency on banner position
 const modulePathSetup = `
 // Add stubs directory to module resolution paths (ESM version)
 // This allows Node.js to find our stub modules for backend dependencies
 import { spawn as __spawn } from 'child_process';
-import { join as __join } from 'path';
+import { join as __join, dirname as __stubsDirname } from 'path';
+import { fileURLToPath as __stubsFileURLToPath } from 'url';
 
-const __stubsDir = __join(__dirname, 'stubs');
+const __stubsDir = __join(__stubsDirname(__stubsFileURLToPath(import.meta.url)), 'stubs');
 
 // Check if we need to relaunch with NODE_PATH set
 if (!process.env.__PACKMIND_STUBS_LOADED) {
@@ -43,29 +44,14 @@ let content = fs.readFileSync(mainJsPath, 'utf8');
 
 // Check if already has setup
 if (!content.includes('Add stubs directory')) {
-  // Find where to insert (after the esbuild banner that defines __dirname)
-  // The banner ends with: const __dirname = __dirname_fn(__filename);
-  const bannerEndMarker = 'const __dirname = __dirname_fn(__filename);';
-  const bannerEndIndex = content.indexOf(bannerEndMarker);
-
-  if (bannerEndIndex !== -1) {
-    // Insert after the banner end line
-    const insertPosition = bannerEndIndex + bannerEndMarker.length;
-    content =
-      content.slice(0, insertPosition) +
-      '\n' +
-      modulePathSetup +
-      content.slice(insertPosition);
-  } else {
-    // Fallback: insert after shebang if no banner found
-    const lines = content.split('\n');
-    let insertIndex = 0;
-    if (lines[0].startsWith('#!')) {
-      insertIndex = 1;
-    }
-    lines.splice(insertIndex, 0, modulePathSetup);
-    content = lines.join('\n');
+  // Insert after shebang if present
+  const lines = content.split('\n');
+  let insertIndex = 0;
+  if (lines[0].startsWith('#!')) {
+    insertIndex = 1;
   }
+  lines.splice(insertIndex, 0, modulePathSetup);
+  content = lines.join('\n');
 
   fs.writeFileSync(mainJsPath, content);
   console.log('✅ Added module path setup to main.js');
