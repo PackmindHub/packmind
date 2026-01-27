@@ -1076,3 +1076,7 @@
   path: .claude/rules/packmind/standard-typescript-code-standards.md
   type: rule
   date: 2026-01-26T11:20:57+01:00
+- name: git-commit-guidelines
+  path: git-commit-guidelines
+  type: skill
+  date: 2026-01-27T09:23:44+01:00

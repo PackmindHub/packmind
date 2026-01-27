@@ -171,3 +171,150 @@
     - 'testing'
     - 'winston'
     - 'memory-optimization'
+
+- timestamp: 2026-01-27T10:00:00Z
+  file: CLAUDE.md
+  context: 'Creating hierarchical CLAUDE.md structure across Packmind monorepo'
+  category: 'architecture'
+  question: 'What information hierarchy should CLAUDE.md files follow to avoid repetition?'
+  decision: 'Use four-level hierarchy: root (monorepo-wide), apps/ (categorization), apps/*/  (app-specific), packages/ (all packages)'
+  reasoning: 'Root covers concerns affecting entire monorepo (Nx, Node.js, TypeScript). apps/CLAUDE.md provides overview and categorization. Individual app files contain unique details. packages/CLAUDE.md covers all packages in one place rather than per-package files.'
+  alternatives:
+    - 'Flat structure with all information in root CLAUDE.md'
+    - 'Per-package CLAUDE.md files in addition to apps/'
+    - 'Two-level structure (root + per-app only)'
+  impact: 'global'
+  confidence: 'high'
+  source: 'ai-agent'
+  tags:
+    - 'documentation'
+    - 'information-architecture'
+    - 'monorepo'
+
+- timestamp: 2026-01-27T10:15:00Z
+  file: apps/CLAUDE.md
+  context: 'Creating apps/CLAUDE.md to categorize applications'
+  category: 'patterns'
+  decision: 'Group 6 apps into 3 categories: Backend Services, Frontend & CLI, Testing & Documentation'
+  reasoning: 'Logical grouping by primary function. Backend (api, mcp-server) both serve data. Frontend & CLI (frontend, cli) are user-facing. Testing & Docs (e2e-tests, doc) support development.'
+  alternatives:
+    - 'Alphabetical listing without categories'
+    - 'Group by technology stack (Node.js vs React)'
+    - 'Group by deployment type (server vs client)'
+  impact: 'module'
+  confidence: 'high'
+  source: 'ai-agent'
+  tags:
+    - 'documentation'
+    - 'categorization'
+    - 'organization'
+
+- timestamp: 2026-01-27T10:30:00Z
+  file: apps/api/CLAUDE.md
+  context: 'Creating individual app CLAUDE.md files'
+  category: 'patterns'
+  decision: 'Use consistent structure across all 6 app files: Architecture, Technologies, Main Commands, Key Patterns, Configuration, Testing, Related Documentation'
+  reasoning: 'Provides predictable navigation for AI agents. Same sections in same order make it easy to quickly find specific information type across different apps.'
+  alternatives:
+    - 'Custom structure per app based on unique needs'
+    - 'Minimal structure with just overview and commands'
+    - 'More granular sections (separate DB, API, Auth sections)'
+  impact: 'global'
+  confidence: 'high'
+  source: 'pattern-matching'
+  tags:
+    - 'documentation'
+    - 'consistency'
+    - 'structure'
+
+- timestamp: 2026-01-27T10:45:00Z
+  file: apps/api/CLAUDE.md
+  context: 'Writing app CLAUDE.md files'
+  category: 'naming'
+  question: 'Should app CLAUDE.md files be ~40 lines or more comprehensive?'
+  decision: 'Target 80-100 lines per app file with comprehensive details'
+  reasoning: 'Provides enough context for AI agents to understand architecture, key patterns, and technologies without being overwhelming. All 6 files ended up 83-97 lines showing good consistency.'
+  alternatives:
+    - 'Keep minimal at ~40 lines with links to external docs'
+    - 'Make comprehensive at 150+ lines with all details'
+    - 'Variable length based on app complexity'
+  impact: 'global'
+  confidence: 'medium'
+  source: 'ai-agent'
+  tags:
+    - 'documentation'
+    - 'length'
+    - 'detail-level'
+
+- timestamp: 2026-01-27T11:00:00Z
+  file: packages/CLAUDE.md
+  context: 'Creating packages/CLAUDE.md'
+  category: 'architecture'
+  question: 'Should each package have its own CLAUDE.md file or one central file?'
+  decision: 'Create single packages/CLAUDE.md with all 21 packages organized by category, no per-package files'
+  reasoning: 'Packages are smaller units than apps. Per-package CLAUDE.md would be too granular (21 files). Central file provides overview and categories. Detailed package info exists in standards/AGENTS.md.'
+  alternatives:
+    - 'Create per-package CLAUDE.md for each of 21 packages'
+    - 'Only document domain packages, skip infrastructure'
+    - 'Group packages by creating CLAUDE.md per category folder'
+  impact: 'global'
+  confidence: 'high'
+  source: 'inference'
+  tags:
+    - 'documentation'
+    - 'granularity'
+    - 'packages'
+
+- timestamp: 2026-01-27T11:10:00Z
+  file: packages/CLAUDE.md
+  context: 'Organizing packages in packages/CLAUDE.md'
+  category: 'patterns'
+  decision: 'Organize 21 packages into 6 categories: Core Infrastructure, Domain Packages, Integration & Deployment, Language Analysis, Frontend, Supporting'
+  reasoning: 'Groups packages by their primary purpose. Makes it easy to find packages related to specific concerns (domain logic vs infrastructure vs integrations).'
+  alternatives:
+    - 'Alphabetical listing without categories'
+    - 'Group by dependency layers (domain, application, infrastructure)'
+    - 'Group by technology (TypeORM packages, React packages, etc.)'
+  impact: 'module'
+  confidence: 'high'
+  source: 'ai-agent'
+  tags:
+    - 'documentation'
+    - 'categorization'
+    - 'packages'
+
+- timestamp: 2026-01-27T11:20:00Z
+  file: CLAUDE.md
+  context: 'Writing CLAUDE.md files across monorepo'
+  category: 'styling'
+  decision: 'Use imperative tone with ## headers and bullet points consistently across all files'
+  reasoning: 'Imperative tone (e.g., "Build a project: nx build") is action-oriented and clearer than descriptive. Bullet points are scannable. ## headers provide clear structure.'
+  alternatives:
+    - 'Use descriptive prose paragraphs'
+    - 'Use numbered lists instead of bullets'
+    - 'Mix formats based on content type'
+  impact: 'global'
+  confidence: 'high'
+  source: 'pattern-matching'
+  tags:
+    - 'documentation'
+    - 'writing-style'
+    - 'formatting'
+
+- timestamp: 2026-01-27T11:25:00Z
+  file: apps/api/CLAUDE.md
+  context: 'Writing app CLAUDE.md files'
+  category: 'patterns'
+  decision: 'Reference .claude/rules/ and other CLAUDE.md files rather than duplicating information'
+  reasoning: 'Avoids repetition and keeps files focused on unique information. Single source of truth for standards in .claude/rules/. Cross-references guide AI agents to deeper information when needed.'
+  alternatives:
+    - 'Duplicate key information in each file for self-containment'
+    - 'Inline all standards directly in app CLAUDE.md'
+    - 'No references, make each file completely independent'
+  impact: 'global'
+  confidence: 'high'
+  source: 'ai-agent'
+  tags:
+    - 'documentation'
+    - 'dry-principle'
+    - 'cross-references'

@@ -2,16 +2,6 @@
 
 This directory contains reusable domain and infrastructure packages shared across applications.
 
-## Package Architecture
-
-Most domain packages follow hexagonal (ports & adapters) architecture:
-
-- **Domain Layer**: Entities, value objects, domain events
-- **Application Layer**: Use cases orchestrating business logic
-- **Infrastructure Layer**: Repository implementations, external adapters
-
-Packages are designed to be independent, testable, and composable.
-
 ## Package Categories
 
 ### Core Infrastructure
@@ -59,44 +49,3 @@ Packages are designed to be independent, testable, and composable.
 - Build a package: `nx build <package-name>`
 - Test a package: `nx test <package-name>`
 - Lint a package: `nx lint <package-name>`
-
-### Dependency Rules
-
-- Packages should minimize dependencies on other packages
-- Domain packages depend only on core infrastructure packages
-- Integration packages can depend on domain packages
-- Avoid circular dependencies between packages
-
-### Adding a New Package
-
-- Create package in `packages/` directory
-- Define `project.json` with Nx configuration
-- Update TypeScript path mappings in root `tsconfig.base.json`
-- Follow package architecture pattern (hexagonal for domain packages)
-- Add exports to `index.ts` for public API
-
-## Testing Strategy
-
-- Unit tests: Test domain logic and use cases in isolation
-- Integration tests: Test repository implementations and external adapters
-- Use test factories from `test-utils` for consistent test data
-- Follow standards in `.claude/rules/packmind/standard-testing-good-practices.md`
-
-## TypeORM Entity Packages
-
-Domain packages containing TypeORM entities:
-
-- **accounts** - UserEntity
-- **spaces** - SpaceEntity, MemberEntity
-- **standards** - StandardEntity, RuleEntity
-- **recipes** - RecipeEntity, StepEntity
-- **skills** - SkillEntity
-
-Entities use TypeORM decorators and are registered in API and MCP server TypeORM config.
-
-## Related Documentation
-
-- See `.claude/rules/packmind/` for coding standards
-- See `.claude/skills/packmind:create-new-package-in-monorepo/` for package creation skill
-- See root `CLAUDE.md` for monorepo-wide rules
-- See individual package README files for package-specific details
