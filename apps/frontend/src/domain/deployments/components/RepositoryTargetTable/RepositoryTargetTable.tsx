@@ -101,7 +101,7 @@ export const RepositoryTargetTable: React.FC<RepositoryTargetTableProps> = ({
       if (d.isDeleted) {
         statusNode = (
           <PMBadge colorPalette="red" size="sm">
-            Deleted
+            Needs removal
           </PMBadge>
         );
       } else if (mode === 'outdated') {
@@ -178,7 +178,7 @@ export const RepositoryTargetTable: React.FC<RepositoryTargetTableProps> = ({
       if (d.isDeleted) {
         statusNode = (
           <PMBadge colorPalette="red" size="sm">
-            Deleted
+            Needs removal
           </PMBadge>
         );
       } else if (mode === 'outdated') {
@@ -259,7 +259,7 @@ export const RepositoryTargetTable: React.FC<RepositoryTargetTableProps> = ({
       if (d.isDeleted) {
         statusNode = (
           <PMBadge colorPalette="red" size="sm">
-            Deleted
+            Needs removal
           </PMBadge>
         );
       } else if (mode === 'outdated') {
