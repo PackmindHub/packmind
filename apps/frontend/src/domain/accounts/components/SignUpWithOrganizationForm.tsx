@@ -163,8 +163,8 @@ export default function SignUpWithOrganizationForm() {
             },
             {
               onSuccess: () => {
-                // Redirect to organization dashboard after auto-login
-                navigate(routes.org.toDashboard(response.organization.slug));
+                // Redirect to onboarding reason after successful registration and login
+                navigate('/sign-up/onboarding-reason');
               },
               onError: (error) => {
                 console.error('Auto-login failed after registration:', error);

@@ -1,5 +1,3 @@
-import { useEffect } from 'react';
-import { useNavigate } from 'react-router';
 import {
   PMBox,
   PMVStack,
@@ -8,21 +6,11 @@ import {
   PMButton,
   PMHStack,
 } from '@packmind/ui';
-import { useIsAuthenticated } from '../../src/domain/accounts/hooks/useIsAuthenticated';
+import { useNavigate } from 'react-router';
 import SignUpWithOrganizationForm from '../../src/domain/accounts/components/SignUpWithOrganizationForm';
 
 export default function CreateAccountRouteModule() {
-  const { isAuthenticated, isLoading } = useIsAuthenticated();
   const navigate = useNavigate();
-
-  useEffect(() => {
-    if (!isLoading && isAuthenticated) {
-      navigate('/');
-    }
-  }, [isAuthenticated, isLoading, navigate]);
-
-  if (isLoading) return <div>Loading...</div>;
-  if (isAuthenticated) return null;
 
   return (
     <PMVStack gap={6} align="stretch">
