@@ -107,6 +107,28 @@ export function useNavigation() {
         `/org/${currentOrgSlug}/space/${currentSpaceSlug}/standards/create`,
       );
     },
+    toCommands: () => {
+      if (!currentOrgSlug || !currentSpaceSlug) return;
+      navigate(`/org/${currentOrgSlug}/space/${currentSpaceSlug}/commands`);
+    },
+    toCommand: (commandId: string) => {
+      if (!currentOrgSlug || !currentSpaceSlug) return;
+      navigate(
+        `/org/${currentOrgSlug}/space/${currentSpaceSlug}/commands/${commandId}`,
+      );
+    },
+    toCreateCommand: () => {
+      if (!currentOrgSlug || !currentSpaceSlug) return;
+      navigate(
+        `/org/${currentOrgSlug}/space/${currentSpaceSlug}/commands/create`,
+      );
+    },
+    toEditCommand: (commandId: string) => {
+      if (!currentOrgSlug || !currentSpaceSlug) return;
+      navigate(
+        `/org/${currentOrgSlug}/space/${currentSpaceSlug}/commands/${commandId}/edit`,
+      );
+    },
   };
 
   /**
