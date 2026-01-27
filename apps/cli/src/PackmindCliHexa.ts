@@ -49,6 +49,10 @@ import {
   ISetupMcpCommand,
   ISetupMcpResult,
 } from './domain/useCases/ISetupMcpUseCase';
+import {
+  IAggressiveOnboardingCommand,
+  IAggressiveOnboardingResult,
+} from './domain/useCases/IAggressiveOnboardingUseCase';
 import { AllConfigsResult, HierarchicalConfigResult } from '@packmind/types';
 import { logWarningConsole } from './infra/utils/consoleLogger';
 import {
@@ -263,5 +267,11 @@ export class PackmindCliHexa {
 
   public getPackmindGateway() {
     return this.hexa.repositories.packmindGateway;
+  }
+
+  public async aggressiveOnboarding(
+    command: IAggressiveOnboardingCommand,
+  ): Promise<IAggressiveOnboardingResult> {
+    return this.hexa.useCases.aggressiveOnboarding.execute(command);
   }
 }
