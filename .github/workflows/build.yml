@@ -265,6 +265,38 @@ jobs:
         run: node dist/apps/cli/main.cjs --version
         shell: bash
 
+      - name: Test login command (ESM import test)
+        run: |
+          # Run login command with a short timeout
+          # On the unfixed version, this will fail immediately with ERR_REQUIRE_ESM
+          # On the fixed version, it will timeout waiting for user input (which is expected)
+          node -e "
+            const { spawn } = require('child_process');
+            const proc = spawn('node', ['dist/apps/cli/main.cjs', 'login'], {
+              stdio: 'inherit',
+              shell: true
+            });
+            setTimeout(() => {
+              console.log('✓ Login command started successfully (no ESM import error)');
+              proc.kill();
+              process.exit(0);
+            }, 3000);
+            proc.on('error', (err) => {
+              console.error('✗ Process spawn error:', err.message);
+              process.exit(1);
+            });
+            proc.on('exit', (code, signal) => {
+              if (signal === 'SIGTERM' || signal === 'SIGKILL') {
+                process.exit(0);
+              }
+              if (code !== 0) {
+                console.error('✗ Login command failed with exit code:', code);
+                process.exit(1);
+              }
+            });
+          "
+        shell: bash
+
       - name: Test native executable (Linux)
         if: matrix.is-primary
         run: ./dist/apps/cli-executables/${{ matrix.test-executable }} --version
