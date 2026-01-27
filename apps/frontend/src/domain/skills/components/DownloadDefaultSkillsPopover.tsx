@@ -10,6 +10,7 @@ import {
 import { CodingAgent } from '@packmind/types';
 import { RiClaudeLine } from 'react-icons/ri';
 import { VscVscode } from 'react-icons/vsc';
+import { CursorIcon } from '@packmind/assets/icons/CursorIcon';
 import { useAnalytics } from '@packmind/proprietary/frontend/domain/amplitude/providers/AnalyticsProvider';
 
 export const DownloadDefaultSkillsPopover = () => {
@@ -48,7 +49,7 @@ export const DownloadDefaultSkillsPopover = () => {
         </PMButton>
       </PMPopover.Trigger>
       <PMPopover.Positioner>
-        <PMPopover.Content width="320px">
+        <PMPopover.Content width="380px">
           <PMPopover.Arrow>
             <PMPopover.ArrowTip />
           </PMPopover.Arrow>
@@ -87,6 +88,16 @@ export const DownloadDefaultSkillsPopover = () => {
                   >
                     <PMIcon as={VscVscode} />
                     Copilot
+                  </PMButton>
+                  <PMButton
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleDownloadSkillsForAgent('cursor')}
+                    loading={downloadingAgent === 'cursor'}
+                    disabled={downloadingAgent !== null}
+                  >
+                    <PMIcon as={CursorIcon} />
+                    Cursor
                   </PMButton>
                 </PMHStack>
               </PMVStack>

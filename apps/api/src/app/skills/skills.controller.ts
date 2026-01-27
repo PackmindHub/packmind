@@ -60,4 +60,26 @@ export class PublicSkillsController {
       )
       .send(Buffer.from(result.fileContent, 'base64'));
   }
+
+  @Public()
+  @Get('cursor')
+  async downloadCursorDefaultSkills(@Res() response: Response): Promise<void> {
+    this.logger.info('GET /skills/cursor - Downloading Cursor default skills');
+
+    const result =
+      await this.skillsService.downloadDefaultSkillsZipForAgent('cursor');
+
+    this.logger.info(
+      'GET /skills/cursor - Cursor default skills zip created successfully',
+      { fileName: result.fileName },
+    );
+
+    response
+      .setHeader('Content-Type', 'application/zip')
+      .setHeader(
+        'Content-Disposition',
+        `attachment; filename="${result.fileName}"`,
+      )
+      .send(Buffer.from(result.fileContent, 'base64'));
+  }
 }
