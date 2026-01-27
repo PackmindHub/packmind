@@ -8,6 +8,7 @@ import {
   logConsole,
   logWarningConsole,
 } from '../utils/consoleLogger';
+import { AgentInstructionsService } from '../../application/services/AgentInstructionsService';
 
 export const onboardCommand = command({
   name: 'onboard',
@@ -129,8 +130,44 @@ export const onboardCommand = command({
           }
         }
 
+        // Write enhancement instructions to all agent config files
+        const instructionsService = new AgentInstructionsService();
+        const instructionsResult =
+          await instructionsService.writeToAllAgentConfigs(
+            targetPath,
+            writeResult,
+            result.scanResult,
+          );
+
         logConsole('\n');
         logSuccessConsole('Onboarding complete!');
+
+        // Show agent config files that were updated
+        if (
+          instructionsResult.filesCreated.length > 0 ||
+          instructionsResult.filesUpdated.length > 0
+        ) {
+          logConsole('\n');
+          logInfoConsole('Enhancement instructions added to:');
+
+          for (const file of instructionsResult.filesCreated) {
+            logConsole(`    + ${file} (created)`);
+          }
+          for (const file of instructionsResult.filesUpdated) {
+            logConsole(`    ~ ${file} (updated)`);
+          }
+
+          logConsole('\n');
+          logConsole(
+            'Your AI agent will automatically see these instructions and enhance the generated files.',
+          );
+        }
+
+        if (instructionsResult.errors.length > 0) {
+          for (const error of instructionsResult.errors) {
+            logWarningConsole(error);
+          }
+        }
       }
     } catch (error) {
       if (error instanceof Error) {
