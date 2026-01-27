@@ -76,23 +76,11 @@ export class GetSkillsDeploymentOverviewUseCase implements IGetSkillDeploymentOv
       const activeSkills = activeSkillsPerSpace.flat();
       const activeSkillIds = new Set(activeSkills.map((s) => s.id));
 
-      // Extract all skill IDs from distributions to identify deleted skills
-      const distributedSkillIds = new Set<SkillId>();
-      for (const distribution of distributions) {
-        for (const dp of distribution.distributedPackages) {
-          if (dp.skillVersions) {
-            for (const sv of dp.skillVersions) {
-              if (sv && sv.skillId) {
-                distributedSkillIds.add(sv.skillId);
-              }
-            }
-          }
-        }
-      }
-
-      // Find skill IDs that were distributed but are no longer active (deleted)
-      const deletedSkillIds = Array.from(distributedSkillIds).filter(
-        (id) => !activeSkillIds.has(id),
+      // Find skill IDs that are deleted but still effectively deployed
+      // (only considering latest distribution per package per target)
+      const deletedSkillIds = this.computeDeletedSkillIdsStillDeployed(
+        distributions,
+        activeSkillIds,
       );
 
       // Fetch deleted skills if any exist
@@ -658,5 +646,107 @@ export class GetSkillsDeploymentOverviewUseCase implements IGetSkillDeploymentOv
     });
 
     return deploymentInfos;
+  }
+
+  /**
+   * Computes deleted skill IDs that are still effectively deployed.
+   * A deleted skill is considered "still deployed" only if ALL packages that
+   * ever contained it still have it in their latest distribution.
+   *
+   * If ANY package that previously contained the skill has been redistributed
+   * without the skill, the skill is excluded from the result.
+   */
+  private computeDeletedSkillIdsStillDeployed(
+    distributions: Distribution[],
+    activeSkillIds: Set<SkillId>,
+  ): SkillId[] {
+    // Group distributions by target
+    const targetDistributions = new Map<string, Distribution[]>();
+    for (const distribution of distributions) {
+      if (distribution.target) {
+        const targetId = distribution.target.id;
+        if (!targetDistributions.has(targetId)) {
+          targetDistributions.set(targetId, []);
+        }
+        const targetDists = targetDistributions.get(targetId);
+        if (targetDists) {
+          targetDists.push(distribution);
+        }
+      }
+    }
+
+    // Collect skill IDs that are still effectively deployed across all targets
+    const effectivelyDeployedSkillIds = new Set<SkillId>();
+
+    for (const [, targetDists] of targetDistributions) {
+      // Sort distributions newest first
+      const sortedDistributions = [...targetDists].sort(
+        (a, b) =>
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+      );
+
+      // First pass: Track which packages EVER had each skill (from ALL distributions)
+      const packagesPerSkill = new Map<SkillId, Set<PackageId>>();
+      for (const distribution of sortedDistributions) {
+        for (const dp of distribution.distributedPackages) {
+          if (!dp || !dp.skillVersions || dp.operation === 'remove') continue;
+          for (const sv of dp.skillVersions) {
+            if (!sv || !sv.skillId) continue;
+            if (!packagesPerSkill.has(sv.skillId)) {
+              packagesPerSkill.set(sv.skillId, new Set());
+            }
+            packagesPerSkill.get(sv.skillId)!.add(dp.packageId);
+          }
+        }
+      }
+
+      // Second pass: Track the LATEST distribution per package (skills in that latest dist)
+      const latestSkillsPerPackage = new Map<PackageId, Set<SkillId>>();
+      for (const distribution of sortedDistributions) {
+        for (const dp of distribution.distributedPackages) {
+          if (!dp || !dp.skillVersions) continue;
+          // Only keep the first (latest) occurrence of each package
+          if (!latestSkillsPerPackage.has(dp.packageId)) {
+            const skillIds = new Set<SkillId>();
+            // Skip packages with 'remove' operation - they have no skills
+            if (dp.operation !== 'remove') {
+              for (const sv of dp.skillVersions) {
+                if (sv && sv.skillId) {
+                  skillIds.add(sv.skillId);
+                }
+              }
+            }
+            latestSkillsPerPackage.set(dp.packageId, skillIds);
+          }
+        }
+      }
+
+      // Third pass: For each skill, check if ALL packages that ever had it still have it
+      for (const [skillId, packagesThatHadSkill] of packagesPerSkill) {
+        // Skip active skills
+        if (activeSkillIds.has(skillId)) continue;
+
+        // Check if ANY package that ever had this skill no longer has it
+        let allPackagesStillHaveSkill = true;
+        for (const packageId of packagesThatHadSkill) {
+          const latestSkills = latestSkillsPerPackage.get(packageId);
+          if (!latestSkills || !latestSkills.has(skillId)) {
+            // This package's latest distribution doesn't have the skill
+            allPackagesStillHaveSkill = false;
+            break;
+          }
+        }
+
+        // Only include if ALL packages that ever had it still have it in latest
+        if (allPackagesStillHaveSkill) {
+          effectivelyDeployedSkillIds.add(skillId);
+        }
+      }
+    }
+
+    // Return skills that are effectively deployed but no longer active
+    return Array.from(effectivelyDeployedSkillIds).filter(
+      (id) => !activeSkillIds.has(id),
+    );
   }
 }

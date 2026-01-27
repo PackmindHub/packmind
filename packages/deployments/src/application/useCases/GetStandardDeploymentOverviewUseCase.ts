@@ -76,23 +76,11 @@ export class GetStandardDeploymentOverviewUseCase implements IGetStandardDeploym
       const activeStandards = activeStandardsPerSpace.flat();
       const activeStandardIds = new Set(activeStandards.map((s) => s.id));
 
-      // Extract all standard IDs from distributions to identify deleted standards
-      const distributedStandardIds = new Set<StandardId>();
-      for (const distribution of distributions) {
-        for (const dp of distribution.distributedPackages) {
-          if (dp.standardVersions) {
-            for (const sv of dp.standardVersions) {
-              if (sv && sv.standardId) {
-                distributedStandardIds.add(sv.standardId);
-              }
-            }
-          }
-        }
-      }
-
-      // Find standard IDs that were distributed but are no longer active (deleted)
-      const deletedStandardIds = Array.from(distributedStandardIds).filter(
-        (id) => !activeStandardIds.has(id),
+      // Find standard IDs that are deleted but still effectively deployed
+      // (only considering latest distribution per package per target)
+      const deletedStandardIds = this.computeDeletedStandardIdsStillDeployed(
+        distributions,
+        activeStandardIds,
       );
 
       // Fetch deleted standards if any exist
@@ -659,5 +647,108 @@ export class GetStandardDeploymentOverviewUseCase implements IGetStandardDeploym
     });
 
     return deploymentInfos;
+  }
+
+  /**
+   * Computes deleted standard IDs that are still effectively deployed.
+   * A deleted standard is considered "still deployed" only if ALL packages that
+   * ever contained it still have it in their latest distribution.
+   *
+   * If ANY package that previously contained the standard has been redistributed
+   * without the standard, the standard is excluded from the result.
+   */
+  private computeDeletedStandardIdsStillDeployed(
+    distributions: Distribution[],
+    activeStandardIds: Set<StandardId>,
+  ): StandardId[] {
+    // Group distributions by target
+    const targetDistributions = new Map<string, Distribution[]>();
+    for (const distribution of distributions) {
+      if (distribution.target) {
+        const targetId = distribution.target.id;
+        if (!targetDistributions.has(targetId)) {
+          targetDistributions.set(targetId, []);
+        }
+        const targetDists = targetDistributions.get(targetId);
+        if (targetDists) {
+          targetDists.push(distribution);
+        }
+      }
+    }
+
+    // Collect standard IDs that are still effectively deployed across all targets
+    const effectivelyDeployedStandardIds = new Set<StandardId>();
+
+    for (const [, targetDists] of targetDistributions) {
+      // Sort distributions newest first
+      const sortedDistributions = [...targetDists].sort(
+        (a, b) =>
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+      );
+
+      // First pass: Track which packages EVER had each standard (from ALL distributions)
+      const packagesPerStandard = new Map<StandardId, Set<PackageId>>();
+      for (const distribution of sortedDistributions) {
+        for (const dp of distribution.distributedPackages) {
+          if (!dp || !dp.standardVersions || dp.operation === 'remove')
+            continue;
+          for (const sv of dp.standardVersions) {
+            if (!sv || !sv.standardId) continue;
+            if (!packagesPerStandard.has(sv.standardId)) {
+              packagesPerStandard.set(sv.standardId, new Set());
+            }
+            packagesPerStandard.get(sv.standardId)!.add(dp.packageId);
+          }
+        }
+      }
+
+      // Second pass: Track the LATEST distribution per package (standards in that latest dist)
+      const latestStandardsPerPackage = new Map<PackageId, Set<StandardId>>();
+      for (const distribution of sortedDistributions) {
+        for (const dp of distribution.distributedPackages) {
+          if (!dp || !dp.standardVersions) continue;
+          // Only keep the first (latest) occurrence of each package
+          if (!latestStandardsPerPackage.has(dp.packageId)) {
+            const standardIds = new Set<StandardId>();
+            // Skip packages with 'remove' operation - they have no standards
+            if (dp.operation !== 'remove') {
+              for (const sv of dp.standardVersions) {
+                if (sv && sv.standardId) {
+                  standardIds.add(sv.standardId);
+                }
+              }
+            }
+            latestStandardsPerPackage.set(dp.packageId, standardIds);
+          }
+        }
+      }
+
+      // Third pass: For each standard, check if ALL packages that ever had it still have it
+      for (const [standardId, packagesThatHadStandard] of packagesPerStandard) {
+        // Skip active standards
+        if (activeStandardIds.has(standardId)) continue;
+
+        // Check if ANY package that ever had this standard no longer has it
+        let allPackagesStillHaveStandard = true;
+        for (const packageId of packagesThatHadStandard) {
+          const latestStandards = latestStandardsPerPackage.get(packageId);
+          if (!latestStandards || !latestStandards.has(standardId)) {
+            // This package's latest distribution doesn't have the standard
+            allPackagesStillHaveStandard = false;
+            break;
+          }
+        }
+
+        // Only include if ALL packages that ever had it still have it in latest
+        if (allPackagesStillHaveStandard) {
+          effectivelyDeployedStandardIds.add(standardId);
+        }
+      }
+    }
+
+    // Return standards that are effectively deployed but no longer active
+    return Array.from(effectivelyDeployedStandardIds).filter(
+      (id) => !activeStandardIds.has(id),
+    );
   }
 }

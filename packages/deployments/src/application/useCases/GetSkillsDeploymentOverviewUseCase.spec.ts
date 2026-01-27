@@ -367,6 +367,218 @@ describe('GetSkillsDeploymentOverviewUseCase', () => {
     });
   });
 
+  describe('when a deleted skill was in multiple packages and one package is redistributed without it', () => {
+    const mockGitRepo = gitRepoFactory();
+    const mockTarget = targetFactory({ gitRepoId: mockGitRepo.id });
+    const mockDeletedSkill = skillFactory({
+      id: createSkillId('deleted-shared-skill'),
+      name: 'Deleted Shared Skill',
+      version: 1,
+    });
+    const mockSpace: Space = {
+      id: createSpaceId('space-1'),
+      name: 'Global',
+      slug: 'global',
+      organizationId,
+    };
+    const packageIdA = createPackageId('package-a');
+    const packageIdB = createPackageId('package-b');
+
+    let result: SkillDeploymentOverview;
+
+    beforeEach(async () => {
+      const command: GetSkillDeploymentOverviewCommand = {
+        organizationId,
+        userId,
+      };
+
+      const skillVersion = skillVersionFactory({
+        skillId: mockDeletedSkill.id,
+        version: 1,
+      });
+
+      // Package A: first distribution has deleted skill
+      const packageAFirstDist = createDistributionWithSkills({
+        organizationId,
+        target: mockTarget,
+        status: DistributionStatus.success,
+        skillVersions: [skillVersion],
+        createdAt: '2024-01-01T00:00:00Z',
+        packageId: packageIdA,
+      });
+
+      // Package B: has deleted skill
+      const packageBDist = createDistributionWithSkills({
+        organizationId,
+        target: mockTarget,
+        status: DistributionStatus.success,
+        skillVersions: [skillVersion],
+        createdAt: '2024-01-02T00:00:00Z',
+        packageId: packageIdB,
+      });
+
+      // Package A: redistributed WITHOUT the skill (after deletion)
+      const packageASecondDist = createDistributionWithSkills({
+        organizationId,
+        target: mockTarget,
+        status: DistributionStatus.success,
+        skillVersions: [], // Skill removed after deletion
+        createdAt: '2024-01-03T00:00:00Z',
+        packageId: packageIdA,
+      });
+
+      mockDistributionRepository.listByOrganizationIdWithStatus.mockResolvedValue(
+        [packageAFirstDist, packageBDist, packageASecondDist],
+      );
+      mockSpacesPort.listSpacesByOrganization.mockResolvedValue([mockSpace]);
+
+      // The skill is deleted (not active) and Package A was redistributed without it,
+      // so the skill should NOT appear at all (no need to fetch deleted skills)
+      mockSkillsPort.listSkillsBySpace.mockResolvedValue([]);
+
+      mockGitPort.getOrganizationRepositories.mockResolvedValue([mockGitRepo]);
+
+      result = await useCase.execute(command);
+    });
+
+    it('does not show deleted skill because Package A was redistributed without it', () => {
+      // Even though Package B's latest distribution still has the skill,
+      // the skill should NOT appear because Package A (which also had it)
+      // was redistributed without it. A deleted skill only shows if ALL
+      // packages that ever had it still have it in their latest distribution.
+      expect(result.skills).toHaveLength(0);
+    });
+
+    it('calls listSkillsBySpace only once', () => {
+      // Since no deleted skills pass the filter (Package A was redistributed without it),
+      // we should not fetch deleted skills at all
+      expect(mockSkillsPort.listSkillsBySpace).toHaveBeenCalledTimes(1);
+    });
+
+    it('does not call listSkillsBySpace with includeDeleted', () => {
+      expect(mockSkillsPort.listSkillsBySpace).not.toHaveBeenCalledWith(
+        expect.anything(),
+        expect.anything(),
+        expect.anything(),
+        { includeDeleted: true },
+      );
+    });
+  });
+
+  describe('when a deleted skill was in multiple packages and all packages are redistributed without it', () => {
+    const mockGitRepo = gitRepoFactory();
+    const mockTarget = targetFactory({ gitRepoId: mockGitRepo.id });
+    const mockDeletedSkill = skillFactory({
+      id: createSkillId('deleted-orphan-skill'),
+      name: 'Deleted Orphan Skill',
+      version: 1,
+    });
+    const mockSpace: Space = {
+      id: createSpaceId('space-1'),
+      name: 'Global',
+      slug: 'global',
+      organizationId,
+    };
+    const packageIdA = createPackageId('package-a');
+    const packageIdB = createPackageId('package-b');
+
+    let result: SkillDeploymentOverview;
+
+    beforeEach(async () => {
+      const command: GetSkillDeploymentOverviewCommand = {
+        organizationId,
+        userId,
+      };
+
+      const skillVersion = skillVersionFactory({
+        skillId: mockDeletedSkill.id,
+        version: 1,
+      });
+
+      // Package A: first distribution has deleted skill
+      const packageAFirstDist = createDistributionWithSkills({
+        organizationId,
+        target: mockTarget,
+        status: DistributionStatus.success,
+        skillVersions: [skillVersion],
+        createdAt: '2024-01-01T00:00:00Z',
+        packageId: packageIdA,
+      });
+
+      // Package B: first distribution has deleted skill
+      const packageBFirstDist = createDistributionWithSkills({
+        organizationId,
+        target: mockTarget,
+        status: DistributionStatus.success,
+        skillVersions: [skillVersion],
+        createdAt: '2024-01-02T00:00:00Z',
+        packageId: packageIdB,
+      });
+
+      // Package A: redistributed WITHOUT the skill (after deletion)
+      const packageASecondDist = createDistributionWithSkills({
+        organizationId,
+        target: mockTarget,
+        status: DistributionStatus.success,
+        skillVersions: [], // Skill removed after deletion
+        createdAt: '2024-01-03T00:00:00Z',
+        packageId: packageIdA,
+      });
+
+      // Package B: ALSO redistributed WITHOUT the skill (after deletion)
+      const packageBSecondDist = createDistributionWithSkills({
+        organizationId,
+        target: mockTarget,
+        status: DistributionStatus.success,
+        skillVersions: [], // Skill removed after deletion
+        createdAt: '2024-01-04T00:00:00Z',
+        packageId: packageIdB,
+      });
+
+      mockDistributionRepository.listByOrganizationIdWithStatus.mockResolvedValue(
+        [
+          packageAFirstDist,
+          packageBFirstDist,
+          packageASecondDist,
+          packageBSecondDist,
+        ],
+      );
+      mockSpacesPort.listSpacesByOrganization.mockResolvedValue([mockSpace]);
+
+      // The skill is deleted (not active), so only returns active skills
+      mockSkillsPort.listSkillsBySpace.mockResolvedValue([]);
+
+      mockGitPort.getOrganizationRepositories.mockResolvedValue([mockGitRepo]);
+
+      result = await useCase.execute(command);
+    });
+
+    it('does not show deleted skill because no package has it in latest distribution', () => {
+      // Both Package A and Package B have been redistributed without the skill
+      // So the deleted skill should NOT appear in the overview at all
+      expect(result.skills).toHaveLength(0);
+    });
+
+    it('does not show skill in targets view', () => {
+      expect(result.targets[0].deployedSkills).toHaveLength(0);
+    });
+
+    it('calls listSkillsBySpace only once', () => {
+      // Since no deleted skills are still effectively deployed,
+      // we should not fetch deleted skills
+      expect(mockSkillsPort.listSkillsBySpace).toHaveBeenCalledTimes(1);
+    });
+
+    it('does not call listSkillsBySpace with includeDeleted', () => {
+      expect(mockSkillsPort.listSkillsBySpace).not.toHaveBeenCalledWith(
+        expect.anything(),
+        expect.anything(),
+        expect.anything(),
+        { includeDeleted: true },
+      );
+    });
+  });
+
   describe('when a package is redistributed without a skill', () => {
     const mockGitRepo = gitRepoFactory();
     const mockTarget = targetFactory({ gitRepoId: mockGitRepo.id });

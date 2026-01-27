@@ -82,23 +82,11 @@ export class GetDeploymentOverviewUseCase implements IGetDeploymentOverview {
       const activeRecipes = activeRecipesPerSpace.flat();
       const activeRecipeIds = new Set(activeRecipes.map((r) => r.id));
 
-      // Extract all recipe IDs from distributions to identify deleted recipes
-      const distributedRecipeIds = new Set<RecipeId>();
-      for (const distribution of distributions) {
-        for (const dp of distribution.distributedPackages) {
-          if (dp.recipeVersions) {
-            for (const rv of dp.recipeVersions) {
-              if (rv && rv.recipeId) {
-                distributedRecipeIds.add(rv.recipeId);
-              }
-            }
-          }
-        }
-      }
-
-      // Find recipe IDs that were distributed but are no longer active (deleted)
-      const deletedRecipeIds = Array.from(distributedRecipeIds).filter(
-        (id) => !activeRecipeIds.has(id),
+      // Find recipe IDs that are deleted but still effectively deployed
+      // (only considering latest distribution per package per target)
+      const deletedRecipeIds = this.computeDeletedRecipeIdsStillDeployed(
+        distributions,
+        activeRecipeIds,
       );
 
       // Fetch deleted recipes if any exist
@@ -655,5 +643,107 @@ export class GetDeploymentOverviewUseCase implements IGetDeploymentOverview {
     }
 
     return targetStatuses;
+  }
+
+  /**
+   * Computes deleted recipe IDs that are still effectively deployed.
+   * A deleted recipe is considered "still deployed" only if ALL packages that
+   * ever contained it still have it in their latest distribution.
+   *
+   * If ANY package that previously contained the recipe has been redistributed
+   * without the recipe, the recipe is excluded from the result.
+   */
+  private computeDeletedRecipeIdsStillDeployed(
+    distributions: Distribution[],
+    activeRecipeIds: Set<RecipeId>,
+  ): RecipeId[] {
+    // Group distributions by target
+    const targetDistributions = new Map<string, Distribution[]>();
+    for (const distribution of distributions) {
+      if (distribution.target) {
+        const targetId = distribution.target.id;
+        if (!targetDistributions.has(targetId)) {
+          targetDistributions.set(targetId, []);
+        }
+        const targetDists = targetDistributions.get(targetId);
+        if (targetDists) {
+          targetDists.push(distribution);
+        }
+      }
+    }
+
+    // Collect recipe IDs that are still effectively deployed across all targets
+    const effectivelyDeployedRecipeIds = new Set<RecipeId>();
+
+    for (const [, targetDists] of targetDistributions) {
+      // Sort distributions newest first
+      const sortedDistributions = [...targetDists].sort(
+        (a, b) =>
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+      );
+
+      // First pass: Track which packages EVER had each recipe (from ALL distributions)
+      const packagesPerRecipe = new Map<RecipeId, Set<PackageId>>();
+      for (const distribution of sortedDistributions) {
+        for (const dp of distribution.distributedPackages) {
+          if (!dp || !dp.recipeVersions || dp.operation === 'remove') continue;
+          for (const rv of dp.recipeVersions) {
+            if (!rv || !rv.recipeId) continue;
+            if (!packagesPerRecipe.has(rv.recipeId)) {
+              packagesPerRecipe.set(rv.recipeId, new Set());
+            }
+            packagesPerRecipe.get(rv.recipeId)!.add(dp.packageId);
+          }
+        }
+      }
+
+      // Second pass: Track the LATEST distribution per package (recipes in that latest dist)
+      const latestRecipesPerPackage = new Map<PackageId, Set<RecipeId>>();
+      for (const distribution of sortedDistributions) {
+        for (const dp of distribution.distributedPackages) {
+          if (!dp || !dp.recipeVersions) continue;
+          // Only keep the first (latest) occurrence of each package
+          if (!latestRecipesPerPackage.has(dp.packageId)) {
+            const recipeIds = new Set<RecipeId>();
+            // Skip packages with 'remove' operation - they have no recipes
+            if (dp.operation !== 'remove') {
+              for (const rv of dp.recipeVersions) {
+                if (rv && rv.recipeId) {
+                  recipeIds.add(rv.recipeId);
+                }
+              }
+            }
+            latestRecipesPerPackage.set(dp.packageId, recipeIds);
+          }
+        }
+      }
+
+      // Third pass: For each recipe, check if ALL packages that ever had it still have it
+      for (const [recipeId, packagesThatHadRecipe] of packagesPerRecipe) {
+        // Skip active recipes
+        if (activeRecipeIds.has(recipeId)) continue;
+
+        // Check if ANY package that ever had this recipe no longer has it
+        let allPackagesStillHaveRecipe = true;
+        for (const packageId of packagesThatHadRecipe) {
+          const latestRecipes = latestRecipesPerPackage.get(packageId);
+          if (!latestRecipes || !latestRecipes.has(recipeId)) {
+            // This package's latest distribution doesn't have the recipe
+            allPackagesStillHaveRecipe = false;
+            break;
+          }
+        }
+
+        // Only include if ALL packages that ever had it still have it in latest
+        if (allPackagesStillHaveRecipe) {
+          effectivelyDeployedRecipeIds.add(recipeId);
+        }
+      }
+    }
+
+    // Return recipes that are effectively deployed but no longer active
+    return Array.from(effectivelyDeployedRecipeIds).filter(
+      (id) => !activeRecipeIds.has(id),
+    );
   }
 }
