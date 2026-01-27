@@ -23,6 +23,8 @@ import {
   CreateStandardResult,
   StandardRule,
   AddExampleCommand,
+  CreateCommandCommand,
+  CreateCommandResult,
 } from '../../domain/repositories/IPackmindGateway';
 import { readSkillDirectory } from '../utils/readSkillDirectory';
 import { CommunityEditionError } from '../../domain/errors/CommunityEditionError';
@@ -1281,6 +1283,17 @@ export class PackmindGateway implements IPackmindGateway {
           negative: example.negative,
         },
       },
+    );
+  };
+
+  public createCommand = async (
+    spaceId: string,
+    data: CreateCommandCommand,
+  ): Promise<CreateCommandResult> => {
+    const { organizationId } = this.httpClient.getAuthContext();
+    return this.httpClient.request<CreateCommandResult>(
+      `/api/v0/organizations/${organizationId}/spaces/${spaceId}/recipes`,
+      { method: 'POST', body: data },
     );
   };
 }
