@@ -98,6 +98,7 @@ describe('CreateStandardFromPlaybookUseCase', () => {
       expect(result).toEqual({ standardId: 'std-1', name: 'Test Standard' });
     });
 
+<<<<<<< HEAD
     describe('when rules have no examples', () => {
       beforeEach(async () => {
         mockGateway.getGlobalSpace.mockResolvedValue({

@@ -206,7 +206,14 @@ export type CreateStandardInSpaceCommand = {
   name: string;
   description: string;
   scope: string;
-  rules: Array<{ content: string }>;
+  rules: Array<{
+    content: string;
+    examples?: {
+      language: string;
+      positive: string;
+      negative: string;
+    };
+  }>;
 };
 
 export type CreateStandardInSpaceResult = {
@@ -223,6 +230,12 @@ export type RuleExample = {
   language: string;
   positive: string;
   negative: string;
+};
+
+// Global space type (used by createCommand)
+export type GetGlobalSpaceResult = {
+  id: string;
+  slug: string;
 };
 
 // Global space type (used by createCommand)
