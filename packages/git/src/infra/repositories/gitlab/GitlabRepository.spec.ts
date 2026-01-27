@@ -100,8 +100,12 @@ describe('GitlabRepository', () => {
       let result: Awaited<ReturnType<typeof gitlabRepository.commitFiles>>;
 
       beforeEach(async () => {
-        mockAxiosInstance.get.mockResolvedValue({
-          status: 404,
+        // Mock tree API to return empty (files don't exist)
+        mockAxiosInstance.get.mockImplementation((url: string) => {
+          if (url.includes('/repository/tree')) {
+            return Promise.resolve({ data: [], headers: {} });
+          }
+          return Promise.reject({ response: { status: 404 } });
         });
 
         mockAxiosInstance.post.mockResolvedValue({
@@ -114,6 +118,14 @@ describe('GitlabRepository', () => {
         });
 
         result = await gitlabRepository.commitFiles(files, commitMessage);
+      });
+
+      it('fetches tree API first', () => {
+        const treeCalls = mockAxiosInstance.get.mock.calls.filter(
+          (call) =>
+            typeof call[0] === 'string' && call[0].includes('/repository/tree'),
+        );
+        expect(treeCalls.length).toBeGreaterThanOrEqual(1);
       });
 
       it('calls API with create actions for new files', () => {
@@ -146,11 +158,24 @@ describe('GitlabRepository', () => {
       let result: Awaited<ReturnType<typeof gitlabRepository.commitFiles>>;
 
       beforeEach(async () => {
-        mockAxiosInstance.get.mockResolvedValue({
-          data: {
-            blob_id: 'existing-blob-id',
-            content: Buffer.from('old-content').toString('base64'),
-          },
+        mockAxiosInstance.get.mockImplementation((url: string) => {
+          if (url.includes('/repository/tree')) {
+            // Tree shows file exists
+            return Promise.resolve({
+              data: [{ path: 'existing-file.txt', type: 'blob' }],
+              headers: {},
+            });
+          }
+          if (url.includes('/repository/files/')) {
+            // getFileOnRepo returns content for diff check
+            return Promise.resolve({
+              data: {
+                blob_id: 'existing-blob-id',
+                content: Buffer.from('old-content').toString('base64'),
+              },
+            });
+          }
+          return Promise.reject({ response: { status: 404 } });
         });
 
         mockAxiosInstance.post.mockResolvedValue({
@@ -163,6 +188,23 @@ describe('GitlabRepository', () => {
         });
 
         result = await gitlabRepository.commitFiles(files, commitMessage);
+      });
+
+      it('fetches tree API first', () => {
+        const treeCalls = mockAxiosInstance.get.mock.calls.filter(
+          (call) =>
+            typeof call[0] === 'string' && call[0].includes('/repository/tree'),
+        );
+        expect(treeCalls.length).toBeGreaterThanOrEqual(1);
+      });
+
+      it('calls getFileOnRepo to check content changes', () => {
+        const fileCalls = mockAxiosInstance.get.mock.calls.filter(
+          (call) =>
+            typeof call[0] === 'string' &&
+            call[0].includes('/repository/files/'),
+        );
+        expect(fileCalls).toHaveLength(1);
       });
 
       it('calls API with update action for existing files', () => {
@@ -197,12 +239,22 @@ describe('GitlabRepository', () => {
         const files = [{ path: 'file1.txt', content: 'existing-content' }];
         const commitMessage = 'Test commit';
 
-        // Mock getFileOnRepo to return existing content
-        mockAxiosInstance.get.mockResolvedValue({
-          data: {
-            blob_id: 'existing-blob-id',
-            content: Buffer.from('existing-content').toString('base64'),
-          },
+        mockAxiosInstance.get.mockImplementation((url: string) => {
+          if (url.includes('/repository/tree')) {
+            return Promise.resolve({
+              data: [{ path: 'file1.txt', type: 'blob' }],
+              headers: {},
+            });
+          }
+          if (url.includes('/repository/files/')) {
+            return Promise.resolve({
+              data: {
+                blob_id: 'existing-blob-id',
+                content: Buffer.from('existing-content').toString('base64'),
+              },
+            });
+          }
+          return Promise.reject({ response: { status: 404 } });
         });
 
         const result = await gitlabRepository.commitFiles(files, commitMessage);
@@ -228,7 +280,12 @@ describe('GitlabRepository', () => {
       it('throws error', async () => {
         const files = [{ path: 'file1.txt', content: 'content1' }];
 
-        mockAxiosInstance.get.mockResolvedValue({ status: 404 });
+        mockAxiosInstance.get.mockImplementation((url: string) => {
+          if (url.includes('/repository/tree')) {
+            return Promise.resolve({ data: [], headers: {} });
+          }
+          return Promise.reject({ response: { status: 404 } });
+        });
         mockAxiosInstance.post.mockRejectedValue(new Error('Commit failed'));
 
         await expect(
@@ -240,7 +297,12 @@ describe('GitlabRepository', () => {
     it('throws specific error for insufficient permissions (403)', async () => {
       const files = [{ path: 'file1.txt', content: 'content1' }];
 
-      mockAxiosInstance.get.mockResolvedValue({ status: 404 });
+      mockAxiosInstance.get.mockImplementation((url: string) => {
+        if (url.includes('/repository/tree')) {
+          return Promise.resolve({ data: [], headers: {} });
+        }
+        return Promise.reject({ response: { status: 404 } });
+      });
       const permissionError = {
         response: { status: 403 },
         message: 'Forbidden',
@@ -252,6 +314,54 @@ describe('GitlabRepository', () => {
       ).rejects.toThrow(
         'Insufficient permissions to commit to GitLab repository. Please ensure your token has write access to testowner/testrepo',
       );
+    });
+
+    describe('when path normalization handles leading/trailing slashes', () => {
+      it('treats paths with leading slashes as equivalent', async () => {
+        const files = [{ path: '/path/to/file.txt', content: 'content' }];
+
+        mockAxiosInstance.get.mockImplementation((url: string) => {
+          if (url.includes('/repository/tree')) {
+            // Tree returns path without leading slash
+            return Promise.resolve({
+              data: [{ path: 'path/to/file.txt', type: 'blob' }],
+              headers: {},
+            });
+          }
+          if (url.includes('/repository/files/')) {
+            return Promise.resolve({
+              data: {
+                blob_id: 'existing-blob-id',
+                content: Buffer.from('old-content').toString('base64'),
+              },
+            });
+          }
+          return Promise.reject({ response: { status: 404 } });
+        });
+
+        mockAxiosInstance.post.mockResolvedValue({
+          data: {
+            id: 'commit-sha-normalized',
+            author_email: 'test@example.com',
+            web_url:
+              'https://gitlab.com/testowner/testrepo/-/commit/commit-sha-normalized',
+          },
+        });
+
+        await gitlabRepository.commitFiles(files, 'Test commit');
+
+        expect(mockAxiosInstance.post).toHaveBeenCalledWith(
+          '/projects/testowner%2Ftestrepo/repository/commits',
+          expect.objectContaining({
+            actions: [
+              expect.objectContaining({
+                action: 'update',
+                file_path: '/path/to/file.txt',
+              }),
+            ],
+          }),
+        );
+      });
     });
 
     describe('when deleting files', () => {
@@ -271,6 +381,7 @@ describe('GitlabRepository', () => {
                 { path: 'file-to-delete.txt', type: 'blob' },
                 { path: 'another-file-to-delete.txt', type: 'blob' },
               ],
+              headers: {},
             });
           }
           // For file content check, return 404 (files don't exist)
@@ -337,6 +448,7 @@ describe('GitlabRepository', () => {
               // Only return existing-file.txt in the tree
               return Promise.resolve({
                 data: [{ path: 'existing-file.txt', type: 'blob' }],
+                headers: {},
               });
             }
             return Promise.reject({ response: { status: 404 } });
@@ -384,7 +496,7 @@ describe('GitlabRepository', () => {
           mockAxiosInstance.get.mockImplementation((url: string) => {
             if (url.includes('/repository/tree')) {
               // Return empty tree (no files exist)
-              return Promise.resolve({ data: [] });
+              return Promise.resolve({ data: [], headers: {} });
             }
             return Promise.reject({ response: { status: 404 } });
           });
@@ -454,6 +566,222 @@ describe('GitlabRepository', () => {
             });
           });
         });
+      });
+    });
+
+    describe('when repository tree has multiple pages', () => {
+      describe('when files to delete exist on second page', () => {
+        const deleteFiles = [
+          { path: 'file-on-page-1.txt' },
+          { path: 'file-on-page-2.txt' },
+        ];
+
+        beforeEach(() => {
+          let callCount = 0;
+          mockAxiosInstance.get.mockImplementation((url: string) => {
+            if (url.includes('/repository/tree')) {
+              callCount++;
+              if (callCount === 1) {
+                // First page - return file-on-page-1.txt
+                return Promise.resolve({
+                  data: [{ path: 'file-on-page-1.txt', type: 'blob' }],
+                  headers: { 'x-next-page': '2' },
+                });
+              }
+              // Second page - return file-on-page-2.txt
+              return Promise.resolve({
+                data: [{ path: 'file-on-page-2.txt', type: 'blob' }],
+                headers: {},
+              });
+            }
+            return Promise.reject({ response: { status: 404 } });
+          });
+
+          mockAxiosInstance.post.mockResolvedValue({
+            data: {
+              id: 'commit-sha-paginated',
+              author_email: 'test@example.com',
+              web_url:
+                'https://gitlab.com/testowner/testrepo/-/commit/commit-sha-paginated',
+            },
+          });
+        });
+
+        it('includes files from all pages in deletion', async () => {
+          await gitlabRepository.commitFiles([], 'Delete files', deleteFiles);
+
+          expect(mockAxiosInstance.post).toHaveBeenCalledWith(
+            '/projects/testowner%2Ftestrepo/repository/commits',
+            {
+              branch: 'main',
+              commit_message: 'Delete files',
+              actions: [
+                { action: 'delete', file_path: 'file-on-page-1.txt' },
+                { action: 'delete', file_path: 'file-on-page-2.txt' },
+              ],
+            },
+          );
+        });
+
+        it('fetches multiple pages of tree', async () => {
+          await gitlabRepository.commitFiles([], 'Delete files', deleteFiles);
+
+          const treeCalls = mockAxiosInstance.get.mock.calls.filter(
+            (call) =>
+              typeof call[0] === 'string' &&
+              call[0].includes('/repository/tree'),
+          );
+          expect(treeCalls).toHaveLength(2);
+        });
+      });
+
+      describe('when using Link header for pagination', () => {
+        const deleteFiles = [
+          { path: 'file-page-1.txt' },
+          { path: 'file-page-2.txt' },
+        ];
+
+        beforeEach(() => {
+          let callCount = 0;
+          mockAxiosInstance.get.mockImplementation((url: string) => {
+            if (url.includes('/repository/tree')) {
+              callCount++;
+              if (callCount === 1) {
+                return Promise.resolve({
+                  data: [{ path: 'file-page-1.txt', type: 'blob' }],
+                  headers: {
+                    link: '<https://gitlab.com/api/v4/projects/testowner%2Ftestrepo/repository/tree?page=2>; rel="next"',
+                  },
+                });
+              }
+              return Promise.resolve({
+                data: [{ path: 'file-page-2.txt', type: 'blob' }],
+                headers: {},
+              });
+            }
+            return Promise.reject({ response: { status: 404 } });
+          });
+
+          mockAxiosInstance.post.mockResolvedValue({
+            data: {
+              id: 'commit-sha-link',
+              author_email: 'test@example.com',
+              web_url:
+                'https://gitlab.com/testowner/testrepo/-/commit/commit-sha-link',
+            },
+          });
+        });
+
+        it('follows Link header for pagination', async () => {
+          await gitlabRepository.commitFiles([], 'Delete files', deleteFiles);
+
+          expect(mockAxiosInstance.post).toHaveBeenCalledWith(
+            '/projects/testowner%2Ftestrepo/repository/commits',
+            {
+              branch: 'main',
+              commit_message: 'Delete files',
+              actions: [
+                { action: 'delete', file_path: 'file-page-1.txt' },
+                { action: 'delete', file_path: 'file-page-2.txt' },
+              ],
+            },
+          );
+        });
+      });
+    });
+
+    describe('when files array contains duplicates', () => {
+      it('deduplicates files keeping the last occurrence', async () => {
+        const filesWithDuplicates = [
+          { path: 'AGENTS.md', content: 'first content' },
+          { path: 'file2.txt', content: 'content2' },
+          { path: 'AGENTS.md', content: 'second content' }, // Duplicate - should keep this one
+        ];
+
+        mockAxiosInstance.get.mockImplementation((url: string) => {
+          if (url.includes('/repository/tree')) {
+            return Promise.resolve({ data: [], headers: {} });
+          }
+          return Promise.reject({ response: { status: 404 } });
+        });
+
+        mockAxiosInstance.post.mockResolvedValue({
+          data: {
+            id: 'commit-sha-dedup',
+            author_email: 'test@example.com',
+            web_url:
+              'https://gitlab.com/testowner/testrepo/-/commit/commit-sha-dedup',
+          },
+        });
+
+        await gitlabRepository.commitFiles(
+          filesWithDuplicates,
+          'Commit with duplicates',
+        );
+
+        expect(mockAxiosInstance.post).toHaveBeenCalledWith(
+          '/projects/testowner%2Ftestrepo/repository/commits',
+          {
+            branch: 'main',
+            commit_message: 'Commit with duplicates',
+            actions: [
+              {
+                action: 'create',
+                file_path: 'AGENTS.md',
+                content: 'second content',
+              },
+              { action: 'create', file_path: 'file2.txt', content: 'content2' },
+            ],
+          },
+        );
+      });
+
+      it('deduplicates delete files', async () => {
+        const deleteFilesWithDuplicates = [
+          { path: 'file1.txt' },
+          { path: 'file2.txt' },
+          { path: 'file1.txt' }, // Duplicate
+        ];
+
+        mockAxiosInstance.get.mockImplementation((url: string) => {
+          if (url.includes('/repository/tree')) {
+            return Promise.resolve({
+              data: [
+                { path: 'file1.txt', type: 'blob' },
+                { path: 'file2.txt', type: 'blob' },
+              ],
+              headers: {},
+            });
+          }
+          return Promise.reject({ response: { status: 404 } });
+        });
+
+        mockAxiosInstance.post.mockResolvedValue({
+          data: {
+            id: 'commit-sha-dedup-delete',
+            author_email: 'test@example.com',
+            web_url:
+              'https://gitlab.com/testowner/testrepo/-/commit/commit-sha-dedup-delete',
+          },
+        });
+
+        await gitlabRepository.commitFiles(
+          [],
+          'Delete with duplicates',
+          deleteFilesWithDuplicates,
+        );
+
+        expect(mockAxiosInstance.post).toHaveBeenCalledWith(
+          '/projects/testowner%2Ftestrepo/repository/commits',
+          {
+            branch: 'main',
+            commit_message: 'Delete with duplicates',
+            actions: [
+              { action: 'delete', file_path: 'file1.txt' },
+              { action: 'delete', file_path: 'file2.txt' },
+            ],
+          },
+        );
       });
     });
   });
