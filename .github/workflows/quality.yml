@@ -22,9 +22,6 @@ on:
       SONAR_TOKEN:
         required: true
         description: 'Token for SonarCloud code quality analysis'
-      PACKMIND_API_KEY:
-        required: false
-        description: 'API key for Packmind CLI scanning'
       PACKMIND_API_KEY_V3:
         required: false
         description: 'API key to run new packmind-cli'
@@ -85,29 +82,6 @@ jobs:
         uses: SonarSource/sonarqube-quality-gate-action@v1.2.0
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-
-  packmind:
-    runs-on: ${{ vars.ACTION_RUNNER_TAG || 'self-hosted' }}
-    strategy:
-      matrix:
-        node-version: ["${{ inputs.node-version }}"]
-    name: Packmind CLI scan
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ matrix.node-version }}
-          cache: 'npm'
-      - run: npm install -g packmind-cli
-      - name: Run Packmind cli
-        run: packmind-cli scan "**/*.ts,**/*.tsx" --formatters=raw --errorIfResults=true --spaces="Packmind V3"
-        env:
-          PACKMIND_API_KEY: ${{ secrets.PACKMIND_API_KEY }}
 
   packmind-cli-v3:
     runs-on: ${{ vars.ACTION_RUNNER_TAG || 'self-hosted' }}
