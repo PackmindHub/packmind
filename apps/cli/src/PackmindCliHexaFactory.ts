@@ -44,6 +44,7 @@ import { CommandsGeneratorService } from './application/services/CommandsGenerat
 import { SkillsGeneratorService } from './application/services/SkillsGeneratorService';
 import { SkillsScannerService } from './application/services/SkillsScannerService';
 import { ContentPreviewService } from './application/services/ContentPreviewService';
+import { ContentWriterService } from './application/services/ContentWriterService';
 
 export class PackmindCliHexaFactory {
   public repositories: IPackmindRepositories;
@@ -77,6 +78,7 @@ export class PackmindCliHexaFactory {
       gitRemoteUrlService: new GitService(this.logger),
       linterExecutionUseCase: new ExecuteLinterProgramsUseCase(),
       diffViolationFilterService: new DiffViolationFilterService(),
+      contentWriter: new ContentWriterService(),
     };
 
     this.useCases = {
