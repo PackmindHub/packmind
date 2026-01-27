@@ -1,6 +1,5 @@
 import { PackmindGateway } from './PackmindGateway';
 
-// Shared helper for creating test API keys
 const createTestApiKey = () => {
   const jwt = Buffer.from(
     JSON.stringify({ alg: 'HS256', typ: 'JWT' }),
@@ -23,132 +22,170 @@ const createTestApiKey = () => {
   ).toString('base64');
 };
 
-describe('PackmindGateway.getGlobalSpace', () => {
-  let gateway: PackmindGateway;
-  let result: Awaited<ReturnType<PackmindGateway['getGlobalSpace']>>;
-
-  beforeEach(async () => {
-    global.fetch = jest.fn();
-    gateway = new PackmindGateway(createTestApiKey());
-    (global.fetch as jest.Mock).mockResolvedValueOnce({
-      ok: true,
-      json: jest.fn().mockResolvedValue({ id: 'space-uuid', slug: 'global' }),
-    });
-
-    result = await gateway.getGlobalSpace();
-  });
-
-  it('returns space id and slug', () => {
-    expect(result).toEqual({ id: 'space-uuid', slug: 'global' });
-  });
-
-  it('calls the correct API endpoint', () => {
-    expect(global.fetch).toHaveBeenCalledWith(
-      expect.stringContaining('/spaces/global'),
-      expect.any(Object),
-    );
-  });
-});
-
 describe('PackmindGateway.createStandard', () => {
   let gateway: PackmindGateway;
-  let result: Awaited<ReturnType<PackmindGateway['createStandard']>>;
 
-  beforeEach(async () => {
+  beforeEach(() => {
     global.fetch = jest.fn();
     gateway = new PackmindGateway(createTestApiKey());
-    (global.fetch as jest.Mock).mockResolvedValueOnce({
-      ok: true,
-      json: jest
-        .fn()
-        .mockResolvedValue({ id: 'std-123', name: 'Test Standard' }),
+  });
+
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
+  describe('when creating standard without examples', () => {
+    let result: Awaited<ReturnType<PackmindGateway['createStandard']>>;
+
+    beforeEach(async () => {
+      // Mock getGlobalSpace
+      (global.fetch as jest.Mock).mockResolvedValueOnce({
+        ok: true,
+        json: jest.fn().mockResolvedValue({ id: 'space-uuid', slug: 'global' }),
+      });
+      // Mock createStandard
+      (global.fetch as jest.Mock).mockResolvedValueOnce({
+        ok: true,
+        json: jest
+          .fn()
+          .mockResolvedValue({ id: 'std-123', name: 'Test Standard' }),
+      });
+
+      result = await gateway.createStandard({
+        name: 'Test Standard',
+        description: 'Desc',
+        scope: 'test',
+        rules: [{ content: 'Rule 1' }],
+      });
     });
 
-    result = await gateway.createStandard('space-1', {
-      name: 'Test Standard',
-      description: 'Desc',
-      scope: 'test',
-      rules: [{ content: 'Rule 1' }],
-    });
-  });
-
-  it('returns the created standard', () => {
-    expect(result).toEqual({ id: 'std-123', name: 'Test Standard' });
-  });
-
-  it('calls the correct API endpoint with POST', () => {
-    expect(global.fetch).toHaveBeenCalledWith(
-      expect.stringContaining('/spaces/space-1/standards'),
-      expect.objectContaining({ method: 'POST' }),
-    );
-  });
-});
-
-describe('PackmindGateway.getRulesForStandard', () => {
-  let gateway: PackmindGateway;
-  let result: Awaited<ReturnType<PackmindGateway['getRulesForStandard']>>;
-  const mockRules = [
-    { id: 'rule-1', content: 'Rule 1' },
-    { id: 'rule-2', content: 'Rule 2' },
-  ];
-
-  beforeEach(async () => {
-    global.fetch = jest.fn();
-    gateway = new PackmindGateway(createTestApiKey());
-    (global.fetch as jest.Mock).mockResolvedValueOnce({
-      ok: true,
-      json: jest.fn().mockResolvedValue(mockRules),
+    it('returns standard id and name', () => {
+      expect(result).toEqual({ id: 'std-123', name: 'Test Standard' });
     });
 
-    result = await gateway.getRulesForStandard('space-1', 'std-1');
-  });
-
-  it('returns rules for a standard', () => {
-    expect(result).toEqual(mockRules);
-  });
-
-  it('calls the correct API endpoint', () => {
-    expect(global.fetch).toHaveBeenCalledWith(
-      expect.stringContaining('/spaces/space-1/standards/std-1/rules'),
-      expect.any(Object),
-    );
-  });
-});
-
-describe('PackmindGateway.addExampleToRule', () => {
-  let gateway: PackmindGateway;
-
-  beforeEach(async () => {
-    global.fetch = jest.fn();
-    gateway = new PackmindGateway(createTestApiKey());
-    (global.fetch as jest.Mock).mockResolvedValueOnce({
-      ok: true,
-      json: jest.fn().mockResolvedValue({ id: 'example-1' }),
+    it('calls getGlobalSpace first', () => {
+      expect(global.fetch).toHaveBeenNthCalledWith(
+        1,
+        expect.stringContaining('/spaces/global'),
+        expect.any(Object),
+      );
     });
 
-    await gateway.addExampleToRule('space-1', 'std-1', 'rule-1', {
-      language: 'TYPESCRIPT',
-      positive: 'const x = 1;',
-      negative: 'var x = 1;',
+    it('calls createStandard with POST', () => {
+      expect(global.fetch).toHaveBeenNthCalledWith(
+        2,
+        expect.stringContaining('/standards'),
+        expect.objectContaining({ method: 'POST' }),
+      );
+    });
+
+    it('does not fetch rules or add examples', () => {
+      expect(global.fetch).toHaveBeenCalledTimes(2);
     });
   });
 
-  it('calls the correct API endpoint with POST', () => {
-    expect(global.fetch).toHaveBeenCalledWith(
-      expect.stringContaining(
-        '/spaces/space-1/standards/std-1/rules/rule-1/examples',
-      ),
-      expect.objectContaining({ method: 'POST' }),
-    );
+  describe('when creating standard with examples', () => {
+    beforeEach(async () => {
+      // Mock getGlobalSpace
+      (global.fetch as jest.Mock).mockResolvedValueOnce({
+        ok: true,
+        json: jest.fn().mockResolvedValue({ id: 'space-uuid', slug: 'global' }),
+      });
+      // Mock createStandard
+      (global.fetch as jest.Mock).mockResolvedValueOnce({
+        ok: true,
+        json: jest.fn().mockResolvedValue({ id: 'std-123', name: 'Test' }),
+      });
+      // Mock getRulesForStandard
+      (global.fetch as jest.Mock).mockResolvedValueOnce({
+        ok: true,
+        json: jest
+          .fn()
+          .mockResolvedValue([{ id: 'rule-1', content: 'Rule 1' }]),
+      });
+      // Mock addExampleToRule
+      (global.fetch as jest.Mock).mockResolvedValueOnce({
+        ok: true,
+        json: jest.fn().mockResolvedValue({ id: 'example-1' }),
+      });
+
+      await gateway.createStandard({
+        name: 'Test',
+        description: 'Desc',
+        scope: 'test',
+        rules: [
+          {
+            content: 'Rule 1',
+            examples: {
+              language: 'TYPESCRIPT',
+              positive: 'const x = 1;',
+              negative: 'var x = 1;',
+            },
+          },
+        ],
+      });
+    });
+
+    it('fetches rules after creating standard', () => {
+      expect(global.fetch).toHaveBeenNthCalledWith(
+        3,
+        expect.stringContaining('/standards/std-123/rules'),
+        expect.any(Object),
+      );
+    });
+
+    it('adds example to rule', () => {
+      expect(global.fetch).toHaveBeenNthCalledWith(
+        4,
+        expect.stringContaining('/rules/rule-1/examples'),
+        expect.objectContaining({ method: 'POST' }),
+      );
+    });
   });
 
-  it('sends example with correct payload', () => {
-    const callArgs = (global.fetch as jest.Mock).mock.calls[0];
-    const body = JSON.parse(callArgs[1].body);
-    expect(body).toEqual({
-      lang: 'TYPESCRIPT',
-      positive: 'const x = 1;',
-      negative: 'var x = 1;',
+  describe('when example creation fails', () => {
+    it('still returns success', async () => {
+      // Mock getGlobalSpace
+      (global.fetch as jest.Mock).mockResolvedValueOnce({
+        ok: true,
+        json: jest.fn().mockResolvedValue({ id: 'space-uuid', slug: 'global' }),
+      });
+      // Mock createStandard
+      (global.fetch as jest.Mock).mockResolvedValueOnce({
+        ok: true,
+        json: jest.fn().mockResolvedValue({ id: 'std-123', name: 'Test' }),
+      });
+      // Mock getRulesForStandard
+      (global.fetch as jest.Mock).mockResolvedValueOnce({
+        ok: true,
+        json: jest
+          .fn()
+          .mockResolvedValue([{ id: 'rule-1', content: 'Rule 1' }]),
+      });
+      // Mock addExampleToRule - FAILS
+      (global.fetch as jest.Mock).mockResolvedValueOnce({
+        ok: false,
+        status: 500,
+        statusText: 'Internal Server Error',
+      });
+
+      const result = await gateway.createStandard({
+        name: 'Test',
+        description: 'Desc',
+        scope: 'test',
+        rules: [
+          {
+            content: 'Rule 1',
+            examples: {
+              language: 'TYPESCRIPT',
+              positive: 'good',
+              negative: 'bad',
+            },
+          },
+        ],
+      });
+
+      expect(result).toEqual({ id: 'std-123', name: 'Test' });
     });
   });
 });

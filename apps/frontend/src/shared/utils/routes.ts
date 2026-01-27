@@ -32,6 +32,10 @@ export const routes = {
       `/org/${orgSlug}/space/${spaceSlug}/commands`,
     toCommand: (orgSlug: string, spaceSlug: string, commandId: string) =>
       `/org/${orgSlug}/space/${spaceSlug}/commands/${commandId}`,
+    toCreateCommand: (orgSlug: string, spaceSlug: string) =>
+      `/org/${orgSlug}/space/${spaceSlug}/commands/create`,
+    toEditCommand: (orgSlug: string, spaceSlug: string, commandId: string) =>
+      `/org/${orgSlug}/space/${spaceSlug}/commands/${commandId}/edit`,
     toStandards: (orgSlug: string, spaceSlug: string) =>
       `/org/${orgSlug}/space/${spaceSlug}/standards`,
     toPackages: (orgSlug: string, spaceSlug: string) =>

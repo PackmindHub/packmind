@@ -21,7 +21,7 @@ npm install
 nx run packmind-cli:run -- lint <path>
 
 # Or use npm script
-npm run packmind-cli:v3:lint
+npm run packmind-cli:lint
 ```
 
 ### Building
