@@ -109,8 +109,9 @@ describe('organization resource loaders', () => {
     });
   });
 
-  describe('when a recipe does not belong to the current space', () => {
-    let redirectResponse: Response | null = null;
+  describe('when a recipe does not exist', () => {
+    const notFoundError = new Error('Recipe not found');
+    let thrownError: Error | null = null;
 
     beforeEach(async () => {
       ensureQueryDataMock
@@ -118,7 +119,7 @@ describe('organization resource loaders', () => {
           organization: { id: 'org-1', slug: 'org-slug', name: 'Org Name' },
         })
         .mockResolvedValueOnce({ id: 'space-1' })
-        .mockResolvedValueOnce({ recipes: [] });
+        .mockRejectedValueOnce(notFoundError);
 
       try {
         await recipeLoader({
@@ -128,13 +129,13 @@ describe('organization resource loaders', () => {
             commandId: 'rec-1',
           },
         });
-      } catch (response) {
-        redirectResponse = response as Response;
+      } catch (error) {
+        thrownError = error as Error;
       }
     });
 
-    it('redirects to dashboard', () => {
-      expect(redirectResponse).toBeTruthy();
+    it('throws an error from the recipe fetch', () => {
+      expect(thrownError).toBe(notFoundError);
     });
 
     it('does not display an error toast', () => {

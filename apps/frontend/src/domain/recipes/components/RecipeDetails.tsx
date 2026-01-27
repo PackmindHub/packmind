@@ -27,7 +27,6 @@ import {
 import { RecipeVersionsListDrawer } from './RecipeVersionsListDrawer';
 import { RecipeDistributionsList } from '../../deployments/components/RecipeDistributionsList/RecipeDistributionsList';
 import { useListRecipeDistributionsQuery } from '../../deployments/api/queries/DeploymentsQueries';
-import { EditRecipe } from './EditRecipe';
 import { AutobreadCrumb } from '../../../../src/shared/components/navigation/AutobreadCrumb';
 import { RECIPE_MESSAGES } from '../constants/messages';
 import { RecipeId } from '@packmind/types';
@@ -38,6 +37,7 @@ import {
 import { useCurrentSpace } from '../../spaces/hooks/useCurrentSpace';
 import { routes } from '../../../shared/utils/routes';
 import { useAuthContext } from '../../accounts/hooks/useAuthContext';
+import { useNavigation } from '../../../shared/hooks/useNavigation';
 
 interface RecipeDetailsProps {
   id: RecipeId;
@@ -47,9 +47,9 @@ interface RecipeDetailsProps {
 
 export const RecipeDetails = ({ id, orgSlug }: RecipeDetailsProps) => {
   const navigate = useNavigate();
+  const nav = useNavigation();
   const { organization } = useAuthContext();
   const { spaceSlug, spaceId } = useCurrentSpace();
-  const [isEditing, setIsEditing] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [deleteAlert, setDeleteAlert] = useState<{
     type: 'success' | 'error';
@@ -138,38 +138,9 @@ export const RecipeDetails = ({ id, orgSlug }: RecipeDetailsProps) => {
     );
   }
 
-  // Show edit form when in edit mode
-  if (isEditing) {
-    if (!organization?.id || !spaceId) {
-      return (
-        <PMPage
-          title="Cannot Edit Command"
-          subtitle="Missing organization or space context"
-          breadcrumbComponent={<AutobreadCrumb />}
-        >
-          <PMAlert.Root status="error" width="lg" mb={4}>
-            <PMAlert.Indicator />
-            <PMAlert.Title>
-              Cannot edit command without organization and space context.
-            </PMAlert.Title>
-          </PMAlert.Root>
-        </PMPage>
-      );
-    }
-
-    return (
-      <EditRecipe
-        recipe={recipe}
-        organizationId={organization.id}
-        spaceId={spaceId}
-        onCancel={() => setIsEditing(false)}
-        onSuccess={() => {
-          setIsEditing(false);
-          // Command data will be automatically refreshed due to query invalidation
-        }}
-      />
-    );
-  }
+  const handleEditClick = () => {
+    nav.space.toEditCommand(recipe.id);
+  };
 
   return (
     <PMPage
@@ -189,7 +160,7 @@ export const RecipeDetails = ({ id, orgSlug }: RecipeDetailsProps) => {
               </PMCopiable.Trigger>
             </PMTooltip>
           </PMCopiable.Root>
-          <PMButton variant="primary" onClick={() => setIsEditing(true)}>
+          <PMButton variant="primary" onClick={handleEditClick}>
             Edit
           </PMButton>
           <PMAlertDialog

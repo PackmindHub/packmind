@@ -1,10 +1,7 @@
 import { OrganizationId, Recipe, RecipeId } from '@packmind/types';
-import { NavLink, Outlet, redirect } from 'react-router';
+import { NavLink, Outlet } from 'react-router';
 import { getMeQueryOptions } from '../../src/domain/accounts/api/queries/UserQueries';
-import {
-  getRecipeByIdOptions,
-  getRecipesBySpaceQueryOptions,
-} from '../../src/domain/recipes/api/queries/RecipesQueries';
+import { getRecipeByIdOptions } from '../../src/domain/recipes/api/queries/RecipesQueries';
 import { getSpaceBySlugQueryOptions } from '../../src/domain/spaces/api/queries/SpacesQueries';
 import { queryClient } from '../../src/shared/data/queryClient';
 import { routes } from '../../src/shared/utils/routes';
@@ -26,20 +23,6 @@ export async function clientLoader({
   );
   if (!space) {
     throw new Error('Space not found');
-  }
-
-  const recipesResponse = (await queryClient.ensureQueryData(
-    getRecipesBySpaceQueryOptions(me.organization.id, space.id),
-  )) as Recipe[] | { recipes: Recipe[] };
-  const recipesList: Recipe[] = Array.isArray(recipesResponse)
-    ? recipesResponse
-    : (recipesResponse?.recipes ?? []);
-  const recipeExists = recipesList.some(
-    (candidate) => candidate.id === params.commandId,
-  );
-
-  if (!recipeExists) {
-    throw redirect(routes.org.toDashboard(me.organization.slug));
   }
 
   return queryClient.ensureQueryData(
