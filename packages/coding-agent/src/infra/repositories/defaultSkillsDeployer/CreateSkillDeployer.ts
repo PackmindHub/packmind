@@ -3,7 +3,7 @@ import { ISkillDeployer } from './IDefaultSkillDeployer';
 
 function getCreateSkillSkillMd(agentName: string): string {
   return `---
-name: 'create-skill'
+name: 'packmind-create-skill'
 description: "Guide for creating effective skills. This skill should be used when users want to create a new skill (or update an existing skill) that extends ${agentName}'s capabilities with specialized knowledge, workflows, or tool integrations."
 license: 'Complete terms in LICENSE.txt'
 ---
@@ -240,15 +240,17 @@ After testing the skill, users may request improvements. Often this happens righ
 
 ### Step 7: Distributing a Skill
 
-Once the skill is validated and ready for distribution, use packmind-cli to add it to the skills registry.
+**After successful validation, always run the distribution command** to register the skill with Packmind. Do not skip this step.
 
 **Before running the command**, verify that packmind-cli is available (see Prerequisites section). If not installed, install it first.
+
+Run the following command with the actual skill path:
 
 \`\`\`bash
 packmind-cli skills add <path/to/skill-folder>
 \`\`\`
 
-This command registers the skill with Packmind, making it available for deployment to target repositories and AI coding agents.
+This registers the skill with Packmind, making it available for deployment to target repositories and AI coding agents. The skill creation process is not complete until this command has been executed successfully.
 `;
 }
 
@@ -887,7 +889,7 @@ Apache 2.0 - See LICENSE.txt for details.
 
 export class CreateSkillDeployer implements ISkillDeployer {
   deploy(agentName: string, skillsFolderPath: string): FileUpdates {
-    const basePath = `${skillsFolderPath}create-skill`;
+    const basePath = `${skillsFolderPath}packmind-create-skill`;
 
     return {
       createOrUpdate: [

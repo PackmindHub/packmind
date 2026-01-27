@@ -124,8 +124,8 @@ When you distribute a package, all included skills are deployed together with yo
 <Tip>
   **Default skills included** — When packages are distributed (via the web app
   push strategy or CLI install), Packmind's default skills are automatically
-  included. This ensures the `create-skill` skill is always available for
-  creating new skills with AI assistance.
+  included. This ensures the `packmind-create-skill` skill is always available
+  for creating new skills with AI assistance.
 </Tip>
 
 ## Where Skills Appear After Distribution
@@ -135,7 +135,7 @@ After distributing a package containing skills, they appear in specific location
 | AI Assistant   | Where Skills Appear                    |
 | -------------- | -------------------------------------- |
 | Claude Code    | `.claude/skills/{skill-slug}/SKILL.md` |
-| Cursor         | Uses Claude Code skills                |
+| Cursor         | `.cursor/skills/{skill-slug}/SKILL.md` |
 | GitHub Copilot | `.github/skills/{skill-slug}/SKILL.md` |
 
 The source files are always stored in `.packmind/skills/` regardless of which AI assistants are enabled.

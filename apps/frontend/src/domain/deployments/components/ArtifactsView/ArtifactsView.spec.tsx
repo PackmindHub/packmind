@@ -7,6 +7,7 @@ import { ArtifactsView } from './ArtifactsView';
 import {
   RecipeDeploymentStatus,
   StandardDeploymentStatus,
+  SkillDeploymentStatus,
 } from '@packmind/types';
 
 // Provide lightweight realistic samples
@@ -20,6 +21,7 @@ const makeRecipe = (
     up: boolean;
     repo?: { owner: string; repo: string; branch?: string };
   }>,
+  options?: { isDeleted?: boolean },
 ): RecipeDeploymentStatus =>
   ({
     recipe: { id, name },
@@ -35,6 +37,7 @@ const makeRecipe = (
         branch: 'main',
       },
     })),
+    ...(options?.isDeleted && { isDeleted: true }),
   }) as unknown as RecipeDeploymentStatus;
 
 const makeStandard = (
@@ -47,6 +50,7 @@ const makeStandard = (
     up: boolean;
     repo?: { owner: string; repo: string; branch?: string };
   }>,
+  options?: { isDeleted?: boolean },
 ): StandardDeploymentStatus =>
   ({
     standard: { id, name },
@@ -62,7 +66,37 @@ const makeStandard = (
         branch: 'develop',
       },
     })),
+    ...(options?.isDeleted && { isDeleted: true }),
   }) as unknown as StandardDeploymentStatus;
+
+const makeSkill = (
+  id: string,
+  name: string,
+  latest: number,
+  targets: Array<{
+    name: string;
+    distributed: number;
+    up: boolean;
+    repo?: { owner: string; repo: string; branch?: string };
+  }>,
+  options?: { isDeleted?: boolean },
+): SkillDeploymentStatus =>
+  ({
+    skill: { id, name },
+    latestVersion: { version: latest },
+    targetDeployments: targets.map((t) => ({
+      target: { id: `${id}-${t.name}`, name: t.name },
+      deployedVersion: { version: t.distributed },
+      isUpToDate: t.up,
+      gitRepo: t.repo ?? {
+        id: `${id}-${t.name}-repo`,
+        owner: 'acme',
+        repo: 'backend',
+        branch: 'main',
+      },
+    })),
+    ...(options?.isDeleted && { isDeleted: true }),
+  }) as unknown as SkillDeploymentStatus;
 
 // Mock PMTable to render a simple table for assertions on rows/columns while keeping our mapping logic
 jest.mock('@packmind/ui', () => {
@@ -227,5 +261,193 @@ describe('ArtifactsView', () => {
 
     // Status badges should read Outdated only
     expect(screen.getAllByText('Outdated').length).toBeGreaterThan(0);
+  });
+
+  describe('when artifacts are deleted', () => {
+    it('renders Deleted badge for deleted skills', () => {
+      const skills = [
+        makeSkill(
+          'sk1',
+          'Deleted Skill',
+          5,
+          [{ name: 'Prod', distributed: 5, up: true }],
+          { isDeleted: true },
+        ),
+      ];
+
+      renderView(
+        <ArtifactsView
+          recipes={[]}
+          standards={[]}
+          skills={skills}
+          artifactStatusFilter="all"
+          searchTerm=""
+          orgSlug="org-x"
+        />,
+      );
+
+      expect(screen.getByText('Deleted Skill')).toBeInTheDocument();
+      expect(screen.getByText('Deleted')).toBeInTheDocument();
+    });
+
+    it('renders Deleted badge for deleted standards', () => {
+      const standards = [
+        makeStandard(
+          's1',
+          'Deleted Standard',
+          3,
+          [{ name: 'Dev', distributed: 3, up: true }],
+          { isDeleted: true },
+        ),
+      ];
+
+      renderView(
+        <ArtifactsView
+          recipes={[]}
+          standards={standards}
+          skills={[]}
+          artifactStatusFilter="all"
+          searchTerm=""
+          orgSlug="org-x"
+        />,
+      );
+
+      expect(screen.getByText('Deleted Standard')).toBeInTheDocument();
+      expect(screen.getByText('Deleted')).toBeInTheDocument();
+    });
+
+    it('renders Deleted badge for deleted recipes', () => {
+      const recipes = [
+        makeRecipe(
+          'r1',
+          'Deleted Recipe',
+          10,
+          [{ name: 'Staging', distributed: 10, up: true }],
+          { isDeleted: true },
+        ),
+      ];
+
+      renderView(
+        <ArtifactsView
+          recipes={recipes}
+          standards={[]}
+          skills={[]}
+          artifactStatusFilter="all"
+          searchTerm=""
+          orgSlug="org-x"
+        />,
+      );
+
+      expect(screen.getByText('Deleted Recipe')).toBeInTheDocument();
+      expect(screen.getByText('Deleted')).toBeInTheDocument();
+    });
+
+    it('does not render navigation link for deleted standards', () => {
+      const standards = [
+        makeStandard(
+          's1',
+          'Deleted Standard',
+          3,
+          [{ name: 'Dev', distributed: 3, up: true }],
+          { isDeleted: true },
+        ),
+      ];
+
+      renderView(
+        <ArtifactsView
+          recipes={[]}
+          standards={standards}
+          skills={[]}
+          artifactStatusFilter="all"
+          searchTerm=""
+          orgSlug="org-x"
+        />,
+      );
+
+      expect(
+        screen.queryByRole('link', { name: 'Deleted Standard' }),
+      ).not.toBeInTheDocument();
+      expect(screen.getByText('Deleted Standard')).toBeInTheDocument();
+    });
+
+    it('does not render navigation link for deleted recipes', () => {
+      const recipes = [
+        makeRecipe(
+          'r1',
+          'Deleted Recipe',
+          10,
+          [{ name: 'Staging', distributed: 10, up: true }],
+          { isDeleted: true },
+        ),
+      ];
+
+      renderView(
+        <ArtifactsView
+          recipes={recipes}
+          standards={[]}
+          skills={[]}
+          artifactStatusFilter="all"
+          searchTerm=""
+          orgSlug="org-x"
+        />,
+      );
+
+      expect(
+        screen.queryByRole('link', { name: 'Deleted Recipe' }),
+      ).not.toBeInTheDocument();
+      expect(screen.getByText('Deleted Recipe')).toBeInTheDocument();
+    });
+
+    it('renders Needs removal status badge for deleted skill deployments', () => {
+      const skills = [
+        makeSkill(
+          'sk1',
+          'Deleted Skill',
+          1,
+          [{ name: 'Prod', distributed: 1, up: true }],
+          { isDeleted: true },
+        ),
+      ];
+
+      renderView(
+        <ArtifactsView
+          recipes={[]}
+          standards={[]}
+          skills={skills}
+          artifactStatusFilter="all"
+          searchTerm=""
+          orgSlug="org-x"
+        />,
+      );
+
+      expect(screen.getByText('Needs removal')).toBeInTheDocument();
+    });
+
+    it('shows deleted artifacts when filtering by outdated status', () => {
+      const skills = [
+        makeSkill(
+          'sk1',
+          'Deleted Skill',
+          1,
+          [{ name: 'Prod', distributed: 1, up: true }],
+          { isDeleted: true },
+        ),
+      ];
+
+      renderView(
+        <ArtifactsView
+          recipes={[]}
+          standards={[]}
+          skills={skills}
+          artifactStatusFilter="outdated"
+          searchTerm=""
+          orgSlug="org-x"
+        />,
+      );
+
+      // Even though the deployment is "up-to-date" version-wise,
+      // deleted artifacts should show when filtering by "outdated"
+      expect(screen.getByText('Deleted Skill')).toBeInTheDocument();
+    });
   });
 });

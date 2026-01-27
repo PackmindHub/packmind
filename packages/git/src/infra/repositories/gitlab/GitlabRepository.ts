@@ -72,6 +72,83 @@ export class GitlabRepository implements IGitRepo {
       : repoName;
   }
 
+  private normalizePath(path: string): string {
+    // Trim leading and trailing slashes for consistent comparison
+    return path.replace(/^\/+|\/+$/g, '');
+  }
+
+  private async fetchRepositoryTree(branch: string): Promise<Set<string>> {
+    const allTreeItems: Array<{ path: string; type: string }> = [];
+    let nextPage: string | null = null;
+    let pageNumber = 1;
+    const perPage = 100;
+
+    do {
+      const url =
+        nextPage || `/projects/${this.encodedProjectPath}/repository/tree`;
+
+      const params: Record<string, string | number> = {
+        ref: branch,
+        recursive: 'true',
+        per_page: perPage,
+      };
+
+      if (!nextPage) {
+        params['page'] = pageNumber;
+      }
+
+      const treeResponse = await this.axiosInstance.get(url, {
+        params: nextPage ? undefined : params,
+      });
+
+      if (Array.isArray(treeResponse.data)) {
+        allTreeItems.push(...treeResponse.data);
+      }
+
+      // Check for pagination headers
+      const headers = treeResponse.headers as Record<string, string>;
+      nextPage = null;
+
+      // Check for offset pagination (x-next-page header)
+      const xNextPage = headers['x-next-page'];
+      if (xNextPage && xNextPage.trim() !== '') {
+        nextPage = `/projects/${this.encodedProjectPath}/repository/tree?ref=${branch}&recursive=true&per_page=${perPage}&page=${xNextPage}`;
+      } else {
+        // Check for keyset pagination (Link header)
+        const linkHeader = headers['link'];
+        if (linkHeader) {
+          const nextUrl = extractNextPageUrl(linkHeader);
+          if (nextUrl) {
+            nextPage = nextUrl;
+          }
+        }
+      }
+
+      pageNumber++;
+
+      // Safety check to prevent infinite loops
+      if (pageNumber > 1000) {
+        this.logger.warn(
+          'Reached maximum page limit (1000) for GitLab tree listing',
+          {
+            projectPath: this.projectPath,
+            branch,
+            totalItems: allTreeItems.length,
+            pagesProcessed: pageNumber - 1,
+          },
+        );
+        break;
+      }
+    } while (nextPage);
+
+    // Return normalized paths for blobs only
+    return new Set(
+      allTreeItems
+        .filter((item: { type: string }) => item.type === 'blob')
+        .map((item: { path: string }) => this.normalizePath(item.path)),
+    );
+  }
+
   async commitFiles(
     files: { path: string; content: string }[],
     commitMessage: string,
@@ -92,134 +169,124 @@ export class GitlabRepository implements IGitRepo {
       const { branch } = this.options;
       const targetBranch = branch || 'main';
 
-      // Check file existence and prepare actions in one pass
-      // For GitLab, we need to determine the correct action (create vs update) for each file
-      let fileDifferenceCheck;
-      let actions: Array<
-        | { action: 'create' | 'update'; file_path: string; content: string }
-        | { action: 'delete'; file_path: string }
-      >;
+      // Deduplicate files by path (keep last occurrence to get most recent content)
+      // GitLab's commit API fails with "A file with this name doesn't exist" when
+      // duplicate paths are present in a single commit
+      const deduplicatedFiles = Array.from(
+        files
+          .reduce((map, file) => {
+            map.set(this.normalizePath(file.path), file);
+            return map;
+          }, new Map<string, { path: string; content: string }>())
+          .values(),
+      );
 
-      try {
-        const fileAnalysis = await Promise.all(
-          files.map(async (file) => {
-            try {
-              const existingFile = await this.getFileOnRepo(
-                file.path,
-                targetBranch,
-              );
+      // Deduplicate deleteFiles by path
+      const deduplicatedDeleteFiles = deleteFiles
+        ? Array.from(
+            deleteFiles
+              .reduce((map, file) => {
+                map.set(this.normalizePath(file.path), file);
+                return map;
+              }, new Map<string, { path: string }>())
+              .values(),
+          )
+        : undefined;
 
-              if (!existingFile) {
-                // File doesn't exist, so it's a new file
-                return {
-                  path: file.path,
-                  hasChanges: true,
-                  action: 'create' as const,
-                  fileExists: false,
-                };
-              } else {
-                // File exists, check if content is different
-                const existingContent = Buffer.from(
-                  existingFile.content,
-                  'base64',
-                ).toString('utf-8');
-                const hasChanges = existingContent !== file.content;
+      // Fetch tree once as single source of truth for file existence
+      // This prevents race conditions and inconsistent state between create/update/delete decisions
+      const existingPaths = await this.fetchRepositoryTree(targetBranch);
 
-                return {
-                  path: file.path,
-                  hasChanges,
-                  action: 'update' as const,
-                  fileExists: true,
-                };
-              }
-            } catch (fileError: unknown) {
-              // If file doesn't exist (404 or other error), treat as new file
-              this.logger.debug('File check failed, treating as new file', {
-                filePath: file.path,
-                error:
-                  fileError instanceof Error
-                    ? fileError.message
-                    : String(fileError),
-              });
+      // Determine create/update for files to commit using tree lookup
+      // Only call getFileOnRepo for existing files to check content changes
+      const fileAnalysis = await Promise.all(
+        deduplicatedFiles.map(async (file) => {
+          const normalizedPath = this.normalizePath(file.path);
+          const fileExists = existingPaths.has(normalizedPath);
+
+          if (!fileExists) {
+            // File doesn't exist in tree, mark as create
+            this.logger.debug('File action determined', {
+              filePath: file.path,
+              action: 'create',
+            });
+            return {
+              path: file.path,
+              hasChanges: true,
+              action: 'create' as const,
+            };
+          }
+
+          // File exists - fetch content to check if it changed
+          try {
+            const existingFile = await this.getFileOnRepo(
+              file.path,
+              targetBranch,
+            );
+
+            if (!existingFile) {
               return {
                 path: file.path,
                 hasChanges: true,
                 action: 'create' as const,
-                fileExists: false,
               };
             }
-          }),
-        );
 
-        fileDifferenceCheck = fileAnalysis;
+            // File exists, check if content is different
+            const existingContent = Buffer.from(
+              existingFile.content,
+              'base64',
+            ).toString('utf-8');
+            const hasChanges = existingContent !== file.content;
 
-        // Prepare actions with correct create/update types
-        actions = files.map((file, index) => {
-          const analysis = fileAnalysis[index];
+            return {
+              path: file.path,
+              hasChanges,
+              action: 'update' as const,
+            };
+          } catch (fileError: unknown) {
+            // If getFileOnRepo fails for an existing file, treat as create
+            // This handles transient errors gracefully
+            this.logger.debug('File content check failed, treating as create', {
+              filePath: file.path,
+              error:
+                fileError instanceof Error
+                  ? fileError.message
+                  : String(fileError),
+            });
+            return {
+              path: file.path,
+              hasChanges: true,
+              action: 'create' as const,
+            };
+          }
+        }),
+      );
 
-          this.logger.debug('File action determined', {
-            filePath: file.path,
-            action: analysis.action,
-          });
+      const fileDifferenceCheck = fileAnalysis;
 
-          return {
-            action: analysis.action,
-            file_path: file.path,
-            content: file.content,
-          };
-        });
-      } catch (error) {
-        // If we can't check files at all, assume all files are new
-        this.logger.warn(
-          'Could not check existing files, treating all as new',
-          {
-            error: error instanceof Error ? error.message : String(error),
-          },
-        );
-        fileDifferenceCheck = files.map((file) => ({
-          path: file.path,
-          hasChanges: true,
-        }));
-        actions = files.map((file) => ({
-          action: 'create' as const,
+      // Prepare actions with correct create/update types
+      const actions: Array<
+        | { action: 'create' | 'update'; file_path: string; content: string }
+        | { action: 'delete'; file_path: string }
+      > = deduplicatedFiles.map((file, index) => {
+        const analysis = fileAnalysis[index];
+        return {
+          action: analysis.action,
           file_path: file.path,
           content: file.content,
-        }));
-      }
+        };
+      });
 
-      // Handle file deletions - fetch tree to filter non-existent files
+      // Filter deleteFiles using the same existingPaths from tree
       let existingDeleteFiles: { path: string }[] = [];
-      if (deleteFiles && deleteFiles.length > 0) {
-        // Fetch the repository tree to know which files exist
-        const treeResponse = await this.axiosInstance.get(
-          `/projects/${this.encodedProjectPath}/repository/tree`,
-          {
-            params: {
-              ref: targetBranch,
-              recursive: 'true',
-              per_page: 100,
-            },
-          },
+      if (deduplicatedDeleteFiles && deduplicatedDeleteFiles.length > 0) {
+        existingDeleteFiles = deduplicatedDeleteFiles.filter((file) =>
+          existingPaths.has(this.normalizePath(file.path)),
         );
 
-        // Handle pagination for large repositories
-        const allTreeItems: Array<{ path: string; type: string }> = [];
-        if (Array.isArray(treeResponse.data)) {
-          allTreeItems.push(...treeResponse.data);
-        }
-
-        const existingPaths = new Set(
-          allTreeItems
-            .filter((item: { type: string }) => item.type === 'blob')
-            .map((item: { path: string }) => item.path),
-        );
-
-        // Filter deleteFiles to only include files that exist
-        existingDeleteFiles = deleteFiles.filter((file) =>
-          existingPaths.has(file.path),
-        );
-
-        const skippedCount = deleteFiles.length - existingDeleteFiles.length;
+        const skippedCount =
+          deduplicatedDeleteFiles.length - existingDeleteFiles.length;
         if (skippedCount > 0) {
           this.logger.debug('Skipping deletion of non-existent files', {
             skippedCount,
@@ -253,8 +320,8 @@ export class GitlabRepository implements IGitRepo {
 
       if (!hasChanges) {
         this.logger.info('No changes detected, skipping commit', {
-          fileCount: files.length,
-          deleteFileCount: deleteFiles?.length ?? 0,
+          fileCount: deduplicatedFiles.length,
+          deleteFileCount: deduplicatedDeleteFiles?.length ?? 0,
           owner: this.options.owner,
           repo: this.options.repo,
           branch: targetBranch,
@@ -300,7 +367,7 @@ export class GitlabRepository implements IGitRepo {
       };
 
       this.logger.info('Files committed successfully to GitLab', {
-        fileCount: files.length,
+        fileCount: deduplicatedFiles.length,
         projectPath: this.projectPath,
         commitSha: commitInfo.sha,
       });
@@ -320,6 +387,7 @@ export class GitlabRepository implements IGitRepo {
           statusCode: axiosError.response?.status,
           projectPath: this.projectPath,
           error: axiosError.response?.data?.message || errorMessage,
+          errorDetails: axiosError.response?.data, // Log FULL response for debugging
         });
 
         if (axiosError.response?.status === 403) {

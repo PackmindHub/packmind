@@ -6,6 +6,8 @@ import {
 import {
   CreateSkillCommand,
   DeleteSkillCommand,
+  DeleteSkillsBatchCommand,
+  DeleteSkillsBatchResponse,
   FindSkillBySlugCommand,
   GetLatestSkillVersionCommand,
   GetSkillByIdCommand,
@@ -21,6 +23,7 @@ import {
   ListSkillVersionsCommand,
   ListSkillVersionsResponse,
   OrganizationId,
+  QueryOption,
   Skill,
   SkillFile,
   SkillId,
@@ -38,6 +41,7 @@ import { ISkillsRepositories } from '../../domain/repositories/ISkillsRepositori
 import { SkillsServices } from '../services/SkillsServices';
 import { CreateSkillUsecase } from '../useCases/createSkill/createSkill.usecase';
 import { DeleteSkillUsecase } from '../useCases/deleteSkill/deleteSkill.usecase';
+import { DeleteSkillsBatchUsecase } from '../useCases/deleteSkillsBatch/deleteSkillsBatch.usecase';
 import { FindSkillBySlugUsecase } from '../useCases/findSkillBySlug/findSkillBySlug.usecase';
 import { GetLatestSkillVersionUsecase } from '../useCases/getLatestSkillVersion/getLatestSkillVersion.usecase';
 import { GetSkillByIdUsecase } from '../useCases/getSkillById/getSkillById.usecase';
@@ -60,6 +64,7 @@ export class SkillsAdapter implements IBaseAdapter<ISkillsPort>, ISkillsPort {
   private _uploadSkill!: UploadSkillUsecase;
   private _updateSkill!: UpdateSkillUsecase;
   private _deleteSkill!: DeleteSkillUsecase;
+  private _deleteSkillsBatch!: DeleteSkillsBatchUsecase;
   private _getSkillById!: GetSkillByIdUsecase;
   private _getSkillWithFiles!: GetSkillWithFilesUsecase;
   private _findSkillBySlug!: FindSkillBySlugUsecase;
@@ -126,6 +131,13 @@ export class SkillsAdapter implements IBaseAdapter<ISkillsPort>, ISkillsPort {
     );
 
     this._deleteSkill = new DeleteSkillUsecase(
+      this.accountsPort,
+      this.spacesPort,
+      this.services.getSkillService(),
+      this.eventEmitterService,
+    );
+
+    this._deleteSkillsBatch = new DeleteSkillsBatchUsecase(
       this.accountsPort,
       this.spacesPort,
       this.services.getSkillService(),
@@ -228,13 +240,15 @@ export class SkillsAdapter implements IBaseAdapter<ISkillsPort>, ISkillsPort {
     spaceId: SpaceId,
     organizationId: OrganizationId,
     userId: string,
+    opts?: Pick<QueryOption, 'includeDeleted'>,
   ): Promise<Skill[]> {
     this.logger.info('listSkillsBySpace called via port', {
       spaceId,
       organizationId,
       userId: userId.substring(0, 6) + '*',
+      includeDeleted: opts?.includeDeleted ?? false,
     });
-    return this.services.getSkillService().listSkillsBySpace(spaceId);
+    return this.services.getSkillService().listSkillsBySpace(spaceId, opts);
   }
 
   async findSkillBySlug(
@@ -299,6 +313,17 @@ export class SkillsAdapter implements IBaseAdapter<ISkillsPort>, ISkillsPort {
     });
     await this._deleteSkill.execute(command);
     return { success: true };
+  }
+
+  async deleteSkillsBatch(
+    command: DeleteSkillsBatchCommand,
+  ): Promise<DeleteSkillsBatchResponse> {
+    this.logger.info('deleteSkillsBatch use case invoked', {
+      skillCount: command.skillIds.length,
+      userId: command.userId.substring(0, 6) + '*',
+      organizationId: command.organizationId,
+    });
+    return this._deleteSkillsBatch.execute(command);
   }
 
   async getSkillById(

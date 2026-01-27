@@ -3,6 +3,7 @@ import { TargetId } from '../TargetId';
 import { PackageId } from '../Package';
 import { RecipeVersionId } from '../../recipes/RecipeVersion';
 import { StandardVersionId } from '../../standards/StandardVersionId';
+import { SkillVersionId } from '../../skills/SkillVersionId';
 
 export type RemovePackageFromTargetsCommand = PackmindCommand & {
   packageId: PackageId;
@@ -26,11 +27,13 @@ export type TargetArtifactResolution = {
   exclusiveArtifacts: {
     recipeVersionIds: RecipeVersionId[];
     standardVersionIds: StandardVersionId[];
+    skillVersionIds: SkillVersionId[];
   };
   /** Artifacts that belong to remaining packages and should be re-rendered */
   remainingArtifacts: {
     recipeVersionIds: RecipeVersionId[];
     standardVersionIds: StandardVersionId[];
+    skillVersionIds: SkillVersionId[];
   };
 };
 

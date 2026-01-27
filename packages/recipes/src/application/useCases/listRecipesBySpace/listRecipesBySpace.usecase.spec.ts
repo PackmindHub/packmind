@@ -100,7 +100,9 @@ describe('ListRecipesBySpaceUsecase', () => {
       });
 
       it('calls listRecipesBySpace with the space id', () => {
-        expect(recipeService.listRecipesBySpace).toHaveBeenCalledWith(spaceId);
+        expect(recipeService.listRecipesBySpace).toHaveBeenCalledWith(spaceId, {
+          includeDeleted: undefined,
+        });
       });
 
       it('does not call listRecipesByOrganization', () => {
@@ -166,7 +168,9 @@ describe('ListRecipesBySpaceUsecase', () => {
       });
 
       it('calls listRecipesBySpace with the space id', () => {
-        expect(recipeService.listRecipesBySpace).toHaveBeenCalledWith(spaceId);
+        expect(recipeService.listRecipesBySpace).toHaveBeenCalledWith(spaceId, {
+          includeDeleted: undefined,
+        });
       });
 
       it('does not call listRecipesByOrganization', () => {
@@ -455,6 +459,65 @@ describe('ListRecipesBySpaceUsecase', () => {
         ).rejects.toThrow(
           `Space ${spaceId} does not belong to organization ${organizationId}`,
         );
+      });
+    });
+
+    describe('when includeDeleted is true', () => {
+      const organizationId = createOrganizationId('org-1');
+      const spaceId = createSpaceId('space-1');
+      const userId = createUserId('user-1');
+      let spaceRecipes: ReturnType<typeof recipeFactory>[];
+      let result: { recipes: ReturnType<typeof recipeFactory>[] };
+
+      beforeEach(async () => {
+        const organization = {
+          id: organizationId,
+          name: 'Test Org',
+          slug: 'test-org',
+        };
+        const user = {
+          id: userId,
+          email: 'test@example.com',
+          passwordHash: 'hash',
+          active: true,
+          memberships: [
+            {
+              userId,
+              organizationId,
+              role: 'member' as const,
+            },
+          ],
+        };
+        const space: Space = {
+          id: spaceId,
+          name: 'Test Space',
+          slug: 'test-space',
+          organizationId,
+        };
+
+        spaceRecipes = [recipeFactory({ spaceId }), recipeFactory({ spaceId })];
+
+        accountsAdapter.getOrganizationById.mockResolvedValue(organization);
+        accountsAdapter.getUserById.mockResolvedValue(user);
+        spacesPort.getSpaceById.mockResolvedValue(space);
+        recipeService.listRecipesBySpace.mockResolvedValue(spaceRecipes);
+
+        result = await usecase.execute({
+          userId,
+          organizationId,
+          spaceId,
+          includeDeleted: true,
+        });
+      });
+
+      it('passes includeDeleted option to service', () => {
+        expect(recipeService.listRecipesBySpace).toHaveBeenCalledWith(spaceId, {
+          includeDeleted: true,
+        });
+      });
+
+      it('returns the recipes from the space', () => {
+        expect(result.recipes).toEqual(spaceRecipes);
       });
     });
   });

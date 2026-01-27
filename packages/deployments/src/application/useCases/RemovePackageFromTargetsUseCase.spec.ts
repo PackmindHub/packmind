@@ -19,8 +19,10 @@ import {
   createDistributedPackageId,
   createRecipeVersionId,
   createStandardVersionId,
+  createSkillVersionId,
   createRecipeId,
   createStandardId,
+  createSkillId,
   RemovePackageFromTargetsCommand,
   Package,
   Target,
@@ -29,6 +31,7 @@ import {
   DistributedPackage,
   IRecipesPort,
   IStandardsPort,
+  ISkillsPort,
   IGitPort,
   ICodingAgentPort,
   GitRepo,
@@ -44,6 +47,7 @@ describe('RemovePackageFromTargetsUseCase', () => {
   let mockDistributedPackageRepository: jest.Mocked<IDistributedPackageRepository>;
   let mockRecipesPort: jest.Mocked<IRecipesPort>;
   let mockStandardsPort: jest.Mocked<IStandardsPort>;
+  let mockSkillsPort: jest.Mocked<ISkillsPort>;
   let mockGitPort: jest.Mocked<IGitPort>;
   let mockCodingAgentPort: jest.Mocked<ICodingAgentPort>;
   let mockRenderModeConfigurationService: jest.Mocked<RenderModeConfigurationService>;
@@ -108,6 +112,7 @@ describe('RemovePackageFromTargetsUseCase', () => {
       add: jest.fn(),
       addStandardVersions: jest.fn(),
       addRecipeVersions: jest.fn(),
+      addSkillVersions: jest.fn(),
     } as unknown as jest.Mocked<IDistributedPackageRepository>;
 
     mockRecipesPort = {
@@ -118,6 +123,10 @@ describe('RemovePackageFromTargetsUseCase', () => {
       getStandardVersionById: jest.fn(),
       getRulesByStandardId: jest.fn(),
     } as unknown as jest.Mocked<IStandardsPort>;
+
+    mockSkillsPort = {
+      getSkillVersion: jest.fn(),
+    } as unknown as jest.Mocked<ISkillsPort>;
 
     mockGitPort = {
       getRepositoryById: jest.fn(),
@@ -146,6 +155,7 @@ describe('RemovePackageFromTargetsUseCase', () => {
       mockDistributedPackageRepository,
       mockRecipesPort,
       mockStandardsPort,
+      mockSkillsPort,
       mockGitPort,
       mockCodingAgentPort,
       mockRenderModeConfigurationService,
@@ -283,6 +293,14 @@ describe('RemovePackageFromTargetsUseCase', () => {
           expect(
             result.artifactResolutions![0].exclusiveArtifacts
               .standardVersionIds,
+          ).toEqual([]);
+        });
+
+        it('returns empty exclusive skill versions', async () => {
+          const result = await useCase.execute(command);
+
+          expect(
+            result.artifactResolutions![0].exclusiveArtifacts.skillVersionIds,
           ).toEqual([]);
         });
 
@@ -518,6 +536,7 @@ describe('RemovePackageFromTargetsUseCase', () => {
                   scope: null,
                 },
               ],
+              skillVersions: [],
               operation: 'add',
             };
 
@@ -642,6 +661,7 @@ describe('RemovePackageFromTargetsUseCase', () => {
                   scope: null,
                 },
               ],
+              skillVersions: [],
               operation: 'add',
             };
 
@@ -689,6 +709,7 @@ describe('RemovePackageFromTargetsUseCase', () => {
                   scope: null,
                 },
               ],
+              skillVersions: [],
               operation: 'add',
             };
 
@@ -894,6 +915,7 @@ describe('RemovePackageFromTargetsUseCase', () => {
                   scope: null,
                 },
               ],
+              skillVersions: [],
               operation: 'add',
             };
 
@@ -923,6 +945,7 @@ describe('RemovePackageFromTargetsUseCase', () => {
                   scope: null,
                 },
               ],
+              skillVersions: [],
               operation: 'add',
             };
 
@@ -1004,6 +1027,7 @@ describe('RemovePackageFromTargetsUseCase', () => {
                 },
               ],
               standardVersions: [],
+              skillVersions: [],
               operation: 'add',
             };
 
@@ -1023,6 +1047,7 @@ describe('RemovePackageFromTargetsUseCase', () => {
                 },
               ],
               standardVersions: [],
+              skillVersions: [],
               operation: 'add',
             };
 
@@ -1109,6 +1134,7 @@ describe('RemovePackageFromTargetsUseCase', () => {
                   scope: null,
                 },
               ],
+              skillVersions: [],
               operation: 'add',
             };
 
@@ -1152,6 +1178,7 @@ describe('RemovePackageFromTargetsUseCase', () => {
                   scope: null,
                 },
               ],
+              skillVersions: [],
               operation: 'remove',
             };
 
@@ -1189,6 +1216,90 @@ describe('RemovePackageFromTargetsUseCase', () => {
               result.artifactResolutions![0].remainingArtifacts
                 .standardVersionIds,
             ).not.toContain(packageBStandardVersionId);
+          });
+        });
+
+        describe('when package has exclusive skill versions', () => {
+          const skillVersionId1 = createSkillVersionId('skv-1');
+
+          beforeEach(() => {
+            const distributedPackage: DistributedPackage = {
+              id: createDistributedPackageId('dp-1'),
+              distributionId: createDistributionId('dist-1'),
+              packageId: packageId,
+              recipeVersions: [],
+              standardVersions: [],
+              skillVersions: [
+                {
+                  id: skillVersionId1,
+                  skillId: createSkillId('skill-1'),
+                  name: 'Skill 1',
+                  slug: 'skill-1',
+                  description: 'description',
+                  prompt: 'prompt',
+                  version: 1,
+                  userId: userId,
+                },
+              ],
+              operation: 'add',
+            };
+
+            const distribution: Distribution = {
+              id: createDistributionId('dist-1'),
+              distributedPackages: [distributedPackage],
+              createdAt: new Date().toISOString(),
+              authorId: userId,
+              organizationId,
+              target: mockTarget,
+              status: DistributionStatus.success,
+              renderModes: [],
+              source: 'app',
+            };
+
+            mockDistributionRepository.listByTargetIds.mockResolvedValue([
+              distribution,
+            ]);
+
+            mockSkillsPort.getSkillVersion.mockResolvedValue({
+              id: skillVersionId1,
+              skillId: createSkillId('skill-1'),
+              name: 'Skill 1',
+              slug: 'skill-1',
+              description: 'description',
+              prompt: 'prompt',
+              version: 1,
+              userId: userId,
+            });
+          });
+
+          it('includes exclusive skill versions in exclusiveArtifacts', async () => {
+            const result = await useCase.execute(command);
+
+            expect(
+              result.artifactResolutions![0].exclusiveArtifacts.skillVersionIds,
+            ).toEqual([skillVersionId1]);
+          });
+
+          it('calls renderArtifacts with exclusive skills as removed', async () => {
+            await useCase.execute(command);
+
+            expect(mockCodingAgentPort.renderArtifacts).toHaveBeenCalledWith(
+              expect.objectContaining({
+                removed: expect.objectContaining({
+                  skillVersions: expect.arrayContaining([
+                    expect.objectContaining({ id: skillVersionId1 }),
+                  ]),
+                }),
+              }),
+            );
+          });
+
+          it('links skill versions to distributed package via addSkillVersions', async () => {
+            await useCase.execute(command);
+
+            expect(
+              mockDistributedPackageRepository.addSkillVersions,
+            ).toHaveBeenCalledWith(expect.any(String), [skillVersionId1]);
           });
         });
       });
