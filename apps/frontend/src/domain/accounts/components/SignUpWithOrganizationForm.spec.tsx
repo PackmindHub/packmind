@@ -347,8 +347,10 @@ describe('SignUpWithOrganizationForm', () => {
         onSignInSuccess({});
       });
 
-      it('navigates to onboarding reason page', () => {
-        expect(mockNavigate).toHaveBeenCalledWith('/sign-up/onboarding-reason');
+      it('navigates to create organization page', () => {
+        expect(mockNavigate).toHaveBeenCalledWith(
+          '/sign-up/create-organization',
+        );
       });
     });
 

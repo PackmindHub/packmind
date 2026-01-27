@@ -163,8 +163,8 @@ export default function SignUpWithOrganizationForm() {
             },
             {
               onSuccess: () => {
-                // Redirect to onboarding reason after successful registration and login
-                navigate('/sign-up/onboarding-reason');
+                // Redirect to create organization page after successful registration and login
+                navigate('/sign-up/create-organization');
               },
               onError: (error) => {
                 console.error('Auto-login failed after registration:', error);

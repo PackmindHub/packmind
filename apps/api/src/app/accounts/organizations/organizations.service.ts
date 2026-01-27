@@ -5,6 +5,8 @@ import {
   UserId,
   UserOrganizationRole,
   IAccountsPort,
+  RenameOrganizationCommand,
+  RenameOrganizationResponse,
 } from '@packmind/types';
 import {
   RemoveUserFromOrganizationCommand,
@@ -63,5 +65,11 @@ export class OrganizationsService {
       emails,
       role,
     });
+  }
+
+  async renameOrganization(
+    command: RenameOrganizationCommand,
+  ): Promise<RenameOrganizationResponse> {
+    return this.accountsAdapter.renameOrganization(command);
   }
 }
