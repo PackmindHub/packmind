@@ -4,7 +4,8 @@
 
 - Render skills for GitHub Copilot, Claude Code and Skills (#71)
 - Provide downloadable skills to ease managing the playbook
-- Delete skills from the webapp
+- Delete skills from the app
+- Create commands from the app
 
 ## Changed
 
