@@ -3,6 +3,9 @@
  * Marks backend dependencies as external - stubs will be provided at runtime
  */
 
+/* eslint-disable @typescript-eslint/no-require-imports */
+const { builtinModules } = require('module');
+
 module.exports = (options) => {
   // Backend-only modules that the CLI doesn't use but get imported by @packmind/shared
   const backendModules = [
@@ -17,9 +20,12 @@ module.exports = (options) => {
     '@types/nodemailer',
   ];
 
+  // Node.js built-in modules need to be external for ESM compatibility
+  // Some CJS dependencies (like debug) use dynamic require for these
+  const nodeBuiltins = builtinModules.flatMap((m) => [m, `node:${m}`]);
+
   // Banner to provide require() function for ESM output
-  // This is needed because some CJS dependencies (like debug) use dynamic require
-  // for Node.js built-in modules (tty, fs, etc.)
+  // This is needed for any remaining dynamic requires
   const esmBanner = `
 import { createRequire as __createRequire } from 'module';
 import { fileURLToPath as __fileURLToPath } from 'url';
@@ -31,9 +37,10 @@ const __dirname = __dirname_fn(__filename);
 
   return {
     ...options,
-    // Mark both web-tree-sitter AND backend modules as external
-    // Stub modules will be created by create-stubs.js script
-    external: ['web-tree-sitter', ...backendModules],
+    // Mark web-tree-sitter, backend modules, and Node.js built-ins as external
+    // Node.js built-ins are external to avoid dynamic require issues in ESM
+    // Stub modules will be created by create-stubs.js script for backend modules
+    external: ['web-tree-sitter', ...backendModules, ...nodeBuiltins],
     platform: 'node',
     banner: {
       js: esmBanner,
