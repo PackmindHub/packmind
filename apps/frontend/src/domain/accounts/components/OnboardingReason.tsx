@@ -17,24 +17,16 @@ export interface OnboardingReasonChoice {
 
 export const ONBOARDING_REASONS: OnboardingReasonChoice[] = [
   {
-    key: 'governance_messy_edits',
-    label: 'Instructions are becoming messy as more people edit them',
+    key: 'control_at_scale',
+    label: 'Keeping instructions under control as our setup grows',
   },
   {
-    key: 'instruction_clarity',
-    label: "I know instructions matter, but I'm not sure what to write",
+    key: 'create_better_instructions',
+    label: 'Figuring out what good AI instructions look like',
   },
   {
-    key: 'instruction_maintenance',
-    label: 'I already have instructions, but maintaining them is painful',
-  },
-  {
-    key: 'multi_assistant_centralization',
-    label: 'I use multiple AI coding assistants and want one source of truth',
-  },
-  {
-    key: 'instruction_impact',
-    label: 'I want to be confident in the instructions my AI agents rely on',
+    key: 'assess_instruction_quality',
+    label: 'Checking whether our current instructions are good enough',
   },
   {
     key: 'exploring',
@@ -70,18 +62,18 @@ export function OnboardingReason({
             key={reason.key}
             cursor="pointer"
             onClick={() => setSelectedReason(reason.key)}
-            borderWidth="2px"
+            borderWidth="1px"
             borderColor={
-              selectedReason === reason.key ? 'purple.500' : 'gray.700'
+              selectedReason === reason.key ? 'branding.primary' : 'gray.700'
             }
             bg={
               selectedReason === reason.key
-                ? 'purple.900'
+                ? 'blue.800'
                 : 'background.secondary'
             }
             _hover={{
-              borderColor: 'purple.400',
-              bg: selectedReason === reason.key ? 'purple.900' : 'gray.800',
+              borderColor: 'brand.primary',
+              bg: selectedReason === reason.key ? 'blue.800' : 'blue.900',
             }}
             transition="all 0.2s"
           >
@@ -89,7 +81,7 @@ export function OnboardingReason({
               <PMHStack justify="space-between" align="center">
                 <PMText fontSize="md">{reason.label}</PMText>
                 {selectedReason === reason.key && (
-                  <PMIcon as={LuCheck} color="purple.400" size="lg" />
+                  <PMIcon as={LuCheck} color="brand.primary" size="lg" />
                 )}
               </PMHStack>
             </PMCard.Body>
@@ -109,7 +101,7 @@ export function OnboardingReason({
         </PMButton>
         <PMButton
           size="md"
-          variant="tertiary"
+          variant="ghost"
           onClick={onSkip}
           data-testid="OnboardingReason.SkipButton"
         >
