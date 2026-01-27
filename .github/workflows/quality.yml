@@ -83,10 +83,9 @@ jobs:
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
-  packmind-cli-v3:
+  packmind-cli:
     runs-on: ${{ vars.ACTION_RUNNER_TAG || 'self-hosted' }}
-    name: Run Packmind CLI V3
-    continue-on-error: true
+    name: Run Packmind CLI
 
     steps:
       - name: Checkout
@@ -105,57 +104,5 @@ jobs:
 
       - name: Run Packmind CLI V3
         run: ./cli-binary/packmind-cli-linux-x64 lint .
-        env:
-          PACKMIND_API_KEY_V3: ${{ secrets.PACKMIND_API_KEY_V3 }}
-
-  packmind-cli-v3-blocker:
-    name: Run Packmind CLI V3 [Blocker version]
-    runs-on: ${{ vars.ACTION_RUNNER_TAG || 'self-hosted' }}
-
-    strategy:
-      matrix:
-        target:
-          - apps/api
-          - apps/cli
-          - apps/e2e-tests
-          - apps/frontend
-          - apps/mcp-server
-          - packages/editions
-          - packages/frontend
-          - packages/migrations
-          - packages/skills
-          - packages/spaces
-          #- packages/standards
-          - packages/test-utils
-          - packages/types
-          - packages/ui
-          - packages/accounts
-          - packages/coding-agent
-          - packages/git
-          - packages/integration-tests
-          - packages/linter-ast
-          - packages/linter-execution
-          - packages/llm
-          - packages/logger
-          - packages/node-utils
-          - packages/recipes
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Download CLI executable
-        uses: actions/download-artifact@v4
-        with:
-          name: ${{ inputs.cli-executables-artifact }}
-          path: ./cli-binary
-
-      - name: Make binary executable
-        run: chmod +x ./cli-binary/packmind-cli-linux-x64
-
-      - name: Lint ${{ matrix.target }}
-        run: ./cli-binary/packmind-cli-linux-x64 lint ${{ matrix.target }}
         env:
           PACKMIND_API_KEY_V3: ${{ secrets.PACKMIND_API_KEY_V3 }}
