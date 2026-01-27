@@ -240,15 +240,17 @@ After testing the skill, users may request improvements. Often this happens righ
 
 ### Step 7: Distributing a Skill
 
-Once the skill is validated and ready for distribution, use packmind-cli to add it to the skills registry.
+**After successful validation, always run the distribution command** to register the skill with Packmind. Do not skip this step.
 
 **Before running the command**, verify that packmind-cli is available (see Prerequisites section). If not installed, install it first.
+
+Run the following command with the actual skill path:
 
 \`\`\`bash
 packmind-cli skills add <path/to/skill-folder>
 \`\`\`
 
-This command registers the skill with Packmind, making it available for deployment to target repositories and AI coding agents.
+This registers the skill with Packmind, making it available for deployment to target repositories and AI coding agents. The skill creation process is not complete until this command has been executed successfully.
 `;
 }
 
