@@ -27,16 +27,7 @@ import { getSpaceBySlugQueryOptions } from '../../src/domain/spaces/api/queries/
 import { queryClient } from '../../src/shared/data/queryClient';
 import { routes } from '../../src/shared/utils/routes';
 import { useAuthContext } from '../../src/domain/accounts/hooks/useAuthContext';
-import {
-  PMPage,
-  PMBox,
-  PMText,
-  PMGrid,
-  PMAlert,
-  PMFeatureFlag,
-  DEFAULT_FEATURE_DOMAIN_MAP,
-  SKILL_DELETION_FEATURE_KEY,
-} from '@packmind/ui';
+import { PMPage, PMBox, PMText, PMGrid, PMAlert } from '@packmind/ui';
 import { AutobreadCrumb } from '../../src/shared/components/navigation/AutobreadCrumb';
 import { SkillDetailsSidebar } from '../../src/domain/skills/components/SkillDetailsSidebar';
 import { SkillVersionHistoryHeader } from '../../src/domain/skills/components/SkillVersionHistoryHeader';
@@ -133,7 +124,7 @@ export default function SkillDetailLayoutRouteModule() {
     spaceSlug: string;
     skillSlug: string;
   }>();
-  const { organization, user } = useAuthContext();
+  const { organization } = useAuthContext();
 
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [deleteAlert, setDeleteAlert] = useState<{
@@ -309,22 +300,16 @@ export default function SkillDetailLayoutRouteModule() {
           />
         }
         actions={
-          <PMFeatureFlag
-            featureKeys={[SKILL_DELETION_FEATURE_KEY]}
-            featureDomainMap={DEFAULT_FEATURE_DOMAIN_MAP}
-            userEmail={user?.email}
-          >
-            <SkillActions
-              onDeleteRequest={handleDeleteRequest}
-              onDeleteDialogChange={handleDeleteDialogChange}
-              onConfirmDelete={handleDelete}
-              isDeleteDialogOpen={deleteModalOpen}
-              isDeleting={deleteSkillMutation.isPending}
-              deleteDialogMessage={SKILL_MESSAGES.confirmation.deleteSkill(
-                skillWithFiles.skill.name,
-              )}
-            />
-          </PMFeatureFlag>
+          <SkillActions
+            onDeleteRequest={handleDeleteRequest}
+            onDeleteDialogChange={handleDeleteDialogChange}
+            onConfirmDelete={handleDelete}
+            isDeleteDialogOpen={deleteModalOpen}
+            isDeleting={deleteSkillMutation.isPending}
+            deleteDialogMessage={SKILL_MESSAGES.confirmation.deleteSkill(
+              skillWithFiles.skill.name,
+            )}
+          />
         }
       >
         {deleteAlert && (
