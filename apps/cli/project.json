@@ -44,9 +44,9 @@
       "dependsOn": ["build"],
       "options": {
         "commands": [
-          "node apps/cli/scripts/clean-package-json.js",
-          "node apps/cli/scripts/create-stubs.js",
-          "node apps/cli/scripts/add-module-paths.js"
+          "node apps/cli/scripts/clean-package-json.cjs",
+          "node apps/cli/scripts/create-stubs.cjs",
+          "node apps/cli/scripts/add-module-paths.cjs"
         ],
         "parallel": false
       }
