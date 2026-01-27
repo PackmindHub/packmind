@@ -14,6 +14,10 @@ import {
 } from '@packmind/types';
 import { PackmindLogger } from '@packmind/logger';
 import { localDataSource, AbstractRepository } from '@packmind/node-utils';
+import { RecipeSchema } from '@packmind/recipes';
+import { StandardSchema, StandardVersionSchema } from '@packmind/standards';
+import { SkillSchema } from '@packmind/skills';
+import { SpaceSchema } from '@packmind/spaces';
 import { IPackageRepository } from '../../domain/repositories/IPackageRepository';
 import { PackageSchema } from '../schemas/PackageSchema';
 import {
@@ -62,7 +66,6 @@ export class PackageRepository
       const packages = await this.repository
         .createQueryBuilder('package')
         .where('package.space_id = :spaceId', { spaceId })
-        .andWhere('package.deleted_at IS NULL')
         .orderBy('package.created_at', 'DESC')
         .getMany();
 
@@ -313,26 +316,28 @@ export class PackageRepository
     });
 
     try {
-      // First get space IDs for the organization
-      const spaceIds = await this.repository.manager
-        .createQueryBuilder()
-        .select('space.id')
-        .from('spaces', 'space')
-        .where('space.organization_id = :organizationId', { organizationId })
-        .getRawMany()
-        .then((rows) => rows.map((r) => r.space_id));
+      // Find packages by slugs within spaces of the organization
+      // First get space IDs for the organization using repository
+      const spaces = await this.repository.manager
+        .getRepository(SpaceSchema)
+        .find({
+          where: { organizationId },
+          select: ['id'],
+        });
+
+      const spaceIds = spaces.map((s) => s.id);
 
       if (spaceIds.length === 0) {
         return [];
       }
 
       // Then find packages by slugs within those spaces
-      const packages = await this.repository
-        .createQueryBuilder('package')
-        .where('package.slug IN (:...slugs)', { slugs })
-        .andWhere('package.space_id IN (:...spaceIds)', { spaceIds })
-        .orderBy('package.created_at', 'DESC')
-        .getMany();
+      const packages = await this.repository.find({
+        where: {
+          slug: In(slugs),
+          spaceId: In(spaceIds),
+        },
+      });
 
       if (packages.length === 0) {
         return [];
@@ -370,119 +375,54 @@ export class PackageRepository
 
       const recipes: Recipe[] =
         uniqueRecipeIds.length > 0
-          ? ((await this.repository.manager
-              .createQueryBuilder()
-              .select('recipe')
-              .from('recipes', 'recipe')
-              .where('recipe.id IN (:...recipeIds)', {
-                recipeIds: uniqueRecipeIds,
+          ? await this.repository.manager
+              .getRepository<Recipe>(RecipeSchema)
+              .find({
+                where: { id: In(uniqueRecipeIds) },
               })
-              .getMany()) as Recipe[])
           : [];
 
-      const standards: Standard[] =
+      // Fetch standards
+      const standardsEntities =
         uniqueStandardIds.length > 0
           ? await this.repository.manager
-              .createQueryBuilder()
-              .select([
-                'standard.id',
-                'standard.name',
-                'standard.slug',
-                'standard.description',
-                'standard.version',
-                'standard.git_commit_id',
-                'standard.user_id',
-                'standard.scope',
-                'standard.space_id',
-                'standard.created_at',
-                'standard.updated_at',
-                'standard.deleted_at',
-                'standard.deleted_by',
-                'sv.summary',
-              ])
-              .from('standards', 'standard')
-              .leftJoin(
-                'standard_versions',
-                'sv',
-                'standard.id = sv.standard_id AND standard.version = sv.version',
-              )
-              .where('standard.id IN (:...standardIds)', {
-                standardIds: uniqueStandardIds,
+              .getRepository<Standard>(StandardSchema)
+              .find({
+                where: { id: In(uniqueStandardIds) },
               })
-              .getRawMany()
-              .then((rows) =>
-                rows.map(
-                  (row) =>
-                    ({
-                      id: row.standard_id,
-                      name: row.standard_name,
-                      slug: row.standard_slug,
-                      description: row.standard_description,
-                      version: row.standard_version,
-                      gitCommitId: row.standard_git_commit_id,
-                      userId: row.standard_user_id,
-                      scope: row.standard_scope,
-                      spaceId: row.standard_space_id,
-                      createdAt: row.standard_created_at,
-                      updatedAt: row.standard_updated_at,
-                      deletedAt: row.standard_deleted_at,
-                      deletedBy: row.standard_deleted_by,
-                      summary: row.sv_summary || undefined,
-                    }) as Standard,
-                ),
-              )
           : [];
+
+      // Fetch summaries for standards from standard_versions
+      const standardVersionsWithSummary =
+        standardsEntities.length > 0
+          ? await this.repository.manager
+              .getRepository(StandardVersionSchema)
+              .find({
+                where: { standardId: In(uniqueStandardIds) },
+              })
+          : [];
+
+      // Create a map for quick lookup of summaries by standard_id and version
+      const summaryMap = new Map<string, string>();
+      for (const sv of standardVersionsWithSummary) {
+        if (sv.summary) {
+          summaryMap.set(`${sv.standardId}:${sv.version}`, sv.summary);
+        }
+      }
+
+      const standards: Standard[] = standardsEntities.map((standard) => ({
+        ...standard,
+        summary:
+          summaryMap.get(`${standard.id}:${standard.version}`) || undefined,
+      }));
 
       const skills: Skill[] =
         uniqueSkillIds.length > 0
           ? await this.repository.manager
-              .createQueryBuilder()
-              .select([
-                'skill.id',
-                'skill.name',
-                'skill.slug',
-                'skill.version',
-                'skill.description',
-                'skill.prompt',
-                'skill.license',
-                'skill.compatibility',
-                'skill.metadata',
-                'skill.allowed_tools',
-                'skill.space_id',
-                'skill.user_id',
-                'skill.created_at',
-                'skill.updated_at',
-                'skill.deleted_at',
-                'skill.deleted_by',
-              ])
-              .from('skills', 'skill')
-              .where('skill.id IN (:...skillIds)', {
-                skillIds: uniqueSkillIds,
+              .getRepository<Skill>(SkillSchema)
+              .find({
+                where: { id: In(uniqueSkillIds) },
               })
-              .getRawMany()
-              .then((rows) =>
-                rows.map(
-                  (row) =>
-                    ({
-                      id: row.skill_id,
-                      name: row.skill_name,
-                      slug: row.skill_slug,
-                      version: row.skill_version,
-                      description: row.skill_description,
-                      prompt: row.skill_prompt,
-                      license: row.skill_license || undefined,
-                      compatibility: row.skill_compatibility || undefined,
-                      metadata: row.skill_metadata || undefined,
-                      allowedTools: row.skill_allowed_tools || undefined,
-                      spaceId: row.skill_space_id,
-                      userId: row.skill_user_id,
-                      createdAt: row.skill_created_at,
-                      updatedAt: row.skill_updated_at,
-                      deletedAt: row.skill_deleted_at,
-                      deletedBy: row.skill_deleted_by,
-                    }) as Skill,
-                ),
-              )
           : [];
 
       const recipesMap = new Map<string, Recipe>(recipes.map((r) => [r.id, r]));

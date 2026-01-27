@@ -255,26 +255,31 @@ describe('PublishArtifactsUseCase', () => {
       });
     });
 
-    it('returns distributions with empty distributedPackages', async () => {
-      const result = await useCase.execute(command);
+    describe('when execute is called', () => {
+      let result: Awaited<ReturnType<typeof useCase.execute>>;
 
-      expect(result.distributions).toHaveLength(1);
-      // distributedPackages are created by PublishPackagesUseCase, not PublishArtifactsUseCase
-      expect(result.distributions[0].distributedPackages).toEqual([]);
-    });
+      beforeEach(async () => {
+        result = await useCase.execute(command);
+      });
 
-    it('stores distribution with in_progress status', async () => {
-      const result = await useCase.execute(command);
+      it('returns exactly one distribution', () => {
+        expect(result.distributions).toHaveLength(1);
+      });
 
-      expect(result.distributions[0].status).toBe(
-        DistributionStatus.in_progress,
-      );
-    });
+      it('returns distributions with empty distributedPackages', () => {
+        // distributedPackages are created by PublishPackagesUseCase, not PublishArtifactsUseCase
+        expect(result.distributions[0].distributedPackages).toEqual([]);
+      });
 
-    it('stores distribution without git commit', async () => {
-      const result = await useCase.execute(command);
+      it('stores distribution with in_progress status', () => {
+        expect(result.distributions[0].status).toBe(
+          DistributionStatus.in_progress,
+        );
+      });
 
-      expect(result.distributions[0].gitCommit).toBeUndefined();
+      it('stores distribution without git commit', () => {
+        expect(result.distributions[0].gitCommit).toBeUndefined();
+      });
     });
 
     it('calls renderArtifacts with both recipe and standard versions', async () => {
@@ -302,20 +307,22 @@ describe('PublishArtifactsUseCase', () => {
       );
     });
 
-    it('fetches active render modes for organization', async () => {
-      await useCase.execute(command);
+    describe('when mapping render modes to coding agents', () => {
+      beforeEach(async () => {
+        await useCase.execute(command);
+      });
 
-      expect(
-        mockRenderModeConfigurationService.getActiveRenderModes,
-      ).toHaveBeenCalledWith(organizationId);
-    });
+      it('retrieves active render modes for organization', () => {
+        expect(
+          mockRenderModeConfigurationService.getActiveRenderModes,
+        ).toHaveBeenCalledWith(organizationId);
+      });
 
-    it('maps render modes to coding agents', async () => {
-      await useCase.execute(command);
-
-      expect(
-        mockRenderModeConfigurationService.mapRenderModesToCodingAgents,
-      ).toHaveBeenCalledWith(activeRenderModes);
+      it('maps render modes to coding agents', () => {
+        expect(
+          mockRenderModeConfigurationService.mapRenderModesToCodingAgents,
+        ).toHaveBeenCalledWith(activeRenderModes);
+      });
     });
 
     it('stores distributions with render modes', async () => {
@@ -358,39 +365,33 @@ describe('PublishArtifactsUseCase', () => {
       );
     });
 
-    it('includes recipe name in commit message', async () => {
-      await useCase.execute(command);
+    describe('when verifying commit message content', () => {
+      let jobInput: { commitMessage: string };
 
-      const jobInput = mockPublishArtifactsDelayedJob.addJob.mock.calls[0][0];
-      expect(jobInput.commitMessage).toContain('Test Recipe');
-    });
+      beforeEach(async () => {
+        await useCase.execute(command);
+        jobInput = mockPublishArtifactsDelayedJob.addJob.mock.calls[0][0];
+      });
 
-    it('includes recipe slug in commit message', async () => {
-      await useCase.execute(command);
+      it('includes recipe name in commit message', () => {
+        expect(jobInput.commitMessage).toContain('Test Recipe');
+      });
 
-      const jobInput = mockPublishArtifactsDelayedJob.addJob.mock.calls[0][0];
-      expect(jobInput.commitMessage).toContain('test-recipe');
-    });
+      it('includes recipe slug in commit message', () => {
+        expect(jobInput.commitMessage).toContain('test-recipe');
+      });
 
-    it('includes standard name in commit message', async () => {
-      await useCase.execute(command);
+      it('includes standard name in commit message', () => {
+        expect(jobInput.commitMessage).toContain('Test Standard');
+      });
 
-      const jobInput = mockPublishArtifactsDelayedJob.addJob.mock.calls[0][0];
-      expect(jobInput.commitMessage).toContain('Test Standard');
-    });
+      it('includes standard slug in commit message', () => {
+        expect(jobInput.commitMessage).toContain('test-standard');
+      });
 
-    it('includes standard slug in commit message', async () => {
-      await useCase.execute(command);
-
-      const jobInput = mockPublishArtifactsDelayedJob.addJob.mock.calls[0][0];
-      expect(jobInput.commitMessage).toContain('test-standard');
-    });
-
-    it('includes target name in commit message', async () => {
-      await useCase.execute(command);
-
-      const jobInput = mockPublishArtifactsDelayedJob.addJob.mock.calls[0][0];
-      expect(jobInput.commitMessage).toContain('Production');
+      it('includes target name in commit message', () => {
+        expect(jobInput.commitMessage).toContain('Production');
+      });
     });
 
     it('includes packmind.json in file updates', async () => {
@@ -460,16 +461,20 @@ describe('PublishArtifactsUseCase', () => {
       });
     });
 
-    it('creates one distribution', async () => {
-      const result = await useCase.execute(command);
+    describe('when execute is called', () => {
+      let result: Awaited<ReturnType<typeof useCase.execute>>;
 
-      expect(result.distributions).toHaveLength(1);
-    });
+      beforeEach(async () => {
+        result = await useCase.execute(command);
+      });
 
-    it('creates distribution with empty distributedPackages', async () => {
-      const result = await useCase.execute(command);
+      it('creates exactly one distribution', () => {
+        expect(result.distributions).toHaveLength(1);
+      });
 
-      expect(result.distributions[0].distributedPackages).toEqual([]);
+      it('creates distribution with empty distributedPackages', () => {
+        expect(result.distributions[0].distributedPackages).toEqual([]);
+      });
     });
 
     it('calls renderArtifacts with empty standards array', async () => {
@@ -542,16 +547,20 @@ describe('PublishArtifactsUseCase', () => {
       });
     });
 
-    it('creates one distribution', async () => {
-      const result = await useCase.execute(command);
+    describe('when execute is called', () => {
+      let result: Awaited<ReturnType<typeof useCase.execute>>;
 
-      expect(result.distributions).toHaveLength(1);
-    });
+      beforeEach(async () => {
+        result = await useCase.execute(command);
+      });
 
-    it('creates distribution with empty distributedPackages', async () => {
-      const result = await useCase.execute(command);
+      it('creates exactly one distribution', () => {
+        expect(result.distributions).toHaveLength(1);
+      });
 
-      expect(result.distributions[0].distributedPackages).toEqual([]);
+      it('creates distribution with empty distributedPackages', () => {
+        expect(result.distributions[0].distributedPackages).toEqual([]);
+      });
     });
 
     it('calls renderArtifacts with empty recipes array', async () => {
@@ -823,76 +832,62 @@ describe('PublishArtifactsUseCase', () => {
       });
     });
 
-    it('creates two distributions', async () => {
-      const result = await useCase.execute(command);
+    describe('when execute is called', () => {
+      let result: Awaited<ReturnType<typeof useCase.execute>>;
+      let jobInput: { commitMessage: string };
 
-      expect(result.distributions).toHaveLength(2);
-    });
+      beforeEach(async () => {
+        result = await useCase.execute(command);
+        jobInput = mockPublishArtifactsDelayedJob.addJob.mock.calls[0][0];
+      });
 
-    it('assigns first target to first distribution', async () => {
-      const result = await useCase.execute(command);
+      it('creates exactly two distributions', () => {
+        expect(result.distributions).toHaveLength(2);
+      });
 
-      expect(result.distributions[0].target.id).toBe(targetId1);
-    });
+      it('assigns first target to first distribution', () => {
+        expect(result.distributions[0].target.id).toBe(targetId1);
+      });
 
-    it('assigns second target to second distribution', async () => {
-      const result = await useCase.execute(command);
+      it('assigns second target to second distribution', () => {
+        expect(result.distributions[1].target.id).toBe(targetId2);
+      });
 
-      expect(result.distributions[1].target.id).toBe(targetId2);
-    });
+      it('enqueues only one job for all targets in the same repository', () => {
+        expect(mockPublishArtifactsDelayedJob.addJob).toHaveBeenCalledTimes(1);
+      });
 
-    it('enqueues only one job for all targets in the same repository', async () => {
-      await useCase.execute(command);
+      it('sets first distribution status to in_progress', () => {
+        expect(result.distributions[0].status).toBe(
+          DistributionStatus.in_progress,
+        );
+      });
 
-      expect(mockPublishArtifactsDelayedJob.addJob).toHaveBeenCalledTimes(1);
-    });
+      it('sets second distribution status to in_progress', () => {
+        expect(result.distributions[1].status).toBe(
+          DistributionStatus.in_progress,
+        );
+      });
 
-    it('sets first distribution status to in_progress', async () => {
-      const result = await useCase.execute(command);
+      it('leaves first distribution gitCommit undefined', () => {
+        expect(result.distributions[0].gitCommit).toBeUndefined();
+      });
 
-      expect(result.distributions[0].status).toBe(
-        DistributionStatus.in_progress,
-      );
-    });
+      it('leaves second distribution gitCommit undefined', () => {
+        expect(result.distributions[1].gitCommit).toBeUndefined();
+      });
 
-    it('sets second distribution status to in_progress', async () => {
-      const result = await useCase.execute(command);
+      it('calls renderArtifacts once per target', () => {
+        expect(mockCodingAgentPort.renderArtifacts).toHaveBeenCalledTimes(2);
+      });
 
-      expect(result.distributions[1].status).toBe(
-        DistributionStatus.in_progress,
-      );
-    });
+      it('includes Production target name in commit message', () => {
+        expect(jobInput.commitMessage).toContain('Production');
+      });
 
-    it('leaves first distribution gitCommit undefined', async () => {
-      const result = await useCase.execute(command);
-
-      expect(result.distributions[0].gitCommit).toBeUndefined();
-    });
-
-    it('leaves second distribution gitCommit undefined', async () => {
-      const result = await useCase.execute(command);
-
-      expect(result.distributions[1].gitCommit).toBeUndefined();
-    });
-
-    it('calls renderArtifacts once per target', async () => {
-      await useCase.execute(command);
-
-      expect(mockCodingAgentPort.renderArtifacts).toHaveBeenCalledTimes(2);
-    });
-
-    it('includes Production target in commit message', async () => {
-      await useCase.execute(command);
-
-      const jobInput = mockPublishArtifactsDelayedJob.addJob.mock.calls[0][0];
-      expect(jobInput.commitMessage).toContain('Production');
-    });
-
-    it('includes Staging target in commit message', async () => {
-      await useCase.execute(command);
-
-      const jobInput = mockPublishArtifactsDelayedJob.addJob.mock.calls[0][0];
-      expect(jobInput.commitMessage).toContain('Staging');
+      it('includes Staging target name in commit message', () => {
+        expect(jobInput.commitMessage).toContain('Staging');
+      });
     });
   });
 
@@ -1199,7 +1194,7 @@ describe('PublishArtifactsUseCase', () => {
       ).toHaveBeenCalledWith(DEFAULT_ACTIVE_RENDER_MODES);
     });
 
-    it('stores default render modes in distribution', () => {
+    it('stores distribution with default render modes', () => {
       expect(result.distributions[0].renderModes).toEqual(
         DEFAULT_ACTIVE_RENDER_MODES,
       );
