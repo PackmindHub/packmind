@@ -1,0 +1,79 @@
+{
+  "name": "Frontend Gateway Pattern",
+  "description": "Gateways provide a clean abstraction layer for API communication in the frontend application. They separate the interface contract from the HTTP implementation, enabling testability and consistent data fetching patterns across domains.",
+  "scope": "Frontend gateway files in apps/frontend/src/domain/*/api/gateways/",
+  "rules": [
+    {
+      "content": "Name gateway interface files with `I` prefix following pattern `I{Domain}Gateway.ts`",
+      "examples": {
+        "positive": "// File: ITrialGateway.ts\nexport interface ITrialGateway {\n  startTrial: PublicGateway<IStartTrial>;\n}",
+        "negative": "// File: TrialGateway.ts (missing I prefix)\nexport interface TrialGateway {\n  startTrial: PublicGateway<IStartTrial>;\n}",
+        "language": "TYPESCRIPT"
+      }
+    },
+    {
+      "content": "Name gateway implementation files following pattern `{Domain}GatewayApi.ts`",
+      "examples": {
+        "positive": "// File: TrialGatewayApi.ts\nexport class TrialGatewayApi extends PackmindGateway implements ITrialGateway {\n  // ...\n}",
+        "negative": "// File: TrialGateway.ts (missing Api suffix)\nexport class TrialGateway extends PackmindGateway implements ITrialGateway {\n  // ...\n}",
+        "language": "TYPESCRIPT"
+      }
+    },
+    {
+      "content": "Use `Gateway<IUseCase>` type helper for authenticated operations or `PublicGateway<IUseCase>` for public operations when the method corresponds to a backend use case",
+      "examples": {
+        "positive": "import { PublicGateway, IStartTrial, Gateway, IGetUser } from '@packmind/types';\n\nexport interface ITrialGateway {\n  startTrial: PublicGateway<IStartTrial>;\n}\n\nexport interface IUserGateway {\n  getUser: Gateway<IGetUser>;\n}",
+        "negative": "export interface ITrialGateway {\n  startTrial: (command: StartTrialCommand) => Promise<StartTrialResult>;\n}",
+        "language": "TYPESCRIPT"
+      }
+    },
+    {
+      "content": "Import Command and Response types from `@packmind/types` when they are defined in use case contracts",
+      "examples": {
+        "positive": "import { StartTrialCommand, StartTrialResult } from '@packmind/types';\n\nstartTrial = async (params: StartTrialCommand): Promise<StartTrialResult> => {\n  return this._api.get<StartTrialResult>(`${this._endpoint}?agent=${params.agent}`);\n};",
+        "negative": "// Duplicating types that already exist in @packmind/types\ninterface StartTrialCommand {\n  agent: string;\n}\n\ninterface StartTrialResult {\n  token: string;\n}",
+        "language": "TYPESCRIPT"
+      }
+    },
+    {
+      "content": "Define Command and Response types locally in the interface file only for gateway-specific operations not backed by a use case",
+      "examples": {
+        "positive": "// In ITrialGateway.ts - gateway-specific operation\nexport interface GetActivationTokenCommand {\n  mcpToken: string;\n}\n\nexport interface GetActivationTokenResponse {\n  activationUrl: string;\n}\n\nexport interface ITrialGateway {\n  getActivationToken: (command: GetActivationTokenCommand) => Promise<GetActivationTokenResponse>;\n}",
+        "negative": "// Defining types locally when they exist in @packmind/types\nexport interface StartTrialCommand {\n  agent: string;\n}",
+        "language": "TYPESCRIPT"
+      }
+    },
+    {
+      "content": "Extend `PackmindGateway` base class in implementation and call `super('/endpoint-base')` in constructor",
+      "examples": {
+        "positive": "import { PackmindGateway } from '../../../../shared/PackmindGateway';\n\nexport class TrialGatewayApi extends PackmindGateway implements ITrialGateway {\n  constructor() {\n    super('/quick-start');\n  }\n}",
+        "negative": "export class TrialGatewayApi implements ITrialGateway {\n  private endpoint = '/quick-start';\n  private api = new AxiosClient();\n}",
+        "language": "TYPESCRIPT"
+      }
+    },
+    {
+      "content": "Implement the gateway interface explicitly using `implements I{Domain}Gateway`",
+      "examples": {
+        "positive": "export class TrialGatewayApi extends PackmindGateway implements ITrialGateway {\n  // TypeScript enforces interface contract\n}",
+        "negative": "export class TrialGatewayApi extends PackmindGateway {\n  // No interface contract enforcement\n}",
+        "language": "TYPESCRIPT"
+      }
+    },
+    {
+      "content": "Define methods as arrow function properties instead of regular class methods",
+      "examples": {
+        "positive": "export class TrialGatewayApi extends PackmindGateway implements ITrialGateway {\n  startTrial = async (params: StartTrialCommand): Promise<StartTrialResult> => {\n    return this._api.get<StartTrialResult>(`${this._endpoint}?agent=${params.agent}`);\n  };\n}",
+        "negative": "export class AuthGatewayApi extends PackmindGateway implements IAuthGateway {\n  async signIn(request: SignInUserCommand): Promise<SignInUserResponse> {\n    return this._api.post<SignInUserResponse>(`${this._endpoint}/signin`, request);\n  }\n}",
+        "language": "TYPESCRIPT"
+      }
+    },
+    {
+      "content": "Return typed API calls using `this._api.get<ResponseType>()` or `this._api.post<ResponseType>()`",
+      "examples": {
+        "positive": "startTrial = async (params: StartTrialCommand): Promise<StartTrialResult> => {\n  return this._api.get<StartTrialResult>(`${this._endpoint}?agent=${params.agent}`);\n};",
+        "negative": "startTrial = async (params: StartTrialCommand) => {\n  return this._api.get(`${this._endpoint}?agent=${params.agent}`);\n};",
+        "language": "TYPESCRIPT"
+      }
+    }
+  ]
+}
