@@ -12,7 +12,7 @@
 
 ## Fixed
 
-- Migrate CLI from CommonJS to ESM to fix runtime errors with ESM-only dependencies on Windows (#96)
+- Fix CLI runtime errors on Windows with ESM-only dependencies by using dynamic import for `open` package (#96)
 
 ## Removed
 

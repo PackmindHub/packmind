@@ -27,6 +27,6 @@ jobs:
         run: npm run packmind-cli:build
 
       - name: Run CLI lint
-        run: node dist/apps/cli/main.js lint .
+        run: node dist/apps/cli/main.cjs lint .
         env:
           PACKMIND_API_KEY_V3: ${{ secrets.PACKMIND_API_KEY_V3 }}

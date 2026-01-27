@@ -2,8 +2,7 @@
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "outDir": "../../dist/out-tsc",
-    "module": "ES2022",
-    "moduleResolution": "bundler",
+    "module": "commonjs",
     "types": ["node"]
   },
   "include": ["src/**/*.ts"],

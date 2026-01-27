@@ -12,7 +12,7 @@
       "options": {
         "platform": "node",
         "outputPath": "dist/apps/cli",
-        "format": ["esm"],
+        "format": ["cjs"],
         "bundle": true,
         "main": "apps/cli/src/main.ts",
         "tsConfig": "apps/cli/tsconfig.app.json",
@@ -30,12 +30,12 @@
           }
         ],
         "generatePackageJson": true,
-        "esbuildConfig": "apps/cli/esbuild-publish.config.cjs"
+        "esbuildConfig": "apps/cli/esbuild-publish.config.js"
       },
       "configurations": {
         "development": {},
         "production": {
-          "esbuildConfig": "apps/cli/esbuild-publish.config.cjs"
+          "esbuildConfig": "apps/cli/esbuild-publish.config.js"
         }
       }
     },
@@ -44,9 +44,9 @@
       "dependsOn": ["build"],
       "options": {
         "commands": [
-          "node apps/cli/scripts/clean-package-json.cjs",
-          "node apps/cli/scripts/create-stubs.cjs",
-          "node apps/cli/scripts/add-module-paths.cjs"
+          "node apps/cli/scripts/clean-package-json.js",
+          "node apps/cli/scripts/create-stubs.js",
+          "node apps/cli/scripts/add-module-paths.js"
         ],
         "parallel": false
       }
@@ -58,13 +58,13 @@
       "options": {
         "platform": "node",
         "outputPath": "dist/apps/cli-bundle",
-        "format": ["esm"],
+        "format": ["cjs"],
         "bundle": true,
         "minify": false,
         "main": "apps/cli/src/main.ts",
         "tsConfig": "apps/cli/tsconfig.app.json",
         "generatePackageJson": false,
-        "esbuildConfig": "apps/cli/esbuild-publish.config.cjs"
+        "esbuildConfig": "apps/cli/esbuild-publish.config.js"
       },
       "configurations": {
         "development": {},

@@ -1,5 +1,4 @@
 import * as http from 'http';
-import open from 'open';
 import * as readline from 'readline';
 import { removeTrailingSlash } from '@packmind/node-utils';
 import {
@@ -29,6 +28,8 @@ export interface ILoginDependencies {
 
 async function defaultOpenBrowser(url: string): Promise<void> {
   try {
+    // Use dynamic import for 'open' package (ESM-only) to work with CJS bundle
+    const { default: open } = await import('open');
     await open(url);
   } catch {
     // Browser open failed, caller should handle fallback

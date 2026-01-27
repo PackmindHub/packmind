@@ -17,8 +17,7 @@ import { GitService } from './application/services/GitService';
 import { logConsole, logErrorConsole } from './infra/utils/consoleLogger';
 
 // Read version from package.json (bundled by esbuild)
-import { createRequire } from 'module';
-const require = createRequire(import.meta.url);
+// eslint-disable-next-line @typescript-eslint/no-require-imports
 const { version: CLI_VERSION } = require('../package.json');
 
 /**

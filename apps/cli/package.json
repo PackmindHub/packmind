@@ -3,13 +3,12 @@
   "version": "0.13.1",
   "description": "A command-line interface for Packmind linting and code quality checks",
   "private": false,
-  "type": "module",
   "bin": {
-    "packmind-cli": "./main.js"
+    "packmind-cli": "./main.cjs"
   },
-  "main": "./main.js",
+  "main": "./main.cjs",
   "files": [
-    "main.js",
+    "main.cjs",
     "*.wasm",
     "stubs",
     "CHANGELOG.MD"

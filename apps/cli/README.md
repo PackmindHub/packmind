@@ -290,7 +290,7 @@ When modifying the CLI:
 
 ```
   nx run packmind-cli:build --skip-nx-cache
-  node dist/apps/cli/main.js <args>
+  node dist/apps/cli/main.cjs <args>
 ```
 
 ## References
