@@ -39,6 +39,7 @@ export class StandardRepository
   async findBySlug(
     slug: string,
     organizationId: OrganizationId,
+    opts?: QueryOption,
   ): Promise<Standard | null> {
     this.logger.info('Finding standard with scope by slug and organization', {
       slug,
@@ -48,14 +49,19 @@ export class StandardRepository
     try {
       // Query standards by slug across all spaces in the organization
       // Join with spaces table to filter by organizationId
-      const standard = await this.repository
+      const queryBuilder = this.repository
         .createQueryBuilder('standard')
         .innerJoin('spaces', 'space', 'standard.space_id = space.id')
         .leftJoinAndSelect('standard.gitCommit', 'gitCommit')
         .where('standard.slug = :slug', { slug })
-        .andWhere('space.organization_id = :organizationId', { organizationId })
-        .andWhere('standard.deleted_at IS NULL')
-        .getOne();
+        .andWhere('space.organization_id = :organizationId', {
+          organizationId,
+        });
+
+      if (opts?.includeDeleted) {
+        queryBuilder.withDeleted();
+      }
+      const standard = await queryBuilder.getOne();
 
       if (!standard) {
         this.logger.warn('Standard not found by slug and organization', {
