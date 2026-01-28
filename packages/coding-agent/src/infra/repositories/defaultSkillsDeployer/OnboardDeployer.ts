@@ -1,119 +1,197 @@
 import { FileUpdates } from '@packmind/types';
 import { ISkillDeployer } from './IDefaultSkillDeployer';
 
-function getOnboardSkillMd(agentName: string): string {
+function getOnboardSkillMd(): string {
   return `---
 name: 'packmind-onboard'
-description: "Generate a Packmind onboarding draft. ${agentName} scans read-only, writes local draft files, prompts before sending."
+description: "Generate a personalized onboarding pack (insights + artifacts) from a read-only scan, write a local draft, optionally apply to repo, then optionally send to Packmind."
 license: 'Complete terms in LICENSE.txt'
 ---
 
 # packmind-onboard
 
-**This skill generates a draft. Nothing is sent without your confirmation.**
+Action skill. Generates a personalized onboarding pack (insights + ready-to-use artifacts) from a read-only scan.
+
+**Draft-first:** nothing is sent or written into the repo unless the user explicitly chooses it.
+
+## What This Skill Produces
+
+- **Project-specific insights** (things Packmind discovered about this repo)
+- **Artifacts that are directly usable:**
+  - \`CLAUDE.md\` snippet updates (repo commands, conventions)
+  - \`.packmind/standards/*\` drafts tailored to repo configs/patterns
+  - \`.packmind/commands/*\` drafts aligned with repo structure
+- **Local draft files** (.md + .json) so the user can review before doing anything
 
 ## Execution Steps
 
 When this skill is triggered:
 
-1. Print: \`packmind-onboard: generating draft (read-only scan)...\`
-2. Run the draft generation using the Bash tool:
-   \`\`\`bash
-   packmind-cli onboard --dry-run --print
-   \`\`\`
-3. Show the user the draft file paths from the output
-4. Ask user: **[s] send to Packmind | [e] open draft | [q] quit**
-5. If **send**: run \`packmind-cli onboard --yes\` and confirm success
-6. If **open**: open the markdown file, then re-prompt send/quit
-7. If **quit**: done, draft files remain for later
+### 1. Print exactly:
+\`\`\`
+packmind-onboard: generating onboarding pack (read-only)...
+\`\`\`
 
-## Output Format
+### 2. Generate the draft pack (read-only, draft-only) using Bash:
+\`\`\`bash
+packmind-cli onboard --dry-run --print
+\`\`\`
 
-Keep output minimal. Example:
+### 3. From the CLI output, extract and display:
+- Number of baseline items
+- Number of insights (if printed)
+- Draft file paths (md + json)
+- Artifact folder paths (if printed)
+
+### 4. Show a short "wow" preview:
+- Print up to 3 top insights (one line each)
+- Each insight must reference evidence if available (e.g., \`package.json\`, \`tsconfig.json\`, \`.github/workflows/*\`)
+- No long explanations
+
+### 5. Prompt once:
+\`\`\`
+[a] apply to repo | [s] send to Packmind | [e] open draft | [q] quit
+\`\`\`
+
+### 6. Handle choices:
+
+**If apply:**
+Run an apply mode command that shows diffs first and requires confirmation:
+\`\`\`bash
+packmind-cli onboard --apply
+\`\`\`
+After apply completes, re-prompt:
+\`[s] send to Packmind | [e] open draft | [q] quit\`
+
+**If send:**
+Send only after explicit confirmation (user chose \`s\` or said "send it"):
+\`\`\`bash
+packmind-cli onboard --yes
+\`\`\`
+Confirm success from output. If success, print:
+\`\`\`
+Done. Sent to Packmind.
+\`\`\`
+
+**If open:**
+Open the markdown draft file:
+\`\`\`bash
+packmind-cli onboard --open --dry-run
+\`\`\`
+If \`--open\` isn't supported or fails, instruct the user to open the printed path manually.
+Re-prompt: \`[a] apply to repo | [s] send to Packmind | [q] quit\`
+
+**If quit:**
+Print:
+\`\`\`
+Done. Draft files remain available for later.
+\`\`\`
+
+## Output Format (minimal)
+
+Example output (keep it tight):
 
 \`\`\`
-packmind-onboard: generating draft (read-only scan)...
+packmind-onboard: generating onboarding pack (read-only)...
 
 Generated 7 baseline items
+Found 4 project-specific insights
+
+Top insights:
+  1) ESLint configured but not enforced in CI (evidence: .eslintrc*, .github/workflows/*)
+  2) Typecheck script exists but not part of default workflow (evidence: package.json)
+  3) Component conventions differ across apps (evidence: src/components/, components/)
 
 Draft files:
   ~/.packmind/cli/drafts/packmind-onboard.draft.md
   ~/.packmind/cli/drafts/packmind-onboard.draft.json
 
-[s] send to Packmind | [e] open draft | [q] quit
+[a] apply to repo | [s] send to Packmind | [e] open draft | [q] quit
 \`\`\`
 
 ## Rules
 
-- **No fluff.** One-liner intro, then action.
+- **No fluff.** One-liner intro, then do the work.
 - **Always generate the draft** as part of skill execution.
-- **Never send without confirmation** (unless user explicitly says "send it").
-- **Print paths** after generation.
-- **Single prompt** for next action.
+- **Never send** without explicit user confirmation.
+- **Never write to repo** unless user explicitly chooses \`apply\`.
+- **Apply must show diffs first** and avoid overwriting without confirmation.
+- **Keep previews short:** max 3 insights printed.
+- If parsing file paths fails, ask the user to paste the lines that contain "Draft files:" from the CLI output.
 
-## Prerequisites
+## Failure Handling
 
-If the CLI is not installed or user is not logged in, the command will fail. In that case, tell the user:
-
+**If CLI missing:**
 \`\`\`
 packmind-cli not found. Install with: npm install -g @packmind/cli
 Then login with: packmind-cli login
 \`\`\`
 
-## Reference
+**If user not logged in / auth error:**
+\`\`\`
+You're not logged in. Run: packmind-cli login
+Then rerun: packmind-cli onboard --dry-run --print
+\`\`\`
 
-CLI flags:
-- \`--dry-run\` - Generate draft only, never send
-- \`--print\` - Print baseline items to stdout
-- \`--yes\` - Skip prompts and send immediately
-- \`--open\` - Open draft in default viewer
-- \`--output <path>\` - Custom output directory
+**If generation is slow or silent:**
+Print a single line:
+\`\`\`
+Still working... (scan is read-only; extracting repo-specific insights)
+\`\`\`
+
+## Reference Flags (CLI)
+
+| Flag | Description |
+|------|-------------|
+| \`--dry-run\` | Generate draft only, never send |
+| \`--print\` | Print summary/insights to stdout |
+| \`--yes\` | Skip prompts and send immediately |
+| \`--open\` | Open markdown draft in default viewer |
+| \`--apply\` | Apply selected artifacts to repo (shows diffs, requires confirm) |
+| \`--output <path>\` | Custom output directory |
+
+## Notes for Implementation
+
+The CLI must print draft paths and (ideally) a small list of "Top insights" so this skill can display them without additional file parsing.
+
+The draft .json should contain:
+- baseline items
+- insights
+- artifacts with recommended paths and content
+
+The draft .md should include:
+- disclaimer
+- summary
+- insights section
+- artifacts index with recommended install locations
 `;
 }
 
-const ONBOARD_README = `# Packmind Draft-First Onboarding
+const ONBOARD_README = `# Packmind Onboarding Skill
 
-A skill that guides AI coding agents through the draft-first onboarding process for Packmind.
+Action skill that generates a personalized onboarding pack from a read-only scan.
 
-## What is Draft-First Onboarding?
+## What It Does
 
-This skill uses a **draft-first** approach:
-1. Scan your project (read-only)
-2. Generate a local draft baseline file
-3. Let you review before sending anything
-4. Optionally send to Packmind after your approval
+1. Scans your project (read-only)
+2. Generates insights + artifact drafts
+3. Writes local draft files for review
+4. Optionally applies artifacts to repo
+5. Optionally sends to Packmind
 
-**Nothing is sent to Packmind without explicit user confirmation.**
+**Nothing is sent or written without explicit user confirmation.**
 
-## How to Use
+## Usage
 
-Ask the AI agent to onboard your project to Packmind. The agent will automatically use this skill to guide the process.
-
-### Example Prompts
-
+Ask your AI agent to onboard your project to Packmind:
 - "Onboard this project to Packmind"
 - "Run packmind onboarding"
-- "Generate a Packmind baseline for this project"
-- "Scan this project for Packmind"
-
-The AI agent will:
-
-1. Check prerequisites (packmind-cli installed and logged in)
-2. Run \`packmind-cli onboard\`
-3. Review the generated draft with you
-4. Help you decide whether to send or edit
+- "Generate a Packmind baseline"
 
 ## Prerequisites
 
 - **packmind-cli**: Install with \`npm install -g @packmind/cli\`
 - **Packmind account**: Login via \`packmind-cli login\`
-
-## Safety
-
-- Read-only scanning (no modifications to your repo)
-- Draft files generated locally first
-- User reviews before any network push
-- Evidence-backed baseline items only
 
 ## License
 
@@ -300,14 +378,14 @@ const ONBOARD_LICENSE = `
 `;
 
 export class OnboardDeployer implements ISkillDeployer {
-  deploy(agentName: string, skillsFolderPath: string): FileUpdates {
+  deploy(_agentName: string, skillsFolderPath: string): FileUpdates {
     const basePath = `${skillsFolderPath}packmind-onboard`;
 
     return {
       createOrUpdate: [
         {
           path: `${basePath}/SKILL.md`,
-          content: getOnboardSkillMd(agentName),
+          content: getOnboardSkillMd(),
         },
         {
           path: `${basePath}/README.md`,
