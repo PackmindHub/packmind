@@ -1,4 +1,5 @@
 import { Box } from '@chakra-ui/react';
+import DOMPurify from 'dompurify';
 import { marked } from 'marked';
 import { ComponentPropsWithoutRef, useMemo } from 'react';
 
@@ -16,15 +17,14 @@ export function PMMarkdownViewer({
   ...rest
 }: PMMarkdownViewerProps) {
   const htmlContent = useMemo(() => {
-    // Configure marked options
     marked.setOptions({
       breaks: true,
       gfm: true,
     });
 
-    const html = marked(content);
-    return html;
-  }, [content]);
+    const html = marked(content) as string;
+    return sanitize ? DOMPurify.sanitize(html) : html;
+  }, [content, sanitize]);
 
   const defaultStyles: React.CSSProperties = {
     lineHeight: '1.6',
