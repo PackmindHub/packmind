@@ -205,6 +205,244 @@ git commit -m "feat(cli): add project scanner service for onboarding"
 
 ---
 
+## Task 1.5: Project Map Generation (Agent-Assisted)
+
+**Goal:** The `packmind onboard` command outputs a structured prompt that guides the AI agent to generate a "Project Map" standard - a simple 5-10 bullet reference of "where things live" in the codebase.
+
+**Flow:**
+1. CLI scans project structure using ProjectScannerService
+2. CLI outputs a structured prompt with detected structure
+3. Agent (running the command) generates Project Map content
+4. Agent writes a JSON playbook file
+5. Agent runs `packmind-cli standards create ./project-map.json`
+
+**Files:**
+- Modify: `apps/cli/src/infra/commands/OnboardCommand.ts`
+
+**Step 1: Update OnboardCommand to output structured prompt**
+
+The command should output the project structure and instructions for the agent:
+
+```typescript
+// In OnboardCommand handler, after scanning:
+const output = `
+## Project Structure
+
+\`\`\`
+my-project/
+├── apps/
+│   ├── api/           # NestJS backend
+│   ├── frontend/      # React SPA
+│   └── cli/           # Command-line tool
+├── packages/
+│   ├── common/        # Shared utilities
+│   ├── types/         # TypeScript types
+│   └── migrations/    # Database migrations
+├── docs/              # Documentation
+├── tools/             # Build scripts
+├── package.json       # (typescript, nestjs, react)
+├── tsconfig.json
+└── nx.json            # Nx monorepo
+\`\`\`
+
+## Your Task
+
+Create a "Project Map" standard with 5-10 rules explaining where things live.
+Format: "Find [what] in [where]"
+
+Example rules:
+- "Find API endpoints in apps/api/src/controllers/"
+- "Find shared utilities in packages/common/"
+- "Find React components in apps/frontend/src/components/"
+
+Save to \`project-map.json\`:
+
+\`\`\`json
+{
+  "name": "Project Map",
+  "description": "Quick reference for navigating this codebase",
+  "scope": "All files in this project",
+  "rules": [
+    { "content": "Find ... in ..." }
+  ]
+}
+\`\`\`
+
+Then run: \`packmind-cli standards create ./project-map.json\`
+`;
+
+consoleLogger.log(output);
+```
+
+**Step 2: Create ASCII tree generator service**
+
+Create a service to generate the ASCII tree representation:
+
+**Files:**
+- Create: `apps/cli/src/application/services/AsciiTreeService.ts`
+- Create: `apps/cli/src/application/services/AsciiTreeService.spec.ts`
+
+```typescript
+// apps/cli/src/application/services/AsciiTreeService.ts
+import * as fs from 'fs/promises';
+import * as path from 'path';
+
+interface ITreeEntry {
+  name: string;
+  isDirectory: boolean;
+  annotation?: string;  // e.g., "# NestJS backend"
+  children?: ITreeEntry[];
+}
+
+export class AsciiTreeService {
+  private ignoredDirs = ['node_modules', '.git', 'dist', 'coverage', '.nx'];
+  private configFiles = ['package.json', 'tsconfig.json', 'nx.json', 'turbo.json', '.eslintrc.json'];
+
+  async generateTree(projectPath: string, depth: number = 2): Promise<string> {
+    const projectName = path.basename(projectPath);
+    const entries = await this.scanDirectory(projectPath, depth);
+
+    const lines: string[] = [`${projectName}/`];
+    this.renderEntries(entries, lines, '');
+
+    return lines.join('\n');
+  }
+
+  private async scanDirectory(dirPath: string, depth: number): Promise<ITreeEntry[]> {
+    if (depth === 0) return [];
+
+    const entries = await fs.readdir(dirPath, { withFileTypes: true });
+    const result: ITreeEntry[] = [];
+
+    // Directories first, then files
+    const dirs = entries.filter(e => e.isDirectory() && !this.ignoredDirs.includes(e.name) && !e.name.startsWith('.'));
+    const files = entries.filter(e => e.isFile() && this.configFiles.includes(e.name));
+
+    for (const dir of dirs) {
+      const children = await this.scanDirectory(path.join(dirPath, dir.name), depth - 1);
+      result.push({
+        name: dir.name,
+        isDirectory: true,
+        annotation: await this.detectAnnotation(path.join(dirPath, dir.name)),
+        children,
+      });
+    }
+
+    for (const file of files) {
+      result.push({
+        name: file.name,
+        isDirectory: false,
+        annotation: await this.detectFileAnnotation(path.join(dirPath, file.name)),
+      });
+    }
+
+    return result;
+  }
+
+  private renderEntries(entries: ITreeEntry[], lines: string[], prefix: string): void {
+    entries.forEach((entry, idx) => {
+      const isLast = idx === entries.length - 1;
+      const connector = isLast ? '└── ' : '├── ';
+      const childPrefix = isLast ? '    ' : '│   ';
+
+      const suffix = entry.isDirectory ? '/' : '';
+      const annotation = entry.annotation ? `  # ${entry.annotation}` : '';
+
+      lines.push(`${prefix}${connector}${entry.name}${suffix}${annotation}`);
+
+      if (entry.children && entry.children.length > 0) {
+        this.renderEntries(entry.children, lines, prefix + childPrefix);
+      }
+    });
+  }
+
+  private async detectAnnotation(dirPath: string): Promise<string | undefined> {
+    // Try to detect what this directory contains
+    const packageJsonPath = path.join(dirPath, 'package.json');
+    try {
+      const content = await fs.readFile(packageJsonPath, 'utf-8');
+      const pkg = JSON.parse(content);
+
+      if (pkg.dependencies?.['@nestjs/core']) return 'NestJS backend';
+      if (pkg.dependencies?.['react']) return 'React app';
+      if (pkg.dependencies?.['vue']) return 'Vue app';
+      if (pkg.name?.includes('common') || pkg.name?.includes('shared')) return 'Shared utilities';
+      if (pkg.name?.includes('types')) return 'TypeScript types';
+    } catch {
+      // No package.json, try other heuristics
+      const files = await fs.readdir(dirPath).catch(() => []);
+      if (files.includes('migrations')) return 'Database migrations';
+      if (files.includes('SKILL.md')) return 'Skill definition';
+    }
+    return undefined;
+  }
+
+  private async detectFileAnnotation(filePath: string): Promise<string | undefined> {
+    const fileName = path.basename(filePath);
+    if (fileName === 'package.json') {
+      const content = await fs.readFile(filePath, 'utf-8');
+      const pkg = JSON.parse(content);
+      const techs: string[] = [];
+      const deps = { ...pkg.dependencies, ...pkg.devDependencies };
+      if (deps['typescript']) techs.push('TypeScript');
+      if (deps['@nestjs/core']) techs.push('NestJS');
+      if (deps['react']) techs.push('React');
+      if (techs.length > 0) return techs.join(', ');
+    }
+    if (fileName === 'nx.json') return 'Nx monorepo';
+    if (fileName === 'turbo.json') return 'Turborepo';
+    return undefined;
+  }
+}
+```
+
+**Step 3: Test the flow**
+
+Run: `packmind-cli onboard`
+
+Expected output:
+```
+## Project Structure
+
+packmind/
+├── apps/
+│   ├── api/           # NestJS backend
+│   ├── frontend/      # React app
+│   ├── cli/
+│   ├── mcp-server/
+│   └── doc/
+├── packages/
+│   ├── common/        # Shared utilities
+│   ├── types/         # TypeScript types
+│   └── migrations/    # Database migrations
+├── docs/
+├── tools/
+├── package.json       # TypeScript, NestJS, React
+├── tsconfig.json
+└── nx.json            # Nx monorepo
+
+## Your Task
+
+Create a "Project Map" standard with 5-10 rules explaining where things live.
+Format: "Find [what] in [where]"
+
+Example rules:
+- "Find API endpoints in apps/api/src/controllers/"
+- "Find shared utilities in packages/common/"
+
+Save to `project-map.json`:
+...
+```
+
+**Step 4: Commit**
+
+```bash
+git add apps/cli/src/infra/commands/OnboardCommand.ts
+git commit -m "feat(cli): onboard command outputs structured prompt for Project Map generation"
+```
+
+---
+
 ## Task 2: Existing Documentation Scanner Service
 
 **Files:**
@@ -2101,18 +2339,41 @@ git commit -m "feat: complete aggressive onboarding feature
 
 ## Success Criteria
 
-- [ ] CLI scans project without modifying files
-- [ ] Generates Standards/Rules based on detected tools
-- [ ] Generates Commands for common workflows
-- [ ] Generates Skills for debugging/navigation
-- [ ] Shows preview in CLI with formatted output
-- [ ] Prompts user for approval before pushing
-- [ ] Pushes to backend using existing APIs
-- [ ] Integrates with `install --auto-onboard` flag
-- [ ] Standalone `onboard` command works
+- [x] CLI scans project without modifying files
+- [x] Generates Standards/Rules based on detected tools (10+ language-specific standards)
+- [x] Generates Commands for common workflows (7 framework-specific commands)
+- [x] Generates Skills for debugging/navigation (including project overview skill)
+- [x] Shows preview in CLI with formatted output
+- [x] Prompts user for approval before writing files (--yes to skip, --dry-run to preview)
+- [ ] Pushes to backend using existing APIs (deferred - local file writing only)
+- [x] `packmind-cli init` combines default skills + onboarding (replaces --auto-onboard)
+- [x] Standalone `onboard` command works
 - [ ] All tests pass
 - [ ] Quality gate passes
-- [ ] Documentation complete
+- [x] Documentation complete
+
+## Implementation Changes from Original Plan
+
+The implementation diverged from the original plan in several ways:
+
+1. **Entry point changed**: Instead of `install --auto-onboard`, we created `packmind-cli init` which:
+   - Installs default skills (from `skills install-default`)
+   - Runs aggressive onboarding (project scanning + content generation)
+   - Supports `--skip-onboard`, `--skip-default-skills`, `--dry-run`, and `--yes` flags
+
+2. **Local-first approach**: Generated content is written to local files instead of pushed to backend:
+   - Standards → `.packmind/standards/`
+   - Commands → `.packmind/commands/`
+   - Skills → `.claude/skills/[name]/SKILL.md`
+
+3. **Enhanced features beyond plan**:
+   - Multi-language support (TypeScript, Python, Java, Go, C#, Ruby, Rust, PHP)
+   - More framework detection (Django, FastAPI, Spring Boot, ASP.NET Core, Rails)
+   - SkillsScannerService discovers existing skills in project
+   - AgentInstructionsService writes enhancement instructions to AI agent configs
+   - Project overview skill generated for every project
+
+4. **Backend push deferred**: The gateway methods exist but content push to backend was deferred
 
 ---
 
