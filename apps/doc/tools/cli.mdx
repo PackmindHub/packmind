@@ -6,11 +6,14 @@ title: 'CLI: Command-Line Interface'
 
 The Packmind CLI provides the following commands:
 
+- **`init`** - Initialize Packmind in your project (install skills + scan for patterns)
 - **`login`** - Authenticate with your Packmind instance
 - **`logout`** - Clear stored credentials
 - **`whoami`** - Show current authentication status
 - **`setup-mcp`** - Configure MCP for AI coding agents
 - **`install`** - Download packages locally
+- **`uninstall`** - Remove packages from your project
+- **`onboard`** - Scan project and generate standards/commands/skills
 - **`lint`** - Run detection programs (Enterprise only)
 - **`skills add`** - Import skills into Packmind
 - **`skills init`** - Install default Packmind skills locally
@@ -193,6 +196,114 @@ source ~/.zshrc
   **Credential Priority** — When both a credentials file and environment
   variable exist, the environment variable takes precedence.
 </Tip>
+
+## Init Command
+
+Initialize Packmind in your project. This is the recommended first command to run when setting up Packmind in a new project.
+
+### What Init Does
+
+The init command performs two main actions:
+
+1. **Installs default skills** - Including skill creator, standard creator, and onboarding skills
+2. **Scans your project** - Detects languages, frameworks, tools, and generates project-specific content
+
+### Basic Usage
+
+```bash
+packmind-cli init
+```
+
+This will:
+
+1. Install Packmind's default skills to `.claude/skills/` (or equivalent for other agents)
+2. Scan your project for technologies and patterns
+3. Show a preview of generated standards, commands, and skills
+4. Prompt for confirmation before writing files
+5. Write generated content to `.packmind/` and `.claude/skills/`
+
+### Flags
+
+| Flag                    | Short | Description                                           |
+| ----------------------- | ----- | ----------------------------------------------------- |
+| `--dry-run`             | `-d`  | Preview generated content without writing files       |
+| `--yes`                 | `-y`  | Skip confirmation prompts and proceed automatically   |
+| `--skip-onboard`        |       | Only install default skills, skip project scanning    |
+| `--skip-default-skills` |       | Only run onboarding, skip default skills installation |
+
+**Examples:**
+
+```bash
+# Preview what would be generated
+packmind-cli init --dry-run
+
+# Auto-approve all prompts (for CI/CD)
+packmind-cli init --yes
+
+# Only install default skills
+packmind-cli init --skip-onboard
+```
+
+### Generated Content
+
+Based on your project's technologies, the init command may generate:
+
+**Standards** (`.packmind/standards/`):
+
+- Language-specific coding standards (TypeScript, Python, Java, etc.)
+- Framework conventions (NestJS, React, Django, Spring Boot, etc.)
+- Extracted rules from existing documentation
+
+**Commands** (`.packmind/commands/`):
+
+- Framework-specific workflows (create module, create component, etc.)
+
+**Skills** (`.claude/skills/`):
+
+- Project overview skill with technology stack summary
+- Debugging workflows for your test framework
+- Framework-specific debugging skills
+
+<Tip>
+  **First-time setup** — Run `packmind-cli init` after installing the CLI and
+  logging in. It's the quickest way to get Packmind configured for your project.
+</Tip>
+
+## Onboard Command
+
+Scan your project and generate standards, commands, and skills based on detected patterns. This is the same scanning functionality that runs during `init`, but can be run independently.
+
+### When to Use Onboard
+
+Use the onboard command when:
+
+- You want to re-scan after project changes
+- You've already installed default skills and just want to regenerate content
+- You want to scan a different directory
+
+### Basic Usage
+
+```bash
+packmind-cli onboard
+```
+
+### Flags
+
+| Flag           | Short | Description                              |
+| -------------- | ----- | ---------------------------------------- |
+| `--path <dir>` | `-p`  | Specify a different project path to scan |
+| `--dry-run`    | `-d`  | Preview without writing files            |
+| `--yes`        | `-y`  | Skip confirmation prompts                |
+
+**Examples:**
+
+```bash
+# Scan a different directory
+packmind-cli onboard --path ./other-project
+
+# Preview what would be generated
+packmind-cli onboard --dry-run
+```
 
 ## Setup MCP Command
 
@@ -467,18 +578,15 @@ This command installs Packmind's default skills locally, including:
 
 - **packmind-create-skill** — A skill that guides you through creating new skills with AI assistance
 - **packmind-create-command** — A skill that guides you through creating reusable commands with AI assistance
-- **packmind-create-standard** — A skill for creating coding standards
+- **packmind-create-standard** — A skill for creating coding standards via the CLI
+- **packmind-onboard** — A skill for initializing Packmind in projects
 
-After running this command, you can use slash commands in your AI coding assistant:
-
-- `/packmind-create-skill` - Create new skills
-- `/packmind-create-command` - Create new commands
-- `/packmind-create-standard` - Create new standards
+After running this command, you can use these skills in your AI coding assistant to create new skills, commands, standards, or onboard projects interactively.
 
 <Tip>
   **Automatic installation** — Default skills are also installed automatically
-  when you install a package with `packmind-cli install` or when packages are
-  distributed to your repository via the web app.
+  when you run `packmind-cli init`, install a package with `packmind-cli
+  install`, or when packages are distributed to your repository via the web app.
 </Tip>
 
 ### Add a Skill

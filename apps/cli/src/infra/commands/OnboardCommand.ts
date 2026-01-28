@@ -9,6 +9,7 @@ import {
   logWarningConsole,
 } from '../utils/consoleLogger';
 import { AgentInstructionsService } from '../../application/services/AgentInstructionsService';
+import { promptConfirmation } from '../utils/promptUtils';
 
 export const onboardCommand = command({
   name: 'onboard',
@@ -27,8 +28,14 @@ export const onboardCommand = command({
       short: 'd',
       description: 'Preview generated content without writing files',
     }),
+    yes: flag({
+      type: boolean,
+      long: 'yes',
+      short: 'y',
+      description: 'Skip confirmation prompts and proceed automatically',
+    }),
   },
-  handler: async ({ path: projectPath, dryRun }) => {
+  handler: async ({ path: projectPath, dryRun, yes }) => {
     const packmindLogger = new PackmindLogger('PackmindCLI', LogLevel.INFO);
     const packmindCliHexa = new PackmindCliHexa(packmindLogger);
     const targetPath = projectPath || process.cwd();
@@ -91,6 +98,21 @@ export const onboardCommand = command({
         logInfoConsole(`Dry run: ${totalItems} items would be created`);
         logConsole('\nRun without --dry-run to write files to disk.');
       } else {
+        // Prompt for confirmation unless --yes flag is set
+        const shouldWrite =
+          yes ||
+          (await promptConfirmation(
+            `\nWrite ${totalItems} generated files to disk?`,
+          ));
+
+        if (!shouldWrite) {
+          logInfoConsole('Skipped writing files.');
+          logConsole(
+            'Run with --dry-run to preview, or --yes to auto-approve.',
+          );
+          return;
+        }
+
         logConsole('\n');
         logInfoConsole('Writing generated content to files...');
 

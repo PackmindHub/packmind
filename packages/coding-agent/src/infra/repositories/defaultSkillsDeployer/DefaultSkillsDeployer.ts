@@ -2,6 +2,7 @@ import { FileUpdates } from '@packmind/types';
 import { CreateCommandDeployer } from './CreateCommandDeployer';
 import { CreateSkillDeployer } from './CreateSkillDeployer';
 import { CreateStandardDeployer } from './CreateStandardDeployer';
+import { OnboardDeployer } from './OnboardDeployer';
 
 export class DefaultSkillsDeployer {
   constructor(
@@ -13,17 +14,20 @@ export class DefaultSkillsDeployer {
     const skillCreatorFiles = this.deploySkillsCreator();
     const standardCreatorFiles = this.deployStandardCreator();
     const commandCreatorFiles = this.deployCommandCreator();
+    const onboardFiles = this.deployOnboard();
 
     return {
       createOrUpdate: [
         ...skillCreatorFiles.createOrUpdate,
         ...standardCreatorFiles.createOrUpdate,
         ...commandCreatorFiles.createOrUpdate,
+        ...onboardFiles.createOrUpdate,
       ],
       delete: [
         ...skillCreatorFiles.delete,
         ...standardCreatorFiles.delete,
         ...commandCreatorFiles.delete,
+        ...onboardFiles.delete,
       ],
     };
   }
@@ -47,5 +51,9 @@ export class DefaultSkillsDeployer {
       this.agentName,
       this.skillsFolderPath,
     );
+  }
+
+  private deployOnboard(): FileUpdates {
+    return new OnboardDeployer().deploy(this.agentName, this.skillsFolderPath);
   }
 }

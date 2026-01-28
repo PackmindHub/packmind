@@ -15,6 +15,7 @@ import { skillsCommand } from './infra/commands/SkillsCommand';
 import { standardsCommand } from './infra/commands/StandardsCommand';
 import { commandsCommand } from './infra/commands/CommandsCommand';
 import { onboardCommand } from './infra/commands/OnboardCommand';
+import { initCommand } from './infra/commands/InitCommand';
 import { GitService } from './application/services/GitService';
 import { logConsole, logErrorConsole } from './infra/utils/consoleLogger';
 
@@ -89,6 +90,7 @@ const app = subcommands({
   name: 'packmind-cli',
   description: 'Packmind CLI tool',
   cmds: {
+    init: initCommand,
     lint: lintCommand,
     install: installCommand,
     uninstall: uninstallCommand,
