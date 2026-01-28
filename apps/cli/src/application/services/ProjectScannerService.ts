@@ -14,15 +14,35 @@ export interface IProjectScanResult {
   packageManager?: string;
   hasTypeScript: boolean;
   hasLinting: boolean;
+  detectedFiles: string[];
+  detectedDirectories: string[];
 }
 
 export interface IProjectScannerService {
   scanProject(projectPath: string): Promise<IProjectScanResult>;
 }
 
+type PartialScanResult = Omit<
+  IProjectScanResult,
+  'detectedFiles' | 'detectedDirectories'
+>;
+
 export class ProjectScannerService implements IProjectScannerService {
+  private detectedFiles: Set<string> = new Set();
+  private detectedDirectories: Set<string> = new Set();
+
+  private trackFile(filename: string): void {
+    this.detectedFiles.add(filename);
+  }
+
+  private trackDirectory(dirname: string): void {
+    this.detectedDirectories.add(dirname);
+  }
+
   async scanProject(projectPath: string): Promise<IProjectScanResult> {
-    const result: IProjectScanResult = {
+    this.detectedFiles = new Set();
+    this.detectedDirectories = new Set();
+    const result: PartialScanResult = {
       languages: [],
       frameworks: [],
       tools: [],
@@ -86,7 +106,11 @@ export class ProjectScannerService implements IProjectScannerService {
       result.tools.includes('Black') ||
       result.tools.includes('Mypy');
 
-    return result;
+    return {
+      ...result,
+      detectedFiles: Array.from(this.detectedFiles),
+      detectedDirectories: Array.from(this.detectedDirectories),
+    };
   }
 
   private async fileExists(filePath: string): Promise<boolean> {
@@ -100,69 +124,97 @@ export class ProjectScannerService implements IProjectScannerService {
 
   private async detectLanguages(
     projectPath: string,
-    result: IProjectScanResult,
+    result: PartialScanResult,
   ): Promise<void> {
     // TypeScript (check for tsconfig.json or tsconfig.base.json for monorepos)
-    if (
-      (await this.fileExists(path.join(projectPath, 'tsconfig.json'))) ||
-      (await this.fileExists(path.join(projectPath, 'tsconfig.base.json')))
-    ) {
+    const hasTsConfig = await this.fileExists(
+      path.join(projectPath, 'tsconfig.json'),
+    );
+    const hasTsConfigBase = await this.fileExists(
+      path.join(projectPath, 'tsconfig.base.json'),
+    );
+    if (hasTsConfig || hasTsConfigBase) {
       result.languages.push('TypeScript');
+      if (hasTsConfig) this.trackFile('tsconfig.json');
+      if (hasTsConfigBase) this.trackFile('tsconfig.base.json');
     }
 
     // JavaScript
     if (await this.fileExists(path.join(projectPath, 'package.json'))) {
       result.languages.push('JavaScript');
+      this.trackFile('package.json');
     }
 
     // Python
-    if (
-      (await this.fileExists(path.join(projectPath, 'requirements.txt'))) ||
-      (await this.fileExists(path.join(projectPath, 'setup.py'))) ||
-      (await this.fileExists(path.join(projectPath, 'pyproject.toml'))) ||
-      (await this.fileExists(path.join(projectPath, 'Pipfile')))
-    ) {
+    const hasRequirements = await this.fileExists(
+      path.join(projectPath, 'requirements.txt'),
+    );
+    const hasSetupPy = await this.fileExists(
+      path.join(projectPath, 'setup.py'),
+    );
+    const hasPyproject = await this.fileExists(
+      path.join(projectPath, 'pyproject.toml'),
+    );
+    const hasPipfile = await this.fileExists(path.join(projectPath, 'Pipfile'));
+    if (hasRequirements || hasSetupPy || hasPyproject || hasPipfile) {
       result.languages.push('Python');
+      if (hasRequirements) this.trackFile('requirements.txt');
+      if (hasSetupPy) this.trackFile('setup.py');
+      if (hasPyproject) this.trackFile('pyproject.toml');
+      if (hasPipfile) this.trackFile('Pipfile');
     }
 
     // Java/Kotlin
-    if (
-      (await this.fileExists(path.join(projectPath, 'pom.xml'))) ||
-      (await this.fileExists(path.join(projectPath, 'build.gradle'))) ||
-      (await this.fileExists(path.join(projectPath, 'build.gradle.kts')))
-    ) {
+    const hasPom = await this.fileExists(path.join(projectPath, 'pom.xml'));
+    const hasBuildGradle = await this.fileExists(
+      path.join(projectPath, 'build.gradle'),
+    );
+    const hasBuildGradleKts = await this.fileExists(
+      path.join(projectPath, 'build.gradle.kts'),
+    );
+    if (hasPom || hasBuildGradle || hasBuildGradleKts) {
       result.languages.push('Java');
+      if (hasPom) this.trackFile('pom.xml');
+      if (hasBuildGradle) this.trackFile('build.gradle');
+      if (hasBuildGradleKts) this.trackFile('build.gradle.kts');
     }
 
     // Go
     if (await this.fileExists(path.join(projectPath, 'go.mod'))) {
       result.languages.push('Go');
+      this.trackFile('go.mod');
     }
 
     // Rust
     if (await this.fileExists(path.join(projectPath, 'Cargo.toml'))) {
       result.languages.push('Rust');
+      this.trackFile('Cargo.toml');
     }
 
     // PHP
     if (await this.fileExists(path.join(projectPath, 'composer.json'))) {
       result.languages.push('PHP');
+      this.trackFile('composer.json');
     }
 
     // Ruby
-    if (
-      (await this.fileExists(path.join(projectPath, 'Gemfile'))) ||
-      (await this.fileExists(path.join(projectPath, 'Rakefile')))
-    ) {
+    const hasGemfile = await this.fileExists(path.join(projectPath, 'Gemfile'));
+    const hasRakefile = await this.fileExists(
+      path.join(projectPath, 'Rakefile'),
+    );
+    if (hasGemfile || hasRakefile) {
       result.languages.push('Ruby');
+      if (hasGemfile) this.trackFile('Gemfile');
+      if (hasRakefile) this.trackFile('Rakefile');
     }
 
     // C# (.NET)
-    if (
-      (await this.hasFilesWithExtension(projectPath, '.csproj')) ||
-      (await this.hasFilesWithExtension(projectPath, '.sln'))
-    ) {
+    const hasCsproj = await this.hasFilesWithExtension(projectPath, '.csproj');
+    const hasSln = await this.hasFilesWithExtension(projectPath, '.sln');
+    if (hasCsproj || hasSln) {
       result.languages.push('C#');
+      if (hasCsproj) this.trackFile('*.csproj');
+      if (hasSln) this.trackFile('*.sln');
     }
   }
 
@@ -180,7 +232,7 @@ export class ProjectScannerService implements IProjectScannerService {
 
   private async detectFromPackageJson(
     projectPath: string,
-    result: IProjectScanResult,
+    result: PartialScanResult,
   ): Promise<void> {
     const packageJsonPath = path.join(projectPath, 'package.json');
     if (!(await this.fileExists(packageJsonPath))) {
@@ -247,7 +299,7 @@ export class ProjectScannerService implements IProjectScannerService {
 
   private async detectPythonEcosystem(
     projectPath: string,
-    result: IProjectScanResult,
+    result: PartialScanResult,
   ): Promise<void> {
     // Check requirements.txt
     const requirementsPath = path.join(projectPath, 'requirements.txt');
@@ -357,7 +409,7 @@ export class ProjectScannerService implements IProjectScannerService {
 
   private async detectJavaEcosystem(
     projectPath: string,
-    result: IProjectScanResult,
+    result: PartialScanResult,
   ): Promise<void> {
     // Check pom.xml (Maven)
     const pomPath = path.join(projectPath, 'pom.xml');
@@ -431,7 +483,7 @@ export class ProjectScannerService implements IProjectScannerService {
 
   private async detectGoEcosystem(
     projectPath: string,
-    result: IProjectScanResult,
+    result: PartialScanResult,
   ): Promise<void> {
     const goModPath = path.join(projectPath, 'go.mod');
     if (!(await this.fileExists(goModPath))) {
@@ -464,7 +516,7 @@ export class ProjectScannerService implements IProjectScannerService {
 
   private async detectRustEcosystem(
     projectPath: string,
-    result: IProjectScanResult,
+    result: PartialScanResult,
   ): Promise<void> {
     const cargoTomlPath = path.join(projectPath, 'Cargo.toml');
     if (!(await this.fileExists(cargoTomlPath))) {
@@ -498,7 +550,7 @@ export class ProjectScannerService implements IProjectScannerService {
 
   private async detectPhpEcosystem(
     projectPath: string,
-    result: IProjectScanResult,
+    result: PartialScanResult,
   ): Promise<void> {
     const composerJsonPath = path.join(projectPath, 'composer.json');
     if (!(await this.fileExists(composerJsonPath))) {
@@ -540,7 +592,7 @@ export class ProjectScannerService implements IProjectScannerService {
 
   private async detectRubyEcosystem(
     projectPath: string,
-    result: IProjectScanResult,
+    result: PartialScanResult,
   ): Promise<void> {
     const gemfilePath = path.join(projectPath, 'Gemfile');
     if (!(await this.fileExists(gemfilePath))) {
@@ -574,7 +626,7 @@ export class ProjectScannerService implements IProjectScannerService {
 
   private async detectDotNetEcosystem(
     projectPath: string,
-    result: IProjectScanResult,
+    result: PartialScanResult,
   ): Promise<void> {
     // Look for .csproj files
     try {
@@ -621,7 +673,7 @@ export class ProjectScannerService implements IProjectScannerService {
 
   private async detectMonorepoStructure(
     projectPath: string,
-    result: IProjectScanResult,
+    result: PartialScanResult,
   ): Promise<void> {
     const packagesDir = path.join(projectPath, 'packages');
     const appsDir = path.join(projectPath, 'apps');
@@ -631,6 +683,8 @@ export class ProjectScannerService implements IProjectScannerService {
 
     if (hasPackagesDir || hasAppsDir) {
       result.structure.isMonorepo = true;
+      if (hasPackagesDir) this.trackDirectory('packages');
+      if (hasAppsDir) this.trackDirectory('apps');
     }
   }
 
@@ -645,27 +699,31 @@ export class ProjectScannerService implements IProjectScannerService {
 
   private async detectPackageManager(
     projectPath: string,
-    result: IProjectScanResult,
+    result: PartialScanResult,
   ): Promise<void> {
     if (await this.fileExists(path.join(projectPath, 'pnpm-lock.yaml'))) {
       result.packageManager = 'pnpm';
+      this.trackFile('pnpm-lock.yaml');
     } else if (await this.fileExists(path.join(projectPath, 'yarn.lock'))) {
       result.packageManager = 'yarn';
+      this.trackFile('yarn.lock');
     } else if (
       await this.fileExists(path.join(projectPath, 'package-lock.json'))
     ) {
       result.packageManager = 'npm';
+      this.trackFile('package-lock.json');
     }
   }
 
   private async detectStructureDetails(
     projectPath: string,
-    result: IProjectScanResult,
+    result: PartialScanResult,
   ): Promise<void> {
     // Detect src directory
     const srcDir = path.join(projectPath, 'src');
     if (await this.isDirectory(srcDir)) {
       result.structure.hasSrcDirectory = true;
+      this.trackDirectory('src');
     }
 
     // Detect test directories
@@ -674,6 +732,7 @@ export class ProjectScannerService implements IProjectScannerService {
       const fullPath = path.join(projectPath, testDir);
       if (await this.isDirectory(fullPath)) {
         result.structure.hasTests = true;
+        this.trackDirectory(testDir);
         break;
       }
     }
@@ -681,7 +740,7 @@ export class ProjectScannerService implements IProjectScannerService {
 
   private async detectToolsFromConfigFiles(
     projectPath: string,
-    result: IProjectScanResult,
+    result: PartialScanResult,
   ): Promise<void> {
     try {
       // Nx
@@ -689,6 +748,7 @@ export class ProjectScannerService implements IProjectScannerService {
         if (!result.tools.includes('Nx')) {
           result.tools.push('Nx');
         }
+        this.trackFile('nx.json');
       }
 
       // Turbo
@@ -696,6 +756,7 @@ export class ProjectScannerService implements IProjectScannerService {
         if (!result.tools.includes('Turbo')) {
           result.tools.push('Turbo');
         }
+        this.trackFile('turbo.json');
       }
     } catch {
       // Ignore file system errors

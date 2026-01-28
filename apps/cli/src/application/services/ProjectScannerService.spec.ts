@@ -734,5 +734,184 @@ describe('ProjectScannerService', () => {
         expect(result.testFramework).toBe('RSpec');
       });
     });
+
+    describe('when tracking detected files', () => {
+      it('includes tsconfig.json in detectedFiles when TypeScript is detected', async () => {
+        (mockFs.access as jest.Mock).mockImplementation((filePath: string) => {
+          if (filePath.toString().endsWith('tsconfig.json')) {
+            return Promise.resolve();
+          }
+          return Promise.reject(new Error('File not found'));
+        });
+        (mockFs.readFile as jest.Mock).mockResolvedValue('{}');
+        const service = new ProjectScannerService();
+
+        const result = await service.scanProject('/test-project');
+
+        expect(result.detectedFiles).toContain('tsconfig.json');
+      });
+
+      it('includes package.json in detectedFiles when JavaScript is detected', async () => {
+        (mockFs.access as jest.Mock).mockImplementation((filePath: string) => {
+          if (filePath.toString().endsWith('package.json')) {
+            return Promise.resolve();
+          }
+          return Promise.reject(new Error('File not found'));
+        });
+        (mockFs.readFile as jest.Mock).mockResolvedValue('{}');
+        const service = new ProjectScannerService();
+
+        const result = await service.scanProject('/test-project');
+
+        expect(result.detectedFiles).toContain('package.json');
+      });
+
+      it('includes pnpm-lock.yaml in detectedFiles when pnpm is detected', async () => {
+        (mockFs.access as jest.Mock).mockImplementation((filePath: string) => {
+          const pathStr = filePath.toString();
+          if (
+            pathStr.endsWith('pnpm-lock.yaml') ||
+            pathStr.endsWith('package.json')
+          ) {
+            return Promise.resolve();
+          }
+          return Promise.reject(new Error('File not found'));
+        });
+        (mockFs.readFile as jest.Mock).mockResolvedValue('{}');
+        const service = new ProjectScannerService();
+
+        const result = await service.scanProject('/test-project');
+
+        expect(result.detectedFiles).toContain('pnpm-lock.yaml');
+      });
+
+      it('includes nx.json in detectedFiles when Nx is detected', async () => {
+        (mockFs.access as jest.Mock).mockImplementation((filePath: string) => {
+          const pathStr = filePath.toString();
+          if (pathStr.endsWith('nx.json') || pathStr.endsWith('package.json')) {
+            return Promise.resolve();
+          }
+          return Promise.reject(new Error('File not found'));
+        });
+        (mockFs.readFile as jest.Mock).mockResolvedValue('{}');
+        const service = new ProjectScannerService();
+
+        const result = await service.scanProject('/test-project');
+
+        expect(result.detectedFiles).toContain('nx.json');
+      });
+
+      it('returns empty detectedFiles array when no files are found', async () => {
+        (mockFs.access as jest.Mock).mockRejectedValue(
+          new Error('File not found'),
+        );
+        const service = new ProjectScannerService();
+
+        const result = await service.scanProject('/test-project');
+
+        expect(result.detectedFiles).toEqual([]);
+      });
+    });
+
+    describe('when tracking detected directories', () => {
+      it('includes packages in detectedDirectories when monorepo with packages is detected', async () => {
+        (mockFs.access as jest.Mock).mockImplementation((filePath: string) => {
+          const pathStr = filePath.toString();
+          if (
+            pathStr.endsWith('packages') ||
+            pathStr.endsWith('package.json')
+          ) {
+            return Promise.resolve();
+          }
+          return Promise.reject(new Error('File not found'));
+        });
+        (mockFs.stat as jest.Mock).mockResolvedValue({
+          isDirectory: () => true,
+        });
+        (mockFs.readFile as jest.Mock).mockResolvedValue('{}');
+        const service = new ProjectScannerService();
+
+        const result = await service.scanProject('/test-project');
+
+        expect(result.detectedDirectories).toContain('packages');
+      });
+
+      it('includes apps in detectedDirectories when monorepo with apps is detected', async () => {
+        (mockFs.access as jest.Mock).mockImplementation((filePath: string) => {
+          const pathStr = filePath.toString();
+          if (pathStr.endsWith('apps') || pathStr.endsWith('package.json')) {
+            return Promise.resolve();
+          }
+          return Promise.reject(new Error('File not found'));
+        });
+        (mockFs.stat as jest.Mock).mockResolvedValue({
+          isDirectory: () => true,
+        });
+        (mockFs.readFile as jest.Mock).mockResolvedValue('{}');
+        const service = new ProjectScannerService();
+
+        const result = await service.scanProject('/test-project');
+
+        expect(result.detectedDirectories).toContain('apps');
+      });
+
+      it('includes src in detectedDirectories when src directory is detected', async () => {
+        (mockFs.access as jest.Mock).mockImplementation((filePath: string) => {
+          const pathStr = filePath.toString();
+          if (pathStr.endsWith('src') || pathStr.endsWith('package.json')) {
+            return Promise.resolve();
+          }
+          return Promise.reject(new Error('File not found'));
+        });
+        (mockFs.stat as jest.Mock).mockImplementation((filePath: string) => {
+          if (filePath.toString().endsWith('src')) {
+            return Promise.resolve({ isDirectory: () => true });
+          }
+          return Promise.resolve({ isDirectory: () => false });
+        });
+        (mockFs.readFile as jest.Mock).mockResolvedValue('{}');
+        const service = new ProjectScannerService();
+
+        const result = await service.scanProject('/test-project');
+
+        expect(result.detectedDirectories).toContain('src');
+      });
+
+      it('includes test directory in detectedDirectories when tests are detected', async () => {
+        (mockFs.access as jest.Mock).mockImplementation((filePath: string) => {
+          const pathStr = filePath.toString();
+          if (pathStr.endsWith('test') || pathStr.endsWith('package.json')) {
+            return Promise.resolve();
+          }
+          return Promise.reject(new Error('File not found'));
+        });
+        (mockFs.stat as jest.Mock).mockImplementation((filePath: string) => {
+          if (filePath.toString().endsWith('test')) {
+            return Promise.resolve({ isDirectory: () => true });
+          }
+          return Promise.resolve({ isDirectory: () => false });
+        });
+        (mockFs.readFile as jest.Mock).mockResolvedValue('{}');
+        const service = new ProjectScannerService();
+
+        const result = await service.scanProject('/test-project');
+
+        expect(result.detectedDirectories).toContain('test');
+      });
+
+      it('returns empty detectedDirectories array when no directories are found', async () => {
+        (mockFs.access as jest.Mock).mockRejectedValue(
+          new Error('File not found'),
+        );
+        (mockFs.stat as jest.Mock).mockRejectedValue(
+          new Error('Directory not found'),
+        );
+        const service = new ProjectScannerService();
+
+        const result = await service.scanProject('/test-project');
+
+        expect(result.detectedDirectories).toEqual([]);
+      });
+    });
   });
 });
