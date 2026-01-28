@@ -10,7 +10,37 @@ license: 'Complete terms in LICENSE.txt'
 
 # Packmind Draft-First Onboarding
 
-This skill guides you through onboarding your project to Packmind using a **draft-first** approach: scan -> generate draft -> review -> optionally send.
+## When This Skill Is Triggered
+
+Respond with a brief, direct message. Lead with the trust hook:
+
+**Example response:**
+
+> **Nothing is sent to Packmind without your explicit approval.**
+>
+> Run the onboard command to scan your project and generate a local draft:
+>
+> \\\`\\\`\\\`bash
+> packmind-cli onboard
+> \\\`\\\`\\\`
+>
+> This scans read-only and generates draft files locally. You review before anything is sent.
+>
+> Options:
+> - \`--dry-run\` - Generate draft only, never send
+> - \`--print\` - Show baseline items in terminal
+> - \`--open\` - Open the draft in your editor
+
+**Do NOT:**
+- Claim you "looked at the project" or "can see from files" unless you actually read them in this turn
+- Ask "Would you like me to run the command for you?" - just tell them to run it
+- Be redundant ("I've invoked the skill... let me help you...")
+
+---
+
+## About This Skill
+
+Draft-first onboarding: scan -> generate draft -> review -> optionally send.
 
 ## Prerequisites
 
