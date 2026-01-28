@@ -99,7 +99,7 @@ describe('CreateStandardFromPlaybookUseCase', () => {
     });
 
     describe('when rules have no examples', () => {
-      it('does not fetch rules or add examples', async () => {
+      beforeEach(async () => {
         mockGateway.getGlobalSpace.mockResolvedValue({
           id: 'space-1',
           slug: 'global',
@@ -115,8 +115,13 @@ describe('CreateStandardFromPlaybookUseCase', () => {
           scope: 'test',
           rules: [{ content: 'Rule 1' }, { content: 'Rule 2' }],
         });
+      });
 
+      it('does not fetch rules', () => {
         expect(mockGateway.getRulesForStandard).not.toHaveBeenCalled();
+      });
+
+      it('does not add examples', () => {
         expect(mockGateway.addExampleToRule).not.toHaveBeenCalled();
       });
     });
@@ -160,73 +165,90 @@ describe('CreateStandardFromPlaybookUseCase', () => {
         );
       });
 
-      it('adds example to the corresponding rule', async () => {
-        await useCase.execute({
-          name: 'Test',
-          description: 'Desc',
-          scope: 'test',
-          rules: [
-            {
-              content: 'Rule 1',
-              examples: {
-                positive: 'good',
-                negative: 'bad',
-                language: 'TYPESCRIPT',
+      describe('when only first rule has examples', () => {
+        beforeEach(async () => {
+          await useCase.execute({
+            name: 'Test',
+            description: 'Desc',
+            scope: 'test',
+            rules: [
+              {
+                content: 'Rule 1',
+                examples: {
+                  positive: 'good',
+                  negative: 'bad',
+                  language: 'TYPESCRIPT',
+                },
               },
-            },
-            { content: 'Rule 2' },
-          ],
+              { content: 'Rule 2' },
+            ],
+          });
         });
 
-        expect(mockGateway.addExampleToRule).toHaveBeenCalledWith(
-          'space-1',
-          'std-1',
-          'rule-1',
-          { positive: 'good', negative: 'bad', language: 'TYPESCRIPT' },
-        );
-        expect(mockGateway.addExampleToRule).toHaveBeenCalledTimes(1);
+        it('adds example to the corresponding rule', () => {
+          expect(mockGateway.addExampleToRule).toHaveBeenCalledWith(
+            'space-1',
+            'std-1',
+            'rule-1',
+            { positive: 'good', negative: 'bad', language: 'TYPESCRIPT' },
+          );
+        });
+
+        it('adds example only once', () => {
+          expect(mockGateway.addExampleToRule).toHaveBeenCalledTimes(1);
+        });
       });
 
-      it('adds examples for multiple rules', async () => {
-        await useCase.execute({
-          name: 'Test',
-          description: 'Desc',
-          scope: 'test',
-          rules: [
-            {
-              content: 'Rule 1',
-              examples: {
-                positive: 'good1',
-                negative: 'bad1',
-                language: 'TYPESCRIPT',
+      describe('when multiple rules have examples', () => {
+        beforeEach(async () => {
+          await useCase.execute({
+            name: 'Test',
+            description: 'Desc',
+            scope: 'test',
+            rules: [
+              {
+                content: 'Rule 1',
+                examples: {
+                  positive: 'good1',
+                  negative: 'bad1',
+                  language: 'TYPESCRIPT',
+                },
               },
-            },
-            {
-              content: 'Rule 2',
-              examples: {
-                positive: 'good2',
-                negative: 'bad2',
-                language: 'PYTHON',
+              {
+                content: 'Rule 2',
+                examples: {
+                  positive: 'good2',
+                  negative: 'bad2',
+                  language: 'PYTHON',
+                },
               },
-            },
-          ],
+            ],
+          });
         });
 
-        expect(mockGateway.addExampleToRule).toHaveBeenCalledTimes(2);
-        expect(mockGateway.addExampleToRule).toHaveBeenNthCalledWith(
-          1,
-          'space-1',
-          'std-1',
-          'rule-1',
-          { positive: 'good1', negative: 'bad1', language: 'TYPESCRIPT' },
-        );
-        expect(mockGateway.addExampleToRule).toHaveBeenNthCalledWith(
-          2,
-          'space-1',
-          'std-1',
-          'rule-2',
-          { positive: 'good2', negative: 'bad2', language: 'PYTHON' },
-        );
+        it('adds example for each rule with examples', () => {
+          expect(mockGateway.addExampleToRule).toHaveBeenCalledTimes(2);
+        });
+
+        it('adds example to first rule', () => {
+          expect(mockGateway.addExampleToRule).toHaveBeenNthCalledWith(
+            1,
+            'space-1',
+            'std-1',
+            'rule-1',
+            { positive: 'good1', negative: 'bad1', language: 'TYPESCRIPT' },
+          );
+        });
+
+        it('adds example to second rule', () => {
+          expect(mockGateway.addExampleToRule).toHaveBeenNthCalledWith(
+            2,
+            'space-1',
+            'std-1',
+            'rule-2',
+            { positive: 'good2', negative: 'bad2', language: 'PYTHON' },
+          );
+        });
       });
 
       describe('when addExampleToRule fails', () => {
