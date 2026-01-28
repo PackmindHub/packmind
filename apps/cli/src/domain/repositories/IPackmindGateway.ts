@@ -226,6 +226,21 @@ export type GetGlobalSpaceResult = {
   slug: string;
 };
 
+// Create command types
+export type CreateCommandCommand = {
+  name: string;
+  summary: string;
+  whenToUse: string[];
+  contextValidationCheckpoints: string[];
+  steps: Array<{ name: string; description: string; codeSnippet?: string }>;
+};
+
+export type CreateCommandResult = {
+  id: string;
+  name: string;
+  slug: string;
+};
+
 export interface IPackmindGateway {
   listExecutionPrograms: Gateway<ListDetectionPrograms>;
   getDraftDetectionProgramsForRule: Gateway<GetDraftDetectionProgramsForRule>;
@@ -247,4 +262,8 @@ export interface IPackmindGateway {
   createStandard(
     data: CreateStandardWithExamplesCommand,
   ): Promise<CreateStandardWithExamplesResult>;
+  createCommand(
+    spaceId: string,
+    data: CreateCommandCommand,
+  ): Promise<CreateCommandResult>;
 }
