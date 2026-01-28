@@ -135,8 +135,8 @@ export class DataFactory {
     }
 
     return this.testApp.recipesHexa.getAdapter().captureRecipe({
-      ...this.packmindCommand(),
       ...recipeFactory({ spaceId: this.space.id }),
+      ...this.packmindCommand(),
       ...recipe,
     });
   }

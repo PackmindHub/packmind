@@ -130,6 +130,8 @@ export class RecipesAdapter
 
     // Step 4: Create all use cases with non-null ports/services
     this._captureRecipe = new CaptureRecipeUsecase(
+      this.accountsPort,
+      this.spacesPort,
       this.recipesServices.getRecipeService(),
       this.recipesServices.getRecipeVersionService(),
       this.recipesServices.getRecipeSummaryService(),
@@ -174,6 +176,8 @@ export class RecipesAdapter
     );
 
     this._deleteRecipe = new DeleteRecipeUsecase(
+      this.accountsPort,
+      this.spacesPort,
       this.recipesServices.getRecipeService(),
       this.recipesServices.getRecipeVersionService(),
       ports.eventEmitterService,
