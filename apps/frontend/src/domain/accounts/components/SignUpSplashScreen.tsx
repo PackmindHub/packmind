@@ -59,19 +59,18 @@ export function SignUpSplashScreen({
         maxW="600px"
         borderRadius="xl"
         border="solid 1px"
-        borderColor="blue.800"
+        borderColor="blue.400"
+        boxShadow="0 8px 30px rgba(59, 130, 246, 0.25)"
       >
         <PMCarousel.ItemGroup>
           {features.map((feature, index) => (
             <PMCarousel.Item key={index} index={index}>
               <PMBox
                 p={10}
-                textAlign="center"
                 minH="280px"
                 display="flex"
                 flexDirection="column"
-                alignItems="center"
-                justifyContent="center"
+                alignItems="flex-start"
                 gap={6}
                 shadow="sm"
                 transition="all 0.3s"
@@ -82,13 +81,13 @@ export function SignUpSplashScreen({
                 <PMBox
                   p={4}
                   borderRadius="full"
-                  bg="blue.500"
+                  bg="blue.400"
                   color="white"
                   display="inline-flex"
                   alignItems="center"
                   justifyContent="center"
                 >
-                  <PMIcon fontSize="3xl">
+                  <PMIcon fontSize="4xl">
                     <feature.icon />
                   </PMIcon>
                 </PMBox>
