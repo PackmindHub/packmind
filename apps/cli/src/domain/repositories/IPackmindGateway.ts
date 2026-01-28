@@ -8,6 +8,7 @@ import {
 } from '@packmind/types';
 import { IListPackagesUseCase } from '../useCases/IListPackagesUseCase';
 import { IGetPackageSummaryUseCase } from '../useCases/IGetPackageSummaryUseCase';
+import { IOnboardingDraft } from '../types/OnboardingDraft';
 
 // MCP Token types
 export type GetMcpTokenCommand = PackmindCommand;
@@ -285,4 +286,9 @@ export interface IPackmindGateway {
     spaceId: string,
     data: CreateCommandCommand,
   ): Promise<CreateCommandResult>;
+
+  // Onboarding baseline
+  pushOnboardingBaseline(
+    draft: IOnboardingDraft,
+  ): Promise<{ success: boolean }>;
 }
