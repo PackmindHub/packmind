@@ -38,6 +38,8 @@ import {
   OrganizationOnboardingStatus,
   RemoveUserFromOrganizationCommand,
   RemoveUserFromOrganizationResponse,
+  RenameOrganizationCommand,
+  RenameOrganizationResponse,
   RequestPasswordResetCommand,
   RequestPasswordResetResponse,
   ResetPasswordCommand,
@@ -114,6 +116,10 @@ export interface IAccountsPort {
   listUserOrganizations(
     command: ListUserOrganizationsCommand,
   ): Promise<ListUserOrganizationsResponse>;
+
+  renameOrganization(
+    command: RenameOrganizationCommand,
+  ): Promise<RenameOrganizationResponse>;
 
   generateUserToken(
     command: GenerateUserTokenCommand,

@@ -18,3 +18,4 @@ export { PasswordResetConfigurationError } from './PasswordResetConfigurationErr
 export { PasswordResetTokenNotFoundError } from './PasswordResetTokenNotFoundError';
 export { PasswordResetTokenExpiredError } from './PasswordResetTokenExpiredError';
 export { InvalidTrialActivationTokenError } from './InvalidTrialActivationTokenError';
+export { InvalidOrganizationNameError } from './InvalidOrganizationNameError';

@@ -13,6 +13,9 @@ import {
   IRemoveUserFromOrganizationUseCase,
   RemoveUserFromOrganizationCommand,
   RemoveUserFromOrganizationResponse,
+  IRenameOrganizationUseCase,
+  RenameOrganizationCommand,
+  RenameOrganizationResponse,
 } from '@packmind/types';
 
 export class OrganizationGatewayApi
@@ -56,6 +59,16 @@ export class OrganizationGatewayApi
   }: NewPackmindCommandBody<RemoveUserFromOrganizationCommand>) => {
     return this._api.delete<RemoveUserFromOrganizationResponse>(
       `${this._endpoint}/${encodeURIComponent(organizationId)}/users/${encodeURIComponent(targetUserId)}`,
+    );
+  };
+
+  renameOrganization: NewGateway<IRenameOrganizationUseCase> = async ({
+    organizationId,
+    name,
+  }: NewPackmindCommandBody<RenameOrganizationCommand>) => {
+    return this._api.patch<RenameOrganizationResponse>(
+      `${this._endpoint}/${encodeURIComponent(organizationId)}/name`,
+      { name },
     );
   };
 

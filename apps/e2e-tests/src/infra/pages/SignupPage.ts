@@ -4,16 +4,9 @@ import { IDashboardPage, ISignUpPage } from '../../domain/pages';
 import { SignUpWithOrganizationFormDataTestIds } from '@packmind/frontend';
 
 export class SignupPage extends AbstractPackmindPage implements ISignUpPage {
-  async signup(
-    email: string,
-    password: string,
-    organizationName: string,
-  ): Promise<IDashboardPage> {
+  async signup(email: string, password: string): Promise<IDashboardPage> {
     console.log(`Creating user ${email} with password ${password}`);
 
-    await this.page
-      .getByTestId(SignUpWithOrganizationFormDataTestIds.OrganizationField)
-      .fill(organizationName);
     await this.page
       .getByTestId(SignUpWithOrganizationFormDataTestIds.EmailField)
       .fill(email);
@@ -27,10 +20,26 @@ export class SignupPage extends AbstractPackmindPage implements ISignUpPage {
       .getByTestId(SignUpWithOrganizationFormDataTestIds.Submit)
       .click();
 
+    // Wait for redirect to onboarding reason page
+    await this.page.waitForURL('**/sign-up/create-organization');
+    // Skip the onboarding reason step
+    await this.page.getByTestId('CreateOrganizationForm.SubmitButton').click();
+
+    // Wait for redirect to onboarding reason page
+    await this.page.waitForURL('**/sign-up/onboarding-reason');
+
+    // Select the first onboarding reason option
+    await this.page
+      .getByText('Keeping instructions under control as our setup grows')
+      .click();
+
+    // Click the continue button
+    await this.page.getByTestId('OnboardingReason.ContinueButton').click();
+
     return this.pageFactory.getDashboardPage();
   }
 
   expectedUrl(): string {
-    return '/create-account';
+    return '/sign-up/create-account';
   }
 }

@@ -32,7 +32,7 @@ describe('SignUpWithOrganizationUseCase', () => {
     mockOrganizationService = {
       createOrganization: jest.fn(),
       getOrganizationById: jest.fn(),
-      getOrganizationByName: jest.fn(),
+      getOrganizationByName: jest.fn().mockResolvedValue(null),
       listOrganizations: jest.fn(),
     } as unknown as jest.Mocked<OrganizationService>;
 
@@ -77,7 +77,6 @@ describe('SignUpWithOrganizationUseCase', () => {
 
     describe('when valid inputs are provided', () => {
       const command: SignUpWithOrganizationCommand = {
-        organizationName: 'Test Organization',
         email: 'testuser@packmind.com',
         password: 'password123!@',
       };
@@ -99,11 +98,11 @@ describe('SignUpWithOrganizationUseCase', () => {
         });
       });
 
-      it('calls organization service with organization name', async () => {
+      it('generates organization name from email local part', async () => {
         await signUpWithOrganizationUseCase.execute(command);
 
         expect(mockOrganizationService.createOrganization).toHaveBeenCalledWith(
-          'Test Organization',
+          "testuser's organization",
         );
       });
 
@@ -114,20 +113,6 @@ describe('SignUpWithOrganizationUseCase', () => {
           'testuser@packmind.com',
           'password123!@',
           createOrganizationId('org-123'),
-        );
-      });
-
-      it('trims organization name before creating organization', async () => {
-        const commandWithSpaces: SignUpWithOrganizationCommand = {
-          organizationName: '  Test Organization  ',
-          email: 'testuser@packmind.com',
-          password: 'password123!@',
-        };
-
-        await signUpWithOrganizationUseCase.execute(commandWithSpaces);
-
-        expect(mockOrganizationService.createOrganization).toHaveBeenCalledWith(
-          'Test Organization',
         );
       });
 
@@ -148,17 +133,6 @@ describe('SignUpWithOrganizationUseCase', () => {
       });
 
       it('emits OrganizationCreatedEvent after successful signup', async () => {
-        const command: SignUpWithOrganizationCommand = {
-          organizationName: 'Test Organization',
-          email: 'testuser@packmind.com',
-          password: 'password123!@',
-        };
-
-        mockOrganizationService.createOrganization.mockResolvedValue(
-          mockOrganization,
-        );
-        mockUserService.createUser.mockResolvedValue(mockUser);
-
         await signUpWithOrganizationUseCase.execute(command);
 
         expect(mockEventEmitterService.emit).toHaveBeenCalledWith(
@@ -166,7 +140,7 @@ describe('SignUpWithOrganizationUseCase', () => {
             payload: {
               userId: mockUser.id,
               organizationId: mockOrganization.id,
-              name: 'Test Organization',
+              name: "testuser's organization",
               method: 'sign-up',
               source: 'ui',
             },
@@ -175,84 +149,102 @@ describe('SignUpWithOrganizationUseCase', () => {
       });
     });
 
-    describe('when organization name validation fails', () => {
-      describe('with empty organization name', () => {
-        const command: SignUpWithOrganizationCommand = {
-          organizationName: '',
-          email: 'testuser@packmind.com',
-          password: 'password123!@',
-        };
+    describe('when organization name already exists', () => {
+      const command: SignUpWithOrganizationCommand = {
+        email: 'john@example.com',
+        password: 'password123!@',
+      };
 
-        it('throws organization name required error', async () => {
-          await expect(
-            signUpWithOrganizationUseCase.execute(command),
-          ).rejects.toThrow('Organization name is required');
+      beforeEach(() => {
+        mockOrganizationService.createOrganization.mockResolvedValue(
+          mockOrganization,
+        );
+        mockUserService.createUser.mockResolvedValue(mockUser);
+      });
+
+      describe('when base name exists', () => {
+        beforeEach(() => {
+          mockOrganizationService.getOrganizationByName
+            .mockResolvedValueOnce(mockOrganization)
+            .mockResolvedValueOnce(null);
         });
 
-        it('does not call organization service', async () => {
-          try {
-            await signUpWithOrganizationUseCase.execute(command);
-          } catch {
-            // Expected to throw
-          }
+        it('adds suffix 2 to organization name', async () => {
+          await signUpWithOrganizationUseCase.execute(command);
 
           expect(
             mockOrganizationService.createOrganization,
-          ).not.toHaveBeenCalled();
-        });
-
-        it('does not call user service', async () => {
-          try {
-            await signUpWithOrganizationUseCase.execute(command);
-          } catch {
-            // Expected to throw
-          }
-
-          expect(mockUserService.createUser).not.toHaveBeenCalled();
+          ).toHaveBeenCalledWith("john's organization 2");
         });
       });
 
-      describe('with whitespace-only organization name', () => {
-        const command: SignUpWithOrganizationCommand = {
-          organizationName: '   ',
-          email: 'testuser@packmind.com',
-          password: 'password123!@',
-        };
-
-        it('throws organization name required error', async () => {
-          await expect(
-            signUpWithOrganizationUseCase.execute(command),
-          ).rejects.toThrow('Organization name is required');
+      describe('when base name and suffix 2 exist', () => {
+        beforeEach(() => {
+          mockOrganizationService.getOrganizationByName
+            .mockResolvedValueOnce(mockOrganization)
+            .mockResolvedValueOnce(mockOrganization)
+            .mockResolvedValueOnce(null);
         });
 
-        it('does not call organization service', async () => {
-          try {
-            await signUpWithOrganizationUseCase.execute(command);
-          } catch {
-            // Expected to throw
-          }
+        it('adds suffix 3 to organization name', async () => {
+          await signUpWithOrganizationUseCase.execute(command);
 
           expect(
             mockOrganizationService.createOrganization,
-          ).not.toHaveBeenCalled();
+          ).toHaveBeenCalledWith("john's organization 3");
         });
 
-        it('does not call user service', async () => {
-          try {
-            await signUpWithOrganizationUseCase.execute(command);
-          } catch {
-            // Expected to throw
-          }
+        it('checks base organization name first', async () => {
+          await signUpWithOrganizationUseCase.execute(command);
 
-          expect(mockUserService.createUser).not.toHaveBeenCalled();
+          expect(
+            mockOrganizationService.getOrganizationByName,
+          ).toHaveBeenNthCalledWith(1, "john's organization");
         });
+
+        it('checks organization name with suffix 2 second', async () => {
+          await signUpWithOrganizationUseCase.execute(command);
+
+          expect(
+            mockOrganizationService.getOrganizationByName,
+          ).toHaveBeenNthCalledWith(2, "john's organization 2");
+        });
+
+        it('checks organization name with suffix 3 third', async () => {
+          await signUpWithOrganizationUseCase.execute(command);
+
+          expect(
+            mockOrganizationService.getOrganizationByName,
+          ).toHaveBeenNthCalledWith(3, "john's organization 3");
+        });
+      });
+    });
+
+    describe('when email has firstName.lastName format', () => {
+      const command: SignUpWithOrganizationCommand = {
+        email: 'firstName.lastName@example.com',
+        password: 'password123!@',
+      };
+
+      beforeEach(() => {
+        mockOrganizationService.createOrganization.mockResolvedValue(
+          mockOrganization,
+        );
+        mockUserService.createUser.mockResolvedValue(mockUser);
+      });
+
+      it('generates organization name from full local part', async () => {
+        await signUpWithOrganizationUseCase.execute(command);
+
+        expect(mockOrganizationService.createOrganization).toHaveBeenCalledWith(
+          "firstName.lastName's organization",
+        );
       });
     });
 
     describe('when password validation fails', () => {
       describe('with empty password', () => {
         const command: SignUpWithOrganizationCommand = {
-          organizationName: 'Test Organization',
           email: 'testuser@packmind.com',
           password: '',
         };
@@ -288,7 +280,6 @@ describe('SignUpWithOrganizationUseCase', () => {
 
       describe('with short password', () => {
         const command: SignUpWithOrganizationCommand = {
-          organizationName: 'Test Organization',
           email: 'testuser@packmind.com',
           password: 'short',
         };
@@ -324,7 +315,6 @@ describe('SignUpWithOrganizationUseCase', () => {
 
       describe('with password without enough non-alphanumerical characters', () => {
         const command: SignUpWithOrganizationCommand = {
-          organizationName: 'Test Organization',
           email: 'testuser@packmind.com',
           password: 'password123',
         };
@@ -363,24 +353,23 @@ describe('SignUpWithOrganizationUseCase', () => {
 
     describe('when organization creation fails', () => {
       const command: SignUpWithOrganizationCommand = {
-        organizationName: 'Test Organization',
         email: 'testuser@packmind.com',
         password: 'password123!@',
       };
 
       beforeEach(() => {
         mockOrganizationService.createOrganization.mockRejectedValue(
-          new Error('Organization name already exists'),
+          new Error('Organization slug conflict'),
         );
       });
 
-      it('throws organization already exists error', async () => {
+      it('throws organization creation error', async () => {
         await expect(
           signUpWithOrganizationUseCase.execute(command),
-        ).rejects.toThrow('Organization name already exists');
+        ).rejects.toThrow('Organization slug conflict');
       });
 
-      it('calls organization service with organization name', async () => {
+      it('calls organization service with generated organization name', async () => {
         try {
           await signUpWithOrganizationUseCase.execute(command);
         } catch {
@@ -388,7 +377,7 @@ describe('SignUpWithOrganizationUseCase', () => {
         }
 
         expect(mockOrganizationService.createOrganization).toHaveBeenCalledWith(
-          'Test Organization',
+          "testuser's organization",
         );
       });
 
@@ -415,7 +404,6 @@ describe('SignUpWithOrganizationUseCase', () => {
 
     describe('when user creation fails after organization creation', () => {
       const command: SignUpWithOrganizationCommand = {
-        organizationName: 'Test Organization',
         email: 'testuser@packmind.com',
         password: 'password123!@',
       };
@@ -435,7 +423,7 @@ describe('SignUpWithOrganizationUseCase', () => {
         ).rejects.toThrow("Email 'testuser@packmind.com' already exists");
       });
 
-      it('calls organization service with organization name', async () => {
+      it('calls organization service with generated organization name', async () => {
         try {
           await signUpWithOrganizationUseCase.execute(command);
         } catch {
@@ -443,7 +431,7 @@ describe('SignUpWithOrganizationUseCase', () => {
         }
 
         expect(mockOrganizationService.createOrganization).toHaveBeenCalledWith(
-          'Test Organization',
+          "testuser's organization",
         );
       });
 
@@ -464,7 +452,6 @@ describe('SignUpWithOrganizationUseCase', () => {
 
     describe('when organizationService throws unexpected error', () => {
       const command: SignUpWithOrganizationCommand = {
-        organizationName: 'Test Organization',
         email: 'testuser@packmind.com',
         password: 'password123!@',
       };
@@ -481,7 +468,7 @@ describe('SignUpWithOrganizationUseCase', () => {
         ).rejects.toThrow('Database connection failed');
       });
 
-      it('calls organization service with organization name', async () => {
+      it('calls organization service with generated organization name', async () => {
         try {
           await signUpWithOrganizationUseCase.execute(command);
         } catch {
@@ -489,7 +476,7 @@ describe('SignUpWithOrganizationUseCase', () => {
         }
 
         expect(mockOrganizationService.createOrganization).toHaveBeenCalledWith(
-          'Test Organization',
+          "testuser's organization",
         );
       });
 
@@ -506,7 +493,6 @@ describe('SignUpWithOrganizationUseCase', () => {
 
     describe('when userService throws unexpected error', () => {
       const command: SignUpWithOrganizationCommand = {
-        organizationName: 'Test Organization',
         email: 'testuser@packmind.com',
         password: 'password123!@',
       };
@@ -526,7 +512,7 @@ describe('SignUpWithOrganizationUseCase', () => {
         ).rejects.toThrow('Database connection failed');
       });
 
-      it('calls organization service with organization name', async () => {
+      it('calls organization service with generated organization name', async () => {
         try {
           await signUpWithOrganizationUseCase.execute(command);
         } catch {
@@ -534,7 +520,7 @@ describe('SignUpWithOrganizationUseCase', () => {
         }
 
         expect(mockOrganizationService.createOrganization).toHaveBeenCalledWith(
-          'Test Organization',
+          "testuser's organization",
         );
       });
 

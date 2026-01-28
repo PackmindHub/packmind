@@ -30,3 +30,4 @@ export {
   PMTimelineTitle,
   PMTimelineDescription,
 } from './PMTimeline/PMTimeline';
+export { PMCarousel } from './PMCarousel/PMCarousel';

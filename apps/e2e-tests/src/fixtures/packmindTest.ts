@@ -13,8 +13,7 @@ export const testWithUserData = base.extend<{
   userData: ({}, use) => {
     use({
       email: `someone-${uuidv4()}@example.com`,
-      password: uuidv4(),
-      organizationName: `my-organization-${uuidv4()}`,
+      password: `${uuidv4()}!!`,
     });
   },
 });
@@ -29,7 +28,6 @@ export const testWithUserSignedUp = testWithUserData.extend<{
     const dashboardPage = await signupPage.signup(
       userData.email,
       userData.password,
-      userData.organizationName,
     );
 
     await dashboardPage.expectWelcomeMessage();

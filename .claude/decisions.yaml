@@ -318,3 +318,60 @@
     - 'documentation'
     - 'dry-principle'
     - 'cross-references'
+
+- timestamp: 2026-01-27T14:30:00Z
+  file: apps/frontend/src/domain/accounts/components/CreateOrganizationForm.tsx
+  context: 'Creating organization name form for sign-up flow'
+  category: 'performance'
+  question: 'How long should the debounce timeout be for organization name validation?'
+  decision: 'Use 500ms debounce for organization name availability check'
+  reasoning: 'Matches the existing debounce timeout used in SignUpWithOrganizationForm.tsx (line 59). Provides good balance between responsiveness and avoiding excessive API calls.'
+  alternatives:
+    - '300ms for faster feedback'
+    - '1000ms to reduce API calls further'
+    - 'No debounce, validate on blur instead'
+  impact: 'local'
+  confidence: 'high'
+  source: 'pattern-matching'
+  tags:
+    - 'debounce'
+    - 'validation'
+    - 'ux'
+    - 'api-calls'
+
+- timestamp: 2026-01-27T14:35:00Z
+  file: apps/frontend/src/domain/accounts/components/CreateOrganizationForm.tsx
+  context: 'Creating organization name form for sign-up flow'
+  category: 'performance'
+  question: 'Should validation skip checking when the name matches the current organization name?'
+  decision: 'Skip API validation call when trimmed name matches current organization.name'
+  reasoning: 'Avoids unnecessary API call when user has not made changes or reverted to original name. This is a valid name by definition since it already exists for this organization.'
+  alternatives:
+    - 'Always validate against API regardless of current name'
+    - 'Cache validation results'
+  impact: 'local'
+  confidence: 'high'
+  source: 'ai-agent'
+  tags:
+    - 'performance'
+    - 'validation'
+    - 'optimization'
+
+- timestamp: 2026-01-27T14:40:00Z
+  file: apps/frontend/src/domain/accounts/components/CreateOrganizationForm.tsx
+  context: 'Creating organization name form for sign-up flow'
+  category: 'patterns'
+  question: 'What should happen when user clicks Continue without changing the organization name?'
+  decision: 'Allow Continue without making API call when name unchanged, just call onSuccess()'
+  reasoning: 'User may be satisfied with current name and want to proceed. Making them change it artificially would be poor UX. The form is about customization, not mandatory changes.'
+  alternatives:
+    - 'Require user to make changes before continuing'
+    - 'Show confirmation that name was not changed'
+    - 'Disable Continue button until name is different'
+  impact: 'local'
+  confidence: 'high'
+  source: 'ai-agent'
+  tags:
+    - 'ux'
+    - 'form-behavior'
+    - 'optional-changes'

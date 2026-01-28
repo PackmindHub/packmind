@@ -4,8 +4,9 @@ import {
   GET_USER_ORGANIZATIONS_KEY,
   GET_USER_STATUSES_KEY,
   GET_ONBOARDING_STATUS_KEY,
+  GET_ME_KEY,
 } from '../queryKeys';
-import { UserId, UserOrganizationRole } from '@packmind/types';
+import { OrganizationId, UserId, UserOrganizationRole } from '@packmind/types';
 import { useAuthContext } from '../../hooks/useAuthContext';
 import { spacesQueryKeys } from '../../../spaces/api/queryKeys';
 
@@ -13,6 +14,7 @@ const CREATE_ORGANIZATION_MUTATION_KEY = 'createOrganization';
 const INVITE_USERS_MUTATION_KEY = 'inviteUsers';
 const CHANGE_USER_ROLE_MUTATION_KEY = 'changeUserRole';
 const EXCLUDE_USER_MUTATION_KEY = 'excludeUser';
+const RENAME_ORGANIZATION_MUTATION_KEY = 'renameOrganization';
 
 export const getUserOrganizationsQueryOptions = () => ({
   queryKey: GET_USER_ORGANIZATIONS_KEY,
@@ -126,6 +128,35 @@ export const useExcludeUserMutation = () => {
       await queryClient.invalidateQueries({
         queryKey: GET_USER_STATUSES_KEY,
       });
+    },
+  });
+};
+
+export const useRenameOrganizationMutation = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationKey: [RENAME_ORGANIZATION_MUTATION_KEY],
+    mutationFn: async (params: {
+      organizationId: OrganizationId;
+      name: string;
+    }) => {
+      const { organizationId, name } = params;
+      return organizationGateway.renameOrganization({
+        organizationId,
+        name,
+      });
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
+        queryKey: GET_USER_ORGANIZATIONS_KEY,
+      });
+      await queryClient.invalidateQueries({
+        queryKey: GET_ME_KEY,
+      });
+    },
+    onError: (error) => {
+      console.error('Error renaming organization:', error);
     },
   });
 };

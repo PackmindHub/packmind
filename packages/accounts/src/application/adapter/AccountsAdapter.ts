@@ -47,6 +47,7 @@ import {
   IListOrganizationUserStatusesUseCase,
   IListOrganizationUsersUseCase,
   IListUserOrganizationsUseCase,
+  IRenameOrganizationUseCase,
   IRequestPasswordResetUseCase,
   IResetPasswordUseCase,
   ISignInUserUseCase,
@@ -73,6 +74,8 @@ import {
   Organization,
   OrganizationId,
   OrganizationOnboardingStatus,
+  RenameOrganizationCommand,
+  RenameOrganizationResponse,
   RequestPasswordResetCommand,
   RequestPasswordResetResponse,
   ResetPasswordCommand,
@@ -97,6 +100,7 @@ import {
   RemoveUserFromOrganizationResponse,
   SignUpWithOrganizationCommand,
 } from '../../domain/useCases';
+import { RenameOrganizationUseCase } from '../useCases/renameOrganization/RenameOrganizationUseCase';
 import { GenerateTrialActivationTokenUseCase } from '../useCases/generateTrialActivationToken/GenerateTrialActivationTokenUseCase';
 import { ActivateTrialAccountUseCase } from '../useCases/activateTrialAccount/ActivateTrialAccountUseCase';
 import { EnhancedAccountsServices } from '../services/EnhancedAccountsServices';
@@ -157,6 +161,7 @@ export class AccountsAdapter
   private _getCurrentApiKey?: IGetCurrentApiKeyUseCase;
   private _checkEmailAvailability!: ICheckEmailAvailabilityUseCase;
   private _changeUserRole!: IChangeUserRoleUseCase;
+  private _renameOrganization!: IRenameOrganizationUseCase;
   private _listUserOrganizations!: IListUserOrganizationsUseCase;
   private _requestPasswordReset!: IRequestPasswordResetUseCase;
   private _resetPassword!: IResetPasswordUseCase;
@@ -285,6 +290,11 @@ export class AccountsAdapter
     this._changeUserRole = new ChangeUserRoleUseCase(
       this,
       this.accountsServices.getUserService(),
+      this.logger,
+    );
+    this._renameOrganization = new RenameOrganizationUseCase(
+      this,
+      this.accountsServices.getOrganizationService(),
       this.logger,
     );
     this._requestPasswordReset = new RequestPasswordResetUseCase(
@@ -520,6 +530,12 @@ export class AccountsAdapter
     command: ChangeUserRoleCommand,
   ): Promise<ChangeUserRoleResponse> {
     return this._changeUserRole.execute(command);
+  }
+
+  public async renameOrganization(
+    command: RenameOrganizationCommand,
+  ): Promise<RenameOrganizationResponse> {
+    return this._renameOrganization.execute(command);
   }
 
   // API key-related use cases

@@ -2,6 +2,7 @@ import {
   Controller,
   Get,
   Post,
+  Patch,
   Body,
   Param,
   Req,
@@ -9,8 +10,15 @@ import {
   BadRequestException,
   ConflictException,
 } from '@nestjs/common';
-import { Organization } from '@packmind/types';
-import { OrganizationSlugConflictError } from '@packmind/accounts';
+import {
+  Organization,
+  OrganizationId,
+  RenameOrganizationResponse,
+} from '@packmind/types';
+import {
+  OrganizationSlugConflictError,
+  InvalidOrganizationNameError,
+} from '@packmind/accounts';
 import { OrganizationsService } from './organizations.service';
 import { PackmindLogger } from '@packmind/logger';
 import { AuthenticatedRequest } from '@packmind/node-utils';
@@ -112,6 +120,48 @@ export class OrganizationsController {
         organizationName: body.name,
         error: errorMessage,
       });
+
+      if (error instanceof OrganizationSlugConflictError) {
+        throw new ConflictException(error.message);
+      }
+
+      throw error;
+    }
+  }
+
+  @Patch(':orgId/name')
+  async renameOrganization(
+    @Param('orgId') organizationId: OrganizationId,
+    @Body() body: { name: string },
+    @Req() request: AuthenticatedRequest,
+  ): Promise<RenameOrganizationResponse> {
+    this.logger.info(
+      'PATCH /organizations/:orgId/name - Renaming organization',
+      {
+        organizationId,
+      },
+    );
+
+    try {
+      return await this.organizationsService.renameOrganization({
+        organizationId,
+        userId: request.user.userId,
+        name: body.name,
+      });
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      this.logger.error(
+        'PATCH /organizations/:orgId/name - Failed to rename organization',
+        {
+          organizationId,
+          error: errorMessage,
+        },
+      );
+
+      if (error instanceof InvalidOrganizationNameError) {
+        throw new BadRequestException(error.message);
+      }
 
       if (error instanceof OrganizationSlugConflictError) {
         throw new ConflictException(error.message);

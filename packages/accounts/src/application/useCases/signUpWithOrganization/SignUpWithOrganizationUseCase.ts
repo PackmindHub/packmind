@@ -43,33 +43,49 @@ export class SignUpWithOrganizationUseCase implements ISignUpWithOrganizationUse
     }
   }
 
-  private validateOrganizationName(organizationName: string): void {
-    if (!organizationName || organizationName.trim().length === 0) {
-      throw new Error('Organization name is required');
+  private generateBaseOrganizationName(email: string): string {
+    const localPart = email.split('@')[0];
+    return `${localPart}'s organization`;
+  }
+
+  private async findUniqueOrganizationName(baseName: string): Promise<string> {
+    let candidateName = baseName;
+    let suffix = 1;
+
+    while (
+      await this.organizationService.getOrganizationByName(candidateName)
+    ) {
+      suffix++;
+      candidateName = `${baseName} ${suffix}`;
     }
+
+    return candidateName;
   }
 
   async execute(
     command: SignUpWithOrganizationCommand,
   ): Promise<SignUpWithOrganizationResponse> {
-    const { organizationName, email, password } = command;
+    const { email, password } = command;
 
     this.logger.info('Executing sign up with organization use case', {
       email,
-      organizationName,
     });
+
+    // Generate unique organization name from email
+    const baseOrganizationName = this.generateBaseOrganizationName(email);
 
     try {
       // Validate inputs
       this.logger.debug('Validating input parameters');
-      this.validateOrganizationName(organizationName);
       this.validatePassword(password);
+
+      const organizationName =
+        await this.findUniqueOrganizationName(baseOrganizationName);
 
       // Step 1: Create organization first
       this.logger.debug('Creating organization', { organizationName });
-      const organization = await this.organizationService.createOrganization(
-        organizationName.trim(),
-      );
+      const organization =
+        await this.organizationService.createOrganization(organizationName);
 
       // Create default "Global" space for the organization
       if (this.spacesPort) {
@@ -126,7 +142,7 @@ export class SignUpWithOrganizationUseCase implements ISignUpWithOrganizationUse
     } catch (error) {
       this.logger.error('Failed to sign up user with organization', {
         email,
-        organizationName,
+        baseOrganizationName,
         error: error instanceof Error ? error.message : String(error),
       });
       throw error;
