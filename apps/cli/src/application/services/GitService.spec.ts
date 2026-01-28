@@ -1,6 +1,7 @@
 import * as path from 'path';
 import { GitRunner, GitService } from './GitService';
 import { stubLogger } from '@packmind/test-utils';
+import { normalizePath } from '../utils/pathUtils';
 
 describe('GitService', () => {
   let gitRunner: jest.MockedFunction<GitRunner>;
@@ -375,7 +376,7 @@ describe('GitService', () => {
 
         const result = service.getModifiedFiles('/repo');
 
-        expect(result).toEqual([path.join('/repo', 'file.txt')]);
+        expect(result).toEqual([normalizePath(path.join('/repo', 'file.txt'))]);
       });
     });
 
@@ -389,7 +390,9 @@ describe('GitService', () => {
 
         const result = service.getModifiedFiles('/repo');
 
-        expect(result).toEqual([path.join('/repo', 'untracked.txt')]);
+        expect(result).toEqual([
+          normalizePath(path.join('/repo', 'untracked.txt')),
+        ]);
       });
     });
 
@@ -404,8 +407,8 @@ describe('GitService', () => {
         const result = service.getModifiedFiles('/repo');
 
         expect(result.sort()).toEqual([
-          path.join('/repo', 'file.txt'),
-          path.join('/repo', 'untracked.txt'),
+          normalizePath(path.join('/repo', 'file.txt')),
+          normalizePath(path.join('/repo', 'untracked.txt')),
         ]);
       });
     });
@@ -425,7 +428,9 @@ describe('GitService', () => {
 
         const result = service.getModifiedFiles('/repo');
 
-        expect(result).toEqual([path.join('/repo', 'staged.txt')]);
+        expect(result).toEqual([
+          normalizePath(path.join('/repo', 'staged.txt')),
+        ]);
       });
     });
   });
@@ -462,8 +467,8 @@ describe('GitService', () => {
         const result = service.getUntrackedFiles('/repo');
 
         expect(result.sort()).toEqual([
-          path.join('/repo', 'new1.txt'),
-          path.join('/repo', 'new2.txt'),
+          normalizePath(path.join('/repo', 'new1.txt')),
+          normalizePath(path.join('/repo', 'new2.txt')),
         ]);
       });
     });
@@ -503,7 +508,7 @@ index abc123..def456 100644
         const result = service.getModifiedLines('/repo');
 
         expect(result).toContainEqual({
-          file: path.join('/repo', 'file.txt'),
+          file: normalizePath(path.join('/repo', 'file.txt')),
           startLine: 2,
           lineCount: 1,
         });
@@ -529,7 +534,7 @@ index abc123..def456 100644
         const result = service.getModifiedLines('/repo');
 
         expect(result).toContainEqual({
-          file: path.join('/repo', 'file.txt'),
+          file: normalizePath(path.join('/repo', 'file.txt')),
           startLine: 3,
           lineCount: 2,
         });
@@ -577,7 +582,7 @@ index 0000000..abc123
         const result = service.getModifiedLines('/repo');
 
         expect(result).toContainEqual({
-          file: path.join('/repo', 'file.txt'),
+          file: normalizePath(path.join('/repo', 'file.txt')),
           startLine: 1,
           lineCount: 3,
         });
