@@ -29,7 +29,6 @@ export class UpdateRecipesAndGenerateSummariesJobFactory implements IJobFactory<
       this.recipeService,
       this.recipeVersionService,
       this.recipeSummaryService,
-      this.logger,
     );
 
     return {

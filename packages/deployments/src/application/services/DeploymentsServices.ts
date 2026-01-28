@@ -18,20 +18,16 @@ export class DeploymentsServices {
 
   constructor(
     private readonly deploymentsRepositories: IDeploymentsRepositories,
-    private readonly logger: PackmindLogger,
   ) {
     // Initialize all services with their respective repositories from the aggregator
     this.targetService = new TargetService(
       this.deploymentsRepositories.getTargetRepository(),
-      this.logger,
     );
     this.renderModeConfigurationService = new RenderModeConfigurationService(
       this.deploymentsRepositories.getRenderModeConfigurationRepository(),
-      this.logger,
     );
     this.packageService = new PackageService(
       this.deploymentsRepositories.getPackageRepository(),
-      this.logger,
     );
   }
 

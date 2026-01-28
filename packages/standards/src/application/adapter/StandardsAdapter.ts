@@ -300,7 +300,6 @@ export class StandardsAdapter
     this.logger.debug('Building standards delayed jobs');
 
     const jobFactory = new GenerateStandardSummaryJobFactory(
-      this.logger,
       this.repositories,
       this.services.getStandardSummaryService(),
       this.services.getStandardVersionService(),

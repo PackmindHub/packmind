@@ -32,11 +32,13 @@ export class CodingAgentAdapter
 
   private _renderArtifactsUseCase!: RenderArtifactsUseCase;
 
+  private readonly logger: PackmindLogger;
+
   constructor(
     private readonly codingAgentRepositories: ICodingAgentRepositories,
     private readonly codingAgentServices: CodingAgentServices,
-    private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {
+    this.logger = new PackmindLogger(origin);
     this.logger.info(
       'CodingAgentAdapter constructed - awaiting initialization',
     );
@@ -66,7 +68,6 @@ export class CodingAgentAdapter
 
     this._renderArtifactsUseCase = new RenderArtifactsUseCase(
       this.codingAgentServices,
-      this.logger,
     );
 
     this.logger.info('CodingAgentAdapter initialized successfully');

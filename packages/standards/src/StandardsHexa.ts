@@ -58,7 +58,6 @@ export class StandardsHexa extends BaseHexa<BaseHexaOpts, StandardsAdapter> {
       // Instantiate services (linter adapter will be set later)
       this.standardsServices = new StandardsServices(
         this.standardsRepositories,
-        this.logger,
       );
 
       // Create adapter in constructor - dependencies will be injected in initialize()
@@ -66,7 +65,6 @@ export class StandardsHexa extends BaseHexa<BaseHexaOpts, StandardsAdapter> {
       this.adapter = new StandardsAdapter(
         this.standardsServices,
         this.standardsRepositories,
-        this.logger,
       );
 
       this.logger.info('StandardsHexa construction completed');

@@ -183,39 +183,32 @@ export class RecipesAdapter
       this.accountsPort!,
       this.recipesServices.getRecipeService(),
       this.spacesPort!,
-      this.logger,
     );
 
     this._findRecipeBySlug = new FindRecipeBySlugUsecase(
       this.recipesServices.getRecipeService(),
-      this.logger,
     );
 
     this._listRecipesByOrganization = new ListRecipesByOrganizationUsecase(
       this.recipesServices.getRecipeService(),
-      this.logger,
     );
 
     this._listRecipesBySpace = new ListRecipesBySpaceUsecase(
       this.accountsPort!,
       this.recipesServices.getRecipeService(),
       this.spacesPort!,
-      this.logger,
     );
 
     this._listRecipeVersions = new ListRecipeVersionsUsecase(
       this.recipesServices.getRecipeVersionService(),
-      this.logger,
     );
 
     this._getRecipeVersion = new GetRecipeVersionUsecase(
       this.recipesServices.getRecipeVersionService(),
-      this.logger,
     );
 
     this._deleteRecipesBatch = new DeleteRecipesBatchUsecase(
       this._deleteRecipe,
-      this.logger,
     );
 
     this.logger.info('RecipesAdapter initialized successfully');
