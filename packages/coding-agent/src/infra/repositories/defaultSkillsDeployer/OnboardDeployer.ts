@@ -4,194 +4,410 @@ import { ISkillDeployer } from './IDefaultSkillDeployer';
 function getOnboardSkillMd(): string {
   return `---
 name: 'packmind-onboard'
-description: "Generate a personalized onboarding pack (insights + artifacts) from a read-only scan, write a local draft, optionally apply to repo, then optionally send to Packmind."
+description: "Analyze any codebase to discover insights, generate personalized Standards and Commands"
 license: 'Complete terms in LICENSE.txt'
 ---
 
 # packmind-onboard
 
-Action skill. Generates a personalized onboarding pack (insights + ready-to-use artifacts) from a read-only scan.
+Action skill. Analyzes your codebase to discover things you didn't know, then generates personalized Standards and Commands.
 
-**Draft-first:** nothing is sent or written into the repo unless the user explicitly chooses it.
+**Works with any language.** The analysis adapts to what your codebase actually uses.
+
+**Draft-first:** nothing is written or sent unless you explicitly choose it.
 
 ## What This Skill Produces
 
-- **Project-specific insights** (things Packmind discovered about this repo)
-- **Artifacts that are directly usable:**
-  - \`CLAUDE.md\` snippet updates (repo commands, conventions)
-  - \`.packmind/standards/*\` drafts tailored to repo configs/patterns
-  - \`.packmind/commands/*\` drafts aligned with repo structure
-- **Local draft files** (.md + .json) so the user can review before doing anything
+- **Insights** - Non-obvious discoveries about YOUR codebase
+- **Standards** - Rules derived from insights, tailored to your conventions
+- **Commands** - Workflows derived from insights, matching your project structure
 
-## Execution Steps
+## Execution
 
-When this skill is triggered:
+### Step 1: Announce
 
-### 1. Print exactly:
-\`\`\`
-packmind-onboard: generating onboarding pack (read-only)...
-\`\`\`
-
-### 2. Generate the draft pack (read-only, draft-only) using Bash:
-\`\`\`bash
-packmind-cli onboard --dry-run --print
-\`\`\`
-
-### 3. From the CLI output, extract and display:
-- Number of baseline items
-- Number of insights (if printed)
-- Draft file paths (md + json)
-- Artifact folder paths (if printed)
-
-### 4. Show a short "wow" preview:
-- Print up to 3 top insights (one line each)
-- Each insight must reference evidence if available (e.g., \`package.json\`, \`tsconfig.json\`, \`.github/workflows/*\`)
-- No long explanations
-
-### 5. Prompt once:
-\`\`\`
-[a] apply to repo | [s] send to Packmind | [e] open draft | [q] quit
-\`\`\`
-
-### 6. Handle choices:
-
-**If apply:**
-Run an apply mode command that shows diffs first and requires confirmation:
-\`\`\`bash
-packmind-cli onboard --apply
-\`\`\`
-After apply completes, re-prompt:
-\`[s] send to Packmind | [e] open draft | [q] quit\`
-
-**If send:**
-Send only after explicit confirmation (user chose \`s\` or said "send it"):
-\`\`\`bash
-packmind-cli onboard --yes
-\`\`\`
-Confirm success from output. If success, print:
-\`\`\`
-Done. Sent to Packmind.
-\`\`\`
-
-**If open:**
-Open the markdown draft file:
-\`\`\`bash
-packmind-cli onboard --open --dry-run
-\`\`\`
-If \`--open\` isn't supported or fails, instruct the user to open the printed path manually.
-Re-prompt: \`[a] apply to repo | [s] send to Packmind | [q] quit\`
-
-**If quit:**
 Print:
 \`\`\`
-Done. Draft files remain available for later.
+packmind-onboard: analyzing codebase (read-only)...
 \`\`\`
 
-## Output Format (minimal)
+### Step 2: Detect Project Stack
 
-Example output (keep it tight):
+Before analyzing, understand what you're working with. Use Glob and Read to check:
+
+**Language markers:**
+- \`package.json\` -> JavaScript/TypeScript
+- \`pyproject.toml\`, \`requirements.txt\`, \`setup.py\` -> Python
+- \`go.mod\` -> Go
+- \`Cargo.toml\` -> Rust
+- \`Gemfile\` -> Ruby
+- \`pom.xml\`, \`build.gradle\` -> Java/Kotlin
+- \`*.csproj\`, \`*.sln\` -> C#/.NET
+- \`composer.json\` -> PHP
+
+**Config files:**
+- Linters: \`.eslintrc*\`, \`pylintrc\`, \`.rubocop.yml\`, \`golangci.yml\`, \`.flake8\`
+- Formatters: \`.prettierrc*\`, \`pyproject.toml [tool.black]\`, \`.rustfmt.toml\`
+- Type checkers: \`tsconfig.json\`, \`mypy.ini\`, \`pyrightconfig.json\`
+
+**CI:**
+- \`.github/workflows/*.yml\`
+- \`.gitlab-ci.yml\`
+- \`Jenkinsfile\`
+- \`.circleci/config.yml\`
+
+Note what you find - this guides which analyses are relevant.
+
+### Step 3: Run Analyses
+
+Run each analysis that applies to the detected stack. Use Read, Grep, and Glob tools.
+
+---
+
+#### Analysis A: Config vs Reality Gaps
+
+**Goal:** Find configs that exist but aren't enforced in code.
+
+For each config file found, grep for bypass patterns:
+
+| Config found | Grep for violations |
+|--------------|---------------------|
+| \`tsconfig.json\` with strict | \`@ts-ignore\`, \`@ts-expect-error\`, \`: any\` |
+| \`.eslintrc*\` or \`eslint.config.*\` | \`eslint-disable\`, \`eslint-disable-line\` |
+| \`mypy.ini\` or \`pyproject.toml [tool.mypy]\` | \`# type: ignore\` |
+| \`.flake8\` or \`setup.cfg [flake8]\` | \`# noqa\` |
+| \`golangci.yml\` | \`//nolint\` |
+| \`.rubocop.yml\` | \`# rubocop:disable\` |
+
+**Steps:**
+1. Read the config file to confirm it exists and is active
+2. Use Grep to find violations in source files (exclude node_modules, vendor, etc.)
+3. Count total violations
+4. Note top 5 file paths as evidence
+
+**Report if:** config exists AND violations > 0
+
+**Insight format:**
+\`\`\`
+CONFIG GAP: [Config] is configured but [N] bypass comments found
+Evidence: [file1], [file2], ...
+Severity: high (>20) | medium (5-20) | low (<5)
+\`\`\`
+
+---
+
+#### Analysis B: Naming Convention Patterns
+
+**Goal:** Discover what naming patterns exist and find inconsistencies.
+
+**Steps:**
+1. Use Glob to find files matching common patterns:
+   \`\`\`
+   **/*[Cc]ontroller*    **/*[Ss]ervice*     **/*[Rr]epository*
+   **/*[Hh]andler*       **/*[Mm]odel*       **/*[Uu]se[Cc]ase*
+   \`\`\`
+
+2. For patterns with 3+ matches, analyze:
+   - What suffix/naming is dominant? (e.g., \`.service.ts\` vs \`_service.py\`)
+   - Are there files that should match but don't?
+   - Calculate consistency percentage
+
+3. Check file casing in source directories:
+   - Count: kebab-case, snake_case, camelCase, PascalCase
+   - Find dominant pattern and exceptions
+
+**Report if:** pattern exists with exceptions (consistency < 100%)
+
+**Insight format:**
+\`\`\`
+NAMING PATTERN: [N] files use [pattern], but [M] exceptions found
+Dominant: [examples]
+Exceptions: [examples]
+Consistency: [X]%
+\`\`\`
+
+---
+
+#### Analysis C: Test Structure Patterns
+
+**Goal:** Discover how tests are written, find inconsistencies.
+
+**Steps:**
+1. Find test files (adapt to detected language):
+   - JS/TS: \`**/*.spec.ts\`, \`**/*.test.ts\`
+   - Python: \`**/test_*.py\`, \`**/*_test.py\`
+   - Go: \`**/*_test.go\`
+   - Ruby: \`**/*_spec.rb\`
+   - Java: \`**/*Test.java\`
+
+2. Read 5-10 test files
+
+3. Detect patterns (language-appropriate):
+
+   **JS/TS:** factory functions, nested describes, beforeEach, mocking
+   **Python:** fixtures, parametrize, factory pattern
+   **Go:** table-driven tests, subtests
+   **Ruby:** FactoryBot, contexts, let blocks
+
+4. Calculate frequency of each pattern
+5. Find files that don't follow dominant patterns
+
+**Report if:** pattern frequency is 40-90% (interesting variation)
+
+**Insight format:**
+\`\`\`
+TEST PATTERN: [X]% of tests use [pattern], [Y]% don't
+Using it: [files]
+Not using it: [files]
+\`\`\`
+
+---
+
+#### Analysis D: CI vs Local Workflow Gaps
+
+**Goal:** Find CI commands that can't be run locally.
+
+**Steps:**
+1. Read project manifest for local scripts:
+   - \`package.json\` -> scripts
+   - \`pyproject.toml\` -> scripts
+   - \`Makefile\` -> targets
+   - \`Taskfile.yml\` -> tasks
+
+2. Read CI configuration and extract commands:
+   - \`.github/workflows/*.yml\` -> \`run:\` commands
+   - \`.gitlab-ci.yml\` -> \`script:\` commands
+
+3. Compare: which CI commands have no local equivalent?
+
+**Report if:** at least 1 CI command has no local equivalent
+
+**Insight format:**
+\`\`\`
+WORKFLOW GAP: CI runs [N] commands not available locally
+CI: [list]
+Local: [list]
+Missing: [list]
+\`\`\`
+
+---
+
+#### Analysis E: File Creation Patterns
+
+**Goal:** Find boilerplate patterns to generate creation commands.
+
+**Steps:**
+1. Identify file types with 3+ instances (Controllers, Services, UseCases, etc.)
+
+2. Read 3-5 sample files of each type
+
+3. Extract common elements:
+   - Base class/interface
+   - Decorators/annotations
+   - Common imports
+   - Constructor dependencies
+   - Common methods
+
+4. Extract variable elements (name, specific logic)
+
+**Report if:** clear common structure found
+
+**Insight format:**
+\`\`\`
+FILE PATTERN: All [N] [FileType] files share common structure
+Common: [base class], [decorators], [methods]
+Variable: [name], [specific logic]
+Evidence: [sample files]
+\`\`\`
+
+---
+
+### Step 4: Generate Artifacts
+
+Based on insights, generate Standards and Commands.
+
+#### From CONFIG GAP -> Standard
+
+\`\`\`yaml
+name: "[Config] Enforcement"
+summary: "Enforce [config] by eliminating bypass patterns"
+description: "Discovered: [N] violations found"
+rules:
+  - content: "Avoid [bypass pattern] - address the underlying issue"
+    examples:
+      positive: "[proper fix]"
+      negative: "[bypass from codebase]"
+\`\`\`
+
+#### From NAMING PATTERN -> Standard
+
+\`\`\`yaml
+name: "Naming Conventions"
+summary: "Consistent naming based on codebase patterns"
+description: "[X]% follow this pattern"
+rules:
+  - content: "Name [file type] using [detected pattern]"
+    examples:
+      positive: "[dominant example]"
+      negative: "[exception example]"
+\`\`\`
+
+#### From TEST PATTERN -> Standard
+
+\`\`\`yaml
+name: "Test Structure"
+summary: "Consistent test patterns"
+rules:
+  - content: "[pattern description]"
+    examples:
+      positive: "[file that follows]"
+      negative: "[file that doesn't]"
+\`\`\`
+
+#### From WORKFLOW GAP -> Command
+
+\`\`\`yaml
+name: "Pre-Commit Check"
+summary: "Run CI checks locally"
+whenToUse:
+  - "Before pushing changes"
+steps:
+  - name: "[Step]"
+    description: "[What it does]"
+    codeSnippet: "[command]"
+\`\`\`
+
+#### From FILE PATTERN -> Command
+
+\`\`\`yaml
+name: "Create [FileType]"
+summary: "Create new [FileType] following conventions"
+contextValidationCheckpoints:
+  - "What is the name?"
+  - "What module does it belong to?"
+steps:
+  - name: "Create file"
+    codeSnippet: |
+      [template with common structure]
+  - name: "Create test"
+  - name: "Register/Export"
+\`\`\`
+
+---
+
+### Step 5: Present Results
 
 \`\`\`
-packmind-onboard: generating onboarding pack (read-only)...
+============================================================
+  PACKMIND ONBOARDING RESULTS
+============================================================
 
-Generated 7 baseline items
-Found 4 project-specific insights
+Stack: [detected language/framework/tools]
 
-Top insights:
-  1) ESLint configured but not enforced in CI (evidence: .eslintrc*, .github/workflows/*)
-  2) Typecheck script exists but not part of default workflow (evidence: package.json)
-  3) Component conventions differ across apps (evidence: src/components/, components/)
+INSIGHTS:
 
-Draft files:
-  ~/.packmind/cli/drafts/packmind-onboard.draft.md
-  ~/.packmind/cli/drafts/packmind-onboard.draft.json
+  1. [Title]
+     evidence: [files]
 
-[a] apply to repo | [s] send to Packmind | [e] open draft | [q] quit
+  2. [Title]
+     evidence: [files]
+
+  3. [Title]
+     evidence: [files]
+
+ARTIFACTS:
+
+  Standards ([N]):
+    * [Name] ([M] rules)
+
+  Commands ([N]):
+    * [Name] ([M] steps)
+
+============================================================
+
+[a] Apply to repo | [p] Preview artifact | [q] Quit
 \`\`\`
+
+### Step 6: Handle Choice
+
+**[a] Apply:**
+- Create \`.packmind/standards/[name].yaml\` for each Standard
+- Create \`.packmind/commands/[name].yaml\` for each Command
+- Show what was written
+- Done
+
+**[p] Preview:**
+- Show full YAML for selected artifact
+- Return to menu
+
+**[q] Quit:**
+- Print: "Done. Run this skill again anytime."
+
+---
 
 ## Rules
 
-- **No fluff.** One-liner intro, then do the work.
-- **Always generate the draft** as part of skill execution.
-- **Never send** without explicit user confirmation.
-- **Never write to repo** unless user explicitly chooses \`apply\`.
-- **Apply must show diffs first** and avoid overwriting without confirmation.
-- **Keep previews short:** max 3 insights printed.
-- If parsing file paths fails, ask the user to paste the lines that contain "Draft files:" from the CLI output.
+- **Language agnostic.** Detect what exists, don't assume.
+- **Evidence required.** Every insight needs file paths.
+- **Skip irrelevant.** No Python analysis in a Go project.
+- **Wow factor.** Report surprises, not obvious facts.
+- **Draft-first.** Only write with explicit user choice.
 
-## Failure Handling
+## Quality Check
 
-**If CLI missing:**
+Before reporting an insight, verify:
+- It applies to THIS codebase's detected stack
+- It reveals something non-obvious
+- It has file path evidence
+- It maps to an actionable artifact
+
+**Bad:** "Project uses TypeScript" (obvious)
+**Good:** "TypeScript strict enabled but 47 @ts-ignore found" (surprising)
+
+## No Insights Found
+
+If no insights discovered:
 \`\`\`
-packmind-cli not found. Install with: npm install -g @packmind/cli
-Then login with: packmind-cli login
+Analysis complete. No significant insights found.
+
+Your codebase appears consistent! Possible reasons:
+- Configs are well-enforced
+- Naming is consistent
+- Tests follow uniform patterns
+- CI matches local scripts
+
+This is a good thing!
 \`\`\`
-
-**If user not logged in / auth error:**
-\`\`\`
-You're not logged in. Run: packmind-cli login
-Then rerun: packmind-cli onboard --dry-run --print
-\`\`\`
-
-**If generation is slow or silent:**
-Print a single line:
-\`\`\`
-Still working... (scan is read-only; extracting repo-specific insights)
-\`\`\`
-
-## Reference Flags (CLI)
-
-| Flag | Description |
-|------|-------------|
-| \`--dry-run\` | Generate draft only, never send |
-| \`--print\` | Print summary/insights to stdout |
-| \`--yes\` | Skip prompts and send immediately |
-| \`--open\` | Open markdown draft in default viewer |
-| \`--apply\` | Apply selected artifacts to repo (shows diffs, requires confirm) |
-| \`--output <path>\` | Custom output directory |
-
-## Notes for Implementation
-
-The CLI must print draft paths and (ideally) a small list of "Top insights" so this skill can display them without additional file parsing.
-
-The draft .json should contain:
-- baseline items
-- insights
-- artifacts with recommended paths and content
-
-The draft .md should include:
-- disclaimer
-- summary
-- insights section
-- artifacts index with recommended install locations
 `;
 }
 
 const ONBOARD_README = `# Packmind Onboarding Skill
 
-Action skill that generates a personalized onboarding pack from a read-only scan.
+Action skill that analyzes your codebase to discover insights and generate personalized Standards and Commands.
 
 ## What It Does
 
-1. Scans your project (read-only)
-2. Generates insights + artifact drafts
-3. Writes local draft files for review
-4. Optionally applies artifacts to repo
-5. Optionally sends to Packmind
+1. **Detects your stack** - Language, frameworks, configs, CI
+2. **Analyzes for insights** - Config gaps, naming patterns, test patterns, workflow gaps, file patterns
+3. **Generates artifacts** - Standards with rules, Commands with steps
+4. **Applies on your choice** - Nothing written without explicit confirmation
 
-**Nothing is sent or written without explicit user confirmation.**
+**Works with any language** - JavaScript, TypeScript, Python, Go, Ruby, Java, and more.
 
 ## Usage
 
-Ask your AI agent to onboard your project to Packmind:
+Ask your AI agent to onboard:
 - "Onboard this project to Packmind"
-- "Run packmind onboarding"
-- "Generate a Packmind baseline"
+- "Analyze this codebase for standards"
+- "Generate coding standards for this project"
 
-## Prerequisites
+## What You'll Discover
 
-- **packmind-cli**: Install with \`npm install -g @packmind/cli\`
-- **Packmind account**: Login via \`packmind-cli login\`
+- **Config gaps**: "ESLint configured but 47 eslint-disable comments found"
+- **Naming inconsistencies**: "94% use .service.ts suffix, 3 files don't"
+- **Test pattern drift**: "80% of tests use factories, 20% use inline objects"
+- **Workflow gaps**: "CI runs typecheck, no local script exists"
+- **File patterns**: "All UseCases share AbstractUseCase base class"
 
 ## License
 
