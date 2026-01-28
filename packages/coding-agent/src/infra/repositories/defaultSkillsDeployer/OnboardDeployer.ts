@@ -4,333 +4,223 @@ import { ISkillDeployer } from './IDefaultSkillDeployer';
 function getOnboardSkillMd(agentName: string): string {
   return `---
 name: 'packmind-onboard'
-description: "Guide for initializing Packmind in a project. This skill should be used when users want to onboard their project to Packmind, scan for patterns, and generate project-specific standards, commands, and skills for ${agentName}."
+description: "Draft-first onboarding for Packmind. This skill helps ${agentName} guide users through scanning the project, generating a reviewable draft, and optionally pushing to Packmind after user approval."
 license: 'Complete terms in LICENSE.txt'
 ---
 
-# Project Onboarding
+# Packmind Draft-First Onboarding
 
-This skill guides you through initializing Packmind in your project - scanning for patterns and generating project-specific standards, commands, and skills.
-
-## What Onboarding Does
-
-The onboarding process:
-
-1. **Scans your project** to detect languages, frameworks, tools, and structure
-2. **Reads existing documentation** from CLAUDE.md, CONTRIBUTING.md, and similar files
-3. **Generates standards** based on detected technologies and extracted conventions
-4. **Generates commands** for common workflows (e.g., creating modules, components)
-5. **Generates skills** for debugging and navigation
-6. **Writes files** to \`.packmind/\` and \`.claude/skills/\`
+This skill guides you through onboarding your project to Packmind using a **draft-first** approach: scan -> generate draft -> review -> optionally send.
 
 ## Prerequisites
 
-Before onboarding, verify that packmind-cli is available:
+Before running onboarding:
 
-\`\`\`bash
-packmind-cli --version
-\`\`\`
+1. **CLI installed**: \`npm install -g @packmind/cli\`
+2. **Logged in**: \`packmind-cli login\`
+3. **Skills installed**: This skill is already installed if you're reading this
 
-If not available, install it:
+## Quick Start
 
-\`\`\`bash
-npm install -g @packmind/cli
-\`\`\`
-
-Then login to Packmind:
-
-\`\`\`bash
-packmind-cli login
-\`\`\`
-
-## Onboarding Process
-
-### Option 1: Full Initialization (Recommended)
-
-Run the init command to install default skills AND scan your project:
-
-\`\`\`bash
-packmind-cli init
-\`\`\`
-
-This will:
-1. Install default Packmind skills (skill creator, standard creator, this onboarding skill)
-2. Scan your project for technologies and patterns
-3. Show a preview of generated content
-4. Prompt for confirmation before writing files
-5. Write generated files to your project
-
-#### Flags
-
-- \`--dry-run\` or \`-d\`: Preview what would be generated without writing files
-- \`--yes\` or \`-y\`: Skip confirmation prompts
-- \`--skip-onboard\`: Only install default skills, skip project scanning
-- \`--skip-default-skills\`: Only run onboarding, skip default skills installation
-
-### Option 2: Onboard Only
-
-If you've already installed default skills or want to re-scan your project:
+Run the onboard command:
 
 \`\`\`bash
 packmind-cli onboard
 \`\`\`
 
-This scans your project and generates content without installing default skills.
+This will:
+1. Show you what will happen (consent prompt)
+2. Scan your project read-only
+3. Generate draft files locally
+4. Let you review before sending anything
+5. Optionally send to Packmind on your approval
 
-#### Onboard Flags
+## Command Options
 
-- \`--path <dir>\` or \`-p <dir>\`: Specify a different project path to scan
-- \`--dry-run\` or \`-d\`: Preview without writing files
-- \`--yes\` or \`-y\`: Skip confirmation prompts
+| Flag | Description |
+|------|-------------|
+| \`--output <path>\` | Where to write draft files |
+| \`--format md\\|json\\|both\` | Output format (default: both) |
+| \`--yes\` | Skip prompts and auto-send |
+| \`--dry-run\` | Generate draft only, never send |
+| \`--print\` | Print detailed summary to stdout |
+| \`--open\` | Open markdown in default viewer |
+| \`--send\` | Explicitly send existing draft |
 
-## What Gets Detected
+## What Gets Scanned
 
-### Languages
+The scanner detects (read-only, no modifications):
 
-The scanner detects languages from configuration files:
+- **Languages**: TypeScript, JavaScript, Python, Go, Java, C#, etc.
+- **Frameworks**: NestJS, React, Vue, Angular, Django, FastAPI, etc.
+- **Tools**: ESLint, Prettier, Nx, Turbo, Jest, Vitest, etc.
+- **Structure**: Monorepo, test directories, src directory
 
-| Language | Detection |
-|----------|-----------|
-| TypeScript | \`tsconfig.json\` |
-| JavaScript | \`package.json\` |
-| Python | \`requirements.txt\`, \`setup.py\`, \`pyproject.toml\` |
-| Java | \`pom.xml\`, \`build.gradle\` |
-| Go | \`go.mod\` |
-| Rust | \`Cargo.toml\` |
-| PHP | \`composer.json\` |
-| Ruby | \`Gemfile\` |
-| C# | \`*.csproj\`, \`*.sln\` |
+## What Gets Generated
 
-### Frameworks
+### Draft Files
 
-| Framework | Detection |
-|-----------|-----------|
-| NestJS | \`@nestjs/core\` dependency |
-| React | \`react\` dependency |
-| Vue | \`vue\` dependency |
-| Angular | \`@angular/core\` dependency |
-| Express | \`express\` dependency |
-| Next.js | \`next\` dependency |
-| Django | \`django\` in requirements |
-| FastAPI | \`fastapi\` in requirements |
-| Spring Boot | \`spring-boot\` in pom.xml |
-| ASP.NET Core | \`Microsoft.AspNetCore\` reference |
-| Rails | \`rails\` in Gemfile |
+Two files are created in \`~/.packmind/cli/drafts/\` (or custom \`--output\`):
 
-### Tools
+1. **packmind-onboard.draft.json** - Machine-readable payload
+2. **packmind-onboard.draft.md** - Human-readable review document
 
-| Tool | Detection |
-|------|-----------|
-| ESLint | \`.eslintrc.*\` files |
-| Prettier | \`.prettierrc\` file |
-| Nx | \`nx.json\` |
-| Turbo | \`turbo.json\` |
-| Jest | \`jest\` dependency or \`jest.config.*\` |
-| Vitest | \`vitest\` dependency or \`vitest.config.*\` |
+### Baseline Items
 
-### Structure
+Each item includes:
+- **Label**: Short factual statement (e.g., "Uses TypeScript")
+- **Type**: tooling, structure, convention, or agent
+- **Confidence**: high or medium
+- **Evidence**: File paths that prove the claim
 
-- **Monorepo**: \`packages/\` or \`apps/\` directories
-- **Source directory**: \`src/\` directory
-- **Tests**: \`test/\`, \`tests/\`, or \`__tests__/\` directories
+Items are capped at 5-10, prioritizing high-confidence claims.
 
-## Generated Content
+## Review Flow
 
-### Standards
-
-Based on detected technologies, generates standards like:
-
-- **TypeScript Coding Standards** - Type safety, interfaces, naming conventions
-- **NestJS Architecture Standards** - Module organization, dependency injection
-- **React Component Standards** - Hooks, props, composition patterns
-- **Testing Standards** - Test structure, assertions, mocking
-- **Monorepo Organization Standards** - Package boundaries, dependencies
-
-If existing documentation (CLAUDE.md, CONTRIBUTING.md) contains rules or conventions, these are extracted into an "Extracted Project Standards" standard.
-
-### Commands
-
-Framework-specific workflow commands:
-
-- **Create NestJS Module** - Module, controller, service scaffolding
-- **Create React Component** - Component with TypeScript props
-- **Create Test** - Test file following project conventions
-- **Create Django App** - App structure for Django projects
-- **Create FastAPI Router** - Router module for FastAPI
-- And more based on detected frameworks
-
-### Skills
-
-Debugging and navigation skills:
-
-- **Project Overview** - Generated for every project with technology stack summary
-- **Debugging with [framework]** - Test-driven debugging workflow
-- **Framework-specific Debugging** - NestJS, Django, Spring Boot, etc.
-- **Monorepo Navigation** - Working efficiently in monorepo structure
-
-## Output Locations
-
-Generated content is written to:
-
-| Content Type | Location |
-|--------------|----------|
-| Standards | \`.packmind/standards/<name>.md\` |
-| Commands | \`.packmind/commands/<name>.md\` |
-| Skills | \`.claude/skills/<name>/SKILL.md\` |
-
-## AI Agent Enhancement
-
-After writing files, the onboarding process also updates AI agent configuration files (CLAUDE.md, .cursorrules, etc.) with instructions to help ${agentName} improve the generated content over time.
-
-## Example Output
+After generating drafts, you'll see:
 
 \`\`\`
-$ packmind-cli init
+What would you like to do?
 
-Initializing Packmind...
-
-Installing default skills...
-Default skills: added 9 files, changed 0 files
-
-Scanning project...
-
-Project scan complete!
-
-Detected:
-  Languages: typescript, javascript
-  Frameworks: nestjs, react
-  Tools: eslint, prettier, nx
-  Test Framework: jest
-  Package Manager: npm
-  Structure: Monorepo
-
-============================================================
-  GENERATED CONTENT PREVIEW
-============================================================
-
-Standards:
-  1. TypeScript Coding Standards
-     Apply TypeScript best practices for type safety and code quality
-     Rules: 4
-
-  2. NestJS Architecture Standards
-     Apply NestJS architectural patterns for modular services
-     Rules: 4
-
-Commands:
-  1. Create NestJS Module
-     Create a new feature module in NestJS
-     Steps: 5
-
-Skills:
-  1. project-overview
-     Overview of this project's technology stack and structure
-
-  2. debugging-with-jest
-     Systematic debugging workflow using jest tests
-
-============================================================
-
-Write 4 generated files to disk? (y/n): y
-
-Writing generated content to files...
-
-Created 4 files:
-  Standards:
-    - .packmind/standards/typescript-coding-standards.md
-    - .packmind/standards/nestjs-architecture-standards.md
-
-  Commands:
-    - .packmind/commands/create-nestjs-module.md
-
-  Skills:
-    - .claude/skills/project-overview/SKILL.md
-
-Enhancement instructions added to:
-    ~ CLAUDE.md (updated)
-
-Packmind initialization complete!
-
-Next steps:
-  - Review generated files in .packmind/ and .claude/skills/
-  - Install packages: packmind-cli install <package-slug>
-  - Setup MCP integration: packmind-cli setup-mcp
+  [Enter] Send draft to Packmind
+  [e]     Open draft in editor
+  [p]     Print summary
+  [r]     Regenerate draft
+  [q]     Quit without sending
 \`\`\`
 
-## Customizing Generated Content
+**Nothing is sent until you explicitly confirm.**
 
-After onboarding, you can:
+## Checking Status
 
-1. **Edit generated files** - Modify standards, commands, or skills to match your exact needs
-2. **Delete unwanted items** - Remove files that don't apply to your project
-3. **Add to packages** - Organize content into Packmind packages for team distribution
-4. **Re-run onboarding** - Use \`packmind-cli onboard\` to regenerate content after project changes
+See the current onboarding state:
+
+\`\`\`bash
+packmind-cli onboard-status
+\`\`\`
+
+Shows:
+- Last run timestamp
+- Baseline item count
+- Draft file locations
+- Push status (sent/unsent)
+
+## Example Session
+
+\`\`\`
+$ packmind-cli onboard
+
+============================================================
+  PACKMIND ONBOARDING
+============================================================
+
+This will:
+  1. Scan your repository (read-only, no modifications)
+  2. Generate a local draft baseline file
+  3. Let you review before sending anything
+
+Nothing will be sent to Packmind without your approval.
+
+Press Enter to continue, Ctrl+C to abort...
+
+Generating repository fingerprint...
+Scanning project (read-only)...
+Found languages: typescript, javascript
+Found frameworks: nestjs, react
+Found tools: eslint, prettier, nx
+Detected monorepo structure
+Generating baseline items...
+Writing draft files to /Users/you/.packmind/cli/drafts/...
+
+Generated 7 baseline items
+
+Draft files:
+  JSON: /Users/you/.packmind/cli/drafts/packmind-onboard.draft.json
+  Markdown: /Users/you/.packmind/cli/drafts/packmind-onboard.draft.md
+
+What would you like to do?
+
+  [Enter] Send draft to Packmind
+  [e]     Open draft in viewer
+  [p]     Print detailed summary
+  [r]     Regenerate draft
+  [q]     Quit without sending
+
+Your choice:
+
+Draft sent successfully!
+Open the app to review and convert baseline items into rules.
+\`\`\`
+
+## Safety Guarantees
+
+- **Read-only**: No files are modified in your repo
+- **Draft-first**: Nothing sent without explicit approval
+- **Factual only**: No architecture inference or recommendations
+- **Evidence-backed**: Every claim has file path evidence
+- **Deletable**: Draft files can be deleted anytime
 
 ## Troubleshooting
 
-### "No content was generated"
+### "Not logged in"
 
-This means the scanner didn't detect any recognizable patterns. Try:
+Run \`packmind-cli login\` first.
 
-- Adding a \`CLAUDE.md\` or \`CONTRIBUTING.md\` with coding guidelines
-- Ensuring your project has standard configuration files (package.json, tsconfig.json, etc.)
+### "No items generated"
 
-### "packmind-cli not found"
+Your project may lack recognizable config files. Ensure you have:
+- package.json, tsconfig.json, or similar
+- Standard project structure
 
-Install the CLI globally:
+### "Send failed"
 
-\`\`\`bash
-npm install -g @packmind/cli
-\`\`\`
-
-### Files not written
-
-- Check that you have write permissions in the project directory
-- Run with \`--yes\` flag if prompts are stuck in non-interactive environments
-
-## Quick Reference
-
-| Command | Description |
-|---------|-------------|
-| \`packmind-cli init\` | Full initialization (skills + onboarding) |
-| \`packmind-cli init --dry-run\` | Preview what would be generated |
-| \`packmind-cli init --yes\` | Auto-approve file writing |
-| \`packmind-cli init --skip-onboard\` | Only install default skills |
-| \`packmind-cli onboard\` | Re-scan project and generate content |
-| \`packmind-cli onboard --path ./other-project\` | Scan a different directory |
+Check your network connection. The draft files are preserved - try again with \`packmind-cli onboard --yes\`.
 `;
 }
 
-const ONBOARD_README = `# Project Onboarding
+const ONBOARD_README = `# Packmind Draft-First Onboarding
 
-A skill that guides AI coding agents through the process of initializing Packmind in a project.
+A skill that guides AI coding agents through the draft-first onboarding process for Packmind.
 
-## What is Onboarding?
+## What is Draft-First Onboarding?
 
-Onboarding scans your project to detect technologies, patterns, and existing documentation, then generates project-specific standards, commands, and skills.
+This skill uses a **draft-first** approach:
+1. Scan your project (read-only)
+2. Generate a local draft baseline file
+3. Let you review before sending anything
+4. Optionally send to Packmind after your approval
+
+**Nothing is sent to Packmind without explicit user confirmation.**
 
 ## How to Use
 
-Ask the AI agent to initialize Packmind or onboard your project. The agent will automatically use this skill to guide the process.
+Ask the AI agent to onboard your project to Packmind. The agent will automatically use this skill to guide the process.
 
 ### Example Prompts
 
-- "Initialize Packmind in this project"
 - "Onboard this project to Packmind"
-- "Scan this project and generate coding standards"
-- "Set up Packmind for this codebase"
+- "Run packmind onboarding"
+- "Generate a Packmind baseline for this project"
+- "Scan this project for Packmind"
 
 The AI agent will:
 
 1. Check prerequisites (packmind-cli installed and logged in)
-2. Run the appropriate CLI command
-3. Review the generated content with you
-4. Help customize the output as needed
+2. Run \`packmind-cli onboard\`
+3. Review the generated draft with you
+4. Help you decide whether to send or edit
 
 ## Prerequisites
 
-- **packmind-cli**: Required for onboarding
+- **packmind-cli**: Install with \`npm install -g @packmind/cli\`
 - **Packmind account**: Login via \`packmind-cli login\`
+
+## Safety
+
+- Read-only scanning (no modifications to your repo)
+- Draft files generated locally first
+- User reviews before any network push
+- Evidence-backed baseline items only
 
 ## License
 
