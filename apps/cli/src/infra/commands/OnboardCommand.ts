@@ -1,249 +1,391 @@
-import { command, option, string, optional, boolean, flag } from 'cmd-ts';
-import { PackmindCliHexa } from '../../PackmindCliHexa';
-import { PackmindLogger, LogLevel } from '@packmind/logger';
+import { command, flag, option, string, optional, boolean } from 'cmd-ts';
+import * as readline from 'readline';
+import * as fs from 'fs';
+import { spawn } from 'child_process';
 import {
+  logConsole,
   logSuccessConsole,
   logErrorConsole,
-  logInfoConsole,
-  logConsole,
-  logWarningConsole,
 } from '../utils/consoleLogger';
-import { AgentInstructionsService } from '../../application/services/AgentInstructionsService';
-import { promptConfirmation } from '../utils/promptUtils';
+import { PackmindCliHexa } from '../../PackmindCliHexa';
+import { PackmindLogger, LogLevel } from '@packmind/logger';
+import { DraftFormat } from '../../application/services/DraftFileWriterService';
+import { IGenerateDraftResult } from '../../application/useCases/DraftOnboardingUseCase';
+import { ProjectScannerService } from '../../application/services/ProjectScannerService';
+import { BaselineItemGeneratorService } from '../../application/services/BaselineItemGeneratorService';
+import { DraftFileWriterService } from '../../application/services/DraftFileWriterService';
+import { OnboardingStateService } from '../../application/services/OnboardingStateService';
+import { RepoFingerprintService } from '../../application/services/RepoFingerprintService';
+import { DraftOnboardingUseCase } from '../../application/useCases/DraftOnboardingUseCase';
 
 export const onboardCommand = command({
   name: 'onboard',
   description:
-    'Scan your project and generate standards, commands, and skills based on detected patterns',
+    'Scan project and generate draft baseline for Packmind onboarding',
   args: {
-    path: option({
+    output: option({
       type: optional(string),
-      long: 'path',
-      short: 'p',
-      description: 'Project path to scan (defaults to current directory)',
+      long: 'output',
+      short: 'o',
+      description: 'Output directory for draft files',
     }),
-    dryRun: flag({
-      type: boolean,
-      long: 'dry-run',
-      short: 'd',
-      description: 'Preview generated content without writing files',
+    format: option({
+      type: optional(string),
+      long: 'format',
+      short: 'f',
+      description: 'Output format: md, json, or both (default: both)',
     }),
     yes: flag({
       type: boolean,
       long: 'yes',
       short: 'y',
-      description: 'Skip confirmation prompts and proceed automatically',
+      description: 'Skip review prompt and immediately send to Packmind',
     }),
-    push: flag({
+    dryRun: flag({
       type: boolean,
-      long: 'push',
-      description: 'Push generated standards and commands to Packmind backend',
+      long: 'dry-run',
+      short: 'd',
+      description: 'Generate draft only, never send to Packmind',
+    }),
+    print: flag({
+      type: boolean,
+      long: 'print',
+      short: 'p',
+      description: 'Print full draft details to stdout',
+    }),
+    open: flag({
+      type: boolean,
+      long: 'open',
+      description: 'Open the generated markdown file in default editor/viewer',
+    }),
+    send: flag({
+      type: boolean,
+      long: 'send',
+      description: 'Explicitly send existing draft to Packmind',
     }),
   },
-  handler: async ({ path: projectPath, dryRun, yes, push }) => {
-    const packmindLogger = new PackmindLogger('PackmindCLI', LogLevel.INFO);
-    const packmindCliHexa = new PackmindCliHexa(packmindLogger);
-    const targetPath = projectPath || process.cwd();
+  handler: async (args) => {
+    const logger = new PackmindLogger('OnboardCommand', LogLevel.INFO);
+    const packmindCliHexa = new PackmindCliHexa(logger);
+    const format = (args.format as DraftFormat) || 'both';
 
-    try {
-      logConsole('\n');
-      logInfoConsole('Scanning project...');
+    // Create the draft onboarding use case with all dependencies
+    const draftUseCase = new DraftOnboardingUseCase(
+      new ProjectScannerService(),
+      new BaselineItemGeneratorService(),
+      new DraftFileWriterService(),
+      new OnboardingStateService(),
+      new RepoFingerprintService(),
+      packmindCliHexa.getPackmindGateway(),
+      logger,
+    );
 
-      const result = await packmindCliHexa.aggressiveOnboarding({
-        projectPath: targetPath,
+    // Step A: Minimal consent (unless --yes or --send)
+    // No Y/n question - just "Press Enter to continue, Ctrl+C to abort"
+    const skipPrompts = args.yes || args.send;
+    if (!skipPrompts) {
+      logConsole('');
+      logConsole('='.repeat(60));
+      logConsole('  PACKMIND ONBOARDING');
+      logConsole('='.repeat(60));
+      logConsole('');
+      logConsole('This will:');
+      logConsole('  1. Scan your repository (read-only, no modifications)');
+      logConsole('  2. Generate a local draft baseline file');
+      logConsole('  3. Let you review before sending anything');
+      logConsole('');
+      logConsole('Nothing will be sent to Packmind without your approval.');
+      logConsole('');
+
+      await waitForEnterOrAbort('Press Enter to continue, Ctrl+C to abort...');
+    }
+
+    // Main loop - allows regeneration without restarting command
+    let result: IGenerateDraftResult | null = null;
+    let shouldContinue = true;
+
+    while (shouldContinue) {
+      // Step B & C: Scan and generate draft
+      logConsole('');
+      result = await draftUseCase.generateDraft({
+        projectPath: process.cwd(),
+        format,
+        outputDir: args.output,
       });
 
-      // Display scan results
-      logConsole('\n');
-      logSuccessConsole('Project scan complete!');
-      logConsole('\n');
+      // Always print short summary
+      logConsole('');
+      logConsole(
+        `Generated ${result.draft.baseline_items.length} baseline items`,
+      );
 
-      // Show detected technologies
-      logConsole('Detected:');
-      if (result.scanResult.languages.length > 0) {
-        logConsole(`  Languages: ${result.scanResult.languages.join(', ')}`);
-      }
-      if (result.scanResult.frameworks.length > 0) {
-        logConsole(`  Frameworks: ${result.scanResult.frameworks.join(', ')}`);
-      }
-      if (result.scanResult.tools.length > 0) {
-        logConsole(`  Tools: ${result.scanResult.tools.join(', ')}`);
-      }
-      if (result.scanResult.testFramework) {
-        logConsole(`  Test Framework: ${result.scanResult.testFramework}`);
-      }
-      if (result.scanResult.packageManager) {
-        logConsole(`  Package Manager: ${result.scanResult.packageManager}`);
-      }
-      if (result.scanResult.structure.isMonorepo) {
-        logConsole('  Structure: Monorepo');
+      // Print detailed summary if requested
+      if (args.print) {
+        printDetailedSummary(result);
       }
 
-      // Display generated content preview
-      logConsole(result.preview);
+      // Report file paths
+      logConsole('');
+      logConsole('Draft files:');
+      if (result.paths.jsonPath) {
+        logConsole(`  JSON: ${result.paths.jsonPath}`);
+      }
+      if (result.paths.mdPath) {
+        logConsole(`  Markdown: ${result.paths.mdPath}`);
+      }
 
-      // Summary
-      const totalItems =
-        result.content.standards.length +
-        result.content.commands.length +
-        result.content.skills.length;
+      // Open in viewer if requested
+      if (args.open && result.paths.mdPath) {
+        openFile(result.paths.mdPath);
+      }
 
-      if (totalItems === 0) {
-        logInfoConsole(
-          'No content was generated. Your project may not have detectable patterns.',
-        );
-        logConsole(
-          '\nTip: Add a CLAUDE.md, CONTRIBUTING.md, or similar documentation files to help generate more relevant content.',
-        );
+      // Step D: Review gate
+      if (args.dryRun) {
+        logConsole('');
+        logConsole('Dry run complete. Draft files generated, nothing sent.');
         return;
       }
 
-      // Write content to files unless dry-run
-      if (dryRun) {
-        logInfoConsole(`Dry run: ${totalItems} items would be created`);
-        logConsole('\nRun without --dry-run to write files to disk.');
-      } else {
-        // Prompt for confirmation unless --yes flag is set
-        const shouldWrite =
-          yes ||
-          (await promptConfirmation(
-            `\nWrite ${totalItems} generated files to disk?`,
-          ));
+      if (skipPrompts) {
+        // Auto-send (--yes or --send)
+        logConsole('');
+        const sendResult = await draftUseCase.sendDraft(result.draft);
+        printSendResult(sendResult, result.paths);
+        return;
+      }
 
-        if (!shouldWrite) {
-          logInfoConsole('Skipped writing files.');
-          logConsole(
-            'Run with --dry-run to preview, or --yes to auto-approve.',
-          );
-          return;
+      // Interactive review loop
+      const choice = await showReviewMenu();
+
+      switch (choice) {
+        case 'send': {
+          logConsole('');
+          const sendResult = await draftUseCase.sendDraft(result.draft);
+          printSendResult(sendResult, result.paths);
+          shouldContinue = false;
+          break;
         }
 
-        logConsole('\n');
-        logInfoConsole('Writing generated content to files...');
-
-        const writeResult = await packmindCliHexa.writeContent(
-          targetPath,
-          result.content,
-        );
-
-        if (writeResult.errors.length > 0) {
-          for (const error of writeResult.errors) {
-            logWarningConsole(error);
-          }
-        }
-
-        logConsole('\n');
-        logSuccessConsole(`Created ${writeResult.filesCreated} files:`);
-
-        // Show created file paths
-        if (writeResult.paths.standards.length > 0) {
-          logConsole('\n  Standards:');
-          for (const filePath of writeResult.paths.standards) {
-            logConsole(`    - ${filePath}`);
-          }
-        }
-
-        if (writeResult.paths.commands.length > 0) {
-          logConsole('\n  Commands:');
-          for (const filePath of writeResult.paths.commands) {
-            logConsole(`    - ${filePath}`);
-          }
-        }
-
-        if (writeResult.paths.skills.length > 0) {
-          logConsole('\n  Skills:');
-          for (const filePath of writeResult.paths.skills) {
-            logConsole(`    - ${filePath}`);
-          }
-        }
-
-        // Write enhancement instructions to all agent config files
-        const instructionsService = new AgentInstructionsService();
-        const instructionsResult =
-          await instructionsService.writeToAllAgentConfigs(
-            targetPath,
-            writeResult,
-            result.scanResult,
-          );
-
-        logConsole('\n');
-        logSuccessConsole('Onboarding complete!');
-
-        // Show agent config files that were updated
-        if (
-          instructionsResult.filesCreated.length > 0 ||
-          instructionsResult.filesUpdated.length > 0
-        ) {
-          logConsole('\n');
-          logInfoConsole('Enhancement instructions added to:');
-
-          for (const file of instructionsResult.filesCreated) {
-            logConsole(`    + ${file} (created)`);
-          }
-          for (const file of instructionsResult.filesUpdated) {
-            logConsole(`    ~ ${file} (updated)`);
-          }
-
-          logConsole('\n');
-          logConsole(
-            'Your AI agent will automatically see these instructions and enhance the generated files.',
-          );
-        }
-
-        if (instructionsResult.errors.length > 0) {
-          for (const error of instructionsResult.errors) {
-            logWarningConsole(error);
-          }
-        }
-
-        // Push to backend if requested
-        if (push) {
-          logConsole('\n');
-          logInfoConsole('Pushing content to Packmind backend...');
-
-          const pushResult = await packmindCliHexa.pushContent(
-            result.content.standards,
-            result.content.commands,
-          );
-
-          if (pushResult.errors.length > 0) {
-            for (const error of pushResult.errors) {
-              logWarningConsole(error);
-            }
-          }
-
-          if (
-            pushResult.standardsCreated > 0 ||
-            pushResult.commandsCreated > 0
-          ) {
-            logConsole('\n');
-            logSuccessConsole(
-              `Pushed to backend: ${pushResult.standardsCreated} standards, ${pushResult.commandsCreated} commands`,
+        case 'edit':
+          if (result.paths.mdPath) {
+            openFile(result.paths.mdPath);
+            logConsole('');
+            logConsole(
+              'File opened. Select [r] to regenerate after editing, or [Enter] to send.',
             );
-
-            if (pushResult.createdStandards.length > 0) {
-              logConsole('\n  Standards:');
-              for (const standard of pushResult.createdStandards) {
-                logConsole(`    - ${standard.name} (ID: ${standard.id})`);
-              }
-            }
-
-            if (pushResult.createdCommands.length > 0) {
-              logConsole('\n  Commands:');
-              for (const cmd of pushResult.createdCommands) {
-                logConsole(`    - ${cmd.name} (slug: ${cmd.slug})`);
-              }
-            }
           }
-        }
+          break;
+
+        case 'print':
+          printDetailedSummary(result);
+          break;
+
+        case 'regenerate':
+          logConsole('');
+          logConsole('Regenerating...');
+          // Loop continues, will regenerate
+          break;
+
+        case 'quit':
+          logConsole('');
+          logConsole(
+            'Exited without sending. Your draft files are still available:',
+          );
+          if (result.paths.jsonPath) logConsole(`  ${result.paths.jsonPath}`);
+          if (result.paths.mdPath) logConsole(`  ${result.paths.mdPath}`);
+          shouldContinue = false;
+          break;
       }
-    } catch (error) {
-      if (error instanceof Error) {
-        logErrorConsole(error.message);
-      } else {
-        logErrorConsole(String(error));
-      }
-      process.exit(1);
     }
   },
 });
+
+async function showReviewMenu(): Promise<string> {
+  logConsole('');
+  logConsole('What would you like to do?');
+  logConsole('');
+  logConsole('  [Enter] Send draft to Packmind');
+  logConsole('  [e]     Open draft in viewer');
+  logConsole('  [p]     Print detailed summary');
+  logConsole('  [r]     Regenerate draft');
+  logConsole('  [q]     Quit without sending');
+  logConsole('');
+
+  const choice = await promptChoice('Your choice: ', ['', 'e', 'p', 'r', 'q']);
+
+  const choiceMap: Record<string, string> = {
+    '': 'send',
+    e: 'edit',
+    p: 'print',
+    r: 'regenerate',
+    q: 'quit',
+  };
+
+  return choiceMap[choice] || 'quit';
+}
+
+function printDetailedSummary(result: IGenerateDraftResult): void {
+  logConsole('');
+  logConsole('='.repeat(60));
+  logConsole('  DRAFT SUMMARY');
+  logConsole('='.repeat(60));
+  logConsole('');
+  logConsole(
+    `Languages: ${result.draft.summary.languages.join(', ') || 'none detected'}`,
+  );
+  logConsole(
+    `Frameworks: ${result.draft.summary.frameworks.join(', ') || 'none detected'}`,
+  );
+  logConsole(
+    `Tools: ${result.draft.summary.tools.join(', ') || 'none detected'}`,
+  );
+  logConsole('');
+  logConsole('Baseline items:');
+  for (const item of result.draft.baseline_items) {
+    logConsole(
+      `  - ${item.label} (${item.confidence}) [${item.evidence.join(', ')}]`,
+    );
+  }
+}
+
+function printSendResult(
+  sendResult: { success: boolean; error?: string },
+  paths: { jsonPath: string | null; mdPath: string | null },
+): void {
+  if (sendResult.success) {
+    logConsole('');
+    logSuccessConsole('Draft reviewed');
+    logSuccessConsole('Sent to Packmind');
+    logSuccessConsole('Stored successfully');
+    logConsole('');
+    logConsole('Open the app to review and convert baseline items into rules.');
+  } else {
+    logConsole('');
+    logErrorConsole('Failed to send draft to Packmind');
+    logConsole(`  Error: ${sendResult.error}`);
+    logConsole('');
+    logConsole('Your draft files are preserved:');
+    if (paths.jsonPath) logConsole(`  ${paths.jsonPath}`);
+    if (paths.mdPath) logConsole(`  ${paths.mdPath}`);
+    logConsole('');
+    logConsole('Try again with: packmind-cli onboard --yes');
+  }
+}
+
+async function waitForEnterOrAbort(message: string): Promise<void> {
+  // Check if stdin is a TTY - if not, default to continue (non-interactive mode)
+  if (!process.stdin.isTTY) {
+    return;
+  }
+
+  // Open /dev/tty directly for input/output to handle various environments
+  let input: NodeJS.ReadableStream;
+  let output: NodeJS.WritableStream;
+
+  try {
+    input = fs.createReadStream('/dev/tty');
+    output = fs.createWriteStream('/dev/tty');
+  } catch {
+    // Fallback to stdin/stdout if /dev/tty is not available
+    input = process.stdin;
+    output = process.stdout;
+  }
+
+  const rl = readline.createInterface({
+    input,
+    output,
+  });
+
+  return new Promise((resolve) => {
+    rl.question(message, () => {
+      rl.close();
+      // Close file streams if we opened /dev/tty
+      if (input !== process.stdin) {
+        (input as fs.ReadStream).close();
+        (output as fs.WriteStream).close();
+      }
+      resolve();
+    });
+  });
+}
+
+async function promptChoice(
+  prompt: string,
+  validChoices: string[],
+): Promise<string> {
+  // Check if stdin is a TTY - if not, default to first choice (non-interactive mode)
+  if (!process.stdin.isTTY) {
+    return validChoices[0] || '';
+  }
+
+  // Open /dev/tty directly for input/output to handle various environments
+  let input: NodeJS.ReadableStream;
+  let output: NodeJS.WritableStream;
+
+  try {
+    input = fs.createReadStream('/dev/tty');
+    output = fs.createWriteStream('/dev/tty');
+  } catch {
+    // Fallback to stdin/stdout if /dev/tty is not available
+    input = process.stdin;
+    output = process.stdout;
+  }
+
+  const rl = readline.createInterface({
+    input,
+    output,
+  });
+
+  return new Promise((resolve) => {
+    rl.question(prompt, (answer) => {
+      rl.close();
+      // Close file streams if we opened /dev/tty
+      if (input !== process.stdin) {
+        (input as fs.ReadStream).close();
+        (output as fs.WriteStream).close();
+      }
+
+      const normalized = answer.trim().toLowerCase();
+      if (validChoices.includes(normalized)) {
+        resolve(normalized);
+      } else {
+        resolve('q'); // Default to quit on invalid input
+      }
+    });
+  });
+}
+
+/**
+ * Opens a file using the platform-appropriate command.
+ * Uses spawn for safety (no shell injection).
+ */
+function openFile(filePath: string): void {
+  let command: string;
+  let args: string[];
+
+  switch (process.platform) {
+    case 'darwin':
+      command = 'open';
+      args = [filePath];
+      break;
+    case 'win32':
+      command = 'cmd';
+      args = ['/c', 'start', '', filePath];
+      break;
+    default: // Linux and others
+      command = 'xdg-open';
+      args = [filePath];
+      break;
+  }
+
+  try {
+    const child = spawn(command, args, {
+      detached: true,
+      stdio: 'ignore',
+    });
+    child.unref();
+    logConsole(`Opening: ${filePath}`);
+  } catch {
+    logConsole(`Could not open file. Please open manually: ${filePath}`);
+  }
+}
