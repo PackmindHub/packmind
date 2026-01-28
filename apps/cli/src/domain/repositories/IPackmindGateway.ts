@@ -220,7 +220,7 @@ export type CreateStandardWithExamplesResult = {
   name: string;
 };
 
-// Global space type
+// Global space type (used by createCommand)
 export type GetGlobalSpaceResult = {
   id: string;
   slug: string;
@@ -255,13 +255,15 @@ export interface IPackmindGateway {
   uploadSkill: Gateway<IUploadSkillUseCase>;
   getDefaultSkills: Gateway<IGetDefaultSkillsUseCase>;
 
-  // Atomic gateway for getGlobalSpace
+  // Atomic gateway for getGlobalSpace (used by createCommand)
   getGlobalSpace(): Promise<GetGlobalSpaceResult>;
 
   // Consolidated standard creation
   createStandard(
     data: CreateStandardWithExamplesCommand,
   ): Promise<CreateStandardWithExamplesResult>;
+
+  // Atomic gateway for command creation
   createCommand(
     spaceId: string,
     data: CreateCommandCommand,

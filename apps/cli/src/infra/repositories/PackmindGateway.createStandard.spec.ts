@@ -79,7 +79,7 @@ describe('PackmindGateway.createStandard', () => {
       );
     });
 
-    it('does not fetch rules or add examples', () => {
+    it('does not fetch rules when no examples', () => {
       expect(global.fetch).toHaveBeenCalledTimes(2);
     });
   });
