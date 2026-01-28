@@ -23,7 +23,6 @@ import {
   createOrganizationId,
   createUserId,
 } from '@packmind/types';
-import { OrganizationAdminRequiredError } from '@packmind/node-utils';
 import { stubLogger } from '@packmind/test-utils';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -299,37 +298,6 @@ describe('AddGitRepoUseCase', () => {
   });
 
   describe('validation errors', () => {
-    it('throws error if user is not admin', async () => {
-      const command: AddGitRepoCommand = {
-        userId,
-        organizationId,
-        gitProviderId,
-        owner: 'testowner',
-        repo: 'testrepo',
-        branch: 'main',
-      };
-
-      const nonAdminUser: User = {
-        id: userId,
-        email: 'member@example.com',
-        passwordHash: null,
-        active: true,
-        memberships: [
-          {
-            userId,
-            organizationId,
-            role: 'member',
-          },
-        ],
-      };
-
-      mockAccountsAdapter.getUserById.mockResolvedValueOnce(nonAdminUser);
-
-      await expect(useCase.execute(command)).rejects.toThrow(
-        OrganizationAdminRequiredError,
-      );
-    });
-
     it('throws error for missing git provider ID', async () => {
       const command: AddGitRepoCommand = {
         userId,

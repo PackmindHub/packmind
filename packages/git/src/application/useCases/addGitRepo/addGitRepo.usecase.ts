@@ -1,5 +1,5 @@
 import { PackmindLogger } from '@packmind/logger';
-import { AbstractAdminUseCase, AdminContext } from '@packmind/node-utils';
+import { AbstractMemberUseCase, MemberContext } from '@packmind/node-utils';
 import {
   AddGitRepoCommand,
   createUserId,
@@ -18,7 +18,7 @@ import { GitRepoService } from '../../GitRepoService';
 const origin = 'AddGitRepoUseCase';
 
 export class AddGitRepoUseCase
-  extends AbstractAdminUseCase<AddGitRepoCommand, GitRepo>
+  extends AbstractMemberUseCase<AddGitRepoCommand, GitRepo>
   implements IAddGitRepoUseCase
 {
   constructor(
@@ -31,8 +31,8 @@ export class AddGitRepoUseCase
     super(accountsAdapter, logger);
   }
 
-  protected async executeForAdmins(
-    command: AddGitRepoCommand & AdminContext,
+  protected async executeForMembers(
+    command: AddGitRepoCommand & MemberContext,
   ): Promise<GitRepo> {
     const {
       organization,
