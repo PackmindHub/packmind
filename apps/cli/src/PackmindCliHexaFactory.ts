@@ -45,6 +45,7 @@ import { SkillsGeneratorService } from './application/services/SkillsGeneratorSe
 import { SkillsScannerService } from './application/services/SkillsScannerService';
 import { ContentPreviewService } from './application/services/ContentPreviewService';
 import { ContentWriterService } from './application/services/ContentWriterService';
+import { ContentPusherService } from './application/services/ContentPusherService';
 
 export class PackmindCliHexaFactory {
   public repositories: IPackmindRepositories;
@@ -79,6 +80,9 @@ export class PackmindCliHexaFactory {
       linterExecutionUseCase: new ExecuteLinterProgramsUseCase(),
       diffViolationFilterService: new DiffViolationFilterService(),
       contentWriter: new ContentWriterService(),
+      contentPusher: new ContentPusherService(
+        this.repositories.packmindGateway,
+      ),
     };
 
     this.useCases = {

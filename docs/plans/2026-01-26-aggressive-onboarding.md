@@ -2345,11 +2345,11 @@ git commit -m "feat: complete aggressive onboarding feature
 - [x] Generates Skills for debugging/navigation (including project overview skill)
 - [x] Shows preview in CLI with formatted output
 - [x] Prompts user for approval before writing files (--yes to skip, --dry-run to preview)
-- [ ] Pushes to backend using existing APIs (deferred - local file writing only)
+- [x] Pushes to backend using existing APIs (--push flag on init/onboard commands)
 - [x] `packmind-cli init` combines default skills + onboarding (replaces --auto-onboard)
 - [x] Standalone `onboard` command works
-- [ ] All tests pass
-- [ ] Quality gate passes
+- [x] All tests pass
+- [x] Quality gate passes
 - [x] Documentation complete
 
 ## Implementation Changes from Original Plan
@@ -2373,7 +2373,7 @@ The implementation diverged from the original plan in several ways:
    - AgentInstructionsService writes enhancement instructions to AI agent configs
    - Project overview skill generated for every project
 
-4. **Backend push deferred**: The gateway methods exist but content push to backend was deferred
+4. **Backend push implemented**: Added `--push` flag to `init` and `onboard` commands to push generated standards and commands to Packmind backend using `ContentPusherService`
 
 ---
 

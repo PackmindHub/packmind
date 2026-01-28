@@ -65,6 +65,7 @@ import { IContentWriteResult } from './application/services/ContentWriterService
 import { IGeneratedStandard } from './application/services/StandardsGeneratorService';
 import { IGeneratedCommand } from './application/services/CommandsGeneratorService';
 import { IGeneratedSkill } from './application/services/SkillsGeneratorService';
+import { IContentPushResult } from './application/services/ContentPusherService';
 
 const origin = 'PackmindCliHexa';
 
@@ -288,5 +289,12 @@ export class PackmindCliHexa {
     },
   ): Promise<IContentWriteResult> {
     return this.hexa.services.contentWriter.writeContent(projectPath, content);
+  }
+
+  public async pushContent(
+    standards: IGeneratedStandard[],
+    commands: IGeneratedCommand[],
+  ): Promise<IContentPushResult> {
+    return this.hexa.services.contentPusher.pushContent(standards, commands);
   }
 }
