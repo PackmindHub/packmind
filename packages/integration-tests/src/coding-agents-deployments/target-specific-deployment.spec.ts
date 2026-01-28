@@ -6,7 +6,6 @@ import { recipesSchemas } from '@packmind/recipes';
 import { skillsSchemas } from '@packmind/skills';
 import { spacesSchemas } from '@packmind/spaces';
 import { standardsSchemas } from '@packmind/standards';
-import { makeTestDatasource } from '@packmind/test-utils';
 import {
   createGitProviderId,
   createGitRepoId,
@@ -26,8 +25,8 @@ import {
   User,
 } from '@packmind/types';
 import assert from 'assert';
-import { DataSource } from 'typeorm';
 import { v4 as uuidv4 } from 'uuid';
+import { createIntegrationTestFixture } from '../helpers/createIntegrationTestFixture';
 import { TestApp } from '../helpers/TestApp';
 
 // Mock the Git provider adapter for file retrieval
@@ -48,8 +47,17 @@ jest.mock('@packmind/git', () => {
 });
 
 describe('Target-Specific Deployment Integration', () => {
+  const fixture = createIntegrationTestFixture([
+    ...accountsSchemas,
+    ...recipesSchemas,
+    ...standardsSchemas,
+    ...spacesSchemas,
+    ...gitSchemas,
+    ...deploymentsSchemas,
+    ...skillsSchemas,
+  ]);
+
   let testApp: TestApp;
-  let dataSource: DataSource;
   let deployerService: DeployerService;
 
   let recipe: Recipe;
@@ -62,22 +70,11 @@ describe('Target-Specific Deployment Integration', () => {
   let vscodeTarget: Target;
   let rootTarget: Target;
 
-  beforeEach(async () => {
-    // Create test datasource with all necessary schemas
-    dataSource = await makeTestDatasource([
-      ...accountsSchemas,
-      ...recipesSchemas,
-      ...standardsSchemas,
-      ...spacesSchemas,
-      ...gitSchemas,
-      ...deploymentsSchemas,
-      ...skillsSchemas,
-    ]);
-    await dataSource.initialize();
-    await dataSource.synchronize();
+  beforeAll(() => fixture.initialize());
 
+  beforeEach(async () => {
     // Use TestApp which handles all hexa registration and initialization
-    testApp = new TestApp(dataSource);
+    testApp = new TestApp(fixture.datasource);
     await testApp.initialize();
 
     // Get deployer service from hexa
@@ -180,8 +177,11 @@ class MyService {
   });
 
   afterEach(async () => {
-    await dataSource.destroy();
+    jest.clearAllMocks();
+    await fixture.cleanup();
   });
+
+  afterAll(() => fixture.destroy());
 
   describe('Standards Publishing: Example Mapping Scenario 1: Standard distributed to jetbrains target', () => {
     describe('when deploying standard to jetbrains/.packmind/standards path', () => {

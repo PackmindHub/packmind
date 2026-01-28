@@ -2,7 +2,6 @@ import { accountsSchemas } from '@packmind/accounts';
 import { gitSchemas } from '@packmind/git';
 import { spacesSchemas } from '@packmind/spaces';
 import { standardsSchemas } from '@packmind/standards';
-import { makeTestDatasource } from '@packmind/test-utils';
 import {
   Organization,
   Space,
@@ -12,31 +11,29 @@ import {
 } from '@packmind/types';
 
 import assert from 'assert';
-import { DataSource } from 'typeorm';
+import { createIntegrationTestFixture } from './helpers/createIntegrationTestFixture';
 import { TestApp } from './helpers/TestApp';
 
 describe('Add rule to standard integration', () => {
+  const fixture = createIntegrationTestFixture([
+    ...accountsSchemas,
+    ...standardsSchemas,
+    ...gitSchemas,
+    ...spacesSchemas,
+  ]);
+
   let testApp: TestApp;
-  let dataSource: DataSource;
 
   let standard: Standard;
   let organization: Organization;
   let user: User;
   let space: Space;
 
-  beforeEach(async () => {
-    // Create test datasource with all necessary schemas
-    dataSource = await makeTestDatasource([
-      ...accountsSchemas,
-      ...standardsSchemas,
-      ...gitSchemas,
-      ...spacesSchemas,
-    ]);
-    await dataSource.initialize();
-    await dataSource.synchronize();
+  beforeAll(() => fixture.initialize());
 
+  beforeEach(async () => {
     // Use TestApp which handles all hexa registration and initialization
-    testApp = new TestApp(dataSource);
+    testApp = new TestApp(fixture.datasource);
     await testApp.initialize();
 
     // Create test data
@@ -74,8 +71,11 @@ describe('Add rule to standard integration', () => {
   });
 
   afterEach(async () => {
-    await dataSource.destroy();
+    jest.clearAllMocks();
+    await fixture.cleanup();
   });
+
+  afterAll(() => fixture.destroy());
 
   describe('when standard slug is not found in the organization', () => {
     test('An error is thrown', async () => {

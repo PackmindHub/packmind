@@ -20,5 +20,7 @@ export default {
     compilerOptions.paths,
     '<rootDir>/../../',
   ),
-  testTimeout: 60000,
+  testTimeout: 30000,
+  // Run integration tests in parallel - each test file uses its own database fixture
+  maxWorkers: 4,
 };

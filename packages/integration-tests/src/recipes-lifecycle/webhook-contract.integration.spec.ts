@@ -16,9 +16,9 @@ import {
   Package,
   Recipe,
 } from '@packmind/types';
-import { DataSource } from 'typeorm';
+import { createIntegrationTestFixture } from '../helpers/createIntegrationTestFixture';
 import { DataFactory } from '../helpers/DataFactory';
-import { makeIntegrationTestDataSource } from '../helpers/makeIntegrationTestDataSource';
+import { integrationTestSchemas } from '../helpers/makeIntegrationTestDataSource';
 import { TestApp } from '../helpers/TestApp';
 
 // Increase timeout for integration tests to reduce flakiness
@@ -74,7 +74,8 @@ interface WebhookTestConfig<TPayload> {
 
 function contractWebhookTest<TPayload>(config: WebhookTestConfig<TPayload>) {
   describe(`${config.providerName} Webhook Integration Test`, () => {
-    let dataSource: DataSource;
+    const fixture = createIntegrationTestFixture(integrationTestSchemas);
+
     let testApp: TestApp;
     let dataFactory: DataFactory;
 
@@ -91,7 +92,7 @@ function contractWebhookTest<TPayload>(config: WebhookTestConfig<TPayload>) {
       files: Array<{ filePath: string; fileContent: string }>,
     ) => {
       // Create a real GitCommit in the database for the test
-      const mockGitCommit = await dataSource
+      const mockGitCommit = await fixture.datasource
         .getRepository(GitCommitSchema)
         .save(gitCommitFactory());
 
@@ -180,13 +181,10 @@ function contractWebhookTest<TPayload>(config: WebhookTestConfig<TPayload>) {
         });
     };
 
-    beforeEach(async () => {
-      // Create test datasource with all necessary schemas
-      dataSource = await makeIntegrationTestDataSource();
-      await dataSource.initialize();
-      await dataSource.synchronize();
+    beforeAll(() => fixture.initialize());
 
-      testApp = new TestApp(dataSource);
+    beforeEach(async () => {
+      testApp = new TestApp(fixture.datasource);
       await testApp.initialize();
 
       dataFactory = new DataFactory(testApp);
@@ -205,8 +203,10 @@ function contractWebhookTest<TPayload>(config: WebhookTestConfig<TPayload>) {
 
     afterEach(async () => {
       jest.restoreAllMocks();
-      await dataSource.destroy();
+      await fixture.cleanup();
     });
+
+    afterAll(() => fixture.destroy());
 
     describe(`${config.providerName} Webhook Recipe Update Flow`, () => {
       describe('when the recipe is not deployed on the target', () => {
@@ -261,7 +261,8 @@ function contractWebhookTest<TPayload>(config: WebhookTestConfig<TPayload>) {
 
       describe('when the recipe is deployed on the target', () => {
         async function createGitCommit() {
-          const gitCommitRepo = dataSource.getRepository(GitCommitSchema);
+          const gitCommitRepo =
+            fixture.datasource.getRepository(GitCommitSchema);
           return gitCommitRepo.save(gitCommitFactory());
         }
 

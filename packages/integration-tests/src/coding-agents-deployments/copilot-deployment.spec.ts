@@ -6,7 +6,6 @@ import { recipesSchemas } from '@packmind/recipes';
 import { skillsSchemas } from '@packmind/skills';
 import { spacesSchemas } from '@packmind/spaces';
 import { standardsSchemas } from '@packmind/standards';
-import { makeTestDatasource } from '@packmind/test-utils';
 import {
   DeleteItemType,
   FileUpdates,
@@ -32,12 +31,21 @@ import {
 } from '@packmind/types';
 
 import assert from 'assert';
-import { DataSource } from 'typeorm';
+import { createIntegrationTestFixture } from '../helpers/createIntegrationTestFixture';
 import { TestApp } from '../helpers/TestApp';
 
 describe('GitHub Copilot Deployment Integration', () => {
+  const fixture = createIntegrationTestFixture([
+    ...accountsSchemas,
+    ...recipesSchemas,
+    ...standardsSchemas,
+    ...skillsSchemas,
+    ...spacesSchemas,
+    ...gitSchemas,
+    ...deploymentsSchemas,
+  ]);
+
   let testApp: TestApp;
-  let dataSource: DataSource;
   let standardsPort: IStandardsPort;
   let gitPort: IGitPort;
   let deployerService: DeployerService;
@@ -50,22 +58,11 @@ describe('GitHub Copilot Deployment Integration', () => {
   let space: Space;
   let gitRepo: GitRepo;
 
-  beforeEach(async () => {
-    // Create test datasource with all necessary schemas
-    dataSource = await makeTestDatasource([
-      ...accountsSchemas,
-      ...recipesSchemas,
-      ...standardsSchemas,
-      ...skillsSchemas,
-      ...spacesSchemas,
-      ...gitSchemas,
-      ...deploymentsSchemas,
-    ]);
-    await dataSource.initialize();
-    await dataSource.synchronize();
+  beforeAll(() => fixture.initialize());
 
+  beforeEach(async () => {
     // Use TestApp which handles all hexa registration and initialization
-    testApp = new TestApp(dataSource);
+    testApp = new TestApp(fixture.datasource);
     await testApp.initialize();
 
     // Get deployer service from hexa
@@ -153,8 +150,11 @@ describe('GitHub Copilot Deployment Integration', () => {
   });
 
   afterEach(async () => {
-    await dataSource.destroy();
+    jest.clearAllMocks();
+    await fixture.cleanup();
   });
+
+  afterAll(() => fixture.destroy());
 
   describe('when .github/instructions/packmind-recipes-index.instructions.md does not exist', () => {
     let defaultTarget: Target;

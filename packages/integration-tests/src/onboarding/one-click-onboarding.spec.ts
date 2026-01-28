@@ -1,7 +1,5 @@
 import { TestApp } from '../helpers/TestApp';
 import { lessThanOrEqual } from '../helpers/testMatchers';
-import { DataSource } from 'typeorm';
-import { makeTestDatasource } from '@packmind/test-utils';
 import { accountsSchemas } from '@packmind/accounts';
 import {
   ActivateTrialAccountResult,
@@ -9,21 +7,20 @@ import {
   User,
 } from '@packmind/types';
 import * as jwt from 'jsonwebtoken';
+import { createIntegrationTestFixture } from '../helpers/createIntegrationTestFixture';
 
 describe('One click on-boarding', () => {
+  const fixture = createIntegrationTestFixture([...accountsSchemas]);
+
   let testApp: TestApp;
-  let dataSource: DataSource;
   let user: User;
   let organization: Organization;
 
-  beforeEach(async () => {
-    // Create test datasource with all necessary schemas
-    dataSource = await makeTestDatasource([...accountsSchemas]);
-    await dataSource.initialize();
-    await dataSource.synchronize();
+  beforeAll(() => fixture.initialize());
 
+  beforeEach(async () => {
     // Use TestApp which handles all hexa registration and initialization
-    testApp = new TestApp(dataSource);
+    testApp = new TestApp(fixture.datasource);
     await testApp.initialize();
 
     const startTrialResult = await testApp.accountsHexa
@@ -37,8 +34,11 @@ describe('One click on-boarding', () => {
   });
 
   afterEach(async () => {
-    await dataSource.destroy();
+    jest.clearAllMocks();
+    await fixture.cleanup();
   });
+
+  afterAll(() => fixture.destroy());
 
   it('creates a random user', async () => {
     expect(user).toEqual(
