@@ -10,13 +10,7 @@ import {
 import { PackmindCliHexa } from '../../PackmindCliHexa';
 import { PackmindLogger, LogLevel } from '@packmind/logger';
 import { DraftFormat } from '../../application/services/DraftFileWriterService';
-import { IGenerateDraftResult } from '../../application/useCases/DraftOnboardingUseCase';
-import { ProjectScannerService } from '../../application/services/ProjectScannerService';
-import { BaselineItemGeneratorService } from '../../application/services/BaselineItemGeneratorService';
-import { DraftFileWriterService } from '../../application/services/DraftFileWriterService';
-import { OnboardingStateService } from '../../application/services/OnboardingStateService';
-import { RepoFingerprintService } from '../../application/services/RepoFingerprintService';
-import { DraftOnboardingUseCase } from '../../application/useCases/DraftOnboardingUseCase';
+import { IGenerateDraftResult } from '../../domain/useCases/IDraftOnboardingUseCase';
 
 export const onboardCommand = command({
   name: 'onboard',
@@ -69,16 +63,8 @@ export const onboardCommand = command({
     const packmindCliHexa = new PackmindCliHexa(logger);
     const format = (args.format as DraftFormat) || 'both';
 
-    // Create the draft onboarding use case with all dependencies
-    const draftUseCase = new DraftOnboardingUseCase(
-      new ProjectScannerService(),
-      new BaselineItemGeneratorService(),
-      new DraftFileWriterService(),
-      new OnboardingStateService(),
-      new RepoFingerprintService(),
-      packmindCliHexa.getPackmindGateway(),
-      logger,
-    );
+    // Get the draft onboarding use case from the hexa factory
+    const draftUseCase = packmindCliHexa.getDraftOnboardingUseCase();
 
     // Step A: Minimal consent (unless --yes or --send)
     // No Y/n question - just "Press Enter to continue, Ctrl+C to abort"

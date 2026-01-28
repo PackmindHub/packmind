@@ -46,6 +46,12 @@ import { SkillsScannerService } from './application/services/SkillsScannerServic
 import { ContentPreviewService } from './application/services/ContentPreviewService';
 import { ContentWriterService } from './application/services/ContentWriterService';
 import { ContentPusherService } from './application/services/ContentPusherService';
+import { BaselineItemGeneratorService } from './application/services/BaselineItemGeneratorService';
+import { DraftFileWriterService } from './application/services/DraftFileWriterService';
+import { OnboardingStateService } from './application/services/OnboardingStateService';
+import { RepoFingerprintService } from './application/services/RepoFingerprintService';
+import { DraftOnboardingUseCase } from './application/useCases/DraftOnboardingUseCase';
+import { IDraftOnboardingUseCase } from './domain/useCases/IDraftOnboardingUseCase';
 
 export class PackmindCliHexaFactory {
   public repositories: IPackmindRepositories;
@@ -66,6 +72,7 @@ export class PackmindCliHexaFactory {
     whoami: IWhoamiUseCase;
     setupMcp: ISetupMcpUseCase;
     aggressiveOnboarding: IAggressiveOnboardingUseCase;
+    draftOnboarding: IDraftOnboardingUseCase;
   };
 
   constructor(private readonly logger: PackmindLogger) {
@@ -126,6 +133,15 @@ export class PackmindCliHexaFactory {
         new SkillsGeneratorService(),
         new SkillsScannerService(),
         new ContentPreviewService(),
+      ),
+      draftOnboarding: new DraftOnboardingUseCase(
+        new ProjectScannerService(),
+        new BaselineItemGeneratorService(),
+        new DraftFileWriterService(),
+        new OnboardingStateService(),
+        new RepoFingerprintService(),
+        this.repositories.packmindGateway,
+        this.logger,
       ),
     };
   }

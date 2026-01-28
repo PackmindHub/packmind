@@ -2,12 +2,6 @@ import { command, option, string, optional } from 'cmd-ts';
 import { logConsole } from '../utils/consoleLogger';
 import { PackmindLogger, LogLevel } from '@packmind/logger';
 import { PackmindCliHexa } from '../../PackmindCliHexa';
-import { ProjectScannerService } from '../../application/services/ProjectScannerService';
-import { BaselineItemGeneratorService } from '../../application/services/BaselineItemGeneratorService';
-import { DraftFileWriterService } from '../../application/services/DraftFileWriterService';
-import { OnboardingStateService } from '../../application/services/OnboardingStateService';
-import { RepoFingerprintService } from '../../application/services/RepoFingerprintService';
-import { DraftOnboardingUseCase } from '../../application/useCases/DraftOnboardingUseCase';
 
 export const onboardStatusCommand = command({
   name: 'onboard-status',
@@ -24,16 +18,8 @@ export const onboardStatusCommand = command({
     const logger = new PackmindLogger('OnboardStatusCommand', LogLevel.INFO);
     const packmindCliHexa = new PackmindCliHexa(logger);
 
-    // Create the draft onboarding use case with all dependencies
-    const draftUseCase = new DraftOnboardingUseCase(
-      new ProjectScannerService(),
-      new BaselineItemGeneratorService(),
-      new DraftFileWriterService(),
-      new OnboardingStateService(),
-      new RepoFingerprintService(),
-      packmindCliHexa.getPackmindGateway(),
-      logger,
-    );
+    // Get the draft onboarding use case from the hexa factory
+    const draftUseCase = packmindCliHexa.getDraftOnboardingUseCase();
 
     const projectPath = args.path || process.cwd();
     const status = await draftUseCase.getStatus(projectPath);
