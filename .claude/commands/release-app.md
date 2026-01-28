@@ -6,6 +6,7 @@ Create a Packmind release with version {{version}}. Follow these steps:
    - Update the version in `package.json` to `{{version}}`
    - Update the version in `apps/api/docker-package.json` to `{{version}}`
    - In CHANGELOG.md:
+     - drop the empty sections under [Unreleased]
      - Replace the `[Unreleased]` heading with `[{{version}}] - {{today_date}}` (use ISO 8601 format YYYY-MM-DD for the date)
      - Update the unreleased comparison link at the bottom to point to the new release:
        ```
