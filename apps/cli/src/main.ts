@@ -15,6 +15,7 @@ import { skillsCommand } from './infra/commands/SkillsCommand';
 import { standardsCommand } from './infra/commands/StandardsCommand';
 import { commandsCommand } from './infra/commands/CommandsCommand';
 import { onboardCommand } from './infra/commands/OnboardCommand';
+import { onboardStatusCommand } from './infra/commands/OnboardStatusCommand';
 import { initCommand } from './infra/commands/InitCommand';
 import { GitService } from './application/services/GitService';
 import { logConsole, logErrorConsole } from './infra/utils/consoleLogger';
@@ -103,6 +104,7 @@ const app = subcommands({
     standard: standardsCommand,
     commands: commandsCommand,
     onboard: onboardCommand,
+    'onboard-status': onboardStatusCommand,
   },
 });
 
