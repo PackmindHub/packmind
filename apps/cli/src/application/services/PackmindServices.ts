@@ -3,6 +3,7 @@ import { GitService } from './GitService';
 import { DiffViolationFilterService } from './DiffViolationFilterService';
 import { IExecuteLinterProgramsUseCase } from '@packmind/types';
 import { IContentWriterService } from './ContentWriterService';
+import { IContentPusherService } from './ContentPusherService';
 
 export interface PackmindServices {
   listFiles: ListFiles;
@@ -10,4 +11,5 @@ export interface PackmindServices {
   linterExecutionUseCase: IExecuteLinterProgramsUseCase;
   diffViolationFilterService: DiffViolationFilterService;
   contentWriter: IContentWriterService;
+  contentPusher: IContentPusherService;
 }

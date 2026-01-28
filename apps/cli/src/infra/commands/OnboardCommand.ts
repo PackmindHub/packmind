@@ -34,8 +34,13 @@ export const onboardCommand = command({
       short: 'y',
       description: 'Skip confirmation prompts and proceed automatically',
     }),
+    push: flag({
+      type: boolean,
+      long: 'push',
+      description: 'Push generated standards and commands to Packmind backend',
+    }),
   },
-  handler: async ({ path: projectPath, dryRun, yes }) => {
+  handler: async ({ path: projectPath, dryRun, yes, push }) => {
     const packmindLogger = new PackmindLogger('PackmindCLI', LogLevel.INFO);
     const packmindCliHexa = new PackmindCliHexa(packmindLogger);
     const targetPath = projectPath || process.cwd();
@@ -188,6 +193,47 @@ export const onboardCommand = command({
         if (instructionsResult.errors.length > 0) {
           for (const error of instructionsResult.errors) {
             logWarningConsole(error);
+          }
+        }
+
+        // Push to backend if requested
+        if (push) {
+          logConsole('\n');
+          logInfoConsole('Pushing content to Packmind backend...');
+
+          const pushResult = await packmindCliHexa.pushContent(
+            result.content.standards,
+            result.content.commands,
+          );
+
+          if (pushResult.errors.length > 0) {
+            for (const error of pushResult.errors) {
+              logWarningConsole(error);
+            }
+          }
+
+          if (
+            pushResult.standardsCreated > 0 ||
+            pushResult.commandsCreated > 0
+          ) {
+            logConsole('\n');
+            logSuccessConsole(
+              `Pushed to backend: ${pushResult.standardsCreated} standards, ${pushResult.commandsCreated} commands`,
+            );
+
+            if (pushResult.createdStandards.length > 0) {
+              logConsole('\n  Standards:');
+              for (const standard of pushResult.createdStandards) {
+                logConsole(`    - ${standard.name} (ID: ${standard.id})`);
+              }
+            }
+
+            if (pushResult.createdCommands.length > 0) {
+              logConsole('\n  Commands:');
+              for (const cmd of pushResult.createdCommands) {
+                logConsole(`    - ${cmd.name} (slug: ${cmd.slug})`);
+              }
+            }
           }
         }
       }
