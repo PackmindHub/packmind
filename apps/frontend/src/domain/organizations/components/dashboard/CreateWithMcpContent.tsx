@@ -117,7 +117,8 @@ export const CreateWithMcpContent: React.FC = () => {
           <PMAlert.Root status="info">
             <PMAlert.Indicator />
             <PMAlert.Content>
-              You can also create and edit standards from the Standards page.
+              You can also create and edit standards and commands from their
+              respective sections.
             </PMAlert.Content>
           </PMAlert.Root>
         </PMVStack>

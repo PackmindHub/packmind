@@ -200,29 +200,48 @@ export type IUploadSkillUseCase = IUseCase<
   UploadSkillResult
 >;
 
-// Consolidated standard creation types
-export type CreateStandardWithExamplesCommand = {
+// Standard creation types (atomic)
+export type CreateStandardInSpaceCommand = {
   name: string;
   description: string;
   scope: string;
-  rules: Array<{
-    content: string;
-    examples?: {
-      language: string;
-      positive: string;
-      negative: string;
-    };
-  }>;
+  rules: Array<{ content: string }>;
 };
 
-export type CreateStandardWithExamplesResult = {
+export type CreateStandardInSpaceResult = {
   id: string;
   name: string;
 };
 
-// Global space type
+export type RuleWithId = {
+  id: string;
+  content: string;
+};
+
+export type RuleExample = {
+  language: string;
+  positive: string;
+  negative: string;
+};
+
+// Global space type (used by createCommand)
 export type GetGlobalSpaceResult = {
   id: string;
+  slug: string;
+};
+
+// Create command types
+export type CreateCommandCommand = {
+  name: string;
+  summary: string;
+  whenToUse: string[];
+  contextValidationCheckpoints: string[];
+  steps: Array<{ name: string; description: string; codeSnippet?: string }>;
+};
+
+export type CreateCommandResult = {
+  id: string;
+  name: string;
   slug: string;
 };
 
@@ -240,11 +259,30 @@ export interface IPackmindGateway {
   uploadSkill: Gateway<IUploadSkillUseCase>;
   getDefaultSkills: Gateway<IGetDefaultSkillsUseCase>;
 
-  // Atomic gateway for getGlobalSpace
+  // Atomic gateway for getGlobalSpace (used by createCommand and createStandard)
   getGlobalSpace(): Promise<GetGlobalSpaceResult>;
 
-  // Consolidated standard creation
-  createStandard(
-    data: CreateStandardWithExamplesCommand,
-  ): Promise<CreateStandardWithExamplesResult>;
+  // Atomic gateways for standard creation
+  createStandardInSpace(
+    spaceId: string,
+    data: CreateStandardInSpaceCommand,
+  ): Promise<CreateStandardInSpaceResult>;
+
+  getRulesForStandard(
+    spaceId: string,
+    standardId: string,
+  ): Promise<RuleWithId[]>;
+
+  addExampleToRule(
+    spaceId: string,
+    standardId: string,
+    ruleId: string,
+    example: RuleExample,
+  ): Promise<void>;
+
+  // Atomic gateway for command creation
+  createCommand(
+    spaceId: string,
+    data: CreateCommandCommand,
+  ): Promise<CreateCommandResult>;
 }

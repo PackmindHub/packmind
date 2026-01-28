@@ -1100,3 +1100,7 @@
   path: implicit-decision-capture
   type: skill
   date: 2026-01-27T16:00:49+01:00
+- name: release-app
+  path: release-app
+  type: skill
+  date: 2026-01-28T10:37:31+01:00

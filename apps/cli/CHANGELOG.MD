@@ -6,13 +6,9 @@
 - Add blacklist filter to `skills add` to exclude unwanted files like `.DS_Store` (#71)
 - Added `packmind-cli skills init` to install skills to manage the playbook
 
-## Changed
-
 ## Fixed
 
 - Fix double-slash in login URLs when host ends with trailing slash (#100)
-
-## Removed
 
 # [0.13.1] - 2026-01-19
 

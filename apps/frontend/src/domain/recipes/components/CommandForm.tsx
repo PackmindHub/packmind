@@ -7,11 +7,11 @@ import {
   PMFieldset,
   PMButton,
   PMInput,
-  PMTextArea,
   PMAlert,
 } from '@packmind/ui';
 import { Recipe } from '@packmind/types';
 import { RECIPE_MESSAGES } from '../constants/messages';
+import { MarkdownEditor } from '../../../shared/components/editor/MarkdownEditor';
 
 export interface CommandFormData {
   name: string;
@@ -110,14 +110,12 @@ export const CommandForm: React.FC<ICommandFormProps> = ({
                 Content
                 <PMField.RequiredIndicator />
               </PMField.Label>
-              <PMTextArea
-                placeholder="Enter the command content or prompt template"
-                value={content}
-                onChange={(e) => setContent(e.target.value)}
-                disabled={isPending}
-                rows={10}
-                autoresize
-              />
+              <PMBox width={'100%'}>
+                <MarkdownEditor
+                  defaultValue={content}
+                  onMarkdownChange={(value) => setContent(value)}
+                />
+              </PMBox>
               <PMField.HelperText>
                 The prompt or instructions that will be executed when this
                 command is invoked

@@ -2,6 +2,16 @@
 
 ## Added
 
+## Changed
+
+## Fixed
+
+## Removed
+
+# [1.8.0] - 2025-01-28
+
+## Added
+
 - Render skills for GitHub Copilot, Claude Code and Skills (#71)
 - Provide downloadable skills to ease managing the playbook
 - Delete skills from the app
@@ -10,10 +20,6 @@
 ## Changed
 
 - Overview now displays artifacts that need removal from repositories
-
-## Fixed
-
-## Removed
 
 # [1.7.0] - 2025-01-07
 
@@ -186,7 +192,8 @@
 - Bulk deployment across multiple repositories with atomic commits
 - Optional OpenAI integration for enhanced AI-powered features
 
-[Unreleased]: https://github.com/PackmindHub/packmind/compare/release/1.7.0...HEAD
+[Unreleased]: https://github.com/PackmindHub/packmind/compare/release/1.8.0...HEAD
+[1.8.0]: https://github.com/PackmindHub/packmind/compare/release/1.7.0...release/1.8.0
 [1.7.0]: https://github.com/PackmindHub/packmind/compare/release/1.6.0...release/1.7.0
 [1.6.0]: https://github.com/PackmindHub/packmind/compare/release/1.5.0...release/1.6.0
 [1.5.0]: https://github.com/PackmindHub/packmind/compare/release/1.4.1...release/1.5.0
