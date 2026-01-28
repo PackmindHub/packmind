@@ -6,6 +6,7 @@ import { useAuthContext } from '../../accounts/hooks/useAuthContext';
 import { useCurrentSpace } from '../../spaces/hooks/useCurrentSpace';
 import { useNavigation } from '../../../shared/hooks/useNavigation';
 import { CommandForm, CommandFormData } from './CommandForm';
+import { MarkdownEditorProvider } from '../../../shared/components/editor/MarkdownEditor';
 
 interface IEditCommandProps {
   recipe: Recipe;
@@ -69,13 +70,15 @@ export const EditCommand: React.FC<IEditCommandProps> = ({ recipe }) => {
   };
 
   return (
-    <CommandForm
-      mode="edit"
-      recipe={recipe}
-      onSubmit={handleSubmit}
-      onCancel={handleCancel}
-      isPending={updateMutation.isPending}
-      alert={alert}
-    />
+    <MarkdownEditorProvider>
+      <CommandForm
+        mode="edit"
+        recipe={recipe}
+        onSubmit={handleSubmit}
+        onCancel={handleCancel}
+        isPending={updateMutation.isPending}
+        alert={alert}
+      />
+    </MarkdownEditorProvider>
   );
 };

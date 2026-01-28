@@ -6,6 +6,7 @@ import { useAuthContext } from '../../accounts/hooks/useAuthContext';
 import { useCurrentSpace } from '../../spaces/hooks/useCurrentSpace';
 import { useNavigation } from '../../../shared/hooks/useNavigation';
 import { CommandForm, CommandFormData } from './CommandForm';
+import { MarkdownEditorProvider } from '../../../shared/components/editor/MarkdownEditor';
 
 export const CreateCommand = () => {
   const { organization } = useAuthContext();
@@ -64,12 +65,14 @@ export const CreateCommand = () => {
   };
 
   return (
-    <CommandForm
-      mode="create"
-      onSubmit={handleSubmit}
-      onCancel={handleCancel}
-      isPending={createMutation.isPending}
-      alert={alert}
-    />
+    <MarkdownEditorProvider>
+      <CommandForm
+        mode="create"
+        onSubmit={handleSubmit}
+        onCancel={handleCancel}
+        isPending={createMutation.isPending}
+        alert={alert}
+      />
+    </MarkdownEditorProvider>
   );
 };
