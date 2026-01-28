@@ -1,17 +1,41 @@
-import { useEffect } from 'react';
-import { useNavigate } from 'react-router';
-import { useIsAuthenticated } from '../../src/domain/accounts/hooks/useIsAuthenticated';
-import { SignUpOptions } from '../../src/domain/accounts/components/SignUpOptions';
+import { Outlet, redirect } from 'react-router';
+import type { LoaderFunctionArgs } from 'react-router';
+import { queryClient } from '../../src/shared/data/queryClient';
+import { getMeQueryOptions } from '../../src/domain/accounts/api/queries/UserQueries';
 
-export default function SignUpRouteModule() {
-  const { isAuthenticated } = useIsAuthenticated();
-  const navigate = useNavigate();
+/**
+ * Loader for sign-up routes - redirects authenticated users who have completed sign-up
+ * If user is authenticated with an organization, they shouldn't access sign-up pages
+ */
+export async function clientLoader({ request }: LoaderFunctionArgs) {
+  try {
+    // Check if user is authenticated
+    const me = await queryClient.ensureQueryData(getMeQueryOptions());
 
-  useEffect(() => {
-    if (isAuthenticated) {
-      navigate('/');
+    // If authenticated with an organization, redirect to org home
+    // User has already completed sign-up process if they have an org
+    if (me?.authenticated && me.organization) {
+      throw redirect(`/org/${me.organization.slug}`);
     }
-  }, [isAuthenticated, navigate]);
 
-  return <SignUpOptions />;
+    // User is not authenticated or has no organization - allow access to sign-up
+    return null;
+  } catch (error) {
+    // If error is a redirect, rethrow it
+    if (
+      error instanceof Response &&
+      error.status >= 300 &&
+      error.status < 400
+    ) {
+      throw error;
+    }
+
+    // For any other error (e.g., network issue), allow access to sign-up
+    // This ensures users can still access sign-up pages if the API is down
+    return null;
+  }
+}
+
+export default function SignUpLayout() {
+  return <Outlet />;
 }

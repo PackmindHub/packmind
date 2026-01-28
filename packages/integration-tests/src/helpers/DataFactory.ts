@@ -34,10 +34,9 @@ export class DataFactory {
       const signUpWithOrganizationResponse = await this.testApp.accountsHexa
         .getAdapter()
         .signUpWithOrganization({
-          ...cmd,
-          organizationName: 'test orga',
           email: 'someone@example.com',
-          password: 'some-secret-password',
+          password: 'some-secret-password!!',
+          ...cmd,
         });
 
       this._user = signUpWithOrganizationResponse.user;

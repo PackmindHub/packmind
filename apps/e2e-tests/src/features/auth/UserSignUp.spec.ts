@@ -9,7 +9,6 @@ testWithUserData('User can signup', async ({ userData, page }) => {
   const dashboardPage = await signupPage.signup(
     userData.email,
     userData.password,
-    userData.organizationName,
   );
 
   await dashboardPage.expectWelcomeMessage();
