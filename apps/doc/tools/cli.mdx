@@ -522,7 +522,7 @@ This creates a new coding standard in your Packmind organization based on the pl
 
 ### Playbook File Format
 
-The playbook file is a JSON file with the following structure:
+The standard-playbook file is a JSON file with the following structure:
 
 ```json
 {
@@ -556,10 +556,10 @@ The playbook file is a JSON file with the following structure:
 
 **Rule fields:**
 
-| Field      | Required | Description                                         |
-| ---------- | -------- | --------------------------------------------------- |
-| `content`  | Yes      | Rule description (should start with an action verb) |
-| `examples` | No       | Code examples showing correct and incorrect usage   |
+| Field      | Required | Description                                                                             |
+| ---------- | -------- | --------------------------------------------------------------------------------------- |
+| `content`  | Yes      | Rule description (max ~25 words, starts with action verb like "Use", "Avoid", "Prefer") |
+| `examples` | No       | Code examples showing correct and incorrect usage                                       |
 
 **Example fields (when provided):**
 
