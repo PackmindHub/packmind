@@ -3,17 +3,17 @@ import { ILogger } from '../../domain/repositories/ILogger';
 import { logConsole } from '../utils/consoleLogger';
 
 export class IDELintLogger implements ILogger {
-  logViolations(violations: LintViolation[]) {
-    violations.forEach((violation) => {
-      this.logViolation(violation);
-    });
+  async logViolations(violations: LintViolation[]): Promise<void> {
+    for (const violation of violations) {
+      await this.logViolation(violation);
+    }
   }
 
-  logViolation(violation: LintViolation) {
-    violation.violations.forEach(({ line, character, standard, rule }) => {
+  async logViolation(violation: LintViolation): Promise<void> {
+    for (const { line, character, standard, rule } of violation.violations) {
       logConsole(
         `${violation.file}:${line}:${character}:error:@${standard}/${rule}`,
       );
-    });
+    }
   }
 }

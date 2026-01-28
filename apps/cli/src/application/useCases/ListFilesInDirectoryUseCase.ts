@@ -36,7 +36,7 @@ export class ListFilesInDirectoryUseCase {
           content,
         });
       } catch (error) {
-        logErrorConsole(`Error reading file ${file.path}: ${error}`);
+        await logErrorConsole(`Error reading file ${file.path}: ${error}`);
       }
     }
 

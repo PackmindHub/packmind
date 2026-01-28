@@ -64,7 +64,7 @@
         "main": "apps/cli/src/main.ts",
         "tsConfig": "apps/cli/tsconfig.app.json",
         "generatePackageJson": false,
-        "esbuildConfig": "apps/cli/esbuild.config.js"
+        "esbuildConfig": "apps/cli/esbuild-publish.config.js"
       },
       "configurations": {
         "development": {},

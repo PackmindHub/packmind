@@ -1,7 +1,6 @@
 import { command, multioption, Type, array } from 'cmd-ts';
 import * as fs from 'fs';
 import * as readline from 'readline';
-import * as inquirer from 'inquirer';
 import {
   AgentDetectionService,
   AgentType,
@@ -128,7 +127,7 @@ export const setupMcpCommand = command({
     const credentials = loadCredentials();
 
     if (!credentials) {
-      logErrorConsole('Not authenticated');
+      await logErrorConsole('Not authenticated');
       logConsole('\nNo credentials found. You can authenticate by either:');
       logConsole('  1. Running `packmind-cli login`');
       logConsole('  2. Setting PACKMIND_API_KEY_V3 environment variable');
@@ -139,7 +138,7 @@ export const setupMcpCommand = command({
     }
 
     if (credentials.isExpired) {
-      logErrorConsole('Credentials expired');
+      await logErrorConsole('Credentials expired');
       logConsole('\nRun `packmind-cli login` to re-authenticate.');
       process.exit(1);
     }
@@ -188,6 +187,8 @@ export const setupMcpCommand = command({
         promptedAgents = await promptAgentsWithReadline(choices);
       } else {
         // Use inquirer checkbox when in a normal terminal
+        // Dynamic import for ESM-only inquirer package (works in CJS bundle)
+        const inquirer = await import('inquirer');
         const result = await inquirer.default.prompt<{
           selectedAgents: AgentType[];
         }>([
@@ -218,7 +219,7 @@ export const setupMcpCommand = command({
     try {
       result = await packmindCliHexa.setupMcp({ agentTypes: selectedAgents });
     } catch (error) {
-      logErrorConsole('Failed to fetch MCP configuration from server.');
+      await logErrorConsole('Failed to fetch MCP configuration from server.');
       if (error instanceof Error) {
         logConsole(`  ${error.message}`);
       }
@@ -235,10 +236,12 @@ export const setupMcpCommand = command({
       logConsole(`Installing MCP for ${agentResult.agentName}...`);
 
       if (agentResult.success) {
-        logSuccessConsole(`  ${agentResult.agentName} configured successfully`);
+        await logSuccessConsole(
+          `  ${agentResult.agentName} configured successfully`,
+        );
         successCount++;
       } else {
-        logErrorConsole(`  Failed to configure ${agentResult.agentName}`);
+        await logErrorConsole(`  Failed to configure ${agentResult.agentName}`);
         failedAgents.push({
           name: agentResult.agentName,
           error: agentResult.error || '',
@@ -250,7 +253,7 @@ export const setupMcpCommand = command({
 
     if (failedAgents.length > 0) {
       for (const failed of failedAgents) {
-        logWarningConsole(`Failed to configure ${failed.name}:`);
+        await logWarningConsole(`Failed to configure ${failed.name}:`);
 
         logConsole(`\n  Error: ${failed.error}`);
 
@@ -273,7 +276,9 @@ export const setupMcpCommand = command({
     if (successCount > 0) {
       const agentWord = successCount === 1 ? 'agent' : 'agents';
       logConsole(
-        formatBold(`Done! MCP configured for ${successCount} ${agentWord}.`),
+        await formatBold(
+          `Done! MCP configured for ${successCount} ${agentWord}.`,
+        ),
       );
     }
 

@@ -1,4 +1,5 @@
 import * as fs from 'fs/promises';
+import * as path from 'path';
 import { ConfigFileRepository } from './ConfigFileRepository';
 
 jest.mock('fs/promises');
@@ -10,6 +11,22 @@ jest.mock('chalk', () => ({
 const mockFs = fs as jest.Mocked<typeof fs>;
 
 type MockDirent = { name: string; isDirectory: () => boolean };
+
+/**
+ * Normalize path separators to forward slashes for cross-platform comparison
+ */
+function normalizePath(p: string): string {
+  return p.replace(/\\/g, '/');
+}
+
+/**
+ * Create a platform-appropriate absolute test path
+ * On Windows, paths like '/project' get resolved to 'C:/project'
+ * This helper ensures consistent paths in tests
+ */
+function testPath(...segments: string[]): string {
+  return normalizePath(path.resolve(path.join('/', ...segments)));
+}
 
 describe('ConfigFileRepository', () => {
   let repository: ConfigFileRepository;
@@ -33,8 +50,8 @@ describe('ConfigFileRepository', () => {
         mockFs.readFile.mockRejectedValue({ code: 'ENOENT' });
 
         result = await repository.readHierarchicalConfig(
-          '/project/apps/api/src',
-          '/project',
+          testPath('project', 'apps', 'api', 'src'),
+          testPath('project'),
         );
       });
 
@@ -59,15 +76,16 @@ describe('ConfigFileRepository', () => {
 
       beforeEach(async () => {
         mockFs.readFile.mockImplementation(async (filePath: unknown) => {
-          if (filePath === '/project/packmind.json') {
+          const normalized = normalizePath(String(filePath));
+          if (normalized === testPath('project', 'packmind.json')) {
             return JSON.stringify({ packages: { generic: '*' } });
           }
           throw { code: 'ENOENT' };
         });
 
         result = await repository.readHierarchicalConfig(
-          '/project/apps/api',
-          '/project',
+          testPath('project', 'apps', 'api'),
+          testPath('project'),
         );
       });
 
@@ -80,7 +98,9 @@ describe('ConfigFileRepository', () => {
       });
 
       it('includes root config path', () => {
-        expect(result.configPaths).toContain('/project/packmind.json');
+        expect(result.configPaths).toContain(
+          testPath('project', 'packmind.json'),
+        );
       });
     });
 
@@ -92,15 +112,18 @@ describe('ConfigFileRepository', () => {
 
       beforeEach(async () => {
         mockFs.readFile.mockImplementation(async (filePath: unknown) => {
-          if (filePath === '/project/apps/api/packmind.json') {
+          const normalized = normalizePath(String(filePath));
+          if (
+            normalized === testPath('project', 'apps', 'api', 'packmind.json')
+          ) {
             return JSON.stringify({ packages: { backend: '*' } });
           }
           throw { code: 'ENOENT' };
         });
 
         result = await repository.readHierarchicalConfig(
-          '/project/apps/api',
-          '/project',
+          testPath('project', 'apps', 'api'),
+          testPath('project'),
         );
       });
 
@@ -113,7 +136,9 @@ describe('ConfigFileRepository', () => {
       });
 
       it('returns only subdirectory config path', () => {
-        expect(result.configPaths).toEqual(['/project/apps/api/packmind.json']);
+        expect(result.configPaths).toEqual([
+          testPath('project', 'apps', 'api', 'packmind.json'),
+        ]);
       });
     });
 
@@ -125,18 +150,21 @@ describe('ConfigFileRepository', () => {
 
       beforeEach(async () => {
         mockFs.readFile.mockImplementation(async (filePath: unknown) => {
-          if (filePath === '/project/packmind.json') {
+          const normalized = normalizePath(String(filePath));
+          if (normalized === testPath('project', 'packmind.json')) {
             return JSON.stringify({ packages: { generic: '*' } });
           }
-          if (filePath === '/project/apps/api/packmind.json') {
+          if (
+            normalized === testPath('project', 'apps', 'api', 'packmind.json')
+          ) {
             return JSON.stringify({ packages: { backend: '*' } });
           }
           throw { code: 'ENOENT' };
         });
 
         result = await repository.readHierarchicalConfig(
-          '/project/apps/api',
-          '/project',
+          testPath('project', 'apps', 'api'),
+          testPath('project'),
         );
       });
 
@@ -156,18 +184,21 @@ describe('ConfigFileRepository', () => {
     describe('when multiple configs have same package slug', () => {
       it('gives precedence to deeper config', async () => {
         mockFs.readFile.mockImplementation(async (filePath: unknown) => {
-          if (filePath === '/project/packmind.json') {
+          const normalized = normalizePath(String(filePath));
+          if (normalized === testPath('project', 'packmind.json')) {
             return JSON.stringify({ packages: { shared: '1.0.0' } });
           }
-          if (filePath === '/project/apps/api/packmind.json') {
+          if (
+            normalized === testPath('project', 'apps', 'api', 'packmind.json')
+          ) {
             return JSON.stringify({ packages: { shared: '2.0.0' } });
           }
           throw { code: 'ENOENT' };
         });
 
         const result = await repository.readHierarchicalConfig(
-          '/project/apps/api',
-          '/project',
+          testPath('project', 'apps', 'api'),
+          testPath('project'),
         );
 
         expect(result.packages.shared).toBe('2.0.0');
@@ -182,15 +213,16 @@ describe('ConfigFileRepository', () => {
 
       beforeEach(async () => {
         mockFs.readFile.mockImplementation(async (filePath: unknown) => {
-          if (filePath === '/project/packmind.json') {
+          const normalized = normalizePath(String(filePath));
+          if (normalized === testPath('project', 'packmind.json')) {
             return JSON.stringify({ packages: { only: '*' } });
           }
           throw { code: 'ENOENT' };
         });
 
         result = await repository.readHierarchicalConfig(
-          '/project',
-          '/project',
+          testPath('project'),
+          testPath('project'),
         );
       });
 
@@ -216,17 +248,21 @@ describe('ConfigFileRepository', () => {
           .mockImplementation(jest.fn());
 
         mockFs.readFile.mockImplementation(async (filePath: unknown) => {
-          if (filePath === '/project/packmind.json') {
+          const normalized = normalizePath(String(filePath));
+          if (normalized === testPath('project', 'packmind.json')) {
             return 'not valid json';
           }
           throw { code: 'ENOENT' };
         });
 
         // Call twice to verify warning is only shown once
-        await repository.readHierarchicalConfig('/project', '/project');
+        await repository.readHierarchicalConfig(
+          testPath('project'),
+          testPath('project'),
+        );
         result = await repository.readHierarchicalConfig(
-          '/project',
-          '/project',
+          testPath('project'),
+          testPath('project'),
         );
       });
 
@@ -249,7 +285,7 @@ describe('ConfigFileRepository', () => {
       it('logs warning with config path', () => {
         expect(consoleWarnSpy).toHaveBeenCalledWith(
           expect.anything(),
-          expect.stringContaining('/project/packmind.json'),
+          expect.stringContaining('packmind.json'),
         );
       });
     });
@@ -257,27 +293,30 @@ describe('ConfigFileRepository', () => {
     describe('when config paths are collected in order', () => {
       it('lists configs from deepest to shallowest', async () => {
         mockFs.readFile.mockImplementation(async (filePath: unknown) => {
-          if (filePath === '/project/packmind.json') {
+          const normalized = normalizePath(String(filePath));
+          if (normalized === testPath('project', 'packmind.json')) {
             return JSON.stringify({ packages: { root: '*' } });
           }
-          if (filePath === '/project/apps/packmind.json') {
+          if (normalized === testPath('project', 'apps', 'packmind.json')) {
             return JSON.stringify({ packages: { apps: '*' } });
           }
-          if (filePath === '/project/apps/api/packmind.json') {
+          if (
+            normalized === testPath('project', 'apps', 'api', 'packmind.json')
+          ) {
             return JSON.stringify({ packages: { api: '*' } });
           }
           throw { code: 'ENOENT' };
         });
 
         const result = await repository.readHierarchicalConfig(
-          '/project/apps/api',
-          '/project',
+          testPath('project', 'apps', 'api'),
+          testPath('project'),
         );
 
         expect(result.configPaths).toEqual([
-          '/project/apps/api/packmind.json',
-          '/project/apps/packmind.json',
-          '/project/packmind.json',
+          testPath('project', 'apps', 'api', 'packmind.json'),
+          testPath('project', 'apps', 'packmind.json'),
+          testPath('project', 'packmind.json'),
         ]);
       });
     });
@@ -290,17 +329,20 @@ describe('ConfigFileRepository', () => {
 
       beforeEach(async () => {
         mockFs.readFile.mockImplementation(async (filePath: unknown) => {
-          if (filePath === '/home/user/packmind.json') {
+          const normalized = normalizePath(String(filePath));
+          if (normalized === testPath('home', 'user', 'packmind.json')) {
             return JSON.stringify({ packages: { home: '*' } });
           }
-          if (filePath === '/home/user/project/packmind.json') {
+          if (
+            normalized === testPath('home', 'user', 'project', 'packmind.json')
+          ) {
             return JSON.stringify({ packages: { project: '*' } });
           }
           throw { code: 'ENOENT' };
         });
 
         result = await repository.readHierarchicalConfig(
-          '/home/user/project',
+          testPath('home', 'user', 'project'),
           null,
         );
       });
@@ -315,12 +357,14 @@ describe('ConfigFileRepository', () => {
 
       it('includes project config path', () => {
         expect(result.configPaths).toContain(
-          '/home/user/project/packmind.json',
+          testPath('home', 'user', 'project', 'packmind.json'),
         );
       });
 
       it('includes home config path', () => {
-        expect(result.configPaths).toContain('/home/user/packmind.json');
+        expect(result.configPaths).toContain(
+          testPath('home', 'user', 'packmind.json'),
+        );
       });
     });
   });
@@ -338,7 +382,9 @@ describe('ConfigFileRepository', () => {
         ] as MockDirent[] as never);
         mockFs.readFile.mockRejectedValue({ code: 'ENOENT' });
 
-        const result = await repository.findDescendantConfigs('/project');
+        const result = await repository.findDescendantConfigs(
+          testPath('project'),
+        );
 
         expect(result).toEqual([]);
       });
@@ -352,15 +398,18 @@ describe('ConfigFileRepository', () => {
           ] as MockDirent[] as never)
           .mockResolvedValue([]);
         mockFs.readFile.mockImplementation(async (filePath: unknown) => {
-          if (filePath === '/project/apps/packmind.json') {
+          const normalized = normalizePath(String(filePath));
+          if (normalized === testPath('project', 'apps', 'packmind.json')) {
             return JSON.stringify({ packages: { apps: '*' } });
           }
           throw { code: 'ENOENT' };
         });
 
-        const result = await repository.findDescendantConfigs('/project');
+        const result = await repository.findDescendantConfigs(
+          testPath('project'),
+        );
 
-        expect(result).toEqual(['/project/apps']);
+        expect(result).toEqual([testPath('project', 'apps')]);
       });
     });
 
@@ -381,31 +430,34 @@ describe('ConfigFileRepository', () => {
           ] as MockDirent[] as never)
           .mockResolvedValue([]);
         mockFs.readFile.mockImplementation(async (filePath: unknown) => {
-          if (filePath === '/project/apps/packmind.json') {
+          const normalized = normalizePath(String(filePath));
+          if (normalized === testPath('project', 'apps', 'packmind.json')) {
             return JSON.stringify({ packages: { apps: '*' } });
           }
-          if (filePath === '/project/apps/api/packmind.json') {
+          if (
+            normalized === testPath('project', 'apps', 'api', 'packmind.json')
+          ) {
             return JSON.stringify({ packages: { api: '*' } });
           }
-          if (filePath === '/project/packages/packmind.json') {
+          if (normalized === testPath('project', 'packages', 'packmind.json')) {
             return JSON.stringify({ packages: { packages: '*' } });
           }
           throw { code: 'ENOENT' };
         });
 
-        result = await repository.findDescendantConfigs('/project');
+        result = await repository.findDescendantConfigs(testPath('project'));
       });
 
       it('includes apps directory', () => {
-        expect(result).toContain('/project/apps');
+        expect(result).toContain(testPath('project', 'apps'));
       });
 
       it('includes nested api directory', () => {
-        expect(result).toContain('/project/apps/api');
+        expect(result).toContain(testPath('project', 'apps', 'api'));
       });
 
       it('includes packages directory', () => {
-        expect(result).toContain('/project/packages');
+        expect(result).toContain(testPath('project', 'packages'));
       });
     });
 
@@ -423,15 +475,18 @@ describe('ConfigFileRepository', () => {
           ] as MockDirent[] as never)
           .mockResolvedValue([]);
         mockFs.readFile.mockImplementation(async (filePath: unknown) => {
-          if (filePath === '/project/src/packmind.json') {
+          const normalized = normalizePath(String(filePath));
+          if (normalized === testPath('project', 'src', 'packmind.json')) {
             return JSON.stringify({ packages: { src: '*' } });
           }
           throw { code: 'ENOENT' };
         });
 
-        const result = await repository.findDescendantConfigs('/project');
+        const result = await repository.findDescendantConfigs(
+          testPath('project'),
+        );
 
-        expect(result).toEqual(['/project/src']);
+        expect(result).toEqual([testPath('project', 'src')]);
       });
     });
 
@@ -454,16 +509,17 @@ describe('ConfigFileRepository', () => {
           ] as MockDirent[] as never)
           .mockResolvedValue([]);
         mockFs.readFile.mockImplementation(async (filePath: unknown) => {
-          if (filePath === '/project/valid/packmind.json') {
+          const normalized = normalizePath(String(filePath));
+          if (normalized === testPath('project', 'valid', 'packmind.json')) {
             return JSON.stringify({ packages: { valid: '*' } });
           }
-          if (filePath === '/project/invalid/packmind.json') {
+          if (normalized === testPath('project', 'invalid', 'packmind.json')) {
             return 'not valid json';
           }
           throw { code: 'ENOENT' };
         });
 
-        result = await repository.findDescendantConfigs('/project');
+        result = await repository.findDescendantConfigs(testPath('project'));
       });
 
       afterEach(() => {
@@ -471,13 +527,13 @@ describe('ConfigFileRepository', () => {
       });
 
       it('returns only valid config paths', () => {
-        expect(result).toEqual(['/project/valid']);
+        expect(result).toEqual([testPath('project', 'valid')]);
       });
 
       it('logs warning for malformed config', () => {
         expect(consoleWarnSpy).toHaveBeenCalledWith(
           expect.anything(),
-          expect.stringContaining('/project/invalid/packmind.json'),
+          expect.stringContaining('packmind.json'),
         );
       });
     });
@@ -498,8 +554,8 @@ describe('ConfigFileRepository', () => {
         mockFs.readFile.mockRejectedValue({ code: 'ENOENT' });
 
         result = await repository.findAllConfigsInTree(
-          '/project/apps/api',
-          '/project',
+          testPath('project', 'apps', 'api'),
+          testPath('project'),
         );
       });
 
@@ -512,7 +568,7 @@ describe('ConfigFileRepository', () => {
       });
 
       it('returns basePath as stopDirectory', () => {
-        expect(result.basePath).toBe('/project');
+        expect(result.basePath).toBe(testPath('project'));
       });
     });
 
@@ -524,15 +580,16 @@ describe('ConfigFileRepository', () => {
 
       beforeEach(async () => {
         mockFs.readFile.mockImplementation(async (filePath: unknown) => {
-          if (filePath === '/project/packmind.json') {
+          const normalized = normalizePath(String(filePath));
+          if (normalized === testPath('project', 'packmind.json')) {
             return JSON.stringify({ packages: { generic: '*' } });
           }
           throw { code: 'ENOENT' };
         });
 
         result = await repository.findAllConfigsInTree(
-          '/project/apps/api',
-          '/project',
+          testPath('project', 'apps', 'api'),
+          testPath('project'),
         );
       });
 
@@ -547,7 +604,7 @@ describe('ConfigFileRepository', () => {
       it('returns root config with correct properties', () => {
         expect(result.configs[0]).toEqual({
           targetPath: '/',
-          absoluteTargetPath: '/project',
+          absoluteTargetPath: testPath('project'),
           packages: { generic: '*' },
         });
       });
@@ -561,18 +618,21 @@ describe('ConfigFileRepository', () => {
 
       beforeEach(async () => {
         mockFs.readFile.mockImplementation(async (filePath: unknown) => {
-          if (filePath === '/project/packmind.json') {
+          const normalized = normalizePath(String(filePath));
+          if (normalized === testPath('project', 'packmind.json')) {
             return JSON.stringify({ packages: { generic: '*' } });
           }
-          if (filePath === '/project/apps/api/packmind.json') {
+          if (
+            normalized === testPath('project', 'apps', 'api', 'packmind.json')
+          ) {
             return JSON.stringify({ packages: { backend: '*' } });
           }
           throw { code: 'ENOENT' };
         });
 
         result = await repository.findAllConfigsInTree(
-          '/project/apps/api',
-          '/project',
+          testPath('project', 'apps', 'api'),
+          testPath('project'),
         );
       });
 
@@ -588,7 +648,7 @@ describe('ConfigFileRepository', () => {
         const rootConfig = result.configs.find((c) => c.targetPath === '/');
         expect(rootConfig).toEqual({
           targetPath: '/',
-          absoluteTargetPath: '/project',
+          absoluteTargetPath: testPath('project'),
           packages: { generic: '*' },
         });
       });
@@ -599,7 +659,7 @@ describe('ConfigFileRepository', () => {
         );
         expect(apiConfig).toEqual({
           targetPath: '/apps/api',
-          absoluteTargetPath: '/project/apps/api',
+          absoluteTargetPath: testPath('project', 'apps', 'api'),
           packages: { backend: '*' },
         });
       });
@@ -622,19 +682,27 @@ describe('ConfigFileRepository', () => {
           ] as MockDirent[] as never)
           .mockResolvedValue([]);
         mockFs.readFile.mockImplementation(async (filePath: unknown) => {
-          if (filePath === '/project/packmind.json') {
+          const normalized = normalizePath(String(filePath));
+          if (normalized === testPath('project', 'packmind.json')) {
             return JSON.stringify({ packages: { generic: '*' } });
           }
-          if (filePath === '/project/apps/api/packmind.json') {
+          if (
+            normalized === testPath('project', 'apps', 'api', 'packmind.json')
+          ) {
             return JSON.stringify({ packages: { backend: '*' } });
           }
-          if (filePath === '/project/apps/web/packmind.json') {
+          if (
+            normalized === testPath('project', 'apps', 'web', 'packmind.json')
+          ) {
             return JSON.stringify({ packages: { frontend: '*' } });
           }
           throw { code: 'ENOENT' };
         });
 
-        result = await repository.findAllConfigsInTree('/project', '/project');
+        result = await repository.findAllConfigsInTree(
+          testPath('project'),
+          testPath('project'),
+        );
       });
 
       it('returns hasConfigs as true', () => {
@@ -682,13 +750,16 @@ describe('ConfigFileRepository', () => {
           ] as MockDirent[] as never)
           .mockResolvedValue([]);
         mockFs.readFile.mockImplementation(async (filePath: unknown) => {
-          if (filePath === '/project/packmind.json') {
+          const normalized = normalizePath(String(filePath));
+          if (normalized === testPath('project', 'packmind.json')) {
             return JSON.stringify({ packages: { generic: '*' } });
           }
-          if (filePath === '/project/apps/api/packmind.json') {
+          if (
+            normalized === testPath('project', 'apps', 'api', 'packmind.json')
+          ) {
             return JSON.stringify({ packages: { backend: '*' } });
           }
-          if (filePath === '/project/libs/packmind.json') {
+          if (normalized === testPath('project', 'libs', 'packmind.json')) {
             return JSON.stringify({ packages: { libs: '*' } });
           }
           throw { code: 'ENOENT' };
@@ -697,8 +768,8 @@ describe('ConfigFileRepository', () => {
         // Start from /project/apps/api, so it's an ancestor
         // /project/libs is a descendant from /project root
         result = await repository.findAllConfigsInTree(
-          '/project/apps/api',
-          '/project',
+          testPath('project', 'apps', 'api'),
+          testPath('project'),
         );
       });
 
@@ -724,20 +795,23 @@ describe('ConfigFileRepository', () => {
 
       beforeEach(async () => {
         mockFs.readFile.mockImplementation(async (filePath: unknown) => {
-          if (filePath === '/home/user/project/packmind.json') {
+          const normalized = normalizePath(String(filePath));
+          if (
+            normalized === testPath('home', 'user', 'project', 'packmind.json')
+          ) {
             return JSON.stringify({ packages: { project: '*' } });
           }
           throw { code: 'ENOENT' };
         });
 
         result = await repository.findAllConfigsInTree(
-          '/home/user/project',
+          testPath('home', 'user', 'project'),
           null,
         );
       });
 
       it('uses startDirectory as basePath', () => {
-        expect(result.basePath).toBe('/home/user/project');
+        expect(result.basePath).toBe(testPath('home', 'user', 'project'));
       });
 
       it('returns hasConfigs as true', () => {
@@ -762,16 +836,20 @@ describe('ConfigFileRepository', () => {
           ] as MockDirent[] as never)
           .mockResolvedValue([]);
         mockFs.readFile.mockImplementation(async (filePath: unknown) => {
-          if (filePath === '/project/packmind.json') {
+          const normalized = normalizePath(String(filePath));
+          if (normalized === testPath('project', 'packmind.json')) {
             return JSON.stringify({ packages: { shared: '1.0.0' } });
           }
-          if (filePath === '/project/apps/packmind.json') {
+          if (normalized === testPath('project', 'apps', 'packmind.json')) {
             return JSON.stringify({ packages: { shared: '2.0.0' } });
           }
           throw { code: 'ENOENT' };
         });
 
-        result = await repository.findAllConfigsInTree('/project', '/project');
+        result = await repository.findAllConfigsInTree(
+          testPath('project'),
+          testPath('project'),
+        );
       });
 
       it('returns two configs', () => {

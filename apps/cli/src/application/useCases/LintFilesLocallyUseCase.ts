@@ -297,7 +297,7 @@ export class LintFilesLocallyUseCase implements ILintFilesLocally {
 
                   programsByLanguage.set(programLanguage, programsForLanguage);
                 } catch (error) {
-                  logErrorConsole(
+                  await logErrorConsole(
                     `Error preparing program for file ${file.path}: ${error}`,
                   );
                 }
@@ -324,13 +324,13 @@ export class LintFilesLocallyUseCase implements ILintFilesLocally {
 
               fileViolations.push(...result);
             } catch (error) {
-              logErrorConsole(
+              await logErrorConsole(
                 `Error executing programs for file ${file.path} (${language}): ${error}`,
               );
             }
           }
         } catch (error) {
-          logErrorConsole(
+          await logErrorConsole(
             `Error reading file content for ${file.path}: ${error}`,
           );
         }

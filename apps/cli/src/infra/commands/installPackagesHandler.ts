@@ -125,9 +125,10 @@ export async function listPackagesHandler(
     );
 
     log('Available packages:\n');
-    sortedPackages.forEach((pkg, index) => {
-      log(`- ${formatSlug(pkg.slug)}`);
-      log(`    ${formatLabel('Name:')} ${pkg.name}`);
+    for (let index = 0; index < sortedPackages.length; index++) {
+      const pkg = sortedPackages[index];
+      log(`- ${await formatSlug(pkg.slug)}`);
+      log(`    ${await formatLabel('Name:')} ${pkg.name}`);
       if (pkg.description) {
         const descriptionLines = pkg.description
           .trim()
@@ -135,7 +136,7 @@ export async function listPackagesHandler(
           .map((line) => line.trim())
           .filter((line) => line.length > 0);
         const [firstLine, ...restLines] = descriptionLines;
-        log(`    ${formatLabel('Description:')} ${firstLine}`);
+        log(`    ${await formatLabel('Description:')} ${firstLine}`);
         restLines.forEach((line) => {
           log(`                 ${line}`);
         });
@@ -144,9 +145,9 @@ export async function listPackagesHandler(
       if (index < sortedPackages.length - 1) {
         log('');
       }
-    });
+    }
 
-    const exampleSlug = formatSlug(sortedPackages[0].slug);
+    const exampleSlug = await formatSlug(sortedPackages[0].slug);
     log('\nHow to install a package:\n');
     log(`  $ packmind-cli install ${exampleSlug}`);
     exit(0);
@@ -526,11 +527,11 @@ export async function installPackagesHandler(
   // Show help if no packages from either source
   if (allPackages.length === 0) {
     if (configFileExists) {
-      logWarningConsole(
+      await logWarningConsole(
         'config packmind.json is empty, no packages to install',
       );
     } else {
-      logWarningConsole('config packmind.json not found');
+      await logWarningConsole('config packmind.json not found');
     }
     log('Usage: packmind-cli install <package-slug> [package-slug...]');
     log('       packmind-cli install --list');

@@ -102,7 +102,7 @@ const app = subcommands({
   },
 });
 
-run(app, args).catch((error) => {
-  logErrorConsole(error.message);
+run(app, args).catch(async (error) => {
+  await logErrorConsole(error.message);
   process.exit(1);
 });

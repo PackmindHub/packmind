@@ -10,30 +10,32 @@ import {
 } from '../utils/consoleLogger';
 
 export class HumanReadableLogger implements ILogger {
-  logViolations(violations: LintViolation[]) {
-    violations.forEach((violation) => {
-      this.logViolation(violation);
-    });
+  async logViolations(violations: LintViolation[]): Promise<void> {
+    for (const violation of violations) {
+      await this.logViolation(violation);
+    }
 
     if (violations.length > 0) {
       const totalViolationCount = violations.reduce(
         (acc, violation) => acc + violation.violations.length,
         0,
       );
-      logErrorConsole(
-        `❌ Found ${formatBold(String(totalViolationCount))} violation(s) in ${formatBold(String(violations.length))} file(s)`,
+      await logErrorConsole(
+        `❌ Found ${await formatBold(String(totalViolationCount))} violation(s) in ${await formatBold(String(violations.length))} file(s)`,
       );
     } else {
-      logSuccessConsole(`✅ No violations found`);
+      await logSuccessConsole(`✅ No violations found`);
     }
   }
 
-  logViolation(violation: LintViolation) {
-    logConsole(formatFilePath(violation.file));
-    violation.violations.forEach(({ line, character, standard, rule }) => {
+  async logViolation(violation: LintViolation): Promise<void> {
+    logConsole(await formatFilePath(violation.file));
+    for (const { line, character, standard, rule } of violation.violations) {
       logConsole(
-        formatError(`\t${line}:${character}\terror\t@${standard}/${rule}`),
+        await formatError(
+          `\t${line}:${character}\terror\t@${standard}/${rule}`,
+        ),
       );
-    });
+    }
   }
 }

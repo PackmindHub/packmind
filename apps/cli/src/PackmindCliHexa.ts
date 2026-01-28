@@ -154,7 +154,7 @@ export class PackmindCliHexa {
     );
 
     if (hasNonWildcardVersions) {
-      logWarningConsole(
+      await logWarningConsole(
         'Package versions are not supported yet, getting the latest version',
       );
     }

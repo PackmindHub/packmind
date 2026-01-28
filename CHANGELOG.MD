@@ -13,6 +13,8 @@
 
 ## Fixed
 
+- Fix CLI runtime errors on Windows with ESM-only dependencies by using dynamic import for `open` package (#96)
+
 ## Removed
 
 # [1.7.0] - 2025-01-07

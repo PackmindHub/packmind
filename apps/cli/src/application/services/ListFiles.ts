@@ -76,7 +76,9 @@ export class ListFiles {
         }
       }
     } catch (error) {
-      logErrorConsole(`Error reading directory ${directoryPath}: ${error}`);
+      await logErrorConsole(
+        `Error reading directory ${directoryPath}: ${error}`,
+      );
     }
   }
 
@@ -128,7 +130,7 @@ export class ListFiles {
     try {
       return await fs.readFile(filePath, 'utf-8');
     } catch (error) {
-      logErrorConsole(`Error reading file ${filePath}: ${error}`);
+      await logErrorConsole(`Error reading file ${filePath}: ${error}`);
       throw error;
     }
   }

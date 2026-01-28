@@ -22,7 +22,7 @@ export const addSkillCommand = command({
     const packmindCliHexa = new PackmindCliHexa(packmindLogger);
 
     try {
-      logInfoConsole(`Uploading skill from ${skillPath}...`);
+      await logInfoConsole(`Uploading skill from ${skillPath}...`);
 
       const result = await packmindCliHexa.uploadSkill({
         skillPath,
@@ -31,25 +31,25 @@ export const addSkillCommand = command({
       });
 
       if (result.isNewSkill) {
-        logSuccessConsole('Skill created successfully!');
+        await logSuccessConsole('Skill created successfully!');
       } else if (!result.versionCreated) {
-        logInfoConsole(
+        await logInfoConsole(
           `Skill content is identical to version ${result.version}, no new version created.`,
         );
       } else {
-        logSuccessConsole(`Skill updated to version ${result.version}!`);
+        await logSuccessConsole(`Skill updated to version ${result.version}!`);
       }
-      logInfoConsole(`  Name: ${result.name}`);
-      logInfoConsole(`  Version: ${result.version}`);
-      logInfoConsole(`  Files: ${result.fileCount}`);
-      logInfoConsole(
+      await logInfoConsole(`  Name: ${result.name}`);
+      await logInfoConsole(`  Version: ${result.version}`);
+      await logInfoConsole(`  Files: ${result.fileCount}`);
+      await logInfoConsole(
         `  Total size: ${(result.totalSize / 1024).toFixed(2)} KB`,
       );
     } catch (error) {
       if (error instanceof Error) {
-        logErrorConsole(`Upload failed: ${error.message}`);
+        await logErrorConsole(`Upload failed: ${error.message}`);
       } else {
-        logErrorConsole(`Upload failed: ${String(error)}`);
+        await logErrorConsole(`Upload failed: ${String(error)}`);
       }
       process.exit(1);
     }

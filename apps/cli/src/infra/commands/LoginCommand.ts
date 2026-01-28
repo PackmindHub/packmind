@@ -30,7 +30,7 @@ export const loginCommand = command({
   },
   handler: async ({ host, code }) => {
     if (!host.includes('://')) {
-      logErrorConsole(
+      await logErrorConsole(
         'Invalid host URL: protocol is required (e.g., https://your-host.com)',
       );
       process.exit(1);
@@ -46,23 +46,23 @@ export const loginCommand = command({
         logConsole(
           `\nIf the browser doesn't open, visit: ${normalizedHost}/cli-login?callback_url=${encodeURIComponent('http://127.0.0.1:19284')}\n`,
         );
-        logInfoConsole('Waiting for browser authentication...');
+        await logInfoConsole('Waiting for browser authentication...');
       }
 
-      logInfoConsole('Exchanging code for API key...');
+      await logInfoConsole('Exchanging code for API key...');
 
       const result = await packmindCliHexa.login({ host, code });
 
-      logSuccessConsole('Login successful!');
+      await logSuccessConsole('Login successful!');
       logConsole(`\nCredentials saved to: ${result.credentialsPath}`);
       logConsole(
         '\nYou can now use packmind-cli commands with your authenticated account.',
       );
     } catch (error) {
       if (error instanceof Error) {
-        logErrorConsole(error.message);
+        await logErrorConsole(error.message);
       } else {
-        logErrorConsole(String(error));
+        await logErrorConsole(String(error));
       }
       process.exit(1);
     }

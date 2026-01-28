@@ -20,18 +20,20 @@ export const logoutCommand = command({
       const result = await packmindCliHexa.logout({});
 
       if (!result.hadCredentialsFile && !result.hasEnvVar) {
-        logInfoConsole('No stored credentials found. Already logged out.');
+        await logInfoConsole(
+          'No stored credentials found. Already logged out.',
+        );
         return;
       }
 
       if (result.hadCredentialsFile) {
-        logSuccessConsole('Logged out successfully.');
+        await logSuccessConsole('Logged out successfully.');
         logConsole(`Removed credentials from: ${result.credentialsPath}`);
       }
 
       if (result.hasEnvVar) {
         if (!result.hadCredentialsFile) {
-          logInfoConsole('No stored credentials file found.');
+          await logInfoConsole('No stored credentials file found.');
         }
         logConsole(
           '\nNote: PACKMIND_API_KEY_V3 environment variable is still set.',
@@ -39,7 +41,7 @@ export const logoutCommand = command({
         logConsole('To fully log out, run: unset PACKMIND_API_KEY_V3');
       }
     } catch (error) {
-      logErrorConsole('Failed to remove credentials file.');
+      await logErrorConsole('Failed to remove credentials file.');
       logConsole(
         `Error: ${error instanceof Error ? error.message : String(error)}`,
       );

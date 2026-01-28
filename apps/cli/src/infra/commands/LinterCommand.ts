@@ -130,7 +130,9 @@ export const lintCommand = command({
     if (args.diff) {
       const replacement =
         args.diff === DiffMode.FILES ? '--changed-files' : '--changed-lines';
-      logWarningConsole(`--diff is deprecated. Use ${replacement} instead.`);
+      await logWarningConsole(
+        `--diff is deprecated. Use ${replacement} instead.`,
+      );
     }
 
     let diff = args.diff;
