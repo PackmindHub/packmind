@@ -1,16 +1,23 @@
-import { LogLevel, PackmindLogger } from '@packmind/logger';
-import { PackmindEventEmitterService } from '@packmind/node-utils';
-import { AiNotConfigured, OrganizationId } from '@packmind/types';
+import { PackmindLogger } from '@packmind/logger';
 import {
+  AbstractMemberUseCase,
+  MemberContext,
+  PackmindEventEmitterService,
+} from '@packmind/node-utils';
+import {
+  AiNotConfigured,
   CaptureRecipeCommand,
   CaptureRecipeResponse,
+  CommandCreatedEvent,
   createOrganizationId,
   createRecipeId,
   createSpaceId,
   createUserId,
+  IAccountsPort,
   ICaptureRecipeUseCase,
+  ISpacesPort,
+  OrganizationId,
   Recipe,
-  CommandCreatedEvent,
   RecipeStep,
 } from '@packmind/types';
 import slug from 'slug';
@@ -20,22 +27,25 @@ import { RecipeVersionService } from '../../services/RecipeVersionService';
 
 const origin = 'CaptureRecipeUsecase';
 
-export class CaptureRecipeUsecase implements ICaptureRecipeUseCase {
+export class CaptureRecipeUsecase
+  extends AbstractMemberUseCase<CaptureRecipeCommand, CaptureRecipeResponse>
+  implements ICaptureRecipeUseCase
+{
   constructor(
+    accountsPort: IAccountsPort,
+    private readonly spacesPort: ISpacesPort,
     private readonly recipeService: RecipeService,
     private readonly recipeVersionService: RecipeVersionService,
     private readonly recipeSummaryService: RecipeSummaryService,
     private readonly eventEmitterService: PackmindEventEmitterService,
-    private readonly logger: PackmindLogger = new PackmindLogger(
-      origin,
-      LogLevel.INFO,
-    ),
+    logger: PackmindLogger = new PackmindLogger(origin),
   ) {
+    super(accountsPort, logger);
     this.logger.info('CaptureRecipeUsecase initialized');
   }
 
-  public async execute(
-    command: CaptureRecipeCommand,
+  protected async executeForMembers(
+    command: CaptureRecipeCommand & MemberContext,
   ): Promise<CaptureRecipeResponse> {
     const {
       name,
@@ -52,6 +62,24 @@ export class CaptureRecipeUsecase implements ICaptureRecipeUseCase {
     const organizationId = createOrganizationId(orgIdString);
     const userId = createUserId(userIdString);
     const spaceId = createSpaceId(spaceIdString);
+
+    // Verify the space belongs to the organization
+    const space = await this.spacesPort.getSpaceById(spaceId);
+    if (!space) {
+      this.logger.warn('Space not found', { spaceId });
+      throw new Error(`Space with id ${spaceId} not found`);
+    }
+
+    if (space.organizationId !== organizationId) {
+      this.logger.warn('Space does not belong to organization', {
+        spaceId,
+        spaceOrganizationId: space.organizationId,
+        requestOrganizationId: organizationId,
+      });
+      throw new Error(
+        `Space ${spaceId} does not belong to organization ${organizationId}`,
+      );
+    }
     this.logger.info('Starting captureRecipe process', {
       name,
       organizationId,

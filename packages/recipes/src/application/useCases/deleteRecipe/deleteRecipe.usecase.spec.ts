@@ -6,11 +6,16 @@ import {
   createSpaceId,
   createUserId,
   DeleteRecipeCommand,
+  IAccountsPort,
+  ISpacesPort,
+  Organization,
   OrganizationId,
   Recipe,
   CommandDeletedEvent,
   RecipeId,
+  Space,
   SpaceId,
+  User,
   UserId,
 } from '@packmind/types';
 import { v4 as uuidv4 } from 'uuid';
@@ -20,11 +25,22 @@ import { DeleteRecipeUsecase } from './deleteRecipe.usecase';
 
 describe('DeleteRecipeUsecase', () => {
   let deleteRecipeUsecase: DeleteRecipeUsecase;
+  let accountsPort: jest.Mocked<IAccountsPort>;
+  let spacesPort: jest.Mocked<ISpacesPort>;
   let recipeService: jest.Mocked<RecipeService>;
   let recipeVersionService: jest.Mocked<RecipeVersionService>;
   let eventEmitterService: jest.Mocked<PackmindEventEmitterService>;
 
   beforeEach(() => {
+    accountsPort = {
+      getUserById: jest.fn(),
+      getOrganizationById: jest.fn(),
+    } as unknown as jest.Mocked<IAccountsPort>;
+
+    spacesPort = {
+      getSpaceById: jest.fn(),
+    } as unknown as jest.Mocked<ISpacesPort>;
+
     recipeService = {
       addRecipe: jest.fn(),
       publishToGit: jest.fn(),
@@ -52,6 +68,8 @@ describe('DeleteRecipeUsecase', () => {
     stubLogger();
 
     deleteRecipeUsecase = new DeleteRecipeUsecase(
+      accountsPort,
+      spacesPort,
       recipeService,
       recipeVersionService,
       eventEmitterService,
@@ -69,12 +87,36 @@ describe('DeleteRecipeUsecase', () => {
     let spaceId: SpaceId;
     let command: DeleteRecipeCommand;
     let mockRecipe: Recipe;
+    let user: User;
+    let organization: Organization;
+    let space: Space;
 
-    beforeEach(async () => {
+    beforeEach(() => {
       userId = createUserId(uuidv4());
       organizationId = createOrganizationId(uuidv4());
       spaceId = createSpaceId(uuidv4());
       recipeId = createRecipeId(uuidv4());
+
+      user = {
+        trial: false,
+        id: userId,
+        email: 'test@example.com',
+        passwordHash: 'hashed_password',
+        memberships: [{ organizationId, role: 'member', userId }],
+        active: true,
+      };
+      organization = {
+        id: organizationId,
+        name: 'Test Org',
+        slug: 'test-org',
+      };
+      space = {
+        id: spaceId,
+        name: 'Test Space',
+        slug: 'test-space',
+        organizationId,
+      };
+
       mockRecipe = {
         id: recipeId,
         slug: 'test-recipe',
@@ -87,9 +129,13 @@ describe('DeleteRecipeUsecase', () => {
       command = {
         recipeId,
         spaceId,
-        userId: userId,
-        organizationId: organizationId,
+        userId,
+        organizationId,
       };
+
+      accountsPort.getUserById.mockResolvedValue(user);
+      accountsPort.getOrganizationById.mockResolvedValue(organization);
+      spacesPort.getSpaceById.mockResolvedValue(space);
     });
 
     describe('when recipe deletion succeeds', () => {
@@ -200,8 +246,8 @@ describe('DeleteRecipeUsecase', () => {
         nonExistentCommand = {
           recipeId: nonExistentRecipeId,
           spaceId,
-          userId: userId,
-          organizationId: organizationId,
+          userId,
+          organizationId,
         };
         recipeService.getRecipeById.mockResolvedValue(null);
       });
@@ -220,8 +266,8 @@ describe('DeleteRecipeUsecase', () => {
         failingCommand = {
           recipeId,
           spaceId,
-          userId: userId,
-          organizationId: organizationId,
+          userId,
+          organizationId,
         };
         recipeService.getRecipeById.mockResolvedValue(mockRecipe);
         recipeService.deleteRecipe.mockRejectedValue(

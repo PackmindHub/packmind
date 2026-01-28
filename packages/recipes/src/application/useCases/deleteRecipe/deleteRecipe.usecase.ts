@@ -1,34 +1,43 @@
 import { RecipeService } from '../../services/RecipeService';
 import { RecipeVersionService } from '../../services/RecipeVersionService';
-import { LogLevel, PackmindLogger } from '@packmind/logger';
-import { PackmindEventEmitterService } from '@packmind/node-utils';
+import { PackmindLogger } from '@packmind/logger';
+import {
+  AbstractMemberUseCase,
+  MemberContext,
+  PackmindEventEmitterService,
+} from '@packmind/node-utils';
 import {
   createOrganizationId,
   createUserId,
   DeleteRecipeCommand,
   DeleteRecipeResponse,
+  IAccountsPort,
   IDeleteRecipeUseCase,
+  ISpacesPort,
   CommandDeletedEvent,
   UserId,
 } from '@packmind/types';
 
 const origin = 'DeleteRecipeUsecase';
 
-export class DeleteRecipeUsecase implements IDeleteRecipeUseCase {
+export class DeleteRecipeUsecase
+  extends AbstractMemberUseCase<DeleteRecipeCommand, DeleteRecipeResponse>
+  implements IDeleteRecipeUseCase
+{
   constructor(
+    accountsPort: IAccountsPort,
+    private readonly spacesPort: ISpacesPort,
     private readonly recipeService: RecipeService,
     private readonly recipeVersionService: RecipeVersionService,
     private readonly eventEmitterService: PackmindEventEmitterService,
-    private readonly logger: PackmindLogger = new PackmindLogger(
-      origin,
-      LogLevel.DEBUG,
-    ),
+    logger: PackmindLogger = new PackmindLogger(origin),
   ) {
+    super(accountsPort, logger);
     this.logger.info('DeleteRecipeUsecase initialized');
   }
 
-  public async execute(
-    command: DeleteRecipeCommand,
+  protected async executeForMembers(
+    command: DeleteRecipeCommand & MemberContext,
   ): Promise<DeleteRecipeResponse> {
     const {
       recipeId,
@@ -45,6 +54,24 @@ export class DeleteRecipeUsecase implements IDeleteRecipeUseCase {
     });
 
     try {
+      // Verify the space belongs to the organization
+      const space = await this.spacesPort.getSpaceById(spaceId);
+      if (!space) {
+        this.logger.error('Space not found', { spaceId });
+        throw new Error(`Space with id ${spaceId} not found`);
+      }
+
+      if (space.organizationId !== organizationId) {
+        this.logger.error('Space does not belong to organization', {
+          spaceId,
+          spaceOrganizationId: space.organizationId,
+          requestOrganizationId: organizationId,
+        });
+        throw new Error(
+          `Space ${spaceId} does not belong to organization ${organizationId}`,
+        );
+      }
+
       // Get existing recipe to validate space ownership
       this.logger.info('Fetching recipe to validate space ownership', {
         recipeId,
