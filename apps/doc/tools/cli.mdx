@@ -14,6 +14,7 @@ The Packmind CLI provides the following commands:
 - **`lint`** - Run detection programs (Enterprise only)
 - **`skills add`** - Import skills into Packmind
 - **`skills init`** - Install default Packmind skills locally
+- **`standard create`** - Create a coding standard from a playbook file
 
 ## Installation
 
@@ -496,6 +497,82 @@ When uploading a skill that already exists, Packmind automatically compares the 
 - If the content is identical, no new version is created
 
 See [Skills Management](/concepts/skills-management) for details on versioning.
+
+## Standard Command
+
+Create and manage coding standards from the command line.
+
+### Create a Standard from a Playbook File
+
+```bash
+packmind-cli standard create <file>
+```
+
+**Arguments:**
+
+- `<file>` - Path to a JSON playbook file containing the standard definition
+
+**Example:**
+
+```bash
+packmind-cli standard create ./my-standard.json
+```
+
+This creates a new coding standard in your Packmind organization based on the playbook file.
+
+### Playbook File Format
+
+The playbook file is a JSON file with the following structure:
+
+```json
+{
+  "name": "Error Handling",
+  "description": "Ensure errors are handled predictably with context and actionable feedback.",
+  "scope": "Applies to all services and applications",
+  "rules": [
+    {
+      "content": "Validate inputs at boundaries and fail fast"
+    },
+    {
+      "content": "Preserve context when rethrowing errors",
+      "examples": {
+        "positive": "throw new PersistenceError('Save failed', { cause: e });",
+        "negative": "throw new Error('Save failed');",
+        "language": "TYPESCRIPT"
+      }
+    }
+  ]
+}
+```
+
+**Required fields:**
+
+| Field         | Description                              |
+| ------------- | ---------------------------------------- |
+| `name`        | Standard name (displayed in the web app) |
+| `description` | Context and purpose of the standard      |
+| `scope`       | Where the standard applies               |
+| `rules`       | Array of rules (at least one required)   |
+
+**Rule fields:**
+
+| Field      | Required | Description                                         |
+| ---------- | -------- | --------------------------------------------------- |
+| `content`  | Yes      | Rule description (should start with an action verb) |
+| `examples` | No       | Code examples showing correct and incorrect usage   |
+
+**Example fields (when provided):**
+
+| Field      | Description                                                       |
+| ---------- | ----------------------------------------------------------------- |
+| `positive` | Code snippet showing correct implementation                       |
+| `negative` | Code snippet showing incorrect implementation                     |
+| `language` | Programming language (e.g., `TYPESCRIPT`, `JAVASCRIPT`, `PYTHON`) |
+
+<Tip>
+  **Workflow tip** — Use this command when you have standards defined as files
+  in your repository or want to create standards without the MCP server.
+</Tip>
 
 ## Related Documentation
 

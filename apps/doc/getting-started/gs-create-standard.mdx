@@ -46,6 +46,44 @@ Your new standard will be available in the Packmind web app, in the **Standards*
   will refine the standard before submitting it.
 </Tip>
 
+## Create a standard from the CLI
+
+You can create standards programmatically using the Packmind CLI with a JSON playbook file.
+
+```bash
+packmind-cli standard create ./my-standard.json
+```
+
+The playbook file defines your standard structure:
+
+```json
+{
+  "name": "Error Handling",
+  "description": "Ensure errors are handled predictably with context.",
+  "scope": "Applies to all services",
+  "rules": [
+    {
+      "content": "Validate inputs at boundaries and fail fast"
+    },
+    {
+      "content": "Preserve context when rethrowing errors",
+      "examples": {
+        "positive": "throw new AppError('Failed', { cause: e });",
+        "negative": "throw new Error('Failed');",
+        "language": "TYPESCRIPT"
+      }
+    }
+  ]
+}
+```
+
+<Tip>
+  This approach is useful when you have standards defined as files in your
+  repository or want to create standards without the MCP server. See [CLI:
+  Standard Command](/tools/cli#standard-command) for the complete playbook
+  format.
+</Tip>
+
 ## Create a standard from the web app
 
 1. Go to the **Standards** panel.
