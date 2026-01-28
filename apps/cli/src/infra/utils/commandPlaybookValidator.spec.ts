@@ -111,7 +111,6 @@ describe('commandPlaybookValidator', () => {
     });
 
     it('returns errors for empty arrays', () => {
-      expect(result.errors).toBeDefined();
       expect(result.errors?.length).toBeGreaterThan(0);
     });
   });

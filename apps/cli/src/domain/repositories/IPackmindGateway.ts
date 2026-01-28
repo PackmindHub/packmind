@@ -200,24 +200,28 @@ export type IUploadSkillUseCase = IUseCase<
   UploadSkillResult
 >;
 
-// Consolidated standard creation types
-export type CreateStandardWithExamplesCommand = {
+// Standard creation types (atomic)
+export type CreateStandardInSpaceCommand = {
   name: string;
   description: string;
   scope: string;
-  rules: Array<{
-    content: string;
-    examples?: {
-      language: string;
-      positive: string;
-      negative: string;
-    };
-  }>;
+  rules: Array<{ content: string }>;
 };
 
-export type CreateStandardWithExamplesResult = {
+export type CreateStandardInSpaceResult = {
   id: string;
   name: string;
+};
+
+export type RuleWithId = {
+  id: string;
+  content: string;
+};
+
+export type RuleExample = {
+  language: string;
+  positive: string;
+  negative: string;
 };
 
 // Global space type (used by createCommand)
@@ -255,13 +259,26 @@ export interface IPackmindGateway {
   uploadSkill: Gateway<IUploadSkillUseCase>;
   getDefaultSkills: Gateway<IGetDefaultSkillsUseCase>;
 
-  // Atomic gateway for getGlobalSpace (used by createCommand)
+  // Atomic gateway for getGlobalSpace (used by createCommand and createStandard)
   getGlobalSpace(): Promise<GetGlobalSpaceResult>;
 
-  // Consolidated standard creation
-  createStandard(
-    data: CreateStandardWithExamplesCommand,
-  ): Promise<CreateStandardWithExamplesResult>;
+  // Atomic gateways for standard creation
+  createStandardInSpace(
+    spaceId: string,
+    data: CreateStandardInSpaceCommand,
+  ): Promise<CreateStandardInSpaceResult>;
+
+  getRulesForStandard(
+    spaceId: string,
+    standardId: string,
+  ): Promise<RuleWithId[]>;
+
+  addExampleToRule(
+    spaceId: string,
+    standardId: string,
+    ruleId: string,
+    example: RuleExample,
+  ): Promise<void>;
 
   // Atomic gateway for command creation
   createCommand(

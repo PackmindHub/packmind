@@ -19,8 +19,10 @@ import {
   IGetDefaultSkillsUseCase,
   GetDefaultSkillsResult,
   GetGlobalSpaceResult,
-  CreateStandardWithExamplesCommand,
-  CreateStandardWithExamplesResult,
+  CreateStandardInSpaceCommand,
+  CreateStandardInSpaceResult,
+  RuleWithId,
+  RuleExample,
   CreateCommandCommand,
   CreateCommandResult,
 } from '../../domain/repositories/IPackmindGateway';
@@ -1243,37 +1245,32 @@ export class PackmindGateway implements IPackmindGateway {
     );
   };
 
-  private createStandardRequest = async (
+  public createStandardInSpace = async (
     spaceId: string,
-    data: {
-      name: string;
-      description: string;
-      scope: string;
-      rules: Array<{ content: string }>;
-    },
-  ): Promise<{ id: string; name: string }> => {
+    data: CreateStandardInSpaceCommand,
+  ): Promise<CreateStandardInSpaceResult> => {
     const { organizationId } = this.httpClient.getAuthContext();
-    return this.httpClient.request<{ id: string; name: string }>(
+    return this.httpClient.request<CreateStandardInSpaceResult>(
       `/api/v0/organizations/${organizationId}/spaces/${spaceId}/standards`,
       { method: 'POST', body: data },
     );
   };
 
-  private getRulesForStandard = async (
+  public getRulesForStandard = async (
     spaceId: string,
     standardId: string,
-  ): Promise<Array<{ id: string; content: string }>> => {
+  ): Promise<RuleWithId[]> => {
     const { organizationId } = this.httpClient.getAuthContext();
-    return this.httpClient.request<Array<{ id: string; content: string }>>(
+    return this.httpClient.request<RuleWithId[]>(
       `/api/v0/organizations/${organizationId}/spaces/${spaceId}/standards/${standardId}/rules`,
     );
   };
 
-  private addExampleToRule = async (
+  public addExampleToRule = async (
     spaceId: string,
     standardId: string,
     ruleId: string,
-    example: { language: string; positive: string; negative: string },
+    example: RuleExample,
   ): Promise<void> => {
     const { organizationId } = this.httpClient.getAuthContext();
     await this.httpClient.request(
@@ -1287,49 +1284,6 @@ export class PackmindGateway implements IPackmindGateway {
         },
       },
     );
-  };
-
-  public createStandard = async (
-    data: CreateStandardWithExamplesCommand,
-  ): Promise<CreateStandardWithExamplesResult> => {
-    // 1. Get global space
-    const space = await this.getGlobalSpace();
-
-    // 2. Create standard (without examples)
-    const standard = await this.createStandardRequest(space.id, {
-      name: data.name,
-      description: data.description,
-      scope: data.scope,
-      rules: data.rules.map((r) => ({ content: r.content })),
-    });
-
-    // 3. Add examples if any rules have them
-    const rulesWithExamples = data.rules.filter((r) => r.examples);
-
-    if (rulesWithExamples.length > 0) {
-      const createdRules = await this.getRulesForStandard(
-        space.id,
-        standard.id,
-      );
-
-      for (let i = 0; i < data.rules.length; i++) {
-        const rule = data.rules[i];
-        if (rule.examples && createdRules[i]) {
-          try {
-            await this.addExampleToRule(
-              space.id,
-              standard.id,
-              createdRules[i].id,
-              rule.examples,
-            );
-          } catch {
-            // Example creation failure doesn't fail the whole operation
-          }
-        }
-      }
-    }
-
-    return { id: standard.id, name: standard.name };
   };
 
   public createCommand = async (

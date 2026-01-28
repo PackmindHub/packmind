@@ -22,7 +22,7 @@ const createTestApiKey = () => {
   ).toString('base64');
 };
 
-describe('PackmindGateway.createStandard', () => {
+describe('PackmindGateway standard operations', () => {
   let gateway: PackmindGateway;
 
   beforeEach(() => {
@@ -34,16 +34,8 @@ describe('PackmindGateway.createStandard', () => {
     jest.clearAllMocks();
   });
 
-  describe('when creating standard without examples', () => {
-    let result: Awaited<ReturnType<PackmindGateway['createStandard']>>;
-
-    beforeEach(async () => {
-      // Mock getGlobalSpace
-      (global.fetch as jest.Mock).mockResolvedValueOnce({
-        ok: true,
-        json: jest.fn().mockResolvedValue({ id: 'space-uuid', slug: 'global' }),
-      });
-      // Mock createStandard
+  describe('createStandardInSpace', () => {
+    it('makes POST request to standards endpoint', async () => {
       (global.fetch as jest.Mock).mockResolvedValueOnce({
         ok: true,
         json: jest
@@ -51,141 +43,114 @@ describe('PackmindGateway.createStandard', () => {
           .mockResolvedValue({ id: 'std-123', name: 'Test Standard' }),
       });
 
-      result = await gateway.createStandard({
+      await gateway.createStandardInSpace('space-uuid', {
         name: 'Test Standard',
         description: 'Desc',
         scope: 'test',
         rules: [{ content: 'Rule 1' }],
       });
-    });
 
-    it('returns standard id and name', () => {
-      expect(result).toEqual({ id: 'std-123', name: 'Test Standard' });
-    });
-
-    it('calls getGlobalSpace first', () => {
-      expect(global.fetch).toHaveBeenNthCalledWith(
-        1,
-        expect.stringContaining('/spaces/global'),
-        expect.any(Object),
-      );
-    });
-
-    it('calls createStandard with POST', () => {
-      expect(global.fetch).toHaveBeenNthCalledWith(
-        2,
-        expect.stringContaining('/standards'),
+      expect(global.fetch).toHaveBeenCalledWith(
+        expect.stringContaining('/spaces/space-uuid/standards'),
         expect.objectContaining({ method: 'POST' }),
       );
     });
 
-    it('does not fetch rules when no examples', () => {
-      expect(global.fetch).toHaveBeenCalledTimes(2);
+    it('returns standard id and name', async () => {
+      (global.fetch as jest.Mock).mockResolvedValueOnce({
+        ok: true,
+        json: jest
+          .fn()
+          .mockResolvedValue({ id: 'std-123', name: 'Test Standard' }),
+      });
+
+      const result = await gateway.createStandardInSpace('space-uuid', {
+        name: 'Test Standard',
+        description: 'Desc',
+        scope: 'test',
+        rules: [{ content: 'Rule 1' }],
+      });
+
+      expect(result).toEqual({ id: 'std-123', name: 'Test Standard' });
     });
   });
 
-  describe('when creating standard with examples', () => {
-    beforeEach(async () => {
-      // Mock getGlobalSpace
-      (global.fetch as jest.Mock).mockResolvedValueOnce({
-        ok: true,
-        json: jest.fn().mockResolvedValue({ id: 'space-uuid', slug: 'global' }),
-      });
-      // Mock createStandard
-      (global.fetch as jest.Mock).mockResolvedValueOnce({
-        ok: true,
-        json: jest.fn().mockResolvedValue({ id: 'std-123', name: 'Test' }),
-      });
-      // Mock getRulesForStandard
+  describe('getRulesForStandard', () => {
+    it('makes GET request to rules endpoint', async () => {
       (global.fetch as jest.Mock).mockResolvedValueOnce({
         ok: true,
         json: jest
           .fn()
           .mockResolvedValue([{ id: 'rule-1', content: 'Rule 1' }]),
       });
-      // Mock addExampleToRule
-      (global.fetch as jest.Mock).mockResolvedValueOnce({
-        ok: true,
-        json: jest.fn().mockResolvedValue({ id: 'example-1' }),
-      });
 
-      await gateway.createStandard({
-        name: 'Test',
-        description: 'Desc',
-        scope: 'test',
-        rules: [
-          {
-            content: 'Rule 1',
-            examples: {
-              language: 'TYPESCRIPT',
-              positive: 'const x = 1;',
-              negative: 'var x = 1;',
-            },
-          },
-        ],
-      });
-    });
+      await gateway.getRulesForStandard('space-uuid', 'std-123');
 
-    it('fetches rules after creating standard', () => {
-      expect(global.fetch).toHaveBeenNthCalledWith(
-        3,
+      expect(global.fetch).toHaveBeenCalledWith(
         expect.stringContaining('/standards/std-123/rules'),
         expect.any(Object),
       );
     });
 
-    it('adds example to rule', () => {
-      expect(global.fetch).toHaveBeenNthCalledWith(
-        4,
+    it('returns rules array', async () => {
+      (global.fetch as jest.Mock).mockResolvedValueOnce({
+        ok: true,
+        json: jest.fn().mockResolvedValue([
+          { id: 'rule-1', content: 'Rule 1' },
+          { id: 'rule-2', content: 'Rule 2' },
+        ]),
+      });
+
+      const result = await gateway.getRulesForStandard('space-uuid', 'std-123');
+
+      expect(result).toEqual([
+        { id: 'rule-1', content: 'Rule 1' },
+        { id: 'rule-2', content: 'Rule 2' },
+      ]);
+    });
+  });
+
+  describe('addExampleToRule', () => {
+    it('makes POST request to examples endpoint', async () => {
+      (global.fetch as jest.Mock).mockResolvedValueOnce({
+        ok: true,
+        json: jest.fn().mockResolvedValue({ id: 'example-1' }),
+      });
+
+      await gateway.addExampleToRule('space-uuid', 'std-123', 'rule-1', {
+        language: 'TYPESCRIPT',
+        positive: 'const x = 1;',
+        negative: 'var x = 1;',
+      });
+
+      expect(global.fetch).toHaveBeenCalledWith(
         expect.stringContaining('/rules/rule-1/examples'),
         expect.objectContaining({ method: 'POST' }),
       );
     });
-  });
 
-  describe('when example creation fails', () => {
-    it('still returns success', async () => {
-      // Mock getGlobalSpace
+    it('sends example data with lang field', async () => {
       (global.fetch as jest.Mock).mockResolvedValueOnce({
         ok: true,
-        json: jest.fn().mockResolvedValue({ id: 'space-uuid', slug: 'global' }),
-      });
-      // Mock createStandard
-      (global.fetch as jest.Mock).mockResolvedValueOnce({
-        ok: true,
-        json: jest.fn().mockResolvedValue({ id: 'std-123', name: 'Test' }),
-      });
-      // Mock getRulesForStandard
-      (global.fetch as jest.Mock).mockResolvedValueOnce({
-        ok: true,
-        json: jest
-          .fn()
-          .mockResolvedValue([{ id: 'rule-1', content: 'Rule 1' }]),
-      });
-      // Mock addExampleToRule - FAILS
-      (global.fetch as jest.Mock).mockResolvedValueOnce({
-        ok: false,
-        status: 500,
-        statusText: 'Internal Server Error',
+        json: jest.fn().mockResolvedValue({ id: 'example-1' }),
       });
 
-      const result = await gateway.createStandard({
-        name: 'Test',
-        description: 'Desc',
-        scope: 'test',
-        rules: [
-          {
-            content: 'Rule 1',
-            examples: {
-              language: 'TYPESCRIPT',
-              positive: 'good',
-              negative: 'bad',
-            },
-          },
-        ],
+      await gateway.addExampleToRule('space-uuid', 'std-123', 'rule-1', {
+        language: 'TYPESCRIPT',
+        positive: 'const x = 1;',
+        negative: 'var x = 1;',
       });
 
-      expect(result).toEqual({ id: 'std-123', name: 'Test' });
+      expect(global.fetch).toHaveBeenCalledWith(
+        expect.any(String),
+        expect.objectContaining({
+          body: JSON.stringify({
+            lang: 'TYPESCRIPT',
+            positive: 'const x = 1;',
+            negative: 'var x = 1;',
+          }),
+        }),
+      );
     });
   });
 });
