@@ -34,6 +34,10 @@ export type AnalyticsEventMap = {
   onboarding_prompt_copied: {
     agent: StartTrialCommandAgents;
   };
+  onboarding_reason_selected: {
+    reason_key: string;
+    reason_label: string;
+  };
   mcp_unavailable_feedback: {
     reason: McpUnavailableReason;
     otherDetails?: string;
