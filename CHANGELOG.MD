@@ -11,10 +11,6 @@
 
 - Overview now displays artifacts that need removal from repositories
 
-## Fixed
-
-## Removed
-
 # [1.7.0] - 2025-01-07
 
 ## Added
