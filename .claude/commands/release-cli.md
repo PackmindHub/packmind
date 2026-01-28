@@ -5,6 +5,7 @@ Create a CLI release with version {{version}}. Follow these steps:
 2. **Update apps/cli/package.json and apps/cli/CHANGELOG.MD for release (First commit)**:
    - Update the version in apps/cli/package.json to `{{version}}`
    - in apps/cli/CHANGELOG.md:
+     - drop the empty sections under [Unreleased]
      - Replace the `[Unreleased]` heading with `[{{version}}] - {{today_date}}` (use ISO 8601 format YYYY-MM-DD for the date)
      - Update the unreleased comparison link at the bottom to point to the new release:
        ```
