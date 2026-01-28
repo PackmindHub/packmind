@@ -5,7 +5,7 @@ Create a coding standard from a playbook JSON file.
 ## Usage
 
 ```bash
-packmind-cli standard:create <file>
+packmind-cli standards create <file>
 ```
 
 ## Arguments
@@ -62,7 +62,7 @@ TYPESCRIPT, TYPESCRIPT_TSX, JAVASCRIPT, JAVASCRIPT_JSX, PYTHON, JAVA, GO, RUST, 
 
 ```bash
 # Create standard from playbook
-packmind-cli standard:create ./standards/react-best-practices.json
+packmind-cli standards create ./standards/react-best-practices.json
 
 # Expected output on success
 # ✅ Standard "React Best Practices" created successfully (ID: std-abc123def)

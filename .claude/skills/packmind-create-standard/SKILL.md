@@ -53,23 +53,7 @@ Every standard consists of:
 
 ## Prerequisites
 
-Before creating a standard, verify that the required tools are available:
-
-### Python 3
-
-Check if Python 3 is installed:
-
-```bash
-python3 --version
-```
-
-If not available, install it:
-
-- **macOS**: `brew install python3`
-- **Ubuntu/Debian**: `sudo apt-get install python3`
-- **Windows**: Download from https://python.org or use `winget install Python.Python.3`
-
-### Packmind CLI
+Before creating a standard, verify that packmind-cli is available:
 
 Check if packmind-cli is installed:
 
@@ -93,37 +77,53 @@ packmind-cli login
 
 To create a standard, follow this process in order, skipping steps only if there is a clear reason why they are not applicable.
 
-### Step 1: Understanding the Standard's Purpose
+### Step 1: Clarify the Request
 
-Skip this step only when the standard's scope and rules are already clearly defined. It remains valuable even when working with an existing standard.
+Gather essential information before drafting the standard.
 
-To create an effective standard, clearly understand:
+#### Clarification Flow
 
-1. **What problem does this standard solve?**
-   - Example: "Inconsistent error handling across services"
-   - Example: "New team members don't know our naming conventions"
+Study the user's request and identify critical gaps. The number of questions should match the request clarity:
 
-2. **Who will benefit from this standard?**
-   - AI coding agents working on this codebase
-   - New team members onboarding
-   - Existing developers maintaining consistency
+- **1-2 questions** when the request is well-defined (clear scope, specific examples, detailed context)
+- **3-5 questions** when the context is unclear or the request is vague
 
-3. **Where does this standard apply?**
-   - Specific file types (e.g., "\*.spec.ts files")
-   - Specific frameworks (e.g., "React components")
-   - Specific domains (e.g., "API controllers")
+**Examples of focused questions:**
 
-Example clarifying questions:
+- "Which service or file shows the expected pattern?"
+- "Is there an existing doc or rule we must stay aligned with?"
+- "What specific aspect matters most (mocking guidelines, naming conventions, assertion style)?"
 
-- "What coding conventions do you want to enforce?"
-- "Can you give examples of code that follows vs violates these rules?"
-- "Which file types or areas of the codebase should this standard apply to?"
+Introduce questions with a simple phrase about needing clarification, then list as bullet points—no numbering, no category headers.
 
-Conclude this step when there is a clear sense of the standard's purpose and scope.
+#### Repository Access Guardrail
 
-### Step 2: Gathering and Writing Rules
+**Do not open or scan repository files unless the user explicitly points to them** (provides file paths or requests project-wide review). If source references are needed, ask the user to supply them.
 
-Transform the understanding from Step 1 into concrete rules.
+#### What to Capture
+
+Take brief notes on:
+
+- Title or slug (if mentioned)
+- Scope guardrails
+- Key references
+- Expected outcomes
+
+Keep notes concise—just enough to unlock drafting.
+
+### Step 2: Draft Rules
+
+Transform the understanding into concrete rules. **Do not add examples yet** - examples will be added in Step 3.
+
+#### Draft Creation (Rules Only)
+
+1. Create a draft markdown file in `.packmind/standards/_drafts/` (create the folder if missing) using filename `<slug>-draft.md` (lowercase with hyphens)
+2. Initial draft structure:
+   - `# <Standard Title>`
+   - Context paragraph explaining when/why to apply the standard
+   - Optional **Key References** list citing files or authoritative sources
+   - `## Rules` as bullet points following the Rule Writing Guidelines below
+   - **DO NOT include examples yet** - examples will be added in Phase 2
 
 #### Rule Writing Guidelines
 
@@ -194,15 +194,35 @@ Inline examples (code, paths, patterns) within the rule content are **optional**
 - "Use const and prefix interfaces with I" (multiple concepts)
 - "Don't use var" (no positive guidance)
 
-#### Adding Examples (Recommended)
+#### Draft Summary
 
-Examples dramatically improve rule effectiveness. For each rule, consider adding:
+After saving the draft file, write a concise summary that captures:
 
-- **positive**: Code that correctly follows the rule
-- **negative**: Code that violates the rule
-- **language**: The programming language for syntax highlighting
+- One sentence summarizing the standard's purpose
+- A bullet list of all rules (each rule ~22 words max, imperative form, with inline code if helpful)
 
-Valid language values:
+Then proceed directly to Step 3.
+
+### Step 3: Add Examples
+
+Add illustrative examples to each rule in the draft file.
+
+#### Examples Creation
+
+1. Open the existing draft file and add examples to each rule:
+   - `### Positive Example` showing the compliant approach
+   - `### Negative Example` highlighting the anti-pattern to avoid
+   - Annotate every code block with its language (e.g., `typescript`, `sql`, `javascript`)
+   - Keep examples concise and focused on demonstrating the specific rule
+2. If a rule doesn't benefit from code examples (e.g., process or organizational rules), skip examples for that rule
+
+#### Examples Guidelines
+
+- Examples should be realistic and directly relevant to this codebase
+- Each example should clearly demonstrate why the rule matters
+- Keep code snippets minimal—only include what's necessary to illustrate the point
+
+Valid language values for code blocks:
 
 - TYPESCRIPT, TYPESCRIPT_TSX
 - JAVASCRIPT, JAVASCRIPT_JSX
@@ -211,23 +231,11 @@ Valid language values:
 - HTML, CSS, SCSS, YAML, JSON
 - MARKDOWN, BASH, GENERIC
 
-### Step 3: Creating the Playbook File
+Then proceed directly to Step 4.
 
-**Before running the script**, verify that python3 is available (see Prerequisites section). If not installed, install it first.
+### Step 4: Creating the Playbook File
 
-When creating a new standard from scratch, use the `init_playbook.py` script to generate a template playbook file:
-
-```bash
-python3 scripts/init_playbook.py <standard-name> --path <output-directory>
-```
-
-Example:
-
-```bash
-python3 scripts/init_playbook.py typescript-conventions --path .
-```
-
-The script generates a JSON file (named `<standard-name>.playbook.json`) with the following structure:
+Create a JSON playbook file named `<standard-name>.playbook.json` based on the draft content:
 
 ```json
 {
@@ -250,68 +258,76 @@ The script generates a JSON file (named `<standard-name>.playbook.json`) with th
 }
 ```
 
-#### Validation Requirements
+#### Playbook Requirements
 
 - **name**: Non-empty string
 - **description**: Non-empty string explaining purpose
-- **scope**: Non-empty string describing applicability (required by CLI)
-- **summary**: One-sentence description (optional, not yet supported by CLI)
+- **scope**: Non-empty string describing applicability
 - **rules**: Array with at least one rule
 - **rules[].content**: Non-empty string starting with action verb (max ~25 words)
 - **rules[].examples** (optional): If provided, must include positive, negative, and language
 
-#### Validating the Playbook
+#### Valid Language Values
 
-Before creating the standard via CLI, validate the playbook to catch errors early:
+TYPESCRIPT, TYPESCRIPT_TSX, JAVASCRIPT, JAVASCRIPT_JSX, PYTHON, JAVA, GO, RUST, CSHARP, PHP, RUBY, KOTLIN, SWIFT, SQL, HTML, CSS, SCSS, YAML, JSON, MARKDOWN, BASH, GENERIC
 
-```bash
-python3 scripts/validate_playbook.py <path-to-playbook.json>
-```
-
-Example:
-
-```bash
-python3 scripts/validate_playbook.py typescript-conventions.playbook.json
-```
-
-The validator checks:
-
-- All required fields are present (name, description, scope, rules)
-- No TODO placeholders remain
-- Rules start with action verbs
-- Example fields are complete when provided
-- Language values are valid
-
-If validation fails, fix the reported errors and run validation again before proceeding.
-
-### Step 4: Review Before Submission
+### Step 5: Review Before Submission
 
 **Before running the CLI command**, you MUST get explicit user approval:
 
-1. Show the user the complete playbook content in a formatted preview:
-   - Name
-   - Description
-   - Scope
-   - Each rule with its content and examples (if any)
+1. **Display a formatted recap** of the playbook content:
 
-2. Ask: **"Here is the standard that will be created on Packmind. Do you approve?"**
+```
+---
+Name: <standard name>
 
-3. **Wait for explicit user confirmation** before proceeding to Step 5.
+Description: <description>
 
-4. If the user requests changes, go back to Step 2 or Step 3 to make adjustments.
+Scope: <scope>
 
-### Step 5: Creating the Standard via CLI
+Rules:
 
-Run the packmind-cli command to create the standard:
+1. <rule content>
+   - ✅ <positive example>
+   - ❌ <negative example>
+2. <rule content>
+   - ✅ <positive example>
+   - ❌ <negative example>
+...
+---
+```
+
+2. **Provide the file path** to the playbook JSON file so users can open and edit it directly if needed.
+
+3. Ask: **"Here is the standard that will be created on Packmind. The playbook file is at `<path>` if you want to review or edit it. Do you approve?"**
+
+4. **Wait for explicit user confirmation** before proceeding to Step 6.
+
+5. If the user requests changes, go back to earlier steps to make adjustments.
+
+### Step 6: Confirm and Submit
+
+1. **Re-read the playbook file** from disk to capture any user edits.
+
+2. **Compare with the original content** you created in Step 4.
+
+3. **If changes were detected**:
+   - Display the formatted recap again (same format as Step 5)
+   - Ask: **"The file was modified. Here is the updated content that will be sent. Do you confirm?"**
+   - **Wait for explicit confirmation** before proceeding.
+
+4. **If no changes**: Proceed directly to submission.
+
+5. Run the packmind-cli command:
 
 ```bash
-packmind-cli standard create <path-to-playbook.json>
+packmind-cli standards create <path-to-playbook.json>
 ```
 
 Example:
 
 ```bash
-packmind-cli standard create ./typescript-conventions.playbook.json
+packmind-cli standards create ./typescript-conventions.playbook.json
 ```
 
 Expected output on success:
@@ -339,24 +355,14 @@ packmind-cli login
 - Verify JSON syntax is valid (use a JSON validator)
 - Check that rules array has at least one entry
 
-### Step 6: Verifying the Standard
+### Step 7: Cleanup
 
-After creation, verify the standard was created correctly:
+After the standard is **successfully created**, delete the temporary files:
 
-1. **Check in Packmind UI**: Navigate to your organization's standards to see the new standard
-2. **Verify rules**: Ensure all rules appear with correct content
-3. **Check examples**: Confirm code examples are properly formatted
+1. Delete the playbook JSON file (e.g., `<standard-name>.playbook.json`)
+2. Delete the draft markdown file in `.packmind/standards/_drafts/` if it exists
 
-### Step 7: Iterate and Improve
-
-Standards benefit from iteration. Consider:
-
-1. **Add more rules** as new conventions emerge
-2. **Add examples** to rules that lack them
-3. **Refine rule wording** based on how AI agents interpret them
-4. **Update scope** as the standard's applicability becomes clearer
-
-To add rules to an existing standard, use the Packmind UI or API.
+**Only clean up on success** - if the CLI command fails, keep the files so the user can retry.
 
 ## Complete Example
 
@@ -404,7 +410,7 @@ Here's a complete example creating a TypeScript testing standard:
 **Creating the standard:**
 
 ```bash
-packmind-cli standard create testing-conventions.playbook.json
+packmind-cli standards create testing-conventions.playbook.json
 ```
 
 ## Quick Reference
