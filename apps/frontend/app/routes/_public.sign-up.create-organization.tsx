@@ -8,11 +8,5 @@ export default function CreateOrganizationRouteModule() {
     navigate('/sign-up/onboarding-reason');
   };
 
-  const handleSkip = () => {
-    navigate('/sign-up/onboarding-reason');
-  };
-
-  return (
-    <CreateOrganizationForm onSuccess={handleSuccess} onSkip={handleSkip} />
-  );
+  return <CreateOrganizationForm onSuccess={handleSuccess} />;
 }

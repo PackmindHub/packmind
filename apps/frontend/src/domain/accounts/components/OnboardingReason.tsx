@@ -36,13 +36,9 @@ export const ONBOARDING_REASONS: OnboardingReasonChoice[] = [
 
 interface OnboardingReasonProps {
   onContinue: (reasonKey: string) => void;
-  onSkip: () => void;
 }
 
-export function OnboardingReason({
-  onContinue,
-  onSkip,
-}: OnboardingReasonProps) {
+export function OnboardingReason({ onContinue }: OnboardingReasonProps) {
   const [selectedReason, setSelectedReason] = useState<string | null>(null);
 
   return (
@@ -98,14 +94,6 @@ export function OnboardingReason({
           data-testid="OnboardingReason.ContinueButton"
         >
           Continue
-        </PMButton>
-        <PMButton
-          size="md"
-          variant="ghost"
-          onClick={onSkip}
-          data-testid="OnboardingReason.SkipButton"
-        >
-          Skip for now
         </PMButton>
       </PMVStack>
     </PMVStack>

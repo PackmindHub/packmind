@@ -15,12 +15,10 @@ import { isPackmindConflictError } from '../../../services/api/errors/PackmindCo
 
 interface CreateOrganizationFormProps {
   onSuccess: () => void;
-  onSkip: () => void;
 }
 
 export function CreateOrganizationForm({
   onSuccess,
-  onSkip,
 }: CreateOrganizationFormProps) {
   const { organization } = useAuthContext();
   const [organizationName, setOrganizationName] = useState(
@@ -174,16 +172,6 @@ export function CreateOrganizationForm({
               data-testid="CreateOrganizationForm.SubmitButton"
             >
               {renameOrganizationMutation.isPending ? 'Saving...' : 'Continue'}
-            </PMButton>
-            <PMButton
-              type="button"
-              size="md"
-              variant="tertiary"
-              onClick={onSkip}
-              disabled={renameOrganizationMutation.isPending}
-              data-testid="CreateOrganizationForm.SkipButton"
-            >
-              Skip for now
             </PMButton>
           </PMVStack>
         </PMVStack>
