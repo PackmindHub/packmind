@@ -129,4 +129,11 @@ Standardize unit test structure and naming in TypeScript/TSX test files using ve
 * Use one expect per test case for better clarity and easier debugging; group related tests in describe blocks with shared setup in beforeEach
 
 Full standard is available here for further request: [Testing good practices](.packmind/standards/testing-good-practices.md)
+
+## Standard: Packmind Proprietary
+
+Forbid importing from '@packmind/editions' in TypeScript files to prevent using OSS-only modules in proprietary codebases. :
+* Never import something from '@packmind/editions', this is for OSS only
+
+Full standard is available here for further request: [Packmind Proprietary](.packmind/standards/packmind-proprietary.md)
 <!-- end: Packmind standards -->
