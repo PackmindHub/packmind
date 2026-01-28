@@ -66,6 +66,7 @@ import { IGeneratedStandard } from './application/services/StandardsGeneratorSer
 import { IGeneratedCommand } from './application/services/CommandsGeneratorService';
 import { IGeneratedSkill } from './application/services/SkillsGeneratorService';
 import { IContentPushResult } from './application/services/ContentPusherService';
+import { IDraftOnboardingUseCase } from './domain/useCases/IDraftOnboardingUseCase';
 
 const origin = 'PackmindCliHexa';
 
@@ -296,5 +297,9 @@ export class PackmindCliHexa {
     commands: IGeneratedCommand[],
   ): Promise<IContentPushResult> {
     return this.hexa.services.contentPusher.pushContent(standards, commands);
+  }
+
+  public getDraftOnboardingUseCase(): IDraftOnboardingUseCase {
+    return this.hexa.useCases.draftOnboarding;
   }
 }
