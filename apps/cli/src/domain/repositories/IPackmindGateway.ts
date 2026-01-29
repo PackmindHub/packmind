@@ -205,7 +205,14 @@ export type CreateStandardInSpaceCommand = {
   name: string;
   description: string;
   scope: string;
-  rules: Array<{ content: string }>;
+  rules: Array<{
+    content: string;
+    examples?: {
+      language: string;
+      positive: string;
+      negative: string;
+    };
+  }>;
 };
 
 export type CreateStandardInSpaceResult = {

@@ -11,13 +11,15 @@ export class CreateStandardFromPlaybookUseCase implements ICreateStandardFromPla
   async execute(playbook: IPlaybookInput): Promise<ICreateStandardResult> {
     const space = await this.gateway.getGlobalSpace();
 
+    // Create standard with rules (without examples)
     const standard = await this.gateway.createStandardInSpace(space.id, {
       name: playbook.name,
       description: playbook.description,
       scope: playbook.scope,
-      rules: playbook.rules.map((r) => ({ content: r.content })),
+      rules: playbook.rules,
     });
 
+    // Add examples if any rules have them
     const rulesWithExamples = playbook.rules.filter((r) => r.examples);
 
     if (rulesWithExamples.length > 0) {

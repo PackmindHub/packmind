@@ -14,7 +14,8 @@ The Packmind CLI provides the following commands:
 - **`lint`** - Run detection programs (Enterprise only)
 - **`skills add`** - Import skills into Packmind
 - **`skills init`** - Install default Packmind skills locally
-- **`standard create`** - Create a coding standard from a playbook file
+- **`standards create`** - Create a coding standard from a playbook file
+- **`commands create`** - Create a reusable command from a playbook file
 
 ## Installation
 
@@ -465,9 +466,14 @@ packmind-cli skills init
 This command installs Packmind's default skills locally, including:
 
 - **packmind-create-skill** — A skill that guides you through creating new skills with AI assistance
-- **packmind-standard-create** — A skill for creating coding standards
+- **packmind-create-command** — A skill that guides you through creating reusable commands with AI assistance
+- **packmind-create-standard** — A skill for creating coding standards
 
-After running this command, you can use the `/packmind-create-skill` command in your AI coding assistant to create new skills interactively.
+After running this command, you can use slash commands in your AI coding assistant:
+
+- `/packmind-create-skill` - Create new skills
+- `/packmind-create-command` - Create new commands
+- `/packmind-create-standard` - Create new standards
 
 <Tip>
   **Automatic installation** — Default skills are also installed automatically
@@ -576,8 +582,115 @@ The standard-playbook file is a JSON file with the following structure:
   in your repository or want to create standards without the MCP server.
 </Tip>
 
+## Commands Command
+
+Create and manage reusable, multi-step workflow commands from the command line.
+
+### Create a Command from a Playbook File
+
+```bash
+packmind-cli commands create <file>
+```
+
+**Arguments:**
+
+- `<file>` - Path to a JSON playbook file containing the command definition
+
+**Example:**
+
+```bash
+packmind-cli commands create ./setup-api-endpoint.json
+```
+
+This creates a new command in your Packmind organization based on the playbook file.
+
+### Playbook File Format
+
+The command playbook file is a JSON file with the following structure:
+
+```json
+{
+  "name": "Add a New REST Endpoint",
+  "summary": "Step-by-step guide for adding a new REST endpoint with validation, tests, and documentation",
+  "whenToUse": [
+    "When adding a new API endpoint to the backend service",
+    "When extending existing API functionality",
+    "When creating endpoints for frontend integration"
+  ],
+  "contextValidationCheckpoints": [
+    "Do you understand the business requirement for this endpoint?",
+    "Do you know the request and response data structures?",
+    "Is the endpoint's purpose clear to all team members?"
+  ],
+  "steps": [
+    {
+      "name": "Define the Route",
+      "description": "Create the HTTP route with appropriate method (GET, POST, PUT, DELETE) and path in your API configuration"
+    },
+    {
+      "name": "Implement the Handler",
+      "description": "Write the handler function that processes the request and calls the appropriate use case or service",
+      "codeSnippet": "// Example Express handler\napp.post('/api/users', async (req, res) => {\n  const user = await userService.create(req.body);\n  res.status(201).json(user);\n});"
+    },
+    {
+      "name": "Add Input Validation",
+      "description": "Validate request parameters and body data before processing"
+    },
+    {
+      "name": "Write Tests",
+      "description": "Create unit and integration tests covering success and error scenarios"
+    },
+    {
+      "name": "Update API Documentation",
+      "description": "Document the endpoint with request/response examples and parameter descriptions"
+    }
+  ]
+}
+```
+
+### Command Identification
+
+When you create a command, Packmind automatically generates a **slug** from the command name:
+
+- **Name** (provided by you): `"Add a New REST Endpoint"`
+- **Slug** (auto-generated): `"add-a-new-rest-endpoint"`
+
+The slug is used for:
+
+- File naming: `.claude/commands/packmind/add-a-new-rest-endpoint.md`
+- AI agent invocation: `/add-a-new-rest-endpoint`
+- Command identification and distribution
+
+If a command with the same slug already exists in your space, Packmind appends a counter (e.g., `add-a-new-rest-endpoint-1`) to ensure uniqueness.
+
+**Required fields:**
+
+| Field                          | Description                                              |
+| ------------------------------ | -------------------------------------------------------- |
+| `name`                         | Command name (displayed in the web app)                  |
+| `summary`                      | What the command does and why it's useful                |
+| `whenToUse`                    | Array of scenarios when this command applies             |
+| `contextValidationCheckpoints` | Array of validation questions to clarify before starting |
+| `steps`                        | Array of step objects (at least one required)            |
+
+**Step fields:**
+
+| Field         | Required | Description                                    |
+| ------------- | -------- | ---------------------------------------------- |
+| `name`        | Yes      | Step title (e.g., "Define the Route")          |
+| `description` | Yes      | Clear instructions for what to do in this step |
+| `codeSnippet` | No       | Optional code example demonstrating the step   |
+
+<Tip>
+  **Workflow tip** — Use this command when you have commands defined as files in
+  your repository or want to create commands without the MCP server. Commands
+  are particularly useful for capturing multi-step development workflows that
+  your team performs regularly.
+</Tip>
+
 ## Related Documentation
 
+- [Create your first command](/getting-started/gs-create-command): Learn how to create commands with AI assistance
 - [Packages Management](/concepts/packages-management): Learn about organizing commands, standards, and skills into packages
 - [Linter: Automated Detection](/linter/linter): Learn about how detection programs work
 - [Standards Management](/concepts/standards-management): Create rules and add code examples
