@@ -194,12 +194,12 @@ Example minimal playbook:
 Run the packmind-cli command to create the command:
 
 \`\`\`bash
-packmind-cli command create <path-to-playbook.json>
+packmind-cli commands create <path-to-playbook.json>
 \`\`\`
 
 Example:
 \`\`\`bash
-packmind-cli command create ./create-api-endpoint.command.playbook.json
+packmind-cli commands create ./create-api-endpoint.command.playbook.json
 \`\`\`
 
 Expected output on success:
@@ -266,7 +266,7 @@ Here's a complete example creating a command for setting up a new API endpoint:
 
 **Creating the command:**
 \`\`\`bash
-packmind-cli command create create-api-endpoint.command.playbook.json
+packmind-cli commands create create-api-endpoint.command.playbook.json
 \`\`\`
 
 ## Quick Reference

@@ -19,7 +19,6 @@ export const installDefaultSkillsCommand = command({
       logInfoConsole('Installing default skills...');
 
       const result = await packmindCliHexa.installDefaultSkills({});
-      console.log(JSON.stringify(result, null, 2));
 
       if (result.errors.length > 0) {
         for (const error of result.errors) {
