@@ -237,12 +237,6 @@ export type GetGlobalSpaceResult = {
   slug: string;
 };
 
-// Global space type (used by createCommand)
-export type GetGlobalSpaceResult = {
-  id: string;
-  slug: string;
-};
-
 // Create command types
 export type CreateCommandCommand = {
   name: string;

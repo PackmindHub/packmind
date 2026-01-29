@@ -17,10 +17,11 @@ Examples of commands can be:
 
 ## Creating Commands
 
-Commands can be created in two ways:
+Commands can be created in three ways:
 
 1. **Through the web app** — Create commands directly in the Packmind interface
 2. **Through the MCP server** — Use AI-assisted workflows for more sophisticated command creation
+3. **Through the CLI** — Create commands from JSON playbook files
 
 ### Creating Commands in the Web App
 
@@ -36,12 +37,18 @@ To create a command directly in the Packmind web app:
 <Tip>
   Use the web app when you want to quickly create or edit commands manually. Use
   the MCP server workflow when you want AI assistance in structuring commands
-  from your development history.
+  from your development history. Use the CLI when you have commands already
+  defined in files.
 </Tip>
 
 ### Creating Commands with MCP Server
 
-The MCP server provides an AI-assisted workflow that helps structure well-formed commands.
+The MCP server provides an AI-assisted workflow through the **`packmind-create-command` skill** that helps structure well-formed commands.
+
+You can invoke the skill by:
+
+- Typing `/packmind-create-command` in your AI assistant (if slash commands are supported)
+- Running: `Execute @.packmind/commands/packmind-create-command.md`
 
 The AI agent will automatically follow the **command creation workflow** which:
 
@@ -49,6 +56,20 @@ The AI agent will automatically follow the **command creation workflow** which:
 2. Structures it into clear, actionable steps with context validation checkpoints
 3. Defines specific "when to use" scenarios
 4. Adds optional code examples to demonstrate each step
+
+This skill is automatically installed when you run `packmind-cli skills init` or distribute packages to your repository.
+
+### Creating Commands with the CLI
+
+You can create commands from the command line using JSON playbook files:
+
+```bash
+packmind-cli commands create ./my-command.json
+```
+
+This is useful when you have commands already defined as files in your repository or want to create commands programmatically without using the web app or MCP server.
+
+See [CLI: Command-Line Interface](/tools/cli#commands-command) for detailed format and examples.
 
 ### Best Practices for Command Creation
 
