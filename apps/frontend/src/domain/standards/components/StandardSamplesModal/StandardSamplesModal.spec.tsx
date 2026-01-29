@@ -114,7 +114,7 @@ describe('StandardSamplesModal', () => {
     it('renders framework sample cards', () => {
       renderWithProviders(<StandardSamplesModal {...defaultProps} />);
 
-      expect(screen.getByText('Spring')).toBeInTheDocument();
+      expect(screen.getByText('React')).toBeInTheDocument();
     });
   });
 
@@ -132,9 +132,9 @@ describe('StandardSamplesModal', () => {
       renderWithProviders(<StandardSamplesModal {...defaultProps} />);
 
       const searchInput = screen.getByPlaceholderText('Search...');
-      fireEvent.change(searchInput, { target: { value: 'Spring' } });
+      fireEvent.change(searchInput, { target: { value: 'React' } });
 
-      expect(screen.getByText('Spring')).toBeInTheDocument();
+      expect(screen.getByText('React')).toBeInTheDocument();
     });
 
     it('hides non-matching items', () => {
@@ -144,7 +144,7 @@ describe('StandardSamplesModal', () => {
       fireEvent.change(searchInput, { target: { value: 'xyz123' } });
 
       expect(screen.queryByText('Java')).not.toBeInTheDocument();
-      expect(screen.queryByText('Spring')).not.toBeInTheDocument();
+      expect(screen.queryByText('React')).not.toBeInTheDocument();
     });
   });
 
@@ -168,15 +168,15 @@ describe('StandardSamplesModal', () => {
     it('allows selecting a framework card', async () => {
       renderWithProviders(<StandardSamplesModal {...defaultProps} />);
 
-      const springCard = screen.getByText('Spring').closest('label');
-      expect(springCard).toBeInTheDocument();
+      const reactCard = screen.getByText('React').closest('label');
+      expect(reactCard).toBeInTheDocument();
 
       await act(async () => {
-        fireEvent.click(springCard!);
+        fireEvent.click(reactCard!);
       });
 
       await waitFor(() => {
-        const checkbox = springCard!.querySelector('input[type="checkbox"]');
+        const checkbox = reactCard!.querySelector('input[type="checkbox"]');
         expect(checkbox).toBeChecked();
       });
     });
@@ -203,13 +203,13 @@ describe('StandardSamplesModal', () => {
           );
         });
 
-        const springCard = screen.getByText('Spring').closest('label');
+        const reactCard = screen.getByText('React').closest('label');
         await act(async () => {
-          fireEvent.click(springCard!);
+          fireEvent.click(reactCard!);
         });
 
         await waitFor(() => {
-          const checkbox = springCard!.querySelector('input[type="checkbox"]');
+          const checkbox = reactCard!.querySelector('input[type="checkbox"]');
           return (
             checkbox?.hasAttribute('checked') ||
             checkbox?.closest('[data-state="checked"]')
@@ -229,7 +229,7 @@ describe('StandardSamplesModal', () => {
         expect(mockMutate).toHaveBeenCalledWith(
           [
             { type: 'language', id: 'java' },
-            { type: 'framework', id: 'spring' },
+            { type: 'framework', id: 'react' },
           ],
           expect.any(Object),
         );
