@@ -2,6 +2,10 @@ import { OrganizationId } from '../../accounts/Organization';
 import { UserId } from '../../accounts/User';
 import type { QueryOption } from '../../database/types';
 import { SpaceId } from '../../spaces/SpaceId';
+import {
+  CreateStandardSamplesCommand,
+  CreateStandardSamplesResponse,
+} from '../contracts';
 import { Rule } from '../Rule';
 import { RuleExample } from '../RuleExample';
 import { RuleId } from '../RuleId';
@@ -49,4 +53,7 @@ export interface IStandardsPort {
     disableTriggerAssessment?: boolean;
     source?: string;
   }): Promise<Standard>;
+  createStandardSamples(
+    command: CreateStandardSamplesCommand,
+  ): Promise<CreateStandardSamplesResponse>;
 }
