@@ -1,0 +1,87 @@
+{
+  "name": "Spring Best Practices",
+  "description": "A concise coding standard for organizing, naming, configuring, handling errors, validating input, and testing Spring applications using consistent, idiomatic Spring and Java patterns.",
+  "scope": "Spring source files",
+  "rules": [
+    {
+      "content": "Use constructor-based dependency injection for required Spring components instead of field injection.",
+      "examples": {
+        "positive": "import org.springframework.stereotype.Service;\n\n@Service\npublic class OrderService {\n\n    private final OrderRepository orderRepository;\n\n    public OrderService(OrderRepository orderRepository) {\n        this.orderRepository = orderRepository;\n    }\n}\n",
+        "negative": "import org.springframework.beans.factory.annotation.Autowired;\nimport org.springframework.stereotype.Service;\n\n@Service\npublic class OrderService {\n\n    @Autowired\n    private OrderRepository orderRepository;\n}\n",
+        "language": "JAVA"
+      }
+    },
+    {
+      "content": "Annotate service, repository, and controller classes with appropriate Spring stereotypes.",
+      "examples": {
+        "positive": "import org.springframework.stereotype.Service;\nimport org.springframework.stereotype.Repository;\nimport org.springframework.web.bind.annotation.RestController;\n\n@Service\npublic class PaymentService { }\n\n@Repository\npublic class PaymentRepository { }\n\n@RestController\npublic class PaymentController { }\n",
+        "negative": "public class PaymentService { }\n\npublic class PaymentRepository { }\n\npublic class PaymentController { }\n",
+        "language": "JAVA"
+      }
+    },
+    {
+      "content": "Use @Configuration and @Bean methods for explicit bean definitions instead of XML configuration.",
+      "examples": {
+        "positive": "import org.springframework.context.annotation.Bean;\nimport org.springframework.context.annotation.Configuration;\n\n@Configuration\npublic class AppConfig {\n\n    @Bean\n    public EmailClient emailClient() {\n        return new EmailClient(\"smtp.example.com\");\n    }\n}\n",
+        "negative": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<beans xmlns=\"http://www.springframework.org/schema/beans\">\n    <bean id=\"emailClient\" class=\"com.example.EmailClient\">\n        <constructor-arg value=\"smtp.example.com\" />\n    </bean>\n</beans>\n",
+        "language": "JAVA"
+      }
+    },
+    {
+      "content": "Use @ControllerAdvice with @ExceptionHandler for centralized REST exception handling.",
+      "examples": {
+        "positive": "import org.springframework.http.HttpStatus;\nimport org.springframework.http.ResponseEntity;\nimport org.springframework.web.bind.annotation.ControllerAdvice;\nimport org.springframework.web.bind.annotation.ExceptionHandler;\n\n@ControllerAdvice\npublic class GlobalExceptionHandler {\n\n    @ExceptionHandler(OrderNotFoundException.class)\n    public ResponseEntity<String> handleOrderNotFound(OrderNotFoundException ex) {\n        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());\n    }\n}\n",
+        "negative": "import org.springframework.http.HttpStatus;\nimport org.springframework.http.ResponseEntity;\nimport org.springframework.web.bind.annotation.GetMapping;\nimport org.springframework.web.bind.annotation.RestController;\n\n@RestController\npublic class OrderController {\n\n    @GetMapping(\"/orders/{id}\")\n    public ResponseEntity<String> getOrder() {\n        try {\n            // ...\n            return ResponseEntity.ok(\"order\");\n        } catch (OrderNotFoundException ex) {\n            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());\n        }\n    }\n}\n",
+        "language": "JAVA"
+      }
+    },
+    {
+      "content": "Use @Transactional on service methods that modify persistent state.",
+      "examples": {
+        "positive": "import org.springframework.stereotype.Service;\nimport org.springframework.transaction.annotation.Transactional;\n\n@Service\npublic class AccountService {\n\n    private final AccountRepository accountRepository;\n\n    public AccountService(AccountRepository accountRepository) {\n        this.accountRepository = accountRepository;\n    }\n\n    @Transactional\n    public void transfer(Long fromId, Long toId, long amount) {\n        Account from = accountRepository.findById(fromId).orElseThrow();\n        Account to = accountRepository.findById(toId).orElseThrow();\n        from.debit(amount);\n        to.credit(amount);\n    }\n}\n",
+        "negative": "import org.springframework.stereotype.Service;\n\n@Service\npublic class AccountService {\n\n    private final AccountRepository accountRepository;\n\n    public AccountService(AccountRepository accountRepository) {\n        this.accountRepository = accountRepository;\n    }\n\n    public void transfer(Long fromId, Long toId, long amount) {\n        Account from = accountRepository.findById(fromId).orElseThrow();\n        Account to = accountRepository.findById(toId).orElseThrow();\n        from.debit(amount);\n        to.credit(amount);\n    }\n}\n",
+        "language": "JAVA"
+      }
+    },
+    {
+      "content": "Use @Validated on controllers and @Valid on request bodies with Bean Validation annotations.",
+      "examples": {
+        "positive": "import jakarta.validation.constraints.Email;\nimport jakarta.validation.constraints.NotBlank;\nimport org.springframework.validation.annotation.Validated;\nimport org.springframework.web.bind.annotation.PostMapping;\nimport org.springframework.web.bind.annotation.RequestBody;\nimport org.springframework.web.bind.annotation.RestController;\n\nclass RegisterUserRequest {\n    @NotBlank\n    private String username;\n    @Email\n    private String email;\n    // getters and setters\n}\n\n@RestController\n@Validated\npublic class UserController {\n\n    @PostMapping(\"/users\")\n    public void register(@RequestBody @jakarta.validation.Valid RegisterUserRequest request) {\n        // ...\n    }\n}\n",
+        "negative": "import org.springframework.web.bind.annotation.PostMapping;\nimport org.springframework.web.bind.annotation.RequestBody;\nimport org.springframework.web.bind.annotation.RestController;\n\nclass RegisterUserRequest {\n    private String username;\n    private String email;\n    // getters and setters\n}\n\n@RestController\npublic class UserController {\n\n    @PostMapping(\"/users\")\n    public void register(@RequestBody RegisterUserRequest request) {\n        // manual validation\n        if (request.getUsername() == null || request.getUsername().isEmpty()) {\n            throw new IllegalArgumentException(\"username required\");\n        }\n    }\n}\n",
+        "language": "JAVA"
+      }
+    },
+    {
+      "content": "Name controller classes with Controller suffix and map base path with @RequestMapping or composed annotations.",
+      "examples": {
+        "positive": "import org.springframework.web.bind.annotation.GetMapping;\nimport org.springframework.web.bind.annotation.RequestMapping;\nimport org.springframework.web.bind.annotation.RestController;\n\n@RestController\n@RequestMapping(\"/orders\")\npublic class OrderController {\n\n    @GetMapping\n    public String list() {\n        return \"orders\";\n    }\n}\n",
+        "negative": "import org.springframework.web.bind.annotation.GetMapping;\nimport org.springframework.web.bind.annotation.RestController;\n\n@RestController\npublic class OrderApi {\n\n    @GetMapping(\"/orders\")\n    public String list() {\n        return \"orders\";\n    }\n}\n",
+        "language": "JAVA"
+      }
+    },
+    {
+      "content": "Expose Spring Data repositories as interfaces extending Repository types, not concrete classes.",
+      "examples": {
+        "positive": "import org.springframework.data.jpa.repository.JpaRepository;\n\npublic interface CustomerRepository extends JpaRepository<Customer, Long> {\n    Customer findByEmail(String email);\n}\n",
+        "negative": "import java.util.Optional;\n\npublic class CustomerRepository {\n\n    public Optional<Customer> findById(Long id) {\n        // manual JPA code\n        return Optional.empty();\n    }\n\n    public Customer save(Customer customer) {\n        // manual JPA code\n        return customer;\n    }\n}\n",
+        "language": "JAVA"
+      }
+    },
+    {
+      "content": "Use @SpringBootTest for integration tests and slice annotations for focused tests.",
+      "examples": {
+        "positive": "import org.junit.jupiter.api.Test;\nimport org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;\nimport org.springframework.boot.test.context.SpringBootTest;\n\n@SpringBootTest\nclass ApplicationIntegrationTest {\n\n    @Test\n    void contextLoads() {\n    }\n}\n\n@WebMvcTest(controllers = OrderController.class)\nclass OrderControllerTest {\n\n    @Test\n    void listReturnsOk() {\n    }\n}\n",
+        "negative": "import org.junit.jupiter.api.Test;\nimport org.springframework.boot.test.context.SpringBootTest;\n\n@SpringBootTest\nclass OrderControllerTest {\n\n    @Test\n    void listReturnsOk() {\n        // only MVC layer needed, full context started\n    }\n}\n",
+        "language": "JAVA"
+      }
+    },
+    {
+      "content": "Externalize configuration in application.yml or application.properties and access via @ConfigurationProperties classes.",
+      "examples": {
+        "positive": "import org.springframework.boot.context.properties.ConfigurationProperties;\nimport org.springframework.stereotype.Component;\n\n@Component\n@ConfigurationProperties(prefix = \"payment\")\npublic class PaymentProperties {\n    private String provider;\n    private String apiKey;\n    // getters and setters\n}\n\n// application.yml\n// payment:\n//   provider: stripe\n//   apiKey: example-key\n",
+        "negative": "import org.springframework.stereotype.Service;\n\n@Service\npublic class PaymentService {\n\n    private static final String PROVIDER = \"stripe\";\n    private static final String API_KEY = \"example-key\";\n}\n",
+        "language": "JAVA"
+      }
+    }
+  ]
+}

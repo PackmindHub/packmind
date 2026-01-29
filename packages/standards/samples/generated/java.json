@@ -1,0 +1,87 @@
+{
+  "name": "Java Best Practices",
+  "description": "A concise standard for consistent Java code covering naming, structure, exceptions, immutability, collections, testing, documentation, and common object-oriented patterns.",
+  "scope": "Java source files",
+  "rules": [
+    {
+      "content": "Name classes and interfaces in PascalCase nouns, using singular form for types representing a single entity.",
+      "examples": {
+        "positive": "public class OrderService {}\npublic interface PaymentGateway {}\npublic class User {}\n",
+        "negative": "public class order_service {}\npublic interface payment_gateway {}\npublic class Users {}\n",
+        "language": "JAVA"
+      }
+    },
+    {
+      "content": "Use lowerCamelCase for methods and variables, starting with a verb for methods and a noun for fields.",
+      "examples": {
+        "positive": "public class UserService {\n    private String userName;\n\n    public String findUserName() {\n        String fullName = \"John Doe\";\n        return fullName;\n    }\n}\n",
+        "negative": "public class UserService {\n    private String User_name;\n\n    public String Find_user_Name() {\n        String Full_Name = \"John Doe\";\n        return Full_Name;\n    }\n}\n",
+        "language": "JAVA"
+      }
+    },
+    {
+      "content": "Declare method parameters and local variables as final when they are not reassigned.",
+      "examples": {
+        "positive": "public int add(final int a, final int b) {\n    final int sum = a + b;\n    return sum;\n}\n",
+        "negative": "public int add(int a, int b) {\n    int sum = a + b;\n    sum = sum + 0;\n    return sum;\n}\n",
+        "language": "JAVA"
+      }
+    },
+    {
+      "content": "Use checked exceptions for recoverable conditions and unchecked exceptions for programming errors.",
+      "examples": {
+        "positive": "public void readConfig(Path path) throws IOException {\n    Files.readAllLines(path);\n}\n\npublic int divide(int a, int b) {\n    if (b == 0) {\n        throw new IllegalArgumentException(\"b must not be zero\");\n    }\n    return a / b;\n}\n",
+        "negative": "public void readConfig(Path path) {\n    try {\n        Files.readAllLines(path);\n    } catch (IOException e) {\n        throw new RuntimeException(e);\n    }\n}\n\npublic int divide(int a, int b) throws Exception {\n    return a / b;\n}\n",
+        "language": "JAVA"
+      }
+    },
+    {
+      "content": "Prefer interfaces over concrete classes for method parameters, fields, and return types when depending on behavior.",
+      "examples": {
+        "positive": "public class ReportService {\n    private final List<String> items;\n\n    public ReportService(List<String> items) {\n        this.items = items;\n    }\n\n    public Collection<String> getItems() {\n        return items;\n    }\n}\n",
+        "negative": "public class ReportService {\n    private final ArrayList<String> items;\n\n    public ReportService(ArrayList<String> items) {\n        this.items = items;\n    }\n\n    public ArrayList<String> getItems() {\n        return items;\n    }\n}\n",
+        "language": "JAVA"
+      }
+    },
+    {
+      "content": "Use constructors or static factory methods instead of public setters for required immutable state.",
+      "examples": {
+        "positive": "public final class User {\n    private final String id;\n    private final String email;\n\n    public User(String id, String email) {\n        this.id = id;\n        this.email = email;\n    }\n\n    public String getId() { return id; }\n    public String getEmail() { return email; }\n}\n",
+        "negative": "public class User {\n    private String id;\n    private String email;\n\n    public User() {}\n\n    public void setId(String id) { this.id = id; }\n    public void setEmail(String email) { this.email = email; }\n}\n",
+        "language": "JAVA"
+      }
+    },
+    {
+      "content": "Use generics for collections and APIs instead of raw types.",
+      "examples": {
+        "positive": "public class UserRepository {\n    private final List<User> users = new ArrayList<>();\n\n    public List<User> findAll() {\n        return Collections.unmodifiableList(users);\n    }\n}\n",
+        "negative": "public class UserRepository {\n    @SuppressWarnings(\"rawtypes\")\n    private final List users = new ArrayList();\n\n    public List findAll() {\n        return users;\n    }\n}\n",
+        "language": "JAVA"
+      }
+    },
+    {
+      "content": "Use try-with-resources for Closeable or AutoCloseable resources instead of manual finally blocks.",
+      "examples": {
+        "positive": "public String readFirstLine(Path path) throws IOException {\n    try (BufferedReader reader = Files.newBufferedReader(path)) {\n        return reader.readLine();\n    }\n}\n",
+        "negative": "public String readFirstLine(Path path) throws IOException {\n    BufferedReader reader = null;\n    try {\n        reader = Files.newBufferedReader(path);\n        return reader.readLine();\n    } finally {\n        if (reader != null) {\n            reader.close();\n        }\n    }\n}\n",
+        "language": "JAVA"
+      }
+    },
+    {
+      "content": "Annotate public classes and public methods with Javadoc describing purpose, parameters, return values, and thrown exceptions.",
+      "examples": {
+        "positive": "/**\n * Service for managing users.\n */\npublic class UserService {\n\n    /**\n     * Finds a user by identifier.\n     *\n     * @param id user identifier\n     * @return user with given identifier\n     * @throws UserNotFoundException when no user exists\n     */\n    public User findById(String id) throws UserNotFoundException {\n        return new User(id);\n    }\n}\n",
+        "negative": "public class UserService {\n    public User findById(String id) {\n        return new User(id);\n    }\n}\n",
+        "language": "JAVA"
+      }
+    },
+    {
+      "content": "Structure unit tests using Arrange-Act-Assert with descriptive method names and one logical assertion group per test.",
+      "examples": {
+        "positive": "class UserServiceTest {\n\n    @Test\n    void findById_returnsExistingUser() {\n        // Arrange\n        UserRepository repository = new InMemoryUserRepository();\n        repository.save(new User(\"123\"));\n        UserService service = new UserService(repository);\n\n        // Act\n        User result = service.findById(\"123\");\n\n        // Assert\n        assertNotNull(result);\n        assertEquals(\"123\", result.getId());\n    }\n}\n",
+        "negative": "class UserServiceTest {\n\n    @Test\n    void test1() {\n        UserService service = new UserService(null);\n        assertNotNull(service);\n        User u = service.findById(\"123\");\n        assertNull(u);\n        u = service.findById(\"456\");\n        assertNotNull(u);\n    }\n}\n",
+        "language": "JAVA"
+      }
+    }
+  ]
+}
