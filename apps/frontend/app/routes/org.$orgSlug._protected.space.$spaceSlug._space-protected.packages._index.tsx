@@ -13,7 +13,7 @@ export default function PackagesRouteModule() {
   return (
     <PMPage
       title="Packages"
-      subtitle="View all packages in this space"
+      subtitle="Organize and distribute your playbook artifacts across your repositories."
       breadcrumbComponent={<AutobreadCrumb />}
       actions={
         <Link to={routes.space.toCreatePackage(orgSlug, spaceSlug)}>
