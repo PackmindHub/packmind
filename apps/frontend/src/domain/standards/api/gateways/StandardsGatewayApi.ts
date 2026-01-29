@@ -11,11 +11,14 @@ import {
   Rule,
   IListStandardsBySpaceUseCase,
   IGetStandardByIdUseCase,
+  ICreateStandardSamplesUseCase,
   SpaceId,
   ListStandardsBySpaceResponse,
   ListStandardsBySpaceCommand,
   GetStandardByIdCommand,
   GetStandardByIdResponse,
+  CreateStandardSamplesCommand,
+  CreateStandardSamplesResponse,
 } from '@packmind/types';
 import { PackmindGateway } from '../../../../shared/PackmindGateway';
 import { IStandardsGateway } from './IStandardsGateway';
@@ -133,4 +136,16 @@ export class StandardsGatewayApi
       },
     );
   }
+
+  createStandardsFromSamples: NewGateway<ICreateStandardSamplesUseCase> =
+    async ({
+      organizationId,
+      spaceId,
+      samples,
+    }: NewPackmindCommandBody<CreateStandardSamplesCommand>) => {
+      return this._api.post<CreateStandardSamplesResponse>(
+        `/organizations/${organizationId}/spaces/${spaceId}/standards/samples`,
+        { samples },
+      );
+    };
 }

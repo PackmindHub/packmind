@@ -2,7 +2,13 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useParams } from 'react-router';
 
 import { standardsGateway } from '../gateways';
-import { OrganizationId, RuleId, StandardId, SpaceId } from '@packmind/types';
+import {
+  OrganizationId,
+  RuleId,
+  StandardId,
+  SpaceId,
+  SampleInput,
+} from '@packmind/types';
 import {
   GET_STANDARDS_DEPLOYMENT_OVERVIEW_KEY,
   LIST_PACKAGES_BY_SPACE_KEY,
@@ -328,6 +334,47 @@ export const useDeleteStandardMutation = () => {
     },
     onError: async (error, variables, context) => {
       console.error('Error deleting standard');
+      console.log('error: ', error);
+      console.log('variables: ', variables);
+      console.log('context: ', context);
+    },
+  });
+};
+
+const CREATE_STANDARDS_FROM_SAMPLES_MUTATION_KEY = 'createStandardsFromSamples';
+
+export const useCreateStandardsFromSamplesMutation = () => {
+  const queryClient = useQueryClient();
+  const { spaceId } = useCurrentSpace();
+  const { organization } = useAuthContext();
+
+  return useMutation({
+    mutationKey: [CREATE_STANDARDS_FROM_SAMPLES_MUTATION_KEY],
+    mutationFn: async (samples: SampleInput[]) => {
+      if (!organization?.id || !spaceId) {
+        throw new Error('Organization and space context required');
+      }
+      return standardsGateway.createStandardsFromSamples({
+        organizationId: organization.id,
+        spaceId,
+        samples,
+      });
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
+        queryKey: getStandardsBySpaceKey(spaceId),
+      });
+
+      await queryClient.invalidateQueries({
+        queryKey: GET_STANDARDS_DEPLOYMENT_OVERVIEW_KEY,
+      });
+
+      await queryClient.invalidateQueries({
+        queryKey: [GET_ONBOARDING_STATUS_KEY],
+      });
+    },
+    onError: async (error, variables, context) => {
+      console.error('Error creating standards from samples');
       console.log('error: ', error);
       console.log('variables: ', variables);
       console.log('context: ', context);
