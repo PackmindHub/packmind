@@ -387,4 +387,123 @@ describe('OrganizationService', () => {
       expect(result).toEqual(expectedOrganizations);
     });
   });
+
+  describe('.renameOrganization', () => {
+    const organizationId = createOrganizationId(
+      '123e4567-e89b-12d3-a456-426614174000',
+    );
+    const organization = organizationFactory({
+      id: organizationId,
+      name: 'Original Name',
+      slug: 'original-name',
+    });
+
+    describe('when renaming with no slug conflict', () => {
+      beforeEach(() => {
+        mockSlug.mockReturnValue('new-name');
+        mockOrganizationRepository.findBySlug.mockResolvedValue(null);
+        mockOrganizationRepository.add.mockImplementation(async (org) => org);
+      });
+
+      it('updates organization name', async () => {
+        const result = await organizationService.renameOrganization(
+          organization,
+          'New Name',
+        );
+
+        expect(result.name).toBe('New Name');
+      });
+
+      it('updates organization slug', async () => {
+        const result = await organizationService.renameOrganization(
+          organization,
+          'New Name',
+        );
+
+        expect(result.slug).toBe('new-name');
+      });
+
+      it('preserves organization id', async () => {
+        const result = await organizationService.renameOrganization(
+          organization,
+          'New Name',
+        );
+
+        expect(result.id).toBe(organizationId);
+      });
+
+      it('saves organization to repository', async () => {
+        await organizationService.renameOrganization(organization, 'New Name');
+
+        expect(mockOrganizationRepository.add).toHaveBeenCalledWith({
+          id: organizationId,
+          name: 'New Name',
+          slug: 'new-name',
+        });
+      });
+    });
+
+    describe('when renaming to name that generates same slug as current', () => {
+      beforeEach(() => {
+        mockSlug.mockReturnValue('original-name');
+        mockOrganizationRepository.findBySlug.mockResolvedValue(organization);
+        mockOrganizationRepository.add.mockImplementation(async (org) => org);
+      });
+
+      it('allows the rename', async () => {
+        const result = await organizationService.renameOrganization(
+          organization,
+          'Original Name Updated',
+        );
+
+        expect(result.slug).toBe('original-name');
+      });
+
+      it('saves organization to repository', async () => {
+        await organizationService.renameOrganization(
+          organization,
+          'Original Name Updated',
+        );
+
+        expect(mockOrganizationRepository.add).toHaveBeenCalled();
+      });
+    });
+
+    describe('when new slug conflicts with another organization', () => {
+      const conflictingOrg = organizationFactory({
+        id: createOrganizationId('123e4567-e89b-12d3-a456-426614174001'),
+        name: 'Conflicting Org',
+        slug: 'conflicting-name',
+      });
+
+      beforeEach(() => {
+        mockSlug.mockReturnValue('conflicting-name');
+        mockOrganizationRepository.findBySlug.mockResolvedValue(conflictingOrg);
+      });
+
+      it('throws OrganizationSlugConflictError', async () => {
+        await expect(
+          organizationService.renameOrganization(
+            organization,
+            'Conflicting Name',
+          ),
+        ).rejects.toThrow(
+          'An organization with a similar name already exists. The name "Conflicting Name" conflicts with an existing organization when converted to URL-friendly format.',
+        );
+      });
+
+      it('does not save organization to repository', async () => {
+        try {
+          await organizationService.renameOrganization(
+            organization,
+            'Conflicting Name',
+          );
+        } catch {
+          // Expected to throw
+        }
+
+        expect(mockOrganizationRepository.add).not.toHaveBeenCalled();
+      });
+    });
+  });
 });
