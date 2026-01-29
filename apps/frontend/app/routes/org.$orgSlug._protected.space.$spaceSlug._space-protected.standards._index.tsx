@@ -15,6 +15,7 @@ import { StandardsList } from '../../src/domain/standards/components/StandardsLi
 import { StandardSamplesModal } from '../../src/domain/standards/components/StandardSamplesModal';
 import { AutobreadCrumb } from '../../src/shared/components/navigation/AutobreadCrumb';
 import { routes } from '../../src/shared/utils/routes';
+import { useAnalytics } from '@packmind/proprietary/frontend/domain/amplitude/providers/AnalyticsProvider';
 
 export default function OrgStandardsIndex() {
   const { orgSlug, spaceSlug } = useParams<{
@@ -23,6 +24,7 @@ export default function OrgStandardsIndex() {
   }>();
   const { organization, user } = useAuthContext();
   const [isSamplesModalOpen, setIsSamplesModalOpen] = useState(false);
+  const analytics = useAnalytics();
 
   const hasSamplesAccess = isFeatureFlagEnabled({
     featureKeys: [STANDARD_SAMPLES_FEATURE_KEY],
@@ -61,7 +63,13 @@ export default function OrgStandardsIndex() {
                   </PMMenu.Item>
                   <PMMenu.Item
                     value="samples"
-                    onClick={() => setIsSamplesModalOpen(true)}
+                    onClick={() => {
+                      analytics.track(
+                        'create_standard_from_samples_clicked',
+                        {},
+                      );
+                      setIsSamplesModalOpen(true);
+                    }}
                   >
                     From samples
                   </PMMenu.Item>

@@ -1,0 +1,135 @@
+---
+title: 'Set Up Your Project with Onboarding'
+---
+
+## Overview
+
+Packmind's onboarding feature automatically scans your project, detects your technologies and coding patterns, and generates tailored standards and commands in minutes. Instead of manually creating standards from scratch, Packmind analyzes your existing code and practices to create a foundation you can refine.
+
+This is the fastest way to get Packmind working in your project.
+
+## Prerequisites
+
+- Packmind CLI installed and configured
+- Logged in with `packmind-cli login`
+- A Git repository in your project
+
+## Quick Start
+
+Run this single command in your project directory:
+
+```bash
+packmind-cli init
+```
+
+This will:
+
+1. Install Packmind's default skills to your AI agent configuration
+2. Scan your project for technologies, frameworks, and patterns
+3. Generate coding standards based on detected conventions
+4. Generate workflow commands for your framework
+5. Show you a preview of everything that will be created
+6. Ask for confirmation before writing files
+
+Once confirmed, Packmind writes standards to `.packmind/` and skills to `.claude/skills/` (or equivalent for your AI agent).
+
+## What Gets Generated
+
+Based on your project's technologies, you'll get:
+
+**Standards** (in `.packmind/standards/`)
+
+- Language-specific conventions (TypeScript, Python, Java, etc.)
+- Framework best practices (React, NestJS, Spring Boot, etc.)
+- Rules extracted from your existing code documentation
+
+**Commands** (in `.packmind/commands/`)
+
+- Framework-specific workflows ("create component", "add API endpoint", etc.)
+- Project-specific patterns your team follows
+
+**Skills** (installed to your AI agent)
+
+- Project overview with your full technology stack
+- Debugging guides for your testing framework
+- Framework-specific coding assistance
+
+## Common Workflows
+
+### Preview Before Applying
+
+Want to see what will be generated without writing anything?
+
+```bash
+packmind-cli init --dry-run
+```
+
+This shows the preview without creating files, so you can review before committing.
+
+### Auto-Approve for CI/CD
+
+Automate onboarding in your deployment pipeline:
+
+```bash
+packmind-cli init --yes
+```
+
+Skips all confirmation prompts and applies all changes automatically.
+
+### Push to Your Team
+
+Generate standards and commands, then share them with your team via Packmind:
+
+```bash
+packmind-cli init --push
+```
+
+This automatically uploads generated standards and commands to your Packmind organization, making them available to all team members.
+
+### Only Install Skills (Skip Scanning)
+
+If you only want Packmind's default skills without scanning your project:
+
+```bash
+packmind-cli init --skip-onboard
+```
+
+### Regenerate After Changes
+
+After updating your codebase or frameworks, rescan and regenerate content:
+
+```bash
+packmind-cli onboard
+```
+
+This re-scans your project and regenerates all standards and commands based on current patterns.
+
+## Next Steps
+
+Once onboarding completes:
+
+1. **Review generated standards** in `.packmind/standards/` — edit and refine as needed
+2. **Review generated commands** in `.packmind/commands/` — customize for your team's workflows
+3. **Test in your AI agent** — use the new skills and standards immediately in Claude Code, Cursor, or other supported agents
+4. **Iterate** — run `packmind-cli onboard` again anytime your project changes significantly
+
+## Troubleshooting
+
+**Q: Init command hangs or times out**
+
+A: Large projects can take longer to scan. Use `--dry-run` first to see scanning progress, or manually specify which directories to scan with future onboarding improvements.
+
+**Q: Generated standards don't match my project**
+
+A: This is expected for new projects. Onboarding is a starting point — review and customize the generated standards to match your actual conventions. Your edits will be preserved on future scans if you don't regenerate over them.
+
+**Q: Standards and commands won't push to backend**
+
+A: Ensure you've logged in with `packmind-cli login` and have network access to your Packmind instance. The `--push` flag requires valid credentials.
+
+## Related Documentation
+
+- [Create and customize standards](/getting-started/gs-create-standard)
+- [Create and customize commands](/getting-started/gs-create-command)
+- [Distribute standards and commands](/getting-started/gs-distribute)
+- [CLI Reference](/tools/cli) for all command options

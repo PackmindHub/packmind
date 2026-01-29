@@ -261,6 +261,7 @@ export class StandardsAdapter
     this._createStandardSamples = new CreateStandardSamplesUsecase(
       this.accountsPort,
       this,
+      this.eventEmitterService,
     );
 
     // Use case that depends on accountsPort, deploymentsPort, and spacesPort
