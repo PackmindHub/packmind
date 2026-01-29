@@ -1,4 +1,5 @@
 import { PackmindLogger } from '@packmind/logger';
+import { PackmindEventEmitterService } from '@packmind/node-utils';
 import { stubLogger } from '@packmind/test-utils';
 import {
   CreateStandardSamplesCommand,
@@ -8,6 +9,7 @@ import {
   Organization,
   OrganizationId,
   SpaceId,
+  StandardSampleSelectedEvent,
   User,
   UserId,
   createOrganizationId,
@@ -25,6 +27,7 @@ describe('CreateStandardSamplesUsecase', () => {
   let usecase: CreateStandardSamplesUsecase;
   let accountsPort: jest.Mocked<IAccountsPort>;
   let standardsPort: jest.Mocked<IStandardsPort>;
+  let eventEmitterService: jest.Mocked<PackmindEventEmitterService>;
   let stubbedLogger: jest.Mocked<PackmindLogger>;
 
   let testUserId: UserId;
@@ -65,11 +68,16 @@ describe('CreateStandardSamplesUsecase', () => {
       createStandardWithExamples: jest.fn(),
     } as unknown as jest.Mocked<IStandardsPort>;
 
+    eventEmitterService = {
+      emit: jest.fn(),
+    } as unknown as jest.Mocked<PackmindEventEmitterService>;
+
     stubbedLogger = stubLogger();
 
     usecase = new CreateStandardSamplesUsecase(
       accountsPort,
       standardsPort,
+      eventEmitterService,
       stubbedLogger,
     );
   });
@@ -212,6 +220,46 @@ describe('CreateStandardSamplesUsecase', () => {
       it('returns no errors', () => {
         expect(result.errors).toHaveLength(0);
       });
+
+      it('emits StandardSampleSelectedEvent for each sample', () => {
+        expect(eventEmitterService.emit).toHaveBeenCalledTimes(2);
+      });
+
+      it('emits event with correct payload for java sample', () => {
+        expect(eventEmitterService.emit).toHaveBeenCalledWith(
+          expect.objectContaining({
+            payload: expect.objectContaining({
+              sampleId: 'java',
+              sampleType: 'language',
+              spaceId: testSpaceId,
+              organizationId: testOrganizationId,
+              userId: testUserId,
+              source: 'ui',
+            }),
+          }),
+        );
+      });
+
+      it('emits event with correct payload for spring sample', () => {
+        expect(eventEmitterService.emit).toHaveBeenCalledWith(
+          expect.objectContaining({
+            payload: expect.objectContaining({
+              sampleId: 'spring',
+              sampleType: 'framework',
+              spaceId: testSpaceId,
+              organizationId: testOrganizationId,
+              userId: testUserId,
+              source: 'ui',
+            }),
+          }),
+        );
+      });
+
+      it('emits StandardSampleSelectedEvent instances', () => {
+        expect(eventEmitterService.emit).toHaveBeenCalledWith(
+          expect.any(StandardSampleSelectedEvent),
+        );
+      });
     });
 
     describe('when sample file does not exist', () => {
@@ -248,6 +296,10 @@ describe('CreateStandardSamplesUsecase', () => {
 
       it('does not call createStandardWithExamples', () => {
         expect(standardsPort.createStandardWithExamples).not.toHaveBeenCalled();
+      });
+
+      it('still emits event for each sample', () => {
+        expect(eventEmitterService.emit).toHaveBeenCalledTimes(1);
       });
     });
 
@@ -430,6 +482,10 @@ describe('CreateStandardSamplesUsecase', () => {
 
       it('does not call createStandardWithExamples', () => {
         expect(standardsPort.createStandardWithExamples).not.toHaveBeenCalled();
+      });
+
+      it('does not emit any events', () => {
+        expect(eventEmitterService.emit).not.toHaveBeenCalled();
       });
     });
 
