@@ -3,44 +3,53 @@ import { ISkillDeployer } from './IDefaultSkillDeployer';
 
 function getOnboardSkillMd(): string {
   return `---
-name: 'packmind-onboard'
-description: "Read-only codebase analysis to identify non-linter architectural patterns and generate draft Packmind Standards and Commands."
-license: 'Complete terms in LICENSE.txt'
+name: "packmind-onboard"
+description: "Read-only source scan to find non-linter codebase conventions and generate a human-readable findings report + draft Packmind Standards/Commands."
+license: "Complete terms in LICENSE.txt"
 ---
 
 # packmind-onboard
 
-Action skill. Performs **read-only** repository analysis to discover **non-obvious, non-linter** patterns ("exotic insights"), then drafts **Standards** and **Commands** aligned with the codebase's real conventions.
+Action skill. Scans a repository (source-code read-only) to find **non-linter** patterns (architecture, boundaries, workflows) and generates:
+1) a **human-readable findings report** saved to the repo, and
+2) draft **Standards** and **Commands** derived strictly from those findings.
 
 ## Guarantees
 
-- **Read-only by default.** No files are written unless the user explicitly chooses to apply.
-- **Preserve existing.** Never overwrite existing artifacts. If a slug already exists, create \`-2\`, \`-3\`, etc.
-- **Evidence required.** Every reported insight must include file-path evidence (and line ranges when feasible).
-- **Focused output.** Max **5 Standards** and **5 Commands** generated per run.
+- **Source-code read-only.** No source files are modified.
+- **Findings report is written automatically.** A single markdown report is saved for reading/sharing.
+- **Publish only on Apply.** No Packmind artifacts are created unless the user chooses **Apply**.
+- **Never overwrite.** If a target slug/path exists, append \`-2\`, \`-3\`, etc.
+- **Evidence required.** Every finding includes file-path evidence (include line ranges unless impossible).
+- **Actionable output cap.** Max **5 Standards** and **5 Commands** per run.
 
 ## Definitions
 
-- **Exotic insight:** a pattern a linter cannot reliably enforce (architecture, module boundaries, workflow gaps, cross-module conventions).
-- **Evidence:** list of file paths; when feasible include line ranges or minimal snippets (≤10 lines total per insight).
-- **Dominant pattern:** ≥60% of observations OR at least 2× the next most common pattern.
+- **Pattern (non-linter):** a convention a linter cannot reliably enforce (module boundaries, cross-domain communication, workflow parity, error semantics, etc).
+- **Evidence:** \`path[:line-line]\` entries; omit line ranges only when the file isn't text-searchable.
+
+---
 
 ## Step 1 — Mode Selection
 
-Present the user with two onboarding modes using AskUserQuestion:
+Present two modes using AskUserQuestion:
 
-- **Quick** - Fast analysis (~4 checks), basic standards & commands. Best for getting started quickly or smaller codebases.
-- **Optimal** - Deep analysis (17 checks), comprehensive insights. Best for thorough understanding or larger codebases.
+- **Quick** — Fast scan (≈2–5 min). Generates a small starter set of Standards/Commands.
+- **Optimal** — Deep scan (≈10–20 min). More cross-module patterns + better evidence coverage.
 
 Wait for user selection before proceeding.
+
+---
 
 ## Step 2 — Announce
 
 Print exactly:
 
 \`\`\`
-packmind-onboard: analyzing codebase (read-only) — [QUICK|OPTIMAL] mode...
+packmind-onboard: read-only scan started — MODE=[QUICK|OPTIMAL] (you'll get insights + draft Standards/Commands)
 \`\`\`
+
+---
 
 ## Step 3 — Detect Existing Packmind and Agent Configuration
 
@@ -58,18 +67,23 @@ Glob for markdown in these roots (recursive):
 Classify found files into counts:
 - **standards**: \`.packmind/standards/**/*.md\`
 - **commands**: \`.packmind/commands/**/*.md\`
-- **agent_md**: any markdown under \`.claude/\`, \`.agents/\`, or any \`skills/\` or \`rules/\` directory outside \`.packmind\`
+- **other_docs**: any markdown under \`.claude/\`, \`.agents/\`, or any \`skills/\` or \`rules/\` directory outside \`.packmind\`
 
-If any exist, print:
+If any exist, print exactly:
 
 \`\`\`
-Found existing configuration:
-  - [N] standards
-  - [M] commands
-  - [P] agent docs
+Existing Packmind/agent docs detected:
 
-These will be preserved. New artifacts will be added alongside them.
+    Standards: [N]
+
+    Commands: [M]
+
+    Other docs: [P]
 \`\`\`
+
+No overwrites. New files (if you Export) will be added next to the existing ones.
+
+---
 
 ## Step 4 — Detect Project Stack (Minimal, Evidence-Based)
 
@@ -88,78 +102,106 @@ These will be preserved. New artifacts will be added alongside them.
 - Layered/MVC: \`src/controllers/\`, \`src/services/\`
 - Monorepo: \`packages/\`, \`apps/\`
 
-Output a short stack summary:
-- languages detected
-- monorepo vs single package
-- any architecture marker match
+Print exactly:
+
+\`\`\`
+Stack detected (heuristic):
+
+    Languages: [..]
+
+    Repo shape: [monorepo|single]
+
+    Architecture markers: [..|none]
+\`\`\`
+
+---
 
 ## Step 5 — Run Analyses
 
-Select and run analyses based on the chosen mode. Read each reference file for detailed search patterns, thresholds, and insight templates.
+Select and run analyses based on chosen mode. Read each reference file for detailed search patterns, thresholds, and insight templates.
 
 ### Quick Mode Analyses (4 checks)
 
-Run only these analyses for fast, high-value insights:
-
-| Analysis | Reference File | Focus |
-|----------|---------------|-------|
-| File Template Consistency | \`references/file-template-consistency.md\` | Scaffolding patterns → Commands |
-| CI/Local Workflow Parity | \`references/ci-local-workflow-parity.md\` | CI steps vs local scripts → Commands |
-| Role Taxonomy Drift | \`references/role-taxonomy-drift.md\` | Service/Handler/UseCase meanings → Standards |
-| Test Data Construction | \`references/test-data-construction.md\` | Factories, fixtures, inline → Standards |
+| Analysis | Reference File | Output focus |
+|----------|----------------|--------------|
+| File Template Consistency | \`references/file-template-consistency.md\` | Commands |
+| CI/Local Workflow Parity | \`references/ci-local-workflow-parity.md\` | Commands |
+| Role Taxonomy Drift | \`references/role-taxonomy-drift.md\` | Standards |
+| Test Data Construction | \`references/test-data-construction.md\` | Standards |
 
 ### Optimal Mode Analyses (17 checks)
 
-Run all analyses for comprehensive insights:
+| Analysis | Reference File |
+|----------|----------------|
+| File Template Consistency | \`references/file-template-consistency.md\` |
+| CI/Local Workflow Parity | \`references/ci-local-workflow-parity.md\` |
+| Role Taxonomy Drift | \`references/role-taxonomy-drift.md\` |
+| Test Data Construction | \`references/test-data-construction.md\` |
+| Cross-Domain Communication | \`references/cross-domain-communication.md\` |
+| Module Boundaries | \`references/module-boundaries-dependencies.md\` |
+| Shared Kernel Drift | \`references/shared-kernel-drift.md\` |
+| Public API Discipline | \`references/public-api-deep-imports.md\` |
+| Error Semantics | \`references/error-semantics.md\` |
+| Data Boundary Leakage | \`references/data-boundary-leakage.md\` |
+| Transaction Conventions | \`references/transaction-atomicity.md\` |
+| Concurrency Style | \`references/concurrency-style.md\` |
+| Config/Feature Flags | \`references/config-feature-flags.md\` |
+| Observability Contract | \`references/observability-contract.md\` |
+| Authorization Boundaries | \`references/authorization-boundary.md\` |
+| Schema Generation Boundary | \`references/schema-generation-boundary.md\` |
+| Cross-Cutting Hotspots | \`references/cross-cutting-hotspots.md\` |
 
-| Analysis | Reference File | Focus |
-|----------|---------------|-------|
-| File Template Consistency | \`references/file-template-consistency.md\` | Scaffolding patterns |
-| CI/Local Workflow Parity | \`references/ci-local-workflow-parity.md\` | CI steps vs local scripts |
-| Role Taxonomy Drift | \`references/role-taxonomy-drift.md\` | Service/Handler/UseCase meanings |
-| Test Data Construction | \`references/test-data-construction.md\` | Factories, fixtures, inline |
-| Cross-Domain Communication | \`references/cross-domain-communication.md\` | Events vs direct coupling |
-| Module Boundaries | \`references/module-boundaries-dependencies.md\` | Dependency violations |
-| Shared Kernel Drift | \`references/shared-kernel-drift.md\` | Utils as gravity wells |
-| Public API Discipline | \`references/public-api-deep-imports.md\` | Entrypoint vs deep imports |
-| Error Semantics | \`references/error-semantics.md\` | Exception vs Result vs sentinel |
-| Data Boundary Leakage | \`references/data-boundary-leakage.md\` | ORM/DTO in core logic |
-| Transaction Conventions | \`references/transaction-atomicity.md\` | Multi-write coordination |
-| Concurrency Style | \`references/concurrency-style.md\` | Async model consistency |
-| Config/Feature Flags | \`references/config-feature-flags.md\` | Centralized vs scattered |
-| Observability Contract | \`references/observability-contract.md\` | Logging, tracing, context |
-| Authorization Boundaries | \`references/authorization-boundary.md\` | Authz check placement |
-| Schema Generation Boundary | \`references/schema-generation-boundary.md\` | Generated code discipline |
-| Cross-Cutting Hotspots | \`references/cross-cutting-hotspots.md\` | God files, high coupling |
-
-### Analysis Selection Strategy
-
-**Quick mode:**
-- Run all 4 Quick Mode analyses
-- Skip conditional checks — focus on speed
-
-**Optimal mode:**
-1. **Always run**: All 17 analyses listed above
-2. **Run if detected**: Additional depth for analyses matching detected stack
-3. **Run on request**: Extra detail if user asks
-
-### Output Schema (use for every insight)
+### Output schema (internal; do not print as-is to user)
+For every finding, keep an internal record:
 
 \`\`\`
 INSIGHT:
-  id: [PREFIX]-[n]
-  title: ...
-  summary: ...
-  confidence: [high|medium|low]
-  evidence:
-    - path[:line-line]
-  exceptions:
-    - path[:line-line]
+title: ...
+why_it_matters: ...
+confidence: [high|medium|low]
+evidence:
+- path[:line-line]
+where_it_doesnt_apply:
+- path[:line-line]
 \`\`\`
 
-## Step 6 — Generate Draft Artifacts (Max 5 each)
+---
 
-Generate artifacts **only from reported exotic insights**.
+## Step 6 — Write Findings Report (always)
+
+Write a human-readable markdown report to:
+
+- \`.packmind/reports/onboard-findings-[quick|optimal].md\`
+- Never overwrite. If exists, write \`...-2.md\`, \`...-3.md\`, etc.
+
+### Report content (human-readable; ready to read)
+Must include these sections in this order:
+
+1. **Title**: \`Packmind Onboard Findings — MODE=[QUICK|OPTIMAL]\`
+2. **Context**
+   - timestamp
+   - stack summary (from Step 4)
+   - existing artifacts counts (from Step 3)
+3. **Findings (non-linter patterns)**
+   For each finding:
+   - **Title**
+   - **What we saw**
+   - **Why it matters**
+   - **Evidence**: list of paths (include line ranges unless impossible)
+   - **Where it doesn't apply** (optional)
+4. **Drafts generated**
+   - Standards: list of name + one-line summary
+   - Commands: list of name + one-line summary
+5. **Appendix (optional)**
+   - internal \`INSIGHT\` blocks (machine-friendly)
+
+---
+
+## Step 7 — Generate Draft Artifacts (Max 5 each)
+
+Generate drafts **only from the findings** (no extra invention). Cap output:
+- Max 5 Standards
+- Max 5 Commands
 
 ### Standard format (draft)
 
@@ -182,7 +224,7 @@ rules:
 \`\`\`yaml
 name: "..."
 summary: "..."
-why_now: "..."
+why_now: "Derived from observed repo patterns"
 evidence:
   - path[:line-line]
 contextValidationCheckpoints:
@@ -193,70 +235,77 @@ steps:
       ...
 \`\`\`
 
-## Step 7 — Present Results
+---
 
-Present a summary of findings:
+## Step 8 — CLI Preflight (before offering Apply)
+
+Check that Packmind CLI can publish artifacts:
+
+- CLI installed (call \`packmind --version\`)
+- Authenticated/session valid (CLI command appropriate for auth status)
+- Workspace/org context configured if required by CLI
+
+If preflight fails:
+
+- Do not offer Apply
+- Offer Export and Quit
+- Print exactly:
 
 \`\`\`
-============================================================
-  PACKMIND ONBOARDING RESULTS — [QUICK|OPTIMAL] MODE
-============================================================
-
-Existing configuration:
-  - [N] standards | [M] commands | [P] agent docs
-
-Stack detected: [languages], [monorepo?], [architecture markers]
-
-Analyses run: [N] checks
-
-INSIGHTS (exotic patterns only):
-  1. [Title]
-     evidence: [paths...]
-
-GENERATED ARTIFACTS (draft, max 5 each):
-  Standards ([N]):
-    * [Name] - [one-line summary]
-  Commands ([M]):
-    * [Name] - [one-line summary]
-
-============================================================
+Packmind CLI not ready: [reason]. Use Export or configure CLI then rerun.
 \`\`\`
 
-Then use AskUserQuestion to offer options:
-- **Apply** — Publish generated Standards/Commands to Packmind via CLI (no file writes).
-- **Export** — Write generated drafts into .packmind/standards/ + .packmind/commands/ (no overwrites; suffixes added).
-- **Preview** - Show full content of a specific artifact before deciding
-- **Quit** - Exit without taking action (report remains saved).
+---
 
-## Step 7.5 — CLI Preflight Check (before offering Apply)
+## Step 9 — Present Results (human-facing)
 
-**Check the following:**
-- Packmind CLI is installed and accessible
-- User is authenticated
-- Workspace/org context is set (if applicable)
+Print exactly:
 
-**If preflight fails:**
-- Hide the Apply option
-- Show only: Export, Preview, Quit
-- Print one line: \`Packmind CLI not ready: [reason]. Use Export or configure CLI then rerun.\`
+\`\`\`
+=== PACKMIND ONBOARD — MODE=[QUICK|OPTIMAL] ===
 
-## Step 8 — Handle Choice
+Existing artifacts found:
+  - Standards: [N] | Commands: [M] | Other docs: [P]
 
-**Apply (Publish via CLI):**
+Detected stack:
+  - Languages: [...]
+  - Repo: [monorepo|single]
+  - Architecture markers: [...]
 
-Behavior:
-- Convert generated draft artifacts (Standards + Commands) into payloads for Packmind CLI
-- Use idempotent keys to prevent duplicates:
-  - Query existing artifacts to check for slug collisions
-  - If same slug exists: create with \`-2\`, \`-3\`, etc. suffix (same as file system)
-- Call Packmind CLI create endpoints with the artifact data
+Full findings report saved to: .packmind/reports/[FILENAME].md
+
+Findings (non-linter patterns):
+  1) [Title] — confidence: [high|medium|low]
+     evidence: path:line-line, path:line-line
+
+Drafts generated (review before Apply):
+  - Standards ([N]): [Name], [Name], ...
+  - Commands  ([M]): [Name], [Name], ...
+\`\`\`
+
+Then use AskUserQuestion to offer options (based on CLI preflight):
+
+- **Apply** — Publish drafts to Packmind using the CLI (no repo writes)
+- **Preview** — Open sections from the saved findings report (instant; no regeneration)
+- **Export** — Write drafts into .packmind/standards/ + .packmind/commands/ (no overwrites)
+- **Quit** — Exit
+
+---
+
+## Step 10 — Handle Choice
+
+**Apply (Publish via Packmind CLI)**
+
+Publish the generated drafts to Packmind using CLI create commands.
 
 Rules:
-- Never overwrite in Packmind (suffix on collision)
-- If any publish fails, continue publishing the rest
-- Print a clear report of successes + failures
 
-Human-facing output (exact format):
+- Idempotent slugs: prefer explicit --slug if supported.
+- If slug exists in Packmind, create -2, -3, etc.
+- If one publish fails: continue publishing the rest; collect errors.
+- Do not regenerate drafts. Use already-generated content.
+
+Print exactly:
 
 \`\`\`
 Published to Packmind (via CLI):
@@ -267,18 +316,37 @@ Failures:
   - [type] [name] — [error summary]
 \`\`\`
 
-**Export (Write to repo files):**
-- Write new files:
-  - \`.packmind/standards/[slug].md\`
-  - \`.packmind/commands/[slug].md\`
-- Never overwrite. If slug exists, append \`-2\`, \`-3\`, etc.
-- Show exactly what was written (paths + titles).
+**Preview (Instant; from report)**
 
-**Preview:**
-- Show full content of selected artifact, then return to the options.
+- Show the requested section from \`.packmind/reports/[FILENAME].md\`
+- Do not rerun analyses
+- Return to the options
 
-**Quit:**
-- Print: \`Done. Run this skill again anytime.\`
+**Export (Repo files)**
+
+Write new files:
+
+- \`.packmind/standards/[slug].md\`
+- \`.packmind/commands/[slug].md\`
+
+Rules:
+
+- Never overwrite. If slug exists, append -2, -3, etc.
+- Print exactly:
+
+\`\`\`
+Written:
+  - .packmind/standards/[slug].md — [Title]
+  - .packmind/commands/[slug].md — [Title]
+\`\`\`
+
+**Quit**
+
+Print exactly:
+
+\`\`\`
+Done. Run this skill again anytime.
+\`\`\`
 `;
 }
 
