@@ -33,6 +33,9 @@ on:
       cli-executables-artifact:
         description: 'CLI executables artifact name'
         value: ${{ jobs.build-cli.outputs.cli-executables-artifact }}
+      standard-samples-artifact:
+        description: 'Standard samples artifact name'
+        value: ${{ jobs.build-packages.outputs.standard-samples-artifact }}
 
 jobs:
   build-api:
@@ -158,6 +161,8 @@ jobs:
 
   build-packages:
     runs-on: ${{ vars.ACTION_RUNNER_TAG || 'self-hosted' }}
+    outputs:
+      standard-samples-artifact: standard-samples-${{ vars.PACKMIND_EDITION }}-${{ github.run_number }}-${{ github.sha }}
     strategy:
       matrix:
         node-version: ['${{ inputs.node-version }}']
@@ -182,6 +187,13 @@ jobs:
         env:
           PACKMIND_EDITION: ${{ vars.PACKMIND_EDITION }}
         run: ./node_modules/.bin/nx run-many -t test -p packages/* --passWithNoTests
+
+      - name: Upload standard samples artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: standard-samples-${{ vars.PACKMIND_EDITION }}-${{ github.run_number }}-${{ github.sha }}
+          path: dist/packages/standards/samples/generated/
+          if-no-files-found: ignore
 
   build-cli:
     runs-on: ${{ vars.ACTION_RUNNER_TAG || 'self-hosted' }}
