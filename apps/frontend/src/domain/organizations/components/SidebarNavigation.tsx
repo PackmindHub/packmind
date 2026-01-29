@@ -138,7 +138,7 @@ export const SidebarNavigation: React.FunctionComponent<
         ]}
       />
       <PMVerticalNavSection
-        title="Deployments"
+        title="Distribution"
         navEntries={[
           <SidebarNavigationLink
             key="packages"
