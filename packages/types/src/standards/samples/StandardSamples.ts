@@ -157,6 +157,41 @@ const frameworkSamples: Sample[] = [
   },
 ];
 
+/**
+ * Maps language IDs to their associated framework display names.
+ * Used to exclude framework-specific rules when generating language samples.
+ * Only includes languages that have dedicated framework samples.
+ */
+export const languageToFrameworks: Record<string, string[]> = {
+  java: ['Spring Boot'],
+  python: ['Django', 'Flask', 'FastAPI'],
+  javascript: [
+    'React',
+    'Angular',
+    'Vue.js',
+    'Svelte',
+    'Next.js',
+    'Nuxt.js',
+    'Nest.js',
+    'Express.js',
+    'Meteor',
+    'Ionic',
+  ],
+  typescript: [
+    'React',
+    'Angular',
+    'Vue.js',
+    'Svelte',
+    'Next.js',
+    'Nuxt.js',
+    'Nest.js',
+    'Express.js',
+  ],
+  php: ['Laravel', 'Symfony', 'Zend Framework'],
+  ruby: ['Ruby on Rails'],
+  csharp: ['.NET Core'],
+};
+
 export const standardSamples = {
   languageSamples,
   frameworkSamples,
