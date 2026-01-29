@@ -200,6 +200,15 @@ export type IUploadSkillUseCase = IUseCase<
   UploadSkillCommand,
   UploadSkillResult
 >;
+// Track Linter Execution types
+export type TrackLinterExecutionCommand = {
+  targetCount: number;
+  standardCount: number;
+};
+
+export type TrackLinterExecution = (
+  command: TrackLinterExecutionCommand,
+) => Promise<void>;
 
 // Standard creation types (atomic)
 export type CreateStandardInSpaceCommand = {
@@ -266,6 +275,7 @@ export interface IPackmindGateway {
   notifyDistribution: NotifyDistributionGateway;
   uploadSkill: Gateway<IUploadSkillUseCase>;
   getDefaultSkills: Gateway<IGetDefaultSkillsUseCase>;
+  trackLinterExecution: TrackLinterExecution;
 
   // Atomic gateway for getGlobalSpace (used by createCommand and createStandard)
   getGlobalSpace(): Promise<GetGlobalSpaceResult>;

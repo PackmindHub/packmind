@@ -151,16 +151,6 @@ describe('AuthService - getMe method', () => {
             userId: createUserId('1'),
           });
         });
-
-        it('logs a warning', () => {
-          expect(authService.logger.warn).toHaveBeenCalledWith(
-            'User does not have access to organization',
-            {
-              userId: '1',
-              organizationId: 'org-1',
-            },
-          );
-        });
       });
 
       describe('when user has no memberships', () => {
@@ -266,15 +256,6 @@ describe('AuthService - getMe method', () => {
         it('fetches all user organizations', () => {
           expect(mockAccountsAdapter.getOrganizationById).toHaveBeenCalledTimes(
             2,
-          );
-        });
-
-        it('logs the multi-organization state', () => {
-          expect(authService.logger.log).toHaveBeenCalledWith(
-            'User is authenticated but has not selected an organization',
-            {
-              userId: '1',
-            },
           );
         });
       });

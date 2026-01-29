@@ -1,0 +1,15 @@
+---
+alwaysApply: true
+---
+## Standard: NestJS Module Hierarchy
+
+Establish a consistent NestJS module structure in the API application using RouterModule.register() with nested children arrays to enhance maintainability, scalability, and clear separation of concerns across the codebase when organizing modules in apps/api/src/app/. :
+* Configure all hierarchical routing exclusively in AppModule using RouterModule.register() with nested children arrays
+* Create a dedicated NestJS module for each resource type, preventing controllers from handling sub-resource routes
+* Define controller routes using empty @Controller() decorators to inherit path segments from RouterModule configuration
+* Do not use organization from the AuthRequest, use the Param instead
+* Import child modules in parent module's imports array and register them as children in AppModule's RouterModule configuration
+* Include all parent resource IDs in URL paths to make hierarchical relationships explicit and enable proper resource scoping
+* Place module files in directories that mirror the URL path hierarchy (e.g., /organizations/spaces/recipes/)
+
+Full standard is available here for further request: [NestJS Module Hierarchy](../../../.packmind/standards/nestjs-module-hierarchy.md)
