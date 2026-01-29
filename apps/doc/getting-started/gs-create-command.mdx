@@ -102,6 +102,28 @@ Create a JSON file (e.g., `my-command.json`) with your command definition:
 }
 ```
 
+### Understanding Command Naming
+
+The `name` field in your playbook is automatically converted to a **slug** for use in file names and AI agent invocation:
+
+- **Your playbook name**: `"Add a New REST Endpoint"`
+- **Generated slug**: `"add-a-new-rest-endpoint"`
+- **Used in file**: `.claude/commands/packmind/add-a-new-rest-endpoint.md`
+- **AI agent command**: `/add-a-new-rest-endpoint`
+
+**Slug Generation Rules:**
+
+- Converts to lowercase
+- Replaces spaces and special characters with hyphens
+- Removes non-alphanumeric characters
+- If a command with the same slug exists, adds `-1`, `-2`, etc. for uniqueness
+
+**Examples:**
+
+- `"Setup CI Pipeline"` → `"setup-ci-pipeline"`
+- `"Add@Database Migration!"` → `"add-database-migration"`
+- Duplicate of above → `"add-database-migration-1"`
+
 ### Submit the Command
 
 Run the CLI command to create the command:
