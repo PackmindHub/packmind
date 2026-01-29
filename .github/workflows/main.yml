@@ -51,6 +51,7 @@ jobs:
       api-artifact: ${{ needs.build.outputs.api-artifact }}
       frontend-artifact: ${{ needs.build.outputs.frontend-artifact }}
       mcp-server-artifact: ${{ needs.build.outputs.mcp-server-artifact }}
+      standard-samples-artifact: ${{ needs.build.outputs.standard-samples-artifact }}
       node-version: 22.17.0
     secrets:
       DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}

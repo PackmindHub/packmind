@@ -1,16 +1,20 @@
 import * as React from 'react';
 import {
+  PMBadge,
   PMButton,
   PMButtonGroup,
   PMCheckboxCard,
   PMCheckboxGroup,
   PMCloseButton,
   PMDialog,
+  PMEmptyState,
   PMGrid,
   PMGridItem,
   PMHeading,
+  PMHStack,
   PMInput,
   PMVStack,
+  pmToaster,
 } from '@packmind/ui';
 import {
   standardSamples,
@@ -60,11 +64,24 @@ export const StandardSamplesModal: React.FC<IStandardSamplesModalProps> = ({
     ];
 
     createMutation.mutate(samples, {
-      onSuccess: () => {
+      onSuccess: (data) => {
+        const count = data.created.length;
+        pmToaster.create({
+          type: 'success',
+          title: 'Standards created',
+          description: `${count} standard${count !== 1 ? 's' : ''} created successfully`,
+        });
         setSelectedLanguages([]);
         setSelectedFrameworks([]);
         setSearchQuery('');
         onOpenChange(false);
+      },
+      onError: () => {
+        pmToaster.error({
+          title: 'Failed to create standards',
+          description:
+            'An error occurred while creating standards from samples',
+        });
       },
     });
   };
@@ -101,23 +118,42 @@ export const StandardSamplesModal: React.FC<IStandardSamplesModalProps> = ({
                 onChange={handleSearchChange}
               />
 
-              <PMVStack gap={4} align="stretch">
-                <PMHeading size="sm">Languages</PMHeading>
-                <SampleCardGrid
-                  samples={filteredLanguages}
-                  selectedValues={selectedLanguages}
-                  onValueChange={setSelectedLanguages}
-                />
-              </PMVStack>
+              {filteredLanguages.length > 0 && (
+                <PMVStack gap={4} align="stretch">
+                  <PMHStack gap={2} align="center">
+                    <PMHeading size="sm">Languages</PMHeading>
+                    <PMBadge>{filteredLanguages.length}</PMBadge>
+                  </PMHStack>
+                  <SampleCardGrid
+                    samples={filteredLanguages}
+                    selectedValues={selectedLanguages}
+                    onValueChange={setSelectedLanguages}
+                  />
+                </PMVStack>
+              )}
 
-              <PMVStack gap={4} align="stretch">
-                <PMHeading size="sm">Frameworks</PMHeading>
-                <SampleCardGrid
-                  samples={filteredFrameworks}
-                  selectedValues={selectedFrameworks}
-                  onValueChange={setSelectedFrameworks}
-                />
-              </PMVStack>
+              {filteredFrameworks.length > 0 && (
+                <PMVStack gap={4} align="stretch">
+                  <PMHStack gap={2} align="center">
+                    <PMHeading size="sm">Frameworks</PMHeading>
+                    <PMBadge>{filteredFrameworks.length}</PMBadge>
+                  </PMHStack>
+                  <SampleCardGrid
+                    samples={filteredFrameworks}
+                    selectedValues={selectedFrameworks}
+                    onValueChange={setSelectedFrameworks}
+                  />
+                </PMVStack>
+              )}
+
+              {filteredLanguages.length === 0 &&
+                filteredFrameworks.length === 0 &&
+                searchQuery && (
+                  <PMEmptyState
+                    title="No samples found"
+                    description={`No languages or frameworks match "${searchQuery}"`}
+                  />
+                )}
             </PMVStack>
           </PMDialog.Body>
           <PMDialog.Footer>
@@ -157,7 +193,7 @@ const SampleCardGrid: React.FC<ISampleCardGridProps> = ({
 }) => {
   return (
     <PMCheckboxGroup value={selectedValues} onValueChange={onValueChange}>
-      <PMGrid gap={4} templateColumns="repeat(auto-fill, 150px)">
+      <PMGrid gap={4} templateColumns="repeat(auto-fill, 190px)">
         {samples.map((sample) => (
           <PMGridItem key={sample.id}>
             <PMCheckboxCard.Root

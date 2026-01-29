@@ -1,3 +1,7 @@
+---
+description: Automate creating a clean CLI release by updating versioning, changelog entries, tags, and comparison links so that releases are consistent, traceable, and ready for the next development cycle whenever you publish a new CLI version.
+---
+
 Create a CLI release with version {{version}}. Follow these steps:
 
 1. **Verify clean git status**: Check that `git status` shows no uncommitted changes. If there are changes, fail and ask the user to commit or stash them first.
@@ -5,7 +9,7 @@ Create a CLI release with version {{version}}. Follow these steps:
 2. **Update apps/cli/package.json and apps/cli/CHANGELOG.MD for release (First commit)**:
    - Update the version in apps/cli/package.json to `{{version}}`
    - in apps/cli/CHANGELOG.md:
-     - drop the empty sections under [Unreleased]
+     - drop the empty sections under \[Unreleased]
      - Replace the `[Unreleased]` heading with `[{{version}}] - {{today_date}}` (use ISO 8601 format YYYY-MM-DD for the date)
      - Update the unreleased comparison link at the bottom to point to the new release:
        ```
@@ -34,9 +38,11 @@ Create a CLI release with version {{version}}. Follow these steps:
      ```
 
    - Add the unreleased comparison link at the bottom:
+
      ```
      [Unreleased]: https://github.com/PackmindHub/packmind/compare/release-cli/{{version}}...HEAD
      ```
+
    - Commit with message: `chore(cli): prepare next development cycle`
 
 5. **Push all commits** to GitHub
