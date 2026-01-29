@@ -49,10 +49,6 @@ import {
   ISetupMcpCommand,
   ISetupMcpResult,
 } from './domain/useCases/ISetupMcpUseCase';
-import {
-  IAggressiveOnboardingCommand,
-  IAggressiveOnboardingResult,
-} from './domain/useCases/IAggressiveOnboardingUseCase';
 import { AllConfigsResult, HierarchicalConfigResult } from '@packmind/types';
 import { logWarningConsole } from './infra/utils/consoleLogger';
 import {
@@ -61,12 +57,6 @@ import {
   UploadSkillCommand,
   UploadSkillResult,
 } from './domain/repositories/IPackmindGateway';
-import { IContentWriteResult } from './application/services/ContentWriterService';
-import { IGeneratedStandard } from './application/services/StandardsGeneratorService';
-import { IGeneratedCommand } from './application/services/CommandsGeneratorService';
-import { IGeneratedSkill } from './application/services/SkillsGeneratorService';
-import { IContentPushResult } from './application/services/ContentPusherService';
-import { IDraftOnboardingUseCase } from './domain/useCases/IDraftOnboardingUseCase';
 
 const origin = 'PackmindCliHexa';
 
@@ -273,33 +263,5 @@ export class PackmindCliHexa {
 
   public getPackmindGateway() {
     return this.hexa.repositories.packmindGateway;
-  }
-
-  public async aggressiveOnboarding(
-    command: IAggressiveOnboardingCommand,
-  ): Promise<IAggressiveOnboardingResult> {
-    return this.hexa.useCases.aggressiveOnboarding.execute(command);
-  }
-
-  public async writeContent(
-    projectPath: string,
-    content: {
-      standards: IGeneratedStandard[];
-      commands: IGeneratedCommand[];
-      skills: IGeneratedSkill[];
-    },
-  ): Promise<IContentWriteResult> {
-    return this.hexa.services.contentWriter.writeContent(projectPath, content);
-  }
-
-  public async pushContent(
-    standards: IGeneratedStandard[],
-    commands: IGeneratedCommand[],
-  ): Promise<IContentPushResult> {
-    return this.hexa.services.contentPusher.pushContent(standards, commands);
-  }
-
-  public getDraftOnboardingUseCase(): IDraftOnboardingUseCase {
-    return this.hexa.useCases.draftOnboarding;
   }
 }

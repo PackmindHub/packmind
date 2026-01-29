@@ -35,23 +35,6 @@ import { SetupMcpUseCase } from './application/useCases/SetupMcpUseCase';
 import { McpConfigService } from './application/services/McpConfigService';
 import { ConfigFileRepository } from './infra/repositories/ConfigFileRepository';
 import { loadApiKey } from './infra/utils/credentialsLoader';
-import { IAggressiveOnboardingUseCase } from './domain/useCases/IAggressiveOnboardingUseCase';
-import { AggressiveOnboardingUseCase } from './application/useCases/AggressiveOnboardingUseCase';
-import { ProjectScannerService } from './application/services/ProjectScannerService';
-import { DocumentationScannerService } from './application/services/DocumentationScannerService';
-import { StandardsGeneratorService } from './application/services/StandardsGeneratorService';
-import { CommandsGeneratorService } from './application/services/CommandsGeneratorService';
-import { SkillsGeneratorService } from './application/services/SkillsGeneratorService';
-import { SkillsScannerService } from './application/services/SkillsScannerService';
-import { ContentPreviewService } from './application/services/ContentPreviewService';
-import { ContentWriterService } from './application/services/ContentWriterService';
-import { ContentPusherService } from './application/services/ContentPusherService';
-import { BaselineItemGeneratorService } from './application/services/BaselineItemGeneratorService';
-import { DraftFileWriterService } from './application/services/DraftFileWriterService';
-import { OnboardingStateService } from './application/services/OnboardingStateService';
-import { RepoFingerprintService } from './application/services/RepoFingerprintService';
-import { DraftOnboardingUseCase } from './application/useCases/DraftOnboardingUseCase';
-import { IDraftOnboardingUseCase } from './domain/useCases/IDraftOnboardingUseCase';
 
 export class PackmindCliHexaFactory {
   public repositories: IPackmindRepositories;
@@ -71,8 +54,6 @@ export class PackmindCliHexaFactory {
     logout: ILogoutUseCase;
     whoami: IWhoamiUseCase;
     setupMcp: ISetupMcpUseCase;
-    aggressiveOnboarding: IAggressiveOnboardingUseCase;
-    draftOnboarding: IDraftOnboardingUseCase;
   };
 
   constructor(private readonly logger: PackmindLogger) {
@@ -86,10 +67,6 @@ export class PackmindCliHexaFactory {
       gitRemoteUrlService: new GitService(this.logger),
       linterExecutionUseCase: new ExecuteLinterProgramsUseCase(),
       diffViolationFilterService: new DiffViolationFilterService(),
-      contentWriter: new ContentWriterService(),
-      contentPusher: new ContentPusherService(
-        this.repositories.packmindGateway,
-      ),
     };
 
     this.useCases = {
@@ -125,24 +102,6 @@ export class PackmindCliHexaFactory {
         gateway: this.repositories.packmindGateway,
         mcpConfigService: new McpConfigService(),
       }),
-      aggressiveOnboarding: new AggressiveOnboardingUseCase(
-        new ProjectScannerService(),
-        new DocumentationScannerService(),
-        new StandardsGeneratorService(),
-        new CommandsGeneratorService(),
-        new SkillsGeneratorService(),
-        new SkillsScannerService(),
-        new ContentPreviewService(),
-      ),
-      draftOnboarding: new DraftOnboardingUseCase(
-        new ProjectScannerService(),
-        new BaselineItemGeneratorService(),
-        new DraftFileWriterService(),
-        new OnboardingStateService(),
-        new RepoFingerprintService(),
-        this.repositories.packmindGateway,
-        this.logger,
-      ),
     };
   }
 }
