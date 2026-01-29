@@ -11,6 +11,8 @@
 
 ## Fixed
 
+- Remove forgotten debugging when installing packages.
+
 ## Removed
 
 # [0.14.0] - 2026-01-28
