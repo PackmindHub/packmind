@@ -92,4 +92,32 @@ export class OrganizationService {
     });
     return await this.organizationRepository.add(organization);
   }
+
+  async renameOrganization(
+    organization: Organization,
+    newName: string,
+  ): Promise<Organization> {
+    this.logger.info('Renaming organization', {
+      organizationId: organization.id,
+      oldName: organization.name,
+      newName,
+    });
+
+    const newSlug = slug(newName);
+
+    const existingOrganization =
+      await this.organizationRepository.findBySlug(newSlug);
+
+    if (existingOrganization && existingOrganization.id !== organization.id) {
+      throw new OrganizationSlugConflictError(newName);
+    }
+
+    const updatedOrganization: Organization = {
+      ...organization,
+      name: newName,
+      slug: newSlug,
+    };
+
+    return await this.organizationRepository.add(updatedOrganization);
+  }
 }
