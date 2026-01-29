@@ -1,9 +1,15 @@
 import { OrganizationId } from '../../accounts/Organization';
+import { UserId } from '../../accounts/User';
 import type { QueryOption } from '../../database/types';
 import { SpaceId } from '../../spaces/SpaceId';
+import {
+  CreateStandardSamplesCommand,
+  CreateStandardSamplesResponse,
+} from '../contracts';
 import { Rule } from '../Rule';
 import { RuleExample } from '../RuleExample';
 import { RuleId } from '../RuleId';
+import { RuleWithExamples } from '../RuleWithExamples';
 import { Standard } from '../Standard';
 import { StandardId } from '../StandardId';
 import { StandardVersion } from '../StandardVersion';
@@ -35,4 +41,19 @@ export interface IStandardsPort {
     slug: string,
     organizationId: OrganizationId,
   ): Promise<Standard | null>;
+  createStandardWithExamples(params: {
+    name: string;
+    description: string;
+    summary: string | null;
+    rules: RuleWithExamples[];
+    organizationId: OrganizationId;
+    userId: UserId;
+    scope: string | null;
+    spaceId: SpaceId;
+    disableTriggerAssessment?: boolean;
+    source?: string;
+  }): Promise<Standard>;
+  createStandardSamples(
+    command: CreateStandardSamplesCommand,
+  ): Promise<CreateStandardSamplesResponse>;
 }

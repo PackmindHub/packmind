@@ -1,4 +1,4 @@
-type Sample = {
+export type Sample = {
   id: string;
   displayName: string;
 };

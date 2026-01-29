@@ -3,6 +3,7 @@ import { PackmindLogger } from '@packmind/logger';
 import { StandardsHexa } from '@packmind/standards';
 import {
   ClientSource,
+  CreateStandardSamplesResponse,
   DeleteStandardCommand,
   DeleteStandardsBatchCommand,
   Distribution,
@@ -12,6 +13,7 @@ import {
   OrganizationId,
   PublishStandardsCommand,
   RuleId,
+  SampleInput,
   SpaceId,
   Standard,
   StandardId,
@@ -124,5 +126,19 @@ export class StandardsService {
     command: DeleteStandardsBatchCommand,
   ): Promise<void> {
     return this.standardsHexa.getAdapter().deleteStandardsBatch(command);
+  }
+
+  async createStandardSamples(
+    organizationId: OrganizationId,
+    spaceId: SpaceId,
+    userId: UserId,
+    samples: SampleInput[],
+  ): Promise<CreateStandardSamplesResponse> {
+    return this.standardsHexa.getAdapter().createStandardSamples({
+      organizationId,
+      spaceId,
+      userId,
+      samples,
+    });
   }
 }

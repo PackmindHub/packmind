@@ -9,6 +9,7 @@
     "tslib": "^2.3.0",
     "typeorm": "0.3.27",
     "@packmind/git": "*",
+    "@packmind/llm": "*",
     "@packmind/logger": "*",
     "@packmind/node-utils": "*",
     "@packmind/spaces": "*",
