@@ -7,7 +7,12 @@ import * as fs from 'fs';
 import * as path from 'path';
 
 import { createLLMService, LLMProvider, AIService } from '@packmind/llm';
-import { standardSamples, Sample, AI_RESPONSE_FORMAT } from '@packmind/types';
+import {
+  standardSamples,
+  Sample,
+  AI_RESPONSE_FORMAT,
+  languageToFrameworks,
+} from '@packmind/types';
 
 import { generateStandardSamplePrompt } from './prompts/generateStandardSamplePrompt';
 
@@ -114,7 +119,13 @@ async function generateSample(
   sample: Sample,
   type: 'language' | 'framework',
 ): Promise<{ success: boolean; error?: string }> {
-  const prompt = generateStandardSamplePrompt(sample.displayName, type);
+  const excludeTopics =
+    type === 'language' ? (languageToFrameworks[sample.id] ?? []) : [];
+  const prompt = generateStandardSamplePrompt(
+    sample.displayName,
+    type,
+    excludeTopics,
+  );
 
   let lastError = '';
 

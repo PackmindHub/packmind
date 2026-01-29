@@ -7,14 +7,32 @@
 
 type SampleType = 'language' | 'framework';
 
+function buildExclusionSection(excludeTopics: string[]): string {
+  if (excludeTopics.length === 0) {
+    return '';
+  }
+
+  return `
+## ⚠️ EXCLUSIONS - DO NOT INCLUDE
+The following topics have dedicated standards and MUST NOT be covered in this standard:
+${excludeTopics.map((t) => `- ${t}`).join('\n')}
+
+Do NOT generate rules about these frameworks or their specific patterns.
+Focus only on core language features and patterns.
+
+`;
+}
+
 export function generateStandardSamplePrompt(
   displayName: string,
   type: SampleType,
+  excludeTopics: string[] = [],
 ): string {
   const typeLabel = type === 'language' ? 'programming language' : 'framework';
+  const exclusionSection = buildExclusionSection(excludeTopics);
 
   return `You are a principal software engineer creating an ADVANCED coding standard for ${displayName} (${typeLabel}).
-
+${exclusionSection}
 TARGET AUDIENCE: Experienced developers who already know the basics.
 
 ## CRITICAL: Rule Selection Criteria
