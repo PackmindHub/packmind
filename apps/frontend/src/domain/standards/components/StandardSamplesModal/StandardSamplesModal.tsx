@@ -43,17 +43,21 @@ export const StandardSamplesModal: React.FC<IStandardSamplesModalProps> = ({
 
   const filteredLanguages = React.useMemo(
     () =>
-      standardSamples.languageSamples.filter((sample) =>
-        sample.displayName.toLowerCase().includes(searchQuery.toLowerCase()),
-      ),
+      standardSamples.languageSamples
+        .filter((sample) =>
+          sample.displayName.toLowerCase().includes(searchQuery.toLowerCase()),
+        )
+        .sort((a, b) => a.displayName.localeCompare(b.displayName)),
     [searchQuery],
   );
 
   const filteredFrameworks = React.useMemo(
     () =>
-      standardSamples.frameworkSamples.filter((sample) =>
-        sample.displayName.toLowerCase().includes(searchQuery.toLowerCase()),
-      ),
+      standardSamples.frameworkSamples
+        .filter((sample) =>
+          sample.displayName.toLowerCase().includes(searchQuery.toLowerCase()),
+        )
+        .sort((a, b) => a.displayName.localeCompare(b.displayName)),
     [searchQuery],
   );
 
