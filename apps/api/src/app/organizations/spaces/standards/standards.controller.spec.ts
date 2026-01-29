@@ -8,7 +8,9 @@ import {
   createUserId,
   createRuleId,
   createStandardId,
+  CreateStandardSamplesResponse,
   RuleId,
+  SampleInput,
   Standard,
 } from '@packmind/types';
 import { StandardsService } from '../../../standards/standards.service';
@@ -23,6 +25,7 @@ describe('OrganizationsSpacesStandardsController', () => {
     standardsService = {
       getStandardsBySpace: jest.fn(),
       updateStandard: jest.fn(),
+      createStandardSamples: jest.fn(),
     } as unknown as jest.Mocked<StandardsService>;
 
     logger = stubLogger();
@@ -405,6 +408,246 @@ describe('OrganizationsSpacesStandardsController', () => {
           'ui',
         );
       });
+    });
+  });
+
+  describe('createStandardSamples', () => {
+    const orgId = createOrganizationId('org-123');
+    const spaceId = createSpaceId('space-456');
+    const userId = createUserId('user-1');
+
+    const request = {
+      organization: {
+        id: orgId,
+        name: 'Test Org',
+        slug: 'test-org',
+        role: 'admin',
+      },
+      user: {
+        userId,
+        name: 'Test User',
+      },
+    } as unknown as AuthenticatedRequest;
+
+    const validSamples: SampleInput[] = [
+      { type: 'language', id: 'java' },
+      { type: 'framework', id: 'react' },
+    ];
+
+    describe('when samples are created successfully', () => {
+      const mockResponse: CreateStandardSamplesResponse = {
+        created: [
+          {
+            id: createStandardId('standard-1'),
+            slug: 'java-standard',
+            name: 'Java Standard',
+            description: 'Java coding standard',
+            userId,
+            spaceId,
+            version: 1,
+            scope: '**/*.java',
+          },
+          {
+            id: createStandardId('standard-2'),
+            slug: 'react-standard',
+            name: 'React Standard',
+            description: 'React coding standard',
+            userId,
+            spaceId,
+            version: 1,
+            scope: '**/*.tsx',
+          },
+        ],
+        errors: [],
+      };
+
+      let result: CreateStandardSamplesResponse;
+
+      beforeEach(async () => {
+        standardsService.createStandardSamples.mockResolvedValue(mockResponse);
+        result = await controller.createStandardSamples(
+          orgId,
+          spaceId,
+          { samples: validSamples },
+          request,
+        );
+      });
+
+      it('returns created standards', () => {
+        expect(result).toEqual(mockResponse);
+      });
+
+      it('calls service with correct params', () => {
+        expect(standardsService.createStandardSamples).toHaveBeenCalledWith(
+          orgId,
+          spaceId,
+          userId,
+          validSamples,
+        );
+      });
+    });
+
+    describe('when some samples fail to create', () => {
+      const mockResponse: CreateStandardSamplesResponse = {
+        created: [
+          {
+            id: createStandardId('standard-1'),
+            slug: 'java-standard',
+            name: 'Java Standard',
+            description: 'Java coding standard',
+            userId,
+            spaceId,
+            version: 1,
+            scope: '**/*.java',
+          },
+        ],
+        errors: [
+          {
+            sampleId: 'react',
+            type: 'framework',
+            error: 'Sample file not found: react',
+          },
+        ],
+      };
+
+      let result: CreateStandardSamplesResponse;
+
+      beforeEach(async () => {
+        standardsService.createStandardSamples.mockResolvedValue(mockResponse);
+        result = await controller.createStandardSamples(
+          orgId,
+          spaceId,
+          { samples: validSamples },
+          request,
+        );
+      });
+
+      it('returns partial response with created and errors', () => {
+        expect(result).toEqual(mockResponse);
+      });
+    });
+
+    describe('when samples is not an array', () => {
+      it('throws BadRequestException', async () => {
+        await expect(
+          controller.createStandardSamples(
+            orgId,
+            spaceId,
+            { samples: null as unknown as SampleInput[] },
+            request,
+          ),
+        ).rejects.toThrow(BadRequestException);
+      });
+
+      it('does not call service', async () => {
+        await controller
+          .createStandardSamples(
+            orgId,
+            spaceId,
+            { samples: null as unknown as SampleInput[] },
+            request,
+          )
+          .catch(() => {
+            /* expected */
+          });
+        expect(standardsService.createStandardSamples).not.toHaveBeenCalled();
+      });
+    });
+
+    describe('when samples array is empty', () => {
+      it('throws BadRequestException', async () => {
+        await expect(
+          controller.createStandardSamples(
+            orgId,
+            spaceId,
+            { samples: [] },
+            request,
+          ),
+        ).rejects.toThrow(BadRequestException);
+      });
+
+      it('does not call service', async () => {
+        await controller
+          .createStandardSamples(orgId, spaceId, { samples: [] }, request)
+          .catch(() => {
+            /* expected */
+          });
+        expect(standardsService.createStandardSamples).not.toHaveBeenCalled();
+      });
+    });
+
+    describe('when sample has invalid type', () => {
+      const invalidSamples = [
+        { type: 'invalid' as 'language' | 'framework', id: 'java' },
+      ];
+
+      it('throws BadRequestException', async () => {
+        await expect(
+          controller.createStandardSamples(
+            orgId,
+            spaceId,
+            { samples: invalidSamples },
+            request,
+          ),
+        ).rejects.toThrow(BadRequestException);
+      });
+
+      it('does not call service', async () => {
+        await controller
+          .createStandardSamples(
+            orgId,
+            spaceId,
+            { samples: invalidSamples },
+            request,
+          )
+          .catch(() => {
+            /* expected */
+          });
+        expect(standardsService.createStandardSamples).not.toHaveBeenCalled();
+      });
+    });
+
+    describe('when sample has missing id', () => {
+      const invalidSamples = [{ type: 'language', id: '' }] as SampleInput[];
+
+      it('throws BadRequestException', async () => {
+        await expect(
+          controller.createStandardSamples(
+            orgId,
+            spaceId,
+            { samples: invalidSamples },
+            request,
+          ),
+        ).rejects.toThrow(BadRequestException);
+      });
+
+      it('does not call service', async () => {
+        await controller
+          .createStandardSamples(
+            orgId,
+            spaceId,
+            { samples: invalidSamples },
+            request,
+          )
+          .catch(() => {
+            /* expected */
+          });
+        expect(standardsService.createStandardSamples).not.toHaveBeenCalled();
+      });
+    });
+
+    it('propagates errors from service', async () => {
+      const error = new Error('Database error');
+      standardsService.createStandardSamples.mockRejectedValue(error);
+
+      await expect(
+        controller.createStandardSamples(
+          orgId,
+          spaceId,
+          { samples: validSamples },
+          request,
+        ),
+      ).rejects.toThrow('Database error');
     });
   });
 });
