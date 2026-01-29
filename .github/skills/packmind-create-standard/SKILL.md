@@ -307,12 +307,12 @@ Rules:
 5. Run the packmind-cli command:
 
 ```bash
-packmind-cli standard create <path-to-playbook.json>
+packmind-cli standards create <path-to-playbook.json>
 ```
 
 Example:
 ```bash
-packmind-cli standard create ./typescript-conventions.playbook.json
+packmind-cli standards create ./typescript-conventions.playbook.json
 ```
 
 Expected output on success:
@@ -389,7 +389,7 @@ Here's a complete example creating a TypeScript testing standard:
 
 **Creating the standard:**
 ```bash
-packmind-cli standard create testing-conventions.playbook.json
+packmind-cli standards create testing-conventions.playbook.json
 ```
 
 ## Quick Reference
