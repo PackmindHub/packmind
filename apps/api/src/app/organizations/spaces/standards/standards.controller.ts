@@ -626,4 +626,89 @@ export class OrganizationsSpacesStandardsController {
       throw error;
     }
   }
+
+  /**
+   * Create standards from predefined samples
+   * POST /organizations/:orgId/spaces/:spaceId/standards/samples
+   */
+  @Post('samples')
+  async createStandardSamples(
+    @Param('orgId') organizationId: OrganizationId,
+    @Param('spaceId') spaceId: SpaceId,
+    @Body() body: { samples: SampleInput[] },
+    @Req() request: AuthenticatedRequest,
+  ): Promise<CreateStandardSamplesResponse> {
+    const userId = request.user.userId;
+
+    this.logger.info(
+      'POST /organizations/:orgId/spaces/:spaceId/standards/samples - Creating standards from samples',
+      {
+        organizationId,
+        spaceId,
+        samplesCount: body.samples?.length,
+        userId,
+      },
+    );
+
+    try {
+      if (!body.samples || !Array.isArray(body.samples)) {
+        throw new BadRequestException('samples must be an array');
+      }
+
+      if (body.samples.length === 0) {
+        throw new BadRequestException('samples array cannot be empty');
+      }
+
+      for (let i = 0; i < body.samples.length; i++) {
+        const sample = body.samples[i];
+        if (
+          !sample.type ||
+          (sample.type !== 'language' && sample.type !== 'framework')
+        ) {
+          throw new BadRequestException(
+            `Sample ${i} must have a valid type ('language' or 'framework')`,
+          );
+        }
+        if (!sample.id || typeof sample.id !== 'string') {
+          throw new BadRequestException(`Sample ${i} must have a valid id`);
+        }
+      }
+
+      const result = await this.standardsService.createStandardSamples(
+        organizationId,
+        spaceId,
+        userId,
+        body.samples,
+      );
+
+      this.logger.info(
+        'POST /organizations/:orgId/spaces/:spaceId/standards/samples - Standards created from samples',
+        {
+          organizationId,
+          spaceId,
+          createdCount: result.created.length,
+          errorsCount: result.errors.length,
+        },
+      );
+
+      return result;
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+
+      if (!(error instanceof BadRequestException)) {
+        this.logger.error(
+          'POST /organizations/:orgId/spaces/:spaceId/standards/samples - Failed to create standards from samples',
+          {
+            organizationId,
+            spaceId,
+            userId,
+            error: errorMessage,
+          },
+        );
+      }
+
+      throw error;
+    }
+  }
 }
