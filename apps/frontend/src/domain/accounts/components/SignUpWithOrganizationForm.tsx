@@ -60,7 +60,7 @@ export default function SignUpWithOrganizationForm() {
 
     const debounceTimer = setTimeout(validateEmailAvailability, 500);
     return () => clearTimeout(debounceTimer);
-  }, [email, checkEmailAvailabilityMutation]);
+  }, [email]);
 
   const getButtonText = () => {
     if (signUpWithOrganizationMutation.isPending) return 'Creating Account...';
