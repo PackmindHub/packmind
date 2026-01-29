@@ -891,6 +891,301 @@ describe('LintFilesInDirectoryUseCase', () => {
         expect(mockLinterExecutionUseCase.execute).toHaveBeenCalled();
       });
     });
+
+    describe('when using draft mode with comma-separated scope', () => {
+      const draftProgramsResponse = {
+        programs: [
+          {
+            language: 'typescript',
+            code: 'const x = 1;',
+            mode: 'singleAst',
+            sourceCodeState: 'AST' as const,
+          },
+        ],
+        ruleContent: 'Test hexagonal architecture rule',
+        standardSlug: 'hexagonal-architecture',
+        scope: '**/*Hexa.ts,**/*Adapter.ts',
+      };
+
+      beforeEach(async () => {
+        mockPackmindGateway.getDraftDetectionProgramsForRule = jest
+          .fn()
+          .mockResolvedValue(draftProgramsResponse);
+
+        mockGitRemoteUrlService.getGitRepositoryRoot.mockResolvedValue(
+          '/project',
+        );
+        mockListFiles.listFilesInDirectory.mockResolvedValue([
+          { path: '/project/src/UserHexa.ts' },
+          { path: '/project/src/UserAdapter.ts' },
+          { path: '/project/src/UserService.ts' },
+        ]);
+        mockListFiles.readFileContent.mockResolvedValue('const x = 1;');
+
+        mockGitRemoteUrlService.getGitRemoteUrl.mockResolvedValue({
+          gitRemoteUrl: 'https://github.com/user/repo',
+        });
+        mockGitRemoteUrlService.getCurrentBranches.mockResolvedValue({
+          branches: ['main'],
+        });
+
+        mockLinterExecutionUseCase.execute.mockResolvedValue({
+          file: '/project/src/test.ts',
+          violations: [
+            {
+              line: 1,
+              character: 1,
+              rule: 'Test hexagonal architecture rule',
+              standard: 'hexagonal-architecture',
+            },
+          ],
+        });
+
+        result = await useCase.execute({
+          path: '/project',
+          draftMode: true,
+          standardSlug: 'hexagonal-architecture',
+          ruleId: 'rule-123' as RuleId,
+        });
+      });
+
+      it('lints files matching first pattern', () => {
+        expect(mockLinterExecutionUseCase.execute).toHaveBeenCalledWith(
+          expect.objectContaining({
+            filePath: '/project/src/UserHexa.ts',
+          }),
+        );
+      });
+
+      it('lints files matching second pattern', () => {
+        expect(mockLinterExecutionUseCase.execute).toHaveBeenCalledWith(
+          expect.objectContaining({
+            filePath: '/project/src/UserAdapter.ts',
+          }),
+        );
+      });
+
+      it('does not lint files matching neither pattern', () => {
+        expect(mockLinterExecutionUseCase.execute).not.toHaveBeenCalledWith(
+          expect.objectContaining({
+            filePath: '/project/src/UserService.ts',
+          }),
+        );
+      });
+
+      it('calls linter exactly twice', () => {
+        expect(mockLinterExecutionUseCase.execute).toHaveBeenCalledTimes(2);
+      });
+    });
+  });
+
+  describe('when active mode is enabled', () => {
+    describe('when using active mode with comma-separated scope', () => {
+      const activeProgramsResponse = {
+        programs: [
+          {
+            language: 'typescript',
+            code: 'const x = 1;',
+            mode: 'singleAst',
+            sourceCodeState: 'AST' as const,
+          },
+        ],
+        ruleContent: 'Test hexagonal architecture rule',
+        standardSlug: 'hexagonal-architecture',
+        scope: '**/*Hexa.ts,**/*Adapter.ts',
+      };
+
+      beforeEach(async () => {
+        mockPackmindGateway.getActiveDetectionProgramsForRule = jest
+          .fn()
+          .mockResolvedValue(activeProgramsResponse);
+
+        mockGitRemoteUrlService.getGitRepositoryRoot.mockResolvedValue(
+          '/project',
+        );
+        mockListFiles.listFilesInDirectory.mockResolvedValue([
+          { path: '/project/src/UserHexa.ts' },
+          { path: '/project/src/UserAdapter.ts' },
+          { path: '/project/src/UserService.ts' },
+        ]);
+        mockListFiles.readFileContent.mockResolvedValue('const x = 1;');
+
+        mockGitRemoteUrlService.getGitRemoteUrl.mockResolvedValue({
+          gitRemoteUrl: 'https://github.com/user/repo',
+        });
+        mockGitRemoteUrlService.getCurrentBranches.mockResolvedValue({
+          branches: ['main'],
+        });
+
+        mockLinterExecutionUseCase.execute.mockResolvedValue({
+          file: '/project/src/test.ts',
+          violations: [
+            {
+              line: 1,
+              character: 1,
+              rule: 'Test hexagonal architecture rule',
+              standard: 'hexagonal-architecture',
+            },
+          ],
+        });
+
+        result = await useCase.execute({
+          path: '/project',
+          draftMode: false,
+          standardSlug: 'hexagonal-architecture',
+          ruleId: 'rule-123' as RuleId,
+        });
+      });
+
+      it('lints files matching first pattern', () => {
+        expect(mockLinterExecutionUseCase.execute).toHaveBeenCalledWith(
+          expect.objectContaining({
+            filePath: '/project/src/UserHexa.ts',
+          }),
+        );
+      });
+
+      it('lints files matching second pattern', () => {
+        expect(mockLinterExecutionUseCase.execute).toHaveBeenCalledWith(
+          expect.objectContaining({
+            filePath: '/project/src/UserAdapter.ts',
+          }),
+        );
+      });
+
+      it('does not lint files matching neither pattern', () => {
+        expect(mockLinterExecutionUseCase.execute).not.toHaveBeenCalledWith(
+          expect.objectContaining({
+            filePath: '/project/src/UserService.ts',
+          }),
+        );
+      });
+
+      it('calls linter exactly twice', () => {
+        expect(mockLinterExecutionUseCase.execute).toHaveBeenCalledTimes(2);
+      });
+    });
+  });
+
+  describe('parseScopeString', () => {
+    let testUseCase: LintFilesInDirectoryUseCase;
+
+    beforeEach(() => {
+      const mockServices = {
+        listFiles: {} as ListFiles,
+        gitRemoteUrlService: {} as GitService,
+        linterExecutionUseCase: {} as IExecuteLinterProgramsUseCase,
+      };
+      const mockRepositories = {
+        packmindGateway: {} as IPackmindGateway,
+      };
+      testUseCase = new LintFilesInDirectoryUseCase(
+        mockServices,
+        mockRepositories,
+      );
+    });
+
+    describe('when scope is null or undefined', () => {
+      it('returns empty array for null', () => {
+        const result = (
+          testUseCase as unknown as {
+            parseScopeString: (scope: string | null | undefined) => string[];
+          }
+        ).parseScopeString(null);
+        expect(result).toEqual([]);
+      });
+
+      it('returns empty array for undefined', () => {
+        const result = (
+          testUseCase as unknown as {
+            parseScopeString: (scope: string | null | undefined) => string[];
+          }
+        ).parseScopeString(undefined);
+        expect(result).toEqual([]);
+      });
+    });
+
+    describe('when scope is empty or whitespace', () => {
+      it('returns empty array for empty string', () => {
+        const result = (
+          testUseCase as unknown as {
+            parseScopeString: (scope: string | null | undefined) => string[];
+          }
+        ).parseScopeString('');
+        expect(result).toEqual([]);
+      });
+
+      it('returns empty array for whitespace', () => {
+        const result = (
+          testUseCase as unknown as {
+            parseScopeString: (scope: string | null | undefined) => string[];
+          }
+        ).parseScopeString('   ');
+        expect(result).toEqual([]);
+      });
+    });
+
+    describe('when scope is a single pattern', () => {
+      it('returns single-element array', () => {
+        const result = (
+          testUseCase as unknown as {
+            parseScopeString: (scope: string | null | undefined) => string[];
+          }
+        ).parseScopeString('**/*.ts');
+        expect(result).toEqual(['**/*.ts']);
+      });
+
+      it('trims whitespace from single pattern', () => {
+        const result = (
+          testUseCase as unknown as {
+            parseScopeString: (scope: string | null | undefined) => string[];
+          }
+        ).parseScopeString('  **/*.ts  ');
+        expect(result).toEqual(['**/*.ts']);
+      });
+    });
+
+    describe('when scope is comma-separated patterns', () => {
+      it('splits and returns multiple patterns', () => {
+        const result = (
+          testUseCase as unknown as {
+            parseScopeString: (scope: string | null | undefined) => string[];
+          }
+        ).parseScopeString('**/*Hexa.ts,**/*Adapter.ts');
+        expect(result).toEqual(['**/*Hexa.ts', '**/*Adapter.ts']);
+      });
+
+      it('trims whitespace from each pattern', () => {
+        const result = (
+          testUseCase as unknown as {
+            parseScopeString: (scope: string | null | undefined) => string[];
+          }
+        ).parseScopeString('a , b , c');
+        expect(result).toEqual(['a', 'b', 'c']);
+      });
+
+      it('filters out empty segments', () => {
+        const result = (
+          testUseCase as unknown as {
+            parseScopeString: (scope: string | null | undefined) => string[];
+          }
+        ).parseScopeString('a,,b,,,c');
+        expect(result).toEqual(['a', 'b', 'c']);
+      });
+
+      it('handles three patterns with complex globs', () => {
+        const result = (
+          testUseCase as unknown as {
+            parseScopeString: (scope: string | null | undefined) => string[];
+          }
+        ).parseScopeString('**/*Hexa.ts,**/*Adapter.ts,**/*Port.ts');
+        expect(result).toEqual([
+          '**/*Hexa.ts',
+          '**/*Adapter.ts',
+          '**/*Port.ts',
+        ]);
+      });
+    });
   });
 
   describe('File matching with target and scope', () => {
