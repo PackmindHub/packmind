@@ -12,6 +12,7 @@ import { SSEEventPublisher } from '@packmind/node-utils';
 import { stubLogger } from '@packmind/test-utils';
 import { userFactory } from '../../../test';
 import {
+  EmailAlreadyExistsError,
   InvalidInvitationEmailError,
   UserNotInOrganizationError,
   UserCannotExcludeSelfError,
@@ -566,10 +567,8 @@ describe('UserService', () => {
           }
         });
 
-        it('throws error with masked email', () => {
-          expect(thrownError).toEqual(
-            new Error(`Email 'testus***************' already exists`),
-          );
+        it('throws EmailAlreadyExistsError', () => {
+          expect(thrownError).toBeInstanceOf(EmailAlreadyExistsError);
         });
 
         it('searches for existing user', () => {
@@ -605,10 +604,8 @@ describe('UserService', () => {
           }
         });
 
-        it('throws error with masked email', () => {
-          expect(thrownError).toEqual(
-            new Error(`Email 'NewUse**************' already exists`),
-          );
+        it('throws EmailAlreadyExistsError', () => {
+          expect(thrownError).toBeInstanceOf(EmailAlreadyExistsError);
         });
 
         it('searches for existing user', () => {

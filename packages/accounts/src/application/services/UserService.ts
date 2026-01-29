@@ -14,6 +14,7 @@ import { PackmindLogger, LogLevel, maskEmail } from '@packmind/logger';
 import { SSEEventPublisher } from '@packmind/node-utils';
 import { UserContextChangeType } from '@packmind/types';
 import {
+  EmailAlreadyExistsError,
   InvalidInvitationEmailError,
   UserNotInOrganizationError,
   UserCannotExcludeSelfError,
@@ -59,7 +60,7 @@ export class UserService {
       // Check if user already exists (case-insensitive)
       const existingUser = await this.getUserByEmailCaseInsensitive(email);
       if (existingUser) {
-        throw new Error(`Email '${maskEmail(email)}' already exists`);
+        throw new EmailAlreadyExistsError();
       }
 
       // Hash password

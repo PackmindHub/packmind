@@ -38,6 +38,7 @@ import {
   CliLoginCodeExpiredError,
   CliLoginCodeNotFoundError,
   InvalidTrialActivationTokenError,
+  EmailAlreadyExistsError,
 } from '@packmind/accounts';
 import { ActivateTrialAccountResult } from '@packmind/types';
 import { AuthenticatedRequest } from '@packmind/node-utils';
@@ -81,6 +82,11 @@ export class AuthController {
         email: maskEmail(signUpRequest.email),
         error: getErrorMessage(error),
       });
+
+      if (error instanceof EmailAlreadyExistsError) {
+        throw new HttpException(error.message, HttpStatus.CONFLICT);
+      }
+
       throw error;
     }
   }
