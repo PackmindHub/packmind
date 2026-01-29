@@ -45,7 +45,14 @@ USER node
 ENV JS_PLAYGROUND_PATH=/app/js-playground
 
 # Copy standard samples for sample-based standard creation
-COPY --chown=node:node dist/packages/standards/samples/generated/ ./standard-samples/
+USER root
+RUN --mount=type=bind,source=.,target=/build-context \
+    if [ -d "/build-context/dist/packages/standards/samples/generated" ]; then \
+      mkdir -p /app/standard-samples && \
+      cp -r /build-context/dist/packages/standards/samples/generated/* /app/standard-samples/ && \
+      chown -R node:node /app/standard-samples; \
+    fi
+USER node
 ENV STANDARD_SAMPLES_PATH=/app/standard-samples
 
 # Install migration dependencies
