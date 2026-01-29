@@ -11,6 +11,7 @@ import {
   PMHeading,
   PMInput,
   PMVStack,
+  pmToaster,
 } from '@packmind/ui';
 import {
   standardSamples,
@@ -60,7 +61,13 @@ export const StandardSamplesModal: React.FC<IStandardSamplesModalProps> = ({
     ];
 
     createMutation.mutate(samples, {
-      onSuccess: () => {
+      onSuccess: (data) => {
+        const count = data.created.length;
+        pmToaster.create({
+          type: 'success',
+          title: 'Standards created',
+          description: `${count} standard${count !== 1 ? 's' : ''} created successfully`,
+        });
         setSelectedLanguages([]);
         setSelectedFrameworks([]);
         setSearchQuery('');
