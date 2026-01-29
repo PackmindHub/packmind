@@ -13,6 +13,7 @@ import {
   Organization,
   OrganizationId,
   Recipe,
+  RecipeSlugAlreadyExistsError,
   Space,
   SpaceId,
   User,
@@ -1095,6 +1096,288 @@ describe('CaptureRecipeUsecase', () => {
         expect(mockSlug).toHaveBeenCalledWith(
           'Recipe with "Special" Characters!',
         );
+      });
+    });
+
+    describe('with user-provided slug', () => {
+      describe('when slug is valid and unique', () => {
+        it('uses the provided slug directly', async () => {
+          const command: CaptureRecipeCommand = {
+            name: 'Test Recipe',
+            spaceId,
+            slug: 'my-custom-slug',
+            summary: 'Test summary',
+            whenToUse: [],
+            contextValidationCheckpoints: [],
+            steps: [],
+            organizationId,
+            userId,
+          };
+
+          const createdRecipe = recipeFactory({
+            id: createRecipeId(uuidv4()),
+            name: command.name,
+            slug: 'my-custom-slug',
+            content: command.summary,
+            version: 1,
+          });
+
+          const createdRecipeVersion = recipeVersionFactory({
+            id: createRecipeVersionId(uuidv4()),
+            recipeId: createdRecipe.id,
+            version: 1,
+          });
+
+          recipeService.addRecipe.mockResolvedValue(createdRecipe);
+          recipeVersionService.addRecipeVersion.mockResolvedValue(
+            createdRecipeVersion,
+          );
+
+          await captureRecipeUsecase.execute(command);
+
+          expect(recipeService.addRecipe).toHaveBeenCalledWith(
+            expect.objectContaining({
+              slug: 'my-custom-slug',
+            }),
+          );
+        });
+
+        it('does not call slug library', async () => {
+          const command: CaptureRecipeCommand = {
+            name: 'Test Recipe',
+            spaceId,
+            slug: 'my-custom-slug',
+            summary: 'Test summary',
+            whenToUse: [],
+            contextValidationCheckpoints: [],
+            steps: [],
+            organizationId,
+            userId,
+          };
+
+          const createdRecipe = recipeFactory({
+            id: createRecipeId(uuidv4()),
+            name: command.name,
+            slug: 'my-custom-slug',
+            content: command.summary,
+            version: 1,
+          });
+
+          const createdRecipeVersion = recipeVersionFactory({
+            id: createRecipeVersionId(uuidv4()),
+            recipeId: createdRecipe.id,
+            version: 1,
+          });
+
+          recipeService.addRecipe.mockResolvedValue(createdRecipe);
+          recipeVersionService.addRecipeVersion.mockResolvedValue(
+            createdRecipeVersion,
+          );
+
+          await captureRecipeUsecase.execute(command);
+
+          expect(mockSlug).not.toHaveBeenCalled();
+        });
+      });
+
+      describe('when slug needs sanitization', () => {
+        it('sanitizes the slug to lowercase with hyphens', async () => {
+          const command: CaptureRecipeCommand = {
+            name: 'Test Recipe',
+            spaceId,
+            slug: 'My Custom SLUG with spaces!',
+            summary: 'Test summary',
+            whenToUse: [],
+            contextValidationCheckpoints: [],
+            steps: [],
+            organizationId,
+            userId,
+          };
+
+          const createdRecipe = recipeFactory({
+            id: createRecipeId(uuidv4()),
+            name: command.name,
+            slug: 'my-custom-slug-with-spaces',
+            content: command.summary,
+            version: 1,
+          });
+
+          const createdRecipeVersion = recipeVersionFactory({
+            id: createRecipeVersionId(uuidv4()),
+            recipeId: createdRecipe.id,
+            version: 1,
+          });
+
+          recipeService.addRecipe.mockResolvedValue(createdRecipe);
+          recipeVersionService.addRecipeVersion.mockResolvedValue(
+            createdRecipeVersion,
+          );
+
+          await captureRecipeUsecase.execute(command);
+
+          expect(recipeService.addRecipe).toHaveBeenCalledWith(
+            expect.objectContaining({
+              slug: 'my-custom-slug-with-spaces',
+            }),
+          );
+        });
+      });
+
+      describe('when slug already exists', () => {
+        it('throws RecipeSlugAlreadyExistsError', async () => {
+          const command: CaptureRecipeCommand = {
+            name: 'Test Recipe',
+            spaceId,
+            slug: 'existing-slug',
+            summary: 'Test summary',
+            whenToUse: [],
+            contextValidationCheckpoints: [],
+            steps: [],
+            organizationId,
+            userId,
+          };
+
+          const existingRecipes = [recipeFactory({ slug: 'existing-slug' })];
+          recipeService.listRecipesBySpace.mockResolvedValue(existingRecipes);
+
+          await expect(captureRecipeUsecase.execute(command)).rejects.toThrow(
+            RecipeSlugAlreadyExistsError,
+          );
+        });
+
+        it('includes slug in error message', async () => {
+          const command: CaptureRecipeCommand = {
+            name: 'Test Recipe',
+            spaceId,
+            slug: 'existing-slug',
+            summary: 'Test summary',
+            whenToUse: [],
+            contextValidationCheckpoints: [],
+            steps: [],
+            organizationId,
+            userId,
+          };
+
+          const existingRecipes = [recipeFactory({ slug: 'existing-slug' })];
+          recipeService.listRecipesBySpace.mockResolvedValue(existingRecipes);
+
+          await expect(captureRecipeUsecase.execute(command)).rejects.toThrow(
+            'A command with slug "existing-slug" already exists in this space',
+          );
+        });
+
+        it('does not call RecipeService.addRecipe', async () => {
+          const command: CaptureRecipeCommand = {
+            name: 'Test Recipe',
+            spaceId,
+            slug: 'existing-slug',
+            summary: 'Test summary',
+            whenToUse: [],
+            contextValidationCheckpoints: [],
+            steps: [],
+            organizationId,
+            userId,
+          };
+
+          const existingRecipes = [recipeFactory({ slug: 'existing-slug' })];
+          recipeService.listRecipesBySpace.mockResolvedValue(existingRecipes);
+
+          try {
+            await captureRecipeUsecase.execute(command);
+          } catch {
+            // Expected to throw
+          }
+
+          expect(recipeService.addRecipe).not.toHaveBeenCalled();
+        });
+      });
+
+      describe('when slug is empty string', () => {
+        beforeEach(async () => {
+          const command: CaptureRecipeCommand = {
+            name: 'Test Recipe',
+            spaceId,
+            slug: '',
+            summary: 'Test summary',
+            whenToUse: [],
+            contextValidationCheckpoints: [],
+            steps: [],
+            organizationId,
+            userId,
+          };
+
+          const createdRecipe = recipeFactory({
+            id: createRecipeId(uuidv4()),
+            name: command.name,
+            slug: 'test-recipe',
+            content: command.summary,
+            version: 1,
+          });
+
+          const createdRecipeVersion = recipeVersionFactory({
+            id: createRecipeVersionId(uuidv4()),
+            recipeId: createdRecipe.id,
+            version: 1,
+          });
+
+          recipeService.addRecipe.mockResolvedValue(createdRecipe);
+          recipeVersionService.addRecipeVersion.mockResolvedValue(
+            createdRecipeVersion,
+          );
+
+          await captureRecipeUsecase.execute(command);
+        });
+
+        it('calls slug library with recipe name', () => {
+          expect(mockSlug).toHaveBeenCalledWith('Test Recipe');
+        });
+
+        it('saves recipe with generated slug', () => {
+          expect(recipeService.addRecipe).toHaveBeenCalledWith(
+            expect.objectContaining({
+              slug: 'test-recipe',
+            }),
+          );
+        });
+      });
+
+      describe('when slug is whitespace only', () => {
+        it('auto-generates slug from name', async () => {
+          const command: CaptureRecipeCommand = {
+            name: 'Test Recipe',
+            spaceId,
+            slug: '   ',
+            summary: 'Test summary',
+            whenToUse: [],
+            contextValidationCheckpoints: [],
+            steps: [],
+            organizationId,
+            userId,
+          };
+
+          const createdRecipe = recipeFactory({
+            id: createRecipeId(uuidv4()),
+            name: command.name,
+            slug: 'test-recipe',
+            content: command.summary,
+            version: 1,
+          });
+
+          const createdRecipeVersion = recipeVersionFactory({
+            id: createRecipeVersionId(uuidv4()),
+            recipeId: createdRecipe.id,
+            version: 1,
+          });
+
+          recipeService.addRecipe.mockResolvedValue(createdRecipe);
+          recipeVersionService.addRecipeVersion.mockResolvedValue(
+            createdRecipeVersion,
+          );
+
+          await captureRecipeUsecase.execute(command);
+
+          expect(mockSlug).toHaveBeenCalledWith('Test Recipe');
+        });
       });
     });
 

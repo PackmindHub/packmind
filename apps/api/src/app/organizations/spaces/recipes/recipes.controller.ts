@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   Body,
+  ConflictException,
   Controller,
   Delete,
   Get,
@@ -17,6 +18,7 @@ import {
   OrganizationId,
   Recipe,
   RecipeId,
+  RecipeSlugAlreadyExistsError,
   RecipeVersion,
   SpaceId,
 } from '@packmind/types';
@@ -185,6 +187,19 @@ export class OrganizationsSpacesRecipesController {
         request.clientSource,
       );
     } catch (error) {
+      if (error instanceof RecipeSlugAlreadyExistsError) {
+        this.logger.warn(
+          'POST /organizations/:orgId/spaces/:spaceId/recipes - Slug already exists',
+          {
+            organizationId,
+            spaceId,
+            slug: error.slug,
+            userId,
+          },
+        );
+        throw new ConflictException(error.message);
+      }
+
       const errorMessage =
         error instanceof Error ? error.message : String(error);
       this.logger.error(
