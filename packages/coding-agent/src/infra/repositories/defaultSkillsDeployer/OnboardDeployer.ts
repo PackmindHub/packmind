@@ -223,13 +223,51 @@ GENERATED ARTIFACTS (draft, max 5 each):
 \`\`\`
 
 Then use AskUserQuestion to offer options:
-- **Apply** - Write all generated artifacts to the repository
+- **Apply** — Publish generated Standards/Commands to Packmind via CLI (no file writes).
+- **Export** — Write generated drafts into .packmind/standards/ + .packmind/commands/ (no overwrites; suffixes added).
 - **Preview** - Show full content of a specific artifact before deciding
-- **Quit** - Exit without writing any files
+- **Quit** - Exit without taking action (report remains saved).
+
+## Step 7.5 — CLI Preflight Check (before offering Apply)
+
+**Check the following:**
+- Packmind CLI is installed and accessible
+- User is authenticated
+- Workspace/org context is set (if applicable)
+
+**If preflight fails:**
+- Hide the Apply option
+- Show only: Export, Preview, Quit
+- Print one line: \`Packmind CLI not ready: [reason]. Use Export or configure CLI then rerun.\`
 
 ## Step 8 — Handle Choice
 
-**Apply:**
+**Apply (Publish via CLI):**
+
+Behavior:
+- Convert generated draft artifacts (Standards + Commands) into payloads for Packmind CLI
+- Use idempotent keys to prevent duplicates:
+  - Query existing artifacts to check for slug collisions
+  - If same slug exists: create with \`-2\`, \`-3\`, etc. suffix (same as file system)
+- Call Packmind CLI create endpoints with the artifact data
+
+Rules:
+- Never overwrite in Packmind (suffix on collision)
+- If any publish fails, continue publishing the rest
+- Print a clear report of successes + failures
+
+Human-facing output (exact format):
+
+\`\`\`
+Published to Packmind (via CLI):
+  - Standard: [name] (slug: [slug]) — [id|link|created]
+  - Command:  [name] (slug: [slug]) — [id|link|created]
+
+Failures:
+  - [type] [name] — [error summary]
+\`\`\`
+
+**Export (Write to repo files):**
 - Write new files:
   - \`.packmind/standards/[slug].md\`
   - \`.packmind/commands/[slug].md\`
