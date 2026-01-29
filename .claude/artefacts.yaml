@@ -1104,3 +1104,7 @@
   path: release-app
   type: skill
   date: 2026-01-28T10:37:31+01:00
+- name: CLAUDE.md
+  path: CLAUDE.md
+  type: claude_md
+  date: 2026-01-29T11:23:17+01:00
