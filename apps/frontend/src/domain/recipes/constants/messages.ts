@@ -4,6 +4,8 @@ export const RECIPE_MESSAGES = {
     nameRequired: 'Command name is required',
     descriptionRequired: 'Command description is required',
     contentRequired: 'Command content is required',
+    slugInvalid:
+      'Slug must contain only lowercase letters, numbers, and hyphens',
   },
   success: {
     created: 'Command created successfully!',
@@ -17,6 +19,7 @@ export const RECIPE_MESSAGES = {
     deleteFailed: 'Failed to delete command. Please try again.',
     deployFailed: 'Failed to deploy command. Please try again.',
     loadFailed: 'Failed to load command. Please try again.',
+    slugAlreadyExists: 'A command with this slug already exists in this space.',
   },
   loading: {
     creating: 'Creating command...',

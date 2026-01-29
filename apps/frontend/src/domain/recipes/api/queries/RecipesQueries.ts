@@ -91,7 +91,7 @@ export const useCreateRecipeMutation = () => {
     }: {
       organizationId: OrganizationId;
       spaceId: SpaceId;
-      recipe: { name: string; content: string };
+      recipe: { name: string; content: string; slug?: string };
     }) => {
       return recipesGateway.createRecipe(organizationId, spaceId, recipe);
     },

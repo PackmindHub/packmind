@@ -23,7 +23,7 @@ export interface IRecipesGateway {
   createRecipe(
     organizationId: OrganizationId,
     spaceId: SpaceId,
-    recipe: { name: string; content: string },
+    recipe: { name: string; content: string; slug?: string },
   ): Promise<Recipe>;
   updateRecipe(
     organizationId: OrganizationId,

@@ -18,6 +18,7 @@ import {
   ISpacesPort,
   OrganizationId,
   Recipe,
+  RecipeSlugAlreadyExistsError,
   RecipeStep,
 } from '@packmind/types';
 import slug from 'slug';
@@ -88,29 +89,17 @@ export class CaptureRecipeUsecase
     });
 
     try {
-      this.logger.info('Generating slug from recipe name', { name });
-      const baseSlug = slug(name);
-      this.logger.info('Base slug generated', { slug: baseSlug });
-
-      // Ensure slug is unique per space. If it exists, append "-1", "-2", ... until unique
-      this.logger.info('Checking slug uniqueness within space', {
-        baseSlug,
-        spaceId,
-        organizationId,
-      });
       const existingRecipes =
         await this.recipeService.listRecipesBySpace(spaceId);
       const existingSlugs = new Set(existingRecipes.map((r) => r.slug));
 
-      let recipeSlug = baseSlug;
-      if (existingSlugs.has(recipeSlug)) {
-        let counter = 1;
-        while (existingSlugs.has(`${baseSlug}-${counter}`)) {
-          counter++;
-        }
-        recipeSlug = `${baseSlug}-${counter}`;
-      }
-      this.logger.info('Resolved unique slug', { slug: recipeSlug });
+      const recipeSlug = this.resolveSlug(
+        command.slug,
+        name,
+        existingSlugs,
+        spaceId,
+      );
+      this.logger.info('Resolved slug', { slug: recipeSlug });
 
       // Determine content: use new structured format if provided, otherwise use legacy content
       const content =
@@ -246,6 +235,46 @@ export class CaptureRecipeUsecase
       }
     }
     return null;
+  }
+
+  private resolveSlug(
+    providedSlug: string | undefined,
+    name: string,
+    existingSlugs: Set<string>,
+    spaceId: string,
+  ): string {
+    if (providedSlug && providedSlug.trim() !== '') {
+      const sanitized = this.sanitizeSlug(providedSlug);
+
+      if (existingSlugs.has(sanitized)) {
+        throw new RecipeSlugAlreadyExistsError(sanitized, spaceId);
+      }
+
+      return sanitized;
+    }
+
+    // Auto-generate from name
+    const baseSlug = slug(name);
+    let recipeSlug = baseSlug;
+
+    if (existingSlugs.has(recipeSlug)) {
+      let counter = 1;
+      while (existingSlugs.has(`${baseSlug}-${counter}`)) {
+        counter++;
+      }
+      recipeSlug = `${baseSlug}-${counter}`;
+    }
+
+    return recipeSlug;
+  }
+
+  private sanitizeSlug(input: string): string {
+    return input
+      .toLowerCase()
+      .trim()
+      .replace(/[^a-z0-9-]/g, '-')
+      .replace(/-+/g, '-')
+      .replace(/^-|-$/g, '');
   }
 
   public assembleRecipeContent(

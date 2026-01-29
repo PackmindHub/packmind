@@ -134,10 +134,21 @@ export class DataFactory {
       await this.withUserAndOrganization();
     }
 
+    // Exclude slug from factory defaults - let captureRecipe auto-generate it from name
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { slug: _factorySlug, ...factoryDefaults } = recipeFactory({
+      spaceId: this.space.id,
+    });
+
+    // Also exclude slug from recipe override unless explicitly provided
+    const { slug: recipeSlug, ...recipeWithoutSlug } = recipe || {};
+
     return this.testApp.recipesHexa.getAdapter().captureRecipe({
-      ...recipeFactory({ spaceId: this.space.id }),
+      ...factoryDefaults,
       ...this.packmindCommand(),
-      ...recipe,
+      ...recipeWithoutSlug,
+      // Only include slug if explicitly provided in the recipe parameter
+      ...(recipeSlug !== undefined ? { slug: recipeSlug } : {}),
     });
   }
 

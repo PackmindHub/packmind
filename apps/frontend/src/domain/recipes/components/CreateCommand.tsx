@@ -7,6 +7,7 @@ import { useCurrentSpace } from '../../spaces/hooks/useCurrentSpace';
 import { useNavigation } from '../../../shared/hooks/useNavigation';
 import { CommandForm, CommandFormData } from './CommandForm';
 import { MarkdownEditorProvider } from '../../../shared/components/editor/MarkdownEditor';
+import { isPackmindConflictError } from '../../../services/api/errors/PackmindConflictError';
 
 export const CreateCommand = () => {
   const { organization } = useAuthContext();
@@ -36,6 +37,7 @@ export const CreateCommand = () => {
         recipe: {
           name: data.name,
           content: data.content,
+          slug: data.slug,
         },
       },
       {
@@ -51,10 +53,17 @@ export const CreateCommand = () => {
         },
         onError: (error) => {
           console.error('Failed to create command:', error);
-          setAlert({
-            type: 'error',
-            message: RECIPE_MESSAGES.error.createFailed,
-          });
+          if (isPackmindConflictError(error)) {
+            setAlert({
+              type: 'error',
+              message: RECIPE_MESSAGES.error.slugAlreadyExists,
+            });
+          } else {
+            setAlert({
+              type: 'error',
+              message: RECIPE_MESSAGES.error.createFailed,
+            });
+          }
         },
       },
     );
