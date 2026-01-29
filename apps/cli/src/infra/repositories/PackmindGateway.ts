@@ -26,6 +26,7 @@ import {
   CreateCommandCommand,
   CreateCommandResult,
 } from '../../domain/repositories/IPackmindGateway';
+import { IOnboardingDraft } from '../../domain/types/OnboardingDraft';
 import { readSkillDirectory } from '../utils/readSkillDirectory';
 import { CommunityEditionError } from '../../domain/errors/CommunityEditionError';
 import { NotLoggedInError } from '../../domain/errors/NotLoggedInError';
@@ -1295,5 +1296,26 @@ export class PackmindGateway implements IPackmindGateway {
       `/api/v0/organizations/${organizationId}/spaces/${spaceId}/recipes`,
       { method: 'POST', body: data },
     );
+  };
+
+  public pushOnboardingBaseline = async (
+    draft: IOnboardingDraft,
+  ): Promise<{ success: boolean }> => {
+    const space = await this.getGlobalSpace();
+    const { organizationId } = this.httpClient.getAuthContext();
+
+    await this.httpClient.request(
+      `/api/v0/organizations/${organizationId}/spaces/${space.id}/onboarding/baseline`,
+      {
+        method: 'POST',
+        body: {
+          meta: draft.meta,
+          summary: draft.summary,
+          baseline_items: draft.baseline_items,
+        },
+      },
+    );
+
+    return { success: true };
   };
 }

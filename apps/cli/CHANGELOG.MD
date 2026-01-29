@@ -2,11 +2,19 @@
 
 ## Added
 
-- add `commands create` to create commands in Packmind.
+- Add `commands create` command to create reusable commands from playbook JSON files with `packmind-cli commands create <playbook.json>`
+- Add `init` command for onboarding: automatically scans projects, generates standards and commands, with optional push to backend
+- Add `onboard` command to rescan projects and regenerate content with draft-first flow
+- Enhanced `packmind-onboard` default skill with structured step-based guidance and AI-driven project analysis
 
 ## Changed
 
+- Improved onboarding with draft-first flow and regeneration loop
+- Improved project scanning to detect multiple language ecosystems and technologies
+
 ## Fixed
+
+- Fix CLI syntax for command creation to consistently use `commands create` instead of `command create`
 
 ## Removed
 
