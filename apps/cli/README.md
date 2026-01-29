@@ -2,6 +2,16 @@
 
 A command-line interface for Packmind linting and code quality checks.
 
+## Requirements
+
+**For npm installation only:**
+
+- **Node.js 22 or higher**
+
+**For standalone executables:**
+
+- No Node.js installation required (runtime is bundled)
+
 ## Features
 
 - **Lint code**: Analyze code files against Packmind standards

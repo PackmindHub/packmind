@@ -79,7 +79,7 @@ In Packmind, go to **Packages** → **Create Package**, then add your standards,
 ### 2. Install locally
 
 ```bash
-# Install the CLI
+# Install the CLI (requires Node.js 22+ for npm installation)
 npm install -g @packmind/cli
 
 packmind-cli login
