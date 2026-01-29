@@ -114,26 +114,40 @@ The workflow ensures your command includes:
 Every time you update a command, this creates a new version.
 This keeps track of the history of your changes, and it's useful to keep track of which versions are currently distributed to Git repositories.
 
+## Command Identification
+
+Each command has three identifiers:
+
+| Identifier | Example                                | Purpose                                                 |
+| ---------- | -------------------------------------- | ------------------------------------------------------- |
+| **Name**   | `"Add a New REST Endpoint"`            | User-facing display name in the web app                 |
+| **Slug**   | `"add-a-new-rest-endpoint"`            | URL-safe identifier used for invocation and file naming |
+| **ID**     | `550e8400-e29b-41d4-a716-446655440000` | Internal database identifier                            |
+
+The **slug** is automatically generated from the name and used throughout the system. If you create multiple commands with similar names in the same space, Packmind appends numbers to keep slugs unique (e.g., `"add-api-endpoint"`, `"add-api-endpoint-1"`).
+
 ## How to Use Commands After Distribution
 
 Unlike standards (which are applied automatically), commands are **user-invoked**—you run them when you need them.
 
+Commands are identified and invoked using their **slug** (the auto-generated URL-safe name).
+
 ### Using Slash Commands (Claude Code, Cursor, GitHub Copilot)
 
-For AI assistants with native slash command support, type `/` followed by the command name in your chat:
+For AI assistants with native slash command support, type `/` followed by the command slug:
 
 ```
-/create-new-use-case
+/add-a-new-rest-endpoint
 ```
 
-The AI assistant will recognize the command and execute its instructions.
+The AI assistant will recognize the command by its slug and execute its instructions.
 
 ### Manual Invocation (Continue, GitLab Duo, Junie, AGENTS.md)
 
-For AI assistants without native slash command support, reference the command file directly in your prompt:
+For AI assistants without native slash command support, reference the command file by its slug:
 
 ```
-Execute @.packmind/commands/create-new-use-case.md
+Execute @.packmind/commands/add-a-new-rest-endpoint.md
 ```
 
 The AI assistant will read the command file and follow its instructions.
