@@ -2,6 +2,8 @@
 
 ## Added
 
+- Create commands with the CLI using `packmind-cli commands create <playbook.json>`
+
 ## Changed
 
 ## Fixed
