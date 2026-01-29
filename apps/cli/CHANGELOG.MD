@@ -2,6 +2,8 @@
 
 ## Added
 
+- add `commands create` to create commands in Packmind.
+
 ## Changed
 
 ## Fixed
