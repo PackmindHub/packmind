@@ -274,7 +274,7 @@ export class CaptureRecipeUsecase
       .trim()
       .replace(/[^a-z0-9-]/g, '-')
       .replace(/-+/g, '-')
-      .replace(/^-|-$/g, '');
+      .replace(/(?:^-)|(?:-$)/g, '');
   }
 
   public assembleRecipeContent(
