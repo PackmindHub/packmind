@@ -44,10 +44,10 @@ export class RenameOrganizationUseCase
     }
 
     const updatedOrganization =
-      await this.organizationService.updateOrganization({
-        ...command.organization,
-        name: newName,
-      });
+      await this.organizationService.renameOrganization(
+        command.organization,
+        newName,
+      );
 
     this.logger.info('Organization renamed successfully', {
       organizationId: command.organizationId,
