@@ -107,7 +107,11 @@ describe('LLMConfigurationForm', () => {
 
       it('displays model input field', async () => {
         await waitFor(() => {
-          expect(screen.getByPlaceholderText('gpt-5.1')).toBeInTheDocument();
+          expect(
+            screen.getByPlaceholderText(
+              LLM_PROVIDER_METADATA.openai.defaultModel,
+            ),
+          ).toBeInTheDocument();
         });
       });
 
@@ -248,7 +252,7 @@ describe('LLMConfigurationForm', () => {
           expect(mockOnTestConnection).toHaveBeenCalledWith({
             provider: LLMProvider.OPENAI,
             apiKey: 'sk-test-key-123',
-            model: 'gpt-5.1',
+            model: LLM_PROVIDER_METADATA.openai.defaultModel,
             fastestModel: 'gpt-4.1-mini',
           });
         });
@@ -545,7 +549,7 @@ describe('LLMConfigurationForm', () => {
           expect(mockOnSaveConfiguration).toHaveBeenCalledWith({
             provider: LLMProvider.OPENAI,
             apiKey: 'sk-test-key-123',
-            model: 'gpt-5.1',
+            model: LLM_PROVIDER_METADATA.openai.defaultModel,
             fastestModel: 'gpt-4.1-mini',
           });
         });
