@@ -1,3 +1,4 @@
+export { EmailAlreadyExistsError } from './EmailAlreadyExistsError';
 export {
   OrganizationSlugConflictError,
   OrganizationNameConflictError,
