@@ -13,7 +13,36 @@ export function generateStandardSamplePrompt(
 ): string {
   const typeLabel = type === 'language' ? 'programming language' : 'framework';
 
-  return `You are an expert software engineer creating a coding standard for ${displayName} (${typeLabel}).
+  return `You are a principal software engineer creating an ADVANCED coding standard for ${displayName} (${typeLabel}).
+
+TARGET AUDIENCE: Experienced developers who already know the basics.
+
+## CRITICAL: Rule Selection Criteria
+
+### ❌ AVOID These Types of Rules (NO VALUE):
+- **Beginner-level**: Naming conventions, basic syntax, simple formatting
+- **Too common**: Patterns everyone already follows (e.g., "use try-catch", "close resources")
+- **Too niche**: Rules that only apply to rare edge cases or specific architectures
+- **Obvious**: Things any experienced developer does naturally
+
+### ✅ FOCUS On Rules That Are:
+- **Broadly applicable**: Most ${displayName} developers encounter these situations regularly
+- **Non-obvious pitfalls**: Common mistakes even experienced developers make
+- **High-impact**: Mistakes here cause real production issues (bugs, performance, security)
+- **Actionable**: Clear guidance that developers can apply immediately
+
+### Good Rule Characteristics:
+- Addresses a scenario 70%+ of ${displayName} developers will face
+- Prevents a mistake that causes real-world problems
+- Not so common that everyone already does it
+- Not so rare that few developers will ever need it
+
+### Examples of GOOD vs BAD Rule Topics:
+- ✅ "Handle timeouts on HTTP clients" (common scenario, often forgotten)
+- ❌ "Use camelCase for variables" (too basic, everyone knows)
+- ❌ "Implement custom class loaders" (too niche, rare use case)
+- ✅ "Validate user input at API boundaries" (common, high-impact, often incomplete)
+- ❌ "Use async/await" (too common, everyone already does it)
 
 Generate a JSON coding standard following these STRICT requirements:
 
@@ -79,25 +108,29 @@ Don't just say what NOT to do. Tell what TO do instead.
 **BAD:** "Don't use var"
 **GOOD:** "Use const for variables that are never reassigned, let for reassigned variables"
 
-## Examples of Well-Written Rules
+## Examples of Well-Written Rules (Broadly Applicable)
 
-- "Use const instead of let for variables that are never reassigned"
-- "Prefix interface names with I (e.g., \`IUserService\`)"
-- "Place repository implementations in \`infra/repositories/\`"
-- "Name test files with \`.spec.ts\` suffix matching the source file name"
-- "Handle errors at service boundaries using try-catch with specific error types"
-- "Follow Arrange-Act-Assert pattern in test structure"
-- "Use async/await instead of Promise chains for asynchronous operations"
+- "Set explicit timeouts on all HTTP client calls including connect and read timeouts"
+- "Validate and sanitize all user inputs at controller/handler boundaries"
+- "Use parameterized queries instead of string concatenation for database operations"
+- "Close database connections in finally blocks or use connection pooling"
+- "Log exception stack traces with context, not just error messages"
+- "Return defensive copies of mutable collections from public methods"
+- "Use dependency injection for external services instead of static instances"
+- "Isolate unit tests from external dependencies using mocks or stubs"
 
-## Example Topics to Cover
-Generate rules covering a mix of these areas relevant to ${displayName}:
-- Naming conventions (files, classes, functions, variables)
-- Code organization and structure
-- Error handling patterns
-- Type safety (if applicable)
-- Common idioms and patterns specific to ${displayName}
-- Testing patterns
-- Documentation requirements
+## Topics to Cover (Broadly Applicable)
+Generate rules that MOST ${displayName} developers will benefit from:
+- Resource management (connections, streams, handles) - everyone deals with this
+- Error handling beyond happy path - common source of production bugs
+- Input validation and sanitization - security basics often done wrong
+- Timeout and retry patterns - critical for any networked application
+- Thread safety for shared state - common pitfall in real applications
+- Test isolation and reliability - most projects have flaky tests
+- Logging that helps debugging - everyone needs this in production
+- Configuration management - every app needs external config
+- Dependency injection patterns - standard in modern ${displayName}
+- Common framework pitfalls specific to ${displayName}
 
 ## Language for Code Examples
 Choose the appropriate programming language based on ${displayName}:
