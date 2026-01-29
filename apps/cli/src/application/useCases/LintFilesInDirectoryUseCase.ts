@@ -32,6 +32,30 @@ export class LintFilesInDirectoryUseCase implements ILintFilesInDirectory {
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {}
 
+  /**
+   * Parses a scope string from the API into an array of patterns.
+   * Handles comma-separated patterns and various edge cases.
+   *
+   * @param scope - The scope string from API (can be null, empty, or comma-separated)
+   * @returns Array of scope patterns, or empty array if no valid scope
+   */
+  private parseScopeString(scope: string | null | undefined): string[] {
+    if (!scope) {
+      return [];
+    }
+
+    const trimmedScope = scope.trim();
+
+    if (trimmedScope === '') {
+      return [];
+    }
+
+    return trimmedScope
+      .split(',')
+      .map((pattern) => pattern.trim())
+      .filter((pattern) => pattern.length > 0);
+  }
+
   private fileMatchesScope(filePath: string, scopePatterns: string[]): boolean {
     // If no scope patterns defined, run on all files
     if (!scopePatterns || scopePatterns.length === 0) {
@@ -298,9 +322,7 @@ export class LintFilesInDirectoryUseCase implements ILintFilesInDirectory {
               {
                 name: standardSlug,
                 slug: standardSlug,
-                scope: draftProgramsResult.scope
-                  ? [draftProgramsResult.scope]
-                  : [],
+                scope: this.parseScopeString(draftProgramsResult.scope),
                 rules: [
                   {
                     content: draftProgramsResult.ruleContent || 'Draft Rule',
@@ -342,9 +364,7 @@ export class LintFilesInDirectoryUseCase implements ILintFilesInDirectory {
               {
                 name: standardSlug,
                 slug: standardSlug,
-                scope: activeProgramsResult.scope
-                  ? [activeProgramsResult.scope]
-                  : [],
+                scope: this.parseScopeString(activeProgramsResult.scope),
                 rules: [
                   {
                     content: activeProgramsResult.ruleContent || 'Active Rule',
