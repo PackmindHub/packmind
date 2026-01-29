@@ -1,14 +1,8 @@
-# [Unreleased]
-
-## Added
-
-## Changed
+# [0.14.1] - 2026-01-29
 
 ## Fixed
 
 - Remove forgotten debugging when installing packages.
-
-## Removed
 
 # [0.14.0] - 2026-01-28
 
@@ -164,7 +158,7 @@
 
 - Add proper CHANGELOG.MD in the GH release
 
-[Unreleased]: https://github.com/PackmindHub/packmind/compare/release-cli/0.14.0...HEAD
+[0.14.1]: https://github.com/PackmindHub/packmind/compare/release-cli/0.14.0...release-cli/0.14.1
 [0.14.0]: https://github.com/PackmindHub/packmind/compare/release-cli/0.13.1...release-cli/0.14.0
 [0.13.1]: https://github.com/PackmindHub/packmind/compare/release-cli/0.13.0...release-cli/0.13.1
 [0.13.0]: https://github.com/PackmindHub/packmind/compare/release-cli/0.12.0...release-cli/0.13.0
