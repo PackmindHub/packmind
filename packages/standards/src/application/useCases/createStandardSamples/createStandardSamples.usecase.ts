@@ -2,6 +2,7 @@ import { PackmindLogger } from '@packmind/logger';
 import {
   AbstractMemberUseCase,
   MemberContext,
+  PackmindEventEmitterService,
   getErrorMessage,
 } from '@packmind/node-utils';
 import {
@@ -15,6 +16,7 @@ import {
   SampleError,
   SpaceId,
   Standard,
+  StandardSampleSelectedEvent,
   UserId,
   createOrganizationId,
   createUserId,
@@ -37,6 +39,7 @@ export class CreateStandardSamplesUsecase
   constructor(
     accountsPort: IAccountsPort,
     private readonly standardsPort: IStandardsPort,
+    private readonly eventEmitterService: PackmindEventEmitterService,
     logger: PackmindLogger = new PackmindLogger(origin),
   ) {
     super(accountsPort, logger);
@@ -46,6 +49,19 @@ export class CreateStandardSamplesUsecase
     command: CreateStandardSamplesCommand & MemberContext,
   ): Promise<CreateStandardSamplesResponse> {
     const { organizationId, spaceId, samples, userId } = command;
+
+    for (const sample of samples) {
+      this.eventEmitterService.emit(
+        new StandardSampleSelectedEvent({
+          sampleId: sample.id,
+          sampleType: sample.type,
+          spaceId,
+          organizationId: createOrganizationId(organizationId),
+          userId: createUserId(userId),
+          source: 'ui',
+        }),
+      );
+    }
 
     this.logger.info('Starting createStandardSamples process', {
       organizationId,

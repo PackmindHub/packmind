@@ -34,6 +34,7 @@ import { useCurrentSpace } from '../../spaces/hooks/useCurrentSpace';
 import { routes } from '../../../shared/utils/routes';
 import { StandardSamplesModal } from './StandardSamplesModal';
 import { useAuthContext } from '../../accounts/hooks/useAuthContext';
+import { useAnalytics } from '@packmind/proprietary/frontend/domain/amplitude/providers/AnalyticsProvider';
 
 interface StandardsListProps {
   orgSlug?: string;
@@ -42,6 +43,7 @@ interface StandardsListProps {
 export const StandardsList = ({ orgSlug }: StandardsListProps = {}) => {
   const { spaceSlug } = useCurrentSpace();
   const { user } = useAuthContext();
+  const analytics = useAnalytics();
 
   const hasSamplesAccess = isFeatureFlagEnabled({
     featureKeys: [STANDARD_SAMPLES_FEATURE_KEY],
@@ -290,7 +292,13 @@ export const StandardsList = ({ orgSlug }: StandardsListProps = {}) => {
                           </PMMenu.Item>
                           <PMMenu.Item
                             value="samples"
-                            onClick={() => setIsSamplesModalOpen(true)}
+                            onClick={() => {
+                              analytics.track(
+                                'create_standard_from_samples_clicked',
+                                {},
+                              );
+                              setIsSamplesModalOpen(true);
+                            }}
                           >
                             From samples
                           </PMMenu.Item>
