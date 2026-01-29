@@ -763,6 +763,21 @@ The command playbook file is a JSON file with the following structure:
 }
 ```
 
+### Command Identification
+
+When you create a command, Packmind automatically generates a **slug** from the command name:
+
+- **Name** (provided by you): `"Add a New REST Endpoint"`
+- **Slug** (auto-generated): `"add-a-new-rest-endpoint"`
+
+The slug is used for:
+
+- File naming: `.claude/commands/packmind/add-a-new-rest-endpoint.md`
+- AI agent invocation: `/add-a-new-rest-endpoint`
+- Command identification and distribution
+
+If a command with the same slug already exists in your space, Packmind appends a counter (e.g., `add-a-new-rest-endpoint-1`) to ensure uniqueness.
+
 **Required fields:**
 
 | Field                          | Description                                              |
