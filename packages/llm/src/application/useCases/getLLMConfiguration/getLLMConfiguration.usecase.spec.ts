@@ -1,4 +1,8 @@
-import { createOrganizationId, LLMProvider } from '@packmind/types';
+import {
+  createOrganizationId,
+  LLM_PROVIDER_METADATA,
+  LLMProvider,
+} from '@packmind/types';
 import { stubLogger } from '@packmind/test-utils';
 import { IAIProviderRepository } from '../../../domain/repositories/IAIProviderRepository';
 import { GetLLMConfigurationUseCase } from './getLLMConfiguration.usecase';
@@ -168,7 +172,9 @@ describe('GetLLMConfigurationUseCase', () => {
     it('returns default model', async () => {
       const result = await useCase.execute({ organizationId });
 
-      expect(result.configuration?.model).toBe('gpt-5.1');
+      expect(result.configuration?.model).toBe(
+        LLM_PROVIDER_METADATA.openai.defaultModel,
+      );
     });
 
     it('returns default fastestModel', async () => {
@@ -203,7 +209,9 @@ describe('GetLLMConfigurationUseCase', () => {
       it('returns default model in fallback configuration', async () => {
         const result = await useCase.execute({ organizationId });
 
-        expect(result.configuration?.model).toBe('gpt-5.1');
+        expect(result.configuration?.model).toBe(
+          LLM_PROVIDER_METADATA.openai.defaultModel,
+        );
       });
 
       it('returns default fastestModel in fallback configuration', async () => {

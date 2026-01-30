@@ -7,6 +7,7 @@ import {
 } from '@packmind/types';
 import { IListPackagesUseCase } from '../useCases/IListPackagesUseCase';
 import { IGetPackageSummaryUseCase } from '../useCases/IGetPackageSummaryUseCase';
+import { IOnboardingDraft } from '../types/OnboardingDraft';
 import { ILinterGateway } from './ILinterGateway';
 
 // MCP Token types
@@ -177,4 +178,9 @@ export interface IPackmindGateway {
     spaceId: string,
     data: CreateCommandCommand,
   ): Promise<CreateCommandResult>;
+
+  // Onboarding baseline
+  pushOnboardingBaseline(
+    draft: IOnboardingDraft,
+  ): Promise<{ success: boolean }>;
 }

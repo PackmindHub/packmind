@@ -97,7 +97,7 @@ const app = subcommands({
     whoami: whoamiCommand,
     'setup-mcp': setupMcpCommand,
     skills: skillsCommand,
-    standards: standardsCommand,
+    standard: standardsCommand,
     commands: commandsCommand,
   },
 });

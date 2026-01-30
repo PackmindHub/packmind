@@ -149,7 +149,8 @@ Define specific, actionable scenarios:
 
 ### Step 3: Creating the Playbook File
 
-Create a JSON file named `<command-name>.command.playbook.json` with the structure documented above.
+1. Create a draft JSON file in `.packmind/commands/_drafts/` (create the folder if missing) using filename `<command-slug>-draft.json` (lowercase with hyphens)
+2. Structure the playbook with all required fields documented above
 
 Example minimal playbook:
 
@@ -179,26 +180,26 @@ Example minimal playbook:
    - Context validation checkpoints
    - Each step with name, description, and code snippet (if any)
 
-2. **Provide the file path** to the playbook JSON file so users can open and edit it directly if needed.
+2. **Provide the file path** to the draft JSON file (`.packmind/commands/_drafts/<command-slug>-draft.json`) so users can open and edit it directly if needed.
 
-3. Ask: **"Here is the command that will be created on Packmind. The playbook file is at \`<path>\` if you want to review or edit it. Do you approve?"**
+3. Ask: **"Here is the command that will be created on Packmind. The draft file is at \`<path>\` if you want to review or edit it. Do you approve?"**
 
 4. **Wait for explicit user confirmation** before proceeding to Step 5.
 
-5. If the user requests changes, go back to earlier steps to make adjustments.
+5. If the user requests changes, edit the draft file and re-submit for approval.
 
 ### Step 5: Creating the Command via CLI
 
 Run the packmind-cli command to create the command:
 
 ```bash
-packmind-cli command create <path-to-playbook.json>
+packmind-cli commands create <path-to-playbook.json>
 ```
 
 Example:
 
 ```bash
-packmind-cli command create ./create-api-endpoint.command.playbook.json
+packmind-cli commands create ./.packmind/commands/_drafts/create-api-endpoint-draft.json
 ```
 
 Expected output on success:
@@ -271,7 +272,7 @@ Here's a complete example creating a command for setting up a new API endpoint:
 **Creating the command:**
 
 ```bash
-packmind-cli command create create-api-endpoint.command.playbook.json
+packmind-cli commands create ./.packmind/commands/_drafts/create-api-endpoint-draft.json
 ```
 
 ## Quick Reference

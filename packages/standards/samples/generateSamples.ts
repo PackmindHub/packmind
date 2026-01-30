@@ -7,7 +7,12 @@ import * as fs from 'fs';
 import * as path from 'path';
 
 import { createLLMService, LLMProvider, AIService } from '@packmind/llm';
-import { standardSamples, Sample, AI_RESPONSE_FORMAT } from '@packmind/types';
+import {
+  standardSamples,
+  Sample,
+  AI_RESPONSE_FORMAT,
+  languageToFrameworks,
+} from '@packmind/types';
 
 import { generateStandardSamplePrompt } from './prompts/generateStandardSamplePrompt';
 
@@ -114,7 +119,13 @@ async function generateSample(
   sample: Sample,
   type: 'language' | 'framework',
 ): Promise<{ success: boolean; error?: string }> {
-  const prompt = generateStandardSamplePrompt(sample.displayName, type);
+  const excludeTopics =
+    type === 'language' ? (languageToFrameworks[sample.id] ?? []) : [];
+  const prompt = generateStandardSamplePrompt(
+    sample.displayName,
+    type,
+    excludeTopics,
+  );
 
   let lastError = '';
 
@@ -181,15 +192,29 @@ async function main(): Promise<void> {
 
   await ensureGeneratedDir();
 
+  // TODO: Temporary hack - only generate samples for specific technologies
+  // Node.js targets both JavaScript and TypeScript
+  const ALLOWED_SAMPLE_IDS = [
+    'java',
+    'javascript',
+    'typescript',
+    'react',
+    'express',
+  ];
+
   const allSamples: { sample: Sample; type: 'language' | 'framework' }[] = [
-    ...standardSamples.languageSamples.map((sample) => ({
-      sample,
-      type: 'language' as const,
-    })),
-    ...standardSamples.frameworkSamples.map((sample) => ({
-      sample,
-      type: 'framework' as const,
-    })),
+    ...standardSamples.languageSamples
+      .filter((sample) => ALLOWED_SAMPLE_IDS.includes(sample.id))
+      .map((sample) => ({
+        sample,
+        type: 'language' as const,
+      })),
+    ...standardSamples.frameworkSamples
+      .filter((sample) => ALLOWED_SAMPLE_IDS.includes(sample.id))
+      .map((sample) => ({
+        sample,
+        type: 'framework' as const,
+      })),
   ];
 
   const results: {
