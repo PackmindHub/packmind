@@ -54,9 +54,10 @@ export function OnboardingIntentModal({
               alignItems="center"
               justifyContent="center"
               height="100%"
-              padding={8}
+              paddingX="5%"
+              paddingY="5%"
             >
-              <PMBox maxWidth="800px" width="full">
+              <PMBox width="full" height="full">
                 {step === 'welcome' && (
                   <OnboardingWelcome
                     onDiscover={handleDiscover}

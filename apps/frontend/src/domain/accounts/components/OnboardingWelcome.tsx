@@ -6,8 +6,6 @@ import {
   PMCard,
   PMHStack,
   PMIcon,
-  PMGrid,
-  PMGridItem,
   PMLink,
 } from '@packmind/ui';
 import { LuBookOpen, LuBrainCircuit, LuUsers } from 'react-icons/lu';
@@ -50,65 +48,67 @@ export function OnboardingWelcome({
   onSkip,
 }: OnboardingWelcomeProps) {
   return (
-    <PMGrid templateColumns="1fr 1fr" gap={8} align="start" width="full">
-      <PMGridItem>
-        <PMVStack gap={6} align="start">
-          <PMVStack gap={3} align="start">
-            <PMHeading level="h2">Welcome to Packmind</PMHeading>
-            <PMText color="secondary" fontSize="md">
-              Train AI agents to code right
-            </PMText>
-          </PMVStack>
-
-          <PMVStack gap={3} align="stretch" width="full">
-            <PMButton
-              size="lg"
-              variant="primary"
-              onClick={onDiscover}
-              data-testid="OnboardingWelcome.DiscoverButton"
-            >
-              Discover
-            </PMButton>
-            <PMLink
-              variant="underline"
-              cursor="pointer"
-              onClick={onSkip}
-              textAlign="center"
-              data-testid="OnboardingWelcome.SkipLink"
-            >
-              I just want to explore
-            </PMLink>
-          </PMVStack>
+    <PMHStack
+      gap="10%"
+      align="center"
+      justify="space-between"
+      width="full"
+      height="full"
+    >
+      <PMVStack gap="15%" align="start" height="full" justify="center" flex={1}>
+        <PMVStack gap={4} align="start">
+          <PMHeading level="h2">Welcome to Packmind</PMHeading>
+          <PMText color="secondary" fontSize="md">
+            Train AI agents to code right
+          </PMText>
         </PMVStack>
-      </PMGridItem>
 
-      <PMGridItem>
-        <PMVStack gap={3} align="stretch">
-          {ONBOARDING_VALUE_PROPS.map((valueProp) => (
-            <PMCard.Root
-              key={valueProp.key}
-              borderWidth="1px"
-              borderColor="gray.700"
-              bg="background.secondary"
-              data-testid={`OnboardingWelcome.ValuePropCard.${valueProp.key}`}
-            >
-              <PMCard.Body padding={4}>
-                <PMHStack gap={3} align="start">
-                  <PMIcon as={valueProp.icon} size="lg" color="brand.primary" />
-                  <PMVStack gap={1} align="start">
-                    <PMText fontSize="md" fontWeight="medium">
-                      {valueProp.title}
-                    </PMText>
-                    <PMText fontSize="sm" color="secondary">
-                      {valueProp.description}
-                    </PMText>
-                  </PMVStack>
-                </PMHStack>
-              </PMCard.Body>
-            </PMCard.Root>
-          ))}
+        <PMVStack gap={4} align="stretch" width="full" maxWidth="400px">
+          <PMButton
+            size="lg"
+            variant="primary"
+            onClick={onDiscover}
+            data-testid="OnboardingWelcome.DiscoverButton"
+          >
+            Discover
+          </PMButton>
+          <PMLink
+            variant="underline"
+            cursor="pointer"
+            onClick={onSkip}
+            textAlign="center"
+            data-testid="OnboardingWelcome.SkipLink"
+          >
+            I just want to explore
+          </PMLink>
         </PMVStack>
-      </PMGridItem>
-    </PMGrid>
+      </PMVStack>
+
+      <PMVStack gap={8} align="stretch" flex={1} maxWidth="450px">
+        {ONBOARDING_VALUE_PROPS.map((valueProp) => (
+          <PMCard.Root
+            key={valueProp.key}
+            borderWidth="1px"
+            borderColor="gray.700"
+            bg="background.secondary"
+            data-testid={`OnboardingWelcome.ValuePropCard.${valueProp.key}`}
+          >
+            <PMCard.Body padding={4}>
+              <PMHStack gap={3} align="start">
+                <PMIcon as={valueProp.icon} size="lg" color="brand.primary" />
+                <PMVStack gap={1} align="start">
+                  <PMText fontSize="md" fontWeight="medium">
+                    {valueProp.title}
+                  </PMText>
+                  <PMText fontSize="sm" color="secondary">
+                    {valueProp.description}
+                  </PMText>
+                </PMVStack>
+              </PMHStack>
+            </PMCard.Body>
+          </PMCard.Root>
+        ))}
+      </PMVStack>
+    </PMHStack>
   );
 }

@@ -52,8 +52,13 @@ export function OnboardingPlaybook({
   onPrevious,
 }: OnboardingPlaybookProps) {
   return (
-    <PMVStack gap={8} align="stretch" width="full">
-      <PMVStack gap={3} textAlign="center">
+    <PMVStack
+      align="stretch"
+      width="full"
+      height="full"
+      justify="space-between"
+    >
+      <PMVStack gap={4} textAlign="center">
         <PMHeading level="h2">Build and evolve your playbook</PMHeading>
         <PMText color="secondary" fontStyle="italic">
           A Playbook is where your engineering knowledge lives — so AI can
@@ -61,13 +66,13 @@ export function OnboardingPlaybook({
         </PMText>
       </PMVStack>
 
-      <PMGrid templateColumns="repeat(3, 1fr)" gap={6}>
+      <PMGrid templateColumns="repeat(3, 1fr)" gap={8}>
         {PLAYBOOK_ITEMS.map((item) => (
           <PMGridItem
             key={item.key}
             data-testid={`OnboardingPlaybook.ItemCard.${item.key}`}
           >
-            <PMVStack gap={3} align="center" textAlign="center">
+            <PMVStack gap={4} align="center" textAlign="center">
               <PMIcon
                 as={item.icon}
                 boxSize={12}
@@ -90,7 +95,7 @@ export function OnboardingPlaybook({
         ))}
       </PMGrid>
 
-      <PMHStack gap={3}>
+      <PMHStack gap={4}>
         <PMButton
           size="lg"
           variant="primary"
