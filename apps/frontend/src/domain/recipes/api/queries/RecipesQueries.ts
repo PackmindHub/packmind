@@ -77,6 +77,44 @@ export const useGetRecipeByIdQuery = (id: RecipeId) => {
   });
 };
 
+const CREATE_RECIPE_MUTATION_KEY = 'createRecipe';
+
+export const useCreateRecipeMutation = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationKey: [CREATE_RECIPE_MUTATION_KEY],
+    mutationFn: async ({
+      organizationId,
+      spaceId,
+      recipe,
+    }: {
+      organizationId: OrganizationId;
+      spaceId: SpaceId;
+      recipe: { name: string; content: string; slug?: string };
+    }) => {
+      return recipesGateway.createRecipe(organizationId, spaceId, recipe);
+    },
+    onSuccess: async () => {
+      // Invalidate the recipes list to show the new recipe
+      await queryClient.invalidateQueries({
+        queryKey: GET_RECIPES_KEY,
+      });
+
+      // Deployments overview may be affected
+      await queryClient.invalidateQueries({
+        queryKey: GET_RECIPES_DEPLOYMENT_OVERVIEW_KEY,
+      });
+    },
+    onError: async (error, variables, context) => {
+      console.error('Error creating recipe');
+      console.log('error: ', error);
+      console.log('variables: ', variables);
+      console.log('context: ', context);
+    },
+  });
+};
+
 const UPDATE_RECIPE_MUTATION_KEY = 'updateRecipe';
 
 export const useUpdateRecipeMutation = () => {

@@ -2,6 +2,16 @@
 
 A command-line interface for Packmind linting and code quality checks.
 
+## Requirements
+
+**For npm installation only:**
+
+- **Node.js 22 or higher**
+
+**For standalone executables:**
+
+- No Node.js installation required (runtime is bundled)
+
 ## Features
 
 - **Lint code**: Analyze code files against Packmind standards
@@ -21,7 +31,7 @@ npm install
 nx run packmind-cli:run -- lint <path>
 
 # Or use npm script
-npm run packmind-cli:v3:lint
+npm run packmind-cli:lint
 ```
 
 ### Building

@@ -91,6 +91,19 @@ module.exports = {
         ],
       },
     }),
+    // Copy sample JSON files for standard samples feature (both OSS and proprietary modes)
+    new CopyWebpackPlugin({
+      patterns: [
+        {
+          from: join(__dirname, '../../packages/standards/samples/generated'),
+          to: join(__dirname, '../../dist/apps/api/generated'),
+          globOptions: {
+            ignore: ['**/*.ts', '**/*.js'],
+          },
+          noErrorOnMissing: true,
+        },
+      ],
+    }),
     // Only copy WASM files in enterprise mode (not in OSS mode)
     ...(!isOssMode
       ? [

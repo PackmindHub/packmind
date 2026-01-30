@@ -2,14 +2,33 @@
 
 ## Added
 
-- Render skills for GitHub Copilot, Claude Code and Skills (#71)
-- Provide downloadable skills to ease managing the playbook
+- Create commands with the CLI using `packmind-cli commands create <playbook.json>`
+- Onboarding in CLI: scan projects, generate standards and commands automatically with `packmind-cli init` and `packmind-cli onboard`
+- Improved packmind-onboard skill with structured step-based guidance and AI-driven project analysis
+- Command creation support in coding agents via CreateCommandDeployer
 
 ## Changed
 
+- packmind-onboard skill completely restructured for clarity and enhanced user guidance
+
 ## Fixed
 
+- CLI syntax for command creation to use `commands create` instead of `command create`
+
 ## Removed
+
+# [1.8.0] - 2025-01-28
+
+## Added
+
+- Render skills for GitHub Copilot, Claude Code and Skills (#71)
+- Provide downloadable skills to ease managing the playbook
+- Delete skills from the app
+- Create commands from the app
+
+## Changed
+
+- Overview now displays artifacts that need removal from repositories
 
 # [1.7.0] - 2025-01-07
 
@@ -182,7 +201,8 @@
 - Bulk deployment across multiple repositories with atomic commits
 - Optional OpenAI integration for enhanced AI-powered features
 
-[Unreleased]: https://github.com/PackmindHub/packmind/compare/release/1.7.0...HEAD
+[Unreleased]: https://github.com/PackmindHub/packmind/compare/release/1.8.0...HEAD
+[1.8.0]: https://github.com/PackmindHub/packmind/compare/release/1.7.0...release/1.8.0
 [1.7.0]: https://github.com/PackmindHub/packmind/compare/release/1.6.0...release/1.7.0
 [1.6.0]: https://github.com/PackmindHub/packmind/compare/release/1.5.0...release/1.6.0
 [1.5.0]: https://github.com/PackmindHub/packmind/compare/release/1.4.1...release/1.5.0

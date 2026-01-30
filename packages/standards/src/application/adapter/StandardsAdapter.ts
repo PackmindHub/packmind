@@ -9,6 +9,8 @@ import {
   AddRuleToStandardResponse,
   CreateRuleExampleCommand,
   CreateStandardCommand,
+  CreateStandardSamplesCommand,
+  CreateStandardSamplesResponse,
   DeleteRuleExampleCommand,
   DeleteRuleExampleResponse,
   DeleteStandardCommand,
@@ -49,6 +51,7 @@ import { StandardsServices } from '../services/StandardsServices';
 import { AddRuleToStandardUsecase } from '../useCases/addRuleToStandard/addRuleToStandard.usecase';
 import { CreateRuleExampleUsecase } from '../useCases/createRuleExample/createRuleExample.usecase';
 import { CreateStandardUsecase } from '../useCases/createStandard/createStandard.usecase';
+import { CreateStandardSamplesUsecase } from '../useCases/createStandardSamples/createStandardSamples.usecase';
 import { CreateStandardWithExamplesUsecase } from '../useCases/createStandardWithExamples/createStandardWithExamples.usecase';
 import { CreateStandardWithPackagesUsecase } from '../useCases/createStandardWithPackages/createStandardWithPackages.usecase';
 import { DeleteRuleExampleUsecase } from '../useCases/deleteRuleExample/deleteRuleExample.usecase';
@@ -82,6 +85,7 @@ export class StandardsAdapter
   // Use cases - all initialized in initialize()
   private _createStandard!: CreateStandardUsecase;
   private _createStandardWithExamples!: CreateStandardWithExamplesUsecase;
+  private _createStandardSamples!: CreateStandardSamplesUsecase;
   private _createStandardWithPackages!: CreateStandardWithPackagesUsecase;
   private _updateStandard!: UpdateStandardUsecase;
   private _addRuleToStandard!: AddRuleToStandardUsecase;
@@ -252,6 +256,12 @@ export class StandardsAdapter
       this.repositories.getRuleRepository(),
       this.eventEmitterService,
       this.linterPort,
+    );
+
+    this._createStandardSamples = new CreateStandardSamplesUsecase(
+      this.accountsPort,
+      this,
+      this.eventEmitterService,
     );
 
     // Use case that depends on accountsPort, deploymentsPort, and spacesPort
@@ -517,5 +527,11 @@ export class StandardsAdapter
     command: DeleteRuleExampleCommand,
   ): Promise<DeleteRuleExampleResponse> {
     return this._deleteRuleExample.execute(command);
+  }
+
+  async createStandardSamples(
+    command: CreateStandardSamplesCommand,
+  ): Promise<CreateStandardSamplesResponse> {
+    return this._createStandardSamples.execute(command);
   }
 }

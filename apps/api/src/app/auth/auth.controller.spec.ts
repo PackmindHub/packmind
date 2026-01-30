@@ -125,7 +125,6 @@ describe('AuthController', () => {
     const signUpRequest: SignUpWithOrganizationCommand = {
       email: 'testuser@packmind.com',
       password: 'password123',
-      organizationName: 'Test Organization',
     };
 
     describe('with valid request', () => {
@@ -195,14 +194,11 @@ describe('AuthController', () => {
       const invalidRequest = {
         email: '',
         password: '',
-        organizationName: '',
       };
 
       beforeEach(() => {
         mockAuthService.signUp.mockRejectedValue(
-          new BadRequestException(
-            'Email, password, and organizationName are required',
-          ),
+          new BadRequestException('Email and password are required'),
         );
       });
 

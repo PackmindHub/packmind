@@ -23,8 +23,7 @@ import {
 } from '../api/queries/SkillsQueries';
 import { useCurrentSpace } from '../../spaces/hooks/useCurrentSpace';
 import { routes } from '../../../shared/utils/routes';
-import { GettingStartedLearnMoreDialog } from '../../organizations/components/dashboard/GettingStartedLearnMoreDialog';
-import { SkillsLearnMoreContent } from './SkillsLearnMoreContent';
+import { DownloadDefaultSkillsPopover } from './DownloadDefaultSkillsPopover';
 import { SKILL_MESSAGES } from '../constants/messages';
 
 interface ISkillsListProps {
@@ -170,14 +169,12 @@ export const SkillsList = ({ orgSlug }: ISkillsListProps) => {
         mx="auto"
         title="No skills yet"
       >
-        Skills are reusable prompts that can be invoked by AI coding assistants.
-        Create skills via the CLI using the command "packmind-cli skill add"
+        Download our skills to get started, then run /packmind-create-skill with
+        your AI coding assistant to be guided through creating your own skills.
         <PMHStack>
-          <GettingStartedLearnMoreDialog
-            body={<SkillsLearnMoreContent />}
-            title="How to create skills"
-            buttonLabel="Learn how to create skills"
-            buttonSize="sm"
+          <DownloadDefaultSkillsPopover
+            buttonVariant="primary"
+            placement="bottom"
           />
         </PMHStack>
       </PMEmptyState>

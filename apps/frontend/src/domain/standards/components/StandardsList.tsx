@@ -1,4 +1,4 @@
-import React from 'react';
+import * as React from 'react';
 import { Link } from 'react-router';
 import {
   PMBox,
@@ -12,6 +12,11 @@ import {
   PMAlertDialog,
   PMCheckbox,
   PMEmptyState,
+  PMMenu,
+  PMPortal,
+  isFeatureFlagEnabled,
+  STANDARD_SAMPLES_FEATURE_KEY,
+  DEFAULT_FEATURE_DOMAIN_MAP,
 } from '@packmind/ui';
 
 import {
@@ -27,6 +32,9 @@ import { GETTING_STARTED_CREATE_DIALOG } from '../../organizations/components/da
 import { GettingStartedLearnMoreDialog } from '../../organizations/components/dashboard/GettingStartedLearnMoreDialog';
 import { useCurrentSpace } from '../../spaces/hooks/useCurrentSpace';
 import { routes } from '../../../shared/utils/routes';
+import { StandardSamplesModal } from './StandardSamplesModal';
+import { useAuthContext } from '../../accounts/hooks/useAuthContext';
+import { useAnalytics } from '@packmind/proprietary/frontend/domain/amplitude/providers/AnalyticsProvider';
 
 interface StandardsListProps {
   orgSlug?: string;
@@ -34,6 +42,14 @@ interface StandardsListProps {
 
 export const StandardsList = ({ orgSlug }: StandardsListProps = {}) => {
   const { spaceSlug } = useCurrentSpace();
+  const { user } = useAuthContext();
+  const analytics = useAnalytics();
+
+  const hasSamplesAccess = isFeatureFlagEnabled({
+    featureKeys: [STANDARD_SAMPLES_FEATURE_KEY],
+    featureDomainMap: DEFAULT_FEATURE_DOMAIN_MAP,
+    userEmail: user?.email,
+  });
 
   const {
     data: listStandardsResponse,
@@ -52,6 +68,7 @@ export const StandardsList = ({ orgSlug }: StandardsListProps = {}) => {
     type: 'success' | 'error';
     message: string;
   } | null>(null);
+  const [isSamplesModalOpen, setIsSamplesModalOpen] = React.useState(false);
 
   const checkStandard = (standardId: StandardId) => {
     setSelectedStandardIds((prev) => [...prev, standardId]);
@@ -243,31 +260,77 @@ export const StandardsList = ({ orgSlug }: StandardsListProps = {}) => {
           />
         </PMBox>
       ) : (
-        <PMEmptyState
-          backgroundColor={'background.primary'}
-          borderRadius={'md'}
-          width={'2xl'}
-          mx={'auto'}
-          title={'No standards yet'}
-        >
-          Standards align coding assistants and developers on your
-          organization's conventions and best practices.
-          <PMHStack>
-            <GettingStartedLearnMoreDialog
-              body={GETTING_STARTED_CREATE_DIALOG.body}
-              title={GETTING_STARTED_CREATE_DIALOG.title}
-              buttonLabel="Create from your code"
-              buttonSize="sm"
-            />
-            {spaceSlug && (
-              <Link
-                to={routes.space.toCreateStandard(orgSlug || '', spaceSlug)}
-              >
-                <PMButton variant="secondary">Create from scratch</PMButton>
-              </Link>
-            )}
-          </PMHStack>
-        </PMEmptyState>
+        <>
+          <PMEmptyState
+            backgroundColor={'background.primary'}
+            borderRadius={'md'}
+            width={'2xl'}
+            mx={'auto'}
+            title={'No standards yet'}
+          >
+            Standards align coding assistants and developers on your
+            organization's conventions and best practices.
+            <PMHStack>
+              {spaceSlug &&
+                (hasSamplesAccess ? (
+                  <PMMenu.Root>
+                    <PMMenu.Trigger asChild>
+                      <PMButton variant="secondary">Create</PMButton>
+                    </PMMenu.Trigger>
+                    <PMPortal>
+                      <PMMenu.Positioner>
+                        <PMMenu.Content>
+                          <PMMenu.Item value="blank" asChild>
+                            <Link
+                              to={routes.space.toCreateStandard(
+                                orgSlug || '',
+                                spaceSlug,
+                              )}
+                            >
+                              Blank
+                            </Link>
+                          </PMMenu.Item>
+                          <PMMenu.Item
+                            value="samples"
+                            onClick={() => {
+                              analytics.track(
+                                'create_standard_from_samples_clicked',
+                                {},
+                              );
+                              setIsSamplesModalOpen(true);
+                            }}
+                          >
+                            From samples
+                          </PMMenu.Item>
+                        </PMMenu.Content>
+                      </PMMenu.Positioner>
+                    </PMPortal>
+                  </PMMenu.Root>
+                ) : (
+                  <PMButton variant="secondary" asChild>
+                    <Link
+                      to={routes.space.toCreateStandard(
+                        orgSlug || '',
+                        spaceSlug,
+                      )}
+                    >
+                      Create from scratch
+                    </Link>
+                  </PMButton>
+                ))}
+              <GettingStartedLearnMoreDialog
+                body={GETTING_STARTED_CREATE_DIALOG.body}
+                title={GETTING_STARTED_CREATE_DIALOG.title}
+                buttonLabel="Create from your code"
+                buttonSize="sm"
+              />
+            </PMHStack>
+          </PMEmptyState>
+          <StandardSamplesModal
+            open={isSamplesModalOpen}
+            onOpenChange={setIsSamplesModalOpen}
+          />
+        </>
       )}
     </div>
   );

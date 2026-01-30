@@ -13,20 +13,14 @@ import {
   useSignInMutation,
   useSignUpWithOrganizationMutation,
 } from '../api/queries';
-import { organizationGateway } from '../api/gateways';
-import { isPackmindConflictError } from '../../../services/api/errors/PackmindConflictError';
 import validator from 'validator';
 import { routes } from '../../../shared/utils/routes';
 import { SignUpWithOrganizationFormDataTestIds } from '@packmind/frontend';
 
 export default function SignUpWithOrganizationForm() {
-  const [organizationName, setOrganizationName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [organizationNameError, setOrganizationNameError] = useState<
-    string | undefined
-  >(undefined);
   const [emailError, setEmailError] = useState<string | undefined>(undefined);
   const [formErrors, setFormErrors] = useState<{
     email?: string;
@@ -38,27 +32,6 @@ export default function SignUpWithOrganizationForm() {
   const signInMutation = useSignInMutation();
   const checkEmailAvailabilityMutation = useCheckEmailAvailabilityMutation();
   const navigate = useNavigate();
-
-  // Real-time organization name validation
-  useEffect(() => {
-    if (!organizationName.trim()) {
-      setOrganizationNameError(undefined);
-      return;
-    }
-
-    const validateOrganizationName = async () => {
-      try {
-        await organizationGateway.getByName(organizationName.trim());
-        setOrganizationNameError('Organization name already exists');
-      } catch {
-        // If organization doesn't exist (404), that's good - name is available
-        setOrganizationNameError(undefined);
-      }
-    };
-
-    const debounceTimer = setTimeout(validateOrganizationName, 500);
-    return () => clearTimeout(debounceTimer);
-  }, [organizationName]);
 
   // Real-time email availability validation
   useEffect(() => {
@@ -87,7 +60,7 @@ export default function SignUpWithOrganizationForm() {
 
     const debounceTimer = setTimeout(validateEmailAvailability, 500);
     return () => clearTimeout(debounceTimer);
-  }, [email, checkEmailAvailabilityMutation]);
+  }, [email]);
 
   const getButtonText = () => {
     if (signUpWithOrganizationMutation.isPending) return 'Creating Account...';
@@ -130,15 +103,6 @@ export default function SignUpWithOrganizationForm() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!organizationName.trim()) {
-      setOrganizationNameError('Organization name is required');
-      return;
-    }
-
-    if (organizationNameError) {
-      return;
-    }
-
     if (emailError) {
       return;
     }
@@ -149,12 +113,11 @@ export default function SignUpWithOrganizationForm() {
 
     signUpWithOrganizationMutation.mutate(
       {
-        organizationName: organizationName.trim(),
         email: email.trim(),
         password,
       },
       {
-        onSuccess: (response) => {
+        onSuccess: () => {
           // Auto-login the user after successful registration
           signInMutation.mutate(
             {
@@ -163,8 +126,8 @@ export default function SignUpWithOrganizationForm() {
             },
             {
               onSuccess: () => {
-                // Redirect to organization dashboard after auto-login
-                navigate(routes.org.toDashboard(response.organization.slug));
+                // Redirect to create organization page after successful registration and login
+                navigate('/sign-up/create-organization');
               },
               onError: (error) => {
                 console.error('Auto-login failed after registration:', error);
@@ -174,23 +137,14 @@ export default function SignUpWithOrganizationForm() {
             },
           );
         },
-        onError: (error: unknown) => {
-          if (isPackmindConflictError(error)) {
-            if (error.serverError.data.message.includes('organization')) {
-              setOrganizationNameError(error.serverError.data.message);
-            }
-          }
-        },
       },
     );
   };
 
-  const organizationNameId = 'signup-organization-name';
   const emailId = 'signup-email';
   const passwordId = 'signup-password';
   const confirmPasswordId = 'signup-confirm-password';
 
-  const ORG_NAME_MAX_LENGTH = 64;
   const EMAIL_MAX_LENGTH = 255;
   const PASSWORD_MAX_LENGTH = 128;
 
@@ -200,36 +154,6 @@ export default function SignUpWithOrganizationForm() {
       data-testId={SignUpWithOrganizationFormDataTestIds.Component}
     >
       <PMFormContainer maxWidth="full" spacing={4}>
-        <PMField.Root required invalid={!!organizationNameError}>
-          <PMField.Label>
-            Organization Name{' '}
-            <PMText as="span" variant="small" color="secondary">
-              ({organizationName.length} / {ORG_NAME_MAX_LENGTH} max)
-            </PMText>
-            <PMField.RequiredIndicator />
-          </PMField.Label>
-
-          <PMInput
-            id={organizationNameId}
-            value={organizationName}
-            onChange={(e) => {
-              setOrganizationName(e.target.value);
-              setOrganizationNameError(undefined);
-            }}
-            placeholder="Enter organization name"
-            required
-            disabled={
-              signUpWithOrganizationMutation.isPending ||
-              signInMutation.isPending
-            }
-            maxLength={ORG_NAME_MAX_LENGTH}
-            data-testId={
-              SignUpWithOrganizationFormDataTestIds.OrganizationField
-            }
-          />
-          <PMField.ErrorText>{organizationNameError}</PMField.ErrorText>
-        </PMField.Root>
-
         <PMField.Root required invalid={!!formErrors.email || !!emailError}>
           <PMField.Label>
             Email{' '}
@@ -329,7 +253,6 @@ export default function SignUpWithOrganizationForm() {
           disabled={
             signUpWithOrganizationMutation.isPending ||
             signInMutation.isPending ||
-            !!organizationNameError ||
             !!emailError
           }
           data-testId={SignUpWithOrganizationFormDataTestIds.Submit}

@@ -1,5 +1,5 @@
 ---
-description: Create clear and concise end-user documentation for Packmind features to empower users in accomplishing their tasks effectively while avoiding unnecessary technical details.
+description: Create user-focused Packmind documentation within `apps/doc/` that explains features in clear task-oriented language without technical implementation details to help end users accomplish specific goals effectively when adding or updating guides for new or existing functionality.
 ---
 
 Create clear and concise end-user documentation for Packmind features to empower users in accomplishing their tasks effectively while avoiding unnecessary technical details.
@@ -11,11 +11,15 @@ Create clear and concise end-user documentation for Packmind features to empower
 - When you need to explain how users can accomplish specific tasks
 - When converting developer-focused documentation to user-friendly guides
 
+## Scope
+
+All documentation modifications MUST only be made within the `apps/doc/` folder, which contains the official Packmind end-user documentation. Do not modify any other documentation files outside this directory.
+
 ## Context Validation Checkpoints
 
 - [ ] Have you analyzed the codebase to understand the feature thoroughly (backend API, packages, frontend, MCP server)?
-- [ ] Have you reviewed existing documentation in docs/howto/ to understand the structure?
-- [ ] Do you know whether you need to create a new file or update an existing one?
+- [ ] Have you reviewed existing documentation in `apps/doc/` to understand the structure?
+- [ ] Do you know whether you need to create a new file or update an existing one within `apps/doc/`?
 - [ ] Have you identified what users need to accomplish versus what developers need to know?
 
 ## Recipe Steps
@@ -26,11 +30,11 @@ Before writing any documentation, thoroughly understand the feature by analyzing
 
 ### Step 2: Review Existing Documentation
 
-Read all existing files in docs/howto/ to understand the current documentation structure, identify where your new content fits, check for overlapping or related information, and determine if you need to create a new file or update existing ones.
+Read all existing files in `apps/doc/` to understand the current documentation structure, identify where your new content fits, check for overlapping or related information, and determine if you need to create a new file or update existing ones. The documentation is organized into subdirectories: `administration/`, `concepts/`, `getting-started/`, `governance/`, `linter/`, `security/`, and `tools/`.
 
 ### Step 3: Determine Documentation Structure
 
-Based on your analysis, decide whether to create a new file for a distinct new feature, update existing files if extending current functionality, or reorganize by extracting related content into dedicated files if needed.
+Based on your analysis, decide whether to create a new `.mdx` file in the appropriate `apps/doc/` subdirectory for a distinct new feature, update existing files if extending current functionality, or reorganize by extracting related content into dedicated files if needed. Always place new documentation in the most appropriate existing subdirectory.
 
 ### Step 4: Write User-Focused Content
 

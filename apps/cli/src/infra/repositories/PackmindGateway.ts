@@ -19,11 +19,14 @@ import {
   IGetDefaultSkillsUseCase,
   GetDefaultSkillsResult,
   GetGlobalSpaceResult,
-  CreateStandardCommand,
-  CreateStandardResult,
-  StandardRule,
-  AddExampleCommand,
+  CreateStandardInSpaceCommand,
+  CreateStandardInSpaceResult,
+  RuleWithId,
+  RuleExample,
+  CreateCommandCommand,
+  CreateCommandResult,
 } from '../../domain/repositories/IPackmindGateway';
+import { IOnboardingDraft } from '../../domain/types/OnboardingDraft';
 import { readSkillDirectory } from '../utils/readSkillDirectory';
 import { CommunityEditionError } from '../../domain/errors/CommunityEditionError';
 import { NotLoggedInError } from '../../domain/errors/NotLoggedInError';
@@ -1243,12 +1246,12 @@ export class PackmindGateway implements IPackmindGateway {
     );
   };
 
-  public createStandard = async (
+  public createStandardInSpace = async (
     spaceId: string,
-    data: CreateStandardCommand,
-  ): Promise<CreateStandardResult> => {
+    data: CreateStandardInSpaceCommand,
+  ): Promise<CreateStandardInSpaceResult> => {
     const { organizationId } = this.httpClient.getAuthContext();
-    return this.httpClient.request<CreateStandardResult>(
+    return this.httpClient.request<CreateStandardInSpaceResult>(
       `/api/v0/organizations/${organizationId}/spaces/${spaceId}/standards`,
       { method: 'POST', body: data },
     );
@@ -1257,9 +1260,9 @@ export class PackmindGateway implements IPackmindGateway {
   public getRulesForStandard = async (
     spaceId: string,
     standardId: string,
-  ): Promise<StandardRule[]> => {
+  ): Promise<RuleWithId[]> => {
     const { organizationId } = this.httpClient.getAuthContext();
-    return this.httpClient.request<StandardRule[]>(
+    return this.httpClient.request<RuleWithId[]>(
       `/api/v0/organizations/${organizationId}/spaces/${spaceId}/standards/${standardId}/rules`,
     );
   };
@@ -1268,7 +1271,7 @@ export class PackmindGateway implements IPackmindGateway {
     spaceId: string,
     standardId: string,
     ruleId: string,
-    example: AddExampleCommand,
+    example: RuleExample,
   ): Promise<void> => {
     const { organizationId } = this.httpClient.getAuthContext();
     await this.httpClient.request(
@@ -1282,5 +1285,37 @@ export class PackmindGateway implements IPackmindGateway {
         },
       },
     );
+  };
+
+  public createCommand = async (
+    spaceId: string,
+    data: CreateCommandCommand,
+  ): Promise<CreateCommandResult> => {
+    const { organizationId } = this.httpClient.getAuthContext();
+    return this.httpClient.request<CreateCommandResult>(
+      `/api/v0/organizations/${organizationId}/spaces/${spaceId}/recipes`,
+      { method: 'POST', body: data },
+    );
+  };
+
+  public pushOnboardingBaseline = async (
+    draft: IOnboardingDraft,
+  ): Promise<{ success: boolean }> => {
+    const space = await this.getGlobalSpace();
+    const { organizationId } = this.httpClient.getAuthContext();
+
+    await this.httpClient.request(
+      `/api/v0/organizations/${organizationId}/spaces/${space.id}/onboarding/baseline`,
+      {
+        method: 'POST',
+        body: {
+          meta: draft.meta,
+          summary: draft.summary,
+          baseline_items: draft.baseline_items,
+        },
+      },
+    );
+
+    return { success: true };
   };
 }

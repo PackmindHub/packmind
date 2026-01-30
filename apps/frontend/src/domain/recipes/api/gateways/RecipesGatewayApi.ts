@@ -49,7 +49,7 @@ export class RecipesGatewayApi
   async createRecipe(
     organizationId: OrganizationId,
     spaceId: SpaceId,
-    recipe: Omit<Recipe, 'id' | 'slug' | 'version'>,
+    recipe: { name: string; content: string; slug?: string },
   ): Promise<Recipe> {
     return this._api.post<Recipe>(
       `/organizations/${organizationId}/spaces/${spaceId}/recipes`,

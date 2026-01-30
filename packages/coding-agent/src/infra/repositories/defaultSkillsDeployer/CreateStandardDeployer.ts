@@ -266,29 +266,58 @@ TYPESCRIPT, TYPESCRIPT_TSX, JAVASCRIPT, JAVASCRIPT_JSX, PYTHON, JAVA, GO, RUST, 
 
 **Before running the CLI command**, you MUST get explicit user approval:
 
-1. Show the user the complete playbook content in a formatted preview:
-   - Name
-   - Description
-   - Scope
-   - Each rule with its content and examples (if any)
+1. **Display a formatted recap** of the playbook content:
 
-2. Ask: **"Here is the standard that will be created on Packmind. Do you approve?"**
+\`\`\`
+---
+Name: <standard name>
 
-3. **Wait for explicit user confirmation** before proceeding to Step 6.
+Description: <description>
 
-4. If the user requests changes, go back to earlier steps to make adjustments.
+Scope: <scope>
 
-### Step 6: Creating the Standard via CLI
+Rules:
 
-Run the packmind-cli command to create the standard:
+1. <rule content>
+   - ✅ <positive example>
+   - ❌ <negative example>
+2. <rule content>
+   - ✅ <positive example>
+   - ❌ <negative example>
+...
+---
+\`\`\`
+
+2. **Provide the file path** to the playbook JSON file so users can open and edit it directly if needed.
+
+3. Ask: **"Here is the standard that will be created on Packmind. The playbook file is at \`<path>\` if you want to review or edit it. Do you approve?"**
+
+4. **Wait for explicit user confirmation** before proceeding to Step 6.
+
+5. If the user requests changes, go back to earlier steps to make adjustments.
+
+### Step 6: Confirm and Submit
+
+1. **Re-read the playbook file** from disk to capture any user edits.
+
+2. **Compare with the original content** you created in Step 4.
+
+3. **If changes were detected**:
+   - Display the formatted recap again (same format as Step 5)
+   - Ask: **"The file was modified. Here is the updated content that will be sent. Do you confirm?"**
+   - **Wait for explicit confirmation** before proceeding.
+
+4. **If no changes**: Proceed directly to submission.
+
+5. Run the packmind-cli command:
 
 \`\`\`bash
-packmind-cli standard create <path-to-playbook.json>
+packmind-cli standards create <path-to-playbook.json>
 \`\`\`
 
 Example:
 \`\`\`bash
-packmind-cli standard create ./typescript-conventions.playbook.json
+packmind-cli standards create ./typescript-conventions.playbook.json
 \`\`\`
 
 Expected output on success:
@@ -311,6 +340,15 @@ packmind-cli login
 - Ensure all required fields are present
 - Verify JSON syntax is valid (use a JSON validator)
 - Check that rules array has at least one entry
+
+### Step 7: Cleanup
+
+After the standard is **successfully created**, delete the temporary files:
+
+1. Delete the playbook JSON file (e.g., \`<standard-name>.playbook.json\`)
+2. Delete the draft markdown file in \`.packmind/standards/_drafts/\` if it exists
+
+**Only clean up on success** - if the CLI command fails, keep the files so the user can retry.
 
 ## Complete Example
 
@@ -356,7 +394,7 @@ Here's a complete example creating a TypeScript testing standard:
 
 **Creating the standard:**
 \`\`\`bash
-packmind-cli standard create testing-conventions.playbook.json
+packmind-cli standards create testing-conventions.playbook.json
 \`\`\`
 
 ## Quick Reference

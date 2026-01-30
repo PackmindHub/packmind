@@ -93,7 +93,7 @@ def init_playbook(standard_name, path):
     print("4. Run the validator to check the playbook format:")
     print(f"   python3 scripts/validate_playbook.py {playbook_path}")
     print("5. Create the standard via CLI:")
-    print(f"   packmind-cli standard create {playbook_path}")
+    print(f"   packmind-cli standards create {playbook_path}")
 
     return playbook_path
 

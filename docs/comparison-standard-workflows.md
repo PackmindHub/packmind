@@ -8,40 +8,40 @@ This document compares the two standard creation workflows in Packmind:
 
 ## Comparison Table
 
-| Feature | packmind-standard-create (Skill) | MCP Workflow | Status |
-|---------|----------------------------------|--------------|--------|
+| Feature | packmind-standard-create (Skill) | MCP Workflow | Status                                                               |
+|---------|----------------------------------|--------------|----------------------------------------------------------------------|
 | **SHARED FEATURES** |
-| Rule writing guidelines (start with verb, be specific) | ✅ | ✅ | Implemented in both |
-| User approval before submission | ✅ | ✅ | Implemented in both |
-| Examples (positive/negative/language) | ✅ | ✅ | Implemented in both |
-| Iterative refinement | ✅ | ✅ | Implemented in both |
-| Standard name and description | ✅ | ✅ | Implemented in both |
+| Rule writing guidelines (start with verb, be specific) | ✅ | ✅ | Implemented in both                                                  |
+| User approval before submission | ✅ | ✅ | Implemented in both                                                  |
+| Examples (positive/negative/language) | ✅ | ✅ | Implemented in both                                                  |
+| Iterative refinement | ✅ | ✅ | Implemented in both                                                  |
+| Standard name and description | ✅ | ✅ | Implemented in both                                                  |
 | **IN SKILL ONLY** |
-| CLI-based workflow | ✅ | ❌ | Skill only |
-| Python scripts (init_playbook.py, validate_playbook.py) | ✅ | ❌ | Skill only |
-| JSON playbook file format | ✅ | ❌ | Skill only |
-| `scope` field | ✅ | ❌ | Skill only |
-| Python 3 prerequisite check | ✅ | ❌ | Skill only |
-| Separate validation step | ✅ | ❌ | Skill only |
-| Step 6: Verify in UI | ✅ | ❌ | Skill only |
-| Step 7: Iterate and improve guidance | ✅ | ❌ | Skill only |
+| CLI-based workflow | ✅ | ❌ | Skill only                                                           |
+| Python scripts (init_playbook.py, validate_playbook.py) | ✅ | ❌ | Skill only                                                           |
+| JSON playbook file format | ✅ | ❌ | Skill only                                                           |
+| `scope` field | ✅ | ❌ | Skill only                                                           |
+| Python 3 prerequisite check | ✅ | ❌ | Skill only                                                           |
+| Separate validation step | ✅ | ❌ | Skill only                                                           |
+| Step 6: Verify in UI | ✅ | ❌ | Skill only                                                           |
+| Step 7: Iterate and improve guidance | ✅ | ❌ | Skill only                                                           |
 | **IN MCP ONLY** |
-| Check for similar standards (Step 1) | ❌ | ✅ | MCP only |
-| Draft markdown file in `.packmind/standards/_drafts/` | ❌ | ✅ | MCP only |
-| Two-phase iteration (rules first, then examples) | ❌ | ✅ | MCP only |
-| TL;DR summary for review | ❌ | ✅ | MCP only |
-| Repository access guardrail | ❌ | ✅ | MCP only |
-| Advanced rule guidelines (~25 words, avoid rationale, split concerns) | ✅ | ✅ | Implemented in both |
-| `summary` field (one-sentence) | ✅ (documented) | ✅ | Both (CLI doesn't support yet) |
-| Clarification with 1-5 questions based on request clarity | ❌ | ✅ | MCP only |
-| Package selection | ❌ | ✅ | MCP only |
+| Check for similar standards (Step 1) | ❌ | ✅ | MCP only                                                             |
+| Draft markdown file in `.packmind/standards/_drafts/` | ❌ | ✅ | MCP only                                                             |
+| Two-phase iteration (rules first, then examples) | ❌ | ✅ | MCP only                                                             |
+| TL;DR summary for review | ❌ | ✅ | MCP only                                                             |
+| Repository access guardrail | ❌ | ✅ | MCP only                                                             |
+| Advanced rule guidelines (~25 words, avoid rationale, split concerns) | ✅ | ✅ | Implemented in both                                                  |
+| `summary` field (one-sentence) | ✅ (documented) | ✅ | Both (CLI doesn't support yet)                                       |
+| Clarification with 1-5 questions based on request clarity | ❌ | ✅ | MCP only                                                             |
+| Package selection | ❌ | ✅ | MCP only                                                             |
 | **NOT IMPLEMENTED YET** |
-| CLI package selection during standard creation | ❌ | ❌ | Not implemented (no `packmind-cli standard create --packages` flag) |
+| CLI package selection during standard creation | ❌ | ❌ | Not implemented (no `packmind-cli standards create --packages` flag) |
 
 ## Key Differences
 
 ### Technical Implementation
-- **Skill**: Uses CLI + Python scripts → creates JSON playbook file → runs `packmind-cli standard create`
+- **Skill**: Uses CLI + Python scripts → creates JSON playbook file → runs `packmind-cli standards create`
 - **MCP**: Direct MCP tool calls (`packmind_list_standards`, `packmind_save_standard`) with no CLI or Python scripts
 
 ### Workflow Structure

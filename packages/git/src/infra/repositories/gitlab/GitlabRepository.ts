@@ -73,8 +73,17 @@ export class GitlabRepository implements IGitRepo {
   }
 
   private normalizePath(path: string): string {
-    // Trim leading and trailing slashes for consistent comparison
-    return path.replace(/^\/+|\/+$/g, '');
+    // Trim leading slashes
+    let start = 0;
+    while (start < path.length && path[start] === '/') {
+      start++;
+    }
+    // Trim trailing slashes
+    let end = path.length;
+    while (end > start && path[end - 1] === '/') {
+      end--;
+    }
+    return path.slice(start, end);
   }
 
   private async fetchRepositoryTree(branch: string): Promise<Set<string>> {

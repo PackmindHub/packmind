@@ -8,6 +8,7 @@ import {
 } from '@packmind/types';
 import { IListPackagesUseCase } from '../useCases/IListPackagesUseCase';
 import { IGetPackageSummaryUseCase } from '../useCases/IGetPackageSummaryUseCase';
+import { IOnboardingDraft } from '../types/OnboardingDraft';
 
 // MCP Token types
 export type GetMcpTokenCommand = PackmindCommand;
@@ -200,33 +201,56 @@ export type IUploadSkillUseCase = IUseCase<
   UploadSkillResult
 >;
 
-// Atomic gateway types for standard creation
+// Standard creation types (atomic)
+export type CreateStandardInSpaceCommand = {
+  name: string;
+  description: string;
+  scope: string;
+  rules: Array<{
+    content: string;
+    examples?: {
+      language: string;
+      positive: string;
+      negative: string;
+    };
+  }>;
+};
+
+export type CreateStandardInSpaceResult = {
+  id: string;
+  name: string;
+};
+
+export type RuleWithId = {
+  id: string;
+  content: string;
+};
+
+export type RuleExample = {
+  language: string;
+  positive: string;
+  negative: string;
+};
+
+// Global space type (used by createCommand)
 export type GetGlobalSpaceResult = {
   id: string;
   slug: string;
 };
 
-export type CreateStandardCommand = {
+// Create command types
+export type CreateCommandCommand = {
   name: string;
-  description: string;
-  scope: string;
-  rules: Array<{ content: string }>;
+  summary: string;
+  whenToUse: string[];
+  contextValidationCheckpoints: string[];
+  steps: Array<{ name: string; description: string; codeSnippet?: string }>;
 };
 
-export type CreateStandardResult = {
+export type CreateCommandResult = {
   id: string;
   name: string;
-};
-
-export type StandardRule = {
-  id: string;
-  content: string;
-};
-
-export type AddExampleCommand = {
-  language: string;
-  positive: string;
-  negative: string;
+  slug: string;
 };
 
 export interface IPackmindGateway {
@@ -243,20 +267,35 @@ export interface IPackmindGateway {
   uploadSkill: Gateway<IUploadSkillUseCase>;
   getDefaultSkills: Gateway<IGetDefaultSkillsUseCase>;
 
-  // Atomic gateway methods for standard creation
+  // Atomic gateway for getGlobalSpace (used by createCommand and createStandard)
   getGlobalSpace(): Promise<GetGlobalSpaceResult>;
-  createStandard(
+
+  // Atomic gateways for standard creation
+  createStandardInSpace(
     spaceId: string,
-    data: CreateStandardCommand,
-  ): Promise<CreateStandardResult>;
+    data: CreateStandardInSpaceCommand,
+  ): Promise<CreateStandardInSpaceResult>;
+
   getRulesForStandard(
     spaceId: string,
     standardId: string,
-  ): Promise<StandardRule[]>;
+  ): Promise<RuleWithId[]>;
+
   addExampleToRule(
     spaceId: string,
     standardId: string,
     ruleId: string,
-    example: AddExampleCommand,
+    example: RuleExample,
   ): Promise<void>;
+
+  // Atomic gateway for command creation
+  createCommand(
+    spaceId: string,
+    data: CreateCommandCommand,
+  ): Promise<CreateCommandResult>;
+
+  // Onboarding baseline
+  pushOnboardingBaseline(
+    draft: IOnboardingDraft,
+  ): Promise<{ success: boolean }>;
 }

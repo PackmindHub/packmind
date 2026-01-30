@@ -46,6 +46,90 @@ Your new standard will be available in the Packmind web app, in the **Standards*
   will refine the standard before submitting it.
 </Tip>
 
+## Create a standard with a coding agent
+
+When using a coding agent like Claude Code, you can invoke the `/packmind-create-standard` skill to get guided assistance through the entire standard creation process.
+
+### Using the skill
+
+1. Open your coding agent (e.g., Claude Code)
+2. Type `/packmind-create-standard` to invoke the skill
+3. Describe the standard you want to create
+
+The agent will guide you through:
+
+1. **Understanding your needs** — Clarifying what problem the standard solves and where it applies
+2. **Writing rules** — Helping you craft clear, actionable rules following best practices
+3. **Creating the playbook** — Generating a JSON file with your standard definition
+4. **Review** — Showing you the complete standard for approval
+5. **Submission** — Creating the standard via the CLI
+
+<Tip>
+  The skill workflow is interactive and iterative. The agent will ask clarifying
+  questions and help you refine your rules before creating the standard.
+</Tip>
+
+## Create a standard from the CLI
+
+You can also create standards directly using the Packmind CLI with a JSON playbook file.
+
+```bash
+packmind-cli standards create ./my-standard.json
+```
+
+### Playbook format
+
+The playbook file defines your standard structure:
+
+```json
+{
+  "name": "Error Handling",
+  "description": "Ensure errors are handled predictably with context.",
+  "scope": "Applies to all services",
+  "rules": [
+    {
+      "content": "Validate inputs at boundaries and fail fast"
+    },
+    {
+      "content": "Preserve context when rethrowing errors",
+      "examples": {
+        "positive": "throw new AppError('Failed', { cause: e });",
+        "negative": "throw new Error('Failed');",
+        "language": "TYPESCRIPT"
+      }
+    }
+  ]
+}
+```
+
+### Required fields
+
+| Field         | Description                                                               |
+| ------------- | ------------------------------------------------------------------------- |
+| `name`        | Standard name displayed in the web app                                    |
+| `description` | Context and purpose of the standard                                       |
+| `scope`       | Where the standard applies (e.g., "TypeScript files", "React components") |
+| `rules`       | Array of rules (at least one required)                                    |
+
+### Rule format
+
+Each rule requires a `content` field that starts with an action verb. Examples are optional but recommended.
+
+| Field               | Required | Description                                        |
+| ------------------- | -------- | -------------------------------------------------- |
+| `content`           | Yes      | Rule description (max ~25 words, starts with verb) |
+| `examples.positive` | No       | Code showing correct implementation                |
+| `examples.negative` | No       | Code showing incorrect implementation              |
+| `examples.language` | No       | Language for syntax highlighting                   |
+
+**Supported languages:** `TYPESCRIPT`, `TYPESCRIPT_TSX`, `JAVASCRIPT`, `JAVASCRIPT_JSX`, `PYTHON`, `JAVA`, `GO`, `RUST`, `CSHARP`, and more.
+
+<Tip>
+  Use the CLI directly when you have standards defined as files in your
+  repository or want to automate standard creation. See [CLI: Standard
+  Command](/tools/cli#standard-command) for more details.
+</Tip>
+
 ## Create a standard from the web app
 
 1. Go to the **Standards** panel.

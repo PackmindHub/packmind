@@ -192,7 +192,7 @@ export const RecipesList = ({ orgSlug }: RecipesListProps) => {
       {isError && <p>Error loading recipes.</p>}
       {recipes?.length ? (
         <PMBox>
-          <PMButtonGroup size="sm">
+          <PMButtonGroup size="sm" mb={4}>
             <PMAlertDialog
               trigger={
                 <PMButton
@@ -243,12 +243,19 @@ export const RecipesList = ({ orgSlug }: RecipesListProps) => {
           Commands are reusable prompts that help you speed up recurring dev
           tasks — like creating a new React component or setting up tests — with
           consistent results across your team.
-          <GettingStartedLearnMoreDialog
-            body={GETTING_STARTED_CREATE_DIALOG.body}
-            title={GETTING_STARTED_CREATE_DIALOG.title}
-            buttonLabel="Create from your code"
-            buttonSize="sm"
-          />
+          <PMHStack gap={3} mt={4}>
+            <GettingStartedLearnMoreDialog
+              body={GETTING_STARTED_CREATE_DIALOG.body}
+              title={GETTING_STARTED_CREATE_DIALOG.title}
+              buttonLabel="Create from your code"
+              buttonSize="sm"
+            />
+            {spaceSlug && (
+              <Link to={routes.space.toCreateCommand(orgSlug, spaceSlug)}>
+                <PMButton variant="secondary">Create from scratch</PMButton>
+              </Link>
+            )}
+          </PMHStack>
         </PMEmptyState>
       )}
     </div>

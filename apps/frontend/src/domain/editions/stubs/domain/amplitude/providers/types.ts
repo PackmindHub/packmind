@@ -42,6 +42,12 @@ export type AnalyticsEventMap = {
   default_skills_downloaded: {
     agent: CodingAgent;
   };
+  onboarding_reason_selected: {
+    reason_key: string;
+    reason_label: string;
+  };
+  onboarding_reason_skipped: Record<string, never>;
+  create_standard_from_samples_clicked: Record<string, never>;
 };
 
 export type AnalyticsEventName = keyof AnalyticsEventMap;

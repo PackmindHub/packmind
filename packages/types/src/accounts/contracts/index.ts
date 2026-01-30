@@ -29,3 +29,4 @@ export * from './IValidateInvitationTokenUseCase';
 export * from './IStartTrial';
 export * from './IGenerateTrialActivationTokenUseCase';
 export * from './IActivateTrialAccountUseCase';
+export * from './IRenameOrganizationUseCase';

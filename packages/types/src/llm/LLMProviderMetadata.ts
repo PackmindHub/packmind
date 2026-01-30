@@ -71,7 +71,7 @@ export type ProviderMetadata = {
  * These are used as fallback values when models are not explicitly specified in config.
  */
 export const DEFAULT_OPENAI_MODELS = {
-  model: 'gpt-5.1',
+  model: 'gpt-5.2',
   fastestModel: 'gpt-4.1-mini',
 } as const;
 
@@ -119,7 +119,7 @@ export const LLM_PROVIDER_METADATA: Record<LLMProvider, ProviderMetadata> = {
         helpMessage:
           'The primary model to use for standard operations. Defaults to the latest recommended model.',
         optional: false,
-        placeholder: 'gpt-5.1',
+        placeholder: 'gpt-5.2',
         secret: false,
       },
       {

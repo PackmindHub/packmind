@@ -17,7 +17,38 @@ Examples of commands can be:
 
 ## Creating Commands
 
-Commands are created through the **MCP server** using a guided workflow that ensures they are well-structured and reusable.
+Commands can be created in three ways:
+
+1. **Through the web app** — Create commands directly in the Packmind interface
+2. **Through the MCP server** — Use AI-assisted workflows for more sophisticated command creation
+3. **Through the CLI** — Create commands from JSON playbook files
+
+### Creating Commands in the Web App
+
+To create a command directly in the Packmind web app:
+
+1. Navigate to **Commands** in the main menu
+2. Click **Create**
+3. Fill in the command details:
+   - **Name**: A descriptive name for the command
+   - **Content**: The instructions in Markdown format
+4. Click **Save** to create the command
+
+<Tip>
+  Use the web app when you want to quickly create or edit commands manually. Use
+  the MCP server workflow when you want AI assistance in structuring commands
+  from your development history. Use the CLI when you have commands already
+  defined in files.
+</Tip>
+
+### Creating Commands with MCP Server
+
+The MCP server provides an AI-assisted workflow through the **`packmind-create-command` skill** that helps structure well-formed commands.
+
+You can invoke the skill by:
+
+- Typing `/packmind-create-command` in your AI assistant (if slash commands are supported)
+- Running: `Execute @.packmind/commands/packmind-create-command.md`
 
 The AI agent will automatically follow the **command creation workflow** which:
 
@@ -25,6 +56,20 @@ The AI agent will automatically follow the **command creation workflow** which:
 2. Structures it into clear, actionable steps with context validation checkpoints
 3. Defines specific "when to use" scenarios
 4. Adds optional code examples to demonstrate each step
+
+This skill is automatically installed when you run `packmind-cli skills init` or distribute packages to your repository.
+
+### Creating Commands with the CLI
+
+You can create commands from the command line using JSON playbook files:
+
+```bash
+packmind-cli commands create ./my-command.json
+```
+
+This is useful when you have commands already defined as files in your repository or want to create commands programmatically without using the web app or MCP server.
+
+See [CLI: Command-Line Interface](/tools/cli#commands-command) for detailed format and examples.
 
 ### Best Practices for Command Creation
 
@@ -69,26 +114,40 @@ The workflow ensures your command includes:
 Every time you update a command, this creates a new version.
 This keeps track of the history of your changes, and it's useful to keep track of which versions are currently distributed to Git repositories.
 
+## Command Identification
+
+Each command has three identifiers:
+
+| Identifier | Example                                | Purpose                                                 |
+| ---------- | -------------------------------------- | ------------------------------------------------------- |
+| **Name**   | `"Add a New REST Endpoint"`            | User-facing display name in the web app                 |
+| **Slug**   | `"add-a-new-rest-endpoint"`            | URL-safe identifier used for invocation and file naming |
+| **ID**     | `550e8400-e29b-41d4-a716-446655440000` | Internal database identifier                            |
+
+The **slug** is automatically generated from the name and used throughout the system. If you create multiple commands with similar names in the same space, Packmind appends numbers to keep slugs unique (e.g., `"add-api-endpoint"`, `"add-api-endpoint-1"`).
+
 ## How to Use Commands After Distribution
 
 Unlike standards (which are applied automatically), commands are **user-invoked**—you run them when you need them.
 
+Commands are identified and invoked using their **slug** (the auto-generated URL-safe name).
+
 ### Using Slash Commands (Claude Code, Cursor, GitHub Copilot)
 
-For AI assistants with native slash command support, type `/` followed by the command name in your chat:
+For AI assistants with native slash command support, type `/` followed by the command slug:
 
 ```
-/create-new-use-case
+/add-a-new-rest-endpoint
 ```
 
-The AI assistant will recognize the command and execute its instructions.
+The AI assistant will recognize the command by its slug and execute its instructions.
 
 ### Manual Invocation (Continue, GitLab Duo, Junie, AGENTS.md)
 
-For AI assistants without native slash command support, reference the command file directly in your prompt:
+For AI assistants without native slash command support, reference the command file by its slug:
 
 ```
-Execute @.packmind/commands/create-new-use-case.md
+Execute @.packmind/commands/add-a-new-rest-endpoint.md
 ```
 
 The AI assistant will read the command file and follow its instructions.

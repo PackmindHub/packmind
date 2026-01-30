@@ -2,17 +2,39 @@
 
 ## Added
 
-- Add `standards add` command to import standards in Packmind (#71)
-- Add blacklist filter to `skills add` to exclude unwanted files like `.DS_Store` (#71)
-- Added `packmind-cli skills init` to install skills to manage the playbook
+- Add `commands create` command to create reusable commands from playbook JSON files with `packmind-cli commands create <playbook.json>`
+- Add `init` command for onboarding: automatically scans projects, generates standards and commands, with optional push to backend
+- Add `onboard` command to rescan projects and regenerate content with draft-first flow
+- Enhanced `packmind-onboard` default skill with structured step-based guidance and AI-driven project analysis
 
 ## Changed
+
+- Improved onboarding with draft-first flow and regeneration loop
+- Improved project scanning to detect multiple language ecosystems and technologies
+
+## Fixed
+
+- Fix CLI syntax for command creation to consistently use `commands create` instead of `command create`
+
+## Removed
+
+# [0.14.1] - 2026-01-29
+
+## Fixed
+
+- Remove forgotten debugging when installing packages.
+
+# [0.14.0] - 2026-01-28
+
+## Added
+
+- Add `standards create` command to import standards in Packmind
+- Add blacklist filter to `skills add` to exclude unwanted files like `.DS_Store` (#71)
+- Added `packmind-cli skills init` to install skills to manage the playbook
 
 ## Fixed
 
 - Fix double-slash in login URLs when host ends with trailing slash (#100)
-
-## Removed
 
 # [0.13.1] - 2026-01-19
 
@@ -156,7 +178,9 @@
 
 - Add proper CHANGELOG.MD in the GH release
 
-[Unreleased]: https://github.com/PackmindHub/packmind/compare/release-cli/0.13.1...HEAD
+[Unreleased]: https://github.com/PackmindHub/packmind/compare/release-cli/0.14.1...HEAD
+[0.14.1]: https://github.com/PackmindHub/packmind/compare/release-cli/0.14.0...release-cli/0.14.1
+[0.14.0]: https://github.com/PackmindHub/packmind/compare/release-cli/0.13.1...release-cli/0.14.0
 [0.13.1]: https://github.com/PackmindHub/packmind/compare/release-cli/0.13.0...release-cli/0.13.1
 [0.13.0]: https://github.com/PackmindHub/packmind/compare/release-cli/0.12.0...release-cli/0.13.0
 [0.12.0]: https://github.com/PackmindHub/packmind/compare/release-cli/0.11.0...release-cli/0.12.0
