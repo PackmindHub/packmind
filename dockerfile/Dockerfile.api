@@ -8,7 +8,7 @@ ENV NODE_ENV=production
 # Update OpenSSL and install required system dependencies
 RUN apk update && \
     apk add --no-cache \
-        openssl \
+        openssl=3.5.5 \
         bash \
         ca-certificates
 
