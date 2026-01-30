@@ -1,0 +1,87 @@
+{
+  "name": "JavaScript Best Practices",
+  "description": "Advanced, framework-agnostic JavaScript coding standard focused on high-impact reliability, security, performance, and operability pitfalls in production code.",
+  "scope": "JavaScript source files",
+  "rules": [
+    {
+      "content": "Validate and normalize all external input at module boundaries, including types, ranges, and unknown fields; reject or default explicitly.",
+      "examples": {
+        "positive": "function parseCreateUser(body) {\n  if (typeof body !== 'object' || body === null) throw new TypeError('body');\n  const name = String(body.name ?? '').trim();\n  const age = Number(body.age);\n  if (!name) throw new RangeError('name');\n  if (!Number.isInteger(age) || age < 0 || age > 130) throw new RangeError('age');\n  return { name, age };\n}\n\nconst user = parseCreateUser(JSON.parse(input));",
+        "negative": "const user = JSON.parse(input); // trusts shape\nsaveUser({ name: user.name, age: user.age });",
+        "language": "JAVASCRIPT"
+      }
+    },
+    {
+      "content": "Use AbortController to enforce timeouts on every network call; pass the signal through all layers.",
+      "examples": {
+        "positive": "async function fetchWithTimeout(url, { timeoutMs = 5000 } = {}) {\n  const ac = new AbortController();\n  const t = setTimeout(() => ac.abort(), timeoutMs);\n  try {\n    const res = await fetch(url, { signal: ac.signal });\n    return res;\n  } finally {\n    clearTimeout(t);\n  }\n}\n\nawait fetchWithTimeout('https://api.example.com/data', { timeoutMs: 3000 });",
+        "negative": "const res = await fetch('https://api.example.com/data'); // unbounded\nawait res.json();",
+        "language": "JAVASCRIPT"
+      }
+    },
+    {
+      "content": "Implement retries only for idempotent operations and gate them with a retry budget and backoff; never retry blindly in loops.",
+      "examples": {
+        "positive": "async function retry(fn, { retries = 3, baseMs = 100 } = {}) {\n  let lastErr;\n  for (let i = 0; i <= retries; i++) {\n    try { return await fn(i); } catch (e) { lastErr = e; }\n    const delay = baseMs * 2 ** i + Math.floor(Math.random() * 50);\n    await new Promise(r => setTimeout(r, delay));\n  }\n  throw lastErr;\n}\n\nconst res = await retry(() => fetchWithTimeout(url, { timeoutMs: 2000 }), { retries: 2 });",
+        "negative": "while (true) {\n  try { return await fetch(url); } catch (e) {}\n} // infinite retry",
+        "language": "JAVASCRIPT"
+      }
+    },
+    {
+      "content": "Preserve error causes when rethrowing by using Error options or attaching the original error; avoid throwing strings or losing stacks.",
+      "examples": {
+        "positive": "async function loadConfig(path) {\n  try {\n    const txt = await fs.promises.readFile(path, 'utf8');\n    return JSON.parse(txt);\n  } catch (err) {\n    throw new Error(`Failed to load config: ${path}`, { cause: err });\n  }\n}",
+        "negative": "try {\n  return JSON.parse(txt);\n} catch (e) {\n  throw 'Bad config';\n}\n// or: throw new Error('Bad config'); // loses original context",
+        "language": "JAVASCRIPT"
+      }
+    },
+    {
+      "content": "Release resources using using/await using or finally blocks for streams, file handles, locks, and timers; close explicitly on all paths.",
+      "examples": {
+        "positive": "import { open } from 'node:fs/promises';\n\nasync function readFirstLine(path) {\n  const fh = await open(path, 'r');\n  try {\n    const buf = Buffer.alloc(1024);\n    const { bytesRead } = await fh.read(buf, 0, buf.length, 0);\n    return buf.subarray(0, bytesRead).toString('utf8').split(/\\r?\\n/)[0];\n  } finally {\n    await fh.close();\n  }\n}",
+        "negative": "import { open } from 'node:fs/promises';\n\nasync function readFirstLine(path) {\n  const fh = await open(path, 'r');\n  const buf = Buffer.alloc(1024);\n  await fh.read(buf, 0, buf.length, 0);\n  return buf.toString('utf8').split(/\\r?\\n/)[0];\n  // handle never closed\n}",
+        "language": "JAVASCRIPT"
+      }
+    },
+    {
+      "content": "Limit concurrency for bulk async work using a queue or pool; avoid Promise.all over unbounded collections.",
+      "examples": {
+        "positive": "async function mapLimit(items, limit, fn) {\n  const ret = [];\n  const executing = new Set();\n  for (const item of items) {\n    const p = Promise.resolve().then(() => fn(item));\n    ret.push(p);\n    executing.add(p);\n    p.finally(() => executing.delete(p));\n    if (executing.size >= limit) await Promise.race(executing);\n  }\n  return Promise.all(ret);\n}\n\nawait mapLimit(urls, 10, url => fetchWithTimeout(url, { timeoutMs: 3000 }));",
+        "negative": "await Promise.all(urls.map(url => fetch(url))); // thousands at once",
+        "language": "JAVASCRIPT"
+      }
+    },
+    {
+      "content": "Avoid shared mutable module state for request-scoped data; pass state explicitly through parameters or create per-operation context objects.",
+      "examples": {
+        "positive": "function createContext({ requestId }) {\n  return { requestId, startedAt: Date.now() };\n}\n\nasync function handle(ctx, input) {\n  log({ requestId: ctx.requestId, msg: 'start' });\n  return doWork(ctx, input);\n}\n\nawait handle(createContext({ requestId: crypto.randomUUID() }), input);",
+        "negative": "let currentRequestId;\n\nasync function handle(input) {\n  currentRequestId = crypto.randomUUID();\n  await doWork(input);\n  log({ requestId: currentRequestId });\n}",
+        "language": "JAVASCRIPT"
+      }
+    },
+    {
+      "content": "Redact secrets and PII in logs by default; log structured objects with an explicit allowlist of fields.",
+      "examples": {
+        "positive": "function logAuthEvent({ userId, ip, outcome }) {\n  console.info({ event: 'auth', userId, ip, outcome });\n}\n\nlogAuthEvent({ userId: 'u123', ip: '203.0.113.5', outcome: 'denied' });",
+        "negative": "console.info('login', { userId, password, token, ssn });",
+        "language": "JAVASCRIPT"
+      }
+    },
+    {
+      "content": "Treat configuration as immutable validated data loaded once at startup; avoid reading env/config repeatedly inside hot paths.",
+      "examples": {
+        "positive": "const config = (() => {\n  const port = Number(process.env.PORT ?? 3000);\n  if (!Number.isInteger(port) || port <= 0) throw new Error('PORT');\n  const apiBase = String(process.env.API_BASE ?? '').trim();\n  if (!apiBase) throw new Error('API_BASE');\n  return Object.freeze({ port, apiBase });\n})();\n\nexport { config };",
+        "negative": "export function getApiBase() {\n  return process.env.API_BASE; // read everywhere, unvalidated\n}\n\nfetch(`${getApiBase()}/v1/items`);",
+        "language": "JAVASCRIPT"
+      }
+    },
+    {
+      "content": "Inject external dependencies via parameters or factory functions; avoid importing singletons directly inside business logic.",
+      "examples": {
+        "positive": "export function createUserService({ http, now }) {\n  return {\n    async fetchUser(id) {\n      const res = await http.get(`/users/${encodeURIComponent(id)}`);\n      return { ...res, fetchedAt: now() };\n    }\n  };\n}\n\nconst svc = createUserService({ http: { get: url => fetchWithTimeout(url).then(r => r.json()) }, now: () => Date.now() });",
+        "negative": "import fetch from 'node-fetch';\n\nexport async function fetchUser(id) {\n  const res = await fetch(`https://api.example.com/users/${id}`);\n  return res.json();\n}",
+        "language": "JAVASCRIPT"
+      }
+    }
+  ]
+}

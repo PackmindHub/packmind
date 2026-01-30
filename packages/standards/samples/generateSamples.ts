@@ -192,15 +192,29 @@ async function main(): Promise<void> {
 
   await ensureGeneratedDir();
 
+  // TODO: Temporary hack - only generate samples for specific technologies
+  // Node.js targets both JavaScript and TypeScript
+  const ALLOWED_SAMPLE_IDS = [
+    'java',
+    'javascript',
+    'typescript',
+    'react',
+    'express',
+  ];
+
   const allSamples: { sample: Sample; type: 'language' | 'framework' }[] = [
-    ...standardSamples.languageSamples.map((sample) => ({
-      sample,
-      type: 'language' as const,
-    })),
-    ...standardSamples.frameworkSamples.map((sample) => ({
-      sample,
-      type: 'framework' as const,
-    })),
+    ...standardSamples.languageSamples
+      .filter((sample) => ALLOWED_SAMPLE_IDS.includes(sample.id))
+      .map((sample) => ({
+        sample,
+        type: 'language' as const,
+      })),
+    ...standardSamples.frameworkSamples
+      .filter((sample) => ALLOWED_SAMPLE_IDS.includes(sample.id))
+      .map((sample) => ({
+        sample,
+        type: 'framework' as const,
+      })),
   ];
 
   const results: {

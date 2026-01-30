@@ -1,0 +1,87 @@
+{
+  "name": "TypeScript Best Practices",
+  "description": "Advanced TypeScript guidance for runtime safety, reliability, and maintainability across network calls, validation, errors, resources, concurrency, configuration, logging, and type-system pitfalls.",
+  "scope": "TypeScript source files",
+  "rules": [
+    {
+      "content": "Validate external inputs at module boundaries using schema parsing that returns typed data; reject unknown fields and normalize types before business logic.",
+      "examples": {
+        "positive": "import { z } from \"zod\";\n\nconst CreateUser = z.object({\n  email: z.string().email(),\n  age: z.number().int().min(0)\n}).strict();\n\ntype CreateUser = z.infer<typeof CreateUser>;\n\nexport function handleCreateUser(body: unknown) {\n  const input: CreateUser = CreateUser.parse(body);\n  return { email: input.email.toLowerCase(), age: input.age };\n}\n",
+        "negative": "type CreateUser = { email: string; age: number };\n\nexport function handleCreateUser(body: any) {\n  const input = body as CreateUser;\n  // Accepts missing/extra fields and wrong types\n  return { email: input.email.toLowerCase(), age: input.age + 1 };\n}\n",
+        "language": "TYPESCRIPT"
+      }
+    },
+    {
+      "content": "Set explicit timeouts and cancellation for all network operations using AbortController; wire cancellation through layers instead of leaving promises unbounded.",
+      "examples": {
+        "positive": "export async function fetchJson(url: string, timeoutMs = 5000) {\n  const controller = new AbortController();\n  const t = setTimeout(() => controller.abort(), timeoutMs);\n  try {\n    const res = await fetch(url, { signal: controller.signal });\n    if (!res.ok) throw new Error(`HTTP ${res.status}`);\n    return await res.json();\n  } finally {\n    clearTimeout(t);\n  }\n}\n",
+        "negative": "export async function fetchJson(url: string) {\n  const res = await fetch(url); // no timeout, no cancellation\n  return res.json();\n}\n",
+        "language": "TYPESCRIPT"
+      }
+    },
+    {
+      "content": "Apply bounded retries with exponential backoff and jitter; retry only on transient failures and cap total elapsed time per operation.",
+      "examples": {
+        "positive": "const sleep = (ms: number) => new Promise(r => setTimeout(r, ms));\n\nexport async function retry<T>(fn: () => Promise<T>, opts = { max: 4, baseMs: 200, maxElapsedMs: 4000 }) {\n  const start = Date.now();\n  let attempt = 0;\n  while (true) {\n    try {\n      return await fn();\n    } catch (e) {\n      const elapsed = Date.now() - start;\n      if (attempt >= opts.max || elapsed >= opts.maxElapsedMs) throw e;\n      attempt++;\n      const backoff = Math.min(opts.baseMs * 2 ** (attempt - 1), 1000);\n      const jitter = Math.random() * backoff * 0.3;\n      await sleep(backoff + jitter);\n    }\n  }\n}\n",
+        "negative": "export async function retryForever<T>(fn: () => Promise<T>): Promise<T> {\n  while (true) {\n    try { return await fn(); } catch { /* tight loop */ }\n  }\n}\n",
+        "language": "TYPESCRIPT"
+      }
+    },
+    {
+      "content": "Use Error subclasses with stable codes and explicit causes; avoid throwing strings or plain objects.",
+      "examples": {
+        "positive": "export class AppError extends Error {\n  constructor(public readonly code: string, message: string, options?: { cause?: unknown }) {\n    super(message, options);\n    this.name = \"AppError\";\n  }\n}\n\nthrow new AppError(\"CONFIG_INVALID\", \"Missing DATABASE_URL\", { cause: new Error(\"env\") });\n",
+        "negative": "throw \"Missing DATABASE_URL\";\n// or\nthrow { code: \"CONFIG_INVALID\", message: \"Missing DATABASE_URL\" };\n",
+        "language": "TYPESCRIPT"
+      }
+    },
+    {
+      "content": "Keep thrown errors intact; catch only to add context, then rethrow or wrap with cause instead of replacing the original stack.",
+      "examples": {
+        "positive": "import { readFile } from \"node:fs/promises\";\n\nexport async function loadConfig(path: string) {\n  try {\n    return await readFile(path, \"utf8\");\n  } catch (e) {\n    throw new Error(`Failed reading config: ${path}`, { cause: e });\n  }\n}\n",
+        "negative": "import { readFile } from \"node:fs/promises\";\n\nexport async function loadConfig(path: string) {\n  try {\n    return await readFile(path, \"utf8\");\n  } catch {\n    throw new Error(\"Config read failed\"); // loses original error\n  }\n}\n",
+        "language": "TYPESCRIPT"
+      }
+    },
+    {
+      "content": "Manage resources with explicit disposal patterns; use finally blocks and AbortSignal cleanup for streams, timers, and subscriptions.",
+      "examples": {
+        "positive": "import { createReadStream } from \"node:fs\";\n\nexport async function firstLine(path: string): Promise<string> {\n  const s = createReadStream(path, { encoding: \"utf8\" });\n  try {\n    let buf = \"\";\n    for await (const chunk of s) {\n      buf += chunk;\n      const i = buf.indexOf(\"\\n\");\n      if (i >= 0) return buf.slice(0, i);\n    }\n    return buf;\n  } finally {\n    s.destroy();\n  }\n}\n",
+        "negative": "import { createReadStream } from \"node:fs\";\n\nexport async function firstLine(path: string): Promise<string> {\n  const s = createReadStream(path, { encoding: \"utf8\" });\n  let buf = \"\";\n  for await (const chunk of s) {\n    buf += chunk;\n    const i = buf.indexOf(\"\\n\");\n    if (i >= 0) return buf.slice(0, i); // stream left open\n  }\n  return buf;\n}\n",
+        "language": "TYPESCRIPT"
+      }
+    },
+    {
+      "content": "Serialize access to shared mutable state with a mutex or queue; avoid read-modify-write across awaits.",
+      "examples": {
+        "positive": "class Mutex {\n  private p: Promise<void> = Promise.resolve();\n  async runExclusive<T>(fn: () => Promise<T>): Promise<T> {\n    let release!: () => void;\n    const next = new Promise<void>(r => (release = r));\n    const prev = this.p;\n    this.p = prev.then(() => next);\n    await prev;\n    try { return await fn(); } finally { release(); }\n  }\n}\n\nconst m = new Mutex();\nlet counter = 0;\n\nexport async function inc() {\n  return m.runExclusive(async () => {\n    const v = counter;\n    await Promise.resolve();\n    counter = v + 1;\n    return counter;\n  });\n}\n",
+        "negative": "let counter = 0;\n\nexport async function inc() {\n  const v = counter;\n  await Promise.resolve();\n  counter = v + 1; // races under concurrent calls\n  return counter;\n}\n",
+        "language": "TYPESCRIPT"
+      }
+    },
+    {
+      "content": "Prefer unknown over any at trust boundaries; narrow with type guards or schema parsing before property access.",
+      "examples": {
+        "positive": "function isUser(x: unknown): x is { id: string } {\n  return typeof x === \"object\" && x !== null && typeof (x as any).id === \"string\";\n}\n\nexport function getUserId(payload: unknown) {\n  if (!isUser(payload)) throw new Error(\"Invalid payload\");\n  return payload.id;\n}\n",
+        "negative": "export function getUserId(payload: any) {\n  return payload.id.trim(); // runtime crash if id missing/not string\n}\n",
+        "language": "TYPESCRIPT"
+      }
+    },
+    {
+      "content": "Avoid type assertions for object shapes; use the satisfies operator or typed builders so mismatches fail at compile time.",
+      "examples": {
+        "positive": "type Config = { host: string; port: number };\n\nconst cfg = {\n  host: \"localhost\",\n  port: 5432\n} satisfies Config;\n",
+        "negative": "type Config = { host: string; port: number };\n\nconst cfg = {\n  host: \"localhost\",\n  port: \"5432\" // wrong type\n} as Config;\n",
+        "language": "TYPESCRIPT"
+      }
+    },
+    {
+      "content": "Load configuration via a single typed module that parses process.env once; avoid scattered env access and implicit string-to-number conversions.",
+      "examples": {
+        "positive": "import { z } from \"zod\";\n\nconst Env = z.object({\n  PORT: z.coerce.number().int().min(1).max(65535),\n  LOG_LEVEL: z.enum([\"debug\", \"info\", \"warn\", \"error\"]).default(\"info\")\n});\n\nexport const config = Env.parse(process.env);\n",
+        "negative": "export const port = Number(process.env.PORT) || 3000;\nexport const logLevel = (process.env.LOG_LEVEL as any) ?? \"verbose\";\n// env read spread across modules; silent NaN and invalid values\n",
+        "language": "TYPESCRIPT"
+      }
+    }
+  ]
+}
