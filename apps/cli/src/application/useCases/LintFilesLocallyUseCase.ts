@@ -12,10 +12,10 @@ import { PackmindLogger } from '@packmind/logger';
 import {
   ConfigWithTarget,
   ExecuteLinterProgramsCommand,
+  GetDetectionProgramsForPackagesResponse,
   LinterExecutionProgram,
   LinterExecutionViolation,
 } from '@packmind/types';
-import { GetDetectionProgramsForPackagesResult } from '../../domain/repositories/IPackmindGateway';
 import {
   ProgrammingLanguage,
   stringToProgrammingLanguage,
@@ -30,7 +30,7 @@ const origin = 'LintFilesLocallyUseCase';
 export class LintFilesLocallyUseCase implements ILintFilesLocally {
   private detectionProgramsCache: Map<
     string,
-    GetDetectionProgramsForPackagesResult
+    GetDetectionProgramsForPackagesResponse
   > = new Map();
 
   constructor(
@@ -392,7 +392,7 @@ export class LintFilesLocallyUseCase implements ILintFilesLocally {
    */
   private async getDetectionProgramsForTarget(
     targetConfig: ConfigWithTarget,
-  ): Promise<GetDetectionProgramsForPackagesResult> {
+  ): Promise<GetDetectionProgramsForPackagesResponse> {
     const packageSlugs = Object.keys(targetConfig.packages).sort((a, b) =>
       a.localeCompare(b),
     );
@@ -411,9 +411,11 @@ export class LintFilesLocallyUseCase implements ILintFilesLocally {
     );
 
     const detectionPrograms =
-      await this.repositories.packmindGateway.getDetectionProgramsForPackages({
-        packagesSlugs: packageSlugs,
-      });
+      await this.repositories.packmindGateway.linter.getDetectionProgramsForPackages(
+        {
+          packagesSlugs: packageSlugs,
+        },
+      );
 
     this.detectionProgramsCache.set(cacheKey, detectionPrograms);
 

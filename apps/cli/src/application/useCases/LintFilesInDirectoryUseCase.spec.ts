@@ -1,8 +1,11 @@
 import { PackmindLogger } from '@packmind/logger';
 import {
   ExecuteLinterProgramsCommand,
+  GetDetectionProgramsForPackagesResponse,
   IExecuteLinterProgramsUseCase,
   LinterExecutionViolation,
+  PackmindCommand,
+  PackmindCommandBody,
   ProgrammingLanguage,
   RuleId,
 } from '@packmind/types';
@@ -52,9 +55,12 @@ describe('LintFilesInDirectoryUseCase', () => {
     } as unknown as jest.Mocked<IExecuteLinterProgramsUseCase>;
 
     mockPackmindGateway = {
-      listExecutionPrograms: jest.fn(),
-      getDraftDetectionProgramsForRule: jest.fn(),
-      getActiveDetectionProgramsForRule: jest.fn(),
+      linter: {
+        listDetectionPrograms: jest.fn(),
+        getDraftDetectionProgramsForRule: jest.fn(),
+        getActiveDetectionProgramsForRule: jest.fn(),
+        getDetectionProgramsForPackages: jest.fn(),
+      },
       getPullData: jest.fn(),
       listPackages: jest.fn(),
       getPackageSummary: jest.fn(),
@@ -138,7 +144,7 @@ describe('LintFilesInDirectoryUseCase', () => {
       mockGitRemoteUrlService.getCurrentBranches.mockResolvedValue({
         branches,
       });
-      mockPackmindGateway.listExecutionPrograms.mockResolvedValue(
+      mockPackmindGateway.linter.listDetectionPrograms.mockResolvedValue(
         mockDetectionPrograms,
       );
 
@@ -174,7 +180,9 @@ describe('LintFilesInDirectoryUseCase', () => {
     });
 
     it('calls listExecutionPrograms with correct parameters', () => {
-      expect(mockPackmindGateway.listExecutionPrograms).toHaveBeenCalledWith({
+      expect(
+        mockPackmindGateway.linter.listDetectionPrograms,
+      ).toHaveBeenCalledWith({
         gitRemoteUrl,
         branches,
       });
@@ -241,7 +249,7 @@ describe('LintFilesInDirectoryUseCase', () => {
       mockGitRemoteUrlService.getCurrentBranches.mockResolvedValue({
         branches: ['main'],
       });
-      mockPackmindGateway.listExecutionPrograms.mockResolvedValue({
+      mockPackmindGateway.linter.listDetectionPrograms.mockResolvedValue({
         targets: [],
       });
 
@@ -321,7 +329,7 @@ describe('LintFilesInDirectoryUseCase', () => {
         mockGitRemoteUrlService.getCurrentBranches.mockResolvedValue({
           branches: ['main'],
         });
-        mockPackmindGateway.listExecutionPrograms.mockResolvedValue(
+        mockPackmindGateway.linter.listDetectionPrograms.mockResolvedValue(
           mockDetectionPrograms,
         );
 
@@ -411,7 +419,7 @@ describe('LintFilesInDirectoryUseCase', () => {
         mockGitRemoteUrlService.getCurrentBranches.mockResolvedValue({
           branches: ['main'],
         });
-        mockPackmindGateway.listExecutionPrograms.mockResolvedValue(
+        mockPackmindGateway.linter.listDetectionPrograms.mockResolvedValue(
           mockDetectionPrograms,
         );
 
@@ -481,7 +489,7 @@ describe('LintFilesInDirectoryUseCase', () => {
       mockGitRemoteUrlService.getCurrentBranches.mockResolvedValue({
         branches: ['main'],
       });
-      mockPackmindGateway.listExecutionPrograms.mockResolvedValue(
+      mockPackmindGateway.linter.listDetectionPrograms.mockResolvedValue(
         mockDetectionPrograms,
       );
       mockLinterExecutionUseCase.execute.mockRejectedValue(
@@ -570,7 +578,7 @@ describe('LintFilesInDirectoryUseCase', () => {
       mockGitRemoteUrlService.getCurrentBranches.mockResolvedValue({
         branches: ['main'],
       });
-      mockPackmindGateway.listExecutionPrograms.mockResolvedValue(
+      mockPackmindGateway.linter.listDetectionPrograms.mockResolvedValue(
         mockDetectionPrograms,
       );
 
@@ -648,7 +656,7 @@ describe('LintFilesInDirectoryUseCase', () => {
       mockGitRemoteUrlService.getCurrentBranches.mockResolvedValue({
         branches: ['main'],
       });
-      mockPackmindGateway.listExecutionPrograms.mockResolvedValue(
+      mockPackmindGateway.linter.listDetectionPrograms.mockResolvedValue(
         mockDetectionPrograms,
       );
 
@@ -701,7 +709,7 @@ describe('LintFilesInDirectoryUseCase', () => {
     mockGitRemoteUrlService.getCurrentBranches.mockResolvedValue({
       branches: ['main'],
     });
-    mockPackmindGateway.listExecutionPrograms.mockResolvedValue(
+    mockPackmindGateway.linter.listDetectionPrograms.mockResolvedValue(
       mockDetectionPrograms,
     );
 
@@ -779,7 +787,7 @@ describe('LintFilesInDirectoryUseCase', () => {
       };
 
       beforeEach(async () => {
-        mockPackmindGateway.getDraftDetectionProgramsForRule = jest
+        mockPackmindGateway.linter.getDraftDetectionProgramsForRule = jest
           .fn()
           .mockResolvedValue(draftProgramsResponse);
 
@@ -813,7 +821,7 @@ describe('LintFilesInDirectoryUseCase', () => {
 
       it('calls getDraftDetectionProgramsForRule with correct parameters', () => {
         expect(
-          mockPackmindGateway.getDraftDetectionProgramsForRule,
+          mockPackmindGateway.linter.getDraftDetectionProgramsForRule,
         ).toHaveBeenCalledWith({
           standardSlug: 'test-standard',
           ruleId: 'rule-123',
@@ -822,7 +830,7 @@ describe('LintFilesInDirectoryUseCase', () => {
 
       it('does not call listExecutionPrograms', () => {
         expect(
-          mockPackmindGateway.listExecutionPrograms,
+          mockPackmindGateway.linter.listDetectionPrograms,
         ).not.toHaveBeenCalled();
       });
     });
@@ -844,7 +852,7 @@ describe('LintFilesInDirectoryUseCase', () => {
       let result: Awaited<ReturnType<typeof useCase.execute>>;
 
       beforeEach(async () => {
-        mockPackmindGateway.getDraftDetectionProgramsForRule = jest
+        mockPackmindGateway.linter.getDraftDetectionProgramsForRule = jest
           .fn()
           .mockResolvedValue(draftProgramsResponse);
 
@@ -908,7 +916,7 @@ describe('LintFilesInDirectoryUseCase', () => {
       };
 
       beforeEach(async () => {
-        mockPackmindGateway.getDraftDetectionProgramsForRule = jest
+        mockPackmindGateway.linter.getDraftDetectionProgramsForRule = jest
           .fn()
           .mockResolvedValue(draftProgramsResponse);
 
@@ -996,7 +1004,7 @@ describe('LintFilesInDirectoryUseCase', () => {
       };
 
       beforeEach(async () => {
-        mockPackmindGateway.getActiveDetectionProgramsForRule = jest
+        mockPackmindGateway.linter.getActiveDetectionProgramsForRule = jest
           .fn()
           .mockResolvedValue(activeProgramsResponse);
 
@@ -1063,127 +1071,6 @@ describe('LintFilesInDirectoryUseCase', () => {
 
       it('calls linter exactly twice', () => {
         expect(mockLinterExecutionUseCase.execute).toHaveBeenCalledTimes(2);
-      });
-    });
-  });
-
-  describe('parseScopeString', () => {
-    let testUseCase: LintFilesInDirectoryUseCase;
-
-    beforeEach(() => {
-      const mockServices = {
-        listFiles: {} as ListFiles,
-        gitRemoteUrlService: {} as GitService,
-        linterExecutionUseCase: {} as IExecuteLinterProgramsUseCase,
-      };
-      const mockRepositories = {
-        packmindGateway: {} as IPackmindGateway,
-      };
-      testUseCase = new LintFilesInDirectoryUseCase(
-        mockServices,
-        mockRepositories,
-      );
-    });
-
-    describe('when scope is null or undefined', () => {
-      it('returns empty array for null', () => {
-        const result = (
-          testUseCase as unknown as {
-            parseScopeString: (scope: string | null | undefined) => string[];
-          }
-        ).parseScopeString(null);
-        expect(result).toEqual([]);
-      });
-
-      it('returns empty array for undefined', () => {
-        const result = (
-          testUseCase as unknown as {
-            parseScopeString: (scope: string | null | undefined) => string[];
-          }
-        ).parseScopeString(undefined);
-        expect(result).toEqual([]);
-      });
-    });
-
-    describe('when scope is empty or whitespace', () => {
-      it('returns empty array for empty string', () => {
-        const result = (
-          testUseCase as unknown as {
-            parseScopeString: (scope: string | null | undefined) => string[];
-          }
-        ).parseScopeString('');
-        expect(result).toEqual([]);
-      });
-
-      it('returns empty array for whitespace', () => {
-        const result = (
-          testUseCase as unknown as {
-            parseScopeString: (scope: string | null | undefined) => string[];
-          }
-        ).parseScopeString('   ');
-        expect(result).toEqual([]);
-      });
-    });
-
-    describe('when scope is a single pattern', () => {
-      it('returns single-element array', () => {
-        const result = (
-          testUseCase as unknown as {
-            parseScopeString: (scope: string | null | undefined) => string[];
-          }
-        ).parseScopeString('**/*.ts');
-        expect(result).toEqual(['**/*.ts']);
-      });
-
-      it('trims whitespace from single pattern', () => {
-        const result = (
-          testUseCase as unknown as {
-            parseScopeString: (scope: string | null | undefined) => string[];
-          }
-        ).parseScopeString('  **/*.ts  ');
-        expect(result).toEqual(['**/*.ts']);
-      });
-    });
-
-    describe('when scope is comma-separated patterns', () => {
-      it('splits and returns multiple patterns', () => {
-        const result = (
-          testUseCase as unknown as {
-            parseScopeString: (scope: string | null | undefined) => string[];
-          }
-        ).parseScopeString('**/*Hexa.ts,**/*Adapter.ts');
-        expect(result).toEqual(['**/*Hexa.ts', '**/*Adapter.ts']);
-      });
-
-      it('trims whitespace from each pattern', () => {
-        const result = (
-          testUseCase as unknown as {
-            parseScopeString: (scope: string | null | undefined) => string[];
-          }
-        ).parseScopeString('a , b , c');
-        expect(result).toEqual(['a', 'b', 'c']);
-      });
-
-      it('filters out empty segments', () => {
-        const result = (
-          testUseCase as unknown as {
-            parseScopeString: (scope: string | null | undefined) => string[];
-          }
-        ).parseScopeString('a,,b,,,c');
-        expect(result).toEqual(['a', 'b', 'c']);
-      });
-
-      it('handles three patterns with complex globs', () => {
-        const result = (
-          testUseCase as unknown as {
-            parseScopeString: (scope: string | null | undefined) => string[];
-          }
-        ).parseScopeString('**/*Hexa.ts,**/*Adapter.ts,**/*Port.ts');
-        expect(result).toEqual([
-          '**/*Hexa.ts',
-          '**/*Adapter.ts',
-          '**/*Port.ts',
-        ]);
       });
     });
   });

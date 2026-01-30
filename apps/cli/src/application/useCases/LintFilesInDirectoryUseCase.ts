@@ -22,6 +22,7 @@ import * as path from 'path';
 import * as fs from 'fs/promises';
 import { pathStartsWith } from '../utils/pathUtils';
 import { logErrorConsole } from '../../infra/utils/consoleLogger';
+import { handleScope } from '../utils/handleScope';
 
 const origin = 'LintFilesInDirectoryUseCase';
 
@@ -31,40 +32,6 @@ export class LintFilesInDirectoryUseCase implements ILintFilesInDirectory {
     private readonly repositories: IPackmindRepositories,
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {}
-
-  /**
-   * Parses a scope string from the API into an array of patterns.
-   * Handles comma-separated patterns and various edge cases.
-   *
-   * @param scope - The scope string from API (can be null, empty, or comma-separated)
-   * @returns Array of scope patterns, or empty array if no valid scope
-   */
-  private parseScopeString(scope: string | null | undefined): string[] {
-    if (!scope) {
-      return [];
-    }
-
-    const trimmedScope = scope.trim();
-
-    if (trimmedScope === '') {
-      return [];
-    }
-
-    return trimmedScope
-      .split(',')
-      .map((pattern) => pattern.trim())
-      .filter((pattern) => pattern.length > 0);
-  }
-
-  private fileMatchesScope(filePath: string, scopePatterns: string[]): boolean {
-    // If no scope patterns defined, run on all files
-    if (!scopePatterns || scopePatterns.length === 0) {
-      return true;
-    }
-
-    // Check if file matches any of the scope patterns
-    return scopePatterns.some((pattern) => minimatch(filePath, pattern));
-  }
 
   public fileMatchesTargetAndScope(
     filePath: string,
@@ -286,11 +253,11 @@ export class LintFilesInDirectoryUseCase implements ILintFilesInDirectory {
 
     // Step 2: Get Git remote URL
     const { gitRemoteUrl } =
-      await this.services.gitRemoteUrlService.getGitRemoteUrl(gitRepoRoot);
+      this.services.gitRemoteUrlService.getGitRemoteUrl(gitRepoRoot);
 
     // Step 2.5: Get current branches
     const { branches } =
-      await this.services.gitRemoteUrlService.getCurrentBranches(gitRepoRoot);
+      this.services.gitRemoteUrlService.getCurrentBranches(gitRepoRoot);
 
     this.logger.debug(
       `Git repository: url="${gitRemoteUrl}", branches=${JSON.stringify(branches)}, filesCount=${files.length}`,
@@ -304,13 +271,19 @@ export class LintFilesInDirectoryUseCase implements ILintFilesInDirectory {
       // Draft mode: Get draft detection programs for specific rule
       isDraftMode = true;
       const draftProgramsResult =
-        await this.repositories.packmindGateway.getDraftDetectionProgramsForRule(
+        await this.repositories.packmindGateway.linter.getDraftDetectionProgramsForRule(
           {
             standardSlug,
             ruleId,
             language,
           },
         );
+      if (draftProgramsResult.programs.length === 0) {
+        const languageMsg = language ? ` for language ${language}` : '';
+        throw new Error(
+          `No draft detection programs found for rule ${ruleId} in standard ${standardSlug}${languageMsg}`,
+        );
+      }
 
       // Transform draft programs into the same format as active programs
       detectionPrograms = {
@@ -322,7 +295,7 @@ export class LintFilesInDirectoryUseCase implements ILintFilesInDirectory {
               {
                 name: standardSlug,
                 slug: standardSlug,
-                scope: this.parseScopeString(draftProgramsResult.scope),
+                scope: handleScope(draftProgramsResult.scope),
                 rules: [
                   {
                     content: draftProgramsResult.ruleContent || 'Draft Rule',
@@ -346,14 +319,19 @@ export class LintFilesInDirectoryUseCase implements ILintFilesInDirectory {
     } else if (!draftMode && standardSlug && ruleId) {
       // Active mode: Get active detection programs for specific rule
       const activeProgramsResult =
-        await this.repositories.packmindGateway.getActiveDetectionProgramsForRule(
+        await this.repositories.packmindGateway.linter.getActiveDetectionProgramsForRule(
           {
             standardSlug,
             ruleId,
             language,
           },
         );
-
+      if (activeProgramsResult.programs.length === 0) {
+        const languageMsg = language ? ` for language ${language}` : '';
+        throw new Error(
+          `No active detection programs found for rule ${ruleId} in standard ${standardSlug}${languageMsg}`,
+        );
+      }
       // Transform active programs into the same format
       detectionPrograms = {
         targets: [
@@ -364,7 +342,7 @@ export class LintFilesInDirectoryUseCase implements ILintFilesInDirectory {
               {
                 name: standardSlug,
                 slug: standardSlug,
-                scope: this.parseScopeString(activeProgramsResult.scope),
+                scope: handleScope(activeProgramsResult.scope),
                 rules: [
                   {
                     content: activeProgramsResult.ruleContent || 'Active Rule',
@@ -388,8 +366,8 @@ export class LintFilesInDirectoryUseCase implements ILintFilesInDirectory {
     } else {
       // Normal mode: Get all active detection programs from git repo
       detectionPrograms =
-        await this.repositories.packmindGateway.listExecutionPrograms({
-          gitRemoteUrl,
+        await this.repositories.packmindGateway.linter.listDetectionPrograms({
+          gitRemoteUrl: gitRemoteUrl.replace(':', '/'),
           branches,
         });
     }
