@@ -162,91 +162,142 @@ INSIGHT:
     - path[:line-line]
 ```
 
-## Step 6 — Generate Draft Artifacts (Max 5 each)
+## Step 6 — Generate All Draft Playbooks
 
-Generate artifacts **only from reported exotic insights**.
+Generate all draft playbook files in one batch, using the formats defined in `packmind-create-standard` and `packmind-create-command` skills.
 
-### Standard format (draft)
+### Standard Playbook Format
 
-```yaml
-name: '...'
-summary: '...'
-why_now: 'Derived from observed repo patterns'
-evidence:
-  - path[:line-line]
-rules:
-  - content: '...'
-    rationale: '...'
-    examples:
-      positive: 'path[:line-line] — short snippet or description'
-      negative: 'path[:line-line] — short snippet or description'
+For each Standard insight, create a JSON file at `.packmind/standards/_drafts/<slug>.playbook.json`:
+
+```json
+{
+  "name": "Standard Name",
+  "description": "What the standard covers and why",
+  "scope": "Where this standard applies (e.g., 'TypeScript files', 'React components')",
+  "rules": [
+    {
+      "content": "Rule starting with action verb",
+      "examples": {
+        "positive": "Valid code example",
+        "negative": "Invalid code example",
+        "language": "TYPESCRIPT"
+      }
+    }
+  ]
+}
 ```
 
-### Command format (draft)
+### Command Playbook Format
 
-```yaml
-name: '...'
-summary: '...'
-why_now: '...'
-evidence:
-  - path[:line-line]
-contextValidationCheckpoints:
-  - '...'
-steps:
-  - name: '...'
-    codeSnippet: |
-      ...
+For each Command insight, create a JSON file at `.packmind/commands/_drafts/<slug>.playbook.json`:
+
+```json
+{
+  "name": "Command Name",
+  "summary": "What the command does, why it's useful, and when it's relevant",
+  "whenToUse": ["Scenario when this command applies"],
+  "contextValidationCheckpoints": ["Question to validate before proceeding?"],
+  "steps": [
+    {
+      "name": "Step Name",
+      "description": "What this step does and how to implement it",
+      "codeSnippet": "// Optional code example"
+    }
+  ]
+}
 ```
 
-## Step 7 — Present Results
+### Generation Rules
 
-Present a summary of findings:
+- Generate playbooks **only from discovered insights** (no invention)
+- Use evidence from analysis to populate rules/steps
+- Cap output: max **5 Standards** + **5 Commands**
+- Never overwrite existing files; append `-2`, `-3`, etc. if slug exists
+
+---
+
+## Step 7 — Present Drafts for Single Approval
+
+Present the generated draft files and ask for **one single approval**:
 
 ```
 ============================================================
-  PACKMIND ONBOARDING RESULTS — [QUICK|OPTIMAL] MODE
+  PACKMIND ONBOARDING — [QUICK|OPTIMAL] MODE
 ============================================================
-
-Existing configuration:
-  - [N] standards | [M] commands | [P] agent docs
 
 Stack detected: [languages], [monorepo?], [architecture markers]
-
 Analyses run: [N] checks
 
-INSIGHTS (exotic patterns only):
-  1. [Title]
-     evidence: [paths...]
+DRAFT PLAYBOOKS CREATED:
 
-GENERATED ARTIFACTS (draft, max 5 each):
-  Standards ([N]):
-    * [Name] - [one-line summary]
-  Commands ([M]):
-    * [Name] - [one-line summary]
+Standards ([N]):
+  1. [Name] → .packmind/standards/_drafts/[slug].playbook.json
+  2. ...
 
+Commands ([M]):
+  1. [Name] → .packmind/commands/_drafts/[slug].playbook.json
+  2. ...
+
+============================================================
+
+Please review the draft files above. When ready, confirm to publish
+them to Packmind via CLI.
+```
+
+Then ask:
+
+```
+Ready to publish these Standards and Commands to Packmind?
+
+[Y] Yes, publish all
+[N] No, I need to edit them first
+```
+
+---
+
+## Step 8 — Apply or Wait
+
+**If user approves (Y):**
+
+Publish all drafts to Packmind using CLI:
+
+```bash
+packmind-cli standards create .packmind/standards/_drafts/<slug>.playbook.json
+packmind-cli commands create .packmind/commands/_drafts/<slug>.playbook.json
+```
+
+Print final summary:
+
+```
+============================================================
+  PUBLISHED TO PACKMIND
+============================================================
+
+Standards: [N]
+  - [Name] (slug: [slug])
+
+Commands: [M]
+  - [Name] (slug: [slug])
+
+Draft files cleaned up.
 ============================================================
 ```
 
-Then use AskUserQuestion to offer options:
+After successful publish, delete the draft playbook files.
 
-- **Apply** - Write all generated artifacts to the repository
-- **Preview** - Show full content of a specific artifact before deciding
-- **Quit** - Exit without writing any files
+**If user declines (N):**
 
-## Step 8 — Handle Choice
+Print:
 
-**Apply:**
+```
+Draft files ready for review at:
+  - .packmind/standards/_drafts/
+  - .packmind/commands/_drafts/
 
-- Write new files:
-  - `.packmind/standards/[slug].md`
-  - `.packmind/commands/[slug].md`
-- Never overwrite. If slug exists, append `-2`, `-3`, etc.
-- Show exactly what was written (paths + titles).
+Edit them as needed, then run:
+  packmind-cli standards create <path>
+  packmind-cli commands create <path>
 
-**Preview:**
-
-- Show full content of selected artifact, then return to the options.
-
-**Quit:**
-
-- Print: `Done. Run this skill again anytime.`
+Or re-run this skill when ready.
+```

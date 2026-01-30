@@ -14,7 +14,7 @@
 
 ## Fixed
 
-- Fix CLI syntax for command creation to consistently use `commands create` instead of `command create`
+- Fix CLI syntax for command creation to consistently use `commands create` instead of `commands create`
 
 ## Removed
 
