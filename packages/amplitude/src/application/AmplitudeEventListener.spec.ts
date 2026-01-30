@@ -127,8 +127,7 @@ describe('AmplitudeEventListener', () => {
         'org-456',
         'standard_sample_selected',
         {
-          sampleId: 'sample-typescript',
-          sampleType: 'language',
+          name: 'sample-typescript',
           spaceId: 'space-abc',
           source: 'ui',
         },
