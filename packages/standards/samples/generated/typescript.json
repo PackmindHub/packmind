@@ -1,85 +1,86 @@
 {
   "name": "TypeScript Best Practices",
-  "description": "Advanced TypeScript guidance for runtime safety, reliability, and maintainability across network calls, validation, errors, resources, concurrency, configuration, logging, and type-system pitfalls.",
+  "summary": "A focused set of high-impact TypeScript rules for production services and libraries dealing with I/O, untrusted input, concurrency, configuration, and operational diagnostics.",
+  "description": "This standard covers advanced TypeScript patterns that prevent production defects: runtime validation at boundaries, safe error handling, reliable resource lifecycle management, deterministic concurrency, resilient networking, structured logging, and configuration safety. It targets common non-obvious pitfalls in modern TypeScript codebases without prescribing framework-specific conventions.",
   "scope": "TypeScript source files",
   "rules": [
     {
-      "content": "Validate external inputs at module boundaries using schema parsing that returns typed data; reject unknown fields and normalize types before business logic.",
+      "content": "Validate unknown input at boundaries using a runtime schema and transform to a typed domain object before use.",
       "examples": {
-        "positive": "import { z } from \"zod\";\n\nconst CreateUser = z.object({\n  email: z.string().email(),\n  age: z.number().int().min(0)\n}).strict();\n\ntype CreateUser = z.infer<typeof CreateUser>;\n\nexport function handleCreateUser(body: unknown) {\n  const input: CreateUser = CreateUser.parse(body);\n  return { email: input.email.toLowerCase(), age: input.age };\n}\n",
-        "negative": "type CreateUser = { email: string; age: number };\n\nexport function handleCreateUser(body: any) {\n  const input = body as CreateUser;\n  // Accepts missing/extra fields and wrong types\n  return { email: input.email.toLowerCase(), age: input.age + 1 };\n}\n",
+        "positive": "import { z } from \"zod\";\n\nconst CreateUser = z.object({\n  email: z.string().email(),\n  age: z.number().int().nonnegative().optional()\n});\n\ntype CreateUser = z.infer<typeof CreateUser>;\n\nexport function parseCreateUser(body: unknown): CreateUser {\n  return CreateUser.parse(body);\n}\n\nconst dto = parseCreateUser(reqBody);\nuseEmail(dto.email);\n",
+        "negative": "type CreateUser = { email: string; age?: number };\n\nfunction handle(body: any) {\n  // assumes shape without runtime validation\n  useEmail(body.email);\n  if (body.age) useAge(body.age);\n}\n",
         "language": "TYPESCRIPT"
       }
     },
     {
-      "content": "Set explicit timeouts and cancellation for all network operations using AbortController; wire cancellation through layers instead of leaving promises unbounded.",
+      "content": "Use assertion functions to narrow unknown values; avoid \"as\" casts for data from I/O, JSON, or external libraries.",
       "examples": {
-        "positive": "export async function fetchJson(url: string, timeoutMs = 5000) {\n  const controller = new AbortController();\n  const t = setTimeout(() => controller.abort(), timeoutMs);\n  try {\n    const res = await fetch(url, { signal: controller.signal });\n    if (!res.ok) throw new Error(`HTTP ${res.status}`);\n    return await res.json();\n  } finally {\n    clearTimeout(t);\n  }\n}\n",
-        "negative": "export async function fetchJson(url: string) {\n  const res = await fetch(url); // no timeout, no cancellation\n  return res.json();\n}\n",
+        "positive": "function assertNonEmptyString(value: unknown, name: string): asserts value is string {\n  if (typeof value !== \"string\" || value.length === 0) {\n    throw new TypeError(`${name} must be a non-empty string`);\n  }\n}\n\nfunction greet(input: unknown) {\n  assertNonEmptyString(input, \"name\");\n  return `Hello, ${input.toUpperCase()}`;\n}\n",
+        "negative": "function greet(input: unknown) {\n  const name = input as string;\n  return `Hello, ${name.toUpperCase()}`;\n}\n",
         "language": "TYPESCRIPT"
       }
     },
     {
-      "content": "Apply bounded retries with exponential backoff and jitter; retry only on transient failures and cap total elapsed time per operation.",
+      "content": "Throw and reject with Error objects; map unknown caught values to an Error before rethrowing or logging.",
       "examples": {
-        "positive": "const sleep = (ms: number) => new Promise(r => setTimeout(r, ms));\n\nexport async function retry<T>(fn: () => Promise<T>, opts = { max: 4, baseMs: 200, maxElapsedMs: 4000 }) {\n  const start = Date.now();\n  let attempt = 0;\n  while (true) {\n    try {\n      return await fn();\n    } catch (e) {\n      const elapsed = Date.now() - start;\n      if (attempt >= opts.max || elapsed >= opts.maxElapsedMs) throw e;\n      attempt++;\n      const backoff = Math.min(opts.baseMs * 2 ** (attempt - 1), 1000);\n      const jitter = Math.random() * backoff * 0.3;\n      await sleep(backoff + jitter);\n    }\n  }\n}\n",
-        "negative": "export async function retryForever<T>(fn: () => Promise<T>): Promise<T> {\n  while (true) {\n    try { return await fn(); } catch { /* tight loop */ }\n  }\n}\n",
+        "positive": "function toError(e: unknown): Error {\n  return e instanceof Error ? e : new Error(typeof e === \"string\" ? e : JSON.stringify(e));\n}\n\ntry {\n  doWork();\n} catch (e: unknown) {\n  const err = toError(e);\n  logger.error({ err }, \"work failed\");\n  throw err;\n}\n",
+        "negative": "try {\n  doWork();\n} catch (e) {\n  // throws non-Error and loses stack discipline\n  throw \"work failed: \" + e;\n}\n",
         "language": "TYPESCRIPT"
       }
     },
     {
-      "content": "Use Error subclasses with stable codes and explicit causes; avoid throwing strings or plain objects.",
+      "content": "Use AbortSignal with explicit timeouts for all network and filesystem operations that support cancellation.",
       "examples": {
-        "positive": "export class AppError extends Error {\n  constructor(public readonly code: string, message: string, options?: { cause?: unknown }) {\n    super(message, options);\n    this.name = \"AppError\";\n  }\n}\n\nthrow new AppError(\"CONFIG_INVALID\", \"Missing DATABASE_URL\", { cause: new Error(\"env\") });\n",
-        "negative": "throw \"Missing DATABASE_URL\";\n// or\nthrow { code: \"CONFIG_INVALID\", message: \"Missing DATABASE_URL\" };\n",
+        "positive": "const ctrl = new AbortController();\nconst t = setTimeout(() => ctrl.abort(), 5_000);\ntry {\n  const res = await fetch(url, { signal: ctrl.signal });\n  return await res.json();\n} finally {\n  clearTimeout(t);\n}\n",
+        "negative": "const res = await fetch(url);\nreturn await res.json();\n",
         "language": "TYPESCRIPT"
       }
     },
     {
-      "content": "Keep thrown errors intact; catch only to add context, then rethrow or wrap with cause instead of replacing the original stack.",
+      "content": "Retry only idempotent operations using bounded attempts and capped backoff; stop retries on AbortSignal.",
       "examples": {
-        "positive": "import { readFile } from \"node:fs/promises\";\n\nexport async function loadConfig(path: string) {\n  try {\n    return await readFile(path, \"utf8\");\n  } catch (e) {\n    throw new Error(`Failed reading config: ${path}`, { cause: e });\n  }\n}\n",
-        "negative": "import { readFile } from \"node:fs/promises\";\n\nexport async function loadConfig(path: string) {\n  try {\n    return await readFile(path, \"utf8\");\n  } catch {\n    throw new Error(\"Config read failed\"); // loses original error\n  }\n}\n",
+        "positive": "async function retry<T>(fn: (signal: AbortSignal) => Promise<T>, signal: AbortSignal): Promise<T> {\n  let delay = 100;\n  for (let attempt = 0; attempt < 3; attempt++) {\n    signal.throwIfAborted?.();\n    try {\n      return await fn(signal);\n    } catch {\n      if (attempt === 2) throw;\n      await new Promise<void>((r, reject) => {\n        const id = setTimeout(r, delay);\n        signal.addEventListener(\"abort\", () => {\n          clearTimeout(id);\n          reject(new DOMException(\"Aborted\", \"AbortError\"));\n        }, { once: true });\n      });\n      delay = Math.min(delay * 2, 1_000);\n    }\n  }\n  throw new Error(\"unreachable\");\n}\n\nawait retry((s) => fetch(url, { method: \"GET\", signal: s }), ctrl.signal);\n",
+        "negative": "while (true) {\n  try {\n    return await fetch(url, { method: \"POST\" });\n  } catch {\n    // infinite retry on non-idempotent operation\n  }\n}\n",
         "language": "TYPESCRIPT"
       }
     },
     {
-      "content": "Manage resources with explicit disposal patterns; use finally blocks and AbortSignal cleanup for streams, timers, and subscriptions.",
+      "content": "Release resources using finally or disposable helpers; avoid relying on garbage collection for streams, timers, sockets, and locks.",
       "examples": {
-        "positive": "import { createReadStream } from \"node:fs\";\n\nexport async function firstLine(path: string): Promise<string> {\n  const s = createReadStream(path, { encoding: \"utf8\" });\n  try {\n    let buf = \"\";\n    for await (const chunk of s) {\n      buf += chunk;\n      const i = buf.indexOf(\"\\n\");\n      if (i >= 0) return buf.slice(0, i);\n    }\n    return buf;\n  } finally {\n    s.destroy();\n  }\n}\n",
-        "negative": "import { createReadStream } from \"node:fs\";\n\nexport async function firstLine(path: string): Promise<string> {\n  const s = createReadStream(path, { encoding: \"utf8\" });\n  let buf = \"\";\n  for await (const chunk of s) {\n    buf += chunk;\n    const i = buf.indexOf(\"\\n\");\n    if (i >= 0) return buf.slice(0, i); // stream left open\n  }\n  return buf;\n}\n",
+        "positive": "const id = setInterval(tick, 1000);\ntry {\n  await runJob();\n} finally {\n  clearInterval(id);\n}\n",
+        "negative": "const id = setInterval(tick, 1000);\nawait runJob();\n// interval keeps running\n",
         "language": "TYPESCRIPT"
       }
     },
     {
-      "content": "Serialize access to shared mutable state with a mutex or queue; avoid read-modify-write across awaits.",
+      "content": "Serialize access to shared mutable state with a mutex or queue; avoid read-modify-write across awaits without synchronization.",
       "examples": {
-        "positive": "class Mutex {\n  private p: Promise<void> = Promise.resolve();\n  async runExclusive<T>(fn: () => Promise<T>): Promise<T> {\n    let release!: () => void;\n    const next = new Promise<void>(r => (release = r));\n    const prev = this.p;\n    this.p = prev.then(() => next);\n    await prev;\n    try { return await fn(); } finally { release(); }\n  }\n}\n\nconst m = new Mutex();\nlet counter = 0;\n\nexport async function inc() {\n  return m.runExclusive(async () => {\n    const v = counter;\n    await Promise.resolve();\n    counter = v + 1;\n    return counter;\n  });\n}\n",
-        "negative": "let counter = 0;\n\nexport async function inc() {\n  const v = counter;\n  await Promise.resolve();\n  counter = v + 1; // races under concurrent calls\n  return counter;\n}\n",
+        "positive": "class Mutex {\n  private p: Promise<void> = Promise.resolve();\n  lock<T>(fn: () => Promise<T>): Promise<T> {\n    const run = this.p.then(fn, fn);\n    this.p = run.then(() => undefined, () => undefined);\n    return run;\n  }\n}\n\nconst mu = new Mutex();\nlet counter = 0;\n\nasync function inc() {\n  return mu.lock(async () => {\n    const current = counter;\n    await Promise.resolve();\n    counter = current + 1;\n    return counter;\n  });\n}\n",
+        "negative": "let counter = 0;\n\nasync function inc() {\n  const current = counter;\n  await Promise.resolve();\n  counter = current + 1; // lost updates under concurrency\n}\n",
         "language": "TYPESCRIPT"
       }
     },
     {
-      "content": "Prefer unknown over any at trust boundaries; narrow with type guards or schema parsing before property access.",
+      "content": "Log structured data and pass Error objects as fields; avoid interpolating stack traces or logging only message strings.",
       "examples": {
-        "positive": "function isUser(x: unknown): x is { id: string } {\n  return typeof x === \"object\" && x !== null && typeof (x as any).id === \"string\";\n}\n\nexport function getUserId(payload: unknown) {\n  if (!isUser(payload)) throw new Error(\"Invalid payload\");\n  return payload.id;\n}\n",
-        "negative": "export function getUserId(payload: any) {\n  return payload.id.trim(); // runtime crash if id missing/not string\n}\n",
+        "positive": "logger.error(\n  { err, userId, requestId },\n  \"payment authorization failed\"\n);\n",
+        "negative": "logger.error(`payment authorization failed: ${err}`);\n",
         "language": "TYPESCRIPT"
       }
     },
     {
-      "content": "Avoid type assertions for object shapes; use the satisfies operator or typed builders so mismatches fail at compile time.",
+      "content": "Load configuration once at startup, validate it, and export a typed readonly config object; avoid reading process.env ad hoc.",
       "examples": {
-        "positive": "type Config = { host: string; port: number };\n\nconst cfg = {\n  host: \"localhost\",\n  port: 5432\n} satisfies Config;\n",
-        "negative": "type Config = { host: string; port: number };\n\nconst cfg = {\n  host: \"localhost\",\n  port: \"5432\" // wrong type\n} as Config;\n",
+        "positive": "import { z } from \"zod\";\n\nconst Env = z.object({\n  PORT: z.coerce.number().int().min(1).max(65535),\n  LOG_LEVEL: z.enum([\"debug\", \"info\", \"warn\", \"error\"]).default(\"info\")\n});\n\nexport const config = Object.freeze(Env.parse(process.env));\n",
+        "negative": "export function port(): number {\n  return Number(process.env.PORT) || 3000;\n}\n\n// scattered env access\nif (process.env.LOG_LEVEL === \"debug\") console.log(\"debug\");\n",
         "language": "TYPESCRIPT"
       }
     },
     {
-      "content": "Load configuration via a single typed module that parses process.env once; avoid scattered env access and implicit string-to-number conversions.",
+      "content": "Inject external dependencies via constructor parameters or function arguments; avoid module-level singletons that create hidden global state.",
       "examples": {
-        "positive": "import { z } from \"zod\";\n\nconst Env = z.object({\n  PORT: z.coerce.number().int().min(1).max(65535),\n  LOG_LEVEL: z.enum([\"debug\", \"info\", \"warn\", \"error\"]).default(\"info\")\n});\n\nexport const config = Env.parse(process.env);\n",
-        "negative": "export const port = Number(process.env.PORT) || 3000;\nexport const logLevel = (process.env.LOG_LEVEL as any) ?? \"verbose\";\n// env read spread across modules; silent NaN and invalid values\n",
+        "positive": "type HttpClient = { get(url: string, init?: RequestInit): Promise<Response> };\n\nclass UserService {\n  constructor(private readonly http: HttpClient) {}\n  async fetchUser(id: string) {\n    const res = await this.http.get(`/users/${id}`);\n    return res.json();\n  }\n}\n",
+        "negative": "const http = {\n  get: (url: string, init?: RequestInit) => fetch(url, init)\n};\n\nclass UserService {\n  async fetchUser(id: string) {\n    const res = await http.get(`/users/${id}`);\n    return res.json();\n  }\n}\n",
         "language": "TYPESCRIPT"
       }
     }
