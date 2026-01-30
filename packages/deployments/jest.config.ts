@@ -20,6 +20,4 @@ export default {
     compilerOptions.paths,
     '<rootDir>/../../',
   ),
-  forceExit: true,
-  detectOpenHandles: true,
 };

@@ -6,7 +6,6 @@ import { recipesSchemas } from '@packmind/recipes';
 import { skillsSchemas } from '@packmind/skills';
 import { spacesSchemas } from '@packmind/spaces';
 import { standardsSchemas } from '@packmind/standards';
-import { makeTestDatasource } from '@packmind/test-utils';
 import {
   createTargetId,
   FileModification,
@@ -26,12 +25,21 @@ import {
   User,
 } from '@packmind/types';
 import assert from 'assert';
-import { DataSource } from 'typeorm';
+import { createIntegrationTestFixture } from '../helpers/createIntegrationTestFixture';
 import { TestApp } from '../helpers/TestApp';
 
 describe('Continue Deployment Integration', () => {
+  const fixture = createIntegrationTestFixture([
+    ...accountsSchemas,
+    ...recipesSchemas,
+    ...standardsSchemas,
+    ...spacesSchemas,
+    ...gitSchemas,
+    ...deploymentsSchemas,
+    ...skillsSchemas,
+  ]);
+
   let testApp: TestApp;
-  let dataSource: DataSource;
   let standardsPort: IStandardsPort;
   let gitPort: IGitPort;
   let deployerService: DeployerService;
@@ -43,22 +51,11 @@ describe('Continue Deployment Integration', () => {
   let space: Space;
   let gitRepo: GitRepo;
 
-  beforeEach(async () => {
-    // Create test datasource with all necessary schemas
-    dataSource = await makeTestDatasource([
-      ...accountsSchemas,
-      ...recipesSchemas,
-      ...standardsSchemas,
-      ...spacesSchemas,
-      ...gitSchemas,
-      ...deploymentsSchemas,
-      ...skillsSchemas,
-    ]);
-    await dataSource.initialize();
-    await dataSource.synchronize();
+  beforeAll(() => fixture.initialize());
 
+  beforeEach(async () => {
     // Use TestApp which handles all hexa registration and initialization
-    testApp = new TestApp(dataSource);
+    testApp = new TestApp(fixture.datasource);
     await testApp.initialize();
 
     // Get deployer service from hexa
@@ -132,8 +129,11 @@ describe('Continue Deployment Integration', () => {
   });
 
   afterEach(async () => {
-    await dataSource.destroy();
+    jest.clearAllMocks();
+    await fixture.cleanup();
   });
+
+  afterAll(() => fixture.destroy());
 
   describe('when deploying a single recipe', () => {
     let defaultTarget: Target;

@@ -8,9 +8,9 @@ import {
   RenderMode,
   Standard,
 } from '@packmind/types';
-import { DataSource } from 'typeorm';
+import { createIntegrationTestFixture } from './helpers/createIntegrationTestFixture';
 import { DataFactory } from './helpers/DataFactory';
-import { makeIntegrationTestDataSource } from './helpers/makeIntegrationTestDataSource';
+import { integrationTestSchemas } from './helpers/makeIntegrationTestDataSource';
 import { TestApp } from './helpers/TestApp';
 
 /**
@@ -30,9 +30,10 @@ import { TestApp } from './helpers/TestApp';
  * 5. CLAUDE.md legacy sections are cleared (Packmind standards and recipes sections set to empty).
  */
 describe('CLAUDE.md cleanup on package removal', () => {
+  const fixture = createIntegrationTestFixture(integrationTestSchemas);
+
   let testApp: TestApp;
   let dataFactory: DataFactory;
-  let dataSource: DataSource;
 
   let recipe: Recipe;
   let standard: Standard;
@@ -41,12 +42,10 @@ describe('CLAUDE.md cleanup on package removal', () => {
   let commitToGit: jest.Mock;
   let getFileFromRepo: jest.Mock;
 
-  beforeEach(async () => {
-    dataSource = await makeIntegrationTestDataSource();
-    await dataSource.initialize();
-    await dataSource.synchronize();
+  beforeAll(() => fixture.initialize());
 
-    testApp = new TestApp(dataSource);
+  beforeEach(async () => {
+    testApp = new TestApp(fixture.datasource);
     await testApp.initialize();
 
     dataFactory = new DataFactory(testApp);
@@ -70,11 +69,13 @@ describe('CLAUDE.md cleanup on package removal', () => {
 
   afterEach(async () => {
     jest.clearAllMocks();
-    await dataSource.destroy();
+    await fixture.cleanup();
   });
 
+  afterAll(() => fixture.destroy());
+
   async function createGitCommit() {
-    const gitCommitRepo = dataSource.getRepository(GitCommitSchema);
+    const gitCommitRepo = fixture.datasource.getRepository(GitCommitSchema);
     return gitCommitRepo.save(gitCommitFactory());
   }
 

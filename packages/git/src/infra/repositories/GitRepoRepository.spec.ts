@@ -1,20 +1,26 @@
 import { GitRepoRepository } from './GitRepoRepository';
 import { GitRepoSchema } from '../schemas/GitRepoSchema';
 import { GitProviderSchema } from '../schemas/GitProviderSchema';
-import { DataSource, Repository } from 'typeorm';
-import { makeTestDatasource } from '@packmind/test-utils';
-import { itHandlesSoftDelete } from '@packmind/test-utils';
+import { Repository } from 'typeorm';
+import {
+  createTestDatasourceFixture,
+  itHandlesSoftDelete,
+  stubLogger,
+} from '@packmind/test-utils';
 import { v4 as uuidv4 } from 'uuid';
-import { GitRepo } from '@packmind/types';
-import { GitProvider } from '@packmind/types';
+import { GitRepo, GitProvider } from '@packmind/types';
 import { PackmindLogger } from '@packmind/logger';
-import { stubLogger } from '@packmind/test-utils';
 import { gitRepoFactory, gitProviderFactory } from '../../../test';
 import { createOrganizationId, Organization } from '@packmind/types';
 import { OrganizationSchema } from '@packmind/accounts';
 
 describe('GitRepoRepository', () => {
-  let datasource: DataSource;
+  const fixture = createTestDatasourceFixture([
+    GitRepoSchema,
+    GitProviderSchema,
+    OrganizationSchema,
+  ]);
+
   let gitRepoRepository: GitRepoRepository;
   let gitProviderRepository: Repository<GitProvider>;
   let organizationRepository: Repository<Organization>;
@@ -22,23 +28,19 @@ describe('GitRepoRepository', () => {
   let testProvider: GitProvider;
   let testOrganization: Organization;
 
+  beforeAll(() => fixture.initialize());
+
   beforeEach(async () => {
     logger = stubLogger();
-    datasource = await makeTestDatasource([
-      GitRepoSchema,
-      GitProviderSchema,
-      OrganizationSchema,
-    ]);
-    await datasource.initialize();
-    await datasource.synchronize();
 
     gitRepoRepository = new GitRepoRepository(
-      datasource.getRepository<GitRepo>(GitRepoSchema),
+      fixture.datasource.getRepository<GitRepo>(GitRepoSchema),
       logger,
     );
 
-    gitProviderRepository = datasource.getRepository(GitProviderSchema);
-    organizationRepository = datasource.getRepository(OrganizationSchema);
+    gitProviderRepository = fixture.datasource.getRepository(GitProviderSchema);
+    organizationRepository =
+      fixture.datasource.getRepository(OrganizationSchema);
 
     // Create test organization and provider for foreign key constraints
     testOrganization = await organizationRepository.save({
@@ -54,8 +56,10 @@ describe('GitRepoRepository', () => {
 
   afterEach(async () => {
     jest.clearAllMocks();
-    await datasource.destroy();
+    await fixture.cleanup();
   });
+
+  afterAll(() => fixture.destroy());
 
   itHandlesSoftDelete<GitRepo>({
     entityFactory: () =>
@@ -64,7 +68,7 @@ describe('GitRepoRepository', () => {
       }),
     getRepository: () => gitRepoRepository,
     queryDeletedEntity: async (id) =>
-      datasource.getRepository(GitRepoSchema).findOne({
+      fixture.datasource.getRepository(GitRepoSchema).findOne({
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         where: { id: id as any },
         withDeleted: true,

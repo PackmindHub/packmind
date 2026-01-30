@@ -1,14 +1,16 @@
 import { GitProviderRepository } from './GitProviderRepository';
 import { GitProviderSchema } from '../schemas/GitProviderSchema';
 import { GitRepoSchema } from '../schemas/GitRepoSchema';
-import { DataSource, Repository } from 'typeorm';
-import { makeTestDatasource } from '@packmind/test-utils';
-import { itHandlesSoftDelete } from '@packmind/test-utils';
+import { Repository } from 'typeorm';
+import {
+  createTestDatasourceFixture,
+  itHandlesSoftDelete,
+  stubLogger,
+} from '@packmind/test-utils';
 import { v4 as uuidv4 } from 'uuid';
 import { createGitProviderId, GitProvider } from '@packmind/types';
 import { PackmindLogger } from '@packmind/logger';
 import { Configuration } from '@packmind/node-utils';
-import { stubLogger } from '@packmind/test-utils';
 import { gitProviderFactory, gitlabProviderFactory } from '../../../test';
 import { createOrganizationId, Organization } from '@packmind/types';
 import { OrganizationSchema } from '@packmind/accounts';
@@ -24,33 +26,35 @@ jest.mock('@packmind/node-utils', () => ({
 const mockConfiguration = Configuration as jest.Mocked<typeof Configuration>;
 
 describe('GitProviderRepository', () => {
-  let datasource: DataSource;
+  const fixture = createTestDatasourceFixture([
+    GitProviderSchema,
+    GitRepoSchema,
+    OrganizationSchema,
+  ]);
+
   let gitProviderRepository: GitProviderRepository;
   let organizationRepository: Repository<Organization>;
   let logger: jest.Mocked<PackmindLogger>;
   let testOrganization: Organization;
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     // Mock the encryption key (must be 32 characters for AES-256)
     mockConfiguration.getConfig.mockResolvedValue(
       '12345678901234567890123456789012',
     );
+    await fixture.initialize();
+  });
 
+  beforeEach(async () => {
     logger = stubLogger();
-    datasource = await makeTestDatasource([
-      GitProviderSchema,
-      GitRepoSchema,
-      OrganizationSchema,
-    ]);
-    await datasource.initialize();
-    await datasource.synchronize();
 
     gitProviderRepository = new GitProviderRepository(
-      datasource.getRepository<GitProvider>(GitProviderSchema),
+      fixture.datasource.getRepository<GitProvider>(GitProviderSchema),
       logger,
     );
 
-    organizationRepository = datasource.getRepository(OrganizationSchema);
+    organizationRepository =
+      fixture.datasource.getRepository(OrganizationSchema);
 
     // Create test organization for foreign key constraints
     testOrganization = await organizationRepository.save({
@@ -62,8 +66,10 @@ describe('GitProviderRepository', () => {
 
   afterEach(async () => {
     jest.clearAllMocks();
-    await datasource.destroy();
+    await fixture.cleanup();
   });
+
+  afterAll(() => fixture.destroy());
 
   itHandlesSoftDelete<GitProvider>({
     entityFactory: () =>
@@ -72,7 +78,7 @@ describe('GitProviderRepository', () => {
       }),
     getRepository: () => gitProviderRepository,
     queryDeletedEntity: async (id) =>
-      datasource.getRepository(GitProviderSchema).findOne({
+      fixture.datasource.getRepository(GitProviderSchema).findOne({
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         where: { id: id as any },
         withDeleted: true,
@@ -85,7 +91,7 @@ describe('GitProviderRepository', () => {
       ReturnType<typeof gitProviderRepository.findById>
     >;
     let rawProvider: Awaited<
-      ReturnType<ReturnType<typeof datasource.getRepository>['findOne']>
+      ReturnType<ReturnType<typeof fixture.datasource.getRepository>['findOne']>
     >;
 
     beforeEach(async () => {
@@ -97,9 +103,11 @@ describe('GitProviderRepository', () => {
 
       foundGitProvider = await gitProviderRepository.findById(gitProvider.id);
 
-      rawProvider = await datasource.getRepository(GitProviderSchema).findOne({
-        where: { id: gitProvider.id },
-      });
+      rawProvider = await fixture.datasource
+        .getRepository(GitProviderSchema)
+        .findOne({
+          where: { id: gitProvider.id },
+        });
     });
 
     it('retrieves decrypted provider with correct properties', async () => {
@@ -221,7 +229,7 @@ describe('GitProviderRepository', () => {
       ReturnType<typeof gitProviderRepository.update>
     >;
     let rawProvider: Awaited<
-      ReturnType<ReturnType<typeof datasource.getRepository>['findOne']>
+      ReturnType<ReturnType<typeof fixture.datasource.getRepository>['findOne']>
     >;
 
     beforeEach(async () => {
@@ -236,9 +244,11 @@ describe('GitProviderRepository', () => {
         url: 'https://updated.example.com',
       });
 
-      rawProvider = await datasource.getRepository(GitProviderSchema).findOne({
-        where: { id: gitProvider.id },
-      });
+      rawProvider = await fixture.datasource
+        .getRepository(GitProviderSchema)
+        .findOne({
+          where: { id: gitProvider.id },
+        });
     });
 
     it('returns updated provider with decrypted token', async () => {
@@ -320,7 +330,7 @@ describe('GitProviderRepository', () => {
       ReturnType<typeof gitProviderRepository.findById>
     >;
     let rawProvider: Awaited<
-      ReturnType<ReturnType<typeof datasource.getRepository>['findOne']>
+      ReturnType<ReturnType<typeof fixture.datasource.getRepository>['findOne']>
     >;
 
     beforeEach(async () => {
@@ -334,9 +344,11 @@ describe('GitProviderRepository', () => {
         gitlabProvider.id,
       );
 
-      rawProvider = await datasource.getRepository(GitProviderSchema).findOne({
-        where: { id: gitlabProvider.id },
-      });
+      rawProvider = await fixture.datasource
+        .getRepository(GitProviderSchema)
+        .findOne({
+          where: { id: gitlabProvider.id },
+        });
     });
 
     it('retrieves decrypted GitLab provider with correct properties', async () => {
@@ -368,7 +380,7 @@ describe('GitProviderRepository', () => {
       ReturnType<typeof gitProviderRepository.findById>
     >;
     let rawProvider: Awaited<
-      ReturnType<ReturnType<typeof datasource.getRepository>['findOne']>
+      ReturnType<ReturnType<typeof fixture.datasource.getRepository>['findOne']>
     >;
 
     beforeEach(async () => {
@@ -383,9 +395,11 @@ describe('GitProviderRepository', () => {
         selfHostedGitlabProvider.id,
       );
 
-      rawProvider = await datasource.getRepository(GitProviderSchema).findOne({
-        where: { id: selfHostedGitlabProvider.id },
-      });
+      rawProvider = await fixture.datasource
+        .getRepository(GitProviderSchema)
+        .findOne({
+          where: { id: selfHostedGitlabProvider.id },
+        });
     });
 
     it('retrieves decrypted self-hosted GitLab provider with correct properties', async () => {
@@ -421,7 +435,7 @@ describe('GitProviderRepository', () => {
       ReturnType<typeof gitProviderRepository.update>
     >;
     let rawProvider: Awaited<
-      ReturnType<ReturnType<typeof datasource.getRepository>['findOne']>
+      ReturnType<ReturnType<typeof fixture.datasource.getRepository>['findOne']>
     >;
 
     beforeEach(async () => {
@@ -437,9 +451,11 @@ describe('GitProviderRepository', () => {
         token: 'glpat-updated-token',
       });
 
-      rawProvider = await datasource.getRepository(GitProviderSchema).findOne({
-        where: { id: gitlabProvider.id },
-      });
+      rawProvider = await fixture.datasource
+        .getRepository(GitProviderSchema)
+        .findOne({
+          where: { id: gitlabProvider.id },
+        });
     });
 
     it('returns updated GitLab provider with decrypted token', async () => {

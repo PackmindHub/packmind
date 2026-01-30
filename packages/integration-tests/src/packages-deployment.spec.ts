@@ -1,12 +1,14 @@
 import { GitCommitSchema } from '@packmind/git';
 import { gitCommitFactory } from '@packmind/git/test';
 import { DistributionStatus, Package, Recipe, Standard } from '@packmind/types';
-import { DataSource } from 'typeorm';
+import { createIntegrationTestFixture } from './helpers/createIntegrationTestFixture';
 import { DataFactory } from './helpers/DataFactory';
-import { makeIntegrationTestDataSource } from './helpers/makeIntegrationTestDataSource';
+import { integrationTestSchemas } from './helpers/makeIntegrationTestDataSource';
 import { TestApp } from './helpers/TestApp';
 
 describe('Package deployment integration', () => {
+  const fixture = createIntegrationTestFixture(integrationTestSchemas);
+
   let testApp: TestApp;
   let dataFactory: DataFactory;
 
@@ -15,14 +17,10 @@ describe('Package deployment integration', () => {
   let standard1: Standard;
   let standard2: Standard;
 
-  let dataSource: DataSource;
+  beforeAll(() => fixture.initialize());
 
   beforeEach(async () => {
-    dataSource = await makeIntegrationTestDataSource();
-    await dataSource.initialize();
-    await dataSource.synchronize();
-
-    testApp = new TestApp(dataSource);
+    testApp = new TestApp(fixture.datasource);
     await testApp.initialize();
 
     dataFactory = new DataFactory(testApp);
@@ -44,11 +42,13 @@ describe('Package deployment integration', () => {
 
   afterEach(async () => {
     jest.clearAllMocks();
-    await dataSource.destroy();
+    await fixture.cleanup();
   });
 
+  afterAll(() => fixture.destroy());
+
   async function createGitCommit() {
-    const gitCommitRepo = dataSource.getRepository(GitCommitSchema);
+    const gitCommitRepo = fixture.datasource.getRepository(GitCommitSchema);
     return gitCommitRepo.save(gitCommitFactory());
   }
 
