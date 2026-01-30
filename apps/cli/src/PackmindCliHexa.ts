@@ -69,7 +69,7 @@ export class PackmindCliHexa {
 
     try {
       // Initialize the hexagon factory
-      this.hexa = new PackmindCliHexaFactory(this.logger);
+      this.hexa = new PackmindCliHexaFactory();
     } catch (error) {
       this.logger.error('Failed to initialize PackmindCliHexa', {
         error: error instanceof Error ? error.message : String(error),

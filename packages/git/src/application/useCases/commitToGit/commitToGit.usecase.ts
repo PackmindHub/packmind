@@ -13,12 +13,14 @@ import { GitProviderService } from '../../GitProviderService';
 import { PackmindLogger } from '@packmind/logger';
 import { mergeSectionsIntoFileContent } from '@packmind/node-utils';
 
+const origin = 'CommitToGit';
+
 export class CommitToGit {
   constructor(
     private readonly gitCommitService: GitCommitService,
     private readonly gitProviderService: GitProviderService,
     private readonly gitRepoFactory: IGitRepoFactory,
-    private readonly logger: PackmindLogger,
+    private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {}
 
   public async commitToGit(

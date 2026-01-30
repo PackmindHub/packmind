@@ -104,25 +104,21 @@ export class GitUseCases {
       gitServices.getGitCommitService(),
       gitServices.getGitProviderService(),
       gitServices.getGitRepoFactory(),
-      this.logger,
     );
     this._handleWebHook = new HandleWebHook(
       gitServices.getGitCommitService(),
       gitServices.getGitProviderService(),
       gitServices.getGitRepoService(),
       gitServices.getGitRepoFactory(),
-      this.logger,
     );
     this._handleWebHookWithoutContent = new HandleWebHookWithoutContent(
       gitServices.getGitCommitService(),
       gitServices.getGitProviderService(),
       gitServices.getGitRepoService(),
-      this.logger,
     );
     this._getFileFromRepo = new GetFileFromRepo(
       gitServices.getGitProviderService(),
       gitServices.getGitRepoFactory(),
-      this.logger,
     );
     this._findGitRepoByOwnerAndRepo = new FindGitRepoByOwnerAndRepoUseCase(
       gitServices.getGitRepoService(),
@@ -172,7 +168,6 @@ export class GitUseCases {
     return new AddGitProviderUseCase(
       this.gitServices.getGitProviderService(),
       this.accountsAdapter,
-      this.logger,
     );
   }
 
@@ -190,7 +185,6 @@ export class GitUseCases {
       this.gitServices.getGitProviderService(),
       this.gitServices.getGitRepoService(),
       this.accountsAdapter,
-      this.logger,
     );
   }
 
@@ -199,7 +193,6 @@ export class GitUseCases {
       this.gitServices.getGitProviderService(),
       this.gitServices.getGitRepoService(),
       this.accountsAdapter,
-      this.logger,
     );
   }
 
@@ -207,7 +200,6 @@ export class GitUseCases {
     return new UpdateGitProviderUseCase(
       this.gitServices.getGitProviderService(),
       this.accountsAdapter,
-      this.logger,
     );
   }
 

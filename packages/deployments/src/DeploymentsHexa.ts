@@ -59,13 +59,10 @@ export class DeploymentsHexa extends BaseHexa<
 
     try {
       // Initialize repositories aggregator
-      this.repositories = new DeploymentsRepositories(
-        this.dataSource,
-        this.logger,
-      );
+      this.repositories = new DeploymentsRepositories(this.dataSource);
 
       // Initialize services (no longer depends on GitPort)
-      this.services = new DeploymentsServices(this.repositories, this.logger);
+      this.services = new DeploymentsServices(this.repositories);
 
       // Create adapter in constructor - ports will be set during initialize()
       this.adapter = new DeploymentsAdapter(

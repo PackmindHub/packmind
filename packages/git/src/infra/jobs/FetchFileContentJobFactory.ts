@@ -25,14 +25,12 @@ export class FetchFileContentJobFactory implements IJobFactory<FetchFileContentI
     const getFileFromRepo = new GetFileFromRepo(
       this.gitProviderService,
       this.gitRepoFactory,
-      this.logger,
     );
 
     this._delayedJob = new FetchFileContentDelayedJob(
       (listeners) => queueFactory(this.getQueueName(), listeners),
       this.gitRepoService,
       getFileFromRepo,
-      this.logger,
     );
 
     return {

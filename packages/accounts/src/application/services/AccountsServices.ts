@@ -21,10 +21,8 @@ export class AccountsServices {
   private readonly loginRateLimiterService: LoginRateLimiterService;
   private readonly passwordResetTokenService: PasswordResetTokenService;
 
-  constructor(
-    private readonly accountsRepositories: IAccountsRepositories,
-    private readonly logger: PackmindLogger,
-  ) {
+  constructor(private readonly accountsRepositories: IAccountsRepositories) {
+    const logger = new PackmindLogger('AccountsServices');
     // Initialize all services with their respective repositories from the aggregator
     this.userService = new UserService(
       this.accountsRepositories.getUserRepository(),
@@ -32,18 +30,15 @@ export class AccountsServices {
     );
     this.organizationService = new OrganizationService(
       this.accountsRepositories.getOrganizationRepository(),
-      this.logger,
     );
     this.invitationService = new InvitationService(
       this.accountsRepositories.getInvitationRepository(),
-      new SmtpMailService(this.logger),
-      this.logger,
+      new SmtpMailService(),
     );
     this.loginRateLimiterService = new LoginRateLimiterService();
     this.passwordResetTokenService = new PasswordResetTokenService(
       this.accountsRepositories.getPasswordResetTokenRepository(),
-      new SmtpMailService(this.logger),
-      this.logger,
+      new SmtpMailService(),
     );
   }
 

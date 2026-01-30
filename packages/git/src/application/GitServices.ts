@@ -18,23 +18,18 @@ export class GitServices {
   private readonly gitRepoService: GitRepoService;
   private readonly gitCommitService: GitCommitService;
 
-  constructor(
-    private readonly gitRepositories: IGitRepositories,
-    private readonly logger: PackmindLogger,
-  ) {
+  constructor(private readonly gitRepositories: IGitRepositories) {
     // Initialize all services with their respective repositories from the aggregator
     this.gitProviderService = new GitProviderService(
       this.gitRepositories.getGitProviderRepository(),
       this.gitRepositories.getGitProviderFactory(),
       this.gitRepositories.getGitRepoFactory(),
-      this.logger,
     );
     this.gitRepoService = new GitRepoService(
       this.gitRepositories.getGitRepoRepository(),
     );
     this.gitCommitService = new GitCommitService(
       this.gitRepositories.getGitCommitRepository(),
-      this.logger,
     );
   }
 

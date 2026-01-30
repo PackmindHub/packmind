@@ -12,21 +12,16 @@ export class RecipesServices {
 
   constructor(
     private readonly recipesRepositories: IRecipesRepositories,
-    private readonly logger: PackmindLogger,
     private llmPort?: ILlmPort,
   ) {
     this.recipeService = new RecipeService(
       this.recipesRepositories.getRecipeRepository(),
-      this.logger,
     );
     this.recipeVersionService = new RecipeVersionService(
       this.recipesRepositories.getRecipeVersionRepository(),
     );
     // RecipeSummaryService created with llmPort (may be undefined initially)
-    this.recipeSummaryService = new RecipeSummaryService(
-      this.logger,
-      this.llmPort,
-    );
+    this.recipeSummaryService = new RecipeSummaryService(this.llmPort);
   }
 
   getRecipeService(): RecipeService {
@@ -44,9 +39,6 @@ export class RecipesServices {
   setLlmPort(port: ILlmPort): void {
     this.llmPort = port;
     // Recreate RecipeSummaryService with the llmPort
-    this.recipeSummaryService = new RecipeSummaryService(
-      this.logger,
-      this.llmPort,
-    );
+    this.recipeSummaryService = new RecipeSummaryService(this.llmPort);
   }
 }

@@ -120,7 +120,6 @@ export class GitAdapter implements IBaseAdapter<IGitPort>, IGitPort {
     this._addGitProvider = new AddGitProviderUseCase(
       this.gitServices.getGitProviderService(),
       this.accountsPort,
-      this.logger,
     );
 
     this._addGitRepo = new AddGitRepoUseCase(
@@ -134,20 +133,17 @@ export class GitAdapter implements IBaseAdapter<IGitPort>, IGitPort {
       this.gitServices.getGitProviderService(),
       this.gitServices.getGitRepoService(),
       this.accountsPort,
-      this.logger,
     );
 
     this._deleteGitRepo = new DeleteGitRepoUseCase(
       this.gitServices.getGitProviderService(),
       this.gitServices.getGitRepoService(),
       this.accountsPort,
-      this.logger,
     );
 
     this._updateGitProvider = new UpdateGitProviderUseCase(
       this.gitServices.getGitProviderService(),
       this.accountsPort,
-      this.logger,
     );
 
     // Use cases that don't depend on external ports
@@ -163,7 +159,6 @@ export class GitAdapter implements IBaseAdapter<IGitPort>, IGitPort {
       this.gitServices.getGitCommitService(),
       this.gitServices.getGitProviderService(),
       this.gitServices.getGitRepoFactory(),
-      this.logger,
     );
 
     this._handleWebHook = new HandleWebHook(
@@ -171,20 +166,17 @@ export class GitAdapter implements IBaseAdapter<IGitPort>, IGitPort {
       this.gitServices.getGitProviderService(),
       this.gitServices.getGitRepoService(),
       this.gitServices.getGitRepoFactory(),
-      this.logger,
     );
 
     this._handleWebHookWithoutContent = new HandleWebHookWithoutContent(
       this.gitServices.getGitCommitService(),
       this.gitServices.getGitProviderService(),
       this.gitServices.getGitRepoService(),
-      this.logger,
     );
 
     this._getFileFromRepo = new GetFileFromRepo(
       this.gitServices.getGitProviderService(),
       this.gitServices.getGitRepoFactory(),
-      this.logger,
     );
 
     this._findGitRepoByOwnerAndRepo = new FindGitRepoByOwnerAndRepoUseCase(
@@ -241,7 +233,6 @@ export class GitAdapter implements IBaseAdapter<IGitPort>, IGitPort {
       this.gitServices.getGitRepoService(),
       this.gitServices.getGitProviderService(),
       this.gitServices.getGitRepoFactory(),
-      this.logger,
     );
 
     jobsService.registerJobQueue(

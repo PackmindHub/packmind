@@ -28,7 +28,7 @@ export class JobsService extends BaseService {
 
     try {
       // Initialize the job registry
-      this.jobRegistry = new JobRegistry(this.logger);
+      this.jobRegistry = new JobRegistry();
 
       this.logger.info('JobsService construction completed');
     } catch (error) {

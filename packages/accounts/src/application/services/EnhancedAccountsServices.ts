@@ -27,10 +27,10 @@ export class EnhancedAccountsServices {
 
   constructor(
     private readonly accountsRepositories: IAccountsRepositories,
-    private readonly logger: PackmindLogger,
     apiKeyService?: ApiKeyService,
     jwtService?: IJwtService,
   ) {
+    const logger = new PackmindLogger('EnhancedAccountsServices');
     // Initialize standard services
     this.userService = new UserService(
       this.accountsRepositories.getUserRepository(),
@@ -38,17 +38,14 @@ export class EnhancedAccountsServices {
     );
     this.organizationService = new OrganizationService(
       this.accountsRepositories.getOrganizationRepository(),
-      this.logger,
     );
     this.invitationService = new InvitationService(
       this.accountsRepositories.getInvitationRepository(),
-      new SmtpMailService(this.logger),
-      this.logger,
+      new SmtpMailService(),
     );
     this.passwordResetTokenService = new PasswordResetTokenService(
       this.accountsRepositories.getPasswordResetTokenRepository(),
-      new SmtpMailService(this.logger),
-      this.logger,
+      new SmtpMailService(),
     );
     this.loginRateLimiterService = new LoginRateLimiterService();
 
@@ -60,11 +57,10 @@ export class EnhancedAccountsServices {
       this.trialActivationService = new TrialActivationService(
         this.accountsRepositories.getTrialActivationRepository(),
         jwtService,
-        this.logger,
       );
     }
 
-    this.logger.info('EnhancedAccountsServices initialized', {
+    logger.info('EnhancedAccountsServices initialized', {
       hasApiKeyService: !!this.apiKeyService,
       hasTrialActivationService: !!this.trialActivationService,
     });

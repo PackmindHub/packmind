@@ -14,10 +14,10 @@ export class StandardsServices {
 
   constructor(
     private readonly standardsRepositories: IStandardsRepositories,
-    private readonly logger: PackmindLogger,
     private linterAdapter?: ILinterPort,
     private llmPort?: ILlmPort,
   ) {
+    const logger = new PackmindLogger('StandardsServices');
     this.standardService = new StandardService(
       this.standardsRepositories.getStandardRepository(),
     );
@@ -30,10 +30,7 @@ export class StandardsServices {
     );
     this.standardBookService = new StandardBookService();
     // StandardSummaryService created with llmPort (may be undefined initially)
-    this.standardSummaryService = new StandardSummaryService(
-      this.logger,
-      this.llmPort,
-    );
+    this.standardSummaryService = new StandardSummaryService(this.llmPort);
   }
 
   getStandardService(): StandardService {
@@ -64,9 +61,6 @@ export class StandardsServices {
   setLlmPort(port: ILlmPort): void {
     this.llmPort = port;
     // Recreate StandardSummaryService with the llmPort
-    this.standardSummaryService = new StandardSummaryService(
-      this.logger,
-      this.llmPort,
-    );
+    this.standardSummaryService = new StandardSummaryService(this.llmPort);
   }
 }

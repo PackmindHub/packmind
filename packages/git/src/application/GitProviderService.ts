@@ -16,7 +16,6 @@ export class GitProviderService {
     private readonly gitProviderRepository: IGitProviderRepository,
     private readonly gitProviderFactory: IGitProviderFactory,
     private readonly gitRepoFactory: IGitRepoFactory,
-    private readonly logger: PackmindLogger,
   ) {}
 
   async addGitProvider(

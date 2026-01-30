@@ -15,14 +15,10 @@ import { PackmindLogger } from '@packmind/logger';
 export class SpacesServices {
   private readonly spaceService: SpaceService;
 
-  constructor(
-    private readonly spacesRepositories: ISpacesRepositories,
-    private readonly logger: PackmindLogger,
-  ) {
+  constructor(private readonly spacesRepositories: ISpacesRepositories) {
     // Initialize all services with their respective repositories from the aggregator
     this.spaceService = new SpaceService(
       this.spacesRepositories.getSpaceRepository(),
-      this.logger,
     );
   }
 

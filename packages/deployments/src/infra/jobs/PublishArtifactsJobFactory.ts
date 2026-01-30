@@ -23,7 +23,6 @@ export class PublishArtifactsJobFactory implements IJobFactory<PublishArtifactsJ
       (listeners) => queueFactory(this.getQueueName(), listeners),
       this.distributionRepository,
       this.gitPort,
-      this.logger,
     );
 
     return {

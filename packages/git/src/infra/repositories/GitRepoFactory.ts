@@ -35,18 +35,13 @@ export class GitRepoFactory implements IGitRepoFactory {
 
     switch (provider.source) {
       case GitProviderVendors.github:
-        return new GithubRepository(
-          provider.token,
-          repositoryOptions,
-          this.logger,
-        );
+        return new GithubRepository(provider.token, repositoryOptions);
 
       case GitProviderVendors.gitlab:
         return new GitlabRepository(
           provider.token,
           repositoryOptions,
           provider.url || undefined,
-          this.logger,
         );
 
       default:

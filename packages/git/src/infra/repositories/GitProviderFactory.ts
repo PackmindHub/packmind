@@ -31,11 +31,7 @@ export class GitProviderFactory implements IGitProviderFactory {
         return new GithubProvider(provider.token);
 
       case GitProviderVendors.gitlab:
-        return new GitlabProvider(
-          provider.token,
-          this.logger,
-          provider.url || undefined,
-        );
+        return new GitlabProvider(provider.token, provider.url || undefined);
 
       default:
         throw new Error(`Unsupported git provider source: ${provider.source}`);

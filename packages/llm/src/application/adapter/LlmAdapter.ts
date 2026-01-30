@@ -76,36 +76,27 @@ export class LlmAdapter implements IBaseAdapter<ILlmPort>, ILlmPort {
     // Initialize repository with dataSource
     this.aiProviderRepository = new AIProviderRepository(
       this.dataSource.getRepository(AIProviderSchema),
-      this.logger,
     );
 
     // Initialize use cases
     this._getAiServiceForOrganization = new GetAiServiceForOrganizationUseCase(
       this.aiProviderRepository,
-      this.logger,
     );
-    this._testLLMConnection = new TestLLMConnectionUseCase(
-      this.accountsPort,
-      this.logger,
-    );
-    this._getModels = new GetModelsUseCase(this.accountsPort, this.logger);
+    this._testLLMConnection = new TestLLMConnectionUseCase(this.accountsPort);
+    this._getModels = new GetModelsUseCase(this.accountsPort);
     this._saveLLMConfiguration = new SaveLLMConfigurationUseCase(
       this.accountsPort,
       this.aiProviderRepository,
-      this.logger,
     );
     this._getLLMConfiguration = new GetLLMConfigurationUseCase(
       this.aiProviderRepository,
-      this.logger,
     );
     this._testSavedLLMConfiguration = new TestSavedLLMConfigurationUseCase(
       this.accountsPort,
       this.aiProviderRepository,
-      this.logger,
     );
     this._getAvailableProviders = new GetAvailableProvidersUseCase(
       this.accountsPort,
-      this.logger,
     );
 
     this.logger.info('LlmAdapter initialized successfully');
