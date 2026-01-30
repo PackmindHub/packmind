@@ -21,6 +21,7 @@ interface Rule {
 
 export interface StandardSampleContent {
   name: string;
+  summary: string;
   description: string;
   scope: string;
   rules: Rule[];

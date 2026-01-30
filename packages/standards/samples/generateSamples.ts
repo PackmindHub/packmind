@@ -29,6 +29,7 @@ interface Rule {
 
 interface StandardSampleContent {
   name: string;
+  summary: string;
   description: string;
   scope: string;
   rules: Rule[];
@@ -57,6 +58,10 @@ function validateStandardContent(content: StandardSampleContent): string[] {
 
   if (!content.name || typeof content.name !== 'string') {
     errors.push('Missing or invalid "name" field');
+  }
+
+  if (!content.summary || typeof content.summary !== 'string') {
+    errors.push('Missing or invalid "summary" field');
   }
 
   if (!content.description || typeof content.description !== 'string') {

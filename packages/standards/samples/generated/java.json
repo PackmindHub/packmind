@@ -1,85 +1,86 @@
 {
   "name": "Java Best Practices",
-  "description": "Advanced, high-impact coding rules for experienced Java developers covering resource management, error handling, concurrency, configuration, testing, logging, input validation, and dependency management.",
+  "summary": "Advanced rules for writing robust, secure, and predictable core-Java code in production services and libraries.",
+  "description": "Covers high-impact Java language and JDK usage patterns around resources, exceptions, concurrency, configuration, time, I/O, logging, and network boundaries, focusing on pitfalls that cause production bugs and outages.",
   "scope": "Java source files",
   "rules": [
     {
-      "content": "Set explicit connect, read, and write timeouts on all HTTP client calls, including framework-provided clients.",
+      "content": "Use structured concurrency with ExecutorService and Futures; always bound task lifetime with timeouts and cancellation.",
       "examples": {
-        "positive": "HttpClient client = HttpClient.newBuilder()\n    .connectTimeout(Duration.ofSeconds(3))\n    .build();\n\nHttpRequest request = HttpRequest.newBuilder()\n    .uri(URI.create(url))\n    .timeout(Duration.ofSeconds(5))\n    .GET()\n    .build();\n\nHttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());",
-        "negative": "HttpClient client = HttpClient.newHttpClient();\n\nHttpRequest request = HttpRequest.newBuilder()\n    .uri(URI.create(url))\n    .GET()\n    .build();\n\n// No timeouts configured\nHttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());",
+        "positive": "ExecutorService pool = Executors.newFixedThreadPool(8);\nFuture<String> f = pool.submit(() -> remoteCall());\ntry {\n  return f.get(2, TimeUnit.SECONDS);\n} catch (TimeoutException e) {\n  f.cancel(true);\n  throw new RuntimeException(e);\n} finally {\n  pool.shutdown();\n}\n",
+        "negative": "ExecutorService pool = Executors.newCachedThreadPool();\nFuture<String> f = pool.submit(() -> remoteCall());\ntry {\n  return f.get();\n} catch (Exception e) {\n  return null;\n}\n",
         "language": "JAVA"
       }
     },
     {
-      "content": "Validate and normalize all external inputs at API or boundary layers before passing them to domain or persistence code.",
+      "content": "Define interruption policy: catch InterruptedException only to restore interrupt flag or rethrow; never swallow it.",
       "examples": {
-        "positive": "@PostMapping(\"/users\")\npublic ResponseEntity<UserResponse> create(@Valid @RequestBody CreateUserRequest request) {\n    String email = request.getEmail().trim().toLowerCase(Locale.ROOT);\n    if (!email.matches(EMAIL_REGEX)) {\n        throw new IllegalArgumentException(\"Invalid email\");\n    }\n    return ResponseEntity.ok(userService.create(email, request.getName().trim()));\n}",
-        "negative": "@PostMapping(\"/users\")\npublic ResponseEntity<UserResponse> create(@RequestBody Map<String, Object> payload) {\n    // Raw map, no validation or normalization\n    String email = (String) payload.get(\"email\");\n    String name = (String) payload.get(\"name\");\n    return ResponseEntity.ok(userService.create(email, name));\n}",
+        "positive": "try {\n  Thread.sleep(100);\n} catch (InterruptedException e) {\n  Thread.currentThread().interrupt();\n  throw new RuntimeException(e);\n}\n",
+        "negative": "try {\n  Thread.sleep(100);\n} catch (InterruptedException e) {\n  // ignored\n}\n",
         "language": "JAVA"
       }
     },
     {
-      "content": "Use parameterized queries or ORM binding for all dynamic database operations instead of concatenating SQL fragments or parameters.",
+      "content": "Prefer immutable data for shared state; when mutation is required, encapsulate it behind synchronization or atomic types.",
       "examples": {
-        "positive": "String sql = \"SELECT * FROM users WHERE email = ?\";\ntry (PreparedStatement ps = connection.prepareStatement(sql)) {\n    ps.setString(1, email);\n    try (ResultSet rs = ps.executeQuery()) {\n        // handle results\n    }\n}\n\n// JPA example\nTypedQuery<User> q = em.createQuery(\n    \"SELECT u FROM User u WHERE u.email = :email\", User.class);\nq.setParameter(\"email\", email);",
-        "negative": "String sql = \"SELECT * FROM users WHERE email = '\" + email + \"'\";\ntry (Statement st = connection.createStatement()) {\n    // String concatenation in SQL\n    try (ResultSet rs = st.executeQuery(sql)) {\n        // handle results\n    }\n}\n\n// JPA with string concatenation\nString jpql = \"SELECT u FROM User u WHERE u.email = '\" + email + \"'\";\nList<User> users = em.createQuery(jpql, User.class).getResultList();",
+        "positive": "final class Counter {\n  private final AtomicLong value = new AtomicLong();\n  long incrementAndGet() { return value.incrementAndGet(); }\n}\n",
+        "negative": "final class Counter {\n  private long value;\n  long incrementAndGet() { return ++value; }\n}\n",
         "language": "JAVA"
       }
     },
     {
-      "content": "Return defensive copies or unmodifiable views of mutable internal collections from public methods and accessors.",
+      "content": "Use try-with-resources for every Closeable/AutoCloseable acquired in a method; do not leak resources across API boundaries.",
       "examples": {
-        "positive": "public class Order {\n    private final List<LineItem> items = new ArrayList<>();\n\n    public List<LineItem> getItems() {\n        return Collections.unmodifiableList(new ArrayList<>(items));\n    }\n}\n\nOrder order = service.getOrder(id);\nList<LineItem> items = order.getItems(); // cannot modify internal list",
-        "negative": "public class Order {\n    private final List<LineItem> items = new ArrayList<>();\n\n    public List<LineItem> getItems() {\n        return items; // exposes internal list\n    }\n}\n\nOrder order = service.getOrder(id);\norder.getItems().clear(); // mutates internal state externally",
+        "positive": "Path p = Path.of(\"out.txt\");\ntry (BufferedWriter w = Files.newBufferedWriter(p, StandardCharsets.UTF_8)) {\n  w.write(\"hello\");\n}\n",
+        "negative": "BufferedWriter w = Files.newBufferedWriter(Path.of(\"out.txt\"));\nw.write(\"hello\");\n// not closed\n",
         "language": "JAVA"
       }
     },
     {
-      "content": "Guard all shared mutable state with appropriate synchronization or confinement when accessed from multiple threads.",
+      "content": "Validate external inputs at module boundaries using explicit allowlists and length limits; reject or normalize before parsing.",
       "examples": {
-        "positive": "public class Counter {\n    private final AtomicLong value = new AtomicLong();\n\n    public long increment() {\n        return value.incrementAndGet();\n    }\n}\n\n// Or confinement\npublic class TaskProcessor {\n    private final ExecutorService executor = Executors.newSingleThreadExecutor();\n    private final List<Task> queue = new ArrayList<>();\n\n    public void submit(Task task) {\n        executor.submit(() -> queue.add(task));\n    }\n}",
-        "negative": "public class Counter {\n    private long value; // shared without synchronization\n\n    public long increment() {\n        return ++value; // data race\n    }\n}\n\npublic class TaskProcessor {\n    private final ExecutorService executor = Executors.newCachedThreadPool();\n    private final List<Task> queue = new ArrayList<>();\n\n    public void submit(Task task) {\n        executor.submit(() -> queue.add(task)); // non-thread-safe list\n    }\n}",
+        "positive": "static int parsePort(String s) {\n  if (s == null || !s.matches(\"\\\\d{1,5}\")) throw new IllegalArgumentException(\"port\");\n  int p = Integer.parseInt(s);\n  if (p < 1 || p > 65535) throw new IllegalArgumentException(\"port\");\n  return p;\n}\n",
+        "negative": "static int parsePort(String s) {\n  return Integer.parseInt(s.trim());\n}\n",
         "language": "JAVA"
       }
     },
     {
-      "content": "Wrap blocking or remote calls with bounded retries and backoff instead of manual loops or unbounded immediate retries.",
+      "content": "Preserve causal exceptions: wrap with original cause and meaningful message; do not create new exceptions without the cause.",
       "examples": {
-        "positive": "public <T> T callWithRetry(Callable<T> callable) throws Exception {\n    int attempts = 0;\n    long delayMillis = 200;\n    while (true) {\n        try {\n            return callable.call();\n        } catch (IOException ex) {\n            attempts++;\n            if (attempts >= 3) {\n                throw ex;\n            }\n            Thread.sleep(delayMillis);\n            delayMillis *= 2; // simple backoff\n        }\n    }\n}\n\nString result = callWithRetry(() -> client.fetch(id));",
-        "negative": "public String fetchWithRetry(String id) throws Exception {\n    while (true) {\n        try {\n            return client.fetch(id);\n        } catch (IOException ex) {\n            // Immediate, unbounded retry\n        }\n    }\n}\n\nString result = fetchWithRetry(\"123\");",
+        "positive": "try {\n  return Files.readString(path, StandardCharsets.UTF_8);\n} catch (IOException e) {\n  throw new UncheckedIOException(\"read failed: \" + path, e);\n}\n",
+        "negative": "try {\n  return Files.readString(path);\n} catch (IOException e) {\n  throw new RuntimeException(\"read failed\");\n}\n",
         "language": "JAVA"
       }
     },
     {
-      "content": "Use dependency injection for external collaborators instead of static singletons or direct construction inside business logic.",
+      "content": "Use java.time types; parse and format with explicit ZoneId and Locale; avoid Date, Calendar, and default zone assumptions.",
       "examples": {
-        "positive": "public class UserService {\n    private final EmailClient emailClient;\n\n    @Autowired\n    public UserService(EmailClient emailClient) {\n        this.emailClient = emailClient;\n    }\n\n    public void register(User user) {\n        // ...\n        emailClient.sendWelcome(user.getEmail());\n    }\n}\n\n@Configuration\nclass AppConfig {\n    @Bean\n    EmailClient emailClient() {\n        return new SmtpEmailClient();\n    }\n}",
-        "negative": "public class UserService {\n    private static final EmailClient EMAIL_CLIENT = new SmtpEmailClient();\n\n    public void register(User user) {\n        // ...\n        EMAIL_CLIENT.sendWelcome(user.getEmail()); // hard-wired singleton\n    }\n}\n\npublic class OtherService {\n    public void notify(User user) {\n        EmailClient client = new SmtpEmailClient(); // direct construction\n        client.sendNotification(user.getEmail());\n    }\n}",
+        "positive": "Instant now = Instant.now();\nZonedDateTime zdt = now.atZone(ZoneId.of(\"UTC\"));\nDateTimeFormatter fmt = DateTimeFormatter.ofPattern(\"uuuu-MM-dd HH:mm\", Locale.ROOT);\nString s = fmt.format(zdt);\n",
+        "negative": "Date d = new Date();\nString s = new SimpleDateFormat(\"yyyy-MM-dd HH:mm\").format(d);\n",
         "language": "JAVA"
       }
     },
     {
-      "content": "Isolate unit tests from external systems by mocking I/O, time, randomness, and network dependencies.",
+      "content": "Use explicit connect and read timeouts for all network calls; avoid APIs that default to infinite waits.",
       "examples": {
-        "positive": "class BillingServiceTest {\n\n    @Test\n    void chargesCustomerUsingMockedGateway() {\n        PaymentGateway gateway = Mockito.mock(PaymentGateway.class);\n        Clock fixedClock = Clock.fixed(Instant.parse(\"2024-01-01T00:00:00Z\"), ZoneOffset.UTC);\n\n        BillingService service = new BillingService(gateway, fixedClock);\n\n        service.charge(\"cust-1\", BigDecimal.TEN);\n\n        Mockito.verify(gateway).charge(\"cust-1\", BigDecimal.TEN, Instant.parse(\"2024-01-01T00:00:00Z\"));\n    }\n}",
-        "negative": "class BillingServiceTest {\n\n    @Test\n    void chargesCustomerHittingRealGateway() {\n        PaymentGateway gateway = new HttpPaymentGateway(\"https://real-gateway\"); // real network\n        BillingService service = new BillingService(gateway, Clock.systemUTC()); // non-deterministic time\n\n        service.charge(\"cust-1\", BigDecimal.TEN);\n\n        // Test depends on external availability and wall clock\n    }\n}",
+        "positive": "HttpClient client = HttpClient.newBuilder()\n  .connectTimeout(Duration.ofSeconds(2))\n  .build();\nHttpRequest req = HttpRequest.newBuilder(URI.create(url))\n  .timeout(Duration.ofSeconds(3))\n  .GET()\n  .build();\nHttpResponse<String> res = client.send(req, HttpResponse.BodyHandlers.ofString());\n",
+        "negative": "HttpURLConnection c = (HttpURLConnection) new URL(url).openConnection();\ntry (InputStream in = c.getInputStream()) {\n  in.readAllBytes();\n}\n",
         "language": "JAVA"
       }
     },
     {
-      "content": "Emit structured, contextual logs including correlation identifiers instead of ad-hoc concatenated strings.",
+      "content": "Load configuration from explicit sources (env, args, files) and pass as typed objects; avoid scattered System.getProperty calls.",
       "examples": {
-        "positive": "public void process(Request request) {\n    String correlationId = request.getCorrelationId();\n    MDC.put(\"correlationId\", correlationId);\n    try {\n        log.info(\"Received request\", kv(\"userId\", request.getUserId()));\n        handler.handle(request);\n        log.info(\"Completed request\", kv(\"status\", \"SUCCESS\"));\n    } catch (Exception ex) {\n        log.error(\"Failed request\", ex);\n        throw ex;\n    } finally {\n        MDC.clear();\n    }\n}\n\nprivate Object kv(String key, Object value) {\n    return org.slf4j.event.KeyValuePair.of(key, value);\n}",
-        "negative": "public void process(Request request) {\n    String correlationId = UUID.randomUUID().toString();\n    // Correlation id not propagated\n    log.info(\"Got request: \" + request); // Concatenated string\n    try {\n        handler.handle(request);\n        log.info(\"Done processing \" + request.getUserId());\n    } catch (Exception ex) {\n        log.error(\"Error: \" + ex.getMessage()); // message only\n        throw ex;\n    }\n}",
+        "positive": "record AppConfig(String dbUrl, int maxConnections) {\n  static AppConfig fromEnv() {\n    String url = Objects.requireNonNull(System.getenv(\"DB_URL\"));\n    int max = Integer.parseInt(System.getenv().getOrDefault(\"MAX_CONN\", \"20\"));\n    return new AppConfig(url, max);\n  }\n}\n",
+        "negative": "String url = System.getenv(\"DB_URL\");\nint max = Integer.parseInt(System.getProperty(\"max.conn\", \"20\"));\n// used directly across many classes\n",
         "language": "JAVA"
       }
     },
     {
-      "content": "Load configuration from external sources with explicit typing and validation instead of scattering literals throughout the codebase.",
+      "content": "Guard log construction: use parameterized logging or Suppliers; never build expensive messages unconditionally.",
       "examples": {
-        "positive": "@ConfigurationProperties(prefix = \"app\")\npublic class AppProperties {\n    @NotBlank\n    private String externalServiceUrl;\n\n    @Min(100)\n    @Max(10000)\n    private int httpTimeoutMillis;\n\n    // getters and setters\n}\n\n@Service\npublic class ExternalClient {\n    private final AppProperties properties;\n\n    public ExternalClient(AppProperties properties) {\n        this.properties = properties;\n    }\n\n    public String call() {\n        HttpClient client = HttpClient.newBuilder()\n            .connectTimeout(Duration.ofMillis(properties.getHttpTimeoutMillis()))\n            .build();\n        // use properties.getExternalServiceUrl()\n        return \"ok\";\n    }\n}",
-        "negative": "public class ExternalClient {\n\n    // Hard-coded configuration\n    private static final String URL = \"https://api.example.com\";\n    private static final int TIMEOUT_MILLIS = 5000;\n\n    public String call() {\n        HttpClient client = HttpClient.newBuilder()\n            .connectTimeout(Duration.ofMillis(TIMEOUT_MILLIS))\n            .build();\n        // uses URL directly\n        return \"ok\";\n    }\n}\n\n// No central validation or external configuration binding",
+        "positive": "Logger log = LoggerFactory.getLogger(MyClass.class);\nlog.debug(\"payload size={} id={}\", payload.size(), id);\n// or\nlog.atDebug().addArgument(() -> expensiveDump(payload)).log(\"payload={}\");\n",
+        "negative": "Logger log = LoggerFactory.getLogger(MyClass.class);\nlog.debug(\"payload=\" + expensiveDump(payload));\n",
         "language": "JAVA"
       }
     }

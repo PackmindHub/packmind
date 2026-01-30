@@ -1,85 +1,86 @@
 {
   "name": "JavaScript Best Practices",
-  "description": "Advanced, framework-agnostic JavaScript coding standard focused on high-impact reliability, security, performance, and operability pitfalls in production code.",
+  "summary": "Advanced rules for writing reliable, secure, and observable JavaScript across services, CLIs, and libraries handling I/O, concurrency, and untrusted input.",
+  "description": "This standard covers high-impact JavaScript language and runtime patterns: robust async control flow, deterministic resource cleanup, safe input handling, timeout/retry boundaries, structured logging, configuration hygiene, and dependency injection practices without framework assumptions.",
   "scope": "JavaScript source files",
   "rules": [
     {
-      "content": "Validate and normalize all external input at module boundaries, including types, ranges, and unknown fields; reject or default explicitly.",
+      "content": "Guard every awaited operation with AbortSignal or explicit timeout; propagate the signal through internal async calls.",
       "examples": {
-        "positive": "function parseCreateUser(body) {\n  if (typeof body !== 'object' || body === null) throw new TypeError('body');\n  const name = String(body.name ?? '').trim();\n  const age = Number(body.age);\n  if (!name) throw new RangeError('name');\n  if (!Number.isInteger(age) || age < 0 || age > 130) throw new RangeError('age');\n  return { name, age };\n}\n\nconst user = parseCreateUser(JSON.parse(input));",
-        "negative": "const user = JSON.parse(input); // trusts shape\nsaveUser({ name: user.name, age: user.age });",
+        "positive": "import { setTimeout as delay } from \"node:timers/promises\";\n\nasync function fetchJson(url, { signal } = {}) {\n  const controller = new AbortController();\n  const timeout = setTimeout(() => controller.abort(), 5000);\n  const combinedSignal = signal\n    ? AbortSignal.any([signal, controller.signal])\n    : controller.signal;\n\n  try {\n    const res = await fetch(url, { signal: combinedSignal });\n    if (!res.ok) throw new Error(`HTTP ${res.status}`);\n    return await res.json();\n  } finally {\n    clearTimeout(timeout);\n  }\n}\n\nawait fetchJson(\"https://example.com/api\", { signal: AbortSignal.timeout(3000) });\n",
+        "negative": "async function fetchJson(url) {\n  const res = await fetch(url); // no timeout/cancellation\n  return res.json();\n}\n\nawait fetchJson(\"https://example.com/api\");\n",
         "language": "JAVASCRIPT"
       }
     },
     {
-      "content": "Use AbortController to enforce timeouts on every network call; pass the signal through all layers.",
+      "content": "Release file, socket, and stream resources using using/try-finally and close/destroy; never rely on garbage collection for cleanup.",
       "examples": {
-        "positive": "async function fetchWithTimeout(url, { timeoutMs = 5000 } = {}) {\n  const ac = new AbortController();\n  const t = setTimeout(() => ac.abort(), timeoutMs);\n  try {\n    const res = await fetch(url, { signal: ac.signal });\n    return res;\n  } finally {\n    clearTimeout(t);\n  }\n}\n\nawait fetchWithTimeout('https://api.example.com/data', { timeoutMs: 3000 });",
-        "negative": "const res = await fetch('https://api.example.com/data'); // unbounded\nawait res.json();",
+        "positive": "import { open } from \"node:fs/promises\";\n\nasync function readFirstLine(path) {\n  const fh = await open(path, \"r\");\n  try {\n    const data = await fh.readFile({ encoding: \"utf8\" });\n    return data.split(\"\\n\")[0];\n  } finally {\n    await fh.close();\n  }\n}\n",
+        "negative": "import { open } from \"node:fs/promises\";\n\nasync function readFirstLine(path) {\n  const fh = await open(path, \"r\");\n  const data = await fh.readFile({ encoding: \"utf8\" });\n  return data.split(\"\\n\")[0]; // file handle never closed\n}\n",
         "language": "JAVASCRIPT"
       }
     },
     {
-      "content": "Implement retries only for idempotent operations and gate them with a retry budget and backoff; never retry blindly in loops.",
+      "content": "Prefer explicit Promise.all/Promise.allSettled for concurrent work; avoid await inside loops when iterations are independent.",
       "examples": {
-        "positive": "async function retry(fn, { retries = 3, baseMs = 100 } = {}) {\n  let lastErr;\n  for (let i = 0; i <= retries; i++) {\n    try { return await fn(i); } catch (e) { lastErr = e; }\n    const delay = baseMs * 2 ** i + Math.floor(Math.random() * 50);\n    await new Promise(r => setTimeout(r, delay));\n  }\n  throw lastErr;\n}\n\nconst res = await retry(() => fetchWithTimeout(url, { timeoutMs: 2000 }), { retries: 2 });",
-        "negative": "while (true) {\n  try { return await fetch(url); } catch (e) {}\n} // infinite retry",
+        "positive": "async function loadAll(urls) {\n  const tasks = urls.map((u) => fetch(u).then((r) => r.text()));\n  const bodies = await Promise.all(tasks);\n  return bodies;\n}\n",
+        "negative": "async function loadAll(urls) {\n  const bodies = [];\n  for (const u of urls) {\n    bodies.push(await (await fetch(u)).text()); // serializes independent I/O\n  }\n  return bodies;\n}\n",
         "language": "JAVASCRIPT"
       }
     },
     {
-      "content": "Preserve error causes when rethrowing by using Error options or attaching the original error; avoid throwing strings or losing stacks.",
+      "content": "Handle all promise rejections by awaiting, returning, or attaching catch; never fire-and-forget promises without an explicit error sink.",
       "examples": {
-        "positive": "async function loadConfig(path) {\n  try {\n    const txt = await fs.promises.readFile(path, 'utf8');\n    return JSON.parse(txt);\n  } catch (err) {\n    throw new Error(`Failed to load config: ${path}`, { cause: err });\n  }\n}",
-        "negative": "try {\n  return JSON.parse(txt);\n} catch (e) {\n  throw 'Bad config';\n}\n// or: throw new Error('Bad config'); // loses original context",
+        "positive": "function startBackgroundJob(job, log) {\n  void job().catch((err) => log.error({ err }, \"background job failed\"));\n}\n\nstartBackgroundJob(async () => {\n  await Promise.reject(new Error(\"boom\"));\n}, console);\n",
+        "negative": "function startBackgroundJob(job) {\n  job(); // unhandled rejection if job rejects\n}\n\nstartBackgroundJob(async () => {\n  await Promise.reject(new Error(\"boom\"));\n});\n",
         "language": "JAVASCRIPT"
       }
     },
     {
-      "content": "Release resources using using/await using or finally blocks for streams, file handles, locks, and timers; close explicitly on all paths.",
+      "content": "Define a stable error contract by throwing custom Error subclasses with cause and codes; avoid throwing strings or mixing error shapes.",
       "examples": {
-        "positive": "import { open } from 'node:fs/promises';\n\nasync function readFirstLine(path) {\n  const fh = await open(path, 'r');\n  try {\n    const buf = Buffer.alloc(1024);\n    const { bytesRead } = await fh.read(buf, 0, buf.length, 0);\n    return buf.subarray(0, bytesRead).toString('utf8').split(/\\r?\\n/)[0];\n  } finally {\n    await fh.close();\n  }\n}",
-        "negative": "import { open } from 'node:fs/promises';\n\nasync function readFirstLine(path) {\n  const fh = await open(path, 'r');\n  const buf = Buffer.alloc(1024);\n  await fh.read(buf, 0, buf.length, 0);\n  return buf.toString('utf8').split(/\\r?\\n/)[0];\n  // handle never closed\n}",
+        "positive": "class DomainError extends Error {\n  constructor(message, { code, cause } = {}) {\n    super(message, { cause });\n    this.name = \"DomainError\";\n    this.code = code;\n  }\n}\n\nfunction parsePort(value) {\n  const n = Number(value);\n  if (!Number.isInteger(n) || n <= 0) {\n    throw new DomainError(\"Invalid port\", { code: \"E_BAD_PORT\" });\n  }\n  return n;\n}\n",
+        "negative": "function parsePort(value) {\n  const n = Number(value);\n  if (!Number.isInteger(n) || n <= 0) {\n    throw \"Invalid port\"; // non-Error throw\n  }\n  return n;\n}\n",
         "language": "JAVASCRIPT"
       }
     },
     {
-      "content": "Limit concurrency for bulk async work using a queue or pool; avoid Promise.all over unbounded collections.",
+      "content": "Validate and normalize untrusted inputs at module boundaries using allowlists and type checks; avoid passing raw request/query/env values deeper.",
       "examples": {
-        "positive": "async function mapLimit(items, limit, fn) {\n  const ret = [];\n  const executing = new Set();\n  for (const item of items) {\n    const p = Promise.resolve().then(() => fn(item));\n    ret.push(p);\n    executing.add(p);\n    p.finally(() => executing.delete(p));\n    if (executing.size >= limit) await Promise.race(executing);\n  }\n  return Promise.all(ret);\n}\n\nawait mapLimit(urls, 10, url => fetchWithTimeout(url, { timeoutMs: 3000 }));",
-        "negative": "await Promise.all(urls.map(url => fetch(url))); // thousands at once",
+        "positive": "function parseUserId(input) {\n  if (typeof input !== \"string\" || !/^[0-9]{1,18}$/.test(input)) {\n    throw new Error(\"Invalid userId\");\n  }\n  return input;\n}\n\nfunction handler(params) {\n  const userId = parseUserId(params.userId);\n  return { userId };\n}\n",
+        "negative": "function handler(params) {\n  // params.userId used as-is throughout the codebase\n  return { userId: params.userId };\n}\n",
         "language": "JAVASCRIPT"
       }
     },
     {
-      "content": "Avoid shared mutable module state for request-scoped data; pass state explicitly through parameters or create per-operation context objects.",
+      "content": "Build SQL, shell, and filesystem commands with parameterization and safe path joining; avoid string concatenation with untrusted data.",
       "examples": {
-        "positive": "function createContext({ requestId }) {\n  return { requestId, startedAt: Date.now() };\n}\n\nasync function handle(ctx, input) {\n  log({ requestId: ctx.requestId, msg: 'start' });\n  return doWork(ctx, input);\n}\n\nawait handle(createContext({ requestId: crypto.randomUUID() }), input);",
-        "negative": "let currentRequestId;\n\nasync function handle(input) {\n  currentRequestId = crypto.randomUUID();\n  await doWork(input);\n  log({ requestId: currentRequestId });\n}",
+        "positive": "import path from \"node:path\";\n\nconst baseDir = \"/var/app/uploads\";\nconst safeName = \"report.txt\";\nconst fullPath = path.join(baseDir, safeName);\n\nconst query = { text: \"SELECT * FROM users WHERE id = ?\", values: [\"42\"] };\n",
+        "negative": "import path from \"node:path\";\n\nconst baseDir = \"/var/app/uploads\";\nconst fullPath = baseDir + \"/\" + \"../\" + \"secrets.txt\"; // traversal risk\n\nconst userId = \"42 OR 1=1\";\nconst sql = \"SELECT * FROM users WHERE id = \" + userId; // injection\n",
         "language": "JAVASCRIPT"
       }
     },
     {
-      "content": "Redact secrets and PII in logs by default; log structured objects with an explicit allowlist of fields.",
+      "content": "Log events as structured objects with stable keys and correlation IDs; avoid concatenated strings and avoid logging secrets.",
       "examples": {
-        "positive": "function logAuthEvent({ userId, ip, outcome }) {\n  console.info({ event: 'auth', userId, ip, outcome });\n}\n\nlogAuthEvent({ userId: 'u123', ip: '203.0.113.5', outcome: 'denied' });",
-        "negative": "console.info('login', { userId, password, token, ssn });",
+        "positive": "function logRequest(log, { requestId, userId, path, durationMs }) {\n  log.info({ requestId, userId, path, durationMs }, \"request completed\");\n}\n\nlogRequest(console, { requestId: \"req-123\", userId: \"u-9\", path: \"/v1/items\", durationMs: 14 });\n",
+        "negative": "function logRequest(log, req) {\n  log.log(\"requestId=\" + req.requestId + \" token=\" + req.token + \" path=\" + req.path); // string concat + secret\n}\n",
         "language": "JAVASCRIPT"
       }
     },
     {
-      "content": "Treat configuration as immutable validated data loaded once at startup; avoid reading env/config repeatedly inside hot paths.",
+      "content": "Freeze configuration at startup by parsing env/files into a single object; avoid reading process.env ad hoc across modules.",
       "examples": {
-        "positive": "const config = (() => {\n  const port = Number(process.env.PORT ?? 3000);\n  if (!Number.isInteger(port) || port <= 0) throw new Error('PORT');\n  const apiBase = String(process.env.API_BASE ?? '').trim();\n  if (!apiBase) throw new Error('API_BASE');\n  return Object.freeze({ port, apiBase });\n})();\n\nexport { config };",
-        "negative": "export function getApiBase() {\n  return process.env.API_BASE; // read everywhere, unvalidated\n}\n\nfetch(`${getApiBase()}/v1/items`);",
+        "positive": "function loadConfig(env) {\n  const port = Number(env.PORT ?? 3000);\n  const nodeEnv = String(env.NODE_ENV ?? \"development\");\n  return Object.freeze({ port, nodeEnv });\n}\n\nexport const config = loadConfig(process.env);\n",
+        "negative": "export function getPort() {\n  return Number(process.env.PORT ?? 3000); // read env from anywhere, anytime\n}\n\nexport function isProd() {\n  return process.env.NODE_ENV === \"production\";\n}\n",
         "language": "JAVASCRIPT"
       }
     },
     {
-      "content": "Inject external dependencies via parameters or factory functions; avoid importing singletons directly inside business logic.",
+      "content": "Inject external dependencies via parameters or constructors; avoid importing singletons directly in business logic modules.",
       "examples": {
-        "positive": "export function createUserService({ http, now }) {\n  return {\n    async fetchUser(id) {\n      const res = await http.get(`/users/${encodeURIComponent(id)}`);\n      return { ...res, fetchedAt: now() };\n    }\n  };\n}\n\nconst svc = createUserService({ http: { get: url => fetchWithTimeout(url).then(r => r.json()) }, now: () => Date.now() });",
-        "negative": "import fetch from 'node-fetch';\n\nexport async function fetchUser(id) {\n  const res = await fetch(`https://api.example.com/users/${id}`);\n  return res.json();\n}",
+        "positive": "export function createNotifier({ httpClient, log }) {\n  return {\n    async notify(url, payload) {\n      const res = await httpClient.post(url, payload);\n      log.info({ url, status: res.status }, \"notification sent\");\n      return res;\n    }\n  };\n}\n\nconst notifier = createNotifier({\n  httpClient: { post: async () => ({ status: 204 }) },\n  log: console\n});\n",
+        "negative": "import httpClient from \"./httpClient.js\";\nimport log from \"./logger.js\";\n\nexport async function notify(url, payload) {\n  const res = await httpClient.post(url, payload); // hardwired singleton\n  log.info(\"sent \" + url);\n  return res;\n}\n",
         "language": "JAVASCRIPT"
       }
     }

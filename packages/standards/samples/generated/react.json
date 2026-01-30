@@ -1,86 +1,87 @@
 {
   "name": "React Best Practices",
-  "description": "Advanced React standards for preventing production bugs, performance regressions, security issues, and test flakiness in modern React applications.",
+  "summary": "Rules for building React applications with predictable rendering, safe side effects, resilient data fetching, and maintainable boundaries between UI, state, and infrastructure.",
+  "description": "This standard covers advanced React patterns that prevent common production issues: stale state, effect bugs, render thrashing, unsafe HTML, request leaks, flaky tests, and mis-scoped dependencies. It defines actionable rules for data fetching, side effects, memoization, concurrency-safe state updates, and configuration/instrumentation boundaries.",
   "scope": "React source files",
   "rules": [
     {
-      "content": "Include AbortController cancellation in every async effect and clean up pending requests on unmount or dependency changes.",
+      "content": "Use functional state updates when next state depends on previous state; avoid reading captured state inside async callbacks.",
       "examples": {
-        "positive": "import React, { useEffect, useState } from \"react\";\n\nexport function UserCard({ id }: { id: string }) {\n  const [user, setUser] = useState<{ name: string } | null>(null);\n\n  useEffect(() => {\n    const ac = new AbortController();\n\n    (async () => {\n      const res = await fetch(`/api/users/${id}`, { signal: ac.signal });\n      if (!res.ok) throw new Error(`HTTP ${res.status}`);\n      setUser(await res.json());\n    })().catch((e) => {\n      if ((e as any).name !== \"AbortError\") console.error(e);\n    });\n\n    return () => ac.abort();\n  }, [id]);\n\n  return <div>{user?.name ?? \"Loading...\"}</div>;\n}\n",
-        "negative": "import React, { useEffect, useState } from \"react\";\n\nexport function UserCard({ id }: { id: string }) {\n  const [user, setUser] = useState<any>(null);\n\n  useEffect(() => {\n    fetch(`/api/users/${id}`)\n      .then((r) => r.json())\n      .then(setUser);\n  }, [id]);\n\n  return <div>{user?.name ?? \"Loading...\"}</div>;\n}\n",
+        "positive": "function Counter() {\n  const [count, setCount] = React.useState(0);\n\n  const onClick = () => {\n    setTimeout(() => setCount(c => c + 1), 250);\n  };\n\n  return <button onClick={onClick}>{count}</button>;\n}\n",
+        "negative": "function Counter() {\n  const [count, setCount] = React.useState(0);\n\n  const onClick = () => {\n    setTimeout(() => setCount(count + 1), 250);\n  };\n\n  return <button onClick={onClick}>{count}</button>;\n}\n",
         "language": "TYPESCRIPT_TSX"
       }
     },
     {
-      "content": "Set explicit timeouts for network calls and wrap fetch with a shared client that enforces them.",
+      "content": "Include every referenced reactive value in hook dependency arrays; move non-reactive helpers inside the effect or memoize them.",
       "examples": {
-        "positive": "export async function fetchWithTimeout(input: RequestInfo, init: RequestInit = {}, ms = 10_000) {\n  const ac = new AbortController();\n  const t = setTimeout(() => ac.abort(), ms);\n  try {\n    return await fetch(input, { ...init, signal: ac.signal });\n  } finally {\n    clearTimeout(t);\n  }\n}\n\n// usage\nawait fetchWithTimeout(\"/api/search?q=react\");\n",
-        "negative": "// usage\nawait fetch(\"/api/search?q=react\");\n",
+        "positive": "function Search({ query }: { query: string }) {\n  const [items, setItems] = React.useState<string[]>([]);\n\n  React.useEffect(() => {\n    const controller = new AbortController();\n    (async () => {\n      const res = await fetch(`/api/search?q=${encodeURIComponent(query)}`, { signal: controller.signal });\n      setItems(await res.json());\n    })();\n    return () => controller.abort();\n  }, [query]);\n\n  return <ul>{items.map(i => <li key={i}>{i}</li>)}</ul>;\n}\n",
+        "negative": "function Search({ query }: { query: string }) {\n  const [items, setItems] = React.useState<string[]>([]);\n\n  React.useEffect(() => {\n    fetch(`/api/search?q=${encodeURIComponent(query)}`)\n      .then(r => r.json())\n      .then(setItems);\n  }, []);\n\n  return <ul>{items.map(i => <li key={i}>{i}</li>)}</ul>;\n}\n",
+        "language": "TYPESCRIPT_TSX"
+      }
+    },
+    {
+      "content": "Abort in-flight requests in effects and data hooks using AbortController; avoid leaving async work running after unmount or parameter changes.",
+      "examples": {
+        "positive": "function Profile({ id }: { id: string }) {\n  const [user, setUser] = React.useState<{ name: string } | null>(null);\n\n  React.useEffect(() => {\n    const controller = new AbortController();\n    (async () => {\n      const res = await fetch(`/api/users/${id}`, { signal: controller.signal });\n      setUser(await res.json());\n    })();\n    return () => controller.abort();\n  }, [id]);\n\n  return <div>{user?.name ?? \"Loading\"}</div>;\n}\n",
+        "negative": "function Profile({ id }: { id: string }) {\n  const [user, setUser] = React.useState<{ name: string } | null>(null);\n\n  React.useEffect(() => {\n    fetch(`/api/users/${id}`)\n      .then(r => r.json())\n      .then(setUser);\n  }, [id]);\n\n  return <div>{user?.name ?? \"Loading\"}</div>;\n}\n",
+        "language": "TYPESCRIPT_TSX"
+      }
+    },
+    {
+      "content": "Set per-request timeouts for fetch using AbortController; avoid indefinite network waits.",
+      "examples": {
+        "positive": "async function fetchWithTimeout(url: string, ms: number) {\n  const controller = new AbortController();\n  const t = setTimeout(() => controller.abort(), ms);\n  try {\n    const res = await fetch(url, { signal: controller.signal });\n    return res;\n  } finally {\n    clearTimeout(t);\n  }\n}\n",
+        "negative": "async function fetchNoTimeout(url: string) {\n  return fetch(url);\n}\n",
         "language": "TYPESCRIPT"
       }
     },
     {
-      "content": "Retry only idempotent requests with bounded attempts and backoff; avoid retrying non-idempotent POSTs by default.",
+      "content": "Retry idempotent requests with capped exponential backoff and a maximum attempt count; avoid unbounded retries and retrying non-idempotent mutations.",
       "examples": {
-        "positive": "const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));\n\nexport async function getWithRetry(url: string, attempts = 3) {\n  let last: unknown;\n  for (let i = 0; i < attempts; i++) {\n    try {\n      const res = await fetch(url);\n      if (!res.ok) throw new Error(`HTTP ${res.status}`);\n      return res;\n    } catch (e) {\n      last = e;\n      await sleep(200 * 2 ** i);\n    }\n  }\n  throw last;\n}\n\nawait getWithRetry(\"/api/catalog\");\n",
-        "negative": "async function postWithRetry(url: string, body: unknown) {\n  for (let i = 0; i < 5; i++) {\n    await fetch(url, { method: \"POST\", body: JSON.stringify(body) });\n  }\n}\n\npostWithRetry(\"/api/orders\", { sku: \"x\" });\n",
+        "positive": "async function retryGet(url: string, attempts = 3) {\n  let delay = 200;\n  for (let i = 0; i < attempts; i++) {\n    try {\n      const res = await fetch(url);\n      if (!res.ok) throw new Error(`HTTP ${res.status}`);\n      return res;\n    } catch (e) {\n      if (i === attempts - 1) throw e;\n      await new Promise(r => setTimeout(r, delay));\n      delay = Math.min(delay * 2, 2000);\n    }\n  }\n  throw new Error(\"unreachable\");\n}\n",
+        "negative": "async function retryForever(url: string) {\n  while (true) {\n    try {\n      return await fetch(url);\n    } catch {\n      // keep retrying\n    }\n  }\n}\n",
         "language": "TYPESCRIPT"
       }
     },
     {
-      "content": "Validate and sanitize untrusted strings before rendering with dangerouslySetInnerHTML; use a vetted HTML sanitizer.",
+      "content": "Render network failures with an explicit error state or error boundary; avoid logging and returning null without a user-visible fallback.",
       "examples": {
-        "positive": "import DOMPurify from \"dompurify\";\n\nexport function RichText({ html }: { html: string }) {\n  const safe = DOMPurify.sanitize(html, { USE_PROFILES: { html: true } });\n  return <div dangerouslySetInnerHTML={{ __html: safe }} />;\n}\n",
-        "negative": "export function RichText({ html }: { html: string }) {\n  return <div dangerouslySetInnerHTML={{ __html: html }} />;\n}\n",
+        "positive": "function UseUser({ id }: { id: string }) {\n  const [state, setState] = React.useState<{ user?: any; error?: string }>({});\n\n  React.useEffect(() => {\n    let active = true;\n    (async () => {\n      try {\n        const res = await fetch(`/api/users/${id}`);\n        if (!res.ok) throw new Error(`HTTP ${res.status}`);\n        const user = await res.json();\n        if (active) setState({ user });\n      } catch (e: any) {\n        if (active) setState({ error: e.message ?? \"Request failed\" });\n      }\n    })();\n    return () => {\n      active = false;\n    };\n  }, [id]);\n\n  if (state.error) return <div role=\"alert\">{state.error}</div>;\n  if (!state.user) return <div>Loading</div>;\n  return <div>{state.user.name}</div>;\n}\n",
+        "negative": "function UseUser({ id }: { id: string }) {\n  const [user, setUser] = React.useState<any>(null);\n\n  React.useEffect(() => {\n    fetch(`/api/users/${id}`)\n      .then(r => r.json())\n      .then(setUser)\n      .catch(console.error);\n  }, [id]);\n\n  if (!user) return null;\n  return <div>{user.name}</div>;\n}\n",
         "language": "TYPESCRIPT_TSX"
       }
     },
     {
-      "content": "Keep derived state out of useState; compute it from props/state with memoization when expensive.",
+      "content": "Sanitize any HTML before using dangerouslySetInnerHTML; avoid rendering untrusted HTML directly from APIs, CMS, or query parameters.",
       "examples": {
-        "positive": "import React, { useMemo } from \"react\";\n\nexport function Totals({ items }: { items: Array<{ price: number; qty: number }> }) {\n  const total = useMemo(\n    () => items.reduce((sum, i) => sum + i.price * i.qty, 0),\n    [items]\n  );\n  return <div>Total: {total}</div>;\n}\n",
-        "negative": "import React, { useEffect, useState } from \"react\";\n\nexport function Totals({ items }: { items: Array<{ price: number; qty: number }> }) {\n  const [total, setTotal] = useState(0);\n  useEffect(() => {\n    setTotal(items.reduce((sum, i) => sum + i.price * i.qty, 0));\n  }, [items]);\n  return <div>Total: {total}</div>;\n}\n",
+        "positive": "import DOMPurify from \"dompurify\";\n\nfunction HtmlBlock({ html }: { html: string }) {\n  const safe = React.useMemo(() => DOMPurify.sanitize(html), [html]);\n  return <div dangerouslySetInnerHTML={{ __html: safe }} />;\n}\n",
+        "negative": "function HtmlBlock({ html }: { html: string }) {\n  return <div dangerouslySetInnerHTML={{ __html: html }} />;\n}\n",
         "language": "TYPESCRIPT_TSX"
       }
     },
     {
-      "content": "Prefer functional state updates when next state depends on previous state; avoid reading stale state from closures.",
+      "content": "Keep render pure by moving side effects into event handlers, effects, or external services; avoid mutating globals or starting requests during render.",
       "examples": {
-        "positive": "import React, { useState } from \"react\";\n\nexport function Counter() {\n  const [n, setN] = useState(0);\n  const incTwice = () => {\n    setN((p) => p + 1);\n    setN((p) => p + 1);\n  };\n  return <button onClick={incTwice}>{n}</button>;\n}\n",
-        "negative": "import React, { useState } from \"react\";\n\nexport function Counter() {\n  const [n, setN] = useState(0);\n  const incTwice = () => {\n    setN(n + 1);\n    setN(n + 1);\n  };\n  return <button onClick={incTwice}>{n}</button>;\n}\n",
+        "positive": "function SubscribeButton() {\n  const onClick = async () => {\n    await fetch(\"/api/subscribe\", { method: \"POST\" });\n  };\n\n  return <button onClick={onClick}>Subscribe</button>;\n}\n",
+        "negative": "function SubscribeButton() {\n  fetch(\"/api/subscribe\", { method: \"POST\" });\n  return <button>Subscribe</button>;\n}\n",
         "language": "TYPESCRIPT_TSX"
       }
     },
     {
-      "content": "Avoid mutating objects or arrays held in state; create new references for updates at every changed level.",
+      "content": "Stabilize props passed to memoized children by memoizing callbacks and derived objects; avoid recreating object literals and functions every render.",
       "examples": {
-        "positive": "import React, { useState } from \"react\";\n\ntype Item = { id: string; done: boolean };\n\nexport function List() {\n  const [items, setItems] = useState<Item[]>([{ id: \"a\", done: false }]);\n\n  const toggle = (id: string) =>\n    setItems((prev) => prev.map((i) => (i.id === id ? { ...i, done: !i.done } : i)));\n\n  return <button onClick={() => toggle(\"a\")}>{String(items[0].done)}</button>;\n}\n",
-        "negative": "import React, { useState } from \"react\";\n\ntype Item = { id: string; done: boolean };\n\nexport function List() {\n  const [items, setItems] = useState<Item[]>([{ id: \"a\", done: false }]);\n\n  const toggle = (id: string) => {\n    const item = items.find((i) => i.id === id)!;\n    item.done = !item.done;\n    setItems(items);\n  };\n\n  return <button onClick={() => toggle(\"a\")}>{String(items[0].done)}</button>;\n}\n",
+        "positive": "const ItemRow = React.memo(function ItemRow({ onSelect, style }: { onSelect: (id: string) => void; style: React.CSSProperties }) {\n  return <div style={style} onClick={() => onSelect(\"1\")}>Row</div>;\n});\n\nfunction List() {\n  const onSelect = React.useCallback((id: string) => {\n    console.log(id);\n  }, []);\n\n  const style = React.useMemo(() => ({ padding: 8 }), []);\n\n  return <ItemRow onSelect={onSelect} style={style} />;\n}\n",
+        "negative": "const ItemRow = React.memo(function ItemRow({ onSelect, style }: { onSelect: (id: string) => void; style: React.CSSProperties }) {\n  return <div style={style} onClick={() => onSelect(\"1\")}>Row</div>;\n});\n\nfunction List() {\n  return (\n    <ItemRow\n      onSelect={(id) => console.log(id)}\n      style={{ padding: 8 }}\n    />\n  );\n}\n",
         "language": "TYPESCRIPT_TSX"
       }
     },
     {
-      "content": "Avoid unstable dependencies in useEffect/useMemo; memoize callbacks and objects passed to dependency arrays.",
+      "content": "Inject environment configuration via a typed config module and pass dependencies as parameters; avoid importing process.env or singletons across components.",
       "examples": {
-        "positive": "import React, { useCallback, useEffect } from \"react\";\n\nexport function Search({ query }: { query: string }) {\n  const run = useCallback(async (q: string) => {\n    await fetch(`/api/search?q=${encodeURIComponent(q)}`);\n  }, []);\n\n  useEffect(() => {\n    run(query);\n  }, [run, query]);\n\n  return null;\n}\n",
-        "negative": "import React, { useEffect } from \"react\";\n\nexport function Search({ query }: { query: string }) {\n  const run = async (q: string) => {\n    await fetch(`/api/search?q=${encodeURIComponent(q)}`);\n  };\n\n  useEffect(() => {\n    run(query);\n  }, [run, query]);\n\n  return null;\n}\n",
+        "positive": "export type AppConfig = { apiBaseUrl: string };\nexport const config: AppConfig = {\n  apiBaseUrl: import.meta.env.VITE_API_BASE_URL as string,\n};\n\nexport function createApi(cfg: AppConfig) {\n  return {\n    getUser: (id: string) => fetch(`${cfg.apiBaseUrl}/users/${id}`),\n  };\n}\n\nfunction User({ api, id }: { api: ReturnType<typeof createApi>; id: string }) {\n  React.useEffect(() => {\n    api.getUser(id);\n  }, [api, id]);\n  return null;\n}\n",
+        "negative": "function User({ id }: { id: string }) {\n  const apiBaseUrl = process.env.API_BASE_URL as string;\n\n  React.useEffect(() => {\n    fetch(`${apiBaseUrl}/users/${id}`);\n  }, [apiBaseUrl, id]);\n\n  return null;\n}\n",
         "language": "TYPESCRIPT_TSX"
-      }
-    },
-    {
-      "content": "Place side effects and subscriptions in useEffect cleanup; close sockets, remove listeners, and clear intervals deterministically.",
-      "examples": {
-        "positive": "import React, { useEffect, useState } from \"react\";\n\nexport function Clock() {\n  const [now, setNow] = useState(Date.now());\n\n  useEffect(() => {\n    const id = window.setInterval(() => setNow(Date.now()), 1000);\n    return () => window.clearInterval(id);\n  }, []);\n\n  return <time>{new Date(now).toISOString()}</time>;\n}\n",
-        "negative": "import React, { useEffect, useState } from \"react\";\n\nexport function Clock() {\n  const [now, setNow] = useState(Date.now());\n\n  useEffect(() => {\n    window.setInterval(() => setNow(Date.now()), 1000);\n  }, []);\n\n  return <time>{new Date(now).toISOString()}</time>;\n}\n",
-        "language": "TYPESCRIPT_TSX"
-      }
-    },
-    {
-      "content": "Isolate React tests from timers, network, and randomness; use fake timers, request mocking, and deterministic seeds per test.",
-      "examples": {
-        "positive": "import { afterEach, beforeEach, it, expect, vi } from \"vitest\";\n\nbeforeEach(() => {\n  vi.useFakeTimers();\n  vi.stubGlobal(\"fetch\", vi.fn(async () => new Response(JSON.stringify({ ok: true }))) as any);\n});\n\nafterEach(() => {\n  vi.unstubAllGlobals();\n  vi.useRealTimers();\n  vi.restoreAllMocks();\n});\n\nit(\"polls once\", async () => {\n  const fetchSpy = fetch as any;\n  await fetch(\"/api/ping\");\n  expect(fetchSpy).toHaveBeenCalledTimes(1);\n});\n",
-        "negative": "import { it, expect } from \"vitest\";\n\nit(\"sometimes passes\", async () => {\n  await new Promise((r) => setTimeout(r, 100));\n  const res = await fetch(\"/api/ping\");\n  expect(res.status).toBe(200);\n});\n",
-        "language": "TYPESCRIPT"
       }
     }
   ]

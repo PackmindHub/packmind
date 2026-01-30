@@ -94,6 +94,7 @@ describe('CreateStandardSamplesUsecase', () => {
       beforeEach(async () => {
         const javaSample = {
           name: 'Java Best Practices',
+          summary: 'Essential Java coding practices for robust applications',
           description: 'Java coding standards',
           scope: 'Java source files',
           rules: [
@@ -110,6 +111,7 @@ describe('CreateStandardSamplesUsecase', () => {
 
         const springSample = {
           name: 'Spring Best Practices',
+          summary: 'Core Spring framework patterns for maintainable code',
           description: 'Spring framework standards',
           scope: 'Spring applications',
           rules: [
@@ -165,7 +167,7 @@ describe('CreateStandardSamplesUsecase', () => {
         expect(standardsPort.createStandardWithExamples).toHaveBeenCalledWith({
           name: 'Java Best Practices',
           description: 'Java coding standards',
-          summary: null,
+          summary: 'Essential Java coding practices for robust applications',
           rules: [
             {
               content: 'Use try-with-resources',
@@ -191,7 +193,7 @@ describe('CreateStandardSamplesUsecase', () => {
         expect(standardsPort.createStandardWithExamples).toHaveBeenCalledWith({
           name: 'Spring Best Practices',
           description: 'Spring framework standards',
-          summary: null,
+          summary: 'Core Spring framework patterns for maintainable code',
           rules: [
             {
               content: 'Use constructor injection',
@@ -348,6 +350,7 @@ describe('CreateStandardSamplesUsecase', () => {
       beforeEach(async () => {
         const javaSample = {
           name: 'Java Best Practices',
+          summary: 'Essential Java coding practices for robust applications',
           description: 'Java coding standards',
           scope: 'Java source files',
           rules: [
@@ -404,6 +407,7 @@ describe('CreateStandardSamplesUsecase', () => {
       beforeEach(async () => {
         const javaSample = {
           name: 'Java Best Practices',
+          summary: 'Essential Java coding practices for robust applications',
           description: 'Java coding standards',
           scope: 'Java source files',
           rules: [
@@ -496,6 +500,7 @@ describe('CreateStandardSamplesUsecase', () => {
       beforeEach(async () => {
         const javaSample = {
           name: 'Java Best Practices',
+          summary: 'Essential Java coding practices for robust applications',
           description: 'Java coding standards',
           scope: 'Java source files',
           rules: [

@@ -166,7 +166,7 @@ export class CreateStandardSamplesUsecase
     return this.standardsPort.createStandardWithExamples({
       name: sampleContent.name,
       description: sampleContent.description,
-      summary: null,
+      summary: sampleContent.summary,
       rules,
       organizationId,
       userId,
