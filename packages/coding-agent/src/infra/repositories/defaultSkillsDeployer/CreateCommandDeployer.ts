@@ -43,7 +43,7 @@ Every command playbook is a JSON file with this structure:
     {
       "name": "Step Name",
       "description": "What this step does and how to implement it",
-      "codeSnippet": "// Optional code example"
+      "codeSnippet": "\`\`\`typescript\\n// Optional code example\\n\`\`\`"
     }
   ]
 }
@@ -60,7 +60,7 @@ The CLI validates playbooks automatically. Requirements:
 - **steps**: Array with at least one step
 - **steps[].name**: Non-empty string (step title)
 - **steps[].description**: Non-empty string (implementation details)
-- **steps[].codeSnippet** (optional): Code example for the step
+- **steps[].codeSnippet** (optional): Code example wrapped in markdown code fences with language identifier (e.g., \\\`\\\`\\\`typescript\\\\n...code...\\\\n\\\`\\\`\\\`)
 
 ## Prerequisites
 
@@ -225,6 +225,14 @@ packmind-cli login
 - Verify JSON syntax is valid (use a JSON validator)
 - Check that all arrays have at least one entry
 
+### Step 6: Cleanup
+
+After the command is **successfully created**, delete the temporary files:
+
+1. Delete the draft JSON file in \`.packmind/commands/_drafts/\` (e.g., \`<command-slug>-draft.json\`)
+
+**Only clean up on success** - if the CLI command fails, keep the files so the user can retry.
+
 ## Complete Example
 
 Here's a complete example creating a command for setting up a new API endpoint:
@@ -247,7 +255,7 @@ Here's a complete example creating a command for setting up a new API endpoint:
     {
       "name": "Create Controller",
       "description": "Create the controller file in the \\\`infra/http/controllers/\\\` directory with the endpoint handler and input validation.",
-      "codeSnippet": "@Controller('users')\\nexport class UsersController {\\n  @Post()\\n  async create(@Body() dto: CreateUserDTO) {\\n    return this.useCase.execute(dto);\\n  }\\n}"
+      "codeSnippet": "\`\`\`typescript\\n@Controller('users')\\nexport class UsersController {\\n  @Post()\\n  async create(@Body() dto: CreateUserDTO) {\\n    return this.useCase.execute(dto);\\n  }\\n}\\n\`\`\`"
     },
     {
       "name": "Create Use Case",
@@ -281,7 +289,7 @@ packmind-cli commands create ./.packmind/commands/_drafts/create-api-endpoint-dr
 | steps                         | Yes      | At least one step                              |
 | steps[].name                  | Yes      | Step title                                     |
 | steps[].description           | Yes      | Implementation details                         |
-| steps[].codeSnippet           | No       | Optional code example                          |
+| steps[].codeSnippet           | No       | Markdown code block with language (e.g., \\\`\\\`\\\`ts) |
 `;
 }
 
