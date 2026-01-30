@@ -8,6 +8,7 @@ import {
   RuleAddedEvent,
   StandardCreatedEvent,
   StandardUpdatedEvent,
+  StandardSampleSelectedEvent,
   LinterCalledEvent,
   SkillCreatedEvent,
   OrganizationCreatedEvent,
@@ -100,6 +101,35 @@ describe('AmplitudeEventListener', () => {
           standardId: 'std-789',
           spaceId: 'space-abc',
           newVersion: 2,
+          source: 'ui',
+        },
+      );
+    });
+  });
+
+  describe('StandardSampleSelectedEvent', () => {
+    it('tracks standard_sample_selected event with correct payload', async () => {
+      const event = new StandardSampleSelectedEvent({
+        userId: createUserId('user-123'),
+        organizationId: createOrganizationId('org-456'),
+        sampleId: 'sample-typescript',
+        sampleType: 'language',
+        spaceId: createSpaceId('space-abc'),
+        source: 'ui',
+      });
+
+      eventEmitterService.emit(event);
+
+      await flushPromises();
+
+      expect(mockAdapter.trackEvent).toHaveBeenCalledWith(
+        'user-123',
+        'org-456',
+        'standard_sample_selected',
+        {
+          sampleId: 'sample-typescript',
+          sampleType: 'language',
+          spaceId: 'space-abc',
           source: 'ui',
         },
       );

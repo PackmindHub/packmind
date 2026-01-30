@@ -19,6 +19,7 @@ import {
   UserEvent,
   UserSignedUpEvent,
   OrganizationCreatedEvent,
+  StandardSampleSelectedEvent,
 } from '@packmind/types';
 import { EventTrackingAdapter } from './EventTrackingAdapter';
 import { AmplitudeMetadata } from '../domain/entities/AmplitudeNodeEvent';
@@ -34,6 +35,7 @@ export class AmplitudeEventListener extends PackmindListener<EventTrackingAdapte
     this.subscribe(StandardCreatedEvent, this.onStandardCreated);
     this.subscribe(StandardUpdatedEvent, this.onStandardUpdated);
     this.subscribe(StandardDeletedEvent, this.onStandardDeleted);
+    this.subscribe(StandardSampleSelectedEvent, this.onStandardSampleSelected);
     this.subscribe(RuleAddedEvent, this.onRuleAdded);
     this.subscribe(RuleUpdatedEvent, this.onRuleUpdated);
     this.subscribe(RuleDeletedEvent, this.onRuleDeleted);
@@ -99,6 +101,19 @@ export class AmplitudeEventListener extends PackmindListener<EventTrackingAdapte
       standardId: payload.standardId,
       spaceId: payload.spaceId,
     }));
+  };
+
+  private onStandardSampleSelected = async (
+    event: StandardSampleSelectedEvent,
+  ): Promise<void> => {
+    return this.emitAmplitudeEvent(
+      event,
+      'standard_sample_selected',
+      (payload) => ({
+        name: payload.sampleId,
+        spaceId: payload.spaceId,
+      }),
+    );
   };
 
   private onRuleAdded = async (event: RuleAddedEvent): Promise<void> => {
