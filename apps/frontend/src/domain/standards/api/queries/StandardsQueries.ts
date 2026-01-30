@@ -10,6 +10,7 @@ import {
   SampleInput,
 } from '@packmind/types';
 import {
+  GET_PACKAGE_BY_ID_KEY,
   GET_STANDARDS_DEPLOYMENT_OVERVIEW_KEY,
   LIST_PACKAGES_BY_SPACE_KEY,
 } from '../../../deployments/api/queryKeys';
@@ -331,6 +332,11 @@ export const useDeleteStandardMutation = () => {
       await queryClient.invalidateQueries({
         queryKey: LIST_PACKAGES_BY_SPACE_KEY,
       });
+
+      // Also invalidate individual package detail queries
+      await queryClient.invalidateQueries({
+        queryKey: GET_PACKAGE_BY_ID_KEY,
+      });
     },
     onError: async (error, variables, context) => {
       console.error('Error deleting standard');
@@ -414,6 +420,11 @@ export const useDeleteStandardsBatchMutation = () => {
       // Packages containing the deleted standards need to be refreshed
       await queryClient.invalidateQueries({
         queryKey: LIST_PACKAGES_BY_SPACE_KEY,
+      });
+
+      // Also invalidate individual package detail queries
+      await queryClient.invalidateQueries({
+        queryKey: GET_PACKAGE_BY_ID_KEY,
       });
     },
     onError: async (error, variables, context) => {
