@@ -1,11 +1,5 @@
-import {
-  Outlet,
-  redirect,
-  useNavigate,
-  useParams,
-  useSearchParams,
-} from 'react-router';
-import { useEffect } from 'react';
+import { Outlet, useNavigate, useParams } from 'react-router';
+import { useEffect, useState } from 'react';
 import { PMBox, PMHStack } from '@packmind/ui';
 import { SidebarNavigation } from '../../src/domain/organizations/components/SidebarNavigation';
 import { useGetMeQuery } from '../../src/domain/accounts/api/queries/UserQueries';
@@ -16,17 +10,51 @@ import {
 } from '@packmind/proprietary/frontend/services/vendors/CrispService';
 import { AuthService } from '../../src/services/auth/AuthService';
 import { SkeletonLayout } from '../../src/domain/organizations/components/SkeletonLayout';
+import { OnboardingIntentModal } from '../../src/domain/accounts/components/OnboardingIntentModal';
 
 // NO clientLoader exported here to prevent blocking!
+
+const ONBOARDING_INTENT_STORAGE_KEY = 'onboarding_intent_completed';
+
+function getOnboardingStorageKey(orgId: string): string {
+  return `${ONBOARDING_INTENT_STORAGE_KEY}_${orgId}`;
+}
 
 export default function AuthenticatedLayout() {
   const { data: me, isLoading } = useGetMeQuery();
   const navigate = useNavigate();
   const params = useParams();
-  const [searchParams] = useSearchParams();
   const authService = AuthService.getInstance();
+  const [showOnboardingModal, setShowOnboardingModal] = useState(false);
 
   useAuthErrorHandler();
+
+  useEffect(() => {
+    if (!me?.authenticated || !me.organization?.id) return;
+
+    const storageKey = getOnboardingStorageKey(me.organization.id);
+    const hasCompletedOnboarding = localStorage.getItem(storageKey) === 'true';
+
+    if (!hasCompletedOnboarding) {
+      setShowOnboardingModal(true);
+    }
+  }, [me?.authenticated, me?.organization?.id]);
+
+  const handleOnboardingComplete = () => {
+    if (me?.organization?.id) {
+      const storageKey = getOnboardingStorageKey(me.organization.id);
+      localStorage.setItem(storageKey, 'true');
+    }
+    setShowOnboardingModal(false);
+  };
+
+  const handleOnboardingSkip = () => {
+    if (me?.organization?.id) {
+      const storageKey = getOnboardingStorageKey(me.organization.id);
+      localStorage.setItem(storageKey, 'true');
+    }
+    setShowOnboardingModal(false);
+  };
 
   useEffect(() => {
     if (isLoading) return;
@@ -77,17 +105,24 @@ export default function AuthenticatedLayout() {
   }
 
   return (
-    <PMHStack
-      h="100%"
-      w="100%"
-      alignItems={'stretch'}
-      gap={0}
-      overflow={'hidden'}
-    >
-      <SidebarNavigation organization={me.organization} />
-      <PMBox flex={'1'} h="100%" overflow={'auto'}>
-        <Outlet />
-      </PMBox>
-    </PMHStack>
+    <>
+      <PMHStack
+        h="100%"
+        w="100%"
+        alignItems={'stretch'}
+        gap={0}
+        overflow={'hidden'}
+      >
+        <SidebarNavigation organization={me.organization} />
+        <PMBox flex={'1'} h="100%" overflow={'auto'}>
+          <Outlet />
+        </PMBox>
+      </PMHStack>
+      <OnboardingIntentModal
+        open={showOnboardingModal}
+        onComplete={handleOnboardingComplete}
+        onSkip={handleOnboardingSkip}
+      />
+    </>
   );
 }
