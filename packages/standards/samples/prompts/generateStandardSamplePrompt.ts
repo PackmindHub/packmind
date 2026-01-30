@@ -68,6 +68,7 @@ Generate a JSON coding standard following these STRICT requirements:
 Return ONLY valid JSON with this exact structure (no markdown, no backticks, no explanation):
 {
   "name": "${displayName} Best Practices",
+  "summary": "A concise one-sentence summary describing the intent of this standard and when it is relevant to apply its rules.",
   "description": "A clear description of what this standard covers and what problems it solves.",
   "scope": "${displayName} source files",
   "rules": [
@@ -169,6 +170,7 @@ Choose the appropriate programming language based on ${displayName}:
 TYPESCRIPT, TYPESCRIPT_TSX, JAVASCRIPT, JAVASCRIPT_JSX, PYTHON, JAVA, GO, RUST, CSHARP, PHP, RUBY, KOTLIN, SWIFT, SQL, HTML, CSS, SCSS, YAML, JSON, MARKDOWN, BASH, GENERIC
 
 ## Final Checklist Before Generating
+- [ ] Includes a concise one-sentence summary
 - [ ] Exactly 10 rules
 - [ ] Each rule starts with action verb
 - [ ] Each rule is max ~25 words
