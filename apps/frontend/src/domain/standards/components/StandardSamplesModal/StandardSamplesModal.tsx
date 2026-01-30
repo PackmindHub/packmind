@@ -102,7 +102,7 @@ export const StandardSamplesModal: React.FC<IStandardSamplesModalProps> = ({
     <PMDialog.Root
       open={open}
       onOpenChange={(details: { open: boolean }) => onOpenChange(details.open)}
-      size="lg"
+      size="xl"
       scrollBehavior="inside"
     >
       <PMDialog.Backdrop />
@@ -197,7 +197,11 @@ const SampleCardGrid: React.FC<ISampleCardGridProps> = ({
 }) => {
   return (
     <PMCheckboxGroup value={selectedValues} onValueChange={onValueChange}>
-      <PMGrid gap={4} templateColumns="repeat(auto-fill, 190px)">
+      <PMGrid
+        gap={4}
+        templateColumns="repeat(auto-fill, 195px)"
+        justifyContent="center"
+      >
         {samples.map((sample) => (
           <PMGridItem key={sample.id}>
             <PMCheckboxCard.Root
