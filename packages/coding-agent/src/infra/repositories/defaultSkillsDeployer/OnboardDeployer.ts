@@ -167,185 +167,167 @@ where_it_doesnt_apply:
 
 ---
 
-## Step 6 — Write Findings Report (always)
+## Step 6 — Generate All Draft Playbooks
 
-Write a human-readable markdown report to:
+Generate all draft playbook files in one batch, using the formats defined in \`packmind-create-standard\` and \`packmind-create-command\` skills.
 
-- \`.packmind/reports/onboard-findings-[quick|optimal].md\`
-- Never overwrite. If exists, write \`...-2.md\`, \`...-3.md\`, etc.
+### Standard Playbook Format
 
-### Report content (human-readable; ready to read)
-Must include these sections in this order:
+For each Standard insight, create a JSON file at \`.packmind/standards/_drafts/<slug>.playbook.json\`:
 
-1. **Title**: \`Packmind Onboard Findings — MODE=[QUICK|OPTIMAL]\`
-2. **Context**
-   - timestamp
-   - stack summary (from Step 4)
-   - existing artifacts counts (from Step 3)
-3. **Findings (non-linter patterns)**
-   For each finding:
-   - **Title**
-   - **What we saw**
-   - **Why it matters**
-   - **Evidence**: list of paths (include line ranges unless impossible)
-   - **Where it doesn't apply** (optional)
-4. **Drafts generated**
-   - Standards: list of name + one-line summary
-   - Commands: list of name + one-line summary
-5. **Appendix (optional)**
-   - internal \`INSIGHT\` blocks (machine-friendly)
+\`\`\`json
+{
+  "name": "Standard Name",
+  "description": "What the standard covers and why",
+  "scope": "Where this standard applies (e.g., 'TypeScript files', 'React components')",
+  "rules": [
+    {
+      "content": "Rule starting with action verb",
+      "examples": {
+        "positive": "Valid code example",
+        "negative": "Invalid code example",
+        "language": "TYPESCRIPT"
+      }
+    }
+  ]
+}
+\`\`\`
+
+### Command Playbook Format
+
+For each Command insight, create a JSON file at \`.packmind/commands/_drafts/<slug>.playbook.json\`:
+
+\`\`\`json
+{
+  "name": "Command Name",
+  "summary": "What the command does, why it's useful, and when it's relevant",
+  "whenToUse": ["Scenario when this command applies"],
+  "contextValidationCheckpoints": ["Question to validate before proceeding?"],
+  "steps": [
+    {
+      "name": "Step Name",
+      "description": "What this step does and how to implement it",
+      "codeSnippet": "// Optional code example"
+    }
+  ]
+}
+\`\`\`
+
+### Generation Rules
+
+- Generate playbooks **only from discovered insights** (no invention)
+- Use evidence from analysis to populate rules/steps
+- Cap output: max **5 Standards** + **5 Commands**
+- Never overwrite existing files; append \`-2\`, \`-3\`, etc. if slug exists
 
 ---
 
-## Step 7 — Generate Draft Artifacts (Max 5 each)
+## Step 7 — Present Drafts for Single Approval
 
-Generate drafts **only from the findings** (no extra invention). Cap output:
-- Max 5 Standards
-- Max 5 Commands
-
-### Standard format (draft)
-
-\`\`\`yaml
-name: "..."
-summary: "..."
-why_now: "Derived from observed repo patterns"
-evidence:
-  - path[:line-line]
-rules:
-  - content: "..."
-    rationale: "..."
-    examples:
-      positive: "path[:line-line] — short snippet or description"
-      negative: "path[:line-line] — short snippet or description"
-\`\`\`
-
-### Command format (draft)
-
-\`\`\`yaml
-name: "..."
-summary: "..."
-why_now: "Derived from observed repo patterns"
-evidence:
-  - path[:line-line]
-contextValidationCheckpoints:
-  - "..."
-steps:
-  - name: "..."
-    codeSnippet: |
-      ...
-\`\`\`
-
----
-
-## Step 8 — CLI Preflight (before offering Apply)
-
-Check that Packmind CLI can publish artifacts:
-
-- CLI installed (call \`packmind --version\`)
-- Authenticated/session valid (CLI command appropriate for auth status)
-- Workspace/org context configured if required by CLI
-
-If preflight fails:
-
-- Do not offer Apply
-- Offer Export and Quit
-- Print exactly:
+Present the generated draft files and ask for **one single approval**:
 
 \`\`\`
-Packmind CLI not ready: [reason]. Use Export or configure CLI then rerun.
+============================================================
+  PACKMIND ONBOARDING — [QUICK|OPTIMAL] MODE
+============================================================
+
+Stack detected: [languages], [monorepo?], [architecture markers]
+Analyses run: [N] checks
+
+DRAFT PLAYBOOKS CREATED:
+
+Standards ([N]):
+  1. [Name] → .packmind/standards/_drafts/[slug].playbook.json
+  2. ...
+
+Commands ([M]):
+  1. [Name] → .packmind/commands/_drafts/[slug].playbook.json
+  2. ...
+
+============================================================
+
+Please review the draft files above. When ready, confirm to publish
+them to Packmind via CLI.
+\`\`\`
+
+Then ask:
+
+\`\`\`
+Ready to publish these Standards and Commands to Packmind?
+
+[Y] Yes, publish all
+[N] No, I need to edit them first
 \`\`\`
 
 ---
 
-## Step 9 — Present Results (human-facing)
+## Step 8 — Apply or Wait
 
-Print exactly:
+**If user approves (Y):**
 
-\`\`\`
-=== PACKMIND ONBOARD — MODE=[QUICK|OPTIMAL] ===
+### 8.1 Publish to Packmind
 
-Existing artifacts found:
-  - Standards: [N] | Commands: [M] | Other docs: [P]
+Publish all drafts to Packmind using CLI:
 
-Detected stack:
-  - Languages: [...]
-  - Repo: [monorepo|single]
-  - Architecture markers: [...]
-
-Full findings report saved to: .packmind/reports/[FILENAME].md
-
-Findings (non-linter patterns):
-  1) [Title] — confidence: [high|medium|low]
-     evidence: path:line-line, path:line-line
-
-Drafts generated (review before Apply):
-  - Standards ([N]): [Name], [Name], ...
-  - Commands  ([M]): [Name], [Name], ...
+\`\`\`bash
+packmind-cli standards create .packmind/standards/_drafts/<slug>.playbook.json
+packmind-cli commands create .packmind/commands/_drafts/<slug>.playbook.json
 \`\`\`
 
-Then use AskUserQuestion to offer options (based on CLI preflight):
+### 8.2 Deploy Locally
 
-- **Apply** — Publish drafts to Packmind using the CLI (no repo writes)
-- **Preview** — Open sections from the saved findings report (instant; no regeneration)
-- **Export** — Write drafts into .packmind/standards/ + .packmind/commands/ (no overwrites)
-- **Quit** — Exit
+Since the onboard skill is present, the user has configured an AI agent. Deploy the created artifacts locally:
 
----
-
-## Step 10 — Handle Choice
-
-**Apply (Publish via Packmind CLI)**
-
-Publish the generated drafts to Packmind using CLI create commands.
-
-Rules:
-
-- Idempotent slugs: prefer explicit --slug if supported.
-- If slug exists in Packmind, create -2, -3, etc.
-- If one publish fails: continue publishing the rest; collect errors.
-- Do not regenerate drafts. Use already-generated content.
-
-Print exactly:
-
-\`\`\`
-Published to Packmind (via CLI):
-  - Standard: [name] (slug: [slug]) — [id|link|created]
-  - Command:  [name] (slug: [slug]) — [id|link|created]
-
-Failures:
-  - [type] [name] — [error summary]
+\`\`\`bash
+packmind-cli pull
 \`\`\`
 
-**Preview (Instant; from report)**
+This deploys to agent-specific folders:
 
-- Show the requested section from \`.packmind/reports/[FILENAME].md\`
-- Do not rerun analyses
-- Return to the options
+| Agent | Standards | Commands |
+|-------|-----------|----------|
+| Claude | \`.claude/rules/packmind/standard-[slug].md\` | \`.claude/commands/packmind/[slug].md\` |
+| Cursor | \`.cursor/rules/packmind/standard-[slug].mdc\` | \`.cursor/commands/packmind/[slug].mdc\` |
+| Copilot | \`.github/instructions/packmind-standard-[slug].instructions.md\` | \`.github/prompts/packmind-[slug].prompt.md\` |
 
-**Export (Repo files)**
+### 8.3 Cleanup and Summary
 
-Write new files:
-
-- \`.packmind/standards/[slug].md\`
-- \`.packmind/commands/[slug].md\`
-
-Rules:
-
-- Never overwrite. If slug exists, append -2, -3, etc.
-- Print exactly:
+Delete the draft playbook files, then print final summary:
 
 \`\`\`
-Written:
-  - .packmind/standards/[slug].md — [Title]
-  - .packmind/commands/[slug].md — [Title]
+============================================================
+  PUBLISHED TO PACKMIND & DEPLOYED LOCALLY
+============================================================
+
+Standards: [N]
+  - [Name] (slug: [slug])
+    → .packmind/standards/[slug].md
+    → [agent-specific path]
+
+Commands: [M]
+  - [Name] (slug: [slug])
+    → .packmind/commands/[slug].md
+    → [agent-specific path]
+
+Draft files cleaned up.
+============================================================
 \`\`\`
 
-**Quit**
+**If user declines (N):**
 
-Print exactly:
+Print:
 
 \`\`\`
-Done. Run this skill again anytime.
+Draft files ready for review at:
+  - .packmind/standards/_drafts/
+  - .packmind/commands/_drafts/
+
+Edit them as needed, then run:
+  packmind-cli standards create <path>
+  packmind-cli commands create <path>
+  packmind-cli pull
+
+Or re-run this skill when ready.
 \`\`\`
 `;
 }
