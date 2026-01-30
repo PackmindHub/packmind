@@ -46,6 +46,7 @@ export type AnalyticsEventMap = {
   default_skills_downloaded: {
     agent: CodingAgent;
   };
+  create_standard_from_samples_clicked: Record<string, never>;
 };
 
 export type AnalyticsEventName = keyof AnalyticsEventMap;
