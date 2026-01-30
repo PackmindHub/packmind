@@ -2,8 +2,9 @@ import { useState } from 'react';
 import { PMDialog, PMBox } from '@packmind/ui';
 import { OnboardingWelcome } from './OnboardingWelcome';
 import { OnboardingPlaybook } from './OnboardingPlaybook';
+import { OnboardingBuild } from './OnboardingBuild';
 
-type OnboardingStep = 'welcome' | 'playbook';
+type OnboardingStep = 'welcome' | 'playbook' | 'build';
 
 interface OnboardingIntentModalProps {
   open: boolean;
@@ -22,11 +23,19 @@ export function OnboardingIntentModal({
     setStep('playbook');
   };
 
-  const handlePrevious = () => {
+  const handlePreviousToWelcome = () => {
     setStep('welcome');
   };
 
   const handleBuildPlaybook = () => {
+    setStep('build');
+  };
+
+  const handlePreviousToPlaybook = () => {
+    setStep('playbook');
+  };
+
+  const handleComplete = () => {
     onComplete();
   };
 
@@ -67,7 +76,13 @@ export function OnboardingIntentModal({
                 {step === 'playbook' && (
                   <OnboardingPlaybook
                     onBuildPlaybook={handleBuildPlaybook}
-                    onPrevious={handlePrevious}
+                    onPrevious={handlePreviousToWelcome}
+                  />
+                )}
+                {step === 'build' && (
+                  <OnboardingBuild
+                    onComplete={handleComplete}
+                    onPrevious={handlePreviousToPlaybook}
                   />
                 )}
               </PMBox>

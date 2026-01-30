@@ -72,10 +72,41 @@ describe('OnboardingIntentModal', () => {
         expect(screen.getByText('Welcome to Packmind')).toBeInTheDocument();
       });
     });
+
+    describe('when user clicks Build my playbook', () => {
+      it('navigates to build step', async () => {
+        const user = userEvent.setup();
+        renderWithProviders(<OnboardingIntentModal {...defaultProps} />);
+
+        await user.click(
+          screen.getByTestId('OnboardingWelcome.DiscoverButton'),
+        );
+        await user.click(screen.getByTestId('OnboardingPlaybook.BuildButton'));
+
+        expect(screen.getByText('Build my playbook')).toBeInTheDocument();
+      });
+    });
+
+    describe('when user clicks Previous on build step', () => {
+      it('navigates back to playbook step', async () => {
+        const user = userEvent.setup();
+        renderWithProviders(<OnboardingIntentModal {...defaultProps} />);
+
+        await user.click(
+          screen.getByTestId('OnboardingWelcome.DiscoverButton'),
+        );
+        await user.click(screen.getByTestId('OnboardingPlaybook.BuildButton'));
+        await user.click(screen.getByTestId('OnboardingBuild.PreviousButton'));
+
+        expect(
+          screen.getByText('Build and evolve your playbook'),
+        ).toBeInTheDocument();
+      });
+    });
   });
 
   describe('completion callbacks', () => {
-    describe('when user clicks Build my playbook', () => {
+    describe("when user clicks I'm done on build step", () => {
       it('calls onComplete', async () => {
         const user = userEvent.setup();
         renderWithProviders(<OnboardingIntentModal {...defaultProps} />);
@@ -84,6 +115,7 @@ describe('OnboardingIntentModal', () => {
           screen.getByTestId('OnboardingWelcome.DiscoverButton'),
         );
         await user.click(screen.getByTestId('OnboardingPlaybook.BuildButton'));
+        await user.click(screen.getByTestId('OnboardingBuild.CompleteButton'));
 
         expect(defaultProps.onComplete).toHaveBeenCalledTimes(1);
       });
