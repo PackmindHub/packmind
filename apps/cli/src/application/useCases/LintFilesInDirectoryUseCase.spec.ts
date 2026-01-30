@@ -1,11 +1,8 @@
 import { PackmindLogger } from '@packmind/logger';
 import {
   ExecuteLinterProgramsCommand,
-  GetDetectionProgramsForPackagesResponse,
   IExecuteLinterProgramsUseCase,
   LinterExecutionViolation,
-  PackmindCommand,
-  PackmindCommandBody,
   ProgrammingLanguage,
   RuleId,
 } from '@packmind/types';
