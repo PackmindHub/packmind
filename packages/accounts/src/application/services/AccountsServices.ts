@@ -22,7 +22,6 @@ export class AccountsServices {
   private readonly passwordResetTokenService: PasswordResetTokenService;
 
   constructor(private readonly accountsRepositories: IAccountsRepositories) {
-    const logger = new PackmindLogger('AccountsServices');
     // Initialize all services with their respective repositories from the aggregator
     this.userService = new UserService(
       this.accountsRepositories.getUserRepository(),

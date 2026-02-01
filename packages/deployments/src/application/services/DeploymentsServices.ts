@@ -1,5 +1,4 @@
 import { TargetService } from './TargetService';
-import { PackmindLogger } from '@packmind/logger';
 import { RenderModeConfigurationService } from './RenderModeConfigurationService';
 import { PackageService } from './PackageService';
 import { IDeploymentsRepositories } from '../../domain/repositories/IDeploymentsRepositories';

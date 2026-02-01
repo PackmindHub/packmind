@@ -1,6 +1,5 @@
 import { SpaceService } from './SpaceService';
 import { ISpacesRepositories } from '../../domain/repositories/ISpacesRepositories';
-import { PackmindLogger } from '@packmind/logger';
 
 /**
  * SpacesServices - Service aggregator for the Spaces application layer

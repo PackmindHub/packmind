@@ -2,7 +2,6 @@ import { RecipeService } from './RecipeService';
 import { RecipeVersionService } from './RecipeVersionService';
 import { RecipeSummaryService } from './RecipeSummaryService';
 import { IRecipesRepositories } from '../../domain/repositories/IRecipesRepositories';
-import { PackmindLogger } from '@packmind/logger';
 import type { ILlmPort } from '@packmind/types';
 
 export class RecipesServices {
