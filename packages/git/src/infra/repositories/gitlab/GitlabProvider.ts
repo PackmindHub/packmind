@@ -12,8 +12,8 @@ export class GitlabProvider implements IGitProvider {
 
   constructor(
     private readonly token: string,
-    private readonly logger: PackmindLogger = new PackmindLogger(origin),
     baseUrl?: string,
+    private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {
     // Handle both cases: user enters base GitLab URL or full API URL
     const providedUrl =
