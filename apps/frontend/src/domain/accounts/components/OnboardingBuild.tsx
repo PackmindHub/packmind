@@ -13,6 +13,7 @@ import {
   PMCopiable,
   PMIconButton,
 } from '@packmind/ui';
+import { OnboardingProgressSection } from './OnboardingProgressSection';
 import { LuCircleHelp, LuCopy } from 'react-icons/lu';
 import { useCliLoginCode } from './LocalEnvironmentSetup/hooks/useCliLoginCode';
 import {
@@ -491,13 +492,7 @@ export function OnboardingBuild({
 
       {/* Status and navigation */}
       <PMVStack gap={4} align="stretch">
-        {/* Status indicator */}
-        <PMHStack gap={3} align="center">
-          <PMSpinner size="sm" />
-          <PMText color="secondary" data-testid="OnboardingBuild.StatusText">
-            Waiting for your playbook to be ready...
-          </PMText>
-        </PMHStack>
+        <OnboardingProgressSection />
 
         {/* Navigation buttons */}
         <PMHStack gap={4}>
