@@ -26,10 +26,7 @@ export class CaptureRecipeUsecase implements ICaptureRecipeUseCase {
     private readonly recipeVersionService: RecipeVersionService,
     private readonly recipeSummaryService: RecipeSummaryService,
     private readonly eventEmitterService: PackmindEventEmitterService,
-    private readonly logger: PackmindLogger = new PackmindLogger(
-      origin,
-      LogLevel.INFO,
-    ),
+    private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {
     this.logger.info('CaptureRecipeUsecase initialized');
   }

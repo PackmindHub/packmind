@@ -33,7 +33,7 @@ export class UpdateRecipeFromUIUsecase
     private readonly recipeVersionService: RecipeVersionService,
     private readonly recipeSummaryService: RecipeSummaryService,
     private readonly eventEmitterService: PackmindEventEmitterService,
-    logger: PackmindLogger = new PackmindLogger(origin),
+    private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {
     super(accountsPort, logger);
     this.logger.info('UpdateRecipeFromUIUsecase initialized');

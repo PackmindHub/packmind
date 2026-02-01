@@ -27,7 +27,7 @@ export class CaptureRecipeWithPackagesUsecase
     private readonly captureRecipeUsecase: CaptureRecipeUsecase,
     private readonly deploymentsPort: IDeploymentPort,
     private readonly spacesPort: ISpacesPort,
-    logger: PackmindLogger = new PackmindLogger(origin),
+    logger: PackmindLogger,
   ) {
     super(accountsPort, logger);
     this.logger.info('CaptureRecipeWithPackagesUsecase initialized');

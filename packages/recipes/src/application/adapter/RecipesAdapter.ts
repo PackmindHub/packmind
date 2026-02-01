@@ -134,7 +134,6 @@ export class RecipesAdapter
       this.recipesServices.getRecipeVersionService(),
       this.recipesServices.getRecipeSummaryService(),
       ports.eventEmitterService,
-      this.logger,
     );
 
     this._captureRecipeWithPackages = new CaptureRecipeWithPackagesUsecase(
@@ -142,7 +141,6 @@ export class RecipesAdapter
       this._captureRecipe,
       this.deploymentPort!,
       this.spacesPort!,
-      this.logger,
     );
 
     this._updateRecipesFromGitHub = new UpdateRecipesFromGitHubUsecase(
@@ -170,7 +168,6 @@ export class RecipesAdapter
       this.recipesServices.getRecipeVersionService(),
       this.recipesServices.getRecipeSummaryService(),
       ports.eventEmitterService,
-      this.logger,
     );
 
     this._deleteRecipe = new DeleteRecipeUsecase(
