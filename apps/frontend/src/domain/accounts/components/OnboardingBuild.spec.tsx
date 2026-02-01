@@ -15,6 +15,11 @@ jest.mock('./LocalEnvironmentSetup/hooks/useCliLoginCode', () => ({
   }),
 }));
 
+const mockUseMcpConnection = jest.fn();
+jest.mock('./LocalEnvironmentSetup/hooks/useMcpConnection', () => ({
+  useMcpConnection: () => mockUseMcpConnection(),
+}));
+
 const renderWithProviders = (component: React.ReactElement) => {
   const queryClient = new QueryClient({
     defaultOptions: {
@@ -42,6 +47,14 @@ describe('OnboardingBuild', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    mockUseMcpConnection.mockReturnValue({
+      url: 'https://mcp.test.packmind.ai/mcp',
+      token: 'test-mcp-token',
+      isLoading: false,
+      isReady: true,
+      isError: false,
+      errorMessage: null,
+    });
   });
 
   describe('rendering', () => {
@@ -106,20 +119,69 @@ describe('OnboardingBuild', () => {
       renderWithProviders(<OnboardingBuild {...defaultProps} />);
 
       expect(
-        screen.getByTestId('OnboardingBuild.AssistantClaude'),
+        screen.getByTestId('OnboardingBuild.Assistant-claude'),
       ).toBeInTheDocument();
       expect(
-        screen.getByTestId('OnboardingBuild.AssistantCursor'),
+        screen.getByTestId('OnboardingBuild.Assistant-cursor'),
       ).toBeInTheDocument();
       expect(
-        screen.getByTestId('OnboardingBuild.AssistantCopilot'),
+        screen.getByTestId('OnboardingBuild.Assistant-github-copilot-vscode'),
       ).toBeInTheDocument();
     });
 
-    it('renders the Prompt section', () => {
+    it('renders the Instructions section', () => {
       renderWithProviders(<OnboardingBuild {...defaultProps} />);
 
-      expect(screen.getByText('Prompt')).toBeInTheDocument();
+      expect(screen.getByText('Instructions')).toBeInTheDocument();
+    });
+
+    describe('when MCP connection is loading', () => {
+      it('renders a loading spinner', () => {
+        mockUseMcpConnection.mockReturnValue({
+          url: undefined,
+          token: undefined,
+          isLoading: true,
+          isReady: false,
+          isError: false,
+          errorMessage: null,
+        });
+
+        renderWithProviders(<OnboardingBuild {...defaultProps} />);
+
+        expect(
+          screen.getByTestId('OnboardingBuild.McpLoading'),
+        ).toBeInTheDocument();
+      });
+    });
+
+    describe('when user clicks on an agent', () => {
+      it('hides the placeholder text', async () => {
+        const user = userEvent.setup();
+        renderWithProviders(<OnboardingBuild {...defaultProps} />);
+
+        await user.click(
+          screen.getByTestId('OnboardingBuild.Assistant-claude'),
+        );
+
+        expect(
+          screen.queryByText(
+            'Select a coding assistant above to see setup instructions.',
+          ),
+        ).not.toBeInTheDocument();
+      });
+
+      it('shows method content for the selected agent', async () => {
+        const user = userEvent.setup();
+        renderWithProviders(<OnboardingBuild {...defaultProps} />);
+
+        await user.click(
+          screen.getByTestId('OnboardingBuild.Assistant-claude'),
+        );
+
+        expect(
+          screen.getByTestId('OnboardingBuild.InstructionsContent').textContent,
+        ).not.toBe('');
+      });
     });
   });
 

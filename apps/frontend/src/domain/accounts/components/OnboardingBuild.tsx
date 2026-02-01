@@ -1,3 +1,4 @@
+import { useMemo, useState } from 'react';
 import {
   PMVStack,
   PMHStack,
@@ -19,11 +20,78 @@ import {
   NPM_INSTALL_COMMAND,
   buildCliLoginCommand,
 } from './LocalEnvironmentSetup/utils';
+import { useMcpConnection } from './LocalEnvironmentSetup/hooks/useMcpConnection';
+import { getAgentsConfig } from './McpConfig/agentsConfig';
+import {
+  IAgentConfig,
+  IInstallMethod,
+  groupMethodsByType,
+  getAvailableMethods,
+} from './McpConfig/types';
+import { MethodContent } from './McpConfig/InstallMethods';
+import { StartTrialCommandAgents } from '@packmind/types';
+import { OnboardingAgentProvider } from '../contexts';
 
 interface OnboardingBuildProps {
   onComplete: () => void;
   onPrevious: () => void;
 }
+
+const mapAgentIdToAnalytics = (agentId: string): StartTrialCommandAgents => {
+  const mapping: Record<string, StartTrialCommandAgents> = {
+    claude: 'claude',
+    'github-copilot-vscode': 'vs-code',
+    'github-copilot-jetbrains': 'jetbrains',
+    cursor: 'cursor',
+    continue: 'continue-dev',
+    generic: 'other',
+  };
+  return mapping[agentId] ?? 'other';
+};
+
+const createTabsFromMethods = (
+  methodsByType: Record<string, IInstallMethod[]>,
+  token: string,
+  url: string,
+) => {
+  const orderedTypes = ['magicLink', 'cli', 'json'];
+
+  return orderedTypes
+    .filter((type) => methodsByType[type])
+    .map((type) => {
+      const methods = methodsByType[type];
+      const firstMethod = methods[0];
+      const uniqueKey = methods.length > 1 ? `${type}-multi` : type;
+
+      return {
+        value: uniqueKey,
+        triggerLabel: firstMethod.label,
+        content: (
+          <PMVStack gap={4} width="100%" alignItems="flex-start">
+            {methods.length > 1 ? (
+              <PMVStack gap={6} width="100%" alignItems="flex-start">
+                {methods.map((method, index) => (
+                  <PMVStack
+                    key={index}
+                    gap={2}
+                    width="100%"
+                    alignItems="flex-start"
+                  >
+                    <PMText as="p" fontWeight="bold">
+                      {method.label}
+                    </PMText>
+                    <MethodContent method={method} token={token} url={url} />
+                  </PMVStack>
+                ))}
+              </PMVStack>
+            ) : (
+              <MethodContent method={firstMethod} token={token} url={url} />
+            )}
+          </PMVStack>
+        ),
+      };
+    });
+};
 
 export function OnboardingBuild({
   onComplete,
@@ -32,6 +100,18 @@ export function OnboardingBuild({
   const { loginCode } = useCliLoginCode();
   const curlCommand = buildCurlInstallCommand(loginCode ?? '');
   const loginCommand = buildCliLoginCommand();
+
+  const [selectedAgent, setSelectedAgent] = useState<IAgentConfig | null>(null);
+  const { url, token, isLoading } = useMcpConnection();
+  const agents = getAgentsConfig();
+
+  const methodTabs = useMemo(() => {
+    if (!selectedAgent || !url || !token) return [];
+    const availableMethods = getAvailableMethods(selectedAgent);
+    if (availableMethods.length === 0) return [];
+    const methodsByType = groupMethodsByType(availableMethods);
+    return createTabsFromMethods(methodsByType, token, url);
+  }, [selectedAgent, url, token]);
 
   return (
     <PMVStack
@@ -347,49 +427,62 @@ export function OnboardingBuild({
                 <PMText fontWeight="semibold">
                   Pick your coding assistant
                 </PMText>
-                <PMHStack gap={2} overflowX="auto">
-                  <PMButton
-                    variant="outline"
-                    size="sm"
-                    data-testid="OnboardingBuild.AssistantClaude"
-                  >
-                    Claude
-                  </PMButton>
-                  <PMButton
-                    variant="outline"
-                    size="sm"
-                    data-testid="OnboardingBuild.AssistantCursor"
-                  >
-                    Cursor
-                  </PMButton>
-                  <PMButton
-                    variant="outline"
-                    size="sm"
-                    data-testid="OnboardingBuild.AssistantCopilot"
-                  >
-                    Copilot
-                  </PMButton>
-                  <PMButton
-                    variant="outline"
-                    size="sm"
-                    data-testid="OnboardingBuild.AssistantMore"
-                  >
-                    ...
-                  </PMButton>
+                <PMHStack gap={2} flexWrap="wrap">
+                  {isLoading ? (
+                    <PMSpinner
+                      size="sm"
+                      data-testid="OnboardingBuild.McpLoading"
+                    />
+                  ) : (
+                    agents.map((agent) => (
+                      <PMButton
+                        key={agent.id}
+                        variant={
+                          selectedAgent?.id === agent.id ? 'solid' : 'outline'
+                        }
+                        size="sm"
+                        onClick={() => setSelectedAgent(agent)}
+                        data-testid={`OnboardingBuild.Assistant-${agent.id}`}
+                      >
+                        {agent.name}
+                      </PMButton>
+                    ))
+                  )}
                 </PMHStack>
               </PMVStack>
 
-              {/* Prompt section */}
+              {/* Instructions section */}
               <PMVStack gap={2} align="stretch" flex={1}>
-                <PMText fontWeight="semibold">Prompt</PMText>
+                <PMText fontWeight="semibold">Instructions</PMText>
                 <PMBox
                   bg="background.secondary"
                   borderRadius="md"
                   padding={4}
                   flex={1}
                   minHeight="120px"
-                  data-testid="OnboardingBuild.PromptContent"
-                />
+                  data-testid="OnboardingBuild.InstructionsContent"
+                >
+                  {selectedAgent && methodTabs.length > 0 ? (
+                    <OnboardingAgentProvider
+                      agent={mapAgentIdToAnalytics(selectedAgent.id)}
+                    >
+                      {methodTabs.length === 1 ? (
+                        methodTabs[0].content
+                      ) : (
+                        <PMTabs
+                          width="100%"
+                          defaultValue={methodTabs[0].value}
+                          tabs={methodTabs}
+                          data-testid="OnboardingBuild.McpMethodTabs"
+                        />
+                      )}
+                    </OnboardingAgentProvider>
+                  ) : (
+                    <PMText color="secondary" fontSize="sm">
+                      Select a coding assistant above to see setup instructions.
+                    </PMText>
+                  )}
+                </PMBox>
               </PMVStack>
             </PMVStack>
           </PMCard.Body>
