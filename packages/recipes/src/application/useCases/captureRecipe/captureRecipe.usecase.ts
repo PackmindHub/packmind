@@ -1,4 +1,4 @@
-import { LogLevel, PackmindLogger } from '@packmind/logger';
+import { PackmindLogger } from '@packmind/logger';
 import { PackmindEventEmitterService } from '@packmind/node-utils';
 import { AiNotConfigured, OrganizationId } from '@packmind/types';
 import {
