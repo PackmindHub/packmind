@@ -2,12 +2,41 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router';
 import { UIProvider } from '@packmind/ui';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { OnboardingIntentModal } from './OnboardingIntentModal';
 
+jest.mock('./LocalEnvironmentSetup/hooks/useCliLoginCode', () => ({
+  useCliLoginCode: () => ({
+    loginCode: 'test-login-code',
+    codeExpiresAt: new Date(Date.now() + 600000).toISOString(),
+    isGenerating: false,
+    regenerate: jest.fn(),
+  }),
+}));
+
+jest.mock('./LocalEnvironmentSetup/hooks/useMcpConnection', () => ({
+  useMcpConnection: () => ({
+    url: 'https://mcp.test.com',
+    token: 'test-token',
+    isLoading: false,
+  }),
+}));
+
 const renderWithProviders = (component: React.ReactElement) => {
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: { retry: false },
+      mutations: { retry: false },
+    },
+  });
+
   return render(
     <MemoryRouter>
-      <UIProvider>{component}</UIProvider>
+      <UIProvider>
+        <QueryClientProvider client={queryClient}>
+          {component}
+        </QueryClientProvider>
+      </UIProvider>
     </MemoryRouter>,
   );
 };
