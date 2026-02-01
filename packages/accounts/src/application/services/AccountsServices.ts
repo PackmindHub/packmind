@@ -4,7 +4,6 @@ import { InvitationService } from './InvitationService';
 import { LoginRateLimiterService } from './LoginRateLimiterService';
 import { PasswordResetTokenService } from './PasswordResetTokenService';
 import { IAccountsRepositories } from '../../domain/repositories/IAccountsRepositories';
-import { PackmindLogger } from '@packmind/logger';
 import { SmtpMailService } from '@packmind/node-utils';
 
 /**

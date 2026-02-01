@@ -26,7 +26,6 @@ import {
   Distribution,
   DistributedPackage,
 } from '@packmind/types';
-import { PackmindLogger } from '@packmind/logger';
 
 /**
  * DeploymentsRepositories - Repository aggregator implementation for the Deployments domain
