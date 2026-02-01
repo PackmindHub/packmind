@@ -4,7 +4,6 @@ import { GitCommitService } from './services/GitCommitService';
 import { IGitRepositories } from '../domain/repositories/IGitRepositories';
 import { IGitRepoFactory } from '../domain/repositories/IGitRepoFactory';
 import { IGitProviderFactory } from '../domain/repositories/IGitProviderFactory';
-import { PackmindLogger } from '@packmind/logger';
 
 /**
  * GitServices - Service aggregator for the Git application layer
