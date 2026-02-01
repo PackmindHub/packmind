@@ -21,7 +21,7 @@ describe('GitlabProvider', () => {
   beforeEach(() => {
     mockLogger = stubLogger();
     mockedAxios.create.mockReturnValue(mockAxiosInstance);
-    gitlabProvider = new GitlabProvider('test-token', mockLogger);
+    gitlabProvider = new GitlabProvider('test-token', '', mockLogger);
   });
 
   afterEach(() => {
@@ -44,8 +44,8 @@ describe('GitlabProvider', () => {
         mockedAxios.create.mockClear();
         new GitlabProvider(
           'test-token',
-          mockLogger,
           'https://custom-gitlab.com/api/v4',
+          mockLogger,
         );
 
         expect(mockedAxios.create).toHaveBeenCalledWith({
@@ -63,8 +63,8 @@ describe('GitlabProvider', () => {
         mockedAxios.create.mockClear();
         new GitlabProvider(
           'test-token',
-          mockLogger,
           'https://gitlab.company.com',
+          mockLogger,
         );
 
         expect(mockedAxios.create).toHaveBeenCalledWith({
@@ -81,8 +81,8 @@ describe('GitlabProvider', () => {
       mockedAxios.create.mockClear();
       new GitlabProvider(
         'test-token',
-        mockLogger,
         'https://gitlab.company.com/',
+        mockLogger,
       );
 
       expect(mockedAxios.create).toHaveBeenCalledWith({
