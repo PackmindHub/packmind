@@ -2,7 +2,6 @@ import { StandardService } from './StandardService';
 import { StandardVersionService } from './StandardVersionService';
 import { StandardBookService } from './StandardBookService';
 import { IStandardsRepositories } from '../../domain/repositories/IStandardsRepositories';
-import { PackmindLogger } from '@packmind/logger';
 import { StandardSummaryService } from './StandardSummaryService';
 import type { ILinterPort, ILlmPort } from '@packmind/types';
 
@@ -17,7 +16,6 @@ export class StandardsServices {
     private linterAdapter?: ILinterPort,
     private llmPort?: ILlmPort,
   ) {
-    const logger = new PackmindLogger('StandardsServices');
     this.standardService = new StandardService(
       this.standardsRepositories.getStandardRepository(),
     );
