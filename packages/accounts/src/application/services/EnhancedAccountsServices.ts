@@ -5,6 +5,7 @@ import { ApiKeyService, IJwtService } from './ApiKeyService';
 import { LoginRateLimiterService } from './LoginRateLimiterService';
 import { PasswordResetTokenService } from './PasswordResetTokenService';
 import { TrialActivationService } from './TrialActivationService';
+import { UserMetadataService } from './UserMetadataService';
 import { IAccountsRepositories } from '../../domain/repositories/IAccountsRepositories';
 import { ICliLoginCodeRepository } from '../../domain/repositories/ICliLoginCodeRepository';
 import { ITrialActivationRepository } from '../../domain/repositories/ITrialActivationRepository';
@@ -24,6 +25,7 @@ export class EnhancedAccountsServices {
   private readonly loginRateLimiterService: LoginRateLimiterService;
   private readonly apiKeyService?: ApiKeyService;
   private readonly trialActivationService?: TrialActivationService;
+  private readonly userMetadataService: UserMetadataService;
 
   constructor(
     private readonly accountsRepositories: IAccountsRepositories,
@@ -63,6 +65,11 @@ export class EnhancedAccountsServices {
         this.logger,
       );
     }
+
+    // Initialize user metadata service
+    this.userMetadataService = new UserMetadataService(
+      this.accountsRepositories.getUserMetadataRepository(),
+    );
 
     this.logger.info('EnhancedAccountsServices initialized', {
       hasApiKeyService: !!this.apiKeyService,
@@ -104,5 +111,9 @@ export class EnhancedAccountsServices {
 
   getTrialActivationRepository(): ITrialActivationRepository {
     return this.accountsRepositories.getTrialActivationRepository();
+  }
+
+  getUserMetadataService(): UserMetadataService {
+    return this.userMetadataService;
   }
 }
