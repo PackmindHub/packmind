@@ -16,6 +16,20 @@ import { LintFilesLocallyUseCase } from './LintFilesLocallyUseCase';
 import { ConfigFileRepository } from '../../infra/repositories/ConfigFileRepository';
 import { stubLogger } from '@packmind/test-utils';
 import { ILinterGateway } from '../../domain/repositories/ILinterGateway';
+import {
+  createMockExecuteLinterProgramsUseCase,
+  createMockGitService,
+  createMockListFiles,
+  createMockServices,
+} from '../../mocks/createMockServices';
+import {
+  createMockLinterGateway,
+  createMockPackmindGateway,
+} from '../../mocks/createMockGateways';
+import {
+  createMockConfigFileRepository,
+  createMockPackmindRepositories,
+} from '../../mocks/createMockRepositories';
 
 jest.mock('fs/promises');
 
@@ -33,19 +47,9 @@ describe('LintFilesLocallyUseCase', () => {
   const logger = stubLogger();
 
   beforeEach(() => {
-    mockListFiles = {
-      listFilesInDirectory: jest.fn(),
-      readFileContent: jest.fn(),
-    } as unknown as jest.Mocked<ListFiles>;
-
-    mockGitRemoteUrlService = {
-      getGitRemoteUrl: jest.fn(),
-      getCurrentBranches: jest.fn(),
-      getGitRepositoryRoot: jest.fn(),
-      tryGetGitRepositoryRoot: jest.fn(),
-    } as unknown as jest.Mocked<GitService>;
-
-    mockLinterExecutionUseCase = {
+    mockListFiles = createMockListFiles();
+    mockGitRemoteUrlService = createMockGitService();
+    mockLinterExecutionUseCase = createMockExecuteLinterProgramsUseCase({
       execute: jest.fn(async (command: ExecuteLinterProgramsCommand) => ({
         file: command.filePath,
         violations: command.programs.map<LinterExecutionViolation>(
@@ -57,44 +61,25 @@ describe('LintFilesLocallyUseCase', () => {
           }),
         ),
       })),
-    } as unknown as jest.Mocked<IExecuteLinterProgramsUseCase>;
+    });
 
-    mockLinterGateway = {
-      listDetectionPrograms: jest.fn(),
-      getDraftDetectionProgramsForRule: jest.fn(),
-      getActiveDetectionProgramsForRule: jest.fn(),
-      getDetectionProgramsForPackages: jest.fn(),
-    };
-
-    mockPackmindGateway = {
+    mockLinterGateway = createMockLinterGateway();
+    mockPackmindGateway = createMockPackmindGateway({
       linter: mockLinterGateway,
-      getMcpToken: jest.fn(),
-      getMcpUrl: jest.fn(),
-      notifyDistribution: jest.fn(),
-      uploadSkill: jest.fn(),
-      getPullData: jest.fn(),
-      listPackages: jest.fn(),
-      getPackageSummary: jest.fn(),
-    };
+    });
 
-    mockConfigFileRepository = {
-      readConfig: jest.fn(),
-      writeConfig: jest.fn(),
-      readHierarchicalConfig: jest.fn(),
-      findAllConfigsInTree: jest.fn(),
-      findDescendantConfigs: jest.fn(),
-    } as unknown as jest.Mocked<ConfigFileRepository>;
+    mockConfigFileRepository = createMockConfigFileRepository();
 
-    mockServices = {
+    mockServices = createMockServices({
       listFiles: mockListFiles,
       gitRemoteUrlService: mockGitRemoteUrlService,
       linterExecutionUseCase: mockLinterExecutionUseCase,
-    };
+    });
 
-    mockRepositories = {
+    mockRepositories = createMockPackmindRepositories({
       packmindGateway: mockPackmindGateway,
       configFileRepository: mockConfigFileRepository,
-    };
+    });
 
     (fs.stat as jest.Mock).mockResolvedValue({
       isFile: () => false,
