@@ -512,6 +512,8 @@ const COMMAND_CREATOR_LICENSE = `
 `;
 
 export class CreateCommandDeployer implements ISkillDeployer {
+  public readonly minimumVersion = 'unreleased';
+
   deploy(agentName: string, skillsFolderPath: string): FileUpdates {
     const basePath = `${skillsFolderPath}packmind-create-command`;
 
