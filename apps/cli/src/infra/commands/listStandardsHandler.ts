@@ -1,5 +1,14 @@
 import { PackmindCliHexa } from '../../PackmindCliHexa';
 import { formatSlug, formatLabel } from '../utils/consoleLogger';
+import { loadApiKey, decodeApiKey } from '../utils/credentials';
+
+function buildStandardUrl(
+  host: string,
+  orgSlug: string,
+  standardSlug: string,
+): string {
+  return `${host}/org/${orgSlug}/space/global/standards/${standardSlug}`;
+}
 
 export type ListStandardsHandlerDependencies = {
   packmindCliHexa: PackmindCliHexa;
@@ -27,10 +36,25 @@ export async function listStandardsHandler(
       a.slug.localeCompare(b.slug),
     );
 
+    // Try to build webapp URL from credentials
+    let urlBuilder: ((slug: string) => string) | null = null;
+    const apiKey = loadApiKey();
+    if (apiKey) {
+      const decoded = decodeApiKey(apiKey);
+      const orgSlug = decoded?.jwt?.organization?.slug;
+      if (decoded?.host && orgSlug) {
+        urlBuilder = (slug: string) =>
+          buildStandardUrl(decoded.host, orgSlug, slug);
+      }
+    }
+
     log('Available standards:\n');
     sortedStandards.forEach((standard, index) => {
-      log(`- 🔗 ${formatSlug(standard.slug)}`);
+      log(`- ${formatSlug(standard.slug)}`);
       log(`    ${formatLabel('Name:')} ${standard.name}`);
+      if (urlBuilder) {
+        log(`    ${formatLabel('URL:')} ${urlBuilder(standard.slug)}`);
+      }
       if (standard.description) {
         const descriptionLines = standard.description
           .trim()

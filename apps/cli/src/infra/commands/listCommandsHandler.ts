@@ -1,5 +1,14 @@
 import { PackmindCliHexa } from '../../PackmindCliHexa';
 import { formatSlug, formatLabel } from '../utils/consoleLogger';
+import { loadApiKey, decodeApiKey } from '../utils/credentials';
+
+function buildCommandUrl(
+  host: string,
+  orgSlug: string,
+  commandSlug: string,
+): string {
+  return `${host}/org/${orgSlug}/space/global/commands/${commandSlug}`;
+}
 
 export type ListCommandsHandlerDependencies = {
   packmindCliHexa: PackmindCliHexa;
@@ -27,10 +36,25 @@ export async function listCommandsHandler(
       a.slug.localeCompare(b.slug),
     );
 
+    // Try to build webapp URL from credentials
+    let urlBuilder: ((slug: string) => string) | null = null;
+    const apiKey = loadApiKey();
+    if (apiKey) {
+      const decoded = decodeApiKey(apiKey);
+      const orgSlug = decoded?.jwt?.organization?.slug;
+      if (decoded?.host && orgSlug) {
+        urlBuilder = (slug: string) =>
+          buildCommandUrl(decoded.host, orgSlug, slug);
+      }
+    }
+
     log('Available commands:\n');
     sortedCommands.forEach((cmd, index) => {
-      log(`- 🔗 ${formatSlug(cmd.slug)}`);
+      log(`- ${formatSlug(cmd.slug)}`);
       log(`    ${formatLabel('Name:')} ${cmd.name}`);
+      if (urlBuilder) {
+        log(`    ${formatLabel('URL:')} ${urlBuilder(cmd.slug)}`);
+      }
       if (index < sortedCommands.length - 1) {
         log('');
       }
