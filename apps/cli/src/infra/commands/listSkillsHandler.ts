@@ -1,5 +1,14 @@
 import { PackmindCliHexa } from '../../PackmindCliHexa';
 import { formatSlug, formatLabel } from '../utils/consoleLogger';
+import { loadApiKey, decodeApiKey } from '../utils/credentials';
+
+function buildSkillUrl(
+  host: string,
+  orgSlug: string,
+  skillSlug: string,
+): string {
+  return `${host}/org/${orgSlug}/space/global/skills/${skillSlug}`;
+}
 
 export type ListSkillsHandlerDependencies = {
   packmindCliHexa: PackmindCliHexa;
@@ -27,10 +36,25 @@ export async function listSkillsHandler(
       a.slug.localeCompare(b.slug),
     );
 
+    // Try to build webapp URL from credentials
+    let urlBuilder: ((slug: string) => string) | null = null;
+    const apiKey = loadApiKey();
+    if (apiKey) {
+      const decoded = decodeApiKey(apiKey);
+      const orgSlug = decoded?.jwt?.organization?.slug;
+      if (decoded?.host && orgSlug) {
+        urlBuilder = (slug: string) =>
+          buildSkillUrl(decoded.host, orgSlug, slug);
+      }
+    }
+
     log('Available skills:\n');
     sortedSkills.forEach((skill, index) => {
-      log(`- 🔗 ${formatSlug(skill.slug)}`);
+      log(`- ${formatSlug(skill.slug)}`);
       log(`    ${formatLabel('Name:')} ${skill.name}`);
+      if (urlBuilder) {
+        log(`    ${formatLabel('URL:')} ${urlBuilder(skill.slug)}`);
+      }
       if (skill.description) {
         const descriptionLines = skill.description
           .trim()
