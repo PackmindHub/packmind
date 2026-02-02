@@ -2,7 +2,7 @@ import { IPackmindGateway } from '../domain/repositories/IPackmindGateway';
 import { ILinterGateway } from '../domain/repositories/ILinterGateway';
 
 export type MockPackmindGatewayOverrides = {
-  linter?: Partial<jest.Mocked<ILinterGateway>>;
+  linter?: jest.Mocked<ILinterGateway>;
   getPullData?: jest.Mocked<IPackmindGateway>['getPullData'];
   listPackages?: jest.Mocked<IPackmindGateway>['listPackages'];
   getPackageSummary?: jest.Mocked<IPackmindGateway>['getPackageSummary'];
@@ -23,7 +23,7 @@ export function createMockPackmindGateway(
   overrides?: MockPackmindGatewayOverrides,
 ): jest.Mocked<IPackmindGateway> {
   return {
-    linter: createMockLinterGateway(overrides?.linter),
+    linter: createMockLinterGateway(),
     getPullData: jest.fn(),
     listPackages: jest.fn(),
     getPackageSummary: jest.fn(),
