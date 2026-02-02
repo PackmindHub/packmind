@@ -35,13 +35,14 @@ export const createPackageCommand = command({
       const result = await createPackageHandler(name, description, useCase);
 
       if (result.success) {
-        const webAppUrl = hexa.getWebAppUrl();
         logSuccessConsole(
           `Package "${result.packageName}" created successfully`,
         );
         logConsole('');
         logConsole(`Created: ${result.slug}`);
-        logConsole(`You can see it at: ${webAppUrl}/packages/${result.slug}`);
+        if (result.webappUrl) {
+          logConsole(`You can see it at: ${result.webappUrl}`);
+        }
         logConsole(
           `You can install it with: packmind-cli packages install ${result.slug}`,
         );

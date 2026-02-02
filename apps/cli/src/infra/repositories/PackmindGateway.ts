@@ -903,10 +903,13 @@ export class PackmindGateway implements IPackmindGateway {
     data: CreatePackageCommand,
   ): Promise<CreatePackageResult> => {
     const { organizationId } = this.httpClient.getAuthContext();
-    return this.httpClient.request<CreatePackageResult>(
-      `/api/v0/organizations/${organizationId}/spaces/${spaceId}/packages`,
-      { method: 'POST', body: data },
-    );
+    const response = await this.httpClient.request<{
+      package: CreatePackageResult;
+    }>(`/api/v0/organizations/${organizationId}/spaces/${spaceId}/packages`, {
+      method: 'POST',
+      body: data,
+    });
+    return response.package;
   };
 
   public pushOnboardingBaseline = async (
