@@ -940,11 +940,11 @@ export class PackmindGateway implements IPackmindGateway {
     const space = await this.getGlobalSpace();
     const { organizationId } = this.httpClient.getAuthContext();
 
-    const standards = await this.httpClient.request<
-      Array<{ slug: string; name: string; description: string }>
-    >(`/api/v0/organizations/${organizationId}/spaces/${space.id}/standards`);
+    const response = await this.httpClient.request<{
+      standards: Array<{ slug: string; name: string; description: string }>;
+    }>(`/api/v0/organizations/${organizationId}/spaces/${space.id}/standards`);
 
-    return standards.map((s) => ({
+    return response.standards.map((s) => ({
       slug: s.slug,
       name: s.name,
       description: s.description,
@@ -955,11 +955,11 @@ export class PackmindGateway implements IPackmindGateway {
     const space = await this.getGlobalSpace();
     const { organizationId } = this.httpClient.getAuthContext();
 
-    const recipes = await this.httpClient.request<
-      Array<{ slug: string; name: string }>
-    >(`/api/v0/organizations/${organizationId}/spaces/${space.id}/recipes`);
+    const response = await this.httpClient.request<{
+      recipes: Array<{ slug: string; name: string }>;
+    }>(`/api/v0/organizations/${organizationId}/spaces/${space.id}/recipes`);
 
-    return recipes.map((r) => ({
+    return response.recipes.map((r) => ({
       slug: r.slug,
       name: r.name,
     }));
