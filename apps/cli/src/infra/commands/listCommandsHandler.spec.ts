@@ -32,44 +32,77 @@ describe('listCommandsHandler', () => {
     jest.clearAllMocks();
   });
 
-  it('displays commands sorted by slug', async () => {
-    mockPackmindCliHexa.listCommands.mockResolvedValue([
-      { slug: 'zebra-command', name: 'Zebra Command' },
-      { slug: 'alpha-command', name: 'Alpha Command' },
-    ]);
+  describe('when commands exist', () => {
+    beforeEach(async () => {
+      mockPackmindCliHexa.listCommands.mockResolvedValue([
+        { id: 'id-z', slug: 'zebra-command', name: 'Zebra Command' },
+        { id: 'id-a', slug: 'alpha-command', name: 'Alpha Command' },
+      ]);
 
-    await listCommandsHandler(deps);
+      await listCommandsHandler(deps);
+    });
 
-    expect(mockLog).toHaveBeenCalledWith('Available commands:\n');
-    const logCalls = mockLog.mock.calls.map((c) => c[0]);
-    const alphaIndex = logCalls.findIndex((c: string) =>
-      c.includes('alpha-command'),
-    );
-    const zebraIndex = logCalls.findIndex((c: string) =>
-      c.includes('zebra-command'),
-    );
-    expect(alphaIndex).toBeLessThan(zebraIndex);
-    expect(mockExit).toHaveBeenCalledWith(0);
+    it('displays header with count', () => {
+      const logCalls = mockLog.mock.calls.map((c) => c[0]);
+      const headerCall = logCalls.find((c: string) =>
+        c.includes('Commands (2)'),
+      );
+
+      expect(headerCall).toBeDefined();
+    });
+
+    it('sorts commands alphabetically by slug', () => {
+      const logCalls = mockLog.mock.calls.map((c) => c[0]);
+      const alphaIndex = logCalls.findIndex((c: string) =>
+        c.includes('alpha-command'),
+      );
+      const zebraIndex = logCalls.findIndex((c: string) =>
+        c.includes('zebra-command'),
+      );
+
+      expect(alphaIndex).toBeLessThan(zebraIndex);
+    });
+
+    it('exits with code 0', () => {
+      expect(mockExit).toHaveBeenCalledWith(0);
+    });
   });
 
-  it('displays message when no commands found', async () => {
-    mockPackmindCliHexa.listCommands.mockResolvedValue([]);
+  describe('when no commands found', () => {
+    beforeEach(async () => {
+      mockPackmindCliHexa.listCommands.mockResolvedValue([]);
 
-    await listCommandsHandler(deps);
+      await listCommandsHandler(deps);
+    });
 
-    expect(mockLog).toHaveBeenCalledWith('No commands found.');
-    expect(mockExit).toHaveBeenCalledWith(0);
+    it('displays empty message', () => {
+      expect(mockLog).toHaveBeenCalledWith('No commands found.');
+    });
+
+    it('exits with code 0', () => {
+      expect(mockExit).toHaveBeenCalledWith(0);
+    });
   });
 
-  it('displays error on failure', async () => {
-    mockPackmindCliHexa.listCommands.mockRejectedValue(
-      new Error('Network error'),
-    );
+  describe('when API fails', () => {
+    beforeEach(async () => {
+      mockPackmindCliHexa.listCommands.mockRejectedValue(
+        new Error('Network error'),
+      );
 
-    await listCommandsHandler(deps);
+      await listCommandsHandler(deps);
+    });
 
-    expect(mockError).toHaveBeenCalledWith('\n❌ Failed to list commands:');
-    expect(mockError).toHaveBeenCalledWith('   Network error');
-    expect(mockExit).toHaveBeenCalledWith(1);
+    it('displays error header', () => {
+      expect(mockError).toHaveBeenCalledWith('\n❌ Failed to list commands:');
+    });
+
+    it('displays error message', () => {
+      expect(mockError).toHaveBeenCalledWith('   Network error');
+    });
+
+    it('exits with code 1', () => {
+      expect(mockExit).toHaveBeenCalledWith(1);
+    });
   });
 });

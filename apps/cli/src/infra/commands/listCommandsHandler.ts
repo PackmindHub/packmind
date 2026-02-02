@@ -1,5 +1,10 @@
 import { PackmindCliHexa } from '../../PackmindCliHexa';
-import { formatSlug, formatLabel } from '../utils/consoleLogger';
+import {
+  formatSlug,
+  formatLabel,
+  formatLink,
+  formatHeader,
+} from '../utils/consoleLogger';
 import { loadApiKey, decodeApiKey } from '../utils/credentials';
 
 function buildCommandUrl(
@@ -47,12 +52,15 @@ export async function listCommandsHandler(
       }
     }
 
-    log('Available commands:\n');
+    log(formatHeader(`📋 Commands (${sortedCommands.length})\n`));
     sortedCommands.forEach((cmd, index) => {
-      log(`- ${formatSlug(cmd.slug)}`);
-      log(`    ${formatLabel('Name:')} ${cmd.name}`);
+      log(`  ${formatSlug(cmd.slug)}`);
+      log(`  ${formatLabel('Name:')}  ${cmd.name}`);
       if (urlBuilder) {
-        log(`    ${formatLabel('URL:')} ${urlBuilder(cmd.id)}`);
+        const url = urlBuilder(cmd.id);
+        log(
+          `  ${formatLabel('Link:')}  ${formatLink(url, 'Open in Packmind')}`,
+        );
       }
       if (index < sortedCommands.length - 1) {
         log('');
