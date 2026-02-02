@@ -155,6 +155,7 @@ export type CreatePackageResult = {
 
 // List Standards types
 export type ListedStandard = {
+  id: string;
   slug: string;
   name: string;
   description: string;
@@ -164,6 +165,7 @@ export type ListStandardsResult = ListedStandard[];
 
 // List Commands types
 export type ListedCommand = {
+  id: string;
   slug: string;
   name: string;
 };

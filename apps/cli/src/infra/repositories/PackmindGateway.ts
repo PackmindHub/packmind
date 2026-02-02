@@ -941,10 +941,16 @@ export class PackmindGateway implements IPackmindGateway {
     const { organizationId } = this.httpClient.getAuthContext();
 
     const response = await this.httpClient.request<{
-      standards: Array<{ slug: string; name: string; description: string }>;
+      standards: Array<{
+        id: string;
+        slug: string;
+        name: string;
+        description: string;
+      }>;
     }>(`/api/v0/organizations/${organizationId}/spaces/${space.id}/standards`);
 
     return response.standards.map((s) => ({
+      id: s.id,
       slug: s.slug,
       name: s.name,
       description: s.description,
@@ -956,10 +962,11 @@ export class PackmindGateway implements IPackmindGateway {
     const { organizationId } = this.httpClient.getAuthContext();
 
     const response = await this.httpClient.request<{
-      recipes: Array<{ slug: string; name: string }>;
+      recipes: Array<{ id: string; slug: string; name: string }>;
     }>(`/api/v0/organizations/${organizationId}/spaces/${space.id}/recipes`);
 
     return response.recipes.map((r) => ({
+      id: r.id,
       slug: r.slug,
       name: r.name,
     }));
