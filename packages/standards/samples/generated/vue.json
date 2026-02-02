@@ -1,0 +1,88 @@
+{
+  "name": "Vue.js Best Practices",
+  "summary": "Apply these rules when building Vue 3 applications with Composition API, routing, state, and networked services in production environments.",
+  "description": "This standard defines high-impact Vue.js practices for reactive state safety, async lifecycle control, routing/data loading, error boundaries, configuration, logging, and test reliability across components and services.",
+  "scope": "**/*.vue,**/*.ts,**/*.js",
+  "rules": [
+    {
+      "content": "Use shallowRef/markRaw for external mutable instances (clients, editors, maps); keep them out of deep reactivity.",
+      "examples": {
+        "positive": "import { shallowRef, onBeforeUnmount } from 'vue'\nimport type { AxiosInstance } from 'axios'\n\nconst http = shallowRef<AxiosInstance | null>(null)\n\nexport function useHttp(factory: () => AxiosInstance) {\n  if (!http.value) http.value = factory()\n  onBeforeUnmount(() => {\n    http.value = null\n  })\n  return http\n}\n",
+        "negative": "import { ref } from 'vue'\nimport axios from 'axios'\n\n// Deep reactive proxy over a complex external instance\nconst http = ref(axios.create())\n",
+        "language": "TYPESCRIPT"
+      }
+    },
+    {
+      "content": "Cancel in-flight async work on scope dispose using AbortController or onScopeDispose; pass the signal through API calls.",
+      "examples": {
+        "positive": "import { onScopeDispose, ref } from 'vue'\n\nexport function useUser(api: (id: string, signal: AbortSignal) => Promise<any>) {\n  const user = ref<any>(null)\n  const ac = new AbortController()\n\n  const load = async (id: string) => {\n    user.value = await api(id, ac.signal)\n  }\n\n  onScopeDispose(() => ac.abort())\n  return { user, load }\n}\n",
+        "negative": "import { ref } from 'vue'\n\nexport function useUser(api: (id: string) => Promise<any>) {\n  const user = ref<any>(null)\n\n  const load = async (id: string) => {\n    // No cancellation; updates can land after unmount\n    user.value = await api(id)\n  }\n\n  return { user, load }\n}\n",
+        "language": "TYPESCRIPT"
+      }
+    },
+    {
+      "content": "Include timeouts on every network call; configure per-request timeout values and propagate them through service methods.",
+      "examples": {
+        "positive": "import axios from 'axios'\n\nconst http = axios.create({ baseURL: '/api', timeout: 10_000 })\n\nexport async function fetchOrders() {\n  return http.get('/orders', { timeout: 5_000 })\n}\n",
+        "negative": "import axios from 'axios'\n\nconst http = axios.create({ baseURL: '/api' })\n\nexport async function fetchOrders() {\n  // No timeout\n  return http.get('/orders')\n}\n",
+        "language": "TYPESCRIPT"
+      }
+    },
+    {
+      "content": "Gate retries with explicit idempotency; retry only safe methods and use bounded backoff logic in one shared request utility.",
+      "examples": {
+        "positive": "type Req = () => Promise<Response>\n\nasync function retryIdempotent(req: Req, attempts = 3) {\n  let delay = 200\n  for (let i = 0; i < attempts; i++) {\n    try {\n      return await req()\n    } catch (e) {\n      if (i === attempts - 1) throw e\n      await new Promise(r => setTimeout(r, delay))\n      delay = Math.min(delay * 2, 2000)\n    }\n  }\n  throw new Error('unreachable')\n}\n\nexport function fetchProfile(signal: AbortSignal) {\n  return retryIdempotent(() => fetch('/api/profile', { method: 'GET', signal }))\n}\n",
+        "negative": "export function createOrder(data: any) {\n  // Retries a non-idempotent operation\n  return Promise.resolve()\n    .catch(() => fetch('/api/orders', { method: 'POST', body: JSON.stringify(data) }))\n    .catch(() => fetch('/api/orders', { method: 'POST', body: JSON.stringify(data) }))\n}\n",
+        "language": "TYPESCRIPT"
+      }
+    },
+    {
+      "content": "Validate and normalize route params and query values at boundaries; convert types and reject invalid values before using them in requests.",
+      "examples": {
+        "positive": "import { useRoute } from 'vue-router'\n\nexport function useOrderId() {\n  const route = useRoute()\n  const raw = route.params.id\n  const id = Array.isArray(raw) ? raw[0] : raw\n\n  if (!/^[0-9]+$/.test(String(id))) throw new Error('Invalid order id')\n  return Number(id)\n}\n",
+        "negative": "import { useRoute } from 'vue-router'\n\nexport function useOrderId() {\n  const route = useRoute()\n  // Uses unchecked string in API call\n  return route.params.id as any\n}\n",
+        "language": "TYPESCRIPT"
+      }
+    },
+    {
+      "content": "Use v-text or sanitized HTML for user-provided strings; never bind untrusted input to v-html.",
+      "examples": {
+        "positive": "<template>\n  <p v-text=\"comment\"></p>\n</template>\n\n<script setup lang=\"ts\">\nconst comment = '<img src=x onerror=alert(1)>'\n</script>\n",
+        "negative": "<template>\n  <!-- Untrusted HTML injection -->\n  <div v-html=\"comment\"></div>\n</template>\n\n<script setup lang=\"ts\">\nconst comment = '<img src=x onerror=alert(1)>'\n</script>\n",
+        "language": "HTML"
+      }
+    },
+    {
+      "content": "Handle async errors in a single boundary: return errors from actions/services and render via onErrorCaptured or router error routes.",
+      "examples": {
+        "positive": "<template>\n  <section>\n    <p v-if=\"error\">{{ error.message }}</p>\n    <UserCard v-else :user=\"user\" />\n  </section>\n</template>\n\n<script setup lang=\"ts\">\nimport { ref, onErrorCaptured } from 'vue'\n\nconst user = ref<any>(null)\nconst error = ref<Error | null>(null)\n\nonErrorCaptured((e) => {\n  error.value = e as Error\n  return false\n})\n</script>\n",
+        "negative": "<script setup lang=\"ts\">\n// Async errors are dropped if not awaited/caught\nsetTimeout(async () => {\n  throw new Error('boom')\n}, 0)\n</script>\n",
+        "language": "HTML"
+      }
+    },
+    {
+      "content": "Define store state with plain serializable objects; avoid Dates, Maps, class instances, or functions inside Pinia/Vuex state.",
+      "examples": {
+        "positive": "import { defineStore } from 'pinia'\n\ntype State = { session: { userId: string | null; expiresAtIso: string | null } }\n\nexport const useSessionStore = defineStore('session', {\n  state: (): State => ({ session: { userId: null, expiresAtIso: null } }),\n  actions: {\n    setExpiry(date: Date) {\n      this.session.expiresAtIso = date.toISOString()\n    }\n  }\n})\n",
+        "negative": "import { defineStore } from 'pinia'\n\nexport const useSessionStore = defineStore('session', {\n  state: () => ({\n    // Non-serializable state\n    expiresAt: new Date(),\n    cache: new Map<string, any>(),\n    validator: (x: any) => !!x\n  })\n})\n",
+        "language": "TYPESCRIPT"
+      }
+    },
+    {
+      "content": "Read environment configuration once in a typed config module; avoid direct import.meta.env access across components and services.",
+      "examples": {
+        "positive": "export type AppConfig = {\n  apiBaseUrl: string\n  sentryDsn?: string\n}\n\nexport const config: AppConfig = {\n  apiBaseUrl: import.meta.env.VITE_API_BASE_URL as string,\n  sentryDsn: import.meta.env.VITE_SENTRY_DSN as string | undefined\n}\n\nif (!config.apiBaseUrl) throw new Error('Missing VITE_API_BASE_URL')\n",
+        "negative": "export function apiUrl(path: string) {\n  // Scattered env access\n  return `${import.meta.env.VITE_API_BASE_URL}${path}`\n}\n",
+        "language": "TYPESCRIPT"
+      }
+    },
+    {
+      "content": "Stabilize tests by flushing Promises and timers explicitly; avoid relying on arbitrary timeouts or implicit nextTick chains.",
+      "examples": {
+        "positive": "import { mount } from '@vue/test-utils'\nimport { vi, it, expect } from 'vitest'\n\nconst flushPromises = () => new Promise(resolve => queueMicrotask(resolve))\n\nit('renders loaded data', async () => {\n  vi.useFakeTimers()\n  const wrapper = mount({\n    template: '<div>{{ text }}</div>',\n    data: () => ({ text: 'loading' }),\n    mounted() {\n      setTimeout(() => { this.text = 'done' }, 10)\n    }\n  })\n\n  vi.advanceTimersByTime(10)\n  await flushPromises()\n\n  expect(wrapper.text()).toBe('done')\n  vi.useRealTimers()\n})\n",
+        "negative": "import { mount } from '@vue/test-utils'\nimport { it, expect } from 'vitest'\n\nit('renders loaded data', async () => {\n  const wrapper = mount({\n    template: '<div>{{ text }}</div>',\n    data: () => ({ text: 'loading' }),\n    mounted() {\n      setTimeout(() => { this.text = 'done' }, 10)\n    }\n  })\n\n  // Flaky timing\n  await new Promise(r => setTimeout(r, 20))\n  expect(wrapper.text()).toBe('done')\n})\n",
+        "language": "TYPESCRIPT"
+      }
+    }
+  ]
+}

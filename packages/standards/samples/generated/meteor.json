@@ -1,0 +1,88 @@
+{
+  "name": "Meteor Best Practices",
+  "summary": "Advanced, production-focused rules for building secure, performant Meteor apps with predictable data access, methods, publications, and runtime behavior.",
+  "description": "This standard covers high-impact Meteor patterns around Methods and Publications, allow/deny avoidance, schema validation, reactive query control, server/client boundaries, async handling, distributed locks, configuration, logging, and deterministic testing.",
+  "scope": "**/*.js,**/*.ts",
+  "rules": [
+    {
+      "content": "Replace allow/deny with Meteor Methods and explicit server-side authorization checks per operation.",
+      "examples": {
+        "positive": "import { Meteor } from 'meteor/meteor';\nimport { check } from 'meteor/check';\nimport { Posts } from '/imports/api/posts/collection';\n\nMeteor.methods({\n  'posts.insert'({ title }) {\n    check(title, String);\n    if (!this.userId) throw new Meteor.Error('not-authorized');\n    return Posts.insert({ title, ownerId: this.userId, createdAt: new Date() });\n  }\n});\n",
+        "negative": "import { Posts } from '/imports/api/posts/collection';\n\nPosts.allow({\n  insert(userId, doc) {\n    return !!userId; // no per-field or per-operation checks\n  },\n  update() {\n    return true;\n  },\n  remove() {\n    return true;\n  }\n});\n",
+        "language": "TYPESCRIPT"
+      }
+    },
+    {
+      "content": "Validate and normalize all Method and Publication arguments with check/Match or a schema before any database access.",
+      "examples": {
+        "positive": "import { Meteor } from 'meteor/meteor';\nimport { check, Match } from 'meteor/check';\nimport { Posts } from '/imports/api/posts/collection';\n\nMeteor.publish('posts.byOwner', function ({ ownerId, limit }) {\n  check(ownerId, String);\n  check(limit, Match.Integer);\n  const safeLimit = Math.max(1, Math.min(limit, 50));\n  return Posts.find({ ownerId }, { limit: safeLimit, fields: { title: 1, createdAt: 1 } });\n});\n",
+        "negative": "import { Meteor } from 'meteor/meteor';\nimport { Posts } from '/imports/api/posts/collection';\n\nMeteor.publish('posts.byOwner', function (args: any) {\n  // args.limit and args.ownerId used directly\n  return Posts.find({ ownerId: args.ownerId }, { limit: args.limit });\n});\n",
+        "language": "TYPESCRIPT"
+      }
+    },
+    {
+      "content": "Whitelist fields in Publications and server queries; avoid returning full documents by default.",
+      "examples": {
+        "positive": "import { Meteor } from 'meteor/meteor';\nimport { Posts } from '/imports/api/posts/collection';\n\nMeteor.publish('posts.list', function () {\n  return Posts.find(\n    { ownerId: this.userId },\n    { fields: { title: 1, createdAt: 1, ownerId: 1 }, limit: 20, sort: { createdAt: -1 } }\n  );\n});\n",
+        "negative": "import { Meteor } from 'meteor/meteor';\nimport { Posts } from '/imports/api/posts/collection';\n\nMeteor.publish('posts.list', function () {\n  return Posts.find({ ownerId: this.userId }); // sends all fields\n});\n",
+        "language": "TYPESCRIPT"
+      }
+    },
+    {
+      "content": "Bound Publications with limit, sort, and stable selectors; avoid reactive queries without explicit constraints.",
+      "examples": {
+        "positive": "import { Meteor } from 'meteor/meteor';\nimport { check } from 'meteor/check';\nimport { AuditEvents } from '/imports/api/audit/collection';\n\nMeteor.publish('audit.recent', function ({ since }) {\n  check(since, Date);\n  return AuditEvents.find(\n    { createdAt: { $gte: since }, orgId: this.userId ? 'org' : 'none' },\n    { sort: { createdAt: -1 }, limit: 200, fields: { createdAt: 1, type: 1 } }\n  );\n});\n",
+        "negative": "import { Meteor } from 'meteor/meteor';\nimport { AuditEvents } from '/imports/api/audit/collection';\n\nMeteor.publish('audit.all', function () {\n  return AuditEvents.find({}); // unbounded, fully reactive\n});\n",
+        "language": "TYPESCRIPT"
+      }
+    },
+    {
+      "content": "Avoid client-side database writes; keep client collections read-only and perform writes through Methods only.",
+      "examples": {
+        "positive": "import { Meteor } from 'meteor/meteor';\nimport { Posts } from '/imports/api/posts/collection';\n\n// client\nexport async function createPost(title: string) {\n  return await Meteor.callAsync('posts.insert', { title });\n}\n\n// client reads only\nexport const postsCursor = Posts.find({}, { sort: { createdAt: -1 } });\n",
+        "negative": "import { Posts } from '/imports/api/posts/collection';\n\n// client\nPosts.insert({ title: 'direct write', createdAt: new Date() });\nPosts.update({ _id: 'id' }, { $set: { title: 'mutated' } });\n",
+        "language": "TYPESCRIPT"
+      }
+    },
+    {
+      "content": "Use rawCollection bulk operations for large server-side writes; avoid per-document insert/update loops with Minimongo-style calls.",
+      "examples": {
+        "positive": "import { Meteor } from 'meteor/meteor';\nimport { check } from 'meteor/check';\nimport { Events } from '/imports/api/events/collection';\n\nMeteor.methods({\n  async 'events.ingest'(batch: Array<{ type: string; ts: Date }>) {\n    check(batch, [Object]);\n    if (!this.userId) throw new Meteor.Error('not-authorized');\n\n    const ops = batch.map((e) => ({\n      insertOne: { document: { ...e, ownerId: this.userId } }\n    }));\n\n    const coll = Events.rawCollection();\n    await coll.bulkWrite(ops, { ordered: false });\n  }\n});\n",
+        "negative": "import { Meteor } from 'meteor/meteor';\nimport { Events } from '/imports/api/events/collection';\n\nMeteor.methods({\n  'events.ingest'(batch: any[]) {\n    batch.forEach((e) => {\n      Events.insert(e); // many round-trips and reactivity work\n    });\n  }\n});\n",
+        "language": "TYPESCRIPT"
+      }
+    },
+    {
+      "content": "Convert callback-style Meteor and Node APIs to async and await them; avoid fire-and-forget async work inside Methods.",
+      "examples": {
+        "positive": "import { Meteor } from 'meteor/meteor';\nimport { HTTP } from 'meteor/http';\n\nMeteor.methods({\n  async 'status.check'(url: string) {\n    if (!this.userId) throw new Meteor.Error('not-authorized');\n    const result = await HTTP.callAsync('GET', url, { timeout: 5000 });\n    return { code: result.statusCode };\n  }\n});\n",
+        "negative": "import { Meteor } from 'meteor/meteor';\nimport { HTTP } from 'meteor/http';\n\nMeteor.methods({\n  'status.check'(url: string) {\n    HTTP.call('GET', url, {}, (err) => {\n      if (err) throw err; // thrown outside method context\n    });\n    return { ok: true }; // returns before work completes\n  }\n});\n",
+        "language": "TYPESCRIPT"
+      }
+    },
+    {
+      "content": "Enforce timeouts and cancellation boundaries on external calls inside Methods using AbortController or Meteor HTTP timeout options.",
+      "examples": {
+        "positive": "import { Meteor } from 'meteor/meteor';\n\nMeteor.methods({\n  async 'billing.fetch'() {\n    if (!this.userId) throw new Meteor.Error('not-authorized');\n\n    const ac = new AbortController();\n    const t = setTimeout(() => ac.abort(), 4000);\n    try {\n      const res = await fetch('https://api.example.com/billing', { signal: ac.signal });\n      if (!res.ok) throw new Meteor.Error('upstream-failed');\n      return await res.json();\n    } finally {\n      clearTimeout(t);\n    }\n  }\n});\n",
+        "negative": "import { Meteor } from 'meteor/meteor';\n\nMeteor.methods({\n  async 'billing.fetch'() {\n    const res = await fetch('https://api.example.com/billing'); // no timeout\n    return await res.json();\n  }\n});\n",
+        "language": "TYPESCRIPT"
+      }
+    },
+    {
+      "content": "Use distributed locks for cross-server critical sections; avoid in-memory mutexes or globals for shared state in clustered deployments.",
+      "examples": {
+        "positive": "import { Meteor } from 'meteor/meteor';\nimport { Mongo } from 'meteor/mongo';\n\nconst Locks = new Mongo.Collection<{ _id: string; until: Date }>('locks');\n\nasync function withLock(key: string, ttlMs: number, fn: () => Promise<any>) {\n  const now = new Date();\n  const until = new Date(Date.now() + ttlMs);\n  const raw = Locks.rawCollection();\n  const r = await raw.findOneAndUpdate(\n    { _id: key, $or: [{ until: { $lte: now } }, { until: { $exists: false } }] },\n    { $set: { until } },\n    { upsert: true, returnDocument: 'after' }\n  );\n  const doc = r.value;\n  if (!doc || doc.until.getTime() !== until.getTime()) throw new Meteor.Error('locked');\n  try {\n    return await fn();\n  } finally {\n    await raw.updateOne({ _id: key, until }, { $set: { until: new Date(0) } });\n  }\n}\n\nMeteor.methods({\n  async 'reports.rebuild'() {\n    if (!this.userId) throw new Meteor.Error('not-authorized');\n    return withLock('reports.rebuild', 30000, async () => {\n      // critical section\n      return { ok: true };\n    });\n  }\n});\n",
+        "negative": "import { Meteor } from 'meteor/meteor';\n\nlet rebuilding = false;\n\nMeteor.methods({\n  async 'reports.rebuild'() {\n    if (rebuilding) throw new Meteor.Error('busy');\n    rebuilding = true;\n    try {\n      return { ok: true };\n    } finally {\n      rebuilding = false;\n    }\n  }\n});\n",
+        "language": "TYPESCRIPT"
+      }
+    },
+    {
+      "content": "Isolate tests from reactive global state by cleaning collections, resetting Meteor stubs, and awaiting pending promises between tests.",
+      "examples": {
+        "positive": "import { Meteor } from 'meteor/meteor';\nimport { Random } from 'meteor/random';\nimport { Posts } from '/imports/api/posts/collection';\n\nbeforeEach(async () => {\n  await Posts.removeAsync({});\n});\n\nafterEach(() => {\n  // example: restore any spied methods\n  if ((Meteor as any).callAsync && (Meteor.callAsync as any).mockRestore) {\n    (Meteor.callAsync as any).mockRestore();\n  }\n});\n\ntest('inserts post', async () => {\n  const userId = Random.id();\n  const insert = Meteor.server.method_handlers['posts.insert'];\n  const ctx = { userId } as any;\n  const id = await insert.apply(ctx, [{ title: 't' }]);\n  expect(await Posts.findOneAsync(id)).toBeTruthy();\n});\n",
+        "negative": "import { Meteor } from 'meteor/meteor';\nimport { Posts } from '/imports/api/posts/collection';\n\ntest('inserts post', async () => {\n  // no cleanup between tests; relies on prior data\n  await Posts.insertAsync({ title: 't' });\n  expect(Posts.find().count()).toBeGreaterThan(0);\n});\n",
+        "language": "TYPESCRIPT"
+      }
+    }
+  ]
+}

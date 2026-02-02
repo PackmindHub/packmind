@@ -1,0 +1,88 @@
+{
+  "name": "Python Best Practices",
+  "summary": "Advanced, production-focused rules for writing reliable, secure, observable, and maintainable Python code across services, libraries, and scripts.",
+  "description": "This standard covers high-impact Python practices for dependency boundaries, configuration, resource and concurrency safety, network robustness, validation, structured logging, and deterministic tests using core language patterns.",
+  "scope": "**/*.py,**/*.pyx,**/*.pyw",
+  "rules": [
+    {
+      "content": "Inject external dependencies via parameters or constructors; avoid importing globals for clients like HTTP, DB, clock, random, filesystem, and environment access.",
+      "examples": {
+        "positive": "from __future__ import annotations\n\nfrom dataclasses import dataclass\nfrom pathlib import Path\nfrom typing import Protocol\n\nclass HttpClient(Protocol):\n    def get(self, url: str, *, timeout: float) -> str: ...\n\n@dataclass\nclass Service:\n    http: HttpClient\n    base_url: str\n\n    def fetch_user(self, user_id: str) -> str:\n        return self.http.get(f\"{self.base_url}/users/{user_id}\", timeout=2.0)\n",
+        "negative": "import os\nimport requests\n\nBASE_URL = os.environ.get(\"BASE_URL\", \"https://api\")\n\ndef fetch_user(user_id: str) -> str:\n    return requests.get(f\"{BASE_URL}/users/{user_id}\").text\n",
+        "language": "PYTHON"
+      }
+    },
+    {
+      "content": "Read configuration once at startup into an immutable object; avoid reading environment variables or files throughout business logic.",
+      "examples": {
+        "positive": "from __future__ import annotations\n\nfrom dataclasses import dataclass\nimport os\n\n@dataclass(frozen=True)\nclass Config:\n    base_url: str\n    request_timeout_s: float\n\n\ndef load_config() -> Config:\n    return Config(\n        base_url=os.environ[\"BASE_URL\"],\n        request_timeout_s=float(os.environ.get(\"REQUEST_TIMEOUT_S\", \"2\")),\n    )\n\n\ndef run(cfg: Config) -> None:\n    print(cfg.base_url)\n",
+        "negative": "import os\n\ndef run() -> None:\n    base_url = os.environ.get(\"BASE_URL\", \"https://api\")\n    timeout = float(os.environ.get(\"REQUEST_TIMEOUT_S\", \"2\"))\n    print(base_url, timeout)\n",
+        "language": "PYTHON"
+      }
+    },
+    {
+      "content": "Set explicit connect and read timeouts on all network calls; avoid default timeouts or unbounded waits.",
+      "examples": {
+        "positive": "import requests\n\nresp = requests.get(\n    \"https://example.com/data\",\n    timeout=(1.0, 3.0),  # connect, read\n)\nresp.raise_for_status()\n",
+        "negative": "import requests\n\nresp = requests.get(\"https://example.com/data\")  # no timeout\nresp.raise_for_status()\n",
+        "language": "PYTHON"
+      }
+    },
+    {
+      "content": "Retry only idempotent operations with bounded attempts and jittered backoff; avoid retrying non-idempotent writes or infinite loops.",
+      "examples": {
+        "positive": "import random\nimport time\nimport requests\n\n\ndef get_with_retry(url: str, *, attempts: int = 3) -> str:\n    delay = 0.2\n    for i in range(attempts):\n        try:\n            r = requests.get(url, timeout=(1.0, 3.0))\n            r.raise_for_status()\n            return r.text\n        except requests.RequestException:\n            if i == attempts - 1:\n                raise\n            time.sleep(delay + random.uniform(0, delay))\n            delay *= 2\n    raise RuntimeError(\"unreachable\")\n",
+        "negative": "import time\nimport requests\n\n\ndef create_order(payload: dict) -> str:\n    while True:\n        try:\n            return requests.post(\"https://api/orders\", json=payload).text\n        except Exception:\n            time.sleep(1)\n",
+        "language": "PYTHON"
+      }
+    },
+    {
+      "content": "Use context managers for lifecycle-bound resources; avoid manual open/close patterns that span multiple returns or exceptions.",
+      "examples": {
+        "positive": "from pathlib import Path\n\npath = Path(\"out.txt\")\nwith path.open(\"w\", encoding=\"utf-8\") as f:\n    f.write(\"hello\\n\")\n",
+        "negative": "from pathlib import Path\n\nf = Path(\"out.txt\").open(\"w\", encoding=\"utf-8\")\nf.write(\"hello\\n\")\n# missing close on early return/exception paths\n",
+        "language": "PYTHON"
+      }
+    },
+    {
+      "content": "Translate exceptions at module boundaries into typed domain errors; avoid raising raw library exceptions directly from public APIs.",
+      "examples": {
+        "positive": "class StorageError(RuntimeError):\n    pass\n\n\ndef read_text(path: str) -> str:\n    try:\n        with open(path, \"r\", encoding=\"utf-8\") as f:\n            return f.read()\n    except OSError as e:\n        raise StorageError(f\"read failed: {path}\") from e\n",
+        "negative": "def read_text(path: str) -> str:\n    with open(path, \"r\", encoding=\"utf-8\") as f:\n        return f.read()  # leaks OSError to callers\n",
+        "language": "PYTHON"
+      }
+    },
+    {
+      "content": "Use structured logging with key/value context and exception info; avoid string-concatenated logs and swallowing stack traces.",
+      "examples": {
+        "positive": "import logging\n\nlogger = logging.getLogger(__name__)\n\ntry:\n    1 / 0\nexcept ZeroDivisionError:\n    logger.exception(\"calculation failed\", extra={\"op\": \"divide\", \"a\": 1, \"b\": 0})\n",
+        "negative": "import logging\n\nlogger = logging.getLogger(__name__)\n\ntry:\n    1 / 0\nexcept Exception as e:\n    logger.error(\"calculation failed: \" + str(e))\n",
+        "language": "PYTHON"
+      }
+    },
+    {
+      "content": "Validate untrusted inputs at boundaries using explicit parsing and allowlists; avoid passing raw strings into SQL, shells, file paths, or serializers.",
+      "examples": {
+        "positive": "import re\nfrom pathlib import Path\n\nUSER_RE = re.compile(r\"^[a-z0-9_]{3,32}$\")\n\n\ndef safe_user_dir(root: Path, user: str) -> Path:\n    if not USER_RE.fullmatch(user):\n        raise ValueError(\"invalid user\")\n    return (root / user).resolve(strict=False)\n",
+        "negative": "from pathlib import Path\n\n\ndef user_dir(root: Path, user: str) -> Path:\n    return root / user  # accepts '../' and unexpected characters\n",
+        "language": "PYTHON"
+      }
+    },
+    {
+      "content": "Protect shared mutable state with locks or thread-safe queues; avoid mutating globals across threads without synchronization.",
+      "examples": {
+        "positive": "import threading\n\n_counter = 0\n_lock = threading.Lock()\n\n\ndef incr() -> None:\n    global _counter\n    with _lock:\n        _counter += 1\n",
+        "negative": "import threading\n\n_counter = 0\n\n\ndef incr() -> None:\n    global _counter\n    _counter += 1  # unsynchronized shared write\n",
+        "language": "PYTHON"
+      }
+    },
+    {
+      "content": "Make tests deterministic by controlling time, randomness, and external I/O via fakes or fixtures; avoid relying on real clocks, networks, or process environment.",
+      "examples": {
+        "positive": "from dataclasses import dataclass\nfrom typing import Callable\n\n@dataclass\nclass TokenMaker:\n    now: Callable[[], int]\n\n    def make(self) -> str:\n        return f\"t-{self.now()}\"\n\n\ndef test_token() -> None:\n    tm = TokenMaker(now=lambda: 1700000000)\n    assert tm.make() == \"t-1700000000\"\n",
+        "negative": "import time\n\n\ndef make_token() -> str:\n    return f\"t-{int(time.time())}\"\n\n\ndef test_token() -> None:\n    assert make_token().startswith(\"t-\")  # time-dependent and flaky\n",
+        "language": "PYTHON"
+      }
+    }
+  ]
+}

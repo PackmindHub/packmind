@@ -1,0 +1,88 @@
+{
+  "name": "Svelte Best Practices",
+  "summary": "Advanced rules for building reliable, secure, and performant Svelte/SvelteKit apps with predictable state, side effects, and network behavior.",
+  "description": "This standard defines high-impact Svelte and SvelteKit patterns for managing side effects, reactive state, server/client boundaries, data fetching, cleanup, and security-sensitive rendering. It targets non-obvious pitfalls around reactivity, lifecycle, aborting work, serialization, and universal code paths.",
+  "scope": "**/*.svelte,**/*.ts,**/*.js",
+  "rules": [
+    {
+      "content": "Guard browser-only APIs behind runtime checks and isolate them in onMount or client-only modules.",
+      "examples": {
+        "positive": "/// Component.svelte\n<script lang=\"ts\">\n  import { onMount } from 'svelte';\n\n  let width = 0;\n\n  onMount(() => {\n    width = window.innerWidth;\n  });\n</script>\n\n<p>{width}</p>\n",
+        "negative": "/// Component.svelte\n<script lang=\"ts\">\n  // Breaks during SSR\n  const width = window.innerWidth;\n</script>\n\n<p>{width}</p>\n",
+        "language": "TYPESCRIPT"
+      }
+    },
+    {
+      "content": "Abort fetches and cancel timers in onDestroy when created in onMount or reactive effects.",
+      "examples": {
+        "positive": "/// Component.svelte\n<script lang=\"ts\">\n  import { onMount, onDestroy } from 'svelte';\n\n  let data: unknown;\n  const controller = new AbortController();\n  let interval: ReturnType<typeof setInterval>;\n\n  onMount(async () => {\n    interval = setInterval(() => {}, 1000);\n    const res = await fetch('/api/data', { signal: controller.signal });\n    data = await res.json();\n  });\n\n  onDestroy(() => {\n    controller.abort();\n    clearInterval(interval);\n  });\n</script>\n",
+        "negative": "/// Component.svelte\n<script lang=\"ts\">\n  import { onMount } from 'svelte';\n\n  onMount(async () => {\n    setInterval(() => {}, 1000);\n    await fetch('/api/data');\n  });\n</script>\n",
+        "language": "TYPESCRIPT"
+      }
+    },
+    {
+      "content": "Prefer derived stores over reactive statements that mutate unrelated state across multiple dependencies.",
+      "examples": {
+        "positive": "/// stores.ts\nimport { writable, derived } from 'svelte/store';\n\nexport const items = writable<number[]>([]);\nexport const total = derived(items, ($items) => $items.reduce((a, b) => a + b, 0));\n",
+        "negative": "/// Component.svelte\n<script lang=\"ts\">\n  import { items } from './stores';\n\n  let total = 0;\n\n  // Hidden coupling: any new dependency added here changes behavior\n  $: total = $items.reduce((a, b) => a + b, 0);\n</script>\n",
+        "language": "TYPESCRIPT"
+      }
+    },
+    {
+      "content": "Avoid mutating arrays or objects in-place when used in Svelte reactivity; reassign a new reference after changes.",
+      "examples": {
+        "positive": "/// Component.svelte\n<script lang=\"ts\">\n  let tags: string[] = [];\n\n  function add(tag: string) {\n    tags = [...tags, tag];\n  }\n</script>\n",
+        "negative": "/// Component.svelte\n<script lang=\"ts\">\n  let tags: string[] = [];\n\n  function add(tag: string) {\n    tags.push(tag); // UI may not update as expected\n  }\n</script>\n",
+        "language": "TYPESCRIPT"
+      }
+    },
+    {
+      "content": "Validate and normalize untrusted data at the boundary before passing it into components or stores.",
+      "examples": {
+        "positive": "/// +page.ts\nimport type { PageLoad } from './$types';\n\ntype User = { id: string; name: string };\n\nfunction parseUser(x: unknown): User {\n  if (!x || typeof x !== 'object') throw new Error('Invalid user');\n  const u = x as Record<string, unknown>;\n  if (typeof u.id !== 'string' || typeof u.name !== 'string') throw new Error('Invalid user');\n  return { id: u.id, name: u.name.trim() };\n}\n\nexport const load: PageLoad = async ({ fetch }) => {\n  const res = await fetch('/api/user');\n  const raw = await res.json();\n  return { user: parseUser(raw) };\n};\n",
+        "negative": "/// +page.ts\nimport type { PageLoad } from './$types';\n\nexport const load: PageLoad = async ({ fetch }) => {\n  const res = await fetch('/api/user');\n  const user = await res.json(); // passed through unchecked\n  return { user };\n};\n",
+        "language": "TYPESCRIPT"
+      }
+    },
+    {
+      "content": "Include explicit timeouts and bounded retries for network calls; propagate AbortSignal through wrappers.",
+      "examples": {
+        "positive": "/// http.ts\nexport async function fetchJson(url: string, opts: { signal?: AbortSignal; timeoutMs?: number } = {}) {\n  const controller = new AbortController();\n  const timeout = setTimeout(() => controller.abort(), opts.timeoutMs ?? 8000);\n  const signal = opts.signal\n    ? AbortSignal.any([opts.signal, controller.signal])\n    : controller.signal;\n\n  try {\n    const res = await fetch(url, { signal });\n    if (!res.ok) throw new Error(`HTTP ${res.status}`);\n    return await res.json();\n  } finally {\n    clearTimeout(timeout);\n  }\n}\n",
+        "negative": "/// http.ts\nexport async function fetchJson(url: string) {\n  const res = await fetch(url); // no timeout, no abort propagation\n  return res.json();\n}\n",
+        "language": "TYPESCRIPT"
+      }
+    },
+    {
+      "content": "Handle load and action errors by throwing typed errors or returning fail(); avoid swallowing errors in endpoints and loads.",
+      "examples": {
+        "positive": "/// +page.server.ts\nimport { fail, error } from '@sveltejs/kit';\nimport type { Actions, PageServerLoad } from './$types';\n\nexport const load: PageServerLoad = async ({ locals }) => {\n  if (!locals.user) throw error(401, 'Unauthorized');\n  return { userId: locals.user.id };\n};\n\nexport const actions: Actions = {\n  default: async ({ request }) => {\n    const form = await request.formData();\n    const email = String(form.get('email') ?? '');\n    if (!email.includes('@')) return fail(400, { email, message: 'Invalid email' });\n    return { success: true };\n  }\n};\n",
+        "negative": "/// +page.server.ts\nimport type { Actions, PageServerLoad } from './$types';\n\nexport const load: PageServerLoad = async () => {\n  try {\n    // failures become silent empty UI states\n    return { userId: (null as any).id };\n  } catch {\n    return { userId: null };\n  }\n};\n\nexport const actions: Actions = {\n  default: async () => {\n    try {\n      throw new Error('boom');\n    } catch {\n      return { success: false }; // loses HTTP semantics\n    }\n  }\n};\n",
+        "language": "TYPESCRIPT"
+      }
+    },
+    {
+      "content": "Prefer server routes and server load for secrets; never expose credentials in client bundles or public env variables.",
+      "examples": {
+        "positive": "/// +server.ts\nimport { json } from '@sveltejs/kit';\nimport { PRIVATE_API_KEY } from '$env/static/private';\nimport type { RequestHandler } from './$types';\n\nexport const GET: RequestHandler = async () => {\n  const res = await fetch('https://third-party.example/data', {\n    headers: { Authorization: `Bearer ${PRIVATE_API_KEY}` }\n  });\n  return json(await res.json());\n};\n",
+        "negative": "/// Component.svelte\n<script lang=\"ts\">\n  import { PUBLIC_API_KEY } from '$env/static/public';\n\n  // credential ends up in the client bundle\n  fetch('https://third-party.example/data', {\n    headers: { Authorization: `Bearer ${PUBLIC_API_KEY}` }\n  });\n</script>\n",
+        "language": "TYPESCRIPT"
+      }
+    },
+    {
+      "content": "Avoid {#each} keyed by index; use stable ids and reset component state by changing the key on root elements.",
+      "examples": {
+        "positive": "/// Component.svelte\n<script lang=\"ts\">\n  type Row = { id: string; name: string };\n  export let rows: Row[] = [];\n\n  let mode: 'a' | 'b' = 'a';\n</script>\n\n<button on:click={() => (mode = mode === 'a' ? 'b' : 'a')}>toggle</button>\n\n<div key={mode}>\n  {#each rows as row (row.id)}\n    <input value={row.name} />\n  {/each}\n</div>\n",
+        "negative": "/// Component.svelte\n<script lang=\"ts\">\n  export let rows: { id: string; name: string }[] = [];\n</script>\n\n{#each rows as row, i (i)}\n  <input value={row.name} />\n{/each}\n",
+        "language": "TYPESCRIPT"
+      }
+    },
+    {
+      "content": "Inject HTML only through {@html} with sanitized content and a narrow type; avoid passing arbitrary strings to {@html}.",
+      "examples": {
+        "positive": "/// Component.svelte\n<script lang=\"ts\">\n  type SanitizedHtml = string & { __brand: 'sanitized' };\n  export let html: SanitizedHtml;\n</script>\n\n<article>{@html html}</article>\n",
+        "negative": "/// Component.svelte\n<script lang=\"ts\">\n  export let html: string;\n</script>\n\n<!-- arbitrary HTML from user input -->\n<article>{@html html}</article>\n",
+        "language": "TYPESCRIPT"
+      }
+    }
+  ]
+}

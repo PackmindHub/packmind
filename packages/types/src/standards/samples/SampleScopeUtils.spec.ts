@@ -1,5 +1,9 @@
 import { ProgrammingLanguage } from '../../languages';
-import { languagesToGlobPattern, getSampleScope } from './SampleScopeUtils';
+import {
+  languagesToGlobPattern,
+  getSampleScope,
+  getSampleExampleLanguage,
+} from './SampleScopeUtils';
 
 describe('SampleScopeUtils', () => {
   describe('languagesToGlobPattern', () => {
@@ -136,6 +140,85 @@ describe('SampleScopeUtils', () => {
 
       it('returns null for unknown framework sample', () => {
         const result = getSampleScope('unknown-framework', 'framework');
+
+        expect(result).toBeNull();
+      });
+    });
+  });
+
+  describe('getSampleExampleLanguage', () => {
+    describe('with language samples', () => {
+      it('returns TYPESCRIPT for typescript', () => {
+        const result = getSampleExampleLanguage('typescript', 'language');
+
+        expect(result).toBe(ProgrammingLanguage.TYPESCRIPT);
+      });
+
+      it('returns PYTHON for python', () => {
+        const result = getSampleExampleLanguage('python', 'language');
+
+        expect(result).toBe(ProgrammingLanguage.PYTHON);
+      });
+
+      it('returns JAVA for java', () => {
+        const result = getSampleExampleLanguage('java', 'language');
+
+        expect(result).toBe(ProgrammingLanguage.JAVA);
+      });
+    });
+
+    describe('with framework samples', () => {
+      it('returns TYPESCRIPT_TSX for react', () => {
+        const result = getSampleExampleLanguage('react', 'framework');
+
+        expect(result).toBe(ProgrammingLanguage.TYPESCRIPT_TSX);
+      });
+
+      it('returns VUE for vue', () => {
+        const result = getSampleExampleLanguage('vue', 'framework');
+
+        expect(result).toBe(ProgrammingLanguage.VUE);
+      });
+
+      it('returns TYPESCRIPT for angular', () => {
+        const result = getSampleExampleLanguage('angular', 'framework');
+
+        expect(result).toBe(ProgrammingLanguage.TYPESCRIPT);
+      });
+
+      it('returns JAVASCRIPT for meteor', () => {
+        const result = getSampleExampleLanguage('meteor', 'framework');
+
+        expect(result).toBe(ProgrammingLanguage.JAVASCRIPT);
+      });
+    });
+
+    describe('with samples without example language', () => {
+      it('returns null for terraform', () => {
+        const result = getSampleExampleLanguage('terraform', 'framework');
+
+        expect(result).toBeNull();
+      });
+
+      it('returns null for flutter', () => {
+        const result = getSampleExampleLanguage('flutter', 'framework');
+
+        expect(result).toBeNull();
+      });
+    });
+
+    describe('with unknown sample', () => {
+      it('returns null for unknown language sample', () => {
+        const result = getSampleExampleLanguage('unknown-language', 'language');
+
+        expect(result).toBeNull();
+      });
+
+      it('returns null for unknown framework sample', () => {
+        const result = getSampleExampleLanguage(
+          'unknown-framework',
+          'framework',
+        );
 
         expect(result).toBeNull();
       });

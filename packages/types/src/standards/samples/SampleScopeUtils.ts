@@ -67,3 +67,25 @@ export function getSampleScope(
 
   return patterns.length > 0 ? patterns.join(',') : null;
 }
+
+/**
+ * Gets the primary language to use for code examples in a sample's generated standards.
+ *
+ * @param sampleId - The sample ID (e.g., "typescript", "react", "svelte")
+ * @param type - Whether the sample is a language or framework
+ * @returns The ProgrammingLanguage for examples, or null if not found or not applicable
+ */
+export function getSampleExampleLanguage(
+  sampleId: string,
+  type: 'language' | 'framework',
+): ProgrammingLanguage | null {
+  const mappings =
+    type === 'language' ? languageSampleMappings : frameworkSampleMappings;
+  const mapping: ISampleLanguageMapping | undefined = mappings[sampleId];
+
+  if (!mapping) {
+    return null;
+  }
+
+  return mapping.exampleLanguage;
+}

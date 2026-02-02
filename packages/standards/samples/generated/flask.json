@@ -1,0 +1,88 @@
+{
+  "name": "Flask Best Practices",
+  "summary": "Advanced operational and security-focused rules for building production Flask services with predictable behavior under load and failures.",
+  "description": "This standard covers high-impact Flask patterns for configuration, request handling, validation, database usage, external I/O, error handling, logging, state management, background work, and test isolation.",
+  "scope": "**/*.py,**/*.pyx,**/*.pyw",
+  "rules": [
+    {
+      "content": "Load configuration via environment-specific objects and validate required keys at startup; avoid accessing os.environ directly in request handlers.",
+      "examples": {
+        "positive": "import os\n\nclass Config:\n    SECRET_KEY: str\n    SQLALCHEMY_DATABASE_URI: str\n\n    def __init__(self) -> None:\n        self.SECRET_KEY = os.environ[\"SECRET_KEY\"]\n        self.SQLALCHEMY_DATABASE_URI = os.environ[\"DATABASE_URL\"]\n\n\ndef create_app() -> \"Flask\":\n    from flask import Flask\n\n    app = Flask(__name__)\n    cfg = Config()\n    app.config.from_mapping(\n        SECRET_KEY=cfg.SECRET_KEY,\n        SQLALCHEMY_DATABASE_URI=cfg.SQLALCHEMY_DATABASE_URI,\n    )\n    return app\n",
+        "negative": "import os\nfrom flask import Flask\n\napp = Flask(__name__)\n\n@app.get(\"/feature\")\ndef feature():\n    if os.environ.get(\"ENABLE_FEATURE\") == \"1\":\n        return {\"enabled\": True}\n    return {\"enabled\": False}\n",
+        "language": "PYTHON"
+      }
+    },
+    {
+      "content": "Define per-request dependencies using app extensions or request context; avoid global singletons for clients holding state or connections.",
+      "examples": {
+        "positive": "import requests\nfrom flask import Flask, g\n\n\ndef create_app() -> Flask:\n    app = Flask(__name__)\n\n    @app.before_request\n    def _deps():\n        g.http = requests.Session()\n\n    @app.teardown_request\n    def _cleanup(_exc):\n        http = getattr(g, \"http\", None)\n        if http:\n            http.close()\n\n    @app.get(\"/ping\")\n    def ping():\n        r = g.http.get(\"https://example.com\", timeout=(2, 5))\n        return {\"status\": r.status_code}\n\n    return app\n",
+        "negative": "import requests\nfrom flask import Flask\n\napp = Flask(__name__)\nhttp = requests.Session()\n\n@app.get(\"/ping\")\ndef ping():\n    r = http.get(\"https://example.com\")\n    return {\"status\": r.status_code}\n",
+        "language": "PYTHON"
+      }
+    },
+    {
+      "content": "Validate and normalize request data at the route boundary using a schema; avoid accessing request.json/request.args directly in business logic.",
+      "examples": {
+        "positive": "from flask import Flask, request\nfrom pydantic import BaseModel, EmailStr, ValidationError\n\napp = Flask(__name__)\n\nclass CreateUser(BaseModel):\n    email: EmailStr\n    age: int\n\n@app.post(\"/users\")\ndef create_user():\n    try:\n        payload = CreateUser.model_validate(request.get_json(force=True))\n    except ValidationError as e:\n        return {\"error\": e.errors()}, 400\n\n    return {\"email\": payload.email, \"age\": payload.age}, 201\n",
+        "negative": "from flask import Flask, request\n\napp = Flask(__name__)\n\n@app.post(\"/users\")\ndef create_user():\n    data = request.json\n    return {\"email\": data[\"email\"], \"age\": int(data[\"age\"])}, 201\n",
+        "language": "PYTHON"
+      }
+    },
+    {
+      "content": "Apply a single JSON error handler that maps domain exceptions to HTTP status codes; avoid returning ad-hoc error shapes from routes.",
+      "examples": {
+        "positive": "from flask import Flask, jsonify\n\nclass DomainError(Exception):\n    status_code = 400\n    code = \"domain_error\"\n\nclass NotFound(DomainError):\n    status_code = 404\n    code = \"not_found\"\n\napp = Flask(__name__)\n\n@app.errorhandler(DomainError)\ndef handle_domain_error(e: DomainError):\n    return jsonify({\"error\": e.code}), e.status_code\n\n@app.get(\"/items/<item_id>\")\ndef get_item(item_id: str):\n    raise NotFound()\n",
+        "negative": "from flask import Flask\n\napp = Flask(__name__)\n\n@app.get(\"/items/<item_id>\")\ndef get_item(item_id: str):\n    if item_id != \"1\":\n        return {\"message\": \"missing\"}, 404\n    return {\"id\": item_id}\n",
+        "language": "PYTHON"
+      }
+    },
+    {
+      "content": "Use database sessions with explicit commit/rollback and scoped lifecycle per request; avoid keeping ORM sessions alive across requests or threads.",
+      "examples": {
+        "positive": "from flask import Flask\nfrom sqlalchemy import create_engine\nfrom sqlalchemy.orm import sessionmaker\n\nengine = create_engine(\"sqlite:///app.db\", future=True)\nSessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False, future=True)\n\napp = Flask(__name__)\n\n@app.post(\"/tx\")\ndef tx():\n    db = SessionLocal()\n    try:\n        # db.add(...)\n        db.commit()\n        return {\"ok\": True}\n    except Exception:\n        db.rollback()\n        raise\n    finally:\n        db.close()\n",
+        "negative": "from flask import Flask\nfrom sqlalchemy.orm import Session\n\napp = Flask(__name__)\n\ndb = Session()  # global session\n\n@app.post(\"/tx\")\ndef tx():\n    # db.add(...)\n    db.commit()\n    return {\"ok\": True}\n",
+        "language": "PYTHON"
+      }
+    },
+    {
+      "content": "Set explicit connect/read timeouts on all outbound HTTP calls; avoid default timeouts or unbounded streaming from requests without limits.",
+      "examples": {
+        "positive": "import requests\nfrom flask import Flask\n\napp = Flask(__name__)\n\n@app.get(\"/proxy\")\ndef proxy():\n    r = requests.get(\"https://httpbin.org/bytes/10\", timeout=(2, 5))\n    return {\"status\": r.status_code}\n",
+        "negative": "import requests\nfrom flask import Flask\n\napp = Flask(__name__)\n\n@app.get(\"/proxy\")\ndef proxy():\n    r = requests.get(\"https://httpbin.org/delay/30\")\n    return {\"status\": r.status_code}\n",
+        "language": "PYTHON"
+      }
+    },
+    {
+      "content": "Emit structured logs with request_id and user identifiers via LoggerAdapter/filter; avoid logging raw request bodies or secrets.",
+      "examples": {
+        "positive": "import logging\nimport uuid\nfrom flask import Flask, g, request\n\nlogger = logging.getLogger(\"app\")\n\nclass CtxAdapter(logging.LoggerAdapter):\n    def process(self, msg, kwargs):\n        extra = kwargs.get(\"extra\", {})\n        extra.update({\"request_id\": getattr(g, \"request_id\", None)})\n        kwargs[\"extra\"] = extra\n        return msg, kwargs\n\napp = Flask(__name__)\nlog = CtxAdapter(logger, {})\n\n@app.before_request\ndef _rid():\n    g.request_id = request.headers.get(\"X-Request-Id\") or str(uuid.uuid4())\n\n@app.post(\"/login\")\ndef login():\n    log.info(\"login_attempt\", extra={\"user\": request.form.get(\"email\")})\n    return {\"ok\": True}\n",
+        "negative": "import logging\nfrom flask import Flask, request\n\napp = Flask(__name__)\nlogger = logging.getLogger(\"app\")\n\n@app.post(\"/login\")\ndef login():\n    logger.info(\"body=%s\", request.get_data(as_text=True))\n    return {\"ok\": True}\n",
+        "language": "PYTHON"
+      }
+    },
+    {
+      "content": "Keep per-request data in flask.g or request context; avoid mutable module-level state for counters, caches, or accumulated results.",
+      "examples": {
+        "positive": "from flask import Flask, g\n\napp = Flask(__name__)\n\n@app.before_request\ndef init_ctx():\n    g.items_seen = 0\n\n@app.get(\"/items\")\ndef items():\n    g.items_seen += 1\n    return {\"seen\": g.items_seen}\n",
+        "negative": "from flask import Flask\n\napp = Flask(__name__)\nitems_seen = 0\n\n@app.get(\"/items\")\ndef items():\n    global items_seen\n    items_seen += 1\n    return {\"seen\": items_seen}\n",
+        "language": "PYTHON"
+      }
+    },
+    {
+      "content": "Enforce request size limits and safe file handling using MAX_CONTENT_LENGTH and secure filenames; avoid trusting client filenames or reading uploads into memory.",
+      "examples": {
+        "positive": "import os\nfrom flask import Flask, request\nfrom werkzeug.utils import secure_filename\n\napp = Flask(__name__)\napp.config[\"MAX_CONTENT_LENGTH\"] = 10 * 1024 * 1024\n\n@app.post(\"/upload\")\ndef upload():\n    f = request.files[\"file\"]\n    name = secure_filename(f.filename)\n    path = os.path.join(\"/tmp\", name)\n    f.save(path)\n    return {\"saved\": name}\n",
+        "negative": "from flask import Flask, request\n\napp = Flask(__name__)\n\n@app.post(\"/upload\")\ndef upload():\n    f = request.files[\"file\"]\n    data = f.read()  # loads entire file\n    open(f\"/tmp/{f.filename}\", \"wb\").write(data)\n    return {\"saved\": f.filename}\n",
+        "language": "PYTHON"
+      }
+    },
+    {
+      "content": "Isolate tests by creating a new app instance per test and clearing extensions/state; avoid reusing a module-level app across tests.",
+      "examples": {
+        "positive": "import pytest\nfrom flask import Flask\n\n\ndef create_app() -> Flask:\n    app = Flask(__name__)\n    app.config.update(TESTING=True)\n\n    @app.get(\"/health\")\n    def health():\n        return {\"ok\": True}\n\n    return app\n\n@pytest.fixture()\ndef app():\n    return create_app()\n\n@pytest.fixture()\ndef client(app: Flask):\n    return app.test_client()\n\n\ndef test_health(client):\n    assert client.get(\"/health\").json == {\"ok\": True}\n",
+        "negative": "from flask import Flask\n\napp = Flask(__name__)\napp.config[\"TESTING\"] = True\n\n@app.get(\"/health\")\ndef health():\n    return {\"ok\": True}\n\n\ndef test_health():\n    client = app.test_client()\n    assert client.get(\"/health\").status_code == 200\n",
+        "language": "PYTHON"
+      }
+    }
+  ]
+}

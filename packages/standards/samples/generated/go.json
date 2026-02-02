@@ -1,0 +1,88 @@
+{
+  "name": "Go Best Practices",
+  "summary": "Advanced Go rules for production services covering correctness, resilience, security, observability, and concurrency patterns used in everyday backend codebases.",
+  "description": "This standard defines high-impact Go practices around context propagation, timeouts, error and logging patterns, safe concurrency, resource lifecycle, configuration, input validation, and test reliability.",
+  "scope": "**/*.go",
+  "rules": [
+    {
+      "content": "Propagate context.Context through call chains and select on ctx.Done() in blocking loops and goroutines.",
+      "examples": {
+        "positive": "func worker(ctx context.Context, jobs <-chan Job) {\n\tfor {\n\t\tselect {\n\t\tcase <-ctx.Done():\n\t\t\treturn\n\t\tcase j := <-jobs:\n\t\t\tdoWork(ctx, j)\n\t\t}\n\t}\n}\n\nfunc doWork(ctx context.Context, j Job) error {\n\treq, _ := http.NewRequestWithContext(ctx, http.MethodGet, \"https://example\", nil)\n\t_, err := http.DefaultClient.Do(req)\n\treturn err\n}\n",
+        "negative": "func worker(jobs <-chan Job) {\n\tfor j := range jobs {\n\t\tgo func() {\n\t\t\t// no cancellation path\n\t\t\tdoWork(j)\n\t\t}()\n\t}\n}\n\nfunc doWork(j Job) {\n\treq, _ := http.NewRequest(http.MethodGet, \"https://example\", nil)\n\thttp.DefaultClient.Do(req)\n}\n",
+        "language": "GO"
+      }
+    },
+    {
+      "content": "Set explicit deadlines for outbound calls using context.WithTimeout at the call site; avoid using context.Background inside request-handling code.",
+      "examples": {
+        "positive": "func handler(w http.ResponseWriter, r *http.Request) {\n\tctx, cancel := context.WithTimeout(r.Context(), 2*time.Second)\n\tdefer cancel()\n\n\treq, _ := http.NewRequestWithContext(ctx, http.MethodGet, \"https://api\", nil)\n\tresp, err := http.DefaultClient.Do(req)\n\tif err != nil {\n\t\thttp.Error(w, err.Error(), http.StatusBadGateway)\n\t\treturn\n\t}\n\tdefer resp.Body.Close()\n\tio.Copy(w, resp.Body)\n}\n",
+        "negative": "func handler(w http.ResponseWriter, r *http.Request) {\n\t// loses request cancellation and has no deadline\n\treq, _ := http.NewRequestWithContext(context.Background(), http.MethodGet, \"https://api\", nil)\n\thttp.DefaultClient.Do(req)\n\tw.WriteHeader(http.StatusOK)\n}\n",
+        "language": "GO"
+      }
+    },
+    {
+      "content": "Configure http.Client with Timeout and explicit Transport timeouts; avoid zero-value clients in production code paths.",
+      "examples": {
+        "positive": "var httpClient = &http.Client{\n\tTimeout: 5 * time.Second,\n\tTransport: &http.Transport{\n\t\tDialContext: (&net.Dialer{Timeout: 1 * time.Second, KeepAlive: 30 * time.Second}).DialContext,\n\t\tTLSHandshakeTimeout:   1 * time.Second,\n\t\tResponseHeaderTimeout: 2 * time.Second,\n\t\tIdleConnTimeout:       30 * time.Second,\n\t\tMaxIdleConnsPerHost:   10,\n\t},\n}\n\nfunc fetch(ctx context.Context, url string) (*http.Response, error) {\n\treq, _ := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)\n\treturn httpClient.Do(req)\n}\n",
+        "negative": "func fetch(url string) (*http.Response, error) {\n\t// no client timeout; default Transport settings only\n\tc := &http.Client{}\n\treturn c.Get(url)\n}\n",
+        "language": "GO"
+      }
+    },
+    {
+      "content": "Wrap returned errors with context using fmt.Errorf(\"...: %w\", err) and test causes with errors.Is or errors.As.",
+      "examples": {
+        "positive": "var ErrNotFound = errors.New(\"not found\")\n\nfunc load(id string) error {\n\terr := repoGet(id)\n\tif err != nil {\n\t\treturn fmt.Errorf(\"load %s: %w\", id, err)\n\t}\n\treturn nil\n}\n\nfunc handle(err error) bool {\n\treturn errors.Is(err, ErrNotFound)\n}\n",
+        "negative": "func load(id string) error {\n\terr := repoGet(id)\n\tif err != nil {\n\t\t// loses cause and makes matching brittle\n\t\treturn errors.New(\"load failed: \" + err.Error())\n\t}\n\treturn nil\n}\n\nfunc handle(err error) bool {\n\treturn strings.Contains(err.Error(), \"not found\")\n}\n",
+        "language": "GO"
+      }
+    },
+    {
+      "content": "Use typed sentinel errors or custom types for domain outcomes; avoid string comparisons and ad-hoc error messages for control flow.",
+      "examples": {
+        "positive": "type ValidationError struct{ Field string }\n\nfunc (e ValidationError) Error() string { return \"invalid: \" + e.Field }\n\nfunc validate(name string) error {\n\tif name == \"\" {\n\t\treturn ValidationError{Field: \"name\"}\n\t}\n\treturn nil\n}\n\nfunc isValidation(err error) bool {\n\tvar ve ValidationError\n\treturn errors.As(err, &ve)\n}\n",
+        "negative": "func validate(name string) error {\n\tif name == \"\" {\n\t\treturn fmt.Errorf(\"bad input: name\")\n\t}\n\treturn nil\n}\n\nfunc isValidation(err error) bool {\n\treturn err != nil && strings.HasPrefix(err.Error(), \"bad input\")\n}\n",
+        "language": "GO"
+      }
+    },
+    {
+      "content": "Make logs structured and request-scoped using log/slog with stable keys; avoid sprintf-style concatenation and logging raw structs without redaction.",
+      "examples": {
+        "positive": "var logger = slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{}))\n\ntype ctxKey struct{}\n\nfunc withReqID(ctx context.Context, id string) context.Context {\n\treturn context.WithValue(ctx, ctxKey{}, id)\n}\n\nfunc logErr(ctx context.Context, err error) {\n\treqID, _ := ctx.Value(ctxKey{}).(string)\n\tlogger.Error(\"call failed\", \"req_id\", reqID, \"err\", err)\n}\n",
+        "negative": "func logErr(ctx context.Context, err error, user any) {\n\t// unstable message format; may leak sensitive fields\n\tlog.Printf(\"failed for user=%v: %s\", user, err.Error())\n}\n",
+        "language": "GO"
+      }
+    },
+    {
+      "content": "Validate and normalize external input at boundaries, including length limits and allowed characters; avoid passing raw request values into queries or file paths.",
+      "examples": {
+        "positive": "var idRe = regexp.MustCompile(`^[a-zA-Z0-9_-]{1,64}$`)\n\nfunc parseID(r *http.Request) (string, error) {\n\tid := strings.TrimSpace(r.URL.Query().Get(\"id\"))\n\tif !idRe.MatchString(id) {\n\t\treturn \"\", fmt.Errorf(\"invalid id\")\n\t}\n\treturn id, nil\n}\n",
+        "negative": "func parseID(r *http.Request) string {\n\t// raw user input flows downstream\n\treturn r.URL.Query().Get(\"id\")\n}\n",
+        "language": "GO"
+      }
+    },
+    {
+      "content": "Use parameterized SQL with placeholders; avoid building query strings with fmt.Sprintf or concatenation from user-controlled values.",
+      "examples": {
+        "positive": "func userByEmail(ctx context.Context, db *sql.DB, email string) (User, error) {\n\tvar u User\n\terr := db.QueryRowContext(ctx, `SELECT id, email FROM users WHERE email = ?`, email).Scan(&u.ID, &u.Email)\n\treturn u, err\n}\n",
+        "negative": "func userByEmail(ctx context.Context, db *sql.DB, email string) (User, error) {\n\tq := \"SELECT id, email FROM users WHERE email = '\" + email + \"'\"\n\tvar u User\n\terr := db.QueryRowContext(ctx, q).Scan(&u.ID, &u.Email)\n\treturn u, err\n}\n",
+        "language": "GO"
+      }
+    },
+    {
+      "content": "Avoid goroutine leaks by tying goroutine lifetime to context and closing result channels; avoid unbounded goroutine creation per item without backpressure.",
+      "examples": {
+        "positive": "func fanOut(ctx context.Context, in <-chan int) <-chan int {\n\tout := make(chan int)\n\tsem := make(chan struct{}, 8)\n\tgo func() {\n\t\tdefer close(out)\n\t\tfor {\n\t\t\tselect {\n\t\t\tcase <-ctx.Done():\n\t\t\t\treturn\n\t\t\tcase v, ok := <-in:\n\t\t\t\tif !ok {\n\t\t\t\t\treturn\n\t\t\t\t}\n\t\t\t\tsem <- struct{}{}\n\t\t\t\tgo func(x int) {\n\t\t\t\t\tdefer func() { <-sem }()\n\t\t\t\t\tselect {\n\t\t\t\t\tcase <-ctx.Done():\n\t\t\t\t\t\treturn\n\t\t\t\t\tcase out <- x * 2:\n\t\t\t\t\t}\n\t\t\t\t}(v)\n\t\t\t}\n\t\t}\n\t}()\n\treturn out\n}\n",
+        "negative": "func fanOut(in <-chan int) <-chan int {\n\tout := make(chan int)\n\tgo func() {\n\t\tfor v := range in {\n\t\t\tgo func(x int) {\n\t\t\t\tout <- x * 2 // blocks forever if receiver stops\n\t\t\t}(v)\n\t\t}\n\t}()\n\treturn out // never closed\n}\n",
+        "language": "GO"
+      }
+    },
+    {
+      "content": "Isolate tests from process-global state by avoiding os.Setenv and time.Now without injection; restore globals with t.Cleanup when unavoidable.",
+      "examples": {
+        "positive": "type Clock interface{ Now() time.Time }\n\ntype realClock struct{}\nfunc (realClock) Now() time.Time { return time.Now() }\n\nfunc expiresAt(c Clock, d time.Duration) time.Time {\n\treturn c.Now().Add(d)\n}\n\nfunc TestExpiresAt(t *testing.T) {\n\tfixed := time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)\n\tc := ClockFunc(func() time.Time { return fixed })\n\tgot := expiresAt(c, time.Hour)\n\tif !got.Equal(fixed.Add(time.Hour)) {\n\t\tt.Fatalf(\"got %v\", got)\n\t}\n}\n\ntype ClockFunc func() time.Time\nfunc (f ClockFunc) Now() time.Time { return f() }\n",
+        "negative": "func expiresAt(d time.Duration) time.Time {\n\treturn time.Now().Add(d)\n}\n\nfunc TestExpiresAt(t *testing.T) {\n\tos.Setenv(\"TZ\", \"UTC\") // not restored\n\tgot := expiresAt(time.Millisecond)\n\ttime.Sleep(2 * time.Millisecond)\n\t_ = got\n}\n",
+        "language": "GO"
+      }
+    }
+  ]
+}

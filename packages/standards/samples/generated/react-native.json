@@ -1,0 +1,88 @@
+{
+  "name": "React Native Best Practices",
+  "summary": "Advanced production-grade rules for React Native apps focusing on stability, performance, security, and operability across networking, state, rendering, and native boundaries.",
+  "description": "This standard defines high-impact practices for React Native codebases: safe network behavior, predictable state updates, reliable navigation and lifecycle handling, disciplined bridge usage, resilient logging, secure persistence, and test determinism.",
+  "scope": "**/*.tsx,**/*.jsx,**/*.ts,**/*.js",
+  "rules": [
+    {
+      "content": "Set explicit timeout, cancellation, and request dedupe for every HTTP call using AbortController and stable request keys.",
+      "examples": {
+        "positive": "const inFlight = new Map<string, AbortController>();\n\nexport async function fetchUser(id: string) {\n  const key = `user:${id}`;\n  inFlight.get(key)?.abort();\n\n  const ac = new AbortController();\n  inFlight.set(key, ac);\n\n  const timeoutId = setTimeout(() => ac.abort(), 10_000);\n  try {\n    const res = await fetch(`https://api.example.com/users/${encodeURIComponent(id)}`, {\n      signal: ac.signal,\n      headers: { Accept: 'application/json' }\n    });\n    if (!res.ok) throw new Error(`HTTP ${res.status}`);\n    return (await res.json()) as { id: string; name: string };\n  } finally {\n    clearTimeout(timeoutId);\n    inFlight.delete(key);\n  }\n}\n",
+        "negative": "export async function fetchUser(id: string) {\n  const res = await fetch(`https://api.example.com/users/${id}`);\n  return res.json();\n}\n",
+        "language": "TYPESCRIPT"
+      }
+    },
+    {
+      "content": "Implement bounded retries with exponential backoff and jitter; stop retrying on 4xx and handle idempotency per endpoint.",
+      "examples": {
+        "positive": "type RetryOpts = { attempts: number; baseMs: number };\n\nconst sleep = (ms: number) => new Promise(r => setTimeout(r, ms));\n\nexport async function fetchWithRetry(url: string, opts: RequestInit, r: RetryOpts) {\n  let lastErr: unknown;\n  for (let i = 0; i < r.attempts; i++) {\n    try {\n      const res = await fetch(url, opts);\n      if (res.status >= 400 && res.status < 500) return res; // no retry\n      if (!res.ok) throw new Error(`HTTP ${res.status}`);\n      return res;\n    } catch (e) {\n      lastErr = e;\n      const jitter = Math.random() * 100;\n      const backoff = r.baseMs * Math.pow(2, i) + jitter;\n      await sleep(backoff);\n    }\n  }\n  throw lastErr;\n}\n",
+        "negative": "export async function fetchWithRetry(url: string) {\n  while (true) {\n    try {\n      const res = await fetch(url);\n      return res;\n    } catch {\n      // retry forever\n    }\n  }\n}\n",
+        "language": "TYPESCRIPT"
+      }
+    },
+    {
+      "content": "Validate and coerce all external inputs at module boundaries using schemas; avoid trusting route params, AsyncStorage payloads, or network JSON.",
+      "examples": {
+        "positive": "import { z } from 'zod';\n\nconst UserSchema = z.object({\n  id: z.string().min(1),\n  name: z.string().min(1),\n  age: z.number().int().nonnegative().optional()\n});\n\nexport function parseUser(json: unknown) {\n  return UserSchema.parse(json);\n}\n\n// usage\nconst user = parseUser(await res.json());\n",
+        "negative": "type User = { id: string; name: string; age?: number };\n\nexport function parseUser(json: any): User {\n  return json as User;\n}\n",
+        "language": "TYPESCRIPT"
+      }
+    },
+    {
+      "content": "Keep side effects out of render; place subscriptions, timers, and listeners in effects with cleanup and stable dependencies.",
+      "examples": {
+        "positive": "import React, { useEffect, useState } from 'react';\nimport { AppState, Text } from 'react-native';\n\nexport function AppStateLabel() {\n  const [state, setState] = useState(AppState.currentState);\n\n  useEffect(() => {\n    const sub = AppState.addEventListener('change', setState);\n    return () => sub.remove();\n  }, []);\n\n  return <Text>{state}</Text>;\n}\n",
+        "negative": "import React, { useState } from 'react';\nimport { AppState, Text } from 'react-native';\n\nexport function AppStateLabel() {\n  const [state, setState] = useState(AppState.currentState);\n  AppState.addEventListener('change', setState);\n  return <Text>{state}</Text>;\n}\n",
+        "language": "TYPESCRIPT_TSX"
+      }
+    },
+    {
+      "content": "Avoid stale closures by using functional state updates or refs in async callbacks and event handlers.",
+      "examples": {
+        "positive": "import React, { useCallback, useRef, useState, useEffect } from 'react';\nimport { Button, View } from 'react-native';\n\nexport function Counter() {\n  const [count, setCount] = useState(0);\n  const countRef = useRef(count);\n\n  useEffect(() => {\n    countRef.current = count;\n  }, [count]);\n\n  const incLater = useCallback(() => {\n    setTimeout(() => setCount(c => c + 1), 500);\n  }, []);\n\n  const logCountLater = useCallback(() => {\n    setTimeout(() => console.log('count', countRef.current), 500);\n  }, []);\n\n  return (\n    <View>\n      <Button title=\"+1 later\" onPress={incLater} />\n      <Button title=\"log later\" onPress={logCountLater} />\n    </View>\n  );\n}\n",
+        "negative": "import React, { useCallback, useState } from 'react';\nimport { Button } from 'react-native';\n\nexport function Counter() {\n  const [count, setCount] = useState(0);\n\n  const incLater = useCallback(() => {\n    setTimeout(() => setCount(count + 1), 500);\n  }, [count]);\n\n  return <Button title=\"+1 later\" onPress={incLater} />;\n}\n",
+        "language": "TYPESCRIPT_TSX"
+      }
+    },
+    {
+      "content": "Memoize expensive derived values and stable callbacks; avoid inline object/array props passed to memoized children and FlatList renderItem.",
+      "examples": {
+        "positive": "import React, { useCallback, useMemo } from 'react';\nimport { FlatList, Text, View } from 'react-native';\n\ntype Item = { id: string; title: string };\n\nconst Row = React.memo(function Row({ title, onPress }: { title: string; onPress: () => void }) {\n  return <Text onPress={onPress}>{title}</Text>;\n});\n\nexport function List({ items }: { items: Item[] }) {\n  const keyExtractor = useCallback((it: Item) => it.id, []);\n  const renderItem = useCallback(({ item }: { item: Item }) => {\n    return <Row title={item.title} onPress={() => console.log(item.id)} />;\n  }, []);\n\n  const data = useMemo(() => items.slice(), [items]);\n\n  return (\n    <View>\n      <FlatList data={data} keyExtractor={keyExtractor} renderItem={renderItem} />\n    </View>\n  );\n}\n",
+        "negative": "import React from 'react';\nimport { FlatList, Text } from 'react-native';\n\ntype Item = { id: string; title: string };\n\nconst Row = React.memo(function Row({ title, onPress }: { title: string; onPress: () => void }) {\n  return <Text onPress={onPress}>{title}</Text>;\n});\n\nexport function List({ items }: { items: Item[] }) {\n  return (\n    <FlatList\n      data={items}\n      keyExtractor={(it) => it.id}\n      renderItem={({ item }) => (\n        <Row title={item.title} onPress={() => console.log(item.id)} />\n      )}\n    />\n  );\n}\n",
+        "language": "TYPESCRIPT_TSX"
+      }
+    },
+    {
+      "content": "Use FlatList virtualization controls for large lists; set getItemLayout when row heights are fixed and avoid nesting scroll views.",
+      "examples": {
+        "positive": "import React, { useCallback } from 'react';\nimport { FlatList, Text } from 'react-native';\n\ntype Item = { id: string; title: string };\nconst ROW_H = 56;\n\nexport function BigList({ items }: { items: Item[] }) {\n  const getItemLayout = useCallback((_: Item[] | null | undefined, index: number) => ({\n    length: ROW_H,\n    offset: ROW_H * index,\n    index\n  }), []);\n\n  return (\n    <FlatList\n      data={items}\n      renderItem={({ item }) => <Text style={{ height: ROW_H }}>{item.title}</Text>}\n      keyExtractor={(i) => i.id}\n      initialNumToRender={12}\n      windowSize={7}\n      maxToRenderPerBatch={12}\n      removeClippedSubviews\n      getItemLayout={getItemLayout}\n    />\n  );\n}\n",
+        "negative": "import React from 'react';\nimport { ScrollView, Text } from 'react-native';\n\ntype Item = { id: string; title: string };\n\nexport function BigList({ items }: { items: Item[] }) {\n  return (\n    <ScrollView>\n      {items.map(i => (\n        <Text key={i.id}>{i.title}</Text>\n      ))}\n    </ScrollView>\n  );\n}\n",
+        "language": "TYPESCRIPT_TSX"
+      }
+    },
+    {
+      "content": "Gate environment-specific config behind a single typed module; avoid reading process.env or global variables across feature code.",
+      "examples": {
+        "positive": "// config.ts\nexport type AppConfig = {\n  apiBaseUrl: string;\n  sentryDsn?: string;\n};\n\nconst config: AppConfig = {\n  apiBaseUrl: 'https://api.example.com',\n  sentryDsn: undefined\n};\n\nexport default config;\n\n// usage\nimport config from './config';\nfetch(`${config.apiBaseUrl}/health`);\n",
+        "negative": "fetch(`${process.env.API_BASE_URL}/health`);\n\nconst dsn = (global as any).SENTRY_DSN;\n",
+        "language": "TYPESCRIPT"
+      }
+    },
+    {
+      "content": "Inject external services via interfaces and constructors/hooks; avoid importing singletons directly inside feature modules.",
+      "examples": {
+        "positive": "export interface Analytics {\n  track(event: string, props?: Record<string, unknown>): void;\n}\n\nexport function createUseCheckout(analytics: Analytics) {\n  return function useCheckout() {\n    const complete = () => analytics.track('checkout_complete');\n    return { complete };\n  };\n}\n\n// composition root\nconst analytics: Analytics = { track: (e, p) => console.log(e, p) };\nexport const useCheckout = createUseCheckout(analytics);\n",
+        "negative": "// analytics.ts\nexport const analytics = {\n  track(event: string, props?: Record<string, unknown>) {\n    console.log(event, props);\n  }\n};\n\n// checkout.ts\nimport { analytics } from './analytics';\n\nexport function useCheckout() {\n  const complete = () => analytics.track('checkout_complete');\n  return { complete };\n}\n",
+        "language": "TYPESCRIPT"
+      }
+    },
+    {
+      "content": "Persist secrets only in platform keystores; avoid storing tokens in AsyncStorage and never log sensitive values.",
+      "examples": {
+        "positive": "import * as Keychain from 'react-native-keychain';\n\nexport async function saveAuthToken(token: string) {\n  await Keychain.setGenericPassword('auth', token, {\n    accessible: Keychain.ACCESSIBLE.WHEN_UNLOCKED_THIS_DEVICE_ONLY\n  });\n}\n\nexport async function loadAuthToken() {\n  const creds = await Keychain.getGenericPassword();\n  return creds ? creds.password : null;\n}\n",
+        "negative": "import AsyncStorage from '@react-native-async-storage/async-storage';\n\nexport async function saveAuthToken(token: string) {\n  console.log('token', token);\n  await AsyncStorage.setItem('authToken', token);\n}\n",
+        "language": "TYPESCRIPT"
+      }
+    }
+  ]
+}

@@ -1,0 +1,88 @@
+{
+  "name": "FastAPI Best Practices",
+  "summary": "Advanced, production-focused FastAPI rules for reliability, security, performance, and maintainable API behavior across typical service codebases.",
+  "description": "This standard covers high-impact FastAPI patterns around dependency lifecycles, async/concurrency pitfalls, request validation boundaries, error and response consistency, outbound network hardening, logging/observability, configuration, and test isolation.",
+  "scope": "**/*.py,**/*.pyx,**/*.pyw",
+  "rules": [
+    {
+      "content": "Define dependencies with yield for resources and finalize cleanup after yield; avoid creating long-lived clients or sessions per request without teardown.",
+      "examples": {
+        "positive": "from contextlib import asynccontextmanager\nfrom fastapi import Depends, FastAPI\nimport httpx\n\napp = FastAPI()\n\n@asynccontextmanager\nasync def http_client_dep():\n    async with httpx.AsyncClient(timeout=httpx.Timeout(5.0)) as client:\n        yield client\n\n@app.get(\"/upstream\")\nasync def upstream(client: httpx.AsyncClient = Depends(http_client_dep)):\n    r = await client.get(\"https://example.com\")\n    return {\"status\": r.status_code}\n",
+        "negative": "from fastapi import Depends, FastAPI\nimport httpx\n\napp = FastAPI()\n\nasync def http_client_dep():\n    return httpx.AsyncClient()  # never closed\n\n@app.get(\"/upstream\")\nasync def upstream(client: httpx.AsyncClient = Depends(http_client_dep)):\n    r = await client.get(\"https://example.com\")\n    return {\"status\": r.status_code}\n",
+        "language": "PYTHON"
+      }
+    },
+    {
+      "content": "Set explicit connect/read/write/pool timeouts on every outbound HTTP call; avoid relying on library defaults.",
+      "examples": {
+        "positive": "import httpx\n\ntimeout = httpx.Timeout(connect=2.0, read=5.0, write=5.0, pool=2.0)\nclient = httpx.AsyncClient(timeout=timeout)\n",
+        "negative": "import httpx\n\nclient = httpx.AsyncClient()  # implicit timeouts\n",
+        "language": "PYTHON"
+      }
+    },
+    {
+      "content": "Gate retries to idempotent operations and bounded retry counts; avoid automatic retries on non-idempotent endpoints like POST without idempotency keys.",
+      "examples": {
+        "positive": "import asyncio\nimport httpx\n\nasync def get_with_retry(client: httpx.AsyncClient, url: str) -> httpx.Response:\n    last_exc: Exception | None = None\n    for attempt in range(3):\n        try:\n            return await client.get(url)\n        except (httpx.ConnectError, httpx.ReadTimeout) as exc:\n            last_exc = exc\n            await asyncio.sleep(0.2 * (2 ** attempt))\n    raise last_exc\n",
+        "negative": "import httpx\n\nasync def post_with_retry(client: httpx.AsyncClient, url: str, payload: dict):\n    for _ in range(10):\n        try:\n            return await client.post(url, json=payload)  # retries non-idempotent POST\n        except Exception:\n            pass\n",
+        "language": "PYTHON"
+      }
+    },
+    {
+      "content": "Use response_model to control output schema and hide internal fields; avoid returning ORM models or dicts containing secrets directly.",
+      "examples": {
+        "positive": "from pydantic import BaseModel\nfrom fastapi import FastAPI\n\napp = FastAPI()\n\nclass UserOut(BaseModel):\n    id: int\n    email: str\n\n@app.get(\"/users/{user_id}\", response_model=UserOut)\nasync def get_user(user_id: int):\n    user = {\"id\": user_id, \"email\": \"a@b.com\", \"password_hash\": \"...\"}\n    return user\n",
+        "negative": "from fastapi import FastAPI\n\napp = FastAPI()\n\n@app.get(\"/users/{user_id}\")\nasync def get_user(user_id: int):\n    return {\"id\": user_id, \"email\": \"a@b.com\", \"password_hash\": \"...\"}\n",
+        "language": "PYTHON"
+      }
+    },
+    {
+      "content": "Raise HTTPException with explicit status_code and detail for expected failures; avoid catching Exception and returning 200 with error payloads.",
+      "examples": {
+        "positive": "from fastapi import FastAPI, HTTPException\n\napp = FastAPI()\n\n@app.get(\"/items/{item_id}\")\nasync def get_item(item_id: int):\n    item = None\n    if item is None:\n        raise HTTPException(status_code=404, detail=\"item not found\")\n    return item\n",
+        "negative": "from fastapi import FastAPI\n\napp = FastAPI()\n\n@app.get(\"/items/{item_id}\")\nasync def get_item(item_id: int):\n    try:\n        raise KeyError(\"missing\")\n    except Exception as e:\n        return {\"error\": str(e)}  # 200 OK with error body\n",
+        "language": "PYTHON"
+      }
+    },
+    {
+      "content": "Use run_in_threadpool for blocking I/O inside async endpoints; avoid calling synchronous database drivers or filesystem APIs directly on the event loop.",
+      "examples": {
+        "positive": "from fastapi import FastAPI\nfrom starlette.concurrency import run_in_threadpool\n\napp = FastAPI()\n\ndef read_big_file(path: str) -> str:\n    with open(path, \"r\", encoding=\"utf-8\") as f:\n        return f.read()\n\n@app.get(\"/file\")\nasync def file():\n    data = await run_in_threadpool(read_big_file, \"/tmp/data.txt\")\n    return {\"bytes\": len(data)}\n",
+        "negative": "from fastapi import FastAPI\n\napp = FastAPI()\n\n@app.get(\"/file\")\nasync def file():\n    with open(\"/tmp/data.txt\", \"r\", encoding=\"utf-8\") as f:\n        data = f.read()  # blocks event loop\n    return {\"bytes\": len(data)}\n",
+        "language": "PYTHON"
+      }
+    },
+    {
+      "content": "Avoid global mutable state for request-scoped data; use request.state, dependencies, or contextvars instead of module-level dicts or caches.",
+      "examples": {
+        "positive": "from fastapi import FastAPI, Request\n\napp = FastAPI()\n\n@app.middleware(\"http\")\nasync def add_request_id(request: Request, call_next):\n    request.state.request_id = request.headers.get(\"x-request-id\", \"unknown\")\n    return await call_next(request)\n\n@app.get(\"/who\")\nasync def who(request: Request):\n    return {\"request_id\": request.state.request_id}\n",
+        "negative": "from fastapi import FastAPI\n\napp = FastAPI()\nCURRENT = {}\n\n@app.middleware(\"http\")\nasync def set_current(request, call_next):\n    CURRENT[\"request_id\"] = request.headers.get(\"x-request-id\")\n    return await call_next(request)\n\n@app.get(\"/who\")\nasync def who():\n    return {\"request_id\": CURRENT.get(\"request_id\")}\n",
+        "language": "PYTHON"
+      }
+    },
+    {
+      "content": "Include correlation identifiers and structured fields in logs; avoid logging raw request bodies, authorization headers, or secrets.",
+      "examples": {
+        "positive": "import logging\nfrom fastapi import FastAPI, Request\n\nlog = logging.getLogger(\"api\")\napp = FastAPI()\n\n@app.middleware(\"http\")\nasync def log_request(request: Request, call_next):\n    request_id = request.headers.get(\"x-request-id\", \"unknown\")\n    log.info(\"request\", extra={\"request_id\": request_id, \"path\": request.url.path, \"method\": request.method})\n    return await call_next(request)\n",
+        "negative": "import logging\nfrom fastapi import FastAPI, Request\n\nlog = logging.getLogger(\"api\")\napp = FastAPI()\n\n@app.post(\"/login\")\nasync def login(request: Request):\n    body = await request.body()\n    log.info(\"login %s %s\", request.headers.get(\"authorization\"), body)  # logs secrets\n    return {\"ok\": True}\n",
+        "language": "PYTHON"
+      }
+    },
+    {
+      "content": "Load configuration from environment via typed settings objects; avoid importing environment variables at module import time as constants.",
+      "examples": {
+        "positive": "from pydantic_settings import BaseSettings, SettingsConfigDict\n\nclass Settings(BaseSettings):\n    model_config = SettingsConfigDict(env_prefix=\"APP_\")\n    database_url: str\n\nsettings = Settings()\n",
+        "negative": "import os\n\nDATABASE_URL = os.environ[\"APP_DATABASE_URL\"]  # evaluated at import time\n",
+        "language": "PYTHON"
+      }
+    },
+    {
+      "content": "Use dependency overrides in tests to swap real resources with fakes; avoid tests that call live databases, real HTTP services, or shared singletons.",
+      "examples": {
+        "positive": "from fastapi import Depends, FastAPI\nfrom fastapi.testclient import TestClient\n\napp = FastAPI()\n\nclass Repo:\n    def get(self, item_id: int):\n        raise NotImplementedError\n\ndef get_repo() -> Repo:\n    return Repo()\n\n@app.get(\"/items/{item_id}\")\ndef read_item(item_id: int, repo: Repo = Depends(get_repo)):\n    return repo.get(item_id)\n\nclass FakeRepo(Repo):\n    def get(self, item_id: int):\n        return {\"id\": item_id}\n\ndef test_read_item():\n    app.dependency_overrides[get_repo] = lambda: FakeRepo()\n    client = TestClient(app)\n    assert client.get(\"/items/1\").json() == {\"id\": 1}\n    app.dependency_overrides.clear()\n",
+        "negative": "from fastapi import FastAPI\nfrom fastapi.testclient import TestClient\nimport requests\n\napp = FastAPI()\n\n@app.get(\"/items/{item_id}\")\ndef read_item(item_id: int):\n    r = requests.get(f\"https://example.com/items/{item_id}\")  # external call in unit test path\n    return r.json()\n\ndef test_read_item():\n    client = TestClient(app)\n    client.get(\"/items/1\")\n",
+        "language": "PYTHON"
+      }
+    }
+  ]
+}

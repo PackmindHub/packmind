@@ -1,0 +1,88 @@
+{
+  "name": "Laravel Best Practices",
+  "summary": "Apply these rules when building production Laravel applications to standardize high-impact behaviors around boundaries, failures, configuration, persistence, and observability.",
+  "description": "This standard defines advanced, broadly applicable Laravel rules covering request validation, authorization ordering, database transaction boundaries, queue job idempotency, external HTTP resiliency, environment configuration safety, N+1 prevention, exception handling, structured logging, and test reliability patterns.",
+  "scope": "**/*.php,**/*.phtml",
+  "rules": [
+    {
+      "content": "Validate and normalize input at every HTTP entrypoint using FormRequest or Validator, and pass only validated data into domain logic.",
+      "examples": {
+        "positive": "<?php\n\nuse App\\Http\\Requests\\StoreUserRequest;\nuse App\\Actions\\CreateUser;\n\nfinal class UserController\n{\n    public function store(StoreUserRequest $request, CreateUser $create)\n    {\n        $user = $create->handle($request->validated());\n\n        return response()->json($user, 201);\n    }\n}\n",
+        "negative": "<?php\n\nuse App\\Actions\\CreateUser;\nuse Illuminate\\Http\\Request;\n\nfinal class UserController\n{\n    public function store(Request $request, CreateUser $create)\n    {\n        $user = $create->handle($request->all());\n\n        return response()->json($user, 201);\n    }\n}\n",
+        "language": "PHP"
+      }
+    },
+    {
+      "content": "Authorize before retrieving or mutating models by accepting route-model binding and calling authorize() or Gate checks before any state changes.",
+      "examples": {
+        "positive": "<?php\n\nuse App\\Models\\Post;\nuse Illuminate\\Http\\Request;\n\nfinal class PostController\n{\n    public function update(Request $request, Post $post)\n    {\n        $this->authorize('update', $post);\n\n        $post->fill($request->validate(['title' => ['required','string']]));\n        $post->save();\n\n        return response()->json($post);\n    }\n}\n",
+        "negative": "<?php\n\nuse App\\Models\\Post;\nuse Illuminate\\Http\\Request;\n\nfinal class PostController\n{\n    public function update(Request $request, int $id)\n    {\n        $post = Post::findOrFail($id);\n        $post->title = $request->input('title');\n        $post->save();\n\n        $this->authorize('update', $post);\n\n        return response()->json($post);\n    }\n}\n",
+        "language": "PHP"
+      }
+    },
+    {
+      "content": "Wrap multi-step writes in DB::transaction and keep external side effects outside the transaction boundary.",
+      "examples": {
+        "positive": "<?php\n\nuse App\\Models\\Order;\nuse Illuminate\\Support\\Facades\\DB;\nuse Illuminate\\Support\\Facades\\Notification;\n\nfinal class CheckoutService\n{\n    public function checkout(array $data): Order\n    {\n        $order = DB::transaction(function () use ($data) {\n            $order = Order::create($data);\n            $order->items()->createMany($data['items']);\n\n            return $order;\n        });\n\n        Notification::route('mail', $order->email)->notify(new \\App\\Notifications\\OrderPlaced($order->id));\n\n        return $order;\n    }\n}\n",
+        "negative": "<?php\n\nuse App\\Models\\Order;\nuse Illuminate\\Support\\Facades\\DB;\nuse Illuminate\\Support\\Facades\\Notification;\n\nfinal class CheckoutService\n{\n    public function checkout(array $data): Order\n    {\n        return DB::transaction(function () use ($data) {\n            $order = Order::create($data);\n            Notification::route('mail', $order->email)->notify(new \\App\\Notifications\\OrderPlaced($order->id));\n            $order->items()->createMany($data['items']);\n\n            return $order;\n        });\n    }\n}\n",
+        "language": "PHP"
+      }
+    },
+    {
+      "content": "Enforce idempotency for queued jobs by using unique keys or dedupe storage and making handle() safe to run multiple times.",
+      "examples": {
+        "positive": "<?php\n\nuse Illuminate\\Bus\\Queueable;\nuse Illuminate\\Contracts\\Queue\\ShouldQueue;\nuse Illuminate\\Queue\\InteractsWithQueue;\nuse Illuminate\\Queue\\SerializesModels;\nuse Illuminate\\Contracts\\Queue\\ShouldBeUnique;\nuse App\\Models\\Invoice;\n\nfinal class GenerateInvoicePdf implements ShouldQueue, ShouldBeUnique\n{\n    use InteractsWithQueue, Queueable, SerializesModels;\n\n    public function __construct(public int $invoiceId) {}\n\n    public function uniqueId(): string\n    {\n        return (string) $this->invoiceId;\n    }\n\n    public function handle(): void\n    {\n        $invoice = Invoice::findOrFail($this->invoiceId);\n        if ($invoice->pdf_path) {\n            return;\n        }\n\n        $invoice->pdf_path = app('pdf')->renderToPath($invoice);\n        $invoice->save();\n    }\n}\n",
+        "negative": "<?php\n\nuse Illuminate\\Contracts\\Queue\\ShouldQueue;\nuse App\\Models\\Invoice;\n\nfinal class GenerateInvoicePdf implements ShouldQueue\n{\n    public function __construct(public int $invoiceId) {}\n\n    public function handle(): void\n    {\n        $invoice = Invoice::findOrFail($this->invoiceId);\n        $invoice->pdf_path = app('pdf')->renderToPath($invoice);\n        $invoice->save();\n    }\n}\n",
+        "language": "PHP"
+      }
+    },
+    {
+      "content": "Set explicit connect and request timeouts on every HTTP client call, and configure retries with bounded attempts and backoff.",
+      "examples": {
+        "positive": "<?php\n\nuse Illuminate\\Support\\Facades\\Http;\n\n$response = Http::connectTimeout(2)\n    ->timeout(5)\n    ->retry(3, 200, throw: false)\n    ->get('https://api.example.com/v1/users');\n\nif ($response->failed()) {\n    report(new \\RuntimeException('Upstream failed: '.$response->status()));\n}\n",
+        "negative": "<?php\n\nuse Illuminate\\Support\\Facades\\Http;\n\n$response = Http::get('https://api.example.com/v1/users');\n\n$data = $response->json();\n",
+        "language": "PHP"
+      }
+    },
+    {
+      "content": "Read configuration via config() and injected options; avoid env() outside config files and avoid runtime-dependent env access.",
+      "examples": {
+        "positive": "<?php\n\nnamespace App\\Services;\n\nfinal class BillingClient\n{\n    public function __construct(private readonly string $baseUrl) {}\n\n    public static function fromConfig(): self\n    {\n        return new self(config('services.billing.base_url'));\n    }\n}\n",
+        "negative": "<?php\n\nnamespace App\\Services;\n\nfinal class BillingClient\n{\n    public function __construct()\n    {\n        $this->baseUrl = env('BILLING_BASE_URL');\n    }\n}\n",
+        "language": "PHP"
+      }
+    },
+    {
+      "content": "Eager load required relationships at query time using with/withCount and avoid accessing relations inside loops without preloading.",
+      "examples": {
+        "positive": "<?php\n\nuse App\\Models\\Post;\n\n$posts = Post::query()\n    ->with(['author:id,name'])\n    ->withCount('comments')\n    ->latest()\n    ->take(50)\n    ->get();\n\nforeach ($posts as $post) {\n    echo $post->author->name.' '.$post->comments_count;\n}\n",
+        "negative": "<?php\n\nuse App\\Models\\Post;\n\n$posts = Post::latest()->take(50)->get();\n\nforeach ($posts as $post) {\n    echo $post->author->name;\n    echo $post->comments()->count();\n}\n",
+        "language": "PHP"
+      }
+    },
+    {
+      "content": "Prefer fail-fast Eloquent retrieval with firstOrFail/findOrFail and handle missing models via exceptions or abort helpers.",
+      "examples": {
+        "positive": "<?php\n\nuse App\\Models\\User;\n\n$user = User::query()->where('email', $email)->firstOrFail();\n\nreturn response()->json(['id' => $user->id]);\n",
+        "negative": "<?php\n\nuse App\\Models\\User;\n\n$user = User::query()->where('email', $email)->first();\n\nreturn response()->json(['id' => $user->id]);\n",
+        "language": "PHP"
+      }
+    },
+    {
+      "content": "Log structured context with exception objects and correlation identifiers; avoid logging only strings or dumping full payloads unredacted.",
+      "examples": {
+        "positive": "<?php\n\nuse Illuminate\\Support\\Facades\\Log;\n\ntry {\n    $client->charge($userId, $amount);\n} catch (\\Throwable $e) {\n    Log::error('billing.charge_failed', [\n        'request_id' => request()->header('X-Request-Id'),\n        'user_id' => $userId,\n        'amount_cents' => $amount,\n        'exception' => $e,\n    ]);\n\n    throw $e;\n}\n",
+        "negative": "<?php\n\nuse Illuminate\\Support\\Facades\\Log;\n\ntry {\n    $client->charge($userId, $amount);\n} catch (\\Throwable $e) {\n    Log::error('Charge failed: '.$e->getMessage().' payload='.json_encode(request()->all()));\n    throw $e;\n}\n",
+        "language": "PHP"
+      }
+    },
+    {
+      "content": "Freeze time and isolate external services in tests using Carbon::setTestNow(), Http::fake(), and Queue::fake(); avoid real time, network, and queues.",
+      "examples": {
+        "positive": "<?php\n\nuse Carbon\\Carbon;\nuse Illuminate\\Support\\Facades\\Http;\nuse Illuminate\\Support\\Facades\\Queue;\n\npublic function test_checkout_dispatches_job(): void\n{\n    Carbon::setTestNow('2026-01-01 00:00:00');\n    Http::fake(['api.example.com/*' => Http::response(['ok' => true], 200)]);\n    Queue::fake();\n\n    $this->postJson('/checkout', ['items' => [['sku' => 'A', 'qty' => 1]]])\n        ->assertStatus(201);\n\n    Queue::assertPushed(\\App\\Jobs\\FinalizeOrder::class);\n}\n",
+        "negative": "<?php\n\npublic function test_checkout_dispatches_job(): void\n{\n    $this->postJson('/checkout', ['items' => [['sku' => 'A', 'qty' => 1]]])\n        ->assertStatus(201);\n\n    // hits real HTTP, real queue, and depends on current time\n}\n",
+        "language": "PHP"
+      }
+    }
+  ]
+}
