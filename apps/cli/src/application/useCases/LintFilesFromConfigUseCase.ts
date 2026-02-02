@@ -1,9 +1,8 @@
 import {
-  ILintFilesLocally,
-  LintFilesLocallyCommand,
-  LintFilesLocallyResult,
-} from '../../domain/useCases/ILintFilesLocally';
-import { PackmindServices } from '../services/PackmindServices';
+  ILintFilesFromConfig,
+  LintFilesFromConfigCommand,
+  LintFilesFromConfigResult,
+} from '../../domain/useCases/ILintFilesFromConfig';
 import { IPackmindRepositories } from '../../domain/repositories/IPackmindRepositories';
 import { LintViolation } from '../../domain/entities/LintViolation';
 import { DiffMode, ModifiedLine } from '../../domain/entities/DiffMode';
@@ -12,10 +11,10 @@ import { PackmindLogger } from '@packmind/logger';
 import {
   ConfigWithTarget,
   ExecuteLinterProgramsCommand,
+  GetDetectionProgramsForPackagesResponse,
   LinterExecutionProgram,
   LinterExecutionViolation,
 } from '@packmind/types';
-import { GetDetectionProgramsForPackagesResult } from '../../domain/repositories/IPackmindGateway';
 import {
   ProgrammingLanguage,
   stringToProgrammingLanguage,
@@ -24,17 +23,18 @@ import * as path from 'path';
 import * as fs from 'fs/promises';
 import { pathStartsWith } from '../utils/pathUtils';
 import { logErrorConsole } from '../../infra/utils/consoleLogger';
+import { IPackmindServices } from '../../domain/services/IPackmindServices';
 
-const origin = 'LintFilesLocallyUseCase';
+const origin = 'LintFilesFromConfigUseCase';
 
-export class LintFilesLocallyUseCase implements ILintFilesLocally {
+export class LintFilesFromConfigUseCase implements ILintFilesFromConfig {
   private detectionProgramsCache: Map<
     string,
-    GetDetectionProgramsForPackagesResult
+    GetDetectionProgramsForPackagesResponse
   > = new Map();
 
   constructor(
-    private readonly services: PackmindServices,
+    private readonly services: IPackmindServices,
     private readonly repositories: IPackmindRepositories,
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {}
@@ -93,8 +93,8 @@ export class LintFilesLocallyUseCase implements ILintFilesLocally {
   }
 
   public async execute(
-    command: LintFilesLocallyCommand,
-  ): Promise<LintFilesLocallyResult> {
+    command: LintFilesFromConfigCommand,
+  ): Promise<LintFilesFromConfigResult> {
     const { path: userPath, diffMode } = command;
 
     this.logger.debug(
@@ -392,7 +392,7 @@ export class LintFilesLocallyUseCase implements ILintFilesLocally {
    */
   private async getDetectionProgramsForTarget(
     targetConfig: ConfigWithTarget,
-  ): Promise<GetDetectionProgramsForPackagesResult> {
+  ): Promise<GetDetectionProgramsForPackagesResponse> {
     const packageSlugs = Object.keys(targetConfig.packages).sort((a, b) =>
       a.localeCompare(b),
     );
@@ -411,9 +411,11 @@ export class LintFilesLocallyUseCase implements ILintFilesLocally {
     );
 
     const detectionPrograms =
-      await this.repositories.packmindGateway.getDetectionProgramsForPackages({
-        packagesSlugs: packageSlugs,
-      });
+      await this.repositories.packmindGateway.linter.getDetectionProgramsForPackages(
+        {
+          packagesSlugs: packageSlugs,
+        },
+      );
 
     this.detectionProgramsCache.set(cacheKey, detectionPrograms);
 

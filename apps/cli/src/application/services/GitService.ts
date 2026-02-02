@@ -3,6 +3,12 @@ import { PackmindLogger } from '@packmind/logger';
 import { ModifiedLine } from '../../domain/entities/DiffMode';
 import * as path from 'path';
 import { normalizePath } from '../utils/pathUtils';
+import {
+  GitBranchesResult,
+  GitCurrentBranchResult,
+  GitRemoteResult,
+  IGitService,
+} from '../../domain/services/IGitService';
 
 const origin = 'GitService';
 
@@ -13,19 +19,7 @@ export type GitRunner = (
   options?: GitRunnerOptions,
 ) => GitRunnerResult;
 
-export type GitRemoteResult = {
-  gitRemoteUrl: string;
-};
-
-export type GitBranchesResult = {
-  branches: string[];
-};
-
-export type GitCurrentBranchResult = {
-  branch: string;
-};
-
-export class GitService {
+export class GitService implements IGitService {
   private readonly logger: PackmindLogger;
 
   constructor(
@@ -42,7 +36,7 @@ export class GitService {
     this.logger = logger;
   }
 
-  public getGitRepositoryRoot(path: string): string {
+  getGitRepositoryRoot(path: string): string {
     try {
       const { stdout } = this.gitRunner('rev-parse --show-toplevel', {
         cwd: path,
@@ -65,7 +59,7 @@ export class GitService {
     }
   }
 
-  public tryGetGitRepositoryRoot(path: string): string | null {
+  tryGetGitRepositoryRoot(path: string): string | null {
     try {
       return this.getGitRepositoryRoot(path);
     } catch {
@@ -73,7 +67,7 @@ export class GitService {
     }
   }
 
-  public getGitRepositoryRootSync(cwd: string): string | null {
+  getGitRepositoryRootSync(cwd: string): string | null {
     try {
       const result = execSync('git rev-parse --show-toplevel', {
         cwd,
@@ -86,7 +80,7 @@ export class GitService {
     }
   }
 
-  public getCurrentBranch(repoPath: string): GitCurrentBranchResult {
+  getCurrentBranch(repoPath: string): GitCurrentBranchResult {
     try {
       const { stdout } = this.gitRunner('rev-parse --abbrev-ref HEAD', {
         cwd: repoPath,
@@ -109,7 +103,7 @@ export class GitService {
     }
   }
 
-  public getCurrentBranches(repoPath: string): GitBranchesResult {
+  getCurrentBranches(repoPath: string): GitBranchesResult {
     try {
       const { stdout } = this.gitRunner('branch -a --contains HEAD', {
         cwd: repoPath,
@@ -128,7 +122,7 @@ export class GitService {
     }
   }
 
-  public getGitRemoteUrl(repoPath: string, origin?: string): GitRemoteResult {
+  getGitRemoteUrl(repoPath: string, origin?: string): GitRemoteResult {
     try {
       const { stdout } = this.gitRunner('remote -v', {
         cwd: repoPath,
@@ -174,6 +168,84 @@ export class GitService {
       }
       throw new Error('Failed to get Git remote URL: Unknown error');
     }
+  }
+
+  /**
+   * Gets files that have been modified (staged + unstaged) compared to HEAD.
+   * Returns absolute file paths.
+   */
+  getModifiedFiles(repoPath: string): string[] {
+    const gitRoot = this.getGitRepositoryRoot(repoPath);
+
+    // Get tracked modified files (staged + unstaged)
+    const trackedFiles = this.getTrackedModifiedFiles(gitRoot);
+
+    // Get untracked files
+    const untrackedFiles = this.getUntrackedFiles(gitRoot);
+
+    // Combine and deduplicate
+    const allFiles = [...new Set([...trackedFiles, ...untrackedFiles])];
+
+    this.logger.debug('Found modified files', {
+      trackedCount: trackedFiles.length,
+      untrackedCount: untrackedFiles.length,
+      totalCount: allFiles.length,
+    });
+
+    return allFiles;
+  }
+
+  /**
+   * Gets untracked files (new files not yet added to git).
+   * Returns absolute file paths.
+   */
+  getUntrackedFiles(repoPath: string): string[] {
+    const gitRoot = this.getGitRepositoryRoot(repoPath);
+
+    const { stdout } = this.gitRunner('ls-files --others --exclude-standard', {
+      cwd: gitRoot,
+    });
+
+    return stdout
+      .trim()
+      .split('\n')
+      .filter((line) => line.length > 0)
+      .map((relativePath) => normalizePath(path.join(gitRoot, relativePath)));
+  }
+
+  /**
+   * Gets line-level diff information for modified files.
+   * For untracked files, all lines are considered modified (new file).
+   * Returns ModifiedLine objects with absolute file paths.
+   */
+  getModifiedLines(repoPath: string): ModifiedLine[] {
+    const gitRoot = this.getGitRepositoryRoot(repoPath);
+    const modifiedLines: ModifiedLine[] = [];
+
+    // Get tracked file modifications from unified diff
+    const trackedModifications = this.getTrackedModifiedLines(gitRoot);
+    modifiedLines.push(...trackedModifications);
+
+    // For untracked files, count all lines as modified
+    const untrackedFiles = this.getUntrackedFiles(gitRoot);
+    for (const filePath of untrackedFiles) {
+      const lineCount = this.countFileLines(filePath);
+      if (lineCount > 0) {
+        modifiedLines.push({
+          file: filePath,
+          startLine: 1,
+          lineCount,
+        });
+      }
+    }
+
+    this.logger.debug('Found modified lines', {
+      trackedEntries: trackedModifications.length,
+      untrackedFiles: untrackedFiles.length,
+      totalEntries: modifiedLines.length,
+    });
+
+    return modifiedLines;
   }
 
   private parseRemotes(gitRemoteOutput: string): Array<{
@@ -244,31 +316,6 @@ export class GitService {
   }
 
   /**
-   * Gets files that have been modified (staged + unstaged) compared to HEAD.
-   * Returns absolute file paths.
-   */
-  public getModifiedFiles(repoPath: string): string[] {
-    const gitRoot = this.getGitRepositoryRoot(repoPath);
-
-    // Get tracked modified files (staged + unstaged)
-    const trackedFiles = this.getTrackedModifiedFiles(gitRoot);
-
-    // Get untracked files
-    const untrackedFiles = this.getUntrackedFiles(gitRoot);
-
-    // Combine and deduplicate
-    const allFiles = [...new Set([...trackedFiles, ...untrackedFiles])];
-
-    this.logger.debug('Found modified files', {
-      trackedCount: trackedFiles.length,
-      untrackedCount: untrackedFiles.length,
-      totalCount: allFiles.length,
-    });
-
-    return allFiles;
-  }
-
-  /**
    * Gets tracked files that have been modified (staged + unstaged) compared to HEAD.
    * Returns absolute file paths.
    */
@@ -311,59 +358,6 @@ export class GitService {
       .split('\n')
       .filter((line) => line.length > 0)
       .map((relativePath) => normalizePath(path.join(gitRoot, relativePath)));
-  }
-
-  /**
-   * Gets untracked files (new files not yet added to git).
-   * Returns absolute file paths.
-   */
-  public getUntrackedFiles(repoPath: string): string[] {
-    const gitRoot = this.getGitRepositoryRoot(repoPath);
-
-    const { stdout } = this.gitRunner('ls-files --others --exclude-standard', {
-      cwd: gitRoot,
-    });
-
-    return stdout
-      .trim()
-      .split('\n')
-      .filter((line) => line.length > 0)
-      .map((relativePath) => normalizePath(path.join(gitRoot, relativePath)));
-  }
-
-  /**
-   * Gets line-level diff information for modified files.
-   * For untracked files, all lines are considered modified (new file).
-   * Returns ModifiedLine objects with absolute file paths.
-   */
-  public getModifiedLines(repoPath: string): ModifiedLine[] {
-    const gitRoot = this.getGitRepositoryRoot(repoPath);
-    const modifiedLines: ModifiedLine[] = [];
-
-    // Get tracked file modifications from unified diff
-    const trackedModifications = this.getTrackedModifiedLines(gitRoot);
-    modifiedLines.push(...trackedModifications);
-
-    // For untracked files, count all lines as modified
-    const untrackedFiles = this.getUntrackedFiles(gitRoot);
-    for (const filePath of untrackedFiles) {
-      const lineCount = this.countFileLines(filePath);
-      if (lineCount > 0) {
-        modifiedLines.push({
-          file: filePath,
-          startLine: 1,
-          lineCount,
-        });
-      }
-    }
-
-    this.logger.debug('Found modified lines', {
-      trackedEntries: trackedModifications.length,
-      untrackedFiles: untrackedFiles.length,
-      totalEntries: modifiedLines.length,
-    });
-
-    return modifiedLines;
   }
 
   /**
