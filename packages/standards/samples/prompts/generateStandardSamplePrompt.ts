@@ -27,9 +27,11 @@ export function generateStandardSamplePrompt(
   displayName: string,
   type: SampleType,
   excludeTopics: string[] = [],
+  scope: string | null = null,
 ): string {
   const typeLabel = type === 'language' ? 'programming language' : 'framework';
   const exclusionSection = buildExclusionSection(excludeTopics);
+  const scopeValue = scope ?? `${displayName} source files`;
 
   return `You are a principal software engineer creating an ADVANCED coding standard for ${displayName} (${typeLabel}).
 ${exclusionSection}
@@ -70,7 +72,7 @@ Return ONLY valid JSON with this exact structure (no markdown, no backticks, no 
   "name": "${displayName} Best Practices",
   "summary": "A concise one-sentence summary describing the intent of this standard and when it is relevant to apply its rules.",
   "description": "A clear description of what this standard covers and what problems it solves.",
-  "scope": "${displayName} source files",
+  "scope": "${scopeValue}",
   "rules": [
     {
       "content": "Rule text starting with action verb (max ~25 words)",

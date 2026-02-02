@@ -12,6 +12,7 @@ import {
   Sample,
   AI_RESPONSE_FORMAT,
   languageToFrameworks,
+  getSampleScope,
 } from '@packmind/types';
 
 import { generateStandardSamplePrompt } from './prompts/generateStandardSamplePrompt';
@@ -126,10 +127,12 @@ async function generateSample(
 ): Promise<{ success: boolean; error?: string }> {
   const excludeTopics =
     type === 'language' ? (languageToFrameworks[sample.id] ?? []) : [];
+  const scope = getSampleScope(sample.id, type);
   const prompt = generateStandardSamplePrompt(
     sample.displayName,
     type,
     excludeTopics,
+    scope,
   );
 
   let lastError = '';
