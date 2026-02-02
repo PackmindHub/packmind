@@ -1,0 +1,88 @@
+{
+  "name": "Nest.js Best Practices",
+  "summary": "Advanced, production-oriented Nest.js rules for building reliable APIs and services with consistent validation, failure handling, observability, and configuration boundaries.",
+  "description": "This standard covers high-impact Nest.js practices around API boundaries, validation, error mapping, outbound network behavior, lifecycle-safe resource management, logging/telemetry, configuration, and test reliability. It targets common production pitfalls such as unbounded retries, missing timeouts, leaking resources, inconsistent exception responses, weak module boundaries, and flaky tests caused by shared state or real integrations.",
+  "scope": "**/*.ts",
+  "rules": [
+    {
+      "content": "Apply ValidationPipe globally with whitelist, forbidNonWhitelisted, and transform; validate DTOs at controller boundaries instead of validating inside services.",
+      "examples": {
+        "positive": "import { ValidationPipe } from '@nestjs/common';\nimport { NestFactory } from '@nestjs/core';\nimport { AppModule } from './app.module';\n\nasync function bootstrap() {\n  const app = await NestFactory.create(AppModule);\n  app.useGlobalPipes(\n    new ValidationPipe({\n      transform: true,\n      whitelist: true,\n      forbidNonWhitelisted: true,\n    }),\n  );\n  await app.listen(3000);\n}\nbootstrap();\n",
+        "negative": "import { Controller, Post, Body } from '@nestjs/common';\nimport { plainToInstance } from 'class-transformer';\nimport { validateOrReject } from 'class-validator';\n\n@Controller('users')\nexport class UsersController {\n  @Post()\n  async create(@Body() body: any) {\n    const dto = plainToInstance(CreateUserDto, body);\n    await validateOrReject(dto); // ad-hoc validation per handler\n    return { ok: true };\n  }\n}\n",
+        "language": "TYPESCRIPT"
+      }
+    },
+    {
+      "content": "Define explicit DTOs for request/response payloads; avoid exposing entities or ORM models directly from controllers.",
+      "examples": {
+        "positive": "import { Controller, Get } from '@nestjs/common';\n\nclass UserResponseDto {\n  id!: string;\n  email!: string;\n}\n\n@Controller('users')\nexport class UsersController {\n  @Get(':id')\n  async getOne(): Promise<UserResponseDto> {\n    return { id: 'u1', email: 'a@example.com' };\n  }\n}\n",
+        "negative": "import { Controller, Get } from '@nestjs/common';\nimport { UserEntity } from './user.entity';\n\n@Controller('users')\nexport class UsersController {\n  @Get(':id')\n  async getOne(): Promise<UserEntity> {\n    return new UserEntity(); // leaks internal columns/relations\n  }\n}\n",
+        "language": "TYPESCRIPT"
+      }
+    },
+    {
+      "content": "Throw HttpException variants from controllers and domain-specific errors from services; map domain errors to HTTP with a global exception filter.",
+      "examples": {
+        "positive": "import {\n  ArgumentsHost,\n  Catch,\n  ExceptionFilter,\n  HttpStatus,\n  Module,\n} from '@nestjs/common';\nimport { APP_FILTER } from '@nestjs/core';\n\nexport class UserNotFoundError extends Error {\n  constructor(public readonly userId: string) {\n    super(`User not found: ${userId}`);\n  }\n}\n\n@Catch(UserNotFoundError)\nexport class DomainToHttpFilter implements ExceptionFilter {\n  catch(exception: UserNotFoundError, host: ArgumentsHost) {\n    const res = host.switchToHttp().getResponse();\n    res.status(HttpStatus.NOT_FOUND).json({ code: 'USER_NOT_FOUND', userId: exception.userId });\n  }\n}\n\n@Module({\n  providers: [{ provide: APP_FILTER, useClass: DomainToHttpFilter }],\n})\nexport class ErrorMappingModule {}\n",
+        "negative": "import { Injectable, NotFoundException } from '@nestjs/common';\n\n@Injectable()\nexport class UsersService {\n  async getUser(id: string) {\n    // service couples domain behavior to HTTP\n    throw new NotFoundException('User not found');\n  }\n}\n",
+        "language": "TYPESCRIPT"
+      }
+    },
+    {
+      "content": "Set explicit timeouts on all outbound HTTP calls; avoid relying on defaults in HttpModule/Axios or fetch without AbortController.",
+      "examples": {
+        "positive": "import { Injectable } from '@nestjs/common';\nimport { HttpService } from '@nestjs/axios';\nimport { firstValueFrom, timeout } from 'rxjs';\n\n@Injectable()\nexport class PaymentsClient {\n  constructor(private readonly http: HttpService) {}\n\n  async charge() {\n    const res = await firstValueFrom(\n      this.http.post('https://pay.example/charge', { amount: 100 }).pipe(timeout(3000)),\n    );\n    return res.data;\n  }\n}\n",
+        "negative": "import { Injectable } from '@nestjs/common';\nimport { HttpService } from '@nestjs/axios';\nimport { firstValueFrom } from 'rxjs';\n\n@Injectable()\nexport class PaymentsClient {\n  constructor(private readonly http: HttpService) {}\n\n  async charge() {\n    // no timeout configured\n    const res = await firstValueFrom(this.http.post('https://pay.example/charge', { amount: 100 }));\n    return res.data;\n  }\n}\n",
+        "language": "TYPESCRIPT"
+      }
+    },
+    {
+      "content": "Use bounded retries with backoff and error classification for outbound calls; avoid retrying non-idempotent operations or retrying forever.",
+      "examples": {
+        "positive": "import { Injectable } from '@nestjs/common';\nimport { HttpService } from '@nestjs/axios';\nimport { firstValueFrom, retry, timer } from 'rxjs';\nimport { mergeMap } from 'rxjs/operators';\n\n@Injectable()\nexport class CatalogClient {\n  constructor(private readonly http: HttpService) {}\n\n  async getItem(id: string) {\n    return firstValueFrom(\n      this.http.get(`https://catalog.example/items/${id}`).pipe(\n        retry({\n          count: 3,\n          delay: (err, attempt) => timer(200 * attempt),\n          resetOnSuccess: true,\n        }),\n      ),\n    ).then(r => r.data);\n  }\n}\n",
+        "negative": "import { Injectable } from '@nestjs/common';\nimport { HttpService } from '@nestjs/axios';\nimport { firstValueFrom, retry } from 'rxjs';\n\n@Injectable()\nexport class OrdersClient {\n  constructor(private readonly http: HttpService) {}\n\n  async createOrder(payload: any) {\n    // retries a non-idempotent POST without bounds/strategy\n    const res = await firstValueFrom(this.http.post('https://orders.example/orders', payload).pipe(retry()));\n    return res.data;\n  }\n}\n",
+        "language": "TYPESCRIPT"
+      }
+    },
+    {
+      "content": "Register long-lived resources with lifecycle hooks (OnModuleInit/OnModuleDestroy); avoid creating clients/connections in request handlers.",
+      "examples": {
+        "positive": "import { Injectable, OnModuleInit, OnModuleDestroy } from '@nestjs/common';\nimport { createClient, RedisClientType } from 'redis';\n\n@Injectable()\nexport class RedisProvider implements OnModuleInit, OnModuleDestroy {\n  private client!: RedisClientType;\n\n  async onModuleInit() {\n    this.client = createClient({ url: process.env.REDIS_URL });\n    await this.client.connect();\n  }\n\n  async onModuleDestroy() {\n    await this.client.quit();\n  }\n\n  get redis() {\n    return this.client;\n  }\n}\n",
+        "negative": "import { Injectable } from '@nestjs/common';\nimport { createClient } from 'redis';\n\n@Injectable()\nexport class SessionsService {\n  async getSession(id: string) {\n    const client = createClient({ url: process.env.REDIS_URL });\n    await client.connect();\n    const value = await client.get(id);\n    await client.quit();\n    return value;\n  }\n}\n",
+        "language": "TYPESCRIPT"
+      }
+    },
+    {
+      "content": "Keep providers stateless across requests; avoid mutable module-level state for per-request data unless using request-scoped providers explicitly.",
+      "examples": {
+        "positive": "import { Injectable, Scope } from '@nestjs/common';\n\n@Injectable({ scope: Scope.REQUEST })\nexport class RequestContext {\n  traceId?: string;\n}\n",
+        "negative": "import { Injectable } from '@nestjs/common';\n\n@Injectable()\nexport class AuthService {\n  // shared across all requests\n  private currentUserId?: string;\n\n  setUser(id: string) {\n    this.currentUserId = id;\n  }\n}\n",
+        "language": "TYPESCRIPT"
+      }
+    },
+    {
+      "content": "Use AsyncLocalStorage or request-scoped context for correlation IDs; avoid passing request objects deep into services for logging context.",
+      "examples": {
+        "positive": "import { Injectable, NestMiddleware } from '@nestjs/common';\nimport { AsyncLocalStorage } from 'node:async_hooks';\nimport { randomUUID } from 'node:crypto';\n\nexport const als = new AsyncLocalStorage<{ traceId: string }>();\n\n@Injectable()\nexport class TraceMiddleware implements NestMiddleware {\n  use(req: any, _res: any, next: () => void) {\n    const traceId = req.headers['x-request-id'] ?? randomUUID();\n    als.run({ traceId }, next);\n  }\n}\n\nexport function getTraceId() {\n  return als.getStore()?.traceId;\n}\n",
+        "negative": "import { Injectable } from '@nestjs/common';\n\n@Injectable()\nexport class OrdersService {\n  async create(req: any, payload: any) {\n    // req threaded through layers for logging\n    const traceId = req.headers['x-request-id'];\n    return { traceId, payload };\n  }\n}\n",
+        "language": "TYPESCRIPT"
+      }
+    },
+    {
+      "content": "Validate configuration at startup with a typed schema; avoid reading process.env directly outside a dedicated config module/service.",
+      "examples": {
+        "positive": "import { Module } from '@nestjs/common';\nimport { ConfigModule, ConfigService } from '@nestjs/config';\nimport { z } from 'zod';\n\nconst EnvSchema = z.object({\n  PORT: z.coerce.number().int().positive().default(3000),\n  DATABASE_URL: z.string().url(),\n});\n\n@Module({\n  imports: [\n    ConfigModule.forRoot({\n      isGlobal: true,\n      validate: (env) => {\n        const parsed = EnvSchema.parse(env);\n        return parsed;\n      },\n    }),\n  ],\n})\nexport class AppConfigModule {}\n\nexport class Example {\n  constructor(private readonly config: ConfigService) {}\n  port() {\n    return this.config.get<number>('PORT', { infer: true });\n  }\n}\n",
+        "negative": "import { Injectable } from '@nestjs/common';\n\n@Injectable()\nexport class DbService {\n  url() {\n    return process.env.DATABASE_URL; // unvalidated, scattered\n  }\n}\n",
+        "language": "TYPESCRIPT"
+      }
+    },
+    {
+      "content": "Isolate unit tests by overriding providers and disabling real network/DB calls; avoid importing AppModule or using live integrations in unit suites.",
+      "examples": {
+        "positive": "import { Test } from '@nestjs/testing';\nimport { UsersService } from './users.service';\nimport { UsersRepository } from './users.repository';\n\ndescribe('UsersService', () => {\n  it('returns user', async () => {\n    const moduleRef = await Test.createTestingModule({\n      providers: [\n        UsersService,\n        {\n          provide: UsersRepository,\n          useValue: { findById: async () => ({ id: 'u1' }) },\n        },\n      ],\n    }).compile();\n\n    const svc = moduleRef.get(UsersService);\n    await expect(svc.get('u1')).resolves.toEqual({ id: 'u1' });\n  });\n});\n",
+        "negative": "import { Test } from '@nestjs/testing';\nimport { AppModule } from '../src/app.module';\n\ndescribe('UsersService (unit)', () => {\n  it('hits real modules', async () => {\n    const moduleRef = await Test.createTestingModule({\n      imports: [AppModule],\n    }).compile();\n\n    // may open DB connections, call HTTP clients, run schedulers\n    expect(moduleRef).toBeDefined();\n  });\n});\n",
+        "language": "TYPESCRIPT"
+      }
+    }
+  ]
+}

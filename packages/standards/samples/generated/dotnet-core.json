@@ -1,0 +1,88 @@
+{
+  "name": ".NET Core Best Practices",
+  "summary": "Advanced production-focused rules for .NET Core services and libraries handling I/O, concurrency, configuration, logging, and reliability under real traffic.",
+  "description": "This standard targets high-impact .NET Core pitfalls in HTTP and database access, resource lifetimes, cancellation and timeouts, concurrency safety, configuration binding, logging practices, and test reliability. It focuses on actionable patterns that reduce production failures, latency spikes, security issues, and flaky tests in typical web and worker applications.",
+  "scope": "**/*.cs",
+  "rules": [
+    {
+      "content": "Set per-request timeouts and CancellationToken on all outbound HTTP calls; avoid infinite waits and tokenless SendAsync.",
+      "examples": {
+        "positive": "using System.Net.Http;\nusing Microsoft.Extensions.Logging;\n\npublic sealed class WeatherClient\n{\n    private readonly HttpClient _http;\n    private readonly ILogger<WeatherClient> _log;\n\n    public WeatherClient(HttpClient http, ILogger<WeatherClient> log)\n    {\n        _http = http;\n        _log = log;\n    }\n\n    public async Task<string> GetAsync(CancellationToken ct)\n    {\n        using var cts = CancellationTokenSource.CreateLinkedTokenSource(ct);\n        cts.CancelAfter(TimeSpan.FromSeconds(5));\n\n        using var req = new HttpRequestMessage(HttpMethod.Get, \"/weather\");\n        using var res = await _http.SendAsync(req, HttpCompletionOption.ResponseHeadersRead, cts.Token);\n        res.EnsureSuccessStatusCode();\n\n        return await res.Content.ReadAsStringAsync(cts.Token);\n    }\n}\n",
+        "negative": "using System.Net.Http;\n\npublic sealed class WeatherClient\n{\n    private readonly HttpClient _http;\n\n    public WeatherClient(HttpClient http) => _http = http;\n\n    public async Task<string> GetAsync()\n    {\n        // No timeout and no CancellationToken\n        var res = await _http.GetAsync(\"/weather\");\n        return await res.Content.ReadAsStringAsync();\n    }\n}\n",
+        "language": "CSHARP"
+      }
+    },
+    {
+      "content": "Use IHttpClientFactory with typed/named clients; avoid constructing or disposing HttpClient per request.",
+      "examples": {
+        "positive": "using Microsoft.Extensions.DependencyInjection;\nusing System.Net.Http;\n\npublic static class ServiceRegistration\n{\n    public static IServiceCollection AddOutbound(this IServiceCollection services)\n    {\n        services.AddHttpClient<WeatherClient>(c =>\n        {\n            c.BaseAddress = new Uri(\"https://api.example.com\");\n            c.DefaultRequestHeaders.UserAgent.ParseAdd(\"MyService/1.0\");\n        });\n\n        return services;\n    }\n}\n\npublic sealed class WeatherClient\n{\n    private readonly HttpClient _http;\n    public WeatherClient(HttpClient http) => _http = http;\n}\n",
+        "negative": "using System.Net.Http;\n\npublic sealed class WeatherClient\n{\n    public async Task<string> GetAsync()\n    {\n        using var http = new HttpClient { BaseAddress = new Uri(\"https://api.example.com\") };\n        return await http.GetStringAsync(\"/weather\");\n    }\n}\n",
+        "language": "CSHARP"
+      }
+    },
+    {
+      "content": "Pass CancellationToken through async call chains and into framework APIs; avoid CancellationToken.None in request or job execution paths.",
+      "examples": {
+        "positive": "using Microsoft.AspNetCore.Mvc;\n\n[ApiController]\n[Route(\"orders\")]\npublic sealed class OrdersController : ControllerBase\n{\n    private readonly OrdersService _svc;\n    public OrdersController(OrdersService svc) => _svc = svc;\n\n    [HttpPost]\n    public Task<IActionResult> Create([FromBody] CreateOrderRequest req, CancellationToken ct)\n        => _svc.CreateAsync(req, ct);\n}\n\npublic sealed class OrdersService\n{\n    private readonly OrdersRepository _repo;\n    public OrdersService(OrdersRepository repo) => _repo = repo;\n\n    public async Task<IActionResult> CreateAsync(CreateOrderRequest req, CancellationToken ct)\n    {\n        await _repo.InsertAsync(req, ct);\n        return new OkResult();\n    }\n}\n",
+        "negative": "using Microsoft.AspNetCore.Mvc;\n\n[ApiController]\n[Route(\"orders\")]\npublic sealed class OrdersController : ControllerBase\n{\n    private readonly OrdersService _svc;\n    public OrdersController(OrdersService svc) => _svc = svc;\n\n    [HttpPost]\n    public Task<IActionResult> Create([FromBody] CreateOrderRequest req)\n        => _svc.CreateAsync(req);\n}\n\npublic sealed class OrdersService\n{\n    public Task<IActionResult> CreateAsync(CreateOrderRequest req)\n    {\n        // Drops cancellation at boundary\n        return Task.FromResult<IActionResult>(new OkResult());\n    }\n}\n",
+        "language": "CSHARP"
+      }
+    },
+    {
+      "content": "Dispose IAsyncDisposable resources with await using; avoid synchronous Dispose for async-only resources like DbContext and streams with async flush.",
+      "examples": {
+        "positive": "using Microsoft.EntityFrameworkCore;\n\npublic sealed class ReportsService\n{\n    private readonly IDbContextFactory<AppDbContext> _factory;\n    public ReportsService(IDbContextFactory<AppDbContext> factory) => _factory = factory;\n\n    public async Task<int> CountAsync(CancellationToken ct)\n    {\n        await using var db = await _factory.CreateDbContextAsync(ct);\n        return await db.Users.CountAsync(ct);\n    }\n}\n",
+        "negative": "using Microsoft.EntityFrameworkCore;\n\npublic sealed class ReportsService\n{\n    private readonly IDbContextFactory<AppDbContext> _factory;\n    public ReportsService(IDbContextFactory<AppDbContext> factory) => _factory = factory;\n\n    public async Task<int> CountAsync(CancellationToken ct)\n    {\n        var db = await _factory.CreateDbContextAsync(ct);\n        try\n        {\n            return await db.Users.CountAsync(ct);\n        }\n        finally\n        {\n            // Synchronous dispose on async-disposable resource\n            db.Dispose();\n        }\n    }\n}\n",
+        "language": "CSHARP"
+      }
+    },
+    {
+      "content": "Use structured logging with message templates and exception parameter; avoid string interpolation or concatenation in log messages.",
+      "examples": {
+        "positive": "using Microsoft.Extensions.Logging;\n\npublic sealed class BillingService\n{\n    private readonly ILogger<BillingService> _log;\n    public BillingService(ILogger<BillingService> log) => _log = log;\n\n    public void Charge(Guid orderId)\n    {\n        try\n        {\n            // ...\n        }\n        catch (Exception ex)\n        {\n            _log.LogError(ex, \"Charge failed for OrderId {OrderId}\", orderId);\n            throw;\n        }\n    }\n}\n",
+        "negative": "using Microsoft.Extensions.Logging;\n\npublic sealed class BillingService\n{\n    private readonly ILogger<BillingService> _log;\n    public BillingService(ILogger<BillingService> log) => _log = log;\n\n    public void Charge(Guid orderId)\n    {\n        try\n        {\n            // ...\n        }\n        catch (Exception ex)\n        {\n            _log.LogError($\"Charge failed for {orderId}: {ex}\");\n            throw;\n        }\n    }\n}\n",
+        "language": "CSHARP"
+      }
+    },
+    {
+      "content": "Validate inputs at API boundaries using model validation or explicit checks; avoid relying on deeper layers to reject null, empty, or out-of-range values.",
+      "examples": {
+        "positive": "using Microsoft.AspNetCore.Mvc;\nusing System.ComponentModel.DataAnnotations;\n\npublic sealed class CreateUserRequest\n{\n    [Required]\n    [EmailAddress]\n    public string Email { get; init; } = string.Empty;\n\n    [Range(13, 120)]\n    public int Age { get; init; }\n}\n\n[ApiController]\n[Route(\"users\")]\npublic sealed class UsersController : ControllerBase\n{\n    [HttpPost]\n    public IActionResult Create([FromBody] CreateUserRequest req)\n    {\n        if (!ModelState.IsValid) return ValidationProblem(ModelState);\n        return Ok();\n    }\n}\n",
+        "negative": "using Microsoft.AspNetCore.Mvc;\n\npublic sealed class CreateUserRequest\n{\n    public string? Email { get; set; }\n    public int Age { get; set; }\n}\n\n[ApiController]\n[Route(\"users\")]\npublic sealed class UsersController : ControllerBase\n{\n    [HttpPost]\n    public IActionResult Create([FromBody] CreateUserRequest req)\n    {\n        // Accepts null/invalid values and defers validation implicitly\n        return Ok();\n    }\n}\n",
+        "language": "CSHARP"
+      }
+    },
+    {
+      "content": "Bind configuration into validated options with IOptions<T> and ValidateOnStart; avoid reading raw configuration values throughout the codebase.",
+      "examples": {
+        "positive": "using Microsoft.Extensions.Configuration;\nusing Microsoft.Extensions.DependencyInjection;\nusing System.ComponentModel.DataAnnotations;\n\npublic sealed class PaymentsOptions\n{\n    [Required]\n    public string BaseUrl { get; init; } = string.Empty;\n\n    [Range(1, 60)]\n    public int TimeoutSeconds { get; init; } = 10;\n}\n\npublic static class PaymentsRegistration\n{\n    public static IServiceCollection AddPayments(this IServiceCollection services, IConfiguration config)\n    {\n        services.AddOptions<PaymentsOptions>()\n            .Bind(config.GetSection(\"Payments\"))\n            .ValidateDataAnnotations()\n            .ValidateOnStart();\n\n        return services;\n    }\n}\n",
+        "negative": "using Microsoft.Extensions.Configuration;\n\npublic sealed class PaymentsClient\n{\n    private readonly IConfiguration _config;\n    public PaymentsClient(IConfiguration config) => _config = config;\n\n    public Uri GetBaseUri()\n        => new Uri(_config[\"Payments:BaseUrl\"]!);\n}\n",
+        "language": "CSHARP"
+      }
+    },
+    {
+      "content": "Use idempotency keys and explicit retry policies for transient network calls; avoid ad-hoc retries with Task.Delay loops in business methods.",
+      "examples": {
+        "positive": "using System.Net;\nusing System.Net.Http;\n\npublic sealed class PaymentsClient\n{\n    private readonly HttpClient _http;\n    public PaymentsClient(HttpClient http) => _http = http;\n\n    public async Task<HttpResponseMessage> CreateChargeAsync(string idempotencyKey, HttpContent body, CancellationToken ct)\n    {\n        for (var attempt = 1; attempt <= 3; attempt++)\n        {\n            using var req = new HttpRequestMessage(HttpMethod.Post, \"/charges\");\n            req.Headers.TryAddWithoutValidation(\"Idempotency-Key\", idempotencyKey);\n            req.Content = body;\n\n            var res = await _http.SendAsync(req, ct);\n            if ((int)res.StatusCode >= 500 || res.StatusCode == HttpStatusCode.TooManyRequests)\n            {\n                await Task.Delay(TimeSpan.FromMilliseconds(200 * attempt), ct);\n                continue;\n            }\n\n            return res;\n        }\n\n        throw new HttpRequestException(\"Retries exhausted\");\n    }\n}\n",
+        "negative": "using System.Net.Http;\n\npublic sealed class PaymentsClient\n{\n    private readonly HttpClient _http;\n    public PaymentsClient(HttpClient http) => _http = http;\n\n    public async Task<HttpResponseMessage> CreateChargeAsync(HttpContent body)\n    {\n        // Random sleeps and no idempotency key\n        for (var i = 0; i < 5; i++)\n        {\n            try\n            {\n                return await _http.PostAsync(\"/charges\", body);\n            }\n            catch\n            {\n                await Task.Delay(1000);\n            }\n        }\n        throw new Exception(\"failed\");\n    }\n}\n",
+        "language": "CSHARP"
+      }
+    },
+    {
+      "content": "Guard shared mutable state with locks or immutable snapshots; avoid writing to Dictionary/List from multiple threads without synchronization.",
+      "examples": {
+        "positive": "using System.Collections.Concurrent;\n\npublic sealed class TokenCache\n{\n    private readonly ConcurrentDictionary<string, string> _tokens = new();\n\n    public string GetOrAdd(string userId, Func<string> factory)\n        => _tokens.GetOrAdd(userId, _ => factory());\n}\n",
+        "negative": "using System.Collections.Generic;\n\npublic sealed class TokenCache\n{\n    private readonly Dictionary<string, string> _tokens = new();\n\n    public string GetOrAdd(string userId, Func<string> factory)\n    {\n        if (_tokens.TryGetValue(userId, out var token)) return token;\n        token = factory();\n        _tokens[userId] = token; // Racy under concurrent calls\n        return token;\n    }\n}\n",
+        "language": "CSHARP"
+      }
+    },
+    {
+      "content": "Isolate tests from wall-clock time using TimeProvider and deterministic clocks; avoid DateTime.UtcNow and Task.Delay in unit tests.",
+      "examples": {
+        "positive": "using System;\n\npublic sealed class ExpiringToken\n{\n    private readonly TimeProvider _time;\n    private readonly DateTimeOffset _expiresAt;\n\n    public ExpiringToken(TimeProvider time, DateTimeOffset expiresAt)\n    {\n        _time = time;\n        _expiresAt = expiresAt;\n    }\n\n    public bool IsExpired() => _time.GetUtcNow() >= _expiresAt;\n}\n\npublic sealed class FakeTimeProvider : TimeProvider\n{\n    private DateTimeOffset _now;\n    public FakeTimeProvider(DateTimeOffset now) => _now = now;\n    public void Advance(TimeSpan by) => _now = _now.Add(by);\n    public override DateTimeOffset GetUtcNow() => _now;\n}\n\npublic static class TokenTests\n{\n    public static void Expiration_is_deterministic()\n    {\n        var time = new FakeTimeProvider(new DateTimeOffset(2025, 1, 1, 0, 0, 0, TimeSpan.Zero));\n        var token = new ExpiringToken(time, time.GetUtcNow().AddMinutes(5));\n\n        if (token.IsExpired()) throw new Exception(\"unexpected\");\n        time.Advance(TimeSpan.FromMinutes(6));\n        if (!token.IsExpired()) throw new Exception(\"expected\");\n    }\n}\n",
+        "negative": "using System;\nusing System.Threading.Tasks;\n\npublic sealed class ExpiringToken\n{\n    private readonly DateTimeOffset _expiresAt;\n    public ExpiringToken(DateTimeOffset expiresAt) => _expiresAt = expiresAt;\n    public bool IsExpired() => DateTimeOffset.UtcNow >= _expiresAt;\n}\n\npublic static class TokenTests\n{\n    public static async Task Expiration_is_flaky()\n    {\n        var token = new ExpiringToken(DateTimeOffset.UtcNow.AddMilliseconds(50));\n        await Task.Delay(60);\n        if (!token.IsExpired()) throw new Exception(\"flaky\");\n    }\n}\n",
+        "language": "CSHARP"
+      }
+    }
+  ]
+}

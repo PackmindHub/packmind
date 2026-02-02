@@ -1,0 +1,88 @@
+{
+  "name": "Spring Boot Best Practices",
+  "summary": "Advanced Spring Boot rules for production services to prevent common reliability, security, and operability pitfalls in web, data, and integration code.",
+  "description": "This standard defines high-impact, non-obvious Spring Boot practices covering configuration binding, validation at boundaries, transactional correctness, HTTP client resilience, logging, exception handling, concurrency pitfalls, and test reliability.",
+  "scope": "**/*.java",
+  "rules": [
+    {
+      "content": "Bind external configuration via @ConfigurationProperties with validation; avoid scattered @Value strings across beans.",
+      "examples": {
+        "positive": "import jakarta.validation.constraints.NotBlank;\nimport jakarta.validation.constraints.Positive;\nimport org.springframework.boot.context.properties.ConfigurationProperties;\nimport org.springframework.validation.annotation.Validated;\n\n@Validated\n@ConfigurationProperties(prefix = \"payments\")\npublic class PaymentsProperties {\n  @NotBlank private String baseUrl;\n  @Positive private int connectTimeoutMs;\n\n  public String getBaseUrl() { return baseUrl; }\n  public void setBaseUrl(String baseUrl) { this.baseUrl = baseUrl; }\n  public int getConnectTimeoutMs() { return connectTimeoutMs; }\n  public void setConnectTimeoutMs(int connectTimeoutMs) { this.connectTimeoutMs = connectTimeoutMs; }\n}",
+        "negative": "import org.springframework.beans.factory.annotation.Value;\nimport org.springframework.stereotype.Service;\n\n@Service\npublic class PaymentsClient {\n  @Value(\"${payments.baseUrl}\")\n  private String baseUrl;\n\n  @Value(\"${payments.connectTimeoutMs}\")\n  private int connectTimeoutMs;\n}",
+        "language": "JAVA"
+      }
+    },
+    {
+      "content": "Validate request payloads at controller boundaries with @Valid and constraint annotations; avoid deferring validation into services.",
+      "examples": {
+        "positive": "import jakarta.validation.Valid;\nimport jakarta.validation.constraints.Email;\nimport jakarta.validation.constraints.NotBlank;\nimport org.springframework.http.ResponseEntity;\nimport org.springframework.web.bind.annotation.*;\n\nrecord CreateUserRequest(@NotBlank String name, @Email String email) {}\n\n@RestController\n@RequestMapping(\"/users\")\nclass UserController {\n  @PostMapping\n  ResponseEntity<Void> create(@RequestBody @Valid CreateUserRequest req) {\n    return ResponseEntity.accepted().build();\n  }\n}",
+        "negative": "import org.springframework.web.bind.annotation.*;\n\nrecord CreateUserRequest(String name, String email) {}\n\n@RestController\n@RequestMapping(\"/users\")\nclass UserController {\n  @PostMapping\n  void create(@RequestBody CreateUserRequest req) {\n    // no @Valid; service must guess missing fields\n  }\n}",
+        "language": "JAVA"
+      }
+    },
+    {
+      "content": "Centralize HTTP error mapping in @RestControllerAdvice; avoid per-controller try/catch translating exceptions into ad-hoc responses.",
+      "examples": {
+        "positive": "import org.springframework.http.*;\nimport org.springframework.web.bind.annotation.*;\n\nclass NotFoundException extends RuntimeException {\n  NotFoundException(String msg) { super(msg); }\n}\n\nrecord ApiError(String code, String message) {}\n\n@RestControllerAdvice\nclass ApiExceptionHandler {\n  @ExceptionHandler(NotFoundException.class)\n  ResponseEntity<ApiError> notFound(NotFoundException ex) {\n    return ResponseEntity.status(HttpStatus.NOT_FOUND)\n        .body(new ApiError(\"NOT_FOUND\", ex.getMessage()));\n  }\n}",
+        "negative": "import org.springframework.http.*;\nimport org.springframework.web.bind.annotation.*;\n\n@RestController\nclass OrdersController {\n  @GetMapping(\"/orders/{id}\")\n  ResponseEntity<?> get(@PathVariable String id) {\n    try {\n      throw new RuntimeException(\"missing\");\n    } catch (RuntimeException ex) {\n      return ResponseEntity.status(500).body(ex.getMessage());\n    }\n  }\n}",
+        "language": "JAVA"
+      }
+    },
+    {
+      "content": "Use a single transaction boundary per use-case on a public service method; avoid calling @Transactional methods within the same bean.",
+      "examples": {
+        "positive": "import org.springframework.stereotype.Service;\nimport org.springframework.transaction.annotation.Transactional;\n\n@Service\nclass CheckoutService {\n  private final OrderRepository orders;\n  private final PaymentGateway payments;\n\n  CheckoutService(OrderRepository orders, PaymentGateway payments) {\n    this.orders = orders;\n    this.payments = payments;\n  }\n\n  @Transactional\n  public void checkout(String orderId) {\n    orders.markPending(orderId);\n    payments.charge(orderId);\n    orders.markPaid(orderId);\n  }\n}\n\ninterface OrderRepository {\n  void markPending(String orderId);\n  void markPaid(String orderId);\n}\n\ninterface PaymentGateway {\n  void charge(String orderId);\n}",
+        "negative": "import org.springframework.stereotype.Service;\nimport org.springframework.transaction.annotation.Transactional;\n\n@Service\nclass CheckoutService {\n  public void checkout(String orderId) {\n    // self-invocation bypasses transactional proxy\n    reserve(orderId);\n  }\n\n  @Transactional\n  public void reserve(String orderId) {\n    // expects transaction\n  }\n}",
+        "language": "JAVA"
+      }
+    },
+    {
+      "content": "Use explicit @Transactional(readOnly=true) for read paths and default read-write for writes; avoid leaving transaction attributes implicit on data-heavy services.",
+      "examples": {
+        "positive": "import org.springframework.stereotype.Service;\nimport org.springframework.transaction.annotation.Transactional;\n\n@Service\nclass CatalogService {\n  private final ProductRepository repo;\n  CatalogService(ProductRepository repo) { this.repo = repo; }\n\n  @Transactional(readOnly = true)\n  public Product get(String id) {\n    return repo.findById(id);\n  }\n\n  @Transactional\n  public void rename(String id, String name) {\n    repo.rename(id, name);\n  }\n}\n\nrecord Product(String id, String name) {}\n\ninterface ProductRepository {\n  Product findById(String id);\n  void rename(String id, String name);\n}",
+        "negative": "import org.springframework.stereotype.Service;\n\n@Service\nclass CatalogService {\n  // no transaction attributes; behavior depends on call path\n  public Product get(String id) { return null; }\n  public void rename(String id, String name) { }\n}\n\nrecord Product(String id, String name) {}",
+        "language": "JAVA"
+      }
+    },
+    {
+      "content": "Set connect, read, and overall timeouts on all outbound HTTP clients; avoid relying on library defaults.",
+      "examples": {
+        "positive": "import org.springframework.boot.web.client.RestTemplateBuilder;\nimport org.springframework.context.annotation.Bean;\nimport org.springframework.context.annotation.Configuration;\nimport org.springframework.web.client.RestTemplate;\n\nimport java.time.Duration;\n\n@Configuration\nclass HttpClientsConfig {\n  @Bean\n  RestTemplate restTemplate(RestTemplateBuilder b) {\n    return b\n        .setConnectTimeout(Duration.ofSeconds(2))\n        .setReadTimeout(Duration.ofSeconds(5))\n        .build();\n  }\n}",
+        "negative": "import org.springframework.context.annotation.Bean;\nimport org.springframework.context.annotation.Configuration;\nimport org.springframework.web.client.RestTemplate;\n\n@Configuration\nclass HttpClientsConfig {\n  @Bean\n  RestTemplate restTemplate() {\n    return new RestTemplate(); // no explicit timeouts\n  }\n}",
+        "language": "JAVA"
+      }
+    },
+    {
+      "content": "Prefer resilience4j annotations or Spring Retry with bounded attempts and backoff; avoid ad-hoc loops around remote calls.",
+      "examples": {
+        "positive": "import io.github.resilience4j.retry.annotation.Retry;\nimport org.springframework.stereotype.Service;\n\n@Service\nclass ShippingClient {\n  private final RemoteShippingApi api;\n  ShippingClient(RemoteShippingApi api) { this.api = api; }\n\n  @Retry(name = \"shipping\")\n  public ShipmentQuote quote(String zip) {\n    return api.quote(zip);\n  }\n}\n\nrecord ShipmentQuote(int cents) {}\n\ninterface RemoteShippingApi {\n  ShipmentQuote quote(String zip);\n}",
+        "negative": "import org.springframework.stereotype.Service;\n\n@Service\nclass ShippingClient {\n  private final RemoteShippingApi api;\n  ShippingClient(RemoteShippingApi api) { this.api = api; }\n\n  public ShipmentQuote quote(String zip) {\n    for (int i = 0; i < 1000; i++) {\n      try {\n        return api.quote(zip);\n      } catch (RuntimeException ignored) {\n      }\n    }\n    throw new RuntimeException(\"failed\");\n  }\n}\n\nrecord ShipmentQuote(int cents) {}\n\ninterface RemoteShippingApi {\n  ShipmentQuote quote(String zip);\n}",
+        "language": "JAVA"
+      }
+    },
+    {
+      "content": "Log with structured placeholders and correlation IDs from MDC; avoid string concatenation and logging raw request bodies.",
+      "examples": {
+        "positive": "import org.slf4j.Logger;\nimport org.slf4j.LoggerFactory;\nimport org.slf4j.MDC;\nimport org.springframework.stereotype.Component;\n\n@Component\nclass PaymentLogger {\n  private static final Logger log = LoggerFactory.getLogger(PaymentLogger.class);\n\n  void logCharge(String paymentId, int amountCents) {\n    MDC.put(\"correlationId\", \"corr-123\");\n    try {\n      log.info(\"charge_attempt paymentId={} amountCents={} correlationId={}\", paymentId, amountCents, MDC.get(\"correlationId\"));\n    } finally {\n      MDC.remove(\"correlationId\");\n    }\n  }\n}",
+        "negative": "import org.slf4j.Logger;\nimport org.slf4j.LoggerFactory;\nimport org.springframework.stereotype.Component;\n\n@Component\nclass PaymentLogger {\n  private static final Logger log = LoggerFactory.getLogger(PaymentLogger.class);\n\n  void logCharge(String paymentId, String rawBody) {\n    log.info(\"charging \" + paymentId + \" body=\" + rawBody);\n  }\n}",
+        "language": "JAVA"
+      }
+    },
+    {
+      "content": "Keep singleton beans stateless; place mutable per-request state in method locals, request scope, or immutable value objects.",
+      "examples": {
+        "positive": "import org.springframework.stereotype.Service;\n\n@Service\nclass PriceService {\n  public int discounted(int baseCents, int percent) {\n    int discount = baseCents * percent / 100;\n    return baseCents - discount;\n  }\n}",
+        "negative": "import org.springframework.stereotype.Service;\n\n@Service\nclass PriceService {\n  private int lastDiscount; // shared mutable state\n\n  public int discounted(int baseCents, int percent) {\n    lastDiscount = baseCents * percent / 100;\n    return baseCents - lastDiscount;\n  }\n}",
+        "language": "JAVA"
+      }
+    },
+    {
+      "content": "Use @SpringBootTest sparingly; prefer slice tests and mock external clients, and clean shared state between tests.",
+      "examples": {
+        "positive": "import org.junit.jupiter.api.Test;\nimport org.springframework.beans.factory.annotation.Autowired;\nimport org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;\nimport org.springframework.boot.test.mock.mockito.MockBean;\nimport org.springframework.test.web.servlet.MockMvc;\n\nimport static org.mockito.Mockito.*;\nimport static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;\nimport static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;\n\n@WebMvcTest(controllers = HealthController.class)\nclass HealthControllerTest {\n  @Autowired MockMvc mvc;\n  @MockBean StatusService statusService;\n\n  @Test\n  void ok() throws Exception {\n    when(statusService.status()).thenReturn(\"OK\");\n    mvc.perform(get(\"/health\")).andExpect(status().isOk());\n  }\n}\n\ninterface StatusService { String status(); }\n\n@org.springframework.web.bind.annotation.RestController\nclass HealthController {\n  private final StatusService s;\n  HealthController(StatusService s) { this.s = s; }\n  @org.springframework.web.bind.annotation.GetMapping(\"/health\")\n  String health() { return s.status(); }\n}",
+        "negative": "import org.junit.jupiter.api.Test;\nimport org.springframework.boot.test.context.SpringBootTest;\n\n@SpringBootTest\nclass HealthControllerTest {\n  @Test\n  void ok() {\n    // loads full context and hits real dependencies if configured\n  }\n}",
+        "language": "JAVA"
+      }
+    }
+  ]
+}

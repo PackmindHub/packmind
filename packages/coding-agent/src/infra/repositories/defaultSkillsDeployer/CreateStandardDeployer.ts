@@ -633,6 +633,8 @@ const STANDARD_CREATOR_LICENSE = `
 `;
 
 export class CreateStandardDeployer implements ISkillDeployer {
+  public readonly minimumVersion = '0.14.0';
+
   deploy(agentName: string, skillsFolderPath: string): FileUpdates {
     const basePath = `${skillsFolderPath}packmind-create-standard`;
 

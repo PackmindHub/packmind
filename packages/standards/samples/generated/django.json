@@ -1,0 +1,88 @@
+{
+  "name": "Django Best Practices",
+  "summary": "Advanced operational standards for Django codebases handling real traffic, multi-worker deployments, external services, and evolving schemas.",
+  "description": "Covers production-grade patterns for database access, transactions, concurrency, configuration, logging, security boundaries, network calls, background work, and test isolation in Django applications.",
+  "scope": "**/*.py,**/*.pyx,**/*.pyw",
+  "rules": [
+    {
+      "content": "Wrap multi-write workflows in atomic() and place on_commit() side effects inside the same block.",
+      "examples": {
+        "positive": "from django.db import transaction\n\nwith transaction.atomic():\n    order = Order.objects.create(user=request.user)\n    OrderItem.objects.bulk_create(items)\n    transaction.on_commit(lambda: send_order_email(order.id))\n",
+        "negative": "order = Order.objects.create(user=request.user)\nOrderItem.objects.bulk_create(items)\nsend_order_email(order.id)\n",
+        "language": "PYTHON"
+      }
+    },
+    {
+      "content": "Use select_for_update() inside atomic() when multiple requests can update the same row concurrently.",
+      "examples": {
+        "positive": "from django.db import transaction\n\nwith transaction.atomic():\n    acct = Account.objects.select_for_update().get(pk=account_id)\n    acct.balance -= amount\n    acct.save(update_fields=[\"balance\"])\n",
+        "negative": "acct = Account.objects.get(pk=account_id)\nacct.balance -= amount\nacct.save()\n",
+        "language": "PYTHON"
+      }
+    },
+    {
+      "content": "Prefer Exists, Subquery, and annotations over Python loops that trigger per-row queries.",
+      "examples": {
+        "positive": "from django.db.models import Exists, OuterRef\n\nqs = Author.objects.annotate(\n    has_books=Exists(Book.objects.filter(author_id=OuterRef(\"pk\")))\n).filter(has_books=True)\n",
+        "negative": "authors = []\nfor a in Author.objects.all():\n    if Book.objects.filter(author=a).exists():\n        authors.append(a)\n",
+        "language": "PYTHON"
+      }
+    },
+    {
+      "content": "Use queryset.iterator() when streaming large result sets; avoid loading entire tables into memory.",
+      "examples": {
+        "positive": "for row in Event.objects.filter(ts__gte=cutoff).iterator(chunk_size=2000):\n    process(row)\n",
+        "negative": "events = list(Event.objects.filter(ts__gte=cutoff))\nfor row in events:\n    process(row)\n",
+        "language": "PYTHON"
+      }
+    },
+    {
+      "content": "Include explicit timeouts on outbound HTTP calls and handle request exceptions at the boundary.",
+      "examples": {
+        "positive": "import requests\n\ntry:\n    resp = requests.get(url, timeout=(3.05, 10))\n    resp.raise_for_status()\nexcept requests.RequestException as exc:\n    raise ExternalServiceError(\"catalog\") from exc\n",
+        "negative": "import requests\n\nresp = requests.get(url)\nresp.raise_for_status()\n",
+        "language": "PYTHON"
+      }
+    },
+    {
+      "content": "Prefer structured logging with extra context and use logger.exception inside except blocks.",
+      "examples": {
+        "positive": "import logging\nlogger = logging.getLogger(__name__)\n\ntry:\n    charge(order)\nexcept Exception:\n    logger.exception(\"payment_failed\", extra={\"order_id\": order.id, \"user_id\": order.user_id})\n    raise\n",
+        "negative": "import logging\nlogger = logging.getLogger(__name__)\n\ntry:\n    charge(order)\nexcept Exception as e:\n    logger.error(str(e))\n    raise\n",
+        "language": "PYTHON"
+      }
+    },
+    {
+      "content": "Validate at API boundaries using forms/serializers and raise ValidationError; avoid trusting request.POST, request.GET, or request.body directly.",
+      "examples": {
+        "positive": "from django import forms\nfrom django.http import JsonResponse\n\nclass RenameForm(forms.Form):\n    name = forms.CharField(max_length=80)\n\ndef rename_view(request):\n    form = RenameForm(request.POST)\n    form.is_valid()  # raises? no; returns bool\n    if not form.is_valid():\n        return JsonResponse({\"errors\": form.errors}, status=400)\n    obj.name = form.cleaned_data[\"name\"]\n    obj.save(update_fields=[\"name\"])\n    return JsonResponse({\"ok\": True})\n",
+        "negative": "from django.http import JsonResponse\n\ndef rename_view(request):\n    obj.name = request.POST[\"name\"]\n    obj.save()\n    return JsonResponse({\"ok\": True})\n",
+        "language": "PYTHON"
+      }
+    },
+    {
+      "content": "Use celery tasks or a job queue for long-running work; avoid executing network calls and heavy processing in request/response cycle.",
+      "examples": {
+        "positive": "from django.http import JsonResponse\nfrom .tasks import rebuild_search_index\n\ndef admin_reindex(request):\n    rebuild_search_index.delay()\n    return JsonResponse({\"queued\": True})\n",
+        "negative": "from django.http import JsonResponse\n\ndef admin_reindex(request):\n    rebuild_search_index()  # long-running\n    return JsonResponse({\"done\": True})\n",
+        "language": "PYTHON"
+      }
+    },
+    {
+      "content": "Avoid module-level mutable state and cached querysets; keep shared state in caches or databases.",
+      "examples": {
+        "positive": "from django.core.cache import cache\n\ndef get_flags(user_id: int):\n    key = f\"flags:{user_id}\"\n    flags = cache.get(key)\n    if flags is None:\n        flags = list(Flag.objects.filter(user_id=user_id).values_list(\"name\", flat=True))\n        cache.set(key, flags, 60)\n    return flags\n",
+        "negative": "FLAGS = {}\n\ndef get_flags(user_id: int):\n    if user_id not in FLAGS:\n        FLAGS[user_id] = list(Flag.objects.filter(user_id=user_id).values_list(\"name\", flat=True))\n    return FLAGS[user_id]\n",
+        "language": "PYTHON"
+      }
+    },
+    {
+      "content": "Freeze time and isolate external dependencies in tests; avoid tests that depend on wall-clock time, network, or global settings mutations.",
+      "examples": {
+        "positive": "from unittest.mock import patch\nfrom freezegun import freeze_time\n\n@freeze_time(\"2025-01-01T00:00:00Z\")\n@patch(\"app.services.payments.charge\")\ndef test_checkout_calls_charge(mock_charge, client):\n    mock_charge.return_value = {\"id\": \"ch_123\"}\n    resp = client.post(\"/checkout/\")\n    assert resp.status_code == 200\n    mock_charge.assert_called_once()\n",
+        "negative": "def test_checkout(client):\n    # hits real network and depends on current time\n    resp = client.post(\"/checkout/\")\n    assert resp.json()[\"charged_at\"]\n",
+        "language": "PYTHON"
+      }
+    }
+  ]
+}

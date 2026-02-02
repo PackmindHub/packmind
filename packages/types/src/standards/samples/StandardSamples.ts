@@ -196,3 +196,6 @@ export const standardSamples = {
   languageSamples,
   frameworkSamples,
 };
+
+export * from './SampleLanguageMapping';
+export * from './SampleScopeUtils';

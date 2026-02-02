@@ -1,0 +1,88 @@
+{
+  "name": "C++ Best Practices",
+  "summary": "Advanced, production-focused C++ rules for correctness, security, performance, and operability in long-lived services and applications.",
+  "description": "This standard covers high-impact C++ practices around ownership, error handling, concurrency, API boundaries, logging, configuration, network resilience, and test reliability, targeting common production pitfalls.",
+  "scope": "**/*.cpp,**/*.cc,**/*.cxx,**/*.c++,**/*.hpp,**/*.hxx",
+  "rules": [
+    {
+      "content": "Express ownership explicitly: return unique_ptr for transfers, use shared_ptr only for shared lifetime, and pass non-owning references via T& or T*.",
+      "examples": {
+        "positive": "std::unique_ptr<Widget> makeWidget();\n\nvoid use(const Widget& w);\n\nvoid f() {\n  auto w = makeWidget();\n  use(*w);\n}\n\nstruct Owner {\n  explicit Owner(std::unique_ptr<Widget> w_) : w(std::move(w_)) {}\n  std::unique_ptr<Widget> w;\n};\n\nOwner o(makeWidget());\n",
+        "negative": "Widget* makeWidget();\n\nvoid f() {\n  Widget* w = makeWidget();\n  use(*w);\n  // unclear ownership; leak or double-delete risk\n}\n\nstruct Owner {\n  Owner(Widget* w_) : w(w_) {}\n  Widget* w;\n};\n",
+        "language": "GENERIC"
+      }
+    },
+    {
+      "content": "Prefer RAII wrappers for resources; create a single owning object per handle and pass views/references rather than duplicating raw handles.",
+      "examples": {
+        "positive": "class Fd {\npublic:\n  explicit Fd(int fd) : fd_(fd) {}\n  ~Fd() { if (fd_ >= 0) ::close(fd_); }\n  Fd(const Fd&) = delete;\n  Fd& operator=(const Fd&) = delete;\n  Fd(Fd&& o) noexcept : fd_(std::exchange(o.fd_, -1)) {}\n  Fd& operator=(Fd&& o) noexcept {\n    if (this != &o) { if (fd_ >= 0) ::close(fd_); fd_ = std::exchange(o.fd_, -1); }\n    return *this;\n  }\n  int get() const { return fd_; }\nprivate:\n  int fd_;\n};\n\nFd fd(::open(path, O_RDONLY));\nread(fd.get(), buf, n);\n",
+        "negative": "int fd = ::open(path, O_RDONLY);\nread(fd, buf, n);\n// multiple return paths; close frequently missed\nif (error) return;\n::close(fd);\n",
+        "language": "GENERIC"
+      }
+    },
+    {
+      "content": "Define and document exception guarantees: mark functions noexcept only when all operations are noexcept, and avoid throwing from destructors.",
+      "examples": {
+        "positive": "struct Logger {\n  ~Logger() noexcept {\n    try { flush(); }\n    catch (...) { /* swallow */ }\n  }\n  void flush();\n};\n\nint parseInt(std::string_view s); // may throw\n\nvoid tick() noexcept {\n  // only noexcept operations here\n}\n",
+        "negative": "struct Logger {\n  ~Logger() { flush(); } // flush may throw\n  void flush();\n};\n\nvoid tick() noexcept {\n  throw std::runtime_error(\"boom\");\n}\n",
+        "language": "GENERIC"
+      }
+    },
+    {
+      "content": "Prefer explicit error channels for recoverable failures: return expected-like results or status+value rather than exceptions for normal control flow.",
+      "examples": {
+        "positive": "#include <expected>\n\nstd::expected<int, std::string> readPort(std::string_view s) {\n  if (s.empty()) return std::unexpected(\"missing\");\n  int p = std::stoi(std::string{s});\n  if (p < 1 || p > 65535) return std::unexpected(\"range\");\n  return p;\n}\n\nauto port = readPort(env);\nif (!port) { log(port.error()); return; }\nconnect(*port);\n",
+        "negative": "int readPort(std::string_view s) {\n  if (s.empty()) throw std::runtime_error(\"missing\");\n  return std::stoi(std::string{s});\n}\n\ntry { connect(readPort(env)); }\ncatch (...) { /* expected config absence treated as exception */ }\n",
+        "language": "GENERIC"
+      }
+    },
+    {
+      "content": "Validate and bound external inputs at the boundary: enforce length, range, encoding, and format before parsing or allocating based on the data.",
+      "examples": {
+        "positive": "std::optional<std::string> readUserId(std::string_view s) {\n  if (s.size() > 64) return std::nullopt;\n  for (unsigned char c : s) {\n    if (!(std::isalnum(c) || c == '_' || c == '-')) return std::nullopt;\n  }\n  return std::string{s};\n}\n\nauto uid = readUserId(req.query(\"user\"));\nif (!uid) return bad_request();\n",
+        "negative": "std::string uid = req.query(\"user\");\n// unbounded length and unchecked characters\nstd::string path = \"/home/\" + uid + \"/profile\";\n",
+        "language": "GENERIC"
+      }
+    },
+    {
+      "content": "Set explicit deadlines and cancellation for all network and IPC operations; thread the deadline through call stacks instead of relying on library defaults.",
+      "examples": {
+        "positive": "using Clock = std::chrono::steady_clock;\n\nResponse fetch(HttpClient& c, Request r, Clock::time_point deadline) {\n  r.connect_timeout = 200ms;\n  r.read_timeout = 500ms;\n  r.deadline = deadline;\n  return c.send(r);\n}\n\nauto dl = Clock::now() + 2s;\nauto resp = fetch(client, req, dl);\n",
+        "negative": "Response fetch(HttpClient& c, Request r) {\n  // inherits infinite/default timeouts\n  return c.send(r);\n}\n\nauto resp = fetch(client, req);\n",
+        "language": "GENERIC"
+      }
+    },
+    {
+      "content": "Implement retries with bounded attempts and jittered backoff, and limit retries to idempotent operations under a total time budget.",
+      "examples": {
+        "positive": "Response getWithRetry(HttpClient& c, Request r) {\n  const int maxAttempts = 4;\n  auto deadline = std::chrono::steady_clock::now() + 2s;\n  for (int a = 1; a <= maxAttempts; ++a) {\n    r.deadline = deadline;\n    auto res = c.send(r);\n    if (res.ok()) return res;\n    if (!r.idempotent) break;\n    auto base = std::chrono::milliseconds(50) * (1 << (a - 1));\n    auto jitter = std::chrono::milliseconds(rand() % 20);\n    std::this_thread::sleep_for(base + jitter);\n  }\n  return Response::error(\"unavailable\");\n}\n",
+        "negative": "Response getWithRetry(HttpClient& c, Request r) {\n  while (true) {\n    auto res = c.send(r);\n    if (res.ok()) return res;\n    // unbounded loop, no backoff, retries non-idempotent requests\n  }\n}\n",
+        "language": "GENERIC"
+      }
+    },
+    {
+      "content": "Guard shared mutable state with a single synchronization strategy per object; avoid mixing atomics and mutexes for the same state variable.",
+      "examples": {
+        "positive": "class Counter {\npublic:\n  void inc() {\n    std::lock_guard<std::mutex> g(m_);\n    ++value_;\n  }\n  int get() const {\n    std::lock_guard<std::mutex> g(m_);\n    return value_;\n  }\nprivate:\n  mutable std::mutex m_;\n  int value_ = 0;\n};\n",
+        "negative": "class Counter {\npublic:\n  void inc() {\n    std::lock_guard<std::mutex> g(m_);\n    ++value_; // guarded here\n  }\n  int get() const {\n    return value_.load(std::memory_order_relaxed); // atomic access elsewhere\n  }\nprivate:\n  mutable std::mutex m_;\n  std::atomic<int> value_{0};\n};\n",
+        "language": "GENERIC"
+      }
+    },
+    {
+      "content": "Use structured, parameterized logging with stable keys; avoid concatenating user input into log messages and avoid logging secrets.",
+      "examples": {
+        "positive": "logger.info(\"http_request\",\n            { {\"method\", req.method()},\n              {\"path\", req.path()},\n              {\"status\", std::to_string(status)},\n              {\"request_id\", req.id()} });\n\nlogger.warn(\"auth_failed\", { {\"user\", userId}, {\"reason\", \"bad_password\"} });\n",
+        "negative": "logger.info(\"request: \" + req.method() + \" \" + req.path() +\n            \" auth=\" + req.header(\"Authorization\"));\n",
+        "language": "GENERIC"
+      }
+    },
+    {
+      "content": "Isolate tests from real time, randomness, filesystem, and network by injecting clocks, RNGs, and clients; avoid sleeps and live endpoints in unit tests.",
+      "examples": {
+        "positive": "struct Clock { virtual ~Clock() = default; virtual std::chrono::steady_clock::time_point now() const = 0; };\n\nstruct FakeClock : Clock {\n  std::chrono::steady_clock::time_point t{};\n  std::chrono::steady_clock::time_point now() const override { return t; }\n};\n\nstruct Http {\n  virtual ~Http() = default;\n  virtual Response send(const Request&) = 0;\n};\n\nstruct FakeHttp : Http {\n  Response next;\n  Response send(const Request&) override { return next; }\n};\n\nTEST(Service, UsesInjectedDeps) {\n  FakeClock c;\n  FakeHttp h;\n  h.next = Response::ok(\"{}\");\n  Service s(c, h);\n  EXPECT_TRUE(s.poll().ok());\n}\n",
+        "negative": "TEST(Service, Flaky) {\n  Service s; // uses system clock and real HTTP\n  std::this_thread::sleep_for(200ms);\n  auto r = s.poll();\n  EXPECT_TRUE(r.ok());\n}\n",
+        "language": "GENERIC"
+      }
+    }
+  ]
+}

@@ -1,0 +1,88 @@
+{
+  "name": "Swift Best Practices",
+  "summary": "Advanced Swift rules for production code dealing with concurrency, networking, boundaries, configuration, and reliability across app and server environments.",
+  "description": "This standard defines high-impact Swift practices for network safety (timeouts, retries, cancellation), strict boundary validation, robust error mapping, thread-safe state, resource lifecycle control, deterministic tests, structured logging, configuration injection, and avoiding common Swift pitfalls in escaping closures and sendable concurrency.",
+  "scope": "**/*.swift",
+  "rules": [
+    {
+      "content": "Set per-request connect and resource timeouts on all URLSession tasks; use a dedicated URLSessionConfiguration rather than the shared session.",
+      "examples": {
+        "positive": "let config = URLSessionConfiguration.ephemeral\nconfig.timeoutIntervalForRequest = 15\nconfig.timeoutIntervalForResource = 30\nconfig.waitsForConnectivity = false\nlet session = URLSession(configuration: config)\n\nlet task = session.dataTask(with: URL(string: \"https://api.example.com\")!) { _, _, _ in }\ntask.resume()",
+        "negative": "let task = URLSession.shared.dataTask(with: URL(string: \"https://api.example.com\")!) { _, _, _ in }\ntask.resume()",
+        "language": "SWIFT"
+      }
+    },
+    {
+      "content": "Apply bounded retries only for transient failures; use exponential backoff with jitter and cap attempts and total delay.",
+      "examples": {
+        "positive": "func fetchWithRetry(_ run: @escaping () async throws -> Data) async throws -> Data {\n    var attempt = 0\n    var delayNanos: UInt64 = 200_000_000\n    while true {\n        do { return try await run() }\n        catch {\n            attempt += 1\n            guard attempt <= 3 else { throw error }\n            let jitter = UInt64.random(in: 0...(delayNanos / 4))\n            try await Task.sleep(nanoseconds: delayNanos + jitter)\n            delayNanos = min(delayNanos * 2, 2_000_000_000)\n        }\n    }\n}",
+        "negative": "func fetchForever(_ run: @escaping () async throws -> Data) async throws -> Data {\n    while true {\n        do { return try await run() }\n        catch { continue }\n    }\n}",
+        "language": "SWIFT"
+      }
+    },
+    {
+      "content": "Propagate cancellation in async code; check Task.isCancelled and rethrow CancellationError instead of converting it to generic errors.",
+      "examples": {
+        "positive": "func load() async throws -> Data {\n    try Task.checkCancellation()\n    do {\n        return try await Task.sleep(nanoseconds: 10_000_000).map { Data() }\n    } catch is CancellationError {\n        throw CancellationError()\n    }\n}\n\nextension Task where Success == Never, Failure == Never {\n    static func sleep(nanoseconds: UInt64) async throws {\n        try await Task.sleep(nanoseconds: nanoseconds)\n    }\n}",
+        "negative": "func load() async throws -> Data {\n    do {\n        try await Task.sleep(nanoseconds: 10_000_000)\n        return Data()\n    } catch {\n        throw NSError(domain: \"Load\", code: 1) // swallows cancellation\n    }\n}",
+        "language": "SWIFT"
+      }
+    },
+    {
+      "content": "Validate and normalize all external inputs at module boundaries; reject invalid values before constructing domain models.",
+      "examples": {
+        "positive": "struct CreateUserRequest {\n    let email: String\n\n    init?(email raw: String) {\n        let trimmed = raw.trimmingCharacters(in: .whitespacesAndNewlines)\n        guard trimmed.contains(\"@\"), trimmed.count <= 254 else { return nil }\n        self.email = trimmed.lowercased()\n    }\n}\n\nlet req = CreateUserRequest(email: inputEmail) ?? { fatalError(\"invalid\") }()",
+        "negative": "struct CreateUserRequest {\n    let email: String\n}\n\nlet req = CreateUserRequest(email: inputEmail) // passes unchecked/unnormalized input",
+        "language": "SWIFT"
+      }
+    },
+    {
+      "content": "Map thrown errors to a typed domain error surface; avoid exposing NSError, URLError, or decoding errors directly across module boundaries.",
+      "examples": {
+        "positive": "enum APIError: Error {\n    case timeout\n    case unauthorized\n    case transport(Error)\n    case decoding(Error)\n}\n\nfunc map(_ error: Error) -> APIError {\n    if let urlError = error as? URLError, urlError.code == .timedOut { return .timeout }\n    return (error is DecodingError) ? .decoding(error) : .transport(error)\n}",
+        "negative": "func handle(_ error: Error) {\n    // leaks raw errors across layers\n    print(\"Error: \\(error)\")\n    throw error\n}",
+        "language": "SWIFT"
+      }
+    },
+    {
+      "content": "Guard shared mutable state with an actor or explicit synchronization; avoid concurrent reads/writes on class properties across tasks.",
+      "examples": {
+        "positive": "actor TokenStore {\n    private var token: String?\n\n    func get() -> String? { token }\n    func set(_ value: String?) { token = value }\n}\n\nlet store = TokenStore()\nTask { await store.set(\"t\") }\nTask { _ = await store.get() }",
+        "negative": "final class TokenStore {\n    var token: String?\n}\n\nlet store = TokenStore()\nTask { store.token = \"t\" }\nTask { _ = store.token } // unsynchronized access",
+        "language": "SWIFT"
+      }
+    },
+    {
+      "content": "Avoid capturing self strongly in escaping closures; use [weak self] and early-return, or pass required values explicitly.",
+      "examples": {
+        "positive": "final class VM {\n    var onUpdate: (() -> Void)?\n\n    func bind() {\n        onUpdate = { [weak self] in\n            guard let self else { return }\n            self.refresh()\n        }\n    }\n\n    private func refresh() {}\n}",
+        "negative": "final class VM {\n    var onUpdate: (() -> Void)?\n\n    func bind() {\n        onUpdate = {\n            self.refresh() // strong capture in escaping closure\n        }\n    }\n\n    private func refresh() {}\n}",
+        "language": "SWIFT"
+      }
+    },
+    {
+      "content": "Manage long-lived resources with explicit lifecycle methods and deinit hooks; avoid relying on implicit cleanup from ARC timing.",
+      "examples": {
+        "positive": "final class FileWriter {\n    private var handle: FileHandle?\n\n    func open(at url: URL) throws {\n        FileManager.default.createFile(atPath: url.path, contents: nil)\n        handle = try FileHandle(forWritingTo: url)\n    }\n\n    func close() {\n        try? handle?.close()\n        handle = nil\n    }\n\n    deinit { close() }\n}",
+        "negative": "final class FileWriter {\n    private let handle: FileHandle\n\n    init(url: URL) throws {\n        handle = try FileHandle(forWritingTo: url)\n    }\n\n    // no close(); relies on ARC to flush/close\n}",
+        "language": "SWIFT"
+      }
+    },
+    {
+      "content": "Isolate tests from time, randomness, and external services by injecting Clock/RandomNumberGenerator/clients; avoid real network and sleeps in unit tests.",
+      "examples": {
+        "positive": "protocol Clock { func now() -> Date }\nstruct FixedClock: Clock { let value: Date; func now() -> Date { value } }\n\nfinal class Greeter {\n    private let clock: Clock\n    init(clock: Clock) { self.clock = clock }\n    func greeting() -> String { \"Hi @ \\(clock.now())\" }\n}\n\nimport XCTest\nfinal class GreeterTests: XCTestCase {\n    func testGreetingDeterministic() {\n        let g = Greeter(clock: FixedClock(value: Date(timeIntervalSince1970: 0)))\n        XCTAssertEqual(g.greeting(), \"Hi @ 1970-01-01 00:00:00 +0000\")\n    }\n}",
+        "negative": "import XCTest\nfinal class GreeterTests: XCTestCase {\n    func testGreetingFlaky() async throws {\n        try await Task.sleep(nanoseconds: 500_000_000)\n        let s = \"Hi @ \\(Date())\"\n        XCTAssertTrue(s.contains(\"Hi\"))\n    }\n}",
+        "language": "SWIFT"
+      }
+    },
+    {
+      "content": "Use structured logging with stable event names and redaction; avoid logging secrets and avoid interpolating raw user input without sanitization.",
+      "examples": {
+        "positive": "import OSLog\n\nlet log = Logger(subsystem: \"com.example.app\", category: \"auth\")\nlet userId = \"123\"\nlet token = \"secret\"\nlog.info(\"auth.login user=\\(userId, privacy: .public) token=\\(token, privacy: .private(mask: .hash))\")",
+        "negative": "import OSLog\n\nlet log = Logger(subsystem: \"com.example.app\", category: \"auth\")\nlet userId = \"123\"\nlet token = \"secret\"\nlog.info(\"User \\(userId) logged in with token \\(token)\")",
+        "language": "SWIFT"
+      }
+    }
+  ]
+}

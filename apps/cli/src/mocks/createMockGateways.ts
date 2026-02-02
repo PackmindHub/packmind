@@ -18,6 +18,9 @@ export type MockPackmindGatewayOverrides = {
   createCommand?: jest.Mocked<IPackmindGateway>['createCommand'];
   createPackage?: jest.Mocked<IPackmindGateway>['createPackage'];
   pushOnboardingBaseline?: jest.Mocked<IPackmindGateway>['pushOnboardingBaseline'];
+  listStandards?: jest.Mocked<IPackmindGateway>['listStandards'];
+  listCommands?: jest.Mocked<IPackmindGateway>['listCommands'];
+  listSkills?: jest.Mocked<IPackmindGateway>['listSkills'];
 };
 
 export function createMockPackmindGateway(
@@ -40,6 +43,9 @@ export function createMockPackmindGateway(
     createCommand: jest.fn(),
     createPackage: jest.fn(),
     pushOnboardingBaseline: jest.fn(),
+    listStandards: jest.fn(),
+    listCommands: jest.fn(),
+    listSkills: jest.fn(),
     ...overrides,
   };
 }

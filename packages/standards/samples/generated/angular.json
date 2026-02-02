@@ -1,0 +1,88 @@
+{
+  "name": "Angular Best Practices",
+  "summary": "Standards for production Angular apps focusing on reactive correctness, security boundaries, performance-critical change detection, and reliable integration patterns.",
+  "description": "Covers advanced Angular patterns that prevent common production defects: uncontrolled subscriptions, leaky interceptors, brittle change detection, unsafe DOM usage, mis-scoped state, and flaky tests. Emphasizes consistent RxJS lifecycles, strict template safety, HttpClient hardening, and predictable state and DI boundaries.",
+  "scope": "**/*.ts,**/*.tsx,**/*.html,**/*.htm",
+  "rules": [
+    {
+      "content": "Apply takeUntilDestroyed(inject(DestroyRef)) to long-lived Observables in components, directives, and services; avoid manual subscribe without a deterministic teardown.",
+      "examples": {
+        "positive": "import { Component, DestroyRef, inject } from '@angular/core';\nimport { takeUntilDestroyed } from '@angular/core/rxjs-interop';\nimport { interval } from 'rxjs';\n\n@Component({ selector: 'app-timer', template: '{{n}}' })\nexport class TimerComponent {\n  private readonly destroyRef = inject(DestroyRef);\n  n = 0;\n\n  ngOnInit() {\n    interval(1000)\n      .pipe(takeUntilDestroyed(this.destroyRef))\n      .subscribe(v => (this.n = v));\n  }\n}\n",
+        "negative": "import { Component } from '@angular/core';\nimport { interval } from 'rxjs';\n\n@Component({ selector: 'app-timer', template: '{{n}}' })\nexport class TimerComponent {\n  n = 0;\n\n  ngOnInit() {\n    interval(1000).subscribe(v => (this.n = v));\n  }\n}\n",
+        "language": "TYPESCRIPT"
+      }
+    },
+    {
+      "content": "Prefer the async pipe for template bindings; expose Observable signals from the component and avoid subscribing in the component only to assign view model fields.",
+      "examples": {
+        "positive": "import { Component, inject } from '@angular/core';\nimport { UserService } from './user.service';\n\n@Component({\n  selector: 'app-profile',\n  template: \"<h1>{{ (user$ | async)?.name }}</h1>\"\n})\nexport class ProfileComponent {\n  private readonly users = inject(UserService);\n  readonly user$ = this.users.getMe();\n}\n",
+        "negative": "import { Component, inject } from '@angular/core';\nimport { UserService } from './user.service';\n\n@Component({\n  selector: 'app-profile',\n  template: \"<h1>{{ user?.name }}</h1>\"\n})\nexport class ProfileComponent {\n  private readonly users = inject(UserService);\n  user: any;\n\n  ngOnInit() {\n    this.users.getMe().subscribe(u => (this.user = u));\n  }\n}\n",
+        "language": "TYPESCRIPT"
+      }
+    },
+    {
+      "content": "Set ChangeDetectionStrategy.OnPush on components and update view state via immutable assignments, async pipe, or signals; avoid mutating objects bound into templates.",
+      "examples": {
+        "positive": "import { ChangeDetectionStrategy, Component } from '@angular/core';\n\n@Component({\n  selector: 'app-items',\n  template: \"<li *ngFor=\\\"let i of items\\\">{{ i.name }}</li>\",\n  changeDetection: ChangeDetectionStrategy.OnPush\n})\nexport class ItemsComponent {\n  items = [{ name: 'A' }];\n\n  add(name: string) {\n    this.items = [...this.items, { name }];\n  }\n}\n",
+        "negative": "import { Component } from '@angular/core';\n\n@Component({\n  selector: 'app-items',\n  template: \"<li *ngFor=\\\"let i of items\\\">{{ i.name }}</li>\"\n})\nexport class ItemsComponent {\n  items = [{ name: 'A' }];\n\n  add(name: string) {\n    this.items.push({ name });\n  }\n}\n",
+        "language": "TYPESCRIPT"
+      }
+    },
+    {
+      "content": "Include per-request cancellation in HttpClient calls using AbortController or takeUntil with a component destroy signal; avoid leaving in-flight requests after navigation.",
+      "examples": {
+        "positive": "import { Component, DestroyRef, inject } from '@angular/core';\nimport { HttpClient } from '@angular/common/http';\nimport { takeUntilDestroyed } from '@angular/core/rxjs-interop';\n\n@Component({ selector: 'app-search', template: \"\" })\nexport class SearchComponent {\n  private readonly http = inject(HttpClient);\n  private readonly destroyRef = inject(DestroyRef);\n\n  load(term: string) {\n    this.http\n      .get(`/api/search`, { params: { q: term } })\n      .pipe(takeUntilDestroyed(this.destroyRef))\n      .subscribe();\n  }\n}\n",
+        "negative": "import { Component, inject } from '@angular/core';\nimport { HttpClient } from '@angular/common/http';\n\n@Component({ selector: 'app-search', template: \"\" })\nexport class SearchComponent {\n  private readonly http = inject(HttpClient);\n\n  load(term: string) {\n    this.http.get(`/api/search?q=${encodeURIComponent(term)}`).subscribe();\n  }\n}\n",
+        "language": "TYPESCRIPT"
+      }
+    },
+    {
+      "content": "Handle HttpClient errors in the Observable pipeline using catchError and typed error mapping; avoid handling errors only in subscribe callbacks.",
+      "examples": {
+        "positive": "import { Injectable, inject } from '@angular/core';\nimport { HttpClient } from '@angular/common/http';\nimport { catchError, throwError } from 'rxjs';\n\nexport type ApiError = { kind: 'http'; status: number; message: string };\n\n@Injectable({ providedIn: 'root' })\nexport class OrdersApi {\n  private readonly http = inject(HttpClient);\n\n  getOrders() {\n    return this.http.get('/api/orders').pipe(\n      catchError((err: any) =>\n        throwError((): ApiError => ({\n          kind: 'http',\n          status: err?.status ?? 0,\n          message: err?.message ?? 'Request failed'\n        }))\n      )\n    );\n  }\n}\n",
+        "negative": "import { Injectable, inject } from '@angular/core';\nimport { HttpClient } from '@angular/common/http';\n\n@Injectable({ providedIn: 'root' })\nexport class OrdersApi {\n  private readonly http = inject(HttpClient);\n\n  getOrders() {\n    return this.http.get('/api/orders');\n  }\n}\n\n// later\nordersApi.getOrders().subscribe({\n  next: () => {},\n  error: (e) => console.error('failed', e)\n});\n",
+        "language": "TYPESCRIPT"
+      }
+    },
+    {
+      "content": "Validate and normalize route parameters at entry using typed coercion and explicit guards/resolvers; avoid using raw ActivatedRoute params directly in APIs.",
+      "examples": {
+        "positive": "import { Injectable, inject } from '@angular/core';\nimport { ActivatedRouteSnapshot, ResolveFn, Router } from '@angular/router';\n\nexport const userIdResolver: ResolveFn<number> = (route: ActivatedRouteSnapshot) => {\n  const id = Number(route.paramMap.get('id'));\n  if (!Number.isInteger(id) || id <= 0) {\n    inject(Router).navigateByUrl('/not-found');\n    throw new Error('Invalid id');\n  }\n  return id;\n};\n",
+        "negative": "import { Component, inject } from '@angular/core';\nimport { ActivatedRoute } from '@angular/router';\nimport { HttpClient } from '@angular/common/http';\n\n@Component({ selector: 'app-user', template: '' })\nexport class UserComponent {\n  private readonly route = inject(ActivatedRoute);\n  private readonly http = inject(HttpClient);\n\n  ngOnInit() {\n    const id = this.route.snapshot.paramMap.get('id');\n    this.http.get(`/api/users/${id}`).subscribe();\n  }\n}\n",
+        "language": "TYPESCRIPT"
+      }
+    },
+    {
+      "content": "Use DomSanitizer only with trusted, schema-validated inputs; prefer text bindings and URL parsing; avoid bypassSecurityTrust* for user-controlled content.",
+      "examples": {
+        "positive": "import { Component, computed, input } from '@angular/core';\n\n@Component({\n  selector: 'app-message',\n  template: \"<p>{{ message() }}</p>\"\n})\nexport class MessageComponent {\n  message = input.required<string>();\n}\n",
+        "negative": "import { Component, inject, input } from '@angular/core';\nimport { DomSanitizer } from '@angular/platform-browser';\n\n@Component({\n  selector: 'app-message',\n  template: \"<div [innerHTML]=\\\"html\\\"></div>\"\n})\nexport class MessageComponent {\n  private readonly sanitizer = inject(DomSanitizer);\n  raw = input.required<string>();\n\n  get html() {\n    return this.sanitizer.bypassSecurityTrustHtml(this.raw());\n  }\n}\n",
+        "language": "TYPESCRIPT"
+      }
+    },
+    {
+      "content": "Scope stateful services explicitly with providers at component/route level; avoid relying on providedIn: 'root' for services that hold per-screen state.",
+      "examples": {
+        "positive": "import { Injectable } from '@angular/core';\n\n@Injectable()\nexport class EditorState {\n  draft = '';\n}\n\nimport { Component } from '@angular/core';\n\n@Component({\n  selector: 'app-editor',\n  template: \"<textarea [(ngModel)]='state.draft'></textarea>\",\n  providers: [EditorState]\n})\nexport class EditorComponent {\n  constructor(public state: EditorState) {}\n}\n",
+        "negative": "import { Injectable } from '@angular/core';\n\n@Injectable({ providedIn: 'root' })\nexport class EditorState {\n  draft = '';\n}\n",
+        "language": "TYPESCRIPT"
+      }
+    },
+    {
+      "content": "Define interceptors as pure functions returning next(req) pipelines; avoid reading mutable globals or triggering navigation directly inside interceptors.",
+      "examples": {
+        "positive": "import { HttpInterceptorFn } from '@angular/common/http';\nimport { inject } from '@angular/core';\nimport { AuthTokenStore } from './auth-token.store';\n\nexport const authInterceptor: HttpInterceptorFn = (req, next) => {\n  const token = inject(AuthTokenStore).token();\n  const authReq = token\n    ? req.clone({ setHeaders: { Authorization: `Bearer ${token}` } })\n    : req;\n  return next(authReq);\n};\n",
+        "negative": "import { HttpInterceptorFn } from '@angular/common/http';\nimport { Router } from '@angular/router';\n\nlet token = '';\n\nexport const authInterceptor: HttpInterceptorFn = (req, next) => {\n  if (!token) {\n    new Router().navigateByUrl('/login');\n  }\n  return next(req.clone({ setHeaders: { Authorization: `Bearer ${token}` } }));\n};\n",
+        "language": "TYPESCRIPT"
+      }
+    },
+    {
+      "content": "Make tests deterministic by controlling time and async work with fakeAsync/tick or TestScheduler; avoid real timers, setTimeout, and race-prone waits.",
+      "examples": {
+        "positive": "import { fakeAsync, tick } from '@angular/core/testing';\nimport { debounceTime, Subject } from 'rxjs';\n\nit('debounces deterministically', fakeAsync(() => {\n  const in$ = new Subject<number>();\n  const out: number[] = [];\n\n  in$.pipe(debounceTime(100)).subscribe(v => out.push(v));\n\n  in$.next(1);\n  tick(99);\n  in$.next(2);\n  tick(100);\n\n  expect(out).toEqual([2]);\n}));\n",
+        "negative": "import { debounceTime, Subject } from 'rxjs';\n\nit('debounces (flaky)', (done) => {\n  const in$ = new Subject<number>();\n  const out: number[] = [];\n\n  in$.pipe(debounceTime(100)).subscribe(v => out.push(v));\n  in$.next(1);\n\n  setTimeout(() => {\n    expect(out.length).toBe(1);\n    done();\n  }, 110);\n});\n",
+        "language": "TYPESCRIPT"
+      }
+    }
+  ]
+}

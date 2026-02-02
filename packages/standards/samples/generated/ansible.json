@@ -1,0 +1,88 @@
+{
+  "name": "Ansible Best Practices",
+  "summary": "Advanced rules for writing predictable, secure, and maintainable Ansible playbooks, roles, and tasks in production automation.",
+  "description": "This standard defines high-impact patterns for idempotency, secret handling, error control, network robustness, privilege boundaries, and dependency isolation across playbooks and roles.",
+  "scope": "**/*.yaml,**/*.yml",
+  "rules": [
+    {
+      "content": "Set changed_when and failed_when explicitly for shell/command tasks; reference rc/stdout/stderr and avoid parsing-only heuristics without guards.",
+      "examples": {
+        "positive": "- name: Check service status\n  ansible.builtin.command: systemctl is-active mysvc\n  register: svc\n  changed_when: false\n  failed_when: svc.rc not in [0, 3]\n\n- name: Reload when active\n  ansible.builtin.command: systemctl reload mysvc\n  when: svc.stdout == 'active'\n  register: reload\n  changed_when: reload.rc == 0\n  failed_when: reload.rc != 0",
+        "negative": "- name: Check service status\n  ansible.builtin.shell: systemctl is-active mysvc | grep active\n  register: svc\n\n- name: Reload\n  ansible.builtin.shell: systemctl reload mysvc\n  when: svc.stdout is search('active')",
+        "language": "YAML"
+      }
+    },
+    {
+      "content": "Use block/rescue/always around multi-step changes; register outputs and gate dependent tasks with when conditions from prior results.",
+      "examples": {
+        "positive": "- block:\n    - name: Upload config\n      ansible.builtin.copy:\n        src: app.conf\n        dest: /etc/app/app.conf\n      register: cfg\n\n    - name: Restart app when config changed\n      ansible.builtin.service:\n        name: app\n        state: restarted\n      when: cfg.changed\n  rescue:\n    - name: Collect logs\n      ansible.builtin.command: journalctl -u app -n 200\n      register: logs\n      changed_when: false\n      failed_when: false\n  always:\n    - name: Emit log snippet\n      ansible.builtin.debug:\n        var: logs.stdout\n      when: logs is defined",
+        "negative": "- name: Upload config\n  ansible.builtin.copy:\n    src: app.conf\n    dest: /etc/app/app.conf\n\n- name: Restart app\n  ansible.builtin.service:\n    name: app\n    state: restarted\n\n- name: Collect logs\n  ansible.builtin.command: journalctl -u app -n 200",
+        "language": "YAML"
+      }
+    },
+    {
+      "content": "Mark secret-bearing tasks with no_log and keep secrets in vault/encrypted vars; avoid printing registered outputs that may contain credentials.",
+      "examples": {
+        "positive": "- name: Login and fetch token\n  ansible.builtin.uri:\n    url: https://api.example.com/login\n    method: POST\n    body_format: json\n    body:\n      username: \"{{ api_user }}\"\n      password: \"{{ api_password }}\"\n    return_content: true\n  register: login\n  no_log: true\n\n- name: Use token\n  ansible.builtin.uri:\n    url: https://api.example.com/data\n    headers:\n      Authorization: \"Bearer {{ login.json.token }}\"",
+        "negative": "- name: Login and fetch token\n  ansible.builtin.uri:\n    url: https://api.example.com/login\n    method: POST\n    body_format: json\n    body:\n      username: \"{{ api_user }}\"\n      password: \"{{ api_password }}\"\n  register: login\n\n- name: Debug token\n  ansible.builtin.debug:\n    var: login",
+        "language": "YAML"
+      }
+    },
+    {
+      "content": "Validate required variables with assert at role/play boundaries; check type and allowed values before using them in templates or commands.",
+      "examples": {
+        "positive": "- name: Validate inputs\n  ansible.builtin.assert:\n    that:\n      - app_port is integer\n      - app_port >= 1024\n      - app_env in ['dev', 'stage', 'prod']\n      - app_name is match('^[a-z0-9-]+$')\n\n- name: Render config\n  ansible.builtin.template:\n    src: app.conf.j2\n    dest: /etc/app/app.conf",
+        "negative": "- name: Render config\n  ansible.builtin.template:\n    src: app.conf.j2\n    dest: /etc/app/app.conf\n  vars:\n    app_port: \"{{ user_supplied_port }}\"\n\n- name: Start app\n  ansible.builtin.shell: \"app --port {{ app_port }} --env {{ app_env }}\"",
+        "language": "YAML"
+      }
+    },
+    {
+      "content": "Use uri with explicit timeout and retries; add until with status/content checks and delay/backoff for unstable endpoints.",
+      "examples": {
+        "positive": "- name: Wait for health endpoint\n  ansible.builtin.uri:\n    url: \"https://{{ inventory_hostname }}:8443/health\"\n    method: GET\n    validate_certs: true\n    timeout: 5\n    return_content: true\n  register: health\n  retries: 12\n  delay: 5\n  until:\n    - health.status == 200\n    - (health.json.status | default('')) == 'ok'",
+        "negative": "- name: Call health endpoint\n  ansible.builtin.uri:\n    url: \"https://{{ inventory_hostname }}:8443/health\"\n    method: GET\n  register: health\n\n- name: Assume healthy\n  ansible.builtin.debug:\n    msg: \"{{ health.status }}\"",
+        "language": "YAML"
+      }
+    },
+    {
+      "content": "Prefer module-specific timeout/retry options over wrapping shell loops; avoid custom curl/wget retry logic when Ansible modules support it.",
+      "examples": {
+        "positive": "- name: Download artifact\n  ansible.builtin.get_url:\n    url: \"{{ artifact_url }}\"\n    dest: /opt/app/app.tgz\n    mode: '0644'\n    timeout: 30\n  register: dl\n  retries: 5\n  delay: 10\n  until: dl is succeeded",
+        "negative": "- name: Download artifact with curl loop\n  ansible.builtin.shell: |\n    for i in 1 2 3 4 5; do\n      curl -fSL \"{{ artifact_url }}\" -o /opt/app/app.tgz && exit 0\n      sleep 10\n    done\n    exit 1",
+        "language": "YAML"
+      }
+    },
+    {
+      "content": "Use become at the task or block level; avoid setting become globally for a play when only a subset of tasks requires elevation.",
+      "examples": {
+        "positive": "- name: Configure app\n  hosts: app\n  tasks:\n    - name: Create app user\n      ansible.builtin.user:\n        name: app\n      become: true\n\n    - name: Render user-owned config\n      ansible.builtin.template:\n        src: user.conf.j2\n        dest: /home/app/user.conf\n        owner: app\n        group: app\n        mode: '0644'\n      become: true\n\n    - name: Query app status\n      ansible.builtin.command: appctl status\n      changed_when: false",
+        "negative": "- name: Configure app\n  hosts: app\n  become: true\n  tasks:\n    - name: Query app status\n      ansible.builtin.command: appctl status\n      changed_when: false\n\n    - name: Render user-owned config\n      ansible.builtin.template:\n        src: user.conf.j2\n        dest: /home/app/user.conf",
+        "language": "YAML"
+      }
+    },
+    {
+      "content": "Delegate API/control-plane calls to localhost and use run_once where appropriate; avoid executing external API mutations concurrently across all hosts.",
+      "examples": {
+        "positive": "- name: Create DNS record once\n  ansible.builtin.uri:\n    url: \"https://dns.example.com/records\"\n    method: POST\n    body_format: json\n    body:\n      name: \"{{ app_name }}.example.com\"\n      value: \"{{ vip }}\"\n    status_code: [200, 201, 409]\n    timeout: 10\n  delegate_to: localhost\n  run_once: true\n  register: dns\n  no_log: true",
+        "negative": "- name: Create DNS record\n  ansible.builtin.uri:\n    url: \"https://dns.example.com/records\"\n    method: POST\n    body_format: json\n    body:\n      name: \"{{ inventory_hostname }}.example.com\"\n      value: \"{{ ansible_host }}\"",
+        "language": "YAML"
+      }
+    },
+    {
+      "content": "Constrain host-level parallelism for shared resources using serial/throttle; avoid running package/database migrations simultaneously on all targets.",
+      "examples": {
+        "positive": "- name: Rolling deployment\n  hosts: app\n  serial: 20%\n  tasks:\n    - name: Run migration\n      ansible.builtin.command: /opt/app/bin/migrate\n      throttle: 1\n      register: mig\n      changed_when: mig.rc == 0\n      failed_when: mig.rc != 0",
+        "negative": "- name: Parallel migration\n  hosts: app\n  tasks:\n    - name: Run migration\n      ansible.builtin.command: /opt/app/bin/migrate",
+        "language": "YAML"
+      }
+    },
+    {
+      "content": "Pin external role and collection versions in requirements files; avoid implicit latest installs and unversioned Galaxy dependencies in CI and production runs.",
+      "examples": {
+        "positive": "collections:\n  - name: community.general\n    version: \"8.6.0\"\n  - name: ansible.posix\n    version: \"1.5.4\"\n\nroles:\n  - name: geerlingguy.nginx\n    version: \"3.2.0\"",
+        "negative": "collections:\n  - name: community.general\n  - name: ansible.posix\n\nroles:\n  - name: geerlingguy.nginx",
+        "language": "YAML"
+      }
+    }
+  ]
+}

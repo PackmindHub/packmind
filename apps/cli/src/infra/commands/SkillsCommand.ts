@@ -1,6 +1,7 @@
 import { subcommands } from 'cmd-ts';
 import { addSkillCommand } from './skills/AddSkillCommand';
 import { installDefaultSkillsCommand } from './skills/InstallDefaultSkillsCommand';
+import { listSkillsCommand } from './ListSkillsCommand';
 
 export const skillsCommand = subcommands({
   name: 'skills',
@@ -8,5 +9,6 @@ export const skillsCommand = subcommands({
   cmds: {
     add: addSkillCommand,
     init: installDefaultSkillsCommand,
+    list: listSkillsCommand,
   },
 });

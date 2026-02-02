@@ -1,0 +1,88 @@
+{
+  "name": "Rust Best Practices",
+  "summary": "Advanced, production-oriented Rust rules for reliable I/O, concurrency, configuration, and error handling in services and libraries.",
+  "description": "This standard covers high-impact Rust practices for fallible boundaries, resource lifetimes, async cancellation, retries/timeouts, secure input handling, concurrency correctness, structured logging, configuration loading, dependency injection, and deterministic testing.",
+  "scope": "**/*.rs",
+  "rules": [
+    {
+      "content": "Use structured error types with context; avoid String errors and unwrap at fallible boundaries.",
+      "examples": {
+        "positive": "use thiserror::Error;\n\n#[derive(Debug, Error)]\nenum AppError {\n    #[error(\"config parse failed: {0}\")]\n    Config(#[from] toml::de::Error),\n    #[error(\"io failed reading {path}: {source}\")]\n    Read { path: String, #[source] source: std::io::Error },\n}\n\nfn load(path: &str) -> Result<String, AppError> {\n    let s = std::fs::read_to_string(path)\n        .map_err(|e| AppError::Read { path: path.to_owned(), source: e })?;\n    Ok(s)\n}\n",
+        "negative": "fn load(path: &str) -> Result<String, String> {\n    let s = std::fs::read_to_string(path).unwrap();\n    Ok(s)\n}\n",
+        "language": "RUST"
+      }
+    },
+    {
+      "content": "Include timeouts on every network operation; prefer per-request timeouts over relying on defaults.",
+      "examples": {
+        "positive": "use std::time::Duration;\n\nasync fn fetch(url: &str) -> Result<String, reqwest::Error> {\n    let client = reqwest::Client::builder()\n        .connect_timeout(Duration::from_secs(3))\n        .timeout(Duration::from_secs(10))\n        .build()?;\n\n    let body = client.get(url).send().await?.error_for_status()?.text().await?;\n    Ok(body)\n}\n",
+        "negative": "async fn fetch(url: &str) -> Result<String, reqwest::Error> {\n    let body = reqwest::get(url).await?.text().await?;\n    Ok(body)\n}\n",
+        "language": "RUST"
+      }
+    },
+    {
+      "content": "Apply retries only to idempotent operations and gate them by error category; avoid unconditional retry loops.",
+      "examples": {
+        "positive": "use std::time::Duration;\n\nasync fn get_with_retry(client: &reqwest::Client, url: &str) -> Result<reqwest::Response, reqwest::Error> {\n    let mut backoff = Duration::from_millis(50);\n    for attempt in 0..3 {\n        match client.get(url).send().await {\n            Ok(r) if r.status().is_server_error() && attempt < 2 => {},\n            Ok(r) => return Ok(r),\n            Err(e) if (e.is_timeout() || e.is_connect()) && attempt < 2 => {},\n            Err(e) => return Err(e),\n        }\n        tokio::time::sleep(backoff).await;\n        backoff *= 2;\n    }\n    unreachable!()\n}\n",
+        "negative": "async fn get_with_retry(client: &reqwest::Client, url: &str) -> Result<reqwest::Response, reqwest::Error> {\n    loop {\n        if let Ok(r) = client.get(url).send().await {\n            return Ok(r);\n        }\n    }\n}\n",
+        "language": "RUST"
+      }
+    },
+    {
+      "content": "Prefer borrowing over cloning in APIs; expose &str/&[T] and accept impl AsRef/Into where ownership is needed.",
+      "examples": {
+        "positive": "struct User { name: String }\n\nfn greet(name: &str) -> String {\n    format!(\"hi {name}\")\n}\n\nfn set_name(u: &mut User, name: impl Into<String>) {\n    u.name = name.into();\n}\n",
+        "negative": "struct User { name: String }\n\nfn greet(name: String) -> String {\n    format!(\"hi {name}\")\n}\n\nfn set_name(u: &mut User, name: String) {\n    u.name = name;\n}\n",
+        "language": "RUST"
+      }
+    },
+    {
+      "content": "Use cancellation-safe async patterns; avoid holding Mutex/RwLock guards across .await.",
+      "examples": {
+        "positive": "use tokio::sync::Mutex;\n\nstruct State { v: Mutex<Vec<i32>> }\n\nasync fn push_then_work(s: &State) {\n    {\n        let mut g = s.v.lock().await;\n        g.push(1);\n    }\n    tokio::time::sleep(std::time::Duration::from_millis(10)).await;\n}\n",
+        "negative": "use tokio::sync::Mutex;\n\nstruct State { v: Mutex<Vec<i32>> }\n\nasync fn push_then_work(s: &State) {\n    let mut g = s.v.lock().await;\n    g.push(1);\n    tokio::time::sleep(std::time::Duration::from_millis(10)).await;\n    drop(g);\n}\n",
+        "language": "RUST"
+      }
+    },
+    {
+      "content": "Validate and normalize external inputs at module boundaries; avoid passing raw strings into core logic.",
+      "examples": {
+        "positive": "use std::num::NonZeroU16;\n\n#[derive(Debug, Clone)]\nstruct Port(NonZeroU16);\n\nimpl TryFrom<&str> for Port {\n    type Error = &'static str;\n    fn try_from(s: &str) -> Result<Self, Self::Error> {\n        let n: u16 = s.parse().map_err(|_| \"port\")?;\n        let nz = NonZeroU16::new(n).ok_or(\"port\")?;\n        Ok(Port(nz))\n    }\n}\n\nfn start_server(port: Port) {\n    let _p = port.0.get();\n}\n",
+        "negative": "fn start_server(port: &str) {\n    let p: u16 = port.parse().unwrap();\n    if p == 0 { panic!(\"bad\") }\n}\n",
+        "language": "RUST"
+      }
+    },
+    {
+      "content": "Use atomic file writes for persisted state; write to a temp file and rename, never overwrite in place.",
+      "examples": {
+        "positive": "use std::{fs, io::Write, path::Path};\n\ndefn write_atomic(path: &Path, data: &[u8]) -> std::io::Result<()> {\n    let dir = path.parent().unwrap_or_else(|| Path::new(\".\"));\n    let tmp = dir.join(format!(\".{}.tmp\", path.file_name().unwrap().to_string_lossy()));\n    {\n        let mut f = fs::File::create(&tmp)?;\n        f.write_all(data)?;\n        f.sync_all()?;\n    }\n    fs::rename(tmp, path)?;\n    Ok(())\n}\n",
+        "negative": "use std::{fs, io::Write, path::Path};\n\nfn write_in_place(path: &Path, data: &[u8]) -> std::io::Result<()> {\n    let mut f = fs::OpenOptions::new().write(true).create(true).open(path)?;\n    f.write_all(data)?;\n    Ok(())\n}\n",
+        "language": "RUST"
+      }
+    },
+    {
+      "content": "Use structured logging with stable fields; avoid interpolated strings that drop context.",
+      "examples": {
+        "positive": "use tracing::{error, info};\n\nfn handle(req_id: &str, user_id: u64) {\n    info!(%req_id, user_id, \"request started\");\n    if user_id == 0 {\n        error!(%req_id, user_id, \"invalid user\");\n    }\n}\n",
+        "negative": "fn handle(req_id: &str, user_id: u64) {\n    println!(\"request started req_id={req_id} user_id={user_id}\");\n    if user_id == 0 {\n        eprintln!(\"invalid user {user_id} on {req_id}\");\n    }\n}\n",
+        "language": "RUST"
+      }
+    },
+    {
+      "content": "Load configuration once into typed structs; avoid environment lookups scattered through business logic.",
+      "examples": {
+        "positive": "use serde::Deserialize;\n\n#[derive(Clone, Debug, Deserialize)]\nstruct Config {\n    database_url: String,\n    timeout_ms: u64,\n}\n\nfn load_config() -> Result<Config, config::ConfigError> {\n    config::Config::builder()\n        .add_source(config::Environment::default())\n        .build()?\n        .try_deserialize()\n}\n\nfn run(cfg: Config) {\n    let _ = cfg.database_url;\n}\n",
+        "negative": "fn run() {\n    let database_url = std::env::var(\"DATABASE_URL\").unwrap();\n    let timeout_ms: u64 = std::env::var(\"TIMEOUT_MS\").unwrap().parse().unwrap();\n    let _ = (database_url, timeout_ms);\n}\n",
+        "language": "RUST"
+      }
+    },
+    {
+      "content": "Inject external dependencies behind traits or function parameters; avoid hard-coded constructors and global singletons in core logic.",
+      "examples": {
+        "positive": "use async_trait::async_trait;\n\n#[async_trait]\ntrait Clock: Send + Sync {\n    async fn now_ms(&self) -> u64;\n}\n\nstruct SystemClock;\n\n#[async_trait]\nimpl Clock for SystemClock {\n    async fn now_ms(&self) -> u64 {\n        0\n    }\n}\n\nstruct Service<C: Clock> { clock: C }\n\nimpl<C: Clock> Service<C> {\n    fn new(clock: C) -> Self { Self { clock } }\n    async fn handle(&self) -> u64 { self.clock.now_ms().await }\n}\n",
+        "negative": "static mut CLOCK_OFFSET: u64 = 0;\n\nstruct Service;\n\nimpl Service {\n    async fn handle(&self) -> u64 {\n        unsafe { CLOCK_OFFSET }\n    }\n}\n",
+        "language": "RUST"
+      }
+    }
+  ]
+}

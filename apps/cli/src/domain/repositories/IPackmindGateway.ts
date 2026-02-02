@@ -162,6 +162,34 @@ export type CreatePackageResult = {
   slug: string;
 };
 
+// List Standards types
+export type ListedStandard = {
+  id: string;
+  slug: string;
+  name: string;
+  description: string;
+};
+
+export type ListStandardsResult = ListedStandard[];
+
+// List Commands types
+export type ListedCommand = {
+  id: string;
+  slug: string;
+  name: string;
+};
+
+export type ListCommandsResult = ListedCommand[];
+
+// List Skills types
+export type ListedSkill = {
+  slug: string;
+  name: string;
+  description: string;
+};
+
+export type ListSkillsResult = ListedSkill[];
+
 export interface IPackmindGateway {
   linter: ILinterGateway;
   getPullData: Gateway<IPullContentUseCase>;
@@ -211,4 +239,9 @@ export interface IPackmindGateway {
   pushOnboardingBaseline(
     draft: IOnboardingDraft,
   ): Promise<{ success: boolean }>;
+
+  // List methods
+  listStandards(): Promise<ListStandardsResult>;
+  listCommands(): Promise<ListCommandsResult>;
+  listSkills(): Promise<ListSkillsResult>;
 }

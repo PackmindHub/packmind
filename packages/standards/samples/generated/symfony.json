@@ -1,0 +1,88 @@
+{
+  "name": "Symfony Best Practices",
+  "summary": "Advanced Symfony coding rules for production-grade services, APIs, and web apps focusing on correctness, resilience, and operational safety.",
+  "description": "This standard covers high-impact Symfony patterns around DI container boundaries, request handling, validation, I/O resilience, Doctrine usage, caching, logging, and test reliability, targeting common production pitfalls.",
+  "scope": "**/*.php,**/*.phtml",
+  "rules": [
+    {
+      "content": "Inject explicit dependencies; avoid fetching services from the container in controllers, commands, and services except in compiler passes and bundles.",
+      "examples": {
+        "positive": "<?php\n\nnamespace App\\Controller;\n\nuse App\\Service\\ReportGenerator;\nuse Symfony\\Bundle\\FrameworkBundle\\Controller\\AbstractController;\nuse Symfony\\Component\\HttpFoundation\\Response;\nuse Symfony\\Component\\Routing\\Attribute\\Route;\n\nfinal class ReportController extends AbstractController\n{\n    public function __construct(private readonly ReportGenerator $generator) {}\n\n    #[Route('/report', name: 'report')]\n    public function __invoke(): Response\n    {\n        return new Response($this->generator->generate());\n    }\n}\n",
+        "negative": "<?php\n\nnamespace App\\Controller;\n\nuse Symfony\\Bundle\\FrameworkBundle\\Controller\\AbstractController;\nuse Symfony\\Component\\HttpFoundation\\Response;\nuse Symfony\\Component\\Routing\\Attribute\\Route;\n\nfinal class ReportController extends AbstractController\n{\n    #[Route('/report', name: 'report')]\n    public function __invoke(): Response\n    {\n        $generator = $this->container->get('App\\\\Service\\\\ReportGenerator');\n        return new Response($generator->generate());\n    }\n}\n",
+        "language": "PHP"
+      }
+    },
+    {
+      "content": "Set explicit connect and total timeouts on all Symfony HttpClient requests.",
+      "examples": {
+        "positive": "<?php\n\nuse Symfony\\Contracts\\HttpClient\\HttpClientInterface;\n\nfinal class PricingClient\n{\n    public function __construct(private readonly HttpClientInterface $http) {}\n\n    public function fetch(): array\n    {\n        $response = $this->http->request('GET', 'https://api.example.com/prices', [\n            'timeout' => 5.0,\n            'max_duration' => 8.0,\n        ]);\n\n        return $response->toArray();\n    }\n}\n",
+        "negative": "<?php\n\nuse Symfony\\Contracts\\HttpClient\\HttpClientInterface;\n\nfinal class PricingClient\n{\n    public function __construct(private readonly HttpClientInterface $http) {}\n\n    public function fetch(): array\n    {\n        $response = $this->http->request('GET', 'https://api.example.com/prices');\n        return $response->toArray();\n    }\n}\n",
+        "language": "PHP"
+      }
+    },
+    {
+      "content": "Handle non-2xx HTTP responses and transport exceptions explicitly; avoid calling toArray() without status checks.",
+      "examples": {
+        "positive": "<?php\n\nuse Symfony\\Contracts\\HttpClient\\Exception\\TransportExceptionInterface;\nuse Symfony\\Contracts\\HttpClient\\HttpClientInterface;\n\nfinal class ProfileClient\n{\n    public function __construct(private readonly HttpClientInterface $http) {}\n\n    public function fetch(string $id): array\n    {\n        try {\n            $response = $this->http->request('GET', \"https://api.example.com/users/{$id}\");\n            $status = $response->getStatusCode();\n\n            if ($status !== 200) {\n                return ['error' => 'upstream', 'status' => $status];\n            }\n\n            return $response->toArray(false);\n        } catch (TransportExceptionInterface $e) {\n            return ['error' => 'transport'];\n        }\n    }\n}\n",
+        "negative": "<?php\n\nuse Symfony\\Contracts\\HttpClient\\HttpClientInterface;\n\nfinal class ProfileClient\n{\n    public function __construct(private readonly HttpClientInterface $http) {}\n\n    public function fetch(string $id): array\n    {\n        $response = $this->http->request('GET', \"https://api.example.com/users/{$id}\");\n        return $response->toArray();\n    }\n}\n",
+        "language": "PHP"
+      }
+    },
+    {
+      "content": "Validate request payloads at controller boundaries using Symfony Validator on DTOs; avoid using raw Request data in domain services.",
+      "examples": {
+        "positive": "<?php\n\nnamespace App\\Controller;\n\nuse Symfony\\Component\\HttpFoundation\\Request;\nuse Symfony\\Component\\HttpFoundation\\JsonResponse;\nuse Symfony\\Component\\Routing\\Attribute\\Route;\nuse Symfony\\Component\\Validator\\Constraints as Assert;\nuse Symfony\\Component\\Validator\\Validator\\ValidatorInterface;\n\nfinal class CreateUserInput\n{\n    public function __construct(\n        #[Assert\\Email]\n        public readonly string $email,\n        #[Assert\\Length(min: 8)]\n        public readonly string $password,\n    ) {}\n}\n\nfinal class UserController\n{\n    public function __construct(private readonly ValidatorInterface $validator) {}\n\n    #[Route('/users', methods: ['POST'])]\n    public function create(Request $request): JsonResponse\n    {\n        $data = json_decode($request->getContent(), true, 512, JSON_THROW_ON_ERROR);\n        $input = new CreateUserInput($data['email'] ?? '', $data['password'] ?? '');\n\n        $violations = $this->validator->validate($input);\n        if (count($violations) > 0) {\n            return new JsonResponse(['errors' => (string) $violations], 422);\n        }\n\n        return new JsonResponse(['ok' => true], 201);\n    }\n}\n",
+        "negative": "<?php\n\nnamespace App\\Controller;\n\nuse Symfony\\Component\\HttpFoundation\\Request;\nuse Symfony\\Component\\HttpFoundation\\JsonResponse;\nuse Symfony\\Component\\Routing\\Attribute\\Route;\n\nfinal class UserController\n{\n    #[Route('/users', methods: ['POST'])]\n    public function create(Request $request): JsonResponse\n    {\n        $email = $request->request->get('email');\n        $password = $request->request->get('password');\n\n        // passed directly into deeper layers without validation\n        return new JsonResponse(['email' => $email, 'password' => $password], 201);\n    }\n}\n",
+        "language": "PHP"
+      }
+    },
+    {
+      "content": "Use Doctrine transactions for multi-entity writes; avoid interleaving flush() calls across steps without a surrounding transaction.",
+      "examples": {
+        "positive": "<?php\n\nuse Doctrine\\ORM\\EntityManagerInterface;\n\nfinal class CheckoutService\n{\n    public function __construct(private readonly EntityManagerInterface $em) {}\n\n    public function checkout(object $order, object $payment): void\n    {\n        $this->em->wrapInTransaction(function () use ($order, $payment): void {\n            $this->em->persist($order);\n            $this->em->persist($payment);\n            $this->em->flush();\n        });\n    }\n}\n",
+        "negative": "<?php\n\nuse Doctrine\\ORM\\EntityManagerInterface;\n\nfinal class CheckoutService\n{\n    public function __construct(private readonly EntityManagerInterface $em) {}\n\n    public function checkout(object $order, object $payment): void\n    {\n        $this->em->persist($order);\n        $this->em->flush();\n\n        $this->em->persist($payment);\n        $this->em->flush();\n    }\n}\n",
+        "language": "PHP"
+      }
+    },
+    {
+      "content": "Stream large Doctrine result sets with iterate()/toIterable(); avoid getResult() when processing many rows.",
+      "examples": {
+        "positive": "<?php\n\nuse Doctrine\\ORM\\EntityManagerInterface;\n\nfinal class ExportUsers\n{\n    public function __construct(private readonly EntityManagerInterface $em) {}\n\n    public function run(): void\n    {\n        $qb = $this->em->createQueryBuilder()\n            ->select('u')\n            ->from('App\\\\Entity\\\\User', 'u')\n            ->orderBy('u.id', 'ASC');\n\n        foreach ($qb->getQuery()->toIterable() as $user) {\n            // write row\n            $this->em->detach($user);\n        }\n    }\n}\n",
+        "negative": "<?php\n\nuse Doctrine\\ORM\\EntityManagerInterface;\n\nfinal class ExportUsers\n{\n    public function __construct(private readonly EntityManagerInterface $em) {}\n\n    public function run(): void\n    {\n        $users = $this->em->createQuery('SELECT u FROM App\\\\Entity\\\\User u')->getResult();\n        foreach ($users as $user) {\n            // write row\n        }\n    }\n}\n",
+        "language": "PHP"
+      }
+    },
+    {
+      "content": "Keep cache values versioned and typed; avoid storing unserialized entities or mutable objects directly in cache pools.",
+      "examples": {
+        "positive": "<?php\n\nuse Symfony\\Contracts\\Cache\\CacheInterface;\nuse Symfony\\Contracts\\Cache\\ItemInterface;\n\nfinal class FeatureFlags\n{\n    public function __construct(private readonly CacheInterface $cache) {}\n\n    public function all(): array\n    {\n        return $this->cache->get('flags:v2', function (ItemInterface $item): array {\n            $item->expiresAfter(300);\n            return [\n                'new_checkout' => true,\n                'beta_search' => false,\n            ];\n        });\n    }\n}\n",
+        "negative": "<?php\n\nuse Symfony\\Contracts\\Cache\\CacheInterface;\nuse Symfony\\Contracts\\Cache\\ItemInterface;\n\nfinal class CachedUser\n{\n    public function __construct(private readonly CacheInterface $cache) {}\n\n    public function get(int $id): object\n    {\n        return $this->cache->get('user_'.$id, function (ItemInterface $item): object {\n            $item->expiresAfter(3600);\n            return new \\stdClass(); // placeholder for an ORM entity\n        });\n    }\n}\n",
+        "language": "PHP"
+      }
+    },
+    {
+      "content": "Log with context arrays and a stable message key; avoid concatenating user input into log messages.",
+      "examples": {
+        "positive": "<?php\n\nuse Psr\\Log\\LoggerInterface;\n\nfinal class LoginHandler\n{\n    public function __construct(private readonly LoggerInterface $logger) {}\n\n    public function onFailedLogin(string $email, string $ip): void\n    {\n        $this->logger->warning('auth.login_failed', [\n            'email' => $email,\n            'ip' => $ip,\n        ]);\n    }\n}\n",
+        "negative": "<?php\n\nuse Psr\\Log\\LoggerInterface;\n\nfinal class LoginHandler\n{\n    public function __construct(private readonly LoggerInterface $logger) {}\n\n    public function onFailedLogin(string $email, string $ip): void\n    {\n        $this->logger->warning('Login failed for '.$email.' from '.$ip);\n    }\n}\n",
+        "language": "PHP"
+      }
+    },
+    {
+      "content": "Make services stateless; avoid storing per-request data in service properties shared across requests.",
+      "examples": {
+        "positive": "<?php\n\nfinal class PriceCalculator\n{\n    public function calculate(int $cents, float $taxRate): int\n    {\n        return (int) round($cents * (1 + $taxRate));\n    }\n}\n",
+        "negative": "<?php\n\nfinal class PriceCalculator\n{\n    private float $taxRate;\n\n    public function setTaxRate(float $taxRate): void\n    {\n        $this->taxRate = $taxRate;\n    }\n\n    public function calculate(int $cents): int\n    {\n        return (int) round($cents * (1 + $this->taxRate));\n    }\n}\n",
+        "language": "PHP"
+      }
+    },
+    {
+      "content": "Isolate tests by resetting Doctrine, cache, and messenger transports between tests; avoid relying on execution order or shared state.",
+      "examples": {
+        "positive": "<?php\n\nnamespace App\\Tests\\Integration;\n\nuse Doctrine\\ORM\\EntityManagerInterface;\nuse Symfony\\Bundle\\FrameworkBundle\\Test\\KernelTestCase;\nuse Symfony\\Component\\Messenger\\Transport\\InMemoryTransport;\nuse Symfony\\Contracts\\Cache\\CacheInterface;\n\nfinal class UserFlowTest extends KernelTestCase\n{\n    protected function tearDown(): void\n    {\n        $container = static::getContainer();\n\n        $em = $container->get(EntityManagerInterface::class);\n        $em->clear();\n\n        $cache = $container->get(CacheInterface::class);\n        $cache->clear();\n\n        $transport = $container->get('messenger.transport.async');\n        if ($transport instanceof InMemoryTransport) {\n            $transport->reset();\n        }\n\n        parent::tearDown();\n    }\n}\n",
+        "negative": "<?php\n\nnamespace App\\Tests\\Integration;\n\nuse Symfony\\Bundle\\FrameworkBundle\\Test\\KernelTestCase;\n\nfinal class UserFlowTest extends KernelTestCase\n{\n    public function testA(): void\n    {\n        // writes DB, queues messages, warms cache\n        $this->assertTrue(true);\n    }\n\n    public function testB(): void\n    {\n        // assumes DB/cache/queue state from testA\n        $this->assertTrue(true);\n    }\n}\n",
+        "language": "PHP"
+      }
+    }
+  ]
+}

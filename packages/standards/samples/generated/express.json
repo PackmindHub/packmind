@@ -1,86 +1,86 @@
 {
   "name": "Express.js Best Practices",
-  "summary": "A focused standard for building production Express.js APIs with predictable behavior under failure, load, and untrusted input.",
-  "description": "Covers high-impact Express.js patterns for request lifecycle safety, error propagation, validation, logging, configuration, dependency boundaries, resource handling, and external I/O controls in production services.",
-  "scope": "Express.js source files",
+  "summary": "Apply these rules when building and operating production Express.js HTTP APIs where reliability, security, and observability matter.",
+  "description": "This standard defines high-impact Express.js patterns for request handling, error propagation, validation, configuration, dependency boundaries, resource lifecycle, timeouts, and logging in production services.",
+  "scope": "**/*.ts,**/*.js",
   "rules": [
     {
-      "content": "Propagate handler failures by calling next(err) or throwing inside async handlers; avoid sending partial responses before error propagation.",
+      "content": "Propagate handler failures with next(err) or a wrapper; never leave rejected promises unhandled inside Express middleware.",
       "examples": {
-        "positive": "import express, { Request, Response, NextFunction } from \"express\";\n\nconst app = express();\n\nconst asyncHandler = (fn: any) => (req: Request, res: Response, next: NextFunction) =>\n  Promise.resolve(fn(req, res, next)).catch(next);\n\napp.get(\n  \"/users/:id\",\n  asyncHandler(async (req: Request, res: Response) => {\n    const user = await getUser(req.params.id);\n    res.json({ user });\n  })\n);\n\napp.use((err: any, req: Request, res: Response, next: NextFunction) => {\n  if (res.headersSent) return next(err);\n  res.status(500).json({ error: \"internal_error\" });\n});\n\nasync function getUser(id: string) {\n  if (id === \"0\") throw new Error(\"not found\");\n  return { id };\n}\n",
-        "negative": "import express, { Request, Response } from \"express\";\n\nconst app = express();\n\napp.get(\"/users/:id\", async (req: Request, res: Response) => {\n  res.status(200); // headers may be sent later\n  const user = await getUser(req.params.id); // rejection becomes unhandled\n  res.json({ user });\n});\n\nasync function getUser(id: string) {\n  if (id === \"0\") throw new Error(\"not found\");\n  return { id };\n}\n",
+        "positive": "import express, { Request, Response, NextFunction } from \"express\";\n\nconst app = express();\n\ntype AsyncHandler = (req: Request, res: Response, next: NextFunction) => Promise<unknown>;\nconst asyncHandler = (fn: AsyncHandler) => (req: Request, res: Response, next: NextFunction) => {\n  Promise.resolve(fn(req, res, next)).catch(next);\n};\n\napp.get(\"/users/:id\", asyncHandler(async (req, res) => {\n  const user = await loadUser(req.params.id);\n  res.json(user);\n}));\n\nasync function loadUser(id: string) {\n  if (!id) throw new Error(\"missing id\");\n  return { id };\n}\n",
+        "negative": "import express from \"express\";\n\nconst app = express();\n\napp.get(\"/users/:id\", async (req, res) => {\n  // Rejection becomes unhandled; Express may not route it to error middleware reliably.\n  const user = await loadUser(req.params.id);\n  res.json(user);\n});\n\nasync function loadUser(id: string) {\n  if (!id) throw new Error(\"missing id\");\n  return { id };\n}\n",
         "language": "TYPESCRIPT"
       }
     },
     {
-      "content": "Return immediately after res.send/res.json/res.end; avoid continuing work that may throw or attempt a second response.",
+      "content": "Register error middleware last and end it with a response; avoid calling next() after writing headers.",
       "examples": {
-        "positive": "import { Request, Response } from \"express\";\n\nexport function handler(req: Request, res: Response) {\n  if (!req.headers.authorization) {\n    return res.status(401).json({ error: \"missing_auth\" });\n  }\n\n  // safe to continue\n  return res.json({ ok: true });\n}\n",
-        "negative": "import { Request, Response } from \"express\";\n\nexport function handler(req: Request, res: Response) {\n  if (!req.headers.authorization) {\n    res.status(401).json({ error: \"missing_auth\" });\n  }\n\n  // continues and may try to respond again\n  res.json({ ok: true });\n}\n",
+        "positive": "import express, { Request, Response, NextFunction } from \"express\";\n\nconst app = express();\n\napp.get(\"/boom\", (_req, _res) => {\n  throw new Error(\"boom\");\n});\n\napp.use((err: unknown, _req: Request, res: Response, _next: NextFunction) => {\n  res.status(500).json({ error: \"internal_error\" });\n});\n",
+        "negative": "import express, { Request, Response, NextFunction } from \"express\";\n\nconst app = express();\n\n// Wrong order: this will miss errors from routes registered later.\napp.use((err: unknown, _req: Request, res: Response, next: NextFunction) => {\n  res.status(500).json({ error: \"internal_error\" });\n  next(err); // headers already sent\n});\n\napp.get(\"/boom\", (_req, _res) => {\n  throw new Error(\"boom\");\n});\n",
         "language": "TYPESCRIPT"
       }
     },
     {
-      "content": "Validate request params, query, headers, and body at route entry using a schema; reject unknown fields with explicit allowlists.",
+      "content": "Validate and coerce req.params, req.query, and req.body at the route boundary; avoid using raw request values downstream.",
       "examples": {
-        "positive": "import { Request, Response, NextFunction } from \"express\";\nimport { z } from \"zod\";\n\nconst CreateUser = z\n  .object({ email: z.string().email(), name: z.string().min(1) })\n  .strict();\n\nexport function createUser(req: Request, res: Response, next: NextFunction) {\n  const parsed = CreateUser.safeParse(req.body);\n  if (!parsed.success) return res.status(400).json({ error: \"invalid_body\" });\n\n  const { email, name } = parsed.data;\n  return res.status(201).json({ email, name });\n}\n",
-        "negative": "import { Request, Response } from \"express\";\n\nexport function createUser(req: Request, res: Response) {\n  // accepts arbitrary fields and types\n  const { email, name, role } = req.body;\n  return res.status(201).json({ email, name, role });\n}\n",
+        "positive": "import express from \"express\";\nimport { z } from \"zod\";\n\nconst app = express();\napp.use(express.json());\n\nconst Params = z.object({ id: z.string().uuid() });\nconst Body = z.object({ email: z.string().email() });\n\napp.post(\"/users/:id\", (req, res) => {\n  const params = Params.parse(req.params);\n  const body = Body.parse(req.body);\n  res.json({ id: params.id, email: body.email });\n});\n",
+        "negative": "import express from \"express\";\n\nconst app = express();\napp.use(express.json());\n\napp.post(\"/users/:id\", (req, res) => {\n  // Raw values used directly.\n  const id = req.params.id;\n  const email = req.body.email;\n  res.json({ id, email });\n});\n",
         "language": "TYPESCRIPT"
       }
     },
     {
-      "content": "Treat req.body as untrusted; coerce types and normalize inputs before use, especially booleans, numbers, arrays, and dates.",
+      "content": "Set explicit connect and request timeouts on all outbound HTTP calls; avoid relying on library defaults.",
       "examples": {
-        "positive": "import { Request, Response } from \"express\";\nimport { z } from \"zod\";\n\nconst Query = z.object({\n  limit: z.coerce.number().int().min(1).max(100).default(20),\n  includeDeleted: z.coerce.boolean().default(false)\n});\n\nexport function list(req: Request, res: Response) {\n  const q = Query.parse(req.query);\n  return res.json({ limit: q.limit, includeDeleted: q.includeDeleted });\n}\n",
-        "negative": "import { Request, Response } from \"express\";\n\nexport function list(req: Request, res: Response) {\n  // \"10\" + 1 => \"101\"; \"false\" is truthy\n  const limit = (req.query.limit as any) || 20;\n  const includeDeleted = (req.query.includeDeleted as any) || false;\n  return res.json({ limit: limit + 1, includeDeleted });\n}\n",
+        "positive": "import express from \"express\";\n\nconst app = express();\n\napp.get(\"/proxy\", async (_req, res, next) => {\n  try {\n    const controller = new AbortController();\n    const t = setTimeout(() => controller.abort(), 2000);\n\n    const r = await fetch(\"https://example.com/api\", {\n      signal: controller.signal,\n      headers: { \"accept\": \"application/json\" }\n    });\n\n    clearTimeout(t);\n    res.status(r.status).send(await r.text());\n  } catch (e) {\n    next(e);\n  }\n});\n",
+        "negative": "import express from \"express\";\n\nconst app = express();\n\napp.get(\"/proxy\", async (_req, res) => {\n  // No timeout; request can hang indefinitely.\n  const r = await fetch(\"https://example.com/api\");\n  res.status(r.status).send(await r.text());\n});\n",
         "language": "TYPESCRIPT"
       }
     },
     {
-      "content": "Set explicit timeouts on outbound HTTP calls and database queries; avoid using clients with infinite or default timeouts.",
+      "content": "Use AbortController to cancel downstream work when req aborts; avoid continuing database/HTTP work after client disconnect.",
       "examples": {
-        "positive": "import axios from \"axios\";\n\nconst http = axios.create({ timeout: 5000 });\n\nexport async function fetchProfile(userId: string) {\n  const resp = await http.get(`https://example.com/profiles/${encodeURIComponent(userId)}`);\n  return resp.data;\n}\n",
-        "negative": "import axios from \"axios\";\n\nexport async function fetchProfile(userId: string) {\n  // no timeout; can hang until connection/OS timeouts\n  const resp = await axios.get(`https://example.com/profiles/${userId}`);\n  return resp.data;\n}\n",
+        "positive": "import express, { Request } from \"express\";\n\nconst app = express();\n\napp.get(\"/slow\", async (req: Request, res, next) => {\n  const controller = new AbortController();\n  req.on(\"aborted\", () => controller.abort());\n\n  try {\n    const r = await fetch(\"https://example.com/slow\", { signal: controller.signal });\n    res.send(await r.text());\n  } catch (e) {\n    next(e);\n  }\n});\n",
+        "negative": "import express from \"express\";\n\nconst app = express();\n\napp.get(\"/slow\", async (_req, res) => {\n  // Work continues even if client disconnects.\n  const r = await fetch(\"https://example.com/slow\");\n  res.send(await r.text());\n});\n",
         "language": "TYPESCRIPT"
       }
     },
     {
-      "content": "Define an idempotent retry policy with backoff and a max attempt count for transient outbound failures; avoid retrying non-idempotent operations by default.",
+      "content": "Stream large responses with pipeline and handle errors; avoid buffering large files into memory with res.send(Buffer).",
       "examples": {
-        "positive": "import axios, { AxiosError } from \"axios\";\n\nasync function sleep(ms: number) {\n  await new Promise((r) => setTimeout(r, ms));\n}\n\nexport async function getWithRetry(url: string) {\n  const maxAttempts = 3;\n  for (let attempt = 1; attempt <= maxAttempts; attempt++) {\n    try {\n      return (await axios.get(url, { timeout: 3000 })).data;\n    } catch (e) {\n      const err = e as AxiosError;\n      const status = err.response?.status;\n      const transient = !status || status >= 500 || status === 429;\n      if (!transient || attempt === maxAttempts) throw err;\n      await sleep(100 * Math.pow(2, attempt - 1));\n    }\n  }\n}\n",
-        "negative": "import axios from \"axios\";\n\nexport async function createOrderWithRetry() {\n  // retries POST without idempotency; may duplicate orders\n  for (let i = 0; i < 5; i++) {\n    try {\n      return (await axios.post(\"https://example.com/orders\", { sku: \"X\" })).data;\n    } catch {\n      // immediate retry\n    }\n  }\n}\n",
+        "positive": "import express from \"express\";\nimport { createReadStream } from \"node:fs\";\nimport { pipeline } from \"node:stream/promises\";\n\nconst app = express();\n\napp.get(\"/download\", async (_req, res, next) => {\n  res.setHeader(\"Content-Type\", \"application/octet-stream\");\n  try {\n    await pipeline(createReadStream(\"./big.bin\"), res);\n  } catch (e) {\n    next(e);\n  }\n});\n",
+        "negative": "import express from \"express\";\nimport { readFile } from \"node:fs/promises\";\n\nconst app = express();\n\napp.get(\"/download\", async (_req, res) => {\n  // Buffers entire file.\n  const buf = await readFile(\"./big.bin\");\n  res.send(buf);\n});\n",
         "language": "TYPESCRIPT"
       }
     },
     {
-      "content": "Create request-scoped context (requestId, userId) and include it in all logs; avoid logging without correlation fields.",
+      "content": "Create request-scoped log context using AsyncLocalStorage and pass correlation IDs; avoid using global mutable variables for per-request logging state.",
       "examples": {
-        "positive": "import express, { Request, Response, NextFunction } from \"express\";\nimport pino from \"pino\";\nimport pinoHttp from \"pino-http\";\nimport { randomUUID } from \"crypto\";\n\nconst app = express();\nconst logger = pino();\n\napp.use(\n  pinoHttp({\n    logger,\n    genReqId: (req) => (req.headers[\"x-request-id\"] as string) || randomUUID()\n  })\n);\n\napp.use((req: any, _res: Response, next: NextFunction) => {\n  req.log = req.log.child({ userId: req.header(\"x-user-id\") || \"anonymous\" });\n  next();\n});\n\napp.get(\"/health\", (req: any, res: Response) => {\n  req.log.info({ route: \"/health\" }, \"handled\");\n  res.json({ ok: true });\n});\n",
-        "negative": "import express, { Request, Response } from \"express\";\n\nconst app = express();\n\napp.get(\"/health\", (_req: Request, res: Response) => {\n  console.log(\"handled /health\");\n  res.json({ ok: true });\n});\n",
+        "positive": "import express from \"express\";\nimport { AsyncLocalStorage } from \"node:async_hooks\";\nimport { randomUUID } from \"node:crypto\";\n\nconst als = new AsyncLocalStorage<{ requestId: string }>();\n\nconst app = express();\n\napp.use((req, _res, next) => {\n  const requestId = (req.header(\"x-request-id\") ?? randomUUID()).toString();\n  als.run({ requestId }, next);\n});\n\nfunction log(msg: string) {\n  const ctx = als.getStore();\n  console.log(JSON.stringify({ requestId: ctx?.requestId, msg }));\n}\n\napp.get(\"/\", (_req, res) => {\n  log(\"handled\");\n  res.json({ ok: true });\n});\n",
+        "negative": "import express from \"express\";\n\nlet requestId: string | undefined;\n\nconst app = express();\n\napp.use((req, _res, next) => {\n  requestId = req.header(\"x-request-id\") ?? \"missing\";\n  next();\n});\n\nfunction log(msg: string) {\n  console.log(JSON.stringify({ requestId, msg }));\n}\n\napp.get(\"/\", (_req, res) => {\n  log(\"handled\");\n  res.json({ ok: true });\n});\n",
         "language": "TYPESCRIPT"
       }
     },
     {
-      "content": "Use a centralized error handler that maps known errors to HTTP responses; avoid ad-hoc status codes and message formats per route.",
+      "content": "Apply request body size limits and content-type checks per route; avoid globally accepting large JSON payloads by default.",
       "examples": {
-        "positive": "import express, { Request, Response, NextFunction } from \"express\";\n\nclass HttpError extends Error {\n  constructor(public status: number, public code: string, message?: string) {\n    super(message || code);\n  }\n}\n\nconst app = express();\n\napp.get(\"/items/:id\", (req: Request, res: Response) => {\n  if (req.params.id === \"0\") throw new HttpError(404, \"not_found\");\n  res.json({ id: req.params.id });\n});\n\napp.use((err: any, _req: Request, res: Response, next: NextFunction) => {\n  if (res.headersSent) return next(err);\n  if (err instanceof HttpError) {\n    return res.status(err.status).json({ error: err.code });\n  }\n  return res.status(500).json({ error: \"internal_error\" });\n});\n",
-        "negative": "import express, { Request, Response } from \"express\";\n\nconst app = express();\n\napp.get(\"/items/:id\", (req: Request, res: Response) => {\n  if (req.params.id === \"0\") return res.status(404).send(\"missing\");\n  if (req.params.id === \"1\") return res.status(400).json({ msg: \"bad\" });\n  return res.status(500).json({ errorMessage: \"oops\" });\n});\n",
+        "positive": "import express from \"express\";\n\nconst app = express();\n\napp.post(\n  \"/events\",\n  express.json({ limit: \"256kb\", type: \"application/json\" }),\n  (req, res) => {\n    res.status(202).json({ received: true, bytes: JSON.stringify(req.body).length });\n  }\n);\n",
+        "negative": "import express from \"express\";\n\nconst app = express();\n\n// Accepts any JSON size/type for all routes.\napp.use(express.json());\n\napp.post(\"/events\", (req, res) => {\n  res.json(req.body);\n});\n",
         "language": "TYPESCRIPT"
       }
     },
     {
-      "content": "Avoid module-level mutable state for request data; store per-request values on req/res locals or AsyncLocalStorage.",
+      "content": "Centralize configuration parsing at startup with schema validation; avoid reading process.env across handlers and modules.",
       "examples": {
-        "positive": "import express, { Request, Response, NextFunction } from \"express\";\nimport { AsyncLocalStorage } from \"node:async_hooks\";\n\ntype Ctx = { requestId: string };\nconst als = new AsyncLocalStorage<Ctx>();\n\nconst app = express();\n\napp.use((req: Request, _res: Response, next: NextFunction) => {\n  als.run({ requestId: req.header(\"x-request-id\") || \"generated\" }, next);\n});\n\napp.get(\"/me\", (_req: Request, res: Response) => {\n  const ctx = als.getStore();\n  res.json({ requestId: ctx?.requestId });\n});\n",
-        "negative": "import express, { Request, Response } from \"express\";\n\nconst app = express();\nlet currentRequestId: string | undefined;\n\napp.use((req, _res, next) => {\n  currentRequestId = req.header(\"x-request-id\") || \"generated\";\n  next();\n});\n\napp.get(\"/me\", (_req: Request, res: Response) => {\n  res.json({ requestId: currentRequestId });\n});\n",
+        "positive": "import { z } from \"zod\";\n\nconst Env = z.object({\n  NODE_ENV: z.enum([\"development\", \"test\", \"production\"]).default(\"development\"),\n  PORT: z.coerce.number().int().min(1).max(65535).default(3000),\n  DATABASE_URL: z.string().url()\n});\n\nexport const config = Env.parse(process.env);\n",
+        "negative": "export function getDbUrl() {\n  // Spread env reads across codebase.\n  return process.env.DATABASE_URL as string;\n}\n\nexport function getPort() {\n  return Number(process.env.PORT || 3000);\n}\n",
         "language": "TYPESCRIPT"
       }
     },
     {
-      "content": "Clean up request resources on aborted/closed connections; subscribe to req.on('aborted') and res.on('close') for cancellation and stream teardown.",
+      "content": "Inject external clients via app.locals or factory wiring; avoid importing singletons directly inside route modules.",
       "examples": {
-        "positive": "import { Request, Response } from \"express\";\n\nexport function download(req: Request, res: Response) {\n  const upstream = fetch(\"https://example.com/large-file\");\n  const ac = new AbortController();\n\n  req.on(\"aborted\", () => ac.abort());\n  res.on(\"close\", () => ac.abort());\n\n  upstream\n    .then(async (r) => {\n      if (!r.body) return res.status(502).end();\n      const reader = r.body.getReader();\n      res.setHeader(\"content-type\", r.headers.get(\"content-type\") || \"application/octet-stream\");\n      while (true) {\n        const { done, value } = await reader.read();\n        if (done) break;\n        res.write(Buffer.from(value));\n      }\n      res.end();\n    })\n    .catch(() => {\n      if (!res.headersSent) res.status(499).end();\n    });\n}\n",
-        "negative": "import { Request, Response } from \"express\";\n\nexport async function download(_req: Request, res: Response) {\n  const r = await fetch(\"https://example.com/large-file\");\n  // ignores client disconnect; keeps pulling data\n  const buf = Buffer.from(await r.arrayBuffer());\n  res.end(buf);\n}\n",
+        "positive": "import express from \"express\";\n\ntype UserRepo = { findById(id: string): Promise<{ id: string }> };\n\nfunction usersRouter(repo: UserRepo) {\n  const r = express.Router();\n  r.get(\"/:id\", async (req, res, next) => {\n    try {\n      const user = await repo.findById(req.params.id);\n      res.json(user);\n    } catch (e) {\n      next(e);\n    }\n  });\n  return r;\n}\n\nconst app = express();\nconst repo: UserRepo = { async findById(id) { return { id }; } };\napp.use(\"/users\", usersRouter(repo));\n",
+        "negative": "import express from \"express\";\nimport { repo } from \"./repoSingleton\";\n\nconst app = express();\n\napp.get(\"/users/:id\", async (req, res) => {\n  // Hard dependency on module singleton.\n  const user = await repo.findById(req.params.id);\n  res.json(user);\n});\n",
         "language": "TYPESCRIPT"
       }
     }

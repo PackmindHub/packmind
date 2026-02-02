@@ -1,0 +1,88 @@
+{
+  "name": "Kotlin Best Practices",
+  "summary": "Apply these rules when building production Kotlin services, apps, and libraries that interact with I/O, concurrency, configuration, and external systems.",
+  "description": "This standard covers high-impact Kotlin practices for resources, concurrency, networking, validation, configuration, logging, dependency management, and testing, focusing on common production pitfalls and failure modes.",
+  "scope": "**/*.kt,**/*.kts",
+  "rules": [
+    {
+      "content": "Use use{} for Closeable resources and wrap suspend cleanup with try/finally around withContext blocks.",
+      "examples": {
+        "positive": "import java.io.FileInputStream\n\nfun readFirstByte(path: String): Int =\n    FileInputStream(path).use { it.read() }\n\nsuspend fun writeSafely(bytes: ByteArray, out: java.io.OutputStream) {\n    kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {\n        try {\n            out.write(bytes)\n            out.flush()\n        } finally {\n            out.close()\n        }\n    }\n}\n",
+        "negative": "import java.io.FileInputStream\n\nfun readFirstByte(path: String): Int {\n    val fis = FileInputStream(path)\n    return fis.read() // leaks on exceptions and early returns\n}\n",
+        "language": "KOTLIN"
+      }
+    },
+    {
+      "content": "Set explicit connect, read, and call timeouts for every HTTP client; avoid default infinite waits.",
+      "examples": {
+        "positive": "import okhttp3.OkHttpClient\nimport java.time.Duration\n\nval client = OkHttpClient.Builder()\n    .connectTimeout(Duration.ofSeconds(3))\n    .readTimeout(Duration.ofSeconds(10))\n    .callTimeout(Duration.ofSeconds(12))\n    .build()\n",
+        "negative": "import okhttp3.OkHttpClient\n\nval client = OkHttpClient() // defaults may be unbounded depending on client/version\n",
+        "language": "KOTLIN"
+      }
+    },
+    {
+      "content": "Apply retries only to idempotent operations and cap attempts with exponential backoff and jitter.",
+      "examples": {
+        "positive": "import kotlin.math.min\nimport kotlin.random.Random\n\nsuspend fun <T> retryIdempotent(\n    maxAttempts: Int = 4,\n    baseDelayMs: Long = 100,\n    block: suspend () -> T\n): T {\n    var attempt = 0\n    var last: Throwable? = null\n    while (attempt++ < maxAttempts) {\n        try {\n            return block()\n        } catch (t: Throwable) {\n            last = t\n            val exp = min(2000L, baseDelayMs shl (attempt - 1))\n            val jitter = Random.nextLong(0, 100)\n            kotlinx.coroutines.delay(exp + jitter)\n        }\n    }\n    throw last ?: IllegalStateException(\"retry failed\")\n}\n\n// usage for idempotent GET\nsuspend fun fetch(): String = retryIdempotent { \"ok\" }\n",
+        "negative": "suspend fun createOrder(): String {\n    // retries a non-idempotent operation without backoff\n    repeat(5) {\n        try {\n            return postCreateOrder()\n        } catch (_: Exception) {}\n    }\n    return postCreateOrder()\n}\n\nsuspend fun postCreateOrder(): String = \"created\"\n",
+        "language": "KOTLIN"
+      }
+    },
+    {
+      "content": "Validate and normalize all external input at API boundaries before converting to domain types.",
+      "examples": {
+        "positive": "data class CreateUserRequest(val email: String, val age: Int)\n\ndata class Email(val value: String)\n\ndata class CreateUserCommand(val email: Email, val age: Int)\n\nfun toCommand(req: CreateUserRequest): CreateUserCommand {\n    val email = req.email.trim().lowercase()\n    require(email.contains('@'))\n    require(req.age in 0..150)\n    return CreateUserCommand(Email(email), req.age)\n}\n",
+        "negative": "data class CreateUserRequest(val email: String, val age: Int)\n\ndata class CreateUserCommand(val email: String, val age: Int)\n\nfun toCommand(req: CreateUserRequest): CreateUserCommand {\n    // accepts raw unvalidated input into domain\n    return CreateUserCommand(req.email, req.age)\n}\n",
+        "language": "KOTLIN"
+      }
+    },
+    {
+      "content": "Use structured concurrency; tie coroutines to lifecycle scopes and avoid GlobalScope and unbounded CoroutineScope().",
+      "examples": {
+        "positive": "class Worker(private val scope: kotlinx.coroutines.CoroutineScope) {\n    fun start() {\n        scope.launch {\n            doWork()\n        }\n    }\n\n    private suspend fun doWork() {\n        kotlinx.coroutines.delay(10)\n    }\n}\n",
+        "negative": "class Worker {\n    fun start() {\n        kotlinx.coroutines.GlobalScope.launch {\n            doWork() // outlives caller; cancellation not propagated\n        }\n    }\n\n    private suspend fun doWork() {\n        kotlinx.coroutines.delay(10)\n    }\n}\n",
+        "language": "KOTLIN"
+      }
+    },
+    {
+      "content": "Keep shared mutable state behind Mutex/Atomic or confine it to a single dispatcher; avoid unsynchronized var across coroutines.",
+      "examples": {
+        "positive": "import kotlinx.coroutines.sync.Mutex\nimport kotlinx.coroutines.sync.withLock\n\nclass Counter {\n    private val mutex = Mutex()\n    private var value = 0\n\n    suspend fun inc(): Int = mutex.withLock {\n        value += 1\n        value\n    }\n}\n",
+        "negative": "class Counter {\n    var value = 0\n\n    suspend fun inc(): Int {\n        value += 1 // races under concurrency\n        return value\n    }\n}\n",
+        "language": "KOTLIN"
+      }
+    },
+    {
+      "content": "Throw and handle domain-specific exceptions; avoid catching Exception broadly outside top-level boundaries.",
+      "examples": {
+        "positive": "class UserNotFound(val userId: String) : RuntimeException(\"user not found: $userId\")\n\nfun loadUser(id: String): String {\n    if (id.isBlank()) throw IllegalArgumentException(\"id\")\n    throw UserNotFound(id)\n}\n\nfun handler(id: String): String = try {\n    loadUser(id)\n} catch (e: UserNotFound) {\n    \"404\"\n}\n",
+        "negative": "fun handler(id: String): String = try {\n    loadUser(id)\n} catch (e: Exception) {\n    \"error\" // swallows details and mixes unrelated failures\n}\n\nfun loadUser(id: String): String = throw RuntimeException(\"boom\")\n",
+        "language": "KOTLIN"
+      }
+    },
+    {
+      "content": "Log with structured fields and include exception objects; avoid string interpolation that drops stack traces.",
+      "examples": {
+        "positive": "import org.slf4j.LoggerFactory\n\nprivate val log = LoggerFactory.getLogger(\"svc\")\n\nfun parse(input: String): Int = try {\n    input.toInt()\n} catch (e: NumberFormatException) {\n    log.warn(\"parse_failed input={} len={}\", input, input.length, e)\n    throw e\n}\n",
+        "negative": "import org.slf4j.LoggerFactory\n\nprivate val log = LoggerFactory.getLogger(\"svc\")\n\nfun parse(input: String): Int = try {\n    input.toInt()\n} catch (e: NumberFormatException) {\n    log.warn(\"parse failed for $input: ${e.message}\") // no stack trace\n    throw e\n}\n",
+        "language": "KOTLIN"
+      }
+    },
+    {
+      "content": "Inject clocks, random, and external clients; avoid calling system time, Random.Default, or singletons directly in business logic.",
+      "examples": {
+        "positive": "import java.time.Clock\nimport java.time.Instant\n\nclass TokenService(\n    private val clock: Clock,\n    private val rng: java.util.Random\n) {\n    fun issuedAt(): Instant = Instant.now(clock)\n    fun nextId(): Int = rng.nextInt()\n}\n",
+        "negative": "import java.time.Instant\nimport kotlin.random.Random\n\nobject TokenService {\n    fun issuedAt(): Instant = Instant.now()\n    fun nextId(): Int = Random.nextInt()\n}\n",
+        "language": "KOTLIN"
+      }
+    },
+    {
+      "content": "Externalize configuration and validate it at startup; avoid reading env/system properties ad hoc across the codebase.",
+      "examples": {
+        "positive": "data class AppConfig(val baseUrl: String, val port: Int)\n\nfun loadConfig(env: Map<String, String>): AppConfig {\n    val baseUrl = requireNotNull(env[\"BASE_URL\"]).trim()\n    val port = requireNotNull(env[\"PORT\"]).toInt()\n    require(port in 1..65535)\n    return AppConfig(baseUrl, port)\n}\n\nclass ApiClient(private val cfg: AppConfig)\n",
+        "negative": "class ApiClient {\n    private val baseUrl = System.getenv(\"BASE_URL\") ?: \"\"\n    private val port = (System.getenv(\"PORT\") ?: \"0\").toInt()\n\n    fun call() {\n        // scattered config reads; no centralized validation\n    }\n}\n",
+        "language": "KOTLIN"
+      }
+    }
+  ]
+}

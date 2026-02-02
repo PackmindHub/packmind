@@ -1,0 +1,88 @@
+{
+  "name": "C# Best Practices",
+  "summary": "Advanced C# rules for preventing production bugs and performance issues in everyday code involving resources, concurrency, exceptions, validation, and async behavior.",
+  "description": "This standard covers high-impact C# language and BCL usage patterns that frequently cause subtle defects: deterministic disposal, cancellation, exception flow, data validation, thread safety, and safe public APIs. It avoids basic style guidance and focuses on non-obvious pitfalls encountered in typical production code.",
+  "scope": "**/*.cs",
+  "rules": [
+    {
+      "content": "Use `using`/`using var` for every `IDisposable` and `IAsyncDisposable`; avoid disposing the same instance from multiple owners.",
+      "examples": {
+        "positive": "using var stream = File.OpenRead(path);\nusing var reader = new StreamReader(stream);\nvar text = reader.ReadToEnd();\n",
+        "negative": "var stream = File.OpenRead(path);\nvar reader = new StreamReader(stream);\nvar text = reader.ReadToEnd();\nreader.Dispose();\nstream.Dispose(); // disposed by reader already\n",
+        "language": "CSHARP"
+      }
+    },
+    {
+      "content": "Prefer `await using` and `DisposeAsync()` for async I/O resources; avoid `Dispose()` on types implementing `IAsyncDisposable` in async flows.",
+      "examples": {
+        "positive": "await using var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read, 4096, useAsync: true);\nvar buffer = new byte[1024];\n_ = await stream.ReadAsync(buffer);\n",
+        "negative": "var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read, 4096, useAsync: true);\nvar buffer = new byte[1024];\n_ = await stream.ReadAsync(buffer);\nstream.Dispose();\n",
+        "language": "CSHARP"
+      }
+    },
+    {
+      "content": "Propagate `CancellationToken` through every async method and pass it into cancellable APIs; avoid creating new tokens inside callees.",
+      "examples": {
+        "positive": "public static async Task<string> ReadAsync(Stream s, CancellationToken ct)\n{\n    using var reader = new StreamReader(s);\n    return await reader.ReadToEndAsync(ct);\n}\n",
+        "negative": "public static async Task<string> ReadAsync(Stream s, CancellationToken ct)\n{\n    using var reader = new StreamReader(s);\n    using var ignored = new CancellationTokenSource();\n    return await reader.ReadToEndAsync(CancellationToken.None);\n}\n",
+        "language": "CSHARP"
+      }
+    },
+    {
+      "content": "Return `Task` from async methods and always await created tasks; avoid `async void` except event handlers.",
+      "examples": {
+        "positive": "public static async Task SaveAsync(Stream s, byte[] data, CancellationToken ct)\n{\n    await s.WriteAsync(data, ct);\n}\n\nawait SaveAsync(stream, data, ct);\n",
+        "negative": "public static async void SaveAsync(Stream s, byte[] data)\n{\n    await s.WriteAsync(data, 0, data.Length);\n}\n\nSaveAsync(stream, data); // fire-and-forget\n",
+        "language": "CSHARP"
+      }
+    },
+    {
+      "content": "Preserve exception stacks by using `throw;` and `ExceptionDispatchInfo`; avoid `throw ex;` or wrapping without setting `InnerException`.",
+      "examples": {
+        "positive": "try\n{\n    DoWork();\n}\ncatch\n{\n    throw;\n}\n",
+        "negative": "try\n{\n    DoWork();\n}\ncatch (Exception ex)\n{\n    throw ex;\n}\n",
+        "language": "CSHARP"
+      }
+    },
+    {
+      "content": "Avoid catching `Exception` broadly; catch specific exceptions and rethrow unknown ones.",
+      "examples": {
+        "positive": "try\n{\n    value = int.Parse(text, CultureInfo.InvariantCulture);\n}\ncatch (FormatException)\n{\n    value = 0;\n}\n",
+        "negative": "try\n{\n    value = int.Parse(text, CultureInfo.InvariantCulture);\n}\ncatch (Exception)\n{\n    value = 0;\n}\n",
+        "language": "CSHARP"
+      }
+    },
+    {
+      "content": "Validate method arguments at public boundaries using `ArgumentNullException.ThrowIfNull` and range checks; avoid deferring validation to deep helpers.",
+      "examples": {
+        "positive": "public static void SetLimit(int limit, string name)\n{\n    ArgumentNullException.ThrowIfNull(name);\n    if ((uint)limit > 10_000u) throw new ArgumentOutOfRangeException(nameof(limit));\n    // ...\n}\n",
+        "negative": "public static void SetLimit(int limit, string name)\n{\n    // validation occurs later\n    Helper(limit, name);\n}\n\nstatic void Helper(int limit, string name)\n{\n    if (name == null) throw new NullReferenceException();\n}\n",
+        "language": "CSHARP"
+      }
+    },
+    {
+      "content": "Use ordinal string comparisons explicitly (`StringComparison.Ordinal`/`OrdinalIgnoreCase`); avoid default culture-dependent comparisons and `ToLower()` for matching.",
+      "examples": {
+        "positive": "if (input.Equals(\"admin\", StringComparison.OrdinalIgnoreCase))\n{\n    Allow();\n}\n",
+        "negative": "if (input.ToLower() == \"admin\")\n{\n    Allow();\n}\n",
+        "language": "CSHARP"
+      }
+    },
+    {
+      "content": "Make shared mutable state thread-safe using `lock`, `Interlocked`, or immutable snapshots; avoid unsynchronized reads/writes across threads.",
+      "examples": {
+        "positive": "private readonly object _gate = new();\nprivate int _count;\n\npublic void Increment()\n{\n    lock (_gate) { _count++; }\n}\n\npublic int Read()\n{\n    lock (_gate) { return _count; }\n}\n",
+        "negative": "private int _count;\n\npublic void Increment() => _count++;\npublic int Read() => _count;\n",
+        "language": "CSHARP"
+      }
+    },
+    {
+      "content": "Return read-only views or copies of mutable collections from public APIs; avoid exposing internal `List<T>`/arrays directly.",
+      "examples": {
+        "positive": "private readonly List<string> _items = new();\npublic IReadOnlyList<string> Items => _items.AsReadOnly();\n",
+        "negative": "private readonly List<string> _items = new();\npublic List<string> Items => _items;\n",
+        "language": "CSHARP"
+      }
+    }
+  ]
+}

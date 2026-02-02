@@ -1,0 +1,88 @@
+{
+  "name": "Next.js Best Practices",
+  "summary": "Apply these rules when building production Next.js apps with React Server Components, Route Handlers, and client components across serverless or Node runtimes.",
+  "description": "This standard covers high-impact Next.js practices around server/client boundaries, data access, caching and revalidation, request lifecycles, configuration, security at API edges, and observability patterns used in production applications.",
+  "scope": "**/*.tsx,**/*.jsx,**/*.ts,**/*.js",
+  "rules": [
+    {
+      "content": "Define server actions and Route Handlers as the only write entrypoints; keep mutations out of React Server Components and client components.",
+      "examples": {
+        "positive": "/* app/actions.ts */\n'use server';\n\nimport { z } from 'zod';\nimport { revalidatePath } from 'next/cache';\n\nconst schema = z.object({ name: z.string().min(1).max(80) });\n\nexport async function createProject(input: unknown) {\n  const { name } = schema.parse(input);\n  // write side effect here\n  await db.project.create({ data: { name } });\n  revalidatePath('/projects');\n}\n",
+        "negative": "/* app/projects/page.tsx */\nimport { db } from '@/lib/db';\n\nexport default async function Page() {\n  // mutation inside RSC render path\n  await db.auditLog.create({ data: { event: 'VISIT' } });\n  return <div>Projects</div>;\n}\n",
+        "language": "TYPESCRIPT"
+      }
+    },
+    {
+      "content": "Validate and coerce all external input at action/handler boundaries using a schema; pass typed values inward only.",
+      "examples": {
+        "positive": "/* app/api/search/route.ts */\nimport { NextResponse } from 'next/server';\nimport { z } from 'zod';\n\nconst querySchema = z.object({\n  q: z.string().trim().min(1).max(100),\n  page: z.coerce.number().int().min(1).max(100).default(1)\n});\n\nexport async function GET(req: Request) {\n  const url = new URL(req.url);\n  const parsed = querySchema.parse(Object.fromEntries(url.searchParams));\n  const results = await search(parsed.q, parsed.page);\n  return NextResponse.json(results);\n}\n",
+        "negative": "/* app/api/search/route.ts */\nimport { NextResponse } from 'next/server';\n\nexport async function GET(req: Request) {\n  const url = new URL(req.url);\n  const q = url.searchParams.get('q') as string;\n  const page = Number(url.searchParams.get('page'));\n  const results = await search(q, page);\n  return NextResponse.json(results);\n}\n",
+        "language": "TYPESCRIPT"
+      }
+    },
+    {
+      "content": "Set explicit timeouts on every outbound network call via AbortController or client config; surface timeout errors as typed failures.",
+      "examples": {
+        "positive": "/* lib/http.ts */\nexport async function fetchJson<T>(url: string, init: RequestInit = {}): Promise<T> {\n  const controller = new AbortController();\n  const id = setTimeout(() => controller.abort(), 5000);\n  try {\n    const res = await fetch(url, { ...init, signal: controller.signal });\n    if (!res.ok) throw new Error(`HTTP ${res.status}`);\n    return (await res.json()) as T;\n  } finally {\n    clearTimeout(id);\n  }\n}\n",
+        "negative": "/* lib/http.ts */\nexport async function fetchJson(url: string) {\n  const res = await fetch(url);\n  return res.json();\n}\n",
+        "language": "TYPESCRIPT"
+      }
+    },
+    {
+      "content": "Use Next.js fetch caching controls explicitly; declare cache, revalidate, or tags per request instead of relying on defaults.",
+      "examples": {
+        "positive": "/* app/products/page.tsx */\nexport default async function Page() {\n  const res = await fetch('https://api.example.com/products', {\n    next: { revalidate: 60, tags: ['products'] }\n  });\n  const products = await res.json();\n  return <pre>{JSON.stringify(products, null, 2)}</pre>;\n}\n",
+        "negative": "/* app/products/page.tsx */\nexport default async function Page() {\n  const res = await fetch('https://api.example.com/products');\n  const products = await res.json();\n  return <pre>{JSON.stringify(products, null, 2)}</pre>;\n}\n",
+        "language": "TYPESCRIPT_TSX"
+      }
+    },
+    {
+      "content": "Isolate client-only code behind 'use client' components; avoid importing browser APIs or client libraries from Server Components.",
+      "examples": {
+        "positive": "/* app/components/ThemeToggle.tsx */\n'use client';\n\nimport { useEffect, useState } from 'react';\n\nexport function ThemeToggle() {\n  const [theme, setTheme] = useState('light');\n  useEffect(() => {\n    const t = window.localStorage.getItem('theme');\n    if (t) setTheme(t);\n  }, []);\n  return <button onClick={() => setTheme(t => (t === 'light' ? 'dark' : 'light'))}>{theme}</button>;\n}\n",
+        "negative": "/* app/page.tsx */\nexport default function Page() {\n  const theme = window.localStorage.getItem('theme');\n  return <div>{theme}</div>;\n}\n",
+        "language": "TYPESCRIPT_TSX"
+      }
+    },
+    {
+      "content": "Redact secrets and PII in logs; log structured context objects and avoid logging request bodies, tokens, or headers like Authorization.",
+      "examples": {
+        "positive": "/* app/api/login/route.ts */\nimport { NextResponse } from 'next/server';\n\nexport async function POST(req: Request) {\n  const requestId = crypto.randomUUID();\n  console.info('login_attempt', { requestId, path: '/api/login' });\n  // ...\n  return NextResponse.json({ ok: true, requestId });\n}\n",
+        "negative": "/* app/api/login/route.ts */\nimport { NextResponse } from 'next/server';\n\nexport async function POST(req: Request) {\n  const body = await req.json();\n  console.log('login', { body, headers: Object.fromEntries(req.headers) });\n  return NextResponse.json({ ok: true });\n}\n",
+        "language": "TYPESCRIPT"
+      }
+    },
+    {
+      "content": "Gate environment variable access through a typed config module; validate at startup and never read process.env throughout the codebase.",
+      "examples": {
+        "positive": "/* lib/config.ts */\nimport { z } from 'zod';\n\nconst envSchema = z.object({\n  DATABASE_URL: z.string().url(),\n  API_BASE_URL: z.string().url(),\n  NODE_ENV: z.enum(['development', 'test', 'production'])\n});\n\nexport const config = envSchema.parse({\n  DATABASE_URL: process.env.DATABASE_URL,\n  API_BASE_URL: process.env.API_BASE_URL,\n  NODE_ENV: process.env.NODE_ENV\n});\n",
+        "negative": "/* lib/db.ts */\nexport const dbUrl = process.env.DATABASE_URL!;\n\n/* app/page.tsx */\nconst api = process.env.API_BASE_URL;\n",
+        "language": "TYPESCRIPT"
+      }
+    },
+    {
+      "content": "Use a singleton pattern for long-lived server resources (DB, Redis) in Node runtime; avoid creating new clients per request/module import.",
+      "examples": {
+        "positive": "/* lib/prisma.ts */\nimport { PrismaClient } from '@prisma/client';\n\ndeclare global {\n  // eslint-disable-next-line no-var\n  var prisma: PrismaClient | undefined;\n}\n\nexport const prisma = global.prisma ?? new PrismaClient();\nif (process.env.NODE_ENV !== 'production') global.prisma = prisma;\n",
+        "negative": "/* lib/prisma.ts */\nimport { PrismaClient } from '@prisma/client';\n\nexport const prisma = new PrismaClient();\n\n/* app/api/users/route.ts */\nimport { PrismaClient } from '@prisma/client';\nexport async function GET() {\n  const prisma = new PrismaClient();\n  return Response.json(await prisma.user.findMany());\n}\n",
+        "language": "TYPESCRIPT"
+      }
+    },
+    {
+      "content": "Return typed error responses from Route Handlers; avoid throwing raw errors across the boundary and avoid leaking stack traces to clients.",
+      "examples": {
+        "positive": "/* app/api/projects/route.ts */\nimport { NextResponse } from 'next/server';\n\nexport async function POST(req: Request) {\n  try {\n    const input = await req.json();\n    const project = await createProject(input);\n    return NextResponse.json({ ok: true, project });\n  } catch (err) {\n    console.error('projects_create_failed', { err });\n    return NextResponse.json(\n      { ok: false, error: { code: 'BAD_REQUEST', message: 'Invalid input' } },\n      { status: 400 }\n    );\n  }\n}\n",
+        "negative": "/* app/api/projects/route.ts */\nexport async function POST(req: Request) {\n  const input = await req.json();\n  const project = await createProject(input);\n  return Response.json(project);\n}\n\n/* createProject throws Error('email must be valid') */\n",
+        "language": "TYPESCRIPT"
+      }
+    },
+    {
+      "content": "Prefer integration tests against Route Handlers and server actions with deterministic time, random, and network stubs; avoid tests depending on real APIs or clocks.",
+      "examples": {
+        "positive": "/* app/api/ping/route.test.ts */\nimport { GET } from './route';\n\nconst fixedNow = new Date('2025-01-01T00:00:00.000Z');\n\nbeforeAll(() => {\n  jest.useFakeTimers();\n  jest.setSystemTime(fixedNow);\n});\n\nafterAll(() => jest.useRealTimers());\n\ntest('GET returns stable payload', async () => {\n  const res = await GET(new Request('http://localhost/api/ping'));\n  const json = await res.json();\n  expect(json).toEqual({ ok: true, now: fixedNow.toISOString() });\n});\n",
+        "negative": "/* app/api/ping/route.test.ts */\nimport fetch from 'node-fetch';\n\ntest('GET works', async () => {\n  const res = await fetch('http://localhost:3000/api/ping');\n  const json = await res.json();\n  expect(json.ok).toBe(true);\n});\n",
+        "language": "TYPESCRIPT"
+      }
+    }
+  ]
+}

@@ -49,6 +49,18 @@ import {
   ISetupMcpCommand,
   ISetupMcpResult,
 } from './domain/useCases/ISetupMcpUseCase';
+import {
+  IListStandardsCommand,
+  IListStandardsResult,
+} from './domain/useCases/IListStandardsUseCase';
+import {
+  IListCommandsCommand,
+  IListCommandsResult,
+} from './domain/useCases/IListCommandsUseCase';
+import {
+  IListSkillsCommand,
+  IListSkillsResult,
+} from './domain/useCases/IListSkillsUseCase';
 import { AllConfigsResult, HierarchicalConfigResult } from '@packmind/types';
 import { logWarningConsole } from './infra/utils/consoleLogger';
 import {
@@ -134,6 +146,24 @@ export class PackmindCliHexa {
     command: IGetPackageSummaryCommand,
   ): Promise<IGetPackageSummaryResult> {
     return this.hexa.useCases.getPackageBySlug.execute(command);
+  }
+
+  public async listStandards(
+    command: IListStandardsCommand,
+  ): Promise<IListStandardsResult> {
+    return this.hexa.useCases.listStandards.execute(command);
+  }
+
+  public async listCommands(
+    command: IListCommandsCommand,
+  ): Promise<IListCommandsResult> {
+    return this.hexa.useCases.listCommands.execute(command);
+  }
+
+  public async listSkills(
+    command: IListSkillsCommand,
+  ): Promise<IListSkillsResult> {
+    return this.hexa.useCases.listSkills.execute(command);
   }
 
   public async configExists(baseDirectory: string): Promise<boolean> {

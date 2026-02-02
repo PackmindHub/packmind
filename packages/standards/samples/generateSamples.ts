@@ -12,6 +12,8 @@ import {
   Sample,
   AI_RESPONSE_FORMAT,
   languageToFrameworks,
+  getSampleScope,
+  getSampleExampleLanguage,
 } from '@packmind/types';
 
 import { generateStandardSamplePrompt } from './prompts/generateStandardSamplePrompt';
@@ -126,10 +128,14 @@ async function generateSample(
 ): Promise<{ success: boolean; error?: string }> {
   const excludeTopics =
     type === 'language' ? (languageToFrameworks[sample.id] ?? []) : [];
+  const scope = getSampleScope(sample.id, type);
+  const exampleLanguage = getSampleExampleLanguage(sample.id, type);
   const prompt = generateStandardSamplePrompt(
     sample.displayName,
     type,
     excludeTopics,
+    scope,
+    exampleLanguage,
   );
 
   let lastError = '';
@@ -197,29 +203,15 @@ async function main(): Promise<void> {
 
   await ensureGeneratedDir();
 
-  // TODO: Temporary hack - only generate samples for specific technologies
-  // Node.js targets both JavaScript and TypeScript
-  const ALLOWED_SAMPLE_IDS = [
-    'java',
-    'javascript',
-    'typescript',
-    'react',
-    'express',
-  ];
-
   const allSamples: { sample: Sample; type: 'language' | 'framework' }[] = [
-    ...standardSamples.languageSamples
-      .filter((sample) => ALLOWED_SAMPLE_IDS.includes(sample.id))
-      .map((sample) => ({
-        sample,
-        type: 'language' as const,
-      })),
-    ...standardSamples.frameworkSamples
-      .filter((sample) => ALLOWED_SAMPLE_IDS.includes(sample.id))
-      .map((sample) => ({
-        sample,
-        type: 'framework' as const,
-      })),
+    ...standardSamples.languageSamples.map((sample) => ({
+      sample,
+      type: 'language' as const,
+    })),
+    ...standardSamples.frameworkSamples.map((sample) => ({
+      sample,
+      type: 'framework' as const,
+    })),
   ];
 
   const results: {

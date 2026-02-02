@@ -1,86 +1,86 @@
 {
   "name": "Java Best Practices",
-  "summary": "Advanced rules for writing robust, secure, and predictable core-Java code in production services and libraries.",
-  "description": "Covers high-impact Java language and JDK usage patterns around resources, exceptions, concurrency, configuration, time, I/O, logging, and network boundaries, focusing on pitfalls that cause production bugs and outages.",
-  "scope": "Java source files",
+  "summary": "Advanced, production-focused rules for core Java code handling failures, concurrency, IO, configuration, validation, and observability in typical backend and service applications.",
+  "description": "This standard covers non-obvious, high-impact practices in core Java: robust resource lifecycles, error propagation, input validation, timeouts and retries, concurrency safety, logging correctness, configuration typing, immutability boundaries, and test determinism.",
+  "scope": "**/*.java",
   "rules": [
     {
-      "content": "Use structured concurrency with ExecutorService and Futures; always bound task lifetime with timeouts and cancellation.",
+      "content": "Use timeouts on all blocking I/O and network calls via APIs that accept timeouts; set both connect and read/operation timeouts.",
       "examples": {
-        "positive": "ExecutorService pool = Executors.newFixedThreadPool(8);\nFuture<String> f = pool.submit(() -> remoteCall());\ntry {\n  return f.get(2, TimeUnit.SECONDS);\n} catch (TimeoutException e) {\n  f.cancel(true);\n  throw new RuntimeException(e);\n} finally {\n  pool.shutdown();\n}\n",
-        "negative": "ExecutorService pool = Executors.newCachedThreadPool();\nFuture<String> f = pool.submit(() -> remoteCall());\ntry {\n  return f.get();\n} catch (Exception e) {\n  return null;\n}\n",
+        "positive": "HttpClient client = HttpClient.newBuilder()\n    .connectTimeout(Duration.ofSeconds(2))\n    .build();\n\nHttpRequest req = HttpRequest.newBuilder(URI.create(url))\n    .timeout(Duration.ofSeconds(3))\n    .GET()\n    .build();\n\nHttpResponse<String> res = client.send(req, HttpResponse.BodyHandlers.ofString());",
+        "negative": "HttpClient client = HttpClient.newHttpClient();\nHttpRequest req = HttpRequest.newBuilder(URI.create(url)).GET().build();\nHttpResponse<String> res = client.send(req, HttpResponse.BodyHandlers.ofString());",
         "language": "JAVA"
       }
     },
     {
-      "content": "Define interruption policy: catch InterruptedException only to restore interrupt flag or rethrow; never swallow it.",
+      "content": "Bound retries with max attempts and exponential backoff with jitter; retry only explicitly classified transient failures.",
       "examples": {
-        "positive": "try {\n  Thread.sleep(100);\n} catch (InterruptedException e) {\n  Thread.currentThread().interrupt();\n  throw new RuntimeException(e);\n}\n",
-        "negative": "try {\n  Thread.sleep(100);\n} catch (InterruptedException e) {\n  // ignored\n}\n",
+        "positive": "int maxAttempts = 4;\nDuration base = Duration.ofMillis(100);\nThreadLocalRandom rnd = ThreadLocalRandom.current();\n\nfor (int attempt = 1; attempt <= maxAttempts; attempt++) {\n  try {\n    return client.send(req, HttpResponse.BodyHandlers.ofString());\n  } catch (IOException e) {\n    if (attempt == maxAttempts) throw e;\n    long backoff = (long) (base.toMillis() * Math.pow(2, attempt - 1));\n    long jitter = rnd.nextLong(0, 50);\n    Thread.sleep(backoff + jitter);\n  }\n}\nthrow new AssertionError(\"unreachable\");",
+        "negative": "while (true) {\n  try {\n    return client.send(req, HttpResponse.BodyHandlers.ofString());\n  } catch (Exception ignored) {\n    // retry forever\n  }\n}",
         "language": "JAVA"
       }
     },
     {
-      "content": "Prefer immutable data for shared state; when mutation is required, encapsulate it behind synchronization or atomic types.",
+      "content": "Preserve exception causes when rethrowing; wrap with a domain exception including the original Throwable as the cause.",
       "examples": {
-        "positive": "final class Counter {\n  private final AtomicLong value = new AtomicLong();\n  long incrementAndGet() { return value.incrementAndGet(); }\n}\n",
-        "negative": "final class Counter {\n  private long value;\n  long incrementAndGet() { return ++value; }\n}\n",
+        "positive": "try {\n  return Files.readString(path);\n} catch (IOException e) {\n  throw new UncheckedIOException(\"read failed: \" + path, e);\n}",
+        "negative": "try {\n  return Files.readString(path);\n} catch (IOException e) {\n  throw new RuntimeException(\"read failed\");\n}",
         "language": "JAVA"
       }
     },
     {
-      "content": "Use try-with-resources for every Closeable/AutoCloseable acquired in a method; do not leak resources across API boundaries.",
+      "content": "Restore interrupt status when catching InterruptedException; either rethrow or call Thread.currentThread().interrupt() and exit the blocking workflow.",
       "examples": {
-        "positive": "Path p = Path.of(\"out.txt\");\ntry (BufferedWriter w = Files.newBufferedWriter(p, StandardCharsets.UTF_8)) {\n  w.write(\"hello\");\n}\n",
-        "negative": "BufferedWriter w = Files.newBufferedWriter(Path.of(\"out.txt\"));\nw.write(\"hello\");\n// not closed\n",
+        "positive": "try {\n  queue.take();\n} catch (InterruptedException e) {\n  Thread.currentThread().interrupt();\n  return;\n}",
+        "negative": "try {\n  queue.take();\n} catch (InterruptedException e) {\n  // ignored\n}",
         "language": "JAVA"
       }
     },
     {
-      "content": "Validate external inputs at module boundaries using explicit allowlists and length limits; reject or normalize before parsing.",
+      "content": "Validate and normalize all external inputs at boundaries; reject invalid ranges, sizes, and formats before business logic.",
       "examples": {
-        "positive": "static int parsePort(String s) {\n  if (s == null || !s.matches(\"\\\\d{1,5}\")) throw new IllegalArgumentException(\"port\");\n  int p = Integer.parseInt(s);\n  if (p < 1 || p > 65535) throw new IllegalArgumentException(\"port\");\n  return p;\n}\n",
-        "negative": "static int parsePort(String s) {\n  return Integer.parseInt(s.trim());\n}\n",
+        "positive": "static int parsePort(String raw) {\n  String s = Objects.requireNonNull(raw, \"port\").trim();\n  int p = Integer.parseInt(s);\n  if (p < 1 || p > 65535) throw new IllegalArgumentException(\"port\");\n  return p;\n}",
+        "negative": "static int parsePort(String raw) {\n  return Integer.parseInt(raw);\n}",
         "language": "JAVA"
       }
     },
     {
-      "content": "Preserve causal exceptions: wrap with original cause and meaningful message; do not create new exceptions without the cause.",
+      "content": "Return immutable or defensive copies from public APIs when exposing mutable state like arrays, lists, maps, or dates.",
       "examples": {
-        "positive": "try {\n  return Files.readString(path, StandardCharsets.UTF_8);\n} catch (IOException e) {\n  throw new UncheckedIOException(\"read failed: \" + path, e);\n}\n",
-        "negative": "try {\n  return Files.readString(path);\n} catch (IOException e) {\n  throw new RuntimeException(\"read failed\");\n}\n",
+        "positive": "final class User {\n  private final List<String> roles;\n  User(List<String> roles) { this.roles = List.copyOf(roles); }\n  public List<String> getRoles() { return roles; }\n}",
+        "negative": "final class User {\n  private final List<String> roles;\n  User(List<String> roles) { this.roles = roles; }\n  public List<String> getRoles() { return roles; }\n}",
         "language": "JAVA"
       }
     },
     {
-      "content": "Use java.time types; parse and format with explicit ZoneId and Locale; avoid Date, Calendar, and default zone assumptions.",
+      "content": "Prefer immutable concurrency primitives for shared state; use Atomic* or Concurrent collections instead of unsynchronized mutable fields.",
       "examples": {
-        "positive": "Instant now = Instant.now();\nZonedDateTime zdt = now.atZone(ZoneId.of(\"UTC\"));\nDateTimeFormatter fmt = DateTimeFormatter.ofPattern(\"uuuu-MM-dd HH:mm\", Locale.ROOT);\nString s = fmt.format(zdt);\n",
-        "negative": "Date d = new Date();\nString s = new SimpleDateFormat(\"yyyy-MM-dd HH:mm\").format(d);\n",
+        "positive": "final class Metrics {\n  private final LongAdder requests = new LongAdder();\n  void inc() { requests.increment(); }\n  long count() { return requests.sum(); }\n}",
+        "negative": "final class Metrics {\n  private long requests;\n  void inc() { requests++; }\n  long count() { return requests; }\n}",
         "language": "JAVA"
       }
     },
     {
-      "content": "Use explicit connect and read timeouts for all network calls; avoid APIs that default to infinite waits.",
+      "content": "Use try-with-resources for Closeable lifecycles that must close deterministically; include all resources in a single try header when possible.",
       "examples": {
-        "positive": "HttpClient client = HttpClient.newBuilder()\n  .connectTimeout(Duration.ofSeconds(2))\n  .build();\nHttpRequest req = HttpRequest.newBuilder(URI.create(url))\n  .timeout(Duration.ofSeconds(3))\n  .GET()\n  .build();\nHttpResponse<String> res = client.send(req, HttpResponse.BodyHandlers.ofString());\n",
-        "negative": "HttpURLConnection c = (HttpURLConnection) new URL(url).openConnection();\ntry (InputStream in = c.getInputStream()) {\n  in.readAllBytes();\n}\n",
+        "positive": "try (InputStream in = Files.newInputStream(path);\n     OutputStream out = Files.newOutputStream(dest)) {\n  in.transferTo(out);\n}",
+        "negative": "InputStream in = Files.newInputStream(path);\nOutputStream out = Files.newOutputStream(dest);\nin.transferTo(out);\nout.close();\nin.close();",
         "language": "JAVA"
       }
     },
     {
-      "content": "Load configuration from explicit sources (env, args, files) and pass as typed objects; avoid scattered System.getProperty calls.",
+      "content": "Log structured context with placeholders; avoid string concatenation and avoid logging secrets; pass Throwable as the last parameter.",
       "examples": {
-        "positive": "record AppConfig(String dbUrl, int maxConnections) {\n  static AppConfig fromEnv() {\n    String url = Objects.requireNonNull(System.getenv(\"DB_URL\"));\n    int max = Integer.parseInt(System.getenv().getOrDefault(\"MAX_CONN\", \"20\"));\n    return new AppConfig(url, max);\n  }\n}\n",
-        "negative": "String url = System.getenv(\"DB_URL\");\nint max = Integer.parseInt(System.getProperty(\"max.conn\", \"20\"));\n// used directly across many classes\n",
+        "positive": "private static final Logger log = LoggerFactory.getLogger(MyService.class);\n\ntry {\n  service.call(userId);\n} catch (RuntimeException e) {\n  log.warn(\"call failed userId={} requestId={}\", userId, requestId, e);\n  throw e;\n}",
+        "negative": "private static final Logger log = LoggerFactory.getLogger(MyService.class);\n\ntry {\n  service.call(userId);\n} catch (RuntimeException e) {\n  log.warn(\"call failed userId=\" + userId + \" password=\" + password + \" \" + e);\n  throw e;\n}",
         "language": "JAVA"
       }
     },
     {
-      "content": "Guard log construction: use parameterized logging or Suppliers; never build expensive messages unconditionally.",
+      "content": "Parse configuration into typed values once at startup and pass as an immutable settings object; avoid repeated System.getenv/System.getProperty lookups.",
       "examples": {
-        "positive": "Logger log = LoggerFactory.getLogger(MyClass.class);\nlog.debug(\"payload size={} id={}\", payload.size(), id);\n// or\nlog.atDebug().addArgument(() -> expensiveDump(payload)).log(\"payload={}\");\n",
-        "negative": "Logger log = LoggerFactory.getLogger(MyClass.class);\nlog.debug(\"payload=\" + expensiveDump(payload));\n",
+        "positive": "record AppConfig(URI baseUri, Duration timeout) {\n  static AppConfig fromEnv() {\n    URI uri = URI.create(Objects.requireNonNull(System.getenv(\"BASE_URI\"), \"BASE_URI\"));\n    Duration t = Duration.ofMillis(Long.parseLong(System.getenv().getOrDefault(\"TIMEOUT_MS\", \"2000\")));\n    return new AppConfig(uri, t);\n  }\n}\n\nAppConfig cfg = AppConfig.fromEnv();",
+        "negative": "URI uri = URI.create(System.getenv(\"BASE_URI\"));\nHttpClient client = HttpClient.newBuilder()\n    .connectTimeout(Duration.ofMillis(Long.parseLong(System.getenv(\"TIMEOUT_MS\"))))\n    .build();\n// later...\nlong ms = Long.parseLong(System.getenv(\"TIMEOUT_MS\"));",
         "language": "JAVA"
       }
     }

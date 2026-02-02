@@ -19,6 +19,9 @@ import {
   CreateCommandResult,
   CreatePackageCommand,
   CreatePackageResult,
+  ListStandardsResult,
+  ListCommandsResult,
+  ListSkillsResult,
 } from '../../domain/repositories/IPackmindGateway';
 
 import { IOnboardingDraft } from '../../domain/types/OnboardingDraft';
@@ -963,5 +966,56 @@ export class PackmindGateway implements IPackmindGateway {
     }).catch(() => {
       // Silent fail - we don't want tracking failures to affect linting
     });
+  };
+
+  public listStandards = async (): Promise<ListStandardsResult> => {
+    const space = await this.getGlobalSpace();
+    const { organizationId } = this.httpClient.getAuthContext();
+
+    const response = await this.httpClient.request<{
+      standards: Array<{
+        id: string;
+        slug: string;
+        name: string;
+        description: string;
+      }>;
+    }>(`/api/v0/organizations/${organizationId}/spaces/${space.id}/standards`);
+
+    return response.standards.map((s) => ({
+      id: s.id,
+      slug: s.slug,
+      name: s.name,
+      description: s.description,
+    }));
+  };
+
+  public listCommands = async (): Promise<ListCommandsResult> => {
+    const space = await this.getGlobalSpace();
+    const { organizationId } = this.httpClient.getAuthContext();
+
+    const recipes = await this.httpClient.request<
+      Array<{ id: string; slug: string; name: string }>
+    >(`/api/v0/organizations/${organizationId}/spaces/${space.id}/recipes`);
+
+    return recipes.map((r) => ({
+      id: r.id,
+      slug: r.slug,
+      name: r.name,
+    }));
+  };
+
+  public listSkills = async (): Promise<ListSkillsResult> => {
+    const space = await this.getGlobalSpace();
+    const { organizationId } = this.httpClient.getAuthContext();
+
+    const skills = await this.httpClient.request<
+      Array<{ slug: string; name: string; description: string }>
+    >(`/api/v0/organizations/${organizationId}/spaces/${space.id}/skills`);
+
+    return skills.map((s) => ({
+      slug: s.slug,
+      name: s.name,
+      description: s.description,
+    }));
   };
 }
