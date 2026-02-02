@@ -9,7 +9,7 @@ import {
 import * as fs from 'fs/promises';
 import { IPackmindGateway } from '../../domain/repositories/IPackmindGateway';
 import { IPackmindRepositories } from '../../domain/repositories/IPackmindRepositories';
-import { LintFilesLocallyUseCase } from './LintFilesLocallyUseCase';
+import { LintFilesFromConfigUseCase } from './LintFilesFromConfigUseCase';
 import { stubLogger } from '@packmind/test-utils';
 import { ILinterGateway } from '../../domain/repositories/ILinterGateway';
 import {
@@ -33,8 +33,8 @@ import { IConfigFileRepository } from '../../domain/repositories/IConfigFileRepo
 
 jest.mock('fs/promises');
 
-describe('LintFilesLocallyUseCase', () => {
-  let useCase: LintFilesLocallyUseCase;
+describe('LintFilesFromConfigUseCase', () => {
+  let useCase: LintFilesFromConfigUseCase;
   let mockServices: IPackmindServices;
   let mockRepositories: IPackmindRepositories;
   let mockListFiles: jest.Mocked<IListFiles>;
@@ -86,7 +86,7 @@ describe('LintFilesLocallyUseCase', () => {
       isDirectory: () => true,
     });
 
-    useCase = new LintFilesLocallyUseCase(
+    useCase = new LintFilesFromConfigUseCase(
       mockServices,
       mockRepositories,
       logger,
@@ -270,7 +270,7 @@ describe('LintFilesLocallyUseCase', () => {
 
   describe('when executing linting with target-based matching', () => {
     describe('when detection programs return violations', () => {
-      let result: Awaited<ReturnType<LintFilesLocallyUseCase['execute']>>;
+      let result: Awaited<ReturnType<LintFilesFromConfigUseCase['execute']>>;
 
       beforeEach(async () => {
         const allConfigs: AllConfigsResult = {
@@ -347,7 +347,7 @@ describe('LintFilesLocallyUseCase', () => {
     });
 
     describe('when file matches multiple targets', () => {
-      let result: Awaited<ReturnType<LintFilesLocallyUseCase['execute']>>;
+      let result: Awaited<ReturnType<LintFilesFromConfigUseCase['execute']>>;
 
       beforeEach(async () => {
         const allConfigs: AllConfigsResult = {
@@ -504,7 +504,7 @@ describe('LintFilesLocallyUseCase', () => {
     });
 
     describe('when file is outside a specific target path', () => {
-      let result: Awaited<ReturnType<LintFilesLocallyUseCase['execute']>>;
+      let result: Awaited<ReturnType<LintFilesFromConfigUseCase['execute']>>;
 
       beforeEach(async () => {
         const allConfigs: AllConfigsResult = {

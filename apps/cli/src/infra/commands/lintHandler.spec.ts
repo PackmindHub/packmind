@@ -30,8 +30,8 @@ describe('lintHandler', () => {
     mockPackmindCliHexa = {
       tryGetGitRepositoryRoot: jest.fn(),
       readHierarchicalConfig: jest.fn(),
-      lintFilesLocally: jest.fn(),
-      lintFilesInDirectory: jest.fn(),
+      lintFilesFromConfig: jest.fn(),
+      lintFilesAgainstRule: jest.fn(),
     } as unknown as jest.Mocked<PackmindCliHexa>;
 
     mockHumanLogger = {
@@ -89,7 +89,7 @@ describe('lintHandler', () => {
           hasConfigs: false,
           configs: [],
         });
-        mockPackmindCliHexa.lintFilesInDirectory.mockResolvedValue({
+        mockPackmindCliHexa.lintFilesAgainstRule.mockResolvedValue({
           violations: [],
           summary: {
             totalFiles: 0,
@@ -122,7 +122,7 @@ describe('lintHandler', () => {
 
     describe('when no violations are found', () => {
       it('exits with code 0', async () => {
-        mockPackmindCliHexa.lintFilesLocally.mockResolvedValue({
+        mockPackmindCliHexa.lintFilesFromConfig.mockResolvedValue({
           violations: [],
           summary: {
             totalFiles: 1,
@@ -149,7 +149,7 @@ describe('lintHandler', () => {
           },
         ];
 
-        mockPackmindCliHexa.lintFilesLocally.mockResolvedValue({
+        mockPackmindCliHexa.lintFilesFromConfig.mockResolvedValue({
           violations,
         });
 
@@ -171,7 +171,7 @@ describe('lintHandler', () => {
             },
           ];
 
-          mockPackmindCliHexa.lintFilesLocally.mockResolvedValue({
+          mockPackmindCliHexa.lintFilesFromConfig.mockResolvedValue({
             violations,
           });
 
@@ -186,7 +186,7 @@ describe('lintHandler', () => {
 
       describe('when no violations and --continue-on-error is set', () => {
         it('exits with code 0', async () => {
-          mockPackmindCliHexa.lintFilesLocally.mockResolvedValue({
+          mockPackmindCliHexa.lintFilesFromConfig.mockResolvedValue({
             violations: [],
           });
 
@@ -208,7 +208,7 @@ describe('lintHandler', () => {
         hasConfigs: true,
         configs: [{ path: '/project/packmind.json' }],
       });
-      mockPackmindCliHexa.lintFilesLocally.mockResolvedValue({
+      mockPackmindCliHexa.lintFilesFromConfig.mockResolvedValue({
         violations: [],
       });
     });
@@ -272,20 +272,20 @@ describe('lintHandler', () => {
             hasConfigs: true,
             configs: [{ path: '/project/packmind.json' }],
           });
-          mockPackmindCliHexa.lintFilesLocally.mockResolvedValue({
+          mockPackmindCliHexa.lintFilesFromConfig.mockResolvedValue({
             violations: [],
           });
 
           await lintHandler(createArgs(), deps);
         });
 
-        it('calls lintFilesLocally', () => {
-          expect(mockPackmindCliHexa.lintFilesLocally).toHaveBeenCalled();
+        it('calls lintFilesFromConfig', () => {
+          expect(mockPackmindCliHexa.lintFilesFromConfig).toHaveBeenCalled();
         });
 
-        it('does not call lintFilesInDirectory', () => {
+        it('does not call lintFilesAgainstRule', () => {
           expect(
-            mockPackmindCliHexa.lintFilesInDirectory,
+            mockPackmindCliHexa.lintFilesAgainstRule,
           ).not.toHaveBeenCalled();
         });
       });
@@ -309,7 +309,7 @@ describe('lintHandler', () => {
             hasConfigs: true,
             configs: [{ path: '/project/packmind.json' }],
           });
-          mockPackmindCliHexa.lintFilesInDirectory.mockResolvedValue({
+          mockPackmindCliHexa.lintFilesAgainstRule.mockResolvedValue({
             violations: [],
             summary: {
               totalFiles: 0,
@@ -328,12 +328,14 @@ describe('lintHandler', () => {
           );
         });
 
-        it('calls lintFilesInDirectory', () => {
-          expect(mockPackmindCliHexa.lintFilesInDirectory).toHaveBeenCalled();
+        it('calls lintFilesAgainstRule', () => {
+          expect(mockPackmindCliHexa.lintFilesAgainstRule).toHaveBeenCalled();
         });
 
-        it('does not call lintFilesLocally', () => {
-          expect(mockPackmindCliHexa.lintFilesLocally).not.toHaveBeenCalled();
+        it('does not call lintFilesFromConfig', () => {
+          expect(
+            mockPackmindCliHexa.lintFilesFromConfig,
+          ).not.toHaveBeenCalled();
         });
       });
     });
@@ -361,7 +363,7 @@ describe('lintHandler', () => {
           hasConfigs: true,
           configs: [{ path: '/project/packmind.json' }],
         });
-        mockPackmindCliHexa.lintFilesLocally.mockResolvedValue({
+        mockPackmindCliHexa.lintFilesFromConfig.mockResolvedValue({
           violations: [],
         });
 
@@ -379,7 +381,7 @@ describe('lintHandler', () => {
         hasConfigs: true,
         configs: [{ path: '/project/packmind.json' }],
       });
-      mockPackmindCliHexa.lintFilesLocally.mockResolvedValue({
+      mockPackmindCliHexa.lintFilesFromConfig.mockResolvedValue({
         violations: [],
       });
 
@@ -402,7 +404,7 @@ describe('lintHandler', () => {
 
     describe('when not logged in and flag is set', () => {
       beforeEach(async () => {
-        mockPackmindCliHexa.lintFilesLocally.mockRejectedValue(
+        mockPackmindCliHexa.lintFilesFromConfig.mockRejectedValue(
           new NotLoggedInError(),
         );
 
@@ -422,7 +424,7 @@ describe('lintHandler', () => {
 
     describe('when not logged in and flag is not set', () => {
       it('throws error', async () => {
-        mockPackmindCliHexa.lintFilesLocally.mockRejectedValue(
+        mockPackmindCliHexa.lintFilesFromConfig.mockRejectedValue(
           new NotLoggedInError(),
         );
 
@@ -434,7 +436,7 @@ describe('lintHandler', () => {
 
     describe('when non-API-key errors occur even with flag set', () => {
       it('rethrows the error', async () => {
-        mockPackmindCliHexa.lintFilesLocally.mockRejectedValue(
+        mockPackmindCliHexa.lintFilesFromConfig.mockRejectedValue(
           new Error('Some other error'),
         );
 
@@ -450,7 +452,7 @@ describe('lintHandler', () => {
           hasConfigs: true,
           configs: [{ path: '/project/packmind.json' }],
         });
-        mockPackmindCliHexa.lintFilesLocally.mockRejectedValue(
+        mockPackmindCliHexa.lintFilesFromConfig.mockRejectedValue(
           new NotLoggedInError(),
         );
 

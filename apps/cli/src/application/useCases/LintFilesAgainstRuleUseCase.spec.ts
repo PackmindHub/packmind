@@ -3,17 +3,14 @@ import {
   ExecuteLinterProgramsCommand,
   IExecuteLinterProgramsUseCase,
   LinterExecutionViolation,
-  ListDetectionProgramResponse,
   ProgrammingLanguage,
   RuleId,
 } from '@packmind/types';
 import * as fs from 'fs/promises';
 import { IPackmindGateway } from '../../domain/repositories/IPackmindGateway';
 import { IPackmindRepositories } from '../../domain/repositories/IPackmindRepositories';
-import { GitService } from '../services/GitService';
-import { ListFiles } from '../services/ListFiles';
-import { IPackmindServices } from '../services/IPackmindServices';
-import { LintFilesInDirectoryUseCase } from './LintFilesInDirectoryUseCase';
+import { IPackmindServices } from '../../domain/services/IPackmindServices';
+import { LintFilesAgainstRuleUseCase } from './LintFilesAgainstRuleUseCase';
 import { ILinterGateway } from '../../domain/repositories/ILinterGateway';
 import {
   createMockLinterGateway,
@@ -27,15 +24,17 @@ import {
 } from '../../mocks/createMockServices';
 import { createMockPackmindRepositories } from '../../mocks/createMockRepositories';
 import { stubLogger } from '@packmind/test-utils';
+import { IListFiles } from '../../domain/services/IListFiles';
+import { IGitService } from '../../domain/services/IGitService';
 
 jest.mock('fs/promises');
 
-describe('LintFilesInDirectoryUseCase', () => {
-  let useCase: LintFilesInDirectoryUseCase;
+describe('LintFilesAgainstRuleUseCase', () => {
+  let useCase: LintFilesAgainstRuleUseCase;
   let mockServices: IPackmindServices;
   let mockRepositories: IPackmindRepositories;
-  let mockListFiles: jest.Mocked<ListFiles>;
-  let mockGitRemoteUrlService: jest.Mocked<GitService>;
+  let mockListFiles: jest.Mocked<IListFiles>;
+  let mockGitRemoteUrlService: jest.Mocked<IGitService>;
   let mockLinterExecutionUseCase: jest.Mocked<IExecuteLinterProgramsUseCase>;
   let mockPackmindGateway: jest.Mocked<IPackmindGateway>;
   let mockLinterGateway: jest.Mocked<ILinterGateway>;
@@ -78,7 +77,7 @@ describe('LintFilesInDirectoryUseCase', () => {
       isDirectory: () => true,
     });
 
-    useCase = new LintFilesInDirectoryUseCase(mockServices, mockRepositories);
+    useCase = new LintFilesAgainstRuleUseCase(mockServices, mockRepositories);
   });
 
   afterEach(() => {
@@ -90,67 +89,44 @@ describe('LintFilesInDirectoryUseCase', () => {
       { path: '/project/src/file1.ts' },
       { path: '/project/src/file2.ts' },
     ];
-    const gitRemoteUrl = 'github.com/user/repo';
-    const branches = ['main', 'develop'];
-    const mockDetectionPrograms: ListDetectionProgramResponse = {
-      targets: [
-        {
-          name: 'Root Target',
-          path: '/',
-          standards: [
-            {
-              name: 'Interface Naming',
-              slug: 'interface-naming',
-              scope: [],
-              rules: [
-                {
-                  content: 'Interface names should start with I',
-                  activeDetectionPrograms: [
-                    {
-                      language: 'typescript',
-                      detectionProgram: {
-                        mode: DetectionModeEnum.SINGLE_AST,
-                        code: 'function checkSourceCode(ast) { return [1]; }',
-                        sourceCodeState: 'AST' as const,
-                      },
-                    },
-                  ],
-                },
-              ],
-            },
-          ],
-        },
-      ],
-    };
+    const standardSlug = 'interface-naming';
+    const ruleId = 'rule-1' as RuleId;
     let result: Awaited<ReturnType<typeof useCase.execute>>;
 
     beforeEach(async () => {
-      mockGitRemoteUrlService.getGitRepositoryRoot.mockReturnValue('/project');
+      mockGitRemoteUrlService.tryGetGitRepositoryRoot.mockReturnValue(
+        '/project',
+      );
       mockListFiles.listFilesInDirectory.mockResolvedValue(mockFiles);
       mockListFiles.readFileContent.mockImplementation(async (filePath) => {
         if (filePath === '/project/src/file1.ts') return 'interface User {}';
         if (filePath === '/project/src/file2.ts') return 'interface IAdmin {}';
         return '';
       });
-      mockGitRemoteUrlService.getGitRemoteUrl.mockReturnValue({
-        gitRemoteUrl,
+      mockLinterGateway.getActiveDetectionProgramsForRule.mockResolvedValue({
+        scope: [],
+        ruleContent: 'Interface names should start with I',
+        programs: [
+          {
+            language: 'typescript',
+            mode: DetectionModeEnum.SINGLE_AST,
+            code: 'function checkSourceCode(ast) { return [1]; }',
+            sourceCodeState: 'AST' as const,
+          },
+        ],
       });
-      mockGitRemoteUrlService.getCurrentBranches.mockReturnValue({
-        branches,
-      });
-      mockLinterGateway.listDetectionPrograms.mockResolvedValue(
-        mockDetectionPrograms,
-      );
 
       result = await useCase.execute({
         path: '/project',
+        standardSlug,
+        ruleId,
       });
     });
 
     it('calls getGitRepositoryRoot with correct path', () => {
-      expect(mockGitRemoteUrlService.getGitRepositoryRoot).toHaveBeenCalledWith(
-        '/project',
-      );
+      expect(
+        mockGitRemoteUrlService.tryGetGitRepositoryRoot,
+      ).toHaveBeenCalledWith('/project');
     });
 
     it('calls listFilesInDirectory with correct parameters', () => {
@@ -161,24 +137,13 @@ describe('LintFilesInDirectoryUseCase', () => {
       );
     });
 
-    it('calls getGitRemoteUrl with correct path', () => {
-      expect(mockGitRemoteUrlService.getGitRemoteUrl).toHaveBeenCalledWith(
-        '/project',
-      );
-    });
-
-    it('calls getCurrentBranches with correct path', () => {
-      expect(mockGitRemoteUrlService.getCurrentBranches).toHaveBeenCalledWith(
-        '/project',
-      );
-    });
-
-    it('calls listExecutionPrograms with correct parameters', () => {
+    it('calls getActiveDetectionProgramsForRule with correct parameters', () => {
       expect(
-        mockPackmindGateway.linter.listDetectionPrograms,
+        mockPackmindGateway.linter.getActiveDetectionProgramsForRule,
       ).toHaveBeenCalledWith({
-        gitRemoteUrl,
-        branches,
+        standardSlug,
+        ruleId,
+        language: undefined,
       });
     });
 
@@ -202,10 +167,6 @@ describe('LintFilesInDirectoryUseCase', () => {
           language: ProgrammingLanguage.TYPESCRIPT,
         }),
       );
-    });
-
-    it('returns correct gitRemoteUrl', () => {
-      expect(result.gitRemoteUrl).toBe(gitRemoteUrl);
     });
 
     it('returns correct number of violations', () => {
@@ -233,22 +194,27 @@ describe('LintFilesInDirectoryUseCase', () => {
     let result: Awaited<ReturnType<typeof useCase.execute>>;
 
     beforeEach(async () => {
-      mockGitRemoteUrlService.getGitRepositoryRoot.mockReturnValue(
+      mockGitRemoteUrlService.tryGetGitRepositoryRoot.mockReturnValue(
         '/empty-project',
       );
       mockListFiles.listFilesInDirectory.mockResolvedValue([]);
-      mockGitRemoteUrlService.getGitRemoteUrl.mockReturnValue({
-        gitRemoteUrl: 'github.com/user/repo',
-      });
-      mockGitRemoteUrlService.getCurrentBranches.mockReturnValue({
-        branches: ['main'],
-      });
-      mockLinterGateway.listDetectionPrograms.mockResolvedValue({
-        targets: [],
+      mockLinterGateway.getActiveDetectionProgramsForRule.mockResolvedValue({
+        scope: [],
+        ruleContent: 'Test rule',
+        programs: [
+          {
+            language: 'typescript',
+            mode: DetectionModeEnum.SINGLE_AST,
+            code: 'function checkSourceCode(ast) { return []; }',
+            sourceCodeState: 'AST' as const,
+          },
+        ],
       });
 
       result = await useCase.execute({
         path: '/empty-project',
+        standardSlug: 'test-standard',
+        ruleId: 'rule-1' as RuleId,
       });
     });
 
@@ -275,36 +241,6 @@ describe('LintFilesInDirectoryUseCase', () => {
 
   describe('when path is a single file', () => {
     describe('when linting a TypeScript file', () => {
-      const mockDetectionPrograms: ListDetectionProgramResponse = {
-        targets: [
-          {
-            name: 'Root Target',
-            path: '/',
-            standards: [
-              {
-                name: 'Interface Naming',
-                slug: 'interface-naming',
-                scope: [],
-                rules: [
-                  {
-                    content: 'Interface names should start with I',
-                    activeDetectionPrograms: [
-                      {
-                        language: 'typescript',
-                        detectionProgram: {
-                          mode: DetectionModeEnum.SINGLE_AST,
-                          code: 'function checkSourceCode(ast) { return [1]; }',
-                          sourceCodeState: 'AST' as const,
-                        },
-                      },
-                    ],
-                  },
-                ],
-              },
-            ],
-          },
-        ],
-      };
       let result: Awaited<ReturnType<typeof useCase.execute>>;
 
       beforeEach(async () => {
@@ -313,28 +249,33 @@ describe('LintFilesInDirectoryUseCase', () => {
           isDirectory: () => false,
         });
 
-        mockGitRemoteUrlService.getGitRepositoryRoot.mockReturnValue(
+        mockGitRemoteUrlService.tryGetGitRepositoryRoot.mockReturnValue(
           '/project',
         );
         mockListFiles.readFileContent.mockResolvedValue('interface User {}');
-        mockGitRemoteUrlService.getGitRemoteUrl.mockReturnValue({
-          gitRemoteUrl: 'github.com/user/repo',
+        mockLinterGateway.getActiveDetectionProgramsForRule.mockResolvedValue({
+          scope: [],
+          ruleContent: 'Interface names should start with I',
+          programs: [
+            {
+              language: 'typescript',
+              mode: DetectionModeEnum.SINGLE_AST,
+              code: 'function checkSourceCode(ast) { return [1]; }',
+              sourceCodeState: 'AST' as const,
+            },
+          ],
         });
-        mockGitRemoteUrlService.getCurrentBranches.mockReturnValue({
-          branches: ['main'],
-        });
-        mockLinterGateway.listDetectionPrograms.mockResolvedValue(
-          mockDetectionPrograms,
-        );
 
         result = await useCase.execute({
           path: '/project/src/user.ts',
+          standardSlug: 'interface-naming',
+          ruleId: 'rule-1' as RuleId,
         });
       });
 
       it('uses directory for Git operations', () => {
         expect(
-          mockGitRemoteUrlService.getGitRepositoryRoot,
+          mockGitRemoteUrlService.tryGetGitRepositoryRoot,
         ).toHaveBeenCalledWith('/project/src');
       });
 
@@ -365,36 +306,6 @@ describe('LintFilesInDirectoryUseCase', () => {
     });
 
     describe('when linting a JavaScript file with violations', () => {
-      const mockDetectionPrograms: ListDetectionProgramResponse = {
-        targets: [
-          {
-            name: 'Root Target',
-            path: '/',
-            standards: [
-              {
-                name: 'Test Standard',
-                slug: 'test-standard',
-                scope: [],
-                rules: [
-                  {
-                    content: 'Test rule',
-                    activeDetectionPrograms: [
-                      {
-                        language: 'js',
-                        detectionProgram: {
-                          mode: DetectionModeEnum.SINGLE_AST,
-                          code: 'function check() { return [1]; }',
-                          sourceCodeState: 'AST' as const,
-                        },
-                      },
-                    ],
-                  },
-                ],
-              },
-            ],
-          },
-        ],
-      };
       let result: Awaited<ReturnType<typeof useCase.execute>>;
 
       beforeEach(async () => {
@@ -403,22 +314,27 @@ describe('LintFilesInDirectoryUseCase', () => {
           isDirectory: () => false,
         });
 
-        mockGitRemoteUrlService.getGitRepositoryRoot.mockReturnValue(
+        mockGitRemoteUrlService.tryGetGitRepositoryRoot.mockReturnValue(
           '/project',
         );
         mockListFiles.readFileContent.mockResolvedValue('const x = 1;');
-        mockGitRemoteUrlService.getGitRemoteUrl.mockReturnValue({
-          gitRemoteUrl: 'github.com/user/repo',
+        mockLinterGateway.getActiveDetectionProgramsForRule.mockResolvedValue({
+          scope: [],
+          ruleContent: 'Test rule',
+          programs: [
+            {
+              language: 'js',
+              mode: DetectionModeEnum.SINGLE_AST,
+              code: 'function check() { return [1]; }',
+              sourceCodeState: 'AST' as const,
+            },
+          ],
         });
-        mockGitRemoteUrlService.getCurrentBranches.mockReturnValue({
-          branches: ['main'],
-        });
-        mockLinterGateway.listDetectionPrograms.mockResolvedValue(
-          mockDetectionPrograms,
-        );
 
         result = await useCase.execute({
           path: '/project/index.js',
+          standardSlug: 'test-standard',
+          ruleId: 'rule-1' as RuleId,
         });
       });
 
@@ -438,52 +354,27 @@ describe('LintFilesInDirectoryUseCase', () => {
 
   describe('when linter execution throws an error', () => {
     const mockFiles = [{ path: '/project/src/file1.ts' }];
-    const mockDetectionPrograms: ListDetectionProgramResponse = {
-      targets: [
-        {
-          name: 'Root Target',
-          path: '/',
-          standards: [
-            {
-              name: 'Test Standard',
-              slug: 'test-standard',
-              scope: [],
-              rules: [
-                {
-                  content: 'Test rule',
-                  activeDetectionPrograms: [
-                    {
-                      language: 'typescript',
-                      detectionProgram: {
-                        mode: DetectionModeEnum.SINGLE_AST,
-                        code: 'invalid code',
-                        sourceCodeState: 'AST' as const,
-                      },
-                    },
-                  ],
-                },
-              ],
-            },
-          ],
-        },
-      ],
-    };
     let result: Awaited<ReturnType<typeof useCase.execute>>;
     let consoleSpy: jest.SpyInstance;
 
     beforeEach(async () => {
-      mockGitRemoteUrlService.getGitRepositoryRoot.mockReturnValue('/project');
+      mockGitRemoteUrlService.tryGetGitRepositoryRoot.mockReturnValue(
+        '/project',
+      );
       mockListFiles.listFilesInDirectory.mockResolvedValue(mockFiles);
       mockListFiles.readFileContent.mockResolvedValue('interface User {}');
-      mockGitRemoteUrlService.getGitRemoteUrl.mockReturnValue({
-        gitRemoteUrl: 'github.com/user/repo',
+      mockLinterGateway.getActiveDetectionProgramsForRule.mockResolvedValue({
+        scope: [],
+        ruleContent: 'Test rule',
+        programs: [
+          {
+            language: 'typescript',
+            mode: DetectionModeEnum.SINGLE_AST,
+            code: 'invalid code',
+            sourceCodeState: 'AST' as const,
+          },
+        ],
       });
-      mockGitRemoteUrlService.getCurrentBranches.mockReturnValue({
-        branches: ['main'],
-      });
-      mockLinterGateway.listDetectionPrograms.mockResolvedValue(
-        mockDetectionPrograms,
-      );
       mockLinterExecutionUseCase.execute.mockRejectedValue(
         new Error('AST parsing failed'),
       );
@@ -492,6 +383,8 @@ describe('LintFilesInDirectoryUseCase', () => {
 
       result = await useCase.execute({
         path: '/project',
+        standardSlug: 'test-standard',
+        ruleId: 'rule-1' as RuleId,
       });
     });
 
@@ -519,39 +412,11 @@ describe('LintFilesInDirectoryUseCase', () => {
       },
       { path: '/project/test/helpers.ts' },
     ];
-    const mockDetectionPrograms: ListDetectionProgramResponse = {
-      targets: [
-        {
-          name: 'Root Target',
-          path: '/',
-          standards: [
-            {
-              name: 'Test Files Standard',
-              slug: 'test-files',
-              scope: ['**/*.spec.ts', '**/test/**/*.ts'],
-              rules: [
-                {
-                  content: 'Test specific rule',
-                  activeDetectionPrograms: [
-                    {
-                      language: 'typescript',
-                      detectionProgram: {
-                        mode: DetectionModeEnum.SINGLE_AST,
-                        code: 'function checkSourceCode(ast) { return [1]; }',
-                        sourceCodeState: 'AST' as const,
-                      },
-                    },
-                  ],
-                },
-              ],
-            },
-          ],
-        },
-      ],
-    };
 
     beforeEach(async () => {
-      mockGitRemoteUrlService.getGitRepositoryRoot.mockReturnValue('/project');
+      mockGitRemoteUrlService.tryGetGitRepositoryRoot.mockReturnValue(
+        '/project',
+      );
       mockListFiles.listFilesInDirectory.mockResolvedValue(mockFiles);
       mockListFiles.readFileContent.mockImplementation(async (filePath) => {
         if (filePath === '/project/src/component.ts')
@@ -562,18 +427,23 @@ describe('LintFilesInDirectoryUseCase', () => {
           return 'interface Helper {}';
         return '';
       });
-      mockGitRemoteUrlService.getGitRemoteUrl.mockReturnValue({
-        gitRemoteUrl: 'github.com/user/repo',
+      mockLinterGateway.getActiveDetectionProgramsForRule.mockResolvedValue({
+        scope: ['**/*.spec.ts', '**/test/**/*.ts'],
+        ruleContent: 'Test specific rule',
+        programs: [
+          {
+            language: 'typescript',
+            mode: DetectionModeEnum.SINGLE_AST,
+            code: 'function checkSourceCode(ast) { return [1]; }',
+            sourceCodeState: 'AST' as const,
+          },
+        ],
       });
-      mockGitRemoteUrlService.getCurrentBranches.mockReturnValue({
-        branches: ['main'],
-      });
-      mockLinterGateway.listDetectionPrograms.mockResolvedValue(
-        mockDetectionPrograms,
-      );
 
       await useCase.execute({
         path: '/project',
+        standardSlug: 'test-files',
+        ruleId: 'rule-1' as RuleId,
       });
     });
 
@@ -598,38 +468,10 @@ describe('LintFilesInDirectoryUseCase', () => {
           path: '/project/src/component.spec.ts',
         },
       ];
-      const mockDetectionPrograms: ListDetectionProgramResponse = {
-        targets: [
-          {
-            name: 'Root Target',
-            path: '/',
-            standards: [
-              {
-                name: 'Global Standard',
-                slug: 'global',
-                scope: [],
-                rules: [
-                  {
-                    content: 'Global rule',
-                    activeDetectionPrograms: [
-                      {
-                        language: 'typescript',
-                        detectionProgram: {
-                          mode: DetectionModeEnum.SINGLE_AST,
-                          code: 'function checkSourceCode(ast) { return [1]; }',
-                          sourceCodeState: 'AST' as const,
-                        },
-                      },
-                    ],
-                  },
-                ],
-              },
-            ],
-          },
-        ],
-      };
 
-      mockGitRemoteUrlService.getGitRepositoryRoot.mockReturnValue('/project');
+      mockGitRemoteUrlService.tryGetGitRepositoryRoot.mockReturnValue(
+        '/project',
+      );
       mockListFiles.listFilesInDirectory.mockResolvedValue(mockFiles);
       mockListFiles.readFileContent.mockImplementation(async (filePath) => {
         if (filePath === '/project/src/component.ts')
@@ -638,18 +480,23 @@ describe('LintFilesInDirectoryUseCase', () => {
           return 'interface TestInterface {}';
         return '';
       });
-      mockGitRemoteUrlService.getGitRemoteUrl.mockReturnValue({
-        gitRemoteUrl: 'github.com/user/repo',
+      mockLinterGateway.getActiveDetectionProgramsForRule.mockResolvedValue({
+        scope: [],
+        ruleContent: 'Global rule',
+        programs: [
+          {
+            language: 'typescript',
+            mode: DetectionModeEnum.SINGLE_AST,
+            code: 'function checkSourceCode(ast) { return [1]; }',
+            sourceCodeState: 'AST' as const,
+          },
+        ],
       });
-      mockGitRemoteUrlService.getCurrentBranches.mockReturnValue({
-        branches: ['main'],
-      });
-      mockLinterGateway.listDetectionPrograms.mockResolvedValue(
-        mockDetectionPrograms,
-      );
 
       await useCase.execute({
         path: '/project',
+        standardSlug: 'global',
+        ruleId: 'rule-1' as RuleId,
       });
 
       expect(mockLinterExecutionUseCase.execute).toHaveBeenCalledTimes(2);
@@ -658,53 +505,28 @@ describe('LintFilesInDirectoryUseCase', () => {
 
   it('skips programs with unsupported languages', async () => {
     const mockFiles = [{ path: '/project/src/file1.py' }];
-    const mockDetectionPrograms: ListDetectionProgramResponse = {
-      targets: [
+
+    mockGitRemoteUrlService.tryGetGitRepositoryRoot.mockReturnValue('/project');
+    mockListFiles.listFilesInDirectory.mockResolvedValue(mockFiles);
+    mockLinterGateway.getActiveDetectionProgramsForRule.mockResolvedValue({
+      scope: [],
+      ruleContent: 'Test rule',
+      programs: [
         {
-          name: 'Root Target',
-          path: '/',
-          standards: [
-            {
-              name: 'Python Standard',
-              slug: 'python-standard',
-              scope: [],
-              rules: [
-                {
-                  content: 'Test rule',
-                  activeDetectionPrograms: [
-                    {
-                      language: 'unsupported-lang',
-                      detectionProgram: {
-                        mode: DetectionModeEnum.SINGLE_AST,
-                        code: 'function checkSourceCode() { return [1]; }',
-                        sourceCodeState: 'AST' as const,
-                      },
-                    },
-                  ],
-                },
-              ],
-            },
-          ],
+          language: 'unsupported-lang',
+          mode: DetectionModeEnum.SINGLE_AST,
+          code: 'function checkSourceCode() { return [1]; }',
+          sourceCodeState: 'AST' as const,
         },
       ],
-    };
-
-    mockGitRemoteUrlService.getGitRepositoryRoot.mockReturnValue('/project');
-    mockListFiles.listFilesInDirectory.mockResolvedValue(mockFiles);
-    mockGitRemoteUrlService.getGitRemoteUrl.mockReturnValue({
-      gitRemoteUrl: 'github.com/user/repo',
     });
-    mockGitRemoteUrlService.getCurrentBranches.mockReturnValue({
-      branches: ['main'],
-    });
-    mockLinterGateway.listDetectionPrograms.mockResolvedValue(
-      mockDetectionPrograms,
-    );
 
     const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
 
     await useCase.execute({
       path: '/project',
+      standardSlug: 'python-standard',
+      ruleId: 'rule-1' as RuleId,
     });
 
     expect(mockLinterExecutionUseCase.execute).not.toHaveBeenCalled();
@@ -779,7 +601,7 @@ describe('LintFilesInDirectoryUseCase', () => {
           .fn()
           .mockResolvedValue(draftProgramsResponse);
 
-        mockGitRemoteUrlService.getGitRepositoryRoot.mockReturnValue(
+        mockGitRemoteUrlService.tryGetGitRepositoryRoot.mockReturnValue(
           '/project',
         );
         mockListFiles.listFilesInDirectory.mockResolvedValue([
@@ -815,12 +637,6 @@ describe('LintFilesInDirectoryUseCase', () => {
           ruleId: 'rule-123',
         });
       });
-
-      it('does not call listExecutionPrograms', () => {
-        expect(
-          mockPackmindGateway.linter.listDetectionPrograms,
-        ).not.toHaveBeenCalled();
-      });
     });
 
     describe('when scope filtering is skipped', () => {
@@ -844,7 +660,7 @@ describe('LintFilesInDirectoryUseCase', () => {
           .fn()
           .mockResolvedValue(draftProgramsResponse);
 
-        mockGitRemoteUrlService.getGitRepositoryRoot.mockReturnValue(
+        mockGitRemoteUrlService.tryGetGitRepositoryRoot.mockReturnValue(
           '/project',
         );
         mockListFiles.listFilesInDirectory.mockResolvedValue([
@@ -908,7 +724,7 @@ describe('LintFilesInDirectoryUseCase', () => {
           .fn()
           .mockResolvedValue(draftProgramsResponse);
 
-        mockGitRemoteUrlService.getGitRepositoryRoot.mockReturnValue(
+        mockGitRemoteUrlService.tryGetGitRepositoryRoot.mockReturnValue(
           '/project',
         );
         mockListFiles.listFilesInDirectory.mockResolvedValue([
@@ -996,7 +812,7 @@ describe('LintFilesInDirectoryUseCase', () => {
           .fn()
           .mockResolvedValue(activeProgramsResponse);
 
-        mockGitRemoteUrlService.getGitRepositoryRoot.mockReturnValue(
+        mockGitRemoteUrlService.tryGetGitRepositoryRoot.mockReturnValue(
           '/project',
         );
         mockListFiles.listFilesInDirectory.mockResolvedValue([
@@ -1065,7 +881,7 @@ describe('LintFilesInDirectoryUseCase', () => {
 
   describe('File matching with target and scope', () => {
     // Create a clean instance for unit testing the public method
-    let testUseCase: LintFilesInDirectoryUseCase;
+    let testUseCase: LintFilesAgainstRuleUseCase;
 
     beforeEach(() => {
       // Minimal setup just to test the public method
@@ -1073,7 +889,7 @@ describe('LintFilesInDirectoryUseCase', () => {
       const mockRepositories = createMockPackmindRepositories();
       const mockLogger = stubLogger();
 
-      testUseCase = new LintFilesInDirectoryUseCase(
+      testUseCase = new LintFilesAgainstRuleUseCase(
         mockServices,
         mockRepositories,
         mockLogger,

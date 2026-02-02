@@ -1,12 +1,10 @@
 import { IPackmindRepositories } from '../domain/repositories/IPackmindRepositories';
 import { IConfigFileRepository } from '../domain/repositories/IConfigFileRepository';
-import {
-  createMockPackmindGateway,
-  MockPackmindGatewayOverrides,
-} from './createMockGateways';
+import { createMockPackmindGateway } from './createMockGateways';
+import { IPackmindGateway } from '../domain/repositories/IPackmindGateway';
 
 type MockRepositoriesOverrides = {
-  packmindGateway?: MockPackmindGatewayOverrides;
+  packmindGateway?: jest.Mocked<IPackmindGateway>;
   configFileRepository?: Partial<jest.Mocked<IConfigFileRepository>>;
 };
 
@@ -14,7 +12,7 @@ export function createMockPackmindRepositories(
   overrides?: MockRepositoriesOverrides,
 ): jest.Mocked<IPackmindRepositories> {
   return {
-    packmindGateway: createMockPackmindGateway(overrides?.packmindGateway),
+    packmindGateway: overrides?.packmindGateway ?? createMockPackmindGateway(),
     configFileRepository: createMockConfigFileRepository(
       overrides?.configFileRepository,
     ),

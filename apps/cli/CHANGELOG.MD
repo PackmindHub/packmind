@@ -18,6 +18,8 @@
 
 ## Removed
 
+- linter based on git remote URL when `packmind.json` is absent.
+
 # [0.14.1] - 2026-01-29
 
 ## Fixed

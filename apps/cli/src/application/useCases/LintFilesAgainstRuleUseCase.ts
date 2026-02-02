@@ -1,8 +1,8 @@
 import {
-  ILintFilesInDirectory,
-  LintFilesInDirectoryCommand,
-  LintFilesInDirectoryResult,
-} from '../../domain/useCases/ILintFilesInDirectory';
+  ILintFilesAgainstRule,
+  LintFilesAgainstRuleCommand,
+  LintFilesAgainstRuleResult,
+} from '../../domain/useCases/ILintFilesAgainstRule';
 import { IPackmindRepositories } from '../../domain/repositories/IPackmindRepositories';
 import { LintViolation } from '../../domain/entities/LintViolation';
 import { DiffMode, ModifiedLine } from '../../domain/entities/DiffMode';
@@ -24,9 +24,9 @@ import { logErrorConsole } from '../../infra/utils/consoleLogger';
 import { handleScope } from '../utils/handleScope';
 import { IPackmindServices } from '../../domain/services/IPackmindServices';
 
-const origin = 'LintFilesInDirectoryUseCase';
+const origin = 'LintFilesAgainstRuleUseCase';
 
-export class LintFilesInDirectoryUseCase implements ILintFilesInDirectory {
+export class LintFilesAgainstRuleUseCase implements ILintFilesAgainstRule {
   constructor(
     private readonly services: IPackmindServices,
     private readonly repositories: IPackmindRepositories,
@@ -119,8 +119,8 @@ export class LintFilesInDirectoryUseCase implements ILintFilesInDirectory {
   }
 
   public async execute(
-    command: LintFilesInDirectoryCommand,
-  ): Promise<LintFilesInDirectoryResult> {
+    command: LintFilesAgainstRuleCommand,
+  ): Promise<LintFilesAgainstRuleResult> {
     const {
       path: userPath,
       draftMode,
@@ -161,22 +161,18 @@ export class LintFilesInDirectoryUseCase implements ILintFilesInDirectory {
       `Path type: ${isFile ? 'file' : 'directory'}, gitOpsDir="${directoryForGitOps}"`,
     );
 
+    // Try to get git repository root, but don't require it
     const gitRepoRoot =
-      await this.services.gitRemoteUrlService.getGitRepositoryRoot(
+      this.services.gitRemoteUrlService.tryGetGitRepositoryRoot(
         directoryForGitOps,
       );
 
+    // Use git root if available, otherwise use the lint path directory as root
+    const effectiveRoot = gitRepoRoot ?? directoryForGitOps;
     const absoluteLintPath = absoluteUserPath;
 
-    // Verify the path is within the git repository
-    if (!pathStartsWith(absoluteLintPath, gitRepoRoot)) {
-      throw new Error(
-        `The path "${absoluteLintPath}" is not within the git repository at "${gitRepoRoot}"`,
-      );
-    }
-
     this.logger.debug(
-      `Resolved paths: gitRoot="${gitRepoRoot}", lintPath="${absoluteLintPath}"`,
+      `Resolved paths: effectiveRoot="${effectiveRoot}", lintPath="${absoluteLintPath}", inGitRepo=${!!gitRepoRoot}`,
     );
 
     // Get diff information if diffMode is enabled
@@ -184,6 +180,13 @@ export class LintFilesInDirectoryUseCase implements ILintFilesInDirectory {
     let modifiedLines: ModifiedLine[] | null = null;
 
     if (diffMode) {
+      // Diff mode requires being in a git repository
+      if (!gitRepoRoot) {
+        throw new Error(
+          'The --changed-files and --changed-lines options require the project to be in a Git repository',
+        );
+      }
+
       if (diffMode === DiffMode.FILES) {
         modifiedFiles =
           await this.services.gitRemoteUrlService.getModifiedFiles(gitRepoRoot);
@@ -191,12 +194,7 @@ export class LintFilesInDirectoryUseCase implements ILintFilesInDirectory {
 
         // If no files are modified, return early with no violations
         if (modifiedFiles.length === 0) {
-          const { gitRemoteUrl } =
-            await this.services.gitRemoteUrlService.getGitRemoteUrl(
-              gitRepoRoot,
-            );
           return {
-            gitRemoteUrl,
             violations: [],
             summary: {
               totalFiles: 0,
@@ -217,12 +215,7 @@ export class LintFilesInDirectoryUseCase implements ILintFilesInDirectory {
 
         // If no files are modified, return early with no violations
         if (modifiedFiles.length === 0) {
-          const { gitRemoteUrl } =
-            await this.services.gitRemoteUrlService.getGitRemoteUrl(
-              gitRepoRoot,
-            );
           return {
-            gitRemoteUrl,
             violations: [],
             summary: {
               totalFiles: 0,
@@ -251,23 +244,11 @@ export class LintFilesInDirectoryUseCase implements ILintFilesInDirectory {
       this.logger.debug(`Filtered to ${files.length} modified files`);
     }
 
-    // Step 2: Get Git remote URL
-    const { gitRemoteUrl } =
-      this.services.gitRemoteUrlService.getGitRemoteUrl(gitRepoRoot);
-
-    // Step 2.5: Get current branches
-    const { branches } =
-      this.services.gitRemoteUrlService.getCurrentBranches(gitRepoRoot);
-
-    this.logger.debug(
-      `Git repository: url="${gitRemoteUrl}", branches=${JSON.stringify(branches)}, filesCount=${files.length}`,
-    );
-
     // Step 3: Get detection programs from Packmind Gateway
     let detectionPrograms;
     let isDraftMode = false;
 
-    if (draftMode && standardSlug && ruleId) {
+    if (draftMode) {
       // Draft mode: Get draft detection programs for specific rule
       isDraftMode = true;
       const draftProgramsResult =
@@ -316,7 +297,7 @@ export class LintFilesInDirectoryUseCase implements ILintFilesInDirectory {
           },
         ],
       };
-    } else if (!draftMode && standardSlug && ruleId) {
+    } else {
       // Active mode: Get active detection programs for specific rule
       const activeProgramsResult =
         await this.repositories.packmindGateway.linter.getActiveDetectionProgramsForRule(
@@ -363,13 +344,6 @@ export class LintFilesInDirectoryUseCase implements ILintFilesInDirectory {
           },
         ],
       };
-    } else {
-      // Normal mode: Get all active detection programs from git repo
-      detectionPrograms =
-        await this.repositories.packmindGateway.linter.listDetectionPrograms({
-          gitRemoteUrl: gitRemoteUrl.replace(':', '/'),
-          branches,
-        });
     }
 
     this.logger.debug(
@@ -382,10 +356,10 @@ export class LintFilesInDirectoryUseCase implements ILintFilesInDirectory {
     for (const file of files) {
       const fileViolations: LintViolation['violations'] = [];
 
-      // Convert absolute file path to relative path from git repo root
+      // Convert absolute file path to relative path from effective root
       // This ensures proper matching against target paths and scopes
-      const relativeFilePath = pathStartsWith(file.path, gitRepoRoot)
-        ? file.path.substring(gitRepoRoot.length)
+      const relativeFilePath = pathStartsWith(file.path, effectiveRoot)
+        ? file.path.substring(effectiveRoot.length)
         : file.path;
 
       // Ensure the relative path starts with '/'
@@ -551,7 +525,6 @@ export class LintFilesInDirectoryUseCase implements ILintFilesInDirectory {
     );
 
     return {
-      gitRemoteUrl,
       violations: filteredViolations,
       summary: {
         totalFiles: files.length,

@@ -1,8 +1,8 @@
 import {
-  ILintFilesLocally,
-  LintFilesLocallyCommand,
-  LintFilesLocallyResult,
-} from '../../domain/useCases/ILintFilesLocally';
+  ILintFilesFromConfig,
+  LintFilesFromConfigCommand,
+  LintFilesFromConfigResult,
+} from '../../domain/useCases/ILintFilesFromConfig';
 import { IPackmindRepositories } from '../../domain/repositories/IPackmindRepositories';
 import { LintViolation } from '../../domain/entities/LintViolation';
 import { DiffMode, ModifiedLine } from '../../domain/entities/DiffMode';
@@ -25,9 +25,9 @@ import { pathStartsWith } from '../utils/pathUtils';
 import { logErrorConsole } from '../../infra/utils/consoleLogger';
 import { IPackmindServices } from '../../domain/services/IPackmindServices';
 
-const origin = 'LintFilesLocallyUseCase';
+const origin = 'LintFilesFromConfigUseCase';
 
-export class LintFilesLocallyUseCase implements ILintFilesLocally {
+export class LintFilesFromConfigUseCase implements ILintFilesFromConfig {
   private detectionProgramsCache: Map<
     string,
     GetDetectionProgramsForPackagesResponse
@@ -93,8 +93,8 @@ export class LintFilesLocallyUseCase implements ILintFilesLocally {
   }
 
   public async execute(
-    command: LintFilesLocallyCommand,
-  ): Promise<LintFilesLocallyResult> {
+    command: LintFilesFromConfigCommand,
+  ): Promise<LintFilesFromConfigResult> {
     const { path: userPath, diffMode } = command;
 
     this.logger.debug(

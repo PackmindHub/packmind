@@ -46,7 +46,6 @@ export function createMockLinterGateway(
   overrides?: Partial<jest.Mocked<ILinterGateway>>,
 ): jest.Mocked<ILinterGateway> {
   return {
-    listDetectionPrograms: jest.fn(),
     getDraftDetectionProgramsForRule: jest.fn(),
     getActiveDetectionProgramsForRule: jest.fn(),
     getDetectionProgramsForPackages: jest.fn(),

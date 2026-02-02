@@ -1,10 +1,8 @@
 import {
   Gateway,
-  IListDetectionProgramUseCase,
   IGetDraftDetectionProgramForRule,
   IGetActiveDetectionProgramForRule,
   IGetDetectionProgramsForPackagesUseCase,
-  ListDetectionProgramResponse,
   GetDetectionProgramsForPackagesResponse,
   RuleId,
 } from '@packmind/types';
@@ -15,26 +13,6 @@ import { CommunityEditionError } from '../../domain/errors/CommunityEditionError
 
 export class LinterGateway implements ILinterGateway {
   constructor(private readonly httpClient: PackmindHttpClient) {}
-
-  listDetectionPrograms: Gateway<IListDetectionProgramUseCase> = async (
-    command,
-  ) => {
-    const response: ListDetectionProgramResponse =
-      await this.httpClient.request('/api/v0/list-detection-program', {
-        method: 'POST',
-        body: {
-          gitRemoteUrl: command.gitRemoteUrl,
-          branches: command.branches,
-        },
-        onError: (response) => {
-          if (response.status === 404) {
-            throw new CommunityEditionError('local linting with packages');
-          }
-        },
-      });
-
-    return handleScopeInTargetsResponse(response);
-  };
 
   getDraftDetectionProgramsForRule: Gateway<IGetDraftDetectionProgramForRule> =
     async (command) => {

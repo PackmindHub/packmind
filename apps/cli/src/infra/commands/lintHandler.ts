@@ -65,7 +65,6 @@ export async function lintHandler(
 
   const startedAt = Date.now();
   const targetPath = path ?? '.';
-  const hasArguments = !!(draft || rule || language);
   const absolutePath = resolvePath(targetPath);
 
   if (diff) {
@@ -77,42 +76,36 @@ export async function lintHandler(
     }
   }
 
-  let useLocalLinting = false;
-
-  if (!hasArguments) {
-    const stopDirectory =
-      await packmindCliHexa.tryGetGitRepositoryRoot(absolutePath);
-
-    const hierarchicalConfig = await packmindCliHexa.readHierarchicalConfig(
-      absolutePath,
-      stopDirectory,
-    );
-
-    if (hierarchicalConfig.hasConfigs) {
-      useLocalLinting = true;
-    } else {
-      throw new Error(
-        'No packmind.json config found. Run `packmind-cli install <some-package>` first to set up linting.',
-      );
-    }
-  }
-
   let violations: LintViolation[] = [];
 
   try {
-    if (useLocalLinting) {
-      const result = await packmindCliHexa.lintFilesLocally({
-        path: absolutePath,
-        diffMode: diff,
-      });
-      violations = result.violations;
-    } else {
-      const result = await packmindCliHexa.lintFilesInDirectory({
+    if (rule) {
+      const result = await packmindCliHexa.lintFilesAgainstRule({
         path: targetPath,
         draftMode: draft,
         standardSlug: rule?.standardSlug,
         ruleId: rule?.ruleId,
         language,
+        diffMode: diff,
+      });
+      violations = result.violations;
+    } else {
+      const stopDirectory =
+        await packmindCliHexa.tryGetGitRepositoryRoot(absolutePath);
+
+      const hierarchicalConfig = await packmindCliHexa.readHierarchicalConfig(
+        absolutePath,
+        stopDirectory,
+      );
+
+      if (!hierarchicalConfig.hasConfigs) {
+        throw new Error(
+          'No packmind.json config found. Run `packmind-cli install <some-package>` first to set up linting.',
+        );
+      }
+
+      const result = await packmindCliHexa.lintFilesFromConfig({
+        path: absolutePath,
         diffMode: diff,
       });
       violations = result.violations;
