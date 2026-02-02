@@ -173,10 +173,10 @@ export class AccountsAdapter
   private _generateTrialActivationToken!: IGenerateTrialActivationTokenUseCase;
   private _activateTrialAccount!: IActivateTrialAccountUseCase;
 
-  private readonly logger: PackmindLogger;
-
-  constructor(private readonly accountsServices: EnhancedAccountsServices) {
-    this.logger = new PackmindLogger(origin);
+  constructor(
+    private readonly accountsServices: EnhancedAccountsServices,
+    private readonly logger: PackmindLogger = new PackmindLogger(origin),
+  ) {
     this.logger.info('AccountsAdapter constructed - awaiting initialization');
   }
 

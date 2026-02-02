@@ -15,11 +15,9 @@ const origin = 'GitProviderFactory';
  * keeping the application layer clean from infrastructure dependencies.
  */
 export class GitProviderFactory implements IGitProviderFactory {
-  private readonly logger: PackmindLogger;
-
-  constructor() {
-    this.logger = new PackmindLogger(origin);
-  }
+  constructor(
+    private readonly logger: PackmindLogger = new PackmindLogger(origin),
+  ) {}
 
   createGitProvider(provider: GitProvider): IGitProvider {
     if (!provider.token) {

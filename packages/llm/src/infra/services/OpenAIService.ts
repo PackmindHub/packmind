@@ -25,7 +25,7 @@ export class OpenAIService extends BaseOpenAIService {
     config: OpenAIServiceConfig,
     logger: PackmindLogger = new PackmindLogger(origin, LogLevel.INFO),
   ) {
-    super(logger, origin);
+    super(origin, logger);
     this.apiKey = config.apiKey;
     this.defaultModel = config.model || DEFAULT_OPENAI_MODELS.model;
     this.defaultFastModel =

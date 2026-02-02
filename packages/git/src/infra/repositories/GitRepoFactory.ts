@@ -16,11 +16,9 @@ const origin = 'GitRepoFactory';
  * keeping the application layer clean from infrastructure dependencies.
  */
 export class GitRepoFactory implements IGitRepoFactory {
-  private readonly logger: PackmindLogger;
-
-  constructor() {
-    this.logger = new PackmindLogger(origin);
-  }
+  constructor(
+    private readonly logger: PackmindLogger = new PackmindLogger(origin),
+  ) {}
 
   createGitRepo(gitRepo: GitRepo, provider: GitProvider): IGitRepo {
     if (!provider.token) {

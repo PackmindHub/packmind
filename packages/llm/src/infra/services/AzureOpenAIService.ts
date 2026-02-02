@@ -45,7 +45,7 @@ export class AzureOpenAIService extends BaseOpenAIService {
     config: AzureOpenAIServiceConfig,
     logger: PackmindLogger = new PackmindLogger(origin, LogLevel.INFO),
   ) {
-    super(logger, origin);
+    super(origin, logger);
     this.defaultModel = config.model;
     this.defaultFastModel = config.fastestModel;
     this.configEndpoint = config.endpoint;

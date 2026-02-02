@@ -16,16 +16,13 @@ import { InvalidTrialActivationTokenError } from '../../../domain/errors';
 const origin = 'ActivateTrialAccountUseCase';
 
 export class ActivateTrialAccountUseCase implements IActivateTrialAccountUseCase {
-  private readonly logger: PackmindLogger;
-
   constructor(
     private readonly trialActivationService: TrialActivationService,
     private readonly userService: UserService,
     private readonly organizationService: OrganizationService,
     private readonly eventEmitterService: PackmindEventEmitterService,
-    logger: PackmindLogger = new PackmindLogger(origin),
+    private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {
-    this.logger = logger;
     this.logger.info('ActivateTrialAccountUseCase initialized');
   }
 

@@ -8,11 +8,11 @@ const origin = 'DeployRecipesJobFactory';
 
 export class DeployRecipesJobFactory implements IJobFactory<DeployRecipesInput> {
   private _delayedJob: DeployRecipesDelayedJob | null = null;
-  private readonly logger: PackmindLogger;
 
-  constructor(private readonly deploymentPort: IDeploymentPort) {
-    this.logger = new PackmindLogger(origin);
-  }
+  constructor(
+    private readonly deploymentPort: IDeploymentPort,
+    private readonly logger: PackmindLogger = new PackmindLogger(origin),
+  ) {}
 
   async createQueue(): Promise<IJobQueue<DeployRecipesInput>> {
     this.logger.info('Creating DeployRecipes job queue');
