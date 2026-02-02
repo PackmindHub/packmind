@@ -3,7 +3,11 @@ import { CodingAgents } from '@packmind/coding-agent';
 import { IDistributionRepository } from '../../domain/repositories/IDistributionRepository';
 import { TargetService } from '../services/TargetService';
 import { RenderModeConfigurationService } from '../services/RenderModeConfigurationService';
-import { createUserId, createOrganizationId } from '@packmind/types';
+import {
+  createUserId,
+  createOrganizationId,
+  createPackageId,
+} from '@packmind/types';
 import {
   PublishArtifactsCommand,
   DistributionStatus,
@@ -2488,7 +2492,7 @@ describe('PublishArtifactsUseCase', () => {
         skillVersionIds: [],
         targetIds: [targetId],
         packagesSlugs: ['package-a'],
-        packageIds: ['package-a-id'],
+        packageIds: [createPackageId('package-a-id')],
       };
 
       mockTargetService.findById.mockResolvedValue(target);
@@ -2584,7 +2588,7 @@ describe('PublishArtifactsUseCase', () => {
         standardVersionIds: [],
         targetIds: [targetId],
         packagesSlugs: ['package-a'],
-        packageIds: ['package-a-id'],
+        packageIds: [createPackageId('package-a-id')],
       };
 
       mockTargetService.findById.mockResolvedValue(target);
@@ -2683,7 +2687,7 @@ describe('PublishArtifactsUseCase', () => {
         standardVersionIds: [],
         targetIds: [targetId],
         packagesSlugs: ['package-a'],
-        packageIds: ['package-a-id'],
+        packageIds: [createPackageId('package-a-id')],
       };
 
       mockTargetService.findById.mockResolvedValue(target);
@@ -2899,7 +2903,7 @@ describe('PublishArtifactsUseCase', () => {
       beforeEach(() => {
         // Return packmind.json with agents defined
         mockGitPort.getFileFromRepo.mockResolvedValue({
-          path: 'docs/packmind.json',
+          sha: 'docs/packmind.json',
           content: JSON.stringify({
             packages: { 'existing-pkg': '*' },
             agents: ['claude', 'cursor'],
@@ -2929,7 +2933,7 @@ describe('PublishArtifactsUseCase', () => {
       beforeEach(() => {
         // Return packmind.json with empty agents array (intentional - no agents)
         mockGitPort.getFileFromRepo.mockResolvedValue({
-          path: 'docs/packmind.json',
+          sha: 'docs/packmind.json',
           content: JSON.stringify({
             packages: { 'existing-pkg': '*' },
             agents: [],
@@ -2952,7 +2956,7 @@ describe('PublishArtifactsUseCase', () => {
       beforeEach(() => {
         // Return packmind.json without agents property
         mockGitPort.getFileFromRepo.mockResolvedValue({
-          path: 'docs/packmind.json',
+          sha: 'docs/packmind.json',
           content: JSON.stringify({
             packages: { 'existing-pkg': '*' },
           }),
