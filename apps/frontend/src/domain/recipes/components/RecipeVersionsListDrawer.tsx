@@ -9,8 +9,9 @@ import {
   PMLink,
   PMPortal,
 } from '@packmind/ui';
+import { formatDistanceToNowStrict } from 'date-fns';
 import { useGetRecipeVersionsQuery } from '../api/queries/RecipesQueries';
-import { RecipeId } from '@packmind/types';
+import { RecipeId, WithTimestamps } from '@packmind/types';
 
 interface RecipeVersionsListDrawerProps {
   recipeId: RecipeId;
@@ -37,17 +38,9 @@ export const RecipeVersionsListDrawer: React.FC<
       version.content && version.content.length > 100
         ? `${version.content.substring(0, 100)}...`
         : version.content || '-',
-    source: version.gitCommit ? (
-      <a
-        href={version.gitCommit.url}
-        target="_blank"
-        rel="noopener noreferrer"
-        style={{ color: '#3182ce', textDecoration: 'underline' }}
-      >
-        {version.gitCommit.sha.substring(0, 7)}
-      </a>
-    ) : (
-      'N/A'
+    createdAt: formatDistanceToNowStrict(
+      (version as WithTimestamps<typeof version>).createdAt,
+      { addSuffix: true },
     ),
   }));
 
@@ -55,7 +48,7 @@ export const RecipeVersionsListDrawer: React.FC<
     { key: 'version', header: 'Version', width: '100px', align: 'center' },
     { key: 'name', header: 'Name', grow: true },
     { key: 'description', header: 'Description', grow: true },
-    { key: 'source', header: 'Source', width: '120px', align: 'center' },
+    { key: 'createdAt', header: 'Created', align: 'center', grow: true },
   ];
 
   return (

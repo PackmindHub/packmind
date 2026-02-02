@@ -20,11 +20,17 @@ A Packmind **Command** is an executable, step-by-step guide that tells the AI as
 
 1. Open your IDE and your coding assistant in **agentic mode**.
 2. For this demo, we will create a **language-agnostic command**. (You can also target a specific language or framework.)
-3. Type this prompt:
+3. Type this prompt or use the `/packmind-create-command` skill:
 
 ```text
 Analyze our codebase and create a Packmind command to add a new endpoint to our API.
 ```
+
+<Tip>
+  **Using the Skill** — You can also type `/packmind-create-command` in your AI
+  assistant to invoke the command creator skill directly. This provides
+  step-by-step guidance through the creation process.
+</Tip>
 
 ### How it works
 
@@ -45,9 +51,99 @@ Your new command will be available in the Packmind web app, in the **Commands** 
   effective for AI agents and team members alike.
 </Tip>
 
+## Alternative: Create Commands from the CLI
+
+You can also create commands directly from your terminal using the Packmind CLI without MCP support.
+
+### Prerequisites
+
+1. Install the Packmind CLI:
+
+```bash
+npm install -g @packmind/cli
+```
+
+2. Authenticate with your Packmind account:
+
+```bash
+packmind-cli login
+```
+
+### Create a Command File
+
+Create a JSON file (e.g., `my-command.json`) with your command definition:
+
+```json
+{
+  "name": "Add a New REST Endpoint",
+  "summary": "Step-by-step guide for adding a new REST endpoint with validation, tests, and documentation",
+  "whenToUse": [
+    "When adding a new API endpoint to the backend service",
+    "When extending existing API functionality"
+  ],
+  "contextValidationCheckpoints": [
+    "Do you understand the business requirement?",
+    "Do you know the request and response structures?"
+  ],
+  "steps": [
+    {
+      "name": "Define the Route",
+      "description": "Create the HTTP route with appropriate method and path"
+    },
+    {
+      "name": "Implement the Handler",
+      "description": "Write the handler function that processes the request"
+    },
+    {
+      "name": "Add Input Validation",
+      "description": "Validate request parameters and body data"
+    }
+  ]
+}
+```
+
+### Understanding Command Naming
+
+The `name` field in your playbook is automatically converted to a **slug** for use in file names and AI agent invocation:
+
+- **Your playbook name**: `"Add a New REST Endpoint"`
+- **Generated slug**: `"add-a-new-rest-endpoint"`
+- **Used in file**: `.claude/commands/packmind/add-a-new-rest-endpoint.md`
+- **AI agent command**: `/add-a-new-rest-endpoint`
+
+**Slug Generation Rules:**
+
+- Converts to lowercase
+- Replaces spaces and special characters with hyphens
+- Removes non-alphanumeric characters
+- If a command with the same slug exists, adds `-1`, `-2`, etc. for uniqueness
+
+**Examples:**
+
+- `"Setup CI Pipeline"` → `"setup-ci-pipeline"`
+- `"Add@Database Migration!"` → `"add-database-migration"`
+- Duplicate of above → `"add-database-migration-1"`
+
+### Submit the Command
+
+Run the CLI command to create the command:
+
+```bash
+packmind-cli commands create ./my-command.json
+```
+
+Your new command will appear in the Packmind web app's **Commands** panel.
+
+<Tip>
+  **CLI vs MCP Workflow** — Use the CLI approach when you already have a command
+  structured and ready, or when you prefer working with files. Use the MCP/AI
+  approach when you want AI assistance in analyzing your codebase and
+  structuring the command.
+</Tip>
+
 ## Tips
 
-The quality of the generated command depends mostly on the level of detail you provide to your coding assistant.
+The quality of the generated command depends mostly on the level of detail you provide.
 
 When capturing a **Command**, you can, for example:
 
@@ -74,3 +170,11 @@ When capturing a **Command**, you can, for example:
   ```text
   Read commit abcd123 and create a command for migrating an Angular component to React.
   ```
+
+## What Makes a Good Command
+
+- **Clear purpose** — The command name and summary clearly explain what it accomplishes
+- **Realistic scenarios** — The "When to use" section covers actual situations your team encounters
+- **Validation checkpoints** — Questions clarify prerequisites and assumptions
+- **Actionable steps** — Each step is specific and can be completed independently
+- **Helpful examples** — Code snippets demonstrate what to do, not just explain it

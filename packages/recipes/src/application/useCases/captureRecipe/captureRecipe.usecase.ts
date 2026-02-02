@@ -1,16 +1,24 @@
 import { PackmindLogger } from '@packmind/logger';
-import { PackmindEventEmitterService } from '@packmind/node-utils';
-import { AiNotConfigured, OrganizationId } from '@packmind/types';
 import {
+  AbstractMemberUseCase,
+  MemberContext,
+  PackmindEventEmitterService,
+} from '@packmind/node-utils';
+import {
+  AiNotConfigured,
   CaptureRecipeCommand,
   CaptureRecipeResponse,
+  CommandCreatedEvent,
   createOrganizationId,
   createRecipeId,
   createSpaceId,
   createUserId,
+  IAccountsPort,
   ICaptureRecipeUseCase,
+  ISpacesPort,
+  OrganizationId,
   Recipe,
-  CommandCreatedEvent,
+  RecipeSlugAlreadyExistsError,
   RecipeStep,
 } from '@packmind/types';
 import slug from 'slug';
@@ -20,19 +28,25 @@ import { RecipeVersionService } from '../../services/RecipeVersionService';
 
 const origin = 'CaptureRecipeUsecase';
 
-export class CaptureRecipeUsecase implements ICaptureRecipeUseCase {
+export class CaptureRecipeUsecase
+  extends AbstractMemberUseCase<CaptureRecipeCommand, CaptureRecipeResponse>
+  implements ICaptureRecipeUseCase
+{
   constructor(
+    accountsPort: IAccountsPort,
+    private readonly spacesPort: ISpacesPort,
     private readonly recipeService: RecipeService,
     private readonly recipeVersionService: RecipeVersionService,
     private readonly recipeSummaryService: RecipeSummaryService,
     private readonly eventEmitterService: PackmindEventEmitterService,
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {
+    super(accountsPort, logger);
     this.logger.info('CaptureRecipeUsecase initialized');
   }
 
-  public async execute(
-    command: CaptureRecipeCommand,
+  protected async executeForMembers(
+    command: CaptureRecipeCommand & MemberContext,
   ): Promise<CaptureRecipeResponse> {
     const {
       name,
@@ -49,6 +63,24 @@ export class CaptureRecipeUsecase implements ICaptureRecipeUseCase {
     const organizationId = createOrganizationId(orgIdString);
     const userId = createUserId(userIdString);
     const spaceId = createSpaceId(spaceIdString);
+
+    // Verify the space belongs to the organization
+    const space = await this.spacesPort.getSpaceById(spaceId);
+    if (!space) {
+      this.logger.warn('Space not found', { spaceId });
+      throw new Error(`Space with id ${spaceId} not found`);
+    }
+
+    if (space.organizationId !== organizationId) {
+      this.logger.warn('Space does not belong to organization', {
+        spaceId,
+        spaceOrganizationId: space.organizationId,
+        requestOrganizationId: organizationId,
+      });
+      throw new Error(
+        `Space ${spaceId} does not belong to organization ${organizationId}`,
+      );
+    }
     this.logger.info('Starting captureRecipe process', {
       name,
       organizationId,
@@ -57,29 +89,17 @@ export class CaptureRecipeUsecase implements ICaptureRecipeUseCase {
     });
 
     try {
-      this.logger.info('Generating slug from recipe name', { name });
-      const baseSlug = slug(name);
-      this.logger.info('Base slug generated', { slug: baseSlug });
-
-      // Ensure slug is unique per space. If it exists, append "-1", "-2", ... until unique
-      this.logger.info('Checking slug uniqueness within space', {
-        baseSlug,
-        spaceId,
-        organizationId,
-      });
       const existingRecipes =
         await this.recipeService.listRecipesBySpace(spaceId);
       const existingSlugs = new Set(existingRecipes.map((r) => r.slug));
 
-      let recipeSlug = baseSlug;
-      if (existingSlugs.has(recipeSlug)) {
-        let counter = 1;
-        while (existingSlugs.has(`${baseSlug}-${counter}`)) {
-          counter++;
-        }
-        recipeSlug = `${baseSlug}-${counter}`;
-      }
-      this.logger.info('Resolved unique slug', { slug: recipeSlug });
+      const recipeSlug = this.resolveSlug(
+        command.slug,
+        name,
+        existingSlugs,
+        spaceId,
+      );
+      this.logger.info('Resolved slug', { slug: recipeSlug });
 
       // Determine content: use new structured format if provided, otherwise use legacy content
       const content =
@@ -215,6 +235,46 @@ export class CaptureRecipeUsecase implements ICaptureRecipeUseCase {
       }
     }
     return null;
+  }
+
+  private resolveSlug(
+    providedSlug: string | undefined,
+    name: string,
+    existingSlugs: Set<string>,
+    spaceId: string,
+  ): string {
+    if (providedSlug && providedSlug.trim() !== '') {
+      const sanitized = this.sanitizeSlug(providedSlug);
+
+      if (existingSlugs.has(sanitized)) {
+        throw new RecipeSlugAlreadyExistsError(sanitized, spaceId);
+      }
+
+      return sanitized;
+    }
+
+    // Auto-generate from name
+    const baseSlug = slug(name);
+    let recipeSlug = baseSlug;
+
+    if (existingSlugs.has(recipeSlug)) {
+      let counter = 1;
+      while (existingSlugs.has(`${baseSlug}-${counter}`)) {
+        counter++;
+      }
+      recipeSlug = `${baseSlug}-${counter}`;
+    }
+
+    return recipeSlug;
+  }
+
+  private sanitizeSlug(input: string): string {
+    return input
+      .toLowerCase()
+      .trim()
+      .replace(/[^a-z0-9-]/g, '-')
+      .replace(/-+/g, '-')
+      .replace(/(?:^-)|(?:-$)/g, '');
   }
 
   public assembleRecipeContent(

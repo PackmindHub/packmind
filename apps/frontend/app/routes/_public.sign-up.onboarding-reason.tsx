@@ -3,7 +3,7 @@ import {
   OnboardingReason,
   ONBOARDING_REASONS,
 } from '../../src/domain/accounts/components/OnboardingReason';
-import { useAnalytics } from '../../src/domain/editions/stubs/domain/amplitude/providers/AnalyticsProvider';
+import { useAnalytics } from '@packmind/proprietary/frontend/domain/amplitude/providers/AnalyticsProvider';
 import { useAuthContext } from '../../src/domain/accounts/hooks/useAuthContext';
 import { routes } from '../../src/shared/utils/routes';
 

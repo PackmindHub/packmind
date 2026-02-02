@@ -15,7 +15,7 @@ describe('RenameOrganizationUseCase', () => {
   let useCase: RenameOrganizationUseCase;
   let mockGetUserById: jest.Mock;
   let mockGetOrganizationById: jest.Mock;
-  let mockUpdateOrganization: jest.Mock;
+  let mockRenameOrganization: jest.Mock;
   let organizationService: jest.Mocked<OrganizationService>;
   const mockLogger = stubLogger();
 
@@ -31,7 +31,7 @@ describe('RenameOrganizationUseCase', () => {
   beforeEach(() => {
     mockGetUserById = jest.fn();
     mockGetOrganizationById = jest.fn();
-    mockUpdateOrganization = jest.fn();
+    mockRenameOrganization = jest.fn();
 
     const accountsPort = {
       getUserById: mockGetUserById,
@@ -39,7 +39,7 @@ describe('RenameOrganizationUseCase', () => {
     } as unknown as IAccountsPort;
 
     organizationService = {
-      updateOrganization: mockUpdateOrganization,
+      renameOrganization: mockRenameOrganization,
     } as unknown as jest.Mocked<OrganizationService>;
 
     mockGetOrganizationById.mockResolvedValue(organization);
@@ -76,6 +76,7 @@ describe('RenameOrganizationUseCase', () => {
   describe('execute', () => {
     describe('when admin renames organization with valid name', () => {
       const newName = 'New Organization Name';
+      const newSlug = 'new-organization-name';
 
       beforeEach(() => {
         const adminUser = createAdminUser();
@@ -84,9 +85,9 @@ describe('RenameOrganizationUseCase', () => {
         const updatedOrganization = organizationFactory({
           id: createOrganizationId(organizationId),
           name: newName,
-          slug: 'original-name',
+          slug: newSlug,
         });
-        mockUpdateOrganization.mockResolvedValue(updatedOrganization);
+        mockRenameOrganization.mockResolvedValue(updatedOrganization);
       });
 
       it('returns the renamed organization', async () => {
@@ -95,13 +96,19 @@ describe('RenameOrganizationUseCase', () => {
         expect(result.organization.name).toBe(newName);
       });
 
-      it('calls updateOrganization with correct parameters', async () => {
+      it('returns organization with updated slug', async () => {
+        const result = await useCase.execute(createCommand(newName));
+
+        expect(result.organization.slug).toBe(newSlug);
+      });
+
+      it('calls renameOrganization with organization and new name', async () => {
         await useCase.execute(createCommand(newName));
 
-        expect(mockUpdateOrganization).toHaveBeenCalledWith({
-          ...organization,
-          name: newName,
-        });
+        expect(mockRenameOrganization).toHaveBeenCalledWith(
+          organization,
+          newName,
+        );
       });
     });
 
@@ -116,18 +123,18 @@ describe('RenameOrganizationUseCase', () => {
         const updatedOrganization = organizationFactory({
           id: createOrganizationId(organizationId),
           name: trimmedName,
-          slug: 'original-name',
+          slug: 'trimmed-name',
         });
-        mockUpdateOrganization.mockResolvedValue(updatedOrganization);
+        mockRenameOrganization.mockResolvedValue(updatedOrganization);
       });
 
       it('trims the name before saving', async () => {
         await useCase.execute(createCommand(nameWithWhitespace));
 
-        expect(mockUpdateOrganization).toHaveBeenCalledWith({
-          ...organization,
-          name: trimmedName,
-        });
+        expect(mockRenameOrganization).toHaveBeenCalledWith(
+          organization,
+          trimmedName,
+        );
       });
     });
 
@@ -143,14 +150,14 @@ describe('RenameOrganizationUseCase', () => {
         );
       });
 
-      it('does not call updateOrganization', async () => {
+      it('does not call renameOrganization', async () => {
         try {
           await useCase.execute(createCommand(''));
         } catch {
           // Expected to throw
         }
 
-        expect(mockUpdateOrganization).not.toHaveBeenCalled();
+        expect(mockRenameOrganization).not.toHaveBeenCalled();
       });
     });
 
@@ -166,14 +173,14 @@ describe('RenameOrganizationUseCase', () => {
         ).rejects.toBeInstanceOf(InvalidOrganizationNameError);
       });
 
-      it('does not call updateOrganization', async () => {
+      it('does not call renameOrganization', async () => {
         try {
           await useCase.execute(createCommand('   '));
         } catch {
           // Expected to throw
         }
 
-        expect(mockUpdateOrganization).not.toHaveBeenCalled();
+        expect(mockRenameOrganization).not.toHaveBeenCalled();
       });
     });
 
@@ -207,7 +214,7 @@ describe('RenameOrganizationUseCase', () => {
       beforeEach(() => {
         const adminUser = createAdminUser();
         mockGetUserById.mockResolvedValueOnce(adminUser);
-        mockUpdateOrganization.mockRejectedValue(new Error('Database error'));
+        mockRenameOrganization.mockRejectedValue(new Error('Database error'));
       });
 
       it('propagates the error', async () => {

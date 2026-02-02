@@ -200,6 +200,10 @@ export const RecipeDetails = ({ id, orgSlug }: RecipeDetailsProps) => {
           orientation="horizontal"
           items={[
             {
+              label: 'Slug',
+              value: recipe.slug,
+            },
+            {
               label: 'Version',
               value: (
                 <PMHStack>

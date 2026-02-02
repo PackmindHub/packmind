@@ -7,6 +7,7 @@ import {
   Rule,
   IListStandardsBySpaceUseCase,
   IGetStandardByIdUseCase,
+  ICreateStandardSamplesUseCase,
   SpaceId,
 } from '@packmind/types';
 import { GitRepoId } from '@packmind/types';
@@ -59,4 +60,5 @@ export interface IStandardsGateway {
     spaceId: SpaceId,
     standardIds: StandardId[],
   ): Promise<void>;
+  createStandardsFromSamples: NewGateway<ICreateStandardSamplesUseCase>;
 }

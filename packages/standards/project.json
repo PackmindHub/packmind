@@ -19,7 +19,20 @@
         "tsConfig": "packages/standards/tsconfig.lib.json",
         "packageJson": "packages/standards/package.json",
         "main": "packages/standards/src/index.ts",
-        "assets": ["packages/standards/*.md"]
+        "assets": [
+          "packages/standards/*.md",
+          {
+            "input": "packages/standards/samples/generated",
+            "glob": "*.json",
+            "output": "samples/generated"
+          }
+        ]
+      }
+    },
+    "generate-samples": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "set -a && source apps/api/.env && set +a && npx ts-node --project tsconfig.base.json -r tsconfig-paths/register --transpile-only --compiler-options '{\"module\":\"commonjs\"}' packages/standards/samples/generateSamples.ts"
       }
     }
   }

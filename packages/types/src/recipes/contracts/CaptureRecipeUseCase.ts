@@ -10,6 +10,7 @@ export type RecipeStep = {
 export type CaptureRecipeCommand = PackmindCommand & {
   name: string;
   spaceId: string; // Required space ID for space-specific recipes
+  slug?: string; // Optional user-provided slug; if not provided, auto-generated from name
   // New structured format (preferred)
   summary?: string;
   whenToUse?: string[];

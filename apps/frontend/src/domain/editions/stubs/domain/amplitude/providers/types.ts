@@ -47,6 +47,7 @@ export type AnalyticsEventMap = {
     reason_label: string;
   };
   onboarding_reason_skipped: Record<string, never>;
+  create_standard_from_samples_clicked: Record<string, never>;
 };
 
 export type AnalyticsEventName = keyof AnalyticsEventMap;

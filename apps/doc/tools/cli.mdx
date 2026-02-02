@@ -6,15 +6,19 @@ title: 'CLI: Command-Line Interface'
 
 The Packmind CLI provides the following commands:
 
+- **`init`** - Initialize Packmind in your project (install skills + scan for patterns)
 - **`login`** - Authenticate with your Packmind instance
 - **`logout`** - Clear stored credentials
 - **`whoami`** - Show current authentication status
 - **`setup-mcp`** - Configure MCP for AI coding agents
 - **`install`** - Download packages locally
+- **`uninstall`** - Remove packages from your project
+- **`onboard`** - Scan project and generate standards/commands/skills
 - **`lint`** - Run detection programs (Enterprise only)
 - **`skills add`** - Import skills into Packmind
 - **`skills init`** - Install default Packmind skills locally
-- **`standard create`** - Create a coding standard from a playbook file
+- **`standards create`** - Create a coding standard from a playbook file
+- **`commands create`** - Create a reusable command from a playbook file
 
 ## Installation
 
@@ -44,6 +48,8 @@ Simply copy the provided command and paste it into your terminal. The script han
 </Tip>
 
 ### Alternative: npm Package
+
+<Note>**Node.js 22 or higher required**.</Note>
 
 **Global Installation**:
 
@@ -190,6 +196,116 @@ source ~/.zshrc
   **Credential Priority** — When both a credentials file and environment
   variable exist, the environment variable takes precedence.
 </Tip>
+
+## Init Command
+
+Initialize Packmind in your project. This is the recommended first command to run when setting up Packmind in a new project.
+
+### What Init Does
+
+The init command performs two main actions:
+
+1. **Installs default skills** - Including skill creator, standard creator, and onboarding skills
+2. **Scans your project** - Detects languages, frameworks, tools, and generates project-specific content
+
+### Basic Usage
+
+```bash
+packmind-cli init
+```
+
+This will:
+
+1. Install Packmind's default skills to `.claude/skills/` (or equivalent for other agents)
+2. Scan your project for technologies and patterns
+3. Show a preview of generated standards, commands, and skills
+4. Prompt for confirmation before writing files
+5. Write generated content to `.packmind/` and `.claude/skills/`
+
+### Flags
+
+| Flag                    | Short | Description                                               |
+| ----------------------- | ----- | --------------------------------------------------------- |
+| `--dry-run`             | `-d`  | Preview generated content without writing files           |
+| `--yes`                 | `-y`  | Skip confirmation prompts and proceed automatically       |
+| `--skip-onboard`        |       | Only install default skills, skip project scanning        |
+| `--skip-default-skills` |       | Only run onboarding, skip default skills installation     |
+| `--push`                |       | Push generated standards and commands to Packmind backend |
+
+**Examples:**
+
+```bash
+# Preview what would be generated
+packmind-cli init --dry-run
+
+# Auto-approve all prompts (for CI/CD)
+packmind-cli init --yes
+
+# Only install default skills
+packmind-cli init --skip-onboard
+```
+
+### Generated Content
+
+Based on your project's technologies, the init command may generate:
+
+**Standards** (`.packmind/standards/`):
+
+- Language-specific coding standards (TypeScript, Python, Java, etc.)
+- Framework conventions (NestJS, React, Django, Spring Boot, etc.)
+- Extracted rules from existing documentation
+
+**Commands** (`.packmind/commands/`):
+
+- Framework-specific workflows (create module, create component, etc.)
+
+**Skills** (`.claude/skills/`):
+
+- Project overview skill with technology stack summary
+- Debugging workflows for your test framework
+- Framework-specific debugging skills
+
+<Tip>
+  **First-time setup** — Run `packmind-cli init` after installing the CLI and
+  logging in. It's the quickest way to get Packmind configured for your project.
+</Tip>
+
+## Onboard Command
+
+Scan your project and generate standards, commands, and skills based on detected patterns. This is the same scanning functionality that runs during `init`, but can be run independently.
+
+### When to Use Onboard
+
+Use the onboard command when:
+
+- You want to re-scan after project changes
+- You've already installed default skills and just want to regenerate content
+- You want to scan a different directory
+
+### Basic Usage
+
+```bash
+packmind-cli onboard
+```
+
+### Flags
+
+| Flag           | Short | Description                                               |
+| -------------- | ----- | --------------------------------------------------------- |
+| `--path <dir>` | `-p`  | Specify a different project path to scan                  |
+| `--dry-run`    | `-d`  | Preview without writing files                             |
+| `--yes`        | `-y`  | Skip confirmation prompts                                 |
+| `--push`       |       | Push generated standards and commands to Packmind backend |
+
+**Examples:**
+
+```bash
+# Scan a different directory
+packmind-cli onboard --path ./other-project
+
+# Preview what would be generated
+packmind-cli onboard --dry-run
+```
 
 ## Setup MCP Command
 
@@ -463,14 +579,21 @@ packmind-cli skills init
 This command installs Packmind's default skills locally, including:
 
 - **packmind-create-skill** — A skill that guides you through creating new skills with AI assistance
-- **packmind-standard-create** — A skill for creating coding standards
+- **packmind-create-command** — A skill that guides you through creating reusable commands with AI assistance
+- **packmind-create-standard** — A skill for creating coding standards
+- **packmind-onboard** — A skill for initializing Packmind in projects
 
-After running this command, you can use the `/packmind-create-skill` command in your AI coding assistant to create new skills interactively.
+After running this command, you can use these skills in your AI coding assistant:
+
+- `/packmind-create-skill` - Create new skills
+- `/packmind-create-command` - Create new commands
+- `/packmind-create-standard` - Create new standards
+- `/packmind-onboard` - Initialize Packmind in projects
 
 <Tip>
   **Automatic installation** — Default skills are also installed automatically
-  when you install a package with `packmind-cli install` or when packages are
-  distributed to your repository via the web app.
+  when you run `packmind-cli init`, install a package with `packmind-cli
+  install`, or when packages are distributed to your repository via the web app.
 </Tip>
 
 ### Add a Skill
@@ -574,8 +697,115 @@ The standard-playbook file is a JSON file with the following structure:
   in your repository or want to create standards without the MCP server.
 </Tip>
 
+## Commands Command
+
+Create and manage reusable, multi-step workflow commands from the command line.
+
+### Create a Command from a Playbook File
+
+```bash
+packmind-cli commands create <file>
+```
+
+**Arguments:**
+
+- `<file>` - Path to a JSON playbook file containing the command definition
+
+**Example:**
+
+```bash
+packmind-cli commands create ./setup-api-endpoint.json
+```
+
+This creates a new command in your Packmind organization based on the playbook file.
+
+### Playbook File Format
+
+The command playbook file is a JSON file with the following structure:
+
+```json
+{
+  "name": "Add a New REST Endpoint",
+  "summary": "Step-by-step guide for adding a new REST endpoint with validation, tests, and documentation",
+  "whenToUse": [
+    "When adding a new API endpoint to the backend service",
+    "When extending existing API functionality",
+    "When creating endpoints for frontend integration"
+  ],
+  "contextValidationCheckpoints": [
+    "Do you understand the business requirement for this endpoint?",
+    "Do you know the request and response data structures?",
+    "Is the endpoint's purpose clear to all team members?"
+  ],
+  "steps": [
+    {
+      "name": "Define the Route",
+      "description": "Create the HTTP route with appropriate method (GET, POST, PUT, DELETE) and path in your API configuration"
+    },
+    {
+      "name": "Implement the Handler",
+      "description": "Write the handler function that processes the request and calls the appropriate use case or service",
+      "codeSnippet": "// Example Express handler\napp.post('/api/users', async (req, res) => {\n  const user = await userService.create(req.body);\n  res.status(201).json(user);\n});"
+    },
+    {
+      "name": "Add Input Validation",
+      "description": "Validate request parameters and body data before processing"
+    },
+    {
+      "name": "Write Tests",
+      "description": "Create unit and integration tests covering success and error scenarios"
+    },
+    {
+      "name": "Update API Documentation",
+      "description": "Document the endpoint with request/response examples and parameter descriptions"
+    }
+  ]
+}
+```
+
+### Command Identification
+
+When you create a command, Packmind automatically generates a **slug** from the command name:
+
+- **Name** (provided by you): `"Add a New REST Endpoint"`
+- **Slug** (auto-generated): `"add-a-new-rest-endpoint"`
+
+The slug is used for:
+
+- File naming: `.claude/commands/packmind/add-a-new-rest-endpoint.md`
+- AI agent invocation: `/add-a-new-rest-endpoint`
+- Command identification and distribution
+
+If a command with the same slug already exists in your space, Packmind appends a counter (e.g., `add-a-new-rest-endpoint-1`) to ensure uniqueness.
+
+**Required fields:**
+
+| Field                          | Description                                              |
+| ------------------------------ | -------------------------------------------------------- |
+| `name`                         | Command name (displayed in the web app)                  |
+| `summary`                      | What the command does and why it's useful                |
+| `whenToUse`                    | Array of scenarios when this command applies             |
+| `contextValidationCheckpoints` | Array of validation questions to clarify before starting |
+| `steps`                        | Array of step objects (at least one required)            |
+
+**Step fields:**
+
+| Field         | Required | Description                                    |
+| ------------- | -------- | ---------------------------------------------- |
+| `name`        | Yes      | Step title (e.g., "Define the Route")          |
+| `description` | Yes      | Clear instructions for what to do in this step |
+| `codeSnippet` | No       | Optional code example demonstrating the step   |
+
+<Tip>
+  **Workflow tip** — Use this command when you have commands defined as files in
+  your repository or want to create commands without the MCP server. Commands
+  are particularly useful for capturing multi-step development workflows that
+  your team performs regularly.
+</Tip>
+
 ## Related Documentation
 
+- [Create your first command](/getting-started/gs-create-command): Learn how to create commands with AI assistance
 - [Packages Management](/concepts/packages-management): Learn about organizing commands, standards, and skills into packages
 - [Linter: Automated Detection](/linter/linter): Learn about how detection programs work
 - [Standards Management](/concepts/standards-management): Create rules and add code examples

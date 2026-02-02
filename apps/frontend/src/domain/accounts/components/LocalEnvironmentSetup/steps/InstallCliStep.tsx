@@ -1,5 +1,12 @@
 import React, { useState } from 'react';
-import { PMVStack, PMHStack, PMButton, PMText, PMBox } from '@packmind/ui';
+import {
+  PMVStack,
+  PMHStack,
+  PMButton,
+  PMText,
+  PMBox,
+  PMAlert,
+} from '@packmind/ui';
 import {
   CopiableTextarea,
   CopiableTextField,
@@ -89,6 +96,14 @@ export const InstallCliStep: React.FC<IInstallCliStepProps> = ({
           title={selectedOs === 'macos-linux' ? 'Alternative' : 'Recommended'}
           description="Install via npm (most reliable across environments)."
         >
+          <PMAlert.Root status="info" marginBottom={4}>
+            <PMAlert.Indicator />
+            <PMAlert.Content>
+              <PMAlert.Description>
+                Requires Node.js 22 or higher.
+              </PMAlert.Description>
+            </PMAlert.Content>
+          </PMAlert.Root>
           <PMBox width="1/2">
             <CopiableTextField
               value={buildNpmInstallCommand()}

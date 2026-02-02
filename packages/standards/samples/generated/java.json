@@ -1,0 +1,88 @@
+{
+  "name": "Java Best Practices",
+  "summary": "Advanced rules for writing robust, secure, and predictable core-Java code in production services and libraries.",
+  "description": "Covers high-impact Java language and JDK usage patterns around resources, exceptions, concurrency, configuration, time, I/O, logging, and network boundaries, focusing on pitfalls that cause production bugs and outages.",
+  "scope": "Java source files",
+  "rules": [
+    {
+      "content": "Use structured concurrency with ExecutorService and Futures; always bound task lifetime with timeouts and cancellation.",
+      "examples": {
+        "positive": "ExecutorService pool = Executors.newFixedThreadPool(8);\nFuture<String> f = pool.submit(() -> remoteCall());\ntry {\n  return f.get(2, TimeUnit.SECONDS);\n} catch (TimeoutException e) {\n  f.cancel(true);\n  throw new RuntimeException(e);\n} finally {\n  pool.shutdown();\n}\n",
+        "negative": "ExecutorService pool = Executors.newCachedThreadPool();\nFuture<String> f = pool.submit(() -> remoteCall());\ntry {\n  return f.get();\n} catch (Exception e) {\n  return null;\n}\n",
+        "language": "JAVA"
+      }
+    },
+    {
+      "content": "Define interruption policy: catch InterruptedException only to restore interrupt flag or rethrow; never swallow it.",
+      "examples": {
+        "positive": "try {\n  Thread.sleep(100);\n} catch (InterruptedException e) {\n  Thread.currentThread().interrupt();\n  throw new RuntimeException(e);\n}\n",
+        "negative": "try {\n  Thread.sleep(100);\n} catch (InterruptedException e) {\n  // ignored\n}\n",
+        "language": "JAVA"
+      }
+    },
+    {
+      "content": "Prefer immutable data for shared state; when mutation is required, encapsulate it behind synchronization or atomic types.",
+      "examples": {
+        "positive": "final class Counter {\n  private final AtomicLong value = new AtomicLong();\n  long incrementAndGet() { return value.incrementAndGet(); }\n}\n",
+        "negative": "final class Counter {\n  private long value;\n  long incrementAndGet() { return ++value; }\n}\n",
+        "language": "JAVA"
+      }
+    },
+    {
+      "content": "Use try-with-resources for every Closeable/AutoCloseable acquired in a method; do not leak resources across API boundaries.",
+      "examples": {
+        "positive": "Path p = Path.of(\"out.txt\");\ntry (BufferedWriter w = Files.newBufferedWriter(p, StandardCharsets.UTF_8)) {\n  w.write(\"hello\");\n}\n",
+        "negative": "BufferedWriter w = Files.newBufferedWriter(Path.of(\"out.txt\"));\nw.write(\"hello\");\n// not closed\n",
+        "language": "JAVA"
+      }
+    },
+    {
+      "content": "Validate external inputs at module boundaries using explicit allowlists and length limits; reject or normalize before parsing.",
+      "examples": {
+        "positive": "static int parsePort(String s) {\n  if (s == null || !s.matches(\"\\\\d{1,5}\")) throw new IllegalArgumentException(\"port\");\n  int p = Integer.parseInt(s);\n  if (p < 1 || p > 65535) throw new IllegalArgumentException(\"port\");\n  return p;\n}\n",
+        "negative": "static int parsePort(String s) {\n  return Integer.parseInt(s.trim());\n}\n",
+        "language": "JAVA"
+      }
+    },
+    {
+      "content": "Preserve causal exceptions: wrap with original cause and meaningful message; do not create new exceptions without the cause.",
+      "examples": {
+        "positive": "try {\n  return Files.readString(path, StandardCharsets.UTF_8);\n} catch (IOException e) {\n  throw new UncheckedIOException(\"read failed: \" + path, e);\n}\n",
+        "negative": "try {\n  return Files.readString(path);\n} catch (IOException e) {\n  throw new RuntimeException(\"read failed\");\n}\n",
+        "language": "JAVA"
+      }
+    },
+    {
+      "content": "Use java.time types; parse and format with explicit ZoneId and Locale; avoid Date, Calendar, and default zone assumptions.",
+      "examples": {
+        "positive": "Instant now = Instant.now();\nZonedDateTime zdt = now.atZone(ZoneId.of(\"UTC\"));\nDateTimeFormatter fmt = DateTimeFormatter.ofPattern(\"uuuu-MM-dd HH:mm\", Locale.ROOT);\nString s = fmt.format(zdt);\n",
+        "negative": "Date d = new Date();\nString s = new SimpleDateFormat(\"yyyy-MM-dd HH:mm\").format(d);\n",
+        "language": "JAVA"
+      }
+    },
+    {
+      "content": "Use explicit connect and read timeouts for all network calls; avoid APIs that default to infinite waits.",
+      "examples": {
+        "positive": "HttpClient client = HttpClient.newBuilder()\n  .connectTimeout(Duration.ofSeconds(2))\n  .build();\nHttpRequest req = HttpRequest.newBuilder(URI.create(url))\n  .timeout(Duration.ofSeconds(3))\n  .GET()\n  .build();\nHttpResponse<String> res = client.send(req, HttpResponse.BodyHandlers.ofString());\n",
+        "negative": "HttpURLConnection c = (HttpURLConnection) new URL(url).openConnection();\ntry (InputStream in = c.getInputStream()) {\n  in.readAllBytes();\n}\n",
+        "language": "JAVA"
+      }
+    },
+    {
+      "content": "Load configuration from explicit sources (env, args, files) and pass as typed objects; avoid scattered System.getProperty calls.",
+      "examples": {
+        "positive": "record AppConfig(String dbUrl, int maxConnections) {\n  static AppConfig fromEnv() {\n    String url = Objects.requireNonNull(System.getenv(\"DB_URL\"));\n    int max = Integer.parseInt(System.getenv().getOrDefault(\"MAX_CONN\", \"20\"));\n    return new AppConfig(url, max);\n  }\n}\n",
+        "negative": "String url = System.getenv(\"DB_URL\");\nint max = Integer.parseInt(System.getProperty(\"max.conn\", \"20\"));\n// used directly across many classes\n",
+        "language": "JAVA"
+      }
+    },
+    {
+      "content": "Guard log construction: use parameterized logging or Suppliers; never build expensive messages unconditionally.",
+      "examples": {
+        "positive": "Logger log = LoggerFactory.getLogger(MyClass.class);\nlog.debug(\"payload size={} id={}\", payload.size(), id);\n// or\nlog.atDebug().addArgument(() -> expensiveDump(payload)).log(\"payload={}\");\n",
+        "negative": "Logger log = LoggerFactory.getLogger(MyClass.class);\nlog.debug(\"payload=\" + expensiveDump(payload));\n",
+        "language": "JAVA"
+      }
+    }
+  ]
+}
