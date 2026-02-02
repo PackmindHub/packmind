@@ -5,9 +5,9 @@ import { loadApiKey, decodeApiKey } from '../utils/credentials';
 function buildStandardUrl(
   host: string,
   orgSlug: string,
-  standardSlug: string,
+  standardId: string,
 ): string {
-  return `${host}/org/${orgSlug}/space/global/standards/${standardSlug}`;
+  return `${host}/org/${orgSlug}/space/global/standards/${standardId}/summary`;
 }
 
 export type ListStandardsHandlerDependencies = {
@@ -37,14 +37,14 @@ export async function listStandardsHandler(
     );
 
     // Try to build webapp URL from credentials
-    let urlBuilder: ((slug: string) => string) | null = null;
+    let urlBuilder: ((id: string) => string) | null = null;
     const apiKey = loadApiKey();
     if (apiKey) {
       const decoded = decodeApiKey(apiKey);
       const orgSlug = decoded?.jwt?.organization?.slug;
       if (decoded?.host && orgSlug) {
-        urlBuilder = (slug: string) =>
-          buildStandardUrl(decoded.host, orgSlug, slug);
+        urlBuilder = (id: string) =>
+          buildStandardUrl(decoded.host, orgSlug, id);
       }
     }
 
@@ -53,7 +53,7 @@ export async function listStandardsHandler(
       log(`- ${formatSlug(standard.slug)}`);
       log(`    ${formatLabel('Name:')} ${standard.name}`);
       if (urlBuilder) {
-        log(`    ${formatLabel('URL:')} ${urlBuilder(standard.slug)}`);
+        log(`    ${formatLabel('URL:')} ${urlBuilder(standard.id)}`);
       }
       if (standard.description) {
         const descriptionLines = standard.description

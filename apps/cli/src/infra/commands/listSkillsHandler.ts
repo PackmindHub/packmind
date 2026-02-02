@@ -7,7 +7,7 @@ function buildSkillUrl(
   orgSlug: string,
   skillSlug: string,
 ): string {
-  return `${host}/org/${orgSlug}/space/global/skills/${skillSlug}`;
+  return `${host}/org/${orgSlug}/space/global/skills/${skillSlug}/files`;
 }
 
 export type ListSkillsHandlerDependencies = {

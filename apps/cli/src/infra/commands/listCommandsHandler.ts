@@ -5,9 +5,9 @@ import { loadApiKey, decodeApiKey } from '../utils/credentials';
 function buildCommandUrl(
   host: string,
   orgSlug: string,
-  commandSlug: string,
+  commandId: string,
 ): string {
-  return `${host}/org/${orgSlug}/space/global/commands/${commandSlug}`;
+  return `${host}/org/${orgSlug}/space/global/commands/${commandId}`;
 }
 
 export type ListCommandsHandlerDependencies = {
@@ -37,14 +37,13 @@ export async function listCommandsHandler(
     );
 
     // Try to build webapp URL from credentials
-    let urlBuilder: ((slug: string) => string) | null = null;
+    let urlBuilder: ((id: string) => string) | null = null;
     const apiKey = loadApiKey();
     if (apiKey) {
       const decoded = decodeApiKey(apiKey);
       const orgSlug = decoded?.jwt?.organization?.slug;
       if (decoded?.host && orgSlug) {
-        urlBuilder = (slug: string) =>
-          buildCommandUrl(decoded.host, orgSlug, slug);
+        urlBuilder = (id: string) => buildCommandUrl(decoded.host, orgSlug, id);
       }
     }
 
@@ -53,7 +52,7 @@ export async function listCommandsHandler(
       log(`- ${formatSlug(cmd.slug)}`);
       log(`    ${formatLabel('Name:')} ${cmd.name}`);
       if (urlBuilder) {
-        log(`    ${formatLabel('URL:')} ${urlBuilder(cmd.slug)}`);
+        log(`    ${formatLabel('URL:')} ${urlBuilder(cmd.id)}`);
       }
       if (index < sortedCommands.length - 1) {
         log('');
