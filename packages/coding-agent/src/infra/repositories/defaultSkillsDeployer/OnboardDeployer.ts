@@ -3663,6 +3663,8 @@ const ONBOARD_LICENSE = `
 `;
 
 export class OnboardDeployer implements ISkillDeployer {
+  public readonly minimumVersion = 'unreleased';
+
   deploy(_agentName: string, skillsFolderPath: string): FileUpdates {
     const basePath = `${skillsFolderPath}packmind-onboard`;
     const referencesPath = `${basePath}/references`;
