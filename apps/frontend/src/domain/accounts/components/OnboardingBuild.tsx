@@ -2,6 +2,7 @@ import { PMVStack, PMHStack, PMHeading, PMText, PMButton } from '@packmind/ui';
 import { OnboardingProgressSection } from './OnboardingProgressSection';
 import { OnboardingBuildCliSection } from './OnboardingBuildCliSection';
 import { OnboardingBuildMcpSection } from './OnboardingBuildMcpSection';
+import { isLocalhost } from '../../../shared/utils/isLocalhost';
 
 interface OnboardingBuildProps {
   onComplete: () => void;
@@ -12,6 +13,8 @@ export function OnboardingBuild({
   onComplete,
   onPrevious,
 }: OnboardingBuildProps) {
+  const showProgress = isLocalhost();
+
   return (
     <PMVStack
       align="stretch"
@@ -28,36 +31,34 @@ export function OnboardingBuild({
         </PMText>
       </PMVStack>
 
+      {/* Progress status */}
+      {showProgress && <OnboardingProgressSection />}
+
       {/* Two-column content */}
       <PMHStack gap={8} align="stretch" flex={1} paddingY={6}>
         <OnboardingBuildCliSection />
         <OnboardingBuildMcpSection />
       </PMHStack>
 
-      {/* Status and navigation */}
-      <PMVStack gap={4} align="stretch">
-        <OnboardingProgressSection />
-
-        {/* Navigation buttons */}
-        <PMHStack gap={4}>
-          <PMButton
-            size="lg"
-            variant="secondary"
-            onClick={onPrevious}
-            data-testid="OnboardingBuild.PreviousButton"
-          >
-            Previous
-          </PMButton>
-          <PMButton
-            size="lg"
-            variant="primary"
-            onClick={onComplete}
-            data-testid="OnboardingBuild.CompleteButton"
-          >
-            I'm done
-          </PMButton>
-        </PMHStack>
-      </PMVStack>
+      {/* Navigation buttons */}
+      <PMHStack gap={4}>
+        <PMButton
+          size="lg"
+          variant="secondary"
+          onClick={onPrevious}
+          data-testid="OnboardingBuild.PreviousButton"
+        >
+          Previous
+        </PMButton>
+        <PMButton
+          size="lg"
+          variant="primary"
+          onClick={onComplete}
+          data-testid="OnboardingBuild.CompleteButton"
+        >
+          I'm done
+        </PMButton>
+      </PMHStack>
     </PMVStack>
   );
 }

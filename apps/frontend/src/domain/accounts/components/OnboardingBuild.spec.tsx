@@ -20,6 +20,11 @@ jest.mock('./LocalEnvironmentSetup/hooks/useMcpConnection', () => ({
   useMcpConnection: () => mockUseMcpConnection(),
 }));
 
+const mockIsLocalhost = jest.fn();
+jest.mock('../../../shared/utils/isLocalhost', () => ({
+  isLocalhost: () => mockIsLocalhost(),
+}));
+
 const renderWithProviders = (component: React.ReactElement) => {
   const queryClient = new QueryClient({
     defaultOptions: {
@@ -55,6 +60,7 @@ describe('OnboardingBuild', () => {
       isError: false,
       errorMessage: null,
     });
+    mockIsLocalhost.mockReturnValue(false);
   });
 
   describe('rendering', () => {
@@ -84,12 +90,26 @@ describe('OnboardingBuild', () => {
       expect(screen.getByTestId('OnboardingBuild.MCPCard')).toBeInTheDocument();
     });
 
-    it('renders the status text', () => {
-      renderWithProviders(<OnboardingBuild {...defaultProps} />);
+    describe('when on localhost', () => {
+      it('renders the progress section', () => {
+        mockIsLocalhost.mockReturnValue(true);
+        renderWithProviders(<OnboardingBuild {...defaultProps} />);
 
-      expect(
-        screen.getByText('Waiting for your playbook to be ready...'),
-      ).toBeInTheDocument();
+        expect(
+          screen.getByText('Waiting for your playbook to be ready...'),
+        ).toBeInTheDocument();
+      });
+    });
+
+    describe('when not on localhost', () => {
+      it('does not render the progress section', () => {
+        mockIsLocalhost.mockReturnValue(false);
+        renderWithProviders(<OnboardingBuild {...defaultProps} />);
+
+        expect(
+          screen.queryByText('Waiting for your playbook to be ready...'),
+        ).not.toBeInTheDocument();
+      });
     });
   });
 
