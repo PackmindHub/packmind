@@ -375,7 +375,7 @@ describe('RemovePackageFromTargetsUseCase', () => {
 
           expect(
             mockPackmindConfigService.createRemovalConfigFileModification,
-          ).toHaveBeenCalledWith('test-package', {});
+          ).toHaveBeenCalledWith('test-package', {}, undefined);
         });
       });
 

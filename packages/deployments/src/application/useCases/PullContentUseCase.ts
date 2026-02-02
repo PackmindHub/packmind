@@ -99,16 +99,24 @@ export class PullContentUseCase extends AbstractMemberUseCase<
     }
 
     try {
-      // Get active coding agents for the organization
-      const codingAgents =
-        await this.renderModeConfigurationService.resolveActiveCodingAgents(
-          command.organization.id,
-        );
-
-      this.logger.info('Using organization render modes', {
-        codingAgents,
-        organizationId: command.organizationId,
-      });
+      // Get active coding agents: use command.agents if provided, otherwise fall back to org-level config
+      let codingAgents;
+      if (command.agents && command.agents.length > 0) {
+        codingAgents = command.agents;
+        this.logger.info('Using agents from command (packmind.json override)', {
+          codingAgents,
+          organizationId: command.organizationId,
+        });
+      } else {
+        codingAgents =
+          await this.renderModeConfigurationService.resolveActiveCodingAgents(
+            command.organization.id,
+          );
+        this.logger.info('Using organization-level render modes', {
+          codingAgents,
+          organizationId: command.organizationId,
+        });
+      }
 
       // Fetch packages and their artifacts (skip if removal-only operation)
       let recipeVersions: RecipeVersion[] = [];

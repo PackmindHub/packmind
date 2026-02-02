@@ -2301,4 +2301,85 @@ describe('PullContentUseCase', () => {
       });
     });
   });
+
+  describe('when agents are provided in command', () => {
+    beforeEach(() => {
+      const testPackage: PackageWithArtefacts = {
+        id: createPackageId('test-package-id'),
+        slug: 'test-package',
+        name: 'Test Package',
+        description: 'Test package description',
+        spaceId: createSpaceId('space-1'),
+        createdBy: createUserId('user-1'),
+        recipes: [],
+        standards: [],
+        skills: [],
+      };
+
+      packageService.getPackagesBySlugsWithArtefacts.mockResolvedValue([
+        testPackage,
+      ]);
+    });
+
+    describe('with valid agents array', () => {
+      beforeEach(() => {
+        command = {
+          ...command,
+          agents: [CodingAgents.claude, CodingAgents.cursor],
+        };
+      });
+
+      it('uses agents from command instead of org-level config', async () => {
+        await useCase.execute(command);
+
+        expect(
+          renderModeConfigurationService.resolveActiveCodingAgents,
+        ).not.toHaveBeenCalled();
+      });
+
+      it('passes command agents to deployArtifactsForAgents', async () => {
+        await useCase.execute(command);
+
+        expect(codingAgentPort.deployArtifactsForAgents).toHaveBeenCalledWith(
+          expect.objectContaining({
+            codingAgents: [CodingAgents.claude, CodingAgents.cursor],
+          }),
+        );
+      });
+    });
+
+    describe('with empty agents array', () => {
+      beforeEach(() => {
+        command = {
+          ...command,
+          agents: [],
+        };
+      });
+
+      it('falls back to org-level config', async () => {
+        await useCase.execute(command);
+
+        expect(
+          renderModeConfigurationService.resolveActiveCodingAgents,
+        ).toHaveBeenCalledWith(organization.id);
+      });
+    });
+
+    describe('when agents is undefined', () => {
+      beforeEach(() => {
+        command = {
+          ...command,
+          agents: undefined,
+        };
+      });
+
+      it('falls back to org-level config', async () => {
+        await useCase.execute(command);
+
+        expect(
+          renderModeConfigurationService.resolveActiveCodingAgents,
+        ).toHaveBeenCalledWith(organization.id);
+      });
+    });
+  });
 });

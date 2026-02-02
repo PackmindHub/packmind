@@ -450,12 +450,34 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
     let addedPackmindSkills: string[] = [];
 
     for (const target of targets) {
+      // Fetch existing packmind.json to check for per-target agents
+      const existingPackmindJson = await this.fetchExistingPackmindJson(
+        gitRepo,
+        target,
+      );
+      const existingPackages = existingPackmindJson?.packages ?? {};
+
+      // Use per-target agents if defined in packmind.json, otherwise use org-level agents
+      // Note: empty array [] means "no agents" (intentional), undefined means "use org-level"
+      const targetCodingAgents =
+        existingPackmindJson?.agents !== undefined
+          ? existingPackmindJson.agents
+          : codingAgents;
+
+      if (existingPackmindJson?.agents !== undefined) {
+        this.logger.info('Using per-target agents from packmind.json', {
+          targetId: target.id,
+          targetName: target.name,
+          agents: targetCodingAgents,
+        });
+      }
+
       // Fetch existing files from git
       const existingFiles = await fetchExistingFilesFromGit(
         this.gitPort,
         gitRepo,
         target,
-        codingAgents,
+        targetCodingAgents,
         this.logger,
       );
 
@@ -473,22 +495,16 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
           standardVersions: removedStandardVersions,
           skillVersions: removedSkillVersions,
         },
-        codingAgents,
+        codingAgents: targetCodingAgents,
         existingFiles,
       });
 
-      // Fetch existing packmind.json to merge with new packages
-      const existingPackmindJson = await this.fetchExistingPackmindJson(
-        gitRepo,
-        target,
-      );
-      const existingPackages = existingPackmindJson?.packages ?? {};
-
-      // Add packmind.json config file with merged packages
+      // Add packmind.json config file with merged packages (preserving agents if defined)
       const configFile =
         this.packmindConfigService.createConfigFileModification(
           packagesSlugs,
           existingPackages,
+          existingPackmindJson?.agents,
         );
       baseFileUpdates.createOrUpdate.push(configFile);
 

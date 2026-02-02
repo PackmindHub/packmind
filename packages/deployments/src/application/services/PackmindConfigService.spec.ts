@@ -1,3 +1,4 @@
+import { CodingAgent } from '@packmind/types';
 import { PackmindConfigService } from './PackmindConfigService';
 
 describe('PackmindConfigService', () => {
@@ -129,6 +130,72 @@ describe('PackmindConfigService', () => {
         });
       });
     });
+
+    describe('with existing agents', () => {
+      it('preserves agents in generated config', () => {
+        const existingAgents: CodingAgent[] = ['claude', 'cursor'];
+
+        const result = service.generateConfigContent(
+          ['my-package'],
+          {},
+          existingAgents,
+        );
+
+        expect(result).toEqual({
+          packages: {
+            'my-package': '*',
+          },
+          agents: ['claude', 'cursor'],
+        });
+      });
+
+      it('preserves empty agents array', () => {
+        const existingAgents: CodingAgent[] = [];
+
+        const result = service.generateConfigContent(
+          ['my-package'],
+          {},
+          existingAgents,
+        );
+
+        expect(result).toEqual({
+          packages: {
+            'my-package': '*',
+          },
+          agents: [],
+        });
+      });
+
+      it('does not include agents when undefined', () => {
+        const result = service.generateConfigContent(['my-package'], {});
+
+        expect(result).toEqual({
+          packages: {
+            'my-package': '*',
+          },
+        });
+        expect(result).not.toHaveProperty('agents');
+      });
+
+      it('preserves agents with existing packages', () => {
+        const existingPackages = { 'existing-pkg': '*' };
+        const existingAgents: CodingAgent[] = ['claude'];
+
+        const result = service.generateConfigContent(
+          ['new-pkg'],
+          existingPackages,
+          existingAgents,
+        );
+
+        expect(result).toEqual({
+          packages: {
+            'existing-pkg': '*',
+            'new-pkg': '*',
+          },
+          agents: ['claude'],
+        });
+      });
+    });
   });
 
   describe('createConfigFileModification', () => {
@@ -177,6 +244,41 @@ describe('PackmindConfigService', () => {
           frontend: '*',
           'api-standards': '*',
         });
+      });
+    });
+
+    describe('with existing agents', () => {
+      it('returns FileModification with agents in content', () => {
+        const existingAgents: CodingAgent[] = ['claude', 'cursor'];
+
+        const result = service.createConfigFileModification(
+          ['test-package'],
+          {},
+          existingAgents,
+        );
+
+        const parsed = JSON.parse(result.content);
+        expect(parsed.agents).toEqual(['claude', 'cursor']);
+      });
+
+      it('preserves empty agents array in content', () => {
+        const existingAgents: CodingAgent[] = [];
+
+        const result = service.createConfigFileModification(
+          ['test-package'],
+          {},
+          existingAgents,
+        );
+
+        const parsed = JSON.parse(result.content);
+        expect(parsed.agents).toEqual([]);
+      });
+
+      it('does not include agents property when undefined', () => {
+        const result = service.createConfigFileModification(['test-package']);
+
+        const parsed = JSON.parse(result.content);
+        expect(parsed).not.toHaveProperty('agents');
       });
     });
   });
@@ -265,6 +367,127 @@ describe('PackmindConfigService', () => {
 
           expect(result).toEqual({ packages: {} });
         });
+      });
+    });
+
+    describe('with existing agents', () => {
+      it('preserves agents when removing package', () => {
+        const existingPackages = {
+          'package-a': '*',
+          'package-b': '*',
+        };
+        const existingAgents: CodingAgent[] = ['claude', 'cursor'];
+
+        const result = service.removePackageFromConfig(
+          'package-a',
+          existingPackages,
+          existingAgents,
+        );
+
+        expect(result).toEqual({
+          packages: {
+            'package-b': '*',
+          },
+          agents: ['claude', 'cursor'],
+        });
+      });
+
+      it('preserves empty agents array', () => {
+        const existingPackages = { 'package-a': '*' };
+        const existingAgents: CodingAgent[] = [];
+
+        const result = service.removePackageFromConfig(
+          'package-a',
+          existingPackages,
+          existingAgents,
+        );
+
+        expect(result).toEqual({
+          packages: {},
+          agents: [],
+        });
+      });
+
+      it('does not include agents when undefined', () => {
+        const existingPackages = { 'package-a': '*' };
+
+        const result = service.removePackageFromConfig(
+          'package-a',
+          existingPackages,
+        );
+
+        expect(result).toEqual({ packages: {} });
+        expect(result).not.toHaveProperty('agents');
+      });
+    });
+  });
+
+  describe('createRemovalConfigFileModification', () => {
+    describe('with package to remove', () => {
+      it('returns FileModification with correct path', () => {
+        const existingPackages = { 'package-a': '*', 'package-b': '*' };
+
+        const result = service.createRemovalConfigFileModification(
+          'package-a',
+          existingPackages,
+        );
+
+        expect(result.path).toBe('packmind.json');
+      });
+
+      it('returns FileModification with package removed', () => {
+        const existingPackages = { 'package-a': '*', 'package-b': '*' };
+
+        const result = service.createRemovalConfigFileModification(
+          'package-a',
+          existingPackages,
+        );
+
+        const parsed = JSON.parse(result.content);
+        expect(parsed.packages).toEqual({ 'package-b': '*' });
+      });
+    });
+
+    describe('with existing agents', () => {
+      it('preserves agents in content when removing package', () => {
+        const existingPackages = { 'package-a': '*', 'package-b': '*' };
+        const existingAgents: CodingAgent[] = ['claude'];
+
+        const result = service.createRemovalConfigFileModification(
+          'package-a',
+          existingPackages,
+          existingAgents,
+        );
+
+        const parsed = JSON.parse(result.content);
+        expect(parsed.agents).toEqual(['claude']);
+        expect(parsed.packages).toEqual({ 'package-b': '*' });
+      });
+
+      it('preserves empty agents array in content', () => {
+        const existingPackages = { 'package-a': '*' };
+        const existingAgents: CodingAgent[] = [];
+
+        const result = service.createRemovalConfigFileModification(
+          'package-a',
+          existingPackages,
+          existingAgents,
+        );
+
+        const parsed = JSON.parse(result.content);
+        expect(parsed.agents).toEqual([]);
+      });
+
+      it('does not include agents when undefined', () => {
+        const existingPackages = { 'package-a': '*' };
+
+        const result = service.createRemovalConfigFileModification(
+          'package-a',
+          existingPackages,
+        );
+
+        const parsed = JSON.parse(result.content);
+        expect(parsed).not.toHaveProperty('agents');
       });
     });
   });
