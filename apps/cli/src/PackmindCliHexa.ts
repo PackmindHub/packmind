@@ -61,7 +61,11 @@ import {
   IListSkillsCommand,
   IListSkillsResult,
 } from './domain/useCases/IListSkillsUseCase';
-import { AllConfigsResult, HierarchicalConfigResult } from '@packmind/types';
+import {
+  AllConfigsResult,
+  HierarchicalConfigResult,
+  PackmindFileConfig,
+} from '@packmind/types';
 import { logWarningConsole } from './infra/utils/consoleLogger';
 import {
   NotifyDistributionCommand,
@@ -191,6 +195,16 @@ export class PackmindCliHexa {
     }
 
     return Object.keys(config.packages);
+  }
+
+  /**
+   * Reads the full packmind.json configuration including agents.
+   * Returns null if no config file exists.
+   */
+  public async readFullConfig(
+    baseDirectory: string,
+  ): Promise<PackmindFileConfig | null> {
+    return this.hexa.repositories.configFileRepository.readConfig(baseDirectory);
   }
 
   public async writeConfig(

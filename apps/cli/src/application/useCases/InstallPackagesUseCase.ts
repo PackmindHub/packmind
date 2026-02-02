@@ -34,6 +34,7 @@ export class InstallPackagesUseCase implements IInstallPackagesUseCase {
       gitRemoteUrl: command.gitRemoteUrl,
       gitBranch: command.gitBranch,
       relativePath: command.relativePath,
+      agents: command.agents,
     });
 
     // Deduplicate files by path (when multiple packages share standards/recipes)

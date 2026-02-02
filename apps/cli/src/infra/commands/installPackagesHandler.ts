@@ -1,5 +1,5 @@
 import { PackmindCliHexa } from '../../PackmindCliHexa';
-import { ConfigWithTarget, SummarizedArtifact } from '@packmind/types';
+import { CodingAgent, ConfigWithTarget, SummarizedArtifact } from '@packmind/types';
 import {
   logWarningConsole,
   formatSlug,
@@ -383,10 +383,17 @@ async function executeInstallForDirectory(
 ): Promise<SingleDirectoryInstallResult> {
   const { packmindCliHexa, log } = deps;
 
-  // Read existing config
+  // Read existing config (including agents if present)
   let configPackages: string[];
+  let configAgents: CodingAgent[] | undefined;
   try {
-    configPackages = await packmindCliHexa.readConfig(directory);
+    const fullConfig = await packmindCliHexa.readFullConfig(directory);
+    if (fullConfig) {
+      configPackages = Object.keys(fullConfig.packages);
+      configAgents = fullConfig.agents;
+    } else {
+      configPackages = [];
+    }
   } catch (err) {
     const errorMessage = err instanceof Error ? err.message : String(err);
     return {
@@ -424,6 +431,7 @@ async function executeInstallForDirectory(
       baseDirectory: directory,
       packagesSlugs: configPackages,
       previousPackagesSlugs: configPackages, // Pass for consistency
+      agents: configAgents, // Pass agents from config if present
     });
 
     // Show installation message with counts
@@ -497,12 +505,28 @@ export async function installPackagesHandler(
   const { packagesSlugs } = args;
   const cwd = getCwd();
 
-  // Read existing config
+  // Read existing config (including agents if present)
   let configPackages: string[];
+  let configAgents: CodingAgent[] | undefined;
   let configFileExists = false;
   try {
     configFileExists = await packmindCliHexa.configExists(cwd);
-    configPackages = await packmindCliHexa.readConfig(cwd);
+    const fullConfig = await packmindCliHexa.readFullConfig(cwd);
+    if (fullConfig) {
+      // Check for non-wildcard versions and warn the user
+      const hasNonWildcardVersions = Object.values(fullConfig.packages).some(
+        (version) => version !== '*',
+      );
+      if (hasNonWildcardVersions) {
+        logWarningConsole(
+          'Package versions are not supported yet, getting the latest version',
+        );
+      }
+      configPackages = Object.keys(fullConfig.packages);
+      configAgents = fullConfig.agents;
+    } else {
+      configPackages = [];
+    }
   } catch (err) {
     error('ERROR Failed to parse packmind.json');
     if (err instanceof Error) {
@@ -597,6 +621,7 @@ export async function installPackagesHandler(
       gitRemoteUrl,
       gitBranch,
       relativePath,
+      agents: configAgents, // Pass agents from config if present (overrides org-level)
     });
 
     // Show installation message with counts

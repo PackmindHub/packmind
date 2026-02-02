@@ -3,6 +3,7 @@ import {
   ConfigWithTarget,
   HierarchicalConfigResult,
   PackmindFileConfig,
+  validateAgentsWithWarnings,
 } from '@packmind/types';
 import * as fs from 'fs/promises';
 import * as path from 'path';
@@ -46,13 +47,34 @@ export class ConfigFileRepository implements IConfigFileRepository {
 
     try {
       const configContent = await fs.readFile(configPath, 'utf-8');
-      const config = JSON.parse(configContent) as PackmindFileConfig;
+      const rawConfig = JSON.parse(configContent);
 
       // Validate structure
-      if (!config.packages || typeof config.packages !== 'object') {
+      if (!rawConfig.packages || typeof rawConfig.packages !== 'object') {
         throw new Error(
           'Invalid packmind.json structure. Expected { packages: { ... } }',
         );
+      }
+
+      // Validate and filter agents if present
+      const { validAgents, invalidAgents } = validateAgentsWithWarnings(
+        rawConfig.agents,
+      );
+
+      // Warn about invalid agents
+      if (invalidAgents.length > 0) {
+        logWarningConsole(
+          `Invalid agent(s) in ${configPath}: ${invalidAgents.join(', ')}. Valid agents are: packmind, junie, claude, cursor, copilot, agents_md, gitlab_duo, continue`,
+        );
+      }
+
+      const config: PackmindFileConfig = {
+        packages: rawConfig.packages,
+      };
+
+      // Only include agents if explicitly defined in the config
+      if (validAgents !== null) {
+        config.agents = validAgents;
       }
 
       return config;
@@ -205,6 +227,7 @@ export class ConfigFileRepository implements IConfigFileRepository {
           targetPath,
           absoluteTargetPath: currentDir,
           packages: config.packages,
+          agents: config.agents,
         });
       }
 
@@ -240,6 +263,7 @@ export class ConfigFileRepository implements IConfigFileRepository {
           targetPath,
           absoluteTargetPath: normalizedDescendantDir,
           packages: config.packages,
+          agents: config.agents,
         });
       }
     }
@@ -252,6 +276,7 @@ export class ConfigFileRepository implements IConfigFileRepository {
           targetPath: '/',
           absoluteTargetPath: searchRoot,
           packages: rootConfig.packages,
+          agents: rootConfig.agents,
         });
       }
     }

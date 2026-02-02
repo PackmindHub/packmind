@@ -31,6 +31,7 @@ describe('installPackagesHandler', () => {
       getPackageBySlug: jest.fn(),
       configExists: jest.fn(),
       readConfig: jest.fn(),
+      readFullConfig: jest.fn(),
       writeConfig: jest.fn(),
       installPackages: jest.fn(),
       tryGetGitRepositoryRoot: jest.fn(),
@@ -215,7 +216,7 @@ describe('installPackagesHandler', () => {
   describe('installPackagesHandler', () => {
     describe('when config parsing fails', () => {
       beforeEach(async () => {
-        mockPackmindCliHexa.readConfig.mockRejectedValue(
+        mockPackmindCliHexa.readFullConfig.mockRejectedValue(
           new Error('Invalid JSON'),
         );
 
@@ -240,7 +241,7 @@ describe('installPackagesHandler', () => {
     describe('when no packages provided and no config file', () => {
       beforeEach(async () => {
         mockPackmindCliHexa.configExists.mockResolvedValue(false);
-        mockPackmindCliHexa.readConfig.mockResolvedValue([]);
+        mockPackmindCliHexa.readFullConfig.mockResolvedValue(null);
 
         await installPackagesHandler({ packagesSlugs: [] }, deps);
       });
@@ -259,7 +260,7 @@ describe('installPackagesHandler', () => {
     describe('when no packages provided and config file is empty', () => {
       beforeEach(async () => {
         mockPackmindCliHexa.configExists.mockResolvedValue(true);
-        mockPackmindCliHexa.readConfig.mockResolvedValue([]);
+        mockPackmindCliHexa.readFullConfig.mockResolvedValue(null);
 
         await installPackagesHandler({ packagesSlugs: [] }, deps);
       });
@@ -280,7 +281,7 @@ describe('installPackagesHandler', () => {
 
       beforeEach(async () => {
         mockPackmindCliHexa.configExists.mockResolvedValue(true);
-        mockPackmindCliHexa.readConfig.mockResolvedValue(['backend']);
+        mockPackmindCliHexa.readFullConfig.mockResolvedValue({ packages: { backend: '*' } });
         mockPackmindCliHexa.installPackages.mockResolvedValue({
           filesCreated: 0,
           filesUpdated: 0,
@@ -307,7 +308,7 @@ describe('installPackagesHandler', () => {
 
       beforeEach(async () => {
         mockPackmindCliHexa.configExists.mockResolvedValue(true);
-        mockPackmindCliHexa.readConfig.mockResolvedValue(['backend']);
+        mockPackmindCliHexa.readFullConfig.mockResolvedValue({ packages: { backend: '*' } });
         mockPackmindCliHexa.installPackages.mockResolvedValue({
           filesCreated: 2,
           filesUpdated: 1,
@@ -333,7 +334,7 @@ describe('installPackagesHandler', () => {
     describe('when install succeeds with file changes in git repo', () => {
       beforeEach(() => {
         mockPackmindCliHexa.configExists.mockResolvedValue(true);
-        mockPackmindCliHexa.readConfig.mockResolvedValue(['backend']);
+        mockPackmindCliHexa.readFullConfig.mockResolvedValue({ packages: { backend: '*' } });
         mockPackmindCliHexa.installPackages.mockResolvedValue({
           filesCreated: 2,
           filesUpdated: 1,
@@ -427,7 +428,7 @@ describe('installPackagesHandler', () => {
     describe('when pull fails with 404 error', () => {
       beforeEach(async () => {
         mockPackmindCliHexa.configExists.mockResolvedValue(false);
-        mockPackmindCliHexa.readConfig.mockResolvedValue([]);
+        mockPackmindCliHexa.readFullConfig.mockResolvedValue(null);
         const error = new Error('Package not found') as Error & {
           statusCode: number;
         };
@@ -457,7 +458,7 @@ describe('installPackagesHandler', () => {
 
       beforeEach(async () => {
         mockPackmindCliHexa.configExists.mockResolvedValue(true);
-        mockPackmindCliHexa.readConfig.mockResolvedValue(['backend']);
+        mockPackmindCliHexa.readFullConfig.mockResolvedValue({ packages: { backend: '*' } });
         mockPackmindCliHexa.installPackages.mockResolvedValue({
           filesCreated: 1,
           filesUpdated: 0,
@@ -492,7 +493,7 @@ describe('installPackagesHandler', () => {
     describe('when initializing new config', () => {
       it('logs initialization message', async () => {
         mockPackmindCliHexa.configExists.mockResolvedValue(false);
-        mockPackmindCliHexa.readConfig.mockResolvedValue([]);
+        mockPackmindCliHexa.readFullConfig.mockResolvedValue(null);
         mockPackmindCliHexa.installPackages.mockResolvedValue({
           filesCreated: 1,
           filesUpdated: 0,
@@ -512,7 +513,7 @@ describe('installPackagesHandler', () => {
     describe('when updating existing config', () => {
       it('does not log initialization message', async () => {
         mockPackmindCliHexa.configExists.mockResolvedValue(true);
-        mockPackmindCliHexa.readConfig.mockResolvedValue(['frontend']);
+        mockPackmindCliHexa.readFullConfig.mockResolvedValue({ packages: { frontend: '*' } });
         mockPackmindCliHexa.installPackages.mockResolvedValue({
           filesCreated: 1,
           filesUpdated: 0,
@@ -534,10 +535,7 @@ describe('installPackagesHandler', () => {
     describe('when merging config and cli packages', () => {
       it('deduplicates packages', async () => {
         mockPackmindCliHexa.configExists.mockResolvedValue(true);
-        mockPackmindCliHexa.readConfig.mockResolvedValue([
-          'backend',
-          'frontend',
-        ]);
+        mockPackmindCliHexa.readFullConfig.mockResolvedValue({ packages: { backend: '*', frontend: '*' } });
         mockPackmindCliHexa.installPackages.mockResolvedValue({
           filesCreated: 0,
           filesUpdated: 0,
@@ -553,18 +551,21 @@ describe('installPackagesHandler', () => {
           deps,
         );
 
-        expect(mockPackmindCliHexa.installPackages).toHaveBeenCalledWith({
-          baseDirectory: '/project',
-          packagesSlugs: ['backend', 'frontend', 'api'],
-          previousPackagesSlugs: ['backend', 'frontend'],
-        });
+        expect(mockPackmindCliHexa.installPackages).toHaveBeenCalledWith(
+          expect.objectContaining({
+            baseDirectory: '/project',
+            packagesSlugs: ['backend', 'frontend', 'api'],
+            previousPackagesSlugs: ['backend', 'frontend'],
+            agents: undefined,
+          }),
+        );
       });
     });
 
     describe('default skills installation', () => {
       beforeEach(() => {
         mockPackmindCliHexa.configExists.mockResolvedValue(true);
-        mockPackmindCliHexa.readConfig.mockResolvedValue(['backend']);
+        mockPackmindCliHexa.readFullConfig.mockResolvedValue({ packages: { backend: '*' } });
         mockPackmindCliHexa.installPackages.mockResolvedValue({
           filesCreated: 2,
           filesUpdated: 1,
@@ -1182,7 +1183,7 @@ describe('installPackagesHandler', () => {
       });
 
       it('displays count of files to process', async () => {
-        mockPackmindCliHexa.readConfig.mockResolvedValue(['backend']);
+        mockPackmindCliHexa.readFullConfig.mockResolvedValue({ packages: { backend: '*' } });
         mockPackmindCliHexa.installPackages.mockResolvedValue({
           filesCreated: 0,
           filesUpdated: 0,
@@ -1202,7 +1203,7 @@ describe('installPackagesHandler', () => {
         let result: Awaited<ReturnType<typeof recursiveInstallHandler>>;
 
         beforeEach(async () => {
-          mockPackmindCliHexa.readConfig.mockResolvedValue(['backend']);
+          mockPackmindCliHexa.readFullConfig.mockResolvedValue({ packages: { backend: '*' } });
           mockPackmindCliHexa.installPackages.mockResolvedValue({
             filesCreated: 3,
             filesUpdated: 1,
@@ -1228,7 +1229,7 @@ describe('installPackagesHandler', () => {
         let result: Awaited<ReturnType<typeof recursiveInstallHandler>>;
 
         beforeEach(async () => {
-          mockPackmindCliHexa.readConfig.mockResolvedValue(['backend']);
+          mockPackmindCliHexa.readFullConfig.mockResolvedValue({ packages: { backend: '*' } });
           mockPackmindCliHexa.installPackages.mockResolvedValue({
             filesCreated: 3,
             filesUpdated: 1,
@@ -1255,7 +1256,7 @@ describe('installPackagesHandler', () => {
       });
 
       it('displays summary at the end', async () => {
-        mockPackmindCliHexa.readConfig.mockResolvedValue(['backend']);
+        mockPackmindCliHexa.readFullConfig.mockResolvedValue({ packages: { backend: '*' } });
         mockPackmindCliHexa.installPackages.mockResolvedValue({
           filesCreated: 3,
           filesUpdated: 1,
@@ -1273,7 +1274,7 @@ describe('installPackagesHandler', () => {
       });
 
       it('exits with 0', async () => {
-        mockPackmindCliHexa.readConfig.mockResolvedValue(['backend']);
+        mockPackmindCliHexa.readFullConfig.mockResolvedValue({ packages: { backend: '*' } });
         mockPackmindCliHexa.installPackages.mockResolvedValue({
           filesCreated: 0,
           filesUpdated: 0,
@@ -1291,7 +1292,7 @@ describe('installPackagesHandler', () => {
       describe('notification', () => {
         describe('when notifying distributions', () => {
           beforeEach(async () => {
-            mockPackmindCliHexa.readConfig.mockResolvedValue(['backend']);
+            mockPackmindCliHexa.readFullConfig.mockResolvedValue({ packages: { backend: '*' } });
             mockPackmindCliHexa.installPackages.mockResolvedValue({
               filesCreated: 2,
               filesUpdated: 1,
@@ -1344,7 +1345,7 @@ describe('installPackagesHandler', () => {
           let result: Awaited<ReturnType<typeof recursiveInstallHandler>>;
 
           beforeEach(async () => {
-            mockPackmindCliHexa.readConfig.mockResolvedValue(['backend']);
+            mockPackmindCliHexa.readFullConfig.mockResolvedValue({ packages: { backend: '*' } });
             mockPackmindCliHexa.installPackages.mockResolvedValue({
               filesCreated: 2,
               filesUpdated: 0,
@@ -1388,7 +1389,7 @@ describe('installPackagesHandler', () => {
               hasConfigs: true,
               basePath: '/project',
             });
-            mockPackmindCliHexa.readConfig.mockResolvedValue(['backend']);
+            mockPackmindCliHexa.readFullConfig.mockResolvedValue({ packages: { backend: '*' } });
             mockPackmindCliHexa.installPackages.mockResolvedValue({
               filesCreated: 2,
               filesUpdated: 0,
@@ -1417,7 +1418,7 @@ describe('installPackagesHandler', () => {
           let result: Awaited<ReturnType<typeof recursiveInstallHandler>>;
 
           beforeEach(async () => {
-            mockPackmindCliHexa.readConfig.mockResolvedValue(['backend']);
+            mockPackmindCliHexa.readFullConfig.mockResolvedValue({ packages: { backend: '*' } });
             mockPackmindCliHexa.installPackages.mockResolvedValue({
               filesCreated: 0,
               filesUpdated: 0,
@@ -1451,7 +1452,7 @@ describe('installPackagesHandler', () => {
           let result: Awaited<ReturnType<typeof recursiveInstallHandler>>;
 
           beforeEach(async () => {
-            mockPackmindCliHexa.readConfig.mockResolvedValue(['backend']);
+            mockPackmindCliHexa.readFullConfig.mockResolvedValue({ packages: { backend: '*' } });
             mockPackmindCliHexa.installPackages.mockResolvedValue({
               filesCreated: 2,
               filesUpdated: 0,
@@ -1508,7 +1509,7 @@ describe('installPackagesHandler', () => {
           hasConfigs: true,
           basePath: '/project',
         });
-        mockPackmindCliHexa.readConfig.mockResolvedValue(['backend']);
+        mockPackmindCliHexa.readFullConfig.mockResolvedValue({ packages: { backend: '*' } });
         mockPackmindCliHexa.installPackages.mockResolvedValue({
           filesCreated: 2,
           filesUpdated: 0,
@@ -1563,9 +1564,9 @@ describe('installPackagesHandler', () => {
         let result: Awaited<ReturnType<typeof recursiveInstallHandler>>;
 
         beforeEach(async () => {
-          mockPackmindCliHexa.readConfig
-            .mockResolvedValueOnce(['backend'])
-            .mockResolvedValueOnce(['nestjs']);
+          mockPackmindCliHexa.readFullConfig
+            .mockResolvedValueOnce({ packages: { backend: '*' } })
+            .mockResolvedValueOnce({ packages: { nestjs: '*' } });
           mockPackmindCliHexa.installPackages
             .mockRejectedValueOnce(new Error('Network error'))
             .mockResolvedValueOnce({
@@ -1594,7 +1595,7 @@ describe('installPackagesHandler', () => {
       });
 
       it('reports errors at the end', async () => {
-        mockPackmindCliHexa.readConfig.mockResolvedValue(['backend']);
+        mockPackmindCliHexa.readFullConfig.mockResolvedValue({ packages: { backend: '*' } });
         mockPackmindCliHexa.installPackages
           .mockRejectedValueOnce(new Error('Network error'))
           .mockResolvedValueOnce({
@@ -1614,7 +1615,7 @@ describe('installPackagesHandler', () => {
       });
 
       it('exits with 1', async () => {
-        mockPackmindCliHexa.readConfig.mockResolvedValue(['backend']);
+        mockPackmindCliHexa.readFullConfig.mockResolvedValue({ packages: { backend: '*' } });
         mockPackmindCliHexa.installPackages
           .mockRejectedValueOnce(new Error('Network error'))
           .mockResolvedValueOnce({
@@ -1654,7 +1655,7 @@ describe('installPackagesHandler', () => {
         let result: Awaited<ReturnType<typeof recursiveInstallHandler>>;
 
         beforeEach(async () => {
-          mockPackmindCliHexa.readConfig.mockRejectedValue(
+          mockPackmindCliHexa.readFullConfig.mockRejectedValue(
             new Error('Invalid JSON'),
           );
 
@@ -1717,7 +1718,7 @@ describe('installPackagesHandler', () => {
       });
 
       it('displays singular form in summary', async () => {
-        mockPackmindCliHexa.readConfig.mockResolvedValue(['backend']);
+        mockPackmindCliHexa.readFullConfig.mockResolvedValue({ packages: { backend: '*' } });
         mockPackmindCliHexa.installPackages.mockResolvedValue({
           filesCreated: 1,
           filesUpdated: 0,
