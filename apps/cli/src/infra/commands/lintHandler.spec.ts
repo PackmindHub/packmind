@@ -115,14 +115,14 @@ describe('lintHandler', () => {
     beforeEach(() => {
       mockPackmindCliHexa.tryGetGitRepositoryRoot.mockResolvedValue('/project');
       mockPackmindCliHexa.readHierarchicalConfig.mockResolvedValue({
-        hasConfigs: false,
-        configs: [],
+        hasConfigs: true,
+        configs: [{ path: '/project/packmind.json' }],
       });
     });
 
     describe('when no violations are found', () => {
       it('exits with code 0', async () => {
-        mockPackmindCliHexa.lintFilesInDirectory.mockResolvedValue({
+        mockPackmindCliHexa.lintFilesLocally.mockResolvedValue({
           violations: [],
           summary: {
             totalFiles: 1,
@@ -149,14 +149,8 @@ describe('lintHandler', () => {
           },
         ];
 
-        mockPackmindCliHexa.lintFilesInDirectory.mockResolvedValue({
+        mockPackmindCliHexa.lintFilesLocally.mockResolvedValue({
           violations,
-          summary: {
-            totalFiles: 1,
-            violatedFiles: 1,
-            totalViolations: 1,
-            standardsChecked: ['test'],
-          },
         });
 
         await lintHandler(createArgs({ path: '/project' }), deps);
@@ -177,14 +171,8 @@ describe('lintHandler', () => {
             },
           ];
 
-          mockPackmindCliHexa.lintFilesInDirectory.mockResolvedValue({
+          mockPackmindCliHexa.lintFilesLocally.mockResolvedValue({
             violations,
-            summary: {
-              totalFiles: 1,
-              violatedFiles: 1,
-              totalViolations: 1,
-              standardsChecked: ['test'],
-            },
           });
 
           await lintHandler(
@@ -198,14 +186,8 @@ describe('lintHandler', () => {
 
       describe('when no violations and --continue-on-error is set', () => {
         it('exits with code 0', async () => {
-          mockPackmindCliHexa.lintFilesInDirectory.mockResolvedValue({
+          mockPackmindCliHexa.lintFilesLocally.mockResolvedValue({
             violations: [],
-            summary: {
-              totalFiles: 1,
-              violatedFiles: 0,
-              totalViolations: 0,
-              standardsChecked: [],
-            },
           });
 
           await lintHandler(
@@ -223,17 +205,11 @@ describe('lintHandler', () => {
     beforeEach(() => {
       mockPackmindCliHexa.tryGetGitRepositoryRoot.mockResolvedValue('/project');
       mockPackmindCliHexa.readHierarchicalConfig.mockResolvedValue({
-        hasConfigs: false,
-        configs: [],
+        hasConfigs: true,
+        configs: [{ path: '/project/packmind.json' }],
       });
-      mockPackmindCliHexa.lintFilesInDirectory.mockResolvedValue({
+      mockPackmindCliHexa.lintFilesLocally.mockResolvedValue({
         violations: [],
-        summary: {
-          totalFiles: 0,
-          violatedFiles: 0,
-          totalViolations: 0,
-          standardsChecked: [],
-        },
       });
     });
 
@@ -267,16 +243,18 @@ describe('lintHandler', () => {
   });
 
   describe('linting mode selection', () => {
-    describe('when not in a git repository and no config files exist', () => {
+    describe('when no config files exist', () => {
       it('throws clear error message', async () => {
-        mockPackmindCliHexa.tryGetGitRepositoryRoot.mockResolvedValue(null);
+        mockPackmindCliHexa.tryGetGitRepositoryRoot.mockResolvedValue(
+          '/project',
+        );
         mockPackmindCliHexa.readHierarchicalConfig.mockResolvedValue({
           hasConfigs: false,
           configs: [],
         });
 
         await expect(lintHandler(createArgs(), deps)).rejects.toThrow(
-          'Unable to run linting: no packmind.json config found and this is not a Git repository',
+          'No packmind.json config found. Run `packmind-cli install <some-package>` first to set up linting.',
         );
       });
     });
@@ -313,30 +291,15 @@ describe('lintHandler', () => {
       });
 
       describe('when no config files exist', () => {
-        beforeEach(async () => {
+        it('throws error asking to install a package', async () => {
           mockPackmindCliHexa.readHierarchicalConfig.mockResolvedValue({
             hasConfigs: false,
             configs: [],
           });
-          mockPackmindCliHexa.lintFilesInDirectory.mockResolvedValue({
-            violations: [],
-            summary: {
-              totalFiles: 0,
-              violatedFiles: 0,
-              totalViolations: 0,
-              standardsChecked: [],
-            },
-          });
 
-          await lintHandler(createArgs(), deps);
-        });
-
-        it('calls lintFilesInDirectory', () => {
-          expect(mockPackmindCliHexa.lintFilesInDirectory).toHaveBeenCalled();
-        });
-
-        it('does not call lintFilesLocally', () => {
-          expect(mockPackmindCliHexa.lintFilesLocally).not.toHaveBeenCalled();
+          await expect(lintHandler(createArgs(), deps)).rejects.toThrow(
+            'No packmind.json config found. Run `packmind-cli install <some-package>` first to set up linting.',
+          );
         });
       });
 
@@ -395,17 +358,11 @@ describe('lintHandler', () => {
           '/project',
         );
         mockPackmindCliHexa.readHierarchicalConfig.mockResolvedValue({
-          hasConfigs: false,
-          configs: [],
+          hasConfigs: true,
+          configs: [{ path: '/project/packmind.json' }],
         });
-        mockPackmindCliHexa.lintFilesInDirectory.mockResolvedValue({
+        mockPackmindCliHexa.lintFilesLocally.mockResolvedValue({
           violations: [],
-          summary: {
-            totalFiles: 0,
-            violatedFiles: 0,
-            totalViolations: 0,
-            standardsChecked: [],
-          },
         });
 
         await lintHandler(createArgs({ diff: DiffMode.FILES }), deps);
@@ -419,17 +376,11 @@ describe('lintHandler', () => {
     it('logs completion time', async () => {
       mockPackmindCliHexa.tryGetGitRepositoryRoot.mockResolvedValue('/project');
       mockPackmindCliHexa.readHierarchicalConfig.mockResolvedValue({
-        hasConfigs: false,
-        configs: [],
+        hasConfigs: true,
+        configs: [{ path: '/project/packmind.json' }],
       });
-      mockPackmindCliHexa.lintFilesInDirectory.mockResolvedValue({
+      mockPackmindCliHexa.lintFilesLocally.mockResolvedValue({
         violations: [],
-        summary: {
-          totalFiles: 0,
-          violatedFiles: 0,
-          totalViolations: 0,
-          standardsChecked: [],
-        },
       });
 
       await lintHandler(createArgs(), deps);
@@ -444,14 +395,14 @@ describe('lintHandler', () => {
     beforeEach(() => {
       mockPackmindCliHexa.tryGetGitRepositoryRoot.mockResolvedValue('/project');
       mockPackmindCliHexa.readHierarchicalConfig.mockResolvedValue({
-        hasConfigs: false,
-        configs: [],
+        hasConfigs: true,
+        configs: [{ path: '/project/packmind.json' }],
       });
     });
 
     describe('when not logged in and flag is set', () => {
       beforeEach(async () => {
-        mockPackmindCliHexa.lintFilesInDirectory.mockRejectedValue(
+        mockPackmindCliHexa.lintFilesLocally.mockRejectedValue(
           new NotLoggedInError(),
         );
 
@@ -471,7 +422,7 @@ describe('lintHandler', () => {
 
     describe('when not logged in and flag is not set', () => {
       it('throws error', async () => {
-        mockPackmindCliHexa.lintFilesInDirectory.mockRejectedValue(
+        mockPackmindCliHexa.lintFilesLocally.mockRejectedValue(
           new NotLoggedInError(),
         );
 
@@ -483,7 +434,7 @@ describe('lintHandler', () => {
 
     describe('when non-API-key errors occur even with flag set', () => {
       it('rethrows the error', async () => {
-        mockPackmindCliHexa.lintFilesInDirectory.mockRejectedValue(
+        mockPackmindCliHexa.lintFilesLocally.mockRejectedValue(
           new Error('Some other error'),
         );
 
