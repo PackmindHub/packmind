@@ -3,7 +3,7 @@ import { ICreatePackageUseCase } from '../../domain/useCases/ICreatePackageUseCa
 export interface ICreatePackageHandlerResult {
   success: boolean;
   slug?: string;
-  name?: string;
+  packageName?: string;
   packageId?: string;
   error?: string;
 }
@@ -27,7 +27,7 @@ export async function createPackageHandler(
     return {
       success: true,
       slug: result.slug,
-      name: result.name,
+      packageName: result.name,
       packageId: result.packageId,
     };
   } catch (e) {

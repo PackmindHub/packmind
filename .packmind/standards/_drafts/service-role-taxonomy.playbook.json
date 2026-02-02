@@ -1,0 +1,47 @@
+{
+  "name": "Service Role Taxonomy",
+  "description": "Establish clear naming conventions and architectural roles for services across the codebase. Services fall into distinct categories based on their responsibility, dependencies, and location. Proper categorization improves code discoverability and prevents semantic confusion between domain services, infrastructure services, and adapters.",
+  "scope": "TypeScript service files in application/services/, infra/services/, and adapters/ directories across all packages",
+  "rules": [
+    {
+      "content": "Name domain CRUD services with {EntityName}Service pattern for application-layer services that orchestrate repository operations and business logic",
+      "examples": {
+        "positive": "packages/accounts/src/application/services/UserService.ts\npackages/standards/src/application/services/StandardService.ts\npackages/recipes/src/application/services/RecipeService.ts",
+        "negative": "packages/accounts/src/application/services/UserManagementAdapter.ts\npackages/standards/src/application/services/IStandardPort.ts",
+        "language": "TYPESCRIPT"
+      }
+    },
+    {
+      "content": "Name infrastructure services with {Capability}Service pattern and extend BaseService for cross-cutting concerns that manage lifecycle (init/destroy)",
+      "examples": {
+        "positive": "packages/node-utils/src/jobs/JobsService.ts\npackages/node-utils/src/mail/SmtpMailService.ts\npackages/node-utils/src/security/EncryptionService.ts",
+        "negative": "packages/node-utils/src/jobs/JobOrchestrator.ts\npackages/node-utils/src/mail/MailProvider.ts",
+        "language": "TYPESCRIPT"
+      }
+    },
+    {
+      "content": "Name LLM provider services with {VendorName}Service pattern for concrete implementations of AIService interface",
+      "examples": {
+        "positive": "packages/llm/src/infra/services/AnthropicService.ts\npackages/llm/src/infra/services/OpenAIService.ts\npackages/llm/src/infra/services/GeminiService.ts",
+        "negative": "packages/llm/src/infra/services/LLMClient.ts\npackages/llm/src/infra/services/AIProvider.ts",
+        "language": "TYPESCRIPT"
+      }
+    },
+    {
+      "content": "Name data generator services with {DataType}IndexService or {DataType}SummaryService pattern for stateless transformation utilities",
+      "examples": {
+        "positive": "packages/coding-agent/src/application/services/StandardsIndexService.ts\npackages/standards/src/application/services/StandardSummaryService.ts",
+        "negative": "packages/coding-agent/src/application/services/IndexBuilder.ts\npackages/standards/src/application/services/SummaryGenerator.ts",
+        "language": "TYPESCRIPT"
+      }
+    },
+    {
+      "content": "Locate domain entity services in packages/{domain}/src/application/services/, infrastructure services in packages/node-utils/src/*/, and LLM services in packages/llm/src/infra/services/",
+      "examples": {
+        "positive": "packages/standards/src/application/services/StandardService.ts ✓\npackages/node-utils/src/jobs/JobsService.ts ✓\npackages/llm/src/infra/services/AnthropicService.ts ✓",
+        "negative": "packages/standards/src/services/StandardService.ts (wrong path)\npackages/jobs/src/JobsService.ts (wrong location for infrastructure)",
+        "language": "TYPESCRIPT"
+      }
+    }
+  ]
+}

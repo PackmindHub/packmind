@@ -1,0 +1,39 @@
+{
+  "name": "Domain Events and Listeners Pattern",
+  "description": "Implement domain events using UserEvent/SystemEvent classes and PackmindListener base class to enable loose coupling between domains. Events follow naming convention 'domain.entity.action' (e.g., 'accounts.organization.created'), listeners register handlers in registerHandlers() method, and events are emitted from use cases through EventEmitterService.",
+  "scope": "All domain packages requiring async event-driven workflows between packages",
+  "rules": [
+    {
+      "content": "Define domain events by extending UserEvent or SystemEvent with typed payloads and static eventName property following 'domain.entity.action' naming convention",
+      "examples": {
+        "positive": "export type OrganizationCreatedPayload = {\n  organizationId: OrganizationId;\n  name: string;\n  slug: string;\n};\n\nexport class OrganizationCreatedEvent extends UserEvent<OrganizationCreatedPayload> {\n  static override readonly eventName = 'accounts.organization.created';\n\n  constructor(\n    organizationId: OrganizationId,\n    name: string,\n    slug: string,\n    userId: UserId,\n    organizationId: OrganizationId\n  ) {\n    super({\n      organizationId,\n      name,\n      slug\n    }, userId, organizationId);\n  }\n}",
+        "negative": "// WRONG: No typed payload or inconsistent naming\nexport class OrgCreated {\n  constructor(public data: any) {}\n}\n// WRONG: Missing eventName static property\nexport class OrganizationCreatedEvent extends UserEvent {\n  constructor(data: any) {\n    super(data, '', '');\n  }\n}",
+        "language": "TYPESCRIPT"
+      }
+    },
+    {
+      "content": "Create event listeners by extending PackmindListener and registering handlers in registerHandlers() method using arrow functions to maintain 'this' context",
+      "examples": {
+        "positive": "export class DeploymentsListener extends PackmindListener<IDeploymentsAdapter> {\n  protected registerHandlers(): void {\n    this.subscribe(CommandDeletedEvent, this.handleCommandDeleted);\n    this.subscribe(StandardDeletedEvent, this.handleStandardDeleted);\n  }\n\n  private handleCommandDeleted = async (event: CommandDeletedEvent): Promise<void> => {\n    const cmd = event.payload;\n    await this.getAdapter().deleteDeploymentsByCommandId({\n      commandId: cmd.commandId,\n      organizationId: event.organizationId\n    });\n  };\n\n  private handleStandardDeleted = async (event: StandardDeletedEvent): Promise<void> => {\n    const std = event.payload;\n    // Handle standard deletion\n  };\n}",
+        "negative": "// WRONG: Using regular method instead of arrow function\nexport class DeploymentsListener extends PackmindListener<IDeploymentsAdapter> {\n  protected registerHandlers(): void {\n    this.subscribe(CommandDeletedEvent, this.handleCommandDeleted);\n  }\n\n  private handleCommandDeleted(event: CommandDeletedEvent): Promise<void> {\n    // 'this' is undefined here!\n    return this.getAdapter().deleteDeploymentsByCommandId(...);\n  }\n}",
+        "language": "TYPESCRIPT"
+      }
+    },
+    {
+      "content": "Emit events from use cases via EventEmitterService injected through hexa, including user and organization context automatically",
+      "examples": {
+        "positive": "export class CreateOrganizationUseCase {\n  constructor(\n    private repositories: IAccountsRepositories,\n    private eventEmitterService: EventEmitterService\n  ) {}\n\n  async execute(cmd: CreateOrganizationCommand): Promise<Organization> {\n    const organization = Organization.create(cmd.name, cmd.slug, cmd.userId);\n    await this.repositories.getOrganizationRepository().save(organization);\n\n    // Emit event - userId and organizationId added automatically\n    this.eventEmitterService.emit(\n      new OrganizationCreatedEvent(\n        organization.id,\n        organization.name,\n        organization.slug,\n        cmd.userId,\n        organization.id\n      )\n    );\n\n    return organization;\n  }\n}",
+        "negative": "// WRONG: Event emission without proper context\nexport class CreateOrganizationUseCase {\n  execute(cmd: CreateOrganizationCommand): Promise<Organization> {\n    const organization = Organization.create(cmd.name, cmd.slug, cmd.userId);\n    // Not emitting event at all\n    return Promise.resolve(organization);\n  }\n}",
+        "language": "TYPESCRIPT"
+      }
+    },
+    {
+      "content": "Register event listeners in hexa's initialize() method to ensure they receive adapter instance and have access to other initialized hexas",
+      "examples": {
+        "positive": "export class DeploymentsHexa extends BaseHexa<IDeploymentsAdapter, DeploymentsAdapters> {\n  private listener: DeploymentsListener;\n\n  constructor(\n    dataSource: DataSource,\n    eventEmitterService: EventEmitterService\n  ) {\n    super('deployments');\n    this.repositories = new DeploymentsRepositories(dataSource);\n    this.listener = new DeploymentsListener(eventEmitterService);\n  }\n\n  async initialize(): Promise<void> {\n    this.adapters = new DeploymentsAdapters(this.repositories);\n    // Initialize listener after adapter is set\n    this.listener.initialize(this);\n    this.listener.registerHandlers();\n  }\n}",
+        "negative": "// WRONG: Creating listener before hexa is initialized\nexport class DeploymentsHexa extends BaseHexa {\n  private listener = new DeploymentsListener(this.eventEmitterService);\n  // 'this' is not fully initialized yet!\n}",
+        "language": "TYPESCRIPT"
+      }
+    }
+  ]
+}

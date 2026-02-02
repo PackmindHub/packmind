@@ -31,8 +31,8 @@ describe('createPackageHandler', () => {
       expect(result.slug).toBe('frontend');
     });
 
-    it('returns the name', () => {
-      expect(result.name).toBe('FrontEnd');
+    it('returns the packageName', () => {
+      expect(result.packageName).toBe('FrontEnd');
     });
 
     it('calls use case with correct command', () => {

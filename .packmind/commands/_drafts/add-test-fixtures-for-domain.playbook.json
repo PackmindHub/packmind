@@ -1,0 +1,58 @@
+{
+  "name": "Add Test Fixtures for Domain",
+  "summary": "Create comprehensive test factories and fixtures for a domain package to enable consistent test data generation. Factories provide sensible defaults, support partial overrides, and ensure type-safe ID creation across all test files",
+  "whenToUse": [
+    "Setting up test infrastructure for a new domain package",
+    "Adding missing factories for domain entities that lack test data builders",
+    "Centralizing scattered test data creation into reusable fixtures",
+    "Ensuring all domain entities have Factory<T> implementations"
+  ],
+  "contextValidationCheckpoints": [
+    "What domain package are we adding factories for?",
+    "What are all the primary entities in this domain (list them)?",
+    "Are there related/nested entities that should have factories referencing each other?",
+    "Are there complex multi-entity scenarios (deployments, configurations) that need builder functions?"
+  ],
+  "steps": [
+    {
+      "name": "Identify All Entities",
+      "description": "List all domain entities that need factories. Include primary entities and any value objects or related types used in tests."
+    },
+    {
+      "name": "Create Factory Files",
+      "description": "Create packages/{domain}/test/{entity}Factory.ts for each entity, importing Factory type and ID creators from @packmind/types and @packmind/test-utils."
+    },
+    {
+      "name": "Implement Simple Entity Factories",
+      "description": "For each entity, create a Factory<T> that generates instances with sensible defaults. Use create*Id() for all IDs."
+    },
+    {
+      "name": "Add Partial Override Support",
+      "description": "Ensure each factory accepts Partial<Entity> parameter and spreads it to allow callers to customize specific fields."
+    },
+    {
+      "name": "Create Nested Factories for Relations",
+      "description": "For entities with relationships, create factories that call other entity factories to build complete object graphs."
+    },
+    {
+      "name": "Create Complex Builder Functions",
+      "description": "For multi-entity scenarios (e.g., Deployment with related Package and Target), create create*() builder functions (not Factory type) that compose multiple entity factories."
+    },
+    {
+      "name": "Export All Factories",
+      "description": "Export factories from packages/{domain}/test/index.ts or directly from factory files for easy test imports."
+    },
+    {
+      "name": "Add Faker for Realistic Data",
+      "description": "Use randomIn() helper from @packmind/test-utils to generate varied test data where appropriate (choose realistic values from predefined options)."
+    },
+    {
+      "name": "Create Factory Usage Examples",
+      "description": "Add JSDoc examples on each factory showing basic usage and common override patterns."
+    },
+    {
+      "name": "Verify Type Safety",
+      "description": "Run TypeScript compiler to ensure all factories are properly typed and entities compile without warnings."
+    }
+  ]
+}

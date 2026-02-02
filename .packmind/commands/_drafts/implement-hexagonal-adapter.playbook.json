@@ -1,0 +1,58 @@
+{
+  "name": "Implement Hexagonal Adapter",
+  "summary": "Create a port adapter that exposes domain use cases to other domains via command/response pattern, following the double-interface implementation pattern. Adapters are the glue that connects domains while maintaining clean boundaries and enabling cross-domain communication",
+  "whenToUse": [
+    "A domain needs to be accessed by other domains in the monorepo",
+    "Exposing internal domain logic as a reusable service contract",
+    "Creating a cross-domain integration point while maintaining DDD boundaries",
+    "Adding new operations to an existing domain port"
+  ],
+  "contextValidationCheckpoints": [
+    "What domain is this adapter for? Does the I{Domain}Port interface already exist?",
+    "What use cases should this adapter expose? Are they already implemented?",
+    "Will other domains call this adapter? How (directly or via HexaRegistry)?",
+    "Does this adapter need to transform use case responses to port response types?"
+  ],
+  "steps": [
+    {
+      "name": "Verify Port Interface Exists",
+      "description": "Ensure I{Domain}Port is defined in packages/types/src/{domain}/ports/. If not, create it first with all method signatures that the adapter should implement."
+    },
+    {
+      "name": "Create Adapter File",
+      "description": "Create packages/{domain}/src/application/adapter/{Domain}Adapter.ts that implements both IBaseAdapter and the domain port interface."
+    },
+    {
+      "name": "Implement Double-Interface Pattern",
+      "description": "Declare class as: export class {Domain}Adapter implements IBaseAdapter<I{Domain}Port>, I{Domain}Port to satisfy both hexagonal and domain contracts."
+    },
+    {
+      "name": "Inject Use Cases in Constructor",
+      "description": "Inject all required use cases as dependencies in the adapter constructor with proper typing and initialization."
+    },
+    {
+      "name": "Implement Port Methods",
+      "description": "For each port method, implement a corresponding method that delegates to the appropriate use case and transforms responses if needed."
+    },
+    {
+      "name": "Add Logging and Error Handling",
+      "description": "Log method entry/exit and errors consistently. Adapt use case exceptions to port response types if the port uses Result patterns."
+    },
+    {
+      "name": "Register Adapter in HexaRegistry",
+      "description": "During application initialization, register the adapter: registry.register(I{Domain}Port, adapterInstance) so other domains can discover it."
+    },
+    {
+      "name": "Create Adapter Tests",
+      "description": "Write tests verifying the adapter delegates to use cases correctly, transforms responses, and handles errors appropriately."
+    },
+    {
+      "name": "Export from Package Index",
+      "description": "Add export to packages/{domain}/src/index.ts so adapter is accessible: export { {Domain}Adapter } from './application/adapter/{Domain}Adapter'."
+    },
+    {
+      "name": "Document Cross-Domain Contract",
+      "description": "Add JSDoc comments explaining each port method, its contract, and any domain-specific constraints callers should know."
+    }
+  ]
+}
