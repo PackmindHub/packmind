@@ -321,6 +321,8 @@ const CLI_LIST_COMMANDS_LICENSE = `
 `;
 
 export class CliListCommandsDeployer implements ISkillDeployer {
+  public readonly minimumVersion = 'unreleased';
+
   deploy(_agentName: string, skillsFolderPath: string): FileUpdates {
     const basePath = `${skillsFolderPath}packmind-cli-list-commands`;
 
