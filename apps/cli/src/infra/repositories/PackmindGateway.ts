@@ -961,11 +961,11 @@ export class PackmindGateway implements IPackmindGateway {
     const space = await this.getGlobalSpace();
     const { organizationId } = this.httpClient.getAuthContext();
 
-    const response = await this.httpClient.request<{
-      recipes: Array<{ id: string; slug: string; name: string }>;
-    }>(`/api/v0/organizations/${organizationId}/spaces/${space.id}/recipes`);
+    const recipes = await this.httpClient.request<
+      Array<{ id: string; slug: string; name: string }>
+    >(`/api/v0/organizations/${organizationId}/spaces/${space.id}/recipes`);
 
-    return response.recipes.map((r) => ({
+    return recipes.map((r) => ({
       id: r.id,
       slug: r.slug,
       name: r.name,
