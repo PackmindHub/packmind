@@ -16,6 +16,7 @@ export type MockPackmindGatewayOverrides = {
   getRulesForStandard?: jest.Mocked<IPackmindGateway>['getRulesForStandard'];
   addExampleToRule?: jest.Mocked<IPackmindGateway>['addExampleToRule'];
   createCommand?: jest.Mocked<IPackmindGateway>['createCommand'];
+  createPackage?: jest.Mocked<IPackmindGateway>['createPackage'];
   pushOnboardingBaseline?: jest.Mocked<IPackmindGateway>['pushOnboardingBaseline'];
 };
 
@@ -37,6 +38,7 @@ export function createMockPackmindGateway(
     getRulesForStandard: jest.fn(),
     addExampleToRule: jest.fn(),
     createCommand: jest.fn(),
+    createPackage: jest.fn(),
     pushOnboardingBaseline: jest.fn(),
     ...overrides,
   };
