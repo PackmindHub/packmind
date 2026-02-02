@@ -2,6 +2,7 @@
 
 ## Added
 
+- Create packages with the CLI using `packmind-cli packages create <name>`
 - Create commands with the CLI using `packmind-cli commands create <playbook.json>`
 - packmind-onboard skill with structured step-based guidance and AI-driven project analysis
 
