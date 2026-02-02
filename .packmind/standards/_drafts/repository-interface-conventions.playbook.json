@@ -1,0 +1,47 @@
+{
+  "name": "Repository Interface Conventions",
+  "description": "Establish consistent patterns for repository interfaces that provide domain-internal data access contracts. Repository interfaces define CRUD operations and queries on domain entities, maintaining separation between domain logic and infrastructure persistence.",
+  "scope": "Interface definitions in packages/{domain}/src/domain/repositories/ and packages/{domain}/src/application/repositories/",
+  "rules": [
+    {
+      "content": "Name all repository interfaces with I{EntityName}Repository pattern to distinguish from port interfaces and internal services",
+      "examples": {
+        "positive": "packages/standards/src/domain/repositories/IStandardRepository.ts\npackages/accounts/src/domain/repositories/IUserRepository.ts",
+        "negative": "packages/standards/src/domain/repositories/StandardRepository.ts\npackages/accounts/src/domain/repositories/IUserDataAccess.ts",
+        "language": "TYPESCRIPT"
+      }
+    },
+    {
+      "content": "Extend IRepository<Entity> generic base interface to inherit standard CRUD patterns: add(), findById(), delete()",
+      "examples": {
+        "positive": "export interface IStandardRepository extends IRepository<Standard> {\n  findBySlug(slug: StandardSlug, organizationId: OrganizationId): Promise<Standard | null>;\n}",
+        "negative": "export interface IStandardRepository {\n  add(standard: Standard): Promise<void>;\n  findById(id: StandardId): Promise<Standard | null>;\n  // duplicate base methods\n}",
+        "language": "TYPESCRIPT"
+      }
+    },
+    {
+      "content": "Define domain-specific finder methods using findBy* pattern: findBySlug(), findByOrganizationId(), findByUserId() to expose repository capabilities",
+      "examples": {
+        "positive": "findBySlug(slug: StandardSlug, organizationId: OrganizationId, opts?: QueryOption): Promise<Standard | null>;\nfindByOrganizationId(organizationId: OrganizationId): Promise<Standard[]>;",
+        "negative": "search(criteria: any): Promise<Standard[]>;\nquery(sql: string): Promise<Standard[]>;",
+        "language": "TYPESCRIPT"
+      }
+    },
+    {
+      "content": "Support soft-delete semantics by accepting QueryOption parameter with includeDeleted flag on finder methods",
+      "examples": {
+        "positive": "findById(id: StandardId, opts?: QueryOption): Promise<Standard | null>;\n// Where QueryOption = { includeDeleted?: boolean }",
+        "negative": "findById(id: StandardId, includeSoftDeleted?: boolean): Promise<Standard | null>;",
+        "language": "TYPESCRIPT"
+      }
+    },
+    {
+      "content": "Implement repository interfaces extending AbstractRepository<Entity> in packages/{domain}/src/infra/repositories/ with consistent error handling and logging",
+      "examples": {
+        "positive": "export class StandardRepository extends AbstractRepository<Standard> implements IStandardRepository {\n  constructor(repository: Repository<StandardSchema>, logger?: PackmindLogger) { ... }\n}",
+        "negative": "export class StandardRepository implements IStandardRepository {\n  // missing AbstractRepository extension\n}",
+        "language": "TYPESCRIPT"
+      }
+    }
+  ]
+}

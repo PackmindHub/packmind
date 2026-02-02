@@ -1,0 +1,39 @@
+{
+  "name": "Cross-Domain Communication via Ports and Adapters",
+  "description": "Enable loose coupling between domain packages using port interfaces defined in @packmind/types, typed command/response contracts, and adapter pattern with HexaRegistry for dependency resolution. Domains expose adapters through ports, services inject adapters and call port methods with typed commands.",
+  "scope": "All inter-package dependencies and service-layer communication in apps/api and cross-package use cases",
+  "rules": [
+    {
+      "content": "Define port interfaces in @packmind/types with methods accepting strongly-typed command/response pairs from domain contracts",
+      "examples": {
+        "positive": "// packages/types/src/accounts/ports/IAccountsPort.ts\nexport type IAccountsPort = {\n  generateApiKey(cmd: GenerateApiKeyCommand): Promise<GenerateApiKeyResponse>;\n  getOrganizationUser(cmd: GetOrganizationUserCommand): Promise<GetOrganizationUserResponse>;\n  validateUserExists(cmd: ValidateUserExistsCommand): Promise<ValidateUserExistsResponse>;\n};\n\n// Each command/response is defined separately\nexport type GenerateApiKeyCommand = PackmindCommand & {\n  userId: UserId;\n  organizationId: OrganizationId;\n};\n\nexport type GenerateApiKeyResponse = PackmindResult & {\n  apiKey: string;\n  expiresAt: Date;\n};",
+        "negative": "// WRONG: Untyped port\nexport type IAccountsPort = {\n  generateApiKey(data: any): Promise<any>;\n  getUser(id: string): Promise<User | null>;\n};\n\n// WRONG: Port methods return raw entities\nexport type IAccountsPort = {\n  findUser(id: UserId): Promise<User>; // Returns entity directly\n};",
+        "language": "TYPESCRIPT"
+      }
+    },
+    {
+      "content": "Create adapters that implement port interfaces and delegate to use cases, extracting domain logic into use cases that take command inputs and return typed responses",
+      "examples": {
+        "positive": "export class AccountsAdapters implements IAccountsPort {\n  constructor(\n    private repositories: IAccountsRepositories,\n    private generateApiKeyUseCase: IGenerateApiKeyUseCase,\n    private getOrganizationUserUseCase: IGetOrganizationUserUseCase\n  ) {}\n\n  async generateApiKey(cmd: GenerateApiKeyCommand): Promise<GenerateApiKeyResponse> {\n    return this.generateApiKeyUseCase.execute(cmd);\n  }\n\n  async getOrganizationUser(cmd: GetOrganizationUserCommand): Promise<GetOrganizationUserResponse> {\n    return this.getOrganizationUserUseCase.execute(cmd);\n  }\n\n  async validateUserExists(cmd: ValidateUserExistsCommand): Promise<ValidateUserExistsResponse> {\n    const user = await this.repositories.getUserRepository().findById(cmd.userId);\n    return { exists: user !== null };\n  }\n}",
+        "negative": "// WRONG: Adapter contains business logic\nexport class AccountsAdapters {\n  async generateApiKey(cmd: any): Promise<any> {\n    const user = await this.repositories.getUserRepository().findById(cmd.userId);\n    // Generate API key here directly\n    const key = crypto.randomBytes(32).toString('hex');\n    // ... validation logic\n  }\n}\n\n// WRONG: Port returns internal domain objects\nexport class AccountsAdapters implements IAccountsPort {\n  async getOrganizationUser(cmd: any): Promise<User> {\n    return this.repositories.getUserRepository().findById(cmd.userId);\n  }\n}",
+        "language": "TYPESCRIPT"
+      }
+    },
+    {
+      "content": "Inject adapters in NestJS services using custom decorator tokens, never access repositories directly from services, and call port methods with typed commands",
+      "examples": {
+        "positive": "export class StandardsService {\n  constructor(\n    @InjectSpacesAdapter() private spacesAdapter: ISpacesPort,\n    @InjectStandardsAdapter() private standardsAdapter: IStandardsPort\n  ) {}\n\n  async listStandardsBySpace(spaceId: SpaceId): Promise<StandardDTO[]> {\n    // Call adapter with typed command\n    const response = await this.standardsAdapter.listStandardsBySpace({\n      spaceId,\n      organizationId: this.getCurrentOrganizationId()\n    });\n    return response.standards.map(this.mapToDTO);\n  }\n}\n\n// In module:\nproviders: [\n  StandardsService,\n  {\n    provide: 'STANDARDS_ADAPTER_TOKEN',\n    useFactory: (standardsHexa: StandardsHexa) => standardsHexa.getAdapter(),\n    inject: [StandardsHexa]\n  }\n]",
+        "negative": "// WRONG: Direct repository access\nexport class StandardsService {\n  constructor(private standardsRepository: StandardRepository) {}\n\n  async listStandardsBySpace(spaceId: string): Promise<StandardDTO[]> {\n    return this.standardsRepository.findBySpaceId(spaceId);\n  }\n}\n\n// WRONG: Calling use case directly\nexport class StandardsService {\n  constructor(private listStandardsUseCase: ListStandardsUseCase) {}\n\n  async list(spaceId: string): Promise<Standard[]> {\n    return this.listStandardsUseCase.execute({ spaceId });\n  }\n}",
+        "language": "TYPESCRIPT"
+      }
+    },
+    {
+      "content": "Use HexaRegistry to resolve adapter dependencies in the correct order, respecting inter-domain dependencies during hexa initialization",
+      "examples": {
+        "positive": "// SpacesHexa registered before AccountsHexa\nHexaRegistryModule.register({\n  hexas: [\n    SpacesHexa,       // No dependencies\n    AccountsHexa,     // Can access SpacesAdapter\n    GitHexa,          // No dependencies\n    StandardsHexa,    // Can access SpacesAdapter\n    DeploymentsHexa   // Can access all adapters\n  ]\n});\n\n// In StandardsHexa.initialize()\nasync initialize(): Promise<void> {\n  // Now SpacesAdapter is available\n  const spacesAdapter = this.registry.getAdapter<ISpacesPort>('spaces');\n  this.adapters = new StandardsAdapters(this.repositories, spacesAdapter);\n}",
+        "negative": "// WRONG: Random order\nHexaRegistryModule.register({\n  hexas: [StandardsHexa, SpacesHexa, AccountsHexa] // StandardsHexa before SpacesHexa!\n});\n\n// WRONG: Accessing adapter before it's initialized\nexport class StandardsHexa extends BaseHexa {\n  constructor() {\n    const spacesAdapter = this.registry.getAdapter('spaces'); // undefined!\n  }\n}",
+        "language": "TYPESCRIPT"
+      }
+    }
+  ]
+}

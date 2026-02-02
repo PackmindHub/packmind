@@ -1,0 +1,47 @@
+{
+  "name": "Test Data Factory Conventions",
+  "description": "Establish consistent patterns for creating test data using factory functions. Factories provide sensible defaults, support partial overrides, and ensure type-safe ID creation. This pattern reduces test boilerplate and improves maintainability of test suites.",
+  "scope": "Test files in packages/*/test/*Factory.ts and *.spec.ts files that create test data",
+  "rules": [
+    {
+      "content": "Create factory functions for every domain entity using Factory<T> type from @packmind/test-utils with pattern: export const {entityName}Factory: Factory<Type>",
+      "examples": {
+        "positive": "export const userFactory: Factory<User> = (opts?: Partial<User>) => {\n  return {\n    id: createUserId(uuidv4()),\n    email: 'test@example.com',\n    ...opts,\n  };\n};",
+        "negative": "function createUser(overrides?: Partial<User>) { ... }\nconst createUserData = () => ({ id: '123', ... });",
+        "language": "TYPESCRIPT"
+      }
+    },
+    {
+      "content": "Use create*Id() helpers from @packmind/types for all ID generation to ensure type safety with Branded types",
+      "examples": {
+        "positive": "const userId = createUserId(uuidv4());\nconst standardId = createStandardId(uuidv4());",
+        "negative": "const userId = 'user-123' as UserId;\nconst standardId = randomUUID();",
+        "language": "TYPESCRIPT"
+      }
+    },
+    {
+      "content": "Provide sensible defaults for all required fields in factories, allowing callers to override via Partial<T> parameter",
+      "examples": {
+        "positive": "export const userFactory: Factory<User> = (opts) => ({\n  id: createUserId(uuidv4()),\n  email: 'user@example.com',\n  passwordHash: 'hashed',\n  active: true,\n  ...opts,\n});",
+        "negative": "export const userFactory: Factory<User> = (opts) => ({\n  ...opts,\n  // missing defaults\n});",
+        "language": "TYPESCRIPT"
+      }
+    },
+    {
+      "content": "Use nested factories to create related entities, enabling convenient creation of complex test data scenarios",
+      "examples": {
+        "positive": "export const deploymentOverviewFactory = (opts?: Partial<DeploymentOverview>) => {\n  const recipe = recipeFactory();\n  const deployedVersion = recipeVersionFactory({ recipeId: recipe.id });\n  return { recipe, deployedVersion, ...opts };\n};",
+        "negative": "// Creating entities without relationships\nconst recipe = recipeFactory();\nconst version = recipeVersionFactory();",
+        "language": "TYPESCRIPT"
+      }
+    },
+    {
+      "content": "For complex multi-entity scenarios, use create*() builder function naming (not Factory type) to signal stateful construction",
+      "examples": {
+        "positive": "export const createDeployedRecipeInfo = (...) => {\n  const recipe = recipeFactory();\n  const deployedVersion = recipeVersionFactory({ recipeId: recipe.id });\n  return { recipe, deployedVersion };\n};",
+        "negative": "export const deployedRecipeInfoFactory: Factory<DeployedRecipeInfo> = (...) => { ... };",
+        "language": "TYPESCRIPT"
+      }
+    }
+  ]
+}
