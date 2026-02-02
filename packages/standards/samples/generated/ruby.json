@@ -1,0 +1,88 @@
+{
+  "name": "Ruby Best Practices",
+  "summary": "Advanced Ruby standards for production codebases covering reliability, security, concurrency, configuration, and operational correctness in core Ruby programs and libraries.",
+  "description": "This standard defines high-impact Ruby practices for managing resources, handling errors, validating inputs, controlling network behavior, maintaining thread safety, producing useful logs, managing configuration, and isolating tests using core Ruby patterns and common Ruby libraries (without framework-specific guidance).",
+  "scope": "**/*.rb",
+  "rules": [
+    {
+      "content": "Use block-based resource APIs for IO, files, and locks; wrap non-block resources with ensure to close or unlock.",
+      "examples": {
+        "positive": "File.open(path, \"w\") { |f| f.write(payload) }\n\nmutex.synchronize do\n  shared << item\nend\n\nsocket = TCPSocket.new(host, port)\nbegin\n  socket.write(data)\nensure\n  socket.close\nend\n",
+        "negative": "f = File.open(path, \"w\")\nf.write(payload)\n# leaked if exception occurs\n\nmutex.lock\nshared << item\n# unlocked only on happy path\nmutex.unlock\n",
+        "language": "RUBY"
+      }
+    },
+    {
+      "content": "Raise specific exception classes and rescue narrowly; re-raise after adding context instead of rescuing StandardError broadly.",
+      "examples": {
+        "positive": "class ParseError < StandardError; end\n\ndef parse_int!(s)\n  Integer(s, 10)\nrescue ArgumentError => e\n  raise ParseError, \"invalid integer: #{s.inspect}\", e.backtrace\nend\n",
+        "negative": "def parse_int!(s)\n  Integer(s, 10)\nrescue StandardError\n  nil\nend\n",
+        "language": "RUBY"
+      }
+    },
+    {
+      "content": "Include structured context in logs at boundaries and on errors; log backtraces explicitly instead of only exception messages.",
+      "examples": {
+        "positive": "logger.error(\n  event: \"job_failed\",\n  job_id: job_id,\n  error_class: e.class.name,\n  error: e.message,\n  backtrace: e.backtrace&.first(20)\n)\n",
+        "negative": "logger.error(\"job failed: #{e}\")\n",
+        "language": "RUBY"
+      }
+    },
+    {
+      "content": "Validate and normalize external inputs at boundaries; use strict coercion and explicit allowlists rather than implicit conversions.",
+      "examples": {
+        "positive": "ALLOWED_SORTS = %w[name created_at].freeze\n\ndef normalize_params(params)\n  limit = Integer(params.fetch(:limit, 50))\n  sort = params.fetch(:sort, \"created_at\").to_s\n  raise ArgumentError, \"invalid sort\" unless ALLOWED_SORTS.include?(sort)\n  { limit: [[limit, 1].max, 500].min, sort: sort }\nend\n",
+        "negative": "def normalize_params(params)\n  limit = params[:limit].to_i\n  sort = params[:sort]\n  { limit: limit, sort: sort }\nend\n",
+        "language": "RUBY"
+      }
+    },
+    {
+      "content": "Set explicit open/read/write timeouts on all network clients and use bounded retries with jitter for transient failures.",
+      "examples": {
+        "positive": "require \"net/http\"\n\nuri = URI(url)\nhttp = Net::HTTP.new(uri.host, uri.port)\nhttp.use_ssl = (uri.scheme == \"https\")\nhttp.open_timeout = 2\nhttp.read_timeout = 5\nhttp.write_timeout = 5 if http.respond_to?(:write_timeout=)\n\nattempts = 0\nbegin\n  attempts += 1\n  req = Net::HTTP::Get.new(uri)\n  res = http.request(req)\nrescue Net::OpenTimeout, Net::ReadTimeout, Errno::ECONNRESET => e\n  raise if attempts >= 3\n  sleep(rand * (2 ** attempts) * 0.1)\n  retry\nend\n",
+        "negative": "require \"net/http\"\n\nres = Net::HTTP.get_response(URI(url))\n# no timeouts, no retry bounds\n",
+        "language": "RUBY"
+      }
+    },
+    {
+      "content": "Avoid shared mutable state across threads; guard writes with Mutex or use thread-safe collections for shared data.",
+      "examples": {
+        "positive": "require \"concurrent\"\n\ncounts = Concurrent::Hash.new(0)\nthreads = 10.times.map do\n  Thread.new do\n    1000.times { counts.compute(:ok) { |v| v + 1 } }\n  end\nend\nthreads.each(&:join)\n",
+        "negative": "counts = Hash.new(0)\nthreads = 10.times.map do\n  Thread.new do\n    1000.times { counts[:ok] += 1 }\n  end\nend\nthreads.each(&:join)\n",
+        "language": "RUBY"
+      }
+    },
+    {
+      "content": "Return copies of mutable collections from public APIs and freeze exported constants holding arrays or hashes.",
+      "examples": {
+        "positive": "DEFAULT_HEADERS = { \"Accept\" => \"application/json\" }.freeze\n\nclass Client\n  def initialize\n    @headers = { \"User-Agent\" => \"app\" }\n  end\n\n  def headers\n    @headers.dup\n  end\nend\n",
+        "negative": "DEFAULT_HEADERS = { \"Accept\" => \"application/json\" }\n\nclass Client\n  def initialize\n    @headers = { \"User-Agent\" => \"app\" }\n  end\n\n  def headers\n    @headers\n  end\nend\n",
+        "language": "RUBY"
+      }
+    },
+    {
+      "content": "Inject external dependencies via initializer parameters and avoid global singletons for clients, clocks, randomness, and configuration readers.",
+      "examples": {
+        "positive": "class Notifier\n  def initialize(http:, logger:, clock: Time)\n    @http = http\n    @logger = logger\n    @clock = clock\n  end\nend\n\nnotifier = Notifier.new(http: Net::HTTP, logger: Logger.new($stdout))\n",
+        "negative": "$http = Net::HTTP\n\nclass Notifier\n  def call\n    $http.get(URI(\"https://example.com\"))\n  end\nend\n",
+        "language": "RUBY"
+      }
+    },
+    {
+      "content": "Load configuration from explicit sources and fail fast on missing keys; keep ENV access at startup and pass values into objects.",
+      "examples": {
+        "positive": "Config = Struct.new(:api_key, :endpoint, keyword_init: true)\n\ndef load_config(env)\n  api_key = env.fetch(\"API_KEY\")\n  endpoint = env.fetch(\"ENDPOINT\")\n  Config.new(api_key: api_key, endpoint: endpoint)\nend\n\nconfig = load_config(ENV)\nclient = Client.new(api_key: config.api_key, endpoint: config.endpoint)\n",
+        "negative": "class Client\n  def initialize\n    @api_key = ENV[\"API_KEY\"]\n    @endpoint = ENV[\"ENDPOINT\"] || \"\"\n  end\nend\n",
+        "language": "RUBY"
+      }
+    },
+    {
+      "content": "Isolate tests from time, randomness, and network by stubbing collaborators; avoid real sleeps and external calls in unit tests.",
+      "examples": {
+        "positive": "require \"minitest/autorun\"\n\nclass Clock\n  def now; Time.now; end\nend\n\nclass Greeter\n  def initialize(clock: Clock.new)\n    @clock = clock\n  end\n  def greeting\n    @clock.now.hour < 12 ? \"morning\" : \"hello\"\n  end\nend\n\nclass GreeterTest < Minitest::Test\n  def test_greeting_morning\n    fake_clock = Object.new\n    def fake_clock.now = Time.new(2025, 1, 1, 9, 0, 0)\n    assert_equal \"morning\", Greeter.new(clock: fake_clock).greeting\n  end\nend\n",
+        "negative": "require \"minitest/autorun\"\n\nclass GreeterTest < Minitest::Test\n  def test_greeting\n    sleep 1\n    assert_includes %w[morning hello], Greeter.new.greeting\n  end\nend\n",
+        "language": "RUBY"
+      }
+    }
+  ]
+}

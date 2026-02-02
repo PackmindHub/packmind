@@ -1,0 +1,88 @@
+{
+  "name": "C Best Practices",
+  "summary": "Advanced C rules for production code that interacts with memory, OS resources, concurrency, external inputs, and failure-prone dependencies.",
+  "description": "This standard covers high-impact C practices for reliable error propagation, resource lifetime control, input and configuration validation, safe interfaces, concurrency correctness, network I/O robustness, and diagnostics suitable for production operations.",
+  "scope": "**/*.c,**/*.h",
+  "rules": [
+    {
+      "content": "Centralize function cleanup with a single exit path and explicit release steps; use goto cleanup for multi-resource acquisition.",
+      "examples": {
+        "positive": "int load_file(const char *path, char **out, size_t *out_len) {\n    int rc = -1;\n    FILE *f = NULL;\n    char *buf = NULL;\n    long n;\n\n    f = fopen(path, \"rb\");\n    if (!f) goto cleanup;\n\n    if (fseek(f, 0, SEEK_END) != 0) goto cleanup;\n    n = ftell(f);\n    if (n < 0) goto cleanup;\n    if (fseek(f, 0, SEEK_SET) != 0) goto cleanup;\n\n    buf = malloc((size_t)n + 1);\n    if (!buf) goto cleanup;\n\n    if (fread(buf, 1, (size_t)n, f) != (size_t)n) goto cleanup;\n    buf[n] = '\\0';\n\n    *out = buf; buf = NULL;\n    *out_len = (size_t)n;\n    rc = 0;\n\ncleanup:\n    free(buf);\n    if (f) fclose(f);\n    return rc;\n}\n",
+        "negative": "int load_file(const char *path, char **out, size_t *out_len) {\n    FILE *f = fopen(path, \"rb\");\n    if (!f) return -1;\n\n    char *buf = malloc(1024);\n    if (!buf) return -1; /* leaks f */\n\n    if (fread(buf, 1, 1024, f) == 0) return -1; /* leaks buf and f */\n\n    *out = buf;\n    *out_len = 1024;\n    fclose(f);\n    return 0;\n}\n",
+        "language": "GENERIC"
+      }
+    },
+    {
+      "content": "Return explicit status codes and write outputs via out-parameters; always initialize out-parameters on entry and on error paths.",
+      "examples": {
+        "positive": "int parse_u32(const char *s, uint32_t *out) {\n    if (out) *out = 0;\n    if (!s || !out) return -1;\n\n    errno = 0;\n    char *end = NULL;\n    unsigned long v = strtoul(s, &end, 10);\n    if (errno != 0 || end == s || *end != '\\0' || v > UINT32_MAX) return -2;\n\n    *out = (uint32_t)v;\n    return 0;\n}\n",
+        "negative": "uint32_t parse_u32(const char *s) {\n    return (uint32_t)atoi(s); /* no error reporting; silent truncation */\n}\n",
+        "language": "GENERIC"
+      }
+    },
+    {
+      "content": "Check every syscall/stdlib return value and preserve errno immediately after failure before any other call overwrites it.",
+      "examples": {
+        "positive": "int fd = open(path, O_RDONLY);\nif (fd < 0) {\n    int err = errno;\n    log_error(\"open failed\", err);\n    return -1;\n}\n",
+        "negative": "int fd = open(path, O_RDONLY);\nif (fd < 0) {\n    perror(\"open\");\n    errno = 0; /* clobbers diagnostic */\n    return -1;\n}\n",
+        "language": "GENERIC"
+      }
+    },
+    {
+      "content": "Validate all external sizes and indices with overflow-safe arithmetic before allocation, copy, or pointer math.",
+      "examples": {
+        "positive": "int alloc_items(size_t count, size_t size, void **out) {\n    if (out) *out = NULL;\n    if (!out) return -1;\n\n    if (count == 0 || size == 0) return -2;\n    if (count > SIZE_MAX / size) return -3;\n\n    void *p = malloc(count * size);\n    if (!p) return -4;\n    *out = p;\n    return 0;\n}\n",
+        "negative": "void *alloc_items(size_t count, size_t size) {\n    return malloc(count * size); /* overflow wraps; undersized allocation */\n}\n",
+        "language": "GENERIC"
+      }
+    },
+    {
+      "content": "Prefer length-bounded APIs with explicit buffer size and returned length; avoid unbounded string functions in new code.",
+      "examples": {
+        "positive": "int format_msg(char *buf, size_t cap, int code) {\n    int n = snprintf(buf, cap, \"code=%d\", code);\n    if (n < 0 || (size_t)n >= cap) return -1;\n    return n;\n}\n",
+        "negative": "void format_msg(char *buf, int code) {\n    sprintf(buf, \"code=%d\", code); /* no cap */\n}\n",
+        "language": "GENERIC"
+      }
+    },
+    {
+      "content": "Treat pointers as non-owning or owning by contract; represent ownership transfer explicitly in function names and comments near declarations.",
+      "examples": {
+        "positive": "/* Takes ownership of heap_buf on success; caller retains on error. */\nint cache_put_take(char *heap_buf, size_t len);\n\nint cache_put_take(char *heap_buf, size_t len) {\n    if (!heap_buf || len == 0) return -1;\n    /* ... store ... */\n    free(heap_buf);\n    return 0;\n}\n",
+        "negative": "int cache_put(char *buf, size_t len) {\n    /* unclear ownership */\n    free(buf); /* caller may also free */\n    return 0;\n}\n",
+        "language": "GENERIC"
+      }
+    },
+    {
+      "content": "Isolate shared mutable state behind one synchronization primitive; read and write the state only while holding that lock.",
+      "examples": {
+        "positive": "static pthread_mutex_t g_mu = PTHREAD_MUTEX_INITIALIZER;\nstatic int g_counter;\n\nint counter_inc(void) {\n    pthread_mutex_lock(&g_mu);\n    int v = ++g_counter;\n    pthread_mutex_unlock(&g_mu);\n    return v;\n}\n",
+        "negative": "static int g_counter;\n\nint counter_inc(void) {\n    return ++g_counter; /* data race under threads */\n}\n",
+        "language": "GENERIC"
+      }
+    },
+    {
+      "content": "Set explicit connect/read/write timeouts for all network I/O and propagate timeout status distinctly from other errors.",
+      "examples": {
+        "positive": "int set_socket_timeouts(int fd, int ms) {\n    struct timeval tv;\n    tv.tv_sec = ms / 1000;\n    tv.tv_usec = (ms % 1000) * 1000;\n    if (setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv)) != 0) return -1;\n    if (setsockopt(fd, SOL_SOCKET, SO_SNDTIMEO, &tv, sizeof(tv)) != 0) return -1;\n    return 0;\n}\n",
+        "negative": "int fd = socket(AF_INET, SOCK_STREAM, 0);\nconnect(fd, (struct sockaddr *)&addr, sizeof(addr));\nrecv(fd, buf, sizeof(buf), 0); /* blocks indefinitely */\n",
+        "language": "GENERIC"
+      }
+    },
+    {
+      "content": "Handle partial reads and writes by looping until completion, EOF, or error; treat EINTR as retry for I/O calls.",
+      "examples": {
+        "positive": "ssize_t write_all(int fd, const void *buf, size_t len) {\n    const uint8_t *p = (const uint8_t *)buf;\n    size_t off = 0;\n    while (off < len) {\n        ssize_t n = write(fd, p + off, len - off);\n        if (n > 0) { off += (size_t)n; continue; }\n        if (n < 0 && errno == EINTR) continue;\n        return -1;\n    }\n    return (ssize_t)off;\n}\n",
+        "negative": "ssize_t send_msg(int fd, const void *buf, size_t len) {\n    return write(fd, buf, len); /* assumes full write */\n}\n",
+        "language": "GENERIC"
+      }
+    },
+    {
+      "content": "Inject OS and external dependencies via function pointers or small interfaces; avoid direct calls to time, env, filesystem, and network in core logic.",
+      "examples": {
+        "positive": "typedef struct {\n    int (*read_file)(const char *path, char **out, size_t *out_len);\n    int (*now_ms)(int64_t *out);\n} Deps;\n\nint do_work(const Deps *d, const char *path) {\n    char *data = NULL; size_t n = 0;\n    if (d->read_file(path, &data, &n) != 0) return -1;\n    free(data);\n    return 0;\n}\n",
+        "negative": "int do_work(const char *path) {\n    FILE *f = fopen(path, \"rb\"); /* hard to test */\n    if (!f) return -1;\n    fclose(f);\n    return 0;\n}\n",
+        "language": "GENERIC"
+      }
+    }
+  ]
+}
