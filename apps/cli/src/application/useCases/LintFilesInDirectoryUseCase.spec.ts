@@ -12,7 +12,7 @@ import { IPackmindGateway } from '../../domain/repositories/IPackmindGateway';
 import { IPackmindRepositories } from '../../domain/repositories/IPackmindRepositories';
 import { GitService } from '../services/GitService';
 import { ListFiles } from '../services/ListFiles';
-import { PackmindServices } from '../services/PackmindServices';
+import { IPackmindServices } from '../services/IPackmindServices';
 import { LintFilesInDirectoryUseCase } from './LintFilesInDirectoryUseCase';
 import { ILinterGateway } from '../../domain/repositories/ILinterGateway';
 import {
@@ -32,7 +32,7 @@ jest.mock('fs/promises');
 
 describe('LintFilesInDirectoryUseCase', () => {
   let useCase: LintFilesInDirectoryUseCase;
-  let mockServices: PackmindServices;
+  let mockServices: IPackmindServices;
   let mockRepositories: IPackmindRepositories;
   let mockListFiles: jest.Mocked<ListFiles>;
   let mockGitRemoteUrlService: jest.Mocked<GitService>;

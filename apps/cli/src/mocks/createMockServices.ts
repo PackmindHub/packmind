@@ -1,12 +1,12 @@
-import { PackmindServices } from '../application/services/PackmindServices';
-import { ListFiles } from '../application/services/ListFiles';
-import { GitService } from '../application/services/GitService';
+import { IPackmindServices } from '../domain/services/IPackmindServices';
 import { DiffViolationFilterService } from '../application/services/DiffViolationFilterService';
 import { IExecuteLinterProgramsUseCase } from '@packmind/types';
+import { IListFiles } from '../domain/services/IListFiles';
+import { IGitService } from '../domain/services/IGitService';
 
 export function createMockServices(
-  services?: Partial<PackmindServices>,
-): jest.Mocked<PackmindServices> {
+  services?: Partial<IPackmindServices>,
+): jest.Mocked<IPackmindServices> {
   return {
     listFiles: createMockListFiles(services?.listFiles),
     gitRemoteUrlService: createMockGitService(services?.gitRemoteUrlService),
@@ -21,8 +21,8 @@ export function createMockServices(
 }
 
 export function createMockListFiles(
-  listFiles?: Partial<ListFiles>,
-): jest.Mocked<ListFiles> {
+  listFiles?: Partial<IListFiles>,
+): jest.Mocked<IListFiles> {
   return {
     listFilesInDirectory: jest.fn(),
     readFileContent: jest.fn(),
@@ -31,8 +31,8 @@ export function createMockListFiles(
 }
 
 export function createMockGitService(
-  gitService?: Partial<GitService>,
-): jest.Mocked<GitService> {
+  gitService?: Partial<IGitService>,
+): jest.Mocked<IGitService> {
   return {
     getGitRepositoryRoot: jest.fn(),
     tryGetGitRepositoryRoot: jest.fn(),

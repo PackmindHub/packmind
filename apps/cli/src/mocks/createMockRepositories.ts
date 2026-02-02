@@ -1,5 +1,5 @@
 import { IPackmindRepositories } from '../domain/repositories/IPackmindRepositories';
-import { ConfigFileRepository } from '../infra/repositories/ConfigFileRepository';
+import { IConfigFileRepository } from '../domain/repositories/IConfigFileRepository';
 import { createMockPackmindGateway } from './createMockGateways';
 
 export function createMockPackmindRepositories(
@@ -15,8 +15,8 @@ export function createMockPackmindRepositories(
 }
 
 export function createMockConfigFileRepository(
-  configFileRepository?: Partial<ConfigFileRepository>,
-): jest.Mocked<ConfigFileRepository> {
+  configFileRepository?: Partial<IConfigFileRepository>,
+): jest.Mocked<IConfigFileRepository> {
   return {
     writeConfig: jest.fn(),
     configExists: jest.fn(),

@@ -10,7 +10,7 @@ import { LintFilesInDirectoryUseCase } from './application/useCases/LintFilesInD
 import { ILintFilesLocally } from './domain/useCases/ILintFilesLocally';
 import { LintFilesLocallyUseCase } from './application/useCases/LintFilesLocallyUseCase';
 import { PackmindGateway } from './infra/repositories/PackmindGateway';
-import { PackmindServices } from './application/services/PackmindServices';
+import { IPackmindServices } from './domain/services/IPackmindServices';
 import { IPackmindRepositories } from './domain/repositories/IPackmindRepositories';
 import { ListFiles } from './application/services/ListFiles';
 import { GitService } from './application/services/GitService';
@@ -38,7 +38,7 @@ import { loadApiKey } from './infra/utils/credentialsLoader';
 
 export class PackmindCliHexaFactory {
   public repositories: IPackmindRepositories;
-  public services: PackmindServices;
+  public services: IPackmindServices;
 
   public useCases: {
     executeSingleFileAst: IExecuteSingleFileAstUseCase;

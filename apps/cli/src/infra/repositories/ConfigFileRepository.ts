@@ -8,8 +8,9 @@ import * as fs from 'fs/promises';
 import * as path from 'path';
 import { logWarningConsole } from '../utils/consoleLogger';
 import { normalizePath } from '../../application/utils/pathUtils';
+import { IConfigFileRepository } from '../../domain/repositories/IConfigFileRepository';
 
-export class ConfigFileRepository {
+export class ConfigFileRepository implements IConfigFileRepository {
   private readonly CONFIG_FILENAME = 'packmind.json';
   private readonly warnedFiles = new Set<string>();
   private readonly EXCLUDED_DIRECTORIES = [

@@ -9,11 +9,7 @@ import {
 import * as fs from 'fs/promises';
 import { IPackmindGateway } from '../../domain/repositories/IPackmindGateway';
 import { IPackmindRepositories } from '../../domain/repositories/IPackmindRepositories';
-import { GitService } from '../services/GitService';
-import { ListFiles } from '../services/ListFiles';
-import { PackmindServices } from '../services/PackmindServices';
 import { LintFilesLocallyUseCase } from './LintFilesLocallyUseCase';
-import { ConfigFileRepository } from '../../infra/repositories/ConfigFileRepository';
 import { stubLogger } from '@packmind/test-utils';
 import { ILinterGateway } from '../../domain/repositories/ILinterGateway';
 import {
@@ -30,20 +26,24 @@ import {
   createMockConfigFileRepository,
   createMockPackmindRepositories,
 } from '../../mocks/createMockRepositories';
+import { IPackmindServices } from '../../domain/services/IPackmindServices';
+import { IListFiles } from '../../domain/services/IListFiles';
+import { IGitService } from '../../domain/services/IGitService';
+import { IConfigFileRepository } from '../../domain/repositories/IConfigFileRepository';
 
 jest.mock('fs/promises');
 
 describe('LintFilesLocallyUseCase', () => {
   let useCase: LintFilesLocallyUseCase;
-  let mockServices: PackmindServices;
+  let mockServices: IPackmindServices;
   let mockRepositories: IPackmindRepositories;
-  let mockListFiles: jest.Mocked<ListFiles>;
-  let mockGitRemoteUrlService: jest.Mocked<GitService>;
+  let mockListFiles: jest.Mocked<IListFiles>;
+  let mockGitRemoteUrlService: jest.Mocked<IGitService>;
   let mockLinterExecutionUseCase: jest.Mocked<IExecuteLinterProgramsUseCase>;
   let mockPackmindGateway: jest.Mocked<IPackmindGateway>;
   let mockLinterGateway: jest.Mocked<ILinterGateway>;
 
-  let mockConfigFileRepository: jest.Mocked<ConfigFileRepository>;
+  let mockConfigFileRepository: jest.Mocked<IConfigFileRepository>;
   const logger = stubLogger();
 
   beforeEach(() => {

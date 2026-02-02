@@ -3,7 +3,6 @@ import {
   LintFilesLocallyCommand,
   LintFilesLocallyResult,
 } from '../../domain/useCases/ILintFilesLocally';
-import { PackmindServices } from '../services/PackmindServices';
 import { IPackmindRepositories } from '../../domain/repositories/IPackmindRepositories';
 import { LintViolation } from '../../domain/entities/LintViolation';
 import { DiffMode, ModifiedLine } from '../../domain/entities/DiffMode';
@@ -24,6 +23,7 @@ import * as path from 'path';
 import * as fs from 'fs/promises';
 import { pathStartsWith } from '../utils/pathUtils';
 import { logErrorConsole } from '../../infra/utils/consoleLogger';
+import { IPackmindServices } from '../../domain/services/IPackmindServices';
 
 const origin = 'LintFilesLocallyUseCase';
 
@@ -34,7 +34,7 @@ export class LintFilesLocallyUseCase implements ILintFilesLocally {
   > = new Map();
 
   constructor(
-    private readonly services: PackmindServices,
+    private readonly services: IPackmindServices,
     private readonly repositories: IPackmindRepositories,
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {}
