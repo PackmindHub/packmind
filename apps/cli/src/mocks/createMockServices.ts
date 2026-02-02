@@ -1,37 +1,45 @@
 import { IPackmindServices } from '../domain/services/IPackmindServices';
-import { DiffViolationFilterService } from '../application/services/DiffViolationFilterService';
+import { IDiffViolationFilterService } from '../domain/services/IDiffViolationFilterService';
 import { IExecuteLinterProgramsUseCase } from '@packmind/types';
 import { IListFiles } from '../domain/services/IListFiles';
 import { IGitService } from '../domain/services/IGitService';
 
+type MockServicesOverrides = {
+  listFiles?: Partial<jest.Mocked<IListFiles>>;
+  gitRemoteUrlService?: Partial<jest.Mocked<IGitService>>;
+  linterExecutionUseCase?: Partial<jest.Mocked<IExecuteLinterProgramsUseCase>>;
+  diffViolationFilterService?: Partial<
+    jest.Mocked<IDiffViolationFilterService>
+  >;
+};
+
 export function createMockServices(
-  services?: Partial<IPackmindServices>,
+  overrides?: MockServicesOverrides,
 ): jest.Mocked<IPackmindServices> {
   return {
-    listFiles: createMockListFiles(services?.listFiles),
-    gitRemoteUrlService: createMockGitService(services?.gitRemoteUrlService),
+    listFiles: createMockListFiles(overrides?.listFiles),
+    gitRemoteUrlService: createMockGitService(overrides?.gitRemoteUrlService),
     linterExecutionUseCase: createMockExecuteLinterProgramsUseCase(
-      services?.linterExecutionUseCase,
+      overrides?.linterExecutionUseCase,
     ),
     diffViolationFilterService: createMockDiffViolationFilterService(
-      services?.diffViolationFilterService,
+      overrides?.diffViolationFilterService,
     ),
-    ...services,
   };
 }
 
 export function createMockListFiles(
-  listFiles?: Partial<IListFiles>,
+  overrides?: Partial<jest.Mocked<IListFiles>>,
 ): jest.Mocked<IListFiles> {
   return {
     listFilesInDirectory: jest.fn(),
     readFileContent: jest.fn(),
-    ...listFiles,
+    ...overrides,
   };
 }
 
 export function createMockGitService(
-  gitService?: Partial<IGitService>,
+  overrides?: Partial<jest.Mocked<IGitService>>,
 ): jest.Mocked<IGitService> {
   return {
     getGitRepositoryRoot: jest.fn(),
@@ -43,27 +51,25 @@ export function createMockGitService(
     getModifiedFiles: jest.fn(),
     getUntrackedFiles: jest.fn(),
     getModifiedLines: jest.fn(),
-    ...gitService,
+    ...overrides,
   };
 }
 
 export function createMockExecuteLinterProgramsUseCase(
-  executeLinterPrograms?: Partial<IExecuteLinterProgramsUseCase>,
+  overrides?: Partial<jest.Mocked<IExecuteLinterProgramsUseCase>>,
 ): jest.Mocked<IExecuteLinterProgramsUseCase> {
   return {
     execute: jest.fn(),
-    ...executeLinterPrograms,
+    ...overrides,
   };
 }
 
 export function createMockDiffViolationFilterService(
-  diffViolationService?: Partial<DiffViolationFilterService>,
-): jest.Mocked<DiffViolationFilterService> {
+  overrides?: Partial<jest.Mocked<IDiffViolationFilterService>>,
+): jest.Mocked<IDiffViolationFilterService> {
   return {
     filterByFiles: jest.fn(),
     filterByLines: jest.fn(),
-    groupModifiedLinesByFile: jest.fn(),
-    isLineInModifiedRanges: jest.fn(),
-    ...diffViolationService,
+    ...overrides,
   };
 }

@@ -1,21 +1,28 @@
 import { IPackmindRepositories } from '../domain/repositories/IPackmindRepositories';
 import { IConfigFileRepository } from '../domain/repositories/IConfigFileRepository';
-import { createMockPackmindGateway } from './createMockGateways';
+import {
+  createMockPackmindGateway,
+  MockPackmindGatewayOverrides,
+} from './createMockGateways';
+
+type MockRepositoriesOverrides = {
+  packmindGateway?: MockPackmindGatewayOverrides;
+  configFileRepository?: Partial<jest.Mocked<IConfigFileRepository>>;
+};
 
 export function createMockPackmindRepositories(
-  repositories?: Partial<IPackmindRepositories>,
+  overrides?: MockRepositoriesOverrides,
 ): jest.Mocked<IPackmindRepositories> {
   return {
-    packmindGateway: createMockPackmindGateway(repositories?.packmindGateway),
+    packmindGateway: createMockPackmindGateway(overrides?.packmindGateway),
     configFileRepository: createMockConfigFileRepository(
-      repositories?.configFileRepository,
+      overrides?.configFileRepository,
     ),
-    ...repositories,
   };
 }
 
 export function createMockConfigFileRepository(
-  configFileRepository?: Partial<IConfigFileRepository>,
+  overrides?: Partial<jest.Mocked<IConfigFileRepository>>,
 ): jest.Mocked<IConfigFileRepository> {
   return {
     writeConfig: jest.fn(),
@@ -24,7 +31,6 @@ export function createMockConfigFileRepository(
     findDescendantConfigs: jest.fn(),
     readHierarchicalConfig: jest.fn(),
     findAllConfigsInTree: jest.fn(),
-    computeRelativeTargetPath: jest.fn(),
-    ...configFileRepository,
+    ...overrides,
   };
 }
