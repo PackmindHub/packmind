@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { PMDialog, PMBox, PMHStack, PMButton } from '@packmind/ui';
 import { OnboardingWelcome } from './OnboardingWelcome';
 import { OnboardingPlaybook } from './OnboardingPlaybook';
@@ -10,14 +10,25 @@ interface OnboardingIntentModalProps {
   open: boolean;
   onComplete: () => void;
   onSkip: () => void;
+  stepsToShow: OnboardingStep[];
 }
 
 export function OnboardingIntentModal({
   open,
   onComplete,
   onSkip,
+  stepsToShow,
 }: OnboardingIntentModalProps) {
-  const [step, setStep] = useState<OnboardingStep>('welcome');
+  const [step, setStep] = useState<OnboardingStep>(stepsToShow[0] || 'welcome');
+
+  const showBuildStep = stepsToShow.includes('build');
+
+  // Reset step when modal opens
+  useEffect(() => {
+    if (open && stepsToShow.length > 0) {
+      setStep(stepsToShow[0]);
+    }
+  }, [open, stepsToShow]);
 
   const handleDiscover = () => {
     setStep('playbook');
@@ -28,7 +39,11 @@ export function OnboardingIntentModal({
   };
 
   const handleBuildPlaybook = () => {
-    setStep('build');
+    if (showBuildStep) {
+      setStep('build');
+    } else {
+      onComplete(); // Complete if no build step for invited users
+    }
   };
 
   const handlePreviousToPlaybook = () => {

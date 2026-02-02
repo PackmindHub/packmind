@@ -11,17 +11,17 @@ import {
 import { AuthService } from '../../src/services/auth/AuthService';
 import { SkeletonLayout } from '../../src/domain/organizations/components/SkeletonLayout';
 import { OnboardingIntentModal } from '../../src/domain/accounts/components/OnboardingIntentModal';
+import {
+  useGetOnboardingStatusQuery,
+  useCompleteOnboardingMutation,
+} from '../../src/domain/accounts/api/queries/OnboardingQueries';
 
 // NO clientLoader exported here to prevent blocking!
 
-const ONBOARDING_INTENT_STORAGE_KEY = 'onboarding_intent_completed';
-
-function getOnboardingStorageKey(orgId: string): string {
-  return `${ONBOARDING_INTENT_STORAGE_KEY}_${orgId}`;
-}
-
 export default function AuthenticatedLayout() {
   const { data: me, isLoading } = useGetMeQuery();
+  const { data: onboardingStatus } = useGetOnboardingStatusQuery();
+  const completeOnboardingMutation = useCompleteOnboardingMutation();
   const navigate = useNavigate();
   const params = useParams();
   const authService = AuthService.getInstance();
@@ -29,30 +29,22 @@ export default function AuthenticatedLayout() {
 
   useAuthErrorHandler();
 
+  // Show modal based on server state
   useEffect(() => {
-    if (!me?.authenticated || !me.organization?.id) return;
+    if (!me?.authenticated || !onboardingStatus) return;
 
-    const storageKey = getOnboardingStorageKey(me.organization.id);
-    const hasCompletedOnboarding = localStorage.getItem(storageKey) === 'true';
-
-    if (!hasCompletedOnboarding) {
+    if (onboardingStatus.showOnboarding) {
       setShowOnboardingModal(true);
     }
-  }, [me?.authenticated, me?.organization?.id]);
+  }, [me?.authenticated, onboardingStatus]);
 
   const handleOnboardingComplete = () => {
-    if (me?.organization?.id) {
-      const storageKey = getOnboardingStorageKey(me.organization.id);
-      localStorage.setItem(storageKey, 'true');
-    }
+    completeOnboardingMutation.mutate();
     setShowOnboardingModal(false);
   };
 
   const handleOnboardingSkip = () => {
-    if (me?.organization?.id) {
-      const storageKey = getOnboardingStorageKey(me.organization.id);
-      localStorage.setItem(storageKey, 'true');
-    }
+    completeOnboardingMutation.mutate();
     setShowOnboardingModal(false);
   };
 
@@ -122,6 +114,9 @@ export default function AuthenticatedLayout() {
         open={showOnboardingModal}
         onComplete={handleOnboardingComplete}
         onSkip={handleOnboardingSkip}
+        stepsToShow={
+          onboardingStatus?.stepsToShow ?? ['welcome', 'playbook', 'build']
+        }
       />
     </>
   );
