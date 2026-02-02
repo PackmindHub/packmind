@@ -141,6 +141,18 @@ export type CreateCommandResult = {
   slug: string;
 };
 
+// Create package types
+export type CreatePackageCommand = {
+  name: string;
+  description?: string;
+};
+
+export type CreatePackageResult = {
+  id: string;
+  name: string;
+  slug: string;
+};
+
 export interface IPackmindGateway {
   linter: ILinterGateway;
   getPullData: Gateway<IPullContentUseCase>;
@@ -178,6 +190,12 @@ export interface IPackmindGateway {
     spaceId: string,
     data: CreateCommandCommand,
   ): Promise<CreateCommandResult>;
+
+  // Atomic gateway for package creation
+  createPackage(
+    spaceId: string,
+    data: CreatePackageCommand,
+  ): Promise<CreatePackageResult>;
 
   // Onboarding baseline
   pushOnboardingBaseline(
