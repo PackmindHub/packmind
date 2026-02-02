@@ -45,11 +45,6 @@ const renderWithProviders = (component: React.ReactElement) => {
 };
 
 describe('OnboardingBuild', () => {
-  const defaultProps = {
-    onComplete: jest.fn(),
-    onPrevious: jest.fn(),
-  };
-
   beforeEach(() => {
     jest.clearAllMocks();
     mockUseMcpConnection.mockReturnValue({
@@ -65,13 +60,13 @@ describe('OnboardingBuild', () => {
 
   describe('rendering', () => {
     it('renders the title', () => {
-      renderWithProviders(<OnboardingBuild {...defaultProps} />);
+      renderWithProviders(<OnboardingBuild />);
 
       expect(screen.getByText('Build my playbook')).toBeInTheDocument();
     });
 
     it('renders the subtitle', () => {
-      renderWithProviders(<OnboardingBuild {...defaultProps} />);
+      renderWithProviders(<OnboardingBuild />);
 
       expect(
         screen.getByText(/Analyze your local repository/),
@@ -79,13 +74,13 @@ describe('OnboardingBuild', () => {
     });
 
     it('renders the CLI card', () => {
-      renderWithProviders(<OnboardingBuild {...defaultProps} />);
+      renderWithProviders(<OnboardingBuild />);
 
       expect(screen.getByTestId('OnboardingBuild.CLICard')).toBeInTheDocument();
     });
 
     it('renders the MCP card', () => {
-      renderWithProviders(<OnboardingBuild {...defaultProps} />);
+      renderWithProviders(<OnboardingBuild />);
 
       expect(screen.getByTestId('OnboardingBuild.MCPCard')).toBeInTheDocument();
     });
@@ -93,7 +88,7 @@ describe('OnboardingBuild', () => {
     describe('when on localhost', () => {
       it('renders the progress section', () => {
         mockIsLocalhost.mockReturnValue(true);
-        renderWithProviders(<OnboardingBuild {...defaultProps} />);
+        renderWithProviders(<OnboardingBuild />);
 
         expect(
           screen.getByText('Waiting for your playbook to be ready...'),
@@ -104,7 +99,7 @@ describe('OnboardingBuild', () => {
     describe('when not on localhost', () => {
       it('does not render the progress section', () => {
         mockIsLocalhost.mockReturnValue(false);
-        renderWithProviders(<OnboardingBuild {...defaultProps} />);
+        renderWithProviders(<OnboardingBuild />);
 
         expect(
           screen.queryByText('Waiting for your playbook to be ready...'),
@@ -115,20 +110,20 @@ describe('OnboardingBuild', () => {
 
   describe('CLI section', () => {
     it('renders the Install tabs', () => {
-      renderWithProviders(<OnboardingBuild {...defaultProps} />);
+      renderWithProviders(<OnboardingBuild />);
 
       expect(screen.getByText('Script')).toBeInTheDocument();
       expect(screen.getByText('NPM')).toBeInTheDocument();
     });
 
     it('renders the Initialize section', () => {
-      renderWithProviders(<OnboardingBuild {...defaultProps} />);
+      renderWithProviders(<OnboardingBuild />);
 
       expect(screen.getByText('Initialize')).toBeInTheDocument();
     });
 
     it('renders the Start analysis section', () => {
-      renderWithProviders(<OnboardingBuild {...defaultProps} />);
+      renderWithProviders(<OnboardingBuild />);
 
       expect(screen.getByText('Start analysis')).toBeInTheDocument();
     });
@@ -136,7 +131,7 @@ describe('OnboardingBuild', () => {
 
   describe('MCP section', () => {
     it('renders the coding assistant options', () => {
-      renderWithProviders(<OnboardingBuild {...defaultProps} />);
+      renderWithProviders(<OnboardingBuild />);
 
       expect(
         screen.getByTestId('OnboardingBuild.Assistant-claude'),
@@ -150,7 +145,7 @@ describe('OnboardingBuild', () => {
     });
 
     it('renders the Instructions section', () => {
-      renderWithProviders(<OnboardingBuild {...defaultProps} />);
+      renderWithProviders(<OnboardingBuild />);
 
       expect(screen.getByText('Instructions')).toBeInTheDocument();
     });
@@ -166,7 +161,7 @@ describe('OnboardingBuild', () => {
           errorMessage: null,
         });
 
-        renderWithProviders(<OnboardingBuild {...defaultProps} />);
+        renderWithProviders(<OnboardingBuild />);
 
         expect(
           screen.getByTestId('OnboardingBuild.McpLoading'),
@@ -177,7 +172,7 @@ describe('OnboardingBuild', () => {
     describe('when user clicks on an agent', () => {
       it('hides the placeholder text', async () => {
         const user = userEvent.setup();
-        renderWithProviders(<OnboardingBuild {...defaultProps} />);
+        renderWithProviders(<OnboardingBuild />);
 
         await user.click(
           screen.getByTestId('OnboardingBuild.Assistant-claude'),
@@ -192,7 +187,7 @@ describe('OnboardingBuild', () => {
 
       it('shows method content for the selected agent', async () => {
         const user = userEvent.setup();
-        renderWithProviders(<OnboardingBuild {...defaultProps} />);
+        renderWithProviders(<OnboardingBuild />);
 
         await user.click(
           screen.getByTestId('OnboardingBuild.Assistant-claude'),
@@ -202,28 +197,6 @@ describe('OnboardingBuild', () => {
           screen.getByTestId('OnboardingBuild.InstructionsContent').textContent,
         ).not.toBe('');
       });
-    });
-  });
-
-  describe('when user clicks Previous', () => {
-    it('calls onPrevious', async () => {
-      const user = userEvent.setup();
-      renderWithProviders(<OnboardingBuild {...defaultProps} />);
-
-      await user.click(screen.getByTestId('OnboardingBuild.PreviousButton'));
-
-      expect(defaultProps.onPrevious).toHaveBeenCalledTimes(1);
-    });
-  });
-
-  describe("when user clicks I'm done", () => {
-    it('calls onComplete', async () => {
-      const user = userEvent.setup();
-      renderWithProviders(<OnboardingBuild {...defaultProps} />);
-
-      await user.click(screen.getByTestId('OnboardingBuild.CompleteButton'));
-
-      expect(defaultProps.onComplete).toHaveBeenCalledTimes(1);
     });
   });
 });

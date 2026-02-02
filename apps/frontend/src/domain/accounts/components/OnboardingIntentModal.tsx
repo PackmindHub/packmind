@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { PMDialog, PMBox } from '@packmind/ui';
+import { PMDialog, PMBox, PMHStack, PMButton } from '@packmind/ui';
 import { OnboardingWelcome } from './OnboardingWelcome';
 import { OnboardingPlaybook } from './OnboardingPlaybook';
 import { OnboardingBuild } from './OnboardingBuild';
@@ -79,15 +79,32 @@ export function OnboardingIntentModal({
                     onPrevious={handlePreviousToWelcome}
                   />
                 )}
-                {step === 'build' && (
-                  <OnboardingBuild
-                    onComplete={handleComplete}
-                    onPrevious={handlePreviousToPlaybook}
-                  />
-                )}
+                {step === 'build' && <OnboardingBuild />}
               </PMBox>
             </PMBox>
           </PMDialog.Body>
+          {step === 'build' && (
+            <PMDialog.Footer justifyContent="flex-start">
+              <PMHStack gap={4}>
+                <PMButton
+                  size="lg"
+                  variant="secondary"
+                  onClick={handlePreviousToPlaybook}
+                  data-testid="OnboardingModal.PreviousButton"
+                >
+                  Previous
+                </PMButton>
+                <PMButton
+                  size="lg"
+                  variant="primary"
+                  onClick={handleComplete}
+                  data-testid="OnboardingModal.CompleteButton"
+                >
+                  I'm done
+                </PMButton>
+              </PMHStack>
+            </PMDialog.Footer>
+          )}
         </PMDialog.Content>
       </PMDialog.Positioner>
     </PMDialog.Root>

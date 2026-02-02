@@ -125,7 +125,7 @@ describe('OnboardingIntentModal', () => {
           screen.getByTestId('OnboardingWelcome.DiscoverButton'),
         );
         await user.click(screen.getByTestId('OnboardingPlaybook.BuildButton'));
-        await user.click(screen.getByTestId('OnboardingBuild.PreviousButton'));
+        await user.click(screen.getByTestId('OnboardingModal.PreviousButton'));
 
         expect(
           screen.getByText('Build and evolve your playbook'),
@@ -144,7 +144,7 @@ describe('OnboardingIntentModal', () => {
           screen.getByTestId('OnboardingWelcome.DiscoverButton'),
         );
         await user.click(screen.getByTestId('OnboardingPlaybook.BuildButton'));
-        await user.click(screen.getByTestId('OnboardingBuild.CompleteButton'));
+        await user.click(screen.getByTestId('OnboardingModal.CompleteButton'));
 
         expect(defaultProps.onComplete).toHaveBeenCalledTimes(1);
       });

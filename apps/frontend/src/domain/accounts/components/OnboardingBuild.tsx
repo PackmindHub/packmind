@@ -1,18 +1,10 @@
-import { PMVStack, PMHStack, PMHeading, PMText, PMButton } from '@packmind/ui';
+import { PMVStack, PMHStack, PMHeading, PMText } from '@packmind/ui';
 import { OnboardingProgressSection } from './OnboardingProgressSection';
 import { OnboardingBuildCliSection } from './OnboardingBuildCliSection';
 import { OnboardingBuildMcpSection } from './OnboardingBuildMcpSection';
 import { isLocalhost } from '../../../shared/utils/isLocalhost';
 
-interface OnboardingBuildProps {
-  onComplete: () => void;
-  onPrevious: () => void;
-}
-
-export function OnboardingBuild({
-  onComplete,
-  onPrevious,
-}: OnboardingBuildProps) {
+export function OnboardingBuild() {
   const showProgress = isLocalhost();
 
   return (
@@ -38,26 +30,6 @@ export function OnboardingBuild({
       <PMHStack gap={8} align="stretch" flex={1} paddingY={6}>
         <OnboardingBuildCliSection />
         <OnboardingBuildMcpSection />
-      </PMHStack>
-
-      {/* Navigation buttons */}
-      <PMHStack gap={4}>
-        <PMButton
-          size="lg"
-          variant="secondary"
-          onClick={onPrevious}
-          data-testid="OnboardingBuild.PreviousButton"
-        >
-          Previous
-        </PMButton>
-        <PMButton
-          size="lg"
-          variant="primary"
-          onClick={onComplete}
-          data-testid="OnboardingBuild.CompleteButton"
-        >
-          I'm done
-        </PMButton>
       </PMHStack>
     </PMVStack>
   );
