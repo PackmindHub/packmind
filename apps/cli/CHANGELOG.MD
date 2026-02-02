@@ -14,9 +14,11 @@
 
 ## Fixed
 
-- Fix CLI syntax for command creation to consistently use `commands create` instead of `commands create`
+- Properly apply multiple scopes when linting.
 
 ## Removed
+
+- linter based on git remote URL when `packmind.json` is absent.
 
 # [0.14.1] - 2026-01-29
 

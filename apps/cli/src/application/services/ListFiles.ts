@@ -1,13 +1,10 @@
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import { logErrorConsole } from '../../infra/utils/consoleLogger';
+import { FileResult, IListFiles } from '../../domain/services/IListFiles';
 
-export type FileResult = {
-  path: string;
-};
-
-export class ListFiles {
-  public async listFilesInDirectory(
+export class ListFiles implements IListFiles {
+  async listFilesInDirectory(
     directoryPath: string,
     extensions: string[],
     excludes: string[] = [],
@@ -30,6 +27,15 @@ export class ListFiles {
     );
 
     return results;
+  }
+
+  async readFileContent(filePath: string): Promise<string> {
+    try {
+      return await fs.readFile(filePath, 'utf-8');
+    } catch (error) {
+      logErrorConsole(`Error reading file ${filePath}: ${error}`);
+      throw error;
+    }
   }
 
   private async findFilesRecursively(
@@ -122,14 +128,5 @@ export class ListFiles {
 
     const regex = new RegExp(regexPattern);
     return regex.test(filePath);
-  }
-
-  public async readFileContent(filePath: string): Promise<string> {
-    try {
-      return await fs.readFile(filePath, 'utf-8');
-    } catch (error) {
-      logErrorConsole(`Error reading file ${filePath}: ${error}`);
-      throw error;
-    }
   }
 }

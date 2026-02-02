@@ -13,13 +13,13 @@ import {
   ListFilesInDirectoryUseCaseResult,
 } from './application/useCases/ListFilesInDirectoryUseCase';
 import {
-  LintFilesInDirectoryCommand,
-  LintFilesInDirectoryResult,
-} from './domain/useCases/ILintFilesInDirectory';
+  LintFilesAgainstRuleCommand,
+  LintFilesAgainstRuleResult,
+} from './domain/useCases/ILintFilesAgainstRule';
 import {
-  LintFilesLocallyCommand,
-  LintFilesLocallyResult,
-} from './domain/useCases/ILintFilesLocally';
+  LintFilesFromConfigCommand,
+  LintFilesFromConfigResult,
+} from './domain/useCases/ILintFilesFromConfig';
 import {
   IInstallPackagesCommand,
   IInstallPackagesResult,
@@ -105,16 +105,16 @@ export class PackmindCliHexa {
     return this.hexa.useCases.listFilesInDirectoryUseCase.execute(command);
   }
 
-  public async lintFilesInDirectory(
-    command: LintFilesInDirectoryCommand,
-  ): Promise<LintFilesInDirectoryResult> {
-    return this.hexa.useCases.lintFilesInDirectory.execute(command);
+  public async lintFilesAgainstRule(
+    command: LintFilesAgainstRuleCommand,
+  ): Promise<LintFilesAgainstRuleResult> {
+    return this.hexa.useCases.lintFilesAgainstRule.execute(command);
   }
 
-  public async lintFilesLocally(
-    command: LintFilesLocallyCommand,
-  ): Promise<LintFilesLocallyResult> {
-    return this.hexa.useCases.lintFilesLocally.execute(command);
+  public async lintFilesFromConfig(
+    command: LintFilesFromConfigCommand,
+  ): Promise<LintFilesFromConfigResult> {
+    return this.hexa.useCases.lintFilesFromConfig.execute(command);
   }
 
   public async installPackages(

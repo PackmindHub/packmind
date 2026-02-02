@@ -1,7 +1,7 @@
 import { IPackmindGateway } from './IPackmindGateway';
-import { ConfigFileRepository } from '../../infra/repositories/ConfigFileRepository';
+import { IConfigFileRepository } from './IConfigFileRepository';
 
 export interface IPackmindRepositories {
   packmindGateway: IPackmindGateway;
-  configFileRepository: ConfigFileRepository;
+  configFileRepository: IConfigFileRepository;
 }

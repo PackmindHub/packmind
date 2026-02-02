@@ -2,12 +2,12 @@ import { IPublicUseCase } from '@packmind/types';
 import { LintViolation } from '../entities/LintViolation';
 import { DiffMode } from '../entities/DiffMode';
 
-export type LintFilesLocallyCommand = {
+export type LintFilesFromConfigCommand = {
   path: string;
   diffMode?: DiffMode;
 };
 
-export type LintFilesLocallyResult = {
+export type LintFilesFromConfigResult = {
   violations: LintViolation[];
   summary: {
     totalFiles: number;
@@ -17,7 +17,7 @@ export type LintFilesLocallyResult = {
   };
 };
 
-export type ILintFilesLocally = IPublicUseCase<
-  LintFilesLocallyCommand,
-  LintFilesLocallyResult
+export type ILintFilesFromConfig = IPublicUseCase<
+  LintFilesFromConfigCommand,
+  LintFilesFromConfigResult
 >;

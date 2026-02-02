@@ -1,11 +1,12 @@
 import { IPublicUseCase } from '../../UseCase';
 import { ProgrammingLanguage } from '../../languages';
+import { SourceCodeState } from '../DetectionProgram';
 
 export type LinterExecutionProgram = {
   standardSlug: string;
   ruleContent: string;
   code: string;
-  sourceCodeState: 'AST' | 'RAW';
+  sourceCodeState: SourceCodeState;
   language: ProgrammingLanguage;
 };
 

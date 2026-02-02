@@ -9,6 +9,7 @@ interface IAuthContext {
 interface IRequestOptions {
   method?: 'GET' | 'POST';
   body?: unknown;
+  onError?: (response: Response) => void;
 }
 
 export class PackmindHttpClient {
@@ -76,6 +77,10 @@ export class PackmindHttpClient {
       });
 
       if (!response.ok) {
+        if (options.onError) {
+          options.onError(response);
+        }
+
         let errorMsg = `API request failed: ${response.status} ${response.statusText}`;
         try {
           const errorBody = await response.json();

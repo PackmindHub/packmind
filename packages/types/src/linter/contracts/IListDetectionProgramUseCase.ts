@@ -1,5 +1,5 @@
 import { IUseCase, PackmindCommand } from '../../UseCase';
-import { DetectionModeEnum } from '../DetectionProgram';
+import { DetectionModeEnum, SourceCodeState } from '../DetectionProgram';
 
 export type IListDetectionProgramUseCase = IUseCase<
   ListDetectionProgramCommand,
@@ -26,6 +26,7 @@ export type ListDetectionProgramResponse = {
           detectionProgram: {
             mode: DetectionModeEnum;
             code: string;
+            sourceCodeState: SourceCodeState;
           };
         }[];
       }[];

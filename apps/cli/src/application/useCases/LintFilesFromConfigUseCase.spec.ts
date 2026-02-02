@@ -1,46 +1,55 @@
 import {
   AllConfigsResult,
+  DetectionModeEnum,
   ExecuteLinterProgramsCommand,
+  GetDetectionProgramsForPackagesResponse,
   IExecuteLinterProgramsUseCase,
   LinterExecutionViolation,
 } from '@packmind/types';
 import * as fs from 'fs/promises';
 import { IPackmindGateway } from '../../domain/repositories/IPackmindGateway';
 import { IPackmindRepositories } from '../../domain/repositories/IPackmindRepositories';
-import { GitService } from '../services/GitService';
-import { ListFiles } from '../services/ListFiles';
-import { PackmindServices } from '../services/PackmindServices';
-import { LintFilesLocallyUseCase } from './LintFilesLocallyUseCase';
-import { ConfigFileRepository } from '../../infra/repositories/ConfigFileRepository';
+import { LintFilesFromConfigUseCase } from './LintFilesFromConfigUseCase';
 import { stubLogger } from '@packmind/test-utils';
+import { ILinterGateway } from '../../domain/repositories/ILinterGateway';
+import {
+  createMockExecuteLinterProgramsUseCase,
+  createMockGitService,
+  createMockListFiles,
+  createMockServices,
+} from '../../mocks/createMockServices';
+import {
+  createMockLinterGateway,
+  createMockPackmindGateway,
+} from '../../mocks/createMockGateways';
+import {
+  createMockConfigFileRepository,
+  createMockPackmindRepositories,
+} from '../../mocks/createMockRepositories';
+import { IPackmindServices } from '../../domain/services/IPackmindServices';
+import { IListFiles } from '../../domain/services/IListFiles';
+import { IGitService } from '../../domain/services/IGitService';
+import { IConfigFileRepository } from '../../domain/repositories/IConfigFileRepository';
 
 jest.mock('fs/promises');
 
-describe('LintFilesLocallyUseCase', () => {
-  let useCase: LintFilesLocallyUseCase;
-  let mockServices: PackmindServices;
+describe('LintFilesFromConfigUseCase', () => {
+  let useCase: LintFilesFromConfigUseCase;
+  let mockServices: IPackmindServices;
   let mockRepositories: IPackmindRepositories;
-  let mockListFiles: jest.Mocked<ListFiles>;
-  let mockGitRemoteUrlService: jest.Mocked<GitService>;
+  let mockListFiles: jest.Mocked<IListFiles>;
+  let mockGitRemoteUrlService: jest.Mocked<IGitService>;
   let mockLinterExecutionUseCase: jest.Mocked<IExecuteLinterProgramsUseCase>;
   let mockPackmindGateway: jest.Mocked<IPackmindGateway>;
-  let mockConfigFileRepository: jest.Mocked<ConfigFileRepository>;
+  let mockLinterGateway: jest.Mocked<ILinterGateway>;
+
+  let mockConfigFileRepository: jest.Mocked<IConfigFileRepository>;
   const logger = stubLogger();
 
   beforeEach(() => {
-    mockListFiles = {
-      listFilesInDirectory: jest.fn(),
-      readFileContent: jest.fn(),
-    } as unknown as jest.Mocked<ListFiles>;
-
-    mockGitRemoteUrlService = {
-      getGitRemoteUrl: jest.fn(),
-      getCurrentBranches: jest.fn(),
-      getGitRepositoryRoot: jest.fn(),
-      tryGetGitRepositoryRoot: jest.fn(),
-    } as unknown as jest.Mocked<GitService>;
-
-    mockLinterExecutionUseCase = {
+    mockListFiles = createMockListFiles();
+    mockGitRemoteUrlService = createMockGitService();
+    mockLinterExecutionUseCase = createMockExecuteLinterProgramsUseCase({
       execute: jest.fn(async (command: ExecuteLinterProgramsCommand) => ({
         file: command.filePath,
         violations: command.programs.map<LinterExecutionViolation>(
@@ -52,47 +61,32 @@ describe('LintFilesLocallyUseCase', () => {
           }),
         ),
       })),
-    } as unknown as jest.Mocked<IExecuteLinterProgramsUseCase>;
+    });
 
-    mockPackmindGateway = {
-      getMcpToken: jest.fn(),
-      getMcpUrl: jest.fn(),
-      notifyDistribution: jest.fn(),
-      uploadSkill: jest.fn(),
-      listExecutionPrograms: jest.fn(),
-      getDraftDetectionProgramsForRule: jest.fn(),
-      getActiveDetectionProgramsForRule: jest.fn(),
-      getPullData: jest.fn(),
-      listPackages: jest.fn(),
-      getPackageSummary: jest.fn(),
-      getDetectionProgramsForPackages: jest.fn(),
-    };
+    mockLinterGateway = createMockLinterGateway();
+    mockPackmindGateway = createMockPackmindGateway({
+      linter: mockLinterGateway,
+    });
 
-    mockConfigFileRepository = {
-      readConfig: jest.fn(),
-      writeConfig: jest.fn(),
-      readHierarchicalConfig: jest.fn(),
-      findAllConfigsInTree: jest.fn(),
-      findDescendantConfigs: jest.fn(),
-    } as unknown as jest.Mocked<ConfigFileRepository>;
+    mockConfigFileRepository = createMockConfigFileRepository();
 
-    mockServices = {
+    mockServices = createMockServices({
       listFiles: mockListFiles,
       gitRemoteUrlService: mockGitRemoteUrlService,
       linterExecutionUseCase: mockLinterExecutionUseCase,
-    };
+    });
 
-    mockRepositories = {
+    mockRepositories = createMockPackmindRepositories({
       packmindGateway: mockPackmindGateway,
       configFileRepository: mockConfigFileRepository,
-    };
+    });
 
     (fs.stat as jest.Mock).mockResolvedValue({
       isFile: () => false,
       isDirectory: () => true,
     });
 
-    useCase = new LintFilesLocallyUseCase(
+    useCase = new LintFilesFromConfigUseCase(
       mockServices,
       mockRepositories,
       logger,
@@ -122,14 +116,14 @@ describe('LintFilesLocallyUseCase', () => {
         basePath: '/project',
       };
 
-      mockGitRemoteUrlService.tryGetGitRepositoryRoot.mockResolvedValue(
+      mockGitRemoteUrlService.tryGetGitRepositoryRoot.mockReturnValue(
         '/project',
       );
       mockConfigFileRepository.findAllConfigsInTree.mockResolvedValue(
         allConfigs,
       );
       mockListFiles.listFilesInDirectory.mockResolvedValue([]);
-      mockPackmindGateway.getDetectionProgramsForPackages.mockResolvedValue({
+      mockLinterGateway.getDetectionProgramsForPackages.mockResolvedValue({
         targets: [],
       });
 
@@ -153,7 +147,7 @@ describe('LintFilesLocallyUseCase', () => {
         basePath: '/project',
       };
 
-      mockGitRemoteUrlService.tryGetGitRepositoryRoot.mockResolvedValue(
+      mockGitRemoteUrlService.tryGetGitRepositoryRoot.mockReturnValue(
         '/project',
       );
       mockConfigFileRepository.findAllConfigsInTree.mockResolvedValue(
@@ -163,14 +157,14 @@ describe('LintFilesLocallyUseCase', () => {
         { path: '/project/src/file.ts' },
       ]);
       mockListFiles.readFileContent.mockResolvedValue('const x = 1;');
-      mockPackmindGateway.getDetectionProgramsForPackages.mockResolvedValue({
+      mockLinterGateway.getDetectionProgramsForPackages.mockResolvedValue({
         targets: [],
       });
 
       await useCase.execute({ path: '/project' });
 
       expect(
-        mockPackmindGateway.getDetectionProgramsForPackages,
+        mockPackmindGateway.linter.getDetectionProgramsForPackages,
       ).toHaveBeenCalledWith({
         packagesSlugs: ['frontend', 'shared'],
       });
@@ -185,7 +179,7 @@ describe('LintFilesLocallyUseCase', () => {
         basePath: '/project',
       };
 
-      mockGitRemoteUrlService.tryGetGitRepositoryRoot.mockResolvedValue(
+      mockGitRemoteUrlService.tryGetGitRepositoryRoot.mockReturnValue(
         '/project',
       );
       mockConfigFileRepository.findAllConfigsInTree.mockResolvedValue(
@@ -212,7 +206,7 @@ describe('LintFilesLocallyUseCase', () => {
         basePath: '/project',
       };
 
-      mockGitRemoteUrlService.tryGetGitRepositoryRoot.mockResolvedValue(
+      mockGitRemoteUrlService.tryGetGitRepositoryRoot.mockReturnValue(
         '/project',
       );
       mockConfigFileRepository.findAllConfigsInTree.mockResolvedValue(
@@ -222,14 +216,14 @@ describe('LintFilesLocallyUseCase', () => {
         { path: '/project/apps/api/file.ts' },
       ]);
       mockListFiles.readFileContent.mockResolvedValue('const x = 1;');
-      mockPackmindGateway.getDetectionProgramsForPackages.mockResolvedValue({
+      mockLinterGateway.getDetectionProgramsForPackages.mockResolvedValue({
         targets: [],
       });
 
       await useCase.execute({ path: '/project/apps/api' });
 
       expect(
-        mockPackmindGateway.getDetectionProgramsForPackages,
+        mockLinterGateway.getDetectionProgramsForPackages,
       ).toHaveBeenCalledWith({
         packagesSlugs: ['root-package'],
       });
@@ -255,14 +249,14 @@ describe('LintFilesLocallyUseCase', () => {
         basePath: '/project',
       };
 
-      mockGitRemoteUrlService.tryGetGitRepositoryRoot.mockResolvedValue(
+      mockGitRemoteUrlService.tryGetGitRepositoryRoot.mockReturnValue(
         '/project',
       );
       mockConfigFileRepository.findAllConfigsInTree.mockResolvedValue(
         allConfigs,
       );
       mockListFiles.readFileContent.mockResolvedValue('const x = 1;');
-      mockPackmindGateway.getDetectionProgramsForPackages.mockResolvedValue({
+      mockLinterGateway.getDetectionProgramsForPackages.mockResolvedValue({
         targets: [],
       });
 
@@ -276,7 +270,7 @@ describe('LintFilesLocallyUseCase', () => {
 
   describe('when executing linting with target-based matching', () => {
     describe('when detection programs return violations', () => {
-      let result: Awaited<ReturnType<LintFilesLocallyUseCase['execute']>>;
+      let result: Awaited<ReturnType<LintFilesFromConfigUseCase['execute']>>;
 
       beforeEach(async () => {
         const allConfigs: AllConfigsResult = {
@@ -291,7 +285,7 @@ describe('LintFilesLocallyUseCase', () => {
           basePath: '/project',
         };
 
-        const mockDetectionPrograms = {
+        const mockDetectionPrograms: GetDetectionProgramsForPackagesResponse = {
           targets: [
             {
               name: 'Root Target',
@@ -308,7 +302,7 @@ describe('LintFilesLocallyUseCase', () => {
                         {
                           language: 'typescript',
                           detectionProgram: {
-                            mode: 'ast',
+                            mode: DetectionModeEnum.SINGLE_AST,
                             code: 'function checkSourceCode(ast) { return [1]; }',
                             sourceCodeState: 'AST' as const,
                           },
@@ -322,7 +316,7 @@ describe('LintFilesLocallyUseCase', () => {
           ],
         };
 
-        mockGitRemoteUrlService.tryGetGitRepositoryRoot.mockResolvedValue(
+        mockGitRemoteUrlService.tryGetGitRepositoryRoot.mockReturnValue(
           '/project',
         );
         mockConfigFileRepository.findAllConfigsInTree.mockResolvedValue(
@@ -332,7 +326,7 @@ describe('LintFilesLocallyUseCase', () => {
           { path: '/project/src/file.ts' },
         ]);
         mockListFiles.readFileContent.mockResolvedValue('const x = 1;');
-        mockPackmindGateway.getDetectionProgramsForPackages.mockResolvedValue(
+        mockLinterGateway.getDetectionProgramsForPackages.mockResolvedValue(
           mockDetectionPrograms,
         );
 
@@ -353,7 +347,7 @@ describe('LintFilesLocallyUseCase', () => {
     });
 
     describe('when file matches multiple targets', () => {
-      let result: Awaited<ReturnType<LintFilesLocallyUseCase['execute']>>;
+      let result: Awaited<ReturnType<LintFilesFromConfigUseCase['execute']>>;
 
       beforeEach(async () => {
         const allConfigs: AllConfigsResult = {
@@ -373,7 +367,7 @@ describe('LintFilesLocallyUseCase', () => {
           basePath: '/project',
         };
 
-        const genericPrograms = {
+        const genericPrograms: GetDetectionProgramsForPackagesResponse = {
           targets: [
             {
               name: 'Generic Target',
@@ -390,7 +384,7 @@ describe('LintFilesLocallyUseCase', () => {
                         {
                           language: 'typescript',
                           detectionProgram: {
-                            mode: 'ast',
+                            mode: DetectionModeEnum.SINGLE_AST,
                             code: 'function checkSourceCode(ast) { return [1]; }',
                             sourceCodeState: 'AST' as const,
                           },
@@ -404,7 +398,7 @@ describe('LintFilesLocallyUseCase', () => {
           ],
         };
 
-        const backendPrograms = {
+        const backendPrograms: GetDetectionProgramsForPackagesResponse = {
           targets: [
             {
               name: 'Backend Target',
@@ -421,7 +415,7 @@ describe('LintFilesLocallyUseCase', () => {
                         {
                           language: 'typescript',
                           detectionProgram: {
-                            mode: 'ast',
+                            mode: DetectionModeEnum.SINGLE_AST,
                             code: 'function checkSourceCode(ast) { return [2]; }',
                             sourceCodeState: 'AST' as const,
                           },
@@ -435,7 +429,7 @@ describe('LintFilesLocallyUseCase', () => {
           ],
         };
 
-        mockGitRemoteUrlService.tryGetGitRepositoryRoot.mockResolvedValue(
+        mockGitRemoteUrlService.tryGetGitRepositoryRoot.mockReturnValue(
           '/project',
         );
         mockConfigFileRepository.findAllConfigsInTree.mockResolvedValue(
@@ -445,7 +439,7 @@ describe('LintFilesLocallyUseCase', () => {
           { path: '/project/src/file.ts' },
         ]);
         mockListFiles.readFileContent.mockResolvedValue('const x = 1;');
-        mockPackmindGateway.getDetectionProgramsForPackages
+        mockLinterGateway.getDetectionProgramsForPackages
           .mockResolvedValueOnce(genericPrograms)
           .mockResolvedValueOnce(backendPrograms);
 
@@ -487,7 +481,7 @@ describe('LintFilesLocallyUseCase', () => {
         basePath: '/project',
       };
 
-      mockGitRemoteUrlService.tryGetGitRepositoryRoot.mockResolvedValue(
+      mockGitRemoteUrlService.tryGetGitRepositoryRoot.mockReturnValue(
         '/project',
       );
       mockConfigFileRepository.findAllConfigsInTree.mockResolvedValue(
@@ -497,7 +491,7 @@ describe('LintFilesLocallyUseCase', () => {
         { path: '/project/apps/api/file.ts' },
       ]);
       mockListFiles.readFileContent.mockResolvedValue('const x = 1;');
-      mockPackmindGateway.getDetectionProgramsForPackages.mockResolvedValue({
+      mockLinterGateway.getDetectionProgramsForPackages.mockResolvedValue({
         targets: [],
       });
 
@@ -505,12 +499,12 @@ describe('LintFilesLocallyUseCase', () => {
 
       // Both targets have same packages, so API should only be called once
       expect(
-        mockPackmindGateway.getDetectionProgramsForPackages,
+        mockLinterGateway.getDetectionProgramsForPackages,
       ).toHaveBeenCalledTimes(1);
     });
 
     describe('when file is outside a specific target path', () => {
-      let result: Awaited<ReturnType<LintFilesLocallyUseCase['execute']>>;
+      let result: Awaited<ReturnType<LintFilesFromConfigUseCase['execute']>>;
 
       beforeEach(async () => {
         const allConfigs: AllConfigsResult = {
@@ -530,7 +524,7 @@ describe('LintFilesLocallyUseCase', () => {
           basePath: '/project',
         };
 
-        const genericPrograms = {
+        const genericPrograms: GetDetectionProgramsForPackagesResponse = {
           targets: [
             {
               name: 'Generic Target',
@@ -547,7 +541,7 @@ describe('LintFilesLocallyUseCase', () => {
                         {
                           language: 'typescript',
                           detectionProgram: {
-                            mode: 'ast',
+                            mode: DetectionModeEnum.SINGLE_AST,
                             code: 'function checkSourceCode(ast) { return [1]; }',
                             sourceCodeState: 'AST' as const,
                           },
@@ -561,7 +555,7 @@ describe('LintFilesLocallyUseCase', () => {
           ],
         };
 
-        const backendPrograms = {
+        const backendPrograms: GetDetectionProgramsForPackagesResponse = {
           targets: [
             {
               name: 'Backend Target',
@@ -578,7 +572,7 @@ describe('LintFilesLocallyUseCase', () => {
                         {
                           language: 'typescript',
                           detectionProgram: {
-                            mode: 'ast',
+                            mode: DetectionModeEnum.SINGLE_AST,
                             code: 'function checkSourceCode(ast) { return [2]; }',
                             sourceCodeState: 'AST' as const,
                           },
@@ -592,7 +586,7 @@ describe('LintFilesLocallyUseCase', () => {
           ],
         };
 
-        mockGitRemoteUrlService.tryGetGitRepositoryRoot.mockResolvedValue(
+        mockGitRemoteUrlService.tryGetGitRepositoryRoot.mockReturnValue(
           '/project',
         );
         mockConfigFileRepository.findAllConfigsInTree.mockResolvedValue(
@@ -603,7 +597,7 @@ describe('LintFilesLocallyUseCase', () => {
           { path: '/project/libs/utils.ts' },
         ]);
         mockListFiles.readFileContent.mockResolvedValue('const x = 1;');
-        mockPackmindGateway.getDetectionProgramsForPackages
+        mockLinterGateway.getDetectionProgramsForPackages
           .mockResolvedValueOnce(genericPrograms)
           .mockResolvedValueOnce(backendPrograms);
 
