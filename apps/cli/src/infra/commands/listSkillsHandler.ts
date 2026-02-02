@@ -1,5 +1,10 @@
 import { PackmindCliHexa } from '../../PackmindCliHexa';
-import { formatSlug, formatLabel } from '../utils/consoleLogger';
+import {
+  formatSlug,
+  formatLabel,
+  formatLink,
+  formatHeader,
+} from '../utils/consoleLogger';
 import { loadApiKey, decodeApiKey } from '../utils/credentials';
 
 function buildSkillUrl(
@@ -48,12 +53,15 @@ export async function listSkillsHandler(
       }
     }
 
-    log('Available skills:\n');
+    log(formatHeader(`📋 Skills (${sortedSkills.length})\n`));
     sortedSkills.forEach((skill, index) => {
-      log(`- ${formatSlug(skill.slug)}`);
-      log(`    ${formatLabel('Name:')} ${skill.name}`);
+      log(`  ${formatSlug(skill.slug)}`);
+      log(`  ${formatLabel('Name:')}  ${skill.name}`);
       if (urlBuilder) {
-        log(`    ${formatLabel('URL:')} ${urlBuilder(skill.slug)}`);
+        const url = urlBuilder(skill.slug);
+        log(
+          `  ${formatLabel('Link:')}  ${formatLink(url, 'Open in Packmind')}`,
+        );
       }
       if (skill.description) {
         const descriptionLines = skill.description
@@ -61,11 +69,12 @@ export async function listSkillsHandler(
           .split('\n')
           .map((line) => line.trim())
           .filter((line) => line.length > 0);
-        const [firstLine, ...restLines] = descriptionLines;
-        log(`    ${formatLabel('Description:')} ${firstLine}`);
-        restLines.forEach((line) => {
-          log(`                 ${line}`);
-        });
+        const firstLine = descriptionLines[0];
+        if (firstLine) {
+          const truncated =
+            firstLine.length > 80 ? firstLine.slice(0, 77) + '...' : firstLine;
+          log(`  ${formatLabel('Desc:')}  ${truncated}`);
+        }
       }
       if (index < sortedSkills.length - 1) {
         log('');

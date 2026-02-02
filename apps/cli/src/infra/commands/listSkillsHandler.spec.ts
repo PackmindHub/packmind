@@ -32,44 +32,75 @@ describe('listSkillsHandler', () => {
     jest.clearAllMocks();
   });
 
-  it('displays skills sorted by slug', async () => {
-    mockPackmindCliHexa.listSkills.mockResolvedValue([
-      { slug: 'zebra-skill', name: 'Zebra Skill', description: 'Desc Z' },
-      { slug: 'alpha-skill', name: 'Alpha Skill', description: 'Desc A' },
-    ]);
+  describe('when skills exist', () => {
+    beforeEach(async () => {
+      mockPackmindCliHexa.listSkills.mockResolvedValue([
+        { slug: 'zebra-skill', name: 'Zebra Skill', description: 'Desc Z' },
+        { slug: 'alpha-skill', name: 'Alpha Skill', description: 'Desc A' },
+      ]);
 
-    await listSkillsHandler(deps);
+      await listSkillsHandler(deps);
+    });
 
-    expect(mockLog).toHaveBeenCalledWith('Available skills:\n');
-    const logCalls = mockLog.mock.calls.map((c) => c[0]);
-    const alphaIndex = logCalls.findIndex((c: string) =>
-      c.includes('alpha-skill'),
-    );
-    const zebraIndex = logCalls.findIndex((c: string) =>
-      c.includes('zebra-skill'),
-    );
-    expect(alphaIndex).toBeLessThan(zebraIndex);
-    expect(mockExit).toHaveBeenCalledWith(0);
+    it('displays header with count', () => {
+      const logCalls = mockLog.mock.calls.map((c) => c[0]);
+      const headerCall = logCalls.find((c: string) => c.includes('Skills (2)'));
+
+      expect(headerCall).toBeDefined();
+    });
+
+    it('sorts skills alphabetically by slug', () => {
+      const logCalls = mockLog.mock.calls.map((c) => c[0]);
+      const alphaIndex = logCalls.findIndex((c: string) =>
+        c.includes('alpha-skill'),
+      );
+      const zebraIndex = logCalls.findIndex((c: string) =>
+        c.includes('zebra-skill'),
+      );
+
+      expect(alphaIndex).toBeLessThan(zebraIndex);
+    });
+
+    it('exits with code 0', () => {
+      expect(mockExit).toHaveBeenCalledWith(0);
+    });
   });
 
-  it('displays message when no skills found', async () => {
-    mockPackmindCliHexa.listSkills.mockResolvedValue([]);
+  describe('when no skills found', () => {
+    beforeEach(async () => {
+      mockPackmindCliHexa.listSkills.mockResolvedValue([]);
 
-    await listSkillsHandler(deps);
+      await listSkillsHandler(deps);
+    });
 
-    expect(mockLog).toHaveBeenCalledWith('No skills found.');
-    expect(mockExit).toHaveBeenCalledWith(0);
+    it('displays empty message', () => {
+      expect(mockLog).toHaveBeenCalledWith('No skills found.');
+    });
+
+    it('exits with code 0', () => {
+      expect(mockExit).toHaveBeenCalledWith(0);
+    });
   });
 
-  it('displays error on failure', async () => {
-    mockPackmindCliHexa.listSkills.mockRejectedValue(
-      new Error('Network error'),
-    );
+  describe('when API fails', () => {
+    beforeEach(async () => {
+      mockPackmindCliHexa.listSkills.mockRejectedValue(
+        new Error('Network error'),
+      );
 
-    await listSkillsHandler(deps);
+      await listSkillsHandler(deps);
+    });
 
-    expect(mockError).toHaveBeenCalledWith('\n❌ Failed to list skills:');
-    expect(mockError).toHaveBeenCalledWith('   Network error');
-    expect(mockExit).toHaveBeenCalledWith(1);
+    it('displays error header', () => {
+      expect(mockError).toHaveBeenCalledWith('\n❌ Failed to list skills:');
+    });
+
+    it('displays error message', () => {
+      expect(mockError).toHaveBeenCalledWith('   Network error');
+    });
+
+    it('exits with code 1', () => {
+      expect(mockExit).toHaveBeenCalledWith(1);
+    });
   });
 });

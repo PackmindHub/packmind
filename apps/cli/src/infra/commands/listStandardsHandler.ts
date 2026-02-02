@@ -1,5 +1,10 @@
 import { PackmindCliHexa } from '../../PackmindCliHexa';
-import { formatSlug, formatLabel } from '../utils/consoleLogger';
+import {
+  formatSlug,
+  formatLabel,
+  formatLink,
+  formatHeader,
+} from '../utils/consoleLogger';
 import { loadApiKey, decodeApiKey } from '../utils/credentials';
 
 function buildStandardUrl(
@@ -48,12 +53,15 @@ export async function listStandardsHandler(
       }
     }
 
-    log('Available standards:\n');
+    log(formatHeader(`📋 Standards (${sortedStandards.length})\n`));
     sortedStandards.forEach((standard, index) => {
-      log(`- ${formatSlug(standard.slug)}`);
-      log(`    ${formatLabel('Name:')} ${standard.name}`);
+      log(`  ${formatSlug(standard.slug)}`);
+      log(`  ${formatLabel('Name:')}  ${standard.name}`);
       if (urlBuilder) {
-        log(`    ${formatLabel('URL:')} ${urlBuilder(standard.id)}`);
+        const url = urlBuilder(standard.id);
+        log(
+          `  ${formatLabel('Link:')}  ${formatLink(url, 'Open in Packmind')}`,
+        );
       }
       if (standard.description) {
         const descriptionLines = standard.description
@@ -61,11 +69,12 @@ export async function listStandardsHandler(
           .split('\n')
           .map((line) => line.trim())
           .filter((line) => line.length > 0);
-        const [firstLine, ...restLines] = descriptionLines;
-        log(`    ${formatLabel('Description:')} ${firstLine}`);
-        restLines.forEach((line) => {
-          log(`                 ${line}`);
-        });
+        const firstLine = descriptionLines[0];
+        if (firstLine) {
+          const truncated =
+            firstLine.length > 80 ? firstLine.slice(0, 77) + '...' : firstLine;
+          log(`  ${formatLabel('Desc:')}  ${truncated}`);
+        }
       }
       if (index < sortedStandards.length - 1) {
         log('');
