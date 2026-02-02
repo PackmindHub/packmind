@@ -4,7 +4,11 @@ import { createPackageHandler } from './createPackageHandler';
 import {
   logErrorConsole,
   logConsole,
-  logSuccessConsole,
+  formatSlug,
+  formatLabel,
+  formatLink,
+  formatCommand,
+  formatHeader,
 } from '../utils/consoleLogger';
 import { PackmindLogger, LogLevel } from '@packmind/logger';
 import { CreatePackageUseCase } from '../../application/useCases/CreatePackageUseCase';
@@ -35,17 +39,23 @@ export const createPackageCommand = command({
       const result = await createPackageHandler(name, description, useCase);
 
       if (result.success) {
-        logSuccessConsole(
-          `Package "${result.packageName}" created successfully`,
+        logConsole('');
+        logConsole(formatHeader(`✅ Package created successfully\n`));
+        logConsole(`  ${formatLabel('Name:')}  ${result.packageName}`);
+        logConsole(
+          `  ${formatLabel('Slug:')}  ${formatSlug(result.slug ?? '')}`,
         );
         logConsole('');
-        logConsole(`Created: ${result.slug}`);
+        logConsole(formatHeader(`📋 Next steps\n`));
         if (result.webappUrl) {
-          logConsole(`You can see it at: ${result.webappUrl}`);
+          logConsole(
+            `  ${formatLabel('View:')}  ${formatLink(result.webappUrl, 'Open in Packmind')}`,
+          );
         }
         logConsole(
-          `You can install it with: packmind-cli packages install ${result.slug}`,
+          `  ${formatLabel('Install:')}  ${formatCommand(`packmind-cli packages install ${result.slug}`)}`,
         );
+        logConsole('');
         process.exit(0);
       } else {
         logErrorConsole(`Failed to create package: ${result.error}`);

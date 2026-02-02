@@ -1,5 +1,7 @@
 import { FileUpdates } from '@packmind/types';
+import { CliListCommandsDeployer } from './CliListCommandsDeployer';
 import { CreateCommandDeployer } from './CreateCommandDeployer';
+import { CreatePackageDeployer } from './CreatePackageDeployer';
 import { CreateSkillDeployer } from './CreateSkillDeployer';
 import { CreateStandardDeployer } from './CreateStandardDeployer';
 import { OnboardDeployer } from './OnboardDeployer';
@@ -15,6 +17,8 @@ export class DefaultSkillsDeployer {
     const standardCreatorFiles = this.deployStandardCreator();
     const commandCreatorFiles = this.deployCommandCreator();
     const onboardFiles = this.deployOnboard();
+    const packageCreatorFiles = this.deployPackageCreator();
+    const cliListCommandsFiles = this.deployCliListCommands();
 
     return {
       createOrUpdate: [
@@ -22,12 +26,16 @@ export class DefaultSkillsDeployer {
         ...standardCreatorFiles.createOrUpdate,
         ...commandCreatorFiles.createOrUpdate,
         ...onboardFiles.createOrUpdate,
+        ...packageCreatorFiles.createOrUpdate,
+        ...cliListCommandsFiles.createOrUpdate,
       ],
       delete: [
         ...skillCreatorFiles.delete,
         ...standardCreatorFiles.delete,
         ...commandCreatorFiles.delete,
         ...onboardFiles.delete,
+        ...packageCreatorFiles.delete,
+        ...cliListCommandsFiles.delete,
       ],
     };
   }
@@ -55,5 +63,19 @@ export class DefaultSkillsDeployer {
 
   private deployOnboard(): FileUpdates {
     return new OnboardDeployer().deploy(this.agentName, this.skillsFolderPath);
+  }
+
+  private deployPackageCreator(): FileUpdates {
+    return new CreatePackageDeployer().deploy(
+      this.agentName,
+      this.skillsFolderPath,
+    );
+  }
+
+  private deployCliListCommands(): FileUpdates {
+    return new CliListCommandsDeployer().deploy(
+      this.agentName,
+      this.skillsFolderPath,
+    );
   }
 }
