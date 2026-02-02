@@ -2,17 +2,16 @@ import { IPublicUseCase, RuleId } from '@packmind/types';
 import { LintViolation } from '../entities/LintViolation';
 import { DiffMode } from '../entities/DiffMode';
 
-export type LintFilesInDirectoryCommand = {
+export type LintFilesAgainstRuleCommand = {
   path: string;
+  standardSlug: string;
+  ruleId: RuleId;
   draftMode?: boolean;
-  standardSlug?: string;
-  ruleId?: RuleId;
   language?: string;
   diffMode?: DiffMode;
 };
 
-export type LintFilesInDirectoryResult = {
-  gitRemoteUrl: string;
+export type LintFilesAgainstRuleResult = {
   violations: LintViolation[];
   summary: {
     totalFiles: number;
@@ -22,7 +21,7 @@ export type LintFilesInDirectoryResult = {
   };
 };
 
-export type ILintFilesInDirectory = IPublicUseCase<
-  LintFilesInDirectoryCommand,
-  LintFilesInDirectoryResult
+export type ILintFilesAgainstRule = IPublicUseCase<
+  LintFilesAgainstRuleCommand,
+  LintFilesAgainstRuleResult
 >;
