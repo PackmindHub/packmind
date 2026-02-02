@@ -19,7 +19,7 @@ These are alternative distribution methods—you can choose the approach that fi
 
 ## Creating Packages
 
-Create packages through the web interface:
+### Via Web Interface
 
 1. Navigate to **Packages** in the Packmind UI
 2. Click **Create Package**
@@ -27,7 +27,19 @@ Create packages through the web interface:
 4. Select commands, standards, and skills to include
 5. Save the package
 
-You can also add items to packages automatically when creating commands or standards via the MCP server by including the `packageSlugs` parameter. Skills are added to packages through the web interface after uploading them via CLI.
+### Via CLI
+
+Create an empty package from the command line:
+
+```bash
+packmind-cli packages create "My Package" -d "Package description"
+```
+
+See the [CLI documentation](/tools/cli#packages-command) for details.
+
+### Adding Items to Packages
+
+You can add items to packages automatically when creating commands or standards via the MCP server by including the `packageSlugs` parameter. Skills are added to packages through the web interface after uploading them via CLI.
 
 ## Using Packages
 
