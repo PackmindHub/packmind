@@ -1,0 +1,77 @@
+{
+  "name": "Scaffold Domain Package",
+  "summary": "Create a new domain package with complete directory structure, TypeORM schemas, repositories, services, use cases, and adapters following Packmind conventions so that new domain modules maintain architectural consistency and are immediately ready for business logic implementation",
+  "whenToUse": [
+    "Starting development on a new business domain (e.g., notifications, billing, analytics)",
+    "Splitting an existing domain into a new standalone package",
+    "Adding a new cross-domain concern to the monorepo"
+  ],
+  "contextValidationCheckpoints": [
+    "What is the domain name (e.g., 'notifications', 'billing')? Should be lowercase singular or plural noun.",
+    "What are the core entities in this domain (e.g., Notification, Template, Channel)?",
+    "Does this domain need to expose a hexagonal port for cross-domain communication?",
+    "Will this domain interact with external systems (API, database, message queue)?"
+  ],
+  "steps": [
+    {
+      "name": "Create Package Structure",
+      "description": "Generate the base package directory with TypeScript configuration and npm scripts following monorepo conventions. This establishes the foundation for all domain code.",
+      "codeSnippet": "mkdir -p packages/{domainName}/src/{domain,application,infra}\nmkdir -p packages/{domainName}/test\ncat > packages/{domainName}/package.json << 'EOF'\n{\n  \"name\": \"@packmind/{domainName}\",\n  \"version\": \"0.0.0\",\n  \"main\": \"./dist/index.js\",\n  \"scripts\": {\n    \"test\": \"nx test {domainName}\",\n    \"lint\": \"nx lint {domainName}\",\n    \"build\": \"nx build {domainName}\"\n  }\n}\nEOF"
+    },
+    {
+      "name": "Define Domain Entities",
+      "description": "Create domain entity interfaces in packages/types/src/{domain}/ with Branded ID types and factory helpers for type safety. Entities define the domain model contract.",
+      "codeSnippet": "# Create entity type file\ncat > packages/types/src/{domain}/{Entity}.ts << 'EOF'\nimport { Branded, brandedIdFactory } from '@packmind/types';\n\nexport type {Entity}Id = Branded<'{Entity}Id'>;\nexport const create{Entity}Id = brandedIdFactory<{Entity}Id>();\n\nexport type {Entity} = {\n  id: {Entity}Id;\n  name: string;\n  createdAt: Date;\n  updatedAt: Date;\n};\nEOF"
+    },
+    {
+      "name": "Create TypeORM Schemas",
+      "description": "Define TypeORM entity schemas in packages/{domain}/src/infra/schemas/ that map domain entities to database tables with proper relationships and constraints.",
+      "codeSnippet": "cat > packages/{domain}/src/infra/schemas/{Entity}Schema.ts << 'EOF'\nimport { Entity, PrimaryColumn, Column, CreateDateColumn, UpdateDateColumn } from 'typeorm';\n\n@Entity('{entities}')\nexport class {Entity}Schema {\n  @PrimaryColumn('uuid')\n  id: string;\n\n  @Column('text')\n  name: string;\n\n  @CreateDateColumn()\n  createdAt: Date;\n\n  @UpdateDateColumn()\n  updatedAt: Date;\n}\nEOF"
+    },
+    {
+      "name": "Create Repository Interfaces",
+      "description": "Define IRepository interfaces in packages/{domain}/src/domain/repositories/ that specify data access contracts. Repositories are domain-internal and define CRUD operations.",
+      "codeSnippet": "cat > packages/{domain}/src/domain/repositories/I{Entity}Repository.ts << 'EOF'\nimport { IRepository } from '@packmind/types';\nimport { {Entity} } from '@packmind/types';\n\nexport interface I{Entity}Repository extends IRepository<{Entity}> {\n  findBySlug(slug: string): Promise<{Entity} | null>;\n}\nEOF"
+    },
+    {
+      "name": "Implement Repository Classes",
+      "description": "Create repository implementations extending AbstractRepository in packages/{domain}/src/infra/repositories/ that use TypeORM DataSource and provide the data access layer.",
+      "codeSnippet": "cat > packages/{domain}/src/infra/repositories/{Entity}Repository.ts << 'EOF'\nimport { Repository } from 'typeorm';\nimport { AbstractRepository, PackmindLogger, stubLogger } from '@packmind/types';\nimport { {Entity} } from '@packmind/types';\nimport { I{Entity}Repository } from '../../domain/repositories/I{Entity}Repository';\nimport { {Entity}Schema } from '../schemas/{Entity}Schema';\n\nconst origin = '{Entity}Repository';\n\nexport class {Entity}Repository extends AbstractRepository<{Entity}> implements I{Entity}Repository {\n  constructor(\n    private repository: Repository<{Entity}Schema>,\n    private logger: PackmindLogger = stubLogger(origin),\n  ) {\n    super(repository, logger);\n  }\n}\nEOF"
+    },
+    {
+      "name": "Create Application Services",
+      "description": "Implement domain services in packages/{domain}/src/application/services/ that orchestrate repository operations and provide business logic for use cases.",
+      "codeSnippet": "cat > packages/{domain}/src/application/services/{Entity}Service.ts << 'EOF'\nimport { PackmindLogger, stubLogger } from '@packmind/types';\nimport { I{Entity}Repository } from '../../domain/repositories/I{Entity}Repository';\n\nconst origin = '{Entity}Service';\n\nexport class {Entity}Service {\n  constructor(\n    private repository: I{Entity}Repository,\n    private logger: PackmindLogger = stubLogger(origin),\n  ) {}\n\n  async add(entity: {Entity}): Promise<void> {\n    this.logger.info(`${origin}: Adding {entity}`);\n    await this.repository.add(entity);\n  }\n}\nEOF"
+    },
+    {
+      "name": "Create Use Cases",
+      "description": "Define use case implementations in packages/{domain}/src/application/useCases/ that accept command objects and delegate to services. Each use case represents one user action.",
+      "codeSnippet": "mkdir -p packages/{domain}/src/application/useCases/create{Entity}\ncat > packages/{domain}/src/application/useCases/create{Entity}/Create{Entity}UseCase.ts << 'EOF'\nimport { PackmindLogger, stubLogger } from '@packmind/types';\nimport { {Entity}Service } from '../../services/{Entity}Service';\n\nconst origin = 'Create{Entity}UseCase';\n\nexport class Create{Entity}UseCase {\n  constructor(\n    private service: {Entity}Service,\n    private logger: PackmindLogger = stubLogger(origin),\n  ) {}\n\n  async execute(command: any): Promise<any> {\n    this.logger.info(`${origin}: Starting execution`);\n    // Implementation\n  }\n}\nEOF"
+    },
+    {
+      "name": "Create Hexagonal Port (if cross-domain)",
+      "description": "Define I{Domain}Port interface in packages/types/src/{domain}/ports/ to expose use cases to other domains via command/response pattern.",
+      "codeSnippet": "cat > packages/types/src/{domain}/ports/I{Domain}Port.ts << 'EOF'\nexport const I{Domain}Port = 'I{Domain}Port';\n\nexport interface I{Domain}Port {\n  create{Entity}(command: Create{Entity}Command): Promise<{Entity}>;\n}\nEOF"
+    },
+    {
+      "name": "Create Port Adapter",
+      "description": "Implement the port interface in packages/{domain}/src/application/adapter/ using double-interface pattern to connect domain use cases to the hexagonal architecture.",
+      "codeSnippet": "cat > packages/{domain}/src/application/adapter/{Domain}Adapter.ts << 'EOF'\nimport { I{Domain}Port } from '@packmind/types';\nimport { IBaseAdapter } from '@packmind/types';\nimport { Create{Entity}UseCase } from '../useCases/create{Entity}/Create{Entity}UseCase';\n\nexport class {Domain}Adapter implements IBaseAdapter<I{Domain}Port>, I{Domain}Port {\n  constructor(private createUseCase: Create{Entity}UseCase) {}\n\n  async create{Entity}(command: any): Promise<any> {\n    return this.createUseCase.execute(command);\n  }\n}\nEOF"
+    },
+    {
+      "name": "Create Test Factories",
+      "description": "Define factory functions in packages/{domain}/test/*Factory.ts for all domain entities to support consistent test data generation with sensible defaults.",
+      "codeSnippet": "cat > packages/{domain}/test/{entity}Factory.ts << 'EOF'\nimport { v4 as uuidv4 } from 'uuid';\nimport { create{Entity}Id } from '@packmind/types';\nimport { Factory } from '@packmind/test-utils';\nimport { {Entity} } from '@packmind/types';\n\nexport const {entity}Factory: Factory<{Entity}> = (opts?) => ({\n  id: create{Entity}Id(uuidv4()),\n  name: 'Test {Entity}',\n  createdAt: new Date(),\n  updatedAt: new Date(),\n  ...opts,\n});\nEOF"
+    },
+    {
+      "name": "Create Repository Tests",
+      "description": "Write repository tests in packages/{domain}/src/infra/repositories/{Entity}Repository.spec.ts covering CRUD operations, soft-delete behavior, and complex queries.",
+      "codeSnippet": "# Follow testing-good-practices standard\n# Use makeTestDatasource() for in-memory database\n# Create describe blocks with 'when' context clauses\n# Use single-expect test cases\n# Reference: packages/standards/src/infra/repositories/StandardRepository.spec.ts"
+    },
+    {
+      "name": "Wire Dependency Injection",
+      "description": "Register repositories, services, and adapters in the HexaRegistry during application initialization so they can be discovered and injected across domains.",
+      "codeSnippet": "# In application initialization or bootstrap:\nconst registry = new HexaRegistry();\nregistry.register(I{Domain}Port, new {Domain}Adapter(createUseCase));\n# Services and repositories are auto-wired by the hexagonal framework"
+    }
+  ]
+}

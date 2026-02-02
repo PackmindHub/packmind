@@ -1,0 +1,47 @@
+{
+  "name": "Hexagonal Architecture Pattern",
+  "description": "Establish clear hexagonal (ports & adapters) architecture using BaseHexa for domain packages, with repository aggregators, port interfaces, and adapter injection patterns. Each domain package (accounts, spaces, standards, etc.) extends BaseHexa to implement two-phase initialization (constructor for DI setup, initialize() for registry access), repository aggregators in infra/ directories, and port-based cross-domain communication through the HexaRegistry.",
+  "scope": "All domain packages in packages/ directory (accounts, spaces, standards, recipes, skills, deployments, git) and NestJS application integration in apps/api",
+  "rules": [
+    {
+      "content": "Extend BaseHexa for all domain packages with two-phase initialization: constructor for dependency injection setup and initialize() method for registry-dependent initialization",
+      "examples": {
+        "positive": "export class AccountsHexa extends BaseHexa<IAccountsPort, AccountsAdapters> {\n  constructor(\n    dataSource: DataSource,\n    eventEmitterService: EventEmitterService\n  ) {\n    super('accounts');\n    this.repositories = new AccountsRepositories(dataSource);\n  }\n\n  async initialize(): Promise<void> {\n    this.adapters = new AccountsAdapters(\n      this.repositories,\n      this.registry.getAdapter<IAccountsPort>('accounts')\n    );\n  }\n}",
+        "negative": "// WRONG: Direct initialization without two-phase setup\nexport class AccountsHexa extends BaseHexa<IAccountsPort, AccountsAdapters> {\n  constructor(dataSource: DataSource) {\n    super('accounts');\n    // Trying to use registry before initialize()\n    this.adapters = new AccountsAdapters(dataSource, this.registry.getAdapter('accounts'));\n  }\n}",
+        "language": "TYPESCRIPT"
+      }
+    },
+    {
+      "content": "Create repository aggregators (RepositoriesFolder) that instantiate all individual repositories using TypeORM DataSource and provide getter methods for each domain repository",
+      "examples": {
+        "positive": "export class AccountsRepositories implements IAccountsRepositories {\n  private userRepository: UserRepository;\n  private organizationRepository: OrganizationRepository;\n\n  constructor(private dataSource: DataSource) {\n    this.userRepository = new UserRepository(dataSource.getRepository(User));\n    this.organizationRepository = new OrganizationRepository(dataSource.getRepository(Organization));\n  }\n\n  getUserRepository(): IUserRepository {\n    return this.userRepository;\n  }\n\n  getOrganizationRepository(): IOrganizationRepository {\n    return this.organizationRepository;\n  }\n}",
+        "negative": "// WRONG: No aggregation pattern\nexport class UserRepository extends AbstractRepository<User> {\n  constructor(private dataSource: DataSource) {\n    super(dataSource.getRepository(User));\n  }\n}\n// Creating repositories individually throughout the codebase",
+        "language": "TYPESCRIPT"
+      }
+    },
+    {
+      "content": "Define port interfaces in @packmind/types as contracts for cross-domain communication, typed to accept Command/Response pairs from domain contracts",
+      "examples": {
+        "positive": "// In packages/types/src/accounts/ports/IAccountsPort.ts\nexport type IAccountsPort = {\n  generateApiKey(cmd: GenerateApiKeyCommand): Promise<GenerateApiKeyResponse>;\n  getUser(cmd: GetUserCommand): Promise<GetUserResponse>;\n  createOrganization(cmd: CreateOrganizationCommand): Promise<CreateOrganizationResponse>;\n}",
+        "negative": "// WRONG: Port with untyped methods\nexport type IAccountsPort = {\n  generateApiKey(data: any): Promise<any>;\n  getUser(id: string): Promise<User | null>;\n}",
+        "language": "TYPESCRIPT"
+      }
+    },
+    {
+      "content": "Use HexaRegistry in NestJS to register all hexas in dependency order (respecting inter-domain dependencies) during application bootstrap",
+      "examples": {
+        "positive": "HexaRegistryModule.register({\n  hexas: [\n    SpacesHexa,     // Register SpacesHexa first\n    AccountsHexa,   // AccountsHexa depends on SpacesHexa\n    GitHexa,        // GitHexa has no dependencies\n    StandardsHexa,  // StandardsHexa depends on SpacesHexa and DeploymentsHexa\n    DeploymentsHexa // DeploymentsHexa has cross-domain dependencies\n  ]\n})",
+        "negative": "// WRONG: Random registration order\nHexaRegistryModule.register({\n  hexas: [AccountsHexa, StandardsHexa, SpacesHexa, GitHexa, DeploymentsHexa]\n})",
+        "language": "TYPESCRIPT"
+      }
+    },
+    {
+      "content": "Inject hexas in NestJS services via constructor and retrieve domain-specific adapters using getAdapter() method",
+      "examples": {
+        "positive": "export class StandardsService {\n  constructor(\n    @InjectSpacesHexa() private spacesHexa: SpacesHexa,\n    @InjectStandardsHexa() private standardsHexa: StandardsHexa\n  ) {}\n\n  async listStandards(spaceId: string): Promise<StandardDTO[]> {\n    const spacesAdapter = this.spacesHexa.getAdapter();\n    const standardsAdapter = this.standardsHexa.getAdapter();\n    return standardsAdapter.listStandardsBySpace({ spaceId });\n  }\n}",
+        "negative": "// WRONG: Direct repository access in service\nexport class StandardsService {\n  constructor(private standardsRepo: StandardRepository) {}\n\n  async listStandards(spaceId: string): Promise<StandardDTO[]> {\n    return this.standardsRepo.findBySpaceId(spaceId);\n  }\n}",
+        "language": "TYPESCRIPT"
+      }
+    }
+  ]
+}

@@ -1,0 +1,48 @@
+{
+  "name": "Add Domain Event Listener for Cross-Domain Communication",
+  "summary": "Implement an event listener to subscribe to domain events from other packages, handle them with proper error handling, and integrate into hexa initialization for reactive cross-domain workflows.",
+  "whenToUse": [
+    "Domain needs to react to events from other domains (e.g., when a Standard is deleted, update Deployments)",
+    "Implementing async cross-domain workflows without direct dependencies",
+    "Cleaning up or updating related data when parent entities change"
+  ],
+  "contextValidationCheckpoints": [
+    "What events does this domain need to listen to? (e.g., StandardDeletedEvent, CommandDeletedEvent)",
+    "What actions should the listener perform when each event is received?",
+    "Should the listener update other entities, delete related data, or trigger other operations?"
+  ],
+  "steps": [
+    {
+      "name": "Define event handler methods",
+      "description": "Create private handler methods in a new listener class that accept the event type, extract payload, and perform domain operations. Use arrow function syntax to preserve 'this' context: `private handleEventName = async (event: EventType) => { ... }`"
+    },
+    {
+      "name": "Create PackmindListener class",
+      "description": "Create listener class in src/application/listeners/ extending PackmindListener<TAdapter> with access to domain adapter and repositories."
+    },
+    {
+      "name": "Register event handlers in registerHandlers()",
+      "description": "Implement registerHandlers() method calling this.subscribe() for each event, passing the event class and handler method: `this.subscribe(StandardDeletedEvent, this.handleStandardDeleted);`"
+    },
+    {
+      "name": "Implement error handling",
+      "description": "Wrap async operations in try-catch blocks, log errors using the logger, and either retry, queue for later processing, or silently fail depending on domain requirements."
+    },
+    {
+      "name": "Define event types in @packmind/types",
+      "description": "If listening to events from another domain, ensure the event class is exported from the source domain's packages/types contracts. If creating new events, define in packages/types/src/{domain}/events/"
+    },
+    {
+      "name": "Initialize listener in hexa's initialize() method",
+      "description": "In the hexa class's initialize() method, create listener instance, call listener.initialize(this) to provide adapter reference, and call listener.registerHandlers() to subscribe to events."
+    },
+    {
+      "name": "Test listener behavior",
+      "description": "Write tests that emit sample events, verify handlers are called with correct payloads, and verify domain operations execute properly with success and error scenarios."
+    },
+    {
+      "name": "Verify hexa registration order",
+      "description": "Ensure in HexaRegistryModule.register() that the current hexa is registered AFTER any hexas whose events it listens to, so adapters are initialized before listeners register."
+    }
+  ]
+}

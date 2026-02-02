@@ -1,0 +1,62 @@
+{
+  "name": "Standardize Workflow Parity",
+  "summary": "Establish npm scripts for common development, testing, and build workflows that match CI behavior, ensuring developers catch issues locally before pushing to prevent CI failures and reduce feedback loops",
+  "whenToUse": [
+    "Developers report that tests pass locally but fail in CI",
+    "Different developers use different scripts for similar tasks",
+    "New team members are unsure which commands to run before pushing",
+    "CI and local environments have drift in behavior or settings"
+  ],
+  "contextValidationCheckpoints": [
+    "What workflows are currently missing from npm scripts that exist in CI?",
+    "Are there environment variables (NODE_OPTIONS, NX_DAEMON, PACKMIND_EDITION) that should be standardized?",
+    "Should pre-commit or pre-push hooks enforce certain workflows?",
+    "Are there CI-specific flags (--tuiAutoExit, --max-old-space-size) that should be exposed locally?"
+  ],
+  "steps": [
+    {
+      "name": "Audit Existing npm Scripts",
+      "description": "Review package.json scripts against CI workflows in .github/workflows/ to identify gaps where CI runs commands that don't have local equivalents."
+    },
+    {
+      "name": "Create Frontend Preparation Script",
+      "description": "Add npm run prepare:frontend that combines Chakra typegen and frontend type checking, mirroring CI build prerequisites."
+    },
+    {
+      "name": "Create CI-Behavior Scripts",
+      "description": "Add npm run build:ci, npm run test:ci, npm run lint:ci that include CI-specific environment variables and flags (NX_DAEMON=false, --tuiAutoExit, NODE_OPTIONS memory)."
+    },
+    {
+      "name": "Create Database Migration Script",
+      "description": "Add npm run db:migrate that wraps nx run migrations:run for standalone migration execution outside docker-compose."
+    },
+    {
+      "name": "Create E2E Setup Script",
+      "description": "Add npm run e2e:local that starts docker-compose with e2e profile and waits for test completion, matching CI behavior exactly."
+    },
+    {
+      "name": "Create Pre-Push Validation Script",
+      "description": "Add npm run pre-push that runs quality-gate plus E2E tests to validate all work before pushing (reduces CI failures)."
+    },
+    {
+      "name": "Create CLI Build Scripts",
+      "description": "Add npm run packmind-cli:executables for building portable CLI binaries locally (requires Bun runtime)."
+    },
+    {
+      "name": "Document Environment Setup",
+      "description": "Create .env.example documenting PACKMIND_EDITION, NODE_OPTIONS, NX_DAEMON, and other critical environment variables with explanations."
+    },
+    {
+      "name": "Add Husky Pre-Commit Hooks",
+      "description": "Configure pre-commit hook in .husky/pre-commit to run prettier:check, lint:staged, test:staged automatically before commits."
+    },
+    {
+      "name": "Add Husky Pre-Push Hooks",
+      "description": "Configure pre-push hook in .husky/pre-push to run full quality-gate before push attempt (optional but recommended)."
+    },
+    {
+      "name": "Update Developer Documentation",
+      "description": "Add section to CLAUDE.md or create DEVELOPER_GUIDE.md explaining when to run each script, what they do, and how they map to CI workflows."
+    }
+  ]
+}

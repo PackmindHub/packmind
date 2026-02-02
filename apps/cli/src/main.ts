@@ -14,6 +14,7 @@ import { setupMcpCommand } from './infra/commands/SetupMcpCommand';
 import { skillsCommand } from './infra/commands/SkillsCommand';
 import { standardsCommand } from './infra/commands/StandardsCommand';
 import { commandsCommand } from './infra/commands/CommandsCommand';
+import { packagesCommand } from './infra/commands/PackagesCommand';
 import { GitService } from './application/services/GitService';
 import { logConsole, logErrorConsole } from './infra/utils/consoleLogger';
 
@@ -99,6 +100,7 @@ const app = subcommands({
     skills: skillsCommand,
     standard: standardsCommand,
     commands: commandsCommand,
+    packages: packagesCommand,
   },
 });
 

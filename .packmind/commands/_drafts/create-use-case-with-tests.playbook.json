@@ -1,0 +1,62 @@
+{
+  "name": "Create Use Case with Tests",
+  "summary": "Generate a new use case implementation with complete test coverage following domain-driven design patterns. Creates the command type, response type, use case class, and comprehensive test file with arrange-act-assert structure so new business logic is immediately testable and follows architectural conventions",
+  "whenToUse": [
+    "Adding a new user action or business operation to an existing domain",
+    "Implementing a feature that requires orchestrating services or repositories",
+    "When a domain needs a new command handler following DDD principles"
+  ],
+  "contextValidationCheckpoints": [
+    "What domain package is this use case for (e.g., 'accounts', 'standards')?",
+    "What operation does this use case perform? (e.g., 'UpdateUserProfile', 'PublishStandard')",
+    "What services or repositories does this use case depend on?",
+    "What is the expected output/response type?",
+    "Should this use case be role-based (execute vs executeForMembers/executeForAdmins)?"
+  ],
+  "steps": [
+    {
+      "name": "Define Command and Response Types",
+      "description": "Create command and response interfaces in packages/types/src/{domain}/ that define the input/output contract for the use case. Commands capture user intent; responses capture results."
+    },
+    {
+      "name": "Create Use Case File Structure",
+      "description": "Create the use case directory and main implementation file in packages/{domain}/src/application/useCases/{operation}/ following naming conventions."
+    },
+    {
+      "name": "Implement Use Case Class",
+      "description": "Create the use case class with constructor dependency injection, origin constant for logging, and async execute method wrapped in try-catch with logging."
+    },
+    {
+      "name": "Create Test File Structure",
+      "description": "Create comprehensive test file using describe blocks with 'when' context clauses, beforeEach setup, and single-expect test cases."
+    },
+    {
+      "name": "Add Happy Path Test",
+      "description": "Write the happy path test that verifies successful execution of the use case with expected side effects and logging."
+    },
+    {
+      "name": "Add Error Handling Tests",
+      "description": "Write tests for error scenarios to verify proper error logging and exception propagation."
+    },
+    {
+      "name": "Add Service Interaction Tests",
+      "description": "Write tests that verify the use case calls services with correct parameters and handles their responses properly."
+    },
+    {
+      "name": "Add Integration Test (Optional)",
+      "description": "For complex use cases, add an integration test using makeTestDatasource() and real repository instances to verify end-to-end behavior."
+    },
+    {
+      "name": "Export Use Case from Package Index",
+      "description": "Add use case to packages/{domain}/src/index.ts to make it discoverable and available for import by other packages."
+    },
+    {
+      "name": "Register in Adapter (if port-based)",
+      "description": "If this use case is exposed via a hexagonal port, wire it into the adapter so it is available for cross-domain calls."
+    },
+    {
+      "name": "Run Tests and Verify",
+      "description": "Execute tests to ensure use case is properly implemented, all dependencies are wired correctly, and test coverage is complete."
+    }
+  ]
+}

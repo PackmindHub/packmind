@@ -1,0 +1,39 @@
+{
+  "name": "TypeORM Repository and Entity Pattern",
+  "description": "Use TypeORM EntitySchema with soft delete support via WithSoftDelete mixin, create typed AbstractRepository implementations that handle queries consistently, and organize schemas in infra/schemas/ directories with proper relation configuration.",
+  "scope": "All TypeORM entity definitions, repository implementations, and database queries across domain packages",
+  "rules": [
+    {
+      "content": "Define entities using TypeORM EntitySchema with soft delete and timestamp mixins for consistent schema structure and audit trails",
+      "examples": {
+        "positive": "import { EntitySchema } from 'typeorm';\nimport { User } from '../entities/User';\nimport { WithSoftDelete, WithTimestamps, softDeleteSchemas, timestampsSchemas } from '@packmind/node-utils';\n\nexport const UserSchema = new EntitySchema<WithSoftDelete<WithTimestamps<User>>>({\n  name: 'User',\n  target: User,\n  columns: {\n    id: { type: 'uuid', primary: true },\n    email: { type: 'varchar', unique: true },\n    firstName: { type: 'varchar', nullable: true },\n    lastName: { type: 'varchar', nullable: true },\n    ...timestampsSchemas.columns,\n    ...softDeleteSchemas.columns\n  },\n  relations: {\n    memberships: {\n      type: 'one-to-many',\n      target: 'UserOrganizationMembership',\n      joinColumn: { name: 'userId' },\n      onDelete: 'CASCADE'\n    }\n  }\n});",
+        "negative": "// WRONG: Using decorators instead of EntitySchema\n@Entity()\nexport class User {\n  @PrimaryGeneratedColumn('uuid')\n  id: string;\n\n  @Column({ unique: true })\n  email: string;\n  // No soft delete or timestamps\n}\n\n// WRONG: No mixin support for soft deletes\nconst UserSchema = new EntitySchema({\n  name: 'User',\n  columns: {\n    id: { type: 'uuid', primary: true },\n    email: { type: 'varchar' },\n    deletedAt: { type: 'timestamp', nullable: true } // Manual soft delete\n  }\n});",
+        "language": "TYPESCRIPT"
+      }
+    },
+    {
+      "content": "Extend AbstractRepository for all repository implementations with typed entities, implement domain repository interface, and use TypeORM QueryBuilder for parameterized queries",
+      "examples": {
+        "positive": "export interface IUserRepository {\n  findById(id: UserId, opts?: QueryOptions): Promise<User | null>;\n  findByEmail(email: string): Promise<User | null>;\n  save(user: User): Promise<User>;\n  delete(id: UserId): Promise<void>;\n}\n\nexport class UserRepository extends AbstractRepository<User> implements IUserRepository {\n  constructor(repository: Repository<User>) {\n    super(repository);\n  }\n\n  async findById(id: UserId, opts?: QueryOptions): Promise<User | null> {\n    return this.repository.findOne({\n      where: { id },\n      withDeleted: opts?.includeDeleted ?? false,\n      relations: { memberships: { organization: true } }\n    });\n  }\n\n  async findByEmail(email: string): Promise<User | null> {\n    return this.repository.findOne({ where: { email } });\n  }\n\n  async save(user: User): Promise<User> {\n    return this.repository.save(user);\n  }\n\n  async delete(id: UserId): Promise<void> {\n    await this.repository.softDelete({ id });\n  }\n}",
+        "negative": "// WRONG: Raw SQL queries\nexport class UserRepository {\n  async findById(id: string): Promise<User | null> {\n    const result = await this.dataSource.query(`\n      SELECT * FROM user WHERE id = '${id}'\n    `);\n    return result[0];\n  }\n}\n\n// WRONG: No interface implementation\nexport class UserRepository extends AbstractRepository<User> {\n  async findById(id: string): Promise<any> {\n    return this.repository.findOne({ where: { id } });\n  }\n}",
+        "language": "TYPESCRIPT"
+      }
+    },
+    {
+      "content": "Use soft delete pattern with withDeleted flag in queries to respect deleted records, and prefer soft delete over hard delete for audit trail preservation",
+      "examples": {
+        "positive": "// Soft delete: preserves data for audit\nawait userRepository.delete(userId);\n\n// Query: exclude deleted by default\nconst user = await userRepository.findById(userId);\n// user is null if soft-deleted\n\n// Query: include deleted if needed\nconst user = await userRepository.findById(userId, { includeDeleted: true });\n// Returns user even if soft-deleted",
+        "negative": "// WRONG: Hard delete loses audit trail\nawait this.repository.delete({ id });\n\n// WRONG: Querying without soft delete handling\nconst users = await this.repository.find({\n  // Doesn't consider deleted_at column\n});",
+        "language": "TYPESCRIPT"
+      }
+    },
+    {
+      "content": "Configure entity relations consistently with proper cascade settings and lazy-load relations only when needed for query performance",
+      "examples": {
+        "positive": "export const UserSchema = new EntitySchema({\n  name: 'User',\n  columns: { /* ... */ },\n  relations: {\n    memberships: {\n      type: 'one-to-many',\n      target: 'UserOrganizationMembership',\n      joinColumn: { name: 'userId' },\n      onDelete: 'CASCADE',\n      lazy: false // Load by default\n    },\n    organization: {\n      type: 'many-to-one',\n      target: 'Organization',\n      joinColumn: { name: 'organizationId' },\n      onDelete: 'RESTRICT',\n      lazy: true // Load only when needed\n    }\n  }\n});",
+        "negative": "// WRONG: No cascade settings\nrelations: {\n  memberships: {\n    type: 'one-to-many',\n    target: 'UserOrganizationMembership'\n  }\n}\n\n// WRONG: Always eager load all relations\nrelations: {\n  memberships: { eager: true },\n  organization: { eager: true },\n  settings: { eager: true }\n  // Performance nightmare!\n}",
+        "language": "TYPESCRIPT"
+      }
+    }
+  ]
+}

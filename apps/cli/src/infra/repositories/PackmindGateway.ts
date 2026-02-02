@@ -17,6 +17,8 @@ import {
   RuleExample,
   CreateCommandCommand,
   CreateCommandResult,
+  CreatePackageCommand,
+  CreatePackageResult,
 } from '../../domain/repositories/IPackmindGateway';
 
 import { IOnboardingDraft } from '../../domain/types/OnboardingDraft';
@@ -894,6 +896,20 @@ export class PackmindGateway implements IPackmindGateway {
       `/api/v0/organizations/${organizationId}/spaces/${spaceId}/recipes`,
       { method: 'POST', body: data },
     );
+  };
+
+  public createPackage = async (
+    spaceId: string,
+    data: CreatePackageCommand,
+  ): Promise<CreatePackageResult> => {
+    const { organizationId } = this.httpClient.getAuthContext();
+    const response = await this.httpClient.request<{
+      package: CreatePackageResult;
+    }>(`/api/v0/organizations/${organizationId}/spaces/${spaceId}/packages`, {
+      method: 'POST',
+      body: data,
+    });
+    return response.package;
   };
 
   public pushOnboardingBaseline = async (

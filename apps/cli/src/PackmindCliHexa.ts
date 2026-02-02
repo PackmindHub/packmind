@@ -57,6 +57,7 @@ import {
   UploadSkillCommand,
   UploadSkillResult,
 } from './domain/repositories/IPackmindGateway';
+import { loadCredentials } from './infra/utils/credentials';
 
 const origin = 'PackmindCliHexa';
 
@@ -263,5 +264,27 @@ export class PackmindCliHexa {
 
   public getPackmindGateway() {
     return this.hexa.repositories.packmindGateway;
+  }
+
+  /**
+   * Gets the Packmind web app URL derived from the API host.
+   * Transforms API host (e.g., https://api.packmind.com) to web app URL (e.g., https://app.packmind.com)
+   * Falls back to https://app.packmind.com if no credentials are available.
+   */
+  public getWebAppUrl(): string {
+    const credentials = loadCredentials();
+    if (!credentials?.host) {
+      return 'https://app.packmind.com';
+    }
+
+    // Transform API host to web app host
+    // api.packmind.com -> app.packmind.com
+    // localhost:3000/api -> localhost:3000
+    try {
+      const host = credentials.host;
+      return host.replace('api.', 'app.').replace('/api', '');
+    } catch {
+      return 'https://app.packmind.com';
+    }
   }
 }

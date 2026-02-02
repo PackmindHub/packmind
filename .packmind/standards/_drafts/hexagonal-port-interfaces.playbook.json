@@ -1,0 +1,47 @@
+{
+  "name": "Hexagonal Port Interfaces",
+  "description": "Define and enforce consistent naming and structure for hexagonal architecture port interfaces that expose domain boundaries. Port interfaces enable cross-domain communication and maintain clean separation of concerns by enforcing command/response contracts.",
+  "scope": "Interface definitions in packages/types/src/{domain}/ports/ directories that define cross-domain contracts",
+  "rules": [
+    {
+      "content": "Name all port interfaces with I{DomainName}Port pattern, never I{DomainName}Service, to distinguish cross-domain contracts from internal services",
+      "examples": {
+        "positive": "packages/types/src/accounts/ports/IAccountsPort.ts\npackages/types/src/standards/ports/IStandardsPort.ts\npackages/types/src/recipes/ports/IRecipesPort.ts",
+        "negative": "packages/types/src/accounts/ports/IAccountsService.ts\npackages/types/src/standards/ports/StandardsInterface.ts",
+        "language": "TYPESCRIPT"
+      }
+    },
+    {
+      "content": "Export port interface and const identifier from packages/types/src/{domain}/ports/ following the pattern: export const PortName = 'I{PortName}' for registry lookups",
+      "examples": {
+        "positive": "export interface IAccountsPort { ... }\nexport const IAccountsPort = 'IAccountsPort';",
+        "negative": "export interface IAccountsPort { ... }\n// missing: export const IAccountsPort",
+        "language": "TYPESCRIPT"
+      }
+    },
+    {
+      "content": "Define port methods to accept Command types and return Response types or domain entities to enforce command/query separation",
+      "examples": {
+        "positive": "getUserById(command: GetUserByIdCommand): Promise<GetUserByIdResponse>;\nlistStandardsBySpace(command: ListStandardsBySpaceCommand): Promise<Standard[]>;",
+        "negative": "getUser(id: UserId): Promise<User>;\nlistStandards(spaceId: SpaceId): Promise<Standard[]>;",
+        "language": "TYPESCRIPT"
+      }
+    },
+    {
+      "content": "Locate port interfaces in packages/types/src/{domain}/ports/ directory and implement them in packages/{domain}/src/application/adapter/ using adapter pattern",
+      "examples": {
+        "positive": "Port: packages/types/src/accounts/ports/IAccountsPort.ts\nImplementation: packages/accounts/src/application/adapter/AccountsAdapter.ts",
+        "negative": "Port: packages/accounts/src/domain/IAccountsPort.ts\nImplementation: packages/accounts/src/AccountsAdapter.ts",
+        "language": "TYPESCRIPT"
+      }
+    },
+    {
+      "content": "Implement port interfaces using double-interface pattern: class XxxAdapter implements IBaseAdapter<IXxxPort>, IXxxPort to satisfy both hexagonal and domain contracts",
+      "examples": {
+        "positive": "export class AccountsAdapter implements IBaseAdapter<IAccountsPort>, IAccountsPort { ... }",
+        "negative": "export class AccountsAdapter implements IAccountsPort { ... }",
+        "language": "TYPESCRIPT"
+      }
+    }
+  ]
+}

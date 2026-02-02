@@ -1,0 +1,77 @@
+{
+  "name": "Create Domain Package with Hexagonal Architecture",
+  "summary": "Scaffold a new domain package following packmind's hexagonal architecture pattern with proper directory structure, hexa class, repository aggregator, adapters, and use cases.",
+  "whenToUse": [
+    "Adding a new business domain (e.g., payments, notifications, billing)",
+    "Creating a new domain package that needs to integrate with existing hexas",
+    "Setting up cross-package communication through ports and adapters"
+  ],
+  "contextValidationCheckpoints": [
+    "What is the name of the new domain package? (e.g., 'payments', 'notifications')",
+    "What core entities does this domain manage?",
+    "Does this domain depend on other domains? If so, which adapters does it need?",
+    "What are the main use cases for this domain?"
+  ],
+  "steps": [
+    {
+      "name": "Create package structure",
+      "description": "Create the domain package directory with standard subdirectories following the hexagonal architecture: src/domain/, src/application/, src/infra/, test/, and package.json configuration."
+    },
+    {
+      "name": "Define domain entities and value objects",
+      "description": "Create entity classes in src/domain/entities/ with domain logic, business rules, and static factory methods. Include value objects for domain concepts like IDs and aggregates."
+    },
+    {
+      "name": "Create repository interfaces",
+      "description": "Define repository interfaces in src/domain/repositories/I*.ts for each aggregate, specifying the contract for data persistence operations without implementation details."
+    },
+    {
+      "name": "Create domain errors",
+      "description": "Define domain-specific error classes in src/domain/errors/ extending Error with semantic constructors. Export from index.ts barrel file for clean imports."
+    },
+    {
+      "name": "Create port interface in @packmind/types",
+      "description": "Define the port interface (e.g., IPaymentsPort) in packages/types/src/{domain}/ports/ with typed methods accepting Command/Response pairs. Create contract types for each use case."
+    },
+    {
+      "name": "Implement repository classes",
+      "description": "Create repository implementations in src/infra/repositories/ extending AbstractRepository, implementing domain repository interfaces using TypeORM with soft delete support."
+    },
+    {
+      "name": "Create repository aggregator",
+      "description": "Create *Repositories class in src/infra/repositories/ that instantiates all individual repositories using TypeORM DataSource and provides typed getter methods."
+    },
+    {
+      "name": "Create TypeORM entity schemas",
+      "description": "Define entity schemas in src/infra/schemas/ using EntitySchema with soft delete and timestamp mixins, proper relations, and cascade settings."
+    },
+    {
+      "name": "Create use cases",
+      "description": "Implement use case classes in src/application/usecases/ that accept typed commands, perform business logic, return typed responses, and emit domain events."
+    },
+    {
+      "name": "Create adapters",
+      "description": "Create adapters class in src/adapters/ implementing the port interface, delegating to use cases, and handling domain error responses."
+    },
+    {
+      "name": "Create {Domain}Hexa class",
+      "description": "Create the main hexa class extending BaseHexa with two-phase initialization: constructor for DI setup, initialize() for adapter creation and listener registration."
+    },
+    {
+      "name": "Create event listeners if needed",
+      "description": "Create PackmindListener implementations in src/application/listeners/ that extend PackmindListener, register handlers in registerHandlers(), and handle domain events from other packages."
+    },
+    {
+      "name": "Create factory functions for tests",
+      "description": "Create factory functions in test/ directory for each entity using the pattern from existing factories, providing realistic test data with configurable overrides."
+    },
+    {
+      "name": "Write comprehensive tests",
+      "description": "Write tests for repositories (soft delete, relations), use cases (success/error paths), and adapters (port contract compliance) following packmind testing standards."
+    },
+    {
+      "name": "Wire hexa in NestJS AppModule",
+      "description": "Import the new hexa in apps/api/src/app/app.module.ts, register in HexaRegistryModule.register() respecting dependency order, and create injectable tokens for the adapter."
+    }
+  ]
+}
