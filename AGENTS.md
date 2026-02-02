@@ -9,7 +9,7 @@ This is an Nx monorepo containing applications and reusable packages.
 - **Database**: PostgreSQL with TypeORM for entity persistence
 - **Cache**: Redis for caching
 - **Background Jobs**: BullMQ for job queue management
-- **Testing**: Jest with @swc/jest as test runner
+- **Testing**: Jest with @swc/jest as test runner. Tests are run with `nx run <project-name>` as detailed below.
 
 ## Directory Structure
 
@@ -25,7 +25,8 @@ Local development uses Docker Compose to run all services (API, frontend, databa
 docker compose up
 ```
 
-This starts the entire development environment. Do not use `nx serve` commands directly for local development.
+This starts the entire development environment. 
+Don't use `nx serve` commands for local development, let user starts the stack with `docker compose up`
 
 ## Working with Nx
 
@@ -35,6 +36,7 @@ The following commands apply for both NX apps and packages:
 - Build a project: `nx build <project-name>`
 - Test affected projects: `npm run test:staged`
 - Lint affected projects: `npm run lint:staged`
+Tip: use `nx show projects` to list actual apps and packages.
 
 ## Commands
 

@@ -12,7 +12,7 @@ Command-line interface for Packmind, built with cmd-ts and tree-sitter parsers.
 
 ### Command Structure
 
-- Commands defined in `src/commands/` directory
+- Commands defined in `src/infra/commands/` directory
 - Each command exports a cmd-ts `command` object
 - Root command aggregates subcommands with `subcommands()` helper
 
