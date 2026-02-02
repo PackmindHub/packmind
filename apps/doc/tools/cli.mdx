@@ -19,6 +19,7 @@ The Packmind CLI provides the following commands:
 - **`skills init`** - Install default Packmind skills locally
 - **`standards create`** - Create a coding standard from a playbook file
 - **`commands create`** - Create a reusable command from a playbook file
+- **`packages create`** - Create a new package
 
 ## Installation
 
@@ -797,6 +798,54 @@ If a command with the same slug already exists in your space, Packmind appends a
   are particularly useful for capturing multi-step development workflows that
   your team performs regularly.
 </Tip>
+
+## Packages Command
+
+Create and manage packages from the command line.
+
+### Create a Package
+
+```bash
+packmind-cli packages create <name>
+```
+
+**Arguments:**
+
+- `<name>` - Name of the package to create
+
+**Options:**
+
+| Flag            | Short | Description                |
+| --------------- | ----- | -------------------------- |
+| `--description` | `-d`  | Description of the package |
+
+**Example:**
+
+```bash
+packmind-cli packages create "Backend Standards"
+```
+
+With a description:
+
+```bash
+packmind-cli packages create "Backend Standards" -d "Standards and commands for backend development"
+```
+
+This creates a new empty package in your Packmind organization. After creation, you can add commands, standards, and skills to the package through the web interface or by using the `packageSlugs` parameter when creating items via MCP.
+
+### Package Identification
+
+When you create a package, Packmind automatically generates a **slug** from the package name:
+
+- **Name** (provided by you): `"Backend Standards"`
+- **Slug** (auto-generated): `"backend-standards"`
+
+The slug is used for:
+
+- Package installation: `packmind-cli install backend-standards`
+- Package identification and distribution
+
+If a package with the same slug already exists in your space, Packmind appends a counter (e.g., `backend-standards-1`) to ensure uniqueness.
 
 ## Related Documentation
 
