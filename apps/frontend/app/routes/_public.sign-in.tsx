@@ -14,7 +14,7 @@ export default function SignInRoute() {
       <SignInForm />
       <PMBox mt={4} textAlign="center">
         <PMText>No account yet? </PMText>
-        <Link to="/sign-up" prefetch="intent">
+        <Link to="/sign-up/create-account" prefetch="intent">
           <PMButton variant="tertiary" size={'xs'} tabIndex={-1}>
             Sign up
           </PMButton>
