@@ -275,7 +275,9 @@ export const StandardsList = ({ orgSlug }: StandardsListProps = {}) => {
                 (hasSamplesAccess ? (
                   <PMMenu.Root>
                     <PMMenu.Trigger asChild>
-                      <PMButton variant="secondary">Create</PMButton>
+                      <PMButton variant="primary" size="sm">
+                        Create
+                      </PMButton>
                     </PMMenu.Trigger>
                     <PMPortal>
                       <PMMenu.Positioner>
@@ -307,7 +309,7 @@ export const StandardsList = ({ orgSlug }: StandardsListProps = {}) => {
                     </PMPortal>
                   </PMMenu.Root>
                 ) : (
-                  <PMButton variant="secondary" asChild>
+                  <PMButton variant="primary" asChild size="sm">
                     <Link
                       to={routes.space.toCreateStandard(
                         orgSlug || '',
@@ -323,6 +325,7 @@ export const StandardsList = ({ orgSlug }: StandardsListProps = {}) => {
                 title={GETTING_STARTED_CREATE_DIALOG.title}
                 buttonLabel="Create from your code"
                 buttonSize="sm"
+                buttonVariant="secondary"
               />
             </PMHStack>
           </PMEmptyState>

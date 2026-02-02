@@ -1,5 +1,6 @@
 import {
   PMButton,
+  PMButtonVariants,
   PMCloseButton,
   PMDialog,
   PMHeading,
@@ -12,11 +13,18 @@ export type GettingStartedLearnMoreDialogProps = {
   body: ReactNode;
   buttonLabel?: string;
   buttonSize?: 'xs' | 'sm' | 'md' | 'lg';
+  buttonVariant?: PMButtonVariants;
 };
 
 export const GettingStartedLearnMoreDialog: React.FC<
   GettingStartedLearnMoreDialogProps
-> = ({ title, body, buttonLabel = 'Learn more', buttonSize = 'xs' }) => {
+> = ({
+  title,
+  body,
+  buttonLabel = 'Learn more',
+  buttonSize = 'xs',
+  buttonVariant = 'primary',
+}) => {
   return (
     <PMDialog.Root
       size="lg"
@@ -25,7 +33,9 @@ export const GettingStartedLearnMoreDialog: React.FC<
       scrollBehavior={'inside'}
     >
       <PMDialog.Trigger asChild>
-        <PMButton size={buttonSize}>{buttonLabel}</PMButton>
+        <PMButton size={buttonSize} variant={buttonVariant}>
+          {buttonLabel}
+        </PMButton>
       </PMDialog.Trigger>
       <PMPortal>
         <PMDialog.Backdrop />

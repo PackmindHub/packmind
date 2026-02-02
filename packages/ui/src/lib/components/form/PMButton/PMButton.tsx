@@ -5,16 +5,18 @@ import {
   ButtonGroupProps,
 } from '@chakra-ui/react';
 
+export type PMButtonVariants =
+  | 'primary'
+  | 'secondary'
+  | 'tertiary'
+  | 'outline'
+  | 'ghost'
+  | 'success'
+  | 'warning'
+  | 'danger';
+
 export interface IPMButtonProps extends ButtonProps {
-  variant?:
-    | 'primary'
-    | 'secondary'
-    | 'tertiary'
-    | 'outline'
-    | 'ghost'
-    | 'success'
-    | 'warning'
-    | 'danger';
+  variant?: PMButtonVariants;
   children: React.ReactNode;
 }
 
