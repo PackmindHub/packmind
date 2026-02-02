@@ -33,7 +33,8 @@ export class GetUserOnboardingStatusUseCase
   ): Promise<GetUserOnboardingStatusResponse> {
     const { user, membership } = command;
 
-    const onboardingCompleted = await this.userMetadataService.isOnboardingCompleted(user.id);
+    const onboardingCompleted =
+      await this.userMetadataService.isOnboardingCompleted(user.id);
     const isOrganizationCreator = this.isUserOrganizationCreator(
       user.createdAt,
       membership.createdAt,
@@ -47,7 +48,12 @@ export class GetUserOnboardingStatusUseCase
         : ['welcome', 'playbook'];
     }
 
-    return { onboardingCompleted, isOrganizationCreator, showOnboarding, stepsToShow };
+    return {
+      onboardingCompleted,
+      isOrganizationCreator,
+      showOnboarding,
+      stepsToShow,
+    };
   }
 
   private isUserOrganizationCreator(

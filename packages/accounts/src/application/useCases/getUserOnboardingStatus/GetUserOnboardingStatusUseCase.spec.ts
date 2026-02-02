@@ -98,7 +98,9 @@ describe('GetUserOnboardingStatusUseCase', () => {
             membership,
           };
 
-          mockUserMetadataService.isOnboardingCompleted.mockResolvedValue(false);
+          mockUserMetadataService.isOnboardingCompleted.mockResolvedValue(
+            false,
+          );
 
           const result = await useCase.executeForMembers(command);
 
@@ -129,7 +131,9 @@ describe('GetUserOnboardingStatusUseCase', () => {
             membership,
           };
 
-          mockUserMetadataService.isOnboardingCompleted.mockResolvedValue(false);
+          mockUserMetadataService.isOnboardingCompleted.mockResolvedValue(
+            false,
+          );
 
           const result = await useCase.executeForMembers(command);
 

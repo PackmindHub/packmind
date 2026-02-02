@@ -69,7 +69,9 @@ describe('CompleteUserOnboardingUseCase', () => {
 
       const result = await useCase.executeForMembers(command);
 
-      expect(mockUserMetadataService.markOnboardingCompleted).toHaveBeenCalledWith(userId);
+      expect(
+        mockUserMetadataService.markOnboardingCompleted,
+      ).toHaveBeenCalledWith(userId);
       expect(result).toEqual({ success: true });
     });
   });
