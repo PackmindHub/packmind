@@ -35,6 +35,12 @@ import { SetupMcpUseCase } from './application/useCases/SetupMcpUseCase';
 import { McpConfigService } from './application/services/McpConfigService';
 import { ConfigFileRepository } from './infra/repositories/ConfigFileRepository';
 import { loadApiKey } from './infra/utils/credentialsLoader';
+import { IListStandardsUseCase } from './domain/useCases/IListStandardsUseCase';
+import { ListStandardsUseCase } from './application/useCases/ListStandardsUseCase';
+import { IListCommandsUseCase } from './domain/useCases/IListCommandsUseCase';
+import { ListCommandsUseCase } from './application/useCases/ListCommandsUseCase';
+import { IListSkillsUseCase } from './domain/useCases/IListSkillsUseCase';
+import { ListSkillsUseCase } from './application/useCases/ListSkillsUseCase';
 
 export class PackmindCliHexaFactory {
   public repositories: IPackmindRepositories;
@@ -54,6 +60,9 @@ export class PackmindCliHexaFactory {
     logout: ILogoutUseCase;
     whoami: IWhoamiUseCase;
     setupMcp: ISetupMcpUseCase;
+    listStandards: IListStandardsUseCase;
+    listCommands: IListCommandsUseCase;
+    listSkills: IListSkillsUseCase;
   };
 
   constructor(private readonly logger: PackmindLogger) {
@@ -102,6 +111,11 @@ export class PackmindCliHexaFactory {
         gateway: this.repositories.packmindGateway,
         mcpConfigService: new McpConfigService(),
       }),
+      listStandards: new ListStandardsUseCase(
+        this.repositories.packmindGateway,
+      ),
+      listCommands: new ListCommandsUseCase(this.repositories.packmindGateway),
+      listSkills: new ListSkillsUseCase(this.repositories.packmindGateway),
     };
   }
 }
