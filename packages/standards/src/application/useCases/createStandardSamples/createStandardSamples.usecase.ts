@@ -173,7 +173,8 @@ export class CreateStandardSamplesUsecase
       scope: sampleContent.scope,
       spaceId,
       disableTriggerAssessment: true,
-      source: 'SAMPLE_IMPORT',
+      source: 'ui',
+      method: 'sample',
     });
   }
 }

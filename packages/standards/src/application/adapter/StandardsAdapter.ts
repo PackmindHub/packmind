@@ -36,6 +36,7 @@ import {
   RuleId,
   SpaceId,
   Standard,
+  StandardCreationMethod,
   StandardId,
   StandardVersion,
   StandardVersionId,
@@ -465,6 +466,7 @@ export class StandardsAdapter
     spaceId: SpaceId;
     packageSlugs?: string[];
     source?: PackmindEventSource;
+    method?: StandardCreationMethod;
   }): Promise<Standard> {
     const result = await this._createStandardWithPackages.execute({
       ...params,

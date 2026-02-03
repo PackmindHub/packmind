@@ -2,6 +2,7 @@ import { IUseCase, PackmindCommand } from '../../UseCase';
 import { OrganizationId } from '../../accounts/Organization';
 import { SpaceId } from '../../spaces/SpaceId';
 import { Standard } from '../Standard';
+import { StandardCreationMethod } from '../events/StandardCreatedEvent';
 
 export type CreateStandardCommand = PackmindCommand & {
   organizationId: OrganizationId;
@@ -10,6 +11,7 @@ export type CreateStandardCommand = PackmindCommand & {
   description: string;
   rules: Array<{ content: string }>;
   scope: string | null;
+  method?: StandardCreationMethod;
 };
 
 export type CreateStandardResponse = {

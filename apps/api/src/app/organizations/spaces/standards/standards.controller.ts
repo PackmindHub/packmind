@@ -126,12 +126,16 @@ export class OrganizationsSpacesStandardsController {
     );
 
     try {
+      // Determine creation method based on client source
+      const method = request.clientSource === 'cli' ? 'cli' : 'blank';
+
       return await this.standardsService.createStandard(
         standard,
         organizationId,
         userId,
         spaceId,
         request.clientSource,
+        method,
       );
     } catch (error) {
       const errorMessage =
