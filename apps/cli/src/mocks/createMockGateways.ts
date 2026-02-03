@@ -17,7 +17,6 @@ export type MockPackmindGatewayOverrides = {
   standards?: jest.Mocked<IStandardsGateway>;
   packages?: jest.Mocked<IPackagesGateway>;
   deployment?: jest.Mocked<IDeploymentGateway>;
-  pushOnboardingBaseline?: jest.Mocked<IPackmindGateway>['pushOnboardingBaseline'];
 };
 
 export function createMockPackmindGateway(
@@ -32,7 +31,6 @@ export function createMockPackmindGateway(
     standards: createMockStandardsGateway(),
     packages: createMockPackagesGateway(),
     deployment: createMockDeploymentGateway(),
-    pushOnboardingBaseline: jest.fn(),
     ...overrides,
   };
 }

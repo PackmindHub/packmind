@@ -1,4 +1,3 @@
-import { IOnboardingDraft } from '../types/OnboardingDraft';
 import { ILinterGateway } from './ILinterGateway';
 import { IMcpGateway } from './IMcpGateway';
 import { ISpacesGateway } from './ISpacesGateway';
@@ -48,9 +47,4 @@ export interface IPackmindGateway {
   standards: IStandardsGateway;
   packages: IPackagesGateway;
   deployment: IDeploymentGateway;
-
-  // Onboarding baseline
-  pushOnboardingBaseline(
-    draft: IOnboardingDraft,
-  ): Promise<{ success: boolean }>;
 }

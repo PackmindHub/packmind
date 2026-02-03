@@ -1,6 +1,4 @@
 import { IPackmindGateway } from '../../domain/repositories/IPackmindGateway';
-
-import { IOnboardingDraft } from '../../domain/types/OnboardingDraft';
 import { PackmindHttpClient } from '../http/PackmindHttpClient';
 import { LinterGateway } from './LinterGateway';
 import { ILinterGateway } from '../../domain/repositories/ILinterGateway';
@@ -41,25 +39,4 @@ export class PackmindGateway implements IPackmindGateway {
     this.packages = new PackagesGateway(apiKey, this.httpClient);
     this.deployment = new DeploymentGateway(apiKey);
   }
-
-  public pushOnboardingBaseline = async (
-    draft: IOnboardingDraft,
-  ): Promise<{ success: boolean }> => {
-    const space = await this.spaces.getGlobal();
-    const { organizationId } = this.httpClient.getAuthContext();
-
-    await this.httpClient.request(
-      `/api/v0/organizations/${organizationId}/spaces/${space.id}/onboarding/baseline`,
-      {
-        method: 'POST',
-        body: {
-          meta: draft.meta,
-          summary: draft.summary,
-          baseline_items: draft.baseline_items,
-        },
-      },
-    );
-
-    return { success: true };
-  };
 }
