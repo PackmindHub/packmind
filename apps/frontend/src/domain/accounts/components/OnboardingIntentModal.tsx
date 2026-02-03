@@ -67,9 +67,9 @@ export function OnboardingIntentModal({
       <PMDialog.Backdrop />
       <PMDialog.Positioner padding={6}>
         <PMDialog.Content
-          width="calc(100vw - 48px)"
-          height="calc(100vh - 48px)"
-          maxWidth="none"
+          width={{ base: 'calc(100vw - 48px)', lg: '900px', xl: '1000px' }}
+          height={{ base: 'calc(100vh - 48px)', lg: '80vh', xl: '70vh' }}
+          maxWidth={{ base: 'none', lg: '900px', xl: '1000px' }}
           borderRadius="lg"
         >
           <PMDialog.Body>
