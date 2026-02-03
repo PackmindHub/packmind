@@ -21,13 +21,6 @@ Mintlify-based end-user documentation for Packmind.
 - **Theming**: Packmind brand colors and styling
 - **Search**: Automatically indexed by Mintlify
 
-## Content Organization
-
-- `introduction/` - Getting started, concepts, quick start
-- `guides/` - Step-by-step task guides
-- `reference/` - API reference, CLI commands
-- `integrations/` - Integration with AI agents and tools
-
 ## External Documentation
 
 - [Mintlify Documentation](https://mintlify.com/docs) for framework details
