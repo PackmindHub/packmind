@@ -1,6 +1,7 @@
 import { OrganizationId } from '../../accounts/Organization';
 import { UserId } from '../../accounts/User';
 import type { QueryOption } from '../../database/types';
+import { PackmindEventSource } from '../../events';
 import { SpaceId } from '../../spaces/SpaceId';
 import {
   CreateStandardSamplesCommand,
@@ -50,9 +51,9 @@ export interface IStandardsPort {
     organizationId: OrganizationId;
     userId: UserId;
     scope: string | null;
-    spaceId: SpaceId;
+    spaceId: SpaceId | null;
     disableTriggerAssessment?: boolean;
-    source?: string;
+    source?: PackmindEventSource;
     method?: StandardCreationMethod;
   }): Promise<Standard>;
   createStandardSamples(
