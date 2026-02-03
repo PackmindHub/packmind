@@ -1,0 +1,47 @@
+{
+  "name": "Use Case Scaffolding Pattern",
+  "description": "Establish consistent structure for use case implementations. Use cases orchestrate application logic, accept command objects, and return responses. This pattern ensures all use cases follow identical file structure, dependency injection, error handling, and logging conventions.",
+  "scope": "UseCase implementation files in packages/*/src/application/useCases/ directories",
+  "rules": [
+    {
+      "content": "Name use case files and classes following either {OperationName}UseCase (PascalCase) or {operationName}.usecase.ts (camelCase) conventions, but standardize one per domain",
+      "examples": {
+        "positive": "GetCurrentApiKeyUseCase.ts (PascalCase - consistent in domain)\nfindRecipeBySlug.usecase.ts (camelCase - consistent in domain)",
+        "negative": "GetCurrentApiKeyUseCase.ts and findApiKey.usecase.ts (mixed in same domain)",
+        "language": "TYPESCRIPT"
+      }
+    },
+    {
+      "content": "Define origin constant at module level for consistent logging: const origin = 'UseCaseName' to track execution context",
+      "examples": {
+        "positive": "const origin = 'GetCurrentApiKeyUseCase';\nlogger.info(`${origin}: Retrieving current API key...`, { userId });",
+        "negative": "logger.info('GetCurrentApiKeyUseCase: ...'); // hardcoded string in every log",
+        "language": "TYPESCRIPT"
+      }
+    },
+    {
+      "content": "Inject dependencies in constructor with logger defaulting to origin constant: constructor(service: XxxService, logger: PackmindLogger = stubLogger(origin))",
+      "examples": {
+        "positive": "constructor(\n  private readonly apiKeyService: ApiKeyService,\n  private readonly logger: PackmindLogger = stubLogger(origin),\n) {}",
+        "negative": "constructor(\n  private readonly apiKeyService: ApiKeyService,\n  private readonly logger: PackmindLogger,\n) {}\n// missing default logger",
+        "language": "TYPESCRIPT"
+      }
+    },
+    {
+      "content": "Implement async execute(command: XxxCommand): Promise<Response> method that wraps business logic in try-catch with consistent logging",
+      "examples": {
+        "positive": "async execute(command: GetCurrentApiKeyCommand): Promise<GetCurrentApiKeyResponse> {\n  try {\n    this.logger.info(`${origin}: Starting execution`, { userId: command.userId });\n    const apiKey = await this.apiKeyService.findCurrentKey(command.userId);\n    return { apiKey };\n  } catch (error) {\n    this.logger.error(`${origin}: Execution failed`, error);\n    throw error;\n  }\n}",
+        "negative": "execute(command: GetCurrentApiKeyCommand) {\n  return this.apiKeyService.findCurrentKey(command.userId);\n  // missing async, try-catch, logging\n}",
+        "language": "TYPESCRIPT"
+      }
+    },
+    {
+      "content": "For role-based use cases, extend AbstractMemberUseCase or AbstractAdminUseCase and implement executeForMembers/executeForAdmins instead of execute",
+      "examples": {
+        "positive": "export class SignInUserUseCase extends AbstractMemberUseCase {\n  async executeForMembers(command: SignInUserCommand): Promise<SignInUserResponse> { ... }\n}",
+        "negative": "export class SignInUserUseCase implements ISignInUserUseCase {\n  async execute(command: SignInUserCommand): Promise<SignInUserResponse> { ... }\n  // missing role-based extension\n}",
+        "language": "TYPESCRIPT"
+      }
+    }
+  ]
+}

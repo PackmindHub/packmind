@@ -13,8 +13,8 @@ const origin = 'StandardSummaryService';
 
 export class StandardSummaryService {
   constructor(
-    private readonly logger: PackmindLogger = new PackmindLogger(origin),
     private readonly llmPort?: ILlmPort,
+    private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {}
 
   private async getAIService(

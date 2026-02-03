@@ -22,21 +22,22 @@ export class CopilotDeployer implements ICodingAgentDeployer {
   private static readonly RECIPES_INDEX_PATH =
     '.github/instructions/packmind-recipes-index.instructions.md';
   private static readonly SKILLS_FOLDER_PATH = '.github/skills/';
-  private readonly logger: PackmindLogger;
 
   constructor(
     private readonly standardsPort?: IStandardsPort,
     private readonly gitPort?: IGitPort,
-  ) {
-    this.logger = new PackmindLogger(origin);
-  }
+    private readonly logger: PackmindLogger = new PackmindLogger(origin),
+  ) {}
 
-  async deployDefaultSkills() {
+  async deployDefaultSkills(options?: {
+    cliVersion?: string;
+    includeBeta?: boolean;
+  }) {
     const defaultSkillsDeployer = new DefaultSkillsDeployer(
       'CoPilot',
       '.github/skills/',
     );
-    return defaultSkillsDeployer.deployDefaultSkills();
+    return defaultSkillsDeployer.deployDefaultSkills(options);
   }
 
   async deployRecipes(

@@ -1,16 +1,15 @@
-import { PackmindLogger } from '@packmind/logger';
 import { IExecuteSingleFileAstUseCase } from './domain/useCases/IExecuteSingleFileAstUseCase';
 import { IGetGitRemoteUrlUseCase } from './domain/useCases/IGetGitRemoteUrlUseCase';
 import { ExecuteSingleFileAstUseCase } from './application/useCases/ExecuteSingleFileAstUseCase';
 import { GetGitRemoteUrlUseCase } from './application/useCases/GetGitRemoteUrlUseCase';
 import { IListFilesInDirectoryUseCase } from './domain/useCases/IListFilesInDirectoryUseCase';
 import { ListFilesInDirectoryUseCase } from './application/useCases/ListFilesInDirectoryUseCase';
-import { ILintFilesInDirectory } from './domain/useCases/ILintFilesInDirectory';
-import { LintFilesInDirectoryUseCase } from './application/useCases/LintFilesInDirectoryUseCase';
-import { ILintFilesLocally } from './domain/useCases/ILintFilesLocally';
-import { LintFilesLocallyUseCase } from './application/useCases/LintFilesLocallyUseCase';
+import { ILintFilesAgainstRule } from './domain/useCases/ILintFilesAgainstRule';
+import { LintFilesAgainstRuleUseCase } from './application/useCases/LintFilesAgainstRuleUseCase';
+import { ILintFilesFromConfig } from './domain/useCases/ILintFilesFromConfig';
+import { LintFilesFromConfigUseCase } from './application/useCases/LintFilesFromConfigUseCase';
 import { PackmindGateway } from './infra/repositories/PackmindGateway';
-import { PackmindServices } from './application/services/PackmindServices';
+import { IPackmindServices } from './domain/services/IPackmindServices';
 import { IPackmindRepositories } from './domain/repositories/IPackmindRepositories';
 import { ListFiles } from './application/services/ListFiles';
 import { GitService } from './application/services/GitService';
@@ -35,17 +34,23 @@ import { SetupMcpUseCase } from './application/useCases/SetupMcpUseCase';
 import { McpConfigService } from './application/services/McpConfigService';
 import { ConfigFileRepository } from './infra/repositories/ConfigFileRepository';
 import { loadApiKey } from './infra/utils/credentialsLoader';
+import { IListStandardsUseCase } from './domain/useCases/IListStandardsUseCase';
+import { ListStandardsUseCase } from './application/useCases/ListStandardsUseCase';
+import { IListCommandsUseCase } from './domain/useCases/IListCommandsUseCase';
+import { ListCommandsUseCase } from './application/useCases/ListCommandsUseCase';
+import { IListSkillsUseCase } from './domain/useCases/IListSkillsUseCase';
+import { ListSkillsUseCase } from './application/useCases/ListSkillsUseCase';
 
 export class PackmindCliHexaFactory {
   public repositories: IPackmindRepositories;
-  public services: PackmindServices;
+  public services: IPackmindServices;
 
   public useCases: {
     executeSingleFileAst: IExecuteSingleFileAstUseCase;
     getGitRemoteUrl: IGetGitRemoteUrlUseCase;
     listFilesInDirectoryUseCase: IListFilesInDirectoryUseCase;
-    lintFilesInDirectory: ILintFilesInDirectory;
-    lintFilesLocally: ILintFilesLocally;
+    lintFilesAgainstRule: ILintFilesAgainstRule;
+    lintFilesFromConfig: ILintFilesFromConfig;
     installPackages: IInstallPackagesUseCase;
     installDefaultSkills: IInstallDefaultSkillsUseCase;
     listPackages: IListPackagesUseCase;
@@ -54,9 +59,12 @@ export class PackmindCliHexaFactory {
     logout: ILogoutUseCase;
     whoami: IWhoamiUseCase;
     setupMcp: ISetupMcpUseCase;
+    listStandards: IListStandardsUseCase;
+    listCommands: IListCommandsUseCase;
+    listSkills: IListSkillsUseCase;
   };
 
-  constructor(private readonly logger: PackmindLogger) {
+  constructor() {
     this.repositories = {
       packmindGateway: new PackmindGateway(loadApiKey()),
       configFileRepository: new ConfigFileRepository(),
@@ -64,7 +72,7 @@ export class PackmindCliHexaFactory {
 
     this.services = {
       listFiles: new ListFiles(),
-      gitRemoteUrlService: new GitService(this.logger),
+      gitRemoteUrlService: new GitService(),
       linterExecutionUseCase: new ExecuteLinterProgramsUseCase(),
       diffViolationFilterService: new DiffViolationFilterService(),
     };
@@ -75,15 +83,13 @@ export class PackmindCliHexaFactory {
       ),
       getGitRemoteUrl: new GetGitRemoteUrlUseCase(),
       listFilesInDirectoryUseCase: new ListFilesInDirectoryUseCase(),
-      lintFilesInDirectory: new LintFilesInDirectoryUseCase(
+      lintFilesAgainstRule: new LintFilesAgainstRuleUseCase(
         this.services,
         this.repositories,
-        this.logger,
       ),
-      lintFilesLocally: new LintFilesLocallyUseCase(
+      lintFilesFromConfig: new LintFilesFromConfigUseCase(
         this.services,
         this.repositories,
-        this.logger,
       ),
       installPackages: new InstallPackagesUseCase(
         this.repositories.packmindGateway,
@@ -102,6 +108,11 @@ export class PackmindCliHexaFactory {
         gateway: this.repositories.packmindGateway,
         mcpConfigService: new McpConfigService(),
       }),
+      listStandards: new ListStandardsUseCase(
+        this.repositories.packmindGateway,
+      ),
+      listCommands: new ListCommandsUseCase(this.repositories.packmindGateway),
+      listSkills: new ListSkillsUseCase(this.repositories.packmindGateway),
     };
   }
 }

@@ -1,4 +1,3 @@
-import { PackmindLogger } from '@packmind/logger';
 import { ISkillsRepositories } from '../../domain/repositories/ISkillsRepositories';
 import { SkillFileService } from './SkillFileService';
 import { SkillService } from './SkillService';
@@ -9,10 +8,7 @@ export class SkillsServices {
   private readonly skillVersionService: SkillVersionService;
   private readonly skillFileService: SkillFileService;
 
-  constructor(
-    private readonly skillsRepositories: ISkillsRepositories,
-    private readonly logger: PackmindLogger,
-  ) {
+  constructor(private readonly skillsRepositories: ISkillsRepositories) {
     this.skillService = new SkillService(
       this.skillsRepositories.getSkillRepository(),
     );

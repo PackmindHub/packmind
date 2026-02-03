@@ -41,9 +41,9 @@ export class CreatePackageUsecase
     const {
       spaceId,
       name,
-      description,
-      recipeIds,
-      standardIds,
+      description = '',
+      recipeIds = [],
+      standardIds = [],
       skillIds = [],
       userId,
     } = command;

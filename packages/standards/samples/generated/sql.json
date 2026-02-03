@@ -1,0 +1,88 @@
+{
+  "name": "SQL Best Practices",
+  "summary": "Advanced SQL rules for building safe, predictable, and performant database code in production schemas, migrations, and query modules.",
+  "description": "This standard covers high-impact SQL practices for security, concurrency, transactional correctness, performance stability, and operability. It targets non-obvious pitfalls around isolation, locking, pagination, aggregation, indexing, migrations, and plan stability in real-world systems.",
+  "scope": "**/*.sql",
+  "rules": [
+    {
+      "content": "Use parameter placeholders for all external values; pass lists via typed arrays or table-valued parameters, not string-built IN clauses.",
+      "examples": {
+        "positive": "PREPARE q(int, text[]) AS\nSELECT *\nFROM orders\nWHERE tenant_id = $1\n  AND status = ANY($2);\n\nEXECUTE q(42, ARRAY['PAID','SHIPPED']);",
+        "negative": "SELECT *\nFROM orders\nWHERE tenant_id = 42\n  AND status IN ('PAID','SHIPPED');\n\n-- application concatenates: \"... status IN (\" + userInput + \")\"",
+        "language": "SQL"
+      }
+    },
+    {
+      "content": "Set transaction isolation explicitly at transaction start for any multi-statement write flow; do not rely on session or database defaults.",
+      "examples": {
+        "positive": "BEGIN;\nSET TRANSACTION ISOLATION LEVEL REPEATABLE READ;\n\nUPDATE accounts\nSET balance = balance - 100\nWHERE id = 10;\n\nUPDATE accounts\nSET balance = balance + 100\nWHERE id = 20;\n\nCOMMIT;",
+        "negative": "BEGIN;\n\nUPDATE accounts\nSET balance = balance - 100\nWHERE id = 10;\n\nUPDATE accounts\nSET balance = balance + 100\nWHERE id = 20;\n\nCOMMIT; -- isolation depends on server/session defaults",
+        "language": "SQL"
+      }
+    },
+    {
+      "content": "Lock rows with SELECT ... FOR UPDATE when reading values that will be updated in the same transaction; avoid read-then-update without locks.",
+      "examples": {
+        "positive": "BEGIN;\n\nSELECT balance\nFROM accounts\nWHERE id = 10\nFOR UPDATE;\n\nUPDATE accounts\nSET balance = balance - 100\nWHERE id = 10;\n\nCOMMIT;",
+        "negative": "BEGIN;\n\nSELECT balance\nFROM accounts\nWHERE id = 10;\n\nUPDATE accounts\nSET balance = balance - 100\nWHERE id = 10;\n\nCOMMIT;",
+        "language": "SQL"
+      }
+    },
+    {
+      "content": "Write DDL migrations as idempotent steps using IF EXISTS/IF NOT EXISTS and guarded backfills; avoid non-repeatable migrations.",
+      "examples": {
+        "positive": "ALTER TABLE users\n  ADD COLUMN IF NOT EXISTS last_seen_at timestamptz;\n\nUPDATE users\nSET last_seen_at = created_at\nWHERE last_seen_at IS NULL;\n\nCREATE INDEX IF NOT EXISTS idx_users_last_seen_at\n  ON users(last_seen_at);",
+        "negative": "ALTER TABLE users ADD COLUMN last_seen_at timestamptz;\n\nUPDATE users SET last_seen_at = created_at;\n\nCREATE INDEX idx_users_last_seen_at ON users(last_seen_at);",
+        "language": "SQL"
+      }
+    },
+    {
+      "content": "Enforce data invariants with constraints; prefer CHECK, FOREIGN KEY, NOT NULL, and UNIQUE over application-only validation.",
+      "examples": {
+        "positive": "ALTER TABLE orders\n  ADD CONSTRAINT orders_amount_positive CHECK (amount_cents > 0);\n\nALTER TABLE orders\n  ADD CONSTRAINT orders_customer_fk\n  FOREIGN KEY (customer_id) REFERENCES customers(id);\n\nALTER TABLE orders\n  ALTER COLUMN tenant_id SET NOT NULL;",
+        "negative": "-- no constraints; relies on application logic\n-- orders.amount_cents can be 0 or negative\n-- orders.customer_id can reference missing customers",
+        "language": "SQL"
+      }
+    },
+    {
+      "content": "Avoid OFFSET pagination on large tables; use keyset pagination with a stable, unique ordering predicate.",
+      "examples": {
+        "positive": "SELECT id, created_at, total_cents\nFROM orders\nWHERE tenant_id = 42\n  AND (created_at, id) < ($1, $2)\nORDER BY created_at DESC, id DESC\nLIMIT 50;",
+        "negative": "SELECT id, created_at, total_cents\nFROM orders\nWHERE tenant_id = 42\nORDER BY created_at DESC\nLIMIT 50 OFFSET 50000;",
+        "language": "SQL"
+      }
+    },
+    {
+      "content": "Select only required columns in production queries; avoid SELECT * in application-facing SQL and stable interfaces like views.",
+      "examples": {
+        "positive": "SELECT id, email, created_at\nFROM users\nWHERE tenant_id = $1\n  AND status = 'ACTIVE';",
+        "negative": "SELECT *\nFROM users\nWHERE tenant_id = $1\n  AND status = 'ACTIVE';",
+        "language": "SQL"
+      }
+    },
+    {
+      "content": "Use window functions for “top N per group” and latest-row selection; avoid correlated subqueries with LIMIT per row.",
+      "examples": {
+        "positive": "SELECT user_id, order_id, created_at\nFROM (\n  SELECT user_id,\n         id AS order_id,\n         created_at,\n         ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY created_at DESC, id DESC) AS rn\n  FROM orders\n  WHERE tenant_id = $1\n) t\nWHERE rn = 1;",
+        "negative": "SELECT u.id AS user_id,\n       (\n         SELECT o.id\n         FROM orders o\n         WHERE o.user_id = u.id\n         ORDER BY o.created_at DESC\n         LIMIT 1\n       ) AS order_id\nFROM users u\nWHERE u.tenant_id = $1;",
+        "language": "SQL"
+      }
+    },
+    {
+      "content": "Keep predicates sargable; avoid applying functions to indexed columns in WHERE and JOIN conditions, and rewrite to range predicates.",
+      "examples": {
+        "positive": "SELECT *\nFROM events\nWHERE created_at >= DATE '2026-01-01'\n  AND created_at <  DATE '2026-02-01';",
+        "negative": "SELECT *\nFROM events\nWHERE DATE(created_at) = DATE '2026-01-01';",
+        "language": "SQL"
+      }
+    },
+    {
+      "content": "Create composite indexes matching leading equality filters then ordering; avoid indexing only low-selectivity columns or mismatched column order.",
+      "examples": {
+        "positive": "CREATE INDEX idx_orders_tenant_status_created_id\nON orders(tenant_id, status, created_at DESC, id DESC);\n\nSELECT id, created_at\nFROM orders\nWHERE tenant_id = $1 AND status = $2\nORDER BY created_at DESC, id DESC\nLIMIT 50;",
+        "negative": "CREATE INDEX idx_orders_status ON orders(status);\n\nSELECT id, created_at\nFROM orders\nWHERE tenant_id = $1 AND status = $2\nORDER BY created_at DESC, id DESC\nLIMIT 50;",
+        "language": "SQL"
+      }
+    }
+  ]
+}

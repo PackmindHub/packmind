@@ -42,8 +42,8 @@ describe('StandardSummaryService', () => {
     mockAIService.isConfigured.mockResolvedValue(true);
 
     standardSummaryService = new StandardSummaryService(
-      stubbedLogger,
       mockLlmPort,
+      stubbedLogger,
     );
   });
 

@@ -5,6 +5,8 @@
  * This prompt follows the guidelines from .claude/skills/packmind-create-standard/SKILL.md
  */
 
+import { ProgrammingLanguage } from '@packmind/types';
+
 type SampleType = 'language' | 'framework';
 
 function buildExclusionSection(excludeTopics: string[]): string {
@@ -23,13 +25,34 @@ Focus only on core language features and patterns.
 `;
 }
 
+function buildExampleLanguageSection(
+  exampleLanguage: ProgrammingLanguage | null,
+  displayName: string,
+): string {
+  if (exampleLanguage) {
+    return `## Language for Code Examples
+Use ${exampleLanguage} for all code examples in this standard.`;
+  }
+
+  // Fallback for samples without a defined example language
+  return `## Language for Code Examples
+Choose the most appropriate programming language for ${displayName} code examples from the valid language codes below.`;
+}
+
 export function generateStandardSamplePrompt(
   displayName: string,
   type: SampleType,
   excludeTopics: string[] = [],
+  scope: string | null = null,
+  exampleLanguage: ProgrammingLanguage | null = null,
 ): string {
   const typeLabel = type === 'language' ? 'programming language' : 'framework';
   const exclusionSection = buildExclusionSection(excludeTopics);
+  const scopeValue = scope ?? `${displayName} source files`;
+  const exampleLanguageSection = buildExampleLanguageSection(
+    exampleLanguage,
+    displayName,
+  );
 
   return `You are a principal software engineer creating an ADVANCED coding standard for ${displayName} (${typeLabel}).
 ${exclusionSection}
@@ -68,8 +91,9 @@ Generate a JSON coding standard following these STRICT requirements:
 Return ONLY valid JSON with this exact structure (no markdown, no backticks, no explanation):
 {
   "name": "${displayName} Best Practices",
+  "summary": "A concise one-sentence summary describing the intent of this standard and when it is relevant to apply its rules.",
   "description": "A clear description of what this standard covers and what problems it solves.",
-  "scope": "${displayName} source files",
+  "scope": "${scopeValue}",
   "rules": [
     {
       "content": "Rule text starting with action verb (max ~25 words)",
@@ -150,25 +174,13 @@ Generate rules that MOST ${displayName} developers will benefit from:
 - Dependency injection patterns - standard in modern ${displayName}
 - Common framework pitfalls specific to ${displayName}
 
-## Language for Code Examples
-Choose the appropriate programming language based on ${displayName}:
-- Java → JAVA
-- Spring → JAVA
-- TypeScript → TYPESCRIPT
-- React → TYPESCRIPT_TSX
-- Python → PYTHON
-- Go → GO
-- Rust → RUST
-- Kotlin → KOTLIN
-- Swift → SWIFT
-- C# → CSHARP
-- PHP → PHP
-- Ruby → RUBY
+${exampleLanguageSection}
 
 ## Valid Language Codes
 TYPESCRIPT, TYPESCRIPT_TSX, JAVASCRIPT, JAVASCRIPT_JSX, PYTHON, JAVA, GO, RUST, CSHARP, PHP, RUBY, KOTLIN, SWIFT, SQL, HTML, CSS, SCSS, YAML, JSON, MARKDOWN, BASH, GENERIC
 
 ## Final Checklist Before Generating
+- [ ] Includes a concise one-sentence summary
 - [ ] Exactly 10 rules
 - [ ] Each rule starts with action verb
 - [ ] Each rule is max ~25 words

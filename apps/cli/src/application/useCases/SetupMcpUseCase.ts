@@ -31,8 +31,8 @@ export class SetupMcpUseCase implements ISetupMcpUseCase {
     const { agentTypes } = command;
 
     const [tokenResult, urlResult] = await Promise.all([
-      this.deps.gateway.getMcpToken({}),
-      this.deps.gateway.getMcpUrl({}),
+      this.deps.gateway.mcp.getToken({}),
+      this.deps.gateway.mcp.getUrl({}),
     ]);
 
     const config = {

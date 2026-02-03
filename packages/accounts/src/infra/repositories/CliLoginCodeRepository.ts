@@ -28,7 +28,7 @@ export class CliLoginCodeRepository
     repository: Repository<WithTimestamps<CliLoginCode>>,
     logger: PackmindLogger = new PackmindLogger(origin),
   ) {
-    super('cli_login_code', repository, logger, CliLoginCodeSchema);
+    super('cli_login_code', repository, CliLoginCodeSchema, logger);
   }
 
   override async add(cliLoginCode: CliLoginCode): Promise<CliLoginCode> {

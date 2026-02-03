@@ -1,0 +1,88 @@
+{
+  "name": "PHP Best Practices",
+  "summary": "A production-focused standard for PHP applications that hardens I/O, error handling, input boundaries, configuration, and dependency usage in day-to-day code.",
+  "description": "This standard covers high-impact PHP practices around boundary validation, secure data access, safe resource and error handling, predictable time and timezone usage, reliable network I/O, structured logging, configuration loading, and dependency injection patterns using core PHP features.",
+  "scope": "**/*.php,**/*.phtml",
+  "rules": [
+    {
+      "content": "Validate and normalize all external input at module boundaries into typed value objects or DTOs.",
+      "examples": {
+        "positive": "<?php\nfinal class CreateUserInput {\n    public function __construct(\n        public readonly string $email,\n        public readonly int $age,\n    ) {}\n\n    public static function fromArray(array $in): self {\n        $email = filter_var($in['email'] ?? null, FILTER_VALIDATE_EMAIL);\n        if ($email === false) {\n            throw new InvalidArgumentException('Invalid email');\n        }\n        $age = filter_var($in['age'] ?? null, FILTER_VALIDATE_INT);\n        if ($age === false || $age < 0) {\n            throw new InvalidArgumentException('Invalid age');\n        }\n        return new self($email, (int)$age);\n    }\n}\n\n$input = CreateUserInput::fromArray($_POST);\n",
+        "negative": "<?php\n$email = $_POST['email'];\n$age = (int)$_POST['age']; // accepts \"abc\" as 0\n// passed through without validation\ncreateUser($email, $age);\n",
+        "language": "PHP"
+      }
+    },
+    {
+      "content": "Use prepared statements with bound parameters for all SQL; never concatenate user input into query strings.",
+      "examples": {
+        "positive": "<?php\n$pdo = new PDO($dsn, $user, $pass, [\n    PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,\n]);\n\n$stmt = $pdo->prepare('SELECT * FROM users WHERE email = :email');\n$stmt->execute([':email' => $email]);\n$user = $stmt->fetch(PDO::FETCH_ASSOC);\n",
+        "negative": "<?php\n$pdo = new PDO($dsn, $user, $pass);\n$sql = \"SELECT * FROM users WHERE email = '\" . $_GET['email'] . \"'\";\n$user = $pdo->query($sql)->fetch(PDO::FETCH_ASSOC);\n",
+        "language": "PHP"
+      }
+    },
+    {
+      "content": "Set connect and read timeouts on all HTTP calls; pass them per request rather than relying on defaults.",
+      "examples": {
+        "positive": "<?php\n$ch = curl_init('https://api.example.com/data');\ncurl_setopt_array($ch, [\n    CURLOPT_RETURNTRANSFER => true,\n    CURLOPT_CONNECTTIMEOUT => 2,\n    CURLOPT_TIMEOUT => 5,\n]);\n$body = curl_exec($ch);\nif ($body === false) {\n    throw new RuntimeException(curl_error($ch));\n}\ncurl_close($ch);\n",
+        "negative": "<?php\n$ch = curl_init('https://api.example.com/data');\ncurl_setopt($ch, CURLOPT_RETURNTRANSFER, true);\n$body = curl_exec($ch); // no timeouts\ncurl_close($ch);\n",
+        "language": "PHP"
+      }
+    },
+    {
+      "content": "Implement bounded retries with exponential backoff only for idempotent network operations.",
+      "examples": {
+        "positive": "<?php\nfunction getWithRetry(string $url, int $max = 3): string {\n    $delayMs = 100;\n    for ($i = 0; $i < $max; $i++) {\n        $ch = curl_init($url);\n        curl_setopt_array($ch, [\n            CURLOPT_RETURNTRANSFER => true,\n            CURLOPT_CONNECTTIMEOUT => 2,\n            CURLOPT_TIMEOUT => 5,\n        ]);\n        $body = curl_exec($ch);\n        $errNo = curl_errno($ch);\n        curl_close($ch);\n\n        if ($errNo === 0 && $body !== false) {\n            return $body;\n        }\n        usleep($delayMs * 1000);\n        $delayMs *= 2;\n    }\n    throw new RuntimeException('HTTP request failed after retries');\n}\n\n$body = getWithRetry('https://api.example.com/items'); // GET is idempotent\n",
+        "negative": "<?php\n// retries a non-idempotent operation\nfor ($i = 0; $i < 10; $i++) {\n    file_get_contents('https://api.example.com/charge?amount=100');\n}\n",
+        "language": "PHP"
+      }
+    },
+    {
+      "content": "Use exceptions for failures; avoid returning false/null from functions that can fail without a distinct success type.",
+      "examples": {
+        "positive": "<?php\nfunction readJson(string $path): array {\n    $contents = @file_get_contents($path);\n    if ($contents === false) {\n        throw new RuntimeException(\"Failed to read: $path\");\n    }\n    $data = json_decode($contents, true, flags: JSON_THROW_ON_ERROR);\n    return $data;\n}\n\n$data = readJson('/tmp/config.json');\n",
+        "negative": "<?php\nfunction readJson(string $path): ?array {\n    $contents = file_get_contents($path);\n    if ($contents === false) {\n        return null;\n    }\n    return json_decode($contents, true); // may be null on error or valid 'null'\n}\n\n$data = readJson('/tmp/config.json');\nif ($data == null) {\n    // ambiguous\n}\n",
+        "language": "PHP"
+      }
+    },
+    {
+      "content": "Close resources deterministically using try/finally for handles, locks, and temp files created in the same scope.",
+      "examples": {
+        "positive": "<?php\n$fp = fopen($path, 'rb');\nif ($fp === false) {\n    throw new RuntimeException('open failed');\n}\ntry {\n    $data = stream_get_contents($fp);\n    if ($data === false) {\n        throw new RuntimeException('read failed');\n    }\n} finally {\n    fclose($fp);\n}\n",
+        "negative": "<?php\n$fp = fopen($path, 'rb');\n$data = stream_get_contents($fp);\nif ($data === false) {\n    throw new RuntimeException('read failed');\n}\n// fclose skipped on exception paths\n",
+        "language": "PHP"
+      }
+    },
+    {
+      "content": "Use UTC for persisted timestamps and pass DateTimeImmutable with explicit timezone; avoid implicit server timezone parsing.",
+      "examples": {
+        "positive": "<?php\n$utc = new DateTimeZone('UTC');\n$createdAt = new DateTimeImmutable('now', $utc);\n\n$stmt = $pdo->prepare('INSERT INTO events(created_at) VALUES(:ts)');\n$stmt->execute([':ts' => $createdAt->format(DateTimeInterface::ATOM)]);\n",
+        "negative": "<?php\n$createdAt = new DateTime('now'); // server-dependent timezone\n$stmt = $pdo->prepare('INSERT INTO events(created_at) VALUES(:ts)');\n$stmt->execute([':ts' => $createdAt->format('Y-m-d H:i:s')]);\n",
+        "language": "PHP"
+      }
+    },
+    {
+      "content": "Log structured context arrays including exception objects; avoid string-concatenated logs without identifiers.",
+      "examples": {
+        "positive": "<?php\nfunction logError(string $message, array $context = []): void {\n    error_log(json_encode(['message' => $message, 'context' => $context], JSON_UNESCAPED_SLASHES));\n}\n\ntry {\n    throw new RuntimeException('boom');\n} catch (Throwable $e) {\n    logError('request_failed', [\n        'requestId' => $requestId,\n        'userId' => $userId,\n        'exception' => [\n            'type' => $e::class,\n            'message' => $e->getMessage(),\n            'trace' => $e->getTraceAsString(),\n        ],\n    ]);\n}\n",
+        "negative": "<?php\ntry {\n    throw new RuntimeException('boom');\n} catch (Throwable $e) {\n    error_log('Error: ' . $e->getMessage());\n}\n",
+        "language": "PHP"
+      }
+    },
+    {
+      "content": "Load configuration from environment with explicit parsing and defaults; avoid reading $_ENV/$_SERVER values throughout the codebase.",
+      "examples": {
+        "positive": "<?php\nfinal class AppConfig {\n    public function __construct(\n        public readonly string $dsn,\n        public readonly bool $debug,\n        public readonly int $httpTimeoutSeconds,\n    ) {}\n\n    public static function fromEnv(): self {\n        $dsn = getenv('DB_DSN') ?: throw new RuntimeException('DB_DSN missing');\n        $debug = filter_var(getenv('APP_DEBUG') ?: 'false', FILTER_VALIDATE_BOOL);\n        $timeout = filter_var(getenv('HTTP_TIMEOUT') ?: '5', FILTER_VALIDATE_INT);\n        if ($timeout === false || $timeout < 1) {\n            throw new RuntimeException('HTTP_TIMEOUT invalid');\n        }\n        return new self($dsn, $debug, (int)$timeout);\n    }\n}\n\n$config = AppConfig::fromEnv();\n",
+        "negative": "<?php\n// scattered env access and implicit types\nif ($_ENV['APP_DEBUG']) {\n    ini_set('display_errors', '1');\n}\n$pdo = new PDO($_ENV['DB_DSN']);\n$timeout = $_SERVER['HTTP_TIMEOUT'];\n",
+        "language": "PHP"
+      }
+    },
+    {
+      "content": "Inject external dependencies via constructors and interfaces; avoid global state, singletons, and static service access.",
+      "examples": {
+        "positive": "<?php\ninterface HttpClient {\n    public function get(string $url, int $timeoutSeconds): string;\n}\n\nfinal class WeatherService {\n    public function __construct(private HttpClient $http) {}\n\n    public function fetch(string $city): string {\n        return $this->http->get('https://api.example.com/weather?city=' . rawurlencode($city), 5);\n    }\n}\n",
+        "negative": "<?php\nfinal class Http {\n    public static function get(string $url): string {\n        return file_get_contents($url);\n    }\n}\n\nfinal class WeatherService {\n    public function fetch(string $city): string {\n        return Http::get('https://api.example.com/weather?city=' . $city);\n    }\n}\n",
+        "language": "PHP"
+      }
+    }
+  ]
+}

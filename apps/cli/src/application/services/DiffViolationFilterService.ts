@@ -1,14 +1,15 @@
 import { LintViolation } from '../../domain/entities/LintViolation';
 import { ModifiedLine } from '../../domain/entities/DiffMode';
+import { IDiffViolationFilterService } from '../../domain/services/IDiffViolationFilterService';
 
-export class DiffViolationFilterService {
+export class DiffViolationFilterService implements IDiffViolationFilterService {
   /**
    * Filters violations to only include those in modified files.
    * @param violations - The list of violations to filter
    * @param modifiedFiles - The list of absolute paths of modified files
    * @returns Violations that occur in modified files
    */
-  public filterByFiles(
+  filterByFiles(
     violations: LintViolation[],
     modifiedFiles: string[],
   ): LintViolation[] {
@@ -25,7 +26,7 @@ export class DiffViolationFilterService {
    * @param modifiedLines - The list of modified line ranges
    * @returns Violations that occur on modified lines
    */
-  public filterByLines(
+  filterByLines(
     violations: LintViolation[],
     modifiedLines: ModifiedLine[],
   ): LintViolation[] {

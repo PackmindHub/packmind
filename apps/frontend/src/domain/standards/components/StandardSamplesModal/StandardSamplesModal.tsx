@@ -22,6 +22,7 @@ import {
   type SampleInput,
 } from '@packmind/types';
 import { useCreateStandardsFromSamplesMutation } from '../../api/queries/StandardsQueries';
+import { SampleIcon } from './SampleIcon';
 
 interface IStandardSamplesModalProps {
   open: boolean;
@@ -102,7 +103,7 @@ export const StandardSamplesModal: React.FC<IStandardSamplesModalProps> = ({
     <PMDialog.Root
       open={open}
       onOpenChange={(details: { open: boolean }) => onOpenChange(details.open)}
-      size="lg"
+      size="xl"
       scrollBehavior="inside"
     >
       <PMDialog.Backdrop />
@@ -197,27 +198,43 @@ const SampleCardGrid: React.FC<ISampleCardGridProps> = ({
 }) => {
   return (
     <PMCheckboxGroup value={selectedValues} onValueChange={onValueChange}>
-      <PMGrid gap={4} templateColumns="repeat(auto-fill, 190px)">
-        {samples.map((sample) => (
-          <PMGridItem key={sample.id}>
-            <PMCheckboxCard.Root
-              colorPalette="blue"
-              value={sample.id}
-              variant="surface"
-              borderColor="border.tertiary"
-            >
-              <PMCheckboxCard.HiddenInput />
-              <PMCheckboxCard.Control>
-                <PMCheckboxCard.Content>
-                  <PMCheckboxCard.Label>
-                    {sample.displayName}
-                  </PMCheckboxCard.Label>
-                </PMCheckboxCard.Content>
-                <PMCheckboxCard.Indicator />
-              </PMCheckboxCard.Control>
-            </PMCheckboxCard.Root>
-          </PMGridItem>
-        ))}
+      <PMGrid
+        gap={4}
+        templateColumns="repeat(auto-fill, 200px)"
+        justifyContent="center"
+      >
+        {samples.map((sample) => {
+          const isSelected = selectedValues.includes(sample.id);
+          return (
+            <PMGridItem key={sample.id}>
+              <PMCheckboxCard.Root
+                colorPalette="blue"
+                value={sample.id}
+                variant="surface"
+                borderColor="border.tertiary"
+              >
+                <PMCheckboxCard.HiddenInput />
+                <PMCheckboxCard.Control>
+                  <PMCheckboxCard.Content>
+                    <PMHStack gap={2}>
+                      <SampleIcon
+                        sampleId={sample.id}
+                        boxSize={7}
+                        color={
+                          isSelected ? 'branding.primary' : 'text.secondary'
+                        }
+                      />
+                      <PMCheckboxCard.Label>
+                        {sample.displayName}
+                      </PMCheckboxCard.Label>
+                    </PMHStack>
+                  </PMCheckboxCard.Content>
+                  <PMCheckboxCard.Indicator />
+                </PMCheckboxCard.Control>
+              </PMCheckboxCard.Root>
+            </PMGridItem>
+          );
+        })}
       </PMGrid>
     </PMCheckboxGroup>
   );

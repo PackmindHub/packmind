@@ -13,13 +13,13 @@ import {
   ListFilesInDirectoryUseCaseResult,
 } from './application/useCases/ListFilesInDirectoryUseCase';
 import {
-  LintFilesInDirectoryCommand,
-  LintFilesInDirectoryResult,
-} from './domain/useCases/ILintFilesInDirectory';
+  LintFilesAgainstRuleCommand,
+  LintFilesAgainstRuleResult,
+} from './domain/useCases/ILintFilesAgainstRule';
 import {
-  LintFilesLocallyCommand,
-  LintFilesLocallyResult,
-} from './domain/useCases/ILintFilesLocally';
+  LintFilesFromConfigCommand,
+  LintFilesFromConfigResult,
+} from './domain/useCases/ILintFilesFromConfig';
 import {
   IInstallPackagesCommand,
   IInstallPackagesResult,
@@ -49,14 +49,29 @@ import {
   ISetupMcpCommand,
   ISetupMcpResult,
 } from './domain/useCases/ISetupMcpUseCase';
+import {
+  IListStandardsCommand,
+  IListStandardsResult,
+} from './domain/useCases/IListStandardsUseCase';
+import {
+  IListCommandsCommand,
+  IListCommandsResult,
+} from './domain/useCases/IListCommandsUseCase';
+import {
+  IListSkillsCommand,
+  IListSkillsResult,
+} from './domain/useCases/IListSkillsUseCase';
 import { AllConfigsResult, HierarchicalConfigResult } from '@packmind/types';
 import { logWarningConsole } from './infra/utils/consoleLogger';
 import {
   NotifyDistributionCommand,
   NotifyDistributionResult,
+} from './domain/repositories/IPackmindGateway';
+import {
   UploadSkillCommand,
   UploadSkillResult,
-} from './domain/repositories/IPackmindGateway';
+} from './domain/repositories/ISkillsGateway';
+import { loadCredentials } from './infra/utils/credentials';
 
 const origin = 'PackmindCliHexa';
 
@@ -69,7 +84,7 @@ export class PackmindCliHexa {
 
     try {
       // Initialize the hexagon factory
-      this.hexa = new PackmindCliHexaFactory(this.logger);
+      this.hexa = new PackmindCliHexaFactory();
     } catch (error) {
       this.logger.error('Failed to initialize PackmindCliHexa', {
         error: error instanceof Error ? error.message : String(error),
@@ -105,16 +120,16 @@ export class PackmindCliHexa {
     return this.hexa.useCases.listFilesInDirectoryUseCase.execute(command);
   }
 
-  public async lintFilesInDirectory(
-    command: LintFilesInDirectoryCommand,
-  ): Promise<LintFilesInDirectoryResult> {
-    return this.hexa.useCases.lintFilesInDirectory.execute(command);
+  public async lintFilesAgainstRule(
+    command: LintFilesAgainstRuleCommand,
+  ): Promise<LintFilesAgainstRuleResult> {
+    return this.hexa.useCases.lintFilesAgainstRule.execute(command);
   }
 
-  public async lintFilesLocally(
-    command: LintFilesLocallyCommand,
-  ): Promise<LintFilesLocallyResult> {
-    return this.hexa.useCases.lintFilesLocally.execute(command);
+  public async lintFilesFromConfig(
+    command: LintFilesFromConfigCommand,
+  ): Promise<LintFilesFromConfigResult> {
+    return this.hexa.useCases.lintFilesFromConfig.execute(command);
   }
 
   public async installPackages(
@@ -133,6 +148,24 @@ export class PackmindCliHexa {
     command: IGetPackageSummaryCommand,
   ): Promise<IGetPackageSummaryResult> {
     return this.hexa.useCases.getPackageBySlug.execute(command);
+  }
+
+  public async listStandards(
+    command: IListStandardsCommand,
+  ): Promise<IListStandardsResult> {
+    return this.hexa.useCases.listStandards.execute(command);
+  }
+
+  public async listCommands(
+    command: IListCommandsCommand,
+  ): Promise<IListCommandsResult> {
+    return this.hexa.useCases.listCommands.execute(command);
+  }
+
+  public async listSkills(
+    command: IListSkillsCommand,
+  ): Promise<IListSkillsResult> {
+    return this.hexa.useCases.listSkills.execute(command);
   }
 
   public async configExists(baseDirectory: string): Promise<boolean> {
@@ -246,13 +279,15 @@ export class PackmindCliHexa {
   public async notifyDistribution(
     command: NotifyDistributionCommand,
   ): Promise<NotifyDistributionResult> {
-    return this.hexa.repositories.packmindGateway.notifyDistribution(command);
+    return this.hexa.repositories.packmindGateway.deployment.notifyDistribution(
+      command,
+    );
   }
 
   public async uploadSkill(
     command: UploadSkillCommand,
   ): Promise<UploadSkillResult> {
-    return this.hexa.repositories.packmindGateway.uploadSkill(command);
+    return this.hexa.repositories.packmindGateway.skills.upload(command);
   }
 
   public async installDefaultSkills(
@@ -263,5 +298,27 @@ export class PackmindCliHexa {
 
   public getPackmindGateway() {
     return this.hexa.repositories.packmindGateway;
+  }
+
+  /**
+   * Gets the Packmind web app URL derived from the API host.
+   * Transforms API host (e.g., https://api.packmind.com) to web app URL (e.g., https://app.packmind.com)
+   * Falls back to https://app.packmind.com if no credentials are available.
+   */
+  public getWebAppUrl(): string {
+    const credentials = loadCredentials();
+    if (!credentials?.host) {
+      return 'https://app.packmind.com';
+    }
+
+    // Transform API host to web app host
+    // api.packmind.com -> app.packmind.com
+    // localhost:3000/api -> localhost:3000
+    try {
+      const host = credentials.host;
+      return host.replace('api.', 'app.').replace('/api', '');
+    } catch {
+      return 'https://app.packmind.com';
+    }
   }
 }

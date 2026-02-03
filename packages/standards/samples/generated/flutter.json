@@ -1,0 +1,88 @@
+{
+  "name": "Flutter Best Practices",
+  "summary": "Advanced Flutter standards for production apps focusing on correctness, resilience, and performance at common framework and platform boundaries.",
+  "description": "Covers high-impact Flutter and Dart practices around network and async behavior, lifecycle-safe UI updates, state containment, resource cleanup, observability, configuration, and dependency management to reduce production bugs and performance regressions.",
+  "scope": "**/*.dart",
+  "rules": [
+    {
+      "content": "Set per-request connect and receive timeouts on all HTTP calls; represent timeouts as Duration constants.",
+      "examples": {
+        "positive": "import 'dart:convert';\nimport 'package:http/http.dart' as http;\n\nconst _connectTimeout = Duration(seconds: 5);\nconst _receiveTimeout = Duration(seconds: 10);\n\nFuture<Map<String, dynamic>> fetchProfile(http.Client client, Uri uri) async {\n  final response = await client\n      .get(uri)\n      .timeout(_connectTimeout)\n      .timeout(_receiveTimeout);\n  return jsonDecode(response.body) as Map<String, dynamic>;\n}\n",
+        "negative": "import 'dart:convert';\nimport 'package:http/http.dart' as http;\n\nFuture<Map<String, dynamic>> fetchProfile(http.Client client, Uri uri) async {\n  final response = await client.get(uri); // no timeouts\n  return jsonDecode(response.body) as Map<String, dynamic>;\n}\n",
+        "language": "GENERIC"
+      }
+    },
+    {
+      "content": "Retry only idempotent network operations with bounded attempts and jittered backoff; avoid retries on non-idempotent writes.",
+      "examples": {
+        "positive": "import 'dart:math';\n\nFuture<T> retryIdempotent<T>(Future<T> Function() op) async {\n  const maxAttempts = 3;\n  final rand = Random();\n\n  Object? lastError;\n  for (var attempt = 1; attempt <= maxAttempts; attempt++) {\n    try {\n      return await op();\n    } catch (e) {\n      lastError = e;\n      final baseMs = 200 * (1 << (attempt - 1));\n      final jitterMs = rand.nextInt(100);\n      await Future.delayed(Duration(milliseconds: baseMs + jitterMs));\n    }\n  }\n  throw lastError!;\n}\n\n// GET is idempotent\nfinal data = await retryIdempotent(() => client.get(uri));\n",
+        "negative": "Future<void> createOrder() async {\n  // Retrying a POST can create duplicates\n  for (var i = 0; i < 5; i++) {\n    await client.post(createOrderUri, body: '{\"item\":1}');\n  }\n}\n",
+        "language": "GENERIC"
+      }
+    },
+    {
+      "content": "Validate external data at boundaries; parse JSON with explicit schemas and reject missing or unexpected types.",
+      "examples": {
+        "positive": "class UserDto {\n  final String id;\n  final int age;\n\n  UserDto({required this.id, required this.age});\n\n  factory UserDto.fromJson(Map<String, dynamic> json) {\n    final id = json['id'];\n    final age = json['age'];\n    if (id is! String) throw const FormatException('id');\n    if (age is! int) throw const FormatException('age');\n    return UserDto(id: id, age: age);\n  }\n}\n\nUserDto parseUser(Object decoded) {\n  if (decoded is! Map<String, dynamic>) throw const FormatException('root');\n  return UserDto.fromJson(decoded);\n}\n",
+        "negative": "class UserDto {\n  final String id;\n  final int age;\n\n  UserDto(this.id, this.age);\n\n  factory UserDto.fromJson(Map<String, dynamic> json) {\n    // unchecked casts\n    return UserDto(json['id'] as String, json['age'] as int);\n  }\n}\n",
+        "language": "GENERIC"
+      }
+    },
+    {
+      "content": "Guard UI updates after awaits; check mounted before using context or calling setState in async widget methods.",
+      "examples": {
+        "positive": "class ProfilePageState extends State<ProfilePage> {\n  bool loading = false;\n\n  Future<void> refresh() async {\n    setState(() => loading = true);\n    final data = await widget.repo.load();\n    if (!mounted) return;\n    setState(() {\n      loading = false;\n      // use data\n    });\n  }\n}\n",
+        "negative": "class ProfilePageState extends State<ProfilePage> {\n  Future<void> refresh() async {\n    setState(() {});\n    final data = await widget.repo.load();\n    // may run after dispose\n    setState(() {\n      // use data\n    });\n  }\n}\n",
+        "language": "GENERIC"
+      }
+    },
+    {
+      "content": "Cancel StreamSubscriptions, Timers, and AnimationControllers in dispose; close StreamControllers owned by the object.",
+      "examples": {
+        "positive": "class TickerWidgetState extends State<TickerWidget> with SingleTickerProviderStateMixin {\n  late final AnimationController controller;\n  Timer? timer;\n  StreamSubscription<int>? sub;\n  final StreamController<int> owned = StreamController<int>();\n\n  @override\n  void initState() {\n    super.initState();\n    controller = AnimationController(vsync: this, duration: const Duration(seconds: 1));\n    timer = Timer.periodic(const Duration(seconds: 1), (_) {});\n    sub = owned.stream.listen((_) {});\n  }\n\n  @override\n  void dispose() {\n    sub?.cancel();\n    timer?.cancel();\n    controller.dispose();\n    owned.close();\n    super.dispose();\n  }\n}\n",
+        "negative": "class TickerWidgetState extends State<TickerWidget> with SingleTickerProviderStateMixin {\n  late final AnimationController controller;\n  StreamSubscription<int>? sub;\n\n  @override\n  void initState() {\n    super.initState();\n    controller = AnimationController(vsync: this, duration: const Duration(seconds: 1));\n    sub = Stream.periodic(const Duration(seconds: 1), (i) => i).listen((_) {});\n  }\n\n  @override\n  void dispose() {\n    super.dispose(); // leaks controller/subscription\n  }\n}\n",
+        "language": "GENERIC"
+      }
+    },
+    {
+      "content": "Keep side effects out of build; start async work in initState or event handlers, not inside widget build methods.",
+      "examples": {
+        "positive": "class LoadOnce extends StatefulWidget {\n  const LoadOnce({super.key, required this.repo});\n  final Repo repo;\n\n  @override\n  State<LoadOnce> createState() => _LoadOnceState();\n}\n\nclass _LoadOnceState extends State<LoadOnce> {\n  late final Future<Data> _future;\n\n  @override\n  void initState() {\n    super.initState();\n    _future = widget.repo.load();\n  }\n\n  @override\n  Widget build(BuildContext context) {\n    return FutureBuilder<Data>(\n      future: _future,\n      builder: (context, snap) => Text('${snap.data ?? ''}'),\n    );\n  }\n}\n",
+        "negative": "class LoadEveryBuild extends StatelessWidget {\n  const LoadEveryBuild({super.key, required this.repo});\n  final Repo repo;\n\n  @override\n  Widget build(BuildContext context) {\n    final future = repo.load(); // runs on every rebuild\n    return FutureBuilder(future: future, builder: (c, s) => const SizedBox());\n  }\n}\n",
+        "language": "GENERIC"
+      }
+    },
+    {
+      "content": "Inject external dependencies via constructors or providers; avoid global singletons and static service access in application code.",
+      "examples": {
+        "positive": "abstract class Analytics {\n  void logEvent(String name, {Map<String, Object?> params});\n}\n\nclass HomeController {\n  HomeController(this.analytics);\n  final Analytics analytics;\n\n  void opened() => analytics.logEvent('home_opened', params: {});\n}\n",
+        "negative": "class AnalyticsSingleton {\n  static final AnalyticsSingleton instance = AnalyticsSingleton._();\n  AnalyticsSingleton._();\n  void logEvent(String name) {}\n}\n\nclass HomeController {\n  void opened() => AnalyticsSingleton.instance.logEvent('home_opened');\n}\n",
+        "language": "GENERIC"
+      }
+    },
+    {
+      "content": "Use structured logs with stable event names and key-value context; avoid logging raw tokens, passwords, or full request bodies.",
+      "examples": {
+        "positive": "void logAuthFailure({required String userId, required int statusCode}) {\n  debugPrint('auth_failed userId=$userId status=$statusCode');\n}\n\nvoid logNetworkError({required Uri uri, required String method, required String error}) {\n  debugPrint('http_error method=$method uri=$uri error=$error');\n}\n",
+        "negative": "void logLogin(String email, String password, String token) {\n  debugPrint('login email=$email password=$password token=$token');\n}\n",
+        "language": "GENERIC"
+      }
+    },
+    {
+      "content": "Surface domain errors as typed failures; avoid throwing raw strings or returning null for error states across layers.",
+      "examples": {
+        "positive": "sealed class AppFailure implements Exception {\n  const AppFailure();\n}\n\nclass NetworkFailure extends AppFailure {\n  const NetworkFailure(this.statusCode);\n  final int statusCode;\n}\n\nFuture<String> loadGreeting(Api api) async {\n  final res = await api.getGreeting();\n  if (res.statusCode != 200) throw NetworkFailure(res.statusCode);\n  return res.body;\n}\n",
+        "negative": "Future<String?> loadGreeting(Api api) async {\n  final res = await api.getGreeting();\n  if (res.statusCode != 200) return null; // error encoded as null\n  if (res.body.isEmpty) throw 'bad response'; // raw string\n  return res.body;\n}\n",
+        "language": "GENERIC"
+      }
+    },
+    {
+      "content": "Make tests deterministic; use FakeAsync or injected Clock/Random, and avoid real timers, delays, and live HTTP in unit tests.",
+      "examples": {
+        "positive": "import 'package:fake_async/fake_async.dart';\n\nclass Poller {\n  Poller(this.delay);\n  final Duration delay;\n\n  Future<void> tick(Future<void> Function() op) async {\n    await Future<void>.delayed(delay);\n    await op();\n  }\n}\n\nvoid main() {\n  fakeAsync((async) {\n    var called = 0;\n    final poller = Poller(const Duration(seconds: 5));\n    poller.tick(() async => called++);\n    async.elapse(const Duration(seconds: 5));\n    async.flushMicrotasks();\n    assert(called == 1);\n  });\n}\n",
+        "negative": "void main() async {\n  var called = 0;\n  await Future<void>.delayed(const Duration(seconds: 5)); // slow and flaky\n  called++;\n  assert(called == 1);\n}\n",
+        "language": "GENERIC"
+      }
+    }
+  ]
+}

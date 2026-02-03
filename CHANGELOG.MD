@@ -2,18 +2,14 @@
 
 ## Added
 
+- Create packages with the CLI using `packmind-cli packages create <name>`
 - Create commands with the CLI using `packmind-cli commands create <playbook.json>`
-- Onboarding in CLI: scan projects, generate standards and commands automatically with `packmind-cli init` and `packmind-cli onboard`
-- Improved packmind-onboard skill with structured step-based guidance and AI-driven project analysis
-- Command creation support in coding agents via CreateCommandDeployer
+- List standards, commands, and skills with the CLI using `packmind-cli standards list`, `packmind-cli commands list`, and `packmind-cli skills list`
+- packmind-onboard skill with structured step-based guidance and AI-driven project analysis
 
 ## Changed
 
-- packmind-onboard skill completely restructured for clarity and enhanced user guidance
-
 ## Fixed
-
-- CLI syntax for command creation to use `commands create` instead of `command create`
 
 ## Removed
 

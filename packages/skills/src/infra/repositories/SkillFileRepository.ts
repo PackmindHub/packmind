@@ -17,7 +17,7 @@ export class SkillFileRepository
     ),
     logger: PackmindLogger = new PackmindLogger(origin),
   ) {
-    super('skill file', repository, logger, SkillFileSchema);
+    super('skill file', repository, SkillFileSchema, logger);
     this.logger.info('SkillFileRepository initialized');
   }
 

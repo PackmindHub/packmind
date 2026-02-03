@@ -1,85 +1,86 @@
 {
   "name": "JavaScript Best Practices",
-  "description": "Advanced, framework-agnostic JavaScript coding standard focused on high-impact reliability, security, performance, and operability pitfalls in production code.",
-  "scope": "JavaScript source files",
+  "summary": "Apply these rules when writing production JavaScript that performs I/O, handles untrusted input, and runs in long-lived processes or services.",
+  "description": "This standard covers high-impact JavaScript patterns for robustness and safety: reliable async control flow, error propagation, resource cleanup, input validation, network timeouts and retries, configuration handling, logging practices, concurrency-safe shared state, and test determinism. It focuses on pitfalls that commonly cause production incidents such as hung requests, swallowed errors, leaked handles, unsafe dynamic code execution, and flaky tests.",
+  "scope": "**/*.js",
   "rules": [
     {
-      "content": "Validate and normalize all external input at module boundaries, including types, ranges, and unknown fields; reject or default explicitly.",
+      "content": "Set explicit timeouts and cancellation for every network or IPC request using AbortController and per-request deadlines.",
       "examples": {
-        "positive": "function parseCreateUser(body) {\n  if (typeof body !== 'object' || body === null) throw new TypeError('body');\n  const name = String(body.name ?? '').trim();\n  const age = Number(body.age);\n  if (!name) throw new RangeError('name');\n  if (!Number.isInteger(age) || age < 0 || age > 130) throw new RangeError('age');\n  return { name, age };\n}\n\nconst user = parseCreateUser(JSON.parse(input));",
-        "negative": "const user = JSON.parse(input); // trusts shape\nsaveUser({ name: user.name, age: user.age });",
+        "positive": "const controller = new AbortController();\nconst timeoutId = setTimeout(() => controller.abort(), 5000);\n\ntry {\n  const res = await fetch(url, { signal: controller.signal });\n  const data = await res.json();\n  return data;\n} finally {\n  clearTimeout(timeoutId);\n}",
+        "negative": "const res = await fetch(url);\nreturn res.json();",
         "language": "JAVASCRIPT"
       }
     },
     {
-      "content": "Use AbortController to enforce timeouts on every network call; pass the signal through all layers.",
+      "content": "Retry only idempotent operations with bounded attempts, exponential backoff, and jitter; surface the final error without wrapping away the cause.",
       "examples": {
-        "positive": "async function fetchWithTimeout(url, { timeoutMs = 5000 } = {}) {\n  const ac = new AbortController();\n  const t = setTimeout(() => ac.abort(), timeoutMs);\n  try {\n    const res = await fetch(url, { signal: ac.signal });\n    return res;\n  } finally {\n    clearTimeout(t);\n  }\n}\n\nawait fetchWithTimeout('https://api.example.com/data', { timeoutMs: 3000 });",
-        "negative": "const res = await fetch('https://api.example.com/data'); // unbounded\nawait res.json();",
+        "positive": "async function retry(fn, { attempts = 3, baseMs = 200 } = {}) {\n  let lastErr;\n  for (let i = 0; i < attempts; i++) {\n    try {\n      return await fn();\n    } catch (e) {\n      lastErr = e;\n      const jitter = Math.random() * 100;\n      const delay = baseMs * 2 ** i + jitter;\n      await new Promise(r => setTimeout(r, delay));\n    }\n  }\n  throw lastErr;\n}\n\nconst result = await retry(() => fetch(url, { method: 'GET', signal }), { attempts: 4 });",
+        "negative": "while (true) {\n  try {\n    return await fetch(url, { method: 'POST' });\n  } catch {\n    // retry forever\n  }\n}",
         "language": "JAVASCRIPT"
       }
     },
     {
-      "content": "Implement retries only for idempotent operations and gate them with a retry budget and backoff; never retry blindly in loops.",
+      "content": "Validate and normalize untrusted input at module boundaries using allowlists and type checks; reject extra fields and unexpected encodings.",
       "examples": {
-        "positive": "async function retry(fn, { retries = 3, baseMs = 100 } = {}) {\n  let lastErr;\n  for (let i = 0; i <= retries; i++) {\n    try { return await fn(i); } catch (e) { lastErr = e; }\n    const delay = baseMs * 2 ** i + Math.floor(Math.random() * 50);\n    await new Promise(r => setTimeout(r, delay));\n  }\n  throw lastErr;\n}\n\nconst res = await retry(() => fetchWithTimeout(url, { timeoutMs: 2000 }), { retries: 2 });",
-        "negative": "while (true) {\n  try { return await fetch(url); } catch (e) {}\n} // infinite retry",
+        "positive": "function parseUser(payload) {\n  if (payload == null || typeof payload !== 'object') throw new TypeError('payload');\n  const { id, email } = payload;\n  if (typeof id !== 'string' || !/^[a-zA-Z0-9_-]{1,64}$/.test(id)) throw new TypeError('id');\n  if (typeof email !== 'string' || email.length > 254) throw new TypeError('email');\n  const extra = Object.keys(payload).filter(k => !['id', 'email'].includes(k));\n  if (extra.length) throw new TypeError('extra fields');\n  return { id, email: email.trim().toLowerCase() };\n}",
+        "negative": "function parseUser(payload) {\n  return payload; // trusts shape, types, and extra fields\n}",
         "language": "JAVASCRIPT"
       }
     },
     {
-      "content": "Preserve error causes when rethrowing by using Error options or attaching the original error; avoid throwing strings or losing stacks.",
+      "content": "Avoid eval, Function, and dynamic import paths from untrusted data; use explicit dispatch maps for extensibility.",
       "examples": {
-        "positive": "async function loadConfig(path) {\n  try {\n    const txt = await fs.promises.readFile(path, 'utf8');\n    return JSON.parse(txt);\n  } catch (err) {\n    throw new Error(`Failed to load config: ${path}`, { cause: err });\n  }\n}",
-        "negative": "try {\n  return JSON.parse(txt);\n} catch (e) {\n  throw 'Bad config';\n}\n// or: throw new Error('Bad config'); // loses original context",
+        "positive": "const handlers = {\n  sum: (a, b) => a + b,\n  mul: (a, b) => a * b\n};\n\nfunction run(op, a, b) {\n  const fn = handlers[op];\n  if (!fn) throw new Error('unknown op');\n  return fn(a, b);\n}",
+        "negative": "function run(expr) {\n  return eval(expr);\n}\n\nasync function load(name) {\n  return import(`./plugins/${name}.js`);\n}",
         "language": "JAVASCRIPT"
       }
     },
     {
-      "content": "Release resources using using/await using or finally blocks for streams, file handles, locks, and timers; close explicitly on all paths.",
+      "content": "Propagate errors with original cause using Error options or rethrow; avoid catch blocks that only log or return defaults.",
       "examples": {
-        "positive": "import { open } from 'node:fs/promises';\n\nasync function readFirstLine(path) {\n  const fh = await open(path, 'r');\n  try {\n    const buf = Buffer.alloc(1024);\n    const { bytesRead } = await fh.read(buf, 0, buf.length, 0);\n    return buf.subarray(0, bytesRead).toString('utf8').split(/\\r?\\n/)[0];\n  } finally {\n    await fh.close();\n  }\n}",
-        "negative": "import { open } from 'node:fs/promises';\n\nasync function readFirstLine(path) {\n  const fh = await open(path, 'r');\n  const buf = Buffer.alloc(1024);\n  await fh.read(buf, 0, buf.length, 0);\n  return buf.toString('utf8').split(/\\r?\\n/)[0];\n  // handle never closed\n}",
+        "positive": "async function loadConfig(path) {\n  try {\n    const text = await fs.promises.readFile(path, 'utf8');\n    return JSON.parse(text);\n  } catch (err) {\n    throw new Error(`loadConfig failed: ${path}`, { cause: err });\n  }\n}",
+        "negative": "async function loadConfig(path) {\n  try {\n    const text = await fs.promises.readFile(path, 'utf8');\n    return JSON.parse(text);\n  } catch (err) {\n    console.error(err);\n    return {}; // hides failure\n  }\n}",
         "language": "JAVASCRIPT"
       }
     },
     {
-      "content": "Limit concurrency for bulk async work using a queue or pool; avoid Promise.all over unbounded collections.",
+      "content": "Release resources deterministically by awaiting stream completion and closing handles in finally; use pipeline/using patterns where available.",
       "examples": {
-        "positive": "async function mapLimit(items, limit, fn) {\n  const ret = [];\n  const executing = new Set();\n  for (const item of items) {\n    const p = Promise.resolve().then(() => fn(item));\n    ret.push(p);\n    executing.add(p);\n    p.finally(() => executing.delete(p));\n    if (executing.size >= limit) await Promise.race(executing);\n  }\n  return Promise.all(ret);\n}\n\nawait mapLimit(urls, 10, url => fetchWithTimeout(url, { timeoutMs: 3000 }));",
-        "negative": "await Promise.all(urls.map(url => fetch(url))); // thousands at once",
+        "positive": "import { pipeline } from 'node:stream/promises';\nimport fs from 'node:fs';\n\nconst src = fs.createReadStream('in.txt');\nconst dst = fs.createWriteStream('out.txt');\n\ntry {\n  await pipeline(src, dst);\n} finally {\n  src.destroy();\n  dst.end();\n}",
+        "negative": "const src = fs.createReadStream('in.txt');\nconst dst = fs.createWriteStream('out.txt');\nsrc.pipe(dst); // no awaited completion, no cleanup on error",
         "language": "JAVASCRIPT"
       }
     },
     {
-      "content": "Avoid shared mutable module state for request-scoped data; pass state explicitly through parameters or create per-operation context objects.",
+      "content": "Avoid async callbacks in Array.forEach/map without awaiting; use for...of for sequencing or Promise.all with explicit concurrency limits.",
       "examples": {
-        "positive": "function createContext({ requestId }) {\n  return { requestId, startedAt: Date.now() };\n}\n\nasync function handle(ctx, input) {\n  log({ requestId: ctx.requestId, msg: 'start' });\n  return doWork(ctx, input);\n}\n\nawait handle(createContext({ requestId: crypto.randomUUID() }), input);",
-        "negative": "let currentRequestId;\n\nasync function handle(input) {\n  currentRequestId = crypto.randomUUID();\n  await doWork(input);\n  log({ requestId: currentRequestId });\n}",
+        "positive": "for (const id of ids) {\n  await doWork(id);\n}\n\nawait Promise.all(ids.map(id => doWork(id)));",
+        "negative": "ids.forEach(async id => {\n  await doWork(id);\n});\n// function returns before work finishes",
         "language": "JAVASCRIPT"
       }
     },
     {
-      "content": "Redact secrets and PII in logs by default; log structured objects with an explicit allowlist of fields.",
+      "content": "Use structured logging with stable keys and redaction; avoid logging secrets or whole objects containing credentials.",
       "examples": {
-        "positive": "function logAuthEvent({ userId, ip, outcome }) {\n  console.info({ event: 'auth', userId, ip, outcome });\n}\n\nlogAuthEvent({ userId: 'u123', ip: '203.0.113.5', outcome: 'denied' });",
-        "negative": "console.info('login', { userId, password, token, ssn });",
+        "positive": "function logEvent(logger, event) {\n  const safe = {\n    requestId: event.requestId,\n    userId: event.userId,\n    action: event.action,\n    status: event.status\n  };\n  logger.info(safe);\n}\n\nlogEvent(console, { requestId, userId, action: 'login', status: 'failed', password: '***' });",
+        "negative": "console.info('login failed', { requestId, userId, password, token, headers });",
         "language": "JAVASCRIPT"
       }
     },
     {
-      "content": "Treat configuration as immutable validated data loaded once at startup; avoid reading env/config repeatedly inside hot paths.",
+      "content": "Centralize configuration loading and freeze the exported config object; disallow runtime mutation and avoid reading process.env throughout the codebase.",
       "examples": {
-        "positive": "const config = (() => {\n  const port = Number(process.env.PORT ?? 3000);\n  if (!Number.isInteger(port) || port <= 0) throw new Error('PORT');\n  const apiBase = String(process.env.API_BASE ?? '').trim();\n  if (!apiBase) throw new Error('API_BASE');\n  return Object.freeze({ port, apiBase });\n})();\n\nexport { config };",
-        "negative": "export function getApiBase() {\n  return process.env.API_BASE; // read everywhere, unvalidated\n}\n\nfetch(`${getApiBase()}/v1/items`);",
+        "positive": "function loadConfig(env = process.env) {\n  const port = Number(env.PORT ?? '3000');\n  if (!Number.isInteger(port) || port <= 0) throw new Error('PORT');\n  return Object.freeze({ port, nodeEnv: env.NODE_ENV ?? 'development' });\n}\n\nexport const config = loadConfig();",
+        "negative": "export const config = { port: process.env.PORT || 3000 };\n\n// later\nconfig.port = 9999;\n\n// elsewhere\nconst port = process.env.PORT;",
         "language": "JAVASCRIPT"
       }
     },
     {
-      "content": "Inject external dependencies via parameters or factory functions; avoid importing singletons directly inside business logic.",
+      "content": "Guard shared mutable state across async boundaries with explicit ownership, atomics, or a single-writer queue; avoid read-modify-write on shared objects.",
       "examples": {
-        "positive": "export function createUserService({ http, now }) {\n  return {\n    async fetchUser(id) {\n      const res = await http.get(`/users/${encodeURIComponent(id)}`);\n      return { ...res, fetchedAt: now() };\n    }\n  };\n}\n\nconst svc = createUserService({ http: { get: url => fetchWithTimeout(url).then(r => r.json()) }, now: () => Date.now() });",
-        "negative": "import fetch from 'node-fetch';\n\nexport async function fetchUser(id) {\n  const res = await fetch(`https://api.example.com/users/${id}`);\n  return res.json();\n}",
+        "positive": "let chain = Promise.resolve();\nconst state = { count: 0 };\n\nfunction increment() {\n  chain = chain.then(() => {\n    state.count += 1;\n  });\n  return chain;\n}\n\nawait Promise.all([increment(), increment(), increment()]);",
+        "negative": "const state = { count: 0 };\n\nawait Promise.all([\n  (async () => { state.count = state.count + 1; })(),\n  (async () => { state.count = state.count + 1; })()\n]);",
         "language": "JAVASCRIPT"
       }
     }

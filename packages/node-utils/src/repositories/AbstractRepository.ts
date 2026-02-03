@@ -9,14 +9,16 @@ import {
 import assert from 'assert';
 import { BadRequestException } from '@nestjs/common';
 
+const origin = 'AbstractRepository';
+
 export abstract class AbstractRepository<
   Entity extends { id: string },
 > implements IRepository<Entity> {
   constructor(
     private readonly entityName: string,
     protected readonly repository: Repository<Entity>,
-    protected readonly logger: PackmindLogger,
     private readonly schema: EntitySchema<WithSoftDelete<Entity>>,
+    protected readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {}
 
   async add(entity: Entity): Promise<Entity> {

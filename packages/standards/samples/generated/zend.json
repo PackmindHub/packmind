@@ -1,0 +1,88 @@
+{
+  "name": "Zend Framework Best Practices",
+  "summary": "Apply these rules when building or maintaining Zend Framework MVC and Laminas-based PHP applications to standardize safe, observable, and reliable production behavior.",
+  "description": "This standard targets frequent, high-impact pitfalls in Zend Framework applications: input handling at boundaries, DI wiring, database/query safety, HTTP timeouts, transactional consistency, error handling, logging context, resource cleanup, config safety, and test isolation.",
+  "scope": "**/*.php,**/*.phtml",
+  "rules": [
+    {
+      "content": "Validate and normalize all request inputs in controllers using InputFilter, then pass typed values to services.",
+      "examples": {
+        "positive": "<?php\nuse Zend\\InputFilter\\InputFilter;\nuse Zend\\Validator\\Digits;\n\npublic function createAction()\n{\n    $filter = new InputFilter();\n    $filter->add([\n        'name' => 'user_id',\n        'required' => true,\n        'validators' => [[ 'name' => Digits::class ]],\n        'filters' => [['name' => 'ToInt']],\n    ]);\n\n    $filter->setData($this->params()->fromPost());\n    if (! $filter->isValid()) {\n        return $this->getResponse()->setStatusCode(422);\n    }\n\n    $userId = $filter->getValue('user_id');\n    $this->userService->createForUserId($userId);\n    return $this->getResponse()->setStatusCode(201);\n}\n",
+        "negative": "<?php\npublic function createAction()\n{\n    $userId = $this->params()->fromPost('user_id');\n    $this->userService->createForUserId($userId);\n    return $this->getResponse()->setStatusCode(201);\n}\n",
+        "language": "PHP"
+      }
+    },
+    {
+      "content": "Use Zend\\Db\\Sql (or prepared statements) with bound parameters; avoid interpolating request data into SQL strings.",
+      "examples": {
+        "positive": "<?php\nuse Zend\\Db\\Sql\\Sql;\n\n$sql = new Sql($adapter);\n$select = $sql->select('users')->where(['email' => $email]);\n$stmt = $sql->prepareStatementForSqlObject($select);\n$result = $stmt->execute();\n",
+        "negative": "<?php\n$query = \"SELECT * FROM users WHERE email = '\" . $email . \"'\";\n$result = $adapter->query($query, $adapter::QUERY_MODE_EXECUTE);\n",
+        "language": "PHP"
+      }
+    },
+    {
+      "content": "Wrap multi-step database writes in Zend\\Db\\Adapter transaction blocks and commit/rollback explicitly.",
+      "examples": {
+        "positive": "<?php\n$connection = $adapter->getDriver()->getConnection();\n$connection->beginTransaction();\ntry {\n    $adapter->query('INSERT INTO orders(user_id) VALUES (?)', [$userId]);\n    $adapter->query('UPDATE inventory SET qty = qty - 1 WHERE sku = ?', [$sku]);\n    $connection->commit();\n} catch (\\Throwable $e) {\n    $connection->rollback();\n    throw $e;\n}\n",
+        "negative": "<?php\n$adapter->query('INSERT INTO orders(user_id) VALUES (?)', [$userId]);\n$adapter->query('UPDATE inventory SET qty = qty - 1 WHERE sku = ?', [$sku]);\n",
+        "language": "PHP"
+      }
+    },
+    {
+      "content": "Set connect and read timeouts on all HTTP client requests and pass them per request or via client configuration.",
+      "examples": {
+        "positive": "<?php\nuse Zend\\Http\\Client;\n\n$client = new Client($url, [\n    'timeout' => 5, // read timeout\n    'adapter' => 'Zend\\\\Http\\\\Client\\\\Adapter\\\\Curl',\n    'curloptions' => [\n        CURLOPT_CONNECTTIMEOUT => 2,\n        CURLOPT_TIMEOUT => 5,\n    ],\n]);\n$response = $client->send();\n",
+        "negative": "<?php\nuse Zend\\Http\\Client;\n\n$client = new Client($url);\n$response = $client->send();\n",
+        "language": "PHP"
+      }
+    },
+    {
+      "content": "Register services and factories in the ServiceManager; avoid instantiating dependencies inside controllers and view scripts.",
+      "examples": {
+        "positive": "<?php\n// module.config.php\nreturn [\n  'service_manager' => [\n    'factories' => [\n      App\\\\Service\\\\UserService::class => App\\\\Factory\\\\UserServiceFactory::class,\n    ],\n  ],\n  'controllers' => [\n    'factories' => [\n      App\\\\Controller\\\\UserController::class => App\\\\Factory\\\\UserControllerFactory::class,\n    ],\n  ],\n];\n\n// UserControllerFactory.php\nnamespace App\\Factory;\n\nuse App\\Controller\\UserController;\nuse App\\Service\\UserService;\nuse Psr\\Container\\ContainerInterface;\n\nfinal class UserControllerFactory\n{\n    public function __invoke(ContainerInterface $c): UserController\n    {\n        return new UserController($c->get(UserService::class));\n    }\n}\n",
+        "negative": "<?php\n// UserController.php\nuse App\\Service\\UserService;\n\npublic function __construct()\n{\n    $this->userService = new UserService();\n}\n",
+        "language": "PHP"
+      }
+    },
+    {
+      "content": "Handle exceptions in controllers using ApiProblem/JsonModel mapping; avoid returning raw exception messages or var_dump output.",
+      "examples": {
+        "positive": "<?php\nuse Zend\\Mvc\\Controller\\AbstractRestfulController;\nuse Zend\\View\\Model\\JsonModel;\n\npublic function get($id)\n{\n    try {\n        return new JsonModel($this->userService->fetch((int) $id));\n    } catch (DomainException $e) {\n        $this->getResponse()->setStatusCode(404);\n        return new JsonModel(['error' => 'not_found']);\n    } catch (\\Throwable $e) {\n        $this->logger->error('Unhandled exception', ['exception' => $e]);\n        $this->getResponse()->setStatusCode(500);\n        return new JsonModel(['error' => 'internal_error']);\n    }\n}\n",
+        "negative": "<?php\npublic function get($id)\n{\n    try {\n        return $this->userService->fetch($id);\n    } catch (\\Throwable $e) {\n        return ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()];\n    }\n}\n",
+        "language": "PHP"
+      }
+    },
+    {
+      "content": "Log with request correlation IDs and structured context; avoid concatenated strings without context fields.",
+      "examples": {
+        "positive": "<?php\n$cid = $this->request->getHeaders()->get('X-Correlation-Id')?->getFieldValue() ?? bin2hex(random_bytes(8));\n$this->logger->info('Checkout started', [\n    'correlation_id' => $cid,\n    'user_id' => $userId,\n    'route' => $this->getEvent()->getRouteMatch()->getMatchedRouteName(),\n]);\n",
+        "negative": "<?php\n$this->logger->info('Checkout started for user ' . $userId);\n",
+        "language": "PHP"
+      }
+    },
+    {
+      "content": "Disable or strictly scope Zend\\Db\\ResultSet\\HydratingResultSet and hydrators to trusted data; avoid hydrating arbitrary request arrays into entities.",
+      "examples": {
+        "positive": "<?php\n// Hydrate only DB rows into an entity\n$hydrator = new Zend\\Hydrator\\ClassMethodsHydrator(false);\n$resultSet = new Zend\\Db\\ResultSet\\HydratingResultSet($hydrator, new App\\Entity\\User());\n$resultSet->initialize($dbResult);\n",
+        "negative": "<?php\n// Hydrating user-controlled input into an entity\n$hydrator = new Zend\\Hydrator\\ClassMethodsHydrator();\n$user = new App\\Entity\\User();\n$hydrator->hydrate($this->params()->fromPost(), $user);\n",
+        "language": "PHP"
+      }
+    },
+    {
+      "content": "Keep configuration environment-driven and merged via config/autoload; avoid committing secrets or switching behavior with in-code env checks.",
+      "examples": {
+        "positive": "<?php\n// config/autoload/local.php (gitignored)\nreturn [\n  'db' => ['dsn' => getenv('DB_DSN'), 'username' => getenv('DB_USER'), 'password' => getenv('DB_PASS')],\n];\n\n// usage\n$cfg = $container->get('config');\n$dsn = $cfg['db']['dsn'];\n",
+        "negative": "<?php\n// module.config.php\nreturn [\n  'db' => ['password' => 'hardcoded-secret'],\n];\n\n// or\nif (getenv('APP_ENV') === 'prod') {\n    ini_set('display_errors', '0');\n}\n",
+        "language": "PHP"
+      }
+    },
+    {
+      "content": "Isolate tests by bootstrapping a fresh ServiceManager per test and replacing external services with test doubles in configuration.",
+      "examples": {
+        "positive": "<?php\nuse Zend\\ServiceManager\\ServiceManager;\n\npublic function setUp(): void\n{\n    $this->sm = new ServiceManager(require __DIR__ . '/../config/test.services.php');\n    $this->sm->setService(App\\\\Http\\\\PaymentClient::class, new App\\\\Test\\\\FakePaymentClient());\n}\n",
+        "negative": "<?php\npublic function setUp(): void\n{\n    global $container;\n    $this->sm = $container; // shared across tests\n}\n",
+        "language": "PHP"
+      }
+    }
+  ]
+}

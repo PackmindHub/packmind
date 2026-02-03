@@ -20,7 +20,6 @@ export class DeployRecipesJobFactory implements IJobFactory<DeployRecipesInput> 
     this._delayedJob = new DeployRecipesDelayedJob(
       (listeners) => queueFactory(this.getQueueName(), listeners),
       this.deploymentPort,
-      this.logger,
     );
 
     return {

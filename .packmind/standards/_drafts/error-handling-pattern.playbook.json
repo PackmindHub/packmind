@@ -1,0 +1,39 @@
+{
+  "name": "Domain Error Handling Pattern",
+  "description": "Create domain-specific error classes extending Error for each domain concern, organize errors in domain/errors/ directories, use instanceof checks in use cases for error handling, and return typed error responses from adapters.",
+  "scope": "All error handling across domain packages and API layer",
+  "rules": [
+    {
+      "content": "Define domain-specific error classes extending Error with semantic constructor parameters and clear error messages in domain/errors/ directories",
+      "examples": {
+        "positive": "// packages/spaces/src/domain/errors/SpaceSlugConflictError.ts\nexport class SpaceSlugConflictError extends Error {\n  readonly name = 'SpaceSlugConflictError';\n\n  constructor(spaceName: string, organizationId: OrganizationId) {\n    super(\n      `A space with the name \"${spaceName}\" already exists in this organization (${organizationId}). ` +\n      `Please choose a different name or update the existing space.`\n    );\n    Object.setPrototypeOf(this, SpaceSlugConflictError.prototype);\n  }\n}\n\n// packages/accounts/src/domain/errors/UserNotFoundError.ts\nexport class UserNotFoundError extends Error {\n  readonly name = 'UserNotFoundError';\n\n  constructor(userId: UserId) {\n    super(`User with ID ${userId} not found`);\n    Object.setPrototypeOf(this, UserNotFoundError.prototype);\n  }\n}",
+        "negative": "// WRONG: Generic error throwing\nthrow new Error('User not found');\n\n// WRONG: Error without proper message context\nexport class InvalidUserError extends Error {\n  constructor() {\n    super('Invalid');\n  }\n}\n\n// WRONG: Error as plain object\nthrow { error: 'space-conflict' };",
+        "language": "TYPESCRIPT"
+      }
+    },
+    {
+      "content": "Use instanceof checks in use cases to handle domain errors explicitly and return typed error responses including error type and recovery information",
+      "examples": {
+        "positive": "export class CreateSpaceUseCase {\n  async execute(cmd: CreateSpaceCommand): Promise<CreateSpaceResponse> {\n    try {\n      const existingSpace = await this.repositories.getSpaceRepository().findBySlug(\n        cmd.slug,\n        cmd.organizationId\n      );\n\n      if (existingSpace) {\n        throw new SpaceSlugConflictError(cmd.slug, cmd.organizationId);\n      }\n\n      const space = Space.create(cmd.name, cmd.slug, cmd.organizationId);\n      await this.repositories.getSpaceRepository().save(space);\n\n      return { success: true, space };\n    } catch (error) {\n      if (error instanceof SpaceSlugConflictError) {\n        return {\n          success: false,\n          error: { type: 'SPACE_SLUG_CONFLICT', message: error.message }\n        };\n      }\n      throw error; // Re-throw unexpected errors\n    }\n  }\n}",
+        "negative": "// WRONG: Swallowing all errors\ntry {\n  // ... logic\n} catch (error) {\n  return { success: false, error: 'Something went wrong' };\n}\n\n// WRONG: Not handling specific errors\nconst existingSpace = await this.repositories.getSpaceRepository().findBySlug(slug, orgId);\n// Forgot to check and throw error\n\n// WRONG: typeof string checks instead of instanceof\nif (typeof error === 'string' && error.includes('conflict')) {\n  // Fragile!\n}",
+        "language": "TYPESCRIPT"
+      }
+    },
+    {
+      "content": "Export all domain errors from domain/errors/index.ts barrel file for clean imports throughout domain package",
+      "examples": {
+        "positive": "// packages/spaces/src/domain/errors/index.ts\nexport { SpaceSlugConflictError } from './SpaceSlugConflictError';\nexport { SpaceNotFoundError } from './SpaceNotFoundError';\nexport { InvalidSpaceNameError } from './InvalidSpaceNameError';\n\n// In use case\nimport { SpaceSlugConflictError, SpaceNotFoundError } from '../errors';\n\nexport class CreateSpaceUseCase {\n  async execute(cmd: CreateSpaceCommand): Promise<CreateSpaceResponse> {\n    const existing = await this.repo.findBySlug(cmd.slug, cmd.organizationId);\n    if (existing) throw new SpaceSlugConflictError(cmd.slug, cmd.organizationId);\n  }\n}",
+        "negative": "// WRONG: Importing individual error files\nimport SpaceSlugConflictError from '../errors/SpaceSlugConflictError';\nimport { SpaceNotFoundError } from '../errors/SpaceNotFoundError';\n\n// WRONG: No barrel file, scattered imports\n// Each file imports errors separately, hard to track",
+        "language": "TYPESCRIPT"
+      }
+    },
+    {
+      "content": "Use discriminated unions in port response types to represent both success and error states with typed payloads",
+      "examples": {
+        "positive": "export type CreateSpaceCommand = PackmindCommand & {\n  name: string;\n  slug: string;\n};\n\nexport type CreateSpaceResponse = PackmindResult &\n  (\n    | {\n        success: true;\n        space: Space;\n      }\n    | {\n        success: false;\n        error: {\n          type: 'SPACE_SLUG_CONFLICT' | 'INVALID_SPACE_NAME' | 'ORGANIZATION_NOT_FOUND';\n          message: string;\n        };\n      }\n  );\n\n// Type-safe error handling\nconst response = await adapter.createSpace(cmd);\nif (!response.success) {\n  switch (response.error.type) {\n    case 'SPACE_SLUG_CONFLICT':\n      // Handle conflict\n      break;\n    case 'INVALID_SPACE_NAME':\n      // Handle invalid name\n      break;\n  }\n}",
+        "negative": "// WRONG: Non-discriminated union\nexport type CreateSpaceResponse = {\n  space?: Space;\n  error?: { type: string; message: string };\n};\n// Can't tell if both or neither are present\n\n// WRONG: Throwing errors to controller\nexport class CreateSpaceUseCase {\n  async execute(cmd: CreateSpaceCommand): Promise<Space> {\n    // Throws SpaceSlugConflictError - controller must handle it\n  }\n}",
+        "language": "TYPESCRIPT"
+      }
+    }
+  ]
+}

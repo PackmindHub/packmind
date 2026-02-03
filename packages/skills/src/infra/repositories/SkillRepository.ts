@@ -23,7 +23,7 @@ export class SkillRepository
     ),
     logger: PackmindLogger = new PackmindLogger(origin),
   ) {
-    super('skill', repository, logger, SkillSchema);
+    super('skill', repository, SkillSchema, logger);
     this.logger.info('SkillRepository initialized');
   }
 

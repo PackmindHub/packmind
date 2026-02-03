@@ -17,8 +17,12 @@ The Packmind CLI provides the following commands:
 - **`lint`** - Run detection programs (Enterprise only)
 - **`skills add`** - Import skills into Packmind
 - **`skills init`** - Install default Packmind skills locally
+- **`skills list`** - List all skills in your organization
 - **`standards create`** - Create a coding standard from a playbook file
+- **`standards list`** - List all standards in your organization
 - **`commands create`** - Create a reusable command from a playbook file
+- **`commands list`** - List all commands in your organization
+- **`packages create`** - Create a new package
 
 ## Installation
 
@@ -596,6 +600,35 @@ After running this command, you can use these skills in your AI coding assistant
   install`, or when packages are distributed to your repository via the web app.
 </Tip>
 
+### List Skills
+
+```bash
+packmind-cli skills list
+```
+
+This command displays all skills in your Packmind organization, showing:
+
+- **Slug** — The skill identifier
+- **Name** — The display name
+- **URL** — Direct link to view the skill in the web app
+- **Description** — What the skill does
+
+**Example output:**
+
+```
+Available skills:
+
+- packmind-create-skill
+    Name: Create Skill
+    URL: https://app.packmind.com/org/my-org/space/global/skills/packmind-create-skill/files
+    Description: Guide for creating effective skills...
+
+- my-custom-skill
+    Name: My Custom Skill
+    URL: https://app.packmind.com/org/my-org/space/global/skills/my-custom-skill/files
+    Description: Custom skill for my project...
+```
+
 ### Add a Skill
 
 ```bash
@@ -621,9 +654,38 @@ When uploading a skill that already exists, Packmind automatically compares the 
 
 See [Skills Management](/concepts/skills-management) for details on versioning.
 
-## Standard Command
+## Standards Command
 
 Create and manage coding standards from the command line.
+
+### List Standards
+
+```bash
+packmind-cli standards list
+```
+
+This command displays all standards in your Packmind organization, showing:
+
+- **Slug** — The standard identifier
+- **Name** — The display name
+- **URL** — Direct link to view the standard in the web app
+- **Description** — What the standard covers
+
+**Example output:**
+
+```
+Available standards:
+
+- error-handling
+    Name: Error Handling
+    URL: https://app.packmind.com/org/my-org/space/global/standards/abc123/summary
+    Description: Ensure errors are handled predictably...
+
+- typescript-conventions
+    Name: TypeScript Conventions
+    URL: https://app.packmind.com/org/my-org/space/global/standards/def456/summary
+    Description: TypeScript coding conventions...
+```
 
 ### Create a Standard from a Playbook File
 
@@ -700,6 +762,32 @@ The standard-playbook file is a JSON file with the following structure:
 ## Commands Command
 
 Create and manage reusable, multi-step workflow commands from the command line.
+
+### List Commands
+
+```bash
+packmind-cli commands list
+```
+
+This command displays all commands in your Packmind organization, showing:
+
+- **Slug** — The command identifier
+- **Name** — The display name
+- **URL** — Direct link to view the command in the web app
+
+**Example output:**
+
+```
+Available commands:
+
+- add-a-new-rest-endpoint
+    Name: Add a New REST Endpoint
+    URL: https://app.packmind.com/org/my-org/space/global/commands/abc123
+
+- setup-database-migration
+    Name: Setup Database Migration
+    URL: https://app.packmind.com/org/my-org/space/global/commands/def456
+```
 
 ### Create a Command from a Playbook File
 
@@ -802,6 +890,54 @@ If a command with the same slug already exists in your space, Packmind appends a
   are particularly useful for capturing multi-step development workflows that
   your team performs regularly.
 </Tip>
+
+## Packages Command
+
+Create and manage packages from the command line.
+
+### Create a Package
+
+```bash
+packmind-cli packages create <name>
+```
+
+**Arguments:**
+
+- `<name>` - Name of the package to create
+
+**Options:**
+
+| Flag            | Short | Description                |
+| --------------- | ----- | -------------------------- |
+| `--description` | `-d`  | Description of the package |
+
+**Example:**
+
+```bash
+packmind-cli packages create "Backend Standards"
+```
+
+With a description:
+
+```bash
+packmind-cli packages create "Backend Standards" -d "Standards and commands for backend development"
+```
+
+This creates a new empty package in your Packmind organization. After creation, you can add commands, standards, and skills to the package through the web interface or by using the `packageSlugs` parameter when creating items via MCP.
+
+### Package Identification
+
+When you create a package, Packmind automatically generates a **slug** from the package name:
+
+- **Name** (provided by you): `"Backend Standards"`
+- **Slug** (auto-generated): `"backend-standards"`
+
+The slug is used for:
+
+- Package installation: `packmind-cli install backend-standards`
+- Package identification and distribution
+
+If a package with the same slug already exists in your space, Packmind appends a counter (e.g., `backend-standards-1`) to ensure uniqueness.
 
 ## Related Documentation
 

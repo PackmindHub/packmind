@@ -1,0 +1,88 @@
+{
+  "name": "Ionic Best Practices",
+  "summary": "Advanced rules for Ionic apps that prevent common production issues around navigation, lifecycle, networking, storage, and UI performance.",
+  "description": "This standard covers high-impact Ionic patterns for reliable lifecycle behavior, safe navigation, predictable state, robust HTTP usage, secure storage, event/stream cleanup, and performant UI rendering across Angular/React Ionic projects.",
+  "scope": "**/*.ts,**/*.tsx,**/*.html,**/*.htm",
+  "rules": [
+    {
+      "content": "Prefer Ionic lifecycle hooks (ionViewWillEnter/ionViewDidLeave) for page-level init/teardown; keep Angular/React mount hooks for one-time setup only.",
+      "examples": {
+        "positive": "import { Component } from '@angular/core';\n\n@Component({\n  selector: 'app-details',\n  templateUrl: './details.page.html'\n})\nexport class DetailsPage {\n  ionViewWillEnter() {\n    this.load();\n  }\n\n  ionViewDidLeave() {\n    this.stopTimers();\n  }\n\n  private load() {}\n  private stopTimers() {}\n}\n",
+        "negative": "import { Component, OnInit, OnDestroy } from '@angular/core';\n\n@Component({\n  selector: 'app-details',\n  templateUrl: './details.page.html'\n})\nexport class DetailsPage implements OnInit, OnDestroy {\n  ngOnInit() {\n    this.load();\n  }\n\n  ngOnDestroy() {\n    this.stopTimers();\n  }\n\n  private load() {}\n  private stopTimers() {}\n}\n",
+        "language": "TYPESCRIPT"
+      }
+    },
+    {
+      "content": "Use Angular Router or Ionic React router for navigation; avoid direct window.location changes and hard reloads.",
+      "examples": {
+        "positive": "import { Router } from '@angular/router';\n\nexport class LoginPage {\n  constructor(private readonly router: Router) {}\n\n  done() {\n    this.router.navigateByUrl('/tabs/home', { replaceUrl: true });\n  }\n}\n",
+        "negative": "export class LoginPage {\n  done() {\n    window.location.href = '/tabs/home';\n    // or: window.location.reload();\n  }\n}\n",
+        "language": "TYPESCRIPT"
+      }
+    },
+    {
+      "content": "Set explicit HTTP timeouts and cancellation via AbortController/Subscription; avoid requests without a deterministic stop condition.",
+      "examples": {
+        "positive": "const controller = new AbortController();\nconst id = setTimeout(() => controller.abort(), 10_000);\n\ntry {\n  const res = await fetch(url, { signal: controller.signal });\n  const data = await res.json();\n  return data;\n} finally {\n  clearTimeout(id);\n}\n",
+        "negative": "export async function load() {\n  const res = await fetch(url);\n  return res.json();\n}\n",
+        "language": "TYPESCRIPT"
+      }
+    },
+    {
+      "content": "Gate HTTP retries behind idempotency and status codes; avoid retrying non-idempotent requests without an idempotency key.",
+      "examples": {
+        "positive": "async function retryGet(url: string, attempts = 3) {\n  for (let i = 0; i < attempts; i++) {\n    const res = await fetch(url);\n    if (res.ok) return res.json();\n    if (![408, 429, 500, 502, 503, 504].includes(res.status)) break;\n    await new Promise(r => setTimeout(r, 300 * (i + 1)));\n  }\n  throw new Error('GET failed');\n}\n",
+        "negative": "async function retryPost(url: string, body: unknown, attempts = 3) {\n  for (let i = 0; i < attempts; i++) {\n    const res = await fetch(url, {\n      method: 'POST',\n      headers: { 'content-type': 'application/json' },\n      body: JSON.stringify(body)\n    });\n    if (res.ok) return res.json();\n  }\n  throw new Error('POST failed');\n}\n",
+        "language": "TYPESCRIPT"
+      }
+    },
+    {
+      "content": "Validate and normalize route params and query params at the page boundary before using them in services or storage keys.",
+      "examples": {
+        "positive": "import { ActivatedRoute } from '@angular/router';\n\nexport class ProductPage {\n  productId!: number;\n\n  constructor(private readonly route: ActivatedRoute) {}\n\n  ionViewWillEnter() {\n    const raw = this.route.snapshot.paramMap.get('id');\n    const id = Number(raw);\n    if (!Number.isInteger(id) || id <= 0) throw new Error('Invalid id');\n    this.productId = id;\n  }\n}\n",
+        "negative": "import { ActivatedRoute } from '@angular/router';\n\nexport class ProductPage {\n  constructor(private readonly route: ActivatedRoute) {}\n\n  ionViewWillEnter() {\n    const id = this.route.snapshot.paramMap.get('id') as any;\n    this.loadProduct(id);\n  }\n\n  private loadProduct(id: any) {}\n}\n",
+        "language": "TYPESCRIPT"
+      }
+    },
+    {
+      "content": "Use Capacitor Preferences only for non-sensitive settings; store tokens and secrets in a secure storage plugin or platform keystore.",
+      "examples": {
+        "positive": "import { Preferences } from '@capacitor/preferences';\n\nexport async function saveTheme(theme: 'light' | 'dark') {\n  await Preferences.set({ key: 'theme', value: theme });\n}\n\n// Token storage via secure storage plugin / keystore abstraction\nexport interface SecureStore {\n  set(key: string, value: string): Promise<void>;\n}\n\nexport async function saveToken(store: SecureStore, token: string) {\n  await store.set('auth.token', token);\n}\n",
+        "negative": "import { Preferences } from '@capacitor/preferences';\n\nexport async function saveToken(token: string) {\n  await Preferences.set({ key: 'auth.token', value: token });\n}\n",
+        "language": "TYPESCRIPT"
+      }
+    },
+    {
+      "content": "Unsubscribe from Observables and plugin listeners in ionViewDidLeave/cleanup; prefer takeUntilDestroyed or AbortController patterns.",
+      "examples": {
+        "positive": "import { Subject, takeUntil } from 'rxjs';\n\nexport class FeedPage {\n  private readonly destroyed$ = new Subject<void>();\n\n  ionViewWillEnter() {\n    this.stream$()\n      .pipe(takeUntil(this.destroyed$))\n      .subscribe();\n  }\n\n  ionViewDidLeave() {\n    this.destroyed$.next();\n    this.destroyed$.complete();\n  }\n\n  private stream$() { return new Subject<void>(); }\n}\n",
+        "negative": "export class FeedPage {\n  ionViewWillEnter() {\n    this.stream$().subscribe();\n  }\n\n  private stream$() { return new Subject<void>(); }\n}\n",
+        "language": "TYPESCRIPT"
+      }
+    },
+    {
+      "content": "Prefer IonVirtualScroll or incremental rendering for long lists; avoid rendering unbounded arrays with *ngFor or map directly.",
+      "examples": {
+        "positive": "<ion-content>\n  <ion-virtual-scroll [items]=\"items\" approxItemHeight=\"72px\">\n    <ion-item *virtualItem=\"let item\">\n      <ion-label>{{ item.title }}</ion-label>\n    </ion-item>\n  </ion-virtual-scroll>\n</ion-content>\n",
+        "negative": "<ion-content>\n  <ion-list>\n    <ion-item *ngFor=\"let item of items\">\n      <ion-label>{{ item.title }}</ion-label>\n    </ion-item>\n  </ion-list>\n</ion-content>\n",
+        "language": "HTML"
+      }
+    },
+    {
+      "content": "Keep overlays deterministic: await present/dismiss, handle back-button dismissal, and avoid stacking multiple loaders/toasts for the same operation.",
+      "examples": {
+        "positive": "import { LoadingController } from '@ionic/angular';\n\nexport class SavePage {\n  private activeLoader?: HTMLIonLoadingElement;\n\n  constructor(private readonly loadingCtrl: LoadingController) {}\n\n  async save() {\n    if (!this.activeLoader) {\n      this.activeLoader = await this.loadingCtrl.create({ message: 'Saving...', backdropDismiss: false });\n      await this.activeLoader.present();\n    }\n    try {\n      await this.doSave();\n    } finally {\n      await this.activeLoader?.dismiss();\n      this.activeLoader = undefined;\n    }\n  }\n\n  private async doSave() {}\n}\n",
+        "negative": "import { LoadingController } from '@ionic/angular';\n\nexport class SavePage {\n  constructor(private readonly loadingCtrl: LoadingController) {}\n\n  async save() {\n    const loader = await this.loadingCtrl.create({ message: 'Saving...' });\n    loader.present();\n    await this.doSave();\n    loader.dismiss();\n  }\n\n  private async doSave() {}\n}\n",
+        "language": "TYPESCRIPT"
+      }
+    },
+    {
+      "content": "Log structured events with sanitized context and correlation ids; avoid logging raw tokens, PII, or entire request/response bodies.",
+      "examples": {
+        "positive": "type LogCtx = { requestId: string; route: string; status?: number; err?: string };\n\nexport function logError(msg: string, ctx: LogCtx) {\n  console.error(msg, {\n    requestId: ctx.requestId,\n    route: ctx.route,\n    status: ctx.status,\n    err: ctx.err\n  });\n}\n",
+        "negative": "export function logError(err: any, request: any, response: any) {\n  console.error('api failed', { err, request, response });\n  // request/response may include Authorization headers, tokens, emails, addresses\n}\n",
+        "language": "TYPESCRIPT"
+      }
+    }
+  ]
+}

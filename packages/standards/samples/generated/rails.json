@@ -1,0 +1,88 @@
+{
+  "name": "Ruby on Rails Best Practices",
+  "summary": "Advanced Rails rules for production code that touches databases, external services, background jobs, concurrency, and evolving schemas.",
+  "description": "This standard covers high-impact Rails pitfalls around query performance, external I/O safety, transactional boundaries, background jobs, configuration, logging, migrations, and concurrency in common production deployments.",
+  "scope": "**/*.rb",
+  "rules": [
+    {
+      "content": "Prefer ActiveRecord relations (merge, where, select) over in-memory filtering; keep filtering, ordering, and limiting in SQL until final materialization.",
+      "examples": {
+        "positive": "scope :recent_paid, -> { where(status: \"paid\").where(\"paid_at >= ?\", 30.days.ago).order(paid_at: :desc) }\n\n@orders = Order.recent_paid.limit(50)",
+        "negative": "@orders = Order.all.select { |o| o.status == \"paid\" && o.paid_at && o.paid_at >= 30.days.ago }.sort_by(&:paid_at).reverse.first(50)",
+        "language": "RUBY"
+      }
+    },
+    {
+      "content": "Include explicit timeouts for every outbound HTTP call; set open_timeout, read_timeout, and write_timeout per request.",
+      "examples": {
+        "positive": "uri = URI(\"https://api.example.com/v1/widgets\")\nhttp = Net::HTTP.new(uri.host, uri.port)\nhttp.use_ssl = true\nhttp.open_timeout = 2\nhttp.read_timeout = 5\nhttp.write_timeout = 5\n\nreq = Net::HTTP::Get.new(uri)\nres = http.request(req)",
+        "negative": "uri = URI(\"https://api.example.com/v1/widgets\")\nres = Net::HTTP.get_response(uri)",
+        "language": "RUBY"
+      }
+    },
+    {
+      "content": "Use idempotency keys for side-effecting endpoints and store/reuse prior results when the same key repeats.",
+      "examples": {
+        "positive": "class PaymentsController < ApplicationController\n  def create\n    key = request.headers.fetch(\"Idempotency-Key\")\n    record = IdempotencyKey.find_or_create_by!(key: key) do |r|\n      r.request_fingerprint = Digest::SHA256.hexdigest(request.raw_post)\n    end\n\n    if record.response_body\n      render json: JSON.parse(record.response_body), status: record.response_status\n      return\n    end\n\n    payment = Payment.create!(payment_params)\n    record.update!(response_status: 201, response_body: { id: payment.id }.to_json)\n    render json: { id: payment.id }, status: :created\n  end\nend",
+        "negative": "class PaymentsController < ApplicationController\n  def create\n    payment = Payment.create!(payment_params)\n    render json: { id: payment.id }, status: :created\n  end\nend",
+        "language": "RUBY"
+      }
+    },
+    {
+      "content": "Validate and permit request parameters at controller boundaries using strong parameters; reject unknown or nested structures not explicitly allowed.",
+      "examples": {
+        "positive": "class UsersController < ApplicationController\n  def create\n    user = User.create!(user_params)\n    render json: { id: user.id }, status: :created\n  end\n\n  private\n\n  def user_params\n    params.require(:user).permit(:email, :name, settings: [:timezone])\n  end\nend",
+        "negative": "class UsersController < ApplicationController\n  def create\n    user = User.create!(params[:user])\n    render json: { id: user.id }, status: :created\n  end\nend",
+        "language": "RUBY"
+      }
+    },
+    {
+      "content": "Wrap cross-record writes in explicit transactions and use lock when updating counters or balances derived from existing values.",
+      "examples": {
+        "positive": "Account.transaction do\n  account = Account.lock.find(account_id)\n  account.update!(balance_cents: account.balance_cents - amount_cents)\n  LedgerEntry.create!(account: account, delta_cents: -amount_cents)\nend",
+        "negative": "account = Account.find(account_id)\naccount.update!(balance_cents: account.balance_cents - amount_cents)\nLedgerEntry.create!(account: account, delta_cents: -amount_cents)",
+        "language": "RUBY"
+      }
+    },
+    {
+      "content": "Avoid running external I/O inside database transactions; perform network calls before the transaction or after_commit via jobs/callback handlers.",
+      "examples": {
+        "positive": "order = nil\nOrder.transaction do\n  order = Order.create!(order_params)\nend\n\nOrderNotifierJob.perform_later(order.id)",
+        "negative": "Order.transaction do\n  order = Order.create!(order_params)\n  ExternalBillingClient.charge!(order.id)\nend",
+        "language": "RUBY"
+      }
+    },
+    {
+      "content": "Include a stable deduplication key for jobs and enforce uniqueness in the job body or backing store.",
+      "examples": {
+        "positive": "class SyncCustomerJob < ApplicationJob\n  queue_as :default\n\n  def perform(customer_id, dedupe_key:)\n    return if JobDedup.exists?(key: dedupe_key)\n    JobDedup.create!(key: dedupe_key)\n\n    CustomerSyncService.call(customer_id)\n  end\nend\n\nSyncCustomerJob.perform_later(customer.id, dedupe_key: \"customer:#{customer.id}:sync\")",
+        "negative": "class SyncCustomerJob < ApplicationJob\n  def perform(customer_id)\n    CustomerSyncService.call(customer_id)\n  end\nend\n\n10.times { SyncCustomerJob.perform_later(customer.id) }",
+        "language": "RUBY"
+      }
+    },
+    {
+      "content": "Use structured logging with consistent keys and include request_id and domain identifiers; avoid logging raw secrets, tokens, or full request bodies.",
+      "examples": {
+        "positive": "Rails.logger.info(\n  event: \"payment.authorized\",\n  request_id: request.request_id,\n  user_id: current_user.id,\n  payment_id: payment.id,\n  amount_cents: payment.amount_cents\n)",
+        "negative": "Rails.logger.info(\"Authorized payment for user=#{current_user.inspect} headers=#{request.headers.to_h} body=#{request.raw_post}\")",
+        "language": "RUBY"
+      }
+    },
+    {
+      "content": "Keep configuration in Rails credentials or ENV and access via typed wrappers; avoid hardcoded URLs, keys, and magic numbers in application code.",
+      "examples": {
+        "positive": "module AppConfig\n  module_function\n\n  def billing_base_url = ENV.fetch(\"BILLING_BASE_URL\")\n  def billing_api_key = Rails.application.credentials.fetch(:billing_api_key)\n  def http_read_timeout = Integer(ENV.fetch(\"HTTP_READ_TIMEOUT\", \"5\"))\nend\n\nclient = BillingClient.new(base_url: AppConfig.billing_base_url, api_key: AppConfig.billing_api_key)",
+        "negative": "client = BillingClient.new(base_url: \"https://billing.prod.example.com\", api_key: \"sk_live_123\")\nTIMEOUT = 5",
+        "language": "RUBY"
+      }
+    },
+    {
+      "content": "Write migrations as forward-only, online-safe operations; avoid table rewrites and long locks by batching backfills and validating constraints separately.",
+      "examples": {
+        "positive": "class AddStatusToOrders < ActiveRecord::Migration[7.1]\n  disable_ddl_transaction!\n\n  def up\n    add_column :orders, :status, :string\n\n    Order.unscoped.in_batches(of: 10_000) do |batch|\n      batch.update_all(status: \"pending\")\n      sleep 0.1\n    end\n\n    change_column_null :orders, :status, false\n    add_index :orders, :status, algorithm: :concurrently\n  end\n\n  def down\n    remove_index :orders, :status\n    remove_column :orders, :status\n  end\nend",
+        "negative": "class AddStatusToOrders < ActiveRecord::Migration[7.1]\n  def change\n    add_column :orders, :status, :string, null: false, default: \"pending\"\n    add_index :orders, :status\n  end\nend",
+        "language": "RUBY"
+      }
+    }
+  ]
+}

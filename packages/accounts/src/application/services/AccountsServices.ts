@@ -4,7 +4,6 @@ import { InvitationService } from './InvitationService';
 import { LoginRateLimiterService } from './LoginRateLimiterService';
 import { PasswordResetTokenService } from './PasswordResetTokenService';
 import { IAccountsRepositories } from '../../domain/repositories/IAccountsRepositories';
-import { PackmindLogger } from '@packmind/logger';
 import { SmtpMailService } from '@packmind/node-utils';
 
 /**
@@ -21,10 +20,7 @@ export class AccountsServices {
   private readonly loginRateLimiterService: LoginRateLimiterService;
   private readonly passwordResetTokenService: PasswordResetTokenService;
 
-  constructor(
-    private readonly accountsRepositories: IAccountsRepositories,
-    private readonly logger: PackmindLogger,
-  ) {
+  constructor(private readonly accountsRepositories: IAccountsRepositories) {
     // Initialize all services with their respective repositories from the aggregator
     this.userService = new UserService(
       this.accountsRepositories.getUserRepository(),
@@ -32,18 +28,15 @@ export class AccountsServices {
     );
     this.organizationService = new OrganizationService(
       this.accountsRepositories.getOrganizationRepository(),
-      this.logger,
     );
     this.invitationService = new InvitationService(
       this.accountsRepositories.getInvitationRepository(),
-      new SmtpMailService(this.logger),
-      this.logger,
+      new SmtpMailService(),
     );
     this.loginRateLimiterService = new LoginRateLimiterService();
     this.passwordResetTokenService = new PasswordResetTokenService(
       this.accountsRepositories.getPasswordResetTokenRepository(),
-      new SmtpMailService(this.logger),
-      this.logger,
+      new SmtpMailService(),
     );
   }
 
