@@ -83,7 +83,7 @@ export const StandardsCreateButton = ({
                   </PMText>
                 </PMVStack>
               </PMMenu.Item>
-              <PMMenu.Item value="blank" p={3}>
+              <PMMenu.Item value="blank" p={3} asChild cursor={'pointer'}>
                 <Link to={routes.space.toCreateStandard(orgSlug, spaceSlug)}>
                   <PMVStack alignItems={'flex-start'} gap={0}>
                     <PMHStack gap={2} mb={1}>
