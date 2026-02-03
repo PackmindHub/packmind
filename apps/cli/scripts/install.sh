@@ -276,35 +276,6 @@ auto_login() {
     fi
 }
 
-# Setup MCP after successful login
-setup_mcp() {
-    if [ "${LOGIN_SUCCESS:-1}" -ne 0 ]; then
-        return
-    fi
-
-    INSTALL_DIR="${PACKMIND_INSTALL_DIR:-$DEFAULT_INSTALL_DIR}"
-
-    case "$PLATFORM" in
-        windows-*)
-            cli_path="${INSTALL_DIR}/${BINARY_NAME}.exe"
-            ;;
-        *)
-            cli_path="${INSTALL_DIR}/${BINARY_NAME}"
-            ;;
-    esac
-
-    echo ""
-    info "Configuring MCP for AI agents..."
-
-    # Use /dev/tty to allow interactive input even when script is piped (curl | sh)
-    # Set PACKMIND_SIMPLE_PROMPT to use simple readline prompt (works around Bun raw mode issues on macOS)
-    if PACKMIND_SIMPLE_PROMPT=1 "$cli_path" setup-mcp < /dev/tty; then
-        success "MCP configured!"
-    else
-        warn "MCP setup failed. You can try again later with: $BINARY_NAME setup-mcp"
-    fi
-}
-
 # Configure PATH in shell rc file
 # Sets: PATH_NEEDS_RELOAD (1 if PATH was newly added and shell reload is needed)
 #       RC_FILE (path to the shell rc file that was modified)
@@ -411,7 +382,6 @@ main() {
     install_binary
     print_instructions
     auto_login
-    setup_mcp
 }
 
 # Wrap everything in main() to prevent partial execution when piping
