@@ -279,7 +279,9 @@ export class PackmindCliHexa {
   public async notifyDistribution(
     command: NotifyDistributionCommand,
   ): Promise<NotifyDistributionResult> {
-    return this.hexa.repositories.packmindGateway.notifyDistribution(command);
+    return this.hexa.repositories.packmindGateway.deployment.notifyDistribution(
+      command,
+    );
   }
 
   public async uploadSkill(

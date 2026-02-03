@@ -6,6 +6,7 @@ import { ISkillsGateway } from '../domain/repositories/ISkillsGateway';
 import { ICommandsGateway } from '../domain/repositories/ICommandsGateway';
 import { IStandardsGateway } from '../domain/repositories/IStandardsGateway';
 import { IPackagesGateway } from '../domain/repositories/IPackagesGateway';
+import { IDeploymentGateway } from '../domain/repositories/IDeploymentGateway';
 
 export type MockPackmindGatewayOverrides = {
   linter?: jest.Mocked<ILinterGateway>;
@@ -15,8 +16,7 @@ export type MockPackmindGatewayOverrides = {
   commands?: jest.Mocked<ICommandsGateway>;
   standards?: jest.Mocked<IStandardsGateway>;
   packages?: jest.Mocked<IPackagesGateway>;
-  getPullData?: jest.Mocked<IPackmindGateway>['getPullData'];
-  notifyDistribution?: jest.Mocked<IPackmindGateway>['notifyDistribution'];
+  deployment?: jest.Mocked<IDeploymentGateway>;
   pushOnboardingBaseline?: jest.Mocked<IPackmindGateway>['pushOnboardingBaseline'];
 };
 
@@ -31,8 +31,7 @@ export function createMockPackmindGateway(
     commands: createMockCommandsGateway(),
     standards: createMockStandardsGateway(),
     packages: createMockPackagesGateway(),
-    getPullData: jest.fn(),
-    notifyDistribution: jest.fn(),
+    deployment: createMockDeploymentGateway(),
     pushOnboardingBaseline: jest.fn(),
     ...overrides,
   };
@@ -108,6 +107,16 @@ export function createMockPackagesGateway(
     list: jest.fn(),
     getSummary: jest.fn(),
     create: jest.fn(),
+    ...overrides,
+  };
+}
+
+export function createMockDeploymentGateway(
+  overrides?: Partial<jest.Mocked<IDeploymentGateway>>,
+): jest.Mocked<IDeploymentGateway> {
+  return {
+    pull: jest.fn(),
+    notifyDistribution: jest.fn(),
     ...overrides,
   };
 }

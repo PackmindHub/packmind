@@ -1,4 +1,3 @@
-import { Gateway, IPullContentUseCase } from '@packmind/types';
 import { IOnboardingDraft } from '../types/OnboardingDraft';
 import { ILinterGateway } from './ILinterGateway';
 import { IMcpGateway } from './IMcpGateway';
@@ -7,22 +6,14 @@ import { ISkillsGateway } from './ISkillsGateway';
 import { ICommandsGateway } from './ICommandsGateway';
 import { IStandardsGateway } from './IStandardsGateway';
 import { IPackagesGateway } from './IPackagesGateway';
+import { IDeploymentGateway } from './IDeploymentGateway';
 
-// Notify Distribution types
-export type NotifyDistributionCommand = {
-  distributedPackages: string[];
-  gitRemoteUrl: string;
-  gitBranch: string;
-  relativePath: string;
-};
-
-export type NotifyDistributionResult = {
-  deploymentId: string;
-};
-
-export type NotifyDistributionGateway = (
-  command: NotifyDistributionCommand,
-) => Promise<NotifyDistributionResult>;
+// Re-export deployment types for backward compatibility
+export type {
+  NotifyDistributionCommand,
+  NotifyDistributionResult,
+  NotifyDistributionGateway,
+} from './IDeploymentGateway';
 
 // Re-export standard types from IStandardsGateway for backward compatibility
 export type {
@@ -56,8 +47,7 @@ export interface IPackmindGateway {
   commands: ICommandsGateway;
   standards: IStandardsGateway;
   packages: IPackagesGateway;
-  getPullData: Gateway<IPullContentUseCase>;
-  notifyDistribution: NotifyDistributionGateway;
+  deployment: IDeploymentGateway;
 
   // Onboarding baseline
   pushOnboardingBaseline(

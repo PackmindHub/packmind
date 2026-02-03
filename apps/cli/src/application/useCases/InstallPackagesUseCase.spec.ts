@@ -12,7 +12,10 @@ describe('InstallPackagesUseCase', () => {
 
   beforeEach(() => {
     mockGateway = {
-      getPullData: jest.fn(),
+      deployment: {
+        pull: jest.fn(),
+        notifyDistribution: jest.fn(),
+      },
       packages: {
         list: jest.fn(),
         getSummary: jest.fn(),
@@ -42,7 +45,7 @@ describe('InstallPackagesUseCase', () => {
     let result: Awaited<ReturnType<typeof useCase.execute>>;
 
     beforeEach(async () => {
-      mockGateway.getPullData.mockResolvedValue({
+      mockGateway.deployment.pull.mockResolvedValue({
         fileUpdates: {
           createOrUpdate: [
             {
@@ -86,7 +89,7 @@ describe('InstallPackagesUseCase', () => {
     let result: Awaited<ReturnType<typeof useCase.execute>>;
 
     beforeEach(async () => {
-      mockGateway.getPullData.mockResolvedValue({
+      mockGateway.deployment.pull.mockResolvedValue({
         fileUpdates: {
           createOrUpdate: [
             {
@@ -145,7 +148,7 @@ Some footer text.`;
       let result: Awaited<ReturnType<typeof useCase.execute>>;
 
       beforeEach(async () => {
-        mockGateway.getPullData.mockResolvedValue({
+        mockGateway.deployment.pull.mockResolvedValue({
           fileUpdates: {
             createOrUpdate: [
               {
@@ -216,7 +219,7 @@ Footer text.`;
       let result: Awaited<ReturnType<typeof useCase.execute>>;
 
       beforeEach(async () => {
-        mockGateway.getPullData.mockResolvedValue({
+        mockGateway.deployment.pull.mockResolvedValue({
           fileUpdates: {
             createOrUpdate: [
               {
@@ -283,7 +286,7 @@ ${newSectionContent}
     let result: Awaited<ReturnType<typeof useCase.execute>>;
 
     beforeEach(async () => {
-      mockGateway.getPullData.mockResolvedValue({
+      mockGateway.deployment.pull.mockResolvedValue({
         fileUpdates: {
           createOrUpdate: [
             {
@@ -334,7 +337,7 @@ Some existing content here.
       let result: Awaited<ReturnType<typeof useCase.execute>>;
 
       beforeEach(async () => {
-        mockGateway.getPullData.mockResolvedValue({
+        mockGateway.deployment.pull.mockResolvedValue({
           fileUpdates: {
             createOrUpdate: [],
             delete: [
@@ -372,7 +375,7 @@ Some existing content here.
       let result: Awaited<ReturnType<typeof useCase.execute>>;
 
       beforeEach(async () => {
-        mockGateway.getPullData.mockResolvedValue({
+        mockGateway.deployment.pull.mockResolvedValue({
           fileUpdates: {
             createOrUpdate: [],
             delete: [
@@ -417,7 +420,7 @@ Some existing content here.
       let result: Awaited<ReturnType<typeof useCase.execute>>;
 
       beforeEach(async () => {
-        mockGateway.getPullData.mockResolvedValue({
+        mockGateway.deployment.pull.mockResolvedValue({
           fileUpdates: {
             createOrUpdate: [],
             delete: [
@@ -460,7 +463,7 @@ Some existing content here.
   describe('error handling', () => {
     describe('when file operation fails', () => {
       beforeEach(() => {
-        mockGateway.getPullData.mockResolvedValue({
+        mockGateway.deployment.pull.mockResolvedValue({
           fileUpdates: {
             createOrUpdate: [
               {
@@ -511,7 +514,7 @@ Some existing content here.
       const content = '# Unchanged content\n\nThis is the same.';
 
       beforeEach(() => {
-        mockGateway.getPullData.mockResolvedValue({
+        mockGateway.deployment.pull.mockResolvedValue({
           fileUpdates: {
             createOrUpdate: [
               {
@@ -563,7 +566,7 @@ ${sectionContent}
 <!-- end: Packmind recipes -->`;
 
       beforeEach(() => {
-        mockGateway.getPullData.mockResolvedValue({
+        mockGateway.deployment.pull.mockResolvedValue({
           fileUpdates: {
             createOrUpdate: [
               {
@@ -609,7 +612,7 @@ Section content here
 <!-- end: test-section -->`;
 
       beforeEach(() => {
-        mockGateway.getPullData.mockResolvedValue({
+        mockGateway.deployment.pull.mockResolvedValue({
           fileUpdates: {
             createOrUpdate: [
               {
@@ -660,7 +663,7 @@ Section content here
       );
 
       beforeEach(() => {
-        mockGateway.getPullData.mockResolvedValue({
+        mockGateway.deployment.pull.mockResolvedValue({
           fileUpdates: {
             createOrUpdate: [
               {
@@ -736,7 +739,7 @@ Section content here
       const textContent = '# Text content';
 
       beforeEach(() => {
-        mockGateway.getPullData.mockResolvedValue({
+        mockGateway.deployment.pull.mockResolvedValue({
           fileUpdates: {
             createOrUpdate: [
               {
@@ -771,7 +774,7 @@ Section content here
       const textContent = '# Text content';
 
       beforeEach(() => {
-        mockGateway.getPullData.mockResolvedValue({
+        mockGateway.deployment.pull.mockResolvedValue({
           fileUpdates: {
             createOrUpdate: [
               {
@@ -807,7 +810,7 @@ Section content here
       let result: Awaited<ReturnType<typeof useCase.execute>>;
 
       beforeEach(async () => {
-        mockGateway.getPullData.mockResolvedValue({
+        mockGateway.deployment.pull.mockResolvedValue({
           fileUpdates: {
             createOrUpdate: [
               {
@@ -863,7 +866,7 @@ Old packmind content
       let result: Awaited<ReturnType<typeof useCase.execute>>;
 
       beforeEach(async () => {
-        mockGateway.getPullData.mockResolvedValue({
+        mockGateway.deployment.pull.mockResolvedValue({
           fileUpdates: {
             createOrUpdate: [
               {
@@ -939,7 +942,7 @@ Old packmind content
           { name: 'helper.ts', isDirectory: () => false },
         ]);
 
-        mockGateway.getPullData.mockResolvedValue({
+        mockGateway.deployment.pull.mockResolvedValue({
           fileUpdates: {
             createOrUpdate: [
               {
@@ -1019,7 +1022,7 @@ Old packmind content
 
     describe('when skillFolders array is empty', () => {
       beforeEach(() => {
-        mockGateway.getPullData.mockResolvedValue({
+        mockGateway.deployment.pull.mockResolvedValue({
           fileUpdates: {
             createOrUpdate: [
               {
@@ -1059,7 +1062,7 @@ Old packmind content
           { name: 'helper.ts', isDirectory: () => false },
         ]);
 
-        mockGateway.getPullData.mockResolvedValue({
+        mockGateway.deployment.pull.mockResolvedValue({
           fileUpdates: {
             createOrUpdate: [],
             delete: [],
