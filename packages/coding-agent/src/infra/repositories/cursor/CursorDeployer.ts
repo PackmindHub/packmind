@@ -30,12 +30,15 @@ export class CursorDeployer implements ICodingAgentDeployer {
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {}
 
-  async deployDefaultSkills() {
+  async deployDefaultSkills(options?: {
+    cliVersion?: string;
+    includeBeta?: boolean;
+  }) {
     const defaultSkillsDeployer = new DefaultSkillsDeployer(
       'Cursor',
       '.cursor/skills/',
     );
-    return defaultSkillsDeployer.deployDefaultSkills();
+    return defaultSkillsDeployer.deployDefaultSkills(options);
   }
 
   async deployRecipes(

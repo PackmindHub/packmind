@@ -23,7 +23,10 @@ export class InstallDefaultSkillsUseCase implements IInstallDefaultSkillsUseCase
 
     // Fetch default skills from the gateway
     // Note: userId and organizationId are extracted from the API key by the gateway
-    const response = await this.packmindGateway.skills.getDefaults({});
+    const response = await this.packmindGateway.skills.getDefaults({
+      cliVersion: command.cliVersion,
+      includeBeta: command.includeBeta,
+    });
 
     try {
       // Process createOrUpdate files

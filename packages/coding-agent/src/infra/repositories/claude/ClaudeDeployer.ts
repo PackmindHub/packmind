@@ -29,12 +29,15 @@ export class ClaudeDeployer implements ICodingAgentDeployer {
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {}
 
-  async deployDefaultSkills() {
+  async deployDefaultSkills(options?: {
+    cliVersion?: string;
+    includeBeta?: boolean;
+  }) {
     const defaultSkillsDeployer = new DefaultSkillsDeployer(
       'Claude',
       '.claude/skills/',
     );
-    return defaultSkillsDeployer.deployDefaultSkills();
+    return defaultSkillsDeployer.deployDefaultSkills(options);
   }
 
   async deployRecipes(
