@@ -39,12 +39,12 @@ export type {
 } from './IPackagesGateway';
 
 export interface IPackmindGateway {
-  linter: ILinterGateway;
-  mcp: IMcpGateway;
-  spaces: ISpacesGateway;
-  skills: ISkillsGateway;
-  commands: ICommandsGateway;
-  standards: IStandardsGateway;
-  packages: IPackagesGateway;
-  deployment: IDeploymentGateway;
+  readonly linter: ILinterGateway;
+  readonly mcp: IMcpGateway;
+  readonly spaces: ISpacesGateway;
+  readonly skills: ISkillsGateway;
+  readonly commands: ICommandsGateway;
+  readonly standards: IStandardsGateway;
+  readonly packages: IPackagesGateway;
+  readonly deployment: IDeploymentGateway;
 }
