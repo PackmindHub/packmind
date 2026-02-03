@@ -1,7 +1,10 @@
 import { Gateway, IUseCase, PackmindCommand } from '@packmind/types';
 
 // Get Default Skills types
-export type GetDefaultSkillsCommand = PackmindCommand;
+export type GetDefaultSkillsCommand = PackmindCommand & {
+  cliVersion?: string;
+  includeBeta?: boolean;
+};
 
 export type GetDefaultSkillsResult = {
   fileUpdates: {

@@ -600,7 +600,7 @@ describe('installPackagesHandler', () => {
           await installPackagesHandler({ packagesSlugs: [] }, deps);
 
           expect(mockPackmindCliHexa.installDefaultSkills).toHaveBeenCalledWith(
-            {},
+            expect.objectContaining({ cliVersion: expect.any(String) }),
           );
         });
 

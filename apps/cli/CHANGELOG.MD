@@ -19,6 +19,7 @@
 ## Fixed
 
 - Properly apply multiple scopes when linting.
+- Only render skills compatible with the current cli version in `packmind-cli skills init`
 
 ## Removed
 

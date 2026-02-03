@@ -1,81 +1,69 @@
 import { FileUpdates } from '@packmind/types';
+import semver from 'semver';
 import { CliListCommandsDeployer } from './CliListCommandsDeployer';
 import { CreateCommandDeployer } from './CreateCommandDeployer';
 import { CreatePackageDeployer } from './CreatePackageDeployer';
 import { CreateSkillDeployer } from './CreateSkillDeployer';
 import { CreateStandardDeployer } from './CreateStandardDeployer';
+import { ISkillDeployer } from './IDefaultSkillDeployer';
 import { OnboardDeployer } from './OnboardDeployer';
 
+export type DeployDefaultSkillsOptions = {
+  cliVersion?: string;
+  includeBeta?: boolean;
+};
+
 export class DefaultSkillsDeployer {
+  private readonly skillDeployers: ISkillDeployer[] = [
+    new CreateSkillDeployer(),
+    new CreateStandardDeployer(),
+    new OnboardDeployer(),
+    new CreateCommandDeployer(),
+    new CreatePackageDeployer(),
+    new CliListCommandsDeployer()
+  ];
+
   constructor(
     public readonly agentName: string,
     public readonly skillsFolderPath: string,
   ) {}
 
-  public deployDefaultSkills(): FileUpdates {
-    const skillCreatorFiles = this.deploySkillsCreator();
-    const standardCreatorFiles = this.deployStandardCreator();
-    const onboardFiles = this.deployOnboard();
-    const commandCreatorFiles = this.deployCommandCreator();
-    const packageCreatorFiles = this.deployPackageCreator();
-    const cliListCommandsFiles = this.deployCliListCommands();
+  public deployDefaultSkills(
+    options: DeployDefaultSkillsOptions = {},
+  ): FileUpdates {
+    const filteredDeployers = this.filterDeployers(options);
+
+    const allFileUpdates = filteredDeployers.map((deployer) =>
+      deployer.deploy(this.agentName, this.skillsFolderPath),
+    );
 
     return {
-      createOrUpdate: [
-        ...skillCreatorFiles.createOrUpdate,
-        ...standardCreatorFiles.createOrUpdate,
-        ...onboardFiles.createOrUpdate,
-        ...commandCreatorFiles.createOrUpdate,
-        ...packageCreatorFiles.createOrUpdate,
-        ...cliListCommandsFiles.createOrUpdate,
-      ],
-      delete: [
-        ...skillCreatorFiles.delete,
-        ...standardCreatorFiles.delete,
-        ...onboardFiles.delete,
-        ...commandCreatorFiles.delete,
-        ...packageCreatorFiles.delete,
-        ...cliListCommandsFiles.delete,
-      ],
+      createOrUpdate: allFileUpdates.flatMap(
+        (updates) => updates.createOrUpdate,
+      ),
+      delete: allFileUpdates.flatMap((updates) => updates.delete),
     };
   }
 
-  private deploySkillsCreator(): FileUpdates {
-    return new CreateSkillDeployer().deploy(
-      this.agentName,
-      this.skillsFolderPath,
-    );
-  }
+  private filterDeployers(
+    options: DeployDefaultSkillsOptions,
+  ): ISkillDeployer[] {
+    const { cliVersion, includeBeta } = options;
 
-  private deployStandardCreator(): FileUpdates {
-    return new CreateStandardDeployer().deploy(
-      this.agentName,
-      this.skillsFolderPath,
-    );
-  }
+    if (includeBeta) {
+      return this.skillDeployers;
+    }
 
-  private deployOnboard(): FileUpdates {
-    return new OnboardDeployer().deploy(this.agentName, this.skillsFolderPath);
-  }
+    return this.skillDeployers.filter((deployer) => {
+      if (deployer.minimumVersion === 'unreleased') {
+        return false;
+      }
 
-  private deployCommandCreator(): FileUpdates {
-    return new CreateCommandDeployer().deploy(
-      this.agentName,
-      this.skillsFolderPath,
-    );
-  }
+      if (cliVersion) {
+        return semver.lte(deployer.minimumVersion, cliVersion);
+      }
 
-  private deployPackageCreator(): FileUpdates {
-    return new CreatePackageDeployer().deploy(
-      this.agentName,
-      this.skillsFolderPath,
-    );
-  }
-
-  private deployCliListCommands(): FileUpdates {
-    return new CliListCommandsDeployer().deploy(
-      this.agentName,
-      this.skillsFolderPath,
-    );
+      return true;
+    });
   }
 }

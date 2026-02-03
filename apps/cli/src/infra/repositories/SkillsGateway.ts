@@ -237,7 +237,7 @@ export class SkillsGateway implements ISkillsGateway {
     }
   };
 
-  public getDefaults: Gateway<IGetDefaultSkillsUseCase> = async () => {
+  public getDefaults: Gateway<IGetDefaultSkillsUseCase> = async (command) => {
     const decodedApiKey = decodeApiKey(this.apiKey);
 
     if (!decodedApiKey.isValid) {
@@ -255,8 +255,15 @@ export class SkillsGateway implements ISkillsGateway {
     }
 
     const organizationId = jwtPayload.organization.id;
+    const queryParams = new URLSearchParams();
+    if (command.includeBeta) {
+      queryParams.set('includeBeta', 'true');
+    } else if (command.cliVersion) {
+      queryParams.set('cliVersion', command.cliVersion);
+    }
 
-    const url = `${host}/api/v0/organizations/${organizationId}/skills/default`;
+    const queryString = queryParams.toString();
+    const url = `${host}/api/v0/organizations/${organizationId}/skills/default${queryString ? `?${queryString}` : ''}`;
 
     try {
       const response = await fetch(url, {

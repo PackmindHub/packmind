@@ -1,4 +1,4 @@
-import { Controller, Get, Param, Req, UseGuards } from '@nestjs/common';
+import { Controller, Get, Param, Query, Req, UseGuards } from '@nestjs/common';
 import {
   DeployDefaultSkillsCommand,
   DeployDefaultSkillsResponse,
@@ -24,12 +24,18 @@ export class OrganizationSkillsController {
   @Get('default')
   async getDefaultSkills(
     @Param('orgId') organizationId: OrganizationId,
+    @Query('cliVersion') cliVersion: string | undefined,
+    @Query('includeBeta') includeBetaParam: string | undefined,
     @Req() request: AuthenticatedRequest,
   ): Promise<DeployDefaultSkillsResponse> {
+    const includeBeta = includeBetaParam === 'true';
+
     this.logger.info(
       'GET /organizations/:orgId/skills/default - Fetching default skills',
       {
         organizationId,
+        cliVersion,
+        includeBeta,
       },
     );
 
@@ -38,6 +44,8 @@ export class OrganizationSkillsController {
         userId: request.user.userId,
         organizationId,
         source: request.clientSource,
+        cliVersion,
+        includeBeta,
       };
 
       const result = await this.skillsService.deployDefaultSkills(command);

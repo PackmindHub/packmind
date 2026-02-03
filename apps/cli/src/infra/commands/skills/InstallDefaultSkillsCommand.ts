@@ -1,4 +1,4 @@
-import { command } from 'cmd-ts';
+import { command, flag } from 'cmd-ts';
 import { PackmindCliHexa } from '../../../PackmindCliHexa';
 import { PackmindLogger, LogLevel } from '@packmind/logger';
 import {
@@ -7,18 +7,30 @@ import {
   logInfoConsole,
 } from '../../utils/consoleLogger';
 
+// Read version from package.json (bundled by esbuild)
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const { version: CLI_VERSION } = require('../../../../package.json');
+
 export const installDefaultSkillsCommand = command({
   name: 'install-default',
   description: 'Install default Packmind skills for configured coding agents',
-  args: {},
-  handler: async () => {
+  args: {
+    includeBeta: flag({
+      long: 'include-beta',
+      description: 'Include unreleased/beta skills',
+    }),
+  },
+  handler: async ({ includeBeta }) => {
     const packmindLogger = new PackmindLogger('PackmindCLI', LogLevel.INFO);
     const packmindCliHexa = new PackmindCliHexa(packmindLogger);
 
     try {
       logInfoConsole('Installing default skills...');
 
-      const result = await packmindCliHexa.installDefaultSkills({});
+      const result = await packmindCliHexa.installDefaultSkills({
+        includeBeta,
+        cliVersion: includeBeta ? undefined : CLI_VERSION,
+      });
 
       if (result.errors.length > 0) {
         for (const error of result.errors) {

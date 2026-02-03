@@ -49,7 +49,10 @@ export interface ICodingAgentDeployer {
     standardVersions: StandardVersion[],
     skillVersions?: SkillVersion[],
   ): Promise<FileUpdates>;
-  deployDefaultSkills?(): Promise<FileUpdates> | FileUpdates;
+  deployDefaultSkills?(options?: {
+    cliVersion?: string;
+    includeBeta?: boolean;
+  }): Promise<FileUpdates> | FileUpdates;
   /**
    * Returns the base path for skills folder for this deployer.
    * Returns undefined if skills are not supported by this agent.

@@ -7,15 +7,19 @@ import {
   FileUpdates,
   IAccountsPort,
   ICodingAgentPort,
+  IDeployDefaultSkillsUseCase,
 } from '@packmind/types';
 import { RenderModeConfigurationService } from '../services/RenderModeConfigurationService';
 
 const origin = 'DeployDefaultSkillsUseCase';
 
-export class DeployDefaultSkillsUseCase extends AbstractMemberUseCase<
-  DeployDefaultSkillsCommand,
-  DeployDefaultSkillsResponse
-> {
+export class DeployDefaultSkillsUseCase
+  extends AbstractMemberUseCase<
+    DeployDefaultSkillsCommand,
+    DeployDefaultSkillsResponse
+  >
+  implements IDeployDefaultSkillsUseCase
+{
   constructor(
     private readonly renderModeConfigurationService: RenderModeConfigurationService,
     private readonly codingAgentPort: ICodingAgentPort,
@@ -61,7 +65,10 @@ export class DeployDefaultSkillsUseCase extends AbstractMemberUseCase<
           codingAgent,
         });
 
-        const fileUpdates = await deployer.deployDefaultSkills();
+        const fileUpdates = await deployer.deployDefaultSkills({
+          cliVersion: command.cliVersion,
+          includeBeta: command.includeBeta,
+        });
         this.mergeFileUpdates(mergedFileUpdates, fileUpdates);
 
         this.logger.info('Default skills deployed for coding agent', {
