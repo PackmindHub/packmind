@@ -2,10 +2,6 @@ import {
   IPackmindGateway,
   NotifyDistributionGateway,
   NotifyDistributionResult,
-  IUploadSkillUseCase,
-  UploadSkillResult,
-  IGetDefaultSkillsUseCase,
-  GetDefaultSkillsResult,
   CreateStandardInSpaceCommand,
   CreateStandardInSpaceResult,
   RuleWithId,
@@ -16,11 +12,9 @@ import {
   CreatePackageResult,
   ListStandardsResult,
   ListCommandsResult,
-  ListSkillsResult,
 } from '../../domain/repositories/IPackmindGateway';
 
 import { IOnboardingDraft } from '../../domain/types/OnboardingDraft';
-import { readSkillDirectory } from '../utils/readSkillDirectory';
 import { NotLoggedInError } from '../../domain/errors/NotLoggedInError';
 import { PackmindHttpClient } from '../http/PackmindHttpClient';
 import {
@@ -40,6 +34,8 @@ import { McpGateway } from './McpGateway';
 import { IMcpGateway } from '../../domain/repositories/IMcpGateway';
 import { SpacesGateway } from './SpacesGateway';
 import { ISpacesGateway } from '../../domain/repositories/ISpacesGateway';
+import { SkillsGateway } from './SkillsGateway';
+import { ISkillsGateway } from '../../domain/repositories/ISkillsGateway';
 interface ApiKeyPayload {
   host: string;
   jwt: string;
@@ -123,12 +119,14 @@ export class PackmindGateway implements IPackmindGateway {
   readonly linter: ILinterGateway;
   readonly mcp: IMcpGateway;
   readonly spaces: ISpacesGateway;
+  readonly skills: ISkillsGateway;
 
   constructor(private readonly apiKey: string) {
     this.httpClient = new PackmindHttpClient(apiKey);
     this.linter = new LinterGateway(this.httpClient);
     this.mcp = new McpGateway(apiKey);
     this.spaces = new SpacesGateway(this.httpClient);
+    this.skills = new SkillsGateway(apiKey, this.httpClient, this.spaces);
   }
 
   public getPullData: Gateway<IPullContentUseCase> = async (command) => {
@@ -484,219 +482,6 @@ export class PackmindGateway implements IPackmindGateway {
     }
   };
 
-  public uploadSkill: Gateway<IUploadSkillUseCase> = async (command) => {
-    const decodedApiKey = decodeApiKey(this.apiKey);
-
-    if (!decodedApiKey.isValid) {
-      if (decodedApiKey.error === 'NOT_LOGGED_IN') {
-        throw new NotLoggedInError();
-      }
-      throw new Error(`Invalid API key: ${decodedApiKey.error}`);
-    }
-
-    const { host, jwt } = decodedApiKey.payload;
-    const jwtPayload = decodeJwt(jwt);
-
-    if (!jwtPayload?.organization?.id) {
-      throw new Error('Invalid API key: missing organizationId in JWT');
-    }
-
-    const organizationId = jwtPayload.organization.id;
-
-    // Step 1: Resolve 'global' slug to UUID
-    const spacesUrl = `${host}/api/v0/organizations/${organizationId}/spaces/global`;
-    const spaceResponse = await fetch(spacesUrl, {
-      method: 'GET',
-      headers: {
-        Authorization: `Bearer ${this.apiKey}`,
-      },
-    });
-
-    if (!spaceResponse.ok) {
-      throw new Error(
-        `Failed to resolve global space: ${spaceResponse.status} ${spaceResponse.statusText}`,
-      );
-    }
-
-    const space = await spaceResponse.json();
-    const spaceId = space.id;
-
-    // Step 2: Read all files from skill directory
-    const files = await readSkillDirectory(command.skillPath);
-
-    // Validate SKILL.md exists
-    if (!files.find((f) => f.relativePath === 'SKILL.md')) {
-      throw new Error('SKILL.md not found in skill directory');
-    }
-
-    // Validate file count
-    const MAX_FILES = 100;
-    if (files.length > MAX_FILES) {
-      throw new Error(
-        `Skill contains ${files.length} files, but maximum allowed is ${MAX_FILES}`,
-      );
-    }
-
-    // Calculate total size
-    const totalSize = files.reduce((sum, f) => sum + f.size, 0);
-    if (totalSize > 10 * 1024 * 1024) {
-      throw new Error(`Skill size (${totalSize} bytes) exceeds 10MB limit`);
-    }
-
-    // Prepare payload
-    const payload = {
-      files: files.map((f) => ({
-        path: f.relativePath,
-        content: f.content,
-        permissions: f.permissions || 'rw-r--r--',
-        isBase64: f.isBase64,
-      })),
-    };
-
-    // Step 3: Use resolved UUID in upload URL
-    const url = `${host}/api/v0/organizations/${organizationId}/spaces/${spaceId}/skills/upload`;
-
-    try {
-      const response = await fetch(url, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${this.apiKey}`,
-        },
-        body: JSON.stringify(payload),
-      });
-
-      if (!response.ok) {
-        let errorMsg = `API request failed: ${response.status} ${response.statusText}`;
-        try {
-          const errorBody = await response.json();
-          if (errorBody?.message) {
-            errorMsg = errorBody.message;
-          }
-        } catch {
-          // ignore
-        }
-
-        // Special handling for conflict errors (409)
-        if (response.status === 409) {
-          throw new Error(`Skill already exists: ${errorMsg}`);
-        }
-
-        throw new Error(errorMsg);
-      }
-
-      const isNewSkill = response.status === 201;
-      const result = await response.json();
-      return {
-        skillId: result.skill.id,
-        name: result.skill.name,
-        version: result.skill.version,
-        isNewSkill,
-        versionCreated: result.versionCreated,
-        fileCount: files.length,
-        totalSize,
-      } as UploadSkillResult;
-    } catch (error: unknown) {
-      const err = error as {
-        code?: string;
-        name?: string;
-        message?: string;
-        cause?: { code?: string };
-      };
-      const code = err?.code || err?.cause?.code;
-      if (
-        code === 'ECONNREFUSED' ||
-        code === 'ENOTFOUND' ||
-        err?.name === 'FetchError' ||
-        (typeof err?.message === 'string' &&
-          (err.message.includes('Failed to fetch') ||
-            err.message.includes('network') ||
-            err.message.includes('NetworkError')))
-      ) {
-        throw new Error(
-          `Packmind server is not accessible at ${host}. Please check your network connection or the server URL.`,
-        );
-      }
-
-      throw new Error(
-        `Failed to upload skill: Error: ${err?.message || JSON.stringify(error)}`,
-      );
-    }
-  };
-
-  public getDefaultSkills: Gateway<IGetDefaultSkillsUseCase> = async () => {
-    const decodedApiKey = decodeApiKey(this.apiKey);
-
-    if (!decodedApiKey.isValid) {
-      if (decodedApiKey.error === 'NOT_LOGGED_IN') {
-        throw new NotLoggedInError();
-      }
-      throw new Error(`Invalid API key: ${decodedApiKey.error}`);
-    }
-
-    const { host, jwt } = decodedApiKey.payload;
-    const jwtPayload = decodeJwt(jwt);
-
-    if (!jwtPayload?.organization?.id) {
-      throw new Error('Invalid API key: missing organizationId in JWT');
-    }
-
-    const organizationId = jwtPayload.organization.id;
-
-    const url = `${host}/api/v0/organizations/${organizationId}/skills/default`;
-
-    try {
-      const response = await fetch(url, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${this.apiKey}`,
-        },
-      });
-
-      if (!response.ok) {
-        let errorMsg = `API request failed: ${response.status} ${response.statusText}`;
-        try {
-          const errorBody = await response.json();
-          if (errorBody?.message) {
-            errorMsg = errorBody.message;
-          }
-        } catch {
-          // ignore
-        }
-        throw new Error(errorMsg);
-      }
-
-      const result: GetDefaultSkillsResult = await response.json();
-      return result;
-    } catch (error: unknown) {
-      const err = error as {
-        code?: string;
-        name?: string;
-        message?: string;
-        cause?: { code?: string };
-      };
-      const code = err?.code || err?.cause?.code;
-      if (
-        code === 'ECONNREFUSED' ||
-        code === 'ENOTFOUND' ||
-        err?.name === 'FetchError' ||
-        (typeof err?.message === 'string' &&
-          (err.message.includes('Failed to fetch') ||
-            err.message.includes('network') ||
-            err.message.includes('NetworkError')))
-      ) {
-        throw new Error(
-          `Packmind server is not accessible at ${host}. Please check your network connection or the server URL.`,
-        );
-      }
-
-      throw new Error(
-        `Failed to get default skills: Error: ${err?.message || JSON.stringify(error)}`,
-      );
-    }
-  };
-
   public createStandardInSpace = async (
     spaceId: string,
     data: CreateStandardInSpaceCommand,
@@ -817,21 +602,6 @@ export class PackmindGateway implements IPackmindGateway {
       id: r.id,
       slug: r.slug,
       name: r.name,
-    }));
-  };
-
-  public listSkills = async (): Promise<ListSkillsResult> => {
-    const space = await this.spaces.getGlobal();
-    const { organizationId } = this.httpClient.getAuthContext();
-
-    const skills = await this.httpClient.request<
-      Array<{ slug: string; name: string; description: string }>
-    >(`/api/v0/organizations/${organizationId}/spaces/${space.id}/skills`);
-
-    return skills.map((s) => ({
-      slug: s.slug,
-      name: s.name,
-      description: s.description,
     }));
   };
 }

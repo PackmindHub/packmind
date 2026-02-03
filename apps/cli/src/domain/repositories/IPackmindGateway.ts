@@ -1,16 +1,11 @@
-import {
-  Gateway,
-  PublicGateway,
-  IUseCase,
-  PackmindCommand,
-  IPullContentUseCase,
-} from '@packmind/types';
+import { Gateway, PublicGateway, IPullContentUseCase } from '@packmind/types';
 import { IListPackagesUseCase } from '../useCases/IListPackagesUseCase';
 import { IGetPackageSummaryUseCase } from '../useCases/IGetPackageSummaryUseCase';
 import { IOnboardingDraft } from '../types/OnboardingDraft';
 import { ILinterGateway } from './ILinterGateway';
 import { IMcpGateway } from './IMcpGateway';
 import { ISpacesGateway } from './ISpacesGateway';
+import { ISkillsGateway } from './ISkillsGateway';
 
 // Notify Distribution types
 export type NotifyDistributionCommand = {
@@ -27,46 +22,6 @@ export type NotifyDistributionResult = {
 export type NotifyDistributionGateway = (
   command: NotifyDistributionCommand,
 ) => Promise<NotifyDistributionResult>;
-
-// Get Default Skills types
-export type GetDefaultSkillsCommand = PackmindCommand;
-
-export type GetDefaultSkillsResult = {
-  fileUpdates: {
-    createOrUpdate: Array<{
-      path: string;
-      content: string;
-    }>;
-    delete: Array<{
-      path: string;
-    }>;
-  };
-};
-
-export type IGetDefaultSkillsUseCase = IUseCase<
-  GetDefaultSkillsCommand,
-  GetDefaultSkillsResult
->;
-
-// Upload Skill types
-export type UploadSkillCommand = PackmindCommand & {
-  skillPath: string; // local directory path
-};
-
-export type UploadSkillResult = {
-  skillId: string;
-  name: string;
-  version: number;
-  isNewSkill: boolean;
-  versionCreated: boolean;
-  fileCount: number;
-  totalSize: number;
-};
-
-export type IUploadSkillUseCase = IUseCase<
-  UploadSkillCommand,
-  UploadSkillResult
->;
 
 // Standard creation types (atomic)
 export type CreateStandardInSpaceCommand = {
@@ -145,25 +100,15 @@ export type ListedCommand = {
 
 export type ListCommandsResult = ListedCommand[];
 
-// List Skills types
-export type ListedSkill = {
-  slug: string;
-  name: string;
-  description: string;
-};
-
-export type ListSkillsResult = ListedSkill[];
-
 export interface IPackmindGateway {
   linter: ILinterGateway;
   mcp: IMcpGateway;
   spaces: ISpacesGateway;
+  skills: ISkillsGateway;
   getPullData: Gateway<IPullContentUseCase>;
   listPackages: PublicGateway<IListPackagesUseCase>;
   getPackageSummary: PublicGateway<IGetPackageSummaryUseCase>;
   notifyDistribution: NotifyDistributionGateway;
-  uploadSkill: Gateway<IUploadSkillUseCase>;
-  getDefaultSkills: Gateway<IGetDefaultSkillsUseCase>;
 
   // Atomic gateways for standard creation
   createStandardInSpace(
@@ -203,5 +148,4 @@ export interface IPackmindGateway {
   // List methods
   listStandards(): Promise<ListStandardsResult>;
   listCommands(): Promise<ListCommandsResult>;
-  listSkills(): Promise<ListSkillsResult>;
 }
