@@ -4,12 +4,31 @@ import { SpaceId } from '../../spaces/SpaceId';
 import { Standard } from '../Standard';
 import { StandardCreationMethod } from '../events/StandardCreatedEvent';
 
+/**
+ * Example input for rule creation via API.
+ * Uses string `lang` which gets converted to ProgrammingLanguage by the service.
+ */
+export type CreateStandardRuleExampleInput = {
+  lang: string;
+  positive: string;
+  negative: string;
+};
+
+/**
+ * Rule input for standard creation via API.
+ * Supports optional examples that will be created atomically with the standard.
+ */
+export type CreateStandardRuleInput = {
+  content: string;
+  examples?: CreateStandardRuleExampleInput[];
+};
+
 export type CreateStandardCommand = PackmindCommand & {
   organizationId: OrganizationId;
   spaceId: SpaceId;
   name: string;
   description: string;
-  rules: Array<{ content: string }>;
+  rules: CreateStandardRuleInput[];
   scope: string | null;
   method?: StandardCreationMethod;
 };
