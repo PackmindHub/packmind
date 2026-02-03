@@ -81,6 +81,7 @@ export class AmplitudeEventListener extends PackmindListener<EventTrackingAdapte
     return this.emitAmplitudeEvent(event, 'standard_created', (payload) => ({
       standardId: payload.standardId,
       spaceId: payload.spaceId,
+      method: payload.method,
     }));
   };
 

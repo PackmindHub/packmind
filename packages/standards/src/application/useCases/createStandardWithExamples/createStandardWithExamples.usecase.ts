@@ -90,7 +90,7 @@ export class CreateStandardWithExamplesUsecase {
     spaceId,
     disableTriggerAssessment = false,
     source = 'ui',
-    method,
+    method = 'blank',
   }: CreateStandardWithExamplesRequest) {
     this.logger.info('Starting createStandardWithExamples process', {
       name,
