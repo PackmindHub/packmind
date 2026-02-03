@@ -1,4 +1,6 @@
-import { PackmindGateway } from './PackmindGateway';
+import { StandardsGateway } from './StandardsGateway';
+import { PackmindHttpClient } from '../http/PackmindHttpClient';
+import { ISpacesGateway } from '../../domain/repositories/ISpacesGateway';
 
 const createTestApiKey = () => {
   const jwt = Buffer.from(
@@ -22,19 +24,24 @@ const createTestApiKey = () => {
   ).toString('base64');
 };
 
-describe('PackmindGateway standard operations', () => {
-  let gateway: PackmindGateway;
+describe('StandardsGateway', () => {
+  let gateway: StandardsGateway;
+  let mockSpacesGateway: jest.Mocked<ISpacesGateway>;
 
   beforeEach(() => {
     global.fetch = jest.fn();
-    gateway = new PackmindGateway(createTestApiKey());
+    mockSpacesGateway = {
+      getGlobal: jest.fn(),
+    };
+    const httpClient = new PackmindHttpClient(createTestApiKey());
+    gateway = new StandardsGateway(httpClient, mockSpacesGateway);
   });
 
   afterEach(() => {
     jest.clearAllMocks();
   });
 
-  describe('createStandardInSpace', () => {
+  describe('create', () => {
     it('makes POST request to standards endpoint', async () => {
       (global.fetch as jest.Mock).mockResolvedValueOnce({
         ok: true,
@@ -43,7 +50,7 @@ describe('PackmindGateway standard operations', () => {
           .mockResolvedValue({ id: 'std-123', name: 'Test Standard' }),
       });
 
-      await gateway.createStandardInSpace('space-uuid', {
+      await gateway.create('space-uuid', {
         name: 'Test Standard',
         description: 'Desc',
         scope: 'test',
@@ -64,7 +71,7 @@ describe('PackmindGateway standard operations', () => {
           .mockResolvedValue({ id: 'std-123', name: 'Test Standard' }),
       });
 
-      const result = await gateway.createStandardInSpace('space-uuid', {
+      const result = await gateway.create('space-uuid', {
         name: 'Test Standard',
         description: 'Desc',
         scope: 'test',
@@ -75,7 +82,7 @@ describe('PackmindGateway standard operations', () => {
     });
   });
 
-  describe('getRulesForStandard', () => {
+  describe('getRules', () => {
     it('makes GET request to rules endpoint', async () => {
       (global.fetch as jest.Mock).mockResolvedValueOnce({
         ok: true,
@@ -84,7 +91,7 @@ describe('PackmindGateway standard operations', () => {
           .mockResolvedValue([{ id: 'rule-1', content: 'Rule 1' }]),
       });
 
-      await gateway.getRulesForStandard('space-uuid', 'std-123');
+      await gateway.getRules('space-uuid', 'std-123');
 
       expect(global.fetch).toHaveBeenCalledWith(
         expect.stringContaining('/standards/std-123/rules'),
@@ -101,7 +108,7 @@ describe('PackmindGateway standard operations', () => {
         ]),
       });
 
-      const result = await gateway.getRulesForStandard('space-uuid', 'std-123');
+      const result = await gateway.getRules('space-uuid', 'std-123');
 
       expect(result).toEqual([
         { id: 'rule-1', content: 'Rule 1' },

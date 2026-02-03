@@ -8,6 +8,6 @@ export class ListSkillsUseCase implements IListSkillsUseCase {
   constructor(private readonly packmindGateway: IPackmindGateway) {}
 
   public async execute(): Promise<IListSkillsResult> {
-    return this.packmindGateway.listSkills();
+    return this.packmindGateway.skills.list();
   }
 }

@@ -357,7 +357,7 @@ export class LintFilesAgainstRuleUseCase implements ILintFilesAgainstRule {
         0,
       );
 
-      this.repositories.packmindGateway.trackLinterExecution({
+      this.repositories.packmindGateway.linter.trackLinterExecution({
         targetCount: detectionPrograms.targets.length,
         standardCount: totalStandardCount,
       });

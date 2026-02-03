@@ -226,7 +226,7 @@ export class LintFilesFromConfigUseCase implements ILintFilesFromConfig {
           return sum + Object.keys(config.packages).length;
         }, 0);
 
-        this.repositories.packmindGateway.trackLinterExecution({
+        this.repositories.packmindGateway.linter.trackLinterExecution({
           targetCount,
           standardCount,
         });

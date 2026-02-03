@@ -6,13 +6,19 @@ import {
   GetDetectionProgramsForPackagesResponse,
   RuleId,
 } from '@packmind/types';
-import { ILinterGateway } from '../../domain/repositories/ILinterGateway';
+import {
+  ILinterGateway,
+  TrackLinterExecution,
+} from '../../domain/repositories/ILinterGateway';
 import { PackmindHttpClient } from '../http/PackmindHttpClient';
 import { handleScope } from '../../application/utils/handleScope';
 import { CommunityEditionError } from '../../domain/errors/CommunityEditionError';
 
 export class LinterGateway implements ILinterGateway {
-  constructor(private readonly httpClient: PackmindHttpClient) {}
+  constructor(
+    private readonly httpClient: PackmindHttpClient,
+    private readonly apiKey: string,
+  ) {}
 
   getDraftDetectionProgramsForRule: Gateway<IGetDraftDetectionProgramForRule> =
     async (command) => {
@@ -86,6 +92,32 @@ export class LinterGateway implements ILinterGateway {
 
       return handleScopeInTargetsResponse(response);
     };
+
+  /**
+   * Track linter execution (fire-and-forget).
+   * This method is called before running detection programs to track usage.
+   * It silently fails if the API call fails to not block linting.
+   */
+  trackLinterExecution: TrackLinterExecution = async (params) => {
+    try {
+      const { host } = this.httpClient.getAuthContext();
+      const url = `${host}/api/v0/track-execution`;
+
+      // Fire-and-forget: don't await, catch errors silently
+      fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${this.apiKey}`,
+        },
+        body: JSON.stringify(params),
+      }).catch(() => {
+        // Silent fail - we don't want tracking failures to affect linting
+      });
+    } catch {
+      // Silent fail if not logged in or invalid API key
+    }
+  };
 }
 
 type InvalidByTargetResponse = {

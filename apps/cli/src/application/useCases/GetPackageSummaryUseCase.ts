@@ -11,6 +11,6 @@ export class GetPackageSummaryUseCase implements IGetPackageSummaryUseCase {
   async execute(
     command: IGetPackageSummaryCommand,
   ): Promise<IGetPackageSummaryResult> {
-    return this.gateway.getPackageSummary(command);
+    return this.gateway.packages.getSummary(command);
   }
 }

@@ -9,8 +9,8 @@ export class CreatePackageUseCase implements ICreatePackageUseCase {
   constructor(private readonly gateway: IPackmindGateway) {}
 
   async execute(command: ICreatePackageCommand): Promise<ICreatePackageResult> {
-    const space = await this.gateway.getGlobalSpace();
-    const result = await this.gateway.createPackage(space.id, {
+    const space = await this.gateway.spaces.getGlobal();
+    const result = await this.gateway.packages.create(space.id, {
       name: command.name,
       description: command.description,
     });
