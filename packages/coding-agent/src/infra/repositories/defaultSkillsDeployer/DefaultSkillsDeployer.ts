@@ -20,7 +20,7 @@ export class DefaultSkillsDeployer {
     new OnboardDeployer(),
     new CreateCommandDeployer(),
     new CreatePackageDeployer(),
-    new CliListCommandsDeployer()
+    new CliListCommandsDeployer(),
   ];
 
   constructor(
