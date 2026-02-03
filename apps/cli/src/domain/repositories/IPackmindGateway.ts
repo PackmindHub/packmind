@@ -1,6 +1,4 @@
-import { Gateway, PublicGateway, IPullContentUseCase } from '@packmind/types';
-import { IListPackagesUseCase } from '../useCases/IListPackagesUseCase';
-import { IGetPackageSummaryUseCase } from '../useCases/IGetPackageSummaryUseCase';
+import { Gateway, IPullContentUseCase } from '@packmind/types';
 import { IOnboardingDraft } from '../types/OnboardingDraft';
 import { ILinterGateway } from './ILinterGateway';
 import { IMcpGateway } from './IMcpGateway';
@@ -8,6 +6,7 @@ import { ISpacesGateway } from './ISpacesGateway';
 import { ISkillsGateway } from './ISkillsGateway';
 import { ICommandsGateway } from './ICommandsGateway';
 import { IStandardsGateway } from './IStandardsGateway';
+import { IPackagesGateway } from './IPackagesGateway';
 
 // Notify Distribution types
 export type NotifyDistributionCommand = {
@@ -43,17 +42,11 @@ export type {
   ListCommandsResult,
 } from './ICommandsGateway';
 
-// Create package types
-export type CreatePackageCommand = {
-  name: string;
-  description?: string;
-};
-
-export type CreatePackageResult = {
-  id: string;
-  name: string;
-  slug: string;
-};
+// Re-export package types from IPackagesGateway for backward compatibility
+export type {
+  CreatePackageCommand,
+  CreatePackageResult,
+} from './IPackagesGateway';
 
 export interface IPackmindGateway {
   linter: ILinterGateway;
@@ -62,16 +55,9 @@ export interface IPackmindGateway {
   skills: ISkillsGateway;
   commands: ICommandsGateway;
   standards: IStandardsGateway;
+  packages: IPackagesGateway;
   getPullData: Gateway<IPullContentUseCase>;
-  listPackages: PublicGateway<IListPackagesUseCase>;
-  getPackageSummary: PublicGateway<IGetPackageSummaryUseCase>;
   notifyDistribution: NotifyDistributionGateway;
-
-  // Atomic gateway for package creation
-  createPackage(
-    spaceId: string,
-    data: CreatePackageCommand,
-  ): Promise<CreatePackageResult>;
 
   // Onboarding baseline
   pushOnboardingBaseline(

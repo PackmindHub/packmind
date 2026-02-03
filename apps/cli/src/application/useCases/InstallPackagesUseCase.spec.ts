@@ -12,12 +12,12 @@ describe('InstallPackagesUseCase', () => {
 
   beforeEach(() => {
     mockGateway = {
-      listPackages: jest.fn(),
       getPullData: jest.fn(),
-      listExecutionPrograms: jest.fn(),
-      getDraftDetectionProgramsForRule: jest.fn(),
-      getActiveDetectionProgramsForRule: jest.fn(),
-      getPackageSummary: jest.fn(),
+      packages: {
+        list: jest.fn(),
+        getSummary: jest.fn(),
+        create: jest.fn(),
+      },
     } as unknown as jest.Mocked<IPackmindGateway>;
 
     // Setup fs mocks using jest.Mock casting

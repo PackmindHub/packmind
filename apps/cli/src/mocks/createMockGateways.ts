@@ -5,6 +5,7 @@ import { ISpacesGateway } from '../domain/repositories/ISpacesGateway';
 import { ISkillsGateway } from '../domain/repositories/ISkillsGateway';
 import { ICommandsGateway } from '../domain/repositories/ICommandsGateway';
 import { IStandardsGateway } from '../domain/repositories/IStandardsGateway';
+import { IPackagesGateway } from '../domain/repositories/IPackagesGateway';
 
 export type MockPackmindGatewayOverrides = {
   linter?: jest.Mocked<ILinterGateway>;
@@ -13,11 +14,9 @@ export type MockPackmindGatewayOverrides = {
   skills?: jest.Mocked<ISkillsGateway>;
   commands?: jest.Mocked<ICommandsGateway>;
   standards?: jest.Mocked<IStandardsGateway>;
+  packages?: jest.Mocked<IPackagesGateway>;
   getPullData?: jest.Mocked<IPackmindGateway>['getPullData'];
-  listPackages?: jest.Mocked<IPackmindGateway>['listPackages'];
-  getPackageSummary?: jest.Mocked<IPackmindGateway>['getPackageSummary'];
   notifyDistribution?: jest.Mocked<IPackmindGateway>['notifyDistribution'];
-  createPackage?: jest.Mocked<IPackmindGateway>['createPackage'];
   pushOnboardingBaseline?: jest.Mocked<IPackmindGateway>['pushOnboardingBaseline'];
 };
 
@@ -31,11 +30,9 @@ export function createMockPackmindGateway(
     skills: createMockSkillsGateway(),
     commands: createMockCommandsGateway(),
     standards: createMockStandardsGateway(),
+    packages: createMockPackagesGateway(),
     getPullData: jest.fn(),
-    listPackages: jest.fn(),
-    getPackageSummary: jest.fn(),
     notifyDistribution: jest.fn(),
-    createPackage: jest.fn(),
     pushOnboardingBaseline: jest.fn(),
     ...overrides,
   };
@@ -100,6 +97,17 @@ export function createMockLinterGateway(
     getDraftDetectionProgramsForRule: jest.fn(),
     getActiveDetectionProgramsForRule: jest.fn(),
     getDetectionProgramsForPackages: jest.fn(),
+    ...overrides,
+  };
+}
+
+export function createMockPackagesGateway(
+  overrides?: Partial<jest.Mocked<IPackagesGateway>>,
+): jest.Mocked<IPackagesGateway> {
+  return {
+    list: jest.fn(),
+    getSummary: jest.fn(),
+    create: jest.fn(),
     ...overrides,
   };
 }
