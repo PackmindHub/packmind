@@ -1,5 +1,5 @@
 ---
-description: 'Automate creating a clean CLI release by updating versioning, changelog entries, tags, and comparison links so that releases are consistent, traceable, and ready for the next development cycle whenever you publish a new CLI version.'
+description: 'Automate creating a clean, tagged CLI release by verifying git status, promoting unreleased default skills, updating package.json and CHANGELOG, and preparing the next Unreleased section to ensure consistent, traceable releases when publishing version {{version}}.'
 agent: 'agent'
 ---
 
@@ -7,7 +7,16 @@ Create a CLI release with version {{version}}. Follow these steps:
 
 1. **Verify clean git status**: Check that `git status` shows no uncommitted changes. If there are changes, fail and ask the user to commit or stash them first.
 
-2. **Update apps/cli/package.json and apps/cli/CHANGELOG.MD for release (First commit)**:
+2. **Check for unreleased default skills**:
+   * Search for all classes implementing `ISkillDeployer` in `packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/`
+   * Identify any deployers where `minimumVersion` is set to `'unreleased'`
+   * If unreleased skills are found:
+     * List them to the user with their class names
+     * Ask: "Do you want to release any of these skills with version {{version}}?"
+     * If the user selects skills to release, update their `minimumVersion` from `'unreleased'` to `'{{version}}'`
+     * These changes will be included in the release commit
+
+3. **Update apps/cli/package.json and apps/cli/CHANGELOG.MD for release (First commit)**:
    * Update the version in apps/cli/package.json to `{{version}}`
    * in apps/cli/CHANGELOG.md:
      * drop the empty sections under \[Unreleased]
@@ -19,11 +28,11 @@ Create a CLI release with version {{version}}. Follow these steps:
      * Extract the previous version from the existing comparison links in apps/cli/CHANGELOG.MD
    * Commit with message: `chore(cli): release {{version}}`
 
-3. **Create and push release tag**:
+4. **Create and push release tag**:
    * Create tag: `release-cli/{{version}}`
    * Push the tag to GitHub
 
-4. **Prepare next development cycle (Second commit)**:
+5. **Prepare next development cycle (Second commit)**:
    * Add a new `[Unreleased]` section at the top of apps/cli/CHANGELOG.MD:
 
      ```markdown
@@ -45,7 +54,7 @@ Create a CLI release with version {{version}}. Follow these steps:
 
    * Commit with message: `chore(cli): prepare next development cycle`
 
-5. **Push all commits** to GitHub
+6. **Push all commits** to GitHub
 
 Important notes:
 
