@@ -4,21 +4,14 @@ import { Outlet } from 'react-router';
 
 export default function PublicPageLayout() {
   return (
-    <PMVStack
-      flex="1"
-      width="full"
-      justify="center"
-      align="center"
-      gap={'6'}
-      px={6}
-      py={8}
-    >
+    <PMVStack margin={'auto 0'} gap={'6'}>
       <PMImage src={logoPackmindText} maxHeight={'32px'} />
       <PMBox
         bgColor={'background.primary'}
         borderRadius={'md'}
-        width="full"
-        maxWidth={{ base: '95%', md: '90%', lg: '80%' }}
+        minWidth="600px"
+        maxWidth="600px"
+        mx="auto"
         p={6}
       >
         <Outlet />
