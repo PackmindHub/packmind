@@ -1,17 +1,18 @@
 import { IPackmindGateway } from '../domain/repositories/IPackmindGateway';
 import { ILinterGateway } from '../domain/repositories/ILinterGateway';
 import { IMcpGateway } from '../domain/repositories/IMcpGateway';
+import { ISpacesGateway } from '../domain/repositories/ISpacesGateway';
 
 export type MockPackmindGatewayOverrides = {
   linter?: jest.Mocked<ILinterGateway>;
   mcp?: jest.Mocked<IMcpGateway>;
+  spaces?: jest.Mocked<ISpacesGateway>;
   getPullData?: jest.Mocked<IPackmindGateway>['getPullData'];
   listPackages?: jest.Mocked<IPackmindGateway>['listPackages'];
   getPackageSummary?: jest.Mocked<IPackmindGateway>['getPackageSummary'];
   notifyDistribution?: jest.Mocked<IPackmindGateway>['notifyDistribution'];
   uploadSkill?: jest.Mocked<IPackmindGateway>['uploadSkill'];
   getDefaultSkills?: jest.Mocked<IPackmindGateway>['getDefaultSkills'];
-  getGlobalSpace?: jest.Mocked<IPackmindGateway>['getGlobalSpace'];
   createStandardInSpace?: jest.Mocked<IPackmindGateway>['createStandardInSpace'];
   getRulesForStandard?: jest.Mocked<IPackmindGateway>['getRulesForStandard'];
   addExampleToRule?: jest.Mocked<IPackmindGateway>['addExampleToRule'];
@@ -29,13 +30,13 @@ export function createMockPackmindGateway(
   return {
     linter: createMockLinterGateway(),
     mcp: createMockMcpGateway(),
+    spaces: createMockSpacesGateway(),
     getPullData: jest.fn(),
     listPackages: jest.fn(),
     getPackageSummary: jest.fn(),
     notifyDistribution: jest.fn(),
     uploadSkill: jest.fn(),
     getDefaultSkills: jest.fn(),
-    getGlobalSpace: jest.fn(),
     createStandardInSpace: jest.fn(),
     getRulesForStandard: jest.fn(),
     addExampleToRule: jest.fn(),
@@ -55,6 +56,15 @@ export function createMockMcpGateway(
   return {
     getToken: jest.fn(),
     getUrl: jest.fn(),
+    ...overrides,
+  };
+}
+
+export function createMockSpacesGateway(
+  overrides?: Partial<jest.Mocked<ISpacesGateway>>,
+): jest.Mocked<ISpacesGateway> {
+  return {
+    getGlobal: jest.fn(),
     ...overrides,
   };
 }

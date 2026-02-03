@@ -1,12 +1,14 @@
 import { CreateStandardFromPlaybookUseCase } from './CreateStandardFromPlaybookUseCase';
 import { IPackmindGateway } from '../../domain/repositories/IPackmindGateway';
+import { ISpacesGateway } from '../../domain/repositories/ISpacesGateway';
 
 describe('CreateStandardFromPlaybookUseCase', () => {
   let useCase: CreateStandardFromPlaybookUseCase;
+  let mockSpacesGateway: jest.Mocked<ISpacesGateway>;
   let mockGateway: jest.Mocked<
     Pick<
       IPackmindGateway,
-      | 'getGlobalSpace'
+      | 'spaces'
       | 'createStandardInSpace'
       | 'getRulesForStandard'
       | 'addExampleToRule'
@@ -14,8 +16,11 @@ describe('CreateStandardFromPlaybookUseCase', () => {
   >;
 
   beforeEach(() => {
+    mockSpacesGateway = {
+      getGlobal: jest.fn(),
+    };
     mockGateway = {
-      getGlobalSpace: jest.fn(),
+      spaces: mockSpacesGateway,
       createStandardInSpace: jest.fn(),
       getRulesForStandard: jest.fn(),
       addExampleToRule: jest.fn(),
@@ -31,7 +36,7 @@ describe('CreateStandardFromPlaybookUseCase', () => {
 
   describe('when executing', () => {
     it('gets the global space first', async () => {
-      mockGateway.getGlobalSpace.mockResolvedValue({
+      mockSpacesGateway.getGlobal.mockResolvedValue({
         id: 'space-1',
         slug: 'global',
       });
@@ -47,11 +52,11 @@ describe('CreateStandardFromPlaybookUseCase', () => {
         rules: [{ content: 'Rule 1' }],
       });
 
-      expect(mockGateway.getGlobalSpace).toHaveBeenCalled();
+      expect(mockSpacesGateway.getGlobal).toHaveBeenCalled();
     });
 
     it('creates standard in space with rules content only', async () => {
-      mockGateway.getGlobalSpace.mockResolvedValue({
+      mockSpacesGateway.getGlobal.mockResolvedValue({
         id: 'space-1',
         slug: 'global',
       });
@@ -79,7 +84,7 @@ describe('CreateStandardFromPlaybookUseCase', () => {
     });
 
     it('returns standardId and name from gateway result', async () => {
-      mockGateway.getGlobalSpace.mockResolvedValue({
+      mockSpacesGateway.getGlobal.mockResolvedValue({
         id: 'space-1',
         slug: 'global',
       });
@@ -100,7 +105,7 @@ describe('CreateStandardFromPlaybookUseCase', () => {
 
     describe('when rules have no examples', () => {
       beforeEach(async () => {
-        mockGateway.getGlobalSpace.mockResolvedValue({
+        mockSpacesGateway.getGlobal.mockResolvedValue({
           id: 'space-1',
           slug: 'global',
         });
@@ -128,7 +133,7 @@ describe('CreateStandardFromPlaybookUseCase', () => {
 
     describe('when rules have examples', () => {
       beforeEach(() => {
-        mockGateway.getGlobalSpace.mockResolvedValue({
+        mockSpacesGateway.getGlobal.mockResolvedValue({
           id: 'space-1',
           slug: 'global',
         });

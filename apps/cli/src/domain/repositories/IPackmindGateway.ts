@@ -10,6 +10,7 @@ import { IGetPackageSummaryUseCase } from '../useCases/IGetPackageSummaryUseCase
 import { IOnboardingDraft } from '../types/OnboardingDraft';
 import { ILinterGateway } from './ILinterGateway';
 import { IMcpGateway } from './IMcpGateway';
+import { ISpacesGateway } from './ISpacesGateway';
 
 // Notify Distribution types
 export type NotifyDistributionCommand = {
@@ -98,12 +99,6 @@ export type RuleExample = {
   negative: string;
 };
 
-// Global space type (used by createCommand)
-export type GetGlobalSpaceResult = {
-  id: string;
-  slug: string;
-};
-
 // Create command types
 export type CreateCommandCommand = {
   name: string;
@@ -162,15 +157,13 @@ export type ListSkillsResult = ListedSkill[];
 export interface IPackmindGateway {
   linter: ILinterGateway;
   mcp: IMcpGateway;
+  spaces: ISpacesGateway;
   getPullData: Gateway<IPullContentUseCase>;
   listPackages: PublicGateway<IListPackagesUseCase>;
   getPackageSummary: PublicGateway<IGetPackageSummaryUseCase>;
   notifyDistribution: NotifyDistributionGateway;
   uploadSkill: Gateway<IUploadSkillUseCase>;
   getDefaultSkills: Gateway<IGetDefaultSkillsUseCase>;
-
-  // Atomic gateway for getGlobalSpace (used by createCommand and createStandard)
-  getGlobalSpace(): Promise<GetGlobalSpaceResult>;
 
   // Atomic gateways for standard creation
   createStandardInSpace(

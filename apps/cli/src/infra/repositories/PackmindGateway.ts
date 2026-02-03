@@ -6,7 +6,6 @@ import {
   UploadSkillResult,
   IGetDefaultSkillsUseCase,
   GetDefaultSkillsResult,
-  GetGlobalSpaceResult,
   CreateStandardInSpaceCommand,
   CreateStandardInSpaceResult,
   RuleWithId,
@@ -39,6 +38,8 @@ import { LinterGateway } from './LinterGateway';
 import { ILinterGateway } from '../../domain/repositories/ILinterGateway';
 import { McpGateway } from './McpGateway';
 import { IMcpGateway } from '../../domain/repositories/IMcpGateway';
+import { SpacesGateway } from './SpacesGateway';
+import { ISpacesGateway } from '../../domain/repositories/ISpacesGateway';
 interface ApiKeyPayload {
   host: string;
   jwt: string;
@@ -121,11 +122,13 @@ export class PackmindGateway implements IPackmindGateway {
   private readonly httpClient: PackmindHttpClient;
   readonly linter: ILinterGateway;
   readonly mcp: IMcpGateway;
+  readonly spaces: ISpacesGateway;
 
   constructor(private readonly apiKey: string) {
     this.httpClient = new PackmindHttpClient(apiKey);
     this.linter = new LinterGateway(this.httpClient);
     this.mcp = new McpGateway(apiKey);
+    this.spaces = new SpacesGateway(this.httpClient);
   }
 
   public getPullData: Gateway<IPullContentUseCase> = async (command) => {
@@ -694,13 +697,6 @@ export class PackmindGateway implements IPackmindGateway {
     }
   };
 
-  public getGlobalSpace = async (): Promise<GetGlobalSpaceResult> => {
-    const { organizationId } = this.httpClient.getAuthContext();
-    return this.httpClient.request<GetGlobalSpaceResult>(
-      `/api/v0/organizations/${organizationId}/spaces/global`,
-    );
-  };
-
   public createStandardInSpace = async (
     spaceId: string,
     data: CreateStandardInSpaceCommand,
@@ -770,7 +766,7 @@ export class PackmindGateway implements IPackmindGateway {
   public pushOnboardingBaseline = async (
     draft: IOnboardingDraft,
   ): Promise<{ success: boolean }> => {
-    const space = await this.getGlobalSpace();
+    const space = await this.spaces.getGlobal();
     const { organizationId } = this.httpClient.getAuthContext();
 
     await this.httpClient.request(
@@ -789,7 +785,7 @@ export class PackmindGateway implements IPackmindGateway {
   };
 
   public listStandards = async (): Promise<ListStandardsResult> => {
-    const space = await this.getGlobalSpace();
+    const space = await this.spaces.getGlobal();
     const { organizationId } = this.httpClient.getAuthContext();
 
     const response = await this.httpClient.request<{
@@ -810,7 +806,7 @@ export class PackmindGateway implements IPackmindGateway {
   };
 
   public listCommands = async (): Promise<ListCommandsResult> => {
-    const space = await this.getGlobalSpace();
+    const space = await this.spaces.getGlobal();
     const { organizationId } = this.httpClient.getAuthContext();
 
     const recipes = await this.httpClient.request<
@@ -825,7 +821,7 @@ export class PackmindGateway implements IPackmindGateway {
   };
 
   public listSkills = async (): Promise<ListSkillsResult> => {
-    const space = await this.getGlobalSpace();
+    const space = await this.spaces.getGlobal();
     const { organizationId } = this.httpClient.getAuthContext();
 
     const skills = await this.httpClient.request<

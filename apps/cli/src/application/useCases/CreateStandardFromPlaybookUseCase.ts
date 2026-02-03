@@ -9,7 +9,7 @@ export class CreateStandardFromPlaybookUseCase implements ICreateStandardFromPla
   constructor(private readonly gateway: IPackmindGateway) {}
 
   async execute(playbook: IPlaybookInput): Promise<ICreateStandardResult> {
-    const space = await this.gateway.getGlobalSpace();
+    const space = await this.gateway.spaces.getGlobal();
 
     // Create standard with rules (without examples)
     const standard = await this.gateway.createStandardInSpace(space.id, {
