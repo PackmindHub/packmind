@@ -1,4 +1,3 @@
-import * as React from 'react';
 import { Link } from 'react-router';
 import {
   PMBox,
@@ -20,14 +19,12 @@ import { useAnalytics } from '@packmind/proprietary/frontend/domain/amplitude/pr
 interface StandardsBlankStateProps {
   orgSlug: string;
   spaceSlug: string;
-  hasSamplesAccess: boolean;
   onBrowseTemplatesClick: () => void;
 }
 
 export const StandardsBlankState = ({
   orgSlug,
   spaceSlug,
-  hasSamplesAccess,
   onBrowseTemplatesClick,
 }: StandardsBlankStateProps) => {
   const analytics = useAnalytics();
@@ -83,7 +80,6 @@ export const StandardsBlankState = ({
                   analytics.track('create_standard_from_samples_clicked', {});
                   onBrowseTemplatesClick();
                 }}
-                disabled={!hasSamplesAccess}
                 marginTop={'auto'}
               >
                 Browse samples

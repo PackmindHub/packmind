@@ -1,12 +1,6 @@
 import { useState } from 'react';
 import { useParams } from 'react-router';
-import {
-  PMPage,
-  PMVStack,
-  isFeatureFlagEnabled,
-  STANDARD_SAMPLES_FEATURE_KEY,
-  DEFAULT_FEATURE_DOMAIN_MAP,
-} from '@packmind/ui';
+import { PMPage, PMVStack } from '@packmind/ui';
 import { useAuthContext } from '../../src/domain/accounts/hooks/useAuthContext';
 import { StandardsList } from '../../src/domain/standards/components/StandardsList';
 import { StandardsCreateButton } from '../../src/domain/standards/components/StandardsCreateButton';
@@ -17,14 +11,8 @@ export default function OrgStandardsIndex() {
     orgSlug: string;
     spaceSlug: string;
   }>();
-  const { organization, user } = useAuthContext();
+  const { organization } = useAuthContext();
   const [isEmpty, setIsEmpty] = useState(false);
-
-  const hasSamplesAccess = isFeatureFlagEnabled({
-    featureKeys: [STANDARD_SAMPLES_FEATURE_KEY],
-    featureDomainMap: DEFAULT_FEATURE_DOMAIN_MAP,
-    userEmail: user?.email,
-  });
 
   if (!organization || orgSlug !== organization.slug) {
     return null;
@@ -41,7 +29,6 @@ export default function OrgStandardsIndex() {
           <StandardsCreateButton
             orgSlug={organization.slug}
             spaceSlug={spaceSlug}
-            hasSamplesAccess={hasSamplesAccess}
           />
         )
       }

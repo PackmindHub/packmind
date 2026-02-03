@@ -21,27 +21,15 @@ import { useAnalytics } from '@packmind/proprietary/frontend/domain/amplitude/pr
 interface StandardsCreateButtonProps {
   orgSlug: string;
   spaceSlug: string;
-  hasSamplesAccess: boolean;
 }
 
 export const StandardsCreateButton = ({
   orgSlug,
   spaceSlug,
-  hasSamplesAccess,
 }: StandardsCreateButtonProps) => {
   const [isSamplesModalOpen, setIsSamplesModalOpen] = useState(false);
   const [isFromCodeDialogOpen, setIsFromCodeDialogOpen] = useState(false);
   const analytics = useAnalytics();
-
-  if (!hasSamplesAccess) {
-    return (
-      <PMButton asChild>
-        <Link to={routes.space.toCreateStandard(orgSlug, spaceSlug)}>
-          Create
-        </Link>
-      </PMButton>
-    );
-  }
 
   return (
     <>

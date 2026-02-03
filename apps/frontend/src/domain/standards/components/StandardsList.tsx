@@ -11,9 +11,6 @@ import {
   PMAlert,
   PMAlertDialog,
   PMCheckbox,
-  isFeatureFlagEnabled,
-  STANDARD_SAMPLES_FEATURE_KEY,
-  DEFAULT_FEATURE_DOMAIN_MAP,
 } from '@packmind/ui';
 
 import {
@@ -28,8 +25,6 @@ import { formatDistanceToNowStrict } from 'date-fns';
 import { useCurrentSpace } from '../../spaces/hooks/useCurrentSpace';
 import { routes } from '../../../shared/utils/routes';
 import { StandardSamplesModal } from './StandardSamplesModal';
-import { useAuthContext } from '../../accounts/hooks/useAuthContext';
-import { useAnalytics } from '@packmind/proprietary/frontend/domain/amplitude/providers/AnalyticsProvider';
 import { StandardsBlankState } from './StandardsBlankState';
 
 interface StandardsListProps {
@@ -42,15 +37,6 @@ export const StandardsList = ({
   onEmptyStateChange,
 }: StandardsListProps = {}) => {
   const { spaceSlug } = useCurrentSpace();
-  const { user } = useAuthContext();
-  const analytics = useAnalytics();
-
-  const hasSamplesAccess = isFeatureFlagEnabled({
-    featureKeys: [STANDARD_SAMPLES_FEATURE_KEY],
-    featureDomainMap: DEFAULT_FEATURE_DOMAIN_MAP,
-    userEmail: user?.email,
-  });
-
   const {
     data: listStandardsResponse,
     isLoading,
@@ -269,7 +255,6 @@ export const StandardsList = ({
             <StandardsBlankState
               orgSlug={orgSlug || ''}
               spaceSlug={spaceSlug}
-              hasSamplesAccess={hasSamplesAccess}
               onBrowseTemplatesClick={() => setIsSamplesModalOpen(true)}
             />
           )}
