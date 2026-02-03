@@ -1,9 +1,5 @@
 import {
   IPackmindGateway,
-  GetMcpTokenResult,
-  GetMcpUrlResult,
-  IGetMcpTokenUseCase,
-  IGetMcpUrlUseCase,
   NotifyDistributionGateway,
   NotifyDistributionResult,
   IUploadSkillUseCase,
@@ -41,6 +37,8 @@ import {
 import { IListPackagesUseCase } from '../../domain/useCases/IListPackagesUseCase';
 import { LinterGateway } from './LinterGateway';
 import { ILinterGateway } from '../../domain/repositories/ILinterGateway';
+import { McpGateway } from './McpGateway';
+import { IMcpGateway } from '../../domain/repositories/IMcpGateway';
 interface ApiKeyPayload {
   host: string;
   jwt: string;
@@ -122,10 +120,12 @@ function decodeApiKey(apiKey: string): DecodedApiKey {
 export class PackmindGateway implements IPackmindGateway {
   private readonly httpClient: PackmindHttpClient;
   readonly linter: ILinterGateway;
+  readonly mcp: IMcpGateway;
 
   constructor(private readonly apiKey: string) {
     this.httpClient = new PackmindHttpClient(apiKey);
     this.linter = new LinterGateway(this.httpClient);
+    this.mcp = new McpGateway(apiKey);
   }
 
   public getPullData: Gateway<IPullContentUseCase> = async (command) => {
@@ -395,154 +395,6 @@ export class PackmindGateway implements IPackmindGateway {
 
       throw new Error(
         `Failed to get package '${slug}': Error: ${err?.message || JSON.stringify(error)}`,
-      );
-    }
-  };
-
-  public getMcpToken: Gateway<IGetMcpTokenUseCase> = async () => {
-    const decodedApiKey = decodeApiKey(this.apiKey);
-
-    if (!decodedApiKey.isValid) {
-      if (decodedApiKey.error === 'NOT_LOGGED_IN') {
-        throw new NotLoggedInError();
-      }
-      throw new Error(`Invalid API key: ${decodedApiKey.error}`);
-    }
-
-    const { host, jwt } = decodedApiKey.payload;
-
-    const jwtPayload = decodeJwt(jwt);
-
-    if (!jwtPayload?.organization?.id) {
-      throw new Error('Invalid API key: missing organizationId in JWT');
-    }
-
-    const organizationId = jwtPayload.organization.id;
-
-    const url = `${host}/api/v0/organizations/${organizationId}/mcp/token`;
-
-    try {
-      const response = await fetch(url, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${this.apiKey}`,
-        },
-      });
-
-      if (!response.ok) {
-        let errorMsg = `API request failed: ${response.status} ${response.statusText}`;
-        try {
-          const errorBody = await response.json();
-          if (errorBody && errorBody.message) {
-            errorMsg = `${errorBody.message}`;
-          }
-        } catch {
-          // ignore if body is not json
-        }
-        throw new Error(errorMsg);
-      }
-
-      const result: GetMcpTokenResult = await response.json();
-      return result;
-    } catch (error: unknown) {
-      const err = error as {
-        code?: string;
-        name?: string;
-        message?: string;
-        cause?: { code?: string };
-      };
-      const code = err?.code || err?.cause?.code;
-      if (
-        code === 'ECONNREFUSED' ||
-        code === 'ENOTFOUND' ||
-        err?.name === 'FetchError' ||
-        (typeof err?.message === 'string' &&
-          (err.message.includes('Failed to fetch') ||
-            err.message.includes('network') ||
-            err.message.includes('NetworkError')))
-      ) {
-        throw new Error(
-          `Packmind server is not accessible at ${host}. Please check your network connection or the server URL.`,
-        );
-      }
-
-      throw new Error(
-        `Failed to get MCP token: Error: ${err?.message || JSON.stringify(error)}`,
-      );
-    }
-  };
-
-  public getMcpUrl: Gateway<IGetMcpUrlUseCase> = async () => {
-    const decodedApiKey = decodeApiKey(this.apiKey);
-
-    if (!decodedApiKey.isValid) {
-      if (decodedApiKey.error === 'NOT_LOGGED_IN') {
-        throw new NotLoggedInError();
-      }
-      throw new Error(`Invalid API key: ${decodedApiKey.error}`);
-    }
-
-    const { host, jwt } = decodedApiKey.payload;
-
-    const jwtPayload = decodeJwt(jwt);
-
-    if (!jwtPayload?.organization?.id) {
-      throw new Error('Invalid API key: missing organizationId in JWT');
-    }
-
-    const organizationId = jwtPayload.organization.id;
-
-    const url = `${host}/api/v0/organizations/${organizationId}/mcp/url`;
-
-    try {
-      const response = await fetch(url, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${this.apiKey}`,
-        },
-      });
-
-      if (!response.ok) {
-        let errorMsg = `API request failed: ${response.status} ${response.statusText}`;
-        try {
-          const errorBody = await response.json();
-          if (errorBody && errorBody.message) {
-            errorMsg = `${errorBody.message}`;
-          }
-        } catch {
-          // ignore if body is not json
-        }
-        throw new Error(errorMsg);
-      }
-
-      const result: GetMcpUrlResult = await response.json();
-      return result;
-    } catch (error: unknown) {
-      const err = error as {
-        code?: string;
-        name?: string;
-        message?: string;
-        cause?: { code?: string };
-      };
-      const code = err?.code || err?.cause?.code;
-      if (
-        code === 'ECONNREFUSED' ||
-        code === 'ENOTFOUND' ||
-        err?.name === 'FetchError' ||
-        (typeof err?.message === 'string' &&
-          (err.message.includes('Failed to fetch') ||
-            err.message.includes('network') ||
-            err.message.includes('NetworkError')))
-      ) {
-        throw new Error(
-          `Packmind server is not accessible at ${host}. Please check your network connection or the server URL.`,
-        );
-      }
-
-      throw new Error(
-        `Failed to get MCP URL: Error: ${err?.message || JSON.stringify(error)}`,
       );
     }
   };

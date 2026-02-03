@@ -9,29 +9,7 @@ import { IListPackagesUseCase } from '../useCases/IListPackagesUseCase';
 import { IGetPackageSummaryUseCase } from '../useCases/IGetPackageSummaryUseCase';
 import { IOnboardingDraft } from '../types/OnboardingDraft';
 import { ILinterGateway } from './ILinterGateway';
-
-// MCP Token types
-export type GetMcpTokenCommand = PackmindCommand;
-
-export type GetMcpTokenResult = {
-  access_token: string;
-  token_type: string;
-  expires_in: number;
-};
-
-export type IGetMcpTokenUseCase = IUseCase<
-  GetMcpTokenCommand,
-  GetMcpTokenResult
->;
-
-// MCP URL types
-export type GetMcpUrlCommand = PackmindCommand;
-
-export type GetMcpUrlResult = {
-  url: string;
-};
-
-export type IGetMcpUrlUseCase = IUseCase<GetMcpUrlCommand, GetMcpUrlResult>;
+import { IMcpGateway } from './IMcpGateway';
 
 // Notify Distribution types
 export type NotifyDistributionCommand = {
@@ -183,11 +161,10 @@ export type ListSkillsResult = ListedSkill[];
 
 export interface IPackmindGateway {
   linter: ILinterGateway;
+  mcp: IMcpGateway;
   getPullData: Gateway<IPullContentUseCase>;
   listPackages: PublicGateway<IListPackagesUseCase>;
   getPackageSummary: PublicGateway<IGetPackageSummaryUseCase>;
-  getMcpToken: Gateway<IGetMcpTokenUseCase>;
-  getMcpUrl: Gateway<IGetMcpUrlUseCase>;
   notifyDistribution: NotifyDistributionGateway;
   uploadSkill: Gateway<IUploadSkillUseCase>;
   getDefaultSkills: Gateway<IGetDefaultSkillsUseCase>;

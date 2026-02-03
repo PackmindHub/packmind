@@ -1,13 +1,13 @@
 import { IPackmindGateway } from '../domain/repositories/IPackmindGateway';
 import { ILinterGateway } from '../domain/repositories/ILinterGateway';
+import { IMcpGateway } from '../domain/repositories/IMcpGateway';
 
 export type MockPackmindGatewayOverrides = {
   linter?: jest.Mocked<ILinterGateway>;
+  mcp?: jest.Mocked<IMcpGateway>;
   getPullData?: jest.Mocked<IPackmindGateway>['getPullData'];
   listPackages?: jest.Mocked<IPackmindGateway>['listPackages'];
   getPackageSummary?: jest.Mocked<IPackmindGateway>['getPackageSummary'];
-  getMcpToken?: jest.Mocked<IPackmindGateway>['getMcpToken'];
-  getMcpUrl?: jest.Mocked<IPackmindGateway>['getMcpUrl'];
   notifyDistribution?: jest.Mocked<IPackmindGateway>['notifyDistribution'];
   uploadSkill?: jest.Mocked<IPackmindGateway>['uploadSkill'];
   getDefaultSkills?: jest.Mocked<IPackmindGateway>['getDefaultSkills'];
@@ -28,11 +28,10 @@ export function createMockPackmindGateway(
 ): jest.Mocked<IPackmindGateway> {
   return {
     linter: createMockLinterGateway(),
+    mcp: createMockMcpGateway(),
     getPullData: jest.fn(),
     listPackages: jest.fn(),
     getPackageSummary: jest.fn(),
-    getMcpToken: jest.fn(),
-    getMcpUrl: jest.fn(),
     notifyDistribution: jest.fn(),
     uploadSkill: jest.fn(),
     getDefaultSkills: jest.fn(),
@@ -46,6 +45,16 @@ export function createMockPackmindGateway(
     listStandards: jest.fn(),
     listCommands: jest.fn(),
     listSkills: jest.fn(),
+    ...overrides,
+  };
+}
+
+export function createMockMcpGateway(
+  overrides?: Partial<jest.Mocked<IMcpGateway>>,
+): jest.Mocked<IMcpGateway> {
+  return {
+    getToken: jest.fn(),
+    getUrl: jest.fn(),
     ...overrides,
   };
 }
