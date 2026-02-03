@@ -91,7 +91,7 @@ export const StandardsCreateButton = ({
                         <LuPencilLine />
                       </PMIcon>
                       <PMText fontWeight="semibold" fontSize="sm">
-                        From Scratch
+                        Manually
                       </PMText>
                     </PMHStack>
                     <PMText fontSize="xs" color="secondary">
