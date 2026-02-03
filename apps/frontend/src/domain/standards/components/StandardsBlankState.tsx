@@ -15,6 +15,7 @@ import { GETTING_STARTED_CREATE_DIALOG } from '../../organizations/components/da
 import { routes } from '../../../shared/utils/routes';
 import { LuBot, LuLibrary, LuPencilLine } from 'react-icons/lu';
 import { useAnalytics } from '@packmind/proprietary/frontend/domain/amplitude/providers/AnalyticsProvider';
+import { StandardExampleDialog } from './StandardExampleDialog';
 
 interface StandardsBlankStateProps {
   orgSlug: string;
@@ -44,6 +45,7 @@ export const StandardsBlankState = ({
         Create reusable coding guidelines that Packmind can render as
         instructions files for Claude Code, Github Copilot, Cursor...
       </PMText>
+      <StandardExampleDialog />
 
       <PMVStack alignItems={'flex-start'} width={'full'} mt={8}>
         <PMGrid gridTemplateColumns={'repeat(3, 1fr)'} gap={4} width={'full'}>
