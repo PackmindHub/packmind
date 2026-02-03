@@ -22,8 +22,8 @@ export class RuleDetectionAssessmentRepository
     super(
       'ruleDetectionAssessment',
       repository,
-      logger,
       RuleDetectionAssessmentSchema,
+      logger,
     );
     this.logger.info('RuleDetectionAssessmentRepository initialized');
   }

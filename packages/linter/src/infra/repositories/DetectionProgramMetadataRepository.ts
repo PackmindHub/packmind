@@ -35,8 +35,8 @@ export class DetectionProgramMetadataRepository
     super(
       'detectionProgramMetadata',
       repository,
-      logger,
       DetectionProgramMetadataSchema,
+      logger,
     );
     this.executionLogRepository = executionLogRepository;
     this.logger.info('DetectionProgramMetadataRepository initialized');

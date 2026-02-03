@@ -24,7 +24,7 @@ export class DetectionProgramRepository
     ),
     logger: PackmindLogger = new PackmindLogger(origin),
   ) {
-    super('detectionProgram', repository, logger, DetectionProgramSchema);
+    super('detectionProgram', repository, DetectionProgramSchema, logger);
     this.logger.info('DetectionProgramRepository initialized');
   }
 

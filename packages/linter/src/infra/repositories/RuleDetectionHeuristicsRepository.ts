@@ -22,7 +22,7 @@ export class RuleDetectionHeuristicsRepository
     ),
     logger: PackmindLogger = new PackmindLogger(origin),
   ) {
-    super('detectionHeuristics', repository, logger, DetectionHeuristicsSchema);
+    super('detectionHeuristics', repository, DetectionHeuristicsSchema, logger);
     this.logger.info('RuleDetectionHeuristicsRepository initialized');
   }
 

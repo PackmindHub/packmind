@@ -24,8 +24,8 @@ export class ActiveDetectionProgramRepository
     super(
       'activeDetectionProgram',
       repository,
-      logger,
       ActiveDetectionProgramSchema,
+      logger,
     );
     this.logger.info('ActiveDetectionProgramRepository initialized');
   }
