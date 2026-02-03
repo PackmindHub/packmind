@@ -204,7 +204,9 @@ export class PackmindCliHexa {
   public async readFullConfig(
     baseDirectory: string,
   ): Promise<PackmindFileConfig | null> {
-    return this.hexa.repositories.configFileRepository.readConfig(baseDirectory);
+    return this.hexa.repositories.configFileRepository.readConfig(
+      baseDirectory,
+    );
   }
 
   public async writeConfig(
@@ -216,9 +218,18 @@ export class PackmindCliHexa {
       packages[slug] = '*';
     });
 
+    // Read existing config to preserve other fields (like agents)
+    const existingConfig =
+      await this.hexa.repositories.configFileRepository.readConfig(
+        baseDirectory,
+      );
+
     await this.hexa.repositories.configFileRepository.writeConfig(
       baseDirectory,
-      { packages },
+      {
+        ...existingConfig,
+        packages,
+      },
     );
   }
 
