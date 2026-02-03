@@ -4,6 +4,7 @@ import { IMcpGateway } from '../domain/repositories/IMcpGateway';
 import { ISpacesGateway } from '../domain/repositories/ISpacesGateway';
 import { ISkillsGateway } from '../domain/repositories/ISkillsGateway';
 import { ICommandsGateway } from '../domain/repositories/ICommandsGateway';
+import { IStandardsGateway } from '../domain/repositories/IStandardsGateway';
 
 export type MockPackmindGatewayOverrides = {
   linter?: jest.Mocked<ILinterGateway>;
@@ -11,16 +12,13 @@ export type MockPackmindGatewayOverrides = {
   spaces?: jest.Mocked<ISpacesGateway>;
   skills?: jest.Mocked<ISkillsGateway>;
   commands?: jest.Mocked<ICommandsGateway>;
+  standards?: jest.Mocked<IStandardsGateway>;
   getPullData?: jest.Mocked<IPackmindGateway>['getPullData'];
   listPackages?: jest.Mocked<IPackmindGateway>['listPackages'];
   getPackageSummary?: jest.Mocked<IPackmindGateway>['getPackageSummary'];
   notifyDistribution?: jest.Mocked<IPackmindGateway>['notifyDistribution'];
-  createStandardInSpace?: jest.Mocked<IPackmindGateway>['createStandardInSpace'];
-  getRulesForStandard?: jest.Mocked<IPackmindGateway>['getRulesForStandard'];
-  addExampleToRule?: jest.Mocked<IPackmindGateway>['addExampleToRule'];
   createPackage?: jest.Mocked<IPackmindGateway>['createPackage'];
   pushOnboardingBaseline?: jest.Mocked<IPackmindGateway>['pushOnboardingBaseline'];
-  listStandards?: jest.Mocked<IPackmindGateway>['listStandards'];
 };
 
 export function createMockPackmindGateway(
@@ -32,16 +30,13 @@ export function createMockPackmindGateway(
     spaces: createMockSpacesGateway(),
     skills: createMockSkillsGateway(),
     commands: createMockCommandsGateway(),
+    standards: createMockStandardsGateway(),
     getPullData: jest.fn(),
     listPackages: jest.fn(),
     getPackageSummary: jest.fn(),
     notifyDistribution: jest.fn(),
-    createStandardInSpace: jest.fn(),
-    getRulesForStandard: jest.fn(),
-    addExampleToRule: jest.fn(),
     createPackage: jest.fn(),
     pushOnboardingBaseline: jest.fn(),
-    listStandards: jest.fn(),
     ...overrides,
   };
 }
@@ -81,6 +76,18 @@ export function createMockCommandsGateway(
 ): jest.Mocked<ICommandsGateway> {
   return {
     create: jest.fn(),
+    list: jest.fn(),
+    ...overrides,
+  };
+}
+
+export function createMockStandardsGateway(
+  overrides?: Partial<jest.Mocked<IStandardsGateway>>,
+): jest.Mocked<IStandardsGateway> {
+  return {
+    create: jest.fn(),
+    getRules: jest.fn(),
+    addExampleToRule: jest.fn(),
     list: jest.fn(),
     ...overrides,
   };

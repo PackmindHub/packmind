@@ -2,13 +2,8 @@ import {
   IPackmindGateway,
   NotifyDistributionGateway,
   NotifyDistributionResult,
-  CreateStandardInSpaceCommand,
-  CreateStandardInSpaceResult,
-  RuleWithId,
-  RuleExample,
   CreatePackageCommand,
   CreatePackageResult,
-  ListStandardsResult,
 } from '../../domain/repositories/IPackmindGateway';
 
 import { IOnboardingDraft } from '../../domain/types/OnboardingDraft';
@@ -35,6 +30,8 @@ import { SkillsGateway } from './SkillsGateway';
 import { ISkillsGateway } from '../../domain/repositories/ISkillsGateway';
 import { CommandsGateway } from './CommandsGateway';
 import { ICommandsGateway } from '../../domain/repositories/ICommandsGateway';
+import { StandardsGateway } from './StandardsGateway';
+import { IStandardsGateway } from '../../domain/repositories/IStandardsGateway';
 interface ApiKeyPayload {
   host: string;
   jwt: string;
@@ -120,6 +117,7 @@ export class PackmindGateway implements IPackmindGateway {
   readonly spaces: ISpacesGateway;
   readonly skills: ISkillsGateway;
   readonly commands: ICommandsGateway;
+  readonly standards: IStandardsGateway;
 
   constructor(private readonly apiKey: string) {
     this.httpClient = new PackmindHttpClient(apiKey);
@@ -128,6 +126,7 @@ export class PackmindGateway implements IPackmindGateway {
     this.spaces = new SpacesGateway(this.httpClient);
     this.skills = new SkillsGateway(apiKey, this.httpClient, this.spaces);
     this.commands = new CommandsGateway(this.httpClient, this.spaces);
+    this.standards = new StandardsGateway(this.httpClient, this.spaces);
   }
 
   public getPullData: Gateway<IPullContentUseCase> = async (command) => {
@@ -483,47 +482,6 @@ export class PackmindGateway implements IPackmindGateway {
     }
   };
 
-  public createStandardInSpace = async (
-    spaceId: string,
-    data: CreateStandardInSpaceCommand,
-  ): Promise<CreateStandardInSpaceResult> => {
-    const { organizationId } = this.httpClient.getAuthContext();
-    return this.httpClient.request<CreateStandardInSpaceResult>(
-      `/api/v0/organizations/${organizationId}/spaces/${spaceId}/standards`,
-      { method: 'POST', body: data },
-    );
-  };
-
-  public getRulesForStandard = async (
-    spaceId: string,
-    standardId: string,
-  ): Promise<RuleWithId[]> => {
-    const { organizationId } = this.httpClient.getAuthContext();
-    return this.httpClient.request<RuleWithId[]>(
-      `/api/v0/organizations/${organizationId}/spaces/${spaceId}/standards/${standardId}/rules`,
-    );
-  };
-
-  public addExampleToRule = async (
-    spaceId: string,
-    standardId: string,
-    ruleId: string,
-    example: RuleExample,
-  ): Promise<void> => {
-    const { organizationId } = this.httpClient.getAuthContext();
-    await this.httpClient.request(
-      `/api/v0/organizations/${organizationId}/spaces/${spaceId}/standards/${standardId}/rules/${ruleId}/examples`,
-      {
-        method: 'POST',
-        body: {
-          lang: example.language,
-          positive: example.positive,
-          negative: example.negative,
-        },
-      },
-    );
-  };
-
   public createPackage = async (
     spaceId: string,
     data: CreatePackageCommand,
@@ -557,26 +515,5 @@ export class PackmindGateway implements IPackmindGateway {
     );
 
     return { success: true };
-  };
-
-  public listStandards = async (): Promise<ListStandardsResult> => {
-    const space = await this.spaces.getGlobal();
-    const { organizationId } = this.httpClient.getAuthContext();
-
-    const response = await this.httpClient.request<{
-      standards: Array<{
-        id: string;
-        slug: string;
-        name: string;
-        description: string;
-      }>;
-    }>(`/api/v0/organizations/${organizationId}/spaces/${space.id}/standards`);
-
-    return response.standards.map((s) => ({
-      id: s.id,
-      slug: s.slug,
-      name: s.name,
-      description: s.description,
-    }));
   };
 }

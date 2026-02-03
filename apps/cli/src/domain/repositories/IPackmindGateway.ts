@@ -7,6 +7,7 @@ import { IMcpGateway } from './IMcpGateway';
 import { ISpacesGateway } from './ISpacesGateway';
 import { ISkillsGateway } from './ISkillsGateway';
 import { ICommandsGateway } from './ICommandsGateway';
+import { IStandardsGateway } from './IStandardsGateway';
 
 // Notify Distribution types
 export type NotifyDistributionCommand = {
@@ -24,36 +25,15 @@ export type NotifyDistributionGateway = (
   command: NotifyDistributionCommand,
 ) => Promise<NotifyDistributionResult>;
 
-// Standard creation types (atomic)
-export type CreateStandardInSpaceCommand = {
-  name: string;
-  description: string;
-  scope: string;
-  rules: Array<{
-    content: string;
-    examples?: {
-      language: string;
-      positive: string;
-      negative: string;
-    };
-  }>;
-};
-
-export type CreateStandardInSpaceResult = {
-  id: string;
-  name: string;
-};
-
-export type RuleWithId = {
-  id: string;
-  content: string;
-};
-
-export type RuleExample = {
-  language: string;
-  positive: string;
-  negative: string;
-};
+// Re-export standard types from IStandardsGateway for backward compatibility
+export type {
+  CreateStandardInSpaceCommand,
+  CreateStandardInSpaceResult,
+  RuleWithId,
+  RuleExample,
+  ListedStandard,
+  ListStandardsResult,
+} from './IStandardsGateway';
 
 // Re-export command types from ICommandsGateway for backward compatibility
 export type {
@@ -75,44 +55,17 @@ export type CreatePackageResult = {
   slug: string;
 };
 
-// List Standards types
-export type ListedStandard = {
-  id: string;
-  slug: string;
-  name: string;
-  description: string;
-};
-
-export type ListStandardsResult = ListedStandard[];
-
 export interface IPackmindGateway {
   linter: ILinterGateway;
   mcp: IMcpGateway;
   spaces: ISpacesGateway;
   skills: ISkillsGateway;
   commands: ICommandsGateway;
+  standards: IStandardsGateway;
   getPullData: Gateway<IPullContentUseCase>;
   listPackages: PublicGateway<IListPackagesUseCase>;
   getPackageSummary: PublicGateway<IGetPackageSummaryUseCase>;
   notifyDistribution: NotifyDistributionGateway;
-
-  // Atomic gateways for standard creation
-  createStandardInSpace(
-    spaceId: string,
-    data: CreateStandardInSpaceCommand,
-  ): Promise<CreateStandardInSpaceResult>;
-
-  getRulesForStandard(
-    spaceId: string,
-    standardId: string,
-  ): Promise<RuleWithId[]>;
-
-  addExampleToRule(
-    spaceId: string,
-    standardId: string,
-    ruleId: string,
-    example: RuleExample,
-  ): Promise<void>;
 
   // Atomic gateway for package creation
   createPackage(
@@ -124,7 +77,4 @@ export interface IPackmindGateway {
   pushOnboardingBaseline(
     draft: IOnboardingDraft,
   ): Promise<{ success: boolean }>;
-
-  // List methods
-  listStandards(): Promise<ListStandardsResult>;
 }

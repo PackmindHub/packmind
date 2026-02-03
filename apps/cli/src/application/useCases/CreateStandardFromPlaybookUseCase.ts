@@ -12,7 +12,7 @@ export class CreateStandardFromPlaybookUseCase implements ICreateStandardFromPla
     const space = await this.gateway.spaces.getGlobal();
 
     // Create standard with rules (without examples)
-    const standard = await this.gateway.createStandardInSpace(space.id, {
+    const standard = await this.gateway.standards.create(space.id, {
       name: playbook.name,
       description: playbook.description,
       scope: playbook.scope,
@@ -23,7 +23,7 @@ export class CreateStandardFromPlaybookUseCase implements ICreateStandardFromPla
     const rulesWithExamples = playbook.rules.filter((r) => r.examples);
 
     if (rulesWithExamples.length > 0) {
-      const createdRules = await this.gateway.getRulesForStandard(
+      const createdRules = await this.gateway.standards.getRules(
         space.id,
         standard.id,
       );
@@ -32,7 +32,7 @@ export class CreateStandardFromPlaybookUseCase implements ICreateStandardFromPla
         const rule = playbook.rules[i];
         if (rule.examples && createdRules[i]) {
           try {
-            await this.gateway.addExampleToRule(
+            await this.gateway.standards.addExampleToRule(
               space.id,
               standard.id,
               createdRules[i].id,
