@@ -35,7 +35,7 @@ export class PasswordResetTokenRepository
     ),
     logger: PackmindLogger = new PackmindLogger(origin),
   ) {
-    super('passwordResetToken', repository, logger, PasswordResetTokenSchema);
+    super('passwordResetToken', repository, PasswordResetTokenSchema, logger);
     this.logger.info('PasswordResetTokenRepository initialized');
   }
 

@@ -26,7 +26,7 @@ export class GitProviderRepository
     ),
     logger: PackmindLogger = new PackmindLogger(origin),
   ) {
-    super('gitProvider', repository, logger, GitProviderSchema);
+    super('gitProvider', repository, GitProviderSchema, logger);
     this.logger.info('GitProviderRepository initialized');
   }
 

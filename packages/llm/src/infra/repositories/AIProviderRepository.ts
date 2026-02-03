@@ -33,7 +33,7 @@ export class AIProviderRepository
     ),
     logger: PackmindLogger = new PackmindLogger(origin),
   ) {
-    super('aiProvider', repository, logger, AIProviderSchema);
+    super('aiProvider', repository, AIProviderSchema, logger);
     this.logger.info('AIProviderRepository initialized');
   }
 
