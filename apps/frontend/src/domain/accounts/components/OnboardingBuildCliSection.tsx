@@ -35,8 +35,7 @@ export function OnboardingBuildCliSection() {
           <PMVStack gap={2} align="start">
             <PMHeading level="h3">With CLI</PMHeading>
             <PMText color="secondary" fontSize="sm">
-              Your agent use command lines to start the analysis and create
-              playbook artifacts in Packmind
+              For humans and AI agents alike
             </PMText>
           </PMVStack>
 

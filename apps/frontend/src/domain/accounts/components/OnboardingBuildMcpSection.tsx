@@ -108,8 +108,7 @@ export function OnboardingBuildMcpSection() {
               <PMIcon as={LuCircleHelp} color="secondary" />
             </PMHStack>
             <PMText color="secondary" fontSize="sm">
-              Your agent use MCP tools to start the analysis and create playbook
-              artifacts in Packmind
+              Agent-only: native protocol for direct integration
             </PMText>
           </PMVStack>
 

@@ -27,10 +27,15 @@ export function OnboardingBuild() {
       {showProgress && <OnboardingProgressSection />}
 
       {/* Two-column content */}
-      <PMHStack gap={8} align="stretch" flex={1} paddingY={6}>
-        <OnboardingBuildCliSection />
-        <OnboardingBuildMcpSection />
-      </PMHStack>
+      <PMVStack gap={4} flex={1} paddingY={6}>
+        <PMText color="secondary" fontSize="sm">
+          Choose your favorite method
+        </PMText>
+        <PMHStack gap={8} align="stretch" flex={1}>
+          <OnboardingBuildCliSection />
+          <OnboardingBuildMcpSection />
+        </PMHStack>
+      </PMVStack>
     </PMVStack>
   );
 }
