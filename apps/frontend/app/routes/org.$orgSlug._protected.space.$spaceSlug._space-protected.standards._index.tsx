@@ -1,21 +1,16 @@
 import { useState } from 'react';
-import { useParams, Link } from 'react-router';
+import { useParams } from 'react-router';
 import {
   PMPage,
-  PMButton,
   PMVStack,
-  PMMenu,
-  PMPortal,
   isFeatureFlagEnabled,
   STANDARD_SAMPLES_FEATURE_KEY,
   DEFAULT_FEATURE_DOMAIN_MAP,
 } from '@packmind/ui';
 import { useAuthContext } from '../../src/domain/accounts/hooks/useAuthContext';
 import { StandardsList } from '../../src/domain/standards/components/StandardsList';
-import { StandardSamplesModal } from '../../src/domain/standards/components/StandardSamplesModal';
+import { StandardsCreateButton } from '../../src/domain/standards/components/StandardsCreateButton';
 import { AutobreadCrumb } from '../../src/shared/components/navigation/AutobreadCrumb';
-import { routes } from '../../src/shared/utils/routes';
-import { useAnalytics } from '@packmind/proprietary/frontend/domain/amplitude/providers/AnalyticsProvider';
 
 export default function OrgStandardsIndex() {
   const { orgSlug, spaceSlug } = useParams<{
@@ -23,8 +18,6 @@ export default function OrgStandardsIndex() {
     spaceSlug: string;
   }>();
   const { organization, user } = useAuthContext();
-  const [isSamplesModalOpen, setIsSamplesModalOpen] = useState(false);
-  const analytics = useAnalytics();
   const [isEmpty, setIsEmpty] = useState(false);
 
   const hasSamplesAccess = isFeatureFlagEnabled({
@@ -44,50 +37,13 @@ export default function OrgStandardsIndex() {
       breadcrumbComponent={<AutobreadCrumb />}
       actions={
         !isEmpty &&
-        spaceSlug &&
-        (hasSamplesAccess ? (
-          <PMMenu.Root>
-            <PMMenu.Trigger asChild>
-              <PMButton>Create</PMButton>
-            </PMMenu.Trigger>
-            <PMPortal>
-              <PMMenu.Positioner>
-                <PMMenu.Content>
-                  <PMMenu.Item value="blank" asChild>
-                    <Link
-                      to={routes.space.toCreateStandard(
-                        organization.slug,
-                        spaceSlug,
-                      )}
-                    >
-                      Blank
-                    </Link>
-                  </PMMenu.Item>
-                  <PMMenu.Item
-                    value="samples"
-                    onClick={() => {
-                      analytics.track(
-                        'create_standard_from_samples_clicked',
-                        {},
-                      );
-                      setIsSamplesModalOpen(true);
-                    }}
-                  >
-                    From samples
-                  </PMMenu.Item>
-                </PMMenu.Content>
-              </PMMenu.Positioner>
-            </PMPortal>
-          </PMMenu.Root>
-        ) : (
-          <PMButton asChild>
-            <Link
-              to={routes.space.toCreateStandard(organization.slug, spaceSlug)}
-            >
-              Create
-            </Link>
-          </PMButton>
-        ))
+        spaceSlug && (
+          <StandardsCreateButton
+            orgSlug={organization.slug}
+            spaceSlug={spaceSlug}
+            hasSamplesAccess={hasSamplesAccess}
+          />
+        )
       }
     >
       <PMVStack align="stretch" gap={6}>
@@ -96,10 +52,6 @@ export default function OrgStandardsIndex() {
           onEmptyStateChange={setIsEmpty}
         />
       </PMVStack>
-      <StandardSamplesModal
-        open={isSamplesModalOpen}
-        onOpenChange={setIsSamplesModalOpen}
-      />
     </PMPage>
   );
 }

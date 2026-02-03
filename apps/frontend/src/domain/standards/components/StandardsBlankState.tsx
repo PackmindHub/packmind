@@ -14,7 +14,7 @@ import {
 import { GettingStartedLearnMoreDialog } from '../../organizations/components/dashboard/GettingStartedLearnMoreDialog';
 import { GETTING_STARTED_CREATE_DIALOG } from '../../organizations/components/dashboard/GettingStartedWidget';
 import { routes } from '../../../shared/utils/routes';
-import { LuBot, LuPencilLine, LuSparkles } from 'react-icons/lu';
+import { LuBot, LuLibrary, LuPencilLine } from 'react-icons/lu';
 
 interface StandardsBlankStateProps {
   orgSlug: string;
@@ -63,10 +63,10 @@ export const StandardsBlankState = ({
               <PMBox>
                 <PMHStack mb={2}>
                   <PMIcon color={'yellow.200'} size={'lg'}>
-                    <LuSparkles />
+                    <LuLibrary />
                   </PMIcon>
                   <PMHeading level="h5" fontWeight={'bold'}>
-                    Start with a template
+                    Start with a sample
                   </PMHeading>
                 </PMHStack>
                 <PMBox fontSize={'sm'} color={'text.secondary'}>
@@ -80,7 +80,7 @@ export const StandardsBlankState = ({
                 disabled={!hasSamplesAccess}
                 marginTop={'auto'}
               >
-                Browse templates
+                Browse samples
               </PMButton>
             </PMBox>
           </PMGridItem>

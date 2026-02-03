@@ -11,7 +11,7 @@ import { ReactNode } from 'react';
 export type GettingStartedLearnMoreDialogProps = {
   title?: string;
   body: ReactNode;
-  buttonLabel?: string;
+  buttonLabel?: string | ReactNode;
   buttonSize?: 'xs' | 'sm' | 'md' | 'lg';
   buttonVariant?: PMButtonVariants;
   buttonMarginTop?: string | number;
