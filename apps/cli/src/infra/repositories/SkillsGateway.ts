@@ -1,13 +1,14 @@
-import { Gateway, Organization } from '@packmind/types';
+import {
+  Gateway,
+  IDeployDefaultSkillsUseCase,
+  IListSkillsBySpaceUseCase,
+  Organization,
+} from '@packmind/types';
 import {
   ISkillsGateway,
   IUploadSkillUseCase,
   UploadSkillResult,
-  IGetDefaultSkillsUseCase,
-  GetDefaultSkillsResult,
-  ListSkillsResult,
 } from '../../domain/repositories/ISkillsGateway';
-import { ISpacesGateway } from '../../domain/repositories/ISpacesGateway';
 import { PackmindHttpClient } from '../http/PackmindHttpClient';
 import { readSkillDirectory } from '../utils/readSkillDirectory';
 import { NotLoggedInError } from '../../domain/errors/NotLoggedInError';
@@ -94,7 +95,6 @@ export class SkillsGateway implements ISkillsGateway {
   constructor(
     private readonly apiKey: string,
     private readonly httpClient: PackmindHttpClient,
-    private readonly spaces: ISpacesGateway,
   ) {}
 
   public upload: Gateway<IUploadSkillUseCase> = async (command) => {
@@ -237,24 +237,10 @@ export class SkillsGateway implements ISkillsGateway {
     }
   };
 
-  public getDefaults: Gateway<IGetDefaultSkillsUseCase> = async (command) => {
-    const decodedApiKey = decodeApiKey(this.apiKey);
-
-    if (!decodedApiKey.isValid) {
-      if (decodedApiKey.error === 'NOT_LOGGED_IN') {
-        throw new NotLoggedInError();
-      }
-      throw new Error(`Invalid API key: ${decodedApiKey.error}`);
-    }
-
-    const { host, jwt } = decodedApiKey.payload;
-    const jwtPayload = decodeJwt(jwt);
-
-    if (!jwtPayload?.organization?.id) {
-      throw new Error('Invalid API key: missing organizationId in JWT');
-    }
-
-    const organizationId = jwtPayload.organization.id;
+  public getDefaults: Gateway<IDeployDefaultSkillsUseCase> = async (
+    command,
+  ) => {
+    const { organizationId } = this.httpClient.getAuthContext();
     const queryParams = new URLSearchParams();
     if (command.includeBeta) {
       queryParams.set('includeBeta', 'true');
@@ -263,72 +249,15 @@ export class SkillsGateway implements ISkillsGateway {
     }
 
     const queryString = queryParams.toString();
-    const url = `${host}/api/v0/organizations/${organizationId}/skills/default${queryString ? `?${queryString}` : ''}`;
-
-    try {
-      const response = await fetch(url, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${this.apiKey}`,
-        },
-      });
-
-      if (!response.ok) {
-        let errorMsg = `API request failed: ${response.status} ${response.statusText}`;
-        try {
-          const errorBody = await response.json();
-          if (errorBody?.message) {
-            errorMsg = errorBody.message;
-          }
-        } catch {
-          // ignore
-        }
-        throw new Error(errorMsg);
-      }
-
-      const result: GetDefaultSkillsResult = await response.json();
-      return result;
-    } catch (error: unknown) {
-      const err = error as {
-        code?: string;
-        name?: string;
-        message?: string;
-        cause?: { code?: string };
-      };
-      const code = err?.code || err?.cause?.code;
-      if (
-        code === 'ECONNREFUSED' ||
-        code === 'ENOTFOUND' ||
-        err?.name === 'FetchError' ||
-        (typeof err?.message === 'string' &&
-          (err.message.includes('Failed to fetch') ||
-            err.message.includes('network') ||
-            err.message.includes('NetworkError')))
-      ) {
-        throw new Error(
-          `Packmind server is not accessible at ${host}. Please check your network connection or the server URL.`,
-        );
-      }
-
-      throw new Error(
-        `Failed to get default skills: Error: ${err?.message || JSON.stringify(error)}`,
-      );
-    }
+    return this.httpClient.request(
+      `/api/v0/organizations/${organizationId}/skills/default${queryString ? `?${queryString}` : ''}`,
+    );
   };
 
-  public list = async (): Promise<ListSkillsResult> => {
-    const space = await this.spaces.getGlobal();
+  public list: Gateway<IListSkillsBySpaceUseCase> = async (command) => {
     const { organizationId } = this.httpClient.getAuthContext();
-
-    const skills = await this.httpClient.request<
-      Array<{ slug: string; name: string; description: string }>
-    >(`/api/v0/organizations/${organizationId}/spaces/${space.id}/skills`);
-
-    return skills.map((s) => ({
-      slug: s.slug,
-      name: s.name,
-      description: s.description,
-    }));
+    return this.httpClient.request(
+      `/api/v0/organizations/${organizationId}/spaces/${command.spaceId}/skills`,
+    );
   };
 }
