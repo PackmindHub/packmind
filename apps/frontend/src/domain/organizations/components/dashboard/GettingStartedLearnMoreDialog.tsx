@@ -29,7 +29,7 @@ export const GettingStartedLearnMoreDialog: React.FC<
 }) => {
   return (
     <PMDialog.Root
-      size="lg"
+      size="xl"
       placement="center"
       motionPreset="slide-in-bottom"
       scrollBehavior={'inside'}

@@ -154,7 +154,7 @@ export const StandardsBlankState = ({
                     <LuPencilLine />
                   </PMIcon>
                   <PMHeading level="h5" fontWeight={'bold'}>
-                    Create from scratch
+                    Create manually
                   </PMHeading>
                 </PMHStack>
                 <PMBox fontSize={'sm'} color={'text.secondary'}>
