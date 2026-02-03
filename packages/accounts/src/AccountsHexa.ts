@@ -63,12 +63,11 @@ export class AccountsHexa extends BaseHexa<AccountsHexaOpts, IAccountsPort> {
       this.accountsRepositories = new AccountsRepositories(this.dataSource);
       this.accountsServices = new EnhancedAccountsServices(
         this.accountsRepositories,
-        this.logger,
         opts?.apiKeyService,
         opts?.jwtService,
       );
 
-      this.adapter = new AccountsAdapter(this.accountsServices, this.logger);
+      this.adapter = new AccountsAdapter(this.accountsServices);
       this.logger.debug(
         'Repository aggregator, service aggregator, and adapter created successfully',
       );

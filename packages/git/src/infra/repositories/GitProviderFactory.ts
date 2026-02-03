@@ -15,11 +15,9 @@ const origin = 'GitProviderFactory';
  * keeping the application layer clean from infrastructure dependencies.
  */
 export class GitProviderFactory implements IGitProviderFactory {
-  private readonly logger: PackmindLogger;
-
-  constructor() {
-    this.logger = new PackmindLogger(origin);
-  }
+  constructor(
+    private readonly logger: PackmindLogger = new PackmindLogger(origin),
+  ) {}
 
   createGitProvider(provider: GitProvider): IGitProvider {
     if (!provider.token) {
@@ -31,11 +29,7 @@ export class GitProviderFactory implements IGitProviderFactory {
         return new GithubProvider(provider.token);
 
       case GitProviderVendors.gitlab:
-        return new GitlabProvider(
-          provider.token,
-          this.logger,
-          provider.url || undefined,
-        );
+        return new GitlabProvider(provider.token, provider.url || undefined);
 
       default:
         throw new Error(`Unsupported git provider source: ${provider.source}`);

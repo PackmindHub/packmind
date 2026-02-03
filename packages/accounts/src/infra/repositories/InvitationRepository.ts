@@ -35,7 +35,7 @@ export class InvitationRepository
     ),
     logger: PackmindLogger = new PackmindLogger(origin),
   ) {
-    super('invitation', repository, logger, InvitationSchema);
+    super('invitation', repository, InvitationSchema, logger);
     this.logger.info('InvitationRepository initialized');
   }
 

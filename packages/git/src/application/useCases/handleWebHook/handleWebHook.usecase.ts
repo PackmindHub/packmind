@@ -12,13 +12,15 @@ import {
   IHandleWebHookUseCase,
 } from '@packmind/types';
 
+const origin = 'HandleWebHook';
+
 export class HandleWebHook implements IHandleWebHookUseCase {
   constructor(
     private readonly gitCommitService: GitCommitService,
     private readonly gitProviderService: GitProviderService,
     private readonly gitRepoService: GitRepoService,
     private readonly gitRepoFactory: IGitRepoFactory,
-    private readonly logger: PackmindLogger,
+    private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {}
 
   public async execute(

@@ -11,12 +11,14 @@ import { ApiKeyService } from '../../services/ApiKeyService';
 
 const DEFAULT_APP_WEB_URL = 'http://localhost:8081';
 
+const origin = 'GenerateApiKeyUseCase';
+
 export class GenerateApiKeyUseCase implements IGenerateApiKeyUseCase {
   constructor(
     private readonly userService: UserService,
     private readonly organizationService: OrganizationService,
     private readonly apiKeyService: ApiKeyService,
-    private readonly logger: PackmindLogger,
+    private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {}
 
   async execute(

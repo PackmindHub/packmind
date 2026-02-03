@@ -2,10 +2,12 @@ import { GitCommit, GitCommitId } from '@packmind/types';
 import { IGitCommitRepository } from '../../domain/repositories/IGitCommitRepository';
 import { PackmindLogger } from '@packmind/logger';
 
+const origin = 'GitCommitService';
+
 export class GitCommitService {
   constructor(
     private readonly gitCommitRepository: IGitCommitRepository,
-    private readonly logger: PackmindLogger,
+    private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {}
 
   async addCommit(commitData: Omit<GitCommit, 'id'>): Promise<GitCommit> {

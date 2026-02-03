@@ -39,9 +39,8 @@ export class CaptureRecipeUsecase
     private readonly recipeVersionService: RecipeVersionService,
     private readonly recipeSummaryService: RecipeSummaryService,
     private readonly eventEmitterService: PackmindEventEmitterService,
-    logger: PackmindLogger = new PackmindLogger(origin),
   ) {
-    super(accountsPort, logger);
+    super(accountsPort, new PackmindLogger(origin));
     this.logger.info('CaptureRecipeUsecase initialized');
   }
 

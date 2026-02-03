@@ -13,10 +13,10 @@ export class GenerateStandardSummaryJobFactory implements IJobFactory<GenerateSt
   private _delayedJob: GenerateStandardSummaryDelayedJob | null = null;
 
   constructor(
-    private readonly logger: PackmindLogger = new PackmindLogger(origin),
     private readonly standardsRepositories: IStandardsRepositories,
     private readonly standardSummaryService: StandardSummaryService,
     private readonly standardVersionService: StandardVersionService,
+    private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {}
 
   async createQueue(): Promise<IJobQueue<GenerateStandardSummaryInput>> {

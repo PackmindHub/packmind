@@ -24,9 +24,9 @@ export class StartTrialUseCase implements IStartTrial {
     private readonly userService: UserService,
     private readonly organizationService: OrganizationService,
     private readonly eventEmitterService: PackmindEventEmitterService,
-    private readonly logger: PackmindLogger = new PackmindLogger(origin),
     private readonly spacesPort?: ISpacesPort,
     private readonly deploymentPort?: IDeploymentPort,
+    private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {
     this.logger.info('StartTrialUseCase initialized');
   }

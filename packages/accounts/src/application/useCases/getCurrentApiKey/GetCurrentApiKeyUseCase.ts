@@ -5,8 +5,12 @@ import {
   GetCurrentApiKeyResponse,
 } from '@packmind/types';
 
+const origin = 'GetCurrentApiKeyUseCase';
+
 export class GetCurrentApiKeyUseCase implements IGetCurrentApiKeyUseCase {
-  constructor(private readonly logger: PackmindLogger) {}
+  constructor(
+    private readonly logger: PackmindLogger = new PackmindLogger(origin),
+  ) {}
 
   async execute(
     command: GetCurrentApiKeyCommand,

@@ -26,7 +26,6 @@ import {
   Distribution,
   DistributedPackage,
 } from '@packmind/types';
-import { PackmindLogger } from '@packmind/logger';
 
 /**
  * DeploymentsRepositories - Repository aggregator implementation for the Deployments domain
@@ -43,43 +42,34 @@ export class DeploymentsRepositories implements IDeploymentsRepositories {
   private readonly distributionRepository: IDistributionRepository;
   private readonly distributedPackageRepository: IDistributedPackageRepository;
 
-  constructor(
-    private readonly dataSource: DataSource,
-    private readonly logger: PackmindLogger,
-  ) {
+  constructor(private readonly dataSource: DataSource) {
     // Initialize all repositories with their respective schemas
     this.targetRepository = new TargetRepository(
       this.dataSource.getRepository(TargetSchema) as Repository<Target>,
-      this.logger,
     );
     this.packagesDeploymentRepository = new PackagesDeploymentRepository(
       this.dataSource.getRepository(
         PackagesDeploymentSchema,
       ) as Repository<PackagesDeployment>,
-      this.logger,
     );
     this.renderModeConfigurationRepository =
       new RenderModeConfigurationRepository(
         this.dataSource.getRepository(
           RenderModeConfigurationSchema,
         ) as Repository<RenderModeConfiguration>,
-        this.logger,
       );
     this.packageRepository = new PackageRepository(
       this.dataSource.getRepository(PackageSchema) as Repository<Package>,
-      this.logger,
     );
     this.distributionRepository = new DistributionRepository(
       this.dataSource.getRepository(
         DistributionSchema,
       ) as Repository<Distribution>,
-      this.logger,
     );
     this.distributedPackageRepository = new DistributedPackageRepository(
       this.dataSource.getRepository(
         DistributedPackageSchema,
       ) as Repository<DistributedPackage>,
-      this.logger,
     );
   }
 

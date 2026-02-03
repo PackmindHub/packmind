@@ -21,7 +21,7 @@ export class GitRepoRepository
     ),
     logger: PackmindLogger = new PackmindLogger(origin),
   ) {
-    super('gitRepo', repository, logger, GitRepoSchema);
+    super('gitRepo', repository, GitRepoSchema, logger);
     this.logger.info('GitRepoRepository initialized');
   }
 

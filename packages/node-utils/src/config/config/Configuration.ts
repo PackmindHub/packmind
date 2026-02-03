@@ -5,36 +5,34 @@ const origin = 'Configuration';
 
 export class Configuration {
   private static instance: Configuration;
-  private static logger: PackmindLogger = new PackmindLogger(
-    origin,
-    LogLevel.INFO,
-  );
   private infisicalConfig?: InfisicalConfig;
   private initialized = false;
   private initializationPromise: Promise<void> | null = null;
 
   static getInstance(logger?: PackmindLogger): Configuration {
-    if (logger) {
-      Configuration.logger = logger;
-    }
-    Configuration.logger.debug('Getting Configuration instance');
     if (!Configuration.instance) {
-      Configuration.logger.info('Creating new Configuration instance');
-      Configuration.instance = new Configuration();
+      Configuration.instance = new Configuration(logger);
+      Configuration.instance.logger.info('Creating new Configuration instance');
+    } else if (logger) {
+      Configuration.instance.logger = logger;
     }
     return Configuration.instance;
   }
 
+  private constructor(
+    private logger: PackmindLogger = new PackmindLogger(origin, LogLevel.INFO),
+  ) {}
+
   private async initialize(env: Record<string, string | undefined>) {
     // If already initialized, return immediately
     if (this.initialized) {
-      Configuration.logger.debug('Configuration already initialized, skipping');
+      this.logger.debug('Configuration already initialized, skipping');
       return;
     }
 
     // If initialization is in progress, wait for it to complete
     if (this.initializationPromise) {
-      Configuration.logger.debug(
+      this.logger.debug(
         'Configuration initialization already in progress, waiting for completion',
       );
       await this.initializationPromise;
@@ -55,15 +53,15 @@ export class Configuration {
   private async performInitialization(
     env: Record<string, string | undefined>,
   ): Promise<void> {
-    Configuration.logger.info('Initializing Configuration');
+    this.logger.info('Initializing Configuration');
 
     const configurationMode = env['CONFIGURATION']?.toLowerCase();
-    Configuration.logger.debug('Configuration mode detected', {
+    this.logger.debug('Configuration mode detected', {
       mode: configurationMode,
     });
 
     if (configurationMode === 'infisical') {
-      Configuration.logger.info('Initializing Infisical configuration');
+      this.logger.info('Initializing Infisical configuration');
 
       // Initialize InfisicalConfig with required parameters
       const clientId = env['INFISICAL_CLIENT_ID'];
@@ -72,7 +70,7 @@ export class Configuration {
       const projectId = env['INFISICAL_PROJECT_ID'];
 
       if (!clientId || !clientSecret || !infisicalEnv || !projectId) {
-        Configuration.logger.error(
+        this.logger.error(
           'Infisical configuration is incomplete, falling back to environment variables only',
           {
             hasClientId: !!clientId,
@@ -91,13 +89,11 @@ export class Configuration {
             projectId,
           );
 
-          Configuration.logger.debug('Initializing Infisical client');
+          this.logger.debug('Initializing Infisical client');
           await this.infisicalConfig.initClient();
-          Configuration.logger.info(
-            'Infisical configuration initialized successfully',
-          );
+          this.logger.info('Infisical configuration initialized successfully');
         } catch (error) {
-          Configuration.logger.error(
+          this.logger.error(
             'Failed to initialize Infisical, falling back to environment variables only',
             {
               error: error instanceof Error ? error.message : String(error),
@@ -107,13 +103,11 @@ export class Configuration {
         }
       }
     } else {
-      Configuration.logger.info(
-        'Using environment variables only (no Infisical)',
-      );
+      this.logger.info('Using environment variables only (no Infisical)');
     }
 
     this.initialized = true;
-    Configuration.logger.info('Configuration initialization completed');
+    this.logger.info('Configuration initialization completed');
   }
 
   static async getConfigWithDefault(
@@ -129,19 +123,16 @@ export class Configuration {
     env: Record<string, string | undefined> = process.env,
     logger?: PackmindLogger,
   ): Promise<string | null> {
-    if (logger) {
-      Configuration.logger = logger;
-    }
-    Configuration.logger.info('Getting configuration value', { key });
+    const instance = Configuration.getInstance(logger);
+    instance.logger.info('Getting configuration value', { key });
 
     try {
-      const instance = Configuration.getInstance();
       await instance.initialize(env);
 
       // First check process.env
       const envValue = env[key];
       if (envValue) {
-        Configuration.logger.debug(
+        instance.logger.debug(
           'Configuration value found in environment variables',
           { key },
         );
@@ -150,23 +141,19 @@ export class Configuration {
 
       // Then check infisical if available
       if (instance.infisicalConfig) {
-        Configuration.logger.debug(
-          'Checking Infisical for configuration value',
-          { key },
-        );
+        instance.logger.debug('Checking Infisical for configuration value', {
+          key,
+        });
         try {
           const infisicalValue = await instance.infisicalConfig.getValue(key);
           if (infisicalValue) {
-            Configuration.logger.debug(
-              'Configuration value found in Infisical',
-              {
-                key,
-              },
-            );
+            instance.logger.debug('Configuration value found in Infisical', {
+              key,
+            });
             return infisicalValue;
           }
         } catch (error) {
-          Configuration.logger.warn(
+          instance.logger.warn(
             'Failed to retrieve value from Infisical, value not available',
             {
               key,
@@ -177,10 +164,10 @@ export class Configuration {
         }
       }
 
-      Configuration.logger.warn('Configuration value not found', { key });
+      instance.logger.warn('Configuration value not found', { key });
       return null;
     } catch (error) {
-      Configuration.logger.warn('Failed to get configuration value', {
+      instance.logger.warn('Failed to get configuration value', {
         key,
         error: error instanceof Error ? error.message : String(error),
       });

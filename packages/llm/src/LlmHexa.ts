@@ -33,7 +33,7 @@ export class LlmHexa extends BaseHexa<BaseHexaOpts, ILlmPort> {
 
     try {
       this.logger.debug('Creating LlmAdapter');
-      this.adapter = new LlmAdapter(this.dataSource, this.logger);
+      this.adapter = new LlmAdapter(this.dataSource);
 
       this.logger.info('LlmHexa construction completed');
     } catch (error) {

@@ -23,7 +23,7 @@ export class RecipeRepository
     ),
     logger: PackmindLogger = new PackmindLogger(origin),
   ) {
-    super('recipe', repository, logger, RecipeSchema);
+    super('recipe', repository, RecipeSchema, logger);
     this.logger.info('RecipeRepository initialized');
   }
 

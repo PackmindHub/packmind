@@ -15,7 +15,6 @@ export interface CommonRepoData {
 }
 
 export abstract class BaseUpdateRecipesFromWebhookUsecase {
-  protected readonly logger: PackmindLogger;
   protected recipesDelayedJobs: IRecipesDelayedJobs | null = null;
 
   constructor(
@@ -24,8 +23,11 @@ export abstract class BaseUpdateRecipesFromWebhookUsecase {
     origin: string,
     protected readonly deploymentPort?: IDeploymentPort,
     logLevel: LogLevel = LogLevel.INFO,
+    protected readonly logger: PackmindLogger = new PackmindLogger(
+      origin,
+      logLevel,
+    ),
   ) {
-    this.logger = new PackmindLogger(origin, logLevel);
     this.logger.info(`${origin} initialized`);
   }
 

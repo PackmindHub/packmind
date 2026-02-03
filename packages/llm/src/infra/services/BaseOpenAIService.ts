@@ -29,8 +29,8 @@ export abstract class BaseOpenAIService implements AIService {
   protected abstract readonly defaultFastModel: string;
 
   constructor(
-    protected readonly logger: PackmindLogger,
     protected readonly serviceName: string,
+    protected readonly logger: PackmindLogger = new PackmindLogger(serviceName),
   ) {
     this.logger.info(`${this.serviceName} initialized`);
   }

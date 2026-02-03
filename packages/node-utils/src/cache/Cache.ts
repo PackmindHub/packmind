@@ -10,10 +10,6 @@ const origin = 'Cache';
  */
 export class Cache {
   private static instance: Cache;
-  private static logger: PackmindLogger = new PackmindLogger(
-    origin,
-    LogLevel.INFO,
-  );
 
   private client?: Redis;
   private connectionConfig: RedisOptions;
@@ -26,15 +22,19 @@ export class Cache {
    * Get the singleton instance of Cache
    */
   static getInstance(): Cache {
-    Cache.logger.debug('Getting Cache instance');
     if (!Cache.instance) {
-      Cache.logger.info('Creating new Cache instance');
       Cache.instance = new Cache();
+      Cache.instance.logger.info('Creating new Cache instance');
     }
     return Cache.instance;
   }
 
-  private constructor() {
+  private constructor(
+    private readonly logger: PackmindLogger = new PackmindLogger(
+      origin,
+      LogLevel.INFO,
+    ),
+  ) {
     // Default Redis configuration - will be updated during initialization
     this.connectionConfig = {
       host: 'redis',
@@ -52,7 +52,7 @@ export class Cache {
       return;
     }
 
-    Cache.logger.info('Initializing Redis cache client');
+    this.logger.info('Initializing Redis cache client');
 
     try {
       const redisUri = await Configuration.getConfig('REDIS_URI');
@@ -61,25 +61,25 @@ export class Cache {
         throw new Error('REDIS_URI configuration is required');
       }
 
-      Cache.logger.info('Using REDIS_URI configuration');
+      this.logger.info('Using REDIS_URI configuration');
       this.client = new Redis(redisUri, {
         maxRetriesPerRequest: 3,
       });
 
       this.client.on('error', (error) => {
-        Cache.logger.error('Redis cache client error', {
+        this.logger.error('Redis cache client error', {
           error: error instanceof Error ? error.message : String(error),
         });
       });
 
       this.client.on('connect', () => {
-        Cache.logger.info('Redis cache client connected successfully');
+        this.logger.info('Redis cache client connected successfully');
       });
 
       this.initialized = true;
-      Cache.logger.info('Cache initialization completed');
+      this.logger.info('Cache initialization completed');
     } catch (error) {
-      Cache.logger.error('Failed to initialize cache', {
+      this.logger.error('Failed to initialize cache', {
         error: error instanceof Error ? error.message : String(error),
       });
       throw new Error(
@@ -100,7 +100,7 @@ export class Cache {
     expirationSeconds: number = Cache.DEFAULT_EXPIRATION_SECONDS,
   ): Promise<void> {
     if (!this.initialized || !this.client) {
-      Cache.logger.warn('Cache not initialized, skipping set operation', {
+      this.logger.warn('Cache not initialized, skipping set operation', {
         key,
       });
       return;
@@ -110,7 +110,7 @@ export class Cache {
       const serializedValue = JSON.stringify(value);
       await this.client.setex(key, expirationSeconds, serializedValue);
     } catch (error) {
-      Cache.logger.warn(
+      this.logger.warn(
         'Failed to set cache value, continuing without caching',
         {
           key,
@@ -128,7 +128,7 @@ export class Cache {
    */
   async get<T = unknown>(key: string): Promise<T | null> {
     if (!this.initialized || !this.client) {
-      Cache.logger.warn(
+      this.logger.warn(
         'Cache not initialized, returning null for get operation',
         { key },
       );
@@ -145,7 +145,7 @@ export class Cache {
       const value = JSON.parse(serializedValue) as T;
       return value;
     } catch (error) {
-      Cache.logger.warn('Failed to get cache value, returning null', {
+      this.logger.warn('Failed to get cache value, returning null', {
         key,
         error: error instanceof Error ? error.message : String(error),
       });
@@ -160,17 +160,16 @@ export class Cache {
    */
   async invalidate(key: string): Promise<void> {
     if (!this.initialized || !this.client) {
-      Cache.logger.warn(
-        'Cache not initialized, skipping invalidate operation',
-        { key },
-      );
+      this.logger.warn('Cache not initialized, skipping invalidate operation', {
+        key,
+      });
       return;
     }
 
     try {
       await this.client.del(key);
     } catch (error) {
-      Cache.logger.warn(
+      this.logger.warn(
         'Failed to invalidate cache key, continuing without invalidation',
         {
           key,
@@ -185,14 +184,14 @@ export class Cache {
    * Disconnect the Redis client (for cleanup during shutdown)
    */
   async disconnect(): Promise<void> {
-    Cache.logger.info('Disconnecting cache client');
+    this.logger.info('Disconnecting cache client');
 
     if (this.client) {
       try {
         await this.client.disconnect();
-        Cache.logger.info('Cache client disconnected successfully');
+        this.logger.info('Cache client disconnected successfully');
       } catch (error) {
-        Cache.logger.error('Error disconnecting cache client', {
+        this.logger.error('Error disconnecting cache client', {
           error: error instanceof Error ? error.message : String(error),
         });
       }

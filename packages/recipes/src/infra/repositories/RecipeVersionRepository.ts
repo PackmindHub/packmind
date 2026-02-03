@@ -17,7 +17,7 @@ export class RecipeVersionRepository
     ),
     logger: PackmindLogger = new PackmindLogger(origin),
   ) {
-    super('recipeVersion', repository, logger, RecipeVersionSchema);
+    super('recipeVersion', repository, RecipeVersionSchema, logger);
     this.logger.info('RecipeVersionRepository initialized');
   }
 

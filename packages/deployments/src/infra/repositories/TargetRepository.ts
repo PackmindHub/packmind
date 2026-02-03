@@ -17,7 +17,7 @@ export class TargetRepository
     ),
     logger: PackmindLogger = new PackmindLogger(origin),
   ) {
-    super('target', repository, logger, TargetSchema);
+    super('target', repository, TargetSchema, logger);
     this.logger.info('TargetRepository initialized');
   }
 

@@ -14,12 +14,14 @@ import {
   GitlabWebhookPushPayload,
 } from '../../../domain/types/webhookPayloads';
 
+const origin = 'HandleWebHookWithoutContent';
+
 export class HandleWebHookWithoutContent implements IHandleWebHookWithoutContentUseCase {
   constructor(
     private readonly gitCommitService: GitCommitService,
     private readonly gitProviderService: GitProviderService,
     private readonly gitRepoService: GitRepoService,
-    private readonly logger: PackmindLogger,
+    private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {}
 
   public async execute(

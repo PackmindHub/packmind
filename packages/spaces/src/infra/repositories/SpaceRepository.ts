@@ -17,7 +17,7 @@ export class SpaceRepository
     ),
     logger: PackmindLogger = new PackmindLogger(origin),
   ) {
-    super('space', repository, logger, SpaceSchema);
+    super('space', repository, SpaceSchema, logger);
     this.logger.info('SpaceRepository initialized');
   }
 

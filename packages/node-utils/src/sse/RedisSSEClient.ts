@@ -10,23 +10,24 @@ const origin = 'RedisSSEClient';
  */
 export class RedisSSEClient {
   private static instance: RedisSSEClient;
-  private static logger: PackmindLogger = new PackmindLogger(origin);
 
   private publisherClient?: Redis;
   private subscriberClient?: Redis;
   private initialized = false;
 
   static getInstance(): RedisSSEClient {
-    RedisSSEClient.logger.debug('Getting RedisSSEClient instance');
     if (!RedisSSEClient.instance) {
-      RedisSSEClient.logger.info('Creating new RedisSSEClient instance');
       RedisSSEClient.instance = new RedisSSEClient();
+      RedisSSEClient.instance.logger.info(
+        'Creating new RedisSSEClient instance',
+      );
     }
     return RedisSSEClient.instance;
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-empty-function
-  private constructor() {}
+  private constructor(
+    private readonly logger: PackmindLogger = new PackmindLogger(origin),
+  ) {}
 
   /**
    * Initialize Redis clients using the same configuration as BullMQ
@@ -34,7 +35,7 @@ export class RedisSSEClient {
   private async initialize(): Promise<void> {
     if (this.initialized) return;
 
-    RedisSSEClient.logger.info('Initializing Redis SSE clients');
+    this.logger.info('Initializing Redis SSE clients');
 
     try {
       // Use the same Redis configuration as BullMQ (from DelayedJobsFactory pattern)
@@ -46,13 +47,13 @@ export class RedisSSEClient {
 
       // Set up error handling
       this.publisherClient.on('error', (error) => {
-        RedisSSEClient.logger.error('Redis publisher client error', {
+        this.logger.error('Redis publisher client error', {
           error: error.message,
         });
       });
 
       this.subscriberClient.on('error', (error) => {
-        RedisSSEClient.logger.error('Redis subscriber client error', {
+        this.logger.error('Redis subscriber client error', {
           error: error.message,
         });
       });
@@ -62,9 +63,9 @@ export class RedisSSEClient {
       await this.subscriberClient.ping();
 
       this.initialized = true;
-      RedisSSEClient.logger.info('Redis SSE clients initialized successfully');
+      this.logger.info('Redis SSE clients initialized successfully');
     } catch (error) {
-      RedisSSEClient.logger.error('Failed to initialize Redis SSE clients', {
+      this.logger.error('Failed to initialize Redis SSE clients', {
         error: error instanceof Error ? error.message : String(error),
       });
       throw error;
@@ -81,7 +82,7 @@ export class RedisSSEClient {
       throw new Error('Publisher client not initialized');
     }
 
-    RedisSSEClient.logger.debug('Publishing message to Redis channel', {
+    this.logger.debug('Publishing message to Redis channel', {
       channel,
       messageLength: message.length,
     });
@@ -91,13 +92,13 @@ export class RedisSSEClient {
         channel,
         message,
       );
-      RedisSSEClient.logger.debug('Message published successfully', {
+      this.logger.debug('Message published successfully', {
         channel,
         subscriberCount,
       });
       return subscriberCount;
     } catch (error) {
-      RedisSSEClient.logger.error('Failed to publish message', {
+      this.logger.error('Failed to publish message', {
         channel,
         error: error instanceof Error ? error.message : String(error),
       });
@@ -118,12 +119,12 @@ export class RedisSSEClient {
       throw new Error('Subscriber client not initialized');
     }
 
-    RedisSSEClient.logger.info('Subscribing to Redis channel', { channel });
+    this.logger.info('Subscribing to Redis channel', { channel });
 
     try {
       this.subscriberClient.on('message', (receivedChannel, message) => {
         if (receivedChannel === channel) {
-          RedisSSEClient.logger.debug('Received message from Redis channel', {
+          this.logger.debug('Received message from Redis channel', {
             channel: receivedChannel,
             messageLength: message.length,
           });
@@ -132,11 +133,11 @@ export class RedisSSEClient {
       });
 
       await this.subscriberClient.subscribe(channel);
-      RedisSSEClient.logger.info('Successfully subscribed to Redis channel', {
+      this.logger.info('Successfully subscribed to Redis channel', {
         channel,
       });
     } catch (error) {
-      RedisSSEClient.logger.error('Failed to subscribe to Redis channel', {
+      this.logger.error('Failed to subscribe to Redis channel', {
         channel,
         error: error instanceof Error ? error.message : String(error),
       });
@@ -152,16 +153,15 @@ export class RedisSSEClient {
       return;
     }
 
-    RedisSSEClient.logger.info('Unsubscribing from Redis channel', { channel });
+    this.logger.info('Unsubscribing from Redis channel', { channel });
 
     try {
       await this.subscriberClient.unsubscribe(channel);
-      RedisSSEClient.logger.info(
-        'Successfully unsubscribed from Redis channel',
-        { channel },
-      );
+      this.logger.info('Successfully unsubscribed from Redis channel', {
+        channel,
+      });
     } catch (error) {
-      RedisSSEClient.logger.error('Failed to unsubscribe from Redis channel', {
+      this.logger.error('Failed to unsubscribe from Redis channel', {
         channel,
         error: error instanceof Error ? error.message : String(error),
       });
@@ -172,7 +172,7 @@ export class RedisSSEClient {
    * Clean up Redis connections
    */
   async disconnect(): Promise<void> {
-    RedisSSEClient.logger.info('Disconnecting Redis SSE clients');
+    this.logger.info('Disconnecting Redis SSE clients');
 
     try {
       if (this.publisherClient) {
@@ -184,9 +184,9 @@ export class RedisSSEClient {
       }
 
       this.initialized = false;
-      RedisSSEClient.logger.info('Redis SSE clients disconnected successfully');
+      this.logger.info('Redis SSE clients disconnected successfully');
     } catch (error) {
-      RedisSSEClient.logger.error('Error disconnecting Redis SSE clients', {
+      this.logger.error('Error disconnecting Redis SSE clients', {
         error: error instanceof Error ? error.message : String(error),
       });
     }

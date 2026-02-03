@@ -20,8 +20,8 @@ export class CreateOrganizationUseCase implements ICreateOrganizationUseCase {
     private readonly organizationService: OrganizationService,
     private readonly userService: UserService,
     private readonly eventEmitterService: PackmindEventEmitterService,
-    private readonly logger: PackmindLogger = new PackmindLogger(origin),
     private readonly spacesPort?: ISpacesPort,
+    private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {
     this.logger.info('CreateOrganizationUseCase initialized');
   }

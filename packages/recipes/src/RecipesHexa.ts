@@ -54,14 +54,11 @@ export class RecipesHexa extends BaseHexa<BaseHexaOpts, IRecipesPort> {
 
       // Instantiate repositories and services
       this.recipesRepositories = new RecipesRepositories(dataSource);
-      this.recipesServices = new RecipesServices(
-        this.recipesRepositories,
-        this.logger,
-      );
+      this.recipesServices = new RecipesServices(this.recipesRepositories);
 
       // Create adapter in constructor - dependencies will be injected in initialize()
       this.logger.debug('Creating RecipesAdapter');
-      this.adapter = new RecipesAdapter(this.recipesServices, this.logger);
+      this.adapter = new RecipesAdapter(this.recipesServices);
 
       this.logger.info('RecipesHexa construction completed');
     } catch (error) {

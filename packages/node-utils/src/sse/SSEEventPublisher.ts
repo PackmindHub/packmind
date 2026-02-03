@@ -24,23 +24,25 @@ const origin = 'SSEEventPublisher';
  */
 export class SSEEventPublisher {
   private static instance: SSEEventPublisher;
-  private static logger: PackmindLogger = new PackmindLogger(origin);
   private static redisClient: RedisSSEClient;
 
   /**
    * Get the singleton instance
    */
   static getInstance(): SSEEventPublisher {
-    SSEEventPublisher.logger.debug('Getting SSEEventPublisher instance');
     if (!SSEEventPublisher.instance) {
-      SSEEventPublisher.logger.info('Creating new SSEEventPublisher instance');
       SSEEventPublisher.instance = new SSEEventPublisher();
+      SSEEventPublisher.instance.logger.info(
+        'Creating new SSEEventPublisher instance',
+      );
       SSEEventPublisher.redisClient = RedisSSEClient.getInstance();
     }
     return SSEEventPublisher.instance;
   }
 
-  private constructor() {
+  private constructor(
+    private readonly logger: PackmindLogger = new PackmindLogger(origin),
+  ) {
     // Private constructor for singleton pattern
   }
 
@@ -55,13 +57,16 @@ export class SSEEventPublisher {
     userId?: string,
     organizationId?: string,
   ): Promise<void> {
-    SSEEventPublisher.logger.info('Publishing program status change event', {
-      programId,
-      ruleId,
-      language,
-      userId,
-      organizationId,
-    });
+    SSEEventPublisher.instance.logger.info(
+      'Publishing program status change event',
+      {
+        programId,
+        ruleId,
+        language,
+        userId,
+        organizationId,
+      },
+    );
 
     try {
       // Create minimal event payload - just programId for cache invalidation
@@ -74,12 +79,12 @@ export class SSEEventPublisher {
         userId ? [userId] : undefined,
       );
 
-      SSEEventPublisher.logger.debug(
+      SSEEventPublisher.instance.logger.debug(
         'Successfully published program status change event',
         { programId, ruleId, language },
       );
     } catch (error) {
-      SSEEventPublisher.logger.error(
+      SSEEventPublisher.instance.logger.error(
         'Failed to publish program status change event',
         {
           programId,
@@ -101,12 +106,15 @@ export class SSEEventPublisher {
     userId?: string,
     organizationId?: string,
   ): Promise<void> {
-    SSEEventPublisher.logger.info('Publishing assessment status change event', {
-      ruleId,
-      language,
-      userId,
-      organizationId,
-    });
+    SSEEventPublisher.instance.logger.info(
+      'Publishing assessment status change event',
+      {
+        ruleId,
+        language,
+        userId,
+        organizationId,
+      },
+    );
 
     try {
       // Create event payload carrying identifiers needed for cache invalidation
@@ -119,12 +127,12 @@ export class SSEEventPublisher {
         userId ? [userId] : undefined,
       );
 
-      SSEEventPublisher.logger.debug(
+      SSEEventPublisher.instance.logger.debug(
         'Successfully published assessment status change event',
         { ruleId, language },
       );
     } catch (error) {
-      SSEEventPublisher.logger.error(
+      SSEEventPublisher.instance.logger.error(
         'Failed to publish assessment status change event',
         {
           userId,
@@ -146,7 +154,7 @@ export class SSEEventPublisher {
     userId?: string,
     organizationId?: string,
   ): Promise<void> {
-    SSEEventPublisher.logger.info(
+    SSEEventPublisher.instance.logger.info(
       'Publishing detection heuristics updated event',
       {
         ruleId,
@@ -172,12 +180,12 @@ export class SSEEventPublisher {
         userId ? [userId] : undefined,
       );
 
-      SSEEventPublisher.logger.debug(
+      SSEEventPublisher.instance.logger.debug(
         'Successfully published detection heuristics updated event',
         { ruleId, language, detectionHeuristicsId },
       );
     } catch (error) {
-      SSEEventPublisher.logger.error(
+      SSEEventPublisher.instance.logger.error(
         'Failed to publish detection heuristics updated event',
         {
           ruleId,
@@ -201,12 +209,15 @@ export class SSEEventPublisher {
     changeType: UserContextChangeType,
     role?: UserOrganizationRole,
   ): Promise<void> {
-    SSEEventPublisher.logger.info('Publishing user context change event', {
-      userId,
-      organizationId,
-      changeType,
-      role,
-    });
+    SSEEventPublisher.instance.logger.info(
+      'Publishing user context change event',
+      {
+        userId,
+        organizationId,
+        changeType,
+        role,
+      },
+    );
 
     try {
       const event = createUserContextChangeEvent(
@@ -220,7 +231,7 @@ export class SSEEventPublisher {
         userId,
       ]);
 
-      SSEEventPublisher.logger.debug(
+      SSEEventPublisher.instance.logger.debug(
         'Successfully published user context change event',
         {
           userId,
@@ -229,7 +240,7 @@ export class SSEEventPublisher {
         },
       );
     } catch (error) {
-      SSEEventPublisher.logger.error(
+      SSEEventPublisher.instance.logger.error(
         'Failed to publish user context change event',
         {
           userId,
@@ -251,7 +262,7 @@ export class SSEEventPublisher {
     status: string,
     organizationId: string,
   ): Promise<void> {
-    SSEEventPublisher.logger.info(
+    SSEEventPublisher.instance.logger.info(
       'Publishing distribution status change event',
       {
         distributionId,
@@ -273,7 +284,7 @@ export class SSEEventPublisher {
         event,
       );
 
-      SSEEventPublisher.logger.debug(
+      SSEEventPublisher.instance.logger.debug(
         'Successfully published distribution status change event',
         {
           distributionId,
@@ -282,7 +293,7 @@ export class SSEEventPublisher {
         },
       );
     } catch (error) {
-      SSEEventPublisher.logger.error(
+      SSEEventPublisher.instance.logger.error(
         'Failed to publish distribution status change event',
         {
           distributionId,
@@ -304,7 +315,7 @@ export class SSEEventPublisher {
     data: AnySSEEvent,
     targetUserIds?: string[],
   ): Promise<void> {
-    SSEEventPublisher.logger.info('Publishing SSE event', {
+    SSEEventPublisher.instance.logger.info('Publishing SSE event', {
       eventType,
       params,
       targetUserIds: targetUserIds?.length || 'all',
@@ -327,12 +338,15 @@ export class SSEEventPublisher {
       const serializedMessage = serializeSSERedisMessage(message);
       await redisClient.publish(SSE_REDIS_CHANNELS.EVENTS, serializedMessage);
 
-      SSEEventPublisher.logger.debug('Successfully published SSE event', {
-        eventType,
-        params,
-      });
+      SSEEventPublisher.instance.logger.debug(
+        'Successfully published SSE event',
+        {
+          eventType,
+          params,
+        },
+      );
     } catch (error) {
-      SSEEventPublisher.logger.error('Failed to publish SSE event', {
+      SSEEventPublisher.instance.logger.error('Failed to publish SSE event', {
         eventType,
         params,
         error: error instanceof Error ? error.message : String(error),

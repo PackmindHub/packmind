@@ -18,7 +18,7 @@ export class UserRepository
     ),
     logger: PackmindLogger = new PackmindLogger(origin),
   ) {
-    super('user', repository, logger, UserSchema);
+    super('user', repository, UserSchema, logger);
     this.logger.info('UserRepository initialized');
   }
 

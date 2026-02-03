@@ -3,7 +3,6 @@ import { ISpacesRepositories } from '../../domain/repositories/ISpacesRepositori
 import { ISpaceRepository } from '../../domain/repositories/ISpaceRepository';
 import { SpaceRepository } from './SpaceRepository';
 import { SpaceSchema } from '../schemas/SpaceSchema';
-import { PackmindLogger } from '@packmind/logger';
 
 /**
  * SpacesRepositories - Repository aggregator implementation for the Spaces domain
@@ -15,14 +14,10 @@ import { PackmindLogger } from '@packmind/logger';
 export class SpacesRepositories implements ISpacesRepositories {
   private readonly spaceRepository: ISpaceRepository;
 
-  constructor(
-    private readonly dataSource: DataSource,
-    private readonly logger: PackmindLogger,
-  ) {
+  constructor(private readonly dataSource: DataSource) {
     // Initialize all repositories with their respective schemas
     this.spaceRepository = new SpaceRepository(
       this.dataSource.getRepository(SpaceSchema),
-      this.logger,
     );
   }
 

@@ -59,11 +59,13 @@ Visit https://packmind.com for documentation and support.
 }
 
 export class DownloadDefaultSkillsZipForAgentUseCase implements IDownloadDefaultSkillsZipForAgentUseCase {
-  private readonly logger: PackmindLogger;
-
-  constructor(private readonly codingAgentPort: ICodingAgentPort) {
-    this.logger = new PackmindLogger(origin, LogLevel.INFO);
-  }
+  constructor(
+    private readonly codingAgentPort: ICodingAgentPort,
+    private readonly logger: PackmindLogger = new PackmindLogger(
+      origin,
+      LogLevel.INFO,
+    ),
+  ) {}
 
   async execute(
     command: DownloadDefaultSkillsZipForAgentCommand,

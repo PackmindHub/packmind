@@ -12,8 +12,8 @@ const origin = 'RecipeSummaryService';
 
 export class RecipeSummaryService {
   constructor(
-    private readonly logger: PackmindLogger = new PackmindLogger(origin),
     private readonly llmPort?: ILlmPort,
+    private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {}
 
   private async getAIService(

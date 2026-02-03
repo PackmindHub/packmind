@@ -21,7 +21,7 @@ export class SkillVersionRepository
     ),
     logger: PackmindLogger = new PackmindLogger(origin),
   ) {
-    super('skillVersion', repository, logger, SkillVersionSchema);
+    super('skillVersion', repository, SkillVersionSchema, logger);
     this.logger.info('SkillVersionRepository initialized');
   }
 

@@ -32,16 +32,12 @@ export abstract class AbstractMemberUseCase<
   Command extends PackmindCommand,
   Result extends PackmindResult,
 > implements IUseCase<Command, Result> {
-  protected readonly accountsPort: IAccountsPort;
-  protected readonly logger: PackmindLogger;
-
   constructor(
-    accountsPort: IAccountsPort,
-    logger: PackmindLogger = new PackmindLogger(defaultOrigin),
-  ) {
-    this.accountsPort = accountsPort;
-    this.logger = logger;
-  }
+    protected readonly accountsPort: IAccountsPort,
+    protected readonly logger: PackmindLogger = new PackmindLogger(
+      defaultOrigin,
+    ),
+  ) {}
 
   async execute(command: Command): Promise<Result> {
     let context: MemberContext;

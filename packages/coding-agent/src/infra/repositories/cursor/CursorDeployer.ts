@@ -23,14 +23,12 @@ export class CursorDeployer implements ICodingAgentDeployer {
   /** @deprecated Legacy path to clean up during migration */
   private static readonly LEGACY_RECIPES_INDEX_PATH =
     '.cursor/rules/packmind/recipes-index.mdc';
-  private readonly logger: PackmindLogger;
 
   constructor(
     private readonly standardsPort?: IStandardsPort,
     private readonly gitPort?: IGitPort,
-  ) {
-    this.logger = new PackmindLogger(origin);
-  }
+    private readonly logger: PackmindLogger = new PackmindLogger(origin),
+  ) {}
 
   async deployDefaultSkills() {
     const defaultSkillsDeployer = new DefaultSkillsDeployer(

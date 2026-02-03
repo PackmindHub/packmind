@@ -66,7 +66,6 @@ export class CodingAgentAdapter
 
     this._renderArtifactsUseCase = new RenderArtifactsUseCase(
       this.codingAgentServices,
-      this.logger,
     );
 
     this.logger.info('CodingAgentAdapter initialized successfully');

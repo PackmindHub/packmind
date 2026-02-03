@@ -5,6 +5,8 @@ import { IQueue, QueueListeners, WorkerListeners } from '../domain/IQueue';
 import { TokensUsed, TokensUsedByOperation } from '../domain/TokensUsed';
 import { PackmindSerializer } from '../utils/PackmindSerializer';
 
+const defaultOrigin = 'AbstractAIDelayedJob';
+
 export abstract class AbstractAIDelayedJob<
   Input,
   Output,
@@ -19,7 +21,9 @@ export abstract class AbstractAIDelayedJob<
     private queueFactory: (
       queueListeners: Partial<QueueListeners>,
     ) => Promise<IQueue<Input, Output>>,
-    protected readonly logger: PackmindLogger,
+    protected readonly logger: PackmindLogger = new PackmindLogger(
+      defaultOrigin,
+    ),
   ) {
     // Initialization is now deferred to async init method
   }

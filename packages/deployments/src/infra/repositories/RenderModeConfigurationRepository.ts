@@ -21,8 +21,8 @@ export class RenderModeConfigurationRepository
     super(
       'renderModeConfiguration',
       repository,
-      logger,
       RenderModeConfigurationSchema,
+      logger,
     );
     this.logger.info('RenderModeConfigurationRepository initialized');
   }

@@ -37,14 +37,8 @@ export class SpacesHexa extends BaseHexa<BaseHexaOpts, ISpacesPort> {
 
     try {
       // Instantiate repositories and services
-      this.spacesRepositories = new SpacesRepositories(
-        this.dataSource,
-        this.logger,
-      );
-      this.spacesServices = new SpacesServices(
-        this.spacesRepositories,
-        this.logger,
-      );
+      this.spacesRepositories = new SpacesRepositories(this.dataSource);
+      this.spacesServices = new SpacesServices(this.spacesRepositories);
 
       // Instantiate adapter
       this.spacesAdapter = new SpacesAdapter(this);
