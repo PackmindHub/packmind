@@ -25,6 +25,7 @@ export default function OrgStandardsIndex() {
   const { organization, user } = useAuthContext();
   const [isSamplesModalOpen, setIsSamplesModalOpen] = useState(false);
   const analytics = useAnalytics();
+  const [isEmpty, setIsEmpty] = useState(false);
 
   const hasSamplesAccess = isFeatureFlagEnabled({
     featureKeys: [STANDARD_SAMPLES_FEATURE_KEY],
@@ -42,6 +43,7 @@ export default function OrgStandardsIndex() {
       subtitle="Standards define the rules the AI should always follow — use them to ensure consistent behavior across all interactions."
       breadcrumbComponent={<AutobreadCrumb />}
       actions={
+        !isEmpty &&
         spaceSlug &&
         (hasSamplesAccess ? (
           <PMMenu.Root>
@@ -89,7 +91,10 @@ export default function OrgStandardsIndex() {
       }
     >
       <PMVStack align="stretch" gap={6}>
-        <StandardsList orgSlug={organization.slug} />
+        <StandardsList
+          orgSlug={organization.slug}
+          onEmptyStateChange={setIsEmpty}
+        />
       </PMVStack>
       <StandardSamplesModal
         open={isSamplesModalOpen}

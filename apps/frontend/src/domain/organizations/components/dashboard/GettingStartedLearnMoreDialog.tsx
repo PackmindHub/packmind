@@ -14,6 +14,7 @@ export type GettingStartedLearnMoreDialogProps = {
   buttonLabel?: string;
   buttonSize?: 'xs' | 'sm' | 'md' | 'lg';
   buttonVariant?: PMButtonVariants;
+  buttonMarginTop?: string | number;
 };
 
 export const GettingStartedLearnMoreDialog: React.FC<
@@ -24,6 +25,7 @@ export const GettingStartedLearnMoreDialog: React.FC<
   buttonLabel = 'Learn more',
   buttonSize = 'xs',
   buttonVariant = 'primary',
+  buttonMarginTop = 0,
 }) => {
   return (
     <PMDialog.Root
@@ -33,7 +35,12 @@ export const GettingStartedLearnMoreDialog: React.FC<
       scrollBehavior={'inside'}
     >
       <PMDialog.Trigger asChild>
-        <PMButton size={buttonSize} variant={buttonVariant}>
+        <PMButton
+          size={buttonSize}
+          variant={buttonVariant}
+          w={'fit-content'}
+          mt={buttonMarginTop}
+        >
           {buttonLabel}
         </PMButton>
       </PMDialog.Trigger>
