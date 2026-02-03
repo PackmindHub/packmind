@@ -23,8 +23,7 @@ export class UserMetadataRepository
     ),
     logger: PackmindLogger = new PackmindLogger(origin),
   ) {
-    super('user_metadata', repository, logger, UserMetadataSchema);
-    this.logger.info('UserMetadataRepository initialized');
+    super('user_metadata', repository, UserMetadataSchema, logger);
   }
 
   async findByUserId(userId: UserId): Promise<UserMetadata | null> {
