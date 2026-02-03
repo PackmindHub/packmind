@@ -78,9 +78,9 @@ describe('StartTrialUseCase', () => {
       mockUserService,
       mockOrganizationService,
       mockEventEmitterService,
-      stubbedLogger,
       mockSpacesPort,
       mockDeploymentPort,
+      stubbedLogger,
     );
   });
 
@@ -356,9 +356,9 @@ describe('StartTrialUseCase', () => {
           mockUserService,
           mockOrganizationService,
           mockEventEmitterService,
-          stubbedLogger,
           undefined,
           mockDeploymentPort,
+          stubbedLogger,
         );
 
         mockOrganizationService.createOrganization.mockResolvedValue(
@@ -408,8 +408,8 @@ describe('StartTrialUseCase', () => {
           mockUserService,
           mockOrganizationService,
           mockEventEmitterService,
-          stubbedLogger,
           mockSpacesPort,
+          stubbedLogger,
         );
 
         mockOrganizationService.createOrganization.mockResolvedValue(

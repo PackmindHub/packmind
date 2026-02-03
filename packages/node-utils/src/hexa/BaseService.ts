@@ -28,20 +28,19 @@ export type BaseServiceOpts = { logger: PackmindLogger };
  * 4. Cleanup on destroy
  */
 export abstract class BaseService<T extends BaseServiceOpts = BaseServiceOpts> {
-  protected readonly logger: PackmindLogger;
-
   /**
    * Create the service with DataSource for database operations.
    *
    * @param dataSource - The TypeORM DataSource for database operations
    * @param opts - The options to create the service
+   * @param logger - The logger instance
    */
   constructor(
     protected readonly dataSource: DataSource,
     protected readonly opts?: Partial<T>,
-  ) {
-    this.logger = opts?.logger ?? new PackmindLogger('BaseService');
-  }
+    protected readonly logger: PackmindLogger = opts?.logger ??
+      new PackmindLogger('BaseService'),
+  ) {}
 
   /**
    * Initialize the service with access to the registry.

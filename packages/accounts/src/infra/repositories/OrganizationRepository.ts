@@ -17,7 +17,7 @@ export class OrganizationRepository
     ),
     logger: PackmindLogger = new PackmindLogger(origin),
   ) {
-    super('organization', repository, logger, OrganizationSchema);
+    super('organization', repository, OrganizationSchema, logger);
     this.logger.info('OrganizationRepository initialized');
   }
 

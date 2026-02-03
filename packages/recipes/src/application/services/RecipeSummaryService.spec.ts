@@ -37,7 +37,7 @@ describe('RecipeSummaryService', () => {
         .mockResolvedValue({ aiService: mockAIService }),
     } as jest.Mocked<ILlmPort>;
 
-    recipeSummaryService = new RecipeSummaryService(mockLogger, mockLlmPort);
+    recipeSummaryService = new RecipeSummaryService(mockLlmPort, mockLogger);
     // Default: AI service is configured unless specified otherwise
     mockAIService.isConfigured.mockResolvedValue(true);
   });

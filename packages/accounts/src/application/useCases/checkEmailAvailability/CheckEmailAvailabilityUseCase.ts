@@ -9,10 +9,13 @@ import { PackmindLogger, LogLevel, maskEmail } from '@packmind/logger';
 const origin = 'CheckEmailAvailabilityUseCase';
 
 export class CheckEmailAvailabilityUseCase implements ICheckEmailAvailabilityUseCase {
-  private readonly logger: PackmindLogger;
-
-  constructor(private readonly userService: UserService) {
-    this.logger = new PackmindLogger(origin, LogLevel.INFO);
+  constructor(
+    private readonly userService: UserService,
+    private readonly logger: PackmindLogger = new PackmindLogger(
+      origin,
+      LogLevel.INFO,
+    ),
+  ) {
     this.logger.info('CheckEmailAvailabilityUseCase initialized');
   }
 

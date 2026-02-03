@@ -25,7 +25,7 @@ export class StandardRepository
     ),
     logger: PackmindLogger = new PackmindLogger(origin),
   ) {
-    super('standard', repository, logger, StandardSchema);
+    super('standard', repository, StandardSchema, logger);
     this.logger.info('StandardRepository initialized');
   }
 

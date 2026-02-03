@@ -19,8 +19,6 @@ export abstract class BaseHexa<
   T extends BaseHexaOpts = BaseHexaOpts,
   TPort = void,
 > {
-  protected readonly logger: PackmindLogger;
-
   /**
    * Create the hexa with DataSource for database operations.
    * Factories should be created in the constructor using the DataSource.
@@ -28,13 +26,14 @@ export abstract class BaseHexa<
    *
    * @param dataSource - The TypeORM DataSource for database operations
    * @param opts - the options to create the Hexa
+   * @param logger - The logger instance
    */
   constructor(
     protected readonly dataSource: DataSource,
     protected readonly opts?: Partial<T>,
-  ) {
-    this.logger = opts?.logger ?? new PackmindLogger('BaseHexa');
-  }
+    protected readonly logger: PackmindLogger = opts?.logger ??
+      new PackmindLogger('BaseHexa'),
+  ) {}
 
   /**
    * Initialize the hexa with access to the registry for adapter retrieval.

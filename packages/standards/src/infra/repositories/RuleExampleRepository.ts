@@ -17,7 +17,7 @@ export class RuleExampleRepository
     ),
     logger: PackmindLogger = new PackmindLogger(origin),
   ) {
-    super('ruleExample', repository, logger, RuleExampleSchema);
+    super('ruleExample', repository, RuleExampleSchema, logger);
     this.logger.info('RuleExampleRepository initialized');
   }
 

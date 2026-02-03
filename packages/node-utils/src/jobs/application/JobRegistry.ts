@@ -5,11 +5,15 @@ import { IJobFactory, IJobQueue } from '../domain/IJobQueue';
 /**
  * Implementation of job registry for managing job queues
  */
+const origin = 'JobRegistry';
+
 export class JobRegistry implements IJobRegistry {
   private readonly factories = new Map<string, IJobFactory<unknown>>();
   private readonly queues = new Map<string, IJobQueue<unknown>>();
 
-  constructor(private readonly logger: PackmindLogger) {}
+  constructor(
+    private readonly logger: PackmindLogger = new PackmindLogger(origin),
+  ) {}
 
   registerQueue<TInput>(queueName: string, factory: IJobFactory<TInput>): void {
     this.logger.info('Registering job queue', { queueName });
