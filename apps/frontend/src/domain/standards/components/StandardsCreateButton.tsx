@@ -4,7 +4,6 @@ import {
   PMButton,
   PMMenu,
   PMPortal,
-  PMBox,
   PMText,
   PMHStack,
   PMIcon,
@@ -13,7 +12,7 @@ import {
   PMHeading,
   PMCloseButton,
 } from '@packmind/ui';
-import { LuBot, LuLibrary, LuPencilLine, LuSparkles } from 'react-icons/lu';
+import { LuBot, LuLibrary, LuPencilLine } from 'react-icons/lu';
 import { GETTING_STARTED_CREATE_DIALOG } from '../../organizations/components/dashboard/GettingStartedWidget';
 import { StandardSamplesModal } from './StandardSamplesModal';
 import { routes } from '../../../shared/utils/routes';

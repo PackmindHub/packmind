@@ -15,6 +15,7 @@ import { GettingStartedLearnMoreDialog } from '../../organizations/components/da
 import { GETTING_STARTED_CREATE_DIALOG } from '../../organizations/components/dashboard/GettingStartedWidget';
 import { routes } from '../../../shared/utils/routes';
 import { LuBot, LuLibrary, LuPencilLine } from 'react-icons/lu';
+import { useAnalytics } from '@packmind/proprietary/frontend/domain/amplitude/providers/AnalyticsProvider';
 
 interface StandardsBlankStateProps {
   orgSlug: string;
@@ -29,6 +30,8 @@ export const StandardsBlankState = ({
   hasSamplesAccess,
   onBrowseTemplatesClick,
 }: StandardsBlankStateProps) => {
+  const analytics = useAnalytics();
+
   return (
     <PMBox
       borderRadius={'md'}
@@ -76,7 +79,10 @@ export const StandardsBlankState = ({
               <PMButton
                 variant="primary"
                 size={'xs'}
-                onClick={onBrowseTemplatesClick}
+                onClick={() => {
+                  analytics.track('create_standard_from_samples_clicked', {});
+                  onBrowseTemplatesClick();
+                }}
                 disabled={!hasSamplesAccess}
                 marginTop={'auto'}
               >
