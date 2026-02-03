@@ -26,8 +26,6 @@ export const addSkillCommand = command({
 
       const result = await packmindCliHexa.uploadSkill({
         skillPath,
-        organizationId: '',
-        userId: '',
       });
 
       if (result.isNewSkill) {
