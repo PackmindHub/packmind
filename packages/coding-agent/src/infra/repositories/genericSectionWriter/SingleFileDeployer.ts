@@ -24,15 +24,15 @@ export interface DeployerConfig {
 }
 
 export abstract class SingleFileDeployer implements ICodingAgentDeployer {
-  protected readonly logger: PackmindLogger;
   protected abstract readonly config: DeployerConfig;
 
   constructor(
     protected readonly standardsPort?: IStandardsPort,
     protected readonly gitPort?: IGitPort,
-  ) {
-    this.logger = new PackmindLogger(this.constructor.name);
-  }
+    protected readonly logger: PackmindLogger = new PackmindLogger(
+      'SingleFileDeployer',
+    ),
+  ) {}
 
   private async formatStandardContent(
     standardVersion: StandardVersion,

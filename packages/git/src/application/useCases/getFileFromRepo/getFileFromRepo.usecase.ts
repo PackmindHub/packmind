@@ -4,11 +4,13 @@ import { IGitRepoFactory } from '../../../domain/repositories/IGitRepoFactory';
 import { GitProviderService } from '../../GitProviderService';
 import { PackmindLogger } from '@packmind/logger';
 
+const origin = 'GetFileFromRepo';
+
 export class GetFileFromRepo {
   constructor(
     private readonly gitProviderService: GitProviderService,
     private readonly gitRepoFactory: IGitRepoFactory,
-    private readonly logger: PackmindLogger,
+    private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {}
 
   /**

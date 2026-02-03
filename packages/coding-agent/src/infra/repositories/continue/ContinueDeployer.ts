@@ -21,14 +21,12 @@ export class ContinueDeployer implements ICodingAgentDeployer {
   private static readonly STANDARDS_FOLDER_PATH = '.continue/rules/packmind/';
   private static readonly LEGACY_RECIPES_INDEX_PATH =
     '.continue/rules/packmind/recipes-index.md';
-  private readonly logger: PackmindLogger;
 
   constructor(
     private readonly standardsPort?: IStandardsPort,
     private readonly gitPort?: IGitPort,
-  ) {
-    this.logger = new PackmindLogger(origin);
-  }
+    private readonly logger: PackmindLogger = new PackmindLogger(origin),
+  ) {}
 
   async deployRecipes(
     recipeVersions: RecipeVersion[],

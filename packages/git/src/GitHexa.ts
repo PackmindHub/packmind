@@ -57,10 +57,10 @@ export class GitHexa extends BaseHexa<GitHexaOpts, IGitPort> {
         this.dataSource,
         this.opts as GitHexaOpts,
       );
-      this.gitServices = new GitServices(this.gitRepositories, this.logger);
+      this.gitServices = new GitServices(this.gitRepositories);
 
       this.logger.debug('Creating GitAdapter');
-      this.adapter = new GitAdapter(this.gitServices, this.logger);
+      this.adapter = new GitAdapter(this.gitServices);
       this.logger.debug('GitAdapter created successfully');
 
       this.logger.info('GitHexa construction completed');

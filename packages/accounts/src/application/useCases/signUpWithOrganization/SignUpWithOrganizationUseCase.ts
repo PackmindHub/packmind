@@ -19,8 +19,8 @@ export class SignUpWithOrganizationUseCase implements ISignUpWithOrganizationUse
     private readonly userService: UserService,
     private readonly organizationService: OrganizationService,
     private readonly eventEmitterService: PackmindEventEmitterService,
-    private readonly logger: PackmindLogger = new PackmindLogger(origin),
     private readonly spacesPort?: ISpacesPort,
+    private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {
     this.logger.info('SignUpWithOrganizationUseCase initialized');
   }

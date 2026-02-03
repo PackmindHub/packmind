@@ -25,7 +25,7 @@ export class DistributedPackageRepository
     ),
     logger: PackmindLogger = new PackmindLogger(origin),
   ) {
-    super('distributedPackage', repository, logger, DistributedPackageSchema);
+    super('distributedPackage', repository, DistributedPackageSchema, logger);
     this.logger.info('DistributedPackageRepository initialized');
   }
 

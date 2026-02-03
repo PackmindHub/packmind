@@ -23,12 +23,13 @@ export class PackmindDeployer implements ICodingAgentDeployer {
     '.packmind/recipes-index.md';
   private readonly commandsIndexService: CommandsIndexService;
   private readonly standardsIndexService: StandardsIndexService;
-  private readonly logger: PackmindLogger;
 
-  constructor(private readonly standardsPort?: IStandardsPort) {
+  constructor(
+    private readonly standardsPort?: IStandardsPort,
+    private readonly logger: PackmindLogger = new PackmindLogger(origin),
+  ) {
     this.commandsIndexService = new CommandsIndexService();
     this.standardsIndexService = new StandardsIndexService();
-    this.logger = new PackmindLogger(origin);
   }
 
   async deployRecipes(

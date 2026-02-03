@@ -1,16 +1,25 @@
 import { CreateCommandFromPlaybookUseCase } from './CreateCommandFromPlaybookUseCase';
 import { IPackmindGateway } from '../../domain/repositories/IPackmindGateway';
+import { ISpacesGateway } from '../../domain/repositories/ISpacesGateway';
+import { ICommandsGateway } from '../../domain/repositories/ICommandsGateway';
 
 describe('CreateCommandFromPlaybookUseCase', () => {
   let useCase: CreateCommandFromPlaybookUseCase;
-  let mockGateway: jest.Mocked<
-    Pick<IPackmindGateway, 'getGlobalSpace' | 'createCommand'>
-  >;
+  let mockSpacesGateway: jest.Mocked<ISpacesGateway>;
+  let mockCommandsGateway: jest.Mocked<ICommandsGateway>;
+  let mockGateway: jest.Mocked<Pick<IPackmindGateway, 'spaces' | 'commands'>>;
 
   beforeEach(() => {
+    mockSpacesGateway = {
+      getGlobal: jest.fn(),
+    };
+    mockCommandsGateway = {
+      create: jest.fn(),
+      list: jest.fn(),
+    };
     mockGateway = {
-      getGlobalSpace: jest.fn(),
-      createCommand: jest.fn(),
+      spaces: mockSpacesGateway,
+      commands: mockCommandsGateway,
     };
     useCase = new CreateCommandFromPlaybookUseCase(
       mockGateway as unknown as IPackmindGateway,
@@ -38,11 +47,11 @@ describe('CreateCommandFromPlaybookUseCase', () => {
     };
 
     beforeEach(async () => {
-      mockGateway.getGlobalSpace.mockResolvedValue({
+      mockSpacesGateway.getGlobal.mockResolvedValue({
         id: 'space-1',
         slug: 'global',
       });
-      mockGateway.createCommand.mockResolvedValue({
+      mockCommandsGateway.create.mockResolvedValue({
         id: 'cmd-1',
         name: 'Test Command',
         slug: 'test-command',
@@ -52,11 +61,11 @@ describe('CreateCommandFromPlaybookUseCase', () => {
     });
 
     it('fetches the global space', () => {
-      expect(mockGateway.getGlobalSpace).toHaveBeenCalled();
+      expect(mockSpacesGateway.getGlobal).toHaveBeenCalled();
     });
 
     it('creates command with provided data', () => {
-      expect(mockGateway.createCommand).toHaveBeenCalledWith('space-1', {
+      expect(mockCommandsGateway.create).toHaveBeenCalledWith('space-1', {
         name: 'Test Command',
         summary: 'A test command summary',
         whenToUse: ['When testing', 'When developing'],
@@ -75,11 +84,11 @@ describe('CreateCommandFromPlaybookUseCase', () => {
 
   describe('when command is created', () => {
     it('returns command id, name, and slug', async () => {
-      mockGateway.getGlobalSpace.mockResolvedValue({
+      mockSpacesGateway.getGlobal.mockResolvedValue({
         id: 'space-1',
         slug: 'global',
       });
-      mockGateway.createCommand.mockResolvedValue({
+      mockCommandsGateway.create.mockResolvedValue({
         id: 'cmd-1',
         name: 'Test Command',
         slug: 'test-command',

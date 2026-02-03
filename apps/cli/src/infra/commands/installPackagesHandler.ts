@@ -1,10 +1,18 @@
 import { PackmindCliHexa } from '../../PackmindCliHexa';
-import { CodingAgent, ConfigWithTarget, SummarizedArtifact } from '@packmind/types';
+import {
+  CodingAgent,
+  ConfigWithTarget,
+  SummarizedArtifact,
+} from '@packmind/types';
 import {
   logWarningConsole,
   formatSlug,
   formatLabel,
 } from '../utils/consoleLogger';
+
+// Read version from package.json (bundled by esbuild)
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const { version: CLI_VERSION } = require('../../../package.json');
 
 export type InstallHandlerDependencies = {
   packmindCliHexa: PackmindCliHexa;
@@ -79,7 +87,9 @@ async function installDefaultSkillsIfAtGitRoot(params: {
 
   try {
     log('\nInstalling default skills...');
-    const skillsResult = await packmindCliHexa.installDefaultSkills({});
+    const skillsResult = await packmindCliHexa.installDefaultSkills({
+      cliVersion: CLI_VERSION,
+    });
 
     if (skillsResult.errors.length > 0) {
       skillsResult.errors.forEach((err) => {
