@@ -66,14 +66,16 @@ export const DetectionProgramConfiguration: React.FC<
 
   useEffect(() => {
     const shouldOpenDetectability =
-      assessment?.status === RuleDetectionAssessmentStatus.FAILED ||
-      assessment?.status === RuleDetectionAssessmentStatus.IN_PROGRESS;
+      !assessment ||
+      assessment.status === RuleDetectionAssessmentStatus.NOT_STARTED ||
+      assessment.status === RuleDetectionAssessmentStatus.FAILED ||
+      assessment.status === RuleDetectionAssessmentStatus.IN_PROGRESS;
     const shouldOpenProgram =
       assessment?.status === RuleDetectionAssessmentStatus.SUCCESS;
 
     setIsDetectabilityOpen(shouldOpenDetectability);
     setIsProgramOpen(shouldOpenProgram);
-  }, [assessment?.status]);
+  }, [assessment]);
 
   const isProgramDisabled = useMemo(
     () => assessment?.status !== RuleDetectionAssessmentStatus.SUCCESS,
