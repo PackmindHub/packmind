@@ -8,6 +8,7 @@ import {
   PMTabs,
   PMCopiable,
   PMIconButton,
+  PMBadge,
 } from '@packmind/ui';
 import { LuCopy } from 'react-icons/lu';
 import { useCliLoginCode } from './LocalEnvironmentSetup/hooks/useCliLoginCode';
@@ -285,9 +286,6 @@ export function OnboardingBuildCliSection() {
                     </PMCopiable.Trigger>
                   </PMBox>
                 </PMCopiable.Root>
-                <PMText fontSize="xs" color="secondary">
-                  in your favorite agent
-                </PMText>
               </PMHStack>
             </PMBox>
           </PMVStack>

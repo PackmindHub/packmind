@@ -55,12 +55,10 @@ export function OnboardingWelcome({
       width="full"
       height="full"
     >
-      <PMVStack gap="15%" align="start" height="full" justify="center" flex={1}>
-        <PMVStack gap={4} align="start">
-          <PMHeading level="h2">Welcome to Packmind</PMHeading>
-          <PMText color="secondary" fontSize="md">
-            Train AI agents to code right
-          </PMText>
+      <PMVStack gap={10} align="start" height="full" justify="center" flex={1}>
+        <PMVStack gap={0} align="start">
+          <PMHeading level="h1">Welcome to Packmind</PMHeading>
+          <PMHeading level="h5">Train AI agents to code right</PMHeading>
         </PMVStack>
 
         <PMVStack gap={4} align="stretch" width="full" maxWidth="400px">
@@ -84,7 +82,7 @@ export function OnboardingWelcome({
         </PMVStack>
       </PMVStack>
 
-      <PMVStack gap={8} align="stretch" flex={1} maxWidth="450px">
+      <PMVStack gap={4} align="stretch" flex={1} maxWidth="450px">
         {ONBOARDING_VALUE_PROPS.map((valueProp) => (
           <PMCard.Root
             key={valueProp.key}

@@ -58,7 +58,7 @@ export function OnboardingPlaybook({
       height="full"
       justify="space-between"
     >
-      <PMVStack gap={4} textAlign="center">
+      <PMVStack gap={2} textAlign="center">
         <PMHeading level="h2">Build and evolve your playbook</PMHeading>
         <PMText color="secondary" fontStyle="italic">
           A Playbook is where your engineering knowledge lives — so AI can
@@ -71,6 +71,10 @@ export function OnboardingPlaybook({
           <PMGridItem
             key={item.key}
             data-testid={`OnboardingPlaybook.ItemCard.${item.key}`}
+            border={'solid 1px'}
+            borderColor={'border.tertiary'}
+            p={10}
+            borderRadius={'md'}
           >
             <PMVStack gap={4} align="center" textAlign="center">
               <PMIcon

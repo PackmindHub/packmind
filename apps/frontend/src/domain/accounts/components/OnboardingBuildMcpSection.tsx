@@ -102,14 +102,16 @@ export function OnboardingBuildMcpSection() {
     >
       <PMCard.Body padding={6}>
         <PMVStack gap={6} align="stretch">
-          <PMHStack gap={2} align="center">
-            <PMHeading level="h3">With MCP</PMHeading>
-            <PMIcon as={LuCircleHelp} color="secondary" />
-          </PMHStack>
-          <PMText color="secondary" fontSize="sm">
-            Your agent use MCP tools to start the analysis and create playbook
-            artifacts in Packmind
-          </PMText>
+          <PMVStack gap={2} align="start">
+            <PMHStack gap={2} align="center">
+              <PMHeading level="h3">With MCP</PMHeading>
+              <PMIcon as={LuCircleHelp} color="secondary" />
+            </PMHStack>
+            <PMText color="secondary" fontSize="sm">
+              Your agent use MCP tools to start the analysis and create playbook
+              artifacts in Packmind
+            </PMText>
+          </PMVStack>
 
           {/* Pick coding assistant section */}
           <PMVStack gap={2} align="stretch">
