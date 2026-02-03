@@ -6,12 +6,9 @@ import {
   CreateStandardInSpaceResult,
   RuleWithId,
   RuleExample,
-  CreateCommandCommand,
-  CreateCommandResult,
   CreatePackageCommand,
   CreatePackageResult,
   ListStandardsResult,
-  ListCommandsResult,
 } from '../../domain/repositories/IPackmindGateway';
 
 import { IOnboardingDraft } from '../../domain/types/OnboardingDraft';
@@ -36,6 +33,8 @@ import { SpacesGateway } from './SpacesGateway';
 import { ISpacesGateway } from '../../domain/repositories/ISpacesGateway';
 import { SkillsGateway } from './SkillsGateway';
 import { ISkillsGateway } from '../../domain/repositories/ISkillsGateway';
+import { CommandsGateway } from './CommandsGateway';
+import { ICommandsGateway } from '../../domain/repositories/ICommandsGateway';
 interface ApiKeyPayload {
   host: string;
   jwt: string;
@@ -120,6 +119,7 @@ export class PackmindGateway implements IPackmindGateway {
   readonly mcp: IMcpGateway;
   readonly spaces: ISpacesGateway;
   readonly skills: ISkillsGateway;
+  readonly commands: ICommandsGateway;
 
   constructor(private readonly apiKey: string) {
     this.httpClient = new PackmindHttpClient(apiKey);
@@ -127,6 +127,7 @@ export class PackmindGateway implements IPackmindGateway {
     this.mcp = new McpGateway(apiKey);
     this.spaces = new SpacesGateway(this.httpClient);
     this.skills = new SkillsGateway(apiKey, this.httpClient, this.spaces);
+    this.commands = new CommandsGateway(this.httpClient, this.spaces);
   }
 
   public getPullData: Gateway<IPullContentUseCase> = async (command) => {
@@ -523,17 +524,6 @@ export class PackmindGateway implements IPackmindGateway {
     );
   };
 
-  public createCommand = async (
-    spaceId: string,
-    data: CreateCommandCommand,
-  ): Promise<CreateCommandResult> => {
-    const { organizationId } = this.httpClient.getAuthContext();
-    return this.httpClient.request<CreateCommandResult>(
-      `/api/v0/organizations/${organizationId}/spaces/${spaceId}/recipes`,
-      { method: 'POST', body: data },
-    );
-  };
-
   public createPackage = async (
     spaceId: string,
     data: CreatePackageCommand,
@@ -587,21 +577,6 @@ export class PackmindGateway implements IPackmindGateway {
       slug: s.slug,
       name: s.name,
       description: s.description,
-    }));
-  };
-
-  public listCommands = async (): Promise<ListCommandsResult> => {
-    const space = await this.spaces.getGlobal();
-    const { organizationId } = this.httpClient.getAuthContext();
-
-    const recipes = await this.httpClient.request<
-      Array<{ id: string; slug: string; name: string }>
-    >(`/api/v0/organizations/${organizationId}/spaces/${space.id}/recipes`);
-
-    return recipes.map((r) => ({
-      id: r.id,
-      slug: r.slug,
-      name: r.name,
     }));
   };
 }

@@ -6,6 +6,7 @@ import { ILinterGateway } from './ILinterGateway';
 import { IMcpGateway } from './IMcpGateway';
 import { ISpacesGateway } from './ISpacesGateway';
 import { ISkillsGateway } from './ISkillsGateway';
+import { ICommandsGateway } from './ICommandsGateway';
 
 // Notify Distribution types
 export type NotifyDistributionCommand = {
@@ -54,20 +55,13 @@ export type RuleExample = {
   negative: string;
 };
 
-// Create command types
-export type CreateCommandCommand = {
-  name: string;
-  summary: string;
-  whenToUse: string[];
-  contextValidationCheckpoints: string[];
-  steps: Array<{ name: string; description: string; codeSnippet?: string }>;
-};
-
-export type CreateCommandResult = {
-  id: string;
-  name: string;
-  slug: string;
-};
+// Re-export command types from ICommandsGateway for backward compatibility
+export type {
+  CreateCommandCommand,
+  CreateCommandResult,
+  ListedCommand,
+  ListCommandsResult,
+} from './ICommandsGateway';
 
 // Create package types
 export type CreatePackageCommand = {
@@ -91,20 +85,12 @@ export type ListedStandard = {
 
 export type ListStandardsResult = ListedStandard[];
 
-// List Commands types
-export type ListedCommand = {
-  id: string;
-  slug: string;
-  name: string;
-};
-
-export type ListCommandsResult = ListedCommand[];
-
 export interface IPackmindGateway {
   linter: ILinterGateway;
   mcp: IMcpGateway;
   spaces: ISpacesGateway;
   skills: ISkillsGateway;
+  commands: ICommandsGateway;
   getPullData: Gateway<IPullContentUseCase>;
   listPackages: PublicGateway<IListPackagesUseCase>;
   getPackageSummary: PublicGateway<IGetPackageSummaryUseCase>;
@@ -128,12 +114,6 @@ export interface IPackmindGateway {
     example: RuleExample,
   ): Promise<void>;
 
-  // Atomic gateway for command creation
-  createCommand(
-    spaceId: string,
-    data: CreateCommandCommand,
-  ): Promise<CreateCommandResult>;
-
   // Atomic gateway for package creation
   createPackage(
     spaceId: string,
@@ -147,5 +127,4 @@ export interface IPackmindGateway {
 
   // List methods
   listStandards(): Promise<ListStandardsResult>;
-  listCommands(): Promise<ListCommandsResult>;
 }
