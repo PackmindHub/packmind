@@ -60,6 +60,7 @@ export class CreateStandardUsecase
       spaceId,
       organizationId,
       source = 'ui',
+      method,
     } = command;
     const userId = createUserId(command.userId);
     this.logger.info('Starting createStandard process', {
@@ -161,6 +162,9 @@ export class CreateStandardUsecase
         rules,
       );
 
+      // Determine the method: use provided method, or default based on source
+      const creationMethod = method ?? (source === 'cli' ? 'cli' : 'blank');
+
       this.eventEmitterService.emit(
         new StandardCreatedEvent({
           standardId: createStandardId(standard.id),
@@ -168,6 +172,7 @@ export class CreateStandardUsecase
           organizationId,
           userId,
           source,
+          method: creationMethod,
         }),
       );
 

@@ -234,6 +234,7 @@ describe('createStandard.tool', () => {
           spaceId: 'space-123',
           packageSlugs: undefined,
           source: 'mcp',
+          method: 'mcp',
         });
       });
 
@@ -288,6 +289,7 @@ describe('createStandard.tool', () => {
           spaceId: 'space-123',
           packageSlugs: undefined,
           source: 'mcp',
+          method: 'mcp',
         });
       });
 

@@ -16,6 +16,7 @@ import {
   SampleInput,
   SpaceId,
   Standard,
+  StandardCreationMethod,
   StandardId,
   StandardVersion,
   UserId,
@@ -67,6 +68,7 @@ export class StandardsService {
     userId: UserId,
     spaceId: SpaceId,
     source: ClientSource,
+    method: StandardCreationMethod,
   ): Promise<Standard> {
     return this.standardsHexa.getAdapter().createStandard({
       ...standard,
@@ -75,6 +77,7 @@ export class StandardsService {
       userId,
       spaceId,
       source,
+      method,
     });
   }
 

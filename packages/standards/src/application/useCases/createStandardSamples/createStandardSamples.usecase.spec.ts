@@ -185,7 +185,8 @@ describe('CreateStandardSamplesUsecase', () => {
           scope: 'Java source files',
           spaceId: testSpaceId,
           disableTriggerAssessment: true,
-          source: 'SAMPLE_IMPORT',
+          source: 'ui',
+          method: 'sample',
         });
       });
 
@@ -211,7 +212,8 @@ describe('CreateStandardSamplesUsecase', () => {
           scope: 'Spring applications',
           spaceId: testSpaceId,
           disableTriggerAssessment: true,
-          source: 'SAMPLE_IMPORT',
+          source: 'ui',
+          method: 'sample',
         });
       });
 

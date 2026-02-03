@@ -47,6 +47,7 @@ export class CreateStandardWithPackagesUsecase
       userId,
       organizationId,
       source = 'ui',
+      method,
     } = command;
 
     this.logger.info('Creating standard with packages', {
@@ -81,6 +82,7 @@ export class CreateStandardWithPackagesUsecase
         scope: scope || null,
         spaceId,
         source,
+        method,
       });
 
     this.logger.info('Standard created successfully', {

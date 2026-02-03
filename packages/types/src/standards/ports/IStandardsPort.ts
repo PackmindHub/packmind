@@ -6,6 +6,7 @@ import {
   CreateStandardSamplesCommand,
   CreateStandardSamplesResponse,
 } from '../contracts';
+import { StandardCreationMethod } from '../events/StandardCreatedEvent';
 import { Rule } from '../Rule';
 import { RuleExample } from '../RuleExample';
 import { RuleId } from '../RuleId';
@@ -52,6 +53,7 @@ export interface IStandardsPort {
     spaceId: SpaceId;
     disableTriggerAssessment?: boolean;
     source?: string;
+    method?: StandardCreationMethod;
   }): Promise<Standard>;
   createStandardSamples(
     command: CreateStandardSamplesCommand,

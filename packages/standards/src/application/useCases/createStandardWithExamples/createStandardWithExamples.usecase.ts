@@ -26,6 +26,7 @@ import {
 import {
   RuleAddedEvent,
   StandardCreatedEvent,
+  StandardCreationMethod,
   createStandardId,
   createStandardVersionId,
 } from '@packmind/types';
@@ -52,6 +53,10 @@ export type CreateStandardWithExamplesRequest = {
    * The source of the event. Defaults to 'ui' if not provided.
    */
   source?: PackmindEventSource;
+  /**
+   * The method used to create this standard.
+   */
+  method?: StandardCreationMethod;
 };
 
 export class CreateStandardWithExamplesUsecase {
@@ -85,6 +90,7 @@ export class CreateStandardWithExamplesUsecase {
     spaceId,
     disableTriggerAssessment = false,
     source = 'ui',
+    method,
   }: CreateStandardWithExamplesRequest) {
     this.logger.info('Starting createStandardWithExamples process', {
       name,
@@ -224,6 +230,7 @@ export class CreateStandardWithExamplesUsecase {
           organizationId,
           userId,
           source,
+          method,
         }),
       );
 
