@@ -102,19 +102,19 @@ export function OnboardingPlaybook({
       <PMHStack gap={4}>
         <PMButton
           size="lg"
-          variant="primary"
-          onClick={onBuildPlaybook}
-          data-testid="OnboardingPlaybook.BuildButton"
-        >
-          Build my playbook
-        </PMButton>
-        <PMButton
-          size="lg"
           variant="secondary"
           onClick={onPrevious}
           data-testid="OnboardingPlaybook.PreviousButton"
         >
           Previous
+        </PMButton>
+        <PMButton
+          size="lg"
+          variant="primary"
+          onClick={onBuildPlaybook}
+          data-testid="OnboardingPlaybook.BuildButton"
+        >
+          Build my playbook
         </PMButton>
       </PMHStack>
     </PMVStack>
