@@ -49,17 +49,13 @@ export class SkillsHexa extends BaseHexa<BaseHexaOpts, SkillsAdapter> {
       this.skillsRepositories = new SkillsRepositories(this.dataSource);
 
       // Instantiate services
-      this.skillsServices = new SkillsServices(
-        this.skillsRepositories,
-        this.logger,
-      );
+      this.skillsServices = new SkillsServices(this.skillsRepositories);
 
       // Create adapter in constructor - dependencies will be injected in initialize()
       this.logger.debug('Creating SkillsAdapter');
       this.adapter = new SkillsAdapter(
         this.skillsServices,
         this.skillsRepositories,
-        this.logger,
       );
 
       this.logger.info('SkillsHexa construction completed');

@@ -2,13 +2,22 @@
 
 ## Added
 
-- add `commands create` to create commands in Packmind.
+- Add `commands create` command to create reusable commands from playbook JSON files with `packmind-cli commands create <playbook.json>`
+- Add `standards list` command to display all standards in your organization
+- Add `commands list` command to display all commands in your organization
+- Add `skills list` command to display all skills in your organization
+- Add `packages create <name>` command to create a new package
 
 ## Changed
 
 ## Fixed
 
+- Properly apply multiple scopes when linting.
+- Only render skills compatible with the current cli version in `packmind-cli skills init`
+
 ## Removed
+
+- linter based on git remote URL when `packmind.json` is absent.
 
 # [0.14.1] - 2026-01-29
 

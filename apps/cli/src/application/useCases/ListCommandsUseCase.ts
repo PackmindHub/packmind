@@ -8,6 +8,6 @@ export class ListCommandsUseCase implements IListCommandsUseCase {
   constructor(private readonly packmindGateway: IPackmindGateway) {}
 
   public async execute(): Promise<IListCommandsResult> {
-    return this.packmindGateway.listCommands();
+    return this.packmindGateway.commands.list();
   }
 }

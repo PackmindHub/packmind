@@ -1,11 +1,11 @@
-import { PackmindGateway } from './PackmindGateway';
+import { DeploymentGateway } from './DeploymentGateway';
 
 // Mock fetch
 global.fetch = jest.fn();
 const mockFetch = fetch as jest.MockedFunction<typeof fetch>;
 
-describe('PackmindGateway', () => {
-  let gateway: PackmindGateway;
+describe('DeploymentGateway', () => {
+  let gateway: DeploymentGateway;
   const mockHost = 'https://api.packmind.com';
 
   afterEach(() => {
@@ -29,7 +29,7 @@ describe('PackmindGateway', () => {
     };
 
     describe('when notification succeeds', () => {
-      let result: Awaited<ReturnType<PackmindGateway['notifyDistribution']>>;
+      let result: Awaited<ReturnType<DeploymentGateway['notifyDistribution']>>;
       let validApiKey: string;
       const mockApiResponse = {
         deploymentId: 'deployment-456',
@@ -37,7 +37,7 @@ describe('PackmindGateway', () => {
 
       beforeEach(async () => {
         validApiKey = createValidApiKey('org-123');
-        gateway = new PackmindGateway(validApiKey);
+        gateway = new DeploymentGateway(validApiKey);
 
         mockFetch.mockResolvedValue({
           ok: true,
@@ -78,7 +78,7 @@ describe('PackmindGateway', () => {
 
     describe('when API key is invalid', () => {
       beforeEach(() => {
-        gateway = new PackmindGateway('invalid-key');
+        gateway = new DeploymentGateway('invalid-key');
       });
 
       it('throws error', async () => {
@@ -119,7 +119,7 @@ describe('PackmindGateway', () => {
         const invalidApiKey = Buffer.from(
           JSON.stringify(apiKeyPayload),
         ).toString('base64');
-        gateway = new PackmindGateway(invalidApiKey);
+        gateway = new DeploymentGateway(invalidApiKey);
       });
 
       it('throws error', async () => {
@@ -152,7 +152,7 @@ describe('PackmindGateway', () => {
     describe('when API request fails', () => {
       it('throws error with message from response', async () => {
         const validApiKey = createValidApiKey('org-123');
-        gateway = new PackmindGateway(validApiKey);
+        gateway = new DeploymentGateway(validApiKey);
 
         mockFetch.mockResolvedValue({
           ok: false,
@@ -177,7 +177,7 @@ describe('PackmindGateway', () => {
     describe('when network error occurs', () => {
       it('throws server not accessible error', async () => {
         const validApiKey = createValidApiKey('org-123');
-        gateway = new PackmindGateway(validApiKey);
+        gateway = new DeploymentGateway(validApiKey);
 
         mockFetch.mockRejectedValue(new Error('Failed to fetch'));
 

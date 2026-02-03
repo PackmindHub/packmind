@@ -10,11 +10,11 @@ import { IPackageRepository } from '../../domain/repositories/IPackageRepository
 const origin = 'DeploymentsListener';
 
 export class DeploymentsListener extends PackmindListener<IPackageRepository> {
-  private readonly logger: PackmindLogger;
-
-  constructor(adapter: IPackageRepository) {
+  constructor(
+    adapter: IPackageRepository,
+    private readonly logger: PackmindLogger = new PackmindLogger(origin),
+  ) {
     super(adapter);
-    this.logger = new PackmindLogger(origin);
   }
 
   protected registerHandlers(): void {

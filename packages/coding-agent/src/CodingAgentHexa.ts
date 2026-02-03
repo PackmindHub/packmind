@@ -45,21 +45,14 @@ export class CodingAgentHexa extends BaseHexa<BaseHexaOpts, ICodingAgentPort> {
       this.codingAgentRepositories = new CodingAgentRepositories();
 
       // Instantiate services
-      this.deployerService = new DeployerService(
-        this.codingAgentRepositories,
-        this.logger,
-      );
+      this.deployerService = new DeployerService(this.codingAgentRepositories);
 
-      this.codingAgentServices = new CodingAgentServices(
-        this.deployerService,
-        this.logger,
-      );
+      this.codingAgentServices = new CodingAgentServices(this.deployerService);
 
       // Instantiate adapter without dependencies (will be set in initialize)
       this.adapter = new CodingAgentAdapter(
         this.codingAgentRepositories,
         this.codingAgentServices,
-        this.logger,
       );
 
       this.logger.info('CodingAgentHexa construction completed');
@@ -90,15 +83,9 @@ export class CodingAgentHexa extends BaseHexa<BaseHexaOpts, ICodingAgentPort> {
       );
 
       // Recreate services with new repositories
-      this.deployerService = new DeployerService(
-        this.codingAgentRepositories,
-        this.logger,
-      );
+      this.deployerService = new DeployerService(this.codingAgentRepositories);
 
-      this.codingAgentServices = new CodingAgentServices(
-        this.deployerService,
-        this.logger,
-      );
+      this.codingAgentServices = new CodingAgentServices(this.deployerService);
 
       // Initialize adapter with ports, services, and repositories
       await this.adapter.initialize({

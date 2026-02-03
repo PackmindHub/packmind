@@ -5,7 +5,6 @@ import { ApiKeyService, IJwtService } from './ApiKeyService';
 import { LoginRateLimiterService } from './LoginRateLimiterService';
 import { PasswordResetTokenService } from './PasswordResetTokenService';
 import { TrialActivationService } from './TrialActivationService';
-import { UserMetadataService } from './UserMetadataService';
 import { IAccountsRepositories } from '../../domain/repositories/IAccountsRepositories';
 import { ICliLoginCodeRepository } from '../../domain/repositories/ICliLoginCodeRepository';
 import { ITrialActivationRepository } from '../../domain/repositories/ITrialActivationRepository';
@@ -25,14 +24,13 @@ export class EnhancedAccountsServices {
   private readonly loginRateLimiterService: LoginRateLimiterService;
   private readonly apiKeyService?: ApiKeyService;
   private readonly trialActivationService?: TrialActivationService;
-  private readonly userMetadataService: UserMetadataService;
 
   constructor(
     private readonly accountsRepositories: IAccountsRepositories,
-    private readonly logger: PackmindLogger,
     apiKeyService?: ApiKeyService,
     jwtService?: IJwtService,
   ) {
+    const logger = new PackmindLogger('EnhancedAccountsServices');
     // Initialize standard services
     this.userService = new UserService(
       this.accountsRepositories.getUserRepository(),
@@ -40,17 +38,14 @@ export class EnhancedAccountsServices {
     );
     this.organizationService = new OrganizationService(
       this.accountsRepositories.getOrganizationRepository(),
-      this.logger,
     );
     this.invitationService = new InvitationService(
       this.accountsRepositories.getInvitationRepository(),
-      new SmtpMailService(this.logger),
-      this.logger,
+      new SmtpMailService(),
     );
     this.passwordResetTokenService = new PasswordResetTokenService(
       this.accountsRepositories.getPasswordResetTokenRepository(),
-      new SmtpMailService(this.logger),
-      this.logger,
+      new SmtpMailService(),
     );
     this.loginRateLimiterService = new LoginRateLimiterService();
 
@@ -62,16 +57,10 @@ export class EnhancedAccountsServices {
       this.trialActivationService = new TrialActivationService(
         this.accountsRepositories.getTrialActivationRepository(),
         jwtService,
-        this.logger,
       );
     }
 
-    // Initialize user metadata service
-    this.userMetadataService = new UserMetadataService(
-      this.accountsRepositories.getUserMetadataRepository(),
-    );
-
-    this.logger.info('EnhancedAccountsServices initialized', {
+    logger.info('EnhancedAccountsServices initialized', {
       hasApiKeyService: !!this.apiKeyService,
       hasTrialActivationService: !!this.trialActivationService,
     });
@@ -111,9 +100,5 @@ export class EnhancedAccountsServices {
 
   getTrialActivationRepository(): ITrialActivationRepository {
     return this.accountsRepositories.getTrialActivationRepository();
-  }
-
-  getUserMetadataService(): UserMetadataService {
-    return this.userMetadataService;
   }
 }

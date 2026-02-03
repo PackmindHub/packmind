@@ -34,7 +34,7 @@ export class TrialActivationRepository
     ),
     logger: PackmindLogger = new PackmindLogger(origin),
   ) {
-    super('trial_activation', repository, logger, TrialActivationSchema);
+    super('trial_activation', repository, TrialActivationSchema, logger);
     this.logger.info('TrialActivationRepository initialized');
   }
 

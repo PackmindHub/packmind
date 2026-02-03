@@ -22,21 +22,22 @@ export class ClaudeDeployer implements ICodingAgentDeployer {
   private static readonly COMMANDS_FOLDER_PATH = '.claude/commands/packmind/';
   private static readonly SKILLS_FOLDER_PATH = '.claude/skills/';
   private static readonly CLAUDE_MD_PATH = 'CLAUDE.md';
-  private readonly logger: PackmindLogger;
 
   constructor(
     private readonly standardsPort?: IStandardsPort,
     private readonly gitPort?: IGitPort,
-  ) {
-    this.logger = new PackmindLogger(origin);
-  }
+    private readonly logger: PackmindLogger = new PackmindLogger(origin),
+  ) {}
 
-  async deployDefaultSkills() {
+  async deployDefaultSkills(options?: {
+    cliVersion?: string;
+    includeBeta?: boolean;
+  }) {
     const defaultSkillsDeployer = new DefaultSkillsDeployer(
       'Claude',
       '.claude/skills/',
     );
-    return defaultSkillsDeployer.deployDefaultSkills();
+    return defaultSkillsDeployer.deployDefaultSkills(options);
   }
 
   async deployRecipes(

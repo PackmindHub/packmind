@@ -11,9 +11,9 @@ export class CreateCommandFromPlaybookUseCase implements ICreateCommandFromPlayb
   async execute(
     playbook: ICommandPlaybookInput,
   ): Promise<ICreateCommandResult> {
-    const space = await this.gateway.getGlobalSpace();
+    const space = await this.gateway.spaces.getGlobal();
 
-    const command = await this.gateway.createCommand(space.id, {
+    const command = await this.gateway.commands.create(space.id, {
       name: playbook.name,
       summary: playbook.summary,
       whenToUse: playbook.whenToUse,

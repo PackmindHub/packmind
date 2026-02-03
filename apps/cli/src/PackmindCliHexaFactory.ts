@@ -1,4 +1,3 @@
-import { PackmindLogger } from '@packmind/logger';
 import { IExecuteSingleFileAstUseCase } from './domain/useCases/IExecuteSingleFileAstUseCase';
 import { IGetGitRemoteUrlUseCase } from './domain/useCases/IGetGitRemoteUrlUseCase';
 import { ExecuteSingleFileAstUseCase } from './application/useCases/ExecuteSingleFileAstUseCase';
@@ -65,7 +64,7 @@ export class PackmindCliHexaFactory {
     listSkills: IListSkillsUseCase;
   };
 
-  constructor(private readonly logger: PackmindLogger) {
+  constructor() {
     this.repositories = {
       packmindGateway: new PackmindGateway(loadApiKey()),
       configFileRepository: new ConfigFileRepository(),
@@ -73,7 +72,7 @@ export class PackmindCliHexaFactory {
 
     this.services = {
       listFiles: new ListFiles(),
-      gitRemoteUrlService: new GitService(this.logger),
+      gitRemoteUrlService: new GitService(),
       linterExecutionUseCase: new ExecuteLinterProgramsUseCase(),
       diffViolationFilterService: new DiffViolationFilterService(),
     };
@@ -87,12 +86,10 @@ export class PackmindCliHexaFactory {
       lintFilesAgainstRule: new LintFilesAgainstRuleUseCase(
         this.services,
         this.repositories,
-        this.logger,
       ),
       lintFilesFromConfig: new LintFilesFromConfigUseCase(
         this.services,
         this.repositories,
-        this.logger,
       ),
       installPackages: new InstallPackagesUseCase(
         this.repositories.packmindGateway,

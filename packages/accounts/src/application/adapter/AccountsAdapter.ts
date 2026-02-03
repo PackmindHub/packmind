@@ -223,7 +223,6 @@ export class AccountsAdapter
       this.accountsServices.getUserService(),
       this.accountsServices.getOrganizationService(),
       ports.eventEmitterService,
-      this.logger,
       this.spacesPort,
     );
     this._signInUser = new SignInUserUseCase(
@@ -237,19 +236,16 @@ export class AccountsAdapter
     this._removeUserFromOrganization = new RemoveUserFromOrganizationUseCase(
       this,
       this.accountsServices.getUserService(),
-      this.logger,
     );
     this._listOrganizationUserStatuses =
       new ListOrganizationUserStatusesUseCase(
         this,
         this.accountsServices.getUserService(),
         this.accountsServices.getInvitationService(),
-        this.logger,
       );
     this._listOrganizationUsers = new ListOrganizationUsersUseCase(
       this,
       this.accountsServices.getUserService(),
-      this.logger,
     );
     this._validatePassword = new ValidatePasswordUseCase(
       this.accountsServices.getUserService(),
@@ -258,7 +254,6 @@ export class AccountsAdapter
       this.accountsServices.getOrganizationService(),
       this.accountsServices.getUserService(),
       ports.eventEmitterService,
-      this.logger,
       this.spacesPort,
     );
     this._getOrganizationById = new GetOrganizationByIdUseCase(
@@ -284,44 +279,36 @@ export class AccountsAdapter
       this,
       this.accountsServices.getUserService(),
       this.accountsServices.getInvitationService(),
-      this.logger,
     );
     this._activateUserAccount = new ActivateUserAccountUseCase(
       this.accountsServices.getUserService(),
       this.accountsServices.getInvitationService(),
       ports.eventEmitterService,
-      this.logger,
     );
     this._validateInvitationToken = new ValidateInvitationTokenUseCase(
       this.accountsServices.getInvitationService(),
       this.accountsServices.getUserService(),
-      this.logger,
     );
     this._changeUserRole = new ChangeUserRoleUseCase(
       this,
       this.accountsServices.getUserService(),
-      this.logger,
     );
     this._renameOrganization = new RenameOrganizationUseCase(
       this,
       this.accountsServices.getOrganizationService(),
-      this.logger,
     );
     this._requestPasswordReset = new RequestPasswordResetUseCase(
       this.accountsServices.getUserService(),
       this.accountsServices.getPasswordResetTokenService(),
-      this.logger,
     );
     this._resetPassword = new ResetPasswordUseCase(
       this.accountsServices.getUserService(),
       this.accountsServices.getPasswordResetTokenService(),
       this.accountsServices.getLoginRateLimiterService(),
-      this.logger,
     );
     this._validatePasswordResetToken = new ValidatePasswordResetTokenUseCase(
       this.accountsServices.getPasswordResetTokenService(),
       this.accountsServices.getUserService(),
-      this.logger,
     );
     this._getOrganizationOnboardingStatus =
       new GetOrganizationOnboardingStatusUseCase(
@@ -331,7 +318,6 @@ export class AccountsAdapter
         this.standardsPort ?? null,
         this.spacesPort ?? null,
         this.deploymentPort ?? null,
-        this.logger,
       );
 
     // User onboarding use cases
@@ -351,22 +337,19 @@ export class AccountsAdapter
         this.accountsServices.getUserService(),
         this.accountsServices.getOrganizationService(),
         apiKeyService,
-        this.logger,
       );
-      this._getCurrentApiKey = new GetCurrentApiKeyUseCase(this.logger);
+      this._getCurrentApiKey = new GetCurrentApiKeyUseCase();
       this.logger.debug('API key use cases initialized');
 
       // CLI login use cases require API key service
       this._createCliLoginCode = new CreateCliLoginCodeUseCase(
         this.accountsServices.getCliLoginCodeRepository(),
-        this.logger,
       );
       this._exchangeCliLoginCode = new ExchangeCliLoginCodeUseCase(
         this.accountsServices.getCliLoginCodeRepository(),
         this.accountsServices.getUserService(),
         this.accountsServices.getOrganizationService(),
         apiKeyService,
-        this.logger,
       );
       this.logger.debug('CLI login use cases initialized');
     } else {
@@ -378,7 +361,6 @@ export class AccountsAdapter
       this.accountsServices.getUserService(),
       this.accountsServices.getOrganizationService(),
       ports.eventEmitterService,
-      this.logger,
       this.spacesPort ?? undefined,
       this.deploymentPort ?? undefined,
     );
@@ -389,11 +371,7 @@ export class AccountsAdapter
       this.accountsServices.getTrialActivationService?.();
     if (trialActivationService) {
       this._generateTrialActivationToken =
-        new GenerateTrialActivationTokenUseCase(
-          this,
-          trialActivationService,
-          this.logger,
-        );
+        new GenerateTrialActivationTokenUseCase(this, trialActivationService);
       this.logger.debug('Generate trial activation token use case initialized');
 
       this._activateTrialAccount = new ActivateTrialAccountUseCase(
@@ -401,7 +379,6 @@ export class AccountsAdapter
         this.accountsServices.getUserService(),
         this.accountsServices.getOrganizationService(),
         ports.eventEmitterService,
-        this.logger,
       );
       this.logger.debug('Activate trial account use case initialized');
     }

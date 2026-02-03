@@ -28,7 +28,7 @@ export class InstallPackagesUseCase implements IInstallPackagesUseCase {
     };
 
     // Fetch data from the gateway
-    const response = await this.packmindGateway.getPullData({
+    const response = await this.packmindGateway.deployment.pull({
       packagesSlugs: command.packagesSlugs,
       previousPackagesSlugs: command.previousPackagesSlugs,
       gitRemoteUrl: command.gitRemoteUrl,

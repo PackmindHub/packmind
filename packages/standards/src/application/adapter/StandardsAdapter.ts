@@ -36,6 +36,7 @@ import {
   RuleId,
   SpaceId,
   Standard,
+  StandardCreationMethod,
   StandardId,
   StandardVersion,
   StandardVersionId,
@@ -310,7 +311,6 @@ export class StandardsAdapter
     this.logger.debug('Building standards delayed jobs');
 
     const jobFactory = new GenerateStandardSummaryJobFactory(
-      this.logger,
       this.repositories,
       this.services.getStandardSummaryService(),
       this.services.getStandardVersionService(),
@@ -466,6 +466,7 @@ export class StandardsAdapter
     spaceId: SpaceId;
     packageSlugs?: string[];
     source?: PackmindEventSource;
+    method?: StandardCreationMethod;
   }): Promise<Standard> {
     const result = await this._createStandardWithPackages.execute({
       ...params,

@@ -2,6 +2,8 @@ import { GitProvider } from '@packmind/types';
 import { IGitProviderFactory } from '../domain/repositories/IGitProviderFactory';
 import { PackmindLogger } from '@packmind/logger';
 
+const origin = 'ExternalGitService';
+
 export interface ExternalRepository {
   name: string;
   owner: string;
@@ -15,7 +17,7 @@ export interface ExternalRepository {
 export class ExternalGitService {
   constructor(
     private readonly gitProviderFactory: IGitProviderFactory,
-    private readonly logger: PackmindLogger,
+    private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {}
 
   async listAvailableRepositories(

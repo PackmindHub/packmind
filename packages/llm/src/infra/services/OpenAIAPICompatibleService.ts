@@ -40,7 +40,7 @@ export class OpenAIAPICompatibleService extends BaseOpenAIService {
     config: OpenAICompatibleServiceConfig,
     logger: PackmindLogger = new PackmindLogger(origin, LogLevel.INFO),
   ) {
-    super(logger, origin);
+    super(origin, logger);
     this.baseUrl = config.llmEndpoint;
     this.apiKey = config.llmApiKey;
     this.defaultModel = config.model;

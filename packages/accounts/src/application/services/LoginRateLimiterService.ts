@@ -11,11 +11,11 @@ export interface LoginAttempt {
 export class LoginRateLimiterService {
   private static readonly DEFAULT_MAX_ATTEMPTS = 3;
   private static readonly DEFAULT_BAN_TIME_SECONDS = 30 * 60; // 30 minutes
-  private readonly logger: PackmindLogger;
   private readonly cache: Cache;
 
-  constructor() {
-    this.logger = new PackmindLogger(origin);
+  constructor(
+    private readonly logger: PackmindLogger = new PackmindLogger(origin),
+  ) {
     this.cache = Cache.getInstance();
   }
 

@@ -66,9 +66,11 @@ import { logWarningConsole } from './infra/utils/consoleLogger';
 import {
   NotifyDistributionCommand,
   NotifyDistributionResult,
+} from './domain/repositories/IPackmindGateway';
+import {
   UploadSkillCommand,
   UploadSkillResult,
-} from './domain/repositories/IPackmindGateway';
+} from './domain/repositories/ISkillsGateway';
 import { loadCredentials } from './infra/utils/credentials';
 
 const origin = 'PackmindCliHexa';
@@ -82,7 +84,7 @@ export class PackmindCliHexa {
 
     try {
       // Initialize the hexagon factory
-      this.hexa = new PackmindCliHexaFactory(this.logger);
+      this.hexa = new PackmindCliHexaFactory();
     } catch (error) {
       this.logger.error('Failed to initialize PackmindCliHexa', {
         error: error instanceof Error ? error.message : String(error),
@@ -277,13 +279,15 @@ export class PackmindCliHexa {
   public async notifyDistribution(
     command: NotifyDistributionCommand,
   ): Promise<NotifyDistributionResult> {
-    return this.hexa.repositories.packmindGateway.notifyDistribution(command);
+    return this.hexa.repositories.packmindGateway.deployment.notifyDistribution(
+      command,
+    );
   }
 
   public async uploadSkill(
     command: UploadSkillCommand,
   ): Promise<UploadSkillResult> {
-    return this.hexa.repositories.packmindGateway.uploadSkill(command);
+    return this.hexa.repositories.packmindGateway.skills.upload(command);
   }
 
   public async installDefaultSkills(

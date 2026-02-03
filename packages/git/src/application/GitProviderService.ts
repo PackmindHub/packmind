@@ -8,7 +8,6 @@ import {
 } from '@packmind/types';
 import { GitRepo } from '@packmind/types';
 import { OrganizationId, UserId } from '@packmind/types';
-import { PackmindLogger } from '@packmind/logger';
 import { v4 as uuidv4 } from 'uuid';
 
 export class GitProviderService {
@@ -16,7 +15,6 @@ export class GitProviderService {
     private readonly gitProviderRepository: IGitProviderRepository,
     private readonly gitProviderFactory: IGitProviderFactory,
     private readonly gitRepoFactory: IGitRepoFactory,
-    private readonly logger: PackmindLogger,
   ) {}
 
   async addGitProvider(
