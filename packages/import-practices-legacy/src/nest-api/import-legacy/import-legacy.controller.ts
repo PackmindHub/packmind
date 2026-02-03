@@ -20,10 +20,10 @@ const origin = 'ImportLegacyController';
 
 @Controller('')
 export class ImportLegacyController {
-  private readonly logger: PackmindLogger;
-
-  constructor(private readonly importLegacyService: ImportLegacyService) {
-    this.logger = new PackmindLogger(origin);
+  constructor(
+    private readonly importLegacyService: ImportLegacyService,
+    private readonly logger: PackmindLogger = new PackmindLogger(origin),
+  ) {
     this.logger.info('ImportLegacyController initialized');
   }
 

@@ -24,6 +24,8 @@ import { GenerateProgramJobCommand } from '@packmind/types';
 import { ILinterRepositories } from '../../../domain/repositories/ILinterRepositories';
 import { UpdateDetectionProgramUseCase } from '../updateDetectionProgram/updateDetectionProgram.usecase';
 
+const origin = 'GenerateProgramDelayedJob';
+
 export class GenerateProgramDelayedJob extends AbstractAIDelayedJob<
   GenerateProgramInput,
   GenerateProgramOutput
@@ -34,14 +36,13 @@ export class GenerateProgramDelayedJob extends AbstractAIDelayedJob<
     queueFactory: (
       queueListeners: Partial<QueueListeners>,
     ) => Promise<IQueue<GenerateProgramInput, GenerateProgramOutput>>,
-    logger: PackmindLogger,
     private readonly linterRepositories: ILinterRepositories,
     private readonly getStandardsAdapter: () => IStandardsPort,
     private readonly getLinterAstAdapter: () => ILinterAstPort | null,
     private readonly getLinterAdapter: () => ILinterPort,
     private readonly getLlmPort: () => ILlmPort,
   ) {
-    super(queueFactory, logger);
+    super(queueFactory, new PackmindLogger(origin));
   }
 
   async onFail(jobId: string): Promise<void> {
@@ -79,7 +80,6 @@ export class GenerateProgramDelayedJob extends AbstractAIDelayedJob<
       this.getStandardsAdapter(),
       linterAstAdapter,
       this.getLlmPort(),
-      this.logger,
     );
 
     return await useCase.execute(command);

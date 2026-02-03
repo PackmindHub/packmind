@@ -27,7 +27,6 @@ export class AssessRuleDetectionJobFactory implements IJobFactory<AssessRuleDete
 
     this.delayedJob = new AssessRuleDetectionDelayedJob(
       (listeners) => queueFactory(this.getQueueName(), listeners),
-      this.logger,
       this.linterRepositories,
       this.getStandardsAdapter,
       this.getLinterAdapter,

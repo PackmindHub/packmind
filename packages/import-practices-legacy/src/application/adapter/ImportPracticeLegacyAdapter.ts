@@ -72,7 +72,6 @@ export class ImportPracticeLegacyAdapter
       this.spacesPort,
       this.standardsAdapter,
       this.linterPort,
-      this.logger,
     );
 
     this.logger.info('ImportPracticeLegacyAdapter initialized successfully');

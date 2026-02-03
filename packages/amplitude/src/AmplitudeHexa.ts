@@ -34,7 +34,7 @@ export class AmplitudeHexa extends BaseHexa<BaseHexaOpts, IEventTrackingPort> {
       this.logger.debug(
         'Creating EventTrackingAdapter with Amplitude integration',
       );
-      this.adapter = new EventTrackingAdapter(this.logger);
+      this.adapter = new EventTrackingAdapter();
       this.listener = new AmplitudeEventListener(this.adapter);
 
       this.logger.info('AmplitudeHexa construction completed');

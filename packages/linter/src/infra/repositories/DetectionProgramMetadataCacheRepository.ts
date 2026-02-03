@@ -1,5 +1,5 @@
 import { Cache } from '@packmind/node-utils';
-import { PackmindLogger, LogLevel } from '@packmind/logger';
+import { PackmindLogger } from '@packmind/logger';
 import { IDetectionProgramMetadataRepository } from '../../domain/repositories/IDetectionProgramMetadataRepository';
 import {
   DetectionProgramMetadata,
@@ -8,17 +8,17 @@ import {
   TokensUsed,
 } from '@packmind/types';
 
-const origin = 'DetectionProgramMetadataRepository';
+const origin = 'DetectionProgramMetadataCacheRepository';
 
 export class DetectionProgramMetadataCacheRepository implements IDetectionProgramMetadataRepository {
   private readonly cache: Cache;
-  private readonly logger: PackmindLogger;
   private static readonly CACHE_PREFIX = 'detection_program_metadata:';
   private static readonly CACHE_EXPIRATION_SECONDS = 3600 * 24 * 7; // 1 week
 
-  constructor() {
+  constructor(
+    private readonly logger: PackmindLogger = new PackmindLogger(origin),
+  ) {
     this.cache = Cache.getInstance();
-    this.logger = new PackmindLogger(origin, LogLevel.INFO);
   }
 
   private getCacheKey(detectionProgramId: DetectionProgramId): string {

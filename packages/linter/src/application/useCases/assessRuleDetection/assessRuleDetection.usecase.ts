@@ -237,10 +237,7 @@ export class AssessRuleDetectionUseCase implements IAssessRuleDetectionJob {
       );
     }
     const aiService = response.aiService;
-    const assessmentService = new RuleDetectionAssessmentService(
-      aiService,
-      this.logger,
-    );
+    const assessmentService = new RuleDetectionAssessmentService(aiService);
 
     const assessmentResult = await assessmentService.runFeasibilityAssessment(
       detectionProgramRuleInput,

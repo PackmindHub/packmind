@@ -100,7 +100,6 @@ export class GenerateHeuristicFollowingChatbotInputUsecase extends AbstractMembe
       const aiService = response.aiService;
       const heuristicGenerationService = new HeuristicGenerationService(
         aiService,
-        this.logger,
       );
 
       const newHeuristic = await heuristicGenerationService.generateHeuristic(

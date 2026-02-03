@@ -46,7 +46,7 @@ export class ImportPracticeLegacyHexa extends BaseHexa<
 
     try {
       // Instantiate adapter (dependencies will be injected in initialize())
-      this.adapter = new ImportPracticeLegacyAdapter(this.logger);
+      this.adapter = new ImportPracticeLegacyAdapter();
 
       this.logger.info('ImportPracticeLegacyHexa construction completed');
     } catch (error) {

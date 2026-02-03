@@ -10,16 +10,18 @@ import { GenerateProgramInput } from '../domain';
 import { GenerateProgramDelayedJob } from '../application/useCases/generateProgramUseCase/GenerateProgramDelayedJob';
 import { ILinterRepositories } from '../domain/repositories/ILinterRepositories';
 
+const origin = 'GenerateProgramJobFactory';
+
 export class GenerateProgramJobFactory implements IJobFactory<GenerateProgramInput> {
   public delayedJob: GenerateProgramDelayedJob | null = null;
 
   constructor(
-    private readonly logger: PackmindLogger,
     private readonly linterRepositories: ILinterRepositories,
     private readonly getStandardsAdapter: () => IStandardsPort,
     private readonly getLinterAstAdapter: () => ILinterAstPort | null,
     private readonly getLinterAdapter: () => ILinterPort,
     private readonly getLlmPort: () => ILlmPort,
+    private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {}
 
   async createQueue(): Promise<IJobQueue<GenerateProgramInput>> {
@@ -27,7 +29,6 @@ export class GenerateProgramJobFactory implements IJobFactory<GenerateProgramInp
 
     this.delayedJob = new GenerateProgramDelayedJob(
       (listeners) => queueFactory(this.getQueueName(), listeners),
-      this.logger,
       this.linterRepositories,
       this.getStandardsAdapter,
       this.getLinterAstAdapter,

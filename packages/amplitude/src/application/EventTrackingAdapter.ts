@@ -1,17 +1,17 @@
 import { IEventTrackingPort, UserId, OrganizationId } from '@packmind/types';
-import { LogLevel, PackmindLogger } from '@packmind/logger';
+import { PackmindLogger } from '@packmind/logger';
 import { AmplitudeTrackEventService } from './AmplitudeTrackEventService';
 import { AmplitudeNodeEvent } from '../domain/entities/AmplitudeNodeEvent';
 
 const origin = 'EventTrackingAdapter';
 
 export class EventTrackingAdapter implements IEventTrackingPort {
-  private readonly logger: PackmindLogger;
   private readonly amplitudeService: AmplitudeTrackEventService;
 
-  constructor(logger?: PackmindLogger) {
-    this.logger = logger || new PackmindLogger(origin, LogLevel.INFO);
-    this.amplitudeService = new AmplitudeTrackEventService(this.logger);
+  constructor(
+    private readonly logger: PackmindLogger = new PackmindLogger(origin),
+  ) {
+    this.amplitudeService = new AmplitudeTrackEventService();
     this.logger.info('EventTrackingAdapter (proprietary version) initialized');
   }
 

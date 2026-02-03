@@ -17,6 +17,8 @@ import { Job } from 'bullmq';
 import { AssessRuleDetectionUseCase } from './assessRuleDetection.usecase';
 import { ILinterRepositories } from '../../../domain/repositories/ILinterRepositories';
 
+const origin = 'AssessRuleDetectionDelayedJob';
+
 export class AssessRuleDetectionDelayedJob extends AbstractAIDelayedJob<
   AssessRuleDetectionInput,
   AssessRuleDetectionOutput
@@ -27,13 +29,12 @@ export class AssessRuleDetectionDelayedJob extends AbstractAIDelayedJob<
     queueFactory: (
       queueListeners: Partial<QueueListeners>,
     ) => Promise<IQueue<AssessRuleDetectionInput, AssessRuleDetectionOutput>>,
-    logger: PackmindLogger,
     private readonly linterRepositories: ILinterRepositories,
     private readonly getStandardsAdapter: () => IStandardsPort,
     private readonly getLinterAdapter: () => ILinterPort,
     private readonly getLlmPort: () => ILlmPort,
   ) {
-    super(queueFactory, logger);
+    super(queueFactory, new PackmindLogger(origin));
   }
 
   async onFail(jobId: string): Promise<void> {
@@ -66,7 +67,6 @@ export class AssessRuleDetectionDelayedJob extends AbstractAIDelayedJob<
       this.getStandardsAdapter(),
       this.getLinterAdapter,
       this.getLlmPort(),
-      this.logger,
     );
 
     return await useCase.execute(command);

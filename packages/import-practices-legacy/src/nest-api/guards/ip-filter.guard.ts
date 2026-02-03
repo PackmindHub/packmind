@@ -17,11 +17,9 @@ const origin = 'IpFilterGuard';
  */
 @Injectable()
 export class IpFilterGuard implements CanActivate {
-  private readonly logger: PackmindLogger;
-
-  constructor() {
-    this.logger = new PackmindLogger(origin);
-  }
+  constructor(
+    private readonly logger: PackmindLogger = new PackmindLogger(origin),
+  ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const allowedIp = await Configuration.getConfig(

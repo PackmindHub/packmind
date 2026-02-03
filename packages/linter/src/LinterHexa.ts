@@ -69,7 +69,6 @@ export class LinterHexa extends BaseHexa<LinterHexaOpts, ILinterPort> {
       // Instantiate services
       this.detectionProgramService = new DetectionProgramService(
         this.linterRepositories,
-        this.logger,
       );
 
       // Initialize linter-ast adapter early
@@ -240,7 +239,6 @@ export class LinterHexa extends BaseHexa<LinterHexaOpts, ILinterPort> {
   ): Promise<ILinterDelayedJobs> {
     // Register generate program job queue with JobsService
     const generateProgramJobFactory = new GenerateProgramJobFactory(
-      this.logger,
       this.linterRepositories,
       getStandardsAdapter,
       () => this.linterAstAdapter,
