@@ -6,6 +6,10 @@
 - Add `init` command for onboarding: automatically scans projects, generates standards and commands, with optional push to backend
 - Add `onboard` command to rescan projects and regenerate content with draft-first flow
 - Enhanced `packmind-onboard` default skill with structured step-based guidance and AI-driven project analysis
+- Add `standards list` command to display all standards in your organization
+- Add `commands list` command to display all commands in your organization
+- Add `skills list` command to display all skills in your organization
+- Add `packages create <name>` command to create a new package
 
 ## Changed
 
