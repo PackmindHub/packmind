@@ -387,6 +387,15 @@ export class CopilotDeployer implements ICodingAgentDeployer {
       });
     }
 
+    // Delete default skills (managed by Packmind)
+    for (const slug of DefaultSkillsDeployer.getDefaultSkillSlugs()) {
+      fileUpdates.delete.push({
+        path: `${CopilotDeployer.SKILLS_FOLDER_PATH}${slug}`,
+        type: DeleteItemType.Directory,
+      });
+    }
+
+    // Delete user package skills (managed by Packmind)
     for (const skillVersion of artifacts.skillVersions) {
       fileUpdates.delete.push({
         path: `${CopilotDeployer.SKILLS_FOLDER_PATH}${skillVersion.slug}`,
