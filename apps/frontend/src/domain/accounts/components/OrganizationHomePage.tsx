@@ -5,6 +5,7 @@ import { OutdatedTargetsSection } from '../../organizations/components/dashboard
 import { useGetOnboardingStatusQuery } from '../api/queries/AccountsQueries';
 import { useAuthContext } from '../hooks/useAuthContext';
 import { OnboardingSteps } from './OnboardingSteps';
+import { GetStartedWithPackmindWidget } from './GetStartedWithPackmindWidget';
 
 export const OrganizationHomePage: React.FC = () => {
   const { organization } = useAuthContext();
@@ -16,20 +17,19 @@ export const OrganizationHomePage: React.FC = () => {
 
   return (
     <PMPage title={'Dashboard'}>
-      {!isOnboardingComplete ? (
-        <PMBox width="full">
-          <PMVStack gap={8} align="stretch">
+      <PMBox width="full">
+        <PMVStack gap={8} align="stretch">
+          <GetStartedWithPackmindWidget />
+          {!isOnboardingComplete ? (
             <OnboardingSteps />
-          </PMVStack>
-        </PMBox>
-      ) : (
-        <PMBox width="full">
-          <PMVStack gap={8} align="stretch">
-            <DashboardKPI />
-            <OutdatedTargetsSection />
-          </PMVStack>
-        </PMBox>
-      )}
+          ) : (
+            <>
+              <DashboardKPI />
+              <OutdatedTargetsSection />
+            </>
+          )}
+        </PMVStack>
+      </PMBox>
     </PMPage>
   );
 };

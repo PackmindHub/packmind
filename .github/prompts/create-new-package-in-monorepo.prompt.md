@@ -1,6 +1,7 @@
 ---
 description: 'Create a new buildable TypeScript package in the Packmind Nx monorepo, wiring up TypeScript paths, TypeORM, and Webpack so it can serve as a reusable shared or domain-specific library for consistent, type-safe code reuse across applications.'
 agent: 'agent'
+packmind-uid: 'create-new-package-in-monorepo'
 ---
 
 # Create New Package 
