@@ -888,6 +888,7 @@ Apache 2.0 - See LICENSE.txt for details.
 `;
 
 export class CreateSkillDeployer implements ISkillDeployer {
+  public readonly slug = 'packmind-create-skill';
   public readonly minimumVersion = '0.14.0';
 
   deploy(agentName: string, skillsFolderPath: string): FileUpdates {
