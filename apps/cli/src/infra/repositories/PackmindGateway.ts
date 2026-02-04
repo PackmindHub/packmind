@@ -35,7 +35,7 @@ export class PackmindGateway implements IPackmindGateway {
     this.mcp = new McpGateway(this.httpClient);
     this.spaces = new SpacesGateway(this.httpClient);
     this.skills = new SkillsGateway(this.httpClient, this.spaces);
-    this.commands = new CommandsGateway(this.httpClient, this.spaces);
+    this.commands = new CommandsGateway(this.httpClient);
     this.standards = new StandardsGateway(this.httpClient, this.spaces);
     this.packages = new PackagesGateway(apiKey, this.httpClient);
     this.deployment = new DeploymentGateway(apiKey);

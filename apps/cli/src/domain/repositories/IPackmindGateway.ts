@@ -24,14 +24,6 @@ export type {
   ListStandardsResult,
 } from './IStandardsGateway';
 
-// Re-export command types from ICommandsGateway for backward compatibility
-export type {
-  CreateCommandCommand,
-  CreateCommandResult,
-  ListedCommand,
-  ListCommandsResult,
-} from './ICommandsGateway';
-
 // Re-export package types from IPackagesGateway for backward compatibility
 export type {
   CreatePackageCommand,

@@ -1,17 +1,9 @@
 // Create command types
-export type CreateCommandCommand = {
-  name: string;
-  summary: string;
-  whenToUse: string[];
-  contextValidationCheckpoints: string[];
-  steps: Array<{ name: string; description: string; codeSnippet?: string }>;
-};
-
-export type CreateCommandResult = {
-  id: string;
-  name: string;
-  slug: string;
-};
+import {
+  Gateway,
+  ICaptureRecipeUseCase,
+  IListRecipesBySpaceUseCase,
+} from '@packmind/types';
 
 // List Commands types
 export type ListedCommand = {
@@ -23,10 +15,7 @@ export type ListedCommand = {
 export type ListCommandsResult = ListedCommand[];
 
 export interface ICommandsGateway {
-  create(
-    spaceId: string,
-    data: CreateCommandCommand,
-  ): Promise<CreateCommandResult>;
-  list(): Promise<ListCommandsResult>;
+  create: Gateway<ICaptureRecipeUseCase>;
+  list: Gateway<IListRecipesBySpaceUseCase>;
   getBySlug(slug: string): Promise<ListedCommand | null>;
 }

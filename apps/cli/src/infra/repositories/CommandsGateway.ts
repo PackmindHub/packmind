@@ -1,43 +1,37 @@
-import {
-  ICommandsGateway,
-  CreateCommandCommand,
-  CreateCommandResult,
-  ListCommandsResult,
-  ListedCommand,
-} from '../../domain/repositories/ICommandsGateway';
-import { ISpacesGateway } from '../../domain/repositories/ISpacesGateway';
+import { ICommandsGateway } from '../../domain/repositories/ICommandsGateway';
 import { PackmindHttpClient } from '../http/PackmindHttpClient';
+import {
+  Gateway,
+  ICaptureRecipeUseCase,
+  IListRecipesBySpaceUseCase,
+  ListRecipesBySpaceResponse,
+  Recipe,
+} from '@packmind/types';
 
 export class CommandsGateway implements ICommandsGateway {
-  constructor(
-    private readonly httpClient: PackmindHttpClient,
-    private readonly spaces: ISpacesGateway,
-  ) {}
+  constructor(private readonly httpClient: PackmindHttpClient) {}
 
-  public create = async (
-    spaceId: string,
-    data: CreateCommandCommand,
-  ): Promise<CreateCommandResult> => {
+  public create: Gateway<ICaptureRecipeUseCase> = async (command) => {
     const { organizationId } = this.httpClient.getAuthContext();
-    return this.httpClient.request<CreateCommandResult>(
-      `/api/v0/organizations/${organizationId}/spaces/${spaceId}/recipes`,
-      { method: 'POST', body: data },
+    return this.httpClient.request(
+      `/api/v0/organizations/${organizationId}/spaces/${command.spaceId}/recipes`,
+      { method: 'POST', body: command },
     );
   };
 
-  public list = async (): Promise<ListCommandsResult> => {
-    const space = await this.spaces.getGlobal();
+  public list: Gateway<IListRecipesBySpaceUseCase> = async (command) => {
     const { organizationId } = this.httpClient.getAuthContext();
 
-    const recipes = await this.httpClient.request<
-      Array<{ id: string; slug: string; name: string }>
-    >(`/api/v0/organizations/${organizationId}/spaces/${space.id}/recipes`);
-
-    return recipes.map((r) => ({
-      id: r.id,
-      slug: r.slug,
-      name: r.name,
-    }));
+    const listRecipesResponse = await this.httpClient.request<
+      Recipe[] | ListRecipesBySpaceResponse
+    >(
+      `/api/v0/organizations/${organizationId}/spaces/${command.spaceId}/recipes`,
+    );
+    // The API endpoint does not (yet) return the correct type, just handling this for future fix.
+    if (listRecipesResponse instanceof Array) {
+      return { recipes: listRecipesResponse };
+    }
+    return listRecipesResponse;
   };
 
   public getBySlug = async (slug: string): Promise<ListedCommand | null> => {

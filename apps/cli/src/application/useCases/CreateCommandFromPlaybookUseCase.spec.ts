@@ -65,7 +65,8 @@ describe('CreateCommandFromPlaybookUseCase', () => {
     });
 
     it('creates command with provided data', () => {
-      expect(mockCommandsGateway.create).toHaveBeenCalledWith('space-1', {
+      expect(mockCommandsGateway.create).toHaveBeenCalledWith({
+        spaceId: 'space-1',
         name: 'Test Command',
         summary: 'A test command summary',
         whenToUse: ['When testing', 'When developing'],
