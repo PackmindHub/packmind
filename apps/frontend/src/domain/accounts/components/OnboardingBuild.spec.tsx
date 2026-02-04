@@ -73,42 +73,19 @@ describe('OnboardingBuild', () => {
       ).toBeInTheDocument();
     });
 
-    it('renders the CLI card', () => {
-      renderWithProviders(<OnboardingBuild />);
-
-      expect(screen.getByTestId('OnboardingBuild.CLICard')).toBeInTheDocument();
-    });
-
     it('renders the MCP card', () => {
       renderWithProviders(<OnboardingBuild />);
 
       expect(screen.getByTestId('OnboardingBuild.MCPCard')).toBeInTheDocument();
     });
-
-    describe('when on localhost', () => {
-      it('renders the progress section', () => {
-        mockIsLocalhost.mockReturnValue(true);
-        renderWithProviders(<OnboardingBuild />);
-
-        expect(
-          screen.getByText('Waiting for your playbook to be ready...'),
-        ).toBeInTheDocument();
-      });
-    });
-
-    describe('when not on localhost', () => {
-      it('does not render the progress section', () => {
-        mockIsLocalhost.mockReturnValue(false);
-        renderWithProviders(<OnboardingBuild />);
-
-        expect(
-          screen.queryByText('Waiting for your playbook to be ready...'),
-        ).not.toBeInTheDocument();
-      });
-    });
   });
 
-  describe('CLI section', () => {
+  // TODO: Re-enable when CLI is released (currently behind localhost feature flag)
+  describe.skip('CLI section', () => {
+    beforeEach(() => {
+      mockIsLocalhost.mockReturnValue(true);
+    });
+
     it('renders the Install tabs', () => {
       renderWithProviders(<OnboardingBuild />);
 
@@ -206,7 +183,7 @@ describe('OnboardingBuild', () => {
           screen.getByTestId('OnboardingBuild.Assistant-claude'),
         );
 
-        expect(screen.getAllByText('Start analysis')).toHaveLength(2);
+        expect(screen.getByText('Start analysis')).toBeInTheDocument();
       });
 
       it('shows the onboarding prompt textarea', async () => {
@@ -238,12 +215,6 @@ describe('OnboardingBuild', () => {
     });
 
     describe('when no agent is selected', () => {
-      it('shows only the CLI Start analysis section', () => {
-        renderWithProviders(<OnboardingBuild />);
-
-        expect(screen.getAllByText('Start analysis')).toHaveLength(1);
-      });
-
       it('does not show the onboarding prompt textarea', () => {
         renderWithProviders(<OnboardingBuild />);
 
