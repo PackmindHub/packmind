@@ -66,10 +66,6 @@ The following commands apply for both NX apps and packages (use `nx show project
 
 Public end-user documentation is maintained in the `apps/doc/` folder (Mintlify-based).
 
-# Artefact Usage Logging
-
-After reading `CLAUDE.md`, `.claude/rules/**`, `.claude/skills/**`, `.skills/commands/**`, `.claude/agents/**` files, or invoking Skills, use the `artefact-logger` skill to log access. See `.claude/skills/artefact-logger/SKILL.md` for details.
-
 # Task splitting
 
 - For any task you perform, you MUST split it into multiple into sub-tasks which have a logical increment (eg: new endpoint, new component, new use case etc). When a task is done, run all the validation steps (lint, test, packmind etc) and ask me for validation of the work you did.
