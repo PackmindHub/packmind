@@ -33,6 +33,7 @@ describe('installPackagesHandler', () => {
       readConfig: jest.fn(),
       readFullConfig: jest.fn(),
       writeConfig: jest.fn(),
+      addPackagesToConfig: jest.fn(),
       installPackages: jest.fn(),
       tryGetGitRepositoryRoot: jest.fn(),
       getGitRemoteUrlFromPath: jest.fn(),
@@ -574,6 +575,116 @@ describe('installPackagesHandler', () => {
       });
     });
 
+    describe('config writing with order preservation', () => {
+      beforeEach(() => {
+        mockPackmindCliHexa.installPackages.mockResolvedValue({
+          filesCreated: 1,
+          filesUpdated: 0,
+          filesDeleted: 0,
+          recipesCount: 1,
+          standardsCount: 0,
+          errors: [],
+        });
+        mockPackmindCliHexa.tryGetGitRepositoryRoot.mockResolvedValue(null);
+        mockPackmindCliHexa.addPackagesToConfig.mockResolvedValue(undefined);
+      });
+
+      describe('when no new packages are provided (refresh existing)', () => {
+        beforeEach(async () => {
+          mockPackmindCliHexa.configExists.mockResolvedValue(true);
+          mockPackmindCliHexa.readFullConfig.mockResolvedValue({
+            packages: { backend: '*', frontend: '*' },
+          });
+
+          await installPackagesHandler({ packagesSlugs: [] }, deps);
+        });
+
+        it('does not call addPackagesToConfig', () => {
+          expect(
+            mockPackmindCliHexa.addPackagesToConfig,
+          ).not.toHaveBeenCalled();
+        });
+      });
+
+      describe('when all packages already exist in config', () => {
+        beforeEach(async () => {
+          mockPackmindCliHexa.configExists.mockResolvedValue(true);
+          mockPackmindCliHexa.readFullConfig.mockResolvedValue({
+            packages: { backend: '*', frontend: '*' },
+          });
+
+          await installPackagesHandler(
+            { packagesSlugs: ['backend', 'frontend'] },
+            deps,
+          );
+        });
+
+        it('does not call addPackagesToConfig', () => {
+          expect(
+            mockPackmindCliHexa.addPackagesToConfig,
+          ).not.toHaveBeenCalled();
+        });
+      });
+
+      describe('when new packages are provided', () => {
+        beforeEach(async () => {
+          mockPackmindCliHexa.configExists.mockResolvedValue(true);
+          mockPackmindCliHexa.readFullConfig.mockResolvedValue({
+            packages: { backend: '*' },
+          });
+
+          await installPackagesHandler(
+            { packagesSlugs: ['frontend', 'api'] },
+            deps,
+          );
+        });
+
+        it('calls addPackagesToConfig with only new packages', () => {
+          expect(mockPackmindCliHexa.addPackagesToConfig).toHaveBeenCalledWith(
+            '/project',
+            ['frontend', 'api'],
+          );
+        });
+      });
+
+      describe('when some packages are new and some exist', () => {
+        beforeEach(async () => {
+          mockPackmindCliHexa.configExists.mockResolvedValue(true);
+          mockPackmindCliHexa.readFullConfig.mockResolvedValue({
+            packages: { backend: '*' },
+          });
+
+          await installPackagesHandler(
+            { packagesSlugs: ['backend', 'frontend'] },
+            deps,
+          );
+        });
+
+        it('calls addPackagesToConfig with only the new package', () => {
+          expect(mockPackmindCliHexa.addPackagesToConfig).toHaveBeenCalledWith(
+            '/project',
+            ['frontend'],
+          );
+        });
+      });
+
+      describe('when no config exists and new packages are provided', () => {
+        beforeEach(async () => {
+          mockPackmindCliHexa.configExists.mockResolvedValue(false);
+          mockPackmindCliHexa.readFullConfig.mockResolvedValue(null);
+
+          await installPackagesHandler({ packagesSlugs: ['backend'] }, deps);
+        });
+
+        it('calls addPackagesToConfig with all packages', () => {
+          expect(mockPackmindCliHexa.addPackagesToConfig).toHaveBeenCalledWith(
+            '/project',
+            ['backend'],
+          );
+        });
+      });
+    });
+
     describe('default skills installation', () => {
       beforeEach(() => {
         mockPackmindCliHexa.configExists.mockResolvedValue(true);
@@ -616,6 +727,31 @@ describe('installPackagesHandler', () => {
 
           expect(mockPackmindCliHexa.installDefaultSkills).toHaveBeenCalledWith(
             expect.objectContaining({ cliVersion: expect.any(String) }),
+          );
+        });
+
+        it('passes agents from config to installDefaultSkills', async () => {
+          const agents = [
+            { name: 'claude-code', isEnabled: true },
+            { name: 'cursor', isEnabled: false },
+          ];
+          mockPackmindCliHexa.readFullConfig.mockResolvedValue({
+            packages: { backend: '*' },
+            agents,
+          });
+          mockPackmindCliHexa.installDefaultSkills.mockResolvedValue({
+            filesCreated: 1,
+            filesUpdated: 0,
+            errors: [],
+          });
+
+          await installPackagesHandler({ packagesSlugs: [] }, deps);
+
+          expect(mockPackmindCliHexa.installDefaultSkills).toHaveBeenCalledWith(
+            expect.objectContaining({
+              cliVersion: expect.any(String),
+              agents,
+            }),
           );
         });
 

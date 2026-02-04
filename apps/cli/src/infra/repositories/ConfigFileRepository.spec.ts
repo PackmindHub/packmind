@@ -483,6 +483,175 @@ describe('ConfigFileRepository', () => {
     });
   });
 
+  describe('addPackagesToConfig', () => {
+    describe('when no existing config file', () => {
+      beforeEach(() => {
+        mockFs.readFile.mockRejectedValue({ code: 'ENOENT' });
+        mockFs.writeFile.mockResolvedValue(undefined);
+      });
+
+      it('creates config with packages first (default order)', async () => {
+        await repository.addPackagesToConfig('/project', [
+          'backend',
+          'frontend',
+        ]);
+
+        expect(mockFs.writeFile).toHaveBeenCalledWith(
+          '/project/packmind.json',
+          expect.stringContaining('"packages"'),
+          'utf-8',
+        );
+      });
+
+      it('creates config with new packages', async () => {
+        await repository.addPackagesToConfig('/project', [
+          'backend',
+          'frontend',
+        ]);
+
+        const writtenContent = (mockFs.writeFile as jest.Mock).mock.calls[0][1];
+        const parsed = JSON.parse(writtenContent);
+        expect(parsed.packages).toEqual({ backend: '*', frontend: '*' });
+      });
+    });
+
+    describe('when existing config has agents before packages', () => {
+      beforeEach(() => {
+        const existingConfig = JSON.stringify(
+          { agents: ['claude'], packages: { existing: '*' } },
+          null,
+          2,
+        );
+        mockFs.readFile.mockResolvedValue(existingConfig);
+        mockFs.writeFile.mockResolvedValue(undefined);
+      });
+
+      it('preserves agents-first order', async () => {
+        await repository.addPackagesToConfig('/project', ['new-package']);
+
+        const writtenContent = (mockFs.writeFile as jest.Mock).mock.calls[0][1];
+        const agentsIndex = writtenContent.indexOf('"agents"');
+        const packagesIndex = writtenContent.indexOf('"packages"');
+        expect(agentsIndex).toBeLessThan(packagesIndex);
+      });
+
+      it('adds new package while preserving existing packages', async () => {
+        await repository.addPackagesToConfig('/project', ['new-package']);
+
+        const writtenContent = (mockFs.writeFile as jest.Mock).mock.calls[0][1];
+        const parsed = JSON.parse(writtenContent);
+        expect(parsed.packages).toEqual({ existing: '*', 'new-package': '*' });
+      });
+
+      it('preserves agents array', async () => {
+        await repository.addPackagesToConfig('/project', ['new-package']);
+
+        const writtenContent = (mockFs.writeFile as jest.Mock).mock.calls[0][1];
+        const parsed = JSON.parse(writtenContent);
+        expect(parsed.agents).toEqual(['claude']);
+      });
+    });
+
+    describe('when existing config has packages before agents', () => {
+      beforeEach(() => {
+        const existingConfig = JSON.stringify(
+          { packages: { existing: '*' }, agents: ['cursor'] },
+          null,
+          2,
+        );
+        mockFs.readFile.mockResolvedValue(existingConfig);
+        mockFs.writeFile.mockResolvedValue(undefined);
+      });
+
+      it('preserves packages-first order', async () => {
+        await repository.addPackagesToConfig('/project', ['new-package']);
+
+        const writtenContent = (mockFs.writeFile as jest.Mock).mock.calls[0][1];
+        const agentsIndex = writtenContent.indexOf('"agents"');
+        const packagesIndex = writtenContent.indexOf('"packages"');
+        expect(packagesIndex).toBeLessThan(agentsIndex);
+      });
+
+      it('preserves agents array', async () => {
+        await repository.addPackagesToConfig('/project', ['new-package']);
+
+        const writtenContent = (mockFs.writeFile as jest.Mock).mock.calls[0][1];
+        const parsed = JSON.parse(writtenContent);
+        expect(parsed.agents).toEqual(['cursor']);
+      });
+    });
+
+    describe('when existing config has no agents', () => {
+      beforeEach(() => {
+        const existingConfig = JSON.stringify(
+          { packages: { existing: '*' } },
+          null,
+          2,
+        );
+        mockFs.readFile.mockResolvedValue(existingConfig);
+        mockFs.writeFile.mockResolvedValue(undefined);
+      });
+
+      it('does not add agents property', async () => {
+        await repository.addPackagesToConfig('/project', ['new-package']);
+
+        const writtenContent = (mockFs.writeFile as jest.Mock).mock.calls[0][1];
+        const parsed = JSON.parse(writtenContent);
+        expect(parsed).not.toHaveProperty('agents');
+      });
+
+      it('adds new packages', async () => {
+        await repository.addPackagesToConfig('/project', ['new-package']);
+
+        const writtenContent = (mockFs.writeFile as jest.Mock).mock.calls[0][1];
+        const parsed = JSON.parse(writtenContent);
+        expect(parsed.packages).toEqual({ existing: '*', 'new-package': '*' });
+      });
+    });
+
+    describe('when package already exists', () => {
+      beforeEach(() => {
+        const existingConfig = JSON.stringify(
+          { packages: { backend: '*', frontend: '*' } },
+          null,
+          2,
+        );
+        mockFs.readFile.mockResolvedValue(existingConfig);
+        mockFs.writeFile.mockResolvedValue(undefined);
+      });
+
+      it('does not duplicate existing package', async () => {
+        await repository.addPackagesToConfig('/project', [
+          'backend',
+          'new-package',
+        ]);
+
+        const writtenContent = (mockFs.writeFile as jest.Mock).mock.calls[0][1];
+        const parsed = JSON.parse(writtenContent);
+        expect(parsed.packages).toEqual({
+          backend: '*',
+          frontend: '*',
+          'new-package': '*',
+        });
+      });
+    });
+
+    describe('when config has malformed JSON', () => {
+      beforeEach(() => {
+        mockFs.readFile.mockResolvedValue('not valid json');
+        mockFs.writeFile.mockResolvedValue(undefined);
+      });
+
+      it('creates fresh config', async () => {
+        await repository.addPackagesToConfig('/project', ['new-package']);
+
+        const writtenContent = (mockFs.writeFile as jest.Mock).mock.calls[0][1];
+        const parsed = JSON.parse(writtenContent);
+        expect(parsed.packages).toEqual({ 'new-package': '*' });
+      });
+    });
+  });
+
   describe('findAllConfigsInTree', () => {
     beforeEach(() => {
       mockFs.readdir.mockResolvedValue([]);

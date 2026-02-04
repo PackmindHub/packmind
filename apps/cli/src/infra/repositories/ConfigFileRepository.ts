@@ -5,11 +5,12 @@ import {
   PackmindFileConfig,
   validateAgentsWithWarnings,
 } from '@packmind/types';
+import type { Dirent } from 'fs';
 import * as fs from 'fs/promises';
 import * as path from 'path';
-import { logWarningConsole } from '../utils/consoleLogger';
 import { normalizePath } from '../../application/utils/pathUtils';
 import { IConfigFileRepository } from '../../domain/repositories/IConfigFileRepository';
+import { logWarningConsole } from '../utils/consoleLogger';
 
 export class ConfigFileRepository implements IConfigFileRepository {
   private readonly CONFIG_FILENAME = 'packmind.json';
@@ -27,13 +28,12 @@ export class ConfigFileRepository implements IConfigFileRepository {
     baseDirectory: string,
     config: PackmindFileConfig,
   ): Promise<void> {
-    const configPath = path.join(baseDirectory, this.CONFIG_FILENAME);
-    const configContent = JSON.stringify(config, null, 2) + '\n';
-    await fs.writeFile(configPath, configContent, 'utf-8');
+    const configPath = this.getConfigPath(baseDirectory);
+    await this.writeConfigToPath(configPath, config);
   }
 
   async configExists(baseDirectory: string): Promise<boolean> {
-    const configPath = path.join(baseDirectory, this.CONFIG_FILENAME);
+    const configPath = this.getConfigPath(baseDirectory);
     try {
       await fs.access(configPath);
       return true;
@@ -43,25 +43,22 @@ export class ConfigFileRepository implements IConfigFileRepository {
   }
 
   async readConfig(baseDirectory: string): Promise<PackmindFileConfig | null> {
-    const configPath = path.join(baseDirectory, this.CONFIG_FILENAME);
+    const configPath = this.getConfigPath(baseDirectory);
 
     try {
       const configContent = await fs.readFile(configPath, 'utf-8');
       const rawConfig = JSON.parse(configContent);
 
-      // Validate structure
       if (!rawConfig.packages || typeof rawConfig.packages !== 'object') {
         throw new Error(
           'Invalid packmind.json structure. Expected { packages: { ... } }',
         );
       }
 
-      // Validate and filter agents if present
       const { validAgents, invalidAgents } = validateAgentsWithWarnings(
         rawConfig.agents,
       );
 
-      // Warn about invalid agents
       if (invalidAgents.length > 0) {
         logWarningConsole(
           `Invalid agent(s) in ${configPath}: ${invalidAgents.join(', ')}. Valid agents are: packmind, junie, claude, cursor, copilot, agents_md, gitlab_duo, continue`,
@@ -72,7 +69,6 @@ export class ConfigFileRepository implements IConfigFileRepository {
         packages: rawConfig.packages,
       };
 
-      // Only include agents if explicitly defined in the config
       if (validAgents !== null) {
         config.agents = validAgents;
       }
@@ -80,11 +76,9 @@ export class ConfigFileRepository implements IConfigFileRepository {
       return config;
     } catch (error) {
       if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
-        // File doesn't exist - this is OK
         return null;
       }
 
-      // Malformed JSON or invalid structure - warn once and skip
       if (!this.warnedFiles.has(configPath)) {
         this.warnedFiles.add(configPath);
         logWarningConsole(`⚠ Skipping malformed config file: ${configPath}`);
@@ -93,48 +87,66 @@ export class ConfigFileRepository implements IConfigFileRepository {
     }
   }
 
+  private getConfigPath(directory: string): string {
+    return path.join(directory, this.CONFIG_FILENAME);
+  }
+
+  private async writeConfigToPath(
+    configPath: string,
+    config: PackmindFileConfig,
+  ): Promise<void> {
+    const configContent = JSON.stringify(config, null, 2) + '\n';
+    await fs.writeFile(configPath, configContent, 'utf-8');
+  }
+
   /**
    * Recursively finds all directories containing packmind.json in descendant folders.
    * Excludes common build/dependency directories (node_modules, .git, dist, etc.)
-   *
-   * @param directory - The root directory to search from
-   * @returns Array of directory paths that contain a packmind.json file
    */
   async findDescendantConfigs(directory: string): Promise<string[]> {
     const normalizedDir = normalizePath(path.resolve(directory));
+    return this.searchDescendantsRecursively(normalizedDir);
+  }
+
+  private async searchDescendantsRecursively(
+    currentDir: string,
+  ): Promise<string[]> {
+    const entries = await this.tryReadDirectory(currentDir);
+    if (!entries) {
+      return [];
+    }
+
     const results: string[] = [];
 
-    const searchRecursively = async (currentDir: string): Promise<void> => {
-      let entries;
-      try {
-        entries = await fs.readdir(currentDir, { withFileTypes: true });
-      } catch {
-        return;
+    for (const entry of entries) {
+      if (!entry.isDirectory() || this.isExcludedDirectory(entry.name)) {
+        continue;
       }
 
-      for (const entry of entries) {
-        if (!entry.isDirectory()) {
-          continue;
-        }
+      const entryPath = normalizePath(path.join(currentDir, entry.name));
+      const config = await this.readConfig(entryPath);
 
-        if (this.EXCLUDED_DIRECTORIES.includes(entry.name)) {
-          continue;
-        }
-
-        const entryPath = normalizePath(path.join(currentDir, entry.name));
-        const config = await this.readConfig(entryPath);
-
-        if (config) {
-          results.push(entryPath);
-        }
-
-        await searchRecursively(entryPath);
+      if (config) {
+        results.push(entryPath);
       }
-    };
 
-    await searchRecursively(normalizedDir);
+      const nestedResults = await this.searchDescendantsRecursively(entryPath);
+      results.push(...nestedResults);
+    }
 
     return results;
+  }
+
+  private async tryReadDirectory(directory: string): Promise<Dirent[] | null> {
+    try {
+      return await fs.readdir(directory, { withFileTypes: true });
+    } catch {
+      return null;
+    }
+  }
+
+  private isExcludedDirectory(name: string): boolean {
+    return this.EXCLUDED_DIRECTORIES.includes(name);
   }
 
   /**
@@ -200,10 +212,6 @@ export class ConfigFileRepository implements IConfigFileRepository {
   /**
    * Finds all packmind.json files in the tree (both ancestors and descendants)
    * and returns each config with its target path.
-   *
-   * @param startDirectory - Directory to start searching from (typically the lint target)
-   * @param stopDirectory - Directory to stop ancestor search at (typically git repo root), also used as base for descendants search
-   * @returns All configs found with their target paths
    */
   async findAllConfigsInTree(
     startDirectory: string,
@@ -214,24 +222,40 @@ export class ConfigFileRepository implements IConfigFileRepository {
       ? normalizePath(path.resolve(stopDirectory))
       : null;
     const basePath = normalizedStop ?? normalizedStart;
+    const searchRoot = normalizedStop ?? normalizedStart;
 
     const configsMap = new Map<string, ConfigWithTarget>();
 
-    // 1. Walk up from start to stop (ancestors)
-    let currentDir = normalizedStart;
-    while (true) {
-      const config = await this.readConfig(currentDir);
-      if (config) {
-        const targetPath = this.computeRelativeTargetPath(currentDir, basePath);
-        configsMap.set(currentDir, {
-          targetPath,
-          absoluteTargetPath: currentDir,
-          packages: config.packages,
-          agents: config.agents,
-        });
-      }
+    await this.collectAncestorConfigs(
+      normalizedStart,
+      normalizedStop,
+      basePath,
+      configsMap,
+    );
+    await this.collectDescendantConfigs(searchRoot, basePath, configsMap);
+    await this.collectRootConfigIfMissing(searchRoot, basePath, configsMap);
 
-      if (normalizedStop !== null && currentDir === normalizedStop) {
+    const configs = Array.from(configsMap.values());
+
+    return {
+      configs,
+      hasConfigs: configs.length > 0,
+      basePath,
+    };
+  }
+
+  private async collectAncestorConfigs(
+    startDir: string,
+    stopDir: string | null,
+    basePath: string,
+    configsMap: Map<string, ConfigWithTarget>,
+  ): Promise<void> {
+    let currentDir = startDir;
+
+    while (true) {
+      await this.addConfigToMap(currentDir, basePath, configsMap);
+
+      if (stopDir !== null && currentDir === stopDir) {
         break;
       }
 
@@ -241,53 +265,51 @@ export class ConfigFileRepository implements IConfigFileRepository {
       }
       currentDir = parentDir;
     }
+  }
 
-    // 2. Walk down from stop directory (or start if no stop) to find descendants
-    const searchRoot = normalizedStop ?? normalizedStart;
+  private async collectDescendantConfigs(
+    searchRoot: string,
+    basePath: string,
+    configsMap: Map<string, ConfigWithTarget>,
+  ): Promise<void> {
     const descendantDirs = await this.findDescendantConfigs(searchRoot);
 
     for (const descendantDir of descendantDirs) {
       const normalizedDescendantDir = normalizePath(descendantDir);
-      // Skip if already found in ancestor walk
       if (configsMap.has(normalizedDescendantDir)) {
         continue;
       }
-
-      const config = await this.readConfig(normalizedDescendantDir);
-      if (config) {
-        const targetPath = this.computeRelativeTargetPath(
-          normalizedDescendantDir,
-          basePath,
-        );
-        configsMap.set(normalizedDescendantDir, {
-          targetPath,
-          absoluteTargetPath: normalizedDescendantDir,
-          packages: config.packages,
-          agents: config.agents,
-        });
-      }
+      await this.addConfigToMap(normalizedDescendantDir, basePath, configsMap);
     }
+  }
 
-    // 3. Also check the search root itself if not already checked
+  private async collectRootConfigIfMissing(
+    searchRoot: string,
+    basePath: string,
+    configsMap: Map<string, ConfigWithTarget>,
+  ): Promise<void> {
     if (!configsMap.has(searchRoot)) {
-      const rootConfig = await this.readConfig(searchRoot);
-      if (rootConfig) {
-        configsMap.set(searchRoot, {
-          targetPath: '/',
-          absoluteTargetPath: searchRoot,
-          packages: rootConfig.packages,
-          agents: rootConfig.agents,
-        });
-      }
+      await this.addConfigToMap(searchRoot, basePath, configsMap);
+    }
+  }
+
+  private async addConfigToMap(
+    directory: string,
+    basePath: string,
+    configsMap: Map<string, ConfigWithTarget>,
+  ): Promise<void> {
+    const config = await this.readConfig(directory);
+    if (!config) {
+      return;
     }
 
-    const configs = Array.from(configsMap.values());
-
-    return {
-      configs,
-      hasConfigs: configs.length > 0,
-      basePath,
-    };
+    const targetPath = this.computeRelativeTargetPath(directory, basePath);
+    configsMap.set(directory, {
+      targetPath,
+      absoluteTargetPath: directory,
+      packages: config.packages,
+      agents: config.agents,
+    });
   }
 
   private computeRelativeTargetPath(
@@ -303,5 +325,71 @@ export class ConfigFileRepository implements IConfigFileRepository {
 
     const relativePath = normalizedAbsolute.substring(normalizedBase.length);
     return relativePath.startsWith('/') ? relativePath : '/' + relativePath;
+  }
+
+  /**
+   * Adds new packages to an existing packmind.json while preserving property order.
+   * If the file doesn't exist, creates a new one with default order (packages first).
+   *
+   * Uses JavaScript's built-in property order preservation: JSON.parse() preserves
+   * insertion order for string keys, and mutating the existing object maintains
+   * that order when JSON.stringify() outputs it.
+   */
+  async addPackagesToConfig(
+    baseDirectory: string,
+    newPackageSlugs: string[],
+  ): Promise<void> {
+    const configPath = this.getConfigPath(baseDirectory);
+
+    const rawContent = await this.tryReadFile(configPath);
+    if (!rawContent) {
+      const newConfig = this.createConfigWithPackages(newPackageSlugs);
+      await this.writeConfigToPath(configPath, newConfig);
+      return;
+    }
+
+    let parsed: Record<string, unknown>;
+    try {
+      parsed = JSON.parse(rawContent);
+    } catch {
+      const newConfig = this.createConfigWithPackages(newPackageSlugs);
+      await this.writeConfigToPath(configPath, newConfig);
+      return;
+    }
+
+    // Ensure packages exists
+    if (!parsed.packages || typeof parsed.packages !== 'object') {
+      parsed.packages = {};
+    }
+
+    // Add new packages directly - mutating preserves key order
+    const packages = parsed.packages as Record<string, string>;
+    for (const slug of newPackageSlugs) {
+      if (!(slug in packages)) {
+        packages[slug] = '*';
+      }
+    }
+
+    // Write back - JSON.stringify() preserves original key order
+    await this.writeConfigToPath(configPath, parsed as PackmindFileConfig);
+  }
+
+  private async tryReadFile(filePath: string): Promise<string | null> {
+    try {
+      return await fs.readFile(filePath, 'utf-8');
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
+        return null;
+      }
+      throw error;
+    }
+  }
+
+  private createConfigWithPackages(slugs: string[]): PackmindFileConfig {
+    const packages: Record<string, string> = {};
+    for (const slug of slugs) {
+      packages[slug] = '*';
+    }
+    return { packages };
   }
 }

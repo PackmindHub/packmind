@@ -27,9 +27,6 @@ export class InstallPackagesUseCase implements IInstallPackagesUseCase {
       skillDirectoriesDeleted: 0,
     };
 
-    console.log('Executing InstallPackagesUseCase with command: ')
-    console.log(command.agents)
-
     // Fetch data from the gateway
     const response = await this.packmindGateway.deployment.pull({
       packagesSlugs: command.packagesSlugs,
@@ -40,7 +37,11 @@ export class InstallPackagesUseCase implements IInstallPackagesUseCase {
       agents: command.agents,
     });
 
-    console.log(JSON.stringify(response, null, 2))
+    // Filter out packmind.json from server response - config writing is handled separately
+    // by the CLI to preserve property order
+    const filteredCreateOrUpdate = response.fileUpdates.createOrUpdate.filter(
+      (file) => file.path !== 'packmind.json',
+    );
 
     // Deduplicate files by path (when multiple packages share standards/recipes)
     const uniqueFilesMap = new Map<
@@ -52,7 +53,7 @@ export class InstallPackagesUseCase implements IInstallPackagesUseCase {
       }
     >();
 
-    for (const file of response.fileUpdates.createOrUpdate) {
+    for (const file of filteredCreateOrUpdate) {
       uniqueFilesMap.set(file.path, file);
     }
 

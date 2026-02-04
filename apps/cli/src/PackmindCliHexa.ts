@@ -226,20 +226,29 @@ export class PackmindCliHexa {
         baseDirectory,
       );
 
-    console.log('-------------')
-    console.log(
-      baseDirectory,
-      {
-        ...existingConfig,
-        packages,
-      })
-
     await this.hexa.repositories.configFileRepository.writeConfig(
       baseDirectory,
       {
         ...existingConfig,
         packages,
       },
+    );
+  }
+
+  /**
+   * Adds new packages to an existing packmind.json while preserving property order.
+   * If the file doesn't exist, creates a new one with default order (packages first).
+   *
+   * @param baseDirectory - The directory containing packmind.json
+   * @param newPackageSlugs - Array of package slugs to add
+   */
+  public async addPackagesToConfig(
+    baseDirectory: string,
+    newPackageSlugs: string[],
+  ): Promise<void> {
+    return this.hexa.repositories.configFileRepository.addPackagesToConfig(
+      baseDirectory,
+      newPackageSlugs,
     );
   }
 
