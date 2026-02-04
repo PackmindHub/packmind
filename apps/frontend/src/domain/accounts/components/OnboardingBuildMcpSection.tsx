@@ -26,6 +26,7 @@ import { StartTrialCommandAgents } from '@packmind/types';
 import { OnboardingAgentProvider } from '../contexts';
 import { getAgentIcon } from './trial/AgentIcons';
 import { CopiableTextarea } from '../../../shared/components/inputs/CopiableTextarea';
+import { useAnalytics } from '@packmind/proprietary/frontend/domain/amplitude/providers/AnalyticsProvider';
 
 const mapAgentIdToAnalytics = (agentId: string): StartTrialCommandAgents => {
   const mapping: Record<string, StartTrialCommandAgents> = {
@@ -87,6 +88,7 @@ export function OnboardingBuildMcpSection() {
   const [selectedAgent, setSelectedAgent] = useState<IAgentConfig | null>(null);
   const { url, token, isLoading } = useMcpConnection();
   const agents = getAgentsConfig();
+  const analytics = useAnalytics();
 
   const methodTabs = useMemo(() => {
     if (!selectedAgent || !url || !token) return [];
@@ -142,7 +144,15 @@ export function OnboardingBuildMcpSection() {
                         selectedAgent?.id === agent.id ? 'primary' : 'secondary'
                       }
                       size="sm"
-                      onClick={() => setSelectedAgent(agent)}
+                      onClick={() => {
+                        analytics.track(
+                          'post_signup_onboarding_agent_clicked',
+                          {
+                            agent: agentAnalyticsId,
+                          },
+                        );
+                        setSelectedAgent(agent);
+                      }}
                       data-testid={`OnboardingBuild.Assistant-${agent.id}`}
                     >
                       <PMIcon as={AgentIcon} />
@@ -201,6 +211,11 @@ export function OnboardingBuildMcpSection() {
                 readOnly
                 rows={1}
                 data-testid="OnboardingBuild.OnboardingPrompt"
+                onCopy={() =>
+                  analytics.track('post_signup_onboarding_field_copied', {
+                    field: 'mcpStartAnalysis',
+                  })
+                }
               />
             </PMVStack>
           )}

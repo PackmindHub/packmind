@@ -9,11 +9,13 @@ import {
   NPM_INSTALL_COMMAND,
   buildCliLoginCommand,
 } from './LocalEnvironmentSetup/utils';
+import { useAnalytics } from '@packmind/proprietary/frontend/domain/amplitude/providers/AnalyticsProvider';
 
 export function OnboardingBuildCliSection() {
   const { loginCode } = useCliLoginCode();
   const curlCommand = buildCurlInstallCommand(loginCode ?? '');
   const loginCommand = buildCliLoginCommand();
+  const analytics = useAnalytics();
 
   return (
     <PMCard.Root
@@ -46,6 +48,11 @@ export function OnboardingBuildCliSection() {
                       readOnly
                       rows={3}
                       data-testid="OnboardingBuild.InstallScriptContent"
+                      onCopy={() =>
+                        analytics.track('post_signup_onboarding_field_copied', {
+                          field: 'installSh',
+                        })
+                      }
                     />
                   ),
                 },
@@ -58,7 +65,18 @@ export function OnboardingBuildCliSection() {
                       align="stretch"
                       data-testid="OnboardingBuild.InstallNPMContent"
                     >
-                      <CopiableTextField value={NPM_INSTALL_COMMAND} readOnly />
+                      <CopiableTextField
+                        value={NPM_INSTALL_COMMAND}
+                        readOnly
+                        onCopy={() =>
+                          analytics.track(
+                            'post_signup_onboarding_field_copied',
+                            {
+                              field: 'installNpm',
+                            },
+                          )
+                        }
+                      />
                       <CopiableTextField value={loginCommand} readOnly />
                     </PMVStack>
                   ),
@@ -81,6 +99,11 @@ export function OnboardingBuildCliSection() {
               value="packmind-cli init"
               readOnly
               data-testid="OnboardingBuild.InitializeContent"
+              onCopy={() =>
+                analytics.track('post_signup_onboarding_field_copied', {
+                  field: 'cliInit',
+                })
+              }
             />
           </PMVStack>
 
@@ -96,6 +119,11 @@ export function OnboardingBuildCliSection() {
               value="/packmind-onboarding"
               readOnly
               data-testid="OnboardingBuild.StartAnalysisContent"
+              onCopy={() =>
+                analytics.track('post_signup_onboarding_field_copied', {
+                  field: 'cliStartAnalysis',
+                })
+              }
             />
           </PMVStack>
         </PMVStack>

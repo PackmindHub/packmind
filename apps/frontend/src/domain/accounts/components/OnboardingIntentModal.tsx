@@ -3,6 +3,7 @@ import { PMDialog, PMBox, PMHStack, PMButton } from '@packmind/ui';
 import { OnboardingWelcome } from './OnboardingWelcome';
 import { OnboardingPlaybook } from './OnboardingPlaybook';
 import { OnboardingBuild } from './OnboardingBuild';
+import { useAnalytics } from '@packmind/proprietary/frontend/domain/amplitude/providers/AnalyticsProvider';
 
 type OnboardingStep = 'welcome' | 'playbook' | 'build';
 
@@ -20,6 +21,7 @@ export function OnboardingIntentModal({
   stepsToShow,
 }: OnboardingIntentModalProps) {
   const [step, setStep] = useState<OnboardingStep>(stepsToShow[0] || 'welcome');
+  const analytics = useAnalytics();
 
   const showBuildStep = stepsToShow.includes('build');
 
@@ -31,6 +33,7 @@ export function OnboardingIntentModal({
   }, [open, stepsToShow]);
 
   const handleDiscover = () => {
+    analytics.track('post_signup_onboarding_started', {});
     setStep('playbook');
   };
 
@@ -51,10 +54,12 @@ export function OnboardingIntentModal({
   };
 
   const handleComplete = () => {
+    analytics.track('post_signup_onboarding_completed', {});
     onComplete();
   };
 
   const handleSkip = () => {
+    analytics.track('post_signup_onboarding_skipped', {});
     onSkip();
   };
 
