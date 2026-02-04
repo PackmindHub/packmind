@@ -7,13 +7,6 @@ import { MemoryRouter } from 'react-router';
 import { OrganizationHomePage } from './OrganizationHomePage';
 import { useAuthContext } from '../hooks/useAuthContext';
 import { useGetOnboardingStatusQuery } from '../api/queries/AccountsQueries';
-import {
-  useCreateCliLoginCodeMutation,
-  useGetCurrentApiKeyQuery,
-  useGenerateApiKeyMutation,
-  useGetMcpTokenMutation,
-  useGetMcpURLQuery,
-} from '../api/queries/AuthQueries';
 
 jest.mock('../hooks/useAuthContext', () => ({
   useAuthContext: jest.fn(),
@@ -21,31 +14,6 @@ jest.mock('../hooks/useAuthContext', () => ({
 
 jest.mock('../api/queries/AccountsQueries', () => ({
   useGetOnboardingStatusQuery: jest.fn(),
-}));
-
-jest.mock('../api/queries/AuthQueries', () => ({
-  useCreateCliLoginCodeMutation: jest.fn(),
-  useGetCurrentApiKeyQuery: jest.fn(),
-  useGenerateApiKeyMutation: jest.fn(),
-  useGetMcpTokenMutation: jest.fn(),
-  useGetMcpURLQuery: jest.fn(),
-}));
-
-jest.mock('../../../shared/components/inputs', () => ({
-  CopiableTextarea: ({
-    value,
-    ...props
-  }: {
-    value: string;
-    [key: string]: unknown;
-  }) => <textarea value={value} readOnly {...props} />,
-  CopiableTextField: ({
-    value,
-    ...props
-  }: {
-    value: string;
-    [key: string]: unknown;
-  }) => <input type="text" value={value} readOnly {...props} />,
 }));
 
 jest.mock('../../organizations/components/dashboard/DashboardKPI', () => ({
@@ -90,74 +58,6 @@ describe('OrganizationHomePage', () => {
       typeof useGetOnboardingStatusQuery
     >;
 
-  const mockUseCreateCliLoginCodeMutation =
-    useCreateCliLoginCodeMutation as jest.MockedFunction<
-      typeof useCreateCliLoginCodeMutation
-    >;
-
-  const mockUseGetCurrentApiKeyQuery =
-    useGetCurrentApiKeyQuery as jest.MockedFunction<
-      typeof useGetCurrentApiKeyQuery
-    >;
-
-  const mockUseGenerateApiKeyMutation =
-    useGenerateApiKeyMutation as jest.MockedFunction<
-      typeof useGenerateApiKeyMutation
-    >;
-
-  const mockUseGetMcpTokenMutation =
-    useGetMcpTokenMutation as jest.MockedFunction<
-      typeof useGetMcpTokenMutation
-    >;
-
-  const mockUseGetMcpURLQuery = useGetMcpURLQuery as jest.MockedFunction<
-    typeof useGetMcpURLQuery
-  >;
-
-  const defaultMutationResult = {
-    mutate: jest.fn(),
-    mutateAsync: jest.fn(),
-    isPending: false,
-    isSuccess: false,
-    isError: false,
-    isIdle: true,
-    status: 'idle' as const,
-    data: undefined,
-    error: null,
-    variables: undefined,
-    reset: jest.fn(),
-    failureCount: 0,
-    failureReason: null,
-    submittedAt: 0,
-    context: undefined,
-    isPaused: false,
-  };
-
-  const defaultQueryResult = {
-    data: undefined,
-    isLoading: false,
-    isError: false,
-    isSuccess: false,
-    error: null,
-    status: 'idle' as const,
-    refetch: jest.fn(),
-    isFetching: false,
-    isPending: false,
-    isRefetching: false,
-    isLoadingError: false,
-    isRefetchError: false,
-    dataUpdatedAt: 0,
-    errorUpdatedAt: 0,
-    failureCount: 0,
-    failureReason: null,
-    errorUpdateCount: 0,
-    isFetched: false,
-    isFetchedAfterMount: false,
-    isPlaceholderData: false,
-    isStale: false,
-    isPaused: false,
-  };
-
   beforeEach(() => {
     jest.clearAllMocks();
 
@@ -174,22 +74,6 @@ describe('OrganizationHomePage', () => {
       },
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any);
-
-    mockUseCreateCliLoginCodeMutation.mockReturnValue(
-      defaultMutationResult as ReturnType<typeof useCreateCliLoginCodeMutation>,
-    );
-    mockUseGetCurrentApiKeyQuery.mockReturnValue(
-      defaultQueryResult as ReturnType<typeof useGetCurrentApiKeyQuery>,
-    );
-    mockUseGenerateApiKeyMutation.mockReturnValue(
-      defaultMutationResult as ReturnType<typeof useGenerateApiKeyMutation>,
-    );
-    mockUseGetMcpTokenMutation.mockReturnValue(
-      defaultMutationResult as ReturnType<typeof useGetMcpTokenMutation>,
-    );
-    mockUseGetMcpURLQuery.mockReturnValue(
-      defaultQueryResult as ReturnType<typeof useGetMcpURLQuery>,
-    );
   });
 
   describe('Onboarding incomplete', () => {
@@ -211,19 +95,32 @@ describe('OrganizationHomePage', () => {
         renderWithProviders(<OrganizationHomePage />);
       });
 
-      it('displays local environment configuration step', () => {
+      it('displays GetStartedWithPackmindWidget', () => {
         expect(
-          screen.getByText(/Configure your local environment/),
+          screen.getByRole('heading', { name: /get started with packmind/i }),
         ).toBeInTheDocument();
       });
 
-      it('displays build playbook step', () => {
-        expect(screen.getByText(/Build your playbook/)).toBeInTheDocument();
+      it('displays the widget subtitle', () => {
+        expect(
+          screen.getByText(
+            /build and deploy your first practices across your organization/i,
+          ),
+        ).toBeInTheDocument();
       });
 
-      it('displays vibe code step', () => {
+      it('displays all four onboarding steps', () => {
         expect(
-          screen.getByText(/Vibe code with confidence/),
+          screen.getByText(/1\. create your first artifacts/i),
+        ).toBeInTheDocument();
+        expect(
+          screen.getByText(/2\. bundle them into a package/i),
+        ).toBeInTheDocument();
+        expect(
+          screen.getByText(/3\. deploy to your repo/i),
+        ).toBeInTheDocument();
+        expect(
+          screen.getByText(/4\. invite collaborators/i),
         ).toBeInTheDocument();
       });
     });
@@ -240,9 +137,9 @@ describe('OrganizationHomePage', () => {
         renderWithProviders(<OrganizationHomePage />);
       });
 
-      it('displays OnboardingSteps', () => {
+      it('displays GetStartedWithPackmindWidget', () => {
         expect(
-          screen.getByText(/Configure your local environment/),
+          screen.getByRole('heading', { name: /get started with packmind/i }),
         ).toBeInTheDocument();
       });
     });
@@ -279,9 +176,9 @@ describe('OrganizationHomePage', () => {
         });
       });
 
-      it('hides OnboardingSteps', () => {
+      it('hides GetStartedWithPackmindWidget', () => {
         expect(
-          screen.queryByText(/Configure your local environment/),
+          screen.queryByRole('heading', { name: /get started with packmind/i }),
         ).not.toBeInTheDocument();
       });
     });
