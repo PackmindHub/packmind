@@ -1,5 +1,6 @@
 import { PackmindLogger } from '@packmind/logger';
 import {
+  DeleteFileItem,
   DeleteItemType,
   FileUpdates,
   GitRepo,
@@ -371,26 +372,40 @@ export class CursorDeployer implements ICodingAgentDeployer {
       skillsCount: artifacts.skillVersions.length,
     });
 
+    const deleteItems: DeleteFileItem[] = [
+      {
+        path: CursorDeployer.COMMANDS_PATH,
+        type: DeleteItemType.Directory,
+      },
+      {
+        path: '.cursor/rules/packmind/',
+        type: DeleteItemType.Directory,
+      },
+      {
+        path: CursorDeployer.LEGACY_RECIPES_INDEX_PATH,
+        type: DeleteItemType.File,
+      },
+    ];
+
+    // Delete default skills (managed by Packmind)
+    for (const slug of DefaultSkillsDeployer.getDefaultSkillSlugs()) {
+      deleteItems.push({
+        path: `${CursorDeployer.SKILLS_FOLDER_PATH}${slug}`,
+        type: DeleteItemType.Directory,
+      });
+    }
+
+    // Delete user package skills (managed by Packmind)
+    for (const skillVersion of artifacts.skillVersions) {
+      deleteItems.push({
+        path: `${CursorDeployer.SKILLS_FOLDER_PATH}${skillVersion.slug}`,
+        type: DeleteItemType.Directory,
+      });
+    }
+
     return {
       createOrUpdate: [],
-      delete: [
-        {
-          path: CursorDeployer.COMMANDS_PATH,
-          type: DeleteItemType.Directory,
-        },
-        {
-          path: '.cursor/rules/packmind/',
-          type: DeleteItemType.Directory,
-        },
-        {
-          path: CursorDeployer.SKILLS_FOLDER_PATH,
-          type: DeleteItemType.Directory,
-        },
-        {
-          path: CursorDeployer.LEGACY_RECIPES_INDEX_PATH,
-          type: DeleteItemType.File,
-        },
-      ],
+      delete: deleteItems,
     };
   }
 
