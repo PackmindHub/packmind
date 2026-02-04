@@ -16,6 +16,7 @@ export default {
       {
         tsconfig: '<rootDir>/tsconfig.spec.json',
         useESM: true,
+        isolatedModules: true, // Faster compilation, less type checking
       },
     ],
   },
@@ -34,8 +35,8 @@ export default {
     '^@packmind/assets$': '<rootDir>/../../packages/assets/src/index.ts',
     '^@packmind/assets/(.*)$': '<rootDir>/../../packages/assets/src/$1',
   },
-  testTimeout: 30000,
-  // Workaround for macOS jest-worker EPERM errors
-  // Reduce maxWorkers to minimize cleanup issues
-  maxWorkers: 1,
+  testTimeout: 15000,
+  // maxWorkers: 2 provides some parallelization while avoiding EPERM errors on macOS
+  // In CI (Linux), use more workers for faster execution
+  maxWorkers: process.env.CI ? '50%' : 2,
 };

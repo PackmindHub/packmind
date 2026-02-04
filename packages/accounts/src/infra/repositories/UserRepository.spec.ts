@@ -1,53 +1,52 @@
 import {
+  createTestDatasourceFixture,
   itHandlesDuplicateKeys,
   itHandlesSoftDelete,
+  stubLogger,
 } from '@packmind/test-utils';
-import { DataSource, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
 import { UserRepository } from './UserRepository';
 import { createUserId, User } from '@packmind/types';
 import { Organization } from '@packmind/types';
 import { UserSchema } from '../schemas/UserSchema';
 import { OrganizationSchema } from '../schemas/OrganizationSchema';
 import { UserOrganizationMembershipSchema } from '../schemas/UserOrganizationMembershipSchema';
-import { makeTestDatasource } from '@packmind/test-utils';
 import { userFactory, organizationFactory } from '../../../test';
 import { PackmindLogger } from '@packmind/logger';
-import { stubLogger } from '@packmind/test-utils';
 
 describe('UserRepository', () => {
-  let dataSource: DataSource;
+  const fixture = createTestDatasourceFixture([
+    UserSchema,
+    OrganizationSchema,
+    UserOrganizationMembershipSchema,
+  ]);
+
   let userRepository: UserRepository;
   let organizationRepository: Repository<Organization>;
   let testOrganization: Organization;
   let logger: jest.Mocked<PackmindLogger>;
 
+  beforeAll(() => fixture.initialize());
+
   beforeEach(async () => {
     logger = stubLogger();
-    dataSource = await makeTestDatasource([
-      UserSchema,
-      OrganizationSchema,
-      UserOrganizationMembershipSchema,
-    ]);
-    await dataSource.initialize();
-    await dataSource.synchronize();
-
     userRepository = new UserRepository(
-      dataSource.getRepository(UserSchema),
+      fixture.datasource.getRepository(UserSchema),
       logger,
     );
-    organizationRepository = dataSource.getRepository(OrganizationSchema);
+    organizationRepository =
+      fixture.datasource.getRepository(OrganizationSchema);
 
     // Create a test organization that users can reference
     testOrganization = await organizationRepository.save(organizationFactory());
   });
 
-  afterEach(() => {
+  afterEach(async () => {
     jest.clearAllMocks();
+    await fixture.cleanup();
   });
 
-  afterEach(async () => {
-    await dataSource.destroy();
-  });
+  afterAll(() => fixture.destroy());
 
   itHandlesSoftDelete<User>({
     entityFactory: () =>
@@ -63,7 +62,7 @@ describe('UserRepository', () => {
       })(),
     getRepository: () => userRepository,
     queryDeletedEntity: async (id) =>
-      dataSource.getRepository(UserSchema).findOne({
+      fixture.datasource.getRepository(UserSchema).findOne({
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         where: { id: id as any },
         withDeleted: true,

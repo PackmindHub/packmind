@@ -3,8 +3,8 @@ import { PackmindLogger } from '@packmind/logger';
 import { SpaceSchema } from '@packmind/spaces';
 import { spaceFactory } from '@packmind/spaces/test';
 import {
+  createTestDatasourceFixture,
   itHandlesSoftDelete,
-  makeTestDatasource,
   stubLogger,
 } from '@packmind/test-utils';
 import {
@@ -13,7 +13,7 @@ import {
   Recipe,
   WithSoftDelete,
 } from '@packmind/types';
-import { DataSource, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
 import { v4 as uuidv4 } from 'uuid';
 import { recipeFactory } from '../../../test/recipeFactory';
 import { IRecipeRepository } from '../../domain/repositories/IRecipeRepository';
@@ -22,30 +22,32 @@ import { RecipeVersionSchema } from '../schemas/RecipeVersionSchema';
 import { RecipeRepository } from './RecipeRepository';
 
 describe('RecipeRepository', () => {
-  let datasource: DataSource;
+  const fixture = createTestDatasourceFixture([
+    RecipeSchema,
+    RecipeVersionSchema,
+    GitCommitSchema,
+    SpaceSchema,
+  ]);
+
   let recipeRepository: IRecipeRepository;
   let stubbedLogger: jest.Mocked<PackmindLogger>;
   let typeormRepo: Repository<Recipe>;
 
-  beforeEach(async () => {
-    datasource = await makeTestDatasource([
-      RecipeSchema,
-      RecipeVersionSchema,
-      GitCommitSchema,
-      SpaceSchema,
-    ]);
-    await datasource.initialize();
-    await datasource.synchronize();
+  beforeAll(() => fixture.initialize());
 
+  beforeEach(() => {
     stubbedLogger = stubLogger();
-    typeormRepo = datasource.getRepository(RecipeSchema);
+    typeormRepo = fixture.datasource.getRepository(RecipeSchema);
 
     recipeRepository = new RecipeRepository(typeormRepo, stubbedLogger);
   });
 
   afterEach(async () => {
-    await datasource.destroy();
+    jest.clearAllMocks();
+    await fixture.cleanup();
   });
+
+  afterAll(() => fixture.destroy());
 
   it('findByOrganizationId is deprecated and returns empty array', async () => {
     const recipe = recipeFactory();
@@ -95,7 +97,7 @@ describe('RecipeRepository', () => {
     it('can find a recipe by slug and organization', async () => {
       const organizationId = createOrganizationId(uuidv4());
       const space = spaceFactory({ organizationId, id: recipe.spaceId });
-      const spaceRepo = datasource.getRepository(SpaceSchema);
+      const spaceRepo = fixture.datasource.getRepository(SpaceSchema);
       await spaceRepo.save(space);
 
       expect(
@@ -111,7 +113,7 @@ describe('RecipeRepository', () => {
       it('can not find a deleted recipe by slug', async () => {
         const organizationId = createOrganizationId(uuidv4());
         const space = spaceFactory({ organizationId, id: recipe.spaceId });
-        const spaceRepo = datasource.getRepository(SpaceSchema);
+        const spaceRepo = fixture.datasource.getRepository(SpaceSchema);
         await spaceRepo.save(space);
 
         expect(
@@ -122,7 +124,7 @@ describe('RecipeRepository', () => {
       it('can find a deleted recipe by slug if the includeDeleted flag is false', async () => {
         const organizationId = createOrganizationId(uuidv4());
         const space = spaceFactory({ organizationId, id: recipe.spaceId });
-        const spaceRepo = datasource.getRepository(SpaceSchema);
+        const spaceRepo = fixture.datasource.getRepository(SpaceSchema);
         await spaceRepo.save(space);
 
         expect(
@@ -135,7 +137,7 @@ describe('RecipeRepository', () => {
       it('can find a deleted recipe by slug if the proper flag is provided', async () => {
         const organizationId = createOrganizationId(uuidv4());
         const space = spaceFactory({ organizationId, id: recipe.spaceId });
-        const spaceRepo = datasource.getRepository(SpaceSchema);
+        const spaceRepo = fixture.datasource.getRepository(SpaceSchema);
         await spaceRepo.save(space);
 
         expect(

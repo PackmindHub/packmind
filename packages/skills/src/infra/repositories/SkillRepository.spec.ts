@@ -1,14 +1,14 @@
 import { PackmindLogger } from '@packmind/logger';
 import { SpaceSchema } from '@packmind/spaces';
 import { spaceFactory } from '@packmind/spaces/test';
-import { makeTestDatasource, stubLogger } from '@packmind/test-utils';
+import { createTestDatasourceFixture, stubLogger } from '@packmind/test-utils';
 import {
   createOrganizationId,
   createSpaceId,
   createUserId,
   Skill,
 } from '@packmind/types';
-import { DataSource, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
 import { v4 as uuidv4 } from 'uuid';
 import { skillFactory } from '../../../test/skillFactory';
 import { SkillSchema } from '../schemas/SkillSchema';
@@ -16,30 +16,31 @@ import { SkillVersionSchema } from '../schemas/SkillVersionSchema';
 import { SkillRepository } from './SkillRepository';
 
 describe('SkillRepository', () => {
-  let datasource: DataSource;
+  const fixture = createTestDatasourceFixture([
+    SkillSchema,
+    SkillVersionSchema,
+    SpaceSchema,
+  ]);
+
   let skillRepository: SkillRepository;
   let stubbedLogger: jest.Mocked<PackmindLogger>;
   let typeormRepo: Repository<Skill>;
 
-  beforeEach(async () => {
-    datasource = await makeTestDatasource([
-      SkillSchema,
-      SkillVersionSchema,
-      SpaceSchema,
-    ]);
-    await datasource.initialize();
-    await datasource.synchronize();
+  beforeAll(() => fixture.initialize());
 
+  beforeEach(() => {
     stubbedLogger = stubLogger();
-    typeormRepo = datasource.getRepository(SkillSchema);
+    typeormRepo = fixture.datasource.getRepository(SkillSchema);
 
     skillRepository = new SkillRepository(typeormRepo, stubbedLogger);
   });
 
   afterEach(async () => {
     jest.clearAllMocks();
-    await datasource.destroy();
+    await fixture.cleanup();
   });
+
+  afterAll(() => fixture.destroy());
 
   describe('findBySlug', () => {
     it('finds skill by slug and organization', async () => {
@@ -50,7 +51,7 @@ describe('SkillRepository', () => {
         id: spaceId,
         organizationId,
       });
-      await datasource.getRepository(SpaceSchema).save(space);
+      await fixture.datasource.getRepository(SpaceSchema).save(space);
 
       const skill = skillFactory({
         spaceId,
@@ -89,7 +90,7 @@ describe('SkillRepository', () => {
           id: spaceId,
           organizationId,
         });
-        await datasource.getRepository(SpaceSchema).save(space);
+        await fixture.datasource.getRepository(SpaceSchema).save(space);
 
         const skill = skillFactory({
           spaceId,

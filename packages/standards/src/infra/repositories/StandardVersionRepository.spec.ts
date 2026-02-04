@@ -2,8 +2,8 @@ import { GitCommitSchema } from '@packmind/git';
 import { PackmindLogger } from '@packmind/logger';
 import { WithSoftDelete } from '@packmind/node-utils';
 import {
+  createTestDatasourceFixture,
   itHandlesSoftDelete,
-  makeTestDatasource,
   stubLogger,
 } from '@packmind/test-utils';
 import {
@@ -12,7 +12,7 @@ import {
   Standard,
   StandardVersion,
 } from '@packmind/types';
-import { DataSource, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
 import { v4 as uuidv4 } from 'uuid';
 import { standardFactory } from '../../../test/standardFactory';
 import { standardVersionFactory } from '../../../test/standardVersionFactory';
@@ -22,26 +22,24 @@ import { StandardVersionSchema } from '../schemas/StandardVersionSchema';
 import { StandardVersionRepository } from './StandardVersionRepository';
 
 describe('StandardVersionRepository', () => {
-  let datasource: DataSource;
+  const fixture = createTestDatasourceFixture([
+    StandardVersionSchema,
+    StandardSchema,
+    RuleSchema,
+    GitCommitSchema,
+  ]);
+
   let standardVersionRepository: StandardVersionRepository;
   let stubbedLogger: jest.Mocked<PackmindLogger>;
   let typeormRepo: Repository<StandardVersion>;
   let standardRepo: Repository<Standard>;
 
-  beforeEach(async () => {
-    datasource = await makeTestDatasource([
-      StandardVersionSchema,
-      StandardSchema,
-      RuleSchema,
-      GitCommitSchema,
-    ]);
-    await datasource.initialize();
-    await datasource.synchronize();
+  beforeAll(() => fixture.initialize());
 
+  beforeEach(() => {
     stubbedLogger = stubLogger();
-    typeormRepo = datasource.getRepository(StandardVersionSchema);
-    standardRepo = datasource.getRepository(StandardSchema);
-
+    typeormRepo = fixture.datasource.getRepository(StandardVersionSchema);
+    standardRepo = fixture.datasource.getRepository(StandardSchema);
     standardVersionRepository = new StandardVersionRepository(
       typeormRepo,
       stubbedLogger,
@@ -50,8 +48,10 @@ describe('StandardVersionRepository', () => {
 
   afterEach(async () => {
     jest.clearAllMocks();
-    await datasource.destroy();
+    await fixture.cleanup();
   });
+
+  afterAll(() => fixture.destroy());
 
   describe('when storing and retrieving standard versions by standard id', () => {
     let standard: Standard;
