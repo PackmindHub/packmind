@@ -39,7 +39,16 @@ See the [CLI documentation](/tools/cli#packages-command) for details.
 
 ### Adding Items to Packages
 
-You can add items to packages automatically when creating commands or standards via the MCP server by including the `packageSlugs` parameter. Skills are added to packages through the web interface after uploading them via CLI.
+There are several ways to add items to packages:
+
+- **Via CLI** — Use `packmind-cli packages add` to add existing standards, commands, or skills to a package:
+  ```bash
+  packmind-cli packages add --to backend --standard error-handling
+  packmind-cli packages add --to backend --command create-api-endpoint
+  packmind-cli packages add --to backend --skill debugging-workflow
+  ```
+- **Via MCP** — Include the `packageSlugs` parameter when creating commands or standards via the MCP server
+- **Via Web Interface** — Add items to packages through the Packmind UI
 
 ## Using Packages
 

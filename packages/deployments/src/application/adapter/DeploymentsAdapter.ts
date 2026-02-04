@@ -406,6 +406,7 @@ export class DeploymentsAdapter
       this.spacesPort,
       this.recipesPort,
       this.standardsPort,
+      this.skillsPort,
     );
 
     this._notifyDistributionUseCase = new NotifyDistributionUseCase(

@@ -12,6 +12,7 @@ import {
 import { LogLevel, PackmindLogger } from '@packmind/logger';
 import { AuthenticatedRequest } from '@packmind/node-utils';
 import {
+  AddArtefactsToPackageResponse,
   CreatePackageResponse,
   DeletePackagesBatchResponse,
   GetPackageByIdResponse,
@@ -255,6 +256,51 @@ export class OrganizationsSpacesPackagesController {
       );
       throw error;
     }
+  }
+
+  /**
+   * Add artifacts to an existing package
+   * POST /organizations/:orgId/spaces/:spaceId/packages/:packageSlug/add-artifacts
+   */
+  @Post(':packageSlug/add-artifacts')
+  async addArtefactsToPackage(
+    @Param('orgId') organizationId: OrganizationId,
+    @Param('spaceId') spaceId: SpaceId,
+    @Param('packageSlug') packageSlug: string,
+    @Req() request: AuthenticatedRequest,
+    @Body()
+    body: {
+      standardIds?: StandardId[];
+      commandIds?: RecipeId[];
+      skillIds?: SkillId[];
+    },
+  ): Promise<AddArtefactsToPackageResponse> {
+    const userId = request.user.userId;
+
+    this.logger.info(
+      'POST /organizations/:orgId/spaces/:spaceId/packages/:packageSlug/add-artifacts',
+      { organizationId, spaceId, packageSlug },
+    );
+
+    // Resolve packageSlug to packageId
+    const packages = await this.deploymentsService.listPackagesBySpace({
+      userId,
+      organizationId,
+      spaceId,
+    });
+    const pkg = packages.packages.find((p) => p.slug === packageSlug);
+    if (!pkg) {
+      throw new Error(`Package with slug '${packageSlug}' not found`);
+    }
+
+    return this.deploymentsService.addArtefactsToPackage({
+      userId,
+      organizationId,
+      packageId: pkg.id,
+      standardIds: body.standardIds,
+      recipeIds: body.commandIds,
+      skillIds: body.skillIds,
+    });
   }
 
   /**

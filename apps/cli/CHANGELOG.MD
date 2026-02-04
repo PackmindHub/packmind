@@ -2,6 +2,8 @@
 
 ## Added
 
+- Add `packages add` command to add standards, commands, or skills to an existing package with `packmind-cli packages add --to <package-slug> --standard|--command|--skill <slug>`
+
 ## Changed
 
 ## Fixed
