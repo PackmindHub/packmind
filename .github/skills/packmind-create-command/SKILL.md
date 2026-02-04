@@ -220,25 +220,6 @@ packmind-cli login
 - Verify JSON syntax is valid (use a JSON validator)
 - Check that all arrays have at least one entry
 
-### Step 6: Offer to Add to Package
-
-After successful creation, check if the command fits an existing package:
-
-1. Run `packmind-cli install --list` to get available packages
-2. If no packages exist, skip this step silently and end the workflow
-3. Analyze the created command's name and summary against each package's name and description
-4. If a package is a clear semantic fit (the command's domain/technology aligns with the package's purpose):
-   - Present to user: "This command seems to fit the `<package-slug>` package."
-   - Offer three options:
-     - Add to `<package-slug>`
-     - Choose a different package
-     - Skip
-5. If no clear fit is found, skip silently (do not mention packages)
-6. If user chooses to add:
-   - Run: `packmind-cli packages add --to <package-slug> --command <command-slug>`
-   - Ask: "Would you like me to run `packmind-cli install` to sync the changes?"
-   - If yes, run: `packmind-cli install`
-
 ## Complete Example
 
 Here's a complete example creating a command for setting up a new API endpoint:
