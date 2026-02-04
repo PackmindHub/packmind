@@ -2,6 +2,7 @@ import { PackmindCliHexa } from '../../PackmindCliHexa';
 import {
   CodingAgent,
   ConfigWithTarget,
+  PackmindFileConfig,
   SummarizedArtifact,
 } from '@packmind/types';
 import {
@@ -794,11 +795,12 @@ export async function uninstallPackagesHandler(
   }
 
   // Read existing config
-  let configPackages: string[];
+  let configPackages: PackmindFileConfig['packages'];
   let configFileExists = false;
   try {
     configFileExists = await packmindCliHexa.configExists(cwd);
-    configPackages = await packmindCliHexa.readConfig(cwd);
+    const config = await packmindCliHexa.readConfig(cwd);
+    configPackages = config.packages;
   } catch (err) {
     error('❌ Failed to read packmind.json');
     if (err instanceof Error) {
@@ -815,7 +817,7 @@ export async function uninstallPackagesHandler(
   }
 
   // Check if config exists or is empty
-  if (configPackages.length === 0) {
+  if (Object.keys(configPackages).length === 0) {
     if (configFileExists) {
       error('❌ packmind.json is empty.');
     } else {
@@ -832,11 +834,11 @@ export async function uninstallPackagesHandler(
   }
 
   // Check which packages to uninstall are actually installed
-  const packagesToUninstall = packagesSlugs.filter((slug) =>
-    configPackages.includes(slug),
+  const packagesToUninstall = packagesSlugs.filter(
+    (slug) => slug in configPackages,
   );
   const notInstalledPackages = packagesSlugs.filter(
-    (slug) => !configPackages.includes(slug),
+    (slug) => !(slug in configPackages),
   );
 
   // Warn about packages that aren't installed
@@ -871,7 +873,7 @@ export async function uninstallPackagesHandler(
     );
 
     // Calculate remaining packages after removal
-    const remainingPackages = configPackages.filter(
+    const remainingPackages = Object.keys(configPackages).filter(
       (pkg) => !packagesToUninstall.includes(pkg),
     );
 
@@ -886,7 +888,7 @@ export async function uninstallPackagesHandler(
       const result = await packmindCliHexa.installPackages({
         baseDirectory: cwd,
         packagesSlugs: [],
-        previousPackagesSlugs: configPackages,
+        previousPackagesSlugs: Object.keys(configPackages),
       });
 
       // Display results
@@ -912,7 +914,7 @@ export async function uninstallPackagesHandler(
       const result = await packmindCliHexa.installPackages({
         baseDirectory: cwd,
         packagesSlugs: remainingPackages,
-        previousPackagesSlugs: configPackages,
+        previousPackagesSlugs: Object.keys(configPackages),
       });
 
       // Show removal message with counts

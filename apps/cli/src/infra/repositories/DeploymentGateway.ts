@@ -143,6 +143,13 @@ export class DeploymentGateway implements IDeploymentGateway {
       queryParams.append('relativePath', command.relativePath);
     }
 
+    // Add agents from packmind.json config
+    if (command.agents && command.agents.length > 0) {
+      command.agents.forEach((agent) => {
+        queryParams.append('agent', agent);
+      });
+    }
+
     // Make API call to pull all content
     const url = `${host}/api/v0/organizations/${organizationId}/pull?${queryParams.toString()}`;
 

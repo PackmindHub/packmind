@@ -162,8 +162,10 @@ describe('DeployDefaultSkillsUseCase', () => {
           generateFileUpdatesForStandards: jest.fn(),
           generateFileUpdatesForSkills: jest.fn(),
           generateRemovalFileUpdates: jest.fn(),
+          generateAgentCleanupFileUpdates: jest.fn(),
           deployArtifacts: jest.fn(),
           deployDefaultSkills: jest.fn().mockResolvedValue(fileUpdates),
+          getSkillsFolderPath: jest.fn(),
         } as unknown as jest.Mocked<ICodingAgentDeployer>;
 
         deployerRegistry.getDeployer.mockReturnValue(mockDeployer);
@@ -201,7 +203,9 @@ describe('DeployDefaultSkillsUseCase', () => {
           generateFileUpdatesForStandards: jest.fn(),
           generateFileUpdatesForSkills: jest.fn(),
           generateRemovalFileUpdates: jest.fn(),
+          generateAgentCleanupFileUpdates: jest.fn(),
           deployArtifacts: jest.fn(),
+          getSkillsFolderPath: jest.fn(),
         } as unknown as jest.Mocked<ICodingAgentDeployer>;
 
         deployerRegistry.getDeployer.mockReturnValue(mockDeployer);

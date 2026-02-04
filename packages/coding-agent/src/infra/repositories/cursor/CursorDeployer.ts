@@ -360,6 +360,40 @@ export class CursorDeployer implements ICodingAgentDeployer {
     return fileUpdates;
   }
 
+  async generateAgentCleanupFileUpdates(artifacts: {
+    recipeVersions: RecipeVersion[];
+    standardVersions: StandardVersion[];
+    skillVersions: SkillVersion[];
+  }): Promise<FileUpdates> {
+    this.logger.info('Generating agent cleanup file updates for Cursor', {
+      recipesCount: artifacts.recipeVersions.length,
+      standardsCount: artifacts.standardVersions.length,
+      skillsCount: artifacts.skillVersions.length,
+    });
+
+    return {
+      createOrUpdate: [],
+      delete: [
+        {
+          path: CursorDeployer.COMMANDS_PATH,
+          type: DeleteItemType.Directory,
+        },
+        {
+          path: '.cursor/rules/packmind/',
+          type: DeleteItemType.Directory,
+        },
+        {
+          path: CursorDeployer.SKILLS_FOLDER_PATH,
+          type: DeleteItemType.Directory,
+        },
+        {
+          path: CursorDeployer.LEGACY_RECIPES_INDEX_PATH,
+          type: DeleteItemType.File,
+        },
+      ],
+    };
+  }
+
   /**
    * Generate Cursor command file for a specific recipe
    */

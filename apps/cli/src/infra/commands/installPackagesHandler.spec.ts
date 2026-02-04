@@ -764,7 +764,7 @@ describe('installPackagesHandler', () => {
     describe('when config file does not exist', () => {
       beforeEach(async () => {
         mockPackmindCliHexa.configExists.mockResolvedValue(false);
-        mockPackmindCliHexa.readConfig.mockResolvedValue([]);
+        mockPackmindCliHexa.readConfig.mockResolvedValue({ packages: {} });
 
         await uninstallPackagesHandler({ packagesSlugs: ['backend'] }, deps);
       });
@@ -793,7 +793,7 @@ describe('installPackagesHandler', () => {
     describe('when config file is empty', () => {
       beforeEach(async () => {
         mockPackmindCliHexa.configExists.mockResolvedValue(true);
-        mockPackmindCliHexa.readConfig.mockResolvedValue([]);
+        mockPackmindCliHexa.readConfig.mockResolvedValue({ packages: {} });
 
         await uninstallPackagesHandler({ packagesSlugs: ['backend'] }, deps);
       });
@@ -820,7 +820,9 @@ describe('installPackagesHandler', () => {
     describe('when removing all packages', () => {
       beforeEach(() => {
         mockPackmindCliHexa.configExists.mockResolvedValue(true);
-        mockPackmindCliHexa.readConfig.mockResolvedValue(['backend']);
+        mockPackmindCliHexa.readConfig.mockResolvedValue({
+          packages: { backend: '*' },
+        });
         mockPackmindCliHexa.tryGetGitRepositoryRoot.mockResolvedValue(null);
       });
 

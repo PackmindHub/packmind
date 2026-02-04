@@ -7,6 +7,7 @@ import {
 import {
   ArtifactsPulledEvent,
   FileUpdates,
+  CodingAgent,
   IAccountsPort,
   ICodingAgentPort,
   IGitPort,
@@ -101,7 +102,7 @@ export class PullContentUseCase extends AbstractMemberUseCase<
     try {
       // Get active coding agents: use command.agents if provided, otherwise fall back to org-level config
       let codingAgents;
-      if (command.agents && command.agents.length > 0) {
+      if (command.agents !== undefined) {
         codingAgents = command.agents;
         this.logger.info('Using agents from command (packmind.json override)', {
           codingAgents,
@@ -408,6 +409,8 @@ export class PullContentUseCase extends AbstractMemberUseCase<
 
       // Track skill versions to delete for folder cleanup
       let skillVersionsToDelete: SkillVersion[] = [];
+      let removedAgents: CodingAgent[] = [];
+      let cleanupSkillVersions: SkillVersion[] = [];
 
       // Deploy artifacts for all coding agents using the unified method
       this.logger.info('Deploying artifacts for coding agents', {
@@ -485,6 +488,77 @@ export class PullContentUseCase extends AbstractMemberUseCase<
         }
       }
 
+      if (command.gitRemoteUrl && command.gitBranch && command.relativePath) {
+        try {
+          const target = await this.findTargetFromGitInfo(
+            command.organization.id,
+            command.userId,
+            command.gitRemoteUrl,
+            command.gitBranch,
+            command.relativePath,
+          );
+
+          if (target) {
+            const previousRenderModes =
+              await this.distributionRepository.findActiveRenderModesByTarget(
+                command.organization.id,
+                target.id,
+              );
+
+            const previousAgents =
+              this.renderModeConfigurationService.mapRenderModesToCodingAgents(
+                previousRenderModes,
+              );
+
+            const currentAgentSet = new Set(codingAgents);
+            removedAgents = previousAgents.filter(
+              (agent) => !currentAgentSet.has(agent),
+            );
+
+            if (removedAgents.length > 0) {
+              const [
+                activeRecipeVersions,
+                activeStandardVersions,
+                activeSkillVersions,
+              ] = await Promise.all([
+                this.distributionRepository.findActiveRecipeVersionsByTarget(
+                  command.organization.id,
+                  target.id,
+                ),
+                this.distributionRepository.findActiveStandardVersionsByTarget(
+                  command.organization.id,
+                  target.id,
+                ),
+                this.distributionRepository.findActiveSkillVersionsByTarget(
+                  command.organization.id,
+                  target.id,
+                ),
+              ]);
+
+              cleanupSkillVersions = activeSkillVersions;
+
+              const cleanupFileUpdates =
+                await this.codingAgentPort.generateAgentCleanupUpdatesForAgents(
+                  {
+                    agents: removedAgents,
+                    artifacts: {
+                      recipeVersions: activeRecipeVersions,
+                      standardVersions: activeStandardVersions,
+                      skillVersions: activeSkillVersions,
+                    },
+                  },
+                );
+
+              this.mergeFileUpdates(mergedFileUpdates, cleanupFileUpdates);
+            }
+          }
+        } catch (error) {
+          this.logger.info('Skipping agent cleanup from render mode history', {
+            error: error instanceof Error ? error.message : String(error),
+          });
+        }
+      }
+
       // Add README.md for trial users
       const user = await this.accountsPort.getUserById(
         createUserId(command.userId),
@@ -499,10 +573,14 @@ export class PullContentUseCase extends AbstractMemberUseCase<
         });
       }
 
+      console.log(command.agents)
+
       // Add packmind.json config file
       const configFile =
         this.packmindConfigService.createConfigFileModification(
           command.packagesSlugs,
+          undefined, // existingPackages - not needed, we already have all packages in packagesSlugs
+          command.agents, // Pass agents to preserve them
         );
       mergedFileUpdates.createOrUpdate.push(configFile);
 
@@ -541,13 +619,34 @@ export class PullContentUseCase extends AbstractMemberUseCase<
         return allSkillsForFolderCleanup.map((sv) => `${skillPath}${sv.slug}`);
       });
 
+      const removedAgentsSkillFolders =
+        removedAgents.length > 0 && cleanupSkillVersions.length > 0
+          ? (() => {
+              const removedSkillFolderPaths =
+                this.codingAgentPort.getSkillsFolderPathForAgents(
+                  removedAgents,
+                );
+              return removedAgents.flatMap((agent) => {
+                const skillPath = removedSkillFolderPaths.get(agent);
+                if (!skillPath) return [];
+                return cleanupSkillVersions.map(
+                  (sv) => `${skillPath}${sv.slug}`,
+                );
+              });
+            })()
+          : [];
+
+      const mergedSkillFolders = Array.from(
+        new Set([...skillFolders, ...removedAgentsSkillFolders]),
+      );
+
       this.logger.info('Generated skill folders', {
         installedSkillCount: skillVersions.length,
         removedSkillCount: skillVersionsToDelete.length,
-        totalFolderCount: skillFolders.length,
+        totalFolderCount: mergedSkillFolders.length,
       });
 
-      return { fileUpdates: mergedFileUpdates, skillFolders };
+      return { fileUpdates: mergedFileUpdates, skillFolders: mergedSkillFolders };
     } catch (error) {
       this.logger.error('Failed to pull content', {
         organizationId: command.organizationId,

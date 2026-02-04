@@ -27,6 +27,9 @@ export class InstallPackagesUseCase implements IInstallPackagesUseCase {
       skillDirectoriesDeleted: 0,
     };
 
+    console.log('Executing InstallPackagesUseCase with command: ')
+    console.log(command.agents)
+
     // Fetch data from the gateway
     const response = await this.packmindGateway.deployment.pull({
       packagesSlugs: command.packagesSlugs,
@@ -36,6 +39,8 @@ export class InstallPackagesUseCase implements IInstallPackagesUseCase {
       relativePath: command.relativePath,
       agents: command.agents,
     });
+
+    console.log(JSON.stringify(response, null, 2))
 
     // Deduplicate files by path (when multiple packages share standards/recipes)
     const uniqueFilesMap = new Map<

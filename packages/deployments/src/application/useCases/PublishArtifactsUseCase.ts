@@ -472,6 +472,22 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
         });
       }
 
+      const previousRenderModes =
+        await this.distributionRepository.findActiveRenderModesByTarget(
+          organizationId,
+          target.id,
+        );
+
+      const previousAgents =
+        this.renderModeConfigurationService.mapRenderModesToCodingAgents(
+          previousRenderModes,
+        );
+
+      const currentAgentSet = new Set(targetCodingAgents);
+      const removedAgents = previousAgents.filter(
+        (agent) => !currentAgentSet.has(agent),
+      );
+
       // Fetch existing files from git
       const existingFiles = await fetchExistingFilesFromGit(
         this.gitPort,
@@ -498,6 +514,39 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
         codingAgents: targetCodingAgents,
         existingFiles,
       });
+
+      if (removedAgents.length > 0) {
+        const [
+          activeRecipeVersions,
+          activeStandardVersions,
+          activeSkillVersions,
+        ] = await Promise.all([
+          this.distributionRepository.findActiveRecipeVersionsByTarget(
+            organizationId,
+            target.id,
+          ),
+          this.distributionRepository.findActiveStandardVersionsByTarget(
+            organizationId,
+            target.id,
+          ),
+          this.distributionRepository.findActiveSkillVersionsByTarget(
+            organizationId,
+            target.id,
+          ),
+        ]);
+
+        const cleanupFileUpdates =
+          await this.codingAgentPort.generateAgentCleanupUpdatesForAgents({
+            agents: removedAgents,
+            artifacts: {
+              recipeVersions: activeRecipeVersions,
+              standardVersions: activeStandardVersions,
+              skillVersions: activeSkillVersions,
+            },
+          });
+
+        this.mergeFileUpdates(baseFileUpdates, cleanupFileUpdates);
+      }
 
       // Add packmind.json config file with merged packages (preserving agents if defined)
       const configFile =

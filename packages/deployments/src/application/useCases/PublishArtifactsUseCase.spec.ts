@@ -101,6 +101,10 @@ describe('PublishArtifactsUseCase', () => {
 
     mockCodingAgentPort = {
       renderArtifacts: jest.fn(),
+      generateAgentCleanupUpdatesForAgents: jest.fn().mockResolvedValue({
+        createOrUpdate: [],
+        delete: [],
+      }),
     } as unknown as jest.Mocked<ICodingAgentPort>;
 
     mockDistributionRepository = {
@@ -111,6 +115,7 @@ describe('PublishArtifactsUseCase', () => {
       findActiveStandardVersionsByTargetAndPackages: jest.fn(),
       findActiveRecipeVersionsByTargetAndPackages: jest.fn(),
       findActiveSkillVersionsByTargetAndPackages: jest.fn(),
+      findActiveRenderModesByTarget: jest.fn(),
     } as unknown as jest.Mocked<IDistributionRepository>;
 
     // Default empty arrays for skill-related methods (can be overridden in test blocks)
@@ -118,6 +123,9 @@ describe('PublishArtifactsUseCase', () => {
       [],
     );
     mockDistributionRepository.findActiveSkillVersionsByTargetAndPackages.mockResolvedValue(
+      [],
+    );
+    mockDistributionRepository.findActiveRenderModesByTarget.mockResolvedValue(
       [],
     );
 
@@ -2987,6 +2995,141 @@ describe('PublishArtifactsUseCase', () => {
             codingAgents: activeCodingAgents,
           }),
         );
+      });
+    });
+  });
+
+  describe('render mode cleanup', () => {
+    let command: PublishArtifactsCommand;
+    let recipeVersion: ReturnType<typeof recipeVersionFactory>;
+    let standardVersion: ReturnType<typeof standardVersionFactory>;
+    let target: ReturnType<typeof targetFactory>;
+    let gitRepo: GitRepo;
+
+    beforeEach(() => {
+      recipeVersion = recipeVersionFactory({
+        id: createRecipeVersionId(uuidv4()),
+        name: 'Cleanup Recipe',
+        slug: 'cleanup-recipe',
+        version: 1,
+      });
+
+      standardVersion = standardVersionFactory({
+        id: createStandardVersionId(uuidv4()),
+        name: 'Cleanup Standard',
+        slug: 'cleanup-standard',
+        version: 1,
+      });
+
+      gitRepo = {
+        id: createGitRepoId(uuidv4()),
+        owner: 'test-owner',
+        repo: 'test-repo',
+        branch: 'main',
+        providerId: createGitProviderId(uuidv4()),
+      };
+
+      target = targetFactory({
+        id: targetId,
+        gitRepoId: gitRepo.id,
+        name: 'Docs',
+        path: 'docs',
+      });
+
+      command = {
+        userId,
+        organizationId,
+        recipeVersionIds: [recipeVersion.id],
+        standardVersionIds: [standardVersion.id],
+        targetIds: [targetId],
+        packagesSlugs: [],
+        packageIds: [],
+      };
+
+      mockRecipesPort.getRecipeVersionById.mockResolvedValue(recipeVersion);
+      mockStandardsPort.getStandardVersionById.mockResolvedValue(
+        standardVersion,
+      );
+      mockTargetService.findById.mockResolvedValue(target);
+      mockGitPort.getRepositoryById.mockResolvedValue(gitRepo);
+      mockCodingAgentPort.renderArtifacts.mockResolvedValue({
+        createOrUpdate: [],
+        delete: [],
+      });
+
+      mockDistributionRepository.findActiveRecipeVersionsByTarget.mockResolvedValue(
+        [],
+      );
+      mockDistributionRepository.findActiveStandardVersionsByTarget.mockResolvedValue(
+        [],
+      );
+      mockDistributionRepository.findActiveSkillVersionsByTarget.mockResolvedValue(
+        [],
+      );
+      mockDistributionRepository.findActiveRecipeVersionsByTargetAndPackages.mockResolvedValue(
+        [],
+      );
+      mockDistributionRepository.findActiveStandardVersionsByTargetAndPackages.mockResolvedValue(
+        [],
+      );
+      mockDistributionRepository.findActiveSkillVersionsByTargetAndPackages.mockResolvedValue(
+        [],
+      );
+      mockDistributionRepository.findActiveRenderModesByTarget.mockResolvedValue(
+        [RenderMode.CLAUDE, RenderMode.CURSOR],
+      );
+
+      mockRenderModeConfigurationService.mapRenderModesToCodingAgents.mockImplementation(
+        (renderModes) =>
+          renderModes.includes(RenderMode.CLAUDE)
+            ? [CodingAgents.claude, CodingAgents.cursor]
+            : activeCodingAgents,
+      );
+    });
+
+    describe('when per-target agents override org-level agents', () => {
+      beforeEach(() => {
+        mockGitPort.getFileFromRepo.mockResolvedValue({
+          content: JSON.stringify({ agents: [CodingAgents.claude] }),
+        } as GitCommit);
+      });
+
+      it('generates cleanup only for removed agents', async () => {
+        await useCase.execute(command);
+
+        expect(
+          mockCodingAgentPort.generateAgentCleanupUpdatesForAgents,
+        ).toHaveBeenCalledWith(
+          expect.objectContaining({
+            agents: [CodingAgents.cursor],
+          }),
+        );
+      });
+    });
+
+    describe('when cleanup updates are generated', () => {
+      beforeEach(() => {
+        mockCodingAgentPort.generateAgentCleanupUpdatesForAgents.mockResolvedValue(
+          {
+            createOrUpdate: [],
+            delete: [
+              {
+                path: '.cursor/rules/packmind/recipes-index.mdc',
+                type: 'file',
+              },
+            ],
+          },
+        );
+      });
+
+      it('prefixes cleanup updates with the target path', async () => {
+        await useCase.execute(command);
+
+        const jobInput = mockPublishArtifactsDelayedJob.addJob.mock.calls[0][0];
+        expect(jobInput.fileUpdates.delete).toContainEqual({
+          path: 'docs/.cursor/rules/packmind/recipes-index.mdc',
+          type: 'file',
+        });
       });
     });
   });

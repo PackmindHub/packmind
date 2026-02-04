@@ -48,6 +48,7 @@ class MockDeployer implements ICodingAgentDeployer {
     private skillResult: FileUpdates = { createOrUpdate: [], delete: [] },
     private artifactsResult: FileUpdates = { createOrUpdate: [], delete: [] },
     private removalResult: FileUpdates = { createOrUpdate: [], delete: [] },
+    private cleanupResult: FileUpdates = { createOrUpdate: [], delete: [] },
   ) {}
 
   async deployRecipes(
@@ -119,6 +120,21 @@ class MockDeployer implements ICodingAgentDeployer {
     },
   ): Promise<FileUpdates> {
     return this.removalResult;
+  }
+
+  async generateAgentCleanupFileUpdates(
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    artifacts: {
+      recipeVersions: RecipeVersion[];
+      standardVersions: StandardVersion[];
+      skillVersions: SkillVersion[];
+    },
+  ): Promise<FileUpdates> {
+    return this.cleanupResult;
+  }
+
+  getSkillsFolderPath(): string | undefined {
+    return undefined;
   }
 
   async deployArtifacts(

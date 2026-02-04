@@ -18,6 +18,9 @@ export class PackmindConfigService {
 
     const config: PackmindFileConfig = { packages };
 
+    console.log('-----------------------')
+    console.log(existingAgents);
+
     // Preserve existing agents if present
     if (existingAgents !== undefined) {
       config.agents = existingAgents;
@@ -31,11 +34,15 @@ export class PackmindConfigService {
     existingPackages?: { [slug: string]: string },
     existingAgents?: CodingAgent[],
   ): FileModification {
+    console.log('-----------------------')
+    console.log(existingAgents);
     const config = this.generateConfigContent(
       packagesSlugs,
       existingPackages,
       existingAgents,
     );
+
+    console.log(config);
 
     return {
       path: 'packmind.json',

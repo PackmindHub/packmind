@@ -406,6 +406,44 @@ ${recipeVersion.content}`;
     return fileUpdates;
   }
 
+  async generateAgentCleanupFileUpdates(artifacts: {
+    recipeVersions: RecipeVersion[];
+    standardVersions: StandardVersion[];
+    skillVersions: SkillVersion[];
+  }): Promise<FileUpdates> {
+    this.logger.info('Generating agent cleanup file updates for Claude Code', {
+      recipesCount: artifacts.recipeVersions.length,
+      standardsCount: artifacts.standardVersions.length,
+      skillsCount: artifacts.skillVersions.length,
+    });
+
+    return {
+      createOrUpdate: [
+        {
+          path: ClaudeDeployer.CLAUDE_MD_PATH,
+          sections: [
+            { key: 'Packmind standards', content: '' },
+            { key: 'Packmind recipes', content: '' },
+          ],
+        },
+      ],
+      delete: [
+        {
+          path: ClaudeDeployer.COMMANDS_FOLDER_PATH,
+          type: DeleteItemType.Directory,
+        },
+        {
+          path: ClaudeDeployer.STANDARDS_FOLDER_PATH,
+          type: DeleteItemType.Directory,
+        },
+        {
+          path: ClaudeDeployer.SKILLS_FOLDER_PATH,
+          type: DeleteItemType.Directory,
+        },
+      ],
+    };
+  }
+
   /**
    * Format globs value for YAML frontmatter.
    * Parses comma-separated globs and formats them as a YAML array.

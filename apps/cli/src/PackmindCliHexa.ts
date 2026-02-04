@@ -178,12 +178,12 @@ export class PackmindCliHexa {
     );
   }
 
-  public async readConfig(baseDirectory: string): Promise<string[]> {
+  public async readConfig(baseDirectory: string): Promise<PackmindFileConfig> {
     const config =
       await this.hexa.repositories.configFileRepository.readConfig(
         baseDirectory,
       );
-    if (!config) return [];
+    if (!config) return { packages: {} };
 
     // Check for non-wildcard versions and warn the user
     const hasNonWildcardVersions = Object.values(config.packages).some(
@@ -196,7 +196,7 @@ export class PackmindCliHexa {
       );
     }
 
-    return Object.keys(config.packages);
+    return config;
   }
 
   /**
@@ -225,6 +225,14 @@ export class PackmindCliHexa {
       await this.hexa.repositories.configFileRepository.readConfig(
         baseDirectory,
       );
+
+    console.log('-------------')
+    console.log(
+      baseDirectory,
+      {
+        ...existingConfig,
+        packages,
+      })
 
     await this.hexa.repositories.configFileRepository.writeConfig(
       baseDirectory,
