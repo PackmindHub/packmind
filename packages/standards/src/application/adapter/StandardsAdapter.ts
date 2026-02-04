@@ -36,6 +36,7 @@ import {
   RuleId,
   SpaceId,
   Standard,
+  StandardCreationMethod,
   StandardId,
   StandardVersion,
   StandardVersionId,
@@ -442,6 +443,8 @@ export class StandardsAdapter
     scope: string | null;
     spaceId: SpaceId | null;
     disableTriggerAssessment?: boolean;
+    source?: PackmindEventSource;
+    method?: StandardCreationMethod;
   }): Promise<Standard> {
     if (!params.spaceId) {
       throw new Error(
@@ -465,6 +468,7 @@ export class StandardsAdapter
     spaceId: SpaceId;
     packageSlugs?: string[];
     source?: PackmindEventSource;
+    method?: StandardCreationMethod;
   }): Promise<Standard> {
     const result = await this._createStandardWithPackages.execute({
       ...params,

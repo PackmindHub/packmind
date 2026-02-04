@@ -12,12 +12,9 @@ export const RULE_DETAILS_DETECTION_TAB_FEATURE_KEY =
 
 export const MCP_CONFIG_REDESIGN_FEATURE_KEY = 'mcp-config-redesign';
 
-export const STANDARD_SAMPLES_FEATURE_KEY = 'standard-samples';
-
 export const DEFAULT_FEATURE_DOMAIN_MAP: Record<string, readonly string[]> = {
   [RULE_DETAILS_DETECTION_TAB_FEATURE_KEY]: ['@packmind.com', '@promyze.com'],
   [MCP_CONFIG_REDESIGN_FEATURE_KEY]: ['@packmind.com', '@promyze.com'],
-  [STANDARD_SAMPLES_FEATURE_KEY]: ['@packmind.com', '@promyze.com'],
 };
 
 const normalizeDomain = (domain: string): string =>

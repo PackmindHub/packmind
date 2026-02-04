@@ -1,10 +1,5 @@
 import { PackmindCliHexa } from '../../PackmindCliHexa';
-import {
-  formatSlug,
-  formatLabel,
-  formatLink,
-  formatHeader,
-} from '../utils/consoleLogger';
+import { formatSlug, formatLabel, formatHeader } from '../utils/consoleLogger';
 import { loadApiKey, decodeApiKey } from '../utils/credentials';
 
 function buildSkillUrl(
@@ -59,9 +54,7 @@ export async function listSkillsHandler(
       log(`  ${formatLabel('Name:')}  ${skill.name}`);
       if (urlBuilder) {
         const url = urlBuilder(skill.slug);
-        log(
-          `  ${formatLabel('Link:')}  ${formatLink(url, 'Open in Packmind')}`,
-        );
+        log(`  ${formatLabel('Link:')}  ${url}`);
       }
       if (skill.description) {
         const descriptionLines = skill.description
