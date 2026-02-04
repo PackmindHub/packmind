@@ -10,6 +10,7 @@ import {
   PMTabs,
   PMIcon,
   PMSpinner,
+  PMTooltip,
 } from '@packmind/ui';
 import { LuCircleHelp } from 'react-icons/lu';
 import { useMcpConnection } from './LocalEnvironmentSetup/hooks/useMcpConnection';
@@ -105,7 +106,17 @@ export function OnboardingBuildMcpSection() {
           <PMVStack gap={2} align="start">
             <PMHStack gap={2} align="center">
               <PMHeading level="h3">With MCP</PMHeading>
-              <PMIcon as={LuCircleHelp} color="secondary" />
+              <PMTooltip
+                label="MCP (Model Context Protocol) is an open standard that enables AI agents to connect directly with tools and services."
+                placement="top"
+              >
+                <PMIcon
+                  as={LuCircleHelp}
+                  color="secondary"
+                  cursor="help"
+                  data-testid="OnboardingBuild.McpHelpIcon"
+                />
+              </PMTooltip>
             </PMHStack>
             <PMText color="secondary" fontSize="sm">
               Agent-only: native protocol for direct integration
