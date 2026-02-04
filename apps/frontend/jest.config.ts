@@ -26,13 +26,13 @@ export default {
   setupFilesAfterEnv: ['<rootDir>/src/test-setup.ts'],
   coverageDirectory: '../../coverage/apps/frontend',
   moduleNameMapper: {
+    // Specific icons path must come before the general assets path
+    '^@packmind/assets/icons/(.*)$': '<rootDir>/../../packages/assets/icons/$1',
     ...pathsToModuleNameMapper(compilerOptions.paths, {
       prefix: '<rootDir>/../../',
     }),
     '\\.(woff|woff2|eot|ttf|otf)$': 'identity-obj-proxy',
     '\\.(svg|png|jpg|jpeg|gif|css|less|scss|sass)$': 'identity-obj-proxy',
-    '^@packmind/assets$': '<rootDir>/../../packages/assets/src/index.ts',
-    '^@packmind/assets/(.*)$': '<rootDir>/../../packages/assets/src/$1',
   },
   testTimeout: 30000,
   // Workaround for macOS jest-worker EPERM errors

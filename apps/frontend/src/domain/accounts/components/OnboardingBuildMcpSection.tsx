@@ -24,6 +24,7 @@ import {
 import { MethodContent } from './McpConfig/InstallMethods';
 import { StartTrialCommandAgents } from '@packmind/types';
 import { OnboardingAgentProvider } from '../contexts';
+import { getAgentIcon } from './trial/AgentIcons';
 
 const mapAgentIdToAnalytics = (agentId: string): StartTrialCommandAgents => {
   const mapping: Record<string, StartTrialCommandAgents> = {
@@ -130,19 +131,24 @@ export function OnboardingBuildMcpSection() {
               {isLoading ? (
                 <PMSpinner size="sm" data-testid="OnboardingBuild.McpLoading" />
               ) : (
-                agents.map((agent) => (
-                  <PMButton
-                    key={agent.id}
-                    variant={
-                      selectedAgent?.id === agent.id ? 'primary' : 'outline'
-                    }
-                    size="sm"
-                    onClick={() => setSelectedAgent(agent)}
-                    data-testid={`OnboardingBuild.Assistant-${agent.id}`}
-                  >
-                    {agent.name}
-                  </PMButton>
-                ))
+                agents.map((agent) => {
+                  const agentAnalyticsId = mapAgentIdToAnalytics(agent.id);
+                  const AgentIcon = getAgentIcon(agentAnalyticsId);
+                  return (
+                    <PMButton
+                      key={agent.id}
+                      variant={
+                        selectedAgent?.id === agent.id ? 'primary' : 'secondary'
+                      }
+                      size="sm"
+                      onClick={() => setSelectedAgent(agent)}
+                      data-testid={`OnboardingBuild.Assistant-${agent.id}`}
+                    >
+                      <PMIcon as={AgentIcon} />
+                      {agent.name}
+                    </PMButton>
+                  );
+                })
               )}
             </PMHStack>
           </PMVStack>
