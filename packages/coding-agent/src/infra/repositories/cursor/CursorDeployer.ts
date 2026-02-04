@@ -1,6 +1,6 @@
 import { PackmindLogger } from '@packmind/logger';
 import {
-  DeleteFileItem,
+  DeleteItem,
   DeleteItemType,
   FileUpdates,
   GitRepo,
@@ -372,7 +372,7 @@ export class CursorDeployer implements ICodingAgentDeployer {
       skillsCount: artifacts.skillVersions.length,
     });
 
-    const deleteItems: DeleteFileItem[] = [
+    const deleteItems: DeleteItem[] = [
       {
         path: CursorDeployer.COMMANDS_PATH,
         type: DeleteItemType.Directory,

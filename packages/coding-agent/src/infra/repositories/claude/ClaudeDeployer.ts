@@ -1,6 +1,6 @@
 import { PackmindLogger } from '@packmind/logger';
 import {
-  DeleteFileItem,
+  DeleteItem,
   DeleteItemType,
   FileUpdates,
   GitRepo,
@@ -418,7 +418,7 @@ ${recipeVersion.content}`;
       skillsCount: artifacts.skillVersions.length,
     });
 
-    const deleteItems: DeleteFileItem[] = [
+    const deleteItems: DeleteItem[] = [
       {
         path: ClaudeDeployer.COMMANDS_FOLDER_PATH,
         type: DeleteItemType.Directory,

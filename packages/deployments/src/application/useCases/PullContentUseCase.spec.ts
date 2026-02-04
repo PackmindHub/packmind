@@ -749,11 +749,10 @@ describe('PullContentUseCase', () => {
 
           expect(
             packmindConfigService.createConfigFileModification,
-          ).toHaveBeenCalledWith(
-            ['test-package'],
-            undefined,
-            [CodingAgents.claude, CodingAgents.cursor],
-          );
+          ).toHaveBeenCalledWith(['test-package'], undefined, [
+            CodingAgents.claude,
+            CodingAgents.cursor,
+          ]);
         });
       });
 
@@ -2318,7 +2317,7 @@ describe('PullContentUseCase', () => {
 
         expect(
           packmindConfigService.createConfigFileModification,
-        ).toHaveBeenCalledWith([]);
+        ).toHaveBeenCalledWith([], undefined, undefined);
       });
 
       it('includes packmind.json in createOrUpdate', async () => {
@@ -2441,6 +2440,20 @@ describe('PullContentUseCase', () => {
         gitBranch,
         relativePath,
       };
+
+      packageService.getPackagesBySlugsWithArtefacts.mockResolvedValue([
+        {
+          id: createPackageId('test-package-id'),
+          slug: 'test-package',
+          name: 'Test Package',
+          description: 'Test package description',
+          spaceId: createSpaceId('space-1'),
+          createdBy: createUserId('user-1'),
+          recipes: [],
+          standards: [],
+          skills: [],
+        },
+      ]);
 
       gitPort.listProviders.mockResolvedValue({
         providers: [{ id: 'provider-1' }],
