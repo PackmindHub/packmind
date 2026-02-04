@@ -30,13 +30,12 @@ Don't use `nx serve` commands for local development, let user starts the stack w
 
 ## Working with Nx
 
-The following commands apply for both NX apps and packages:
-- Test a project : `nx test <project-name>`
+The following commands apply for both NX apps and packages (use `nx show projects` to list actual apps and packages.)
+- Test a project: `nx test <project-name>`
 - Lint a project: `nx lint <project-name>`
 - Build a project: `nx build <project-name>`
 - Test affected projects: `npm run test:staged`
 - Lint affected projects: `npm run lint:staged`
-Tip: use `nx show projects` to list actual apps and packages.
 
 ## Commands
 
