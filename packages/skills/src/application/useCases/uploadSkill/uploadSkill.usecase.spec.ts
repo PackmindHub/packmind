@@ -1,4 +1,4 @@
-import { UploadSkillUsecase } from './uploadSkill.usecase';
+import { UploadSkillUseCase } from './uploadSkill.usecase';
 import { SkillService } from '../../services/SkillService';
 import { SkillVersionService } from '../../services/SkillVersionService';
 import { ISkillFileRepository } from '../../../domain/repositories/ISkillFileRepository';
@@ -27,7 +27,7 @@ import {
 } from '@packmind/types';
 
 describe('UploadSkillUsecase', () => {
-  let usecase: UploadSkillUsecase;
+  let usecase: UploadSkillUseCase;
   let mockAccountsPort: jest.Mocked<IAccountsPort>;
   let mockSpacesPort: jest.Mocked<ISpacesPort>;
   let mockSkillService: jest.Mocked<SkillService>;
@@ -91,7 +91,7 @@ describe('UploadSkillUsecase', () => {
     } as jest.Mocked<ISkillFileRepository>;
     mockEventEmitterService = createMockInstance(PackmindEventEmitterService);
 
-    usecase = new UploadSkillUsecase(
+    usecase = new UploadSkillUseCase(
       mockAccountsPort,
       mockSpacesPort,
       mockSkillService,

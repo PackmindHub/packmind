@@ -6,18 +6,21 @@ import { IInvitationRepository } from '../../domain/repositories/IInvitationRepo
 import { IPasswordResetTokenRepository } from '../../domain/repositories/IPasswordResetTokenRepository';
 import { ICliLoginCodeRepository } from '../../domain/repositories/ICliLoginCodeRepository';
 import { ITrialActivationRepository } from '../../domain/repositories/ITrialActivationRepository';
+import { IUserMetadataRepository } from '../../domain/repositories/IUserMetadataRepository';
 import { UserRepository } from './UserRepository';
 import { OrganizationRepository } from './OrganizationRepository';
 import { InvitationRepository } from './InvitationRepository';
 import { PasswordResetTokenRepository } from './PasswordResetTokenRepository';
 import { CliLoginCodeRepository } from './CliLoginCodeRepository';
 import { TrialActivationRepository } from './TrialActivationRepository';
+import { UserMetadataRepository } from './UserMetadataRepository';
 import { UserSchema } from '../schemas/UserSchema';
 import { OrganizationSchema } from '../schemas/OrganizationSchema';
 import { InvitationSchema } from '../schemas/InvitationSchema';
 import { PasswordResetTokenSchema } from '../schemas/PasswordResetTokenSchema';
 import { CliLoginCodeSchema } from '../schemas/CliLoginCodeSchema';
 import { TrialActivationSchema } from '../schemas/TrialActivationSchema';
+import { UserMetadataSchema } from '../schemas/UserMetadataSchema';
 import { UserOrganizationMembershipSchema } from '../schemas/UserOrganizationMembershipSchema';
 import { UserOrganizationMembershipRepository } from './UserOrganizationMembershipRepository';
 import { IUserOrganizationMembershipRepository } from '../../domain/repositories/IUserOrganizationMembershipRepository';
@@ -37,6 +40,7 @@ export class AccountsRepositories implements IAccountsRepositories {
   private readonly userOrganizationMembershipRepository: IUserOrganizationMembershipRepository;
   private readonly cliLoginCodeRepository: ICliLoginCodeRepository;
   private readonly trialActivationRepository: ITrialActivationRepository;
+  private readonly userMetadataRepository: IUserMetadataRepository;
 
   constructor(private readonly dataSource: DataSource) {
     // Initialize all repositories with their respective schemas
@@ -61,6 +65,9 @@ export class AccountsRepositories implements IAccountsRepositories {
     );
     this.trialActivationRepository = new TrialActivationRepository(
       this.dataSource.getRepository(TrialActivationSchema),
+    );
+    this.userMetadataRepository = new UserMetadataRepository(
+      this.dataSource.getRepository(UserMetadataSchema),
     );
   }
 
@@ -90,5 +97,9 @@ export class AccountsRepositories implements IAccountsRepositories {
 
   getTrialActivationRepository(): ITrialActivationRepository {
     return this.trialActivationRepository;
+  }
+
+  getUserMetadataRepository(): IUserMetadataRepository {
+    return this.userMetadataRepository;
   }
 }

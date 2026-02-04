@@ -14,6 +14,28 @@ export type CreatePackageResult = {
   slug: string;
 };
 
+// Add artefacts to package types
+export type AddArtefactsToPackageCommand = {
+  packageSlug: string;
+  spaceId: string;
+  standardIds?: string[];
+  commandIds?: string[];
+  skillIds?: string[];
+};
+
+export type AddArtefactsToPackageResult = {
+  added: {
+    standards: string[];
+    commands: string[];
+    skills: string[];
+  };
+  skipped: {
+    standards: string[];
+    commands: string[];
+    skills: string[];
+  };
+};
+
 export interface IPackagesGateway {
   list: PublicGateway<IListPackagesUseCase>;
   getSummary: PublicGateway<IGetPackageSummaryUseCase>;
@@ -21,4 +43,7 @@ export interface IPackagesGateway {
     spaceId: string,
     data: CreatePackageCommand,
   ): Promise<CreatePackageResult>;
+  addArtefacts(
+    command: AddArtefactsToPackageCommand,
+  ): Promise<AddArtefactsToPackageResult>;
 }

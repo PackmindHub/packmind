@@ -9,9 +9,9 @@ import {
   RenderMode,
   Standard,
 } from '@packmind/types';
-import { DataSource } from 'typeorm';
+import { createIntegrationTestFixture } from '../helpers/createIntegrationTestFixture';
 import { DataFactory } from '../helpers/DataFactory';
-import { makeIntegrationTestDataSource } from '../helpers/makeIntegrationTestDataSource';
+import { integrationTestSchemas } from '../helpers/makeIntegrationTestDataSource';
 import { TestApp } from '../helpers/TestApp';
 
 /**
@@ -24,6 +24,8 @@ import { TestApp } from '../helpers/TestApp';
  * File content verification is covered by unit tests in PublishArtifactsUseCase.spec.ts
  */
 describe('Packmind Deployment Spec', () => {
+  const fixture = createIntegrationTestFixture(integrationTestSchemas);
+
   let testApp: TestApp;
   let dataFactory: DataFactory;
 
@@ -32,16 +34,13 @@ describe('Packmind Deployment Spec', () => {
   let recipe1: Recipe;
   let recipe2: Recipe;
 
-  let dataSource: DataSource;
   let commit: GitCommit;
   let commitToGit: jest.Mock;
 
-  beforeEach(async () => {
-    dataSource = await makeIntegrationTestDataSource();
-    await dataSource.initialize();
-    await dataSource.synchronize();
+  beforeAll(() => fixture.initialize());
 
-    testApp = new TestApp(dataSource);
+  beforeEach(async () => {
+    testApp = new TestApp(fixture.datasource);
     await testApp.initialize();
 
     dataFactory = new DataFactory(testApp);
@@ -58,11 +57,13 @@ describe('Packmind Deployment Spec', () => {
 
   afterEach(async () => {
     jest.clearAllMocks();
-    await dataSource.destroy();
+    await fixture.cleanup();
   });
 
+  afterAll(() => fixture.destroy());
+
   async function createGitCommit() {
-    const gitCommitRepo = dataSource.getRepository(GitCommitSchema);
+    const gitCommitRepo = fixture.datasource.getRepository(GitCommitSchema);
     return gitCommitRepo.save(gitCommitFactory());
   }
 

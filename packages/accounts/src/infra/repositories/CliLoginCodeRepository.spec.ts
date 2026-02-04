@@ -1,4 +1,3 @@
-import { DataSource } from 'typeorm';
 import { CliLoginCodeRepository } from './CliLoginCodeRepository';
 import {
   CliLoginCode,
@@ -10,7 +9,7 @@ import { CliLoginCodeSchema } from '../schemas/CliLoginCodeSchema';
 import { UserSchema } from '../schemas/UserSchema';
 import { OrganizationSchema } from '../schemas/OrganizationSchema';
 import { UserOrganizationMembershipSchema } from '../schemas/UserOrganizationMembershipSchema';
-import { makeTestDatasource, stubLogger } from '@packmind/test-utils';
+import { createTestDatasourceFixture, stubLogger } from '@packmind/test-utils';
 import { PackmindLogger } from '@packmind/logger';
 import { Configuration } from '@packmind/node-utils';
 import { organizationFactory, userFactory } from '../../../test';
@@ -23,7 +22,13 @@ jest.mock('@packmind/node-utils', () => ({
 }));
 
 describe('CliLoginCodeRepository', () => {
-  let dataSource: DataSource;
+  const fixture = createTestDatasourceFixture([
+    CliLoginCodeSchema,
+    UserSchema,
+    OrganizationSchema,
+    UserOrganizationMembershipSchema,
+  ]);
+
   let repository: CliLoginCodeRepository;
   let logger: jest.Mocked<PackmindLogger>;
 
@@ -34,31 +39,23 @@ describe('CliLoginCodeRepository', () => {
     '123e4567-e89b-12d3-a456-426614174211',
   );
 
-  beforeAll(() => {
+  beforeAll(async () => {
     mockConfiguration.getConfig.mockResolvedValue('test-encryption-key');
+    await fixture.initialize();
   });
 
   beforeEach(async () => {
     logger = stubLogger();
-    dataSource = await makeTestDatasource([
-      CliLoginCodeSchema,
-      UserSchema,
-      OrganizationSchema,
-      UserOrganizationMembershipSchema,
-    ]);
-    await dataSource.initialize();
-    await dataSource.synchronize();
-
     repository = new CliLoginCodeRepository(
-      dataSource.getRepository(CliLoginCodeSchema),
+      fixture.datasource.getRepository(CliLoginCodeSchema),
       logger,
     );
 
-    const organization = await dataSource
+    const organization = await fixture.datasource
       .getRepository(OrganizationSchema)
       .save(organizationFactory({ id: organizationId }));
 
-    await dataSource.getRepository(UserSchema).save(
+    await fixture.datasource.getRepository(UserSchema).save(
       userFactory({
         id: userId,
         email: 'test-user@packmind.com',
@@ -74,9 +71,11 @@ describe('CliLoginCodeRepository', () => {
   });
 
   afterEach(async () => {
-    await dataSource.destroy();
     jest.clearAllMocks();
+    await fixture.cleanup();
   });
+
+  afterAll(() => fixture.destroy());
 
   describe('.add', () => {
     const cliLoginCode: CliLoginCode = {
@@ -96,7 +95,7 @@ describe('CliLoginCodeRepository', () => {
     it('encrypts code at rest', async () => {
       await repository.add(cliLoginCode);
 
-      const persisted = await dataSource
+      const persisted = await fixture.datasource
         .getRepository(CliLoginCodeSchema)
         .findOne({ where: { id: cliLoginCode.id } });
 
@@ -106,7 +105,7 @@ describe('CliLoginCodeRepository', () => {
     it('stores encrypted code with IV separator', async () => {
       await repository.add(cliLoginCode);
 
-      const persisted = await dataSource
+      const persisted = await fixture.datasource
         .getRepository(CliLoginCodeSchema)
         .findOne({ where: { id: cliLoginCode.id } });
 

@@ -1,0 +1,149 @@
+import { useState, useEffect } from 'react';
+import { PMDialog, PMBox, PMHStack, PMButton } from '@packmind/ui';
+import { OnboardingWelcome } from './OnboardingWelcome';
+import { OnboardingPlaybook } from './OnboardingPlaybook';
+import { OnboardingBuild } from './OnboardingBuild';
+import { useAnalytics } from '@packmind/proprietary/frontend/domain/amplitude/providers/AnalyticsProvider';
+
+type OnboardingStep = 'welcome' | 'playbook' | 'build';
+
+interface OnboardingIntentModalProps {
+  open: boolean;
+  onComplete: () => void;
+  onSkip: () => void;
+  stepsToShow: OnboardingStep[];
+}
+
+export function OnboardingIntentModal({
+  open,
+  onComplete,
+  onSkip,
+  stepsToShow,
+}: OnboardingIntentModalProps) {
+  const [step, setStep] = useState<OnboardingStep>(stepsToShow[0] || 'welcome');
+  const analytics = useAnalytics();
+
+  const showBuildStep = stepsToShow.includes('build');
+
+  // Reset step when modal opens
+  useEffect(() => {
+    if (open && stepsToShow.length > 0) {
+      setStep(stepsToShow[0]);
+    }
+  }, [open, stepsToShow]);
+
+  const handleDiscover = () => {
+    analytics.track('post_signup_onboarding_started', {});
+    setStep('playbook');
+  };
+
+  const handlePreviousToWelcome = () => {
+    setStep('welcome');
+  };
+
+  const handleBuildPlaybook = () => {
+    if (showBuildStep) {
+      setStep('build');
+    } else {
+      onComplete(); // Complete if no build step for invited users
+    }
+  };
+
+  const handlePreviousToPlaybook = () => {
+    setStep('playbook');
+  };
+
+  const handleComplete = () => {
+    analytics.track('post_signup_onboarding_completed', {});
+    onComplete();
+  };
+
+  const handleSkip = () => {
+    analytics.track('post_signup_onboarding_skipped', {});
+    onSkip();
+  };
+
+  return (
+    <PMDialog.Root
+      open={open}
+      closeOnInteractOutside={false}
+      scrollBehavior="inside"
+    >
+      <PMDialog.Backdrop />
+      <PMDialog.Positioner padding={6}>
+        <PMDialog.Content
+          width={{ base: 'calc(100vw - 48px)', lg: '900px', xl: '1000px' }}
+          height={{ base: 'calc(100vh - 48px)', lg: '80vh', xl: '70vh' }}
+          maxWidth={{ base: 'none', lg: '900px', xl: '1000px' }}
+          borderRadius="lg"
+        >
+          <PMDialog.Body>
+            <PMBox
+              display="flex"
+              alignItems="center"
+              justifyContent="center"
+              height="100%"
+              paddingX="5%"
+              paddingY="5%"
+            >
+              <PMBox width="full" height="full">
+                {step === 'welcome' && (
+                  <OnboardingWelcome
+                    onDiscover={handleDiscover}
+                    onSkip={handleSkip}
+                  />
+                )}
+                {step === 'playbook' && <OnboardingPlaybook />}
+                {step === 'build' && <OnboardingBuild />}
+              </PMBox>
+            </PMBox>
+          </PMDialog.Body>
+          {step === 'playbook' && (
+            <PMDialog.Footer justifyContent="flex-start">
+              <PMHStack gap={4}>
+                <PMButton
+                  size="lg"
+                  variant="secondary"
+                  onClick={handlePreviousToWelcome}
+                  data-testid="OnboardingPlaybook.PreviousButton"
+                >
+                  Previous
+                </PMButton>
+                <PMButton
+                  size="lg"
+                  variant="primary"
+                  onClick={handleBuildPlaybook}
+                  data-testid="OnboardingPlaybook.BuildButton"
+                >
+                  Build my playbook
+                </PMButton>
+              </PMHStack>
+            </PMDialog.Footer>
+          )}
+          {step === 'build' && (
+            <PMDialog.Footer justifyContent="flex-start">
+              <PMHStack gap={4}>
+                <PMButton
+                  size="lg"
+                  variant="secondary"
+                  onClick={handlePreviousToPlaybook}
+                  data-testid="OnboardingModal.PreviousButton"
+                >
+                  Previous
+                </PMButton>
+                <PMButton
+                  size="lg"
+                  variant="primary"
+                  onClick={handleComplete}
+                  data-testid="OnboardingModal.CompleteButton"
+                >
+                  I'm done
+                </PMButton>
+              </PMHStack>
+            </PMDialog.Footer>
+          )}
+        </PMDialog.Content>
+      </PMDialog.Positioner>
+    </PMDialog.Root>
+  );
+}

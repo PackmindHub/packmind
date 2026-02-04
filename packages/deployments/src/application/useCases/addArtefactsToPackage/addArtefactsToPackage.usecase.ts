@@ -6,6 +6,7 @@ import {
   IAccountsPort,
   IAddArtefactsToPackageUseCase,
   IRecipesPort,
+  ISkillsPort,
   ISpacesPort,
   IStandardsPort,
 } from '@packmind/types';
@@ -26,6 +27,7 @@ export class AddArtefactsToPackageUsecase
     private readonly spacesPort: ISpacesPort,
     private readonly recipesPort: IRecipesPort,
     private readonly standardsPort: IStandardsPort,
+    private readonly skillsPort: ISkillsPort,
     logger: PackmindLogger = new PackmindLogger(origin),
   ) {
     super(accountsPort, logger);
@@ -35,12 +37,18 @@ export class AddArtefactsToPackageUsecase
   async executeForMembers(
     command: AddArtefactsToPackageCommand & MemberContext,
   ): Promise<AddArtefactsToPackageResponse> {
-    const { packageId, recipeIds = [], standardIds = [] } = command;
+    const {
+      packageId,
+      recipeIds = [],
+      standardIds = [],
+      skillIds = [],
+    } = command;
 
     this.logger.info('Adding artefacts to package', {
       packageId,
       recipeCount: recipeIds.length,
       standardCount: standardIds.length,
+      skillCount: skillIds.length,
     });
 
     // Validate package exists
@@ -63,18 +71,31 @@ export class AddArtefactsToPackageUsecase
       );
     }
 
-    // Get current recipes and standards to filter out duplicates
+    // Get current artefacts to filter out duplicates
     const currentRecipeIds = existingPackage.recipes || [];
     const currentStandardIds = existingPackage.standards || [];
+    const currentSkillIds = existingPackage.skills || [];
 
-    // Filter out recipes that are already in the package
+    // Filter out artefacts that are already in the package
     const newRecipeIds = recipeIds.filter(
       (recipeId) => !currentRecipeIds.includes(recipeId),
     );
+    const skippedRecipeIds = recipeIds.filter((recipeId) =>
+      currentRecipeIds.includes(recipeId),
+    );
 
-    // Filter out standards that are already in the package
     const newStandardIds = standardIds.filter(
       (standardId) => !currentStandardIds.includes(standardId),
+    );
+    const skippedStandardIds = standardIds.filter((standardId) =>
+      currentStandardIds.includes(standardId),
+    );
+
+    const newSkillIds = skillIds.filter(
+      (skillId) => !currentSkillIds.includes(skillId),
+    );
+    const skippedSkillIds = skillIds.filter((skillId) =>
+      currentSkillIds.includes(skillId),
     );
 
     // Validate all new recipes belong to the space
@@ -119,6 +140,25 @@ export class AddArtefactsToPackageUsecase
       }
     }
 
+    // Validate all new skills belong to the space
+    if (newSkillIds.length > 0) {
+      const skills = await Promise.all(
+        newSkillIds.map((skillId) => this.skillsPort.getSkill(skillId)),
+      );
+
+      for (let i = 0; i < skills.length; i++) {
+        const skill = skills[i];
+        if (!skill) {
+          throw new Error(`Skill with id ${newSkillIds[i]} not found`);
+        }
+        if (skill.spaceId !== existingPackage.spaceId) {
+          throw new Error(
+            `Skill ${newSkillIds[i]} does not belong to space ${existingPackage.spaceId}`,
+          );
+        }
+      }
+    }
+
     // Add new artefacts to package
     const packageRepository = this.services
       .getRepositories()
@@ -130,6 +170,10 @@ export class AddArtefactsToPackageUsecase
 
     if (newStandardIds.length > 0) {
       await packageRepository.addStandards(packageId, newStandardIds);
+    }
+
+    if (newSkillIds.length > 0) {
+      await packageRepository.addSkills(packageId, newSkillIds);
     }
 
     // Fetch updated package
@@ -145,10 +189,24 @@ export class AddArtefactsToPackageUsecase
       packageId: updatedPackage.id,
       addedRecipes: newRecipeIds.length,
       addedStandards: newStandardIds.length,
+      addedSkills: newSkillIds.length,
       totalRecipes: updatedPackage.recipes?.length ?? 0,
       totalStandards: updatedPackage.standards?.length ?? 0,
+      totalSkills: updatedPackage.skills?.length ?? 0,
     });
 
-    return { package: updatedPackage };
+    return {
+      package: updatedPackage,
+      added: {
+        standards: newStandardIds,
+        commands: newRecipeIds,
+        skills: newSkillIds,
+      },
+      skipped: {
+        standards: skippedStandardIds,
+        commands: skippedRecipeIds,
+        skills: skippedSkillIds,
+      },
+    };
   }
 }

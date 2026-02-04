@@ -78,25 +78,27 @@ declare global {
 }
 
 // Mock ResizeObserver for tests
-global.ResizeObserver = class ResizeObserver {
-  constructor(cb: ResizeObserverCallback) {
-    this.cb = cb;
-  }
+if (typeof global.ResizeObserver === 'undefined') {
+  global.ResizeObserver = class ResizeObserver {
+    constructor(cb: ResizeObserverCallback) {
+      this.cb = cb;
+    }
 
-  cb: ResizeObserverCallback;
+    cb: ResizeObserverCallback;
 
-  observe() {
-    // Mock implementation
-  }
+    observe() {
+      // Mock implementation
+    }
 
-  unobserve() {
-    // Mock implementation
-  }
+    unobserve() {
+      // Mock implementation
+    }
 
-  disconnect() {
-    // Mock implementation
-  }
-};
+    disconnect() {
+      // Mock implementation
+    }
+  };
+}
 
 jest.mock('./shared/utils/getEnvVar', () => ({
   getEnvVar: jest.fn((name: string, defaultValue = '') => {
@@ -123,21 +125,6 @@ if (typeof global.TextEncoder === 'undefined') {
 
 // Proper mocks for Chakra UI v3 testing environment
 // Based on: https://www.chakra-ui.com/docs/components/concepts/testing
-
-// ResizeObserver mock - required for Chakra UI components
-if (typeof global.ResizeObserver === 'undefined') {
-  global.ResizeObserver = class ResizeObserver {
-    observe() {
-      // Mock implementation
-    }
-    unobserve() {
-      // Mock implementation
-    }
-    disconnect() {
-      // Mock implementation
-    }
-  };
-}
 
 // IntersectionObserver mock - required for some Chakra UI components
 if (typeof global.IntersectionObserver === 'undefined') {

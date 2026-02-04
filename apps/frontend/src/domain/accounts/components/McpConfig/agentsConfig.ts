@@ -29,7 +29,7 @@ export const getInstallCliMethod = (): IInstallMethod => ({
 export const getAgentsConfig = (): IAgentConfig[] => [
   {
     id: 'claude',
-    name: 'Claude (Anthropic)',
+    name: 'Claude Code',
     description: 'Install Packmind MCP for Claude Desktop',
     installMethods: [
       getInstallCliMethod(),

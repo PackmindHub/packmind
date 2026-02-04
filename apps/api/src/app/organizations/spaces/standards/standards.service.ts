@@ -3,6 +3,7 @@ import { PackmindLogger } from '@packmind/logger';
 import { StandardsHexa } from '@packmind/standards';
 import {
   ClientSource,
+  CreateStandardRuleInput,
   CreateStandardSamplesResponse,
   DeleteStandardCommand,
   DeleteStandardsBatchCommand,
@@ -20,6 +21,7 @@ import {
   StandardId,
   StandardVersion,
   UserId,
+  stringToProgrammingLanguage,
 } from '@packmind/types';
 import { InjectDeploymentAdapter } from '../../../shared/HexaInjection';
 
@@ -61,7 +63,7 @@ export class StandardsService {
     standard: {
       name: string;
       description: string;
-      rules: Array<{ content: string }>;
+      rules: CreateStandardRuleInput[];
       scope?: string | null;
     },
     organizationId: OrganizationId,
@@ -70,6 +72,31 @@ export class StandardsService {
     source: ClientSource,
     method: StandardCreationMethod,
   ): Promise<Standard> {
+    const hasExamples = standard.rules.some(
+      (r) => r.examples && r.examples.length > 0,
+    );
+
+    if (hasExamples) {
+      return this.standardsHexa.getAdapter().createStandardWithExamples({
+        name: standard.name,
+        description: standard.description,
+        summary: null,
+        rules: standard.rules.map((r) => ({
+          content: r.content,
+          examples: r.examples?.map((e) => ({
+            positive: e.positive,
+            negative: e.negative,
+            language: stringToProgrammingLanguage(e.lang),
+          })),
+        })),
+        organizationId,
+        userId,
+        scope: standard.scope || null,
+        spaceId,
+        source,
+      });
+    }
+
     return this.standardsHexa.getAdapter().createStandard({
       ...standard,
       scope: standard.scope || null,

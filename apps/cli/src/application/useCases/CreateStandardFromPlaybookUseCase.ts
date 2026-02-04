@@ -11,39 +11,23 @@ export class CreateStandardFromPlaybookUseCase implements ICreateStandardFromPla
   async execute(playbook: IPlaybookInput): Promise<ICreateStandardResult> {
     const space = await this.gateway.spaces.getGlobal();
 
-    // Create standard with rules (without examples)
     const standard = await this.gateway.standards.create(space.id, {
       name: playbook.name,
       description: playbook.description,
       scope: playbook.scope,
-      rules: playbook.rules,
+      rules: playbook.rules.map((r) => ({
+        content: r.content,
+        examples: r.examples
+          ? [
+              {
+                lang: r.examples.language,
+                positive: r.examples.positive,
+                negative: r.examples.negative,
+              },
+            ]
+          : undefined,
+      })),
     });
-
-    // Add examples if any rules have them
-    const rulesWithExamples = playbook.rules.filter((r) => r.examples);
-
-    if (rulesWithExamples.length > 0) {
-      const createdRules = await this.gateway.standards.getRules(
-        space.id,
-        standard.id,
-      );
-
-      for (let i = 0; i < playbook.rules.length; i++) {
-        const rule = playbook.rules[i];
-        if (rule.examples && createdRules[i]) {
-          try {
-            await this.gateway.standards.addExampleToRule(
-              space.id,
-              standard.id,
-              createdRules[i].id,
-              rule.examples,
-            );
-          } catch {
-            // Example creation failure doesn't fail the whole operation
-          }
-        }
-      }
-    }
 
     return { standardId: standard.id, name: standard.name };
   }

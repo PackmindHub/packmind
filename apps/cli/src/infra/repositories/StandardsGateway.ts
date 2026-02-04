@@ -5,6 +5,7 @@ import {
   RuleWithId,
   RuleExample,
   ListStandardsResult,
+  ListedStandard,
 } from '../../domain/repositories/IStandardsGateway';
 import { ISpacesGateway } from '../../domain/repositories/ISpacesGateway';
 import { PackmindHttpClient } from '../http/PackmindHttpClient';
@@ -75,5 +76,10 @@ export class StandardsGateway implements IStandardsGateway {
       name: s.name,
       description: s.description,
     }));
+  };
+
+  public getBySlug = async (slug: string): Promise<ListedStandard | null> => {
+    const standards = await this.list();
+    return standards.find((s) => s.slug === slug) ?? null;
   };
 }

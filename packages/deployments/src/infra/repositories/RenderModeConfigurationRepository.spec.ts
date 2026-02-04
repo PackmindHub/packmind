@@ -1,8 +1,11 @@
-import { itHandlesSoftDelete } from '@packmind/test-utils';
-import { DataSource, Repository } from 'typeorm';
+import {
+  createTestDatasourceFixture,
+  itHandlesSoftDelete,
+  stubLogger,
+} from '@packmind/test-utils';
+import { Repository } from 'typeorm';
 import { RenderModeConfigurationRepository } from './RenderModeConfigurationRepository';
 import { RenderModeConfigurationSchema } from '../schemas/RenderModeConfigurationSchema';
-import { makeTestDatasource, stubLogger } from '@packmind/test-utils';
 import { PackmindLogger } from '@packmind/logger';
 import { RenderMode, RenderModeConfiguration } from '@packmind/types';
 import {
@@ -15,7 +18,11 @@ import { v4 as uuidv4 } from 'uuid';
 import { renderModeConfigurationFactory } from '../../../test';
 
 describe('RenderModeConfigurationRepository', () => {
-  let datasource: DataSource;
+  const fixture = createTestDatasourceFixture([
+    RenderModeConfigurationSchema,
+    OrganizationSchema,
+  ]);
+
   let repository: RenderModeConfigurationRepository;
   let organizationRepository: Repository<Organization>;
   let organization: Organization;
@@ -30,21 +37,18 @@ describe('RenderModeConfigurationRepository', () => {
     });
   };
 
+  beforeAll(() => fixture.initialize());
+
   beforeEach(async () => {
     logger = stubLogger();
-    datasource = await makeTestDatasource([
-      RenderModeConfigurationSchema,
-      OrganizationSchema,
-    ]);
-    await datasource.initialize();
-    await datasource.synchronize();
 
     repository = new RenderModeConfigurationRepository(
-      datasource.getRepository(RenderModeConfigurationSchema),
+      fixture.datasource.getRepository(RenderModeConfigurationSchema),
       logger,
     );
 
-    organizationRepository = datasource.getRepository(OrganizationSchema);
+    organizationRepository =
+      fixture.datasource.getRepository(OrganizationSchema);
     organization = await createOrganization();
     softDeleteOrganizationIds.length = 0;
   });
@@ -56,8 +60,10 @@ describe('RenderModeConfigurationRepository', () => {
 
   afterEach(async () => {
     jest.clearAllMocks();
-    await datasource.destroy();
+    await fixture.cleanup();
   });
+
+  afterAll(() => fixture.destroy());
 
   itHandlesSoftDelete<RenderModeConfiguration>({
     entityFactory: () => {
@@ -70,7 +76,7 @@ describe('RenderModeConfigurationRepository', () => {
     },
     getRepository: () => repository,
     queryDeletedEntity: async (id) =>
-      datasource.getRepository(RenderModeConfigurationSchema).findOne({
+      fixture.datasource.getRepository(RenderModeConfigurationSchema).findOne({
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         where: { id: id as any },
         withDeleted: true,

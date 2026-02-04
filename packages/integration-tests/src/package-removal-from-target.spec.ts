@@ -10,15 +10,16 @@ import {
   createPackageId,
   createTargetId,
 } from '@packmind/types';
-import { DataSource } from 'typeorm';
+import { createIntegrationTestFixture } from './helpers/createIntegrationTestFixture';
 import { DataFactory } from './helpers/DataFactory';
-import { makeIntegrationTestDataSource } from './helpers/makeIntegrationTestDataSource';
+import { integrationTestSchemas } from './helpers/makeIntegrationTestDataSource';
 import { TestApp } from './helpers/TestApp';
 
 describe('Package removal from target integration', () => {
+  const fixture = createIntegrationTestFixture(integrationTestSchemas);
+
   let testApp: TestApp;
   let dataFactory: DataFactory;
-  let dataSource: DataSource;
 
   let recipe1: Recipe;
   let standard1: Standard;
@@ -26,12 +27,10 @@ describe('Package removal from target integration', () => {
   let commit: GitCommit;
   let commitToGit: jest.Mock;
 
-  beforeEach(async () => {
-    dataSource = await makeIntegrationTestDataSource();
-    await dataSource.initialize();
-    await dataSource.synchronize();
+  beforeAll(() => fixture.initialize());
 
-    testApp = new TestApp(dataSource);
+  beforeEach(async () => {
+    testApp = new TestApp(fixture.datasource);
     await testApp.initialize();
 
     dataFactory = new DataFactory(testApp);
@@ -54,11 +53,13 @@ describe('Package removal from target integration', () => {
 
   afterEach(async () => {
     jest.clearAllMocks();
-    await dataSource.destroy();
+    await fixture.cleanup();
   });
 
+  afterAll(() => fixture.destroy());
+
   async function createGitCommit() {
-    const gitCommitRepo = dataSource.getRepository(GitCommitSchema);
+    const gitCommitRepo = fixture.datasource.getRepository(GitCommitSchema);
     return gitCommitRepo.save(gitCommitFactory());
   }
 

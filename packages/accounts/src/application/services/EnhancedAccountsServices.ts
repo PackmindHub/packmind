@@ -5,6 +5,7 @@ import { ApiKeyService, IJwtService } from './ApiKeyService';
 import { LoginRateLimiterService } from './LoginRateLimiterService';
 import { PasswordResetTokenService } from './PasswordResetTokenService';
 import { TrialActivationService } from './TrialActivationService';
+import { UserMetadataService } from './UserMetadataService';
 import { IAccountsRepositories } from '../../domain/repositories/IAccountsRepositories';
 import { ICliLoginCodeRepository } from '../../domain/repositories/ICliLoginCodeRepository';
 import { ITrialActivationRepository } from '../../domain/repositories/ITrialActivationRepository';
@@ -22,6 +23,7 @@ export class EnhancedAccountsServices {
   private readonly invitationService: InvitationService;
   private readonly passwordResetTokenService: PasswordResetTokenService;
   private readonly loginRateLimiterService: LoginRateLimiterService;
+  private readonly userMetadataService: UserMetadataService;
   private readonly apiKeyService?: ApiKeyService;
   private readonly trialActivationService?: TrialActivationService;
 
@@ -48,6 +50,9 @@ export class EnhancedAccountsServices {
       new SmtpMailService(),
     );
     this.loginRateLimiterService = new LoginRateLimiterService();
+    this.userMetadataService = new UserMetadataService(
+      this.accountsRepositories.getUserMetadataRepository(),
+    );
 
     // Store optional API key service if provided
     this.apiKeyService = apiKeyService;
@@ -88,6 +93,10 @@ export class EnhancedAccountsServices {
 
   getPasswordResetTokenService(): PasswordResetTokenService {
     return this.passwordResetTokenService;
+  }
+
+  getUserMetadataService(): UserMetadataService {
+    return this.userMetadataService;
   }
 
   getCliLoginCodeRepository(): ICliLoginCodeRepository {

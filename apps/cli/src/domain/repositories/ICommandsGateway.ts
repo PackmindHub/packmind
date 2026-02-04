@@ -28,4 +28,5 @@ export interface ICommandsGateway {
     data: CreateCommandCommand,
   ): Promise<CreateCommandResult>;
   list(): Promise<ListCommandsResult>;
+  getBySlug(slug: string): Promise<ListedCommand | null>;
 }

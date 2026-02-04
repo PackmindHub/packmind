@@ -1,28 +1,29 @@
 import { GitCommitRepository } from './GitCommitRepository';
 import { GitCommitSchema } from '../schemas/GitCommitSchema';
-import { DataSource } from 'typeorm';
-import { makeTestDatasource } from '@packmind/test-utils';
+import { createTestDatasourceFixture } from '@packmind/test-utils';
 import { gitCommitFactory } from '../../../test/gitCommitFactory';
 import { v4 as uuidv4 } from 'uuid';
 import { createGitCommitId } from '@packmind/types';
 
 describe('GitCommitRepository', () => {
-  let datasource: DataSource;
+  const fixture = createTestDatasourceFixture([GitCommitSchema]);
+
   let gitCommitRepository: GitCommitRepository;
 
-  beforeEach(async () => {
-    datasource = await makeTestDatasource([GitCommitSchema]);
-    await datasource.initialize();
-    await datasource.synchronize();
+  beforeAll(() => fixture.initialize());
 
+  beforeEach(() => {
     gitCommitRepository = new GitCommitRepository(
-      datasource.getRepository(GitCommitSchema),
+      fixture.datasource.getRepository(GitCommitSchema),
     );
   });
 
   afterEach(async () => {
-    await datasource.destroy();
+    jest.clearAllMocks();
+    await fixture.cleanup();
   });
+
+  afterAll(() => fixture.destroy());
 
   it('can add and get a git commit', async () => {
     const gitCommit = gitCommitFactory();

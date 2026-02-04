@@ -443,6 +443,8 @@ export class StandardsAdapter
     scope: string | null;
     spaceId: SpaceId | null;
     disableTriggerAssessment?: boolean;
+    source?: PackmindEventSource;
+    method?: StandardCreationMethod;
   }): Promise<Standard> {
     if (!params.spaceId) {
       throw new Error(

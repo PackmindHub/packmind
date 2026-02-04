@@ -30,3 +30,5 @@ export { SignUpWithOrganizationUseCase } from './signUpWithOrganization/SignUpWi
 export { ValidateInvitationTokenUseCase } from './validateInvitationToken/ValidateInvitationTokenUseCase';
 export { ValidatePasswordResetTokenUseCase } from './ValidatePasswordResetTokenUseCase';
 export { ValidatePasswordUseCase } from './validatePasswordUseCase/ValidatePasswordUseCase';
+export { GetUserOnboardingStatusUseCase } from './getUserOnboardingStatus/GetUserOnboardingStatusUseCase';
+export { CompleteUserOnboardingUseCase } from './completeUserOnboarding/CompleteUserOnboardingUseCase';

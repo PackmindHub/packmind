@@ -26,27 +26,45 @@ docker compose up
 ```
 
 This starts the entire development environment.
+Docker Compose automatically provisions PostgreSQL and Redis - no manual setup required.
 Don't use `nx serve` commands for local development, let user starts the stack with `docker compose up`
 
 ## Working with Nx
 
-The following commands apply for both NX apps and packages:
-- Test a project : `nx test <project-name>`
+The following commands apply for both NX apps and packages (use `nx show projects` to list actual apps and packages.)
+- Test a project: `nx test <project-name>`
 - Lint a project: `nx lint <project-name>`
 - Build a project: `nx build <project-name>`
 - Test affected projects: `npm run test:staged`
 - Lint affected projects: `npm run lint:staged`
-Tip: use `nx show projects` to list actual apps and packages.
+
+## Code Quality
+
+- **Linting**: `nx lint <project-name>` runs ESLint
+- **Formatting**: Prettier is used for code formatting
 
 ## Commands
 
 - When running commands, ensure you use the correct Node version (see .nvmrc at the project's root level)
 - When renaming or moving a file that is commited to git, use `git mv` instead of `mv`
 - ensure the env variable `PACKMIND_EDITION` is properly set to `oss`
+- when asked to execute `packmind-cli`, use `node ./dist/apps/cli/main.cjs`
 
-# Artefact Usage Logging
+## Git Workflow
 
-After reading `CLAUDE.md`, `.claude/rules/**`, `.claude/skills/**`, `.skills/commands/**`, `.claude/agents/**` files, or invoking Skills, use the `artefact-logger` skill to log access. See `.claude/skills/artefact-logger/SKILL.md` for details.
+- The project uses **trunk-based development** (all work on `main` branch)
+- Do NOT create branches yourself - let developers decide on branching strategy
+- Each sub-task should have its own commit (as per Task splitting section)
+
+## Security
+
+- **Secrets Detection**: GitGuardian runs in CI to detect leaked secrets
+- **Secrets Retrieval**: Always use `Configuration.getConfig()` from `@packmind/node-utils` to access secrets in code
+- **Secrets Storage**: Infisical or environment variables are used for secrets management - never hardcode secrets
+
+## Documentation
+
+Public end-user documentation is maintained in the `apps/doc/` folder (Mintlify-based).
 
 # Task splitting
 

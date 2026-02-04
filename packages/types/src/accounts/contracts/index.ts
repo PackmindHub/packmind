@@ -30,3 +30,5 @@ export * from './IStartTrial';
 export * from './IGenerateTrialActivationTokenUseCase';
 export * from './IActivateTrialAccountUseCase';
 export * from './IRenameOrganizationUseCase';
+export * from './IGetUserOnboardingStatusUseCase';
+export * from './ICompleteUserOnboardingUseCase';

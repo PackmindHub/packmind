@@ -16,6 +16,7 @@ export default {
   transformIgnorePatterns: standardTransformIgnorePatterns,
   moduleFileExtensions: standardModuleFileExtensions,
   coverageDirectory: '../../coverage/packages/editions',
+  passWithNoTests: true,
   moduleNameMapper: pathsToModuleNameMapper(
     compilerOptions.paths,
     '<rootDir>/../../',

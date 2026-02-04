@@ -1,10 +1,5 @@
 import { PackmindCliHexa } from '../../PackmindCliHexa';
-import {
-  formatSlug,
-  formatLabel,
-  formatLink,
-  formatHeader,
-} from '../utils/consoleLogger';
+import { formatSlug, formatLabel, formatHeader } from '../utils/consoleLogger';
 import { loadApiKey, decodeApiKey } from '../utils/credentials';
 
 function buildStandardUrl(
@@ -59,9 +54,7 @@ export async function listStandardsHandler(
       log(`  ${formatLabel('Name:')}  ${standard.name}`);
       if (urlBuilder) {
         const url = urlBuilder(standard.id);
-        log(
-          `  ${formatLabel('Link:')}  ${formatLink(url, 'Open in Packmind')}`,
-        );
+        log(`  ${formatLabel('Link:')}  ${url}`);
       }
       if (standard.description) {
         const descriptionLines = standard.description

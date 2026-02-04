@@ -9,6 +9,8 @@ import {
   ChangeUserRoleCommand,
   ChangeUserRoleResponse,
   CheckEmailAvailabilityCommand,
+  CompleteUserOnboardingCommand,
+  CompleteUserOnboardingResponse,
   CreateCliLoginCodeCommand,
   CreateCliLoginCodeResponse,
   CreateInvitationsCommand,
@@ -24,10 +26,13 @@ import {
   GetOrganizationBySlugCommand,
   GetOrganizationOnboardingStatusCommand,
   GetUserByIdCommand,
+  GetUserOnboardingStatusCommand,
+  GetUserOnboardingStatusResponse,
   IAccountsPort,
   IActivateUserAccountUseCase,
   IChangeUserRoleUseCase,
   ICheckEmailAvailabilityUseCase,
+  ICompleteUserOnboardingUseCase,
   ICreateCliLoginCodeUseCase,
   ICreateInvitationsUseCase,
   ICreateOrganizationUseCase,
@@ -42,6 +47,7 @@ import {
   IGetOrganizationBySlugUseCase,
   IGetOrganizationOnboardingStatusUseCase,
   IGetUserByIdUseCase,
+  IGetUserOnboardingStatusUseCase,
   IGitPort,
   IGitPortName,
   IListOrganizationUserStatusesUseCase,
@@ -131,6 +137,8 @@ import { SignUpWithOrganizationUseCase } from '../useCases/signUpWithOrganizatio
 import { ValidateInvitationTokenUseCase } from '../useCases/validateInvitationToken/ValidateInvitationTokenUseCase';
 import { ValidatePasswordUseCase } from '../useCases/validatePasswordUseCase/ValidatePasswordUseCase';
 import { StartTrialUseCase } from '../useCases/startTrial/StartTrialUseCase';
+import { GetUserOnboardingStatusUseCase } from '../useCases/getUserOnboardingStatus/GetUserOnboardingStatusUseCase';
+import { CompleteUserOnboardingUseCase } from '../useCases/completeUserOnboarding/CompleteUserOnboardingUseCase';
 
 const origin = 'AccountsAdapter';
 
@@ -172,6 +180,8 @@ export class AccountsAdapter
   private _startTrial!: IStartTrial;
   private _generateTrialActivationToken!: IGenerateTrialActivationTokenUseCase;
   private _activateTrialAccount!: IActivateTrialAccountUseCase;
+  private _getUserOnboardingStatus!: IGetUserOnboardingStatusUseCase;
+  private _completeUserOnboarding!: ICompleteUserOnboardingUseCase;
 
   constructor(
     private readonly accountsServices: EnhancedAccountsServices,
@@ -309,6 +319,16 @@ export class AccountsAdapter
         this.spacesPort ?? null,
         this.deploymentPort ?? null,
       );
+
+    // User onboarding use cases
+    this._getUserOnboardingStatus = new GetUserOnboardingStatusUseCase(
+      this,
+      this.accountsServices.getUserMetadataService(),
+    );
+    this._completeUserOnboarding = new CompleteUserOnboardingUseCase(
+      this,
+      this.accountsServices.getUserMetadataService(),
+    );
 
     // API key use cases are optional since they require additional dependencies
     const apiKeyService = this.accountsServices.getApiKeyService?.();
@@ -557,6 +577,18 @@ export class AccountsAdapter
     command: GetOrganizationOnboardingStatusCommand,
   ): Promise<OrganizationOnboardingStatus> {
     return this._getOrganizationOnboardingStatus.execute(command);
+  }
+
+  public async getUserOnboardingStatus(
+    command: GetUserOnboardingStatusCommand,
+  ): Promise<GetUserOnboardingStatusResponse> {
+    return this._getUserOnboardingStatus.execute(command);
+  }
+
+  public async completeUserOnboarding(
+    command: CompleteUserOnboardingCommand,
+  ): Promise<CompleteUserOnboardingResponse> {
+    return this._completeUserOnboarding.execute(command);
   }
 
   // CLI login use cases

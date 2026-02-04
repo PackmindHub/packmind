@@ -46,6 +46,7 @@ describe('AccountsAdapter', () => {
       getInvitationService: jest.fn(),
       getPasswordResetTokenService: jest.fn(),
       getApiKeyService: jest.fn(),
+      getUserMetadataService: jest.fn(),
     } as unknown as EnhancedAccountsServices;
 
     adapter = new AccountsAdapter(mockServices, mockLogger);

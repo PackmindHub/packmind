@@ -13,6 +13,7 @@ import {
 import { LogLevel, PackmindLogger } from '@packmind/logger';
 import { AuthenticatedRequest } from '@packmind/node-utils';
 import {
+  CreateStandardRuleInput,
   CreateStandardSamplesResponse,
   GetStandardByIdResponse,
   ListStandardsBySpaceResponse,
@@ -108,7 +109,7 @@ export class OrganizationsSpacesStandardsController {
     standard: {
       name: string;
       description: string;
-      rules: Array<{ content: string }>;
+      rules: CreateStandardRuleInput[];
       scope?: string | null;
     },
     @Req() request: AuthenticatedRequest,

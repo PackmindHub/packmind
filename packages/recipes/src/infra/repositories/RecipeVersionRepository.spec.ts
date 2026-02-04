@@ -1,45 +1,44 @@
-import { itHandlesSoftDelete } from '@packmind/test-utils';
+import {
+  createTestDatasourceFixture,
+  itHandlesSoftDelete,
+  stubLogger,
+} from '@packmind/test-utils';
 import { RecipeVersionRepository } from './RecipeVersionRepository';
 import { RecipeVersionSchema } from '../schemas/RecipeVersionSchema';
 import { RecipeSchema } from '../schemas/RecipeSchema';
-import { DataSource } from 'typeorm';
-import { makeTestDatasource } from '@packmind/test-utils';
 import { recipeFactory } from '../../../test/recipeFactory';
 import { recipeVersionFactory } from '../../../test/recipeVersionFactory';
 import { RecipeRepository } from './RecipeRepository';
 import { createRecipeId, Recipe, RecipeVersion } from '@packmind/types';
-
 import { v4 as uuidv4 } from 'uuid';
 import { PackmindLogger } from '@packmind/logger';
-import { stubLogger } from '@packmind/test-utils';
 import { createGitCommit, gitCommitFactory } from '@packmind/git/test';
 import { GitCommitSchema } from '@packmind/git';
 
 describe('RecipeVersionRepository', () => {
-  let datasource: DataSource;
+  const fixture = createTestDatasourceFixture([
+    RecipeSchema,
+    RecipeVersionSchema,
+    GitCommitSchema,
+  ]);
+
   let recipeVersionRepository: RecipeVersionRepository;
   let recipeRepository: RecipeRepository;
   let stubbedLogger: jest.Mocked<PackmindLogger>;
   let testRecipe: Recipe;
 
-  beforeEach(async () => {
-    datasource = await makeTestDatasource([
-      RecipeSchema,
-      RecipeVersionSchema,
-      GitCommitSchema,
-    ]);
-    await datasource.initialize();
-    await datasource.synchronize();
+  beforeAll(() => fixture.initialize());
 
+  beforeEach(async () => {
     stubbedLogger = stubLogger();
 
     recipeVersionRepository = new RecipeVersionRepository(
-      datasource.getRepository(RecipeVersionSchema),
+      fixture.datasource.getRepository(RecipeVersionSchema),
       stubbedLogger,
     );
 
     recipeRepository = new RecipeRepository(
-      datasource.getRepository(RecipeSchema),
+      fixture.datasource.getRepository(RecipeSchema),
       stubbedLogger,
     );
 
@@ -50,14 +49,16 @@ describe('RecipeVersionRepository', () => {
 
   afterEach(async () => {
     jest.clearAllMocks();
-    await datasource.destroy();
+    await fixture.cleanup();
   });
+
+  afterAll(() => fixture.destroy());
 
   itHandlesSoftDelete<RecipeVersion>({
     entityFactory: () => recipeVersionFactory({ recipeId: testRecipe.id }),
     getRepository: () => recipeVersionRepository,
     queryDeletedEntity: async (id) =>
-      datasource.getRepository(RecipeVersionSchema).findOne({
+      fixture.datasource.getRepository(RecipeVersionSchema).findOne({
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         where: { id: id as any },
         withDeleted: true,
@@ -239,7 +240,10 @@ describe('RecipeVersionRepository', () => {
         const gitCommitData = gitCommitFactory();
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const { id, ...gitCommitWithoutId } = gitCommitData;
-        savedGitCommit = await createGitCommit(datasource, gitCommitWithoutId);
+        savedGitCommit = await createGitCommit(
+          fixture.datasource,
+          gitCommitWithoutId,
+        );
 
         const recipeVersion = recipeVersionFactory({
           recipeId: recipe.id,
@@ -302,11 +306,11 @@ describe('RecipeVersionRepository', () => {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const { id: id2, ...gitCommitWithoutId2 } = gitCommitData2;
         savedGitCommit1 = await createGitCommit(
-          datasource,
+          fixture.datasource,
           gitCommitWithoutId1,
         );
         savedGitCommit2 = await createGitCommit(
-          datasource,
+          fixture.datasource,
           gitCommitWithoutId2,
         );
 

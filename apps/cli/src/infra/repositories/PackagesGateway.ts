@@ -2,6 +2,8 @@ import {
   IPackagesGateway,
   CreatePackageCommand,
   CreatePackageResult,
+  AddArtefactsToPackageCommand,
+  AddArtefactsToPackageResult,
 } from '../../domain/repositories/IPackagesGateway';
 import { NotLoggedInError } from '../../domain/errors/NotLoggedInError';
 import { PackmindHttpClient } from '../http/PackmindHttpClient';
@@ -272,5 +274,33 @@ export class PackagesGateway implements IPackagesGateway {
       body: data,
     });
     return response.package;
+  };
+
+  public addArtefacts = async (
+    command: AddArtefactsToPackageCommand,
+  ): Promise<AddArtefactsToPackageResult> => {
+    const { organizationId } = this.httpClient.getAuthContext();
+    const { packageSlug, spaceId, standardIds, commandIds, skillIds } = command;
+
+    const body: Record<string, string[] | undefined> = {};
+    if (standardIds?.length) body.standardIds = standardIds;
+    if (commandIds?.length) body.commandIds = commandIds;
+    if (skillIds?.length) body.skillIds = skillIds;
+
+    const response = await this.httpClient.request<{
+      added: { standards: string[]; commands: string[]; skills: string[] };
+      skipped: { standards: string[]; commands: string[]; skills: string[] };
+    }>(
+      `/api/v0/organizations/${organizationId}/spaces/${spaceId}/packages/${encodeURIComponent(packageSlug)}/add-artifacts`,
+      {
+        method: 'POST',
+        body,
+      },
+    );
+
+    return {
+      added: response.added,
+      skipped: response.skipped,
+    };
   };
 }

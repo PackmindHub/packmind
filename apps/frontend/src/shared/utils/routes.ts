@@ -97,7 +97,7 @@ export const routes = {
    */
   auth: {
     toSignIn: () => '/sign-in',
-    toSignUp: () => '/sign-up',
+    toSignUp: () => '/sign-up/create-account',
     toCreateAccount: () => '/create-account',
     toForgotPassword: () => '/forgot-password',
     toResetPassword: (token?: string) =>

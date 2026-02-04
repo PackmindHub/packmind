@@ -50,7 +50,7 @@ import { GetSkillWithFilesUsecase } from '../useCases/getSkillWithFiles/getSkill
 import { ListSkillsBySpaceUsecase } from '../useCases/listSkillsBySpace/listSkillsBySpace.usecase';
 import { ListSkillVersionsUsecase } from '../useCases/listSkillVersions/listSkillVersions.usecase';
 import { UpdateSkillUsecase } from '../useCases/updateSkill/updateSkill.usecase';
-import { UploadSkillUsecase } from '../useCases/uploadSkill/uploadSkill.usecase';
+import { UploadSkillUseCase } from '../useCases/uploadSkill/uploadSkill.usecase';
 
 const origin = 'SkillsAdapter';
 
@@ -61,7 +61,7 @@ export class SkillsAdapter implements IBaseAdapter<ISkillsPort>, ISkillsPort {
 
   // Use cases - all initialized in initialize()
   private _createSkill!: CreateSkillUsecase;
-  private _uploadSkill!: UploadSkillUsecase;
+  private _uploadSkill!: UploadSkillUseCase;
   private _updateSkill!: UpdateSkillUsecase;
   private _deleteSkill!: DeleteSkillUsecase;
   private _deleteSkillsBatch!: DeleteSkillsBatchUsecase;
@@ -113,7 +113,7 @@ export class SkillsAdapter implements IBaseAdapter<ISkillsPort>, ISkillsPort {
       this.eventEmitterService,
     );
 
-    this._uploadSkill = new UploadSkillUsecase(
+    this._uploadSkill = new UploadSkillUseCase(
       this.accountsPort,
       this.spacesPort,
       this.services.getSkillService(),

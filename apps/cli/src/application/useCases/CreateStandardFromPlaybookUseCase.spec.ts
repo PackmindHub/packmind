@@ -53,7 +53,7 @@ describe('CreateStandardFromPlaybookUseCase', () => {
       expect(mockSpacesGateway.getGlobal).toHaveBeenCalled();
     });
 
-    it('creates standard in space with rules content only', async () => {
+    it('creates standard in space with rules', async () => {
       mockSpacesGateway.getGlobal.mockResolvedValue({
         id: 'space-1',
         slug: 'global',
@@ -74,7 +74,7 @@ describe('CreateStandardFromPlaybookUseCase', () => {
         name: 'Test Standard',
         description: 'Desc',
         scope: 'test',
-        rules: [{ content: 'Rule 1' }],
+        rules: [{ content: 'Rule 1', examples: undefined }],
       });
     });
 
@@ -117,12 +117,16 @@ describe('CreateStandardFromPlaybookUseCase', () => {
         });
       });
 
-      it('does not fetch rules', () => {
-        expect(mockStandardsGateway.getRules).not.toHaveBeenCalled();
-      });
-
-      it('does not add examples', () => {
-        expect(mockStandardsGateway.addExampleToRule).not.toHaveBeenCalled();
+      it('creates standard with rules without examples', () => {
+        expect(mockStandardsGateway.create).toHaveBeenCalledWith('space-1', {
+          name: 'Test',
+          description: 'Desc',
+          scope: 'test',
+          rules: [
+            { content: 'Rule 1', examples: undefined },
+            { content: 'Rule 2', examples: undefined },
+          ],
+        });
       });
     });
 
@@ -136,33 +140,6 @@ describe('CreateStandardFromPlaybookUseCase', () => {
           id: 'std-1',
           name: 'Test',
         });
-        mockStandardsGateway.getRules.mockResolvedValue([
-          { id: 'rule-1', content: 'Rule 1' },
-          { id: 'rule-2', content: 'Rule 2' },
-        ]);
-      });
-
-      it('fetches created rules from the standard', async () => {
-        await useCase.execute({
-          name: 'Test',
-          description: 'Desc',
-          scope: 'test',
-          rules: [
-            {
-              content: 'Rule 1',
-              examples: {
-                positive: 'good',
-                negative: 'bad',
-                language: 'TYPESCRIPT',
-              },
-            },
-          ],
-        });
-
-        expect(mockStandardsGateway.getRules).toHaveBeenCalledWith(
-          'space-1',
-          'std-1',
-        );
       });
 
       describe('when only first rule has examples', () => {
@@ -185,19 +162,21 @@ describe('CreateStandardFromPlaybookUseCase', () => {
           });
         });
 
-        it('adds example to the corresponding rule', () => {
-          expect(mockStandardsGateway.addExampleToRule).toHaveBeenCalledWith(
-            'space-1',
-            'std-1',
-            'rule-1',
-            { positive: 'good', negative: 'bad', language: 'TYPESCRIPT' },
-          );
-        });
-
-        it('adds example only once', () => {
-          expect(mockStandardsGateway.addExampleToRule).toHaveBeenCalledTimes(
-            1,
-          );
+        it('includes examples in the create call', () => {
+          expect(mockStandardsGateway.create).toHaveBeenCalledWith('space-1', {
+            name: 'Test',
+            description: 'Desc',
+            scope: 'test',
+            rules: [
+              {
+                content: 'Rule 1',
+                examples: [
+                  { lang: 'TYPESCRIPT', positive: 'good', negative: 'bad' },
+                ],
+              },
+              { content: 'Rule 2', examples: undefined },
+            ],
+          });
         });
       });
 
@@ -228,64 +207,26 @@ describe('CreateStandardFromPlaybookUseCase', () => {
           });
         });
 
-        it('adds example for each rule with examples', () => {
-          expect(mockStandardsGateway.addExampleToRule).toHaveBeenCalledTimes(
-            2,
-          );
-        });
-
-        it('adds example to first rule', () => {
-          expect(mockStandardsGateway.addExampleToRule).toHaveBeenNthCalledWith(
-            1,
-            'space-1',
-            'std-1',
-            'rule-1',
-            {
-              positive: 'good1',
-              negative: 'bad1',
-              language: 'TYPESCRIPT',
-            },
-          );
-        });
-
-        it('adds example to second rule', () => {
-          expect(mockStandardsGateway.addExampleToRule).toHaveBeenNthCalledWith(
-            2,
-            'space-1',
-            'std-1',
-            'rule-2',
-            {
-              positive: 'good2',
-              negative: 'bad2',
-              language: 'PYTHON',
-            },
-          );
-        });
-      });
-
-      describe('when addExampleToRule fails', () => {
-        it('continues without failing the operation', async () => {
-          mockStandardsGateway.addExampleToRule.mockRejectedValue(
-            new Error('Example creation failed'),
-          );
-
-          const result = await useCase.execute({
+        it('includes all examples in the create call', () => {
+          expect(mockStandardsGateway.create).toHaveBeenCalledWith('space-1', {
             name: 'Test',
             description: 'Desc',
             scope: 'test',
             rules: [
               {
                 content: 'Rule 1',
-                examples: {
-                  positive: 'good',
-                  negative: 'bad',
-                  language: 'TYPESCRIPT',
-                },
+                examples: [
+                  { lang: 'TYPESCRIPT', positive: 'good1', negative: 'bad1' },
+                ],
+              },
+              {
+                content: 'Rule 2',
+                examples: [
+                  { lang: 'PYTHON', positive: 'good2', negative: 'bad2' },
+                ],
               },
             ],
           });
-
-          expect(result).toEqual({ standardId: 'std-1', name: 'Test' });
         });
       });
     });

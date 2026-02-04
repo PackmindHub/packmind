@@ -164,7 +164,7 @@ describe('McpConfigRedesigned', () => {
     it('displays agent names', () => {
       renderWithProviders(<McpConfigRedesigned />);
 
-      expect(screen.getByText('Claude (Anthropic)')).toBeInTheDocument();
+      expect(screen.getByText('Claude Code')).toBeInTheDocument();
       expect(screen.getByText('GitHub Copilot (VS Code)')).toBeInTheDocument();
       expect(
         screen.getByText('GitHub Copilot (JetBrains)'),

@@ -61,10 +61,12 @@ jobs:
       - name: Build API
         env:
           PACKMIND_EDITION: ${{ vars.PACKMIND_EDITION }}
+          NODE_OPTIONS: '--max-old-space-size=16384'
         run: ./node_modules/.bin/nx build api
       - name: Test API
         env:
           PACKMIND_EDITION: ${{ vars.PACKMIND_EDITION }}
+          NODE_OPTIONS: '--max-old-space-size=16384'
         run: ./node_modules/.bin/nx test api
       - run: cp apps/api/docker-package.json dist/apps/api/.
       - run: cp package.json dist/apps/api/.
@@ -106,11 +108,13 @@ jobs:
       - name: Test Frontend
         env:
           PACKMIND_EDITION: ${{ vars.PACKMIND_EDITION }}
+          NODE_OPTIONS: '--max-old-space-size=16384'
         run: ./node_modules/.bin/nx test frontend
       - name: Build frontend
         env:
           NODE_ENV: production
           PACKMIND_EDITION: ${{ vars.PACKMIND_EDITION }}
+          NODE_OPTIONS: '--max-old-space-size=16384'
           VITE_SENTRY_FRONTEND_DSN: ${{ secrets.VITE_SENTRY_FRONTEND_DSN }}
           VITE_SENTRY_ENVIRONMENT: ${{ vars.PACKMIND_EDITION == 'proprietary' && 'production' || '' }}
           VITE_CRISP_WEBSITE_ID: ${{ secrets.VITE_CRISP_WEBSITE_ID }}
@@ -146,10 +150,12 @@ jobs:
       - name: Build MCP Server
         env:
           PACKMIND_EDITION: ${{ vars.PACKMIND_EDITION }}
+          NODE_OPTIONS: '--max-old-space-size=16384'
         run: ./node_modules/.bin/nx build mcp-server
       - name: Test MCP Server
         env:
           PACKMIND_EDITION: ${{ vars.PACKMIND_EDITION }}
+          NODE_OPTIONS: '--max-old-space-size=16384'
         run: ./node_modules/.bin/nx test mcp-server
       - run: cp tsconfig.base.effective.json dist/apps/mcp-server/.
 
@@ -182,10 +188,12 @@ jobs:
       - name: Build packages
         env:
           PACKMIND_EDITION: ${{ vars.PACKMIND_EDITION }}
+          NODE_OPTIONS: '--max-old-space-size=16384'
         run: ./node_modules/.bin/nx run-many -t build -p packages/*
       - name: Test packages
         env:
           PACKMIND_EDITION: ${{ vars.PACKMIND_EDITION }}
+          NODE_OPTIONS: '--max-old-space-size=16384'
         run: ./node_modules/.bin/nx run-many -t test -p packages/* --passWithNoTests
 
       - name: Upload standard samples artifacts
@@ -230,10 +238,12 @@ jobs:
       - name: Build CLI
         env:
           PACKMIND_EDITION: ${{ vars.PACKMIND_EDITION }}
+          NODE_OPTIONS: '--max-old-space-size=16384'
         run: ./node_modules/.bin/nx build-publish packmind-cli
       - name: Test CLI
         env:
           PACKMIND_EDITION: ${{ vars.PACKMIND_EDITION }}
+          NODE_OPTIONS: '--max-old-space-size=16384'
         run: ./node_modules/.bin/nx test packmind-cli
 
       - name: Upload CLI build artifacts

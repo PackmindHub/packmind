@@ -50,6 +50,8 @@ This directory contains reusable domain and infrastructure packages shared acros
 - Test a package: `nx test <package-name>`
 - Lint a package: `nx lint <package-name>`
 
+**Example packages**: `types`, `logger`, `accounts`, `standards`, `ui`, `node-utils`, `test-utils`
+
 <!-- start: Packmind standards -->
 # Packmind Standards
 

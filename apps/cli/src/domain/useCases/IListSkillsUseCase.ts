@@ -1,5 +1,10 @@
 import { IPublicUseCase } from '@packmind/types';
-import { ListedSkill } from '../repositories/ISkillsGateway';
+
+export type ListedSkill = {
+  slug: string;
+  name: string;
+  description: string;
+};
 
 export type IListSkillsCommand = Record<string, never>;
 

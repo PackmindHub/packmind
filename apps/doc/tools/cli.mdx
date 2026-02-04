@@ -23,6 +23,7 @@ The Packmind CLI provides the following commands:
 - **`commands create`** - Create a reusable command from a playbook file
 - **`commands list`** - List all commands in your organization
 - **`packages create`** - Create a new package
+- **`packages add`** - Add standards, commands, or skills to a package
 
 ## Installation
 
@@ -938,6 +939,49 @@ The slug is used for:
 - Package identification and distribution
 
 If a package with the same slug already exists in your space, Packmind appends a counter (e.g., `backend-standards-1`) to ensure uniqueness.
+
+### Add Items to a Package
+
+```bash
+packmind-cli packages add --to <package-slug> --standard <standard-slug>
+packmind-cli packages add --to <package-slug> --command <command-slug>
+packmind-cli packages add --to <package-slug> --skill <skill-slug>
+```
+
+**Options:**
+
+| Flag         | Description                                |
+| ------------ | ------------------------------------------ |
+| `--to`       | Target package slug (required)             |
+| `--standard` | Slug of the standard to add to the package |
+| `--command`  | Slug of the command to add to the package  |
+| `--skill`    | Slug of the skill to add to the package    |
+
+**Examples:**
+
+Add a standard to a package:
+
+```bash
+packmind-cli packages add --to backend --standard error-handling
+```
+
+Add a command to a package:
+
+```bash
+packmind-cli packages add --to backend --command create-api-endpoint
+```
+
+Add a skill to a package:
+
+```bash
+packmind-cli packages add --to backend --skill debugging-workflow
+```
+
+<Tip>
+  **Workflow tip** — Use this command after creating standards, commands, or
+  skills via CLI to organize them into packages. This is particularly useful
+  when automating package management in scripts or CI/CD pipelines.
+</Tip>
 
 ## Related Documentation
 

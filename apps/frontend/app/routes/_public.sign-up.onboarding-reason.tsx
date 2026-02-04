@@ -5,7 +5,6 @@ import {
 } from '../../src/domain/accounts/components/OnboardingReason';
 import { useAnalytics } from '@packmind/proprietary/frontend/domain/amplitude/providers/AnalyticsProvider';
 import { useAuthContext } from '../../src/domain/accounts/hooks/useAuthContext';
-import { routes } from '../../src/shared/utils/routes';
 
 export default function OnboardingReasonRouteModule() {
   const navigate = useNavigate();
@@ -21,11 +20,9 @@ export default function OnboardingReasonRouteModule() {
       });
     }
 
-    // Redirect to organization dashboard
-    if (organization) {
-      navigate(routes.org.toDashboard(organization.slug));
-    } else {
-      navigate('/');
+    // Redirect to dashboard where the onboarding modal will appear
+    if (organization?.slug) {
+      navigate(`/org/${organization.slug}`);
     }
   };
 

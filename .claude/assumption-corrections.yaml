@@ -52,3 +52,25 @@
     - 'bundling'
     - 'esbuild'
     - 'dependencies'
+
+- timestamp: 2026-02-02T16:05:00Z
+  category: 'patterns'
+  assumption: 'Assumed the UserMetadata feature was fully implemented and passing based on the handoff document "Known Good State" section stating tests passed'
+  reality: 'The build failed because UserOrganizationMembership type was missing createdAt property that GetUserOnboardingStatusUseCase needed for creator detection logic. The schema used WithTimestamps<UserOrganizationMembership> but the type itself did not include createdAt.'
+  discovery_point: 'Running nx build accounts revealed TS2339 error: Property createdAt does not exist on type UserOrganizationMembership'
+  impact: 'low'
+  misleading_signals:
+    - 'Handoff document stated "Known Good State" with passing tests'
+    - 'Schema uses WithTimestamps wrapper suggesting timestamps exist'
+    - 'Other entities have createdAt in their types'
+  documentation_gap: 'Handoff documents should verify build success, not just test success. TypeORM schema WithTimestamps wrapper does not automatically add properties to the domain type - both must be updated together.'
+  files_explored:
+    - packages/types/src/accounts/User.ts
+    - packages/accounts/src/infra/schemas/UserOrganizationMembershipSchema.ts
+    - packages/accounts/src/application/useCases/getUserOnboardingStatus/GetUserOnboardingStatusUseCase.ts
+  tags:
+    - 'typeorm'
+    - 'typescript'
+    - 'domain-types'
+    - 'handoff'
+    - 'validation'

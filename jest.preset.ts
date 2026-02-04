@@ -50,9 +50,10 @@ export const nxPreset = {
   resetMocks: true,
   restoreMocks: true,
 
-  // Detect memory leaks
-  detectLeaks: true, // Can be enabled for debugging, but slows down tests significantly
-  detectOpenHandles: true, // Can enable to find leaking handles, but adds overhead
+  // Debug flags - enable with JEST_DEBUG=true for memory leak detection
+  // Disabled by default as they add 10-20% overhead
+  detectLeaks: process.env.JEST_DEBUG === 'true',
+  detectOpenHandles: process.env.JEST_DEBUG === 'true',
 
   // Force garbage collection between test files (requires --expose-gc flag)
   // This is handled in the test script
