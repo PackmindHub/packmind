@@ -15,3 +15,4 @@ This standard establishes best practices for writing backend tests using Jest in
 * Use expect(actualArray).toEqual(expectedArray) for deep array equality in Jest tests instead of manual length and index checks
 * Use one expect per test case for better clarity and easier debugging; group related tests in describe blocks with shared setup in beforeEach
 * Use stubLogger() in Jest tests to get a fully typed PackmindLogger stub instead of manually creating a jest.Mocked<PackmindLogger> object with jest.fn() methods
+* Never write dummy tests without logic (like expect.true.toBe(true))

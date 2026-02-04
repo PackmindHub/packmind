@@ -33,7 +33,6 @@ Main backend API for Packmind, built with NestJS and hexagonal architecture.
 ## Configuration
 
 - **Port**: 3000 (default)
-- **Environment Variables**: See `.env.example` in root
 - **Database**: Configured via TypeORM config in app module
 - **Redis**: Configured for cache and BullMQ
 

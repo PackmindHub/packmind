@@ -15,7 +15,6 @@ Playwright end-to-end tests for Packmind frontend and API, using Page Object Mod
 - Page objects in `src/infra/pages/` and `src/domain/pages/` represent application pages/routes
 - Each page object encapsulates selectors and interactions
 - Tests use page objects to interact with UI, avoiding direct selectors
-- Example: `LoginPage`, `StandardsListPage`, `SpaceSettingsPage`
 
 ## Technologies
 
@@ -35,7 +34,7 @@ Playwright end-to-end tests for Packmind frontend and API, using Page Object Mod
 
 ## Configuration
 
-- **Config File**: `playwright.config.ts` in root
+- **Config File**: `playwright.config.ts`
 - **Base URL**: Configured to point to local or staging environment
 - **Browsers**: Chromium (default), Firefox, WebKit (configurable)
 - **Parallelization**: Configurable worker count
