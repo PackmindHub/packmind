@@ -248,6 +248,38 @@ describe('RenderModeConfigurationService', () => {
     });
   });
 
+  describe('mapCodingAgentsToRenderModes', () => {
+    it('maps coding agents to render modes without duplicates', () => {
+      const renderModes = service.mapCodingAgentsToRenderModes([
+        CodingAgents.packmind,
+        CodingAgents.claude,
+        CodingAgents.claude,
+        CodingAgents.cursor,
+      ]);
+
+      expect(renderModes).toEqual([
+        RenderMode.PACKMIND,
+        RenderMode.CLAUDE,
+        RenderMode.CURSOR,
+      ]);
+    });
+
+    it('filters out unknown coding agents', () => {
+      const renderModes = service.mapCodingAgentsToRenderModes([
+        CodingAgents.claude,
+        'unknown-agent' as unknown as (typeof CodingAgents)[keyof typeof CodingAgents],
+      ]);
+
+      expect(renderModes).toEqual([RenderMode.CLAUDE]);
+    });
+
+    it('returns empty array for empty input', () => {
+      const renderModes = service.mapCodingAgentsToRenderModes([]);
+
+      expect(renderModes).toEqual([]);
+    });
+  });
+
   describe('resolveActiveCodingAgents', () => {
     describe('with existing configuration', () => {
       it('resolves coding agents from active render modes', async () => {

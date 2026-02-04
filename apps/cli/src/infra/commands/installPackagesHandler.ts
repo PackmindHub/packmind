@@ -41,8 +41,9 @@ async function notifyDistributionIfInGitRepo(params: {
   cwd: string;
   packages: string[];
   log: (msg: string) => void;
+  agents?: CodingAgent[];
 }): Promise<boolean> {
-  const { packmindCliHexa, cwd, packages, log } = params;
+  const { packmindCliHexa, cwd, packages, log, agents } = params;
 
   const gitRoot = await packmindCliHexa.tryGetGitRepositoryRoot(cwd);
   if (!gitRoot) {
@@ -68,6 +69,7 @@ async function notifyDistributionIfInGitRepo(params: {
       gitRemoteUrl,
       gitBranch,
       relativePath,
+      agents,
     });
     log('Successfully notified Packmind of the new distribution');
     return true;
@@ -508,6 +510,7 @@ async function executeInstallForDirectory(
         packmindCliHexa,
         cwd: directory,
         packages: configPackages,
+        agents: configAgents,
         log: () => {
           /* empty */
         },
@@ -710,6 +713,7 @@ export async function installPackagesHandler(
         packmindCliHexa,
         cwd,
         packages: allPackages,
+        agents: configAgents,
         log,
       });
     }

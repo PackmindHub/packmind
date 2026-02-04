@@ -403,6 +403,11 @@ export class CursorDeployer implements ICodingAgentDeployer {
       });
     }
 
+    console.log('-----------------------------------------');
+    console.log('-----------------------------------------');
+    console.log('-----------------------------------------');
+    console.log(JSON.stringify(deleteItems, null, 2));
+
     return {
       createOrUpdate: [],
       delete: deleteItems,

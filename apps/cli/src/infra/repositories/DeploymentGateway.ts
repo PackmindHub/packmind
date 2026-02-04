@@ -235,6 +235,7 @@ export class DeploymentGateway implements IDeploymentGateway {
       gitRemoteUrl: params.gitRemoteUrl,
       gitBranch: params.gitBranch,
       relativePath: params.relativePath,
+      agents: params.agents,
     };
 
     try {
