@@ -27,3 +27,5 @@ This directory contains all deployable applications in the Packmind monorepo.
 - Test an application: `nx test <app-name>`
 - Lint an application: `nx lint <app-name>`
 - Serve/dev an application: `nx serve <app-name>` or `nx dev <app-name>`
+
+**Available applications**: `api`, `mcp-server`, `frontend`, `cli`, `e2e-tests`, `doc`
