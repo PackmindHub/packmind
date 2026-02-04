@@ -46,13 +46,15 @@ describe('PackagesGateway', () => {
     });
 
     describe('when adding standards to a package', () => {
-      it('calls POST with correct payload', async () => {
+      beforeEach(() => {
         mockHttpClient.request.mockResolvedValue({
           added: { standards: ['std-1'], commands: [], skills: [] },
           skipped: { standards: [], commands: [], skills: [] },
         });
+      });
 
-        const result = await gateway.addArtefacts({
+      it('calls POST with correct payload', async () => {
+        await gateway.addArtefacts({
           packageSlug: 'my-package',
           spaceId: 'space-123',
           standardIds: ['std-1'],
@@ -65,18 +67,29 @@ describe('PackagesGateway', () => {
             body: { standardIds: ['std-1'] },
           },
         );
+      });
+
+      it('returns added standards from response', async () => {
+        const result = await gateway.addArtefacts({
+          packageSlug: 'my-package',
+          spaceId: 'space-123',
+          standardIds: ['std-1'],
+        });
+
         expect(result.added.standards).toEqual(['std-1']);
       });
     });
 
     describe('when adding commands to a package', () => {
-      it('calls POST with commandIds in payload', async () => {
+      beforeEach(() => {
         mockHttpClient.request.mockResolvedValue({
           added: { standards: [], commands: ['cmd-1'], skills: [] },
           skipped: { standards: [], commands: [], skills: [] },
         });
+      });
 
-        const result = await gateway.addArtefacts({
+      it('calls POST with commandIds in payload', async () => {
+        await gateway.addArtefacts({
           packageSlug: 'my-package',
           spaceId: 'space-123',
           commandIds: ['cmd-1'],
@@ -89,18 +102,29 @@ describe('PackagesGateway', () => {
             body: { commandIds: ['cmd-1'] },
           },
         );
+      });
+
+      it('returns added commands from response', async () => {
+        const result = await gateway.addArtefacts({
+          packageSlug: 'my-package',
+          spaceId: 'space-123',
+          commandIds: ['cmd-1'],
+        });
+
         expect(result.added.commands).toEqual(['cmd-1']);
       });
     });
 
     describe('when adding skills to a package', () => {
-      it('calls POST with skillIds in payload', async () => {
+      beforeEach(() => {
         mockHttpClient.request.mockResolvedValue({
           added: { standards: [], commands: [], skills: ['skill-1'] },
           skipped: { standards: [], commands: [], skills: [] },
         });
+      });
 
-        const result = await gateway.addArtefacts({
+      it('calls POST with skillIds in payload', async () => {
+        await gateway.addArtefacts({
           packageSlug: 'my-package',
           spaceId: 'space-123',
           skillIds: ['skill-1'],
@@ -113,24 +137,40 @@ describe('PackagesGateway', () => {
             body: { skillIds: ['skill-1'] },
           },
         );
+      });
+
+      it('returns added skills from response', async () => {
+        const result = await gateway.addArtefacts({
+          packageSlug: 'my-package',
+          spaceId: 'space-123',
+          skillIds: ['skill-1'],
+        });
+
         expect(result.added.skills).toEqual(['skill-1']);
       });
     });
 
     describe('when some items are skipped', () => {
-      it('returns skipped items in response', async () => {
+      let result: Awaited<ReturnType<typeof gateway.addArtefacts>>;
+
+      beforeEach(async () => {
         mockHttpClient.request.mockResolvedValue({
           added: { standards: ['std-2'], commands: [], skills: [] },
           skipped: { standards: ['std-1'], commands: [], skills: [] },
         });
 
-        const result = await gateway.addArtefacts({
+        result = await gateway.addArtefacts({
           packageSlug: 'my-package',
           spaceId: 'space-123',
           standardIds: ['std-1', 'std-2'],
         });
+      });
 
+      it('returns added items', () => {
         expect(result.added.standards).toEqual(['std-2']);
+      });
+
+      it('returns skipped items', () => {
         expect(result.skipped.standards).toEqual(['std-1']);
       });
     });

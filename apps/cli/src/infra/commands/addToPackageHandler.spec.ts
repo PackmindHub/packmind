@@ -13,69 +13,97 @@ describe('addToPackageHandler', () => {
   });
 
   describe('when adding standards successfully', () => {
-    it('returns success with added items', async () => {
+    let result: Awaited<ReturnType<typeof addToPackageHandler>>;
+
+    beforeEach(async () => {
       mockUseCase.execute.mockResolvedValue({
         added: ['std-1', 'std-2'],
         skipped: [],
       });
 
-      const result = await addToPackageHandler(
+      result = await addToPackageHandler(
         'my-package',
         'standard',
         ['std-1', 'std-2'],
         mockUseCase,
       );
+    });
 
+    it('returns success true', () => {
       expect(result.success).toBe(true);
+    });
+
+    it('returns added items', () => {
       expect(result.added).toEqual(['std-1', 'std-2']);
     });
   });
 
   describe('when some items are skipped', () => {
-    it('returns success with skipped items', async () => {
+    let result: Awaited<ReturnType<typeof addToPackageHandler>>;
+
+    beforeEach(async () => {
       mockUseCase.execute.mockResolvedValue({
         added: ['std-1'],
         skipped: ['std-2'],
       });
 
-      const result = await addToPackageHandler(
+      result = await addToPackageHandler(
         'my-package',
         'standard',
         ['std-1', 'std-2'],
         mockUseCase,
       );
+    });
 
+    it('returns success true', () => {
       expect(result.success).toBe(true);
+    });
+
+    it('returns skipped items', () => {
       expect(result.skipped).toEqual(['std-2']);
     });
   });
 
   describe('when no items provided', () => {
-    it('returns error', async () => {
-      const result = await addToPackageHandler(
+    let result: Awaited<ReturnType<typeof addToPackageHandler>>;
+
+    beforeEach(async () => {
+      result = await addToPackageHandler(
         'my-package',
         'standard',
         [],
         mockUseCase,
       );
+    });
 
+    it('returns success false', () => {
       expect(result.success).toBe(false);
+    });
+
+    it('returns error message', () => {
       expect(result.error).toBe('No items provided to add');
     });
   });
 
   describe('when use case throws error', () => {
-    it('returns error with message', async () => {
+    let result: Awaited<ReturnType<typeof addToPackageHandler>>;
+
+    beforeEach(async () => {
       mockUseCase.execute.mockRejectedValue(new Error('Item not found'));
 
-      const result = await addToPackageHandler(
+      result = await addToPackageHandler(
         'my-package',
         'standard',
         ['std-1'],
         mockUseCase,
       );
+    });
 
+    it('returns success false', () => {
       expect(result.success).toBe(false);
+    });
+
+    it('returns error message', () => {
       expect(result.error).toBe('Item not found');
     });
   });

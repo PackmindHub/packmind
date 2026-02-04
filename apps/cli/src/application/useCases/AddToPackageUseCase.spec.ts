@@ -22,7 +22,7 @@ describe('AddToPackageUseCase', () => {
   });
 
   describe('when adding standards', () => {
-    it('resolves slugs to IDs and calls gateway', async () => {
+    beforeEach(() => {
       mockGateway.standards.getBySlug
         .mockResolvedValueOnce({
           id: 'std-id-1',
@@ -40,8 +40,10 @@ describe('AddToPackageUseCase', () => {
         added: { standards: ['std-1', 'std-2'], commands: [], skills: [] },
         skipped: { standards: [], commands: [], skills: [] },
       });
+    });
 
-      const result = await useCase.execute({
+    it('resolves slugs to IDs and calls gateway with standardIds', async () => {
+      await useCase.execute({
         packageSlug: 'my-package',
         itemType: 'standard',
         itemSlugs: ['std-1', 'std-2'],
@@ -52,12 +54,21 @@ describe('AddToPackageUseCase', () => {
         spaceId: 'space-123',
         standardIds: ['std-id-1', 'std-id-2'],
       });
+    });
+
+    it('returns added items from gateway response', async () => {
+      const result = await useCase.execute({
+        packageSlug: 'my-package',
+        itemType: 'standard',
+        itemSlugs: ['std-1', 'std-2'],
+      });
+
       expect(result.added).toEqual(['std-1', 'std-2']);
     });
   });
 
   describe('when adding commands', () => {
-    it('resolves slugs to IDs and calls gateway with commandIds', async () => {
+    beforeEach(() => {
       mockGateway.commands.getBySlug.mockResolvedValueOnce({
         id: 'cmd-id-1',
         slug: 'cmd-1',
@@ -67,8 +78,10 @@ describe('AddToPackageUseCase', () => {
         added: { standards: [], commands: ['cmd-1'], skills: [] },
         skipped: { standards: [], commands: [], skills: [] },
       });
+    });
 
-      const result = await useCase.execute({
+    it('calls gateway with commandIds', async () => {
+      await useCase.execute({
         packageSlug: 'my-package',
         itemType: 'command',
         itemSlugs: ['cmd-1'],
@@ -79,12 +92,21 @@ describe('AddToPackageUseCase', () => {
         spaceId: 'space-123',
         commandIds: ['cmd-id-1'],
       });
+    });
+
+    it('returns added commands from gateway response', async () => {
+      const result = await useCase.execute({
+        packageSlug: 'my-package',
+        itemType: 'command',
+        itemSlugs: ['cmd-1'],
+      });
+
       expect(result.added).toEqual(['cmd-1']);
     });
   });
 
   describe('when adding skills', () => {
-    it('resolves slugs to IDs and calls gateway with skillIds', async () => {
+    beforeEach(() => {
       mockGateway.skills.getBySlug.mockResolvedValueOnce({
         id: 'skill-id-1',
         slug: 'skill-1',
@@ -94,8 +116,10 @@ describe('AddToPackageUseCase', () => {
         added: { standards: [], commands: [], skills: ['skill-1'] },
         skipped: { standards: [], commands: [], skills: [] },
       });
+    });
 
-      const result = await useCase.execute({
+    it('calls gateway with skillIds', async () => {
+      await useCase.execute({
         packageSlug: 'my-package',
         itemType: 'skill',
         itemSlugs: ['skill-1'],
@@ -106,6 +130,15 @@ describe('AddToPackageUseCase', () => {
         spaceId: 'space-123',
         skillIds: ['skill-id-1'],
       });
+    });
+
+    it('returns added skills from gateway response', async () => {
+      const result = await useCase.execute({
+        packageSlug: 'my-package',
+        itemType: 'skill',
+        itemSlugs: ['skill-1'],
+      });
+
       expect(result.added).toEqual(['skill-1']);
     });
   });
@@ -125,7 +158,9 @@ describe('AddToPackageUseCase', () => {
   });
 
   describe('when some items are skipped', () => {
-    it('returns both added and skipped items', async () => {
+    let result: { added: string[]; skipped: string[] };
+
+    beforeEach(async () => {
       mockGateway.standards.getBySlug
         .mockResolvedValueOnce({
           id: 'std-id-1',
@@ -144,13 +179,18 @@ describe('AddToPackageUseCase', () => {
         skipped: { standards: ['std-1'], commands: [], skills: [] },
       });
 
-      const result = await useCase.execute({
+      result = await useCase.execute({
         packageSlug: 'my-package',
         itemType: 'standard',
         itemSlugs: ['std-1', 'std-2'],
       });
+    });
 
+    it('returns added items', () => {
       expect(result.added).toEqual(['std-2']);
+    });
+
+    it('returns skipped items', () => {
       expect(result.skipped).toEqual(['std-1']);
     });
   });
