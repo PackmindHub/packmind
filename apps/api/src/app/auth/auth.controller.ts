@@ -40,7 +40,11 @@ import {
   InvalidTrialActivationTokenError,
   EmailAlreadyExistsError,
 } from '@packmind/accounts';
-import { ActivateTrialAccountResult } from '@packmind/types';
+import {
+  ActivateTrialAccountResult,
+  GetUserOnboardingStatusResponse,
+  CompleteUserOnboardingResponse,
+} from '@packmind/types';
 import { AuthenticatedRequest } from '@packmind/node-utils';
 import { Configuration } from '@packmind/node-utils';
 import { Public } from '@packmind/node-utils';
@@ -821,6 +825,80 @@ export class AuthController {
         throw new HttpException(error.message, HttpStatus.GONE);
       }
 
+      throw error;
+    }
+  }
+
+  @Get('onboarding-status')
+  @HttpCode(HttpStatus.OK)
+  async getOnboardingStatus(
+    @Req() request: AuthenticatedRequest,
+  ): Promise<GetUserOnboardingStatusResponse> {
+    this.logger.log('GET /auth/onboarding-status - Getting onboarding status', {
+      userId: request.user.userId,
+      organizationId: request.organization.id,
+    });
+
+    try {
+      const result = await this.authService.getUserOnboardingStatus(request);
+
+      this.logger.log(
+        'GET /auth/onboarding-status - Onboarding status retrieved successfully',
+        {
+          userId: request.user.userId,
+          organizationId: request.organization.id,
+          showOnboarding: result.showOnboarding,
+        },
+      );
+
+      return result;
+    } catch (error) {
+      this.logger.error(
+        'GET /auth/onboarding-status - Failed to get onboarding status',
+        {
+          userId: request.user.userId,
+          organizationId: request.organization.id,
+          error: getErrorMessage(error),
+        },
+      );
+      throw error;
+    }
+  }
+
+  @Post('complete-onboarding')
+  @HttpCode(HttpStatus.OK)
+  async completeOnboarding(
+    @Req() request: AuthenticatedRequest,
+  ): Promise<CompleteUserOnboardingResponse> {
+    this.logger.log(
+      'POST /auth/complete-onboarding - Completing user onboarding',
+      {
+        userId: request.user.userId,
+        organizationId: request.organization.id,
+      },
+    );
+
+    try {
+      const result = await this.authService.completeUserOnboarding(request);
+
+      this.logger.log(
+        'POST /auth/complete-onboarding - User onboarding completed successfully',
+        {
+          userId: request.user.userId,
+          organizationId: request.organization.id,
+        },
+      );
+
+      return result;
+    } catch (error) {
+      this.logger.error(
+        'POST /auth/complete-onboarding - Failed to complete user onboarding',
+        {
+          userId: request.user.userId,
+          organizationId: request.organization.id,
+          error: getErrorMessage(error),
+        },
+      );
       throw error;
     }
   }

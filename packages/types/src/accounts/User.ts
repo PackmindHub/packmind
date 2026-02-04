@@ -12,6 +12,7 @@ export type UserOrganizationMembership = {
   role: UserOrganizationRole;
   user?: User;
   organization?: Organization;
+  createdAt?: Date;
 };
 
 export type User = {

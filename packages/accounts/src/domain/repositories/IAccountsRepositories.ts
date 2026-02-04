@@ -5,6 +5,7 @@ import { IUserOrganizationMembershipRepository } from './IUserOrganizationMember
 import { IPasswordResetTokenRepository } from './IPasswordResetTokenRepository';
 import { ICliLoginCodeRepository } from './ICliLoginCodeRepository';
 import { ITrialActivationRepository } from './ITrialActivationRepository';
+import { IUserMetadataRepository } from './IUserMetadataRepository';
 
 /**
  * IAccountsRepositories - Repository aggregator interface for the Accounts domain
@@ -48,4 +49,9 @@ export interface IAccountsRepositories {
    * Get the trial activation repository instance
    */
   getTrialActivationRepository(): ITrialActivationRepository;
+
+  /**
+   * Get the user metadata repository instance
+   */
+  getUserMetadataRepository(): IUserMetadataRepository;
 }

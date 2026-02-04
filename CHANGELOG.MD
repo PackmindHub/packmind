@@ -2,6 +2,7 @@
 
 ## Added
 
+- Post-signup onboarding flow with MCP setup guide for AI coding assistants
 - Create packages with the CLI using `packmind-cli packages create <name>`
 - Create commands with the CLI using `packmind-cli commands create <playbook.json>`
 - List standards, commands, and skills with the CLI using `packmind-cli standards list`, `packmind-cli commands list`, and `packmind-cli skills list`
