@@ -26,6 +26,7 @@ docker compose up
 ```
 
 This starts the entire development environment.
+Docker Compose automatically provisions PostgreSQL and Redis - no manual setup required.
 Don't use `nx serve` commands for local development, let user starts the stack with `docker compose up`
 
 ## Working with Nx
@@ -37,12 +38,33 @@ The following commands apply for both NX apps and packages (use `nx show project
 - Test affected projects: `npm run test:staged`
 - Lint affected projects: `npm run lint:staged`
 
+## Code Quality
+
+- **Linting**: `nx lint <project-name>` runs ESLint
+- **Formatting**: Prettier is used for code formatting
+
 ## Commands
 
 - When running commands, ensure you use the correct Node version (see .nvmrc at the project's root level)
 - When renaming or moving a file that is commited to git, use `git mv` instead of `mv`
 - ensure the env variable `PACKMIND_EDITION` is properly set to `oss`
 - when asked to execute `packmind-cli`, use `node ./dist/apps/cli/main.cjs`
+
+## Git Workflow
+
+- The project uses **trunk-based development** (all work on `main` branch)
+- Do NOT create branches yourself - let developers decide on branching strategy
+- Each sub-task should have its own commit (as per Task splitting section)
+
+## Security
+
+- **Secrets Detection**: GitGuardian runs in CI to detect leaked secrets
+- **Secrets Retrieval**: Always use `Configuration.getConfig()` from `@packmind/node-utils` to access secrets in code
+- **Secrets Storage**: Infisical or environment variables are used for secrets management - never hardcode secrets
+
+## Documentation
+
+Public end-user documentation is maintained in the `apps/doc/` folder (Mintlify-based).
 
 # Artefact Usage Logging
 
