@@ -1,7 +1,7 @@
 import { PackmindLogger } from '@packmind/logger';
 import { SpaceSchema } from '@packmind/spaces';
 import { spaceFactory } from '@packmind/spaces/test';
-import { makeTestDatasource, stubLogger } from '@packmind/test-utils';
+import { createTestDatasourceFixture, stubLogger } from '@packmind/test-utils';
 import {
   createOrganizationId,
   createSpaceId,
@@ -10,7 +10,7 @@ import {
   createUserId,
   SkillFile,
 } from '@packmind/types';
-import { DataSource, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
 import { v4 as uuidv4 } from 'uuid';
 import {
   skillFactory,
@@ -23,31 +23,32 @@ import { SkillVersionSchema } from '../schemas/SkillVersionSchema';
 import { SkillFileRepository } from './SkillFileRepository';
 
 describe('SkillFileRepository', () => {
-  let datasource: DataSource;
+  const fixture = createTestDatasourceFixture([
+    SkillFileSchema,
+    SkillVersionSchema,
+    SkillSchema,
+    SpaceSchema,
+  ]);
+
   let skillFileRepository: SkillFileRepository;
   let stubbedLogger: jest.Mocked<PackmindLogger>;
   let typeormRepo: Repository<SkillFile>;
 
-  beforeEach(async () => {
-    datasource = await makeTestDatasource([
-      SkillFileSchema,
-      SkillVersionSchema,
-      SkillSchema,
-      SpaceSchema,
-    ]);
-    await datasource.initialize();
-    await datasource.synchronize();
+  beforeAll(() => fixture.initialize());
 
+  beforeEach(() => {
     stubbedLogger = stubLogger();
-    typeormRepo = datasource.getRepository(SkillFileSchema);
+    typeormRepo = fixture.datasource.getRepository(SkillFileSchema);
 
     skillFileRepository = new SkillFileRepository(typeormRepo, stubbedLogger);
   });
 
   afterEach(async () => {
     jest.clearAllMocks();
-    await datasource.destroy();
+    await fixture.cleanup();
   });
+
+  afterAll(() => fixture.destroy());
 
   describe('findBySkillVersionId', () => {
     it('finds all files for a skill version', async () => {
@@ -61,21 +62,23 @@ describe('SkillFileRepository', () => {
         id: spaceId,
         organizationId,
       });
-      await datasource.getRepository(SpaceSchema).save(space);
+      await fixture.datasource.getRepository(SpaceSchema).save(space);
 
       const skill = skillFactory({
         id: skillId,
         spaceId,
         userId,
       });
-      await datasource.getRepository(SkillSchema).save(skill);
+      await fixture.datasource.getRepository(SkillSchema).save(skill);
 
       const skillVersion = skillVersionFactory({
         id: skillVersionId,
         skillId,
         userId,
       });
-      await datasource.getRepository(SkillVersionSchema).save(skillVersion);
+      await fixture.datasource
+        .getRepository(SkillVersionSchema)
+        .save(skillVersion);
 
       const file1 = skillFileFactory({
         skillVersionId,
@@ -104,21 +107,23 @@ describe('SkillFileRepository', () => {
         id: spaceId,
         organizationId,
       });
-      await datasource.getRepository(SpaceSchema).save(space);
+      await fixture.datasource.getRepository(SpaceSchema).save(space);
 
       const skill = skillFactory({
         id: skillId,
         spaceId,
         userId,
       });
-      await datasource.getRepository(SkillSchema).save(skill);
+      await fixture.datasource.getRepository(SkillSchema).save(skill);
 
       const skillVersion = skillVersionFactory({
         id: skillVersionId,
         skillId,
         userId,
       });
-      await datasource.getRepository(SkillVersionSchema).save(skillVersion);
+      await fixture.datasource
+        .getRepository(SkillVersionSchema)
+        .save(skillVersion);
 
       const file = skillFileFactory({
         skillVersionId,
@@ -157,14 +162,14 @@ describe('SkillFileRepository', () => {
           id: spaceId,
           organizationId,
         });
-        await datasource.getRepository(SpaceSchema).save(space);
+        await fixture.datasource.getRepository(SpaceSchema).save(space);
 
         const skill = skillFactory({
           id: skillId,
           spaceId,
           userId,
         });
-        await datasource.getRepository(SkillSchema).save(skill);
+        await fixture.datasource.getRepository(SkillSchema).save(skill);
 
         const skillVersion1 = skillVersionFactory({
           id: skillVersionId1,
@@ -178,7 +183,7 @@ describe('SkillFileRepository', () => {
           userId,
           version: 2,
         });
-        await datasource
+        await fixture.datasource
           .getRepository(SkillVersionSchema)
           .save([skillVersion1, skillVersion2]);
 
@@ -212,21 +217,23 @@ describe('SkillFileRepository', () => {
         id: spaceId,
         organizationId,
       });
-      await datasource.getRepository(SpaceSchema).save(space);
+      await fixture.datasource.getRepository(SpaceSchema).save(space);
 
       const skill = skillFactory({
         id: skillId,
         spaceId,
         userId,
       });
-      await datasource.getRepository(SkillSchema).save(skill);
+      await fixture.datasource.getRepository(SkillSchema).save(skill);
 
       const skillVersion = skillVersionFactory({
         id: skillVersionId,
         skillId,
         userId,
       });
-      await datasource.getRepository(SkillVersionSchema).save(skillVersion);
+      await fixture.datasource
+        .getRepository(SkillVersionSchema)
+        .save(skillVersion);
 
       const files = [
         skillFileFactory({
@@ -259,21 +266,23 @@ describe('SkillFileRepository', () => {
         id: spaceId,
         organizationId,
       });
-      await datasource.getRepository(SpaceSchema).save(space);
+      await fixture.datasource.getRepository(SpaceSchema).save(space);
 
       const skill = skillFactory({
         id: skillId,
         spaceId,
         userId,
       });
-      await datasource.getRepository(SkillSchema).save(skill);
+      await fixture.datasource.getRepository(SkillSchema).save(skill);
 
       const skillVersion = skillVersionFactory({
         id: skillVersionId,
         skillId,
         userId,
       });
-      await datasource.getRepository(SkillVersionSchema).save(skillVersion);
+      await fixture.datasource
+        .getRepository(SkillVersionSchema)
+        .save(skillVersion);
 
       const files = [
         skillFileFactory({
@@ -299,21 +308,23 @@ describe('SkillFileRepository', () => {
           id: spaceId,
           organizationId,
         });
-        await datasource.getRepository(SpaceSchema).save(space);
+        await fixture.datasource.getRepository(SpaceSchema).save(space);
 
         const skill = skillFactory({
           id: skillId,
           spaceId,
           userId,
         });
-        await datasource.getRepository(SkillSchema).save(skill);
+        await fixture.datasource.getRepository(SkillSchema).save(skill);
 
         const skillVersion = skillVersionFactory({
           id: skillVersionId,
           skillId,
           userId,
         });
-        await datasource.getRepository(SkillVersionSchema).save(skillVersion);
+        await fixture.datasource
+          .getRepository(SkillVersionSchema)
+          .save(skillVersion);
 
         const files = [
           skillFileFactory({
@@ -348,21 +359,23 @@ describe('SkillFileRepository', () => {
           id: spaceId,
           organizationId,
         });
-        await datasource.getRepository(SpaceSchema).save(space);
+        await fixture.datasource.getRepository(SpaceSchema).save(space);
 
         const skill = skillFactory({
           id: skillId,
           spaceId,
           userId,
         });
-        await datasource.getRepository(SkillSchema).save(skill);
+        await fixture.datasource.getRepository(SkillSchema).save(skill);
 
         const skillVersion = skillVersionFactory({
           id: skillVersionId,
           skillId,
           userId,
         });
-        await datasource.getRepository(SkillVersionSchema).save(skillVersion);
+        await fixture.datasource
+          .getRepository(SkillVersionSchema)
+          .save(skillVersion);
 
         const files = [
           skillFileFactory({

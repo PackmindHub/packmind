@@ -74,7 +74,7 @@ import {
 import {
   UploadSkillCommand,
   UploadSkillResult,
-} from './domain/repositories/ISkillsGateway';
+} from './domain/useCases/IUploadSkillUseCase';
 import { loadCredentials } from './infra/utils/credentials';
 
 const origin = 'PackmindCliHexa';
@@ -329,7 +329,7 @@ export class PackmindCliHexa {
   public async uploadSkill(
     command: UploadSkillCommand,
   ): Promise<UploadSkillResult> {
-    return this.hexa.repositories.packmindGateway.skills.upload(command);
+    return this.hexa.useCases.uploadSkill.execute(command);
   }
 
   public async installDefaultSkills(

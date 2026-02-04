@@ -18,10 +18,10 @@ import {
   createSpaceId,
   IAccountsPort,
   ISpacesPort,
+  IUploadSkillUseCase,
 } from '@packmind/types';
 import slug from 'slug';
 import { v4 as uuidv4 } from 'uuid';
-import { IUploadSkill } from '../../../domain/useCases/IUploadSkill';
 import { SKILL_MD_FILENAME } from '../../../domain/SkillProperties';
 import { SkillService } from '../../services/SkillService';
 import { SkillVersionService } from '../../services/SkillVersionService';
@@ -33,9 +33,9 @@ import { SkillValidationError } from '../../errors/SkillValidationError';
 
 const origin = 'UploadSkillUsecase';
 
-export class UploadSkillUsecase
+export class UploadSkillUseCase
   extends AbstractMemberUseCase<UploadSkillCommand, UploadSkillResponse>
-  implements IUploadSkill
+  implements IUploadSkillUseCase
 {
   private readonly skillParser: SkillParser;
   private readonly skillValidator: SkillValidator;

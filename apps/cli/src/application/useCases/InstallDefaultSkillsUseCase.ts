@@ -33,7 +33,9 @@ export class InstallDefaultSkillsUseCase implements IInstallDefaultSkillsUseCase
       // Process createOrUpdate files
       for (const file of response.fileUpdates.createOrUpdate) {
         try {
-          await this.createOrUpdateFile(baseDirectory, file, result);
+          if (file.content) {
+            await this.createOrUpdateFile(baseDirectory, file, result);
+          }
         } catch (error) {
           const errorMsg =
             error instanceof Error ? error.message : String(error);

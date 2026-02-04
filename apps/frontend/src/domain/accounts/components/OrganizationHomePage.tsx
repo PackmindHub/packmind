@@ -15,7 +15,7 @@ export const OrganizationHomePage: React.FC = () => {
   const isOnboardingComplete = onboardingStatus?.hasDeployed;
 
   return (
-    <PMPage title={'👋 Welcome to your dashboard'} centeredHeader>
+    <PMPage title={'Dashboard'}>
       {!isOnboardingComplete ? (
         <PMBox width="full">
           <PMVStack gap={8} align="stretch">

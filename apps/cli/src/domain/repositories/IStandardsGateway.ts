@@ -5,11 +5,11 @@ export type CreateStandardInSpaceCommand = {
   scope: string;
   rules: Array<{
     content: string;
-    examples?: {
-      language: string;
+    examples?: Array<{
+      lang: string;
       positive: string;
       negative: string;
-    };
+    }>;
   }>;
 };
 
@@ -55,4 +55,6 @@ export interface IStandardsGateway {
   ): Promise<void>;
 
   list(): Promise<ListStandardsResult>;
+
+  getBySlug(slug: string): Promise<ListedStandard | null>;
 }

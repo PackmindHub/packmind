@@ -130,3 +130,39 @@ export const standardTransformIgnorePatterns = [
  * Standard moduleFileExtensions for TypeScript projects
  */
 export const standardModuleFileExtensions = ['ts', 'js', 'html'];
+
+/**
+ * SWC Jest transformer configuration for React/TSX projects
+ */
+export const swcTransformConfigTsx = {
+  jsc: {
+    parser: {
+      syntax: 'typescript' as const,
+      tsx: true,
+      decorators: false,
+    },
+    transform: {
+      react: {
+        runtime: 'automatic',
+      },
+    },
+    target: 'es2022' as const,
+  },
+  module: {
+    type: 'commonjs' as const,
+  },
+};
+
+/**
+ * Transform configuration for @swc/jest with TSX support (React components)
+ */
+export const swcTransformTsx = {
+  '^.+\\.[tj]sx?$': ['@swc/jest', swcTransformConfigTsx],
+};
+
+/**
+ * Transform ignore patterns for frontend with Chakra UI, framer-motion, etc.
+ */
+export const frontendTransformIgnorePatterns = [
+  '/node_modules/(?!(slug|marked|@chakra-ui|@zag-js|framer-motion|lucide-react)).+\\.[tj]sx?$',
+];

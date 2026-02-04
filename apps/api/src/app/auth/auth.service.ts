@@ -10,6 +10,8 @@ import {
   ActivateTrialAccountCommand,
   ActivateTrialAccountResult,
   createTrialActivationToken,
+  GetUserOnboardingStatusResponse,
+  CompleteUserOnboardingResponse,
 } from '@packmind/types';
 import {
   SignInUserCommand,
@@ -905,5 +907,76 @@ export class AuthService {
    */
   verifyToken(token: string): JwtPayload {
     return this.jwtService.verify<JwtPayload>(token);
+  }
+
+  /**
+   * Gets the user onboarding status for the authenticated user
+   * @param req Authenticated request containing user and organization info
+   * @returns User onboarding status including steps to show
+   */
+  async getUserOnboardingStatus(
+    req: AuthenticatedRequest,
+  ): Promise<GetUserOnboardingStatusResponse> {
+    this.logger.log('Getting user onboarding status', {
+      userId: req.user.userId,
+      organizationId: req.organization.id,
+    });
+
+    try {
+      const result = await this.accountsAdapter.getUserOnboardingStatus({
+        userId: req.user.userId,
+        organizationId: req.organization.id,
+      });
+
+      this.logger.log('User onboarding status retrieved successfully', {
+        userId: req.user.userId,
+        organizationId: req.organization.id,
+        showOnboarding: result.showOnboarding,
+      });
+
+      return result;
+    } catch (error) {
+      this.logger.error('Failed to get user onboarding status', {
+        userId: req.user.userId,
+        organizationId: req.organization.id,
+        error: getErrorMessage(error),
+      });
+      throw error;
+    }
+  }
+
+  /**
+   * Marks the user onboarding as completed
+   * @param req Authenticated request containing user and organization info
+   * @returns Success status
+   */
+  async completeUserOnboarding(
+    req: AuthenticatedRequest,
+  ): Promise<CompleteUserOnboardingResponse> {
+    this.logger.log('Completing user onboarding', {
+      userId: req.user.userId,
+      organizationId: req.organization.id,
+    });
+
+    try {
+      const result = await this.accountsAdapter.completeUserOnboarding({
+        userId: req.user.userId,
+        organizationId: req.organization.id,
+      });
+
+      this.logger.log('User onboarding completed successfully', {
+        userId: req.user.userId,
+        organizationId: req.organization.id,
+      });
+
+      return result;
+    } catch (error) {
+      this.logger.error('Failed to complete user onboarding', {
+        userId: req.user.userId,
+        organizationId: req.organization.id,
+        error: getErrorMessage(error),
+      });
+      throw error;
+    }
   }
 }

@@ -10,6 +10,15 @@ import {
   formatSlug,
   formatLabel,
 } from '../utils/consoleLogger';
+import { loadApiKey, decodeApiKey } from '../utils/credentials';
+
+function buildPackageUrl(
+  host: string,
+  orgSlug: string,
+  packageId: string,
+): string {
+  return `${host}/org/${orgSlug}/space/global/packages/${packageId}`;
+}
 
 // Read version from package.json (bundled by esbuild)
 // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -137,10 +146,25 @@ export async function listPackagesHandler(
       a.slug.localeCompare(b.slug),
     );
 
+    // Try to build webapp URL from credentials
+    let urlBuilder: ((id: string) => string) | null = null;
+    const apiKey = loadApiKey();
+    if (apiKey) {
+      const decoded = decodeApiKey(apiKey);
+      const orgSlug = decoded?.jwt?.organization?.slug;
+      if (decoded?.host && orgSlug) {
+        urlBuilder = (id: string) => buildPackageUrl(decoded.host, orgSlug, id);
+      }
+    }
+
     log('Available packages:\n');
     sortedPackages.forEach((pkg, index) => {
       log(`- ${formatSlug(pkg.slug)}`);
       log(`    ${formatLabel('Name:')} ${pkg.name}`);
+      if (urlBuilder) {
+        const url = urlBuilder(pkg.id);
+        log(`    ${formatLabel('Link:')} ${url}`);
+      }
       if (pkg.description) {
         const descriptionLines = pkg.description
           .trim()

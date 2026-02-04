@@ -7,9 +7,7 @@ export class DashboardPage
   implements IDashboardPage
 {
   async expectWelcomeMessage(): Promise<void> {
-    await expect(this.page.locator('h1')).toContainText(
-      'Welcome to your dashboard',
-    );
+    await expect(this.page.locator('h1')).toContainText('Dashboard');
   }
 
   expectedUrl(): string {

@@ -3,6 +3,7 @@ import {
   CreateCommandCommand,
   CreateCommandResult,
   ListCommandsResult,
+  ListedCommand,
 } from '../../domain/repositories/ICommandsGateway';
 import { ISpacesGateway } from '../../domain/repositories/ISpacesGateway';
 import { PackmindHttpClient } from '../http/PackmindHttpClient';
@@ -37,5 +38,10 @@ export class CommandsGateway implements ICommandsGateway {
       slug: r.slug,
       name: r.name,
     }));
+  };
+
+  public getBySlug = async (slug: string): Promise<ListedCommand | null> => {
+    const commands = await this.list();
+    return commands.find((c) => c.slug === slug) ?? null;
   };
 }

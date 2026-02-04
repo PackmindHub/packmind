@@ -76,7 +76,7 @@ export const OutdatedTargetsSection: React.FC = () => {
 
   return (
     <PMPageSection
-      title="Outdated deployments"
+      title="Outdated artifacts"
       headingLevel="h5"
       boxProps={{ padding: 0 }}
     >
@@ -101,15 +101,20 @@ export const OutdatedTargetsSection: React.FC = () => {
       )}
 
       {!isLoading && !isError && reposWithTargets.length === 0 && (
-        <PMBox backgroundColor={'background.primary'} padding={4} my={4}>
+        <PMBox
+          backgroundColor={'background.primary'}
+          padding={4}
+          my={4}
+          w={'full'}
+        >
           <PMEmptyState
             icon={
               <PMIcon color={'green.500'}>
                 <LuCircleCheckBig />
               </PMIcon>
             }
-            title="No outdated deployments"
-            description="All distributed commands and standards are up-to-date across your targets."
+            title="Everything is up-to-date!"
+            description="All distributed artifacts are up-to-date across your targets."
           />
         </PMBox>
       )}

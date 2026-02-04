@@ -10,102 +10,47 @@ license: 'Complete terms in LICENSE.txt'
 
 # Packmind CLI List Commands
 
-Quick reference for listing available artifacts via the Packmind CLI.
+List available Packmind artifacts (standards, commands, skills, packages) via the CLI.
 
-## Available Commands
+## IMPORTANT: Output Requirements
 
-| Command | Purpose | Use When |
-|---------|---------|----------|
-| \`packmind-cli standards list\` | List coding standards | Need to find standards to apply or check naming conventions |
-| \`packmind-cli commands list\` | List reusable commands | Need to find commands/recipes to execute |
-| \`packmind-cli skills list\` | List available skills | Need to discover skills or check if a skill exists |
-| \`packmind-cli install --list\` | List available packages | Need to find packages to install or check package names |
+When presenting results to the user, you MUST:
+1. **Run the CLI command** using the Bash tool
+2. **Preserve the full URLs** from the CLI output - these are clickable links to the Packmind webapp
+3. **Display results as a list** showing slug, name, and the full URL for each item
+4. **Never summarize or table-ify** the output in a way that hides the URLs
 
-## Command Details
+Example output format to show the user:
+\`\`\`
+## Standards (3)
 
-### List Standards
+- **my-standard-slug**
+  Name: My Standard Name
+  Link: https://app.packmind.com/org/myorg/space/global/standards/abc123/summary
 
-\`\`\`bash
-packmind-cli standards list
+- **another-standard**
+  Name: Another Standard
+  Link: https://app.packmind.com/org/myorg/space/global/standards/def456/summary
 \`\`\`
 
-**Output format:**
-\`\`\`
-- <slug>
-    Name: <name>
-    URL: <webapp-url>
-    Description: <description>
-\`\`\`
+## Commands Reference
 
-**Use cases:**
-- Check existing standards before creating a new one
-- Find a standard to reference or apply
-- Verify naming conventions
-
-### List Commands
-
-\`\`\`bash
-packmind-cli commands list
-\`\`\`
-
-**Output format:**
-\`\`\`
-- <slug>
-    Name: <name>
-    URL: <webapp-url>
-\`\`\`
-
-**Use cases:**
-- Discover available recipes/workflows
-- Check if a command already exists before creating one
-- Find commands to execute for a task
-
-### List Skills
-
-\`\`\`bash
-packmind-cli skills list
-\`\`\`
-
-**Output format:**
-\`\`\`
-- <slug>
-    Name: <name>
-    URL: <webapp-url>
-    Description: <description>
-\`\`\`
-
-**Use cases:**
-- Check if a skill exists before creating one
-- Find skills available in the organization
-- Verify skill naming conventions
-
-### List Packages
-
-\`\`\`bash
-packmind-cli install --list
-\`\`\`
-
-**Output format:**
-\`\`\`
-- <slug>
-    Name: <name>
-    Description: <description>
-\`\`\`
-
-**Use cases:**
-- Find packages available to install
-- Check package names before creating a new one
-- Discover what's available in the organization
+| Command | Purpose |
+|---------|---------|
+| \`packmind-cli standards list\` | List coding standards |
+| \`packmind-cli commands list\` | List reusable commands |
+| \`packmind-cli skills list\` | List available skills |
+| \`packmind-cli install --list\` | List available packages |
 
 ## Prerequisites
 
-Ensure packmind-cli is authenticated:
+Ensure packmind-cli is authenticated before running commands:
 
 \`\`\`bash
 packmind-cli whoami
 \`\`\`
 
-If not logged in:
+If not logged in, authenticate first:
 
 \`\`\`bash
 packmind-cli login
@@ -322,7 +267,7 @@ const CLI_LIST_COMMANDS_LICENSE = `
 
 export class CliListCommandsDeployer implements ISkillDeployer {
   public readonly slug = 'packmind-cli-list-commands';
-  public readonly minimumVersion = 'unreleased';
+  public readonly minimumVersion = '0.15.0';
 
   deploy(_agentName: string, skillsFolderPath: string): FileUpdates {
     const basePath = `${skillsFolderPath}packmind-cli-list-commands`;

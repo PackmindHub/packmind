@@ -2,13 +2,23 @@
 
 ## Added
 
+- Add `packages add` command to add standards, commands, or skills to an existing package with `packmind-cli packages add --to <package-slug> --standard|--command|--skill <slug>`
+
+## Changed
+
+## Fixed
+
+## Removed
+
+# [0.15.0] - 2026-02-04
+
+## Added
+
 - Add `commands create` command to create reusable commands from playbook JSON files with `packmind-cli commands create <playbook.json>`
 - Add `standards list` command to display all standards in your organization
 - Add `commands list` command to display all commands in your organization
 - Add `skills list` command to display all skills in your organization
 - Add `packages create <name>` command to create a new package
-
-## Changed
 
 ## Fixed
 
@@ -179,7 +189,8 @@
 
 - Add proper CHANGELOG.MD in the GH release
 
-[Unreleased]: https://github.com/PackmindHub/packmind/compare/release-cli/0.14.1...HEAD
+[Unreleased]: https://github.com/PackmindHub/packmind/compare/release-cli/0.15.0...HEAD
+[0.15.0]: https://github.com/PackmindHub/packmind/compare/release-cli/0.14.1...release-cli/0.15.0
 [0.14.1]: https://github.com/PackmindHub/packmind/compare/release-cli/0.14.0...release-cli/0.14.1
 [0.14.0]: https://github.com/PackmindHub/packmind/compare/release-cli/0.13.1...release-cli/0.14.0
 [0.13.1]: https://github.com/PackmindHub/packmind/compare/release-cli/0.13.0...release-cli/0.13.1

@@ -1,5 +1,14 @@
 {
   "$schema": "./node_modules/nx/schemas/nx-schema.json",
+  "namedInputs": {
+    "sharedGlobals": [
+      "{workspaceRoot}/jest.preset.ts",
+      "{workspaceRoot}/jest-utils.ts",
+      "{workspaceRoot}/jest.setup.ts",
+      "{workspaceRoot}/jest.env-setup.ts",
+      "{workspaceRoot}/tsconfig.base.json"
+    ]
+  },
   "plugins": [
     {
       "plugin": "@nx/webpack/plugin",
@@ -96,6 +105,10 @@
     "typecheck": {
       "cache": true,
       "inputs": ["default", "^default", "{workspaceRoot}/tsconfig.base.json"]
+    },
+    "test": {
+      "cache": true,
+      "inputs": ["default", "^default", "sharedGlobals"]
     }
   },
   "tui": {

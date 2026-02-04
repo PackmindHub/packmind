@@ -49,3 +49,5 @@ This directory contains reusable domain and infrastructure packages shared acros
 - Build a package: `nx build <package-name>`
 - Test a package: `nx test <package-name>`
 - Lint a package: `nx lint <package-name>`
+
+**Example packages**: `types`, `logger`, `accounts`, `standards`, `ui`, `node-utils`, `test-utils`

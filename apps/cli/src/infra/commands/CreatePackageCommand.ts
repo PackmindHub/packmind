@@ -6,7 +6,6 @@ import {
   logConsole,
   formatSlug,
   formatLabel,
-  formatLink,
   formatCommand,
   formatHeader,
 } from '../utils/consoleLogger';
@@ -48,9 +47,7 @@ export const createPackageCommand = command({
         logConsole('');
         logConsole(formatHeader(`📋 Next steps\n`));
         if (result.webappUrl) {
-          logConsole(
-            `  ${formatLabel('View:')}  ${formatLink(result.webappUrl, 'Open in Packmind')}`,
-          );
+          logConsole(`  ${formatLabel('Link:')}  ${result.webappUrl}`);
         }
         logConsole(
           `  ${formatLabel('Install:')}  ${formatCommand(`packmind-cli packages install ${result.slug}`)}`,

@@ -30,10 +30,11 @@ export class PackmindGateway implements IPackmindGateway {
 
   constructor(private readonly apiKey: string) {
     this.httpClient = new PackmindHttpClient(apiKey);
+
     this.linter = new LinterGateway(this.httpClient);
-    this.mcp = new McpGateway(apiKey);
+    this.mcp = new McpGateway(this.httpClient);
     this.spaces = new SpacesGateway(this.httpClient);
-    this.skills = new SkillsGateway(apiKey, this.httpClient, this.spaces);
+    this.skills = new SkillsGateway(this.httpClient, this.spaces);
     this.commands = new CommandsGateway(this.httpClient, this.spaces);
     this.standards = new StandardsGateway(this.httpClient, this.spaces);
     this.packages = new PackagesGateway(apiKey, this.httpClient);

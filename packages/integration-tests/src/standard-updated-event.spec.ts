@@ -3,9 +3,8 @@ import { gitSchemas } from '@packmind/git';
 import { PackmindEventEmitterService } from '@packmind/node-utils';
 import { spacesSchemas } from '@packmind/spaces';
 import { standardsSchemas } from '@packmind/standards';
-import { makeTestDatasource } from '@packmind/test-utils';
 import { Standard, StandardUpdatedPayload } from '@packmind/types';
-import { DataSource } from 'typeorm';
+import { createIntegrationTestFixture } from './helpers/createIntegrationTestFixture';
 import { DataFactory } from './helpers/DataFactory';
 import {
   StubStandardsAdapter,
@@ -14,7 +13,13 @@ import {
 import { TestApp } from './helpers/TestApp';
 
 describe('StandardUpdatedEvent integration', () => {
-  let dataSource: DataSource;
+  const fixture = createIntegrationTestFixture([
+    ...accountsSchemas,
+    ...standardsSchemas,
+    ...gitSchemas,
+    ...spacesSchemas,
+  ]);
+
   let testApp: TestApp;
   let dataFactory: DataFactory;
   let eventEmitterService: PackmindEventEmitterService;
@@ -24,17 +29,10 @@ describe('StandardUpdatedEvent integration', () => {
   let stubAdapter: jest.Mocked<StubStandardsAdapter>;
   let listener: StubStandardsListener;
 
-  beforeEach(async () => {
-    dataSource = await makeTestDatasource([
-      ...accountsSchemas,
-      ...standardsSchemas,
-      ...gitSchemas,
-      ...spacesSchemas,
-    ]);
-    await dataSource.initialize();
-    await dataSource.synchronize();
+  beforeAll(() => fixture.initialize());
 
-    testApp = new TestApp(dataSource);
+  beforeEach(async () => {
+    testApp = new TestApp(fixture.datasource);
     await testApp.initialize();
 
     dataFactory = new DataFactory(testApp);
@@ -60,8 +58,11 @@ describe('StandardUpdatedEvent integration', () => {
 
   afterEach(async () => {
     eventEmitterService.removeAllListeners();
-    await dataSource.destroy();
+    jest.clearAllMocks();
+    await fixture.cleanup();
   });
+
+  afterAll(() => fixture.destroy());
 
   describe('when a standard is updated', () => {
     let payload: StandardUpdatedPayload;

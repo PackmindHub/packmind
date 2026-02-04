@@ -306,9 +306,7 @@ describe('OrganizationHomePage', () => {
     });
 
     it('displays welcome title', () => {
-      expect(
-        screen.getByText('👋 Welcome to your dashboard'),
-      ).toBeInTheDocument();
+      expect(screen.getByText('Dashboard')).toBeInTheDocument();
     });
   });
 });

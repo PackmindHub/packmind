@@ -1,5 +1,5 @@
-import { DataSource, Repository } from 'typeorm';
-import { makeTestDatasource, stubLogger } from '@packmind/test-utils';
+import { Repository } from 'typeorm';
+import { createTestDatasourceFixture, stubLogger } from '@packmind/test-utils';
 import { OrganizationSchema } from '../schemas/OrganizationSchema';
 import { UserSchema } from '../schemas/UserSchema';
 import { UserOrganizationMembershipSchema } from '../schemas/UserOrganizationMembershipSchema';
@@ -14,41 +14,44 @@ import { v4 as uuidv4 } from 'uuid';
 import { UserOrganizationMembershipRepository } from './UserOrganizationMembershipRepository';
 
 describe('UserOrganizationMembershipRepository', () => {
-  let dataSource: DataSource;
+  const fixture = createTestDatasourceFixture([
+    OrganizationSchema,
+    UserSchema,
+    UserOrganizationMembershipSchema,
+  ]);
+
   let repository: UserOrganizationMembershipRepository;
   let ormRepository: Repository<WithTimestamps<UserOrganizationMembership>>;
   let organization: Organization;
   let logger: jest.Mocked<PackmindLogger>;
 
+  beforeAll(() => fixture.initialize());
+
   beforeEach(async () => {
     logger = stubLogger();
-    dataSource = await makeTestDatasource([
-      OrganizationSchema,
-      UserSchema,
+    ormRepository = fixture.datasource.getRepository(
       UserOrganizationMembershipSchema,
-    ]);
-    await dataSource.initialize();
-    await dataSource.synchronize();
-
-    ormRepository = dataSource.getRepository(UserOrganizationMembershipSchema);
+    );
     repository = new UserOrganizationMembershipRepository(
       ormRepository,
       logger,
     );
 
-    organization = await createOrganization(dataSource, {
+    organization = await createOrganization(fixture.datasource, {
       id: createOrganizationId(uuidv4()),
     });
   });
 
   afterEach(async () => {
     jest.clearAllMocks();
-    await dataSource.destroy();
+    await fixture.cleanup();
   });
+
+  afterAll(() => fixture.destroy());
 
   const createMembership = async () => {
     const userId = createUserId(uuidv4());
-    await createUser(dataSource, {
+    await createUser(fixture.datasource, {
       id: userId,
       memberships: [
         {
@@ -130,7 +133,7 @@ describe('UserOrganizationMembershipRepository', () => {
 
       beforeEach(async () => {
         userId = createUserId(uuidv4());
-        await createUser(dataSource, {
+        await createUser(fixture.datasource, {
           id: userId,
           memberships: [
             {

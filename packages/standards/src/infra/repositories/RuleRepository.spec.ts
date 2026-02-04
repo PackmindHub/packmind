@@ -2,12 +2,12 @@ import { GitCommitSchema } from '@packmind/git';
 import { PackmindLogger } from '@packmind/logger';
 import { WithSoftDelete } from '@packmind/node-utils';
 import {
+  createTestDatasourceFixture,
   itHandlesSoftDelete,
-  makeTestDatasource,
   stubLogger,
 } from '@packmind/test-utils';
 import { createRuleId, Rule, Standard, StandardVersion } from '@packmind/types';
-import { DataSource, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
 import { v4 as uuidv4 } from 'uuid';
 import { ruleFactory } from '../../../test/ruleFactory';
 import { standardFactory } from '../../../test/standardFactory';
@@ -18,35 +18,37 @@ import { StandardVersionSchema } from '../schemas/StandardVersionSchema';
 import { RuleRepository } from './RuleRepository';
 
 describe('RuleRepository', () => {
-  let datasource: DataSource;
+  const fixture = createTestDatasourceFixture([
+    RuleSchema,
+    StandardVersionSchema,
+    StandardSchema,
+    GitCommitSchema,
+  ]);
+
   let ruleRepository: RuleRepository;
   let stubbedLogger: jest.Mocked<PackmindLogger>;
   let typeormRepo: Repository<Rule>;
   let standardRepo: Repository<Standard>;
   let standardVersionRepo: Repository<StandardVersion>;
 
-  beforeEach(async () => {
-    datasource = await makeTestDatasource([
-      RuleSchema,
-      StandardVersionSchema,
-      StandardSchema,
-      GitCommitSchema,
-    ]);
-    await datasource.initialize();
-    await datasource.synchronize();
+  beforeAll(() => fixture.initialize());
 
+  beforeEach(() => {
     stubbedLogger = stubLogger();
-    typeormRepo = datasource.getRepository(RuleSchema);
-    standardRepo = datasource.getRepository(StandardSchema);
-    standardVersionRepo = datasource.getRepository(StandardVersionSchema);
-
+    typeormRepo = fixture.datasource.getRepository(RuleSchema);
+    standardRepo = fixture.datasource.getRepository(StandardSchema);
+    standardVersionRepo = fixture.datasource.getRepository(
+      StandardVersionSchema,
+    );
     ruleRepository = new RuleRepository(typeormRepo, stubbedLogger);
   });
 
   afterEach(async () => {
     jest.clearAllMocks();
-    await datasource.destroy();
+    await fixture.cleanup();
   });
+
+  afterAll(() => fixture.destroy());
 
   describe('when storing and retrieving rules by standard version', () => {
     let rule: Rule;

@@ -4,10 +4,27 @@ import {
   CreateStandardVersionData,
 } from '../../services/StandardVersionService';
 import { StandardSummaryService } from '../../services/StandardSummaryService';
-import { Standard } from '@packmind/types';
-import { StandardId, StandardVersionId } from '@packmind/types';
-import { createRuleId, RuleId } from '@packmind/types';
-import { RuleExample, createRuleExampleId } from '@packmind/types';
+import {
+  AiNotConfigured,
+  CreateStandardWithExamplesCommand,
+  createOrganizationId,
+  createRuleExampleId,
+  createRuleId,
+  createStandardId,
+  createStandardVersionId,
+  createUserId,
+  OrganizationId,
+  PackmindEventSource,
+  ProgrammingLanguage,
+  RuleAddedEvent,
+  RuleExample,
+  RuleWithExamples,
+  Standard,
+  StandardCreatedEvent,
+  StandardId,
+  StandardVersionId,
+  UserId,
+} from '@packmind/types';
 import { IRuleExampleRepository } from '../../../domain/repositories/IRuleExampleRepository';
 import { IRuleRepository } from '../../../domain/repositories/IRuleRepository';
 import slug from 'slug';
@@ -16,48 +33,10 @@ import {
   getErrorMessage,
   PackmindEventEmitterService,
 } from '@packmind/node-utils';
-import { RuleWithExamples, AiNotConfigured } from '@packmind/types';
-import { OrganizationId, UserId } from '@packmind/types';
-import {
-  SpaceId,
-  ProgrammingLanguage,
-  PackmindEventSource,
-} from '@packmind/types';
-import {
-  RuleAddedEvent,
-  StandardCreatedEvent,
-  StandardCreationMethod,
-  createStandardId,
-  createStandardVersionId,
-} from '@packmind/types';
 import { v4 as uuidv4 } from 'uuid';
-import type { ILinterPort } from '@packmind/types';
+import type { ILinterPort, RuleId } from '@packmind/types';
 
 const origin = 'CreateStandardWithExamplesUsecase';
-
-export type CreateStandardWithExamplesRequest = {
-  name: string;
-  description: string;
-  summary: string | null;
-  rules: RuleWithExamples[];
-  organizationId: OrganizationId;
-  userId: UserId;
-  scope: string | null;
-  spaceId: SpaceId;
-  /**
-   * When true, skips the detection program assessment for rules.
-   * Useful for bulk imports where assessment would be too expensive.
-   */
-  disableTriggerAssessment?: boolean;
-  /**
-   * The source of the event. Defaults to 'ui' if not provided.
-   */
-  source?: PackmindEventSource;
-  /**
-   * The method used to create this standard.
-   */
-  method?: StandardCreationMethod;
-};
 
 export class CreateStandardWithExamplesUsecase {
   constructor(
@@ -79,19 +58,26 @@ export class CreateStandardWithExamplesUsecase {
     });
   }
 
-  public async createStandardWithExamples({
-    name,
-    description,
-    summary,
-    rules,
-    organizationId,
-    userId,
-    scope,
-    spaceId,
-    disableTriggerAssessment = false,
-    source = 'ui',
-    method,
-  }: CreateStandardWithExamplesRequest) {
+  public async createStandardWithExamples(
+    command: CreateStandardWithExamplesCommand,
+  ) {
+    const {
+      name,
+      description,
+      summary,
+      rules,
+      organizationId: orgId,
+      userId: uid,
+      scope,
+      spaceId,
+      disableTriggerAssessment = false,
+      source = 'ui',
+      method,
+    } = command;
+
+    const organizationId = createOrganizationId(orgId);
+    const userId = createUserId(uid);
+
     this.logger.info('Starting createStandardWithExamples process', {
       name,
       organizationId,
