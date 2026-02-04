@@ -55,4 +55,6 @@ export interface IStandardsGateway {
   ): Promise<void>;
 
   list(): Promise<ListStandardsResult>;
+
+  getBySlug(slug: string): Promise<ListedStandard | null>;
 }
