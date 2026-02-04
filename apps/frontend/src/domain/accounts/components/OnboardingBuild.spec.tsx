@@ -197,6 +197,60 @@ describe('OnboardingBuild', () => {
           screen.getByTestId('OnboardingBuild.InstructionsContent').textContent,
         ).not.toBe('');
       });
+
+      it('shows the Start analysis section header', async () => {
+        const user = userEvent.setup();
+        renderWithProviders(<OnboardingBuild />);
+
+        await user.click(
+          screen.getByTestId('OnboardingBuild.Assistant-claude'),
+        );
+
+        expect(screen.getAllByText('Start analysis')).toHaveLength(2);
+      });
+
+      it('shows the onboarding prompt textarea', async () => {
+        const user = userEvent.setup();
+        renderWithProviders(<OnboardingBuild />);
+
+        await user.click(
+          screen.getByTestId('OnboardingBuild.Assistant-claude'),
+        );
+
+        expect(
+          screen.getByTestId('OnboardingBuild.OnboardingPrompt'),
+        ).toBeInTheDocument();
+      });
+
+      it('contains the correct onboarding prompt text', async () => {
+        const user = userEvent.setup();
+        renderWithProviders(<OnboardingBuild />);
+
+        await user.click(
+          screen.getByTestId('OnboardingBuild.Assistant-claude'),
+        );
+
+        const promptTextarea = screen.getByTestId(
+          'OnboardingBuild.OnboardingPrompt',
+        );
+        expect(promptTextarea).toHaveValue('Start the Packmind onboarding');
+      });
+    });
+
+    describe('when no agent is selected', () => {
+      it('shows only the CLI Start analysis section', () => {
+        renderWithProviders(<OnboardingBuild />);
+
+        expect(screen.getAllByText('Start analysis')).toHaveLength(1);
+      });
+
+      it('does not show the onboarding prompt textarea', () => {
+        renderWithProviders(<OnboardingBuild />);
+
+        expect(
+          screen.queryByTestId('OnboardingBuild.OnboardingPrompt'),
+        ).not.toBeInTheDocument();
+      });
     });
   });
 });

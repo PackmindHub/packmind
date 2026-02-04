@@ -25,6 +25,7 @@ import { MethodContent } from './McpConfig/InstallMethods';
 import { StartTrialCommandAgents } from '@packmind/types';
 import { OnboardingAgentProvider } from '../contexts';
 import { getAgentIcon } from './trial/AgentIcons';
+import { CopiableTextarea } from '../../../shared/components/inputs/CopiableTextarea';
 
 const mapAgentIdToAnalytics = (agentId: string): StartTrialCommandAgents => {
   const mapping: Record<string, StartTrialCommandAgents> = {
@@ -186,6 +187,23 @@ export function OnboardingBuildMcpSection() {
               )}
             </PMBox>
           </PMVStack>
+
+          {/* Start analysis prompt section - visible when agent is selected */}
+          {selectedAgent && (
+            <PMVStack gap={2} align="stretch">
+              <PMText fontWeight="semibold">Start analysis</PMText>
+              <PMText color="secondary" fontSize="sm">
+                Once the MCP server is connected, copy and paste this prompt to
+                your AI agent:
+              </PMText>
+              <CopiableTextarea
+                value="Start the Packmind onboarding"
+                readOnly
+                rows={1}
+                data-testid="OnboardingBuild.OnboardingPrompt"
+              />
+            </PMVStack>
+          )}
         </PMVStack>
       </PMCard.Body>
     </PMCard.Root>
