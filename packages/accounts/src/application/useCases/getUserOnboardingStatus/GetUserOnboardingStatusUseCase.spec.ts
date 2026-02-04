@@ -143,108 +143,124 @@ describe('GetUserOnboardingStatusUseCase', () => {
     });
 
     describe('when detecting organization creator', () => {
-      it('returns isOrganizationCreator: true when timestamps are within 60 seconds', async () => {
-        const userCreatedAt = new Date('2024-01-01T10:00:00Z');
-        const membershipCreatedAt = new Date('2024-01-01T10:00:30Z');
-        const user = userFactory({ id: userId, createdAt: userCreatedAt });
-        const organization = organizationFactory({ id: organizationId });
-        const membership = {
-          userId,
-          organizationId,
-          role: 'admin' as const,
-          createdAt: membershipCreatedAt,
-        };
+      describe('when timestamps are within 60 seconds', () => {
+        it('returns isOrganizationCreator: true', async () => {
+          const userCreatedAt = new Date('2024-01-01T10:00:00Z');
+          const membershipCreatedAt = new Date('2024-01-01T10:00:30Z');
+          const user = userFactory({ id: userId, createdAt: userCreatedAt });
+          const organization = organizationFactory({ id: organizationId });
+          const membership = {
+            userId,
+            organizationId,
+            role: 'admin' as const,
+            createdAt: membershipCreatedAt,
+          };
 
-        const command: GetUserOnboardingStatusCommand & MemberContext = {
-          userId: String(userId),
-          organizationId,
-          user,
-          organization,
-          membership,
-        };
+          const command: GetUserOnboardingStatusCommand & MemberContext = {
+            userId: String(userId),
+            organizationId,
+            user,
+            organization,
+            membership,
+          };
 
-        mockUserMetadataService.isOnboardingCompleted.mockResolvedValue(false);
+          mockUserMetadataService.isOnboardingCompleted.mockResolvedValue(
+            false,
+          );
 
-        const result = await useCase.executeForMembers(command);
+          const result = await useCase.executeForMembers(command);
 
-        expect(result.isOrganizationCreator).toBe(true);
+          expect(result.isOrganizationCreator).toBe(true);
+        });
       });
 
-      it('returns isOrganizationCreator: false when timestamps differ by more than 60 seconds', async () => {
-        const userCreatedAt = new Date('2024-01-01T10:00:00Z');
-        const membershipCreatedAt = new Date('2024-01-01T10:02:00Z');
-        const user = userFactory({ id: userId, createdAt: userCreatedAt });
-        const organization = organizationFactory({ id: organizationId });
-        const membership = {
-          userId,
-          organizationId,
-          role: 'member' as const,
-          createdAt: membershipCreatedAt,
-        };
+      describe('when timestamps differ by more than 60 seconds', () => {
+        it('returns isOrganizationCreator: false', async () => {
+          const userCreatedAt = new Date('2024-01-01T10:00:00Z');
+          const membershipCreatedAt = new Date('2024-01-01T10:02:00Z');
+          const user = userFactory({ id: userId, createdAt: userCreatedAt });
+          const organization = organizationFactory({ id: organizationId });
+          const membership = {
+            userId,
+            organizationId,
+            role: 'member' as const,
+            createdAt: membershipCreatedAt,
+          };
 
-        const command: GetUserOnboardingStatusCommand & MemberContext = {
-          userId: String(userId),
-          organizationId,
-          user,
-          organization,
-          membership,
-        };
+          const command: GetUserOnboardingStatusCommand & MemberContext = {
+            userId: String(userId),
+            organizationId,
+            user,
+            organization,
+            membership,
+          };
 
-        mockUserMetadataService.isOnboardingCompleted.mockResolvedValue(false);
+          mockUserMetadataService.isOnboardingCompleted.mockResolvedValue(
+            false,
+          );
 
-        const result = await useCase.executeForMembers(command);
+          const result = await useCase.executeForMembers(command);
 
-        expect(result.isOrganizationCreator).toBe(false);
+          expect(result.isOrganizationCreator).toBe(false);
+        });
       });
 
-      it('returns isOrganizationCreator: false when userCreatedAt is undefined', async () => {
-        const user = userFactory({ id: userId, createdAt: undefined });
-        const organization = organizationFactory({ id: organizationId });
-        const membership = {
-          userId,
-          organizationId,
-          role: 'member' as const,
-          createdAt: new Date(),
-        };
+      describe('when userCreatedAt is undefined', () => {
+        it('returns isOrganizationCreator: false', async () => {
+          const user = userFactory({ id: userId, createdAt: undefined });
+          const organization = organizationFactory({ id: organizationId });
+          const membership = {
+            userId,
+            organizationId,
+            role: 'member' as const,
+            createdAt: new Date(),
+          };
 
-        const command: GetUserOnboardingStatusCommand & MemberContext = {
-          userId: String(userId),
-          organizationId,
-          user,
-          organization,
-          membership,
-        };
+          const command: GetUserOnboardingStatusCommand & MemberContext = {
+            userId: String(userId),
+            organizationId,
+            user,
+            organization,
+            membership,
+          };
 
-        mockUserMetadataService.isOnboardingCompleted.mockResolvedValue(false);
+          mockUserMetadataService.isOnboardingCompleted.mockResolvedValue(
+            false,
+          );
 
-        const result = await useCase.executeForMembers(command);
+          const result = await useCase.executeForMembers(command);
 
-        expect(result.isOrganizationCreator).toBe(false);
+          expect(result.isOrganizationCreator).toBe(false);
+        });
       });
 
-      it('returns isOrganizationCreator: false when membershipCreatedAt is undefined', async () => {
-        const user = userFactory({ id: userId, createdAt: new Date() });
-        const organization = organizationFactory({ id: organizationId });
-        const membership = {
-          userId,
-          organizationId,
-          role: 'member' as const,
-          createdAt: undefined,
-        };
+      describe('when membershipCreatedAt is undefined', () => {
+        it('returns isOrganizationCreator: false', async () => {
+          const user = userFactory({ id: userId, createdAt: new Date() });
+          const organization = organizationFactory({ id: organizationId });
+          const membership = {
+            userId,
+            organizationId,
+            role: 'member' as const,
+            createdAt: undefined,
+          };
 
-        const command: GetUserOnboardingStatusCommand & MemberContext = {
-          userId: String(userId),
-          organizationId,
-          user,
-          organization,
-          membership,
-        };
+          const command: GetUserOnboardingStatusCommand & MemberContext = {
+            userId: String(userId),
+            organizationId,
+            user,
+            organization,
+            membership,
+          };
 
-        mockUserMetadataService.isOnboardingCompleted.mockResolvedValue(false);
+          mockUserMetadataService.isOnboardingCompleted.mockResolvedValue(
+            false,
+          );
 
-        const result = await useCase.executeForMembers(command);
+          const result = await useCase.executeForMembers(command);
 
-        expect(result.isOrganizationCreator).toBe(false);
+          expect(result.isOrganizationCreator).toBe(false);
+        });
       });
     });
   });

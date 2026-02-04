@@ -1,4 +1,4 @@
-# Nx Monorepo Structure
+_# Nx Monorepo Structure
 
 This is an Nx monorepo containing applications and reusable packages.
 
@@ -40,8 +40,8 @@ The following commands apply for both NX apps and packages (use `nx show project
 
 ## Code Quality
 
-- **Linting**: `nx lint <project-name>` runs ESLint
-- **Formatting**: Prettier is used for code formatting
+- **Linting**: `nx lint <project-name>` runs ESLint, using the config file `eslint.config.mjs`.
+- **Formatting**: Prettier is used for code formatting. You don't have to run it, it's set as a pre-commit hook.
 
 ## Commands
 
@@ -65,11 +65,11 @@ The following commands apply for both NX apps and packages (use `nx show project
 
 Public end-user documentation is maintained in the `apps/doc/` folder (Mintlify-based).
 
-# Task splitting
+## Task splitting
 
 - For any task you perform, you MUST split it into multiple into sub-tasks which have a logical increment (eg: new endpoint, new component, new use case etc). When a task is done, run all the validation steps (lint, test, packmind etc) and ask me for validation of the work you did.
 - Each sub task MUST have its own commit.
-- Use the `lint` and `test` commands on the apps and packages you've edited
+- Use the `nx lint` and `nx test` commands on the apps and packages you've edited
 
 <!-- start: Packmind standards -->
 # Packmind Standards
@@ -101,4 +101,4 @@ Standardize unit test structure and naming in TypeScript/TSX test files using ve
 * Use one expect per test case for better clarity and easier debugging; group related tests in describe blocks with shared setup in beforeEach
 
 Full standard is available here for further request: [Testing good practices](.packmind/standards/testing-good-practices.md)
-<!-- end: Packmind standards -->
+<!-- end: Packmind standards -->_
