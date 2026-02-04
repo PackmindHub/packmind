@@ -2,8 +2,6 @@ import {
   PMVStack,
   PMHeading,
   PMText,
-  PMButton,
-  PMHStack,
   PMIcon,
   PMGrid,
   PMGridItem,
@@ -42,22 +40,9 @@ const PLAYBOOK_ITEMS: PlaybookItem[] = [
   },
 ];
 
-interface OnboardingPlaybookProps {
-  onBuildPlaybook: () => void;
-  onPrevious: () => void;
-}
-
-export function OnboardingPlaybook({
-  onBuildPlaybook,
-  onPrevious,
-}: OnboardingPlaybookProps) {
+export function OnboardingPlaybook() {
   return (
-    <PMVStack
-      align="stretch"
-      width="full"
-      height="full"
-      justify="space-between"
-    >
+    <PMVStack align="stretch" width="full" height="full" gap={8}>
       <PMVStack gap={2} textAlign="center">
         <PMHeading level="h2">Build and evolve your playbook</PMHeading>
         <PMText color="secondary" fontStyle="italic">
@@ -98,25 +83,6 @@ export function OnboardingPlaybook({
           </PMGridItem>
         ))}
       </PMGrid>
-
-      <PMHStack gap={4}>
-        <PMButton
-          size="lg"
-          variant="secondary"
-          onClick={onPrevious}
-          data-testid="OnboardingPlaybook.PreviousButton"
-        >
-          Previous
-        </PMButton>
-        <PMButton
-          size="lg"
-          variant="primary"
-          onClick={onBuildPlaybook}
-          data-testid="OnboardingPlaybook.BuildButton"
-        >
-          Build my playbook
-        </PMButton>
-      </PMHStack>
     </PMVStack>
   );
 }

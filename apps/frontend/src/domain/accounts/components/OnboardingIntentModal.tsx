@@ -88,16 +88,33 @@ export function OnboardingIntentModal({
                     onSkip={handleSkip}
                   />
                 )}
-                {step === 'playbook' && (
-                  <OnboardingPlaybook
-                    onBuildPlaybook={handleBuildPlaybook}
-                    onPrevious={handlePreviousToWelcome}
-                  />
-                )}
+                {step === 'playbook' && <OnboardingPlaybook />}
                 {step === 'build' && <OnboardingBuild />}
               </PMBox>
             </PMBox>
           </PMDialog.Body>
+          {step === 'playbook' && (
+            <PMDialog.Footer justifyContent="flex-start">
+              <PMHStack gap={4}>
+                <PMButton
+                  size="lg"
+                  variant="secondary"
+                  onClick={handlePreviousToWelcome}
+                  data-testid="OnboardingPlaybook.PreviousButton"
+                >
+                  Previous
+                </PMButton>
+                <PMButton
+                  size="lg"
+                  variant="primary"
+                  onClick={handleBuildPlaybook}
+                  data-testid="OnboardingPlaybook.BuildButton"
+                >
+                  Build my playbook
+                </PMButton>
+              </PMHStack>
+            </PMDialog.Footer>
+          )}
           {step === 'build' && (
             <PMDialog.Footer justifyContent="flex-start">
               <PMHStack gap={4}>

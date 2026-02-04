@@ -1,6 +1,5 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
 import '@testing-library/jest-dom';
 import { UIProvider } from '@packmind/ui';
 import { MemoryRouter } from 'react-router';
@@ -15,21 +14,9 @@ const renderWithProviders = (component: React.ReactElement) => {
 };
 
 describe('OnboardingPlaybook', () => {
-  const mockOnBuildPlaybook = jest.fn();
-  const mockOnPrevious = jest.fn();
-
-  beforeEach(() => {
-    jest.clearAllMocks();
-  });
-
   describe('when rendering the component', () => {
     beforeEach(() => {
-      renderWithProviders(
-        <OnboardingPlaybook
-          onBuildPlaybook={mockOnBuildPlaybook}
-          onPrevious={mockOnPrevious}
-        />,
-      );
+      renderWithProviders(<OnboardingPlaybook />);
     });
 
     it('displays title', () => {
@@ -65,50 +52,6 @@ describe('OnboardingPlaybook', () => {
       expect(
         screen.getByText('Expert modules for recurring needs.'),
       ).toBeInTheDocument();
-    });
-
-    it('displays Build my playbook button', () => {
-      expect(
-        screen.getByTestId('OnboardingPlaybook.BuildButton'),
-      ).toBeInTheDocument();
-    });
-
-    it('displays Previous button', () => {
-      expect(
-        screen.getByTestId('OnboardingPlaybook.PreviousButton'),
-      ).toBeInTheDocument();
-    });
-  });
-
-  describe('when clicking Build my playbook button', () => {
-    it('calls onBuildPlaybook', async () => {
-      const user = userEvent.setup();
-      renderWithProviders(
-        <OnboardingPlaybook
-          onBuildPlaybook={mockOnBuildPlaybook}
-          onPrevious={mockOnPrevious}
-        />,
-      );
-
-      await user.click(screen.getByTestId('OnboardingPlaybook.BuildButton'));
-
-      expect(mockOnBuildPlaybook).toHaveBeenCalled();
-    });
-  });
-
-  describe('when clicking Previous button', () => {
-    it('calls onPrevious', async () => {
-      const user = userEvent.setup();
-      renderWithProviders(
-        <OnboardingPlaybook
-          onBuildPlaybook={mockOnBuildPlaybook}
-          onPrevious={mockOnPrevious}
-        />,
-      );
-
-      await user.click(screen.getByTestId('OnboardingPlaybook.PreviousButton'));
-
-      expect(mockOnPrevious).toHaveBeenCalled();
     });
   });
 });
