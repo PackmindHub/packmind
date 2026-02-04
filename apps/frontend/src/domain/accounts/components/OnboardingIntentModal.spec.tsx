@@ -165,23 +165,27 @@ describe('OnboardingIntentModal', () => {
 
   describe('stepsToShow behavior', () => {
     describe('when stepsToShow excludes build step', () => {
-      it('calls onComplete when clicking Build my playbook', async () => {
-        const onComplete = jest.fn();
-        const user = userEvent.setup();
-        renderWithProviders(
-          <OnboardingIntentModal
-            {...defaultProps}
-            onComplete={onComplete}
-            stepsToShow={['welcome', 'playbook']}
-          />,
-        );
+      describe('when clicking Build my playbook', () => {
+        it('calls onComplete', async () => {
+          const onComplete = jest.fn();
+          const user = userEvent.setup();
+          renderWithProviders(
+            <OnboardingIntentModal
+              {...defaultProps}
+              onComplete={onComplete}
+              stepsToShow={['welcome', 'playbook']}
+            />,
+          );
 
-        await user.click(
-          screen.getByTestId('OnboardingWelcome.DiscoverButton'),
-        );
-        await user.click(screen.getByTestId('OnboardingPlaybook.BuildButton'));
+          await user.click(
+            screen.getByTestId('OnboardingWelcome.DiscoverButton'),
+          );
+          await user.click(
+            screen.getByTestId('OnboardingPlaybook.BuildButton'),
+          );
 
-        expect(onComplete).toHaveBeenCalledTimes(1);
+          expect(onComplete).toHaveBeenCalledTimes(1);
+        });
       });
     });
   });

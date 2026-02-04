@@ -44,35 +44,44 @@ describe('CompleteUserOnboardingUseCase', () => {
   });
 
   describe('executeForMembers', () => {
-    it('marks onboarding as completed and returns success', async () => {
-      const user = userFactory({ id: userId });
-      const organization = organizationFactory({ id: organizationId });
-      const membership = {
-        userId,
-        organizationId,
-        role: 'member' as const,
-      };
+    describe('when completing onboarding', () => {
+      let result: { success: boolean };
 
-      const command: CompleteUserOnboardingCommand & MemberContext = {
-        userId: String(userId),
-        organizationId,
-        user,
-        organization,
-        membership,
-      };
+      beforeEach(async () => {
+        const user = userFactory({ id: userId });
+        const organization = organizationFactory({ id: organizationId });
+        const membership = {
+          userId,
+          organizationId,
+          role: 'member' as const,
+        };
 
-      mockUserMetadataService.markOnboardingCompleted.mockResolvedValue({
-        id: 'metadata-1' as never,
-        userId,
-        onboardingCompleted: true,
+        const command: CompleteUserOnboardingCommand & MemberContext = {
+          userId: String(userId),
+          organizationId,
+          user,
+          organization,
+          membership,
+        };
+
+        mockUserMetadataService.markOnboardingCompleted.mockResolvedValue({
+          id: 'metadata-1' as never,
+          userId,
+          onboardingCompleted: true,
+        });
+
+        result = await useCase.executeForMembers(command);
       });
 
-      const result = await useCase.executeForMembers(command);
+      it('calls markOnboardingCompleted with the userId', () => {
+        expect(
+          mockUserMetadataService.markOnboardingCompleted,
+        ).toHaveBeenCalledWith(userId);
+      });
 
-      expect(
-        mockUserMetadataService.markOnboardingCompleted,
-      ).toHaveBeenCalledWith(userId);
-      expect(result).toEqual({ success: true });
+      it('returns success', () => {
+        expect(result).toEqual({ success: true });
+      });
     });
   });
 });
