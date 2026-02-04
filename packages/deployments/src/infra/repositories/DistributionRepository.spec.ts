@@ -33,6 +33,7 @@ describe('DistributionRepository', () => {
     SelectQueryBuilder<Distribution>
   > => {
     const qb = {
+      innerJoinAndSelect: jest.fn().mockReturnThis(),
       leftJoinAndSelect: jest.fn().mockReturnThis(),
       where: jest.fn().mockReturnThis(),
       andWhere: jest.fn().mockReturnThis(),
@@ -114,6 +115,7 @@ describe('DistributionRepository', () => {
               operation: 'add',
               standardVersions: [sv1],
               recipeVersions: [],
+              skillVersions: [],
             },
           ],
         );
@@ -154,6 +156,7 @@ describe('DistributionRepository', () => {
               operation: 'add',
               standardVersions: [sv1],
               recipeVersions: [],
+              skillVersions: [],
             },
           ],
         );
@@ -169,6 +172,7 @@ describe('DistributionRepository', () => {
               operation: 'remove',
               standardVersions: [],
               recipeVersions: [],
+              skillVersions: [],
             },
           ],
         );
@@ -184,6 +188,7 @@ describe('DistributionRepository', () => {
               operation: 'add',
               standardVersions: [sv2],
               recipeVersions: [],
+              skillVersions: [],
             },
           ],
         );
@@ -227,6 +232,7 @@ describe('DistributionRepository', () => {
               operation: 'add',
               standardVersions: [sv1],
               recipeVersions: [],
+              skillVersions: [],
             },
           ],
         );
@@ -242,6 +248,7 @@ describe('DistributionRepository', () => {
               operation: 'remove',
               standardVersions: [],
               recipeVersions: [],
+              skillVersions: [],
             },
           ],
         );
@@ -257,6 +264,7 @@ describe('DistributionRepository', () => {
               operation: 'add',
               standardVersions: [sv1],
               recipeVersions: [],
+              skillVersions: [],
             },
           ],
         );
@@ -300,6 +308,7 @@ describe('DistributionRepository', () => {
               operation: undefined as never,
               standardVersions: [sv1],
               recipeVersions: [],
+              skillVersions: [],
             },
           ],
         );
@@ -348,6 +357,7 @@ describe('DistributionRepository', () => {
               operation: 'add',
               standardVersions: [sv1v2],
               recipeVersions: [],
+              skillVersions: [],
             },
           ],
         );
@@ -363,6 +373,7 @@ describe('DistributionRepository', () => {
               operation: 'add',
               standardVersions: [sv1v1],
               recipeVersions: [],
+              skillVersions: [],
             },
           ],
         );
@@ -443,6 +454,7 @@ describe('DistributionRepository', () => {
               operation: 'add',
               standardVersions: [],
               recipeVersions: [rv1],
+              skillVersions: [],
             },
           ],
         );
@@ -483,6 +495,7 @@ describe('DistributionRepository', () => {
               operation: 'add',
               standardVersions: [],
               recipeVersions: [rv1],
+              skillVersions: [],
             },
           ],
         );
@@ -498,6 +511,7 @@ describe('DistributionRepository', () => {
               operation: 'remove',
               standardVersions: [],
               recipeVersions: [],
+              skillVersions: [],
             },
           ],
         );
@@ -513,6 +527,7 @@ describe('DistributionRepository', () => {
               operation: 'add',
               standardVersions: [],
               recipeVersions: [rv2],
+              skillVersions: [],
             },
           ],
         );
@@ -556,6 +571,7 @@ describe('DistributionRepository', () => {
               operation: 'add',
               standardVersions: [],
               recipeVersions: [rv1],
+              skillVersions: [],
             },
           ],
         );
@@ -571,6 +587,7 @@ describe('DistributionRepository', () => {
               operation: 'remove',
               standardVersions: [],
               recipeVersions: [],
+              skillVersions: [],
             },
           ],
         );
@@ -586,6 +603,7 @@ describe('DistributionRepository', () => {
               operation: 'add',
               standardVersions: [],
               recipeVersions: [rv1],
+              skillVersions: [],
             },
           ],
         );
@@ -629,6 +647,7 @@ describe('DistributionRepository', () => {
               operation: undefined as never,
               standardVersions: [],
               recipeVersions: [rv1],
+              skillVersions: [],
             },
           ],
         );
@@ -669,6 +688,7 @@ describe('DistributionRepository', () => {
               operation: 'add',
               standardVersions: [],
               recipeVersions: [rv1v2],
+              skillVersions: [],
             },
           ],
         );
@@ -684,6 +704,7 @@ describe('DistributionRepository', () => {
               operation: 'add',
               standardVersions: [],
               recipeVersions: [rv1v1],
+              skillVersions: [],
             },
           ],
         );
