@@ -14,10 +14,6 @@ export interface IPackmindAppPage extends IPackmindPage {
   signOut(): Promise<void>;
 }
 
-export interface ISignUpOptionsPage extends IPackmindPage {
-  clickCreateAccount(): Promise<ISignUpPage>;
-}
-
 export interface ISignUpPage extends IPackmindPage {
   signup(email: string, password: string): Promise<IDashboardPage>;
 }
@@ -111,7 +107,6 @@ export interface IActivateAccountPage extends IPackmindPage {
 
 export interface IPageFactory {
   getSignupPage(): Promise<ISignUpPage>;
-  getSignupOptionsPage(): Promise<ISignUpOptionsPage>;
   getSignupFormPage(): Promise<ISignUpPage>;
   getDashboardPage(): Promise<IDashboardPage>;
   getUserSettingsPage(): Promise<IUserSettingsPage>;
