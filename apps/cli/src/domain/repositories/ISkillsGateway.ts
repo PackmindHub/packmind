@@ -1,9 +1,15 @@
-import { Gateway, IUseCase, PackmindCommand } from '@packmind/types';
+import {
+  CodingAgent,
+  Gateway,
+  IUseCase,
+  PackmindCommand,
+} from '@packmind/types';
 
 // Get Default Skills types
 export type GetDefaultSkillsCommand = PackmindCommand & {
   cliVersion?: string;
   includeBeta?: boolean;
+  agents?: CodingAgent[]; // Optional agents to generate artifacts for (overrides org-level config when present)
 };
 
 export type GetDefaultSkillsResult = {
