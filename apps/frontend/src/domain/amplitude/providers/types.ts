@@ -47,6 +47,20 @@ export type AnalyticsEventMap = {
     agent: CodingAgent;
   };
   create_standard_from_samples_clicked: Record<string, never>;
+  post_signup_onboarding_started: Record<string, never>;
+  post_signup_onboarding_skipped: Record<string, never>;
+  post_signup_onboarding_completed: Record<string, never>;
+  post_signup_onboarding_agent_clicked: {
+    agent: StartTrialCommandAgents;
+  };
+  post_signup_onboarding_field_copied: {
+    field:
+      | 'installSh'
+      | 'installNpm'
+      | 'cliInit'
+      | 'cliStartAnalysis'
+      | 'mcpStartAnalysis';
+  };
 };
 
 export type AnalyticsEventName = keyof AnalyticsEventMap;
