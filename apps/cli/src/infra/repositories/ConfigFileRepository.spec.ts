@@ -23,11 +23,12 @@ describe('ConfigFileRepository', () => {
   });
 
   describe('readHierarchicalConfig', () => {
+    type HierarchicalConfigResult = Awaited<
+      ReturnType<ConfigFileRepository['readHierarchicalConfig']>
+    >;
+
     describe('when no packmind.json exists in hierarchy', () => {
-      type ResultType = Awaited<
-        ReturnType<ConfigFileRepository['readHierarchicalConfig']>
-      >;
-      let result: ResultType;
+      let result: HierarchicalConfigResult;
 
       beforeEach(async () => {
         mockFs.readFile.mockRejectedValue({ code: 'ENOENT' });
@@ -52,10 +53,7 @@ describe('ConfigFileRepository', () => {
     });
 
     describe('when single packmind.json exists at root', () => {
-      type ResultType = Awaited<
-        ReturnType<ConfigFileRepository['readHierarchicalConfig']>
-      >;
-      let result: ResultType;
+      let result: HierarchicalConfigResult;
 
       beforeEach(async () => {
         mockFs.readFile.mockImplementation(async (filePath: unknown) => {
@@ -85,10 +83,7 @@ describe('ConfigFileRepository', () => {
     });
 
     describe('when single packmind.json exists in subdirectory', () => {
-      type ResultType = Awaited<
-        ReturnType<ConfigFileRepository['readHierarchicalConfig']>
-      >;
-      let result: ResultType;
+      let result: HierarchicalConfigResult;
 
       beforeEach(async () => {
         mockFs.readFile.mockImplementation(async (filePath: unknown) => {
@@ -118,10 +113,7 @@ describe('ConfigFileRepository', () => {
     });
 
     describe('when multiple packmind.json files exist', () => {
-      type ResultType = Awaited<
-        ReturnType<ConfigFileRepository['readHierarchicalConfig']>
-      >;
-      let result: ResultType;
+      let result: HierarchicalConfigResult;
 
       beforeEach(async () => {
         mockFs.readFile.mockImplementation(async (filePath: unknown) => {
@@ -175,10 +167,7 @@ describe('ConfigFileRepository', () => {
     });
 
     describe('when start and stop directories are the same', () => {
-      type ResultType = Awaited<
-        ReturnType<ConfigFileRepository['readHierarchicalConfig']>
-      >;
-      let result: ResultType;
+      let result: HierarchicalConfigResult;
 
       beforeEach(async () => {
         mockFs.readFile.mockImplementation(async (filePath: unknown) => {
@@ -204,10 +193,7 @@ describe('ConfigFileRepository', () => {
     });
 
     describe('when config file has malformed JSON', () => {
-      type ResultType = Awaited<
-        ReturnType<ConfigFileRepository['readHierarchicalConfig']>
-      >;
-      let result: ResultType;
+      let result: HierarchicalConfigResult;
       let consoleWarnSpy: jest.SpyInstance;
 
       beforeEach(async () => {
@@ -283,10 +269,7 @@ describe('ConfigFileRepository', () => {
     });
 
     describe('when stopDirectory is null', () => {
-      type ResultType = Awaited<
-        ReturnType<ConfigFileRepository['readHierarchicalConfig']>
-      >;
-      let result: ResultType;
+      let result: HierarchicalConfigResult;
 
       beforeEach(async () => {
         mockFs.readFile.mockImplementation(async (filePath: unknown) => {
@@ -326,6 +309,10 @@ describe('ConfigFileRepository', () => {
   });
 
   describe('findDescendantConfigs', () => {
+    type DescendantConfigsResult = Awaited<
+      ReturnType<ConfigFileRepository['findDescendantConfigs']>
+    >;
+
     beforeEach(() => {
       mockFs.readdir.mockResolvedValue([]);
     });
@@ -365,10 +352,7 @@ describe('ConfigFileRepository', () => {
     });
 
     describe('when packmind.json exists in nested directories', () => {
-      type ResultType = Awaited<
-        ReturnType<ConfigFileRepository['findDescendantConfigs']>
-      >;
-      let result: ResultType;
+      let result: DescendantConfigsResult;
 
       beforeEach(async () => {
         mockFs.readdir
@@ -436,10 +420,7 @@ describe('ConfigFileRepository', () => {
     });
 
     describe('when descendant has malformed JSON', () => {
-      type ResultType = Awaited<
-        ReturnType<ConfigFileRepository['findDescendantConfigs']>
-      >;
-      let result: ResultType;
+      let result: DescendantConfigsResult;
       let consoleWarnSpy: jest.SpyInstance;
 
       beforeEach(async () => {
@@ -653,15 +634,16 @@ describe('ConfigFileRepository', () => {
   });
 
   describe('findAllConfigsInTree', () => {
+    type AllConfigsInTreeResult = Awaited<
+      ReturnType<ConfigFileRepository['findAllConfigsInTree']>
+    >;
+
     beforeEach(() => {
       mockFs.readdir.mockResolvedValue([]);
     });
 
     describe('when no packmind.json exists anywhere', () => {
-      type ResultType = Awaited<
-        ReturnType<ConfigFileRepository['findAllConfigsInTree']>
-      >;
-      let result: ResultType;
+      let result: AllConfigsInTreeResult;
 
       beforeEach(async () => {
         mockFs.readFile.mockRejectedValue({ code: 'ENOENT' });
@@ -686,10 +668,7 @@ describe('ConfigFileRepository', () => {
     });
 
     describe('when packmind.json exists only at root', () => {
-      type ResultType = Awaited<
-        ReturnType<ConfigFileRepository['findAllConfigsInTree']>
-      >;
-      let result: ResultType;
+      let result: AllConfigsInTreeResult;
 
       beforeEach(async () => {
         mockFs.readFile.mockImplementation(async (filePath: unknown) => {
@@ -723,10 +702,7 @@ describe('ConfigFileRepository', () => {
     });
 
     describe('when packmind.json exists in ancestor directories', () => {
-      type ResultType = Awaited<
-        ReturnType<ConfigFileRepository['findAllConfigsInTree']>
-      >;
-      let result: ResultType;
+      let result: AllConfigsInTreeResult;
 
       beforeEach(async () => {
         mockFs.readFile.mockImplementation(async (filePath: unknown) => {
@@ -775,10 +751,7 @@ describe('ConfigFileRepository', () => {
     });
 
     describe('when packmind.json exists in descendant directories', () => {
-      type ResultType = Awaited<
-        ReturnType<ConfigFileRepository['findAllConfigsInTree']>
-      >;
-      let result: ResultType;
+      let result: AllConfigsInTreeResult;
 
       beforeEach(async () => {
         mockFs.readdir
@@ -835,10 +808,7 @@ describe('ConfigFileRepository', () => {
     });
 
     describe('when packmind.json exists in both ancestors and descendants', () => {
-      type ResultType = Awaited<
-        ReturnType<ConfigFileRepository['findAllConfigsInTree']>
-      >;
-      let result: ResultType;
+      let result: AllConfigsInTreeResult;
 
       beforeEach(async () => {
         mockFs.readdir
@@ -886,10 +856,7 @@ describe('ConfigFileRepository', () => {
     });
 
     describe('when stopDirectory is null', () => {
-      type ResultType = Awaited<
-        ReturnType<ConfigFileRepository['findAllConfigsInTree']>
-      >;
-      let result: ResultType;
+      let result: AllConfigsInTreeResult;
 
       beforeEach(async () => {
         mockFs.readFile.mockImplementation(async (filePath: unknown) => {
@@ -919,10 +886,7 @@ describe('ConfigFileRepository', () => {
     });
 
     describe('when configs have same packages', () => {
-      type ResultType = Awaited<
-        ReturnType<ConfigFileRepository['findAllConfigsInTree']>
-      >;
-      let result: ResultType;
+      let result: AllConfigsInTreeResult;
 
       beforeEach(async () => {
         mockFs.readdir
@@ -955,6 +919,181 @@ describe('ConfigFileRepository', () => {
       it('keeps apps config with its own package version', () => {
         const appsConfig = result.configs.find((c) => c.targetPath === '/apps');
         expect(appsConfig?.packages).toEqual({ shared: '2.0.0' });
+      });
+    });
+
+    describe('when config contains agents', () => {
+      let result: AllConfigsInTreeResult;
+
+      beforeEach(async () => {
+        mockFs.readFile.mockImplementation(async (filePath: unknown) => {
+          if (filePath === '/project/packmind.json') {
+            return JSON.stringify({
+              packages: { generic: '*' },
+              agents: ['claude', 'cursor'],
+            });
+          }
+          throw { code: 'ENOENT' };
+        });
+
+        result = await repository.findAllConfigsInTree('/project', '/project');
+      });
+
+      it('returns hasConfigs as true', () => {
+        expect(result.hasConfigs).toBe(true);
+      });
+
+      it('returns agents in config', () => {
+        const rootConfig = result.configs.find((c) => c.targetPath === '/');
+        expect(rootConfig?.agents).toEqual(['claude', 'cursor']);
+      });
+    });
+
+    describe('when config contains invalid agents', () => {
+      let result: AllConfigsInTreeResult;
+      let consoleWarnSpy: jest.SpyInstance;
+
+      beforeEach(async () => {
+        consoleWarnSpy = jest
+          .spyOn(console, 'warn')
+          .mockImplementation(jest.fn());
+
+        mockFs.readFile.mockImplementation(async (filePath: unknown) => {
+          if (filePath === '/project/packmind.json') {
+            return JSON.stringify({
+              packages: { generic: '*' },
+              agents: ['claude', 'invalid-agent', 'cursor'],
+            });
+          }
+          throw { code: 'ENOENT' };
+        });
+
+        result = await repository.findAllConfigsInTree('/project', '/project');
+      });
+
+      afterEach(() => {
+        consoleWarnSpy.mockRestore();
+      });
+
+      it('returns only valid agents', () => {
+        const rootConfig = result.configs.find((c) => c.targetPath === '/');
+        expect(rootConfig?.agents).toEqual(['claude', 'cursor']);
+      });
+
+      it('logs warning about invalid agents', () => {
+        expect(consoleWarnSpy).toHaveBeenCalledWith(
+          expect.anything(),
+          expect.stringContaining('invalid-agent'),
+        );
+      });
+    });
+
+    describe('when config has single agent', () => {
+      let result: AllConfigsInTreeResult;
+
+      beforeEach(async () => {
+        mockFs.readFile.mockImplementation(async (filePath: unknown) => {
+          if (filePath === '/project/packmind.json') {
+            return JSON.stringify({
+              packages: { generic: '*' },
+              agents: ['claude'],
+            });
+          }
+          throw { code: 'ENOENT' };
+        });
+
+        result = await repository.findAllConfigsInTree('/project', '/project');
+      });
+
+      it('returns the single agent in array', () => {
+        const rootConfig = result.configs.find((c) => c.targetPath === '/');
+        expect(rootConfig?.agents).toEqual(['claude']);
+      });
+    });
+
+    describe('when config has empty agents array', () => {
+      let result: AllConfigsInTreeResult;
+
+      beforeEach(async () => {
+        mockFs.readFile.mockImplementation(async (filePath: unknown) => {
+          if (filePath === '/project/packmind.json') {
+            return JSON.stringify({
+              packages: { generic: '*' },
+              agents: [],
+            });
+          }
+          throw { code: 'ENOENT' };
+        });
+
+        result = await repository.findAllConfigsInTree('/project', '/project');
+      });
+
+      it('returns empty agents array', () => {
+        const rootConfig = result.configs.find((c) => c.targetPath === '/');
+        expect(rootConfig?.agents).toEqual([]);
+      });
+    });
+
+    describe('when config has no agents field', () => {
+      let result: AllConfigsInTreeResult;
+
+      beforeEach(async () => {
+        mockFs.readFile.mockImplementation(async (filePath: unknown) => {
+          if (filePath === '/project/packmind.json') {
+            return JSON.stringify({ packages: { generic: '*' } });
+          }
+          throw { code: 'ENOENT' };
+        });
+
+        result = await repository.findAllConfigsInTree('/project', '/project');
+      });
+
+      it('returns undefined for agents', () => {
+        const rootConfig = result.configs.find((c) => c.targetPath === '/');
+        expect(rootConfig?.agents).toBeUndefined();
+      });
+    });
+
+    describe('when multiple configs have different agents', () => {
+      let result: AllConfigsInTreeResult;
+
+      beforeEach(async () => {
+        mockFs.readdir
+          .mockResolvedValueOnce([
+            { name: 'apps', isDirectory: () => true },
+          ] as MockDirent[] as never)
+          .mockResolvedValue([]);
+        mockFs.readFile.mockImplementation(async (filePath: unknown) => {
+          if (filePath === '/project/packmind.json') {
+            return JSON.stringify({
+              packages: { generic: '*' },
+              agents: ['claude'],
+            });
+          }
+          if (filePath === '/project/apps/packmind.json') {
+            return JSON.stringify({
+              packages: { backend: '*' },
+              agents: ['cursor', 'copilot'],
+            });
+          }
+          throw { code: 'ENOENT' };
+        });
+
+        result = await repository.findAllConfigsInTree('/project', '/project');
+      });
+
+      it('returns two configs', () => {
+        expect(result.configs).toHaveLength(2);
+      });
+
+      it('returns root config with its agents', () => {
+        const rootConfig = result.configs.find((c) => c.targetPath === '/');
+        expect(rootConfig?.agents).toEqual(['claude']);
+      });
+
+      it('returns apps config with its agents', () => {
+        const appsConfig = result.configs.find((c) => c.targetPath === '/apps');
+        expect(appsConfig?.agents).toEqual(['cursor', 'copilot']);
       });
     });
   });

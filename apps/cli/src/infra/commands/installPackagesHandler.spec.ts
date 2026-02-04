@@ -575,6 +575,117 @@ describe('installPackagesHandler', () => {
       });
     });
 
+    describe('when config contains agents', () => {
+      beforeEach(() => {
+        mockPackmindCliHexa.configExists.mockResolvedValue(true);
+        mockPackmindCliHexa.installPackages.mockResolvedValue({
+          filesCreated: 1,
+          filesUpdated: 0,
+          filesDeleted: 0,
+          recipesCount: 1,
+          standardsCount: 0,
+          errors: [],
+        });
+        mockPackmindCliHexa.tryGetGitRepositoryRoot.mockResolvedValue(null);
+      });
+
+      describe('when config has no agents field', () => {
+        beforeEach(async () => {
+          mockPackmindCliHexa.readFullConfig.mockResolvedValue({
+            packages: { backend: '*' },
+          });
+
+          await installPackagesHandler({ packagesSlugs: [] }, deps);
+        });
+
+        it('passes undefined agents', () => {
+          expect(mockPackmindCliHexa.installPackages).toHaveBeenCalledWith(
+            expect.objectContaining({
+              agents: undefined,
+            }),
+          );
+        });
+      });
+
+      describe('when config has single agent', () => {
+        beforeEach(async () => {
+          mockPackmindCliHexa.readFullConfig.mockResolvedValue({
+            packages: { backend: '*' },
+            agents: ['claude'],
+          });
+
+          await installPackagesHandler({ packagesSlugs: [] }, deps);
+        });
+
+        it('passes single agent to installPackages', () => {
+          expect(mockPackmindCliHexa.installPackages).toHaveBeenCalledWith(
+            expect.objectContaining({
+              agents: ['claude'],
+            }),
+          );
+        });
+      });
+
+      describe('when config has multiple agents', () => {
+        beforeEach(async () => {
+          mockPackmindCliHexa.readFullConfig.mockResolvedValue({
+            packages: { backend: '*' },
+            agents: ['claude', 'cursor', 'copilot'],
+          });
+
+          await installPackagesHandler({ packagesSlugs: [] }, deps);
+        });
+
+        it('passes all agents to installPackages', () => {
+          expect(mockPackmindCliHexa.installPackages).toHaveBeenCalledWith(
+            expect.objectContaining({
+              agents: ['claude', 'cursor', 'copilot'],
+            }),
+          );
+        });
+      });
+
+      describe('when config has agents filtered from mixed valid/invalid', () => {
+        beforeEach(async () => {
+          // After validation layer filters, only valid agents remain
+          mockPackmindCliHexa.readFullConfig.mockResolvedValue({
+            packages: { backend: '*' },
+            agents: ['claude'], // Result after filtering ['claude', 'invalid-agent']
+          });
+
+          await installPackagesHandler({ packagesSlugs: [] }, deps);
+        });
+
+        it('passes only the valid agents to installPackages', () => {
+          expect(mockPackmindCliHexa.installPackages).toHaveBeenCalledWith(
+            expect.objectContaining({
+              agents: ['claude'],
+            }),
+          );
+        });
+      });
+
+      describe('when config has empty agents array after filtering all invalid', () => {
+        beforeEach(async () => {
+          // After validation layer filters out all invalid agents, empty array remains
+          mockPackmindCliHexa.readFullConfig.mockResolvedValue({
+            packages: { backend: '*' },
+            agents: [], // Result after filtering ['invalid-agent', 'another-invalid']
+          });
+
+          await installPackagesHandler({ packagesSlugs: [] }, deps);
+        });
+
+        it('passes empty agents array to installPackages', () => {
+          expect(mockPackmindCliHexa.installPackages).toHaveBeenCalledWith(
+            expect.objectContaining({
+              agents: [],
+            }),
+          );
+        });
+      });
+    });
+
     describe('config writing with order preservation', () => {
       beforeEach(() => {
         mockPackmindCliHexa.installPackages.mockResolvedValue({
