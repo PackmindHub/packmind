@@ -32,10 +32,22 @@ describe('DefaultSkillsDeployer', () => {
         expect(paths.some((p) => p.includes('packmind-onboard'))).toBe(false);
       });
 
-      it('excludes packmind-create-command (unreleased)', () => {
+      it('includes packmind-create-command', () => {
         expect(paths.some((p) => p.includes('packmind-create-command'))).toBe(
-          false,
+          true,
         );
+      });
+
+      it('includes packmind-create-package', () => {
+        expect(paths.some((p) => p.includes('packmind-create-package'))).toBe(
+          true,
+        );
+      });
+
+      it('includes packmind-cli-list-commands', () => {
+        expect(
+          paths.some((p) => p.includes('packmind-cli-list-commands')),
+        ).toBe(true);
       });
     });
 
@@ -157,10 +169,22 @@ describe('DefaultSkillsDeployer', () => {
           expect(paths.some((p) => p.includes('packmind-onboard'))).toBe(false);
         });
 
-        it('excludes packmind-create-command (unreleased)', () => {
+        it('includes packmind-create-command', () => {
           expect(paths.some((p) => p.includes('packmind-create-command'))).toBe(
-            false,
+            true,
           );
+        });
+
+        it('includes packmind-create-package', () => {
+          expect(paths.some((p) => p.includes('packmind-create-package'))).toBe(
+            true,
+          );
+        });
+
+        it('includes packmind-cli-list-commands', () => {
+          expect(
+            paths.some((p) => p.includes('packmind-cli-list-commands')),
+          ).toBe(true);
         });
       });
     });
