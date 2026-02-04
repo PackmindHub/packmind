@@ -4,6 +4,7 @@ type IntString = `${bigint}`;
 type SemVer = `${IntString}.${IntString}.${IntString}`;
 
 export interface ISkillDeployer {
+  slug: string;
   minimumVersion: SemVer | 'unreleased';
   deploy(agentName: string, skillsFolderPath: string): FileUpdates;
 }
