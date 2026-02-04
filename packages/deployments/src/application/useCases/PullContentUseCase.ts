@@ -573,8 +573,6 @@ export class PullContentUseCase extends AbstractMemberUseCase<
         });
       }
 
-      console.log(command.agents)
-
       // Add packmind.json config file
       const configFile =
         this.packmindConfigService.createConfigFileModification(
@@ -646,7 +644,10 @@ export class PullContentUseCase extends AbstractMemberUseCase<
         totalFolderCount: mergedSkillFolders.length,
       });
 
-      return { fileUpdates: mergedFileUpdates, skillFolders: mergedSkillFolders };
+      return {
+        fileUpdates: mergedFileUpdates,
+        skillFolders: mergedSkillFolders,
+      };
     } catch (error) {
       this.logger.error('Failed to pull content', {
         organizationId: command.organizationId,

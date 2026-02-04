@@ -2454,12 +2454,165 @@ describe('PublishArtifactsUseCase', () => {
       expect(defaultSkillFile).toBeDefined();
     });
 
-    it('calls DeployDefaultSkillsUseCase', async () => {
+    it('calls DeployDefaultSkillsUseCase with org-level agents', async () => {
       await useCase.execute(command);
 
       expect(mockDeployDefaultSkillsUseCase.execute).toHaveBeenCalledWith({
         userId,
         organizationId,
+        agents: activeCodingAgents,
+      });
+    });
+  });
+
+  describe('when deploying to root target with packmind.json agents', () => {
+    let command: PublishArtifactsCommand;
+    let recipeVersion: ReturnType<typeof recipeVersionFactory>;
+    let target: ReturnType<typeof targetFactory>;
+    let gitRepo: GitRepo;
+    const perTargetAgents = [CodingAgents.claude, CodingAgents.cursor];
+
+    beforeEach(() => {
+      recipeVersion = recipeVersionFactory({
+        id: createRecipeVersionId(uuidv4()),
+        name: 'Test Recipe',
+        slug: 'test-recipe',
+        version: 1,
+      });
+
+      gitRepo = {
+        id: createGitRepoId(uuidv4()),
+        owner: 'test-owner',
+        repo: 'test-repo',
+        branch: 'main',
+        providerId: createGitProviderId(uuidv4()),
+      };
+
+      target = targetFactory({
+        id: targetId,
+        gitRepoId: gitRepo.id,
+        name: 'Root Target',
+        path: '/',
+      });
+
+      command = {
+        userId,
+        organizationId,
+        recipeVersionIds: [recipeVersion.id],
+        standardVersionIds: [],
+        targetIds: [targetId],
+        packagesSlugs: [],
+        packageIds: [],
+      };
+
+      mockDeployDefaultSkillsUseCase.execute.mockResolvedValue({
+        fileUpdates: {
+          createOrUpdate: [
+            {
+              path: '.claude/skills/default-skill/SKILL.md',
+              content: 'default skill content',
+            },
+          ],
+          delete: [],
+        },
+      });
+
+      mockRecipesPort.getRecipeVersionById.mockResolvedValue(recipeVersion);
+      mockTargetService.findById.mockResolvedValue(target);
+      mockGitPort.getRepositoryById.mockResolvedValue(gitRepo);
+      mockDistributionRepository.findActiveRecipeVersionsByTarget.mockResolvedValue(
+        [],
+      );
+      mockDistributionRepository.findActiveStandardVersionsByTarget.mockResolvedValue(
+        [],
+      );
+      mockDistributionRepository.findActiveRecipeVersionsByTargetAndPackages.mockResolvedValue(
+        [],
+      );
+      mockDistributionRepository.findActiveStandardVersionsByTargetAndPackages.mockResolvedValue(
+        [],
+      );
+      mockCodingAgentPort.renderArtifacts.mockResolvedValue({
+        createOrUpdate: [
+          {
+            path: '.packmind/recipes/test-recipe.md',
+            content: 'recipe content',
+          },
+        ],
+        delete: [],
+      });
+    });
+
+    describe('when packmind.json has agents configured', () => {
+      beforeEach(() => {
+        mockGitPort.getFileFromRepo.mockResolvedValue({
+          sha: 'packmind.json',
+          content: JSON.stringify({
+            packages: {},
+            agents: ['claude', 'cursor'],
+          }),
+        });
+      });
+
+      it('calls DeployDefaultSkillsUseCase with per-target agents', async () => {
+        await useCase.execute(command);
+
+        expect(mockDeployDefaultSkillsUseCase.execute).toHaveBeenCalledWith({
+          userId,
+          organizationId,
+          agents: perTargetAgents,
+        });
+      });
+
+      it('does not use org-level agents for default skills', async () => {
+        await useCase.execute(command);
+
+        const executeCall =
+          mockDeployDefaultSkillsUseCase.execute.mock.calls[0][0];
+        expect(executeCall.agents).not.toEqual(activeCodingAgents);
+      });
+    });
+
+    describe('when packmind.json has empty agents array', () => {
+      beforeEach(() => {
+        mockGitPort.getFileFromRepo.mockResolvedValue({
+          sha: 'packmind.json',
+          content: JSON.stringify({
+            packages: {},
+            agents: [],
+          }),
+        });
+      });
+
+      it('calls DeployDefaultSkillsUseCase with empty agents array', async () => {
+        await useCase.execute(command);
+
+        expect(mockDeployDefaultSkillsUseCase.execute).toHaveBeenCalledWith({
+          userId,
+          organizationId,
+          agents: [],
+        });
+      });
+    });
+
+    describe('when packmind.json has no agents property', () => {
+      beforeEach(() => {
+        mockGitPort.getFileFromRepo.mockResolvedValue({
+          sha: 'packmind.json',
+          content: JSON.stringify({
+            packages: {},
+          }),
+        });
+      });
+
+      it('calls DeployDefaultSkillsUseCase with org-level agents', async () => {
+        await useCase.execute(command);
+
+        expect(mockDeployDefaultSkillsUseCase.execute).toHaveBeenCalledWith({
+          userId,
+          organizationId,
+          agents: activeCodingAgents,
+        });
       });
     });
   });

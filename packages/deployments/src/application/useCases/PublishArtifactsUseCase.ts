@@ -571,6 +571,7 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
           organizationId,
           baseFileUpdates,
           gitRepo,
+          targetCodingAgents,
         );
       }
 
@@ -1024,10 +1025,12 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
     organizationId: OrganizationId,
     fileUpdates: FileUpdates,
     gitRepo: GitRepo,
+    targetCodingAgents: CodingAgent[],
   ): Promise<string[]> {
     const result = await this.deployDefaultSkillsUseCase.execute({
       userId,
       organizationId,
+      agents: targetCodingAgents,
     });
 
     // Extract skill names from paths and determine which are new
