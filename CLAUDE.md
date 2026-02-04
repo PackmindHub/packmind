@@ -19,16 +19,9 @@ This is an Nx monorepo containing applications and reusable packages.
 
 ## Local Development Environment
 
-Local development uses Docker Compose to run all services (API, frontend, database, Redis, etc.):
-
-```bash
-docker compose up
-```
-
-This starts the entire development environment.
-Docker Compose automatically provisions PostgreSQL and Redis - no manual setup required.
-Don't use `nx serve` commands for local development, let user starts the stack with `docker compose up`
-
+Local development uses Docker Compose to run all services (API, frontend, database, Redis, mcp-Server, Postgresq).
+This starts the entire development environmentDocker Compose automatically provisions PostgreSQL and Redis - no manual setup required.
+Do not use nx serve commands for regular local development. Use docker compose up to start the full development environment. Only use `nx serve <app>` for isolated testing of a single application.
 ## Working with Nx
 
 The following commands apply for both NX apps and packages (use `nx show projects` to list actual apps and packages.)
@@ -40,8 +33,8 @@ The following commands apply for both NX apps and packages (use `nx show project
 
 ## Code Quality
 
-- **Linting**: `nx lint <project-name>` runs ESLint
-- **Formatting**: Prettier is used for code formatting
+- **Linting**: `nx lint <project-name>` runs ESLint, using the config file `eslint.config.mjs`.
+- **Formatting**: Prettier is used for code formatting. You don't have to run it, it's set as a pre-commit hook.
 
 ## Commands
 
@@ -66,9 +59,9 @@ The following commands apply for both NX apps and packages (use `nx show project
 
 Public end-user documentation is maintained in the `apps/doc/` folder (Mintlify-based).
 
-# Task splitting
+## Task splitting
 
 - For any task you perform, you MUST split it into multiple into sub-tasks which have a logical increment (eg: new endpoint, new component, new use case etc). When a task is done, run all the validation steps (lint, test, packmind etc) and ask me for validation of the work you did.
 - Each sub task MUST have its own commit.
-- Use the `lint` and `test` commands on the apps and packages you've edited
+- Use the `nx lint` and `nx test` commands on the apps and packages you've edited
 

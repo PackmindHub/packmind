@@ -1,13 +1,13 @@
 ---
 name: Port-Adapter Cross-Domain Integration
-globs: ['**/*Hexa.ts', '**/*Adapter.ts']
+globs: ['**/*Adapter.ts', '**/*Hexa.ts']
 alwaysApply: false
-description: Define port-adapter cross-domain integration for domain packages in a TypeScript/Node.js DDD monorepo by declaring port interfaces in @packmind/types with Command/Response contracts under packages/types/src/<domain>/contracts/, exposing adapters only via Hexa public getter methods and retrieving provider adapters through the registry while typing stored references as port interfaces, implementing async initialize() on HexaFactory with registry isRegistered()/get() checks for deferred dependencies to enable synchronous and asynchronous operations with graceful degradation and prevent circular dependencies and tight coupling, and enforce these patterns across tooling and workflows (ESLint/Prettier, Webpack/Vite), testing (Jest/Vitest), ORMs/libs (TypeORM/Prisma), and infrastructure pipelines (Docker, Kubernetes, AWS) to ensure maintainability, testability, and safe cross-domain integration when composing domains.
+description: Define port interfaces and cross-domain contracts in @packmind/types and packages/types/src/<domain>/contracts/, expose adapters via Hexa getters, and use async HexaFactory.initialize() with registry isRegistered()/get() checks to prevent circular dependencies, maintain loose coupling, and support resilient synchronous and asynchronous cross-domain operations.
 ---
 
 ## Standard: Port-Adapter Cross-Domain Integration
 
-Define port-adapter cross-domain integration for domain packages in a TypeScript/Node.js DDD monorepo by declaring port interfaces in @packmind/types with Command/Response contracts under packages/types/src/<domain>/contracts/, exposing adapters only via Hexa public getter methods and retrieving provider adapters through the registry while typing stored references as port interfaces, implementing async initialize() on HexaFactory with registry isRegistered()/get() checks for deferred dependencies to enable synchronous and asynchronous operations with graceful degradation and prevent circular dependencies and tight coupling, and enforce these patterns across tooling and workflows (ESLint/Prettier, Webpack/Vite), testing (Jest/Vitest), ORMs/libs (TypeORM/Prisma), and infrastructure pipelines (Docker, Kubernetes, AWS) to ensure maintainability, testability, and safe cross-domain integration when composing domains. :
+Define port interfaces and cross-domain contracts in @packmind/types and packages/types/src/<domain>/contracts/, expose adapters via Hexa getters, and use async HexaFactory.initialize() with registry isRegistered()/get() checks to prevent circular dependencies, maintain loose coupling, and support resilient synchronous and asynchronous cross-domain operations. :
 
 - Declare all Command and Response types that define contracts between domains in packages/types/src/<domain>/contracts/ to ensure a single source of truth and prevent import cycles between domain packages.
 - Define port interfaces in @packmind/types with domain-specific contracts that expose only the operations needed by consumers, where each method accepts a Command type and returns a Response type or domain entity.
