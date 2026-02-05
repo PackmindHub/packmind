@@ -4,24 +4,29 @@ import { ISkillDeployer } from './IDefaultSkillDeployer';
 function getOnboardSkillMd(): string {
   return `---
 name: "packmind-onboard"
-description: "Read-only source scan to find non-linter codebase conventions and generate a human-readable findings report + draft Packmind Standards/Commands."
+description: "Complete automated onboarding: analyzes codebase, creates package, and generates standards & commands via CLI. Automatic package creation when none exist, user selection when packages are available."
 license: "Complete terms in LICENSE.txt"
 ---
 
 # packmind-onboard
 
-Action skill. Scans a repository (source-code read-only) to find **non-linter** patterns (architecture, boundaries, workflows) and generates:
-1) a **human-readable findings report** saved to the repo, and
-2) draft **Standards** and **Commands** derived strictly from those findings.
+Action skill. Provides **complete automated onboarding** for Packmind:
+1. Creates or selects a package
+2. Analyzes codebase for patterns
+3. Generates draft Standards and Commands
+4. Creates items via CLI
+
+Automatic package creation when none exist, user selection when packages are available.
 
 ## Guarantees
 
-- **Source-code read-only.** No source files are modified.
-- **Findings report is written automatically.** A single markdown report is saved for reading/sharing.
-- **Publish only on Apply.** No Packmind artifacts are created unless the user chooses **Apply**.
-- **Never overwrite.** If a target slug/path exists, append \`-2\`, \`-3\`, etc.
-- **Evidence required.** Every finding includes file-path evidence (include line ranges unless impossible).
-- **Actionable output cap.** Max **5 Standards** and **5 Commands** per run.
+- **Read-only analysis.** Analysis phase does not modify any project files.
+- **Drafts before creation.** All items are written as drafts first, allowing review before creation.
+- **Preserve existing.** Never overwrite existing artifacts. If a slug already exists, create \`-2\`, \`-3\`, etc.
+- **Evidence required.** Every reported insight must include file-path evidence (and line ranges when feasible).
+- **Focused output.** Max **5 Standards** and **5 Commands** generated per run.
+- **Graceful failure.** Partial failures don't lose successful work; failed drafts are preserved.
+- **User control.** When packages exist, users confirm package selection before creation.
 
 ## Definitions
 
@@ -30,7 +35,19 @@ Action skill. Scans a repository (source-code read-only) to find **non-linter** 
 
 ---
 
-## Step 1 — Mode Selection
+## Step 1 — Get Repository Name
+
+Get the repository name for package naming:
+
+\`\`\`bash
+basename "$(git rev-parse --show-toplevel)"
+\`\`\`
+
+Remember this as the repository name for package creation in Step 3.
+
+---
+
+## Step 2 — Analysis Depth Selection
 
 Present two modes using AskUserQuestion:
 
@@ -41,17 +58,66 @@ Wait for user selection before proceeding.
 
 ---
 
-## Step 2 — Announce
+## Step 3 — Package Handling
+
+Handle package creation or selection.
+
+### Check existing packages
+
+List available packages:
+
+\`\`\`bash
+packmind-cli install --list
+\`\`\`
+
+Parse the output to get package names.
+
+### No packages exist
+
+Auto-create package using repository name:
+
+\`\`\`bash
+packmind-cli packages create "\${REPO_NAME}-standards"
+\`\`\`
+
+Print:
+\`\`\`
+Created package: \${REPO_NAME}-standards
+\`\`\`
+
+### One package exists
+
+Ask via AskUserQuestion:
+- "Add to \`{package-name}\`?"
+- "Create new package instead"
+
+### Multiple packages exist
+
+Ask via AskUserQuestion:
+- List each existing package as an option
+- Include "Create new package" option
+
+### If "Create new package" is selected
+
+- Ask for package name (suggest \`\${REPO_NAME}-standards\` as default)
+- Run: \`packmind-cli packages create <name>\`
+
+Remember the selected/created package name for later reference.
+
+---
+
+## Step 4 — Announce
 
 Print exactly:
 
 \`\`\`
-packmind-onboard: read-only scan started — MODE=[QUICK|OPTIMAL] (you'll get insights + draft Standards/Commands)
+packmind-onboard: analyzing codebase (read-only) — [QUICK|OPTIMAL] mode
+Target package: [package-name]
 \`\`\`
 
 ---
 
-## Step 3 — Detect Existing Packmind and Agent Configuration
+## Step 5 — Detect Existing Packmind and Agent Configuration
 
 Before analyzing, detect and preserve any existing Packmind/agent configuration.
 
@@ -85,7 +151,7 @@ No overwrites. New files (if you Export) will be added next to the existing ones
 
 ---
 
-## Step 4 — Detect Project Stack (Minimal, Evidence-Based)
+## Step 6 — Detect Project Stack (Minimal, Evidence-Based)
 
 ### Language markers (check presence)
 - JS/TS: \`package.json\`, \`pnpm-lock.yaml\`, \`yarn.lock\`, \`tsconfig.json\`
@@ -116,7 +182,7 @@ Stack detected (heuristic):
 
 ---
 
-## Step 5 — Run Analyses
+## Step 7 — Run Analyses
 
 Select and run analyses based on chosen mode. Read each reference file for detailed search patterns, thresholds, and insight templates.
 
@@ -167,25 +233,142 @@ where_it_doesnt_apply:
 
 ---
 
-## Step 6 — Generate All Draft Playbooks
+## Step 8 — Generate All Drafts
 
-Generate all draft playbook files in one batch, using the formats defined in \`packmind-create-standard\` and \`packmind-create-command\` skills.
+Generate all draft files in one batch, using the formats defined above.
 
-### Standard Playbook Format
+### Standard Draft Format
 
-For each Standard insight, create a JSON file at \`.packmind/standards/_drafts/<slug>.playbook.json\`:
+For each Standard insight, create a Markdown file at \`.packmind/standards/_drafts/<slug>.draft.md\`:
+
+\`\`\`markdown
+# Standard Name
+
+What the standard covers and why.
+
+## Scope
+
+Where this standard applies (e.g., 'TypeScript files', 'React components').
+
+## Rules
+
+### Rule starting with action verb
+
+Another rule can follow...
+
+## Examples
+
+### Good
+
+\`\`\`typescript
+// Valid code example
+\`\`\`
+
+### Bad
+
+\`\`\`typescript
+// Invalid code example
+\`\`\`
+\`\`\`
+
+### Command Draft Format
+
+For each Command insight, create a Markdown file at \`.packmind/commands/_drafts/<slug>.draft.md\`:
+
+\`\`\`markdown
+# Command Name
+
+What the command does, why it's useful, and when it's relevant.
+
+## When to Use
+
+- Scenario when this command applies
+- Another scenario...
+
+## Checkpoints
+
+- Question to validate before proceeding?
+
+## Steps
+
+### 1. Step Name
+
+What this step does and how to implement it.
+
+\`\`\`typescript
+// Optional code example
+\`\`\`
+
+### 2. Another Step
+
+Description of next step...
+\`\`\`
+
+### Generation Rules
+
+- Generate drafts **only from discovered insights** (no invention)
+- Use evidence from analysis to populate rules/steps
+- Cap output: max **5 Standards** + **5 Commands**
+- Never overwrite existing files; append \`-2\`, \`-3\`, etc. if slug exists
+
+---
+
+## Step 9 — Present Summary & Confirm
+
+Present the generated draft files and ask for confirmation:
+
+\`\`\`
+============================================================
+  PACKMIND ONBOARDING — [QUICK|OPTIMAL] MODE
+============================================================
+
+Target package: [package-name]
+Stack detected: [languages], [monorepo?], [architecture markers]
+Analyses run: [N] checks
+
+DRAFTS CREATED:
+
+Standards ([N]):
+  1. [Name] → .packmind/standards/_drafts/[slug].draft.md
+  2. ...
+
+Commands ([M]):
+  1. [Name] → .packmind/commands/_drafts/[slug].draft.md
+  2. ...
+
+Drafts are in .packmind/*/_drafts/ if you want to edit them first.
+============================================================
+\`\`\`
+
+Then ask via AskUserQuestion with three options:
+
+- **Create all now** — Proceed with creating all standards and commands
+- **Let me review drafts first** — Pause to allow editing, re-run skill when ready
+- **Cancel** — Exit without creating anything
+
+---
+
+## Step 10 — Create Items
+
+### If user selected "Create all now"
+
+**IMPORTANT:** The CLI only accepts JSON playbook files, not markdown. Before calling the CLI, convert each \`.draft.md\` file to a \`.json\` file.
+
+#### Standard JSON Schema
+
+Convert the markdown draft to this JSON format:
 
 \`\`\`json
 {
-  "name": "Standard Name",
-  "description": "What the standard covers and why",
-  "scope": "Where this standard applies (e.g., 'TypeScript files', 'React components')",
+  "name": "Standard name (from # heading)",
+  "description": "What the standard covers (from intro paragraph)",
+  "scope": "Where it applies (from ## Scope section)",
   "rules": [
     {
-      "content": "Rule starting with action verb",
+      "content": "Rule starting with action verb (from ### Rule headings under ## Rules)",
       "examples": {
-        "positive": "Valid code example",
-        "negative": "Invalid code example",
+        "positive": "Valid code example (from ### Good section)",
+        "negative": "Invalid code example (from ### Bad section)",
         "language": "TYPESCRIPT"
       }
     }
@@ -193,93 +376,200 @@ For each Standard insight, create a JSON file at \`.packmind/standards/_drafts/<
 }
 \`\`\`
 
-### Command Playbook Format
+#### Command JSON Schema
 
-For each Command insight, create a JSON file at \`.packmind/commands/_drafts/<slug>.playbook.json\`:
+Convert the markdown draft to this JSON format:
 
 \`\`\`json
 {
-  "name": "Command Name",
-  "summary": "What the command does, why it's useful, and when it's relevant",
-  "whenToUse": ["Scenario when this command applies"],
-  "contextValidationCheckpoints": ["Question to validate before proceeding?"],
+  "name": "Command name (from # heading)",
+  "summary": "What it does and when (from intro paragraph)",
+  "whenToUse": ["Scenario 1", "Scenario 2 (from ## When to Use bullets)"],
+  "contextValidationCheckpoints": ["Question 1? (from ## Checkpoints bullets)"],
   "steps": [
     {
-      "name": "Step Name",
-      "description": "What this step does and how to implement it",
-      "codeSnippet": "// Optional code example"
+      "name": "Step name (from ### N. Step Name)",
+      "description": "Step description (from step content)",
+      "codeSnippet": "Optional code fence content"
     }
   ]
 }
 \`\`\`
 
-### Generation Rules
+#### Conversion and Creation Process
 
-- Generate playbooks **only from discovered insights** (no invention)
-- Use evidence from analysis to populate rules/steps
-- Cap output: max **5 Standards** + **5 Commands**
-- Never overwrite existing files; append \`-2\`, \`-3\`, etc. if slug exists
+**For each standard draft:**
 
----
-
-## Step 7 — Present Drafts for Single Approval
-
-Present the generated draft files and ask for **one single approval**:
-
-\`\`\`
-============================================================
-  PACKMIND ONBOARDING — [QUICK|OPTIMAL] MODE
-============================================================
-
-Stack detected: [languages], [monorepo?], [architecture markers]
-Analyses run: [N] checks
-
-DRAFT PLAYBOOKS CREATED:
-
-Standards ([N]):
-  1. [Name] → .packmind/standards/_drafts/[slug].playbook.json
-  2. ...
-
-Commands ([M]):
-  1. [Name] → .packmind/commands/_drafts/[slug].playbook.json
-  2. ...
-
-============================================================
-
-Please review the draft files above. When ready, confirm to publish
-them to Packmind via CLI.
-\`\`\`
-
-Then ask:
-
-\`\`\`
-Ready to publish these Standards and Commands to Packmind?
-
-[Y] Yes, publish all
-[N] No, I need to edit them first
-\`\`\`
-
----
-
-## Step 8 — Apply or Wait
-
-**If user approves (Y):**
-
-### 8.1 Publish to Packmind
-
-Publish all drafts to Packmind using CLI:
-
+1. Read the \`.draft.md\` file
+2. Convert to JSON matching the schema above
+3. Write the JSON to \`.packmind/standards/_drafts/<slug>.json\`
+4. Run CLI command:
 \`\`\`bash
-packmind-cli standards create .packmind/standards/_drafts/<slug>.playbook.json
-packmind-cli commands create .packmind/commands/_drafts/<slug>.playbook.json
+packmind-cli standards create .packmind/standards/_drafts/<slug>.json
+\`\`\`
+5. Track result (success/failure)
+
+**For each command draft:**
+
+1. Read the \`.draft.md\` file
+2. Convert to JSON matching the schema above
+3. Write the JSON to \`.packmind/commands/_drafts/<slug>.json\`
+4. Run CLI command:
+\`\`\`bash
+packmind-cli commands create .packmind/commands/_drafts/<slug>.json
+\`\`\`
+5. Track result (success/failure)
+
+**Show progress:**
+\`\`\`
+Creating standards and commands...
+✓ error-handling-pattern
+✓ naming-conventions
+✗ test-factory-patterns (error: duplicate name exists)
+✓ run-full-test-suite
+
+Done: 3 created, 1 failed
 \`\`\`
 
-### 8.2 Deploy Locally
+### If user selected "Let me review drafts first"
+
+Print:
+\`\`\`
+Draft files ready for review at:
+  - .packmind/standards/_drafts/
+  - .packmind/commands/_drafts/
+
+Edit them as needed, then re-run this skill to continue.
+\`\`\`
+
+Exit the skill.
+
+### If user selected "Cancel"
+
+Print:
+\`\`\`
+Onboarding cancelled.
+Draft files remain at .packmind/*/_drafts/ if you want to review them later.
+\`\`\`
+
+Exit the skill.
+
+---
+
+## Step 11 — Completion Summary
+
+### All items created successfully
+
+\`\`\`
+============================================================
+  ✅ ONBOARDING COMPLETE
+============================================================
+
+Package: [package-name]
+Created: [N] standards, [M] commands
+
+Your package is ready. Standards will be distributed to AI tools
+when you run \`packmind-cli install [package-slug]\` in your repos.
+
+Next steps:
+  - Visit the webapp to add standards/commands to your package
+  - Run \`packmind-cli deploy\` to distribute to AI tools
+============================================================
+\`\`\`
+
+Clean up successful draft files after creation.
+
+### Partial success (some items failed)
+
+\`\`\`
+============================================================
+  ⚠️ ONBOARDING COMPLETED WITH ERRORS
+============================================================
+
+Package: [package-name]
+Created: [N] standards, [M] commands
+Failed: [X] items
+
+Failed items:
+  • [item-name]: [error message]
+
+Failed drafts remain in .packmind/*/_drafts/ for review.
+You can fix and re-run, or create manually with:
+  packmind-cli standards create <file>
+  packmind-cli commands create <file>
+============================================================
+\`\`\`
+
+Keep failed draft files for user to fix and retry.
+
+### No patterns discovered
+
+If analysis found no patterns:
+
+\`\`\`
+============================================================
+  ℹ️ NO PATTERNS DISCOVERED
+============================================================
+
+The analysis did not find any non-obvious patterns to capture.
+
+Consider running again with Optimal mode for deeper analysis.
+
+Suggestions:
+  - Ensure your codebase has consistent patterns
+  - Check that files are not ignored by .gitignore
+  - Try running on a more mature codebase section
+============================================================
+\`\`\`
+
+---
+
+## Edge Cases
+
+### Package creation fails
+
+If \`packmind-cli packages create\` fails:
+
+\`\`\`
+❌ Failed to create package: [error message]
+
+Please check:
+  - You are logged in: \`packmind-cli login\`
+  - Your network connection is working
+  - The package name is valid
+
+Cannot proceed with onboarding until package is created.
+\`\`\`
+
+Exit the skill. Do not proceed to analysis.
+
+### Not logged in
+
+If CLI commands fail with authentication errors:
+
+\`\`\`
+❌ Not logged in to Packmind
+
+Please run:
+  packmind-cli login
+
+Then re-run this skill.
+\`\`\`
+
+### No packages available
+
+If \`packmind-cli install --list\` returns no packages:
+
+Auto-create a package using the repository name.
+
+---
+
+### 10.1 Deploy Locally (after successful creation)
 
 Since the onboard skill is present, the user has configured an AI agent. Deploy the created artifacts locally:
 
 \`\`\`bash
-packmind-cli pull
+packmind-cli install
 \`\`\`
 
 This deploys to agent-specific folders:
@@ -292,7 +582,7 @@ This deploys to agent-specific folders:
 
 ### 8.3 Cleanup and Summary
 
-Delete the draft playbook files, then print final summary:
+Delete the draft files, then print final summary:
 
 \`\`\`
 ============================================================
@@ -322,10 +612,13 @@ Draft files ready for review at:
   - .packmind/standards/_drafts/
   - .packmind/commands/_drafts/
 
-Edit them as needed, then run:
-  packmind-cli standards create <path>
-  packmind-cli commands create <path>
-  packmind-cli pull
+Edit them as needed, then convert to JSON and run:
+  packmind-cli standards create <path-to-json>
+  packmind-cli commands create <path-to-json>
+  packmind-cli install
+
+Note: The CLI requires JSON playbook files, not markdown.
+See Step 10 for the JSON schema format.
 
 Or re-run this skill when ready.
 \`\`\`
