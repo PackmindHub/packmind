@@ -16,6 +16,7 @@ import { standardsCommand } from './infra/commands/StandardsCommand';
 import { commandsCommand } from './infra/commands/CommandsCommand';
 import { packagesCommand } from './infra/commands/PackagesCommand';
 import { configCommand } from './infra/commands/config/ConfigCommand';
+import { initCommand } from './infra/commands/InitCommand';
 import { GitService } from './application/services/GitService';
 import { logConsole, logErrorConsole } from './infra/utils/consoleLogger';
 
@@ -90,19 +91,20 @@ const app = subcommands({
   name: 'packmind-cli',
   description: 'Packmind CLI tool',
   cmds: {
-    lint: lintCommand,
+    commands: commandsCommand,
+    config: configCommand,
+    init: initCommand,
     install: installCommand,
-    uninstall: uninstallCommand,
-    remove: uninstallCommand, // Alias for uninstall
+    lint: lintCommand,
     login: loginCommand,
     logout: logoutCommand,
-    whoami: whoamiCommand,
+    packages: packagesCommand,
+    remove: uninstallCommand, // Alias for uninstall
     'setup-mcp': setupMcpCommand,
     skills: skillsCommand,
     standards: standardsCommand,
-    commands: commandsCommand,
-    packages: packagesCommand,
-    config: configCommand,
+    uninstall: uninstallCommand,
+    whoami: whoamiCommand,
   },
 });
 
