@@ -6,7 +6,9 @@ import {
   logWarningConsole,
   logErrorConsole,
   logSuccessConsole,
+  logInfoConsole,
 } from '../utils/consoleLogger';
+import { ItemNotFoundError } from '../../domain/errors/ItemNotFoundError';
 
 function pluralize(singular: string, count: number) {
   return count === 1 ? singular : `${singular}s`;
@@ -59,6 +61,11 @@ export async function addToPackageHandler(
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     logErrorConsole(message);
+    if (error instanceof ItemNotFoundError) {
+      logInfoConsole(
+        `Run \`packmind-cli ${error.itemType}s list\` to display available ${error.itemType}s`,
+      );
+    }
     return { success: false, error: message };
   }
 }
