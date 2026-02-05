@@ -34,7 +34,7 @@ export class PackmindGateway implements IPackmindGateway {
     this.linter = new LinterGateway(this.httpClient);
     this.mcp = new McpGateway(this.httpClient);
     this.spaces = new SpacesGateway(this.httpClient);
-    this.skills = new SkillsGateway(this.httpClient, this.spaces);
+    this.skills = new SkillsGateway(this.httpClient);
     this.commands = new CommandsGateway(this.httpClient);
     this.standards = new StandardsGateway(this.httpClient, this.spaces);
     this.packages = new PackagesGateway(apiKey, this.httpClient);
