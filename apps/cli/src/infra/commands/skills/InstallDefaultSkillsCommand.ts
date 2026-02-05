@@ -27,9 +27,14 @@ export const installDefaultSkillsCommand = command({
     try {
       logInfoConsole('Installing default skills...');
 
+      // Read agents configuration from packmind.json
+      const config = await packmindCliHexa.readFullConfig(process.cwd());
+      const agents = config?.agents;
+
       const result = await packmindCliHexa.installDefaultSkills({
         includeBeta,
         cliVersion: includeBeta ? undefined : CLI_VERSION,
+        agents,
       });
 
       if (result.errors.length > 0) {
