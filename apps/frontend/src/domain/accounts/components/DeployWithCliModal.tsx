@@ -1,17 +1,10 @@
 import React, { useMemo } from 'react';
-import {
-  PMDialog,
-  PMTabs,
-  PMVStack,
-  PMText,
-  PMBox,
-  PMHeading,
-  PMInput,
-} from '@packmind/ui';
+import { PMDialog, PMTabs, PMVStack } from '@packmind/ui';
 import { useCliLoginCode } from './LocalEnvironmentSetup/hooks';
 import {
   InstallCliStep,
   AuthenticateStep,
+  DistributeStep,
 } from './LocalEnvironmentSetup/steps';
 import { useAuthContext } from '../hooks/useAuthContext';
 import { useGetSpacesQuery } from '../../spaces/api/queries/SpacesQueries';
@@ -74,52 +67,10 @@ export const DeployWithCliModal: React.FC<DeployWithCliModalProps> = ({
         triggerLabel: '3. Distribute',
         content: (
           <TabContent>
-            <PMVStack align="flex-start" gap={4}>
-              <PMText as="p">
-                Install packages in your repository using the CLI:
-              </PMText>
-
-              {(() => {
-                if (isLoadingSpaces || isLoadingPackages) {
-                  return <PMText color="secondary">Loading packages...</PMText>;
-                }
-                if (
-                  packagesResponse?.packages &&
-                  packagesResponse.packages.length > 0
-                ) {
-                  return (
-                    <PMVStack align="flex-start" gap={2} width="full">
-                      <PMHeading level="h6">Available packages:</PMHeading>
-                      {packagesResponse.packages.map((pkg) => (
-                        <PMBox
-                          key={pkg.id}
-                          p={3}
-                          borderRadius="md"
-                          backgroundColor="background.secondary"
-                          width="full"
-                        >
-                          <PMVStack align="flex-start" gap={1}>
-                            <PMText fontWeight="bold">{pkg.name}</PMText>
-                            <PMText fontSize="sm" color="secondary">
-                              Slug: {pkg.slug}
-                            </PMText>
-                            <PMInput
-                              value={`packmind-cli install ${pkg.slug}`}
-                              readOnly
-                            />
-                          </PMVStack>
-                        </PMBox>
-                      ))}
-                    </PMVStack>
-                  );
-                }
-                return (
-                  <PMText color="secondary">
-                    No packages available. Create a package first to deploy it.
-                  </PMText>
-                );
-              })()}
-            </PMVStack>
+            <DistributeStep
+              packages={packagesResponse?.packages}
+              isLoading={isLoadingSpaces || isLoadingPackages}
+            />
           </TabContent>
         ),
       },

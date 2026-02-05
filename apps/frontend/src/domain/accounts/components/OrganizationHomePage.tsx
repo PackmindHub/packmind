@@ -20,14 +20,9 @@ export const OrganizationHomePage: React.FC = () => {
       <PMBox width="full">
         <PMVStack gap={8} align="stretch">
           <GetStartedWithPackmindWidget />
-          {!isOnboardingComplete ? (
-            <OnboardingSteps />
-          ) : (
-            <>
-              <DashboardKPI />
-              <OutdatedTargetsSection />
-            </>
-          )}
+
+          <DashboardKPI />
+          <OutdatedTargetsSection />
         </PMVStack>
       </PMBox>
     </PMPage>

@@ -10,7 +10,7 @@ import {
   PMVStack,
   PMIcon,
 } from '@packmind/ui';
-import { LuCheck } from 'react-icons/lu';
+import { LuCheck, LuCircleCheck, LuRocket } from 'react-icons/lu';
 import { routes } from '../../../shared/utils/routes';
 import { useAuthContext } from '../hooks/useAuthContext';
 import { useGetSpacesQuery } from '../../spaces/api/queries/SpacesQueries';
@@ -27,11 +27,16 @@ const StepLabel: React.FC<{ text: string; isCompleted: boolean }> = ({
 }) => (
   <PMHStack gap={2} align="center">
     {isCompleted && (
-      <PMIcon color="green.500" fontSize="lg" aria-label="completed">
-        <LuCheck />
+      <PMIcon color="green.300" fontSize="lg" aria-label="completed">
+        <LuCircleCheck />
       </PMIcon>
     )}
-    <PMText as="span">{text}</PMText>
+    <PMText
+      as="span"
+      textDecorationLine={isCompleted ? 'line-through' : 'none'}
+    >
+      {text}
+    </PMText>
   </PMHStack>
 );
 
@@ -118,18 +123,24 @@ export const GetStartedWithPackmindWidget: React.FC<
       navigate(routes.org.toSettingsUsers(organization.slug));
     }
   };
+
+  // Hide widget when onboarding is complete (hasDeployed is true)
+  if (onboardingStatus?.hasDeployed) {
+    return null;
+  }
+
   return (
     <PMBox backgroundColor="background.primary" p={6} borderRadius="md">
       <PMVStack gap={6} align="stretch">
         <PMVStack gap={2} align="flex-start">
-          <PMHeading level="h3">
-            <span role="img" aria-label="rocket">
-              🚀
-            </span>{' '}
+          <PMHeading level="h3" fontWeight={'bold'}>
+            <PMIcon mr={2} color={'branding.primary'}>
+              <LuRocket />
+            </PMIcon>
             Get started with Packmind
           </PMHeading>
           <PMText as="p" color="secondary">
-            Build and deploy your first practices across your organization.
+            Build and distribute your first playbook across your organization.
           </PMText>
         </PMVStack>
 
@@ -139,7 +150,7 @@ export const GetStartedWithPackmindWidget: React.FC<
               text="1. Create your first artifacts"
               isCompleted={!!stepCompletionStatus.step1}
             />
-            <PMButton variant="primary" onClick={handleCreateArtifact}>
+            <PMButton variant="secondary" onClick={handleCreateArtifact}>
               Create a standard
             </PMButton>
           </PMHStack>

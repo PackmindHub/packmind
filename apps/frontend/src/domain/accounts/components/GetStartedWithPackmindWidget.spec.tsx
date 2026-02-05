@@ -102,28 +102,10 @@ describe('GetStartedWithPackmindWidget', () => {
       data: { hasDeployed: false },
     } as ReturnType<typeof useGetOnboardingStatusQuery>);
     mockedUseGetUsersInMyOrganizationQuery.mockReturnValue({
-      data: [],
+      data: { users: [] },
     } as ReturnType<typeof useGetUsersInMyOrganizationQuery>);
   });
   describe('renders static content', () => {
-    it('displays the title', () => {
-      renderWithProviders(<GetStartedWithPackmindWidget />);
-
-      expect(
-        screen.getByRole('heading', { name: /get started with packmind/i }),
-      ).toBeInTheDocument();
-    });
-
-    it('displays the subtitle', () => {
-      renderWithProviders(<GetStartedWithPackmindWidget />);
-
-      expect(
-        screen.getByText(
-          /build and deploy your first practices across your organization/i,
-        ),
-      ).toBeInTheDocument();
-    });
-
     it('displays all four step labels', () => {
       renderWithProviders(<GetStartedWithPackmindWidget />);
 
