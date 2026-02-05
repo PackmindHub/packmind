@@ -24,6 +24,7 @@ import {
   SkillId,
   SpaceId,
   StandardId,
+  AddArtefactsToPackageCommand,
 } from '@packmind/types';
 import { DeploymentsService } from '../../deployments/deployments.service';
 import { OrganizationAccessGuard } from '../../guards/organization-access.guard';
@@ -269,11 +270,7 @@ export class OrganizationsSpacesPackagesController {
     @Param('packageId') packageId: PackageId,
     @Req() request: AuthenticatedRequest,
     @Body()
-    body: {
-      standardIds?: StandardId[];
-      commandIds?: RecipeId[];
-      skillIds?: SkillId[];
-    },
+    body: AddArtefactsToPackageCommand,
   ): Promise<AddArtefactsToPackageResponse> {
     const userId = request.user.userId;
 
@@ -288,7 +285,7 @@ export class OrganizationsSpacesPackagesController {
       organizationId,
       packageId: packageId,
       standardIds: body.standardIds,
-      recipeIds: body.commandIds,
+      recipeIds: body.recipeIds,
       skillIds: body.skillIds,
     });
   }
