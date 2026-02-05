@@ -274,21 +274,24 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
         );
 
         // Prepare unified deployment using renderArtifacts for ALL targets
-        const { fileUpdatesPerTarget, addedPackmindSkills } =
-          await this.prepareUnifiedDeployment(
-            command.userId as UserId,
-            command.organizationId as OrganizationId,
-            filteredRecipeVersions,
-            standardVersionsWithRules,
-            filteredSkillVersions,
-            removedRecipeVersions,
-            removedStandardVersions,
-            skillVersionsToRemove,
-            gitRepo,
-            targets,
-            codingAgents,
-            command.packagesSlugs,
-          );
+        const {
+          fileUpdatesPerTarget,
+          renderModesPerTarget,
+          addedPackmindSkills,
+        } = await this.prepareUnifiedDeployment(
+          command.userId as UserId,
+          command.organizationId as OrganizationId,
+          filteredRecipeVersions,
+          standardVersionsWithRules,
+          filteredSkillVersions,
+          removedRecipeVersions,
+          removedStandardVersions,
+          skillVersionsToRemove,
+          gitRepo,
+          targets,
+          codingAgents,
+          command.packagesSlugs,
+        );
 
         // Build commit message for the job
         const commitMessage = this.buildCommitMessage(
@@ -311,10 +314,13 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
         // Create distribution records for each target with in_progress status
         const targetDistributions: Distribution[] = [];
         for (const target of targets) {
+          // Use per-target render modes from packmind.json, fallback to org-level
+          const targetRenderModes =
+            renderModesPerTarget.get(target.id) ?? activeRenderModes;
           const distribution = await this.createDistribution(
             command,
             target,
-            activeRenderModes,
+            targetRenderModes,
             DistributionStatus.in_progress,
             undefined,
           );
@@ -444,9 +450,11 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
     packagesSlugs: string[],
   ): Promise<{
     fileUpdatesPerTarget: Map<string, FileUpdates>;
+    renderModesPerTarget: Map<string, RenderMode[]>;
     addedPackmindSkills: string[];
   }> {
     const fileUpdatesPerTarget = new Map<string, FileUpdates>();
+    const renderModesPerTarget = new Map<string, RenderMode[]>();
     let addedPackmindSkills: string[] = [];
 
     for (const target of targets) {
@@ -471,6 +479,13 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
           agents: targetCodingAgents,
         });
       }
+
+      // Convert target coding agents to render modes for distribution storage
+      const targetRenderModes =
+        this.renderModeConfigurationService.mapCodingAgentsToRenderModes(
+          targetCodingAgents,
+        );
+      renderModesPerTarget.set(target.id, targetRenderModes);
 
       const previousRenderModes =
         await this.distributionRepository.findActiveRenderModesByTarget(
@@ -590,7 +605,7 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
       });
     }
 
-    return { fileUpdatesPerTarget, addedPackmindSkills };
+    return { fileUpdatesPerTarget, renderModesPerTarget, addedPackmindSkills };
   }
 
   /**

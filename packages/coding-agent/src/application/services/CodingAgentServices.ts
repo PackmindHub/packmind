@@ -249,8 +249,7 @@ export class CodingAgentServices {
 
     for (const agent of codingAgents) {
       const deployer = this.deployerService.getDeployerForAgent(agent);
-      const updates =
-        await deployer.generateAgentCleanupFileUpdates(artifacts);
+      const updates = await deployer.generateAgentCleanupFileUpdates(artifacts);
       allUpdates.push(updates);
     }
 

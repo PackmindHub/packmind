@@ -136,6 +136,7 @@ describe('PublishArtifactsUseCase', () => {
     mockRenderModeConfigurationService = {
       getActiveRenderModes: jest.fn(),
       mapRenderModesToCodingAgents: jest.fn(),
+      mapCodingAgentsToRenderModes: jest.fn(),
     } as unknown as jest.Mocked<RenderModeConfigurationService>;
 
     mockRenderModeConfigurationService.getActiveRenderModes.mockResolvedValue(
@@ -143,6 +144,9 @@ describe('PublishArtifactsUseCase', () => {
     );
     mockRenderModeConfigurationService.mapRenderModesToCodingAgents.mockReturnValue(
       activeCodingAgents,
+    );
+    mockRenderModeConfigurationService.mapCodingAgentsToRenderModes.mockReturnValue(
+      activeRenderModes,
     );
 
     mockEventEmitterService = {
@@ -1172,6 +1176,9 @@ describe('PublishArtifactsUseCase', () => {
       };
 
       mockRenderModeConfigurationService.getActiveRenderModes.mockResolvedValueOnce(
+        DEFAULT_ACTIVE_RENDER_MODES,
+      );
+      mockRenderModeConfigurationService.mapCodingAgentsToRenderModes.mockReturnValueOnce(
         DEFAULT_ACTIVE_RENDER_MODES,
       );
       mockRecipesPort.getRecipeVersionById.mockResolvedValue(recipeVersion);
@@ -3283,6 +3290,160 @@ describe('PublishArtifactsUseCase', () => {
           path: 'docs/.cursor/rules/packmind/recipes-index.mdc',
           type: 'file',
         });
+      });
+    });
+  });
+
+  describe('when distribution render modes match packmind.json agents', () => {
+    let command: PublishArtifactsCommand;
+    let recipeVersion: ReturnType<typeof recipeVersionFactory>;
+    let target: ReturnType<typeof targetFactory>;
+    let gitRepo: GitRepo;
+
+    beforeEach(() => {
+      recipeVersion = recipeVersionFactory({
+        id: createRecipeVersionId(uuidv4()),
+        name: 'Test Recipe',
+        slug: 'test-recipe',
+        version: 1,
+      });
+
+      gitRepo = {
+        id: createGitRepoId(uuidv4()),
+        owner: 'test-owner',
+        repo: 'test-repo',
+        branch: 'main',
+        providerId: createGitProviderId(uuidv4()),
+      };
+
+      target = targetFactory({
+        id: targetId,
+        gitRepoId: gitRepo.id,
+        name: 'Production',
+        path: 'docs',
+      });
+
+      command = {
+        userId,
+        organizationId,
+        recipeVersionIds: [recipeVersion.id],
+        standardVersionIds: [],
+        targetIds: [targetId],
+        packagesSlugs: ['my-package'],
+        packageIds: [],
+      };
+
+      mockRecipesPort.getRecipeVersionById.mockResolvedValue(recipeVersion);
+      mockTargetService.findById.mockResolvedValue(target);
+      mockGitPort.getRepositoryById.mockResolvedValue(gitRepo);
+      mockDistributionRepository.findActiveRecipeVersionsByTarget.mockResolvedValue(
+        [],
+      );
+      mockDistributionRepository.findActiveStandardVersionsByTarget.mockResolvedValue(
+        [],
+      );
+      mockDistributionRepository.findActiveRecipeVersionsByTargetAndPackages.mockResolvedValue(
+        [],
+      );
+      mockDistributionRepository.findActiveStandardVersionsByTargetAndPackages.mockResolvedValue(
+        [],
+      );
+      mockCodingAgentPort.renderArtifacts.mockResolvedValue({
+        createOrUpdate: [],
+        delete: [],
+      });
+    });
+
+    describe('when packmind.json has agents configured', () => {
+      const perTargetRenderModes = [RenderMode.CLAUDE, RenderMode.CURSOR];
+
+      beforeEach(() => {
+        mockGitPort.getFileFromRepo.mockResolvedValue({
+          sha: 'docs/packmind.json',
+          content: JSON.stringify({
+            packages: { 'existing-pkg': '*' },
+            agents: ['claude', 'cursor'],
+          }),
+        });
+
+        mockRenderModeConfigurationService.mapCodingAgentsToRenderModes.mockReturnValue(
+          perTargetRenderModes,
+        );
+      });
+
+      it('stores distribution with per-target render modes', async () => {
+        const result = await useCase.execute(command);
+
+        expect(result.distributions[0].renderModes).toEqual(
+          perTargetRenderModes,
+        );
+      });
+
+      it('does not use org-level render modes in distribution', async () => {
+        const result = await useCase.execute(command);
+
+        expect(result.distributions[0].renderModes).not.toEqual(
+          activeRenderModes,
+        );
+      });
+    });
+
+    describe('when packmind.json has empty agents array', () => {
+      beforeEach(() => {
+        mockGitPort.getFileFromRepo.mockResolvedValue({
+          sha: 'docs/packmind.json',
+          content: JSON.stringify({
+            packages: { 'existing-pkg': '*' },
+            agents: [],
+          }),
+        });
+
+        mockRenderModeConfigurationService.mapCodingAgentsToRenderModes.mockReturnValue(
+          [],
+        );
+      });
+
+      it('stores distribution with empty render modes', async () => {
+        const result = await useCase.execute(command);
+
+        expect(result.distributions[0].renderModes).toEqual([]);
+      });
+    });
+
+    describe('when packmind.json has no agents property', () => {
+      beforeEach(() => {
+        mockGitPort.getFileFromRepo.mockResolvedValue({
+          sha: 'docs/packmind.json',
+          content: JSON.stringify({
+            packages: { 'existing-pkg': '*' },
+          }),
+        });
+
+        mockRenderModeConfigurationService.mapCodingAgentsToRenderModes.mockReturnValue(
+          activeRenderModes,
+        );
+      });
+
+      it('stores distribution with org-level render modes', async () => {
+        const result = await useCase.execute(command);
+
+        expect(result.distributions[0].renderModes).toEqual(activeRenderModes);
+      });
+    });
+
+    describe('when packmind.json does not exist', () => {
+      beforeEach(() => {
+        mockGitPort.getFileFromRepo.mockResolvedValue(null);
+
+        mockRenderModeConfigurationService.mapCodingAgentsToRenderModes.mockReturnValue(
+          activeRenderModes,
+        );
+      });
+
+      it('stores distribution with org-level render modes', async () => {
+        const result = await useCase.execute(command);
+
+        expect(result.distributions[0].renderModes).toEqual(activeRenderModes);
       });
     });
   });

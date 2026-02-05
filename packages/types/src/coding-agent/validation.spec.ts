@@ -70,15 +70,19 @@ describe('validateAgents', () => {
   });
 
   describe('with valid agents array', () => {
-    it('returns all agents when all are valid', () => {
-      expect(validateAgents(['claude', 'cursor'])).toEqual([
-        'claude',
-        'cursor',
-      ]);
+    describe('when all agents are valid', () => {
+      it('returns all agents', () => {
+        expect(validateAgents(['claude', 'cursor'])).toEqual([
+          'claude',
+          'cursor',
+        ]);
+      });
     });
 
-    it('returns empty array for empty input', () => {
-      expect(validateAgents([])).toEqual([]);
+    describe('when input is empty', () => {
+      it('returns empty array', () => {
+        expect(validateAgents([])).toEqual([]);
+      });
     });
   });
 
