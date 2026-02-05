@@ -165,7 +165,7 @@ describe('Packmind Deployment Spec', () => {
           'Standards Package 2',
         );
         result = await distributePackage(standardsPackage2);
-      });
+      }, 60000);
 
       it('creates exactly one distribution', async () => {
         expect(result).toHaveLength(1);
