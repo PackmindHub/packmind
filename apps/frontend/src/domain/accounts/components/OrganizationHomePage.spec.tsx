@@ -16,6 +16,20 @@ jest.mock('../api/queries/AccountsQueries', () => ({
   useGetOnboardingStatusQuery: jest.fn(),
 }));
 
+let mockAllStepsComplete = false;
+jest.mock('./GetStartedWithPackmindWidget', () => ({
+  GetStartedWithPackmindWidget: () =>
+    mockAllStepsComplete ? null : (
+      <div>
+        <h3>Get started with Packmind</h3>
+        <p>1. Create your first artifacts</p>
+        <p>2. Bundle them into a package</p>
+        <p>3. Deploy to your repo</p>
+        <p>4. Invite collaborators</p>
+      </div>
+    ),
+}));
+
 jest.mock('../../organizations/components/dashboard/DashboardKPI', () => ({
   DashboardKPI: () => <div data-testid="dashboard-kpi">Dashboard KPI</div>,
 }));
@@ -60,6 +74,7 @@ describe('OrganizationHomePage', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    mockAllStepsComplete = false;
 
     mockUseAuthContext.mockReturnValue({
       organization: {
@@ -138,8 +153,9 @@ describe('OrganizationHomePage', () => {
   });
 
   describe('Onboarding complete', () => {
-    describe('when hasDeployed is true', () => {
+    describe('when all 4 steps are complete', () => {
       beforeEach(() => {
+        mockAllStepsComplete = true;
         mockUseGetOnboardingStatusQuery.mockReturnValue({
           data: {
             hasDeployed: true,
