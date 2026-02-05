@@ -1,4 +1,6 @@
 // Standard creation types (atomic)
+import { Gateway, IListStandardsBySpaceUseCase } from '@packmind/types';
+
 export type CreateStandardInSpaceCommand = {
   name: string;
   description: string;
@@ -54,7 +56,5 @@ export interface IStandardsGateway {
     example: RuleExample,
   ): Promise<void>;
 
-  list(): Promise<ListStandardsResult>;
-
-  getBySlug(slug: string): Promise<ListedStandard | null>;
+  list: Gateway<IListStandardsBySpaceUseCase>;
 }

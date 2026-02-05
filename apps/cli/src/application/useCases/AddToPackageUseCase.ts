@@ -6,7 +6,7 @@ import {
 } from '../../domain/useCases/IAddToPackageUseCase';
 import { IPackmindGateway } from '../../domain/repositories/IPackmindGateway';
 import { AddArtefactsToPackageCommand } from '../../domain/repositories/IPackagesGateway';
-import { Recipe, Skill, SpaceId } from '@packmind/types';
+import { Recipe, Skill, SpaceId, Standard } from '@packmind/types';
 
 export class AddToPackageUseCase implements IAddToPackageUseCase {
   constructor(private readonly gateway: IPackmindGateway) {}
@@ -55,7 +55,7 @@ export class AddToPackageUseCase implements IAddToPackageUseCase {
       let item: { id: string } | null = null;
 
       if (itemType === 'standard') {
-        item = await this.gateway.standards.getBySlug(slug);
+        item = await this.findStandardBySlug(slug, globalSpace.id);
       } else if (itemType === 'command') {
         item = await this.findCommandBySlug(slug, globalSpace.id);
       } else if (itemType === 'skill') {
@@ -70,6 +70,14 @@ export class AddToPackageUseCase implements IAddToPackageUseCase {
     }
 
     return ids;
+  }
+
+  private async findStandardBySlug(
+    slug: string,
+    spaceId: SpaceId,
+  ): Promise<Standard | null> {
+    const standards = await this.gateway.standards.list({ spaceId });
+    return standards.standards.find((skill) => skill.slug === slug) ?? null;
   }
 
   private async findCommandBySlug(

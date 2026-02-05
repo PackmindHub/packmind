@@ -25,8 +25,6 @@ export async function listCommandsHandler(
   try {
     log('Fetching commands...\n');
     const commands = await packmindCliHexa.listCommands({});
-    console.log({ commands });
-
     if (commands.length === 0) {
       log('No commands found.');
       exit(0);
