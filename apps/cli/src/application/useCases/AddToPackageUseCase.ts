@@ -5,6 +5,7 @@ import {
   ItemType,
 } from '../../domain/useCases/IAddToPackageUseCase';
 import { IPackmindGateway } from '../../domain/repositories/IPackmindGateway';
+import { ItemNotFoundError } from '../../domain/errors/ItemNotFoundError';
 import {
   AddArtefactsToPackageCommand,
   createRecipeId,
@@ -27,7 +28,7 @@ export class AddToPackageUseCase implements IAddToPackageUseCase {
     const packages = await this.gateway.packages.list({});
     const pkg = packages.packages.find((pkg) => pkg.slug === packageSlug);
     if (!pkg) {
-      throw new Error(`No packages matching slug ${packageSlug}`);
+      throw new ItemNotFoundError('package', packageSlug);
     }
 
     // Resolve slugs to IDs based on item type (also builds ID->slug mapping)
@@ -90,7 +91,7 @@ export class AddToPackageUseCase implements IAddToPackageUseCase {
       }
 
       if (!item) {
-        throw new Error(`${itemType} '${slug}' not found`);
+        throw new ItemNotFoundError(itemType, slug);
       }
 
       ids.push(item.id);

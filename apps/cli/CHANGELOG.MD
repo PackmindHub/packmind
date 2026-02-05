@@ -5,6 +5,7 @@
 - Add `init` command to initialize Packmind in a project with `packmind-cli init` (configures AI agents and installs default skills)
 - Add `config agents` command to configure which AI coding agents to generate artifacts for with `packmind-cli config agents`
 - Add `packages add` command to add standards, commands, or skills to an existing package with `packmind-cli packages add --to <package-slug> --standard|--command|--skill <slug>`
+- Add `packages list` (equivalent to `install --list`) to list available packages.
 
 ## Changed
 
