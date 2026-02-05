@@ -30,8 +30,11 @@ export class AddToPackageUseCase implements IAddToPackageUseCase {
       throw new Error(`No packages matching slug ${packageSlug}`);
     }
 
-    // Resolve slugs to IDs based on item type
-    const ids = await this.resolveSlugsToIds(itemType, itemSlugs);
+    // Resolve slugs to IDs based on item type (also builds ID->slug mapping)
+    const { ids, idToSlugMap } = await this.resolveSlugsToIds(
+      itemType,
+      itemSlugs,
+    );
 
     // Build command based on item type
     const addCommand: Omit<
@@ -57,17 +60,22 @@ export class AddToPackageUseCase implements IAddToPackageUseCase {
 
     // Extract the relevant added/skipped arrays based on item type
     const typeKey = itemType === 'command' ? 'commands' : `${itemType}s`;
+    const addedIds = result.added[typeKey as keyof typeof result.added];
+    const skippedIds = result.skipped[typeKey as keyof typeof result.skipped];
+
+    // Convert IDs back to slugs
     return {
-      added: result.added[typeKey as keyof typeof result.added],
-      skipped: result.skipped[typeKey as keyof typeof result.skipped],
+      added: addedIds.map((id) => idToSlugMap.get(id) ?? id),
+      skipped: skippedIds.map((id) => idToSlugMap.get(id) ?? id),
     };
   }
 
   private async resolveSlugsToIds(
     itemType: ItemType,
     slugs: string[],
-  ): Promise<string[]> {
+  ): Promise<{ ids: string[]; idToSlugMap: Map<string, string> }> {
     const ids: string[] = [];
+    const idToSlugMap = new Map<string, string>();
     const globalSpace = await this.gateway.spaces.getGlobal();
 
     for (const slug of slugs) {
@@ -86,9 +94,10 @@ export class AddToPackageUseCase implements IAddToPackageUseCase {
       }
 
       ids.push(item.id);
+      idToSlugMap.set(item.id, slug);
     }
 
-    return ids;
+    return { ids, idToSlugMap };
   }
 
   private async findStandardBySlug(

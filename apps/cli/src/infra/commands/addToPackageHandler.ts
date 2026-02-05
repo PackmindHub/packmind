@@ -3,10 +3,22 @@ import {
   ItemType,
 } from '../../domain/useCases/IAddToPackageUseCase';
 import {
-  logConsole,
   logWarningConsole,
   logErrorConsole,
+  logSuccessConsole,
 } from '../utils/consoleLogger';
+
+function pluralize(singular: string, count: number) {
+  return count === 1 ? singular : `${singular}s`;
+}
+
+function formatItemType(itemType: ItemType, count: number): string {
+  return pluralize(itemType.charAt(0).toUpperCase() + itemType.slice(1), count);
+}
+
+function formatItemList(items: string[]): string {
+  return items.map((item) => `"${item}"`).join(', ');
+}
 
 export interface IAddToPackageHandlerResult {
   success: boolean;
@@ -28,11 +40,19 @@ export async function addToPackageHandler(
   try {
     const result = await useCase.execute({ packageSlug, itemType, itemSlugs });
 
-    for (const item of result.added) {
-      logConsole(`Added ${item} to ${packageSlug}`);
+    if (result.added.length) {
+      logSuccessConsole(
+        `${formatItemType(itemType, result.added.length)} ${formatItemList(result.added)} added to "${packageSlug}"`,
+      );
+      logSuccessConsole(
+        `Run \`packmind-cli install ${packageSlug}\` to install the ${pluralize(itemType, result.added.length)}`,
+      );
     }
-    for (const item of result.skipped) {
-      logWarningConsole(`${item} already in ${packageSlug} (skipped)`);
+
+    if (result.skipped.length) {
+      logWarningConsole(
+        `${formatItemType(itemType, result.skipped.length)} ${formatItemList(result.skipped)} already in "${packageSlug}" (skipped)`,
+      );
     }
 
     return { success: true, added: result.added, skipped: result.skipped };
