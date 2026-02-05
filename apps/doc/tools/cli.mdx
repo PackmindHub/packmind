@@ -169,9 +169,13 @@ This displays:
 - User name
 - Credential expiration status
 
-### Alternative: Environment Variable
+### API Key Authentication (PACKMIND_API_KEY_V3)
 
-You can also authenticate using an environment variable. This is useful for CI/CD pipelines or when you prefer not to store credentials in a file.
+You can authenticate using the `PACKMIND_API_KEY_V3` environment variable instead of the interactive login flow. This is the recommended approach for:
+
+- **CI/CD pipelines** — Automated environments where interactive login isn't possible
+- **Docker containers** — Pass the API key as an environment variable
+- **Scripted workflows** — When you need non-interactive authentication
 
 #### Getting Your API Key
 
@@ -182,9 +186,9 @@ You can also authenticate using an environment variable. This is useful for CI/C
 5. Click **Generate New Key** to create an API key (valid for 90 days)
 6. Copy the generated key
 
-#### Setting the API Key
+#### Setting the Environment Variable
 
-Set the API key as an environment variable:
+Set the `PACKMIND_API_KEY_V3` environment variable with your API key:
 
 ```bash
 export PACKMIND_API_KEY_V3="your-api-key-here"
@@ -197,9 +201,19 @@ echo 'export PACKMIND_API_KEY_V3="your-api-key-here"' >> ~/.zshrc
 source ~/.zshrc
 ```
 
+#### CI/CD Example (GitHub Actions)
+
+```yaml
+- name: Install Packmind packages
+  env:
+    PACKMIND_API_KEY_V3: ${{ secrets.PACKMIND_API_KEY_V3 }}
+  run: packmind-cli install -r
+```
+
 <Tip>
-  **Credential Priority** — When both a credentials file and environment
-  variable exist, the environment variable takes precedence.
+  **Credential Priority** — When both a credentials file and the
+  `PACKMIND_API_KEY_V3` environment variable exist, the environment variable
+  takes precedence.
 </Tip>
 
 ## Init Command
