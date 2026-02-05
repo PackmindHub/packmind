@@ -44,6 +44,7 @@ import { PackmindConfigService } from '../services/PackmindConfigService';
 import {
   fetchExistingFilesFromGit,
   applyTargetPrefixingToFileUpdates,
+  getTargetPrefixedPath,
 } from '../utils/GitFileUtils';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -399,10 +400,7 @@ export class RemovePackageFromTargetsUseCase implements IRemovePackageFromTarget
     gitRepo: GitRepo,
     target: Target,
   ): Promise<PackmindFileConfig | null> {
-    const targetPath = target.path && target.path !== '/' ? target.path : '';
-    const packmindJsonPath = targetPath
-      ? `${targetPath}/packmind.json`
-      : 'packmind.json';
+    const packmindJsonPath = getTargetPrefixedPath('packmind.json', target);
 
     try {
       const fileData = await this.gitPort.getFileFromRepo(

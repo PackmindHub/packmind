@@ -168,24 +168,71 @@ describe('OrganizationsController', () => {
       });
 
       describe('with only invalid agent values', () => {
-        it('does not pass agents to the adapter', async () => {
-          await controller.pullAllContent(
-            orgId,
-            mockRequest,
-            'backend',
-            undefined,
-            undefined,
-            undefined,
-            undefined,
-            ['invalid-agent', 'another-invalid'],
-          );
+        describe('when agentsConfigOverride is true', () => {
+          it('passes empty agents array to the adapter', async () => {
+            await controller.pullAllContent(
+              orgId,
+              mockRequest,
+              'backend',
+              undefined,
+              undefined,
+              undefined,
+              undefined,
+              ['invalid-agent', 'another-invalid'],
+              'true',
+            );
 
-          expect(mockDeploymentAdapter.pullAllContent).toHaveBeenCalledWith(
-            expect.objectContaining({
-              agents: undefined,
-            }),
-          );
+            expect(mockDeploymentAdapter.pullAllContent).toHaveBeenCalledWith(
+              expect.objectContaining({
+                agents: [],
+              }),
+            );
+          });
         });
+
+        describe('when agentsConfigOverride is not provided', () => {
+          it('does not pass agents to the adapter', async () => {
+            await controller.pullAllContent(
+              orgId,
+              mockRequest,
+              'backend',
+              undefined,
+              undefined,
+              undefined,
+              undefined,
+              ['invalid-agent', 'another-invalid'],
+              undefined,
+            );
+
+            expect(mockDeploymentAdapter.pullAllContent).toHaveBeenCalledWith(
+              expect.objectContaining({
+                agents: undefined,
+              }),
+            );
+          });
+        });
+      });
+    });
+
+    describe('when agentsConfigOverride is true but no agents provided', () => {
+      it('passes empty agents array to the adapter', async () => {
+        await controller.pullAllContent(
+          orgId,
+          mockRequest,
+          'backend',
+          undefined,
+          undefined,
+          undefined,
+          undefined,
+          undefined,
+          'true',
+        );
+
+        expect(mockDeploymentAdapter.pullAllContent).toHaveBeenCalledWith(
+          expect.objectContaining({
+            agents: [],
+          }),
+        );
       });
     });
 

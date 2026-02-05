@@ -36,6 +36,7 @@ import { RenderModeConfigurationService } from '../services/RenderModeConfigurat
 import {
   fetchExistingFilesFromGit,
   applyTargetPrefixingToFileUpdates,
+  getTargetPrefixedPath,
 } from '../utils/GitFileUtils';
 import { PackmindConfigService } from '../services/PackmindConfigService';
 import { v4 as uuidv4 } from 'uuid';
@@ -618,10 +619,7 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
     gitRepo: GitRepo,
     target: Target,
   ): Promise<PackmindFileConfig | null> {
-    const targetPath = target.path && target.path !== '/' ? target.path : '';
-    const packmindJsonPath = targetPath
-      ? `${targetPath}/packmind.json`
-      : 'packmind.json';
+    const packmindJsonPath = getTargetPrefixedPath('packmind.json', target);
 
     try {
       const fileData = await this.gitPort.getFileFromRepo(

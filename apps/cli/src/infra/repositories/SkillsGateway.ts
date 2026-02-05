@@ -33,7 +33,9 @@ export class SkillsGateway implements ISkillsGateway {
     }
 
     // Add agents from packmind.json config
-    if (command.agents && command.agents.length > 0) {
+    // When agents is defined (even if empty), signal to API that user explicitly configured agents
+    if (command.agents !== undefined) {
+      queryParams.append('agentsConfigOverride', 'true');
       command.agents.forEach((agent) => {
         queryParams.append('agent', agent);
       });
