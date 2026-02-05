@@ -10,15 +10,18 @@ export class CreatePackageUseCase implements ICreatePackageUseCase {
 
   async execute(command: ICreatePackageCommand): Promise<ICreatePackageResult> {
     const space = await this.gateway.spaces.getGlobal();
-    const result = await this.gateway.packages.create(space.id, {
+    const result = await this.gateway.packages.create({
+      spaceId: space.id,
       name: command.name,
-      description: command.description,
+      description: command.description ?? '',
+      recipeIds: [],
+      standardIds: [],
     });
 
     return {
-      packageId: result.id,
-      name: result.name,
-      slug: result.slug,
+      packageId: result.package.id,
+      name: result.package.name,
+      slug: result.package.slug,
     };
   }
 }

@@ -24,12 +24,6 @@ export type {
   ListStandardsResult,
 } from './IStandardsGateway';
 
-// Re-export package types from IPackagesGateway for backward compatibility
-export type {
-  CreatePackageCommand,
-  CreatePackageResult,
-} from './IPackagesGateway';
-
 export interface IPackmindGateway {
   readonly linter: ILinterGateway;
   readonly mcp: IMcpGateway;

@@ -2,19 +2,8 @@ import {
   Gateway,
   IListPackagesUseCase,
   IGetPackageSummaryUseCase,
+  ICreatePackageUseCase,
 } from '@packmind/types';
-
-// Create package types
-export type CreatePackageCommand = {
-  name: string;
-  description?: string;
-};
-
-export type CreatePackageResult = {
-  id: string;
-  name: string;
-  slug: string;
-};
 
 // Add artefacts to package types
 export type AddArtefactsToPackageCommand = {
@@ -41,10 +30,7 @@ export type AddArtefactsToPackageResult = {
 export interface IPackagesGateway {
   list: Gateway<IListPackagesUseCase>;
   getSummary: Gateway<IGetPackageSummaryUseCase>;
-  create(
-    spaceId: string,
-    data: CreatePackageCommand,
-  ): Promise<CreatePackageResult>;
+  create: Gateway<ICreatePackageUseCase>;
   addArtefacts(
     command: AddArtefactsToPackageCommand,
   ): Promise<AddArtefactsToPackageResult>;
