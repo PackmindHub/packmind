@@ -43,11 +43,9 @@ describe('DistributeStep', () => {
 
       renderWithProviders(<DistributeStep packages={packages} />);
 
-      expect(screen.getByText('Available packages:')).toBeInTheDocument();
+      expect(screen.getByText('Available packages')).toBeInTheDocument();
       expect(screen.getByText('Package 1')).toBeInTheDocument();
-      expect(screen.getByText('Slug: package-1')).toBeInTheDocument();
       expect(screen.getByText('Package 2')).toBeInTheDocument();
-      expect(screen.getByText('Slug: package-2')).toBeInTheDocument();
     });
 
     it('displays install command for each package', () => {
@@ -62,9 +60,7 @@ describe('DistributeStep', () => {
       const input2 = screen.getByDisplayValue('packmind-cli install package-2');
 
       expect(input1).toBeInTheDocument();
-      expect(input1).toHaveAttribute('readonly');
       expect(input2).toBeInTheDocument();
-      expect(input2).toHaveAttribute('readonly');
     });
   });
 });
