@@ -403,22 +403,30 @@ Convert the markdown draft to this JSON format:
 1. Read the \`.draft.md\` file
 2. Convert to JSON matching the schema above
 3. Write the JSON to \`.packmind/standards/_drafts/<slug>.json\`
-4. Run CLI command:
+4. Run CLI command to create:
 \`\`\`bash
 packmind-cli standards create .packmind/standards/_drafts/<slug>.json
 \`\`\`
-5. Track result (success/failure)
+5. If creation succeeded, add to package:
+\`\`\`bash
+packmind-cli packages add --to <package-slug> --standard <slug>
+\`\`\`
+6. Track result (success/failure)
 
 **For each command draft:**
 
 1. Read the \`.draft.md\` file
 2. Convert to JSON matching the schema above
 3. Write the JSON to \`.packmind/commands/_drafts/<slug>.json\`
-4. Run CLI command:
+4. Run CLI command to create:
 \`\`\`bash
 packmind-cli commands create .packmind/commands/_drafts/<slug>.json
 \`\`\`
-5. Track result (success/failure)
+5. If creation succeeded, add to package:
+\`\`\`bash
+packmind-cli packages add --to <package-slug> --command <slug>
+\`\`\`
+6. Track result (success/failure)
 
 **Show progress:**
 \`\`\`
@@ -496,7 +504,9 @@ Failed items:
 Failed drafts remain in .packmind/*/_drafts/ for review.
 You can fix and re-run, or create manually with:
   packmind-cli standards create <file>
+  packmind-cli packages add --to <package-slug> --standard <slug>
   packmind-cli commands create <file>
+  packmind-cli packages add --to <package-slug> --command <slug>
 ============================================================
 \`\`\`
 
@@ -614,7 +624,9 @@ Draft files ready for review at:
 
 Edit them as needed, then convert to JSON and run:
   packmind-cli standards create <path-to-json>
+  packmind-cli packages add --to <package-slug> --standard <slug>
   packmind-cli commands create <path-to-json>
+  packmind-cli packages add --to <package-slug> --command <slug>
   packmind-cli install
 
 Note: The CLI requires JSON playbook files, not markdown.
