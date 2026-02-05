@@ -217,6 +217,7 @@ describe('AddArtefactsToPackageUsecase', () => {
         const command: AddArtefactsToPackageCommand = {
           userId,
           organizationId,
+          spaceId,
           packageId,
           recipeIds: [recipeId1, recipeId2],
           standardIds: [standardId1, standardId2],
@@ -280,6 +281,7 @@ describe('AddArtefactsToPackageUsecase', () => {
         const command: AddArtefactsToPackageCommand = {
           userId,
           organizationId,
+          spaceId,
           packageId,
           recipeIds: [recipeId1],
         };
@@ -337,6 +339,7 @@ describe('AddArtefactsToPackageUsecase', () => {
         const command: AddArtefactsToPackageCommand = {
           userId,
           organizationId,
+          spaceId,
           packageId,
           standardIds: [standardId1],
         };
@@ -397,6 +400,7 @@ describe('AddArtefactsToPackageUsecase', () => {
         const command: AddArtefactsToPackageCommand = {
           userId,
           organizationId,
+          spaceId,
           packageId,
           recipeIds: [recipeId1, recipeId2],
           standardIds: [standardId1, standardId2],
@@ -459,6 +463,7 @@ describe('AddArtefactsToPackageUsecase', () => {
         const command: AddArtefactsToPackageCommand = {
           userId,
           organizationId,
+          spaceId,
           packageId,
           recipeIds: [recipeId1],
           standardIds: [standardId1],
@@ -488,11 +493,14 @@ describe('AddArtefactsToPackageUsecase', () => {
       let executePromise: Promise<unknown>;
 
       beforeEach(() => {
+        const mockSpace = buildSpace();
+        mockSpacesPort.getSpaceById.mockResolvedValue(mockSpace);
         mockPackageService.findById.mockResolvedValue(null);
 
         const command: AddArtefactsToPackageCommand = {
           userId,
           organizationId,
+          spaceId,
           packageId,
           recipeIds: [recipeId1],
           standardIds: [standardId1],
@@ -533,23 +541,12 @@ describe('AddArtefactsToPackageUsecase', () => {
       let executePromise: Promise<unknown>;
 
       beforeEach(() => {
-        const existingPackage = packageFactory({
-          id: packageId,
-          name: 'My Package',
-          slug: 'my-package',
-          description: 'Package description',
-          spaceId,
-          createdBy: userId,
-          recipes: [],
-          standards: [],
-        });
-
-        mockPackageService.findById.mockResolvedValue(existingPackage);
         mockSpacesPort.getSpaceById.mockResolvedValue(null);
 
         const command: AddArtefactsToPackageCommand = {
           userId,
           organizationId,
+          spaceId,
           packageId,
           recipeIds: [recipeId1],
         };
@@ -583,16 +580,6 @@ describe('AddArtefactsToPackageUsecase', () => {
       const differentOrgId = createOrganizationId(uuidv4());
 
       beforeEach(() => {
-        const existingPackage = packageFactory({
-          id: packageId,
-          name: 'My Package',
-          slug: 'my-package',
-          description: 'Package description',
-          spaceId,
-          createdBy: userId,
-          recipes: [],
-          standards: [],
-        });
         const mockSpace: Space = {
           id: spaceId,
           slug: 'test-space',
@@ -600,12 +587,12 @@ describe('AddArtefactsToPackageUsecase', () => {
           organizationId: differentOrgId,
         };
 
-        mockPackageService.findById.mockResolvedValue(existingPackage);
         mockSpacesPort.getSpaceById.mockResolvedValue(mockSpace);
 
         const command: AddArtefactsToPackageCommand = {
           userId,
           organizationId,
+          spaceId,
           packageId,
           recipeIds: [recipeId1],
         };
@@ -624,6 +611,51 @@ describe('AddArtefactsToPackageUsecase', () => {
           /* expected rejection */
         });
         expect(mockSpacesPort.getSpaceById).toHaveBeenCalledWith(spaceId);
+      });
+
+      it('does not call addRecipes', async () => {
+        await executePromise.catch(() => {
+          /* expected rejection */
+        });
+        expect(mockPackageRepository.addRecipes).not.toHaveBeenCalled();
+      });
+    });
+
+    describe('when package does not belong to space', () => {
+      let executePromise: Promise<unknown>;
+      const differentSpaceId = createSpaceId(uuidv4());
+
+      beforeEach(() => {
+        const existingPackage = packageFactory({
+          id: packageId,
+          name: 'My Package',
+          slug: 'my-package',
+          description: 'Package description',
+          spaceId: differentSpaceId,
+          createdBy: userId,
+          recipes: [],
+          standards: [],
+        });
+        const mockSpace = buildSpace();
+
+        mockSpacesPort.getSpaceById.mockResolvedValue(mockSpace);
+        mockPackageService.findById.mockResolvedValue(existingPackage);
+
+        const command: AddArtefactsToPackageCommand = {
+          userId,
+          organizationId,
+          spaceId,
+          packageId,
+          recipeIds: [recipeId1],
+        };
+
+        executePromise = useCase.execute(command);
+      });
+
+      it('throws error with package and space ids', async () => {
+        await expect(executePromise).rejects.toThrow(
+          `Package with id ${packageId} does not exist in space ${spaceId}`,
+        );
       });
 
       it('does not call addRecipes', async () => {
@@ -657,6 +689,7 @@ describe('AddArtefactsToPackageUsecase', () => {
         const command: AddArtefactsToPackageCommand = {
           userId,
           organizationId,
+          spaceId,
           packageId,
           recipeIds: [recipeId1],
         };
@@ -712,6 +745,7 @@ describe('AddArtefactsToPackageUsecase', () => {
         const command: AddArtefactsToPackageCommand = {
           userId,
           organizationId,
+          spaceId,
           packageId,
           recipeIds: [recipeId1],
         };
@@ -765,6 +799,7 @@ describe('AddArtefactsToPackageUsecase', () => {
         const command: AddArtefactsToPackageCommand = {
           userId,
           organizationId,
+          spaceId,
           packageId,
           standardIds: [standardId1],
         };
@@ -818,6 +853,7 @@ describe('AddArtefactsToPackageUsecase', () => {
         const command: AddArtefactsToPackageCommand = {
           userId,
           organizationId,
+          spaceId,
           packageId,
           standardIds: [standardId1],
         };
@@ -874,6 +910,7 @@ describe('AddArtefactsToPackageUsecase', () => {
         const command: AddArtefactsToPackageCommand = {
           userId,
           organizationId,
+          spaceId,
           packageId,
           recipeIds: [recipeId1],
         };
@@ -929,6 +966,7 @@ describe('AddArtefactsToPackageUsecase', () => {
         const command: AddArtefactsToPackageCommand = {
           userId,
           organizationId,
+          spaceId,
           packageId,
           skillIds: [skillId1],
         };
@@ -980,6 +1018,7 @@ describe('AddArtefactsToPackageUsecase', () => {
         const command: AddArtefactsToPackageCommand = {
           userId,
           organizationId,
+          spaceId,
           packageId,
           skillIds: [skillId1],
         };
@@ -1020,6 +1059,7 @@ describe('AddArtefactsToPackageUsecase', () => {
         const command: AddArtefactsToPackageCommand = {
           userId,
           organizationId,
+          spaceId,
           packageId,
           skillIds: [skillId1],
         };
@@ -1065,6 +1105,7 @@ describe('AddArtefactsToPackageUsecase', () => {
         const command: AddArtefactsToPackageCommand = {
           userId,
           organizationId,
+          spaceId,
           packageId,
           skillIds: [skillId1, skillId2],
         };
@@ -1127,6 +1168,7 @@ describe('AddArtefactsToPackageUsecase', () => {
         const command: AddArtefactsToPackageCommand = {
           userId,
           organizationId,
+          spaceId,
           packageId,
           recipeIds: [recipeId1, recipeId2],
           standardIds: [standardId1, standardId2],

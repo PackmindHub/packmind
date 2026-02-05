@@ -5,8 +5,16 @@ import {
   ItemType,
 } from '../../domain/useCases/IAddToPackageUseCase';
 import { IPackmindGateway } from '../../domain/repositories/IPackmindGateway';
-import { AddArtefactsToPackageCommand } from '../../domain/repositories/IPackagesGateway';
-import { Recipe, Skill, SpaceId, Standard } from '@packmind/types';
+import {
+  AddArtefactsToPackageCommand,
+  createRecipeId,
+  createSkillId,
+  createStandardId,
+  Recipe,
+  Skill,
+  SpaceId,
+  Standard,
+} from '@packmind/types';
 
 export class AddToPackageUseCase implements IAddToPackageUseCase {
   constructor(private readonly gateway: IPackmindGateway) {}
@@ -16,22 +24,33 @@ export class AddToPackageUseCase implements IAddToPackageUseCase {
 
     // Get global space ID
     const space = await this.gateway.spaces.getGlobal();
+    const packages = await this.gateway.packages.list({});
+    const pkg = packages.packages.find((pkg) => pkg.slug === packageSlug);
+    if (!pkg) {
+      throw new Error(`No packages matching slug ${packageSlug}`);
+    }
 
     // Resolve slugs to IDs based on item type
     const ids = await this.resolveSlugsToIds(itemType, itemSlugs);
 
     // Build command based on item type
-    const addCommand: AddArtefactsToPackageCommand = {
-      packageSlug,
+    const addCommand: Omit<
+      AddArtefactsToPackageCommand,
+      'userId' | 'organizationId'
+    > = {
+      packageId: pkg.id,
       spaceId: space.id,
+      standardIds: [],
+      recipeIds: [],
+      skillIds: [],
     };
 
     if (itemType === 'standard') {
-      addCommand.standardIds = ids;
+      addCommand.standardIds = ids.map(createStandardId);
     } else if (itemType === 'command') {
-      addCommand.commandIds = ids;
+      addCommand.recipeIds = ids.map(createRecipeId);
     } else if (itemType === 'skill') {
-      addCommand.skillIds = ids;
+      addCommand.skillIds = ids.map(createSkillId);
     }
 
     const result = await this.gateway.packages.addArtefacts(addCommand);

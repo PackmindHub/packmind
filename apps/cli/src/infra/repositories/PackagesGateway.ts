@@ -1,14 +1,11 @@
-import {
-  IPackagesGateway,
-  AddArtefactsToPackageCommand,
-  AddArtefactsToPackageResult,
-} from '../../domain/repositories/IPackagesGateway';
+import { IPackagesGateway } from '../../domain/repositories/IPackagesGateway';
 import { PackmindHttpClient } from '../http/PackmindHttpClient';
 import {
   IGetPackageSummaryUseCase,
   IListPackagesUseCase,
   Gateway,
   ICreatePackageUseCase,
+  IAddArtefactsToPackageUseCase,
 } from '@packmind/types';
 
 export class PackagesGateway implements IPackagesGateway {
@@ -44,31 +41,18 @@ export class PackagesGateway implements IPackagesGateway {
     );
   };
 
-  public addArtefacts = async (
-    command: AddArtefactsToPackageCommand,
-  ): Promise<AddArtefactsToPackageResult> => {
+  public addArtefacts: Gateway<IAddArtefactsToPackageUseCase> = async (
+    command,
+  ) => {
     const { organizationId } = this.httpClient.getAuthContext();
-    const { packageSlug, spaceId, standardIds, commandIds, skillIds } = command;
+    const { packageId, spaceId } = command;
 
-    const body: Record<string, string[] | undefined> = {};
-    if (standardIds?.length) body.standardIds = standardIds;
-    if (commandIds?.length) body.commandIds = commandIds;
-    if (skillIds?.length) body.skillIds = skillIds;
-
-    const response = await this.httpClient.request<{
-      added: { standards: string[]; commands: string[]; skills: string[] };
-      skipped: { standards: string[]; commands: string[]; skills: string[] };
-    }>(
-      `/api/v0/organizations/${organizationId}/spaces/${spaceId}/packages/${encodeURIComponent(packageSlug)}/add-artifacts`,
+    return this.httpClient.request(
+      `/api/v0/organizations/${organizationId}/spaces/${spaceId}/packages/${packageId}/add-artifacts`,
       {
         method: 'POST',
-        body,
+        body: command,
       },
     );
-
-    return {
-      added: response.added,
-      skipped: response.skipped,
-    };
   };
 }

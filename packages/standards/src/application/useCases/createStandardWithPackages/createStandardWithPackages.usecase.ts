@@ -122,6 +122,7 @@ export class CreateStandardWithPackagesUsecase
           // Add standard to package
           await this.deploymentsPort.addArtefactsToPackage({
             userId,
+            spaceId,
             organizationId,
             packageId: pkg.id,
             standardIds: [standard.id],
