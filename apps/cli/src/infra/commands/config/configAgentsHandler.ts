@@ -3,6 +3,7 @@ import * as inquirer from 'inquirer';
 import { CodingAgent } from '@packmind/types';
 import { IConfigFileRepository } from '../../../domain/repositories/IConfigFileRepository';
 import { IAgentArtifactDetectionService } from '../../../application/services/AgentArtifactDetectionService';
+import { logInfoConsole, logSuccessConsole } from '../../utils/consoleLogger';
 
 /**
  * Agents available for selection (packmind excluded - always active)
@@ -158,12 +159,12 @@ export async function configAgentsHandler(
 
   const agentNames = selectedAgents.map((a) => AGENT_DISPLAY_NAMES[a]);
   if (selectedAgents.length === 0) {
-    process.stdout.write(
-      '\nNo agents selected. Only packmind artifacts will be generated.\n',
+    logInfoConsole(
+      'No agents selected. Only packmind artifacts will be generated.',
     );
   } else {
-    process.stdout.write(
-      `\nConfiguration saved. Artifacts will be generated for: ${agentNames.join(', ')}\n`,
+    logSuccessConsole(
+      `Configuration saved. Artifacts will be generated for: ${agentNames.join(', ')}`,
     );
   }
 }

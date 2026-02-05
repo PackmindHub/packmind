@@ -9,6 +9,7 @@ import {
   SELECTABLE_AGENTS,
   AGENT_DISPLAY_NAMES,
 } from './configAgentsHandler';
+import * as consoleLogger from '../../utils/consoleLogger';
 
 // Create mock functions before jest.mock to avoid hoisting issues
 const mockInquirerPrompt = jest.fn();
@@ -23,9 +24,14 @@ jest.mock('inquirer', () => ({
 
 jest.mock('fs');
 jest.mock('readline');
+jest.mock('../../utils/consoleLogger', () => ({
+  logInfoConsole: jest.fn(),
+  logSuccessConsole: jest.fn(),
+}));
 
 const mockFs = fs as jest.Mocked<typeof fs>;
 const mockReadline = readline as jest.Mocked<typeof readline>;
+const mockConsoleLogger = consoleLogger as jest.Mocked<typeof consoleLogger>;
 
 describe('configAgentsHandler', () => {
   let mockConfigRepository: jest.Mocked<IConfigFileRepository>;
@@ -420,19 +426,19 @@ describe('configAgentsHandler', () => {
         });
 
         it('displays Claude Code in success message', () => {
-          expect(process.stdout.write).toHaveBeenCalledWith(
+          expect(mockConsoleLogger.logSuccessConsole).toHaveBeenCalledWith(
             expect.stringContaining('Claude Code'),
           );
         });
 
         it('displays Cursor in success message', () => {
-          expect(process.stdout.write).toHaveBeenCalledWith(
+          expect(mockConsoleLogger.logSuccessConsole).toHaveBeenCalledWith(
             expect.stringContaining('Cursor'),
           );
         });
 
         it('displays GitHub Copilot in success message', () => {
-          expect(process.stdout.write).toHaveBeenCalledWith(
+          expect(mockConsoleLogger.logSuccessConsole).toHaveBeenCalledWith(
             expect.stringContaining('GitHub Copilot'),
           );
         });
@@ -460,13 +466,13 @@ describe('configAgentsHandler', () => {
         });
 
         it('displays no agents selected message', () => {
-          expect(process.stdout.write).toHaveBeenCalledWith(
+          expect(mockConsoleLogger.logInfoConsole).toHaveBeenCalledWith(
             expect.stringContaining('No agents selected'),
           );
         });
 
         it('displays packmind artifacts message', () => {
-          expect(process.stdout.write).toHaveBeenCalledWith(
+          expect(mockConsoleLogger.logInfoConsole).toHaveBeenCalledWith(
             expect.stringContaining('packmind artifacts'),
           );
         });
@@ -494,7 +500,7 @@ describe('configAgentsHandler', () => {
         });
 
         it('displays GitLab Duo in success message', () => {
-          expect(process.stdout.write).toHaveBeenCalledWith(
+          expect(mockConsoleLogger.logSuccessConsole).toHaveBeenCalledWith(
             expect.stringContaining('GitLab Duo'),
           );
         });
