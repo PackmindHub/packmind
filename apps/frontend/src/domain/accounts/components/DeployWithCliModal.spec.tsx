@@ -93,36 +93,36 @@ describe('DeployWithCliModal', () => {
   });
 
   describe('when modal is open', () => {
-    it('renders the dialog title', () => {
+    beforeEach(() => {
       renderWithProviders(
         <DeployWithCliModal open={true} onClose={jest.fn()} />,
       );
+    });
 
+    it('renders the dialog title', () => {
       expect(screen.getByText('Deploy with CLI')).toBeInTheDocument();
     });
 
-    it('renders three tab triggers', () => {
-      renderWithProviders(
-        <DeployWithCliModal open={true} onClose={jest.fn()} />,
-      );
-
+    it('renders Install CLI tab trigger', () => {
       expect(screen.getByText('1. Install CLI')).toBeInTheDocument();
+    });
+
+    it('renders Authenticate tab trigger', () => {
       expect(screen.getByText('2. Authenticate')).toBeInTheDocument();
+    });
+
+    it('renders Distribute tab trigger', () => {
       expect(screen.getByText('3. Distribute')).toBeInTheDocument();
     });
 
     describe('when no packages are available', () => {
       it('displays message about no packages', () => {
-        renderWithProviders(
-          <DeployWithCliModal open={true} onClose={jest.fn()} />,
-        );
-
         expect(screen.getByText(/No packages available/i)).toBeInTheDocument();
       });
     });
 
     describe('when packages are available', () => {
-      it('displays package list', () => {
+      beforeEach(() => {
         mockedUseListPackagesBySpaceQuery.mockReturnValue({
           data: {
             packages: [
@@ -160,13 +160,23 @@ describe('DeployWithCliModal', () => {
         renderWithProviders(
           <DeployWithCliModal open={true} onClose={jest.fn()} />,
         );
+      });
 
+      it('displays first package name', () => {
         expect(screen.getByText('Test Package')).toBeInTheDocument();
+      });
+
+      it('displays install command for first package', () => {
         expect(
           screen.getByDisplayValue('packmind-cli install test-package'),
         ).toBeInTheDocument();
+      });
 
+      it('displays second package name', () => {
         expect(screen.getByText('Another Package')).toBeInTheDocument();
+      });
+
+      it('displays install command for second package', () => {
         expect(
           screen.getByDisplayValue('packmind-cli install another-package'),
         ).toBeInTheDocument();

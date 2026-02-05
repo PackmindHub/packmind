@@ -35,17 +35,39 @@ describe('DistributeStep', () => {
       ).toBeInTheDocument();
     });
 
-    it('displays available packages when packages are provided', () => {
-      const packages = [
-        { id: '1', name: 'Package 1', slug: 'package-1' },
-        { id: '2', name: 'Package 2', slug: 'package-2' },
-      ];
+    describe('when packages are provided', () => {
+      it('displays available packages header', () => {
+        const packages = [
+          { id: '1', name: 'Package 1', slug: 'package-1' },
+          { id: '2', name: 'Package 2', slug: 'package-2' },
+        ];
 
-      renderWithProviders(<DistributeStep packages={packages} />);
+        renderWithProviders(<DistributeStep packages={packages} />);
 
-      expect(screen.getByText('Available packages')).toBeInTheDocument();
-      expect(screen.getByText('Package 1')).toBeInTheDocument();
-      expect(screen.getByText('Package 2')).toBeInTheDocument();
+        expect(screen.getByText('Available packages')).toBeInTheDocument();
+      });
+
+      it('displays first package', () => {
+        const packages = [
+          { id: '1', name: 'Package 1', slug: 'package-1' },
+          { id: '2', name: 'Package 2', slug: 'package-2' },
+        ];
+
+        renderWithProviders(<DistributeStep packages={packages} />);
+
+        expect(screen.getByText('Package 1')).toBeInTheDocument();
+      });
+
+      it('displays second package', () => {
+        const packages = [
+          { id: '1', name: 'Package 1', slug: 'package-1' },
+          { id: '2', name: 'Package 2', slug: 'package-2' },
+        ];
+
+        renderWithProviders(<DistributeStep packages={packages} />);
+
+        expect(screen.getByText('Package 2')).toBeInTheDocument();
+      });
     });
 
     it('displays install command for each package', () => {
