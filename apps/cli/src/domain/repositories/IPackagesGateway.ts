@@ -1,5 +1,4 @@
-import { PublicGateway } from '@packmind/types';
-import { IListPackagesUseCase } from '../useCases/IListPackagesUseCase';
+import { Gateway, IListPackagesUseCase, PublicGateway } from '@packmind/types';
 import { IGetPackageSummaryUseCase } from '../useCases/IGetPackageSummaryUseCase';
 
 // Create package types
@@ -37,7 +36,7 @@ export type AddArtefactsToPackageResult = {
 };
 
 export interface IPackagesGateway {
-  list: PublicGateway<IListPackagesUseCase>;
+  list: Gateway<IListPackagesUseCase>;
   getSummary: PublicGateway<IGetPackageSummaryUseCase>;
   create(
     spaceId: string,
