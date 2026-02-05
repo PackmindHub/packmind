@@ -2371,12 +2371,16 @@ describe('PullContentUseCase', () => {
         ).not.toHaveBeenCalled();
       });
 
-      it('passes command agents to deployArtifactsForAgents', async () => {
+      it('passes normalized agents with packmind to deployArtifactsForAgents', async () => {
         await useCase.execute(command);
 
         expect(codingAgentPort.deployArtifactsForAgents).toHaveBeenCalledWith(
           expect.objectContaining({
-            codingAgents: [CodingAgents.claude, CodingAgents.cursor],
+            codingAgents: [
+              CodingAgents.packmind,
+              CodingAgents.claude,
+              CodingAgents.cursor,
+            ],
           }),
         );
       });
@@ -2398,12 +2402,31 @@ describe('PullContentUseCase', () => {
         ).not.toHaveBeenCalled();
       });
 
-      it('passes empty agents to deployArtifactsForAgents', async () => {
+      it('passes packmind agent to deployArtifactsForAgents', async () => {
         await useCase.execute(command);
 
         expect(codingAgentPort.deployArtifactsForAgents).toHaveBeenCalledWith(
           expect.objectContaining({
-            codingAgents: [],
+            codingAgents: [CodingAgents.packmind],
+          }),
+        );
+      });
+    });
+
+    describe('when agents do not include packmind', () => {
+      beforeEach(() => {
+        command = {
+          ...command,
+          agents: [CodingAgents.cursor],
+        };
+      });
+
+      it('automatically includes packmind agent', async () => {
+        await useCase.execute(command);
+
+        expect(codingAgentPort.deployArtifactsForAgents).toHaveBeenCalledWith(
+          expect.objectContaining({
+            codingAgents: [CodingAgents.packmind, CodingAgents.cursor],
           }),
         );
       });

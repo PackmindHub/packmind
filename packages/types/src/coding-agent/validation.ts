@@ -16,6 +16,11 @@ export const VALID_CODING_AGENTS: readonly CodingAgent[] = [
 ] as const;
 
 /**
+ * The coding agent that must always be included in any agent configuration.
+ */
+export const REQUIRED_CODING_AGENT: CodingAgent = 'packmind';
+
+/**
  * Type guard to check if a string is a valid CodingAgent.
  */
 export function isValidCodingAgent(value: string): value is CodingAgent {
@@ -81,4 +86,33 @@ export function validateAgentsWithWarnings(agents: unknown): {
   }
 
   return { validAgents, invalidAgents };
+}
+
+/**
+ * Normalizes a list of coding agents by:
+ * 1. Adding the required 'packmind' agent if not present
+ * 2. Removing duplicates
+ *
+ * @param agents - Array of CodingAgents to normalize
+ * @returns Normalized array with 'packmind' always included, preserving user order
+ */
+export function normalizeCodingAgents(agents: CodingAgent[]): CodingAgent[] {
+  const seen = new Set<CodingAgent>();
+  const result: CodingAgent[] = [];
+
+  // Add 'packmind' first if not already in list
+  if (!agents.includes(REQUIRED_CODING_AGENT)) {
+    result.push(REQUIRED_CODING_AGENT);
+    seen.add(REQUIRED_CODING_AGENT);
+  }
+
+  // Preserve user order, removing duplicates
+  for (const agent of agents) {
+    if (!seen.has(agent)) {
+      seen.add(agent);
+      result.push(agent);
+    }
+  }
+
+  return result;
 }

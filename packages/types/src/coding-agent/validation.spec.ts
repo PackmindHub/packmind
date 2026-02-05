@@ -1,8 +1,10 @@
 import {
   VALID_CODING_AGENTS,
+  REQUIRED_CODING_AGENT,
   isValidCodingAgent,
   validateAgents,
   validateAgentsWithWarnings,
+  normalizeCodingAgents,
 } from './validation';
 
 describe('VALID_CODING_AGENTS', () => {
@@ -157,6 +159,63 @@ describe('validateAgentsWithWarnings', () => {
         validAgents: [],
         invalidAgents: ['invalid', 'unknown'],
       });
+    });
+  });
+});
+
+describe('REQUIRED_CODING_AGENT', () => {
+  it('is packmind', () => {
+    expect(REQUIRED_CODING_AGENT).toBe('packmind');
+  });
+});
+
+describe('normalizeCodingAgents', () => {
+  describe('with empty array', () => {
+    it('returns array with packmind', () => {
+      expect(normalizeCodingAgents([])).toEqual(['packmind']);
+    });
+  });
+
+  describe('when packmind is not present', () => {
+    it('adds packmind to the result', () => {
+      const result = normalizeCodingAgents(['cursor']);
+
+      expect(result).toContain('packmind');
+    });
+  });
+
+  describe('when packmind is already present', () => {
+    it('preserves user order', () => {
+      const result = normalizeCodingAgents(['cursor', 'packmind', 'claude']);
+
+      expect(result).toEqual(['cursor', 'packmind', 'claude']);
+    });
+  });
+
+  describe('with duplicates', () => {
+    it('removes duplicates while preserving order', () => {
+      const result = normalizeCodingAgents(['cursor', 'cursor', 'claude']);
+
+      expect(result).toEqual(['packmind', 'cursor', 'claude']);
+    });
+  });
+
+  describe('ordering', () => {
+    it('preserves user order instead of reordering', () => {
+      const result = normalizeCodingAgents([
+        'continue',
+        'cursor',
+        'junie',
+        'copilot',
+      ]);
+
+      expect(result).toEqual([
+        'packmind',
+        'continue',
+        'cursor',
+        'junie',
+        'copilot',
+      ]);
     });
   });
 });

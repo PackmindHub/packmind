@@ -2477,7 +2477,12 @@ describe('PublishArtifactsUseCase', () => {
     let recipeVersion: ReturnType<typeof recipeVersionFactory>;
     let target: ReturnType<typeof targetFactory>;
     let gitRepo: GitRepo;
-    const perTargetAgents = [CodingAgents.claude, CodingAgents.cursor];
+    // Normalized: packmind is always added and agents are ordered
+    const perTargetAgents = [
+      CodingAgents.packmind,
+      CodingAgents.claude,
+      CodingAgents.cursor,
+    ];
 
     beforeEach(() => {
       recipeVersion = recipeVersionFactory({
@@ -2591,13 +2596,13 @@ describe('PublishArtifactsUseCase', () => {
         });
       });
 
-      it('calls DeployDefaultSkillsUseCase with empty agents array', async () => {
+      it('calls DeployDefaultSkillsUseCase with packmind automatically included', async () => {
         await useCase.execute(command);
 
         expect(mockDeployDefaultSkillsUseCase.execute).toHaveBeenCalledWith({
           userId,
           organizationId,
-          agents: [],
+          agents: [CodingAgents.packmind],
         });
       });
     });
@@ -3066,7 +3071,12 @@ describe('PublishArtifactsUseCase', () => {
     });
 
     describe('when agents are specified in packmind.json', () => {
-      const perTargetAgents = [CodingAgents.claude, CodingAgents.cursor];
+      // Normalized: packmind is always added and agents are ordered
+      const perTargetAgents = [
+        CodingAgents.packmind,
+        CodingAgents.claude,
+        CodingAgents.cursor,
+      ];
 
       beforeEach(() => {
         // Return packmind.json with agents defined
@@ -3079,7 +3089,7 @@ describe('PublishArtifactsUseCase', () => {
         });
       });
 
-      it('uses per-target agents instead of org-level agents', async () => {
+      it('uses per-target agents with packmind automatically included', async () => {
         await useCase.execute(command);
 
         expect(mockCodingAgentPort.renderArtifacts).toHaveBeenCalledWith(
@@ -3099,7 +3109,7 @@ describe('PublishArtifactsUseCase', () => {
 
     describe('when agents is an empty array in packmind.json', () => {
       beforeEach(() => {
-        // Return packmind.json with empty agents array (intentional - no agents)
+        // Return packmind.json with empty agents array
         mockGitPort.getFileFromRepo.mockResolvedValue({
           sha: 'docs/packmind.json',
           content: JSON.stringify({
@@ -3109,12 +3119,35 @@ describe('PublishArtifactsUseCase', () => {
         });
       });
 
-      it('uses empty agents array as specified', async () => {
+      it('automatically includes packmind agent', async () => {
         await useCase.execute(command);
 
         expect(mockCodingAgentPort.renderArtifacts).toHaveBeenCalledWith(
           expect.objectContaining({
-            codingAgents: [],
+            codingAgents: [CodingAgents.packmind],
+          }),
+        );
+      });
+    });
+
+    describe('when agents do not include packmind in packmind.json', () => {
+      beforeEach(() => {
+        // Return packmind.json with agents that don't include packmind
+        mockGitPort.getFileFromRepo.mockResolvedValue({
+          sha: 'docs/packmind.json',
+          content: JSON.stringify({
+            packages: { 'existing-pkg': '*' },
+            agents: ['cursor'],
+          }),
+        });
+      });
+
+      it('automatically includes packmind agent', async () => {
+        await useCase.execute(command);
+
+        expect(mockCodingAgentPort.renderArtifacts).toHaveBeenCalledWith(
+          expect.objectContaining({
+            codingAgents: [CodingAgents.packmind, CodingAgents.cursor],
           }),
         );
       });
@@ -3355,7 +3388,12 @@ describe('PublishArtifactsUseCase', () => {
     });
 
     describe('when packmind.json has agents configured', () => {
-      const perTargetRenderModes = [RenderMode.CLAUDE, RenderMode.CURSOR];
+      // Normalized agents include packmind
+      const perTargetRenderModes = [
+        RenderMode.PACKMIND,
+        RenderMode.CLAUDE,
+        RenderMode.CURSOR,
+      ];
 
       beforeEach(() => {
         mockGitPort.getFileFromRepo.mockResolvedValue({
@@ -3371,7 +3409,7 @@ describe('PublishArtifactsUseCase', () => {
         );
       });
 
-      it('stores distribution with per-target render modes', async () => {
+      it('stores distribution with per-target render modes including packmind', async () => {
         const result = await useCase.execute(command);
 
         expect(result.distributions[0].renderModes).toEqual(
@@ -3389,6 +3427,9 @@ describe('PublishArtifactsUseCase', () => {
     });
 
     describe('when packmind.json has empty agents array', () => {
+      // Normalized: packmind is always included
+      const packmindOnlyRenderModes = [RenderMode.PACKMIND];
+
       beforeEach(() => {
         mockGitPort.getFileFromRepo.mockResolvedValue({
           sha: 'docs/packmind.json',
@@ -3399,14 +3440,16 @@ describe('PublishArtifactsUseCase', () => {
         });
 
         mockRenderModeConfigurationService.mapCodingAgentsToRenderModes.mockReturnValue(
-          [],
+          packmindOnlyRenderModes,
         );
       });
 
-      it('stores distribution with empty render modes', async () => {
+      it('stores distribution with packmind render mode', async () => {
         const result = await useCase.execute(command);
 
-        expect(result.distributions[0].renderModes).toEqual([]);
+        expect(result.distributions[0].renderModes).toEqual(
+          packmindOnlyRenderModes,
+        );
       });
     });
 
