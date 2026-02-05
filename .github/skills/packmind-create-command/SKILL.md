@@ -39,7 +39,7 @@ Every command playbook is a JSON file with this structure:
     {
       "name": "Step Name",
       "description": "What this step does and how to implement it",
-      "codeSnippet": "// Optional code example"
+      "codeSnippet": "```typescript\n// Optional code example\n```"
     }
   ]
 }
@@ -56,7 +56,7 @@ The CLI validates playbooks automatically. Requirements:
 - **steps**: Array with at least one step
 - **steps[].name**: Non-empty string (step title)
 - **steps[].description**: Non-empty string (implementation details)
-- **steps[].codeSnippet** (optional): Code example for the step
+- **steps[].codeSnippet** (optional): Code example wrapped in markdown code fences with language identifier (e.g., \`\`\`typescript\\n...code...\\n\`\`\`)
 
 ## Prerequisites
 
@@ -143,7 +143,8 @@ Define specific, actionable scenarios:
 
 ### Step 3: Creating the Playbook File
 
-Create a JSON file named `<command-name>.command.playbook.json` with the structure documented above.
+1. Create a draft JSON file in `.packmind/commands/_drafts/` (create the folder if missing) using filename `<command-slug>-draft.json` (lowercase with hyphens)
+2. Structure the playbook with all required fields documented above
 
 Example minimal playbook:
 
@@ -177,13 +178,13 @@ Example minimal playbook:
    - Context validation checkpoints
    - Each step with name, description, and code snippet (if any)
 
-2. **Provide the file path** to the playbook JSON file so users can open and edit it directly if needed.
+2. **Provide the file path** to the draft JSON file (`.packmind/commands/_drafts/<command-slug>-draft.json`) so users can open and edit it directly if needed.
 
-3. Ask: **"Here is the command that will be created on Packmind. The playbook file is at \`<path>\` if you want to review or edit it. Do you approve?"**
+3. Ask: **"Here is the command that will be created on Packmind. The draft file is at \`<path>\` if you want to review or edit it. Do you approve?"**
 
 4. **Wait for explicit user confirmation** before proceeding to Step 5.
 
-5. If the user requests changes, go back to earlier steps to make adjustments.
+5. If the user requests changes, edit the draft file and re-submit for approval.
 
 ### Step 5: Creating the Command via CLI
 
@@ -195,7 +196,7 @@ packmind-cli commands create <path-to-playbook.json>
 
 Example:
 ```bash
-packmind-cli commands create ./create-api-endpoint.command.playbook.json
+packmind-cli commands create ./.packmind/commands/_drafts/create-api-endpoint-draft.json
 ```
 
 Expected output on success:
@@ -220,6 +221,33 @@ packmind-cli login
 - Verify JSON syntax is valid (use a JSON validator)
 - Check that all arrays have at least one entry
 
+### Step 6: Cleanup
+
+After the command is **successfully created**, delete the temporary files:
+
+1. Delete the draft JSON file in `.packmind/commands/_drafts/` (e.g., `<command-slug>-draft.json`)
+
+**Only clean up on success** - if the CLI command fails, keep the files so the user can retry.
+
+### Step 7: Offer to Add to Package
+
+After successful creation, check if the command fits an existing package:
+
+1. Run `packmind-cli install --list` to get available packages
+2. If no packages exist, skip this step silently and end the workflow
+3. Analyze the created command's name and summary against each package's name and description
+4. If a package is a clear semantic fit (the command's domain/technology aligns with the package's purpose):
+   - Present to user: "This command seems to fit the `<package-slug>` package."
+   - Offer three options:
+     - Add to `<package-slug>`
+     - Choose a different package
+     - Skip
+5. If no clear fit is found, skip silently (do not mention packages)
+6. If user chooses to add:
+   - Run: `packmind-cli packages add --to <package-slug> --command <command-slug>`
+   - Ask: "Would you like me to run `packmind-cli install` to sync the changes?"
+   - If yes, run: `packmind-cli install`
+
 ## Complete Example
 
 Here's a complete example creating a command for setting up a new API endpoint:
@@ -242,7 +270,7 @@ Here's a complete example creating a command for setting up a new API endpoint:
     {
       "name": "Create Controller",
       "description": "Create the controller file in the \`infra/http/controllers/\` directory with the endpoint handler and input validation.",
-      "codeSnippet": "@Controller('users')\nexport class UsersController {\n  @Post()\n  async create(@Body() dto: CreateUserDTO) {\n    return this.useCase.execute(dto);\n  }\n}"
+      "codeSnippet": "```typescript\n@Controller('users')\nexport class UsersController {\n  @Post()\n  async create(@Body() dto: CreateUserDTO) {\n    return this.useCase.execute(dto);\n  }\n}\n```"
     },
     {
       "name": "Create Use Case",
@@ -262,7 +290,7 @@ Here's a complete example creating a command for setting up a new API endpoint:
 
 **Creating the command:**
 ```bash
-packmind-cli commands create create-api-endpoint.command.playbook.json
+packmind-cli commands create ./.packmind/commands/_drafts/create-api-endpoint-draft.json
 ```
 
 ## Quick Reference
@@ -276,4 +304,4 @@ packmind-cli commands create create-api-endpoint.command.playbook.json
 | steps                         | Yes      | At least one step                              |
 | steps[].name                  | Yes      | Step title                                     |
 | steps[].description           | Yes      | Implementation details                         |
-| steps[].codeSnippet           | No       | Optional code example                          |
+| steps[].codeSnippet           | No       | Markdown code block with language (e.g., \`\`\`ts) |

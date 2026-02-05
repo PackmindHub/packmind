@@ -23,7 +23,7 @@ Commands are structured, multi-step workflows that capture repeatable tasks, rec
 
 Every command playbook is a JSON file with this structure:
 
-```json
+````json
 {
   "name": "Command Name",
   "summary": "What the command does, why it's useful, and when it's relevant",
@@ -39,11 +39,11 @@ Every command playbook is a JSON file with this structure:
     {
       "name": "Step Name",
       "description": "What this step does and how to implement it",
-      "codeSnippet": "// Optional code example"
+      "codeSnippet": "```typescript\n// Optional code example\n```"
     }
   ]
 }
-```
+````
 
 ### Validation Requirements
 
@@ -56,7 +56,7 @@ The CLI validates playbooks automatically. Requirements:
 - **steps**: Array with at least one step
 - **steps[].name**: Non-empty string (step title)
 - **steps[].description**: Non-empty string (implementation details)
-- **steps[].codeSnippet** (optional): Code example for the step
+- **steps[].codeSnippet** (optional): Code example wrapped in markdown code fences with language identifier (e.g., \`\`\`typescript\\n...code...\\n\`\`\`)
 
 ## Prerequisites
 
@@ -228,13 +228,40 @@ packmind-cli login
 - Verify JSON syntax is valid (use a JSON validator)
 - Check that all arrays have at least one entry
 
+### Step 6: Cleanup
+
+After the command is **successfully created**, delete the temporary files:
+
+1. Delete the draft JSON file in `.packmind/commands/_drafts/` (e.g., `<command-slug>-draft.json`)
+
+**Only clean up on success** - if the CLI command fails, keep the files so the user can retry.
+
+### Step 7: Offer to Add to Package
+
+After successful creation, check if the command fits an existing package:
+
+1. Run `packmind-cli install --list` to get available packages
+2. If no packages exist, skip this step silently and end the workflow
+3. Analyze the created command's name and summary against each package's name and description
+4. If a package is a clear semantic fit (the command's domain/technology aligns with the package's purpose):
+   - Present to user: "This command seems to fit the `<package-slug>` package."
+   - Offer three options:
+     - Add to `<package-slug>`
+     - Choose a different package
+     - Skip
+5. If no clear fit is found, skip silently (do not mention packages)
+6. If user chooses to add:
+   - Run: `packmind-cli packages add --to <package-slug> --command <command-slug>`
+   - Ask: "Would you like me to run `packmind-cli install` to sync the changes?"
+   - If yes, run: `packmind-cli install`
+
 ## Complete Example
 
 Here's a complete example creating a command for setting up a new API endpoint:
 
 **File: create-api-endpoint.command.playbook.json**
 
-```json
+````json
 {
   "name": "Create API Endpoint",
   "summary": "Set up a new REST API endpoint with controller, service, and tests following the hexagonal architecture pattern.",
@@ -251,7 +278,7 @@ Here's a complete example creating a command for setting up a new API endpoint:
     {
       "name": "Create Controller",
       "description": "Create the controller file in the \`infra/http/controllers/\` directory with the endpoint handler and input validation.",
-      "codeSnippet": "@Controller('users')\nexport class UsersController {\n  @Post()\n  async create(@Body() dto: CreateUserDTO) {\n    return this.useCase.execute(dto);\n  }\n}"
+      "codeSnippet": "```typescript\n@Controller('users')\nexport class UsersController {\n  @Post()\n  async create(@Body() dto: CreateUserDTO) {\n    return this.useCase.execute(dto);\n  }\n}\n```"
     },
     {
       "name": "Create Use Case",
@@ -267,7 +294,7 @@ Here's a complete example creating a command for setting up a new API endpoint:
     }
   ]
 }
-```
+````
 
 **Creating the command:**
 
@@ -277,13 +304,13 @@ packmind-cli commands create ./.packmind/commands/_drafts/create-api-endpoint-dr
 
 ## Quick Reference
 
-| Field                        | Required | Description                        |
-| ---------------------------- | -------- | ---------------------------------- |
-| name                         | Yes      | Command name                       |
-| summary                      | Yes      | What, why, and when (one sentence) |
-| whenToUse                    | Yes      | At least one scenario              |
-| contextValidationCheckpoints | Yes      | At least one checkpoint question   |
-| steps                        | Yes      | At least one step                  |
-| steps[].name                 | Yes      | Step title                         |
-| steps[].description          | Yes      | Implementation details             |
-| steps[].codeSnippet          | No       | Optional code example              |
+| Field                        | Required | Description                                        |
+| ---------------------------- | -------- | -------------------------------------------------- |
+| name                         | Yes      | Command name                                       |
+| summary                      | Yes      | What, why, and when (one sentence)                 |
+| whenToUse                    | Yes      | At least one scenario                              |
+| contextValidationCheckpoints | Yes      | At least one checkpoint question                   |
+| steps                        | Yes      | At least one step                                  |
+| steps[].name                 | Yes      | Step title                                         |
+| steps[].description          | Yes      | Implementation details                             |
+| steps[].codeSnippet          | No       | Markdown code block with language (e.g., \`\`\`ts) |
