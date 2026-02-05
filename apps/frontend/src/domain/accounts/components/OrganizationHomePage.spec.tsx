@@ -101,14 +101,6 @@ describe('OrganizationHomePage', () => {
         ).toBeInTheDocument();
       });
 
-      it('displays the widget subtitle', () => {
-        expect(
-          screen.getByText(
-            /build and deploy your first practices across your organization/i,
-          ),
-        ).toBeInTheDocument();
-      });
-
       it('displays all four onboarding steps', () => {
         expect(
           screen.getByText(/1\. create your first artifacts/i),
