@@ -1,0 +1,108 @@
+import { DeploymentGateway } from './DeploymentGateway';
+import { createMockHttpClient } from '../../mocks/createMockHttpClient';
+import { PackmindHttpClient } from '../http/PackmindHttpClient';
+
+describe('DeploymentGateway', () => {
+  let gateway: DeploymentGateway;
+  let mockHttpClient: jest.Mocked<PackmindHttpClient>;
+  const mockOrganizationId = 'org-123';
+
+  beforeEach(() => {
+    mockHttpClient = createMockHttpClient({
+      getAuthContext: jest.fn().mockReturnValue({
+        host: 'https://api.packmind.com',
+        jwt: 'mock-jwt',
+        organizationId: mockOrganizationId,
+      }),
+    });
+
+    gateway = new DeploymentGateway(mockHttpClient);
+  });
+
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
+  describe('notifyDistribution', () => {
+    describe('when notification succeeds', () => {
+      const mockApiResponse = {
+        deploymentId: 'deployment-456',
+      };
+
+      beforeEach(() => {
+        mockHttpClient.request.mockResolvedValue(mockApiResponse);
+      });
+
+      it('calls the API with correct endpoint and parameters', async () => {
+        await gateway.notifyDistribution({
+          distributedPackages: ['backend', 'frontend'],
+          gitRemoteUrl: 'github.com/user/repo',
+          gitBranch: 'main',
+          relativePath: '/src/',
+        });
+
+        expect(mockHttpClient.request).toHaveBeenCalledWith(
+          `/api/v0/organizations/${mockOrganizationId}/deployments`,
+          {
+            method: 'POST',
+            body: {
+              distributedPackages: ['backend', 'frontend'],
+              gitRemoteUrl: 'github.com/user/repo',
+              gitBranch: 'main',
+              relativePath: '/src/',
+            },
+          },
+        );
+      });
+
+      it('returns the deployment ID', async () => {
+        const result = await gateway.notifyDistribution({
+          distributedPackages: ['backend', 'frontend'],
+          gitRemoteUrl: 'github.com/user/repo',
+          gitBranch: 'main',
+          relativePath: '/src/',
+        });
+
+        expect(result).toEqual({ deploymentId: 'deployment-456' });
+      });
+    });
+
+    describe('when API request fails', () => {
+      it('propagates the error from httpClient', async () => {
+        mockHttpClient.request.mockRejectedValue(
+          new Error('Invalid package slug'),
+        );
+
+        await expect(
+          gateway.notifyDistribution({
+            distributedPackages: ['non-existent'],
+            gitRemoteUrl: 'github.com/user/repo',
+            gitBranch: 'main',
+            relativePath: '/',
+          }),
+        ).rejects.toThrow('Invalid package slug');
+      });
+    });
+
+    describe('when network error occurs', () => {
+      it('propagates the network error from httpClient', async () => {
+        mockHttpClient.request.mockRejectedValue(
+          new Error(
+            'Packmind server is not accessible at https://api.packmind.com. Please check your network connection or the server URL.',
+          ),
+        );
+
+        await expect(
+          gateway.notifyDistribution({
+            distributedPackages: ['backend'],
+            gitRemoteUrl: 'github.com/user/repo',
+            gitBranch: 'main',
+            relativePath: '/',
+          }),
+        ).rejects.toThrow(
+          'Packmind server is not accessible at https://api.packmind.com. Please check your network connection or the server URL.',
+        );
+      });
+    });
+  });
+});

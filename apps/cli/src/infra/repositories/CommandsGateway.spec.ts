@@ -1,60 +1,42 @@
 import { CommandsGateway } from './CommandsGateway';
+import { createMockHttpClient } from '../../mocks/createMockHttpClient';
 import { PackmindHttpClient } from '../http/PackmindHttpClient';
-import { ISpacesGateway } from '../../domain/repositories/ISpacesGateway';
 import { CaptureRecipeResponse, createSpaceId } from '@packmind/types';
-import { spaceFactory } from '@packmind/spaces/test';
-
-// Shared helper for creating test API keys
-const createTestApiKey = () => {
-  const jwt = Buffer.from(
-    JSON.stringify({ alg: 'HS256', typ: 'JWT' }),
-  ).toString('base64');
-  const payload = Buffer.from(
-    JSON.stringify({
-      organization: { id: 'org-123', name: 'Test Org' },
-      iat: Date.now(),
-      exp: Date.now() + 3600000,
-    }),
-  ).toString('base64');
-  const signature = 'test-signature';
-  const fullJwt = `${jwt}.${payload}.${signature}`;
-
-  return Buffer.from(
-    JSON.stringify({
-      host: 'http://localhost:4200',
-      jwt: fullJwt,
-    }),
-  ).toString('base64');
-};
 
 describe('CommandsGateway', () => {
   let gateway: CommandsGateway;
-  let mockSpacesGateway: jest.Mocked<ISpacesGateway>;
-
+  let mockHttpClient: jest.Mocked<PackmindHttpClient>;
+  const mockOrganizationId = 'org-123';
   const spaceId = createSpaceId('space-123');
 
   beforeEach(() => {
-    mockSpacesGateway = {
-      getGlobal: jest.fn(),
-    };
+    mockHttpClient = createMockHttpClient({
+      getAuthContext: jest.fn().mockReturnValue({
+        host: 'https://api.packmind.com',
+        jwt: 'mock-jwt',
+        organizationId: mockOrganizationId,
+      }),
+    });
+
+    gateway = new CommandsGateway(mockHttpClient);
+  });
+
+  afterEach(() => {
+    jest.clearAllMocks();
   });
 
   describe('create', () => {
     let result: CaptureRecipeResponse;
 
     describe('when creating a command successfully', () => {
+      const mockResponse = {
+        id: 'cmd-123',
+        name: 'Test Command',
+        slug: 'test-command',
+      };
+
       beforeEach(async () => {
-        global.fetch = jest.fn();
-        const httpClient = new PackmindHttpClient(createTestApiKey());
-        gateway = new CommandsGateway(httpClient);
-        (global.fetch as jest.Mock).mockResolvedValueOnce({
-          ok: true,
-          json: jest.fn().mockResolvedValue({
-            id: 'cmd-123',
-            name: 'Test Command',
-            slug: 'test-command',
-          }),
-        });
+        mockHttpClient.request.mockResolvedValue(mockResponse);
 
         result = await gateway.create({
           spaceId,
@@ -82,55 +64,45 @@ describe('CommandsGateway', () => {
       });
 
       it('calls the correct API endpoint with POST', () => {
-        expect(global.fetch).toHaveBeenCalledWith(
-          expect.stringContaining(`/spaces/${spaceId}/recipes`),
+        expect(mockHttpClient.request).toHaveBeenCalledWith(
+          `/api/v0/organizations/${mockOrganizationId}/spaces/${spaceId}/recipes`,
           expect.objectContaining({ method: 'POST' }),
         );
       });
 
       it('sends command data in the request body', () => {
-        const callArgs = (global.fetch as jest.Mock).mock.calls[0];
-        const body = JSON.parse(callArgs[1].body);
-        expect(body).toEqual({
-          spaceId,
-          name: 'Test Command',
-          summary: 'A test command for demonstration',
-          whenToUse: ['When testing', 'When demonstrating'],
-          contextValidationCheckpoints: ['Is the context clear?'],
-          steps: [
-            {
-              name: 'Step 1',
-              description: 'First step description',
-              codeSnippet: 'const x = 1;',
+        expect(mockHttpClient.request).toHaveBeenCalledWith(
+          expect.any(String),
+          {
+            method: 'POST',
+            body: {
+              spaceId,
+              name: 'Test Command',
+              summary: 'A test command for demonstration',
+              whenToUse: ['When testing', 'When demonstrating'],
+              contextValidationCheckpoints: ['Is the context clear?'],
+              steps: [
+                {
+                  name: 'Step 1',
+                  description: 'First step description',
+                  codeSnippet: 'const x = 1;',
+                },
+                { name: 'Step 2', description: 'Second step description' },
+              ],
             },
-            { name: 'Step 2', description: 'Second step description' },
-          ],
-        });
+          },
+        );
       });
     });
   });
 
   describe('list', () => {
     describe('when listing commands successfully', () => {
-      beforeEach(async () => {
-        global.fetch = jest.fn();
-        const httpClient = new PackmindHttpClient(createTestApiKey());
-        gateway = new CommandsGateway(httpClient);
-
-        mockSpacesGateway.getGlobal.mockResolvedValue(
-          spaceFactory({
-            id: spaceId,
-            slug: 'global',
-          }),
-        );
-
-        (global.fetch as jest.Mock).mockResolvedValueOnce({
-          ok: true,
-          json: jest.fn().mockResolvedValue([
-            { id: 'cmd-1', slug: 'command-one', name: 'Command One' },
-            { id: 'cmd-2', slug: 'command-two', name: 'Command Two' },
-          ]),
-        });
+      beforeEach(() => {
+        mockHttpClient.request.mockResolvedValue([
+          { id: 'cmd-1', slug: 'command-one', name: 'Command One' },
+          { id: 'cmd-2', slug: 'command-two', name: 'Command Two' },
+        ]);
       });
 
       it('returns list of commands', async () => {
@@ -147,9 +119,8 @@ describe('CommandsGateway', () => {
       it('calls the correct API endpoint', async () => {
         await gateway.list({ spaceId });
 
-        expect(global.fetch).toHaveBeenCalledWith(
-          expect.stringContaining('/spaces/space-123/recipes'),
-          expect.anything(),
+        expect(mockHttpClient.request).toHaveBeenCalledWith(
+          `/api/v0/organizations/${mockOrganizationId}/spaces/${spaceId}/recipes`,
         );
       });
     });
