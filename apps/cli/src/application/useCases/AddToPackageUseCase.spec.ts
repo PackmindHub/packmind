@@ -84,7 +84,11 @@ describe('AddToPackageUseCase', () => {
       });
       packagesGateway.addArtefacts.mockResolvedValue({
         package: pkg,
-        added: { standards: ['std-1', 'std-2'], commands: [], skills: [] },
+        added: {
+          standards: ['std-id-1', 'std-id-2'],
+          commands: [],
+          skills: [],
+        },
         skipped: { standards: [], commands: [], skills: [] },
       });
     });
@@ -105,7 +109,7 @@ describe('AddToPackageUseCase', () => {
       );
     });
 
-    it('returns added items from gateway response', async () => {
+    it('converts IDs from gateway response back to slugs', async () => {
       const result = await useCase.execute({
         packageSlug: pkg.slug,
         itemType: 'standard',
@@ -133,7 +137,7 @@ describe('AddToPackageUseCase', () => {
       });
       packagesGateway.addArtefacts.mockResolvedValue({
         package: pkg,
-        added: { standards: [], commands: ['cmd-1'], skills: [] },
+        added: { standards: [], commands: ['cmd-id-1'], skills: [] },
         skipped: { standards: [], commands: [], skills: [] },
       });
     });
@@ -154,7 +158,7 @@ describe('AddToPackageUseCase', () => {
       );
     });
 
-    it('returns added commands from gateway response', async () => {
+    it('converts command IDs from gateway response back to slugs', async () => {
       const result = await useCase.execute({
         packageSlug: pkg.slug,
         itemType: 'command',
@@ -180,7 +184,7 @@ describe('AddToPackageUseCase', () => {
       });
       packagesGateway.addArtefacts.mockResolvedValue({
         package: pkg,
-        added: { standards: [], commands: [], skills: ['skill-1'] },
+        added: { standards: [], commands: [], skills: ['skill-id-1'] },
         skipped: { standards: [], commands: [], skills: [] },
       });
     });
@@ -201,7 +205,7 @@ describe('AddToPackageUseCase', () => {
       );
     });
 
-    it('returns added skills from gateway response', async () => {
+    it('converts skill IDs from gateway response back to slugs', async () => {
       const result = await useCase.execute({
         packageSlug: pkg.slug,
         itemType: 'skill',
@@ -257,8 +261,8 @@ describe('AddToPackageUseCase', () => {
       });
       packagesGateway.addArtefacts.mockResolvedValue({
         package: pkg,
-        added: { standards: ['std-2'], commands: [], skills: [] },
-        skipped: { standards: ['std-1'], commands: [], skills: [] },
+        added: { standards: ['std-id-2'], commands: [], skills: [] },
+        skipped: { standards: ['std-id-1'], commands: [], skills: [] },
       });
 
       result = await useCase.execute({
@@ -268,11 +272,11 @@ describe('AddToPackageUseCase', () => {
       });
     });
 
-    it('returns added items', () => {
+    it('converts added IDs to slugs', () => {
       expect(result.added).toEqual(['std-2']);
     });
 
-    it('returns skipped items', () => {
+    it('converts skipped IDs to slugs', () => {
       expect(result.skipped).toEqual(['std-1']);
     });
   });
