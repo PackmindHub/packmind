@@ -15,6 +15,7 @@ import { skillsCommand } from './infra/commands/SkillsCommand';
 import { standardsCommand } from './infra/commands/StandardsCommand';
 import { commandsCommand } from './infra/commands/CommandsCommand';
 import { packagesCommand } from './infra/commands/PackagesCommand';
+import { configCommand } from './infra/commands/config/ConfigCommand';
 import { GitService } from './application/services/GitService';
 import { logConsole, logErrorConsole } from './infra/utils/consoleLogger';
 
@@ -101,6 +102,7 @@ const app = subcommands({
     standards: standardsCommand,
     commands: commandsCommand,
     packages: packagesCommand,
+    config: configCommand,
   },
 });
 

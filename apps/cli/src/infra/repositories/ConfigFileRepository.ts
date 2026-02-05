@@ -1,5 +1,6 @@
 import {
   AllConfigsResult,
+  CodingAgent,
   ConfigWithTarget,
   HierarchicalConfigResult,
   PackmindFileConfig,
@@ -372,6 +373,56 @@ export class ConfigFileRepository implements IConfigFileRepository {
 
     // Write back - JSON.stringify() preserves original key order
     await this.writeConfigToPath(configPath, parsed as PackmindFileConfig);
+  }
+
+  /**
+   * Updates a specific field in packmind.json while preserving property order.
+   * If the file doesn't exist, creates a new one with default packages and the field.
+   */
+  async updateConfig<K extends keyof PackmindFileConfig>(
+    baseDirectory: string,
+    field: K,
+    value: PackmindFileConfig[K],
+  ): Promise<void> {
+    const configPath = this.getConfigPath(baseDirectory);
+
+    const rawContent = await this.tryReadFile(configPath);
+    if (!rawContent) {
+      const newConfig: PackmindFileConfig = { packages: {}, [field]: value };
+      await this.writeConfigToPath(configPath, newConfig);
+      return;
+    }
+
+    let parsed: Record<string, unknown>;
+    try {
+      parsed = JSON.parse(rawContent);
+    } catch {
+      const newConfig: PackmindFileConfig = { packages: {}, [field]: value };
+      await this.writeConfigToPath(configPath, newConfig);
+      return;
+    }
+
+    // Ensure packages exists
+    if (!parsed.packages || typeof parsed.packages !== 'object') {
+      parsed.packages = {};
+    }
+
+    // Update the field - mutating preserves key order
+    parsed[field] = value;
+
+    // Write back - JSON.stringify() preserves original key order
+    await this.writeConfigToPath(configPath, parsed as PackmindFileConfig);
+  }
+
+  /**
+   * Updates the agents configuration in packmind.json.
+   * Convenience wrapper around updateConfig for the agents field.
+   */
+  async updateAgentsConfig(
+    baseDirectory: string,
+    agents: CodingAgent[],
+  ): Promise<void> {
+    return this.updateConfig(baseDirectory, 'agents', agents);
   }
 
   private async tryReadFile(filePath: string): Promise<string | null> {
