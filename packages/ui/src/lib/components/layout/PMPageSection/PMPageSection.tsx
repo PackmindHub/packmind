@@ -9,11 +9,12 @@ import {
   useCollapsibleContext,
 } from '@chakra-ui/react';
 import { PMHeading } from '../../typography/PMHeading';
-import { ComponentPropsWithoutRef } from 'react';
+import React, { ComponentPropsWithoutRef, ReactNode } from 'react';
 import { LuChevronDown, LuChevronUp } from 'react-icons/lu';
 
 interface PMBoxProps extends ComponentPropsWithoutRef<'div'> {
   title?: string;
+  titleComponent?: ReactNode;
   cta?: React.ReactNode;
   variant?: 'plain' | 'outline';
   backgroundColor?: 'primary' | 'secondary' | 'tertiary';
@@ -32,6 +33,7 @@ const CollapsibleIcon = () => {
 
 const PMPageSection = ({
   title,
+  titleComponent,
   cta,
   variant = 'plain',
   backgroundColor = 'secondary',
@@ -54,7 +56,7 @@ const PMPageSection = ({
   const headerContent = (
     <HStack justify={'space-between'} width="full">
       <PMHeading level={headingLevel} mb={2} data-testId={headerDataTestId}>
-        {title}
+        {titleComponent ?? title}
       </PMHeading>
       <HStack gap={2}>
         {cta && <ButtonGroup>{cta}</ButtonGroup>}

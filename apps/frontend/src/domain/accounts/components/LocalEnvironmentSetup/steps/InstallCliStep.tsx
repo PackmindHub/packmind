@@ -74,7 +74,7 @@ export const InstallCliStep: React.FC<IInstallCliStepProps> = ({
     <PMVStack align="flex-start" gap={6} width="full" padding={4}>
       <StepHeader
         title="Install the Packmind CLI"
-        description="The CLI is required to authenticate and run the MCP server locally."
+        description="The CLI is required to authenticate and communicate with Packmind."
       />
 
       <PMVStack align="flex-start" gap={2} width="full">
