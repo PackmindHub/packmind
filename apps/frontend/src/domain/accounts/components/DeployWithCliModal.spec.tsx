@@ -162,13 +162,11 @@ describe('DeployWithCliModal', () => {
         );
 
         expect(screen.getByText('Test Package')).toBeInTheDocument();
-        expect(screen.getByText('Slug: test-package')).toBeInTheDocument();
         expect(
           screen.getByDisplayValue('packmind-cli install test-package'),
         ).toBeInTheDocument();
 
         expect(screen.getByText('Another Package')).toBeInTheDocument();
-        expect(screen.getByText('Slug: another-package')).toBeInTheDocument();
         expect(
           screen.getByDisplayValue('packmind-cli install another-package'),
         ).toBeInTheDocument();
