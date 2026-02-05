@@ -1,5 +1,6 @@
 import { IUseCase, PackmindCommand } from '../../UseCase';
 import { FileUpdates } from '../FileUpdates';
+import { CodingAgent } from '../../coding-agent/CodingAgent';
 
 export type IPullContentResponse = {
   fileUpdates: FileUpdates;
@@ -13,6 +14,8 @@ export type PullContentCommand = PackmindCommand & {
   gitRemoteUrl?: string;
   gitBranch?: string;
   relativePath?: string;
+  // Optional agents to generate artifacts for (overrides org-level config when present)
+  agents?: CodingAgent[];
 };
 
 export type IPullContentUseCase = IUseCase<

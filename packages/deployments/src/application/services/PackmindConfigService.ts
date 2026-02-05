@@ -1,9 +1,14 @@
-import { FileModification, PackmindFileConfig } from '@packmind/types';
+import {
+  CodingAgent,
+  FileModification,
+  PackmindFileConfig,
+} from '@packmind/types';
 
 export class PackmindConfigService {
   generateConfigContent(
     packagesSlugs: string[],
     existingPackages?: { [slug: string]: string },
+    existingAgents?: CodingAgent[],
   ): PackmindFileConfig {
     const packages: { [slug: string]: string } = { ...existingPackages };
 
@@ -11,14 +16,26 @@ export class PackmindConfigService {
       packages[slug] = '*';
     }
 
-    return { packages };
+    const config: PackmindFileConfig = { packages };
+
+    // Preserve existing agents if present
+    if (existingAgents !== undefined) {
+      config.agents = existingAgents;
+    }
+
+    return config;
   }
 
   createConfigFileModification(
     packagesSlugs: string[],
     existingPackages?: { [slug: string]: string },
+    existingAgents?: CodingAgent[],
   ): FileModification {
-    const config = this.generateConfigContent(packagesSlugs, existingPackages);
+    const config = this.generateConfigContent(
+      packagesSlugs,
+      existingPackages,
+      existingAgents,
+    );
 
     return {
       path: 'packmind.json',
@@ -29,18 +46,31 @@ export class PackmindConfigService {
   removePackageFromConfig(
     slugToRemove: string,
     existingPackages: { [slug: string]: string },
+    existingAgents?: CodingAgent[],
   ): PackmindFileConfig {
     const packages = { ...existingPackages };
     delete packages[slugToRemove];
 
-    return { packages };
+    const config: PackmindFileConfig = { packages };
+
+    // Preserve existing agents if present
+    if (existingAgents !== undefined) {
+      config.agents = existingAgents;
+    }
+
+    return config;
   }
 
   createRemovalConfigFileModification(
     slugToRemove: string,
     existingPackages: { [slug: string]: string },
+    existingAgents?: CodingAgent[],
   ): FileModification {
-    const config = this.removePackageFromConfig(slugToRemove, existingPackages);
+    const config = this.removePackageFromConfig(
+      slugToRemove,
+      existingPackages,
+      existingAgents,
+    );
 
     return {
       path: 'packmind.json',

@@ -28,6 +28,17 @@ export class DefaultSkillsDeployer {
     public readonly skillsFolderPath: string,
   ) {}
 
+  public static getDefaultSkillSlugs(): string[] {
+    return [
+      'packmind-create-skill',
+      'packmind-create-standard',
+      'packmind-onboard',
+      'packmind-create-command',
+      'packmind-create-package',
+      'packmind-cli-list-commands',
+    ];
+  }
+
   public deployDefaultSkills(
     options: DeployDefaultSkillsOptions = {},
   ): FileUpdates {

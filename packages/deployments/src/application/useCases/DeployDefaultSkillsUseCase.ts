@@ -2,6 +2,7 @@ import { ICodingAgentDeployer } from '@packmind/coding-agent';
 import { LogLevel, PackmindLogger } from '@packmind/logger';
 import { AbstractMemberUseCase, MemberContext } from '@packmind/node-utils';
 import {
+  CodingAgent,
   DeployDefaultSkillsCommand,
   DeployDefaultSkillsResponse,
   FileUpdates,
@@ -43,15 +44,24 @@ export class DeployDefaultSkillsUseCase
       delete: [],
     };
 
-    const codingAgents =
-      await this.renderModeConfigurationService.resolveActiveCodingAgents(
-        command.organization.id,
-      );
-
-    this.logger.info('Active coding agents for organization', {
-      organizationId: command.organizationId,
-      codingAgents,
-    });
+    // Get active coding agents: use command.agents if provided, otherwise fall back to org-level config
+    let codingAgents: CodingAgent[];
+    if (command.agents !== undefined && command.agents.length > 0) {
+      codingAgents = command.agents;
+      this.logger.info('Using agents from command (packmind.json override)', {
+        codingAgents,
+        organizationId: command.organizationId,
+      });
+    } else {
+      codingAgents =
+        await this.renderModeConfigurationService.resolveActiveCodingAgents(
+          command.organization.id,
+        );
+      this.logger.info('Using organization-level render modes', {
+        codingAgents,
+        organizationId: command.organizationId,
+      });
+    }
 
     const deployerRegistry = this.codingAgentPort.getDeployerRegistry();
 

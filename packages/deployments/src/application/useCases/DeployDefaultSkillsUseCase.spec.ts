@@ -19,6 +19,26 @@ import { v4 as uuidv4 } from 'uuid';
 import { RenderModeConfigurationService } from '../services/RenderModeConfigurationService';
 import { DeployDefaultSkillsUseCase } from './DeployDefaultSkillsUseCase';
 
+const createMockDeployer = (
+  overrides?: Partial<ICodingAgentDeployer>,
+): jest.Mocked<ICodingAgentDeployer> =>
+  ({
+    deployRecipes: jest.fn(),
+    deployStandards: jest.fn(),
+    deploySkills: jest.fn(),
+    generateFileUpdatesForRecipes: jest.fn(),
+    generateFileUpdatesForStandards: jest.fn(),
+    generateFileUpdatesForSkills: jest.fn(),
+    generateRemovalFileUpdates: jest.fn(),
+    generateAgentCleanupFileUpdates: jest.fn(),
+    deployArtifacts: jest.fn(),
+    deployDefaultSkills: jest
+      .fn()
+      .mockResolvedValue({ createOrUpdate: [], delete: [] }),
+    getSkillsFolderPath: jest.fn(),
+    ...overrides,
+  }) as unknown as jest.Mocked<ICodingAgentDeployer>;
+
 const createUserWithMembership = (
   userId: string,
   organization: Organization,
@@ -154,17 +174,9 @@ describe('DeployDefaultSkillsUseCase', () => {
           ['claude'] as CodingAgent[],
         );
 
-        mockDeployer = {
-          deployRecipes: jest.fn(),
-          deployStandards: jest.fn(),
-          deploySkills: jest.fn(),
-          generateFileUpdatesForRecipes: jest.fn(),
-          generateFileUpdatesForStandards: jest.fn(),
-          generateFileUpdatesForSkills: jest.fn(),
-          generateRemovalFileUpdates: jest.fn(),
-          deployArtifacts: jest.fn(),
+        mockDeployer = createMockDeployer({
           deployDefaultSkills: jest.fn().mockResolvedValue(fileUpdates),
-        } as unknown as jest.Mocked<ICodingAgentDeployer>;
+        });
 
         deployerRegistry.getDeployer.mockReturnValue(mockDeployer);
 
@@ -193,16 +205,9 @@ describe('DeployDefaultSkillsUseCase', () => {
           ['packmind'] as CodingAgent[],
         );
 
-        mockDeployer = {
-          deployRecipes: jest.fn(),
-          deployStandards: jest.fn(),
-          deploySkills: jest.fn(),
-          generateFileUpdatesForRecipes: jest.fn(),
-          generateFileUpdatesForStandards: jest.fn(),
-          generateFileUpdatesForSkills: jest.fn(),
-          generateRemovalFileUpdates: jest.fn(),
-          deployArtifacts: jest.fn(),
-        } as unknown as jest.Mocked<ICodingAgentDeployer>;
+        mockDeployer = createMockDeployer({
+          deployDefaultSkills: undefined,
+        });
 
         deployerRegistry.getDeployer.mockReturnValue(mockDeployer);
 
@@ -232,15 +237,7 @@ describe('DeployDefaultSkillsUseCase', () => {
         ['claude', 'packmind'] as CodingAgent[],
       );
 
-      claudeDeployer = {
-        deployRecipes: jest.fn(),
-        deployStandards: jest.fn(),
-        deploySkills: jest.fn(),
-        generateFileUpdatesForRecipes: jest.fn(),
-        generateFileUpdatesForStandards: jest.fn(),
-        generateFileUpdatesForSkills: jest.fn(),
-        generateRemovalFileUpdates: jest.fn(),
-        deployArtifacts: jest.fn(),
+      claudeDeployer = createMockDeployer({
         deployDefaultSkills: jest.fn().mockResolvedValue({
           createOrUpdate: [
             {
@@ -250,18 +247,11 @@ describe('DeployDefaultSkillsUseCase', () => {
           ],
           delete: [],
         }),
-      } as unknown as jest.Mocked<ICodingAgentDeployer>;
+      });
 
-      packmindDeployer = {
-        deployRecipes: jest.fn(),
-        deployStandards: jest.fn(),
-        deploySkills: jest.fn(),
-        generateFileUpdatesForRecipes: jest.fn(),
-        generateFileUpdatesForStandards: jest.fn(),
-        generateFileUpdatesForSkills: jest.fn(),
-        generateRemovalFileUpdates: jest.fn(),
-        deployArtifacts: jest.fn(),
-      } as unknown as jest.Mocked<ICodingAgentDeployer>;
+      packmindDeployer = createMockDeployer({
+        deployDefaultSkills: undefined,
+      });
 
       deployerRegistry.getDeployer.mockImplementation((agent: CodingAgent) => {
         if (agent === 'claude') return claudeDeployer;
@@ -295,6 +285,160 @@ describe('DeployDefaultSkillsUseCase', () => {
 
     it('calls deployDefaultSkills only on deployers that support it', () => {
       expect(claudeDeployer.deployDefaultSkills).toHaveBeenCalled();
+    });
+  });
+
+  describe('when command.agents is provided', () => {
+    let result: DeployDefaultSkillsResponse;
+    let claudeDeployer: jest.Mocked<ICodingAgentDeployer>;
+
+    beforeEach(async () => {
+      claudeDeployer = createMockDeployer({
+        deployDefaultSkills: jest.fn().mockResolvedValue({
+          createOrUpdate: [
+            {
+              path: '.claude/skills/packmind/skill-creator/SKILL.md',
+              content: 'claude skill',
+            },
+          ],
+          delete: [],
+        }),
+      });
+
+      deployerRegistry.getDeployer.mockReturnValue(claudeDeployer);
+
+      result = await useCase.execute({
+        ...command,
+        agents: ['claude'] as CodingAgent[],
+      });
+    });
+
+    it('uses agents from command instead of org-level config', () => {
+      expect(
+        renderModeConfigurationService.resolveActiveCodingAgents,
+      ).not.toHaveBeenCalled();
+    });
+
+    it('returns file updates from deployer', () => {
+      expect(result.fileUpdates.createOrUpdate).toHaveLength(1);
+    });
+
+    it('calls getDeployer with the agent from command', () => {
+      expect(deployerRegistry.getDeployer).toHaveBeenCalledWith('claude');
+    });
+  });
+
+  describe('when command.agents is empty array', () => {
+    beforeEach(async () => {
+      renderModeConfigurationService.resolveActiveCodingAgents.mockResolvedValue(
+        ['claude'] as CodingAgent[],
+      );
+
+      const mockDeployer = createMockDeployer();
+
+      deployerRegistry.getDeployer.mockReturnValue(mockDeployer);
+
+      await useCase.execute({
+        ...command,
+        agents: [],
+      });
+    });
+
+    it('falls back to org-level config', () => {
+      expect(
+        renderModeConfigurationService.resolveActiveCodingAgents,
+      ).toHaveBeenCalledWith(organizationId);
+    });
+  });
+
+  describe('when command.agents is undefined', () => {
+    beforeEach(async () => {
+      renderModeConfigurationService.resolveActiveCodingAgents.mockResolvedValue(
+        ['cursor'] as CodingAgent[],
+      );
+
+      const mockDeployer = createMockDeployer();
+
+      deployerRegistry.getDeployer.mockReturnValue(mockDeployer);
+
+      await useCase.execute({
+        ...command,
+        agents: undefined,
+      });
+    });
+
+    it('falls back to org-level config', () => {
+      expect(
+        renderModeConfigurationService.resolveActiveCodingAgents,
+      ).toHaveBeenCalledWith(organizationId);
+    });
+
+    it('calls getDeployer with agent from org-level config', () => {
+      expect(deployerRegistry.getDeployer).toHaveBeenCalledWith('cursor');
+    });
+  });
+
+  describe('when command.agents has multiple agents', () => {
+    let claudeDeployer: jest.Mocked<ICodingAgentDeployer>;
+    let cursorDeployer: jest.Mocked<ICodingAgentDeployer>;
+
+    beforeEach(async () => {
+      claudeDeployer = createMockDeployer({
+        deployDefaultSkills: jest.fn().mockResolvedValue({
+          createOrUpdate: [
+            {
+              path: '.claude/skills/packmind/SKILL.md',
+              content: 'claude skill',
+            },
+          ],
+          delete: [],
+        }),
+      });
+
+      cursorDeployer = createMockDeployer({
+        deployDefaultSkills: jest.fn().mockResolvedValue({
+          createOrUpdate: [
+            {
+              path: '.cursor/skills/packmind/SKILL.md',
+              content: 'cursor skill',
+            },
+          ],
+          delete: [],
+        }),
+      });
+
+      deployerRegistry.getDeployer.mockImplementation((agent: CodingAgent) => {
+        if (agent === 'claude') return claudeDeployer;
+        if (agent === 'cursor') return cursorDeployer;
+        return claudeDeployer;
+      });
+
+      await useCase.execute({
+        ...command,
+        agents: ['claude', 'cursor'] as CodingAgent[],
+      });
+    });
+
+    it('does not call resolveActiveCodingAgents', () => {
+      expect(
+        renderModeConfigurationService.resolveActiveCodingAgents,
+      ).not.toHaveBeenCalled();
+    });
+
+    it('calls getDeployer for claude', () => {
+      expect(deployerRegistry.getDeployer).toHaveBeenCalledWith('claude');
+    });
+
+    it('calls getDeployer for cursor', () => {
+      expect(deployerRegistry.getDeployer).toHaveBeenCalledWith('cursor');
+    });
+
+    it('calls deployDefaultSkills on claude deployer', () => {
+      expect(claudeDeployer.deployDefaultSkills).toHaveBeenCalled();
+    });
+
+    it('calls deployDefaultSkills on cursor deployer', () => {
+      expect(cursorDeployer.deployDefaultSkills).toHaveBeenCalled();
     });
   });
 });

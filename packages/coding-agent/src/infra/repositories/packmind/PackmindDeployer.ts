@@ -410,6 +410,48 @@ export class PackmindDeployer implements ICodingAgentDeployer {
     return fileUpdates;
   }
 
+  async generateAgentCleanupFileUpdates(artifacts: {
+    recipeVersions: RecipeVersion[];
+    standardVersions: StandardVersion[];
+    skillVersions: SkillVersion[];
+  }): Promise<FileUpdates> {
+    this.logger.info('Generating agent cleanup file updates for Packmind', {
+      recipesCount: artifacts.recipeVersions.length,
+      standardsCount: artifacts.standardVersions.length,
+      skillsCount: artifacts.skillVersions.length,
+    });
+
+    return {
+      createOrUpdate: [],
+      delete: [
+        {
+          path: '.packmind/commands/',
+          type: DeleteItemType.Directory,
+        },
+        {
+          path: '.packmind/standards/',
+          type: DeleteItemType.Directory,
+        },
+        {
+          path: '.packmind/',
+          type: DeleteItemType.Directory,
+        },
+        {
+          path: PackmindDeployer.COMMANDS_INDEX_PATH,
+          type: DeleteItemType.File,
+        },
+        {
+          path: '.packmind/standards-index.md',
+          type: DeleteItemType.File,
+        },
+        {
+          path: PackmindDeployer.LEGACY_RECIPES_INDEX_PATH,
+          type: DeleteItemType.File,
+        },
+      ],
+    };
+  }
+
   private formatStandardVersionContent(
     standardVersion: StandardVersion,
   ): string {

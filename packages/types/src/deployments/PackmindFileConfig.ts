@@ -1,7 +1,10 @@
+import { CodingAgent } from '../coding-agent/CodingAgent';
+
 export type PackmindFileConfig = {
   packages: {
     [slug: string]: string;
   };
+  agents?: CodingAgent[];
 };
 
 export type HierarchicalConfigResult = {
@@ -23,6 +26,8 @@ export type ConfigWithTarget = {
   absoluteTargetPath: string;
   /** Packages defined in this specific packmind.json */
   packages: { [slug: string]: string };
+  /** Optional agents to generate artifacts for (overrides org-level config) */
+  agents?: CodingAgent[];
 };
 
 /**

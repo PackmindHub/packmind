@@ -14,6 +14,7 @@ import {
   PullContentCommand,
   Recipe,
   RecipeVersion,
+  RenderMode,
   Skill,
   SkillVersion,
   Standard,
@@ -29,6 +30,7 @@ import {
   createSpaceId,
   createStandardId,
   createStandardVersionId,
+  createTargetId,
   createUserId,
 } from '@packmind/types';
 import { CodingAgents } from '@packmind/coding-agent';
@@ -119,6 +121,10 @@ describe('PullContentUseCase', () => {
         createOrUpdate: [],
         delete: [],
       }),
+      generateAgentCleanupUpdatesForAgents: jest.fn().mockResolvedValue({
+        createOrUpdate: [],
+        delete: [],
+      }),
       getAgentFilePath: jest.fn(),
       getAgentSkillPath: jest.fn(),
       getSupportedAgents: jest.fn(),
@@ -136,6 +142,7 @@ describe('PullContentUseCase', () => {
 
     renderModeConfigurationService = {
       resolveActiveCodingAgents: jest.fn(),
+      mapRenderModesToCodingAgents: jest.fn(),
     } as unknown as jest.Mocked<RenderModeConfigurationService>;
 
     packmindConfigService = {
@@ -152,6 +159,9 @@ describe('PullContentUseCase', () => {
       CodingAgents.packmind,
       CodingAgents.agents_md,
     ]);
+    renderModeConfigurationService.mapRenderModesToCodingAgents.mockReturnValue(
+      [],
+    );
 
     gitPort = {
       listProviders: jest.fn().mockResolvedValue({ providers: [] }),
@@ -168,6 +178,10 @@ describe('PullContentUseCase', () => {
       findActiveRecipeVersionsByTargetAndPackages: jest
         .fn()
         .mockResolvedValue([]),
+      findActiveRenderModesByTarget: jest.fn().mockResolvedValue([]),
+      findActiveRecipeVersionsByTarget: jest.fn().mockResolvedValue([]),
+      findActiveStandardVersionsByTarget: jest.fn().mockResolvedValue([]),
+      findActiveSkillVersionsByTarget: jest.fn().mockResolvedValue([]),
     } as unknown as jest.Mocked<IDistributionRepository>;
 
     targetService = {
@@ -714,12 +728,32 @@ describe('PullContentUseCase', () => {
         expect(packmindJsonFile).toBeDefined();
       });
 
-      it('calls PackmindConfigService with package slugs', async () => {
+      it('calls PackmindConfigService with package slugs and undefined agents', async () => {
         await useCase.execute(command);
 
         expect(
           packmindConfigService.createConfigFileModification,
-        ).toHaveBeenCalledWith(['test-package']);
+        ).toHaveBeenCalledWith(['test-package'], undefined, undefined);
+      });
+
+      describe('when agents are provided in command', () => {
+        beforeEach(() => {
+          command = {
+            ...command,
+            agents: [CodingAgents.claude, CodingAgents.cursor],
+          };
+        });
+
+        it('passes agents to PackmindConfigService', async () => {
+          await useCase.execute(command);
+
+          expect(
+            packmindConfigService.createConfigFileModification,
+          ).toHaveBeenCalledWith(['test-package'], undefined, [
+            CodingAgents.claude,
+            CodingAgents.cursor,
+          ]);
+        });
       });
 
       it('includes correct content in packmind.json', async () => {
@@ -2283,7 +2317,7 @@ describe('PullContentUseCase', () => {
 
         expect(
           packmindConfigService.createConfigFileModification,
-        ).toHaveBeenCalledWith([]);
+        ).toHaveBeenCalledWith([], undefined, undefined);
       });
 
       it('includes packmind.json in createOrUpdate', async () => {
@@ -2298,6 +2332,239 @@ describe('PullContentUseCase', () => {
           (file) => file.path === 'packmind.json',
         );
         expect(packmindJsonFile).toBeDefined();
+      });
+    });
+  });
+
+  describe('when agents are provided in command', () => {
+    beforeEach(() => {
+      const testPackage: PackageWithArtefacts = {
+        id: createPackageId('test-package-id'),
+        slug: 'test-package',
+        name: 'Test Package',
+        description: 'Test package description',
+        spaceId: createSpaceId('space-1'),
+        createdBy: createUserId('user-1'),
+        recipes: [],
+        standards: [],
+        skills: [],
+      };
+
+      packageService.getPackagesBySlugsWithArtefacts.mockResolvedValue([
+        testPackage,
+      ]);
+    });
+
+    describe('with valid agents array', () => {
+      beforeEach(() => {
+        command = {
+          ...command,
+          agents: [CodingAgents.claude, CodingAgents.cursor],
+        };
+      });
+
+      it('uses agents from command instead of org-level config', async () => {
+        await useCase.execute(command);
+
+        expect(
+          renderModeConfigurationService.resolveActiveCodingAgents,
+        ).not.toHaveBeenCalled();
+      });
+
+      it('passes command agents to deployArtifactsForAgents', async () => {
+        await useCase.execute(command);
+
+        expect(codingAgentPort.deployArtifactsForAgents).toHaveBeenCalledWith(
+          expect.objectContaining({
+            codingAgents: [CodingAgents.claude, CodingAgents.cursor],
+          }),
+        );
+      });
+    });
+
+    describe('with empty agents array', () => {
+      beforeEach(() => {
+        command = {
+          ...command,
+          agents: [],
+        };
+      });
+
+      it('uses agents from command instead of org-level config', async () => {
+        await useCase.execute(command);
+
+        expect(
+          renderModeConfigurationService.resolveActiveCodingAgents,
+        ).not.toHaveBeenCalled();
+      });
+
+      it('passes empty agents to deployArtifactsForAgents', async () => {
+        await useCase.execute(command);
+
+        expect(codingAgentPort.deployArtifactsForAgents).toHaveBeenCalledWith(
+          expect.objectContaining({
+            codingAgents: [],
+          }),
+        );
+      });
+    });
+
+    describe('when agents is undefined', () => {
+      beforeEach(() => {
+        command = {
+          ...command,
+          agents: undefined,
+        };
+      });
+
+      it('falls back to org-level config', async () => {
+        await useCase.execute(command);
+
+        expect(
+          renderModeConfigurationService.resolveActiveCodingAgents,
+        ).toHaveBeenCalledWith(organization.id);
+      });
+    });
+  });
+
+  describe('render mode cleanup', () => {
+    const gitRemoteUrl = 'https://github.com/packmind/packmind.git';
+    const gitBranch = 'main';
+    const relativePath = '/';
+    const targetId = createTargetId('target-1');
+
+    beforeEach(() => {
+      command = {
+        ...command,
+        gitRemoteUrl,
+        gitBranch,
+        relativePath,
+      };
+
+      packageService.getPackagesBySlugsWithArtefacts.mockResolvedValue([
+        {
+          id: createPackageId('test-package-id'),
+          slug: 'test-package',
+          name: 'Test Package',
+          description: 'Test package description',
+          spaceId: createSpaceId('space-1'),
+          createdBy: createUserId('user-1'),
+          recipes: [],
+          standards: [],
+          skills: [],
+        },
+      ]);
+
+      gitPort.listProviders.mockResolvedValue({
+        providers: [{ id: 'provider-1' }],
+      });
+      gitPort.listRepos.mockResolvedValue([
+        {
+          id: 'repo-1',
+          owner: 'packmind',
+          repo: 'packmind',
+          branch: gitBranch,
+        },
+      ]);
+      targetService.getTargetsByGitRepoId.mockResolvedValue([
+        {
+          id: targetId,
+          name: 'default',
+          path: '/',
+          gitRepoId: 'repo-1' as never,
+        },
+      ]);
+    });
+
+    describe('when render modes drop an agent', () => {
+      beforeEach(() => {
+        distributionRepository.findActiveRenderModesByTarget.mockResolvedValue([
+          RenderMode.CLAUDE,
+        ]);
+        renderModeConfigurationService.mapRenderModesToCodingAgents.mockReturnValue(
+          [CodingAgents.claude],
+        );
+        distributionRepository.findActiveRecipeVersionsByTarget.mockResolvedValue(
+          [],
+        );
+        distributionRepository.findActiveStandardVersionsByTarget.mockResolvedValue(
+          [],
+        );
+        distributionRepository.findActiveSkillVersionsByTarget.mockResolvedValue(
+          [],
+        );
+        codingAgentPort.generateAgentCleanupUpdatesForAgents.mockResolvedValue({
+          createOrUpdate: [],
+          delete: [
+            {
+              path: '.claude/commands/packmind/',
+              type: 'directory',
+            },
+          ],
+        });
+      });
+
+      it('merges cleanup updates into file updates', async () => {
+        const result = await useCase.execute(command);
+
+        expect(result.fileUpdates.delete).toContainEqual({
+          path: '.claude/commands/packmind/',
+          type: 'directory',
+        });
+      });
+
+      it('calls cleanup generation for removed agents', async () => {
+        await useCase.execute(command);
+
+        expect(
+          codingAgentPort.generateAgentCleanupUpdatesForAgents,
+        ).toHaveBeenCalledWith(
+          expect.objectContaining({
+            agents: [CodingAgents.claude],
+          }),
+        );
+      });
+    });
+
+    describe('when target is not found', () => {
+      beforeEach(() => {
+        targetService.getTargetsByGitRepoId.mockResolvedValue([]);
+      });
+
+      it('skips agent cleanup', async () => {
+        await useCase.execute(command);
+
+        expect(
+          codingAgentPort.generateAgentCleanupUpdatesForAgents,
+        ).not.toHaveBeenCalled();
+      });
+    });
+
+    describe('when command agents are empty', () => {
+      beforeEach(() => {
+        command = {
+          ...command,
+          agents: [],
+        };
+        distributionRepository.findActiveRenderModesByTarget.mockResolvedValue([
+          RenderMode.CLAUDE,
+          RenderMode.CURSOR,
+        ]);
+        renderModeConfigurationService.mapRenderModesToCodingAgents.mockReturnValue(
+          [CodingAgents.claude, CodingAgents.cursor],
+        );
+      });
+
+      it('treats all previous agents as removed', async () => {
+        await useCase.execute(command);
+
+        expect(
+          codingAgentPort.generateAgentCleanupUpdatesForAgents,
+        ).toHaveBeenCalledWith(
+          expect.objectContaining({
+            agents: [CodingAgents.claude, CodingAgents.cursor],
+          }),
+        );
       });
     });
   });

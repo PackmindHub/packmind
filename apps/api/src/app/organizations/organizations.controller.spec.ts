@@ -1,5 +1,5 @@
 import { OrganizationsController } from './organizations.controller';
-import { createOrganizationId } from '@packmind/types';
+import { createOrganizationId, IPullContentResponse } from '@packmind/types';
 import { stubLogger } from '@packmind/test-utils';
 import { AuthenticatedRequest } from '@packmind/node-utils';
 import { IAccountsPort, IDeploymentPort } from '@packmind/types';
@@ -83,6 +83,130 @@ describe('OrganizationsController', () => {
       ).toHaveBeenCalledWith({
         userId: 'user-123',
         organizationId: orgId,
+      });
+    });
+  });
+
+  describe('pullAllContent', () => {
+    const orgId = createOrganizationId('org-123');
+    const mockRequest = {
+      organization: { id: orgId },
+      user: { userId: 'user-123' },
+      clientSource: 'cli',
+    } as AuthenticatedRequest;
+    const mockResponse: IPullContentResponse = {
+      fileUpdates: { createOrUpdate: [], delete: [] },
+      skillFolders: [],
+    };
+
+    beforeEach(() => {
+      mockDeploymentAdapter.pullAllContent.mockResolvedValue(mockResponse);
+    });
+
+    describe('when agent query param is provided', () => {
+      describe('with a single valid agent', () => {
+        it('passes agents to the adapter', async () => {
+          await controller.pullAllContent(
+            orgId,
+            mockRequest,
+            'backend',
+            undefined,
+            undefined,
+            undefined,
+            undefined,
+            'claude',
+          );
+
+          expect(mockDeploymentAdapter.pullAllContent).toHaveBeenCalledWith(
+            expect.objectContaining({
+              agents: ['claude'],
+            }),
+          );
+        });
+      });
+
+      describe('with multiple valid agents', () => {
+        it('passes all agents to the adapter', async () => {
+          await controller.pullAllContent(
+            orgId,
+            mockRequest,
+            'backend',
+            undefined,
+            undefined,
+            undefined,
+            undefined,
+            ['claude', 'cursor'],
+          );
+
+          expect(mockDeploymentAdapter.pullAllContent).toHaveBeenCalledWith(
+            expect.objectContaining({
+              agents: ['claude', 'cursor'],
+            }),
+          );
+        });
+      });
+
+      describe('with invalid agent values', () => {
+        it('filters out invalid agents', async () => {
+          await controller.pullAllContent(
+            orgId,
+            mockRequest,
+            'backend',
+            undefined,
+            undefined,
+            undefined,
+            undefined,
+            ['claude', 'invalid-agent', 'cursor'],
+          );
+
+          expect(mockDeploymentAdapter.pullAllContent).toHaveBeenCalledWith(
+            expect.objectContaining({
+              agents: ['claude', 'cursor'],
+            }),
+          );
+        });
+      });
+
+      describe('with only invalid agent values', () => {
+        it('does not pass agents to the adapter', async () => {
+          await controller.pullAllContent(
+            orgId,
+            mockRequest,
+            'backend',
+            undefined,
+            undefined,
+            undefined,
+            undefined,
+            ['invalid-agent', 'another-invalid'],
+          );
+
+          expect(mockDeploymentAdapter.pullAllContent).toHaveBeenCalledWith(
+            expect.objectContaining({
+              agents: undefined,
+            }),
+          );
+        });
+      });
+    });
+
+    describe('when agent query param is not provided', () => {
+      it('does not pass agents to the adapter', async () => {
+        await controller.pullAllContent(
+          orgId,
+          mockRequest,
+          'backend',
+          undefined,
+          undefined,
+          undefined,
+          undefined,
+          undefined,
+        );
+
+        expect(mockDeploymentAdapter.pullAllContent).toHaveBeenCalledWith(
+          expect.objectContaining({
+            agents: undefined,
+          }),
+        );
       });
     });
   });

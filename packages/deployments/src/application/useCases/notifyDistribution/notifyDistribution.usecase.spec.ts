@@ -3,6 +3,7 @@ import {
   parseGitRepoInfo,
 } from './notifyDistribution.usecase';
 import {
+  CodingAgent,
   createUserId,
   createOrganizationId,
   createPackageId,
@@ -24,6 +25,7 @@ import {
   IStandardsPort,
   NotifyDistributionCommand,
   Package,
+  RenderMode,
   Target,
   RecipeVersion,
   SkillVersion,
@@ -1913,6 +1915,262 @@ describe('NotifyDistributionUseCase', () => {
         expect(mockDistributedPackageRepository.add).not.toHaveBeenCalledWith(
           expect.objectContaining({
             operation: 'remove',
+          }),
+        );
+      });
+    });
+
+    describe('when command.agents is provided with non-empty array', () => {
+      const commandAgents: CodingAgent[] = ['claude', 'cursor'];
+      const expectedRenderModes = [RenderMode.CLAUDE, RenderMode.CURSOR];
+
+      beforeEach(async () => {
+        const existingTarget = buildTarget();
+        const recipeVersion = buildRecipeVersion();
+        const standardVersion = buildStandardVersion();
+        const pkg = buildPackage('my-package');
+
+        mockGitPort.listProviders.mockResolvedValue({
+          providers: [
+            {
+              id: gitProviderId,
+              source: 'github',
+              organizationId,
+              url: 'https://github.com',
+              hasToken: false,
+            },
+          ],
+        });
+
+        mockGitPort.listRepos.mockResolvedValue([
+          {
+            id: gitRepoId,
+            owner: 'test-owner',
+            repo: 'test-repo',
+            branch: 'main',
+            providerId: gitProviderId,
+          },
+        ]);
+
+        mockTargetRepository.findByGitRepoId.mockResolvedValue([
+          existingTarget,
+        ]);
+        mockPackageRepository.findByOrganizationId.mockResolvedValue([pkg]);
+        mockStandardsPort.getLatestStandardVersion.mockResolvedValue(
+          standardVersion,
+        );
+        mockRecipesPort.listRecipeVersions.mockResolvedValue([recipeVersion]);
+        mockSkillsPort.getLatestSkillVersion.mockResolvedValue(
+          buildSkillVersion(),
+        );
+        mockDistributionRepository.add.mockImplementation((d) =>
+          Promise.resolve(d),
+        );
+        mockDistributedPackageRepository.add.mockImplementation((d) =>
+          Promise.resolve(d),
+        );
+
+        mockRenderModeConfigurationService.mapCodingAgentsToRenderModes = jest
+          .fn()
+          .mockReturnValue(expectedRenderModes);
+
+        const command: NotifyDistributionCommand = {
+          userId,
+          organizationId,
+          distributedPackages: ['my-package'],
+          gitRemoteUrl: 'https://github.com/test-owner/test-repo.git',
+          gitBranch: 'main',
+          relativePath: '/',
+          agents: commandAgents,
+        };
+
+        await useCase.execute(command);
+      });
+
+      it('calls mapCodingAgentsToRenderModes with the provided agents', () => {
+        expect(
+          mockRenderModeConfigurationService.mapCodingAgentsToRenderModes,
+        ).toHaveBeenCalledWith(commandAgents);
+      });
+
+      it('does not call getActiveRenderModes', () => {
+        expect(
+          mockRenderModeConfigurationService.getActiveRenderModes,
+        ).not.toHaveBeenCalled();
+      });
+
+      it('stores the mapped render modes in the distribution', () => {
+        expect(mockDistributionRepository.add).toHaveBeenCalledWith(
+          expect.objectContaining({
+            renderModes: expectedRenderModes,
+          }),
+        );
+      });
+    });
+
+    describe('when command.agents is undefined', () => {
+      beforeEach(async () => {
+        const existingTarget = buildTarget();
+        const recipeVersion = buildRecipeVersion();
+        const standardVersion = buildStandardVersion();
+        const pkg = buildPackage('my-package');
+
+        mockGitPort.listProviders.mockResolvedValue({
+          providers: [
+            {
+              id: gitProviderId,
+              source: 'github',
+              organizationId,
+              url: 'https://github.com',
+              hasToken: false,
+            },
+          ],
+        });
+
+        mockGitPort.listRepos.mockResolvedValue([
+          {
+            id: gitRepoId,
+            owner: 'test-owner',
+            repo: 'test-repo',
+            branch: 'main',
+            providerId: gitProviderId,
+          },
+        ]);
+
+        mockTargetRepository.findByGitRepoId.mockResolvedValue([
+          existingTarget,
+        ]);
+        mockPackageRepository.findByOrganizationId.mockResolvedValue([pkg]);
+        mockStandardsPort.getLatestStandardVersion.mockResolvedValue(
+          standardVersion,
+        );
+        mockRecipesPort.listRecipeVersions.mockResolvedValue([recipeVersion]);
+        mockSkillsPort.getLatestSkillVersion.mockResolvedValue(
+          buildSkillVersion(),
+        );
+        mockDistributionRepository.add.mockImplementation((d) =>
+          Promise.resolve(d),
+        );
+        mockDistributedPackageRepository.add.mockImplementation((d) =>
+          Promise.resolve(d),
+        );
+
+        mockRenderModeConfigurationService.mapCodingAgentsToRenderModes =
+          jest.fn();
+
+        const command: NotifyDistributionCommand = {
+          userId,
+          organizationId,
+          distributedPackages: ['my-package'],
+          gitRemoteUrl: 'https://github.com/test-owner/test-repo.git',
+          gitBranch: 'main',
+          relativePath: '/',
+          agents: undefined,
+        };
+
+        await useCase.execute(command);
+      });
+
+      it('calls getActiveRenderModes with the organization id', () => {
+        expect(
+          mockRenderModeConfigurationService.getActiveRenderModes,
+        ).toHaveBeenCalledWith(organizationId);
+      });
+
+      it('does not call mapCodingAgentsToRenderModes', () => {
+        expect(
+          mockRenderModeConfigurationService.mapCodingAgentsToRenderModes,
+        ).not.toHaveBeenCalled();
+      });
+
+      it('stores the organization render modes in the distribution', () => {
+        expect(mockDistributionRepository.add).toHaveBeenCalledWith(
+          expect.objectContaining({
+            renderModes: DEFAULT_ACTIVE_RENDER_MODES,
+          }),
+        );
+      });
+    });
+
+    describe('when command.agents is an empty array', () => {
+      beforeEach(async () => {
+        const existingTarget = buildTarget();
+        const recipeVersion = buildRecipeVersion();
+        const standardVersion = buildStandardVersion();
+        const pkg = buildPackage('my-package');
+
+        mockGitPort.listProviders.mockResolvedValue({
+          providers: [
+            {
+              id: gitProviderId,
+              source: 'github',
+              organizationId,
+              url: 'https://github.com',
+              hasToken: false,
+            },
+          ],
+        });
+
+        mockGitPort.listRepos.mockResolvedValue([
+          {
+            id: gitRepoId,
+            owner: 'test-owner',
+            repo: 'test-repo',
+            branch: 'main',
+            providerId: gitProviderId,
+          },
+        ]);
+
+        mockTargetRepository.findByGitRepoId.mockResolvedValue([
+          existingTarget,
+        ]);
+        mockPackageRepository.findByOrganizationId.mockResolvedValue([pkg]);
+        mockStandardsPort.getLatestStandardVersion.mockResolvedValue(
+          standardVersion,
+        );
+        mockRecipesPort.listRecipeVersions.mockResolvedValue([recipeVersion]);
+        mockSkillsPort.getLatestSkillVersion.mockResolvedValue(
+          buildSkillVersion(),
+        );
+        mockDistributionRepository.add.mockImplementation((d) =>
+          Promise.resolve(d),
+        );
+        mockDistributedPackageRepository.add.mockImplementation((d) =>
+          Promise.resolve(d),
+        );
+
+        mockRenderModeConfigurationService.mapCodingAgentsToRenderModes =
+          jest.fn();
+
+        const command: NotifyDistributionCommand = {
+          userId,
+          organizationId,
+          distributedPackages: ['my-package'],
+          gitRemoteUrl: 'https://github.com/test-owner/test-repo.git',
+          gitBranch: 'main',
+          relativePath: '/',
+          agents: [],
+        };
+
+        await useCase.execute(command);
+      });
+
+      it('calls getActiveRenderModes with the organization id', () => {
+        expect(
+          mockRenderModeConfigurationService.getActiveRenderModes,
+        ).toHaveBeenCalledWith(organizationId);
+      });
+
+      it('does not call mapCodingAgentsToRenderModes', () => {
+        expect(
+          mockRenderModeConfigurationService.mapCodingAgentsToRenderModes,
+        ).not.toHaveBeenCalled();
+      });
+
+      it('stores the organization render modes in the distribution', () => {
+        expect(mockDistributionRepository.add).toHaveBeenCalledWith(
+          expect.objectContaining({
+            renderModes: DEFAULT_ACTIVE_RENDER_MODES,
           }),
         );
       });

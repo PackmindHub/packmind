@@ -1,6 +1,8 @@
 import { PackmindLogger } from '@packmind/logger';
 import {
+  DeleteItem,
   DeleteItemType,
+  FileModification,
   FileUpdates,
   GitRepo,
   RecipeVersion,
@@ -221,5 +223,73 @@ export class CodingAgentServices {
     });
 
     return result;
+  }
+
+  async generateAgentCleanupUpdatesForAgents(
+    artifacts: {
+      recipeVersions: RecipeVersion[];
+      standardVersions: StandardVersion[];
+      skillVersions: SkillVersion[];
+    },
+    codingAgents: CodingAgent[],
+  ): Promise<FileUpdates> {
+    this.logger.info('Generating agent cleanup updates for agents', {
+      recipesCount: artifacts.recipeVersions.length,
+      standardsCount: artifacts.standardVersions.length,
+      skillsCount: artifacts.skillVersions.length,
+      agentsCount: codingAgents.length,
+    });
+
+    if (codingAgents.length === 0) {
+      this.logger.warn('No coding agents specified for cleanup');
+      return { createOrUpdate: [], delete: [] };
+    }
+
+    const allUpdates: FileUpdates[] = [];
+
+    for (const agent of codingAgents) {
+      const deployer = this.deployerService.getDeployerForAgent(agent);
+      const updates = await deployer.generateAgentCleanupFileUpdates(artifacts);
+      allUpdates.push(updates);
+    }
+
+    const merged = this.mergeFileUpdates(allUpdates);
+
+    this.logger.info('Agent cleanup updates generated', {
+      createOrUpdateCount: merged.createOrUpdate.length,
+      deleteCount: merged.delete.length,
+    });
+
+    return merged;
+  }
+
+  private mergeFileUpdates(updates: FileUpdates[]): FileUpdates {
+    const merged: FileUpdates = {
+      createOrUpdate: [],
+      delete: [],
+    };
+
+    const pathMap = new Map<string, FileModification>();
+
+    for (const update of updates) {
+      for (const file of update.createOrUpdate) {
+        pathMap.set(file.path, file);
+      }
+    }
+
+    merged.createOrUpdate = Array.from(pathMap.values());
+
+    const deleteMap = new Map<string, DeleteItem>();
+    for (const update of updates) {
+      for (const file of update.delete) {
+        if (!deleteMap.has(file.path)) {
+          deleteMap.set(file.path, file);
+        }
+      }
+    }
+
+    merged.delete = Array.from(deleteMap.values());
+
+    return merged;
   }
 }

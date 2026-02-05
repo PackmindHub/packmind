@@ -13,6 +13,7 @@ import {
   createUserId,
   Distribution,
   DistributionStatus,
+  RenderMode,
 } from '@packmind/types';
 import { Repository, SelectQueryBuilder } from 'typeorm';
 import { DistributionRepository } from './DistributionRepository';
@@ -32,6 +33,7 @@ describe('DistributionRepository', () => {
     SelectQueryBuilder<Distribution>
   > => {
     const qb = {
+      innerJoinAndSelect: jest.fn().mockReturnThis(),
       leftJoinAndSelect: jest.fn().mockReturnThis(),
       where: jest.fn().mockReturnThis(),
       andWhere: jest.fn().mockReturnThis(),
@@ -113,6 +115,7 @@ describe('DistributionRepository', () => {
               operation: 'add',
               standardVersions: [sv1],
               recipeVersions: [],
+              skillVersions: [],
             },
           ],
         );
@@ -153,6 +156,7 @@ describe('DistributionRepository', () => {
               operation: 'add',
               standardVersions: [sv1],
               recipeVersions: [],
+              skillVersions: [],
             },
           ],
         );
@@ -168,6 +172,7 @@ describe('DistributionRepository', () => {
               operation: 'remove',
               standardVersions: [],
               recipeVersions: [],
+              skillVersions: [],
             },
           ],
         );
@@ -183,6 +188,7 @@ describe('DistributionRepository', () => {
               operation: 'add',
               standardVersions: [sv2],
               recipeVersions: [],
+              skillVersions: [],
             },
           ],
         );
@@ -226,6 +232,7 @@ describe('DistributionRepository', () => {
               operation: 'add',
               standardVersions: [sv1],
               recipeVersions: [],
+              skillVersions: [],
             },
           ],
         );
@@ -241,6 +248,7 @@ describe('DistributionRepository', () => {
               operation: 'remove',
               standardVersions: [],
               recipeVersions: [],
+              skillVersions: [],
             },
           ],
         );
@@ -256,6 +264,7 @@ describe('DistributionRepository', () => {
               operation: 'add',
               standardVersions: [sv1],
               recipeVersions: [],
+              skillVersions: [],
             },
           ],
         );
@@ -299,6 +308,7 @@ describe('DistributionRepository', () => {
               operation: undefined as never,
               standardVersions: [sv1],
               recipeVersions: [],
+              skillVersions: [],
             },
           ],
         );
@@ -347,6 +357,7 @@ describe('DistributionRepository', () => {
               operation: 'add',
               standardVersions: [sv1v2],
               recipeVersions: [],
+              skillVersions: [],
             },
           ],
         );
@@ -362,6 +373,7 @@ describe('DistributionRepository', () => {
               operation: 'add',
               standardVersions: [sv1v1],
               recipeVersions: [],
+              skillVersions: [],
             },
           ],
         );
@@ -442,6 +454,7 @@ describe('DistributionRepository', () => {
               operation: 'add',
               standardVersions: [],
               recipeVersions: [rv1],
+              skillVersions: [],
             },
           ],
         );
@@ -482,6 +495,7 @@ describe('DistributionRepository', () => {
               operation: 'add',
               standardVersions: [],
               recipeVersions: [rv1],
+              skillVersions: [],
             },
           ],
         );
@@ -497,6 +511,7 @@ describe('DistributionRepository', () => {
               operation: 'remove',
               standardVersions: [],
               recipeVersions: [],
+              skillVersions: [],
             },
           ],
         );
@@ -512,6 +527,7 @@ describe('DistributionRepository', () => {
               operation: 'add',
               standardVersions: [],
               recipeVersions: [rv2],
+              skillVersions: [],
             },
           ],
         );
@@ -555,6 +571,7 @@ describe('DistributionRepository', () => {
               operation: 'add',
               standardVersions: [],
               recipeVersions: [rv1],
+              skillVersions: [],
             },
           ],
         );
@@ -570,6 +587,7 @@ describe('DistributionRepository', () => {
               operation: 'remove',
               standardVersions: [],
               recipeVersions: [],
+              skillVersions: [],
             },
           ],
         );
@@ -585,6 +603,7 @@ describe('DistributionRepository', () => {
               operation: 'add',
               standardVersions: [],
               recipeVersions: [rv1],
+              skillVersions: [],
             },
           ],
         );
@@ -628,6 +647,7 @@ describe('DistributionRepository', () => {
               operation: undefined as never,
               standardVersions: [],
               recipeVersions: [rv1],
+              skillVersions: [],
             },
           ],
         );
@@ -668,6 +688,7 @@ describe('DistributionRepository', () => {
               operation: 'add',
               standardVersions: [],
               recipeVersions: [rv1v2],
+              skillVersions: [],
             },
           ],
         );
@@ -683,6 +704,7 @@ describe('DistributionRepository', () => {
               operation: 'add',
               standardVersions: [],
               recipeVersions: [rv1v1],
+              skillVersions: [],
             },
           ],
         );
@@ -704,6 +726,130 @@ describe('DistributionRepository', () => {
 
       it('keeps the most recent version', () => {
         expect(result[0].id).toBe(rv1v2.id);
+      });
+    });
+  });
+
+  describe('findActiveRenderModesByTarget', () => {
+    const createDistribution = (
+      id: string,
+      createdAt: string,
+      renderModes: RenderMode[],
+      distributedPackages: Distribution['distributedPackages'],
+    ): Distribution => ({
+      id: createDistributionId(id),
+      organizationId,
+      authorId: createUserId('author-1'),
+      status: DistributionStatus.success,
+      target: {
+        id: targetId,
+        name: 'default',
+        path: '/',
+        gitRepoId: 'git-repo-1' as never,
+      },
+      distributedPackages,
+      createdAt,
+      renderModes,
+      source: 'cli',
+    });
+
+    describe('when active packages have distributions', () => {
+      let result: Awaited<
+        ReturnType<typeof repository.findActiveRenderModesByTarget>
+      >;
+
+      beforeEach(async () => {
+        jest
+          .spyOn(repository, 'findActivePackageIdsByTarget')
+          .mockResolvedValue([packageId1, packageId2]);
+
+        const distribution1 = createDistribution(
+          'dist-3',
+          '2024-01-03T00:00:00Z',
+          [RenderMode.CLAUDE],
+          [
+            {
+              id: createDistributedPackageId('dp-1'),
+              distributionId: createDistributionId('dist-3'),
+              packageId: packageId1,
+              operation: 'add',
+              standardVersions: [],
+              recipeVersions: [],
+              skillVersions: [],
+            },
+          ],
+        );
+
+        const distribution2 = createDistribution(
+          'dist-2',
+          '2024-01-02T00:00:00Z',
+          [RenderMode.CURSOR],
+          [
+            {
+              id: createDistributedPackageId('dp-2'),
+              distributionId: createDistributionId('dist-2'),
+              packageId: packageId2,
+              operation: 'add',
+              standardVersions: [],
+              recipeVersions: [],
+              skillVersions: [],
+            },
+          ],
+        );
+
+        const distribution3 = createDistribution(
+          'dist-1',
+          '2024-01-01T00:00:00Z',
+          [RenderMode.PACKMIND],
+          [
+            {
+              id: createDistributedPackageId('dp-3'),
+              distributionId: createDistributionId('dist-1'),
+              packageId: packageId1,
+              operation: 'add',
+              standardVersions: [],
+              recipeVersions: [],
+              skillVersions: [],
+            },
+          ],
+        );
+
+        mockQueryBuilder.getMany.mockResolvedValue([
+          distribution1,
+          distribution2,
+          distribution3,
+        ]);
+
+        result = await repository.findActiveRenderModesByTarget(
+          organizationId,
+          targetId,
+        );
+      });
+
+      it('returns the union of latest render modes per active package', () => {
+        const sorted = [...result].sort();
+        expect(sorted).toEqual([RenderMode.CLAUDE, RenderMode.CURSOR].sort());
+      });
+    });
+
+    describe('when no active packages exist', () => {
+      let result: Awaited<
+        ReturnType<typeof repository.findActiveRenderModesByTarget>
+      >;
+
+      beforeEach(async () => {
+        jest
+          .spyOn(repository, 'findActivePackageIdsByTarget')
+          .mockResolvedValue([]);
+
+        result = await repository.findActiveRenderModesByTarget(
+          organizationId,
+          targetId,
+        );
+      });
+
+      it('returns an empty array', () => {
+        expect(result).toEqual([]);
       });
     });
   });

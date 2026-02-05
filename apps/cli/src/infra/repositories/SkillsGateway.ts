@@ -32,6 +32,13 @@ export class SkillsGateway implements ISkillsGateway {
       queryParams.set('cliVersion', command.cliVersion);
     }
 
+    // Add agents from packmind.json config
+    if (command.agents && command.agents.length > 0) {
+      command.agents.forEach((agent) => {
+        queryParams.append('agent', agent);
+      });
+    }
+
     const queryString = queryParams.toString();
     return this.httpClient.request(
       `/api/v0/organizations/${organizationId}/skills/default${queryString ? `?${queryString}` : ''}`,
