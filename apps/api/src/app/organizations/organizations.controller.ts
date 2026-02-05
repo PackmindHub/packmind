@@ -128,6 +128,7 @@ export class OrganizationsController {
     @Query('gitBranch') gitBranch?: string,
     @Query('relativePath') relativePath?: string,
     @Query('agent') agent?: string | string[],
+    @Query('agentsConfigOverride') agentsConfigOverride?: string,
   ): Promise<IPullContentResponse> {
     const userId = request.user.userId;
 
@@ -147,23 +148,22 @@ export class OrganizationsController {
 
     // Normalize and validate agents to array of valid CodingAgents
     let agents: CodingAgent[] | undefined;
-    if (agent) {
-      const agentArray = Array.isArray(agent) ? agent : [agent];
-      const validAgents = agentArray.filter(isValidCodingAgent);
+    const agentArray = agent ? (Array.isArray(agent) ? agent : [agent]) : [];
+    const validAgents = agentArray.filter(isValidCodingAgent);
 
-      // Log warning for invalid agents
-      const invalidAgents = agentArray.filter((a) => !isValidCodingAgent(a));
-      if (invalidAgents.length > 0) {
-        this.logger.info('Invalid agent values provided, ignoring', {
-          invalidAgents,
-          validAgents,
-        });
-      }
+    // Log warning for invalid agents
+    const invalidAgents = agentArray.filter((a) => !isValidCodingAgent(a));
+    if (invalidAgents.length > 0) {
+      this.logger.info('Invalid agent values provided, ignoring', {
+        invalidAgents,
+        validAgents,
+      });
+    }
 
-      // Only set agents if there are valid ones
-      if (validAgents.length > 0) {
-        agents = validAgents;
-      }
+    // Set agents if: valid agents exist OR user explicitly overrode config
+    // This distinguishes "not configured" (agents=undefined) from "configured but empty" (agents=[])
+    if (validAgents.length > 0 || agentsConfigOverride === 'true') {
+      agents = validAgents;
     }
 
     this.logger.info(
