@@ -4,26 +4,36 @@ import { ICommandsGateway } from '../../domain/repositories/ICommandsGateway';
 import {
   createMockCommandsGateway,
   createMockSkillsGateway,
+  createMockStandardsGateway,
 } from '../../mocks/createMockGateways';
 import { recipeFactory } from '@packmind/recipes/test';
 import { skillFactory } from '@packmind/skills/test';
-import { createRecipeId, createSkillId } from '@packmind/types';
+import { standardFactory } from '@packmind/standards/test';
+
+import {
+  createRecipeId,
+  createSkillId,
+  createStandardId,
+} from '@packmind/types';
 import { ISkillsGateway } from '../../domain/repositories/ISkillsGateway';
+import { IStandardsGateway } from '../../domain/repositories/IStandardsGateway';
 
 describe('AddToPackageUseCase', () => {
   let useCase: AddToPackageUseCase;
   let mockGateway: jest.Mocked<IPackmindGateway>;
   let commandsGateway: jest.Mocked<ICommandsGateway>;
   let skillsGateway: jest.Mocked<ISkillsGateway>;
+  let standardsGateway: jest.Mocked<IStandardsGateway>;
 
   beforeEach(() => {
     commandsGateway = createMockCommandsGateway();
     skillsGateway = createMockSkillsGateway();
+    standardsGateway = createMockStandardsGateway();
 
     mockGateway = {
       spaces: { getGlobal: jest.fn().mockResolvedValue({ id: 'space-123' }) },
       packages: { addArtefacts: jest.fn() },
-      standards: { getBySlug: jest.fn() },
+      standards: standardsGateway,
       commands: commandsGateway,
       skills: skillsGateway,
     } as unknown as jest.Mocked<IPackmindGateway>;
@@ -37,18 +47,26 @@ describe('AddToPackageUseCase', () => {
 
   describe('when adding standards', () => {
     beforeEach(() => {
-      mockGateway.standards.getBySlug
+      standardsGateway.list
         .mockResolvedValueOnce({
-          id: 'std-id-1',
-          slug: 'std-1',
-          name: 'Std 1',
-          description: 'desc',
+          standards: [
+            standardFactory({
+              id: createStandardId('std-id-1'),
+              slug: 'std-1',
+              name: 'Std 1',
+              description: 'desc',
+            }),
+          ],
         })
         .mockResolvedValueOnce({
-          id: 'std-id-2',
-          slug: 'std-2',
-          name: 'Std 2',
-          description: 'desc',
+          standards: [
+            standardFactory({
+              id: createStandardId('std-id-2'),
+              slug: 'std-2',
+              name: 'Std 2',
+              description: 'desc',
+            }),
+          ],
         });
       mockGateway.packages.addArtefacts.mockResolvedValue({
         added: { standards: ['std-1', 'std-2'], commands: [], skills: [] },
@@ -166,7 +184,7 @@ describe('AddToPackageUseCase', () => {
 
   describe('when standard does not exist', () => {
     it('throws error with standard slug', async () => {
-      mockGateway.standards.getBySlug.mockResolvedValue(null);
+      standardsGateway.list.mockResolvedValue({ standards: [] });
 
       await expect(
         useCase.execute({
@@ -182,18 +200,26 @@ describe('AddToPackageUseCase', () => {
     let result: { added: string[]; skipped: string[] };
 
     beforeEach(async () => {
-      mockGateway.standards.getBySlug
+      standardsGateway.list
         .mockResolvedValueOnce({
-          id: 'std-id-1',
-          slug: 'std-1',
-          name: 'Std 1',
-          description: 'desc',
+          standards: [
+            standardFactory({
+              id: createStandardId('std-id-1'),
+              slug: 'std-1',
+              name: 'Std 1',
+              description: 'desc',
+            }),
+          ],
         })
         .mockResolvedValueOnce({
-          id: 'std-id-2',
-          slug: 'std-2',
-          name: 'Std 2',
-          description: 'desc',
+          standards: [
+            standardFactory({
+              id: createStandardId('std-id-2'),
+              slug: 'std-2',
+              name: 'Std 2',
+              description: 'desc',
+            }),
+          ],
         });
       mockGateway.packages.addArtefacts.mockResolvedValue({
         added: { standards: ['std-2'], commands: [], skills: [] },

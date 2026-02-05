@@ -8,6 +8,11 @@ export class ListStandardsUseCase implements IListStandardsUseCase {
   constructor(private readonly packmindGateway: IPackmindGateway) {}
 
   public async execute(): Promise<IListStandardsResult> {
-    return this.packmindGateway.standards.list();
+    const globalSpace = await this.packmindGateway.spaces.getGlobal();
+    const listStandardsResponse = await this.packmindGateway.standards.list({
+      spaceId: globalSpace.id,
+    });
+
+    return listStandardsResponse.standards;
   }
 }

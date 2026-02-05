@@ -4,11 +4,10 @@ import {
   CreateStandardInSpaceResult,
   RuleWithId,
   RuleExample,
-  ListStandardsResult,
-  ListedStandard,
 } from '../../domain/repositories/IStandardsGateway';
 import { ISpacesGateway } from '../../domain/repositories/ISpacesGateway';
 import { PackmindHttpClient } from '../http/PackmindHttpClient';
+import { Gateway, IListStandardsBySpaceUseCase } from '@packmind/types';
 
 export class StandardsGateway implements IStandardsGateway {
   constructor(
@@ -57,29 +56,11 @@ export class StandardsGateway implements IStandardsGateway {
     );
   };
 
-  public list = async (): Promise<ListStandardsResult> => {
-    const space = await this.spaces.getGlobal();
+  public list: Gateway<IListStandardsBySpaceUseCase> = async (command) => {
     const { organizationId } = this.httpClient.getAuthContext();
 
-    const response = await this.httpClient.request<{
-      standards: Array<{
-        id: string;
-        slug: string;
-        name: string;
-        description: string;
-      }>;
-    }>(`/api/v0/organizations/${organizationId}/spaces/${space.id}/standards`);
-
-    return response.standards.map((s) => ({
-      id: s.id,
-      slug: s.slug,
-      name: s.name,
-      description: s.description,
-    }));
-  };
-
-  public getBySlug = async (slug: string): Promise<ListedStandard | null> => {
-    const standards = await this.list();
-    return standards.find((s) => s.slug === slug) ?? null;
+    return this.httpClient.request(
+      `/api/v0/organizations/${organizationId}/spaces/${command.spaceId}/standards`,
+    );
   };
 }
