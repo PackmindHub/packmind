@@ -1,5 +1,6 @@
 import {
   AllConfigsResult,
+  CodingAgent,
   HierarchicalConfigResult,
   PackmindFileConfig,
 } from '@packmind/types';
@@ -57,4 +58,30 @@ export interface IConfigFileRepository {
     startDirectory: string,
     stopDirectory: string | null,
   ): Promise<AllConfigsResult>;
+
+  /**
+   * Updates a specific field in packmind.json while preserving property order.
+   * If the file doesn't exist, creates a new one with default packages and the field.
+   *
+   * @param baseDirectory - The directory containing packmind.json
+   * @param field - The field name to update
+   * @param value - The new value for the field
+   */
+  updateConfig<K extends keyof PackmindFileConfig>(
+    baseDirectory: string,
+    field: K,
+    value: PackmindFileConfig[K],
+  ): Promise<void>;
+
+  /**
+   * Updates the agents configuration in packmind.json.
+   * Convenience wrapper around updateConfig for the agents field.
+   *
+   * @param baseDirectory - The directory containing packmind.json
+   * @param agents - Array of coding agents to set
+   */
+  updateAgentsConfig(
+    baseDirectory: string,
+    agents: CodingAgent[],
+  ): Promise<void>;
 }
