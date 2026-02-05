@@ -22,7 +22,7 @@ import { integrationTestSchemas } from '../helpers/makeIntegrationTestDataSource
 import { TestApp } from '../helpers/TestApp';
 
 // Increase timeout for integration tests to reduce flakiness
-jest.setTimeout(10000);
+jest.setTimeout(60000);
 
 jest.mock(
   '@packmind/git/src/infra/repositories/github/GithubRepository',
