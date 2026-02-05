@@ -28,7 +28,8 @@ export function getTargetPrefixedPath(
   filePath: string,
   target: Target,
 ): string {
-  if (target.path === '/') {
+  // Handle root targets (path is '/' or empty)
+  if (!target.path || target.path === '/') {
     return filePath;
   }
 

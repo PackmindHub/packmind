@@ -1987,6 +1987,131 @@ describe('PublishArtifactsUseCase', () => {
     });
   });
 
+  describe('when target path has leading slash', () => {
+    let command: PublishArtifactsCommand;
+    let recipeVersion: ReturnType<typeof recipeVersionFactory>;
+    let target: ReturnType<typeof targetFactory>;
+    let gitRepo: GitRepo;
+
+    beforeEach(() => {
+      recipeVersion = recipeVersionFactory({
+        id: createRecipeVersionId(uuidv4()),
+        name: 'Test Recipe',
+        slug: 'test-recipe',
+        version: 1,
+      });
+
+      gitRepo = {
+        id: createGitRepoId(uuidv4()),
+        owner: 'test-owner',
+        repo: 'test-repo',
+        branch: 'main',
+        providerId: createGitProviderId(uuidv4()),
+      };
+
+      target = targetFactory({
+        id: targetId,
+        gitRepoId: gitRepo.id,
+        name: 'Production',
+        path: '/apps/frontend',
+      });
+
+      command = {
+        userId,
+        organizationId,
+        recipeVersionIds: [recipeVersion.id],
+        standardVersionIds: [],
+        targetIds: [targetId],
+        packagesSlugs: ['new-package'],
+        packageIds: [],
+      };
+
+      mockRecipesPort.getRecipeVersionById.mockResolvedValue(recipeVersion);
+      mockTargetService.findById.mockResolvedValue(target);
+      mockGitPort.getRepositoryById.mockResolvedValue(gitRepo);
+      mockDistributionRepository.findActiveRecipeVersionsByTarget.mockResolvedValue(
+        [],
+      );
+      mockDistributionRepository.findActiveStandardVersionsByTarget.mockResolvedValue(
+        [],
+      );
+      mockDistributionRepository.findActiveRecipeVersionsByTargetAndPackages.mockResolvedValue(
+        [],
+      );
+      mockDistributionRepository.findActiveStandardVersionsByTargetAndPackages.mockResolvedValue(
+        [],
+      );
+      mockGitPort.getFileFromRepo.mockResolvedValue({
+        sha: 'existing-sha',
+        content: JSON.stringify({
+          packages: {
+            'existing-package': '*',
+          },
+          agents: ['cursor', 'claude'],
+        }),
+      });
+      mockCodingAgentPort.renderArtifacts.mockResolvedValue({
+        createOrUpdate: [
+          {
+            path: '.packmind/recipes/test-recipe.md',
+            content: 'recipe content',
+          },
+        ],
+        delete: [],
+      });
+    });
+
+    it('fetches packmind.json from correct path without leading slash', async () => {
+      await useCase.execute(command);
+
+      const calls = mockGitPort.getFileFromRepo.mock.calls;
+      const packmindJsonCall = calls.find(
+        (call) => call[1] === 'apps/frontend/packmind.json',
+      );
+
+      expect(packmindJsonCall).toBeDefined();
+    });
+
+    it('preserves agents from existing packmind.json', async () => {
+      await useCase.execute(command);
+
+      const jobInput = mockPublishArtifactsDelayedJob.addJob.mock.calls[0][0];
+      const packmindJsonFile = jobInput.fileUpdates.createOrUpdate.find(
+        (f: { path: string }) => f.path.endsWith('packmind.json'),
+      );
+
+      assert(packmindJsonFile, 'packmindJsonFile should be defined');
+      assert(
+        packmindJsonFile.content,
+        'packmindJsonFile.content should be defined',
+      );
+      const parsedContent = JSON.parse(packmindJsonFile.content);
+
+      expect(parsedContent.agents).toEqual(['cursor', 'claude']);
+    });
+
+    it('merges existing packages with new package', async () => {
+      await useCase.execute(command);
+
+      const jobInput = mockPublishArtifactsDelayedJob.addJob.mock.calls[0][0];
+      const packmindJsonFile = jobInput.fileUpdates.createOrUpdate.find(
+        (f: { path: string }) => f.path.endsWith('packmind.json'),
+      );
+
+      assert(packmindJsonFile, 'packmindJsonFile should be defined');
+      assert(
+        packmindJsonFile.content,
+        'packmindJsonFile.content should be defined',
+      );
+      const parsedContent = JSON.parse(packmindJsonFile.content);
+
+      expect(parsedContent.packages).toEqual({
+        'existing-package': '*',
+        'new-package': '*',
+      });
+    });
+  });
+
   describe('when packmind.json does not exist in repository', () => {
     let command: PublishArtifactsCommand;
     let recipeVersion: ReturnType<typeof recipeVersionFactory>;
