@@ -53,7 +53,7 @@ export const addToPackageCommand = command({
 
     if (itemTypes.length > 1) {
       logErrorConsole(
-        'Error: Cannot mix item types. Use separate commands for different types.',
+        'Cannot add standards, commands, and skills simultaneously.  Use dedicated commands for each artefact.',
       );
       process.exit(1);
     }
