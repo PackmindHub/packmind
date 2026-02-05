@@ -1,3 +1,5 @@
+import { IPublicUseCase } from '@packmind/types';
+
 export interface ICreatePackageCommand {
   name: string;
   description?: string;
@@ -9,6 +11,7 @@ export interface ICreatePackageResult {
   slug: string;
 }
 
-export interface ICreatePackageUseCase {
-  execute(command: ICreatePackageCommand): Promise<ICreatePackageResult>;
-}
+export type ICreatePackageUseCase = IPublicUseCase<
+  ICreatePackageCommand,
+  ICreatePackageResult
+>;

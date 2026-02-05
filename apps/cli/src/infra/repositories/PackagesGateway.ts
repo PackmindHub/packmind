@@ -1,7 +1,5 @@
 import {
   IPackagesGateway,
-  CreatePackageCommand,
-  CreatePackageResult,
   AddArtefactsToPackageCommand,
   AddArtefactsToPackageResult,
 } from '../../domain/repositories/IPackagesGateway';
@@ -10,6 +8,7 @@ import {
   IGetPackageSummaryUseCase,
   IListPackagesUseCase,
   Gateway,
+  ICreatePackageUseCase,
 } from '@packmind/types';
 
 export class PackagesGateway implements IPackagesGateway {
@@ -34,18 +33,15 @@ export class PackagesGateway implements IPackagesGateway {
     );
   };
 
-  public create = async (
-    spaceId: string,
-    data: CreatePackageCommand,
-  ): Promise<CreatePackageResult> => {
+  public create: Gateway<ICreatePackageUseCase> = async (command) => {
     const { organizationId } = this.httpClient.getAuthContext();
-    const response = await this.httpClient.request<{
-      package: CreatePackageResult;
-    }>(`/api/v0/organizations/${organizationId}/spaces/${spaceId}/packages`, {
-      method: 'POST',
-      body: data,
-    });
-    return response.package;
+    return this.httpClient.request(
+      `/api/v0/organizations/${organizationId}/spaces/${command.spaceId}/packages`,
+      {
+        method: 'POST',
+        body: command,
+      },
+    );
   };
 
   public addArtefacts = async (
