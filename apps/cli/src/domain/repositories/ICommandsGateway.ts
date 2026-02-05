@@ -17,5 +17,4 @@ export type ListCommandsResult = ListedCommand[];
 export interface ICommandsGateway {
   create: Gateway<ICaptureRecipeUseCase>;
   list: Gateway<IListRecipesBySpaceUseCase>;
-  getBySlug(slug: string): Promise<ListedCommand | null>;
 }

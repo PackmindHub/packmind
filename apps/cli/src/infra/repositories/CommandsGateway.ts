@@ -33,9 +33,4 @@ export class CommandsGateway implements ICommandsGateway {
     }
     return listRecipesResponse;
   };
-
-  public getBySlug = async (slug: string): Promise<ListedCommand | null> => {
-    const commands = await this.list();
-    return commands.find((c) => c.slug === slug) ?? null;
-  };
 }
