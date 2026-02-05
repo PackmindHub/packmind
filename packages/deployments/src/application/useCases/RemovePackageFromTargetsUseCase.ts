@@ -285,12 +285,34 @@ export class RemovePackageFromTargetsUseCase implements IRemovePackageFromTarget
         throw new Error(`No artifact resolution found for target ${target.id}`);
       }
 
+      // Fetch existing packmind.json to check for per-target agents
+      const existingPackmindJson = await this.fetchExistingPackmindJson(
+        gitRepo,
+        target,
+      );
+      const existingPackages = existingPackmindJson?.packages ?? {};
+
+      // Use per-target agents if defined in packmind.json, otherwise use org-level agents
+      // Note: empty array [] means "no agents" (intentional), undefined means "use org-level"
+      const targetCodingAgents =
+        existingPackmindJson?.agents !== undefined
+          ? existingPackmindJson.agents
+          : codingAgents;
+
+      if (existingPackmindJson?.agents !== undefined) {
+        this.logger.info('Using per-target agents from packmind.json', {
+          targetId: target.id,
+          targetName: target.name,
+          agents: targetCodingAgents,
+        });
+      }
+
       // Fetch existing files from git
       const existingFiles = await fetchExistingFilesFromGit(
         this.gitPort,
         gitRepo,
         target,
-        codingAgents,
+        targetCodingAgents,
         this.logger,
       );
 
@@ -330,22 +352,16 @@ export class RemovePackageFromTargetsUseCase implements IRemovePackageFromTarget
           standardVersions: removedStandardVersions,
           skillVersions: removedSkillVersions,
         },
-        codingAgents,
+        codingAgents: targetCodingAgents,
         existingFiles,
       });
 
-      // Fetch existing packmind.json and remove the package
-      const existingPackmindJson = await this.fetchExistingPackmindJson(
-        gitRepo,
-        target,
-      );
-      const existingPackages = existingPackmindJson?.packages ?? {};
-
-      // Create config file with package removed
+      // Create config file with package removed (preserving agents if defined)
       const configFile =
         this.packmindConfigService.createRemovalConfigFileModification(
           packageSlugToRemove,
           existingPackages,
+          existingPackmindJson?.agents,
         );
       baseFileUpdates.createOrUpdate.push(configFile);
 

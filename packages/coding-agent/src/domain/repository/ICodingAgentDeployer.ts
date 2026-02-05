@@ -44,6 +44,11 @@ export interface ICodingAgentDeployer {
       skillVersions: SkillVersion[];
     },
   ): Promise<FileUpdates>;
+  generateAgentCleanupFileUpdates(artifacts: {
+    recipeVersions: RecipeVersion[];
+    standardVersions: StandardVersion[];
+    skillVersions: SkillVersion[];
+  }): Promise<FileUpdates>;
   deployArtifacts(
     recipeVersions: RecipeVersion[],
     standardVersions: StandardVersion[],

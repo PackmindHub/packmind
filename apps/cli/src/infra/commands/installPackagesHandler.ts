@@ -1,5 +1,10 @@
 import { PackmindCliHexa } from '../../PackmindCliHexa';
-import { ConfigWithTarget, SummarizedArtifact } from '@packmind/types';
+import {
+  CodingAgent,
+  ConfigWithTarget,
+  PackmindFileConfig,
+  SummarizedArtifact,
+} from '@packmind/types';
 import {
   logWarningConsole,
   formatSlug,
@@ -36,8 +41,9 @@ async function notifyDistributionIfInGitRepo(params: {
   cwd: string;
   packages: string[];
   log: (msg: string) => void;
+  agents?: CodingAgent[];
 }): Promise<boolean> {
-  const { packmindCliHexa, cwd, packages, log } = params;
+  const { packmindCliHexa, cwd, packages, log, agents } = params;
 
   const gitRoot = await packmindCliHexa.tryGetGitRepositoryRoot(cwd);
   if (!gitRoot) {
@@ -63,6 +69,7 @@ async function notifyDistributionIfInGitRepo(params: {
       gitRemoteUrl,
       gitBranch,
       relativePath,
+      agents,
     });
     log('Successfully notified Packmind of the new distribution');
     return true;
@@ -80,8 +87,9 @@ async function installDefaultSkillsIfAtGitRoot(params: {
   packmindCliHexa: PackmindCliHexa;
   cwd: string;
   log: (msg: string) => void;
+  agents?: CodingAgent[];
 }): Promise<void> {
-  const { packmindCliHexa, cwd, log } = params;
+  const { packmindCliHexa, cwd, log, agents } = params;
 
   const gitRoot = await packmindCliHexa.tryGetGitRepositoryRoot(cwd);
 
@@ -94,6 +102,7 @@ async function installDefaultSkillsIfAtGitRoot(params: {
     log('\nInstalling default skills...');
     const skillsResult = await packmindCliHexa.installDefaultSkills({
       cliVersion: CLI_VERSION,
+      agents,
     });
 
     if (skillsResult.errors.length > 0) {
@@ -413,10 +422,17 @@ async function executeInstallForDirectory(
 ): Promise<SingleDirectoryInstallResult> {
   const { packmindCliHexa, log } = deps;
 
-  // Read existing config
+  // Read existing config (including agents if present)
   let configPackages: string[];
+  let configAgents: CodingAgent[] | undefined;
   try {
-    configPackages = await packmindCliHexa.readConfig(directory);
+    const fullConfig = await packmindCliHexa.readFullConfig(directory);
+    if (fullConfig) {
+      configPackages = Object.keys(fullConfig.packages);
+      configAgents = fullConfig.agents;
+    } else {
+      configPackages = [];
+    }
   } catch (err) {
     const errorMessage = err instanceof Error ? err.message : String(err);
     return {
@@ -454,6 +470,7 @@ async function executeInstallForDirectory(
       baseDirectory: directory,
       packagesSlugs: configPackages,
       previousPackagesSlugs: configPackages, // Pass for consistency
+      agents: configAgents, // Pass agents from config if present
     });
 
     // Show installation message with counts
@@ -493,6 +510,7 @@ async function executeInstallForDirectory(
         packmindCliHexa,
         cwd: directory,
         packages: configPackages,
+        agents: configAgents,
         log: () => {
           /* empty */
         },
@@ -527,12 +545,28 @@ export async function installPackagesHandler(
   const { packagesSlugs } = args;
   const cwd = getCwd();
 
-  // Read existing config
+  // Read existing config (including agents if present)
   let configPackages: string[];
+  let configAgents: CodingAgent[] | undefined;
   let configFileExists = false;
   try {
     configFileExists = await packmindCliHexa.configExists(cwd);
-    configPackages = await packmindCliHexa.readConfig(cwd);
+    const fullConfig = await packmindCliHexa.readFullConfig(cwd);
+    if (fullConfig) {
+      // Check for non-wildcard versions and warn the user
+      const hasNonWildcardVersions = Object.values(fullConfig.packages).some(
+        (version) => version !== '*',
+      );
+      if (hasNonWildcardVersions) {
+        logWarningConsole(
+          'Package versions are not supported yet, getting the latest version',
+        );
+      }
+      configPackages = Object.keys(fullConfig.packages);
+      configAgents = fullConfig.agents;
+    } else {
+      configPackages = [];
+    }
   } catch (err) {
     error('ERROR Failed to parse packmind.json');
     if (err instanceof Error) {
@@ -627,6 +661,7 @@ export async function installPackagesHandler(
       gitRemoteUrl,
       gitBranch,
       relativePath,
+      agents: configAgents, // Pass agents from config if present (overrides org-level)
     });
 
     // Show installation message with counts
@@ -658,6 +693,14 @@ export async function installPackagesHandler(
       };
     }
 
+    // Write config only if there are new packages (preserves property order)
+    const newPackages = packagesSlugs.filter(
+      (slug) => !configPackages.includes(slug),
+    );
+    if (newPackages.length > 0) {
+      await packmindCliHexa.addPackagesToConfig(cwd, newPackages);
+    }
+
     // Notify distribution if files were created, updated or deleted (including skill directories)
     let notificationSent = false;
     if (
@@ -670,12 +713,18 @@ export async function installPackagesHandler(
         packmindCliHexa,
         cwd,
         packages: allPackages,
+        agents: configAgents,
         log,
       });
     }
 
     // Install default skills if running at the root of a git repository
-    await installDefaultSkillsIfAtGitRoot({ packmindCliHexa, cwd, log });
+    await installDefaultSkillsIfAtGitRoot({
+      packmindCliHexa,
+      cwd,
+      log,
+      agents: configAgents,
+    });
 
     return {
       filesCreated: result.filesCreated,
@@ -789,11 +838,12 @@ export async function uninstallPackagesHandler(
   }
 
   // Read existing config
-  let configPackages: string[];
+  let configPackages: PackmindFileConfig['packages'];
   let configFileExists = false;
   try {
     configFileExists = await packmindCliHexa.configExists(cwd);
-    configPackages = await packmindCliHexa.readConfig(cwd);
+    const config = await packmindCliHexa.readConfig(cwd);
+    configPackages = config.packages;
   } catch (err) {
     error('❌ Failed to read packmind.json');
     if (err instanceof Error) {
@@ -810,7 +860,7 @@ export async function uninstallPackagesHandler(
   }
 
   // Check if config exists or is empty
-  if (configPackages.length === 0) {
+  if (Object.keys(configPackages).length === 0) {
     if (configFileExists) {
       error('❌ packmind.json is empty.');
     } else {
@@ -827,11 +877,11 @@ export async function uninstallPackagesHandler(
   }
 
   // Check which packages to uninstall are actually installed
-  const packagesToUninstall = packagesSlugs.filter((slug) =>
-    configPackages.includes(slug),
+  const packagesToUninstall = packagesSlugs.filter(
+    (slug) => slug in configPackages,
   );
   const notInstalledPackages = packagesSlugs.filter(
-    (slug) => !configPackages.includes(slug),
+    (slug) => !(slug in configPackages),
   );
 
   // Warn about packages that aren't installed
@@ -866,7 +916,7 @@ export async function uninstallPackagesHandler(
     );
 
     // Calculate remaining packages after removal
-    const remainingPackages = configPackages.filter(
+    const remainingPackages = Object.keys(configPackages).filter(
       (pkg) => !packagesToUninstall.includes(pkg),
     );
 
@@ -881,7 +931,7 @@ export async function uninstallPackagesHandler(
       const result = await packmindCliHexa.installPackages({
         baseDirectory: cwd,
         packagesSlugs: [],
-        previousPackagesSlugs: configPackages,
+        previousPackagesSlugs: Object.keys(configPackages),
       });
 
       // Display results
@@ -907,7 +957,7 @@ export async function uninstallPackagesHandler(
       const result = await packmindCliHexa.installPackages({
         baseDirectory: cwd,
         packagesSlugs: remainingPackages,
-        previousPackagesSlugs: configPackages,
+        previousPackagesSlugs: Object.keys(configPackages),
       });
 
       // Show removal message with counts

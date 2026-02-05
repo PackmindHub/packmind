@@ -1,5 +1,6 @@
 import { PackmindLogger } from '@packmind/logger';
 import {
+  DeleteItem,
   DeleteItemType,
   FileUpdates,
   GitRepo,
@@ -404,6 +405,58 @@ ${recipeVersion.content}`;
     }
 
     return fileUpdates;
+  }
+
+  async generateAgentCleanupFileUpdates(artifacts: {
+    recipeVersions: RecipeVersion[];
+    standardVersions: StandardVersion[];
+    skillVersions: SkillVersion[];
+  }): Promise<FileUpdates> {
+    this.logger.info('Generating agent cleanup file updates for Claude Code', {
+      recipesCount: artifacts.recipeVersions.length,
+      standardsCount: artifacts.standardVersions.length,
+      skillsCount: artifacts.skillVersions.length,
+    });
+
+    const deleteItems: DeleteItem[] = [
+      {
+        path: ClaudeDeployer.COMMANDS_FOLDER_PATH,
+        type: DeleteItemType.Directory,
+      },
+      {
+        path: ClaudeDeployer.STANDARDS_FOLDER_PATH,
+        type: DeleteItemType.Directory,
+      },
+    ];
+
+    // Delete default skills (managed by Packmind)
+    for (const slug of DefaultSkillsDeployer.getDefaultSkillSlugs()) {
+      deleteItems.push({
+        path: `${ClaudeDeployer.SKILLS_FOLDER_PATH}${slug}`,
+        type: DeleteItemType.Directory,
+      });
+    }
+
+    // Delete user package skills (managed by Packmind)
+    for (const skillVersion of artifacts.skillVersions) {
+      deleteItems.push({
+        path: `${ClaudeDeployer.SKILLS_FOLDER_PATH}${skillVersion.slug}`,
+        type: DeleteItemType.Directory,
+      });
+    }
+
+    return {
+      createOrUpdate: [
+        {
+          path: ClaudeDeployer.CLAUDE_MD_PATH,
+          sections: [
+            { key: 'Packmind standards', content: '' },
+            { key: 'Packmind recipes', content: '' },
+          ],
+        },
+      ],
+      delete: deleteItems,
+    };
   }
 
   /**

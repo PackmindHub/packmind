@@ -7,6 +7,8 @@ import {
   DeployArtifactsForAgentsResponse,
   FileModification,
   FileUpdates,
+  GenerateAgentCleanupUpdatesCommand,
+  GenerateAgentCleanupUpdatesResponse,
   GenerateRemovalUpdatesCommand,
   GenerateRemovalUpdatesResponse,
   ICodingAgentDeployerRegistry,
@@ -152,6 +154,22 @@ export class CodingAgentAdapter
     }
 
     return this.mergeFileUpdates(allUpdates);
+  }
+
+  async generateAgentCleanupUpdatesForAgents(
+    command: GenerateAgentCleanupUpdatesCommand,
+  ): Promise<GenerateAgentCleanupUpdatesResponse> {
+    this.logger.info('Generating agent cleanup updates for agents', {
+      agentsCount: command.agents.length,
+      recipesCount: command.artifacts.recipeVersions.length,
+      standardsCount: command.artifacts.standardVersions.length,
+      skillsCount: command.artifacts.skillVersions.length,
+    });
+
+    return this.codingAgentServices.generateAgentCleanupUpdatesForAgents(
+      command.artifacts,
+      command.agents,
+    );
   }
 
   getSkillsFolderPathForAgents(

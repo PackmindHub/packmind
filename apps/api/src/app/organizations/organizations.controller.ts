@@ -16,6 +16,8 @@ import {
   GetPackageSummaryResponse,
   IAccountsPort,
   IDeploymentPort,
+  CodingAgent,
+  isValidCodingAgent,
 } from '@packmind/types';
 import { OrganizationId } from '@packmind/types';
 import { AuthenticatedRequest } from '@packmind/node-utils';
@@ -114,7 +116,7 @@ export class OrganizationsController {
 
   /**
    * Pull all content (recipes and standards) for an organization
-   * GET /organizations/:orgId/pull?packageSlug=backend&packageSlug=frontend&previousPackageSlug=old-package
+   * GET /organizations/:orgId/pull?packageSlug=backend&packageSlug=frontend&previousPackageSlug=old-package&agent=claude&agent=cursor
    */
   @Get('pull')
   async pullAllContent(
@@ -125,6 +127,7 @@ export class OrganizationsController {
     @Query('gitRemoteUrl') gitRemoteUrl?: string,
     @Query('gitBranch') gitBranch?: string,
     @Query('relativePath') relativePath?: string,
+    @Query('agent') agent?: string | string[],
   ): Promise<IPullContentResponse> {
     const userId = request.user.userId;
 
@@ -142,6 +145,27 @@ export class OrganizationsController {
         : [previousPackageSlug]
       : [];
 
+    // Normalize and validate agents to array of valid CodingAgents
+    let agents: CodingAgent[] | undefined;
+    if (agent) {
+      const agentArray = Array.isArray(agent) ? agent : [agent];
+      const validAgents = agentArray.filter(isValidCodingAgent);
+
+      // Log warning for invalid agents
+      const invalidAgents = agentArray.filter((a) => !isValidCodingAgent(a));
+      if (invalidAgents.length > 0) {
+        this.logger.info('Invalid agent values provided, ignoring', {
+          invalidAgents,
+          validAgents,
+        });
+      }
+
+      // Only set agents if there are valid ones
+      if (validAgents.length > 0) {
+        agents = validAgents;
+      }
+    }
+
     this.logger.info(
       'GET /organizations/:orgId/pull - Pulling all content for organization',
       {
@@ -152,6 +176,7 @@ export class OrganizationsController {
         gitRemoteUrl,
         gitBranch,
         relativePath,
+        agents,
       },
     );
 
@@ -164,6 +189,7 @@ export class OrganizationsController {
         gitRemoteUrl,
         gitBranch,
         relativePath,
+        agents,
         source: request.clientSource,
       });
     } catch (error) {

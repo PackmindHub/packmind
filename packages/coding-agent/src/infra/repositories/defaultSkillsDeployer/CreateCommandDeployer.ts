@@ -531,6 +531,7 @@ const COMMAND_CREATOR_LICENSE = `
 `;
 
 export class CreateCommandDeployer implements ISkillDeployer {
+  public readonly slug = 'packmind-create-command';
   public readonly minimumVersion = '0.15.0';
 
   deploy(agentName: string, skillsFolderPath: string): FileUpdates {

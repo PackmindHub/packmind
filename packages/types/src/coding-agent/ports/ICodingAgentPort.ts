@@ -3,6 +3,8 @@ import {
   RenderArtifactsResponse,
   DeployArtifactsForAgentsCommand,
   DeployArtifactsForAgentsResponse,
+  GenerateAgentCleanupUpdatesCommand,
+  GenerateAgentCleanupUpdatesResponse,
   GenerateRemovalUpdatesCommand,
   GenerateRemovalUpdatesResponse,
 } from '../contracts';
@@ -31,6 +33,13 @@ export interface ICodingAgentPort {
   generateRemovalUpdatesForAgents(
     command: GenerateRemovalUpdatesCommand,
   ): Promise<GenerateRemovalUpdatesResponse>;
+
+  /**
+   * Generate file updates to clean up agent-specific files when agents are removed
+   */
+  generateAgentCleanupUpdatesForAgents(
+    command: GenerateAgentCleanupUpdatesCommand,
+  ): Promise<GenerateAgentCleanupUpdatesResponse>;
 
   /**
    * Get the deployer registry for direct access to coding agent deployers

@@ -349,6 +349,63 @@ export class CopilotDeployer implements ICodingAgentDeployer {
     return fileUpdates;
   }
 
+  async generateAgentCleanupFileUpdates(artifacts: {
+    recipeVersions: RecipeVersion[];
+    standardVersions: StandardVersion[];
+    skillVersions: SkillVersion[];
+  }): Promise<FileUpdates> {
+    this.logger.info(
+      'Generating agent cleanup file updates for GitHub Copilot',
+      {
+        recipesCount: artifacts.recipeVersions.length,
+        standardsCount: artifacts.standardVersions.length,
+        skillsCount: artifacts.skillVersions.length,
+      },
+    );
+
+    const fileUpdates: FileUpdates = {
+      createOrUpdate: [],
+      delete: [
+        {
+          path: CopilotDeployer.RECIPES_INDEX_PATH,
+          type: DeleteItemType.File,
+        },
+      ],
+    };
+
+    for (const recipeVersion of artifacts.recipeVersions) {
+      fileUpdates.delete.push({
+        path: `.github/prompts/${recipeVersion.slug}.prompt.md`,
+        type: DeleteItemType.File,
+      });
+    }
+
+    for (const standardVersion of artifacts.standardVersions) {
+      fileUpdates.delete.push({
+        path: `.github/instructions/packmind-${standardVersion.slug}.instructions.md`,
+        type: DeleteItemType.File,
+      });
+    }
+
+    // Delete default skills (managed by Packmind)
+    for (const slug of DefaultSkillsDeployer.getDefaultSkillSlugs()) {
+      fileUpdates.delete.push({
+        path: `${CopilotDeployer.SKILLS_FOLDER_PATH}${slug}`,
+        type: DeleteItemType.Directory,
+      });
+    }
+
+    // Delete user package skills (managed by Packmind)
+    for (const skillVersion of artifacts.skillVersions) {
+      fileUpdates.delete.push({
+        path: `${CopilotDeployer.SKILLS_FOLDER_PATH}${skillVersion.slug}`,
+        type: DeleteItemType.Directory,
+      });
+    }
+
+    return fileUpdates;
+  }
+
   /**
    * Generate GitHub Copilot configuration file for a specific standard
    */

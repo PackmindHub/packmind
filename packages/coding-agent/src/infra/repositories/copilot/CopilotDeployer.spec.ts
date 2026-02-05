@@ -5,6 +5,7 @@ import {
   createSkillFileId,
   createSkillVersionId,
   createTargetId,
+  DeleteItemType,
   GitRepo,
   IStandardsPort,
   SkillVersion,
@@ -192,6 +193,153 @@ describe('CopilotDeployer', () => {
   describe('getSkillsFolderPath', () => {
     it('returns the GitHub skills folder path', () => {
       expect(deployer.getSkillsFolderPath()).toBe('.github/skills/');
+    });
+  });
+
+  describe('generateAgentCleanupFileUpdates', () => {
+    describe('when deleting default skills', () => {
+      let result: Awaited<
+        ReturnType<typeof deployer.generateAgentCleanupFileUpdates>
+      >;
+
+      beforeEach(async () => {
+        result = await deployer.generateAgentCleanupFileUpdates({
+          recipeVersions: [],
+          standardVersions: [],
+          skillVersions: [],
+        });
+      });
+
+      it('deletes packmind-create-skill default skill', () => {
+        expect(
+          result.delete.some(
+            (item) =>
+              item.path === '.github/skills/packmind-create-skill' &&
+              item.type === DeleteItemType.Directory,
+          ),
+        ).toBe(true);
+      });
+
+      it('deletes packmind-create-standard default skill', () => {
+        expect(
+          result.delete.some(
+            (item) =>
+              item.path === '.github/skills/packmind-create-standard' &&
+              item.type === DeleteItemType.Directory,
+          ),
+        ).toBe(true);
+      });
+
+      it('deletes packmind-onboard default skill', () => {
+        expect(
+          result.delete.some(
+            (item) =>
+              item.path === '.github/skills/packmind-onboard' &&
+              item.type === DeleteItemType.Directory,
+          ),
+        ).toBe(true);
+      });
+
+      it('deletes packmind-create-command default skill', () => {
+        expect(
+          result.delete.some(
+            (item) =>
+              item.path === '.github/skills/packmind-create-command' &&
+              item.type === DeleteItemType.Directory,
+          ),
+        ).toBe(true);
+      });
+
+      it('deletes packmind-create-package default skill', () => {
+        expect(
+          result.delete.some(
+            (item) =>
+              item.path === '.github/skills/packmind-create-package' &&
+              item.type === DeleteItemType.Directory,
+          ),
+        ).toBe(true);
+      });
+
+      it('deletes packmind-cli-list-commands default skill', () => {
+        expect(
+          result.delete.some(
+            (item) =>
+              item.path === '.github/skills/packmind-cli-list-commands' &&
+              item.type === DeleteItemType.Directory,
+          ),
+        ).toBe(true);
+      });
+    });
+
+    describe('when deleting user package skills', () => {
+      let result: Awaited<
+        ReturnType<typeof deployer.generateAgentCleanupFileUpdates>
+      >;
+      let userPackageSkillVersions: SkillVersion[];
+
+      beforeEach(async () => {
+        userPackageSkillVersions = [
+          skillVersionFactory({ slug: 'my-custom-skill' }),
+          skillVersionFactory({ slug: 'another-package-skill' }),
+        ];
+
+        result = await deployer.generateAgentCleanupFileUpdates({
+          recipeVersions: [],
+          standardVersions: [],
+          skillVersions: userPackageSkillVersions,
+        });
+      });
+
+      it('deletes my-custom-skill user package skill', () => {
+        expect(
+          result.delete.some(
+            (item) =>
+              item.path === '.github/skills/my-custom-skill' &&
+              item.type === DeleteItemType.Directory,
+          ),
+        ).toBe(true);
+      });
+
+      it('deletes another-package-skill user package skill', () => {
+        expect(
+          result.delete.some(
+            (item) =>
+              item.path === '.github/skills/another-package-skill' &&
+              item.type === DeleteItemType.Directory,
+          ),
+        ).toBe(true);
+      });
+    });
+
+    describe('when user has skills not managed by Packmind', () => {
+      let result: Awaited<
+        ReturnType<typeof deployer.generateAgentCleanupFileUpdates>
+      >;
+
+      beforeEach(async () => {
+        result = await deployer.generateAgentCleanupFileUpdates({
+          recipeVersions: [],
+          standardVersions: [],
+          skillVersions: [skillVersionFactory({ slug: 'managed-skill' })],
+        });
+      });
+
+      it('does not include unmanaged skill in delete list', () => {
+        expect(
+          result.delete.some(
+            (item) => item.path === '.github/skills/user-created-skill',
+          ),
+        ).toBe(false);
+      });
+
+      it('only deletes skills that are explicitly managed', () => {
+        const skillDeleteItems = result.delete.filter((item) =>
+          item.path.startsWith('.github/skills/'),
+        );
+
+        // Should include: 6 default skills + 1 managed skill = 7 total
+        expect(skillDeleteItems).toHaveLength(7);
+      });
     });
   });
 });

@@ -9,6 +9,7 @@ import {
   PackageId,
   RecipeId,
   RecipeVersion,
+  RenderMode,
   SkillId,
   SkillVersion,
   StandardId,
@@ -923,6 +924,89 @@ export class DistributionRepository implements IDistributionRepository {
       return activePackageIds;
     } catch (error) {
       this.logger.error('Failed to find active package IDs by target', {
+        organizationId,
+        targetId,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
+    }
+  }
+
+  async findActiveRenderModesByTarget(
+    organizationId: OrganizationId,
+    targetId: TargetId,
+  ): Promise<RenderMode[]> {
+    this.logger.info('Finding active render modes by target', {
+      organizationId,
+      targetId,
+    });
+
+    try {
+      const activePackageIds = await this.findActivePackageIdsByTarget(
+        organizationId,
+        targetId,
+      );
+
+      if (activePackageIds.length === 0) {
+        this.logger.info('No active packages found for render modes lookup', {
+          organizationId,
+          targetId,
+        });
+        return [];
+      }
+
+      const distributions = await this.repository
+        .createQueryBuilder('distribution')
+        .innerJoinAndSelect(
+          'distribution.distributedPackages',
+          'distributedPackage',
+        )
+        .where('distribution.organizationId = :organizationId', {
+          organizationId,
+        })
+        .andWhere('distribution.target_id = :targetId', { targetId })
+        .andWhere('distribution.status = :status', {
+          status: DistributionStatus.success,
+        })
+        .orderBy('distribution.createdAt', 'DESC')
+        .getMany();
+
+      const remainingPackageIds = new Set<string>(
+        activePackageIds.map((id) => id as string),
+      );
+      const renderModes = new Set<RenderMode>();
+
+      for (const distribution of distributions) {
+        for (const distributedPackage of distribution.distributedPackages) {
+          const packageId = distributedPackage.packageId as string;
+          if (!remainingPackageIds.has(packageId)) {
+            continue;
+          }
+
+          remainingPackageIds.delete(packageId);
+
+          for (const mode of distribution.renderModes ?? []) {
+            renderModes.add(mode);
+          }
+        }
+
+        if (remainingPackageIds.size === 0) {
+          break;
+        }
+      }
+
+      const activeRenderModes = Array.from(renderModes.values());
+
+      this.logger.info('Active render modes found by target', {
+        organizationId,
+        targetId,
+        activePackageCount: activePackageIds.length,
+        renderModesCount: activeRenderModes.length,
+      });
+
+      return activeRenderModes;
+    } catch (error) {
+      this.logger.error('Failed to find active render modes by target', {
         organizationId,
         targetId,
         error: error instanceof Error ? error.message : String(error),

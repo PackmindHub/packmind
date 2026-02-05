@@ -274,21 +274,24 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
         );
 
         // Prepare unified deployment using renderArtifacts for ALL targets
-        const { fileUpdatesPerTarget, addedPackmindSkills } =
-          await this.prepareUnifiedDeployment(
-            command.userId as UserId,
-            command.organizationId as OrganizationId,
-            filteredRecipeVersions,
-            standardVersionsWithRules,
-            filteredSkillVersions,
-            removedRecipeVersions,
-            removedStandardVersions,
-            skillVersionsToRemove,
-            gitRepo,
-            targets,
-            codingAgents,
-            command.packagesSlugs,
-          );
+        const {
+          fileUpdatesPerTarget,
+          renderModesPerTarget,
+          addedPackmindSkills,
+        } = await this.prepareUnifiedDeployment(
+          command.userId as UserId,
+          command.organizationId as OrganizationId,
+          filteredRecipeVersions,
+          standardVersionsWithRules,
+          filteredSkillVersions,
+          removedRecipeVersions,
+          removedStandardVersions,
+          skillVersionsToRemove,
+          gitRepo,
+          targets,
+          codingAgents,
+          command.packagesSlugs,
+        );
 
         // Build commit message for the job
         const commitMessage = this.buildCommitMessage(
@@ -311,10 +314,13 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
         // Create distribution records for each target with in_progress status
         const targetDistributions: Distribution[] = [];
         for (const target of targets) {
+          // Use per-target render modes from packmind.json, fallback to org-level
+          const targetRenderModes =
+            renderModesPerTarget.get(target.id) ?? activeRenderModes;
           const distribution = await this.createDistribution(
             command,
             target,
-            activeRenderModes,
+            targetRenderModes,
             DistributionStatus.in_progress,
             undefined,
           );
@@ -444,18 +450,65 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
     packagesSlugs: string[],
   ): Promise<{
     fileUpdatesPerTarget: Map<string, FileUpdates>;
+    renderModesPerTarget: Map<string, RenderMode[]>;
     addedPackmindSkills: string[];
   }> {
     const fileUpdatesPerTarget = new Map<string, FileUpdates>();
+    const renderModesPerTarget = new Map<string, RenderMode[]>();
     let addedPackmindSkills: string[] = [];
 
     for (const target of targets) {
+      // Fetch existing packmind.json to check for per-target agents
+      const existingPackmindJson = await this.fetchExistingPackmindJson(
+        gitRepo,
+        target,
+      );
+      const existingPackages = existingPackmindJson?.packages ?? {};
+
+      // Use per-target agents if defined in packmind.json, otherwise use org-level agents
+      // Note: empty array [] means "no agents" (intentional), undefined means "use org-level"
+      const targetCodingAgents =
+        existingPackmindJson?.agents !== undefined
+          ? existingPackmindJson.agents
+          : codingAgents;
+
+      if (existingPackmindJson?.agents !== undefined) {
+        this.logger.info('Using per-target agents from packmind.json', {
+          targetId: target.id,
+          targetName: target.name,
+          agents: targetCodingAgents,
+        });
+      }
+
+      // Convert target coding agents to render modes for distribution storage
+      const targetRenderModes =
+        this.renderModeConfigurationService.mapCodingAgentsToRenderModes(
+          targetCodingAgents,
+        );
+      renderModesPerTarget.set(target.id, targetRenderModes);
+
+      const previousRenderModes =
+        await this.distributionRepository.findActiveRenderModesByTarget(
+          organizationId,
+          target.id,
+        );
+
+      const previousAgents =
+        this.renderModeConfigurationService.mapRenderModesToCodingAgents(
+          previousRenderModes,
+        );
+
+      const currentAgentSet = new Set(targetCodingAgents);
+      const removedAgents = previousAgents.filter(
+        (agent) => !currentAgentSet.has(agent),
+      );
+
       // Fetch existing files from git
       const existingFiles = await fetchExistingFilesFromGit(
         this.gitPort,
         gitRepo,
         target,
-        codingAgents,
+        targetCodingAgents,
         this.logger,
       );
 
@@ -473,22 +526,49 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
           standardVersions: removedStandardVersions,
           skillVersions: removedSkillVersions,
         },
-        codingAgents,
+        codingAgents: targetCodingAgents,
         existingFiles,
       });
 
-      // Fetch existing packmind.json to merge with new packages
-      const existingPackmindJson = await this.fetchExistingPackmindJson(
-        gitRepo,
-        target,
-      );
-      const existingPackages = existingPackmindJson?.packages ?? {};
+      if (removedAgents.length > 0) {
+        const [
+          activeRecipeVersions,
+          activeStandardVersions,
+          activeSkillVersions,
+        ] = await Promise.all([
+          this.distributionRepository.findActiveRecipeVersionsByTarget(
+            organizationId,
+            target.id,
+          ),
+          this.distributionRepository.findActiveStandardVersionsByTarget(
+            organizationId,
+            target.id,
+          ),
+          this.distributionRepository.findActiveSkillVersionsByTarget(
+            organizationId,
+            target.id,
+          ),
+        ]);
 
-      // Add packmind.json config file with merged packages
+        const cleanupFileUpdates =
+          await this.codingAgentPort.generateAgentCleanupUpdatesForAgents({
+            agents: removedAgents,
+            artifacts: {
+              recipeVersions: activeRecipeVersions,
+              standardVersions: activeStandardVersions,
+              skillVersions: activeSkillVersions,
+            },
+          });
+
+        this.mergeFileUpdates(baseFileUpdates, cleanupFileUpdates);
+      }
+
+      // Add packmind.json config file with merged packages (preserving agents if defined)
       const configFile =
         this.packmindConfigService.createConfigFileModification(
           packagesSlugs,
           existingPackages,
+          existingPackmindJson?.agents,
         );
       baseFileUpdates.createOrUpdate.push(configFile);
 
@@ -506,6 +586,7 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
           organizationId,
           baseFileUpdates,
           gitRepo,
+          targetCodingAgents,
         );
       }
 
@@ -524,7 +605,7 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
       });
     }
 
-    return { fileUpdatesPerTarget, addedPackmindSkills };
+    return { fileUpdatesPerTarget, renderModesPerTarget, addedPackmindSkills };
   }
 
   /**
@@ -959,10 +1040,12 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
     organizationId: OrganizationId,
     fileUpdates: FileUpdates,
     gitRepo: GitRepo,
+    targetCodingAgents: CodingAgent[],
   ): Promise<string[]> {
     const result = await this.deployDefaultSkillsUseCase.execute({
       userId,
       organizationId,
+      agents: targetCodingAgents,
     });
 
     // Extract skill names from paths and determine which are new

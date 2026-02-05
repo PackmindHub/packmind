@@ -138,6 +138,8 @@ describe('CodingAgentAdapter', () => {
         deployStandards: jest.fn(),
         deploySkills: jest.fn(),
         generateRemovalFileUpdates: jest.fn(),
+        generateAgentCleanupFileUpdates: jest.fn(),
+        getSkillsFolderPath: jest.fn(),
       } as unknown as jest.Mocked<ICodingAgentDeployer>;
 
       mockDeployerRegistry = {
@@ -258,6 +260,8 @@ describe('CodingAgentAdapter', () => {
         deployStandards: jest.fn(),
         deploySkills: jest.fn(),
         generateRemovalFileUpdates: jest.fn(),
+        generateAgentCleanupFileUpdates: jest.fn(),
+        getSkillsFolderPath: jest.fn(),
       } as unknown as jest.Mocked<ICodingAgentDeployer>;
 
       mockDeployerRegistry = {
@@ -336,6 +340,7 @@ describe('CodingAgentAdapter', () => {
         deployStandards: jest.fn(),
         deploySkills: jest.fn(),
         generateRemovalFileUpdates: jest.fn(),
+        generateAgentCleanupFileUpdates: jest.fn(),
         getSkillsFolderPath: jest.fn(),
       } as unknown as jest.Mocked<ICodingAgentDeployer>;
 

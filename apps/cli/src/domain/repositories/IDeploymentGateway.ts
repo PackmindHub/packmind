@@ -6,6 +6,7 @@ export type NotifyDistributionCommand = {
   gitRemoteUrl: string;
   gitBranch: string;
   relativePath: string;
+  agents?: string[];
 };
 
 export type NotifyDistributionResult = {

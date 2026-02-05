@@ -1,4 +1,4 @@
-import { IPublicUseCase } from '@packmind/types';
+import { CodingAgent, IPublicUseCase } from '@packmind/types';
 
 export type IInstallPackagesCommand = {
   baseDirectory?: string; // Directory where files should be created (defaults to current working directory)
@@ -8,6 +8,8 @@ export type IInstallPackagesCommand = {
   gitRemoteUrl?: string;
   gitBranch?: string;
   relativePath?: string;
+  // Optional agents to generate artifacts for (overrides org-level config)
+  agents?: CodingAgent[];
 };
 
 export type IInstallPackagesResult = {

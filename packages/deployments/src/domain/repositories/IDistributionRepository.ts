@@ -12,6 +12,7 @@ import {
   StandardId,
   StandardVersion,
   TargetId,
+  RenderMode,
 } from '@packmind/types';
 
 export interface IDistributionRepository {
@@ -130,6 +131,15 @@ export interface IDistributionRepository {
     organizationId: OrganizationId,
     targetId: TargetId,
   ): Promise<PackageId[]>;
+
+  /**
+   * Get render modes used by the latest successful distribution per active package.
+   * Aggregates render modes across active packages for a target.
+   */
+  findActiveRenderModesByTarget(
+    organizationId: OrganizationId,
+    targetId: TargetId,
+  ): Promise<RenderMode[]>;
 
   /**
    * Update the status of a distribution after async processing completes.

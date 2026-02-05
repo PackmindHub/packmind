@@ -61,7 +61,11 @@ import {
   IListSkillsCommand,
   IListSkillsResult,
 } from './domain/useCases/IListSkillsUseCase';
-import { AllConfigsResult, HierarchicalConfigResult } from '@packmind/types';
+import {
+  AllConfigsResult,
+  HierarchicalConfigResult,
+  PackmindFileConfig,
+} from '@packmind/types';
 import { logWarningConsole } from './infra/utils/consoleLogger';
 import {
   NotifyDistributionCommand,
@@ -174,12 +178,12 @@ export class PackmindCliHexa {
     );
   }
 
-  public async readConfig(baseDirectory: string): Promise<string[]> {
+  public async readConfig(baseDirectory: string): Promise<PackmindFileConfig> {
     const config =
       await this.hexa.repositories.configFileRepository.readConfig(
         baseDirectory,
       );
-    if (!config) return [];
+    if (!config) return { packages: {} };
 
     // Check for non-wildcard versions and warn the user
     const hasNonWildcardVersions = Object.values(config.packages).some(
@@ -192,7 +196,19 @@ export class PackmindCliHexa {
       );
     }
 
-    return Object.keys(config.packages);
+    return config;
+  }
+
+  /**
+   * Reads the full packmind.json configuration including agents.
+   * Returns null if no config file exists.
+   */
+  public async readFullConfig(
+    baseDirectory: string,
+  ): Promise<PackmindFileConfig | null> {
+    return this.hexa.repositories.configFileRepository.readConfig(
+      baseDirectory,
+    );
   }
 
   public async writeConfig(
@@ -204,9 +220,35 @@ export class PackmindCliHexa {
       packages[slug] = '*';
     });
 
+    // Read existing config to preserve other fields (like agents)
+    const existingConfig =
+      await this.hexa.repositories.configFileRepository.readConfig(
+        baseDirectory,
+      );
+
     await this.hexa.repositories.configFileRepository.writeConfig(
       baseDirectory,
-      { packages },
+      {
+        ...existingConfig,
+        packages,
+      },
+    );
+  }
+
+  /**
+   * Adds new packages to an existing packmind.json while preserving property order.
+   * If the file doesn't exist, creates a new one with default order (packages first).
+   *
+   * @param baseDirectory - The directory containing packmind.json
+   * @param newPackageSlugs - Array of package slugs to add
+   */
+  public async addPackagesToConfig(
+    baseDirectory: string,
+    newPackageSlugs: string[],
+  ): Promise<void> {
+    return this.hexa.repositories.configFileRepository.addPackagesToConfig(
+      baseDirectory,
+      newPackageSlugs,
     );
   }
 

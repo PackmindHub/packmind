@@ -33,8 +33,16 @@ class MockDeployer implements ICodingAgentDeployer {
     return { createOrUpdate: [], delete: [] };
   }
 
+  async generateAgentCleanupFileUpdates(): Promise<FileUpdates> {
+    return { createOrUpdate: [], delete: [] };
+  }
+
   async deployArtifacts(): Promise<FileUpdates> {
     return { createOrUpdate: [], delete: [] };
+  }
+
+  getSkillsFolderPath(): string | undefined {
+    return undefined;
   }
 }
 

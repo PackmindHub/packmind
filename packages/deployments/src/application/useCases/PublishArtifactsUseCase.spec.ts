@@ -3,7 +3,11 @@ import { CodingAgents } from '@packmind/coding-agent';
 import { IDistributionRepository } from '../../domain/repositories/IDistributionRepository';
 import { TargetService } from '../services/TargetService';
 import { RenderModeConfigurationService } from '../services/RenderModeConfigurationService';
-import { createUserId, createOrganizationId } from '@packmind/types';
+import {
+  createUserId,
+  createOrganizationId,
+  createPackageId,
+} from '@packmind/types';
 import {
   PublishArtifactsCommand,
   DistributionStatus,
@@ -97,6 +101,10 @@ describe('PublishArtifactsUseCase', () => {
 
     mockCodingAgentPort = {
       renderArtifacts: jest.fn(),
+      generateAgentCleanupUpdatesForAgents: jest.fn().mockResolvedValue({
+        createOrUpdate: [],
+        delete: [],
+      }),
     } as unknown as jest.Mocked<ICodingAgentPort>;
 
     mockDistributionRepository = {
@@ -107,6 +115,7 @@ describe('PublishArtifactsUseCase', () => {
       findActiveStandardVersionsByTargetAndPackages: jest.fn(),
       findActiveRecipeVersionsByTargetAndPackages: jest.fn(),
       findActiveSkillVersionsByTargetAndPackages: jest.fn(),
+      findActiveRenderModesByTarget: jest.fn(),
     } as unknown as jest.Mocked<IDistributionRepository>;
 
     // Default empty arrays for skill-related methods (can be overridden in test blocks)
@@ -114,6 +123,9 @@ describe('PublishArtifactsUseCase', () => {
       [],
     );
     mockDistributionRepository.findActiveSkillVersionsByTargetAndPackages.mockResolvedValue(
+      [],
+    );
+    mockDistributionRepository.findActiveRenderModesByTarget.mockResolvedValue(
       [],
     );
 
@@ -124,6 +136,7 @@ describe('PublishArtifactsUseCase', () => {
     mockRenderModeConfigurationService = {
       getActiveRenderModes: jest.fn(),
       mapRenderModesToCodingAgents: jest.fn(),
+      mapCodingAgentsToRenderModes: jest.fn(),
     } as unknown as jest.Mocked<RenderModeConfigurationService>;
 
     mockRenderModeConfigurationService.getActiveRenderModes.mockResolvedValue(
@@ -131,6 +144,9 @@ describe('PublishArtifactsUseCase', () => {
     );
     mockRenderModeConfigurationService.mapRenderModesToCodingAgents.mockReturnValue(
       activeCodingAgents,
+    );
+    mockRenderModeConfigurationService.mapCodingAgentsToRenderModes.mockReturnValue(
+      activeRenderModes,
     );
 
     mockEventEmitterService = {
@@ -1160,6 +1176,9 @@ describe('PublishArtifactsUseCase', () => {
       };
 
       mockRenderModeConfigurationService.getActiveRenderModes.mockResolvedValueOnce(
+        DEFAULT_ACTIVE_RENDER_MODES,
+      );
+      mockRenderModeConfigurationService.mapCodingAgentsToRenderModes.mockReturnValueOnce(
         DEFAULT_ACTIVE_RENDER_MODES,
       );
       mockRecipesPort.getRecipeVersionById.mockResolvedValue(recipeVersion);
@@ -2442,12 +2461,165 @@ describe('PublishArtifactsUseCase', () => {
       expect(defaultSkillFile).toBeDefined();
     });
 
-    it('calls DeployDefaultSkillsUseCase', async () => {
+    it('calls DeployDefaultSkillsUseCase with org-level agents', async () => {
       await useCase.execute(command);
 
       expect(mockDeployDefaultSkillsUseCase.execute).toHaveBeenCalledWith({
         userId,
         organizationId,
+        agents: activeCodingAgents,
+      });
+    });
+  });
+
+  describe('when deploying to root target with packmind.json agents', () => {
+    let command: PublishArtifactsCommand;
+    let recipeVersion: ReturnType<typeof recipeVersionFactory>;
+    let target: ReturnType<typeof targetFactory>;
+    let gitRepo: GitRepo;
+    const perTargetAgents = [CodingAgents.claude, CodingAgents.cursor];
+
+    beforeEach(() => {
+      recipeVersion = recipeVersionFactory({
+        id: createRecipeVersionId(uuidv4()),
+        name: 'Test Recipe',
+        slug: 'test-recipe',
+        version: 1,
+      });
+
+      gitRepo = {
+        id: createGitRepoId(uuidv4()),
+        owner: 'test-owner',
+        repo: 'test-repo',
+        branch: 'main',
+        providerId: createGitProviderId(uuidv4()),
+      };
+
+      target = targetFactory({
+        id: targetId,
+        gitRepoId: gitRepo.id,
+        name: 'Root Target',
+        path: '/',
+      });
+
+      command = {
+        userId,
+        organizationId,
+        recipeVersionIds: [recipeVersion.id],
+        standardVersionIds: [],
+        targetIds: [targetId],
+        packagesSlugs: [],
+        packageIds: [],
+      };
+
+      mockDeployDefaultSkillsUseCase.execute.mockResolvedValue({
+        fileUpdates: {
+          createOrUpdate: [
+            {
+              path: '.claude/skills/default-skill/SKILL.md',
+              content: 'default skill content',
+            },
+          ],
+          delete: [],
+        },
+      });
+
+      mockRecipesPort.getRecipeVersionById.mockResolvedValue(recipeVersion);
+      mockTargetService.findById.mockResolvedValue(target);
+      mockGitPort.getRepositoryById.mockResolvedValue(gitRepo);
+      mockDistributionRepository.findActiveRecipeVersionsByTarget.mockResolvedValue(
+        [],
+      );
+      mockDistributionRepository.findActiveStandardVersionsByTarget.mockResolvedValue(
+        [],
+      );
+      mockDistributionRepository.findActiveRecipeVersionsByTargetAndPackages.mockResolvedValue(
+        [],
+      );
+      mockDistributionRepository.findActiveStandardVersionsByTargetAndPackages.mockResolvedValue(
+        [],
+      );
+      mockCodingAgentPort.renderArtifacts.mockResolvedValue({
+        createOrUpdate: [
+          {
+            path: '.packmind/recipes/test-recipe.md',
+            content: 'recipe content',
+          },
+        ],
+        delete: [],
+      });
+    });
+
+    describe('when packmind.json has agents configured', () => {
+      beforeEach(() => {
+        mockGitPort.getFileFromRepo.mockResolvedValue({
+          sha: 'packmind.json',
+          content: JSON.stringify({
+            packages: {},
+            agents: ['claude', 'cursor'],
+          }),
+        });
+      });
+
+      it('calls DeployDefaultSkillsUseCase with per-target agents', async () => {
+        await useCase.execute(command);
+
+        expect(mockDeployDefaultSkillsUseCase.execute).toHaveBeenCalledWith({
+          userId,
+          organizationId,
+          agents: perTargetAgents,
+        });
+      });
+
+      it('does not use org-level agents for default skills', async () => {
+        await useCase.execute(command);
+
+        const executeCall =
+          mockDeployDefaultSkillsUseCase.execute.mock.calls[0][0];
+        expect(executeCall.agents).not.toEqual(activeCodingAgents);
+      });
+    });
+
+    describe('when packmind.json has empty agents array', () => {
+      beforeEach(() => {
+        mockGitPort.getFileFromRepo.mockResolvedValue({
+          sha: 'packmind.json',
+          content: JSON.stringify({
+            packages: {},
+            agents: [],
+          }),
+        });
+      });
+
+      it('calls DeployDefaultSkillsUseCase with empty agents array', async () => {
+        await useCase.execute(command);
+
+        expect(mockDeployDefaultSkillsUseCase.execute).toHaveBeenCalledWith({
+          userId,
+          organizationId,
+          agents: [],
+        });
+      });
+    });
+
+    describe('when packmind.json has no agents property', () => {
+      beforeEach(() => {
+        mockGitPort.getFileFromRepo.mockResolvedValue({
+          sha: 'packmind.json',
+          content: JSON.stringify({
+            packages: {},
+          }),
+        });
+      });
+
+      it('calls DeployDefaultSkillsUseCase with org-level agents', async () => {
+        await useCase.execute(command);
+
+        expect(mockDeployDefaultSkillsUseCase.execute).toHaveBeenCalledWith({
+          userId,
+          organizationId,
+          agents: activeCodingAgents,
+        });
       });
     });
   });
@@ -2488,7 +2660,7 @@ describe('PublishArtifactsUseCase', () => {
         skillVersionIds: [],
         targetIds: [targetId],
         packagesSlugs: ['package-a'],
-        packageIds: ['package-a-id'],
+        packageIds: [createPackageId('package-a-id')],
       };
 
       mockTargetService.findById.mockResolvedValue(target);
@@ -2584,7 +2756,7 @@ describe('PublishArtifactsUseCase', () => {
         standardVersionIds: [],
         targetIds: [targetId],
         packagesSlugs: ['package-a'],
-        packageIds: ['package-a-id'],
+        packageIds: [createPackageId('package-a-id')],
       };
 
       mockTargetService.findById.mockResolvedValue(target);
@@ -2683,7 +2855,7 @@ describe('PublishArtifactsUseCase', () => {
         standardVersionIds: [],
         targetIds: [targetId],
         packagesSlugs: ['package-a'],
-        packageIds: ['package-a-id'],
+        packageIds: [createPackageId('package-a-id')],
       };
 
       mockTargetService.findById.mockResolvedValue(target);
@@ -2826,6 +2998,453 @@ describe('PublishArtifactsUseCase', () => {
       await useCase.execute(command);
 
       expect(mockDeployDefaultSkillsUseCase.execute).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('when packmind.json has agents defined', () => {
+    let command: PublishArtifactsCommand;
+    let recipeVersion: ReturnType<typeof recipeVersionFactory>;
+    let target: ReturnType<typeof targetFactory>;
+    let gitRepo: GitRepo;
+
+    beforeEach(() => {
+      recipeVersion = recipeVersionFactory({
+        id: createRecipeVersionId(uuidv4()),
+        name: 'Test Recipe',
+        slug: 'test-recipe',
+        version: 1,
+      });
+
+      gitRepo = {
+        id: createGitRepoId(uuidv4()),
+        owner: 'test-owner',
+        repo: 'test-repo',
+        branch: 'main',
+        providerId: createGitProviderId(uuidv4()),
+      };
+
+      target = targetFactory({
+        id: targetId,
+        gitRepoId: gitRepo.id,
+        name: 'Production',
+        path: 'docs',
+      });
+
+      command = {
+        userId,
+        organizationId,
+        recipeVersionIds: [recipeVersion.id],
+        standardVersionIds: [],
+        targetIds: [targetId],
+        packagesSlugs: ['my-package'],
+        packageIds: [],
+      };
+
+      mockRecipesPort.getRecipeVersionById.mockResolvedValue(recipeVersion);
+      mockTargetService.findById.mockResolvedValue(target);
+      mockGitPort.getRepositoryById.mockResolvedValue(gitRepo);
+      mockDistributionRepository.findActiveRecipeVersionsByTarget.mockResolvedValue(
+        [],
+      );
+      mockDistributionRepository.findActiveStandardVersionsByTarget.mockResolvedValue(
+        [],
+      );
+      mockDistributionRepository.findActiveRecipeVersionsByTargetAndPackages.mockResolvedValue(
+        [],
+      );
+      mockDistributionRepository.findActiveStandardVersionsByTargetAndPackages.mockResolvedValue(
+        [],
+      );
+      mockCodingAgentPort.renderArtifacts.mockResolvedValue({
+        createOrUpdate: [],
+        delete: [],
+      });
+    });
+
+    afterEach(() => {
+      jest.clearAllMocks();
+    });
+
+    describe('when agents are specified in packmind.json', () => {
+      const perTargetAgents = [CodingAgents.claude, CodingAgents.cursor];
+
+      beforeEach(() => {
+        // Return packmind.json with agents defined
+        mockGitPort.getFileFromRepo.mockResolvedValue({
+          sha: 'docs/packmind.json',
+          content: JSON.stringify({
+            packages: { 'existing-pkg': '*' },
+            agents: ['claude', 'cursor'],
+          }),
+        });
+      });
+
+      it('uses per-target agents instead of org-level agents', async () => {
+        await useCase.execute(command);
+
+        expect(mockCodingAgentPort.renderArtifacts).toHaveBeenCalledWith(
+          expect.objectContaining({
+            codingAgents: perTargetAgents,
+          }),
+        );
+      });
+
+      it('does not use org-level agents', async () => {
+        await useCase.execute(command);
+
+        const renderCall = mockCodingAgentPort.renderArtifacts.mock.calls[0][0];
+        expect(renderCall.codingAgents).not.toEqual(activeCodingAgents);
+      });
+    });
+
+    describe('when agents is an empty array in packmind.json', () => {
+      beforeEach(() => {
+        // Return packmind.json with empty agents array (intentional - no agents)
+        mockGitPort.getFileFromRepo.mockResolvedValue({
+          sha: 'docs/packmind.json',
+          content: JSON.stringify({
+            packages: { 'existing-pkg': '*' },
+            agents: [],
+          }),
+        });
+      });
+
+      it('uses empty agents array as specified', async () => {
+        await useCase.execute(command);
+
+        expect(mockCodingAgentPort.renderArtifacts).toHaveBeenCalledWith(
+          expect.objectContaining({
+            codingAgents: [],
+          }),
+        );
+      });
+    });
+
+    describe('when agents is undefined in packmind.json', () => {
+      beforeEach(() => {
+        // Return packmind.json without agents property
+        mockGitPort.getFileFromRepo.mockResolvedValue({
+          sha: 'docs/packmind.json',
+          content: JSON.stringify({
+            packages: { 'existing-pkg': '*' },
+          }),
+        });
+      });
+
+      it('falls back to org-level agents', async () => {
+        await useCase.execute(command);
+
+        expect(mockCodingAgentPort.renderArtifacts).toHaveBeenCalledWith(
+          expect.objectContaining({
+            codingAgents: activeCodingAgents,
+          }),
+        );
+      });
+    });
+
+    describe('when packmind.json does not exist', () => {
+      beforeEach(() => {
+        mockGitPort.getFileFromRepo.mockResolvedValue(null);
+      });
+
+      it('falls back to org-level agents', async () => {
+        await useCase.execute(command);
+
+        expect(mockCodingAgentPort.renderArtifacts).toHaveBeenCalledWith(
+          expect.objectContaining({
+            codingAgents: activeCodingAgents,
+          }),
+        );
+      });
+    });
+  });
+
+  describe('render mode cleanup', () => {
+    let command: PublishArtifactsCommand;
+    let recipeVersion: ReturnType<typeof recipeVersionFactory>;
+    let standardVersion: ReturnType<typeof standardVersionFactory>;
+    let target: ReturnType<typeof targetFactory>;
+    let gitRepo: GitRepo;
+
+    beforeEach(() => {
+      recipeVersion = recipeVersionFactory({
+        id: createRecipeVersionId(uuidv4()),
+        name: 'Cleanup Recipe',
+        slug: 'cleanup-recipe',
+        version: 1,
+      });
+
+      standardVersion = standardVersionFactory({
+        id: createStandardVersionId(uuidv4()),
+        name: 'Cleanup Standard',
+        slug: 'cleanup-standard',
+        version: 1,
+      });
+
+      gitRepo = {
+        id: createGitRepoId(uuidv4()),
+        owner: 'test-owner',
+        repo: 'test-repo',
+        branch: 'main',
+        providerId: createGitProviderId(uuidv4()),
+      };
+
+      target = targetFactory({
+        id: targetId,
+        gitRepoId: gitRepo.id,
+        name: 'Docs',
+        path: 'docs',
+      });
+
+      command = {
+        userId,
+        organizationId,
+        recipeVersionIds: [recipeVersion.id],
+        standardVersionIds: [standardVersion.id],
+        targetIds: [targetId],
+        packagesSlugs: [],
+        packageIds: [],
+      };
+
+      mockRecipesPort.getRecipeVersionById.mockResolvedValue(recipeVersion);
+      mockStandardsPort.getStandardVersionById.mockResolvedValue(
+        standardVersion,
+      );
+      mockTargetService.findById.mockResolvedValue(target);
+      mockGitPort.getRepositoryById.mockResolvedValue(gitRepo);
+      mockCodingAgentPort.renderArtifacts.mockResolvedValue({
+        createOrUpdate: [],
+        delete: [],
+      });
+
+      mockDistributionRepository.findActiveRecipeVersionsByTarget.mockResolvedValue(
+        [],
+      );
+      mockDistributionRepository.findActiveStandardVersionsByTarget.mockResolvedValue(
+        [],
+      );
+      mockDistributionRepository.findActiveSkillVersionsByTarget.mockResolvedValue(
+        [],
+      );
+      mockDistributionRepository.findActiveRecipeVersionsByTargetAndPackages.mockResolvedValue(
+        [],
+      );
+      mockDistributionRepository.findActiveStandardVersionsByTargetAndPackages.mockResolvedValue(
+        [],
+      );
+      mockDistributionRepository.findActiveSkillVersionsByTargetAndPackages.mockResolvedValue(
+        [],
+      );
+      mockDistributionRepository.findActiveRenderModesByTarget.mockResolvedValue(
+        [RenderMode.CLAUDE, RenderMode.CURSOR],
+      );
+
+      mockRenderModeConfigurationService.mapRenderModesToCodingAgents.mockImplementation(
+        (renderModes) =>
+          renderModes.includes(RenderMode.CLAUDE)
+            ? [CodingAgents.claude, CodingAgents.cursor]
+            : activeCodingAgents,
+      );
+    });
+
+    describe('when per-target agents override org-level agents', () => {
+      beforeEach(() => {
+        mockGitPort.getFileFromRepo.mockResolvedValue({
+          content: JSON.stringify({ agents: [CodingAgents.claude] }),
+        } as GitCommit);
+      });
+
+      it('generates cleanup only for removed agents', async () => {
+        await useCase.execute(command);
+
+        expect(
+          mockCodingAgentPort.generateAgentCleanupUpdatesForAgents,
+        ).toHaveBeenCalledWith(
+          expect.objectContaining({
+            agents: [CodingAgents.cursor],
+          }),
+        );
+      });
+    });
+
+    describe('when cleanup updates are generated', () => {
+      beforeEach(() => {
+        mockCodingAgentPort.generateAgentCleanupUpdatesForAgents.mockResolvedValue(
+          {
+            createOrUpdate: [],
+            delete: [
+              {
+                path: '.cursor/rules/packmind/recipes-index.mdc',
+                type: 'file',
+              },
+            ],
+          },
+        );
+      });
+
+      it('prefixes cleanup updates with the target path', async () => {
+        await useCase.execute(command);
+
+        const jobInput = mockPublishArtifactsDelayedJob.addJob.mock.calls[0][0];
+        expect(jobInput.fileUpdates.delete).toContainEqual({
+          path: 'docs/.cursor/rules/packmind/recipes-index.mdc',
+          type: 'file',
+        });
+      });
+    });
+  });
+
+  describe('when distribution render modes match packmind.json agents', () => {
+    let command: PublishArtifactsCommand;
+    let recipeVersion: ReturnType<typeof recipeVersionFactory>;
+    let target: ReturnType<typeof targetFactory>;
+    let gitRepo: GitRepo;
+
+    beforeEach(() => {
+      recipeVersion = recipeVersionFactory({
+        id: createRecipeVersionId(uuidv4()),
+        name: 'Test Recipe',
+        slug: 'test-recipe',
+        version: 1,
+      });
+
+      gitRepo = {
+        id: createGitRepoId(uuidv4()),
+        owner: 'test-owner',
+        repo: 'test-repo',
+        branch: 'main',
+        providerId: createGitProviderId(uuidv4()),
+      };
+
+      target = targetFactory({
+        id: targetId,
+        gitRepoId: gitRepo.id,
+        name: 'Production',
+        path: 'docs',
+      });
+
+      command = {
+        userId,
+        organizationId,
+        recipeVersionIds: [recipeVersion.id],
+        standardVersionIds: [],
+        targetIds: [targetId],
+        packagesSlugs: ['my-package'],
+        packageIds: [],
+      };
+
+      mockRecipesPort.getRecipeVersionById.mockResolvedValue(recipeVersion);
+      mockTargetService.findById.mockResolvedValue(target);
+      mockGitPort.getRepositoryById.mockResolvedValue(gitRepo);
+      mockDistributionRepository.findActiveRecipeVersionsByTarget.mockResolvedValue(
+        [],
+      );
+      mockDistributionRepository.findActiveStandardVersionsByTarget.mockResolvedValue(
+        [],
+      );
+      mockDistributionRepository.findActiveRecipeVersionsByTargetAndPackages.mockResolvedValue(
+        [],
+      );
+      mockDistributionRepository.findActiveStandardVersionsByTargetAndPackages.mockResolvedValue(
+        [],
+      );
+      mockCodingAgentPort.renderArtifacts.mockResolvedValue({
+        createOrUpdate: [],
+        delete: [],
+      });
+    });
+
+    describe('when packmind.json has agents configured', () => {
+      const perTargetRenderModes = [RenderMode.CLAUDE, RenderMode.CURSOR];
+
+      beforeEach(() => {
+        mockGitPort.getFileFromRepo.mockResolvedValue({
+          sha: 'docs/packmind.json',
+          content: JSON.stringify({
+            packages: { 'existing-pkg': '*' },
+            agents: ['claude', 'cursor'],
+          }),
+        });
+
+        mockRenderModeConfigurationService.mapCodingAgentsToRenderModes.mockReturnValue(
+          perTargetRenderModes,
+        );
+      });
+
+      it('stores distribution with per-target render modes', async () => {
+        const result = await useCase.execute(command);
+
+        expect(result.distributions[0].renderModes).toEqual(
+          perTargetRenderModes,
+        );
+      });
+
+      it('does not use org-level render modes in distribution', async () => {
+        const result = await useCase.execute(command);
+
+        expect(result.distributions[0].renderModes).not.toEqual(
+          activeRenderModes,
+        );
+      });
+    });
+
+    describe('when packmind.json has empty agents array', () => {
+      beforeEach(() => {
+        mockGitPort.getFileFromRepo.mockResolvedValue({
+          sha: 'docs/packmind.json',
+          content: JSON.stringify({
+            packages: { 'existing-pkg': '*' },
+            agents: [],
+          }),
+        });
+
+        mockRenderModeConfigurationService.mapCodingAgentsToRenderModes.mockReturnValue(
+          [],
+        );
+      });
+
+      it('stores distribution with empty render modes', async () => {
+        const result = await useCase.execute(command);
+
+        expect(result.distributions[0].renderModes).toEqual([]);
+      });
+    });
+
+    describe('when packmind.json has no agents property', () => {
+      beforeEach(() => {
+        mockGitPort.getFileFromRepo.mockResolvedValue({
+          sha: 'docs/packmind.json',
+          content: JSON.stringify({
+            packages: { 'existing-pkg': '*' },
+          }),
+        });
+
+        mockRenderModeConfigurationService.mapCodingAgentsToRenderModes.mockReturnValue(
+          activeRenderModes,
+        );
+      });
+
+      it('stores distribution with org-level render modes', async () => {
+        const result = await useCase.execute(command);
+
+        expect(result.distributions[0].renderModes).toEqual(activeRenderModes);
+      });
+    });
+
+    describe('when packmind.json does not exist', () => {
+      beforeEach(() => {
+        mockGitPort.getFileFromRepo.mockResolvedValue(null);
+
+        mockRenderModeConfigurationService.mapCodingAgentsToRenderModes.mockReturnValue(
+          activeRenderModes,
+        );
+      });
+
+      it('stores distribution with org-level render modes', async () => {
+        const result = await useCase.execute(command);
+
+        expect(result.distributions[0].renderModes).toEqual(activeRenderModes);
+      });
     });
   });
 });

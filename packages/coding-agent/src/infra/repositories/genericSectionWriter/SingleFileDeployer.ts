@@ -350,6 +350,39 @@ export abstract class SingleFileDeployer implements ICodingAgentDeployer {
     };
   }
 
+  async generateAgentCleanupFileUpdates(artifacts: {
+    recipeVersions: RecipeVersion[];
+    standardVersions: StandardVersion[];
+    skillVersions: SkillVersion[];
+  }): Promise<FileUpdates> {
+    this.logger.info(
+      `Generating agent cleanup file updates for ${this.config.agentName}`,
+      {
+        recipesCount: artifacts.recipeVersions.length,
+        standardsCount: artifacts.standardVersions.length,
+        skillsCount: artifacts.skillVersions.length,
+      },
+    );
+
+    const sections: { key: string; content: string }[] = [
+      { key: 'Packmind recipes', content: '' },
+    ];
+
+    if (artifacts.standardVersions.length > 0) {
+      sections.push({ key: 'Packmind standards', content: '' });
+    }
+
+    return {
+      createOrUpdate: [
+        {
+          path: this.config.filePath,
+          sections,
+        },
+      ],
+      delete: [],
+    };
+  }
+
   private async getExistingContent(
     gitRepo: GitRepo,
     target: Target,

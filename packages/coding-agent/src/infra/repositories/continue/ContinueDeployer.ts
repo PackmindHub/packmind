@@ -292,6 +292,48 @@ export class ContinueDeployer implements ICodingAgentDeployer {
     return fileUpdates;
   }
 
+  async generateAgentCleanupFileUpdates(artifacts: {
+    recipeVersions: RecipeVersion[];
+    standardVersions: StandardVersion[];
+    skillVersions: SkillVersion[];
+  }): Promise<FileUpdates> {
+    this.logger.info('Generating agent cleanup file updates for Continue', {
+      recipesCount: artifacts.recipeVersions.length,
+      standardsCount: artifacts.standardVersions.length,
+      skillsCount: artifacts.skillVersions.length,
+    });
+
+    const fileUpdates: FileUpdates = {
+      createOrUpdate: [],
+      delete: [
+        {
+          path: ContinueDeployer.LEGACY_RECIPES_INDEX_PATH,
+          type: DeleteItemType.File,
+        },
+        {
+          path: ContinueDeployer.STANDARDS_FOLDER_PATH,
+          type: DeleteItemType.Directory,
+        },
+      ],
+    };
+
+    for (const recipeVersion of artifacts.recipeVersions) {
+      fileUpdates.delete.push({
+        path: `${ContinueDeployer.COMMANDS_FOLDER_PATH}${recipeVersion.slug}.md`,
+        type: DeleteItemType.File,
+      });
+    }
+
+    for (const standardVersion of artifacts.standardVersions) {
+      fileUpdates.delete.push({
+        path: `${ContinueDeployer.STANDARDS_FOLDER_PATH}standard-${standardVersion.slug}.md`,
+        type: DeleteItemType.File,
+      });
+    }
+
+    return fileUpdates;
+  }
+
   /**
    * Generate Continue command file for a specific recipe
    */

@@ -3971,4 +3971,217 @@ describe('ClaudeDeployer', () => {
       expect(deployer.getSkillsFolderPath()).toBe('.claude/skills/');
     });
   });
+
+  describe('generateAgentCleanupFileUpdates', () => {
+    describe('when generating cleanup file updates', () => {
+      let result: Awaited<
+        ReturnType<typeof deployer.generateAgentCleanupFileUpdates>
+      >;
+      let userPackageSkillVersions: SkillVersion[];
+
+      beforeEach(async () => {
+        userPackageSkillVersions = [
+          skillVersionFactory({ slug: 'user-skill-1' }),
+          skillVersionFactory({ slug: 'user-skill-2' }),
+        ];
+
+        result = await deployer.generateAgentCleanupFileUpdates({
+          recipeVersions: [],
+          standardVersions: [],
+          skillVersions: userPackageSkillVersions,
+        });
+      });
+
+      it('deletes the commands folder', () => {
+        expect(
+          result.delete.some(
+            (item) =>
+              item.path === '.claude/commands/packmind/' &&
+              item.type === DeleteItemType.Directory,
+          ),
+        ).toBe(true);
+      });
+
+      it('deletes the standards folder', () => {
+        expect(
+          result.delete.some(
+            (item) =>
+              item.path === '.claude/rules/packmind/' &&
+              item.type === DeleteItemType.Directory,
+          ),
+        ).toBe(true);
+      });
+
+      it('does not delete the entire skills folder', () => {
+        expect(
+          result.delete.some((item) => item.path === '.claude/skills/'),
+        ).toBe(false);
+      });
+
+      it('clears legacy Packmind standards section from CLAUDE.md', () => {
+        const claudeMdUpdate = result.createOrUpdate.find(
+          (item) => item.path === 'CLAUDE.md',
+        );
+        expect(claudeMdUpdate?.sections).toContainEqual({
+          key: 'Packmind standards',
+          content: '',
+        });
+      });
+
+      it('clears legacy Packmind recipes section from CLAUDE.md', () => {
+        const claudeMdUpdate = result.createOrUpdate.find(
+          (item) => item.path === 'CLAUDE.md',
+        );
+        expect(claudeMdUpdate?.sections).toContainEqual({
+          key: 'Packmind recipes',
+          content: '',
+        });
+      });
+    });
+
+    describe('when deleting default skills', () => {
+      let result: Awaited<
+        ReturnType<typeof deployer.generateAgentCleanupFileUpdates>
+      >;
+
+      beforeEach(async () => {
+        result = await deployer.generateAgentCleanupFileUpdates({
+          recipeVersions: [],
+          standardVersions: [],
+          skillVersions: [],
+        });
+      });
+
+      it('deletes packmind-create-skill default skill', () => {
+        expect(
+          result.delete.some(
+            (item) =>
+              item.path === '.claude/skills/packmind-create-skill' &&
+              item.type === DeleteItemType.Directory,
+          ),
+        ).toBe(true);
+      });
+
+      it('deletes packmind-create-standard default skill', () => {
+        expect(
+          result.delete.some(
+            (item) =>
+              item.path === '.claude/skills/packmind-create-standard' &&
+              item.type === DeleteItemType.Directory,
+          ),
+        ).toBe(true);
+      });
+
+      it('deletes packmind-onboard default skill', () => {
+        expect(
+          result.delete.some(
+            (item) =>
+              item.path === '.claude/skills/packmind-onboard' &&
+              item.type === DeleteItemType.Directory,
+          ),
+        ).toBe(true);
+      });
+
+      it('deletes packmind-create-command default skill', () => {
+        expect(
+          result.delete.some(
+            (item) =>
+              item.path === '.claude/skills/packmind-create-command' &&
+              item.type === DeleteItemType.Directory,
+          ),
+        ).toBe(true);
+      });
+
+      it('deletes packmind-create-package default skill', () => {
+        expect(
+          result.delete.some(
+            (item) =>
+              item.path === '.claude/skills/packmind-create-package' &&
+              item.type === DeleteItemType.Directory,
+          ),
+        ).toBe(true);
+      });
+
+      it('deletes packmind-cli-list-commands default skill', () => {
+        expect(
+          result.delete.some(
+            (item) =>
+              item.path === '.claude/skills/packmind-cli-list-commands' &&
+              item.type === DeleteItemType.Directory,
+          ),
+        ).toBe(true);
+      });
+    });
+
+    describe('when deleting user package skills', () => {
+      let result: Awaited<
+        ReturnType<typeof deployer.generateAgentCleanupFileUpdates>
+      >;
+      let userPackageSkillVersions: SkillVersion[];
+
+      beforeEach(async () => {
+        userPackageSkillVersions = [
+          skillVersionFactory({ slug: 'my-custom-skill' }),
+          skillVersionFactory({ slug: 'another-package-skill' }),
+        ];
+
+        result = await deployer.generateAgentCleanupFileUpdates({
+          recipeVersions: [],
+          standardVersions: [],
+          skillVersions: userPackageSkillVersions,
+        });
+      });
+
+      it('deletes my-custom-skill user package skill', () => {
+        expect(
+          result.delete.some(
+            (item) =>
+              item.path === '.claude/skills/my-custom-skill' &&
+              item.type === DeleteItemType.Directory,
+          ),
+        ).toBe(true);
+      });
+
+      it('deletes another-package-skill user package skill', () => {
+        expect(
+          result.delete.some(
+            (item) =>
+              item.path === '.claude/skills/another-package-skill' &&
+              item.type === DeleteItemType.Directory,
+          ),
+        ).toBe(true);
+      });
+    });
+
+    describe('when user has skills not managed by Packmind', () => {
+      let result: Awaited<
+        ReturnType<typeof deployer.generateAgentCleanupFileUpdates>
+      >;
+
+      beforeEach(async () => {
+        result = await deployer.generateAgentCleanupFileUpdates({
+          recipeVersions: [],
+          standardVersions: [],
+          skillVersions: [skillVersionFactory({ slug: 'managed-skill' })],
+        });
+      });
+
+      it('does not include unmanaged skill in delete list', () => {
+        expect(
+          result.delete.some(
+            (item) => item.path === '.claude/skills/user-created-skill',
+          ),
+        ).toBe(false);
+      });
+
+      it('only deletes skills that are explicitly managed', () => {
+        const skillDeleteItems = result.delete.filter((item) =>
+          item.path.startsWith('.claude/skills/'),
+        );
+
+        // Should include: 6 default skills + 1 managed skill = 7 total
+        expect(skillDeleteItems).toHaveLength(7);
+      });
+    });
+  });
 });

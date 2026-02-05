@@ -227,10 +227,18 @@ export class NotifyDistributionUseCase
       packageSlugs,
     });
 
-    const renderModes =
-      await this.renderModeConfigurationService.getActiveRenderModes(
-        organizationId,
-      );
+    let renderModes: RenderMode[];
+    if (command.agents && command.agents.length > 0) {
+      renderModes =
+        this.renderModeConfigurationService.mapCodingAgentsToRenderModes(
+          command.agents,
+        );
+    } else {
+      renderModes =
+        await this.renderModeConfigurationService.getActiveRenderModes(
+          organizationId,
+        );
+    }
 
     const distributionId = createDistributionId(uuidv4());
     const distributedPackages = await this.buildDistributedPackages({

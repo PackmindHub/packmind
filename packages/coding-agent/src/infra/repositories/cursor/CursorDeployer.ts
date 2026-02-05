@@ -1,5 +1,6 @@
 import { PackmindLogger } from '@packmind/logger';
 import {
+  DeleteItem,
   DeleteItemType,
   FileUpdates,
   GitRepo,
@@ -358,6 +359,59 @@ export class CursorDeployer implements ICodingAgentDeployer {
     }
 
     return fileUpdates;
+  }
+
+  async generateAgentCleanupFileUpdates(artifacts: {
+    recipeVersions: RecipeVersion[];
+    standardVersions: StandardVersion[];
+    skillVersions: SkillVersion[];
+  }): Promise<FileUpdates> {
+    this.logger.info('Generating agent cleanup file updates for Cursor', {
+      recipesCount: artifacts.recipeVersions.length,
+      standardsCount: artifacts.standardVersions.length,
+      skillsCount: artifacts.skillVersions.length,
+    });
+
+    const deleteItems: DeleteItem[] = [
+      {
+        path: CursorDeployer.COMMANDS_PATH,
+        type: DeleteItemType.Directory,
+      },
+      {
+        path: '.cursor/rules/packmind/',
+        type: DeleteItemType.Directory,
+      },
+      {
+        path: CursorDeployer.LEGACY_RECIPES_INDEX_PATH,
+        type: DeleteItemType.File,
+      },
+    ];
+
+    // Delete default skills (managed by Packmind)
+    for (const slug of DefaultSkillsDeployer.getDefaultSkillSlugs()) {
+      deleteItems.push({
+        path: `${CursorDeployer.SKILLS_FOLDER_PATH}${slug}`,
+        type: DeleteItemType.Directory,
+      });
+    }
+
+    // Delete user package skills (managed by Packmind)
+    for (const skillVersion of artifacts.skillVersions) {
+      deleteItems.push({
+        path: `${CursorDeployer.SKILLS_FOLDER_PATH}${skillVersion.slug}`,
+        type: DeleteItemType.Directory,
+      });
+    }
+
+    console.log('-----------------------------------------');
+    console.log('-----------------------------------------');
+    console.log('-----------------------------------------');
+    console.log(JSON.stringify(deleteItems, null, 2));
+
+    return {
+      createOrUpdate: [],
+      delete: deleteItems,
+    };
   }
 
   /**

@@ -26,6 +26,7 @@ export class InstallDefaultSkillsUseCase implements IInstallDefaultSkillsUseCase
     const response = await this.packmindGateway.skills.getDefaults({
       cliVersion: command.cliVersion,
       includeBeta: command.includeBeta,
+      agents: command.agents,
     });
 
     try {

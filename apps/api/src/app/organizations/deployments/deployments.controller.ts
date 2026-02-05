@@ -42,6 +42,7 @@ import {
   NotifyDistributionResponse,
   RemovePackageFromTargetsCommand,
   RemovePackageFromTargetsResponse,
+  CodingAgent,
 } from '@packmind/types';
 import { DeploymentsService } from './deployments.service';
 import { PackmindLogger } from '@packmind/logger';
@@ -759,6 +760,7 @@ export class DeploymentsController {
       gitRemoteUrl: string;
       gitBranch: string;
       relativePath: string;
+      agents?: CodingAgent[];
     },
     @Req() request: AuthenticatedRequest,
   ): Promise<NotifyDistributionResponse> {
@@ -770,6 +772,7 @@ export class DeploymentsController {
         gitRemoteUrl: body.gitRemoteUrl,
         gitBranch: body.gitBranch,
         relativePath: body.relativePath,
+        agents: body.agents,
       },
     );
 
@@ -781,6 +784,7 @@ export class DeploymentsController {
         gitRemoteUrl: body.gitRemoteUrl,
         gitBranch: body.gitBranch,
         relativePath: body.relativePath,
+        agents: body.agents,
       };
 
       const response =

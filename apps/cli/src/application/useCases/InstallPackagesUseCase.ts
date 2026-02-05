@@ -34,7 +34,14 @@ export class InstallPackagesUseCase implements IInstallPackagesUseCase {
       gitRemoteUrl: command.gitRemoteUrl,
       gitBranch: command.gitBranch,
       relativePath: command.relativePath,
+      agents: command.agents,
     });
+
+    // Filter out packmind.json from server response - config writing is handled separately
+    // by the CLI to preserve property order
+    const filteredCreateOrUpdate = response.fileUpdates.createOrUpdate.filter(
+      (file) => file.path !== 'packmind.json',
+    );
 
     // Deduplicate files by path (when multiple packages share standards/recipes)
     const uniqueFilesMap = new Map<
@@ -46,7 +53,7 @@ export class InstallPackagesUseCase implements IInstallPackagesUseCase {
       }
     >();
 
-    for (const file of response.fileUpdates.createOrUpdate) {
+    for (const file of filteredCreateOrUpdate) {
       uniqueFilesMap.set(file.path, file);
     }
 

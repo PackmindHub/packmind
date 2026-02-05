@@ -324,6 +324,7 @@ const CREATE_PACKAGE_LICENSE = `
 `;
 
 export class CreatePackageDeployer implements ISkillDeployer {
+  public readonly slug = 'packmind-create-package';
   public readonly minimumVersion = '0.15.0';
 
   deploy(_agentName: string, skillsFolderPath: string): FileUpdates {

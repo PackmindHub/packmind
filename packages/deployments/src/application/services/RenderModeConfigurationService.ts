@@ -24,6 +24,15 @@ const renderModeToCodingAgent: Record<RenderMode, CodingAgent> = {
   [RenderMode.CONTINUE]: CodingAgents.continue,
 };
 
+const codingAgentToRenderMode: Partial<Record<CodingAgent, RenderMode>> =
+  Object.entries(renderModeToCodingAgent).reduce(
+    (acc, [renderMode, codingAgent]) => {
+      acc[codingAgent] = renderMode as RenderMode;
+      return acc;
+    },
+    {} as Partial<Record<CodingAgent, RenderMode>>,
+  );
+
 export class RenderModeConfigurationService {
   constructor(
     private readonly repository: IRenderModeConfigurationRepository,
@@ -64,6 +73,14 @@ export class RenderModeConfigurationService {
     });
 
     return Array.from(new Set(mappedAgents));
+  }
+
+  mapCodingAgentsToRenderModes(codingAgents: CodingAgent[]): RenderMode[] {
+    const mappedRenderModes = codingAgents
+      .map((agent) => codingAgentToRenderMode[agent])
+      .filter((mode): mode is RenderMode => mode !== undefined);
+
+    return Array.from(new Set(mappedRenderModes));
   }
 
   async resolveActiveCodingAgents(

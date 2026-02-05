@@ -12,6 +12,18 @@ export interface IConfigFileRepository {
   readConfig(baseDirectory: string): Promise<PackmindFileConfig | null>;
 
   /**
+   * Adds new packages to an existing packmind.json while preserving property order.
+   * If the file doesn't exist, creates a new one with default order (packages first).
+   *
+   * @param baseDirectory - The directory containing packmind.json
+   * @param newPackageSlugs - Array of package slugs to add
+   */
+  addPackagesToConfig(
+    baseDirectory: string,
+    newPackageSlugs: string[],
+  ): Promise<void>;
+
+  /**
    * Recursively finds all directories containing packmind.json in descendant folders.
    * Excludes common build/dependency directories (node_modules, .git, dist, etc.)
    *

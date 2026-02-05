@@ -617,6 +617,209 @@ describe('CursorDeployer', () => {
     });
   });
 
+  describe('generateAgentCleanupFileUpdates', () => {
+    describe('when generating cleanup file updates', () => {
+      let result: Awaited<
+        ReturnType<typeof deployer.generateAgentCleanupFileUpdates>
+      >;
+      let userPackageSkillVersions: SkillVersion[];
+
+      beforeEach(async () => {
+        userPackageSkillVersions = [
+          skillVersionFactory({ slug: 'user-skill-1' }),
+          skillVersionFactory({ slug: 'user-skill-2' }),
+        ];
+
+        result = await deployer.generateAgentCleanupFileUpdates({
+          recipeVersions: [],
+          standardVersions: [],
+          skillVersions: userPackageSkillVersions,
+        });
+      });
+
+      it('deletes the commands folder', () => {
+        expect(
+          result.delete.some(
+            (item) =>
+              item.path === '.cursor/commands/packmind' &&
+              item.type === DeleteItemType.Directory,
+          ),
+        ).toBe(true);
+      });
+
+      it('deletes the standards folder', () => {
+        expect(
+          result.delete.some(
+            (item) =>
+              item.path === '.cursor/rules/packmind/' &&
+              item.type === DeleteItemType.Directory,
+          ),
+        ).toBe(true);
+      });
+
+      it('does not delete the entire skills folder', () => {
+        expect(
+          result.delete.some((item) => item.path === '.cursor/skills/'),
+        ).toBe(false);
+      });
+
+      it('deletes legacy recipes-index.mdc file', () => {
+        expect(
+          result.delete.some(
+            (item) =>
+              item.path === '.cursor/rules/packmind/recipes-index.mdc' &&
+              item.type === DeleteItemType.File,
+          ),
+        ).toBe(true);
+      });
+    });
+
+    describe('when deleting default skills', () => {
+      let result: Awaited<
+        ReturnType<typeof deployer.generateAgentCleanupFileUpdates>
+      >;
+
+      beforeEach(async () => {
+        result = await deployer.generateAgentCleanupFileUpdates({
+          recipeVersions: [],
+          standardVersions: [],
+          skillVersions: [],
+        });
+      });
+
+      it('deletes packmind-create-skill default skill', () => {
+        expect(
+          result.delete.some(
+            (item) =>
+              item.path === '.cursor/skills/packmind-create-skill' &&
+              item.type === DeleteItemType.Directory,
+          ),
+        ).toBe(true);
+      });
+
+      it('deletes packmind-create-standard default skill', () => {
+        expect(
+          result.delete.some(
+            (item) =>
+              item.path === '.cursor/skills/packmind-create-standard' &&
+              item.type === DeleteItemType.Directory,
+          ),
+        ).toBe(true);
+      });
+
+      it('deletes packmind-onboard default skill', () => {
+        expect(
+          result.delete.some(
+            (item) =>
+              item.path === '.cursor/skills/packmind-onboard' &&
+              item.type === DeleteItemType.Directory,
+          ),
+        ).toBe(true);
+      });
+
+      it('deletes packmind-create-command default skill', () => {
+        expect(
+          result.delete.some(
+            (item) =>
+              item.path === '.cursor/skills/packmind-create-command' &&
+              item.type === DeleteItemType.Directory,
+          ),
+        ).toBe(true);
+      });
+
+      it('deletes packmind-create-package default skill', () => {
+        expect(
+          result.delete.some(
+            (item) =>
+              item.path === '.cursor/skills/packmind-create-package' &&
+              item.type === DeleteItemType.Directory,
+          ),
+        ).toBe(true);
+      });
+
+      it('deletes packmind-cli-list-commands default skill', () => {
+        expect(
+          result.delete.some(
+            (item) =>
+              item.path === '.cursor/skills/packmind-cli-list-commands' &&
+              item.type === DeleteItemType.Directory,
+          ),
+        ).toBe(true);
+      });
+    });
+
+    describe('when deleting user package skills', () => {
+      let result: Awaited<
+        ReturnType<typeof deployer.generateAgentCleanupFileUpdates>
+      >;
+      let userPackageSkillVersions: SkillVersion[];
+
+      beforeEach(async () => {
+        userPackageSkillVersions = [
+          skillVersionFactory({ slug: 'my-custom-skill' }),
+          skillVersionFactory({ slug: 'another-package-skill' }),
+        ];
+
+        result = await deployer.generateAgentCleanupFileUpdates({
+          recipeVersions: [],
+          standardVersions: [],
+          skillVersions: userPackageSkillVersions,
+        });
+      });
+
+      it('deletes my-custom-skill user package skill', () => {
+        expect(
+          result.delete.some(
+            (item) =>
+              item.path === '.cursor/skills/my-custom-skill' &&
+              item.type === DeleteItemType.Directory,
+          ),
+        ).toBe(true);
+      });
+
+      it('deletes another-package-skill user package skill', () => {
+        expect(
+          result.delete.some(
+            (item) =>
+              item.path === '.cursor/skills/another-package-skill' &&
+              item.type === DeleteItemType.Directory,
+          ),
+        ).toBe(true);
+      });
+    });
+
+    describe('when user has skills not managed by Packmind', () => {
+      let result: Awaited<
+        ReturnType<typeof deployer.generateAgentCleanupFileUpdates>
+      >;
+
+      beforeEach(async () => {
+        result = await deployer.generateAgentCleanupFileUpdates({
+          recipeVersions: [],
+          standardVersions: [],
+          skillVersions: [skillVersionFactory({ slug: 'managed-skill' })],
+        });
+      });
+
+      it('does not include unmanaged skill in delete list', () => {
+        expect(
+          result.delete.some(
+            (item) => item.path === '.cursor/skills/user-created-skill',
+          ),
+        ).toBe(false);
+      });
+
+      it('only deletes skills that are explicitly managed', () => {
+        const skillDeleteItems = result.delete.filter((item) =>
+          item.path.startsWith('.cursor/skills/'),
+        );
+
+        // Should include: 6 default skills + 1 managed skill = 7 total
+        expect(skillDeleteItems).toHaveLength(7);
+      });
+    });
+  });
+
   describe('deployArtifacts', () => {
     describe('when deploying artifacts with skills', () => {
       let fileUpdates: Awaited<ReturnType<typeof deployer.deployArtifacts>>;
