@@ -13,7 +13,8 @@ export class CreateCommandFromPlaybookUseCase implements ICreateCommandFromPlayb
   ): Promise<ICreateCommandResult> {
     const space = await this.gateway.spaces.getGlobal();
 
-    const command = await this.gateway.commands.create(space.id, {
+    const command = await this.gateway.commands.create({
+      spaceId: space.id,
       name: playbook.name,
       summary: playbook.summary,
       whenToUse: playbook.whenToUse,

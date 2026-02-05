@@ -6,6 +6,7 @@ import {
 } from '../../domain/useCases/IAddToPackageUseCase';
 import { IPackmindGateway } from '../../domain/repositories/IPackmindGateway';
 import { AddArtefactsToPackageCommand } from '../../domain/repositories/IPackagesGateway';
+import { Recipe, Skill, SpaceId } from '@packmind/types';
 
 export class AddToPackageUseCase implements IAddToPackageUseCase {
   constructor(private readonly gateway: IPackmindGateway) {}
@@ -48,6 +49,7 @@ export class AddToPackageUseCase implements IAddToPackageUseCase {
     slugs: string[],
   ): Promise<string[]> {
     const ids: string[] = [];
+    const globalSpace = await this.gateway.spaces.getGlobal();
 
     for (const slug of slugs) {
       let item: { id: string } | null = null;
@@ -55,9 +57,9 @@ export class AddToPackageUseCase implements IAddToPackageUseCase {
       if (itemType === 'standard') {
         item = await this.gateway.standards.getBySlug(slug);
       } else if (itemType === 'command') {
-        item = await this.gateway.commands.getBySlug(slug);
+        item = await this.findCommandBySlug(slug, globalSpace.id);
       } else if (itemType === 'skill') {
-        item = await this.gateway.skills.getBySlug(slug);
+        item = await this.findSkillBySlug(slug, globalSpace.id);
       }
 
       if (!item) {
@@ -68,5 +70,21 @@ export class AddToPackageUseCase implements IAddToPackageUseCase {
     }
 
     return ids;
+  }
+
+  private async findCommandBySlug(
+    slug: string,
+    spaceId: SpaceId,
+  ): Promise<Recipe | null> {
+    const commands = await this.gateway.commands.list({ spaceId });
+    return commands.recipes.find((command) => command.slug === slug) ?? null;
+  }
+
+  private async findSkillBySlug(
+    slug: string,
+    spaceId: SpaceId,
+  ): Promise<Skill | null> {
+    const skills = await this.gateway.skills.list({ spaceId });
+    return skills.find((skill) => skill.slug === slug) ?? null;
   }
 }

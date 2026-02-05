@@ -1,17 +1,31 @@
 import { AddToPackageUseCase } from './AddToPackageUseCase';
 import { IPackmindGateway } from '../../domain/repositories/IPackmindGateway';
+import { ICommandsGateway } from '../../domain/repositories/ICommandsGateway';
+import {
+  createMockCommandsGateway,
+  createMockSkillsGateway,
+} from '../../mocks/createMockGateways';
+import { recipeFactory } from '@packmind/recipes/test';
+import { skillFactory } from '@packmind/skills/test';
+import { createRecipeId, createSkillId } from '@packmind/types';
+import { ISkillsGateway } from '../../domain/repositories/ISkillsGateway';
 
 describe('AddToPackageUseCase', () => {
   let useCase: AddToPackageUseCase;
   let mockGateway: jest.Mocked<IPackmindGateway>;
+  let commandsGateway: jest.Mocked<ICommandsGateway>;
+  let skillsGateway: jest.Mocked<ISkillsGateway>;
 
   beforeEach(() => {
+    commandsGateway = createMockCommandsGateway();
+    skillsGateway = createMockSkillsGateway();
+
     mockGateway = {
       spaces: { getGlobal: jest.fn().mockResolvedValue({ id: 'space-123' }) },
       packages: { addArtefacts: jest.fn() },
       standards: { getBySlug: jest.fn() },
-      commands: { getBySlug: jest.fn() },
-      skills: { getBySlug: jest.fn() },
+      commands: commandsGateway,
+      skills: skillsGateway,
     } as unknown as jest.Mocked<IPackmindGateway>;
 
     useCase = new AddToPackageUseCase(mockGateway);
@@ -69,10 +83,14 @@ describe('AddToPackageUseCase', () => {
 
   describe('when adding commands', () => {
     beforeEach(() => {
-      mockGateway.commands.getBySlug.mockResolvedValueOnce({
-        id: 'cmd-id-1',
-        slug: 'cmd-1',
-        name: 'Cmd 1',
+      commandsGateway.list.mockResolvedValueOnce({
+        recipes: [
+          recipeFactory({
+            id: createRecipeId('cmd-id-1'),
+            slug: 'cmd-1',
+            name: 'Cmd 1',
+          }),
+        ],
       });
       mockGateway.packages.addArtefacts.mockResolvedValue({
         added: { standards: [], commands: ['cmd-1'], skills: [] },
@@ -107,11 +125,14 @@ describe('AddToPackageUseCase', () => {
 
   describe('when adding skills', () => {
     beforeEach(() => {
-      mockGateway.skills.getBySlug.mockResolvedValueOnce({
-        id: 'skill-id-1',
-        slug: 'skill-1',
-        name: 'Skill 1',
-      });
+      skillsGateway.list.mockResolvedValueOnce([
+        skillFactory({
+          id: createSkillId('skill-id-1'),
+          slug: 'skill-1',
+          name: 'Skill 1',
+        }),
+      ]);
+
       mockGateway.packages.addArtefacts.mockResolvedValue({
         added: { standards: [], commands: [], skills: ['skill-1'] },
         skipped: { standards: [], commands: [], skills: [] },

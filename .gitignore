@@ -3,6 +3,7 @@ node_modules/
 .vscode/
 .idea/
 dist/
+docs/
 tmp/
 apps/api/.env
 apps/mcp-server/.env

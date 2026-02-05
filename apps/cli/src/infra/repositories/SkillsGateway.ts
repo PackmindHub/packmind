@@ -4,18 +4,11 @@ import {
   IListSkillsBySpaceUseCase,
   IUploadSkillUseCase,
 } from '@packmind/types';
-import {
-  ISkillsGateway,
-  ListedSkill,
-} from '../../domain/repositories/ISkillsGateway';
-import { ISpacesGateway } from '../../domain/repositories/ISpacesGateway';
+import { ISkillsGateway } from '../../domain/repositories/ISkillsGateway';
 import { PackmindHttpClient } from '../http/PackmindHttpClient';
 
 export class SkillsGateway implements ISkillsGateway {
-  constructor(
-    private readonly httpClient: PackmindHttpClient,
-    private readonly spaces: ISpacesGateway,
-  ) {}
+  constructor(private readonly httpClient: PackmindHttpClient) {}
 
   public upload: Gateway<IUploadSkillUseCase> = async (command) => {
     const { organizationId } = this.httpClient.getAuthContext();
@@ -57,12 +50,5 @@ export class SkillsGateway implements ISkillsGateway {
     return this.httpClient.request(
       `/api/v0/organizations/${organizationId}/spaces/${command.spaceId}/skills`,
     );
-  };
-
-  public getBySlug = async (slug: string): Promise<ListedSkill | null> => {
-    const space = await this.spaces.getGlobal();
-    const skills = await this.list({ spaceId: space.id });
-    const skill = skills.find((s) => s.slug === slug);
-    return skill ? { id: skill.id, slug: skill.slug, name: skill.name } : null;
   };
 }
