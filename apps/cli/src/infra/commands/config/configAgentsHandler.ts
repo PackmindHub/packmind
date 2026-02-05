@@ -1,4 +1,3 @@
-import * as fs from 'fs';
 import * as readline from 'readline';
 import * as inquirer from 'inquirer';
 import { CodingAgent } from '@packmind/types';
@@ -52,8 +51,9 @@ export type ConfigAgentsHandlerDependencies = {
 async function promptAgentsWithReadline(
   choices: AgentChoice[],
 ): Promise<CodingAgent[]> {
-  const input = fs.createReadStream('/dev/tty');
-  const output = fs.createWriteStream('/dev/tty');
+  // Use stdin/stdout directly - /dev/tty is not reliably available in piped contexts
+  const input = process.stdin;
+  const output = process.stdout;
 
   const rl = readline.createInterface({
     input,
@@ -79,8 +79,6 @@ async function promptAgentsWithReadline(
       `Enter numbers separated by commas (default: ${defaultValue}): `,
       (answer) => {
         rl.close();
-        input.destroy();
-        output.destroy();
 
         const trimmed = answer.trim();
         const numbersStr = trimmed === '' ? defaultValue : trimmed;

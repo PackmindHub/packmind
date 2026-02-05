@@ -537,8 +537,8 @@ describe('configAgentsHandler', () => {
         question: jest.fn(),
         close: jest.fn(),
       };
-      mockInput = { destroy: jest.fn() };
-      mockOutput = { write: jest.fn(), destroy: jest.fn() };
+      mockInput = { close: jest.fn() };
+      mockOutput = { write: jest.fn(), close: jest.fn() };
 
       mockReadline.createInterface.mockReturnValue(
         mockRlInterface as unknown as readline.Interface,
@@ -692,8 +692,8 @@ describe('configAgentsHandler', () => {
 
         await configAgentsHandler(deps);
 
-        // Verify output includes markers
-        expect(mockOutput.write).toHaveBeenCalledWith(
+        // Verify output includes markers (now using process.stdout)
+        expect(process.stdout.write).toHaveBeenCalledWith(
           expect.stringContaining('[*]'),
         );
       });
@@ -711,14 +711,6 @@ describe('configAgentsHandler', () => {
 
         it('closes readline interface', () => {
           expect(mockRlInterface.close).toHaveBeenCalled();
-        });
-
-        it('destroys input stream', () => {
-          expect(mockInput.destroy).toHaveBeenCalled();
-        });
-
-        it('destroys output stream', () => {
-          expect(mockOutput.destroy).toHaveBeenCalled();
         });
       });
     });
