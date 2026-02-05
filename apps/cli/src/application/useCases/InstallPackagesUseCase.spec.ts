@@ -33,6 +33,7 @@ describe('InstallPackagesUseCase', () => {
     (fs.stat as jest.Mock).mockResolvedValue(null);
     (fs.rm as jest.Mock).mockResolvedValue(undefined);
     (fs.readdir as jest.Mock).mockResolvedValue([]);
+    (fs.rmdir as jest.Mock).mockResolvedValue(undefined);
 
     useCase = new InstallPackagesUseCase(mockGateway);
   });
@@ -1096,6 +1097,254 @@ Old packmind content
         });
 
         expect(result.errors).toEqual([]);
+      });
+    });
+  });
+
+  describe('empty folder cleanup', () => {
+    describe('when deleting a file leaves parent directory empty', () => {
+      beforeEach(() => {
+        mockGateway.deployment.pull.mockResolvedValue({
+          fileUpdates: {
+            createOrUpdate: [],
+            delete: [
+              {
+                path: '.packmind/recipes/old-recipe.md',
+                type: DeleteItemType.File,
+              },
+            ],
+          },
+          skillFolders: [],
+        });
+
+        // File exists and is a file
+        (fs.stat as jest.Mock).mockResolvedValue({
+          isDirectory: () => false,
+          isFile: () => true,
+        });
+
+        // Parent directory is empty after deletion
+        (fs.readdir as jest.Mock).mockResolvedValue([]);
+      });
+
+      it('removes immediate empty parent directory', async () => {
+        await useCase.execute({
+          packagesSlugs: ['test-package'],
+          baseDirectory: '/test',
+        });
+
+        expect(fs.rmdir).toHaveBeenCalledWith('/test/.packmind/recipes');
+      });
+
+      it('removes empty grandparent directory recursively', async () => {
+        await useCase.execute({
+          packagesSlugs: ['test-package'],
+          baseDirectory: '/test',
+        });
+
+        expect(fs.rmdir).toHaveBeenCalledWith('/test/.packmind');
+      });
+    });
+
+    describe('when parent directory is not empty after deletion', () => {
+      beforeEach(() => {
+        mockGateway.deployment.pull.mockResolvedValue({
+          fileUpdates: {
+            createOrUpdate: [],
+            delete: [
+              {
+                path: '.packmind/recipes/old-recipe.md',
+                type: DeleteItemType.File,
+              },
+            ],
+          },
+          skillFolders: [],
+        });
+
+        // File exists and is a file
+        (fs.stat as jest.Mock).mockResolvedValue({
+          isDirectory: () => false,
+          isFile: () => true,
+        });
+
+        // Parent directory still has files
+        (fs.readdir as jest.Mock).mockResolvedValue(['other-recipe.md']);
+      });
+
+      it('does not remove parent directory', async () => {
+        await useCase.execute({
+          packagesSlugs: ['test-package'],
+          baseDirectory: '/test',
+        });
+
+        expect(fs.rmdir).not.toHaveBeenCalled();
+      });
+    });
+
+    describe('when section merge results in empty file', () => {
+      beforeEach(() => {
+        mockGateway.deployment.pull.mockResolvedValue({
+          fileUpdates: {
+            createOrUpdate: [
+              {
+                path: '.claude/rules/config.mdc',
+                sections: [
+                  {
+                    key: 'packmind-section',
+                    content: '',
+                  },
+                ],
+              },
+            ],
+            delete: [],
+          },
+          skillFolders: [],
+        });
+
+        // File exists
+        (fs.access as jest.Mock).mockResolvedValue(undefined);
+
+        // Existing file has only the packmind section
+        const existingContent = `<!-- start: packmind-section -->
+Old packmind content
+<!-- end: packmind-section -->`;
+        (fs.readFile as jest.Mock).mockResolvedValue(existingContent);
+
+        // Parent directory is empty after deletion
+        (fs.readdir as jest.Mock).mockResolvedValue([]);
+      });
+
+      it('removes empty parent directories after deleting empty file', async () => {
+        await useCase.execute({
+          packagesSlugs: ['test-package'],
+          baseDirectory: '/test',
+        });
+
+        expect(fs.rmdir).toHaveBeenCalledWith('/test/.claude/rules');
+      });
+    });
+
+    describe('when skill folder deletion leaves parent empty', () => {
+      beforeEach(() => {
+        // Mock fs.access to resolve for skill folders (folders exist)
+        (fs.access as jest.Mock).mockImplementation((path: string) => {
+          if (path.includes('/skills/')) {
+            return Promise.resolve();
+          }
+          return Promise.reject(new Error('File not found'));
+        });
+
+        // Mock fs.readdir to return files for skill folder, then empty for parent
+        (fs.readdir as jest.Mock).mockImplementation((path: string) => {
+          if (path.includes('signal-capture')) {
+            return Promise.resolve([
+              { name: 'SKILL.md', isDirectory: () => false },
+            ]);
+          }
+          // Parent directories are empty after skill folder deletion
+          return Promise.resolve([]);
+        });
+
+        mockGateway.deployment.pull.mockResolvedValue({
+          fileUpdates: {
+            createOrUpdate: [],
+            delete: [],
+          },
+          skillFolders: ['.packmind/skills/signal-capture'],
+        });
+      });
+
+      it('removes empty parent directories after skill folder deletion', async () => {
+        await useCase.execute({
+          packagesSlugs: ['test-package'],
+          baseDirectory: '/test',
+        });
+
+        expect(fs.rmdir).toHaveBeenCalledWith('/test/.packmind/skills');
+      });
+    });
+
+    describe('when cleanup should not exceed base directory', () => {
+      beforeEach(() => {
+        mockGateway.deployment.pull.mockResolvedValue({
+          fileUpdates: {
+            createOrUpdate: [],
+            delete: [
+              {
+                path: 'single-file.md',
+                type: DeleteItemType.File,
+              },
+            ],
+          },
+          skillFolders: [],
+        });
+
+        // File exists and is a file
+        (fs.stat as jest.Mock).mockResolvedValue({
+          isDirectory: () => false,
+          isFile: () => true,
+        });
+
+        // Parent directory (base directory) would be empty
+        (fs.readdir as jest.Mock).mockResolvedValue([]);
+      });
+
+      it('does not remove base directory', async () => {
+        await useCase.execute({
+          packagesSlugs: ['test-package'],
+          baseDirectory: '/test',
+        });
+
+        expect(fs.rmdir).not.toHaveBeenCalledWith('/test');
+      });
+    });
+
+    describe('when rmdir fails', () => {
+      beforeEach(() => {
+        mockGateway.deployment.pull.mockResolvedValue({
+          fileUpdates: {
+            createOrUpdate: [],
+            delete: [
+              {
+                path: '.packmind/recipes/old-recipe.md',
+                type: DeleteItemType.File,
+              },
+            ],
+          },
+          skillFolders: [],
+        });
+
+        // File exists and is a file
+        (fs.stat as jest.Mock).mockResolvedValue({
+          isDirectory: () => false,
+          isFile: () => true,
+        });
+
+        // Parent directory is empty
+        (fs.readdir as jest.Mock).mockResolvedValue([]);
+
+        // rmdir fails
+        (fs.rmdir as jest.Mock).mockRejectedValue(
+          new Error('Permission denied'),
+        );
+      });
+
+      it('does not throw error', async () => {
+        const result = await useCase.execute({
+          packagesSlugs: ['test-package'],
+          baseDirectory: '/test',
+        });
+
+        expect(result.errors).toEqual([]);
+      });
+
+      it('still counts file as deleted', async () => {
+        const result = await useCase.execute({
+          packagesSlugs: ['test-package'],
+          baseDirectory: '/test',
+        });
+
+        expect(result.filesDeleted).toBe(1);
       });
     });
   });
