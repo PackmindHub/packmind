@@ -6,7 +6,8 @@ title: 'CLI: Command-Line Interface'
 
 The Packmind CLI provides the following commands:
 
-- **`init`** - Initialize Packmind in your project (install skills + scan for patterns)
+- **`init`** - Initialize Packmind in your project (configure agents + install skills)
+- **`config agents`** - Configure which AI coding agents to generate artifacts for
 - **`login`** - Authenticate with your Packmind instance
 - **`logout`** - Clear stored credentials
 - **`whoami`** - Show current authentication status
@@ -224,8 +225,8 @@ Initialize Packmind in your project. This is the recommended first command to ru
 
 The init command performs two main actions:
 
-1. **Installs default skills** - Including skill creator, standard creator, and onboarding skills
-2. **Scans your project** - Detects languages, frameworks, tools, and generates project-specific content
+1. **Configures AI agents** - Interactively select which AI coding agents to generate artifacts for
+2. **Installs default skills** - Including skill creator, standard creator, and onboarding skills
 
 ### Basic Usage
 
@@ -235,70 +236,82 @@ packmind-cli init
 
 This will:
 
-1. Install Packmind's default skills to `.claude/skills/` (or equivalent for other agents)
-2. Scan your project for technologies and patterns
-3. Show a preview of generated standards, commands, and skills
-4. Prompt for confirmation before writing files
-5. Write generated content to `.packmind/` and `.claude/skills/`
+1. Present an interactive prompt to select which AI agents you use (Claude Code, Cursor, GitHub Copilot, etc.)
+2. Save your agent configuration to `packmind.json`
+3. Install Packmind's default skills to the appropriate locations for your selected agents
+4. Display a success message with next steps
 
-### Flags
+**Example output:**
 
-| Flag                    | Short | Description                                               |
-| ----------------------- | ----- | --------------------------------------------------------- |
-| `--dry-run`             | `-d`  | Preview generated content without writing files           |
-| `--yes`                 | `-y`  | Skip confirmation prompts and proceed automatically       |
-| `--skip-onboard`        |       | Only install default skills, skip project scanning        |
-| `--skip-default-skills` |       | Only run onboarding, skip default skills installation     |
-| `--push`                |       | Push generated standards and commands to Packmind backend |
-
-**Examples:**
-
-```bash
-# Preview what would be generated
-packmind-cli init --dry-run
-
-# Auto-approve all prompts (for CI/CD)
-packmind-cli init --yes
-
-# Only install default skills
-packmind-cli init --skip-onboard
 ```
+Select coding agents to generate artifacts for:
+(packmind is always active by default)
 
-### Generated Content
+  1. [*] Claude Code
+  2. [ ] Cursor
+  3. [ ] GitHub Copilot
+  ...
 
-Based on your project's technologies, the init command may generate:
+Enter numbers separated by commas (default: 1,2,3): 1,2
 
-**Standards** (`.packmind/standards/`):
+Configuration saved. Artifacts will be generated for: Claude Code, Cursor
 
-- Language-specific coding standards (TypeScript, Python, Java, etc.)
-- Framework conventions (NestJS, React, Django, Spring Boot, etc.)
-- Extracted rules from existing documentation
+Installing default skills...
+Default skills installed successfully!
+  Files created: 5
 
-**Commands** (`.packmind/commands/`):
-
-- Framework-specific workflows (create module, create component, etc.)
-
-**Skills** (`.claude/skills/`):
-
-- Project overview skill with technology stack summary
-- Debugging workflows for your test framework
-- Framework-specific debugging skills
+Packmind initialized successfully!
+Next step: Run /packmind-onboard in your AI agent to onboard the project
+```
 
 <Tip>
   **First-time setup** — Run `packmind-cli init` after installing the CLI and
   logging in. It's the quickest way to get Packmind configured for your project.
+  After initialization, use the `/packmind-onboard` skill in your AI agent to
+  scan your project and generate project-specific standards and commands.
+</Tip>
+
+## Config Command
+
+Configure Packmind settings.
+
+### Config Agents
+
+Configure which AI coding agents to generate artifacts for:
+
+```bash
+packmind-cli config agents
+```
+
+This presents an interactive prompt where you can select from supported AI coding agents:
+
+- **Claude Code** - Artifacts in `.claude/` directory
+- **Cursor** - Artifacts in `.cursor/rules/` directory
+- **GitHub Copilot** - Artifacts in `.github/copilot-instructions.md`
+- **Continue.dev** - Artifacts in `.continue/` directory
+- **Junie** - Artifacts in `.junie/` directory
+- **AGENTS.md** - Single `AGENTS.md` file at project root
+- **GitLab Duo** - Artifacts in `.gitlab/` directory
+
+The command auto-detects existing agent configurations in your project and pre-selects them. Your selection is saved to `packmind.json`.
+
+<Tip>
+  **Auto-detection** — If you already have agent configuration files (like
+  `.cursor/` or `.claude/`), they will be automatically pre-selected when you
+  run this command.
 </Tip>
 
 ## Onboard Command
 
-Scan your project and generate standards, commands, and skills based on detected patterns. This is the same scanning functionality that runs during `init`, but can be run independently.
+Scan your project and generate standards, commands, and skills based on detected patterns.
 
 ### When to Use Onboard
 
 Use the onboard command when:
 
+- You want to scan your project after running `init`
 - You want to re-scan after project changes
-- You've already installed default skills and just want to regenerate content
+- You want to regenerate project-specific content
 - You want to scan a different directory
 
 ### Basic Usage
