@@ -23,6 +23,7 @@ import {
   Target,
   createOrganizationId,
   createUserId,
+  normalizeCodingAgents,
 } from '@packmind/types';
 import { PackageService } from '../services/PackageService';
 import { PackmindConfigService } from '../services/PackmindConfigService';
@@ -101,9 +102,10 @@ export class PullContentUseCase extends AbstractMemberUseCase<
 
     try {
       // Get active coding agents: use command.agents if provided, otherwise fall back to org-level config
+      // Always normalize to ensure 'packmind' is included
       let codingAgents;
       if (command.agents !== undefined) {
-        codingAgents = command.agents;
+        codingAgents = normalizeCodingAgents(command.agents);
         this.logger.info('Using agents from command (packmind.json override)', {
           codingAgents,
           organizationId: command.organizationId,

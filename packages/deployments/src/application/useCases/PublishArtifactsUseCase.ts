@@ -28,6 +28,7 @@ import {
   CodingAgent,
   DeploymentCompletedEvent,
   PackmindFileConfig,
+  normalizeCodingAgents,
 } from '@packmind/types';
 import { IDistributionRepository } from '../../domain/repositories/IDistributionRepository';
 import { TargetService } from '../services/TargetService';
@@ -466,10 +467,11 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
       const existingPackages = existingPackmindJson?.packages ?? {};
 
       // Use per-target agents if defined in packmind.json, otherwise use org-level agents
-      // Note: empty array [] means "no agents" (intentional), undefined means "use org-level"
+      // Note: undefined means "use org-level", but any defined array (including []) gets normalized
+      // to always include 'packmind' agent
       const targetCodingAgents =
         existingPackmindJson?.agents !== undefined
-          ? existingPackmindJson.agents
+          ? normalizeCodingAgents(existingPackmindJson.agents)
           : codingAgents;
 
       if (existingPackmindJson?.agents !== undefined) {
