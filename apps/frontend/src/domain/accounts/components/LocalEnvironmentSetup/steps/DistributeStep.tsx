@@ -1,5 +1,12 @@
 import React from 'react';
-import { PMVStack, PMText, PMBox, PMHeading } from '@packmind/ui';
+import {
+  PMVStack,
+  PMText,
+  PMBox,
+  PMHeading,
+  PMGrid,
+  PMGridItem,
+} from '@packmind/ui';
 import { CopiableTextField } from '../../../../../shared/components/inputs';
 import { StepHeader } from '../components';
 
@@ -23,20 +30,29 @@ export const DistributeStep: React.FC<IDistributeStepProps> = ({
     content = (
       <PMVStack align="flex-start" gap={4} width="full">
         <PMHeading level="h6">Available packages</PMHeading>
-        {packages.map((pkg) => (
-          <PMBox
-            key={pkg.id}
-            p={3}
-            borderRadius="md"
-            backgroundColor="background.secondary"
-            width="full"
-          >
-            <PMVStack align="flex-start" gap={1}>
-              <PMText fontWeight="bold">{pkg.name}</PMText>
-              <CopiableTextField value={`packmind-cli install ${pkg.slug}`} />
-            </PMVStack>
-          </PMBox>
-        ))}
+
+        <PMGrid width="full" templateColumns={'1fr 1fr'} gap={4}>
+          {packages.map((pkg) => (
+            <PMGridItem
+              key={pkg.id}
+              p={3}
+              borderRadius="md"
+              backgroundColor="background.secondary"
+            >
+              <PMVStack align="flex-start" gap={1}>
+                <PMText fontWeight="bold">{pkg.name}</PMText>
+                <PMBox w="full">
+                  <CopiableTextField
+                    label={
+                      'Run this command in your terminal to install the package'
+                    }
+                    value={`packmind-cli install ${pkg.slug}`}
+                  />
+                </PMBox>
+              </PMVStack>
+            </PMGridItem>
+          ))}
+        </PMGrid>
       </PMVStack>
     );
   } else {

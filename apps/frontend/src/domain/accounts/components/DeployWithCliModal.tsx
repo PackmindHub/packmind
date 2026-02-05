@@ -90,10 +90,11 @@ export const DeployWithCliModal: React.FC<DeployWithCliModalProps> = ({
     <PMDialog.Root
       open={open}
       onOpenChange={(details) => !details.open && onClose()}
+      size={'xl'}
     >
       <PMDialog.Backdrop />
       <PMDialog.Positioner>
-        <PMDialog.Content maxWidth="800px">
+        <PMDialog.Content>
           <PMDialog.Header>
             <PMDialog.Title>Deploy with CLI</PMDialog.Title>
             <PMDialog.CloseTrigger />
