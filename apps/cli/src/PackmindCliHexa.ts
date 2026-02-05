@@ -63,14 +63,13 @@ import {
 } from './domain/useCases/IListSkillsUseCase';
 import {
   AllConfigsResult,
+  Gateway,
   HierarchicalConfigResult,
+  INotifyDistributionUseCase,
   PackmindFileConfig,
 } from '@packmind/types';
 import { logWarningConsole } from './infra/utils/consoleLogger';
-import {
-  NotifyDistributionCommand,
-  NotifyDistributionResult,
-} from './domain/repositories/IPackmindGateway';
+
 import {
   UploadSkillCommand,
   UploadSkillResult,
@@ -318,13 +317,13 @@ export class PackmindCliHexa {
       .gitRemoteUrl;
   }
 
-  public async notifyDistribution(
-    command: NotifyDistributionCommand,
-  ): Promise<NotifyDistributionResult> {
+  public notifyDistribution: Gateway<INotifyDistributionUseCase> = async (
+    command,
+  ) => {
     return this.hexa.repositories.packmindGateway.deployment.notifyDistribution(
       command,
     );
-  }
+  };
 
   public async uploadSkill(
     command: UploadSkillCommand,

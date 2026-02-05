@@ -1,4 +1,5 @@
 import { PackagesGateway } from './PackagesGateway';
+import { createMockHttpClient } from '../../mocks/createMockHttpClient';
 import { PackmindHttpClient } from '../http/PackmindHttpClient';
 import {
   createPackageId,
@@ -8,47 +9,24 @@ import {
   createStandardId,
 } from '@packmind/types';
 
-const createTestApiKey = () => {
-  const jwt = Buffer.from(
-    JSON.stringify({ alg: 'HS256', typ: 'JWT' }),
-  ).toString('base64');
-  const payload = Buffer.from(
-    JSON.stringify({
-      organization: { id: 'org-123', name: 'Test Org' },
-      iat: Date.now(),
-      exp: Date.now() + 3600000,
-    }),
-  ).toString('base64');
-  const signature = 'test-signature';
-  const fullJwt = `${jwt}.${payload}.${signature}`;
-
-  return Buffer.from(
-    JSON.stringify({
-      host: 'http://localhost:4200',
-      jwt: fullJwt,
-    }),
-  ).toString('base64');
-};
-
 describe('PackagesGateway', () => {
   describe('addArtefacts', () => {
     let gateway: PackagesGateway;
     let mockHttpClient: jest.Mocked<PackmindHttpClient>;
-
+    const mockOrganizationId = 'org-123';
     const packageId = createPackageId('pkg-123');
     const spaceId = createSpaceId('space-123');
 
     beforeEach(() => {
-      mockHttpClient = {
+      mockHttpClient = createMockHttpClient({
         getAuthContext: jest.fn().mockReturnValue({
-          organizationId: 'org-123',
+          organizationId: mockOrganizationId,
           host: 'https://api.packmind.com',
           jwt: 'mock-jwt',
         }),
-        request: jest.fn(),
-      } as unknown as jest.Mocked<PackmindHttpClient>;
+      });
 
-      gateway = new PackagesGateway(createTestApiKey(), mockHttpClient);
+      gateway = new PackagesGateway('mock-api-key', mockHttpClient);
     });
 
     afterEach(() => {
@@ -71,7 +49,7 @@ describe('PackagesGateway', () => {
         });
 
         expect(mockHttpClient.request).toHaveBeenCalledWith(
-          '/api/v0/organizations/org-123/spaces/space-123/packages/pkg-123/add-artifacts',
+          `/api/v0/organizations/${mockOrganizationId}/spaces/${spaceId}/packages/${packageId}/add-artifacts`,
           {
             method: 'POST',
             body: {
@@ -110,7 +88,7 @@ describe('PackagesGateway', () => {
         });
 
         expect(mockHttpClient.request).toHaveBeenCalledWith(
-          '/api/v0/organizations/org-123/spaces/space-123/packages/pkg-123/add-artifacts',
+          `/api/v0/organizations/${mockOrganizationId}/spaces/${spaceId}/packages/${packageId}/add-artifacts`,
           {
             method: 'POST',
             body: { packageId, spaceId, recipeIds: ['cmd-1'] },
@@ -145,7 +123,7 @@ describe('PackagesGateway', () => {
         });
 
         expect(mockHttpClient.request).toHaveBeenCalledWith(
-          '/api/v0/organizations/org-123/spaces/space-123/packages/pkg-123/add-artifacts',
+          `/api/v0/organizations/${mockOrganizationId}/spaces/${spaceId}/packages/${packageId}/add-artifacts`,
           {
             method: 'POST',
             body: { packageId, spaceId, skillIds: ['skill-1'] },

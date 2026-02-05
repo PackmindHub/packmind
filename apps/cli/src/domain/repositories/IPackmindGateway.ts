@@ -7,13 +7,6 @@ import { IStandardsGateway } from './IStandardsGateway';
 import { IPackagesGateway } from './IPackagesGateway';
 import { IDeploymentGateway } from './IDeploymentGateway';
 
-// Re-export deployment types for backward compatibility
-export type {
-  NotifyDistributionCommand,
-  NotifyDistributionResult,
-  NotifyDistributionGateway,
-} from './IDeploymentGateway';
-
 // Re-export standard types from IStandardsGateway for backward compatibility
 export type {
   CreateStandardInSpaceCommand,
