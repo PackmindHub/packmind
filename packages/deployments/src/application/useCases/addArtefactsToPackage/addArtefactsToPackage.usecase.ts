@@ -39,6 +39,7 @@ export class AddArtefactsToPackageUsecase
   ): Promise<AddArtefactsToPackageResponse> {
     const {
       packageId,
+      spaceId,
       recipeIds = [],
       standardIds = [],
       skillIds = [],
@@ -51,6 +52,18 @@ export class AddArtefactsToPackageUsecase
       skillCount: skillIds.length,
     });
 
+    // Validate space exists and belongs to organization
+    const space = await this.spacesPort.getSpaceById(spaceId);
+    if (!space) {
+      throw new Error(`Space with id ${spaceId} not found`);
+    }
+
+    if (space.organizationId !== command.organizationId) {
+      throw new Error(
+        `Package ${packageId} does not belong to organization ${command.organizationId}`,
+      );
+    }
+
     // Validate package exists
     const existingPackage = await this.services
       .getPackageService()
@@ -59,15 +72,9 @@ export class AddArtefactsToPackageUsecase
       throw new Error(`Package with id ${packageId} not found`);
     }
 
-    // Validate space exists and belongs to organization
-    const space = await this.spacesPort.getSpaceById(existingPackage.spaceId);
-    if (!space) {
-      throw new Error(`Space with id ${existingPackage.spaceId} not found`);
-    }
-
-    if (space.organizationId !== command.organizationId) {
+    if (existingPackage.spaceId !== spaceId) {
       throw new Error(
-        `Package ${packageId} does not belong to organization ${command.organizationId}`,
+        `Package with id ${packageId} does not exist in space ${spaceId}`,
       );
     }
 

@@ -1,5 +1,12 @@
 import { PackagesGateway } from './PackagesGateway';
 import { PackmindHttpClient } from '../http/PackmindHttpClient';
+import {
+  createPackageId,
+  createRecipeId,
+  createSkillId,
+  createSpaceId,
+  createStandardId,
+} from '@packmind/types';
 
 const createTestApiKey = () => {
   const jwt = Buffer.from(
@@ -28,6 +35,9 @@ describe('PackagesGateway', () => {
     let gateway: PackagesGateway;
     let mockHttpClient: jest.Mocked<PackmindHttpClient>;
 
+    const packageId = createPackageId('pkg-123');
+    const spaceId = createSpaceId('space-123');
+
     beforeEach(() => {
       mockHttpClient = {
         getAuthContext: jest.fn().mockReturnValue({
@@ -55,25 +65,29 @@ describe('PackagesGateway', () => {
 
       it('calls POST with correct payload', async () => {
         await gateway.addArtefacts({
-          packageSlug: 'my-package',
-          spaceId: 'space-123',
-          standardIds: ['std-1'],
+          packageId,
+          spaceId,
+          standardIds: [createStandardId('std-1')],
         });
 
         expect(mockHttpClient.request).toHaveBeenCalledWith(
-          '/api/v0/organizations/org-123/spaces/space-123/packages/my-package/add-artifacts',
+          '/api/v0/organizations/org-123/spaces/space-123/packages/pkg-123/add-artifacts',
           {
             method: 'POST',
-            body: { standardIds: ['std-1'] },
+            body: {
+              packageId,
+              spaceId,
+              standardIds: ['std-1'],
+            },
           },
         );
       });
 
       it('returns added standards from response', async () => {
         const result = await gateway.addArtefacts({
-          packageSlug: 'my-package',
-          spaceId: 'space-123',
-          standardIds: ['std-1'],
+          packageId,
+          spaceId,
+          standardIds: [createStandardId('std-1')],
         });
 
         expect(result.added.standards).toEqual(['std-1']);
@@ -90,25 +104,25 @@ describe('PackagesGateway', () => {
 
       it('calls POST with commandIds in payload', async () => {
         await gateway.addArtefacts({
-          packageSlug: 'my-package',
-          spaceId: 'space-123',
-          commandIds: ['cmd-1'],
+          packageId,
+          spaceId,
+          recipeIds: [createRecipeId('cmd-1')],
         });
 
         expect(mockHttpClient.request).toHaveBeenCalledWith(
-          '/api/v0/organizations/org-123/spaces/space-123/packages/my-package/add-artifacts',
+          '/api/v0/organizations/org-123/spaces/space-123/packages/pkg-123/add-artifacts',
           {
             method: 'POST',
-            body: { commandIds: ['cmd-1'] },
+            body: { packageId, spaceId, recipeIds: ['cmd-1'] },
           },
         );
       });
 
       it('returns added commands from response', async () => {
         const result = await gateway.addArtefacts({
-          packageSlug: 'my-package',
-          spaceId: 'space-123',
-          commandIds: ['cmd-1'],
+          packageId,
+          spaceId,
+          recipeIds: [createRecipeId('cmd-1')],
         });
 
         expect(result.added.commands).toEqual(['cmd-1']);
@@ -125,25 +139,25 @@ describe('PackagesGateway', () => {
 
       it('calls POST with skillIds in payload', async () => {
         await gateway.addArtefacts({
-          packageSlug: 'my-package',
-          spaceId: 'space-123',
-          skillIds: ['skill-1'],
+          packageId,
+          spaceId,
+          skillIds: [createSkillId('skill-1')],
         });
 
         expect(mockHttpClient.request).toHaveBeenCalledWith(
-          '/api/v0/organizations/org-123/spaces/space-123/packages/my-package/add-artifacts',
+          '/api/v0/organizations/org-123/spaces/space-123/packages/pkg-123/add-artifacts',
           {
             method: 'POST',
-            body: { skillIds: ['skill-1'] },
+            body: { packageId, spaceId, skillIds: ['skill-1'] },
           },
         );
       });
 
       it('returns added skills from response', async () => {
         const result = await gateway.addArtefacts({
-          packageSlug: 'my-package',
-          spaceId: 'space-123',
-          skillIds: ['skill-1'],
+          packageId,
+          spaceId,
+          skillIds: [createSkillId('skill-1')],
         });
 
         expect(result.added.skills).toEqual(['skill-1']);
@@ -160,9 +174,9 @@ describe('PackagesGateway', () => {
         });
 
         result = await gateway.addArtefacts({
-          packageSlug: 'my-package',
-          spaceId: 'space-123',
-          standardIds: ['std-1', 'std-2'],
+          packageId,
+          spaceId,
+          standardIds: ['std-1', 'std-2'].map(createStandardId),
         });
       });
 

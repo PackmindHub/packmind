@@ -260,13 +260,13 @@ export class OrganizationsSpacesPackagesController {
 
   /**
    * Add artifacts to an existing package
-   * POST /organizations/:orgId/spaces/:spaceId/packages/:packageSlug/add-artifacts
+   * POST /organizations/:orgId/spaces/:spaceId/packages/:packageId/add-artifacts
    */
-  @Post(':packageSlug/add-artifacts')
+  @Post(':packageId/add-artifacts')
   async addArtefactsToPackage(
     @Param('orgId') organizationId: OrganizationId,
     @Param('spaceId') spaceId: SpaceId,
-    @Param('packageSlug') packageSlug: string,
+    @Param('packageId') packageId: PackageId,
     @Req() request: AuthenticatedRequest,
     @Body()
     body: {
@@ -278,25 +278,15 @@ export class OrganizationsSpacesPackagesController {
     const userId = request.user.userId;
 
     this.logger.info(
-      'POST /organizations/:orgId/spaces/:spaceId/packages/:packageSlug/add-artifacts',
-      { organizationId, spaceId, packageSlug },
+      'POST /organizations/:orgId/spaces/:spaceId/packages/:packageId/add-artifacts',
+      { organizationId, spaceId, packageId },
     );
-
-    // Resolve packageSlug to packageId
-    const packages = await this.deploymentsService.listPackagesBySpace({
-      userId,
-      organizationId,
-      spaceId,
-    });
-    const pkg = packages.packages.find((p) => p.slug === packageSlug);
-    if (!pkg) {
-      throw new Error(`Package with slug '${packageSlug}' not found`);
-    }
 
     return this.deploymentsService.addArtefactsToPackage({
       userId,
+      spaceId,
       organizationId,
-      packageId: pkg.id,
+      packageId: packageId,
       standardIds: body.standardIds,
       recipeIds: body.commandIds,
       skillIds: body.skillIds,

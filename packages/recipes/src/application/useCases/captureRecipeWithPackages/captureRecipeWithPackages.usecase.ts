@@ -118,6 +118,7 @@ export class CaptureRecipeWithPackagesUsecase
           // Add recipe to package
           await this.deploymentsPort.addArtefactsToPackage({
             userId,
+            spaceId: createSpaceId(spaceId),
             organizationId,
             packageId: pkg.id,
             recipeIds: [recipe.id],

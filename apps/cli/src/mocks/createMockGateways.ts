@@ -105,6 +105,7 @@ export function createMockPackagesGateway(
     list: jest.fn(),
     getSummary: jest.fn(),
     create: jest.fn(),
+    addArtefacts: jest.fn(),
     ...overrides,
   };
 }

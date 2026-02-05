@@ -761,6 +761,7 @@ describe('addRuleToStandard.tool', () => {
               mockDeploymentsAdapter.addArtefactsToPackage,
             ).toHaveBeenCalledWith({
               userId: 'user-123',
+              spaceId: 'space-123',
               organizationId: 'org-123',
               packageId: 'existing-package-123',
               standardIds: ['standard-456'],

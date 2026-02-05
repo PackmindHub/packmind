@@ -57,6 +57,7 @@ export async function ensureDefaultPackageWithArtifact(
     // Add artifact to existing Default package
     await deploymentsAdapter.addArtefactsToPackage({
       userId,
+      spaceId,
       organizationId,
       packageId: defaultPackage.id,
       standardIds: artifact.standardId ? [artifact.standardId] : undefined,
