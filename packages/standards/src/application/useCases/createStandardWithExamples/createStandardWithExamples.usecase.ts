@@ -72,7 +72,7 @@ export class CreateStandardWithExamplesUsecase {
       spaceId,
       disableTriggerAssessment = false,
       source = 'ui',
-      method,
+      method = 'blank',
     } = command;
 
     const organizationId = createOrganizationId(orgId);

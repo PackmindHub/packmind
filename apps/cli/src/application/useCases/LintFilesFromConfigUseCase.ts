@@ -216,6 +216,25 @@ export class LintFilesFromConfigUseCase implements ILintFilesFromConfig {
 
     this.logger.debug(`Found ${files.length} files to lint`);
 
+    // Track linter execution (fire-and-forget)
+    // Get git remote URL if available for tracking
+    try {
+      if (gitRepoRoot) {
+        // Count total targets and standards from configs
+        const targetCount = allConfigs.configs.length;
+        const standardCount = allConfigs.configs.reduce((sum, config) => {
+          return sum + Object.keys(config.packages).length;
+        }, 0);
+
+        this.repositories.packmindGateway.linter.trackLinterExecution({
+          targetCount,
+          standardCount,
+        });
+      }
+    } catch {
+      // Silent fail - tracking should not affect linting
+    }
+
     const violations: LintViolation[] = [];
     const allStandardsChecked = new Set<string>();
 
