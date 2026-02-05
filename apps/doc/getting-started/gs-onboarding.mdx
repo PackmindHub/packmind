@@ -4,18 +4,33 @@ title: 'Set Up Your Project with Onboarding'
 
 ## Overview
 
-Packmind's onboarding skill automatically scans your project, detects your technologies and coding patterns, and generates tailored standards and commands. Instead of manually creating standards from scratch, your AI agent analyzes your existing code and practices to create a foundation you can refine.
+Packmind offers two ways to automatically generate coding standards from your project. Instead of manually creating standards from scratch, your AI agent analyzes your existing code and practices to create a foundation you can refine.
 
-This is the fastest way to get Packmind working in your project.
+## Choose Your Approach
 
-## Prerequisites
+| Approach                                   | Best For                   | Creates              | How It Works                              |
+| ------------------------------------------ | -------------------------- | -------------------- | ----------------------------------------- |
+| **[Skill-based](#skill-based-onboarding)** | Batch analysis, CLI users  | Standards + Commands | Automated scan with draft review          |
+| **[MCP-based](#mcp-based-onboarding)**     | Guided creation, MCP users | Standards only       | Interactive workflow with topic selection |
+
+**Use skill-based onboarding** if you have Packmind skills installed (Claude Code, Cursor with skills) and want automated batch analysis.
+
+**Use MCP-based onboarding** if you're using the Packmind MCP server (Claude Desktop, other MCP clients) and want a guided, focused workflow.
+
+---
+
+## Skill-Based Onboarding
+
+The `/packmind-onboard` skill provides automated batch analysis of your codebase, generating both standards and commands.
+
+### Prerequisites
 
 - Packmind CLI installed
 - Logged in with `packmind-cli login`
-- Packmind skills installed with `packmind-cli install`
+- Packmind skills installed with `packmind-cli init`
 - A Git repository in your project
 
-## Quick Start
+### Quick Start
 
 In your AI agent (Claude Code, Cursor, etc.), invoke the onboarding skill:
 
@@ -31,18 +46,16 @@ The skill guides you through an interactive process:
 4. **Review generated drafts** — Preview before creating anything
 5. **Create standards and commands** — Publish to Packmind and deploy locally
 
-## Analysis Modes
-
-When you start onboarding, choose your analysis depth:
+### Analysis Modes
 
 | Mode        | Checks            | Best For                                 |
 | ----------- | ----------------- | ---------------------------------------- |
 | **Quick**   | 4 pattern checks  | Fast starter set, small projects         |
 | **Optimal** | 17 pattern checks | Comprehensive analysis, larger codebases |
 
-Quick mode focuses on file templates, CI/local parity, role taxonomy, and test data patterns. Optimal mode adds cross-domain communication, module boundaries, error semantics, observability, and more.
+Quick mode gives you a fast starter set. Optimal mode provides deeper analysis across more pattern categories.
 
-## What Gets Generated
+### What Gets Generated
 
 Based on your project's patterns, you'll get up to:
 
@@ -59,11 +72,11 @@ Based on your project's patterns, you'll get up to:
 - CI/local development parity scripts
 - Project-specific automation
 
-All items are created as **drafts first** in `.packmind/standards/_drafts/` and `.packmind/commands/_drafts/`, giving you a chance to review and edit before publishing.
+All items are created as **drafts first**, giving you a chance to review and edit before publishing.
 
-## The Onboarding Flow
+### The Onboarding Flow
 
-### Step 1: Package Selection
+#### Step 1: Package Selection
 
 The skill checks for existing packages:
 
@@ -71,73 +84,158 @@ The skill checks for existing packages:
 - **One package exists**: Asks if you want to use it or create a new one
 - **Multiple packages**: Lists all options for you to choose
 
-### Step 2: Codebase Analysis
+#### Step 2: Codebase Analysis
 
-The skill performs a read-only scan:
+The skill performs a read-only scan of your project, detecting your tech stack, frameworks, and coding patterns.
 
-1. Detects your tech stack (languages, frameworks, architecture patterns)
-2. Identifies existing Packmind/agent configuration
-3. Runs pattern analysis based on your chosen mode
-4. Collects evidence (file paths, line ranges) for each finding
+#### Step 3: Draft Review
 
-### Step 3: Draft Review
+After analysis, you see a summary of what will be created (e.g., "3 standards, 2 commands"). You can then choose:
 
-After analysis, you see a summary:
-
-```
-DRAFTS CREATED:
-
-Standards (3):
-  1. Error Handling Pattern → .packmind/standards/_drafts/error-handling.draft.md
-  2. Test Factory Pattern → .packmind/standards/_drafts/test-factory.draft.md
-  3. Module Boundaries → .packmind/standards/_drafts/module-boundaries.draft.md
-
-Commands (2):
-  1. Run Full Test Suite → .packmind/commands/_drafts/run-tests.draft.md
-  2. Create New Module → .packmind/commands/_drafts/create-module.draft.md
-```
-
-You can then choose:
-
-- **Create all now** — Proceed with publishing
-- **Let me review drafts first** — Edit the markdown files, then re-run the skill
+- **Create all now** — Publish everything to Packmind
+- **Let me review drafts first** — Edit the drafts before publishing
 - **Cancel** — Exit without creating anything
 
-### Step 4: Publishing
+#### Step 4: Publishing
 
-When you confirm, the skill:
+When you confirm, the skill publishes everything to Packmind and deploys to your local AI agent automatically.
 
-1. Converts each draft to JSON format
-2. Creates standards via `packmind-cli standards create`
-3. Creates commands via `packmind-cli commands create`
-4. Adds each item to your package via `packmind-cli packages add`
-5. Deploys locally via `packmind-cli install`
-
-## After Onboarding
+### After Skill-Based Onboarding
 
 Once complete, your standards and commands are:
 
 - **Published to Packmind** — Available in your organization
 - **Added to your package** — Ready for team distribution
-- **Deployed locally** — Active in your AI agent configuration
+- **Deployed locally** — Active in your AI agent (Claude Code, Cursor, GitHub Copilot, etc.)
 
-Files are written to agent-specific locations:
+### Re-running Skill-Based Onboarding
 
-| Agent          | Standards                 | Commands                     |
-| -------------- | ------------------------- | ---------------------------- |
-| Claude Code    | `.claude/rules/packmind/` | `.claude/commands/packmind/` |
-| Cursor         | `.cursor/rules/packmind/` | `.cursor/commands/packmind/` |
-| GitHub Copilot | `.github/instructions/`   | `.github/prompts/`           |
+Run the skill again anytime to generate additional standards and commands. The skill never overwrites existing items.
 
-## Re-running Onboarding
+---
 
-Run the skill again anytime:
+## MCP-Based Onboarding
 
-- After significant codebase changes
-- To use Optimal mode after starting with Quick
-- To generate additional standards and commands
+The MCP `onboarding` tool provides guided workflows for creating standards one at a time, with multiple analysis methods to choose from.
 
-The skill never overwrites existing artifacts. If a slug already exists, it creates `-2`, `-3`, etc.
+### Prerequisites
+
+- Packmind MCP server configured (see [MCP Server Setup](/getting-started/gs-mcp-server-setup))
+- An MCP-compatible AI client (Claude Desktop, etc.)
+
+### Quick Start
+
+Ask your AI agent to help you create standards:
+
+```
+Help me create coding standards for my project
+```
+
+The AI agent will present five analysis methods:
+
+1. **📁 Codebase Analysis** — Analyze your current codebase to identify languages, frameworks, and patterns
+2. **📈 Git History Analysis** — Analyze recent commits to identify areas where standards could help
+3. **📄 Documentation Analysis** — Convert existing markdown docs, ADRs, and guidelines into standards
+4. **🤖 AI Instructions Analysis** — Transform existing AI agent instructions (CLAUDE.md, .cursor/rules) into standards
+5. **🌐 Web Research** — Research industry best practices for specific technologies
+
+### How MCP Onboarding Works
+
+Each method follows the same general flow:
+
+1. **Analysis** — The AI examines your chosen source (code, commits, docs, etc.)
+2. **Topic Selection** — You're presented with relevant areas and pick one to focus on
+3. **Deep Dive** — The AI analyzes your chosen topic thoroughly
+4. **Standard Creation** — Creates one standard with 5 actionable rules
+5. **Package Selection** — Optionally adds the standard to a package
+
+### Analysis Methods in Detail
+
+#### Codebase Analysis
+
+The AI scans your project and identifies up to 10 areas where standards would help:
+
+```
+I've analyzed your codebase and identified these key areas:
+
+1. TypeScript - Used throughout with strict mode enabled
+2. React - Component patterns in src/components/
+3. Jest - Unit testing with specific mocking patterns
+4. Express - REST API with middleware patterns
+...
+
+Which area would you like me to focus on?
+```
+
+After you select a topic, the AI creates a standard based on actual patterns found in your code.
+
+#### Git History Analysis
+
+Examines your last 30 commits to find recurring patterns or areas with frequent changes:
+
+```
+Based on your recent commits, I identified these areas:
+
+1. Error handling - 8 commits touched error handling code
+2. API response formatting - Consistent patterns emerging
+3. Test organization - Recent restructuring patterns
+...
+```
+
+#### Documentation Analysis
+
+Scans markdown files including ADRs, README files, and existing guidelines to convert documented decisions into enforceable standards.
+
+#### AI Instructions Analysis
+
+Reads existing AI agent configuration files:
+
+- `CLAUDE.md`
+- `AGENTS.md`
+- `copilot-instructions.md`
+- `.cursor/rules/*.mdc`
+
+Converts these informal instructions into structured Packmind standards.
+
+#### Web Research
+
+For technologies where you want industry best practices rather than project-specific patterns. The AI researches authoritative sources and creates standards based on community consensus.
+
+### What Gets Generated
+
+Each MCP onboarding session creates:
+
+- **1 standard** focused on your selected topic
+- **5 rules** per standard, each with positive and negative code examples
+- **Optional package assignment** if packages exist in your organization
+
+### After MCP-Based Onboarding
+
+The standard is immediately available in your Packmind organization. To deploy it locally:
+
+```bash
+packmind-cli install
+```
+
+Or ask your AI agent to install the package containing your new standard.
+
+---
+
+## Comparing the Approaches
+
+| Feature                | Skill-Based                    | MCP-Based                   |
+| ---------------------- | ------------------------------ | --------------------------- |
+| **Automation level**   | High (batch processing)        | Interactive (guided)        |
+| **Output per session** | Up to 5 standards + 5 commands | 1 standard with 5 rules     |
+| **Analysis methods**   | Quick or Optimal scan          | 5 specialized methods       |
+| **Draft review**       | Yes, before publishing         | No, creates directly        |
+| **Commands support**   | Yes                            | No (standards only)         |
+| **Package handling**   | Required, with auto-creation   | Optional, suggests matches  |
+| **Best for**           | Initial project setup          | Focused, iterative creation |
+
+**Tip:** Use skill-based onboarding for initial project setup, then use MCP-based onboarding to add focused standards for specific areas over time.
+
+---
 
 ## Troubleshooting
 
@@ -145,21 +243,26 @@ The skill never overwrites existing artifacts. If a slug already exists, it crea
 
 Run `packmind-cli login` first, then retry the skill.
 
+**Q: MCP tool not found**
+
+Ensure your MCP server is configured correctly. See [MCP Server Setup](/getting-started/gs-mcp-server-setup).
+
 **Q: Package creation fails**
 
 Check your network connection and that you have permissions to create packages in your organization.
 
 **Q: No patterns discovered**
 
-Try running with Optimal mode for deeper analysis. Very new or small codebases may not have enough patterns to detect.
+Try running with Optimal mode (skill) or a different analysis method (MCP). Very new or small codebases may not have enough patterns to detect.
 
 **Q: Generated standards don't match my project**
 
-Onboarding generates a starting point. Edit the draft files in `.packmind/*/_drafts/` before confirming, or customize the published standards later.
+Onboarding generates a starting point. For skill-based, edit draft files before confirming. For MCP-based, customize the standard after creation or use a different analysis method.
 
 ## Related Documentation
 
 - [Create and customize standards](/getting-started/gs-create-standard)
 - [Create and customize commands](/getting-started/gs-create-command)
 - [Distribute standards and commands](/getting-started/gs-distribute)
-- [CLI Reference](/tools/cli) for all command options
+- [MCP Server reference](/tools/mcp-server)
+- [CLI Reference](/tools/cli)
