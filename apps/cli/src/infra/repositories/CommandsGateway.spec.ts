@@ -2,6 +2,7 @@ import { CommandsGateway } from './CommandsGateway';
 import { PackmindHttpClient } from '../http/PackmindHttpClient';
 import { ISpacesGateway } from '../../domain/repositories/ISpacesGateway';
 import { CaptureRecipeResponse, createSpaceId } from '@packmind/types';
+import { spaceFactory } from '@packmind/spaces/test';
 
 // Shared helper for creating test API keys
 const createTestApiKey = () => {
@@ -116,10 +117,12 @@ describe('CommandsGateway', () => {
         const httpClient = new PackmindHttpClient(createTestApiKey());
         gateway = new CommandsGateway(httpClient);
 
-        mockSpacesGateway.getGlobal.mockResolvedValue({
-          id: spaceId,
-          slug: 'global',
-        });
+        mockSpacesGateway.getGlobal.mockResolvedValue(
+          spaceFactory({
+            id: spaceId,
+            slug: 'global',
+          }),
+        );
 
         (global.fetch as jest.Mock).mockResolvedValueOnce({
           ok: true,
