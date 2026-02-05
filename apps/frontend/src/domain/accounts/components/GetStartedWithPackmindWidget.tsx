@@ -124,8 +124,14 @@ export const GetStartedWithPackmindWidget: React.FC<
     }
   };
 
-  // Hide widget when onboarding is complete (hasDeployed is true)
-  if (onboardingStatus?.hasDeployed) {
+  // Hide widget when all 4 steps are complete
+  const allStepsComplete =
+    stepCompletionStatus.step1 &&
+    stepCompletionStatus.step2 &&
+    stepCompletionStatus.step3 &&
+    stepCompletionStatus.step4;
+
+  if (allStepsComplete) {
     return null;
   }
 
