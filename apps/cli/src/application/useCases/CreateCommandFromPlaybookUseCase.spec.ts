@@ -2,6 +2,9 @@ import { CreateCommandFromPlaybookUseCase } from './CreateCommandFromPlaybookUse
 import { IPackmindGateway } from '../../domain/repositories/IPackmindGateway';
 import { ISpacesGateway } from '../../domain/repositories/ISpacesGateway';
 import { ICommandsGateway } from '../../domain/repositories/ICommandsGateway';
+import { spaceFactory } from '@packmind/spaces/test';
+import { createRecipeId, createSpaceId } from '@packmind/types';
+import { recipeFactory } from '@packmind/recipes/test';
 
 describe('CreateCommandFromPlaybookUseCase', () => {
   let useCase: CreateCommandFromPlaybookUseCase;
@@ -47,15 +50,19 @@ describe('CreateCommandFromPlaybookUseCase', () => {
     };
 
     beforeEach(async () => {
-      mockSpacesGateway.getGlobal.mockResolvedValue({
-        id: 'space-1',
-        slug: 'global',
-      });
-      mockCommandsGateway.create.mockResolvedValue({
-        id: 'cmd-1',
-        name: 'Test Command',
-        slug: 'test-command',
-      });
+      mockSpacesGateway.getGlobal.mockResolvedValue(
+        spaceFactory({
+          id: createSpaceId('space-1'),
+          slug: 'global',
+        }),
+      );
+      mockCommandsGateway.create.mockResolvedValue(
+        recipeFactory({
+          id: createRecipeId('cmd-1'),
+          name: 'Test Command',
+          slug: 'test-command',
+        }),
+      );
 
       await useCase.execute(playbook);
     });
@@ -65,7 +72,8 @@ describe('CreateCommandFromPlaybookUseCase', () => {
     });
 
     it('creates command with provided data', () => {
-      expect(mockCommandsGateway.create).toHaveBeenCalledWith('space-1', {
+      expect(mockCommandsGateway.create).toHaveBeenCalledWith({
+        spaceId: 'space-1',
         name: 'Test Command',
         summary: 'A test command summary',
         whenToUse: ['When testing', 'When developing'],
@@ -84,15 +92,19 @@ describe('CreateCommandFromPlaybookUseCase', () => {
 
   describe('when command is created', () => {
     it('returns command id, name, and slug', async () => {
-      mockSpacesGateway.getGlobal.mockResolvedValue({
-        id: 'space-1',
-        slug: 'global',
-      });
-      mockCommandsGateway.create.mockResolvedValue({
-        id: 'cmd-1',
-        name: 'Test Command',
-        slug: 'test-command',
-      });
+      mockSpacesGateway.getGlobal.mockResolvedValue(
+        spaceFactory({
+          id: createSpaceId('space-1'),
+          slug: 'global',
+        }),
+      );
+      mockCommandsGateway.create.mockResolvedValue(
+        recipeFactory({
+          id: createRecipeId('cmd-1'),
+          name: 'Test Command',
+          slug: 'test-command',
+        }),
+      );
 
       const result = await useCase.execute({
         name: 'Test Command',

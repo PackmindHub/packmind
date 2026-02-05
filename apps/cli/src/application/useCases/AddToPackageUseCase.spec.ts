@@ -1,16 +1,22 @@
 import { AddToPackageUseCase } from './AddToPackageUseCase';
 import { IPackmindGateway } from '../../domain/repositories/IPackmindGateway';
+import { ICommandsGateway } from '../../domain/repositories/ICommandsGateway';
+import { createMockCommandsGateway } from '../../mocks/createMockGateways';
+import { recipeFactory } from '@packmind/recipes/test';
+import { createRecipeId } from '@packmind/types';
 
 describe('AddToPackageUseCase', () => {
   let useCase: AddToPackageUseCase;
   let mockGateway: jest.Mocked<IPackmindGateway>;
+  let commandsGateway: jest.Mocked<ICommandsGateway>;
 
   beforeEach(() => {
+    commandsGateway = createMockCommandsGateway();
     mockGateway = {
       spaces: { getGlobal: jest.fn().mockResolvedValue({ id: 'space-123' }) },
       packages: { addArtefacts: jest.fn() },
       standards: { getBySlug: jest.fn() },
-      commands: { getBySlug: jest.fn() },
+      commands: commandsGateway,
       skills: { getBySlug: jest.fn() },
     } as unknown as jest.Mocked<IPackmindGateway>;
 
@@ -69,10 +75,14 @@ describe('AddToPackageUseCase', () => {
 
   describe('when adding commands', () => {
     beforeEach(() => {
-      mockGateway.commands.getBySlug.mockResolvedValueOnce({
-        id: 'cmd-id-1',
-        slug: 'cmd-1',
-        name: 'Cmd 1',
+      commandsGateway.list.mockResolvedValueOnce({
+        recipes: [
+          recipeFactory({
+            id: createRecipeId('cmd-id-1'),
+            slug: 'cmd-1',
+            name: 'Cmd 1',
+          }),
+        ],
       });
       mockGateway.packages.addArtefacts.mockResolvedValue({
         added: { standards: [], commands: ['cmd-1'], skills: [] },

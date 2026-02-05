@@ -1,9 +1,5 @@
-// Global space type (used by createCommand and createStandard)
-export type GetGlobalSpaceResult = {
-  id: string;
-  slug: string;
-};
+import { Space } from '@packmind/types';
 
 export interface ISpacesGateway {
-  getGlobal(): Promise<GetGlobalSpaceResult>;
+  getGlobal(): Promise<Space>;
 }

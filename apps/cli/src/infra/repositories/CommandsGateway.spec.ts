@@ -1,7 +1,8 @@
 import { CommandsGateway } from './CommandsGateway';
 import { PackmindHttpClient } from '../http/PackmindHttpClient';
 import { ISpacesGateway } from '../../domain/repositories/ISpacesGateway';
-import { CreateCommandResult } from '../../domain/repositories/ICommandsGateway';
+import { CaptureRecipeResponse, createSpaceId } from '@packmind/types';
+import { spaceFactory } from '@packmind/spaces/test';
 
 // Shared helper for creating test API keys
 const createTestApiKey = () => {
@@ -30,6 +31,8 @@ describe('CommandsGateway', () => {
   let gateway: CommandsGateway;
   let mockSpacesGateway: jest.Mocked<ISpacesGateway>;
 
+  const spaceId = createSpaceId('space-123');
+
   beforeEach(() => {
     mockSpacesGateway = {
       getGlobal: jest.fn(),
@@ -37,13 +40,13 @@ describe('CommandsGateway', () => {
   });
 
   describe('create', () => {
-    let result: CreateCommandResult;
+    let result: CaptureRecipeResponse;
 
     describe('when creating a command successfully', () => {
       beforeEach(async () => {
         global.fetch = jest.fn();
         const httpClient = new PackmindHttpClient(createTestApiKey());
-        gateway = new CommandsGateway(httpClient, mockSpacesGateway);
+        gateway = new CommandsGateway(httpClient);
         (global.fetch as jest.Mock).mockResolvedValueOnce({
           ok: true,
           json: jest.fn().mockResolvedValue({
@@ -53,7 +56,8 @@ describe('CommandsGateway', () => {
           }),
         });
 
-        result = await gateway.create('space-1', {
+        result = await gateway.create({
+          spaceId,
           name: 'Test Command',
           summary: 'A test command for demonstration',
           whenToUse: ['When testing', 'When demonstrating'],
@@ -79,7 +83,7 @@ describe('CommandsGateway', () => {
 
       it('calls the correct API endpoint with POST', () => {
         expect(global.fetch).toHaveBeenCalledWith(
-          expect.stringContaining('/spaces/space-1/recipes'),
+          expect.stringContaining(`/spaces/${spaceId}/recipes`),
           expect.objectContaining({ method: 'POST' }),
         );
       });
@@ -88,6 +92,7 @@ describe('CommandsGateway', () => {
         const callArgs = (global.fetch as jest.Mock).mock.calls[0];
         const body = JSON.parse(callArgs[1].body);
         expect(body).toEqual({
+          spaceId,
           name: 'Test Command',
           summary: 'A test command for demonstration',
           whenToUse: ['When testing', 'When demonstrating'],
@@ -110,12 +115,14 @@ describe('CommandsGateway', () => {
       beforeEach(async () => {
         global.fetch = jest.fn();
         const httpClient = new PackmindHttpClient(createTestApiKey());
-        gateway = new CommandsGateway(httpClient, mockSpacesGateway);
+        gateway = new CommandsGateway(httpClient);
 
-        mockSpacesGateway.getGlobal.mockResolvedValue({
-          id: 'space-123',
-          slug: 'global',
-        });
+        mockSpacesGateway.getGlobal.mockResolvedValue(
+          spaceFactory({
+            id: spaceId,
+            slug: 'global',
+          }),
+        );
 
         (global.fetch as jest.Mock).mockResolvedValueOnce({
           ok: true,
@@ -127,22 +134,18 @@ describe('CommandsGateway', () => {
       });
 
       it('returns list of commands', async () => {
-        const result = await gateway.list();
+        const result = await gateway.list({ spaceId });
 
-        expect(result).toEqual([
-          { id: 'cmd-1', slug: 'command-one', name: 'Command One' },
-          { id: 'cmd-2', slug: 'command-two', name: 'Command Two' },
-        ]);
-      });
-
-      it('fetches global space first', async () => {
-        await gateway.list();
-
-        expect(mockSpacesGateway.getGlobal).toHaveBeenCalled();
+        expect(result).toEqual({
+          recipes: [
+            { id: 'cmd-1', slug: 'command-one', name: 'Command One' },
+            { id: 'cmd-2', slug: 'command-two', name: 'Command Two' },
+          ],
+        });
       });
 
       it('calls the correct API endpoint', async () => {
-        await gateway.list();
+        await gateway.list({ spaceId });
 
         expect(global.fetch).toHaveBeenCalledWith(
           expect.stringContaining('/spaces/space-123/recipes'),
