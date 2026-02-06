@@ -173,7 +173,7 @@ export const GetStartedWithPackmindWidget: React.FC<
 
           <PMHStack justify="space-between" align="center">
             <StepLabel
-              text="3. Deploy to your repo"
+              text="3. Distribute your package in your repo"
               isCompleted={stepCompletionStatus.step3}
             />
             <PMButton variant="secondary" onClick={handleDeployWithCLI}>
