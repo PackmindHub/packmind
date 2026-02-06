@@ -28,8 +28,8 @@ describe('DefaultSkillsDeployer', () => {
         );
       });
 
-      it('excludes packmind-onboard (unreleased)', () => {
-        expect(paths.some((p) => p.includes('packmind-onboard'))).toBe(false);
+      it('includes packmind-onboard', () => {
+        expect(paths.some((p) => p.includes('packmind-onboard'))).toBe(true);
       });
 
       it('includes packmind-create-command', () => {
@@ -103,11 +103,11 @@ describe('DefaultSkillsDeployer', () => {
           ).toBe(true);
         });
 
-        it('excludes packmind-onboard (unreleased)', () => {
+        it('excludes packmind-onboard (requires 0.16.0)', () => {
           expect(paths.some((p) => p.includes('packmind-onboard'))).toBe(false);
         });
 
-        it('excludes packmind-create-command (unreleased)', () => {
+        it('excludes packmind-create-command (requires 0.15.0)', () => {
           expect(paths.some((p) => p.includes('packmind-create-command'))).toBe(
             false,
           );
@@ -165,8 +165,8 @@ describe('DefaultSkillsDeployer', () => {
           ).toBe(true);
         });
 
-        it('excludes packmind-onboard (unreleased)', () => {
-          expect(paths.some((p) => p.includes('packmind-onboard'))).toBe(false);
+        it('includes packmind-onboard', () => {
+          expect(paths.some((p) => p.includes('packmind-onboard'))).toBe(true);
         });
 
         it('includes packmind-create-command', () => {
