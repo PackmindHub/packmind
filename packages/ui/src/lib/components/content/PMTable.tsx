@@ -27,6 +27,7 @@ export interface IPMTableProps<T extends object = object> {
   onSelectionChange?: (selectedRows: Set<string>) => void;
   getRowId?: (row: T, index: number) => string;
   selectAllLabel?: string;
+  tableProps?: React.ComponentPropsWithoutRef<typeof Table.Root>;
 }
 
 export function PMTable<T extends object = object>({
@@ -42,6 +43,7 @@ export function PMTable<T extends object = object>({
   onSelectionChange,
   getRowId,
   selectAllLabel = 'Select All',
+  tableProps,
 }: Readonly<IPMTableProps<T>>) {
   // getRowId is required for selection
   if (selectable && !getRowId) {
@@ -155,6 +157,7 @@ export function PMTable<T extends object = object>({
       striped={striped}
       interactive={hoverable}
       showColumnBorder={showColumnBorder}
+      {...tableProps}
     >
       <Table.ColumnGroup>
         {allColumns.map((column, index) => (
