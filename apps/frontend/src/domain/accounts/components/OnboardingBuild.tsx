@@ -28,13 +28,11 @@ export function OnboardingBuild() {
 
       {/* Two-column content */}
       <PMVStack gap={4} flex={1} paddingY={6}>
-        {isLocalhost() && (
-          <PMText color="secondary" fontSize="sm">
-            Choose your favorite method
-          </PMText>
-        )}
+        <PMText color="secondary" fontSize="sm">
+          Choose your favorite method
+        </PMText>
         <PMHStack gap={8} align="stretch" flex={1}>
-          {isLocalhost() && <OnboardingBuildCliSection />}
+          <OnboardingBuildCliSection />
           <OnboardingBuildMcpSection />
         </PMHStack>
       </PMVStack>
