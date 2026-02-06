@@ -147,7 +147,7 @@ describe('DashboardKPI', () => {
       renderComponent();
 
       const button = screen.getByRole('button', {
-        name: /Show non-live artifacts \(3\)/i,
+        name: /3 non-live/i,
       });
       expect(button).toBeInTheDocument();
     });

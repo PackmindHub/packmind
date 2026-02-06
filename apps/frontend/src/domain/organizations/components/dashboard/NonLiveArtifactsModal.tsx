@@ -45,17 +45,19 @@ export const NonLiveArtifactsModal = ({
   const { data: skillsOverview } = useGetSkillsDeploymentOverviewQuery();
 
   const nonLiveStandards =
-    standardsOverview?.standards.filter(
-      (s) => s.targetDeployments.length === 0,
-    ) ?? [];
+    standardsOverview?.standards
+      .filter((s) => s.targetDeployments.length === 0)
+      .sort((a, b) => a.standard.name.localeCompare(b.standard.name)) ?? [];
 
   const nonLiveRecipes =
-    recipesOverview?.recipes.filter((r) => r.targetDeployments.length === 0) ??
-    [];
+    recipesOverview?.recipes
+      .filter((r) => r.targetDeployments.length === 0)
+      .sort((a, b) => a.recipe.name.localeCompare(b.recipe.name)) ?? [];
 
   const nonLiveSkills =
-    skillsOverview?.skills.filter((s) => s.targetDeployments.length === 0) ??
-    [];
+    skillsOverview?.skills
+      .filter((s) => s.targetDeployments.length === 0)
+      .sort((a, b) => a.skill.name.localeCompare(b.skill.name)) ?? [];
 
   const standardColumns: PMTableColumn[] = [
     {
@@ -151,11 +153,18 @@ export const NonLiveArtifactsModal = ({
       content: (
         <PMBox mt={4}>
           {standardRows.length === 0 ? (
-            <PMText color="faded">
+            <PMText as="p" color="secondary">
               All standards are distributed to at least one target.
             </PMText>
           ) : (
-            <PMTable columns={standardColumns} data={standardRows} />
+            <PMTable
+              columns={standardColumns}
+              data={standardRows}
+              tableProps={{
+                border: 'solid 1px',
+                borderColor: 'border.tertiary',
+              }}
+            />
           )}
         </PMBox>
       ),

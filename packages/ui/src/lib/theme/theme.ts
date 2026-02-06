@@ -15,6 +15,7 @@ import { pmRadioGroup } from '../components/form/PMRadioGroup/PMRadioGroup.recip
 import { pmSelectRecipe } from '../components/form/PMSelect/PMSelect.recipe';
 import { pmRadioCard } from '../components/form/PMRadioCard/PMRadioCard.recipe';
 import { pmTreeViewRecipe } from '../components/navigation/PMTreeView/PMTreeView.recipe';
+import { pmDialogRecipe } from '../components/form/PMDialog/PMDialog.recipe';
 export const packmindTheme = (preflight: boolean) =>
   defineConfig({
     preflight,
@@ -159,6 +160,7 @@ export const packmindTheme = (preflight: boolean) =>
         select: pmSelectRecipe,
         radioCard: pmRadioCard,
         treeView: pmTreeViewRecipe,
+        dialog: pmDialogRecipe,
       },
       semanticTokens: {
         colors: {
