@@ -1582,7 +1582,7 @@ const ONBOARD_LICENSE = `
 
 export class OnboardDeployer implements ISkillDeployer {
   public readonly slug = 'packmind-onboard';
-  public readonly minimumVersion = 'unreleased';
+  public readonly minimumVersion = '0.16.0';
 
   deploy(_agentName: string, skillsFolderPath: string): FileUpdates {
     const basePath = `${skillsFolderPath}packmind-onboard`;
