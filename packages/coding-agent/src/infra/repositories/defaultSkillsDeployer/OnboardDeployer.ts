@@ -55,6 +55,8 @@ basename "$(git rev-parse --show-toplevel)"
 
 Remember this as the repository name for package creation in Step 2.
 
+Also run \`packmind-cli whoami\` and extract the \`Host:\` value from the output. Remember this URL for the completion summary.
+
 ---
 
 ## Step 2 — Package Handling
@@ -455,7 +457,7 @@ Your standards and commands have been created and deployed locally.
 They are now active in your AI coding assistant.
 
 Next steps:
-  - Visit app.packmind.com to manage your standards and commands
+  - Visit [host from packmind-cli whoami] to manage your standards and commands
   - Run \`packmind-cli install\` in other repos to distribute them
 ============================================================
 \`\`\`
