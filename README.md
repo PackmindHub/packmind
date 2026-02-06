@@ -44,7 +44,7 @@ generating the exact instruction files each AI tool needs, optimized for context
 
 Choose your preferred setup option:
 
-- **Cloud version**: Get started at [https://app.packmind.ai](https://app.packmind.ai/sign-up?utm_source=oss) (no account required)
+- **Cloud version**: Get started at [https://app.packmind.ai](https://app.packmind.ai/sign-up?utm_source=oss) (free account)
 - **Self-hosted**: Deploy on your own infrastructure using [Docker Compose or Kubernetes](https://packmindhub.github.io/packmind/gs-install-self-hosted)
 
 ## Connect MCP server
