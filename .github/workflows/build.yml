@@ -115,9 +115,9 @@ jobs:
           NODE_ENV: production
           PACKMIND_EDITION: ${{ vars.PACKMIND_EDITION }}
           NODE_OPTIONS: '--max-old-space-size=16384'
-          VITE_SENTRY_FRONTEND_DSN: ${{ secrets.VITE_SENTRY_FRONTEND_DSN }}
-          VITE_SENTRY_ENVIRONMENT: ${{ vars.PACKMIND_EDITION == 'proprietary' && 'production' || '' }}
-          VITE_CRISP_WEBSITE_ID: ${{ secrets.VITE_CRISP_WEBSITE_ID }}
+          VITE_SENTRY_FRONTEND_DSN: ${{ vars.PACKMIND_EDITION == 'proprietary' && !startsWith(github.ref, 'refs/tags/release/') && secrets.VITE_SENTRY_FRONTEND_DSN || '' }}
+          VITE_SENTRY_ENVIRONMENT: ${{ vars.PACKMIND_EDITION == 'proprietary' && !startsWith(github.ref, 'refs/tags/release/') && 'production' || '' }}
+          VITE_CRISP_WEBSITE_ID: ${{ vars.PACKMIND_EDITION == 'proprietary' && !startsWith(github.ref, 'refs/tags/release/') && secrets.VITE_CRISP_WEBSITE_ID || '' }}
         run: ./node_modules/.bin/nx build frontend
       - run: cp tsconfig.base.effective.json apps/frontend/build/client/.
 
