@@ -3,7 +3,11 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import '@testing-library/jest-dom';
 import { UIProvider } from '@packmind/ui';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import {
+  QueryClient,
+  QueryClientProvider,
+  useQuery,
+} from '@tanstack/react-query';
 import { MemoryRouter } from 'react-router';
 import { GetStartedWithPackmindWidget } from './GetStartedWithPackmindWidget';
 import { useAuthContext } from '../hooks/useAuthContext';
@@ -27,6 +31,10 @@ jest.mock('../../standards/api/queries/StandardsQueries');
 jest.mock('../../skills/api/queries/SkillsQueries');
 jest.mock('../api/queries/AccountsQueries');
 jest.mock('../api/queries/UserQueries');
+jest.mock('@tanstack/react-query', () => ({
+  ...jest.requireActual('@tanstack/react-query'),
+  useQuery: jest.fn(),
+}));
 jest.mock('./LocalEnvironmentSetup/hooks', () => ({
   useCliLoginCode: jest.fn(() => ({
     loginCode: 'TEST-CODE-123',
@@ -60,6 +68,7 @@ const mockedUseGetUsersInMyOrganizationQuery =
   useGetUsersInMyOrganizationQuery as jest.MockedFunction<
     typeof useGetUsersInMyOrganizationQuery
   >;
+const mockedUseQuery = useQuery as jest.MockedFunction<typeof useQuery>;
 
 const renderWithProviders = (component: React.ReactElement) => {
   const queryClient = new QueryClient({
@@ -104,6 +113,15 @@ describe('GetStartedWithPackmindWidget', () => {
     mockedUseGetUsersInMyOrganizationQuery.mockReturnValue({
       data: { users: [] },
     } as ReturnType<typeof useGetUsersInMyOrganizationQuery>);
+
+    // Mock useQuery to return empty data by default
+    mockedUseQuery.mockReturnValue({
+      data: { standards: [], recipes: [] },
+      isLoading: false,
+      isError: false,
+      error: null,
+      refetch: jest.fn(),
+    } as ReturnType<typeof useQuery>);
   });
   describe('renders static content', () => {
     it('displays all four step labels', () => {
@@ -283,6 +301,40 @@ describe('GetStartedWithPackmindWidget', () => {
         );
 
         expect(mockNavigate).not.toHaveBeenCalled();
+      });
+    });
+  });
+
+  describe('when step 1 completion is checked', () => {
+    describe('when there is at least one command', () => {
+      it('marks step 1 as completed', () => {
+        mockedUseQuery
+          .mockReturnValueOnce({
+            data: { standards: [] },
+            isLoading: false,
+            isError: false,
+            error: null,
+            refetch: jest.fn(),
+          } as ReturnType<typeof useQuery>)
+          .mockReturnValueOnce({
+            data: [],
+            isLoading: false,
+            isError: false,
+            error: null,
+            refetch: jest.fn(),
+          } as ReturnType<typeof useQuery>)
+          .mockReturnValueOnce({
+            data: [{ id: 'cmd-1', name: 'Test Command' }],
+            isLoading: false,
+            isError: false,
+            error: null,
+            refetch: jest.fn(),
+          } as ReturnType<typeof useQuery>);
+
+        renderWithProviders(<GetStartedWithPackmindWidget />);
+
+        const completedIcon = screen.getAllByLabelText('completed');
+        expect(completedIcon.length).toBeGreaterThan(0);
       });
     });
   });

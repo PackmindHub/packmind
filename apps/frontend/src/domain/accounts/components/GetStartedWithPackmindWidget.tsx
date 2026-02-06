@@ -16,6 +16,7 @@ import { useAuthContext } from '../hooks/useAuthContext';
 import { useGetSpacesQuery } from '../../spaces/api/queries/SpacesQueries';
 import { getStandardsBySpaceQueryOptions } from '../../standards/api/queries/StandardsQueries';
 import { getSkillsBySpaceQueryOptions } from '../../skills/api/queries/SkillsQueries';
+import { getRecipesBySpaceQueryOptions } from '../../recipes/api/queries/RecipesQueries';
 import { useListPackagesBySpaceQuery } from '../../deployments/api/queries/DeploymentsQueries';
 import { useGetOnboardingStatusQuery } from '../api/queries/AccountsQueries';
 import { useGetUsersInMyOrganizationQuery } from '../api/queries/UserQueries';
@@ -65,6 +66,9 @@ export const GetStartedWithPackmindWidget: React.FC<
   const { data: skills } = useQuery({
     ...getSkillsBySpaceQueryOptions(organization?.id, firstSpace?.id),
   });
+  const { data: commands } = useQuery({
+    ...getRecipesBySpaceQueryOptions(organization?.id, firstSpace?.id),
+  });
   const { data: packagesResponse } = useListPackagesBySpaceQuery(
     firstSpace?.id,
     organization?.id,
@@ -78,7 +82,8 @@ export const GetStartedWithPackmindWidget: React.FC<
   const stepCompletionStatus = useMemo(() => {
     const hasArtifacts =
       (standards && standards.standards.length > 0) ||
-      (skills && skills.length > 0);
+      (skills && skills.length > 0) ||
+      (commands && commands.length > 0);
     const hasPackages =
       packagesResponse?.packages && packagesResponse.packages.length > 0;
     const hasDeployments = onboardingStatus?.hasDeployed || false;
@@ -90,7 +95,7 @@ export const GetStartedWithPackmindWidget: React.FC<
       step3: hasDeployments,
       step4: hasMultipleUsers,
     };
-  }, [standards, skills, packagesResponse, onboardingStatus, users]);
+  }, [standards, skills, commands, packagesResponse, onboardingStatus, users]);
 
   const handleCreateArtifact = () => {
     if (onCreateArtifact) {
