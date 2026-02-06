@@ -246,4 +246,23 @@ Run the following command with the actual skill path:
 packmind-cli skills add <path/to/skill-folder>
 ```
 
-This registers the skill with Packmind, making it available for deployment to target repositories and AI coding agents. The skill creation process is not complete until this command has been executed successfully.
+This registers the skill with Packmind, making it available for deployment to target repositories and AI coding agents.
+
+### Step 8: Offer to Add to Package
+
+After successful distribution, check if the skill fits an existing package:
+
+1. Run `packmind-cli install --list` to get available packages
+2. If no packages exist, skip this step silently and end the workflow
+3. Analyze the created skill's name and description against each package's name and description
+4. If a package is a clear semantic fit (the skill's domain/technology aligns with the package's purpose):
+   - Present to user: "This skill seems to fit the `<package-slug>` package."
+   - Offer three options:
+     - Add to `<package-slug>`
+     - Choose a different package
+     - Skip
+5. If no clear fit is found, skip silently (do not mention packages)
+6. If user chooses to add:
+   - Run: `packmind-cli packages add --to <package-slug> --skill <skill-slug>`
+   - Ask: "Would you like me to run `packmind-cli install` to sync the changes?"
+   - If yes, run: `packmind-cli install`
