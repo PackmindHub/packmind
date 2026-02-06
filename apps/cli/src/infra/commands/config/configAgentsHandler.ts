@@ -12,9 +12,9 @@ export const SELECTABLE_AGENTS: CodingAgent[] = [
   'claude',
   'cursor',
   'copilot',
+  'agents_md',
   'continue',
   'junie',
-  'agents_md',
   'gitlab_duo',
 ];
 
