@@ -2,16 +2,20 @@
 
 ## Added
 
-- Add `init` command to initialize Packmind in a project with `packmind-cli init` (configures AI agents and installs default skills)
-- Add `config agents` command to configure which AI coding agents to generate artifacts for with `packmind-cli config agents`
-- Add `packages add` command to add standards, commands, or skills to an existing package with `packmind-cli packages add --to <package-slug> --standard|--command|--skill <slug>`
-- Add `packages list` (equivalent to `install --list`) to list available packages.
-
 ## Changed
 
 ## Fixed
 
 ## Removed
+
+# [0.16.0] - 2026-02-06
+
+## Added
+
+- Add `init` command to initialize Packmind in a project with `packmind-cli init` (configures AI agents and installs default skills)
+- Add `config agents` command to configure which AI coding agents to generate artifacts for with `packmind-cli config agents`
+- Add `packages add` command to add standards, commands, or skills to an existing package with `packmind-cli packages add --to <package-slug> --standard|--command|--skill <slug>`
+- Add `packages list` (equivalent to `install --list`) to list available packages.
 
 # [0.15.0] - 2026-02-04
 
@@ -192,7 +196,8 @@
 
 - Add proper CHANGELOG.MD in the GH release
 
-[Unreleased]: https://github.com/PackmindHub/packmind/compare/release-cli/0.15.0...HEAD
+[Unreleased]: https://github.com/PackmindHub/packmind/compare/release-cli/0.16.0...HEAD
+[0.16.0]: https://github.com/PackmindHub/packmind/compare/release-cli/0.15.0...release-cli/0.16.0
 [0.15.0]: https://github.com/PackmindHub/packmind/compare/release-cli/0.14.1...release-cli/0.15.0
 [0.14.1]: https://github.com/PackmindHub/packmind/compare/release-cli/0.14.0...release-cli/0.14.1
 [0.14.0]: https://github.com/PackmindHub/packmind/compare/release-cli/0.13.1...release-cli/0.14.0
