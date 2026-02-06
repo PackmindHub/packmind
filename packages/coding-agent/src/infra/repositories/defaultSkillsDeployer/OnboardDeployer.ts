@@ -35,6 +35,16 @@ Automatic package creation when none exist, user selection when packages are ava
 
 ---
 
+## Step 0 — Introduction
+
+Print exactly:
+
+\`\`\`
+I'll start the Packmind onboarding process. I'll create your first standards and commands and send them to your Packmind organization. This usually takes ~3 minutes.
+\`\`\`
+
+---
+
 ## Step 1 — Get Repository Name
 
 Get the repository name for package naming:
@@ -71,7 +81,7 @@ packmind-cli packages create "\${REPO_NAME}-standards"
 
 Print:
 \`\`\`
-Created package: \${REPO_NAME}-standards
+No existing packages found — created a new one: \${REPO_NAME}-standards
 \`\`\`
 
 ### One package exists
@@ -284,7 +294,7 @@ Present the generated draft files and ask for confirmation:
 
 \`\`\`
 ============================================================
-  PACKMIND ONBOARDING
+  ANALYSIS COMPLETE
 ============================================================
 
 Target package: [package-name]
@@ -301,7 +311,7 @@ Commands ([M]):
   1. [Name] → .packmind/commands/_drafts/[slug].draft.md
   2. ...
 
-Drafts are in .packmind/*/_drafts/ if you want to edit them first.
+Drafts are saved in .packmind/*/_drafts/ — you can review or edit them before creating.
 ============================================================
 \`\`\`
 
@@ -395,7 +405,7 @@ packmind-cli packages add --to <package-slug> --command <slug>
 
 **Show progress:**
 \`\`\`
-Creating standards and commands...
+Sending standards and commands to your Packmind organization...
 ✓ error-handling-pattern
 ✓ naming-conventions
 ✗ test-factory-patterns (error: duplicate name exists)
@@ -441,12 +451,12 @@ Exit the skill.
 Package: [package-name]
 Created: [N] standards, [M] commands
 
-Your package is ready. Standards will be distributed to AI tools
-when you run \`packmind-cli install [package-slug]\` in your repos.
+Your standards and commands have been created and deployed locally.
+They are now active in your AI coding assistant.
 
 Next steps:
-  - Visit the webapp to add standards/commands to your package
-  - Run \`packmind-cli deploy\` to distribute to AI tools
+  - Visit app.packmind.com to manage your standards and commands
+  - Run \`packmind-cli install\` in other repos to distribute them
 ============================================================
 \`\`\`
 
@@ -486,12 +496,11 @@ If analysis found no patterns:
   ℹ️ NO PATTERNS DISCOVERED
 ============================================================
 
-The analysis did not find any non-obvious patterns to capture.
+The analysis didn't find enough recurring patterns to generate standards or commands.
 
-Suggestions:
-  - Ensure your codebase has consistent patterns
-  - Check that files are not ignored by .gitignore
-  - Try running on a more mature codebase section
+This can happen with smaller codebases or projects with very diverse coding styles.
+You can try again later as the codebase grows, or create standards manually with:
+  packmind-cli standards create <file>
 ============================================================
 \`\`\`
 
@@ -559,8 +568,11 @@ Delete the draft files, then print final summary:
 
 \`\`\`
 ============================================================
-  PUBLISHED TO PACKMIND & DEPLOYED LOCALLY
+  PUBLISHED & DEPLOYED
 ============================================================
+
+Standards and commands have been sent to your Packmind organization
+and deployed to your AI coding assistant's configuration files.
 
 Standards: [N]
   - [Name] (slug: [slug])
@@ -585,17 +597,7 @@ Draft files ready for review at:
   - .packmind/standards/_drafts/
   - .packmind/commands/_drafts/
 
-Edit them as needed, then convert to JSON and run:
-  packmind-cli standards create <path-to-json>
-  packmind-cli packages add --to <package-slug> --standard <slug>
-  packmind-cli commands create <path-to-json>
-  packmind-cli packages add --to <package-slug> --command <slug>
-  packmind-cli install
-
-Note: The CLI requires JSON playbook files, not markdown.
-See Step 9 for the JSON schema format.
-
-Or re-run this skill when ready.
+Edit them as needed, then re-run this skill to create them.
 \`\`\`
 `;
 }
