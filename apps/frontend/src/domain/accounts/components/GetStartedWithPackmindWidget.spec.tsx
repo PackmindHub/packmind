@@ -100,6 +100,7 @@ describe('GetStartedWithPackmindWidget', () => {
     } as ReturnType<typeof useGetSpacesQuery>);
     mockedUseListPackagesBySpaceQuery.mockReturnValue({
       data: [],
+      isLoading: false,
     } as ReturnType<typeof useListPackagesBySpaceQuery>);
     mockedUseGetStandardsQuery.mockReturnValue({
       data: [],
@@ -109,9 +110,11 @@ describe('GetStartedWithPackmindWidget', () => {
     } as ReturnType<typeof useGetSkillsQuery>);
     mockedUseGetOnboardingStatusQuery.mockReturnValue({
       data: { hasDeployed: false },
+      isLoading: false,
     } as ReturnType<typeof useGetOnboardingStatusQuery>);
     mockedUseGetUsersInMyOrganizationQuery.mockReturnValue({
       data: { users: [] },
+      isLoading: false,
     } as ReturnType<typeof useGetUsersInMyOrganizationQuery>);
 
     // Mock useQuery to return empty data by default
@@ -123,6 +126,24 @@ describe('GetStartedWithPackmindWidget', () => {
       refetch: jest.fn(),
     } as ReturnType<typeof useQuery>);
   });
+  describe('when data is loading', () => {
+    it('does not render the widget', () => {
+      mockedUseQuery.mockReturnValue({
+        data: undefined,
+        isLoading: true,
+        isError: false,
+        error: null,
+        refetch: jest.fn(),
+      } as ReturnType<typeof useQuery>);
+
+      const { container } = renderWithProviders(
+        <GetStartedWithPackmindWidget />,
+      );
+
+      expect(container).toBeEmptyDOMElement();
+    });
+  });
+
   describe('renders static content', () => {
     it('displays all four step labels', () => {
       renderWithProviders(<GetStartedWithPackmindWidget />);

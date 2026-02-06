@@ -10,7 +10,7 @@ import {
   PMVStack,
   PMIcon,
 } from '@packmind/ui';
-import { LuCheck, LuCircleCheck, LuRocket } from 'react-icons/lu';
+import { LuCircleCheck, LuRocket } from 'react-icons/lu';
 import { routes } from '../../../shared/utils/routes';
 import { useAuthContext } from '../hooks/useAuthContext';
 import { useGetSpacesQuery } from '../../spaces/api/queries/SpacesQueries';
@@ -60,23 +60,21 @@ export const GetStartedWithPackmindWidget: React.FC<
   const firstSpace = spaces?.[0];
 
   // Fetch data for completion checks
-  const { data: standards } = useQuery({
+  const { data: standards, isLoading: isLoadingStandards } = useQuery({
     ...getStandardsBySpaceQueryOptions(firstSpace?.id, organization?.id),
   });
-  const { data: skills } = useQuery({
+  const { data: skills, isLoading: isLoadingSkills } = useQuery({
     ...getSkillsBySpaceQueryOptions(organization?.id, firstSpace?.id),
   });
-  const { data: commands } = useQuery({
+  const { data: commands, isLoading: isLoadingCommands } = useQuery({
     ...getRecipesBySpaceQueryOptions(organization?.id, firstSpace?.id),
   });
-  const { data: packagesResponse } = useListPackagesBySpaceQuery(
-    firstSpace?.id,
-    organization?.id,
-  );
-  const { data: onboardingStatus } = useGetOnboardingStatusQuery(
-    organization?.id || '',
-  );
-  const { data: users } = useGetUsersInMyOrganizationQuery();
+  const { data: packagesResponse, isLoading: isLoadingPackages } =
+    useListPackagesBySpaceQuery(firstSpace?.id, organization?.id);
+  const { data: onboardingStatus, isLoading: isLoadingOnboardingStatus } =
+    useGetOnboardingStatusQuery(organization?.id || '');
+  const { data: users, isLoading: isLoadingUsers } =
+    useGetUsersInMyOrganizationQuery();
 
   // Calculate completion status for each step
   const stepCompletionStatus = useMemo(() => {
@@ -129,12 +127,26 @@ export const GetStartedWithPackmindWidget: React.FC<
     }
   };
 
+  // Check if all data is loaded
+  const isLoading =
+    isLoadingStandards ||
+    isLoadingSkills ||
+    isLoadingCommands ||
+    isLoadingPackages ||
+    isLoadingOnboardingStatus ||
+    isLoadingUsers;
+
   // Hide widget when all 4 steps are complete
   const allStepsComplete =
     stepCompletionStatus.step1 &&
     stepCompletionStatus.step2 &&
     stepCompletionStatus.step3 &&
     stepCompletionStatus.step4;
+
+  // Don't render until all data is loaded to avoid blink
+  if (isLoading) {
+    return null;
+  }
 
   if (allStepsComplete) {
     return null;
