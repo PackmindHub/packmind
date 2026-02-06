@@ -1,6 +1,6 @@
 {
   "name": "packmind-api-production",
-  "version": "1.8.0",
+  "version": "1.9.0",
   "private": true,
   "type": "commonjs",
   "main": "main.js",

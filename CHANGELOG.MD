@@ -2,18 +2,22 @@
 
 ## Added
 
+## Changed
+
+## Fixed
+
+## Removed
+
+# [1.9.0] - 2026-02-06
+
+## Added
+
 - Post-signup onboarding flow with MCP setup guide for AI coding assistants
 - Create packages with the CLI using `packmind-cli packages create <name>`
 - Create commands with the CLI using `packmind-cli commands create <playbook.json>`
 - List standards, commands, and skills with the CLI using `packmind-cli standards list`, `packmind-cli commands list`, and `packmind-cli skills list`
 - packmind-onboard skill with structured step-based guidance and AI-driven project analysis
 - Add `agents` property in `packmind.json` to configure agents rendering for a target level
-
-## Changed
-
-## Fixed
-
-## Removed
 
 # [1.8.0] - 2025-01-28
 
@@ -199,7 +203,8 @@
 - Bulk deployment across multiple repositories with atomic commits
 - Optional OpenAI integration for enhanced AI-powered features
 
-[Unreleased]: https://github.com/PackmindHub/packmind/compare/release/1.8.0...HEAD
+[Unreleased]: https://github.com/PackmindHub/packmind/compare/release/1.9.0...HEAD
+[1.9.0]: https://github.com/PackmindHub/packmind/compare/release/1.8.0...release/1.9.0
 [1.8.0]: https://github.com/PackmindHub/packmind/compare/release/1.7.0...release/1.8.0
 [1.7.0]: https://github.com/PackmindHub/packmind/compare/release/1.6.0...release/1.7.0
 [1.6.0]: https://github.com/PackmindHub/packmind/compare/release/1.5.0...release/1.6.0
