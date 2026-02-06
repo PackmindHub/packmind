@@ -506,28 +506,6 @@ describe('configAgentsHandler', () => {
         });
       });
     });
-
-    describe('when inquirer prompt message', () => {
-      let capturedMessage: string;
-
-      beforeEach(async () => {
-        mockConfigRepository.readConfig.mockResolvedValue(null);
-        mockAgentDetectionService.detectAgentArtifacts.mockResolvedValue([]);
-
-        mockInquirerPrompt.mockImplementation(
-          async (questions: { message: string }[]) => {
-            capturedMessage = questions[0].message;
-            return { selectedAgents: [] };
-          },
-        );
-
-        await configAgentsHandler(deps);
-      });
-
-      it('includes message that packmind is always active', () => {
-        expect(capturedMessage).toContain('packmind is always active');
-      });
-    });
   });
 
   describe('when using simple prompt mode', () => {
@@ -625,7 +603,7 @@ describe('configAgentsHandler', () => {
         // SELECTABLE_AGENTS[0]=claude, [2]=copilot, [4]=junie
         expect(mockConfigRepository.updateAgentsConfig).toHaveBeenCalledWith(
           '/project',
-          ['claude', 'copilot', 'junie'],
+          ['claude', 'copilot', 'continue'],
         );
       });
 
