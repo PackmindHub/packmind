@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router';
 import { UIProvider } from '@packmind/ui';
@@ -80,12 +80,7 @@ describe('OnboardingBuild', () => {
     });
   });
 
-  // TODO: Re-enable when CLI is released (currently behind localhost feature flag)
-  describe.skip('CLI section', () => {
-    beforeEach(() => {
-      mockIsLocalhost.mockReturnValue(true);
-    });
-
+  describe('CLI section', () => {
     it('renders the Install tabs', () => {
       renderWithProviders(<OnboardingBuild />);
 
@@ -183,7 +178,8 @@ describe('OnboardingBuild', () => {
           screen.getByTestId('OnboardingBuild.Assistant-claude'),
         );
 
-        expect(screen.getByText('Start analysis')).toBeInTheDocument();
+        const mcpCard = screen.getByTestId('OnboardingBuild.MCPCard');
+        expect(within(mcpCard).getByText('Start analysis')).toBeInTheDocument();
       });
 
       it('shows the onboarding prompt textarea', async () => {
