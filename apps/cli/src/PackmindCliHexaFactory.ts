@@ -97,9 +97,7 @@ export class PackmindCliHexaFactory {
       installPackages: new InstallPackagesUseCase(
         this.repositories.packmindGateway,
       ),
-      installDefaultSkills: new InstallDefaultSkillsUseCase(
-        this.repositories.packmindGateway,
-      ),
+      installDefaultSkills: new InstallDefaultSkillsUseCase(this.repositories),
       listPackages: new ListPackagesUseCase(this.repositories.packmindGateway),
       getPackageBySlug: new GetPackageSummaryUseCase(
         this.repositories.packmindGateway,

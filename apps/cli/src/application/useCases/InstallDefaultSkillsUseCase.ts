@@ -3,12 +3,12 @@ import {
   IInstallDefaultSkillsResult,
   IInstallDefaultSkillsUseCase,
 } from '../../domain/useCases/IInstallDefaultSkillsUseCase';
-import { IPackmindGateway } from '../../domain/repositories/IPackmindGateway';
+import { IPackmindRepositories } from '../../domain/repositories/IPackmindRepositories';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 
 export class InstallDefaultSkillsUseCase implements IInstallDefaultSkillsUseCase {
-  constructor(private readonly packmindGateway: IPackmindGateway) {}
+  constructor(private readonly repositories: IPackmindRepositories) {}
 
   public async execute(
     command: IInstallDefaultSkillsCommand,
@@ -21,13 +21,20 @@ export class InstallDefaultSkillsUseCase implements IInstallDefaultSkillsUseCase
       errors: [],
     };
 
+    // Read agents configuration from packmind.json
+    const config =
+      await this.repositories.configFileRepository.readConfig(baseDirectory);
+    const agents = config?.agents;
+
     // Fetch default skills from the gateway
     // Note: userId and organizationId are extracted from the API key by the gateway
-    const response = await this.packmindGateway.skills.getDefaults({
-      cliVersion: command.cliVersion,
-      includeBeta: command.includeBeta,
-      agents: command.agents,
-    });
+    const response = await this.repositories.packmindGateway.skills.getDefaults(
+      {
+        cliVersion: command.cliVersion,
+        includeBeta: command.includeBeta,
+        agents,
+      },
+    );
 
     try {
       // Process createOrUpdate files
