@@ -5,6 +5,7 @@ import {
   IGetDetectionProgramsForPackagesUseCase,
   GetDetectionProgramsForPackagesResponse,
   RuleId,
+  ITrackLinterExecutionUseCase,
 } from '@packmind/types';
 import { ILinterGateway } from '../../domain/repositories/ILinterGateway';
 import { PackmindHttpClient } from '../http/PackmindHttpClient';
@@ -86,6 +87,10 @@ export class LinterGateway implements ILinterGateway {
 
       return handleScopeInTargetsResponse(response);
     };
+
+  trackLinterExecution: Gateway<ITrackLinterExecutionUseCase> = async () => {
+    return this.httpClient.request(`/api/v0/trackLinterExecution`);
+  };
 }
 
 type InvalidByTargetResponse = {

@@ -54,6 +54,10 @@ import type {
 } from '../contracts';
 import { DetectionProgram } from '../DetectionProgram';
 import { RuleDetectionAssessment } from '../RuleDetectionAssessment';
+import {
+  TrackLinterExecutionCommand,
+  TrackLinterExecutionResponse,
+} from '../contracts/ITrackLinterExecutionUseCase';
 
 export const ILinterPortName = 'ILinterPort' as const;
 
@@ -173,4 +177,8 @@ export interface ILinterPort {
   createEmptyRuleDetectionAssessment(
     command: CreateEmptyRuleDetectionAssessmentCommand,
   ): Promise<CreateEmptyRuleDetectionAssessmentResponse>;
+
+  trackLinterExecution(
+    command: TrackLinterExecutionCommand,
+  ): Promise<TrackLinterExecutionResponse>;
 }

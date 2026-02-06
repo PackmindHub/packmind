@@ -53,6 +53,7 @@ import {
   CreateEmptyRuleDetectionAssessmentCommand,
   CreateEmptyRuleDetectionAssessmentResponse,
   ILinterPort,
+  TrackLinterExecutionResponse,
 } from '@packmind/types';
 import { LinterUsecases } from '.';
 
@@ -251,6 +252,10 @@ export class LinterAdapter implements ILinterPort {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     command: CreateEmptyRuleDetectionAssessmentCommand,
   ): Promise<CreateEmptyRuleDetectionAssessmentResponse> {
+    throw new Error('Method not implemented.');
+  }
+
+  trackLinterExecution(): Promise<TrackLinterExecutionResponse> {
     throw new Error('Method not implemented.');
   }
 }

@@ -30,3 +30,4 @@ export * from './IUpdateDetectionProgramStatus';
 export * from './IUpdateRuleDetectionHeuristics';
 export * from './IUpdateHeuristicsFollowingChatbotInput';
 export * from './IUpdateRuleDetectionStatusAfterUpdate';
+export * from './ITrackLinterExecutionUseCase';
