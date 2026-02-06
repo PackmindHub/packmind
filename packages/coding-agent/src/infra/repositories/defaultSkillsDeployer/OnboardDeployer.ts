@@ -454,11 +454,11 @@ Package: [package-name]
 Created: [N] standards, [M] commands
 
 Your standards and commands have been created and deployed locally.
-They are now active in your AI coding assistant.
 
 Next steps:
+  - Reload your AI coding assistant to start using them
   - Visit [host from packmind-cli whoami] to manage your standards and commands
-  - Run \`packmind-cli install\` in other repos to distribute them
+  - Run \`packmind-cli install [package-slug]\` in other repos to distribute them
 ============================================================
 \`\`\`
 
