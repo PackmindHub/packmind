@@ -87,9 +87,8 @@ async function installDefaultSkillsIfAtGitRoot(params: {
   packmindCliHexa: PackmindCliHexa;
   cwd: string;
   log: (msg: string) => void;
-  agents?: CodingAgent[];
 }): Promise<void> {
-  const { packmindCliHexa, cwd, log, agents } = params;
+  const { packmindCliHexa, cwd, log } = params;
 
   const gitRoot = await packmindCliHexa.tryGetGitRepositoryRoot(cwd);
 
@@ -102,7 +101,6 @@ async function installDefaultSkillsIfAtGitRoot(params: {
     log('\nInstalling default skills...');
     const skillsResult = await packmindCliHexa.installDefaultSkills({
       cliVersion: CLI_VERSION,
-      agents,
     });
 
     if (skillsResult.errors.length > 0) {
@@ -723,7 +721,6 @@ export async function installPackagesHandler(
       packmindCliHexa,
       cwd,
       log,
-      agents: configAgents,
     });
 
     return {

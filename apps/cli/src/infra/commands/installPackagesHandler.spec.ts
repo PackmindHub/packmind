@@ -841,14 +841,13 @@ describe('installPackagesHandler', () => {
           );
         });
 
-        it('passes agents from config to installDefaultSkills', async () => {
-          const agents = [
-            { name: 'claude-code', isEnabled: true },
-            { name: 'cursor', isEnabled: false },
-          ];
+        it('does not pass agents to installDefaultSkills', async () => {
           mockPackmindCliHexa.readFullConfig.mockResolvedValue({
             packages: { backend: '*' },
-            agents,
+            agents: [
+              { name: 'claude-code', isEnabled: true },
+              { name: 'cursor', isEnabled: false },
+            ],
           });
           mockPackmindCliHexa.installDefaultSkills.mockResolvedValue({
             filesCreated: 1,
@@ -858,10 +857,11 @@ describe('installPackagesHandler', () => {
 
           await installPackagesHandler({ packagesSlugs: [] }, deps);
 
-          expect(mockPackmindCliHexa.installDefaultSkills).toHaveBeenCalledWith(
+          expect(
+            mockPackmindCliHexa.installDefaultSkills,
+          ).not.toHaveBeenCalledWith(
             expect.objectContaining({
-              cliVersion: expect.any(String),
-              agents,
+              agents: expect.anything(),
             }),
           );
         });
