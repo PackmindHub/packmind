@@ -40,20 +40,10 @@ In your AI agent (Claude Code, Cursor, etc.), invoke the onboarding skill:
 
 The skill guides you through an interactive process:
 
-1. **Select analysis depth** — Quick scan or Optimal (deeper analysis)
-2. **Create or select a package** — Where your standards and commands will be stored
-3. **Analyze your codebase** — Read-only scan for patterns and conventions
-4. **Review generated drafts** — Preview before creating anything
-5. **Create standards and commands** — Publish to Packmind and deploy locally
-
-### Analysis Modes
-
-| Mode        | Checks            | Best For                                 |
-| ----------- | ----------------- | ---------------------------------------- |
-| **Quick**   | 4 pattern checks  | Fast starter set, small projects         |
-| **Optimal** | 17 pattern checks | Comprehensive analysis, larger codebases |
-
-Quick mode gives you a fast starter set. Optimal mode provides deeper analysis across more pattern categories.
+1. **Create or select a package** — Where your standards and commands will be stored
+2. **Analyze your codebase** — Read-only scan for patterns and conventions
+3. **Review generated drafts** — Preview before creating anything
+4. **Create standards and commands** — Publish to Packmind and deploy locally
 
 ### What Gets Generated
 
@@ -61,16 +51,13 @@ Based on your project's patterns, you'll get up to:
 
 **Standards** (max 5 per run)
 
-- Architectural patterns (module boundaries, cross-domain communication)
-- Error handling conventions
+- Role taxonomy drift patterns
 - Test data construction patterns
-- Authorization boundaries
 
 **Commands** (max 5 per run)
 
 - File template workflows
 - CI/local development parity scripts
-- Project-specific automation
 
 All items are created as **drafts first**, giving you a chance to review and edit before publishing.
 
