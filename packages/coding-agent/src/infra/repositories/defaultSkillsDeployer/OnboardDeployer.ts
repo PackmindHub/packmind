@@ -548,10 +548,10 @@ Auto-create a package using the repository name.
 
 ### 9.1 Deploy Locally (after successful creation)
 
-Since the onboard skill is present, the user has configured an AI agent. Deploy the created artifacts locally:
+Since the onboard skill is present, the user has configured an AI agent. Deploy the created artifacts locally using the package selected/created in Step 2:
 
 \`\`\`bash
-packmind-cli install
+packmind-cli install <package-slug>
 \`\`\`
 
 This deploys to agent-specific folders:
