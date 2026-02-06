@@ -344,17 +344,15 @@ export class LintFilesFromConfigUseCase implements ILintFilesFromConfig {
       }
     }
 
-    try {
-      const targetCount = allConfigs.configs.length;
-
-      // Nothing to await here, we won't delay execution
-      this.repositories.packmindGateway.linter.trackLinterExecution({
-        targetCount,
+    // Nothing to await here, we won't delay execution
+    this.repositories.packmindGateway.linter
+      .trackLinterExecution({
+        targetCount: allConfigs.configs.length,
         standardCount: allStandardsChecked.size,
+      })
+      .catch(() => {
+        // Not a problem if tracking failed
       });
-    } catch {
-      // Silent fail - tracking should not affect linting
-    }
 
     // Filter violations by lines if diffMode is LINES
     let filteredViolations = violations;
