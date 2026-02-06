@@ -62,7 +62,6 @@ async function promptAgentsWithReadline(
   });
 
   output.write('\nSelect coding agents to generate artifacts for:\n');
-  output.write('(packmind is always active by default)\n\n');
   choices.forEach((choice, index) => {
     const marker = choice.checked ? '*' : ' ';
     output.write(`  ${index + 1}. [${marker}] ${choice.name}\n`);
@@ -146,8 +145,7 @@ export async function configAgentsHandler(
       {
         type: 'checkbox',
         name: 'selectedAgents',
-        message:
-          'Select coding agents to generate artifacts for (packmind is always active):',
+        message: 'Select coding agents to generate artifacts for:',
         choices,
       },
     ]);
