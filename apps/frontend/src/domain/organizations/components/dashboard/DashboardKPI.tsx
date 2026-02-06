@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import {
   PMBox,
   PMHStack,
@@ -5,6 +6,7 @@ import {
   PMPageSection,
   PMStat,
   PMTooltip,
+  PMButton,
 } from '@packmind/ui';
 import {
   useGetRecipesDeploymentOverviewQuery,
@@ -12,8 +14,10 @@ import {
   useGetSkillsDeploymentOverviewQuery,
 } from '../../../deployments/api/queries/DeploymentsQueries';
 import { LuInfo, LuRadio } from 'react-icons/lu';
+import { NonLiveArtifactsModal } from './NonLiveArtifactsModal';
 
 export const DashboardKPI = () => {
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const { data: recipesOverview } = useGetRecipesDeploymentOverviewQuery();
   const { data: standardsOverview } = useGetStandardsDeploymentOverviewQuery();
   const { data: skillsOverview } = useGetSkillsDeploymentOverviewQuery();
@@ -32,6 +36,12 @@ export const DashboardKPI = () => {
   const activeSkills =
     skillsOverview?.skills.filter((s) => s.targetDeployments.length > 0)
       .length ?? 0;
+
+  const totalNonLive =
+    totalStandards -
+    activeStandards +
+    (totalRecipes - activeRecipes) +
+    (totalSkills - activeSkills);
 
   return (
     <PMPageSection
@@ -54,6 +64,17 @@ export const DashboardKPI = () => {
       }
       backgroundColor="primary"
       headingLevel="h5"
+      cta={
+        totalNonLive > 0 && (
+          <PMButton
+            variant="tertiary"
+            size="sm"
+            onClick={() => setIsModalOpen(true)}
+          >
+            Show non-live artifacts ({totalNonLive})
+          </PMButton>
+        )
+      }
     >
       <PMHStack align="stretch" width="full" gap={4} my={4}>
         <PMBox
@@ -125,6 +146,8 @@ export const DashboardKPI = () => {
           </PMStat.Root>
         </PMBox>
       </PMHStack>
+
+      <NonLiveArtifactsModal open={isModalOpen} onOpenChange={setIsModalOpen} />
     </PMPageSection>
   );
 };
