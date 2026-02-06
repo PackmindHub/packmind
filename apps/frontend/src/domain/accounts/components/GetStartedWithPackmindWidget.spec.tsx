@@ -115,7 +115,9 @@ describe('GetStartedWithPackmindWidget', () => {
       expect(
         screen.getByText(/2\. bundle them into a package/i),
       ).toBeInTheDocument();
-      expect(screen.getByText(/3\. deploy to your repo/i)).toBeInTheDocument();
+      expect(
+        screen.getByText(/3\. distribute your package in your repo/i),
+      ).toBeInTheDocument();
       expect(screen.getByText(/4\. invite collaborators/i)).toBeInTheDocument();
     });
 
