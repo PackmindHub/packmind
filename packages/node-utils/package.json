@@ -16,7 +16,7 @@
     "uuid": "^11.1.0",
     "@infisical/sdk": "^4.0.2",
     "ioredis": "^5.3.2",
-    "@nestjs/common": "^11.1.6",
+    "@nestjs/common": "^11.1.11",
     "nodemailer": "^7.0.7",
     "bullmq": "^5.0.0"
   },
