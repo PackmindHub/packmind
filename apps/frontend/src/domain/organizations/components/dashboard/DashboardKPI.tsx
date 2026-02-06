@@ -22,20 +22,26 @@ export const DashboardKPI = () => {
   const { data: standardsOverview } = useGetStandardsDeploymentOverviewQuery();
   const { data: skillsOverview } = useGetSkillsDeploymentOverviewQuery();
 
-  const totalRecipes = recipesOverview?.recipes.length ?? 0;
+  const totalRecipes =
+    recipesOverview?.recipes.filter((r) => !r.isDeleted).length ?? 0;
   const activeRecipes =
-    recipesOverview?.recipes.filter((r) => r.targetDeployments.length > 0)
-      .length ?? 0;
+    recipesOverview?.recipes.filter(
+      (r) => !r.isDeleted && r.targetDeployments.length > 0,
+    ).length ?? 0;
 
-  const totalStandards = standardsOverview?.standards.length ?? 0;
+  const totalStandards =
+    standardsOverview?.standards.filter((s) => !s.isDeleted).length ?? 0;
   const activeStandards =
-    standardsOverview?.standards.filter((s) => s.targetDeployments.length > 0)
-      .length ?? 0;
+    standardsOverview?.standards.filter(
+      (s) => !s.isDeleted && s.targetDeployments.length > 0,
+    ).length ?? 0;
 
-  const totalSkills = skillsOverview?.skills.length ?? 0;
+  const totalSkills =
+    skillsOverview?.skills.filter((s) => !s.isDeleted).length ?? 0;
   const activeSkills =
-    skillsOverview?.skills.filter((s) => s.targetDeployments.length > 0)
-      .length ?? 0;
+    skillsOverview?.skills.filter(
+      (s) => !s.isDeleted && s.targetDeployments.length > 0,
+    ).length ?? 0;
 
   const totalNonLive =
     totalStandards -
