@@ -116,25 +116,25 @@ describe('OrganizationHomePage', () => {
         ).toBeInTheDocument();
       });
 
-      it('displays first onboarding step', () => {
+      it('displays step 1 - create artifacts', () => {
         expect(
           screen.getByText(/1\. create your first artifacts/i),
         ).toBeInTheDocument();
       });
 
-      it('displays second onboarding step', () => {
+      it('displays step 2 - bundle into package', () => {
         expect(
           screen.getByText(/2\. bundle them into a package/i),
         ).toBeInTheDocument();
       });
 
-      it('displays third onboarding step', () => {
+      it('displays step 3 - deploy to repo', () => {
         expect(
           screen.getByText(/3\. deploy to your repo/i),
         ).toBeInTheDocument();
       });
 
-      it('displays fourth onboarding step', () => {
+      it('displays step 4 - invite collaborators', () => {
         expect(
           screen.getByText(/4\. invite collaborators/i),
         ).toBeInTheDocument();

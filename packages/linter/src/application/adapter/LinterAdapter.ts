@@ -9,6 +9,7 @@ import {
   IGitPortName,
   ISpacesPortName,
   IStandardsPortName,
+  TrackLinterExecutionCommand,
 } from '@packmind/types';
 import type {
   IAccountsPort,
@@ -68,7 +69,6 @@ import {
   IExecuteLinterProgramsUseCase,
   ListDetectionProgramCommand,
   ListDetectionProgramResponse,
-  OrganizationId,
   StartProgramGenerationCommand,
   StartProgramGenerationResponse,
   TestProgramExecutionCommand,
@@ -80,7 +80,6 @@ import {
   UpdateRuleDetectionHeuristicsCommand,
   UpdateRuleDetectionHeuristicsResponse,
   UpdateRuleDetectionStatusAfterUpdateCommand,
-  UserId,
 } from '@packmind/types';
 import type { DetectionProgramService } from '../services/DetectionProgramService';
 import { ComputeRuleLanguageDetectionStatusUseCase } from '../useCases/computeRuleLanguageDetectionStatus/computeRuleLanguageDetectionStatus.usecase';
@@ -561,12 +560,7 @@ export class LinterAdapter implements IBaseAdapter<ILinterPort>, ILinterPort {
     return this._createEmptyRuleDetectionAssessmentUseCase.execute(command);
   }
 
-  async trackLinterExecution(command: {
-    organizationId: OrganizationId;
-    userId: UserId;
-    targetCount: number;
-    standardCount: number;
-  }): Promise<void> {
+  async trackLinterExecution(command: TrackLinterExecutionCommand) {
     return this._trackLinterExecutionUseCase.execute(command);
   }
 }

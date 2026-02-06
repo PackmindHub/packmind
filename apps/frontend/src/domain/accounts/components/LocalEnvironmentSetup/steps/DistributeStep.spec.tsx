@@ -36,53 +36,44 @@ describe('DistributeStep', () => {
     });
 
     describe('when packages are provided', () => {
-      it('displays available packages header', () => {
-        const packages = [
-          { id: '1', name: 'Package 1', slug: 'package-1' },
-          { id: '2', name: 'Package 2', slug: 'package-2' },
-        ];
-
-        renderWithProviders(<DistributeStep packages={packages} />);
-
-        expect(screen.getByText('Available packages')).toBeInTheDocument();
-      });
-
-      it('displays first package', () => {
-        const packages = [
-          { id: '1', name: 'Package 1', slug: 'package-1' },
-          { id: '2', name: 'Package 2', slug: 'package-2' },
-        ];
-
-        renderWithProviders(<DistributeStep packages={packages} />);
-
-        expect(screen.getByText('Package 1')).toBeInTheDocument();
-      });
-
-      it('displays second package', () => {
-        const packages = [
-          { id: '1', name: 'Package 1', slug: 'package-1' },
-          { id: '2', name: 'Package 2', slug: 'package-2' },
-        ];
-
-        renderWithProviders(<DistributeStep packages={packages} />);
-
-        expect(screen.getByText('Package 2')).toBeInTheDocument();
-      });
-    });
-
-    it('displays install command for each package', () => {
       const packages = [
         { id: '1', name: 'Package 1', slug: 'package-1' },
         { id: '2', name: 'Package 2', slug: 'package-2' },
       ];
 
-      renderWithProviders(<DistributeStep packages={packages} />);
+      it('displays available packages heading', () => {
+        renderWithProviders(<DistributeStep packages={packages} />);
 
-      const input1 = screen.getByDisplayValue('packmind-cli install package-1');
-      const input2 = screen.getByDisplayValue('packmind-cli install package-2');
+        expect(screen.getByText('Available packages')).toBeInTheDocument();
+      });
 
-      expect(input1).toBeInTheDocument();
-      expect(input2).toBeInTheDocument();
+      it('displays Package 1', () => {
+        renderWithProviders(<DistributeStep packages={packages} />);
+
+        expect(screen.getByText('Package 1')).toBeInTheDocument();
+      });
+
+      it('displays Package 2', () => {
+        renderWithProviders(<DistributeStep packages={packages} />);
+
+        expect(screen.getByText('Package 2')).toBeInTheDocument();
+      });
+
+      it('displays install command for package-1', () => {
+        renderWithProviders(<DistributeStep packages={packages} />);
+
+        expect(
+          screen.getByDisplayValue('packmind-cli install package-1'),
+        ).toBeInTheDocument();
+      });
+
+      it('displays install command for package-2', () => {
+        renderWithProviders(<DistributeStep packages={packages} />);
+
+        expect(
+          screen.getByDisplayValue('packmind-cli install package-2'),
+        ).toBeInTheDocument();
+      });
     });
   });
 });

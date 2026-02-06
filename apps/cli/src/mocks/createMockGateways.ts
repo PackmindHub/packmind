@@ -94,6 +94,7 @@ export function createMockLinterGateway(
     getDraftDetectionProgramsForRule: jest.fn(),
     getActiveDetectionProgramsForRule: jest.fn(),
     getDetectionProgramsForPackages: jest.fn(),
+    trackLinterExecution: jest.fn().mockResolvedValue({}),
     ...overrides,
   };
 }

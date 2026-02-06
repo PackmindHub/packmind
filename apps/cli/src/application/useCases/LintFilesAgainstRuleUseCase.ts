@@ -350,20 +350,14 @@ export class LintFilesAgainstRuleUseCase implements ILintFilesAgainstRule {
       `Retrieved detection programs: targetsCount=${detectionPrograms.targets.length}`,
     );
 
-    // Track linter execution (fire-and-forget)
-    try {
-      const totalStandardCount = detectionPrograms.targets.reduce(
-        (sum, target) => sum + target.standards.length,
-        0,
-      );
-
-      this.repositories.packmindGateway.linter.trackLinterExecution({
-        targetCount: detectionPrograms.targets.length,
-        standardCount: totalStandardCount,
+    this.repositories.packmindGateway.linter
+      .trackLinterExecution({
+        targetCount: 1,
+        standardCount: 1,
+      })
+      .catch(() => {
+        // Not a problem if tracking failed
       });
-    } catch {
-      // Silent fail - tracking should not affect linting
-    }
 
     // Step 4: Execute each program for each file and collect violations
     const violations: LintViolation[] = [];

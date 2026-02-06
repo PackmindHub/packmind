@@ -139,7 +139,7 @@ describe('GetStartedWithPackmindWidget', () => {
 
   describe('when callbacks are provided', () => {
     describe('when Create a standard button is clicked', () => {
-      it('calls onCreateArtifact', async () => {
+      it('calls onCreateArtifact callback', async () => {
         const onCreateArtifact = jest.fn();
 
         renderWithProviders(
@@ -155,7 +155,7 @@ describe('GetStartedWithPackmindWidget', () => {
     });
 
     describe('when Create package button is clicked', () => {
-      it('calls onCreatePackage', async () => {
+      it('calls onCreatePackage callback', async () => {
         const onCreatePackage = jest.fn();
 
         renderWithProviders(
@@ -171,7 +171,7 @@ describe('GetStartedWithPackmindWidget', () => {
     });
 
     describe('when Deploy with CLI button is clicked', () => {
-      it('calls onDeployWithCLI', async () => {
+      it('calls onDeployWithCLI callback', async () => {
         const onDeployWithCLI = jest.fn();
 
         renderWithProviders(
@@ -187,7 +187,7 @@ describe('GetStartedWithPackmindWidget', () => {
     });
 
     describe('when Invite team button is clicked', () => {
-      it('calls onInviteTeam', async () => {
+      it('calls onInviteTeam callback', async () => {
         const onInviteTeam = jest.fn();
 
         renderWithProviders(
@@ -204,80 +204,64 @@ describe('GetStartedWithPackmindWidget', () => {
   });
 
   describe('when callbacks are not provided', () => {
-    describe('when Create a standard button is clicked', () => {
-      it('navigates to standards page', async () => {
-        renderWithProviders(<GetStartedWithPackmindWidget />);
+    it('navigates to standards page when Create a standard button is clicked', async () => {
+      renderWithProviders(<GetStartedWithPackmindWidget />);
 
-        await userEvent.click(
-          screen.getByRole('button', { name: /create a standard/i }),
-        );
+      await userEvent.click(
+        screen.getByRole('button', { name: /create a standard/i }),
+      );
 
-        expect(mockNavigate).toHaveBeenCalledWith(
-          '/org/test-org/space/test-space/standards',
-        );
-      });
+      expect(mockNavigate).toHaveBeenCalledWith(
+        '/org/test-org/space/test-space/standards',
+      );
     });
 
-    describe('when Create package button is clicked', () => {
-      it('navigates to packages page', async () => {
-        renderWithProviders(<GetStartedWithPackmindWidget />);
+    it('navigates to packages page when Create package button is clicked', async () => {
+      renderWithProviders(<GetStartedWithPackmindWidget />);
 
-        await userEvent.click(
-          screen.getByRole('button', { name: /create package/i }),
-        );
+      await userEvent.click(
+        screen.getByRole('button', { name: /create package/i }),
+      );
 
-        expect(mockNavigate).toHaveBeenCalledWith(
-          '/org/test-org/space/test-space/packages',
-        );
-      });
+      expect(mockNavigate).toHaveBeenCalledWith(
+        '/org/test-org/space/test-space/packages',
+      );
     });
 
-    describe('when Deploy with CLI button is clicked', () => {
-      it('does not navigate', async () => {
-        renderWithProviders(<GetStartedWithPackmindWidget />);
+    it('opens modal when Deploy with CLI button is clicked', async () => {
+      renderWithProviders(<GetStartedWithPackmindWidget />);
 
-        await userEvent.click(
-          screen.getByRole('button', { name: /deploy with cli/i }),
-        );
+      await userEvent.click(
+        screen.getByRole('button', { name: /deploy with cli/i }),
+      );
 
-        expect(mockNavigate).not.toHaveBeenCalled();
-      });
-
-      it('opens modal', async () => {
-        renderWithProviders(<GetStartedWithPackmindWidget />);
-
-        await userEvent.click(
-          screen.getByRole('button', { name: /deploy with cli/i }),
-        );
-
-        expect(
-          screen.getByRole('heading', { name: /deploy with cli/i }),
-        ).toBeInTheDocument();
-      });
+      expect(mockNavigate).not.toHaveBeenCalled();
+      // Modal should open - check for modal title
+      expect(
+        screen.getByRole('heading', { name: /deploy with cli/i }),
+      ).toBeInTheDocument();
     });
 
-    describe('when Invite team button is clicked', () => {
-      it('navigates to users settings page', async () => {
-        renderWithProviders(<GetStartedWithPackmindWidget />);
+    it('navigates to users settings page when Invite team button is clicked', async () => {
+      renderWithProviders(<GetStartedWithPackmindWidget />);
 
-        await userEvent.click(
-          screen.getByRole('button', { name: /invite team/i }),
-        );
+      await userEvent.click(
+        screen.getByRole('button', { name: /invite team/i }),
+      );
 
-        expect(mockNavigate).toHaveBeenCalledWith(
-          '/org/test-org/settings/users',
-        );
-      });
+      expect(mockNavigate).toHaveBeenCalledWith('/org/test-org/settings/users');
     });
   });
 
   describe('when no spaces are available', () => {
+    beforeEach(() => {
+      mockedUseGetSpacesQuery.mockReturnValue({
+        data: [],
+      } as ReturnType<typeof useGetSpacesQuery>);
+    });
+
     describe('when Create a standard button is clicked', () => {
       it('does not navigate', async () => {
-        mockedUseGetSpacesQuery.mockReturnValue({
-          data: [],
-        } as ReturnType<typeof useGetSpacesQuery>);
-
         renderWithProviders(<GetStartedWithPackmindWidget />);
 
         await userEvent.click(
@@ -290,10 +274,6 @@ describe('GetStartedWithPackmindWidget', () => {
 
     describe('when Create package button is clicked', () => {
       it('does not navigate', async () => {
-        mockedUseGetSpacesQuery.mockReturnValue({
-          data: [],
-        } as ReturnType<typeof useGetSpacesQuery>);
-
         renderWithProviders(<GetStartedWithPackmindWidget />);
 
         await userEvent.click(

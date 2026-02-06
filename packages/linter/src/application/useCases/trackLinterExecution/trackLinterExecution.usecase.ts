@@ -3,27 +3,20 @@ import { PackmindEventEmitterService } from '@packmind/node-utils';
 import {
   createOrganizationId,
   createUserId,
-  OrganizationId,
-  UserId,
   LinterCalledEvent,
+  ITrackLinterExecutionUseCase,
+  TrackLinterExecutionCommand,
 } from '@packmind/types';
 
 const origin = 'TrackLinterExecutionUseCase';
 
-export interface TrackLinterExecutionCommand {
-  organizationId: OrganizationId;
-  userId: UserId;
-  targetCount: number;
-  standardCount: number;
-}
-
-export class TrackLinterExecutionUseCase {
+export class TrackLinterExecutionUseCase implements ITrackLinterExecutionUseCase {
   constructor(
     private readonly eventEmitterService: PackmindEventEmitterService,
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {}
 
-  async execute(command: TrackLinterExecutionCommand): Promise<void> {
+  async execute(command: TrackLinterExecutionCommand) {
     this.logger.info('Tracking linter execution', {
       targetCount: command.targetCount,
       standardCount: command.standardCount,
@@ -41,5 +34,7 @@ export class TrackLinterExecutionUseCase {
     );
 
     this.logger.info('Linter execution tracked successfully');
+
+    return {};
   }
 }

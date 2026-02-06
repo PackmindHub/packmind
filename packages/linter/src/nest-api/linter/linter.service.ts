@@ -43,6 +43,7 @@ import {
   UserId,
   RuleId,
   ProgrammingLanguage,
+  TrackLinterExecutionCommand,
 } from '@packmind/types';
 
 @Injectable()
@@ -184,12 +185,7 @@ export class LinterService {
     });
   }
 
-  async trackLinterExecution(command: {
-    organizationId: OrganizationId;
-    userId: UserId;
-    targetCount: number;
-    standardCount: number;
-  }): Promise<void> {
+  async trackLinterExecution(command: TrackLinterExecutionCommand) {
     return this.linterAdapter.trackLinterExecution(command);
   }
 }
