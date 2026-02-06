@@ -57,8 +57,8 @@ export const DashboardKPI = () => {
     if (total === 0) return 'transparent';
     const percentage = (active / total) * 100;
     if (percentage === 100) return 'green.1000';
-    if (percentage === 0) return 'red.1000';
-    return 'orange.1000';
+    if (percentage === 0) return 'orange.1000';
+    return 'beige.1000';
   };
 
   const getBorderColorByPercentage = (
@@ -68,16 +68,16 @@ export const DashboardKPI = () => {
     if (total === 0) return 'border.tertiary';
     const percentage = (active / total) * 100;
     if (percentage === 100) return 'green.700';
-    if (percentage === 0) return 'red.700';
-    return 'orange.700';
+    if (percentage === 0) return 'orange.700';
+    return 'beige.700';
   };
 
   const getTextColorByPercentage = (active: number, total: number): string => {
     if (total === 0) return 'text.primary';
     const percentage = (active / total) * 100;
     if (percentage === 100) return 'green.400';
-    if (percentage === 0) return 'red.400';
-    return 'orange.400';
+    if (percentage === 0) return 'orange.400';
+    return 'beige.400';
   };
 
   const standardsBackgroundColor = getBackgroundColorByPercentage(
@@ -176,8 +176,8 @@ export const DashboardKPI = () => {
                   totalStandards === activeStandards
                     ? 'green'
                     : activeStandards === 0
-                      ? 'red'
-                      : 'orange'
+                      ? 'orange'
+                      : 'blue'
                 }
                 size="xs"
                 mt={2}
@@ -218,8 +218,8 @@ export const DashboardKPI = () => {
                   totalRecipes === activeRecipes
                     ? 'green'
                     : activeRecipes === 0
-                      ? 'red'
-                      : 'orange'
+                      ? 'orange'
+                      : 'blue'
                 }
                 size="xs"
                 mt={2}
@@ -260,8 +260,8 @@ export const DashboardKPI = () => {
                   totalSkills === activeSkills
                     ? 'green'
                     : activeSkills === 0
-                      ? 'red'
-                      : 'orange'
+                      ? 'orange'
+                      : 'blue'
                 }
                 size="xs"
                 mt={2}
