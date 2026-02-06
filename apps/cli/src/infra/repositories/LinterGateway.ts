@@ -88,8 +88,13 @@ export class LinterGateway implements ILinterGateway {
       return handleScopeInTargetsResponse(response);
     };
 
-  trackLinterExecution: Gateway<ITrackLinterExecutionUseCase> = async () => {
-    return this.httpClient.request(`/api/v0/trackLinterExecution`);
+  trackLinterExecution: Gateway<ITrackLinterExecutionUseCase> = async (
+    command,
+  ) => {
+    return this.httpClient.request(`/api/v0/track-execution`, {
+      method: 'POST',
+      body: command,
+    });
   };
 }
 
