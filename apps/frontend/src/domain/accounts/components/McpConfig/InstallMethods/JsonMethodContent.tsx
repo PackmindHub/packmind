@@ -19,7 +19,13 @@ export const JsonMethodContent: React.FC<IMethodContentProps> = ({
   return (
     <PMVStack gap={4} width="100%" alignItems="flex-start">
       <PMText as="p" color="secondary">
-        {method.label}:
+        {method.filePath ? (
+          <>
+            Create <code>{method.filePath}</code> with this content:
+          </>
+        ) : (
+          `${method.label}:`
+        )}
       </PMText>
       <CopiableTextarea
         value={config}

@@ -11,6 +11,7 @@ export interface IInstallMethod {
   type: InstallMethodType;
   label: string;
   available: boolean;
+  filePath?: string;
   getCliCommand?: (token: string, url: string, cliLoginCode?: string) => string;
   getJsonConfig?: (token: string, url: string) => string;
   getMagicLink?: (token: string, url: string) => string;
@@ -24,27 +25,6 @@ export interface IAgentConfig {
   logo?: string;
   installMethods: IInstallMethod[];
 }
-
-export interface IMethodsByType {
-  [type: string]: IInstallMethod[];
-}
-
-/**
- * Groups install methods by their type (cli, json, magicLink).
- * @param methods - Array of install methods to group
- * @returns Object with method types as keys and arrays of methods as values
- */
-export const groupMethodsByType = (
-  methods: IInstallMethod[],
-): IMethodsByType => {
-  return methods.reduce((acc, method) => {
-    if (!acc[method.type]) {
-      acc[method.type] = [];
-    }
-    acc[method.type].push(method);
-    return acc;
-  }, {} as IMethodsByType);
-};
 
 /**
  * Filters and returns only the available install methods from an agent configuration.

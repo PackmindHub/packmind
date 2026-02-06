@@ -7,16 +7,17 @@ import {
   PMHStack,
   PMCloseButton,
 } from '@packmind/ui';
-import {
-  IAgentConfig,
-  IInstallMethod,
-  groupMethodsByType,
-  getAvailableMethods,
-} from './types';
+import { IAgentConfig, IInstallMethod, getAvailableMethods } from './types';
 import { MethodContent } from './InstallMethods';
 import { StartTrialCommandAgents } from '@packmind/types';
 import { OnboardingAgentProvider } from '../../contexts';
 import { CantUseMcpModal } from '../trial/CantUseMcpModal';
+
+const TYPE_PRIORITY: Record<string, number> = {
+  magicLink: 0,
+  cli: 1,
+  json: 2,
+};
 
 const mapAgentIdToAnalytics = (agentId: string): StartTrialCommandAgents => {
   const mapping: Record<string, StartTrialCommandAgents> = {
@@ -39,60 +40,29 @@ interface IAgentModalProps {
 }
 
 const createTabsFromMethods = (
-  methodsByType: Record<string, IInstallMethod[]>,
+  methods: IInstallMethod[],
   token: string,
   url: string,
   onCantUseMcp?: () => void,
 ) => {
-  // Define the desired order: magicLink (One-click install), cli (CLI), json (JSON)
-  const orderedTypes = ['magicLink', 'cli', 'json'];
+  const sorted = [...methods].sort(
+    (a, b) => (TYPE_PRIORITY[a.type] ?? 99) - (TYPE_PRIORITY[b.type] ?? 99),
+  );
 
-  return orderedTypes
-    .filter((type) => methodsByType[type]) // Only include types that exist
-    .map((type) => {
-      const methods = methodsByType[type];
-      const firstMethod = methods[0];
-      // Use type + label to create unique key when multiple methods of same type
-      const uniqueKey = methods.length > 1 ? `${type}-multi` : type;
-
-      return {
-        value: uniqueKey,
-        triggerLabel: firstMethod.label,
-        content: (
-          <PMVStack gap={4} width="100%" p={4} alignItems="flex-start">
-            {methods.length > 1 ? (
-              <PMVStack gap={6} width="100%" alignItems="flex-start">
-                {methods.map((method, index) => (
-                  <PMVStack
-                    key={index}
-                    gap={2}
-                    width="100%"
-                    alignItems="flex-start"
-                  >
-                    <PMText as="p" fontWeight="bold">
-                      {method.label}
-                    </PMText>
-                    <MethodContent
-                      method={method}
-                      token={token}
-                      url={url}
-                      onCantUseMcp={onCantUseMcp}
-                    />
-                  </PMVStack>
-                ))}
-              </PMVStack>
-            ) : (
-              <MethodContent
-                method={firstMethod}
-                token={token}
-                url={url}
-                onCantUseMcp={onCantUseMcp}
-              />
-            )}
-          </PMVStack>
-        ),
-      };
-    });
+  return sorted.map((method, index) => ({
+    value: `${method.type}-${index}`,
+    triggerLabel: method.label,
+    content: (
+      <PMVStack gap={4} width="100%" p={4} alignItems="flex-start">
+        <MethodContent
+          method={method}
+          token={token}
+          url={url}
+          onCantUseMcp={onCantUseMcp}
+        />
+      </PMVStack>
+    ),
+  }));
 };
 
 export const AgentModal: React.FunctionComponent<IAgentModalProps> = ({
@@ -109,14 +79,15 @@ export const AgentModal: React.FunctionComponent<IAgentModalProps> = ({
 
   const tabs = useMemo(() => {
     if (availableMethods.length === 0) return [];
-    const methodsByType = groupMethodsByType(availableMethods);
-    return createTabsFromMethods(methodsByType, token, url, handleCantUseMcp);
+    return createTabsFromMethods(
+      availableMethods,
+      token,
+      url,
+      handleCantUseMcp,
+    );
   }, [availableMethods, token, url]);
 
   if (tabs.length === 0) return null;
-
-  const hasSingleMethod = tabs.length === 1;
-  const firstTab = tabs[0];
 
   return (
     <>
@@ -140,15 +111,7 @@ export const AgentModal: React.FunctionComponent<IAgentModalProps> = ({
             </PMDialog.Header>
             <PMDialog.Body maxH="70vh" overflowY="auto">
               <OnboardingAgentProvider agent={mapAgentIdToAnalytics(agent.id)}>
-                {hasSingleMethod ? (
-                  firstTab.content
-                ) : (
-                  <PMTabs
-                    width="100%"
-                    defaultValue={firstTab.value}
-                    tabs={tabs}
-                  />
-                )}
+                <PMTabs width="100%" defaultValue={tabs[0].value} tabs={tabs} />
               </OnboardingAgentProvider>
             </PMDialog.Body>
           </PMDialog.Content>
