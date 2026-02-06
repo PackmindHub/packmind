@@ -15,7 +15,6 @@
     "lint:staged": "nx affected:lint --parallel --uncommitted",
     "packmind-cli:build": "nx run packmind-cli:build --skip-nx-cache",
     "packmind-cli:lint": "npm run packmind-cli:build && node dist/apps/cli/main.cjs lint .",
-    "packmind-cli:pre-commit": "npm run packmind-cli:build && node dist/apps/cli/main.cjs lint --changed-lines --continue-on-missing-key",
     "prepare": "npm run husky && npm run chakra:typegen",
     "prettier:check": "prettier -c .",
     "prettier:write": "prettier -w .",
