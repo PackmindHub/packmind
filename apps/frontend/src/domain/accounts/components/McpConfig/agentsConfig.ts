@@ -1,30 +1,4 @@
-import { IAgentConfig, IInstallMethod } from './types';
-
-const DEFAULT_HOST = 'https://app.packmind.ai';
-
-const getHostFromMcpUrl = (mcpUrl: string): string => {
-  try {
-    const url = new URL(mcpUrl);
-    return url.origin;
-  } catch {
-    return DEFAULT_HOST;
-  }
-};
-
-export const getInstallCliMethod = (): IInstallMethod => ({
-  type: 'install-cli',
-  label: 'Install CLI',
-  available: true,
-  getCliCommand: (_token: string, mcpUrl: string, cliLoginCode?: string) => {
-    const host = getHostFromMcpUrl(mcpUrl);
-    const needsHostExport = host !== DEFAULT_HOST;
-    const hostExport = needsHostExport ? `export PACKMIND_HOST=${host}\n` : '';
-    const codeExport = cliLoginCode
-      ? `export PACKMIND_LOGIN_CODE=${cliLoginCode}\n`
-      : '';
-    return `${hostExport}${codeExport}curl --proto '=https' --tlsv1.2 -sSf https://raw.githubusercontent.com/PackmindHub/packmind/main/apps/cli/scripts/install.sh | sh`;
-  },
-});
+import { IAgentConfig } from './types';
 
 export const getAgentsConfig = (): IAgentConfig[] => [
   {
@@ -32,7 +6,6 @@ export const getAgentsConfig = (): IAgentConfig[] => [
     name: 'Claude Code',
     description: 'Install Packmind MCP for Claude Desktop',
     installMethods: [
-      getInstallCliMethod(),
       {
         type: 'cli',
         label: 'Packmind CLI',
@@ -55,7 +28,7 @@ export const getAgentsConfig = (): IAgentConfig[] => [
     installMethods: [
       {
         type: 'cli',
-        label: 'CLI Command',
+        label: 'Packmind CLI',
         available: true,
         getCliCommand: () => 'packmind-cli setup-mcp --target copilot',
       },
@@ -80,6 +53,7 @@ export const getAgentsConfig = (): IAgentConfig[] => [
         type: 'json',
         label: 'JSON Configuration',
         available: true,
+        filePath: '.vscode/mcp.json',
         getJsonConfig: (token: string, url: string) => {
           const config = {
             servers: {
@@ -107,6 +81,7 @@ export const getAgentsConfig = (): IAgentConfig[] => [
         type: 'json',
         label: 'JSON Configuration',
         available: true,
+        filePath: '~/.config/github-copilot/intellij/mcp.json',
         getJsonConfig: (token: string, url: string) => {
           const config = {
             'packmind-mcp-server': {
@@ -130,7 +105,7 @@ export const getAgentsConfig = (): IAgentConfig[] => [
     installMethods: [
       {
         type: 'cli',
-        label: 'CLI Command',
+        label: 'Packmind CLI',
         available: true,
         getCliCommand: () => 'packmind-cli setup-mcp --target cursor',
       },
@@ -153,6 +128,7 @@ export const getAgentsConfig = (): IAgentConfig[] => [
         type: 'json',
         label: 'JSON Configuration',
         available: true,
+        filePath: '.cursor/mcp.json',
         getJsonConfig: (token: string, url: string) => {
           const config = {
             mcpServers: {
@@ -177,14 +153,15 @@ export const getAgentsConfig = (): IAgentConfig[] => [
     installMethods: [
       {
         type: 'cli',
-        label: 'CLI Command',
+        label: 'Packmind CLI',
         available: true,
         getCliCommand: () => 'packmind-cli setup-mcp --target continue',
       },
       {
         type: 'json',
-        label: 'Create .continue/mcpServers/packmind.yaml with this content',
+        label: 'YAML Configuration',
         available: true,
+        filePath: '.continue/mcpServers/packmind.yaml',
         getJsonConfig: (token: string, url: string) => {
           return `name: Packmind MCP Server
 version: 0.0.1
@@ -205,7 +182,6 @@ mcpServers:
     name: 'MCP Generic',
     description: 'Generic MCP configuration for compatible clients',
     installMethods: [
-      getInstallCliMethod(),
       {
         type: 'json',
         label: 'JSON Configuration',

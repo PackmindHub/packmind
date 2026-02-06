@@ -18,7 +18,6 @@ import { getAgentsConfig } from './McpConfig/agentsConfig';
 import {
   IAgentConfig,
   IInstallMethod,
-  groupMethodsByType,
   getAvailableMethods,
 } from './McpConfig/types';
 import { MethodContent } from './McpConfig/InstallMethods';
@@ -40,48 +39,30 @@ const mapAgentIdToAnalytics = (agentId: string): StartTrialCommandAgents => {
   return mapping[agentId] ?? 'other';
 };
 
+const TYPE_PRIORITY: Record<string, number> = {
+  magicLink: 0,
+  cli: 1,
+  json: 2,
+};
+
 const createTabsFromMethods = (
-  methodsByType: Record<string, IInstallMethod[]>,
+  methods: IInstallMethod[],
   token: string,
   url: string,
 ) => {
-  const orderedTypes = ['magicLink', 'cli', 'json'];
+  const sorted = [...methods].sort(
+    (a, b) => (TYPE_PRIORITY[a.type] ?? 99) - (TYPE_PRIORITY[b.type] ?? 99),
+  );
 
-  return orderedTypes
-    .filter((type) => methodsByType[type])
-    .map((type) => {
-      const methods = methodsByType[type];
-      const firstMethod = methods[0];
-      const uniqueKey = methods.length > 1 ? `${type}-multi` : type;
-
-      return {
-        value: uniqueKey,
-        triggerLabel: firstMethod.label,
-        content: (
-          <PMVStack gap={4} width="100%" alignItems="flex-start">
-            {methods.length > 1 ? (
-              <PMVStack gap={6} width="100%" alignItems="flex-start">
-                {methods.map((method, index) => (
-                  <PMVStack
-                    key={index}
-                    gap={2}
-                    width="100%"
-                    alignItems="flex-start"
-                  >
-                    <PMText as="p" fontWeight="bold">
-                      {method.label}
-                    </PMText>
-                    <MethodContent method={method} token={token} url={url} />
-                  </PMVStack>
-                ))}
-              </PMVStack>
-            ) : (
-              <MethodContent method={firstMethod} token={token} url={url} />
-            )}
-          </PMVStack>
-        ),
-      };
-    });
+  return sorted.map((method, index) => ({
+    value: `${method.type}-${index}`,
+    triggerLabel: method.label,
+    content: (
+      <PMVStack gap={4} width="100%" pt={4} alignItems="flex-start">
+        <MethodContent method={method} token={token} url={url} />
+      </PMVStack>
+    ),
+  }));
 };
 
 export function OnboardingBuildMcpSection() {
@@ -94,8 +75,7 @@ export function OnboardingBuildMcpSection() {
     if (!selectedAgent || !url || !token) return [];
     const availableMethods = getAvailableMethods(selectedAgent);
     if (availableMethods.length === 0) return [];
-    const methodsByType = groupMethodsByType(availableMethods);
-    return createTabsFromMethods(methodsByType, token, url);
+    return createTabsFromMethods(availableMethods, token, url);
   }, [selectedAgent, url, token]);
 
   return (
@@ -179,16 +159,13 @@ export function OnboardingBuildMcpSection() {
                 <OnboardingAgentProvider
                   agent={mapAgentIdToAnalytics(selectedAgent.id)}
                 >
-                  {methodTabs.length === 1 ? (
-                    methodTabs[0].content
-                  ) : (
-                    <PMTabs
-                      width="100%"
-                      defaultValue={methodTabs[0].value}
-                      tabs={methodTabs}
-                      data-testid="OnboardingBuild.McpMethodTabs"
-                    />
-                  )}
+                  <PMTabs
+                    key={selectedAgent.id}
+                    width="100%"
+                    defaultValue={methodTabs[0].value}
+                    tabs={methodTabs}
+                    data-testid="OnboardingBuild.McpMethodTabs"
+                  />
                 </OnboardingAgentProvider>
               ) : (
                 <PMText color="secondary" fontSize="sm">
