@@ -1,17 +1,18 @@
 import { UserId } from '../accounts/User';
 import { ChangeProposalId } from './ChangeProposalId';
-import { ChangeProposalPayloadMap } from './ChangeProposalPayload';
+import { ChangeProposalPayload } from './ChangeProposalPayload';
 import { ChangeProposalStatus } from './ChangeProposalStatus';
 import { ChangeProposalType } from './ChangeProposalType';
 import { ChangeProposalCaptureMode } from './ChangeProposalCaptureMode';
+import { ChangeProposalArtefactId } from './ChangeProposalArtefactIdType';
 
 export type ChangeProposal<T extends ChangeProposalType = ChangeProposalType> =
   {
     id: ChangeProposalId;
     type: T;
-    artifactId: string;
+    artifactId: ChangeProposalArtefactId<T>;
     artifactVersion: number;
-    payload: ChangeProposalPayloadMap[T];
+    payload: ChangeProposalPayload<T>;
     captureMode: ChangeProposalCaptureMode;
     status: ChangeProposalStatus;
     createdBy: UserId;
