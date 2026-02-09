@@ -77,7 +77,7 @@ export const DashboardKPI = () => {
     const percentage = (active / total) * 100;
     if (percentage === 100) return 'green.400';
     if (percentage === 0) return 'orange.400';
-    return 'beige.400';
+    return 'beige.0';
   };
 
   const standardsBackgroundColor = getBackgroundColorByPercentage(
