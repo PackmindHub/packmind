@@ -403,6 +403,242 @@ describe('configAgentsHandler', () => {
       });
     });
 
+    describe('when fetchOrganizationAgents is provided', () => {
+      let mockFetchOrganizationAgents: jest.Mock;
+
+      beforeEach(() => {
+        mockConfigRepository.readConfig.mockResolvedValue(null);
+        mockFetchOrganizationAgents = jest.fn();
+        deps.fetchOrganizationAgents = mockFetchOrganizationAgents;
+      });
+
+      describe('when no artifacts detected and organization agents are fetched successfully', () => {
+        let capturedChoices: { value: CodingAgent; checked: boolean }[];
+
+        beforeEach(async () => {
+          mockAgentDetectionService.detectAgentArtifacts.mockResolvedValue([]);
+          mockFetchOrganizationAgents.mockResolvedValue([
+            'claude',
+            'cursor',
+          ] as CodingAgent[]);
+
+          mockInquirerPrompt.mockImplementation(
+            async (
+              questions: {
+                choices: { value: CodingAgent; checked: boolean }[];
+              }[],
+            ) => {
+              capturedChoices = questions[0].choices;
+              return { selectedAgents: ['claude', 'cursor'] };
+            },
+          );
+
+          await configAgentsHandler(deps);
+        });
+
+        it('calls detectAgentArtifacts first', () => {
+          expect(
+            mockAgentDetectionService.detectAgentArtifacts,
+          ).toHaveBeenCalledWith('/project');
+        });
+
+        it('pre-selects claude from organization agents', () => {
+          const claudeChoice = capturedChoices.find(
+            (c) => c.value === 'claude',
+          );
+          expect(claudeChoice?.checked).toBe(true);
+        });
+
+        it('pre-selects cursor from organization agents', () => {
+          const cursorChoice = capturedChoices.find(
+            (c) => c.value === 'cursor',
+          );
+          expect(cursorChoice?.checked).toBe(true);
+        });
+
+        it('does not pre-select other agents', () => {
+          const copilotChoice = capturedChoices.find(
+            (c) => c.value === 'copilot',
+          );
+          expect(copilotChoice?.checked).toBe(false);
+        });
+      });
+
+      describe('when no artifacts detected and organization agents include non-selectable agents', () => {
+        let capturedChoices: { value: CodingAgent; checked: boolean }[];
+
+        beforeEach(async () => {
+          mockAgentDetectionService.detectAgentArtifacts.mockResolvedValue([]);
+          mockFetchOrganizationAgents.mockResolvedValue([
+            'claude',
+            'packmind',
+          ] as CodingAgent[]);
+
+          mockInquirerPrompt.mockImplementation(
+            async (
+              questions: {
+                choices: { value: CodingAgent; checked: boolean }[];
+              }[],
+            ) => {
+              capturedChoices = questions[0].choices;
+              return { selectedAgents: ['claude'] };
+            },
+          );
+
+          await configAgentsHandler(deps);
+        });
+
+        it('pre-selects only selectable agents', () => {
+          const claudeChoice = capturedChoices.find(
+            (c) => c.value === 'claude',
+          );
+          expect(claudeChoice?.checked).toBe(true);
+        });
+      });
+
+      describe('when no artifacts detected and organization agents are empty', () => {
+        let capturedChoices: { value: CodingAgent; checked: boolean }[];
+
+        beforeEach(async () => {
+          mockAgentDetectionService.detectAgentArtifacts.mockResolvedValue([]);
+          mockFetchOrganizationAgents.mockResolvedValue([]);
+
+          mockInquirerPrompt.mockImplementation(
+            async (
+              questions: {
+                choices: { value: CodingAgent; checked: boolean }[];
+              }[],
+            ) => {
+              capturedChoices = questions[0].choices;
+              return { selectedAgents: [] };
+            },
+          );
+
+          await configAgentsHandler(deps);
+        });
+
+        it('calls fetchOrganizationAgents as fallback', () => {
+          expect(mockFetchOrganizationAgents).toHaveBeenCalled();
+        });
+
+        it('does not pre-select any agents', () => {
+          const checkedAgents = capturedChoices.filter((c) => c.checked);
+          expect(checkedAgents).toHaveLength(0);
+        });
+      });
+
+      describe('when no artifacts detected and fetchOrganizationAgents throws', () => {
+        let capturedChoices: { value: CodingAgent; checked: boolean }[];
+
+        beforeEach(async () => {
+          mockAgentDetectionService.detectAgentArtifacts.mockResolvedValue([]);
+          mockFetchOrganizationAgents.mockRejectedValue(
+            new Error('Network error'),
+          );
+
+          mockInquirerPrompt.mockImplementation(
+            async (
+              questions: {
+                choices: { value: CodingAgent; checked: boolean }[];
+              }[],
+            ) => {
+              capturedChoices = questions[0].choices;
+              return { selectedAgents: [] };
+            },
+          );
+
+          await configAgentsHandler(deps);
+        });
+
+        it('does not pre-select any agents', () => {
+          const checkedAgents = capturedChoices.filter((c) => c.checked);
+          expect(checkedAgents).toHaveLength(0);
+        });
+      });
+
+      describe('when artifacts are detected', () => {
+        let capturedChoices: { value: CodingAgent; checked: boolean }[];
+
+        beforeEach(async () => {
+          mockAgentDetectionService.detectAgentArtifacts.mockResolvedValue([
+            { agent: 'cursor', artifactPath: '/project/.cursor' },
+          ]);
+          mockFetchOrganizationAgents.mockResolvedValue([
+            'claude',
+            'copilot',
+          ] as CodingAgent[]);
+
+          mockInquirerPrompt.mockImplementation(
+            async (
+              questions: {
+                choices: { value: CodingAgent; checked: boolean }[];
+              }[],
+            ) => {
+              capturedChoices = questions[0].choices;
+              return { selectedAgents: ['cursor'] };
+            },
+          );
+
+          await configAgentsHandler(deps);
+        });
+
+        it('pre-selects cursor from detected artifacts', () => {
+          const cursorChoice = capturedChoices.find(
+            (c) => c.value === 'cursor',
+          );
+          expect(cursorChoice?.checked).toBe(true);
+        });
+
+        it('does not pre-select organization agents', () => {
+          const claudeChoice = capturedChoices.find(
+            (c) => c.value === 'claude',
+          );
+          expect(claudeChoice?.checked).toBe(false);
+        });
+
+        it('does not call fetchOrganizationAgents', () => {
+          expect(mockFetchOrganizationAgents).not.toHaveBeenCalled();
+        });
+      });
+    });
+
+    describe('when fetchOrganizationAgents is not provided', () => {
+      let capturedChoices: { value: CodingAgent; checked: boolean }[];
+
+      beforeEach(async () => {
+        mockConfigRepository.readConfig.mockResolvedValue(null);
+        mockAgentDetectionService.detectAgentArtifacts.mockResolvedValue([
+          { agent: 'copilot', artifactPath: '/project/.github' },
+        ]);
+
+        mockInquirerPrompt.mockImplementation(
+          async (
+            questions: {
+              choices: { value: CodingAgent; checked: boolean }[];
+            }[],
+          ) => {
+            capturedChoices = questions[0].choices;
+            return { selectedAgents: ['copilot'] };
+          },
+        );
+
+        await configAgentsHandler(deps);
+      });
+
+      it('falls back to artifact detection', () => {
+        expect(
+          mockAgentDetectionService.detectAgentArtifacts,
+        ).toHaveBeenCalledWith('/project');
+      });
+
+      it('pre-selects copilot from detected artifacts', () => {
+        const copilotChoice = capturedChoices.find(
+          (c) => c.value === 'copilot',
+        );
+        expect(copilotChoice?.checked).toBe(true);
+      });
+    });
+
     describe('when saving selected agents', () => {
       describe('when multiple agents are selected', () => {
         beforeEach(async () => {
@@ -521,8 +757,8 @@ describe('configAgentsHandler', () => {
         question: jest.fn(),
         close: jest.fn(),
       };
-      mockInput = { close: jest.fn() };
-      mockOutput = { write: jest.fn(), close: jest.fn() };
+      mockInput = { destroy: jest.fn() };
+      mockOutput = { write: jest.fn(), destroy: jest.fn() };
 
       mockReadline.createInterface.mockReturnValue(
         mockRlInterface as unknown as readline.Interface,

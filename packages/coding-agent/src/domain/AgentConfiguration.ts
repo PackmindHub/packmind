@@ -1,4 +1,4 @@
-import { CodingAgent } from './CodingAgents';
+import { CodingAgent } from '@packmind/types';
 
 /**
  * Centralized configuration for coding agent file paths.

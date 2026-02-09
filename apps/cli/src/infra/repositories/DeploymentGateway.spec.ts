@@ -105,4 +105,56 @@ describe('DeploymentGateway', () => {
       });
     });
   });
+
+  describe('getRenderModeConfiguration', () => {
+    describe('when request succeeds', () => {
+      const mockApiResponse = {
+        configuration: {
+          id: 'config-123',
+          organizationId: mockOrganizationId,
+          activeRenderModes: ['CLAUDE', 'CURSOR'],
+        },
+      };
+
+      beforeEach(() => {
+        mockHttpClient.request.mockResolvedValue(mockApiResponse);
+      });
+
+      it('calls the API with correct endpoint', async () => {
+        await gateway.getRenderModeConfiguration({});
+
+        expect(mockHttpClient.request).toHaveBeenCalledWith(
+          `/api/v0/organizations/${mockOrganizationId}/deployments/renderModeConfiguration`,
+        );
+      });
+
+      it('returns the configuration', async () => {
+        const result = await gateway.getRenderModeConfiguration({});
+
+        expect(result).toEqual(mockApiResponse);
+      });
+    });
+
+    describe('when no configuration exists', () => {
+      beforeEach(() => {
+        mockHttpClient.request.mockResolvedValue({ configuration: null });
+      });
+
+      it('returns null configuration', async () => {
+        const result = await gateway.getRenderModeConfiguration({});
+
+        expect(result).toEqual({ configuration: null });
+      });
+    });
+
+    describe('when API request fails', () => {
+      it('propagates the error from httpClient', async () => {
+        mockHttpClient.request.mockRejectedValue(new Error('Unauthorized'));
+
+        await expect(gateway.getRenderModeConfiguration({})).rejects.toThrow(
+          'Unauthorized',
+        );
+      });
+    });
+  });
 });

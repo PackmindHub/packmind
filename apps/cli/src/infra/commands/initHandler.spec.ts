@@ -108,6 +108,37 @@ describe('initHandler', () => {
         }),
       );
     });
+
+    it('passes undefined fetchOrganizationAgents to configAgentsHandler', () => {
+      expect(mockConfigAgentsHandler).toHaveBeenCalledWith(
+        expect.objectContaining({
+          fetchOrganizationAgents: undefined,
+        }),
+      );
+    });
+  });
+
+  describe('when fetchOrganizationAgents is provided', () => {
+    const mockFetchOrganizationAgents = jest.fn();
+
+    beforeEach(async () => {
+      deps.fetchOrganizationAgents = mockFetchOrganizationAgents;
+      mockInstallDefaultSkills.mockResolvedValue({
+        filesCreated: 0,
+        filesUpdated: 0,
+        errors: [],
+      });
+
+      await initHandler(deps);
+    });
+
+    it('passes fetchOrganizationAgents to configAgentsHandler', () => {
+      expect(mockConfigAgentsHandler).toHaveBeenCalledWith(
+        expect.objectContaining({
+          fetchOrganizationAgents: mockFetchOrganizationAgents,
+        }),
+      );
+    });
   });
 
   describe('when calling installDefaultSkills', () => {

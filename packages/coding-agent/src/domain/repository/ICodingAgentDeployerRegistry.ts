@@ -1,5 +1,5 @@
-import { CodingAgent } from '../CodingAgents';
 import { ICodingAgentDeployer } from './ICodingAgentDeployer';
+import { CodingAgent } from '@packmind/types';
 
 export interface ICodingAgentDeployerRegistry {
   getDeployer(agent: CodingAgent): ICodingAgentDeployer;

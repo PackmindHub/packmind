@@ -32,8 +32,8 @@ import {
   createStandardVersionId,
   createTargetId,
   createUserId,
+  CodingAgents,
 } from '@packmind/types';
-import { CodingAgents } from '@packmind/coding-agent';
 import { v4 as uuidv4 } from 'uuid';
 import { PackageService } from '../services/PackageService';
 import { PackmindConfigService } from '../services/PackmindConfigService';

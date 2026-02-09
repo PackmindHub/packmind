@@ -42,6 +42,7 @@ export type ConfigAgentsHandlerDependencies = {
   stdin?: NodeJS.ReadableStream;
   stdout?: NodeJS.WritableStream;
   isTTY?: boolean;
+  fetchOrganizationAgents?: () => Promise<CodingAgent[]>;
 };
 
 /**
@@ -120,10 +121,26 @@ export async function configAgentsHandler(
       ),
     );
   } else {
-    // Detect agent artifacts to pre-select
+    // Priority 2: Detect agent artifacts from filesystem
     const detectedArtifacts =
       await agentDetectionService.detectAgentArtifacts(baseDirectory);
-    preselectedAgents = new Set(detectedArtifacts.map((a) => a.agent));
+
+    if (detectedArtifacts.length > 0) {
+      preselectedAgents = new Set(detectedArtifacts.map((a) => a.agent));
+    } else if (deps.fetchOrganizationAgents) {
+      // Priority 3: Fall back to organization agents from API
+      try {
+        const orgAgents = await deps.fetchOrganizationAgents();
+        const selectableOrgAgents = orgAgents.filter((agent) =>
+          SELECTABLE_AGENTS.includes(agent),
+        );
+        preselectedAgents = new Set(selectableOrgAgents);
+      } catch {
+        preselectedAgents = new Set();
+      }
+    } else {
+      preselectedAgents = new Set();
+    }
   }
 
   // Step 3: Build choices for the prompt

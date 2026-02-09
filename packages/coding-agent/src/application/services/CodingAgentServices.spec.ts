@@ -13,8 +13,8 @@ import {
   StandardVersionId,
   StandardId,
   UserId,
+  CodingAgent,
 } from '@packmind/types';
-import { CodingAgent } from '../../domain/CodingAgents';
 import { CodingAgentServices } from './CodingAgentServices';
 import { DeployerService } from './DeployerService';
 

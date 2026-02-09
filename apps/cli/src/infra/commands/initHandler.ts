@@ -1,3 +1,4 @@
+import { CodingAgent } from '@packmind/types';
 import { IConfigFileRepository } from '../../domain/repositories/IConfigFileRepository';
 import { IAgentArtifactDetectionService } from '../../application/services/AgentArtifactDetectionService';
 import {
@@ -24,6 +25,7 @@ export type InitHandlerDependencies = {
   installDefaultSkills: InstallDefaultSkillsFunction;
   cliVersion: string;
   isTTY?: boolean;
+  fetchOrganizationAgents?: () => Promise<CodingAgent[]>;
 };
 
 export type InitHandlerResult = {
@@ -45,6 +47,7 @@ export async function initHandler(
     installDefaultSkills,
     cliVersion,
     isTTY,
+    fetchOrganizationAgents,
   } = deps;
 
   // Step 1: Run config agents flow
@@ -53,6 +56,7 @@ export async function initHandler(
     agentDetectionService,
     baseDirectory,
     isTTY,
+    fetchOrganizationAgents,
   };
 
   await configAgentsHandler(configAgentsDeps);

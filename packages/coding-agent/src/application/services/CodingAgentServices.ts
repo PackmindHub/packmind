@@ -1,5 +1,6 @@
 import { PackmindLogger } from '@packmind/logger';
 import {
+  CodingAgent,
   DeleteItem,
   DeleteItemType,
   FileModification,
@@ -10,7 +11,6 @@ import {
   StandardVersion,
   Target,
 } from '@packmind/types';
-import { CodingAgent } from '../../domain/CodingAgents';
 import { DeployerService } from './DeployerService';
 
 const origin = 'CodingAgentServices';
