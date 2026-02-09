@@ -13,6 +13,7 @@ export type CreateStandardInSpaceCommand = {
       negative: string;
     }>;
   }>;
+  originSkill?: string;
 };
 
 export type CreateStandardInSpaceResult = {

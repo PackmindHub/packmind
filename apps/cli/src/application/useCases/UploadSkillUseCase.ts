@@ -49,6 +49,7 @@ export class UploadSkillUseCase implements IUploadSkillUseCase {
     const uploadSkillResponse = await this.deps.gateway.skills.upload({
       spaceId: createSpaceId(space.id),
       files: payload.files,
+      originSkill: command.originSkill,
     });
 
     return {

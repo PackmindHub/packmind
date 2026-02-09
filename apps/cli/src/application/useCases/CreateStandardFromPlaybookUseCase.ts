@@ -27,6 +27,7 @@ export class CreateStandardFromPlaybookUseCase implements ICreateStandardFromPla
             ]
           : undefined,
       })),
+      originSkill: playbook.originSkill,
     });
 
     return { standardId: standard.id, name: standard.name };

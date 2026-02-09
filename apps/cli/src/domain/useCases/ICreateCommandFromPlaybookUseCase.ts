@@ -10,6 +10,7 @@ export interface ICommandPlaybookInput {
   whenToUse: string[];
   contextValidationCheckpoints: string[];
   steps: ICommandStep[];
+  originSkill?: string;
 }
 
 export interface ICreateCommandResult {

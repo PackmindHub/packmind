@@ -24,6 +24,7 @@ export class CreateCommandFromPlaybookUseCase implements ICreateCommandFromPlayb
         description: step.description,
         codeSnippet: step.codeSnippet,
       })),
+      originSkill: playbook.originSkill,
     });
 
     return {

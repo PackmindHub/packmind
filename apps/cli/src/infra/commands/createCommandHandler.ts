@@ -21,6 +21,7 @@ function buildWebappUrl(
 export async function createCommandHandler(
   filePath: string,
   useCase: ICreateCommandFromPlaybookUseCase,
+  originSkill?: string,
 ): Promise<ICreateCommandHandlerResult> {
   const readResult = await readCommandPlaybookFile(filePath);
 
@@ -39,7 +40,10 @@ export async function createCommandHandler(
   }
 
   try {
-    const result = await useCase.execute(readResult.data);
+    const result = await useCase.execute({
+      ...readResult.data,
+      originSkill,
+    });
 
     // Try to build webapp URL from credentials
     let webappUrl: string | undefined;

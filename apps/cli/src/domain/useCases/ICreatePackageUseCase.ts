@@ -3,6 +3,7 @@ import { IPublicUseCase } from '@packmind/types';
 export interface ICreatePackageCommand {
   name: string;
   description?: string;
+  originSkill?: string;
 }
 
 export interface ICreatePackageResult {

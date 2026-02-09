@@ -2,6 +2,7 @@ import { IPublicUseCase } from '@packmind/types';
 
 export type UploadSkillCommand = {
   skillPath: string; // local directory path
+  originSkill?: string;
 };
 
 export type UploadSkillResult = {

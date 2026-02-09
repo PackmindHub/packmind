@@ -34,13 +34,19 @@ export async function addToPackageHandler(
   itemType: ItemType,
   itemSlugs: string[],
   useCase: IAddToPackageUseCase,
+  originSkill?: string,
 ): Promise<IAddToPackageHandlerResult> {
   if (itemSlugs.length === 0) {
     return { success: false, error: 'No items provided to add' };
   }
 
   try {
-    const result = await useCase.execute({ packageSlug, itemType, itemSlugs });
+    const result = await useCase.execute({
+      packageSlug,
+      itemType,
+      itemSlugs,
+      originSkill,
+    });
 
     if (result.added.length) {
       logSuccessConsole(
