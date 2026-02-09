@@ -6,6 +6,7 @@ export * from './DistributionStatus';
 export * from './RenderMode';
 export * from './RenderModeConfigurationId';
 export * from './RenderModeConfiguration';
+export * from './RenderModeCodingAgentMapping';
 export * from './PackagesDeploymentId';
 export * from './PackagesDeployment';
 export * from './StandardDeploymentOverview';

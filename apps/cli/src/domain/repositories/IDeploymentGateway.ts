@@ -1,5 +1,6 @@
 import {
   Gateway,
+  IGetRenderModeConfigurationUseCase,
   INotifyDistributionUseCase,
   IPullContentUseCase,
 } from '@packmind/types';
@@ -7,4 +8,5 @@ import {
 export interface IDeploymentGateway {
   pull: Gateway<IPullContentUseCase>;
   notifyDistribution: Gateway<INotifyDistributionUseCase>;
+  getRenderModeConfiguration: Gateway<IGetRenderModeConfigurationUseCase>;
 }

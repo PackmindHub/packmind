@@ -1,5 +1,4 @@
 import { PublishArtifactsUseCase } from './PublishArtifactsUseCase';
-import { CodingAgents } from '@packmind/coding-agent';
 import { IDistributionRepository } from '../../domain/repositories/IDistributionRepository';
 import { TargetService } from '../services/TargetService';
 import { RenderModeConfigurationService } from '../services/RenderModeConfigurationService';
@@ -35,6 +34,7 @@ import {
   IDeployDefaultSkillsUseCase,
   Rule,
   SkillFile,
+  CodingAgents,
 } from '@packmind/types';
 import { PackmindLogger } from '@packmind/logger';
 import { PackmindEventEmitterService } from '@packmind/node-utils';

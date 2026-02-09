@@ -1,5 +1,6 @@
 import { PackmindLogger } from '@packmind/logger';
 import {
+  CodingAgent,
   DeleteItem,
   FileModification,
   FileUpdates,
@@ -9,7 +10,6 @@ import {
   StandardVersion,
   Target,
 } from '@packmind/types';
-import { CodingAgent } from '../../domain/CodingAgents';
 import { AGENT_FILE_PATHS } from '../../domain/AgentConfiguration';
 import { ICodingAgentRepositories } from '../../domain/repositories/ICodingAgentRepositories';
 

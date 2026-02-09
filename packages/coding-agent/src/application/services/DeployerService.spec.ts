@@ -20,8 +20,8 @@ import {
   Target,
   TargetId,
   UserId,
+  CodingAgent,
 } from '@packmind/types';
-import { CodingAgent } from '../../domain/CodingAgents';
 import { ICodingAgentRepositories } from '../../domain/repositories/ICodingAgentRepositories';
 import { ICodingAgentDeployer } from '../../domain/repository/ICodingAgentDeployer';
 import { ICodingAgentDeployerRegistry } from '../../domain/repository/ICodingAgentDeployerRegistry';

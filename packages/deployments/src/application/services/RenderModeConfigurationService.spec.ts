@@ -8,7 +8,6 @@ import {
   RenderMode,
   RenderModeConfiguration,
 } from '@packmind/types';
-import { CodingAgents } from '@packmind/coding-agent';
 import { renderModeConfigurationFactory } from '../../../test';
 
 describe('RenderModeConfigurationService', () => {
@@ -232,11 +231,7 @@ describe('RenderModeConfigurationService', () => {
         RenderMode.AGENTS_MD,
       ]);
 
-      expect(agents).toEqual([
-        CodingAgents.packmind,
-        CodingAgents.claude,
-        CodingAgents.agents_md,
-      ]);
+      expect(agents).toEqual(['packmind', 'claude', 'agents_md']);
     });
 
     it('throws on unsupported render mode', () => {
@@ -251,10 +246,10 @@ describe('RenderModeConfigurationService', () => {
   describe('mapCodingAgentsToRenderModes', () => {
     it('maps coding agents to render modes without duplicates', () => {
       const renderModes = service.mapCodingAgentsToRenderModes([
-        CodingAgents.packmind,
-        CodingAgents.claude,
-        CodingAgents.claude,
-        CodingAgents.cursor,
+        'packmind',
+        'claude',
+        'claude',
+        'cursor',
       ]);
 
       expect(renderModes).toEqual([
@@ -266,7 +261,7 @@ describe('RenderModeConfigurationService', () => {
 
     it('filters out unknown coding agents', () => {
       const renderModes = service.mapCodingAgentsToRenderModes([
-        CodingAgents.claude,
+        'claude',
         'unknown-agent' as unknown as (typeof CodingAgents)[keyof typeof CodingAgents],
       ]);
 
@@ -293,7 +288,7 @@ describe('RenderModeConfigurationService', () => {
 
         const agents = await service.resolveActiveCodingAgents(organizationId);
 
-        expect(agents).toEqual([CodingAgents.packmind, CodingAgents.copilot]);
+        expect(agents).toEqual(['packmind', 'copilot']);
       });
     });
   });

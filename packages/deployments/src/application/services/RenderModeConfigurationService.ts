@@ -1,37 +1,19 @@
 import { v4 as uuidv4 } from 'uuid';
-import { CodingAgent, OrganizationId } from '@packmind/types';
 import {
+  CodingAgent,
+  OrganizationId,
   DEFAULT_ACTIVE_RENDER_MODES,
   RenderMode,
   RenderModeConfiguration,
   createRenderModeConfigurationId,
   normalizeRenderModes,
+  RENDER_MODE_TO_CODING_AGENT,
+  CODING_AGENT_TO_RENDER_MODE,
 } from '@packmind/types';
 import { PackmindLogger, LogLevel } from '@packmind/logger';
-import { CodingAgents } from '@packmind/coding-agent';
 import { IRenderModeConfigurationRepository } from '../../domain/repositories/IRenderModeConfigurationRepository';
 
 const origin = 'RenderModeConfigurationService';
-
-const renderModeToCodingAgent: Record<RenderMode, CodingAgent> = {
-  [RenderMode.PACKMIND]: CodingAgents.packmind,
-  [RenderMode.AGENTS_MD]: CodingAgents.agents_md,
-  [RenderMode.JUNIE]: CodingAgents.junie,
-  [RenderMode.GH_COPILOT]: CodingAgents.copilot,
-  [RenderMode.CLAUDE]: CodingAgents.claude,
-  [RenderMode.CURSOR]: CodingAgents.cursor,
-  [RenderMode.GITLAB_DUO]: CodingAgents.gitlab_duo,
-  [RenderMode.CONTINUE]: CodingAgents.continue,
-};
-
-const codingAgentToRenderMode: Partial<Record<CodingAgent, RenderMode>> =
-  Object.entries(renderModeToCodingAgent).reduce(
-    (acc, [renderMode, codingAgent]) => {
-      acc[codingAgent] = renderMode as RenderMode;
-      return acc;
-    },
-    {} as Partial<Record<CodingAgent, RenderMode>>,
-  );
 
 export class RenderModeConfigurationService {
   constructor(
@@ -62,7 +44,7 @@ export class RenderModeConfigurationService {
 
   mapRenderModesToCodingAgents(renderModes: RenderMode[]): CodingAgent[] {
     const mappedAgents = renderModes.map((mode) => {
-      const codingAgent = renderModeToCodingAgent[mode];
+      const codingAgent = RENDER_MODE_TO_CODING_AGENT[mode];
 
       if (!codingAgent) {
         this.logger.error('Unsupported render mode encountered', { mode });
@@ -77,7 +59,7 @@ export class RenderModeConfigurationService {
 
   mapCodingAgentsToRenderModes(codingAgents: CodingAgent[]): RenderMode[] {
     const mappedRenderModes = codingAgents
-      .map((agent) => codingAgentToRenderMode[agent])
+      .map((agent) => CODING_AGENT_TO_RENDER_MODE[agent])
       .filter((mode): mode is RenderMode => mode !== undefined);
 
     return Array.from(new Set(mappedRenderModes));

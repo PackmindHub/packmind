@@ -1,5 +1,7 @@
 import {
   Gateway,
+  GetRenderModeConfigurationResult,
+  IGetRenderModeConfigurationUseCase,
   INotifyDistributionUseCase,
   IPullContentUseCase,
 } from '@packmind/types';
@@ -67,4 +69,12 @@ export class DeploymentGateway implements IDeploymentGateway {
       },
     );
   };
+
+  public getRenderModeConfiguration: Gateway<IGetRenderModeConfigurationUseCase> =
+    async () => {
+      const { organizationId } = this.httpClient.getAuthContext();
+      return this.httpClient.request<GetRenderModeConfigurationResult>(
+        `/api/v0/organizations/${organizationId}/deployments/renderModeConfiguration`,
+      );
+    };
 }

@@ -1,5 +1,10 @@
-import { GitRepo, RecipeVersion, Target, FileUpdates } from '@packmind/types';
-import { CodingAgent } from '../CodingAgents';
+import {
+  GitRepo,
+  RecipeVersion,
+  Target,
+  FileUpdates,
+  CodingAgent,
+} from '@packmind/types';
 
 export type PrepareRecipesDeploymentCommand = {
   recipeVersions: RecipeVersion[];

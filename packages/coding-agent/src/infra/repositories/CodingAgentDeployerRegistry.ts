@@ -1,4 +1,3 @@
-import { CodingAgent } from '../../domain/CodingAgents';
 import { ICodingAgentDeployer } from '../../domain/repository/ICodingAgentDeployer';
 import { ICodingAgentDeployerRegistry } from '../../domain/repository/ICodingAgentDeployerRegistry';
 import { PackmindDeployer } from './packmind/PackmindDeployer';
@@ -7,7 +6,7 @@ import { ClaudeDeployer } from './claude/ClaudeDeployer';
 import { CursorDeployer } from './cursor/CursorDeployer';
 import { CopilotDeployer } from './copilot/CopilotDeployer';
 import { AgentsMDDeployer } from './agentsmd/AgentsMDDeployer';
-import { IStandardsPort, IGitPort } from '@packmind/types';
+import { IStandardsPort, IGitPort, CodingAgent } from '@packmind/types';
 import { GitlabDuoDeployer } from './gitlabDuo/GitlabDuoDeployer';
 import { ContinueDeployer } from './continue/ContinueDeployer';
 
