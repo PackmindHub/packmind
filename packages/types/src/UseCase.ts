@@ -10,6 +10,7 @@ export type PackmindCommand = {
   userId: string;
   organizationId: string;
   source?: PackmindEventSource;
+  originSkill?: string;
 };
 
 export type SystemPackmindCommand = {

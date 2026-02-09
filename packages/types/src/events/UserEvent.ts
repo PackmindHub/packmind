@@ -10,6 +10,7 @@ export interface UserEventPayload {
   userId: UserId;
   organizationId: OrganizationId;
   source: PackmindEventSource;
+  originSkill?: string;
 }
 
 /**
