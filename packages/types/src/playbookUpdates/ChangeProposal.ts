@@ -3,6 +3,7 @@ import { ChangeProposalId } from './ChangeProposalId';
 import { ChangeProposalPayloadMap } from './ChangeProposalPayload';
 import { ChangeProposalStatus } from './ChangeProposalStatus';
 import { ChangeProposalType } from './ChangeProposalType';
+import { ChangeProposalCaptureMode } from './ChangeProposalCaptureMode';
 
 export type ChangeProposal<T extends ChangeProposalType = ChangeProposalType> =
   {
@@ -11,6 +12,7 @@ export type ChangeProposal<T extends ChangeProposalType = ChangeProposalType> =
     artifactId: string;
     artifactVersion: number;
     payload: ChangeProposalPayloadMap[T];
+    captureMode: ChangeProposalCaptureMode;
     status: ChangeProposalStatus;
     createdBy: UserId;
     resolvedBy: UserId | null;
