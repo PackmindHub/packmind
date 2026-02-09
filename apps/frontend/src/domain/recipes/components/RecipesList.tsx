@@ -11,8 +11,6 @@ import {
   PMAlert,
   PMAlertDialog,
   PMButtonGroup,
-  PMEmptyState,
-  PMHStack,
 } from '@packmind/ui';
 
 import {
@@ -24,18 +22,21 @@ import './RecipesList.styles.scss';
 import { Recipe, RecipeId } from '@packmind/types';
 import { RECIPE_MESSAGES } from '../constants/messages';
 import { formatDistanceToNowStrict } from 'date-fns';
-import { GettingStartedLearnMoreDialog } from '../../organizations/components/dashboard/GettingStartedLearnMoreDialog';
-import { GETTING_STARTED_CREATE_DIALOG } from '../../organizations/components/dashboard/GettingStartedWidget';
 import { useCurrentSpace } from '../../spaces/hooks/useCurrentSpace';
 import { useAuthContext } from '../../accounts/hooks/useAuthContext';
 import { routes } from '../../../shared/utils/routes';
 import { WithTimestamps } from '@packmind/types';
+import { RecipesBlankState } from './RecipesBlankState';
 
 interface RecipesListProps {
   orgSlug: string;
+  onEmptyStateChange?: (isEmpty: boolean) => void;
 }
 
-export const RecipesList = ({ orgSlug }: RecipesListProps) => {
+export const RecipesList = ({
+  orgSlug,
+  onEmptyStateChange,
+}: RecipesListProps) => {
   const { organization } = useAuthContext();
   const { spaceSlug, spaceId } = useCurrentSpace();
   const { data: recipes, isLoading, isError } = useGetRecipesQuery();
@@ -146,10 +147,17 @@ export const RecipesList = ({ orgSlug }: RecipesListProps) => {
         version: recipe.version,
       })),
     );
-  }, [recipes, selectedRecipeIds, orgSlug]);
+  }, [recipes, selectedRecipeIds, orgSlug, spaceSlug]);
 
   const isAllSelected = recipes && selectedRecipeIds.length === recipes.length;
   const isSomeSelected = selectedRecipeIds.length > 0;
+  const hasRecipes = (recipes ?? []).length > 0;
+
+  React.useEffect(() => {
+    if (onEmptyStateChange) {
+      onEmptyStateChange(!hasRecipes);
+    }
+  }, [hasRecipes, onEmptyStateChange]);
 
   const columns: PMTableColumn[] = [
     {
@@ -190,7 +198,7 @@ export const RecipesList = ({ orgSlug }: RecipesListProps) => {
 
       {isLoading && <p>Loading...</p>}
       {isError && <p>Error loading recipes.</p>}
-      {recipes?.length ? (
+      {hasRecipes ? (
         <PMBox>
           <PMButtonGroup size="sm" mb={4}>
             <PMAlertDialog
@@ -233,30 +241,9 @@ export const RecipesList = ({ orgSlug }: RecipesListProps) => {
           />
         </PMBox>
       ) : (
-        <PMEmptyState
-          backgroundColor={'background.primary'}
-          borderRadius={'md'}
-          width={'2xl'}
-          mx={'auto'}
-          title={'No commands yet'}
-        >
-          Commands are reusable prompts that help you speed up recurring dev
-          tasks — like creating a new React component or setting up tests — with
-          consistent results across your team.
-          <PMHStack gap={3} mt={4}>
-            <GettingStartedLearnMoreDialog
-              body={GETTING_STARTED_CREATE_DIALOG.body}
-              title={GETTING_STARTED_CREATE_DIALOG.title}
-              buttonLabel="Create from your code"
-              buttonSize="sm"
-            />
-            {spaceSlug && (
-              <Link to={routes.space.toCreateCommand(orgSlug, spaceSlug)}>
-                <PMButton variant="secondary">Create from scratch</PMButton>
-              </Link>
-            )}
-          </PMHStack>
-        </PMEmptyState>
+        spaceSlug && (
+          <RecipesBlankState orgSlug={orgSlug} spaceSlug={spaceSlug} />
+        )
       )}
     </div>
   );

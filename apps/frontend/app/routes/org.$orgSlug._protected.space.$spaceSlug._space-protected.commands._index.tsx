@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Link } from 'react-router';
 import { PMButton, PMPage, PMVStack } from '@packmind/ui';
 import { useAuthContext } from '../../src/domain/accounts/hooks/useAuthContext';
@@ -9,6 +10,7 @@ import { routes } from '../../src/shared/utils/routes';
 export default function OrgCommandsIndex() {
   const { organization } = useAuthContext();
   const { spaceSlug } = useCurrentSpace();
+  const [isEmpty, setIsEmpty] = useState(false);
 
   if (!organization) {
     return null;
@@ -20,6 +22,7 @@ export default function OrgCommandsIndex() {
       subtitle="Commands are shortcuts you can run to trigger a specific action — use them to quickly repeat common tasks."
       breadcrumbComponent={<AutobreadCrumb />}
       actions={
+        !isEmpty &&
         spaceSlug && (
           <PMButton asChild>
             <Link
@@ -32,7 +35,10 @@ export default function OrgCommandsIndex() {
       }
     >
       <PMVStack align="stretch" gap={6}>
-        <RecipesList orgSlug={organization.slug} />
+        <RecipesList
+          orgSlug={organization.slug}
+          onEmptyStateChange={setIsEmpty}
+        />
       </PMVStack>
     </PMPage>
   );
