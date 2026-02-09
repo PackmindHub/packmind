@@ -58,6 +58,7 @@ export class CaptureRecipeUsecase
       organizationId: orgIdString,
       userId: userIdString,
       source = 'ui',
+      originSkill,
     } = command;
     const organizationId = createOrganizationId(orgIdString);
     const userId = createUserId(userIdString);
@@ -170,6 +171,7 @@ export class CaptureRecipeUsecase
           organizationId,
           userId,
           source,
+          originSkill,
         }),
       );
 

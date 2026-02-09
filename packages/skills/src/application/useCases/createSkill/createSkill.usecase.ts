@@ -52,6 +52,7 @@ export class CreateSkillUsecase extends AbstractMemberUseCase<
       compatibility,
       metadata,
       source = 'ui',
+      originSkill,
     } = command;
     const organizationId = createOrganizationId(orgIdString);
     const userId = createUserId(userIdString);
@@ -165,6 +166,7 @@ export class CreateSkillUsecase extends AbstractMemberUseCase<
           userId,
           source,
           fileCount: 0,
+          originSkill,
         }),
       );
 
