@@ -398,6 +398,7 @@ describe('OrganizationsSpacesSkillsController', () => {
         spaceId,
         userId,
         'ui',
+        undefined,
       );
     });
 

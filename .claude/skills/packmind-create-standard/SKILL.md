@@ -321,13 +321,13 @@ Rules:
 5. Run the packmind-cli command:
 
 ```bash
-packmind-cli standards create <path-to-playbook.json>
+packmind-cli standards create <path-to-playbook.json> --origin-skill=create-standard
 ```
 
 Example:
 
 ```bash
-packmind-cli standards create ./typescript-conventions.playbook.json
+packmind-cli standards create ./typescript-conventions.playbook.json --origin-skill=create-standard
 ```
 
 Expected output on success:
@@ -379,7 +379,7 @@ After successful creation, check if the standard fits an existing package:
      - Skip
 5. If no clear fit is found, skip silently (do not mention packages)
 6. If user chooses to add:
-   - Run: `packmind-cli packages add --to <package-slug> --standard <standard-slug>`
+   - Run: `packmind-cli packages add --to <package-slug> --standard <standard-slug> --origin-skill=create-standard`
    - Ask: "Would you like me to run `packmind-cli install` to sync the changes?"
    - If yes, run: `packmind-cli install`
 
@@ -429,7 +429,7 @@ Here's a complete example creating a TypeScript testing standard:
 **Creating the standard:**
 
 ```bash
-packmind-cli standards create testing-conventions.playbook.json
+packmind-cli standards create testing-conventions.playbook.json --origin-skill=create-standard
 ```
 
 ## Quick Reference

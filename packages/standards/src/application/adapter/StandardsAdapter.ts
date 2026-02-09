@@ -445,6 +445,7 @@ export class StandardsAdapter
     disableTriggerAssessment?: boolean;
     source?: PackmindEventSource;
     method?: StandardCreationMethod;
+    originSkill?: string;
   }): Promise<Standard> {
     if (!params.spaceId) {
       throw new Error(

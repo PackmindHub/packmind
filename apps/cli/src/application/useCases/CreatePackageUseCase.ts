@@ -16,6 +16,7 @@ export class CreatePackageUseCase implements ICreatePackageUseCase {
       description: command.description ?? '',
       recipeIds: [],
       standardIds: [],
+      originSkill: command.originSkill,
     });
 
     return {

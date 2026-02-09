@@ -5,6 +5,7 @@ import { AddToPackageUseCase } from '../../application/useCases/AddToPackageUseC
 import { addToPackageHandler } from './addToPackageHandler';
 import { logErrorConsole } from '../utils/consoleLogger';
 import { ItemType } from '../../domain/useCases/IAddToPackageUseCase';
+import { originSkillOption } from './sharedOptions';
 
 export const addToPackageCommand = command({
   name: 'add',
@@ -30,8 +31,9 @@ export const addToPackageCommand = command({
       description: 'Skill slug(s) to add',
       type: array(string),
     }),
+    originSkill: originSkillOption,
   },
-  handler: async ({ to, standards, commands, skills }) => {
+  handler: async ({ to, standards, commands, skills, originSkill }) => {
     const standardSlugs = standards ?? [];
     const commandSlugs = commands ?? [];
     const skillSlugs = skills ?? [];
@@ -65,7 +67,13 @@ export const addToPackageCommand = command({
     const gateway = hexa.getPackmindGateway();
     const useCase = new AddToPackageUseCase(gateway);
 
-    const result = await addToPackageHandler(to, itemType, itemSlugs, useCase);
+    const result = await addToPackageHandler(
+      to,
+      itemType,
+      itemSlugs,
+      useCase,
+      originSkill,
+    );
 
     if (!result.success) {
       process.exit(1);

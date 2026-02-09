@@ -6,6 +6,7 @@ import {
   logErrorConsole,
   logInfoConsole,
 } from '../../utils/consoleLogger';
+import { originSkillOption } from '../sharedOptions';
 
 export const addSkillCommand = command({
   name: 'add',
@@ -16,8 +17,9 @@ export const addSkillCommand = command({
       displayName: 'path',
       description: 'Path to skill directory containing SKILL.md',
     }),
+    originSkill: originSkillOption,
   },
-  handler: async ({ skillPath }) => {
+  handler: async ({ skillPath, originSkill }) => {
     const packmindLogger = new PackmindLogger('PackmindCLI', LogLevel.INFO);
     const packmindCliHexa = new PackmindCliHexa(packmindLogger);
 
@@ -26,6 +28,7 @@ export const addSkillCommand = command({
 
       const result = await packmindCliHexa.uploadSkill({
         skillPath,
+        originSkill,
       });
 
       if (result.isNewSkill) {

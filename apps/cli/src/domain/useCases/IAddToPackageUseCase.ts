@@ -4,6 +4,7 @@ export interface IAddToPackageCommand {
   packageSlug: string;
   itemType: ItemType;
   itemSlugs: string[];
+  originSkill?: string;
 }
 
 export interface IAddToPackageResult {

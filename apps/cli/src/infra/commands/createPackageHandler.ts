@@ -22,6 +22,7 @@ export async function createPackageHandler(
   name: string,
   description: string | undefined,
   useCase: ICreatePackageUseCase,
+  originSkill?: string,
 ): Promise<ICreatePackageHandlerResult> {
   const trimmedName = name.trim();
   if (!trimmedName) {
@@ -32,6 +33,7 @@ export async function createPackageHandler(
     const result = await useCase.execute({
       name: trimmedName,
       description,
+      originSkill,
     });
 
     // Try to build webapp URL from credentials

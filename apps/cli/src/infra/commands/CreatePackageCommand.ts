@@ -11,6 +11,7 @@ import {
 } from '../utils/consoleLogger';
 import { PackmindLogger, LogLevel } from '@packmind/logger';
 import { CreatePackageUseCase } from '../../application/useCases/CreatePackageUseCase';
+import { originSkillOption } from './sharedOptions';
 
 export const createPackageCommand = command({
   name: 'create',
@@ -27,15 +28,21 @@ export const createPackageCommand = command({
       description: 'Description of the package (optional)',
       type: optional(string),
     }),
+    originSkill: originSkillOption,
   },
-  handler: async ({ name, description }) => {
+  handler: async ({ name, description, originSkill }) => {
     try {
       const packmindLogger = new PackmindLogger('PackmindCLI', LogLevel.INFO);
       const hexa = new PackmindCliHexa(packmindLogger);
       const gateway = hexa.getPackmindGateway();
       const useCase = new CreatePackageUseCase(gateway);
 
-      const result = await createPackageHandler(name, description, useCase);
+      const result = await createPackageHandler(
+        name,
+        description,
+        useCase,
+        originSkill,
+      );
 
       if (result.success) {
         logConsole('');

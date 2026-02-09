@@ -11,6 +11,7 @@ export interface ICreateStandardHandlerResult {
 export async function createStandardHandler(
   filePath: string,
   useCase: ICreateStandardFromPlaybookUseCase,
+  originSkill?: string,
 ): Promise<ICreateStandardHandlerResult> {
   const readResult = await readPlaybookFile(filePath);
 
@@ -29,7 +30,10 @@ export async function createStandardHandler(
   }
 
   try {
-    const result = await useCase.execute(readResult.data);
+    const result = await useCase.execute({
+      ...readResult.data,
+      originSkill,
+    });
 
     return {
       success: true,

@@ -193,13 +193,13 @@ Example minimal playbook:
 Run the packmind-cli command to create the command:
 
 ```bash
-packmind-cli commands create <path-to-playbook.json>
+packmind-cli commands create <path-to-playbook.json> --origin-skill=create-command
 ```
 
 Example:
 
 ```bash
-packmind-cli commands create ./.packmind/commands/_drafts/create-api-endpoint-draft.json
+packmind-cli commands create ./.packmind/commands/_drafts/create-api-endpoint-draft.json --origin-skill=create-command
 ```
 
 Expected output on success:
@@ -251,7 +251,7 @@ After successful creation, check if the command fits an existing package:
      - Skip
 5. If no clear fit is found, skip silently (do not mention packages)
 6. If user chooses to add:
-   - Run: `packmind-cli packages add --to <package-slug> --command <command-slug>`
+   - Run: `packmind-cli packages add --to <package-slug> --command <command-slug> --origin-skill=create-command`
    - Ask: "Would you like me to run `packmind-cli install` to sync the changes?"
    - If yes, run: `packmind-cli install`
 
@@ -299,7 +299,7 @@ Here's a complete example creating a command for setting up a new API endpoint:
 **Creating the command:**
 
 ```bash
-packmind-cli commands create ./.packmind/commands/_drafts/create-api-endpoint-draft.json
+packmind-cli commands create ./.packmind/commands/_drafts/create-api-endpoint-draft.json --origin-skill=create-command
 ```
 
 ## Quick Reference

@@ -111,6 +111,7 @@ export class OrganizationsSpacesStandardsController {
       description: string;
       rules: CreateStandardRuleInput[];
       scope?: string | null;
+      originSkill?: string;
     },
     @Req() request: AuthenticatedRequest,
   ): Promise<Standard> {

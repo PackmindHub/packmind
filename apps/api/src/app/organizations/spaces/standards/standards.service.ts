@@ -65,6 +65,7 @@ export class StandardsService {
       description: string;
       rules: CreateStandardRuleInput[];
       scope?: string | null;
+      originSkill?: string;
     },
     organizationId: OrganizationId,
     userId: UserId,
@@ -94,6 +95,7 @@ export class StandardsService {
         scope: standard.scope || null,
         spaceId,
         source,
+        originSkill: standard.originSkill,
       });
     }
 

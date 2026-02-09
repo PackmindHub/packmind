@@ -47,6 +47,7 @@ export class AddToPackageUseCase implements IAddToPackageUseCase {
       standardIds: [],
       recipeIds: [],
       skillIds: [],
+      originSkill: command.originSkill,
     };
 
     if (itemType === 'standard') {

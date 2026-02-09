@@ -10,6 +10,7 @@ export interface IPlaybookInput {
       language: string;
     };
   }>;
+  originSkill?: string;
 }
 
 export interface ICreateStandardResult {

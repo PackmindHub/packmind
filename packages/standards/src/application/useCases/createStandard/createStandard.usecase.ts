@@ -61,6 +61,7 @@ export class CreateStandardUsecase
       organizationId,
       source = 'ui',
       method,
+      originSkill,
     } = command;
     const userId = createUserId(command.userId);
     this.logger.info('Starting createStandard process', {
@@ -173,6 +174,7 @@ export class CreateStandardUsecase
           userId,
           source,
           method: creationMethod,
+          originSkill,
         }),
       );
 
@@ -183,6 +185,7 @@ export class CreateStandardUsecase
         organizationId,
         userId,
         source,
+        originSkill,
       );
 
       return { standard };
@@ -219,6 +222,7 @@ export class CreateStandardUsecase
     organizationId: OrganizationId,
     userId: UserId,
     source: PackmindEventSource,
+    originSkill?: string,
   ): Promise<void> {
     this.logger.info('Querying created rules to emit RuleAddedEvents', {
       standardVersionId,
@@ -247,6 +251,7 @@ export class CreateStandardUsecase
           userId,
           newVersion: version,
           source,
+          originSkill,
         }),
       );
     });
