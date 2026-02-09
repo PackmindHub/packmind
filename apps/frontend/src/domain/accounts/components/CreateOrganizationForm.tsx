@@ -32,16 +32,10 @@ export function CreateOrganizationForm({
   const renameOrganizationMutation = useRenameOrganizationMutation();
 
   useEffect(() => {
-    if (organization?.name && !organizationName) {
-      setOrganizationName(organization.name);
-    }
-  }, [organization?.name, organizationName]);
-
-  useEffect(() => {
     const trimmedName = organizationName.trim();
 
     if (!trimmedName) {
-      setOrganizationNameError(undefined);
+      setOrganizationNameError('Name can not be empty');
       setIsValidating(false);
       return;
     }

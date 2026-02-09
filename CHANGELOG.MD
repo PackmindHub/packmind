@@ -6,6 +6,8 @@
 
 ## Fixed
 
+- Fix organization name field auto-refilling instead of showing validation error during sign-up
+
 ## Removed
 
 # [1.9.0] - 2026-02-06
