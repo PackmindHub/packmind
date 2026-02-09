@@ -74,7 +74,7 @@ Parse the output to get package names.
 Auto-create package using repository name:
 
 ```bash
-packmind-cli packages create "${REPO_NAME}-standards"
+packmind-cli packages create "${REPO_NAME}-standards" --origin-skill=onboard
 ```
 
 Print:
@@ -100,7 +100,7 @@ Ask via AskUserQuestion:
 ### If "Create new package" is selected
 
 - Ask for package name (suggest `${REPO_NAME}-standards` as default)
-- Run: `packmind-cli packages create <name>`
+- Run: `packmind-cli packages create <name> --origin-skill=onboard`
 
 Remember the selected/created package name for later reference.
 
@@ -419,13 +419,13 @@ Convert the markdown draft to this JSON format:
 4. Run CLI command to create:
 
 ```bash
-packmind-cli standards create .packmind/standards/_drafts/<slug>.json
+packmind-cli standards create .packmind/standards/_drafts/<slug>.json --origin-skill=onboard
 ```
 
 5. If creation succeeded, add to package:
 
 ```bash
-packmind-cli packages add --to <package-slug> --standard <slug>
+packmind-cli packages add --to <package-slug> --standard <slug> --origin-skill=onboard
 ```
 
 6. Track result (success/failure)
@@ -438,13 +438,13 @@ packmind-cli packages add --to <package-slug> --standard <slug>
 4. Run CLI command to create:
 
 ```bash
-packmind-cli commands create .packmind/commands/_drafts/<slug>.json
+packmind-cli commands create .packmind/commands/_drafts/<slug>.json --origin-skill=onboard
 ```
 
 5. If creation succeeded, add to package:
 
 ```bash
-packmind-cli packages add --to <package-slug> --command <slug>
+packmind-cli packages add --to <package-slug> --command <slug> --origin-skill=onboard
 ```
 
 6. Track result (success/failure)
@@ -527,10 +527,10 @@ Failed items:
 
 Failed drafts remain in .packmind/*/_drafts/ for review.
 You can fix and re-run, or create manually with:
-  packmind-cli standards create <file>
-  packmind-cli packages add --to <package-slug> --standard <slug>
-  packmind-cli commands create <file>
-  packmind-cli packages add --to <package-slug> --command <slug>
+  packmind-cli standards create <file> --origin-skill=onboard
+  packmind-cli packages add --to <package-slug> --standard <slug> --origin-skill=onboard
+  packmind-cli commands create <file> --origin-skill=onboard
+  packmind-cli packages add --to <package-slug> --command <slug> --origin-skill=onboard
 ============================================================
 ```
 
@@ -647,10 +647,10 @@ Draft files ready for review at:
   - .packmind/commands/_drafts/
 
 Edit them as needed, then convert to JSON and run:
-  packmind-cli standards create <path-to-json>
-  packmind-cli packages add --to <package-slug> --standard <slug>
-  packmind-cli commands create <path-to-json>
-  packmind-cli packages add --to <package-slug> --command <slug>
+  packmind-cli standards create <path-to-json> --origin-skill=onboard
+  packmind-cli packages add --to <package-slug> --standard <slug> --origin-skill=onboard
+  packmind-cli commands create <path-to-json> --origin-skill=onboard
+  packmind-cli packages add --to <package-slug> --command <slug> --origin-skill=onboard
   packmind-cli install
 
 Note: The CLI requires JSON playbook files, not markdown.
