@@ -99,7 +99,7 @@ describe('CreateOrganizationForm', () => {
       await user.clear(input);
 
       await waitFor(() => {
-        expect(screen.getByText('Name can not be empty')).toBeInTheDocument();
+        expect(screen.getByText('Name cannot be empty')).toBeInTheDocument();
       });
     });
 

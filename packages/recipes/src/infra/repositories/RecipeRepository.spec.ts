@@ -110,7 +110,7 @@ describe('RecipeRepository', () => {
         await recipeRepository.deleteById(recipe.id);
       });
 
-      it('can not find a deleted recipe by slug', async () => {
+      it('cannot find a deleted recipe by slug', async () => {
         const organizationId = createOrganizationId(uuidv4());
         const space = spaceFactory({ organizationId, id: recipe.spaceId });
         const spaceRepo = fixture.datasource.getRepository(SpaceSchema);

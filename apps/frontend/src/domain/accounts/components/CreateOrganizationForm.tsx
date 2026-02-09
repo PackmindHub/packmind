@@ -35,7 +35,7 @@ export function CreateOrganizationForm({
     const trimmedName = organizationName.trim();
 
     if (!trimmedName) {
-      setOrganizationNameError('Name can not be empty');
+      setOrganizationNameError('Name cannot be empty');
       setIsValidating(false);
       return;
     }
