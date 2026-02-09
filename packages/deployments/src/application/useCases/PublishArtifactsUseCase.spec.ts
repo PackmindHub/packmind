@@ -1054,7 +1054,9 @@ describe('PublishArtifactsUseCase', () => {
         packageIds: [],
       };
 
-      mockTargetService.findByIdsInOrganization.mockResolvedValue([]);
+      mockTargetService.findByIdsInOrganization.mockRejectedValue(
+        new TargetNotFoundError(nonExistentTargetId),
+      );
 
       await expect(useCase.execute(command)).rejects.toThrow(
         TargetNotFoundError,
@@ -1171,7 +1173,9 @@ describe('PublishArtifactsUseCase', () => {
     it('throws TargetNotFoundError', async () => {
       const crossOrgTargetId = createTargetId(uuidv4());
 
-      mockTargetService.findByIdsInOrganization.mockResolvedValue([]);
+      mockTargetService.findByIdsInOrganization.mockRejectedValue(
+        new TargetNotFoundError(crossOrgTargetId),
+      );
 
       const command: PublishArtifactsCommand = {
         userId,

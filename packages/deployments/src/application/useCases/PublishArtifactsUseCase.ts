@@ -39,7 +39,6 @@ import {
   getTargetPrefixedPath,
 } from '../utils/GitFileUtils';
 import { PackmindConfigService } from '../services/PackmindConfigService';
-import { TargetNotFoundError } from '../../domain/errors/TargetNotFoundError';
 import { v4 as uuidv4 } from 'uuid';
 import { PublishArtifactsDelayedJob } from '../jobs/PublishArtifactsDelayedJob';
 
@@ -87,15 +86,10 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
     }
 
     // Validate all targets belong to the requesting organization
-    const validTargets = await this.targetService.findByIdsInOrganization(
+    await this.targetService.findByIdsInOrganization(
       command.targetIds,
       command.organizationId as OrganizationId,
     );
-    if (validTargets.length !== command.targetIds.length) {
-      const validIds = new Set(validTargets.map((t) => t.id));
-      const missingId = command.targetIds.find((id) => !validIds.has(id));
-      throw new TargetNotFoundError(missingId ?? command.targetIds[0]);
-    }
 
     // Fetch organization's active render modes
     const activeRenderModes =

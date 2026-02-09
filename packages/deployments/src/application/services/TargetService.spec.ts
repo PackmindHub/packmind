@@ -1,5 +1,6 @@
 import { TargetService } from './TargetService';
 import { ITargetRepository } from '../../domain/repositories/ITargetRepository';
+import { TargetNotFoundError } from '../../domain/errors/TargetNotFoundError';
 import { stubLogger } from '@packmind/test-utils';
 import {
   Target,
@@ -85,6 +86,35 @@ describe('TargetService', () => {
         await expect(
           service.findByIdsInOrganization([targetId1], organizationId),
         ).rejects.toThrow('Database error');
+      });
+    });
+
+    describe('when a target does not belong to the organization', () => {
+      beforeEach(() => {
+        mockTargetRepository.findByIdsInOrganization.mockResolvedValue([
+          target1,
+        ]);
+      });
+
+      it('throws TargetNotFoundError', async () => {
+        await expect(
+          service.findByIdsInOrganization(
+            [targetId1, targetId2],
+            organizationId,
+          ),
+        ).rejects.toThrow(TargetNotFoundError);
+      });
+    });
+
+    describe('when no targets are found', () => {
+      beforeEach(() => {
+        mockTargetRepository.findByIdsInOrganization.mockResolvedValue([]);
+      });
+
+      it('throws TargetNotFoundError', async () => {
+        await expect(
+          service.findByIdsInOrganization([targetId1], organizationId),
+        ).rejects.toThrow(TargetNotFoundError);
       });
     });
   });

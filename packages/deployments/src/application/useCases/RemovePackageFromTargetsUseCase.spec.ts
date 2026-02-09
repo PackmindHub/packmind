@@ -199,7 +199,9 @@ describe('RemovePackageFromTargetsUseCase', () => {
 
       beforeEach(() => {
         mockPackageService.findById.mockResolvedValue(mockPackage);
-        mockTargetService.findByIdsInOrganization.mockResolvedValue([]);
+        mockTargetService.findByIdsInOrganization.mockRejectedValue(
+          new TargetNotFoundError(targetIds[0]),
+        );
       });
 
       it('throws TargetNotFoundError', async () => {
@@ -219,9 +221,9 @@ describe('RemovePackageFromTargetsUseCase', () => {
 
       beforeEach(() => {
         mockPackageService.findById.mockResolvedValue(mockPackage);
-        mockTargetService.findByIdsInOrganization.mockResolvedValue([
-          mockTarget,
-        ]);
+        mockTargetService.findByIdsInOrganization.mockRejectedValue(
+          new TargetNotFoundError(targetIds[1]),
+        );
       });
 
       it('throws TargetNotFoundError', async () => {

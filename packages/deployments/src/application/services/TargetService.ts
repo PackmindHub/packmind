@@ -1,6 +1,7 @@
 import { PackmindLogger, LogLevel } from '@packmind/logger';
 import { Target, GitRepoId, TargetId, OrganizationId } from '@packmind/types';
 import { ITargetRepository } from '../../domain/repositories/ITargetRepository';
+import { TargetNotFoundError } from '../../domain/errors/TargetNotFoundError';
 
 const origin = 'TargetService';
 
@@ -59,6 +60,12 @@ export class TargetService {
         organizationId,
       );
 
+      if (targets.length !== targetIds.length) {
+        const validIds = new Set(targets.map((t) => t.id));
+        const missingId = targetIds.find((id) => !validIds.has(id));
+        throw new TargetNotFoundError(missingId ?? targetIds[0]);
+      }
+
       this.logger.info('Targets found by IDs within organization', {
         organizationId,
         requestedCount: targetIds.length,
@@ -67,6 +74,9 @@ export class TargetService {
 
       return targets;
     } catch (error) {
+      if (error instanceof TargetNotFoundError) {
+        throw error;
+      }
       this.logger.error('Failed to find targets by IDs within organization', {
         organizationId,
         targetIdsCount: targetIds.length,
