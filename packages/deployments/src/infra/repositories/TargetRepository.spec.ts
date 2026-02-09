@@ -170,6 +170,14 @@ describe('TargetRepository', () => {
       });
     });
 
+    describe('when targetIds is empty', () => {
+      it('returns an empty array without querying the database', async () => {
+        const result = await repository.findByIdsInOrganization([], orgAId);
+
+        expect(result).toEqual([]);
+      });
+    });
+
     describe('when target ids do not exist', () => {
       it('returns an empty array', async () => {
         const result = await repository.findByIdsInOrganization(

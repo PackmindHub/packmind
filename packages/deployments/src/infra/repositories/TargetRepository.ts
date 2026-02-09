@@ -58,6 +58,10 @@ export class TargetRepository
       organizationId,
     });
 
+    if (targetIds.length === 0) {
+      return [];
+    }
+
     try {
       const qb = this.createScopedQueryBuilder(organizationId);
       qb.andWhere('target.id IN (:...targetIds)', {
