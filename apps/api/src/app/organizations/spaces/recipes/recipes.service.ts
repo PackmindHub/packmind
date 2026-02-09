@@ -64,7 +64,7 @@ export class RecipesService {
     recipe: Omit<
       RecipeVersion,
       'id' | 'recipeId' | 'version' | 'author' | 'gitSha' | 'gitRepo'
-    >,
+    > & { originSkill?: string },
     organizationId: OrganizationId,
     userId: UserId,
     spaceId: SpaceId,

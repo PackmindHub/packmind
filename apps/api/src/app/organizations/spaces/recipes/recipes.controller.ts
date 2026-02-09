@@ -163,7 +163,7 @@ export class OrganizationsSpacesRecipesController {
     recipe: Omit<
       RecipeVersion,
       'id' | 'recipeId' | 'version' | 'author' | 'gitSha' | 'gitRepo'
-    >,
+    > & { originSkill?: string },
     @Req() request: AuthenticatedRequest,
   ): Promise<Recipe> {
     const userId = request.user.userId;

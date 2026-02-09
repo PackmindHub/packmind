@@ -184,6 +184,7 @@ export class OrganizationsSpacesSkillsController {
     @Body()
     body: {
       files: UploadSkillFileInput[];
+      originSkill?: string;
     },
     @Req() request: AuthenticatedRequest,
     @Res() response: Response,
@@ -207,6 +208,7 @@ export class OrganizationsSpacesSkillsController {
         spaceId,
         userId,
         request.clientSource,
+        body.originSkill,
       );
 
       let statusCode: HttpStatus;

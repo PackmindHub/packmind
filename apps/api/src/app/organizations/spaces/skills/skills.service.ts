@@ -38,6 +38,7 @@ export class SkillsService {
     spaceId: SpaceId,
     userId: UserId,
     source: ClientSource,
+    originSkill?: string,
   ): Promise<UploadSkillResponse> {
     return this.skillsHexa.getAdapter().uploadSkill({
       files,
@@ -45,6 +46,7 @@ export class SkillsService {
       userId,
       spaceId,
       source,
+      originSkill,
     });
   }
 
