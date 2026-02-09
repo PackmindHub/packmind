@@ -46,6 +46,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { stubLogger } from '@packmind/test-utils';
 import assert from 'assert';
 import { PublishArtifactsDelayedJob } from '../jobs/PublishArtifactsDelayedJob';
+import { TargetNotFoundError } from '../../domain/errors/TargetNotFoundError';
 
 describe('PublishArtifactsUseCase', () => {
   let useCase: PublishArtifactsUseCase;
@@ -131,6 +132,7 @@ describe('PublishArtifactsUseCase', () => {
 
     mockTargetService = {
       findById: jest.fn(),
+      findByIdsInOrganization: jest.fn(),
     } as unknown as jest.Mocked<TargetService>;
 
     mockRenderModeConfigurationService = {
@@ -236,6 +238,7 @@ describe('PublishArtifactsUseCase', () => {
         standardVersion,
       );
       mockTargetService.findById.mockResolvedValue(target);
+      mockTargetService.findByIdsInOrganization.mockResolvedValue([target]);
       mockGitPort.getRepositoryById.mockResolvedValue(gitRepo);
       mockDistributionRepository.findActiveRecipeVersionsByTarget.mockResolvedValue(
         [],
@@ -455,6 +458,7 @@ describe('PublishArtifactsUseCase', () => {
 
       mockRecipesPort.getRecipeVersionById.mockResolvedValue(recipeVersion);
       mockTargetService.findById.mockResolvedValue(target);
+      mockTargetService.findByIdsInOrganization.mockResolvedValue([target]);
       mockGitPort.getRepositoryById.mockResolvedValue(gitRepo);
       mockDistributionRepository.findActiveRecipeVersionsByTarget.mockResolvedValue(
         [],
@@ -541,6 +545,7 @@ describe('PublishArtifactsUseCase', () => {
         standardVersion,
       );
       mockTargetService.findById.mockResolvedValue(target);
+      mockTargetService.findByIdsInOrganization.mockResolvedValue([target]);
       mockGitPort.getRepositoryById.mockResolvedValue(gitRepo);
       mockDistributionRepository.findActiveRecipeVersionsByTarget.mockResolvedValue(
         [],
@@ -632,6 +637,7 @@ describe('PublishArtifactsUseCase', () => {
         standardVersion,
       );
       mockTargetService.findById.mockResolvedValue(target);
+      mockTargetService.findByIdsInOrganization.mockResolvedValue([target]);
       mockGitPort.getRepositoryById.mockResolvedValue(gitRepo);
       mockDistributionRepository.findActiveRecipeVersionsByTarget.mockResolvedValue(
         [],
@@ -731,6 +737,7 @@ describe('PublishArtifactsUseCase', () => {
         standardVersion,
       );
       mockTargetService.findById.mockResolvedValue(target);
+      mockTargetService.findByIdsInOrganization.mockResolvedValue([target]);
       mockGitPort.getRepositoryById.mockResolvedValue(gitRepo);
       mockDistributionRepository.findActiveRecipeVersionsByTarget.mockResolvedValue(
         [],
@@ -825,6 +832,10 @@ describe('PublishArtifactsUseCase', () => {
       mockTargetService.findById
         .mockResolvedValueOnce(target1)
         .mockResolvedValueOnce(target2);
+      mockTargetService.findByIdsInOrganization.mockResolvedValue([
+        target1,
+        target2,
+      ]);
       mockGitPort.getRepositoryById.mockResolvedValue(gitRepo);
       mockDistributionRepository.findActiveRecipeVersionsByTarget.mockResolvedValue(
         [],
@@ -971,6 +982,7 @@ describe('PublishArtifactsUseCase', () => {
         newStandardVersion,
       );
       mockTargetService.findById.mockResolvedValue(target);
+      mockTargetService.findByIdsInOrganization.mockResolvedValue([target]);
       mockGitPort.getRepositoryById.mockResolvedValue(gitRepo);
       mockDistributionRepository.findActiveRecipeVersionsByTarget.mockResolvedValue(
         [oldRecipeVersion],
@@ -1030,20 +1042,23 @@ describe('PublishArtifactsUseCase', () => {
   });
 
   describe('when target does not exist', () => {
-    it('throws error', async () => {
+    it('throws TargetNotFoundError', async () => {
+      const nonExistentTargetId = createTargetId(uuidv4());
       const command: PublishArtifactsCommand = {
         userId,
         organizationId,
         recipeVersionIds: [],
         standardVersionIds: [],
-        targetIds: [createTargetId(uuidv4())],
+        targetIds: [nonExistentTargetId],
         packagesSlugs: [],
         packageIds: [],
       };
 
-      mockTargetService.findById.mockResolvedValue(null);
+      mockTargetService.findByIdsInOrganization.mockResolvedValue([]);
 
-      await expect(useCase.execute(command)).rejects.toThrow('Target with id');
+      await expect(useCase.execute(command)).rejects.toThrow(
+        TargetNotFoundError,
+      );
     });
   });
 
@@ -1061,6 +1076,7 @@ describe('PublishArtifactsUseCase', () => {
       };
 
       mockTargetService.findById.mockResolvedValue(target);
+      mockTargetService.findByIdsInOrganization.mockResolvedValue([target]);
       mockGitPort.getRepositoryById.mockResolvedValue(null);
 
       await expect(useCase.execute(command)).rejects.toThrow(
@@ -1091,6 +1107,7 @@ describe('PublishArtifactsUseCase', () => {
       };
 
       mockTargetService.findById.mockResolvedValue(target);
+      mockTargetService.findByIdsInOrganization.mockResolvedValue([target]);
       mockGitPort.getRepositoryById.mockResolvedValue(gitRepo);
       mockRecipesPort.getRecipeVersionById.mockResolvedValue(null);
 
@@ -1122,6 +1139,7 @@ describe('PublishArtifactsUseCase', () => {
       };
 
       mockTargetService.findById.mockResolvedValue(target);
+      mockTargetService.findByIdsInOrganization.mockResolvedValue([target]);
       mockGitPort.getRepositoryById.mockResolvedValue(gitRepo);
       mockStandardsPort.getStandardVersionById.mockResolvedValue(null);
 
@@ -1145,6 +1163,28 @@ describe('PublishArtifactsUseCase', () => {
 
       await expect(useCase.execute(command)).rejects.toThrow(
         'At least one target must be provided',
+      );
+    });
+  });
+
+  describe('when a target does not belong to the organization', () => {
+    it('throws TargetNotFoundError', async () => {
+      const crossOrgTargetId = createTargetId(uuidv4());
+
+      mockTargetService.findByIdsInOrganization.mockResolvedValue([]);
+
+      const command: PublishArtifactsCommand = {
+        userId,
+        organizationId,
+        recipeVersionIds: [createRecipeVersionId(uuidv4())],
+        standardVersionIds: [],
+        targetIds: [crossOrgTargetId],
+        packagesSlugs: [],
+        packageIds: [],
+      };
+
+      await expect(useCase.execute(command)).rejects.toThrow(
+        TargetNotFoundError,
       );
     });
   });
@@ -1183,6 +1223,7 @@ describe('PublishArtifactsUseCase', () => {
       );
       mockRecipesPort.getRecipeVersionById.mockResolvedValue(recipeVersion);
       mockTargetService.findById.mockResolvedValue(target);
+      mockTargetService.findByIdsInOrganization.mockResolvedValue([target]);
       mockGitPort.getRepositoryById.mockResolvedValue(gitRepo);
       mockDistributionRepository.findActiveRecipeVersionsByTarget.mockResolvedValue(
         [],
@@ -1294,6 +1335,7 @@ describe('PublishArtifactsUseCase', () => {
         newStandardVersion,
       );
       mockTargetService.findById.mockResolvedValue(target);
+      mockTargetService.findByIdsInOrganization.mockResolvedValue([target]);
       mockGitPort.getRepositoryById.mockResolvedValue(gitRepo);
       // Return previously deployed versions that are NOT in the new deployment
       mockDistributionRepository.findActiveRecipeVersionsByTarget.mockResolvedValue(
@@ -1456,6 +1498,7 @@ describe('PublishArtifactsUseCase', () => {
         standardVersion,
       );
       mockTargetService.findById.mockResolvedValue(target);
+      mockTargetService.findByIdsInOrganization.mockResolvedValue([target]);
       mockGitPort.getRepositoryById.mockResolvedValue(gitRepo);
       // No previously deployed versions
       mockDistributionRepository.findActiveRecipeVersionsByTarget.mockResolvedValue(
@@ -1558,6 +1601,7 @@ describe('PublishArtifactsUseCase', () => {
         .fn()
         .mockResolvedValue(mockRules);
       mockTargetService.findById.mockResolvedValue(target);
+      mockTargetService.findByIdsInOrganization.mockResolvedValue([target]);
       mockGitPort.getRepositoryById.mockResolvedValue(gitRepo);
       mockDistributionRepository.findActiveRecipeVersionsByTarget.mockResolvedValue(
         [],
@@ -1667,6 +1711,7 @@ describe('PublishArtifactsUseCase', () => {
 
       mockRecipesPort.getRecipeVersionById.mockResolvedValue(recipeVersion);
       mockTargetService.findById.mockResolvedValue(target);
+      mockTargetService.findByIdsInOrganization.mockResolvedValue([target]);
       mockGitPort.getRepositoryById.mockResolvedValue(gitRepo);
       mockDistributionRepository.findActiveRecipeVersionsByTarget.mockResolvedValue(
         [],
@@ -1798,6 +1843,7 @@ describe('PublishArtifactsUseCase', () => {
 
       mockRecipesPort.getRecipeVersionById.mockResolvedValue(recipeVersion);
       mockTargetService.findById.mockResolvedValue(target);
+      mockTargetService.findByIdsInOrganization.mockResolvedValue([target]);
       mockGitPort.getRepositoryById.mockResolvedValue(gitRepo);
       mockDistributionRepository.findActiveRecipeVersionsByTarget.mockResolvedValue(
         [],
@@ -1943,6 +1989,7 @@ describe('PublishArtifactsUseCase', () => {
 
       mockRecipesPort.getRecipeVersionById.mockResolvedValue(recipeVersion);
       mockTargetService.findById.mockResolvedValue(target);
+      mockTargetService.findByIdsInOrganization.mockResolvedValue([target]);
       mockGitPort.getRepositoryById.mockResolvedValue(gitRepo);
       mockDistributionRepository.findActiveRecipeVersionsByTarget.mockResolvedValue(
         [],
@@ -2028,6 +2075,7 @@ describe('PublishArtifactsUseCase', () => {
 
       mockRecipesPort.getRecipeVersionById.mockResolvedValue(recipeVersion);
       mockTargetService.findById.mockResolvedValue(target);
+      mockTargetService.findByIdsInOrganization.mockResolvedValue([target]);
       mockGitPort.getRepositoryById.mockResolvedValue(gitRepo);
       mockDistributionRepository.findActiveRecipeVersionsByTarget.mockResolvedValue(
         [],
@@ -2153,6 +2201,7 @@ describe('PublishArtifactsUseCase', () => {
 
       mockRecipesPort.getRecipeVersionById.mockResolvedValue(recipeVersion);
       mockTargetService.findById.mockResolvedValue(target);
+      mockTargetService.findByIdsInOrganization.mockResolvedValue([target]);
       mockGitPort.getRepositoryById.mockResolvedValue(gitRepo);
       mockDistributionRepository.findActiveRecipeVersionsByTarget.mockResolvedValue(
         [],
@@ -2264,6 +2313,7 @@ describe('PublishArtifactsUseCase', () => {
       mockSkillsPort.getSkillVersion.mockResolvedValue(skillVersion);
       mockSkillsPort.getSkillFiles.mockResolvedValue(skillFiles);
       mockTargetService.findById.mockResolvedValue(target);
+      mockTargetService.findByIdsInOrganization.mockResolvedValue([target]);
       mockGitPort.getRepositoryById.mockResolvedValue(gitRepo);
       mockDistributionRepository.findActiveRecipeVersionsByTarget.mockResolvedValue(
         [],
@@ -2360,6 +2410,7 @@ describe('PublishArtifactsUseCase', () => {
       };
 
       mockTargetService.findById.mockResolvedValue(target);
+      mockTargetService.findByIdsInOrganization.mockResolvedValue([target]);
       mockGitPort.getRepositoryById.mockResolvedValue(gitRepo);
       mockSkillsPort.getSkillVersion.mockResolvedValue(null);
 
@@ -2429,6 +2480,7 @@ describe('PublishArtifactsUseCase', () => {
       mockSkillsPort.getSkillVersion.mockResolvedValue(newSkillVersion);
       mockSkillsPort.getSkillFiles.mockResolvedValue([]);
       mockTargetService.findById.mockResolvedValue(target);
+      mockTargetService.findByIdsInOrganization.mockResolvedValue([target]);
       mockGitPort.getRepositoryById.mockResolvedValue(gitRepo);
       mockDistributionRepository.findActiveRecipeVersionsByTarget.mockResolvedValue(
         [],
@@ -2549,6 +2601,7 @@ describe('PublishArtifactsUseCase', () => {
 
       mockRecipesPort.getRecipeVersionById.mockResolvedValue(recipeVersion);
       mockTargetService.findById.mockResolvedValue(target);
+      mockTargetService.findByIdsInOrganization.mockResolvedValue([target]);
       mockGitPort.getRepositoryById.mockResolvedValue(gitRepo);
       mockDistributionRepository.findActiveRecipeVersionsByTarget.mockResolvedValue(
         [],
@@ -2656,6 +2709,7 @@ describe('PublishArtifactsUseCase', () => {
 
       mockRecipesPort.getRecipeVersionById.mockResolvedValue(recipeVersion);
       mockTargetService.findById.mockResolvedValue(target);
+      mockTargetService.findByIdsInOrganization.mockResolvedValue([target]);
       mockGitPort.getRepositoryById.mockResolvedValue(gitRepo);
       mockDistributionRepository.findActiveRecipeVersionsByTarget.mockResolvedValue(
         [],
@@ -2794,6 +2848,7 @@ describe('PublishArtifactsUseCase', () => {
       };
 
       mockTargetService.findById.mockResolvedValue(target);
+      mockTargetService.findByIdsInOrganization.mockResolvedValue([target]);
       mockGitPort.getRepositoryById.mockResolvedValue(gitRepo);
       mockDistributionRepository.findActiveRecipeVersionsByTarget.mockResolvedValue(
         [],
@@ -2890,6 +2945,7 @@ describe('PublishArtifactsUseCase', () => {
       };
 
       mockTargetService.findById.mockResolvedValue(target);
+      mockTargetService.findByIdsInOrganization.mockResolvedValue([target]);
       mockGitPort.getRepositoryById.mockResolvedValue(gitRepo);
       // Recipe exists on target via Package B (all packages view)
       mockDistributionRepository.findActiveRecipeVersionsByTarget.mockResolvedValue(
@@ -2989,6 +3045,7 @@ describe('PublishArtifactsUseCase', () => {
       };
 
       mockTargetService.findById.mockResolvedValue(target);
+      mockTargetService.findByIdsInOrganization.mockResolvedValue([target]);
       mockGitPort.getRepositoryById.mockResolvedValue(gitRepo);
       mockDistributionRepository.findActiveRecipeVersionsByTarget.mockResolvedValue(
         [],
@@ -3087,6 +3144,7 @@ describe('PublishArtifactsUseCase', () => {
 
       mockRecipesPort.getRecipeVersionById.mockResolvedValue(recipeVersion);
       mockTargetService.findById.mockResolvedValue(target);
+      mockTargetService.findByIdsInOrganization.mockResolvedValue([target]);
       mockGitPort.getRepositoryById.mockResolvedValue(gitRepo);
       mockDistributionRepository.findActiveRecipeVersionsByTarget.mockResolvedValue(
         [],
@@ -3172,6 +3230,7 @@ describe('PublishArtifactsUseCase', () => {
 
       mockRecipesPort.getRecipeVersionById.mockResolvedValue(recipeVersion);
       mockTargetService.findById.mockResolvedValue(target);
+      mockTargetService.findByIdsInOrganization.mockResolvedValue([target]);
       mockGitPort.getRepositoryById.mockResolvedValue(gitRepo);
       mockDistributionRepository.findActiveRecipeVersionsByTarget.mockResolvedValue(
         [],
@@ -3369,6 +3428,7 @@ describe('PublishArtifactsUseCase', () => {
         standardVersion,
       );
       mockTargetService.findById.mockResolvedValue(target);
+      mockTargetService.findByIdsInOrganization.mockResolvedValue([target]);
       mockGitPort.getRepositoryById.mockResolvedValue(gitRepo);
       mockCodingAgentPort.renderArtifacts.mockResolvedValue({
         createOrUpdate: [],
@@ -3493,6 +3553,7 @@ describe('PublishArtifactsUseCase', () => {
 
       mockRecipesPort.getRecipeVersionById.mockResolvedValue(recipeVersion);
       mockTargetService.findById.mockResolvedValue(target);
+      mockTargetService.findByIdsInOrganization.mockResolvedValue([target]);
       mockGitPort.getRepositoryById.mockResolvedValue(gitRepo);
       mockDistributionRepository.findActiveRecipeVersionsByTarget.mockResolvedValue(
         [],

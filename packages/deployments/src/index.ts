@@ -14,6 +14,7 @@ export * from './infra/schemas';
 // Re-export domain errors
 export * from './domain/errors/NoPackageSlugsProvidedError';
 export * from './domain/errors/PackagesNotFoundError';
+export * from './domain/errors/TargetNotFoundError';
 
 /**
  * Package version

@@ -1,14 +1,17 @@
-import { Repository } from 'typeorm';
-import { Target, TargetId, GitRepoId } from '@packmind/types';
+import { Repository, SelectQueryBuilder } from 'typeorm';
+import { Target, TargetId, GitRepoId, OrganizationId } from '@packmind/types';
 import { PackmindLogger } from '@packmind/logger';
-import { localDataSource, AbstractRepository } from '@packmind/node-utils';
+import {
+  localDataSource,
+  OrganizationScopedRepository,
+} from '@packmind/node-utils';
 import { ITargetRepository } from '../../domain/repositories/ITargetRepository';
 import { TargetSchema } from '../schemas/TargetSchema';
 
 const origin = 'TargetRepository';
 
 export class TargetRepository
-  extends AbstractRepository<Target>
+  extends OrganizationScopedRepository<Target>
   implements ITargetRepository
 {
   constructor(
@@ -21,6 +24,22 @@ export class TargetRepository
     this.logger.info('TargetRepository initialized');
   }
 
+  protected override getEntityAlias(): string {
+    return 'target';
+  }
+
+  protected override applyOrganizationScope(
+    qb: SelectQueryBuilder<Target>,
+    organizationId: string,
+  ): SelectQueryBuilder<Target> {
+    return qb
+      .innerJoin('target.gitRepo', 'gitRepo')
+      .innerJoin('gitRepo.provider', 'gitProvider')
+      .andWhere('gitProvider.organizationId = :organizationId', {
+        organizationId,
+      });
+  }
+
   protected override loggableEntity(target: Target): Partial<Target> {
     return {
       id: target.id,
@@ -28,6 +47,39 @@ export class TargetRepository
       path: target.path,
       gitRepoId: target.gitRepoId,
     };
+  }
+
+  async findByIdsInOrganization(
+    targetIds: TargetId[],
+    organizationId: OrganizationId,
+  ): Promise<Target[]> {
+    this.logger.info('Finding targets by IDs within organization', {
+      targetIdsCount: targetIds.length,
+      organizationId,
+    });
+
+    try {
+      const qb = this.createScopedQueryBuilder(organizationId);
+      qb.andWhere('target.id IN (:...targetIds)', {
+        targetIds: targetIds as string[],
+      });
+      const targets = await qb.getMany();
+
+      this.logger.info('Targets found by IDs within organization', {
+        organizationId,
+        requestedCount: targetIds.length,
+        foundCount: targets.length,
+      });
+
+      return targets;
+    } catch (error) {
+      this.logger.error('Failed to find targets by IDs within organization', {
+        organizationId,
+        targetIdsCount: targetIds.length,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
+    }
   }
 
   async findByGitRepoId(gitRepoId: GitRepoId): Promise<Target[]> {

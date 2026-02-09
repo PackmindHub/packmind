@@ -81,11 +81,14 @@ export class RemovePackageFromTargetsUseCase implements IRemovePackageFromTarget
       throw new PackageNotFoundError(command.packageId);
     }
 
-    for (const targetId of command.targetIds) {
-      const target = await this.targetService.findById(targetId);
-      if (!target) {
-        throw new TargetNotFoundError(targetId);
-      }
+    const validTargets = await this.targetService.findByIdsInOrganization(
+      command.targetIds,
+      command.organizationId as OrganizationId,
+    );
+    if (validTargets.length !== command.targetIds.length) {
+      const validIds = new Set(validTargets.map((t) => t.id));
+      const missingId = command.targetIds.find((id) => !validIds.has(id));
+      throw new TargetNotFoundError(missingId ?? command.targetIds[0]);
     }
 
     // Resolve artifacts for each target

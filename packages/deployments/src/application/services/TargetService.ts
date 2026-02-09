@@ -1,5 +1,5 @@
 import { PackmindLogger, LogLevel } from '@packmind/logger';
-import { Target, GitRepoId, TargetId } from '@packmind/types';
+import { Target, GitRepoId, TargetId, OrganizationId } from '@packmind/types';
 import { ITargetRepository } from '../../domain/repositories/ITargetRepository';
 
 const origin = 'TargetService';
@@ -38,6 +38,38 @@ export class TargetService {
     } catch (error) {
       this.logger.error('Failed to find target by ID', {
         targetId,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
+    }
+  }
+
+  async findByIdsInOrganization(
+    targetIds: TargetId[],
+    organizationId: OrganizationId,
+  ): Promise<Target[]> {
+    this.logger.info('Finding targets by IDs within organization', {
+      targetIdsCount: targetIds.length,
+      organizationId,
+    });
+
+    try {
+      const targets = await this.targetRepository.findByIdsInOrganization(
+        targetIds,
+        organizationId,
+      );
+
+      this.logger.info('Targets found by IDs within organization', {
+        organizationId,
+        requestedCount: targetIds.length,
+        foundCount: targets.length,
+      });
+
+      return targets;
+    } catch (error) {
+      this.logger.error('Failed to find targets by IDs within organization', {
+        organizationId,
+        targetIdsCount: targetIds.length,
         error: error instanceof Error ? error.message : String(error),
       });
       throw error;
