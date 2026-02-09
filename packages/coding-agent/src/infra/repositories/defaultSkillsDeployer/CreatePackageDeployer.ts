@@ -66,13 +66,13 @@ Wait for explicit user approval.
 Run the CLI command:
 
 \`\`\`bash
-packmind-cli packages create "<name>" --description="<description>"
+packmind-cli packages create "<name>" --description="<description>" --origin-skill=create-package
 \`\`\`
 
 Or without description:
 
 \`\`\`bash
-packmind-cli packages create "<name>"
+packmind-cli packages create "<name>" --origin-skill=create-package
 \`\`\`
 
 ### Expected Output

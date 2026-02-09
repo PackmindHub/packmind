@@ -247,7 +247,7 @@ After testing the skill, users may request improvements. Often this happens righ
 Run the following command with the actual skill path:
 
 \`\`\`bash
-packmind-cli skills add <path/to/skill-folder>
+packmind-cli skills add <path/to/skill-folder> --origin-skill=create-skill
 \`\`\`
 
 This registers the skill with Packmind, making it available for deployment to target repositories and AI coding agents.
@@ -267,7 +267,7 @@ After successful distribution, check if the skill fits an existing package:
      - Skip
 5. If no clear fit is found, skip silently (do not mention packages)
 6. If user chooses to add:
-   - Run: \`packmind-cli packages add --to <package-slug> --skill <skill-slug>\`
+   - Run: \`packmind-cli packages add --to <package-slug> --skill <skill-slug> --origin-skill=create-skill\`
    - Ask: "Would you like me to run \`packmind-cli install\` to sync the changes?"
    - If yes, run: \`packmind-cli install\`
 `;
