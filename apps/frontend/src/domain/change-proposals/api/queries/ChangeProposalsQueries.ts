@@ -1,24 +1,15 @@
 import { useMutation } from '@tanstack/react-query';
-import {
-  ChangeProposalCaptureMode,
-  ChangeProposalPayload,
-  ChangeProposalType,
-  ChangeProposalArtefactId,
-  OrganizationId,
-} from '@packmind/types';
+import { ChangeProposalType } from '@packmind/types';
 import { changeProposalsGateway } from '../gateways';
+import { CreateChangeProposalParams } from '../gateways/IChangeProposalsGateway';
 import { CREATE_CHANGE_PROPOSAL_MUTATION_KEY } from '../queryKeys';
 
 export const useCreateChangeProposalMutation = () => {
   return useMutation({
     mutationKey: [...CREATE_CHANGE_PROPOSAL_MUTATION_KEY],
-    mutationFn: async <T extends ChangeProposalType>(params: {
-      organizationId: OrganizationId;
-      type: T;
-      artefactId: ChangeProposalArtefactId<T>;
-      payload: ChangeProposalPayload<T>;
-      captureMode: ChangeProposalCaptureMode;
-    }) => {
+    mutationFn: async (
+      params: CreateChangeProposalParams<ChangeProposalType>,
+    ) => {
       return changeProposalsGateway.createChangeProposal(params);
     },
     onError: (error, variables, context) => {

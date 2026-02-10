@@ -16,9 +16,9 @@ export class ChangeProposalsGatewayApi
   async createChangeProposal<T extends ChangeProposalType>(
     params: CreateChangeProposalParams<T>,
   ): Promise<void> {
-    const { organizationId, ...body } = params;
+    const { organizationId, spaceId, ...body } = params;
     await this._api.post(
-      `/organizations/${organizationId}/changeProposals`,
+      `/organizations/${organizationId}/spaces/${spaceId}/change-proposals`,
       body,
     );
   }

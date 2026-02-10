@@ -344,12 +344,13 @@ export const RecipeDetails = ({ id, orgSlug }: RecipeDetailsProps) => {
         />
       </PMVStack>
 
-      {recipe && organization?.id && (
+      {recipe && organization?.id && spaceId && (
         <>
           <ProposeChangeModal
             recipeName={recipe.name}
             recipeId={recipe.id}
             organizationId={organization.id}
+            spaceId={spaceId}
             open={proposeChangeOpen}
             onOpenChange={(details) => setProposeChangeOpen(details.open)}
           />
@@ -357,6 +358,7 @@ export const RecipeDetails = ({ id, orgSlug }: RecipeDetailsProps) => {
             recipeDescription={recipe.content}
             recipeId={recipe.id}
             organizationId={organization.id}
+            spaceId={spaceId}
             open={proposeDescriptionChangeOpen}
             onOpenChange={(details) =>
               setProposeDescriptionChangeOpen(details.open)

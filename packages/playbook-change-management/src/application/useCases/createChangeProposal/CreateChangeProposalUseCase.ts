@@ -10,6 +10,7 @@ import {
   Recipe,
   RecipeId,
   ScalarUpdatePayload,
+  SpaceId,
 } from '@packmind/types';
 import { ChangeProposalService } from '../../services/ChangeProposalService';
 import { ChangeProposalPayloadMismatchError } from '../../errors/ChangeProposalPayloadMismatchError';
@@ -54,20 +55,22 @@ export class CreateChangeProposalUseCase extends AbstractMemberUseCase<
     }
 
     const recipeId = command.artefactId as RecipeId;
+    const spaceId = command.spaceId as SpaceId;
 
-    const spaces = await this.spacesPort.listSpacesByOrganization(
-      command.organization.id,
-    );
-    if (spaces.length === 0) {
+    const space = await this.spacesPort.getSpaceById(spaceId);
+    if (!space) {
+      throw new Error(`Space ${spaceId} not found`);
+    }
+    if (space.organizationId !== command.organization.id) {
       throw new Error(
-        `No spaces found for organization ${command.organizationId}`,
+        `Space ${spaceId} does not belong to organization ${command.organization.id}`,
       );
     }
 
     const recipe = await this.recipesPort.getRecipeById({
       userId: command.userId,
       organizationId: command.organization.id,
-      spaceId: spaces[0].id,
+      spaceId,
       recipeId,
     });
     if (!recipe) {

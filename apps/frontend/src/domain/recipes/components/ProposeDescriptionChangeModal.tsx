@@ -14,6 +14,7 @@ import {
   ChangeProposalType,
   OrganizationId,
   RecipeId,
+  SpaceId,
 } from '@packmind/types';
 import { useCreateChangeProposalMutation } from '../../change-proposals/api/queries/ChangeProposalsQueries';
 import {
@@ -25,6 +26,7 @@ interface ProposeDescriptionChangeModalProps {
   recipeDescription: string;
   recipeId: RecipeId;
   organizationId: OrganizationId;
+  spaceId: SpaceId;
   open: boolean;
   onOpenChange: (details: { open: boolean }) => void;
 }
@@ -33,6 +35,7 @@ export const ProposeDescriptionChangeModal = ({
   recipeDescription,
   recipeId,
   organizationId,
+  spaceId,
   open,
   onOpenChange,
 }: ProposeDescriptionChangeModalProps) => {
@@ -52,6 +55,7 @@ export const ProposeDescriptionChangeModal = ({
     createChangeProposalMutation.mutate(
       {
         organizationId,
+        spaceId,
         type: ChangeProposalType.updateCommandDescription,
         artefactId: recipeId,
         payload: {

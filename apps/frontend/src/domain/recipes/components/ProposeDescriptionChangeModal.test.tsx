@@ -12,6 +12,7 @@ import { UIProvider } from '@packmind/ui';
 import {
   createOrganizationId,
   createRecipeId,
+  createSpaceId,
   ChangeProposalType,
   ChangeProposalCaptureMode,
 } from '@packmind/types';
@@ -80,11 +81,13 @@ const renderWithProviders = (component: React.ReactElement) => {
 
 describe('ProposeDescriptionChangeModal', () => {
   const organizationId = createOrganizationId();
+  const spaceId = createSpaceId();
   const recipeId = createRecipeId();
   const defaultProps = {
     recipeDescription: '# Original description',
     recipeId,
     organizationId,
+    spaceId,
     open: true,
     onOpenChange: jest.fn(),
   };
@@ -176,6 +179,7 @@ describe('ProposeDescriptionChangeModal', () => {
       expect(mockMutate).toHaveBeenCalledWith(
         {
           organizationId,
+          spaceId,
           type: ChangeProposalType.updateCommandDescription,
           artefactId: recipeId,
           payload: {
