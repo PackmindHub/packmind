@@ -6,8 +6,11 @@
   "main": "./src/index.js",
   "types": "./src/index.d.ts",
   "dependencies": {
+    "@packmind/accounts": "*",
     "@packmind/logger": "*",
     "@packmind/node-utils": "*",
+    "@packmind/recipes": "*",
+    "@packmind/spaces": "*",
     "@packmind/test-utils": "0.0.1",
     "@packmind/types": "*",
     "tslib": "^2.3.0",
