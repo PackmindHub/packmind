@@ -77,7 +77,7 @@ On success:
 
 ```
 Created: <slug>
-You can see it at: https://app.packmind.com/packages/<slug>
+You can see it at: https://<host>/packages/<slug>
 You can install it with: packmind-cli packages install <slug>
 ```
 
