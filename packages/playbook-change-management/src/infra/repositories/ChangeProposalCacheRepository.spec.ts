@@ -10,7 +10,6 @@ import {
 import { Cache } from '@packmind/node-utils';
 import { stubLogger } from '@packmind/test-utils';
 import { ChangeProposalCacheRepository } from './ChangeProposalCacheRepository';
-import { CommandChangeProposalType } from '../../domain/repositories/IChangeProposalRepository';
 
 describe('ChangeProposalCacheRepository', () => {
   let repository: ChangeProposalCacheRepository;
@@ -19,8 +18,8 @@ describe('ChangeProposalCacheRepository', () => {
   const recipeId = createRecipeId();
 
   const buildProposal = (
-    overrides: Partial<ChangeProposal<CommandChangeProposalType>> = {},
-  ): ChangeProposal<CommandChangeProposalType> => ({
+    overrides: Partial<ChangeProposal<ChangeProposalType>> = {},
+  ): ChangeProposal<ChangeProposalType> => ({
     id: createChangeProposalId(),
     type: ChangeProposalType.updateCommandName,
     artefactId: recipeId,

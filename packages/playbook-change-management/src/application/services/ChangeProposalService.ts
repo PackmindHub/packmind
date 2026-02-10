@@ -8,12 +8,10 @@ import {
   CreateCommandChangeProposalCommand,
   CreateCommandChangeProposalResponse,
   ListCommandChangeProposalsResponse,
+  ChangeProposalType,
 } from '@packmind/types';
 import { v4 as uuidv4 } from 'uuid';
-import {
-  CommandChangeProposalType,
-  IChangeProposalRepository,
-} from '../../domain/repositories/IChangeProposalRepository';
+import { IChangeProposalRepository } from '../../domain/repositories/IChangeProposalRepository';
 
 const origin = 'ChangeProposalService';
 
@@ -26,9 +24,9 @@ export class ChangeProposalService {
   async createProposal(
     command: CreateCommandChangeProposalCommand,
   ): Promise<CreateCommandChangeProposalResponse> {
-    const proposal: ChangeProposal<CommandChangeProposalType> = {
+    const proposal: ChangeProposal<ChangeProposalType> = {
       id: createChangeProposalId(uuidv4()),
-      type: command.type as CommandChangeProposalType,
+      type: command.type as ChangeProposalType,
       artefactId: command.artefactId,
       artefactVersion: command.artefactVersion,
       payload: command.payload,
