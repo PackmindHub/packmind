@@ -42,6 +42,9 @@
       "@packmind/logger": ["packages/logger/src/index.ts"],
       "@packmind/migrations": ["packages/migrations/src/index.ts"],
       "@packmind/node-utils": ["packages/node-utils/src/index.ts"],
+      "@packmind/playbook-change-management": [
+        "packages/playbook-change-management/src/index.ts"
+      ],
       "@packmind/recipes": ["packages/recipes/src/index.ts"],
       "@packmind/recipes/test": ["packages/recipes/test/index.ts"],
       "@packmind/skills": ["packages/skills/src/index.ts"],

@@ -1,0 +1,26 @@
+{
+  "name": "playbook-change-management",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/playbook-change-management/src",
+  "projectType": "library",
+  "tags": ["env:node"],
+  "targets": {
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsc --noEmit --project packages/playbook-change-management/tsconfig.lib.json"
+      }
+    },
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/packages/playbook-change-management",
+        "tsConfig": "packages/playbook-change-management/tsconfig.lib.json",
+        "packageJson": "packages/playbook-change-management/package.json",
+        "main": "packages/playbook-change-management/src/index.ts",
+        "assets": ["packages/playbook-change-management/*.md"]
+      }
+    }
+  }
+}
