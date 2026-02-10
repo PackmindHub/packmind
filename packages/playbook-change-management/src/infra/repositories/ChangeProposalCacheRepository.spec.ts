@@ -9,25 +9,26 @@ import {
 } from '@packmind/types';
 import { Cache } from '@packmind/node-utils';
 import { stubLogger } from '@packmind/test-utils';
+import { v4 as uuidv4 } from 'uuid';
 import { ChangeProposalCacheRepository } from './ChangeProposalCacheRepository';
 
 describe('ChangeProposalCacheRepository', () => {
   let repository: ChangeProposalCacheRepository;
   let mockCache: { get: jest.Mock; set: jest.Mock };
 
-  const recipeId = createRecipeId();
+  const recipeId = createRecipeId(uuidv4());
 
   const buildProposal = (
     overrides: Partial<ChangeProposal<ChangeProposalType>> = {},
   ): ChangeProposal<ChangeProposalType> => ({
-    id: createChangeProposalId(),
+    id: createChangeProposalId(uuidv4()),
     type: ChangeProposalType.updateCommandName,
     artefactId: recipeId,
     artefactVersion: 1,
     payload: { oldValue: 'old', newValue: 'new' },
     captureMode: ChangeProposalCaptureMode.commit,
     status: ChangeProposalStatus.pending,
-    createdBy: createUserId(),
+    createdBy: createUserId(uuidv4()),
     resolvedBy: null,
     resolvedAt: null,
     createdAt: new Date(),
