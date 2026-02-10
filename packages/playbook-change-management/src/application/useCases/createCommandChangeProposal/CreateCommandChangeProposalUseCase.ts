@@ -4,15 +4,19 @@ import {
   CreateCommandChangeProposalCommand,
   CreateCommandChangeProposalResponse,
   IAccountsPort,
+  ICreateCommandChangeProposalUseCase,
 } from '@packmind/types';
 import { ChangeProposalService } from '../../services/ChangeProposalService';
 
 const origin = 'CreateCommandChangeProposalUseCase';
 
-export class CreateCommandChangeProposalUseCase extends AbstractMemberUseCase<
-  CreateCommandChangeProposalCommand,
-  CreateCommandChangeProposalResponse
-> {
+export class CreateCommandChangeProposalUseCase
+  extends AbstractMemberUseCase<
+    CreateCommandChangeProposalCommand,
+    CreateCommandChangeProposalResponse
+  >
+  implements ICreateCommandChangeProposalUseCase
+{
   constructor(
     accountsPort: IAccountsPort,
     private readonly service: ChangeProposalService,
