@@ -6,6 +6,8 @@
 
 ## Fixed
 
+- When running `packmind-cli init` (or `packmind-cli config agents`): load selected agents for packmind server if not local configuration is available.
+
 ## Removed
 
 # [0.16.0] - 2026-02-06

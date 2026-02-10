@@ -1,12 +1,8 @@
 import { command } from 'cmd-ts';
-import { CodingAgent, RENDER_MODE_TO_CODING_AGENT } from '@packmind/types';
 import { PackmindLogger, LogLevel } from '@packmind/logger';
 import { PackmindCliHexa } from '../../PackmindCliHexa';
 import { ConfigFileRepository } from '../repositories/ConfigFileRepository';
 import { AgentArtifactDetectionService } from '../../application/services/AgentArtifactDetectionService';
-import { DeploymentGateway } from '../repositories/DeploymentGateway';
-import { PackmindHttpClient } from '../http/PackmindHttpClient';
-import { loadApiKey } from '../utils/credentials';
 import { initHandler } from './initHandler';
 import { logErrorConsole } from '../utils/consoleLogger';
 
@@ -25,27 +21,14 @@ export const initCommand = command({
     const agentDetectionService = new AgentArtifactDetectionService();
     const baseDirectory = process.cwd();
 
-    const apiKey = loadApiKey();
-    const fetchOrganizationAgents = apiKey
-      ? async (): Promise<CodingAgent[]> => {
-          const httpClient = new PackmindHttpClient(apiKey);
-          const gateway = new DeploymentGateway(httpClient);
-          const result = await gateway.getRenderModeConfiguration({});
-          if (!result.configuration) return [];
-          return result.configuration.activeRenderModes
-            .map((mode) => RENDER_MODE_TO_CODING_AGENT[mode])
-            .filter((agent): agent is CodingAgent => agent !== undefined);
-        }
-      : undefined;
-
     const result = await initHandler({
       configRepository,
       agentDetectionService,
+      packmindGateway: packmindCliHexa.getPackmindGateway(),
       baseDirectory,
       installDefaultSkills:
         packmindCliHexa.installDefaultSkills.bind(packmindCliHexa),
       cliVersion: CLI_VERSION,
-      fetchOrganizationAgents,
     });
 
     if (!result.success) {
