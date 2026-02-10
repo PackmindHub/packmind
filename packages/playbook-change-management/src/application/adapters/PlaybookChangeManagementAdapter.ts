@@ -15,11 +15,14 @@ import {
   ISpacesPortName,
   ListCommandChangeProposalsCommand,
   ListCommandChangeProposalsResponse,
+  RejectCommandChangeProposalCommand,
+  RejectCommandChangeProposalResponse,
 } from '@packmind/types';
 import { PlaybookChangeManagementServices } from '../services/PlaybookChangeManagementServices';
 import { CreateChangeProposalUseCase } from '../useCases/createChangeProposal/CreateChangeProposalUseCase';
 import { CreateCommandChangeProposalUseCase } from '../useCases/createCommandChangeProposal/CreateCommandChangeProposalUseCase';
 import { ListCommandChangeProposalsUseCase } from '../useCases/listCommandChangeProposals/ListCommandChangeProposalsUseCase';
+import { RejectCommandChangeProposalUseCase } from '../useCases/rejectCommandChangeProposal/RejectCommandChangeProposalUseCase';
 
 const origin = 'PlaybookChangeManagementAdapter';
 
@@ -31,6 +34,7 @@ export class PlaybookChangeManagementAdapter
   private _createChangeProposal!: CreateChangeProposalUseCase;
   private _createCommandChangeProposal!: CreateCommandChangeProposalUseCase;
   private _listCommandChangeProposals!: ListCommandChangeProposalsUseCase;
+  private _rejectCommandChangeProposal!: RejectCommandChangeProposalUseCase;
 
   constructor(
     private readonly services: PlaybookChangeManagementServices,
@@ -55,6 +59,12 @@ export class PlaybookChangeManagementAdapter
     command: ListCommandChangeProposalsCommand,
   ): Promise<ListCommandChangeProposalsResponse> {
     return this._listCommandChangeProposals.execute(command);
+  }
+
+  async rejectCommandChangeProposal(
+    command: RejectCommandChangeProposalCommand,
+  ): Promise<RejectCommandChangeProposalResponse> {
+    return this._rejectCommandChangeProposal.execute(command);
   }
 
   public async initialize(ports: {
@@ -107,6 +117,11 @@ export class PlaybookChangeManagementAdapter
       changeProposalService,
     );
 
+    this._rejectCommandChangeProposal = new RejectCommandChangeProposalUseCase(
+      accountsPort,
+      changeProposalService,
+    );
+
     this.logger.info(
       'PlaybookChangeManagementAdapter initialized successfully',
     );
@@ -116,7 +131,8 @@ export class PlaybookChangeManagementAdapter
     return (
       this._createChangeProposal !== undefined &&
       this._createCommandChangeProposal !== undefined &&
-      this._listCommandChangeProposals !== undefined
+      this._listCommandChangeProposals !== undefined &&
+      this._rejectCommandChangeProposal !== undefined
     );
   }
 
