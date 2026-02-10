@@ -2,15 +2,15 @@ import { PackmindLogger } from '@packmind/logger';
 import {
   ChangeProposal,
   ChangeProposalStatus,
-  RecipeId,
-  createChangeProposalId,
+  ChangeProposalType,
   CreateChangeProposalCommand,
+  createChangeProposalId,
   CreateChangeProposalResponse,
   CreateCommandChangeProposalCommand,
   CreateCommandChangeProposalResponse,
-  ListCommandChangeProposalsResponse,
-  ChangeProposalType,
   createUserId,
+  ListCommandChangeProposalsResponse,
+  RecipeId,
 } from '@packmind/types';
 import { v4 as uuidv4 } from 'uuid';
 import { IChangeProposalRepository } from '../../domain/repositories/IChangeProposalRepository';
@@ -71,7 +71,11 @@ export class ChangeProposalService {
       updatedAt: new Date(),
     };
 
-    await this.repository.save(command.artefactId, proposal);
+    // Ugly fix for now
+    await this.repository.save(
+      command.artefactId as unknown as RecipeId,
+      proposal,
+    );
 
     this.logger.info('Change proposal created', {
       proposalId: proposal.id,
