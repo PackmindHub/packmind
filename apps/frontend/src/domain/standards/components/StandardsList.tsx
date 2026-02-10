@@ -26,6 +26,7 @@ import { useCurrentSpace } from '../../spaces/hooks/useCurrentSpace';
 import { routes } from '../../../shared/utils/routes';
 import { StandardSamplesModal } from './StandardSamplesModal';
 import { StandardsBlankState } from './StandardsBlankState';
+import { UserAvatarWithInitials } from './UserAvatarWithInitials';
 
 interface StandardsListProps {
   orgSlug?: string;
@@ -143,6 +144,11 @@ export const StandardsList = ({
             </Link>
           </PMLink>
         ),
+        createdBy: standard.createdBy ? (
+          <UserAvatarWithInitials email={standard.createdBy.email} size="xs" />
+        ) : (
+          <span>-</span>
+        ),
         updatedAt: (
           <>
             {formatDistanceToNowStrict(standard.updatedAt || new Date(), {
@@ -180,6 +186,12 @@ export const StandardsList = ({
       align: 'center',
     },
     { key: 'name', header: 'Name', grow: true },
+    {
+      key: 'createdBy',
+      header: 'Created by',
+      width: '200px',
+      align: 'center',
+    },
     {
       key: 'updatedAt',
       header: 'Last Updated',

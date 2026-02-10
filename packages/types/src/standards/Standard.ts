@@ -15,4 +15,8 @@ export type Standard = {
   scope: string | null; // Scope from the latest StandardVersion
   spaceId: SpaceId; // The space this standard belongs to
   updatedAt?: Date;
+  createdBy?: {
+    userId: UserId;
+    email: string;
+  }; // Creator information for UI display
 };

@@ -171,14 +171,14 @@ export class StandardRepository
     });
 
     try {
-      // First, get all standards for the space
+      // First, get all standards for the space with user information
       const standards = await this.repository.find({
         where: { spaceId },
         relations: ['gitCommit'],
         withDeleted: opts?.includeDeleted ?? false,
       });
 
-      // For each standard, get the latest version to retrieve scope
+      // For each standard, get the latest version to retrieve scope and enrich with user data
       const standardsWithScope = await Promise.all(
         standards.map(async (standard) => {
           // Get the latest version for this standard
@@ -189,9 +189,34 @@ export class StandardRepository
               order: { version: 'DESC' },
             });
 
+          // Try to get user info from users table using TypeORM
+          let createdBy: { userId: UserId; email: string } | undefined;
+          try {
+            const user = (await this.repository.manager
+              .getRepository('User')
+              .findOne({
+                where: { id: standard.userId },
+                select: ['id', 'email'],
+              })) as { id: UserId; email: string } | null;
+
+            if (user) {
+              createdBy = {
+                userId: user.id,
+                email: user.email,
+              };
+            }
+          } catch (error) {
+            this.logger.warn('Failed to fetch user info for standard', {
+              standardId: standard.id,
+              userId: standard.userId,
+              error: error instanceof Error ? error.message : String(error),
+            });
+          }
+
           return {
             ...standard,
             scope: latestVersion?.scope ?? standard.scope,
+            createdBy,
           };
         }),
       );
