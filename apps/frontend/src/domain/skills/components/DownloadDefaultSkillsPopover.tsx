@@ -15,12 +15,14 @@ import { CursorIcon } from '@packmind/assets/icons/CursorIcon';
 import { useAnalytics } from '@packmind/proprietary/frontend/domain/amplitude/providers/AnalyticsProvider';
 
 interface IDownloadDefaultSkillsPopoverProps {
-  buttonVariant?: 'primary' | 'outline' | 'secondary';
+  buttonVariant?: 'primary' | 'outline' | 'secondary' | 'tertiary';
+  buttonSize?: 'xs' | 'sm' | 'md' | 'lg';
   placement?: 'bottom' | 'bottom-end' | 'bottom-start';
 }
 
 export const DownloadDefaultSkillsPopover = ({
   buttonVariant = 'outline',
+  buttonSize = 'md',
   placement = 'bottom-end',
 }: IDownloadDefaultSkillsPopoverProps) => {
   const [downloadingAgent, setDownloadingAgent] = useState<CodingAgent | null>(
@@ -55,7 +57,7 @@ export const DownloadDefaultSkillsPopover = ({
       <PMPopover.Trigger asChild>
         <PMButton
           variant={buttonVariant}
-          size="md"
+          size={buttonSize}
           title={
             'Download skills to create standards and skills with your AI Agent.'
           }
