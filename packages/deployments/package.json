@@ -10,7 +10,7 @@
     "archiver": "^7.0.1",
     "bullmq": "^5.58.2",
     "tslib": "^2.3.0",
-    "typeorm": "0.3.27",
+    "typeorm": "0.3.28",
     "uuid": "^11.1.0",
     "slug": "^11.0.1",
     "@packmind/accounts": "*",

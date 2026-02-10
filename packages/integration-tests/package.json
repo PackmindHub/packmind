@@ -17,7 +17,7 @@
     "@packmind/types": "*",
     "@packmind/skills": "*",
     "@packmind/spaces": "*",
-    "typeorm": "0.3.27",
+    "typeorm": "0.3.28",
     "@packmind/standards": "*",
     "@packmind/coding-agent": "*",
     "@packmind/deployments": "*",
