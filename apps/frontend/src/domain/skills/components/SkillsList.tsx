@@ -6,7 +6,6 @@ import {
   PMTable,
   PMTableColumn,
   PMTableRow,
-  PMEmptyState,
   PMHStack,
   PMText,
   PMButton,
@@ -23,7 +22,7 @@ import {
 } from '../api/queries/SkillsQueries';
 import { useCurrentSpace } from '../../spaces/hooks/useCurrentSpace';
 import { routes } from '../../../shared/utils/routes';
-import { DownloadDefaultSkillsPopover } from './DownloadDefaultSkillsPopover';
+import { SkillsBlankState } from './SkillsBlankState';
 import { SKILL_MESSAGES } from '../constants/messages';
 
 interface ISkillsListProps {
@@ -125,7 +124,8 @@ export const SkillsList = ({ orgSlug }: ISkillsListProps) => {
     );
   }, [skills, selectedSkillIds, spaceSlug, orgSlug]);
 
-  const isAllSelected = skills && selectedSkillIds.length === skills.length;
+  const isAllSelected =
+    skills?.length && selectedSkillIds.length === skills.length;
   const isSomeSelected = selectedSkillIds.length > 0;
 
   const columns: PMTableColumn[] = [
@@ -161,24 +161,7 @@ export const SkillsList = ({ orgSlug }: ISkillsListProps) => {
   if (isError) return <PMText color="error">Error loading skills.</PMText>;
 
   if (!skills?.length) {
-    return (
-      <PMEmptyState
-        backgroundColor="background.primary"
-        borderRadius="md"
-        width="2xl"
-        mx="auto"
-        title="No skills yet"
-      >
-        Download our skills to get started, then run /packmind-create-skill with
-        your AI coding assistant to be guided through creating your own skills.
-        <PMHStack>
-          <DownloadDefaultSkillsPopover
-            buttonVariant="primary"
-            placement="bottom"
-          />
-        </PMHStack>
-      </PMEmptyState>
-    );
+    return <SkillsBlankState spaceSlug={spaceSlug} />;
   }
 
   return (
