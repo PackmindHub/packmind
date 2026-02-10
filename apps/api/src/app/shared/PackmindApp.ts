@@ -10,6 +10,7 @@ import { AmplitudeHexa } from '@packmind/amplitude';
 import { GitHexa } from '@packmind/git';
 import { LinterHexa } from '@packmind/linter';
 import { LlmHexa } from '@packmind/llm';
+import { PlaybookChangeManagementHexa } from '@packmind/playbook-change-management';
 import {
   BaseHexa,
   BaseHexaOpts,
@@ -76,6 +77,7 @@ export function getPackmindAppDefinition(): PackmindAppDefinition {
       LinterHexa, // Must come before StandardsHexa (StandardsHexa depends on LinterHexa)
       StandardsHexa,
       SkillsHexa,
+      PlaybookChangeManagementHexa,
       CodingAgentHexa,
       DeploymentsHexa,
       ...apiHexaPlugins,

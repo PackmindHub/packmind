@@ -28,6 +28,17 @@ export const packmindTheme = (preflight: boolean) =>
         backgroundColor: '{colors.background.secondary}',
         color: '{colors.text.primary}',
       },
+      '::selection': {
+        background: '{colors.blue.500}',
+        color: '{colors.beige.0}',
+        textShadow: 'none',
+      },
+
+      '::-moz-selection': {
+        background: '{colors.blue.500}',
+        color: '{colors.beige.0}',
+        textShadow: 'none',
+      },
     },
     cssVarsPrefix: 'pm',
     theme: {

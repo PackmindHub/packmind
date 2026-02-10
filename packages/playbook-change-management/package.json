@@ -1,0 +1,17 @@
+{
+  "name": "@packmind/playbook-change-management",
+  "version": "0.0.1",
+  "private": true,
+  "type": "commonjs",
+  "main": "./src/index.js",
+  "types": "./src/index.d.ts",
+  "dependencies": {
+    "@packmind/logger": "*",
+    "@packmind/node-utils": "*",
+    "@packmind/test-utils": "0.0.1",
+    "@packmind/types": "*",
+    "tslib": "^2.3.0",
+    "typeorm": "0.3.27",
+    "uuid": "^11.1.0"
+  }
+}

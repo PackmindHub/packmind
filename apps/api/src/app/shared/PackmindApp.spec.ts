@@ -7,6 +7,7 @@ import { AmplitudeHexa } from '@packmind/amplitude';
 import { apiHexaPlugins } from '@packmind/plugins';
 import { GitHexa } from '@packmind/git';
 import { LlmHexa } from '@packmind/llm';
+import { PlaybookChangeManagementHexa } from '@packmind/playbook-change-management';
 import { PackmindLogger } from '@packmind/logger';
 import { JobsService } from '@packmind/node-utils';
 import { RecipesHexa } from '@packmind/recipes';
@@ -58,6 +59,7 @@ describe('PackmindApp API', () => {
         LinterHexa,
         StandardsHexa,
         SkillsHexa,
+        PlaybookChangeManagementHexa,
         CodingAgentHexa,
         DeploymentsHexa,
         ...apiHexaPlugins,

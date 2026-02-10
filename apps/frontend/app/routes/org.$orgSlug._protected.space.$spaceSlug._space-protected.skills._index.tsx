@@ -2,14 +2,13 @@ import { PMPage, PMVStack, PMHStack } from '@packmind/ui';
 import { useAuthContext } from '../../src/domain/accounts/hooks/useAuthContext';
 import { SkillsList } from '../../src/domain/skills/components/SkillsList';
 import { AutobreadCrumb } from '../../src/shared/components/navigation/AutobreadCrumb';
-import { GettingStartedLearnMoreDialog } from '../../src/domain/organizations/components/dashboard/GettingStartedLearnMoreDialog';
-import { SkillsLearnMoreContent } from '../../src/domain/skills/components/SkillsLearnMoreContent';
 import { DownloadDefaultSkillsPopover } from '../../src/domain/skills/components/DownloadDefaultSkillsPopover';
 import { useGetSkillsQuery } from '../../src/domain/skills/api/queries/SkillsQueries';
 import { useParams } from 'react-router';
+import { SkillsCreateButton } from '../../src/domain/skills/components/SkillsCreateButton';
 
 export default function SkillsIndexRouteModule() {
-  const { organization, user } = useAuthContext();
+  const { organization } = useAuthContext();
   const { spaceSlug } = useParams<{
     orgSlug: string;
     spaceSlug: string;
@@ -31,12 +30,7 @@ export default function SkillsIndexRouteModule() {
         <PMHStack gap={2}>
           {hasSkills && <DownloadDefaultSkillsPopover />}
           {hasSkills && spaceSlug && (
-            <GettingStartedLearnMoreDialog
-              body={<SkillsLearnMoreContent />}
-              title="How to create skills"
-              buttonLabel="Create"
-              buttonSize="md"
-            />
+            <SkillsCreateButton spaceSlug={spaceSlug} />
           )}
         </PMHStack>
       }
