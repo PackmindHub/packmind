@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Get,
   HttpCode,
   HttpStatus,
   NotFoundException,
@@ -15,6 +16,7 @@ import { AuthenticatedRequest } from '@packmind/node-utils';
 import {
   ChangeProposal,
   ChangeProposalId,
+  ListCommandChangeProposalsResponse,
   OrganizationId,
   RecipeId,
   SpaceId,
@@ -41,6 +43,60 @@ export class OrganizationsSpacesChangeProposalsController {
       LogLevel.INFO,
     ),
   ) {}
+
+  /**
+   * List change proposals for a recipe
+   * GET /organizations/:orgId/spaces/:spaceId/change-proposals/:recipeId
+   */
+  @Get(':recipeId')
+  async listCommandChangeProposals(
+    @Param('orgId') organizationId: OrganizationId,
+    @Param('spaceId') spaceId: SpaceId,
+    @Param('recipeId') recipeId: RecipeId,
+    @Req() request: AuthenticatedRequest,
+  ): Promise<ListCommandChangeProposalsResponse> {
+    this.logger.info(
+      'GET /organizations/:orgId/spaces/:spaceId/change-proposals/:recipeId - Listing change proposals',
+      {
+        organizationId,
+        spaceId,
+        recipeId,
+      },
+    );
+
+    try {
+      const result =
+        await this.changeProposalsService.listCommandChangeProposals({
+          userId: request.user.userId,
+          organizationId,
+          recipeId,
+        });
+
+      this.logger.info(
+        'GET /organizations/:orgId/spaces/:spaceId/change-proposals/:recipeId - Change proposals listed successfully',
+        {
+          organizationId,
+          spaceId,
+          recipeId,
+        },
+      );
+
+      return result;
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      this.logger.error(
+        'GET /organizations/:orgId/spaces/:spaceId/change-proposals/:recipeId - Failed to list change proposals',
+        {
+          organizationId,
+          spaceId,
+          recipeId,
+          error: errorMessage,
+        },
+      );
+      throw error;
+    }
+  }
 
   /**
    * Reject a change proposal
