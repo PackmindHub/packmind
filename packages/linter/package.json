@@ -15,7 +15,7 @@
     "@packmind/node-utils": "*",
     "@packmind/standards": "*",
     "bullmq": "^5.23.6",
-    "typeorm": "0.3.27",
+    "typeorm": "0.3.28",
     "uuid": "^11.1.0",
     "@nestjs/common": "^11.1.6",
     "@packmind/test-utils": "*",
