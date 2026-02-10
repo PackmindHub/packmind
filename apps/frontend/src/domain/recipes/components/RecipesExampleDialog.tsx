@@ -23,9 +23,8 @@ const CONVENTIONAL_COMMIT_EXAMPLE: RecipeExample = {
   buttonLabel: 'Conventional commit',
   content: `### Instructions
 
-\`\`\`xml
-	<description>This file contains a prompt template for generating conventional commit messages. It provides instructions, examples, and formatting guidelines to help users write standardized, descriptive commit messages in accordance with the Conventional Commits specification.</description>
-\`\`\`
+
+This file contains a prompt template for generating conventional commit messages. It provides instructions, examples, and formatting guidelines to help users write standardized, descriptive commit messages in accordance with the Conventional Commits specification.
 
 ### Workflow
 
