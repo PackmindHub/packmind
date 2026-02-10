@@ -117,6 +117,7 @@ export function createMockDeploymentGateway(
   return {
     pull: jest.fn(),
     notifyDistribution: jest.fn(),
+    getRenderModeConfiguration: jest.fn(),
     ...overrides,
   };
 }

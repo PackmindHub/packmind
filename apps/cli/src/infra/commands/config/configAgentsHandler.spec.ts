@@ -1,6 +1,11 @@
 import * as fs from 'fs';
 import * as readline from 'readline';
-import { CodingAgent } from '@packmind/types';
+import {
+  CodingAgent,
+  createOrganizationId,
+  createRenderModeConfigurationId,
+  RenderMode,
+} from '@packmind/types';
 import { IConfigFileRepository } from '../../../domain/repositories/IConfigFileRepository';
 import { IAgentArtifactDetectionService } from '../../../application/services/AgentArtifactDetectionService';
 import {
@@ -10,6 +15,12 @@ import {
   AGENT_DISPLAY_NAMES,
 } from './configAgentsHandler';
 import * as consoleLogger from '../../utils/consoleLogger';
+import { IPackmindGateway } from '../../../domain/repositories/IPackmindGateway';
+import { IDeploymentGateway } from '../../../domain/repositories/IDeploymentGateway';
+import {
+  createMockDeploymentGateway,
+  createMockPackmindGateway,
+} from '../../../mocks/createMockGateways';
 
 // Create mock functions before jest.mock to avoid hoisting issues
 const mockInquirerPrompt = jest.fn();
@@ -36,6 +47,8 @@ const mockConsoleLogger = consoleLogger as jest.Mocked<typeof consoleLogger>;
 describe('configAgentsHandler', () => {
   let mockConfigRepository: jest.Mocked<IConfigFileRepository>;
   let mockAgentDetectionService: jest.Mocked<IAgentArtifactDetectionService>;
+  let mockPackmindGateway: jest.Mocked<IPackmindGateway>;
+  let mockDeploymentGateway: jest.Mocked<IDeploymentGateway>;
   let deps: ConfigAgentsHandlerDependencies;
   let originalStdoutWrite: typeof process.stdout.write;
 
@@ -56,9 +69,15 @@ describe('configAgentsHandler', () => {
       detectAgentArtifacts: jest.fn(),
     } as unknown as jest.Mocked<IAgentArtifactDetectionService>;
 
+    mockDeploymentGateway = createMockDeploymentGateway();
+    mockPackmindGateway = createMockPackmindGateway({
+      deployment: mockDeploymentGateway,
+    });
+
     deps = {
       configRepository: mockConfigRepository,
       agentDetectionService: mockAgentDetectionService,
+      packmindGateway: mockPackmindGateway,
       baseDirectory: '/project',
       isTTY: true,
     };
@@ -404,12 +423,8 @@ describe('configAgentsHandler', () => {
     });
 
     describe('when fetchOrganizationAgents is provided', () => {
-      let mockFetchOrganizationAgents: jest.Mock;
-
       beforeEach(() => {
         mockConfigRepository.readConfig.mockResolvedValue(null);
-        mockFetchOrganizationAgents = jest.fn();
-        deps.fetchOrganizationAgents = mockFetchOrganizationAgents;
       });
 
       describe('when no artifacts detected and organization agents are fetched successfully', () => {
@@ -417,10 +432,13 @@ describe('configAgentsHandler', () => {
 
         beforeEach(async () => {
           mockAgentDetectionService.detectAgentArtifacts.mockResolvedValue([]);
-          mockFetchOrganizationAgents.mockResolvedValue([
-            'claude',
-            'cursor',
-          ] as CodingAgent[]);
+          mockDeploymentGateway.getRenderModeConfiguration.mockResolvedValue({
+            configuration: {
+              id: createRenderModeConfigurationId('render-mode-id'),
+              organizationId: createOrganizationId('organization-id'),
+              activeRenderModes: [RenderMode.CLAUDE, RenderMode.CURSOR],
+            },
+          });
 
           mockInquirerPrompt.mockImplementation(
             async (
@@ -469,10 +487,13 @@ describe('configAgentsHandler', () => {
 
         beforeEach(async () => {
           mockAgentDetectionService.detectAgentArtifacts.mockResolvedValue([]);
-          mockFetchOrganizationAgents.mockResolvedValue([
-            'claude',
-            'packmind',
-          ] as CodingAgent[]);
+          mockDeploymentGateway.getRenderModeConfiguration.mockResolvedValue({
+            configuration: {
+              id: createRenderModeConfigurationId('render-mode-id'),
+              organizationId: createOrganizationId('organization-id'),
+              activeRenderModes: [RenderMode.CLAUDE, RenderMode.PACKMIND],
+            },
+          });
 
           mockInquirerPrompt.mockImplementation(
             async (
@@ -501,8 +522,13 @@ describe('configAgentsHandler', () => {
 
         beforeEach(async () => {
           mockAgentDetectionService.detectAgentArtifacts.mockResolvedValue([]);
-          mockFetchOrganizationAgents.mockResolvedValue([]);
-
+          mockDeploymentGateway.getRenderModeConfiguration.mockResolvedValue({
+            configuration: {
+              id: createRenderModeConfigurationId('render-mode-id'),
+              organizationId: createOrganizationId('organization-id'),
+              activeRenderModes: [],
+            },
+          });
           mockInquirerPrompt.mockImplementation(
             async (
               questions: {
@@ -518,7 +544,9 @@ describe('configAgentsHandler', () => {
         });
 
         it('calls fetchOrganizationAgents as fallback', () => {
-          expect(mockFetchOrganizationAgents).toHaveBeenCalled();
+          expect(
+            mockDeploymentGateway.getRenderModeConfiguration,
+          ).toHaveBeenCalled();
         });
 
         it('does not pre-select any agents', () => {
@@ -532,7 +560,7 @@ describe('configAgentsHandler', () => {
 
         beforeEach(async () => {
           mockAgentDetectionService.detectAgentArtifacts.mockResolvedValue([]);
-          mockFetchOrganizationAgents.mockRejectedValue(
+          mockDeploymentGateway.getRenderModeConfiguration.mockRejectedValue(
             new Error('Network error'),
           );
 
@@ -563,10 +591,13 @@ describe('configAgentsHandler', () => {
           mockAgentDetectionService.detectAgentArtifacts.mockResolvedValue([
             { agent: 'cursor', artifactPath: '/project/.cursor' },
           ]);
-          mockFetchOrganizationAgents.mockResolvedValue([
-            'claude',
-            'copilot',
-          ] as CodingAgent[]);
+          mockDeploymentGateway.getRenderModeConfiguration.mockResolvedValue({
+            configuration: {
+              id: createRenderModeConfigurationId('render-mode-id'),
+              organizationId: createOrganizationId('organization-id'),
+              activeRenderModes: [RenderMode.CLAUDE, RenderMode.GH_COPILOT],
+            },
+          });
 
           mockInquirerPrompt.mockImplementation(
             async (
@@ -597,7 +628,9 @@ describe('configAgentsHandler', () => {
         });
 
         it('does not call fetchOrganizationAgents', () => {
-          expect(mockFetchOrganizationAgents).not.toHaveBeenCalled();
+          expect(
+            mockDeploymentGateway.getRenderModeConfiguration,
+          ).not.toHaveBeenCalled();
         });
       });
     });
