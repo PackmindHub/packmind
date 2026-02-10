@@ -47,6 +47,15 @@ All rules and guidelines defined in these standards are mandatory and must be fo
 
 Failure to follow these standards may lead to inconsistencies, errors, or rework. Treat them as the source of truth for how code should be written, structured, and maintained.
 
+## Standard: REST API Endpoint Design
+
+Define REST API route and controller endpoint conventions using dedicated POST action endpoints and ownership-chain IDs with one endpoint per business action to keep endpoints predictable, self-documenting, and aligned with business intent. :
+* Create one endpoint per business action rather than a single endpoint handling multiple actions via request body
+* Only include resource IDs from the ownership chain in the route — omit IDs of related but non-parent resources
+* Use dedicated POST action endpoints (e.g., `/reject`, `/accept`) instead of a generic PATCH with a status field in the body
+
+Full standard is available here for further request: [REST API Endpoint Design](.packmind/standards/rest-api-endpoint-design.md)
+
 ## Standard: NestJS Module Hierarchy
 
 Establish a consistent NestJS module hierarchy using RouterModule.register() for routing and dedicated modules for each resource in the apps/api/src/app/ directory to enhance maintainability and scalability by mirroring the URL hierarchy and ensuring clear separation of concerns across the codebase, applicable to all modules including controllers, services, and modules. :

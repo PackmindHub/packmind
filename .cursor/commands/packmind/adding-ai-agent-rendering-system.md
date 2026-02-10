@@ -2,19 +2,28 @@ Add a new AI agent rendering system to Packmind, supporting both single-file (li
 
 ## When to Use
 
-- When adding support for a new AI coding assistant (e.g., Continue, Cursor, Claude Code, GitHub Copilot)
-- When implementing a new rendering format for standards and recipes distribution
-- When extending Packmind to support additional AI agent integrations
-- When creating a new deployer that follows the ICodingAgentDeployer interface
+* When adding support for a new AI coding assistant (e.g., Continue, Cursor, Claude Code, GitHub Copilot)
+
+* When implementing a new rendering format for standards and recipes distribution
+
+* When extending Packmind to support additional AI agent integrations
+
+* When creating a new deployer that follows the ICodingAgentDeployer interface
 
 ## Context Validation Checkpoints
 
 * [ ] What is the file location pattern for this AI agent? (e.g., .continue/rules/, .cursor/rules/, CLAUDE.md)
+
 * [ ] Does this agent support single-file or multi-file rendering?
+
 * [ ] What frontmatter format does the agent require? (YAML, Markdown, plain text)
+
 * [ ] What file extensions should be used? (.md, .mdc, .txt, etc.)
+
 * [ ] What naming convention should be used for files? (e.g., packmind-standard-{slug}.md, standard-{slug}.mdc)
+
 * [ ] Does the agent require specific frontmatter properties? (name, globs, alwaysApply, description, etc.)
+
 * [ ] What is the relative path from agent files to .packmind/standards/ directory?
 
 ## Recipe Steps
@@ -143,10 +152,10 @@ export * from './infra/repositories/newAgent/NewAgentDeployer';
 
 ### Step 7: Add RenderMode to CodingAgent mapping
 
-Add the mapping from RenderMode to CodingAgent in `packages/deployments/src/application/services/RenderModeConfigurationService.ts` in the `renderModeToCodingAgent` record.
+Add the mapping from RenderMode to CodingAgent in `packages/types/src/deployments/RenderModeCodingAgentMapping.ts` in the `RENDER_MODE_TO_CODING_AGENT` record.
 
 ```typescript
-const renderModeToCodingAgent: Record<RenderMode, CodingAgent> = {
+export const RENDER_MODE_TO_CODING_AGENT: Record<RenderMode, CodingAgent> = {
   // ... existing mappings
   [RenderMode.NEW_AGENT]: CodingAgents.new_agent,
 };
@@ -237,6 +246,7 @@ link: `.packmind/standards/${standardVersion.slug}.md`
 ```
 
 ### Step 15: Update packages/deployments/src/application/utils/GitFileUtils.ts
+
 ```ts
   const agentToFile: Record<CodingAgent, string> = {
     claude: 'CLAUDE.md',
