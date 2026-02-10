@@ -15,8 +15,8 @@ Every tool expects its own inputs:
 
 - **Copilot** → `.github/copilot-instructions.md`, chat modes, reusable prompts
 - **Claude** → `CLAUDE.md`, commands, skills
-- **Cursor** → `.cursor/rules/*.mdc`
-- **Kiro** → `.kiro/steering/*.md`
+- **Cursor** → `.cursor/rules/*.mdc`, commands, skills
+- **AGENTS.md** → `AGENTS.md`
 - _(with more formats appearing every month…)_
 
 But your team’s **actual standards aren’t stored anywhere**:
@@ -47,9 +47,29 @@ Choose your preferred setup option:
 - **Cloud version**: Get started at [https://app.packmind.ai](https://app.packmind.ai/sign-up?utm_source=oss) (free account)
 - **Self-hosted**: Deploy on your own infrastructure using [Docker Compose or Kubernetes](https://packmindhub.github.io/packmind/gs-install-self-hosted)
 
-## Connect MCP server
+## Option 1: Install the CLI (recommended)
 
-The MCP server allows you to interact with Packmind directly from your AI agent (GitHub Copilot, Claude Code, Cursor, etc.) to create and manage standards and commands. Skills are created via the CLI.
+The CLI is the primary way to set up Packmind.
+
+Install it and follow the onboarding to connect to your Packmind organization, create standards, commands, and skills, and distribute them across your repos.
+
+Once authenticated, run in your git repo:
+
+```bash
+$> packmind-cli init
+```
+
+Then, in your favorite ai coding agent, run:
+
+```
+/packmind-onboard
+```
+
+To create your first standards and commands from your codebase.
+
+## Option 2: Connect MCP server
+
+The MCP server allows you to create and manage standards and commands directly from your AI agent (GitHub Copilot, Claude Code, Cursor, etc.).
 
 1. Go to **Account Settings** in Packmind
 2. Copy your MCP Access token
@@ -57,41 +77,13 @@ The MCP server allows you to interact with Packmind directly from your AI agent 
    - MCP server URL: `{PACKMIND_URL}/mcp`
    - Your MCP access token
 
-## Create your first coding standard
-
-Once your MCP server is configured, open your AI agent and use this prompt:
+Once set up, open your AI agent and use this prompt:
 
 ```
 Start packmind onboarding
 ```
 
 Your AI agent will guide you through creating your first coding standard interactively.
-Go in Packmind to see the final results.
-
-## Distribute standards, commands, and skills
-
-Make your artifacts available to your AI coding assistant:
-
-### 1. Create a package
-
-In Packmind, go to **Packages** → **Create Package**, then add your standards, commands, and skills to it.
-
-### 2. Install locally
-
-```bash
-# Install the CLI (requires Node.js 22+ for npm installation)
-npm install -g @packmind/cli
-
-packmind-cli login
-
-# Install your packages
-packmind-cli install --list
-packmind-cli install <package-slug>
-```
-
-Your standards are now available in the `.packmind` directory and your AI agent configuration files.
-
-For detailed CLI setup and usage, see the [CLI documentation](https://docs.packmind.com/cli).
 
 # Documentation
 
