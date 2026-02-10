@@ -9,6 +9,7 @@ export interface IPMPageProps {
   titleLevel?: 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6';
   centeredHeader?: boolean;
   subtitle?: string;
+  titleAction?: React.ReactNode;
   breadcrumbComponent?: React.ReactNode;
   actions?: React.ReactNode;
   sidebar?: React.ReactNode;
@@ -22,6 +23,7 @@ export const PMPage: React.FC<IPMPageProps> = ({
   titleLevel = 'h1',
   centeredHeader = false,
   subtitle,
+  titleAction,
   breadcrumbComponent,
   actions,
   sidebar,
@@ -46,6 +48,7 @@ export const PMPage: React.FC<IPMPageProps> = ({
             {subtitle}
           </PMText>
         )}
+        {titleAction}
       </VStack>
       {actions && <Box flexShrink={0}>{actions}</Box>}
     </Flex>

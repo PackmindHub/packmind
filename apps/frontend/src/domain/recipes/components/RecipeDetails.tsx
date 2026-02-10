@@ -17,6 +17,10 @@ import {
   PMCopiable,
   PMTooltip,
   PMEmptyState,
+  PMFeatureFlag,
+  DEFAULT_FEATURE_DOMAIN_MAP,
+  CHANGE_PROPOSALS_FEATURE_KEY,
+  PMLink,
 } from '@packmind/ui';
 import { LuCopy } from 'react-icons/lu';
 import { useNavigate } from 'react-router';
@@ -38,6 +42,7 @@ import { useCurrentSpace } from '../../spaces/hooks/useCurrentSpace';
 import { routes } from '../../../shared/utils/routes';
 import { useAuthContext } from '../../accounts/hooks/useAuthContext';
 import { useNavigation } from '../../../shared/hooks/useNavigation';
+import { ProposeChangeModal } from './ProposeChangeModal';
 
 interface RecipeDetailsProps {
   id: RecipeId;
@@ -48,9 +53,10 @@ interface RecipeDetailsProps {
 export const RecipeDetails = ({ id, orgSlug }: RecipeDetailsProps) => {
   const navigate = useNavigate();
   const nav = useNavigation();
-  const { organization } = useAuthContext();
+  const { organization, user } = useAuthContext();
   const { spaceSlug, spaceId } = useCurrentSpace();
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [proposeChangeOpen, setProposeChangeOpen] = useState(false);
   const [deleteAlert, setDeleteAlert] = useState<{
     type: 'success' | 'error';
     message: string;
@@ -145,6 +151,22 @@ export const RecipeDetails = ({ id, orgSlug }: RecipeDetailsProps) => {
   return (
     <PMPage
       title={recipe.name}
+      titleAction={
+        <PMFeatureFlag
+          featureKeys={[CHANGE_PROPOSALS_FEATURE_KEY]}
+          featureDomainMap={DEFAULT_FEATURE_DOMAIN_MAP}
+          userEmail={user?.email}
+        >
+          <PMLink
+            onClick={() => setProposeChangeOpen(true)}
+            cursor="pointer"
+            fontSize={'xs'}
+            variant="underline"
+          >
+            Propose change
+          </PMLink>
+        </PMFeatureFlag>
+      }
       breadcrumbComponent={<AutobreadCrumb />}
       isFullWidth
       actions={
@@ -304,6 +326,16 @@ export const RecipeDetails = ({ id, orgSlug }: RecipeDetailsProps) => {
           ]}
         />
       </PMVStack>
+
+      {recipe && organization?.id && (
+        <ProposeChangeModal
+          recipeName={recipe.name}
+          recipeId={recipe.id}
+          organizationId={organization.id}
+          open={proposeChangeOpen}
+          onOpenChange={(details) => setProposeChangeOpen(details.open)}
+        />
+      )}
     </PMPage>
   );
 };
