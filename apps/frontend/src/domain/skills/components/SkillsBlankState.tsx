@@ -1,12 +1,13 @@
 import {
   PMBox,
+  PMButton,
   PMHeading,
   PMHStack,
   PMIcon,
   PMText,
   PMVStack,
 } from '@packmind/ui';
-import { LuBot } from 'react-icons/lu';
+import { LuBot, LuBook } from 'react-icons/lu';
 import { GettingStartedLearnMoreDialog } from '../../organizations/components/dashboard/GettingStartedLearnMoreDialog';
 import { SkillsLearnMoreContent } from './SkillsLearnMoreContent';
 
@@ -31,6 +32,21 @@ export const SkillsBlankState = ({ spaceSlug }: SkillsBlankStateProps) => {
         independently. Perfect for complex workflows, domain-specific knowledge,
         or multi-step processes that require structured expertise.
       </PMText>
+
+      <PMHStack mt={4} gap={2}>
+        <PMButton variant="secondary" size={'xs'} asChild w="fit-content">
+          <a
+            href="https://github.com/ComposioHQ/awesome-claude-skills/tree/master"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <PMIcon>
+              <LuBook />
+            </PMIcon>
+            Example: awesome-claude-skills
+          </a>
+        </PMButton>
+      </PMHStack>
 
       <PMVStack alignItems={'flex-start'} width={'full'} mt={8}>
         <PMBox
@@ -63,7 +79,7 @@ export const SkillsBlankState = ({ spaceSlug }: SkillsBlankStateProps) => {
               body={<SkillsLearnMoreContent />}
               title="How to create skills"
               buttonLabel="Create"
-              buttonVariant="primary"
+              buttonVariant="tertiary"
               buttonMarginTop={'auto'}
             />
           )}
