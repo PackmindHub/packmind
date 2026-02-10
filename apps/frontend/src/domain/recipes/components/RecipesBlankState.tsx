@@ -14,6 +14,7 @@ import { GettingStartedLearnMoreDialog } from '../../organizations/components/da
 import { GETTING_STARTED_CREATE_DIALOG } from '../../organizations/components/dashboard/GettingStartedWidget';
 import { routes } from '../../../shared/utils/routes';
 import { LuBot, LuPencilLine } from 'react-icons/lu';
+import { RecipesExampleDialog } from './RecipesExampleDialog';
 
 interface RecipesBlankStateProps {
   orgSlug: string;
@@ -40,6 +41,7 @@ export const RecipesBlankState = ({
         — like creating a new React component or setting up tests — with
         consistent results across your team.
       </PMText>
+      <RecipesExampleDialog />
 
       <PMVStack alignItems={'flex-start'} width={'full'} mt={8}>
         <PMGrid gridTemplateColumns={'repeat(2, 1fr)'} gap={4} width={'full'}>
