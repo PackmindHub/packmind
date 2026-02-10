@@ -270,6 +270,7 @@ auto_login() {
 
     if "$cli_path" login --code "$PACKMIND_LOGIN_CODE" --host "$HOST"; then
         success "Login successful!"
+        info "Run 'packmind-cli init' in your repository to start using Packmind."
         LOGIN_SUCCESS=0
     else
         warn "Login failed. You can try again later with: $BINARY_NAME login"

@@ -73,7 +73,9 @@ export function OnboardingBuildMcpSection() {
 
   const methodTabs = useMemo(() => {
     if (!selectedAgent || !url || !token) return [];
-    const availableMethods = getAvailableMethods(selectedAgent);
+    const availableMethods = getAvailableMethods(selectedAgent).filter(
+      (method) => method.label !== 'Packmind CLI',
+    );
     if (availableMethods.length === 0) return [];
     return createTabsFromMethods(availableMethods, token, url);
   }, [selectedAgent, url, token]);
