@@ -66,7 +66,9 @@ export class AmplitudeEventListener extends PackmindListener<EventTrackingAdapte
     await this.adapter.trackEvent(userId, organizationId, eventName, {
       ...transformer(event.payload),
       source: event.payload.source,
-      originSkill: event.payload.originSkill,
+      ...(event.payload.originSkill && {
+        originSkill: event.payload.originSkill,
+      }),
     });
   }
 
