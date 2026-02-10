@@ -21,7 +21,7 @@ export const JsonMethodContent: React.FC<IMethodContentProps> = ({
       <PMText as="p" color="secondary">
         {method.filePath ? (
           <>
-            Create <code>{method.filePath}</code> with this content:
+            Update <code>{method.filePath}</code> with this configuration:
           </>
         ) : (
           `${method.label}:`
