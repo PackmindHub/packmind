@@ -10,8 +10,8 @@ export type ChangeProposal<T extends ChangeProposalType = ChangeProposalType> =
   {
     id: ChangeProposalId;
     type: T;
-    artifactId: ChangeProposalArtefactId<T>;
-    artifactVersion: number;
+    artefactId: ChangeProposalArtefactId<T>;
+    artefactVersion: number;
     payload: ChangeProposalPayload<T>;
     captureMode: ChangeProposalCaptureMode;
     status: ChangeProposalStatus;

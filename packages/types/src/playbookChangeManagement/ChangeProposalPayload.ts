@@ -1,0 +1,67 @@
+import { RuleId } from '../standards/RuleId';
+import { Rule } from '../standards/Rule';
+import { SkillFileId } from '../skills/SkillFileId';
+import { SkillFile } from '../skills/SkillFile';
+import { ChangeProposalType } from './ChangeProposalType';
+
+export type ScalarUpdatePayload = {
+  oldValue: string;
+  newValue: string;
+};
+
+export type CollectionItemUpdatePayload<T> = {
+  targetId: T;
+  oldValue: string;
+  newValue: string;
+};
+
+export type CollectionItemAddPayload<T extends { id: string }> = {
+  targetId: T['id'];
+  item: T;
+};
+
+export type CollectionItemDeletePayload<T extends { id: string }> = {
+  targetId: T['id'];
+  item: T;
+};
+
+type CommandChangeProposalPayloadMap = {
+  [ChangeProposalType.updateCommandName]: ScalarUpdatePayload;
+  [ChangeProposalType.updateCommandDescription]: ScalarUpdatePayload;
+};
+
+type StandardChangeProposalPayloadMap = {
+  [ChangeProposalType.updateStandardName]: ScalarUpdatePayload;
+  [ChangeProposalType.updateStandardDescription]: ScalarUpdatePayload;
+  [ChangeProposalType.addRule]: CollectionItemAddPayload<
+    Omit<Rule, 'standardVersionId'>
+  >;
+  [ChangeProposalType.updateRule]: CollectionItemUpdatePayload<RuleId>;
+  [ChangeProposalType.deleteRule]: CollectionItemDeletePayload<
+    Omit<Rule, 'standardVersionId'>
+  >;
+};
+
+type SkillChangeProposalPayloadMap = {
+  [ChangeProposalType.updateSkillName]: ScalarUpdatePayload;
+  [ChangeProposalType.updateSkillDescription]: ScalarUpdatePayload;
+  [ChangeProposalType.updateSkillPrompt]: ScalarUpdatePayload;
+  [ChangeProposalType.updateSkillMetadata]: ScalarUpdatePayload;
+  [ChangeProposalType.addSkillFile]: CollectionItemAddPayload<
+    Omit<SkillFile, 'skillVersionId'>
+  >;
+  [ChangeProposalType.updateSkillFilePath]: CollectionItemUpdatePayload<SkillFileId>;
+  [ChangeProposalType.updateSkillFileContent]: CollectionItemUpdatePayload<SkillFileId>;
+  [ChangeProposalType.updateSkillFilePermissions]: CollectionItemUpdatePayload<SkillFileId>;
+  [ChangeProposalType.deleteSkillFile]: CollectionItemDeletePayload<
+    Omit<SkillFile, 'skillVersionId'>
+  >;
+};
+
+type ChangeProposalPayloadMap = CommandChangeProposalPayloadMap &
+  StandardChangeProposalPayloadMap &
+  SkillChangeProposalPayloadMap;
+
+export type ChangeProposalPayload<
+  T extends ChangeProposalType = ChangeProposalType,
+> = ChangeProposalPayloadMap[T];
