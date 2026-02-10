@@ -2,6 +2,7 @@ import {
   Controller,
   Delete,
   Get,
+  NotFoundException,
   Param,
   Post,
   Body,
@@ -47,6 +48,7 @@ import {
 import { DeploymentsService } from './deployments.service';
 import { PackmindLogger } from '@packmind/logger';
 import { AuthenticatedRequest } from '@packmind/node-utils';
+import { TargetNotFoundError } from '@packmind/deployments';
 import { OrganizationAccessGuard } from '../guards/organization-access.guard';
 
 const origin = 'OrganizationDeploymentsController';
@@ -532,6 +534,9 @@ export class DeploymentsController {
 
       return deployments;
     } catch (error) {
+      if (error instanceof TargetNotFoundError) {
+        throw new NotFoundException(error.message);
+      }
       const errorMessage =
         error instanceof Error ? error.message : String(error);
       this.logger.error(
@@ -589,6 +594,9 @@ export class DeploymentsController {
 
       return deployments;
     } catch (error) {
+      if (error instanceof TargetNotFoundError) {
+        throw new NotFoundException(error.message);
+      }
       const errorMessage =
         error instanceof Error ? error.message : String(error);
       this.logger.error(
@@ -646,6 +654,9 @@ export class DeploymentsController {
 
       return deployments;
     } catch (error) {
+      if (error instanceof TargetNotFoundError) {
+        throw new NotFoundException(error.message);
+      }
       const errorMessage =
         error instanceof Error ? error.message : String(error);
       this.logger.error(
@@ -853,6 +864,9 @@ export class DeploymentsController {
 
       return response;
     } catch (error) {
+      if (error instanceof TargetNotFoundError) {
+        throw new NotFoundException(error.message);
+      }
       const errorMessage =
         error instanceof Error ? error.message : String(error);
       this.logger.error(

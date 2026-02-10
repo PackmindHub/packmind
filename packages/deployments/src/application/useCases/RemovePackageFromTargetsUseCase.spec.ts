@@ -101,6 +101,7 @@ describe('RemovePackageFromTargetsUseCase', () => {
 
     mockTargetService = {
       findById: jest.fn(),
+      findByIdsInOrganization: jest.fn(),
     } as unknown as jest.Mocked<TargetService>;
 
     mockDistributionRepository = {
@@ -198,7 +199,31 @@ describe('RemovePackageFromTargetsUseCase', () => {
 
       beforeEach(() => {
         mockPackageService.findById.mockResolvedValue(mockPackage);
-        mockTargetService.findById.mockResolvedValue(null);
+        mockTargetService.findByIdsInOrganization.mockRejectedValue(
+          new TargetNotFoundError(targetIds[0]),
+        );
+      });
+
+      it('throws TargetNotFoundError', async () => {
+        await expect(useCase.execute(command)).rejects.toThrow(
+          TargetNotFoundError,
+        );
+      });
+    });
+
+    describe('when a target belongs to another organization', () => {
+      const command: RemovePackageFromTargetsCommand = {
+        userId,
+        organizationId,
+        packageId,
+        targetIds,
+      };
+
+      beforeEach(() => {
+        mockPackageService.findById.mockResolvedValue(mockPackage);
+        mockTargetService.findByIdsInOrganization.mockRejectedValue(
+          new TargetNotFoundError(targetIds[1]),
+        );
       });
 
       it('throws TargetNotFoundError', async () => {
@@ -218,9 +243,11 @@ describe('RemovePackageFromTargetsUseCase', () => {
 
       beforeEach(() => {
         mockPackageService.findById.mockResolvedValue(mockPackage);
+        mockTargetService.findByIdsInOrganization.mockResolvedValue([
+          mockTarget,
+          mockTarget2,
+        ]);
         mockTargetService.findById
-          .mockResolvedValueOnce(mockTarget)
-          .mockResolvedValueOnce(mockTarget2)
           .mockResolvedValueOnce(mockTarget)
           .mockResolvedValueOnce(mockTarget2);
         mockRenderModeConfigurationService.getActiveRenderModes.mockResolvedValue(

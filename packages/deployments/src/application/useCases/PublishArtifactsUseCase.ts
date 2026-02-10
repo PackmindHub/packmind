@@ -85,6 +85,12 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
       throw new Error('At least one target must be provided');
     }
 
+    // Validate all targets belong to the requesting organization
+    await this.targetService.findByIdsInOrganization(
+      command.targetIds,
+      command.organizationId as OrganizationId,
+    );
+
     // Fetch organization's active render modes
     const activeRenderModes =
       await this.renderModeConfigurationService.getActiveRenderModes(

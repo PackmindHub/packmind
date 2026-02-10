@@ -36,7 +36,6 @@ import {
 import { PackageService } from '../services/PackageService';
 import { TargetService } from '../services/TargetService';
 import { PackageNotFoundError } from '../../domain/errors/PackageNotFoundError';
-import { TargetNotFoundError } from '../../domain/errors/TargetNotFoundError';
 import { IDistributionRepository } from '../../domain/repositories/IDistributionRepository';
 import { IDistributedPackageRepository } from '../../domain/repositories/IDistributedPackageRepository';
 import { RenderModeConfigurationService } from '../services/RenderModeConfigurationService';
@@ -81,12 +80,10 @@ export class RemovePackageFromTargetsUseCase implements IRemovePackageFromTarget
       throw new PackageNotFoundError(command.packageId);
     }
 
-    for (const targetId of command.targetIds) {
-      const target = await this.targetService.findById(targetId);
-      if (!target) {
-        throw new TargetNotFoundError(targetId);
-      }
-    }
+    await this.targetService.findByIdsInOrganization(
+      command.targetIds,
+      command.organizationId as OrganizationId,
+    );
 
     // Resolve artifacts for each target
     const artifactResolutions = await this.resolveArtifactsForTargets(
