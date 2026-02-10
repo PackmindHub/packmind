@@ -21,6 +21,7 @@ import {
   DEFAULT_FEATURE_DOMAIN_MAP,
   CHANGE_PROPOSALS_FEATURE_KEY,
   PMLink,
+  PMBadge,
 } from '@packmind/ui';
 import { LuCopy } from 'react-icons/lu';
 import { useNavigate } from 'react-router';
@@ -31,9 +32,10 @@ import {
 import { RecipeVersionsListDrawer } from './RecipeVersionsListDrawer';
 import { RecipeDistributionsList } from '../../deployments/components/RecipeDistributionsList/RecipeDistributionsList';
 import { useListRecipeDistributionsQuery } from '../../deployments/api/queries/DeploymentsQueries';
+import { useGetChangeProposalsQuery } from '../api/queries/ChangeProposalsQueries';
 import { AutobreadCrumb } from '../../../../src/shared/components/navigation/AutobreadCrumb';
 import { RECIPE_MESSAGES } from '../constants/messages';
-import { RecipeId } from '@packmind/types';
+import { ChangeProposalStatus, RecipeId } from '@packmind/types';
 import {
   MarkdownEditor,
   MarkdownEditorProvider,
@@ -68,7 +70,11 @@ export const RecipeDetails = ({ id, orgSlug }: RecipeDetailsProps) => {
   const deleteMutation = useDeleteRecipeMutation();
   const { data: distributions, isLoading: isLoadingDistributions } =
     useListRecipeDistributionsQuery(id);
+  const { data: changeProposals } = useGetChangeProposalsQuery(id);
   const hasDistributions = distributions && distributions.length > 0;
+  const pendingCount =
+    changeProposals?.filter((p) => p.status === ChangeProposalStatus.pending)
+      .length ?? 0;
   const defaultPath = `.packmind/recipes/${recipe?.slug}.md`;
 
   const handleDeleteRecipe = async () => {
@@ -185,6 +191,31 @@ export const RecipeDetails = ({ id, orgSlug }: RecipeDetailsProps) => {
               </PMCopiable.Trigger>
             </PMTooltip>
           </PMCopiable.Root>
+          <PMFeatureFlag
+            featureKeys={[CHANGE_PROPOSALS_FEATURE_KEY]}
+            featureDomainMap={DEFAULT_FEATURE_DOMAIN_MAP}
+            userEmail={user?.email}
+          >
+            {pendingCount > 0 && (
+              <PMButton
+                variant="tertiary"
+                onClick={() =>
+                  navigate(
+                    routes.space.toCommandChangeProposals(
+                      orgSlug || '',
+                      spaceSlug || '',
+                      recipe.id,
+                    ),
+                  )
+                }
+              >
+                <PMHStack gap={2}>
+                  Changes to review
+                  <PMBadge>{pendingCount}</PMBadge>
+                </PMHStack>
+              </PMButton>
+            )}
+          </PMFeatureFlag>
           <PMButton variant="primary" onClick={handleEditClick}>
             Edit
           </PMButton>

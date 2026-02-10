@@ -20,7 +20,7 @@ export const handle = {
           params.commandId,
         )}
       >
-        Change Proposals
+        Changes to review
       </NavLink>
     );
   },
@@ -77,7 +77,7 @@ export default function ViewChangeProposalsRouteModule() {
 
   return (
     <PMPage
-      title="Change Proposals"
+      title="Change proposals"
       subtitle="Review and manage proposed changes to this command"
       breadcrumbComponent={<AutobreadCrumb />}
     >
