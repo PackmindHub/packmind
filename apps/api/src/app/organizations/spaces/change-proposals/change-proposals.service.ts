@@ -3,6 +3,8 @@ import { PackmindLogger } from '@packmind/logger';
 import {
   ChangeProposal,
   IPlaybookChangeManagementPort,
+  ListCommandChangeProposalsCommand,
+  ListCommandChangeProposalsResponse,
   OrganizationId,
   RecipeId,
   ChangeProposalId,
@@ -17,6 +19,14 @@ export class ChangeProposalsService {
     private readonly playbookChangeManagementAdapter: IPlaybookChangeManagementPort,
     private readonly logger: PackmindLogger,
   ) {}
+
+  async listCommandChangeProposals(
+    command: ListCommandChangeProposalsCommand,
+  ): Promise<ListCommandChangeProposalsResponse> {
+    return this.playbookChangeManagementAdapter.listCommandChangeProposals(
+      command,
+    );
+  }
 
   async rejectChangeProposal(
     recipeId: RecipeId,
