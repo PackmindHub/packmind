@@ -30,7 +30,7 @@ export default function SkillsIndexRouteModule() {
       actions={
         <PMHStack gap={2}>
           {hasSkills && <DownloadDefaultSkillsPopover />}
-          {spaceSlug && (
+          {hasSkills && spaceSlug && (
             <GettingStartedLearnMoreDialog
               body={<SkillsLearnMoreContent />}
               title="How to create skills"
