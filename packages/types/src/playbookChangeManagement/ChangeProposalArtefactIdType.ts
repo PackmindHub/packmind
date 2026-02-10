@@ -11,12 +11,12 @@ type CommandChangeProposalArtefactIdMap = {
 type StandardChangeProposalArtefactIdMap = {
   [ChangeProposalType.updateStandardName]: StandardId;
   [ChangeProposalType.updateStandardDescription]: StandardId;
-};
-
-type SkillChangeProposalArtefactIdMap = {
   [ChangeProposalType.addRule]: StandardId;
   [ChangeProposalType.updateRule]: StandardId;
   [ChangeProposalType.deleteRule]: StandardId;
+};
+
+type SkillChangeProposalArtefactIdMap = {
   [ChangeProposalType.updateSkillName]: SkillId;
   [ChangeProposalType.updateSkillDescription]: SkillId;
   [ChangeProposalType.updateSkillPrompt]: SkillId;

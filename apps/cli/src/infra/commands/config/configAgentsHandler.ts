@@ -1,9 +1,10 @@
 import * as readline from 'readline';
 import * as inquirer from 'inquirer';
-import { CodingAgent } from '@packmind/types';
+import { CodingAgent, RENDER_MODE_TO_CODING_AGENT } from '@packmind/types';
 import { IConfigFileRepository } from '../../../domain/repositories/IConfigFileRepository';
 import { IAgentArtifactDetectionService } from '../../../application/services/AgentArtifactDetectionService';
 import { logInfoConsole, logSuccessConsole } from '../../utils/consoleLogger';
+import { IPackmindGateway } from '../../../domain/repositories/IPackmindGateway';
 
 /**
  * Agents available for selection (packmind excluded - always active)
@@ -38,12 +39,67 @@ type AgentChoice = {
 export type ConfigAgentsHandlerDependencies = {
   configRepository: IConfigFileRepository;
   agentDetectionService: IAgentArtifactDetectionService;
+  packmindGateway: IPackmindGateway;
   baseDirectory: string;
   stdin?: NodeJS.ReadableStream;
   stdout?: NodeJS.WritableStream;
   isTTY?: boolean;
-  fetchOrganizationAgents?: () => Promise<CodingAgent[]>;
 };
+
+/**
+ * Handler for the `config agents` command.
+ * Allows users to interactively select which coding agents to generate artifacts for.
+ */
+export async function configAgentsHandler(
+  deps: ConfigAgentsHandlerDependencies,
+): Promise<void> {
+  const { configRepository, baseDirectory } = deps;
+  const isTTY = deps.isTTY ?? process.stdin.isTTY;
+  const useSimplePrompt = process.env.PACKMIND_SIMPLE_PROMPT === '1' || !isTTY;
+
+  // Step 1: Determine pre-selected agents
+  const preselectedAgents = await getPreselectedAgents(deps);
+
+  // Step 2: Build choices for the prompt
+  const choices: AgentChoice[] = SELECTABLE_AGENTS.map((agent) => ({
+    name: AGENT_DISPLAY_NAMES[agent],
+    value: agent,
+    checked: preselectedAgents.has(agent),
+  }));
+
+  // Step 3: Prompt user for selection
+  let selectedAgents: CodingAgent[];
+
+  if (useSimplePrompt) {
+    selectedAgents = await promptAgentsWithReadline(choices);
+  } else {
+    const result = await inquirer.default.prompt<{
+      selectedAgents: CodingAgent[];
+    }>([
+      {
+        type: 'checkbox',
+        name: 'selectedAgents',
+        message: 'Select coding agents to generate artifacts for:',
+        choices,
+      },
+    ]);
+    selectedAgents = result.selectedAgents;
+  }
+
+  // Step 4: Save selected agents to config
+  await configRepository.updateAgentsConfig(baseDirectory, selectedAgents);
+
+  const agentNames = selectedAgents.map((a) => AGENT_DISPLAY_NAMES[a]);
+  if (selectedAgents.length === 0) {
+    logInfoConsole(
+      'No agents selected. Only packmind artifacts will be generated.',
+    );
+  } else {
+    logSuccessConsole(
+      `Configuration saved. Artifacts will be generated for: ${agentNames.join(', ')}`,
+    );
+  }
+}
 
 /**
  * Simple readline-based prompt for selecting agents by number.
@@ -96,90 +152,41 @@ async function promptAgentsWithReadline(
   });
 }
 
-/**
- * Handler for the `config agents` command.
- * Allows users to interactively select which coding agents to generate artifacts for.
- */
-export async function configAgentsHandler(
+async function getPreselectedAgents(
   deps: ConfigAgentsHandlerDependencies,
-): Promise<void> {
+): Promise<Set<CodingAgent>> {
   const { configRepository, agentDetectionService, baseDirectory } = deps;
-  const isTTY = deps.isTTY ?? process.stdin.isTTY;
-  const useSimplePrompt = process.env.PACKMIND_SIMPLE_PROMPT === '1' || !isTTY;
 
-  // Step 1: Read existing config
   const existingConfig = await configRepository.readConfig(baseDirectory);
-
-  // Step 2: Determine pre-selected agents
-  let preselectedAgents: Set<CodingAgent>;
-
   if (existingConfig?.agents && existingConfig.agents.length > 0) {
     // Use agents from config as pre-selected
-    preselectedAgents = new Set(
+    return new Set(
       existingConfig.agents.filter((agent): agent is CodingAgent =>
         SELECTABLE_AGENTS.includes(agent),
       ),
     );
-  } else {
-    // Priority 2: Detect agent artifacts from filesystem
-    const detectedArtifacts =
-      await agentDetectionService.detectAgentArtifacts(baseDirectory);
+  }
 
-    if (detectedArtifacts.length > 0) {
-      preselectedAgents = new Set(detectedArtifacts.map((a) => a.agent));
-    } else if (deps.fetchOrganizationAgents) {
-      // Priority 3: Fall back to organization agents from API
-      try {
-        const orgAgents = await deps.fetchOrganizationAgents();
-        const selectableOrgAgents = orgAgents.filter((agent) =>
-          SELECTABLE_AGENTS.includes(agent),
-        );
-        preselectedAgents = new Set(selectableOrgAgents);
-      } catch {
-        preselectedAgents = new Set();
-      }
-    } else {
-      preselectedAgents = new Set();
+  const detectedArtifacts =
+    await agentDetectionService.detectAgentArtifacts(baseDirectory);
+
+  if (detectedArtifacts.length > 0) {
+    return new Set(detectedArtifacts.map((a) => a.agent));
+  }
+
+  try {
+    const result =
+      await deps.packmindGateway.deployment.getRenderModeConfiguration({});
+    if (result.configuration) {
+      return new Set(
+        result.configuration.activeRenderModes
+          .map((mode) => RENDER_MODE_TO_CODING_AGENT[mode])
+          .filter((agent): agent is CodingAgent => agent !== undefined),
+      );
     }
+  } catch {
+    // No-op. This may happen when the user is not authenticated.
   }
 
-  // Step 3: Build choices for the prompt
-  const choices: AgentChoice[] = SELECTABLE_AGENTS.map((agent) => ({
-    name: AGENT_DISPLAY_NAMES[agent],
-    value: agent,
-    checked: preselectedAgents.has(agent),
-  }));
-
-  // Step 4: Prompt user for selection
-  let selectedAgents: CodingAgent[];
-
-  if (useSimplePrompt) {
-    selectedAgents = await promptAgentsWithReadline(choices);
-  } else {
-    const result = await inquirer.default.prompt<{
-      selectedAgents: CodingAgent[];
-    }>([
-      {
-        type: 'checkbox',
-        name: 'selectedAgents',
-        message: 'Select coding agents to generate artifacts for:',
-        choices,
-      },
-    ]);
-    selectedAgents = result.selectedAgents;
-  }
-
-  // Step 5: Save selected agents to config
-  await configRepository.updateAgentsConfig(baseDirectory, selectedAgents);
-
-  const agentNames = selectedAgents.map((a) => AGENT_DISPLAY_NAMES[a]);
-  if (selectedAgents.length === 0) {
-    logInfoConsole(
-      'No agents selected. Only packmind artifacts will be generated.',
-    );
-  } else {
-    logSuccessConsole(
-      `Configuration saved. Artifacts will be generated for: ${agentNames.join(', ')}`,
-    );
-  }
+  return new Set();
 }

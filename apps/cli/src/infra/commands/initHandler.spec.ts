@@ -7,6 +7,7 @@ import {
 } from './initHandler';
 import * as consoleLogger from '../utils/consoleLogger';
 import * as configAgentsHandlerModule from './config/configAgentsHandler';
+import { createMockPackmindGateway } from '../../mocks/createMockGateways';
 
 jest.mock('../utils/consoleLogger', () => ({
   logInfoConsole: jest.fn(),
@@ -53,6 +54,7 @@ describe('initHandler', () => {
     deps = {
       configRepository: mockConfigRepository,
       agentDetectionService: mockAgentDetectionService,
+      packmindGateway: createMockPackmindGateway(),
       baseDirectory: '/project',
       installDefaultSkills: mockInstallDefaultSkills,
       cliVersion: '1.2.3',
@@ -105,37 +107,6 @@ describe('initHandler', () => {
       expect(mockConfigAgentsHandler).toHaveBeenCalledWith(
         expect.objectContaining({
           isTTY: true,
-        }),
-      );
-    });
-
-    it('passes undefined fetchOrganizationAgents to configAgentsHandler', () => {
-      expect(mockConfigAgentsHandler).toHaveBeenCalledWith(
-        expect.objectContaining({
-          fetchOrganizationAgents: undefined,
-        }),
-      );
-    });
-  });
-
-  describe('when fetchOrganizationAgents is provided', () => {
-    const mockFetchOrganizationAgents = jest.fn();
-
-    beforeEach(async () => {
-      deps.fetchOrganizationAgents = mockFetchOrganizationAgents;
-      mockInstallDefaultSkills.mockResolvedValue({
-        filesCreated: 0,
-        filesUpdated: 0,
-        errors: [],
-      });
-
-      await initHandler(deps);
-    });
-
-    it('passes fetchOrganizationAgents to configAgentsHandler', () => {
-      expect(mockConfigAgentsHandler).toHaveBeenCalledWith(
-        expect.objectContaining({
-          fetchOrganizationAgents: mockFetchOrganizationAgents,
         }),
       );
     });
