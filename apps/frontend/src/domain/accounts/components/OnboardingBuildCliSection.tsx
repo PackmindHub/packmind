@@ -65,6 +65,9 @@ export function OnboardingBuildCliSection() {
                       align="stretch"
                       data-testid="OnboardingBuild.InstallNPMContent"
                     >
+                      <PMText color="secondary" fontSize="xs" marginTop={4}>
+                        Requires Node.js v22 or higher
+                      </PMText>
                       <CopiableTextField
                         value={NPM_INSTALL_COMMAND}
                         readOnly
