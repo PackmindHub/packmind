@@ -12,7 +12,7 @@
     "@packmind/logger": "*",
     "@packmind/node-utils": "*",
     "@packmind/types": "*",
-    "typeorm": "0.3.27",
+    "typeorm": "0.3.28",
     "uuid": "^11.1.0",
     "bullmq": "^5.58.2",
     "@packmind/test-utils": "0.0.1"
