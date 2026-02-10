@@ -73,6 +73,7 @@ export class CreateStandardWithExamplesUsecase {
       disableTriggerAssessment = false,
       source = 'ui',
       method,
+      originSkill,
     } = command;
 
     const organizationId = createOrganizationId(orgId);
@@ -217,6 +218,7 @@ export class CreateStandardWithExamplesUsecase {
           userId,
           source,
           method,
+          originSkill,
         }),
       );
 
@@ -227,6 +229,7 @@ export class CreateStandardWithExamplesUsecase {
         organizationId,
         userId,
         source,
+        originSkill,
       );
 
       this.logger.info(
@@ -516,6 +519,7 @@ export class CreateStandardWithExamplesUsecase {
     organizationId: OrganizationId,
     userId: UserId,
     source: PackmindEventSource,
+    originSkill?: string,
   ): Promise<void> {
     this.logger.info('Querying created rules to emit RuleAddedEvents', {
       standardVersionId,
@@ -544,6 +548,7 @@ export class CreateStandardWithExamplesUsecase {
           userId,
           newVersion: version,
           source,
+          originSkill,
         }),
       );
     });

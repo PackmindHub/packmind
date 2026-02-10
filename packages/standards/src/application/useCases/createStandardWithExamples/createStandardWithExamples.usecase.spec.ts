@@ -1289,6 +1289,60 @@ describe('CreateStandardWithExamplesUsecase', () => {
         });
       });
 
+      describe('when originSkill is provided', () => {
+        let mockStandard: Standard;
+        let mockStandardVersion: StandardVersion;
+        let mockRules: Rule[];
+        const originSkill = 'test-skill';
+
+        beforeEach(async () => {
+          const rules: RuleWithExamples[] = [{ content: 'Rule 1' }];
+
+          mockStandard = standardFactory({
+            id: createStandardId(uuidv4()),
+            name: baseRequest.name,
+          });
+
+          mockStandardVersion = standardVersionFactory({
+            id: createStandardVersionId(uuidv4()),
+            standardId: mockStandard.id,
+            version: 1,
+          });
+
+          mockRules = [
+            ruleFactory({
+              id: uuidv4(),
+              standardVersionId: mockStandardVersion.id,
+            }),
+          ];
+
+          standardService.listStandardsBySpace.mockResolvedValue([]);
+          standardService.addStandard.mockResolvedValue(mockStandard);
+          standardVersionService.addStandardVersion.mockResolvedValue(
+            mockStandardVersion,
+          );
+          ruleRepository.findByStandardVersionId.mockResolvedValue(mockRules);
+
+          await usecase.createStandardWithExamples({
+            ...baseRequest,
+            rules,
+            originSkill,
+          });
+        });
+
+        it('includes originSkill in StandardCreatedEvent', () => {
+          const firstCall = eventEmitterService.emit.mock
+            .calls[0][0] as StandardCreatedEvent;
+          expect(firstCall.payload.originSkill).toBe(originSkill);
+        });
+
+        it('includes originSkill in RuleAddedEvent', () => {
+          const secondCall = eventEmitterService.emit.mock
+            .calls[1][0] as RuleAddedEvent;
+          expect(secondCall.payload.originSkill).toBe(originSkill);
+        });
+      });
+
       describe('when standard is created without rules', () => {
         beforeEach(async () => {
           const rules: RuleWithExamples[] = [];
