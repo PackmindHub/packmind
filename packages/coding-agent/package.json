@@ -14,7 +14,7 @@
     "@packmind/standards": "*",
     "@packmind/skills": "*",
     "semver": "^6.3.1",
-    "typeorm": "0.3.27",
+    "typeorm": "0.3.28",
     "uuid": "^11.1.0",
     "@packmind/test-utils": "0.0.1"
   }
