@@ -8,7 +8,6 @@ import { OrganizationGitModule } from './git/git.module';
 import { OrganizationLlmModule } from './llm/llm.module';
 import { OrganizationMcpModule } from './mcp/mcp.module';
 import { OrganizationSkillsModule } from './skills/skills.module';
-import { OrganizationChangeProposalsModule } from './change-proposals/change-proposals.module';
 import { PackmindLogger, LogLevel } from '@packmind/logger';
 
 /**
@@ -39,7 +38,6 @@ import { PackmindLogger, LogLevel } from '@packmind/logger';
     OrganizationLlmModule,
     OrganizationMcpModule,
     OrganizationSkillsModule,
-    OrganizationChangeProposalsModule,
   ],
   controllers: [OrganizationsController],
   providers: [

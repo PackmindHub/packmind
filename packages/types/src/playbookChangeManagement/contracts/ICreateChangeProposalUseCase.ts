@@ -4,9 +4,11 @@ import { ChangeProposalCaptureMode } from '../ChangeProposalCaptureMode';
 import { ChangeProposalPayload } from '../ChangeProposalPayload';
 import { ChangeProposalType } from '../ChangeProposalType';
 import { ChangeProposalArtefactId } from '../ChangeProposalArtefactIdType';
+import { SpaceId } from '../../spaces';
 
 export type CreateChangeProposalCommand<T extends ChangeProposalType> =
   PackmindCommand & {
+    spaceId: SpaceId;
     type: ChangeProposalType;
     artefactId: ChangeProposalArtefactId<T>;
     payload: ChangeProposalPayload<T>;

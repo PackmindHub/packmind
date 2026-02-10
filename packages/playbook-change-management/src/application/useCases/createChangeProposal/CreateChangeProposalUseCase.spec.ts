@@ -48,6 +48,7 @@ describe('CreateChangeProposalUseCase', () => {
   ): CreateChangeProposalCommand<ChangeProposalType.updateCommandName> => ({
     userId: userId,
     organizationId: organizationId,
+    spaceId: spaceId,
     type: ChangeProposalType.updateCommandName,
     artefactId: recipeId,
     payload: { oldValue: recipe.name, newValue: 'New Recipe Name' },
@@ -66,7 +67,7 @@ describe('CreateChangeProposalUseCase', () => {
     } as unknown as jest.Mocked<IRecipesPort>;
 
     spacesPort = {
-      listSpacesByOrganization: jest.fn(),
+      getSpaceById: jest.fn(),
     } as unknown as jest.Mocked<ISpacesPort>;
 
     service = {
@@ -93,7 +94,7 @@ describe('CreateChangeProposalUseCase', () => {
     const command = buildCommand();
 
     beforeEach(() => {
-      spacesPort.listSpacesByOrganization.mockResolvedValue([space]);
+      spacesPort.getSpaceById.mockResolvedValue(space);
       recipesPort.getRecipeById.mockResolvedValue(recipe);
       service.createChangeProposal.mockResolvedValue({
         changeProposal:
@@ -132,7 +133,7 @@ describe('CreateChangeProposalUseCase', () => {
     });
 
     beforeEach(() => {
-      spacesPort.listSpacesByOrganization.mockResolvedValue([space]);
+      spacesPort.getSpaceById.mockResolvedValue(space);
       recipesPort.getRecipeById.mockResolvedValue(recipe);
       service.createChangeProposal.mockResolvedValue({
         changeProposal:
@@ -176,7 +177,7 @@ describe('CreateChangeProposalUseCase', () => {
     const command = buildCommand();
 
     beforeEach(() => {
-      spacesPort.listSpacesByOrganization.mockResolvedValue([space]);
+      spacesPort.getSpaceById.mockResolvedValue(space);
       recipesPort.getRecipeById.mockResolvedValue(null);
     });
 
@@ -202,7 +203,7 @@ describe('CreateChangeProposalUseCase', () => {
     });
 
     beforeEach(() => {
-      spacesPort.listSpacesByOrganization.mockResolvedValue([space]);
+      spacesPort.getSpaceById.mockResolvedValue(space);
       recipesPort.getRecipeById.mockResolvedValue(recipe);
     });
 
@@ -228,7 +229,7 @@ describe('CreateChangeProposalUseCase', () => {
     });
 
     beforeEach(() => {
-      spacesPort.listSpacesByOrganization.mockResolvedValue([space]);
+      spacesPort.getSpaceById.mockResolvedValue(space);
       recipesPort.getRecipeById.mockResolvedValue(recipe);
     });
 
@@ -247,16 +248,50 @@ describe('CreateChangeProposalUseCase', () => {
     });
   });
 
-  describe('when organization has no spaces', () => {
+  describe('when space is not found', () => {
     const command = buildCommand();
 
     beforeEach(() => {
-      spacesPort.listSpacesByOrganization.mockResolvedValue([]);
+      spacesPort.getSpaceById.mockResolvedValue(null);
     });
 
     it('throws an error', async () => {
       await expect(useCase.execute(command)).rejects.toThrow(
-        'No spaces found for organization',
+        `Space ${spaceId} not found`,
+      );
+    });
+
+    it('does not call the service', async () => {
+      await useCase.execute(command).catch(() => {
+        /* expected rejection */
+      });
+
+      expect(service.createChangeProposal).not.toHaveBeenCalled();
+    });
+
+    it('does not call getRecipeById', async () => {
+      await useCase.execute(command).catch(() => {
+        /* expected rejection */
+      });
+
+      expect(recipesPort.getRecipeById).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('when space does not belong to the organization', () => {
+    const command = buildCommand();
+    const otherOrgSpace = spaceFactory({
+      id: spaceId,
+      organizationId: createOrganizationId('other-org-id'),
+    });
+
+    beforeEach(() => {
+      spacesPort.getSpaceById.mockResolvedValue(otherOrgSpace);
+    });
+
+    it('throws an error', async () => {
+      await expect(useCase.execute(command)).rejects.toThrow(
+        `Space ${spaceId} does not belong to organization ${organizationId}`,
       );
     });
 

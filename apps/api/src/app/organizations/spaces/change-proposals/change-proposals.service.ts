@@ -2,6 +2,9 @@ import { Injectable } from '@nestjs/common';
 import { PackmindLogger } from '@packmind/logger';
 import {
   ChangeProposal,
+  ChangeProposalType,
+  CreateChangeProposalCommand,
+  CreateChangeProposalResponse,
   IPlaybookChangeManagementPort,
   ListCommandChangeProposalsCommand,
   ListCommandChangeProposalsResponse,
@@ -19,6 +22,12 @@ export class ChangeProposalsService {
     private readonly playbookChangeManagementAdapter: IPlaybookChangeManagementPort,
     private readonly logger: PackmindLogger,
   ) {}
+
+  async createChangeProposal(
+    command: CreateChangeProposalCommand<ChangeProposalType>,
+  ): Promise<CreateChangeProposalResponse<ChangeProposalType>> {
+    return this.playbookChangeManagementAdapter.createChangeProposal(command);
+  }
 
   async listCommandChangeProposals(
     command: ListCommandChangeProposalsCommand,

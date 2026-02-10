@@ -1,5 +1,7 @@
 import {
+  BadRequestException,
   Body,
+  ConflictException,
   Controller,
   Get,
   HttpCode,
@@ -15,7 +17,11 @@ import { LogLevel, PackmindLogger } from '@packmind/logger';
 import { AuthenticatedRequest } from '@packmind/node-utils';
 import {
   ChangeProposal,
+  ChangeProposalCaptureMode,
   ChangeProposalId,
+  ChangeProposalType,
+  CreateChangeProposalCommand,
+  CreateChangeProposalResponse,
   ListCommandChangeProposalsResponse,
   OrganizationId,
   RecipeId,
@@ -24,10 +30,21 @@ import {
 import { ChangeProposalsService } from './change-proposals.service';
 import { OrganizationAccessGuard } from '../../guards/organization-access.guard';
 import { SpaceAccessGuard } from '../guards/space-access.guard';
-import { ChangeProposalNotFoundError } from '@packmind/playbook-change-management';
-import { ChangeProposalNotPendingError } from '@packmind/playbook-change-management';
+import {
+  ChangeProposalNotFoundError,
+  ChangeProposalNotPendingError,
+  ChangeProposalPayloadMismatchError,
+  UnsupportedChangeProposalTypeError,
+} from '@packmind/playbook-change-management';
 
 const origin = 'OrganizationsSpacesChangeProposalsController';
+
+interface CreateChangeProposalBody {
+  type: ChangeProposalType;
+  artefactId: string;
+  payload: unknown;
+  captureMode: ChangeProposalCaptureMode;
+}
 
 /**
  * Controller for space-scoped change proposal routes within organizations
@@ -43,6 +60,74 @@ export class OrganizationsSpacesChangeProposalsController {
       LogLevel.INFO,
     ),
   ) {}
+
+  /**
+   * Create a change proposal
+   * POST /organizations/:orgId/spaces/:spaceId/change-proposals
+   */
+  @Post()
+  async createChangeProposal(
+    @Param('orgId') organizationId: OrganizationId,
+    @Param('spaceId') spaceId: SpaceId,
+    @Body() body: CreateChangeProposalBody,
+    @Req() request: AuthenticatedRequest,
+  ): Promise<CreateChangeProposalResponse<ChangeProposalType>> {
+    this.logger.info(
+      'POST /organizations/:orgId/spaces/:spaceId/change-proposals - Creating change proposal',
+      {
+        organizationId,
+        spaceId,
+        type: body.type,
+      },
+    );
+
+    try {
+      const command = {
+        userId: request.user.userId,
+        organizationId,
+        spaceId,
+        type: body.type,
+        artefactId: body.artefactId,
+        payload: body.payload,
+        captureMode: body.captureMode,
+      } as unknown as CreateChangeProposalCommand<ChangeProposalType>;
+
+      const result =
+        await this.changeProposalsService.createChangeProposal(command);
+
+      this.logger.info(
+        'POST /organizations/:orgId/spaces/:spaceId/change-proposals - Change proposal created successfully',
+        {
+          organizationId,
+          spaceId,
+          type: body.type,
+        },
+      );
+
+      return result;
+    } catch (error) {
+      if (error instanceof UnsupportedChangeProposalTypeError) {
+        throw new BadRequestException(error.message);
+      }
+
+      if (error instanceof ChangeProposalPayloadMismatchError) {
+        throw new ConflictException(error.message);
+      }
+
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      this.logger.error(
+        'POST /organizations/:orgId/spaces/:spaceId/change-proposals - Failed to create change proposal',
+        {
+          organizationId,
+          spaceId,
+          type: body.type,
+          error: errorMessage,
+        },
+      );
+      throw error;
+    }
+  }
 
   /**
    * List change proposals for a recipe
