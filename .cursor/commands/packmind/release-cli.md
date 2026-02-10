@@ -3,31 +3,49 @@ Create a CLI release with version {{version}}. Follow these steps:
 1. **Verify clean git status**: Check that `git status` shows no uncommitted changes. If there are changes, fail and ask the user to commit or stash them first.
 
 2. **Check for unreleased default skills**:
+
    * Search for all classes implementing `ISkillDeployer` in `packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/`
+
    * Identify any deployers where `minimumVersion` is set to `'unreleased'`
+
    * If unreleased skills are found:
+
      * List them to the user with their class names
+
      * Ask: "Do you want to release any of these skills with version {{version}}?"
+
      * If the user selects skills to release, update their `minimumVersion` from `'unreleased'` to `'{{version}}'`
+
      * These changes will be included in the release commit
 
 3. **Update apps/cli/package.json and apps/cli/CHANGELOG.MD for release (First commit)**:
+
    * Update the version in apps/cli/package.json to `{{version}}`
-   * in apps/cli/CHANGELOG.md:
+
+   * in apps/cli/CHANGELOG.MD:
+
      * drop the empty sections under \[Unreleased]
+
      * Replace the `[Unreleased]` heading with `[{{version}}] - {{today_date}}` (use ISO 8601 format YYYY-MM-DD for the date)
+
      * Update the unreleased comparison link at the bottom to point to the new release:
+
        ```
        [{{version}}]: https://github.com/PackmindHub/packmind/compare/release-cli/{{previous_version}}...release-cli/{{version}}
        ```
+
      * Extract the previous version from the existing comparison links in apps/cli/CHANGELOG.MD
+
    * Commit with message: `chore(cli): release {{version}}`
 
 4. **Create and push release tag**:
+
    * Create tag: `release-cli/{{version}}`
+
    * Push the tag to GitHub
 
 5. **Prepare next development cycle (Second commit)**:
+
    * Add a new `[Unreleased]` section at the top of apps/cli/CHANGELOG.MD:
 
      ```markdown
@@ -43,6 +61,7 @@ Create a CLI release with version {{version}}. Follow these steps:
      ```
 
    * Add the unreleased comparison link at the bottom:
+
      ```
      [Unreleased]: https://github.com/PackmindHub/packmind/compare/release-cli/{{version}}...HEAD
      ```
@@ -54,5 +73,7 @@ Create a CLI release with version {{version}}. Follow these steps:
 Important notes:
 
 * Do NOT use `--no-verify` when committing
+
 * Verify each commit was successful before proceeding to the next step
+
 * The date must be in ISO 8601 format (YYYY-MM-DD)

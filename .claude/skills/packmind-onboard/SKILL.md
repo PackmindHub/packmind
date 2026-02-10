@@ -32,6 +32,16 @@ Automatic package creation when none exist, user selection when packages are ava
 
 ---
 
+## Step 0 — Introduction
+
+Print exactly:
+
+```
+I'll start the Packmind onboarding process. I'll create your first standards and commands and send them to your Packmind organization. This usually takes ~3 minutes.
+```
+
+---
+
 ## Step 1 — Get Repository Name
 
 Get the repository name for package naming:
@@ -40,22 +50,13 @@ Get the repository name for package naming:
 basename "$(git rev-parse --show-toplevel)"
 ```
 
-Remember this as the repository name for package creation in Step 3.
+Remember this as the repository name for package creation in Step 2.
+
+Also run `packmind-cli whoami` and extract the `Host:` value from the output. Remember this URL for the completion summary.
 
 ---
 
-## Step 2 — Analysis Depth Selection
-
-Present two modes using AskUserQuestion:
-
-- **Quick** — Fast scan (≈2–5 min). Generates a small starter set of Standards/Commands.
-- **Optimal** — Deep scan (≈10–20 min). More cross-module patterns + better evidence coverage.
-
-Wait for user selection before proceeding.
-
----
-
-## Step 3 — Package Handling
+## Step 2 — Package Handling
 
 Handle package creation or selection.
 
@@ -80,7 +81,7 @@ packmind-cli packages create "${REPO_NAME}-standards" --origin-skill=onboard
 Print:
 
 ```
-Created package: ${REPO_NAME}-standards
+No existing packages found — created a new one: ${REPO_NAME}-standards
 ```
 
 ### One package exists
@@ -106,18 +107,18 @@ Remember the selected/created package name for later reference.
 
 ---
 
-## Step 4 — Announce
+## Step 3 — Announce
 
 Print exactly:
 
 ```
-packmind-onboard: analyzing codebase (read-only) — [QUICK|OPTIMAL] mode
+packmind-onboard: analyzing codebase (read-only)
 Target package: [package-name]
 ```
 
 ---
 
-## Step 5 — Detect Existing Packmind and Agent Configuration
+## Step 4 — Detect Existing Packmind and Agent Configuration
 
 Before analyzing, detect and preserve any existing Packmind/agent configuration.
 
@@ -155,7 +156,7 @@ No overwrites. New files (if you Export) will be added next to the existing ones
 
 ---
 
-## Step 6 — Detect Project Stack (Minimal, Evidence-Based)
+## Step 5 — Detect Project Stack (Minimal, Evidence-Based)
 
 ### Language markers (check presence)
 
@@ -188,11 +189,9 @@ Stack detected (heuristic):
 
 ---
 
-## Step 7 — Run Analyses
+## Step 6 — Run Analyses
 
-Select and run analyses based on chosen mode. Read each reference file for detailed search patterns, thresholds, and insight templates.
-
-### Quick Mode Analyses (4 checks)
+Read each reference file for detailed search patterns, thresholds, and insight templates.
 
 | Analysis                  | Reference File                            | Output focus |
 | ------------------------- | ----------------------------------------- | ------------ |
@@ -200,28 +199,6 @@ Select and run analyses based on chosen mode. Read each reference file for detai
 | CI/Local Workflow Parity  | `references/ci-local-workflow-parity.md`  | Commands     |
 | Role Taxonomy Drift       | `references/role-taxonomy-drift.md`       | Standards    |
 | Test Data Construction    | `references/test-data-construction.md`    | Standards    |
-
-### Optimal Mode Analyses (17 checks)
-
-| Analysis                   | Reference File                                 |
-| -------------------------- | ---------------------------------------------- |
-| File Template Consistency  | `references/file-template-consistency.md`      |
-| CI/Local Workflow Parity   | `references/ci-local-workflow-parity.md`       |
-| Role Taxonomy Drift        | `references/role-taxonomy-drift.md`            |
-| Test Data Construction     | `references/test-data-construction.md`         |
-| Cross-Domain Communication | `references/cross-domain-communication.md`     |
-| Module Boundaries          | `references/module-boundaries-dependencies.md` |
-| Shared Kernel Drift        | `references/shared-kernel-drift.md`            |
-| Public API Discipline      | `references/public-api-deep-imports.md`        |
-| Error Semantics            | `references/error-semantics.md`                |
-| Data Boundary Leakage      | `references/data-boundary-leakage.md`          |
-| Transaction Conventions    | `references/transaction-atomicity.md`          |
-| Concurrency Style          | `references/concurrency-style.md`              |
-| Config/Feature Flags       | `references/config-feature-flags.md`           |
-| Observability Contract     | `references/observability-contract.md`         |
-| Authorization Boundaries   | `references/authorization-boundary.md`         |
-| Schema Generation Boundary | `references/schema-generation-boundary.md`     |
-| Cross-Cutting Hotspots     | `references/cross-cutting-hotspots.md`         |
 
 ### Output schema (internal; do not print as-is to user)
 
@@ -240,7 +217,7 @@ where_it_doesnt_apply:
 
 ---
 
-## Step 8 — Generate All Drafts
+## Step 7 — Generate All Drafts
 
 Generate all draft files in one batch, using the formats defined above.
 
@@ -323,14 +300,14 @@ Description of next step...
 
 ---
 
-## Step 9 — Present Summary & Confirm
+## Step 8 — Present Summary & Confirm
 
 Present the generated draft files and ask for confirmation:
 
 ```
 
 ============================================================
-PACKMIND ONBOARDING — [QUICK|OPTIMAL] MODE
+ANALYSIS COMPLETE
 ============================================================
 
 Target package: [package-name]
@@ -349,7 +326,7 @@ Commands ([M]):
 1. [Name] → .packmind/commands/\_drafts/[slug].draft.md
 2. ...
 
-# Drafts are in .packmind/\*/\_drafts/ if you want to edit them first.
+# Drafts are saved in .packmind/\*/\_drafts/ — you can review or edit them before creating.
 
 ````
 
@@ -361,7 +338,7 @@ Then ask via AskUserQuestion with three options:
 
 ---
 
-## Step 10 — Create Items
+## Step 9 — Create Items
 
 ### If user selected "Create all now"
 
@@ -452,7 +429,7 @@ packmind-cli packages add --to <package-slug> --command <slug> --origin-skill=on
 **Show progress:**
 
 ```
-Creating standards and commands...
+Sending standards and commands to your Packmind organization...
 ✓ error-handling-pattern
 ✓ naming-conventions
 ✗ test-factory-patterns (error: duplicate name exists)
@@ -488,7 +465,7 @@ Exit the skill.
 
 ---
 
-## Step 11 — Completion Summary
+## Step 10 — Completion Summary
 
 ### All items created successfully
 
@@ -500,12 +477,12 @@ Exit the skill.
 Package: [package-name]
 Created: [N] standards, [M] commands
 
-Your package is ready. Standards will be distributed to AI tools
-when you run `packmind-cli install [package-slug]` in your repos.
+Your standards and commands have been created and deployed locally.
 
 Next steps:
-  - Visit the webapp to add standards/commands to your package
-  - Run `packmind-cli deploy` to distribute to AI tools
+  - Reload your AI coding assistant to start using them
+  - Visit [host from packmind-cli whoami] to manage your standards and commands
+  - Run `packmind-cli install [package-slug]` in other repos to distribute them
 ============================================================
 ```
 
@@ -545,14 +522,11 @@ If analysis found no patterns:
   ℹ️ NO PATTERNS DISCOVERED
 ============================================================
 
-The analysis did not find any non-obvious patterns to capture.
+The analysis didn't find enough recurring patterns to generate standards or commands.
 
-Consider running again with Optimal mode for deeper analysis.
-
-Suggestions:
-  - Ensure your codebase has consistent patterns
-  - Check that files are not ignored by .gitignore
-  - Try running on a more mature codebase section
+This can happen with smaller codebases or projects with very diverse coding styles.
+You can try again later as the codebase grows, or create standards manually with:
+  packmind-cli standards create <file> --origin-skill=onboard
 ============================================================
 ```
 
@@ -598,12 +572,12 @@ Auto-create a package using the repository name.
 
 ---
 
-### 10.1 Deploy Locally (after successful creation)
+### 9.1 Deploy Locally (after successful creation)
 
-Since the onboard skill is present, the user has configured an AI agent. Deploy the created artifacts locally:
+Since the onboard skill is present, the user has configured an AI agent. Deploy the created artifacts locally using the package selected/created in Step 2:
 
 ```bash
-packmind-cli install
+packmind-cli install <package-slug>
 ```
 
 This deploys to agent-specific folders:
@@ -614,14 +588,17 @@ This deploys to agent-specific folders:
 | Cursor  | `.cursor/rules/packmind/standard-[slug].mdc`                    | `.cursor/commands/packmind/[slug].mdc`      |
 | Copilot | `.github/instructions/packmind-standard-[slug].instructions.md` | `.github/prompts/packmind-[slug].prompt.md` |
 
-### 8.3 Cleanup and Summary
+### 9.2 Cleanup and Summary
 
 Delete the draft files, then print final summary:
 
 ```
 ============================================================
-  PUBLISHED TO PACKMIND & DEPLOYED LOCALLY
+  PUBLISHED & DEPLOYED
 ============================================================
+
+Standards and commands have been sent to your Packmind organization
+and deployed to your AI coding assistant's configuration files.
 
 Standards: [N]
   - [Name] (slug: [slug])
@@ -646,15 +623,5 @@ Draft files ready for review at:
   - .packmind/standards/_drafts/
   - .packmind/commands/_drafts/
 
-Edit them as needed, then convert to JSON and run:
-  packmind-cli standards create <path-to-json> --origin-skill=onboard
-  packmind-cli packages add --to <package-slug> --standard <slug> --origin-skill=onboard
-  packmind-cli commands create <path-to-json> --origin-skill=onboard
-  packmind-cli packages add --to <package-slug> --command <slug> --origin-skill=onboard
-  packmind-cli install
-
-Note: The CLI requires JSON playbook files, not markdown.
-See Step 10 for the JSON schema format.
-
-Or re-run this skill when ready.
+Edit them as needed, then re-run this skill to create them.
 ```

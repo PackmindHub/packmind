@@ -52,7 +52,7 @@ Choose your preferred setup option:
 Follow the instructions during the onboarding to connect to your Packmind organization
 You can find them at anytime in the **Settings** menu.
 
-Once authenticated, run in your git repo:
+Once authenticated, run in your project:
 
 ```bash
 $> packmind-cli init

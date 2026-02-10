@@ -11,6 +11,7 @@ import {
   LINTER_ADAPTER_TOKEN,
   CODING_AGENT_ADAPTER_TOKEN,
   LLM_ADAPTER_TOKEN,
+  PLAYBOOK_CHANGE_MANAGEMENT_ADAPTER_TOKEN,
 } from './HexaRegistryModule';
 
 /**
@@ -73,3 +74,5 @@ export const InjectLinterAdapter = () => Inject(LINTER_ADAPTER_TOKEN);
 export const InjectCodingAgentAdapter = () =>
   Inject(CODING_AGENT_ADAPTER_TOKEN);
 export const InjectLlmAdapter = () => Inject(LLM_ADAPTER_TOKEN);
+export const InjectPlaybookChangeManagementAdapter = () =>
+  Inject(PLAYBOOK_CHANGE_MANAGEMENT_ADAPTER_TOKEN);

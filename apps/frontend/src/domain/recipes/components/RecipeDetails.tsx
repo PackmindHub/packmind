@@ -17,6 +17,11 @@ import {
   PMCopiable,
   PMTooltip,
   PMEmptyState,
+  PMFeatureFlag,
+  DEFAULT_FEATURE_DOMAIN_MAP,
+  CHANGE_PROPOSALS_FEATURE_KEY,
+  PMLink,
+  PMBadge,
 } from '@packmind/ui';
 import { LuCopy } from 'react-icons/lu';
 import { useNavigate } from 'react-router';
@@ -27,9 +32,10 @@ import {
 import { RecipeVersionsListDrawer } from './RecipeVersionsListDrawer';
 import { RecipeDistributionsList } from '../../deployments/components/RecipeDistributionsList/RecipeDistributionsList';
 import { useListRecipeDistributionsQuery } from '../../deployments/api/queries/DeploymentsQueries';
+import { useGetChangeProposalsQuery } from '../api/queries/ChangeProposalsQueries';
 import { AutobreadCrumb } from '../../../../src/shared/components/navigation/AutobreadCrumb';
 import { RECIPE_MESSAGES } from '../constants/messages';
-import { RecipeId } from '@packmind/types';
+import { ChangeProposalStatus, RecipeId } from '@packmind/types';
 import {
   MarkdownEditor,
   MarkdownEditorProvider,
@@ -38,6 +44,8 @@ import { useCurrentSpace } from '../../spaces/hooks/useCurrentSpace';
 import { routes } from '../../../shared/utils/routes';
 import { useAuthContext } from '../../accounts/hooks/useAuthContext';
 import { useNavigation } from '../../../shared/hooks/useNavigation';
+import { ProposeChangeModal } from './ProposeChangeModal';
+import { ProposeDescriptionChangeModal } from './ProposeDescriptionChangeModal';
 
 interface RecipeDetailsProps {
   id: RecipeId;
@@ -48,9 +56,12 @@ interface RecipeDetailsProps {
 export const RecipeDetails = ({ id, orgSlug }: RecipeDetailsProps) => {
   const navigate = useNavigate();
   const nav = useNavigation();
-  const { organization } = useAuthContext();
+  const { organization, user } = useAuthContext();
   const { spaceSlug, spaceId } = useCurrentSpace();
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [proposeChangeOpen, setProposeChangeOpen] = useState(false);
+  const [proposeDescriptionChangeOpen, setProposeDescriptionChangeOpen] =
+    useState(false);
   const [deleteAlert, setDeleteAlert] = useState<{
     type: 'success' | 'error';
     message: string;
@@ -59,7 +70,11 @@ export const RecipeDetails = ({ id, orgSlug }: RecipeDetailsProps) => {
   const deleteMutation = useDeleteRecipeMutation();
   const { data: distributions, isLoading: isLoadingDistributions } =
     useListRecipeDistributionsQuery(id);
+  const { data: changeProposals } = useGetChangeProposalsQuery(id);
   const hasDistributions = distributions && distributions.length > 0;
+  const pendingCount =
+    changeProposals?.filter((p) => p.status === ChangeProposalStatus.pending)
+      .length ?? 0;
   const defaultPath = `.packmind/recipes/${recipe?.slug}.md`;
 
   const handleDeleteRecipe = async () => {
@@ -145,6 +160,22 @@ export const RecipeDetails = ({ id, orgSlug }: RecipeDetailsProps) => {
   return (
     <PMPage
       title={recipe.name}
+      titleAction={
+        <PMFeatureFlag
+          featureKeys={[CHANGE_PROPOSALS_FEATURE_KEY]}
+          featureDomainMap={DEFAULT_FEATURE_DOMAIN_MAP}
+          userEmail={user?.email}
+        >
+          <PMLink
+            onClick={() => setProposeChangeOpen(true)}
+            cursor="pointer"
+            fontSize={'xs'}
+            variant="underline"
+          >
+            Propose change
+          </PMLink>
+        </PMFeatureFlag>
+      }
       breadcrumbComponent={<AutobreadCrumb />}
       isFullWidth
       actions={
@@ -160,6 +191,31 @@ export const RecipeDetails = ({ id, orgSlug }: RecipeDetailsProps) => {
               </PMCopiable.Trigger>
             </PMTooltip>
           </PMCopiable.Root>
+          <PMFeatureFlag
+            featureKeys={[CHANGE_PROPOSALS_FEATURE_KEY]}
+            featureDomainMap={DEFAULT_FEATURE_DOMAIN_MAP}
+            userEmail={user?.email}
+          >
+            {pendingCount > 0 && (
+              <PMButton
+                variant="tertiary"
+                onClick={() =>
+                  navigate(
+                    routes.space.toCommandChangeProposals(
+                      orgSlug || '',
+                      spaceSlug || '',
+                      recipe.id,
+                    ),
+                  )
+                }
+              >
+                <PMHStack gap={2}>
+                  Changes to review
+                  <PMBadge>{pendingCount}</PMBadge>
+                </PMHStack>
+              </PMButton>
+            )}
+          </PMFeatureFlag>
           <PMButton variant="primary" onClick={handleEditClick}>
             Edit
           </PMButton>
@@ -223,6 +279,20 @@ export const RecipeDetails = ({ id, orgSlug }: RecipeDetailsProps) => {
               triggerLabel: 'Instructions',
               content: (
                 <PMPageSection title="Instructions">
+                  <PMFeatureFlag
+                    featureKeys={[CHANGE_PROPOSALS_FEATURE_KEY]}
+                    featureDomainMap={DEFAULT_FEATURE_DOMAIN_MAP}
+                    userEmail={user?.email}
+                  >
+                    <PMLink
+                      onClick={() => setProposeDescriptionChangeOpen(true)}
+                      cursor="pointer"
+                      fontSize="xs"
+                      variant="underline"
+                    >
+                      Propose change
+                    </PMLink>
+                  </PMFeatureFlag>
                   <PMBox
                     border="solid 1px"
                     borderColor="border.primary"
@@ -304,6 +374,29 @@ export const RecipeDetails = ({ id, orgSlug }: RecipeDetailsProps) => {
           ]}
         />
       </PMVStack>
+
+      {recipe && organization?.id && spaceId && (
+        <>
+          <ProposeChangeModal
+            recipeName={recipe.name}
+            recipeId={recipe.id}
+            organizationId={organization.id}
+            spaceId={spaceId}
+            open={proposeChangeOpen}
+            onOpenChange={(details) => setProposeChangeOpen(details.open)}
+          />
+          <ProposeDescriptionChangeModal
+            recipeDescription={recipe.content}
+            recipeId={recipe.id}
+            organizationId={organization.id}
+            spaceId={spaceId}
+            open={proposeDescriptionChangeOpen}
+            onOpenChange={(details) =>
+              setProposeDescriptionChangeOpen(details.open)
+            }
+          />
+        </>
+      )}
     </PMPage>
   );
 };

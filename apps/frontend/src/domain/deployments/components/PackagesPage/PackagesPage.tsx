@@ -7,8 +7,6 @@ import {
   PMTable,
   PMTableColumn,
   PMTableRow,
-  PMEmptyState,
-  PMHStack,
   PMCheckbox,
   PMAlertDialog,
   PMButtonGroup,
@@ -26,15 +24,18 @@ import { useGetGitProvidersQuery } from '../../../git/api/queries/GitProviderQue
 import { routes } from '../../../../shared/utils/routes';
 import { PACKAGE_MESSAGES } from '../../constants/messages';
 import { DeployPackageButton } from '../PackageDeployments/DeployPackageButton';
+import { PackagesBlankState } from '../PackagesBlankState';
 
 export interface PackagesPageProps {
   spaceSlug: string;
   orgSlug: string;
+  onEmptyStateChange?: (isEmpty: boolean) => void;
 }
 
 export const PackagesPage: React.FC<PackagesPageProps> = ({
   spaceSlug,
   orgSlug,
+  onEmptyStateChange,
 }) => {
   const { spaceId, space, isLoading: isLoadingSpace } = useCurrentSpace();
   const organizationId = space?.organizationId;
@@ -222,73 +223,64 @@ export const PackagesPage: React.FC<PackagesPageProps> = ({
         </PMAlert.Root>
       )}
       {(packagesResponse?.packages ?? []).length ? (
-        <PMBox>
-          <PMBox mb={4}>
-            <PMButtonGroup>
-              {hasGitProviderWithToken && (
-                <DeployPackageButton
-                  selectedPackages={selectedPackages}
-                  variant="primary"
-                  disabled={selectedPackages.length === 0}
-                />
-              )}
-              <PMAlertDialog
-                trigger={
-                  <PMButton
-                    variant="tertiary"
-                    loading={deleteBatchMutation.isPending}
-                    disabled={!isSomeSelected}
-                  >
-                    {`Delete (${selectedPackageIds.length})`}
-                  </PMButton>
-                }
-                title="Delete Packages"
-                message={PACKAGE_MESSAGES.confirmation.deleteBatchPackages(
-                  selectedPackageIds.length,
+        <>
+          {onEmptyStateChange && onEmptyStateChange(false)}
+          <PMBox>
+            <PMBox mb={4}>
+              <PMButtonGroup>
+                {hasGitProviderWithToken && (
+                  <DeployPackageButton
+                    selectedPackages={selectedPackages}
+                    variant="primary"
+                    disabled={selectedPackages.length === 0}
+                  />
                 )}
-                confirmText="Delete"
-                cancelText="Cancel"
-                confirmColorScheme="red"
-                onConfirm={handleBatchDelete}
-                open={deleteDialogOpen}
-                onOpenChange={({ open }) => setDeleteDialogOpen(open)}
-                isLoading={deleteBatchMutation.isPending}
-              />
-              <PMButton
-                variant="secondary"
-                onClick={() => setSelectedPackageIds([])}
-                disabled={!isSomeSelected}
-              >
-                Clear Selection
-              </PMButton>
-            </PMButtonGroup>
+                <PMAlertDialog
+                  trigger={
+                    <PMButton
+                      variant="tertiary"
+                      loading={deleteBatchMutation.isPending}
+                      disabled={!isSomeSelected}
+                    >
+                      {`Delete (${selectedPackageIds.length})`}
+                    </PMButton>
+                  }
+                  title="Delete Packages"
+                  message={PACKAGE_MESSAGES.confirmation.deleteBatchPackages(
+                    selectedPackageIds.length,
+                  )}
+                  confirmText="Delete"
+                  cancelText="Cancel"
+                  confirmColorScheme="red"
+                  onConfirm={handleBatchDelete}
+                  open={deleteDialogOpen}
+                  onOpenChange={({ open }) => setDeleteDialogOpen(open)}
+                  isLoading={deleteBatchMutation.isPending}
+                />
+                <PMButton
+                  variant="secondary"
+                  onClick={() => setSelectedPackageIds([])}
+                  disabled={!isSomeSelected}
+                >
+                  Clear Selection
+                </PMButton>
+              </PMButtonGroup>
+            </PMBox>
+            <PMTable
+              columns={columns}
+              data={tableData}
+              striped={true}
+              hoverable={true}
+              size="md"
+              variant="line"
+            />
           </PMBox>
-          <PMTable
-            columns={columns}
-            data={tableData}
-            striped={true}
-            hoverable={true}
-            size="md"
-            variant="line"
-          />
-        </PMBox>
+        </>
       ) : (
-        <PMEmptyState
-          backgroundColor={'background.primary'}
-          borderRadius={'md'}
-          width={'2xl'}
-          mx={'auto'}
-          title={'No packages yet'}
-        >
-          Packages are collections of standards, commands and skills that can be
-          distributed together to your repositories, ensuring consistent
-          practices across your projects.
-          <PMHStack>
-            <Link to={routes.space.toCreatePackage(orgSlug, spaceSlug)}>
-              <PMButton variant="secondary">Create Package</PMButton>
-            </Link>
-          </PMHStack>
-        </PMEmptyState>
+        <>
+          {onEmptyStateChange && onEmptyStateChange(true)}
+          <PackagesBlankState orgSlug={orgSlug} spaceSlug={spaceSlug} />
+        </>
       )}
     </>
   );

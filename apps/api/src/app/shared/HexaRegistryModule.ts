@@ -7,6 +7,7 @@ import { DeploymentsHexa } from '@packmind/deployments';
 import { GitHexa } from '@packmind/git';
 import { LinterHexa } from '@packmind/editions';
 import { LlmHexa } from '@packmind/llm';
+import { PlaybookChangeManagementHexa } from '@packmind/playbook-change-management';
 import { PackmindLogger } from '@packmind/logger';
 import {
   BaseHexa,
@@ -26,6 +27,7 @@ import {
   IGitPort,
   ILinterPort,
   ILlmPort,
+  IPlaybookChangeManagementPort,
   IRecipesPort,
   ISkillsPort,
   ISpacesPort,
@@ -76,6 +78,8 @@ export const SPACES_ADAPTER_TOKEN = 'SPACES_ADAPTER';
 export const LINTER_ADAPTER_TOKEN = 'LINTER_ADAPTER';
 export const CODING_AGENT_ADAPTER_TOKEN = 'CODING_AGENT_ADAPTER';
 export const LLM_ADAPTER_TOKEN = 'LLM_ADAPTER';
+export const PLAYBOOK_CHANGE_MANAGEMENT_ADAPTER_TOKEN =
+  'PLAYBOOK_CHANGE_MANAGEMENT_ADAPTER';
 
 /**
  * NestJS Module for integrating HexaRegistry with dependency injection.
@@ -124,6 +128,7 @@ export class HexaRegistryModule {
         LINTER_ADAPTER_TOKEN,
         CODING_AGENT_ADAPTER_TOKEN,
         LLM_ADAPTER_TOKEN,
+        PLAYBOOK_CHANGE_MANAGEMENT_ADAPTER_TOKEN,
       ],
     };
   }
@@ -338,6 +343,25 @@ export class HexaRegistryModule {
           return llmHexa.getAdapter();
         } catch {
           // LlmHexa not available
+        }
+        return null;
+      },
+      inject: [HEXA_REGISTRY_TOKEN],
+    });
+
+    // PlaybookChangeManagement adapter
+    providers.push({
+      provide: PLAYBOOK_CHANGE_MANAGEMENT_ADAPTER_TOKEN,
+      useFactory: (
+        registry: HexaRegistry,
+      ): IPlaybookChangeManagementPort | null => {
+        try {
+          const playbookChangeManagementHexa = registry.get(
+            PlaybookChangeManagementHexa,
+          );
+          return playbookChangeManagementHexa.getAdapter();
+        } catch {
+          // PlaybookChangeManagementHexa not available
         }
         return null;
       },

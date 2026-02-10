@@ -22,11 +22,11 @@ Example output format to show the user:
 
 - **my-standard-slug**
   Name: My Standard Name
-  Link: https://app.packmind.com/org/myorg/space/global/standards/abc123/summary
+  Link: https://<host>/org/myorg/space/global/standards/abc123/summary
 
 - **another-standard**
   Name: Another Standard
-  Link: https://app.packmind.com/org/myorg/space/global/standards/def456/summary
+  Link: https://<host>/org/myorg/space/global/standards/def456/summary
 ```
 
 ## Commands Reference

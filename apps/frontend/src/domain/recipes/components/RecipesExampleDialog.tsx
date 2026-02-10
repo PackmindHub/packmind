@@ -23,9 +23,8 @@ const CONVENTIONAL_COMMIT_EXAMPLE: RecipeExample = {
   buttonLabel: 'Conventional commit',
   content: `### Instructions
 
-\`\`\`xml
-	<description>This file contains a prompt template for generating conventional commit messages. It provides instructions, examples, and formatting guidelines to help users write standardized, descriptive commit messages in accordance with the Conventional Commits specification.</description>
-\`\`\`
+
+This file contains a prompt template for generating conventional commit messages. It provides instructions, examples, and formatting guidelines to help users write standardized, descriptive commit messages in accordance with the Conventional Commits specification.
 
 ### Workflow
 
@@ -35,13 +34,13 @@ const CONVENTIONAL_COMMIT_EXAMPLE: RecipeExample = {
 2. Run \`git diff\` or \`git diff --cached\` to inspect changes.
 3. Stage your changes with \`git add <file>\`.
 4. Construct your commit message using the following XML structure.
-5. After generating your commit message, Copilot will automatically run the following command in your integrated terminal (no confirmation needed):
+5. After generating your commit message, your coding assistant will automatically run the following command in your integrated terminal (no confirmation needed):
 
 \`\`\`bash
 git commit -m "type(scope): description"
 \`\`\`
 
-6. Just execute this prompt and Copilot will handle the commit for you in the terminal.
+6. Just execute this prompt and your coding assistant will handle the commit for you in the terminal.
 
 ### Commit Message Structure
 

@@ -49,24 +49,13 @@ Get the repository name for package naming:
 basename "$(git rev-parse --show-toplevel)"
 ```
 
-Remember this as the repository name for package creation in Step 3.
+Remember this as the repository name for package creation in Step 2.
 
 Also run `packmind-cli whoami` and extract the `Host:` value from the output. Remember this URL for the completion summary.
 
 ---
 
-## Step 2 — Analysis Depth Selection
-
-Present two modes using AskUserQuestion:
-
-- **Quick** — Fast scan (≈2–5 min). Generates a small starter set of Standards/Commands.
-- **Optimal** — Deep scan (≈10–20 min). More cross-module patterns + better evidence coverage.
-
-Wait for user selection before proceeding.
-
----
-
-## Step 3 — Package Handling
+## Step 2 — Package Handling
 
 Handle package creation or selection.
 
@@ -114,18 +103,18 @@ Remember the selected/created package name for later reference.
 
 ---
 
-## Step 4 — Announce
+## Step 3 — Announce
 
 Print exactly:
 
 ```
-packmind-onboard: analyzing codebase (read-only) — [QUICK|OPTIMAL] mode
+packmind-onboard: analyzing codebase (read-only)
 Target package: [package-name]
 ```
 
 ---
 
-## Step 5 — Detect Existing Packmind and Agent Configuration
+## Step 4 — Detect Existing Packmind and Agent Configuration
 
 Before analyzing, detect and preserve any existing Packmind/agent configuration.
 
@@ -159,7 +148,7 @@ No overwrites. New files (if you Export) will be added next to the existing ones
 
 ---
 
-## Step 6 — Detect Project Stack (Minimal, Evidence-Based)
+## Step 5 — Detect Project Stack (Minimal, Evidence-Based)
 
 ### Language markers (check presence)
 - JS/TS: `package.json`, `pnpm-lock.yaml`, `yarn.lock`, `tsconfig.json`
@@ -190,11 +179,9 @@ Stack detected (heuristic):
 
 ---
 
-## Step 7 — Run Analyses
+## Step 6 — Run Analyses
 
-Select and run analyses based on chosen mode. Read each reference file for detailed search patterns, thresholds, and insight templates.
-
-### Quick Mode Analyses (4 checks)
+Read each reference file for detailed search patterns, thresholds, and insight templates.
 
 | Analysis | Reference File | Output focus |
 |----------|----------------|--------------|
@@ -202,28 +189,6 @@ Select and run analyses based on chosen mode. Read each reference file for detai
 | CI/Local Workflow Parity | `references/ci-local-workflow-parity.md` | Commands |
 | Role Taxonomy Drift | `references/role-taxonomy-drift.md` | Standards |
 | Test Data Construction | `references/test-data-construction.md` | Standards |
-
-### Optimal Mode Analyses (17 checks)
-
-| Analysis | Reference File |
-|----------|----------------|
-| File Template Consistency | `references/file-template-consistency.md` |
-| CI/Local Workflow Parity | `references/ci-local-workflow-parity.md` |
-| Role Taxonomy Drift | `references/role-taxonomy-drift.md` |
-| Test Data Construction | `references/test-data-construction.md` |
-| Cross-Domain Communication | `references/cross-domain-communication.md` |
-| Module Boundaries | `references/module-boundaries-dependencies.md` |
-| Shared Kernel Drift | `references/shared-kernel-drift.md` |
-| Public API Discipline | `references/public-api-deep-imports.md` |
-| Error Semantics | `references/error-semantics.md` |
-| Data Boundary Leakage | `references/data-boundary-leakage.md` |
-| Transaction Conventions | `references/transaction-atomicity.md` |
-| Concurrency Style | `references/concurrency-style.md` |
-| Config/Feature Flags | `references/config-feature-flags.md` |
-| Observability Contract | `references/observability-contract.md` |
-| Authorization Boundaries | `references/authorization-boundary.md` |
-| Schema Generation Boundary | `references/schema-generation-boundary.md` |
-| Cross-Cutting Hotspots | `references/cross-cutting-hotspots.md` |
 
 ### Output schema (internal; do not print as-is to user)
 For every finding, keep an internal record:
@@ -241,7 +206,7 @@ where_it_doesnt_apply:
 
 ---
 
-## Step 8 — Generate All Drafts
+## Step 7 — Generate All Drafts
 
 Generate all draft files in one batch, using the formats defined above.
 
@@ -321,7 +286,7 @@ Description of next step...
 
 ---
 
-## Step 9 — Present Summary & Confirm
+## Step 8 — Present Summary & Confirm
 
 Present the generated draft files and ask for confirmation:
 
@@ -356,7 +321,7 @@ Then ask via AskUserQuestion with three options:
 
 ---
 
-## Step 10 — Create Items
+## Step 9 — Create Items
 
 ### If user selected "Create all now"
 
@@ -472,7 +437,7 @@ Exit the skill.
 
 ---
 
-## Step 11 — Completion Summary
+## Step 10 — Completion Summary
 
 ### All items created successfully
 
@@ -579,12 +544,12 @@ Auto-create a package using the repository name.
 
 ---
 
-### 10.1 Deploy Locally (after successful creation)
+### 9.1 Deploy Locally (after successful creation)
 
-Since the onboard skill is present, the user has configured an AI agent. Deploy the created artifacts locally:
+Since the onboard skill is present, the user has configured an AI agent. Deploy the created artifacts locally using the package selected/created in Step 2:
 
 ```bash
-packmind-cli install
+packmind-cli install <package-slug>
 ```
 
 This deploys to agent-specific folders:
@@ -595,7 +560,7 @@ This deploys to agent-specific folders:
 | Cursor | `.cursor/rules/packmind/standard-[slug].mdc` | `.cursor/commands/packmind/[slug].mdc` |
 | Copilot | `.github/instructions/packmind-standard-[slug].instructions.md` | `.github/prompts/packmind-[slug].prompt.md` |
 
-### 8.3 Cleanup and Summary
+### 9.2 Cleanup and Summary
 
 Delete the draft files, then print final summary:
 
