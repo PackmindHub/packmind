@@ -10,6 +10,10 @@ import {
   ListCommandChangeProposalsCommand,
   ListCommandChangeProposalsResponse,
 } from '../contracts/IListCommandChangeProposalsUseCase';
+import {
+  RejectCommandChangeProposalCommand,
+  RejectCommandChangeProposalResponse,
+} from '../contracts/IRejectCommandChangeProposalUseCase';
 import { ChangeProposalType } from '../ChangeProposalType';
 
 export const IPlaybookChangeManagementPortName =
@@ -27,4 +31,8 @@ export interface IPlaybookChangeManagementPort {
   listCommandChangeProposals(
     command: ListCommandChangeProposalsCommand,
   ): Promise<ListCommandChangeProposalsResponse>;
+
+  rejectCommandChangeProposal(
+    command: RejectCommandChangeProposalCommand,
+  ): Promise<RejectCommandChangeProposalResponse>;
 }

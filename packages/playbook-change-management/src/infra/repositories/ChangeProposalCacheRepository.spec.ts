@@ -124,4 +124,85 @@ describe('ChangeProposalCacheRepository', () => {
       );
     });
   });
+
+  describe('update', () => {
+    describe('when the proposal exists in cache', () => {
+      it('replaces the matching proposal', async () => {
+        const proposal = buildProposal();
+        const updatedProposal = {
+          ...proposal,
+          status: ChangeProposalStatus.rejected,
+        };
+        mockCache.get.mockResolvedValue([proposal]);
+
+        await repository.update(recipeId, updatedProposal);
+
+        expect(mockCache.set).toHaveBeenCalledWith(
+          `change-proposals:command:${recipeId}`,
+          [updatedProposal],
+          86400,
+        );
+      });
+
+      it('preserves other proposals in the array', async () => {
+        const otherProposal = buildProposal();
+        const proposal = buildProposal();
+        const updatedProposal = {
+          ...proposal,
+          status: ChangeProposalStatus.rejected,
+        };
+        mockCache.get.mockResolvedValue([otherProposal, proposal]);
+
+        await repository.update(recipeId, updatedProposal);
+
+        expect(mockCache.set).toHaveBeenCalledWith(
+          `change-proposals:command:${recipeId}`,
+          [otherProposal, updatedProposal],
+          86400,
+        );
+      });
+    });
+
+    describe('when the proposal does not exist in cache', () => {
+      it('writes the array back unchanged', async () => {
+        const existingProposal = buildProposal();
+        const unknownProposal = buildProposal();
+        mockCache.get.mockResolvedValue([existingProposal]);
+
+        await repository.update(recipeId, unknownProposal);
+
+        expect(mockCache.set).toHaveBeenCalledWith(
+          `change-proposals:command:${recipeId}`,
+          [existingProposal],
+          86400,
+        );
+      });
+    });
+
+    describe('when cache is empty', () => {
+      it('writes an empty array', async () => {
+        mockCache.get.mockResolvedValue(null);
+        const proposal = buildProposal();
+
+        await repository.update(recipeId, proposal);
+
+        expect(mockCache.set).toHaveBeenCalledWith(
+          `change-proposals:command:${recipeId}`,
+          [],
+          86400,
+        );
+      });
+    });
+
+    it('reads from the correct cache key', async () => {
+      mockCache.get.mockResolvedValue(null);
+      const proposal = buildProposal();
+
+      await repository.update(recipeId, proposal);
+
+      expect(mockCache.get).toHaveBeenCalledWith(
+        `change-proposals:command:${recipeId}`,
+      );
+    });
+  });
 });

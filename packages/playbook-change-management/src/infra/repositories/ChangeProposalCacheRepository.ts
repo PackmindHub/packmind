@@ -38,6 +38,25 @@ export class ChangeProposalCacheRepository implements IChangeProposalRepository 
     return proposals ?? [];
   }
 
+  async update(
+    recipeId: RecipeId,
+    proposal: ChangeProposal<ChangeProposalType>,
+  ): Promise<void> {
+    const key = this.buildKey(recipeId);
+    const existing =
+      await this.cache.get<ChangeProposal<ChangeProposalType>[]>(key);
+    const proposals = existing ?? [];
+    const index = proposals.findIndex((p) => p.id === proposal.id);
+    if (index !== -1) {
+      proposals[index] = proposal;
+    }
+    await this.cache.set(key, proposals, CHANGE_PROPOSAL_TTL_SECONDS);
+    this.logger.info('Updated change proposal in cache', {
+      recipeId,
+      proposalId: proposal.id,
+    });
+  }
+
   private buildKey(recipeId: RecipeId): string {
     return `change-proposals:command:${recipeId}`;
   }

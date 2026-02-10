@@ -22,6 +22,7 @@ import {
   ImportPracticeLegacyHexa,
 } from '@packmind/import-practices-legacy';
 import { LinterHexa, LinterModule, linterSchemas } from '@packmind/linter';
+import { PlaybookChangeManagementHexa } from '@packmind/playbook-change-management';
 import { JobsService } from '@packmind/node-utils';
 import { OrganizationsModule as AccountsOrganizationsModule } from './accounts/organizations/organizations.module';
 import { AuthGuard } from './auth/auth.guard';
@@ -33,6 +34,7 @@ import { OrganizationsSpacesStandardsModule } from './organizations/spaces/stand
 import { OrganizationsSpacesStandardsRulesModule } from './organizations/spaces/standards/rules/rules.module';
 import { OrganizationsSpacesPackagesModule } from './organizations/spaces/packages/packages.module';
 import { OrganizationsSpacesSkillsModule } from './organizations/spaces/skills/skills.module';
+import { OrganizationsSpacesChangeProposalsModule } from './organizations/spaces/change-proposals/change-proposals.module';
 import { OrganizationsUsersModule } from './organizations/users/users.module';
 import { OrganizationDeploymentsModule } from './organizations/deployments/deployments.module';
 import { OrganizationTargetsModule } from './organizations/deployments/targets/targets.module';
@@ -98,6 +100,7 @@ const logger = new PackmindLogger('AppModule', LogLevel.INFO);
         StandardsHexa,
         SkillsHexa,
         ImportPracticeLegacyHexa, // After StandardsHexa (depends on Linter/Standards ports)
+        PlaybookChangeManagementHexa,
         CodingAgentHexa,
         DeploymentsHexa,
       ],
@@ -199,6 +202,10 @@ const logger = new PackmindLogger('AppModule', LogLevel.INFO);
               {
                 path: ':spaceId/skills',
                 module: OrganizationsSpacesSkillsModule,
+              },
+              {
+                path: ':spaceId/change-proposals',
+                module: OrganizationsSpacesChangeProposalsModule,
               },
             ],
           },

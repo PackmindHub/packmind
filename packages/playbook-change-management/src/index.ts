@@ -1,3 +1,4 @@
+export * from './domain/errors';
 export * from './domain/repositories';
 export * from './infra/repositories';
 export * from './application/adapters';

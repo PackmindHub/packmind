@@ -8,4 +8,8 @@ export interface IChangeProposalRepository {
   findByRecipeId(
     recipeId: RecipeId,
   ): Promise<ChangeProposal<ChangeProposalType>[]>;
+  update(
+    recipeId: RecipeId,
+    proposal: ChangeProposal<ChangeProposalType>,
+  ): Promise<void>;
 }

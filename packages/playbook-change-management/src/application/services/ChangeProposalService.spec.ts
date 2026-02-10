@@ -1,4 +1,5 @@
 import {
+  ChangeProposal,
   ChangeProposalCaptureMode,
   ChangeProposalStatus,
   ChangeProposalType,
@@ -9,6 +10,8 @@ import {
   CreateCommandChangeProposalCommand,
 } from '@packmind/types';
 import { stubLogger } from '@packmind/test-utils';
+import { ChangeProposalNotFoundError } from '../../domain/errors/ChangeProposalNotFoundError';
+import { ChangeProposalNotPendingError } from '../../domain/errors/ChangeProposalNotPendingError';
 import { IChangeProposalRepository } from '../../domain/repositories/IChangeProposalRepository';
 import { ChangeProposalService } from './ChangeProposalService';
 
@@ -20,6 +23,7 @@ describe('ChangeProposalService', () => {
     repository = {
       save: jest.fn(),
       findByRecipeId: jest.fn(),
+      update: jest.fn(),
     } as unknown as jest.Mocked<IChangeProposalRepository>;
 
     service = new ChangeProposalService(repository, stubLogger());
@@ -230,6 +234,117 @@ describe('ChangeProposalService', () => {
       await service.listProposalsByRecipeId(recipeId);
 
       expect(repository.findByRecipeId).toHaveBeenCalledWith(recipeId);
+    });
+  });
+
+  describe('rejectProposal', () => {
+    const recipeId = createRecipeId();
+    const userId = createUserId();
+
+    const buildPendingProposal = (): ChangeProposal<ChangeProposalType> => ({
+      id: createChangeProposalId(),
+      type: ChangeProposalType.updateCommandName,
+      artefactId: recipeId,
+      artefactVersion: 1,
+      payload: { oldValue: 'old', newValue: 'new' },
+      captureMode: ChangeProposalCaptureMode.commit,
+      status: ChangeProposalStatus.pending,
+      createdBy: createUserId(),
+      resolvedBy: null,
+      resolvedAt: null,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
+
+    describe('when the proposal exists and is pending', () => {
+      let proposal: ChangeProposal<ChangeProposalType>;
+
+      beforeEach(() => {
+        proposal = buildPendingProposal();
+        repository.findByRecipeId.mockResolvedValue([proposal]);
+      });
+
+      it('sets status to rejected', async () => {
+        const { changeProposal } = await service.rejectProposal(
+          recipeId,
+          proposal.id,
+          userId,
+        );
+
+        expect(changeProposal.status).toBe(ChangeProposalStatus.rejected);
+      });
+
+      it('sets resolvedBy to the userId', async () => {
+        const { changeProposal } = await service.rejectProposal(
+          recipeId,
+          proposal.id,
+          userId,
+        );
+
+        expect(changeProposal.resolvedBy).toBe(userId);
+      });
+
+      it('sets resolvedAt to a date', async () => {
+        const { changeProposal } = await service.rejectProposal(
+          recipeId,
+          proposal.id,
+          userId,
+        );
+
+        expect(changeProposal.resolvedAt).toBeInstanceOf(Date);
+      });
+
+      it('calls repository.update with the rejected proposal', async () => {
+        await service.rejectProposal(recipeId, proposal.id, userId);
+
+        expect(repository.update).toHaveBeenCalledWith(
+          recipeId,
+          expect.objectContaining({
+            id: proposal.id,
+            status: ChangeProposalStatus.rejected,
+            resolvedBy: userId,
+          }),
+        );
+      });
+    });
+
+    describe('when the proposal does not exist', () => {
+      it('throws ChangeProposalNotFoundError', async () => {
+        repository.findByRecipeId.mockResolvedValue([]);
+        const unknownId = createChangeProposalId();
+
+        await expect(
+          service.rejectProposal(recipeId, unknownId, userId),
+        ).rejects.toThrow(ChangeProposalNotFoundError);
+      });
+    });
+
+    describe('when the proposal is already rejected', () => {
+      it('throws ChangeProposalNotPendingError', async () => {
+        const proposal = {
+          ...buildPendingProposal(),
+          status: ChangeProposalStatus.rejected,
+        };
+        repository.findByRecipeId.mockResolvedValue([proposal]);
+
+        await expect(
+          service.rejectProposal(recipeId, proposal.id, userId),
+        ).rejects.toThrow(ChangeProposalNotPendingError);
+      });
+    });
+
+    describe('when the proposal is already applied', () => {
+      it('throws ChangeProposalNotPendingError', async () => {
+        const proposal = {
+          ...buildPendingProposal(),
+          status: ChangeProposalStatus.applied,
+        };
+        repository.findByRecipeId.mockResolvedValue([proposal]);
+
+        await expect(
+          service.rejectProposal(recipeId, proposal.id, userId),
+        ).rejects.toThrow(ChangeProposalNotPendingError);
+      });
     });
   });
 });

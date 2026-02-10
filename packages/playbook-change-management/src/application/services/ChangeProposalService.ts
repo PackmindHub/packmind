@@ -1,6 +1,7 @@
 import { PackmindLogger } from '@packmind/logger';
 import {
   ChangeProposal,
+  ChangeProposalId,
   ChangeProposalStatus,
   ChangeProposalType,
   CreateChangeProposalCommand,
@@ -11,8 +12,12 @@ import {
   createUserId,
   ListCommandChangeProposalsResponse,
   RecipeId,
+  RejectCommandChangeProposalResponse,
+  UserId,
 } from '@packmind/types';
 import { v4 as uuidv4 } from 'uuid';
+import { ChangeProposalNotFoundError } from '../../domain/errors/ChangeProposalNotFoundError';
+import { ChangeProposalNotPendingError } from '../../domain/errors/ChangeProposalNotPendingError';
 import { IChangeProposalRepository } from '../../domain/repositories/IChangeProposalRepository';
 
 const origin = 'ChangeProposalService';
@@ -91,5 +96,42 @@ export class ChangeProposalService {
   ): Promise<ListCommandChangeProposalsResponse> {
     const changeProposals = await this.repository.findByRecipeId(recipeId);
     return { changeProposals };
+  }
+
+  async rejectProposal(
+    recipeId: RecipeId,
+    changeProposalId: ChangeProposalId,
+    userId: UserId,
+  ): Promise<RejectCommandChangeProposalResponse> {
+    const proposals = await this.repository.findByRecipeId(recipeId);
+    const proposal = proposals.find((p) => p.id === changeProposalId);
+
+    if (!proposal) {
+      throw new ChangeProposalNotFoundError(changeProposalId);
+    }
+
+    if (proposal.status !== ChangeProposalStatus.pending) {
+      throw new ChangeProposalNotPendingError(
+        changeProposalId,
+        proposal.status,
+      );
+    }
+
+    const rejectedProposal: ChangeProposal<ChangeProposalType> = {
+      ...proposal,
+      status: ChangeProposalStatus.rejected,
+      resolvedBy: userId,
+      resolvedAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    await this.repository.update(recipeId, rejectedProposal);
+
+    this.logger.info('Change proposal rejected', {
+      recipeId,
+      proposalId: changeProposalId,
+    });
+
+    return { changeProposal: rejectedProposal };
   }
 }
