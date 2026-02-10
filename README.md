@@ -49,11 +49,10 @@ Choose your preferred setup option:
 
 ## Option 1: Install the CLI (recommended)
 
-The CLI is the primary way to set up Packmind.
+Follow the instructions during the onboarding to connect to your Packmind organization
+You can find them at anytime in the **Settings** menu.
 
-Install it and follow the onboarding to connect to your Packmind organization, create standards, commands, and skills, and distribute them across your repos.
-
-Once authenticated, run in your git repo:
+Once authenticated, run in your project:
 
 ```bash
 $> packmind-cli init
