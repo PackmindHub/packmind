@@ -1,11 +1,10 @@
 import { useState } from 'react';
-import { Link } from 'react-router';
-import { PMButton, PMPage, PMVStack } from '@packmind/ui';
+import { PMPage, PMVStack } from '@packmind/ui';
 import { useAuthContext } from '../../src/domain/accounts/hooks/useAuthContext';
 import { useCurrentSpace } from '../../src/domain/spaces/hooks/useCurrentSpace';
 import { RecipesList } from '../../src/domain/recipes/components/RecipesList';
+import { RecipesCreateButton } from '../../src/domain/recipes/components/RecipesCreateButton';
 import { AutobreadCrumb } from '../../src/shared/components/navigation/AutobreadCrumb';
-import { routes } from '../../src/shared/utils/routes';
 
 export default function OrgCommandsIndex() {
   const { organization } = useAuthContext();
@@ -24,13 +23,10 @@ export default function OrgCommandsIndex() {
       actions={
         !isEmpty &&
         spaceSlug && (
-          <PMButton asChild>
-            <Link
-              to={routes.space.toCreateCommand(organization.slug, spaceSlug)}
-            >
-              Create
-            </Link>
-          </PMButton>
+          <RecipesCreateButton
+            orgSlug={organization.slug}
+            spaceSlug={spaceSlug}
+          />
         )
       }
     >
