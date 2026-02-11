@@ -101,4 +101,11 @@ Standardize unit test structure and naming in TypeScript/TSX test files using ve
 * Use one expect per test case for better clarity and easier debugging; group related tests in describe blocks with shared setup in beforeEach
 
 Full standard is available here for further request: [Testing good practices](.packmind/standards/testing-good-practices.md)
+
+## Standard: Typescript good practices
+
+Prohibit using `Object.setPrototypeOf` when defining TypeScript errors to avoid performance penalties and ensure consistent error behavior. :
+* Do not use `Object.setPrototypeOf` when defining errors.
+
+Full standard is available here for further request: [Typescript good practices](.packmind/standards/typescript-good-practices.md)
 <!-- end: Packmind standards -->_

@@ -1,12 +1,12 @@
 ---
 name: Frontend Data Flow
 alwaysApply: true
-description: Define a standardized frontend data flow using React Router v7 clientLoader with TanStack Query domain-based query options and hooks to centralize route-level data fetching, leverage caching, reduce loading states, and enforce consistent separation between data access and presentation.
+description: Standardize frontend route data flow using React Router v7 framework mode with TanStack Query by centralizing fetching in route clientLoaders via queryClient.ensureQueryData(), organizing reusable query options/hooks under apps/frontend/src/domain/{entity}/api/queries/, and consuming results with useLoaderData() to reduce intermediate loading states and improve consistency and reuse.
 ---
 
 ## Standard: Frontend Data Flow
 
-Define a standardized frontend data flow using React Router v7 clientLoader with TanStack Query domain-based query options and hooks to centralize route-level data fetching, leverage caching, reduce loading states, and enforce consistent separation between data access and presentation. :
+Standardize frontend route data flow using React Router v7 framework mode with TanStack Query by centralizing fetching in route clientLoaders via queryClient.ensureQueryData(), organizing reusable query options/hooks under apps/frontend/src/domain/{entity}/api/queries/, and consuming results with useLoaderData() to reduce intermediate loading states and improve consistency and reuse. :
 
 - Access data via query or mutation hooks in frontend route modules rather than calling gateways directly to maintain separation between data access and presentation layers
 - Consume data in route module components using the useLoaderData() hook to access data returned by the clientLoader
@@ -16,7 +16,7 @@ Define a standardized frontend data flow using React Router v7 clientLoader with
 - Export query options as standalone functions (e.g., getStandardByIdOptions) separate from hooks to enable reuse in both hooks and route loaders
 - Name route module default export functions with a suffix of RouteModule (e.g., StandardDetailRouteModule) to clearly identify route-level components
 - Prefer `queryClient.ensureQueryData()` over `queryClient.fetchQuery()` in clientLoaders to return cached data when available instead of always fetching
-- Store domain queries in the domain folder organized by entity at apps/frontend/src/domains/{entity}/api/queries/ to maintain clear separation of concerns and domain boundaries
+- Store domain queries in the domain folder organized by entity at apps/frontend/src/domain/{entity}/api/queries/ to maintain clear separation of concerns and domain boundaries
 - Use clientLoader function (not loader) in route modules for data fetching when using React Router in SPA mode to ensure proper client-side data loading
 - Use Gateway<IUseCase> type helper for authenticated operations or PublicGateway<IPublicUseCase> for public operations in frontend gateway interfaces to ensure proper command/response typing
 - Use queryClient.ensureQueryData() or queryClient.fetchQuery() in clientLoader to preload data before rendering and leverage TanStack Query's caching mechanisms
