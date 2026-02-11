@@ -1,6 +1,10 @@
 import { useParams, NavLink } from 'react-router';
 import { PMPage, PMBox, PMVStack, PMSpinner, PMText } from '@packmind/ui';
-import { RecipeId } from '@packmind/types';
+import {
+  ChangeProposal,
+  ChangeProposalStatus,
+  RecipeId,
+} from '@packmind/types';
 import { ChangeProposalsTable } from '../../src/domain/recipes/components/ChangeProposalsTable';
 import { useGetChangeProposalsQuery } from '../../src/domain/recipes/api/queries/ChangeProposalsQueries';
 import { AutobreadCrumb } from '../../src/shared/components/navigation/AutobreadCrumb';
@@ -38,6 +42,11 @@ export default function ViewChangeProposalsRouteModule() {
     isLoading,
     isError,
   } = useGetChangeProposalsQuery(commandId as RecipeId);
+
+  // TODO: filter pending proposals on the backend side to avoid fetching unnecessary data
+  function getPendingProposals(proposals: ChangeProposal[]) {
+    return proposals.filter((p) => p.status === ChangeProposalStatus.pending);
+  }
 
   if (isLoading) {
     return (
@@ -82,7 +91,7 @@ export default function ViewChangeProposalsRouteModule() {
       breadcrumbComponent={<AutobreadCrumb />}
     >
       <ChangeProposalsTable
-        proposals={proposals}
+        proposals={getPendingProposals(proposals)}
         recipeId={commandId as RecipeId}
       />
     </PMPage>
