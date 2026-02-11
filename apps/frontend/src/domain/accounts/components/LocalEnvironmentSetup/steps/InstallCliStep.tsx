@@ -96,7 +96,7 @@ export const InstallCliStep: React.FC<IInstallCliStepProps> = ({
           title={selectedOs === 'macos-linux' ? 'Alternative' : 'Recommended'}
           description="Install via npm (most reliable across environments)."
         >
-          <PMAlert.Root status="info" marginBottom={4}>
+          <PMAlert.Root status="info">
             <PMAlert.Indicator />
             <PMAlert.Content>
               <PMAlert.Description>

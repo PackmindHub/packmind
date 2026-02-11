@@ -13,6 +13,7 @@ import {
   PMBadge,
   PMIcon,
   PMAccordion,
+  PMAlert,
 } from '@packmind/ui';
 import { LuTerminal, LuFileCode, LuDownload } from 'react-icons/lu';
 
@@ -163,7 +164,7 @@ export const SkillsLearnMoreContent: React.FC = () => {
         </PMText>
       </PMBox>
 
-      <PMAccordion.Root>
+      <PMAccordion.Root collapsible>
         <PMAccordion.Item
           value="step-1"
           backgroundColor="background.primary"
@@ -266,6 +267,14 @@ export const SkillsLearnMoreContent: React.FC = () => {
                     description="Install via npm (most reliable across environments)."
                     variant="secondary"
                   >
+                    <PMAlert.Root status="info">
+                      <PMAlert.Indicator />
+                      <PMAlert.Content>
+                        <PMAlert.Description>
+                          Requires Node.js 22 or higher.
+                        </PMAlert.Description>
+                      </PMAlert.Content>
+                    </PMAlert.Root>
                     <PMBox width="1/2">
                       <CopiableTextField
                         value={NPM_INSTALL_COMMAND}
@@ -281,6 +290,14 @@ export const SkillsLearnMoreContent: React.FC = () => {
                   description="Install via npm (most reliable across environments)."
                   variant="primary"
                 >
+                  <PMAlert.Root status="info">
+                    <PMAlert.Indicator />
+                    <PMAlert.Content>
+                      <PMAlert.Description>
+                        Requires Node.js 22 or higher.
+                      </PMAlert.Description>
+                    </PMAlert.Content>
+                  </PMAlert.Root>
                   <PMBox width="1/2">
                     <CopiableTextField
                       value={NPM_INSTALL_COMMAND}
