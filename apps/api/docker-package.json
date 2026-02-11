@@ -26,6 +26,7 @@
     "bullmq": "^5.58.2",
     "cookie-parser": "^1.4.7",
     "crisp-api": "^10.0.17",
+    "diff": "^8.0.3",
     "@google/genai": "^1.30.0",
     "http-proxy-middleware": "^3.0.5",
     "ioredis": "^5.3.2",
