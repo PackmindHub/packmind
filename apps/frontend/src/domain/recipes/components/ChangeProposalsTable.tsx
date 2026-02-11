@@ -4,6 +4,7 @@ import {
   PMButton,
   PMHStack,
   PMIcon,
+  PMConfirmationModal,
 } from '@packmind/ui';
 import {
   ChangeProposal,
@@ -68,16 +69,24 @@ function ActionButtons({
           <LuCheck />
         </PMIcon>
       </PMButton>
-      <PMButton
-        variant="secondary"
-        size="xs"
-        onClick={handleReject}
-        disabled={rejectMutation.isPending}
-      >
-        <PMIcon>
-          <LuCircleX />
-        </PMIcon>
-      </PMButton>
+      <PMConfirmationModal
+        trigger={
+          <PMButton
+            variant="secondary"
+            size="xs"
+            disabled={rejectMutation.isPending}
+          >
+            <PMIcon>
+              <LuCircleX />
+            </PMIcon>
+          </PMButton>
+        }
+        title="Reject change proposal"
+        message="Are you sure you want to reject this change proposal? This action cannot be undone."
+        confirmText="Reject"
+        onConfirm={handleReject}
+        isLoading={rejectMutation.isPending}
+      />
     </PMHStack>
   );
 }

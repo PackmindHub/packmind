@@ -13,8 +13,12 @@
     "@packmind/spaces": "*",
     "@packmind/test-utils": "0.0.1",
     "@packmind/types": "*",
+    "diff": "^8.0.3",
     "tslib": "^2.3.0",
     "typeorm": "0.3.28",
     "uuid": "^11.1.0"
+  },
+  "devDependencies": {
+    "@types/diff": "^7.0.2"
   }
 }
