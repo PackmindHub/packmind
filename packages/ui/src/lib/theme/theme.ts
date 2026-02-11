@@ -177,27 +177,42 @@ export const packmindTheme = (preflight: boolean) =>
         colors: {
           blue: {
             subtle: { value: '{colors.blue.800}' },
-            fg: { value: '{colors.blue.200}' },
+            fg: { value: '{colors.blue.100}' },
+            muted: { value: '{colors.blue.500}' },
           },
           green: {
             subtle: { value: '{colors.green.800}' },
-            fg: { value: '{colors.green.200}' },
+            fg: { value: '{colors.green.100}' },
+            muted: { value: '{colors.green.500}' },
           },
           orange: {
             subtle: { value: '{colors.orange.800}' },
-            fg: { value: '{colors.orange.200}' },
+            fg: { value: '{colors.orange.100}' },
+            muted: { value: '{colors.orange.500}' },
           },
           red: {
             subtle: { value: '{colors.red.800}' },
-            fg: { value: '{colors.red.200}' },
+            fg: { value: '{colors.red.100}' },
+            muted: { value: '{colors.red.500}' },
           },
           purple: {
             subtle: { value: '{colors.purple.800}' },
-            fg: { value: '{colors.purple.200}' },
+            fg: { value: '{colors.purple.100}' },
+            muted: { value: '{colors.purple.500}' },
           },
           gray: {
             subtle: { value: '{colors.beige.700}' },
             fg: { value: '{colors.beige.200}' },
+          },
+          yellow: {
+            subtle: { value: '{colors.yellow.800}' },
+            fg: { value: '{colors.yellow.100}' },
+            muted: { value: '{colors.yellow.500}' },
+          },
+          pink: {
+            subtle: { value: '{colors.pink.800}' },
+            fg: { value: '{colors.pink.100}' },
+            muted: { value: '{colors.pink.500}' },
           },
           branding: {
             primary: { value: '{colors.blue.200}' },
