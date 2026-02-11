@@ -189,31 +189,14 @@ export class StandardRepository
               order: { version: 'DESC' },
             });
 
-          // Try to get user info from users table using TypeORM
-          let createdBy: { userId: UserId; displayName: string } | undefined;
-          try {
-            const user = (await this.repository.manager
-              .getRepository('User')
-              .findOne({
-                where: { id: standard.userId },
-                select: ['id', 'email'],
-              })) as { id: UserId; email: string } | null;
-
-            if (user) {
-              // Extract displayName from email (part before @)
-              const displayName = user.email.split('@')[0] ?? 'Unknown';
-              createdBy = {
-                userId: user.id,
-                displayName,
-              };
-            }
-          } catch (error) {
-            this.logger.warn('Failed to fetch user info for standard', {
-              standardId: standard.id,
-              userId: standard.userId,
-              error: error instanceof Error ? error.message : String(error),
-            });
-          }
+          const createdByRaw = await this.getCreatedBy(standard.userId);
+          const createdBy =
+            createdByRaw && createdByRaw.userId
+              ? {
+                  ...createdByRaw,
+                  userId: createdByRaw.userId as UserId,
+                }
+              : undefined;
 
           return {
             ...standard,

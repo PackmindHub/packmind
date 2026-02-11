@@ -1,5 +1,10 @@
 import { PackmindLogger } from '@packmind/logger';
-import { IRepository, QueryOption, WithSoftDelete } from '@packmind/types';
+import {
+  IRepository,
+  QueryOption,
+  WithSoftDelete,
+  CreatedBy,
+} from '@packmind/types';
 import {
   EntitySchema,
   FindOptionsWhere,
@@ -120,6 +125,33 @@ export abstract class AbstractRepository<
   }
 
   protected abstract loggableEntity(entity: Entity): Partial<Entity>;
+
+  protected async getCreatedBy(userId: string): Promise<CreatedBy | undefined> {
+    try {
+      const user = (await this.repository.manager
+        .getRepository('User')
+        .findOne({
+          where: { id: userId },
+          select: ['id', 'email'],
+        })) as { id: string; email: string } | null;
+
+      if (user) {
+        // Extract displayName from email (part before @)
+        const displayName = user.email.split('@')[0] ?? 'Unknown';
+        return {
+          userId: user.id,
+          displayName,
+        };
+      }
+    } catch (error) {
+      this.logger.warn('Failed to fetch user info', {
+        userId,
+        error: error instanceof Error ? error.message : String(error),
+      });
+    }
+    return undefined;
+  }
+
   protected makeDuplicationErrorMessage(entity: Entity): string {
     const loggableFields = this.loggableEntity(entity);
     return `Duplication error found when saving ${this.entityName}: ${JSON.stringify(loggableFields)}`;
