@@ -1,5 +1,6 @@
 import {
   ChangeProposal,
+  ChangeProposalId,
   OrganizationId,
   RecipeId,
   SpaceId,
@@ -11,4 +12,11 @@ export interface IChangeProposalsGateway {
     spaceId: SpaceId,
     recipeId: RecipeId,
   ): Promise<ChangeProposal[]>;
+
+  rejectChangeProposal(
+    organizationId: OrganizationId,
+    spaceId: SpaceId,
+    changeProposalId: ChangeProposalId,
+    recipeId: RecipeId,
+  ): Promise<ChangeProposal>;
 }

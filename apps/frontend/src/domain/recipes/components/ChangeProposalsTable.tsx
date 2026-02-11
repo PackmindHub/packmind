@@ -9,10 +9,16 @@ import {
   ChangeProposal,
   ChangeProposalId,
   ChangeProposalType,
+  OrganizationId,
+  RecipeId,
   ScalarUpdatePayload,
+  SpaceId,
 } from '@packmind/types';
 import { getChangeProposalFieldLabel } from '../utils/changeProposalHelpers';
 import { LuCheck, LuCircleX } from 'react-icons/lu';
+import { useRejectChangeProposalMutation } from '../api/queries/ChangeProposalsQueries';
+import { useAuthContext } from '../../accounts/hooks/useAuthContext';
+import { useCurrentSpace } from '../../spaces/hooks/useCurrentSpace';
 
 type CommandChangeProposal =
   | ChangeProposal<ChangeProposalType.updateCommandName>
@@ -28,11 +34,28 @@ const columns: PMTableColumn[] = [
 
 interface ChangeProposalsTableProps {
   proposals: ChangeProposal[];
+  recipeId: RecipeId;
 }
 
 function ActionButtons({
   proposalId,
-}: Readonly<{ proposalId: ChangeProposalId }>) {
+  recipeId,
+}: Readonly<{ proposalId: ChangeProposalId; recipeId: RecipeId }>) {
+  const { organization } = useAuthContext();
+  const { spaceId } = useCurrentSpace();
+  const rejectMutation = useRejectChangeProposalMutation();
+
+  const handleReject = () => {
+    if (!organization?.id || !spaceId) return;
+
+    rejectMutation.mutate({
+      organizationId: organization.id as OrganizationId,
+      spaceId: spaceId as SpaceId,
+      changeProposalId: proposalId,
+      recipeId,
+    });
+  };
+
   return (
     <PMHStack gap={2}>
       <PMButton
@@ -46,7 +69,8 @@ function ActionButtons({
       <PMButton
         variant="secondary"
         size="xs"
-        onClick={() => console.log('Reject proposal:', proposalId)}
+        onClick={handleReject}
+        disabled={rejectMutation.isPending}
       >
         <PMIcon>
           <LuCircleX />
@@ -58,13 +82,14 @@ function ActionButtons({
 
 export function ChangeProposalsTable({
   proposals,
+  recipeId,
 }: Readonly<ChangeProposalsTableProps>) {
   const tableData = (proposals as CommandChangeProposal[]).map((proposal) => ({
     field: getChangeProposalFieldLabel(proposal.type),
     oldValue: (proposal.payload as ScalarUpdatePayload).oldValue,
     newValue: (proposal.payload as ScalarUpdatePayload).newValue,
     author: proposal.createdBy,
-    actions: <ActionButtons proposalId={proposal.id} />,
+    actions: <ActionButtons proposalId={proposal.id} recipeId={recipeId} />,
   }));
 
   return <PMTable columns={columns} data={tableData} />;

@@ -1,5 +1,6 @@
 import {
   ChangeProposal,
+  ChangeProposalId,
   ListCommandChangeProposalsResponse,
   OrganizationId,
   RecipeId,
@@ -25,5 +26,17 @@ export class ChangeProposalsGatewayApi
       `/organizations/${organizationId}/spaces/${spaceId}/change-proposals/${recipeId}`,
     );
     return response.changeProposals;
+  }
+
+  async rejectChangeProposal(
+    organizationId: OrganizationId,
+    spaceId: SpaceId,
+    changeProposalId: ChangeProposalId,
+    recipeId: RecipeId,
+  ): Promise<ChangeProposal> {
+    return this._api.post(
+      `/organizations/${organizationId}/spaces/${spaceId}/change-proposals/${changeProposalId}/reject`,
+      { recipeId },
+    );
   }
 }
