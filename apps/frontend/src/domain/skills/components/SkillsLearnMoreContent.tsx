@@ -17,6 +17,7 @@ import {
   PMTabs,
 } from '@packmind/ui';
 import { LuTerminal, LuFileCode, LuDownload } from 'react-icons/lu';
+import { CodingAgent } from '@packmind/types';
 
 import {
   CopiableTextField,
@@ -24,6 +25,8 @@ import {
 } from '../../../shared/components/inputs';
 import { useCreateCliLoginCodeMutation } from '../../accounts/api/queries/AuthQueries';
 import { DownloadDefaultSkillsPopover } from './DownloadDefaultSkillsPopover';
+import { DownloadDefaultSkillsContent } from './DownloadDefaultSkillsContent';
+import { useAnalytics } from '@packmind/proprietary/frontend/domain/amplitude/providers/AnalyticsProvider';
 
 const CLI_INSTALL_SCRIPT_URL =
   'https://raw.githubusercontent.com/PackmindHub/packmind/main/apps/cli/scripts/install.sh';
@@ -128,8 +131,12 @@ const AccordionItemHeader: React.FC<AccordionItemHeaderProps> = ({
 
 export const SkillsLearnMoreContent: React.FC = () => {
   const loginCodeMutation = useCreateCliLoginCodeMutation();
+  const analytics = useAnalytics();
   const [selectedOs, setSelectedOs] = useState<'macos-linux' | 'windows'>(
     detectOS,
+  );
+  const [downloadingAgent, setDownloadingAgent] = useState<CodingAgent | null>(
+    null,
   );
 
   useEffect(() => {
@@ -142,6 +149,31 @@ export const SkillsLearnMoreContent: React.FC = () => {
   const handleRegenerateCode = useCallback(() => {
     loginCodeMutation.mutate();
   }, [loginCodeMutation]);
+
+  const handleDownloadSkillsForAgent = useCallback(
+    async (agent: CodingAgent) => {
+      setDownloadingAgent(agent);
+      analytics.track('default_skills_downloaded', { agent });
+      try {
+        const response = await fetch(`/api/v0/skills/${agent}`);
+        if (!response.ok) {
+          throw new Error(`Download failed: ${response.statusText}`);
+        }
+        const blob = await response.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `packmind-${agent}-default-skills.zip`;
+        a.click();
+        URL.revokeObjectURL(url);
+      } catch (error) {
+        console.error(`Failed to download ${agent} skills zip:`, error);
+      } finally {
+        setDownloadingAgent(null);
+      }
+    },
+    [analytics],
+  );
 
   const installCommand = useMemo(
     () =>
@@ -309,7 +341,7 @@ export const SkillsLearnMoreContent: React.FC = () => {
                 </InstallSection>
               )}
 
-              <PMText color="secondary" fontSize="sm">
+              <PMText color="secondary">
                 For more installation methods, see the{' '}
                 <PMLink
                   href="https://docs.packmind.com/cli#installation"
@@ -360,7 +392,7 @@ export const SkillsLearnMoreContent: React.FC = () => {
                   ),
                   content: (
                     <PMVStack align="flex-start" gap={2} width="full" pt={4}>
-                      <PMText as="p" color="secondary" fontSize="sm">
+                      <PMText as="p" color="secondary">
                         Initialize a new Packmind project with default skills
                         included:
                       </PMText>
@@ -379,14 +411,9 @@ export const SkillsLearnMoreContent: React.FC = () => {
                   triggerLabel: 'Manual Download',
                   content: (
                     <PMVStack align="flex-start" gap={2} width="full" pt={4}>
-                      <PMText as="p" color="secondary" fontSize="sm" mb={2}>
-                        Download a pre-packaged collection of default skills for
-                        your AI coding assistant:
-                      </PMText>
-                      <DownloadDefaultSkillsPopover
-                        buttonVariant="tertiary"
-                        buttonSize="xs"
-                        placement="bottom-start"
+                      <DownloadDefaultSkillsContent
+                        downloadingAgent={downloadingAgent}
+                        onDownload={handleDownloadSkillsForAgent}
                       />
                     </PMVStack>
                   ),
@@ -425,7 +452,7 @@ export const SkillsLearnMoreContent: React.FC = () => {
                   triggerLabel: 'Run Skill',
                   content: (
                     <PMVStack align="flex-start" gap={2} width="full" pt={4}>
-                      <PMText as="p" color="secondary" fontSize="sm">
+                      <PMText as="p" color="secondary">
                         Open your AI coding assistant and run the following
                         command (works in Claude Code and Cursor)
                       </PMText>
@@ -444,7 +471,7 @@ export const SkillsLearnMoreContent: React.FC = () => {
                   triggerLabel: 'Prompt Agent',
                   content: (
                     <PMVStack align="flex-start" gap={2} width="full" pt={4}>
-                      <PMText as="p" color="secondary" fontSize="sm">
+                      <PMText as="p" color="secondary">
                         Ask your agent to create a new skill with a prompt like
                         this:
                       </PMText>
