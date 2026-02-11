@@ -760,19 +760,45 @@ describe('RepositoryCentricView', () => {
       });
     });
 
+    describe('when no distributions have been made yet', () => {
+      beforeEach(() => {
+        renderWithProvider(
+          <RepositoryCentricView
+            recipeRepositories={[]}
+            standardRepositories={[]}
+            recipeTargets={[]}
+            standardTargets={[]}
+            skillTargets={[]}
+          />,
+        );
+      });
+
+      it('displays empty state title', () => {
+        expect(screen.getByText('No distributions yet')).toBeInTheDocument();
+      });
+
+      it('displays empty state description', () => {
+        expect(
+          screen.getByText(
+            'No recipes, standards, or skills have been distributed to repositories yet',
+          ),
+        ).toBeInTheDocument();
+      });
+    });
+
     describe('when no repositories exist', () => {
       beforeEach(() => {
         renderWithProvider(<RepositoryCentricView recipeRepositories={[]} />);
       });
 
       it('displays empty state title', () => {
-        expect(screen.getByText('No repositories')).toBeInTheDocument();
+        expect(screen.getByText('No distributions yet')).toBeInTheDocument();
       });
 
       it('displays empty state description', () => {
         expect(
           screen.getByText(
-            'No repositories with distributed recipes or standards found',
+            'No recipes, standards, or skills have been distributed to repositories yet',
           ),
         ).toBeInTheDocument();
       });

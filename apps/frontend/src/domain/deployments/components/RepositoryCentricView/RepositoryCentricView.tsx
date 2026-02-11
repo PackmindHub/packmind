@@ -400,9 +400,20 @@ const getEmptyStateProps = (
   selectedTargetNames: string[] | undefined,
   searchTerm: string,
   artifactStatusFilter: ArtifactStatusFilter,
+  totalRepositoriesCount: number,
 ): EmptyState => {
   if (filteredCount > 0) return null;
 
+  // Case: No distributions at all
+  if (totalRepositoriesCount === 0) {
+    return {
+      title: 'No distributions yet',
+      description:
+        'No recipes, standards, or skills have been distributed to repositories yet',
+    };
+  }
+
+  // Cases: Filters return no results
   if (selectedTargetNames && selectedTargetNames.length > 0 && searchTerm) {
     return {
       title: 'No repositories found',
@@ -608,6 +619,7 @@ export const RepositoryCentricView: React.FC<RepositoryCentricViewProps> = ({
     selectedTargetNames,
     searchTerm,
     artifactStatusFilter,
+    combinedRepositories.size,
   );
 
   if (emptyState) {
