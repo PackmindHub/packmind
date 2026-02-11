@@ -22,7 +22,10 @@ import {
   ImportPracticeLegacyHexa,
 } from '@packmind/import-practices-legacy';
 import { LinterHexa, LinterModule, linterSchemas } from '@packmind/linter';
-import { PlaybookChangeManagementHexa } from '@packmind/playbook-change-management';
+import {
+  PlaybookChangeManagementHexa,
+  playbookChangeManagementSchemas,
+} from '@packmind/playbook-change-management';
 import { JobsService } from '@packmind/node-utils';
 import { OrganizationsModule as AccountsOrganizationsModule } from './accounts/organizations/organizations.module';
 import { AuthGuard } from './auth/auth.guard';
@@ -66,6 +69,7 @@ const logger = new PackmindLogger('AppModule', LogLevel.INFO);
         ...deploymentsSchemas,
         ...linterSchemas,
         ...llmSchemas,
+        ...playbookChangeManagementSchemas,
       ],
       logging: false,
       synchronize: false,
