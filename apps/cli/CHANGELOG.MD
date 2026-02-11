@@ -6,9 +6,13 @@
 
 ## Fixed
 
-- When running `packmind-cli init` (or `packmind-cli config agents`): load selected agents for packmind server if not local configuration is available.
-
 ## Removed
+
+# [0.16.1] - 2026-02-11
+
+## Fixed
+
+- When running `packmind-cli init` (or `packmind-cli config agents`): load selected agents for packmind server if not local configuration is available.
 
 # [0.16.0] - 2026-02-06
 
@@ -198,7 +202,8 @@
 
 - Add proper CHANGELOG.MD in the GH release
 
-[Unreleased]: https://github.com/PackmindHub/packmind/compare/release-cli/0.16.0...HEAD
+[Unreleased]: https://github.com/PackmindHub/packmind/compare/release-cli/0.16.1...HEAD
+[0.16.1]: https://github.com/PackmindHub/packmind/compare/release-cli/0.16.0...release-cli/0.16.1
 [0.16.0]: https://github.com/PackmindHub/packmind/compare/release-cli/0.15.0...release-cli/0.16.0
 [0.15.0]: https://github.com/PackmindHub/packmind/compare/release-cli/0.14.1...release-cli/0.15.0
 [0.14.1]: https://github.com/PackmindHub/packmind/compare/release-cli/0.14.0...release-cli/0.14.1
