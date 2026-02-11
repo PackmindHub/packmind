@@ -189,14 +189,7 @@ export class StandardRepository
               order: { version: 'DESC' },
             });
 
-          const createdByRaw = await this.getCreatedBy(standard.userId);
-          const createdBy =
-            createdByRaw && createdByRaw.userId
-              ? {
-                  ...createdByRaw,
-                  userId: createdByRaw.userId as UserId,
-                }
-              : undefined;
+          const createdBy = await this.getCreatedBy(standard.userId);
 
           return {
             ...standard,

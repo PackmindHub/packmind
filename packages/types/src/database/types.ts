@@ -1,3 +1,5 @@
+import { UserId } from '../accounts/User';
+
 export type WithTimestamps<T> = T & {
   createdAt: Date;
   updatedAt: Date;
@@ -13,8 +15,12 @@ export type QueryOption = Partial<{
 }>;
 
 export type CreatedBy = {
-  userId: string;
+  userId: UserId;
   displayName: string;
+};
+
+export type WithCreator<T> = T & {
+  createdBy?: CreatedBy;
 };
 
 export interface IRepository<Entity extends { id: string }> {
