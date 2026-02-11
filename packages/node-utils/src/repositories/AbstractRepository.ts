@@ -4,6 +4,7 @@ import {
   QueryOption,
   WithSoftDelete,
   CreatedBy,
+  UserId,
 } from '@packmind/types';
 import {
   EntitySchema,
@@ -139,7 +140,7 @@ export abstract class AbstractRepository<
         // Extract displayName from email (part before @)
         const displayName = user.email.split('@')[0] ?? 'Unknown';
         return {
-          userId: user.id,
+          userId: user.id as UserId,
           displayName,
         };
       }
