@@ -11,8 +11,8 @@ import {
   CreateCommandChangeProposalResponse,
   createUserId,
   ListCommandChangeProposalsResponse,
-  RecipeId,
   RejectCommandChangeProposalResponse,
+  SpaceId,
   UserId,
 } from '@packmind/types';
 import { v4 as uuidv4 } from 'uuid';
@@ -36,6 +36,7 @@ export class ChangeProposalService {
       type: command.type,
       artefactId: command.artefactId,
       artefactVersion: command.artefactVersion,
+      spaceId: command.spaceId,
       payload: command.payload,
       captureMode: command.captureMode,
       status: ChangeProposalStatus.pending,
@@ -46,7 +47,7 @@ export class ChangeProposalService {
       updatedAt: new Date(),
     };
 
-    await this.repository.save(command.artefactId, proposal);
+    await this.repository.save(proposal);
 
     this.logger.info('Change proposal created', {
       proposalId: proposal.id,
@@ -66,6 +67,7 @@ export class ChangeProposalService {
       type: command.type as T,
       artefactId: command.artefactId,
       artefactVersion,
+      spaceId: command.spaceId,
       payload: command.payload,
       captureMode: command.captureMode,
       status: ChangeProposalStatus.pending,
@@ -76,11 +78,7 @@ export class ChangeProposalService {
       updatedAt: new Date(),
     };
 
-    // Ugly fix for now
-    await this.repository.save(
-      command.artefactId as unknown as RecipeId,
-      proposal,
-    );
+    await this.repository.save(proposal);
 
     this.logger.info('Change proposal created', {
       proposalId: proposal.id,
@@ -91,19 +89,26 @@ export class ChangeProposalService {
     return { changeProposal: proposal };
   }
 
-  async listProposalsByRecipeId(
-    recipeId: RecipeId,
+  async listProposalsByArtefactId(
+    artefactId: string,
   ): Promise<ListCommandChangeProposalsResponse> {
-    const changeProposals = await this.repository.findByRecipeId(recipeId);
+    const changeProposals = await this.repository.findByArtefactId(artefactId);
+    return { changeProposals };
+  }
+
+  async listProposalsBySpaceId(
+    spaceId: SpaceId,
+  ): Promise<ListCommandChangeProposalsResponse> {
+    const changeProposals = await this.repository.findBySpaceId(spaceId);
     return { changeProposals };
   }
 
   async rejectProposal(
-    recipeId: RecipeId,
+    artefactId: string,
     changeProposalId: ChangeProposalId,
     userId: UserId,
   ): Promise<RejectCommandChangeProposalResponse> {
-    const proposals = await this.repository.findByRecipeId(recipeId);
+    const proposals = await this.repository.findByArtefactId(artefactId);
     const proposal = proposals.find((p) => p.id === changeProposalId);
 
     if (!proposal) {
@@ -125,10 +130,10 @@ export class ChangeProposalService {
       updatedAt: new Date(),
     };
 
-    await this.repository.update(recipeId, rejectedProposal);
+    await this.repository.update(rejectedProposal);
 
     this.logger.info('Change proposal rejected', {
-      recipeId,
+      artefactId,
       proposalId: changeProposalId,
     });
 

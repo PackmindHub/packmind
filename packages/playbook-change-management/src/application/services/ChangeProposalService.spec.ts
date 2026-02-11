@@ -5,6 +5,7 @@ import {
   ChangeProposalType,
   createChangeProposalId,
   createRecipeId,
+  createSpaceId,
   createUserId,
   CreateChangeProposalCommand,
   CreateCommandChangeProposalCommand,
@@ -19,10 +20,13 @@ describe('ChangeProposalService', () => {
   let service: ChangeProposalService;
   let repository: jest.Mocked<IChangeProposalRepository>;
 
+  const spaceId = createSpaceId();
+
   beforeEach(() => {
     repository = {
       save: jest.fn(),
-      findByRecipeId: jest.fn(),
+      findByArtefactId: jest.fn(),
+      findBySpaceId: jest.fn(),
       update: jest.fn(),
     } as unknown as jest.Mocked<IChangeProposalRepository>;
 
@@ -40,6 +44,7 @@ describe('ChangeProposalService', () => {
     const command: CreateCommandChangeProposalCommand = {
       userId: userId as unknown as string,
       organizationId: 'org-1',
+      spaceId,
       type: ChangeProposalType.updateCommandName,
       artefactId: recipeId,
       artefactVersion: 1,
@@ -65,14 +70,20 @@ describe('ChangeProposalService', () => {
       expect(changeProposal.createdBy).toBe(userId);
     });
 
+    it('sets spaceId from command', async () => {
+      const { changeProposal } = await service.createProposal(command);
+
+      expect(changeProposal.spaceId).toBe(spaceId);
+    });
+
     it('saves the proposal to the repository', async () => {
       await service.createProposal(command);
 
       expect(repository.save).toHaveBeenCalledWith(
-        recipeId,
         expect.objectContaining({
           type: ChangeProposalType.updateCommandName,
           artefactId: recipeId,
+          spaceId,
           status: ChangeProposalStatus.pending,
         }),
       );
@@ -114,6 +125,7 @@ describe('ChangeProposalService', () => {
       {
         userId: userId as unknown as string,
         organizationId: 'org-1',
+        spaceId,
         type: ChangeProposalType.updateCommandName,
         artefactId: recipeId,
         payload: { oldValue: 'old name', newValue: 'new name' },
@@ -160,11 +172,11 @@ describe('ChangeProposalService', () => {
       await service.createChangeProposal(command, artefactVersion);
 
       expect(repository.save).toHaveBeenCalledWith(
-        recipeId,
         expect.objectContaining({
           type: ChangeProposalType.updateCommandName,
           artefactId: recipeId,
           artefactVersion,
+          spaceId,
           status: ChangeProposalStatus.pending,
         }),
       );
@@ -189,7 +201,7 @@ describe('ChangeProposalService', () => {
     });
   });
 
-  describe('listProposalsByRecipeId', () => {
+  describe('listProposalsByArtefactId', () => {
     const recipeId = createRecipeId();
 
     describe('when repository returns proposals', () => {
@@ -200,6 +212,7 @@ describe('ChangeProposalService', () => {
             type: ChangeProposalType.updateCommandName,
             artefactId: recipeId,
             artefactVersion: 1,
+            spaceId,
             payload: { oldValue: 'old', newValue: 'new' },
             captureMode: ChangeProposalCaptureMode.commit,
             status: ChangeProposalStatus.pending,
@@ -210,9 +223,9 @@ describe('ChangeProposalService', () => {
             updatedAt: new Date(),
           },
         ];
-        repository.findByRecipeId.mockResolvedValue(proposals);
+        repository.findByArtefactId.mockResolvedValue(proposals);
 
-        const result = await service.listProposalsByRecipeId(recipeId);
+        const result = await service.listProposalsByArtefactId(recipeId);
 
         expect(result.changeProposals).toEqual(proposals);
       });
@@ -220,20 +233,20 @@ describe('ChangeProposalService', () => {
 
     describe('when repository returns empty array', () => {
       it('returns empty changeProposals array', async () => {
-        repository.findByRecipeId.mockResolvedValue([]);
+        repository.findByArtefactId.mockResolvedValue([]);
 
-        const result = await service.listProposalsByRecipeId(recipeId);
+        const result = await service.listProposalsByArtefactId(recipeId);
 
         expect(result.changeProposals).toEqual([]);
       });
     });
 
-    it('calls repository with the correct recipeId', async () => {
-      repository.findByRecipeId.mockResolvedValue([]);
+    it('calls repository with the correct artefactId', async () => {
+      repository.findByArtefactId.mockResolvedValue([]);
 
-      await service.listProposalsByRecipeId(recipeId);
+      await service.listProposalsByArtefactId(recipeId);
 
-      expect(repository.findByRecipeId).toHaveBeenCalledWith(recipeId);
+      expect(repository.findByArtefactId).toHaveBeenCalledWith(recipeId);
     });
   });
 
@@ -246,6 +259,7 @@ describe('ChangeProposalService', () => {
       type: ChangeProposalType.updateCommandName,
       artefactId: recipeId,
       artefactVersion: 1,
+      spaceId,
       payload: { oldValue: 'old', newValue: 'new' },
       captureMode: ChangeProposalCaptureMode.commit,
       status: ChangeProposalStatus.pending,
@@ -261,7 +275,7 @@ describe('ChangeProposalService', () => {
 
       beforeEach(() => {
         proposal = buildPendingProposal();
-        repository.findByRecipeId.mockResolvedValue([proposal]);
+        repository.findByArtefactId.mockResolvedValue([proposal]);
       });
 
       it('sets status to rejected', async () => {
@@ -298,7 +312,6 @@ describe('ChangeProposalService', () => {
         await service.rejectProposal(recipeId, proposal.id, userId);
 
         expect(repository.update).toHaveBeenCalledWith(
-          recipeId,
           expect.objectContaining({
             id: proposal.id,
             status: ChangeProposalStatus.rejected,
@@ -310,7 +323,7 @@ describe('ChangeProposalService', () => {
 
     describe('when the proposal does not exist', () => {
       it('throws ChangeProposalNotFoundError', async () => {
-        repository.findByRecipeId.mockResolvedValue([]);
+        repository.findByArtefactId.mockResolvedValue([]);
         const unknownId = createChangeProposalId();
 
         await expect(
@@ -325,7 +338,7 @@ describe('ChangeProposalService', () => {
           ...buildPendingProposal(),
           status: ChangeProposalStatus.rejected,
         };
-        repository.findByRecipeId.mockResolvedValue([proposal]);
+        repository.findByArtefactId.mockResolvedValue([proposal]);
 
         await expect(
           service.rejectProposal(recipeId, proposal.id, userId),
@@ -339,7 +352,7 @@ describe('ChangeProposalService', () => {
           ...buildPendingProposal(),
           status: ChangeProposalStatus.applied,
         };
-        repository.findByRecipeId.mockResolvedValue([proposal]);
+        repository.findByArtefactId.mockResolvedValue([proposal]);
 
         await expect(
           service.rejectProposal(recipeId, proposal.id, userId),
