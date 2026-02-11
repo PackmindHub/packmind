@@ -190,7 +190,7 @@ export class StandardRepository
             });
 
           // Try to get user info from users table using TypeORM
-          let createdBy: { userId: UserId; email: string } | undefined;
+          let createdBy: { userId: UserId; displayName: string } | undefined;
           try {
             const user = (await this.repository.manager
               .getRepository('User')
@@ -200,9 +200,11 @@ export class StandardRepository
               })) as { id: UserId; email: string } | null;
 
             if (user) {
+              // Extract displayName from email (part before @)
+              const displayName = user.email.split('@')[0] ?? 'Unknown';
               createdBy = {
                 userId: user.id,
-                email: user.email,
+                displayName,
               };
             }
           } catch (error) {

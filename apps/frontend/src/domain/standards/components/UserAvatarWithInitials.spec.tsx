@@ -9,23 +9,21 @@ const renderWithProvider = (component: React.ReactElement) => {
 };
 
 describe('UserAvatarWithInitials', () => {
-  describe('when displaying avatar with email', () => {
-    it('displays initials extracted from dotted email', () => {
-      renderWithProvider(
-        <UserAvatarWithInitials email="john.doe@example.com" />,
-      );
+  describe('when displaying avatar with display name', () => {
+    it('displays initials extracted from dotted display name', () => {
+      renderWithProvider(<UserAvatarWithInitials displayName="john.doe" />);
 
       expect(screen.getByText('JD')).toBeInTheDocument();
     });
 
-    it('displays initials extracted from simple email', () => {
-      renderWithProvider(<UserAvatarWithInitials email="jane@example.com" />);
+    it('displays initials extracted from simple display name', () => {
+      renderWithProvider(<UserAvatarWithInitials displayName="jane" />);
 
       expect(screen.getByText('J')).toBeInTheDocument();
     });
 
-    it('displays single initial for single character email', () => {
-      renderWithProvider(<UserAvatarWithInitials email="a@example.com" />);
+    it('displays single initial for single character display name', () => {
+      renderWithProvider(<UserAvatarWithInitials displayName="a" />);
 
       expect(screen.getByText('A')).toBeInTheDocument();
     });

@@ -17,6 +17,6 @@ export type Standard = {
   updatedAt?: Date;
   createdBy?: {
     userId: UserId;
-    email: string;
+    displayName: string;
   }; // Creator information for UI display
 };

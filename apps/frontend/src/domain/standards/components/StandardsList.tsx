@@ -145,7 +145,10 @@ export const StandardsList = ({
           </PMLink>
         ),
         createdBy: standard.createdBy ? (
-          <UserAvatarWithInitials email={standard.createdBy.email} size="xs" />
+          <UserAvatarWithInitials
+            displayName={standard.createdBy.displayName}
+            size="xs"
+          />
         ) : (
           <span>-</span>
         ),

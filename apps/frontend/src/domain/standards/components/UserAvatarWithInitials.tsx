@@ -2,30 +2,30 @@ import React from 'react';
 import { PMAvatar, PMTooltip } from '@packmind/ui';
 
 interface UserAvatarWithInitialsProps {
-  email: string;
+  displayName: string;
   size?: 'xs' | 'sm' | 'md' | 'lg';
 }
 
 /**
- * Extracts initials from an email address.
+ * Extracts initials from a display name.
  * Examples:
- * - "john.doe@example.com" → "JD"
- * - "jane@example.com" → "JE"
- * - "a@example.com" → "A"
+ * - "john.doe" → "JD"
+ * - "jane" → "J"
+ * - "a" → "A"
  */
-function getInitialsFromEmail(email: string): string {
-  const parts = email.split('@')[0]?.split('.') ?? [];
+function getInitialsFromDisplayName(displayName: string): string {
+  const parts = displayName.split('.');
   if (parts.length >= 2) {
     return (parts[0][0] + parts[1][0]).toUpperCase();
   }
-  return email[0]?.toUpperCase() ?? '?';
+  return displayName[0]?.toUpperCase() ?? '?';
 }
 
 /**
- * Generates a consistent color based on the email string.
- * Uses a deterministic hash to ensure the same email always gets the same color.
+ * Generates a consistent color based on the display name string.
+ * Uses a deterministic hash to ensure the same name always gets the same color.
  */
-function getColorFromEmail(email: string): string {
+function getColorFromDisplayName(displayName: string): string {
   const colors = [
     'red',
     'orange',
@@ -37,31 +37,31 @@ function getColorFromEmail(email: string): string {
     'cyan',
   ];
   let hash = 0;
-  for (let i = 0; i < email.length; i++) {
-    hash = email.charCodeAt(i) + ((hash << 5) - hash);
+  for (let i = 0; i < displayName.length; i++) {
+    hash = displayName.charCodeAt(i) + ((hash << 5) - hash);
   }
   return colors[Math.abs(hash) % colors.length];
 }
 
 /**
- * Displays a user avatar with initials extracted from their email.
- * Includes a tooltip showing the full email address.
+ * Displays a user avatar with initials extracted from their display name.
+ * Includes a tooltip showing the display name.
  *
  * @example
- * <UserAvatarWithInitials email="john.doe@example.com" size="md" />
+ * <UserAvatarWithInitials displayName="john.doe" size="md" />
  */
 export const UserAvatarWithInitials: React.FC<UserAvatarWithInitialsProps> = ({
-  email,
+  displayName,
   size = 'xs',
 }) => {
-  const initials = getInitialsFromEmail(email);
-  const color = getColorFromEmail(email);
+  const initials = getInitialsFromDisplayName(displayName);
+  const color = getColorFromDisplayName(displayName);
 
   return (
-    <PMTooltip label={email} placement="top">
+    <PMTooltip label={displayName} placement="top">
       <span style={{ display: 'inline-flex', cursor: 'pointer' }}>
         <PMAvatar.Root colorPalette={color} size={size}>
-          <PMAvatar.Image src="" alt={email} />
+          <PMAvatar.Image src="" alt={displayName} />
           <PMAvatar.Fallback>{initials}</PMAvatar.Fallback>
         </PMAvatar.Root>
       </span>
