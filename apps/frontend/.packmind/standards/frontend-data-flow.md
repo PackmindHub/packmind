@@ -4,7 +4,7 @@ This standard defines the recommended data flow pattern for frontend routes in t
 
 ## Rules
 
-* Store domain queries in the domain folder organized by entity at apps/frontend/src/domains/{entity}/api/queries/ to maintain clear separation of concerns and domain boundaries
+* Store domain queries in the domain folder organized by entity at apps/frontend/src/domain/{entity}/api/queries/ to maintain clear separation of concerns and domain boundaries
 * Export query options as standalone functions (e.g., getStandardByIdOptions) separate from hooks to enable reuse in both hooks and route loaders
 * Export query hooks (e.g., useGetStandardByIdQuery) alongside query options to provide consistent component-level data access patterns
 * Use clientLoader function (not loader) in route modules for data fetching when using React Router in SPA mode to ensure proper client-side data loading
