@@ -15,6 +15,7 @@ import {
   SpaceId,
 } from '@packmind/types';
 import { getChangeProposalFieldLabel } from '../utils/changeProposalHelpers';
+import { formatDate } from '../../../shared/utils/dateUtils';
 import { LuCheck, LuCircleX } from 'react-icons/lu';
 import { useRejectChangeProposalMutation } from '../api/queries/ChangeProposalsQueries';
 import { useAuthContext } from '../../accounts/hooks/useAuthContext';
@@ -29,6 +30,7 @@ const columns: PMTableColumn[] = [
   { key: 'oldValue', header: 'Old value', width: '300px' },
   { key: 'newValue', header: 'New value', width: '300px' },
   { key: 'author', header: 'Author', width: '150px' },
+  { key: 'date', header: 'Date', width: '180px' },
   { key: 'actions', header: 'Actions', width: '200px' },
 ];
 
@@ -89,6 +91,7 @@ export function ChangeProposalsTable({
     oldValue: (proposal.payload as ScalarUpdatePayload).oldValue,
     newValue: (proposal.payload as ScalarUpdatePayload).newValue,
     author: proposal.createdBy,
+    date: formatDate(String(proposal.createdAt)),
     actions: <ActionButtons proposalId={proposal.id} recipeId={recipeId} />,
   }));
 
