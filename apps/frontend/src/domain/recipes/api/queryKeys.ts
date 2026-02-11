@@ -33,3 +33,9 @@ export const GET_CHANGE_PROPOSALS_KEY = [
   RECIPES_QUERY_SCOPE,
   RecipeQueryKeys.GET_CHANGE_PROPOSALS,
 ] as const;
+
+export const REJECT_CHANGE_PROPOSAL_MUTATION_KEY = [
+  ORGANIZATION_QUERY_SCOPE,
+  RECIPES_QUERY_SCOPE,
+  'reject-change-proposal',
+] as const;

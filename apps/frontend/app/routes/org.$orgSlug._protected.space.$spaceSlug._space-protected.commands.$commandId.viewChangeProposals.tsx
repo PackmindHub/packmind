@@ -81,7 +81,10 @@ export default function ViewChangeProposalsRouteModule() {
       subtitle="Review and manage proposed changes to this command"
       breadcrumbComponent={<AutobreadCrumb />}
     >
-      <ChangeProposalsTable proposals={proposals} />
+      <ChangeProposalsTable
+        proposals={proposals}
+        recipeId={commandId as RecipeId}
+      />
     </PMPage>
   );
 }

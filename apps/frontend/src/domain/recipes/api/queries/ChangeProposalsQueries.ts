@@ -1,7 +1,15 @@
-import { useQuery } from '@tanstack/react-query';
-import { OrganizationId, RecipeId, SpaceId } from '@packmind/types';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import {
+  ChangeProposalId,
+  OrganizationId,
+  RecipeId,
+  SpaceId,
+} from '@packmind/types';
 import { changeProposalsGateway } from '../gateways';
-import { GET_CHANGE_PROPOSALS_KEY } from '../queryKeys';
+import {
+  GET_CHANGE_PROPOSALS_KEY,
+  REJECT_CHANGE_PROPOSAL_MUTATION_KEY,
+} from '../queryKeys';
 import { useAuthContext } from '../../../accounts/hooks/useAuthContext';
 import { useCurrentSpace } from '../../../spaces/hooks/useCurrentSpace';
 
@@ -37,4 +45,41 @@ export const useGetChangeProposalsQuery = (recipeId: RecipeId | undefined) => {
   return useQuery(
     getChangeProposalsByRecipeIdOptions(organization?.id, spaceId, recipeId),
   );
+};
+
+export const useRejectChangeProposalMutation = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationKey: [...REJECT_CHANGE_PROPOSAL_MUTATION_KEY],
+    mutationFn: async ({
+      organizationId,
+      spaceId,
+      changeProposalId,
+      recipeId,
+    }: {
+      organizationId: OrganizationId;
+      spaceId: SpaceId;
+      changeProposalId: ChangeProposalId;
+      recipeId: RecipeId;
+    }) => {
+      return changeProposalsGateway.rejectChangeProposal(
+        organizationId,
+        spaceId,
+        changeProposalId,
+        recipeId,
+      );
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
+        queryKey: GET_CHANGE_PROPOSALS_KEY,
+      });
+    },
+    onError: (error, variables, context) => {
+      console.error('Error rejecting change proposal');
+      console.log('error: ', error);
+      console.log('variables: ', variables);
+      console.log('context: ', context);
+    },
+  });
 };
