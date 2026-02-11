@@ -24,7 +24,7 @@ describe('DeploymentsBlankState', () => {
   it('displays the main heading', () => {
     renderWithProvider(<DeploymentsBlankState />);
     expect(
-      screen.getByText('Ready to distribute your standards'),
+      screen.getByText('Track where your best practices are'),
     ).toBeInTheDocument();
   });
 
@@ -32,8 +32,15 @@ describe('DeploymentsBlankState', () => {
     renderWithProvider(<DeploymentsBlankState />);
     expect(
       screen.getByText(
-        'Distribute recipes, standards, and skills to your repositories. This view will show you the deployment status across all repositories and targets.',
+        'Distribute recipes, standards, and skills to your repositories. This view will show you the distribution status across all repositories.',
       ),
+    ).toBeInTheDocument();
+  });
+
+  it('displays example heading', () => {
+    renderWithProvider(<DeploymentsBlankState />);
+    expect(
+      screen.getByText('Example with demo repository and playbook'),
     ).toBeInTheDocument();
   });
 
@@ -56,16 +63,9 @@ describe('DeploymentsBlankState', () => {
     expect(screen.getByText('3')).toBeInTheDocument();
   });
 
-  it('displays example subtitle', () => {
-    renderWithProvider(<DeploymentsBlankState />);
-    expect(
-      screen.getByText('Example with demo targets and artifacts'),
-    ).toBeInTheDocument();
-  });
-
   it('displays tables for each target', () => {
     renderWithProvider(<DeploymentsBlankState />);
     const tables = screen.getAllByTestId('pm-table');
-    expect(tables.length).toBe(2); // Prod and Staging
+    expect(tables.length).toBe(2); // api and frontend
   });
 });

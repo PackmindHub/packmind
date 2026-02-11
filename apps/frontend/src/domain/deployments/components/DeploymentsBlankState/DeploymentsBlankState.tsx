@@ -139,11 +139,10 @@ export const DeploymentsBlankState = () => {
     >
       <PMVStack gap={8} align="stretch" p={8}>
         <PMVStack gap={4} align="stretch">
-          <PMHeading level="h2">Ready to distribute your standards</PMHeading>
+          <PMHeading level="h2">Track where your best practices are</PMHeading>
           <PMText as="p" fontWeight={'medium'} color="secondary">
             Distribute recipes, standards, and skills to your repositories. This
-            view will show you the deployment status across all repositories and
-            targets.
+            view will show you the distribution status across all repositories.
           </PMText>
         </PMVStack>
 
@@ -207,9 +206,6 @@ export const DeploymentsBlankState = () => {
           >
             <PMVStack gap={2} align="stretch">
               <PMHeading level="h5">DunderMifflin/monorepo:main</PMHeading>
-              <PMText variant="small" color="tertiary">
-                Example with demo targets and artifacts
-              </PMText>
             </PMVStack>
 
             {/* Target 1 - api */}
