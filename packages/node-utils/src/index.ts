@@ -24,6 +24,7 @@ export * from './mail';
 export * from './nest';
 export * from './repositories/AbstractRepository';
 export * from './repositories/OrganizationScopedRepository';
+export * from './repositories/SpaceScopedRepository';
 export * from './security/EncryptionService';
 export * from './sse';
 export * from './text';

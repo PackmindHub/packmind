@@ -5,6 +5,8 @@ import {
   CreateCommandChangeProposalResponse,
   IAccountsPort,
   ICreateCommandChangeProposalUseCase,
+  ISpacesPort,
+  SpaceId,
 } from '@packmind/types';
 import { ChangeProposalService } from '../../services/ChangeProposalService';
 
@@ -19,6 +21,7 @@ export class CreateCommandChangeProposalUseCase
 {
   constructor(
     accountsPort: IAccountsPort,
+    private readonly spacesPort: ISpacesPort,
     private readonly service: ChangeProposalService,
     logger: PackmindLogger = new PackmindLogger(origin),
   ) {
@@ -28,6 +31,18 @@ export class CreateCommandChangeProposalUseCase
   async executeForMembers(
     command: CreateCommandChangeProposalCommand & MemberContext,
   ): Promise<CreateCommandChangeProposalResponse> {
+    const spaceId = command.spaceId as SpaceId;
+
+    const space = await this.spacesPort.getSpaceById(spaceId);
+    if (!space) {
+      throw new Error(`Space ${spaceId} not found`);
+    }
+    if (space.organizationId !== command.organization.id) {
+      throw new Error(
+        `Space ${spaceId} does not belong to organization ${command.organization.id}`,
+      );
+    }
+
     return this.service.createProposal(command);
   }
 }

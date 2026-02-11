@@ -1,15 +1,12 @@
-import { ChangeProposal, ChangeProposalType, RecipeId } from '@packmind/types';
+import { ChangeProposal, ChangeProposalType, SpaceId } from '@packmind/types';
 
 export interface IChangeProposalRepository {
-  save(
-    recipeId: RecipeId,
-    proposal: ChangeProposal<ChangeProposalType>,
-  ): Promise<void>;
-  findByRecipeId(
-    recipeId: RecipeId,
+  save(proposal: ChangeProposal<ChangeProposalType>): Promise<void>;
+  findByArtefactId(
+    artefactId: string,
   ): Promise<ChangeProposal<ChangeProposalType>[]>;
-  update(
-    recipeId: RecipeId,
-    proposal: ChangeProposal<ChangeProposalType>,
-  ): Promise<void>;
+  findBySpaceId(
+    spaceId: SpaceId,
+  ): Promise<ChangeProposal<ChangeProposalType>[]>;
+  update(proposal: ChangeProposal<ChangeProposalType>): Promise<void>;
 }

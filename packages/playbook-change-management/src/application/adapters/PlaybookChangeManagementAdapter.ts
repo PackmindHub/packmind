@@ -109,16 +109,19 @@ export class PlaybookChangeManagementAdapter
 
     this._createCommandChangeProposal = new CreateCommandChangeProposalUseCase(
       accountsPort,
+      spacesPort,
       changeProposalService,
     );
 
     this._listCommandChangeProposals = new ListCommandChangeProposalsUseCase(
       accountsPort,
+      spacesPort,
       changeProposalService,
     );
 
     this._rejectCommandChangeProposal = new RejectCommandChangeProposalUseCase(
       accountsPort,
+      spacesPort,
       changeProposalService,
     );
 
