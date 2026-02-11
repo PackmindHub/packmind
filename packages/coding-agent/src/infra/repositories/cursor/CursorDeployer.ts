@@ -69,6 +69,8 @@ export class CursorDeployer implements ICodingAgentDeployer {
       fileUpdates.createOrUpdate.push({
         path: targetPrefixedPath,
         content: commandFile.content,
+        artifactType: 'command',
+        artifactName: recipe.name,
       });
     }
 
@@ -109,6 +111,8 @@ export class CursorDeployer implements ICodingAgentDeployer {
       fileUpdates.createOrUpdate.push({
         path: targetPrefixedPath,
         content: configFile.content,
+        artifactType: 'standard',
+        artifactName: standardVersion.name,
       });
     }
 
@@ -133,6 +137,8 @@ export class CursorDeployer implements ICodingAgentDeployer {
       fileUpdates.createOrUpdate.push({
         path: commandFile.path,
         content: commandFile.content,
+        artifactType: 'command',
+        artifactName: recipe.name,
       });
     }
 
@@ -164,6 +170,8 @@ export class CursorDeployer implements ICodingAgentDeployer {
       fileUpdates.createOrUpdate.push({
         path: configFile.path,
         content: configFile.content,
+        artifactType: 'standard',
+        artifactName: standardVersion.name,
       });
     }
 
@@ -196,6 +204,8 @@ export class CursorDeployer implements ICodingAgentDeployer {
           path: targetPrefixedPath,
           content: file.content,
           isBase64: file.isBase64,
+          artifactType: 'skill',
+          artifactName: skillVersion.name,
         });
       }
     }
@@ -223,6 +233,8 @@ export class CursorDeployer implements ICodingAgentDeployer {
           path: file.path,
           content: file.content,
           isBase64: file.isBase64,
+          artifactType: 'skill',
+          artifactName: skillVersion.name,
         });
       }
     }
@@ -255,6 +267,8 @@ export class CursorDeployer implements ICodingAgentDeployer {
       fileUpdates.createOrUpdate.push({
         path: commandFile.path,
         content: commandFile.content,
+        artifactType: 'command',
+        artifactName: recipe.name,
       });
     }
 
@@ -265,6 +279,8 @@ export class CursorDeployer implements ICodingAgentDeployer {
       fileUpdates.createOrUpdate.push({
         path: configFile.path,
         content: configFile.content,
+        artifactType: 'standard',
+        artifactName: standardVersion.name,
       });
     }
 
@@ -276,6 +292,8 @@ export class CursorDeployer implements ICodingAgentDeployer {
           path: file.path,
           content: file.content,
           isBase64: file.isBase64,
+          artifactType: 'skill',
+          artifactName: skillVersion.name,
         });
       }
     }

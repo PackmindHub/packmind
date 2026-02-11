@@ -55,6 +55,8 @@ export class PackmindDeployer implements ICodingAgentDeployer {
       fileUpdates.createOrUpdate.push({
         path: targetPrefixedPath,
         content: recipeVersion.content,
+        artifactType: 'command',
+        artifactName: recipeVersion.name,
       });
     }
 
@@ -117,6 +119,8 @@ export class PackmindDeployer implements ICodingAgentDeployer {
       fileUpdates.createOrUpdate.push({
         path: targetPrefixedPath,
         content: GenericStandardWriter.writeStandard(standardVersion, rules),
+        artifactType: 'standard',
+        artifactName: standardVersion.name,
       });
     }
 
@@ -160,6 +164,8 @@ export class PackmindDeployer implements ICodingAgentDeployer {
       fileUpdates.createOrUpdate.push({
         path: commandFilePath,
         content: recipeVersion.content,
+        artifactType: 'command',
+        artifactName: recipeVersion.name,
       });
     }
 
@@ -206,6 +212,8 @@ export class PackmindDeployer implements ICodingAgentDeployer {
       fileUpdates.createOrUpdate.push({
         path: standardFilePath,
         content: GenericStandardWriter.writeStandard(standardVersion, rules),
+        artifactType: 'standard',
+        artifactName: standardVersion.name,
       });
     }
 
@@ -273,6 +281,8 @@ export class PackmindDeployer implements ICodingAgentDeployer {
       fileUpdates.createOrUpdate.push({
         path: commandFilePath,
         content: recipeVersion.content,
+        artifactType: 'command',
+        artifactName: recipeVersion.name,
       });
     }
 
@@ -305,6 +315,8 @@ export class PackmindDeployer implements ICodingAgentDeployer {
       fileUpdates.createOrUpdate.push({
         path: standardFilePath,
         content: GenericStandardWriter.writeStandard(standardVersion, rules),
+        artifactType: 'standard',
+        artifactName: standardVersion.name,
       });
     }
 

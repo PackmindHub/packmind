@@ -74,6 +74,10 @@ import {
   UploadSkillCommand,
   UploadSkillResult,
 } from './domain/useCases/IUploadSkillUseCase';
+import {
+  IDiffArtefactsCommand,
+  IDiffArtefactsResult,
+} from './domain/useCases/IDiffArtefactsUseCase';
 import { loadCredentials } from './infra/utils/credentials';
 
 const origin = 'PackmindCliHexa';
@@ -139,6 +143,12 @@ export class PackmindCliHexa {
     command: IInstallPackagesCommand,
   ): Promise<IInstallPackagesResult> {
     return this.hexa.useCases.installPackages.execute(command);
+  }
+
+  public async diffArtefacts(
+    command: IDiffArtefactsCommand,
+  ): Promise<IDiffArtefactsResult> {
+    return this.hexa.useCases.diffArtefacts.execute(command);
   }
 
   public async listPackages(

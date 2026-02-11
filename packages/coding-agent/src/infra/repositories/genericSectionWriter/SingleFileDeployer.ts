@@ -77,6 +77,7 @@ export abstract class SingleFileDeployer implements ICodingAgentDeployer {
         {
           path: targetPrefixedPath,
           sections: [{ key: 'Packmind recipes', content: '' }],
+          artifactType: 'command',
         },
       ],
       delete: [],
@@ -127,6 +128,7 @@ export abstract class SingleFileDeployer implements ICodingAgentDeployer {
             content: sectionContent,
           },
         ],
+        artifactType: 'standard',
       });
     }
 
@@ -148,6 +150,7 @@ export abstract class SingleFileDeployer implements ICodingAgentDeployer {
         {
           path: this.config.filePath,
           sections: [{ key: 'Packmind recipes', content: '' }],
+          artifactType: 'command',
         },
       ],
       delete: [],
@@ -188,6 +191,7 @@ export abstract class SingleFileDeployer implements ICodingAgentDeployer {
     fileUpdates.createOrUpdate.push({
       path: this.config.filePath,
       content: updatedContent,
+      artifactType: 'standard',
     });
 
     return fileUpdates;
@@ -230,6 +234,8 @@ export abstract class SingleFileDeployer implements ICodingAgentDeployer {
       fileUpdates.createOrUpdate.push({
         path: skillMdPath,
         content: skillMarkdown,
+        artifactType: 'skill',
+        artifactName: skillVersion.name,
       });
 
       // Deploy additional skill files if provided
@@ -242,6 +248,8 @@ export abstract class SingleFileDeployer implements ICodingAgentDeployer {
               fileUpdates.createOrUpdate.push({
                 path: `${basePath}/${skillFile.path}`,
                 content: skillFile.content,
+                artifactType: 'skill',
+                artifactName: skillVersion.name,
               });
             }
           }
