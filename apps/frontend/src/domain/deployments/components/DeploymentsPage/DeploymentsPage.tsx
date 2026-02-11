@@ -9,6 +9,7 @@ import {
   PMSegmentGroup,
 } from '@packmind/ui';
 import { RepositoryCentricView } from '../RepositoryCentricView';
+import { DeploymentsBlankState } from '../DeploymentsBlankState';
 import { ArtifactsView } from '../ArtifactsView';
 import type { ArtifactTypeFilter } from '../ArtifactsView/ArtifactsView';
 import { TargetMultiSelect } from '../TargetMultiSelect';
@@ -300,6 +301,16 @@ export const DeploymentsPage: React.FC = () => {
 
   if (!recipesData) {
     return <PMText>No deployment data available</PMText>;
+  }
+
+  // Show blank state if no distributions exist anywhere in the organization
+  const hasAnyDistributions =
+    (recipesData.targets && recipesData.targets.length > 0) ||
+    (standardData?.targets && standardData.targets.length > 0) ||
+    (skillsData?.targets && skillsData.targets.length > 0);
+
+  if (!hasAnyDistributions) {
+    return <DeploymentsBlankState />;
   }
 
   let searchPlaceholder: string;
