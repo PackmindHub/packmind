@@ -171,14 +171,14 @@ export class StandardRepository
     });
 
     try {
-      // First, get all standards for the space
+      // First, get all standards for the space with user information
       const standards = await this.repository.find({
         where: { spaceId },
         relations: ['gitCommit'],
         withDeleted: opts?.includeDeleted ?? false,
       });
 
-      // For each standard, get the latest version to retrieve scope
+      // For each standard, get the latest version to retrieve scope and enrich with user data
       const standardsWithScope = await Promise.all(
         standards.map(async (standard) => {
           // Get the latest version for this standard
@@ -189,9 +189,12 @@ export class StandardRepository
               order: { version: 'DESC' },
             });
 
+          const createdBy = await this.getCreatedBy(standard.userId);
+
           return {
             ...standard,
             scope: latestVersion?.scope ?? standard.scope,
+            createdBy,
           };
         }),
       );

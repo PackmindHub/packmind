@@ -2,8 +2,9 @@ import { UserId } from '../accounts/User';
 import { StandardId } from './StandardId';
 import { GitCommit } from '../git/GitCommit';
 import { SpaceId } from '../spaces/SpaceId';
+import { WithCreator } from '../database/types';
 
-export type Standard = {
+export type Standard = WithCreator<{
   id: StandardId;
   name: string;
   slug: string;
@@ -15,4 +16,4 @@ export type Standard = {
   scope: string | null; // Scope from the latest StandardVersion
   spaceId: SpaceId; // The space this standard belongs to
   updatedAt?: Date;
-};
+}>;
