@@ -4,8 +4,10 @@ import { ChangeProposal } from '../ChangeProposal';
 import { ChangeProposalCaptureMode } from '../ChangeProposalCaptureMode';
 import { ScalarUpdatePayload } from '../ChangeProposalPayload';
 import { ChangeProposalType } from '../ChangeProposalType';
+import { SpaceId } from '../../spaces';
 
 export type CreateCommandChangeProposalCommand = PackmindCommand & {
+  spaceId: SpaceId;
   type: ChangeProposalType;
   artefactId: RecipeId;
   artefactVersion: number;

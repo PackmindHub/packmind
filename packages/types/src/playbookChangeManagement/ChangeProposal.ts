@@ -5,6 +5,7 @@ import { ChangeProposalStatus } from './ChangeProposalStatus';
 import { ChangeProposalType } from './ChangeProposalType';
 import { ChangeProposalCaptureMode } from './ChangeProposalCaptureMode';
 import { ChangeProposalArtefactId } from './ChangeProposalArtefactIdType';
+import { SpaceId } from '../spaces';
 
 export type ChangeProposal<T extends ChangeProposalType = ChangeProposalType> =
   {
@@ -12,6 +13,7 @@ export type ChangeProposal<T extends ChangeProposalType = ChangeProposalType> =
     type: T;
     artefactId: ChangeProposalArtefactId<T>;
     artefactVersion: number;
+    spaceId: SpaceId;
     payload: ChangeProposalPayload<T>;
     captureMode: ChangeProposalCaptureMode;
     status: ChangeProposalStatus;
