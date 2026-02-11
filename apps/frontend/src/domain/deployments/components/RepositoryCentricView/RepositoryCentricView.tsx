@@ -1,6 +1,7 @@
 import React, { useMemo, useCallback } from 'react';
 import { PMBox, PMHeading, PMVStack, PMEmptyState } from '@packmind/ui';
 import { DeploymentStatsSummary } from '../DeploymentStatsSummary/DeploymentStatsSummary';
+import { DeploymentsBlankState } from '../DeploymentsBlankState/DeploymentsBlankState';
 import {
   RepositoryStandardDeploymentStatus,
   DeployedStandardInfo,
@@ -623,6 +624,14 @@ export const RepositoryCentricView: React.FC<RepositoryCentricViewProps> = ({
   );
 
   if (emptyState) {
+    // Show blank state with preview for "No distributions yet" case
+    if (
+      emptyState.title === 'No distributions yet' &&
+      combinedRepositories.size === 0
+    ) {
+      return <DeploymentsBlankState />;
+    }
+
     return (
       <PMEmptyState
         title={emptyState.title}

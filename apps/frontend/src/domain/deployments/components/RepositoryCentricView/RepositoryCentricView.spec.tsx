@@ -773,15 +773,23 @@ describe('RepositoryCentricView', () => {
         );
       });
 
-      it('displays empty state title', () => {
-        expect(screen.getByText('No distributions yet')).toBeInTheDocument();
+      it('displays deployment blank state heading', () => {
+        expect(
+          screen.getByText('Ready to distribute your standards'),
+        ).toBeInTheDocument();
       });
 
-      it('displays empty state description', () => {
+      it('displays deployment blank state description', () => {
         expect(
           screen.getByText(
-            'No recipes, standards, or skills have been distributed to repositories yet',
+            'Distribute recipes, standards, and skills to your repositories. This view will show you the deployment status across all repositories and targets.',
           ),
+        ).toBeInTheDocument();
+      });
+
+      it('displays preview of what the page will look like', () => {
+        expect(
+          screen.getByText('DunderMifflin/monorepo:main'),
         ).toBeInTheDocument();
       });
     });
@@ -791,14 +799,16 @@ describe('RepositoryCentricView', () => {
         renderWithProvider(<RepositoryCentricView recipeRepositories={[]} />);
       });
 
-      it('displays empty state title', () => {
-        expect(screen.getByText('No distributions yet')).toBeInTheDocument();
+      it('displays deployment blank state heading', () => {
+        expect(
+          screen.getByText('Ready to distribute your standards'),
+        ).toBeInTheDocument();
       });
 
-      it('displays empty state description', () => {
+      it('displays deployment blank state description', () => {
         expect(
           screen.getByText(
-            'No recipes, standards, or skills have been distributed to repositories yet',
+            'Distribute recipes, standards, and skills to your repositories. This view will show you the deployment status across all repositories and targets.',
           ),
         ).toBeInTheDocument();
       });
