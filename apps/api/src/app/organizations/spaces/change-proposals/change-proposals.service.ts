@@ -8,11 +8,7 @@ import {
   IPlaybookChangeManagementPort,
   ListCommandChangeProposalsCommand,
   ListCommandChangeProposalsResponse,
-  OrganizationId,
-  RecipeId,
-  SpaceId,
-  ChangeProposalId,
-  UserId,
+  RejectCommandChangeProposalCommand,
 } from '@packmind/types';
 import { InjectPlaybookChangeManagementAdapter } from '../../../shared/HexaInjection';
 
@@ -39,20 +35,12 @@ export class ChangeProposalsService {
   }
 
   async rejectChangeProposal(
-    recipeId: RecipeId,
-    changeProposalId: ChangeProposalId,
-    organizationId: OrganizationId,
-    spaceId: SpaceId,
-    userId: UserId,
+    command: RejectCommandChangeProposalCommand,
   ): Promise<ChangeProposal> {
     const result =
-      await this.playbookChangeManagementAdapter.rejectCommandChangeProposal({
-        recipeId,
-        changeProposalId,
-        organizationId,
-        spaceId,
-        userId,
-      });
+      await this.playbookChangeManagementAdapter.rejectCommandChangeProposal(
+        command,
+      );
     return result.changeProposal;
   }
 }

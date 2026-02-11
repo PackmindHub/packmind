@@ -210,13 +210,13 @@ export class OrganizationsSpacesChangeProposalsController {
 
     try {
       const changeProposal =
-        await this.changeProposalsService.rejectChangeProposal(
-          body.recipeId,
+        await this.changeProposalsService.rejectChangeProposal({
+          recipeId: body.recipeId,
           changeProposalId,
           organizationId,
           spaceId,
           userId,
-        );
+        });
 
       this.logger.info(
         'POST /organizations/:orgId/spaces/:spaceId/change-proposals/:changeProposalId/reject - Change proposal rejected',
