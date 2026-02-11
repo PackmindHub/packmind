@@ -10,6 +10,7 @@ import {
   ListCommandChangeProposalsResponse,
   OrganizationId,
   RecipeId,
+  SpaceId,
   ChangeProposalId,
   UserId,
 } from '@packmind/types';
@@ -41,6 +42,7 @@ export class ChangeProposalsService {
     recipeId: RecipeId,
     changeProposalId: ChangeProposalId,
     organizationId: OrganizationId,
+    spaceId: SpaceId,
     userId: UserId,
   ): Promise<ChangeProposal> {
     const result =
@@ -48,6 +50,7 @@ export class ChangeProposalsService {
         recipeId,
         changeProposalId,
         organizationId,
+        spaceId,
         userId,
       });
     return result.changeProposal;

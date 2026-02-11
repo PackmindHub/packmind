@@ -24,7 +24,7 @@ const origin = 'PlaybookChangeManagementHexa';
  * This class serves as the main entry point for playbook change management functionality.
  * It exposes the adapter for cross-domain access following DDD standards.
  *
- * Uses in-memory cache for repository storage (no DataSource dependency for repositories).
+ * Uses database repository when DataSource is available, with in-memory cache fallback.
  */
 export class PlaybookChangeManagementHexa extends BaseHexa<
   BaseHexaOpts,
@@ -43,7 +43,7 @@ export class PlaybookChangeManagementHexa extends BaseHexa<
 
     try {
       this.playbookChangeManagementRepositories =
-        new PlaybookChangeManagementRepositories();
+        new PlaybookChangeManagementRepositories(this.dataSource);
       this.playbookChangeManagementServices =
         new PlaybookChangeManagementServices(
           this.playbookChangeManagementRepositories,

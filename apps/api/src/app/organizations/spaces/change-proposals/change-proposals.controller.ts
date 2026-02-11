@@ -154,6 +154,7 @@ export class OrganizationsSpacesChangeProposalsController {
         await this.changeProposalsService.listCommandChangeProposals({
           userId: request.user.userId,
           organizationId,
+          spaceId,
           recipeId,
         });
 
@@ -213,6 +214,7 @@ export class OrganizationsSpacesChangeProposalsController {
           body.recipeId,
           changeProposalId,
           organizationId,
+          spaceId,
           userId,
         );
 

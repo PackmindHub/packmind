@@ -2,8 +2,10 @@ import { PackmindLogger } from '@packmind/logger';
 import { AbstractMemberUseCase, MemberContext } from '@packmind/node-utils';
 import {
   IAccountsPort,
+  ISpacesPort,
   ListCommandChangeProposalsCommand,
   ListCommandChangeProposalsResponse,
+  SpaceId,
 } from '@packmind/types';
 import { ChangeProposalService } from '../../services/ChangeProposalService';
 
@@ -15,6 +17,7 @@ export class ListCommandChangeProposalsUseCase extends AbstractMemberUseCase<
 > {
   constructor(
     accountsPort: IAccountsPort,
+    private readonly spacesPort: ISpacesPort,
     private readonly service: ChangeProposalService,
     logger: PackmindLogger = new PackmindLogger(origin),
   ) {
@@ -24,6 +27,18 @@ export class ListCommandChangeProposalsUseCase extends AbstractMemberUseCase<
   async executeForMembers(
     command: ListCommandChangeProposalsCommand & MemberContext,
   ): Promise<ListCommandChangeProposalsResponse> {
-    return this.service.listProposalsByRecipeId(command.recipeId);
+    const spaceId = command.spaceId as SpaceId;
+
+    const space = await this.spacesPort.getSpaceById(spaceId);
+    if (!space) {
+      throw new Error(`Space ${spaceId} not found`);
+    }
+    if (space.organizationId !== command.organization.id) {
+      throw new Error(
+        `Space ${spaceId} does not belong to organization ${command.organization.id}`,
+      );
+    }
+
+    return this.service.listProposalsByArtefactId(command.recipeId);
   }
 }
