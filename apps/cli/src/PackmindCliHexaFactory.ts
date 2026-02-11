@@ -42,6 +42,8 @@ import { IListSkillsUseCase } from './domain/useCases/IListSkillsUseCase';
 import { ListSkillsUseCase } from './application/useCases/ListSkillsUseCase';
 import { IUploadSkillUseCase } from './domain/useCases/IUploadSkillUseCase';
 import { UploadSkillUseCase } from './application/useCases/UploadSkillUseCase';
+import { IDiffArtefactsUseCase } from './domain/useCases/IDiffArtefactsUseCase';
+import { DiffArtefactsUseCase } from './application/useCases/DiffArtefactsUseCase';
 
 export class PackmindCliHexaFactory {
   public repositories: IPackmindRepositories;
@@ -65,6 +67,7 @@ export class PackmindCliHexaFactory {
     listCommands: IListCommandsUseCase;
     listSkills: IListSkillsUseCase;
     uploadSkill: IUploadSkillUseCase;
+    diffArtefacts: IDiffArtefactsUseCase;
   };
 
   constructor() {
@@ -117,6 +120,9 @@ export class PackmindCliHexaFactory {
       uploadSkill: new UploadSkillUseCase({
         gateway: this.repositories.packmindGateway,
       }),
+      diffArtefacts: new DiffArtefactsUseCase(
+        this.repositories.packmindGateway,
+      ),
     };
   }
 }

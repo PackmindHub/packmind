@@ -14,6 +14,7 @@ import { setupMcpCommand } from './infra/commands/SetupMcpCommand';
 import { skillsCommand } from './infra/commands/SkillsCommand';
 import { standardsCommand } from './infra/commands/StandardsCommand';
 import { commandsCommand } from './infra/commands/CommandsCommand';
+import { diffCommand } from './infra/commands/DiffCommand';
 import { packagesCommand } from './infra/commands/PackagesCommand';
 import { configCommand } from './infra/commands/config/ConfigCommand';
 import { initCommand } from './infra/commands/InitCommand';
@@ -93,6 +94,7 @@ const app = subcommands({
   cmds: {
     commands: commandsCommand,
     config: configCommand,
+    diff: diffCommand,
     init: initCommand,
     install: installCommand,
     lint: lintCommand,

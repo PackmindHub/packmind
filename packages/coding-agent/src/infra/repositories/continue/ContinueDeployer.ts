@@ -55,6 +55,8 @@ export class ContinueDeployer implements ICodingAgentDeployer {
       fileUpdates.createOrUpdate.push({
         path: targetPrefixedPath,
         content: commandFile.content,
+        artifactType: 'command',
+        artifactName: recipeVersion.name,
       });
     }
 
@@ -95,6 +97,8 @@ export class ContinueDeployer implements ICodingAgentDeployer {
       fileUpdates.createOrUpdate.push({
         path: targetPrefixedPath,
         content: configFile.content,
+        artifactType: 'standard',
+        artifactName: standardVersion.name,
       });
     }
 
@@ -119,6 +123,8 @@ export class ContinueDeployer implements ICodingAgentDeployer {
       fileUpdates.createOrUpdate.push({
         path: commandFile.path,
         content: commandFile.content,
+        artifactType: 'command',
+        artifactName: recipeVersion.name,
       });
     }
 
@@ -150,6 +156,8 @@ export class ContinueDeployer implements ICodingAgentDeployer {
       fileUpdates.createOrUpdate.push({
         path: configFile.path,
         content: configFile.content,
+        artifactType: 'standard',
+        artifactName: standardVersion.name,
       });
     }
 
@@ -198,6 +206,8 @@ export class ContinueDeployer implements ICodingAgentDeployer {
       fileUpdates.createOrUpdate.push({
         path: commandFile.path,
         content: commandFile.content,
+        artifactType: 'command',
+        artifactName: recipeVersion.name,
       });
     }
 
@@ -208,6 +218,8 @@ export class ContinueDeployer implements ICodingAgentDeployer {
       fileUpdates.createOrUpdate.push({
         path: configFile.path,
         content: configFile.content,
+        artifactType: 'standard',
+        artifactName: standardVersion.name,
       });
     }
 

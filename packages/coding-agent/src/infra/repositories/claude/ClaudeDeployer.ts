@@ -65,6 +65,8 @@ export class ClaudeDeployer implements ICodingAgentDeployer {
       fileUpdates.createOrUpdate.push({
         path: targetPrefixedPath,
         content: configFile.content,
+        artifactType: 'command',
+        artifactName: recipeVersion.name,
       });
     }
 
@@ -131,6 +133,8 @@ ${recipeVersion.content}`;
       fileUpdates.createOrUpdate.push({
         path: targetPrefixedPath,
         content: configFile.content,
+        artifactType: 'standard',
+        artifactName: standardVersion.name,
       });
     }
 
@@ -165,6 +169,8 @@ ${recipeVersion.content}`;
       fileUpdates.createOrUpdate.push({
         path: configFile.path,
         content: configFile.content,
+        artifactType: 'command',
+        artifactName: recipeVersion.name,
       });
     }
 
@@ -196,6 +202,8 @@ ${recipeVersion.content}`;
       fileUpdates.createOrUpdate.push({
         path: configFile.path,
         content: configFile.content,
+        artifactType: 'standard',
+        artifactName: standardVersion.name,
       });
     }
 
@@ -234,6 +242,8 @@ ${recipeVersion.content}`;
           path: targetPrefixedPath,
           content: file.content,
           isBase64: file.isBase64,
+          artifactType: 'skill',
+          artifactName: skillVersion.name,
         });
       }
     }
@@ -261,6 +271,8 @@ ${recipeVersion.content}`;
           path: file.path,
           content: file.content,
           isBase64: file.isBase64,
+          artifactType: 'skill',
+          artifactName: skillVersion.name,
         });
       }
     }
@@ -293,6 +305,8 @@ ${recipeVersion.content}`;
       fileUpdates.createOrUpdate.push({
         path: configFile.path,
         content: configFile.content,
+        artifactType: 'command',
+        artifactName: recipeVersion.name,
       });
     }
 
@@ -303,6 +317,8 @@ ${recipeVersion.content}`;
       fileUpdates.createOrUpdate.push({
         path: configFile.path,
         content: configFile.content,
+        artifactType: 'standard',
+        artifactName: standardVersion.name,
       });
     }
 
@@ -314,6 +330,8 @@ ${recipeVersion.content}`;
           path: file.path,
           content: file.content,
           isBase64: file.isBase64,
+          artifactType: 'skill',
+          artifactName: skillVersion.name,
         });
       }
     }

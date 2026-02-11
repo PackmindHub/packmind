@@ -64,6 +64,8 @@ export class CopilotDeployer implements ICodingAgentDeployer {
       fileUpdates.createOrUpdate.push({
         path: targetPrefixedPath,
         content: promptFile.content,
+        artifactType: 'command',
+        artifactName: recipeVersion.name,
       });
     }
 
@@ -101,6 +103,8 @@ export class CopilotDeployer implements ICodingAgentDeployer {
       fileUpdates.createOrUpdate.push({
         path: targetPrefixedPath,
         content: configFile.content,
+        artifactType: 'standard',
+        artifactName: standardVersion.name,
       });
     }
 
@@ -125,6 +129,8 @@ export class CopilotDeployer implements ICodingAgentDeployer {
       fileUpdates.createOrUpdate.push({
         path: promptFile.path,
         content: promptFile.content,
+        artifactType: 'command',
+        artifactName: recipeVersion.name,
       });
     }
 
@@ -156,6 +162,8 @@ export class CopilotDeployer implements ICodingAgentDeployer {
       fileUpdates.createOrUpdate.push({
         path: configFile.path,
         content: configFile.content,
+        artifactType: 'standard',
+        artifactName: standardVersion.name,
       });
     }
 
@@ -191,6 +199,8 @@ export class CopilotDeployer implements ICodingAgentDeployer {
           path: targetPrefixedPath,
           content: skillFile.content,
           isBase64: skillFile.isBase64,
+          artifactType: 'skill',
+          artifactName: skillVersion.name,
         });
       }
     }
@@ -218,6 +228,8 @@ export class CopilotDeployer implements ICodingAgentDeployer {
           path: skillFile.path,
           content: skillFile.content,
           isBase64: skillFile.isBase64,
+          artifactType: 'skill',
+          artifactName: skillVersion.name,
         });
       }
     }
@@ -250,6 +262,8 @@ export class CopilotDeployer implements ICodingAgentDeployer {
       fileUpdates.createOrUpdate.push({
         path: promptFile.path,
         content: promptFile.content,
+        artifactType: 'command',
+        artifactName: recipeVersion.name,
       });
     }
 
@@ -260,6 +274,8 @@ export class CopilotDeployer implements ICodingAgentDeployer {
       fileUpdates.createOrUpdate.push({
         path: configFile.path,
         content: configFile.content,
+        artifactType: 'standard',
+        artifactName: standardVersion.name,
       });
     }
 
@@ -271,6 +287,8 @@ export class CopilotDeployer implements ICodingAgentDeployer {
           path: skillFile.path,
           content: skillFile.content,
           isBase64: skillFile.isBase64,
+          artifactType: 'skill',
+          artifactName: skillVersion.name,
         });
       }
     }
