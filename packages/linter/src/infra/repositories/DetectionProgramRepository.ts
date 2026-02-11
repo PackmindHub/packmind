@@ -191,7 +191,7 @@ export class DetectionProgramRepository
         .select('MAX(detection_program.version)', 'maxVersion')
         .where('detection_program.ruleId = :ruleId', { ruleId })
         .andWhere('detection_program.language = :language', { language })
-        .andWhere('detection_program.deletedAt IS :deleted', { deleted: null }) // Exclude soft deleted
+        .andWhere('detection_program.deletedAt IS NULL')
         .getRawOne();
 
       const latestVersion = result?.maxVersion ?? 0;
