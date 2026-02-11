@@ -14,6 +14,7 @@ import {
   PMIcon,
   PMAccordion,
   PMAlert,
+  PMTabs,
 } from '@packmind/ui';
 import { LuTerminal, LuFileCode, LuDownload } from 'react-icons/lu';
 
@@ -343,40 +344,55 @@ export const SkillsLearnMoreContent: React.FC = () => {
             />
           </PMAccordion.ItemTrigger>
           <PMAccordion.ItemContent p={6}>
-            <PMVStack align="flex-start" gap={8} width="full">
-              <PMVStack align="flex-start" gap={2} width="full">
-                <PMHeading level="h6">
-                  <PMBadge colorPalette={'blue'}>Best</PMBadge> Option 1: Using
-                  packmind-cli init
-                </PMHeading>
-                <PMText as="p" color="secondary" fontSize="sm">
-                  Initialize a new Packmind project with default skills
-                  included:
-                </PMText>
-                <PMBox width="1/2">
-                  <CopiableTextField
-                    value="packmind-cli skills init"
-                    readOnly
-                    label="Terminal"
-                  />
-                </PMBox>
-              </PMVStack>
-
-              <PMVStack align="flex-start" gap={2} width="full">
-                <PMHeading level="h6">
-                  Option 2: Download default skills manually
-                </PMHeading>
-                <PMText as="p" color="secondary" fontSize="sm" mb={2}>
-                  Download a pre-packaged collection of default skills for your
-                  AI coding assistant:
-                </PMText>
-                <DownloadDefaultSkillsPopover
-                  buttonVariant="tertiary"
-                  buttonSize="xs"
-                  placement="bottom-start"
-                />
-              </PMVStack>
-            </PMVStack>
+            <PMTabs
+              defaultValue="cli-init"
+              width="full"
+              tabs={[
+                {
+                  value: 'cli-init',
+                  triggerLabel: (
+                    <PMHStack gap={2}>
+                      <PMText>CLI Init</PMText>
+                      <PMBadge size="xs" colorPalette="blue">
+                        Best
+                      </PMBadge>
+                    </PMHStack>
+                  ),
+                  content: (
+                    <PMVStack align="flex-start" gap={2} width="full" pt={4}>
+                      <PMText as="p" color="secondary" fontSize="sm">
+                        Initialize a new Packmind project with default skills
+                        included:
+                      </PMText>
+                      <PMBox width="1/2">
+                        <CopiableTextField
+                          value="packmind-cli skills init"
+                          readOnly
+                          label="Terminal"
+                        />
+                      </PMBox>
+                    </PMVStack>
+                  ),
+                },
+                {
+                  value: 'manual',
+                  triggerLabel: 'Manual Download',
+                  content: (
+                    <PMVStack align="flex-start" gap={2} width="full" pt={4}>
+                      <PMText as="p" color="secondary" fontSize="sm" mb={2}>
+                        Download a pre-packaged collection of default skills for
+                        your AI coding assistant:
+                      </PMText>
+                      <DownloadDefaultSkillsPopover
+                        buttonVariant="tertiary"
+                        buttonSize="xs"
+                        placement="bottom-start"
+                      />
+                    </PMVStack>
+                  ),
+                },
+              ]}
+            />
           </PMAccordion.ItemContent>
         </PMAccordion.Item>
 
@@ -400,39 +416,50 @@ export const SkillsLearnMoreContent: React.FC = () => {
             />
           </PMAccordion.ItemTrigger>
           <PMAccordion.ItemContent p={6}>
-            <PMVStack align="flex-start" gap={8} width="full">
-              <PMVStack align="flex-start" gap={2} width="full">
-                <PMHeading level="h6">
-                  Option 1: Run the skill (in compatible agents)
-                </PMHeading>
-                <PMText as="p" color="secondary" fontSize="sm">
-                  Open your AI coding assistant and run the following command
-                </PMText>
-
-                <PMBox width="1/2">
-                  <CopiableTextField
-                    value="/packmind-create-skill"
-                    readOnly
-                    label="Terminal"
-                  />
-                </PMBox>
-              </PMVStack>
-
-              <PMVStack align="flex-start" gap={2} width="full">
-                <PMHeading level="h6">Option 2: Prompt your agent</PMHeading>
-                <PMText as="p" color="secondary" fontSize="sm">
-                  Ask your agent to create a new skill with a prompt like this:
-                </PMText>
-
-                <PMBox width="full">
-                  <CopiableTextField
-                    value="Create a new Packmind skill for me. I want it to be able to [description of what you want the skill to do]."
-                    readOnly
-                    label="Terminal"
-                  />
-                </PMBox>
-              </PMVStack>
-            </PMVStack>
+            <PMTabs
+              defaultValue="run-skill"
+              width="full"
+              tabs={[
+                {
+                  value: 'run-skill',
+                  triggerLabel: 'Run Skill',
+                  content: (
+                    <PMVStack align="flex-start" gap={2} width="full" pt={4}>
+                      <PMText as="p" color="secondary" fontSize="sm">
+                        Open your AI coding assistant and run the following
+                        command (works in Claude Code and Cursor)
+                      </PMText>
+                      <PMBox width="1/2">
+                        <CopiableTextField
+                          value="/packmind-create-skill"
+                          readOnly
+                          label="Terminal"
+                        />
+                      </PMBox>
+                    </PMVStack>
+                  ),
+                },
+                {
+                  value: 'prompt',
+                  triggerLabel: 'Prompt Agent',
+                  content: (
+                    <PMVStack align="flex-start" gap={2} width="full" pt={4}>
+                      <PMText as="p" color="secondary" fontSize="sm">
+                        Ask your agent to create a new skill with a prompt like
+                        this:
+                      </PMText>
+                      <PMBox width="full">
+                        <CopiableTextField
+                          value="Create a new Packmind skill for me. I want it to be able to [description of what you want the skill to do]."
+                          readOnly
+                          label="Terminal"
+                        />
+                      </PMBox>
+                    </PMVStack>
+                  ),
+                },
+              ]}
+            />
           </PMAccordion.ItemContent>
         </PMAccordion.Item>
       </PMAccordion.Root>
