@@ -26,7 +26,7 @@ import { useCurrentSpace } from '../../spaces/hooks/useCurrentSpace';
 import { routes } from '../../../shared/utils/routes';
 import { StandardSamplesModal } from './StandardSamplesModal';
 import { StandardsBlankState } from './StandardsBlankState';
-import { UserAvatarWithInitials } from './UserAvatarWithInitials';
+import { UserAvatarWithInitials } from '../../accounts/components/UserAvatarWithInitials';
 
 interface StandardsListProps {
   orgSlug?: string;

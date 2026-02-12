@@ -27,6 +27,7 @@ import { useAuthContext } from '../../accounts/hooks/useAuthContext';
 import { routes } from '../../../shared/utils/routes';
 import { WithTimestamps } from '@packmind/types';
 import { RecipesBlankState } from './RecipesBlankState';
+import { UserAvatarWithInitials } from '../../accounts/components/UserAvatarWithInitials';
 
 interface RecipesListProps {
   orgSlug: string;
@@ -134,6 +135,14 @@ export const RecipesList = ({
             </Link>
           </PMLink>
         ),
+        createdBy: recipe.createdBy ? (
+          <UserAvatarWithInitials
+            displayName={recipe.createdBy.displayName}
+            size="xs"
+          />
+        ) : (
+          <span>-</span>
+        ),
         updatedAt: (
           <>
             {formatDistanceToNowStrict(
@@ -175,6 +184,12 @@ export const RecipesList = ({
       align: 'center',
     },
     { key: 'name', header: 'Name', grow: true },
+    {
+      key: 'createdBy',
+      header: 'Created by',
+      width: '200px',
+      align: 'center',
+    },
     {
       key: 'updatedAt',
       header: 'Last Updated',

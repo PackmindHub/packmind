@@ -178,25 +178,38 @@ export class RecipeRepository
     spaceId: SpaceId,
     opts?: Pick<QueryOption, 'includeDeleted'>,
   ): Promise<Recipe[]> {
-    this.logger.info('Finding recipes by space ID', {
+    this.logger.info('Finding recipes with scope by space ID', {
       spaceId,
       includeDeleted: opts?.includeDeleted ?? false,
     });
 
     try {
+      // First, get all recipes for the space with user information
       const recipes = await this.repository.find({
         where: { spaceId },
         relations: ['gitCommit'],
         withDeleted: opts?.includeDeleted ?? false,
       });
 
-      this.logger.info('Recipes found by space ID', {
+      // For each recipe, enrich with user data
+      const recipesWithScope = await Promise.all(
+        recipes.map(async (recipe) => {
+          const createdBy = await this.getCreatedBy(recipe.userId);
+
+          return {
+            ...recipe,
+            createdBy,
+          };
+        }),
+      );
+
+      this.logger.info('Recipes with scope found by space ID', {
         spaceId,
-        count: recipes.length,
+        count: recipesWithScope.length,
       });
-      return recipes;
+      return recipesWithScope;
     } catch (error) {
-      this.logger.error('Failed to find recipes by space ID', {
+      this.logger.error('Failed to find recipes with scope by space ID', {
         spaceId,
         error: error instanceof Error ? error.message : String(error),
       });
