@@ -1,8 +1,8 @@
 import { useParams, NavLink } from 'react-router';
 import { PMPage, PMBox, PMVStack, PMSpinner, PMText } from '@packmind/ui';
 import {
-  ChangeProposal,
   ChangeProposalStatus,
+  ChangeProposalWithOutdatedStatus,
   RecipeId,
 } from '@packmind/types';
 import { ChangeProposalsTable } from '../../src/domain/recipes/components/ChangeProposalsTable';
@@ -44,7 +44,7 @@ export default function ViewChangeProposalsRouteModule() {
   } = useGetChangeProposalsQuery(commandId as RecipeId);
 
   // TODO: filter pending proposals on the backend side to avoid fetching unnecessary data
-  function getPendingProposals(proposals: ChangeProposal[]) {
+  function getPendingProposals(proposals: ChangeProposalWithOutdatedStatus[]) {
     return proposals.filter((p) => p.status === ChangeProposalStatus.pending);
   }
 
@@ -77,7 +77,7 @@ export default function ViewChangeProposalsRouteModule() {
       >
         <PMBox display="flex" justifyContent="center" py={8}>
           <PMVStack gap={4}>
-            <span>Failed to load change proposals. Please try again.</span>
+            <PMText>Failed to load change proposals. Please try again.</PMText>
           </PMVStack>
         </PMBox>
       </PMPage>

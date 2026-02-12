@@ -1,6 +1,8 @@
 import { PackmindLogger } from '@packmind/logger';
 import { IBaseAdapter } from '@packmind/node-utils';
 import {
+  ApplyCommandChangeProposalCommand,
+  ApplyCommandChangeProposalResponse,
   ChangeProposalType,
   CreateChangeProposalCommand,
   CreateChangeProposalResponse,
@@ -19,6 +21,7 @@ import {
   RejectCommandChangeProposalResponse,
 } from '@packmind/types';
 import { PlaybookChangeManagementServices } from '../services/PlaybookChangeManagementServices';
+import { ApplyCommandChangeProposalUseCase } from '../useCases/applyCommandChangeProposal/ApplyCommandChangeProposalUseCase';
 import { CreateChangeProposalUseCase } from '../useCases/createChangeProposal/CreateChangeProposalUseCase';
 import { CreateCommandChangeProposalUseCase } from '../useCases/createCommandChangeProposal/CreateCommandChangeProposalUseCase';
 import { ListCommandChangeProposalsUseCase } from '../useCases/listCommandChangeProposals/ListCommandChangeProposalsUseCase';
@@ -31,6 +34,7 @@ export class PlaybookChangeManagementAdapter
     IBaseAdapter<IPlaybookChangeManagementPort>,
     IPlaybookChangeManagementPort
 {
+  private _applyCommandChangeProposal!: ApplyCommandChangeProposalUseCase;
   private _createChangeProposal!: CreateChangeProposalUseCase;
   private _createCommandChangeProposal!: CreateCommandChangeProposalUseCase;
   private _listCommandChangeProposals!: ListCommandChangeProposalsUseCase;
@@ -40,6 +44,12 @@ export class PlaybookChangeManagementAdapter
     private readonly services: PlaybookChangeManagementServices,
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {}
+
+  async applyCommandChangeProposal(
+    command: ApplyCommandChangeProposalCommand,
+  ): Promise<ApplyCommandChangeProposalResponse> {
+    return this._applyCommandChangeProposal.execute(command);
+  }
 
   async createChangeProposal<T extends ChangeProposalType>(
     command: CreateChangeProposalCommand<T>,
@@ -100,6 +110,13 @@ export class PlaybookChangeManagementAdapter
 
     const changeProposalService = this.services.getChangeProposalService();
 
+    this._applyCommandChangeProposal = new ApplyCommandChangeProposalUseCase(
+      accountsPort,
+      spacesPort,
+      recipesPort,
+      changeProposalService,
+    );
+
     this._createChangeProposal = new CreateChangeProposalUseCase(
       accountsPort,
       recipesPort,
@@ -116,6 +133,7 @@ export class PlaybookChangeManagementAdapter
     this._listCommandChangeProposals = new ListCommandChangeProposalsUseCase(
       accountsPort,
       spacesPort,
+      recipesPort,
       changeProposalService,
     );
 
@@ -132,6 +150,7 @@ export class PlaybookChangeManagementAdapter
 
   public isReady(): boolean {
     return (
+      this._applyCommandChangeProposal !== undefined &&
       this._createChangeProposal !== undefined &&
       this._createCommandChangeProposal !== undefined &&
       this._listCommandChangeProposals !== undefined &&

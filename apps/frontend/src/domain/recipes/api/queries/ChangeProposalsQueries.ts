@@ -7,6 +7,7 @@ import {
 } from '@packmind/types';
 import { changeProposalsGateway } from '../gateways';
 import {
+  APPLY_CHANGE_PROPOSAL_MUTATION_KEY,
   GET_CHANGE_PROPOSALS_KEY,
   REJECT_CHANGE_PROPOSAL_MUTATION_KEY,
 } from '../queryKeys';
@@ -45,6 +46,46 @@ export const useGetChangeProposalsQuery = (recipeId: RecipeId | undefined) => {
   return useQuery(
     getChangeProposalsByRecipeIdOptions(organization?.id, spaceId, recipeId),
   );
+};
+
+export const useApplyChangeProposalMutation = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationKey: [...APPLY_CHANGE_PROPOSAL_MUTATION_KEY],
+    mutationFn: async ({
+      organizationId,
+      spaceId,
+      changeProposalId,
+      recipeId,
+      force,
+    }: {
+      organizationId: OrganizationId;
+      spaceId: SpaceId;
+      changeProposalId: ChangeProposalId;
+      recipeId: RecipeId;
+      force: boolean;
+    }) => {
+      return changeProposalsGateway.applyChangeProposal(
+        organizationId,
+        spaceId,
+        changeProposalId,
+        recipeId,
+        force,
+      );
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
+        queryKey: GET_CHANGE_PROPOSALS_KEY,
+      });
+    },
+    onError: (error, variables, context) => {
+      console.error('Error applying change proposal');
+      console.log('error: ', error);
+      console.log('variables: ', variables);
+      console.log('context: ', context);
+    },
+  });
 };
 
 export const useRejectChangeProposalMutation = () => {

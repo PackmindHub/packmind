@@ -1,6 +1,7 @@
 import {
   ChangeProposal,
   ChangeProposalId,
+  ChangeProposalWithOutdatedStatus,
   OrganizationId,
   RecipeId,
   SpaceId,
@@ -11,7 +12,15 @@ export interface IChangeProposalsGateway {
     organizationId: OrganizationId,
     spaceId: SpaceId,
     recipeId: RecipeId,
-  ): Promise<ChangeProposal[]>;
+  ): Promise<ChangeProposalWithOutdatedStatus[]>;
+
+  applyChangeProposal(
+    organizationId: OrganizationId,
+    spaceId: SpaceId,
+    changeProposalId: ChangeProposalId,
+    recipeId: RecipeId,
+    force: boolean,
+  ): Promise<ChangeProposal>;
 
   rejectChangeProposal(
     organizationId: OrganizationId,

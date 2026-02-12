@@ -31,6 +31,7 @@ import { ChangeProposalsService } from './change-proposals.service';
 import { OrganizationAccessGuard } from '../../guards/organization-access.guard';
 import { SpaceAccessGuard } from '../guards/space-access.guard';
 import {
+  ChangeProposalConflictError,
   ChangeProposalNotFoundError,
   ChangeProposalNotPendingError,
   ChangeProposalPayloadMismatchError,
@@ -180,6 +181,65 @@ export class OrganizationsSpacesChangeProposalsController {
           error: errorMessage,
         },
       );
+      throw error;
+    }
+  }
+
+  /**
+   * Apply a change proposal
+   * POST /organizations/:orgId/spaces/:spaceId/change-proposals/:changeProposalId/apply
+   */
+  @Post(':changeProposalId/apply')
+  @HttpCode(HttpStatus.OK)
+  async applyChangeProposal(
+    @Param('orgId') organizationId: OrganizationId,
+    @Param('spaceId') spaceId: SpaceId,
+    @Param('changeProposalId') changeProposalId: ChangeProposalId,
+    @Body() body: { recipeId: RecipeId; force?: boolean },
+    @Req() request: AuthenticatedRequest,
+  ): Promise<ChangeProposal> {
+    const userId = request.user.userId;
+
+    this.logger.info(
+      'POST /organizations/:orgId/spaces/:spaceId/change-proposals/:changeProposalId/apply - Applying change proposal',
+      {
+        organizationId,
+        spaceId,
+        changeProposalId,
+      },
+    );
+
+    try {
+      const changeProposal =
+        await this.changeProposalsService.applyChangeProposal({
+          recipeId: body.recipeId,
+          changeProposalId,
+          organizationId,
+          spaceId,
+          userId,
+          force: body.force ?? false,
+        });
+
+      this.logger.info(
+        'POST /organizations/:orgId/spaces/:spaceId/change-proposals/:changeProposalId/apply - Change proposal applied',
+        {
+          organizationId,
+          spaceId,
+          changeProposalId,
+        },
+      );
+
+      return changeProposal;
+    } catch (error) {
+      if (error instanceof ChangeProposalNotFoundError) {
+        throw new NotFoundException(error.message);
+      }
+      if (error instanceof ChangeProposalNotPendingError) {
+        throw new UnprocessableEntityException(error.message);
+      }
+      if (error instanceof ChangeProposalConflictError) {
+        throw new ConflictException(error.message);
+      }
       throw error;
     }
   }

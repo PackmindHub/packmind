@@ -11,14 +11,17 @@ import {
   CreateCommandChangeProposalCommand,
 } from '@packmind/types';
 import { stubLogger } from '@packmind/test-utils';
+import { ChangeProposalConflictError } from '../../domain/errors/ChangeProposalConflictError';
 import { ChangeProposalNotFoundError } from '../../domain/errors/ChangeProposalNotFoundError';
 import { ChangeProposalNotPendingError } from '../../domain/errors/ChangeProposalNotPendingError';
 import { IChangeProposalRepository } from '../../domain/repositories/IChangeProposalRepository';
 import { ChangeProposalService } from './ChangeProposalService';
+import { DiffService } from './DiffService';
 
 describe('ChangeProposalService', () => {
   let service: ChangeProposalService;
   let repository: jest.Mocked<IChangeProposalRepository>;
+  let diffService: DiffService;
 
   const spaceId = createSpaceId();
 
@@ -30,7 +33,8 @@ describe('ChangeProposalService', () => {
       update: jest.fn(),
     } as unknown as jest.Mocked<IChangeProposalRepository>;
 
-    service = new ChangeProposalService(repository, stubLogger());
+    diffService = new DiffService();
+    service = new ChangeProposalService(repository, stubLogger(), diffService);
   });
 
   afterEach(() => {
@@ -203,32 +207,58 @@ describe('ChangeProposalService', () => {
 
   describe('listProposalsByArtefactId', () => {
     const recipeId = createRecipeId();
+    const currentRecipe = {
+      name: 'current name',
+      content: 'line 1\nline 2\nline 3',
+    };
 
-    describe('when repository returns proposals', () => {
-      it('delegates to repository and returns result', async () => {
-        const proposals = [
-          {
-            id: createChangeProposalId(),
-            type: ChangeProposalType.updateCommandName,
-            artefactId: recipeId,
-            artefactVersion: 1,
-            spaceId,
-            payload: { oldValue: 'old', newValue: 'new' },
-            captureMode: ChangeProposalCaptureMode.commit,
-            status: ChangeProposalStatus.pending,
-            createdBy: createUserId(),
-            resolvedBy: null,
-            resolvedAt: null,
-            createdAt: new Date(),
-            updatedAt: new Date(),
-          },
-        ];
-        repository.findByArtefactId.mockResolvedValue(proposals);
+    const buildPendingNameProposal = (
+      overrides?: Partial<ChangeProposal<ChangeProposalType>>,
+    ): ChangeProposal<ChangeProposalType> => ({
+      id: createChangeProposalId(),
+      type: ChangeProposalType.updateCommandName,
+      artefactId: recipeId,
+      artefactVersion: 1,
+      spaceId,
+      payload: { oldValue: 'current name', newValue: 'new name' },
+      captureMode: ChangeProposalCaptureMode.commit,
+      status: ChangeProposalStatus.pending,
+      createdBy: createUserId(),
+      resolvedBy: null,
+      resolvedAt: null,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      ...overrides,
+    });
 
-        const result = await service.listProposalsByArtefactId(recipeId);
+    const buildPendingDescriptionProposal = (
+      overrides?: Partial<ChangeProposal<ChangeProposalType>>,
+    ): ChangeProposal<ChangeProposalType> => ({
+      id: createChangeProposalId(),
+      type: ChangeProposalType.updateCommandDescription,
+      artefactId: recipeId,
+      artefactVersion: 1,
+      spaceId,
+      payload: {
+        oldValue: 'line 1\nline 2\nline 3',
+        newValue: 'line 1\nline 2 modified\nline 3',
+      },
+      captureMode: ChangeProposalCaptureMode.commit,
+      status: ChangeProposalStatus.pending,
+      createdBy: createUserId(),
+      resolvedBy: null,
+      resolvedAt: null,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      ...overrides,
+    });
 
-        expect(result.changeProposals).toEqual(proposals);
-      });
+    it('calls repository with the correct artefactId', async () => {
+      repository.findByArtefactId.mockResolvedValue([]);
+
+      await service.listProposalsByArtefactId(recipeId);
+
+      expect(repository.findByArtefactId).toHaveBeenCalledWith(recipeId);
     });
 
     describe('when repository returns empty array', () => {
@@ -241,12 +271,104 @@ describe('ChangeProposalService', () => {
       });
     });
 
-    it('calls repository with the correct artefactId', async () => {
-      repository.findByArtefactId.mockResolvedValue([]);
+    describe('when no currentRecipe is provided', () => {
+      it('marks all proposals as not outdated', async () => {
+        const proposal = buildPendingNameProposal({
+          payload: { oldValue: 'different name', newValue: 'new name' },
+        });
+        repository.findByArtefactId.mockResolvedValue([proposal]);
 
-      await service.listProposalsByArtefactId(recipeId);
+        const result = await service.listProposalsByArtefactId(recipeId);
 
-      expect(repository.findByArtefactId).toHaveBeenCalledWith(recipeId);
+        expect(result.changeProposals[0].outdated).toBe(false);
+      });
+    });
+
+    describe('when currentRecipe is provided', () => {
+      describe('with a pending name proposal', () => {
+        describe('when oldValue matches current name', () => {
+          it('marks as not outdated', async () => {
+            const proposal = buildPendingNameProposal({
+              payload: { oldValue: 'current name', newValue: 'new name' },
+            });
+            repository.findByArtefactId.mockResolvedValue([proposal]);
+
+            const result = await service.listProposalsByArtefactId(
+              recipeId,
+              currentRecipe,
+            );
+
+            expect(result.changeProposals[0].outdated).toBe(false);
+          });
+        });
+
+        describe('when oldValue differs from current name', () => {
+          it('marks as outdated', async () => {
+            const proposal = buildPendingNameProposal({
+              payload: { oldValue: 'outdated name', newValue: 'new name' },
+            });
+            repository.findByArtefactId.mockResolvedValue([proposal]);
+
+            const result = await service.listProposalsByArtefactId(
+              recipeId,
+              currentRecipe,
+            );
+
+            expect(result.changeProposals[0].outdated).toBe(true);
+          });
+        });
+      });
+
+      describe('with a pending description proposal', () => {
+        describe('when diff applies cleanly', () => {
+          it('marks as not outdated', async () => {
+            const proposal = buildPendingDescriptionProposal();
+            repository.findByArtefactId.mockResolvedValue([proposal]);
+
+            const result = await service.listProposalsByArtefactId(
+              recipeId,
+              currentRecipe,
+            );
+
+            expect(result.changeProposals[0].outdated).toBe(false);
+          });
+        });
+
+        describe('when diff has conflicts', () => {
+          it('marks as outdated', async () => {
+            const proposal = buildPendingDescriptionProposal();
+            const conflictingRecipe = {
+              name: 'current name',
+              content: 'line 1\nline 2 changed\nline 3',
+            };
+            repository.findByArtefactId.mockResolvedValue([proposal]);
+
+            const result = await service.listProposalsByArtefactId(
+              recipeId,
+              conflictingRecipe,
+            );
+
+            expect(result.changeProposals[0].outdated).toBe(true);
+          });
+        });
+      });
+
+      describe('with a non-pending proposal', () => {
+        it('marks as not outdated regardless of values', async () => {
+          const proposal = buildPendingNameProposal({
+            payload: { oldValue: 'outdated name', newValue: 'new name' },
+            status: ChangeProposalStatus.applied,
+          });
+          repository.findByArtefactId.mockResolvedValue([proposal]);
+
+          const result = await service.listProposalsByArtefactId(
+            recipeId,
+            currentRecipe,
+          );
+
+          expect(result.changeProposals[0].outdated).toBe(false);
+        });
+      });
     });
   });
 
@@ -356,6 +478,298 @@ describe('ChangeProposalService', () => {
 
         await expect(
           service.rejectProposal(recipeId, proposal.id, userId),
+        ).rejects.toThrow(ChangeProposalNotPendingError);
+      });
+    });
+  });
+
+  describe('applyProposal', () => {
+    const recipeId = createRecipeId();
+    const userId = createUserId();
+    const currentRecipe = {
+      name: 'current name',
+      content: 'line 1\nline 2\nline 3',
+    };
+
+    const buildPendingNameProposal =
+      (): ChangeProposal<ChangeProposalType> => ({
+        id: createChangeProposalId(),
+        type: ChangeProposalType.updateCommandName,
+        artefactId: recipeId,
+        artefactVersion: 1,
+        spaceId,
+        payload: { oldValue: 'old name', newValue: 'new name' },
+        captureMode: ChangeProposalCaptureMode.commit,
+        status: ChangeProposalStatus.pending,
+        createdBy: createUserId(),
+        resolvedBy: null,
+        resolvedAt: null,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+
+    const buildPendingDescriptionProposal =
+      (): ChangeProposal<ChangeProposalType> => ({
+        id: createChangeProposalId(),
+        type: ChangeProposalType.updateCommandDescription,
+        artefactId: recipeId,
+        artefactVersion: 1,
+        spaceId,
+        payload: {
+          oldValue: 'line 1\nline 2\nline 3',
+          newValue: 'line 1\nline 2 modified\nline 3',
+        },
+        captureMode: ChangeProposalCaptureMode.commit,
+        status: ChangeProposalStatus.pending,
+        createdBy: createUserId(),
+        resolvedBy: null,
+        resolvedAt: null,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+
+    describe('when applying a name change proposal', () => {
+      let proposal: ChangeProposal<ChangeProposalType>;
+
+      beforeEach(() => {
+        proposal = buildPendingNameProposal();
+        repository.findByArtefactId.mockResolvedValue([proposal]);
+      });
+
+      it('sets status to applied', async () => {
+        const { changeProposal } = await service.applyProposal(
+          recipeId,
+          proposal.id,
+          userId,
+          currentRecipe,
+          false,
+        );
+
+        expect(changeProposal.status).toBe(ChangeProposalStatus.applied);
+      });
+
+      it('sets resolvedBy to the userId', async () => {
+        const { changeProposal } = await service.applyProposal(
+          recipeId,
+          proposal.id,
+          userId,
+          currentRecipe,
+          false,
+        );
+
+        expect(changeProposal.resolvedBy).toBe(userId);
+      });
+
+      it('sets resolvedAt to a date', async () => {
+        const { changeProposal } = await service.applyProposal(
+          recipeId,
+          proposal.id,
+          userId,
+          currentRecipe,
+          false,
+        );
+
+        expect(changeProposal.resolvedAt).toBeInstanceOf(Date);
+      });
+
+      it('returns updated name with newValue', async () => {
+        const { updatedFields } = await service.applyProposal(
+          recipeId,
+          proposal.id,
+          userId,
+          currentRecipe,
+          false,
+        );
+
+        expect(updatedFields.name).toBe('new name');
+      });
+
+      it('keeps content unchanged', async () => {
+        const { updatedFields } = await service.applyProposal(
+          recipeId,
+          proposal.id,
+          userId,
+          currentRecipe,
+          false,
+        );
+
+        expect(updatedFields.content).toBe(currentRecipe.content);
+      });
+
+      it('calls repository.update with the applied proposal', async () => {
+        await service.applyProposal(
+          recipeId,
+          proposal.id,
+          userId,
+          currentRecipe,
+          false,
+        );
+
+        expect(repository.update).toHaveBeenCalledWith(
+          expect.objectContaining({
+            id: proposal.id,
+            status: ChangeProposalStatus.applied,
+            resolvedBy: userId,
+          }),
+        );
+      });
+    });
+
+    describe('when applying a description change proposal', () => {
+      let proposal: ChangeProposal<ChangeProposalType>;
+
+      beforeEach(() => {
+        proposal = buildPendingDescriptionProposal();
+        repository.findByArtefactId.mockResolvedValue([proposal]);
+      });
+
+      it('returns merged content via diff', async () => {
+        const { updatedFields } = await service.applyProposal(
+          recipeId,
+          proposal.id,
+          userId,
+          currentRecipe,
+          false,
+        );
+
+        expect(updatedFields.content).toBe('line 1\nline 2 modified\nline 3');
+      });
+
+      it('keeps name unchanged', async () => {
+        const { updatedFields } = await service.applyProposal(
+          recipeId,
+          proposal.id,
+          userId,
+          currentRecipe,
+          false,
+        );
+
+        expect(updatedFields.name).toBe(currentRecipe.name);
+      });
+    });
+
+    describe('when applying a description proposal with conflict', () => {
+      let proposal: ChangeProposal<ChangeProposalType>;
+      const conflictingRecipe = {
+        name: 'current name',
+        content: 'line 1\nline 2 changed\nline 3',
+      };
+
+      beforeEach(() => {
+        proposal = buildPendingDescriptionProposal();
+        repository.findByArtefactId.mockResolvedValue([proposal]);
+      });
+
+      describe('when force is false', () => {
+        it('throws ChangeProposalConflictError', async () => {
+          await expect(
+            service.applyProposal(
+              recipeId,
+              proposal.id,
+              userId,
+              conflictingRecipe,
+              false,
+            ),
+          ).rejects.toThrow(ChangeProposalConflictError);
+        });
+
+        it('does not update the repository', async () => {
+          await service
+            .applyProposal(
+              recipeId,
+              proposal.id,
+              userId,
+              conflictingRecipe,
+              false,
+            )
+            .catch(() => {
+              /* expected rejection */
+            });
+
+          expect(repository.update).not.toHaveBeenCalled();
+        });
+      });
+
+      describe('when force is true', () => {
+        it('overwrites content with newValue', async () => {
+          const { updatedFields } = await service.applyProposal(
+            recipeId,
+            proposal.id,
+            userId,
+            conflictingRecipe,
+            true,
+          );
+
+          expect(updatedFields.content).toBe('line 1\nline 2 modified\nline 3');
+        });
+
+        it('sets status to applied', async () => {
+          const { changeProposal } = await service.applyProposal(
+            recipeId,
+            proposal.id,
+            userId,
+            conflictingRecipe,
+            true,
+          );
+
+          expect(changeProposal.status).toBe(ChangeProposalStatus.applied);
+        });
+      });
+    });
+
+    describe('when the proposal does not exist', () => {
+      it('throws ChangeProposalNotFoundError', async () => {
+        repository.findByArtefactId.mockResolvedValue([]);
+        const unknownId = createChangeProposalId();
+
+        await expect(
+          service.applyProposal(
+            recipeId,
+            unknownId,
+            userId,
+            currentRecipe,
+            false,
+          ),
+        ).rejects.toThrow(ChangeProposalNotFoundError);
+      });
+    });
+
+    describe('when the proposal is already rejected', () => {
+      it('throws ChangeProposalNotPendingError', async () => {
+        const proposal = {
+          ...buildPendingNameProposal(),
+          status: ChangeProposalStatus.rejected,
+        };
+        repository.findByArtefactId.mockResolvedValue([proposal]);
+
+        await expect(
+          service.applyProposal(
+            recipeId,
+            proposal.id,
+            userId,
+            currentRecipe,
+            false,
+          ),
+        ).rejects.toThrow(ChangeProposalNotPendingError);
+      });
+    });
+
+    describe('when the proposal is already applied', () => {
+      it('throws ChangeProposalNotPendingError', async () => {
+        const proposal = {
+          ...buildPendingNameProposal(),
+          status: ChangeProposalStatus.applied,
+        };
+        repository.findByArtefactId.mockResolvedValue([proposal]);
+
+        await expect(
+          service.applyProposal(
+            recipeId,
+            proposal.id,
+            userId,
+            currentRecipe,
+            false,
+          ),
         ).rejects.toThrow(ChangeProposalNotPendingError);
       });
     });

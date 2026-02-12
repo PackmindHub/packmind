@@ -1,6 +1,7 @@
 import {
   ChangeProposal,
   ChangeProposalId,
+  ChangeProposalWithOutdatedStatus,
   ListCommandChangeProposalsResponse,
   OrganizationId,
   RecipeId,
@@ -21,11 +22,24 @@ export class ChangeProposalsGatewayApi
     organizationId: OrganizationId,
     spaceId: SpaceId,
     recipeId: RecipeId,
-  ): Promise<ChangeProposal[]> {
+  ): Promise<ChangeProposalWithOutdatedStatus[]> {
     const response = await this._api.get<ListCommandChangeProposalsResponse>(
       `/organizations/${organizationId}/spaces/${spaceId}/change-proposals/${recipeId}`,
     );
     return response.changeProposals;
+  }
+
+  async applyChangeProposal(
+    organizationId: OrganizationId,
+    spaceId: SpaceId,
+    changeProposalId: ChangeProposalId,
+    recipeId: RecipeId,
+    force: boolean,
+  ): Promise<ChangeProposal> {
+    return this._api.post(
+      `/organizations/${organizationId}/spaces/${spaceId}/change-proposals/${changeProposalId}/apply`,
+      { recipeId, force },
+    );
   }
 
   async rejectChangeProposal(

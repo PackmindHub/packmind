@@ -2,9 +2,11 @@ import { PackmindLogger } from '@packmind/logger';
 import { AbstractMemberUseCase, MemberContext } from '@packmind/node-utils';
 import {
   IAccountsPort,
+  IRecipesPort,
   ISpacesPort,
   ListCommandChangeProposalsCommand,
   ListCommandChangeProposalsResponse,
+  RecipeId,
   SpaceId,
 } from '@packmind/types';
 import { ChangeProposalService } from '../../services/ChangeProposalService';
@@ -18,6 +20,7 @@ export class ListCommandChangeProposalsUseCase extends AbstractMemberUseCase<
   constructor(
     accountsPort: IAccountsPort,
     private readonly spacesPort: ISpacesPort,
+    private readonly recipesPort: IRecipesPort,
     private readonly service: ChangeProposalService,
     logger: PackmindLogger = new PackmindLogger(origin),
   ) {
@@ -39,6 +42,17 @@ export class ListCommandChangeProposalsUseCase extends AbstractMemberUseCase<
       );
     }
 
-    return this.service.listProposalsByArtefactId(command.recipeId);
+    const recipe = await this.recipesPort.getRecipeByIdInternal(
+      command.recipeId as RecipeId,
+    );
+
+    const currentRecipe = recipe
+      ? { name: recipe.name, content: recipe.content }
+      : undefined;
+
+    return this.service.listProposalsByArtefactId(
+      command.recipeId,
+      currentRecipe,
+    );
   }
 }
