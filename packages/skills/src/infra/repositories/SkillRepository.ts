@@ -91,24 +91,37 @@ export class SkillRepository
     spaceId: SpaceId,
     opts?: Pick<QueryOption, 'includeDeleted'>,
   ): Promise<Skill[]> {
-    this.logger.info('Finding skills by space ID', {
+    this.logger.info('Finding skills with scope by space ID', {
       spaceId,
       includeDeleted: opts?.includeDeleted ?? false,
     });
 
     try {
+      // First, get all skills for the space with user information
       const skills = await this.repository.find({
         where: { spaceId },
         withDeleted: opts?.includeDeleted ?? false,
       });
 
-      this.logger.info('Skills found by space ID', {
+      // For each skill, enrich with user data
+      const skillsWithScope = await Promise.all(
+        skills.map(async (skill) => {
+          const createdBy = await this.getCreatedBy(skill.userId);
+
+          return {
+            ...skill,
+            createdBy,
+          };
+        }),
+      );
+
+      this.logger.info('Skills with scope found by space ID', {
         spaceId,
-        count: skills.length,
+        count: skillsWithScope.length,
       });
-      return skills;
+      return skillsWithScope;
     } catch (error) {
-      this.logger.error('Failed to find skills by space ID', {
+      this.logger.error('Failed to find skills with scope by space ID', {
         spaceId,
         error: error instanceof Error ? error.message : String(error),
       });

@@ -1,8 +1,9 @@
 import { UserId } from '../accounts/User';
 import { SpaceId } from '../spaces/SpaceId';
 import { SkillId } from './SkillId';
+import { WithCreator } from '../database/types';
 
-export type Skill = {
+export type Skill = WithCreator<{
   id: SkillId;
   spaceId: SpaceId;
   userId: UserId;
@@ -17,4 +18,4 @@ export type Skill = {
   allowedTools?: string;
   createdAt: Date;
   updatedAt: Date;
-};
+}>;

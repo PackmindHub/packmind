@@ -24,6 +24,7 @@ import { useCurrentSpace } from '../../spaces/hooks/useCurrentSpace';
 import { routes } from '../../../shared/utils/routes';
 import { SkillsBlankState } from './SkillsBlankState';
 import { SKILL_MESSAGES } from '../constants/messages';
+import { UserAvatarWithInitials } from '../../accounts/components/UserAvatarWithInitials';
 
 interface ISkillsListProps {
   orgSlug: string;
@@ -120,6 +121,14 @@ export const SkillsList = ({ orgSlug }: ISkillsListProps) => {
           addSuffix: true,
         }),
         version: skill.version,
+        createdBy: skill.createdBy?.displayName ? (
+          <UserAvatarWithInitials
+            displayName={skill.createdBy.displayName}
+            size="xs"
+          />
+        ) : (
+          <span>-</span>
+        ),
       })),
     );
   }, [skills, selectedSkillIds, spaceSlug, orgSlug]);
@@ -148,6 +157,12 @@ export const SkillsList = ({ orgSlug }: ISkillsListProps) => {
       align: 'center',
     },
     { key: 'name', header: 'Name', grow: true },
+    {
+      key: 'createdBy',
+      header: 'Created by',
+      width: '120px',
+      align: 'center',
+    },
     {
       key: 'updatedAt',
       header: 'Last Updated',
