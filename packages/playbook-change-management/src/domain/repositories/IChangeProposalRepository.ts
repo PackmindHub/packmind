@@ -17,5 +17,11 @@ export interface IChangeProposalRepository {
   findBySpaceId(
     spaceId: SpaceId,
   ): Promise<ChangeProposal<ChangeProposalType>[]>;
+  findExistingPending(criteria: {
+    createdBy: UserId;
+    artefactId: string;
+    type: ChangeProposalType;
+    payload: unknown;
+  }): Promise<ChangeProposal<ChangeProposalType> | null>;
   update(proposal: ChangeProposal<ChangeProposalType>): Promise<void>;
 }

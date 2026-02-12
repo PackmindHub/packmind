@@ -63,6 +63,32 @@ export class ChangeProposalRepository
     return this.createScopedQueryBuilder(spaceId).getMany();
   }
 
+  async findExistingPending(criteria: {
+    createdBy: UserId;
+    artefactId: string;
+    type: ChangeProposalType;
+    payload: unknown;
+  }): Promise<ChangeProposal<ChangeProposalType> | null> {
+    return (
+      this.repository
+        .createQueryBuilder('change_proposal')
+        .where('change_proposal.created_by = :createdBy', {
+          createdBy: criteria.createdBy,
+        })
+        .andWhere('change_proposal.artefact_id = :artefactId', {
+          artefactId: criteria.artefactId,
+        })
+        .andWhere('change_proposal.type = :type', { type: criteria.type })
+        .andWhere('change_proposal.status = :status', {
+          status: ChangeProposalStatus.pending,
+        })
+        .andWhere('change_proposal.payload = :payload', {
+          payload: JSON.stringify(criteria.payload),
+        })
+        .getOne() ?? null
+    );
+  }
+
   async update(proposal: ChangeProposal<ChangeProposalType>): Promise<void> {
     await this.add(proposal);
   }
