@@ -43,23 +43,14 @@ export class ChangeProposalService {
   ): Promise<CreateCommandChangeProposalResponse> {
     const createdBy = createUserId(command.userId);
 
-    const existing = await this.repository.findExistingPending({
+    const existing = await this.findExistingPendingProposal(
       createdBy,
-      artefactId: command.artefactId,
-      type: command.type,
-      payload: command.payload,
-    });
+      command.artefactId,
+      command.type,
+      command.payload,
+    );
 
     if (existing) {
-      this.logger.info(
-        'Duplicate pending change proposal found, skipping creation',
-        {
-          proposalId: existing.id,
-          type: existing.type,
-          artefactId: existing.artefactId,
-        },
-      );
-
       return { changeProposal: existing, wasCreated: false };
     }
 
@@ -96,23 +87,14 @@ export class ChangeProposalService {
   ): Promise<CreateChangeProposalResponse<T>> {
     const createdBy = createUserId(command.userId);
 
-    const existing = await this.repository.findExistingPending({
+    const existing = await this.findExistingPendingProposal(
       createdBy,
-      artefactId: command.artefactId as string,
-      type: command.type,
-      payload: command.payload,
-    });
+      command.artefactId as string,
+      command.type,
+      command.payload,
+    );
 
     if (existing) {
-      this.logger.info(
-        'Duplicate pending change proposal found, skipping creation',
-        {
-          proposalId: existing.id,
-          type: existing.type,
-          artefactId: existing.artefactId,
-        },
-      );
-
       return {
         changeProposal: existing as ChangeProposal<T>,
         wasCreated: false,
@@ -144,6 +126,33 @@ export class ChangeProposalService {
     });
 
     return { changeProposal: proposal, wasCreated: true };
+  }
+
+  private async findExistingPendingProposal(
+    createdBy: UserId,
+    artefactId: string,
+    type: ChangeProposalType,
+    payload: unknown,
+  ): Promise<ChangeProposal<ChangeProposalType> | null> {
+    const existing = await this.repository.findExistingPending({
+      createdBy,
+      artefactId,
+      type,
+      payload,
+    });
+
+    if (existing) {
+      this.logger.info(
+        'Duplicate pending change proposal found, skipping creation',
+        {
+          proposalId: existing.id,
+          type: existing.type,
+          artefactId: existing.artefactId,
+        },
+      );
+    }
+
+    return existing;
   }
 
   async listProposalsByArtefactId(
