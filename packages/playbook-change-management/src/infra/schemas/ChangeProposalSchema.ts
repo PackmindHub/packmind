@@ -1,13 +1,15 @@
 import { EntitySchema } from 'typeorm';
 import {
   WithTimestamps,
+  WithSoftDelete,
   uuidSchema,
   timestampsSchemas,
+  softDeleteSchemas,
 } from '@packmind/node-utils';
 import { ChangeProposal } from '@packmind/types';
 
 export const ChangeProposalSchema = new EntitySchema<
-  WithTimestamps<ChangeProposal>
+  WithSoftDelete<WithTimestamps<ChangeProposal>>
 >({
   name: 'ChangeProposal',
   tableName: 'change_proposals',
@@ -28,6 +30,7 @@ export const ChangeProposalSchema = new EntitySchema<
     },
     ...uuidSchema,
     ...timestampsSchemas,
+    ...softDeleteSchemas,
   },
   indices: [
     { name: 'idx_change_proposal_artefact', columns: ['artefactId'] },
