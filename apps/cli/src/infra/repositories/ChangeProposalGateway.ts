@@ -1,4 +1,6 @@
 import {
+  BatchCreateChangeProposalGatewayCommand,
+  BatchCreateChangeProposalGatewayResponse,
   CreateChangeProposalGatewayCommand,
   IChangeProposalGateway,
 } from '../../domain/repositories/IChangeProposalGateway';
@@ -21,6 +23,19 @@ export class ChangeProposalGateway implements IChangeProposalGateway {
           payload: command.payload,
           captureMode: command.captureMode,
         },
+      },
+    );
+  }
+
+  async batchCreateChangeProposals(
+    command: BatchCreateChangeProposalGatewayCommand,
+  ): Promise<BatchCreateChangeProposalGatewayResponse> {
+    const { organizationId } = this.httpClient.getAuthContext();
+    return this.httpClient.request<BatchCreateChangeProposalGatewayResponse>(
+      `/api/v0/organizations/${organizationId}/spaces/${command.spaceId}/change-proposals/batch`,
+      {
+        method: 'POST',
+        body: { proposals: command.proposals },
       },
     );
   }

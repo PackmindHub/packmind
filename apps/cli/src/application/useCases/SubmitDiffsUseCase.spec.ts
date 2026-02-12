@@ -3,10 +3,19 @@ import { ChangeProposalCaptureMode, ChangeProposalType } from '@packmind/types';
 import { SubmitDiffsUseCase } from './SubmitDiffsUseCase';
 import { ArtefactDiff } from '../../domain/useCases/IDiffArtefactsUseCase';
 import { createMockPackmindGateway } from '../../mocks/createMockGateways';
+import { BatchCreateChangeProposalGatewayResponse } from '../../domain/repositories/IChangeProposalGateway';
 
 describe('SubmitDiffsUseCase', () => {
   let useCase: SubmitDiffsUseCase;
   const mockGateway = createMockPackmindGateway();
+
+  const batchResponse = (
+    created: number,
+  ): BatchCreateChangeProposalGatewayResponse => ({
+    created,
+    skipped: 0,
+    errors: [],
+  });
 
   beforeEach(() => {
     useCase = new SubmitDiffsUseCase(mockGateway);
@@ -28,10 +37,18 @@ describe('SubmitDiffsUseCase', () => {
 
       expect(result.skipped).toEqual([]);
     });
+
+    it('does not call batchCreateChangeProposals', async () => {
+      await useCase.execute({ groupedDiffs: [] });
+
+      expect(
+        mockGateway.changeProposals.batchCreateChangeProposals,
+      ).not.toHaveBeenCalled();
+    });
   });
 
-  describe('when group contains duplicate diffs across agent files', () => {
-    const duplicateDiffGroup: ArtefactDiff[] = [
+  describe('when group contains diffs for the same spaceId', () => {
+    const sameSpaceGroup: ArtefactDiff[] = [
       {
         filePath: '.packmind/commands/my-command.md',
         type: ChangeProposalType.updateCommandDescription,
@@ -53,173 +70,107 @@ describe('SubmitDiffsUseCase', () => {
     ];
 
     beforeEach(() => {
-      mockGateway.changeProposals.createChangeProposal.mockResolvedValue(
-        undefined,
+      mockGateway.changeProposals.batchCreateChangeProposals.mockResolvedValue(
+        batchResponse(2),
       );
     });
 
-    it('submits only one change proposal', async () => {
+    it('returns created count from batch response', async () => {
       const result = await useCase.execute({
-        groupedDiffs: [duplicateDiffGroup],
-      });
-
-      expect(result.submitted).toBe(1);
-    });
-
-    it('returns empty skipped array', async () => {
-      const result = await useCase.execute({
-        groupedDiffs: [duplicateDiffGroup],
-      });
-
-      expect(result.skipped).toEqual([]);
-    });
-
-    it('calls createChangeProposal once', async () => {
-      await useCase.execute({ groupedDiffs: [duplicateDiffGroup] });
-
-      expect(
-        mockGateway.changeProposals.createChangeProposal,
-      ).toHaveBeenCalledTimes(1);
-    });
-
-    it('calls createChangeProposal with correct spaceId', async () => {
-      await useCase.execute({ groupedDiffs: [duplicateDiffGroup] });
-
-      expect(
-        mockGateway.changeProposals.createChangeProposal,
-      ).toHaveBeenCalledWith(expect.objectContaining({ spaceId: 'spc-456' }));
-    });
-
-    it('calls createChangeProposal with updateCommandDescription type', async () => {
-      await useCase.execute({ groupedDiffs: [duplicateDiffGroup] });
-
-      expect(
-        mockGateway.changeProposals.createChangeProposal,
-      ).toHaveBeenCalledWith(
-        expect.objectContaining({
-          type: ChangeProposalType.updateCommandDescription,
-        }),
-      );
-    });
-
-    it('calls createChangeProposal with correct artefactId', async () => {
-      await useCase.execute({ groupedDiffs: [duplicateDiffGroup] });
-
-      expect(
-        mockGateway.changeProposals.createChangeProposal,
-      ).toHaveBeenCalledWith(
-        expect.objectContaining({ artefactId: 'art-123' }),
-      );
-    });
-
-    it('calls createChangeProposal with commit capture mode', async () => {
-      await useCase.execute({ groupedDiffs: [duplicateDiffGroup] });
-
-      expect(
-        mockGateway.changeProposals.createChangeProposal,
-      ).toHaveBeenCalledWith(
-        expect.objectContaining({
-          captureMode: ChangeProposalCaptureMode.commit,
-        }),
-      );
-    });
-  });
-
-  describe('when group contains diffs with same artifactId but different payloads', () => {
-    const differentPayloadGroup: ArtefactDiff[] = [
-      {
-        filePath: '.packmind/commands/my-command.md',
-        type: ChangeProposalType.updateCommandDescription,
-        payload: { oldValue: 'old content', newValue: 'new content' },
-        artifactName: 'My Command',
-        artifactType: 'command',
-        artifactId: 'art-123',
-        spaceId: 'spc-456',
-      },
-      {
-        filePath: '.cursor/commands/packmind/my-command.md',
-        type: ChangeProposalType.updateCommandDescription,
-        payload: { oldValue: 'old content', newValue: 'different edit' },
-        artifactName: 'My Command',
-        artifactType: 'command',
-        artifactId: 'art-123',
-        spaceId: 'spc-456',
-      },
-    ];
-
-    beforeEach(() => {
-      mockGateway.changeProposals.createChangeProposal.mockResolvedValue(
-        undefined,
-      );
-    });
-
-    it('submits both diffs', async () => {
-      const result = await useCase.execute({
-        groupedDiffs: [differentPayloadGroup],
+        groupedDiffs: [sameSpaceGroup],
       });
 
       expect(result.submitted).toBe(2);
     });
 
-    it('calls createChangeProposal for each diff', async () => {
-      await useCase.execute({ groupedDiffs: [differentPayloadGroup] });
+    it('calls batchCreateChangeProposals once for the spaceId', async () => {
+      await useCase.execute({ groupedDiffs: [sameSpaceGroup] });
 
       expect(
-        mockGateway.changeProposals.createChangeProposal,
-      ).toHaveBeenCalledTimes(2);
-    });
-  });
-
-  describe('when group has no .packmind/ diff but valid agent diffs with identical payloads', () => {
-    const agentOnlyGroup: ArtefactDiff[] = [
-      {
-        filePath: '.cursor/commands/packmind/my-command.md',
-        type: ChangeProposalType.updateCommandDescription,
-        payload: { oldValue: 'old content', newValue: 'new content' },
-        artifactName: 'My Command',
-        artifactType: 'command',
-        artifactId: 'art-123',
-        spaceId: 'spc-456',
-      },
-      {
-        filePath: '.github/prompts/my-command.prompt.md',
-        type: ChangeProposalType.updateCommandDescription,
-        payload: { oldValue: 'old content', newValue: 'new content' },
-        artifactName: 'My Command',
-        artifactType: 'command',
-        artifactId: 'art-123',
-        spaceId: 'spc-456',
-      },
-    ];
-
-    beforeEach(() => {
-      mockGateway.changeProposals.createChangeProposal.mockResolvedValue(
-        undefined,
-      );
+        mockGateway.changeProposals.batchCreateChangeProposals,
+      ).toHaveBeenCalledTimes(1);
     });
 
-    it('submits only one change proposal', async () => {
-      const result = await useCase.execute({
-        groupedDiffs: [agentOnlyGroup],
+    it('sends all diffs in a single batch', async () => {
+      await useCase.execute({ groupedDiffs: [sameSpaceGroup] });
+
+      expect(
+        mockGateway.changeProposals.batchCreateChangeProposals,
+      ).toHaveBeenCalledWith({
+        spaceId: 'spc-456',
+        proposals: [
+          {
+            type: ChangeProposalType.updateCommandDescription,
+            artefactId: 'art-123',
+            payload: { oldValue: 'old content', newValue: 'new content' },
+            captureMode: ChangeProposalCaptureMode.commit,
+          },
+          {
+            type: ChangeProposalType.updateCommandDescription,
+            artefactId: 'art-123',
+            payload: { oldValue: 'old content', newValue: 'new content' },
+            captureMode: ChangeProposalCaptureMode.commit,
+          },
+        ],
       });
-
-      expect(result.submitted).toBe(1);
     });
 
     it('returns empty skipped array', async () => {
       const result = await useCase.execute({
-        groupedDiffs: [agentOnlyGroup],
+        groupedDiffs: [sameSpaceGroup],
       });
 
       expect(result.skipped).toEqual([]);
     });
+  });
 
-    it('calls createChangeProposal once', async () => {
-      await useCase.execute({ groupedDiffs: [agentOnlyGroup] });
+  describe('when diffs span multiple spaceIds', () => {
+    const spaceAGroup: ArtefactDiff[] = [
+      {
+        filePath: '.packmind/commands/cmd-a.md',
+        type: ChangeProposalType.updateCommandDescription,
+        payload: { oldValue: 'old a', newValue: 'new a' },
+        artifactName: 'Command A',
+        artifactType: 'command',
+        artifactId: 'art-a',
+        spaceId: 'spc-a',
+      },
+    ];
+
+    const spaceBGroup: ArtefactDiff[] = [
+      {
+        filePath: '.packmind/commands/cmd-b.md',
+        type: ChangeProposalType.updateCommandDescription,
+        payload: { oldValue: 'old b', newValue: 'new b' },
+        artifactName: 'Command B',
+        artifactType: 'command',
+        artifactId: 'art-b',
+        spaceId: 'spc-b',
+      },
+    ];
+
+    beforeEach(() => {
+      mockGateway.changeProposals.batchCreateChangeProposals.mockResolvedValue(
+        batchResponse(1),
+      );
+    });
+
+    it('calls batchCreateChangeProposals once per spaceId', async () => {
+      await useCase.execute({
+        groupedDiffs: [spaceAGroup, spaceBGroup],
+      });
 
       expect(
-        mockGateway.changeProposals.createChangeProposal,
-      ).toHaveBeenCalledTimes(1);
+        mockGateway.changeProposals.batchCreateChangeProposals,
+      ).toHaveBeenCalledTimes(2);
+    });
+
+    it('aggregates created counts from all batch responses', async () => {
+      const result = await useCase.execute({
+        groupedDiffs: [spaceAGroup, spaceBGroup],
+      });
+
+      expect(result.submitted).toBe(2);
     });
   });
 
@@ -250,11 +201,11 @@ describe('SubmitDiffsUseCase', () => {
       ]);
     });
 
-    it('does not call createChangeProposal', async () => {
+    it('does not call batchCreateChangeProposals', async () => {
       await useCase.execute({ groupedDiffs: [standardGroup] });
 
       expect(
-        mockGateway.changeProposals.createChangeProposal,
+        mockGateway.changeProposals.batchCreateChangeProposals,
       ).not.toHaveBeenCalled();
     });
   });
@@ -313,12 +264,12 @@ describe('SubmitDiffsUseCase', () => {
     ];
 
     beforeEach(() => {
-      mockGateway.changeProposals.createChangeProposal.mockResolvedValue(
-        undefined,
+      mockGateway.changeProposals.batchCreateChangeProposals.mockResolvedValue(
+        batchResponse(2),
       );
     });
 
-    it('submits only valid diffs', async () => {
+    it('returns created count from batch response', async () => {
       const result = await useCase.execute({
         groupedDiffs: [mixedMetadataGroup],
       });
@@ -336,12 +287,28 @@ describe('SubmitDiffsUseCase', () => {
       ]);
     });
 
-    it('calls createChangeProposal only for valid diffs', async () => {
+    it('sends only valid diffs in the batch', async () => {
       await useCase.execute({ groupedDiffs: [mixedMetadataGroup] });
 
       expect(
-        mockGateway.changeProposals.createChangeProposal,
-      ).toHaveBeenCalledTimes(2);
+        mockGateway.changeProposals.batchCreateChangeProposals,
+      ).toHaveBeenCalledWith({
+        spaceId: 'spc-456',
+        proposals: [
+          {
+            type: ChangeProposalType.updateCommandDescription,
+            artefactId: 'art-123',
+            payload: { oldValue: 'old', newValue: 'new' },
+            captureMode: ChangeProposalCaptureMode.commit,
+          },
+          {
+            type: ChangeProposalType.updateCommandDescription,
+            artefactId: 'art-123',
+            payload: { oldValue: 'old claude', newValue: 'new claude' },
+            captureMode: ChangeProposalCaptureMode.commit,
+          },
+        ],
+      });
     });
   });
 
@@ -376,11 +343,11 @@ describe('SubmitDiffsUseCase', () => {
       ]);
     });
 
-    it('does not call createChangeProposal', async () => {
+    it('does not call batchCreateChangeProposals', async () => {
       await useCase.execute({ groupedDiffs: [missingArtifactIdGroup] });
 
       expect(
-        mockGateway.changeProposals.createChangeProposal,
+        mockGateway.changeProposals.batchCreateChangeProposals,
       ).not.toHaveBeenCalled();
     });
   });
@@ -455,8 +422,8 @@ describe('SubmitDiffsUseCase', () => {
     ];
 
     beforeEach(() => {
-      mockGateway.changeProposals.createChangeProposal.mockResolvedValue(
-        undefined,
+      mockGateway.changeProposals.batchCreateChangeProposals.mockResolvedValue(
+        batchResponse(1),
       );
     });
 
