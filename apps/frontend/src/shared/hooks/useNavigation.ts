@@ -63,6 +63,22 @@ export function useNavigation() {
       if (!currentOrgSlug) return;
       navigate(`/org/${currentOrgSlug}/account-settings`);
     },
+    toSetup: () => {
+      if (!currentOrgSlug) return;
+      navigate(`/org/${currentOrgSlug}/setup`);
+    },
+    toSetupCLI: () => {
+      if (!currentOrgSlug) return;
+      navigate(`/org/${currentOrgSlug}/setup/cli`);
+    },
+    toSetupMCP: () => {
+      if (!currentOrgSlug) return;
+      navigate(`/org/${currentOrgSlug}/setup/mcp`);
+    },
+    toSetupSkills: () => {
+      if (!currentOrgSlug) return;
+      navigate(`/org/${currentOrgSlug}/setup/skills`);
+    },
   };
 
   /**

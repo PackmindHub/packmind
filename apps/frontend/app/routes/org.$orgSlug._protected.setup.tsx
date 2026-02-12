@@ -1,0 +1,119 @@
+import {
+  type LoaderFunctionArgs,
+  NavLink,
+  Outlet,
+  redirect,
+  useNavigate,
+  useParams,
+} from 'react-router';
+import { queryClient } from '../../src/shared/data/queryClient';
+import {
+  getMeQueryOptions,
+  useGetMeQuery,
+} from '../../src/domain/accounts/api/queries/UserQueries';
+import {
+  PMFlex,
+  PMGrid,
+  PMHeading,
+  pmToaster,
+  PMVerticalNav,
+  PMVerticalNavSection,
+} from '@packmind/ui';
+import { useEffect } from 'react';
+import { MeResponse } from '../../src/domain/accounts/api/gateways/IAuthGateway';
+import { SidebarNavigationLink } from '../../src/domain/organizations/components/SidebarNavigation';
+import { routes } from '../../src/shared/utils/routes';
+
+type HasAccessResponse =
+  | {
+      hasAccess: true;
+      toast?: never;
+      redirect?: never;
+    }
+  | {
+      hasAccess: false;
+      toast: { title: string; type: string };
+      redirect: { url: string };
+    };
+
+function hasAccess(me: MeResponse | undefined): HasAccessResponse {
+  // All authenticated users can access setup pages
+  return { hasAccess: true };
+}
+
+export async function clientLoader({ params }: LoaderFunctionArgs) {
+  const me = await queryClient.ensureQueryData(getMeQueryOptions());
+  const hasAccessResponse = hasAccess(me);
+
+  if (!hasAccessResponse.hasAccess) {
+    pmToaster.create(hasAccessResponse.toast);
+    throw redirect(hasAccessResponse.redirect.url);
+  }
+}
+
+export const handle = {
+  crumb: ({ params }: { params: { orgSlug: string } }) => {
+    return <NavLink to={routes.org.toSetup(params.orgSlug)}>Setup</NavLink>;
+  },
+};
+
+export default function SetupIndexRouteModule() {
+  const { data: me } = useGetMeQuery();
+  const navigate = useNavigate();
+  const { orgSlug } = useParams();
+
+  useEffect(() => {
+    const hasAccessResponse = hasAccess(me);
+    if (!hasAccessResponse.hasAccess) {
+      pmToaster.create(hasAccessResponse.toast);
+      navigate(hasAccessResponse.redirect.url);
+    }
+  }, [me, navigate]);
+
+  return (
+    <PMGrid height={'full'} gridTemplateColumns={'fit-content(200px) 1fr'}>
+      <PMVerticalNav
+        logo={false}
+        headerNav={
+          <PMFlex height={'50px'} alignItems={'center'}>
+            <PMHeading level="h4" fontWeight={'bold'} color={'secondary'}>
+              Setup
+            </PMHeading>
+          </PMFlex>
+        }
+      >
+        <PMVerticalNavSection
+          title="Installation"
+          navEntries={[
+            <SidebarNavigationLink
+              key="cli"
+              url={orgSlug ? routes.org.toSetupCLI(orgSlug) : '#'}
+              label="CLI"
+              exact
+            />,
+            <SidebarNavigationLink
+              key="mcp"
+              url={orgSlug ? routes.org.toSetupMCP(orgSlug) : '#'}
+              label="MCP Servers"
+              exact
+            />,
+          ]}
+        />
+
+        <PMVerticalNavSection
+          title="Getting Started"
+          navEntries={[
+            <SidebarNavigationLink
+              key="skills"
+              url={orgSlug ? routes.org.toSetupSkills(orgSlug) : '#'}
+              label="Default Skills"
+              exact
+            />,
+          ]}
+        />
+      </PMVerticalNav>
+
+      <Outlet />
+    </PMGrid>
+  );
+}

@@ -13,7 +13,7 @@ import { AuthContextOrganization } from '../../accounts/hooks/useAuthContext';
 import { SidebarAccountMenu } from '../../accounts/components/SidebarAccountMenu';
 import { SidebarOrgaSelector } from './OrgaSelector';
 import { SidebarHelpMenu } from './SidebarHelpMenu';
-import { LuHouse, LuSettings } from 'react-icons/lu';
+import { LuHouse, LuSettings, LuWrench } from 'react-icons/lu';
 import { useGetSpacesQuery } from '../../spaces/api/queries/SpacesQueries';
 import { routes } from '../../../shared/utils/routes';
 import { SidebarNavigationDataTestId } from '@packmind/frontend';
@@ -157,6 +157,18 @@ export const SidebarNavigation: React.FunctionComponent<
       <PMSeparator borderColor={'border.tertiary'} />
       {(() => {
         const lastEntries: React.ReactElement[] = [];
+
+        // Setup is available to all users
+        lastEntries.push(
+          <SidebarNavigationLink
+            key="setup"
+            url={routes.org.toSetup(orgSlug)}
+            label="Setup"
+            icon={<LuWrench />}
+          />,
+        );
+
+        // Settings is only available to admins
         if (organization.role === 'admin') {
           lastEntries.push(
             <SidebarNavigationLink
