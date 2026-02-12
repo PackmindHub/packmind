@@ -15,6 +15,7 @@ import {
   RejectCommandChangeProposalCommand,
   RejectCommandChangeProposalResponse,
   ScalarUpdatePayload,
+  SpaceId,
   UserId,
 } from '@packmind/types';
 import { v4 as uuidv4 } from 'uuid';
@@ -99,10 +100,14 @@ export class ChangeProposalService {
   }
 
   async listProposalsByArtefactId(
+    spaceId: SpaceId,
     artefactId: string,
     currentRecipe?: { name: string; content: string },
   ): Promise<ListCommandChangeProposalsResponse> {
-    const changeProposals = await this.repository.findByArtefactId(artefactId);
+    const changeProposals = await this.repository.findByArtefactId(
+      spaceId,
+      artefactId,
+    );
 
     return {
       changeProposals: changeProposals.map((proposal) => ({

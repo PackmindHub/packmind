@@ -256,19 +256,25 @@ describe('ChangeProposalService', () => {
       ...overrides,
     });
 
-    it('calls repository with the correct artefactId', async () => {
+    it('calls repository with the correct spaceId and artefactId', async () => {
       repository.findByArtefactId.mockResolvedValue([]);
 
-      await service.listProposalsByArtefactId(recipeId);
+      await service.listProposalsByArtefactId(spaceId, recipeId);
 
-      expect(repository.findByArtefactId).toHaveBeenCalledWith(recipeId);
+      expect(repository.findByArtefactId).toHaveBeenCalledWith(
+        spaceId,
+        recipeId,
+      );
     });
 
     describe('when repository returns empty array', () => {
       it('returns empty changeProposals array', async () => {
         repository.findByArtefactId.mockResolvedValue([]);
 
-        const result = await service.listProposalsByArtefactId(recipeId);
+        const result = await service.listProposalsByArtefactId(
+          spaceId,
+          recipeId,
+        );
 
         expect(result.changeProposals).toEqual([]);
       });
@@ -281,7 +287,10 @@ describe('ChangeProposalService', () => {
         });
         repository.findByArtefactId.mockResolvedValue([proposal]);
 
-        const result = await service.listProposalsByArtefactId(recipeId);
+        const result = await service.listProposalsByArtefactId(
+          spaceId,
+          recipeId,
+        );
 
         expect(result.changeProposals[0].outdated).toBe(false);
       });
@@ -297,6 +306,7 @@ describe('ChangeProposalService', () => {
             repository.findByArtefactId.mockResolvedValue([proposal]);
 
             const result = await service.listProposalsByArtefactId(
+              spaceId,
               recipeId,
               currentRecipe,
             );
@@ -313,6 +323,7 @@ describe('ChangeProposalService', () => {
             repository.findByArtefactId.mockResolvedValue([proposal]);
 
             const result = await service.listProposalsByArtefactId(
+              spaceId,
               recipeId,
               currentRecipe,
             );
@@ -329,6 +340,7 @@ describe('ChangeProposalService', () => {
             repository.findByArtefactId.mockResolvedValue([proposal]);
 
             const result = await service.listProposalsByArtefactId(
+              spaceId,
               recipeId,
               currentRecipe,
             );
@@ -347,6 +359,7 @@ describe('ChangeProposalService', () => {
             repository.findByArtefactId.mockResolvedValue([proposal]);
 
             const result = await service.listProposalsByArtefactId(
+              spaceId,
               recipeId,
               conflictingRecipe,
             );
@@ -365,6 +378,7 @@ describe('ChangeProposalService', () => {
           repository.findByArtefactId.mockResolvedValue([proposal]);
 
           const result = await service.listProposalsByArtefactId(
+            spaceId,
             recipeId,
             currentRecipe,
           );

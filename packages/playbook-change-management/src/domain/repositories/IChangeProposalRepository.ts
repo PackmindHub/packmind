@@ -11,6 +11,7 @@ export interface IChangeProposalRepository {
     changeProposalId: ChangeProposalId,
   ): Promise<ChangeProposal<ChangeProposalType> | null>;
   findByArtefactId(
+    spaceId: SpaceId,
     artefactId: string,
   ): Promise<ChangeProposal<ChangeProposalType>[]>;
   findBySpaceId(

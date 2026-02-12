@@ -1,14 +1,9 @@
 import { IChangeProposalRepository } from '../../domain/repositories/IChangeProposalRepository';
 import { ChangeProposalSchema } from '../schemas/ChangeProposalSchema';
-import { Repository, FindOptionsWhere, SelectQueryBuilder } from 'typeorm';
+import { Repository, SelectQueryBuilder } from 'typeorm';
 import { PackmindLogger } from '@packmind/logger';
 import { localDataSource, SpaceScopedRepository } from '@packmind/node-utils';
-import {
-  ChangeProposal,
-  ChangeProposalId,
-  ChangeProposalType,
-  SpaceId,
-} from '@packmind/types';
+import { ChangeProposal, ChangeProposalType, SpaceId } from '@packmind/types';
 
 const origin = 'ChangeProposalRepository';
 
@@ -53,37 +48,22 @@ export class ChangeProposalRepository
     await this.add(proposal);
   }
 
-  async findById(
-    changeProposalId: ChangeProposalId,
-  ): Promise<ChangeProposal<ChangeProposalType> | null> {
-    return this.repository.findOne({
-      where: {
-        id: changeProposalId,
-      } as FindOptionsWhere<ChangeProposal<ChangeProposalType>>,
-    });
-  }
-
   async findByArtefactId(
+    spaceId: SpaceId,
     artefactId: string,
   ): Promise<ChangeProposal<ChangeProposalType>[]> {
-    return this.repository.find({
-      where: {
-        artefactId,
-      } as FindOptionsWhere<ChangeProposal<ChangeProposalType>>,
-    });
+    return this.createScopedQueryBuilder(spaceId)
+      .andWhere('change_proposal.artefact_id = :artefactId', { artefactId })
+      .getMany();
   }
 
   async findBySpaceId(
     spaceId: SpaceId,
   ): Promise<ChangeProposal<ChangeProposalType>[]> {
-    return this.repository.find({
-      where: {
-        spaceId,
-      } as FindOptionsWhere<ChangeProposal<ChangeProposalType>>,
-    });
+    return this.createScopedQueryBuilder(spaceId).getMany();
   }
 
   async update(proposal: ChangeProposal<ChangeProposalType>): Promise<void> {
-    await this.repository.save(proposal);
+    await this.add(proposal);
   }
 }

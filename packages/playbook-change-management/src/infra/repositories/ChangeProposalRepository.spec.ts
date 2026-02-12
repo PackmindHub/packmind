@@ -77,7 +77,7 @@ describe('ChangeProposalRepository', () => {
         await repository.save(p1);
         await repository.save(p2);
 
-        result = await repository.findByArtefactId(artefactId);
+        result = await repository.findByArtefactId(spaceAId, artefactId);
       });
 
       it('returns all matching proposals', () => {
@@ -88,10 +88,32 @@ describe('ChangeProposalRepository', () => {
     describe('when no proposals exist for the artefact', () => {
       it('returns an empty array', async () => {
         const result = await repository.findByArtefactId(
+          spaceAId,
           createStandardId('dddddddd-dddd-dddd-dddd-dddddddddddd'),
         );
 
         expect(result).toEqual([]);
+      });
+    });
+
+    describe('when proposals exist in different spaces for the same artefact', () => {
+      let result: ChangeProposal<ChangeProposalType>[];
+
+      beforeEach(async () => {
+        const p1 = changeProposalFactory({ spaceId: spaceAId, artefactId });
+        const p2 = changeProposalFactory({ spaceId: spaceBId, artefactId });
+        await repository.save(p1);
+        await repository.save(p2);
+
+        result = await repository.findByArtefactId(spaceAId, artefactId);
+      });
+
+      it('returns only one proposal', () => {
+        expect(result).toHaveLength(1);
+      });
+
+      it('returns proposals from the requested space only', () => {
+        expect(result[0].spaceId).toEqual(spaceAId);
       });
     });
   });

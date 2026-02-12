@@ -118,10 +118,14 @@ describe('ListCommandChangeProposalsUseCase', () => {
     it('passes current recipe to service', async () => {
       await useCase.execute(command);
 
-      expect(service.listProposalsByArtefactId).toHaveBeenCalledWith(recipeId, {
-        name: recipe.name,
-        content: recipe.content,
-      });
+      expect(service.listProposalsByArtefactId).toHaveBeenCalledWith(
+        spaceId,
+        recipeId,
+        {
+          name: recipe.name,
+          content: recipe.content,
+        },
+      );
     });
 
     it('returns the proposals from service', async () => {
@@ -146,6 +150,7 @@ describe('ListCommandChangeProposalsUseCase', () => {
       await useCase.execute(command);
 
       expect(service.listProposalsByArtefactId).toHaveBeenCalledWith(
+        spaceId,
         recipeId,
         undefined,
       );
