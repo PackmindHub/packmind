@@ -1,3 +1,3 @@
 export { ChangeProposalCacheRepository } from './ChangeProposalCacheRepository';
-export { ChangeProposalDatabaseRepository } from './ChangeProposalDatabaseRepository';
+export { ChangeProposalRepository } from './ChangeProposalRepository';
 export { PlaybookChangeManagementRepositories } from './PlaybookChangeManagementRepositories';

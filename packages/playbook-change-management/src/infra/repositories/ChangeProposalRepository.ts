@@ -1,44 +1,31 @@
 import { IChangeProposalRepository } from '../../domain/repositories/IChangeProposalRepository';
 import { ChangeProposalSchema } from '../schemas/ChangeProposalSchema';
-import {
-  DataSource,
-  EntitySchema,
-  FindOptionsWhere,
-  SelectQueryBuilder,
-} from 'typeorm';
+import { Repository, FindOptionsWhere, SelectQueryBuilder } from 'typeorm';
 import { PackmindLogger } from '@packmind/logger';
-import { SpaceScopedRepository } from '@packmind/node-utils';
+import { localDataSource, SpaceScopedRepository } from '@packmind/node-utils';
 import {
   ChangeProposal,
   ChangeProposalId,
   ChangeProposalType,
   SpaceId,
-  WithSoftDelete,
 } from '@packmind/types';
 
-const origin = 'ChangeProposalDatabaseRepository';
+const origin = 'ChangeProposalRepository';
 
-export class ChangeProposalDatabaseRepository
+export class ChangeProposalRepository
   extends SpaceScopedRepository<ChangeProposal<ChangeProposalType>>
   implements IChangeProposalRepository
 {
   constructor(
-    dataSource: DataSource,
+    repository: Repository<
+      ChangeProposal<ChangeProposalType>
+    > = localDataSource.getRepository<ChangeProposal<ChangeProposalType>>(
+      ChangeProposalSchema,
+    ),
     logger: PackmindLogger = new PackmindLogger(origin),
   ) {
-    const repository =
-      dataSource.getRepository<ChangeProposal<ChangeProposalType>>(
-        ChangeProposalSchema,
-      );
-    super(
-      'changeProposal',
-      repository,
-      ChangeProposalSchema as unknown as EntitySchema<
-        WithSoftDelete<ChangeProposal<ChangeProposalType>>
-      >,
-      logger,
-    );
-    this.logger.info('ChangeProposalDatabaseRepository initialized');
+    super('changeProposal', repository, ChangeProposalSchema, logger);
+    this.logger.info('ChangeProposalRepository initialized');
   }
 
   protected override loggableEntity(
