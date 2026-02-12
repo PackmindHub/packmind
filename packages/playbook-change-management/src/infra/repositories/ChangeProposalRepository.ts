@@ -38,11 +38,11 @@ export class ChangeProposalRepository
     };
   }
 
-  protected getEntityAlias(): string {
+  protected override getEntityAlias(): string {
     return 'change_proposal';
   }
 
-  protected applySpaceScope(
+  protected override applySpaceScope(
     qb: SelectQueryBuilder<ChangeProposal<ChangeProposalType>>,
     spaceId: string,
   ): SelectQueryBuilder<ChangeProposal<ChangeProposalType>> {
