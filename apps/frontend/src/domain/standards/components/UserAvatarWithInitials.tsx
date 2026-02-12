@@ -26,16 +26,7 @@ function getInitialsFromDisplayName(displayName: string): string {
  * Uses a deterministic hash to ensure the same name always gets the same color.
  */
 function getColorFromDisplayName(displayName: string): string {
-  const colors = [
-    'red',
-    'orange',
-    'yellow',
-    'green',
-    'blue',
-    'purple',
-    'pink',
-    'cyan',
-  ];
+  const colors = ['orange', 'yellow', 'green', 'blue', 'purple'];
   let hash = 0;
   for (let i = 0; i < displayName.length; i++) {
     hash = displayName.charCodeAt(i) + ((hash << 5) - hash);

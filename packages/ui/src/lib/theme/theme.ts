@@ -178,41 +178,42 @@ export const packmindTheme = (preflight: boolean) =>
           blue: {
             subtle: { value: '{colors.blue.800}' },
             fg: { value: '{colors.blue.100}' },
-            muted: { value: '{colors.blue.500}' },
+            muted: { value: '{colors.blue.600}' },
           },
           green: {
             subtle: { value: '{colors.green.800}' },
             fg: { value: '{colors.green.100}' },
-            muted: { value: '{colors.green.500}' },
+            muted: { value: '{colors.green.600}' },
           },
           orange: {
             subtle: { value: '{colors.orange.800}' },
             fg: { value: '{colors.orange.100}' },
-            muted: { value: '{colors.orange.500}' },
+            muted: { value: '{colors.orange.600}' },
           },
           red: {
             subtle: { value: '{colors.red.800}' },
             fg: { value: '{colors.red.100}' },
-            muted: { value: '{colors.red.500}' },
+            muted: { value: '{colors.red.600}' },
           },
           purple: {
             subtle: { value: '{colors.purple.800}' },
             fg: { value: '{colors.purple.100}' },
-            muted: { value: '{colors.purple.500}' },
+            muted: { value: '{colors.purple.600}' },
           },
           gray: {
-            subtle: { value: '{colors.beige.700}' },
+            subtle: { value: '{colors.beige.800}' },
             fg: { value: '{colors.beige.200}' },
+            muted: { value: '{colors.yellow.600}' },
           },
           yellow: {
             subtle: { value: '{colors.yellow.800}' },
             fg: { value: '{colors.yellow.100}' },
-            muted: { value: '{colors.yellow.500}' },
+            muted: { value: '{colors.yellow.600}' },
           },
           pink: {
             subtle: { value: '{colors.pink.800}' },
             fg: { value: '{colors.pink.100}' },
-            muted: { value: '{colors.pink.500}' },
+            muted: { value: '{colors.pink.600}' },
           },
           branding: {
             primary: { value: '{colors.blue.200}' },
