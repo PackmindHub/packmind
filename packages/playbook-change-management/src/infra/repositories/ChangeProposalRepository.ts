@@ -3,7 +3,15 @@ import { ChangeProposalSchema } from '../schemas/ChangeProposalSchema';
 import { Repository, SelectQueryBuilder } from 'typeorm';
 import { PackmindLogger } from '@packmind/logger';
 import { localDataSource, SpaceScopedRepository } from '@packmind/node-utils';
-import { ChangeProposal, ChangeProposalType, SpaceId } from '@packmind/types';
+import {
+  ChangeProposal,
+  ChangeProposalArtefactId,
+  ChangeProposalPayload,
+  ChangeProposalStatus,
+  ChangeProposalType,
+  SpaceId,
+  UserId,
+} from '@packmind/types';
 
 const origin = 'ChangeProposalRepository';
 
@@ -63,12 +71,12 @@ export class ChangeProposalRepository
     return this.createScopedQueryBuilder(spaceId).getMany();
   }
 
-  async findExistingPending(criteria: {
+  async findExistingPending<T extends ChangeProposalType>(criteria: {
     createdBy: UserId;
-    artefactId: string;
-    type: ChangeProposalType;
-    payload: unknown;
-  }): Promise<ChangeProposal<ChangeProposalType> | null> {
+    artefactId: ChangeProposalArtefactId<T>;
+    type: T;
+    payload: ChangeProposalPayload<T>;
+  }): Promise<ChangeProposal<T> | null> {
     const result = await this.repository
       .createQueryBuilder('change_proposal')
       .where('change_proposal.created_by = :createdBy', {
@@ -85,7 +93,7 @@ export class ChangeProposalRepository
         payload: JSON.stringify(criteria.payload),
       })
       .getOne();
-    return result ?? null;
+    return (result as ChangeProposal<T> | null) ?? null;
   }
 
   async update(proposal: ChangeProposal<ChangeProposalType>): Promise<void> {

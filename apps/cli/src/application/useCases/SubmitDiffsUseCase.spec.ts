@@ -13,7 +13,6 @@ describe('SubmitDiffsUseCase', () => {
     created: number,
   ): BatchCreateChangeProposalGatewayResponse => ({
     created,
-    skipped: 0,
     errors: [],
   });
 

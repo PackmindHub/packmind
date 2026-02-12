@@ -1,7 +1,10 @@
 import { stubLogger } from '@packmind/test-utils';
 import {
+  ChangeProposal,
   ChangeProposalCaptureMode,
+  ChangeProposalStatus,
   ChangeProposalType,
+  createChangeProposalId,
   CreateChangeProposalCommand,
   CreateChangeProposalResponse,
   createOrganizationId,
@@ -74,6 +77,7 @@ describe('CreateChangeProposalUseCase', () => {
 
     service = {
       createChangeProposal: jest.fn(),
+      findExistingPending: jest.fn().mockResolvedValue(null),
     } as unknown as jest.Mocked<ChangeProposalService>;
 
     useCase = new CreateChangeProposalUseCase(
@@ -126,6 +130,12 @@ describe('CreateChangeProposalUseCase', () => {
         recipeId,
       });
     });
+
+    it('returns wasCreated true', async () => {
+      const result = await useCase.execute(command);
+
+      expect(result.wasCreated).toBe(true);
+    });
   });
 
   describe('when type is updateCommandDescription', () => {
@@ -152,6 +162,50 @@ describe('CreateChangeProposalUseCase', () => {
         }),
         5,
       );
+    });
+  });
+
+  describe('when a pending duplicate exists', () => {
+    const command = buildCommand();
+
+    const existingProposal: ChangeProposal<ChangeProposalType> = {
+      id: createChangeProposalId(),
+      type: ChangeProposalType.updateCommandName,
+      artefactId: recipeId,
+      artefactVersion: 5,
+      spaceId,
+      payload: { oldValue: recipe.name, newValue: 'New Recipe Name' },
+      captureMode: ChangeProposalCaptureMode.commit,
+      status: ChangeProposalStatus.pending,
+      createdBy: createUserId('user-id'),
+      resolvedBy: null,
+      resolvedAt: null,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    beforeEach(() => {
+      spacesPort.getSpaceById.mockResolvedValue(space);
+      recipesPort.getRecipeById.mockResolvedValue(recipe);
+      service.findExistingPending.mockResolvedValue(existingProposal);
+    });
+
+    it('returns the existing proposal', async () => {
+      const result = await useCase.execute(command);
+
+      expect(result.changeProposal).toBe(existingProposal);
+    });
+
+    it('returns wasCreated false', async () => {
+      const result = await useCase.execute(command);
+
+      expect(result.wasCreated).toBe(false);
+    });
+
+    it('does not call createChangeProposal', async () => {
+      await useCase.execute(command);
+
+      expect(service.createChangeProposal).not.toHaveBeenCalled();
     });
   });
 

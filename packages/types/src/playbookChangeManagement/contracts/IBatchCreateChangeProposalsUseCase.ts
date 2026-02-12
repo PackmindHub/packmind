@@ -17,7 +17,6 @@ export type BatchCreateChangeProposalsCommand = PackmindCommand & {
 
 export type BatchCreateChangeProposalsResponse = {
   created: number;
-  skipped: number;
   errors: Array<{ index: number; message: string }>;
 };
 

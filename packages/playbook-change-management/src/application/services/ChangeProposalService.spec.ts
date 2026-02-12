@@ -122,52 +122,6 @@ describe('ChangeProposalService', () => {
 
       expect(changeProposal.resolvedAt).toBeNull();
     });
-
-    it('returns wasCreated true', async () => {
-      const result = await service.createProposal(command);
-
-      expect(result.wasCreated).toBe(true);
-    });
-
-    describe('when a pending duplicate exists', () => {
-      const existingProposal: ChangeProposal<ChangeProposalType> = {
-        id: createChangeProposalId(),
-        type: ChangeProposalType.updateCommandName,
-        artefactId: recipeId,
-        artefactVersion: 1,
-        spaceId,
-        payload: { oldValue: 'old name', newValue: 'new name' },
-        captureMode: ChangeProposalCaptureMode.commit,
-        status: ChangeProposalStatus.pending,
-        createdBy: userId,
-        resolvedBy: null,
-        resolvedAt: null,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      };
-
-      beforeEach(() => {
-        repository.findExistingPending.mockResolvedValue(existingProposal);
-      });
-
-      it('returns the existing proposal', async () => {
-        const result = await service.createProposal(command);
-
-        expect(result.changeProposal).toBe(existingProposal);
-      });
-
-      it('returns wasCreated false', async () => {
-        const result = await service.createProposal(command);
-
-        expect(result.wasCreated).toBe(false);
-      });
-
-      it('does not save a new proposal', async () => {
-        await service.createProposal(command);
-
-        expect(repository.save).not.toHaveBeenCalled();
-      });
-    });
   });
 
   describe('createChangeProposal', () => {
@@ -253,22 +207,18 @@ describe('ChangeProposalService', () => {
 
       expect(changeProposal.resolvedAt).toBeNull();
     });
+  });
 
-    it('returns wasCreated true', async () => {
-      const result = await service.createChangeProposal(
-        command,
-        artefactVersion,
-      );
-
-      expect(result.wasCreated).toBe(true);
-    });
+  describe('findExistingPending', () => {
+    const recipeId = createRecipeId();
+    const userId = createUserId();
 
     describe('when a pending duplicate exists', () => {
       const existingProposal: ChangeProposal<ChangeProposalType> = {
         id: createChangeProposalId(),
         type: ChangeProposalType.updateCommandName,
         artefactId: recipeId,
-        artefactVersion: 3,
+        artefactVersion: 1,
         spaceId,
         payload: { oldValue: 'old name', newValue: 'new name' },
         captureMode: ChangeProposalCaptureMode.commit,
@@ -285,27 +235,31 @@ describe('ChangeProposalService', () => {
       });
 
       it('returns the existing proposal', async () => {
-        const result = await service.createChangeProposal(
-          command,
-          artefactVersion,
+        const result = await service.findExistingPending(
+          userId,
+          recipeId,
+          ChangeProposalType.updateCommandName,
+          { oldValue: 'old name', newValue: 'new name' },
         );
 
-        expect(result.changeProposal).toBe(existingProposal);
+        expect(result).toBe(existingProposal);
+      });
+    });
+
+    describe('when no duplicate exists', () => {
+      beforeEach(() => {
+        repository.findExistingPending.mockResolvedValue(null);
       });
 
-      it('returns wasCreated false', async () => {
-        const result = await service.createChangeProposal(
-          command,
-          artefactVersion,
+      it('returns null', async () => {
+        const result = await service.findExistingPending(
+          userId,
+          recipeId,
+          ChangeProposalType.updateCommandName,
+          { oldValue: 'old name', newValue: 'new name' },
         );
 
-        expect(result.wasCreated).toBe(false);
-      });
-
-      it('does not save a new proposal', async () => {
-        await service.createChangeProposal(command, artefactVersion);
-
-        expect(repository.save).not.toHaveBeenCalled();
+        expect(result).toBeNull();
       });
     });
   });

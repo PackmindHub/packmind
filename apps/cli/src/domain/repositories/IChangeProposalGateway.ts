@@ -4,27 +4,24 @@ import {
   ScalarUpdatePayload,
 } from '@packmind/types';
 
-export type CreateChangeProposalGatewayCommand = {
-  spaceId: string;
+type CreateChangeProposalPayload = {
   type: ChangeProposalType;
   artefactId: string;
   payload: ScalarUpdatePayload;
   captureMode: ChangeProposalCaptureMode;
 };
 
+export type CreateChangeProposalGatewayCommand = {
+  spaceId: string;
+} & CreateChangeProposalPayload;
+
 export type BatchCreateChangeProposalGatewayCommand = {
   spaceId: string;
-  proposals: Array<{
-    type: ChangeProposalType;
-    artefactId: string;
-    payload: ScalarUpdatePayload;
-    captureMode: ChangeProposalCaptureMode;
-  }>;
+  proposals: CreateChangeProposalPayload[];
 };
 
 export type BatchCreateChangeProposalGatewayResponse = {
   created: number;
-  skipped: number;
   errors: Array<{ index: number; message: string }>;
 };
 

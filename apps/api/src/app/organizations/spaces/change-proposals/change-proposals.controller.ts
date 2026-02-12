@@ -104,7 +104,6 @@ export class OrganizationsSpacesChangeProposalsController {
         organizationId,
         spaceId,
         created: result.created,
-        skipped: result.skipped,
         errors: result.errors.length,
       },
     );

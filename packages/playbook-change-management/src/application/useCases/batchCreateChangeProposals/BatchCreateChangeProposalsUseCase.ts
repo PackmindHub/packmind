@@ -37,7 +37,7 @@ export class BatchCreateChangeProposalsUseCase extends AbstractMemberUseCase<
     for (let i = 0; i < command.proposals.length; i++) {
       const proposal = command.proposals[i];
 
-      const itemCommand: CreateChangeProposalCommand<ChangeProposalType> = {
+      const itemCommand = {
         userId: command.userId,
         organizationId: command.organizationId,
         spaceId: command.spaceId,
@@ -45,7 +45,7 @@ export class BatchCreateChangeProposalsUseCase extends AbstractMemberUseCase<
         artefactId: proposal.artefactId,
         payload: proposal.payload,
         captureMode: proposal.captureMode,
-      };
+      } as CreateChangeProposalCommand<ChangeProposalType>;
 
       try {
         await this.playbookChangeManagementPort.createChangeProposal(
@@ -64,6 +64,6 @@ export class BatchCreateChangeProposalsUseCase extends AbstractMemberUseCase<
       errors: errors.length,
     });
 
-    return { created, skipped: 0, errors };
+    return { created, errors };
   }
 }

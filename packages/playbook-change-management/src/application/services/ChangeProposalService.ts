@@ -3,13 +3,13 @@ import {
   ApplyCommandChangeProposalCommand,
   ApplyCommandChangeProposalResponse,
   ChangeProposal,
+  ChangeProposalArtefactId,
+  ChangeProposalPayload,
   ChangeProposalStatus,
   ChangeProposalType,
   CreateChangeProposalCommand,
   createChangeProposalId,
-  CreateChangeProposalResponse,
   CreateCommandChangeProposalCommand,
-  CreateCommandChangeProposalResponse,
   createUserId,
   ListCommandChangeProposalsResponse,
   RejectCommandChangeProposalCommand,
@@ -40,19 +40,8 @@ export class ChangeProposalService {
 
   async createProposal(
     command: CreateCommandChangeProposalCommand,
-  ): Promise<CreateCommandChangeProposalResponse> {
+  ): Promise<{ changeProposal: ChangeProposal<ChangeProposalType> }> {
     const createdBy = createUserId(command.userId);
-
-    const existing = await this.findExistingPendingProposal(
-      createdBy,
-      command.artefactId,
-      command.type,
-      command.payload,
-    );
-
-    if (existing) {
-      return { changeProposal: existing, wasCreated: false };
-    }
 
     const proposal: ChangeProposal<ChangeProposalType> = {
       id: createChangeProposalId(uuidv4()),
@@ -78,28 +67,14 @@ export class ChangeProposalService {
       artefactId: proposal.artefactId,
     });
 
-    return { changeProposal: proposal, wasCreated: true };
+    return { changeProposal: proposal };
   }
 
   async createChangeProposal<T extends ChangeProposalType>(
     command: CreateChangeProposalCommand<T>,
     artefactVersion: number,
-  ): Promise<CreateChangeProposalResponse<T>> {
+  ): Promise<{ changeProposal: ChangeProposal<T> }> {
     const createdBy = createUserId(command.userId);
-
-    const existing = await this.findExistingPendingProposal(
-      createdBy,
-      command.artefactId as string,
-      command.type,
-      command.payload,
-    );
-
-    if (existing) {
-      return {
-        changeProposal: existing as ChangeProposal<T>,
-        wasCreated: false,
-      };
-    }
 
     const proposal: ChangeProposal<T> = {
       id: createChangeProposalId(uuidv4()),
@@ -125,15 +100,15 @@ export class ChangeProposalService {
       artefactId: proposal.artefactId,
     });
 
-    return { changeProposal: proposal, wasCreated: true };
+    return { changeProposal: proposal };
   }
 
-  private async findExistingPendingProposal(
+  async findExistingPending<T extends ChangeProposalType>(
     createdBy: UserId,
-    artefactId: string,
-    type: ChangeProposalType,
-    payload: unknown,
-  ): Promise<ChangeProposal<ChangeProposalType> | null> {
+    artefactId: ChangeProposalArtefactId<T>,
+    type: T,
+    payload: ChangeProposalPayload<T>,
+  ): Promise<ChangeProposal<T> | null> {
     const existing = await this.repository.findExistingPending({
       createdBy,
       artefactId,
