@@ -13,6 +13,8 @@ export type FileModification =
       sections?: never;
       artifactType?: ArtifactType;
       artifactName?: string;
+      artifactId?: string;
+      spaceId?: string;
     }
   | {
       path: string;
@@ -20,6 +22,8 @@ export type FileModification =
       sections: FileSection[];
       artifactType?: ArtifactType;
       artifactName?: string;
+      artifactId?: string;
+      spaceId?: string;
     };
 
 export enum DeleteItemType {

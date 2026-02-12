@@ -20,6 +20,7 @@ export type DiffHandlerDependencies = {
   getCwd: () => string;
   log: typeof console.log;
   error: typeof console.error;
+  submit?: boolean;
 };
 
 export type DiffHandlerResult = {
@@ -48,7 +49,7 @@ function groupDiffsByArtefact(
 export async function diffArtefactsHandler(
   deps: DiffHandlerDependencies,
 ): Promise<DiffHandlerResult> {
-  const { packmindCliHexa, exit, getCwd, log, error } = deps;
+  const { packmindCliHexa, exit, getCwd, log, error, submit } = deps;
   const cwd = getCwd();
 
   // Read existing config (including agents if present)
@@ -127,6 +128,9 @@ export async function diffArtefactsHandler(
 
     if (diffs.length === 0) {
       log('No changes found.');
+      if (submit) {
+        logInfoConsole('No changes to submit.');
+      }
       exit(0);
       return { diffsFound: 0 };
     }
@@ -139,11 +143,8 @@ export async function diffArtefactsHandler(
       const typeLabel = ARTIFACT_TYPE_LABELS[artifactType];
       log(formatBold(`${typeLabel} "${artifactName}"`));
 
-      const showFilePaths = groupDiffs.length > 1;
       for (const diff of groupDiffs) {
-        if (showFilePaths) {
-          log(`  ${formatFilePath(diff.filePath)}`);
-        }
+        log(`  ${formatFilePath(diff.filePath)}`);
         log('  - content changed');
         const payload = diff.payload as ScalarUpdatePayload;
         const { lines } = formatContentDiff(payload.oldValue, payload.newValue);
@@ -156,6 +157,23 @@ export async function diffArtefactsHandler(
 
     const changeWord = diffs.length === 1 ? 'change' : 'changes';
     logWarningConsole(`Summary: ${diffs.length} ${changeWord} found`);
+
+    if (submit) {
+      const groupedDiffs = Array.from(groupDiffsByArtefact(diffs).values());
+      const result = await packmindCliHexa.submitDiffs(groupedDiffs);
+
+      if (result.submitted > 0) {
+        const proposalWord =
+          result.submitted === 1 ? 'change proposal' : 'change proposals';
+        logInfoConsole(
+          `Submitted ${result.submitted} ${proposalWord} successfully.`,
+        );
+      }
+
+      for (const skip of result.skipped) {
+        logWarningConsole(`Skipped "${skip.name}": ${skip.reason}`);
+      }
+    }
 
     exit(0);
     return { diffsFound: diffs.length };

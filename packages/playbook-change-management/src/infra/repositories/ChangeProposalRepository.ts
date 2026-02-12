@@ -1,43 +1,26 @@
 import { IChangeProposalRepository } from '../../domain/repositories/IChangeProposalRepository';
 import { ChangeProposalSchema } from '../schemas/ChangeProposalSchema';
-import {
-  DataSource,
-  EntitySchema,
-  FindOptionsWhere,
-  SelectQueryBuilder,
-} from 'typeorm';
+import { Repository, SelectQueryBuilder } from 'typeorm';
 import { PackmindLogger } from '@packmind/logger';
-import { SpaceScopedRepository } from '@packmind/node-utils';
-import {
-  ChangeProposal,
-  ChangeProposalType,
-  SpaceId,
-  WithSoftDelete,
-} from '@packmind/types';
+import { localDataSource, SpaceScopedRepository } from '@packmind/node-utils';
+import { ChangeProposal, ChangeProposalType, SpaceId } from '@packmind/types';
 
-const origin = 'ChangeProposalDatabaseRepository';
+const origin = 'ChangeProposalRepository';
 
-export class ChangeProposalDatabaseRepository
+export class ChangeProposalRepository
   extends SpaceScopedRepository<ChangeProposal<ChangeProposalType>>
   implements IChangeProposalRepository
 {
   constructor(
-    dataSource: DataSource,
+    repository: Repository<
+      ChangeProposal<ChangeProposalType>
+    > = localDataSource.getRepository<ChangeProposal<ChangeProposalType>>(
+      ChangeProposalSchema,
+    ),
     logger: PackmindLogger = new PackmindLogger(origin),
   ) {
-    const repository =
-      dataSource.getRepository<ChangeProposal<ChangeProposalType>>(
-        ChangeProposalSchema,
-      );
-    super(
-      'changeProposal',
-      repository,
-      ChangeProposalSchema as unknown as EntitySchema<
-        WithSoftDelete<ChangeProposal<ChangeProposalType>>
-      >,
-      logger,
-    );
-    this.logger.info('ChangeProposalDatabaseRepository initialized');
+    super('changeProposal', repository, ChangeProposalSchema, logger);
+    this.logger.info('ChangeProposalRepository initialized');
   }
 
   protected override loggableEntity(
@@ -50,11 +33,11 @@ export class ChangeProposalDatabaseRepository
     };
   }
 
-  protected getEntityAlias(): string {
+  protected override getEntityAlias(): string {
     return 'change_proposal';
   }
 
-  protected applySpaceScope(
+  protected override applySpaceScope(
     qb: SelectQueryBuilder<ChangeProposal<ChangeProposalType>>,
     spaceId: string,
   ): SelectQueryBuilder<ChangeProposal<ChangeProposalType>> {
@@ -66,26 +49,21 @@ export class ChangeProposalDatabaseRepository
   }
 
   async findByArtefactId(
+    spaceId: SpaceId,
     artefactId: string,
   ): Promise<ChangeProposal<ChangeProposalType>[]> {
-    return this.repository.find({
-      where: {
-        artefactId,
-      } as FindOptionsWhere<ChangeProposal<ChangeProposalType>>,
-    });
+    return this.createScopedQueryBuilder(spaceId)
+      .andWhere('change_proposal.artefact_id = :artefactId', { artefactId })
+      .getMany();
   }
 
   async findBySpaceId(
     spaceId: SpaceId,
   ): Promise<ChangeProposal<ChangeProposalType>[]> {
-    return this.repository.find({
-      where: {
-        spaceId,
-      } as FindOptionsWhere<ChangeProposal<ChangeProposalType>>,
-    });
+    return this.createScopedQueryBuilder(spaceId).getMany();
   }
 
   async update(proposal: ChangeProposal<ChangeProposalType>): Promise<void> {
-    await this.repository.save(proposal);
+    await this.add(proposal);
   }
 }

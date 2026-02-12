@@ -1,4 +1,5 @@
 import { IPackmindGateway } from '../domain/repositories/IPackmindGateway';
+import { IChangeProposalGateway } from '../domain/repositories/IChangeProposalGateway';
 import { ILinterGateway } from '../domain/repositories/ILinterGateway';
 import { IMcpGateway } from '../domain/repositories/IMcpGateway';
 import { ISpacesGateway } from '../domain/repositories/ISpacesGateway';
@@ -9,6 +10,7 @@ import { IPackagesGateway } from '../domain/repositories/IPackagesGateway';
 import { IDeploymentGateway } from '../domain/repositories/IDeploymentGateway';
 
 export type MockPackmindGatewayOverrides = {
+  changeProposals?: jest.Mocked<IChangeProposalGateway>;
   linter?: jest.Mocked<ILinterGateway>;
   mcp?: jest.Mocked<IMcpGateway>;
   spaces?: jest.Mocked<ISpacesGateway>;
@@ -23,6 +25,7 @@ export function createMockPackmindGateway(
   overrides?: MockPackmindGatewayOverrides,
 ): jest.Mocked<IPackmindGateway> {
   return {
+    changeProposals: createMockChangeProposalGateway(),
     linter: createMockLinterGateway(),
     mcp: createMockMcpGateway(),
     spaces: createMockSpacesGateway(),
@@ -31,6 +34,15 @@ export function createMockPackmindGateway(
     standards: createMockStandardsGateway(),
     packages: createMockPackagesGateway(),
     deployment: createMockDeploymentGateway(),
+    ...overrides,
+  };
+}
+
+export function createMockChangeProposalGateway(
+  overrides?: Partial<jest.Mocked<IChangeProposalGateway>>,
+): jest.Mocked<IChangeProposalGateway> {
+  return {
+    createChangeProposal: jest.fn(),
     ...overrides,
   };
 }

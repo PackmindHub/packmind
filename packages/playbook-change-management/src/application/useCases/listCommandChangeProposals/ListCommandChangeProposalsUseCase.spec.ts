@@ -18,6 +18,8 @@ import { organizationFactory } from '@packmind/accounts/test/organizationFactory
 import { recipeFactory } from '@packmind/recipes/test/recipeFactory';
 import { spaceFactory } from '@packmind/spaces/test/spaceFactory';
 import { ChangeProposalService } from '../../services/ChangeProposalService';
+import { SpaceNotFoundError } from '../../../domain/errors/SpaceNotFoundError';
+import { SpaceOwnershipMismatchError } from '../../../domain/errors/SpaceOwnershipMismatchError';
 import { ListCommandChangeProposalsUseCase } from './ListCommandChangeProposalsUseCase';
 
 describe('ListCommandChangeProposalsUseCase', () => {
@@ -116,10 +118,14 @@ describe('ListCommandChangeProposalsUseCase', () => {
     it('passes current recipe to service', async () => {
       await useCase.execute(command);
 
-      expect(service.listProposalsByArtefactId).toHaveBeenCalledWith(recipeId, {
-        name: recipe.name,
-        content: recipe.content,
-      });
+      expect(service.listProposalsByArtefactId).toHaveBeenCalledWith(
+        spaceId,
+        recipeId,
+        {
+          name: recipe.name,
+          content: recipe.content,
+        },
+      );
     });
 
     it('returns the proposals from service', async () => {
@@ -144,6 +150,7 @@ describe('ListCommandChangeProposalsUseCase', () => {
       await useCase.execute(command);
 
       expect(service.listProposalsByArtefactId).toHaveBeenCalledWith(
+        spaceId,
         recipeId,
         undefined,
       );
@@ -159,7 +166,7 @@ describe('ListCommandChangeProposalsUseCase', () => {
 
     it('throws an error', async () => {
       await expect(useCase.execute(command)).rejects.toThrow(
-        `Space ${spaceId} not found`,
+        SpaceNotFoundError,
       );
     });
 
@@ -185,7 +192,7 @@ describe('ListCommandChangeProposalsUseCase', () => {
 
     it('throws an error', async () => {
       await expect(useCase.execute(command)).rejects.toThrow(
-        `Space ${spaceId} does not belong to organization ${organizationId}`,
+        SpaceOwnershipMismatchError,
       );
     });
 

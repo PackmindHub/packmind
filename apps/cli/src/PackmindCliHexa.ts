@@ -75,9 +75,11 @@ import {
   UploadSkillResult,
 } from './domain/useCases/IUploadSkillUseCase';
 import {
+  ArtefactDiff,
   IDiffArtefactsCommand,
   IDiffArtefactsResult,
 } from './domain/useCases/IDiffArtefactsUseCase';
+import { SubmitDiffsResult } from './domain/useCases/ISubmitDiffsUseCase';
 import { loadCredentials } from './infra/utils/credentials';
 
 const origin = 'PackmindCliHexa';
@@ -149,6 +151,12 @@ export class PackmindCliHexa {
     command: IDiffArtefactsCommand,
   ): Promise<IDiffArtefactsResult> {
     return this.hexa.useCases.diffArtefacts.execute(command);
+  }
+
+  public async submitDiffs(
+    groupedDiffs: ArtefactDiff[][],
+  ): Promise<SubmitDiffsResult> {
+    return this.hexa.useCases.submitDiffs.execute({ groupedDiffs });
   }
 
   public async listPackages(

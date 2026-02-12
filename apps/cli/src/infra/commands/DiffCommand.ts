@@ -1,4 +1,4 @@
-import { command } from 'cmd-ts';
+import { command, flag } from 'cmd-ts';
 import { PackmindCliHexa } from '../../PackmindCliHexa';
 import { PackmindLogger, LogLevel } from '@packmind/logger';
 import { diffArtefactsHandler } from './diffArtefactsHandler';
@@ -7,8 +7,13 @@ export const diffCommand = command({
   name: 'diff',
   description:
     'Show differences between local command files and server content',
-  args: {},
-  handler: async () => {
+  args: {
+    submit: flag({
+      long: 'submit',
+      description: 'Submit detected changes as change proposals',
+    }),
+  },
+  handler: async ({ submit }) => {
     const packmindLogger = new PackmindLogger('PackmindCLI', LogLevel.INFO);
     const packmindCliHexa = new PackmindCliHexa(packmindLogger);
 
@@ -18,6 +23,7 @@ export const diffCommand = command({
       getCwd: () => process.cwd(),
       log: console.log,
       error: console.error,
+      submit,
     });
   },
 });

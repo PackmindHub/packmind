@@ -11,6 +11,7 @@ import {
   UserId,
 } from '@packmind/types';
 import { ChangeProposalService } from '../../services/ChangeProposalService';
+import { validateSpaceOwnership } from '../../services/validateSpaceOwnership';
 
 const origin = 'ApplyCommandChangeProposalUseCase';
 
@@ -31,15 +32,11 @@ export class ApplyCommandChangeProposalUseCase extends AbstractMemberUseCase<
   async executeForMembers(
     command: ApplyCommandChangeProposalCommand & MemberContext,
   ): Promise<ApplyCommandChangeProposalResponse> {
-    const space = await this.spacesPort.getSpaceById(command.spaceId);
-    if (!space) {
-      throw new Error(`Space ${command.spaceId} not found`);
-    }
-    if (space.organizationId !== command.organization.id) {
-      throw new Error(
-        `Space ${command.spaceId} does not belong to organization ${command.organization.id}`,
-      );
-    }
+    await validateSpaceOwnership(
+      this.spacesPort,
+      command.spaceId,
+      command.organization.id,
+    );
 
     const recipe = await this.recipesPort.getRecipeByIdInternal(
       command.recipeId as RecipeId,
@@ -49,11 +46,8 @@ export class ApplyCommandChangeProposalUseCase extends AbstractMemberUseCase<
     }
 
     const { changeProposal, updatedFields } = await this.service.applyProposal(
-      command.recipeId,
-      command.changeProposalId,
-      command.userId as UserId,
+      command,
       { name: recipe.name, content: recipe.content },
-      command.force,
     );
 
     await this.recipesPort.updateRecipeFromUI({

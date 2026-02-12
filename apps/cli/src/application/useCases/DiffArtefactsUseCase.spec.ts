@@ -28,6 +28,8 @@ describe('DiffArtefactsUseCase', () => {
               content: 'Server content',
               artifactType: 'command',
               artifactName: 'My Command',
+              artifactId: 'artifact-1',
+              spaceId: 'space-1',
             },
           ],
           delete: [],
@@ -54,6 +56,8 @@ describe('DiffArtefactsUseCase', () => {
           },
           artifactName: 'My Command',
           artifactType: 'command',
+          artifactId: 'artifact-1',
+          spaceId: 'space-1',
         },
       ]);
     });
@@ -69,6 +73,8 @@ describe('DiffArtefactsUseCase', () => {
               content: 'Server content',
               artifactType: 'command',
               artifactName: 'My Command',
+              artifactId: 'artifact-2',
+              spaceId: 'space-2',
             },
           ],
           delete: [],
@@ -95,6 +101,8 @@ describe('DiffArtefactsUseCase', () => {
           },
           artifactName: 'My Command',
           artifactType: 'command',
+          artifactId: 'artifact-2',
+          spaceId: 'space-2',
         },
       ]);
     });
@@ -110,6 +118,8 @@ describe('DiffArtefactsUseCase', () => {
               content: 'Server content',
               artifactType: 'command',
               artifactName: 'My Command',
+              artifactId: 'artifact-3',
+              spaceId: 'space-3',
             },
           ],
           delete: [],
@@ -136,6 +146,8 @@ describe('DiffArtefactsUseCase', () => {
           },
           artifactName: 'My Command',
           artifactType: 'command',
+          artifactId: 'artifact-3',
+          spaceId: 'space-3',
         },
       ]);
     });
@@ -151,6 +163,8 @@ describe('DiffArtefactsUseCase', () => {
               content: 'Server standard content',
               artifactType: 'standard',
               artifactName: 'My Standard',
+              artifactId: 'artifact-4',
+              spaceId: 'space-4',
             },
           ],
           delete: [],
@@ -177,6 +191,8 @@ describe('DiffArtefactsUseCase', () => {
           },
           artifactName: 'My Standard',
           artifactType: 'standard',
+          artifactId: 'artifact-4',
+          spaceId: 'space-4',
         },
       ]);
     });
@@ -192,6 +208,8 @@ describe('DiffArtefactsUseCase', () => {
               content: 'Server skill content',
               artifactType: 'skill',
               artifactName: 'My Skill',
+              artifactId: 'artifact-5',
+              spaceId: 'space-5',
             },
           ],
           delete: [],
@@ -218,6 +236,8 @@ describe('DiffArtefactsUseCase', () => {
           },
           artifactName: 'My Skill',
           artifactType: 'skill',
+          artifactId: 'artifact-5',
+          spaceId: 'space-5',
         },
       ]);
     });
@@ -233,12 +253,16 @@ describe('DiffArtefactsUseCase', () => {
               content: 'Server skill md',
               artifactType: 'skill',
               artifactName: 'My Skill',
+              artifactId: 'artifact-6',
+              spaceId: 'space-6',
             },
             {
               path: '.claude/skills/my-skill/helper.ts',
               content: 'Server helper',
               artifactType: 'skill',
               artifactName: 'My Skill',
+              artifactId: 'artifact-6',
+              spaceId: 'space-6',
             },
           ],
           delete: [],
@@ -454,12 +478,16 @@ describe('DiffArtefactsUseCase', () => {
               content: 'First version',
               artifactType: 'command',
               artifactName: 'Dup Command',
+              artifactId: 'artifact-dup',
+              spaceId: 'space-dup',
             },
             {
               path: '.packmind/commands/dup.md',
               content: 'Second version',
               artifactType: 'command',
               artifactName: 'Dup Command',
+              artifactId: 'artifact-dup',
+              spaceId: 'space-dup',
             },
           ],
           delete: [],
@@ -486,6 +514,8 @@ describe('DiffArtefactsUseCase', () => {
           },
           artifactName: 'Dup Command',
           artifactType: 'command',
+          artifactId: 'artifact-dup',
+          spaceId: 'space-dup',
         },
       ]);
     });
@@ -501,12 +531,16 @@ describe('DiffArtefactsUseCase', () => {
               content: 'Server A',
               artifactType: 'command',
               artifactName: 'Command A',
+              artifactId: 'artifact-a',
+              spaceId: 'space-a',
             },
             {
               path: '.packmind/commands/cmd-b.md',
               content: 'Server B',
               artifactType: 'command',
               artifactName: 'Command B',
+              artifactId: 'artifact-b',
+              spaceId: 'space-b',
             },
           ],
           delete: [],
@@ -526,6 +560,168 @@ describe('DiffArtefactsUseCase', () => {
       });
 
       expect(result).toHaveLength(2);
+    });
+  });
+
+  describe('when file modification includes artifactId and spaceId', () => {
+    beforeEach(() => {
+      mockGateway.deployment.pull.mockResolvedValue({
+        fileUpdates: {
+          createOrUpdate: [
+            {
+              path: '.packmind/commands/tracked.md',
+              content: 'Server content',
+              artifactType: 'command',
+              artifactName: 'Tracked Command',
+              artifactId: 'art-123',
+              spaceId: 'spc-456',
+            },
+          ],
+          delete: [],
+        },
+        skillFolders: [],
+      });
+
+      (fs.readFile as jest.Mock).mockResolvedValue('Local content');
+    });
+
+    it('propagates artifactId to the diff', async () => {
+      const result = await useCase.execute({
+        packagesSlugs: ['test-package'],
+        baseDirectory: '/test',
+      });
+
+      expect(result[0].artifactId).toBe('art-123');
+    });
+
+    it('propagates spaceId to the diff', async () => {
+      const result = await useCase.execute({
+        packagesSlugs: ['test-package'],
+        baseDirectory: '/test',
+      });
+
+      expect(result[0].spaceId).toBe('spc-456');
+    });
+  });
+
+  describe('when file modification has no artifactId or spaceId', () => {
+    beforeEach(() => {
+      mockGateway.deployment.pull.mockResolvedValue({
+        fileUpdates: {
+          createOrUpdate: [
+            {
+              path: '.packmind/commands/untracked.md',
+              content: 'Server content',
+              artifactType: 'command',
+              artifactName: 'Untracked Command',
+            },
+          ],
+          delete: [],
+        },
+        skillFolders: [],
+      });
+
+      (fs.readFile as jest.Mock).mockResolvedValue('Local content');
+    });
+
+    it('sets artifactId to undefined in the diff', async () => {
+      const result = await useCase.execute({
+        packagesSlugs: ['test-package'],
+        baseDirectory: '/test',
+      });
+
+      expect(result[0].artifactId).toBeUndefined();
+    });
+
+    it('sets spaceId to undefined in the diff', async () => {
+      const result = await useCase.execute({
+        packagesSlugs: ['test-package'],
+        baseDirectory: '/test',
+      });
+
+      expect(result[0].spaceId).toBeUndefined();
+    });
+  });
+
+  describe('when server and local content both have frontmatter', () => {
+    beforeEach(() => {
+      mockGateway.deployment.pull.mockResolvedValue({
+        fileUpdates: {
+          createOrUpdate: [
+            {
+              path: '.packmind/commands/my-command.md',
+              content:
+                "---\ndescription: 'My command'\nagent: 'agent'\n---\n\nThis is a marvelous command",
+              artifactType: 'command',
+              artifactName: 'My Command',
+              artifactId: 'artifact-fm',
+              spaceId: 'space-fm',
+            },
+          ],
+          delete: [],
+        },
+        skillFolders: [],
+      });
+
+      (fs.readFile as jest.Mock).mockResolvedValue(
+        "---\ndescription: 'My command'\nagent: 'agent'\n---\n\nThis is a modified command",
+      );
+    });
+
+    it('returns diff payload with body-only values', async () => {
+      const result = await useCase.execute({
+        packagesSlugs: ['test-package'],
+        baseDirectory: '/test',
+      });
+
+      expect(result).toEqual([
+        {
+          filePath: '.packmind/commands/my-command.md',
+          type: ChangeProposalType.updateCommandDescription,
+          payload: {
+            oldValue: 'This is a marvelous command',
+            newValue: 'This is a modified command',
+          },
+          artifactName: 'My Command',
+          artifactType: 'command',
+          artifactId: 'artifact-fm',
+          spaceId: 'space-fm',
+        },
+      ]);
+    });
+  });
+
+  describe('when only frontmatter differs between server and local', () => {
+    beforeEach(() => {
+      mockGateway.deployment.pull.mockResolvedValue({
+        fileUpdates: {
+          createOrUpdate: [
+            {
+              path: '.packmind/commands/my-command.md',
+              content: "---\ndescription: 'Old description'\n---\n\nSame body",
+              artifactType: 'command',
+              artifactName: 'My Command',
+              artifactId: 'artifact-fm2',
+              spaceId: 'space-fm2',
+            },
+          ],
+          delete: [],
+        },
+        skillFolders: [],
+      });
+
+      (fs.readFile as jest.Mock).mockResolvedValue(
+        "---\ndescription: 'New description'\nagent: 'added-agent'\n---\n\nSame body",
+      );
+    });
+
+    it('returns empty result', async () => {
+      const result = await useCase.execute({
+        packagesSlugs: ['test-package'],
+        baseDirectory: '/test',
+      });
+
+      expect(result).toEqual([]);
     });
   });
 

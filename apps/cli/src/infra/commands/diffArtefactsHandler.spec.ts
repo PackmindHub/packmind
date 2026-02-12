@@ -36,6 +36,7 @@ describe('diffArtefactsHandler', () => {
       getGitRemoteUrlFromPath: jest.fn(),
       getCurrentBranch: jest.fn(),
       diffArtefacts: jest.fn(),
+      submitDiffs: jest.fn(),
     } as unknown as jest.Mocked<PackmindCliHexa>;
 
     mockExit = jest.fn();
@@ -84,6 +85,17 @@ describe('diffArtefactsHandler', () => {
       );
 
       expect(headerCall).toBeDefined();
+    });
+
+    it('displays file path', async () => {
+      await diffArtefactsHandler(deps);
+
+      const logCalls = mockLog.mock.calls.map((c) => c[0]);
+      const filePathCall = logCalls.find((c: string) =>
+        c.includes('.packmind/commands/my-command.md'),
+      );
+
+      expect(filePathCall).toBeDefined();
     });
 
     it('displays content changed label', async () => {
@@ -404,6 +416,146 @@ describe('diffArtefactsHandler', () => {
         gitBranch: undefined,
         relativePath: undefined,
         agents: undefined,
+      });
+    });
+  });
+
+  describe('when submit is false', () => {
+    beforeEach(() => {
+      mockPackmindCliHexa.readFullConfig.mockResolvedValue({
+        packages: { 'my-package': '*' },
+      });
+
+      mockPackmindCliHexa.diffArtefacts.mockResolvedValue([
+        {
+          filePath: '.packmind/commands/my-command.md',
+          type: ChangeProposalType.updateCommandDescription,
+          payload: { oldValue: 'old', newValue: 'new' },
+          artifactName: 'My Command',
+          artifactType: 'command',
+        },
+      ]);
+    });
+
+    it('does not call submitDiffs', async () => {
+      await diffArtefactsHandler({ ...deps, submit: false });
+
+      expect(mockPackmindCliHexa.submitDiffs).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('when submit is true', () => {
+    describe('when there are diffs', () => {
+      beforeEach(() => {
+        mockPackmindCliHexa.readFullConfig.mockResolvedValue({
+          packages: { 'my-package': '*' },
+        });
+
+        mockPackmindCliHexa.diffArtefacts.mockResolvedValue([
+          {
+            filePath: '.packmind/commands/my-command.md',
+            type: ChangeProposalType.updateCommandDescription,
+            payload: { oldValue: 'old', newValue: 'new' },
+            artifactName: 'My Command',
+            artifactType: 'command',
+          },
+        ]);
+
+        mockPackmindCliHexa.submitDiffs.mockResolvedValue({
+          submitted: 1,
+          skipped: [],
+        });
+      });
+
+      it('calls submitDiffs with grouped diffs', async () => {
+        await diffArtefactsHandler({ ...deps, submit: true });
+
+        expect(mockPackmindCliHexa.submitDiffs).toHaveBeenCalledWith([
+          [
+            {
+              filePath: '.packmind/commands/my-command.md',
+              type: ChangeProposalType.updateCommandDescription,
+              payload: { oldValue: 'old', newValue: 'new' },
+              artifactName: 'My Command',
+              artifactType: 'command',
+            },
+          ],
+        ]);
+      });
+
+      it('displays submission success message', async () => {
+        const { logInfoConsole } = jest.requireMock('../utils/consoleLogger');
+        await diffArtefactsHandler({ ...deps, submit: true });
+
+        expect(logInfoConsole).toHaveBeenCalledWith(
+          'Submitted 1 change proposal successfully.',
+        );
+      });
+    });
+
+    describe('when there are diffs with skipped artifacts', () => {
+      beforeEach(() => {
+        mockPackmindCliHexa.readFullConfig.mockResolvedValue({
+          packages: { 'my-package': '*' },
+        });
+
+        mockPackmindCliHexa.diffArtefacts.mockResolvedValue([
+          {
+            filePath: '.packmind/commands/my-command.md',
+            type: ChangeProposalType.updateCommandDescription,
+            payload: { oldValue: 'old', newValue: 'new' },
+            artifactName: 'My Command',
+            artifactType: 'command',
+          },
+          {
+            filePath: '.packmind/standards/my-standard.md',
+            type: ChangeProposalType.updateStandardDescription,
+            payload: { oldValue: 'old std', newValue: 'new std' },
+            artifactName: 'My Standard',
+            artifactType: 'standard',
+          },
+        ]);
+
+        mockPackmindCliHexa.submitDiffs.mockResolvedValue({
+          submitted: 1,
+          skipped: [
+            { name: 'My Standard', reason: 'Only commands are supported' },
+          ],
+        });
+      });
+
+      it('displays skipped artifact warning', async () => {
+        const { logWarningConsole } = jest.requireMock(
+          '../utils/consoleLogger',
+        );
+        await diffArtefactsHandler({ ...deps, submit: true });
+
+        expect(logWarningConsole).toHaveBeenCalledWith(
+          'Skipped "My Standard": Only commands are supported',
+        );
+      });
+    });
+
+    describe('when there are no diffs', () => {
+      beforeEach(() => {
+        mockPackmindCliHexa.readFullConfig.mockResolvedValue({
+          packages: { 'my-package': '*' },
+        });
+
+        mockPackmindCliHexa.diffArtefacts.mockResolvedValue([]);
+      });
+
+      it('does not call submitDiffs', async () => {
+        await diffArtefactsHandler({ ...deps, submit: true });
+
+        expect(mockPackmindCliHexa.submitDiffs).not.toHaveBeenCalled();
+      });
+
+      it('displays no changes to submit message', async () => {
+        const { logInfoConsole } = jest.requireMock('../utils/consoleLogger');
+        await diffArtefactsHandler({ ...deps, submit: true });
+
+        expect(logInfoConsole).toHaveBeenCalledWith('No changes to submit.');
       });
     });
   });

@@ -19,6 +19,8 @@ import { organizationFactory } from '@packmind/accounts/test/organizationFactory
 import { recipeFactory } from '@packmind/recipes/test/recipeFactory';
 import { spaceFactory } from '@packmind/spaces/test/spaceFactory';
 import { ChangeProposalService } from '../../services/ChangeProposalService';
+import { SpaceNotFoundError } from '../../../domain/errors/SpaceNotFoundError';
+import { SpaceOwnershipMismatchError } from '../../../domain/errors/SpaceOwnershipMismatchError';
 import { ApplyCommandChangeProposalUseCase } from './ApplyCommandChangeProposalUseCase';
 
 describe('ApplyCommandChangeProposalUseCase', () => {
@@ -121,11 +123,8 @@ describe('ApplyCommandChangeProposalUseCase', () => {
       await useCase.execute(command);
 
       expect(service.applyProposal).toHaveBeenCalledWith(
-        recipeId,
-        changeProposalId,
-        userId,
+        expect.objectContaining(command),
         { name: recipe.name, content: recipe.content },
-        false,
       );
     });
 
@@ -167,11 +166,8 @@ describe('ApplyCommandChangeProposalUseCase', () => {
       await useCase.execute(command);
 
       expect(service.applyProposal).toHaveBeenCalledWith(
-        recipeId,
-        changeProposalId,
-        userId,
+        expect.objectContaining(command),
         expect.any(Object),
-        true,
       );
     });
   });
@@ -185,7 +181,7 @@ describe('ApplyCommandChangeProposalUseCase', () => {
 
     it('throws an error', async () => {
       await expect(useCase.execute(command)).rejects.toThrow(
-        `Space ${spaceId} not found`,
+        SpaceNotFoundError,
       );
     });
 
@@ -211,7 +207,7 @@ describe('ApplyCommandChangeProposalUseCase', () => {
 
     it('throws an error', async () => {
       await expect(useCase.execute(command)).rejects.toThrow(
-        `Space ${spaceId} does not belong to organization ${organizationId}`,
+        SpaceOwnershipMismatchError,
       );
     });
 

@@ -2450,6 +2450,217 @@ describe('PullContentUseCase', () => {
     });
   });
 
+  describe('when enriching file modifications with artifact metadata', () => {
+    let recipe: Recipe;
+    let standard: Standard;
+    let skill: Skill;
+    let recipeVersion: RecipeVersion;
+    let standardVersion: StandardVersion;
+    let skillVersion: SkillVersion;
+
+    beforeEach(() => {
+      const spaceId = createSpaceId('space-enrichment');
+      const userId = createUserId('user-1');
+
+      recipe = {
+        id: createRecipeId('recipe-enrich'),
+        name: 'Enriched Recipe',
+        slug: 'enriched-recipe',
+        content: 'recipe content',
+        version: 1,
+        userId,
+        spaceId,
+      };
+
+      standard = {
+        id: createStandardId('standard-enrich'),
+        name: 'Enriched Standard',
+        slug: 'enriched-standard',
+        description: 'standard description',
+        version: 1,
+        userId,
+        spaceId,
+        scope: null,
+      };
+
+      skill = {
+        id: createSkillId('skill-enrich'),
+        name: 'Enriched Skill',
+        slug: 'enriched-skill',
+        description: 'skill description',
+        prompt: 'skill prompt',
+        version: 1,
+        userId,
+        spaceId,
+      };
+
+      recipeVersion = {
+        id: createRecipeVersionId('rv-enrich'),
+        recipeId: recipe.id,
+        name: 'Enriched Recipe',
+        slug: 'enriched-recipe',
+        content: 'recipe content',
+        version: 1,
+        userId: null,
+      };
+
+      standardVersion = {
+        id: createStandardVersionId('sv-enrich'),
+        standardId: standard.id,
+        name: 'Enriched Standard',
+        slug: 'enriched-standard',
+        description: 'standard description',
+        version: 1,
+        scope: null,
+      };
+
+      skillVersion = {
+        id: createSkillVersionId('skv-enrich'),
+        skillId: skill.id,
+        name: 'Enriched Skill',
+        slug: 'enriched-skill',
+        description: 'skill description',
+        prompt: 'skill prompt',
+        version: 1,
+        userId,
+      };
+
+      const testPackage: PackageWithArtefacts = {
+        id: createPackageId('package-enrich'),
+        slug: 'test-package',
+        name: 'Test Package',
+        description: 'Test package description',
+        spaceId,
+        createdBy: userId,
+        recipes: [recipe],
+        standards: [standard],
+        skills: [skill],
+      };
+
+      packageService.getPackagesBySlugsWithArtefacts.mockResolvedValue([
+        testPackage,
+      ]);
+
+      recipesPort.listRecipeVersions.mockResolvedValue([recipeVersion]);
+      standardsPort.listStandardVersions.mockResolvedValue([standardVersion]);
+      skillsPort.listSkillVersions.mockResolvedValue([skillVersion]);
+    });
+
+    describe('when deployed files have artifactType and artifactName', () => {
+      beforeEach(() => {
+        codingAgentPort.deployArtifactsForAgents.mockResolvedValue({
+          createOrUpdate: [
+            {
+              path: '.packmind/commands/enriched-recipe.md',
+              content: 'recipe content',
+              artifactType: 'command',
+              artifactName: 'Enriched Recipe',
+            },
+            {
+              path: '.packmind/standards/enriched-standard.md',
+              content: 'standard content',
+              artifactType: 'standard',
+              artifactName: 'Enriched Standard',
+            },
+            {
+              path: '.claude/skills/enriched-skill/SKILL.md',
+              content: 'skill content',
+              artifactType: 'skill',
+              artifactName: 'Enriched Skill',
+            },
+          ],
+          delete: [],
+        } as FileUpdates);
+      });
+
+      it('sets artifactId on recipe file modifications', async () => {
+        const result = await useCase.execute(command);
+
+        const recipeFile = result.fileUpdates.createOrUpdate.find(
+          (f) => f.path === '.packmind/commands/enriched-recipe.md',
+        );
+        expect(recipeFile?.artifactId).toBe(recipe.id as string);
+      });
+
+      it('sets spaceId on recipe file modifications', async () => {
+        const result = await useCase.execute(command);
+
+        const recipeFile = result.fileUpdates.createOrUpdate.find(
+          (f) => f.path === '.packmind/commands/enriched-recipe.md',
+        );
+        expect(recipeFile?.spaceId).toBe(recipe.spaceId as string);
+      });
+
+      it('sets artifactId on standard file modifications', async () => {
+        const result = await useCase.execute(command);
+
+        const standardFile = result.fileUpdates.createOrUpdate.find(
+          (f) => f.path === '.packmind/standards/enriched-standard.md',
+        );
+        expect(standardFile?.artifactId).toBe(standard.id as string);
+      });
+
+      it('sets spaceId on standard file modifications', async () => {
+        const result = await useCase.execute(command);
+
+        const standardFile = result.fileUpdates.createOrUpdate.find(
+          (f) => f.path === '.packmind/standards/enriched-standard.md',
+        );
+        expect(standardFile?.spaceId).toBe(standard.spaceId as string);
+      });
+
+      it('sets artifactId on skill file modifications', async () => {
+        const result = await useCase.execute(command);
+
+        const skillFile = result.fileUpdates.createOrUpdate.find(
+          (f) => f.path === '.claude/skills/enriched-skill/SKILL.md',
+        );
+        expect(skillFile?.artifactId).toBe(skill.id as string);
+      });
+
+      it('sets spaceId on skill file modifications', async () => {
+        const result = await useCase.execute(command);
+
+        const skillFile = result.fileUpdates.createOrUpdate.find(
+          (f) => f.path === '.claude/skills/enriched-skill/SKILL.md',
+        );
+        expect(skillFile?.spaceId).toBe(skill.spaceId as string);
+      });
+    });
+
+    describe('when deployed files do not have artifactType', () => {
+      beforeEach(() => {
+        codingAgentPort.deployArtifactsForAgents.mockResolvedValue({
+          createOrUpdate: [
+            {
+              path: '.packmind/commands/enriched-recipe.md',
+              content: 'recipe content',
+            },
+          ],
+          delete: [],
+        } as FileUpdates);
+      });
+
+      it('does not set artifactId on files without artifactType', async () => {
+        const result = await useCase.execute(command);
+
+        const recipeFile = result.fileUpdates.createOrUpdate.find(
+          (f) => f.path === '.packmind/commands/enriched-recipe.md',
+        );
+        expect(recipeFile?.artifactId).toBeUndefined();
+      });
+
+      it('does not set spaceId on files without artifactType', async () => {
+        const result = await useCase.execute(command);
+
+        const recipeFile = result.fileUpdates.createOrUpdate.find(
+          (f) => f.path === '.packmind/commands/enriched-recipe.md',
+        );
+        expect(recipeFile?.spaceId).toBeUndefined();
+      });
+    });
+  });
+
   describe('render mode cleanup', () => {
     const gitRemoteUrl = 'https://github.com/packmind/packmind.git';
     const gitBranch = 'main';

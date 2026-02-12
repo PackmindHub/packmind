@@ -1,16 +1,12 @@
-import { DataSource } from 'typeorm';
 import { IPlaybookChangeManagementRepositories } from '../../domain/repositories/IPlaybookChangeManagementRepositories';
 import { IChangeProposalRepository } from '../../domain/repositories/IChangeProposalRepository';
-import { ChangeProposalCacheRepository } from './ChangeProposalCacheRepository';
-import { ChangeProposalDatabaseRepository } from './ChangeProposalDatabaseRepository';
+import { ChangeProposalRepository } from './ChangeProposalRepository';
 
 export class PlaybookChangeManagementRepositories implements IPlaybookChangeManagementRepositories {
   private readonly changeProposalRepository: IChangeProposalRepository;
 
-  constructor(dataSource?: DataSource) {
-    this.changeProposalRepository = dataSource
-      ? new ChangeProposalDatabaseRepository(dataSource)
-      : new ChangeProposalCacheRepository();
+  constructor() {
+    this.changeProposalRepository = new ChangeProposalRepository();
   }
 
   getChangeProposalRepository(): IChangeProposalRepository {

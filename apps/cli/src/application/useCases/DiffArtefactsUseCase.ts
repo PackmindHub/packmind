@@ -13,6 +13,7 @@ import {
 import { diffLines } from 'diff';
 import * as fs from 'fs/promises';
 import * as path from 'path';
+import { stripFrontmatter } from '../utils/stripFrontmatter';
 
 type DiffableFile = FileModification & {
   content: string;
@@ -69,8 +70,9 @@ export class DiffArtefactsUseCase implements IDiffArtefactsUseCase {
         continue;
       }
 
-      const serverContent = file.content;
-      const changes = diffLines(serverContent, localContent);
+      const serverBody = stripFrontmatter(file.content);
+      const localBody = stripFrontmatter(localContent);
+      const changes = diffLines(serverBody, localBody);
       const hasDifferences = changes.some(
         (change) => change.added || change.removed,
       );
@@ -80,11 +82,13 @@ export class DiffArtefactsUseCase implements IDiffArtefactsUseCase {
           filePath: file.path,
           type: ARTIFACT_TYPE_TO_CHANGE_TYPE[file.artifactType],
           payload: {
-            oldValue: serverContent,
-            newValue: localContent,
+            oldValue: serverBody,
+            newValue: localBody,
           },
           artifactName: file.artifactName,
           artifactType: file.artifactType,
+          artifactId: file.artifactId,
+          spaceId: file.spaceId,
         });
       }
     }
