@@ -3,6 +3,8 @@ import { IBaseAdapter } from '@packmind/node-utils';
 import {
   ApplyCommandChangeProposalCommand,
   ApplyCommandChangeProposalResponse,
+  BatchCreateChangeProposalsCommand,
+  BatchCreateChangeProposalsResponse,
   ChangeProposalType,
   CreateChangeProposalCommand,
   CreateChangeProposalResponse,
@@ -25,6 +27,7 @@ import { ApplyCommandChangeProposalUseCase } from '../useCases/applyCommandChang
 import { CreateChangeProposalUseCase } from '../useCases/createChangeProposal/CreateChangeProposalUseCase';
 import { CreateCommandChangeProposalUseCase } from '../useCases/createCommandChangeProposal/CreateCommandChangeProposalUseCase';
 import { ListCommandChangeProposalsUseCase } from '../useCases/listCommandChangeProposals/ListCommandChangeProposalsUseCase';
+import { BatchCreateChangeProposalsUseCase } from '../useCases/batchCreateChangeProposals/BatchCreateChangeProposalsUseCase';
 import { RejectCommandChangeProposalUseCase } from '../useCases/rejectCommandChangeProposal/RejectCommandChangeProposalUseCase';
 
 const origin = 'PlaybookChangeManagementAdapter';
@@ -35,6 +38,7 @@ export class PlaybookChangeManagementAdapter
     IPlaybookChangeManagementPort
 {
   private _applyCommandChangeProposal!: ApplyCommandChangeProposalUseCase;
+  private _batchCreateChangeProposals!: BatchCreateChangeProposalsUseCase;
   private _createChangeProposal!: CreateChangeProposalUseCase;
   private _createCommandChangeProposal!: CreateCommandChangeProposalUseCase;
   private _listCommandChangeProposals!: ListCommandChangeProposalsUseCase;
@@ -49,6 +53,12 @@ export class PlaybookChangeManagementAdapter
     command: ApplyCommandChangeProposalCommand,
   ): Promise<ApplyCommandChangeProposalResponse> {
     return this._applyCommandChangeProposal.execute(command);
+  }
+
+  async batchCreateChangeProposals(
+    command: BatchCreateChangeProposalsCommand,
+  ): Promise<BatchCreateChangeProposalsResponse> {
+    return this._batchCreateChangeProposals.execute(command);
   }
 
   async createChangeProposal<T extends ChangeProposalType>(
@@ -117,6 +127,11 @@ export class PlaybookChangeManagementAdapter
       changeProposalService,
     );
 
+    this._batchCreateChangeProposals = new BatchCreateChangeProposalsUseCase(
+      accountsPort,
+      this,
+    );
+
     this._createChangeProposal = new CreateChangeProposalUseCase(
       accountsPort,
       recipesPort,
@@ -151,6 +166,7 @@ export class PlaybookChangeManagementAdapter
   public isReady(): boolean {
     return (
       this._applyCommandChangeProposal !== undefined &&
+      this._batchCreateChangeProposals !== undefined &&
       this._createChangeProposal !== undefined &&
       this._createCommandChangeProposal !== undefined &&
       this._listCommandChangeProposals !== undefined &&
