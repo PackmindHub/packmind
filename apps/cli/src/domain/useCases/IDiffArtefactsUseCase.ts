@@ -22,6 +22,8 @@ export type ArtefactDiff<T extends ChangeProposalType = ChangeProposalType> = {
   payload: ChangeProposalPayload<T>;
   artifactName: string;
   artifactType: ArtifactType;
+  artifactId?: string;
+  spaceId?: string;
 };
 
 export type IDiffArtefactsResult = ArtefactDiff[];

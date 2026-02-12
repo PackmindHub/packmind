@@ -6,6 +6,7 @@ import {
 } from '@packmind/node-utils';
 import {
   ArtifactsPulledEvent,
+  ArtifactType,
   FileUpdates,
   CodingAgent,
   IAccountsPort,
@@ -129,6 +130,17 @@ export class PullContentUseCase extends AbstractMemberUseCase<
         ReturnType<PackageService['getPackagesBySlugsWithArtefacts']>
       > = [];
 
+      // Build a lookup map from artifact type + name to artifactId and spaceId
+      type ArtifactMetadata = { artifactId: string; spaceId: string };
+      const artifactMetadata: Record<
+        ArtifactType,
+        Map<string, ArtifactMetadata>
+      > = {
+        command: new Map(),
+        standard: new Map(),
+        skill: new Map(),
+      };
+
       if (!isRemovalOnlyOperation && command.packagesSlugs) {
         packages = await this.packageService.getPackagesBySlugsWithArtefacts(
           command.packagesSlugs,
@@ -167,6 +179,16 @@ export class PullContentUseCase extends AbstractMemberUseCase<
           ...new Map(allStandards.map((s) => [s.id, s])).values(),
         ];
         const skills = [...new Map(allSkills.map((s) => [s.id, s])).values()];
+
+        const recipeSpaceMap = new Map(
+          recipes.map((r) => [r.id as string, r.spaceId as string]),
+        );
+        const standardSpaceMap = new Map(
+          standards.map((s) => [s.id as string, s.spaceId as string]),
+        );
+        const skillSpaceMap = new Map(
+          skills.map((s) => [s.id as string, s.spaceId as string]),
+        );
 
         this.logger.info('Extracted content from packages', {
           recipeCount: recipes.length,
@@ -229,6 +251,35 @@ export class PullContentUseCase extends AbstractMemberUseCase<
         this.logger.info('Retrieved skill versions', {
           count: skillVersions.length,
         });
+
+        // Populate the artifact metadata map using fetched versions
+        for (const rv of recipeVersions) {
+          const spaceId = recipeSpaceMap.get(rv.recipeId as string);
+          if (spaceId) {
+            artifactMetadata.command.set(rv.name, {
+              artifactId: rv.recipeId as string,
+              spaceId,
+            });
+          }
+        }
+        for (const sv of standardVersions) {
+          const spaceId = standardSpaceMap.get(sv.standardId as string);
+          if (spaceId) {
+            artifactMetadata.standard.set(sv.name, {
+              artifactId: sv.standardId as string,
+              spaceId,
+            });
+          }
+        }
+        for (const skv of skillVersions) {
+          const spaceId = skillSpaceMap.get(skv.skillId as string);
+          if (spaceId) {
+            artifactMetadata.skill.set(skv.name, {
+              artifactId: skv.skillId as string,
+              spaceId,
+            });
+          }
+        }
       } else {
         this.logger.info(
           'Removal-only operation: skipping package fetching, will delete all artifacts from previous packages',
@@ -583,6 +634,19 @@ export class PullContentUseCase extends AbstractMemberUseCase<
           command.agents, // Pass agents to preserve them
         );
       mergedFileUpdates.createOrUpdate.push(configFile);
+
+      // Enrich file modifications with artifactId and spaceId from the metadata map
+      for (const file of mergedFileUpdates.createOrUpdate) {
+        if (file.artifactType && file.artifactName) {
+          const metadata = artifactMetadata[file.artifactType].get(
+            file.artifactName,
+          );
+          if (metadata) {
+            file.artifactId = metadata.artifactId;
+            file.spaceId = metadata.spaceId;
+          }
+        }
+      }
 
       this.logger.info('Successfully pulled content', {
         organizationId: command.organizationId,

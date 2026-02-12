@@ -1,5 +1,7 @@
 import { IPackmindGateway } from '../../domain/repositories/IPackmindGateway';
 import { PackmindHttpClient } from '../http/PackmindHttpClient';
+import { ChangeProposalGateway } from './ChangeProposalGateway';
+import { IChangeProposalGateway } from '../../domain/repositories/IChangeProposalGateway';
 import { LinterGateway } from './LinterGateway';
 import { ILinterGateway } from '../../domain/repositories/ILinterGateway';
 import { McpGateway } from './McpGateway';
@@ -19,6 +21,7 @@ import { IDeploymentGateway } from '../../domain/repositories/IDeploymentGateway
 
 export class PackmindGateway implements IPackmindGateway {
   private readonly httpClient: PackmindHttpClient;
+  readonly changeProposals: IChangeProposalGateway;
   readonly linter: ILinterGateway;
   readonly mcp: IMcpGateway;
   readonly spaces: ISpacesGateway;
@@ -31,6 +34,7 @@ export class PackmindGateway implements IPackmindGateway {
   constructor(private readonly apiKey: string) {
     this.httpClient = new PackmindHttpClient(apiKey);
 
+    this.changeProposals = new ChangeProposalGateway(this.httpClient);
     this.linter = new LinterGateway(this.httpClient);
     this.mcp = new McpGateway(this.httpClient);
     this.spaces = new SpacesGateway(this.httpClient);
