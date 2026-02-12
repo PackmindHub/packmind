@@ -8,8 +8,6 @@ import {
   IAccountsPort,
   IPlaybookChangeManagementPort,
 } from '@packmind/types';
-import { ChangeProposalPayloadMismatchError } from '../../errors/ChangeProposalPayloadMismatchError';
-import { UnsupportedChangeProposalTypeError } from '../../errors/UnsupportedChangeProposalTypeError';
 
 const origin = 'BatchCreateChangeProposalsUseCase';
 
@@ -28,20 +26,25 @@ export class BatchCreateChangeProposalsUseCase extends AbstractMemberUseCase<
   async executeForMembers(
     command: BatchCreateChangeProposalsCommand & MemberContext,
   ): Promise<BatchCreateChangeProposalsResponse> {
+    this.logger.info('Processing batch change proposals', {
+      spaceId: command.spaceId,
+      count: command.proposals.length,
+    });
+
     let created = 0;
     const errors: Array<{ index: number; message: string }> = [];
 
     for (let i = 0; i < command.proposals.length; i++) {
-      const item = command.proposals[i];
+      const proposal = command.proposals[i];
 
       const itemCommand: CreateChangeProposalCommand<ChangeProposalType> = {
         userId: command.userId,
         organizationId: command.organizationId,
         spaceId: command.spaceId,
-        type: item.type,
-        artefactId: item.artefactId,
-        payload: item.payload,
-        captureMode: item.captureMode,
+        type: proposal.type,
+        artefactId: proposal.artefactId,
+        payload: proposal.payload,
+        captureMode: proposal.captureMode,
       };
 
       try {
@@ -50,17 +53,16 @@ export class BatchCreateChangeProposalsUseCase extends AbstractMemberUseCase<
         );
         created++;
       } catch (error) {
-        if (
-          error instanceof UnsupportedChangeProposalTypeError ||
-          error instanceof ChangeProposalPayloadMismatchError ||
-          error instanceof Error
-        ) {
-          errors.push({ index: i, message: error.message });
-        } else {
-          errors.push({ index: i, message: String(error) });
-        }
+        const message = error instanceof Error ? error.message : String(error);
+        errors.push({ index: i, message });
       }
     }
+
+    this.logger.info('Batch change proposals processed', {
+      spaceId: command.spaceId,
+      created,
+      errors: errors.length,
+    });
 
     return { created, skipped: 0, errors };
   }
