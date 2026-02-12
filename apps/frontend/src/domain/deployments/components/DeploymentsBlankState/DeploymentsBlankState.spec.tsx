@@ -24,7 +24,7 @@ describe('DeploymentsBlankState', () => {
   it('displays the main heading', () => {
     renderWithProvider(<DeploymentsBlankState />);
     expect(
-      screen.getByText('Track where your best practices are'),
+      screen.getByText("Track and maintain your AI agents' instructions"),
     ).toBeInTheDocument();
   });
 
@@ -32,9 +32,19 @@ describe('DeploymentsBlankState', () => {
     renderWithProvider(<DeploymentsBlankState />);
     expect(
       screen.getByText(
-        'Distribute recipes, standards, and skills to your repositories. This view will show you the distribution status across all repositories.',
+        'Track versions of your recipes, standards, and skills across repositories. Identify and update outdated artifacts to ensure your AI agents perform at their best.',
       ),
     ).toBeInTheDocument();
+  });
+
+  it('displays the documentation link', () => {
+    renderWithProvider(<DeploymentsBlankState />);
+    const docLink = screen.getByText('Learn more about distribution');
+    expect(docLink).toBeInTheDocument();
+    expect(docLink.closest('a')).toHaveAttribute(
+      'href',
+      'https://docs.packmind.com/getting-started/gs-distribute',
+    );
   });
 
   it('displays example heading', () => {

@@ -8,7 +8,10 @@ import {
   PMTable,
   PMTableColumn,
   PMTableRow,
+  PMButton,
+  PMIcon,
 } from '@packmind/ui';
+import { LuExternalLink } from 'react-icons/lu';
 import { DeploymentStatsSummary } from '../DeploymentStatsSummary/DeploymentStatsSummary';
 
 const TABLE_COLUMNS: PMTableColumn[] = [
@@ -139,11 +142,28 @@ export const DeploymentsBlankState = () => {
     >
       <PMVStack gap={8} align="stretch" p={8}>
         <PMVStack gap={4} align="stretch">
-          <PMHeading level="h2">Track where your best practices are</PMHeading>
+          <PMHeading level="h2">
+            Track and maintain your AI agents' instructions
+          </PMHeading>
           <PMText as="p" fontWeight={'medium'} color="secondary">
-            Distribute recipes, standards, and skills to your repositories. This
-            view will show you the distribution status across all repositories.
+            Track versions of your recipes, standards, and skills across
+            repositories. Identify and update outdated artifacts to ensure your
+            AI agents perform at their best.
           </PMText>
+          <PMHStack mt={2} gap={2}>
+            <PMButton variant="tertiary" size={'xs'} asChild w="fit-content">
+              <a
+                href="https://docs.packmind.com/getting-started/gs-distribute"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <PMIcon>
+                  <LuExternalLink />
+                </PMIcon>
+                Learn more about distribution
+              </a>
+            </PMButton>
+          </PMHStack>
         </PMVStack>
 
         <PMVStack
