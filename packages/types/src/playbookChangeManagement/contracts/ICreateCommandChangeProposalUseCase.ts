@@ -17,6 +17,7 @@ export type CreateCommandChangeProposalCommand = PackmindCommand & {
 
 export type CreateCommandChangeProposalResponse = {
   changeProposal: ChangeProposal;
+  wasCreated?: boolean;
 };
 
 export type ICreateCommandChangeProposalUseCase = IUseCase<
