@@ -65,6 +65,32 @@ describe('ChangeProposalCacheRepository', () => {
           86400,
         );
       });
+
+      it('saves the proposal in the id cache key', async () => {
+        mockCache.get.mockResolvedValue(null);
+        const proposal = buildProposal();
+
+        await repository.save(proposal);
+
+        expect(mockCache.set).toHaveBeenCalledWith(
+          `change-proposals:id:${proposal.id}`,
+          proposal,
+          86400,
+        );
+      });
+
+      it('saves the proposal in the space cache key', async () => {
+        mockCache.get.mockResolvedValue(null);
+        const proposal = buildProposal();
+
+        await repository.save(proposal);
+
+        expect(mockCache.set).toHaveBeenCalledWith(
+          `change-proposals:space:${spaceId}`,
+          [proposal],
+          86400,
+        );
+      });
     });
 
     describe('when cache already has proposals', () => {
@@ -84,18 +110,38 @@ describe('ChangeProposalCacheRepository', () => {
         );
       });
     });
+  });
 
-    it('saves the proposal in the space cache key', async () => {
+  describe('findById', () => {
+    it('reads from the correct cache key', async () => {
+      const id = createChangeProposalId(uuidv4());
       mockCache.get.mockResolvedValue(null);
-      const proposal = buildProposal();
 
-      await repository.save(proposal);
+      await repository.findById(id);
 
-      expect(mockCache.set).toHaveBeenCalledWith(
-        `change-proposals:space:${spaceId}`,
-        [proposal],
-        86400,
-      );
+      expect(mockCache.get).toHaveBeenCalledWith(`change-proposals:id:${id}`);
+    });
+
+    describe('when cache returns null', () => {
+      it('returns null', async () => {
+        mockCache.get.mockResolvedValue(null);
+        const id = createChangeProposalId(uuidv4());
+
+        const result = await repository.findById(id);
+
+        expect(result).toBeNull();
+      });
+    });
+
+    describe('when cache has the proposal', () => {
+      it('returns the cached proposal', async () => {
+        const proposal = buildProposal();
+        mockCache.get.mockResolvedValue(proposal);
+
+        const result = await repository.findById(proposal.id);
+
+        expect(result).toEqual(proposal);
+      });
     });
   });
 
@@ -182,6 +228,25 @@ describe('ChangeProposalCacheRepository', () => {
         expect(mockCache.set).toHaveBeenCalledWith(
           `change-proposals:artefact:${recipeId}`,
           [updatedProposal],
+          86400,
+        );
+      });
+
+      it('updates the id cache key', async () => {
+        const proposal = buildProposal();
+        const updatedProposal = {
+          ...proposal,
+          status: ChangeProposalStatus.rejected,
+        };
+        mockCache.get
+          .mockResolvedValueOnce([proposal])
+          .mockResolvedValueOnce([proposal]);
+
+        await repository.update(updatedProposal);
+
+        expect(mockCache.set).toHaveBeenCalledWith(
+          `change-proposals:id:${proposal.id}`,
+          updatedProposal,
           86400,
         );
       });

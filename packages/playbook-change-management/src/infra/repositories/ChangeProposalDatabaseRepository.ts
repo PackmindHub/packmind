@@ -10,6 +10,7 @@ import { PackmindLogger } from '@packmind/logger';
 import { SpaceScopedRepository } from '@packmind/node-utils';
 import {
   ChangeProposal,
+  ChangeProposalId,
   ChangeProposalType,
   SpaceId,
   WithSoftDelete,
@@ -63,6 +64,16 @@ export class ChangeProposalDatabaseRepository
 
   async save(proposal: ChangeProposal<ChangeProposalType>): Promise<void> {
     await this.add(proposal);
+  }
+
+  async findById(
+    changeProposalId: ChangeProposalId,
+  ): Promise<ChangeProposal<ChangeProposalType> | null> {
+    return this.repository.findOne({
+      where: {
+        id: changeProposalId,
+      } as FindOptionsWhere<ChangeProposal<ChangeProposalType>>,
+    });
   }
 
   async findByArtefactId(

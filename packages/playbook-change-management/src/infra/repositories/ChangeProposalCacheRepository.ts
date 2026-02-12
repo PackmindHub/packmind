@@ -1,4 +1,9 @@
-import { ChangeProposal, ChangeProposalType, SpaceId } from '@packmind/types';
+import {
+  ChangeProposal,
+  ChangeProposalId,
+  ChangeProposalType,
+  SpaceId,
+} from '@packmind/types';
 import { Cache } from '@packmind/node-utils';
 import { PackmindLogger } from '@packmind/logger';
 import { IChangeProposalRepository } from '../../domain/repositories/IChangeProposalRepository';
@@ -14,6 +19,9 @@ export class ChangeProposalCacheRepository implements IChangeProposalRepository 
   ) {}
 
   async save(proposal: ChangeProposal<ChangeProposalType>): Promise<void> {
+    const idKey = this.buildIdKey(proposal.id);
+    await this.cache.set(idKey, proposal, CHANGE_PROPOSAL_TTL_SECONDS);
+
     const artefactKey = this.buildArtefactKey(proposal.artefactId);
     const existing =
       await this.cache.get<ChangeProposal<ChangeProposalType>[]>(artefactKey);
@@ -32,6 +40,13 @@ export class ChangeProposalCacheRepository implements IChangeProposalRepository 
       artefactId: proposal.artefactId,
       proposalId: proposal.id,
     });
+  }
+
+  async findById(
+    changeProposalId: ChangeProposalId,
+  ): Promise<ChangeProposal<ChangeProposalType> | null> {
+    const key = this.buildIdKey(changeProposalId);
+    return this.cache.get<ChangeProposal<ChangeProposalType>>(key);
   }
 
   async findByArtefactId(
@@ -53,6 +68,9 @@ export class ChangeProposalCacheRepository implements IChangeProposalRepository 
   }
 
   async update(proposal: ChangeProposal<ChangeProposalType>): Promise<void> {
+    const idKey = this.buildIdKey(proposal.id);
+    await this.cache.set(idKey, proposal, CHANGE_PROPOSAL_TTL_SECONDS);
+
     const artefactKey = this.buildArtefactKey(proposal.artefactId);
     const existing =
       await this.cache.get<ChangeProposal<ChangeProposalType>[]>(artefactKey);
@@ -77,6 +95,10 @@ export class ChangeProposalCacheRepository implements IChangeProposalRepository 
       artefactId: proposal.artefactId,
       proposalId: proposal.id,
     });
+  }
+
+  private buildIdKey(changeProposalId: ChangeProposalId): string {
+    return `change-proposals:id:${changeProposalId}`;
   }
 
   private buildArtefactKey(artefactId: string): string {

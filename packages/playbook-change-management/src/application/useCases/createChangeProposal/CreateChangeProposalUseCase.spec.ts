@@ -17,6 +17,8 @@ import { organizationFactory } from '@packmind/accounts/test/organizationFactory
 import { recipeFactory } from '@packmind/recipes/test/recipeFactory';
 import { spaceFactory } from '@packmind/spaces/test/spaceFactory';
 import { ChangeProposalService } from '../../services/ChangeProposalService';
+import { SpaceNotFoundError } from '../../../domain/errors/SpaceNotFoundError';
+import { SpaceOwnershipMismatchError } from '../../../domain/errors/SpaceOwnershipMismatchError';
 import { ChangeProposalPayloadMismatchError } from '../../errors/ChangeProposalPayloadMismatchError';
 import { UnsupportedChangeProposalTypeError } from '../../errors/UnsupportedChangeProposalTypeError';
 import { CreateChangeProposalUseCase } from './CreateChangeProposalUseCase';
@@ -257,7 +259,7 @@ describe('CreateChangeProposalUseCase', () => {
 
     it('throws an error', async () => {
       await expect(useCase.execute(command)).rejects.toThrow(
-        `Space ${spaceId} not found`,
+        SpaceNotFoundError,
       );
     });
 
@@ -291,7 +293,7 @@ describe('CreateChangeProposalUseCase', () => {
 
     it('throws an error', async () => {
       await expect(useCase.execute(command)).rejects.toThrow(
-        `Space ${spaceId} does not belong to organization ${organizationId}`,
+        SpaceOwnershipMismatchError,
       );
     });
 

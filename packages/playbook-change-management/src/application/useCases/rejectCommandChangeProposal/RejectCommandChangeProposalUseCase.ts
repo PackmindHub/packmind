@@ -5,9 +5,9 @@ import {
   ISpacesPort,
   RejectCommandChangeProposalCommand,
   RejectCommandChangeProposalResponse,
-  UserId,
 } from '@packmind/types';
 import { ChangeProposalService } from '../../services/ChangeProposalService';
+import { validateSpaceOwnership } from '../../services/validateSpaceOwnership';
 
 const origin = 'RejectCommandChangeProposalUseCase';
 
@@ -27,20 +27,12 @@ export class RejectCommandChangeProposalUseCase extends AbstractMemberUseCase<
   async executeForMembers(
     command: RejectCommandChangeProposalCommand & MemberContext,
   ): Promise<RejectCommandChangeProposalResponse> {
-    const space = await this.spacesPort.getSpaceById(command.spaceId);
-    if (!space) {
-      throw new Error(`Space ${command.spaceId} not found`);
-    }
-    if (space.organizationId !== command.organization.id) {
-      throw new Error(
-        `Space ${command.spaceId} does not belong to organization ${command.organization.id}`,
-      );
-    }
-
-    return this.service.rejectProposal(
-      command.recipeId,
-      command.changeProposalId,
-      command.userId as UserId,
+    await validateSpaceOwnership(
+      this.spacesPort,
+      command.spaceId,
+      command.organization.id,
     );
+
+    return this.service.rejectProposal(command);
   }
 }

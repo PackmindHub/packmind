@@ -1,7 +1,15 @@
-import { ChangeProposal, ChangeProposalType, SpaceId } from '@packmind/types';
+import {
+  ChangeProposal,
+  ChangeProposalId,
+  ChangeProposalType,
+  SpaceId,
+} from '@packmind/types';
 
 export interface IChangeProposalRepository {
   save(proposal: ChangeProposal<ChangeProposalType>): Promise<void>;
+  findById(
+    changeProposalId: ChangeProposalId,
+  ): Promise<ChangeProposal<ChangeProposalType> | null>;
   findByArtefactId(
     artefactId: string,
   ): Promise<ChangeProposal<ChangeProposalType>[]>;
