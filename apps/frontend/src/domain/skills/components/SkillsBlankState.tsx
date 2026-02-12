@@ -9,10 +9,11 @@ import {
   PMText,
   PMVStack,
 } from '@packmind/ui';
-import { LuBot, LuBook, LuUpload } from 'react-icons/lu';
+import { LuBot, LuBook, LuUpload, LuExternalLink } from 'react-icons/lu';
 import { GettingStartedLearnMoreDialog } from '../../organizations/components/dashboard/GettingStartedLearnMoreDialog';
 import { SkillsLearnMoreContent } from './SkillsLearnMoreContent';
 import { SkillsImportContent } from './SkillsImportContent';
+import { SkillExampleDialog } from './SkillExampleDialog';
 
 interface SkillsBlankStateProps {
   spaceSlug?: string;
@@ -35,21 +36,7 @@ export const SkillsBlankState = ({ spaceSlug }: SkillsBlankStateProps) => {
         independently. Perfect for complex workflows, domain-specific knowledge,
         or multi-step processes that require structured expertise.
       </PMText>
-
-      <PMHStack mt={4} gap={2}>
-        <PMButton variant="secondary" size={'xs'} asChild w="fit-content">
-          <a
-            href="https://github.com/ComposioHQ/awesome-claude-skills/tree/master"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <PMIcon>
-              <LuBook />
-            </PMIcon>
-            Example: awesome-claude-skills
-          </a>
-        </PMButton>
-      </PMHStack>
+      <SkillExampleDialog />
 
       <PMVStack alignItems={'flex-start'} width={'full'} mt={8}>
         <PMGrid gridTemplateColumns={'repeat(2, 1fr)'} gap={4} width={'full'}>
