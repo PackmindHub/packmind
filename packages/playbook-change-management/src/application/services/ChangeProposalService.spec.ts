@@ -33,6 +33,7 @@ describe('ChangeProposalService', () => {
       findById: jest.fn(),
       findByArtefactId: jest.fn(),
       findBySpaceId: jest.fn(),
+      findExistingPending: jest.fn(),
       update: jest.fn(),
     } as unknown as jest.Mocked<IChangeProposalRepository>;
 
@@ -205,6 +206,61 @@ describe('ChangeProposalService', () => {
       );
 
       expect(changeProposal.resolvedAt).toBeNull();
+    });
+  });
+
+  describe('findExistingPending', () => {
+    const recipeId = createRecipeId();
+    const userId = createUserId();
+
+    describe('when a pending duplicate exists', () => {
+      const existingProposal: ChangeProposal<ChangeProposalType> = {
+        id: createChangeProposalId(),
+        type: ChangeProposalType.updateCommandName,
+        artefactId: recipeId,
+        artefactVersion: 1,
+        spaceId,
+        payload: { oldValue: 'old name', newValue: 'new name' },
+        captureMode: ChangeProposalCaptureMode.commit,
+        status: ChangeProposalStatus.pending,
+        createdBy: userId,
+        resolvedBy: null,
+        resolvedAt: null,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      beforeEach(() => {
+        repository.findExistingPending.mockResolvedValue(existingProposal);
+      });
+
+      it('returns the existing proposal', async () => {
+        const result = await service.findExistingPending(
+          userId,
+          recipeId,
+          ChangeProposalType.updateCommandName,
+          { oldValue: 'old name', newValue: 'new name' },
+        );
+
+        expect(result).toBe(existingProposal);
+      });
+    });
+
+    describe('when no duplicate exists', () => {
+      beforeEach(() => {
+        repository.findExistingPending.mockResolvedValue(null);
+      });
+
+      it('returns null', async () => {
+        const result = await service.findExistingPending(
+          userId,
+          recipeId,
+          ChangeProposalType.updateCommandName,
+          { oldValue: 'old name', newValue: 'new name' },
+        );
+
+        expect(result).toBeNull();
+      });
     });
   });
 

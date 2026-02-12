@@ -488,7 +488,7 @@ describe('diffArtefactsHandler', () => {
         await diffArtefactsHandler({ ...deps, submit: true });
 
         expect(logInfoConsole).toHaveBeenCalledWith(
-          'Submitted 1 change proposal successfully.',
+          'Changes submitted successfully.',
         );
       });
     });

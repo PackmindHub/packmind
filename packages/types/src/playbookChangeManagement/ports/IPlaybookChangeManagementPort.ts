@@ -18,6 +18,10 @@ import {
   RejectCommandChangeProposalCommand,
   RejectCommandChangeProposalResponse,
 } from '../contracts/IRejectCommandChangeProposalUseCase';
+import {
+  BatchCreateChangeProposalsCommand,
+  BatchCreateChangeProposalsResponse,
+} from '../contracts/IBatchCreateChangeProposalsUseCase';
 import { ChangeProposalType } from '../ChangeProposalType';
 
 export const IPlaybookChangeManagementPortName =
@@ -43,4 +47,8 @@ export interface IPlaybookChangeManagementPort {
   rejectCommandChangeProposal(
     command: RejectCommandChangeProposalCommand,
   ): Promise<RejectCommandChangeProposalResponse>;
+
+  batchCreateChangeProposals(
+    command: BatchCreateChangeProposalsCommand,
+  ): Promise<BatchCreateChangeProposalsResponse>;
 }

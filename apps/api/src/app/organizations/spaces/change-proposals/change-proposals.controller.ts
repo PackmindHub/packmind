@@ -16,6 +16,8 @@ import {
 import { LogLevel, PackmindLogger } from '@packmind/logger';
 import { AuthenticatedRequest } from '@packmind/node-utils';
 import {
+  BatchCreateChangeProposalsCommand,
+  BatchCreateChangeProposalsResponse,
   ChangeProposal,
   ChangeProposalCaptureMode,
   ChangeProposalId,
@@ -61,6 +63,53 @@ export class OrganizationsSpacesChangeProposalsController {
       LogLevel.INFO,
     ),
   ) {}
+
+  /**
+   * Batch create change proposals
+   * POST /organizations/:orgId/spaces/:spaceId/change-proposals/batch
+   */
+  @Post('batch')
+  async batchCreateChangeProposals(
+    @Param('orgId') organizationId: OrganizationId,
+    @Param('spaceId') spaceId: SpaceId,
+    @Body() body: { proposals: CreateChangeProposalBody[] },
+    @Req() request: AuthenticatedRequest,
+  ): Promise<BatchCreateChangeProposalsResponse> {
+    if (!body.proposals || body.proposals.length === 0) {
+      throw new BadRequestException('Proposals array must not be empty');
+    }
+
+    this.logger.info(
+      'POST /organizations/:orgId/spaces/:spaceId/change-proposals/batch - Batch creating change proposals',
+      {
+        organizationId,
+        spaceId,
+        count: body.proposals.length,
+      },
+    );
+
+    const command: BatchCreateChangeProposalsCommand = {
+      userId: request.user.userId,
+      organizationId,
+      spaceId,
+      proposals: body.proposals,
+    };
+
+    const result =
+      await this.changeProposalsService.batchCreateChangeProposals(command);
+
+    this.logger.info(
+      'POST /organizations/:orgId/spaces/:spaceId/change-proposals/batch - Batch creation completed',
+      {
+        organizationId,
+        spaceId,
+        created: result.created,
+        errors: result.errors.length,
+      },
+    );
+
+    return result;
+  }
 
   /**
    * Create a change proposal

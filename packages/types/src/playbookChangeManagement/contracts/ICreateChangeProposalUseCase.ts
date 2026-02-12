@@ -17,6 +17,7 @@ export type CreateChangeProposalCommand<T extends ChangeProposalType> =
 
 export type CreateChangeProposalResponse<T extends ChangeProposalType> = {
   changeProposal: ChangeProposal<T>;
+  wasCreated?: boolean;
 };
 
 export type ICreateChangeProposalUseCase<T extends ChangeProposalType> = {

@@ -163,11 +163,7 @@ export async function diffArtefactsHandler(
       const result = await packmindCliHexa.submitDiffs(groupedDiffs);
 
       if (result.submitted > 0) {
-        const proposalWord =
-          result.submitted === 1 ? 'change proposal' : 'change proposals';
-        logInfoConsole(
-          `Submitted ${result.submitted} ${proposalWord} successfully.`,
-        );
+        logInfoConsole('Changes submitted successfully.');
       }
 
       for (const skip of result.skipped) {

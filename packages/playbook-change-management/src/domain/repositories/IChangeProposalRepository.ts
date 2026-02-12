@@ -1,8 +1,11 @@
 import {
   ChangeProposal,
+  ChangeProposalArtefactId,
   ChangeProposalId,
+  ChangeProposalPayload,
   ChangeProposalType,
   SpaceId,
+  UserId,
 } from '@packmind/types';
 
 export interface IChangeProposalRepository {
@@ -17,5 +20,11 @@ export interface IChangeProposalRepository {
   findBySpaceId(
     spaceId: SpaceId,
   ): Promise<ChangeProposal<ChangeProposalType>[]>;
+  findExistingPending<T extends ChangeProposalType>(criteria: {
+    createdBy: UserId;
+    artefactId: ChangeProposalArtefactId<T>;
+    type: T;
+    payload: ChangeProposalPayload<T>;
+  }): Promise<ChangeProposal<T> | null>;
   update(proposal: ChangeProposal<ChangeProposalType>): Promise<void>;
 }

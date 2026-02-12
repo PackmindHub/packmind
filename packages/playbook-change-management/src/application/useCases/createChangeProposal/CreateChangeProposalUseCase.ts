@@ -4,6 +4,7 @@ import {
   ChangeProposalType,
   CreateChangeProposalCommand,
   CreateChangeProposalResponse,
+  createUserId,
   IAccountsPort,
   IRecipesPort,
   ISpacesPort,
@@ -54,6 +55,17 @@ export class CreateChangeProposalUseCase extends AbstractMemberUseCase<
       throw new UnsupportedChangeProposalTypeError(command.type);
     }
 
+    const existing = await this.service.findExistingPending(
+      createUserId(command.userId),
+      command.artefactId,
+      command.type,
+      command.payload,
+    );
+
+    if (existing) {
+      return { changeProposal: existing, wasCreated: false };
+    }
+
     const recipeId = command.artefactId as RecipeId;
 
     await validateSpaceOwnership(
@@ -83,6 +95,11 @@ export class CreateChangeProposalUseCase extends AbstractMemberUseCase<
       );
     }
 
-    return this.service.createChangeProposal(command, recipe.version);
+    const { changeProposal } = await this.service.createChangeProposal(
+      command,
+      recipe.version,
+    );
+
+    return { changeProposal, wasCreated: true };
   }
 }

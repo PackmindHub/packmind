@@ -3,6 +3,7 @@ import { AbstractMemberUseCase, MemberContext } from '@packmind/node-utils';
 import {
   CreateCommandChangeProposalCommand,
   CreateCommandChangeProposalResponse,
+  createUserId,
   IAccountsPort,
   ICreateCommandChangeProposalUseCase,
   ISpacesPort,
@@ -37,6 +38,19 @@ export class CreateCommandChangeProposalUseCase
       command.organization.id,
     );
 
-    return this.service.createProposal(command);
+    const existing = await this.service.findExistingPending(
+      createUserId(command.userId),
+      command.artefactId,
+      command.type,
+      command.payload,
+    );
+
+    if (existing) {
+      return { changeProposal: existing, wasCreated: false };
+    }
+
+    const { changeProposal } = await this.service.createProposal(command);
+
+    return { changeProposal, wasCreated: true };
   }
 }

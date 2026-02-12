@@ -3,13 +3,13 @@ import {
   ApplyCommandChangeProposalCommand,
   ApplyCommandChangeProposalResponse,
   ChangeProposal,
+  ChangeProposalArtefactId,
+  ChangeProposalPayload,
   ChangeProposalStatus,
   ChangeProposalType,
   CreateChangeProposalCommand,
   createChangeProposalId,
-  CreateChangeProposalResponse,
   CreateCommandChangeProposalCommand,
-  CreateCommandChangeProposalResponse,
   createUserId,
   ListCommandChangeProposalsResponse,
   RejectCommandChangeProposalCommand,
@@ -40,7 +40,9 @@ export class ChangeProposalService {
 
   async createProposal(
     command: CreateCommandChangeProposalCommand,
-  ): Promise<CreateCommandChangeProposalResponse> {
+  ): Promise<{ changeProposal: ChangeProposal<ChangeProposalType> }> {
+    const createdBy = createUserId(command.userId);
+
     const proposal: ChangeProposal<ChangeProposalType> = {
       id: createChangeProposalId(uuidv4()),
       type: command.type,
@@ -50,7 +52,7 @@ export class ChangeProposalService {
       payload: command.payload,
       captureMode: command.captureMode,
       status: ChangeProposalStatus.pending,
-      createdBy: createUserId(command.userId),
+      createdBy,
       resolvedBy: null,
       resolvedAt: null,
       createdAt: new Date(),
@@ -71,7 +73,9 @@ export class ChangeProposalService {
   async createChangeProposal<T extends ChangeProposalType>(
     command: CreateChangeProposalCommand<T>,
     artefactVersion: number,
-  ): Promise<CreateChangeProposalResponse<T>> {
+  ): Promise<{ changeProposal: ChangeProposal<T> }> {
+    const createdBy = createUserId(command.userId);
+
     const proposal: ChangeProposal<T> = {
       id: createChangeProposalId(uuidv4()),
       type: command.type as T,
@@ -81,7 +85,7 @@ export class ChangeProposalService {
       payload: command.payload,
       captureMode: command.captureMode,
       status: ChangeProposalStatus.pending,
-      createdBy: createUserId(command.userId),
+      createdBy,
       resolvedBy: null,
       resolvedAt: null,
       createdAt: new Date(),
@@ -97,6 +101,33 @@ export class ChangeProposalService {
     });
 
     return { changeProposal: proposal };
+  }
+
+  async findExistingPending<T extends ChangeProposalType>(
+    createdBy: UserId,
+    artefactId: ChangeProposalArtefactId<T>,
+    type: T,
+    payload: ChangeProposalPayload<T>,
+  ): Promise<ChangeProposal<T> | null> {
+    const existing = await this.repository.findExistingPending({
+      createdBy,
+      artefactId,
+      type,
+      payload,
+    });
+
+    if (existing) {
+      this.logger.info(
+        'Duplicate pending change proposal found, skipping creation',
+        {
+          proposalId: existing.id,
+          type: existing.type,
+          artefactId: existing.artefactId,
+        },
+      );
+    }
+
+    return existing;
   }
 
   async listProposalsByArtefactId(
