@@ -1,12 +1,5 @@
-import { PMPage } from '@packmind/ui';
+import { SetupCliPage } from '../../src/domain/setup';
 
 export default function SetupCLIRoute() {
-  return (
-    <PMPage
-      title="CLI Installation"
-      subtitle="Instructions for installing the Packmind CLI will be added here."
-    >
-      <></>
-    </PMPage>
-  );
+  return <SetupCliPage />;
 }
