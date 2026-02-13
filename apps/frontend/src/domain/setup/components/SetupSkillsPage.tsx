@@ -1,7 +1,5 @@
 import React from 'react';
 import {
-  PMAlert,
-  PMHeading,
   PMPage,
   PMPageSection,
   PMTable,

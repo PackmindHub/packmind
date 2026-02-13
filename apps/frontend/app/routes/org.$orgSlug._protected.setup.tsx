@@ -83,7 +83,7 @@ export default function SetupIndexRouteModule() {
         }
       >
         <PMVerticalNavSection
-          title="Installation"
+          title="Dev tooling"
           navEntries={[
             <SidebarNavigationLink
               key="cli"
@@ -101,12 +101,12 @@ export default function SetupIndexRouteModule() {
         />
 
         <PMVerticalNavSection
-          title="Getting Started"
+          title="Skills"
           navEntries={[
             <SidebarNavigationLink
               key="skills"
               url={orgSlug ? routes.org.toSetupSkills(orgSlug) : '#'}
-              label="Default skills"
+              label="Playbook management"
               exact
             />,
           ]}

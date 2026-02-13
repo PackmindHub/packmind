@@ -163,7 +163,7 @@ export const SidebarNavigation: React.FunctionComponent<
           <SidebarNavigationLink
             key="setup"
             url={routes.org.toSetup(orgSlug)}
-            label="Setup"
+            label="Integrations"
             icon={<LuWrench />}
           />,
         );
