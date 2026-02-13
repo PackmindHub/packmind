@@ -100,12 +100,14 @@ export class ChangeProposalService {
   }
 
   async findExistingPending<T extends ChangeProposalType>(
+    spaceId: SpaceId,
     createdBy: UserId,
     artefactId: ChangeProposalArtefactId<T>,
     type: T,
     payload: ChangeProposalPayload<T>,
   ): Promise<ChangeProposal<T> | null> {
     const existing = await this.repository.findExistingPending({
+      spaceId,
       createdBy,
       artefactId,
       type,

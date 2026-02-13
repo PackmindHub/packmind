@@ -85,6 +85,7 @@ describe('BatchCreateChangeProposalsUseCase', () => {
     beforeEach(() => {
       playbookChangeManagementPort.createChangeProposal.mockResolvedValue({
         changeProposal: {} as never,
+        wasCreated: true,
       });
     });
 
@@ -122,13 +123,19 @@ describe('BatchCreateChangeProposalsUseCase', () => {
 
     beforeEach(() => {
       playbookChangeManagementPort.createChangeProposal
-        .mockResolvedValueOnce({ changeProposal: {} as never })
+        .mockResolvedValueOnce({
+          changeProposal: {} as never,
+          wasCreated: true,
+        })
         .mockRejectedValueOnce(
           new UnsupportedChangeProposalTypeError(
             ChangeProposalType.updateStandardName,
           ),
         )
-        .mockResolvedValueOnce({ changeProposal: {} as never });
+        .mockResolvedValueOnce({
+          changeProposal: {} as never,
+          wasCreated: true,
+        });
     });
 
     it('adds the error with the correct item index', async () => {
@@ -165,7 +172,10 @@ describe('BatchCreateChangeProposalsUseCase', () => {
             'Actual Name',
           ),
         )
-        .mockResolvedValueOnce({ changeProposal: {} as never });
+        .mockResolvedValueOnce({
+          changeProposal: {} as never,
+          wasCreated: true,
+        });
     });
 
     it('adds the error with the correct item index', async () => {
@@ -183,6 +193,51 @@ describe('BatchCreateChangeProposalsUseCase', () => {
       const result = await useCase.execute(command);
 
       expect(result.created).toBe(1);
+    });
+  });
+
+  describe('when a duplicate exists', () => {
+    const proposals = [
+      buildProposalItem({ artefactId: 'artefact-1' }),
+      buildProposalItem({ artefactId: 'artefact-2' }),
+      buildProposalItem({ artefactId: 'artefact-3' }),
+    ];
+    const command = buildCommand(proposals);
+
+    beforeEach(() => {
+      playbookChangeManagementPort.createChangeProposal
+        .mockResolvedValueOnce({
+          changeProposal: {} as never,
+          wasCreated: true,
+        })
+        .mockResolvedValueOnce({
+          changeProposal: {} as never,
+          wasCreated: false,
+        })
+        .mockResolvedValueOnce({
+          changeProposal: {} as never,
+          wasCreated: true,
+        });
+    });
+
+    it('counts only newly created proposals', async () => {
+      const result = await useCase.execute(command);
+
+      expect(result.created).toBe(2);
+    });
+
+    it('returns an empty errors array', async () => {
+      const result = await useCase.execute(command);
+
+      expect(result.errors).toEqual([]);
+    });
+
+    it('calls createChangeProposal for all proposals', async () => {
+      await useCase.execute(command);
+
+      expect(
+        playbookChangeManagementPort.createChangeProposal,
+      ).toHaveBeenCalledTimes(3);
     });
   });
 

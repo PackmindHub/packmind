@@ -21,6 +21,7 @@ export interface IChangeProposalRepository {
     spaceId: SpaceId,
   ): Promise<ChangeProposal<ChangeProposalType>[]>;
   findExistingPending<T extends ChangeProposalType>(criteria: {
+    spaceId: SpaceId;
     createdBy: UserId;
     artefactId: ChangeProposalArtefactId<T>;
     type: T;

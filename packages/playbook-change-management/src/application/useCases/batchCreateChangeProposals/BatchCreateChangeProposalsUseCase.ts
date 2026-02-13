@@ -48,10 +48,13 @@ export class BatchCreateChangeProposalsUseCase extends AbstractMemberUseCase<
       } as CreateChangeProposalCommand<ChangeProposalType>;
 
       try {
-        await this.playbookChangeManagementPort.createChangeProposal(
-          itemCommand,
-        );
-        created++;
+        const result =
+          await this.playbookChangeManagementPort.createChangeProposal(
+            itemCommand,
+          );
+        if (result.wasCreated) {
+          created++;
+        }
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error);
         errors.push({ index: i, message });

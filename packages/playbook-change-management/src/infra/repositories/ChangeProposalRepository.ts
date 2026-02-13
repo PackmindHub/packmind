@@ -2,7 +2,7 @@ import { IChangeProposalRepository } from '../../domain/repositories/IChangeProp
 import { ChangeProposalSchema } from '../schemas/ChangeProposalSchema';
 import { Repository, SelectQueryBuilder } from 'typeorm';
 import { PackmindLogger } from '@packmind/logger';
-import { localDataSource, SpaceScopedRepository } from '@packmind/node-utils';
+import { SpaceScopedRepository } from '@packmind/node-utils';
 import {
   ChangeProposal,
   ChangeProposalArtefactId,
@@ -20,11 +20,7 @@ export class ChangeProposalRepository
   implements IChangeProposalRepository
 {
   constructor(
-    repository: Repository<
-      ChangeProposal<ChangeProposalType>
-    > = localDataSource.getRepository<ChangeProposal<ChangeProposalType>>(
-      ChangeProposalSchema,
-    ),
+    repository: Repository<ChangeProposal<ChangeProposalType>>,
     logger: PackmindLogger = new PackmindLogger(origin),
   ) {
     super('changeProposal', repository, ChangeProposalSchema, logger);
@@ -72,14 +68,14 @@ export class ChangeProposalRepository
   }
 
   async findExistingPending<T extends ChangeProposalType>(criteria: {
+    spaceId: SpaceId;
     createdBy: UserId;
     artefactId: ChangeProposalArtefactId<T>;
     type: T;
     payload: ChangeProposalPayload<T>;
   }): Promise<ChangeProposal<T> | null> {
-    const result = await this.repository
-      .createQueryBuilder('change_proposal')
-      .where('change_proposal.created_by = :createdBy', {
+    const result = await this.createScopedQueryBuilder(criteria.spaceId)
+      .andWhere('change_proposal.created_by = :createdBy', {
         createdBy: criteria.createdBy,
       })
       .andWhere('change_proposal.artefact_id = :artefactId', {
