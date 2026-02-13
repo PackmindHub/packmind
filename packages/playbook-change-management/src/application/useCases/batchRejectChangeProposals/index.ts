@@ -1,0 +1,1 @@
+export { BatchRejectChangeProposalsUseCase } from './BatchRejectChangeProposalsUseCase';
