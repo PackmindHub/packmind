@@ -55,17 +55,6 @@ export class CreateChangeProposalUseCase extends AbstractMemberUseCase<
       throw new UnsupportedChangeProposalTypeError(command.type);
     }
 
-    const existing = await this.service.findExistingPending(
-      createUserId(command.userId),
-      command.artefactId,
-      command.type,
-      command.payload,
-    );
-
-    if (existing) {
-      return { changeProposal: existing, wasCreated: false };
-    }
-
     const recipeId = command.artefactId as RecipeId;
 
     await validateSpaceOwnership(
@@ -93,6 +82,17 @@ export class CreateChangeProposalUseCase extends AbstractMemberUseCase<
         payload.oldValue,
         currentValue,
       );
+    }
+
+    const existing = await this.service.findExistingPending(
+      createUserId(command.userId),
+      command.artefactId,
+      command.type,
+      command.payload,
+    );
+
+    if (existing) {
+      return { changeProposal: existing, wasCreated: false };
     }
 
     const { changeProposal } = await this.service.createChangeProposal(
