@@ -32,6 +32,7 @@ export class BatchCreateChangeProposalsUseCase extends AbstractMemberUseCase<
     });
 
     let created = 0;
+    let skipped = 0;
     const errors: Array<{ index: number; message: string }> = [];
 
     for (let i = 0; i < command.proposals.length; i++) {
@@ -54,6 +55,8 @@ export class BatchCreateChangeProposalsUseCase extends AbstractMemberUseCase<
           );
         if (result.wasCreated) {
           created++;
+        } else {
+          skipped++;
         }
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error);
@@ -64,9 +67,10 @@ export class BatchCreateChangeProposalsUseCase extends AbstractMemberUseCase<
     this.logger.info('Batch change proposals processed', {
       spaceId: command.spaceId,
       created,
+      skipped,
       errors: errors.length,
     });
 
-    return { created, errors };
+    return { created, skipped, errors };
   }
 }

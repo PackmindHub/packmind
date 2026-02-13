@@ -11,8 +11,10 @@ describe('SubmitDiffsUseCase', () => {
 
   const batchResponse = (
     created: number,
+    skipped = 0,
   ): BatchCreateChangeProposalGatewayResponse => ({
     created,
+    skipped,
     errors: [],
   });
 
@@ -35,6 +37,18 @@ describe('SubmitDiffsUseCase', () => {
       const result = await useCase.execute({ groupedDiffs: [] });
 
       expect(result.skipped).toEqual([]);
+    });
+
+    it('returns empty errors array', async () => {
+      const result = await useCase.execute({ groupedDiffs: [] });
+
+      expect(result.errors).toEqual([]);
+    });
+
+    it('returns 0 alreadySubmitted', async () => {
+      const result = await useCase.execute({ groupedDiffs: [] });
+
+      expect(result.alreadySubmitted).toBe(0);
     });
 
     it('does not call batchCreateChangeProposals', async () => {
@@ -457,6 +471,92 @@ describe('SubmitDiffsUseCase', () => {
       const result = await useCase.execute({ groupedDiffs: [[]] });
 
       expect(result.skipped).toEqual([]);
+    });
+  });
+
+  describe('when gateway returns errors', () => {
+    const commandGroup: ArtefactDiff[] = [
+      {
+        filePath: '.packmind/commands/cmd-a.md',
+        type: ChangeProposalType.updateCommandDescription,
+        payload: { oldValue: 'old a', newValue: 'new a' },
+        artifactName: 'Command A',
+        artifactType: 'command',
+        artifactId: 'art-a',
+        spaceId: 'spc-a',
+      },
+      {
+        filePath: '.packmind/commands/cmd-b.md',
+        type: ChangeProposalType.updateCommandDescription,
+        payload: { oldValue: 'old b', newValue: 'new b' },
+        artifactName: 'Command B',
+        artifactType: 'command',
+        artifactId: 'art-b',
+        spaceId: 'spc-a',
+      },
+    ];
+
+    beforeEach(() => {
+      mockGateway.changeProposals.batchCreateChangeProposals.mockResolvedValue({
+        created: 1,
+        skipped: 0,
+        errors: [{ index: 1, message: 'Duplicate proposal' }],
+      });
+    });
+
+    it('maps errors to artifact names using the index', async () => {
+      const result = await useCase.execute({ groupedDiffs: [commandGroup] });
+
+      expect(result.errors).toEqual([
+        { name: 'Command B', message: 'Duplicate proposal' },
+      ]);
+    });
+
+    it('returns correct submitted count', async () => {
+      const result = await useCase.execute({ groupedDiffs: [commandGroup] });
+
+      expect(result.submitted).toBe(1);
+    });
+  });
+
+  describe('when gateway returns skipped (already submitted)', () => {
+    const commandGroup: ArtefactDiff[] = [
+      {
+        filePath: '.packmind/commands/cmd-a.md',
+        type: ChangeProposalType.updateCommandDescription,
+        payload: { oldValue: 'old a', newValue: 'new a' },
+        artifactName: 'Command A',
+        artifactType: 'command',
+        artifactId: 'art-a',
+        spaceId: 'spc-a',
+      },
+      {
+        filePath: '.packmind/commands/cmd-b.md',
+        type: ChangeProposalType.updateCommandDescription,
+        payload: { oldValue: 'old b', newValue: 'new b' },
+        artifactName: 'Command B',
+        artifactType: 'command',
+        artifactId: 'art-b',
+        spaceId: 'spc-a',
+      },
+    ];
+
+    beforeEach(() => {
+      mockGateway.changeProposals.batchCreateChangeProposals.mockResolvedValue(
+        batchResponse(1, 1),
+      );
+    });
+
+    it('returns alreadySubmitted count from gateway', async () => {
+      const result = await useCase.execute({ groupedDiffs: [commandGroup] });
+
+      expect(result.alreadySubmitted).toBe(1);
+    });
+
+    it('returns correct submitted count', async () => {
+      const result = await useCase.execute({ groupedDiffs: [commandGroup] });
+
+      expect(result.submitted).toBe(1);
     });
   });
 });
