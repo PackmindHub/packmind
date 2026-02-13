@@ -1,9 +1,5 @@
 import { PackmindCliHexa } from '../../PackmindCliHexa';
-import {
-  ArtifactType,
-  CodingAgent,
-  ScalarUpdatePayload,
-} from '@packmind/types';
+import { ArtifactType, ChangeProposalType, CodingAgent } from '@packmind/types';
 import { ArtefactDiff } from '../../domain/useCases/IDiffArtefactsUseCase';
 import {
   logWarningConsole,
@@ -13,6 +9,7 @@ import {
   formatFilePath,
 } from '../utils/consoleLogger';
 import { formatContentDiff } from '../utils/diffFormatter';
+import chalk from 'chalk';
 
 export type DiffHandlerDependencies = {
   packmindCliHexa: PackmindCliHexa;
@@ -33,6 +30,19 @@ const ARTIFACT_TYPE_LABELS: Record<ArtifactType, string> = {
   skill: 'Skill',
 };
 
+const CHANGE_TYPE_LABELS: Partial<Record<ChangeProposalType, string>> = {
+  [ChangeProposalType.updateCommandDescription]: 'content changed',
+  [ChangeProposalType.updateStandardDescription]: 'content changed',
+  [ChangeProposalType.updateSkillName]: 'name changed',
+  [ChangeProposalType.updateSkillDescription]: 'description changed',
+  [ChangeProposalType.updateSkillPrompt]: 'prompt changed',
+  [ChangeProposalType.updateSkillMetadata]: 'metadata changed',
+  [ChangeProposalType.updateSkillFileContent]: 'file content changed',
+  [ChangeProposalType.updateSkillFilePermissions]: 'permissions changed',
+  [ChangeProposalType.addSkillFile]: 'new file added',
+  [ChangeProposalType.deleteSkillFile]: 'file deleted',
+};
+
 function groupDiffsByArtefact(
   diffs: ArtefactDiff[],
 ): Map<string, ArtefactDiff[]> {
@@ -44,6 +54,42 @@ function groupDiffsByArtefact(
     groups.set(key, group);
   }
   return groups;
+}
+
+function formatDiffPayload(diff: ArtefactDiff, log: typeof console.log): void {
+  const payload = diff.payload as Record<string, unknown>;
+
+  if (diff.type === ChangeProposalType.addSkillFile) {
+    const item = payload.item as { content: string; isBase64?: boolean };
+    if (item.isBase64) {
+      log(chalk.green('    + [binary file]'));
+    } else {
+      for (const line of item.content.split('\n')) {
+        log(chalk.green(`    + ${line}`));
+      }
+    }
+    return;
+  }
+
+  if (diff.type === ChangeProposalType.deleteSkillFile) {
+    const item = payload.item as { content: string; isBase64?: boolean };
+    if (item.isBase64) {
+      log(chalk.red('    - [binary file]'));
+    } else {
+      for (const line of item.content.split('\n')) {
+        log(chalk.red(`    - ${line}`));
+      }
+    }
+    return;
+  }
+
+  // ScalarUpdatePayload and CollectionItemUpdatePayload both have oldValue/newValue
+  const oldValue = payload.oldValue as string;
+  const newValue = payload.newValue as string;
+  const { lines } = formatContentDiff(oldValue, newValue);
+  for (const line of lines) {
+    log(line);
+  }
 }
 
 export async function diffArtefactsHandler(
@@ -144,13 +190,10 @@ export async function diffArtefactsHandler(
       log(formatBold(`${typeLabel} "${artifactName}"`));
 
       for (const diff of groupDiffs) {
+        const label = CHANGE_TYPE_LABELS[diff.type] ?? 'content changed';
         log(`  ${formatFilePath(diff.filePath)}`);
-        log('  - content changed');
-        const payload = diff.payload as ScalarUpdatePayload;
-        const { lines } = formatContentDiff(payload.oldValue, payload.newValue);
-        for (const line of lines) {
-          log(line);
-        }
+        log(`  - ${label}`);
+        formatDiffPayload(diff, log);
       }
       log('');
     }

@@ -201,6 +201,8 @@ export class CopilotDeployer implements ICodingAgentDeployer {
           isBase64: skillFile.isBase64,
           artifactType: 'skill',
           artifactName: skillVersion.name,
+          skillFileId: skillFile.skillFileId,
+          skillFilePermissions: skillFile.skillFilePermissions,
         });
       }
     }
@@ -230,6 +232,8 @@ export class CopilotDeployer implements ICodingAgentDeployer {
           isBase64: skillFile.isBase64,
           artifactType: 'skill',
           artifactName: skillVersion.name,
+          skillFileId: skillFile.skillFileId,
+          skillFilePermissions: skillFile.skillFilePermissions,
         });
       }
     }
@@ -289,6 +293,8 @@ export class CopilotDeployer implements ICodingAgentDeployer {
           isBase64: skillFile.isBase64,
           artifactType: 'skill',
           artifactName: skillVersion.name,
+          skillFileId: skillFile.skillFileId,
+          skillFilePermissions: skillFile.skillFilePermissions,
         });
       }
     }
@@ -506,6 +512,8 @@ ${recipeVersion.content}`;
     path: string;
     content: string;
     isBase64?: boolean;
+    skillFileId?: string;
+    skillFilePermissions?: string;
   }> {
     this.logger.debug('Generating Copilot skill files', {
       skillSlug: skillVersion.slug,
@@ -513,8 +521,13 @@ ${recipeVersion.content}`;
       fileCount: (skillVersion.files?.length ?? 0) + 1,
     });
 
-    const files: Array<{ path: string; content: string; isBase64?: boolean }> =
-      [];
+    const files: Array<{
+      path: string;
+      content: string;
+      isBase64?: boolean;
+      skillFileId?: string;
+      skillFilePermissions?: string;
+    }> = [];
 
     // Generate SKILL.md (main skill file)
     const skillMdContent = this.generateSkillMdContent(skillVersion);
@@ -534,6 +547,8 @@ ${recipeVersion.content}`;
           path: `.github/skills/${skillVersion.slug}/${file.path}`,
           content: file.content,
           isBase64: file.isBase64,
+          skillFileId: file.id,
+          skillFilePermissions: file.permissions,
         });
       }
     }

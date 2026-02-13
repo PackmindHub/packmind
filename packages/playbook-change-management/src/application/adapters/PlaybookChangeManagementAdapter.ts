@@ -15,6 +15,8 @@ import {
   IPlaybookChangeManagementPort,
   IRecipesPort,
   IRecipesPortName,
+  ISkillsPort,
+  ISkillsPortName,
   ISpacesPort,
   ISpacesPortName,
   ListCommandChangeProposalsCommand,
@@ -29,6 +31,9 @@ import { CreateCommandChangeProposalUseCase } from '../useCases/createCommandCha
 import { ListCommandChangeProposalsUseCase } from '../useCases/listCommandChangeProposals/ListCommandChangeProposalsUseCase';
 import { BatchCreateChangeProposalsUseCase } from '../useCases/batchCreateChangeProposals/BatchCreateChangeProposalsUseCase';
 import { RejectCommandChangeProposalUseCase } from '../useCases/rejectCommandChangeProposal/RejectCommandChangeProposalUseCase';
+import { IChangeProposalValidator } from '../validators/IChangeProposalValidator';
+import { CommandChangeProposalValidator } from '../validators/CommandChangeProposalValidator';
+import { SkillChangeProposalValidator } from '../validators/SkillChangeProposalValidator';
 
 const origin = 'PlaybookChangeManagementAdapter';
 
@@ -91,6 +96,7 @@ export class PlaybookChangeManagementAdapter
     [IAccountsPortName]: IAccountsPort;
     [IRecipesPortName]: IRecipesPort;
     [ISpacesPortName]: ISpacesPort;
+    [ISkillsPortName]: ISkillsPort;
   }): Promise<void> {
     this.logger.info('Initializing PlaybookChangeManagementAdapter with ports');
 
@@ -118,7 +124,20 @@ export class PlaybookChangeManagementAdapter
       );
     }
 
+    const skillsPort = ports[ISkillsPortName];
+
+    if (!skillsPort) {
+      throw new Error(
+        'PlaybookChangeManagementAdapter: ISkillsPort not provided',
+      );
+    }
+
     const changeProposalService = this.services.getChangeProposalService();
+
+    const validators: IChangeProposalValidator[] = [
+      new CommandChangeProposalValidator(recipesPort),
+      new SkillChangeProposalValidator(skillsPort),
+    ];
 
     this._applyCommandChangeProposal = new ApplyCommandChangeProposalUseCase(
       accountsPort,
@@ -134,9 +153,9 @@ export class PlaybookChangeManagementAdapter
 
     this._createChangeProposal = new CreateChangeProposalUseCase(
       accountsPort,
-      recipesPort,
       spacesPort,
       changeProposalService,
+      validators,
     );
 
     this._createCommandChangeProposal = new CreateCommandChangeProposalUseCase(

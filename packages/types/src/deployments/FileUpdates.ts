@@ -15,6 +15,8 @@ export type FileModification =
       artifactName?: string;
       artifactId?: string;
       spaceId?: string;
+      skillFileId?: string;
+      skillFilePermissions?: string;
     }
   | {
       path: string;
@@ -24,6 +26,8 @@ export type FileModification =
       artifactName?: string;
       artifactId?: string;
       spaceId?: string;
+      skillFileId?: string;
+      skillFilePermissions?: string;
     };
 
 export enum DeleteItemType {
