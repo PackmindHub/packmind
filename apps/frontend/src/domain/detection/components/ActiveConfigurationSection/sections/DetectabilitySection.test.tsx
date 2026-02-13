@@ -43,7 +43,7 @@ describe('DetectabilitySection', () => {
 
         expect(link).toHaveAttribute(
           'href',
-          'https://packmindhub.github.io/packmind/linter',
+          'https://docs.packmind.com/linter/linter',
         );
       });
 

@@ -5,7 +5,7 @@ interface DetectabilitySectionProps {
   standardName?: string;
 }
 
-const LINTER_DOC_URL = 'https://packmindhub.github.io/packmind/linter';
+const LINTER_DOC_URL = 'https://docs.packmind.com/linter/linter';
 
 export const DetectabilitySection: React.FC<DetectabilitySectionProps> = ({
   standardName,
