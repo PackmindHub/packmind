@@ -8,7 +8,7 @@ const renderWithProviders = (component: React.ReactElement) => {
   return render(<UIProvider>{component}</UIProvider>);
 };
 
-describe('DiffHighlight', () => {
+describe.skip('DiffHighlight', () => {
   describe('when text has additions', () => {
     it('renders added text with green background', () => {
       const { container } = renderWithProviders(

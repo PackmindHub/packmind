@@ -17,29 +17,16 @@ export function DiffHighlight({
       {changes.map((change, i) => {
         if (change.added) {
           return (
-            <span
-              key={i}
-              style={{
-                backgroundColor: 'var(--colors-green-100)',
-                color: 'var(--colors-green-800)',
-              }}
-            >
+            <PMText key={i} color="success" p={1}>
               {change.value}
-            </span>
+            </PMText>
           );
         }
         if (change.removed) {
           return (
-            <span
-              key={i}
-              style={{
-                backgroundColor: 'var(--colors-red-100)',
-                color: 'var(--colors-red-800)',
-                textDecoration: 'line-through',
-              }}
-            >
+            <PMText key={i} color="error" p={1}>
               {change.value}
-            </span>
+            </PMText>
           );
         }
         return <span key={i}>{change.value}</span>;
