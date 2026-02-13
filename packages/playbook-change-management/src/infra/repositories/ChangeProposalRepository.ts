@@ -68,14 +68,14 @@ export class ChangeProposalRepository
   }
 
   async findExistingPending<T extends ChangeProposalType>(criteria: {
+    spaceId: SpaceId;
     createdBy: UserId;
     artefactId: ChangeProposalArtefactId<T>;
     type: T;
     payload: ChangeProposalPayload<T>;
   }): Promise<ChangeProposal<T> | null> {
-    const result = await this.repository
-      .createQueryBuilder('change_proposal')
-      .where('change_proposal.created_by = :createdBy', {
+    const result = await this.createScopedQueryBuilder(criteria.spaceId)
+      .andWhere('change_proposal.created_by = :createdBy', {
         createdBy: criteria.createdBy,
       })
       .andWhere('change_proposal.artefact_id = :artefactId', {

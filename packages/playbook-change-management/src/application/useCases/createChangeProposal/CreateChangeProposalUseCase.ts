@@ -85,6 +85,7 @@ export class CreateChangeProposalUseCase extends AbstractMemberUseCase<
     }
 
     const existing = await this.service.findExistingPending(
+      command.spaceId,
       createUserId(command.userId),
       command.artefactId,
       command.type,

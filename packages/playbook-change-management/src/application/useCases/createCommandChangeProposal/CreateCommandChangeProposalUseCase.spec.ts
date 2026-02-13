@@ -103,6 +103,7 @@ describe('CreateCommandChangeProposalUseCase', () => {
       await useCase.execute(command);
 
       expect(service.findExistingPending).toHaveBeenCalledWith(
+        spaceId,
         userId,
         recipeId,
         ChangeProposalType.updateCommandName,

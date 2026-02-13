@@ -232,6 +232,7 @@ describe('ChangeProposalService', () => {
 
       it('returns the existing proposal', async () => {
         const result = await service.findExistingPending(
+          spaceId,
           userId,
           recipeId,
           ChangeProposalType.updateCommandName,
@@ -249,6 +250,7 @@ describe('ChangeProposalService', () => {
 
       it('returns null', async () => {
         const result = await service.findExistingPending(
+          spaceId,
           userId,
           recipeId,
           ChangeProposalType.updateCommandName,
