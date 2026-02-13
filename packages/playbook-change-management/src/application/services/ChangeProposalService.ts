@@ -1,9 +1,8 @@
 import { PackmindLogger } from '@packmind/logger';
 import {
-  ApplyCommandChangeProposalCommand,
-  ApplyCommandChangeProposalResponse,
   ChangeProposal,
   ChangeProposalArtefactId,
+  ChangeProposalId,
   ChangeProposalPayload,
   ChangeProposalStatus,
   ChangeProposalType,
@@ -12,22 +11,19 @@ import {
   CreateCommandChangeProposalCommand,
   createUserId,
   ListCommandChangeProposalsResponse,
-  RejectCommandChangeProposalCommand,
-  RejectCommandChangeProposalResponse,
   ScalarUpdatePayload,
   SpaceId,
   UserId,
 } from '@packmind/types';
 import { v4 as uuidv4 } from 'uuid';
 import { ChangeProposalConflictError } from '../../domain/errors/ChangeProposalConflictError';
-import { ChangeProposalNotFoundError } from '../../domain/errors/ChangeProposalNotFoundError';
-import { ChangeProposalNotPendingError } from '../../domain/errors/ChangeProposalNotPendingError';
 import { IChangeProposalRepository } from '../../domain/repositories/IChangeProposalRepository';
 import { DiffService } from './DiffService';
 
 const origin = 'ChangeProposalService';
 
-export type ApplyProposalResult = ApplyCommandChangeProposalResponse & {
+export type ApplyProposalResult = {
+  appliedProposal: ChangeProposal<ChangeProposalType>;
   updatedFields: { name: string; content: string };
 };
 
@@ -173,23 +169,16 @@ export class ChangeProposalService {
     return false;
   }
 
+  async findById(
+    changeProposalId: ChangeProposalId,
+  ): Promise<ChangeProposal<ChangeProposalType> | null> {
+    return this.repository.findById(changeProposalId);
+  }
+
   async rejectProposal(
-    command: RejectCommandChangeProposalCommand,
-  ): Promise<RejectCommandChangeProposalResponse> {
-    const userId = command.userId as UserId;
-    const proposal = await this.repository.findById(command.changeProposalId);
-
-    if (!proposal) {
-      throw new ChangeProposalNotFoundError(command.changeProposalId);
-    }
-
-    if (proposal.status !== ChangeProposalStatus.pending) {
-      throw new ChangeProposalNotPendingError(
-        command.changeProposalId,
-        proposal.status,
-      );
-    }
-
+    proposal: ChangeProposal<ChangeProposalType>,
+    userId: UserId,
+  ): Promise<ChangeProposal<ChangeProposalType>> {
     const rejectedProposal: ChangeProposal<ChangeProposalType> = {
       ...proposal,
       status: ChangeProposalStatus.rejected,
@@ -201,31 +190,19 @@ export class ChangeProposalService {
     await this.repository.update(rejectedProposal);
 
     this.logger.info('Change proposal rejected', {
-      artefactId: command.recipeId,
-      proposalId: command.changeProposalId,
+      proposalId: proposal.id,
+      artefactId: proposal.artefactId,
     });
 
-    return { changeProposal: rejectedProposal };
+    return rejectedProposal;
   }
 
   async applyProposal(
-    command: ApplyCommandChangeProposalCommand,
+    proposal: ChangeProposal<ChangeProposalType>,
+    userId: UserId,
     currentRecipe: { name: string; content: string },
+    force: boolean,
   ): Promise<ApplyProposalResult> {
-    const userId = command.userId as UserId;
-    const proposal = await this.repository.findById(command.changeProposalId);
-
-    if (!proposal) {
-      throw new ChangeProposalNotFoundError(command.changeProposalId);
-    }
-
-    if (proposal.status !== ChangeProposalStatus.pending) {
-      throw new ChangeProposalNotPendingError(
-        command.changeProposalId,
-        proposal.status,
-      );
-    }
-
     const payload = proposal.payload as ScalarUpdatePayload;
     const updatedFields = { ...currentRecipe };
 
@@ -239,8 +216,8 @@ export class ChangeProposalService {
       );
 
       if (!diffResult.success) {
-        if (!command.force) {
-          throw new ChangeProposalConflictError(command.changeProposalId);
+        if (!force) {
+          throw new ChangeProposalConflictError(proposal.id);
         }
         updatedFields.content = payload.newValue;
       } else {
@@ -259,11 +236,11 @@ export class ChangeProposalService {
     await this.repository.update(appliedProposal);
 
     this.logger.info('Change proposal applied', {
-      artefactId: command.recipeId,
-      proposalId: command.changeProposalId,
-      forced: command.force,
+      proposalId: proposal.id,
+      artefactId: proposal.artefactId,
+      forced: force,
     });
 
-    return { changeProposal: appliedProposal, updatedFields };
+    return { appliedProposal, updatedFields };
   }
 }

@@ -12,6 +12,7 @@ import {
 } from '@packmind/types';
 import { ChangeProposalService } from '../../services/ChangeProposalService';
 import { validateSpaceOwnership } from '../../services/validateSpaceOwnership';
+import { findPendingById } from '../findPendingById';
 
 const origin = 'ApplyCommandChangeProposalUseCase';
 
@@ -38,6 +39,11 @@ export class ApplyCommandChangeProposalUseCase extends AbstractMemberUseCase<
       command.organization.id,
     );
 
+    const proposal = await findPendingById(
+      this.service,
+      command.changeProposalId,
+    );
+
     const recipe = await this.recipesPort.getRecipeByIdInternal(
       command.recipeId as RecipeId,
     );
@@ -45,9 +51,11 @@ export class ApplyCommandChangeProposalUseCase extends AbstractMemberUseCase<
       throw new Error(`Recipe ${command.recipeId} not found`);
     }
 
-    const { changeProposal, updatedFields } = await this.service.applyProposal(
-      command,
+    const { appliedProposal, updatedFields } = await this.service.applyProposal(
+      proposal,
+      command.userId as UserId,
       { name: recipe.name, content: recipe.content },
+      command.force,
     );
 
     await this.recipesPort.updateRecipeFromUI({
@@ -59,6 +67,6 @@ export class ApplyCommandChangeProposalUseCase extends AbstractMemberUseCase<
       organizationId: command.organization.id,
     });
 
-    return { changeProposal };
+    return { changeProposal: appliedProposal };
   }
 }
