@@ -107,26 +107,81 @@ describe('SignUpWithOrganizationForm', () => {
 
     it('displays email input', () => {
       expect(
-        screen.getByPlaceholderText(/enter your email/i),
+        screen.getByPlaceholderText(/name@yourcompany\.com/i),
       ).toBeInTheDocument();
     });
 
-    it('displays password input', () => {
+    it('does not display password input initially', () => {
       expect(
-        screen.getByPlaceholderText(/enter your password/i),
+        screen.queryByPlaceholderText(/enter your password/i),
+      ).not.toBeInTheDocument();
+    });
+
+    it('does not display confirm password input initially', () => {
+      expect(
+        screen.queryByPlaceholderText(/confirm your password/i),
+      ).not.toBeInTheDocument();
+    });
+
+    it('displays continue button initially', () => {
+      expect(
+        screen.getByRole('button', { name: /continue with email/i }),
       ).toBeInTheDocument();
     });
 
-    it('displays confirm password input', () => {
-      expect(
-        screen.getByPlaceholderText(/confirm your password/i),
-      ).toBeInTheDocument();
+    it('shows password fields after entering email', async () => {
+      const user = userEvent.setup();
+
+      // Type in email field
+      await user.type(
+        screen.getByPlaceholderText(/name@yourcompany\.com/i),
+        'test@example.com',
+      );
+
+      // Password fields should now be visible
+      await waitFor(() => {
+        expect(
+          screen.getByPlaceholderText(/enter your password/i),
+        ).toBeInTheDocument();
+      });
+    });
+  });
+
+  describe('when email is entered', () => {
+    beforeEach(async () => {
+      const user = userEvent.setup();
+
+      mockUseSignUpWithOrganizationMutation.mockReturnValue(
+        createSignUpMutation(),
+      );
+      mockUseSignInMutation.mockReturnValue(createSignInMutation());
+      mockUseCheckEmailAvailabilityMutation.mockReturnValue(
+        createEmailCheckMutation(),
+      );
+
+      renderWithProviders(<SignUpWithOrganizationForm />);
+
+      // Type in email field to trigger password fields
+      await user.type(
+        screen.getByPlaceholderText(/name@yourcompany\.com/i),
+        'test@example.com',
+      );
     });
 
-    it('displays create account button', () => {
-      expect(
-        screen.getByRole('button', { name: /create account/i }),
-      ).toBeInTheDocument();
+    it('displays confirm password field', async () => {
+      await waitFor(() => {
+        expect(
+          screen.getByPlaceholderText(/confirm your password/i),
+        ).toBeInTheDocument();
+      });
+    });
+
+    it('changes button text to create account', async () => {
+      await waitFor(() => {
+        expect(
+          screen.getByRole('button', { name: /create account/i }),
+        ).toBeInTheDocument();
+      });
     });
   });
 
@@ -173,9 +228,17 @@ describe('SignUpWithOrganizationForm', () => {
 
     // Fill out the form
     await user.type(
-      screen.getByPlaceholderText(/enter your email/i),
+      screen.getByPlaceholderText(/name@yourcompany\.com/i),
       'test@example.com',
     );
+
+    // Wait for password fields to appear
+    await waitFor(() => {
+      expect(
+        screen.getByPlaceholderText(/enter your password/i),
+      ).toBeInTheDocument();
+    });
+
     await user.type(
       screen.getByPlaceholderText(/enter your password/i),
       'password123!@',
@@ -229,9 +292,17 @@ describe('SignUpWithOrganizationForm', () => {
       renderWithProviders(<SignUpWithOrganizationForm />);
 
       await user.type(
-        screen.getByPlaceholderText(/enter your email/i),
+        screen.getByPlaceholderText(/name@yourcompany\.com/i),
         'test@example.com',
       );
+
+      // Wait for password fields to appear
+      await waitFor(() => {
+        expect(
+          screen.getByPlaceholderText(/enter your password/i),
+        ).toBeInTheDocument();
+      });
+
       await user.type(
         screen.getByPlaceholderText(/enter your password/i),
         'password123!@',

@@ -5,6 +5,7 @@ import {
   PMButton,
   PMField,
   PMFormContainer,
+  PMHStack,
   PMInput,
   PMText,
 } from '@packmind/ui';
@@ -16,6 +17,7 @@ import {
 import validator from 'validator';
 import { routes } from '../../../shared/utils/routes';
 import { SignUpWithOrganizationFormDataTestIds } from '@packmind/frontend';
+import { StartProductTour } from '../../../shared/components/StartProductTour';
 
 export default function SignUpWithOrganizationForm() {
   const [email, setEmail] = useState('');
@@ -32,6 +34,9 @@ export default function SignUpWithOrganizationForm() {
   const signInMutation = useSignInMutation();
   const checkEmailAvailabilityMutation = useCheckEmailAvailabilityMutation();
   const navigate = useNavigate();
+
+  // Show password fields only when user has started typing their email
+  const shouldShowPasswordFields = email.trim().length > 0;
 
   // Real-time email availability validation
   useEffect(() => {
@@ -65,6 +70,7 @@ export default function SignUpWithOrganizationForm() {
   const getButtonText = () => {
     if (signUpWithOrganizationMutation.isPending) return 'Creating Account...';
     if (signInMutation.isPending) return 'Signing In...';
+    if (!shouldShowPasswordFields) return 'Continue with email';
     return 'Create Account';
   };
 
@@ -77,23 +83,26 @@ export default function SignUpWithOrganizationForm() {
       newErrors.email = 'Email must be a valid email address';
     }
 
-    if (!password) {
-      newErrors.password = 'Password is required';
-    } else if (password.length < 8) {
-      newErrors.password = 'Password must be at least 8 characters';
-    } else {
-      // Count non-alphanumerical characters
-      const nonAlphaNumCount = (password.match(/[^a-zA-Z0-9]/g) || []).length;
-      if (nonAlphaNumCount < 2) {
-        newErrors.password =
-          'Password must contain at least 2 non-alphanumerical characters';
+    // Only validate password fields if they are visible
+    if (shouldShowPasswordFields) {
+      if (!password) {
+        newErrors.password = 'Password is required';
+      } else if (password.length < 8) {
+        newErrors.password = 'Password must be at least 8 characters';
+      } else {
+        // Count non-alphanumerical characters
+        const nonAlphaNumCount = (password.match(/[^a-zA-Z0-9]/g) || []).length;
+        if (nonAlphaNumCount < 2) {
+          newErrors.password =
+            'Password must contain at least 2 non-alphanumerical characters';
+        }
       }
-    }
 
-    if (!confirmPassword) {
-      newErrors.confirmPassword = 'Please confirm your password';
-    } else if (password !== confirmPassword) {
-      newErrors.confirmPassword = 'Passwords do not match';
+      if (!confirmPassword) {
+        newErrors.confirmPassword = 'Please confirm your password';
+      } else if (password !== confirmPassword) {
+        newErrors.confirmPassword = 'Passwords do not match';
+      }
     }
 
     setFormErrors(newErrors);
@@ -104,6 +113,12 @@ export default function SignUpWithOrganizationForm() {
     e.preventDefault();
 
     if (emailError) {
+      return;
+    }
+
+    // If password fields are not visible yet, just validate to show them
+    if (!shouldShowPasswordFields) {
+      validateForm(); // This will trigger validation and potentially show errors
       return;
     }
 
@@ -156,11 +171,7 @@ export default function SignUpWithOrganizationForm() {
       <PMFormContainer maxWidth="full" spacing={4}>
         <PMField.Root required invalid={!!formErrors.email || !!emailError}>
           <PMField.Label>
-            Email{' '}
-            <PMText as="span" variant="small" color="secondary">
-              ({email.length} / {EMAIL_MAX_LENGTH} max)
-            </PMText>
-            <PMField.RequiredIndicator />
+            Work email <PMField.RequiredIndicator />
           </PMField.Label>
 
           <PMInput
@@ -171,7 +182,7 @@ export default function SignUpWithOrganizationForm() {
               setEmail(e.target.value);
               setEmailError(undefined);
             }}
-            placeholder="Enter your email"
+            placeholder="name@yourcompany.com"
             required
             disabled={
               signUpWithOrganizationMutation.isPending ||
@@ -185,58 +196,62 @@ export default function SignUpWithOrganizationForm() {
           </PMField.ErrorText>
         </PMField.Root>
 
-        <PMField.Root required invalid={!!formErrors.password}>
-          <PMField.Label>
-            Password{' '}
-            <PMText as="span" variant="small" color="secondary">
-              ({password.length} / {PASSWORD_MAX_LENGTH} max)
-            </PMText>
-            <PMField.RequiredIndicator />
-          </PMField.Label>
-          <PMField.HelperText as={'article'}>
-            8 characters min. with at least 2 non-alphanumerical characters.
-          </PMField.HelperText>
+        {shouldShowPasswordFields && (
+          <>
+            <PMField.Root required invalid={!!formErrors.password}>
+              <PMField.Label>
+                Password <PMField.RequiredIndicator />
+              </PMField.Label>
+              <PMField.HelperText as={'article'}>
+                8 characters min. with at least 2 non-alphanumerical characters.
+              </PMField.HelperText>
 
-          <PMInput
-            id={passwordId}
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder="Enter your password"
-            required
-            disabled={
-              signUpWithOrganizationMutation.isPending ||
-              signInMutation.isPending
-            }
-            maxLength={PASSWORD_MAX_LENGTH}
-            data-testId={SignUpWithOrganizationFormDataTestIds.PasswordField}
-          />
-          <PMField.ErrorText>{formErrors.password}</PMField.ErrorText>
-        </PMField.Root>
+              <PMInput
+                id={passwordId}
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Enter your password"
+                required
+                disabled={
+                  signUpWithOrganizationMutation.isPending ||
+                  signInMutation.isPending
+                }
+                maxLength={PASSWORD_MAX_LENGTH}
+                data-testId={
+                  SignUpWithOrganizationFormDataTestIds.PasswordField
+                }
+              />
+              <PMField.ErrorText>{formErrors.password}</PMField.ErrorText>
+            </PMField.Root>
 
-        <PMField.Root required invalid={!!formErrors.confirmPassword}>
-          <PMField.Label>
-            Confirm Password
-            <PMField.RequiredIndicator />
-          </PMField.Label>
-          <PMInput
-            id={confirmPasswordId}
-            type="password"
-            value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
-            placeholder="Confirm your password"
-            required
-            disabled={
-              signUpWithOrganizationMutation.isPending ||
-              signInMutation.isPending
-            }
-            maxLength={PASSWORD_MAX_LENGTH}
-            data-testId={
-              SignUpWithOrganizationFormDataTestIds.ConfirmPasswordField
-            }
-          />
-          <PMField.ErrorText>{formErrors.confirmPassword}</PMField.ErrorText>
-        </PMField.Root>
+            <PMField.Root required invalid={!!formErrors.confirmPassword}>
+              <PMField.Label>
+                Confirm Password
+                <PMField.RequiredIndicator />
+              </PMField.Label>
+              <PMInput
+                id={confirmPasswordId}
+                type="password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                placeholder="Confirm your password"
+                required
+                disabled={
+                  signUpWithOrganizationMutation.isPending ||
+                  signInMutation.isPending
+                }
+                maxLength={PASSWORD_MAX_LENGTH}
+                data-testId={
+                  SignUpWithOrganizationFormDataTestIds.ConfirmPasswordField
+                }
+              />
+              <PMField.ErrorText>
+                {formErrors.confirmPassword}
+              </PMField.ErrorText>
+            </PMField.Root>
+          </>
+        )}
 
         {signUpWithOrganizationMutation.error && (
           <PMAlert.Root status="error">
@@ -253,12 +268,24 @@ export default function SignUpWithOrganizationForm() {
           disabled={
             signUpWithOrganizationMutation.isPending ||
             signInMutation.isPending ||
-            !!emailError
+            !!emailError ||
+            (shouldShowPasswordFields && (!password || !confirmPassword))
           }
           data-testId={SignUpWithOrganizationFormDataTestIds.Submit}
         >
           {getButtonText()}
         </PMButton>
+
+        <PMHStack justifyContent="center" paddingX={6} gap={4} wrap="wrap">
+          <PMText variant="small">
+            Just Exploring?{' '}
+            <StartProductTour
+              triggerText="Take a 2-minute tour"
+              variant="secondary"
+              size="xs"
+            />
+          </PMText>
+        </PMHStack>
       </PMFormContainer>
     </form>
   );

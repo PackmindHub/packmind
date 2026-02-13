@@ -45,6 +45,7 @@ export class ListCommandChangeProposalsUseCase extends AbstractMemberUseCase<
       : undefined;
 
     return this.service.listProposalsByArtefactId(
+      command.spaceId,
       command.recipeId,
       currentRecipe,
     );

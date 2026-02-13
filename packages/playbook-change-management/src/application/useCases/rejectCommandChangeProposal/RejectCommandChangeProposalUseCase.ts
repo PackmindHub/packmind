@@ -5,9 +5,11 @@ import {
   ISpacesPort,
   RejectCommandChangeProposalCommand,
   RejectCommandChangeProposalResponse,
+  UserId,
 } from '@packmind/types';
 import { ChangeProposalService } from '../../services/ChangeProposalService';
 import { validateSpaceOwnership } from '../../services/validateSpaceOwnership';
+import { findPendingById } from '../findPendingById';
 
 const origin = 'RejectCommandChangeProposalUseCase';
 
@@ -33,6 +35,16 @@ export class RejectCommandChangeProposalUseCase extends AbstractMemberUseCase<
       command.organization.id,
     );
 
-    return this.service.rejectProposal(command);
+    const proposal = await findPendingById(
+      this.service,
+      command.changeProposalId,
+    );
+
+    const rejectedProposal = await this.service.rejectProposal(
+      proposal,
+      command.userId as UserId,
+    );
+
+    return { changeProposal: rejectedProposal };
   }
 }

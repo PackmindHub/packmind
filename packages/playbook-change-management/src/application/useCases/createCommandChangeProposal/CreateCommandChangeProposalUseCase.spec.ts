@@ -1,28 +1,27 @@
 import { stubLogger } from '@packmind/test-utils';
 import {
+  ChangeProposal,
   ChangeProposalCaptureMode,
   ChangeProposalStatus,
   ChangeProposalType,
   createChangeProposalId,
+  CreateCommandChangeProposalCommand,
   createOrganizationId,
   createRecipeId,
   createSpaceId,
   createUserId,
   IAccountsPort,
-  IRecipesPort,
   ISpacesPort,
-  ListCommandChangeProposalsCommand,
 } from '@packmind/types';
 import { userFactory } from '@packmind/accounts/test/userFactory';
 import { organizationFactory } from '@packmind/accounts/test/organizationFactory';
-import { recipeFactory } from '@packmind/recipes/test/recipeFactory';
 import { spaceFactory } from '@packmind/spaces/test/spaceFactory';
 import { ChangeProposalService } from '../../services/ChangeProposalService';
 import { SpaceNotFoundError } from '../../../domain/errors/SpaceNotFoundError';
 import { SpaceOwnershipMismatchError } from '../../../domain/errors/SpaceOwnershipMismatchError';
-import { ListCommandChangeProposalsUseCase } from './ListCommandChangeProposalsUseCase';
+import { CreateCommandChangeProposalUseCase } from './CreateCommandChangeProposalUseCase';
 
-describe('ListCommandChangeProposalsUseCase', () => {
+describe('CreateCommandChangeProposalUseCase', () => {
   const organizationId = createOrganizationId('organization-id');
   const userId = createUserId('user-id');
   const spaceId = createSpaceId('space-id');
@@ -34,21 +33,23 @@ describe('ListCommandChangeProposalsUseCase', () => {
   });
   const organization = organizationFactory({ id: organizationId });
   const space = spaceFactory({ id: spaceId, organizationId });
-  const recipe = recipeFactory({ id: recipeId, spaceId });
 
-  let useCase: ListCommandChangeProposalsUseCase;
+  let useCase: CreateCommandChangeProposalUseCase;
   let accountsPort: jest.Mocked<IAccountsPort>;
-  let recipesPort: jest.Mocked<IRecipesPort>;
   let spacesPort: jest.Mocked<ISpacesPort>;
   let service: jest.Mocked<ChangeProposalService>;
 
   const buildCommand = (
-    overrides?: Partial<ListCommandChangeProposalsCommand>,
-  ): ListCommandChangeProposalsCommand => ({
+    overrides?: Partial<CreateCommandChangeProposalCommand>,
+  ): CreateCommandChangeProposalCommand => ({
     userId: userId,
     organizationId: organizationId,
     spaceId: spaceId,
-    recipeId: recipeId,
+    type: ChangeProposalType.updateCommandName,
+    artefactId: recipeId,
+    artefactVersion: 5,
+    payload: { oldValue: 'Old Name', newValue: 'New Name' },
+    captureMode: ChangeProposalCaptureMode.commit,
     ...overrides,
   });
 
@@ -58,22 +59,18 @@ describe('ListCommandChangeProposalsUseCase', () => {
       getOrganizationById: jest.fn(),
     } as unknown as jest.Mocked<IAccountsPort>;
 
-    recipesPort = {
-      getRecipeByIdInternal: jest.fn(),
-    } as unknown as jest.Mocked<IRecipesPort>;
-
     spacesPort = {
       getSpaceById: jest.fn(),
     } as unknown as jest.Mocked<ISpacesPort>;
 
     service = {
-      listProposalsByArtefactId: jest.fn(),
+      createProposal: jest.fn(),
+      findExistingPending: jest.fn().mockResolvedValue(null),
     } as unknown as jest.Mocked<ChangeProposalService>;
 
-    useCase = new ListCommandChangeProposalsUseCase(
+    useCase = new CreateCommandChangeProposalUseCase(
       accountsPort,
       spacesPort,
-      recipesPort,
       service,
       stubLogger(),
     );
@@ -86,74 +83,94 @@ describe('ListCommandChangeProposalsUseCase', () => {
     jest.clearAllMocks();
   });
 
-  describe('when listing proposals successfully', () => {
+  describe('when creating a command change proposal', () => {
     const command = buildCommand();
-    const proposals = [
-      {
-        id: createChangeProposalId('proposal-1'),
-        type: ChangeProposalType.updateCommandName,
-        artefactId: recipeId,
-        artefactVersion: 1,
-        spaceId,
-        payload: { oldValue: 'old name', newValue: 'new name' },
-        captureMode: ChangeProposalCaptureMode.commit,
-        status: ChangeProposalStatus.pending,
-        createdBy: createUserId(),
-        resolvedBy: null,
-        resolvedAt: null,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        outdated: false,
-      },
-    ];
 
     beforeEach(() => {
       spacesPort.getSpaceById.mockResolvedValue(space);
-      recipesPort.getRecipeByIdInternal.mockResolvedValue(recipe);
-      service.listProposalsByArtefactId.mockResolvedValue({
-        changeProposals: proposals,
+      service.createProposal.mockResolvedValue({
+        changeProposal: {} as ChangeProposal<ChangeProposalType>,
       });
     });
 
-    it('passes current recipe to service', async () => {
+    it('validates space ownership', async () => {
       await useCase.execute(command);
 
-      expect(service.listProposalsByArtefactId).toHaveBeenCalledWith(
+      expect(spacesPort.getSpaceById).toHaveBeenCalledWith(spaceId);
+    });
+
+    it('checks for existing pending duplicates', async () => {
+      await useCase.execute(command);
+
+      expect(service.findExistingPending).toHaveBeenCalledWith(
         spaceId,
+        userId,
         recipeId,
-        {
-          name: recipe.name,
-          content: recipe.content,
-        },
+        ChangeProposalType.updateCommandName,
+        { oldValue: 'Old Name', newValue: 'New Name' },
       );
     });
 
-    it('returns the proposals from service', async () => {
+    it('delegates to service.createProposal', async () => {
+      await useCase.execute(command);
+
+      expect(service.createProposal).toHaveBeenCalledWith(
+        expect.objectContaining({
+          spaceId,
+          type: ChangeProposalType.updateCommandName,
+          artefactId: recipeId,
+          artefactVersion: 5,
+        }),
+      );
+    });
+
+    it('returns wasCreated true', async () => {
       const result = await useCase.execute(command);
 
-      expect(result.changeProposals).toEqual(proposals);
+      expect(result.wasCreated).toBe(true);
     });
   });
 
-  describe('when recipe is not found', () => {
+  describe('when a pending duplicate exists', () => {
     const command = buildCommand();
+
+    const existingProposal: ChangeProposal<ChangeProposalType> = {
+      id: createChangeProposalId(),
+      type: ChangeProposalType.updateCommandName,
+      artefactId: recipeId,
+      artefactVersion: 5,
+      spaceId,
+      payload: { oldValue: 'Old Name', newValue: 'New Name' },
+      captureMode: ChangeProposalCaptureMode.commit,
+      status: ChangeProposalStatus.pending,
+      createdBy: createUserId('user-id'),
+      resolvedBy: null,
+      resolvedAt: null,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
 
     beforeEach(() => {
       spacesPort.getSpaceById.mockResolvedValue(space);
-      recipesPort.getRecipeByIdInternal.mockResolvedValue(null);
-      service.listProposalsByArtefactId.mockResolvedValue({
-        changeProposals: [],
-      });
+      service.findExistingPending.mockResolvedValue(existingProposal);
     });
 
-    it('passes undefined currentRecipe to service', async () => {
+    it('returns the existing proposal', async () => {
+      const result = await useCase.execute(command);
+
+      expect(result.changeProposal).toBe(existingProposal);
+    });
+
+    it('returns wasCreated false', async () => {
+      const result = await useCase.execute(command);
+
+      expect(result.wasCreated).toBe(false);
+    });
+
+    it('does not call createProposal', async () => {
       await useCase.execute(command);
 
-      expect(service.listProposalsByArtefactId).toHaveBeenCalledWith(
-        spaceId,
-        recipeId,
-        undefined,
-      );
+      expect(service.createProposal).not.toHaveBeenCalled();
     });
   });
 
@@ -164,18 +181,18 @@ describe('ListCommandChangeProposalsUseCase', () => {
       spacesPort.getSpaceById.mockResolvedValue(null);
     });
 
-    it('throws an error', async () => {
+    it('throws SpaceNotFoundError', async () => {
       await expect(useCase.execute(command)).rejects.toThrow(
         SpaceNotFoundError,
       );
     });
 
-    it('does not call the service', async () => {
+    it('does not check for duplicates', async () => {
       await useCase.execute(command).catch(() => {
         /* expected rejection */
       });
 
-      expect(service.listProposalsByArtefactId).not.toHaveBeenCalled();
+      expect(service.findExistingPending).not.toHaveBeenCalled();
     });
   });
 
@@ -190,7 +207,7 @@ describe('ListCommandChangeProposalsUseCase', () => {
       spacesPort.getSpaceById.mockResolvedValue(otherOrgSpace);
     });
 
-    it('throws an error', async () => {
+    it('throws SpaceOwnershipMismatchError', async () => {
       await expect(useCase.execute(command)).rejects.toThrow(
         SpaceOwnershipMismatchError,
       );
@@ -201,7 +218,7 @@ describe('ListCommandChangeProposalsUseCase', () => {
         /* expected rejection */
       });
 
-      expect(service.listProposalsByArtefactId).not.toHaveBeenCalled();
+      expect(service.createProposal).not.toHaveBeenCalled();
     });
   });
 });

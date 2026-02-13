@@ -4,6 +4,7 @@ import {
   ChangeProposalType,
   CreateChangeProposalCommand,
   CreateChangeProposalResponse,
+  createUserId,
   IAccountsPort,
   IRecipesPort,
   ISpacesPort,
@@ -83,6 +84,23 @@ export class CreateChangeProposalUseCase extends AbstractMemberUseCase<
       );
     }
 
-    return this.service.createChangeProposal(command, recipe.version);
+    const existing = await this.service.findExistingPending(
+      command.spaceId,
+      createUserId(command.userId),
+      command.artefactId,
+      command.type,
+      command.payload,
+    );
+
+    if (existing) {
+      return { changeProposal: existing, wasCreated: false };
+    }
+
+    const { changeProposal } = await this.service.createChangeProposal(
+      command,
+      recipe.version,
+    );
+
+    return { changeProposal, wasCreated: true };
   }
 }

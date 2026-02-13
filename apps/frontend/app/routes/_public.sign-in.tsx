@@ -1,6 +1,15 @@
-import { PMHeading, PMVStack, PMBox, PMText, PMButton } from '@packmind/ui';
+import {
+  PMHeading,
+  PMVStack,
+  PMBox,
+  PMText,
+  PMButton,
+  PMHStack,
+  PMLink,
+} from '@packmind/ui';
 import { useNavigate, Link } from 'react-router';
 import SignInForm from '../../src/domain/accounts/components/SignInForm';
+import { StartProductTour } from '../../src/shared/components/StartProductTour';
 
 export default function SignInRoute() {
   const navigate = useNavigate();
@@ -12,13 +21,24 @@ export default function SignInRoute() {
       </PMBox>
 
       <SignInForm />
+
       <PMBox mt={4} textAlign="center">
-        <PMText>No account yet? </PMText>
-        <Link to="/sign-up/create-account" prefetch="intent">
-          <PMButton variant="tertiary" size={'xs'} tabIndex={-1}>
-            Sign up
-          </PMButton>
-        </Link>
+        <PMHStack justify="center" gap={4} wrap="wrap">
+          <PMHStack>
+            <PMText>No account yet? </PMText>
+            <PMLink>
+              <Link to="/sign-up/create-account" prefetch="intent">
+                Sign up
+              </Link>
+            </PMLink>
+            or
+            <StartProductTour
+              triggerText="🚀 Discover Packmind"
+              variant="ghost"
+              size="xs"
+            />
+          </PMHStack>
+        </PMHStack>
       </PMBox>
     </PMVStack>
   );

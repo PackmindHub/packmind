@@ -20,16 +20,16 @@ describe('AddGitProviderUseCase', () => {
   let mockGitProviderService: jest.Mocked<GitProviderService>;
   let accountsAdapter: jest.Mocked<IAccountsPort>;
   const organizationId = createOrganizationId('org-123');
-  const adminUser: User = {
+  const memberUser: User = {
     id: createUserId('user-123'),
-    email: 'admin@example.com',
+    email: 'member@example.com',
     passwordHash: null,
     active: true,
     memberships: [
       {
         userId: createUserId('user-123'),
         organizationId,
-        role: 'admin',
+        role: 'member',
       },
     ],
   };
@@ -47,7 +47,7 @@ describe('AddGitProviderUseCase', () => {
     > as jest.Mocked<GitProviderService>;
 
     accountsAdapter = {
-      getUserById: jest.fn().mockResolvedValue(adminUser),
+      getUserById: jest.fn().mockResolvedValue(memberUser),
       getOrganizationById: jest.fn().mockResolvedValue(organization),
     } as unknown as jest.Mocked<IAccountsPort>;
 
@@ -66,7 +66,7 @@ describe('AddGitProviderUseCase', () => {
         token: 'test-token',
       },
       organizationId: organizationId,
-      userId: adminUser.id,
+      userId: memberUser.id,
     };
 
     let result: Awaited<ReturnType<typeof useCase.execute>>;
@@ -108,7 +108,7 @@ describe('AddGitProviderUseCase', () => {
         token: '',
       },
       organizationId: organizationId,
-      userId: adminUser.id,
+      userId: memberUser.id,
     };
 
     let thrownError: Error | null = null;
@@ -139,7 +139,7 @@ describe('AddGitProviderUseCase', () => {
         token: 'test-token',
       },
       organizationId: organizationId,
-      userId: adminUser.id,
+      userId: memberUser.id,
     };
 
     let thrownError: Error | null = null;
@@ -171,7 +171,7 @@ describe('AddGitProviderUseCase', () => {
           token: null,
         },
         organizationId: organizationId,
-        userId: adminUser.id,
+        userId: memberUser.id,
         allowTokenlessProvider: true,
       };
 
@@ -207,7 +207,7 @@ describe('AddGitProviderUseCase', () => {
           token: null,
         },
         organizationId: organizationId,
-        userId: adminUser.id,
+        userId: memberUser.id,
         allowTokenlessProvider: false,
       };
 
@@ -239,7 +239,7 @@ describe('AddGitProviderUseCase', () => {
           token: null,
         },
         organizationId: organizationId,
-        userId: adminUser.id,
+        userId: memberUser.id,
       };
 
       let thrownError: Error | null = null;

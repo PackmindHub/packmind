@@ -45,6 +45,9 @@
       "@packmind/playbook-change-management": [
         "packages/playbook-change-management/src/index.ts"
       ],
+      "@packmind/playbook-change-management/test": [
+        "packages/playbook-change-management/test/index.ts"
+      ],
       "@packmind/recipes": ["packages/recipes/src/index.ts"],
       "@packmind/recipes/test": ["packages/recipes/test/index.ts"],
       "@packmind/skills": ["packages/skills/src/index.ts"],
