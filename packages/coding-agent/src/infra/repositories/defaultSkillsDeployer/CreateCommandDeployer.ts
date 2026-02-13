@@ -49,11 +49,21 @@ Every command playbook is a JSON file with this structure:
 }
 \`\`\`
 
+### Naming Guidelines
+
+The \`name\` field is the **display name** shown in indexes and dashboards. The slug is auto-generated from it.
+
+- **Use Title Case** — capitalize each significant word
+- **Start with an action verb** (e.g., "Create", "Setup", "Configure")
+- **Be descriptive and specific** (2–5 words)
+- Good: \`"Create API Endpoint"\`, \`"Setup Database Migration"\`, \`"Configure CI Pipeline"\`
+- Bad: \`"api-endpoint"\`, \`"setup migration"\`, \`"create-api-endpoint"\`
+
 ### Validation Requirements
 
 The CLI validates playbooks automatically. Requirements:
 
-- **name**: Non-empty string
+- **name**: Non-empty Title Case string starting with an action verb, descriptive and specific (2–5 words, e.g., "Create API Endpoint")
 - **summary**: Non-empty string describing intent, value, and relevance
 - **whenToUse**: Array with at least one scenario (non-empty strings)
 - **contextValidationCheckpoints**: Array with at least one checkpoint (non-empty strings)
@@ -301,7 +311,7 @@ packmind-cli commands create ./.packmind/commands/_drafts/create-api-endpoint-dr
 
 | Field                         | Required | Description                                    |
 | ----------------------------- | -------- | ---------------------------------------------- |
-| name                          | Yes      | Command name                                   |
+| name                          | Yes      | Title Case, action-verb prefix, 2–5 words      |
 | summary                       | Yes      | What, why, and when (one sentence)             |
 | whenToUse                     | Yes      | At least one scenario                          |
 | contextValidationCheckpoints  | Yes      | At least one checkpoint question               |

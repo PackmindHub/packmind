@@ -47,6 +47,15 @@ Every standard consists of:
 }
 \`\`\`
 
+### Naming Guidelines
+
+The \`name\` field is the **display name** shown in indexes and dashboards. The slug is auto-generated from it.
+
+- **Use Title Case** — capitalize each significant word
+- **Be descriptive and specific** (2–5 words) — indicate the domain/technology and the aspect covered
+- Good: \`"TypeScript Testing Conventions"\`, \`"React Component File Organization"\`, \`"Backend Error Handling"\`
+- Bad: \`"testing"\`, \`"good-practices"\`, \`"typescript-good-practices"\`, \`"Standards for Code"\`
+
 **Note**: The Packmind CLI currently requires the \`scope\` field. The \`summary\` field is used in other workflows (like MCP) but not yet supported by the CLI.
 
 #### Understanding \`scope\` vs \`summary\`
@@ -251,7 +260,7 @@ Create a JSON playbook file named \`<standard-name>.playbook.json\` based on the
 
 #### Playbook Requirements
 
-- **name**: Non-empty string
+- **name**: Non-empty Title Case string, descriptive and specific (2–5 words, e.g., "TypeScript Testing Conventions")
 - **description**: Non-empty string explaining purpose
 - **scope**: Non-empty string describing applicability
 - **rules**: Array with at least one rule
@@ -420,7 +429,7 @@ packmind-cli standards create testing-conventions.playbook.json
 
 | Field             | Required    | Description                              |
 | ----------------- | ----------- | ---------------------------------------- |
-| name              | Yes         | Standard name                            |
+| name              | Yes         | Title Case, descriptive, 2–5 words       |
 | description       | Yes         | What and why                             |
 | summary           | No          | One-sentence (not yet supported by CLI)  |
 | scope             | Yes (CLI)   | Where it applies                         |
