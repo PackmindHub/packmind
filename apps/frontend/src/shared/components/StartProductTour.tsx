@@ -101,8 +101,8 @@ export function StartProductTour({
 
       <iframe
         ref={arcadeIframeRef}
-        src="https://demo.arcade.software/j2nMc2d3oquVhLdr6JKg?embed&embed_custom&show_copy_link=true"
-        title="Browse skills, standards, and commands in Packmind"
+        src="https://demo.arcade.software/lVd6g6nPyiOEztyJrCFX?embed&embed_custom&show_copy_link=true"
+        title="Packmind Product Tour"
         loading="lazy"
         allowFullScreen
         allow="clipboard-write"
