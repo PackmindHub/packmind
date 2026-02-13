@@ -5,6 +5,7 @@ import {
   PMButton,
   PMField,
   PMFormContainer,
+  PMHStack,
   PMInput,
   PMText,
 } from '@packmind/ui';
@@ -16,6 +17,7 @@ import {
 import validator from 'validator';
 import { routes } from '../../../shared/utils/routes';
 import { SignUpWithOrganizationFormDataTestIds } from '@packmind/frontend';
+import { StartProductTour } from '../../../shared/components/StartProductTour';
 
 export default function SignUpWithOrganizationForm() {
   const [email, setEmail] = useState('');
@@ -68,7 +70,7 @@ export default function SignUpWithOrganizationForm() {
   const getButtonText = () => {
     if (signUpWithOrganizationMutation.isPending) return 'Creating Account...';
     if (signInMutation.isPending) return 'Signing In...';
-    if (!shouldShowPasswordFields) return 'Continue';
+    if (!shouldShowPasswordFields) return 'Continue with email';
     return 'Create Account';
   };
 
@@ -169,11 +171,7 @@ export default function SignUpWithOrganizationForm() {
       <PMFormContainer maxWidth="full" spacing={4}>
         <PMField.Root required invalid={!!formErrors.email || !!emailError}>
           <PMField.Label>
-            Email{' '}
-            <PMText as="span" variant="small" color="secondary">
-              ({email.length} / {EMAIL_MAX_LENGTH} max)
-            </PMText>
-            <PMField.RequiredIndicator />
+            Work email <PMField.RequiredIndicator />
           </PMField.Label>
 
           <PMInput
@@ -184,7 +182,7 @@ export default function SignUpWithOrganizationForm() {
               setEmail(e.target.value);
               setEmailError(undefined);
             }}
-            placeholder="Enter your email"
+            placeholder="name@yourcompany.com"
             required
             disabled={
               signUpWithOrganizationMutation.isPending ||
@@ -202,11 +200,7 @@ export default function SignUpWithOrganizationForm() {
           <>
             <PMField.Root required invalid={!!formErrors.password}>
               <PMField.Label>
-                Password{' '}
-                <PMText as="span" variant="small" color="secondary">
-                  ({password.length} / {PASSWORD_MAX_LENGTH} max)
-                </PMText>
-                <PMField.RequiredIndicator />
+                Password <PMField.RequiredIndicator />
               </PMField.Label>
               <PMField.HelperText as={'article'}>
                 8 characters min. with at least 2 non-alphanumerical characters.
@@ -281,6 +275,17 @@ export default function SignUpWithOrganizationForm() {
         >
           {getButtonText()}
         </PMButton>
+
+        <PMHStack justifyContent="center" paddingX={6} gap={4} wrap="wrap">
+          <PMText variant="small">
+            Just Exploring?{' '}
+            <StartProductTour
+              triggerText="Take a 2-minute tour"
+              variant="secondary"
+              size="xs"
+            />
+          </PMText>
+        </PMHStack>
       </PMFormContainer>
     </form>
   );
