@@ -22,6 +22,14 @@ import {
   BatchCreateChangeProposalsCommand,
   BatchCreateChangeProposalsResponse,
 } from '../contracts/IBatchCreateChangeProposalsUseCase';
+import {
+  BatchApplyChangeProposalsCommand,
+  BatchApplyChangeProposalsResponse,
+} from '../contracts/IBatchApplyChangeProposalsUseCase';
+import {
+  BatchRejectChangeProposalsCommand,
+  BatchRejectChangeProposalsResponse,
+} from '../contracts/IBatchRejectChangeProposalsUseCase';
 import { ChangeProposalType } from '../ChangeProposalType';
 
 export const IPlaybookChangeManagementPortName =
@@ -51,4 +59,12 @@ export interface IPlaybookChangeManagementPort {
   batchCreateChangeProposals(
     command: BatchCreateChangeProposalsCommand,
   ): Promise<BatchCreateChangeProposalsResponse>;
+
+  batchApplyChangeProposals(
+    command: BatchApplyChangeProposalsCommand,
+  ): Promise<BatchApplyChangeProposalsResponse>;
+
+  batchRejectChangeProposals(
+    command: BatchRejectChangeProposalsCommand,
+  ): Promise<BatchRejectChangeProposalsResponse>;
 }

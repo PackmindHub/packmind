@@ -1,4 +1,8 @@
 import {
+  BatchApplyChangeProposalItem,
+  BatchApplyChangeProposalsResponse,
+  BatchRejectChangeProposalItem,
+  BatchRejectChangeProposalsResponse,
   ChangeProposal,
   ChangeProposalId,
   ChangeProposalWithOutdatedStatus,
@@ -28,4 +32,16 @@ export interface IChangeProposalsGateway {
     changeProposalId: ChangeProposalId,
     recipeId: RecipeId,
   ): Promise<ChangeProposal>;
+
+  batchApplyChangeProposals(
+    organizationId: OrganizationId,
+    spaceId: SpaceId,
+    proposals: BatchApplyChangeProposalItem[],
+  ): Promise<BatchApplyChangeProposalsResponse>;
+
+  batchRejectChangeProposals(
+    organizationId: OrganizationId,
+    spaceId: SpaceId,
+    proposals: BatchRejectChangeProposalItem[],
+  ): Promise<BatchRejectChangeProposalsResponse>;
 }

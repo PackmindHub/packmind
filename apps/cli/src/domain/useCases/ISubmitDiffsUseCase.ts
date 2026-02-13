@@ -8,7 +8,9 @@ export type SubmitDiffsCommand = {
 
 export type SubmitDiffsResult = {
   submitted: number;
+  alreadySubmitted: number;
   skipped: { name: string; reason: string }[];
+  errors: { name: string; message: string }[];
 };
 
 export type ISubmitDiffsUseCase = IPublicUseCase<

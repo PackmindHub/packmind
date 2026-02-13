@@ -95,6 +95,12 @@ describe('BatchCreateChangeProposalsUseCase', () => {
       expect(result.created).toBe(3);
     });
 
+    it('returns zero skipped', async () => {
+      const result = await useCase.execute(command);
+
+      expect(result.skipped).toBe(0);
+    });
+
     it('returns an empty errors array', async () => {
       const result = await useCase.execute(command);
 
@@ -226,6 +232,12 @@ describe('BatchCreateChangeProposalsUseCase', () => {
       expect(result.created).toBe(2);
     });
 
+    it('counts the duplicate as skipped', async () => {
+      const result = await useCase.execute(command);
+
+      expect(result.skipped).toBe(1);
+    });
+
     it('returns an empty errors array', async () => {
       const result = await useCase.execute(command);
 
@@ -248,6 +260,12 @@ describe('BatchCreateChangeProposalsUseCase', () => {
       const result = await useCase.execute(command);
 
       expect(result.created).toBe(0);
+    });
+
+    it('returns zero skipped', async () => {
+      const result = await useCase.execute(command);
+
+      expect(result.skipped).toBe(0);
     });
 
     it('returns an empty errors array', async () => {

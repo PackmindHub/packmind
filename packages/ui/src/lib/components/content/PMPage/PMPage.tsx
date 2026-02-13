@@ -31,28 +31,31 @@ export const PMPage: React.FC<IPMPageProps> = ({
   maxWidth = '1200px',
   isFullWidth = false,
 }) => {
-  const renderHeader = () => (
-    <Flex
-      justify="space-between"
-      align="start"
-      gap={4}
-      direction={{ base: 'column', md: 'row' }}
-      alignItems={'flex-start'}
-      mb={4}
-      textAlign={centeredHeader ? 'center' : 'left'}
-    >
-      <VStack align="stretch" gap={0} flex={1}>
-        <PMHeading level={titleLevel}>{title}</PMHeading>
-        {subtitle && (
-          <PMText variant="body" fontWeight={'medium'} color="tertiary">
-            {subtitle}
-          </PMText>
-        )}
-        {titleAction}
-      </VStack>
-      {actions && <Box flexShrink={0}>{actions}</Box>}
-    </Flex>
-  );
+  const hasHeader = !!(title || subtitle || titleAction || actions);
+
+  const renderHeader = () =>
+    hasHeader ? (
+      <Flex
+        justify="space-between"
+        align="start"
+        gap={4}
+        direction={{ base: 'column', md: 'row' }}
+        alignItems={'flex-start'}
+        mb={4}
+        textAlign={centeredHeader ? 'center' : 'left'}
+      >
+        <VStack align="stretch" gap={0} flex={1}>
+          <PMHeading level={titleLevel}>{title}</PMHeading>
+          {subtitle && (
+            <PMText variant="body" fontWeight={'medium'} color="tertiary">
+              {subtitle}
+            </PMText>
+          )}
+          {titleAction}
+        </VStack>
+        {actions && <Box flexShrink={0}>{actions}</Box>}
+      </Flex>
+    ) : null;
 
   const renderContent = () => {
     if (sidebar) {

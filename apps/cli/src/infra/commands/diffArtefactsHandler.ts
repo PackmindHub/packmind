@@ -8,6 +8,7 @@ import { ArtefactDiff } from '../../domain/useCases/IDiffArtefactsUseCase';
 import {
   logWarningConsole,
   logInfoConsole,
+  logErrorConsole,
   formatHeader,
   formatBold,
   formatFilePath,
@@ -44,6 +45,18 @@ function groupDiffsByArtefact(
     groups.set(key, group);
   }
   return groups;
+}
+
+function groupDiffsByPayload(artifactDiffs: ArtefactDiff[]): ArtefactDiff[][] {
+  const groups = new Map<string, ArtefactDiff[]>();
+  for (const diff of artifactDiffs) {
+    const payload = diff.payload as ScalarUpdatePayload;
+    const key = `${payload.oldValue}\0${payload.newValue}`;
+    const group = groups.get(key) ?? [];
+    group.push(diff);
+    groups.set(key, group);
+  }
+  return Array.from(groups.values());
 }
 
 export async function diffArtefactsHandler(
@@ -143,10 +156,13 @@ export async function diffArtefactsHandler(
       const typeLabel = ARTIFACT_TYPE_LABELS[artifactType];
       log(formatBold(`${typeLabel} "${artifactName}"`));
 
-      for (const diff of groupDiffs) {
-        log(`  ${formatFilePath(diff.filePath)}`);
+      const payloadGroups = groupDiffsByPayload(groupDiffs);
+      for (const payloadGroup of payloadGroups) {
+        for (const diff of payloadGroup) {
+          log(`  ${formatFilePath(diff.filePath)}`);
+        }
         log('  - content changed');
-        const payload = diff.payload as ScalarUpdatePayload;
+        const payload = payloadGroup[0].payload as ScalarUpdatePayload;
         const { lines } = formatContentDiff(payload.oldValue, payload.newValue);
         for (const line of lines) {
           log(line);
@@ -155,24 +171,44 @@ export async function diffArtefactsHandler(
       log('');
     }
 
-    const changeWord = diffs.length === 1 ? 'change' : 'changes';
-    logWarningConsole(`Summary: ${diffs.length} ${changeWord} found`);
+    const changeCount = diffs.length;
+    const changeWord = changeCount === 1 ? 'change' : 'changes';
+    logWarningConsole(`Summary: ${changeCount} ${changeWord} found`);
 
     if (submit) {
       const groupedDiffs = Array.from(groupDiffsByArtefact(diffs).values());
       const result = await packmindCliHexa.submitDiffs(groupedDiffs);
 
-      if (result.submitted > 0) {
-        logInfoConsole('Changes submitted successfully.');
+      for (const err of result.errors) {
+        logErrorConsole(`Failed to submit "${err.name}": ${err.message}`);
       }
 
-      for (const skip of result.skipped) {
-        logWarningConsole(`Skipped "${skip.name}": ${skip.reason}`);
+      const summaryParts: string[] = [];
+      if (result.submitted > 0) {
+        summaryParts.push(`${result.submitted} submitted`);
+      }
+      if (result.alreadySubmitted > 0) {
+        summaryParts.push(`${result.alreadySubmitted} already submitted`);
+      }
+      if (result.errors.length > 0) {
+        const errorWord = result.errors.length === 1 ? 'error' : 'errors';
+        summaryParts.push(`${result.errors.length} ${errorWord}`);
+      }
+
+      if (summaryParts.length > 0) {
+        const summaryMessage = `Summary: ${summaryParts.join(', ')}`;
+        if (result.errors.length > 0) {
+          logErrorConsole(summaryMessage);
+        } else if (result.alreadySubmitted > 0) {
+          logWarningConsole(summaryMessage);
+        } else {
+          logInfoConsole(summaryMessage);
+        }
       }
     }
 
     exit(0);
-    return { diffsFound: diffs.length };
+    return { diffsFound: changeCount };
   } catch (err) {
     error('\n❌ Failed to diff:');
     if (err instanceof Error) {

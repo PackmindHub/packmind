@@ -7,9 +7,15 @@ import {
   PMSeparator,
   PMBadge,
   PMTooltip,
+  PMFeatureFlag,
+  DEFAULT_FEATURE_DOMAIN_MAP,
+  CHANGE_PROPOSALS_FEATURE_KEY,
 } from '@packmind/ui';
 import { NavLink, useParams } from 'react-router';
-import { AuthContextOrganization } from '../../accounts/hooks/useAuthContext';
+import {
+  AuthContextOrganization,
+  useAuthContext,
+} from '../../accounts/hooks/useAuthContext';
 import { SidebarAccountMenu } from '../../accounts/components/SidebarAccountMenu';
 import { SidebarOrgaSelector } from './OrgaSelector';
 import { SidebarHelpMenu } from './SidebarHelpMenu';
@@ -77,6 +83,7 @@ export const SidebarNavigation: React.FunctionComponent<
   Readonly<ISidebarNavigationProps>
 > = ({ organization }) => {
   const { spaceSlug } = useParams<{ spaceSlug?: string }>();
+  const { user } = useAuthContext();
   const { data: spaces } = useGetSpacesQuery();
 
   // Use spaceSlug from URL if available, otherwise use first space from query
@@ -135,6 +142,17 @@ export const SidebarNavigation: React.FunctionComponent<
             label="Skills"
             data-testid={SidebarNavigationDataTestId.SkillsLink}
           />,
+          <PMFeatureFlag
+            key="change-proposals"
+            featureKeys={[CHANGE_PROPOSALS_FEATURE_KEY]}
+            featureDomainMap={DEFAULT_FEATURE_DOMAIN_MAP}
+            userEmail={user?.email}
+          >
+            <SidebarNavigationLink
+              url={routes.space.toChangeProposals(orgSlug, currentSpaceSlug)}
+              label="Review changes"
+            />
+          </PMFeatureFlag>,
         ]}
       />
       <PMVerticalNavSection

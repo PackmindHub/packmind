@@ -8,6 +8,7 @@ import { ChangeProposalType } from '@packmind/types';
 jest.mock('../utils/consoleLogger', () => ({
   logWarningConsole: jest.fn(),
   logInfoConsole: jest.fn(),
+  logErrorConsole: jest.fn(),
   formatFilePath: jest.fn((text: string) => text),
   formatHeader: jest.fn((text: string) => text),
   formatBold: jest.fn((text: string) => text),
@@ -238,6 +239,150 @@ describe('diffArtefactsHandler', () => {
     });
   });
 
+  describe('when same artifact has identical changes across agent folders', () => {
+    beforeEach(() => {
+      mockPackmindCliHexa.readFullConfig.mockResolvedValue({
+        packages: { 'my-package': '*' },
+      });
+
+      mockPackmindCliHexa.diffArtefacts.mockResolvedValue([
+        {
+          filePath: '.claude/commands/packmind/my-command.md',
+          type: ChangeProposalType.updateCommandDescription,
+          payload: { oldValue: 'old', newValue: 'new' },
+          artifactName: 'My Command',
+          artifactType: 'command',
+        },
+        {
+          filePath: '.cursor/commands/packmind/my-command.md',
+          type: ChangeProposalType.updateCommandDescription,
+          payload: { oldValue: 'old', newValue: 'new' },
+          artifactName: 'My Command',
+          artifactType: 'command',
+        },
+      ]);
+    });
+
+    it('displays claude file path', async () => {
+      await diffArtefactsHandler(deps);
+
+      const logCalls = mockLog.mock.calls.map((c) => c[0]);
+      const claudePath = logCalls.find((c: string) =>
+        c.includes('.claude/commands/packmind/my-command.md'),
+      );
+
+      expect(claudePath).toBeDefined();
+    });
+
+    it('displays cursor file path', async () => {
+      await diffArtefactsHandler(deps);
+
+      const logCalls = mockLog.mock.calls.map((c) => c[0]);
+      const cursorPath = logCalls.find((c: string) =>
+        c.includes('.cursor/commands/packmind/my-command.md'),
+      );
+
+      expect(cursorPath).toBeDefined();
+    });
+
+    it('displays content changed only once', async () => {
+      await diffArtefactsHandler(deps);
+
+      const logCalls = mockLog.mock.calls.map((c) => c[0]);
+      const contentChangedCalls = logCalls.filter(
+        (c: string) => c === '  - content changed',
+      );
+
+      expect(contentChangedCalls).toHaveLength(1);
+    });
+
+    it('displays diff lines only once', async () => {
+      await diffArtefactsHandler(deps);
+
+      const logCalls = mockLog.mock.calls.map((c) => c[0]);
+      const addedLines = logCalls.filter((c: string) =>
+        c.includes('+ added line'),
+      );
+
+      expect(addedLines).toHaveLength(1);
+    });
+
+    it('counts each file as a separate change', async () => {
+      const result = await diffArtefactsHandler(deps);
+
+      expect(result.diffsFound).toBe(2);
+    });
+  });
+
+  describe('when same artifact has different changes across agent folders', () => {
+    beforeEach(() => {
+      mockPackmindCliHexa.readFullConfig.mockResolvedValue({
+        packages: { 'my-package': '*' },
+      });
+
+      mockPackmindCliHexa.diffArtefacts.mockResolvedValue([
+        {
+          filePath: '.claude/commands/packmind/my-command.md',
+          type: ChangeProposalType.updateCommandDescription,
+          payload: { oldValue: 'old-claude', newValue: 'new-claude' },
+          artifactName: 'My Command',
+          artifactType: 'command',
+        },
+        {
+          filePath: '.cursor/commands/packmind/my-command.md',
+          type: ChangeProposalType.updateCommandDescription,
+          payload: { oldValue: 'old-cursor', newValue: 'new-cursor' },
+          artifactName: 'My Command',
+          artifactType: 'command',
+        },
+      ]);
+    });
+
+    it('displays claude file path', async () => {
+      await diffArtefactsHandler(deps);
+
+      const logCalls = mockLog.mock.calls.map((c) => c[0]);
+      const claudePath = logCalls.find((c: string) =>
+        c.includes('.claude/commands/packmind/my-command.md'),
+      );
+
+      expect(claudePath).toBeDefined();
+    });
+
+    it('displays cursor file path', async () => {
+      await diffArtefactsHandler(deps);
+
+      const logCalls = mockLog.mock.calls.map((c) => c[0]);
+      const cursorPath = logCalls.find((c: string) =>
+        c.includes('.cursor/commands/packmind/my-command.md'),
+      );
+
+      expect(cursorPath).toBeDefined();
+    });
+
+    it('displays content changed twice', async () => {
+      await diffArtefactsHandler(deps);
+
+      const logCalls = mockLog.mock.calls.map((c) => c[0]);
+      const contentChangedCalls = logCalls.filter(
+        (c: string) => c === '  - content changed',
+      );
+
+      expect(contentChangedCalls).toHaveLength(2);
+    });
+
+    it('displays diff lines separately for each', async () => {
+      await diffArtefactsHandler(deps);
+
+      const logCalls = mockLog.mock.calls.map((c) => c[0]);
+      const addedLines = logCalls.filter((c: string) =>
+        c.includes('+ added line'),
+      );
+
+      expect(addedLines).toHaveLength(2);
+    });
+  });
+
   describe('when no diffs found', () => {
     beforeEach(() => {
       mockPackmindCliHexa.readFullConfig.mockResolvedValue({
@@ -463,7 +608,9 @@ describe('diffArtefactsHandler', () => {
 
         mockPackmindCliHexa.submitDiffs.mockResolvedValue({
           submitted: 1,
+          alreadySubmitted: 0,
           skipped: [],
+          errors: [],
         });
       });
 
@@ -483,13 +630,11 @@ describe('diffArtefactsHandler', () => {
         ]);
       });
 
-      it('displays submission success message', async () => {
+      it('displays submission summary', async () => {
         const { logInfoConsole } = jest.requireMock('../utils/consoleLogger');
         await diffArtefactsHandler({ ...deps, submit: true });
 
-        expect(logInfoConsole).toHaveBeenCalledWith(
-          'Changes submitted successfully.',
-        );
+        expect(logInfoConsole).toHaveBeenCalledWith('Summary: 1 submitted');
       });
     });
 
@@ -518,20 +663,102 @@ describe('diffArtefactsHandler', () => {
 
         mockPackmindCliHexa.submitDiffs.mockResolvedValue({
           submitted: 1,
+          alreadySubmitted: 1,
           skipped: [
             { name: 'My Standard', reason: 'Only commands are supported' },
           ],
+          errors: [],
         });
       });
 
-      it('displays skipped artifact warning', async () => {
+      it('displays summary with submitted and already submitted counts', async () => {
         const { logWarningConsole } = jest.requireMock(
           '../utils/consoleLogger',
         );
         await diffArtefactsHandler({ ...deps, submit: true });
 
         expect(logWarningConsole).toHaveBeenCalledWith(
-          'Skipped "My Standard": Only commands are supported',
+          'Summary: 1 submitted, 1 already submitted',
+        );
+      });
+    });
+
+    describe('when submit has errors', () => {
+      beforeEach(() => {
+        mockPackmindCliHexa.readFullConfig.mockResolvedValue({
+          packages: { 'my-package': '*' },
+        });
+
+        mockPackmindCliHexa.diffArtefacts.mockResolvedValue([
+          {
+            filePath: '.packmind/commands/my-command.md',
+            type: ChangeProposalType.updateCommandDescription,
+            payload: { oldValue: 'old', newValue: 'new' },
+            artifactName: 'My Command',
+            artifactType: 'command',
+          },
+        ]);
+
+        mockPackmindCliHexa.submitDiffs.mockResolvedValue({
+          submitted: 0,
+          alreadySubmitted: 0,
+          skipped: [],
+          errors: [{ name: 'My Command', message: 'Server error' }],
+        });
+      });
+
+      it('displays error for each failed submission', async () => {
+        const { logErrorConsole } = jest.requireMock('../utils/consoleLogger');
+        await diffArtefactsHandler({ ...deps, submit: true });
+
+        expect(logErrorConsole).toHaveBeenCalledWith(
+          'Failed to submit "My Command": Server error',
+        );
+      });
+
+      it('displays error summary', async () => {
+        const { logErrorConsole } = jest.requireMock('../utils/consoleLogger');
+        await diffArtefactsHandler({ ...deps, submit: true });
+
+        expect(logErrorConsole).toHaveBeenCalledWith('Summary: 1 error');
+      });
+    });
+
+    describe('when submit has mix of submitted, skipped, and errors', () => {
+      beforeEach(() => {
+        mockPackmindCliHexa.readFullConfig.mockResolvedValue({
+          packages: { 'my-package': '*' },
+        });
+
+        mockPackmindCliHexa.diffArtefacts.mockResolvedValue([
+          {
+            filePath: '.packmind/commands/my-command.md',
+            type: ChangeProposalType.updateCommandDescription,
+            payload: { oldValue: 'old', newValue: 'new' },
+            artifactName: 'My Command',
+            artifactType: 'command',
+          },
+        ]);
+
+        mockPackmindCliHexa.submitDiffs.mockResolvedValue({
+          submitted: 2,
+          alreadySubmitted: 1,
+          skipped: [
+            { name: 'My Standard', reason: 'Only commands are supported' },
+          ],
+          errors: [
+            { name: 'Failing Command', message: 'Server error' },
+            { name: 'Another Command', message: 'Timeout' },
+          ],
+        });
+      });
+
+      it('displays summary with all counts', async () => {
+        const { logErrorConsole } = jest.requireMock('../utils/consoleLogger');
+        await diffArtefactsHandler({ ...deps, submit: true });
+
+        expect(logErrorConsole).toHaveBeenCalledWith(
+          'Summary: 2 submitted, 1 already submitted, 2 errors',
         );
       });
     });
