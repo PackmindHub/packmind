@@ -216,51 +216,66 @@ describe('SignUpWithOrganizationForm', () => {
     ).toBeInTheDocument();
   });
 
-  it('submits form with valid data', async () => {
-    const user = userEvent.setup();
-    const mockSignUpMutation = createSignUpMutation();
-    const mockSignInMutation = createSignInMutation();
+  describe('when submitting form with valid data', () => {
+    let user: ReturnType<typeof userEvent.setup>;
+    let mockSignUpMutation: ReturnType<typeof createSignUpMutation>;
+    let mockSignInMutation: ReturnType<typeof createSignInMutation>;
 
-    mockUseSignUpWithOrganizationMutation.mockReturnValue(mockSignUpMutation);
-    mockUseSignInMutation.mockReturnValue(mockSignInMutation);
+    beforeEach(async () => {
+      user = userEvent.setup();
+      mockSignUpMutation = createSignUpMutation();
+      mockSignInMutation = createSignInMutation();
 
-    renderWithProviders(<SignUpWithOrganizationForm />);
+      mockUseSignUpWithOrganizationMutation.mockReturnValue(mockSignUpMutation);
+      mockUseSignInMutation.mockReturnValue(mockSignInMutation);
 
-    // Fill out the form
-    await user.type(
-      screen.getByPlaceholderText(/name@yourcompany\.com/i),
-      'test@example.com',
-    );
+      renderWithProviders(<SignUpWithOrganizationForm />);
 
-    // Wait for password fields to appear
-    await waitFor(() => {
-      expect(
+      await user.type(
+        screen.getByPlaceholderText(/name@yourcompany\.com/i),
+        'test@example.com',
+      );
+
+      await waitFor(() => {
+        expect(
+          screen.getByPlaceholderText(/enter your password/i),
+        ).toBeInTheDocument();
+      });
+
+      await user.type(
         screen.getByPlaceholderText(/enter your password/i),
-      ).toBeInTheDocument();
+        'password123!@',
+      );
+      await user.type(
+        screen.getByPlaceholderText(/confirm your password/i),
+        'password123!@',
+      );
+
+      await user.click(screen.getByRole('button', { name: /create account/i }));
     });
 
-    await user.type(
-      screen.getByPlaceholderText(/enter your password/i),
-      'password123!@',
-    );
-    await user.type(
-      screen.getByPlaceholderText(/confirm your password/i),
-      'password123!@',
-    );
+    describe('when email is provided', () => {
+      it('shows password fields', async () => {
+        await waitFor(() => {
+          expect(
+            screen.getByPlaceholderText(/enter your password/i),
+          ).toBeInTheDocument();
+        });
+      });
+    });
 
-    // Submit the form
-    await user.click(screen.getByRole('button', { name: /create account/i }));
-
-    await waitFor(() => {
-      expect(mockSignUpMutation.mutate).toHaveBeenCalledWith(
-        {
-          email: 'test@example.com',
-          password: 'password123!@',
-        },
-        expect.objectContaining({
-          onSuccess: expect.any(Function),
-        }),
-      );
+    it('calls signup mutation with correct data', async () => {
+      await waitFor(() => {
+        expect(mockSignUpMutation.mutate).toHaveBeenCalledWith(
+          {
+            email: 'test@example.com',
+            password: 'password123!@',
+          },
+          expect.objectContaining({
+            onSuccess: expect.any(Function),
+          }),
+        );
+      });
     });
   });
 
