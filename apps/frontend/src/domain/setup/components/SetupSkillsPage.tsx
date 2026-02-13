@@ -102,12 +102,7 @@ export const SetupSkillsPage = () => {
       subtitle="Download and install Packmind's curated skills to enhance your AI agent's capabilities"
     >
       <PMPageSection
-        titleComponent={
-          <PMHeading level="h5" fontWeight={'bold'}>
-            {' '}
-            Playbook management
-          </PMHeading>
-        }
+        title="Packmind playbook management skills"
         backgroundColor="primary"
         cta={
           <DownloadDefaultSkillsPopover

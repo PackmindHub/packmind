@@ -34,7 +34,11 @@ export const SetupMcpPage: React.FC = () => {
       subtitle="Configure MCP servers to connect your AI assistants to Packmind."
     >
       <PMVStack gap={6} width="full">
-        <PMPageSection title="Connect your AI tool" variant="outline">
+        <PMPageSection
+          title="Connect your AI tool"
+          variant="outline"
+          backgroundColor="primary"
+        >
           <PMVStack align="flex-start" gap={4} width="full">
             <PMText color="tertiary" mb={2}>
               Select the AI assistant you want to connect to Packmind via MCP.
