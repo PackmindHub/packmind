@@ -1,5 +1,13 @@
 import React from 'react';
-import { PMPage, PMPageSection, PMTable, PMTableColumn } from '@packmind/ui';
+import {
+  PMAlert,
+  PMHeading,
+  PMPage,
+  PMPageSection,
+  PMTable,
+  PMTableColumn,
+  PMText,
+} from '@packmind/ui';
 import { DownloadDefaultSkillsPopover } from '../../skills/components/DownloadDefaultSkillsPopover';
 
 interface DefaultSkill {
@@ -13,42 +21,42 @@ const defaultSkills: DefaultSkill[] = [
   {
     name: 'Create Skill',
     description:
-      "Guide for creating effective skills. This skill should be used when users want to create a new skill (or update an existing skill) that extends your agent's capabilities with specialized knowledge, workflows, or tool integrations.",
+      'Create new skills to extend your agent capabilities with specialized knowledge and workflows.',
     slug: 'packmind-create-skill',
     minimumVersion: '1.0.0',
   },
   {
     name: 'Create Standard',
     description:
-      'Guide for creating coding standards via the Packmind CLI. This skill should be used when users want to create a new coding standard (or add rules to an existing standard) that captures team conventions, best practices, or coding guidelines for distribution to your agent.',
+      'Create coding standards to enforce team conventions and best practices.',
     slug: 'packmind-create-standard',
     minimumVersion: '1.0.0',
   },
   {
     name: 'Onboard',
     description:
-      'Complete automated onboarding: analyzes codebase, creates package, and generates standards & commands via CLI. Automatic package creation when none exist, user selection when packages are available.',
+      'Automated onboarding that analyzes your codebase and generates initial standards and commands.',
     slug: 'packmind-onboard',
     minimumVersion: '1.0.0',
   },
   {
     name: 'Create Command',
     description:
-      'Guide for creating reusable commands via the Packmind CLI. This skill should be used when users want to create a new command that captures multi-step workflows, recipes, or task automation for distribution to your agent.',
+      'Create reusable commands for multi-step workflows and task automation.',
     slug: 'packmind-create-command',
     minimumVersion: '1.0.0',
   },
   {
     name: 'Create Package',
     description:
-      'Guide for creating Packmind packages via the CLI. This skill should be used when users want to create a new package to organize standards, commands, and skills for distribution.',
+      'Create packages to organize and distribute standards, commands, and skills.',
     slug: 'packmind-create-package',
     minimumVersion: '1.0.0',
   },
   {
     name: 'CLI List Commands',
     description:
-      'Reference for Packmind CLI listing commands. This skill should be used when an agent needs to discover available standards, commands, or skills in the Packmind organization.',
+      'Discover available standards, commands, and skills in your organization.',
     slug: 'packmind-cli-list-commands',
     minimumVersion: '1.0.0',
   },
@@ -84,69 +92,61 @@ type SkillTableRow = {
 export const SetupSkillsPage = () => {
   const tableData: SkillTableRow[] = defaultSkills.map((skill) => ({
     name: skill.name,
-    identifier: (
-      <span className="text-sm font-mono text-gray-700 bg-gray-100 px-2 py-1 rounded">
-        {skill.slug}
-      </span>
-    ),
+    identifier: <>{skill.slug}</>,
     description: skill.description,
   }));
 
   return (
     <PMPage
-      title="Default Skills"
-      subtitle="Download and install Packmind's default skills to enhance your AI agent's capabilities"
+      title="Marketplace"
+      subtitle="Download and install Packmind's curated skills to enhance your AI agent's capabilities"
     >
-      <PMPageSection>
-        <div className="flex flex-col gap-6">
-          {/* Header with download button */}
-          <div className="flex items-center justify-between">
-            <div className="flex flex-col gap-1">
-              <h3 className="text-lg font-semibold">Available Skills</h3>
-              <p className="text-sm text-gray-600">
-                These skills provide specialized workflows and domain expertise
-                for your AI agent
-              </p>
-            </div>
-            <DownloadDefaultSkillsPopover
-              buttonVariant="primary"
-              buttonSize="md"
-            />
-          </div>
-
-          {/* Skills table */}
-          <PMTable<SkillTableRow>
-            columns={skillsTableColumns}
-            data={tableData}
-            striped={true}
-            hoverable={true}
-            size="md"
-            variant="line"
+      <PMPageSection
+        titleComponent={
+          <PMHeading level="h5" fontWeight={'bold'}>
+            {' '}
+            Playbook management
+          </PMHeading>
+        }
+        backgroundColor="primary"
+        cta={
+          <DownloadDefaultSkillsPopover
+            buttonVariant="tertiary"
+            buttonSize="sm"
+            buttonLabel="Download"
           />
+        }
+      >
+        <PMText variant="body" color="secondary" my={4}>
+          These skills provide workflows to create new skills, standards,
+          commands, and packages, as well as an onboarding skill that generates
+          initial standards and commands based on your codebase.
+        </PMText>
 
-          {/* Information section */}
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-            <div className="flex flex-col gap-2">
-              <h4 className="text-sm font-medium text-blue-900">
-                How to use default skills
-              </h4>
-              <div className="text-xs text-blue-700 space-y-1">
-                <p>
-                  1. Click "Get Packmind Skills" to download skills for your
-                  preferred AI agent
-                </p>
-                <p>
-                  2. Extract the downloaded ZIP file to your agent's skills
-                  folder
-                </p>
-                <p>
-                  3. Your agent will now have access to these specialized
-                  capabilities
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
+        <PMAlert.Root status="info" mb={4}>
+          <PMAlert.Indicator />
+          <PMAlert.Content>
+            <PMAlert.Description>
+              You can also add these skills to your project via the Packmind CLI
+              using the command <code>packmind skills init</code>
+            </PMAlert.Description>
+          </PMAlert.Content>
+        </PMAlert.Root>
+
+        {/* Skills table */}
+        <PMTable<SkillTableRow>
+          columns={skillsTableColumns}
+          data={tableData}
+          striped={true}
+          hoverable={true}
+          size="md"
+          variant="line"
+          tableProps={{
+            border: 'solid 1px',
+            borderColor: 'border.tertiary',
+            borderRadius: 'md',
+          }}
+        />
       </PMPageSection>
     </PMPage>
   );

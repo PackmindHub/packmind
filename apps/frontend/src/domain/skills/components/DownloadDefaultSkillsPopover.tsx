@@ -7,12 +7,14 @@ import { DownloadDefaultSkillsContent } from './DownloadDefaultSkillsContent';
 interface IDownloadDefaultSkillsPopoverProps {
   buttonVariant?: 'primary' | 'outline' | 'secondary' | 'tertiary';
   buttonSize?: 'xs' | 'sm' | 'md' | 'lg';
+  buttonLabel?: string;
   placement?: 'bottom' | 'bottom-end' | 'bottom-start';
 }
 
 export const DownloadDefaultSkillsPopover = ({
   buttonVariant = 'outline',
   buttonSize = 'md',
+  buttonLabel = 'Get Packmind Skills',
   placement = 'bottom-end',
 }: IDownloadDefaultSkillsPopoverProps) => {
   const [downloadingAgent, setDownloadingAgent] = useState<CodingAgent | null>(
@@ -52,7 +54,7 @@ export const DownloadDefaultSkillsPopover = ({
             'Download skills to create standards and skills with your AI Agent.'
           }
         >
-          Get Packmind Skills
+          {buttonLabel}
         </PMButton>
       </PMPopover.Trigger>
       <PMPopover.Positioner>
