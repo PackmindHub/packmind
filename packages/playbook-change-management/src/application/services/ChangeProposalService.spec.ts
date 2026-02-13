@@ -1,5 +1,4 @@
 import {
-  ApplyCommandChangeProposalCommand,
   ChangeProposal,
   ChangeProposalCaptureMode,
   ChangeProposalStatus,
@@ -10,12 +9,9 @@ import {
   createUserId,
   CreateChangeProposalCommand,
   CreateCommandChangeProposalCommand,
-  RejectCommandChangeProposalCommand,
 } from '@packmind/types';
 import { stubLogger } from '@packmind/test-utils';
 import { ChangeProposalConflictError } from '../../domain/errors/ChangeProposalConflictError';
-import { ChangeProposalNotFoundError } from '../../domain/errors/ChangeProposalNotFoundError';
-import { ChangeProposalNotPendingError } from '../../domain/errors/ChangeProposalNotPendingError';
 import { IChangeProposalRepository } from '../../domain/repositories/IChangeProposalRepository';
 import { ChangeProposalService } from './ChangeProposalService';
 import { DiffService } from './DiffService';
@@ -449,17 +445,6 @@ describe('ChangeProposalService', () => {
     const recipeId = createRecipeId();
     const userId = createUserId();
 
-    const buildRejectCommand = (
-      overrides?: Partial<RejectCommandChangeProposalCommand>,
-    ): RejectCommandChangeProposalCommand => ({
-      userId: userId as unknown as string,
-      organizationId: 'org-1',
-      spaceId,
-      recipeId,
-      changeProposalId: createChangeProposalId(),
-      ...overrides,
-    });
-
     const buildPendingProposal = (): ChangeProposal<ChangeProposalType> => ({
       id: createChangeProposalId(),
       type: ChangeProposalType.updateCommandName,
@@ -476,93 +461,40 @@ describe('ChangeProposalService', () => {
       updatedAt: new Date(),
     });
 
-    describe('when the proposal exists and is pending', () => {
-      let proposal: ChangeProposal<ChangeProposalType>;
+    let proposal: ChangeProposal<ChangeProposalType>;
 
-      beforeEach(() => {
-        proposal = buildPendingProposal();
-        repository.findById.mockResolvedValue(proposal);
-      });
-
-      it('sets status to rejected', async () => {
-        const { changeProposal } = await service.rejectProposal(
-          buildRejectCommand({ changeProposalId: proposal.id }),
-        );
-
-        expect(changeProposal.status).toBe(ChangeProposalStatus.rejected);
-      });
-
-      it('sets resolvedBy to the userId', async () => {
-        const { changeProposal } = await service.rejectProposal(
-          buildRejectCommand({ changeProposalId: proposal.id }),
-        );
-
-        expect(changeProposal.resolvedBy).toBe(userId);
-      });
-
-      it('sets resolvedAt to a date', async () => {
-        const { changeProposal } = await service.rejectProposal(
-          buildRejectCommand({ changeProposalId: proposal.id }),
-        );
-
-        expect(changeProposal.resolvedAt).toBeInstanceOf(Date);
-      });
-
-      it('calls repository.update with the rejected proposal', async () => {
-        await service.rejectProposal(
-          buildRejectCommand({ changeProposalId: proposal.id }),
-        );
-
-        expect(repository.update).toHaveBeenCalledWith(
-          expect.objectContaining({
-            id: proposal.id,
-            status: ChangeProposalStatus.rejected,
-            resolvedBy: userId,
-          }),
-        );
-      });
+    beforeEach(() => {
+      proposal = buildPendingProposal();
     });
 
-    describe('when the proposal does not exist', () => {
-      it('throws ChangeProposalNotFoundError', async () => {
-        repository.findById.mockResolvedValue(null);
+    it('sets status to rejected', async () => {
+      const result = await service.rejectProposal(proposal, userId);
 
-        await expect(
-          service.rejectProposal(buildRejectCommand()),
-        ).rejects.toThrow(ChangeProposalNotFoundError);
-      });
+      expect(result.status).toBe(ChangeProposalStatus.rejected);
     });
 
-    describe('when the proposal is already rejected', () => {
-      it('throws ChangeProposalNotPendingError', async () => {
-        const proposal = {
-          ...buildPendingProposal(),
+    it('sets resolvedBy to the userId', async () => {
+      const result = await service.rejectProposal(proposal, userId);
+
+      expect(result.resolvedBy).toBe(userId);
+    });
+
+    it('sets resolvedAt to a date', async () => {
+      const result = await service.rejectProposal(proposal, userId);
+
+      expect(result.resolvedAt).toBeInstanceOf(Date);
+    });
+
+    it('calls repository.update with the rejected proposal', async () => {
+      await service.rejectProposal(proposal, userId);
+
+      expect(repository.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          id: proposal.id,
           status: ChangeProposalStatus.rejected,
-        };
-        repository.findById.mockResolvedValue(proposal);
-
-        await expect(
-          service.rejectProposal(
-            buildRejectCommand({ changeProposalId: proposal.id }),
-          ),
-        ).rejects.toThrow(ChangeProposalNotPendingError);
-      });
-    });
-
-    describe('when the proposal is already applied', () => {
-      it('throws ChangeProposalNotPendingError', async () => {
-        const proposal = {
-          ...buildPendingProposal(),
-          status: ChangeProposalStatus.applied,
-        };
-        repository.findById.mockResolvedValue(proposal);
-
-        await expect(
-          service.rejectProposal(
-            buildRejectCommand({ changeProposalId: proposal.id }),
-          ),
-        ).rejects.toThrow(ChangeProposalNotPendingError);
-      });
+          resolvedBy: userId,
+        }),
+      );
     });
   });
 
@@ -573,18 +505,6 @@ describe('ChangeProposalService', () => {
       name: 'current name',
       content: 'line 1\nline 2\nline 3',
     };
-
-    const buildApplyCommand = (
-      overrides?: Partial<ApplyCommandChangeProposalCommand>,
-    ): ApplyCommandChangeProposalCommand => ({
-      userId: userId as unknown as string,
-      organizationId: 'org-1',
-      spaceId,
-      recipeId,
-      changeProposalId: createChangeProposalId(),
-      force: false,
-      ...overrides,
-    });
 
     const buildPendingNameProposal =
       (): ChangeProposal<ChangeProposalType> => ({
@@ -628,40 +548,47 @@ describe('ChangeProposalService', () => {
 
       beforeEach(() => {
         proposal = buildPendingNameProposal();
-        repository.findById.mockResolvedValue(proposal);
       });
 
       it('sets status to applied', async () => {
-        const { changeProposal } = await service.applyProposal(
-          buildApplyCommand({ changeProposalId: proposal.id }),
+        const { appliedProposal } = await service.applyProposal(
+          proposal,
+          userId,
           currentRecipe,
+          false,
         );
 
-        expect(changeProposal.status).toBe(ChangeProposalStatus.applied);
+        expect(appliedProposal.status).toBe(ChangeProposalStatus.applied);
       });
 
       it('sets resolvedBy to the userId', async () => {
-        const { changeProposal } = await service.applyProposal(
-          buildApplyCommand({ changeProposalId: proposal.id }),
+        const { appliedProposal } = await service.applyProposal(
+          proposal,
+          userId,
           currentRecipe,
+          false,
         );
 
-        expect(changeProposal.resolvedBy).toBe(userId);
+        expect(appliedProposal.resolvedBy).toBe(userId);
       });
 
       it('sets resolvedAt to a date', async () => {
-        const { changeProposal } = await service.applyProposal(
-          buildApplyCommand({ changeProposalId: proposal.id }),
+        const { appliedProposal } = await service.applyProposal(
+          proposal,
+          userId,
           currentRecipe,
+          false,
         );
 
-        expect(changeProposal.resolvedAt).toBeInstanceOf(Date);
+        expect(appliedProposal.resolvedAt).toBeInstanceOf(Date);
       });
 
       it('returns updated name with newValue', async () => {
         const { updatedFields } = await service.applyProposal(
-          buildApplyCommand({ changeProposalId: proposal.id }),
+          proposal,
+          userId,
           currentRecipe,
+          false,
         );
 
         expect(updatedFields.name).toBe('new name');
@@ -669,18 +596,17 @@ describe('ChangeProposalService', () => {
 
       it('keeps content unchanged', async () => {
         const { updatedFields } = await service.applyProposal(
-          buildApplyCommand({ changeProposalId: proposal.id }),
+          proposal,
+          userId,
           currentRecipe,
+          false,
         );
 
         expect(updatedFields.content).toBe(currentRecipe.content);
       });
 
       it('calls repository.update with the applied proposal', async () => {
-        await service.applyProposal(
-          buildApplyCommand({ changeProposalId: proposal.id }),
-          currentRecipe,
-        );
+        await service.applyProposal(proposal, userId, currentRecipe, false);
 
         expect(repository.update).toHaveBeenCalledWith(
           expect.objectContaining({
@@ -697,13 +623,14 @@ describe('ChangeProposalService', () => {
 
       beforeEach(() => {
         proposal = buildPendingDescriptionProposal();
-        repository.findById.mockResolvedValue(proposal);
       });
 
       it('returns merged content via diff', async () => {
         const { updatedFields } = await service.applyProposal(
-          buildApplyCommand({ changeProposalId: proposal.id }),
+          proposal,
+          userId,
           currentRecipe,
+          false,
         );
 
         expect(updatedFields.content).toBe('line 1\nline 2 modified\nline 3');
@@ -711,8 +638,10 @@ describe('ChangeProposalService', () => {
 
       it('keeps name unchanged', async () => {
         const { updatedFields } = await service.applyProposal(
-          buildApplyCommand({ changeProposalId: proposal.id }),
+          proposal,
+          userId,
           currentRecipe,
+          false,
         );
 
         expect(updatedFields.name).toBe(currentRecipe.name);
@@ -721,6 +650,7 @@ describe('ChangeProposalService', () => {
 
     describe('when applying a description proposal with conflict', () => {
       let proposal: ChangeProposal<ChangeProposalType>;
+
       const conflictingRecipe = {
         name: 'current name',
         content: 'line 1\nline 2 changed\nline 3',
@@ -728,31 +658,18 @@ describe('ChangeProposalService', () => {
 
       beforeEach(() => {
         proposal = buildPendingDescriptionProposal();
-        repository.findById.mockResolvedValue(proposal);
       });
 
       describe('when force is false', () => {
         it('throws ChangeProposalConflictError', async () => {
           await expect(
-            service.applyProposal(
-              buildApplyCommand({
-                changeProposalId: proposal.id,
-                force: false,
-              }),
-              conflictingRecipe,
-            ),
+            service.applyProposal(proposal, userId, conflictingRecipe, false),
           ).rejects.toThrow(ChangeProposalConflictError);
         });
 
         it('does not update the repository', async () => {
           await service
-            .applyProposal(
-              buildApplyCommand({
-                changeProposalId: proposal.id,
-                force: false,
-              }),
-              conflictingRecipe,
-            )
+            .applyProposal(proposal, userId, conflictingRecipe, false)
             .catch(() => {
               /* expected rejection */
             });
@@ -764,65 +681,25 @@ describe('ChangeProposalService', () => {
       describe('when force is true', () => {
         it('overwrites content with newValue', async () => {
           const { updatedFields } = await service.applyProposal(
-            buildApplyCommand({ changeProposalId: proposal.id, force: true }),
+            proposal,
+            userId,
             conflictingRecipe,
+            true,
           );
 
           expect(updatedFields.content).toBe('line 1\nline 2 modified\nline 3');
         });
 
         it('sets status to applied', async () => {
-          const { changeProposal } = await service.applyProposal(
-            buildApplyCommand({ changeProposalId: proposal.id, force: true }),
+          const { appliedProposal } = await service.applyProposal(
+            proposal,
+            userId,
             conflictingRecipe,
+            true,
           );
 
-          expect(changeProposal.status).toBe(ChangeProposalStatus.applied);
+          expect(appliedProposal.status).toBe(ChangeProposalStatus.applied);
         });
-      });
-    });
-
-    describe('when the proposal does not exist', () => {
-      it('throws ChangeProposalNotFoundError', async () => {
-        repository.findById.mockResolvedValue(null);
-
-        await expect(
-          service.applyProposal(buildApplyCommand(), currentRecipe),
-        ).rejects.toThrow(ChangeProposalNotFoundError);
-      });
-    });
-
-    describe('when the proposal is already rejected', () => {
-      it('throws ChangeProposalNotPendingError', async () => {
-        const proposal = {
-          ...buildPendingNameProposal(),
-          status: ChangeProposalStatus.rejected,
-        };
-        repository.findById.mockResolvedValue(proposal);
-
-        await expect(
-          service.applyProposal(
-            buildApplyCommand({ changeProposalId: proposal.id }),
-            currentRecipe,
-          ),
-        ).rejects.toThrow(ChangeProposalNotPendingError);
-      });
-    });
-
-    describe('when the proposal is already applied', () => {
-      it('throws ChangeProposalNotPendingError', async () => {
-        const proposal = {
-          ...buildPendingNameProposal(),
-          status: ChangeProposalStatus.applied,
-        };
-        repository.findById.mockResolvedValue(proposal);
-
-        await expect(
-          service.applyProposal(
-            buildApplyCommand({ changeProposalId: proposal.id }),
-            currentRecipe,
-          ),
-        ).rejects.toThrow(ChangeProposalNotPendingError);
       });
     });
   });
