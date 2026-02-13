@@ -22,6 +22,10 @@ export const routes = {
       `/org/${orgSlug}/settings/distribution-rendering`,
     toSettingsLLM: (orgSlug: string) => `/org/${orgSlug}/settings/llm`,
     toAccountSettings: (orgSlug: string) => `/org/${orgSlug}/account-settings`,
+    toSetup: (orgSlug: string) => `/org/${orgSlug}/setup`,
+    toSetupCLI: (orgSlug: string) => `/org/${orgSlug}/setup/cli`,
+    toSetupMCP: (orgSlug: string) => `/org/${orgSlug}/setup/mcp`,
+    toSetupSkills: (orgSlug: string) => `/org/${orgSlug}/setup/skills`,
   },
 
   /**

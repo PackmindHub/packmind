@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { PMButton, PMPopover } from '@packmind/ui';
+import { PMBox, PMButton, PMPopover } from '@packmind/ui';
 import { CodingAgent } from '@packmind/types';
 import { useAnalytics } from '@packmind/proprietary/frontend/domain/amplitude/providers/AnalyticsProvider';
 import { DownloadDefaultSkillsContent } from './DownloadDefaultSkillsContent';
@@ -7,12 +7,14 @@ import { DownloadDefaultSkillsContent } from './DownloadDefaultSkillsContent';
 interface IDownloadDefaultSkillsPopoverProps {
   buttonVariant?: 'primary' | 'outline' | 'secondary' | 'tertiary';
   buttonSize?: 'xs' | 'sm' | 'md' | 'lg';
+  buttonLabel?: string;
   placement?: 'bottom' | 'bottom-end' | 'bottom-start';
 }
 
 export const DownloadDefaultSkillsPopover = ({
   buttonVariant = 'outline',
   buttonSize = 'md',
+  buttonLabel = 'Get Packmind Skills',
   placement = 'bottom-end',
 }: IDownloadDefaultSkillsPopoverProps) => {
   const [downloadingAgent, setDownloadingAgent] = useState<CodingAgent | null>(
@@ -52,7 +54,7 @@ export const DownloadDefaultSkillsPopover = ({
             'Download skills to create standards and skills with your AI Agent.'
           }
         >
-          Get Packmind Skills
+          {buttonLabel}
         </PMButton>
       </PMPopover.Trigger>
       <PMPopover.Positioner>
@@ -62,10 +64,13 @@ export const DownloadDefaultSkillsPopover = ({
           </PMPopover.Arrow>
           <PMPopover.Body>
             <PMPopover.Title>Get Packmind skills</PMPopover.Title>
-            <DownloadDefaultSkillsContent
-              downloadingAgent={downloadingAgent}
-              onDownload={handleDownloadSkillsForAgent}
-            />
+
+            <PMBox mt={4}>
+              <DownloadDefaultSkillsContent
+                downloadingAgent={downloadingAgent}
+                onDownload={handleDownloadSkillsForAgent}
+              />
+            </PMBox>
           </PMPopover.Body>
         </PMPopover.Content>
       </PMPopover.Positioner>

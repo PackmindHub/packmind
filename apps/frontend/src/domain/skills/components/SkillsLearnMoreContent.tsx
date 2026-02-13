@@ -376,50 +376,12 @@ export const SkillsLearnMoreContent: React.FC = () => {
             />
           </PMAccordion.ItemTrigger>
           <PMAccordion.ItemContent p={6}>
-            <PMTabs
-              defaultValue="cli-init"
-              width="full"
-              tabs={[
-                {
-                  value: 'cli-init',
-                  triggerLabel: (
-                    <PMHStack gap={2}>
-                      <PMText>CLI Init</PMText>
-                      <PMBadge size="xs" colorPalette="blue">
-                        Best
-                      </PMBadge>
-                    </PMHStack>
-                  ),
-                  content: (
-                    <PMVStack align="flex-start" gap={2} width="full" pt={4}>
-                      <PMText as="p" color="secondary">
-                        Initialize a new Packmind project with default skills
-                        included:
-                      </PMText>
-                      <PMBox width="1/2">
-                        <CopiableTextField
-                          value="packmind-cli skills init"
-                          readOnly
-                          label="Terminal"
-                        />
-                      </PMBox>
-                    </PMVStack>
-                  ),
-                },
-                {
-                  value: 'manual',
-                  triggerLabel: 'Manual Download',
-                  content: (
-                    <PMVStack align="flex-start" gap={2} width="full" pt={4}>
-                      <DownloadDefaultSkillsContent
-                        downloadingAgent={downloadingAgent}
-                        onDownload={handleDownloadSkillsForAgent}
-                      />
-                    </PMVStack>
-                  ),
-                },
-              ]}
-            />
+            <PMVStack align="flex-start" gap={2} width="full">
+              <DownloadDefaultSkillsContent
+                downloadingAgent={downloadingAgent}
+                onDownload={handleDownloadSkillsForAgent}
+              />
+            </PMVStack>
           </PMAccordion.ItemContent>
         </PMAccordion.Item>
 
