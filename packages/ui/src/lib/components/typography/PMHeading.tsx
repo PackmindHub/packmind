@@ -11,16 +11,24 @@ export type PMHeadingProps = {
     | 'secondaryLight'
     | 'tertiaryLight';
   children: React.ReactNode;
+  headingProps?: HeadingProps;
 } & HeadingProps;
 
 export function PMHeading({
   children,
   color = 'primary',
   level = 'h1',
+  headingProps,
   ...rest
 }: PMHeadingProps) {
   return (
-    <Heading as={level} size={level} {...rest} color={`{colors.text.${color}}`}>
+    <Heading
+      as={level}
+      size={level}
+      {...rest}
+      color={`{colors.text.${color}}`}
+      {...headingProps}
+    >
       {children}
     </Heading>
   );

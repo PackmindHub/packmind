@@ -17,6 +17,7 @@ export interface PMTextProps extends TextProps {
   variant?: 'body' | 'body-important' | 'small' | 'small-important';
   color?: PMTextColors;
   children: React.ReactNode;
+  textProps?: TextProps;
 }
 
 export function PMText({
@@ -24,6 +25,7 @@ export function PMText({
   variant = 'body',
   color = 'primary',
   children,
+  textProps,
   ...rest
 }: PMTextProps) {
   return (
@@ -32,6 +34,8 @@ export function PMText({
       textStyle={variant}
       {...rest}
       color={`{colors.text.${color}}`}
+      _selection={{ backgroundColor: 'blue.500' }}
+      {...textProps}
     >
       {children}
     </Text>
