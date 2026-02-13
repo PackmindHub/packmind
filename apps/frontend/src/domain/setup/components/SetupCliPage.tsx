@@ -208,13 +208,14 @@ export const SetupCliPage: React.FC = () => {
       <PMVStack gap={6} width="full">
         {/* Step 1: Install CLI */}
         <PMPageSection
-          title="Install the Packmind CLI"
+          title="Install"
           backgroundColor="primary"
           boxProps={{ width: 'full' }}
         >
           <PMVStack align="flex-start" gap={4} width="full">
             <PMText color="tertiary" mb={2}>
-              The CLI is required to authenticate and communicate with Packmind.
+              Install the CLI using the method that works best for your
+              operating system and environment.
             </PMText>
 
             <PMVStack align="flex-start" gap={2} width="full">
@@ -260,14 +261,14 @@ export const SetupCliPage: React.FC = () => {
 
         {/* Step 2: Authenticate */}
         <PMPageSection
-          title="Authenticate with Packmind"
+          title="Authenticate"
           variant="outline"
           backgroundColor="primary"
           boxProps={{ width: 'full' }}
         >
           <PMVStack align="flex-start" gap={4} width="full">
             <PMText color="tertiary" mb={2}>
-              Choose how you want to authenticate your CLI with Packmind.
+              Choose how you want to authenticate your CLI.
             </PMText>
 
             <AuthMethodSelector value={authMethod} onChange={setAuthMethod} />
