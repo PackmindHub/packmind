@@ -244,6 +244,8 @@ ${recipeVersion.content}`;
           isBase64: file.isBase64,
           artifactType: 'skill',
           artifactName: skillVersion.name,
+          skillFileId: file.skillFileId,
+          skillFilePermissions: file.skillFilePermissions,
         });
       }
     }
@@ -273,6 +275,8 @@ ${recipeVersion.content}`;
           isBase64: file.isBase64,
           artifactType: 'skill',
           artifactName: skillVersion.name,
+          skillFileId: file.skillFileId,
+          skillFilePermissions: file.skillFilePermissions,
         });
       }
     }
@@ -332,6 +336,8 @@ ${recipeVersion.content}`;
           isBase64: file.isBase64,
           artifactType: 'skill',
           artifactName: skillVersion.name,
+          skillFileId: file.skillFileId,
+          skillFilePermissions: file.skillFilePermissions,
         });
       }
     }
@@ -596,9 +602,16 @@ ${instructionContent}`;
     path: string;
     content: string;
     isBase64?: boolean;
+    skillFileId?: string;
+    skillFilePermissions?: string;
   }> {
-    const files: Array<{ path: string; content: string; isBase64?: boolean }> =
-      [];
+    const files: Array<{
+      path: string;
+      content: string;
+      isBase64?: boolean;
+      skillFileId?: string;
+      skillFilePermissions?: string;
+    }> = [];
 
     // Generate SKILL.md (main skill file)
     const skillMdContent = this.generateSkillMdContent(skillVersion);
@@ -618,6 +631,8 @@ ${instructionContent}`;
           path: `.claude/skills/${skillVersion.slug}/${file.path}`,
           content: file.content,
           isBase64: file.isBase64,
+          skillFileId: file.id,
+          skillFilePermissions: file.permissions,
         });
       }
     }

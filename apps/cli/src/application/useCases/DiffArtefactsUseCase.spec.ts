@@ -5,6 +5,9 @@ import { ChangeProposalType } from '@packmind/types';
 import { createMockPackmindGateway } from '../../mocks/createMockGateways';
 
 jest.mock('fs/promises');
+jest.mock('uuid', () => ({
+  v4: jest.fn().mockReturnValue('generated-uuid'),
+}));
 
 describe('DiffArtefactsUseCase', () => {
   let useCase: DiffArtefactsUseCase;
@@ -198,14 +201,15 @@ describe('DiffArtefactsUseCase', () => {
     });
   });
 
-  describe('when local skill file differs from server', () => {
+  describe('when SKILL.md name differs from server', () => {
     beforeEach(() => {
       mockGateway.deployment.pull.mockResolvedValue({
         fileUpdates: {
           createOrUpdate: [
             {
               path: '.claude/skills/my-skill/SKILL.md',
-              content: 'Server skill content',
+              content:
+                "---\nname: 'Server Name'\ndescription: 'Same desc'\n---\n\nSame prompt",
               artifactType: 'skill',
               artifactName: 'My Skill',
               artifactId: 'artifact-5',
@@ -217,52 +221,55 @@ describe('DiffArtefactsUseCase', () => {
         skillFolders: [],
       });
 
-      (fs.readFile as jest.Mock).mockResolvedValue('Local skill content');
+      (fs.readFile as jest.Mock).mockResolvedValue(
+        "---\nname: 'Local Name'\ndescription: 'Same desc'\n---\n\nSame prompt",
+      );
     });
 
-    it('returns a diff with updateSkillDescription type', async () => {
+    it('returns exactly one diff', async () => {
       const result = await useCase.execute({
         packagesSlugs: ['test-package'],
         baseDirectory: '/test',
       });
 
-      expect(result).toEqual([
-        {
-          filePath: '.claude/skills/my-skill/SKILL.md',
-          type: ChangeProposalType.updateSkillDescription,
-          payload: {
-            oldValue: 'Server skill content',
-            newValue: 'Local skill content',
-          },
-          artifactName: 'My Skill',
-          artifactType: 'skill',
-          artifactId: 'artifact-5',
-          spaceId: 'space-5',
-        },
-      ]);
+      expect(result).toHaveLength(1);
+    });
+
+    it('returns updateSkillName type', async () => {
+      const result = await useCase.execute({
+        packagesSlugs: ['test-package'],
+        baseDirectory: '/test',
+      });
+
+      expect(result[0].type).toBe(ChangeProposalType.updateSkillName);
+    });
+
+    it('includes old and new name in payload', async () => {
+      const result = await useCase.execute({
+        packagesSlugs: ['test-package'],
+        baseDirectory: '/test',
+      });
+
+      expect(result[0].payload).toEqual({
+        oldValue: 'Server Name',
+        newValue: 'Local Name',
+      });
     });
   });
 
-  describe('when multiple skill files belong to the same skill', () => {
+  describe('when SKILL.md description differs from server', () => {
     beforeEach(() => {
       mockGateway.deployment.pull.mockResolvedValue({
         fileUpdates: {
           createOrUpdate: [
             {
               path: '.claude/skills/my-skill/SKILL.md',
-              content: 'Server skill md',
+              content:
+                "---\nname: 'Same'\ndescription: 'Server desc'\n---\n\nSame prompt",
               artifactType: 'skill',
               artifactName: 'My Skill',
-              artifactId: 'artifact-6',
-              spaceId: 'space-6',
-            },
-            {
-              path: '.claude/skills/my-skill/helper.ts',
-              content: 'Server helper',
-              artifactType: 'skill',
-              artifactName: 'My Skill',
-              artifactId: 'artifact-6',
-              spaceId: 'space-6',
+              artifactId: 'artifact-5',
+              spaceId: 'space-5',
             },
           ],
           delete: [],
@@ -270,12 +277,389 @@ describe('DiffArtefactsUseCase', () => {
         skillFolders: [],
       });
 
-      (fs.readFile as jest.Mock)
-        .mockResolvedValueOnce('Local skill md')
-        .mockResolvedValueOnce('Local helper');
+      (fs.readFile as jest.Mock).mockResolvedValue(
+        "---\nname: 'Same'\ndescription: 'Local desc'\n---\n\nSame prompt",
+      );
     });
 
-    it('returns two diffs', async () => {
+    it('returns exactly one diff', async () => {
+      const result = await useCase.execute({
+        packagesSlugs: ['test-package'],
+        baseDirectory: '/test',
+      });
+
+      expect(result).toHaveLength(1);
+    });
+
+    it('returns updateSkillDescription type', async () => {
+      const result = await useCase.execute({
+        packagesSlugs: ['test-package'],
+        baseDirectory: '/test',
+      });
+
+      expect(result[0].type).toBe(ChangeProposalType.updateSkillDescription);
+    });
+  });
+
+  describe('when SKILL.md prompt differs from server', () => {
+    beforeEach(() => {
+      mockGateway.deployment.pull.mockResolvedValue({
+        fileUpdates: {
+          createOrUpdate: [
+            {
+              path: '.claude/skills/my-skill/SKILL.md',
+              content:
+                "---\nname: 'Same'\ndescription: 'Same'\n---\n\nServer prompt",
+              artifactType: 'skill',
+              artifactName: 'My Skill',
+              artifactId: 'artifact-5',
+              spaceId: 'space-5',
+            },
+          ],
+          delete: [],
+        },
+        skillFolders: [],
+      });
+
+      (fs.readFile as jest.Mock).mockResolvedValue(
+        "---\nname: 'Same'\ndescription: 'Same'\n---\n\nLocal prompt",
+      );
+    });
+
+    it('returns exactly one diff', async () => {
+      const result = await useCase.execute({
+        packagesSlugs: ['test-package'],
+        baseDirectory: '/test',
+      });
+
+      expect(result).toHaveLength(1);
+    });
+
+    it('returns updateSkillPrompt type', async () => {
+      const result = await useCase.execute({
+        packagesSlugs: ['test-package'],
+        baseDirectory: '/test',
+      });
+
+      expect(result[0].type).toBe(ChangeProposalType.updateSkillPrompt);
+    });
+  });
+
+  describe('when SKILL.md metadata differs from server', () => {
+    beforeEach(() => {
+      mockGateway.deployment.pull.mockResolvedValue({
+        fileUpdates: {
+          createOrUpdate: [
+            {
+              path: '.claude/skills/my-skill/SKILL.md',
+              content:
+                "---\nname: 'Same'\ndescription: 'Same'\nlicense: 'MIT'\n---\n\nSame prompt",
+              artifactType: 'skill',
+              artifactName: 'My Skill',
+              artifactId: 'artifact-5',
+              spaceId: 'space-5',
+            },
+          ],
+          delete: [],
+        },
+        skillFolders: [],
+      });
+
+      (fs.readFile as jest.Mock).mockResolvedValue(
+        "---\nname: 'Same'\ndescription: 'Same'\nlicense: 'Apache-2.0'\n---\n\nSame prompt",
+      );
+    });
+
+    it('returns exactly one diff', async () => {
+      const result = await useCase.execute({
+        packagesSlugs: ['test-package'],
+        baseDirectory: '/test',
+      });
+
+      expect(result).toHaveLength(1);
+    });
+
+    it('returns updateSkillMetadata type', async () => {
+      const result = await useCase.execute({
+        packagesSlugs: ['test-package'],
+        baseDirectory: '/test',
+      });
+
+      expect(result[0].type).toBe(ChangeProposalType.updateSkillMetadata);
+    });
+  });
+
+  describe('when SKILL.md has multiple field changes', () => {
+    beforeEach(() => {
+      mockGateway.deployment.pull.mockResolvedValue({
+        fileUpdates: {
+          createOrUpdate: [
+            {
+              path: '.claude/skills/my-skill/SKILL.md',
+              content:
+                "---\nname: 'Old Name'\ndescription: 'Old Desc'\n---\n\nOld prompt",
+              artifactType: 'skill',
+              artifactName: 'My Skill',
+              artifactId: 'artifact-5',
+              spaceId: 'space-5',
+            },
+          ],
+          delete: [],
+        },
+        skillFolders: [],
+      });
+
+      (fs.readFile as jest.Mock).mockResolvedValue(
+        "---\nname: 'New Name'\ndescription: 'New Desc'\n---\n\nNew prompt",
+      );
+    });
+
+    it('returns exactly three diffs', async () => {
+      const result = await useCase.execute({
+        packagesSlugs: ['test-package'],
+        baseDirectory: '/test',
+      });
+
+      expect(result).toHaveLength(3);
+    });
+
+    it('returns name, description, and prompt types', async () => {
+      const result = await useCase.execute({
+        packagesSlugs: ['test-package'],
+        baseDirectory: '/test',
+      });
+
+      expect(result.map((d) => d.type)).toEqual([
+        ChangeProposalType.updateSkillName,
+        ChangeProposalType.updateSkillDescription,
+        ChangeProposalType.updateSkillPrompt,
+      ]);
+    });
+  });
+
+  describe('when SKILL.md has no differences', () => {
+    const skillContent =
+      "---\nname: 'Same'\ndescription: 'Same'\n---\n\nSame prompt";
+
+    beforeEach(() => {
+      mockGateway.deployment.pull.mockResolvedValue({
+        fileUpdates: {
+          createOrUpdate: [
+            {
+              path: '.claude/skills/my-skill/SKILL.md',
+              content: skillContent,
+              artifactType: 'skill',
+              artifactName: 'My Skill',
+              artifactId: 'artifact-5',
+              spaceId: 'space-5',
+            },
+          ],
+          delete: [],
+        },
+        skillFolders: [],
+      });
+
+      (fs.readFile as jest.Mock).mockResolvedValue(skillContent);
+    });
+
+    it('returns empty result', async () => {
+      const result = await useCase.execute({
+        packagesSlugs: ['test-package'],
+        baseDirectory: '/test',
+      });
+
+      expect(result).toEqual([]);
+    });
+  });
+
+  describe('when SKILL.md has malformed frontmatter', () => {
+    beforeEach(() => {
+      mockGateway.deployment.pull.mockResolvedValue({
+        fileUpdates: {
+          createOrUpdate: [
+            {
+              path: '.claude/skills/my-skill/SKILL.md',
+              content: 'Server skill content without frontmatter',
+              artifactType: 'skill',
+              artifactName: 'My Skill',
+              artifactId: 'artifact-5',
+              spaceId: 'space-5',
+            },
+          ],
+          delete: [],
+        },
+        skillFolders: [],
+      });
+
+      (fs.readFile as jest.Mock).mockResolvedValue(
+        'Local skill content without frontmatter',
+      );
+    });
+
+    it('returns exactly one diff', async () => {
+      const result = await useCase.execute({
+        packagesSlugs: ['test-package'],
+        baseDirectory: '/test',
+      });
+
+      expect(result).toHaveLength(1);
+    });
+
+    it('falls back to updateSkillPrompt type', async () => {
+      const result = await useCase.execute({
+        packagesSlugs: ['test-package'],
+        baseDirectory: '/test',
+      });
+
+      expect(result[0].type).toBe(ChangeProposalType.updateSkillPrompt);
+    });
+  });
+
+  describe('when skill file content changed locally', () => {
+    beforeEach(() => {
+      mockGateway.deployment.pull.mockResolvedValue({
+        fileUpdates: {
+          createOrUpdate: [
+            {
+              path: '.claude/skills/my-skill/helper.ts',
+              content: 'server content',
+              artifactType: 'skill',
+              artifactName: 'My Skill',
+              artifactId: 'artifact-6',
+              spaceId: 'space-6',
+              skillFileId: 'skill-file-1',
+              skillFilePermissions: 'read',
+            },
+          ],
+          delete: [],
+        },
+        skillFolders: [],
+      });
+
+      (fs.readFile as jest.Mock).mockResolvedValue('local content');
+    });
+
+    it('returns exactly one diff', async () => {
+      const result = await useCase.execute({
+        packagesSlugs: ['test-package'],
+        baseDirectory: '/test',
+      });
+
+      expect(result).toHaveLength(1);
+    });
+
+    it('returns updateSkillFileContent type', async () => {
+      const result = await useCase.execute({
+        packagesSlugs: ['test-package'],
+        baseDirectory: '/test',
+      });
+
+      expect(result[0].type).toBe(ChangeProposalType.updateSkillFileContent);
+    });
+
+    it('includes targetId in payload', async () => {
+      const result = await useCase.execute({
+        packagesSlugs: ['test-package'],
+        baseDirectory: '/test',
+      });
+
+      expect(result[0].payload).toEqual({
+        targetId: 'skill-file-1',
+        oldValue: 'server content',
+        newValue: 'local content',
+      });
+    });
+  });
+
+  describe('when skill file permissions changed locally', () => {
+    beforeEach(() => {
+      mockGateway.deployment.pull.mockResolvedValue({
+        fileUpdates: {
+          createOrUpdate: [
+            {
+              path: '.claude/skills/my-skill/helper.ts',
+              content: 'same content',
+              artifactType: 'skill',
+              artifactName: 'My Skill',
+              artifactId: 'artifact-6',
+              spaceId: 'space-6',
+              skillFileId: 'skill-file-1',
+              skillFilePermissions: 'rw-r--r--',
+            },
+          ],
+          delete: [],
+        },
+        skillFolders: [],
+      });
+
+      (fs.readFile as jest.Mock).mockResolvedValue('same content');
+      (fs.stat as jest.Mock).mockResolvedValue({
+        mode: 0o100755,
+      });
+    });
+
+    it('returns exactly one diff', async () => {
+      const result = await useCase.execute({
+        packagesSlugs: ['test-package'],
+        baseDirectory: '/test',
+      });
+
+      expect(result).toHaveLength(1);
+    });
+
+    it('returns updateSkillFilePermissions type', async () => {
+      const result = await useCase.execute({
+        packagesSlugs: ['test-package'],
+        baseDirectory: '/test',
+      });
+
+      expect(result[0].type).toBe(
+        ChangeProposalType.updateSkillFilePermissions,
+      );
+    });
+
+    it('includes targetId and permission values in payload', async () => {
+      const result = await useCase.execute({
+        packagesSlugs: ['test-package'],
+        baseDirectory: '/test',
+      });
+
+      expect(result[0].payload).toEqual({
+        targetId: 'skill-file-1',
+        oldValue: 'rw-r--r--',
+        newValue: 'rwxr-xr-x',
+      });
+    });
+  });
+
+  describe('when skill file content and permissions both changed', () => {
+    beforeEach(() => {
+      mockGateway.deployment.pull.mockResolvedValue({
+        fileUpdates: {
+          createOrUpdate: [
+            {
+              path: '.claude/skills/my-skill/helper.ts',
+              content: 'server content',
+              artifactType: 'skill',
+              artifactName: 'My Skill',
+              artifactId: 'artifact-6',
+              spaceId: 'space-6',
+              skillFileId: 'skill-file-1',
+              skillFilePermissions: 'rw-r--r--',
+            },
+          ],
+          delete: [],
+        },
+        skillFolders: [],
+      });
+
+      (fs.readFile as jest.Mock).mockResolvedValue('local content');
+      (fs.stat as jest.Mock).mockResolvedValue({
+        mode: 0o100755,
+      });
+    });
+
+    it('returns exactly two diffs', async () => {
       const result = await useCase.execute({
         packagesSlugs: ['test-package'],
         baseDirectory: '/test',
@@ -284,22 +668,183 @@ describe('DiffArtefactsUseCase', () => {
       expect(result).toHaveLength(2);
     });
 
-    it('sets artifactName on first diff', async () => {
+    it('returns content and permissions types', async () => {
       const result = await useCase.execute({
         packagesSlugs: ['test-package'],
         baseDirectory: '/test',
       });
 
-      expect(result[0].artifactName).toBe('My Skill');
+      expect(result.map((d) => d.type)).toEqual([
+        ChangeProposalType.updateSkillFileContent,
+        ChangeProposalType.updateSkillFilePermissions,
+      ]);
+    });
+  });
+
+  describe('when skill file permissions match server', () => {
+    beforeEach(() => {
+      mockGateway.deployment.pull.mockResolvedValue({
+        fileUpdates: {
+          createOrUpdate: [
+            {
+              path: '.claude/skills/my-skill/helper.ts',
+              content: 'same content',
+              artifactType: 'skill',
+              artifactName: 'My Skill',
+              artifactId: 'artifact-6',
+              spaceId: 'space-6',
+              skillFileId: 'skill-file-1',
+              skillFilePermissions: 'rw-r--r--',
+            },
+          ],
+          delete: [],
+        },
+        skillFolders: [],
+      });
+
+      (fs.readFile as jest.Mock).mockResolvedValue('same content');
+      (fs.stat as jest.Mock).mockResolvedValue({
+        mode: 0o100644,
+      });
     });
 
-    it('sets artifactName on second diff', async () => {
+    it('returns empty result', async () => {
       const result = await useCase.execute({
         packagesSlugs: ['test-package'],
         baseDirectory: '/test',
       });
 
-      expect(result[1].artifactName).toBe('My Skill');
+      expect(result).toEqual([]);
+    });
+  });
+
+  describe('when skill file deleted locally', () => {
+    beforeEach(() => {
+      mockGateway.deployment.pull.mockResolvedValue({
+        fileUpdates: {
+          createOrUpdate: [
+            {
+              path: '.claude/skills/my-skill/helper.ts',
+              content: 'server content',
+              artifactType: 'skill',
+              artifactName: 'My Skill',
+              artifactId: 'artifact-6',
+              spaceId: 'space-6',
+              skillFileId: 'skill-file-1',
+              skillFilePermissions: 'read',
+            },
+          ],
+          delete: [],
+        },
+        skillFolders: [],
+      });
+
+      (fs.readFile as jest.Mock).mockRejectedValue(
+        new Error('ENOENT: no such file'),
+      );
+    });
+
+    it('returns exactly one diff', async () => {
+      const result = await useCase.execute({
+        packagesSlugs: ['test-package'],
+        baseDirectory: '/test',
+      });
+
+      expect(result).toHaveLength(1);
+    });
+
+    it('returns deleteSkillFile type', async () => {
+      const result = await useCase.execute({
+        packagesSlugs: ['test-package'],
+        baseDirectory: '/test',
+      });
+
+      expect(result[0].type).toBe(ChangeProposalType.deleteSkillFile);
+    });
+  });
+
+  describe('when new local skill file detected', () => {
+    beforeEach(() => {
+      mockGateway.deployment.pull.mockResolvedValue({
+        fileUpdates: {
+          createOrUpdate: [
+            {
+              path: '.claude/skills/my-skill/SKILL.md',
+              content:
+                "---\nname: 'My Skill'\ndescription: 'desc'\n---\n\nprompt",
+              artifactType: 'skill',
+              artifactName: 'My Skill',
+              artifactId: 'artifact-7',
+              spaceId: 'space-7',
+            },
+          ],
+          delete: [],
+        },
+        skillFolders: ['.claude/skills/my-skill'],
+      });
+
+      // SKILL.md read (for SKILL.md diff - same content)
+      (fs.readFile as jest.Mock).mockImplementation((filePath: string) => {
+        if (filePath.endsWith('SKILL.md')) {
+          return Promise.resolve(
+            "---\nname: 'My Skill'\ndescription: 'desc'\n---\n\nprompt",
+          );
+        }
+        if (filePath.endsWith('new-file.ts')) {
+          return Promise.resolve('new file content');
+        }
+        return Promise.reject(new Error('ENOENT'));
+      });
+
+      (fs.readdir as jest.Mock).mockResolvedValue(['SKILL.md', 'new-file.ts']);
+      (fs.stat as jest.Mock).mockResolvedValue({
+        isDirectory: () => false,
+      });
+    });
+
+    it('returns exactly one diff', async () => {
+      const result = await useCase.execute({
+        packagesSlugs: ['test-package'],
+        baseDirectory: '/test',
+      });
+
+      expect(result).toHaveLength(1);
+    });
+
+    it('returns addSkillFile type', async () => {
+      const result = await useCase.execute({
+        packagesSlugs: ['test-package'],
+        baseDirectory: '/test',
+      });
+
+      expect(result[0].type).toBe(ChangeProposalType.addSkillFile);
+    });
+
+    it('includes generated id and file content in payload', async () => {
+      const result = await useCase.execute({
+        packagesSlugs: ['test-package'],
+        baseDirectory: '/test',
+      });
+
+      expect(result[0].payload).toEqual({
+        targetId: 'generated-uuid',
+        item: {
+          id: 'generated-uuid',
+          path: 'new-file.ts',
+          content: 'new file content',
+          permissions: 'read',
+          isBase64: false,
+        },
+      });
+    });
+
+    it('inherits artifactId from SKILL.md file', async () => {
+      const result = await useCase.execute({
+        packagesSlugs: ['test-package'],
+        baseDirectory: '/test',
+      });
+
+      expect(result[0].artifactId).toBe('artifact-7');
     });
   });
 

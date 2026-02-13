@@ -5,30 +5,20 @@ import {
   ArtefactDiff,
 } from '../../domain/useCases/IDiffArtefactsUseCase';
 import { IPackmindGateway } from '../../domain/repositories/IPackmindGateway';
-import {
-  ArtifactType,
-  ChangeProposalType,
-  FileModification,
-} from '@packmind/types';
-import { diffLines } from 'diff';
-import * as fs from 'fs/promises';
-import * as path from 'path';
-import { stripFrontmatter } from '../utils/stripFrontmatter';
-
-type DiffableFile = FileModification & {
-  content: string;
-  artifactType: ArtifactType;
-  artifactName: string;
-};
-
-const ARTIFACT_TYPE_TO_CHANGE_TYPE: Record<ArtifactType, ChangeProposalType> = {
-  command: ChangeProposalType.updateCommandDescription,
-  standard: ChangeProposalType.updateStandardDescription,
-  skill: ChangeProposalType.updateSkillDescription,
-};
+import { FileModification } from '@packmind/types';
+import { DiffableFile } from './diffStrategies/DiffableFile';
+import { IDiffStrategy } from './diffStrategies/IDiffStrategy';
+import { NonSkillDiffStrategy } from './diffStrategies/NonSkillDiffStrategy';
+import { SkillDiffStrategy } from './diffStrategies/SkillDiffStrategy';
 
 export class DiffArtefactsUseCase implements IDiffArtefactsUseCase {
-  constructor(private readonly packmindGateway: IPackmindGateway) {}
+  private readonly strategies: IDiffStrategy[];
+  private readonly skillStrategy: SkillDiffStrategy;
+
+  constructor(private readonly packmindGateway: IPackmindGateway) {
+    this.skillStrategy = new SkillDiffStrategy();
+    this.strategies = [new NonSkillDiffStrategy(), this.skillStrategy];
+  }
 
   public async execute(
     command: IDiffArtefactsCommand,
@@ -63,44 +53,21 @@ export class DiffArtefactsUseCase implements IDiffArtefactsUseCase {
     const diffs: ArtefactDiff[] = [];
 
     for (const file of diffableFiles) {
-      const fullPath = path.join(baseDirectory, file.path);
-
-      const localContent = await this.tryReadFile(fullPath);
-      if (localContent === null) {
-        continue;
-      }
-
-      const serverBody = stripFrontmatter(file.content);
-      const localBody = stripFrontmatter(localContent);
-      const changes = diffLines(serverBody, localBody);
-      const hasDifferences = changes.some(
-        (change) => change.added || change.removed,
-      );
-
-      if (hasDifferences) {
-        diffs.push({
-          filePath: file.path,
-          type: ARTIFACT_TYPE_TO_CHANGE_TYPE[file.artifactType],
-          payload: {
-            oldValue: serverBody,
-            newValue: localBody,
-          },
-          artifactName: file.artifactName,
-          artifactType: file.artifactType,
-          artifactId: file.artifactId,
-          spaceId: file.spaceId,
-        });
+      const strategy = this.strategies.find((s) => s.supports(file));
+      if (strategy) {
+        const fileDiffs = await strategy.diff(file, baseDirectory);
+        diffs.push(...fileDiffs);
       }
     }
+
+    // Detect new local skill files (addSkillFile)
+    const newFileDiffs = await this.skillStrategy.diffNewLocalFiles(
+      response.skillFolders,
+      diffableFiles,
+      baseDirectory,
+    );
+    diffs.push(...newFileDiffs);
 
     return diffs;
-  }
-
-  private async tryReadFile(filePath: string): Promise<string | null> {
-    try {
-      return await fs.readFile(filePath, 'utf-8');
-    } catch {
-      return null;
-    }
   }
 }
