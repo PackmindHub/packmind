@@ -98,17 +98,17 @@ export const SetupSkillsPage = () => {
 
   return (
     <PMPage
-      title="Marketplace"
+      title="Default skills"
       subtitle="Download and install Packmind's curated skills to enhance your AI agent's capabilities"
     >
       <PMPageSection
-        title="Packmind playbook management skills"
+        title="Playbook management skills"
         backgroundColor="primary"
         cta={
           <DownloadDefaultSkillsPopover
             buttonVariant="tertiary"
             buttonSize="sm"
-            buttonLabel="Download"
+            buttonLabel="Get default skills"
           />
         }
       >
@@ -117,16 +117,6 @@ export const SetupSkillsPage = () => {
           commands, and packages, as well as an onboarding skill that generates
           initial standards and commands based on your codebase.
         </PMText>
-
-        <PMAlert.Root status="info" mb={4}>
-          <PMAlert.Indicator />
-          <PMAlert.Content>
-            <PMAlert.Description>
-              You can also add these skills to your project via the Packmind CLI
-              using the command <code>packmind skills init</code>
-            </PMAlert.Description>
-          </PMAlert.Content>
-        </PMAlert.Root>
 
         {/* Skills table */}
         <PMTable<SkillTableRow>

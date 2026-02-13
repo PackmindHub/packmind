@@ -106,7 +106,7 @@ export default function SetupIndexRouteModule() {
             <SidebarNavigationLink
               key="skills"
               url={orgSlug ? routes.org.toSetupSkills(orgSlug) : '#'}
-              label="Marketplace"
+              label="Default skills"
               exact
             />,
           ]}

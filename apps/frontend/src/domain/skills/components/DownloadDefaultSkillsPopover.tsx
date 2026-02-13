@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { PMButton, PMPopover } from '@packmind/ui';
+import { PMBox, PMButton, PMPopover } from '@packmind/ui';
 import { CodingAgent } from '@packmind/types';
 import { useAnalytics } from '@packmind/proprietary/frontend/domain/amplitude/providers/AnalyticsProvider';
 import { DownloadDefaultSkillsContent } from './DownloadDefaultSkillsContent';
@@ -64,10 +64,13 @@ export const DownloadDefaultSkillsPopover = ({
           </PMPopover.Arrow>
           <PMPopover.Body>
             <PMPopover.Title>Get Packmind skills</PMPopover.Title>
-            <DownloadDefaultSkillsContent
-              downloadingAgent={downloadingAgent}
-              onDownload={handleDownloadSkillsForAgent}
-            />
+
+            <PMBox mt={4}>
+              <DownloadDefaultSkillsContent
+                downloadingAgent={downloadingAgent}
+                onDownload={handleDownloadSkillsForAgent}
+              />
+            </PMBox>
           </PMPopover.Body>
         </PMPopover.Content>
       </PMPopover.Positioner>
