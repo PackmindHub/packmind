@@ -2,7 +2,7 @@ import { IChangeProposalRepository } from '../../domain/repositories/IChangeProp
 import { ChangeProposalSchema } from '../schemas/ChangeProposalSchema';
 import { Repository, SelectQueryBuilder } from 'typeorm';
 import { PackmindLogger } from '@packmind/logger';
-import { localDataSource, SpaceScopedRepository } from '@packmind/node-utils';
+import { SpaceScopedRepository } from '@packmind/node-utils';
 import {
   ChangeProposal,
   ChangeProposalArtefactId,
@@ -20,11 +20,7 @@ export class ChangeProposalRepository
   implements IChangeProposalRepository
 {
   constructor(
-    repository: Repository<
-      ChangeProposal<ChangeProposalType>
-    > = localDataSource.getRepository<ChangeProposal<ChangeProposalType>>(
-      ChangeProposalSchema,
-    ),
+    repository: Repository<ChangeProposal<ChangeProposalType>>,
     logger: PackmindLogger = new PackmindLogger(origin),
   ) {
     super('changeProposal', repository, ChangeProposalSchema, logger);
