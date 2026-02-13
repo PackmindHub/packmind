@@ -4,3 +4,5 @@ export * from './IListCommandChangeProposalsUseCase';
 export * from './ICreateChangeProposalUseCase';
 export * from './IRejectCommandChangeProposalUseCase';
 export * from './IBatchCreateChangeProposalsUseCase';
+export * from './IBatchApplyChangeProposalsUseCase';
+export * from './IBatchRejectChangeProposalsUseCase';
