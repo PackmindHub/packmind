@@ -301,8 +301,8 @@ describe('Claude Deployment Integration', () => {
         expect(standardFile?.content).toContain('name: Test Standard');
       });
 
-      it('includes globs in frontmatter', () => {
-        expect(standardFile?.content).toContain('globs:');
+      it('includes paths in frontmatter', () => {
+        expect(standardFile?.content).toContain('paths:');
       });
 
       it('includes alwaysApply setting', () => {

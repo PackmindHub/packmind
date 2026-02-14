@@ -637,7 +637,7 @@ export const SkillExampleDialog = () => {
           <PMIcon>
             <LuExternalLink />
           </PMIcon>
-          Example: awesome-claude-skills
+          Explore awesome-claude-skills
         </a>
       </PMButton>
     </PMHStack>

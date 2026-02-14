@@ -1,4 +1,10 @@
-import React, { createContext, useContext, useMemo, useState } from 'react';
+import React, {
+  createContext,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from 'react';
 import { UserOrganizationRole } from '@packmind/types';
 import {
   TargetId,
@@ -123,6 +129,13 @@ const RunDistributionComponent: React.FC<RunDistributionProps> = ({
     renderModeConfiguration?.activeRenderModes ?? DEFAULT_ACTIVE_RENDER_MODES;
 
   const [selectedTargetIds, setSelectedTargetIds] = useState<TargetId[]>([]);
+
+  useEffect(() => {
+    if (targetsList.length === 1) {
+      setSelectedTargetIds([targetsList[0].id]);
+    }
+  }, [targetsList]);
+
   const canRunDistribution =
     selectedPackages.length > 0 &&
     selectedTargetIds.length > 0 &&
