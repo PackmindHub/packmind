@@ -1,4 +1,7 @@
-import { parseSkillMdContent } from './parseSkillMdContent';
+import {
+  parseSkillMdContent,
+  serializeSkillMetadata,
+} from './parseSkillMdContent';
 
 describe('parseSkillMdContent', () => {
   describe('when content has valid frontmatter and body', () => {
@@ -100,5 +103,26 @@ describe('parseSkillMdContent', () => {
 
       expect(result?.body).toBe('');
     });
+  });
+});
+
+describe('serializeSkillMetadata', () => {
+  it('sorts keys alphabetically', () => {
+    const result = serializeSkillMetadata({ zebra: 1, alpha: 2 });
+
+    expect(result).toBe('{"alpha":2,"zebra":1}');
+  });
+
+  it('returns deterministic output regardless of insertion order', () => {
+    const a = serializeSkillMetadata({ license: 'MIT', compatibility: 'v1' });
+    const b = serializeSkillMetadata({ compatibility: 'v1', license: 'MIT' });
+
+    expect(a).toBe(b);
+  });
+
+  it('returns empty object JSON for empty input', () => {
+    const result = serializeSkillMetadata({});
+
+    expect(result).toBe('{}');
   });
 });

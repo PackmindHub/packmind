@@ -64,19 +64,18 @@ describe('CreateChangeProposalUseCase', () => {
   let service: jest.Mocked<ChangeProposalService>;
 
   const buildCommand = (
-    overrides?: Partial<
-      CreateChangeProposalCommand<ChangeProposalType.updateCommandName>
-    >,
-  ): CreateChangeProposalCommand<ChangeProposalType.updateCommandName> => ({
-    userId: userId,
-    organizationId: organizationId,
-    spaceId: spaceId,
-    type: ChangeProposalType.updateCommandName,
-    artefactId: recipeId,
-    payload: { oldValue: recipe.name, newValue: 'New Recipe Name' },
-    captureMode: ChangeProposalCaptureMode.commit,
-    ...overrides,
-  });
+    overrides?: Partial<CreateChangeProposalCommand<ChangeProposalType>>,
+  ): CreateChangeProposalCommand<ChangeProposalType> =>
+    ({
+      userId,
+      organizationId,
+      spaceId,
+      type: ChangeProposalType.updateCommandName,
+      artefactId: recipeId,
+      payload: { oldValue: recipe.name, newValue: 'New Recipe Name' },
+      captureMode: ChangeProposalCaptureMode.commit,
+      ...overrides,
+    }) as CreateChangeProposalCommand<ChangeProposalType>;
 
   beforeEach(() => {
     accountsPort = {
@@ -166,7 +165,7 @@ describe('CreateChangeProposalUseCase', () => {
 
   describe('when type is updateCommandDescription', () => {
     const command = buildCommand({
-      type: ChangeProposalType.updateCommandDescription as unknown as ChangeProposalType.updateCommandName,
+      type: ChangeProposalType.updateCommandDescription,
       payload: { oldValue: recipe.content, newValue: 'new content' },
     });
 
@@ -203,8 +202,8 @@ describe('CreateChangeProposalUseCase', () => {
 
     it('delegates to service with skill version', async () => {
       const command = buildCommand({
-        type: ChangeProposalType.updateSkillName as unknown as ChangeProposalType.updateCommandName,
-        artefactId: skillId as unknown as string,
+        type: ChangeProposalType.updateSkillName,
+        artefactId: skillId,
         payload: { oldValue: skill.name, newValue: 'New Skill Name' },
       });
 
@@ -221,8 +220,8 @@ describe('CreateChangeProposalUseCase', () => {
 
     it('calls getSkill with the artefactId', async () => {
       const command = buildCommand({
-        type: ChangeProposalType.updateSkillName as unknown as ChangeProposalType.updateCommandName,
-        artefactId: skillId as unknown as string,
+        type: ChangeProposalType.updateSkillName,
+        artefactId: skillId,
         payload: { oldValue: skill.name, newValue: 'New Skill Name' },
       });
 
@@ -240,8 +239,8 @@ describe('CreateChangeProposalUseCase', () => {
 
     it('throws an error', async () => {
       const command = buildCommand({
-        type: ChangeProposalType.updateSkillDescription as unknown as ChangeProposalType.updateCommandName,
-        artefactId: skillId as unknown as string,
+        type: ChangeProposalType.updateSkillDescription,
+        artefactId: skillId,
         payload: { oldValue: 'old', newValue: 'new' },
       });
 
@@ -259,8 +258,8 @@ describe('CreateChangeProposalUseCase', () => {
 
     it('throws ChangeProposalPayloadMismatchError', async () => {
       const command = buildCommand({
-        type: ChangeProposalType.updateSkillName as unknown as ChangeProposalType.updateCommandName,
-        artefactId: skillId as unknown as string,
+        type: ChangeProposalType.updateSkillName,
+        artefactId: skillId,
         payload: { oldValue: 'Wrong Name', newValue: 'New Name' },
       });
 
@@ -281,12 +280,9 @@ describe('CreateChangeProposalUseCase', () => {
     });
 
     it('delegates to service with skill version', async () => {
-      const command = {
-        userId,
-        organizationId,
-        spaceId,
+      const command = buildCommand({
         type: ChangeProposalType.addSkillFile,
-        artefactId: skillId as unknown as string,
+        artefactId: skillId,
         payload: {
           targetId: 'new-file-id',
           item: {
@@ -297,12 +293,9 @@ describe('CreateChangeProposalUseCase', () => {
             isBase64: false,
           },
         },
-        captureMode: ChangeProposalCaptureMode.commit,
-      };
+      });
 
-      await useCase.execute(
-        command as unknown as CreateChangeProposalCommand<ChangeProposalType>,
-      );
+      await useCase.execute(command);
 
       expect(service.createChangeProposal).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -347,23 +340,17 @@ describe('CreateChangeProposalUseCase', () => {
     });
 
     it('delegates to service with skill version', async () => {
-      const command = {
-        userId,
-        organizationId,
-        spaceId,
+      const command = buildCommand({
         type: ChangeProposalType.updateSkillFilePermissions,
-        artefactId: skillId as unknown as string,
+        artefactId: skillId,
         payload: {
           targetId: skillFileId,
           oldValue: 'rw-r--r--',
           newValue: 'rwxr-xr-x',
         },
-        captureMode: ChangeProposalCaptureMode.commit,
-      };
+      });
 
-      await useCase.execute(
-        command as unknown as CreateChangeProposalCommand<ChangeProposalType>,
-      );
+      await useCase.execute(command);
 
       expect(service.createChangeProposal).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -375,25 +362,92 @@ describe('CreateChangeProposalUseCase', () => {
 
     describe('when oldValue does not match', () => {
       it('throws ChangeProposalPayloadMismatchError', async () => {
-        const command = {
-          userId,
-          organizationId,
-          spaceId,
+        const command = buildCommand({
           type: ChangeProposalType.updateSkillFilePermissions,
-          artefactId: skillId as unknown as string,
+          artefactId: skillId,
           payload: {
             targetId: skillFileId,
             oldValue: 'r--r--r--',
             newValue: 'rwxr-xr-x',
           },
-          captureMode: ChangeProposalCaptureMode.commit,
-        };
+        });
 
-        await expect(
-          useCase.execute(
-            command as unknown as CreateChangeProposalCommand<ChangeProposalType>,
-          ),
-        ).rejects.toBeInstanceOf(ChangeProposalPayloadMismatchError);
+        await expect(useCase.execute(command)).rejects.toBeInstanceOf(
+          ChangeProposalPayloadMismatchError,
+        );
+      });
+    });
+  });
+
+  describe('when type is updateSkillFileContent', () => {
+    const skillFileId = createSkillFileId('file-1');
+    const skillVersionId = createSkillVersionId('version-1');
+
+    beforeEach(() => {
+      spacesPort.getSpaceById.mockResolvedValue(space);
+      skillsPort.getSkill.mockResolvedValue(skill);
+      skillsPort.getLatestSkillVersion.mockResolvedValue({
+        id: skillVersionId,
+        skillId,
+        version: 3,
+        userId,
+        name: 'My Skill',
+        slug: 'my-skill',
+        description: 'Skill description',
+        prompt: 'Skill prompt',
+      });
+      skillsPort.getSkillFiles.mockResolvedValue([
+        {
+          id: skillFileId,
+          skillVersionId,
+          path: 'helper.ts',
+          content: 'original content',
+          permissions: 'rw-r--r--',
+          isBase64: false,
+        },
+      ]);
+      service.createChangeProposal.mockResolvedValue({
+        changeProposal:
+          {} as CreateChangeProposalResponse<ChangeProposalType.updateSkillFileContent>['changeProposal'],
+      });
+    });
+
+    it('delegates to service with skill version', async () => {
+      const command = buildCommand({
+        type: ChangeProposalType.updateSkillFileContent,
+        artefactId: skillId,
+        payload: {
+          targetId: skillFileId,
+          oldValue: 'original content',
+          newValue: 'updated content',
+        },
+      });
+
+      await useCase.execute(command);
+
+      expect(service.createChangeProposal).toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: ChangeProposalType.updateSkillFileContent,
+        }),
+        3,
+      );
+    });
+
+    describe('when oldValue does not match', () => {
+      it('throws ChangeProposalPayloadMismatchError', async () => {
+        const command = buildCommand({
+          type: ChangeProposalType.updateSkillFileContent,
+          artefactId: skillId,
+          payload: {
+            targetId: skillFileId,
+            oldValue: 'wrong content',
+            newValue: 'updated content',
+          },
+        });
+
+        await expect(useCase.execute(command)).rejects.toBeInstanceOf(
+          ChangeProposalPayloadMismatchError,
+        );
       });
     });
   });
@@ -444,7 +498,7 @@ describe('CreateChangeProposalUseCase', () => {
 
   describe('when type is unsupported', () => {
     const command = buildCommand({
-      type: ChangeProposalType.updateStandardName as unknown as ChangeProposalType.updateCommandName,
+      type: ChangeProposalType.updateStandardName,
     });
 
     it('throws UnsupportedChangeProposalTypeError', async () => {
@@ -513,7 +567,7 @@ describe('CreateChangeProposalUseCase', () => {
 
   describe('when payload oldValue does not match current recipe content', () => {
     const command = buildCommand({
-      type: ChangeProposalType.updateCommandDescription as unknown as ChangeProposalType.updateCommandName,
+      type: ChangeProposalType.updateCommandDescription,
       payload: { oldValue: 'wrong content', newValue: 'new content' },
     });
 

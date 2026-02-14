@@ -515,6 +515,39 @@ describe('DiffArtefactsUseCase', () => {
     });
   });
 
+  describe('when skill file has no skillFileId', () => {
+    beforeEach(() => {
+      mockGateway.deployment.pull.mockResolvedValue({
+        fileUpdates: {
+          createOrUpdate: [
+            {
+              path: '.claude/skills/my-skill/helper.ts',
+              content: 'server content',
+              artifactType: 'skill',
+              artifactName: 'My Skill',
+              artifactId: 'artifact-6',
+              spaceId: 'space-6',
+              skillFilePermissions: 'read',
+            },
+          ],
+          delete: [],
+        },
+        skillFolders: [],
+      });
+
+      (fs.readFile as jest.Mock).mockResolvedValue('local content');
+    });
+
+    it('returns empty result', async () => {
+      const result = await useCase.execute({
+        packagesSlugs: ['test-package'],
+        baseDirectory: '/test',
+      });
+
+      expect(result).toEqual([]);
+    });
+  });
+
   describe('when skill file content changed locally', () => {
     beforeEach(() => {
       mockGateway.deployment.pull.mockResolvedValue({
@@ -760,6 +793,57 @@ describe('DiffArtefactsUseCase', () => {
       });
 
       expect(result[0].type).toBe(ChangeProposalType.deleteSkillFile);
+    });
+
+    it('includes targetId in payload', async () => {
+      const result = await useCase.execute({
+        packagesSlugs: ['test-package'],
+        baseDirectory: '/test',
+      });
+
+      expect(result[0].payload).toHaveProperty('targetId', 'skill-file-1');
+    });
+
+    it('uses basename for item path', async () => {
+      const result = await useCase.execute({
+        packagesSlugs: ['test-package'],
+        baseDirectory: '/test',
+      });
+
+      expect(result[0].payload).toHaveProperty('item.path', 'helper.ts');
+    });
+
+    it('includes server content, permissions, and isBase64 in payload', async () => {
+      const result = await useCase.execute({
+        packagesSlugs: ['test-package'],
+        baseDirectory: '/test',
+      });
+
+      expect(result[0].payload).toMatchObject({
+        item: {
+          content: 'server content',
+          permissions: 'read',
+          isBase64: false,
+        },
+      });
+    });
+
+    it('propagates artifactId from server file', async () => {
+      const result = await useCase.execute({
+        packagesSlugs: ['test-package'],
+        baseDirectory: '/test',
+      });
+
+      expect(result[0].artifactId).toBe('artifact-6');
+    });
+
+    it('propagates spaceId from server file', async () => {
+      const result = await useCase.execute({
+        packagesSlugs: ['test-package'],
+        baseDirectory: '/test',
+      });
+
+      expect(result[0].spaceId).toBe('space-6');
     });
   });
 
@@ -1267,6 +1351,557 @@ describe('DiffArtefactsUseCase', () => {
       });
 
       expect(result).toEqual([]);
+    });
+  });
+
+  describe('when deleted skill file has isBase64 flag', () => {
+    beforeEach(() => {
+      mockGateway.deployment.pull.mockResolvedValue({
+        fileUpdates: {
+          createOrUpdate: [
+            {
+              path: '.claude/skills/my-skill/image.png',
+              content: 'base64encodedcontent',
+              artifactType: 'skill',
+              artifactName: 'My Skill',
+              artifactId: 'artifact-bin',
+              spaceId: 'space-bin',
+              skillFileId: 'skill-file-bin',
+              skillFilePermissions: 'read',
+              isBase64: true,
+            },
+          ],
+          delete: [],
+        },
+        skillFolders: [],
+      });
+
+      (fs.readFile as jest.Mock).mockRejectedValue(
+        new Error('ENOENT: no such file'),
+      );
+    });
+
+    it('preserves isBase64 flag in payload', async () => {
+      const result = await useCase.execute({
+        packagesSlugs: ['test-package'],
+        baseDirectory: '/test',
+      });
+
+      expect(result[0].payload).toMatchObject({
+        item: { isBase64: true },
+      });
+    });
+  });
+
+  describe('when deleted skill file has custom permissions', () => {
+    beforeEach(() => {
+      mockGateway.deployment.pull.mockResolvedValue({
+        fileUpdates: {
+          createOrUpdate: [
+            {
+              path: '.claude/skills/my-skill/script.sh',
+              content: '#!/bin/bash',
+              artifactType: 'skill',
+              artifactName: 'My Skill',
+              artifactId: 'artifact-perm',
+              spaceId: 'space-perm',
+              skillFileId: 'skill-file-perm',
+              skillFilePermissions: 'rwxr-xr-x',
+            },
+          ],
+          delete: [],
+        },
+        skillFolders: [],
+      });
+
+      (fs.readFile as jest.Mock).mockRejectedValue(
+        new Error('ENOENT: no such file'),
+      );
+    });
+
+    it('preserves custom permissions in payload', async () => {
+      const result = await useCase.execute({
+        packagesSlugs: ['test-package'],
+        baseDirectory: '/test',
+      });
+
+      expect(result[0].payload).toMatchObject({
+        item: { permissions: 'rwxr-xr-x' },
+      });
+    });
+  });
+
+  describe('when deleted skill file is in a subdirectory', () => {
+    beforeEach(() => {
+      mockGateway.deployment.pull.mockResolvedValue({
+        fileUpdates: {
+          createOrUpdate: [
+            {
+              path: '.claude/skills/my-skill/lib/utils.ts',
+              content: 'export const util = true;',
+              artifactType: 'skill',
+              artifactName: 'My Skill',
+              artifactId: 'artifact-sub',
+              spaceId: 'space-sub',
+              skillFileId: 'skill-file-sub',
+              skillFilePermissions: 'read',
+            },
+          ],
+          delete: [],
+        },
+        skillFolders: [],
+      });
+
+      (fs.readFile as jest.Mock).mockRejectedValue(
+        new Error('ENOENT: no such file'),
+      );
+    });
+
+    it('uses path relative to skill folder, preserving subdirectory', async () => {
+      const result = await useCase.execute({
+        packagesSlugs: ['test-package'],
+        baseDirectory: '/test',
+      });
+
+      expect(result[0].payload).toHaveProperty('item.path', 'lib/utils.ts');
+    });
+  });
+
+  describe('when skill folder has no SKILL.md in server files', () => {
+    beforeEach(() => {
+      mockGateway.deployment.pull.mockResolvedValue({
+        fileUpdates: {
+          createOrUpdate: [],
+          delete: [],
+        },
+        skillFolders: ['.claude/skills/orphan-skill'],
+      });
+
+      (fs.readdir as jest.Mock).mockResolvedValue(['new-file.ts']);
+      (fs.stat as jest.Mock).mockImplementation(() =>
+        Promise.resolve({ isDirectory: () => false }),
+      );
+      (fs.readFile as jest.Mock).mockResolvedValue('file content');
+    });
+
+    it('returns empty result', async () => {
+      const result = await useCase.execute({
+        packagesSlugs: ['test-package'],
+        baseDirectory: '/test',
+      });
+
+      expect(result).toEqual([]);
+    });
+  });
+
+  describe('when new local file is inside a subdirectory', () => {
+    beforeEach(() => {
+      mockGateway.deployment.pull.mockResolvedValue({
+        fileUpdates: {
+          createOrUpdate: [
+            {
+              path: '.claude/skills/my-skill/SKILL.md',
+              content:
+                "---\nname: 'My Skill'\ndescription: 'desc'\n---\n\nprompt",
+              artifactType: 'skill',
+              artifactName: 'My Skill',
+              artifactId: 'artifact-dir',
+              spaceId: 'space-dir',
+            },
+          ],
+          delete: [],
+        },
+        skillFolders: ['.claude/skills/my-skill'],
+      });
+
+      (fs.readFile as jest.Mock).mockImplementation((filePath: string) => {
+        if (filePath.endsWith('SKILL.md')) {
+          return Promise.resolve(
+            "---\nname: 'My Skill'\ndescription: 'desc'\n---\n\nprompt",
+          );
+        }
+        if (filePath.endsWith('nested-file.ts')) {
+          return Promise.resolve('nested content');
+        }
+        return Promise.reject(new Error('ENOENT'));
+      });
+
+      (fs.readdir as jest.Mock).mockImplementation((dirPath: string) => {
+        if (dirPath.endsWith('my-skill')) {
+          return Promise.resolve(['SKILL.md', 'references']);
+        }
+        if (dirPath.endsWith('references')) {
+          return Promise.resolve(['nested-file.ts']);
+        }
+        return Promise.resolve([]);
+      });
+
+      (fs.stat as jest.Mock).mockImplementation((filePath: string) => {
+        if (filePath.endsWith('references')) {
+          return Promise.resolve({ isDirectory: () => true });
+        }
+        return Promise.resolve({ isDirectory: () => false });
+      });
+    });
+
+    it('returns exactly one diff', async () => {
+      const result = await useCase.execute({
+        packagesSlugs: ['test-package'],
+        baseDirectory: '/test',
+      });
+
+      expect(result).toHaveLength(1);
+    });
+
+    it('returns addSkillFile type', async () => {
+      const result = await useCase.execute({
+        packagesSlugs: ['test-package'],
+        baseDirectory: '/test',
+      });
+
+      expect(result[0].type).toBe(ChangeProposalType.addSkillFile);
+    });
+
+    it('uses relative path including subdirectory in payload', async () => {
+      const result = await useCase.execute({
+        packagesSlugs: ['test-package'],
+        baseDirectory: '/test',
+      });
+
+      expect(result[0].payload).toHaveProperty(
+        'item.path',
+        'references/nested-file.ts',
+      );
+    });
+
+    it('uses full workspace path for filePath', async () => {
+      const result = await useCase.execute({
+        packagesSlugs: ['test-package'],
+        baseDirectory: '/test',
+      });
+
+      expect(result[0].filePath).toBe(
+        '.claude/skills/my-skill/references/nested-file.ts',
+      );
+    });
+  });
+
+  describe('when subdirectory is empty', () => {
+    beforeEach(() => {
+      mockGateway.deployment.pull.mockResolvedValue({
+        fileUpdates: {
+          createOrUpdate: [
+            {
+              path: '.claude/skills/my-skill/SKILL.md',
+              content:
+                "---\nname: 'My Skill'\ndescription: 'desc'\n---\n\nprompt",
+              artifactType: 'skill',
+              artifactName: 'My Skill',
+              artifactId: 'artifact-empty',
+              spaceId: 'space-empty',
+            },
+          ],
+          delete: [],
+        },
+        skillFolders: ['.claude/skills/my-skill'],
+      });
+
+      (fs.readFile as jest.Mock).mockImplementation((filePath: string) => {
+        if (filePath.endsWith('SKILL.md')) {
+          return Promise.resolve(
+            "---\nname: 'My Skill'\ndescription: 'desc'\n---\n\nprompt",
+          );
+        }
+        return Promise.reject(new Error('ENOENT'));
+      });
+
+      (fs.readdir as jest.Mock).mockImplementation((dirPath: string) => {
+        if (dirPath.endsWith('my-skill')) {
+          return Promise.resolve(['SKILL.md', 'empty-dir']);
+        }
+        if (dirPath.endsWith('empty-dir')) {
+          return Promise.resolve([]);
+        }
+        return Promise.resolve([]);
+      });
+
+      (fs.stat as jest.Mock).mockImplementation((filePath: string) => {
+        if (filePath.endsWith('empty-dir')) {
+          return Promise.resolve({ isDirectory: () => true });
+        }
+        return Promise.resolve({ isDirectory: () => false });
+      });
+    });
+
+    it('returns empty result', async () => {
+      const result = await useCase.execute({
+        packagesSlugs: ['test-package'],
+        baseDirectory: '/test',
+      });
+
+      expect(result).toEqual([]);
+    });
+  });
+
+  describe('when new local file is unreadable', () => {
+    beforeEach(() => {
+      mockGateway.deployment.pull.mockResolvedValue({
+        fileUpdates: {
+          createOrUpdate: [
+            {
+              path: '.claude/skills/my-skill/SKILL.md',
+              content:
+                "---\nname: 'My Skill'\ndescription: 'desc'\n---\n\nprompt",
+              artifactType: 'skill',
+              artifactName: 'My Skill',
+              artifactId: 'artifact-unread',
+              spaceId: 'space-unread',
+            },
+          ],
+          delete: [],
+        },
+        skillFolders: ['.claude/skills/my-skill'],
+      });
+
+      (fs.readFile as jest.Mock).mockImplementation((filePath: string) => {
+        if (filePath.endsWith('SKILL.md')) {
+          return Promise.resolve(
+            "---\nname: 'My Skill'\ndescription: 'desc'\n---\n\nprompt",
+          );
+        }
+        return Promise.reject(new Error('EACCES: permission denied'));
+      });
+
+      (fs.readdir as jest.Mock).mockResolvedValue([
+        'SKILL.md',
+        'unreadable.ts',
+      ]);
+      (fs.stat as jest.Mock).mockResolvedValue({
+        isDirectory: () => false,
+      });
+    });
+
+    it('returns empty result', async () => {
+      const result = await useCase.execute({
+        packagesSlugs: ['test-package'],
+        baseDirectory: '/test',
+      });
+
+      expect(result).toEqual([]);
+    });
+  });
+
+  describe('when same skill has both deleted and new files', () => {
+    beforeEach(() => {
+      mockGateway.deployment.pull.mockResolvedValue({
+        fileUpdates: {
+          createOrUpdate: [
+            {
+              path: '.claude/skills/my-skill/SKILL.md',
+              content:
+                "---\nname: 'My Skill'\ndescription: 'desc'\n---\n\nprompt",
+              artifactType: 'skill',
+              artifactName: 'My Skill',
+              artifactId: 'artifact-mix',
+              spaceId: 'space-mix',
+            },
+            {
+              path: '.claude/skills/my-skill/old-file.ts',
+              content: 'old content',
+              artifactType: 'skill',
+              artifactName: 'My Skill',
+              artifactId: 'artifact-mix',
+              spaceId: 'space-mix',
+              skillFileId: 'skill-file-old',
+              skillFilePermissions: 'read',
+            },
+          ],
+          delete: [],
+        },
+        skillFolders: ['.claude/skills/my-skill'],
+      });
+
+      (fs.readFile as jest.Mock).mockImplementation((filePath: string) => {
+        if (filePath.endsWith('SKILL.md')) {
+          return Promise.resolve(
+            "---\nname: 'My Skill'\ndescription: 'desc'\n---\n\nprompt",
+          );
+        }
+        if (filePath.endsWith('new-file.ts')) {
+          return Promise.resolve('new content');
+        }
+        return Promise.reject(new Error('ENOENT'));
+      });
+
+      (fs.readdir as jest.Mock).mockResolvedValue(['SKILL.md', 'new-file.ts']);
+      (fs.stat as jest.Mock).mockResolvedValue({
+        isDirectory: () => false,
+      });
+    });
+
+    it('returns two diffs', async () => {
+      const result = await useCase.execute({
+        packagesSlugs: ['test-package'],
+        baseDirectory: '/test',
+      });
+
+      expect(result).toHaveLength(2);
+    });
+
+    it('returns deleteSkillFile and addSkillFile types', async () => {
+      const result = await useCase.execute({
+        packagesSlugs: ['test-package'],
+        baseDirectory: '/test',
+      });
+
+      expect(result.map((d) => d.type)).toEqual(
+        expect.arrayContaining([
+          ChangeProposalType.deleteSkillFile,
+          ChangeProposalType.addSkillFile,
+        ]),
+      );
+    });
+
+    it('uses skill-relative path for deleted file payload', async () => {
+      const result = await useCase.execute({
+        packagesSlugs: ['test-package'],
+        baseDirectory: '/test',
+      });
+
+      const deleteDiff = result.find(
+        (d) => d.type === ChangeProposalType.deleteSkillFile,
+      );
+
+      expect(deleteDiff!.payload).toHaveProperty('item.path', 'old-file.ts');
+    });
+
+    it('uses skill-relative path for added file payload', async () => {
+      const result = await useCase.execute({
+        packagesSlugs: ['test-package'],
+        baseDirectory: '/test',
+      });
+
+      const addDiff = result.find(
+        (d) => d.type === ChangeProposalType.addSkillFile,
+      );
+
+      expect(addDiff!.payload).toHaveProperty('item.path', 'new-file.ts');
+    });
+  });
+
+  describe('when skill has subdirectory with both deleted and new files', () => {
+    beforeEach(() => {
+      mockGateway.deployment.pull.mockResolvedValue({
+        fileUpdates: {
+          createOrUpdate: [
+            {
+              path: '.claude/skills/my-skill/SKILL.md',
+              content:
+                "---\nname: 'My Skill'\ndescription: 'desc'\n---\n\nprompt",
+              artifactType: 'skill',
+              artifactName: 'My Skill',
+              artifactId: 'artifact-sub-mix',
+              spaceId: 'space-sub-mix',
+            },
+            {
+              path: '.claude/skills/my-skill/references/existing.md',
+              content: 'existing content',
+              artifactType: 'skill',
+              artifactName: 'My Skill',
+              artifactId: 'artifact-sub-mix',
+              spaceId: 'space-sub-mix',
+              skillFileId: 'skill-file-existing',
+              skillFilePermissions: 'read',
+            },
+            {
+              path: '.claude/skills/my-skill/references/deleted-locally.md',
+              content: 'server only content',
+              artifactType: 'skill',
+              artifactName: 'My Skill',
+              artifactId: 'artifact-sub-mix',
+              spaceId: 'space-sub-mix',
+              skillFileId: 'skill-file-deleted',
+              skillFilePermissions: 'read',
+            },
+          ],
+          delete: [],
+        },
+        skillFolders: ['.claude/skills/my-skill'],
+      });
+
+      (fs.readFile as jest.Mock).mockImplementation((filePath: string) => {
+        if (filePath.endsWith('SKILL.md')) {
+          return Promise.resolve(
+            "---\nname: 'My Skill'\ndescription: 'desc'\n---\n\nprompt",
+          );
+        }
+        if (filePath.endsWith('existing.md')) {
+          return Promise.resolve('existing content');
+        }
+        if (filePath.endsWith('new-file.md')) {
+          return Promise.resolve('brand new content');
+        }
+        return Promise.reject(new Error('ENOENT'));
+      });
+
+      (fs.readdir as jest.Mock).mockImplementation((dirPath: string) => {
+        if (dirPath.endsWith('my-skill')) {
+          return Promise.resolve(['SKILL.md', 'references']);
+        }
+        if (dirPath.endsWith('references')) {
+          return Promise.resolve(['existing.md', 'new-file.md']);
+        }
+        return Promise.resolve([]);
+      });
+
+      (fs.stat as jest.Mock).mockImplementation((filePath: string) => {
+        if (filePath.endsWith('references')) {
+          return Promise.resolve({ isDirectory: () => true });
+        }
+        return Promise.resolve({ isDirectory: () => false });
+      });
+    });
+
+    it('detects the deleted file path as deleteSkillFile', async () => {
+      const result = await useCase.execute({
+        packagesSlugs: ['test-package'],
+        baseDirectory: '/test',
+      });
+
+      const deleteDiff = result.find(
+        (d) => d.type === ChangeProposalType.deleteSkillFile,
+      );
+
+      expect(deleteDiff!.payload).toHaveProperty(
+        'item.path',
+        'references/deleted-locally.md',
+      );
+    });
+
+    it('detects the new file path as addSkillFile', async () => {
+      const result = await useCase.execute({
+        packagesSlugs: ['test-package'],
+        baseDirectory: '/test',
+      });
+
+      const addDiff = result.find(
+        (d) => d.type === ChangeProposalType.addSkillFile,
+      );
+
+      expect(addDiff!.payload).toHaveProperty(
+        'item.path',
+        'references/new-file.md',
+      );
+    });
+
+    it('does not produce diffs for unchanged existing file', async () => {
+      const result = await useCase.execute({
+        packagesSlugs: ['test-package'],
+        baseDirectory: '/test',
+      });
+
+      const types = result.map((d) => d.type);
+      expect(types).not.toContain(ChangeProposalType.updateSkillFileContent);
     });
   });
 

@@ -15,7 +15,7 @@ const CHANGE_TYPE: Record<
   standard: ChangeProposalType.updateStandardDescription,
 };
 
-export class NonSkillDiffStrategy implements IDiffStrategy {
+export class CommandDiffStrategy implements IDiffStrategy {
   supports(file: DiffableFile): boolean {
     return file.artifactType !== 'skill';
   }

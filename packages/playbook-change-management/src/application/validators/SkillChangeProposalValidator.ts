@@ -8,7 +8,7 @@ import {
   SkillId,
   ScalarUpdatePayload,
 } from '@packmind/types';
-import { MemberContext } from '@packmind/node-utils';
+import { MemberContext, serializeSkillMetadata } from '@packmind/node-utils';
 import { IChangeProposalValidator } from './IChangeProposalValidator';
 import { ChangeProposalPayloadMismatchError } from '../errors/ChangeProposalPayloadMismatchError';
 
@@ -33,31 +33,17 @@ const SKILL_FIELD_BY_TYPE: Record<ScalarSkillType, (skill: Skill) => string> = {
   [ChangeProposalType.updateSkillName]: (skill) => skill.name,
   [ChangeProposalType.updateSkillDescription]: (skill) => skill.description,
   [ChangeProposalType.updateSkillPrompt]: (skill) => skill.prompt,
-  [ChangeProposalType.updateSkillMetadata]: (skill) =>
-    serializeSkillMetadata(skill),
+  [ChangeProposalType.updateSkillMetadata]: (skill) => {
+    const fields: Record<string, unknown> = {};
+    if (skill.license !== undefined) fields.license = skill.license;
+    if (skill.compatibility !== undefined)
+      fields.compatibility = skill.compatibility;
+    if (skill.metadata !== undefined) fields.metadata = skill.metadata;
+    if (skill.allowedTools !== undefined)
+      fields.allowedTools = skill.allowedTools;
+    return serializeSkillMetadata(fields);
+  },
 };
-
-function serializeSkillMetadata(skill: Skill): string {
-  const fields: Record<string, unknown> = {};
-  if (skill.license !== undefined) fields.license = skill.license;
-  if (skill.compatibility !== undefined)
-    fields.compatibility = skill.compatibility;
-  if (skill.metadata !== undefined) fields.metadata = skill.metadata;
-  if (skill.allowedTools !== undefined)
-    fields.allowedTools = skill.allowedTools;
-
-  const sorted = Object.keys(fields)
-    .sort()
-    .reduce(
-      (acc, key) => {
-        acc[key] = fields[key];
-        return acc;
-      },
-      {} as Record<string, unknown>,
-    );
-
-  return JSON.stringify(sorted);
-}
 
 const SCALAR_TYPES = new Set<ChangeProposalType>([
   ChangeProposalType.updateSkillName,
@@ -96,11 +82,36 @@ export class SkillChangeProposalValidator implements IChangeProposalValidator {
       }
     }
 
+    if (command.type === ChangeProposalType.updateSkillFileContent) {
+      await this.validateFileContent(skill, command);
+    }
+
     if (command.type === ChangeProposalType.updateSkillFilePermissions) {
       await this.validateFilePermissions(skill, command);
     }
 
     return { artefactVersion: skill.version };
+  }
+
+  private async validateFileContent(
+    skill: Skill,
+    command: CreateChangeProposalCommand<ChangeProposalType> & MemberContext,
+  ): Promise<void> {
+    const payload = command.payload as CollectionItemUpdatePayload<SkillFileId>;
+    const version = await this.skillsPort.getLatestSkillVersion(skill.id);
+    if (!version) {
+      return;
+    }
+
+    const files = await this.skillsPort.getSkillFiles(version.id);
+    const targetFile = files.find((f) => f.id === payload.targetId);
+    if (targetFile && payload.oldValue !== targetFile.content) {
+      throw new ChangeProposalPayloadMismatchError(
+        command.type,
+        payload.oldValue,
+        targetFile.content,
+      );
+    }
   }
 
   private async validateFilePermissions(

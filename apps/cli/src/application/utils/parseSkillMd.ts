@@ -1,4 +1,7 @@
-import { parseSkillMdContent } from '@packmind/node-utils';
+import {
+  parseSkillMdContent,
+  serializeSkillMetadata,
+} from '@packmind/node-utils';
 
 export type ParsedSkillMd = {
   name: string;
@@ -24,20 +27,10 @@ export function parseSkillMd(content: string): ParsedSkillMd | null {
     ),
   );
 
-  const sorted = Object.keys(metadataFields)
-    .sort()
-    .reduce(
-      (acc, key) => {
-        acc[key] = metadataFields[key];
-        return acc;
-      },
-      {} as Record<string, unknown>,
-    );
-
   return {
     name,
     description,
     body,
-    metadataJson: JSON.stringify(sorted),
+    metadataJson: serializeSkillMetadata(metadataFields),
   };
 }
