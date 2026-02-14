@@ -567,7 +567,7 @@ ${recipeVersion.content}`;
       // When the scope is not null or empty
       frontmatter = `---
 name: ${standardVersion.name}
-globs: ${this.formatGlobsValue(standardVersion.scope)}
+paths: ${this.formatGlobsValue(standardVersion.scope)}
 alwaysApply: false
 description: ${summary}
 ---`;

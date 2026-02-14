@@ -597,7 +597,7 @@ describe('ClaudeDeployer', () => {
       });
 
       describe('when scope exists', () => {
-        it('includes frontmatter with globs', async () => {
+        it('includes frontmatter with paths', async () => {
           const standard = standardFactory({
             name: 'Test Standard',
             slug: 'test-standard',
@@ -624,7 +624,7 @@ describe('ClaudeDeployer', () => {
           );
 
           const standardFile = result.createOrUpdate[0];
-          expect(standardFile.content).toContain(`globs: "${standard.scope}"`);
+          expect(standardFile.content).toContain(`paths: "${standard.scope}"`);
         });
 
         it('quotes globs starting with **/', async () => {
@@ -654,7 +654,7 @@ describe('ClaudeDeployer', () => {
           );
 
           const standardFile = result.createOrUpdate[0];
-          expect(standardFile.content).toContain('globs: "**/*.spec.ts"');
+          expect(standardFile.content).toContain('paths: "**/*.spec.ts"');
         });
 
         it('quotes globs starting with *', async () => {
@@ -684,7 +684,7 @@ describe('ClaudeDeployer', () => {
           );
 
           const standardFile = result.createOrUpdate[0];
-          expect(standardFile.content).toContain('globs: "*.spec.ts"');
+          expect(standardFile.content).toContain('paths: "*.spec.ts"');
         });
 
         it('includes unquoted globs not starting with *', async () => {
@@ -714,7 +714,7 @@ describe('ClaudeDeployer', () => {
           );
 
           const standardFile = result.createOrUpdate[0];
-          expect(standardFile.content).toContain(`globs: ${standard.scope}`);
+          expect(standardFile.content).toContain(`paths: ${standard.scope}`);
         });
 
         it('does not quote globs not starting with *', async () => {
@@ -745,7 +745,7 @@ describe('ClaudeDeployer', () => {
 
           const standardFile = result.createOrUpdate[0];
           expect(standardFile.content).not.toContain(
-            `globs: "${standard.scope}"`,
+            `paths: "${standard.scope}"`,
           );
         });
 
@@ -777,7 +777,7 @@ describe('ClaudeDeployer', () => {
 
           const standardFile = result.createOrUpdate[0];
           expect(standardFile.content).toContain(
-            'globs: ["**/*.spec.ts", "**/*.test.ts"]',
+            'paths: ["**/*.spec.ts", "**/*.test.ts"]',
           );
         });
 
@@ -809,7 +809,7 @@ describe('ClaudeDeployer', () => {
 
           const standardFile = result.createOrUpdate[0];
           expect(standardFile.content).toContain(
-            'globs: ["**/*.spec.ts", src/**/*.ts]',
+            'paths: ["**/*.spec.ts", src/**/*.ts]',
           );
         });
 
@@ -840,7 +840,7 @@ describe('ClaudeDeployer', () => {
           );
 
           const standardFile = result.createOrUpdate[0];
-          expect(standardFile.content).toContain('globs: "**/*.{ts,tsx}"');
+          expect(standardFile.content).toContain('paths: "**/*.{ts,tsx}"');
         });
 
         it('sets alwaysApply to false', async () => {
@@ -1093,7 +1093,7 @@ describe('ClaudeDeployer', () => {
         );
 
         const standardFile = result.createOrUpdate[0];
-        expect(standardFile.content).not.toContain('globs:');
+        expect(standardFile.content).not.toContain('paths:');
       });
     });
 
@@ -1293,7 +1293,7 @@ describe('ClaudeDeployer', () => {
           file.path.includes('frontend-standard'),
         );
         if (frontendFile) {
-          expect(frontendFile.content).toContain('globs: "**/*.{ts,tsx}"');
+          expect(frontendFile.content).toContain('paths: "**/*.{ts,tsx}"');
         }
       });
 
@@ -1453,7 +1453,7 @@ describe('ClaudeDeployer', () => {
           file.path.includes('backend-standard'),
         );
         if (backendFile) {
-          expect(backendFile.content).not.toContain('globs:');
+          expect(backendFile.content).not.toContain('paths:');
         }
       });
 
