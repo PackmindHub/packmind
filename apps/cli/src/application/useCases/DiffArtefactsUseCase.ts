@@ -8,16 +8,14 @@ import { IPackmindGateway } from '../../domain/repositories/IPackmindGateway';
 import { FileModification } from '@packmind/types';
 import { DiffableFile } from './diffStrategies/DiffableFile';
 import { IDiffStrategy } from './diffStrategies/IDiffStrategy';
-import { NonSkillDiffStrategy } from './diffStrategies/NonSkillDiffStrategy';
+import { CommandDiffStrategy } from './diffStrategies/CommandDiffStrategy';
 import { SkillDiffStrategy } from './diffStrategies/SkillDiffStrategy';
 
 export class DiffArtefactsUseCase implements IDiffArtefactsUseCase {
   private readonly strategies: IDiffStrategy[];
-  private readonly skillStrategy: SkillDiffStrategy;
 
   constructor(private readonly packmindGateway: IPackmindGateway) {
-    this.skillStrategy = new SkillDiffStrategy();
-    this.strategies = [new NonSkillDiffStrategy(), this.skillStrategy];
+    this.strategies = [new CommandDiffStrategy(), new SkillDiffStrategy()];
   }
 
   public async execute(
@@ -60,13 +58,16 @@ export class DiffArtefactsUseCase implements IDiffArtefactsUseCase {
       }
     }
 
-    // Detect new local skill files (addSkillFile)
-    const newFileDiffs = await this.skillStrategy.diffNewLocalFiles(
-      response.skillFolders,
-      diffableFiles,
-      baseDirectory,
-    );
-    diffs.push(...newFileDiffs);
+    for (const strategy of this.strategies) {
+      if (strategy.diffNewFiles) {
+        const newFileDiffs = await strategy.diffNewFiles(
+          response.skillFolders,
+          diffableFiles,
+          baseDirectory,
+        );
+        diffs.push(...newFileDiffs);
+      }
+    }
 
     return diffs;
   }

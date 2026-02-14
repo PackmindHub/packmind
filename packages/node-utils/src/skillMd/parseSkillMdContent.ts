@@ -20,6 +20,32 @@ export type ParsedSkillMdContent = {
 };
 
 /**
+ * Serializes skill metadata fields into a deterministic JSON string.
+ *
+ * Keys are sorted alphabetically before serialization so that
+ * two records with the same entries always produce the same output
+ * regardless of insertion order.
+ *
+ * @param fields - Metadata key-value pairs to serialize
+ * @returns Deterministic JSON string
+ */
+export function serializeSkillMetadata(
+  fields: Record<string, unknown>,
+): string {
+  const sorted = Object.keys(fields)
+    .sort()
+    .reduce(
+      (acc, key) => {
+        acc[key] = fields[key];
+        return acc;
+      },
+      {} as Record<string, unknown>,
+    );
+
+  return JSON.stringify(sorted);
+}
+
+/**
  * Parses a SKILL.md file and extracts YAML frontmatter properties and body.
  *
  * Returns `null` when the content cannot be parsed (missing/unclosed

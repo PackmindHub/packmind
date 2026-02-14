@@ -1,8 +1,4 @@
-import {
-  ChangeProposalType,
-  SkillFileId,
-  createSkillFileId,
-} from '@packmind/types';
+import { ChangeProposalType, createSkillFileId } from '@packmind/types';
 import { diffLines } from 'diff';
 import * as fs from 'fs/promises';
 import * as path from 'path';
@@ -13,7 +9,7 @@ import { parseSkillMd } from '../../utils/parseSkillMd';
 import { IDiffStrategy } from './IDiffStrategy';
 import { DiffableFile } from './DiffableFile';
 
-export function modeToPermissionString(mode: number): string {
+function modeToPermissionString(mode: number): string {
   const perms = mode & 0o777;
   const chars = 'rwx';
   let result = '';
@@ -38,7 +34,7 @@ export class SkillDiffStrategy implements IDiffStrategy {
     return this.diffSkillFile(file, baseDirectory);
   }
 
-  async diffNewLocalFiles(
+  async diffNewFiles(
     skillFolders: string[],
     serverFiles: DiffableFile[],
     baseDirectory: string,
@@ -47,10 +43,7 @@ export class SkillDiffStrategy implements IDiffStrategy {
 
     for (const folder of skillFolders) {
       const folderPath = path.join(baseDirectory, folder);
-      const localFiles = await this.tryReadDir(folderPath);
-      if (!localFiles) {
-        continue;
-      }
+      const localFiles = await this.listFilesRecursively(folderPath);
 
       const serverPathsInFolder = new Set(
         serverFiles
@@ -65,22 +58,17 @@ export class SkillDiffStrategy implements IDiffStrategy {
         continue;
       }
 
-      for (const localFileName of localFiles) {
-        if (localFileName === 'SKILL.md') {
+      for (const relativePath of localFiles) {
+        if (relativePath === 'SKILL.md') {
           continue;
         }
 
-        const filePath = `${folder}/${localFileName}`;
+        const filePath = `${folder}/${relativePath}`;
         if (serverPathsInFolder.has(filePath)) {
           continue;
         }
 
         const fullPath = path.join(baseDirectory, filePath);
-        const stat = await this.tryStatFile(fullPath);
-        if (!stat || stat.isDirectory) {
-          continue;
-        }
-
         const content = await this.tryReadFile(fullPath);
         if (content === null) {
           continue;
@@ -95,7 +83,7 @@ export class SkillDiffStrategy implements IDiffStrategy {
             targetId: newFileId,
             item: {
               id: newFileId,
-              path: localFileName,
+              path: relativePath,
               content,
               permissions: 'read',
               isBase64: false,
@@ -209,6 +197,11 @@ export class SkillDiffStrategy implements IDiffStrategy {
     file: DiffableFile,
     baseDirectory: string,
   ): Promise<ArtefactDiff[]> {
+    if (!file.skillFileId) {
+      return [];
+    }
+
+    const skillFileId = createSkillFileId(file.skillFileId);
     const fullPath = path.join(baseDirectory, file.path);
     const localContent = await this.tryReadFile(fullPath);
 
@@ -218,10 +211,10 @@ export class SkillDiffStrategy implements IDiffStrategy {
           filePath: file.path,
           type: ChangeProposalType.deleteSkillFile,
           payload: {
-            targetId: file.skillFileId as SkillFileId,
+            targetId: skillFileId,
             item: {
-              id: createSkillFileId(file.skillFileId!),
-              path: file.path,
+              id: skillFileId,
+              path: file.path.split('/').slice(3).join('/'),
               content: file.content,
               permissions: file.skillFilePermissions ?? 'read',
               isBase64: file.isBase64 ?? false,
@@ -249,7 +242,7 @@ export class SkillDiffStrategy implements IDiffStrategy {
         ...baseDiff,
         type: ChangeProposalType.updateSkillFileContent,
         payload: {
-          targetId: createSkillFileId(file.skillFileId!),
+          targetId: skillFileId,
           oldValue: file.content,
           newValue: localContent,
         },
@@ -263,7 +256,7 @@ export class SkillDiffStrategy implements IDiffStrategy {
           ...baseDiff,
           type: ChangeProposalType.updateSkillFilePermissions,
           payload: {
-            targetId: createSkillFileId(file.skillFileId!),
+            targetId: skillFileId,
             oldValue: file.skillFilePermissions,
             newValue: localPermissions,
           },
@@ -282,12 +275,37 @@ export class SkillDiffStrategy implements IDiffStrategy {
     }
   }
 
-  private async tryReadDir(dirPath: string): Promise<string[] | null> {
+  private async listFilesRecursively(
+    dirPath: string,
+    prefix = '',
+  ): Promise<string[]> {
+    let entries: string[];
     try {
-      return await fs.readdir(dirPath);
+      entries = await fs.readdir(dirPath);
     } catch {
-      return null;
+      return [];
     }
+
+    const files: string[] = [];
+    for (const entry of entries) {
+      const fullPath = path.join(dirPath, entry);
+      const stat = await this.tryStatFile(fullPath);
+      if (!stat) {
+        continue;
+      }
+
+      const relativePath = prefix ? `${prefix}/${entry}` : entry;
+      if (stat.isDirectory) {
+        const subFiles = await this.listFilesRecursively(
+          fullPath,
+          relativePath,
+        );
+        files.push(...subFiles);
+      } else {
+        files.push(relativePath);
+      }
+    }
+    return files;
   }
 
   private async tryStatFile(

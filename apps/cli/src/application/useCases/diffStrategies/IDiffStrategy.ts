@@ -5,4 +5,10 @@ export interface IDiffStrategy {
   supports(file: DiffableFile): boolean;
 
   diff(file: DiffableFile, baseDirectory: string): Promise<ArtefactDiff[]>;
+
+  diffNewFiles?(
+    folders: string[],
+    serverFiles: DiffableFile[],
+    baseDirectory: string,
+  ): Promise<ArtefactDiff[]>;
 }
