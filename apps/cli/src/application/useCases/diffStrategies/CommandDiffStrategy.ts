@@ -1,4 +1,4 @@
-import { ArtifactType, ChangeProposalType } from '@packmind/types';
+import { ChangeProposalType } from '@packmind/types';
 import { diffLines } from 'diff';
 import * as fs from 'fs/promises';
 import * as path from 'path';
@@ -7,17 +7,9 @@ import { stripFrontmatter } from '../../utils/stripFrontmatter';
 import { IDiffStrategy } from './IDiffStrategy';
 import { DiffableFile } from './DiffableFile';
 
-const CHANGE_TYPE: Record<
-  Exclude<ArtifactType, 'skill'>,
-  ChangeProposalType
-> = {
-  command: ChangeProposalType.updateCommandDescription,
-  standard: ChangeProposalType.updateStandardDescription,
-};
-
 export class CommandDiffStrategy implements IDiffStrategy {
   supports(file: DiffableFile): boolean {
-    return file.artifactType !== 'skill';
+    return file.artifactType === 'command';
   }
 
   async diff(
@@ -46,7 +38,7 @@ export class CommandDiffStrategy implements IDiffStrategy {
     return [
       {
         filePath: file.path,
-        type: CHANGE_TYPE[file.artifactType as Exclude<ArtifactType, 'skill'>],
+        type: ChangeProposalType.updateCommandDescription,
         payload: {
           oldValue: serverBody,
           newValue: localBody,

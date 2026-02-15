@@ -1,12 +1,16 @@
-import { ChangeProposalType, createSkillFileId } from '@packmind/types';
+import {
+  ChangeProposalType,
+  SkillFileId,
+  createSkillFileId,
+} from '@packmind/types';
 import { diffLines } from 'diff';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import { v4 as uuidv4 } from 'uuid';
 import { ArtefactDiff } from '../../../domain/useCases/IDiffArtefactsUseCase';
 import { stripFrontmatter } from '../../utils/stripFrontmatter';
-import { parseSkillMd } from '../../utils/parseSkillMd';
-import { IDiffStrategy } from './IDiffStrategy';
+import { ParsedSkillMd, parseSkillMd } from '../../utils/parseSkillMd';
+import { DiffContext, IDiffStrategy } from './IDiffStrategy';
 import { DiffableFile } from './DiffableFile';
 
 function modeToPermissionString(mode: number): string {
@@ -19,6 +23,11 @@ function modeToPermissionString(mode: number): string {
   return result;
 }
 
+type BaseDiff = Pick<
+  ArtefactDiff,
+  'filePath' | 'artifactName' | 'artifactType' | 'artifactId' | 'spaceId'
+>;
+
 export class SkillDiffStrategy implements IDiffStrategy {
   supports(file: DiffableFile): boolean {
     return file.artifactType === 'skill';
@@ -27,11 +36,12 @@ export class SkillDiffStrategy implements IDiffStrategy {
   async diff(
     file: DiffableFile,
     baseDirectory: string,
+    context?: DiffContext,
   ): Promise<ArtefactDiff[]> {
     if (file.path.endsWith('/SKILL.md')) {
       return this.diffSkillMd(file, baseDirectory);
     }
-    return this.diffSkillFile(file, baseDirectory);
+    return this.diffSkillFile(file, baseDirectory, context?.skillFolders ?? []);
   }
 
   async diffNewFiles(
@@ -137,8 +147,7 @@ export class SkillDiffStrategy implements IDiffStrategy {
       ];
     }
 
-    const diffs: ArtefactDiff[] = [];
-    const baseDiff = {
+    const baseDiff: BaseDiff = {
       filePath: file.path,
       artifactName: file.artifactName,
       artifactType: file.artifactType,
@@ -146,56 +155,19 @@ export class SkillDiffStrategy implements IDiffStrategy {
       spaceId: file.spaceId,
     };
 
-    if (serverParsed.name !== localParsed.name) {
-      diffs.push({
-        ...baseDiff,
-        type: ChangeProposalType.updateSkillName,
-        payload: {
-          oldValue: serverParsed.name,
-          newValue: localParsed.name,
-        },
-      });
-    }
-
-    if (serverParsed.description !== localParsed.description) {
-      diffs.push({
-        ...baseDiff,
-        type: ChangeProposalType.updateSkillDescription,
-        payload: {
-          oldValue: serverParsed.description,
-          newValue: localParsed.description,
-        },
-      });
-    }
-
-    if (serverParsed.body !== localParsed.body) {
-      diffs.push({
-        ...baseDiff,
-        type: ChangeProposalType.updateSkillPrompt,
-        payload: {
-          oldValue: serverParsed.body,
-          newValue: localParsed.body,
-        },
-      });
-    }
-
-    if (serverParsed.metadataJson !== localParsed.metadataJson) {
-      diffs.push({
-        ...baseDiff,
-        type: ChangeProposalType.updateSkillMetadata,
-        payload: {
-          oldValue: serverParsed.metadataJson,
-          newValue: localParsed.metadataJson,
-        },
-      });
-    }
-
-    return diffs;
+    const checks = [
+      this.checkUpdateSkillName(serverParsed, localParsed, baseDiff),
+      this.checkUpdateSkillDescription(serverParsed, localParsed, baseDiff),
+      this.checkUpdateSkillPrompt(serverParsed, localParsed, baseDiff),
+      this.checkUpdateSkillMetadata(serverParsed, localParsed, baseDiff),
+    ];
+    return checks.filter((d): d is ArtefactDiff => d !== null);
   }
 
   private async diffSkillFile(
     file: DiffableFile,
     baseDirectory: string,
+    skillFolders: string[],
   ): Promise<ArtefactDiff[]> {
     if (!file.skillFileId) {
       return [];
@@ -204,6 +176,7 @@ export class SkillDiffStrategy implements IDiffStrategy {
     const skillFileId = createSkillFileId(file.skillFileId);
     const fullPath = path.join(baseDirectory, file.path);
     const localContent = await this.tryReadFile(fullPath);
+    const fileRelativePath = this.computeRelativePath(file.path, skillFolders);
 
     if (localContent === null) {
       return [
@@ -214,7 +187,7 @@ export class SkillDiffStrategy implements IDiffStrategy {
             targetId: skillFileId,
             item: {
               id: skillFileId,
-              path: file.path.split('/').slice(3).join('/'),
+              path: fileRelativePath,
               content: file.content,
               permissions: file.skillFilePermissions ?? 'read',
               isBase64: file.isBase64 ?? false,
@@ -228,8 +201,7 @@ export class SkillDiffStrategy implements IDiffStrategy {
       ];
     }
 
-    const diffs: ArtefactDiff[] = [];
-    const baseDiff = {
+    const baseDiff: BaseDiff = {
       filePath: file.path,
       artifactName: file.artifactName,
       artifactType: file.artifactType,
@@ -237,34 +209,131 @@ export class SkillDiffStrategy implements IDiffStrategy {
       spaceId: file.spaceId,
     };
 
-    if (localContent !== file.content) {
-      diffs.push({
-        ...baseDiff,
-        type: ChangeProposalType.updateSkillFileContent,
-        payload: {
-          targetId: skillFileId,
-          oldValue: file.content,
-          newValue: localContent,
-        },
-      });
-    }
+    const checks = await Promise.all([
+      this.checkUpdateSkillFileContent(
+        file,
+        localContent,
+        skillFileId,
+        baseDiff,
+      ),
+      this.checkUpdateSkillFilePermissions(
+        file,
+        fullPath,
+        skillFileId,
+        baseDiff,
+      ),
+    ]);
+    return checks.filter((d): d is ArtefactDiff => d !== null);
+  }
 
-    if (file.skillFilePermissions) {
-      const localPermissions = await this.tryGetPermissions(fullPath);
-      if (localPermissions && localPermissions !== file.skillFilePermissions) {
-        diffs.push({
-          ...baseDiff,
-          type: ChangeProposalType.updateSkillFilePermissions,
-          payload: {
-            targetId: skillFileId,
-            oldValue: file.skillFilePermissions,
-            newValue: localPermissions,
-          },
-        });
-      }
+  private checkUpdateSkillName(
+    serverParsed: ParsedSkillMd,
+    localParsed: ParsedSkillMd,
+    baseDiff: BaseDiff,
+  ): ArtefactDiff | null {
+    if (serverParsed.name === localParsed.name) {
+      return null;
     }
+    return {
+      ...baseDiff,
+      type: ChangeProposalType.updateSkillName,
+      payload: { oldValue: serverParsed.name, newValue: localParsed.name },
+    };
+  }
 
-    return diffs;
+  private checkUpdateSkillDescription(
+    serverParsed: ParsedSkillMd,
+    localParsed: ParsedSkillMd,
+    baseDiff: BaseDiff,
+  ): ArtefactDiff | null {
+    if (serverParsed.description === localParsed.description) {
+      return null;
+    }
+    return {
+      ...baseDiff,
+      type: ChangeProposalType.updateSkillDescription,
+      payload: {
+        oldValue: serverParsed.description,
+        newValue: localParsed.description,
+      },
+    };
+  }
+
+  private checkUpdateSkillPrompt(
+    serverParsed: ParsedSkillMd,
+    localParsed: ParsedSkillMd,
+    baseDiff: BaseDiff,
+  ): ArtefactDiff | null {
+    if (serverParsed.body === localParsed.body) {
+      return null;
+    }
+    return {
+      ...baseDiff,
+      type: ChangeProposalType.updateSkillPrompt,
+      payload: { oldValue: serverParsed.body, newValue: localParsed.body },
+    };
+  }
+
+  private checkUpdateSkillMetadata(
+    serverParsed: ParsedSkillMd,
+    localParsed: ParsedSkillMd,
+    baseDiff: BaseDiff,
+  ): ArtefactDiff | null {
+    if (serverParsed.metadataJson === localParsed.metadataJson) {
+      return null;
+    }
+    return {
+      ...baseDiff,
+      type: ChangeProposalType.updateSkillMetadata,
+      payload: {
+        oldValue: serverParsed.metadataJson,
+        newValue: localParsed.metadataJson,
+      },
+    };
+  }
+
+  private checkUpdateSkillFileContent(
+    file: DiffableFile,
+    localContent: string,
+    skillFileId: SkillFileId,
+    baseDiff: BaseDiff,
+  ): ArtefactDiff | null {
+    if (localContent === file.content) {
+      return null;
+    }
+    return {
+      ...baseDiff,
+      type: ChangeProposalType.updateSkillFileContent,
+      payload: {
+        targetId: skillFileId,
+        oldValue: file.content,
+        newValue: localContent,
+      },
+    };
+  }
+
+  private async checkUpdateSkillFilePermissions(
+    file: DiffableFile,
+    fullPath: string,
+    skillFileId: SkillFileId,
+    baseDiff: BaseDiff,
+  ): Promise<ArtefactDiff | null> {
+    if (!file.skillFilePermissions) {
+      return null;
+    }
+    const localPermissions = await this.tryGetPermissions(fullPath);
+    if (!localPermissions || localPermissions === file.skillFilePermissions) {
+      return null;
+    }
+    return {
+      ...baseDiff,
+      type: ChangeProposalType.updateSkillFilePermissions,
+      payload: {
+        targetId: skillFileId,
+        oldValue: file.skillFilePermissions,
+        newValue: localPermissions,
+      },
+    };
   }
 
   private async tryReadFile(filePath: string): Promise<string | null> {
@@ -326,5 +395,17 @@ export class SkillDiffStrategy implements IDiffStrategy {
     } catch {
       return null;
     }
+  }
+
+  private computeRelativePath(
+    filePath: string,
+    skillFolders: string[],
+  ): string {
+    const skillFolder = skillFolders.find((f) => filePath.startsWith(f + '/'));
+    if (skillFolder) {
+      return filePath.slice(skillFolder.length + 1);
+    }
+    // Fallback: assume 3-segment prefix (e.g. .claude/skills/slug/)
+    return filePath.split('/').slice(3).join('/');
   }
 }

@@ -178,26 +178,13 @@ describe('DiffArtefactsUseCase', () => {
       (fs.readFile as jest.Mock).mockResolvedValue('Local standard content');
     });
 
-    it('returns a diff with updateStandardDescription type', async () => {
+    it('returns empty result (standard diffing unsupported)', async () => {
       const result = await useCase.execute({
         packagesSlugs: ['test-package'],
         baseDirectory: '/test',
       });
 
-      expect(result).toEqual([
-        {
-          filePath: '.packmind/standards/my-standard.md',
-          type: ChangeProposalType.updateStandardDescription,
-          payload: {
-            oldValue: 'Server standard content',
-            newValue: 'Local standard content',
-          },
-          artifactName: 'My Standard',
-          artifactType: 'standard',
-          artifactId: 'artifact-4',
-          spaceId: 'space-4',
-        },
-      ]);
+      expect(result).toEqual([]);
     });
   });
 
@@ -1902,6 +1889,199 @@ describe('DiffArtefactsUseCase', () => {
 
       const types = result.map((d) => d.type);
       expect(types).not.toContain(ChangeProposalType.updateSkillFileContent);
+    });
+  });
+
+  describe('when Copilot skill file deleted locally', () => {
+    beforeEach(() => {
+      mockGateway.deployment.pull.mockResolvedValue({
+        fileUpdates: {
+          createOrUpdate: [
+            {
+              path: '.github/skills/my-skill/helper.ts',
+              content: 'server content',
+              artifactType: 'skill',
+              artifactName: 'My Skill',
+              artifactId: 'artifact-copilot',
+              spaceId: 'space-copilot',
+              skillFileId: 'skill-file-copilot',
+              skillFilePermissions: 'read',
+            },
+          ],
+          delete: [],
+        },
+        skillFolders: ['.github/skills/my-skill'],
+      });
+
+      (fs.readFile as jest.Mock).mockRejectedValue(
+        new Error('ENOENT: no such file'),
+      );
+    });
+
+    it('computes relative path using skill folder', async () => {
+      const result = await useCase.execute({
+        packagesSlugs: ['test-package'],
+        baseDirectory: '/test',
+      });
+
+      expect(result[0].payload).toHaveProperty('item.path', 'helper.ts');
+    });
+  });
+
+  describe('when nested relativePath SKILL.md name differs', () => {
+    beforeEach(() => {
+      mockGateway.deployment.pull.mockResolvedValue({
+        fileUpdates: {
+          createOrUpdate: [
+            {
+              path: 'src/frontend/.cursor/skills/my-skill/SKILL.md',
+              content:
+                "---\nname: 'Server Name'\ndescription: 'Same desc'\n---\n\nSame prompt",
+              artifactType: 'skill',
+              artifactName: 'My Skill',
+              artifactId: 'artifact-nested',
+              spaceId: 'space-nested',
+            },
+          ],
+          delete: [],
+        },
+        skillFolders: ['.cursor/skills/my-skill'],
+      });
+
+      (fs.readFile as jest.Mock).mockResolvedValue(
+        "---\nname: 'Local Name'\ndescription: 'Same desc'\n---\n\nSame prompt",
+      );
+
+      (fs.readdir as jest.Mock).mockResolvedValue(['SKILL.md']);
+      (fs.stat as jest.Mock).mockResolvedValue({
+        isDirectory: () => false,
+      });
+    });
+
+    it('returns exactly one diff', async () => {
+      const result = await useCase.execute({
+        packagesSlugs: ['test-package'],
+        baseDirectory: '/test',
+        relativePath: 'src/frontend/',
+      });
+
+      expect(result).toHaveLength(1);
+    });
+
+    it('returns updateSkillName type', async () => {
+      const result = await useCase.execute({
+        packagesSlugs: ['test-package'],
+        baseDirectory: '/test',
+        relativePath: 'src/frontend/',
+      });
+
+      expect(result[0].type).toBe(ChangeProposalType.updateSkillName);
+    });
+  });
+
+  describe('when nested relativePath skill file deleted locally', () => {
+    beforeEach(() => {
+      mockGateway.deployment.pull.mockResolvedValue({
+        fileUpdates: {
+          createOrUpdate: [
+            {
+              path: 'src/frontend/.cursor/skills/my-skill/helper.ts',
+              content: 'server content',
+              artifactType: 'skill',
+              artifactName: 'My Skill',
+              artifactId: 'artifact-nested-del',
+              spaceId: 'space-nested-del',
+              skillFileId: 'skill-file-nested',
+              skillFilePermissions: 'read',
+            },
+          ],
+          delete: [],
+        },
+        skillFolders: ['.cursor/skills/my-skill'],
+      });
+
+      (fs.readFile as jest.Mock).mockRejectedValue(
+        new Error('ENOENT: no such file'),
+      );
+    });
+
+    it('computes relative path using prefixed skill folder', async () => {
+      const result = await useCase.execute({
+        packagesSlugs: ['test-package'],
+        baseDirectory: '/test',
+        relativePath: 'src/frontend/',
+      });
+
+      expect(result[0].payload).toHaveProperty('item.path', 'helper.ts');
+    });
+  });
+
+  describe('when nested relativePath has new local skill file', () => {
+    beforeEach(() => {
+      mockGateway.deployment.pull.mockResolvedValue({
+        fileUpdates: {
+          createOrUpdate: [
+            {
+              path: 'src/frontend/.cursor/skills/my-skill/SKILL.md',
+              content:
+                "---\nname: 'My Skill'\ndescription: 'desc'\n---\n\nprompt",
+              artifactType: 'skill',
+              artifactName: 'My Skill',
+              artifactId: 'artifact-nested-new',
+              spaceId: 'space-nested-new',
+            },
+          ],
+          delete: [],
+        },
+        skillFolders: ['.cursor/skills/my-skill'],
+      });
+
+      (fs.readFile as jest.Mock).mockImplementation((filePath: string) => {
+        if (filePath.endsWith('SKILL.md')) {
+          return Promise.resolve(
+            "---\nname: 'My Skill'\ndescription: 'desc'\n---\n\nprompt",
+          );
+        }
+        if (filePath.endsWith('new-file.ts')) {
+          return Promise.resolve('new file content');
+        }
+        return Promise.reject(new Error('ENOENT'));
+      });
+
+      (fs.readdir as jest.Mock).mockResolvedValue(['SKILL.md', 'new-file.ts']);
+      (fs.stat as jest.Mock).mockResolvedValue({
+        isDirectory: () => false,
+      });
+    });
+
+    it('returns exactly one diff', async () => {
+      const result = await useCase.execute({
+        packagesSlugs: ['test-package'],
+        baseDirectory: '/test',
+        relativePath: 'src/frontend/',
+      });
+
+      expect(result).toHaveLength(1);
+    });
+
+    it('returns addSkillFile type', async () => {
+      const result = await useCase.execute({
+        packagesSlugs: ['test-package'],
+        baseDirectory: '/test',
+        relativePath: 'src/frontend/',
+      });
+
+      expect(result[0].type).toBe(ChangeProposalType.addSkillFile);
+    });
+
+    it('uses correct relative path in payload', async () => {
+      const result = await useCase.execute({
+        packagesSlugs: ['test-package'],
+        baseDirectory: '/test',
+        relativePath: 'src/frontend/',
+      });
+
+      expect(result[0].payload).toHaveProperty('item.path', 'new-file.ts');
     });
   });
 
