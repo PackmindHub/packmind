@@ -6,6 +6,7 @@ import {
   IGitPort,
   IStandardsPort,
   RecipeVersion,
+  SkillFileOutput,
   SkillVersion,
   StandardVersion,
   Target,
@@ -508,26 +509,16 @@ ${recipeVersion.content}`;
    * Skills are deployed to .github/skills/{skill-slug}/ following the Agent Skills specification
    * Returns an array of files including SKILL.md and any additional files
    */
-  private generateCopilotSkillFiles(skillVersion: SkillVersion): Array<{
-    path: string;
-    content: string;
-    isBase64?: boolean;
-    skillFileId?: string;
-    skillFilePermissions?: string;
-  }> {
+  private generateCopilotSkillFiles(
+    skillVersion: SkillVersion,
+  ): SkillFileOutput[] {
     this.logger.debug('Generating Copilot skill files', {
       skillSlug: skillVersion.slug,
       skillName: skillVersion.name,
       fileCount: (skillVersion.files?.length ?? 0) + 1,
     });
 
-    const files: Array<{
-      path: string;
-      content: string;
-      isBase64?: boolean;
-      skillFileId?: string;
-      skillFilePermissions?: string;
-    }> = [];
+    const files: SkillFileOutput[] = [];
 
     // Generate SKILL.md (main skill file)
     const skillMdContent = this.generateSkillMdContent(skillVersion);

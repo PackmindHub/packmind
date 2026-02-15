@@ -7,6 +7,7 @@ import {
   IGitPort,
   IStandardsPort,
   RecipeVersion,
+  SkillFileOutput,
   SkillVersion,
   StandardVersion,
   Target,
@@ -598,20 +599,10 @@ ${instructionContent}`;
     };
   }
 
-  private generateClaudeSkillFiles(skillVersion: SkillVersion): Array<{
-    path: string;
-    content: string;
-    isBase64?: boolean;
-    skillFileId?: string;
-    skillFilePermissions?: string;
-  }> {
-    const files: Array<{
-      path: string;
-      content: string;
-      isBase64?: boolean;
-      skillFileId?: string;
-      skillFilePermissions?: string;
-    }> = [];
+  private generateClaudeSkillFiles(
+    skillVersion: SkillVersion,
+  ): SkillFileOutput[] {
+    const files: SkillFileOutput[] = [];
 
     // Generate SKILL.md (main skill file)
     const skillMdContent = this.generateSkillMdContent(skillVersion);
