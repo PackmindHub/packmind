@@ -209,6 +209,7 @@ export function PMTable<T extends object = object>({
                     display: 'inline-flex',
                     alignItems: 'center',
                     gap: '4px',
+                    whiteSpace: 'nowrap',
                   }}
                 >
                   {column.header}
