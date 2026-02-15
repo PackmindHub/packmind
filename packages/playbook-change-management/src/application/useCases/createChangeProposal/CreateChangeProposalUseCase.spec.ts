@@ -28,6 +28,8 @@ import { ChangeProposalService } from '../../services/ChangeProposalService';
 import { SpaceNotFoundError } from '../../../domain/errors/SpaceNotFoundError';
 import { SpaceOwnershipMismatchError } from '../../../domain/errors/SpaceOwnershipMismatchError';
 import { ChangeProposalPayloadMismatchError } from '../../errors/ChangeProposalPayloadMismatchError';
+import { SkillFileNotFoundError } from '../../errors/SkillFileNotFoundError';
+import { SkillVersionNotFoundError } from '../../errors/SkillVersionNotFoundError';
 import { UnsupportedChangeProposalTypeError } from '../../errors/UnsupportedChangeProposalTypeError';
 import { CreateChangeProposalUseCase } from './CreateChangeProposalUseCase';
 import { CommandChangeProposalValidator } from '../../validators/CommandChangeProposalValidator';
@@ -449,6 +451,227 @@ describe('CreateChangeProposalUseCase', () => {
           ChangeProposalPayloadMismatchError,
         );
       });
+    });
+  });
+
+  describe('when updateSkillFileContent has no skill version', () => {
+    beforeEach(() => {
+      spacesPort.getSpaceById.mockResolvedValue(space);
+      skillsPort.getSkill.mockResolvedValue(skill);
+      skillsPort.getLatestSkillVersion.mockResolvedValue(null);
+    });
+
+    it('throws SkillVersionNotFoundError', async () => {
+      const command = buildCommand({
+        type: ChangeProposalType.updateSkillFileContent,
+        artefactId: skillId,
+        payload: {
+          targetId: createSkillFileId('file-1'),
+          oldValue: 'content',
+          newValue: 'updated',
+        },
+      });
+
+      await expect(useCase.execute(command)).rejects.toBeInstanceOf(
+        SkillVersionNotFoundError,
+      );
+    });
+  });
+
+  describe('when updateSkillFileContent targets nonexistent file', () => {
+    const skillVersionId = createSkillVersionId('version-1');
+
+    beforeEach(() => {
+      spacesPort.getSpaceById.mockResolvedValue(space);
+      skillsPort.getSkill.mockResolvedValue(skill);
+      skillsPort.getLatestSkillVersion.mockResolvedValue({
+        id: skillVersionId,
+        skillId,
+        version: 3,
+        userId,
+        name: 'My Skill',
+        slug: 'my-skill',
+        description: 'desc',
+        prompt: 'prompt',
+      });
+      skillsPort.getSkillFiles.mockResolvedValue([]);
+    });
+
+    it('throws SkillFileNotFoundError', async () => {
+      const command = buildCommand({
+        type: ChangeProposalType.updateSkillFileContent,
+        artefactId: skillId,
+        payload: {
+          targetId: createSkillFileId('nonexistent'),
+          oldValue: 'content',
+          newValue: 'updated',
+        },
+      });
+
+      await expect(useCase.execute(command)).rejects.toBeInstanceOf(
+        SkillFileNotFoundError,
+      );
+    });
+  });
+
+  describe('when updateSkillFilePermissions has no skill version', () => {
+    beforeEach(() => {
+      spacesPort.getSpaceById.mockResolvedValue(space);
+      skillsPort.getSkill.mockResolvedValue(skill);
+      skillsPort.getLatestSkillVersion.mockResolvedValue(null);
+    });
+
+    it('throws SkillVersionNotFoundError', async () => {
+      const command = buildCommand({
+        type: ChangeProposalType.updateSkillFilePermissions,
+        artefactId: skillId,
+        payload: {
+          targetId: createSkillFileId('file-1'),
+          oldValue: 'rw-r--r--',
+          newValue: 'rwxr-xr-x',
+        },
+      });
+
+      await expect(useCase.execute(command)).rejects.toBeInstanceOf(
+        SkillVersionNotFoundError,
+      );
+    });
+  });
+
+  describe('when updateSkillFilePermissions targets nonexistent file', () => {
+    const skillVersionId = createSkillVersionId('version-1');
+
+    beforeEach(() => {
+      spacesPort.getSpaceById.mockResolvedValue(space);
+      skillsPort.getSkill.mockResolvedValue(skill);
+      skillsPort.getLatestSkillVersion.mockResolvedValue({
+        id: skillVersionId,
+        skillId,
+        version: 3,
+        userId,
+        name: 'My Skill',
+        slug: 'my-skill',
+        description: 'desc',
+        prompt: 'prompt',
+      });
+      skillsPort.getSkillFiles.mockResolvedValue([]);
+    });
+
+    it('throws SkillFileNotFoundError', async () => {
+      const command = buildCommand({
+        type: ChangeProposalType.updateSkillFilePermissions,
+        artefactId: skillId,
+        payload: {
+          targetId: createSkillFileId('nonexistent'),
+          oldValue: 'rw-r--r--',
+          newValue: 'rwxr-xr-x',
+        },
+      });
+
+      await expect(useCase.execute(command)).rejects.toBeInstanceOf(
+        SkillFileNotFoundError,
+      );
+    });
+  });
+
+  describe('when deleteSkillFile targets nonexistent file', () => {
+    const skillVersionId = createSkillVersionId('version-1');
+
+    beforeEach(() => {
+      spacesPort.getSpaceById.mockResolvedValue(space);
+      skillsPort.getSkill.mockResolvedValue(skill);
+      skillsPort.getLatestSkillVersion.mockResolvedValue({
+        id: skillVersionId,
+        skillId,
+        version: 3,
+        userId,
+        name: 'My Skill',
+        slug: 'my-skill',
+        description: 'desc',
+        prompt: 'prompt',
+      });
+      skillsPort.getSkillFiles.mockResolvedValue([]);
+    });
+
+    it('throws SkillFileNotFoundError', async () => {
+      const command = buildCommand({
+        type: ChangeProposalType.deleteSkillFile,
+        artefactId: skillId,
+        payload: {
+          targetId: createSkillFileId('nonexistent'),
+          item: {
+            id: createSkillFileId('nonexistent'),
+            path: 'helper.ts',
+            content: 'content',
+            permissions: 'read',
+            isBase64: false,
+          },
+        },
+      });
+
+      await expect(useCase.execute(command)).rejects.toBeInstanceOf(
+        SkillFileNotFoundError,
+      );
+    });
+  });
+
+  describe('when deleteSkillFile targets existing file', () => {
+    const skillFileId = createSkillFileId('file-1');
+    const skillVersionId = createSkillVersionId('version-1');
+
+    beforeEach(() => {
+      spacesPort.getSpaceById.mockResolvedValue(space);
+      skillsPort.getSkill.mockResolvedValue(skill);
+      skillsPort.getLatestSkillVersion.mockResolvedValue({
+        id: skillVersionId,
+        skillId,
+        version: 3,
+        userId,
+        name: 'My Skill',
+        slug: 'my-skill',
+        description: 'desc',
+        prompt: 'prompt',
+      });
+      skillsPort.getSkillFiles.mockResolvedValue([
+        {
+          id: skillFileId,
+          skillVersionId,
+          path: 'helper.ts',
+          content: 'content',
+          permissions: 'read',
+          isBase64: false,
+        },
+      ]);
+      service.createChangeProposal.mockResolvedValue({
+        changeProposal:
+          {} as CreateChangeProposalResponse<ChangeProposalType.deleteSkillFile>['changeProposal'],
+      });
+    });
+
+    it('delegates to service with skill version', async () => {
+      const command = buildCommand({
+        type: ChangeProposalType.deleteSkillFile,
+        artefactId: skillId,
+        payload: {
+          targetId: skillFileId,
+          item: {
+            id: skillFileId,
+            path: 'helper.ts',
+            content: 'content',
+            permissions: 'read',
+            isBase64: false,
+          },
+        },
+      });
+
+      await useCase.execute(command);
+
+      expect(service.createChangeProposal).toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: ChangeProposalType.deleteSkillFile,
+        }),
+        3,
+      );
     });
   });
 

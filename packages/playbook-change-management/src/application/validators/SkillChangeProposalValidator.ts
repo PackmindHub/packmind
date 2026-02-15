@@ -1,5 +1,6 @@
 import {
   ChangeProposalType,
+  CollectionItemDeletePayload,
   CollectionItemUpdatePayload,
   CreateChangeProposalCommand,
   ISkillsPort,
@@ -11,6 +12,8 @@ import {
 import { MemberContext, serializeSkillMetadata } from '@packmind/node-utils';
 import { IChangeProposalValidator } from './IChangeProposalValidator';
 import { ChangeProposalPayloadMismatchError } from '../errors/ChangeProposalPayloadMismatchError';
+import { SkillVersionNotFoundError } from '../errors/SkillVersionNotFoundError';
+import { SkillFileNotFoundError } from '../errors/SkillFileNotFoundError';
 
 type ScalarSkillType =
   | ChangeProposalType.updateSkillName
@@ -90,6 +93,10 @@ export class SkillChangeProposalValidator implements IChangeProposalValidator {
       await this.validateFilePermissions(skill, command);
     }
 
+    if (command.type === ChangeProposalType.deleteSkillFile) {
+      await this.validateDeleteFile(skill, command);
+    }
+
     return { artefactVersion: skill.version };
   }
 
@@ -100,12 +107,16 @@ export class SkillChangeProposalValidator implements IChangeProposalValidator {
     const payload = command.payload as CollectionItemUpdatePayload<SkillFileId>;
     const version = await this.skillsPort.getLatestSkillVersion(skill.id);
     if (!version) {
-      return;
+      throw new SkillVersionNotFoundError(skill.id);
     }
 
     const files = await this.skillsPort.getSkillFiles(version.id);
     const targetFile = files.find((f) => f.id === payload.targetId);
-    if (targetFile && payload.oldValue !== targetFile.content) {
+    if (!targetFile) {
+      throw new SkillFileNotFoundError(payload.targetId);
+    }
+
+    if (payload.oldValue !== targetFile.content) {
       throw new ChangeProposalPayloadMismatchError(
         command.type,
         payload.oldValue,
@@ -121,17 +132,40 @@ export class SkillChangeProposalValidator implements IChangeProposalValidator {
     const payload = command.payload as CollectionItemUpdatePayload<SkillFileId>;
     const version = await this.skillsPort.getLatestSkillVersion(skill.id);
     if (!version) {
-      return;
+      throw new SkillVersionNotFoundError(skill.id);
     }
 
     const files = await this.skillsPort.getSkillFiles(version.id);
     const targetFile = files.find((f) => f.id === payload.targetId);
-    if (targetFile && payload.oldValue !== targetFile.permissions) {
+    if (!targetFile) {
+      throw new SkillFileNotFoundError(payload.targetId);
+    }
+
+    if (payload.oldValue !== targetFile.permissions) {
       throw new ChangeProposalPayloadMismatchError(
         command.type,
         payload.oldValue,
         targetFile.permissions,
       );
+    }
+  }
+
+  private async validateDeleteFile(
+    skill: Skill,
+    command: CreateChangeProposalCommand<ChangeProposalType> & MemberContext,
+  ): Promise<void> {
+    const payload = command.payload as CollectionItemDeletePayload<{
+      id: SkillFileId;
+    }>;
+    const version = await this.skillsPort.getLatestSkillVersion(skill.id);
+    if (!version) {
+      throw new SkillVersionNotFoundError(skill.id);
+    }
+
+    const files = await this.skillsPort.getSkillFiles(version.id);
+    const targetFile = files.find((f) => f.id === payload.targetId);
+    if (!targetFile) {
+      throw new SkillFileNotFoundError(payload.targetId);
     }
   }
 }
