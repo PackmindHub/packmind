@@ -6,9 +6,6 @@ import { createMockPackmindGateway } from '../../mocks/createMockGateways';
 import { ArtefactDiff } from '../../domain/useCases/IDiffArtefactsUseCase';
 
 jest.mock('fs/promises');
-jest.mock('uuid', () => ({
-  v4: jest.fn().mockReturnValue('generated-uuid'),
-}));
 
 describe('DiffArtefactsUseCase', () => {
   let useCase: DiffArtefactsUseCase;
@@ -859,9 +856,9 @@ describe('DiffArtefactsUseCase', () => {
       });
 
       expect(result[0].payload).toEqual({
-        targetId: 'generated-uuid',
+        targetId: 'new-file.ts',
         item: {
-          id: 'generated-uuid',
+          id: 'new-file.ts',
           path: 'new-file.ts',
           content: 'new file content',
           permissions: 'rw-r--r--',

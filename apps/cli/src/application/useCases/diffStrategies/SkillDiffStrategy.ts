@@ -6,7 +6,7 @@ import {
 import { diffLines } from 'diff';
 import * as fs from 'fs/promises';
 import * as path from 'path';
-import { v4 as uuidv4 } from 'uuid';
+
 import { ArtefactDiff } from '../../../domain/useCases/IDiffArtefactsUseCase';
 import { stripFrontmatter } from '../../utils/stripFrontmatter';
 import { ParsedSkillMd, parseSkillMd } from '../../utils/parseSkillMd';
@@ -84,7 +84,7 @@ export class SkillDiffStrategy implements IDiffStrategy {
           continue;
         }
 
-        const newFileId = createSkillFileId(uuidv4());
+        const newFileId = createSkillFileId(relativePath);
         const permissions =
           (await this.tryGetPermissions(fullPath)) ?? 'rw-r--r--';
 
