@@ -3,8 +3,12 @@ import { IBaseAdapter } from '@packmind/node-utils';
 import {
   ApplyCommandChangeProposalCommand,
   ApplyCommandChangeProposalResponse,
+  BatchApplyChangeProposalsCommand,
+  BatchApplyChangeProposalsResponse,
   BatchCreateChangeProposalsCommand,
   BatchCreateChangeProposalsResponse,
+  BatchRejectChangeProposalsCommand,
+  BatchRejectChangeProposalsResponse,
   ChangeProposalType,
   CreateChangeProposalCommand,
   CreateChangeProposalResponse,
@@ -26,6 +30,7 @@ import {
 } from '@packmind/types';
 import { PlaybookChangeManagementServices } from '../services/PlaybookChangeManagementServices';
 import { ApplyCommandChangeProposalUseCase } from '../useCases/applyCommandChangeProposal/ApplyCommandChangeProposalUseCase';
+import { BatchApplyChangeProposalsUseCase } from '../useCases/batchApplyChangeProposals/BatchApplyChangeProposalsUseCase';
 import { CreateChangeProposalUseCase } from '../useCases/createChangeProposal/CreateChangeProposalUseCase';
 import { CreateCommandChangeProposalUseCase } from '../useCases/createCommandChangeProposal/CreateCommandChangeProposalUseCase';
 import { ListCommandChangeProposalsUseCase } from '../useCases/listCommandChangeProposals/ListCommandChangeProposalsUseCase';
@@ -34,6 +39,7 @@ import { RejectCommandChangeProposalUseCase } from '../useCases/rejectCommandCha
 import { IChangeProposalValidator } from '../validators/IChangeProposalValidator';
 import { CommandChangeProposalValidator } from '../validators/CommandChangeProposalValidator';
 import { SkillChangeProposalValidator } from '../validators/SkillChangeProposalValidator';
+import { BatchRejectChangeProposalsUseCase } from '../useCases/batchRejectChangeProposals/BatchRejectChangeProposalsUseCase';
 
 const origin = 'PlaybookChangeManagementAdapter';
 
@@ -43,10 +49,12 @@ export class PlaybookChangeManagementAdapter
     IPlaybookChangeManagementPort
 {
   private _applyCommandChangeProposal!: ApplyCommandChangeProposalUseCase;
+  private _batchApplyChangeProposals!: BatchApplyChangeProposalsUseCase;
   private _batchCreateChangeProposals!: BatchCreateChangeProposalsUseCase;
   private _createChangeProposal!: CreateChangeProposalUseCase;
   private _createCommandChangeProposal!: CreateCommandChangeProposalUseCase;
   private _listCommandChangeProposals!: ListCommandChangeProposalsUseCase;
+  private _batchRejectChangeProposals!: BatchRejectChangeProposalsUseCase;
   private _rejectCommandChangeProposal!: RejectCommandChangeProposalUseCase;
 
   constructor(
@@ -60,10 +68,22 @@ export class PlaybookChangeManagementAdapter
     return this._applyCommandChangeProposal.execute(command);
   }
 
+  async batchApplyChangeProposals(
+    command: BatchApplyChangeProposalsCommand,
+  ): Promise<BatchApplyChangeProposalsResponse> {
+    return this._batchApplyChangeProposals.execute(command);
+  }
+
   async batchCreateChangeProposals(
     command: BatchCreateChangeProposalsCommand,
   ): Promise<BatchCreateChangeProposalsResponse> {
     return this._batchCreateChangeProposals.execute(command);
+  }
+
+  async batchRejectChangeProposals(
+    command: BatchRejectChangeProposalsCommand,
+  ): Promise<BatchRejectChangeProposalsResponse> {
+    return this._batchRejectChangeProposals.execute(command);
   }
 
   async createChangeProposal<T extends ChangeProposalType>(
@@ -146,7 +166,17 @@ export class PlaybookChangeManagementAdapter
       changeProposalService,
     );
 
+    this._batchApplyChangeProposals = new BatchApplyChangeProposalsUseCase(
+      accountsPort,
+      this,
+    );
+
     this._batchCreateChangeProposals = new BatchCreateChangeProposalsUseCase(
+      accountsPort,
+      this,
+    );
+
+    this._batchRejectChangeProposals = new BatchRejectChangeProposalsUseCase(
       accountsPort,
       this,
     );
@@ -185,7 +215,9 @@ export class PlaybookChangeManagementAdapter
   public isReady(): boolean {
     return (
       this._applyCommandChangeProposal !== undefined &&
+      this._batchApplyChangeProposals !== undefined &&
       this._batchCreateChangeProposals !== undefined &&
+      this._batchRejectChangeProposals !== undefined &&
       this._createChangeProposal !== undefined &&
       this._createCommandChangeProposal !== undefined &&
       this._listCommandChangeProposals !== undefined &&

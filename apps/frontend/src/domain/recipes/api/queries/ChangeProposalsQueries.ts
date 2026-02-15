@@ -1,5 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
+  BatchApplyChangeProposalItem,
+  BatchRejectChangeProposalItem,
   ChangeProposalId,
   OrganizationId,
   RecipeId,
@@ -8,7 +10,10 @@ import {
 import { changeProposalsGateway } from '../gateways';
 import {
   APPLY_CHANGE_PROPOSAL_MUTATION_KEY,
+  BATCH_APPLY_CHANGE_PROPOSALS_MUTATION_KEY,
+  BATCH_REJECT_CHANGE_PROPOSALS_MUTATION_KEY,
   GET_CHANGE_PROPOSALS_KEY,
+  GET_RECIPES_KEY,
   REJECT_CHANGE_PROPOSAL_MUTATION_KEY,
 } from '../queryKeys';
 import { useAuthContext } from '../../../accounts/hooks/useAuthContext';
@@ -118,6 +123,84 @@ export const useRejectChangeProposalMutation = () => {
     },
     onError: (error, variables, context) => {
       console.error('Error rejecting change proposal');
+      console.log('error: ', error);
+      console.log('variables: ', variables);
+      console.log('context: ', context);
+    },
+  });
+};
+
+export const useBatchApplyChangeProposalsMutation = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationKey: [...BATCH_APPLY_CHANGE_PROPOSALS_MUTATION_KEY],
+    mutationFn: async ({
+      organizationId,
+      spaceId,
+      proposals,
+    }: {
+      organizationId: OrganizationId;
+      spaceId: SpaceId;
+      proposals: BatchApplyChangeProposalItem[];
+    }) => {
+      return changeProposalsGateway.batchApplyChangeProposals(
+        organizationId,
+        spaceId,
+        proposals,
+      );
+    },
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({
+          queryKey: GET_CHANGE_PROPOSALS_KEY,
+        }),
+        queryClient.invalidateQueries({
+          queryKey: GET_RECIPES_KEY,
+        }),
+      ]);
+    },
+    onError: (error, variables, context) => {
+      console.error('Error batch applying change proposals');
+      console.log('error: ', error);
+      console.log('variables: ', variables);
+      console.log('context: ', context);
+    },
+  });
+};
+
+export const useBatchRejectChangeProposalsMutation = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationKey: [...BATCH_REJECT_CHANGE_PROPOSALS_MUTATION_KEY],
+    mutationFn: async ({
+      organizationId,
+      spaceId,
+      proposals,
+    }: {
+      organizationId: OrganizationId;
+      spaceId: SpaceId;
+      proposals: BatchRejectChangeProposalItem[];
+    }) => {
+      return changeProposalsGateway.batchRejectChangeProposals(
+        organizationId,
+        spaceId,
+        proposals,
+      );
+    },
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({
+          queryKey: GET_CHANGE_PROPOSALS_KEY,
+        }),
+        queryClient.invalidateQueries({
+          queryKey: GET_RECIPES_KEY,
+        }),
+      ]);
+    },
+    onError: (error, variables, context) => {
+      console.error('Error batch rejecting change proposals');
       console.log('error: ', error);
       console.log('variables: ', variables);
       console.log('context: ', context);

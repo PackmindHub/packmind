@@ -45,3 +45,15 @@ export const REJECT_CHANGE_PROPOSAL_MUTATION_KEY = [
   RECIPES_QUERY_SCOPE,
   'reject-change-proposal',
 ] as const;
+
+export const BATCH_APPLY_CHANGE_PROPOSALS_MUTATION_KEY = [
+  ORGANIZATION_QUERY_SCOPE,
+  RECIPES_QUERY_SCOPE,
+  'batch-apply-change-proposals',
+] as const;
+
+export const BATCH_REJECT_CHANGE_PROPOSALS_MUTATION_KEY = [
+  ORGANIZATION_QUERY_SCOPE,
+  RECIPES_QUERY_SCOPE,
+  'batch-reject-change-proposals',
+] as const;

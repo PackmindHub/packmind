@@ -16,8 +16,12 @@ import {
 import { LogLevel, PackmindLogger } from '@packmind/logger';
 import { AuthenticatedRequest } from '@packmind/node-utils';
 import {
+  BatchApplyChangeProposalsCommand,
+  BatchApplyChangeProposalsResponse,
   BatchCreateChangeProposalsCommand,
   BatchCreateChangeProposalsResponse,
+  BatchRejectChangeProposalsCommand,
+  BatchRejectChangeProposalsResponse,
   ChangeProposal,
   ChangeProposalCaptureMode,
   ChangeProposalId,
@@ -47,6 +51,17 @@ interface CreateChangeProposalBody {
   artefactId: string;
   payload: unknown;
   captureMode: ChangeProposalCaptureMode;
+}
+
+interface BatchApplyChangeProposalBody {
+  changeProposalId: ChangeProposalId;
+  recipeId: RecipeId;
+  force: boolean;
+}
+
+interface BatchRejectChangeProposalBody {
+  changeProposalId: ChangeProposalId;
+  recipeId: RecipeId;
 }
 
 /**
@@ -104,6 +119,100 @@ export class OrganizationsSpacesChangeProposalsController {
         organizationId,
         spaceId,
         created: result.created,
+        errors: result.errors.length,
+      },
+    );
+
+    return result;
+  }
+
+  /**
+   * Batch apply change proposals
+   * POST /organizations/:orgId/spaces/:spaceId/change-proposals/batch-apply
+   */
+  @Post('batch-apply')
+  async batchApplyChangeProposals(
+    @Param('orgId') organizationId: OrganizationId,
+    @Param('spaceId') spaceId: SpaceId,
+    @Body() body: { proposals: BatchApplyChangeProposalBody[] },
+    @Req() request: AuthenticatedRequest,
+  ): Promise<BatchApplyChangeProposalsResponse> {
+    if (!body.proposals || body.proposals.length === 0) {
+      throw new BadRequestException('Proposals array must not be empty');
+    }
+
+    this.logger.info(
+      'POST /organizations/:orgId/spaces/:spaceId/change-proposals/batch-apply - Batch applying change proposals',
+      {
+        organizationId,
+        spaceId,
+        count: body.proposals.length,
+      },
+    );
+
+    const command: BatchApplyChangeProposalsCommand = {
+      userId: request.user.userId,
+      organizationId,
+      spaceId,
+      proposals: body.proposals,
+    };
+
+    const result =
+      await this.changeProposalsService.batchApplyChangeProposals(command);
+
+    this.logger.info(
+      'POST /organizations/:orgId/spaces/:spaceId/change-proposals/batch-apply - Batch apply completed',
+      {
+        organizationId,
+        spaceId,
+        applied: result.applied,
+        errors: result.errors.length,
+      },
+    );
+
+    return result;
+  }
+
+  /**
+   * Batch reject change proposals
+   * POST /organizations/:orgId/spaces/:spaceId/change-proposals/batch-reject
+   */
+  @Post('batch-reject')
+  async batchRejectChangeProposals(
+    @Param('orgId') organizationId: OrganizationId,
+    @Param('spaceId') spaceId: SpaceId,
+    @Body() body: { proposals: BatchRejectChangeProposalBody[] },
+    @Req() request: AuthenticatedRequest,
+  ): Promise<BatchRejectChangeProposalsResponse> {
+    if (!body.proposals || body.proposals.length === 0) {
+      throw new BadRequestException('Proposals array must not be empty');
+    }
+
+    this.logger.info(
+      'POST /organizations/:orgId/spaces/:spaceId/change-proposals/batch-reject - Batch rejecting change proposals',
+      {
+        organizationId,
+        spaceId,
+        count: body.proposals.length,
+      },
+    );
+
+    const command: BatchRejectChangeProposalsCommand = {
+      userId: request.user.userId,
+      organizationId,
+      spaceId,
+      proposals: body.proposals,
+    };
+
+    const result =
+      await this.changeProposalsService.batchRejectChangeProposals(command);
+
+    this.logger.info(
+      'POST /organizations/:orgId/spaces/:spaceId/change-proposals/batch-reject - Batch reject completed',
+      {
+        organizationId,
+        spaceId,
+        rejected: result.rejected,
         errors: result.errors.length,
       },
     );

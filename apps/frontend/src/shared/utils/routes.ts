@@ -100,6 +100,8 @@ export const routes = {
       spaceSlug: string,
       skillSlug: string,
     ) => `/org/${orgSlug}/space/${spaceSlug}/skills/${skillSlug}/distributions`,
+    toChangeProposals: (orgSlug: string, spaceSlug: string) =>
+      `/org/${orgSlug}/space/${spaceSlug}/change-proposals`,
   },
 
   /**

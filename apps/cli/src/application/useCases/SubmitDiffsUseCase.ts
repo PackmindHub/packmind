@@ -55,6 +55,8 @@ export class SubmitDiffsUseCase implements ISubmitDiffsUseCase {
     }
 
     let submitted = 0;
+    let alreadySubmitted = 0;
+    const errors: { name: string; message: string }[] = [];
     for (const [spaceId, diffs] of diffsBySpaceId) {
       const response =
         await this.packmindGateway.changeProposals.batchCreateChangeProposals({
@@ -67,8 +69,15 @@ export class SubmitDiffsUseCase implements ISubmitDiffsUseCase {
           })),
         });
       submitted += response.created;
+      alreadySubmitted += response.skipped;
+      for (const error of response.errors) {
+        errors.push({
+          name: diffs[error.index].artifactName,
+          message: error.message,
+        });
+      }
     }
 
-    return { submitted, skipped };
+    return { submitted, alreadySubmitted, skipped, errors };
   }
 }

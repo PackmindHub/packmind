@@ -1,4 +1,8 @@
 import {
+  BatchApplyChangeProposalItem,
+  BatchApplyChangeProposalsResponse,
+  BatchRejectChangeProposalItem,
+  BatchRejectChangeProposalsResponse,
   ChangeProposal,
   ChangeProposalId,
   ChangeProposalWithOutdatedStatus,
@@ -51,6 +55,28 @@ export class ChangeProposalsGatewayApi
     return this._api.post(
       `/organizations/${organizationId}/spaces/${spaceId}/change-proposals/${changeProposalId}/reject`,
       { recipeId },
+    );
+  }
+
+  async batchApplyChangeProposals(
+    organizationId: OrganizationId,
+    spaceId: SpaceId,
+    proposals: BatchApplyChangeProposalItem[],
+  ): Promise<BatchApplyChangeProposalsResponse> {
+    return this._api.post(
+      `/organizations/${organizationId}/spaces/${spaceId}/change-proposals/batch-apply`,
+      { proposals },
+    );
+  }
+
+  async batchRejectChangeProposals(
+    organizationId: OrganizationId,
+    spaceId: SpaceId,
+    proposals: BatchRejectChangeProposalItem[],
+  ): Promise<BatchRejectChangeProposalsResponse> {
+    return this._api.post(
+      `/organizations/${organizationId}/spaces/${spaceId}/change-proposals/batch-reject`,
+      { proposals },
     );
   }
 }

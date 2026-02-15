@@ -22,6 +22,7 @@ export type BatchCreateChangeProposalGatewayCommand = {
 
 export type BatchCreateChangeProposalGatewayResponse = {
   created: number;
+  skipped: number;
   errors: Array<{ index: number; message: string }>;
 };
 
