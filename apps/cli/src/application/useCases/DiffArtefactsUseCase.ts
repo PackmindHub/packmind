@@ -48,12 +48,19 @@ export class DiffArtefactsUseCase implements IDiffArtefactsUseCase {
         file.content !== undefined,
     );
 
+    const prefixedSkillFolders = this.prefixSkillFolders(
+      response.skillFolders,
+      command.relativePath,
+    );
+
     const diffs: ArtefactDiff[] = [];
 
     for (const file of diffableFiles) {
       const strategy = this.strategies.find((s) => s.supports(file));
       if (strategy) {
-        const fileDiffs = await strategy.diff(file, baseDirectory);
+        const fileDiffs = await strategy.diff(file, baseDirectory, {
+          skillFolders: prefixedSkillFolders,
+        });
         diffs.push(...fileDiffs);
       }
     }
@@ -61,7 +68,7 @@ export class DiffArtefactsUseCase implements IDiffArtefactsUseCase {
     for (const strategy of this.strategies) {
       if (strategy.diffNewFiles) {
         const newFileDiffs = await strategy.diffNewFiles(
-          response.skillFolders,
+          prefixedSkillFolders,
           diffableFiles,
           baseDirectory,
         );
@@ -70,5 +77,15 @@ export class DiffArtefactsUseCase implements IDiffArtefactsUseCase {
     }
 
     return diffs;
+  }
+
+  private prefixSkillFolders(
+    skillFolders: string[],
+    relativePath?: string,
+  ): string[] {
+    if (!relativePath) return skillFolders;
+    const normalized = relativePath.replace(/^\/+|\/+$/g, '');
+    if (!normalized) return skillFolders;
+    return skillFolders.map((folder) => `${normalized}/${folder}`);
   }
 }
