@@ -32,7 +32,6 @@ const ARTIFACT_TYPE_LABELS: Record<ArtifactType, string> = {
 
 const CHANGE_TYPE_LABELS: Partial<Record<ChangeProposalType, string>> = {
   [ChangeProposalType.updateCommandDescription]: 'content changed',
-  [ChangeProposalType.updateStandardDescription]: 'content changed',
   [ChangeProposalType.updateSkillName]: 'name changed',
   [ChangeProposalType.updateSkillDescription]: 'description changed',
   [ChangeProposalType.updateSkillPrompt]: 'prompt changed',
