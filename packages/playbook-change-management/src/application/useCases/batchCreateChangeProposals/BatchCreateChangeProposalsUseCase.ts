@@ -57,6 +57,12 @@ export class BatchCreateChangeProposalsUseCase extends AbstractMemberUseCase<
         }
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error);
+        this.logger.error('Failed to create change proposal', {
+          index: i,
+          type: proposal.type,
+          artefactId: proposal.artefactId,
+          error: message,
+        });
         errors.push({ index: i, message });
       }
     }

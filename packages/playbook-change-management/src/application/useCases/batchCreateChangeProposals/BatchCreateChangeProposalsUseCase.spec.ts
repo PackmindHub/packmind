@@ -1,3 +1,4 @@
+import { PackmindLogger } from '@packmind/logger';
 import { stubLogger } from '@packmind/test-utils';
 import {
   BatchCreateChangeProposalItem,
@@ -30,6 +31,7 @@ describe('BatchCreateChangeProposalsUseCase', () => {
   let useCase: BatchCreateChangeProposalsUseCase;
   let accountsPort: jest.Mocked<IAccountsPort>;
   let playbookChangeManagementPort: jest.Mocked<IPlaybookChangeManagementPort>;
+  let logger: jest.Mocked<PackmindLogger>;
 
   const buildProposalItem = (
     overrides?: Partial<BatchCreateChangeProposalItem>,
@@ -60,10 +62,11 @@ describe('BatchCreateChangeProposalsUseCase', () => {
       createChangeProposal: jest.fn(),
     } as unknown as jest.Mocked<IPlaybookChangeManagementPort>;
 
+    logger = stubLogger();
     useCase = new BatchCreateChangeProposalsUseCase(
       accountsPort,
       playbookChangeManagementPort,
-      stubLogger(),
+      logger,
     );
 
     accountsPort.getUserById.mockResolvedValue(user);

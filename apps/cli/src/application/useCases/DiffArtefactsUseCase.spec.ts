@@ -830,6 +830,7 @@ describe('DiffArtefactsUseCase', () => {
       (fs.readdir as jest.Mock).mockResolvedValue(['SKILL.md', 'new-file.ts']);
       (fs.stat as jest.Mock).mockResolvedValue({
         isDirectory: () => false,
+        mode: 0o100644,
       });
     });
 
@@ -851,7 +852,7 @@ describe('DiffArtefactsUseCase', () => {
       expect(result[0].type).toBe(ChangeProposalType.addSkillFile);
     });
 
-    it('includes generated id and file content in payload', async () => {
+    it('includes generated id and file content with POSIX permissions in payload', async () => {
       const result = await useCase.execute({
         packagesSlugs: ['test-package'],
         baseDirectory: '/test',
@@ -863,7 +864,7 @@ describe('DiffArtefactsUseCase', () => {
           id: 'generated-uuid',
           path: 'new-file.ts',
           content: 'new file content',
-          permissions: 'read',
+          permissions: 'rw-r--r--',
           isBase64: false,
         },
       });
