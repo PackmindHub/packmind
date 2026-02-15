@@ -11,6 +11,7 @@ import {
   PMAlertDialog,
   PMButtonGroup,
   PMAlert,
+  PMInput,
   PMTooltip,
   PMText,
   useTableSort,
@@ -62,6 +63,7 @@ export const PackagesPage: React.FC<PackagesPageProps> = ({
     type: 'success' | 'error';
     message: string;
   } | null>(null);
+  const [searchQuery, setSearchQuery] = React.useState('');
 
   const { sortKey, sortDirection, handleSort, getSortDirection } = useTableSort(
     {
@@ -131,7 +133,11 @@ export const PackagesPage: React.FC<PackagesPageProps> = ({
   React.useEffect(() => {
     if (!packagesResponse) return;
 
-    const sortedPackages = [...packagesResponse.packages].sort((a, b) => {
+    const filteredPackages = packagesResponse.packages.filter((pkg) =>
+      pkg.name.toLowerCase().includes(searchQuery.toLowerCase()),
+    );
+
+    const sortedPackages = [...filteredPackages].sort((a, b) => {
       const direction = sortDirection === 'asc' ? 1 : -1;
       switch (sortKey) {
         case 'name':
@@ -219,6 +225,7 @@ export const PackagesPage: React.FC<PackagesPageProps> = ({
     selectedPackageIds,
     sortKey,
     sortDirection,
+    searchQuery,
   ]);
 
   const columns: PMTableColumn[] = [
@@ -271,6 +278,13 @@ export const PackagesPage: React.FC<PackagesPageProps> = ({
         <>
           {onEmptyStateChange && onEmptyStateChange(false)}
           <PMBox>
+            <PMBox mb={4}>
+              <PMInput
+                placeholder="Search by name..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </PMBox>
             <PMBox mb={4}>
               <PMButtonGroup>
                 {hasGitProviderWithToken && (

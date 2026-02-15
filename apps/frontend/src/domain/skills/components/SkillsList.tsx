@@ -12,6 +12,7 @@ import {
   PMAlert,
   PMAlertDialog,
   PMCheckbox,
+  PMInput,
   useTableSort,
 } from '@packmind/ui';
 import { formatDistanceToNowStrict } from 'date-fns';
@@ -43,6 +44,7 @@ export const SkillsList = ({ orgSlug }: ISkillsListProps) => {
   );
 
   const [tableData, setTableData] = React.useState<PMTableRow[]>([]);
+  const [searchQuery, setSearchQuery] = React.useState('');
   const [selectedSkillIds, setSelectedSkillIds] = React.useState<SkillId[]>([]);
   const [deleteModalOpen, setDeleteModalOpen] = React.useState(false);
   const [deleteAlert, setDeleteAlert] = React.useState<{
@@ -95,7 +97,11 @@ export const SkillsList = ({ orgSlug }: ISkillsListProps) => {
   React.useEffect(() => {
     if (!skills) return;
 
-    const sortedSkills = [...skills].sort((a, b) => {
+    const filteredSkills = skills.filter((skill) =>
+      skill.name.toLowerCase().includes(searchQuery.toLowerCase()),
+    );
+
+    const sortedSkills = [...filteredSkills].sort((a, b) => {
       const direction = sortDirection === 'asc' ? 1 : -1;
       switch (sortKey) {
         case 'name':
@@ -160,7 +166,15 @@ export const SkillsList = ({ orgSlug }: ISkillsListProps) => {
         ),
       })),
     );
-  }, [skills, selectedSkillIds, spaceSlug, orgSlug, sortKey, sortDirection]);
+  }, [
+    skills,
+    selectedSkillIds,
+    spaceSlug,
+    orgSlug,
+    sortKey,
+    sortDirection,
+    searchQuery,
+  ]);
 
   const isAllSelected =
     skills?.length && selectedSkillIds.length === skills.length;
@@ -236,6 +250,14 @@ export const SkillsList = ({ orgSlug }: ISkillsListProps) => {
           </PMAlert.Root>
         </PMBox>
       )}
+
+      <PMBox mb={4}>
+        <PMInput
+          placeholder="Search by name..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+        />
+      </PMBox>
 
       <PMBox mb={2}>
         <PMHStack gap={2}>

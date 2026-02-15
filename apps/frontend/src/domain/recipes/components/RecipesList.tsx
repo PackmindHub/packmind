@@ -11,6 +11,7 @@ import {
   PMAlert,
   PMAlertDialog,
   PMButtonGroup,
+  PMInput,
   useTableSort,
 } from '@packmind/ui';
 
@@ -52,6 +53,7 @@ export const RecipesList = ({
     type: 'success' | 'error';
     message: string;
   } | null>(null);
+  const [searchQuery, setSearchQuery] = React.useState('');
   const { sortKey, sortDirection, handleSort, getSortDirection } = useTableSort(
     {
       defaultSortKey: 'name',
@@ -114,7 +116,11 @@ export const RecipesList = ({
   React.useEffect(() => {
     if (!recipes) return;
 
-    const sortedRecipes = [...recipes].sort((a, b) => {
+    const filteredRecipes = recipes.filter((recipe) =>
+      recipe.name.toLowerCase().includes(searchQuery.toLowerCase()),
+    );
+
+    const sortedRecipes = [...filteredRecipes].sort((a, b) => {
       const direction = sortDirection === 'asc' ? 1 : -1;
       switch (sortKey) {
         case 'name':
@@ -185,7 +191,15 @@ export const RecipesList = ({
         version: recipe.version,
       })),
     );
-  }, [recipes, selectedRecipeIds, orgSlug, spaceSlug, sortKey, sortDirection]);
+  }, [
+    recipes,
+    selectedRecipeIds,
+    orgSlug,
+    spaceSlug,
+    sortKey,
+    sortDirection,
+    searchQuery,
+  ]);
 
   const isAllSelected = recipes && selectedRecipeIds.length === recipes.length;
   const isSomeSelected = selectedRecipeIds.length > 0;
@@ -261,6 +275,13 @@ export const RecipesList = ({
       {isError && <p>Error loading recipes.</p>}
       {hasRecipes ? (
         <PMBox>
+          <PMBox mb={4}>
+            <PMInput
+              placeholder="Search by name..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </PMBox>
           <PMButtonGroup size="sm" mb={4}>
             <PMAlertDialog
               trigger={

@@ -11,6 +11,7 @@ import {
   PMAlert,
   PMAlertDialog,
   PMCheckbox,
+  PMInput,
   useTableSort,
 } from '@packmind/ui';
 
@@ -57,6 +58,7 @@ export const StandardsList = ({
     message: string;
   } | null>(null);
   const [isSamplesModalOpen, setIsSamplesModalOpen] = React.useState(false);
+  const [searchQuery, setSearchQuery] = React.useState('');
 
   const { sortKey, sortDirection, handleSort, getSortDirection } = useTableSort(
     {
@@ -123,29 +125,32 @@ export const StandardsList = ({
   React.useEffect(() => {
     if (!listStandardsResponse) return;
 
-    const sortedStandards = [...listStandardsResponse.standards].sort(
-      (a, b) => {
-        const direction = sortDirection === 'asc' ? 1 : -1;
-        switch (sortKey) {
-          case 'name':
-            return direction * a.name.localeCompare(b.name);
-          case 'updatedAt': {
-            const dateA = new Date(a.updatedAt || 0).getTime();
-            const dateB = new Date(b.updatedAt || 0).getTime();
-            return direction * (dateA - dateB);
-          }
-          case 'createdBy': {
-            const nameA = a.createdBy?.displayName ?? '';
-            const nameB = b.createdBy?.displayName ?? '';
-            return direction * nameA.localeCompare(nameB);
-          }
-          case 'version':
-            return direction * ((a.version ?? 0) - (b.version ?? 0));
-          default:
-            return 0;
-        }
-      },
+    const filteredStandards = listStandardsResponse.standards.filter(
+      (standard) =>
+        standard.name.toLowerCase().includes(searchQuery.toLowerCase()),
     );
+
+    const sortedStandards = [...filteredStandards].sort((a, b) => {
+      const direction = sortDirection === 'asc' ? 1 : -1;
+      switch (sortKey) {
+        case 'name':
+          return direction * a.name.localeCompare(b.name);
+        case 'updatedAt': {
+          const dateA = new Date(a.updatedAt || 0).getTime();
+          const dateB = new Date(b.updatedAt || 0).getTime();
+          return direction * (dateA - dateB);
+        }
+        case 'createdBy': {
+          const nameA = a.createdBy?.displayName ?? '';
+          const nameB = b.createdBy?.displayName ?? '';
+          return direction * nameA.localeCompare(nameB);
+        }
+        case 'version':
+          return direction * ((a.version ?? 0) - (b.version ?? 0));
+        default:
+          return 0;
+      }
+    });
 
     setTableData(
       sortedStandards.map((standard) => ({
@@ -201,6 +206,7 @@ export const StandardsList = ({
     orgSlug,
     sortKey,
     sortDirection,
+    searchQuery,
   ]);
 
   const isAllSelected =
@@ -276,6 +282,13 @@ export const StandardsList = ({
       {isError && <p>Error loading standards.</p>}
       {(listStandardsResponse?.standards ?? []).length ? (
         <PMBox>
+          <PMBox mb={4}>
+            <PMInput
+              placeholder="Search by name..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </PMBox>
           <PMBox mb={2}>
             <PMHStack gap={2}>
               <PMAlertDialog
