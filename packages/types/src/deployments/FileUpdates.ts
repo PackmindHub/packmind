@@ -40,6 +40,14 @@ export type DeleteItem = {
   type: DeleteItemType;
 };
 
+export type SkillFileOutput = {
+  path: string;
+  content: string;
+  isBase64?: boolean;
+  skillFileId?: string;
+  skillFilePermissions?: string;
+};
+
 export type FileUpdates = {
   createOrUpdate: FileModification[];
   delete: DeleteItem[];

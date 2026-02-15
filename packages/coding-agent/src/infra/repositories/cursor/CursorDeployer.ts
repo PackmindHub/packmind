@@ -7,6 +7,7 @@ import {
   IGitPort,
   IStandardsPort,
   RecipeVersion,
+  SkillFileOutput,
   SkillVersion,
   StandardVersion,
   Target,
@@ -427,11 +428,6 @@ export class CursorDeployer implements ICodingAgentDeployer {
       });
     }
 
-    console.log('-----------------------------------------');
-    console.log('-----------------------------------------');
-    console.log('-----------------------------------------');
-    console.log(JSON.stringify(deleteItems, null, 2));
-
     return {
       createOrUpdate: [],
       delete: deleteItems,
@@ -514,20 +510,10 @@ ${instructionContent}`;
     return CursorDeployer.SKILLS_FOLDER_PATH;
   }
 
-  private generateCursorSkillFiles(skillVersion: SkillVersion): Array<{
-    path: string;
-    content: string;
-    isBase64?: boolean;
-    skillFileId?: string;
-    skillFilePermissions?: string;
-  }> {
-    const files: Array<{
-      path: string;
-      content: string;
-      isBase64?: boolean;
-      skillFileId?: string;
-      skillFilePermissions?: string;
-    }> = [];
+  private generateCursorSkillFiles(
+    skillVersion: SkillVersion,
+  ): SkillFileOutput[] {
+    const files: SkillFileOutput[] = [];
 
     // Generate SKILL.md (main skill file)
     const skillMdContent = this.generateSkillMdContent(skillVersion);
