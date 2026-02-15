@@ -93,6 +93,7 @@ describe('CreateChangeProposalUseCase', () => {
       getSkill: jest.fn(),
       getLatestSkillVersion: jest.fn(),
       getSkillFiles: jest.fn(),
+      listSkillVersions: jest.fn().mockResolvedValue([]),
     } as unknown as jest.Mocked<ISkillsPort>;
 
     spacesPort = {

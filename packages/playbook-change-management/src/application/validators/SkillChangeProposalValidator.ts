@@ -5,8 +5,10 @@ import {
   CreateChangeProposalCommand,
   ISkillsPort,
   Skill,
+  SkillFile,
   SkillFileId,
   SkillId,
+  SkillVersionId,
   ScalarUpdatePayload,
 } from '@packmind/types';
 import { MemberContext, serializeSkillMetadata } from '@packmind/node-utils';
@@ -38,12 +40,10 @@ const SKILL_FIELD_BY_TYPE: Record<ScalarSkillType, (skill: Skill) => string> = {
   [ChangeProposalType.updateSkillPrompt]: (skill) => skill.prompt,
   [ChangeProposalType.updateSkillMetadata]: (skill) => {
     const fields: Record<string, unknown> = {};
-    if (skill.license !== undefined) fields.license = skill.license;
-    if (skill.compatibility !== undefined)
-      fields.compatibility = skill.compatibility;
-    if (skill.metadata !== undefined) fields.metadata = skill.metadata;
-    if (skill.allowedTools !== undefined)
-      fields.allowedTools = skill.allowedTools;
+    if (skill.license != null) fields.license = skill.license;
+    if (skill.compatibility != null) fields.compatibility = skill.compatibility;
+    if (skill.metadata != null) fields.metadata = skill.metadata;
+    if (skill.allowedTools != null) fields.allowedTools = skill.allowedTools;
     return serializeSkillMetadata(fields);
   },
 };
@@ -105,16 +105,10 @@ export class SkillChangeProposalValidator implements IChangeProposalValidator {
     command: CreateChangeProposalCommand<ChangeProposalType> & MemberContext,
   ): Promise<void> {
     const payload = command.payload as CollectionItemUpdatePayload<SkillFileId>;
-    const version = await this.skillsPort.getLatestSkillVersion(skill.id);
-    if (!version) {
-      throw new SkillVersionNotFoundError(skill.id);
-    }
-
-    const files = await this.skillsPort.getSkillFiles(version.id);
-    const targetFile = files.find((f) => f.id === payload.targetId);
-    if (!targetFile) {
-      throw new SkillFileNotFoundError(payload.targetId);
-    }
+    const { file: targetFile } = await this.resolveSkillFile(
+      skill,
+      payload.targetId,
+    );
 
     if (payload.oldValue !== targetFile.content) {
       throw new ChangeProposalPayloadMismatchError(
@@ -130,16 +124,10 @@ export class SkillChangeProposalValidator implements IChangeProposalValidator {
     command: CreateChangeProposalCommand<ChangeProposalType> & MemberContext,
   ): Promise<void> {
     const payload = command.payload as CollectionItemUpdatePayload<SkillFileId>;
-    const version = await this.skillsPort.getLatestSkillVersion(skill.id);
-    if (!version) {
-      throw new SkillVersionNotFoundError(skill.id);
-    }
-
-    const files = await this.skillsPort.getSkillFiles(version.id);
-    const targetFile = files.find((f) => f.id === payload.targetId);
-    if (!targetFile) {
-      throw new SkillFileNotFoundError(payload.targetId);
-    }
+    const { file: targetFile } = await this.resolveSkillFile(
+      skill,
+      payload.targetId,
+    );
 
     if (payload.oldValue !== targetFile.permissions) {
       throw new ChangeProposalPayloadMismatchError(
@@ -157,15 +145,47 @@ export class SkillChangeProposalValidator implements IChangeProposalValidator {
     const payload = command.payload as CollectionItemDeletePayload<{
       id: SkillFileId;
     }>;
+    await this.resolveSkillFile(skill, payload.targetId);
+  }
+
+  private async resolveSkillFile(
+    skill: Skill,
+    targetId: SkillFileId,
+  ): Promise<{ file: SkillFile; latestVersionId: SkillVersionId }> {
     const version = await this.skillsPort.getLatestSkillVersion(skill.id);
     if (!version) {
       throw new SkillVersionNotFoundError(skill.id);
     }
 
     const files = await this.skillsPort.getSkillFiles(version.id);
-    const targetFile = files.find((f) => f.id === payload.targetId);
-    if (!targetFile) {
-      throw new SkillFileNotFoundError(payload.targetId);
+    const targetFile = files.find((f) => f.id === targetId);
+    if (targetFile) {
+      return { file: targetFile, latestVersionId: version.id };
     }
+
+    const filePath = await this.findFilePathById(skill.id, targetId);
+    if (filePath) {
+      const matchByPath = files.find((f) => f.path === filePath);
+      if (matchByPath) {
+        return { file: matchByPath, latestVersionId: version.id };
+      }
+    }
+
+    throw new SkillFileNotFoundError(targetId);
+  }
+
+  private async findFilePathById(
+    skillId: SkillId,
+    fileId: SkillFileId,
+  ): Promise<string | null> {
+    const versions = await this.skillsPort.listSkillVersions(skillId);
+    for (const version of versions) {
+      const files = await this.skillsPort.getSkillFiles(version.id);
+      const found = files.find((f) => f.id === fileId);
+      if (found) {
+        return found.path;
+      }
+    }
+    return null;
   }
 }

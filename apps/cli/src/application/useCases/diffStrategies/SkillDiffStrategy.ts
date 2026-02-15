@@ -85,6 +85,8 @@ export class SkillDiffStrategy implements IDiffStrategy {
         }
 
         const newFileId = createSkillFileId(uuidv4());
+        const permissions =
+          (await this.tryGetPermissions(fullPath)) ?? 'rw-r--r--';
 
         diffs.push({
           filePath,
@@ -95,7 +97,7 @@ export class SkillDiffStrategy implements IDiffStrategy {
               id: newFileId,
               path: relativePath,
               content,
-              permissions: 'read',
+              permissions,
               isBase64: false,
             },
           },
