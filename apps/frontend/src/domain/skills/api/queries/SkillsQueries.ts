@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { OrganizationId, Skill, SkillId, SpaceId } from '@packmind/types';
+import { OrganizationId, SkillId, SpaceId } from '@packmind/types';
 import { skillsGateway } from '../gateways';
 import {
   GET_SKILLS_KEY,
@@ -27,8 +27,6 @@ export const getSkillsBySpaceQueryOptions = (
     }
     return skillsGateway.getSkills(organizationId, spaceId);
   },
-  select: (skills: Skill[]) =>
-    [...skills].sort((a, b) => a.name.localeCompare(b.name)),
   enabled: !!organizationId && !!spaceId,
 });
 

@@ -12,6 +12,8 @@ import {
   PMAlert,
   PMAlertDialog,
   PMCheckbox,
+  PMInput,
+  useTableSort,
 } from '@packmind/ui';
 import { formatDistanceToNowStrict } from 'date-fns';
 import { SkillId } from '@packmind/types';
@@ -34,8 +36,15 @@ export const SkillsList = ({ orgSlug }: ISkillsListProps) => {
   const { spaceSlug } = useCurrentSpace();
   const { data: skills, isLoading, isError } = useGetSkillsQuery();
   const deleteBatchMutation = useDeleteSkillsBatchMutation();
+  const { sortKey, sortDirection, handleSort, getSortDirection } = useTableSort(
+    {
+      defaultSortKey: 'name',
+      defaultSortDirection: 'asc',
+    },
+  );
 
   const [tableData, setTableData] = React.useState<PMTableRow[]>([]);
+  const [searchQuery, setSearchQuery] = React.useState('');
   const [selectedSkillIds, setSelectedSkillIds] = React.useState<SkillId[]>([]);
   const [deleteModalOpen, setDeleteModalOpen] = React.useState(false);
   const [deleteAlert, setDeleteAlert] = React.useState<{
@@ -88,8 +97,34 @@ export const SkillsList = ({ orgSlug }: ISkillsListProps) => {
   React.useEffect(() => {
     if (!skills) return;
 
+    const filteredSkills = skills.filter((skill) =>
+      skill.name.toLowerCase().includes(searchQuery.toLowerCase()),
+    );
+
+    const sortedSkills = [...filteredSkills].sort((a, b) => {
+      const direction = sortDirection === 'asc' ? 1 : -1;
+      switch (sortKey) {
+        case 'name':
+          return direction * a.name.localeCompare(b.name);
+        case 'updatedAt': {
+          const dateA = new Date(a.updatedAt || 0).getTime();
+          const dateB = new Date(b.updatedAt || 0).getTime();
+          return direction * (dateA - dateB);
+        }
+        case 'createdBy': {
+          const nameA = a.createdBy?.displayName ?? '';
+          const nameB = b.createdBy?.displayName ?? '';
+          return direction * nameA.localeCompare(nameB);
+        }
+        case 'version':
+          return direction * ((a.version ?? 0) - (b.version ?? 0));
+        default:
+          return 0;
+      }
+    });
+
     setTableData(
-      skills.map((skill) => ({
+      sortedSkills.map((skill) => ({
         key: skill.id,
         select: (
           <PMCheckbox
@@ -131,7 +166,15 @@ export const SkillsList = ({ orgSlug }: ISkillsListProps) => {
         ),
       })),
     );
-  }, [skills, selectedSkillIds, spaceSlug, orgSlug]);
+  }, [
+    skills,
+    selectedSkillIds,
+    spaceSlug,
+    orgSlug,
+    sortKey,
+    sortDirection,
+    searchQuery,
+  ]);
 
   const isAllSelected =
     skills?.length && selectedSkillIds.length === skills.length;
@@ -156,20 +199,37 @@ export const SkillsList = ({ orgSlug }: ISkillsListProps) => {
       width: '50px',
       align: 'center',
     },
-    { key: 'name', header: 'Name', grow: true },
+    {
+      key: 'name',
+      header: 'Name',
+      grow: true,
+      sortable: true,
+      sortDirection: getSortDirection('name'),
+    },
     {
       key: 'createdBy',
       header: 'Created by',
       width: '120px',
       align: 'center',
+      sortable: true,
+      sortDirection: getSortDirection('createdBy'),
     },
     {
       key: 'updatedAt',
       header: 'Last Updated',
       width: '250px',
       align: 'center',
+      sortable: true,
+      sortDirection: getSortDirection('updatedAt'),
     },
-    { key: 'version', header: 'Version', width: '100px', align: 'center' },
+    {
+      key: 'version',
+      header: 'Version',
+      width: '100px',
+      align: 'center',
+      sortable: true,
+      sortDirection: getSortDirection('version'),
+    },
   ];
 
   if (isLoading) return <PMText>Loading...</PMText>;
@@ -190,6 +250,14 @@ export const SkillsList = ({ orgSlug }: ISkillsListProps) => {
           </PMAlert.Root>
         </PMBox>
       )}
+
+      <PMBox mb={4}>
+        <PMInput
+          placeholder="Search by name..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+        />
+      </PMBox>
 
       <PMBox mb={2}>
         <PMHStack gap={2}>
@@ -234,6 +302,7 @@ export const SkillsList = ({ orgSlug }: ISkillsListProps) => {
         hoverable
         size="md"
         variant="line"
+        onSort={handleSort}
       />
     </PMBox>
   );

@@ -959,4 +959,98 @@ describe('PMTable', () => {
       });
     });
   });
+
+  describe('sorting', () => {
+    const sortableColumns: PMTableColumn[] = [
+      {
+        key: 'name',
+        header: 'Name',
+        width: '200px',
+        sortable: true,
+        sortDirection: null,
+      },
+      { key: 'email', header: 'Email', width: '250px', sortable: false },
+      {
+        key: 'role',
+        header: 'Role',
+        width: '150px',
+        sortable: true,
+        sortDirection: 'asc',
+      },
+      {
+        key: 'status',
+        header: 'Status',
+        width: '100px',
+        sortable: true,
+        sortDirection: 'desc',
+      },
+    ];
+
+    describe('when column is sortable', () => {
+      beforeEach(() => {
+        renderPMTable({ columns: sortableColumns, data: mockData });
+      });
+
+      it('renders neutral indicator for unsorted column', () => {
+        expect(screen.getByLabelText('sortable')).toBeInTheDocument();
+      });
+
+      it('renders ascending indicator', () => {
+        expect(screen.getByLabelText('sorted ascending')).toBeInTheDocument();
+      });
+
+      it('renders descending indicator', () => {
+        expect(screen.getByLabelText('sorted descending')).toBeInTheDocument();
+      });
+    });
+
+    describe('when sortable header is clicked', () => {
+      it('calls onSort with column key', () => {
+        const onSort = jest.fn();
+        renderPMTable({ columns: sortableColumns, data: mockData, onSort });
+
+        fireEvent.click(screen.getByText('Name'));
+
+        expect(onSort).toHaveBeenCalledWith('name');
+      });
+    });
+
+    describe('when non-sortable header is clicked', () => {
+      it('does not call onSort', () => {
+        const onSort = jest.fn();
+        renderPMTable({ columns: sortableColumns, data: mockData, onSort });
+
+        fireEvent.click(screen.getByText('Email'));
+
+        expect(onSort).not.toHaveBeenCalled();
+      });
+    });
+
+    describe('when column is not sortable', () => {
+      const nonSortableColumns: PMTableColumn[] = [
+        { key: 'name', header: 'Name', width: '200px' },
+        { key: 'email', header: 'Email', width: '250px' },
+      ];
+
+      beforeEach(() => {
+        renderPMTable({ columns: nonSortableColumns, data: mockData });
+      });
+
+      it('does not render sortable indicator', () => {
+        expect(screen.queryByLabelText('sortable')).not.toBeInTheDocument();
+      });
+
+      it('does not render ascending indicator', () => {
+        expect(
+          screen.queryByLabelText('sorted ascending'),
+        ).not.toBeInTheDocument();
+      });
+
+      it('does not render descending indicator', () => {
+        expect(
+          screen.queryByLabelText('sorted descending'),
+        ).not.toBeInTheDocument();
+      });
+    });
+  });
 });

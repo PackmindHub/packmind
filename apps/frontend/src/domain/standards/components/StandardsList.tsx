@@ -11,6 +11,8 @@ import {
   PMAlert,
   PMAlertDialog,
   PMCheckbox,
+  PMInput,
+  useTableSort,
 } from '@packmind/ui';
 
 import {
@@ -56,6 +58,14 @@ export const StandardsList = ({
     message: string;
   } | null>(null);
   const [isSamplesModalOpen, setIsSamplesModalOpen] = React.useState(false);
+  const [searchQuery, setSearchQuery] = React.useState('');
+
+  const { sortKey, sortDirection, handleSort, getSortDirection } = useTableSort(
+    {
+      defaultSortKey: 'name',
+      defaultSortDirection: 'asc',
+    },
+  );
 
   const checkStandard = (standardId: StandardId) => {
     setSelectedStandardIds((prev) => [...prev, standardId]);
@@ -115,8 +125,35 @@ export const StandardsList = ({
   React.useEffect(() => {
     if (!listStandardsResponse) return;
 
+    const filteredStandards = listStandardsResponse.standards.filter(
+      (standard) =>
+        standard.name.toLowerCase().includes(searchQuery.toLowerCase()),
+    );
+
+    const sortedStandards = [...filteredStandards].sort((a, b) => {
+      const direction = sortDirection === 'asc' ? 1 : -1;
+      switch (sortKey) {
+        case 'name':
+          return direction * a.name.localeCompare(b.name);
+        case 'updatedAt': {
+          const dateA = new Date(a.updatedAt || 0).getTime();
+          const dateB = new Date(b.updatedAt || 0).getTime();
+          return direction * (dateA - dateB);
+        }
+        case 'createdBy': {
+          const nameA = a.createdBy?.displayName ?? '';
+          const nameB = b.createdBy?.displayName ?? '';
+          return direction * nameA.localeCompare(nameB);
+        }
+        case 'version':
+          return direction * ((a.version ?? 0) - (b.version ?? 0));
+        default:
+          return 0;
+      }
+    });
+
     setTableData(
-      listStandardsResponse.standards.map((standard) => ({
+      sortedStandards.map((standard) => ({
         key: standard.id,
         select: (
           <PMCheckbox
@@ -162,7 +199,15 @@ export const StandardsList = ({
         version: standard.version,
       })),
     );
-  }, [listStandardsResponse, selectedStandardIds, spaceSlug, orgSlug]);
+  }, [
+    listStandardsResponse,
+    selectedStandardIds,
+    spaceSlug,
+    orgSlug,
+    sortKey,
+    sortDirection,
+    searchQuery,
+  ]);
 
   const isAllSelected =
     listStandardsResponse &&
@@ -188,20 +233,37 @@ export const StandardsList = ({
       width: '50px',
       align: 'center',
     },
-    { key: 'name', header: 'Name', grow: true },
+    {
+      key: 'name',
+      header: 'Name',
+      grow: true,
+      sortable: true,
+      sortDirection: getSortDirection('name'),
+    },
     {
       key: 'createdBy',
       header: 'Created by',
       width: '200px',
       align: 'center',
+      sortable: true,
+      sortDirection: getSortDirection('createdBy'),
     },
     {
       key: 'updatedAt',
       header: 'Last Updated',
       width: '250px',
       align: 'center',
+      sortable: true,
+      sortDirection: getSortDirection('updatedAt'),
     },
-    { key: 'version', header: 'Version', width: '100px', align: 'center' },
+    {
+      key: 'version',
+      header: 'Version',
+      width: '100px',
+      align: 'center',
+      sortable: true,
+      sortDirection: getSortDirection('version'),
+    },
   ];
 
   return (
@@ -220,6 +282,13 @@ export const StandardsList = ({
       {isError && <p>Error loading standards.</p>}
       {(listStandardsResponse?.standards ?? []).length ? (
         <PMBox>
+          <PMBox mb={4}>
+            <PMInput
+              placeholder="Search by name..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </PMBox>
           <PMBox mb={2}>
             <PMHStack gap={2}>
               <PMAlertDialog
@@ -262,6 +331,7 @@ export const StandardsList = ({
             hoverable={true}
             size="md"
             variant="line"
+            onSort={handleSort}
           />
         </PMBox>
       ) : (

@@ -11,8 +11,10 @@ import {
   PMAlertDialog,
   PMButtonGroup,
   PMAlert,
+  PMInput,
   PMTooltip,
   PMText,
+  useTableSort,
 } from '@packmind/ui';
 import { PackageId } from '@packmind/types';
 import { useCurrentSpace } from '../../../spaces/hooks/useCurrentSpace';
@@ -61,6 +63,14 @@ export const PackagesPage: React.FC<PackagesPageProps> = ({
     type: 'success' | 'error';
     message: string;
   } | null>(null);
+  const [searchQuery, setSearchQuery] = React.useState('');
+
+  const { sortKey, sortDirection, handleSort, getSortDirection } = useTableSort(
+    {
+      defaultSortKey: 'name',
+      defaultSortDirection: 'asc',
+    },
+  );
 
   const packages = packagesResponse?.packages ?? [];
   const isSomeSelected = selectedPackageIds.length > 0;
@@ -123,9 +133,30 @@ export const PackagesPage: React.FC<PackagesPageProps> = ({
   React.useEffect(() => {
     if (!packagesResponse) return;
 
-    const sortedPackages = [...packagesResponse.packages].sort((a, b) =>
-      a.name.localeCompare(b.name),
+    const filteredPackages = packagesResponse.packages.filter((pkg) =>
+      pkg.name.toLowerCase().includes(searchQuery.toLowerCase()),
     );
+
+    const sortedPackages = [...filteredPackages].sort((a, b) => {
+      const direction = sortDirection === 'asc' ? 1 : -1;
+      switch (sortKey) {
+        case 'name':
+          return direction * a.name.localeCompare(b.name);
+        case 'artifacts': {
+          const totalA =
+            (a.recipes?.length || 0) +
+            (a.standards?.length || 0) +
+            (a.skills?.length || 0);
+          const totalB =
+            (b.recipes?.length || 0) +
+            (b.standards?.length || 0) +
+            (b.skills?.length || 0);
+          return direction * (totalA - totalB);
+        }
+        default:
+          return 0;
+      }
+    });
 
     setTableData(
       sortedPackages.map((pkg) => {
@@ -187,7 +218,15 @@ export const PackagesPage: React.FC<PackagesPageProps> = ({
         };
       }),
     );
-  }, [packagesResponse, orgSlug, spaceSlug, selectedPackageIds]);
+  }, [
+    packagesResponse,
+    orgSlug,
+    spaceSlug,
+    selectedPackageIds,
+    sortKey,
+    sortDirection,
+    searchQuery,
+  ]);
 
   const columns: PMTableColumn[] = [
     {
@@ -202,8 +241,21 @@ export const PackagesPage: React.FC<PackagesPageProps> = ({
       width: '50px',
       align: 'center',
     },
-    { key: 'name', header: 'Name', grow: true },
-    { key: 'artifacts', header: 'Artifacts', width: '100px', align: 'center' },
+    {
+      key: 'name',
+      header: 'Name',
+      grow: true,
+      sortable: true,
+      sortDirection: getSortDirection('name'),
+    },
+    {
+      key: 'artifacts',
+      header: 'Artifacts',
+      width: '100px',
+      align: 'center',
+      sortable: true,
+      sortDirection: getSortDirection('artifacts'),
+    },
   ];
 
   const isLoading = isLoadingSpace || isLoadingPackages;
@@ -226,6 +278,13 @@ export const PackagesPage: React.FC<PackagesPageProps> = ({
         <>
           {onEmptyStateChange && onEmptyStateChange(false)}
           <PMBox>
+            <PMBox mb={4}>
+              <PMInput
+                placeholder="Search by name..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </PMBox>
             <PMBox mb={4}>
               <PMButtonGroup>
                 {hasGitProviderWithToken && (
@@ -273,6 +332,7 @@ export const PackagesPage: React.FC<PackagesPageProps> = ({
               hoverable={true}
               size="md"
               variant="line"
+              onSort={handleSort}
             />
           </PMBox>
         </>
