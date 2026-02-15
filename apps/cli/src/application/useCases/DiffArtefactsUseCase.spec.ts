@@ -3,6 +3,7 @@ import * as fs from 'fs/promises';
 import { DiffArtefactsUseCase } from './DiffArtefactsUseCase';
 import { ChangeProposalType } from '@packmind/types';
 import { createMockPackmindGateway } from '../../mocks/createMockGateways';
+import { ArtefactDiff } from '../../domain/useCases/IDiffArtefactsUseCase';
 
 jest.mock('fs/promises');
 jest.mock('uuid', () => ({
@@ -12,6 +13,7 @@ jest.mock('uuid', () => ({
 describe('DiffArtefactsUseCase', () => {
   let useCase: DiffArtefactsUseCase;
   const mockGateway = createMockPackmindGateway();
+  const mockPull = mockGateway.deployment.pull as jest.Mock;
 
   beforeEach(() => {
     useCase = new DiffArtefactsUseCase(mockGateway);
@@ -23,7 +25,7 @@ describe('DiffArtefactsUseCase', () => {
 
   describe('when local command file differs from server', () => {
     beforeEach(() => {
-      mockGateway.deployment.pull.mockResolvedValue({
+      mockPull.mockResolvedValue({
         fileUpdates: {
           createOrUpdate: [
             {
@@ -68,7 +70,7 @@ describe('DiffArtefactsUseCase', () => {
 
   describe('when Cursor command file differs from server', () => {
     beforeEach(() => {
-      mockGateway.deployment.pull.mockResolvedValue({
+      mockPull.mockResolvedValue({
         fileUpdates: {
           createOrUpdate: [
             {
@@ -113,7 +115,7 @@ describe('DiffArtefactsUseCase', () => {
 
   describe('when Copilot prompt file differs from server', () => {
     beforeEach(() => {
-      mockGateway.deployment.pull.mockResolvedValue({
+      mockPull.mockResolvedValue({
         fileUpdates: {
           createOrUpdate: [
             {
@@ -158,7 +160,7 @@ describe('DiffArtefactsUseCase', () => {
 
   describe('when local standard file differs from server', () => {
     beforeEach(() => {
-      mockGateway.deployment.pull.mockResolvedValue({
+      mockPull.mockResolvedValue({
         fileUpdates: {
           createOrUpdate: [
             {
@@ -189,8 +191,10 @@ describe('DiffArtefactsUseCase', () => {
   });
 
   describe('when SKILL.md name differs from server', () => {
-    beforeEach(() => {
-      mockGateway.deployment.pull.mockResolvedValue({
+    let result: ArtefactDiff[];
+
+    beforeEach(async () => {
+      mockPull.mockResolvedValue({
         fileUpdates: {
           createOrUpdate: [
             {
@@ -211,32 +215,22 @@ describe('DiffArtefactsUseCase', () => {
       (fs.readFile as jest.Mock).mockResolvedValue(
         "---\nname: 'Local Name'\ndescription: 'Same desc'\n---\n\nSame prompt",
       );
-    });
 
-    it('returns exactly one diff', async () => {
-      const result = await useCase.execute({
+      result = await useCase.execute({
         packagesSlugs: ['test-package'],
         baseDirectory: '/test',
       });
+    });
 
+    it('returns exactly one diff', () => {
       expect(result).toHaveLength(1);
     });
 
-    it('returns updateSkillName type', async () => {
-      const result = await useCase.execute({
-        packagesSlugs: ['test-package'],
-        baseDirectory: '/test',
-      });
-
+    it('returns updateSkillName type', () => {
       expect(result[0].type).toBe(ChangeProposalType.updateSkillName);
     });
 
-    it('includes old and new name in payload', async () => {
-      const result = await useCase.execute({
-        packagesSlugs: ['test-package'],
-        baseDirectory: '/test',
-      });
-
+    it('includes old and new name in payload', () => {
       expect(result[0].payload).toEqual({
         oldValue: 'Server Name',
         newValue: 'Local Name',
@@ -245,8 +239,10 @@ describe('DiffArtefactsUseCase', () => {
   });
 
   describe('when SKILL.md description differs from server', () => {
-    beforeEach(() => {
-      mockGateway.deployment.pull.mockResolvedValue({
+    let result: ArtefactDiff[];
+
+    beforeEach(async () => {
+      mockPull.mockResolvedValue({
         fileUpdates: {
           createOrUpdate: [
             {
@@ -267,30 +263,27 @@ describe('DiffArtefactsUseCase', () => {
       (fs.readFile as jest.Mock).mockResolvedValue(
         "---\nname: 'Same'\ndescription: 'Local desc'\n---\n\nSame prompt",
       );
-    });
 
-    it('returns exactly one diff', async () => {
-      const result = await useCase.execute({
+      result = await useCase.execute({
         packagesSlugs: ['test-package'],
         baseDirectory: '/test',
       });
+    });
 
+    it('returns exactly one diff', () => {
       expect(result).toHaveLength(1);
     });
 
-    it('returns updateSkillDescription type', async () => {
-      const result = await useCase.execute({
-        packagesSlugs: ['test-package'],
-        baseDirectory: '/test',
-      });
-
+    it('returns updateSkillDescription type', () => {
       expect(result[0].type).toBe(ChangeProposalType.updateSkillDescription);
     });
   });
 
   describe('when SKILL.md prompt differs from server', () => {
-    beforeEach(() => {
-      mockGateway.deployment.pull.mockResolvedValue({
+    let result: ArtefactDiff[];
+
+    beforeEach(async () => {
+      mockPull.mockResolvedValue({
         fileUpdates: {
           createOrUpdate: [
             {
@@ -311,30 +304,27 @@ describe('DiffArtefactsUseCase', () => {
       (fs.readFile as jest.Mock).mockResolvedValue(
         "---\nname: 'Same'\ndescription: 'Same'\n---\n\nLocal prompt",
       );
-    });
 
-    it('returns exactly one diff', async () => {
-      const result = await useCase.execute({
+      result = await useCase.execute({
         packagesSlugs: ['test-package'],
         baseDirectory: '/test',
       });
+    });
 
+    it('returns exactly one diff', () => {
       expect(result).toHaveLength(1);
     });
 
-    it('returns updateSkillPrompt type', async () => {
-      const result = await useCase.execute({
-        packagesSlugs: ['test-package'],
-        baseDirectory: '/test',
-      });
-
+    it('returns updateSkillPrompt type', () => {
       expect(result[0].type).toBe(ChangeProposalType.updateSkillPrompt);
     });
   });
 
   describe('when SKILL.md metadata differs from server', () => {
-    beforeEach(() => {
-      mockGateway.deployment.pull.mockResolvedValue({
+    let result: ArtefactDiff[];
+
+    beforeEach(async () => {
+      mockPull.mockResolvedValue({
         fileUpdates: {
           createOrUpdate: [
             {
@@ -355,30 +345,27 @@ describe('DiffArtefactsUseCase', () => {
       (fs.readFile as jest.Mock).mockResolvedValue(
         "---\nname: 'Same'\ndescription: 'Same'\nlicense: 'Apache-2.0'\n---\n\nSame prompt",
       );
-    });
 
-    it('returns exactly one diff', async () => {
-      const result = await useCase.execute({
+      result = await useCase.execute({
         packagesSlugs: ['test-package'],
         baseDirectory: '/test',
       });
+    });
 
+    it('returns exactly one diff', () => {
       expect(result).toHaveLength(1);
     });
 
-    it('returns updateSkillMetadata type', async () => {
-      const result = await useCase.execute({
-        packagesSlugs: ['test-package'],
-        baseDirectory: '/test',
-      });
-
+    it('returns updateSkillMetadata type', () => {
       expect(result[0].type).toBe(ChangeProposalType.updateSkillMetadata);
     });
   });
 
   describe('when SKILL.md has multiple field changes', () => {
-    beforeEach(() => {
-      mockGateway.deployment.pull.mockResolvedValue({
+    let result: ArtefactDiff[];
+
+    beforeEach(async () => {
+      mockPull.mockResolvedValue({
         fileUpdates: {
           createOrUpdate: [
             {
@@ -399,23 +386,18 @@ describe('DiffArtefactsUseCase', () => {
       (fs.readFile as jest.Mock).mockResolvedValue(
         "---\nname: 'New Name'\ndescription: 'New Desc'\n---\n\nNew prompt",
       );
-    });
 
-    it('returns exactly three diffs', async () => {
-      const result = await useCase.execute({
+      result = await useCase.execute({
         packagesSlugs: ['test-package'],
         baseDirectory: '/test',
       });
+    });
 
+    it('returns exactly three diffs', () => {
       expect(result).toHaveLength(3);
     });
 
-    it('returns name, description, and prompt types', async () => {
-      const result = await useCase.execute({
-        packagesSlugs: ['test-package'],
-        baseDirectory: '/test',
-      });
-
+    it('returns name, description, and prompt types', () => {
       expect(result.map((d) => d.type)).toEqual([
         ChangeProposalType.updateSkillName,
         ChangeProposalType.updateSkillDescription,
@@ -429,7 +411,7 @@ describe('DiffArtefactsUseCase', () => {
       "---\nname: 'Same'\ndescription: 'Same'\n---\n\nSame prompt";
 
     beforeEach(() => {
-      mockGateway.deployment.pull.mockResolvedValue({
+      mockPull.mockResolvedValue({
         fileUpdates: {
           createOrUpdate: [
             {
@@ -460,8 +442,10 @@ describe('DiffArtefactsUseCase', () => {
   });
 
   describe('when SKILL.md has malformed frontmatter', () => {
-    beforeEach(() => {
-      mockGateway.deployment.pull.mockResolvedValue({
+    let result: ArtefactDiff[];
+
+    beforeEach(async () => {
+      mockPull.mockResolvedValue({
         fileUpdates: {
           createOrUpdate: [
             {
@@ -481,30 +465,25 @@ describe('DiffArtefactsUseCase', () => {
       (fs.readFile as jest.Mock).mockResolvedValue(
         'Local skill content without frontmatter',
       );
-    });
 
-    it('returns exactly one diff', async () => {
-      const result = await useCase.execute({
+      result = await useCase.execute({
         packagesSlugs: ['test-package'],
         baseDirectory: '/test',
       });
+    });
 
+    it('returns exactly one diff', () => {
       expect(result).toHaveLength(1);
     });
 
-    it('falls back to updateSkillPrompt type', async () => {
-      const result = await useCase.execute({
-        packagesSlugs: ['test-package'],
-        baseDirectory: '/test',
-      });
-
+    it('falls back to updateSkillPrompt type', () => {
       expect(result[0].type).toBe(ChangeProposalType.updateSkillPrompt);
     });
   });
 
   describe('when skill file has no skillFileId', () => {
     beforeEach(() => {
-      mockGateway.deployment.pull.mockResolvedValue({
+      mockPull.mockResolvedValue({
         fileUpdates: {
           createOrUpdate: [
             {
@@ -536,8 +515,10 @@ describe('DiffArtefactsUseCase', () => {
   });
 
   describe('when skill file content changed locally', () => {
-    beforeEach(() => {
-      mockGateway.deployment.pull.mockResolvedValue({
+    let result: ArtefactDiff[];
+
+    beforeEach(async () => {
+      mockPull.mockResolvedValue({
         fileUpdates: {
           createOrUpdate: [
             {
@@ -557,32 +538,22 @@ describe('DiffArtefactsUseCase', () => {
       });
 
       (fs.readFile as jest.Mock).mockResolvedValue('local content');
-    });
 
-    it('returns exactly one diff', async () => {
-      const result = await useCase.execute({
+      result = await useCase.execute({
         packagesSlugs: ['test-package'],
         baseDirectory: '/test',
       });
+    });
 
+    it('returns exactly one diff', () => {
       expect(result).toHaveLength(1);
     });
 
-    it('returns updateSkillFileContent type', async () => {
-      const result = await useCase.execute({
-        packagesSlugs: ['test-package'],
-        baseDirectory: '/test',
-      });
-
+    it('returns updateSkillFileContent type', () => {
       expect(result[0].type).toBe(ChangeProposalType.updateSkillFileContent);
     });
 
-    it('includes targetId in payload', async () => {
-      const result = await useCase.execute({
-        packagesSlugs: ['test-package'],
-        baseDirectory: '/test',
-      });
-
+    it('includes targetId in payload', () => {
       expect(result[0].payload).toEqual({
         targetId: 'skill-file-1',
         oldValue: 'server content',
@@ -592,8 +563,10 @@ describe('DiffArtefactsUseCase', () => {
   });
 
   describe('when skill file permissions changed locally', () => {
-    beforeEach(() => {
-      mockGateway.deployment.pull.mockResolvedValue({
+    let result: ArtefactDiff[];
+
+    beforeEach(async () => {
+      mockPull.mockResolvedValue({
         fileUpdates: {
           createOrUpdate: [
             {
@@ -616,34 +589,24 @@ describe('DiffArtefactsUseCase', () => {
       (fs.stat as jest.Mock).mockResolvedValue({
         mode: 0o100755,
       });
-    });
 
-    it('returns exactly one diff', async () => {
-      const result = await useCase.execute({
+      result = await useCase.execute({
         packagesSlugs: ['test-package'],
         baseDirectory: '/test',
       });
+    });
 
+    it('returns exactly one diff', () => {
       expect(result).toHaveLength(1);
     });
 
-    it('returns updateSkillFilePermissions type', async () => {
-      const result = await useCase.execute({
-        packagesSlugs: ['test-package'],
-        baseDirectory: '/test',
-      });
-
+    it('returns updateSkillFilePermissions type', () => {
       expect(result[0].type).toBe(
         ChangeProposalType.updateSkillFilePermissions,
       );
     });
 
-    it('includes targetId and permission values in payload', async () => {
-      const result = await useCase.execute({
-        packagesSlugs: ['test-package'],
-        baseDirectory: '/test',
-      });
-
+    it('includes targetId and permission values in payload', () => {
       expect(result[0].payload).toEqual({
         targetId: 'skill-file-1',
         oldValue: 'rw-r--r--',
@@ -653,8 +616,10 @@ describe('DiffArtefactsUseCase', () => {
   });
 
   describe('when skill file content and permissions both changed', () => {
-    beforeEach(() => {
-      mockGateway.deployment.pull.mockResolvedValue({
+    let result: ArtefactDiff[];
+
+    beforeEach(async () => {
+      mockPull.mockResolvedValue({
         fileUpdates: {
           createOrUpdate: [
             {
@@ -677,23 +642,18 @@ describe('DiffArtefactsUseCase', () => {
       (fs.stat as jest.Mock).mockResolvedValue({
         mode: 0o100755,
       });
-    });
 
-    it('returns exactly two diffs', async () => {
-      const result = await useCase.execute({
+      result = await useCase.execute({
         packagesSlugs: ['test-package'],
         baseDirectory: '/test',
       });
+    });
 
+    it('returns exactly two diffs', () => {
       expect(result).toHaveLength(2);
     });
 
-    it('returns content and permissions types', async () => {
-      const result = await useCase.execute({
-        packagesSlugs: ['test-package'],
-        baseDirectory: '/test',
-      });
-
+    it('returns content and permissions types', () => {
       expect(result.map((d) => d.type)).toEqual([
         ChangeProposalType.updateSkillFileContent,
         ChangeProposalType.updateSkillFilePermissions,
@@ -703,7 +663,7 @@ describe('DiffArtefactsUseCase', () => {
 
   describe('when skill file permissions match server', () => {
     beforeEach(() => {
-      mockGateway.deployment.pull.mockResolvedValue({
+      mockPull.mockResolvedValue({
         fileUpdates: {
           createOrUpdate: [
             {
@@ -740,7 +700,7 @@ describe('DiffArtefactsUseCase', () => {
 
   describe('when skill file deleted locally', () => {
     beforeEach(() => {
-      mockGateway.deployment.pull.mockResolvedValue({
+      mockPull.mockResolvedValue({
         fileUpdates: {
           createOrUpdate: [
             {
@@ -836,7 +796,7 @@ describe('DiffArtefactsUseCase', () => {
 
   describe('when new local skill file detected', () => {
     beforeEach(() => {
-      mockGateway.deployment.pull.mockResolvedValue({
+      mockPull.mockResolvedValue({
         fileUpdates: {
           createOrUpdate: [
             {
@@ -921,7 +881,7 @@ describe('DiffArtefactsUseCase', () => {
 
   describe('when local file does not exist', () => {
     beforeEach(() => {
-      mockGateway.deployment.pull.mockResolvedValue({
+      mockPull.mockResolvedValue({
         fileUpdates: {
           createOrUpdate: [
             {
@@ -953,7 +913,7 @@ describe('DiffArtefactsUseCase', () => {
 
   describe('when local content matches server content', () => {
     beforeEach(() => {
-      mockGateway.deployment.pull.mockResolvedValue({
+      mockPull.mockResolvedValue({
         fileUpdates: {
           createOrUpdate: [
             {
@@ -983,7 +943,7 @@ describe('DiffArtefactsUseCase', () => {
 
   describe('when server returns files without artifactType', () => {
     beforeEach(() => {
-      mockGateway.deployment.pull.mockResolvedValue({
+      mockPull.mockResolvedValue({
         fileUpdates: {
           createOrUpdate: [
             {
@@ -1022,7 +982,7 @@ describe('DiffArtefactsUseCase', () => {
 
   describe('when file has no artifactName', () => {
     beforeEach(() => {
-      mockGateway.deployment.pull.mockResolvedValue({
+      mockPull.mockResolvedValue({
         fileUpdates: {
           createOrUpdate: [
             {
@@ -1058,7 +1018,7 @@ describe('DiffArtefactsUseCase', () => {
 
   describe('when file uses sections instead of content', () => {
     beforeEach(() => {
-      mockGateway.deployment.pull.mockResolvedValue({
+      mockPull.mockResolvedValue({
         fileUpdates: {
           createOrUpdate: [
             {
@@ -1086,7 +1046,7 @@ describe('DiffArtefactsUseCase', () => {
 
   describe('when server returns duplicate paths', () => {
     beforeEach(() => {
-      mockGateway.deployment.pull.mockResolvedValue({
+      mockPull.mockResolvedValue({
         fileUpdates: {
           createOrUpdate: [
             {
@@ -1139,7 +1099,7 @@ describe('DiffArtefactsUseCase', () => {
 
   describe('when multiple command files have changes', () => {
     beforeEach(() => {
-      mockGateway.deployment.pull.mockResolvedValue({
+      mockPull.mockResolvedValue({
         fileUpdates: {
           createOrUpdate: [
             {
@@ -1181,7 +1141,7 @@ describe('DiffArtefactsUseCase', () => {
 
   describe('when file modification includes artifactId and spaceId', () => {
     beforeEach(() => {
-      mockGateway.deployment.pull.mockResolvedValue({
+      mockPull.mockResolvedValue({
         fileUpdates: {
           createOrUpdate: [
             {
@@ -1222,7 +1182,7 @@ describe('DiffArtefactsUseCase', () => {
 
   describe('when file modification has no artifactId or spaceId', () => {
     beforeEach(() => {
-      mockGateway.deployment.pull.mockResolvedValue({
+      mockPull.mockResolvedValue({
         fileUpdates: {
           createOrUpdate: [
             {
@@ -1261,7 +1221,7 @@ describe('DiffArtefactsUseCase', () => {
 
   describe('when server and local content both have frontmatter', () => {
     beforeEach(() => {
-      mockGateway.deployment.pull.mockResolvedValue({
+      mockPull.mockResolvedValue({
         fileUpdates: {
           createOrUpdate: [
             {
@@ -1309,7 +1269,7 @@ describe('DiffArtefactsUseCase', () => {
 
   describe('when only frontmatter differs between server and local', () => {
     beforeEach(() => {
-      mockGateway.deployment.pull.mockResolvedValue({
+      mockPull.mockResolvedValue({
         fileUpdates: {
           createOrUpdate: [
             {
@@ -1343,7 +1303,7 @@ describe('DiffArtefactsUseCase', () => {
 
   describe('when deleted skill file has isBase64 flag', () => {
     beforeEach(() => {
-      mockGateway.deployment.pull.mockResolvedValue({
+      mockPull.mockResolvedValue({
         fileUpdates: {
           createOrUpdate: [
             {
@@ -1382,7 +1342,7 @@ describe('DiffArtefactsUseCase', () => {
 
   describe('when deleted skill file has custom permissions', () => {
     beforeEach(() => {
-      mockGateway.deployment.pull.mockResolvedValue({
+      mockPull.mockResolvedValue({
         fileUpdates: {
           createOrUpdate: [
             {
@@ -1420,7 +1380,7 @@ describe('DiffArtefactsUseCase', () => {
 
   describe('when deleted skill file is in a subdirectory', () => {
     beforeEach(() => {
-      mockGateway.deployment.pull.mockResolvedValue({
+      mockPull.mockResolvedValue({
         fileUpdates: {
           createOrUpdate: [
             {
@@ -1456,7 +1416,7 @@ describe('DiffArtefactsUseCase', () => {
 
   describe('when skill folder has no SKILL.md in server files', () => {
     beforeEach(() => {
-      mockGateway.deployment.pull.mockResolvedValue({
+      mockPull.mockResolvedValue({
         fileUpdates: {
           createOrUpdate: [],
           delete: [],
@@ -1483,7 +1443,7 @@ describe('DiffArtefactsUseCase', () => {
 
   describe('when new local file is inside a subdirectory', () => {
     beforeEach(() => {
-      mockGateway.deployment.pull.mockResolvedValue({
+      mockPull.mockResolvedValue({
         fileUpdates: {
           createOrUpdate: [
             {
@@ -1575,7 +1535,7 @@ describe('DiffArtefactsUseCase', () => {
 
   describe('when subdirectory is empty', () => {
     beforeEach(() => {
-      mockGateway.deployment.pull.mockResolvedValue({
+      mockPull.mockResolvedValue({
         fileUpdates: {
           createOrUpdate: [
             {
@@ -1632,7 +1592,7 @@ describe('DiffArtefactsUseCase', () => {
 
   describe('when new local file is unreadable', () => {
     beforeEach(() => {
-      mockGateway.deployment.pull.mockResolvedValue({
+      mockPull.mockResolvedValue({
         fileUpdates: {
           createOrUpdate: [
             {
@@ -1680,7 +1640,7 @@ describe('DiffArtefactsUseCase', () => {
 
   describe('when same skill has both deleted and new files', () => {
     beforeEach(() => {
-      mockGateway.deployment.pull.mockResolvedValue({
+      mockPull.mockResolvedValue({
         fileUpdates: {
           createOrUpdate: [
             {
@@ -1778,7 +1738,7 @@ describe('DiffArtefactsUseCase', () => {
 
   describe('when skill has subdirectory with both deleted and new files', () => {
     beforeEach(() => {
-      mockGateway.deployment.pull.mockResolvedValue({
+      mockPull.mockResolvedValue({
         fileUpdates: {
           createOrUpdate: [
             {
@@ -1894,7 +1854,7 @@ describe('DiffArtefactsUseCase', () => {
 
   describe('when Copilot skill file deleted locally', () => {
     beforeEach(() => {
-      mockGateway.deployment.pull.mockResolvedValue({
+      mockPull.mockResolvedValue({
         fileUpdates: {
           createOrUpdate: [
             {
@@ -1930,7 +1890,7 @@ describe('DiffArtefactsUseCase', () => {
 
   describe('when nested relativePath SKILL.md name differs', () => {
     beforeEach(() => {
-      mockGateway.deployment.pull.mockResolvedValue({
+      mockPull.mockResolvedValue({
         fileUpdates: {
           createOrUpdate: [
             {
@@ -1981,7 +1941,7 @@ describe('DiffArtefactsUseCase', () => {
 
   describe('when nested relativePath skill file deleted locally', () => {
     beforeEach(() => {
-      mockGateway.deployment.pull.mockResolvedValue({
+      mockPull.mockResolvedValue({
         fileUpdates: {
           createOrUpdate: [
             {
@@ -2018,7 +1978,7 @@ describe('DiffArtefactsUseCase', () => {
 
   describe('when nested relativePath has new local skill file', () => {
     beforeEach(() => {
-      mockGateway.deployment.pull.mockResolvedValue({
+      mockPull.mockResolvedValue({
         fileUpdates: {
           createOrUpdate: [
             {
@@ -2086,7 +2046,7 @@ describe('DiffArtefactsUseCase', () => {
   });
 
   it('passes command parameters to the gateway pull', async () => {
-    mockGateway.deployment.pull.mockResolvedValue({
+    mockPull.mockResolvedValue({
       fileUpdates: { createOrUpdate: [], delete: [] },
       skillFolders: [],
     });
@@ -2100,7 +2060,7 @@ describe('DiffArtefactsUseCase', () => {
       baseDirectory: '/test',
     });
 
-    expect(mockGateway.deployment.pull).toHaveBeenCalledWith({
+    expect(mockPull).toHaveBeenCalledWith({
       packagesSlugs: ['pkg-1', 'pkg-2'],
       previousPackagesSlugs: ['pkg-old'],
       gitRemoteUrl: 'git@github.com:org/repo.git',
