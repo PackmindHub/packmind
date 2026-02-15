@@ -128,6 +128,11 @@ export const RecipesList = ({
           ).getTime();
           return direction * (dateA - dateB);
         }
+        case 'createdBy': {
+          const nameA = a.createdBy?.displayName ?? '';
+          const nameB = b.createdBy?.displayName ?? '';
+          return direction * nameA.localeCompare(nameB);
+        }
         case 'version':
           return direction * ((a.version ?? 0) - (b.version ?? 0));
         default:
@@ -219,6 +224,8 @@ export const RecipesList = ({
       header: 'Created by',
       width: '200px',
       align: 'center',
+      sortable: true,
+      sortDirection: getSortDirection('createdBy'),
     },
     {
       key: 'updatedAt',

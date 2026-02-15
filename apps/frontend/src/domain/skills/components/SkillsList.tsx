@@ -105,6 +105,11 @@ export const SkillsList = ({ orgSlug }: ISkillsListProps) => {
           const dateB = new Date(b.updatedAt || 0).getTime();
           return direction * (dateA - dateB);
         }
+        case 'createdBy': {
+          const nameA = a.createdBy?.displayName ?? '';
+          const nameB = b.createdBy?.displayName ?? '';
+          return direction * nameA.localeCompare(nameB);
+        }
         case 'version':
           return direction * ((a.version ?? 0) - (b.version ?? 0));
         default:
@@ -192,6 +197,8 @@ export const SkillsList = ({ orgSlug }: ISkillsListProps) => {
       header: 'Created by',
       width: '120px',
       align: 'center',
+      sortable: true,
+      sortDirection: getSortDirection('createdBy'),
     },
     {
       key: 'updatedAt',
