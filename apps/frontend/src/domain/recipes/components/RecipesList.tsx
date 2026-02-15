@@ -11,6 +11,7 @@ import {
   PMAlert,
   PMAlertDialog,
   PMButtonGroup,
+  useTableSort,
 } from '@packmind/ui';
 
 import {
@@ -51,6 +52,12 @@ export const RecipesList = ({
     type: 'success' | 'error';
     message: string;
   } | null>(null);
+  const { sortKey, sortDirection, handleSort, getSortDirection } = useTableSort(
+    {
+      defaultSortKey: 'name',
+      defaultSortDirection: 'asc',
+    },
+  );
 
   const handleSelectRecipe = (recipeId: RecipeId, isChecked: boolean) => {
     if (isChecked) {
@@ -107,9 +114,26 @@ export const RecipesList = ({
   React.useEffect(() => {
     if (!recipes) return;
 
-    const sortedRecipes = [...recipes].sort((a, b) =>
-      a.name.localeCompare(b.name),
-    );
+    const sortedRecipes = [...recipes].sort((a, b) => {
+      const direction = sortDirection === 'asc' ? 1 : -1;
+      switch (sortKey) {
+        case 'name':
+          return direction * a.name.localeCompare(b.name);
+        case 'updatedAt': {
+          const dateA = new Date(
+            (a as WithTimestamps<Recipe>).updatedAt || 0,
+          ).getTime();
+          const dateB = new Date(
+            (b as WithTimestamps<Recipe>).updatedAt || 0,
+          ).getTime();
+          return direction * (dateA - dateB);
+        }
+        case 'version':
+          return direction * ((a.version ?? 0) - (b.version ?? 0));
+        default:
+          return 0;
+      }
+    });
 
     setTableData(
       sortedRecipes.map((recipe) => ({
@@ -156,7 +180,7 @@ export const RecipesList = ({
         version: recipe.version,
       })),
     );
-  }, [recipes, selectedRecipeIds, orgSlug, spaceSlug]);
+  }, [recipes, selectedRecipeIds, orgSlug, spaceSlug, sortKey, sortDirection]);
 
   const isAllSelected = recipes && selectedRecipeIds.length === recipes.length;
   const isSomeSelected = selectedRecipeIds.length > 0;
@@ -183,7 +207,13 @@ export const RecipesList = ({
       width: '50px',
       align: 'center',
     },
-    { key: 'name', header: 'Name', grow: true },
+    {
+      key: 'name',
+      header: 'Name',
+      grow: true,
+      sortable: true,
+      sortDirection: getSortDirection('name'),
+    },
     {
       key: 'createdBy',
       header: 'Created by',
@@ -195,8 +225,17 @@ export const RecipesList = ({
       header: 'Last Updated',
       width: '250px',
       align: 'center',
+      sortable: true,
+      sortDirection: getSortDirection('updatedAt'),
     },
-    { key: 'version', header: 'Version', width: '100px', align: 'center' },
+    {
+      key: 'version',
+      header: 'Version',
+      width: '100px',
+      align: 'center',
+      sortable: true,
+      sortDirection: getSortDirection('version'),
+    },
   ];
 
   return (
@@ -253,6 +292,7 @@ export const RecipesList = ({
             hoverable={true}
             size="md"
             variant="line"
+            onSort={handleSort}
           />
         </PMBox>
       ) : (

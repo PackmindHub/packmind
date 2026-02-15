@@ -1,5 +1,6 @@
 import React from 'react';
 import { Table } from '@chakra-ui/react';
+import { LuArrowUp, LuArrowDown, LuArrowUpDown } from 'react-icons/lu';
 import { PMCheckbox } from '../form/PMCheckbox';
 
 export interface PMTableColumn {
@@ -8,6 +9,8 @@ export interface PMTableColumn {
   width?: string;
   align?: 'left' | 'center' | 'right';
   grow?: boolean;
+  sortable?: boolean;
+  sortDirection?: 'asc' | 'desc' | null;
 }
 
 export interface PMTableRow {
@@ -27,6 +30,7 @@ export interface IPMTableProps<T extends object = object> {
   onSelectionChange?: (selectedRows: Set<string>) => void;
   getRowId?: (row: T, index: number) => string;
   selectAllLabel?: string;
+  onSort?: (columnKey: string) => void;
   tableProps?: React.ComponentPropsWithoutRef<typeof Table.Root>;
 }
 
@@ -42,6 +46,7 @@ export function PMTable<T extends object = object>({
   selectedRows: controlledSelectedRows,
   onSelectionChange,
   getRowId,
+  onSort,
   selectAllLabel = 'Select All',
   tableProps,
 }: Readonly<IPMTableProps<T>>) {
@@ -150,6 +155,17 @@ export function PMTable<T extends object = object>({
     selectedRows.size === rowIds.length &&
     rowIds.every((id) => selectedRows.has(id));
 
+  const getSortIcon = (sortDirection?: 'asc' | 'desc' | null) => {
+    switch (sortDirection) {
+      case 'asc':
+        return <LuArrowUp aria-label="sorted ascending" />;
+      case 'desc':
+        return <LuArrowDown aria-label="sorted descending" />;
+      default:
+        return <LuArrowUpDown aria-label="sortable" />;
+    }
+  };
+
   return (
     <Table.Root
       size={size}
@@ -183,8 +199,24 @@ export function PMTable<T extends object = object>({
             <Table.ColumnHeader
               key={column.key}
               textAlign={getTextAlign(column.align)}
+              cursor={column.sortable ? 'pointer' : undefined}
+              onClick={column.sortable ? () => onSort?.(column.key) : undefined}
+              userSelect={column.sortable ? 'none' : undefined}
             >
-              {column.header}
+              {column.sortable ? (
+                <span
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '4px',
+                  }}
+                >
+                  {column.header}
+                  {getSortIcon(column.sortDirection)}
+                </span>
+              ) : (
+                column.header
+              )}
             </Table.ColumnHeader>
           ))}
         </Table.Row>

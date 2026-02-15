@@ -11,6 +11,7 @@ import {
   PMAlert,
   PMAlertDialog,
   PMCheckbox,
+  useTableSort,
 } from '@packmind/ui';
 
 import {
@@ -56,6 +57,13 @@ export const StandardsList = ({
     message: string;
   } | null>(null);
   const [isSamplesModalOpen, setIsSamplesModalOpen] = React.useState(false);
+
+  const { sortKey, sortDirection, handleSort, getSortDirection } = useTableSort(
+    {
+      defaultSortKey: 'name',
+      defaultSortDirection: 'asc',
+    },
+  );
 
   const checkStandard = (standardId: StandardId) => {
     setSelectedStandardIds((prev) => [...prev, standardId]);
@@ -115,8 +123,27 @@ export const StandardsList = ({
   React.useEffect(() => {
     if (!listStandardsResponse) return;
 
+    const sortedStandards = [...listStandardsResponse.standards].sort(
+      (a, b) => {
+        const direction = sortDirection === 'asc' ? 1 : -1;
+        switch (sortKey) {
+          case 'name':
+            return direction * a.name.localeCompare(b.name);
+          case 'updatedAt': {
+            const dateA = new Date(a.updatedAt || 0).getTime();
+            const dateB = new Date(b.updatedAt || 0).getTime();
+            return direction * (dateA - dateB);
+          }
+          case 'version':
+            return direction * ((a.version ?? 0) - (b.version ?? 0));
+          default:
+            return 0;
+        }
+      },
+    );
+
     setTableData(
-      listStandardsResponse.standards.map((standard) => ({
+      sortedStandards.map((standard) => ({
         key: standard.id,
         select: (
           <PMCheckbox
@@ -162,7 +189,14 @@ export const StandardsList = ({
         version: standard.version,
       })),
     );
-  }, [listStandardsResponse, selectedStandardIds, spaceSlug, orgSlug]);
+  }, [
+    listStandardsResponse,
+    selectedStandardIds,
+    spaceSlug,
+    orgSlug,
+    sortKey,
+    sortDirection,
+  ]);
 
   const isAllSelected =
     listStandardsResponse &&
@@ -188,7 +222,13 @@ export const StandardsList = ({
       width: '50px',
       align: 'center',
     },
-    { key: 'name', header: 'Name', grow: true },
+    {
+      key: 'name',
+      header: 'Name',
+      grow: true,
+      sortable: true,
+      sortDirection: getSortDirection('name'),
+    },
     {
       key: 'createdBy',
       header: 'Created by',
@@ -200,8 +240,17 @@ export const StandardsList = ({
       header: 'Last Updated',
       width: '250px',
       align: 'center',
+      sortable: true,
+      sortDirection: getSortDirection('updatedAt'),
     },
-    { key: 'version', header: 'Version', width: '100px', align: 'center' },
+    {
+      key: 'version',
+      header: 'Version',
+      width: '100px',
+      align: 'center',
+      sortable: true,
+      sortDirection: getSortDirection('version'),
+    },
   ];
 
   return (
@@ -262,6 +311,7 @@ export const StandardsList = ({
             hoverable={true}
             size="md"
             variant="line"
+            onSort={handleSort}
           />
         </PMBox>
       ) : (
