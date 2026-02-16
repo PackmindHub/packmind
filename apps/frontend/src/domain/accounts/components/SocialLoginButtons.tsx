@@ -1,24 +1,15 @@
-import {
-  PMButton,
-  PMVStack,
-  PMText,
-  PMSeparator,
-  PMHStack,
-  PMIcon,
-} from '@packmind/ui';
+import { PMButton, PMText, PMSeparator, PMHStack, PMIcon } from '@packmind/ui';
 import { SiGoogle, SiGithub } from 'react-icons/si';
 import { FaMicrosoft } from 'react-icons/fa';
 import { ComponentType } from 'react';
 import { useSocialProvidersQuery } from '../api/queries/AuthQueries';
 
-const PROVIDER_CONFIG: Record<
-  string,
-  { label: string; icon: ComponentType; color: string }
-> = {
-  GoogleOAuth: { label: 'Google', icon: SiGoogle, color: '#4285F4' },
-  GitHubOAuth: { label: 'GitHub', icon: SiGithub, color: '#FFFFFF' },
-  MicrosoftOAuth: { label: 'Microsoft', icon: FaMicrosoft, color: '#00A4EF' },
-};
+const PROVIDER_CONFIG: Record<string, { label: string; icon: ComponentType }> =
+  {
+    GoogleOAuth: { label: 'Google', icon: SiGoogle },
+    GitHubOAuth: { label: 'GitHub', icon: SiGithub },
+    MicrosoftOAuth: { label: 'Microsoft', icon: FaMicrosoft },
+  };
 
 export default function SocialLoginButtons() {
   const { data, isLoading } = useSocialProvidersQuery();
@@ -50,7 +41,7 @@ export default function SocialLoginButtons() {
                 window.location.href = `/api/v0/auth/social/authorize/${provider}`;
               }}
             >
-              {config && <PMIcon as={config.icon} color={config.color} />}
+              {config && <PMIcon as={config.icon} />}
               {config?.label ?? provider}
             </PMButton>
           );
