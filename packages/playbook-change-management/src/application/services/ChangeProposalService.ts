@@ -290,11 +290,28 @@ export class ChangeProposalService {
     };
 
     for (const proposal of proposals) {
-      const category = getArtefactCategory(proposal.type);
-      const artefactId = proposal.artefactId as StandardId | RecipeId | SkillId;
-
-      const currentCount = grouped[category].get(artefactId) || 0;
-      grouped[category].set(artefactId, currentCount + 1);
+      const artefactCategory = getArtefactCategory(proposal.type);
+      console.log({ artefactCategory });
+      switch (artefactCategory) {
+        case 'standards':
+          grouped.standards.set(
+            proposal.artefactId as StandardId,
+            (grouped.standards.get(proposal.artefactId as StandardId) ?? 0) + 1,
+          );
+          break;
+        case 'commands':
+          grouped.commands.set(
+            proposal.artefactId as RecipeId,
+            (grouped.commands.get(proposal.artefactId as RecipeId) ?? 0) + 1,
+          );
+          break;
+        case 'skills':
+          grouped.skills.set(
+            proposal.artefactId as SkillId,
+            (grouped.skills.get(proposal.artefactId as SkillId) ?? 0) + 1,
+          );
+          break;
+      }
     }
 
     this.logger.info('Grouped change proposals by artefact', {
