@@ -84,7 +84,9 @@ export class DiffArtefactsUseCase implements IDiffArtefactsUseCase {
     relativePath?: string,
   ): string[] {
     if (!relativePath) return skillFolders;
-    const normalized = relativePath.replace(/^\/+/, '').replace(/\/+$/, '');
+    let normalized = relativePath;
+    while (normalized.startsWith('/')) normalized = normalized.slice(1);
+    while (normalized.endsWith('/')) normalized = normalized.slice(0, -1);
     if (!normalized) return skillFolders;
     return skillFolders.map((folder) => `${normalized}/${folder}`);
   }
