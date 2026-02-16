@@ -33,7 +33,6 @@ import { RecipeVersionsListDrawer } from './RecipeVersionsListDrawer';
 import { RecipeDistributionsList } from '../../deployments/components/RecipeDistributionsList/RecipeDistributionsList';
 import { useListRecipeDistributionsQuery } from '../../deployments/api/queries/DeploymentsQueries';
 import { useGetChangeProposalsQuery } from '../api/queries/ChangeProposalsQueries';
-import { AutobreadCrumb } from '../../../../src/shared/components/navigation/AutobreadCrumb';
 import { RECIPE_MESSAGES } from '../constants/messages';
 import { ChangeProposalStatus, RecipeId } from '@packmind/types';
 import {

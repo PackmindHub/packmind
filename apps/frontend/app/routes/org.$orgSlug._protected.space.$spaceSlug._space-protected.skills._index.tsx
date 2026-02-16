@@ -1,7 +1,6 @@
 import { PMPage, PMVStack, PMHStack } from '@packmind/ui';
 import { useAuthContext } from '../../src/domain/accounts/hooks/useAuthContext';
 import { SkillsList } from '../../src/domain/skills/components/SkillsList';
-import { AutobreadCrumb } from '../../src/shared/components/navigation/AutobreadCrumb';
 import { DownloadDefaultSkillsPopover } from '../../src/domain/skills/components/DownloadDefaultSkillsPopover';
 import { useGetSkillsQuery } from '../../src/domain/skills/api/queries/SkillsQueries';
 import { useParams } from 'react-router';

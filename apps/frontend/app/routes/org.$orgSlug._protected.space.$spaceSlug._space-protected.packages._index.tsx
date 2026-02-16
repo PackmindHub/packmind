@@ -1,6 +1,5 @@
 import { useParams, Link } from 'react-router';
 import { PMPage, PMVStack, PMButton } from '@packmind/ui';
-import { AutobreadCrumb } from '../../src/shared/components/navigation/AutobreadCrumb';
 import { PackagesPage } from '../../src/domain/deployments/components/PackagesPage';
 import { routes } from '../../src/shared/utils/routes';
 import { useState } from 'react';

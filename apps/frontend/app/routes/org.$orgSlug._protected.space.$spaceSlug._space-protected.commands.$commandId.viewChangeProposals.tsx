@@ -1,4 +1,4 @@
-import { useParams, NavLink } from 'react-router';
+import { useParams } from 'react-router';
 import { PMPage, PMBox, PMVStack, PMSpinner, PMText } from '@packmind/ui';
 import {
   ChangeProposalStatus,
@@ -7,28 +7,6 @@ import {
 } from '@packmind/types';
 import { ChangeProposalsTable } from '../../src/domain/recipes/components/ChangeProposalsTable';
 import { useGetChangeProposalsQuery } from '../../src/domain/recipes/api/queries/ChangeProposalsQueries';
-import { AutobreadCrumb } from '../../src/shared/components/navigation/AutobreadCrumb';
-import { routes } from '../../src/shared/utils/routes';
-
-export const handle = {
-  crumb: ({
-    params,
-  }: {
-    params: { orgSlug: string; spaceSlug: string; commandId: string };
-  }) => {
-    return (
-      <NavLink
-        to={routes.space.toCommandChangeProposals(
-          params.orgSlug,
-          params.spaceSlug,
-          params.commandId,
-        )}
-      >
-        Changes to review
-      </NavLink>
-    );
-  },
-};
 
 export default function ViewChangeProposalsRouteModule() {
   const { commandId } = useParams<{

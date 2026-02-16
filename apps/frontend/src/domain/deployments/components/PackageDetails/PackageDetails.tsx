@@ -25,7 +25,6 @@ import {
   useDeletePackagesBatchMutation,
   useListPackageDeploymentsQuery,
 } from '../../api/queries/DeploymentsQueries';
-import { AutobreadCrumb } from '../../../../shared/components/navigation/AutobreadCrumb';
 import { PackageId } from '@packmind/types';
 import { useCurrentSpace } from '../../../spaces/hooks/useCurrentSpace';
 import { useAuthContext } from '../../../accounts/hooks/useAuthContext';

@@ -4,7 +4,6 @@ import { useAuthContext } from '../../src/domain/accounts/hooks/useAuthContext';
 import { useCurrentSpace } from '../../src/domain/spaces/hooks/useCurrentSpace';
 import { RecipesList } from '../../src/domain/recipes/components/RecipesList';
 import { RecipesCreateButton } from '../../src/domain/recipes/components/RecipesCreateButton';
-import { AutobreadCrumb } from '../../src/shared/components/navigation/AutobreadCrumb';
 
 export default function OrgCommandsIndex() {
   const { organization } = useAuthContext();

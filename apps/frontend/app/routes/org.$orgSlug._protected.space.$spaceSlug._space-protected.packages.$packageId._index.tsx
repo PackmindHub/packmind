@@ -2,7 +2,6 @@ import { useParams } from 'react-router';
 import { PMPage, PMBox } from '@packmind/ui';
 import { useAuthContext } from '../../src/domain/accounts/hooks/useAuthContext';
 import { PackageDetails } from '../../src/domain/deployments/components/PackageDetails';
-import { AutobreadCrumb } from '../../src/shared/components/navigation/AutobreadCrumb';
 import { PackageId } from '@packmind/types';
 
 export default function PackageDetailsIndexRouteModule() {

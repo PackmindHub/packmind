@@ -1,7 +1,6 @@
 import React from 'react';
 import { PMBox, PMPage } from '@packmind/ui';
 import { LocalEnvironmentSetup } from './LocalEnvironmentSetup';
-import { AutobreadCrumb } from '../../../shared/components/navigation/AutobreadCrumb';
 
 export function SettingsPage() {
   return (

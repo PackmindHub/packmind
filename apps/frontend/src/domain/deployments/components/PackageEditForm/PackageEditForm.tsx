@@ -25,7 +25,6 @@ import {
   useGetPackageByIdQuery,
   useUpdatePackageMutation,
 } from '../../api/queries/DeploymentsQueries';
-import { AutobreadCrumb } from '../../../../shared/components/navigation/AutobreadCrumb';
 import {
   PackageId,
   Recipe,

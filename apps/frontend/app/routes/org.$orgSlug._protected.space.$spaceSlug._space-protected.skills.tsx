@@ -1,15 +1,4 @@
-import { NavLink, Outlet } from 'react-router';
-import { routes } from '../../src/shared/utils/routes';
-
-export const handle = {
-  crumb: ({ params }: { params: { orgSlug: string; spaceSlug: string } }) => {
-    return (
-      <NavLink to={routes.space.toSkills(params.orgSlug, params.spaceSlug)}>
-        Skills
-      </NavLink>
-    );
-  },
-};
+import { Outlet } from 'react-router';
 
 export default function SkillsRouteModule() {
   return <Outlet />;

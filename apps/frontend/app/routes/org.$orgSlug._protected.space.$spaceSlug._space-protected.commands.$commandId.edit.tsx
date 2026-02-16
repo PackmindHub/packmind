@@ -1,30 +1,8 @@
-import { useParams, NavLink } from 'react-router';
+import { useParams } from 'react-router';
 import { PMPage, PMVStack, PMBox, PMSpinner, PMText } from '@packmind/ui';
 import { EditCommand } from '../../src/domain/recipes/components/EditCommand';
 import { useGetRecipeByIdQuery } from '../../src/domain/recipes/api/queries/RecipesQueries';
 import { RecipeId } from '@packmind/types';
-import { AutobreadCrumb } from '../../src/shared/components/navigation/AutobreadCrumb';
-import { routes } from '../../src/shared/utils/routes';
-
-export const handle = {
-  crumb: ({
-    params,
-  }: {
-    params: { orgSlug: string; spaceSlug: string; commandId: string };
-  }) => {
-    return (
-      <NavLink
-        to={routes.space.toEditCommand(
-          params.orgSlug,
-          params.spaceSlug,
-          params.commandId,
-        )}
-      >
-        Edit
-      </NavLink>
-    );
-  },
-};
 
 export default function EditCommandRouteModule() {
   const { commandId } = useParams<{

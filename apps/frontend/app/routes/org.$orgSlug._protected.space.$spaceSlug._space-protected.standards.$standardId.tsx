@@ -1,4 +1,4 @@
-import { NavLink, useLoaderData, useParams, redirect } from 'react-router';
+import { useLoaderData, useParams, redirect } from 'react-router';
 import { queryClient } from '../../src/shared/data/queryClient';
 import {
   getStandardByIdOptions,
@@ -16,7 +16,6 @@ import { getMeQueryOptions } from '../../src/domain/accounts/api/queries/UserQue
 import { useAuthContext } from '../../src/domain/accounts/hooks/useAuthContext';
 import { StandardDetails } from '../../src/domain/standards/components/StandardDetails';
 import { PMBox, PMPage } from '@packmind/ui';
-import { AutobreadCrumb } from '../../src/shared/components/navigation/AutobreadCrumb';
 import { GetStandardByIdResponse } from '@packmind/types';
 
 export async function clientLoader({
@@ -62,30 +61,6 @@ export async function clientLoader({
     ),
   );
 }
-
-export const handle = {
-  crumb: ({
-    params,
-    data,
-  }: {
-    params: { orgSlug: string; spaceSlug: string; standardId: string };
-    data: Standard;
-  }) => {
-    const standardId = params.standardId;
-    return (
-      <NavLink
-        to={routes.space.toStandard(
-          params.orgSlug,
-          params.spaceSlug,
-          standardId,
-        )}
-        prefetch="intent"
-      >
-        {data.name}
-      </NavLink>
-    );
-  },
-};
 
 export default function StandardDetailRouteModule() {
   const loaderStandard = useLoaderData() as GetStandardByIdResponse | undefined;
