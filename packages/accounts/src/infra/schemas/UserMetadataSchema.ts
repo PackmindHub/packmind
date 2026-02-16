@@ -27,7 +27,7 @@ export const UserMetadataSchema = new EntitySchema<
       name: 'social_providers',
       type: 'text',
       array: true,
-      default: "'{}'",
+      default: () => "'{}'",
     },
     ...timestampsSchemas,
   },
