@@ -108,7 +108,10 @@ describe('AuthController', () => {
 
   const mockJwtService = {
     sign: jest.fn().mockReturnValue('mock-state-token'),
-    verify: jest.fn().mockReturnValue({ purpose: 'social-login-state' }),
+    verify: jest.fn().mockReturnValue({
+      purpose: 'social-login-state',
+      provider: 'GoogleOAuth',
+    }),
   };
 
   const mockResponse = {
@@ -962,9 +965,9 @@ describe('AuthController', () => {
         );
       });
 
-      it('creates state JWT', () => {
+      it('creates state JWT with provider', () => {
         expect(mockJwtService.sign).toHaveBeenCalledWith(
-          { purpose: 'social-login-state' },
+          { purpose: 'social-login-state', provider: 'GoogleOAuth' },
           { expiresIn: '10m' },
         );
       });
@@ -1024,6 +1027,11 @@ describe('AuthController', () => {
         mockAuthService.signInSocial.mockResolvedValue({
           accessToken: 'jwt-token',
           user: { id: createUserId('2'), email: 'new@example.com' },
+          organization: {
+            id: createOrganizationId('org-new'),
+            name: "new's organization",
+            slug: 'news-organization',
+          },
           isNewUser: true,
         });
         mockConfiguration.getConfig.mockResolvedValue('false');
@@ -1095,6 +1103,7 @@ describe('AuthController', () => {
       beforeEach(async () => {
         mockJwtService.verify.mockReturnValue({
           purpose: 'social-login-state',
+          provider: 'GoogleOAuth',
         });
         mockWorkOsService.authenticateWithCode.mockRejectedValue(
           new Error('Invalid code'),

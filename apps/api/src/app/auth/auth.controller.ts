@@ -21,7 +21,8 @@ import {
   SelectOrganizationCommand,
 } from './auth.service';
 import { JwtService } from '@nestjs/jwt';
-import { WorkOsService, SocialProvider } from './workos.service';
+import { WorkOsService } from './workos.service';
+import { SocialProvider } from '@packmind/types';
 import { maskEmail } from '@packmind/logger';
 import { getErrorMessage } from '../shared/utils/error.utils';
 import {
@@ -940,7 +941,7 @@ export class AuthController {
     }
 
     const state = this.jwtService.sign(
-      { purpose: 'social-login-state' },
+      { purpose: 'social-login-state', provider },
       { expiresIn: '10m' },
     );
 
@@ -962,17 +963,23 @@ export class AuthController {
     this.logger.log('GET /auth/social/callback - Processing OAuth callback');
 
     try {
-      // Validate CSRF state
+      // Validate CSRF state and extract provider
       const statePayload = this.jwtService.verify(state);
       if (statePayload.purpose !== 'social-login-state') {
         throw new Error('Invalid state token purpose');
       }
+      const provider = statePayload.provider as SocialProvider;
 
       // Exchange code for user info
-      const { email } = await this.workOsService.authenticateWithCode(code);
+      const { email, firstName } =
+        await this.workOsService.authenticateWithCode(code);
 
       // Sign in or create user
-      const result = await this.authService.signInSocial(email);
+      const result = await this.authService.signInSocial(
+        email,
+        provider,
+        firstName,
+      );
 
       // Get cookie security setting
       const cookieSecure = await Configuration.getConfig('COOKIE_SECURE');
@@ -993,8 +1000,6 @@ export class AuthController {
         redirectUrl = '/sign-up/create-organization';
       } else if (result.organization) {
         redirectUrl = `/org/${result.organization.slug}`;
-      } else if (result.organizations && result.organizations.length === 0) {
-        redirectUrl = '/sign-up/create-organization';
       } else {
         redirectUrl = '/sign-in?social=select-org';
       }
