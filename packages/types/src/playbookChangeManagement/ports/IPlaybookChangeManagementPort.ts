@@ -30,6 +30,10 @@ import {
   BatchRejectChangeProposalsCommand,
   BatchRejectChangeProposalsResponse,
 } from '../contracts/IBatchRejectChangeProposalsUseCase';
+import {
+  ListChangeProposalsBySpaceCommand,
+  ListChangeProposalsBySpaceResponse,
+} from '../contracts/IListChangeProposalsBySpace';
 import { ChangeProposalType } from '../ChangeProposalType';
 
 export const IPlaybookChangeManagementPortName =
@@ -67,4 +71,8 @@ export interface IPlaybookChangeManagementPort {
   batchRejectChangeProposals(
     command: BatchRejectChangeProposalsCommand,
   ): Promise<BatchRejectChangeProposalsResponse>;
+
+  listChangeProposalsBySpace(
+    command: ListChangeProposalsBySpaceCommand,
+  ): Promise<ListChangeProposalsBySpaceResponse>;
 }

@@ -13,6 +13,8 @@ import {
   CreateChangeProposalCommand,
   CreateChangeProposalResponse,
   IPlaybookChangeManagementPort,
+  ListChangeProposalsBySpaceCommand,
+  ListChangeProposalsBySpaceResponse,
   ListCommandChangeProposalsCommand,
   ListCommandChangeProposalsResponse,
   RejectCommandChangeProposalCommand,
@@ -65,6 +67,14 @@ export class ChangeProposalsService {
     command: CreateChangeProposalCommand<ChangeProposalType>,
   ): Promise<CreateChangeProposalResponse<ChangeProposalType>> {
     return this.playbookChangeManagementAdapter.createChangeProposal(command);
+  }
+
+  async listChangeProposalsBySpace(
+    command: ListChangeProposalsBySpaceCommand,
+  ): Promise<ListChangeProposalsBySpaceResponse> {
+    return this.playbookChangeManagementAdapter.listChangeProposalsBySpace(
+      command,
+    );
   }
 
   async listCommandChangeProposals(

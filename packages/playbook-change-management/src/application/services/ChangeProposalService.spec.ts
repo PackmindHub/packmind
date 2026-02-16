@@ -5,7 +5,9 @@ import {
   ChangeProposalType,
   createChangeProposalId,
   createRecipeId,
+  createSkillId,
   createSpaceId,
+  createStandardId,
   createUserId,
   CreateChangeProposalCommand,
   CreateCommandChangeProposalCommand,
@@ -702,6 +704,231 @@ describe('ChangeProposalService', () => {
 
           expect(appliedProposal.status).toBe(ChangeProposalStatus.applied);
         });
+      });
+    });
+  });
+
+  describe('groupProposalsByArtefact', () => {
+    const standardId1 = createStandardId('standard-1');
+    const standardId2 = createStandardId('standard-2');
+    const recipeId1 = createRecipeId('recipe-1');
+    const recipeId2 = createRecipeId('recipe-2');
+    const skillId1 = createSkillId('skill-1');
+    const skillId2 = createSkillId('skill-2');
+
+    const createProposal = <T extends ChangeProposalType>(
+      type: T,
+      artefactId: string,
+    ): ChangeProposal<T> => ({
+      id: createChangeProposalId(),
+      type,
+      artefactId: artefactId as ChangeProposal<T>['artefactId'],
+      artefactVersion: 1,
+      spaceId,
+      payload: {
+        oldValue: 'old',
+        newValue: 'new',
+      } as ChangeProposal<T>['payload'],
+      captureMode: ChangeProposalCaptureMode.commit,
+      status: ChangeProposalStatus.pending,
+      createdBy: createUserId(),
+      resolvedBy: null,
+      resolvedAt: null,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
+
+    describe('when space has no proposals', () => {
+      beforeEach(() => {
+        repository.findBySpaceId.mockResolvedValue([]);
+      });
+
+      it('returns empty standards map', async () => {
+        const result = await service.groupProposalsByArtefact(spaceId);
+
+        expect(result.standards.size).toBe(0);
+      });
+
+      it('returns empty commands map', async () => {
+        const result = await service.groupProposalsByArtefact(spaceId);
+
+        expect(result.commands.size).toBe(0);
+      });
+
+      it('returns empty skills map', async () => {
+        const result = await service.groupProposalsByArtefact(spaceId);
+
+        expect(result.skills.size).toBe(0);
+      });
+
+      it('calls repository with correct spaceId', async () => {
+        await service.groupProposalsByArtefact(spaceId);
+
+        expect(repository.findBySpaceId).toHaveBeenCalledWith(spaceId);
+      });
+    });
+
+    describe('when space has proposals for different artefact types', () => {
+      const proposals = [
+        createProposal(ChangeProposalType.updateStandardName, standardId1),
+        createProposal(ChangeProposalType.addRule, standardId1),
+        createProposal(
+          ChangeProposalType.updateStandardDescription,
+          standardId2,
+        ),
+        createProposal(ChangeProposalType.updateCommandName, recipeId1),
+        createProposal(ChangeProposalType.updateCommandDescription, recipeId1),
+        createProposal(ChangeProposalType.updateCommandName, recipeId2),
+        createProposal(ChangeProposalType.updateSkillName, skillId1),
+        createProposal(ChangeProposalType.updateSkillPrompt, skillId1),
+        createProposal(ChangeProposalType.addSkillFile, skillId2),
+      ];
+
+      beforeEach(() => {
+        repository.findBySpaceId.mockResolvedValue(proposals);
+      });
+
+      it('counts proposals for first standard', async () => {
+        const result = await service.groupProposalsByArtefact(spaceId);
+
+        expect(result.standards.get(standardId1)).toBe(2);
+      });
+
+      it('counts proposals for second standard', async () => {
+        const result = await service.groupProposalsByArtefact(spaceId);
+
+        expect(result.standards.get(standardId2)).toBe(1);
+      });
+
+      it('counts proposals for first command', async () => {
+        const result = await service.groupProposalsByArtefact(spaceId);
+
+        expect(result.commands.get(recipeId1)).toBe(2);
+      });
+
+      it('counts proposals for second command', async () => {
+        const result = await service.groupProposalsByArtefact(spaceId);
+
+        expect(result.commands.get(recipeId2)).toBe(1);
+      });
+
+      it('counts proposals for first skill', async () => {
+        const result = await service.groupProposalsByArtefact(spaceId);
+
+        expect(result.skills.get(skillId1)).toBe(2);
+      });
+
+      it('counts proposals for second skill', async () => {
+        const result = await service.groupProposalsByArtefact(spaceId);
+
+        expect(result.skills.get(skillId2)).toBe(1);
+      });
+
+      it('counts total standards', async () => {
+        const result = await service.groupProposalsByArtefact(spaceId);
+
+        expect(result.standards.size).toBe(2);
+      });
+
+      it('counts total commands', async () => {
+        const result = await service.groupProposalsByArtefact(spaceId);
+
+        expect(result.commands.size).toBe(2);
+      });
+
+      it('counts total skills', async () => {
+        const result = await service.groupProposalsByArtefact(spaceId);
+
+        expect(result.skills.size).toBe(2);
+      });
+    });
+
+    describe('when space has only standard proposals', () => {
+      const proposals = [
+        createProposal(ChangeProposalType.updateStandardName, standardId1),
+        createProposal(ChangeProposalType.updateRule, standardId1),
+        createProposal(ChangeProposalType.deleteRule, standardId1),
+      ];
+
+      beforeEach(() => {
+        repository.findBySpaceId.mockResolvedValue(proposals);
+      });
+
+      it('counts standard proposals', async () => {
+        const result = await service.groupProposalsByArtefact(spaceId);
+
+        expect(result.standards.get(standardId1)).toBe(3);
+      });
+
+      it('has no command proposals', async () => {
+        const result = await service.groupProposalsByArtefact(spaceId);
+
+        expect(result.commands.size).toBe(0);
+      });
+
+      it('has no skill proposals', async () => {
+        const result = await service.groupProposalsByArtefact(spaceId);
+
+        expect(result.skills.size).toBe(0);
+      });
+    });
+
+    describe('when space has only command proposals', () => {
+      const proposals = [
+        createProposal(ChangeProposalType.updateCommandName, recipeId1),
+        createProposal(ChangeProposalType.updateCommandDescription, recipeId1),
+      ];
+
+      beforeEach(() => {
+        repository.findBySpaceId.mockResolvedValue(proposals);
+      });
+
+      it('has no standard proposals', async () => {
+        const result = await service.groupProposalsByArtefact(spaceId);
+
+        expect(result.standards.size).toBe(0);
+      });
+
+      it('counts command proposals', async () => {
+        const result = await service.groupProposalsByArtefact(spaceId);
+
+        expect(result.commands.get(recipeId1)).toBe(2);
+      });
+
+      it('has no skill proposals', async () => {
+        const result = await service.groupProposalsByArtefact(spaceId);
+
+        expect(result.skills.size).toBe(0);
+      });
+    });
+
+    describe('when space has only skill proposals', () => {
+      const proposals = [
+        createProposal(ChangeProposalType.updateSkillName, skillId1),
+        createProposal(ChangeProposalType.updateSkillFileContent, skillId1),
+        createProposal(ChangeProposalType.deleteSkillFile, skillId1),
+      ];
+
+      beforeEach(() => {
+        repository.findBySpaceId.mockResolvedValue(proposals);
+      });
+
+      it('has no standard proposals', async () => {
+        const result = await service.groupProposalsByArtefact(spaceId);
+
+        expect(result.standards.size).toBe(0);
+      });
+
+      it('has no command proposals', async () => {
+        const result = await service.groupProposalsByArtefact(spaceId);
+
+        expect(result.commands.size).toBe(0);
+      });
+
+      it('counts skill proposals', async () => {
+        const result = await service.groupProposalsByArtefact(spaceId);
+
+        expect(result.skills.get(skillId1)).toBe(3);
       });
     });
   });

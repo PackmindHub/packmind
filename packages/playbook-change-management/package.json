@@ -12,6 +12,7 @@
     "@packmind/recipes": "*",
     "@packmind/skills": "*",
     "@packmind/spaces": "*",
+    "@packmind/standards": "*",
     "@packmind/test-utils": "0.0.1",
     "@packmind/types": "*",
     "diff": "^8.0.3",

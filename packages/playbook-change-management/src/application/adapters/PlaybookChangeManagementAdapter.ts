@@ -23,6 +23,10 @@ import {
   ISkillsPortName,
   ISpacesPort,
   ISpacesPortName,
+  IStandardsPort,
+  IStandardsPortName,
+  ListChangeProposalsBySpaceCommand,
+  ListChangeProposalsBySpaceResponse,
   ListCommandChangeProposalsCommand,
   ListCommandChangeProposalsResponse,
   RejectCommandChangeProposalCommand,
@@ -33,6 +37,7 @@ import { ApplyCommandChangeProposalUseCase } from '../useCases/applyCommandChang
 import { BatchApplyChangeProposalsUseCase } from '../useCases/batchApplyChangeProposals/BatchApplyChangeProposalsUseCase';
 import { CreateChangeProposalUseCase } from '../useCases/createChangeProposal/CreateChangeProposalUseCase';
 import { CreateCommandChangeProposalUseCase } from '../useCases/createCommandChangeProposal/CreateCommandChangeProposalUseCase';
+import { ListChangeProposalsBySpaceUseCase } from '../useCases/listChangeProposalsBySpace/ListChangeProposalsBySpaceUseCase';
 import { ListCommandChangeProposalsUseCase } from '../useCases/listCommandChangeProposals/ListCommandChangeProposalsUseCase';
 import { BatchCreateChangeProposalsUseCase } from '../useCases/batchCreateChangeProposals/BatchCreateChangeProposalsUseCase';
 import { RejectCommandChangeProposalUseCase } from '../useCases/rejectCommandChangeProposal/RejectCommandChangeProposalUseCase';
@@ -53,6 +58,7 @@ export class PlaybookChangeManagementAdapter
   private _batchCreateChangeProposals!: BatchCreateChangeProposalsUseCase;
   private _createChangeProposal!: CreateChangeProposalUseCase;
   private _createCommandChangeProposal!: CreateCommandChangeProposalUseCase;
+  private _listChangeProposalsBySpace!: ListChangeProposalsBySpaceUseCase;
   private _listCommandChangeProposals!: ListCommandChangeProposalsUseCase;
   private _batchRejectChangeProposals!: BatchRejectChangeProposalsUseCase;
   private _rejectCommandChangeProposal!: RejectCommandChangeProposalUseCase;
@@ -100,6 +106,12 @@ export class PlaybookChangeManagementAdapter
     return this._createCommandChangeProposal.execute(command);
   }
 
+  async listChangeProposalsBySpace(
+    command: ListChangeProposalsBySpaceCommand,
+  ): Promise<ListChangeProposalsBySpaceResponse> {
+    return this._listChangeProposalsBySpace.execute(command);
+  }
+
   async listCommandChangeProposals(
     command: ListCommandChangeProposalsCommand,
   ): Promise<ListCommandChangeProposalsResponse> {
@@ -117,6 +129,7 @@ export class PlaybookChangeManagementAdapter
     [IRecipesPortName]: IRecipesPort;
     [ISpacesPortName]: ISpacesPort;
     [ISkillsPortName]: ISkillsPort;
+    [IStandardsPortName]: IStandardsPort;
   }): Promise<void> {
     this.logger.info('Initializing PlaybookChangeManagementAdapter with ports');
 
@@ -149,6 +162,14 @@ export class PlaybookChangeManagementAdapter
     if (!skillsPort) {
       throw new Error(
         'PlaybookChangeManagementAdapter: ISkillsPort not provided',
+      );
+    }
+
+    const standardsPort = ports[IStandardsPortName];
+
+    if (!standardsPort) {
+      throw new Error(
+        'PlaybookChangeManagementAdapter: IStandardsPort not provided',
       );
     }
 
@@ -194,6 +215,15 @@ export class PlaybookChangeManagementAdapter
       changeProposalService,
     );
 
+    this._listChangeProposalsBySpace = new ListChangeProposalsBySpaceUseCase(
+      accountsPort,
+      spacesPort,
+      standardsPort,
+      recipesPort,
+      skillsPort,
+      changeProposalService,
+    );
+
     this._listCommandChangeProposals = new ListCommandChangeProposalsUseCase(
       accountsPort,
       spacesPort,
@@ -220,6 +250,7 @@ export class PlaybookChangeManagementAdapter
       this._batchRejectChangeProposals !== undefined &&
       this._createChangeProposal !== undefined &&
       this._createCommandChangeProposal !== undefined &&
+      this._listChangeProposalsBySpace !== undefined &&
       this._listCommandChangeProposals !== undefined &&
       this._rejectCommandChangeProposal !== undefined
     );

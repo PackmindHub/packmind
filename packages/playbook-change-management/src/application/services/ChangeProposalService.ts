@@ -11,8 +11,11 @@ import {
   CreateCommandChangeProposalCommand,
   createUserId,
   ListCommandChangeProposalsResponse,
+  RecipeId,
   ScalarUpdatePayload,
+  SkillId,
   SpaceId,
+  StandardId,
   UserId,
 } from '@packmind/types';
 import { v4 as uuidv4 } from 'uuid';
@@ -26,6 +29,35 @@ export type ApplyProposalResult = {
   appliedProposal: ChangeProposal<ChangeProposalType>;
   updatedFields: { name: string; content: string };
 };
+
+export type GroupedProposalsByArtefact = {
+  standards: Map<StandardId, number>;
+  commands: Map<RecipeId, number>;
+  skills: Map<SkillId, number>;
+};
+
+type ArtefactCategory = 'standards' | 'commands' | 'skills';
+
+function getArtefactCategory(type: ChangeProposalType): ArtefactCategory {
+  if (
+    type === ChangeProposalType.updateCommandName ||
+    type === ChangeProposalType.updateCommandDescription
+  ) {
+    return 'commands';
+  }
+
+  if (
+    type === ChangeProposalType.updateStandardName ||
+    type === ChangeProposalType.updateStandardDescription ||
+    type === ChangeProposalType.addRule ||
+    type === ChangeProposalType.updateRule ||
+    type === ChangeProposalType.deleteRule
+  ) {
+    return 'standards';
+  }
+
+  return 'skills';
+}
 
 export class ChangeProposalService {
   constructor(
@@ -244,5 +276,51 @@ export class ChangeProposalService {
     });
 
     return { appliedProposal, updatedFields };
+  }
+
+  async groupProposalsByArtefact(
+    spaceId: SpaceId,
+  ): Promise<GroupedProposalsByArtefact> {
+    const proposals = await this.repository.findBySpaceId(spaceId);
+
+    const grouped: GroupedProposalsByArtefact = {
+      standards: new Map<StandardId, number>(),
+      commands: new Map<RecipeId, number>(),
+      skills: new Map<SkillId, number>(),
+    };
+
+    for (const proposal of proposals) {
+      const artefactCategory = getArtefactCategory(proposal.type);
+      console.log({ artefactCategory });
+      switch (artefactCategory) {
+        case 'standards':
+          grouped.standards.set(
+            proposal.artefactId as StandardId,
+            (grouped.standards.get(proposal.artefactId as StandardId) ?? 0) + 1,
+          );
+          break;
+        case 'commands':
+          grouped.commands.set(
+            proposal.artefactId as RecipeId,
+            (grouped.commands.get(proposal.artefactId as RecipeId) ?? 0) + 1,
+          );
+          break;
+        case 'skills':
+          grouped.skills.set(
+            proposal.artefactId as SkillId,
+            (grouped.skills.get(proposal.artefactId as SkillId) ?? 0) + 1,
+          );
+          break;
+      }
+    }
+
+    this.logger.info('Grouped change proposals by artefact', {
+      spaceId,
+      standardsCount: grouped.standards.size,
+      commandsCount: grouped.commands.size,
+      skillsCount: grouped.skills.size,
+    });
+
+    return grouped;
   }
 }

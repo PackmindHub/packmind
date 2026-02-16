@@ -6,3 +6,4 @@ export * from './IRejectCommandChangeProposalUseCase';
 export * from './IBatchCreateChangeProposalsUseCase';
 export * from './IBatchApplyChangeProposalsUseCase';
 export * from './IBatchRejectChangeProposalsUseCase';
+export * from './IListChangeProposalsBySpace';
