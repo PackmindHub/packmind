@@ -266,6 +266,7 @@ export class AuthService {
       }
     }
 
+
     let organization:
       | { id: OrganizationId; name: string; slug: string }
       | undefined;
