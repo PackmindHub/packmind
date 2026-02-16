@@ -1,4 +1,3 @@
-
 import { PackmindCliHexa } from '../../PackmindCliHexa';
 import { ArtifactType, ChangeProposalType, CodingAgent } from '@packmind/types';
 import { ArtefactDiff } from '../../domain/useCases/IDiffArtefactsUseCase';
