@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
+import { WorkOsService } from './workos.service';
 import { PackmindLogger, LogLevel } from '@packmind/logger';
 
 @Module({
@@ -8,11 +9,12 @@ import { PackmindLogger, LogLevel } from '@packmind/logger';
   controllers: [AuthController],
   providers: [
     AuthService,
+    WorkOsService,
     {
       provide: PackmindLogger,
       useFactory: () => new PackmindLogger('AuthService', LogLevel.INFO),
     },
   ],
-  exports: [AuthService],
+  exports: [AuthService, WorkOsService],
 })
 export class AuthModule {}

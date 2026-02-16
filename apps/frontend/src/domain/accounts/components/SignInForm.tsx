@@ -1,10 +1,12 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router';
 import { SignInUserResponse } from '@packmind/types';
+import { PMAlert } from '@packmind/ui';
 import SignInCredentialsForm from './SignInCredentialsForm';
 import OrganizationSelectionForm from './OrganizationSelectionForm';
 import OrganizationCreationForm from './OrganizationCreationForm';
 import { routes } from '../../../shared/utils/routes';
+import { useGetMeQuery } from '../api/queries/UserQueries';
 
 export default function SignInForm() {
   const [signInResult, setSignInResult] = useState<SignInUserResponse | null>(
@@ -13,9 +15,25 @@ export default function SignInForm() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const returnUrl = searchParams.get('returnUrl');
+  const socialError = searchParams.get('error');
+  const socialSelectOrg = searchParams.get('social');
+
+  const isSocialOrgSelection = socialSelectOrg === 'select-org';
+  const { data: meData } = useGetMeQuery();
+
+  // Handle social login org selection: when ?social=select-org is present
+  // and we get meData with organizations, set signInResult to trigger org selection UI
+  useEffect(() => {
+    if (!isSocialOrgSelection || !meData?.authenticated) return;
+
+    const result: SignInUserResponse = {
+      user: meData.user,
+      organizations: meData.organizations,
+    };
+    setSignInResult(result);
+  }, [isSocialOrgSelection, meData]);
 
   const getRedirectUrl = (orgSlug: string) => {
-    // If returnUrl is provided and starts with /, use it (must be an internal path)
     if (returnUrl && returnUrl.startsWith('/')) {
       return returnUrl;
     }
@@ -23,11 +41,9 @@ export default function SignInForm() {
   };
 
   const handleSignInSuccess = (data: SignInUserResponse) => {
-    // If user belongs to a single organization, redirect immediately
     if (data.organization) {
       navigate(getRedirectUrl(data.organization.slug));
     } else if (data.organizations) {
-      // Store the result to show organization selection
       setSignInResult(data);
     }
   };
@@ -52,5 +68,17 @@ export default function SignInForm() {
   }
 
   // Default: show sign-in form
-  return <SignInCredentialsForm onSignInSuccess={handleSignInSuccess} />;
+  return (
+    <>
+      {socialError === 'social_login_failed' && (
+        <PMAlert.Root status="error" mb={4}>
+          <PMAlert.Indicator />
+          <PMAlert.Title>
+            Social login failed. Please try again or use email/password.
+          </PMAlert.Title>
+        </PMAlert.Root>
+      )}
+      <SignInCredentialsForm onSignInSuccess={handleSignInSuccess} />
+    </>
+  );
 }

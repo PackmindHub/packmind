@@ -68,7 +68,10 @@ export default function OrganizationCreationForm() {
 
         <PMInput
           value={organizationName}
-          onChange={(e) => setOrganizationName(e.target.value)}
+          onChange={(e) => {
+            setOrganizationName(e.target.value);
+            setErrors({});
+          }}
           placeholder="Enter organization name"
           required
           disabled={createOrganizationMutation.isPending}

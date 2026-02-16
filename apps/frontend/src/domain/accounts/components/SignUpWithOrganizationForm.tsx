@@ -17,6 +17,7 @@ import {
 import validator from 'validator';
 import { routes } from '../../../shared/utils/routes';
 import { SignUpWithOrganizationFormDataTestIds } from '@packmind/frontend';
+import SocialLoginButtons from './SocialLoginButtons';
 import { StartProductTour } from '../../../shared/components/StartProductTour';
 
 export default function SignUpWithOrganizationForm() {
@@ -164,129 +165,133 @@ export default function SignUpWithOrganizationForm() {
   const PASSWORD_MAX_LENGTH = 128;
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      data-testId={SignUpWithOrganizationFormDataTestIds.Component}
-    >
-      <PMFormContainer maxWidth="full" spacing={4}>
-        <PMField.Root required invalid={!!formErrors.email || !!emailError}>
-          <PMField.Label>
-            Work email <PMField.RequiredIndicator />
-          </PMField.Label>
+    <>
+      <SocialLoginButtons />
+      <form
+        onSubmit={handleSubmit}
+        data-testId={SignUpWithOrganizationFormDataTestIds.Component}
+      >
+        <PMFormContainer maxWidth="full" spacing={4}>
+          <PMField.Root required invalid={!!formErrors.email || !!emailError}>
+            <PMField.Label>
+              Work email <PMField.RequiredIndicator />
+            </PMField.Label>
 
-          <PMInput
-            id={emailId}
-            type="email"
-            value={email}
-            onChange={(e) => {
-              setEmail(e.target.value);
-              setEmailError(undefined);
-            }}
-            placeholder="name@yourcompany.com"
-            required
+            <PMInput
+              id={emailId}
+              type="email"
+              value={email}
+              onChange={(e) => {
+                setEmail(e.target.value);
+                setEmailError(undefined);
+              }}
+              placeholder="name@yourcompany.com"
+              required
+              disabled={
+                signUpWithOrganizationMutation.isPending ||
+                signInMutation.isPending
+              }
+              maxLength={EMAIL_MAX_LENGTH}
+              data-testId={SignUpWithOrganizationFormDataTestIds.EmailField}
+            />
+            <PMField.ErrorText>
+              {formErrors.email || emailError}
+            </PMField.ErrorText>
+          </PMField.Root>
+
+          {shouldShowPasswordFields && (
+            <>
+              <PMField.Root required invalid={!!formErrors.password}>
+                <PMField.Label>
+                  Password <PMField.RequiredIndicator />
+                </PMField.Label>
+                <PMField.HelperText as={'article'}>
+                  8 characters min. with at least 2 non-alphanumerical
+                  characters.
+                </PMField.HelperText>
+
+                <PMInput
+                  id={passwordId}
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Enter your password"
+                  required
+                  disabled={
+                    signUpWithOrganizationMutation.isPending ||
+                    signInMutation.isPending
+                  }
+                  maxLength={PASSWORD_MAX_LENGTH}
+                  data-testId={
+                    SignUpWithOrganizationFormDataTestIds.PasswordField
+                  }
+                />
+                <PMField.ErrorText>{formErrors.password}</PMField.ErrorText>
+              </PMField.Root>
+
+              <PMField.Root required invalid={!!formErrors.confirmPassword}>
+                <PMField.Label>
+                  Confirm Password
+                  <PMField.RequiredIndicator />
+                </PMField.Label>
+                <PMInput
+                  id={confirmPasswordId}
+                  type="password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  placeholder="Confirm your password"
+                  required
+                  disabled={
+                    signUpWithOrganizationMutation.isPending ||
+                    signInMutation.isPending
+                  }
+                  maxLength={PASSWORD_MAX_LENGTH}
+                  data-testId={
+                    SignUpWithOrganizationFormDataTestIds.ConfirmPasswordField
+                  }
+                />
+                <PMField.ErrorText>
+                  {formErrors.confirmPassword}
+                </PMField.ErrorText>
+              </PMField.Root>
+            </>
+          )}
+
+          {signUpWithOrganizationMutation.error && (
+            <PMAlert.Root status="error">
+              <PMAlert.Indicator />
+              <PMAlert.Title>
+                {signUpWithOrganizationMutation.error.message ||
+                  'Failed to create account. Please try again.'}
+              </PMAlert.Title>
+            </PMAlert.Root>
+          )}
+
+          <PMButton
+            type="submit"
             disabled={
               signUpWithOrganizationMutation.isPending ||
-              signInMutation.isPending
+              signInMutation.isPending ||
+              !!emailError ||
+              (shouldShowPasswordFields && (!password || !confirmPassword))
             }
-            maxLength={EMAIL_MAX_LENGTH}
-            data-testId={SignUpWithOrganizationFormDataTestIds.EmailField}
-          />
-          <PMField.ErrorText>
-            {formErrors.email || emailError}
-          </PMField.ErrorText>
-        </PMField.Root>
+            data-testId={SignUpWithOrganizationFormDataTestIds.Submit}
+          >
+            {getButtonText()}
+          </PMButton>
 
-        {shouldShowPasswordFields && (
-          <>
-            <PMField.Root required invalid={!!formErrors.password}>
-              <PMField.Label>
-                Password <PMField.RequiredIndicator />
-              </PMField.Label>
-              <PMField.HelperText as={'article'}>
-                8 characters min. with at least 2 non-alphanumerical characters.
-              </PMField.HelperText>
-
-              <PMInput
-                id={passwordId}
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Enter your password"
-                required
-                disabled={
-                  signUpWithOrganizationMutation.isPending ||
-                  signInMutation.isPending
-                }
-                maxLength={PASSWORD_MAX_LENGTH}
-                data-testId={
-                  SignUpWithOrganizationFormDataTestIds.PasswordField
-                }
+          <PMHStack justifyContent="center" paddingX={6} gap={4} wrap="wrap">
+            <PMText variant="small">
+              Just Exploring?{' '}
+              <StartProductTour
+                triggerText="Take a 2-minute tour"
+                variant="secondary"
+                size="xs"
               />
-              <PMField.ErrorText>{formErrors.password}</PMField.ErrorText>
-            </PMField.Root>
-
-            <PMField.Root required invalid={!!formErrors.confirmPassword}>
-              <PMField.Label>
-                Confirm Password
-                <PMField.RequiredIndicator />
-              </PMField.Label>
-              <PMInput
-                id={confirmPasswordId}
-                type="password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                placeholder="Confirm your password"
-                required
-                disabled={
-                  signUpWithOrganizationMutation.isPending ||
-                  signInMutation.isPending
-                }
-                maxLength={PASSWORD_MAX_LENGTH}
-                data-testId={
-                  SignUpWithOrganizationFormDataTestIds.ConfirmPasswordField
-                }
-              />
-              <PMField.ErrorText>
-                {formErrors.confirmPassword}
-              </PMField.ErrorText>
-            </PMField.Root>
-          </>
-        )}
-
-        {signUpWithOrganizationMutation.error && (
-          <PMAlert.Root status="error">
-            <PMAlert.Indicator />
-            <PMAlert.Title>
-              {signUpWithOrganizationMutation.error.message ||
-                'Failed to create account. Please try again.'}
-            </PMAlert.Title>
-          </PMAlert.Root>
-        )}
-
-        <PMButton
-          type="submit"
-          disabled={
-            signUpWithOrganizationMutation.isPending ||
-            signInMutation.isPending ||
-            !!emailError ||
-            (shouldShowPasswordFields && (!password || !confirmPassword))
-          }
-          data-testId={SignUpWithOrganizationFormDataTestIds.Submit}
-        >
-          {getButtonText()}
-        </PMButton>
-
-        <PMHStack justifyContent="center" paddingX={6} gap={4} wrap="wrap">
-          <PMText variant="small">
-            Just Exploring?{' '}
-            <StartProductTour
-              triggerText="Take a 2-minute tour"
-              variant="secondary"
-              size="xs"
-            />
-          </PMText>
-        </PMHStack>
-      </PMFormContainer>
-    </form>
+            </PMText>
+          </PMHStack>
+        </PMFormContainer>
+      </form>
+    </>
   );
 }

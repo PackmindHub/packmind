@@ -642,4 +642,15 @@ export class AccountsAdapter
     }
     return this._activateTrialAccount.execute(command);
   }
+
+  // Social login operations
+  public async getUserByEmail(email: string): Promise<User | null> {
+    return this.accountsServices
+      .getUserService()
+      .getUserByEmailCaseInsensitive(email);
+  }
+
+  public async createSocialLoginUser(email: string): Promise<User> {
+    return this.accountsServices.getUserService().createSocialLoginUser(email);
+  }
 }

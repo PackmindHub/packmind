@@ -1,5 +1,5 @@
 import { JwtService } from '@nestjs/jwt';
-import { createOrganizationId, createUserId } from '@packmind/types';
+import { createOrganizationId, createUserId, User } from '@packmind/types';
 import { AuthService, GetMeResponse } from './auth.service';
 import { JwtPayload } from './JwtPayload';
 
@@ -400,6 +400,274 @@ describe('AuthService - getMe method', () => {
 
       it('attempts to verify the token', () => {
         expect(mockJwtService.verify).toHaveBeenCalledWith('malformed-token');
+      });
+    });
+  });
+});
+
+describe('AuthService - signInSocial method', () => {
+  let mockJwtService: JwtService;
+  let mockAccountsAdapter: jest.Mocked<{
+    getUserByEmail: jest.Mock;
+    createSocialLoginUser: jest.Mock;
+    createOrganization: jest.Mock;
+    getOrganizationById: jest.Mock;
+  }>;
+  let signInSocial: (
+    email: string,
+  ) => Promise<ReturnType<AuthService['signInSocial']>>;
+
+  beforeEach(() => {
+    mockJwtService = {
+      sign: jest.fn().mockReturnValue('mock-jwt-token'),
+    } as unknown as JwtService;
+
+    mockAccountsAdapter = {
+      getUserByEmail: jest.fn(),
+      createSocialLoginUser: jest.fn(),
+      createOrganization: jest.fn(),
+      getOrganizationById: jest.fn(),
+    };
+
+    const baseAuthService = {
+      logger: {
+        log: jest.fn(),
+        warn: jest.fn(),
+      },
+      jwtService: mockJwtService,
+      accountsAdapter: mockAccountsAdapter,
+    };
+
+    signInSocial = AuthService.prototype.signInSocial.bind(baseAuthService);
+  });
+
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
+  describe('when user exists with single organization', () => {
+    let result: Awaited<ReturnType<typeof signInSocial>>;
+
+    beforeEach(async () => {
+      const existingUser: User = {
+        id: createUserId('user-1'),
+        email: 'user@example.com',
+        passwordHash: 'hash',
+        active: true,
+        memberships: [
+          {
+            userId: createUserId('user-1'),
+            organizationId: createOrganizationId('org-1'),
+            role: 'admin',
+          },
+        ],
+      };
+      mockAccountsAdapter.getUserByEmail.mockResolvedValue(existingUser);
+      mockAccountsAdapter.getOrganizationById.mockResolvedValue({
+        id: createOrganizationId('org-1'),
+        name: 'Test Org',
+        slug: 'test-org',
+      });
+      result = await signInSocial('user@example.com');
+    });
+
+    it('returns isNewUser false', () => {
+      expect(result.isNewUser).toBe(false);
+    });
+
+    it('returns organization', () => {
+      expect(result.organization).toEqual({
+        id: createOrganizationId('org-1'),
+        name: 'Test Org',
+        slug: 'test-org',
+      });
+    });
+
+    it('returns access token', () => {
+      expect(result.accessToken).toBe('mock-jwt-token');
+    });
+
+    it('does not create a new user', () => {
+      expect(mockAccountsAdapter.createSocialLoginUser).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('when user exists with multiple organizations', () => {
+    let result: Awaited<ReturnType<typeof signInSocial>>;
+
+    beforeEach(async () => {
+      const existingUser: User = {
+        id: createUserId('user-1'),
+        email: 'user@example.com',
+        passwordHash: 'hash',
+        active: true,
+        memberships: [
+          {
+            userId: createUserId('user-1'),
+            organizationId: createOrganizationId('org-1'),
+            role: 'admin',
+          },
+          {
+            userId: createUserId('user-1'),
+            organizationId: createOrganizationId('org-2'),
+            role: 'member',
+          },
+        ],
+      };
+      mockAccountsAdapter.getUserByEmail.mockResolvedValue(existingUser);
+      mockAccountsAdapter.getOrganizationById
+        .mockResolvedValueOnce({
+          id: createOrganizationId('org-1'),
+          name: 'Org 1',
+          slug: 'org-1',
+        })
+        .mockResolvedValueOnce({
+          id: createOrganizationId('org-2'),
+          name: 'Org 2',
+          slug: 'org-2',
+        });
+      result = await signInSocial('user@example.com');
+    });
+
+    it('returns organizations list', () => {
+      expect(result.organizations).toEqual([
+        {
+          organization: {
+            id: createOrganizationId('org-1'),
+            name: 'Org 1',
+            slug: 'org-1',
+          },
+          role: 'admin',
+        },
+        {
+          organization: {
+            id: createOrganizationId('org-2'),
+            name: 'Org 2',
+            slug: 'org-2',
+          },
+          role: 'member',
+        },
+      ]);
+    });
+
+    it('does not return a single organization', () => {
+      expect(result.organization).toBeUndefined();
+    });
+  });
+
+  describe('when user exists with no organizations', () => {
+    let result: Awaited<ReturnType<typeof signInSocial>>;
+
+    beforeEach(async () => {
+      const existingUser: User = {
+        id: createUserId('user-1'),
+        email: 'user@example.com',
+        passwordHash: null,
+        active: true,
+        memberships: [],
+      };
+      const userWithOrg: User = {
+        ...existingUser,
+        memberships: [
+          {
+            userId: createUserId('user-1'),
+            organizationId: createOrganizationId('auto-org'),
+            role: 'admin',
+          },
+        ],
+      };
+      mockAccountsAdapter.getUserByEmail
+        .mockResolvedValueOnce(existingUser)
+        .mockResolvedValueOnce(userWithOrg);
+      mockAccountsAdapter.createOrganization.mockResolvedValue({
+        id: createOrganizationId('auto-org'),
+        name: 'example.com',
+        slug: 'example-com',
+      });
+      mockAccountsAdapter.getOrganizationById.mockResolvedValue({
+        id: createOrganizationId('auto-org'),
+        name: 'example.com',
+        slug: 'example-com',
+      });
+      result = await signInSocial('user@example.com');
+    });
+
+    it('creates a default organization', () => {
+      expect(mockAccountsAdapter.createOrganization).toHaveBeenCalledWith({
+        userId: createUserId('user-1'),
+        name: 'example.com',
+      });
+    });
+
+    it('returns the auto-created organization', () => {
+      expect(result.organization).toEqual({
+        id: createOrganizationId('auto-org'),
+        name: 'example.com',
+        slug: 'example-com',
+      });
+    });
+  });
+
+  describe('when user does not exist', () => {
+    let result: Awaited<ReturnType<typeof signInSocial>>;
+
+    beforeEach(async () => {
+      const newUser: User = {
+        id: createUserId('new-user'),
+        email: 'new@example.com',
+        passwordHash: null,
+        active: true,
+        memberships: [],
+      };
+      const userWithOrg: User = {
+        ...newUser,
+        memberships: [
+          {
+            userId: createUserId('new-user'),
+            organizationId: createOrganizationId('new-org'),
+            role: 'admin',
+          },
+        ],
+      };
+      mockAccountsAdapter.getUserByEmail
+        .mockResolvedValueOnce(null)
+        .mockResolvedValueOnce(userWithOrg);
+      mockAccountsAdapter.createSocialLoginUser.mockResolvedValue(newUser);
+      mockAccountsAdapter.createOrganization.mockResolvedValue({
+        id: createOrganizationId('new-org'),
+        name: 'example.com',
+        slug: 'example-com',
+      });
+      mockAccountsAdapter.getOrganizationById.mockResolvedValue({
+        id: createOrganizationId('new-org'),
+        name: 'example.com',
+        slug: 'example-com',
+      });
+      result = await signInSocial('new@example.com');
+    });
+
+    it('returns isNewUser true', () => {
+      expect(result.isNewUser).toBe(true);
+    });
+
+    it('creates a new user', () => {
+      expect(mockAccountsAdapter.createSocialLoginUser).toHaveBeenCalledWith(
+        'new@example.com',
+      );
+    });
+
+    it('creates a default organization from email domain', () => {
+      expect(mockAccountsAdapter.createOrganization).toHaveBeenCalledWith({
+        userId: createUserId('new-user'),
+        name: 'example.com',
+      });
+    });
+
+    it('returns the new organization', () => {
+      expect(result.organization).toEqual({
+        id: createOrganizationId('new-org'),
+        name: 'example.com',
+        slug: 'example-com',
       });
     });
   });

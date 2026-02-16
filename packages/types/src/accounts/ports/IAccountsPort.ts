@@ -197,4 +197,8 @@ export interface IAccountsPort {
   activateTrialAccount(
     command: ActivateTrialAccountCommand,
   ): Promise<ActivateTrialAccountResult>;
+
+  // Social login operations
+  getUserByEmail(email: string): Promise<User | null>;
+  createSocialLoginUser(email: string): Promise<User>;
 }

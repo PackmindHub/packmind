@@ -40,7 +40,7 @@ import { maskEmail } from '@packmind/logger';
 import { getErrorMessage } from '../shared/utils/error.utils';
 
 import { PackmindLogger } from '@packmind/logger';
-import { PackmindCommand, PackmindCommandBody } from '@packmind/types';
+import { PackmindCommand, PackmindCommandBody, User } from '@packmind/types';
 import { JwtPayload } from './JwtPayload';
 import { AuthenticatedRequest } from '@packmind/node-utils';
 
@@ -190,6 +190,127 @@ export class AuthService {
     });
 
     return { ...signInUserResponse, accessToken };
+  }
+
+  async signInSocial(email: string): Promise<{
+    accessToken: string;
+    user: { id: UserId; email: string };
+    organization?: { id: OrganizationId; name: string; slug: string };
+    organizations?: Array<{
+      organization: { id: OrganizationId; name: string; slug: string };
+      role: UserOrganizationRole;
+    }>;
+    isNewUser: boolean;
+  }> {
+    this.logger.log('Attempting social sign-in', {
+      email: maskEmail(email),
+    });
+
+    let user: User | null = await this.accountsAdapter.getUserByEmail(email);
+    let isNewUser = false;
+
+    if (!user) {
+      user = await this.accountsAdapter.createSocialLoginUser(email);
+      isNewUser = true;
+      this.logger.log('New user created via social login', {
+        userId: user.id,
+        email: maskEmail(email),
+      });
+    }
+
+    // Create a default organization if user has no memberships
+    if ((user.memberships ?? []).length === 0) {
+      const domain = email.split('@')[1] || 'my-organization';
+      const newOrg = await this.accountsAdapter.createOrganization({
+        userId: user.id,
+        name: domain,
+      });
+      this.logger.log('Default organization created for social login user', {
+        userId: user.id,
+        organizationId: newOrg.id,
+      });
+
+      // Refresh user to get updated memberships
+      const updatedUser = await this.accountsAdapter.getUserByEmail(email);
+      if (updatedUser) {
+        user = updatedUser;
+      }
+    }
+
+    const memberships = user.memberships ?? [];
+
+    let organization:
+      | { id: OrganizationId; name: string; slug: string }
+      | undefined;
+    let organizations:
+      | Array<{
+          organization: { id: OrganizationId; name: string; slug: string };
+          role: UserOrganizationRole;
+        }>
+      | undefined;
+
+    if (memberships.length === 1) {
+      const membership = memberships[0];
+      const org = await this.accountsAdapter.getOrganizationById({
+        organizationId: membership.organizationId,
+      });
+      if (org) {
+        organization = { id: org.id, name: org.name, slug: org.slug };
+      }
+    } else if (memberships.length > 1) {
+      organizations = await Promise.all(
+        memberships.map(async (membership) => {
+          const org = await this.accountsAdapter.getOrganizationById({
+            organizationId: membership.organizationId,
+          });
+          return org
+            ? {
+                organization: {
+                  id: org.id,
+                  name: org.name,
+                  slug: org.slug,
+                },
+                role: membership.role,
+              }
+            : null;
+        }),
+      ).then((orgs) =>
+        orgs.filter((o): o is NonNullable<typeof o> => o !== null),
+      );
+    }
+
+    const payload = {
+      user: {
+        name: user.email,
+        userId: user.id,
+      },
+      organization:
+        organization && memberships.length === 1
+          ? {
+              id: organization.id,
+              name: organization.name,
+              slug: organization.slug,
+              role: memberships[0].role,
+            }
+          : undefined,
+    };
+
+    const accessToken = this.jwtService.sign(payload);
+
+    this.logger.log('Social sign-in successful', {
+      userId: user.id,
+      email: maskEmail(user.email),
+      isNewUser,
+      orgCount: memberships.length,
+    });
+
+    return {
+      accessToken,
+      user: { id: user.id, email: user.email },
+      organization,
+      organizations,
+      isNewUser,
+    };
   }
 
   async getMe(accessToken?: string): Promise<GetMeResponse> {

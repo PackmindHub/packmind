@@ -9,6 +9,7 @@ import {
   Res,
   Req,
   Param,
+  Query,
   HttpException,
 } from '@nestjs/common';
 import { Response, Request } from 'express';
@@ -19,6 +20,8 @@ import {
   GetCurrentApiKeyResponse,
   SelectOrganizationCommand,
 } from './auth.service';
+import { JwtService } from '@nestjs/jwt';
+import { WorkOsService, SocialProvider } from './workos.service';
 import { maskEmail } from '@packmind/logger';
 import { getErrorMessage } from '../shared/utils/error.utils';
 import {
@@ -53,7 +56,11 @@ import { Public } from '@packmind/node-utils';
 export class AuthController {
   private readonly logger = new Logger(AuthController.name);
 
-  constructor(private readonly authService: AuthService) {
+  constructor(
+    private readonly authService: AuthService,
+    private readonly workOsService: WorkOsService,
+    private readonly jwtService: JwtService,
+  ) {
     this.logger.log('AuthController initialized');
   }
 
@@ -900,6 +907,110 @@ export class AuthController {
         },
       );
       throw error;
+    }
+  }
+
+  @Public()
+  @Get('social/providers')
+  @HttpCode(HttpStatus.OK)
+  async getSocialProviders(): Promise<{ providers: SocialProvider[] }> {
+    this.logger.log('GET /auth/social/providers - Getting available providers');
+    const providers = await this.workOsService.getAvailableProviders();
+    return { providers };
+  }
+
+  @Public()
+  @Get('social/authorize/:provider')
+  async socialAuthorize(
+    @Param('provider') provider: string,
+    @Res() response: Response,
+  ): Promise<void> {
+    this.logger.log(
+      `GET /auth/social/authorize/${provider} - Initiating social login`,
+    );
+
+    const validProviders: SocialProvider[] = [
+      'GoogleOAuth',
+      'MicrosoftOAuth',
+      'GitHubOAuth',
+    ];
+
+    if (!validProviders.includes(provider as SocialProvider)) {
+      throw new HttpException('Invalid provider', HttpStatus.BAD_REQUEST);
+    }
+
+    const state = this.jwtService.sign(
+      { purpose: 'social-login-state' },
+      { expiresIn: '10m' },
+    );
+
+    const authorizationUrl = await this.workOsService.getAuthorizationUrl(
+      provider as SocialProvider,
+      state,
+    );
+
+    response.redirect(authorizationUrl);
+  }
+
+  @Public()
+  @Get('social/callback')
+  async socialCallback(
+    @Query('code') code: string,
+    @Query('state') state: string,
+    @Res() response: Response,
+  ): Promise<void> {
+    this.logger.log('GET /auth/social/callback - Processing OAuth callback');
+
+    try {
+      // Validate CSRF state
+      const statePayload = this.jwtService.verify(state);
+      if (statePayload.purpose !== 'social-login-state') {
+        throw new Error('Invalid state token purpose');
+      }
+
+      // Exchange code for user info
+      const { email } = await this.workOsService.authenticateWithCode(code);
+
+      // Sign in or create user
+      const result = await this.authService.signInSocial(email);
+
+      // Get cookie security setting
+      const cookieSecure = await Configuration.getConfig('COOKIE_SECURE');
+      const isSecure = cookieSecure === 'true';
+
+      // Set auth cookie with sameSite: 'lax' for OAuth redirect
+      response.cookie('auth_token', result.accessToken, {
+        httpOnly: true,
+        secure: isSecure,
+        sameSite: 'lax',
+        maxAge: 30 * 24 * 60 * 60 * 1000,
+        path: '/',
+      });
+
+      // Determine redirect URL
+      let redirectUrl: string;
+      if (result.isNewUser) {
+        redirectUrl = '/sign-up/create-organization';
+      } else if (result.organization) {
+        redirectUrl = `/org/${result.organization.slug}`;
+      } else if (result.organizations && result.organizations.length === 0) {
+        redirectUrl = '/sign-up/create-organization';
+      } else {
+        redirectUrl = '/sign-in?social=select-org';
+      }
+
+      this.logger.log('Social login callback successful', {
+        email: maskEmail(email),
+        isNewUser: result.isNewUser,
+        redirectUrl,
+      });
+
+      response.redirect(redirectUrl);
+    } catch (error) {
+      this.logger.error('Social login callback failed', {
+        error: getErrorMessage(error),
+      });
+      response.redirect('/sign-in?error=social_login_failed');
     }
   }
 

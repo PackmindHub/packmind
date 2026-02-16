@@ -10,6 +10,7 @@ import {
 import { useSignInMutation } from '../api/queries/AuthQueries';
 import { SignInUserResponse } from '@packmind/types';
 import { isPackmindError } from '../../../services/api/errors/PackmindError';
+import SocialLoginButtons from './SocialLoginButtons';
 
 interface SignInCredentialsFormProps {
   onSignInSuccess: (data: SignInUserResponse) => void;
@@ -90,56 +91,59 @@ export default function SignInCredentialsForm({
   };
 
   return (
-    <form onSubmit={handleSubmit}>
-      <PMFormContainer spacing={4} maxWidth="full">
-        <PMField.Root required invalid={!!getEmailError()}>
-          <PMField.Label>
-            Email
-            <PMField.RequiredIndicator />
-          </PMField.Label>
+    <>
+      <SocialLoginButtons />
+      <form onSubmit={handleSubmit}>
+        <PMFormContainer spacing={4} maxWidth="full">
+          <PMField.Root required invalid={!!getEmailError()}>
+            <PMField.Label>
+              Email
+              <PMField.RequiredIndicator />
+            </PMField.Label>
 
-          <PMInput
-            id={emailId}
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="Enter your email"
-            required
-            disabled={signInMutation.isPending}
-            error={getEmailError()}
-          />
+            <PMInput
+              id={emailId}
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="Enter your email"
+              required
+              disabled={signInMutation.isPending}
+              error={getEmailError()}
+            />
 
-          <PMField.ErrorText>{getEmailError()}</PMField.ErrorText>
-        </PMField.Root>
+            <PMField.ErrorText>{getEmailError()}</PMField.ErrorText>
+          </PMField.Root>
 
-        <PMField.Root required>
-          <PMField.Label>
-            Password
-            <PMField.RequiredIndicator />
-          </PMField.Label>
-          <PMInput
-            id={passwordId}
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder="Enter your password"
-            required
-            disabled={signInMutation.isPending}
-            error={errors.password}
-          />
-        </PMField.Root>
+          <PMField.Root required>
+            <PMField.Label>
+              Password
+              <PMField.RequiredIndicator />
+            </PMField.Label>
+            <PMInput
+              id={passwordId}
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Enter your password"
+              required
+              disabled={signInMutation.isPending}
+              error={errors.password}
+            />
+          </PMField.Root>
 
-        {errors.form && (
-          <div style={{ color: 'red', marginTop: 8 }}>{errors.form}</div>
-        )}
+          {errors.form && (
+            <div style={{ color: 'red', marginTop: 8 }}>{errors.form}</div>
+          )}
 
-        <PMButton type="submit" disabled={signInMutation.isPending}>
-          {signInMutation.isPending ? 'Signing In...' : 'Sign In'}
-        </PMButton>
+          <PMButton type="submit" disabled={signInMutation.isPending}>
+            {signInMutation.isPending ? 'Signing In...' : 'Sign In'}
+          </PMButton>
 
-        <PMLink asChild variant="underline" fontSize="xs" color="secondary">
-          <Link to="/forgot-password">Forgot password?</Link>
-        </PMLink>
-      </PMFormContainer>
-    </form>
+          <PMLink asChild variant="underline" fontSize="xs" color="secondary">
+            <Link to="/forgot-password">Forgot password?</Link>
+          </PMLink>
+        </PMFormContainer>
+      </form>
+    </>
   );
 }
