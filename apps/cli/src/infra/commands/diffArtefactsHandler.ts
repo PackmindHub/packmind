@@ -45,24 +45,14 @@ const CHANGE_TYPE_LABELS: Partial<Record<ChangeProposalType, string>> = {
 };
 
 function subGroupByChangeContent(diffs: ArtefactDiff[]): ArtefactDiff[][] {
-  const subGroups: ArtefactDiff[][] = [];
+  const groups = new Map<string, ArtefactDiff[]>();
   for (const diff of diffs) {
-    const payloadKey = JSON.stringify({
-      type: diff.type,
-      payload: diff.payload,
-    });
-    const existing = subGroups.find(
-      (group) =>
-        JSON.stringify({ type: group[0].type, payload: group[0].payload }) ===
-        payloadKey,
-    );
-    if (existing) {
-      existing.push(diff);
-    } else {
-      subGroups.push([diff]);
-    }
+    const key = JSON.stringify({ type: diff.type, payload: diff.payload });
+    const group = groups.get(key) ?? [];
+    group.push(diff);
+    groups.set(key, group);
   }
-  return subGroups;
+  return Array.from(groups.values());
 }
 
 function groupDiffsByArtefact(
@@ -224,16 +214,13 @@ export async function diffArtefactsHandler(
       log('');
     }
 
-    const changeWord = diffs.length === 1 ? 'change' : 'changes';
-    logWarningConsole(`Summary: ${diffs.length} ${changeWord} found`);
+    const changeCount = diffs.length;
+    const changeWord = changeCount === 1 ? 'change' : 'changes';
+    logWarningConsole(`Summary: ${changeCount} ${changeWord} found`);
 
     if (submit) {
       const groupedDiffs = Array.from(groupDiffsByArtefact(diffs).values());
       const result = await packmindCliHexa.submitDiffs(groupedDiffs);
-
-      for (const skip of result.skipped) {
-        logWarningConsole(`Skipped "${skip.name}": ${skip.reason}`);
-      }
 
       for (const err of result.errors) {
         logErrorConsole(`Failed to submit "${err.name}": ${err.message}`);
@@ -251,18 +238,20 @@ export async function diffArtefactsHandler(
         summaryParts.push(`${result.errors.length} ${errorWord}`);
       }
 
-      const summaryMessage = `Summary: ${summaryParts.join(', ')}`;
-      if (result.errors.length > 0) {
-        logErrorConsole(summaryMessage);
-      } else if (result.alreadySubmitted > 0) {
-        logWarningConsole(summaryMessage);
-      } else {
-        logInfoConsole(summaryMessage);
+      if (summaryParts.length > 0) {
+        const summaryMessage = `Summary: ${summaryParts.join(', ')}`;
+        if (result.errors.length > 0) {
+          logErrorConsole(summaryMessage);
+        } else if (result.alreadySubmitted > 0) {
+          logWarningConsole(summaryMessage);
+        } else {
+          logInfoConsole(summaryMessage);
+        }
       }
     }
 
     exit(0);
-    return { diffsFound: diffs.length };
+    return { diffsFound: changeCount };
   } catch (err) {
     error('\n❌ Failed to diff:');
     if (err instanceof Error) {
