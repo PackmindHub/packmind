@@ -3,6 +3,7 @@ import {
   PMBox,
   PMVStack,
   PMHStack,
+  PMEditable,
   PMField,
   PMFieldset,
   PMHeading,
@@ -221,48 +222,78 @@ export const StandardForm: React.FC<StandardFormProps> = ({
         </PMAlert.Root>
       )}
       <PMVStack gap={10} alignItems={'flex-start'}>
-        <PMFieldset.Root>
-          <PMFieldset.Legend>
-            <PMHeading level="h3">Documentation</PMHeading>
-          </PMFieldset.Legend>
-          <PMFieldset.Content
-            border={'solid 1px'}
-            borderColor="border.primary"
-            p={4}
+        {mode === 'edit' && (
+          <PMEditable.Root
+            defaultValue={name}
+            onValueChange={(details) => setName(details.value)}
+            activationMode="click"
+            disabled={isPending}
+            placeholder="Enter standard name"
           >
-            <PMField.Root required>
-              <PMField.Label>
-                Name
-                <PMField.RequiredIndicator />
-              </PMField.Label>
-              <PMInput
-                placeholder="Enter standard name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                disabled={isPending}
-              />
-              <PMField.HelperText />
-              <PMField.ErrorText />
-            </PMField.Root>
+            <PMEditable.Preview
+              fontSize="2xl"
+              fontWeight="bold"
+              cursor="pointer"
+              _hover={{ opacity: 0.7 }}
+              minW="200px"
+            />
+            <PMEditable.Input fontSize="2xl" fontWeight="bold" />
+          </PMEditable.Root>
+        )}
 
-            <PMField.Root required maxW={'100%'}>
-              <PMField.Label>
-                Description
-                <PMField.RequiredIndicator />
-              </PMField.Label>
-              <PMBox width={'100%'}>
-                <MarkdownEditor
-                  defaultValue={description}
-                  onMarkdownChange={(value: string): void => {
-                    setDescription(value);
-                  }}
+        {mode === 'edit' ? (
+          <PMBox width={'full'}>
+            <MarkdownEditor
+              defaultValue={description}
+              onMarkdownChange={(value: string): void => {
+                setDescription(value);
+              }}
+            />
+          </PMBox>
+        ) : (
+          <PMFieldset.Root>
+            <PMFieldset.Legend>
+              <PMHeading level="h3">Documentation</PMHeading>
+            </PMFieldset.Legend>
+            <PMFieldset.Content
+              border={'solid 1px'}
+              borderColor="border.primary"
+              p={4}
+            >
+              <PMField.Root required>
+                <PMField.Label>
+                  Name
+                  <PMField.RequiredIndicator />
+                </PMField.Label>
+                <PMInput
+                  placeholder="Enter standard name"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  disabled={isPending}
                 />
-              </PMBox>
-              <PMField.HelperText />
-              <PMField.ErrorText />
-            </PMField.Root>
-          </PMFieldset.Content>
-        </PMFieldset.Root>
+                <PMField.HelperText />
+                <PMField.ErrorText />
+              </PMField.Root>
+
+              <PMField.Root required maxW={'100%'}>
+                <PMField.Label>
+                  Description
+                  <PMField.RequiredIndicator />
+                </PMField.Label>
+                <PMBox width={'100%'}>
+                  <MarkdownEditor
+                    defaultValue={description}
+                    onMarkdownChange={(value: string): void => {
+                      setDescription(value);
+                    }}
+                  />
+                </PMBox>
+                <PMField.HelperText />
+                <PMField.ErrorText />
+              </PMField.Root>
+            </PMFieldset.Content>
+          </PMFieldset.Root>
+        )}
 
         <PMFieldset.Root>
           <PMFieldset.Legend>

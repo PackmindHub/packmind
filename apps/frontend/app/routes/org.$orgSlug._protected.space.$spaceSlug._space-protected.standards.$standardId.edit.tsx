@@ -1,6 +1,5 @@
 import { useParams, useNavigate } from 'react-router';
-import { PMPage } from '@packmind/ui';
-import { PMVStack, PMBox } from '@packmind/ui';
+import { PMPage, PMVStack, PMBox } from '@packmind/ui';
 import { StandardForm } from '../../src/domain/standards/components/StandardForm';
 import { useGetStandardByIdQuery } from '../../src/domain/standards/api/queries/StandardsQueries';
 import { StandardId } from '@packmind/types';
@@ -48,18 +47,13 @@ export default function EditStandardRouteModule() {
   }
 
   return (
-    <PMPage
-      title={`Edit ${getStandardByIdResponse.standard.name}`}
-      subtitle="Update standard details and rules"
-    >
-      <MarkdownEditorProvider>
-        <StandardForm
-          mode="edit"
-          standard={getStandardByIdResponse.standard}
-          onSuccess={handleSuccess}
-          onCancel={handleCancel}
-        />
-      </MarkdownEditorProvider>
-    </PMPage>
+    <MarkdownEditorProvider>
+      <StandardForm
+        mode="edit"
+        standard={getStandardByIdResponse.standard}
+        onSuccess={handleSuccess}
+        onCancel={handleCancel}
+      />
+    </MarkdownEditorProvider>
   );
 }
