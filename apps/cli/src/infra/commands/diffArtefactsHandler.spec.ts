@@ -650,6 +650,93 @@ describe('diffArtefactsHandler', () => {
     });
   });
 
+  describe('when skill license change found', () => {
+    beforeEach(() => {
+      mockPackmindCliHexa.readFullConfig.mockResolvedValue({
+        packages: { 'my-package': '*' },
+      });
+
+      mockPackmindCliHexa.diffArtefacts.mockResolvedValue([
+        {
+          filePath: '.claude/skills/my-skill/SKILL.md',
+          type: ChangeProposalType.updateSkillLicense,
+          payload: { oldValue: 'MIT', newValue: 'Apache-2.0' },
+          artifactName: 'My Skill',
+          artifactType: 'skill',
+        },
+      ]);
+    });
+
+    it('displays skill license changed label', async () => {
+      await diffArtefactsHandler(deps);
+
+      const logCalls = mockLog.mock.calls.map((c) => c[0]);
+      const label = logCalls.find((c: string) =>
+        c.includes('skill license changed'),
+      );
+
+      expect(label).toBeDefined();
+    });
+  });
+
+  describe('when skill compatibility change found', () => {
+    beforeEach(() => {
+      mockPackmindCliHexa.readFullConfig.mockResolvedValue({
+        packages: { 'my-package': '*' },
+      });
+
+      mockPackmindCliHexa.diffArtefacts.mockResolvedValue([
+        {
+          filePath: '.claude/skills/my-skill/SKILL.md',
+          type: ChangeProposalType.updateSkillCompatibility,
+          payload: { oldValue: 'claude', newValue: 'cursor' },
+          artifactName: 'My Skill',
+          artifactType: 'skill',
+        },
+      ]);
+    });
+
+    it('displays skill compatibility changed label', async () => {
+      await diffArtefactsHandler(deps);
+
+      const logCalls = mockLog.mock.calls.map((c) => c[0]);
+      const label = logCalls.find((c: string) =>
+        c.includes('skill compatibility changed'),
+      );
+
+      expect(label).toBeDefined();
+    });
+  });
+
+  describe('when skill allowed tools change found', () => {
+    beforeEach(() => {
+      mockPackmindCliHexa.readFullConfig.mockResolvedValue({
+        packages: { 'my-package': '*' },
+      });
+
+      mockPackmindCliHexa.diffArtefacts.mockResolvedValue([
+        {
+          filePath: '.claude/skills/my-skill/SKILL.md',
+          type: ChangeProposalType.updateSkillAllowedTools,
+          payload: { oldValue: 'tool-a', newValue: 'tool-b' },
+          artifactName: 'My Skill',
+          artifactType: 'skill',
+        },
+      ]);
+    });
+
+    it('displays skill allowed tools changed label', async () => {
+      await diffArtefactsHandler(deps);
+
+      const logCalls = mockLog.mock.calls.map((c) => c[0]);
+      const label = logCalls.find((c: string) =>
+        c.includes('skill allowed tools changed'),
+      );
+
+      expect(label).toBeDefined();
+    });
+  });
+
   describe('when no diffs found', () => {
     beforeEach(() => {
       mockPackmindCliHexa.readFullConfig.mockResolvedValue({

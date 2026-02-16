@@ -162,6 +162,9 @@ export class SkillDiffStrategy implements IDiffStrategy {
       this.checkUpdateSkillDescription(serverParsed, localParsed, baseDiff),
       this.checkUpdateSkillPrompt(serverParsed, localParsed, baseDiff),
       this.checkUpdateSkillMetadata(serverParsed, localParsed, baseDiff),
+      this.checkUpdateSkillLicense(serverParsed, localParsed, baseDiff),
+      this.checkUpdateSkillCompatibility(serverParsed, localParsed, baseDiff),
+      this.checkUpdateSkillAllowedTools(serverParsed, localParsed, baseDiff),
     ];
     return checks.filter((d): d is ArtefactDiff => d !== null);
   }
@@ -290,6 +293,60 @@ export class SkillDiffStrategy implements IDiffStrategy {
       payload: {
         oldValue: serverParsed.metadataJson,
         newValue: localParsed.metadataJson,
+      },
+    };
+  }
+
+  private checkUpdateSkillLicense(
+    serverParsed: ParsedSkillMd,
+    localParsed: ParsedSkillMd,
+    baseDiff: BaseDiff,
+  ): ArtefactDiff | null {
+    if (serverParsed.license === localParsed.license) {
+      return null;
+    }
+    return {
+      ...baseDiff,
+      type: ChangeProposalType.updateSkillLicense,
+      payload: {
+        oldValue: serverParsed.license,
+        newValue: localParsed.license,
+      },
+    };
+  }
+
+  private checkUpdateSkillCompatibility(
+    serverParsed: ParsedSkillMd,
+    localParsed: ParsedSkillMd,
+    baseDiff: BaseDiff,
+  ): ArtefactDiff | null {
+    if (serverParsed.compatibility === localParsed.compatibility) {
+      return null;
+    }
+    return {
+      ...baseDiff,
+      type: ChangeProposalType.updateSkillCompatibility,
+      payload: {
+        oldValue: serverParsed.compatibility,
+        newValue: localParsed.compatibility,
+      },
+    };
+  }
+
+  private checkUpdateSkillAllowedTools(
+    serverParsed: ParsedSkillMd,
+    localParsed: ParsedSkillMd,
+    baseDiff: BaseDiff,
+  ): ArtefactDiff | null {
+    if (serverParsed.allowedTools === localParsed.allowedTools) {
+      return null;
+    }
+    return {
+      ...baseDiff,
+      type: ChangeProposalType.updateSkillAllowedTools,
+      payload: {
+        oldValue: serverParsed.allowedTools,
+        newValue: localParsed.allowedTools,
       },
     };
   }
