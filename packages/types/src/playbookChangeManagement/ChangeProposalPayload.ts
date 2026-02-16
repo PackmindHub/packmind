@@ -53,7 +53,6 @@ type SkillChangeProposalPayloadMap = {
   [ChangeProposalType.addSkillFile]: CollectionItemAddPayload<
     Omit<SkillFile, 'skillVersionId'>
   >;
-  [ChangeProposalType.updateSkillFilePath]: CollectionItemUpdatePayload<SkillFileId>;
   [ChangeProposalType.updateSkillFileContent]: CollectionItemUpdatePayload<SkillFileId>;
   [ChangeProposalType.updateSkillFilePermissions]: CollectionItemUpdatePayload<SkillFileId>;
   [ChangeProposalType.deleteSkillFile]: CollectionItemDeletePayload<

@@ -279,7 +279,7 @@ export async function diffArtefactsHandler(
       for (const err of result.errors) {
         if (err.code === 'ChangeProposalPayloadMismatchError') {
           logErrorConsole(
-            `Failed to submit "${err.name}": ${err.artifactType ?? 'artifact'} is outdated, please run packmind-cli install to update it`,
+            `Failed to submit "${err.name}": ${err.artifactType ?? 'artifact'} is outdated, please run \`packmind-cli install\` to update it`,
           );
         } else {
           logErrorConsole(`Failed to submit "${err.name}": ${err.message}`);

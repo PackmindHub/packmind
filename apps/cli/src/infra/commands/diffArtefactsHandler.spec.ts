@@ -1150,7 +1150,7 @@ describe('diffArtefactsHandler', () => {
         await diffArtefactsHandler({ ...deps, submit: true });
 
         expect(logErrorConsole).toHaveBeenCalledWith(
-          'Failed to submit "My Command": command is outdated, please run packmind-cli install to update it',
+          'Failed to submit "My Command": command is outdated, please run `packmind-cli install` to update it',
         );
       });
     });
