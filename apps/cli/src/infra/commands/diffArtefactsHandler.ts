@@ -4,6 +4,7 @@ import { ArtefactDiff } from '../../domain/useCases/IDiffArtefactsUseCase';
 import {
   logWarningConsole,
   logInfoConsole,
+  logErrorConsole,
   formatHeader,
   formatBold,
   formatFilePath,
@@ -41,6 +42,27 @@ const CHANGE_TYPE_LABELS: Partial<Record<ChangeProposalType, string>> = {
   [ChangeProposalType.addSkillFile]: 'new file added',
   [ChangeProposalType.deleteSkillFile]: 'file deleted',
 };
+
+function subGroupByChangeContent(diffs: ArtefactDiff[]): ArtefactDiff[][] {
+  const subGroups: ArtefactDiff[][] = [];
+  for (const diff of diffs) {
+    const payloadKey = JSON.stringify({
+      type: diff.type,
+      payload: diff.payload,
+    });
+    const existing = subGroups.find(
+      (group) =>
+        JSON.stringify({ type: group[0].type, payload: group[0].payload }) ===
+        payloadKey,
+    );
+    if (existing) {
+      existing.push(diff);
+    } else {
+      subGroups.push([diff]);
+    }
+  }
+  return subGroups;
+}
 
 function groupDiffsByArtefact(
   diffs: ArtefactDiff[],
@@ -188,11 +210,15 @@ export async function diffArtefactsHandler(
       const typeLabel = ARTIFACT_TYPE_LABELS[artifactType];
       log(formatBold(`${typeLabel} "${artifactName}"`));
 
-      for (const diff of groupDiffs) {
-        const label = CHANGE_TYPE_LABELS[diff.type] ?? 'content changed';
-        log(`  ${formatFilePath(diff.filePath)}`);
+      // Sub-group by change type + payload to deduplicate identical changes across agent folders
+      const subGroups = subGroupByChangeContent(groupDiffs);
+      for (const subGroup of subGroups) {
+        for (const diff of subGroup) {
+          log(`  ${formatFilePath(diff.filePath)}`);
+        }
+        const label = CHANGE_TYPE_LABELS[subGroup[0].type] ?? 'content changed';
         log(`  - ${label}`);
-        formatDiffPayload(diff, log);
+        formatDiffPayload(subGroup[0], log);
       }
       log('');
     }
@@ -204,12 +230,33 @@ export async function diffArtefactsHandler(
       const groupedDiffs = Array.from(groupDiffsByArtefact(diffs).values());
       const result = await packmindCliHexa.submitDiffs(groupedDiffs);
 
-      if (result.submitted > 0) {
-        logInfoConsole('Changes submitted successfully.');
-      }
-
       for (const skip of result.skipped) {
         logWarningConsole(`Skipped "${skip.name}": ${skip.reason}`);
+      }
+
+      for (const err of result.errors) {
+        logErrorConsole(`Failed to submit "${err.name}": ${err.message}`);
+      }
+
+      const summaryParts: string[] = [];
+      if (result.submitted > 0) {
+        summaryParts.push(`${result.submitted} submitted`);
+      }
+      if (result.alreadySubmitted > 0) {
+        summaryParts.push(`${result.alreadySubmitted} already submitted`);
+      }
+      if (result.errors.length > 0) {
+        const errorWord = result.errors.length === 1 ? 'error' : 'errors';
+        summaryParts.push(`${result.errors.length} ${errorWord}`);
+      }
+
+      const summaryMessage = `Summary: ${summaryParts.join(', ')}`;
+      if (result.errors.length > 0) {
+        logErrorConsole(summaryMessage);
+      } else if (result.alreadySubmitted > 0) {
+        logWarningConsole(summaryMessage);
+      } else {
+        logInfoConsole(summaryMessage);
       }
     }
 
