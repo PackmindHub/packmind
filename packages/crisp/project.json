@@ -1,0 +1,20 @@
+{
+  "name": "crisp",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/crisp/src",
+  "projectType": "library",
+  "tags": ["env:node"],
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/packages/crisp",
+        "tsConfig": "packages/crisp/tsconfig.lib.json",
+        "packageJson": "packages/crisp/package.json",
+        "main": "packages/crisp/src/index.ts",
+        "assets": ["packages/crisp/*.md"]
+      }
+    }
+  }
+}
