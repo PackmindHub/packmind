@@ -18,7 +18,6 @@ export default function DeploymentsOverviewRouteModule() {
     <PMPage
       title="Overview"
       subtitle="Monitor distributions across your repositories"
-      breadcrumbComponent={<AutobreadCrumb />}
     >
       <PMVStack align="stretch" gap={6}>
         <DeploymentsPage />

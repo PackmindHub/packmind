@@ -58,11 +58,7 @@ export default function EditStandardRouteModule() {
     !getStandardByIdResponse.standard
   ) {
     return (
-      <PMPage
-        title="Error"
-        subtitle="Failed to load standard"
-        breadcrumbComponent={<AutobreadCrumb />}
-      >
+      <PMPage title="Error" subtitle="Failed to load standard">
         <PMBox display="flex" justifyContent="center" py={8}>
           <PMVStack gap={4}>
             <span>Failed to load standard. Please try again.</span>
@@ -76,7 +72,6 @@ export default function EditStandardRouteModule() {
     <PMPage
       title={`Edit ${getStandardByIdResponse.standard.name}`}
       subtitle="Update standard details and rules"
-      breadcrumbComponent={<AutobreadCrumb />}
     >
       <MarkdownEditorProvider>
         <StandardForm

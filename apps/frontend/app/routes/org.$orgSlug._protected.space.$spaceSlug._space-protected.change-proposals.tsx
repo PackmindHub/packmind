@@ -16,5 +16,5 @@ export const handle = {
 };
 
 export default function ChangeProposalsReviewRouteModule() {
-  return <ChangeProposals breadcrumbComponent={<AutobreadCrumb />} />;
+  return <ChangeProposals />;
 }

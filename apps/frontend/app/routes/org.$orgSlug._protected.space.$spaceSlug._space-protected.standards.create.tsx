@@ -22,7 +22,6 @@ export default function CreateStandardRouteModule() {
     <PMPage
       title="Create Standard"
       subtitle="Create a new standard for your organization"
-      breadcrumbComponent={<AutobreadCrumb />}
     >
       <PMVStack align="stretch" gap={6}>
         <CreateStandard />

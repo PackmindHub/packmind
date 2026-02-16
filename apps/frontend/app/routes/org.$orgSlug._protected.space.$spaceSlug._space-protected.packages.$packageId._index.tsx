@@ -19,11 +19,7 @@ export default function PackageDetailsIndexRouteModule() {
 
   if (!packageId || !spaceSlug) {
     return (
-      <PMPage
-        title="Package Not Found"
-        subtitle="No package ID provided"
-        breadcrumbComponent={<AutobreadCrumb />}
-      >
+      <PMPage title="Package Not Found" subtitle="No package ID provided">
         <PMBox>
           <p>
             The package you're looking for doesn't exist or the ID is invalid.

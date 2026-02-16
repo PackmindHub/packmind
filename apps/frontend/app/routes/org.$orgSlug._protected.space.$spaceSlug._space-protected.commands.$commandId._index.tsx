@@ -18,11 +18,7 @@ export default function CommandDetailsIndexRouteModule() {
 
   if (!commandId) {
     return (
-      <PMPage
-        title="Command Not Found"
-        subtitle="No command ID provided"
-        breadcrumbComponent={<AutobreadCrumb />}
-      >
+      <PMPage title="Command Not Found" subtitle="No command ID provided">
         <PMBox>
           <p>
             The command you're looking for doesn't exist or the ID is invalid.

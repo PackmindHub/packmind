@@ -206,7 +206,6 @@ export const PackageDetails = ({
       <PMPage
         title="Loading Package..."
         subtitle="Please wait while we fetch the package details"
-        breadcrumbComponent={<AutobreadCrumb />}
       >
         <PMBox
           display="flex"
@@ -226,7 +225,6 @@ export const PackageDetails = ({
       <PMPage
         title="Error Loading Package"
         subtitle="Sorry, we couldn't load the package details"
-        breadcrumbComponent={<AutobreadCrumb />}
       >
         <PMAlert.Root status="error" width="lg" mb={4}>
           <PMAlert.Indicator />
@@ -242,7 +240,6 @@ export const PackageDetails = ({
       <PMPage
         title="Package Not Found"
         subtitle="The package you're looking for doesn't exist"
-        breadcrumbComponent={<AutobreadCrumb />}
       >
         <PMBox>
           <PMText>This package could not be found.</PMText>
@@ -262,7 +259,6 @@ export const PackageDetails = ({
   return (
     <PMPage
       title={pkg.name}
-      breadcrumbComponent={<AutobreadCrumb />}
       isFullWidth
       actions={
         <PMHStack gap={3}>

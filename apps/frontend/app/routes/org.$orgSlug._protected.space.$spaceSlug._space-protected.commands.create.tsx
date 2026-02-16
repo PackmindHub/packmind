@@ -22,7 +22,6 @@ export default function CreateCommandRouteModule() {
     <PMPage
       title="Create Command"
       subtitle="Create a new command for your organization"
-      breadcrumbComponent={<AutobreadCrumb />}
     >
       <PMVStack align="stretch" gap={6}>
         <CreateCommand />

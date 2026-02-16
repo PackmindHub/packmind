@@ -107,11 +107,7 @@ export default function StandardDetailRouteModule() {
 
   if (!standard || !standard.standard) {
     return (
-      <PMPage
-        title="Standard Not Found"
-        subtitle="No standard ID provided"
-        breadcrumbComponent={<AutobreadCrumb />}
-      >
+      <PMPage title="Standard Not Found" subtitle="No standard ID provided">
         <PMBox>
           <p>
             The standard you&apos;re looking for doesn&apos;t exist or the ID is

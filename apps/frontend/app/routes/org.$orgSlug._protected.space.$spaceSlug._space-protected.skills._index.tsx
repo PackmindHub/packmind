@@ -25,7 +25,6 @@ export default function SkillsIndexRouteModule() {
     <PMPage
       title="Skills"
       subtitle="Skills give the AI the ability to handle a type of task on its own — use them when a task requires structured know-how or multiple steps"
-      breadcrumbComponent={<AutobreadCrumb />}
       actions={
         <PMHStack gap={2}>
           {hasSkills && <DownloadDefaultSkillsPopover />}

@@ -16,7 +16,6 @@ export default function PackagesRouteModule() {
     <PMPage
       title="Packages"
       subtitle="Organize and distribute your playbook artifacts across your repositories."
-      breadcrumbComponent={<AutobreadCrumb />}
       actions={
         !isEmpty && (
           <Link to={routes.space.toCreatePackage(orgSlug, spaceSlug)}>

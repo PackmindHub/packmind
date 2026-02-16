@@ -25,7 +25,6 @@ export default function CreatePackageRouteModule() {
     <PMPage
       title="Create Package"
       subtitle="Create a new package with standards, commands and skills"
-      breadcrumbComponent={<AutobreadCrumb />}
     >
       <PMVStack align="stretch" gap={6}>
         <CreatePackagePage organizationSlug={orgSlug} spaceSlug={spaceSlug} />

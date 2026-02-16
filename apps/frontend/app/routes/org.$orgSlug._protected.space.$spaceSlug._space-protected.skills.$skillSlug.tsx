@@ -187,11 +187,7 @@ export default function SkillDetailLayoutRouteModule() {
 
   if (!skillWithFiles) {
     return (
-      <PMPage
-        title="Skill Not Found"
-        subtitle="No skill found"
-        breadcrumbComponent={<AutobreadCrumb />}
-      >
+      <PMPage title="Skill Not Found" subtitle="No skill found">
         <PMBox>
           <PMText>
             The skill you&apos;re looking for doesn&apos;t exist or the slug is

@@ -19,7 +19,6 @@ export default function OrgCommandsIndex() {
     <PMPage
       title="Commands"
       subtitle="Commands are shortcuts you can run to trigger a specific action — use them to quickly repeat common tasks."
-      breadcrumbComponent={<AutobreadCrumb />}
       actions={
         !isEmpty &&
         spaceSlug && (

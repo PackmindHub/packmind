@@ -579,11 +579,7 @@ export const PackageEditForm = ({
 
   if (isLoading) {
     return (
-      <PMPage
-        title="Edit Package"
-        subtitle="Loading..."
-        breadcrumbComponent={<AutobreadCrumb />}
-      >
+      <PMPage title="Edit Package" subtitle="Loading...">
         <PMBox
           display="flex"
           alignItems="center"
@@ -602,7 +598,6 @@ export const PackageEditForm = ({
       <PMPage
         title="Error Loading Package"
         subtitle="Sorry, we couldn't load the package details"
-        breadcrumbComponent={<AutobreadCrumb />}
       >
         <PMAlert.Root status="error" width="lg" mb={4}>
           <PMAlert.Indicator />
@@ -618,7 +613,6 @@ export const PackageEditForm = ({
       <PMPage
         title="Package Not Found"
         subtitle="The package you're looking for doesn't exist"
-        breadcrumbComponent={<AutobreadCrumb />}
       >
         <PMBox>
           <PMText>This package could not be found.</PMText>
@@ -629,11 +623,7 @@ export const PackageEditForm = ({
 
   if (isLoadingRecipes || isLoadingStandards || isLoadingSkills) {
     return (
-      <PMPage
-        title="Edit Package"
-        subtitle="Loading..."
-        breadcrumbComponent={<AutobreadCrumb />}
-      >
+      <PMPage title="Edit Package" subtitle="Loading...">
         <PMBox
           display="flex"
           alignItems="center"
@@ -651,7 +641,6 @@ export const PackageEditForm = ({
     <PMPage
       title="Edit Package"
       subtitle="Update package details, commands, and standards"
-      breadcrumbComponent={<AutobreadCrumb />}
     >
       <MarkdownEditorProvider>
         <PMBox

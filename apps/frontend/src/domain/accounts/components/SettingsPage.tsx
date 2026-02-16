@@ -8,7 +8,6 @@ export function SettingsPage() {
     <PMPage
       title="Settings"
       subtitle="Manage your account settings and access tokens."
-      breadcrumbComponent={<AutobreadCrumb />}
     >
       <PMBox background={'background.primary'} p={4}>
         <LocalEnvironmentSetup />

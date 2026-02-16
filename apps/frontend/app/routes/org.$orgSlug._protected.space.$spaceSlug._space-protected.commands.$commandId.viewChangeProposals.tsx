@@ -53,7 +53,6 @@ export default function ViewChangeProposalsRouteModule() {
       <PMPage
         title="Loading Change Proposals..."
         subtitle="Please wait while we fetch the change proposals"
-        breadcrumbComponent={<AutobreadCrumb />}
       >
         <PMBox
           display="flex"
@@ -70,11 +69,7 @@ export default function ViewChangeProposalsRouteModule() {
 
   if (isError || !proposals) {
     return (
-      <PMPage
-        title="Error"
-        subtitle="Failed to load change proposals"
-        breadcrumbComponent={<AutobreadCrumb />}
-      >
+      <PMPage title="Error" subtitle="Failed to load change proposals">
         <PMBox display="flex" justifyContent="center" py={8}>
           <PMVStack gap={4}>
             <PMText>Failed to load change proposals. Please try again.</PMText>
@@ -88,7 +83,6 @@ export default function ViewChangeProposalsRouteModule() {
     <PMPage
       title="Change proposals"
       subtitle="Review and manage proposed changes to this command"
-      breadcrumbComponent={<AutobreadCrumb />}
     >
       <ChangeProposalsTable
         proposals={getPendingProposals(proposals)}
