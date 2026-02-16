@@ -374,7 +374,7 @@ describe('DiffArtefactsUseCase', () => {
     let result: ArtefactDiff[];
 
     beforeEach(async () => {
-      mockPull.mockResolvedValue({
+      mockGetDeployed.mockResolvedValue({
         fileUpdates: {
           createOrUpdate: [
             {
@@ -416,7 +416,7 @@ describe('DiffArtefactsUseCase', () => {
     let result: ArtefactDiff[];
 
     beforeEach(async () => {
-      mockPull.mockResolvedValue({
+      mockGetDeployed.mockResolvedValue({
         fileUpdates: {
           createOrUpdate: [
             {
@@ -457,7 +457,7 @@ describe('DiffArtefactsUseCase', () => {
     let result: ArtefactDiff[];
 
     beforeEach(async () => {
-      mockPull.mockResolvedValue({
+      mockGetDeployed.mockResolvedValue({
         fileUpdates: {
           createOrUpdate: [
             {
