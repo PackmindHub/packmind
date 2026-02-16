@@ -1130,4 +1130,65 @@ describe('UserService', () => {
       });
     });
   });
+
+  describe('createSocialLoginUser', () => {
+    describe('when user does not exist', () => {
+      let result: User;
+
+      beforeEach(async () => {
+        mockUserRepository.findByEmailCaseInsensitive.mockResolvedValue(null);
+        mockUserRepository.add.mockImplementation(async (user) => user);
+        result = await userService.createSocialLoginUser('Social@Example.com ');
+      });
+
+      it('creates user with normalized email', () => {
+        expect(result.email).toBe('social@example.com');
+      });
+
+      it('creates user with null password hash', () => {
+        expect(result.passwordHash).toBeNull();
+      });
+
+      it('creates user with active status', () => {
+        expect(result.active).toBe(true);
+      });
+
+      it('creates user with empty memberships', () => {
+        expect(result.memberships).toEqual([]);
+      });
+
+      it('creates user with trial false', () => {
+        expect(result.trial).toBe(false);
+      });
+
+      it('saves user to repository', () => {
+        expect(mockUserRepository.add).toHaveBeenCalled();
+      });
+    });
+
+    describe('when user already exists', () => {
+      const existingUser = userFactory({
+        email: 'existing@example.com',
+        active: true,
+      });
+      let result: User;
+
+      beforeEach(async () => {
+        mockUserRepository.findByEmailCaseInsensitive.mockResolvedValue(
+          existingUser,
+        );
+        result = await userService.createSocialLoginUser(
+          'existing@example.com',
+        );
+      });
+
+      it('returns existing user', () => {
+        expect(result).toBe(existingUser);
+      });
+
+      it('does not create a new user', () => {
+        expect(mockUserRepository.add).not.toHaveBeenCalled();
+      });
+    });
+  });
 });

@@ -89,6 +89,7 @@ import {
   SignInUserCommand,
   StartTrialCommand,
   StartTrialResult,
+  SocialProvider,
   User,
   UserId,
   ValidateInvitationTokenCommand,
@@ -641,5 +642,34 @@ export class AccountsAdapter
       );
     }
     return this._activateTrialAccount.execute(command);
+  }
+
+  // Social login operations
+  public async getUserByEmail(email: string): Promise<User | null> {
+    return this.accountsServices
+      .getUserService()
+      .getUserByEmailCaseInsensitive(email);
+  }
+
+  public async createSocialLoginUser(
+    email: string,
+    provider: SocialProvider,
+  ): Promise<User> {
+    const user = await this.accountsServices
+      .getUserService()
+      .createSocialLoginUser(email);
+    await this.accountsServices
+      .getUserMetadataService()
+      .addSocialProvider(user.id, provider);
+    return user;
+  }
+
+  public async addSocialProvider(
+    userId: UserId,
+    provider: SocialProvider,
+  ): Promise<void> {
+    await this.accountsServices
+      .getUserMetadataService()
+      .addSocialProvider(userId, provider);
   }
 }

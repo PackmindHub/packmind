@@ -1,5 +1,10 @@
 import { PackmindLogger } from '@packmind/logger';
-import { UserMetadata, UserId, createUserMetadataId } from '@packmind/types';
+import {
+  UserMetadata,
+  UserId,
+  SocialProvider,
+  createUserMetadataId,
+} from '@packmind/types';
 import { IUserMetadataRepository } from '../../domain/repositories/IUserMetadataRepository';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -21,6 +26,7 @@ export class UserMetadataService {
         id: createUserMetadataId(uuidv4()),
         userId,
         onboardingCompleted: false,
+        socialProviders: [],
       });
       this.logger.info('Created new user metadata', { userId });
     }
@@ -36,12 +42,41 @@ export class UserMetadataService {
         id: createUserMetadataId(uuidv4()),
         userId,
         onboardingCompleted: true,
+        socialProviders: [],
       };
       return this.userMetadataRepository.add(metadata);
     }
 
     metadata.onboardingCompleted = true;
     return this.userMetadataRepository.save(metadata);
+  }
+
+  async addSocialProvider(
+    userId: UserId,
+    provider: SocialProvider,
+  ): Promise<void> {
+    const metadata = await this.userMetadataRepository.findByUserId(userId);
+
+    if (!metadata) {
+      await this.userMetadataRepository.add({
+        id: createUserMetadataId(uuidv4()),
+        userId,
+        onboardingCompleted: false,
+        socialProviders: [provider],
+      });
+      this.logger.info('Created user metadata with social provider', {
+        userId,
+      });
+      return;
+    }
+
+    if (metadata.socialProviders.includes(provider)) {
+      return;
+    }
+
+    metadata.socialProviders = [...metadata.socialProviders, provider];
+    await this.userMetadataRepository.save(metadata);
+    this.logger.info('Added social provider to user metadata', { userId });
   }
 
   async isOnboardingCompleted(userId: UserId): Promise<boolean> {

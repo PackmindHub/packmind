@@ -202,4 +202,10 @@ export class AuthGatewayApi extends PackmindGateway implements IAuthGateway {
       {},
     );
   }
+
+  async getSocialProviders(): Promise<{ providers: string[] }> {
+    return this._api.get<{ providers: string[] }>(
+      `${this._endpoint}/social/providers`,
+    );
+  }
 }

@@ -1,6 +1,8 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
+import { WorkOsService } from './workos.service';
+import { JwtService } from '@nestjs/jwt';
 import {
   User,
   createOrganizationId,
@@ -91,14 +93,30 @@ describe('AuthController', () => {
   const mockAuthService = {
     signUp: jest.fn(),
     signIn: jest.fn(),
+    signInSocial: jest.fn(),
     getMe: jest.fn(),
     checkEmailAvailability: jest.fn(),
     activateAccount: jest.fn(),
     validateInvitationToken: jest.fn(),
   };
 
+  const mockWorkOsService = {
+    getAvailableProviders: jest.fn(),
+    getAuthorizationUrl: jest.fn(),
+    authenticateWithCode: jest.fn(),
+  };
+
+  const mockJwtService = {
+    sign: jest.fn().mockReturnValue('mock-state-token'),
+    verify: jest.fn().mockReturnValue({
+      purpose: 'social-login-state',
+      provider: 'GoogleOAuth',
+    }),
+  };
+
   const mockResponse = {
     cookie: jest.fn(),
+    redirect: jest.fn(),
   } as unknown as jest.Mocked<Response>;
 
   const mockConfiguration = Configuration as jest.Mocked<typeof Configuration>;
@@ -110,6 +128,14 @@ describe('AuthController', () => {
         {
           provide: AuthService,
           useValue: mockAuthService,
+        },
+        {
+          provide: WorkOsService,
+          useValue: mockWorkOsService,
+        },
+        {
+          provide: JwtService,
+          useValue: mockJwtService,
         },
       ],
     }).compile();
@@ -886,6 +912,213 @@ describe('AuthController', () => {
         expect(mockAuthService.validateInvitationToken).toHaveBeenCalledWith({
           token,
         });
+      });
+    });
+  });
+
+  describe('getSocialProviders', () => {
+    describe('when WorkOS is not configured', () => {
+      let result: { providers: string[] };
+
+      beforeEach(async () => {
+        mockWorkOsService.getAvailableProviders.mockResolvedValue([]);
+        result = await controller.getSocialProviders();
+      });
+
+      it('returns empty providers array', () => {
+        expect(result).toEqual({ providers: [] });
+      });
+    });
+
+    describe('when WorkOS is configured', () => {
+      let result: { providers: string[] };
+
+      beforeEach(async () => {
+        mockWorkOsService.getAvailableProviders.mockResolvedValue([
+          'GoogleOAuth',
+          'MicrosoftOAuth',
+          'GitHubOAuth',
+        ]);
+        result = await controller.getSocialProviders();
+      });
+
+      it('returns all providers', () => {
+        expect(result).toEqual({
+          providers: ['GoogleOAuth', 'MicrosoftOAuth', 'GitHubOAuth'],
+        });
+      });
+    });
+  });
+
+  describe('socialAuthorize', () => {
+    describe('with valid provider', () => {
+      beforeEach(async () => {
+        mockWorkOsService.getAuthorizationUrl.mockResolvedValue(
+          'https://workos.com/authorize',
+        );
+        await controller.socialAuthorize('GoogleOAuth', mockResponse);
+      });
+
+      it('redirects to authorization URL', () => {
+        expect(mockResponse.redirect).toHaveBeenCalledWith(
+          'https://workos.com/authorize',
+        );
+      });
+
+      it('creates state JWT with provider', () => {
+        expect(mockJwtService.sign).toHaveBeenCalledWith(
+          { purpose: 'social-login-state', provider: 'GoogleOAuth' },
+          { expiresIn: '10m' },
+        );
+      });
+    });
+
+    describe('with invalid provider', () => {
+      it('throws BadRequest', async () => {
+        await expect(
+          controller.socialAuthorize('InvalidProvider', mockResponse),
+        ).rejects.toThrow('Invalid provider');
+      });
+    });
+  });
+
+  describe('socialCallback', () => {
+    describe('with valid code and existing user with single org', () => {
+      beforeEach(async () => {
+        mockWorkOsService.authenticateWithCode.mockResolvedValue({
+          email: 'user@example.com',
+        });
+        mockAuthService.signInSocial.mockResolvedValue({
+          accessToken: 'jwt-token',
+          user: { id: createUserId('1'), email: 'user@example.com' },
+          organization: {
+            id: createOrganizationId('org-1'),
+            name: 'Test',
+            slug: 'test',
+          },
+          isNewUser: false,
+        });
+        mockConfiguration.getConfig.mockResolvedValue('false');
+        await controller.socialCallback(
+          'code',
+          'mock-state-token',
+          mockResponse,
+        );
+      });
+
+      it('sets auth cookie with sameSite lax', () => {
+        expect(mockResponse.cookie).toHaveBeenCalledWith(
+          'auth_token',
+          'jwt-token',
+          expect.objectContaining({ sameSite: 'lax' }),
+        );
+      });
+
+      it('redirects to org dashboard', () => {
+        expect(mockResponse.redirect).toHaveBeenCalledWith('/org/test');
+      });
+    });
+
+    describe('with valid code and new user', () => {
+      beforeEach(async () => {
+        mockWorkOsService.authenticateWithCode.mockResolvedValue({
+          email: 'new@example.com',
+        });
+        mockAuthService.signInSocial.mockResolvedValue({
+          accessToken: 'jwt-token',
+          user: { id: createUserId('2'), email: 'new@example.com' },
+          organization: {
+            id: createOrganizationId('org-new'),
+            name: "new's organization",
+            slug: 'news-organization',
+          },
+          isNewUser: true,
+        });
+        mockConfiguration.getConfig.mockResolvedValue('false');
+        await controller.socialCallback(
+          'code',
+          'mock-state-token',
+          mockResponse,
+        );
+      });
+
+      it('redirects to create organization page', () => {
+        expect(mockResponse.redirect).toHaveBeenCalledWith(
+          '/sign-up/create-organization',
+        );
+      });
+    });
+
+    describe('with valid code and multiple orgs', () => {
+      beforeEach(async () => {
+        mockWorkOsService.authenticateWithCode.mockResolvedValue({
+          email: 'user@example.com',
+        });
+        mockAuthService.signInSocial.mockResolvedValue({
+          accessToken: 'jwt-token',
+          user: { id: createUserId('1'), email: 'user@example.com' },
+          organizations: [
+            {
+              organization: {
+                id: createOrganizationId('org-1'),
+                name: 'Org 1',
+                slug: 'org-1',
+              },
+              role: 'admin',
+            },
+          ],
+          isNewUser: false,
+        });
+        mockConfiguration.getConfig.mockResolvedValue('false');
+        await controller.socialCallback(
+          'code',
+          'mock-state-token',
+          mockResponse,
+        );
+      });
+
+      it('redirects to sign-in with select-org param', () => {
+        expect(mockResponse.redirect).toHaveBeenCalledWith(
+          '/sign-in?social=select-org',
+        );
+      });
+    });
+
+    describe('with invalid state token', () => {
+      beforeEach(async () => {
+        mockJwtService.verify.mockImplementation(() => {
+          throw new Error('Invalid token');
+        });
+        await controller.socialCallback('code', 'invalid-state', mockResponse);
+      });
+
+      it('redirects to sign-in with error', () => {
+        expect(mockResponse.redirect).toHaveBeenCalledWith(
+          '/sign-in?error=social_login_failed',
+        );
+      });
+    });
+
+    describe('with invalid code', () => {
+      beforeEach(async () => {
+        mockJwtService.verify.mockReturnValue({
+          purpose: 'social-login-state',
+          provider: 'GoogleOAuth',
+        });
+        mockWorkOsService.authenticateWithCode.mockRejectedValue(
+          new Error('Invalid code'),
+        );
+        await controller.socialCallback(
+          'bad-code',
+          'mock-state-token',
+          mockResponse,
+        );
+      });
+
+      it('redirects to sign-in with error', () => {
+        expect(mockResponse.redirect).toHaveBeenCalledWith(
+          '/sign-in?error=social_login_failed',
+        );
       });
     });
   });
