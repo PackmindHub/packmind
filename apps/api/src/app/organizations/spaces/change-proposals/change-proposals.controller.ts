@@ -28,6 +28,7 @@ import {
   ChangeProposalType,
   CreateChangeProposalCommand,
   CreateChangeProposalResponse,
+  ListChangeProposalsBySpaceResponse,
   ListCommandChangeProposalsResponse,
   OrganizationId,
   RecipeId,
@@ -281,6 +282,59 @@ export class OrganizationsSpacesChangeProposalsController {
           organizationId,
           spaceId,
           type: body.type,
+          error: errorMessage,
+        },
+      );
+      throw error;
+    }
+  }
+
+  /**
+   * List change proposals grouped by artefact type for a space
+   * GET /organizations/:orgId/spaces/:spaceId/grouped-change-proposals
+   */
+  @Get('grouped-change-proposals')
+  async listChangeProposalsBySpace(
+    @Param('orgId') organizationId: OrganizationId,
+    @Param('spaceId') spaceId: SpaceId,
+    @Req() request: AuthenticatedRequest,
+  ): Promise<ListChangeProposalsBySpaceResponse> {
+    this.logger.info(
+      'GET /organizations/:orgId/spaces/:spaceId/grouped-change-proposals - Listing grouped change proposals',
+      {
+        organizationId,
+        spaceId,
+      },
+    );
+
+    try {
+      const result =
+        await this.changeProposalsService.listChangeProposalsBySpace({
+          userId: request.user.userId,
+          organizationId,
+          spaceId,
+        });
+
+      this.logger.info(
+        'GET /organizations/:orgId/spaces/:spaceId/grouped-change-proposals - Grouped change proposals listed successfully',
+        {
+          organizationId,
+          spaceId,
+          standardsCount: result.standards.length,
+          commandsCount: result.commands.length,
+          skillsCount: result.skills.length,
+        },
+      );
+
+      return result;
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      this.logger.error(
+        'GET /organizations/:orgId/spaces/:spaceId/grouped-change-proposals - Failed to list grouped change proposals',
+        {
+          organizationId,
+          spaceId,
           error: errorMessage,
         },
       );
