@@ -1,14 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { WorkOS } from '@workos-inc/node';
 import { Configuration } from '@packmind/node-utils';
-
-const SOCIAL_PROVIDERS = [
-  'GoogleOAuth',
-  'MicrosoftOAuth',
-  'GitHubOAuth',
-] as const;
-
-export type SocialProvider = (typeof SOCIAL_PROVIDERS)[number];
+import type { SocialProvider } from '@packmind/types';
+import { SOCIAL_PROVIDERS } from '@packmind/types';
 
 @Injectable()
 export class WorkOsService {

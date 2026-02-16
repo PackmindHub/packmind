@@ -89,6 +89,7 @@ import {
   SignInUserCommand,
   StartTrialCommand,
   StartTrialResult,
+  SocialProvider,
   User,
   UserId,
   ValidateInvitationTokenCommand,
@@ -650,7 +651,25 @@ export class AccountsAdapter
       .getUserByEmailCaseInsensitive(email);
   }
 
-  public async createSocialLoginUser(email: string): Promise<User> {
-    return this.accountsServices.getUserService().createSocialLoginUser(email);
+  public async createSocialLoginUser(
+    email: string,
+    provider: SocialProvider,
+  ): Promise<User> {
+    const user = await this.accountsServices
+      .getUserService()
+      .createSocialLoginUser(email);
+    await this.accountsServices
+      .getUserMetadataService()
+      .addSocialProvider(user.id, provider);
+    return user;
+  }
+
+  public async addSocialProvider(
+    userId: UserId,
+    provider: SocialProvider,
+  ): Promise<void> {
+    await this.accountsServices
+      .getUserMetadataService()
+      .addSocialProvider(userId, provider);
   }
 }
