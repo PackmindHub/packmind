@@ -16,7 +16,7 @@ const PROVIDER_CONFIG: Record<
   { label: string; icon: ComponentType; color: string }
 > = {
   GoogleOAuth: { label: 'Google', icon: SiGoogle, color: '#4285F4' },
-  GitHubOAuth: { label: 'GitHub', icon: SiGithub, color: '#181717' },
+  GitHubOAuth: { label: 'GitHub', icon: SiGithub, color: '#FFFFFF' },
   MicrosoftOAuth: { label: 'Microsoft', icon: FaMicrosoft, color: '#00A4EF' },
 };
 

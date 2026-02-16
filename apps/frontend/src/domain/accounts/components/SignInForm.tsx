@@ -27,7 +27,12 @@ export default function SignInForm() {
     if (!isSocialOrgSelection || !meData?.authenticated) return;
 
     const result: SignInUserResponse = {
-      user: meData.user,
+      user: {
+        ...meData.user,
+        passwordHash: null, // Social login users don't have passwords
+        active: true, // User is authenticated
+        trial: false, // Default value
+      },
       organizations: meData.organizations,
     };
     setSignInResult(result);
