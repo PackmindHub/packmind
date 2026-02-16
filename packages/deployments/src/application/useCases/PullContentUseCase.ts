@@ -11,17 +11,16 @@ import {
   CodingAgent,
   IAccountsPort,
   ICodingAgentPort,
-  IGitPort,
   IPullContentResponse,
   IRecipesPort,
   ISkillsPort,
   IStandardsPort,
   OrganizationId,
+  PackageId,
   PullContentCommand,
   RecipeVersion,
   SkillVersion,
   StandardVersion,
-  Target,
   createOrganizationId,
   createUserId,
   normalizeCodingAgents,
@@ -32,8 +31,7 @@ import { NoPackageSlugsProvidedError } from '../../domain/errors/NoPackageSlugsP
 import { PackagesNotFoundError } from '../../domain/errors/PackagesNotFoundError';
 import { RenderModeConfigurationService } from '../services/RenderModeConfigurationService';
 import { IDistributionRepository } from '../../domain/repositories/IDistributionRepository';
-import { TargetService } from '../services/TargetService';
-import { parseGitRepoInfo } from './notifyDistribution/notifyDistribution.usecase';
+import { TargetResolutionService } from '../services/TargetResolutionService';
 
 const origin = 'PullContentUseCase';
 
@@ -63,9 +61,8 @@ export class PullContentUseCase extends AbstractMemberUseCase<
     private readonly renderModeConfigurationService: RenderModeConfigurationService,
     accountsPort: IAccountsPort,
     private readonly eventEmitterService: PackmindEventEmitterService,
-    private readonly gitPort: IGitPort,
     private readonly distributionRepository: IDistributionRepository,
-    private readonly targetService: TargetService,
+    private readonly targetResolutionService: TargetResolutionService,
     private readonly packmindConfigService: PackmindConfigService = new PackmindConfigService(),
     logger: PackmindLogger = new PackmindLogger(origin, LogLevel.INFO),
   ) {
@@ -378,11 +375,11 @@ export class PullContentUseCase extends AbstractMemberUseCase<
         command.gitBranch &&
         command.relativePath
       ) {
-        const currentPackageIds = packages.map((p) => p.id as string);
+        const currentPackageIds = packages.map((p) => p.id) as PackageId[];
 
         // Query distribution history for previously deployed artifacts
-        const previouslyDeployedStandards =
-          await this.findPreviouslyDeployedStandardVersions(
+        const previouslyDeployed =
+          await this.targetResolutionService.findPreviouslyDeployedVersions(
             command.organization.id,
             command.userId,
             command.gitRemoteUrl,
@@ -391,65 +388,39 @@ export class PullContentUseCase extends AbstractMemberUseCase<
             currentPackageIds,
           );
 
-        if (previouslyDeployedStandards.length > 0) {
+        if (previouslyDeployed.standardVersions.length > 0) {
           this.logger.info(
             'Retrieved previously deployed standard versions from distribution history',
-            { count: previouslyDeployedStandards.length },
+            { count: previouslyDeployed.standardVersions.length },
           );
 
-          // Add to removed standards - they'll be filtered later by filterSharedArtifacts
-          // if they're still present in current package content
           removedStandardVersions = [
             ...removedStandardVersions,
-            ...previouslyDeployedStandards,
+            ...previouslyDeployed.standardVersions,
           ];
         }
 
-        const previouslyDeployedRecipes =
-          await this.findPreviouslyDeployedRecipeVersions(
-            command.organization.id,
-            command.userId,
-            command.gitRemoteUrl,
-            command.gitBranch,
-            command.relativePath,
-            currentPackageIds,
-          );
-
-        if (previouslyDeployedRecipes.length > 0) {
+        if (previouslyDeployed.recipeVersions.length > 0) {
           this.logger.info(
             'Retrieved previously deployed recipe versions from distribution history',
-            { count: previouslyDeployedRecipes.length },
+            { count: previouslyDeployed.recipeVersions.length },
           );
 
-          // Add to removed recipes - they'll be filtered later by filterSharedArtifacts
-          // if they're still present in current package content
           removedRecipeVersions = [
             ...removedRecipeVersions,
-            ...previouslyDeployedRecipes,
+            ...previouslyDeployed.recipeVersions,
           ];
         }
 
-        const previouslyDeployedSkills =
-          await this.findPreviouslyDeployedSkillVersions(
-            command.organization.id,
-            command.userId,
-            command.gitRemoteUrl,
-            command.gitBranch,
-            command.relativePath,
-            currentPackageIds,
-          );
-
-        if (previouslyDeployedSkills.length > 0) {
+        if (previouslyDeployed.skillVersions.length > 0) {
           this.logger.info(
             'Retrieved previously deployed skill versions from distribution history',
-            { count: previouslyDeployedSkills.length },
+            { count: previouslyDeployed.skillVersions.length },
           );
 
-          // Add to removed skills - they'll be filtered later by filterSharedArtifacts
-          // if they're still present in current package content
           removedSkillVersions = [
             ...removedSkillVersions,
-            ...previouslyDeployedSkills,
+            ...previouslyDeployed.skillVersions,
           ];
         }
       }
@@ -543,13 +514,14 @@ export class PullContentUseCase extends AbstractMemberUseCase<
 
       if (command.gitRemoteUrl && command.gitBranch && command.relativePath) {
         try {
-          const target = await this.findTargetFromGitInfo(
-            command.organization.id,
-            command.userId,
-            command.gitRemoteUrl,
-            command.gitBranch,
-            command.relativePath,
-          );
+          const target =
+            await this.targetResolutionService.findTargetFromGitInfo(
+              command.organization.id,
+              command.userId,
+              command.gitRemoteUrl,
+              command.gitBranch,
+              command.relativePath,
+            );
 
           if (target) {
             const previousRenderModes =
@@ -876,226 +848,5 @@ export class PullContentUseCase extends AbstractMemberUseCase<
     );
 
     return { recipeVersions, standardVersions, skillVersions };
-  }
-
-  /**
-   * Finds a target from git info by looking up the repository and path.
-   * Shared logic used by all findPreviouslyDeployed* methods.
-   */
-  private async findTargetFromGitInfo(
-    organizationId: OrganizationId,
-    userId: string,
-    gitRemoteUrl: string,
-    gitBranch: string,
-    relativePath: string,
-  ): Promise<Target | null> {
-    // Parse git remote URL to find repo
-    const { owner, repo } = parseGitRepoInfo(gitRemoteUrl);
-
-    // List all providers for the organization
-    const providersResponse = await this.gitPort.listProviders({
-      userId,
-      organizationId,
-    });
-
-    // Find the git repo across all providers
-    let gitRepoId: string | null = null;
-    for (const provider of providersResponse.providers) {
-      const repos = await this.gitPort.listRepos(provider.id);
-      const matchingRepo = repos.find(
-        (r) =>
-          r.owner.toLowerCase() === owner.toLowerCase() &&
-          r.repo.toLowerCase() === repo.toLowerCase() &&
-          r.branch === gitBranch,
-      );
-      if (matchingRepo) {
-        gitRepoId = matchingRepo.id;
-        break;
-      }
-    }
-
-    if (!gitRepoId) {
-      this.logger.info(
-        'Git repo not found in distribution history, cannot query previous deployments',
-        { owner, repo, branch: gitBranch },
-      );
-      return null;
-    }
-
-    // Find the target by gitRepoId and relativePath (using TargetService)
-    const targets = await this.targetService.getTargetsByGitRepoId(
-      gitRepoId as ReturnType<typeof import('@packmind/types').createGitRepoId>,
-    );
-
-    // Normalize relativePath for comparison
-    let normalizedPath = relativePath;
-    if (!normalizedPath.startsWith('/')) {
-      normalizedPath = '/' + normalizedPath;
-    }
-    if (!normalizedPath.endsWith('/')) {
-      normalizedPath = normalizedPath + '/';
-    }
-
-    const target = targets.find((t) => t.path === normalizedPath);
-
-    if (!target) {
-      this.logger.info(
-        'Target not found in distribution history, cannot query previous deployments',
-        { gitRepoId, relativePath: normalizedPath },
-      );
-      return null;
-    }
-
-    return target;
-  }
-
-  /**
-   * Finds previously deployed skill versions for a target by querying distribution history.
-   * This is used to detect skills that were removed from packages between deployments.
-   */
-  private async findPreviouslyDeployedSkillVersions(
-    organizationId: OrganizationId,
-    userId: string,
-    gitRemoteUrl: string,
-    gitBranch: string,
-    relativePath: string,
-    currentPackageIds: string[],
-  ): Promise<SkillVersion[]> {
-    try {
-      const target = await this.findTargetFromGitInfo(
-        organizationId,
-        userId,
-        gitRemoteUrl,
-        gitBranch,
-        relativePath,
-      );
-
-      if (!target) {
-        return [];
-      }
-
-      // Query previously deployed skill versions for this target and packages
-      const previousSkillVersions =
-        await this.distributionRepository.findActiveSkillVersionsByTargetAndPackages(
-          organizationId,
-          target.id,
-          currentPackageIds as ReturnType<
-            typeof import('@packmind/types').createPackageId
-          >[],
-        );
-
-      this.logger.info(
-        'Found previously deployed skill versions from distribution history',
-        { targetId: target.id, count: previousSkillVersions.length },
-      );
-
-      return previousSkillVersions;
-    } catch (error) {
-      this.logger.info(
-        'Failed to query distribution history for previous skill versions',
-        { error: error instanceof Error ? error.message : String(error) },
-      );
-      return [];
-    }
-  }
-
-  /**
-   * Finds previously deployed standard versions for a target by querying distribution history.
-   * This is used to detect standards that were removed from packages between deployments.
-   */
-  private async findPreviouslyDeployedStandardVersions(
-    organizationId: OrganizationId,
-    userId: string,
-    gitRemoteUrl: string,
-    gitBranch: string,
-    relativePath: string,
-    currentPackageIds: string[],
-  ): Promise<StandardVersion[]> {
-    try {
-      const target = await this.findTargetFromGitInfo(
-        organizationId,
-        userId,
-        gitRemoteUrl,
-        gitBranch,
-        relativePath,
-      );
-
-      if (!target) {
-        return [];
-      }
-
-      // Query previously deployed standard versions for this target and packages
-      const previousStandardVersions =
-        await this.distributionRepository.findActiveStandardVersionsByTargetAndPackages(
-          organizationId,
-          target.id,
-          currentPackageIds as ReturnType<
-            typeof import('@packmind/types').createPackageId
-          >[],
-        );
-
-      this.logger.info(
-        'Found previously deployed standard versions from distribution history',
-        { targetId: target.id, count: previousStandardVersions.length },
-      );
-
-      return previousStandardVersions;
-    } catch (error) {
-      this.logger.info(
-        'Failed to query distribution history for previous standard versions',
-        { error: error instanceof Error ? error.message : String(error) },
-      );
-      return [];
-    }
-  }
-
-  /**
-   * Finds previously deployed recipe versions for a target by querying distribution history.
-   * This is used to detect recipes that were removed from packages between deployments.
-   */
-  private async findPreviouslyDeployedRecipeVersions(
-    organizationId: OrganizationId,
-    userId: string,
-    gitRemoteUrl: string,
-    gitBranch: string,
-    relativePath: string,
-    currentPackageIds: string[],
-  ): Promise<RecipeVersion[]> {
-    try {
-      const target = await this.findTargetFromGitInfo(
-        organizationId,
-        userId,
-        gitRemoteUrl,
-        gitBranch,
-        relativePath,
-      );
-
-      if (!target) {
-        return [];
-      }
-
-      // Query previously deployed recipe versions for this target and packages
-      const previousRecipeVersions =
-        await this.distributionRepository.findActiveRecipeVersionsByTargetAndPackages(
-          organizationId,
-          target.id,
-          currentPackageIds as ReturnType<
-            typeof import('@packmind/types').createPackageId
-          >[],
-        );
-
-      this.logger.info(
-        'Found previously deployed recipe versions from distribution history',
-        { targetId: target.id, count: previousRecipeVersions.length },
-      );
-
-      return previousRecipeVersions;
-    } catch (error) {
-      this.logger.info(
-        'Failed to query distribution history for previous recipe versions',
-        { error: error instanceof Error ? error.message : String(error) },
-      );
-      return [];
-    }
   }
 }

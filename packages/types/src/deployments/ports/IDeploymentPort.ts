@@ -16,6 +16,8 @@ import {
   DownloadDefaultSkillsZipForAgentResponse,
   FindActiveStandardVersionsByTargetCommand,
   FindActiveStandardVersionsByTargetResponse,
+  GetDeployedContentCommand,
+  GetDeployedContentResponse,
   GetDeploymentOverviewCommand,
   GetPackageByIdCommand,
   GetPackageByIdResponse,
@@ -468,4 +470,18 @@ export interface IDeploymentPort {
   downloadDefaultSkillsZipForAgent(
     command: DownloadDefaultSkillsZipForAgentCommand,
   ): Promise<DownloadDefaultSkillsZipForAgentResponse>;
+
+  /**
+   * Gets the deployed content for a specific target identified by git repo, branch, and path.
+   *
+   * Fetches the currently deployed artifact versions (standards, recipes, skills) for the
+   * target and renders them for coding agents. This is a simpler alternative to pullAllContent
+   * that only returns what is currently deployed, without any removal or configuration logic.
+   *
+   * @param command - Command containing git target info and organization context
+   * @returns Promise resolving to file updates for all coding agents
+   */
+  getDeployedContent(
+    command: GetDeployedContentCommand,
+  ): Promise<GetDeployedContentResponse>;
 }

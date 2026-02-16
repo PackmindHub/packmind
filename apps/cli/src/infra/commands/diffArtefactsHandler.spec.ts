@@ -53,7 +53,11 @@ describe('diffArtefactsHandler', () => {
       error: mockError,
     };
 
-    mockPackmindCliHexa.tryGetGitRepositoryRoot.mockResolvedValue(null);
+    mockPackmindCliHexa.tryGetGitRepositoryRoot.mockResolvedValue('/test');
+    mockPackmindCliHexa.getGitRemoteUrlFromPath.mockReturnValue(
+      'git@github.com:org/repo.git',
+    );
+    mockPackmindCliHexa.getCurrentBranch.mockReturnValue('main');
   });
 
   afterEach(() => {
@@ -790,7 +794,6 @@ describe('diffArtefactsHandler', () => {
       expect(mockPackmindCliHexa.diffArtefacts).toHaveBeenCalledWith({
         baseDirectory: '/test/project',
         packagesSlugs: ['my-package'],
-        previousPackagesSlugs: ['my-package'],
         gitRemoteUrl: 'git@github.com:org/repo.git',
         gitBranch: 'main',
         relativePath: '/project/',
@@ -809,21 +812,56 @@ describe('diffArtefactsHandler', () => {
       mockPackmindCliHexa.getGitRemoteUrlFromPath.mockImplementation(() => {
         throw new Error('No remote');
       });
-      mockPackmindCliHexa.diffArtefacts.mockResolvedValue([]);
     });
 
-    it('calls diffArtefacts without git info', async () => {
+    it('displays error about missing git info', async () => {
       await diffArtefactsHandler(deps);
 
-      expect(mockPackmindCliHexa.diffArtefacts).toHaveBeenCalledWith({
-        baseDirectory: '/test/project',
-        packagesSlugs: ['my-package'],
-        previousPackagesSlugs: ['my-package'],
-        gitRemoteUrl: undefined,
-        gitBranch: undefined,
-        relativePath: undefined,
-        agents: undefined,
+      expect(mockError).toHaveBeenCalledWith(
+        '\n❌ Could not determine git repository info. The diff command requires a git repository with a remote configured.',
+      );
+    });
+
+    it('exits with code 1', async () => {
+      await diffArtefactsHandler(deps);
+
+      expect(mockExit).toHaveBeenCalledWith(1);
+    });
+
+    it('does not call diffArtefacts', async () => {
+      await diffArtefactsHandler(deps);
+
+      expect(mockPackmindCliHexa.diffArtefacts).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('when not in a git repository', () => {
+    beforeEach(() => {
+      mockPackmindCliHexa.readFullConfig.mockResolvedValue({
+        packages: { 'my-package': '*' },
       });
+
+      mockPackmindCliHexa.tryGetGitRepositoryRoot.mockResolvedValue(null);
+    });
+
+    it('displays error about missing git info', async () => {
+      await diffArtefactsHandler(deps);
+
+      expect(mockError).toHaveBeenCalledWith(
+        '\n❌ Could not determine git repository info. The diff command requires a git repository with a remote configured.',
+      );
+    });
+
+    it('exits with code 1', async () => {
+      await diffArtefactsHandler(deps);
+
+      expect(mockExit).toHaveBeenCalledWith(1);
+    });
+
+    it('does not call diffArtefacts', async () => {
+      await diffArtefactsHandler(deps);
+
+      expect(mockPackmindCliHexa.diffArtefacts).not.toHaveBeenCalled();
     });
   });
 
@@ -983,6 +1021,90 @@ describe('diffArtefactsHandler', () => {
         await diffArtefactsHandler({ ...deps, submit: true });
 
         expect(logErrorConsole).toHaveBeenCalledWith('Summary: 1 error');
+      });
+    });
+
+    describe('when submit has a ChangeProposalPayloadMismatchError', () => {
+      beforeEach(() => {
+        mockPackmindCliHexa.readFullConfig.mockResolvedValue({
+          packages: { 'my-package': '*' },
+        });
+
+        mockPackmindCliHexa.diffArtefacts.mockResolvedValue([
+          {
+            filePath: '.packmind/commands/my-command.md',
+            type: ChangeProposalType.updateCommandDescription,
+            payload: { oldValue: 'old', newValue: 'new' },
+            artifactName: 'My Command',
+            artifactType: 'command',
+          },
+        ]);
+
+        mockPackmindCliHexa.submitDiffs.mockResolvedValue({
+          submitted: 0,
+          alreadySubmitted: 0,
+          skipped: [],
+          errors: [
+            {
+              name: 'My Command',
+              message: 'Payload mismatch',
+              code: 'ChangeProposalPayloadMismatchError',
+              artifactType: 'command',
+            },
+          ],
+        });
+      });
+
+      it('displays user-friendly outdated message with artifact type', async () => {
+        const { logErrorConsole } = jest.requireMock('../utils/consoleLogger');
+        await diffArtefactsHandler({ ...deps, submit: true });
+
+        expect(logErrorConsole).toHaveBeenCalledWith(
+          'Failed to submit "My Command": command is outdated, please run packmind-cli install to update it',
+        );
+      });
+    });
+
+    describe('when submit has a non-mismatch error', () => {
+      beforeEach(() => {
+        mockPackmindCliHexa.readFullConfig.mockResolvedValue({
+          packages: { 'my-package': '*' },
+        });
+
+        mockPackmindCliHexa.diffArtefacts.mockResolvedValue([
+          {
+            filePath: '.packmind/commands/my-command.md',
+            type: ChangeProposalType.updateCommandDescription,
+            payload: { oldValue: 'old', newValue: 'new' },
+            artifactName: 'My Command',
+            artifactType: 'command',
+          },
+        ]);
+
+        mockPackmindCliHexa.submitDiffs.mockResolvedValue({
+          submitted: 0,
+          alreadySubmitted: 0,
+          skipped: [],
+          errors: [{ name: 'My Command', message: 'Server error' }],
+        });
+      });
+
+      it('displays raw error message', async () => {
+        const { logErrorConsole } = jest.requireMock('../utils/consoleLogger');
+        await diffArtefactsHandler({ ...deps, submit: true });
+
+        expect(logErrorConsole).toHaveBeenCalledWith(
+          'Failed to submit "My Command": Server error',
+        );
+      });
+
+      it('does not display outdated message', async () => {
+        const { logErrorConsole } = jest.requireMock('../utils/consoleLogger');
+        await diffArtefactsHandler({ ...deps, submit: true });
+
+        expect(logErrorConsole).not.toHaveBeenCalledWith(
+          expect.stringContaining('is outdated'),
+        );
       });
     });
 

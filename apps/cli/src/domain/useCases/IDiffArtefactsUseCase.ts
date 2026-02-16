@@ -9,10 +9,9 @@ import {
 export type IDiffArtefactsCommand = {
   baseDirectory?: string;
   packagesSlugs: string[];
-  previousPackagesSlugs?: string[];
-  gitRemoteUrl?: string;
-  gitBranch?: string;
-  relativePath?: string;
+  gitRemoteUrl: string;
+  gitBranch: string;
+  relativePath: string;
   agents?: CodingAgent[];
 };
 

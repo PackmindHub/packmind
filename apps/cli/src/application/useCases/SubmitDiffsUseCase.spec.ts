@@ -542,7 +542,12 @@ describe('SubmitDiffsUseCase', () => {
       const result = await useCase.execute({ groupedDiffs: [commandGroup] });
 
       expect(result.errors).toEqual([
-        { name: 'Command B', message: 'Duplicate proposal' },
+        {
+          name: 'Command B',
+          message: 'Duplicate proposal',
+          code: undefined,
+          artifactType: 'command',
+        },
       ]);
     });
 
@@ -550,6 +555,47 @@ describe('SubmitDiffsUseCase', () => {
       const result = await useCase.execute({ groupedDiffs: [commandGroup] });
 
       expect(result.submitted).toBe(1);
+    });
+  });
+
+  describe('when gateway returns errors with code', () => {
+    const commandGroup: ArtefactDiff[] = [
+      {
+        filePath: '.packmind/commands/cmd-a.md',
+        type: ChangeProposalType.updateCommandDescription,
+        payload: { oldValue: 'old a', newValue: 'new a' },
+        artifactName: 'Command A',
+        artifactType: 'command',
+        artifactId: 'art-a',
+        spaceId: 'spc-a',
+      },
+    ];
+
+    beforeEach(() => {
+      mockGateway.changeProposals.batchCreateChangeProposals.mockResolvedValue({
+        created: 0,
+        skipped: 0,
+        errors: [
+          {
+            index: 0,
+            message: 'Payload mismatch',
+            code: 'ChangeProposalPayloadMismatchError',
+          },
+        ],
+      });
+    });
+
+    it('propagates the error code from the gateway response', async () => {
+      const result = await useCase.execute({ groupedDiffs: [commandGroup] });
+
+      expect(result.errors).toEqual([
+        {
+          name: 'Command A',
+          message: 'Payload mismatch',
+          code: 'ChangeProposalPayloadMismatchError',
+          artifactType: 'command',
+        },
+      ]);
     });
   });
 

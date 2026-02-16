@@ -1,6 +1,7 @@
 import {
   Gateway,
   GetRenderModeConfigurationResult,
+  IGetDeployedContentUseCase,
   IGetRenderModeConfigurationUseCase,
   INotifyDistributionUseCase,
   IPullContentUseCase,
@@ -54,6 +55,24 @@ export class DeploymentGateway implements IDeploymentGateway {
 
     return this.httpClient.request(
       `/api/v0/organizations/${organizationId}/pull?${queryParams.toString()}`,
+    );
+  };
+
+  public getDeployed: Gateway<IGetDeployedContentUseCase> = async (command) => {
+    const { organizationId } = this.httpClient.getAuthContext();
+
+    return this.httpClient.request(
+      `/api/v0/organizations/${organizationId}/deployed-content`,
+      {
+        method: 'POST',
+        body: {
+          packagesSlugs: command.packagesSlugs,
+          gitRemoteUrl: command.gitRemoteUrl,
+          gitBranch: command.gitBranch,
+          relativePath: command.relativePath,
+          ...(command.agents !== undefined && { agents: command.agents }),
+        },
+      },
     );
   };
 

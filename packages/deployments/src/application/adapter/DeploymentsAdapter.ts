@@ -25,6 +25,8 @@ import {
   DownloadDefaultSkillsZipForAgentResponse,
   FindActiveStandardVersionsByTargetCommand,
   FindActiveStandardVersionsByTargetResponse,
+  GetDeployedContentCommand,
+  GetDeployedContentResponse,
   GetDeploymentOverviewCommand,
   GetPackageByIdCommand,
   GetPackageByIdResponse,
@@ -83,6 +85,7 @@ import { IDistributionRepository } from '../../domain/repositories/IDistribution
 import { IDistributedPackageRepository } from '../../domain/repositories/IDistributedPackageRepository';
 import { PublishArtifactsJobFactory } from '../../infra/jobs/PublishArtifactsJobFactory';
 import { DeploymentsServices } from '../services/DeploymentsServices';
+import { TargetResolutionService } from '../services/TargetResolutionService';
 import { AddArtefactsToPackageUsecase } from '../useCases/addArtefactsToPackage/addArtefactsToPackage.usecase';
 import { AddTargetUseCase } from '../useCases/AddTargetUseCase';
 import { CreatePackageUsecase } from '../useCases/createPackage/createPackage.usecase';
@@ -112,6 +115,7 @@ import { ListPackagesBySpaceUsecase } from '../useCases/listPackagesBySpace/list
 import { GetPackageSummaryUsecase } from '../useCases/getPackageSummary/getPackageSummary.usecase';
 import { PublishArtifactsUseCase } from '../useCases/PublishArtifactsUseCase';
 import { PublishPackagesUseCase } from '../useCases/PublishPackagesUseCase';
+import { GetDeployedContentUseCase } from '../useCases/GetDeployedContentUseCase';
 import { PullContentUseCase } from '../useCases/PullContentUseCase';
 import { UpdateRenderModeConfigurationUseCase } from '../useCases/UpdateRenderModeConfigurationUseCase';
 import { UpdateTargetUseCase } from '../useCases/UpdateTargetUseCase';
@@ -163,6 +167,7 @@ export class DeploymentsAdapter
   private _removePackageFromTargetsUseCase!: RemovePackageFromTargetsUseCase;
   private _deployDefaultSkillsUseCase!: DeployDefaultSkillsUseCase;
   private _downloadDefaultSkillsZipForAgentUseCase!: DownloadDefaultSkillsZipForAgentUseCase;
+  private _getDeployedContentUseCase!: GetDeployedContentUseCase;
 
   constructor(
     private readonly deploymentsServices: DeploymentsServices,
@@ -343,6 +348,12 @@ export class DeploymentsAdapter
         this.accountsPort,
       );
 
+    const targetResolutionService = new TargetResolutionService(
+      this.gitPort,
+      this.deploymentsServices.getTargetService(),
+      this.distributionRepository,
+    );
+
     this._pullAllContentUseCase = new PullContentUseCase(
       this.deploymentsServices.getPackageService(),
       this.recipesPort,
@@ -352,9 +363,18 @@ export class DeploymentsAdapter
       this.deploymentsServices.getRenderModeConfigurationService(),
       this.accountsPort,
       ports.eventEmitterService,
-      this.gitPort,
       this.distributionRepository,
-      this.deploymentsServices.getTargetService(),
+      targetResolutionService,
+    );
+
+    this._getDeployedContentUseCase = new GetDeployedContentUseCase(
+      targetResolutionService,
+      this.distributionRepository,
+      this.codingAgentPort,
+      this.deploymentsServices.getRenderModeConfigurationService(),
+      this.deploymentsServices.getPackageService(),
+      this.skillsPort,
+      this.accountsPort,
     );
 
     this._listPackagesBySpaceUseCase = new ListPackagesBySpaceUsecase(
@@ -668,5 +688,11 @@ export class DeploymentsAdapter
     command: DownloadDefaultSkillsZipForAgentCommand,
   ): Promise<DownloadDefaultSkillsZipForAgentResponse> {
     return this._downloadDefaultSkillsZipForAgentUseCase.execute(command);
+  }
+
+  async getDeployedContent(
+    command: GetDeployedContentCommand,
+  ): Promise<GetDeployedContentResponse> {
+    return this._getDeployedContentUseCase.execute(command);
   }
 }
