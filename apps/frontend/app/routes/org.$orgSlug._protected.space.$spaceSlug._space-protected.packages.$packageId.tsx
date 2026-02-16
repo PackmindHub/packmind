@@ -1,11 +1,10 @@
 import {
-  GetPackageByIdResponse,
   ListPackagesBySpaceResponse,
   OrganizationId,
   Package,
   PackageId,
 } from '@packmind/types';
-import { NavLink, Outlet, redirect } from 'react-router';
+import { Outlet, redirect } from 'react-router';
 import { getMeQueryOptions } from '../../src/domain/accounts/api/queries/UserQueries';
 import {
   getPackageByIdOptions,
@@ -57,25 +56,6 @@ export async function clientLoader({
     ),
   );
 }
-
-export const handle = {
-  crumb: ({
-    params,
-    data,
-  }: {
-    params: { orgSlug: string; spaceSlug: string; packageId: string };
-    data: GetPackageByIdResponse;
-  }) => {
-    const packageId = params.packageId;
-    return (
-      <NavLink
-        to={routes.space.toPackage(params.orgSlug, params.spaceSlug, packageId)}
-      >
-        {data.package.name}
-      </NavLink>
-    );
-  },
-};
 
 export default function PackageDetailsRouteModule() {
   return <Outlet />;

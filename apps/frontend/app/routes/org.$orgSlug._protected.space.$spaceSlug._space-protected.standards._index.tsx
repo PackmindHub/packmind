@@ -4,7 +4,6 @@ import { PMPage, PMVStack } from '@packmind/ui';
 import { useAuthContext } from '../../src/domain/accounts/hooks/useAuthContext';
 import { StandardsList } from '../../src/domain/standards/components/StandardsList';
 import { StandardsCreateButton } from '../../src/domain/standards/components/StandardsCreateButton';
-import { AutobreadCrumb } from '../../src/shared/components/navigation/AutobreadCrumb';
 
 export default function OrgStandardsIndex() {
   const { orgSlug, spaceSlug } = useParams<{
@@ -22,7 +21,6 @@ export default function OrgStandardsIndex() {
     <PMPage
       title="Standards"
       subtitle="Standards define the rules the AI should always follow — use them to ensure consistent behavior across all interactions."
-      breadcrumbComponent={<AutobreadCrumb />}
       actions={
         !isEmpty &&
         spaceSlug && (

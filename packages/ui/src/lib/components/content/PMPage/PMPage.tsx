@@ -45,7 +45,9 @@ export const PMPage: React.FC<IPMPageProps> = ({
         textAlign={centeredHeader ? 'center' : 'left'}
       >
         <VStack align="stretch" gap={0} flex={1}>
-          <PMHeading level={titleLevel}>{title}</PMHeading>
+          <PMHeading level={titleLevel} fontSize={'2xl'}>
+            {title}
+          </PMHeading>
           {subtitle && (
             <PMText variant="body" fontWeight={'medium'} color="tertiary">
               {subtitle}

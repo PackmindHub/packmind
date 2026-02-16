@@ -1,6 +1,5 @@
 import {
   type LoaderFunctionArgs,
-  NavLink,
   Outlet,
   redirect,
   useNavigate,
@@ -50,12 +49,6 @@ export async function clientLoader({ params }: LoaderFunctionArgs) {
     throw redirect(hasAccessResponse.redirect.url);
   }
 }
-
-export const handle = {
-  crumb: ({ params }: { params: { orgSlug: string } }) => {
-    return <NavLink to={routes.org.toSetup(params.orgSlug)}>Setup</NavLink>;
-  },
-};
 
 export default function SetupIndexRouteModule() {
   const { data: me } = useGetMeQuery();

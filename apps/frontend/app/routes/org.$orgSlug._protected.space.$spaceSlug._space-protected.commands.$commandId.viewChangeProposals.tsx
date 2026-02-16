@@ -1,4 +1,4 @@
-import { useParams, NavLink } from 'react-router';
+import { useParams } from 'react-router';
 import { PMPage, PMBox, PMVStack, PMSpinner, PMText } from '@packmind/ui';
 import {
   ChangeProposalStatus,
@@ -7,28 +7,6 @@ import {
 } from '@packmind/types';
 import { ChangeProposalsTable } from '../../src/domain/recipes/components/ChangeProposalsTable';
 import { useGetChangeProposalsQuery } from '../../src/domain/recipes/api/queries/ChangeProposalsQueries';
-import { AutobreadCrumb } from '../../src/shared/components/navigation/AutobreadCrumb';
-import { routes } from '../../src/shared/utils/routes';
-
-export const handle = {
-  crumb: ({
-    params,
-  }: {
-    params: { orgSlug: string; spaceSlug: string; commandId: string };
-  }) => {
-    return (
-      <NavLink
-        to={routes.space.toCommandChangeProposals(
-          params.orgSlug,
-          params.spaceSlug,
-          params.commandId,
-        )}
-      >
-        Changes to review
-      </NavLink>
-    );
-  },
-};
 
 export default function ViewChangeProposalsRouteModule() {
   const { commandId } = useParams<{
@@ -53,7 +31,6 @@ export default function ViewChangeProposalsRouteModule() {
       <PMPage
         title="Loading Change Proposals..."
         subtitle="Please wait while we fetch the change proposals"
-        breadcrumbComponent={<AutobreadCrumb />}
       >
         <PMBox
           display="flex"
@@ -70,11 +47,7 @@ export default function ViewChangeProposalsRouteModule() {
 
   if (isError || !proposals) {
     return (
-      <PMPage
-        title="Error"
-        subtitle="Failed to load change proposals"
-        breadcrumbComponent={<AutobreadCrumb />}
-      >
+      <PMPage title="Error" subtitle="Failed to load change proposals">
         <PMBox display="flex" justifyContent="center" py={8}>
           <PMVStack gap={4}>
             <PMText>Failed to load change proposals. Please try again.</PMText>
@@ -88,7 +61,6 @@ export default function ViewChangeProposalsRouteModule() {
     <PMPage
       title="Change proposals"
       subtitle="Review and manage proposed changes to this command"
-      breadcrumbComponent={<AutobreadCrumb />}
     >
       <ChangeProposalsTable
         proposals={getPendingProposals(proposals)}

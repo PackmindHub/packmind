@@ -1,10 +1,9 @@
-import { OrganizationId, Recipe, RecipeId } from '@packmind/types';
-import { NavLink, Outlet } from 'react-router';
+import { OrganizationId, RecipeId } from '@packmind/types';
+import { Outlet } from 'react-router';
 import { getMeQueryOptions } from '../../src/domain/accounts/api/queries/UserQueries';
 import { getRecipeByIdOptions } from '../../src/domain/recipes/api/queries/RecipesQueries';
 import { getSpaceBySlugQueryOptions } from '../../src/domain/spaces/api/queries/SpacesQueries';
 import { queryClient } from '../../src/shared/data/queryClient';
-import { routes } from '../../src/shared/utils/routes';
 
 export async function clientLoader({
   params,
@@ -34,24 +33,6 @@ export async function clientLoader({
   );
 }
 
-export const handle = {
-  crumb: ({
-    params,
-    data,
-  }: {
-    params: { orgSlug: string; spaceSlug: string; commandId: string };
-    data: Recipe;
-  }) => {
-    const commandId = params.commandId;
-    return (
-      <NavLink
-        to={routes.space.toCommand(params.orgSlug, params.spaceSlug, commandId)}
-      >
-        {data.name}
-      </NavLink>
-    );
-  },
-};
 export default function CommandDetailsRouteModule() {
   return <Outlet />;
 }
