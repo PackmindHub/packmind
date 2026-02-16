@@ -21,7 +21,7 @@ export class AddSocialProvidersToUserMetadata1768700000000 implements MigrationI
           name: 'social_providers',
           type: 'text',
           isArray: true,
-          default: 'ARRAY[]::text[]',
+          default: "'{}'",
           isNullable: false,
         }),
       );
