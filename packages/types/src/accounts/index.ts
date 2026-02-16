@@ -1,5 +1,6 @@
 export * from './ClientSource';
 export * from './Organization';
+export * from './SocialProvider';
 export * from './User';
 export * from './UserMetadata';
 export * from './contracts';

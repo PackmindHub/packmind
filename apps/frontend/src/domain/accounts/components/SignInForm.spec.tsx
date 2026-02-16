@@ -9,6 +9,7 @@ import SignInForm from './SignInForm';
 import {
   useSignInMutation,
   useSelectOrganizationMutation,
+  useSocialProvidersQuery,
 } from '../api/queries/AuthQueries';
 import { useCreateOrganizationMutation } from '../api/queries/AccountsQueries';
 import { SignInUserResponse } from '@packmind/types';
@@ -16,6 +17,7 @@ import { SignInUserResponse } from '@packmind/types';
 jest.mock('../api/queries/AuthQueries', () => ({
   useSignInMutation: jest.fn(),
   useSelectOrganizationMutation: jest.fn(),
+  useSocialProvidersQuery: jest.fn(),
 }));
 
 jest.mock('../api/queries/AccountsQueries', () => ({
@@ -62,9 +64,18 @@ describe('SignInForm', () => {
     useCreateOrganizationMutation as jest.MockedFunction<
       typeof useCreateOrganizationMutation
     >;
+  const mockUseSocialProvidersQuery =
+    useSocialProvidersQuery as jest.MockedFunction<
+      typeof useSocialProvidersQuery
+    >;
 
   beforeEach(() => {
     jest.clearAllMocks();
+    // Mock social providers query to return empty list
+    mockUseSocialProvidersQuery.mockReturnValue({
+      data: { providers: [] },
+      isLoading: false,
+    } as ReturnType<typeof useSocialProvidersQuery>);
   });
 
   const createMockMutation = <T = unknown,>(overrides = {}) =>

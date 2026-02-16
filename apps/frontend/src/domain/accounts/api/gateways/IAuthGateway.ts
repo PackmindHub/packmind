@@ -119,4 +119,5 @@ export interface IAuthGateway {
   createCliLoginCode(): Promise<CreateCliLoginCodeResponse>;
   getOnboardingStatus(): Promise<GetUserOnboardingStatusResponse>;
   completeOnboarding(): Promise<CompleteUserOnboardingResponse>;
+  getSocialProviders(): Promise<{ providers: string[] }>;
 }

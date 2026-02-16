@@ -61,6 +61,7 @@ import {
   ValidatePasswordCommand,
   ValidatePasswordResetTokenCommand,
   ValidatePasswordResetTokenResponse,
+  SocialProvider,
 } from '../index';
 
 /**
@@ -197,4 +198,9 @@ export interface IAccountsPort {
   activateTrialAccount(
     command: ActivateTrialAccountCommand,
   ): Promise<ActivateTrialAccountResult>;
+
+  // Social login operations
+  getUserByEmail(email: string): Promise<User | null>;
+  createSocialLoginUser(email: string, provider: SocialProvider): Promise<User>;
+  addSocialProvider(userId: UserId, provider: SocialProvider): Promise<void>;
 }

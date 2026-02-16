@@ -78,6 +78,25 @@ export class RequestPasswordResetUseCase implements IRequestPasswordResetUseCase
       };
     }
 
+    // Check if user is social-only (no password set)
+    if (user.passwordHash === null) {
+      this.logger.info(
+        'Password reset requested for social-only user - sending reminder',
+        {
+          userId: user.id,
+          email: maskEmail(user.email),
+        },
+      );
+      await this.passwordResetTokenService.sendSocialLoginReminderEmail(
+        user.email,
+      );
+      return {
+        success: true,
+        message:
+          'If your email is registered, you will receive a password reset link shortly.',
+      };
+    }
+
     try {
       // Create password reset token and send email
       const request: PasswordResetRequest = {

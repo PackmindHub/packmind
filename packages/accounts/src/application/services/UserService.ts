@@ -187,6 +187,41 @@ export class UserService {
     return this.userRepository.findByEmail(email);
   }
 
+  async createSocialLoginUser(email: string): Promise<User> {
+    const normalizedEmail = email.trim().toLowerCase();
+    this.logger.info('Creating social login user', {
+      email: maskEmail(normalizedEmail),
+    });
+
+    const existingUser =
+      await this.getUserByEmailCaseInsensitive(normalizedEmail);
+    if (existingUser) {
+      this.logger.info(
+        'Social login user creation skipped - user already exists',
+        {
+          email: maskEmail(normalizedEmail),
+        },
+      );
+      return existingUser;
+    }
+
+    const newUser: User = {
+      id: createUserId(uuidv4()),
+      email: normalizedEmail,
+      passwordHash: null,
+      active: true,
+      memberships: [],
+      trial: false,
+    };
+
+    const createdUser = await this.userRepository.add(newUser);
+    this.logger.info('Social login user created successfully', {
+      userId: createdUser.id,
+      email: maskEmail(normalizedEmail),
+    });
+    return createdUser;
+  }
+
   async getUserByEmailCaseInsensitive(email: string): Promise<User | null> {
     this.logger.info('Getting user by email (case-insensitive)', {
       email: maskEmail(email),

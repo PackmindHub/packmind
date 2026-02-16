@@ -68,6 +68,7 @@ describe('CompleteUserOnboardingUseCase', () => {
           id: 'metadata-1' as never,
           userId,
           onboardingCompleted: true,
+          socialProviders: [],
         });
 
         result = await useCase.executeForMembers(command);

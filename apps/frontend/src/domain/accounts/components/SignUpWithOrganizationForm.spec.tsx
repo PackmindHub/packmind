@@ -10,6 +10,7 @@ import {
   useSignUpWithOrganizationMutation,
   useSignInMutation,
   useCheckEmailAvailabilityMutation,
+  useSocialProvidersQuery,
 } from '../api/queries/AuthQueries';
 
 // Mock the queries
@@ -17,6 +18,7 @@ jest.mock('../api/queries/AuthQueries', () => ({
   useSignUpWithOrganizationMutation: jest.fn(),
   useSignInMutation: jest.fn(),
   useCheckEmailAvailabilityMutation: jest.fn(),
+  useSocialProvidersQuery: jest.fn(),
 }));
 
 // Mock the error utility
@@ -62,6 +64,10 @@ describe('SignUpWithOrganizationForm', () => {
     useCheckEmailAvailabilityMutation as jest.MockedFunction<
       typeof useCheckEmailAvailabilityMutation
     >;
+  const mockUseSocialProvidersQuery =
+    useSocialProvidersQuery as jest.MockedFunction<
+      typeof useSocialProvidersQuery
+    >;
 
   afterEach(() => {
     jest.clearAllMocks();
@@ -101,6 +107,10 @@ describe('SignUpWithOrganizationForm', () => {
       mockUseCheckEmailAvailabilityMutation.mockReturnValue(
         createEmailCheckMutation(),
       );
+      mockUseSocialProvidersQuery.mockReturnValue({
+        data: { providers: [] },
+        isLoading: false,
+      } as ReturnType<typeof useSocialProvidersQuery>);
 
       renderWithProviders(<SignUpWithOrganizationForm />);
     });
@@ -158,6 +168,10 @@ describe('SignUpWithOrganizationForm', () => {
       mockUseCheckEmailAvailabilityMutation.mockReturnValue(
         createEmailCheckMutation(),
       );
+      mockUseSocialProvidersQuery.mockReturnValue({
+        data: { providers: [] },
+        isLoading: false,
+      } as ReturnType<typeof useSocialProvidersQuery>);
 
       renderWithProviders(<SignUpWithOrganizationForm />);
 
@@ -193,6 +207,10 @@ describe('SignUpWithOrganizationForm', () => {
     mockUseCheckEmailAvailabilityMutation.mockReturnValue(
       createEmailCheckMutation(),
     );
+    mockUseSocialProvidersQuery.mockReturnValue({
+      data: { providers: [] },
+      isLoading: false,
+    } as ReturnType<typeof useSocialProvidersQuery>);
 
     renderWithProviders(<SignUpWithOrganizationForm />);
 
@@ -208,6 +226,10 @@ describe('SignUpWithOrganizationForm', () => {
     mockUseSignInMutation.mockReturnValue(
       createSignInMutation({ isPending: true }),
     );
+    mockUseSocialProvidersQuery.mockReturnValue({
+      data: { providers: [] },
+      isLoading: false,
+    } as ReturnType<typeof useSocialProvidersQuery>);
 
     renderWithProviders(<SignUpWithOrganizationForm />);
 
@@ -228,6 +250,13 @@ describe('SignUpWithOrganizationForm', () => {
 
       mockUseSignUpWithOrganizationMutation.mockReturnValue(mockSignUpMutation);
       mockUseSignInMutation.mockReturnValue(mockSignInMutation);
+      mockUseCheckEmailAvailabilityMutation.mockReturnValue(
+        createEmailCheckMutation(),
+      );
+      mockUseSocialProvidersQuery.mockReturnValue({
+        data: { providers: [] },
+        isLoading: false,
+      } as ReturnType<typeof useSocialProvidersQuery>);
 
       renderWithProviders(<SignUpWithOrganizationForm />);
 
@@ -303,6 +332,13 @@ describe('SignUpWithOrganizationForm', () => {
 
       mockUseSignUpWithOrganizationMutation.mockReturnValue(mockSignUpMutation);
       mockUseSignInMutation.mockReturnValue(mockSignInMutation);
+      mockUseCheckEmailAvailabilityMutation.mockReturnValue(
+        createEmailCheckMutation(),
+      );
+      mockUseSocialProvidersQuery.mockReturnValue({
+        data: { providers: [] },
+        isLoading: false,
+      } as ReturnType<typeof useSocialProvidersQuery>);
 
       renderWithProviders(<SignUpWithOrganizationForm />);
 

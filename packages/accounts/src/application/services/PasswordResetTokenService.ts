@@ -219,6 +219,41 @@ If you didn't request this password reset, you can safely ignore this email.`;
     return expirationDate.toUTCString();
   }
 
+  async sendSocialLoginReminderEmail(email: string): Promise<void> {
+    const applicationUrl = await this.getApplicationUrl();
+    const signInUrl = `${applicationUrl}/sign-in`;
+
+    const subject = 'Sign in to your Packmind account';
+
+    const contentHtml = `
+      <p>Hello ${email},</p>
+      <p>We received a request to reset your password for your Packmind account.</p>
+      <p>Your account uses social login. Please sign in using your social login provider.</p>
+      <p><a href="${signInUrl}">Sign in to Packmind</a></p>
+      <p>If you didn't request this, you can safely ignore this email.</p>
+    `;
+
+    const contentText = `Hello ${email},
+
+We received a request to reset your password for your Packmind account.
+Your account uses social login. Please sign in using your social login provider.
+
+Sign in to Packmind: ${signInUrl}
+
+If you didn't request this, you can safely ignore this email.`;
+
+    this.logger.info('Sending social login reminder email', {
+      recipient: maskEmail(email),
+    });
+
+    await this.mailService.sendEmail({
+      recipient: email,
+      subject,
+      contentHtml,
+      contentText,
+    });
+  }
+
   private maskToken(token: PasswordResetToken): string {
     const tokenStr = token as string;
     if (tokenStr.length <= 8) {
