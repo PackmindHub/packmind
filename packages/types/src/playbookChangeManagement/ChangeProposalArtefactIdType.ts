@@ -25,7 +25,6 @@ type SkillChangeProposalArtefactIdMap = {
   [ChangeProposalType.updateSkillCompatibility]: SkillId;
   [ChangeProposalType.updateSkillAllowedTools]: SkillId;
   [ChangeProposalType.addSkillFile]: SkillId;
-  [ChangeProposalType.updateSkillFilePath]: SkillId;
   [ChangeProposalType.updateSkillFileContent]: SkillId;
   [ChangeProposalType.updateSkillFilePermissions]: SkillId;
   [ChangeProposalType.deleteSkillFile]: SkillId;

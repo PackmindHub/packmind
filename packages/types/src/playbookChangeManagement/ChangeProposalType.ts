@@ -14,7 +14,6 @@ export enum ChangeProposalType {
   updateSkillCompatibility = 'updateSkillCompatibility',
   updateSkillAllowedTools = 'updateSkillAllowedTools',
   addSkillFile = 'addSkillFile',
-  updateSkillFilePath = 'updateSkillFilePath',
   updateSkillFileContent = 'updateSkillFileContent',
   updateSkillFilePermissions = 'updateSkillFilePermissions',
   deleteSkillFile = 'deleteSkillFile',

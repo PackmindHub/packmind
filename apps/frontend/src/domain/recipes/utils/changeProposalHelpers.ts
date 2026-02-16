@@ -16,7 +16,6 @@ const changeProposalFieldLabels: Record<ChangeProposalType, string> = {
   [ChangeProposalType.updateSkillCompatibility]: 'Compatibility',
   [ChangeProposalType.updateSkillAllowedTools]: 'Allowed Tools',
   [ChangeProposalType.addSkillFile]: 'File (add)',
-  [ChangeProposalType.updateSkillFilePath]: 'File path',
   [ChangeProposalType.updateSkillFileContent]: 'File content',
   [ChangeProposalType.updateSkillFilePermissions]: 'File permissions',
   [ChangeProposalType.deleteSkillFile]: 'File (delete)',
