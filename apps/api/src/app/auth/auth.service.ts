@@ -12,6 +12,8 @@ import {
   createTrialActivationToken,
   GetUserOnboardingStatusResponse,
   CompleteUserOnboardingResponse,
+  SocialProvider,
+  SOCIAL_PROVIDER_DISPLAY_NAMES,
 } from '@packmind/types';
 import {
   SignInUserCommand,
@@ -192,7 +194,11 @@ export class AuthService {
     return { ...signInUserResponse, accessToken };
   }
 
-  async signInSocial(email: string): Promise<{
+  async signInSocial(
+    email: string,
+    provider: SocialProvider,
+    firstName?: string,
+  ): Promise<{
     accessToken: string;
     user: { id: UserId; email: string };
     organization?: { id: OrganizationId; name: string; slug: string };
@@ -202,42 +208,63 @@ export class AuthService {
     }>;
     isNewUser: boolean;
   }> {
-    this.logger.log('Attempting social sign-in', {
-      email: maskEmail(email),
-    });
+    const providerName = SOCIAL_PROVIDER_DISPLAY_NAMES[provider];
+    this.logger.log(
+      `User attempting social login with provider ${providerName}`,
+      {
+        email: maskEmail(email),
+      },
+    );
 
     let user: User | null = await this.accountsAdapter.getUserByEmail(email);
     let isNewUser = false;
 
     if (!user) {
-      user = await this.accountsAdapter.createSocialLoginUser(email);
+      user = await this.accountsAdapter.createSocialLoginUser(email, provider);
       isNewUser = true;
-      this.logger.log('New user created via social login', {
-        userId: user.id,
-        email: maskEmail(email),
-      });
+      this.logger.log(
+        `New user created via social login with provider ${providerName}`,
+        {
+          userId: user.id,
+          email: maskEmail(email),
+        },
+      );
+    } else {
+      // Existing user — track provider in metadata
+      await this.accountsAdapter.addSocialProvider(user.id, provider);
+      this.logger.log(
+        `User ${user.id} logged in with provider ${providerName}`,
+        {
+          email: maskEmail(email),
+        },
+      );
     }
 
-    // Create a default organization if user has no memberships
-    if ((user.memberships ?? []).length === 0) {
-      const domain = email.split('@')[1] || 'my-organization';
-      const newOrg = await this.accountsAdapter.createOrganization({
+    let memberships = user.memberships ?? [];
+
+    // Auto-create organization for users without one (same as email signup)
+    if (memberships.length === 0) {
+      const nameBase = firstName || email.split('@')[0];
+      const orgName = `${nameBase.toLowerCase()}'s organization`;
+
+      const org = await this.accountsAdapter.createOrganization({
         userId: user.id,
-        name: domain,
-      });
-      this.logger.log('Default organization created for social login user', {
-        userId: user.id,
-        organizationId: newOrg.id,
+        name: orgName,
       });
 
-      // Refresh user to get updated memberships
-      const updatedUser = await this.accountsAdapter.getUserByEmail(email);
-      if (updatedUser) {
-        user = updatedUser;
+      this.logger.log('Organization auto-created for social login user', {
+        userId: user.id,
+        organizationId: org.id,
+      });
+
+      // Refresh memberships after org creation
+      const refreshedUser = await this.accountsAdapter.getUserById({
+        userId: user.id,
+      });
+      if (refreshedUser) {
+        memberships = refreshedUser.memberships ?? [];
       }
     }
-
-    const memberships = user.memberships ?? [];
 
     let organization:
       | { id: OrganizationId; name: string; slug: string }
