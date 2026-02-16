@@ -39,7 +39,7 @@ describe('DeploymentsBlankState', () => {
 
   it('displays the documentation link', () => {
     renderWithProvider(<DeploymentsBlankState />);
-    const docLink = screen.getByText('Learn more about distribution');
+    const docLink = screen.getByText('Doc: Learn more about distribution');
     expect(docLink).toBeInTheDocument();
     expect(docLink.closest('a')).toHaveAttribute(
       'href',
@@ -69,8 +69,10 @@ describe('DeploymentsBlankState', () => {
     renderWithProvider(<DeploymentsBlankState />);
     expect(screen.getByText('Up-to-date')).toBeInTheDocument();
     expect(screen.getByText('Outdated')).toBeInTheDocument();
-    expect(screen.getByText('24')).toBeInTheDocument();
-    expect(screen.getByText('3')).toBeInTheDocument();
+
+    // Both stats show "2" - verify there are exactly 2 elements with this text
+    const twoElements = screen.getAllByText('2');
+    expect(twoElements).toHaveLength(2);
   });
 
   it('displays tables for each target', () => {

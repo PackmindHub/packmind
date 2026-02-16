@@ -10,8 +10,9 @@ import {
   PMTableRow,
   PMButton,
   PMIcon,
+  PMImage,
 } from '@packmind/ui';
-import { LuExternalLink } from 'react-icons/lu';
+import { logoPackmind } from '@packmind/assets';
 import { DeploymentStatsSummary } from '../DeploymentStatsSummary/DeploymentStatsSummary';
 
 const TABLE_COLUMNS: PMTableColumn[] = [
@@ -27,7 +28,7 @@ const TABLE_COLUMNS: PMTableColumn[] = [
 
 export const DeploymentsBlankState = () => {
   // Stub data showing what the view looks like with active distributions
-  const stubStats = { upToDate: 24, outdated: 3 };
+  const stubStats = { upToDate: 2, outdated: 2 };
 
   // Sample data for target 1 (api) table
   const apiTableRows: PMTableRow[] = [
@@ -43,13 +44,13 @@ export const DeploymentsBlankState = () => {
       version: (
         <PMHStack gap={2} justify="center" align="center">
           <PMBadge colorPalette="gray" size="sm">
-            2.1
+            2
           </PMBadge>
           <PMText variant="small" color="faded">
             →
           </PMText>
           <PMBadge colorPalette="red" size="sm">
-            2.3
+            3
           </PMBadge>
         </PMHStack>
       ),
@@ -70,7 +71,7 @@ export const DeploymentsBlankState = () => {
       ),
       version: (
         <PMBadge colorPalette="gray" size="sm">
-          1.5
+          5
         </PMBadge>
       ),
       status: (
@@ -94,7 +95,7 @@ export const DeploymentsBlankState = () => {
       ),
       version: (
         <PMBadge colorPalette="gray" size="sm">
-          3.0
+          3
         </PMBadge>
       ),
       status: (
@@ -115,13 +116,13 @@ export const DeploymentsBlankState = () => {
       version: (
         <PMHStack gap={2} justify="center" align="center">
           <PMBadge colorPalette="gray" size="sm">
-            1.8
+            8
           </PMBadge>
           <PMText variant="small" color="faded">
             →
           </PMText>
           <PMBadge colorPalette="orange" size="sm">
-            1.9
+            15
           </PMBadge>
         </PMHStack>
       ),
@@ -151,16 +152,22 @@ export const DeploymentsBlankState = () => {
             AI agents perform at their best.
           </PMText>
           <PMHStack mt={2} gap={2}>
-            <PMButton variant="tertiary" size={'xs'} asChild w="fit-content">
+            <PMButton
+              variant="secondary"
+              size={'xs'}
+              asChild
+              w="fit-content"
+              borderColor={'blue.700'}
+            >
               <a
                 href="https://docs.packmind.com/getting-started/gs-distribute"
                 target="_blank"
                 rel="noopener noreferrer"
               >
                 <PMIcon>
-                  <LuExternalLink />
+                  <PMImage src={logoPackmind} height="16px" />
                 </PMIcon>
-                Learn more about distribution
+                Doc: Learn more about distribution
               </a>
             </PMButton>
           </PMHStack>
@@ -237,6 +244,7 @@ export const DeploymentsBlankState = () => {
               borderColor={'border.tertiary'}
               borderRadius={'sm'}
               padding={4}
+              shadow="5px 5px 15px 5px rgba(0, 0, 0, .5)"
             >
               <PMBox>
                 <PMBadge colorPalette="gray" size="xs" marginRight={2}>
@@ -256,6 +264,7 @@ export const DeploymentsBlankState = () => {
               borderColor={'border.tertiary'}
               borderRadius={'sm'}
               padding={4}
+              shadow="5px 5px 15px 5px rgba(0, 0, 0, .5)"
             >
               <PMBox>
                 <PMBadge colorPalette="gray" size="xs" marginRight={2}>
