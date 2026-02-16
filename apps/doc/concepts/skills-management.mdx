@@ -51,7 +51,17 @@ All files in the skill directory are packaged together when you upload the skill
 
 ## Creating Skills
 
-Skills are created through the CLI by uploading a skill directory:
+The easiest way to create a skill is using the `/packmind-create-skill` command in your AI coding assistant.
+
+Simply type:
+
+```
+/packmind-create-skill
+```
+
+The AI agent will guide you through creating a skill with proper structure and documentation.
+
+Alternatively, you can create skills manually through the CLI by uploading a skill directory:
 
 ```bash
 # Create your skill directory with SKILL.md
@@ -184,7 +194,7 @@ For complete details on where artifacts appear, see [Understanding Where Your Ar
 | -------------- | ------------------- | ------------------------- | -------------------- |
 | **Activation** | Automatic           | User-invoked              | Agent-discovered     |
 | **Purpose**    | Enforce guidelines  | Execute tasks             | Provide capabilities |
-| **Creation**   | MCP or Web UI       | MCP                       | CLI only             |
+| **Creation**   | CLI or Web UI       | CLI or Web UI             | CLI only             |
 | **Format**     | Rules with examples | Step-by-step instructions | SKILL.md + resources |
 
 - **Standards** are coding guidelines that AI assistants follow automatically
