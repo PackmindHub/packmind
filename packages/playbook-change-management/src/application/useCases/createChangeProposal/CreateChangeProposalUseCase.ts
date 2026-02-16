@@ -6,33 +6,14 @@ import {
   CreateChangeProposalResponse,
   createUserId,
   IAccountsPort,
-  IRecipesPort,
   ISpacesPort,
-  Recipe,
-  RecipeId,
-  ScalarUpdatePayload,
 } from '@packmind/types';
 import { ChangeProposalService } from '../../services/ChangeProposalService';
 import { validateSpaceOwnership } from '../../services/validateSpaceOwnership';
-import { ChangeProposalPayloadMismatchError } from '../../errors/ChangeProposalPayloadMismatchError';
 import { UnsupportedChangeProposalTypeError } from '../../errors/UnsupportedChangeProposalTypeError';
+import { IChangeProposalValidator } from '../../validators/IChangeProposalValidator';
 
 const origin = 'CreateChangeProposalUseCase';
-
-const SUPPORTED_TYPES: ReadonlySet<ChangeProposalType> = new Set([
-  ChangeProposalType.updateCommandName,
-  ChangeProposalType.updateCommandDescription,
-]);
-
-type SupportedType =
-  | ChangeProposalType.updateCommandName
-  | ChangeProposalType.updateCommandDescription;
-
-const RECIPE_FIELD_BY_TYPE: Record<SupportedType, (recipe: Recipe) => string> =
-  {
-    [ChangeProposalType.updateCommandName]: (recipe) => recipe.name,
-    [ChangeProposalType.updateCommandDescription]: (recipe) => recipe.content,
-  };
 
 export class CreateChangeProposalUseCase extends AbstractMemberUseCase<
   CreateChangeProposalCommand<ChangeProposalType>,
@@ -40,9 +21,9 @@ export class CreateChangeProposalUseCase extends AbstractMemberUseCase<
 > {
   constructor(
     accountsPort: IAccountsPort,
-    private readonly recipesPort: IRecipesPort,
     private readonly spacesPort: ISpacesPort,
     private readonly service: ChangeProposalService,
+    private readonly validators: IChangeProposalValidator[],
     logger: PackmindLogger = new PackmindLogger(origin),
   ) {
     super(accountsPort, logger);
@@ -51,11 +32,10 @@ export class CreateChangeProposalUseCase extends AbstractMemberUseCase<
   async executeForMembers(
     command: CreateChangeProposalCommand<ChangeProposalType> & MemberContext,
   ): Promise<CreateChangeProposalResponse<ChangeProposalType>> {
-    if (!SUPPORTED_TYPES.has(command.type)) {
+    const validator = this.validators.find((v) => v.supports(command.type));
+    if (!validator) {
       throw new UnsupportedChangeProposalTypeError(command.type);
     }
-
-    const recipeId = command.artefactId as RecipeId;
 
     await validateSpaceOwnership(
       this.spacesPort,
@@ -63,26 +43,7 @@ export class CreateChangeProposalUseCase extends AbstractMemberUseCase<
       command.organization.id,
     );
 
-    const recipe = await this.recipesPort.getRecipeById({
-      userId: command.userId,
-      organizationId: command.organization.id,
-      spaceId: command.spaceId,
-      recipeId,
-    });
-    if (!recipe) {
-      throw new Error(`Recipe ${recipeId} not found`);
-    }
-
-    const payload = command.payload as ScalarUpdatePayload;
-    const currentValue =
-      RECIPE_FIELD_BY_TYPE[command.type as SupportedType](recipe);
-    if (payload.oldValue !== currentValue) {
-      throw new ChangeProposalPayloadMismatchError(
-        command.type,
-        payload.oldValue,
-        currentValue,
-      );
-    }
+    const { artefactVersion } = await validator.validate(command);
 
     const existing = await this.service.findExistingPending(
       command.spaceId,
@@ -98,7 +59,7 @@ export class CreateChangeProposalUseCase extends AbstractMemberUseCase<
 
     const { changeProposal } = await this.service.createChangeProposal(
       command,
-      recipe.version,
+      artefactVersion,
     );
 
     return { changeProposal, wasCreated: true };

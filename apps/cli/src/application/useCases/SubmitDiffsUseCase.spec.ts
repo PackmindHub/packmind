@@ -206,11 +206,14 @@ describe('SubmitDiffsUseCase', () => {
       expect(result.submitted).toBe(0);
     });
 
-    it('skips with reason "Only commands are supported"', async () => {
+    it('skips with reason "Only commands and skills are supported"', async () => {
       const result = await useCase.execute({ groupedDiffs: [standardGroup] });
 
       expect(result.skipped).toEqual([
-        { name: 'My Standard', reason: 'Only commands are supported' },
+        {
+          name: 'My Standard',
+          reason: 'Only commands and skills are supported',
+        },
       ]);
     });
 
@@ -236,12 +239,40 @@ describe('SubmitDiffsUseCase', () => {
       },
     ];
 
-    it('skips with reason "Only commands are supported"', async () => {
+    beforeEach(() => {
+      mockGateway.changeProposals.batchCreateChangeProposals.mockResolvedValue(
+        batchResponse(1),
+      );
+    });
+
+    it('returns created count from batch response', async () => {
       const result = await useCase.execute({ groupedDiffs: [skillGroup] });
 
-      expect(result.skipped).toEqual([
-        { name: 'My Skill', reason: 'Only commands are supported' },
-      ]);
+      expect(result.submitted).toBe(1);
+    });
+
+    it('sends skill diff with correct type and payload', async () => {
+      await useCase.execute({ groupedDiffs: [skillGroup] });
+
+      expect(
+        mockGateway.changeProposals.batchCreateChangeProposals,
+      ).toHaveBeenCalledWith({
+        spaceId: 'spc-skl',
+        proposals: [
+          {
+            type: ChangeProposalType.updateSkillDescription,
+            artefactId: 'art-skl',
+            payload: { oldValue: 'old', newValue: 'new' },
+            captureMode: ChangeProposalCaptureMode.commit,
+          },
+        ],
+      });
+    });
+
+    it('returns empty skipped array', async () => {
+      const result = await useCase.execute({ groupedDiffs: [skillGroup] });
+
+      expect(result.skipped).toEqual([]);
     });
   });
 
@@ -454,7 +485,10 @@ describe('SubmitDiffsUseCase', () => {
       });
 
       expect(result.skipped).toEqual([
-        { name: 'A Standard', reason: 'Only commands are supported' },
+        {
+          name: 'A Standard',
+          reason: 'Only commands and skills are supported',
+        },
         { name: 'No Meta Command', reason: 'Missing artifact metadata' },
       ]);
     });

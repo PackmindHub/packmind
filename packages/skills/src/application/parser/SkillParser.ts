@@ -1,4 +1,4 @@
-import { parse as parseYaml } from 'yaml';
+import { parseSkillMdContent } from '@packmind/node-utils';
 
 import { SkillParseError } from '../errors/SkillParseError';
 import { ParsedSkill, SkillProperties } from '../../domain/SkillProperties';
@@ -22,74 +22,37 @@ export class SkillParser {
    * @throws {SkillParseError} If frontmatter is missing, unclosed, or contains invalid YAML
    */
   parse(content: string): ParsedSkill {
-    const { frontmatter, body } = this.extractFrontmatter(content);
-    const metadata = this.parseYamlFrontmatter(frontmatter);
+    this.validateFrontmatterStructure(content);
 
-    return { metadata, body };
+    const result = parseSkillMdContent(content);
+    if (!result) {
+      throw new SkillParseError(
+        'Invalid frontmatter: expected YAML object with key-value pairs',
+      );
+    }
+
+    return {
+      metadata: result.properties as SkillProperties,
+      body: result.body,
+    };
   }
 
-  private extractFrontmatter(content: string): {
-    frontmatter: string;
-    body: string;
-  } {
-    const trimmedContent = content.trim();
+  private validateFrontmatterStructure(content: string): void {
+    const trimmed = content.trim();
 
-    if (!trimmedContent.startsWith(FRONTMATTER_DELIMITER)) {
+    if (!trimmed.startsWith(FRONTMATTER_DELIMITER)) {
       throw new SkillParseError(
         'Missing frontmatter: SKILL.md must start with ---',
       );
     }
 
-    const contentAfterOpening = trimmedContent.slice(
-      FRONTMATTER_DELIMITER.length,
-    );
-    const closingIndex = contentAfterOpening.indexOf(
-      `\n${FRONTMATTER_DELIMITER}`,
-    );
+    const afterOpening = trimmed.slice(FRONTMATTER_DELIMITER.length);
+    const closingIndex = afterOpening.indexOf(`\n${FRONTMATTER_DELIMITER}`);
 
     if (closingIndex === -1) {
       throw new SkillParseError(
         'Unclosed frontmatter: missing closing --- delimiter',
       );
     }
-
-    const frontmatter = contentAfterOpening.slice(0, closingIndex).trim();
-    const body = contentAfterOpening
-      .slice(closingIndex + FRONTMATTER_DELIMITER.length + 1)
-      .trim();
-
-    return { frontmatter, body };
-  }
-
-  private parseYamlFrontmatter(frontmatter: string): SkillProperties {
-    try {
-      const parsed = parseYaml(frontmatter) as Record<string, unknown>;
-
-      if (parsed === null || typeof parsed !== 'object') {
-        throw new SkillParseError(
-          'Invalid frontmatter: expected YAML object with key-value pairs',
-        );
-      }
-
-      return this.transformToSkillProperties(parsed);
-    } catch (error) {
-      if (error instanceof SkillParseError) {
-        throw error;
-      }
-      throw new SkillParseError(
-        `Invalid YAML syntax: ${error instanceof Error ? error.message : 'unknown error'}`,
-      );
-    }
-  }
-
-  private transformToSkillProperties(
-    parsed: Record<string, unknown>,
-  ): SkillProperties {
-    const { 'allowed-tools': allowedTools, ...rest } = parsed;
-
-    return {
-      ...rest,
-      ...(allowedTools !== undefined && { allowedTools }),
-    } as SkillProperties;
   }
 }

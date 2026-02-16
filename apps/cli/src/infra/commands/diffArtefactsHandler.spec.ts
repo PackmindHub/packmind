@@ -290,7 +290,7 @@ describe('diffArtefactsHandler', () => {
 
       const logCalls = mockLog.mock.calls.map((c) => c[0]);
       const contentChangedCalls = logCalls.filter(
-        (c: string) => c === '  - content changed',
+        (c: string) => c === '  - command content changed',
       );
 
       expect(contentChangedCalls).toHaveLength(1);
@@ -365,7 +365,7 @@ describe('diffArtefactsHandler', () => {
 
       const logCalls = mockLog.mock.calls.map((c) => c[0]);
       const contentChangedCalls = logCalls.filter(
-        (c: string) => c === '  - content changed',
+        (c: string) => c === '  - command content changed',
       );
 
       expect(contentChangedCalls).toHaveLength(2);

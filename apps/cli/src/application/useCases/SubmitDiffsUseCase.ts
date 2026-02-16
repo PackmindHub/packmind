@@ -1,4 +1,4 @@
-import { ChangeProposalCaptureMode, ChangeProposalType } from '@packmind/types';
+import { ChangeProposalCaptureMode } from '@packmind/types';
 
 import {
   ISubmitDiffsUseCase,
@@ -7,6 +7,8 @@ import {
 } from '../../domain/useCases/ISubmitDiffsUseCase';
 import { IPackmindGateway } from '../../domain/repositories/IPackmindGateway';
 import { ArtefactDiff } from '../../domain/useCases/IDiffArtefactsUseCase';
+
+const SUPPORTED_ARTIFACT_TYPES = new Set(['command', 'skill']);
 
 type ValidDiff = ArtefactDiff & { artifactId: string; spaceId: string };
 
@@ -24,10 +26,10 @@ export class SubmitDiffsUseCase implements ISubmitDiffsUseCase {
         continue;
       }
 
-      if (firstDiff.artifactType !== 'command') {
+      if (!SUPPORTED_ARTIFACT_TYPES.has(firstDiff.artifactType)) {
         skipped.push({
           name: firstDiff.artifactName,
-          reason: 'Only commands are supported',
+          reason: 'Only commands and skills are supported',
         });
         continue;
       }
@@ -60,9 +62,9 @@ export class SubmitDiffsUseCase implements ISubmitDiffsUseCase {
         await this.packmindGateway.changeProposals.batchCreateChangeProposals({
           spaceId,
           proposals: diffs.map((diff) => ({
-            type: ChangeProposalType.updateCommandDescription,
+            type: diff.type,
             artefactId: diff.artifactId,
-            payload: diff.payload as { oldValue: string; newValue: string },
+            payload: diff.payload,
             captureMode: ChangeProposalCaptureMode.commit,
           })),
         });

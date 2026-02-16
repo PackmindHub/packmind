@@ -79,6 +79,39 @@ describe('CopilotDeployer', () => {
         );
         expect(binaryFile?.isBase64).toBe(true);
       });
+
+      it('propagates skillFileId for skill file', async () => {
+        const fileUpdates = await deployer.generateFileUpdatesForSkills([
+          skillVersion,
+        ]);
+
+        const binaryFile = fileUpdates.createOrUpdate.find((f) =>
+          f.path.endsWith('image.png'),
+        );
+        expect(binaryFile?.skillFileId).toBe('file-1');
+      });
+
+      it('propagates skillFilePermissions for skill file', async () => {
+        const fileUpdates = await deployer.generateFileUpdatesForSkills([
+          skillVersion,
+        ]);
+
+        const binaryFile = fileUpdates.createOrUpdate.find((f) =>
+          f.path.endsWith('image.png'),
+        );
+        expect(binaryFile?.skillFilePermissions).toBe('rw-r--r--');
+      });
+
+      it('does not set skillFileId on SKILL.md', async () => {
+        const fileUpdates = await deployer.generateFileUpdatesForSkills([
+          skillVersion,
+        ]);
+
+        const skillMdFile = fileUpdates.createOrUpdate.find((f) =>
+          f.path.endsWith('SKILL.md'),
+        );
+        expect(skillMdFile?.skillFileId).toBeUndefined();
+      });
     });
 
     describe('when skill has files with isBase64 false', () => {

@@ -493,6 +493,27 @@ describe('CursorDeployer', () => {
         );
         expect(helperFile).toBeDefined();
       });
+
+      it('propagates skillFileId for helper file', () => {
+        const helperFile = fileUpdates.createOrUpdate.find((f) =>
+          f.path.endsWith('helper.ts'),
+        );
+        expect(helperFile?.skillFileId).toBe('file-1');
+      });
+
+      it('propagates skillFilePermissions for helper file', () => {
+        const helperFile = fileUpdates.createOrUpdate.find((f) =>
+          f.path.endsWith('helper.ts'),
+        );
+        expect(helperFile?.skillFilePermissions).toBe('rw-r--r--');
+      });
+
+      it('does not set skillFileId on SKILL.md', () => {
+        const skillMdFile = fileUpdates.createOrUpdate.find((f) =>
+          f.path.endsWith('SKILL.md'),
+        );
+        expect(skillMdFile?.skillFileId).toBeUndefined();
+      });
     });
 
     describe('when skill has SKILL.MD in additional files', () => {

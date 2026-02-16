@@ -7,6 +7,7 @@ import {
   IGitPort,
   IStandardsPort,
   RecipeVersion,
+  SkillFileOutput,
   SkillVersion,
   StandardVersion,
   Target,
@@ -244,6 +245,8 @@ ${recipeVersion.content}`;
           isBase64: file.isBase64,
           artifactType: 'skill',
           artifactName: skillVersion.name,
+          skillFileId: file.skillFileId,
+          skillFilePermissions: file.skillFilePermissions,
         });
       }
     }
@@ -273,6 +276,8 @@ ${recipeVersion.content}`;
           isBase64: file.isBase64,
           artifactType: 'skill',
           artifactName: skillVersion.name,
+          skillFileId: file.skillFileId,
+          skillFilePermissions: file.skillFilePermissions,
         });
       }
     }
@@ -332,6 +337,8 @@ ${recipeVersion.content}`;
           isBase64: file.isBase64,
           artifactType: 'skill',
           artifactName: skillVersion.name,
+          skillFileId: file.skillFileId,
+          skillFilePermissions: file.skillFilePermissions,
         });
       }
     }
@@ -592,13 +599,10 @@ ${instructionContent}`;
     };
   }
 
-  private generateClaudeSkillFiles(skillVersion: SkillVersion): Array<{
-    path: string;
-    content: string;
-    isBase64?: boolean;
-  }> {
-    const files: Array<{ path: string; content: string; isBase64?: boolean }> =
-      [];
+  private generateClaudeSkillFiles(
+    skillVersion: SkillVersion,
+  ): SkillFileOutput[] {
+    const files: SkillFileOutput[] = [];
 
     // Generate SKILL.md (main skill file)
     const skillMdContent = this.generateSkillMdContent(skillVersion);
@@ -618,6 +622,8 @@ ${instructionContent}`;
           path: `.claude/skills/${skillVersion.slug}/${file.path}`,
           content: file.content,
           isBase64: file.isBase64,
+          skillFileId: file.id,
+          skillFilePermissions: file.permissions,
         });
       }
     }

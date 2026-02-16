@@ -1,13 +1,13 @@
 import {
   ChangeProposalCaptureMode,
+  ChangeProposalPayload,
   ChangeProposalType,
-  ScalarUpdatePayload,
 } from '@packmind/types';
 
 type CreateChangeProposalPayload = {
   type: ChangeProposalType;
   artefactId: string;
-  payload: ScalarUpdatePayload;
+  payload: ChangeProposalPayload<ChangeProposalType>;
   captureMode: ChangeProposalCaptureMode;
 };
 
