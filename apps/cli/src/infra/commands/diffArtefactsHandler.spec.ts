@@ -3,7 +3,7 @@ import {
   DiffHandlerDependencies,
 } from './diffArtefactsHandler';
 import { PackmindCliHexa } from '../../PackmindCliHexa';
-import { ChangeProposalType } from '@packmind/types';
+import { ChangeProposalType, createSkillFileId } from '@packmind/types';
 
 jest.mock('../utils/consoleLogger', () => ({
   logWarningConsole: jest.fn(),
@@ -125,6 +125,22 @@ describe('diffArtefactsHandler', () => {
       expect(result.diffsFound).toBe(1);
     });
 
+    it('displays summary with single artefact', async () => {
+      const { logWarningConsole } = jest.requireMock('../utils/consoleLogger');
+      await diffArtefactsHandler(deps);
+
+      expect(logWarningConsole).toHaveBeenCalledWith(
+        'Summary: 1 change found on 1 artefact:',
+      );
+    });
+
+    it('displays artefact name in summary', async () => {
+      const { logWarningConsole } = jest.requireMock('../utils/consoleLogger');
+      await diffArtefactsHandler(deps);
+
+      expect(logWarningConsole).toHaveBeenCalledWith('* Command "My Command"');
+    });
+
     it('exits with code 0', async () => {
       await diffArtefactsHandler(deps);
 
@@ -182,6 +198,116 @@ describe('diffArtefactsHandler', () => {
       const result = await diffArtefactsHandler(deps);
 
       expect(result.diffsFound).toBe(2);
+    });
+
+    it('displays summary with multiple artefacts', async () => {
+      const { logWarningConsole } = jest.requireMock('../utils/consoleLogger');
+      await diffArtefactsHandler(deps);
+
+      expect(logWarningConsole).toHaveBeenCalledWith(
+        'Summary: 2 changes found on 2 artefacts:',
+      );
+    });
+
+    it('lists Command before Standard in summary', async () => {
+      const { logWarningConsole } = jest.requireMock('../utils/consoleLogger');
+      await diffArtefactsHandler(deps);
+
+      const calls = logWarningConsole.mock.calls.map((c: string[]) => c[0]);
+      const commandIndex = calls.indexOf('* Command "My Command"');
+      const standardIndex = calls.indexOf('* Standard "My Standard"');
+
+      expect(commandIndex).toBeLessThan(standardIndex);
+    });
+  });
+
+  describe('when diffs from all artifact types found', () => {
+    beforeEach(() => {
+      mockPackmindCliHexa.readFullConfig.mockResolvedValue({
+        packages: { 'my-package': '*' },
+      });
+
+      mockPackmindCliHexa.diffArtefacts.mockResolvedValue([
+        {
+          filePath: '.packmind/standards/my-standard.md',
+          type: ChangeProposalType.updateStandardDescription,
+          payload: { oldValue: 'old', newValue: 'new' },
+          artifactName: 'My Standard',
+          artifactType: 'standard',
+        },
+        {
+          filePath: '.claude/skills/my-skill/SKILL.md',
+          type: ChangeProposalType.updateSkillDescription,
+          payload: { oldValue: 'old', newValue: 'new' },
+          artifactName: 'My Skill',
+          artifactType: 'skill',
+        },
+        {
+          filePath: '.packmind/commands/my-command.md',
+          type: ChangeProposalType.updateCommandDescription,
+          payload: { oldValue: 'old', newValue: 'new' },
+          artifactName: 'My Command',
+          artifactType: 'command',
+        },
+      ]);
+    });
+
+    it('lists Command before Skill in summary', async () => {
+      const { logWarningConsole } = jest.requireMock('../utils/consoleLogger');
+      await diffArtefactsHandler(deps);
+
+      const calls = logWarningConsole.mock.calls.map((c: string[]) => c[0]);
+      const commandIndex = calls.indexOf('* Command "My Command"');
+      const skillIndex = calls.indexOf('* Skill "My Skill"');
+
+      expect(commandIndex).toBeLessThan(skillIndex);
+    });
+
+    it('lists Skill before Standard in summary', async () => {
+      const { logWarningConsole } = jest.requireMock('../utils/consoleLogger');
+      await diffArtefactsHandler(deps);
+
+      const calls = logWarningConsole.mock.calls.map((c: string[]) => c[0]);
+      const skillIndex = calls.indexOf('* Skill "My Skill"');
+      const standardIndex = calls.indexOf('* Standard "My Standard"');
+
+      expect(skillIndex).toBeLessThan(standardIndex);
+    });
+  });
+
+  describe('when multiple artefacts of same type found', () => {
+    beforeEach(() => {
+      mockPackmindCliHexa.readFullConfig.mockResolvedValue({
+        packages: { 'my-package': '*' },
+      });
+
+      mockPackmindCliHexa.diffArtefacts.mockResolvedValue([
+        {
+          filePath: '.packmind/commands/zulu-command.md',
+          type: ChangeProposalType.updateCommandDescription,
+          payload: { oldValue: 'old', newValue: 'new' },
+          artifactName: 'Zulu Command',
+          artifactType: 'command',
+        },
+        {
+          filePath: '.packmind/commands/alpha-command.md',
+          type: ChangeProposalType.updateCommandDescription,
+          payload: { oldValue: 'old', newValue: 'new' },
+          artifactName: 'Alpha Command',
+          artifactType: 'command',
+        },
+      ]);
+    });
+
+    it('sorts artefacts alphabetically within same type', async () => {
+      const { logWarningConsole } = jest.requireMock('../utils/consoleLogger');
+      await diffArtefactsHandler(deps);
+
+      const calls = logWarningConsole.mock.calls.map((c: string[]) => c[0]);
+      const alphaIndex = calls.indexOf('* Command "Alpha Command"');
+      const zuluIndex = calls.indexOf('* Command "Zulu Command"');
+
+      expect(alphaIndex).toBeLessThan(zuluIndex);
     });
   });
 
@@ -380,6 +506,142 @@ describe('diffArtefactsHandler', () => {
       );
 
       expect(addedLines).toHaveLength(2);
+    });
+  });
+
+  describe('when deleted skill file has more than 3 lines', () => {
+    beforeEach(() => {
+      mockPackmindCliHexa.readFullConfig.mockResolvedValue({
+        packages: { 'my-package': '*' },
+      });
+
+      mockPackmindCliHexa.diffArtefacts.mockResolvedValue([
+        {
+          filePath: '.claude/skills/my-skill/reference.ts',
+          type: ChangeProposalType.deleteSkillFile,
+          payload: {
+            targetId: createSkillFileId('file-id'),
+            item: {
+              id: createSkillFileId('file-id'),
+              path: 'reference.ts',
+              content: 'line 1\nline 2\nline 3\nline 4\nline 5',
+              permissions: 'rw-r--r--',
+              isBase64: false,
+            },
+          },
+          artifactName: 'My Skill',
+          artifactType: 'skill',
+        },
+      ]);
+    });
+
+    it('displays only the first 3 lines', async () => {
+      await diffArtefactsHandler(deps);
+
+      const logCalls = mockLog.mock.calls.map((c) => c[0]);
+      const deletedLines = logCalls.filter((c: string) =>
+        c.includes('    - line'),
+      );
+
+      expect(deletedLines).toHaveLength(3);
+    });
+
+    it('displays the truncation message with remaining count', async () => {
+      await diffArtefactsHandler(deps);
+
+      const logCalls = mockLog.mock.calls.map((c) => c[0]);
+      const truncationMessage = logCalls.find((c: string) =>
+        c.includes('... and 2 more lines deleted'),
+      );
+
+      expect(truncationMessage).toBeDefined();
+    });
+  });
+
+  describe('when deleted skill file has 3 or fewer lines', () => {
+    beforeEach(() => {
+      mockPackmindCliHexa.readFullConfig.mockResolvedValue({
+        packages: { 'my-package': '*' },
+      });
+
+      mockPackmindCliHexa.diffArtefacts.mockResolvedValue([
+        {
+          filePath: '.claude/skills/my-skill/small.ts',
+          type: ChangeProposalType.deleteSkillFile,
+          payload: {
+            targetId: createSkillFileId('file-id'),
+            item: {
+              id: createSkillFileId('file-id'),
+              path: 'small.ts',
+              content: 'line 1\nline 2\nline 3',
+              permissions: 'rw-r--r--',
+              isBase64: false,
+            },
+          },
+          artifactName: 'My Skill',
+          artifactType: 'skill',
+        },
+      ]);
+    });
+
+    it('displays all lines without truncation', async () => {
+      await diffArtefactsHandler(deps);
+
+      const logCalls = mockLog.mock.calls.map((c) => c[0]);
+      const deletedLines = logCalls.filter((c: string) =>
+        c.includes('    - line'),
+      );
+
+      expect(deletedLines).toHaveLength(3);
+    });
+
+    it('does not display truncation message', async () => {
+      await diffArtefactsHandler(deps);
+
+      const logCalls = mockLog.mock.calls.map((c) => c[0]);
+      const truncationMessage = logCalls.find((c: string) =>
+        c.includes('more lines deleted'),
+      );
+
+      expect(truncationMessage).toBeUndefined();
+    });
+  });
+
+  describe('when new skill file is added', () => {
+    beforeEach(() => {
+      mockPackmindCliHexa.readFullConfig.mockResolvedValue({
+        packages: { 'my-package': '*' },
+      });
+
+      mockPackmindCliHexa.diffArtefacts.mockResolvedValue([
+        {
+          filePath: '.claude/skills/my-skill/reference.ts',
+          type: ChangeProposalType.addSkillFile,
+          payload: {
+            targetId: createSkillFileId('file-id'),
+            item: {
+              id: createSkillFileId('file-id'),
+              path: 'reference.ts',
+              content: 'line 1\nline 2\nline 3\nline 4\nline 5',
+              permissions: 'rw-r--r--',
+              isBase64: false,
+            },
+          },
+          artifactName: 'My Skill',
+          artifactType: 'skill',
+        },
+      ]);
+    });
+
+    it('displays all lines without truncation', async () => {
+      await diffArtefactsHandler(deps);
+
+      const logCalls = mockLog.mock.calls.map((c) => c[0]);
+      const addedLines = logCalls.filter((c: string) =>
+        c.includes('    + line'),
+      );
+
+      expect(addedLines).toHaveLength(5);
     });
   });
 
