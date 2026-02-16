@@ -38,6 +38,9 @@ const CHANGE_TYPE_LABELS: Partial<Record<ChangeProposalType, string>> = {
   [ChangeProposalType.updateSkillDescription]: 'skill description changed',
   [ChangeProposalType.updateSkillPrompt]: 'skill prompt changed',
   [ChangeProposalType.updateSkillMetadata]: 'skill metadata changed',
+  [ChangeProposalType.updateSkillLicense]: 'skill license changed',
+  [ChangeProposalType.updateSkillCompatibility]: 'skill compatibility changed',
+  [ChangeProposalType.updateSkillAllowedTools]: 'skill allowed tools changed',
   [ChangeProposalType.updateSkillFileContent]: 'skill file content changed',
   [ChangeProposalType.updateSkillFilePermissions]:
     'skill file permissions changed',

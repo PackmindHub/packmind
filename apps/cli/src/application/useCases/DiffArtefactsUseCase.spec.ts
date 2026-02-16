@@ -339,6 +339,47 @@ describe('DiffArtefactsUseCase', () => {
             {
               path: '.claude/skills/my-skill/SKILL.md',
               content:
+                "---\nname: 'Same'\ndescription: 'Same'\nmetadata:\n  key1: 'value1'\n---\n\nSame prompt",
+              artifactType: 'skill',
+              artifactName: 'My Skill',
+              artifactId: 'artifact-5',
+              spaceId: 'space-5',
+            },
+          ],
+          delete: [],
+        },
+        skillFolders: [],
+      });
+
+      (fs.readFile as jest.Mock).mockResolvedValue(
+        "---\nname: 'Same'\ndescription: 'Same'\nmetadata:\n  key1: 'value2'\n---\n\nSame prompt",
+      );
+
+      result = await useCase.execute({
+        packagesSlugs: ['test-package'],
+        baseDirectory: '/test',
+      });
+    });
+
+    it('returns exactly one diff', () => {
+      expect(result).toHaveLength(1);
+    });
+
+    it('returns updateSkillMetadata type', () => {
+      expect(result[0].type).toBe(ChangeProposalType.updateSkillMetadata);
+    });
+  });
+
+  describe('when SKILL.md license differs from server', () => {
+    let result: ArtefactDiff[];
+
+    beforeEach(async () => {
+      mockPull.mockResolvedValue({
+        fileUpdates: {
+          createOrUpdate: [
+            {
+              path: '.claude/skills/my-skill/SKILL.md',
+              content:
                 "---\nname: 'Same'\ndescription: 'Same'\nlicense: 'MIT'\n---\n\nSame prompt",
               artifactType: 'skill',
               artifactName: 'My Skill',
@@ -366,8 +407,90 @@ describe('DiffArtefactsUseCase', () => {
       expect(result).toHaveLength(1);
     });
 
-    it('returns updateSkillMetadata type', () => {
-      expect(result[0].type).toBe(ChangeProposalType.updateSkillMetadata);
+    it('returns updateSkillLicense type', () => {
+      expect(result[0].type).toBe(ChangeProposalType.updateSkillLicense);
+    });
+  });
+
+  describe('when SKILL.md compatibility differs from server', () => {
+    let result: ArtefactDiff[];
+
+    beforeEach(async () => {
+      mockPull.mockResolvedValue({
+        fileUpdates: {
+          createOrUpdate: [
+            {
+              path: '.claude/skills/my-skill/SKILL.md',
+              content:
+                "---\nname: 'Same'\ndescription: 'Same'\ncompatibility: 'claude'\n---\n\nSame prompt",
+              artifactType: 'skill',
+              artifactName: 'My Skill',
+              artifactId: 'artifact-5',
+              spaceId: 'space-5',
+            },
+          ],
+          delete: [],
+        },
+        skillFolders: [],
+      });
+
+      (fs.readFile as jest.Mock).mockResolvedValue(
+        "---\nname: 'Same'\ndescription: 'Same'\ncompatibility: 'cursor'\n---\n\nSame prompt",
+      );
+
+      result = await useCase.execute({
+        packagesSlugs: ['test-package'],
+        baseDirectory: '/test',
+      });
+    });
+
+    it('returns exactly one diff', () => {
+      expect(result).toHaveLength(1);
+    });
+
+    it('returns updateSkillCompatibility type', () => {
+      expect(result[0].type).toBe(ChangeProposalType.updateSkillCompatibility);
+    });
+  });
+
+  describe('when SKILL.md allowedTools differs from server', () => {
+    let result: ArtefactDiff[];
+
+    beforeEach(async () => {
+      mockPull.mockResolvedValue({
+        fileUpdates: {
+          createOrUpdate: [
+            {
+              path: '.claude/skills/my-skill/SKILL.md',
+              content:
+                "---\nname: 'Same'\ndescription: 'Same'\nallowedTools: 'tool-a'\n---\n\nSame prompt",
+              artifactType: 'skill',
+              artifactName: 'My Skill',
+              artifactId: 'artifact-5',
+              spaceId: 'space-5',
+            },
+          ],
+          delete: [],
+        },
+        skillFolders: [],
+      });
+
+      (fs.readFile as jest.Mock).mockResolvedValue(
+        "---\nname: 'Same'\ndescription: 'Same'\nallowedTools: 'tool-b'\n---\n\nSame prompt",
+      );
+
+      result = await useCase.execute({
+        packagesSlugs: ['test-package'],
+        baseDirectory: '/test',
+      });
+    });
+
+    it('returns exactly one diff', () => {
+      expect(result).toHaveLength(1);
+    });
+
+    it('returns updateSkillAllowedTools type', () => {
+      expect(result[0].type).toBe(ChangeProposalType.updateSkillAllowedTools);
     });
   });
 
