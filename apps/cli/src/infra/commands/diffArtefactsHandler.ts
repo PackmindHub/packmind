@@ -32,15 +32,16 @@ const ARTIFACT_TYPE_LABELS: Record<ArtifactType, string> = {
 };
 
 const CHANGE_TYPE_LABELS: Partial<Record<ChangeProposalType, string>> = {
-  [ChangeProposalType.updateCommandDescription]: 'content changed',
-  [ChangeProposalType.updateSkillName]: 'name changed',
-  [ChangeProposalType.updateSkillDescription]: 'description changed',
-  [ChangeProposalType.updateSkillPrompt]: 'prompt changed',
-  [ChangeProposalType.updateSkillMetadata]: 'metadata changed',
-  [ChangeProposalType.updateSkillFileContent]: 'file content changed',
-  [ChangeProposalType.updateSkillFilePermissions]: 'permissions changed',
-  [ChangeProposalType.addSkillFile]: 'new file added',
-  [ChangeProposalType.deleteSkillFile]: 'file deleted',
+  [ChangeProposalType.updateCommandDescription]: 'command content changed',
+  [ChangeProposalType.updateSkillName]: 'skill name changed',
+  [ChangeProposalType.updateSkillDescription]: 'skill description changed',
+  [ChangeProposalType.updateSkillPrompt]: 'skill prompt changed',
+  [ChangeProposalType.updateSkillMetadata]: 'skill metadata changed',
+  [ChangeProposalType.updateSkillFileContent]: 'skill file content changed',
+  [ChangeProposalType.updateSkillFilePermissions]:
+    'skill file permissions changed',
+  [ChangeProposalType.addSkillFile]: 'new skill file added',
+  [ChangeProposalType.deleteSkillFile]: 'skill file deleted',
 };
 
 function subGroupByChangeContent(diffs: ArtefactDiff[]): ArtefactDiff[][] {
