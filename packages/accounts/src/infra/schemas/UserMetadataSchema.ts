@@ -23,6 +23,12 @@ export const UserMetadataSchema = new EntitySchema<
       type: 'boolean',
       default: false,
     },
+    socialProviders: {
+      name: 'social_providers',
+      type: 'text',
+      array: true,
+      default: "'{}'",
+    },
     ...timestampsSchemas,
   },
 });
