@@ -37,9 +37,9 @@
         "icon": "rocket",
         "pages": [
           "index",
-          "getting-started/gs-mcp-server-setup",
           "getting-started/gs-install-cloud",
           "getting-started/gs-install-self-hosted",
+          "getting-started/gs-cli-setup",
           "getting-started/gs-onboarding",
           "getting-started/gs-create-standard",
           "getting-started/gs-create-command",
@@ -61,7 +61,7 @@
       {
         "group": "Tools & Integrations",
         "icon": "wrench",
-        "pages": ["tools/mcp-server", "tools/cli"]
+        "pages": ["tools/cli"]
       },
       {
         "group": "Governance",
@@ -107,10 +107,6 @@
       "destination": "/"
     },
     {
-      "source": "/docs/gs-mcp-server-setup",
-      "destination": "/getting-started/gs-mcp-server-setup"
-    },
-    {
       "source": "/docs/gs-install-cloud",
       "destination": "/getting-started/gs-install-cloud"
     },
@@ -153,10 +149,6 @@
     {
       "source": "/artifact-rendering",
       "destination": "/concepts/artifact-rendering"
-    },
-    {
-      "source": "/mcp-server",
-      "destination": "/tools/mcp-server"
     },
     {
       "source": "/cli",

@@ -1,0 +1,202 @@
+---
+title: 'CLI Installation & Setup'
+---
+
+## Overview
+
+The Packmind CLI is your primary tool for managing standards, commands, and skills. This guide will help you install and authenticate the CLI.
+
+## Installation
+
+### One-click install (Recommended)
+
+The easiest way to install and configure the Packmind CLI is using the one-click install available in the Packmind web interface.
+
+**Where to find it:**
+
+- During your first onboarding after creating an account
+- Anytime in your **Account Settings** page
+
+**What it does:**
+
+1. Downloads and installs the Packmind CLI binary for your platform
+2. Authenticates you automatically with your Packmind account
+3. Sets up your PATH environment variable
+
+Simply copy the provided command and paste it into your terminal. The script handles everything automatically.
+
+<Tip>
+  **Why this is recommended** — The one-click install eliminates manual steps by
+  combining installation and authentication in a single command.
+</Tip>
+
+### Alternative: npm Package
+
+<Note>**Node.js 22 or higher required**.</Note>
+
+**Global Installation**:
+
+```bash
+npm install -g @packmind/cli
+```
+
+After installation, the `packmind-cli` command will be available globally.
+
+**npx** (no installation required):
+
+```bash
+npx @packmind/cli install --list
+```
+
+This runs the CLI directly without installing it, always using the latest version.
+
+### Alternative: Standalone Executables
+
+Download the appropriate pre-built executable for your platform from the [GitHub Releases page](https://github.com/PackmindHub/packmind/releases?q=CLI&expanded=true).
+
+**Available platforms:**
+
+- **Linux x64**: `packmind-cli-linux-x64-{version}`
+- **Linux arm64**: `packmind-cli-linux-arm64-{version}`
+- **macOS arm64**: `packmind-cli-macos-arm64-{version}` (signed and notarized)
+- **Windows x64**: `packmind-cli-windows-x64-{version}.exe`
+
+**For Linux/macOS**, make the executable runnable:
+
+```bash
+chmod +x packmind-cli-*-{version}
+```
+
+**Optional**: Move to a directory in your PATH for easy access:
+
+```bash
+# Linux/macOS
+sudo mv packmind-cli-*-{version} /usr/local/bin/packmind-cli
+
+# Windows: Move to a directory in your PATH or run directly
+```
+
+<Tip>
+  **Choosing an Installation Method** — Use **one-click install** for the
+  simplest experience with automatic authentication. Use **npm global** if you
+  want `packmind-cli` always available system-wide. Use **npx** for
+  project-specific usage or testing without installation. Use **standalone
+  executables** if you don't have Node.js installed or need a specific binary
+  for your environment.
+</Tip>
+
+## Authentication
+
+The CLI requires authentication to communicate with your Packmind instance.
+
+### Login Command (Recommended)
+
+The easiest way to authenticate is using the `login` command:
+
+```bash
+packmind-cli login
+```
+
+This will:
+
+1. Open your browser to the Packmind login page
+2. After you authenticate, automatically receive credentials
+3. Store credentials securely in `~/.packmind/credentials.json`
+
+**For self-hosted instances**, specify your host:
+
+```bash
+packmind-cli login --host https://your-packmind-instance.com
+```
+
+**Manual code entry** (if browser flow doesn't work):
+
+You can also enter a login code manually from the web interface:
+
+```bash
+packmind-cli login --code YOUR_CODE_HERE
+```
+
+### Verify Authentication
+
+Check your current authentication status:
+
+```bash
+packmind-cli whoami
+```
+
+This displays:
+
+- Your API key (masked)
+- Connected host
+- Organization name
+- User name
+- Credential expiration status
+
+### API Key Authentication (Alternative)
+
+You can authenticate using the `PACKMIND_API_KEY_V3` environment variable instead of the interactive login flow. This is the recommended approach for:
+
+- **CI/CD pipelines** — Automated environments where interactive login isn't possible
+- **Docker containers** — Pass the API key as an environment variable
+- **Scripted workflows** — When you need non-interactive authentication
+
+#### Getting Your API Key
+
+1. Log in to your Packmind instance (Cloud or self-hosted)
+2. Navigate to **Settings** (click your profile icon in the top right)
+3. Scroll to the **CLI Authentication** section
+4. Go to the **Environment Variable** tab
+5. Click **Generate New Key** to create an API key (valid for 90 days)
+6. Copy the generated key
+
+#### Setting the Environment Variable
+
+Set the `PACKMIND_API_KEY_V3` environment variable with your API key:
+
+```bash
+export PACKMIND_API_KEY_V3="your-api-key-here"
+```
+
+To make this permanent, add it to your shell configuration file (`~/.bashrc`, `~/.zshrc`, etc.).
+
+## Next Steps
+
+Now that you have the CLI installed and authenticated, you can create your first standards and commands:
+
+### Quick Start: Run `/packmind-onboard`
+
+The fastest way to get started is to use the `/packmind-onboard` command in your AI coding assistant. This will guide your AI agent to:
+
+1. Analyze your codebase automatically
+2. Identify coding patterns and conventions
+3. Generate standards and commands based on what it finds
+4. Create or select a package to organize them
+
+Simply type in your AI assistant:
+
+```
+/packmind-onboard
+```
+
+The AI agent will walk you through the entire process interactively.
+
+### Create Individual Artifacts
+
+You can also create standards, commands, and skills individually using these commands in your AI agent:
+
+- **`/packmind-create-standard`** — Create a coding standard with AI guidance
+- **`/packmind-create-command`** — Create a reusable command workflow
+- **`/packmind-create-skill`** — Create a custom skill for your AI agents
+
+Each command provides step-by-step guidance to ensure high-quality artifacts.
+
+### Learn More
+
+- **[Onboarding Guide](./gs-onboarding.mdx)** — Detailed guide on the onboarding process
+- **[CLI Reference](/tools/cli)** — Explore all available CLI commands
+
+<Note>
+  Need help? Run `packmind-cli --help` to see all available commands and
+  options.
+</Note>
