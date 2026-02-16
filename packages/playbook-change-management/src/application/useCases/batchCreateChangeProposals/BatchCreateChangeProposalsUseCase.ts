@@ -33,7 +33,7 @@ export class BatchCreateChangeProposalsUseCase extends AbstractMemberUseCase<
 
     let created = 0;
     let skipped = 0;
-    const errors: Array<{ index: number; message: string }> = [];
+    const errors: Array<{ index: number; message: string; code?: string }> = [];
 
     for (let i = 0; i < command.proposals.length; i++) {
       const proposal = command.proposals[i];
@@ -60,13 +60,14 @@ export class BatchCreateChangeProposalsUseCase extends AbstractMemberUseCase<
         }
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error);
+        const code = error instanceof Error ? error.name : undefined;
         this.logger.error('Failed to create change proposal', {
           index: i,
           type: proposal.type,
           artefactId: proposal.artefactId,
           error: message,
         });
-        errors.push({ index: i, message });
+        errors.push({ index: i, message, code });
       }
     }
 

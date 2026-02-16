@@ -150,7 +150,7 @@ export async function diffArtefactsHandler(
   }
 
   try {
-    // Collect git info
+    // Collect git info (required for deployed content lookup)
     let gitRemoteUrl: string | undefined;
     let gitBranch: string | undefined;
     let relativePath: string | undefined;
@@ -170,9 +170,19 @@ export async function diffArtefactsHandler(
         if (!relativePath.endsWith('/')) {
           relativePath = relativePath + '/';
         }
-      } catch {
-        // Git info collection failed, continue without it
+      } catch (err) {
+        logWarningConsole(
+          `Failed to collect git info: ${err instanceof Error ? err.message : String(err)}`,
+        );
       }
+    }
+
+    if (!gitRemoteUrl || !gitBranch || !relativePath) {
+      error(
+        '\n❌ Could not determine git repository info. The diff command requires a git repository with a remote configured.',
+      );
+      exit(1);
+      return { diffsFound: 0 };
     }
 
     const packageCount = configPackages.length;
@@ -184,7 +194,6 @@ export async function diffArtefactsHandler(
     const diffs = await packmindCliHexa.diffArtefacts({
       baseDirectory: cwd,
       packagesSlugs: configPackages,
-      previousPackagesSlugs: configPackages,
       gitRemoteUrl,
       gitBranch,
       relativePath,
@@ -264,7 +273,13 @@ export async function diffArtefactsHandler(
       const result = await packmindCliHexa.submitDiffs(groupedDiffs);
 
       for (const err of result.errors) {
-        logErrorConsole(`Failed to submit "${err.name}": ${err.message}`);
+        if (err.code === 'ChangeProposalPayloadMismatchError') {
+          logErrorConsole(
+            `Failed to submit "${err.name}": ${err.artifactType ?? 'artifact'} is outdated, please run packmind-cli install to update it`,
+          );
+        } else {
+          logErrorConsole(`Failed to submit "${err.name}": ${err.message}`);
+        }
       }
 
       const summaryParts: string[] = [];

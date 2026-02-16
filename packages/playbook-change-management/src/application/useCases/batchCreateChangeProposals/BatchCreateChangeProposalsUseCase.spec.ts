@@ -154,6 +154,7 @@ describe('BatchCreateChangeProposalsUseCase', () => {
         {
           index: 1,
           message: `Unsupported change proposal type: ${ChangeProposalType.updateStandardName}`,
+          code: 'UnsupportedChangeProposalTypeError',
         },
       ]);
     });
@@ -194,6 +195,7 @@ describe('BatchCreateChangeProposalsUseCase', () => {
         {
           index: 0,
           message: `Payload oldValue does not match current value for ${ChangeProposalType.updateCommandName}: expected "Actual Name", got "Wrong Name"`,
+          code: 'ChangeProposalPayloadMismatchError',
         },
       ]);
     });
