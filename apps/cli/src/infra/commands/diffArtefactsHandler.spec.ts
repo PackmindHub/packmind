@@ -9,6 +9,7 @@ jest.mock('../utils/consoleLogger', () => ({
   logWarningConsole: jest.fn(),
   logInfoConsole: jest.fn(),
   logErrorConsole: jest.fn(),
+  logSuccessConsole: jest.fn(),
   formatFilePath: jest.fn((text: string) => text),
   formatHeader: jest.fn((text: string) => text),
   formatBold: jest.fn((text: string) => text),
@@ -931,10 +932,12 @@ describe('diffArtefactsHandler', () => {
       });
 
       it('displays submission summary', async () => {
-        const { logInfoConsole } = jest.requireMock('../utils/consoleLogger');
+        const { logSuccessConsole } = jest.requireMock(
+          '../utils/consoleLogger',
+        );
         await diffArtefactsHandler({ ...deps, submit: true });
 
-        expect(logInfoConsole).toHaveBeenCalledWith('Summary: 1 submitted');
+        expect(logSuccessConsole).toHaveBeenCalledWith('Summary: 1 submitted');
       });
     });
 
@@ -1138,10 +1141,12 @@ describe('diffArtefactsHandler', () => {
       });
 
       it('displays summary with all counts', async () => {
-        const { logErrorConsole } = jest.requireMock('../utils/consoleLogger');
+        const { logWarningConsole } = jest.requireMock(
+          '../utils/consoleLogger',
+        );
         await diffArtefactsHandler({ ...deps, submit: true });
 
-        expect(logErrorConsole).toHaveBeenCalledWith(
+        expect(logWarningConsole).toHaveBeenCalledWith(
           'Summary: 2 submitted, 1 already submitted, 2 errors',
         );
       });

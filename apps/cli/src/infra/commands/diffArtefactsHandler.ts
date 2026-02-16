@@ -8,6 +8,7 @@ import {
   formatHeader,
   formatBold,
   formatFilePath,
+  logSuccessConsole,
 } from '../utils/consoleLogger';
 import { formatContentDiff } from '../utils/diffFormatter';
 import chalk from 'chalk';
@@ -296,12 +297,15 @@ export async function diffArtefactsHandler(
 
       if (summaryParts.length > 0) {
         const summaryMessage = `Summary: ${summaryParts.join(', ')}`;
-        if (result.errors.length > 0) {
-          logErrorConsole(summaryMessage);
-        } else if (result.alreadySubmitted > 0) {
+        if (result.errors.length === 0 && result.alreadySubmitted === 0) {
+          logSuccessConsole(summaryMessage);
+        } else if (
+          (result.errors.length > 0 && result.submitted > 0) ||
+          result.alreadySubmitted > 0
+        ) {
           logWarningConsole(summaryMessage);
         } else {
-          logInfoConsole(summaryMessage);
+          logErrorConsole(summaryMessage);
         }
       }
     }
