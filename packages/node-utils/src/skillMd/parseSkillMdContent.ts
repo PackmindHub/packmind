@@ -33,7 +33,7 @@ export function serializeSkillMetadata(
   fields: Record<string, unknown>,
 ): string {
   const sorted = Object.keys(fields)
-    .sort()
+    .sort((a, b) => a.localeCompare(b))
     .reduce(
       (acc, key) => {
         acc[key] = fields[key];
