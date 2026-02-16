@@ -54,22 +54,17 @@ describe('SocialLoginButtons', () => {
 
     it('renders Google button', () => {
       renderComponent();
-      expect(screen.getByText('Continue with Google')).toBeInTheDocument();
+      expect(screen.getByText('Google')).toBeInTheDocument();
     });
 
     it('renders GitHub button', () => {
       renderComponent();
-      expect(screen.getByText('Continue with GitHub')).toBeInTheDocument();
+      expect(screen.getByText('GitHub')).toBeInTheDocument();
     });
 
     it('renders Microsoft button', () => {
       renderComponent();
-      expect(screen.getByText('Continue with Microsoft')).toBeInTheDocument();
-    });
-
-    it('renders or divider between buttons and form', () => {
-      renderComponent();
-      expect(screen.getByText('or')).toBeInTheDocument();
+      expect(screen.getByText('Microsoft')).toBeInTheDocument();
     });
   });
 

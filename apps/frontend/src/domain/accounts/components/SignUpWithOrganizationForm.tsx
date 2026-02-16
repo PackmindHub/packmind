@@ -8,6 +8,7 @@ import {
   PMHStack,
   PMInput,
   PMText,
+  PMSeparator,
 } from '@packmind/ui';
 import {
   useCheckEmailAvailabilityMutation,
@@ -166,7 +167,6 @@ export default function SignUpWithOrganizationForm() {
 
   return (
     <>
-      <SocialLoginButtons />
       <form
         onSubmit={handleSubmit}
         data-testId={SignUpWithOrganizationFormDataTestIds.Component}
@@ -292,6 +292,16 @@ export default function SignUpWithOrganizationForm() {
           </PMHStack>
         </PMFormContainer>
       </form>
+
+      {/* Separator + social buttons at the bottom */}
+      <PMHStack width="full" gap={4} alignItems="center">
+        <PMSeparator flex="1" />
+        <PMText variant="small" color="secondary">
+          Or continue with
+        </PMText>
+        <PMSeparator flex="1" />
+      </PMHStack>
+      <SocialLoginButtons />
     </>
   );
 }

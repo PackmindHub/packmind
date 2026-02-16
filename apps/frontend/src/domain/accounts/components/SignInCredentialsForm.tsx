@@ -6,6 +6,9 @@ import {
   PMFormContainer,
   PMField,
   PMLink,
+  PMHStack,
+  PMSeparator,
+  PMText,
 } from '@packmind/ui';
 import { useSignInMutation } from '../api/queries/AuthQueries';
 import { SignInUserResponse } from '@packmind/types';
@@ -92,7 +95,6 @@ export default function SignInCredentialsForm({
 
   return (
     <>
-      <SocialLoginButtons />
       <form onSubmit={handleSubmit}>
         <PMFormContainer spacing={4} maxWidth="full">
           <PMField.Root required invalid={!!getEmailError()}>
@@ -144,6 +146,16 @@ export default function SignInCredentialsForm({
           </PMLink>
         </PMFormContainer>
       </form>
+
+      {/* Separator + social buttons at the bottom */}
+      <PMHStack width="full" gap={4} alignItems="center">
+        <PMSeparator flex="1" />
+        <PMText variant="small" color="secondary">
+          Or continue with
+        </PMText>
+        <PMSeparator flex="1" />
+      </PMHStack>
+      <SocialLoginButtons />
     </>
   );
 }

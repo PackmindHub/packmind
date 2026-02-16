@@ -13,9 +13,9 @@ import { useSocialProvidersQuery } from '../api/queries/AuthQueries';
 
 const PROVIDER_CONFIG: Record<string, { label: string; icon: ComponentType }> =
   {
-    GoogleOAuth: { label: 'Continue with Google', icon: SiGoogle },
-    GitHubOAuth: { label: 'Continue with GitHub', icon: SiGithub },
-    MicrosoftOAuth: { label: 'Continue with Microsoft', icon: FaMicrosoft },
+    GoogleOAuth: { label: 'Google', icon: SiGoogle },
+    GitHubOAuth: { label: 'GitHub', icon: SiGithub },
+    MicrosoftOAuth: { label: 'Microsoft', icon: FaMicrosoft },
   };
 
 export default function SocialLoginButtons() {
@@ -26,14 +26,13 @@ export default function SocialLoginButtons() {
   }
 
   return (
-    <PMVStack gap={4} width="full">
+    <PMHStack gap={3} width="full" justifyContent="center">
       {data.providers.map((provider) => {
         const config = PROVIDER_CONFIG[provider];
         return (
           <PMButton
             key={provider}
             variant="outline"
-            width="full"
             onClick={() => {
               window.location.href = `/api/v0/auth/social/authorize/${provider}`;
             }}
@@ -43,14 +42,6 @@ export default function SocialLoginButtons() {
           </PMButton>
         );
       })}
-
-      <PMHStack width="full" gap={4} alignItems="center">
-        <PMSeparator flex="1" />
-        <PMText variant="small" color="secondary">
-          or
-        </PMText>
-        <PMSeparator flex="1" />
-      </PMHStack>
-    </PMVStack>
+    </PMHStack>
   );
 }
