@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router';
 import {
   PMDialog,
@@ -21,20 +21,30 @@ import {
 import { useGetSpacesQuery } from '../../../spaces/api/queries/SpacesQueries';
 import { routes } from '../../../../shared/utils/routes';
 
+export type ArtifactTab = 'standards' | 'commands' | 'skills';
+
 interface NonLiveArtifactsModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  defaultTab?: ArtifactTab;
 }
 
 export const NonLiveArtifactsModal = ({
   open,
   onOpenChange,
+  defaultTab = 'standards',
 }: NonLiveArtifactsModalProps) => {
   const { orgSlug, spaceSlug } = useParams<{
     orgSlug: string;
     spaceSlug: string;
   }>();
-  const [activeTab, setActiveTab] = useState('standards');
+  const [activeTab, setActiveTab] = useState<ArtifactTab>(defaultTab);
+
+  useEffect(() => {
+    if (open) {
+      setActiveTab(defaultTab);
+    }
+  }, [open, defaultTab]);
 
   const { data: spaces } = useGetSpacesQuery();
   const defaultSpaceSlug = spaces?.[0]?.slug;
@@ -228,8 +238,11 @@ export const NonLiveArtifactsModal = ({
               </PMText>
               <PMTabs
                 defaultValue={activeTab}
+                value={activeTab}
                 tabs={tabs}
-                onValueChange={(details) => setActiveTab(details.value)}
+                onValueChange={(details) =>
+                  setActiveTab(details.value as ArtifactTab)
+                }
               />
             </PMDialog.Body>
           </PMDialog.Content>

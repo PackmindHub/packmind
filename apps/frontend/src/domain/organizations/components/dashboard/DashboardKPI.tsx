@@ -15,10 +15,16 @@ import {
   useGetSkillsDeploymentOverviewQuery,
 } from '../../../deployments/api/queries/DeploymentsQueries';
 import { LuInfo, LuRadio } from 'react-icons/lu';
-import { NonLiveArtifactsModal } from './NonLiveArtifactsModal';
+import { NonLiveArtifactsModal, ArtifactTab } from './NonLiveArtifactsModal';
 
 export const DashboardKPI = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedTab, setSelectedTab] = useState<ArtifactTab>('standards');
+
+  const openModalOnTab = (tab: ArtifactTab) => {
+    setSelectedTab(tab);
+    setIsModalOpen(true);
+  };
   const { data: recipesOverview } = useGetRecipesDeploymentOverviewQuery();
   const { data: standardsOverview } = useGetStandardsDeploymentOverviewQuery();
   const { data: skillsOverview } = useGetSkillsDeploymentOverviewQuery();
@@ -44,11 +50,9 @@ export const DashboardKPI = () => {
       (s) => !s.isDeleted && s.targetDeployments.length > 0,
     ).length ?? 0;
 
-  const totalNonLive =
-    totalStandards -
-    activeStandards +
-    (totalRecipes - activeRecipes) +
-    (totalSkills - activeSkills);
+  const nonLiveStandards = totalStandards - activeStandards;
+  const nonLiveRecipes = totalRecipes - activeRecipes;
+  const nonLiveSkills = totalSkills - activeSkills;
 
   const getBackgroundColorByPercentage = (
     active: number,
@@ -135,17 +139,6 @@ export const DashboardKPI = () => {
       }
       backgroundColor="primary"
       headingLevel="h5"
-      cta={
-        totalNonLive > 0 && (
-          <PMButton
-            variant="tertiary"
-            size="sm"
-            onClick={() => setIsModalOpen(true)}
-          >
-            {totalNonLive} non-live
-          </PMButton>
-        )
-      }
     >
       <PMHStack align="stretch" width="full" gap={4} my={4}>
         <PMBox
@@ -158,7 +151,18 @@ export const DashboardKPI = () => {
           borderColor={standardsBorderColor}
         >
           <PMStat.Root size={'lg'}>
-            <PMStat.Label color={'text.primary'}>Standards</PMStat.Label>
+            <PMHStack justify="space-between" align="center" width="full">
+              <PMStat.Label color={'text.primary'}>Standards</PMStat.Label>
+              {nonLiveStandards > 0 && (
+                <PMButton
+                  variant="tertiary"
+                  size="xs"
+                  onClick={() => openModalOnTab('standards')}
+                >
+                  {nonLiveStandards} non-live
+                </PMButton>
+              )}
+            </PMHStack>
             <PMStat.ValueText alignItems="baseline" color={standardsTextColor}>
               {totalStandards === 0 ? (
                 <PMStat.ValueUnit>No standards yet</PMStat.ValueUnit>
@@ -200,7 +204,18 @@ export const DashboardKPI = () => {
           borderColor={recipesBorderColor}
         >
           <PMStat.Root size={'lg'}>
-            <PMStat.Label color={'text.primary'}>Commands</PMStat.Label>
+            <PMHStack justify="space-between" align="center" width="full">
+              <PMStat.Label color={'text.primary'}>Commands</PMStat.Label>
+              {nonLiveRecipes > 0 && (
+                <PMButton
+                  variant="tertiary"
+                  size="xs"
+                  onClick={() => openModalOnTab('commands')}
+                >
+                  {nonLiveRecipes} non-live
+                </PMButton>
+              )}
+            </PMHStack>
             <PMStat.ValueText alignItems="baseline" color={recipesTextColor}>
               {totalRecipes === 0 ? (
                 <PMStat.ValueUnit>No commands yet</PMStat.ValueUnit>
@@ -242,7 +257,18 @@ export const DashboardKPI = () => {
           borderColor={skillsBorderColor}
         >
           <PMStat.Root size={'lg'}>
-            <PMStat.Label color={'text.primary'}>Skills</PMStat.Label>
+            <PMHStack justify="space-between" align="center" width="full">
+              <PMStat.Label color={'text.primary'}>Skills</PMStat.Label>
+              {nonLiveSkills > 0 && (
+                <PMButton
+                  variant="tertiary"
+                  size="xs"
+                  onClick={() => openModalOnTab('skills')}
+                >
+                  {nonLiveSkills} non-live
+                </PMButton>
+              )}
+            </PMHStack>
             <PMStat.ValueText alignItems="baseline" color={skillsTextColor}>
               {totalSkills === 0 ? (
                 <PMStat.ValueUnit>No skills yet</PMStat.ValueUnit>
@@ -275,7 +301,11 @@ export const DashboardKPI = () => {
         </PMBox>
       </PMHStack>
 
-      <NonLiveArtifactsModal open={isModalOpen} onOpenChange={setIsModalOpen} />
+      <NonLiveArtifactsModal
+        open={isModalOpen}
+        onOpenChange={setIsModalOpen}
+        defaultTab={selectedTab}
+      />
     </PMPageSection>
   );
 };
