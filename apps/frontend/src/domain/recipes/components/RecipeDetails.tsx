@@ -33,7 +33,6 @@ import { RecipeVersionsListDrawer } from './RecipeVersionsListDrawer';
 import { RecipeDistributionsList } from '../../deployments/components/RecipeDistributionsList/RecipeDistributionsList';
 import { useListRecipeDistributionsQuery } from '../../deployments/api/queries/DeploymentsQueries';
 import { useGetChangeProposalsQuery } from '../api/queries/ChangeProposalsQueries';
-import { AutobreadCrumb } from '../../../../src/shared/components/navigation/AutobreadCrumb';
 import { RECIPE_MESSAGES } from '../constants/messages';
 import { ChangeProposalStatus, RecipeId } from '@packmind/types';
 import {
@@ -107,7 +106,6 @@ export const RecipeDetails = ({ id, orgSlug }: RecipeDetailsProps) => {
       <PMPage
         title="Loading Command..."
         subtitle="Please wait while we fetch the command details"
-        breadcrumbComponent={<AutobreadCrumb />}
       >
         <PMBox
           display="flex"
@@ -128,7 +126,6 @@ export const RecipeDetails = ({ id, orgSlug }: RecipeDetailsProps) => {
       <PMPage
         title="Error Loading Command"
         subtitle="Sorry, we couldn't load the command details"
-        breadcrumbComponent={<AutobreadCrumb />}
       >
         <PMAlert.Root status="error" width="lg" mb={4}>
           <PMAlert.Indicator />
@@ -144,7 +141,6 @@ export const RecipeDetails = ({ id, orgSlug }: RecipeDetailsProps) => {
       <PMPage
         title="Command Not Found"
         subtitle="The command you're looking for doesn't exist"
-        breadcrumbComponent={<AutobreadCrumb />}
       >
         <PMBox>
           <PMText>This command could not be found.</PMText>
@@ -176,7 +172,6 @@ export const RecipeDetails = ({ id, orgSlug }: RecipeDetailsProps) => {
           </PMLink>
         </PMFeatureFlag>
       }
-      breadcrumbComponent={<AutobreadCrumb />}
       isFullWidth
       actions={
         <PMHStack gap={2}>

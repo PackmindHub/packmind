@@ -8,6 +8,8 @@ import {
   IPlaybookChangeManagementPortName,
   IRecipesPort,
   IRecipesPortName,
+  ISkillsPort,
+  ISkillsPortName,
   ISpacesPort,
   ISpacesPortName,
 } from '@packmind/types';
@@ -72,11 +74,13 @@ export class PlaybookChangeManagementHexa extends BaseHexa<
         registry.getAdapter<IAccountsPort>(IAccountsPortName);
       const recipesPort = registry.getAdapter<IRecipesPort>(IRecipesPortName);
       const spacesPort = registry.getAdapter<ISpacesPort>(ISpacesPortName);
+      const skillsPort = registry.getAdapter<ISkillsPort>(ISkillsPortName);
 
       await this.playbookChangeManagementAdapter.initialize({
         [IAccountsPortName]: accountsPort,
         [IRecipesPortName]: recipesPort,
         [ISpacesPortName]: spacesPort,
+        [ISkillsPortName]: skillsPort,
       });
 
       this.logger.info('PlaybookChangeManagementHexa initialized successfully');

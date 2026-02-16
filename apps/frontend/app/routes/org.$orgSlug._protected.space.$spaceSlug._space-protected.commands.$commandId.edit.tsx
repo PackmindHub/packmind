@@ -1,30 +1,8 @@
-import { useParams, NavLink } from 'react-router';
+import { useParams } from 'react-router';
 import { PMPage, PMVStack, PMBox, PMSpinner, PMText } from '@packmind/ui';
 import { EditCommand } from '../../src/domain/recipes/components/EditCommand';
 import { useGetRecipeByIdQuery } from '../../src/domain/recipes/api/queries/RecipesQueries';
 import { RecipeId } from '@packmind/types';
-import { AutobreadCrumb } from '../../src/shared/components/navigation/AutobreadCrumb';
-import { routes } from '../../src/shared/utils/routes';
-
-export const handle = {
-  crumb: ({
-    params,
-  }: {
-    params: { orgSlug: string; spaceSlug: string; commandId: string };
-  }) => {
-    return (
-      <NavLink
-        to={routes.space.toEditCommand(
-          params.orgSlug,
-          params.spaceSlug,
-          params.commandId,
-        )}
-      >
-        Edit
-      </NavLink>
-    );
-  },
-};
 
 export default function EditCommandRouteModule() {
   const { commandId } = useParams<{
@@ -44,7 +22,6 @@ export default function EditCommandRouteModule() {
       <PMPage
         title="Loading Command..."
         subtitle="Please wait while we fetch the command details"
-        breadcrumbComponent={<AutobreadCrumb />}
       >
         <PMBox
           display="flex"
@@ -61,11 +38,7 @@ export default function EditCommandRouteModule() {
 
   if (isError || !recipe) {
     return (
-      <PMPage
-        title="Error"
-        subtitle="Failed to load command"
-        breadcrumbComponent={<AutobreadCrumb />}
-      >
+      <PMPage title="Error" subtitle="Failed to load command">
         <PMBox display="flex" justifyContent="center" py={8}>
           <PMVStack gap={4}>
             <span>Failed to load command. Please try again.</span>
@@ -76,11 +49,7 @@ export default function EditCommandRouteModule() {
   }
 
   return (
-    <PMPage
-      title={`Edit ${recipe.name}`}
-      subtitle="Update command details"
-      breadcrumbComponent={<AutobreadCrumb />}
-    >
+    <PMPage title={`Edit ${recipe.name}`} subtitle="Update command details">
       <PMVStack align="stretch" gap={6}>
         <EditCommand recipe={recipe} />
       </PMVStack>

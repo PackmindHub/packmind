@@ -39,7 +39,7 @@ See the [CLI documentation](/tools/cli#packages-command) for details.
 
 ### Adding Items to Packages
 
-There are several ways to add items to packages:
+There are two ways to add items to packages:
 
 - **Via CLI** — Use `packmind-cli packages add` to add existing standards, commands, or skills to a package:
   ```bash
@@ -47,7 +47,6 @@ There are several ways to add items to packages:
   packmind-cli packages add --to backend --command create-api-endpoint
   packmind-cli packages add --to backend --skill debugging-workflow
   ```
-- **Via MCP** — Include the `packageSlugs` parameter when creating commands or standards via the MCP server
 - **Via Web Interface** — Add items to packages through the Packmind UI
 
 ## Using Packages
@@ -88,17 +87,6 @@ All commands, standards, and skills in the package are committed together to you
 </Note>
 
 Learn more in the [Distribution documentation](/governance/distribution).
-
-### Via MCP Server
-
-AI agents can work with packages using these tools:
-
-- `list_packages` - View available packages
-- `get_package_details` - Inspect package contents
-
-When creating commands or standards via MCP using `save_command` or `save_standard`, use the `packageSlugs` parameter to add them to packages automatically.
-
-See the [MCP Server reference](/tools/mcp-server#packages-tools) for details.
 
 ## Package Versions
 

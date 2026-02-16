@@ -17,14 +17,17 @@ Let’s see how we can make written documentation useful again with **Packmind**
 
 ## Create a standard from your codebase
 
-<Warning>
-  You need to connect your MCP server to your IDE. See the setup guide: [Get
-  started with the MCP server](/getting-started/gs-mcp-server-setup).
-</Warning>
+You can create standards using the `/packmind-create-standard` command in your AI coding assistant.
 
 1. Open your IDE and your coding assistant in **agentic mode**.
 2. For this demo, we will create a language-agnostic standard. (You can also target a specific language or framework.)
-3. Type this prompt:
+3. Type this command:
+
+```
+/packmind-create-standard
+```
+
+Or use a natural language prompt:
 
 ```
 Analyze our codebase and create a Packmind standard about error handling.
@@ -36,7 +39,7 @@ The AI agent will automatically follow the **standard creation workflow** which 
 
 1. **Understanding your request** - The agent clarifies what standard you want to create and gathers appropriate context from your codebase
 2. **Drafting the standard** - The agent creates a draft with name, description, and rules, iterating with you for feedback
-3. **Finalization** - Once you're satisfied, the agent validates the standard and calls the `packmind_create_standard` MCP tool
+3. **Finalization** - Once you're satisfied, the agent validates and creates the standard in Packmind
 
 Your new standard will be available in the Packmind web app, in the **Standards** panel.
 

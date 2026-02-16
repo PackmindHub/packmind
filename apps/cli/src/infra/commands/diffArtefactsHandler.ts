@@ -1,9 +1,5 @@
 import { PackmindCliHexa } from '../../PackmindCliHexa';
-import {
-  ArtifactType,
-  CodingAgent,
-  ScalarUpdatePayload,
-} from '@packmind/types';
+import { ArtifactType, ChangeProposalType, CodingAgent } from '@packmind/types';
 import { ArtefactDiff } from '../../domain/useCases/IDiffArtefactsUseCase';
 import {
   logWarningConsole,
@@ -14,6 +10,7 @@ import {
   formatFilePath,
 } from '../utils/consoleLogger';
 import { formatContentDiff } from '../utils/diffFormatter';
+import chalk from 'chalk';
 
 export type DiffHandlerDependencies = {
   packmindCliHexa: PackmindCliHexa;
@@ -34,6 +31,30 @@ const ARTIFACT_TYPE_LABELS: Record<ArtifactType, string> = {
   skill: 'Skill',
 };
 
+const CHANGE_TYPE_LABELS: Partial<Record<ChangeProposalType, string>> = {
+  [ChangeProposalType.updateCommandDescription]: 'command content changed',
+  [ChangeProposalType.updateSkillName]: 'skill name changed',
+  [ChangeProposalType.updateSkillDescription]: 'skill description changed',
+  [ChangeProposalType.updateSkillPrompt]: 'skill prompt changed',
+  [ChangeProposalType.updateSkillMetadata]: 'skill metadata changed',
+  [ChangeProposalType.updateSkillFileContent]: 'skill file content changed',
+  [ChangeProposalType.updateSkillFilePermissions]:
+    'skill file permissions changed',
+  [ChangeProposalType.addSkillFile]: 'new skill file added',
+  [ChangeProposalType.deleteSkillFile]: 'skill file deleted',
+};
+
+function subGroupByChangeContent(diffs: ArtefactDiff[]): ArtefactDiff[][] {
+  const groups = new Map<string, ArtefactDiff[]>();
+  for (const diff of diffs) {
+    const key = JSON.stringify({ type: diff.type, payload: diff.payload });
+    const group = groups.get(key) ?? [];
+    group.push(diff);
+    groups.set(key, group);
+  }
+  return Array.from(groups.values());
+}
+
 function groupDiffsByArtefact(
   diffs: ArtefactDiff[],
 ): Map<string, ArtefactDiff[]> {
@@ -47,16 +68,40 @@ function groupDiffsByArtefact(
   return groups;
 }
 
-function groupDiffsByPayload(artifactDiffs: ArtefactDiff[]): ArtefactDiff[][] {
-  const groups = new Map<string, ArtefactDiff[]>();
-  for (const diff of artifactDiffs) {
-    const payload = diff.payload as ScalarUpdatePayload;
-    const key = `${payload.oldValue}\0${payload.newValue}`;
-    const group = groups.get(key) ?? [];
-    group.push(diff);
-    groups.set(key, group);
+function formatDiffPayload(diff: ArtefactDiff, log: typeof console.log): void {
+  const payload = diff.payload as Record<string, unknown>;
+
+  if (diff.type === ChangeProposalType.addSkillFile) {
+    const item = payload.item as { content: string; isBase64?: boolean };
+    if (item.isBase64) {
+      log(chalk.green('    + [binary file]'));
+    } else {
+      for (const line of item.content.split('\n')) {
+        log(chalk.green(`    + ${line}`));
+      }
+    }
+    return;
   }
-  return Array.from(groups.values());
+
+  if (diff.type === ChangeProposalType.deleteSkillFile) {
+    const item = payload.item as { content: string; isBase64?: boolean };
+    if (item.isBase64) {
+      log(chalk.red('    - [binary file]'));
+    } else {
+      for (const line of item.content.split('\n')) {
+        log(chalk.red(`    - ${line}`));
+      }
+    }
+    return;
+  }
+
+  // ScalarUpdatePayload and CollectionItemUpdatePayload both have oldValue/newValue
+  const oldValue = payload.oldValue as string;
+  const newValue = payload.newValue as string;
+  const { lines } = formatContentDiff(oldValue, newValue);
+  for (const line of lines) {
+    log(line);
+  }
 }
 
 export async function diffArtefactsHandler(
@@ -156,17 +201,15 @@ export async function diffArtefactsHandler(
       const typeLabel = ARTIFACT_TYPE_LABELS[artifactType];
       log(formatBold(`${typeLabel} "${artifactName}"`));
 
-      const payloadGroups = groupDiffsByPayload(groupDiffs);
-      for (const payloadGroup of payloadGroups) {
-        for (const diff of payloadGroup) {
+      // Sub-group by change type + payload to deduplicate identical changes across agent folders
+      const subGroups = subGroupByChangeContent(groupDiffs);
+      for (const subGroup of subGroups) {
+        for (const diff of subGroup) {
           log(`  ${formatFilePath(diff.filePath)}`);
         }
-        log('  - content changed');
-        const payload = payloadGroup[0].payload as ScalarUpdatePayload;
-        const { lines } = formatContentDiff(payload.oldValue, payload.newValue);
-        for (const line of lines) {
-          log(line);
-        }
+        const label = CHANGE_TYPE_LABELS[subGroup[0].type] ?? 'content changed';
+        log(`  - ${label}`);
+        formatDiffPayload(subGroup[0], log);
       }
       log('');
     }

@@ -143,13 +143,13 @@ describe('DashboardKPI', () => {
   });
 
   describe('when there are non-live artifacts', () => {
-    it('displays the show non-distributed artifacts button', () => {
+    it('displays a non-live button on each artifact card', () => {
       renderComponent();
 
-      const button = screen.getByRole('button', {
-        name: /3 non-live/i,
+      const buttons = screen.getAllByRole('button', {
+        name: /1 non-live/i,
       });
-      expect(button).toBeInTheDocument();
+      expect(buttons).toHaveLength(3);
     });
   });
 
@@ -201,13 +201,13 @@ describe('DashboardKPI', () => {
         >);
     });
 
-    it('does not show the non-distributed artifacts button', () => {
+    it('does not show any non-live buttons', () => {
       renderComponent();
 
-      const button = screen.queryByRole('button', {
-        name: /Show non-distributed artifacts/i,
+      const buttons = screen.queryAllByRole('button', {
+        name: /non-live/i,
       });
-      expect(button).not.toBeInTheDocument();
+      expect(buttons).toHaveLength(0);
     });
   });
 });

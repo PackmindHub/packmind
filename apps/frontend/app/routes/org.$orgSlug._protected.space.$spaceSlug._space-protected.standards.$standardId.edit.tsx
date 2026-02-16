@@ -1,32 +1,11 @@
-import { useParams, useNavigate, NavLink } from 'react-router';
+import { useParams, useNavigate } from 'react-router';
 import { PMPage } from '@packmind/ui';
 import { PMVStack, PMBox } from '@packmind/ui';
 import { StandardForm } from '../../src/domain/standards/components/StandardForm';
 import { useGetStandardByIdQuery } from '../../src/domain/standards/api/queries/StandardsQueries';
 import { StandardId } from '@packmind/types';
-import { AutobreadCrumb } from '../../src/shared/components/navigation/AutobreadCrumb';
 import { MarkdownEditorProvider } from '../../src/shared/components/editor/MarkdownEditor';
 import { routes } from '../../src/shared/utils/routes';
-
-export const handle = {
-  crumb: ({
-    params,
-  }: {
-    params: { orgSlug: string; spaceSlug: string; standardId: string };
-  }) => {
-    return (
-      <NavLink
-        to={routes.space.toStandardEdit(
-          params.orgSlug,
-          params.spaceSlug,
-          params.standardId,
-        )}
-      >
-        Edit
-      </NavLink>
-    );
-  },
-};
 
 export default function EditStandardRouteModule() {
   const { orgSlug, spaceSlug, standardId } = useParams<{
@@ -58,11 +37,7 @@ export default function EditStandardRouteModule() {
     !getStandardByIdResponse.standard
   ) {
     return (
-      <PMPage
-        title="Error"
-        subtitle="Failed to load standard"
-        breadcrumbComponent={<AutobreadCrumb />}
-      >
+      <PMPage title="Error" subtitle="Failed to load standard">
         <PMBox display="flex" justifyContent="center" py={8}>
           <PMVStack gap={4}>
             <span>Failed to load standard. Please try again.</span>
@@ -76,7 +51,6 @@ export default function EditStandardRouteModule() {
     <PMPage
       title={`Edit ${getStandardByIdResponse.standard.name}`}
       subtitle="Update standard details and rules"
-      breadcrumbComponent={<AutobreadCrumb />}
     >
       <MarkdownEditorProvider>
         <StandardForm

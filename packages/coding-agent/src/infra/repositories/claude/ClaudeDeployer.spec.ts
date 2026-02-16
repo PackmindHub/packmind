@@ -3564,6 +3564,43 @@ describe('ClaudeDeployer', () => {
             'export const format = (s: string) => s',
           );
         });
+
+        it('propagates skillFileId for helper file', async () => {
+          const fileUpdates = await deployer.generateFileUpdatesForSkills(
+            skillVersionsWithFiles,
+          );
+
+          const helperFile = fileUpdates.createOrUpdate.find((file) =>
+            file.path.includes('helper.ts'),
+          );
+          expect(helperFile?.skillFileId).toBe(
+            skillVersionsWithFiles[0].files![0].id,
+          );
+        });
+
+        it('propagates skillFilePermissions for helper file', async () => {
+          const fileUpdates = await deployer.generateFileUpdatesForSkills(
+            skillVersionsWithFiles,
+          );
+
+          const helperFile = fileUpdates.createOrUpdate.find((file) =>
+            file.path.includes('helper.ts'),
+          );
+          expect(helperFile?.skillFilePermissions).toBe(
+            skillVersionsWithFiles[0].files![0].permissions,
+          );
+        });
+
+        it('does not set skillFileId on SKILL.md', async () => {
+          const fileUpdates = await deployer.generateFileUpdatesForSkills(
+            skillVersionsWithFiles,
+          );
+
+          const skillMdFile = fileUpdates.createOrUpdate.find((file) =>
+            file.path.endsWith('SKILL.md'),
+          );
+          expect(skillMdFile?.skillFileId).toBeUndefined();
+        });
       });
 
       describe('when skill file has isBase64 flag set to true', () => {

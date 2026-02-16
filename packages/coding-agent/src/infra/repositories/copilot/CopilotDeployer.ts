@@ -6,6 +6,7 @@ import {
   IGitPort,
   IStandardsPort,
   RecipeVersion,
+  SkillFileOutput,
   SkillVersion,
   StandardVersion,
   Target,
@@ -201,6 +202,8 @@ export class CopilotDeployer implements ICodingAgentDeployer {
           isBase64: skillFile.isBase64,
           artifactType: 'skill',
           artifactName: skillVersion.name,
+          skillFileId: skillFile.skillFileId,
+          skillFilePermissions: skillFile.skillFilePermissions,
         });
       }
     }
@@ -230,6 +233,8 @@ export class CopilotDeployer implements ICodingAgentDeployer {
           isBase64: skillFile.isBase64,
           artifactType: 'skill',
           artifactName: skillVersion.name,
+          skillFileId: skillFile.skillFileId,
+          skillFilePermissions: skillFile.skillFilePermissions,
         });
       }
     }
@@ -289,6 +294,8 @@ export class CopilotDeployer implements ICodingAgentDeployer {
           isBase64: skillFile.isBase64,
           artifactType: 'skill',
           artifactName: skillVersion.name,
+          skillFileId: skillFile.skillFileId,
+          skillFilePermissions: skillFile.skillFilePermissions,
         });
       }
     }
@@ -502,19 +509,16 @@ ${recipeVersion.content}`;
    * Skills are deployed to .github/skills/{skill-slug}/ following the Agent Skills specification
    * Returns an array of files including SKILL.md and any additional files
    */
-  private generateCopilotSkillFiles(skillVersion: SkillVersion): Array<{
-    path: string;
-    content: string;
-    isBase64?: boolean;
-  }> {
+  private generateCopilotSkillFiles(
+    skillVersion: SkillVersion,
+  ): SkillFileOutput[] {
     this.logger.debug('Generating Copilot skill files', {
       skillSlug: skillVersion.slug,
       skillName: skillVersion.name,
       fileCount: (skillVersion.files?.length ?? 0) + 1,
     });
 
-    const files: Array<{ path: string; content: string; isBase64?: boolean }> =
-      [];
+    const files: SkillFileOutput[] = [];
 
     // Generate SKILL.md (main skill file)
     const skillMdContent = this.generateSkillMdContent(skillVersion);
@@ -534,6 +538,8 @@ ${recipeVersion.content}`;
           path: `.github/skills/${skillVersion.slug}/${file.path}`,
           content: file.content,
           isBase64: file.isBase64,
+          skillFileId: file.id,
+          skillFilePermissions: file.permissions,
         });
       }
     }

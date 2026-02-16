@@ -1,6 +1,5 @@
 import { useMemo, useState } from 'react';
 import {
-  NavLink,
   Outlet,
   redirect,
   useLoaderData,
@@ -28,7 +27,6 @@ import { queryClient } from '../../src/shared/data/queryClient';
 import { routes } from '../../src/shared/utils/routes';
 import { useAuthContext } from '../../src/domain/accounts/hooks/useAuthContext';
 import { PMPage, PMBox, PMText, PMGrid, PMAlert } from '@packmind/ui';
-import { AutobreadCrumb } from '../../src/shared/components/navigation/AutobreadCrumb';
 import { SkillDetailsSidebar } from '../../src/domain/skills/components/SkillDetailsSidebar';
 import { SkillVersionHistoryHeader } from '../../src/domain/skills/components/SkillVersionHistoryHeader';
 import { useSkillSectionNavigation } from '../../src/domain/skills/hooks/useSkillSectionNavigation';
@@ -92,28 +90,6 @@ export async function clientLoader({
     skillSlug: params.skillSlug,
   };
 }
-
-export const handle = {
-  crumb: ({
-    params,
-    data,
-  }: {
-    params: { orgSlug: string; spaceSlug: string; skillSlug: string };
-    data: ISkillDetailLoaderData;
-  }) => {
-    return (
-      <NavLink
-        to={routes.space.toSkill(
-          params.orgSlug,
-          params.spaceSlug,
-          params.skillSlug,
-        )}
-      >
-        {data.skill.skill.name}
-      </NavLink>
-    );
-  },
-};
 
 export default function SkillDetailLayoutRouteModule() {
   const loaderData = useLoaderData() as ISkillDetailLoaderData | undefined;
@@ -187,11 +163,7 @@ export default function SkillDetailLayoutRouteModule() {
 
   if (!skillWithFiles) {
     return (
-      <PMPage
-        title="Skill Not Found"
-        subtitle="No skill found"
-        breadcrumbComponent={<AutobreadCrumb />}
-      >
+      <PMPage title="Skill Not Found" subtitle="No skill found">
         <PMBox>
           <PMText>
             The skill you&apos;re looking for doesn&apos;t exist or the slug is
