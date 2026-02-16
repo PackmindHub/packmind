@@ -11,12 +11,14 @@ import { FaMicrosoft } from 'react-icons/fa';
 import { ComponentType } from 'react';
 import { useSocialProvidersQuery } from '../api/queries/AuthQueries';
 
-const PROVIDER_CONFIG: Record<string, { label: string; icon: ComponentType }> =
-  {
-    GoogleOAuth: { label: 'Google', icon: SiGoogle },
-    GitHubOAuth: { label: 'GitHub', icon: SiGithub },
-    MicrosoftOAuth: { label: 'Microsoft', icon: FaMicrosoft },
-  };
+const PROVIDER_CONFIG: Record<
+  string,
+  { label: string; icon: ComponentType; color: string }
+> = {
+  GoogleOAuth: { label: 'Google', icon: SiGoogle, color: '#4285F4' },
+  GitHubOAuth: { label: 'GitHub', icon: SiGithub, color: '#181717' },
+  MicrosoftOAuth: { label: 'Microsoft', icon: FaMicrosoft, color: '#00A4EF' },
+};
 
 export default function SocialLoginButtons() {
   const { data, isLoading } = useSocialProvidersQuery();
@@ -26,22 +28,34 @@ export default function SocialLoginButtons() {
   }
 
   return (
-    <PMHStack gap={3} width="full" justifyContent="center">
-      {data.providers.map((provider) => {
-        const config = PROVIDER_CONFIG[provider];
-        return (
-          <PMButton
-            key={provider}
-            variant="outline"
-            onClick={() => {
-              window.location.href = `/api/v0/auth/social/authorize/${provider}`;
-            }}
-          >
-            {config && <PMIcon as={config.icon} />}
-            {config?.label ?? provider}
-          </PMButton>
-        );
-      })}
-    </PMHStack>
+    <>
+      {/* Separator above social buttons */}
+      <PMHStack width="full" gap={4} alignItems="center" paddingY={2}>
+        <PMSeparator flex="1" />
+        <PMText variant="small" color="secondary">
+          Or continue with
+        </PMText>
+        <PMSeparator flex="1" />
+      </PMHStack>
+
+      <PMHStack gap={3} width="full">
+        {data.providers.map((provider) => {
+          const config = PROVIDER_CONFIG[provider];
+          return (
+            <PMButton
+              key={provider}
+              variant="outline"
+              flex="1"
+              onClick={() => {
+                window.location.href = `/api/v0/auth/social/authorize/${provider}`;
+              }}
+            >
+              {config && <PMIcon as={config.icon} color={config.color} />}
+              {config?.label ?? provider}
+            </PMButton>
+          );
+        })}
+      </PMHStack>
+    </>
   );
 }
