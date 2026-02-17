@@ -394,9 +394,8 @@ describe('SignUpWithOrganizationForm', () => {
       beforeEach(() => {
         const signInCall = jest.mocked(mockSignInMutation.mutate).mock
           .calls[0] as unknown[];
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const onSignInSuccess = (
-          signInCall[1] as { onSuccess: (data: any) => void }
+          signInCall[1] as { onSuccess: (data: unknown) => void }
         ).onSuccess;
         onSignInSuccess({});
       });
