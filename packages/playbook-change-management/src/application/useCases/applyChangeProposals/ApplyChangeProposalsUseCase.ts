@@ -6,6 +6,7 @@ import {
   ChangeProposalId,
   ChangeProposalType,
   IAccountsPort,
+  IApplyChangeProposalsUseCase,
   IPlaybookChangeManagementPort,
   IRecipesPort,
   ISkillsPort,
@@ -50,10 +51,13 @@ const SKILL_CHANGE_TYPES = [
 
 export class ApplyChangeProposalsUseCase<
   T extends StandardId | RecipeId | SkillId,
-> extends AbstractMemberUseCase<
-  ApplyChangeProposalsCommand<T>,
-  ApplyChangeProposalsResponse
-> {
+>
+  extends AbstractMemberUseCase<
+    ApplyChangeProposalsCommand<T>,
+    ApplyChangeProposalsResponse
+  >
+  implements IApplyChangeProposalsUseCase<T>
+{
   constructor(
     accountsPort: IAccountsPort,
     private readonly spacesPort: ISpacesPort,

@@ -21,10 +21,13 @@ const origin = 'ListChangeProposalsByArtefactUseCase';
 
 export class ListChangeProposalsByArtefactUseCase<
   T extends StandardId | RecipeId | SkillId,
-> extends AbstractMemberUseCase<
-  ListChangeProposalsByArtefactCommand<T>,
-  ListChangeProposalsByArtefactResponse
-> {
+>
+  extends AbstractMemberUseCase<
+    ListChangeProposalsByArtefactCommand<T>,
+    ListChangeProposalsByArtefactResponse
+  >
+  implements ListChangeProposalsByArtefactUseCase<T>
+{
   constructor(
     accountsPort: IAccountsPort,
     private readonly spacesPort: ISpacesPort,
