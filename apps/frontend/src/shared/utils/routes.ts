@@ -102,6 +102,15 @@ export const routes = {
     ) => `/org/${orgSlug}/space/${spaceSlug}/skills/${skillSlug}/distributions`,
     toChangeProposals: (orgSlug: string, spaceSlug: string) =>
       `/org/${orgSlug}/space/${spaceSlug}/change-proposals`,
+    toReviewChanges: (orgSlug: string, spaceSlug: string) =>
+      `/org/${orgSlug}/space/${spaceSlug}/review-changes`,
+    toReviewChangesArtefact: (
+      orgSlug: string,
+      spaceSlug: string,
+      artefactType: string,
+      artefactId: string,
+    ) =>
+      `/org/${orgSlug}/space/${spaceSlug}/review-changes/${artefactType}/${artefactId}`,
   },
 
   /**

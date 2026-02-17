@@ -145,6 +145,18 @@ export function useNavigation() {
         `/org/${currentOrgSlug}/space/${currentSpaceSlug}/commands/${commandId}/edit`,
       );
     },
+    toReviewChanges: () => {
+      if (!currentOrgSlug || !currentSpaceSlug) return;
+      navigate(
+        `/org/${currentOrgSlug}/space/${currentSpaceSlug}/review-changes`,
+      );
+    },
+    toReviewChangesArtefact: (artefactType: string, artefactId: string) => {
+      if (!currentOrgSlug || !currentSpaceSlug) return;
+      navigate(
+        `/org/${currentOrgSlug}/space/${currentSpaceSlug}/review-changes/${artefactType}/${artefactId}`,
+      );
+    },
   };
 
   /**

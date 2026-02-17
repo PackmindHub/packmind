@@ -9,25 +9,26 @@ import {
 import { RecipeId } from '@packmind/types';
 
 interface ChangeProposalsSidebarProps {
-  recipes: Array<{ id: RecipeId; name: string }>;
-  proposalCounts: Map<RecipeId, number>;
-  selectedRecipeId: RecipeId | null;
-  onSelectRecipe: (recipeId: RecipeId) => void;
+  commands: Array<{
+    artefactId: RecipeId;
+    name: string;
+    changeProposalCount: number;
+  }>;
+  selectedCommandId: RecipeId | null;
+  onSelectCommand: (commandId: RecipeId) => void;
 }
 
 export function ChangeProposalsSidebar({
-  recipes,
-  proposalCounts,
-  selectedRecipeId,
-  onSelectRecipe,
+  commands,
+  selectedCommandId,
+  onSelectCommand,
 }: ChangeProposalsSidebarProps) {
-  const commandEntries = recipes.map((recipe) => {
-    const pendingCount = proposalCounts.get(recipe.id) ?? 0;
-    const isActive = recipe.id === selectedRecipeId;
+  const commandEntries = commands.map((command) => {
+    const isActive = command.artefactId === selectedCommandId;
 
     return (
       <PMLink
-        key={recipe.id}
+        key={command.artefactId}
         as="button"
         type="button"
         variant="navbar"
@@ -46,7 +47,7 @@ export function ChangeProposalsSidebar({
         _focus={{ outline: 'none', boxShadow: 'none' }}
         _focusVisible={{ outline: 'none', boxShadow: 'none' }}
         overflow="hidden"
-        onClick={() => onSelectRecipe(recipe.id)}
+        onClick={() => onSelectCommand(command.artefactId)}
       >
         <PMHStack width="full" justifyContent="space-between" gap={2}>
           <PMText
@@ -57,10 +58,10 @@ export function ChangeProposalsSidebar({
             whiteSpace="nowrap"
             flex={1}
           >
-            {recipe.name}
+            {command.name}
           </PMText>
           <PMBadge colorPalette="blue" size="sm">
-            {pendingCount}
+            {command.changeProposalCount}
           </PMBadge>
         </PMHStack>
       </PMLink>

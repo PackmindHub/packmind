@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { useQueries } from '@tanstack/react-query';
+import { useQueryClient } from '@tanstack/react-query';
 import {
   PMBox,
   PMVStack,
@@ -13,8 +13,6 @@ import {
 } from '@packmind/ui';
 import {
   ChangeProposalId,
-  ChangeProposalStatus,
-  ChangeProposalWithOutdatedStatus,
   OrganizationId,
   RecipeId,
   SpaceId,
@@ -23,10 +21,15 @@ import { useAuthContext } from '../../../accounts/hooks/useAuthContext';
 import { useCurrentSpace } from '../../../spaces/hooks/useCurrentSpace';
 import { useGetRecipesQuery } from '../../../recipes/api/queries/RecipesQueries';
 import {
-  getChangeProposalsByRecipeIdOptions,
   useBatchApplyChangeProposalsMutation,
   useBatchRejectChangeProposalsMutation,
 } from '../../../recipes/api/queries/ChangeProposalsQueries';
+import {
+  useGetGroupedChangeProposalsQuery,
+  useListChangeProposalsByRecipeQuery,
+} from '../../api/queries/ChangeProposalsQueries';
+import { GET_GROUPED_CHANGE_PROPOSALS_KEY } from '../../api/queryKeys';
+import { useUserLookup } from '../../hooks/useUserLookup';
 import { ChangeProposalsSidebar } from './ChangeProposalsSidebar';
 import { ChangeProposalsPreviewPanel } from './ChangeProposalsPreviewPanel';
 import { ChangeProposalsChangesList } from './ChangeProposalsChangesList';
@@ -38,196 +41,195 @@ interface ChangeProposalsProps {
 export function ChangeProposals({ breadcrumbComponent }: ChangeProposalsProps) {
   const { organization } = useAuthContext();
   const { spaceId } = useCurrentSpace();
+  const queryClient = useQueryClient();
+  const userLookup = useUserLookup();
 
   const organizationId = organization?.id;
 
+  // Grouped change proposals for the sidebar
   const {
-    data: recipes,
-    isLoading: isLoadingRecipes,
-    isError: isRecipesError,
-  } = useGetRecipesQuery();
+    data: groupedProposals,
+    isLoading: isLoadingGrouped,
+    isError: isGroupedError,
+  } = useGetGroupedChangeProposalsQuery();
 
-  const [selectedRecipeId, setSelectedRecipeId] = useState<RecipeId | null>(
+  // Recipes query for getting recipe content (name + content) for the preview panel
+  const { data: recipes } = useGetRecipesQuery();
+
+  // State: selected command, reviewing proposal, and pool sets
+  const [selectedCommandId, setSelectedCommandId] = useState<RecipeId | null>(
     null,
   );
-  const [selectedProposalIds, setSelectedProposalIds] = useState<
+  const [reviewingProposalId, setReviewingProposalId] =
+    useState<ChangeProposalId | null>(null);
+  const [acceptedProposalIds, setAcceptedProposalIds] = useState<
     Set<ChangeProposalId>
   >(new Set());
-  const [focusedProposalId, setFocusedProposalId] =
-    useState<ChangeProposalId | null>(null);
+  const [rejectedProposalIds, setRejectedProposalIds] = useState<
+    Set<ChangeProposalId>
+  >(new Set());
 
   const batchApplyMutation = useBatchApplyChangeProposalsMutation();
   const batchRejectMutation = useBatchRejectChangeProposalsMutation();
 
-  // Fetch proposals for all recipes
-  const proposalsQueries = useQueries({
-    queries: (recipes ?? []).map((recipe) =>
-      getChangeProposalsByRecipeIdOptions(organizationId, spaceId, recipe.id),
-    ),
-  });
+  // Commands from grouped data
+  const commands = useMemo(
+    () => groupedProposals?.commands ?? [],
+    [groupedProposals],
+  );
 
-  // Build a map: recipeId -> pending proposals
-  const proposalsByRecipeId = useMemo(() => {
-    const map = new Map<RecipeId, ChangeProposalWithOutdatedStatus[]>();
-    if (!recipes) return map;
-
-    recipes.forEach((recipe, index) => {
-      const queryResult = proposalsQueries[index];
-      if (queryResult?.data) {
-        const pendingProposals = queryResult.data.filter(
-          (p) => p.status === ChangeProposalStatus.pending,
-        );
-        if (pendingProposals.length > 0) {
-          map.set(recipe.id, pendingProposals);
-        }
-      }
-    });
-
-    return map;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [recipes, ...proposalsQueries.map((q) => q.data)]);
-
-  // Build a map: recipeId -> proposal count
-  const proposalCountsByRecipeId = useMemo(() => {
-    const counts = new Map<RecipeId, number>();
-    proposalsByRecipeId.forEach((proposals, recipeId) => {
-      counts.set(recipeId, proposals.length);
-    });
-    return counts;
-  }, [proposalsByRecipeId]);
-
-  // Recipes that have pending proposals
-  const recipesWithPendingProposals = useMemo(() => {
-    if (!recipes) return [];
-    return recipes.filter((recipe) => proposalsByRecipeId.has(recipe.id));
-  }, [recipes, proposalsByRecipeId]);
-
-  // Auto-select first command on load
+  // Auto-select first command on load or when selected command is no longer available
   useEffect(() => {
     if (
-      recipesWithPendingProposals.length > 0 &&
-      (!selectedRecipeId ||
-        !recipesWithPendingProposals.some((r) => r.id === selectedRecipeId))
+      commands.length > 0 &&
+      (!selectedCommandId ||
+        !commands.some((c) => c.artefactId === selectedCommandId))
     ) {
-      setSelectedRecipeId(recipesWithPendingProposals[0].id);
-      setSelectedProposalIds(new Set());
-      setFocusedProposalId(null);
+      setSelectedCommandId(commands[0].artefactId);
+      setReviewingProposalId(null);
     }
-  }, [recipesWithPendingProposals, selectedRecipeId]);
+  }, [commands, selectedCommandId]);
 
-  const selectedRecipe = useMemo(
-    () => recipes?.find((r) => r.id === selectedRecipeId),
-    [recipes, selectedRecipeId],
-  );
+  // Fetch proposals for the selected command
+  const { data: selectedRecipeProposalsData, isLoading: isLoadingProposals } =
+    useListChangeProposalsByRecipeQuery(selectedCommandId ?? undefined);
 
+  // Extract proposals from response
   const selectedRecipeProposals = useMemo(
-    () =>
-      selectedRecipeId ? (proposalsByRecipeId.get(selectedRecipeId) ?? []) : [],
-    [selectedRecipeId, proposalsByRecipeId],
+    () => selectedRecipeProposalsData?.changeProposals ?? [],
+    [selectedRecipeProposalsData],
   );
 
-  const focusedProposal = useMemo(
-    () =>
-      focusedProposalId
-        ? selectedRecipeProposals.find((p) => p.id === focusedProposalId)
-        : null,
-    [focusedProposalId, selectedRecipeProposals],
+  // Get the selected recipe from the recipes query (for content)
+  const selectedRecipe = useMemo(
+    () => recipes?.find((r) => r.id === selectedCommandId),
+    [recipes, selectedCommandId],
   );
 
-  const handleSelectRecipe = useCallback((recipeId: RecipeId) => {
-    setSelectedRecipeId(recipeId);
-    setSelectedProposalIds(new Set());
-    setFocusedProposalId(null);
+  // Handlers
+  const handleSelectCommand = useCallback((commandId: RecipeId) => {
+    setSelectedCommandId(commandId);
+    setReviewingProposalId(null);
   }, []);
 
-  const handleToggleProposal = useCallback(
-    (proposalId: ChangeProposalId, checked: boolean) => {
-      setSelectedProposalIds((prev) => {
-        const next = new Set(prev);
-        if (checked) {
-          next.add(proposalId);
-        } else {
-          next.delete(proposalId);
-        }
-        return next;
-      });
-    },
-    [],
-  );
-
-  const handleFocusProposal = useCallback((proposalId: ChangeProposalId) => {
-    setFocusedProposalId((prev) => (prev === proposalId ? null : proposalId));
+  const handleReviewProposal = useCallback((proposalId: ChangeProposalId) => {
+    setReviewingProposalId((prev) => (prev === proposalId ? null : proposalId));
   }, []);
 
-  const handleBatchApply = useCallback(() => {
-    if (!organizationId || !spaceId || selectedProposalIds.size === 0) return;
+  const handlePoolAccept = useCallback((proposalId: ChangeProposalId) => {
+    setAcceptedProposalIds((prev) => {
+      const next = new Set(prev);
+      next.add(proposalId);
+      return next;
+    });
+    setRejectedProposalIds((prev) => {
+      const next = new Set(prev);
+      next.delete(proposalId);
+      return next;
+    });
+  }, []);
 
-    const proposals = selectedRecipeProposals
-      .filter((p) => selectedProposalIds.has(p.id))
+  const handlePoolReject = useCallback((proposalId: ChangeProposalId) => {
+    setRejectedProposalIds((prev) => {
+      const next = new Set(prev);
+      next.add(proposalId);
+      return next;
+    });
+    setAcceptedProposalIds((prev) => {
+      const next = new Set(prev);
+      next.delete(proposalId);
+      return next;
+    });
+  }, []);
+
+  const handleUndoPool = useCallback((proposalId: ChangeProposalId) => {
+    setAcceptedProposalIds((prev) => {
+      const next = new Set(prev);
+      next.delete(proposalId);
+      return next;
+    });
+    setRejectedProposalIds((prev) => {
+      const next = new Set(prev);
+      next.delete(proposalId);
+      return next;
+    });
+  }, []);
+
+  const handleSave = useCallback(async () => {
+    if (!organizationId || !spaceId) return;
+    if (acceptedProposalIds.size === 0 && rejectedProposalIds.size === 0)
+      return;
+
+    const acceptProposals = selectedRecipeProposals
+      .filter((p) => acceptedProposalIds.has(p.id))
       .map((p) => ({
         changeProposalId: p.id,
         recipeId: p.artefactId as RecipeId,
         force: false,
       }));
 
-    batchApplyMutation.mutate(
-      {
-        organizationId: organizationId as OrganizationId,
-        spaceId: spaceId as SpaceId,
-        proposals,
-      },
-      {
-        onSuccess: () => {
-          setSelectedProposalIds(new Set());
-          setFocusedProposalId(null);
-        },
-      },
-    );
-  }, [
-    organizationId,
-    spaceId,
-    selectedProposalIds,
-    selectedRecipeProposals,
-    batchApplyMutation,
-  ]);
-
-  const handleBatchReject = useCallback(() => {
-    if (!organizationId || !spaceId || selectedProposalIds.size === 0) return;
-
-    const proposals = selectedRecipeProposals
-      .filter((p) => selectedProposalIds.has(p.id))
+    const rejectProposals = selectedRecipeProposals
+      .filter((p) => rejectedProposalIds.has(p.id))
       .map((p) => ({
         changeProposalId: p.id,
         recipeId: p.artefactId as RecipeId,
       }));
 
-    batchRejectMutation.mutate(
-      {
-        organizationId: organizationId as OrganizationId,
-        spaceId: spaceId as SpaceId,
-        proposals,
-      },
-      {
-        onSuccess: () => {
-          setSelectedProposalIds(new Set());
-          setFocusedProposalId(null);
-        },
-      },
-    );
+    const mutations: Promise<unknown>[] = [];
+
+    if (acceptProposals.length > 0) {
+      mutations.push(
+        batchApplyMutation.mutateAsync({
+          organizationId: organizationId as OrganizationId,
+          spaceId: spaceId as SpaceId,
+          proposals: acceptProposals,
+        }),
+      );
+    }
+
+    if (rejectProposals.length > 0) {
+      mutations.push(
+        batchRejectMutation.mutateAsync({
+          organizationId: organizationId as OrganizationId,
+          spaceId: spaceId as SpaceId,
+          proposals: rejectProposals,
+        }),
+      );
+    }
+
+    try {
+      await Promise.all(mutations);
+
+      // Also invalidate grouped change proposals (batch mutations already invalidate GET_CHANGE_PROPOSALS_KEY and GET_RECIPES_KEY)
+      await queryClient.invalidateQueries({
+        queryKey: GET_GROUPED_CHANGE_PROPOSALS_KEY,
+      });
+
+      // Clear pools
+      setAcceptedProposalIds(new Set());
+      setRejectedProposalIds(new Set());
+      setReviewingProposalId(null);
+    } catch (error) {
+      // Errors are handled by the mutation onError callbacks
+    }
   }, [
     organizationId,
     spaceId,
-    selectedProposalIds,
+    acceptedProposalIds,
+    rejectedProposalIds,
     selectedRecipeProposals,
+    batchApplyMutation,
     batchRejectMutation,
+    queryClient,
   ]);
-
-  const isLoadingProposals = proposalsQueries.some((q) => q.isLoading);
 
   const isMutating =
     batchApplyMutation.isPending || batchRejectMutation.isPending;
 
-  if (isLoadingRecipes || isLoadingProposals) {
+  const hasPooledDecisions =
+    acceptedProposalIds.size > 0 || rejectedProposalIds.size > 0;
+
+  if (isLoadingGrouped) {
     return (
       <PMBox
         display="flex"
@@ -241,7 +243,7 @@ export function ChangeProposals({ breadcrumbComponent }: ChangeProposalsProps) {
     );
   }
 
-  if (isRecipesError) {
+  if (isGroupedError) {
     return (
       <PMBox display="flex" justifyContent="center" py={8}>
         <PMVStack gap={4}>
@@ -251,7 +253,7 @@ export function ChangeProposals({ breadcrumbComponent }: ChangeProposalsProps) {
     );
   }
 
-  if (recipesWithPendingProposals.length === 0) {
+  if (commands.length === 0) {
     return (
       <PMBox display="flex" justifyContent="center" py={8}>
         <PMText>No pending change proposals to review.</PMText>
@@ -269,10 +271,9 @@ export function ChangeProposals({ breadcrumbComponent }: ChangeProposalsProps) {
       overflowX="auto"
     >
       <ChangeProposalsSidebar
-        recipes={recipesWithPendingProposals}
-        proposalCounts={proposalCountsByRecipeId}
-        selectedRecipeId={selectedRecipeId}
-        onSelectRecipe={handleSelectRecipe}
+        commands={commands}
+        selectedCommandId={selectedCommandId}
+        onSelectCommand={handleSelectCommand}
       />
       <PMPage breadcrumbComponent={breadcrumbComponent} isFullWidth>
         <PMBox
@@ -285,24 +286,19 @@ export function ChangeProposals({ breadcrumbComponent }: ChangeProposalsProps) {
           mb={2}
           justifyContent="flex-end"
         >
-          {selectedRecipeProposals.length > 0 && (
+          {hasPooledDecisions && (
             <PMHStack gap={2}>
+              <PMText fontSize="sm" color="secondary">
+                {acceptedProposalIds.size} accepted, {rejectedProposalIds.size}{' '}
+                rejected
+              </PMText>
               <PMButton
                 size="sm"
-                colorPalette="green"
-                disabled={selectedProposalIds.size === 0 || isMutating}
-                onClick={handleBatchApply}
+                colorPalette="blue"
+                disabled={isMutating}
+                onClick={handleSave}
               >
-                Apply ({selectedProposalIds.size})
-              </PMButton>
-              <PMButton
-                size="sm"
-                colorPalette="red"
-                variant="outline"
-                disabled={selectedProposalIds.size === 0 || isMutating}
-                onClick={handleBatchReject}
-              >
-                Reject ({selectedProposalIds.size})
+                {isMutating ? 'Saving...' : 'Save'}
               </PMButton>
             </PMHStack>
           )}
@@ -310,25 +306,47 @@ export function ChangeProposals({ breadcrumbComponent }: ChangeProposalsProps) {
 
         <PMFlex gap={6} direction={{ base: 'column', lg: 'row' }} flex={1}>
           <PMBox flex={1} minW={0}>
-            <ChangeProposalsPreviewPanel
-              recipe={
-                selectedRecipe
-                  ? {
-                      name: selectedRecipe.name,
-                      content: selectedRecipe.content,
-                    }
-                  : null
-              }
-              focusedProposal={focusedProposal ?? null}
-            />
+            {isLoadingProposals ? (
+              <PMBox
+                display="flex"
+                alignItems="center"
+                justifyContent="center"
+                minH="200px"
+              >
+                <PMSpinner size="md" />
+              </PMBox>
+            ) : (
+              <ChangeProposalsPreviewPanel
+                recipe={
+                  selectedRecipe
+                    ? {
+                        name: selectedRecipe.name,
+                        content: selectedRecipe.content,
+                      }
+                    : null
+                }
+                proposals={selectedRecipeProposals}
+                reviewingProposalId={reviewingProposalId}
+                acceptedProposalIds={acceptedProposalIds}
+                rejectedProposalIds={rejectedProposalIds}
+                onPoolAccept={handlePoolAccept}
+                onPoolReject={handlePoolReject}
+                onUndoPool={handleUndoPool}
+                onReviewProposal={handleReviewProposal}
+              />
+            )}
           </PMBox>
           <PMBox width={{ base: '100%', lg: '300px' }} flexShrink={0}>
             <ChangeProposalsChangesList
               proposals={selectedRecipeProposals}
-              selectedProposalIds={selectedProposalIds}
-              focusedProposalId={focusedProposalId}
-              onToggleProposal={handleToggleProposal}
-              onFocusProposal={handleFocusProposal}
+              reviewingProposalId={reviewingProposalId}
+              acceptedProposalIds={acceptedProposalIds}
+              rejectedProposalIds={rejectedProposalIds}
+              userLookup={userLookup}
+              onSelectProposal={handleReviewProposal}
+              onPoolAccept={handlePoolAccept}
+              onPoolReject={handlePoolReject}
+              onUndoPool={handleUndoPool}
             />
           </PMBox>
         </PMFlex>

@@ -282,6 +282,9 @@ export class ChangeProposalService {
     spaceId: SpaceId,
   ): Promise<GroupedProposalsByArtefact> {
     const proposals = await this.repository.findBySpaceId(spaceId);
+    const pendingProposals = proposals.filter(
+      (p) => p.status === ChangeProposalStatus.pending,
+    );
 
     const grouped: GroupedProposalsByArtefact = {
       standards: new Map<StandardId, number>(),
@@ -289,7 +292,7 @@ export class ChangeProposalService {
       skills: new Map<SkillId, number>(),
     };
 
-    for (const proposal of proposals) {
+    for (const proposal of pendingProposals) {
       const artefactCategory = getArtefactCategory(proposal.type);
       switch (artefactCategory) {
         case 'standards':
