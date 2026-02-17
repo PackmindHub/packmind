@@ -931,6 +931,47 @@ describe('ChangeProposalService', () => {
         expect(result.skills.get(skillId1)).toBe(3);
       });
     });
+
+    describe('when space has a mix of pending and non-pending proposals', () => {
+      const proposals = [
+        createProposal(ChangeProposalType.updateStandardName, standardId1),
+        {
+          ...createProposal(ChangeProposalType.addRule, standardId1),
+          status: ChangeProposalStatus.applied,
+        },
+        {
+          ...createProposal(ChangeProposalType.updateCommandName, recipeId1),
+          status: ChangeProposalStatus.rejected,
+        },
+        createProposal(ChangeProposalType.updateCommandDescription, recipeId1),
+        {
+          ...createProposal(ChangeProposalType.updateSkillName, skillId1),
+          status: ChangeProposalStatus.applied,
+        },
+      ];
+
+      beforeEach(() => {
+        repository.findBySpaceId.mockResolvedValue(proposals);
+      });
+
+      it('counts only pending standard proposals', async () => {
+        const result = await service.groupProposalsByArtefact(spaceId);
+
+        expect(result.standards.get(standardId1)).toBe(1);
+      });
+
+      it('counts only pending command proposals', async () => {
+        const result = await service.groupProposalsByArtefact(spaceId);
+
+        expect(result.commands.get(recipeId1)).toBe(1);
+      });
+
+      it('excludes non-pending skill proposals entirely', async () => {
+        const result = await service.groupProposalsByArtefact(spaceId);
+
+        expect(result.skills.size).toBe(0);
+      });
+    });
   });
 
   describe('findProposalsByArtefact', () => {
