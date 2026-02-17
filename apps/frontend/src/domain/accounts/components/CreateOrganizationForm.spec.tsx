@@ -133,4 +133,34 @@ describe('CreateOrganizationForm', () => {
       });
     });
   });
+
+  describe('when organization does not exist in auth context', () => {
+    beforeEach(() => {
+      mockUseAuthContext.mockReturnValue({
+        isAuthenticated: true,
+        isLoading: false,
+        organization: undefined,
+        getMe: jest.fn(),
+        getUserOrganizations: jest.fn(),
+        validateAndSwitchIfNeeded: jest.fn(),
+      });
+    });
+
+    it('pre-fills input with empty name', () => {
+      renderWithProviders(<CreateOrganizationForm onSuccess={mockOnSuccess} />);
+
+      const input = screen.getByTestId(
+        'CreateOrganizationForm.OrganizationNameInput',
+      );
+      expect(input).toHaveValue('');
+    });
+
+    it('shows validation error for empty name', async () => {
+      renderWithProviders(<CreateOrganizationForm onSuccess={mockOnSuccess} />);
+
+      await waitFor(() => {
+        expect(screen.getByText('Name cannot be empty')).toBeInTheDocument();
+      });
+    });
+  });
 });

@@ -197,7 +197,6 @@ export class AuthService {
   async signInSocial(
     email: string,
     provider: SocialProvider,
-    firstName?: string,
   ): Promise<{
     accessToken: string;
     user: { id: UserId; email: string };
@@ -218,17 +217,39 @@ export class AuthService {
 
     let user: User | null = await this.accountsAdapter.getUserByEmail(email);
     let isNewUser = false;
+    let organization:
+      | { id: OrganizationId; name: string; slug: string }
+      | undefined;
+    let organizations:
+      | Array<{
+          organization: { id: OrganizationId; name: string; slug: string };
+          role: UserOrganizationRole;
+        }>
+      | undefined;
 
     if (!user) {
-      user = await this.accountsAdapter.createSocialLoginUser(email, provider);
+      const result = await this.accountsAdapter.signUpWithOrganization({
+        email,
+        authType: 'social',
+        socialProvider: provider,
+      });
+
+      user = result.user;
       isNewUser = true;
-      this.logger.log(
-        `New user created via social login with provider ${providerName}`,
-        {
-          userId: user.id,
-          email: maskEmail(email),
-        },
-      );
+
+      await this.accountsAdapter.addSocialProvider(user.id, provider);
+
+      organization = {
+        id: result.organization.id,
+        name: result.organization.name,
+        slug: result.organization.slug,
+      };
+
+      this.logger.log('New user created via social login with organization', {
+        userId: user.id,
+        email: maskEmail(email),
+        organizationId: result.organization.id,
+      });
     } else {
       // Existing user — track provider in metadata
       await this.accountsAdapter.addSocialProvider(user.id, provider);
@@ -240,70 +261,38 @@ export class AuthService {
       );
     }
 
-    let memberships = user.memberships ?? [];
+    const memberships = user.memberships ?? [];
 
-    // Auto-create organization for users without one (same as email signup)
-    if (memberships.length === 0) {
-      const nameBase = firstName || email.split('@')[0];
-      const orgName = `${nameBase.toLowerCase()}'s organization`;
-
-      const org = await this.accountsAdapter.createOrganization({
-        userId: user.id,
-        name: orgName,
-      });
-
-      this.logger.log('Organization auto-created for social login user', {
-        userId: user.id,
-        organizationId: org.id,
-      });
-
-      // Refresh memberships after org creation
-      const refreshedUser = await this.accountsAdapter.getUserById({
-        userId: user.id,
-      });
-      if (refreshedUser) {
-        memberships = refreshedUser.memberships ?? [];
+    if (!isNewUser) {
+      if (memberships.length === 1) {
+        const membership = memberships[0];
+        const org = await this.accountsAdapter.getOrganizationById({
+          organizationId: membership.organizationId,
+        });
+        if (org) {
+          organization = { id: org.id, name: org.name, slug: org.slug };
+        }
+      } else if (memberships.length > 1) {
+        organizations = await Promise.all(
+          memberships.map(async (membership) => {
+            const org = await this.accountsAdapter.getOrganizationById({
+              organizationId: membership.organizationId,
+            });
+            return org
+              ? {
+                  organization: {
+                    id: org.id,
+                    name: org.name,
+                    slug: org.slug,
+                  },
+                  role: membership.role,
+                }
+              : null;
+          }),
+        ).then((orgs) =>
+          orgs.filter((o): o is NonNullable<typeof o> => o !== null),
+        );
       }
-    }
-
-    let organization:
-      | { id: OrganizationId; name: string; slug: string }
-      | undefined;
-    let organizations:
-      | Array<{
-          organization: { id: OrganizationId; name: string; slug: string };
-          role: UserOrganizationRole;
-        }>
-      | undefined;
-
-    if (memberships.length === 1) {
-      const membership = memberships[0];
-      const org = await this.accountsAdapter.getOrganizationById({
-        organizationId: membership.organizationId,
-      });
-      if (org) {
-        organization = { id: org.id, name: org.name, slug: org.slug };
-      }
-    } else if (memberships.length > 1) {
-      organizations = await Promise.all(
-        memberships.map(async (membership) => {
-          const org = await this.accountsAdapter.getOrganizationById({
-            organizationId: membership.organizationId,
-          });
-          return org
-            ? {
-                organization: {
-                  id: org.id,
-                  name: org.name,
-                  slug: org.slug,
-                },
-                role: membership.role,
-              }
-            : null;
-        }),
-      ).then((orgs) =>
-        orgs.filter((o): o is NonNullable<typeof o> => o !== null),
-      );
     }
 
     const payload = {
@@ -311,15 +300,14 @@ export class AuthService {
         name: user.email,
         userId: user.id,
       },
-      organization:
-        organization && memberships.length === 1
-          ? {
-              id: organization.id,
-              name: organization.name,
-              slug: organization.slug,
-              role: memberships[0].role,
-            }
-          : undefined,
+      organization: organization
+        ? {
+            id: organization.id,
+            name: organization.name,
+            slug: organization.slug,
+            role: memberships[0]?.role ?? ('admin' as UserOrganizationRole),
+          }
+        : undefined,
     };
 
     const accessToken = this.jwtService.sign(payload);

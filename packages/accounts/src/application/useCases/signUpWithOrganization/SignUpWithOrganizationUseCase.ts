@@ -4,9 +4,12 @@ import {
   createUserId,
   ISignUpWithOrganizationUseCase,
   ISpacesPort,
+  Organization,
   OrganizationCreatedEvent,
+  OrganizationId,
   SignUpWithOrganizationCommand,
   SignUpWithOrganizationResponse,
+  User,
   UserSignedUpEvent,
 } from '@packmind/types';
 import { OrganizationService } from '../../services/OrganizationService';
@@ -65,78 +68,49 @@ export class SignUpWithOrganizationUseCase implements ISignUpWithOrganizationUse
   async execute(
     command: SignUpWithOrganizationCommand,
   ): Promise<SignUpWithOrganizationResponse> {
-    const { email, password } = command;
-
+    const { email, password, authType } = command;
     this.logger.info('Executing sign up with organization use case', {
       email,
+      authType,
     });
 
-    // Generate unique organization name from email
+    if (authType === 'password') {
+      this.validatePasswordForSignup(password);
+    }
+
     const baseOrganizationName = this.generateBaseOrganizationName(email);
 
     try {
-      // Validate inputs
-      this.logger.debug('Validating input parameters');
-      this.validatePassword(password);
-
       const organizationName =
         await this.findUniqueOrganizationName(baseOrganizationName);
 
-      // Step 1: Create organization first
-      this.logger.debug('Creating organization', { organizationName });
       const organization =
         await this.organizationService.createOrganization(organizationName);
 
-      // Create default "Global" space for the organization
-      if (this.spacesPort) {
-        this.logger.info('Creating default Global space for organization', {
-          organizationId: organization.id,
-        });
-        try {
-          await this.spacesPort.createSpace('Global', organization.id);
-          this.logger.info('Default Global space created successfully', {
-            organizationId: organization.id,
-          });
-        } catch (error) {
-          this.logger.error('Failed to create default Global space', {
-            organizationId: organization.id,
-            error: error instanceof Error ? error.message : String(error),
-          });
-        }
-      }
+      await this.tryCreateDefaultSpace(organization.id);
 
-      const user = await this.userService.createUser(
-        email,
-        password,
-        organization.id,
-      );
+      let user;
+      if (authType === 'password') {
+        user = await this.userService.createUser(
+          email,
+          password,
+          organization.id,
+        );
+      } else if (authType === 'social') {
+        user = await this.createSocialUser(email, organization.id);
+      } else {
+        throw new Error(`Authentication type not found: ${authType}`);
+      }
 
       this.logger.info('User signed up with organization successfully', {
         userId: user.id,
         email,
         organizationId: organization.id,
         organizationName: organization.name,
+        authType,
       });
 
-      this.eventEmitterService.emit(
-        new UserSignedUpEvent({
-          userId: createUserId(user.id),
-          organizationId: organization.id,
-          email,
-          quickStart: false,
-          source: 'ui',
-        }),
-      );
-
-      this.eventEmitterService.emit(
-        new OrganizationCreatedEvent({
-          userId: createUserId(user.id),
-          organizationId: organization.id,
-          name: organizationName,
-          method: 'sign-up',
-          source: 'ui',
-        }),
-      );
+      this.emitSignUpEvents(user, organization, organizationName, command);
 
       return { user, organization };
     } catch (error) {
@@ -147,5 +121,77 @@ export class SignUpWithOrganizationUseCase implements ISignUpWithOrganizationUse
       });
       throw error;
     }
+  }
+
+  private validatePasswordForSignup(password: string | undefined): void {
+    if (!password) {
+      throw new Error('Password is required');
+    }
+    this.validatePassword(password);
+  }
+
+  private async createSocialUser(
+    email: string,
+    organizationId: OrganizationId,
+  ): Promise<User> {
+    const user = await this.userService.createSocialLoginUser(email);
+    return this.userService.addOrganizationMembership(
+      user,
+      organizationId,
+      'admin',
+    );
+  }
+
+  private async tryCreateDefaultSpace(
+    organizationId: OrganizationId,
+  ): Promise<void> {
+    if (!this.spacesPort) {
+      return;
+    }
+
+    this.logger.info('Creating default Global space for organization', {
+      organizationId,
+    });
+
+    try {
+      await this.spacesPort.createSpace('Global', organizationId);
+      this.logger.info('Default Global space created successfully', {
+        organizationId,
+      });
+    } catch (error) {
+      this.logger.error('Failed to create default Global space', {
+        organizationId,
+        error: error instanceof Error ? error.message : String(error),
+      });
+    }
+  }
+
+  private emitSignUpEvents(
+    user: User,
+    organization: Organization,
+    organizationName: string,
+    command: SignUpWithOrganizationCommand,
+  ): void {
+    this.eventEmitterService.emit(
+      new UserSignedUpEvent({
+        userId: createUserId(user.id),
+        organizationId: organization.id,
+        email: command.email,
+        quickStart: false,
+        source: 'ui',
+        method: command.authType,
+        socialProvider: command.socialProvider ?? '',
+      }),
+    );
+
+    this.eventEmitterService.emit(
+      new OrganizationCreatedEvent({
+        userId: createUserId(user.id),
+        organizationId: organization.id,
+        name: organizationName,
+        method: 'sign-up',
+        source: 'ui',
+      }),
+    );
   }
 }

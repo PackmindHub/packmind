@@ -1,9 +1,11 @@
 import { IPublicUseCase } from '../../UseCase';
-import { User, Organization } from '../index';
+import { User, Organization, SocialProvider } from '../index';
 
 export type SignUpWithOrganizationCommand = {
   email: string;
-  password: string;
+  password?: string;
+  authType: 'password' | 'social';
+  socialProvider?: SocialProvider;
 };
 
 export type SignUpWithOrganizationResponse = {

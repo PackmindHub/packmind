@@ -22,6 +22,8 @@ describe('SignUpWithOrganizationUseCase', () => {
   beforeEach(() => {
     mockUserService = {
       createUser: jest.fn(),
+      createSocialLoginUser: jest.fn(),
+      addOrganizationMembership: jest.fn(),
       getUserById: jest.fn(),
       getUserByEmail: jest.fn(),
       hashPassword: jest.fn(),
@@ -46,6 +48,7 @@ describe('SignUpWithOrganizationUseCase', () => {
       mockUserService,
       mockOrganizationService,
       mockEventEmitterService,
+      undefined,
       stubbedLogger,
     );
   });
@@ -79,6 +82,7 @@ describe('SignUpWithOrganizationUseCase', () => {
       const command: SignUpWithOrganizationCommand = {
         email: 'testuser@packmind.com',
         password: 'password123!@',
+        authType: 'password' as const,
       };
 
       beforeEach(() => {
@@ -127,6 +131,8 @@ describe('SignUpWithOrganizationUseCase', () => {
               email: 'testuser@packmind.com',
               source: 'ui',
               quickStart: false,
+              method: 'password',
+              socialProvider: '',
             },
           }),
         );
@@ -153,6 +159,7 @@ describe('SignUpWithOrganizationUseCase', () => {
       const command: SignUpWithOrganizationCommand = {
         email: 'john@example.com',
         password: 'password123!@',
+        authType: 'password' as const,
       };
 
       beforeEach(() => {
@@ -224,6 +231,7 @@ describe('SignUpWithOrganizationUseCase', () => {
       const command: SignUpWithOrganizationCommand = {
         email: 'firstName.lastName@example.com',
         password: 'password123!@',
+        authType: 'password' as const,
       };
 
       beforeEach(() => {
@@ -247,6 +255,7 @@ describe('SignUpWithOrganizationUseCase', () => {
         const command: SignUpWithOrganizationCommand = {
           email: 'testuser@packmind.com',
           password: '',
+          authType: 'password',
         };
 
         it('throws password required error', async () => {
@@ -282,6 +291,7 @@ describe('SignUpWithOrganizationUseCase', () => {
         const command: SignUpWithOrganizationCommand = {
           email: 'testuser@packmind.com',
           password: 'short',
+          authType: 'password',
         };
 
         it('throws password minimum length error', async () => {
@@ -317,6 +327,7 @@ describe('SignUpWithOrganizationUseCase', () => {
         const command: SignUpWithOrganizationCommand = {
           email: 'testuser@packmind.com',
           password: 'password123',
+          authType: 'password',
         };
 
         it('throws non-alphanumerical characters error', async () => {
@@ -355,6 +366,7 @@ describe('SignUpWithOrganizationUseCase', () => {
       const command: SignUpWithOrganizationCommand = {
         email: 'testuser@packmind.com',
         password: 'password123!@',
+        authType: 'password' as const,
       };
 
       beforeEach(() => {
@@ -406,6 +418,7 @@ describe('SignUpWithOrganizationUseCase', () => {
       const command: SignUpWithOrganizationCommand = {
         email: 'testuser@packmind.com',
         password: 'password123!@',
+        authType: 'password' as const,
       };
 
       beforeEach(() => {
@@ -454,6 +467,7 @@ describe('SignUpWithOrganizationUseCase', () => {
       const command: SignUpWithOrganizationCommand = {
         email: 'testuser@packmind.com',
         password: 'password123!@',
+        authType: 'password' as const,
       };
 
       beforeEach(() => {
@@ -495,6 +509,7 @@ describe('SignUpWithOrganizationUseCase', () => {
       const command: SignUpWithOrganizationCommand = {
         email: 'testuser@packmind.com',
         password: 'password123!@',
+        authType: 'password' as const,
       };
 
       beforeEach(() => {
@@ -535,6 +550,133 @@ describe('SignUpWithOrganizationUseCase', () => {
           'testuser@packmind.com',
           'password123!@',
           createOrganizationId('org-123'),
+        );
+      });
+    });
+
+    describe('when authType is social', () => {
+      const command: SignUpWithOrganizationCommand = {
+        email: 'socialuser@packmind.com',
+        authType: 'social',
+        socialProvider: 'GoogleOAuth',
+      };
+
+      const socialUser = userFactory({
+        id: userId,
+        email: 'socialuser@packmind.com',
+        passwordHash: null,
+        memberships: [],
+      });
+
+      const socialUserWithMembership = userFactory({
+        id: userId,
+        email: 'socialuser@packmind.com',
+        passwordHash: null,
+        memberships: [
+          {
+            userId,
+            organizationId: createOrganizationId('org-123'),
+            role: 'admin',
+          },
+        ],
+      });
+
+      beforeEach(() => {
+        mockOrganizationService.createOrganization.mockResolvedValue(
+          mockOrganization,
+        );
+        mockUserService.createSocialLoginUser.mockResolvedValue(socialUser);
+        mockUserService.addOrganizationMembership.mockResolvedValue(
+          socialUserWithMembership,
+        );
+      });
+
+      it('returns created user and organization', async () => {
+        const result = await signUpWithOrganizationUseCase.execute(command);
+
+        expect(result).toEqual({
+          user: socialUserWithMembership,
+          organization: mockOrganization,
+        });
+      });
+
+      it('creates social login user via userService', async () => {
+        await signUpWithOrganizationUseCase.execute(command);
+
+        expect(mockUserService.createSocialLoginUser).toHaveBeenCalledWith(
+          'socialuser@packmind.com',
+        );
+      });
+
+      it('adds admin membership to the created organization', async () => {
+        await signUpWithOrganizationUseCase.execute(command);
+
+        expect(mockUserService.addOrganizationMembership).toHaveBeenCalledWith(
+          socialUser,
+          createOrganizationId('org-123'),
+          'admin',
+        );
+      });
+
+      it('does not call createUser', async () => {
+        await signUpWithOrganizationUseCase.execute(command);
+
+        expect(mockUserService.createUser).not.toHaveBeenCalled();
+      });
+
+      it('succeeds without password', async () => {
+        const commandWithoutPassword: SignUpWithOrganizationCommand = {
+          email: 'socialuser@packmind.com',
+          authType: 'social',
+          socialProvider: 'GoogleOAuth',
+        };
+
+        const result = await signUpWithOrganizationUseCase.execute(
+          commandWithoutPassword,
+        );
+
+        expect(result.user).toEqual(socialUserWithMembership);
+      });
+
+      it('emits UserSignedUpEvent with correct payload', async () => {
+        await signUpWithOrganizationUseCase.execute(command);
+
+        expect(mockEventEmitterService.emit).toHaveBeenCalledWith(
+          expect.objectContaining({
+            payload: {
+              userId: socialUserWithMembership.id,
+              organizationId: mockOrganization.id,
+              email: 'socialuser@packmind.com',
+              source: 'ui',
+              quickStart: false,
+              method: 'social',
+              socialProvider: 'GoogleOAuth',
+            },
+          }),
+        );
+      });
+
+      it('emits OrganizationCreatedEvent with correct payload', async () => {
+        await signUpWithOrganizationUseCase.execute(command);
+
+        expect(mockEventEmitterService.emit).toHaveBeenCalledWith(
+          expect.objectContaining({
+            payload: {
+              userId: socialUserWithMembership.id,
+              organizationId: mockOrganization.id,
+              name: "socialuser's organization",
+              method: 'sign-up',
+              source: 'ui',
+            },
+          }),
+        );
+      });
+
+      it('generates organization name from email local part', async () => {
+        await signUpWithOrganizationUseCase.execute(command);
+
+        expect(mockOrganizationService.createOrganization).toHaveBeenCalledWith(
+          "socialuser's organization",
         );
       });
     });

@@ -301,6 +301,7 @@ export class AccountsAdapter
     this._requestPasswordReset = new RequestPasswordResetUseCase(
       this.accountsServices.getUserService(),
       this.accountsServices.getPasswordResetTokenService(),
+      this.accountsServices.getUserMetadataService(),
     );
     this._resetPassword = new ResetPasswordUseCase(
       this.accountsServices.getUserService(),
