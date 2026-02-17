@@ -230,6 +230,7 @@ export class AccountsAdapter
       this.accountsServices.getUserService(),
       this.accountsServices.getOrganizationService(),
       this.accountsServices.getLoginRateLimiterService(),
+      ports.eventEmitterService,
     );
     this._getUserById = new GetUserByIdUseCase(
       this.accountsServices.getUserService(),
