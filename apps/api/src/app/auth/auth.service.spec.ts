@@ -414,6 +414,7 @@ describe('AuthService - signInSocial method', () => {
     addSocialProvider: jest.Mock;
     createOrganization: jest.Mock;
     getOrganizationById: jest.Mock;
+    getOrganizationByName: jest.Mock;
   }>;
   let signInSocial: (
     ...args: Parameters<AuthService['signInSocial']>
@@ -431,6 +432,7 @@ describe('AuthService - signInSocial method', () => {
       addSocialProvider: jest.fn(),
       createOrganization: jest.fn(),
       getOrganizationById: jest.fn(),
+      getOrganizationByName: jest.fn().mockResolvedValue(null),
     };
 
     const baseAuthService = {
@@ -595,68 +597,95 @@ describe('AuthService - signInSocial method', () => {
   });
 
   describe('when user does not exist', () => {
-    describe('when firstName is provided', () => {
-      let result: Awaited<ReturnType<typeof signInSocial>>;
+    let result: Awaited<ReturnType<typeof signInSocial>>;
 
-      beforeEach(async () => {
-        const newUser: User = {
-          id: createUserId('new-user'),
-          email: 'paul@example.com',
-          passwordHash: null,
-          active: true,
-          memberships: [],
-        };
-        mockAccountsAdapter.getUserByEmail.mockResolvedValueOnce(null);
-        mockAccountsAdapter.createSocialLoginUser.mockResolvedValue(newUser);
-        result = await signInSocial('paul@example.com', 'GoogleOAuth');
-      });
+    beforeEach(async () => {
+      const newUser: User = {
+        id: createUserId('new-user'),
+        email: 'paul@example.com',
+        passwordHash: null,
+        active: true,
+        memberships: [],
+      };
+      const createdOrg = {
+        id: createOrganizationId('new-org'),
+        name: "paul's organization",
+        slug: 'pauls-organization',
+      };
+      mockAccountsAdapter.getUserByEmail.mockResolvedValueOnce(null);
+      mockAccountsAdapter.createSocialLoginUser.mockResolvedValue(newUser);
+      mockAccountsAdapter.getOrganizationByName.mockResolvedValue(null);
+      mockAccountsAdapter.createOrganization.mockResolvedValue(createdOrg);
+      result = await signInSocial('paul@example.com', 'GoogleOAuth');
+    });
 
-      it('returns isNewUser true', () => {
-        expect(result.isNewUser).toBe(true);
-      });
+    it('returns isNewUser true', () => {
+      expect(result.isNewUser).toBe(true);
+    });
 
-      it('creates a new user with provider', () => {
-        expect(mockAccountsAdapter.createSocialLoginUser).toHaveBeenCalledWith(
-          'paul@example.com',
-          'GoogleOAuth',
-        );
-      });
+    it('creates a new user with provider', () => {
+      expect(mockAccountsAdapter.createSocialLoginUser).toHaveBeenCalledWith(
+        'paul@example.com',
+        'GoogleOAuth',
+      );
+    });
 
-      it('does not auto-create an organization', () => {
-        expect(mockAccountsAdapter.createOrganization).not.toHaveBeenCalled();
-      });
-
-      it('returns no organization', () => {
-        expect(result.organization).toBeUndefined();
+    it('auto-creates an organization with name derived from email', () => {
+      expect(mockAccountsAdapter.createOrganization).toHaveBeenCalledWith({
+        userId: createUserId('new-user'),
+        name: "paul's organization",
       });
     });
 
-    describe('when firstName is not provided', () => {
-      let result: Awaited<ReturnType<typeof signInSocial>>;
+    it('returns the created organization', () => {
+      expect(result.organization).toEqual({
+        id: createOrganizationId('new-org'),
+        name: "paul's organization",
+        slug: 'pauls-organization',
+      });
+    });
 
+    it('includes organization in JWT payload', () => {
+      expect(mockJwtService.sign).toHaveBeenCalledWith(
+        expect.objectContaining({
+          organization: {
+            id: createOrganizationId('new-org'),
+            name: "paul's organization",
+            slug: 'pauls-organization',
+            role: 'admin',
+          },
+        }),
+      );
+    });
+
+    describe('when org name already exists', () => {
       beforeEach(async () => {
         const newUser: User = {
-          id: createUserId('new-user'),
-          email: 'new@example.com',
+          id: createUserId('new-user-2'),
+          email: 'paul@other.com',
           passwordHash: null,
           active: true,
           memberships: [],
         };
+        const createdOrg = {
+          id: createOrganizationId('new-org-2'),
+          name: "paul's organization 2",
+          slug: 'pauls-organization-2',
+        };
         mockAccountsAdapter.getUserByEmail.mockResolvedValueOnce(null);
         mockAccountsAdapter.createSocialLoginUser.mockResolvedValue(newUser);
-        result = await signInSocial('new@example.com', 'GoogleOAuth');
+        mockAccountsAdapter.getOrganizationByName
+          .mockResolvedValueOnce({ id: 'existing' })
+          .mockResolvedValueOnce(null);
+        mockAccountsAdapter.createOrganization.mockResolvedValue(createdOrg);
+        result = await signInSocial('paul@other.com', 'GoogleOAuth');
       });
 
-      it('returns isNewUser true', () => {
-        expect(result.isNewUser).toBe(true);
-      });
-
-      it('does not auto-create an organization', () => {
-        expect(mockAccountsAdapter.createOrganization).not.toHaveBeenCalled();
-      });
-
-      it('returns no organization', () => {
-        expect(result.organization).toBeUndefined();
+      it('creates organization with unique suffixed name', () => {
+        expect(mockAccountsAdapter.createOrganization).toHaveBeenCalledWith({
+          userId: createUserId('new-user-2'),
+          name: "paul's organization 2",
+        });
       });
     });
   });
