@@ -217,6 +217,15 @@ export class AuthService {
 
     let user: User | null = await this.accountsAdapter.getUserByEmail(email);
     let isNewUser = false;
+    let organization:
+      | { id: OrganizationId; name: string; slug: string }
+      | undefined;
+    let organizations:
+      | Array<{
+          organization: { id: OrganizationId; name: string; slug: string };
+          role: UserOrganizationRole;
+        }>
+      | undefined;
 
     if (!user) {
       user = await this.accountsAdapter.createSocialLoginUser(email, provider);
@@ -228,6 +237,32 @@ export class AuthService {
           email: maskEmail(email),
         },
       );
+
+      // Create organization for new user (mirrors email sign-up flow)
+      const localPart = email.split('@')[0];
+      const baseOrgName = `${localPart}'s organization`;
+      let orgName = baseOrgName;
+      let suffix = 1;
+      while (
+        await this.accountsAdapter.getOrganizationByName({ name: orgName })
+      ) {
+        suffix++;
+        orgName = `${baseOrgName} ${suffix}`;
+      }
+      const newOrg = await this.accountsAdapter.createOrganization({
+        userId: user.id,
+        name: orgName,
+      });
+
+      this.logger.log('Organization auto-created for new social login user', {
+        userId: user.id,
+        email: maskEmail(email),
+        organizationId: newOrg.id,
+        organizationName: newOrg.name,
+      });
+
+      // Set organization for JWT payload (user is admin of new org)
+      organization = { id: newOrg.id, name: newOrg.name, slug: newOrg.slug };
     } else {
       // Existing user — track provider in metadata
       await this.accountsAdapter.addSocialProvider(user.id, provider);
@@ -240,16 +275,6 @@ export class AuthService {
     }
 
     const memberships = user.memberships ?? [];
-
-    let organization:
-      | { id: OrganizationId; name: string; slug: string }
-      | undefined;
-    let organizations:
-      | Array<{
-          organization: { id: OrganizationId; name: string; slug: string };
-          role: UserOrganizationRole;
-        }>
-      | undefined;
 
     if (memberships.length === 1) {
       const membership = memberships[0];
@@ -286,15 +311,17 @@ export class AuthService {
         name: user.email,
         userId: user.id,
       },
-      organization:
-        organization && memberships.length === 1
-          ? {
-              id: organization.id,
-              name: organization.name,
-              slug: organization.slug,
-              role: memberships[0].role,
-            }
-          : undefined,
+      organization: organization
+        ? {
+            id: organization.id,
+            name: organization.name,
+            slug: organization.slug,
+            role:
+              isNewUser && memberships.length === 0
+                ? ('admin' as UserOrganizationRole)
+                : memberships[0]?.role,
+          }
+        : undefined,
     };
 
     const accessToken = this.jwtService.sign(payload);
