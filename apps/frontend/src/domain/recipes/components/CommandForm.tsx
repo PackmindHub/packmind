@@ -93,7 +93,15 @@ export const CommandForm: React.FC<ICommandFormProps> = ({
   const isEditMode = mode === 'edit';
 
   return (
-    <PMBox as="form" onSubmit={handleSubmit}>
+    <PMBox
+      as="form"
+      onSubmit={handleSubmit}
+      {...(isEditMode && {
+        display: 'flex',
+        flexDirection: 'column',
+        minH: 'calc(100vh - 76px)',
+      })}
+    >
       {displayAlert && (
         <PMBox mb={4}>
           <PMAlert.Root status={displayAlert.type}>
@@ -102,7 +110,11 @@ export const CommandForm: React.FC<ICommandFormProps> = ({
           </PMAlert.Root>
         </PMBox>
       )}
-      <PMVStack gap={10} alignItems={'flex-start'}>
+      <PMVStack
+        gap={10}
+        alignItems={'flex-start'}
+        flex={isEditMode ? 1 : undefined}
+      >
         {isEditMode && (
           <PMEditable.Root
             defaultValue={name}
@@ -195,7 +207,7 @@ export const CommandForm: React.FC<ICommandFormProps> = ({
       </PMVStack>
 
       <PMHStack
-        marginTop={6}
+        marginTop={isEditMode ? 'auto' : 6}
         border={'solid 1px'}
         borderColor={'border.primary'}
         paddingY={4}

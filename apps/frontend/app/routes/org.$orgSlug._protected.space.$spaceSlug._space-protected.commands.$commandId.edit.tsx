@@ -1,5 +1,5 @@
 import { useParams } from 'react-router';
-import { PMPage, PMVStack, PMBox, PMSpinner, PMText } from '@packmind/ui';
+import { PMPage, PMBox, PMSpinner, PMText, PMVStack } from '@packmind/ui';
 import { EditCommand } from '../../src/domain/recipes/components/EditCommand';
 import { useGetRecipeByIdQuery } from '../../src/domain/recipes/api/queries/RecipesQueries';
 import { RecipeId } from '@packmind/types';
@@ -53,9 +53,7 @@ export default function EditCommandRouteModule() {
     <PMPage
       breadcrumbComponent={<RecipeVersionHistoryHeader recipe={recipe} />}
     >
-      <PMVStack align="stretch" gap={6}>
-        <EditCommand recipe={recipe} />
-      </PMVStack>
+      <EditCommand recipe={recipe} />
     </PMPage>
   );
 }
