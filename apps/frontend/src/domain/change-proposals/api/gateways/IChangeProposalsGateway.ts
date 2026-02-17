@@ -6,7 +6,11 @@ import {
   OrganizationId,
   SpaceId,
   IListChangeProposalsBySpace,
+  IListChangeProposalsByArtefact,
   NewGateway,
+  RecipeId,
+  StandardId,
+  SkillId,
 } from '@packmind/types';
 
 export interface CreateChangeProposalParams<T extends ChangeProposalType> {
@@ -20,6 +24,16 @@ export interface CreateChangeProposalParams<T extends ChangeProposalType> {
 
 export interface IChangeProposalsGateway {
   getGroupedChangeProposals: NewGateway<IListChangeProposalsBySpace>;
+
+  listChangeProposalsByRecipe: NewGateway<
+    IListChangeProposalsByArtefact<RecipeId>
+  >;
+  listChangeProposalsByStandard: NewGateway<
+    IListChangeProposalsByArtefact<StandardId>
+  >;
+  listChangeProposalsBySkill: NewGateway<
+    IListChangeProposalsByArtefact<SkillId>
+  >;
 
   createChangeProposal<T extends ChangeProposalType>(
     params: CreateChangeProposalParams<T>,

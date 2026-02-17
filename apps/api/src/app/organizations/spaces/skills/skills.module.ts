@@ -5,6 +5,7 @@ import { OrganizationAccessGuard } from '../../guards/organization-access.guard'
 import { SpaceAccessGuard } from '../guards/space-access.guard';
 import { PackmindLogger, LogLevel } from '@packmind/logger';
 import { HexaRegistryModule } from '../../../shared/HexaRegistryModule';
+import { OrganizationsSpacesSkillsChangeProposalsModule } from './change-proposals/skills-change-proposals.module';
 
 /**
  * Module for space-scoped skill routes within organizations
@@ -15,7 +16,7 @@ import { HexaRegistryModule } from '../../../shared/HexaRegistryModule';
  * Both OrganizationAccessGuard and SpaceAccessGuard are provided to ensure proper access validation.
  */
 @Module({
-  imports: [HexaRegistryModule],
+  imports: [HexaRegistryModule, OrganizationsSpacesSkillsChangeProposalsModule],
   controllers: [OrganizationsSpacesSkillsController],
   providers: [
     SkillsService,

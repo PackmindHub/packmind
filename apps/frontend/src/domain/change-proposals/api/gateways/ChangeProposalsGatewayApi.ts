@@ -1,7 +1,11 @@
 import {
   ChangeProposalType,
   IListChangeProposalsBySpace,
+  IListChangeProposalsByArtefact,
   NewGateway,
+  RecipeId,
+  StandardId,
+  SkillId,
 } from '@packmind/types';
 import { PackmindGateway } from '../../../../shared/PackmindGateway';
 import {
@@ -33,6 +37,30 @@ export class ChangeProposalsGatewayApi
   }) => {
     return this._api.get(
       `/organizations/${organizationId}/spaces/${spaceId}/change-proposals/grouped`,
+    );
+  };
+
+  listChangeProposalsByRecipe: NewGateway<
+    IListChangeProposalsByArtefact<RecipeId>
+  > = async ({ organizationId, spaceId, artefactId }) => {
+    return this._api.get(
+      `/organizations/${organizationId}/spaces/${spaceId}/recipes/${artefactId}/change-proposals`,
+    );
+  };
+
+  listChangeProposalsByStandard: NewGateway<
+    IListChangeProposalsByArtefact<StandardId>
+  > = async ({ organizationId, spaceId, artefactId }) => {
+    return this._api.get(
+      `/organizations/${organizationId}/spaces/${spaceId}/standards/${artefactId}/change-proposals`,
+    );
+  };
+
+  listChangeProposalsBySkill: NewGateway<
+    IListChangeProposalsByArtefact<SkillId>
+  > = async ({ organizationId, spaceId, artefactId }) => {
+    return this._api.get(
+      `/organizations/${organizationId}/spaces/${spaceId}/skills/${artefactId}/change-proposals`,
     );
   };
 }
