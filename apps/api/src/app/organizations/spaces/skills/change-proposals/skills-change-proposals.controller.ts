@@ -1,7 +1,17 @@
-import { Controller, Get, Param, Req, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Post,
+  Req,
+  UseGuards,
+} from '@nestjs/common';
 import { LogLevel, PackmindLogger } from '@packmind/logger';
 import { AuthenticatedRequest } from '@packmind/node-utils';
 import {
+  ApplyChangeProposalsResponse,
+  ChangeProposalId,
   ListChangeProposalsByArtefactResponse,
   OrganizationId,
   SkillId,
@@ -58,6 +68,53 @@ export class OrganizationsSpacesSkillsChangeProposalsController {
         spaceId,
         skillId,
         count: result.changeProposals.length,
+      },
+    );
+
+    return result;
+  }
+
+  /**
+   * Apply or reject change proposals for a skill
+   * POST /organizations/:orgId/spaces/:spaceId/skills/:skillId/change-proposals/apply
+   */
+  @Post('apply')
+  async applySkillChangeProposals(
+    @Param('orgId') organizationId: OrganizationId,
+    @Param('spaceId') spaceId: SpaceId,
+    @Param('skillId') skillId: SkillId,
+    @Body()
+    body: { accepted: ChangeProposalId[]; rejected: ChangeProposalId[] },
+    @Req() request: AuthenticatedRequest,
+  ): Promise<ApplyChangeProposalsResponse> {
+    this.logger.info(
+      'POST /organizations/:orgId/spaces/:spaceId/skills/:skillId/change-proposals/apply',
+      {
+        organizationId,
+        spaceId,
+        skillId,
+        acceptedCount: body.accepted.length,
+        rejectedCount: body.rejected.length,
+      },
+    );
+
+    const result = await this.service.applySkillChangeProposals({
+      userId: request.user.userId,
+      organizationId,
+      spaceId,
+      artefactId: skillId,
+      accepted: body.accepted,
+      rejected: body.rejected,
+    });
+
+    this.logger.info(
+      'POST /organizations/:orgId/spaces/:spaceId/skills/:skillId/change-proposals/apply - Applied successfully',
+      {
+        organizationId,
+        spaceId,
+        skillId,
+        successCount: result.success.length,
+        failureCount: result.failure.length,
       },
     );
 

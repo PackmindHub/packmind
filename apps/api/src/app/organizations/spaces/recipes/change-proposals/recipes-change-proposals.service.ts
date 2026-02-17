@@ -1,5 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import {
+  ApplyChangeProposalsCommand,
+  ApplyChangeProposalsResponse,
   IPlaybookChangeManagementPort,
   ListChangeProposalsByArtefactCommand,
   ListChangeProposalsByArtefactResponse,
@@ -20,5 +22,11 @@ export class RecipesChangeProposalsService {
     return this.playbookChangeManagementAdapter.listChangeProposalsByArtefact(
       command,
     );
+  }
+
+  async applyRecipeChangeProposals(
+    command: ApplyChangeProposalsCommand<RecipeId>,
+  ): Promise<ApplyChangeProposalsResponse> {
+    return this.playbookChangeManagementAdapter.applyChangeProposals(command);
   }
 }
