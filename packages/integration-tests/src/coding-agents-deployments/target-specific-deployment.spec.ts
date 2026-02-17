@@ -84,9 +84,9 @@ describe('Target-Specific Deployment Integration', () => {
     const signUpResult = await testApp.accountsHexa
       .getAdapter()
       .signUpWithOrganization({
-        organizationName: 'test organization',
         email: 'testuser@packmind.com',
         password: 's3cret!@',
+        authType: 'password',
       });
     user = signUpResult.user;
     organization = signUpResult.organization;
