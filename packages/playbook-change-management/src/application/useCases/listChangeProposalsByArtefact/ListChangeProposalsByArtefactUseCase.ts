@@ -6,11 +6,13 @@ import {
   ISkillsPort,
   ISpacesPort,
   IStandardsPort,
+  IListChangeProposalsByArtefact,
   ListChangeProposalsByArtefactCommand,
   ListChangeProposalsByArtefactResponse,
   RecipeId,
   SkillId,
   StandardId,
+  ChangeProposalStatus,
 } from '@packmind/types';
 import { ChangeProposalService } from '../../services/ChangeProposalService';
 import { ConflictDetectionService } from '../../services/ConflictDetectionService';
@@ -26,7 +28,7 @@ export class ListChangeProposalsByArtefactUseCase<
     ListChangeProposalsByArtefactCommand<T>,
     ListChangeProposalsByArtefactResponse
   >
-  implements ListChangeProposalsByArtefactUseCase<T>
+  implements IListChangeProposalsByArtefact<T>
 {
   constructor(
     accountsPort: IAccountsPort,
@@ -58,13 +60,17 @@ export class ListChangeProposalsByArtefactUseCase<
       this.skillsPort,
     );
 
-    const proposals = await this.service.findProposalsByArtefact(
+    const allProposals = await this.service.findProposalsByArtefact(
       command.spaceId,
       command.artefactId,
     );
 
+    const pendingProposals = allProposals.filter(
+      (p) => p.status === ChangeProposalStatus.pending,
+    );
+
     const changeProposals =
-      this.conflictDetectionService.detectConflicts(proposals);
+      this.conflictDetectionService.detectConflicts(pendingProposals);
 
     return { changeProposals };
   }
