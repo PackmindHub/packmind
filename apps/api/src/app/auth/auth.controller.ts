@@ -971,15 +971,10 @@ export class AuthController {
       const provider = statePayload.provider as SocialProvider;
 
       // Exchange code for user info
-      const { email, firstName } =
-        await this.workOsService.authenticateWithCode(code);
+      const { email } = await this.workOsService.authenticateWithCode(code);
 
       // Sign in or create user
-      const result = await this.authService.signInSocial(
-        email,
-        provider,
-        firstName,
-      );
+      const result = await this.authService.signInSocial(email, provider);
 
       // Get cookie security setting
       const cookieSecure = await Configuration.getConfig('COOKIE_SECURE');
