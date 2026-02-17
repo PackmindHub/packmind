@@ -1,5 +1,5 @@
 import { useParams } from 'react-router';
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import {
   PMBox,
@@ -17,18 +17,22 @@ import {
 } from '@packmind/types';
 import { useAuthContext } from '../../src/domain/accounts/hooks/useAuthContext';
 import { useCurrentSpace } from '../../src/domain/spaces/hooks/useCurrentSpace';
-import { useGetRecipesQuery } from '../../src/domain/recipes/api/queries/RecipesQueries';
+import { useGetRecipeByIdQuery } from '../../src/domain/recipes/api/queries/RecipesQueries';
 import {
   useBatchApplyChangeProposalsMutation,
   useBatchRejectChangeProposalsMutation,
 } from '../../src/domain/recipes/api/queries/ChangeProposalsQueries';
 import { useListChangeProposalsByRecipeQuery } from '../../src/domain/change-proposals/api/queries/ChangeProposalsQueries';
-import { GET_GROUPED_CHANGE_PROPOSALS_KEY } from '../../src/domain/change-proposals/api/queryKeys';
+import {
+  GET_CHANGE_PROPOSALS_BY_RECIPE_KEY,
+  GET_GROUPED_CHANGE_PROPOSALS_KEY,
+} from '../../src/domain/change-proposals/api/queryKeys';
 import { useUserLookup } from '../../src/domain/change-proposals/hooks/useUserLookup';
 import { ChangeProposalsPreviewPanel } from '../../src/domain/change-proposals/components/ChangeProposals/ChangeProposalsPreviewPanel';
 import { ChangeProposalsChangesList } from '../../src/domain/change-proposals/components/ChangeProposals/ChangeProposalsChangesList';
 
-function CommandReviewDetail({ artefactId }: { artefactId: string }) {
+function CommandReviewDetail({ artefactId }: Readonly<{ artefactId: string }>) {
+  const recipeId = artefactId as RecipeId;
   const { organization } = useAuthContext();
   const { spaceId } = useCurrentSpace();
   const queryClient = useQueryClient();
@@ -49,19 +53,12 @@ function CommandReviewDetail({ artefactId }: { artefactId: string }) {
   const batchRejectMutation = useBatchRejectChangeProposalsMutation();
 
   const { data: selectedRecipeProposalsData, isLoading: isLoadingProposals } =
-    useListChangeProposalsByRecipeQuery(artefactId as RecipeId);
+    useListChangeProposalsByRecipeQuery(recipeId);
 
-  const selectedRecipeProposals = useMemo(
-    () => selectedRecipeProposalsData?.changeProposals ?? [],
-    [selectedRecipeProposalsData],
-  );
+  const selectedRecipeProposals =
+    selectedRecipeProposalsData?.changeProposals ?? [];
 
-  const { data: recipes } = useGetRecipesQuery();
-
-  const selectedRecipe = useMemo(
-    () => recipes?.find((r) => r.id === artefactId),
-    [recipes, artefactId],
-  );
+  const { data: selectedRecipe } = useGetRecipeByIdQuery(recipeId);
 
   const handleReviewProposal = useCallback((proposalId: ChangeProposalId) => {
     setReviewingProposalId((prev) => (prev === proposalId ? null : proposalId));
@@ -151,9 +148,14 @@ function CommandReviewDetail({ artefactId }: { artefactId: string }) {
     try {
       await Promise.all(mutations);
 
-      await queryClient.invalidateQueries({
-        queryKey: GET_GROUPED_CHANGE_PROPOSALS_KEY,
-      });
+      await Promise.all([
+        queryClient.invalidateQueries({
+          queryKey: GET_GROUPED_CHANGE_PROPOSALS_KEY,
+        }),
+        queryClient.invalidateQueries({
+          queryKey: [...GET_CHANGE_PROPOSALS_BY_RECIPE_KEY, recipeId],
+        }),
+      ]);
 
       setAcceptedProposalIds(new Set());
       setRejectedProposalIds(new Set());
@@ -260,7 +262,7 @@ export default function ReviewChangesDetailRouteModule() {
   if (!artefactType || !artefactId) return null;
 
   if (artefactType === 'commands') {
-    return <CommandReviewDetail artefactId={artefactId} />;
+    return <CommandReviewDetail key={artefactId} artefactId={artefactId} />;
   }
 
   return (

@@ -40,12 +40,6 @@ export const routes = {
       `/org/${orgSlug}/space/${spaceSlug}/commands/create`,
     toEditCommand: (orgSlug: string, spaceSlug: string, commandId: string) =>
       `/org/${orgSlug}/space/${spaceSlug}/commands/${commandId}/edit`,
-    toCommandChangeProposals: (
-      orgSlug: string,
-      spaceSlug: string,
-      commandId: string,
-    ) =>
-      `/org/${orgSlug}/space/${spaceSlug}/commands/${commandId}/viewChangeProposals`,
     toStandards: (orgSlug: string, spaceSlug: string) =>
       `/org/${orgSlug}/space/${spaceSlug}/standards`,
     toPackages: (orgSlug: string, spaceSlug: string) =>
@@ -100,8 +94,6 @@ export const routes = {
       spaceSlug: string,
       skillSlug: string,
     ) => `/org/${orgSlug}/space/${spaceSlug}/skills/${skillSlug}/distributions`,
-    toChangeProposals: (orgSlug: string, spaceSlug: string) =>
-      `/org/${orgSlug}/space/${spaceSlug}/change-proposals`,
     toReviewChanges: (orgSlug: string, spaceSlug: string) =>
       `/org/${orgSlug}/space/${spaceSlug}/review-changes`,
     toReviewChangesArtefact: (

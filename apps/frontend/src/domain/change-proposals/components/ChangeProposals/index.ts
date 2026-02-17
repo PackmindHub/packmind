@@ -1,1 +1,2 @@
-export { ChangeProposals } from './ChangeProposals';
+export { ChangeProposalsPreviewPanel } from './ChangeProposalsPreviewPanel';
+export { ChangeProposalsChangesList } from './ChangeProposalsChangesList';
