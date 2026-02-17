@@ -1,7 +1,9 @@
+import { PackmindEventEmitterService } from '@packmind/node-utils';
 import {
   ISignInUserUseCase,
   SignInUserCommand,
   SignInUserResponse,
+  UserSignedInEvent,
 } from '@packmind/types';
 import { UserService } from '../../services/UserService';
 import { OrganizationService } from '../../services/OrganizationService';
@@ -14,6 +16,7 @@ export class SignInUserUseCase implements ISignInUserUseCase {
     private readonly userService: UserService,
     private readonly organizationService: OrganizationService,
     private readonly loginRateLimiterService: LoginRateLimiterService,
+    private readonly eventEmitterService: PackmindEventEmitterService,
   ) {}
 
   async execute(command: SignInUserCommand): Promise<SignInUserResponse> {
@@ -44,6 +47,7 @@ export class SignInUserUseCase implements ISignInUserUseCase {
     }
 
     // If user has no memberships, allow them to sign in to create an organization
+    // No UserSignedInEvent emitted here: event requires organizationId which is unavailable without memberships
     if (user.memberships.length === 0) {
       // Successful login - clear any previous failed attempts
       await this.loginRateLimiterService.clearAttempts(command.email);
@@ -67,6 +71,16 @@ export class SignInUserUseCase implements ISignInUserUseCase {
 
       // Successful login - clear any previous failed attempts
       await this.loginRateLimiterService.clearAttempts(command.email);
+
+      this.eventEmitterService.emit(
+        new UserSignedInEvent({
+          userId: user.id,
+          organizationId: organization.id,
+          email: user.email,
+          authType: 'password',
+          source: 'ui',
+        }),
+      );
 
       return {
         user,
@@ -95,6 +109,16 @@ export class SignInUserUseCase implements ISignInUserUseCase {
 
     // Successful login - clear any previous failed attempts
     await this.loginRateLimiterService.clearAttempts(command.email);
+
+    this.eventEmitterService.emit(
+      new UserSignedInEvent({
+        userId: user.id,
+        organizationId: organizationsWithRoles[0].organization.id,
+        email: user.email,
+        authType: 'password',
+        source: 'ui',
+      }),
+    );
 
     return {
       user,

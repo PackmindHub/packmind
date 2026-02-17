@@ -1,3 +1,4 @@
+import { PackmindEventEmitterService } from '@packmind/node-utils';
 import { SignInUserUseCase } from './SignInUserUseCase';
 import { UserService } from '../../services/UserService';
 import { OrganizationService } from '../../services/OrganizationService';
@@ -18,6 +19,7 @@ describe('SignInUserUseCase', () => {
   let userService: jest.Mocked<UserService>;
   let organizationService: jest.Mocked<OrganizationService>;
   let loginRateLimiterService: jest.Mocked<LoginRateLimiterService>;
+  let mockEventEmitterService: jest.Mocked<PackmindEventEmitterService>;
 
   const organizationId = createOrganizationId('org-123');
   const userId = createUserId('user-123');
@@ -59,10 +61,15 @@ describe('SignInUserUseCase', () => {
       clearAttempts: jest.fn(),
     } as unknown as jest.Mocked<LoginRateLimiterService>;
 
+    mockEventEmitterService = {
+      emit: jest.fn(),
+    } as unknown as jest.Mocked<PackmindEventEmitterService>;
+
     useCase = new SignInUserUseCase(
       userService,
       organizationService,
       loginRateLimiterService,
+      mockEventEmitterService,
     );
   });
 
@@ -118,6 +125,22 @@ describe('SignInUserUseCase', () => {
 
       expect(organizationService.getOrganizationById).toHaveBeenCalledWith(
         organizationId,
+      );
+    });
+
+    it('emits UserSignedInEvent with user and organization details', async () => {
+      await useCase.execute(command);
+
+      expect(mockEventEmitterService.emit).toHaveBeenCalledWith(
+        expect.objectContaining({
+          payload: {
+            userId,
+            organizationId,
+            email: 'testuser@packmind.com',
+            authType: 'password',
+            source: 'ui',
+          },
+        }),
       );
     });
   });
@@ -282,6 +305,12 @@ describe('SignInUserUseCase', () => {
         command.email,
       );
     });
+
+    it('does not emit UserSignedInEvent', async () => {
+      await useCase.execute(command);
+
+      expect(mockEventEmitterService.emit).not.toHaveBeenCalled();
+    });
   });
 
   describe('when user belongs to multiple organizations', () => {
@@ -357,6 +386,22 @@ describe('SignInUserUseCase', () => {
 
       expect(organizationService.getOrganizationById).toHaveBeenCalledWith(
         organizationId2,
+      );
+    });
+
+    it('emits UserSignedInEvent with the first organization', async () => {
+      await useCase.execute(command);
+
+      expect(mockEventEmitterService.emit).toHaveBeenCalledWith(
+        expect.objectContaining({
+          payload: {
+            userId,
+            organizationId,
+            email: 'testuser@packmind.com',
+            authType: 'password',
+            source: 'ui',
+          },
+        }),
       );
     });
   });
