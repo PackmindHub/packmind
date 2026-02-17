@@ -29,16 +29,9 @@ export function InlineDiffContent({
   const changes = diffWords(payload.oldValue, payload.newValue);
   const isPooled = isAccepted || isRejected;
 
-  const borderColor = isAccepted
-    ? 'green.500'
-    : isRejected
-      ? 'red.500'
-      : 'border.tertiary';
-
   return (
     <PMBox
       borderLeft="3px solid"
-      borderLeftColor={borderColor}
       borderRadius="md"
       paddingLeft={3}
       paddingY={2}
@@ -55,14 +48,7 @@ export function InlineDiffContent({
             {changes.map((change, i) => {
               if (change.added) {
                 return (
-                  <PMText
-                    key={i}
-                    as="span"
-                    background="green.50"
-                    color="green.800"
-                    paddingX={0.5}
-                    borderRadius="sm"
-                  >
+                  <PMText key={i} as="span" paddingX={0.5} borderRadius="sm">
                     {change.value}
                   </PMText>
                 );
@@ -72,8 +58,6 @@ export function InlineDiffContent({
                   <PMText
                     key={i}
                     as="span"
-                    background="red.50"
-                    color="red.800"
                     textDecoration="line-through"
                     paddingX={0.5}
                     borderRadius="sm"
