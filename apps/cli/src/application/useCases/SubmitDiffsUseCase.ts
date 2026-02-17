@@ -1,4 +1,9 @@
-import { ChangeProposalCaptureMode } from '@packmind/types';
+import {
+  ChangeProposalArtefactId,
+  ChangeProposalCaptureMode,
+  ChangeProposalType,
+  SpaceId,
+} from '@packmind/types';
 
 import {
   ISubmitDiffsUseCase,
@@ -63,16 +68,16 @@ export class SubmitDiffsUseCase implements ISubmitDiffsUseCase {
       artifactType?: string;
     }[] = [];
     for (const [spaceId, diffs] of diffsBySpaceId) {
-      const response =
-        await this.packmindGateway.changeProposals.batchCreateChangeProposals({
-          spaceId,
-          proposals: diffs.map((diff) => ({
-            type: diff.type,
-            artefactId: diff.artifactId,
-            payload: diff.payload,
-            captureMode: ChangeProposalCaptureMode.commit,
-          })),
-        });
+      const response = await this.packmindGateway.changeProposals.batchCreate({
+        spaceId: spaceId as SpaceId,
+        proposals: diffs.map((diff) => ({
+          type: diff.type,
+          artefactId:
+            diff.artifactId as ChangeProposalArtefactId<ChangeProposalType>,
+          payload: diff.payload,
+          captureMode: ChangeProposalCaptureMode.commit,
+        })),
+      });
       submitted += response.created;
       alreadySubmitted += response.skipped;
       for (const error of response.errors) {

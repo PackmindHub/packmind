@@ -1,18 +1,27 @@
-import { ChangeProposalCaptureMode, ChangeProposalType } from '@packmind/types';
+import {
+  BatchCreateChangeProposalsResponse,
+  ChangeProposalCaptureMode,
+  ChangeProposalType,
+} from '@packmind/types';
 
 import { SubmitDiffsUseCase } from './SubmitDiffsUseCase';
 import { ArtefactDiff } from '../../domain/useCases/IDiffArtefactsUseCase';
-import { createMockPackmindGateway } from '../../mocks/createMockGateways';
-import { BatchCreateChangeProposalGatewayResponse } from '../../domain/repositories/IChangeProposalGateway';
+import {
+  createMockChangeProposalGateway,
+  createMockPackmindGateway,
+} from '../../mocks/createMockGateways';
 
 describe('SubmitDiffsUseCase', () => {
   let useCase: SubmitDiffsUseCase;
-  const mockGateway = createMockPackmindGateway();
+  const mockChangeProposals = createMockChangeProposalGateway();
+  const mockGateway = createMockPackmindGateway({
+    changeProposals: mockChangeProposals,
+  });
 
   const batchResponse = (
     created: number,
     skipped = 0,
-  ): BatchCreateChangeProposalGatewayResponse => ({
+  ): BatchCreateChangeProposalsResponse => ({
     created,
     skipped,
     errors: [],
@@ -51,12 +60,10 @@ describe('SubmitDiffsUseCase', () => {
       expect(result.alreadySubmitted).toBe(0);
     });
 
-    it('does not call batchCreateChangeProposals', async () => {
+    it('does not call batchCreate', async () => {
       await useCase.execute({ groupedDiffs: [] });
 
-      expect(
-        mockGateway.changeProposals.batchCreateChangeProposals,
-      ).not.toHaveBeenCalled();
+      expect(mockChangeProposals.batchCreate).not.toHaveBeenCalled();
     });
   });
 
@@ -83,9 +90,7 @@ describe('SubmitDiffsUseCase', () => {
     ];
 
     beforeEach(() => {
-      mockGateway.changeProposals.batchCreateChangeProposals.mockResolvedValue(
-        batchResponse(2),
-      );
+      mockChangeProposals.batchCreate.mockResolvedValue(batchResponse(2));
     });
 
     it('returns created count from batch response', async () => {
@@ -96,20 +101,16 @@ describe('SubmitDiffsUseCase', () => {
       expect(result.submitted).toBe(2);
     });
 
-    it('calls batchCreateChangeProposals once for the spaceId', async () => {
+    it('calls batchCreate once for the spaceId', async () => {
       await useCase.execute({ groupedDiffs: [sameSpaceGroup] });
 
-      expect(
-        mockGateway.changeProposals.batchCreateChangeProposals,
-      ).toHaveBeenCalledTimes(1);
+      expect(mockChangeProposals.batchCreate).toHaveBeenCalledTimes(1);
     });
 
     it('sends all diffs in a single batch', async () => {
       await useCase.execute({ groupedDiffs: [sameSpaceGroup] });
 
-      expect(
-        mockGateway.changeProposals.batchCreateChangeProposals,
-      ).toHaveBeenCalledWith({
+      expect(mockChangeProposals.batchCreate).toHaveBeenCalledWith({
         spaceId: 'spc-456',
         proposals: [
           {
@@ -163,19 +164,15 @@ describe('SubmitDiffsUseCase', () => {
     ];
 
     beforeEach(() => {
-      mockGateway.changeProposals.batchCreateChangeProposals.mockResolvedValue(
-        batchResponse(1),
-      );
+      mockChangeProposals.batchCreate.mockResolvedValue(batchResponse(1));
     });
 
-    it('calls batchCreateChangeProposals once per spaceId', async () => {
+    it('calls batchCreate once per spaceId', async () => {
       await useCase.execute({
         groupedDiffs: [spaceAGroup, spaceBGroup],
       });
 
-      expect(
-        mockGateway.changeProposals.batchCreateChangeProposals,
-      ).toHaveBeenCalledTimes(2);
+      expect(mockChangeProposals.batchCreate).toHaveBeenCalledTimes(2);
     });
 
     it('aggregates created counts from all batch responses', async () => {
@@ -217,12 +214,10 @@ describe('SubmitDiffsUseCase', () => {
       ]);
     });
 
-    it('does not call batchCreateChangeProposals', async () => {
+    it('does not call batchCreate', async () => {
       await useCase.execute({ groupedDiffs: [standardGroup] });
 
-      expect(
-        mockGateway.changeProposals.batchCreateChangeProposals,
-      ).not.toHaveBeenCalled();
+      expect(mockChangeProposals.batchCreate).not.toHaveBeenCalled();
     });
   });
 
@@ -240,9 +235,7 @@ describe('SubmitDiffsUseCase', () => {
     ];
 
     beforeEach(() => {
-      mockGateway.changeProposals.batchCreateChangeProposals.mockResolvedValue(
-        batchResponse(1),
-      );
+      mockChangeProposals.batchCreate.mockResolvedValue(batchResponse(1));
     });
 
     it('returns created count from batch response', async () => {
@@ -254,9 +247,7 @@ describe('SubmitDiffsUseCase', () => {
     it('sends skill diff with correct type and payload', async () => {
       await useCase.execute({ groupedDiffs: [skillGroup] });
 
-      expect(
-        mockGateway.changeProposals.batchCreateChangeProposals,
-      ).toHaveBeenCalledWith({
+      expect(mockChangeProposals.batchCreate).toHaveBeenCalledWith({
         spaceId: 'spc-skl',
         proposals: [
           {
@@ -308,9 +299,7 @@ describe('SubmitDiffsUseCase', () => {
     ];
 
     beforeEach(() => {
-      mockGateway.changeProposals.batchCreateChangeProposals.mockResolvedValue(
-        batchResponse(2),
-      );
+      mockChangeProposals.batchCreate.mockResolvedValue(batchResponse(2));
     });
 
     it('returns created count from batch response', async () => {
@@ -334,9 +323,7 @@ describe('SubmitDiffsUseCase', () => {
     it('sends only valid diffs in the batch', async () => {
       await useCase.execute({ groupedDiffs: [mixedMetadataGroup] });
 
-      expect(
-        mockGateway.changeProposals.batchCreateChangeProposals,
-      ).toHaveBeenCalledWith({
+      expect(mockChangeProposals.batchCreate).toHaveBeenCalledWith({
         spaceId: 'spc-456',
         proposals: [
           {
@@ -387,12 +374,10 @@ describe('SubmitDiffsUseCase', () => {
       ]);
     });
 
-    it('does not call batchCreateChangeProposals', async () => {
+    it('does not call batchCreate', async () => {
       await useCase.execute({ groupedDiffs: [missingArtifactIdGroup] });
 
-      expect(
-        mockGateway.changeProposals.batchCreateChangeProposals,
-      ).not.toHaveBeenCalled();
+      expect(mockChangeProposals.batchCreate).not.toHaveBeenCalled();
     });
   });
 
@@ -466,9 +451,7 @@ describe('SubmitDiffsUseCase', () => {
     ];
 
     beforeEach(() => {
-      mockGateway.changeProposals.batchCreateChangeProposals.mockResolvedValue(
-        batchResponse(1),
-      );
+      mockChangeProposals.batchCreate.mockResolvedValue(batchResponse(1));
     });
 
     it('returns correct submitted count', async () => {
@@ -531,7 +514,7 @@ describe('SubmitDiffsUseCase', () => {
     ];
 
     beforeEach(() => {
-      mockGateway.changeProposals.batchCreateChangeProposals.mockResolvedValue({
+      mockChangeProposals.batchCreate.mockResolvedValue({
         created: 1,
         skipped: 0,
         errors: [{ index: 1, message: 'Duplicate proposal' }],
@@ -572,7 +555,7 @@ describe('SubmitDiffsUseCase', () => {
     ];
 
     beforeEach(() => {
-      mockGateway.changeProposals.batchCreateChangeProposals.mockResolvedValue({
+      mockChangeProposals.batchCreate.mockResolvedValue({
         created: 0,
         skipped: 0,
         errors: [
@@ -622,9 +605,7 @@ describe('SubmitDiffsUseCase', () => {
     ];
 
     beforeEach(() => {
-      mockGateway.changeProposals.batchCreateChangeProposals.mockResolvedValue(
-        batchResponse(1, 1),
-      );
+      mockChangeProposals.batchCreate.mockResolvedValue(batchResponse(1, 1));
     });
 
     it('returns alreadySubmitted count from gateway', async () => {
