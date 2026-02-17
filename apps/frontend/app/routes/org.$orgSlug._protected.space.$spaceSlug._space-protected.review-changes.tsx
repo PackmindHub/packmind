@@ -45,12 +45,14 @@ export default function ReviewChangesLayoutRouteModule() {
     <PMGrid
       height="full"
       gridTemplateColumns={{
-        base: 'minmax(240px, 270px) minmax(0, 1fr)',
+        base: 'minmax(240px, 270px) 1fr minmax(280px, 320px)',
       }}
-      alignItems="start"
+      gridTemplateRows="auto 1fr"
       overflowX="auto"
     >
-      <ReviewChangesSidebar groupedProposals={groupedProposals} />
+      <PMBox gridRow="1 / -1" gridColumn="1" overflowY="auto">
+        <ReviewChangesSidebar groupedProposals={groupedProposals} />
+      </PMBox>
       <Outlet />
     </PMGrid>
   );

@@ -1,14 +1,7 @@
 import { useParams } from 'react-router';
 import { useState, useCallback } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import {
-  PMBox,
-  PMHStack,
-  PMFlex,
-  PMText,
-  PMSpinner,
-  PMButton,
-} from '@packmind/ui';
+import { PMBox, PMHStack, PMText, PMSpinner, PMButton } from '@packmind/ui';
 import {
   ChangeProposalId,
   OrganizationId,
@@ -183,14 +176,14 @@ function CommandReviewDetail({ artefactId }: Readonly<{ artefactId: string }>) {
   return (
     <>
       <PMBox
-        position="sticky"
-        top={0}
-        zIndex={10}
-        paddingY={3}
-        display="flex"
+        gridColumn="span 2"
         borderBottomWidth="1px"
-        mb={2}
+        paddingX={4}
+        paddingY={2}
+        display="flex"
         justifyContent="flex-end"
+        alignItems="center"
+        minH="40px"
       >
         {hasPooledDecisions && (
           <PMHStack gap={2}>
@@ -209,46 +202,43 @@ function CommandReviewDetail({ artefactId }: Readonly<{ artefactId: string }>) {
           </PMHStack>
         )}
       </PMBox>
-
-      <PMFlex gap={6} direction={{ base: 'column', lg: 'row' }} flex={1}>
-        <PMBox flex={1} minW={0}>
-          {isLoadingProposals ? (
-            <PMSpinner />
-          ) : (
-            <ChangeProposalsPreviewPanel
-              recipe={
-                selectedRecipe
-                  ? {
-                      name: selectedRecipe.name,
-                      content: selectedRecipe.content,
-                    }
-                  : null
-              }
-              proposals={selectedRecipeProposals}
-              reviewingProposalId={reviewingProposalId}
-              acceptedProposalIds={acceptedProposalIds}
-              rejectedProposalIds={rejectedProposalIds}
-              onPoolAccept={handlePoolAccept}
-              onPoolReject={handlePoolReject}
-              onUndoPool={handleUndoPool}
-              onReviewProposal={handleReviewProposal}
-            />
-          )}
-        </PMBox>
-        <PMBox width={{ base: '100%', lg: '300px' }} flexShrink={0}>
-          <ChangeProposalsChangesList
+      <PMBox minW={0} overflowY="auto" p={4}>
+        {isLoadingProposals ? (
+          <PMSpinner />
+        ) : (
+          <ChangeProposalsPreviewPanel
+            recipe={
+              selectedRecipe
+                ? {
+                    name: selectedRecipe.name,
+                    content: selectedRecipe.content,
+                  }
+                : null
+            }
             proposals={selectedRecipeProposals}
             reviewingProposalId={reviewingProposalId}
             acceptedProposalIds={acceptedProposalIds}
             rejectedProposalIds={rejectedProposalIds}
-            userLookup={userLookup}
-            onSelectProposal={handleReviewProposal}
             onPoolAccept={handlePoolAccept}
             onPoolReject={handlePoolReject}
             onUndoPool={handleUndoPool}
+            onReviewProposal={handleReviewProposal}
           />
-        </PMBox>
-      </PMFlex>
+        )}
+      </PMBox>
+      <PMBox borderLeftWidth="1px" p={4} overflowY="auto">
+        <ChangeProposalsChangesList
+          proposals={selectedRecipeProposals}
+          reviewingProposalId={reviewingProposalId}
+          acceptedProposalIds={acceptedProposalIds}
+          rejectedProposalIds={rejectedProposalIds}
+          userLookup={userLookup}
+          onSelectProposal={handleReviewProposal}
+          onPoolAccept={handlePoolAccept}
+          onPoolReject={handlePoolReject}
+          onUndoPool={handleUndoPool}
+        />
+      </PMBox>
     </>
   );
 }
@@ -271,6 +261,7 @@ export default function ReviewChangesDetailRouteModule() {
       alignItems="center"
       justifyContent="center"
       minH="300px"
+      gridColumn="span 2"
     >
       <PMText color="secondary">
         Review not yet supported for this artefact type
