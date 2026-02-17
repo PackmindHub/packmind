@@ -75,6 +75,8 @@ export class AmplitudeEventListener extends PackmindListener<EventTrackingAdapte
   private onUserSignedUpEvent(event: UserSignedUpEvent) {
     return this.emitAmplitudeEvent(event, 'user_signed_up', (payload) => ({
       quickStart: payload.quickStart,
+      method: payload.method,
+      socialProvider: payload.socialProvider ?? '',
     }));
   }
 
