@@ -53,8 +53,14 @@ export class ConflictDetectionService {
     }
 
     if (
-      isUpdateCommandDescription(proposal1) &&
-      isUpdateCommandDescription(proposal2)
+      isCorrectChangeProposalType(
+        proposal1,
+        ChangeProposalType.updateCommandDescription,
+      ) &&
+      isCorrectChangeProposalType(
+        proposal2,
+        ChangeProposalType.updateCommandDescription,
+      )
     ) {
       return this.hasDescriptionConflict(proposal1, proposal2);
     }
@@ -77,8 +83,9 @@ export class ConflictDetectionService {
   }
 }
 
-function isUpdateCommandDescription(
+function isCorrectChangeProposalType<T extends ChangeProposalType>(
   tbd: ChangeProposal,
-): tbd is ChangeProposal<ChangeProposalType.updateCommandDescription> {
-  return tbd.type === ChangeProposalType.updateCommandDescription;
+  expected: T,
+): tbd is ChangeProposal<T> {
+  return tbd.type === expected;
 }
