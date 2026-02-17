@@ -6,8 +6,6 @@ import {
   ChangeProposal,
   ChangeProposalId,
   ChangeProposalWithOutdatedStatus,
-  IListChangeProposalsBySpace,
-  NewGateway,
   OrganizationId,
   RecipeId,
   SpaceId,
@@ -19,8 +17,6 @@ export interface IChangeProposalsGateway {
     spaceId: SpaceId,
     recipeId: RecipeId,
   ): Promise<ChangeProposalWithOutdatedStatus[]>;
-
-  getGroupedChangeProposals: NewGateway<IListChangeProposalsBySpace>;
 
   applyChangeProposal(
     organizationId: OrganizationId,

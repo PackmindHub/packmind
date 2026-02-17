@@ -6,9 +6,7 @@ import {
   ChangeProposal,
   ChangeProposalId,
   ChangeProposalWithOutdatedStatus,
-  IListChangeProposalsBySpace,
   ListCommandChangeProposalsResponse,
-  NewGateway,
   OrganizationId,
   RecipeId,
   SpaceId,
@@ -34,15 +32,6 @@ export class ChangeProposalsGatewayApi
     );
     return response.changeProposals;
   }
-
-  getGroupedChangeProposals: NewGateway<IListChangeProposalsBySpace> = async ({
-    organizationId,
-    spaceId,
-  }) => {
-    return this._api.get(
-      `/organizations/${organizationId}/spaces/${spaceId}/grouped-change-proposals`,
-    );
-  };
 
   async applyChangeProposal(
     organizationId: OrganizationId,
