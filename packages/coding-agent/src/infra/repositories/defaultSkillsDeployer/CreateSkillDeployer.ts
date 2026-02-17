@@ -180,6 +180,11 @@ Usage:
 python3 scripts/init_skill.py <skill-name> --path <output-directory>
 \`\`\`
 
+**IMPORTANT:** The \`--path\` argument must be the **parent directory** where the skill folder will be created, not the skill directory itself. The script automatically creates a subdirectory named after the skill.
+
+- ✅ Correct: \`python3 scripts/init_skill.py my-skill --path .claude/skills\` → creates \`.claude/skills/my-skill/\`
+- ❌ Wrong: \`python3 scripts/init_skill.py my-skill --path .claude/skills/my-skill\` → creates \`.claude/skills/my-skill/my-skill/\` (nested!)
+
 The script:
 
 - Creates the skill directory at the specified path
@@ -192,6 +197,12 @@ After initialization, customize or remove the generated SKILL.md and example fil
 ### Step 4: Edit the Skill
 
 When editing the (newly-generated or existing) skill, remember that the skill is being created for another instance of ${agentName} to use. Focus on including information that would be beneficial and non-obvious to ${agentName}. Consider what procedural knowledge, domain-specific details, or reusable assets would help another ${agentName} instance execute these tasks more effectively.
+
+**File Placement Rule:** Always create files directly in their target subdirectory. Never create a file at the skill root and move it later.
+- Reference docs → \`references/filename.md\`
+- Scripts → \`scripts/filename.py\`
+- Assets → \`assets/filename.ext\`
+- Only \`SKILL.md\`, \`README.md\`, and \`LICENSE.txt\` belong at the skill root.
 
 #### Start with Reusable Skill Contents
 
