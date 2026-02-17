@@ -228,41 +228,28 @@ export class AuthService {
       | undefined;
 
     if (!user) {
-      user = await this.accountsAdapter.createSocialLoginUser(email, provider);
-      isNewUser = true;
-      this.logger.log(
-        `New user created via social login with provider ${providerName}`,
-        {
-          userId: user.id,
-          email: maskEmail(email),
-        },
-      );
-
-      // Create organization for new user (mirrors email sign-up flow)
-      const localPart = email.split('@')[0];
-      const baseOrgName = `${localPart}'s organization`;
-      let orgName = baseOrgName;
-      let suffix = 1;
-      while (
-        await this.accountsAdapter.getOrganizationByName({ name: orgName })
-      ) {
-        suffix++;
-        orgName = `${baseOrgName} ${suffix}`;
-      }
-      const newOrg = await this.accountsAdapter.createOrganization({
-        userId: user.id,
-        name: orgName,
+      const result = await this.accountsAdapter.signUpWithOrganization({
+        email,
+        authType: 'social',
+        socialProvider: provider,
       });
 
-      this.logger.log('Organization auto-created for new social login user', {
+      user = result.user;
+      isNewUser = true;
+
+      await this.accountsAdapter.addSocialProvider(user.id, provider);
+
+      organization = {
+        id: result.organization.id,
+        name: result.organization.name,
+        slug: result.organization.slug,
+      };
+
+      this.logger.log('New user created via social login with organization', {
         userId: user.id,
         email: maskEmail(email),
-        organizationId: newOrg.id,
-        organizationName: newOrg.name,
+        organizationId: result.organization.id,
       });
-
-      // Set organization for JWT payload (user is admin of new org)
-      organization = { id: newOrg.id, name: newOrg.name, slug: newOrg.slug };
     } else {
       // Existing user — track provider in metadata
       await this.accountsAdapter.addSocialProvider(user.id, provider);
@@ -276,34 +263,36 @@ export class AuthService {
 
     const memberships = user.memberships ?? [];
 
-    if (memberships.length === 1) {
-      const membership = memberships[0];
-      const org = await this.accountsAdapter.getOrganizationById({
-        organizationId: membership.organizationId,
-      });
-      if (org) {
-        organization = { id: org.id, name: org.name, slug: org.slug };
+    if (!isNewUser) {
+      if (memberships.length === 1) {
+        const membership = memberships[0];
+        const org = await this.accountsAdapter.getOrganizationById({
+          organizationId: membership.organizationId,
+        });
+        if (org) {
+          organization = { id: org.id, name: org.name, slug: org.slug };
+        }
+      } else if (memberships.length > 1) {
+        organizations = await Promise.all(
+          memberships.map(async (membership) => {
+            const org = await this.accountsAdapter.getOrganizationById({
+              organizationId: membership.organizationId,
+            });
+            return org
+              ? {
+                  organization: {
+                    id: org.id,
+                    name: org.name,
+                    slug: org.slug,
+                  },
+                  role: membership.role,
+                }
+              : null;
+          }),
+        ).then((orgs) =>
+          orgs.filter((o): o is NonNullable<typeof o> => o !== null),
+        );
       }
-    } else if (memberships.length > 1) {
-      organizations = await Promise.all(
-        memberships.map(async (membership) => {
-          const org = await this.accountsAdapter.getOrganizationById({
-            organizationId: membership.organizationId,
-          });
-          return org
-            ? {
-                organization: {
-                  id: org.id,
-                  name: org.name,
-                  slug: org.slug,
-                },
-                role: membership.role,
-              }
-            : null;
-        }),
-      ).then((orgs) =>
-        orgs.filter((o): o is NonNullable<typeof o> => o !== null),
-      );
     }
 
     const payload = {
@@ -316,10 +305,7 @@ export class AuthService {
             id: organization.id,
             name: organization.name,
             slug: organization.slug,
-            role:
-              isNewUser && memberships.length === 0
-                ? ('admin' as UserOrganizationRole)
-                : memberships[0]?.role,
+            role: memberships[0]?.role ?? ('admin' as UserOrganizationRole),
           }
         : undefined,
     };

@@ -65,29 +65,30 @@ export class SignUpWithOrganizationUseCase implements ISignUpWithOrganizationUse
   async execute(
     command: SignUpWithOrganizationCommand,
   ): Promise<SignUpWithOrganizationResponse> {
-    const { email, password } = command;
+    const { email, authType = 'password' } = command;
 
     this.logger.info('Executing sign up with organization use case', {
       email,
+      authType,
     });
 
-    // Generate unique organization name from email
     const baseOrganizationName = this.generateBaseOrganizationName(email);
 
     try {
-      // Validate inputs
-      this.logger.debug('Validating input parameters');
-      this.validatePassword(password);
+      const { password } = command;
+      if (authType === 'password') {
+        if (!password) {
+          throw new Error('Password is required');
+        }
+        this.validatePassword(password);
+      }
 
       const organizationName =
         await this.findUniqueOrganizationName(baseOrganizationName);
 
-      // Step 1: Create organization first
-      this.logger.debug('Creating organization', { organizationName });
       const organization =
         await this.organizationService.createOrganization(organizationName);
 
-      // Create default "Global" space for the organization
       if (this.spacesPort) {
         this.logger.info('Creating default Global space for organization', {
           organizationId: organization.id,
@@ -105,17 +106,31 @@ export class SignUpWithOrganizationUseCase implements ISignUpWithOrganizationUse
         }
       }
 
-      const user = await this.userService.createUser(
-        email,
-        password,
-        organization.id,
-      );
+      let user;
+      if (authType === 'social') {
+        user = await this.userService.createSocialLoginUser(email);
+        user = await this.userService.addOrganizationMembership(
+          user,
+          organization.id,
+          'admin',
+        );
+      } else {
+        if (!password) {
+          throw new Error('Password is required');
+        }
+        user = await this.userService.createUser(
+          email,
+          password,
+          organization.id,
+        );
+      }
 
       this.logger.info('User signed up with organization successfully', {
         userId: user.id,
         email,
         organizationId: organization.id,
         organizationName: organization.name,
+        authType,
       });
 
       this.eventEmitterService.emit(

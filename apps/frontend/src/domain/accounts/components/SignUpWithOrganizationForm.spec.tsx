@@ -299,6 +299,7 @@ describe('SignUpWithOrganizationForm', () => {
           {
             email: 'test@example.com',
             password: 'password123!@',
+            authType: 'password',
           },
           expect.objectContaining({
             onSuccess: expect.any(Function),

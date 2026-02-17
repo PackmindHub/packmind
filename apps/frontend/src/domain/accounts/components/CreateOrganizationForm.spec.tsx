@@ -5,11 +5,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import '@testing-library/jest-dom';
 import { UIProvider } from '@packmind/ui';
 import { CreateOrganizationForm } from './CreateOrganizationForm';
-import {
-  useRenameOrganizationMutation,
-  useCreateOrganizationMutation,
-} from '../api/queries/AccountsQueries';
-import { useSelectOrganizationMutation } from '../api/queries/AuthQueries';
+import { useRenameOrganizationMutation } from '../api/queries/AccountsQueries';
 import { useAuthContext } from '../hooks/useAuthContext';
 import { organizationGateway } from '../api/gateways';
 
@@ -19,11 +15,6 @@ jest.mock('../hooks/useAuthContext', () => ({
 
 jest.mock('../api/queries/AccountsQueries', () => ({
   useRenameOrganizationMutation: jest.fn(),
-  useCreateOrganizationMutation: jest.fn(),
-}));
-
-jest.mock('../api/queries/AuthQueries', () => ({
-  useSelectOrganizationMutation: jest.fn(),
 }));
 
 jest.mock('../api/gateways', () => ({
@@ -42,14 +33,6 @@ const mockUseAuthContext = useAuthContext as jest.MockedFunction<
 const mockUseRenameOrganizationMutation =
   useRenameOrganizationMutation as jest.MockedFunction<
     typeof useRenameOrganizationMutation
-  >;
-const mockUseCreateOrganizationMutation =
-  useCreateOrganizationMutation as jest.MockedFunction<
-    typeof useCreateOrganizationMutation
-  >;
-const mockUseSelectOrganizationMutation =
-  useSelectOrganizationMutation as jest.MockedFunction<
-    typeof useSelectOrganizationMutation
   >;
 const mockOrganizationGateway = organizationGateway as jest.Mocked<
   typeof organizationGateway
@@ -97,18 +80,6 @@ describe('CreateOrganizationForm', () => {
       isPending: false,
       error: null,
     } as unknown as ReturnType<typeof useRenameOrganizationMutation>);
-
-    mockUseCreateOrganizationMutation.mockReturnValue({
-      mutate: jest.fn(),
-      isPending: false,
-      error: null,
-    } as unknown as ReturnType<typeof useCreateOrganizationMutation>);
-
-    mockUseSelectOrganizationMutation.mockReturnValue({
-      mutate: jest.fn(),
-      isPending: false,
-      error: null,
-    } as unknown as ReturnType<typeof useSelectOrganizationMutation>);
 
     mockOrganizationGateway.getByName.mockRejectedValue(new Error('Not found'));
   });
@@ -169,152 +140,27 @@ describe('CreateOrganizationForm', () => {
         isAuthenticated: true,
         isLoading: false,
         organization: undefined,
-        user: { id: 'user-1', email: 'paul@example.com', memberships: [] },
         getMe: jest.fn(),
         getUserOrganizations: jest.fn(),
         validateAndSwitchIfNeeded: jest.fn(),
       });
     });
 
-    it('pre-fills input with suggested name from user email', () => {
+    it('pre-fills input with empty name', () => {
       renderWithProviders(<CreateOrganizationForm onSuccess={mockOnSuccess} />);
 
       const input = screen.getByTestId(
         'CreateOrganizationForm.OrganizationNameInput',
       );
-      expect(input).toHaveValue("paul's organization");
+      expect(input).toHaveValue('');
     });
 
-    it('calls createOrganizationMutation on submit', async () => {
-      const mockCreateMutate = jest.fn();
-      mockUseCreateOrganizationMutation.mockReturnValue({
-        mutate: mockCreateMutate,
-        isPending: false,
-        error: null,
-      } as unknown as ReturnType<typeof useCreateOrganizationMutation>);
-
-      const user = userEvent.setup();
+    it('shows validation error for empty name', async () => {
       renderWithProviders(<CreateOrganizationForm onSuccess={mockOnSuccess} />);
 
-      const input = screen.getByTestId(
-        'CreateOrganizationForm.OrganizationNameInput',
-      );
-      await user.clear(input);
-      await user.type(input, 'My New Org');
-
       await waitFor(() => {
-        expect(
-          screen.getByTestId('CreateOrganizationForm.SubmitButton'),
-        ).not.toBeDisabled();
+        expect(screen.getByText('Name cannot be empty')).toBeInTheDocument();
       });
-
-      await user.click(
-        screen.getByTestId('CreateOrganizationForm.SubmitButton'),
-      );
-
-      expect(mockCreateMutate).toHaveBeenCalledWith(
-        { name: 'My New Org' },
-        expect.objectContaining({ onSuccess: expect.any(Function) }),
-      );
-    });
-
-    it('calls selectOrganizationMutation after successful creation', async () => {
-      const mockSelectMutate = jest.fn();
-      const mockCreateMutate = jest
-        .fn()
-        .mockImplementation((_data, options) => {
-          options.onSuccess({
-            id: 'new-org-id',
-            name: 'My New Org',
-            slug: 'my-new-org',
-          });
-        });
-
-      mockUseCreateOrganizationMutation.mockReturnValue({
-        mutate: mockCreateMutate,
-        isPending: false,
-        error: null,
-      } as unknown as ReturnType<typeof useCreateOrganizationMutation>);
-
-      mockUseSelectOrganizationMutation.mockReturnValue({
-        mutate: mockSelectMutate,
-        isPending: false,
-        error: null,
-      } as unknown as ReturnType<typeof useSelectOrganizationMutation>);
-
-      const user = userEvent.setup();
-      renderWithProviders(<CreateOrganizationForm onSuccess={mockOnSuccess} />);
-
-      const input = screen.getByTestId(
-        'CreateOrganizationForm.OrganizationNameInput',
-      );
-      await user.clear(input);
-      await user.type(input, 'My New Org');
-
-      await waitFor(() => {
-        expect(
-          screen.getByTestId('CreateOrganizationForm.SubmitButton'),
-        ).not.toBeDisabled();
-      });
-
-      await user.click(
-        screen.getByTestId('CreateOrganizationForm.SubmitButton'),
-      );
-
-      expect(mockSelectMutate).toHaveBeenCalledWith(
-        { organizationId: 'new-org-id' },
-        expect.objectContaining({ onSuccess: expect.any(Function) }),
-      );
-    });
-
-    it('calls onSuccess after successful selection', async () => {
-      const mockSelectMutate = jest
-        .fn()
-        .mockImplementation((_data, options) => {
-          options.onSuccess();
-        });
-      const mockCreateMutate = jest
-        .fn()
-        .mockImplementation((_data, options) => {
-          options.onSuccess({
-            id: 'new-org-id',
-            name: 'My New Org',
-            slug: 'my-new-org',
-          });
-        });
-
-      mockUseCreateOrganizationMutation.mockReturnValue({
-        mutate: mockCreateMutate,
-        isPending: false,
-        error: null,
-      } as unknown as ReturnType<typeof useCreateOrganizationMutation>);
-
-      mockUseSelectOrganizationMutation.mockReturnValue({
-        mutate: mockSelectMutate,
-        isPending: false,
-        error: null,
-      } as unknown as ReturnType<typeof useSelectOrganizationMutation>);
-
-      const user = userEvent.setup();
-      renderWithProviders(<CreateOrganizationForm onSuccess={mockOnSuccess} />);
-
-      const input = screen.getByTestId(
-        'CreateOrganizationForm.OrganizationNameInput',
-      );
-      await user.clear(input);
-      await user.type(input, 'My New Org');
-
-      await waitFor(() => {
-        expect(
-          screen.getByTestId('CreateOrganizationForm.SubmitButton'),
-        ).not.toBeDisabled();
-      });
-
-      await user.click(
-        screen.getByTestId('CreateOrganizationForm.SubmitButton'),
-      );
-
-      expect(mockOnSuccess).toHaveBeenCalled();
     });
   });
 });
