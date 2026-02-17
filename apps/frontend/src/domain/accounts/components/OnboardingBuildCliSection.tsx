@@ -41,7 +41,7 @@ export function OnboardingBuildCliSection() {
               tabs={[
                 {
                   value: 'script',
-                  triggerLabel: 'Script',
+                  triggerLabel: 'Script (Mac/Linux)',
                   content: (
                     <CopiableTextarea
                       value={curlCommand}
@@ -58,7 +58,7 @@ export function OnboardingBuildCliSection() {
                 },
                 {
                   value: 'npm',
-                  triggerLabel: 'NPM',
+                  triggerLabel: 'NPM (all OS)',
                   content: (
                     <PMVStack
                       gap={3}
