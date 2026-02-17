@@ -236,8 +236,9 @@ export const StandardForm: React.FC<StandardFormProps> = ({
               cursor="pointer"
               _hover={{ opacity: 0.7 }}
               minW="200px"
+              px={0}
             />
-            <PMEditable.Input fontSize="2xl" fontWeight="bold" />
+            <PMEditable.Input fontSize="2xl" fontWeight="bold" px={0} />
           </PMEditable.Root>
         )}
 

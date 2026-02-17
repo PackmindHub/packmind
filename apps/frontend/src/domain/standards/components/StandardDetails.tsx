@@ -233,7 +233,7 @@ export const StandardDetails = ({
       <PMPage
         title={pageTitle}
         breadcrumbComponent={
-          !showRuleActions && !isEditing ? (
+          !showRuleActions ? (
             <StandardVersionHistoryHeader
               standard={standard}
               versions={versions}
