@@ -32,12 +32,12 @@ export default function SocialLoginButtons() {
   return (
     <>
       {/* Separator above social buttons */}
-      <PMHStack width="full" gap={4} alignItems="center" paddingY={2}>
-        <PMSeparator flex="1" />
+      <PMHStack width="full" gap={4} alignItems="center">
+        <PMSeparator flex="1" borderColor="border.tertiary" />
         <PMText variant="small" color="secondary">
           Or continue with
         </PMText>
-        <PMSeparator flex="1" />
+        <PMSeparator flex="1" borderColor="border.tertiary" />
       </PMHStack>
 
       <PMHStack gap={3} width="full">
