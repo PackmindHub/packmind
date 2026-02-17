@@ -1027,11 +1027,6 @@ describe('AuthController', () => {
         mockAuthService.signInSocial.mockResolvedValue({
           accessToken: 'jwt-token',
           user: { id: createUserId('2'), email: 'new@example.com' },
-          organization: {
-            id: createOrganizationId('org-new'),
-            name: "new's organization",
-            slug: 'news-organization',
-          },
           isNewUser: true,
         });
         mockConfiguration.getConfig.mockResolvedValue('false');

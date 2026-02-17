@@ -578,42 +578,19 @@ describe('AuthService - signInSocial method', () => {
         memberships: [],
       };
       mockAccountsAdapter.getUserByEmail.mockResolvedValue(existingUser);
-      mockAccountsAdapter.createOrganization.mockResolvedValue({
-        id: createOrganizationId('new-org'),
-        name: "user's organization",
-        slug: 'users-organization',
-      });
-      mockAccountsAdapter.getUserById.mockResolvedValue({
-        ...existingUser,
-        memberships: [
-          {
-            userId: createUserId('user-1'),
-            organizationId: createOrganizationId('new-org'),
-            role: 'admin',
-          },
-        ],
-      });
-      mockAccountsAdapter.getOrganizationById.mockResolvedValue({
-        id: createOrganizationId('new-org'),
-        name: "user's organization",
-        slug: 'users-organization',
-      });
       result = await signInSocial('user@example.com', 'GoogleOAuth');
     });
 
-    it('auto-creates an organization', () => {
-      expect(mockAccountsAdapter.createOrganization).toHaveBeenCalledWith({
-        userId: createUserId('user-1'),
-        name: "user's organization",
-      });
+    it('does not auto-create an organization', () => {
+      expect(mockAccountsAdapter.createOrganization).not.toHaveBeenCalled();
     });
 
-    it('returns the created organization', () => {
-      expect(result.organization).toEqual({
-        id: createOrganizationId('new-org'),
-        name: "user's organization",
-        slug: 'users-organization',
-      });
+    it('does not refresh user memberships', () => {
+      expect(mockAccountsAdapter.getUserById).not.toHaveBeenCalled();
+    });
+
+    it('returns no organization', () => {
+      expect(result.organization).toBeUndefined();
     });
   });
 
@@ -631,27 +608,7 @@ describe('AuthService - signInSocial method', () => {
         };
         mockAccountsAdapter.getUserByEmail.mockResolvedValueOnce(null);
         mockAccountsAdapter.createSocialLoginUser.mockResolvedValue(newUser);
-        mockAccountsAdapter.createOrganization.mockResolvedValue({
-          id: createOrganizationId('new-org'),
-          name: "paul's organization",
-          slug: 'pauls-organization',
-        });
-        mockAccountsAdapter.getUserById.mockResolvedValue({
-          ...newUser,
-          memberships: [
-            {
-              userId: createUserId('new-user'),
-              organizationId: createOrganizationId('new-org'),
-              role: 'admin',
-            },
-          ],
-        });
-        mockAccountsAdapter.getOrganizationById.mockResolvedValue({
-          id: createOrganizationId('new-org'),
-          name: "paul's organization",
-          slug: 'pauls-organization',
-        });
-        result = await signInSocial('paul@example.com', 'GoogleOAuth', 'Paul');
+        result = await signInSocial('paul@example.com', 'GoogleOAuth');
       });
 
       it('returns isNewUser true', () => {
@@ -665,19 +622,12 @@ describe('AuthService - signInSocial method', () => {
         );
       });
 
-      it('auto-creates an organization using firstName', () => {
-        expect(mockAccountsAdapter.createOrganization).toHaveBeenCalledWith({
-          userId: createUserId('new-user'),
-          name: "paul's organization",
-        });
+      it('does not auto-create an organization', () => {
+        expect(mockAccountsAdapter.createOrganization).not.toHaveBeenCalled();
       });
 
-      it('returns the created organization', () => {
-        expect(result.organization).toEqual({
-          id: createOrganizationId('new-org'),
-          name: "paul's organization",
-          slug: 'pauls-organization',
-        });
+      it('returns no organization', () => {
+        expect(result.organization).toBeUndefined();
       });
     });
 
@@ -694,42 +644,19 @@ describe('AuthService - signInSocial method', () => {
         };
         mockAccountsAdapter.getUserByEmail.mockResolvedValueOnce(null);
         mockAccountsAdapter.createSocialLoginUser.mockResolvedValue(newUser);
-        mockAccountsAdapter.createOrganization.mockResolvedValue({
-          id: createOrganizationId('new-org'),
-          name: "new's organization",
-          slug: 'news-organization',
-        });
-        mockAccountsAdapter.getUserById.mockResolvedValue({
-          ...newUser,
-          memberships: [
-            {
-              userId: createUserId('new-user'),
-              organizationId: createOrganizationId('new-org'),
-              role: 'admin',
-            },
-          ],
-        });
-        mockAccountsAdapter.getOrganizationById.mockResolvedValue({
-          id: createOrganizationId('new-org'),
-          name: "new's organization",
-          slug: 'news-organization',
-        });
         result = await signInSocial('new@example.com', 'GoogleOAuth');
       });
 
-      it('auto-creates an organization using email local part', () => {
-        expect(mockAccountsAdapter.createOrganization).toHaveBeenCalledWith({
-          userId: createUserId('new-user'),
-          name: "new's organization",
-        });
+      it('returns isNewUser true', () => {
+        expect(result.isNewUser).toBe(true);
       });
 
-      it('returns the created organization', () => {
-        expect(result.organization).toEqual({
-          id: createOrganizationId('new-org'),
-          name: "new's organization",
-          slug: 'news-organization',
-        });
+      it('does not auto-create an organization', () => {
+        expect(mockAccountsAdapter.createOrganization).not.toHaveBeenCalled();
+      });
+
+      it('returns no organization', () => {
+        expect(result.organization).toBeUndefined();
       });
     });
   });

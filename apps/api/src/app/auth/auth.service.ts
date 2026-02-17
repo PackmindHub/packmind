@@ -197,7 +197,6 @@ export class AuthService {
   async signInSocial(
     email: string,
     provider: SocialProvider,
-    firstName?: string,
   ): Promise<{
     accessToken: string;
     user: { id: UserId; email: string };
@@ -240,31 +239,7 @@ export class AuthService {
       );
     }
 
-    let memberships = user.memberships ?? [];
-
-    // Auto-create organization for users without one (same as email signup)
-    if (memberships.length === 0) {
-      const nameBase = firstName || email.split('@')[0];
-      const orgName = `${nameBase.toLowerCase()}'s organization`;
-
-      const org = await this.accountsAdapter.createOrganization({
-        userId: user.id,
-        name: orgName,
-      });
-
-      this.logger.log('Organization auto-created for social login user', {
-        userId: user.id,
-        organizationId: org.id,
-      });
-
-      // Refresh memberships after org creation
-      const refreshedUser = await this.accountsAdapter.getUserById({
-        userId: user.id,
-      });
-      if (refreshedUser) {
-        memberships = refreshedUser.memberships ?? [];
-      }
-    }
+    const memberships = user.memberships ?? [];
 
     let organization:
       | { id: OrganizationId; name: string; slug: string }
