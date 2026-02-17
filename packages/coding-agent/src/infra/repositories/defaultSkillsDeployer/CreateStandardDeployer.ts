@@ -49,12 +49,19 @@ Every standard consists of:
 
 ### Naming Guidelines
 
-The \`name\` field is the **display name** shown in indexes and dashboards. The slug is auto-generated from it.
+The \`name\` field is the **display name** shown in indexes and dashboards. The slug is auto-generated from it — never write the slug yourself.
 
-- **Use Title Case** — capitalize each significant word
-- **Be descriptive and specific** (2–5 words) — indicate the domain/technology and the aspect covered
-- Good: \`"TypeScript Testing Conventions"\`, \`"React Component File Organization"\`, \`"Backend Error Handling"\`
-- Bad: \`"testing"\`, \`"good-practices"\`, \`"typescript-good-practices"\`, \`"Standards for Code"\`
+**Format:** Use **Title Case with spaces** — natural language, not a slug.
+- Capitalize each significant word
+- Use spaces between words, never hyphens or underscores
+- Be descriptive and specific (2–5 words) — indicate the domain/technology and the aspect covered
+
+**Examples:**
+- ✅ \`"TypeScript Testing Conventions"\`, \`"React Component File Organization"\`, \`"Backend Error Handling"\`
+- ❌ \`"typescript-testing-conventions"\` (slug format — use Title Case with spaces)
+- ❌ \`"testing"\` (too generic)
+- ❌ \`"good-practices"\` (slug format and too vague)
+- ❌ \`"Standards for Code"\` (describes meta-concept, not the actual domain)
 
 **Note**: The Packmind CLI currently requires the \`scope\` field. The \`summary\` field is used in other workflows (like MCP) but not yet supported by the CLI.
 
