@@ -932,4 +932,109 @@ describe('ChangeProposalService', () => {
       });
     });
   });
+
+  describe('findProposalsByArtefact', () => {
+    const standardId = createStandardId('standard-1');
+    const recipeId = createRecipeId('recipe-1');
+
+    const createProposal = <T extends ChangeProposalType>(
+      type: T,
+      artefactId: string,
+    ): ChangeProposal<T> => ({
+      id: createChangeProposalId(),
+      type,
+      artefactId: artefactId as ChangeProposal<T>['artefactId'],
+      artefactVersion: 1,
+      spaceId,
+      payload: {
+        oldValue: 'old',
+        newValue: 'new',
+      } as ChangeProposal<T>['payload'],
+      captureMode: ChangeProposalCaptureMode.commit,
+      status: ChangeProposalStatus.pending,
+      createdBy: createUserId(),
+      resolvedBy: null,
+      resolvedAt: null,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
+
+    describe('when artefact has no proposals', () => {
+      beforeEach(() => {
+        repository.findByArtefactId.mockResolvedValue([]);
+      });
+
+      it('returns empty array', async () => {
+        const result = await service.findProposalsByArtefact(
+          spaceId,
+          standardId,
+        );
+
+        expect(result).toEqual([]);
+      });
+
+      it('calls repository with correct parameters', async () => {
+        await service.findProposalsByArtefact(spaceId, standardId);
+
+        expect(repository.findByArtefactId).toHaveBeenCalledWith(
+          spaceId,
+          standardId,
+        );
+      });
+    });
+
+    describe('when artefact has proposals', () => {
+      const proposals = [
+        createProposal(ChangeProposalType.updateStandardName, standardId),
+        createProposal(ChangeProposalType.addRule, standardId),
+      ];
+
+      beforeEach(() => {
+        repository.findByArtefactId.mockResolvedValue(proposals);
+      });
+
+      it('returns all proposals for the artefact', async () => {
+        const result = await service.findProposalsByArtefact(
+          spaceId,
+          standardId,
+        );
+
+        expect(result).toEqual(proposals);
+      });
+
+      it('returns correct number of proposals', async () => {
+        const result = await service.findProposalsByArtefact(
+          spaceId,
+          standardId,
+        );
+
+        expect(result.length).toBe(2);
+      });
+    });
+
+    describe('when finding proposals for a recipe', () => {
+      const proposals = [
+        createProposal(ChangeProposalType.updateCommandName, recipeId),
+      ];
+
+      beforeEach(() => {
+        repository.findByArtefactId.mockResolvedValue(proposals);
+      });
+
+      it('returns recipe proposals', async () => {
+        const result = await service.findProposalsByArtefact(spaceId, recipeId);
+
+        expect(result).toEqual(proposals);
+      });
+
+      it('calls repository with recipe id', async () => {
+        await service.findProposalsByArtefact(spaceId, recipeId);
+
+        expect(repository.findByArtefactId).toHaveBeenCalledWith(
+          spaceId,
+          recipeId,
+        );
+      });
+    });
+  });
 });

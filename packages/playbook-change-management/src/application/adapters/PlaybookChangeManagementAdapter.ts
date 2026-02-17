@@ -25,18 +25,24 @@ import {
   ISpacesPortName,
   IStandardsPort,
   IStandardsPortName,
+  ListChangeProposalsByArtefactCommand,
+  ListChangeProposalsByArtefactResponse,
   ListChangeProposalsBySpaceCommand,
   ListChangeProposalsBySpaceResponse,
   ListCommandChangeProposalsCommand,
   ListCommandChangeProposalsResponse,
+  RecipeId,
   RejectCommandChangeProposalCommand,
   RejectCommandChangeProposalResponse,
+  SkillId,
+  StandardId,
 } from '@packmind/types';
 import { PlaybookChangeManagementServices } from '../services/PlaybookChangeManagementServices';
 import { ApplyCommandChangeProposalUseCase } from '../useCases/applyCommandChangeProposal/ApplyCommandChangeProposalUseCase';
 import { BatchApplyChangeProposalsUseCase } from '../useCases/batchApplyChangeProposals/BatchApplyChangeProposalsUseCase';
 import { CreateChangeProposalUseCase } from '../useCases/createChangeProposal/CreateChangeProposalUseCase';
 import { CreateCommandChangeProposalUseCase } from '../useCases/createCommandChangeProposal/CreateCommandChangeProposalUseCase';
+import { ListChangeProposalsByArtefactUseCase } from '../useCases/listChangeProposalsByArtefact/ListChangeProposalsByArtefactUseCase';
 import { ListChangeProposalsBySpaceUseCase } from '../useCases/listChangeProposalsBySpace/ListChangeProposalsBySpaceUseCase';
 import { ListCommandChangeProposalsUseCase } from '../useCases/listCommandChangeProposals/ListCommandChangeProposalsUseCase';
 import { BatchCreateChangeProposalsUseCase } from '../useCases/batchCreateChangeProposals/BatchCreateChangeProposalsUseCase';
@@ -58,6 +64,9 @@ export class PlaybookChangeManagementAdapter
   private _batchCreateChangeProposals!: BatchCreateChangeProposalsUseCase;
   private _createChangeProposal!: CreateChangeProposalUseCase;
   private _createCommandChangeProposal!: CreateCommandChangeProposalUseCase;
+  private _listChangeProposalsByArtefact!: ListChangeProposalsByArtefactUseCase<
+    StandardId | RecipeId | SkillId
+  >;
   private _listChangeProposalsBySpace!: ListChangeProposalsBySpaceUseCase;
   private _listCommandChangeProposals!: ListCommandChangeProposalsUseCase;
   private _batchRejectChangeProposals!: BatchRejectChangeProposalsUseCase;
@@ -104,6 +113,14 @@ export class PlaybookChangeManagementAdapter
     command: CreateCommandChangeProposalCommand,
   ): Promise<CreateCommandChangeProposalResponse> {
     return this._createCommandChangeProposal.execute(command);
+  }
+
+  async listChangeProposalsByArtefact<
+    T extends StandardId | RecipeId | SkillId,
+  >(
+    command: ListChangeProposalsByArtefactCommand<T>,
+  ): Promise<ListChangeProposalsByArtefactResponse> {
+    return this._listChangeProposalsByArtefact.execute(command);
   }
 
   async listChangeProposalsBySpace(
@@ -215,6 +232,16 @@ export class PlaybookChangeManagementAdapter
       changeProposalService,
     );
 
+    this._listChangeProposalsByArtefact =
+      new ListChangeProposalsByArtefactUseCase(
+        accountsPort,
+        spacesPort,
+        standardsPort,
+        recipesPort,
+        skillsPort,
+        changeProposalService,
+      );
+
     this._listChangeProposalsBySpace = new ListChangeProposalsBySpaceUseCase(
       accountsPort,
       spacesPort,
@@ -250,6 +277,7 @@ export class PlaybookChangeManagementAdapter
       this._batchRejectChangeProposals !== undefined &&
       this._createChangeProposal !== undefined &&
       this._createCommandChangeProposal !== undefined &&
+      this._listChangeProposalsByArtefact !== undefined &&
       this._listChangeProposalsBySpace !== undefined &&
       this._listCommandChangeProposals !== undefined &&
       this._rejectCommandChangeProposal !== undefined

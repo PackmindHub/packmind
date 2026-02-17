@@ -14,10 +14,9 @@ export type ListChangeProposalsByArtefactCommand<
 };
 
 export type ListChangeProposalsByArtefactResponse = {
-  changeProposals: ChangeProposal &
-    {
-      conflictsWith: ChangeProposalId[];
-    }[];
+  changeProposals: (ChangeProposal & {
+    conflictsWith: ChangeProposalId[];
+  })[];
 };
 
 export interface IListChangeProposalsByArtefact<

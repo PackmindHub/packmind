@@ -6,6 +6,7 @@ import { OrganizationAccessGuard } from '../../guards/organization-access.guard'
 import { SpaceAccessGuard } from '../guards/space-access.guard';
 import { PackmindLogger, LogLevel } from '@packmind/logger';
 import { OrganizationsSpacesStandardsRulesModule } from './rules/rules.module';
+import { OrganizationsSpacesStandardsChangeProposalsModule } from './change-proposals/standards-change-proposals.module';
 import { standardsSchemas } from '@packmind/standards';
 
 /**
@@ -21,6 +22,7 @@ import { standardsSchemas } from '@packmind/standards';
   imports: [
     TypeOrmModule.forFeature(standardsSchemas),
     OrganizationsSpacesStandardsRulesModule,
+    OrganizationsSpacesStandardsChangeProposalsModule,
   ],
   controllers: [OrganizationsSpacesStandardsController],
   providers: [
