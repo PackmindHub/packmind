@@ -1,12 +1,7 @@
 import { Outlet } from 'react-router';
 import { PMGrid, PMBox, PMText, PMSpinner, PMVStack } from '@packmind/ui';
-import { ListChangeProposalsBySpaceResponse } from '@packmind/types';
 import { useGetGroupedChangeProposalsQuery } from '../../src/domain/change-proposals/api/queries/ChangeProposalsQueries';
 import { ReviewChangesSidebar } from '../../src/domain/change-proposals/components/ReviewChangesSidebar';
-
-export interface ReviewChangesOutletContext {
-  groupedProposals: ListChangeProposalsBySpaceResponse | undefined;
-}
 
 export default function ReviewChangesLayoutRouteModule() {
   const {
@@ -46,21 +41,19 @@ export default function ReviewChangesLayoutRouteModule() {
     );
   }
 
-  const outletContext: ReviewChangesOutletContext = {
-    groupedProposals,
-  };
-
   return (
     <PMGrid
       height="full"
       gridTemplateColumns={{
-        base: 'minmax(240px, 270px) minmax(0, 1fr)',
+        base: 'minmax(240px, 270px) 1fr minmax(280px, 320px)',
       }}
-      alignItems="start"
+      gridTemplateRows="auto 1fr"
       overflowX="auto"
     >
-      <ReviewChangesSidebar groupedProposals={groupedProposals} />
-      <Outlet context={outletContext} />
+      <PMBox gridRow="1 / -1" gridColumn="1" overflowY="auto">
+        <ReviewChangesSidebar groupedProposals={groupedProposals} />
+      </PMBox>
+      <Outlet />
     </PMGrid>
   );
 }

@@ -1,1 +1,1 @@
-export { ChangeProposals } from './ChangeProposals';
+export { ChangeProposalsChangesList } from './ChangeProposalsChangesList';

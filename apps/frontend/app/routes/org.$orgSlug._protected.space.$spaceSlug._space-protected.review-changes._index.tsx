@@ -7,6 +7,7 @@ export default function ReviewChangesIndexRouteModule() {
       alignItems="center"
       justifyContent="center"
       minH="300px"
+      gridColumn="span 2"
     >
       <PMText fontSize="md">
         Select an artefact to review in the left panel

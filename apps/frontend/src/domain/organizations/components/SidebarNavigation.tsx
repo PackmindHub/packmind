@@ -149,7 +149,7 @@ export const SidebarNavigation: React.FunctionComponent<
             userEmail={user?.email}
           >
             <SidebarNavigationLink
-              url={routes.space.toChangeProposals(orgSlug, currentSpaceSlug)}
+              url={routes.space.toReviewChanges(orgSlug, currentSpaceSlug)}
               label="Review changes"
             />
           </PMFeatureFlag>,
