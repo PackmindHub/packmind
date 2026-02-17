@@ -2,9 +2,11 @@ import {
   RequestPasswordResetCommand,
   RequestPasswordResetResponse,
   IRequestPasswordResetUseCase,
+  SOCIAL_PROVIDER_DISPLAY_NAMES,
 } from '@packmind/types';
 import { PackmindLogger, maskEmail } from '@packmind/logger';
 import { UserService } from '../services/UserService';
+import { UserMetadataService } from '../services/UserMetadataService';
 import {
   PasswordResetTokenService,
   PasswordResetRequest,
@@ -17,6 +19,7 @@ export class RequestPasswordResetUseCase implements IRequestPasswordResetUseCase
   constructor(
     private readonly userService: UserService,
     private readonly passwordResetTokenService: PasswordResetTokenService,
+    private readonly userMetadataService: UserMetadataService,
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {
     this.logger.info('RequestPasswordResetUseCase initialized');
@@ -87,8 +90,15 @@ export class RequestPasswordResetUseCase implements IRequestPasswordResetUseCase
           email: maskEmail(user.email),
         },
       );
+      const metadata = await this.userMetadataService.getOrCreateMetadata(
+        user.id,
+      );
+      const providerDisplayNames = metadata.socialProviders.map(
+        (provider) => SOCIAL_PROVIDER_DISPLAY_NAMES[provider],
+      );
       await this.passwordResetTokenService.sendSocialLoginReminderEmail(
         user.email,
+        providerDisplayNames,
       );
       return {
         success: true,
