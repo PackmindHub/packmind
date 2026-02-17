@@ -48,6 +48,7 @@ describe('SignUpWithOrganizationUseCase', () => {
       mockUserService,
       mockOrganizationService,
       mockEventEmitterService,
+      undefined,
       stubbedLogger,
     );
   });
@@ -130,6 +131,8 @@ describe('SignUpWithOrganizationUseCase', () => {
               email: 'testuser@packmind.com',
               source: 'ui',
               quickStart: false,
+              authType: 'password',
+              socialProvider: '',
             },
           }),
         );
@@ -625,6 +628,7 @@ describe('SignUpWithOrganizationUseCase', () => {
         const commandWithoutPassword: SignUpWithOrganizationCommand = {
           email: 'socialuser@packmind.com',
           authType: 'social',
+          socialProvider: 'GoogleOAuth',
         };
 
         const result = await signUpWithOrganizationUseCase.execute(
@@ -645,6 +649,8 @@ describe('SignUpWithOrganizationUseCase', () => {
               email: 'socialuser@packmind.com',
               source: 'ui',
               quickStart: false,
+              authType: 'social',
+              socialProvider: 'GoogleOAuth',
             },
           }),
         );

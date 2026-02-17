@@ -79,7 +79,8 @@ export default function SignInForm() {
         <PMAlert.Root status="error" mb={4}>
           <PMAlert.Indicator />
           <PMAlert.Title>
-            Social login failed. Please try again or use email/password.
+            Social login failed. Please try again or use another social login
+            provider.
           </PMAlert.Title>
         </PMAlert.Root>
       )}
