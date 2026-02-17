@@ -10,7 +10,11 @@ import {
 } from '@packmind/ui';
 import { useAuthContext } from '../hooks/useAuthContext';
 import { organizationGateway } from '../api/gateways';
-import { useRenameOrganizationMutation } from '../api/queries/AccountsQueries';
+import {
+  useRenameOrganizationMutation,
+  useCreateOrganizationMutation,
+} from '../api/queries/AccountsQueries';
+import { useSelectOrganizationMutation } from '../api/queries/AuthQueries';
 import { isPackmindConflictError } from '../../../services/api/errors/PackmindConflictError';
 
 interface CreateOrganizationFormProps {
@@ -21,6 +25,7 @@ export function CreateOrganizationForm({
   onSuccess,
 }: CreateOrganizationFormProps) {
   const { organization } = useAuthContext();
+  const isCreateMode = !organization;
   const [organizationName, setOrganizationName] = useState(
     organization?.name || '',
   );
@@ -30,6 +35,8 @@ export function CreateOrganizationForm({
   const [isValidating, setIsValidating] = useState(false);
 
   const renameOrganizationMutation = useRenameOrganizationMutation();
+  const createOrganizationMutation = useCreateOrganizationMutation();
+  const selectOrganizationMutation = useSelectOrganizationMutation();
 
   useEffect(() => {
     const trimmedName = organizationName.trim();
@@ -77,7 +84,22 @@ export function CreateOrganizationForm({
       return;
     }
 
-    if (!organization?.id) {
+    if (isCreateMode) {
+      createOrganizationMutation.mutate(
+        { name: trimmedName },
+        {
+          onSuccess: (createdOrg) => {
+            selectOrganizationMutation.mutate(
+              { organizationId: createdOrg.id },
+              {
+                onSuccess: () => {
+                  onSuccess();
+                },
+              },
+            );
+          },
+        },
+      );
       return;
     }
 
@@ -135,7 +157,11 @@ export function CreateOrganizationForm({
               }}
               placeholder="Enter organization name"
               required
-              disabled={renameOrganizationMutation.isPending}
+              disabled={
+                renameOrganizationMutation.isPending ||
+                createOrganizationMutation.isPending ||
+                selectOrganizationMutation.isPending
+              }
               maxLength={ORG_NAME_MAX_LENGTH}
               data-testid="CreateOrganizationForm.OrganizationNameInput"
             />
@@ -160,12 +186,18 @@ export function CreateOrganizationForm({
               variant="primary"
               disabled={
                 renameOrganizationMutation.isPending ||
+                createOrganizationMutation.isPending ||
+                selectOrganizationMutation.isPending ||
                 isValidating ||
                 !!organizationNameError
               }
               data-testid="CreateOrganizationForm.SubmitButton"
             >
-              {renameOrganizationMutation.isPending ? 'Saving...' : 'Continue'}
+              {renameOrganizationMutation.isPending ||
+              createOrganizationMutation.isPending ||
+              selectOrganizationMutation.isPending
+                ? 'Saving...'
+                : 'Continue'}
             </PMButton>
           </PMVStack>
         </PMVStack>

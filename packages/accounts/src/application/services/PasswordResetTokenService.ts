@@ -219,16 +219,27 @@ If you didn't request this password reset, you can safely ignore this email.`;
     return expirationDate.toUTCString();
   }
 
-  async sendSocialLoginReminderEmail(email: string): Promise<void> {
+  async sendSocialLoginReminderEmail(
+    email: string,
+    providerDisplayNames: string[],
+  ): Promise<void> {
     const applicationUrl = await this.getApplicationUrl();
     const signInUrl = `${applicationUrl}/sign-in`;
 
     const subject = 'Sign in to your Packmind account';
 
+    const providerList = this.formatProviderList(providerDisplayNames);
+    const providerMessage = providerList
+      ? `Your account uses <strong>${providerList}</strong> to sign in.`
+      : 'Your account uses social login to sign in.';
+    const providerMessageText = providerList
+      ? `Your account uses ${providerList} to sign in.`
+      : 'Your account uses social login to sign in.';
+
     const contentHtml = `
       <p>Hello ${email},</p>
       <p>We received a request to reset your password for your Packmind account.</p>
-      <p>Your account uses social login. Please sign in using your social login provider.</p>
+      <p>${providerMessage} Please sign in using your social login provider.</p>
       <p><a href="${signInUrl}">Sign in to Packmind</a></p>
       <p>If you didn't request this, you can safely ignore this email.</p>
     `;
@@ -236,7 +247,7 @@ If you didn't request this password reset, you can safely ignore this email.`;
     const contentText = `Hello ${email},
 
 We received a request to reset your password for your Packmind account.
-Your account uses social login. Please sign in using your social login provider.
+${providerMessageText} Please sign in using your social login provider.
 
 Sign in to Packmind: ${signInUrl}
 
@@ -252,6 +263,23 @@ If you didn't request this, you can safely ignore this email.`;
       contentHtml,
       contentText,
     });
+  }
+
+  private formatProviderList(providerDisplayNames: string[]): string {
+    if (providerDisplayNames.length === 0) {
+      return '';
+    }
+    const capitalizedNames = providerDisplayNames.map(
+      (name) => name.charAt(0).toUpperCase() + name.slice(1),
+    );
+    if (capitalizedNames.length === 1) {
+      return capitalizedNames[0];
+    }
+    return (
+      capitalizedNames.slice(0, -1).join(', ') +
+      ' or ' +
+      capitalizedNames[capitalizedNames.length - 1]
+    );
   }
 
   private maskToken(token: PasswordResetToken): string {
