@@ -10,11 +10,7 @@ import {
 } from '@packmind/ui';
 import { useAuthContext } from '../hooks/useAuthContext';
 import { organizationGateway } from '../api/gateways';
-import {
-  useRenameOrganizationMutation,
-  useCreateOrganizationMutation,
-} from '../api/queries/AccountsQueries';
-import { useSelectOrganizationMutation } from '../api/queries/AuthQueries';
+import { useRenameOrganizationMutation } from '../api/queries/AccountsQueries';
 import { isPackmindConflictError } from '../../../services/api/errors/PackmindConflictError';
 
 interface CreateOrganizationFormProps {
@@ -24,16 +20,10 @@ interface CreateOrganizationFormProps {
 export function CreateOrganizationForm({
   onSuccess,
 }: CreateOrganizationFormProps) {
-  const { organization, user } = useAuthContext();
-  const isCreateMode = !organization;
+  const { organization } = useAuthContext();
 
   const getDefaultName = () => {
-    if (organization?.name) return organization.name;
-    if (user?.email) {
-      const localPart = user.email.split('@')[0];
-      return `${localPart}'s organization`;
-    }
-    return '';
+    return organization?.name ?? '';
   };
 
   const [organizationName, setOrganizationName] = useState(getDefaultName());
@@ -43,8 +33,6 @@ export function CreateOrganizationForm({
   const [isValidating, setIsValidating] = useState(false);
 
   const renameOrganizationMutation = useRenameOrganizationMutation();
-  const createOrganizationMutation = useCreateOrganizationMutation();
-  const selectOrganizationMutation = useSelectOrganizationMutation();
 
   useEffect(() => {
     const trimmedName = organizationName.trim();
@@ -92,22 +80,7 @@ export function CreateOrganizationForm({
       return;
     }
 
-    if (isCreateMode) {
-      createOrganizationMutation.mutate(
-        { name: trimmedName },
-        {
-          onSuccess: (createdOrg) => {
-            selectOrganizationMutation.mutate(
-              { organizationId: createdOrg.id },
-              {
-                onSuccess: () => {
-                  onSuccess();
-                },
-              },
-            );
-          },
-        },
-      );
+    if (!organization) {
       return;
     }
 
@@ -165,11 +138,7 @@ export function CreateOrganizationForm({
               }}
               placeholder="Enter organization name"
               required
-              disabled={
-                renameOrganizationMutation.isPending ||
-                createOrganizationMutation.isPending ||
-                selectOrganizationMutation.isPending
-              }
+              disabled={renameOrganizationMutation.isPending}
               maxLength={ORG_NAME_MAX_LENGTH}
               data-testid="CreateOrganizationForm.OrganizationNameInput"
             />
@@ -194,18 +163,12 @@ export function CreateOrganizationForm({
               variant="primary"
               disabled={
                 renameOrganizationMutation.isPending ||
-                createOrganizationMutation.isPending ||
-                selectOrganizationMutation.isPending ||
                 isValidating ||
                 !!organizationNameError
               }
               data-testid="CreateOrganizationForm.SubmitButton"
             >
-              {renameOrganizationMutation.isPending ||
-              createOrganizationMutation.isPending ||
-              selectOrganizationMutation.isPending
-                ? 'Saving...'
-                : 'Continue'}
+              {renameOrganizationMutation.isPending ? 'Saving...' : 'Continue'}
             </PMButton>
           </PMVStack>
         </PMVStack>
