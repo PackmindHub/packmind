@@ -169,19 +169,20 @@ describe('CreateOrganizationForm', () => {
         isAuthenticated: true,
         isLoading: false,
         organization: undefined,
+        user: { id: 'user-1', email: 'paul@example.com', memberships: [] },
         getMe: jest.fn(),
         getUserOrganizations: jest.fn(),
         validateAndSwitchIfNeeded: jest.fn(),
       });
     });
 
-    it('starts with an empty input', () => {
+    it('pre-fills input with suggested name from user email', () => {
       renderWithProviders(<CreateOrganizationForm onSuccess={mockOnSuccess} />);
 
       const input = screen.getByTestId(
         'CreateOrganizationForm.OrganizationNameInput',
       );
-      expect(input).toHaveValue('');
+      expect(input).toHaveValue("paul's organization");
     });
 
     it('calls createOrganizationMutation on submit', async () => {
@@ -198,6 +199,7 @@ describe('CreateOrganizationForm', () => {
       const input = screen.getByTestId(
         'CreateOrganizationForm.OrganizationNameInput',
       );
+      await user.clear(input);
       await user.type(input, 'My New Org');
 
       await waitFor(() => {
@@ -246,6 +248,7 @@ describe('CreateOrganizationForm', () => {
       const input = screen.getByTestId(
         'CreateOrganizationForm.OrganizationNameInput',
       );
+      await user.clear(input);
       await user.type(input, 'My New Org');
 
       await waitFor(() => {
@@ -298,6 +301,7 @@ describe('CreateOrganizationForm', () => {
       const input = screen.getByTestId(
         'CreateOrganizationForm.OrganizationNameInput',
       );
+      await user.clear(input);
       await user.type(input, 'My New Org');
 
       await waitFor(() => {

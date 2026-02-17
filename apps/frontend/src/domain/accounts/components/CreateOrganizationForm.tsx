@@ -24,11 +24,19 @@ interface CreateOrganizationFormProps {
 export function CreateOrganizationForm({
   onSuccess,
 }: CreateOrganizationFormProps) {
-  const { organization } = useAuthContext();
+  const { organization, user } = useAuthContext();
   const isCreateMode = !organization;
-  const [organizationName, setOrganizationName] = useState(
-    organization?.name || '',
-  );
+
+  const getDefaultName = () => {
+    if (organization?.name) return organization.name;
+    if (user?.email) {
+      const localPart = user.email.split('@')[0];
+      return `${localPart}'s organization`;
+    }
+    return '';
+  };
+
+  const [organizationName, setOrganizationName] = useState(getDefaultName());
   const [organizationNameError, setOrganizationNameError] = useState<
     string | undefined
   >(undefined);
