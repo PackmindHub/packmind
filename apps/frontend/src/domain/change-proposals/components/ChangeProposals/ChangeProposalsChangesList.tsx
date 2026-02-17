@@ -3,8 +3,10 @@ import {
   PMBadge,
   PMBox,
   PMHStack,
+  PMIcon,
   PMIconButton,
   PMText,
+  PMTooltip,
   PMVStack,
 } from '@packmind/ui';
 import {
@@ -17,6 +19,7 @@ import {
   LuCheck,
   LuChevronDown,
   LuChevronRight,
+  LuCircleAlert,
   LuUndo2,
   LuX,
 } from 'react-icons/lu';
@@ -31,6 +34,7 @@ interface ChangeProposalsChangesListProps {
   reviewingProposalId: ChangeProposalId | null;
   acceptedProposalIds: Set<ChangeProposalId>;
   rejectedProposalIds: Set<ChangeProposalId>;
+  currentArtefactVersion?: number;
   userLookup: Map<UserId, string>;
   onSelectProposal: (proposalId: ChangeProposalId) => void;
   onPoolAccept: (proposalId: ChangeProposalId) => void;
@@ -43,6 +47,7 @@ export function ChangeProposalsChangesList({
   reviewingProposalId,
   acceptedProposalIds,
   rejectedProposalIds,
+  currentArtefactVersion,
   userLookup,
   onSelectProposal,
   onPoolAccept,
@@ -97,6 +102,7 @@ export function ChangeProposalsChangesList({
             <ReviewingSection
               proposal={reviewingProposal}
               userLookup={userLookup}
+              currentArtefactVersion={currentArtefactVersion}
             />
           )}
 
@@ -105,6 +111,7 @@ export function ChangeProposalsChangesList({
               reviewingProposal={reviewingProposal}
               proposals={proposals}
               userLookup={userLookup}
+              currentArtefactVersion={currentArtefactVersion}
               onSelectProposal={onSelectProposal}
             />
           )}
@@ -125,6 +132,7 @@ export function ChangeProposalsChangesList({
                   key={proposal.id}
                   proposal={proposal}
                   userLookup={userLookup}
+                  currentArtefactVersion={currentArtefactVersion}
                   onSelect={() => onSelectProposal(proposal.id)}
                   onAccept={() => onPoolAccept(proposal.id)}
                   onReject={() => onPoolReject(proposal.id)}
@@ -146,6 +154,7 @@ export function ChangeProposalsChangesList({
                   key={proposal.id}
                   proposal={proposal}
                   userLookup={userLookup}
+                  currentArtefactVersion={currentArtefactVersion}
                   onUndo={() => onUndoPool(proposal.id)}
                 />
               ))}
@@ -165,6 +174,7 @@ export function ChangeProposalsChangesList({
                   key={proposal.id}
                   proposal={proposal}
                   userLookup={userLookup}
+                  currentArtefactVersion={currentArtefactVersion}
                   onUndo={() => onUndoPool(proposal.id)}
                 />
               ))}
@@ -187,12 +197,17 @@ export function ChangeProposalsChangesList({
 function ReviewingSection({
   proposal,
   userLookup,
+  currentArtefactVersion,
 }: {
   proposal: ChangeProposalWithConflicts;
   userLookup: Map<UserId, string>;
+  currentArtefactVersion?: number;
 }) {
   const authorEmail = userLookup.get(proposal.createdBy) ?? 'Unknown user';
   const statusBadge = getStatusBadgeProps(proposal.status);
+  const isOutdated =
+    currentArtefactVersion !== undefined &&
+    proposal.artefactVersion !== currentArtefactVersion;
 
   return (
     <PMVStack gap={2}>
@@ -218,9 +233,20 @@ function ReviewingSection({
           justifyContent="center"
         >
           <PMHStack gap={2} justify="space-between" align="center" width="full">
-            <PMBadge colorPalette={statusBadge.colorPalette} size="sm">
-              {statusBadge.label}
-            </PMBadge>
+            {isOutdated ? (
+              <PMTooltip label="This proposal was made on an outdated version">
+                <PMBadge colorPalette="orange" variant="subtle" size="sm">
+                  <PMIcon>
+                    <LuCircleAlert />
+                  </PMIcon>
+                  Outdated
+                </PMBadge>
+              </PMTooltip>
+            ) : (
+              <PMBadge colorPalette={statusBadge.colorPalette} size="sm">
+                {statusBadge.label}
+              </PMBadge>
+            )}
             <PMText fontSize="xs" color="secondary">
               {formatRelativeTime(proposal.createdAt)}
             </PMText>
@@ -250,11 +276,13 @@ function ConflictWithSection({
   reviewingProposal,
   proposals,
   userLookup,
+  currentArtefactVersion,
   onSelectProposal,
 }: {
   reviewingProposal: ChangeProposalWithConflicts;
   proposals: ChangeProposalWithConflicts[];
   userLookup: Map<UserId, string>;
+  currentArtefactVersion?: number;
   onSelectProposal: (proposalId: ChangeProposalId) => void;
 }) {
   const conflictingProposals = proposals.filter((p) =>
@@ -276,29 +304,75 @@ function ConflictWithSection({
       >
         Conflict with
       </PMText>
-      {conflictingProposals.map((proposal) => (
-        <PMBox
-          key={proposal.id}
-          borderRadius="md"
-          border="1px solid"
-          borderColor="border.tertiary"
-          cursor="pointer"
-          width="full"
-          p={2}
-          _hover={{ background: 'background.tertiary' }}
-          onClick={() => onSelectProposal(proposal.id)}
-        >
-          <PMVStack gap={0} flex={1}>
-            <PMText fontSize="sm" fontWeight="medium">
-              {getChangeProposalFieldLabel(proposal.type)}
-            </PMText>
-            <PMText fontSize="xs" color="secondary">
-              {formatRelativeTime(proposal.createdAt)} -{' '}
-              {userLookup.get(proposal.createdBy) ?? 'Unknown user'}
-            </PMText>
-          </PMVStack>
-        </PMBox>
-      ))}
+      {conflictingProposals.map((proposal) => {
+        const statusBadge = getStatusBadgeProps(proposal.status);
+        const authorEmail =
+          userLookup.get(proposal.createdBy) ?? 'Unknown user';
+        const isOutdated =
+          currentArtefactVersion !== undefined &&
+          proposal.artefactVersion !== currentArtefactVersion;
+
+        return (
+          <PMBox
+            key={proposal.id}
+            borderRadius="md"
+            border="1px solid"
+            borderColor="border.tertiary"
+            cursor="pointer"
+            width="full"
+            p={2}
+            _hover={{ background: 'background.tertiary' }}
+            onClick={() => onSelectProposal(proposal.id)}
+          >
+            <PMVStack
+              gap={2}
+              flex={1}
+              alignItems="flex-start"
+              justifyContent="center"
+            >
+              <PMHStack
+                gap={2}
+                justify="space-between"
+                align="center"
+                width="full"
+              >
+                {isOutdated ? (
+                  <PMTooltip label="This proposal was made on an outdated version">
+                    <PMBadge colorPalette="orange" variant="subtle" size="sm">
+                      <PMIcon>
+                        <LuCircleAlert />
+                      </PMIcon>
+                      Outdated
+                    </PMBadge>
+                  </PMTooltip>
+                ) : (
+                  <PMBadge colorPalette={statusBadge.colorPalette} size="sm">
+                    {statusBadge.label}
+                  </PMBadge>
+                )}
+                <PMText fontSize="xs" color="secondary">
+                  {formatRelativeTime(proposal.createdAt)}
+                </PMText>
+              </PMHStack>
+              <PMText fontSize="sm" fontWeight="bold">
+                {getChangeProposalFieldLabel(proposal.type)}
+              </PMText>
+              <PMText fontSize="xs" color="secondary">
+                <PMText as="span" fontWeight="bold">
+                  From
+                </PMText>{' '}
+                {authorEmail}
+              </PMText>
+              <PMText fontSize="xs" color="secondary">
+                <PMText as="span" fontWeight="bold">
+                  Base version
+                </PMText>{' '}
+                {proposal.artefactVersion}
+              </PMText>
+            </PMVStack>
+          </PMBox>
+        );
+      })}
     </PMVStack>
   );
 }
@@ -306,17 +380,23 @@ function ConflictWithSection({
 function PendingProposalCard({
   proposal,
   userLookup,
+  currentArtefactVersion,
   onSelect,
   onAccept,
   onReject,
 }: {
   proposal: ChangeProposalWithConflicts;
   userLookup: Map<UserId, string>;
+  currentArtefactVersion?: number;
   onSelect: () => void;
   onAccept: () => void;
   onReject: () => void;
 }) {
   const authorEmail = userLookup.get(proposal.createdBy) ?? 'Unknown user';
+  const statusBadge = getStatusBadgeProps(proposal.status);
+  const isOutdated =
+    currentArtefactVersion !== undefined &&
+    proposal.artefactVersion !== currentArtefactVersion;
 
   return (
     <PMBox
@@ -329,13 +409,46 @@ function PendingProposalCard({
       _hover={{ background: 'background.tertiary' }}
       onClick={onSelect}
     >
-      <PMHStack gap={2} justify="space-between" align="center">
-        <PMVStack gap={0} flex={1}>
-          <PMText fontSize="sm" fontWeight="medium">
+      <PMHStack gap={2} justify="space-between" align="flex-start">
+        <PMVStack
+          gap={2}
+          flex={1}
+          alignItems="flex-start"
+          justifyContent="center"
+        >
+          <PMHStack gap={2} justify="space-between" align="center" width="full">
+            {isOutdated ? (
+              <PMTooltip label="This proposal was made on an outdated version">
+                <PMBadge colorPalette="orange" variant="subtle" size="sm">
+                  <PMIcon>
+                    <LuCircleAlert />
+                  </PMIcon>
+                  Outdated
+                </PMBadge>
+              </PMTooltip>
+            ) : (
+              <PMBadge colorPalette={statusBadge.colorPalette} size="sm">
+                {statusBadge.label}
+              </PMBadge>
+            )}
+            <PMText fontSize="xs" color="secondary">
+              {formatRelativeTime(proposal.createdAt)}
+            </PMText>
+          </PMHStack>
+          <PMText fontSize="sm" fontWeight="bold">
             {getChangeProposalFieldLabel(proposal.type)}
           </PMText>
           <PMText fontSize="xs" color="secondary">
-            {formatRelativeTime(proposal.createdAt)} - {authorEmail}
+            <PMText as="span" fontWeight="bold">
+              From
+            </PMText>{' '}
+            {authorEmail}
+          </PMText>
+          <PMText fontSize="xs" color="secondary">
+            <PMText as="span" fontWeight="bold">
+              Base version
+            </PMText>{' '}
+            {proposal.artefactVersion}
           </PMText>
         </PMVStack>
         <PMHStack gap={1}>
@@ -343,6 +456,7 @@ function PendingProposalCard({
             aria-label="Accept proposal"
             size="xs"
             variant="ghost"
+            disabled={isOutdated}
             onClick={(e) => {
               e.stopPropagation();
               onAccept();
@@ -414,13 +528,19 @@ function CollapsiblePoolSection({
 function PoolProposalCard({
   proposal,
   userLookup,
+  currentArtefactVersion,
   onUndo,
 }: {
   proposal: ChangeProposalWithConflicts;
   userLookup: Map<UserId, string>;
+  currentArtefactVersion?: number;
   onUndo: () => void;
 }) {
   const authorEmail = userLookup.get(proposal.createdBy) ?? 'Unknown user';
+  const statusBadge = getStatusBadgeProps(proposal.status);
+  const isOutdated =
+    currentArtefactVersion !== undefined &&
+    proposal.artefactVersion !== currentArtefactVersion;
 
   return (
     <PMBox
@@ -430,13 +550,46 @@ function PoolProposalCard({
       p={2}
       width="full"
     >
-      <PMHStack gap={2} justify="space-between" align="center">
-        <PMVStack gap={0} flex={1}>
-          <PMText fontSize="sm" fontWeight="medium">
+      <PMHStack gap={2} justify="space-between" align="flex-start">
+        <PMVStack
+          gap={2}
+          flex={1}
+          alignItems="flex-start"
+          justifyContent="center"
+        >
+          <PMHStack gap={2} justify="space-between" align="center" width="full">
+            {isOutdated ? (
+              <PMTooltip label="This proposal was made on an outdated version">
+                <PMBadge colorPalette="orange" variant="subtle" size="sm">
+                  <PMIcon>
+                    <LuCircleAlert />
+                  </PMIcon>
+                  Outdated
+                </PMBadge>
+              </PMTooltip>
+            ) : (
+              <PMBadge colorPalette={statusBadge.colorPalette} size="sm">
+                {statusBadge.label}
+              </PMBadge>
+            )}
+            <PMText fontSize="xs" color="secondary">
+              {formatRelativeTime(proposal.createdAt)}
+            </PMText>
+          </PMHStack>
+          <PMText fontSize="sm" fontWeight="bold">
             {getChangeProposalFieldLabel(proposal.type)}
           </PMText>
           <PMText fontSize="xs" color="secondary">
-            {formatRelativeTime(proposal.createdAt)} - {authorEmail}
+            <PMText as="span" fontWeight="bold">
+              From
+            </PMText>{' '}
+            {authorEmail}
+          </PMText>
+          <PMText fontSize="xs" color="secondary">
+            <PMText as="span" fontWeight="bold">
+              Base version
+            </PMText>{' '}
+            {proposal.artefactVersion}
           </PMText>
         </PMVStack>
         <PMIconButton
