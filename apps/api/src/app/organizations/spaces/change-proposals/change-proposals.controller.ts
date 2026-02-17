@@ -293,14 +293,14 @@ export class OrganizationsSpacesChangeProposalsController {
    * List change proposals grouped by artefact type for a space
    * GET /organizations/:orgId/spaces/:spaceId/grouped-change-proposals
    */
-  @Get('grouped-change-proposals')
+  @Get('grouped')
   async listChangeProposalsBySpace(
     @Param('orgId') organizationId: OrganizationId,
     @Param('spaceId') spaceId: SpaceId,
     @Req() request: AuthenticatedRequest,
   ): Promise<ListChangeProposalsBySpaceResponse> {
     this.logger.info(
-      'GET /organizations/:orgId/spaces/:spaceId/grouped-change-proposals - Listing grouped change proposals',
+      'GET /organizations/:orgId/spaces/:spaceId/change-proposals/grouped - Listing grouped change proposals',
       {
         organizationId,
         spaceId,
@@ -316,7 +316,7 @@ export class OrganizationsSpacesChangeProposalsController {
         });
 
       this.logger.info(
-        'GET /organizations/:orgId/spaces/:spaceId/grouped-change-proposals - Grouped change proposals listed successfully',
+        'GET /organizations/:orgId/spaces/:spaceId/change-proposals/grouped - Grouped change proposals listed successfully',
         {
           organizationId,
           spaceId,
