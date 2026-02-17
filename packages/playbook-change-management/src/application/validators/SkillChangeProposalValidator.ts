@@ -21,13 +21,19 @@ type ScalarSkillType =
   | ChangeProposalType.updateSkillName
   | ChangeProposalType.updateSkillDescription
   | ChangeProposalType.updateSkillPrompt
-  | ChangeProposalType.updateSkillMetadata;
+  | ChangeProposalType.updateSkillMetadata
+  | ChangeProposalType.updateSkillLicense
+  | ChangeProposalType.updateSkillCompatibility
+  | ChangeProposalType.updateSkillAllowedTools;
 
 const SUPPORTED_TYPES: ReadonlySet<ChangeProposalType> = new Set([
   ChangeProposalType.updateSkillName,
   ChangeProposalType.updateSkillDescription,
   ChangeProposalType.updateSkillPrompt,
   ChangeProposalType.updateSkillMetadata,
+  ChangeProposalType.updateSkillLicense,
+  ChangeProposalType.updateSkillCompatibility,
+  ChangeProposalType.updateSkillAllowedTools,
   ChangeProposalType.addSkillFile,
   ChangeProposalType.updateSkillFileContent,
   ChangeProposalType.updateSkillFilePermissions,
@@ -38,14 +44,15 @@ const SKILL_FIELD_BY_TYPE: Record<ScalarSkillType, (skill: Skill) => string> = {
   [ChangeProposalType.updateSkillName]: (skill) => skill.name,
   [ChangeProposalType.updateSkillDescription]: (skill) => skill.description,
   [ChangeProposalType.updateSkillPrompt]: (skill) => skill.prompt,
-  [ChangeProposalType.updateSkillMetadata]: (skill) => {
-    const fields: Record<string, unknown> = {};
-    if (skill.license != null) fields.license = skill.license;
-    if (skill.compatibility != null) fields.compatibility = skill.compatibility;
-    if (skill.metadata != null) fields.metadata = skill.metadata;
-    if (skill.allowedTools != null) fields.allowedTools = skill.allowedTools;
-    return serializeSkillMetadata(fields);
-  },
+  [ChangeProposalType.updateSkillMetadata]: (skill) =>
+    skill.metadata != null
+      ? serializeSkillMetadata({ metadata: skill.metadata })
+      : '{}',
+  [ChangeProposalType.updateSkillLicense]: (skill) => skill.license ?? '',
+  [ChangeProposalType.updateSkillCompatibility]: (skill) =>
+    skill.compatibility ?? '',
+  [ChangeProposalType.updateSkillAllowedTools]: (skill) =>
+    skill.allowedTools ?? '',
 };
 
 const SCALAR_TYPES = new Set<ChangeProposalType>([
@@ -53,6 +60,9 @@ const SCALAR_TYPES = new Set<ChangeProposalType>([
   ChangeProposalType.updateSkillDescription,
   ChangeProposalType.updateSkillPrompt,
   ChangeProposalType.updateSkillMetadata,
+  ChangeProposalType.updateSkillLicense,
+  ChangeProposalType.updateSkillCompatibility,
+  ChangeProposalType.updateSkillAllowedTools,
 ]);
 
 export class SkillChangeProposalValidator implements IChangeProposalValidator {

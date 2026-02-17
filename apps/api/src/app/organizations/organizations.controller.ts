@@ -1,9 +1,11 @@
 import {
   BadRequestException,
+  Body,
   Controller,
   Get,
   NotFoundException,
   Param,
+  Post,
   Query,
   Req,
   UseGuards,
@@ -197,6 +199,98 @@ export class OrganizationsController {
         error instanceof Error ? error.message : String(error);
       this.logger.error(
         'GET /organizations/:orgId/pull - Failed to pull all content',
+        {
+          organizationId,
+          userId,
+          error: errorMessage,
+        },
+      );
+
+      if (error instanceof NoPackageSlugsProvidedError) {
+        throw new BadRequestException(error.message);
+      }
+
+      if (error instanceof PackagesNotFoundError) {
+        throw new NotFoundException(error.message);
+      }
+
+      throw error;
+    }
+  }
+
+  /**
+   * Get deployed content for a specific target
+   * POST /organizations/:orgId/deployed-content
+   */
+  @Post('deployed-content')
+  async getDeployedContent(
+    @Param('orgId') organizationId: OrganizationId,
+    @Req() request: AuthenticatedRequest,
+    @Body()
+    body: {
+      packagesSlugs?: string[];
+      gitRemoteUrl: string;
+      gitBranch: string;
+      relativePath: string;
+      agents?: string[];
+    },
+  ): Promise<IPullContentResponse> {
+    const userId = request.user.userId;
+
+    if (!body.gitRemoteUrl || !body.gitBranch || !body.relativePath) {
+      throw new BadRequestException(
+        'gitRemoteUrl, gitBranch, and relativePath are required',
+      );
+    }
+
+    const packagesSlugs = body.packagesSlugs ?? [];
+
+    // Validate agents to array of valid CodingAgents
+    let agents: CodingAgent[] | undefined;
+    if (body.agents !== undefined) {
+      const validAgents = body.agents.filter(isValidCodingAgent);
+
+      // Log warning for invalid agents
+      const invalidAgents = body.agents.filter((a) => !isValidCodingAgent(a));
+      if (invalidAgents.length > 0) {
+        this.logger.info('Invalid agent values provided, ignoring', {
+          invalidAgents,
+          validAgents,
+        });
+      }
+
+      agents = validAgents;
+    }
+
+    this.logger.info(
+      'POST /organizations/:orgId/deployed-content - Getting deployed content for target',
+      {
+        organizationId,
+        userId,
+        packagesSlugs,
+        gitRemoteUrl: body.gitRemoteUrl,
+        gitBranch: body.gitBranch,
+        relativePath: body.relativePath,
+        agents,
+      },
+    );
+
+    try {
+      return await this.deploymentAdapter.getDeployedContent({
+        userId,
+        organizationId,
+        packagesSlugs,
+        gitRemoteUrl: body.gitRemoteUrl,
+        gitBranch: body.gitBranch,
+        relativePath: body.relativePath,
+        agents,
+        source: request.clientSource,
+      });
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      this.logger.error(
+        'POST /organizations/:orgId/deployed-content - Failed to get deployed content',
         {
           organizationId,
           userId,

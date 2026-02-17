@@ -6,4 +6,6 @@ export { default as logoPackmindText } from './images/logo-text.svg';
 export { default as createRecipe } from './images/create-recipe.svg';
 export { default as distributeCodingStandards } from './images/distribute-coding-standards.svg';
 export { default as enforceCodingStandsards } from './images/enforce-coding-standards.svg';
+export { default as googleLogo } from './images/google-icon-logo.svg';
+export { default as microsoftLogo } from './images/microsoft-logo.svg';
 export * from './milkdown.theme';

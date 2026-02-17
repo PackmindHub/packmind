@@ -106,6 +106,112 @@ describe('DeploymentGateway', () => {
     });
   });
 
+  describe('getDeployed', () => {
+    const defaultCommand = {
+      packagesSlugs: ['backend'],
+      gitRemoteUrl: 'github.com/user/repo',
+      gitBranch: 'main',
+      relativePath: '/src/',
+    };
+
+    describe('when request succeeds', () => {
+      const mockApiResponse = {
+        fileUpdates: { createOrUpdate: [], delete: [] },
+        skillFolders: [],
+      };
+
+      beforeEach(() => {
+        mockHttpClient.request.mockResolvedValue(mockApiResponse);
+      });
+
+      it('calls the API with POST and correct body', async () => {
+        await gateway.getDeployed(defaultCommand);
+
+        expect(mockHttpClient.request).toHaveBeenCalledWith(
+          `/api/v0/organizations/${mockOrganizationId}/deployed-content`,
+          {
+            method: 'POST',
+            body: {
+              packagesSlugs: ['backend'],
+              gitRemoteUrl: 'github.com/user/repo',
+              gitBranch: 'main',
+              relativePath: '/src/',
+            },
+          },
+        );
+      });
+
+      it('returns the response', async () => {
+        const result = await gateway.getDeployed(defaultCommand);
+
+        expect(result).toEqual(mockApiResponse);
+      });
+    });
+
+    describe('when agents are provided', () => {
+      beforeEach(() => {
+        mockHttpClient.request.mockResolvedValue({});
+      });
+
+      it('includes agents in the body', async () => {
+        await gateway.getDeployed({
+          ...defaultCommand,
+          agents: ['claude', 'cursor'],
+        });
+
+        expect(mockHttpClient.request).toHaveBeenCalledWith(
+          expect.any(String),
+          expect.objectContaining({
+            body: expect.objectContaining({
+              agents: ['claude', 'cursor'],
+            }),
+          }),
+        );
+      });
+    });
+
+    describe('when agents is an empty array', () => {
+      beforeEach(() => {
+        mockHttpClient.request.mockResolvedValue({});
+      });
+
+      it('includes empty agents array in the body', async () => {
+        await gateway.getDeployed({
+          ...defaultCommand,
+          agents: [],
+        });
+
+        expect(mockHttpClient.request).toHaveBeenCalledWith(
+          expect.any(String),
+          expect.objectContaining({
+            body: expect.objectContaining({
+              agents: [],
+            }),
+          }),
+        );
+      });
+    });
+
+    describe('when agents is not provided', () => {
+      beforeEach(() => {
+        mockHttpClient.request.mockResolvedValue({});
+      });
+
+      it('does not include agents in the body', async () => {
+        await gateway.getDeployed(defaultCommand);
+
+        expect(mockHttpClient.request).toHaveBeenCalledWith(
+          expect.any(String),
+          expect.objectContaining({
+            body: expect.not.objectContaining({
+              agents: expect.anything(),
+            }),
+          }),
+        );
+      });
+    });
+  });
+
   describe('getRenderModeConfiguration', () => {
     describe('when request succeeds', () => {
       const mockApiResponse = {

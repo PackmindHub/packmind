@@ -10,13 +10,13 @@ jest.mock('../api/queries/AuthQueries', () => ({
   useSocialProvidersQuery: jest.fn(),
 }));
 
-jest.mock('react-icons/si', () => ({
-  SiGoogle: () => <span data-testid="icon-google" />,
-  SiGithub: () => <span data-testid="icon-github" />,
+jest.mock('@packmind/assets', () => ({
+  googleLogo: 'google-logo.svg',
+  microsoftLogo: 'microsoft-logo.svg',
 }));
 
-jest.mock('react-icons/fa', () => ({
-  FaMicrosoft: () => <span data-testid="icon-microsoft" />,
+jest.mock('react-icons/si', () => ({
+  SiGithub: () => <span data-testid="icon-github" />,
 }));
 
 const mockUseSocialProvidersQuery =

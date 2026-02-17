@@ -14,6 +14,7 @@ import {
   SkillFileId,
   SkillVersion,
 } from '@packmind/types';
+import { MemberContext } from '@packmind/node-utils';
 import { SkillChangeProposalValidator } from './SkillChangeProposalValidator';
 import { ChangeProposalPayloadMismatchError } from '../errors/ChangeProposalPayloadMismatchError';
 import { SkillFileNotFoundError } from '../errors/SkillFileNotFoundError';
@@ -62,9 +63,7 @@ describe('SkillChangeProposalValidator', () => {
   let skillsPort: jest.Mocked<ISkillsPort>;
 
   const buildCommand = (
-    overrides: Partial<
-      CreateChangeProposalCommand<ChangeProposalType.updateSkillFilePermissions>
-    > = {},
+    overrides: Partial<CreateChangeProposalCommand<ChangeProposalType>> = {},
   ) =>
     ({
       userId,
@@ -79,10 +78,7 @@ describe('SkillChangeProposalValidator', () => {
         newValue: 'rwxr-xr-x',
       },
       ...overrides,
-    }) as CreateChangeProposalCommand<ChangeProposalType> & {
-      userId: string;
-      organizationId: string;
-    };
+    }) as CreateChangeProposalCommand<ChangeProposalType> & MemberContext;
 
   beforeEach(() => {
     skillsPort = {
@@ -251,26 +247,23 @@ describe('SkillChangeProposalValidator', () => {
     });
   });
 
-  describe('when updateSkillMetadata has null fields in skill entity', () => {
+  describe('when updateSkillMetadata has metadata field in skill entity', () => {
     beforeEach(() => {
       skillsPort.getSkill.mockResolvedValue({
         ...skill,
-        license: 'MIT',
-        compatibility: null,
-        metadata: null,
-        allowedTools: null,
-      } as unknown as Skill);
+        metadata: { key1: 'value1' },
+      } as Skill);
     });
 
-    describe('when oldValue matches serialized non-null fields', () => {
+    describe('when oldValue matches serialized metadata field', () => {
       it('validates successfully', async () => {
         const command = buildCommand({
           type: ChangeProposalType.updateSkillMetadata,
           payload: {
-            oldValue: '{"license":"MIT"}',
-            newValue: '{"license":"Apache 2"}',
+            oldValue: '{"metadata":{"key1":"value1"}}',
+            newValue: '{"metadata":{"key1":"value2"}}',
           },
-        } as never);
+        });
 
         const result = await validator.validate(command);
 
@@ -278,21 +271,199 @@ describe('SkillChangeProposalValidator', () => {
       });
     });
 
-    describe('when oldValue includes null fields that server excludes', () => {
+    describe('when oldValue does not match', () => {
       it('throws ChangeProposalPayloadMismatchError', async () => {
         const command = buildCommand({
           type: ChangeProposalType.updateSkillMetadata,
           payload: {
-            oldValue:
-              '{"allowedTools":null,"compatibility":null,"license":"MIT","metadata":null}',
-            newValue: '{"license":"Apache 2"}',
+            oldValue: '{"metadata":{"key1":"wrong"}}',
+            newValue: '{"metadata":{"key1":"value2"}}',
           },
-        } as never);
+        });
 
         await expect(validator.validate(command)).rejects.toBeInstanceOf(
           ChangeProposalPayloadMismatchError,
         );
       });
+    });
+  });
+
+  describe('when updateSkillMetadata has null metadata in skill entity', () => {
+    beforeEach(() => {
+      skillsPort.getSkill.mockResolvedValue({
+        ...skill,
+        metadata: null,
+      } as unknown as Skill);
+    });
+
+    describe('when oldValue is empty object', () => {
+      it('validates successfully', async () => {
+        const command = buildCommand({
+          type: ChangeProposalType.updateSkillMetadata,
+          payload: {
+            oldValue: '{}',
+            newValue: '{"metadata":{"key1":"value1"}}',
+          },
+        });
+
+        const result = await validator.validate(command);
+
+        expect(result).toEqual({ artefactVersion: 2 });
+      });
+    });
+  });
+
+  describe('when updateSkillLicense matches skill entity', () => {
+    beforeEach(() => {
+      skillsPort.getSkill.mockResolvedValue({
+        ...skill,
+        license: 'MIT',
+      } as unknown as Skill);
+    });
+
+    it('validates successfully', async () => {
+      const command = buildCommand({
+        type: ChangeProposalType.updateSkillLicense,
+        payload: {
+          oldValue: 'MIT',
+          newValue: 'Apache-2.0',
+        },
+      });
+
+      const result = await validator.validate(command);
+
+      expect(result).toEqual({ artefactVersion: 2 });
+    });
+  });
+
+  describe('when updateSkillLicense does not match skill entity', () => {
+    beforeEach(() => {
+      skillsPort.getSkill.mockResolvedValue({
+        ...skill,
+        license: 'MIT',
+      } as unknown as Skill);
+    });
+
+    it('throws ChangeProposalPayloadMismatchError', async () => {
+      const command = buildCommand({
+        type: ChangeProposalType.updateSkillLicense,
+        payload: {
+          oldValue: 'GPL',
+          newValue: 'Apache-2.0',
+        },
+      });
+
+      await expect(validator.validate(command)).rejects.toBeInstanceOf(
+        ChangeProposalPayloadMismatchError,
+      );
+    });
+  });
+
+  describe('when updateSkillLicense has undefined license in skill entity', () => {
+    it('validates with empty string as current value', async () => {
+      const command = buildCommand({
+        type: ChangeProposalType.updateSkillLicense,
+        payload: {
+          oldValue: '',
+          newValue: 'MIT',
+        },
+      });
+
+      const result = await validator.validate(command);
+
+      expect(result).toEqual({ artefactVersion: 2 });
+    });
+  });
+
+  describe('when updateSkillCompatibility matches skill entity', () => {
+    beforeEach(() => {
+      skillsPort.getSkill.mockResolvedValue({
+        ...skill,
+        compatibility: 'claude',
+      } as unknown as Skill);
+    });
+
+    it('validates successfully', async () => {
+      const command = buildCommand({
+        type: ChangeProposalType.updateSkillCompatibility,
+        payload: {
+          oldValue: 'claude',
+          newValue: 'cursor',
+        },
+      });
+
+      const result = await validator.validate(command);
+
+      expect(result).toEqual({ artefactVersion: 2 });
+    });
+  });
+
+  describe('when updateSkillCompatibility does not match skill entity', () => {
+    beforeEach(() => {
+      skillsPort.getSkill.mockResolvedValue({
+        ...skill,
+        compatibility: 'claude',
+      } as unknown as Skill);
+    });
+
+    it('throws ChangeProposalPayloadMismatchError', async () => {
+      const command = buildCommand({
+        type: ChangeProposalType.updateSkillCompatibility,
+        payload: {
+          oldValue: 'cursor',
+          newValue: 'copilot',
+        },
+      });
+
+      await expect(validator.validate(command)).rejects.toBeInstanceOf(
+        ChangeProposalPayloadMismatchError,
+      );
+    });
+  });
+
+  describe('when updateSkillAllowedTools matches skill entity', () => {
+    beforeEach(() => {
+      skillsPort.getSkill.mockResolvedValue({
+        ...skill,
+        allowedTools: 'Read,Write',
+      } as unknown as Skill);
+    });
+
+    it('validates successfully', async () => {
+      const command = buildCommand({
+        type: ChangeProposalType.updateSkillAllowedTools,
+        payload: {
+          oldValue: 'Read,Write',
+          newValue: 'Read,Write,Edit',
+        },
+      });
+
+      const result = await validator.validate(command);
+
+      expect(result).toEqual({ artefactVersion: 2 });
+    });
+  });
+
+  describe('when updateSkillAllowedTools does not match skill entity', () => {
+    beforeEach(() => {
+      skillsPort.getSkill.mockResolvedValue({
+        ...skill,
+        allowedTools: 'Read,Write',
+      } as unknown as Skill);
+    });
+
+    it('throws ChangeProposalPayloadMismatchError', async () => {
+      const command = buildCommand({
+        type: ChangeProposalType.updateSkillAllowedTools,
+        payload: {
+          oldValue: 'Read',
+          newValue: 'Read,Write,Edit',
+        },
+      });
+
+      await expect(validator.validate(command)).rejects.toBeInstanceOf(
+        ChangeProposalPayloadMismatchError,
+      );
     });
   });
 });

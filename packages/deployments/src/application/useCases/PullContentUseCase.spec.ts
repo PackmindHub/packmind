@@ -4,7 +4,6 @@ import {
   FileUpdates,
   IAccountsPort,
   ICodingAgentPort,
-  IGitPort,
   IRecipesPort,
   ISkillsPort,
   IStandardsPort,
@@ -40,7 +39,7 @@ import { PackmindConfigService } from '../services/PackmindConfigService';
 import { RenderModeConfigurationService } from '../services/RenderModeConfigurationService';
 import { PullContentUseCase } from './PullContentUseCase';
 import { IDistributionRepository } from '../../domain/repositories/IDistributionRepository';
-import { TargetService } from '../services/TargetService';
+import { TargetResolutionService } from '../services/TargetResolutionService';
 
 const createUserWithMembership = (
   userId: string,
@@ -71,9 +70,8 @@ describe('PullContentUseCase', () => {
   let eventEmitterService: jest.Mocked<PackmindEventEmitterService>;
   let renderModeConfigurationService: jest.Mocked<RenderModeConfigurationService>;
   let packmindConfigService: jest.Mocked<PackmindConfigService>;
-  let gitPort: jest.Mocked<IGitPort>;
   let distributionRepository: jest.Mocked<IDistributionRepository>;
-  let targetService: jest.Mocked<TargetService>;
+  let targetResolutionService: jest.Mocked<TargetResolutionService>;
   let useCase: PullContentUseCase;
   let command: PullContentCommand;
   let organizationId: OrganizationId;
@@ -163,11 +161,6 @@ describe('PullContentUseCase', () => {
       [],
     );
 
-    gitPort = {
-      listProviders: jest.fn().mockResolvedValue({ providers: [] }),
-      listRepos: jest.fn().mockResolvedValue([]),
-    } as unknown as jest.Mocked<IGitPort>;
-
     distributionRepository = {
       findActiveSkillVersionsByTargetAndPackages: jest
         .fn()
@@ -184,9 +177,14 @@ describe('PullContentUseCase', () => {
       findActiveSkillVersionsByTarget: jest.fn().mockResolvedValue([]),
     } as unknown as jest.Mocked<IDistributionRepository>;
 
-    targetService = {
-      getTargetsByGitRepoId: jest.fn().mockResolvedValue([]),
-    } as unknown as jest.Mocked<TargetService>;
+    targetResolutionService = {
+      findTargetFromGitInfo: jest.fn().mockResolvedValue(null),
+      findPreviouslyDeployedVersions: jest.fn().mockResolvedValue({
+        standardVersions: [],
+        recipeVersions: [],
+        skillVersions: [],
+      }),
+    } as unknown as jest.Mocked<TargetResolutionService>;
 
     organizationId = createOrganizationId(uuidv4());
     organization = {
@@ -215,9 +213,8 @@ describe('PullContentUseCase', () => {
       renderModeConfigurationService,
       accountsPort,
       eventEmitterService,
-      gitPort,
       distributionRepository,
-      targetService,
+      targetResolutionService,
       packmindConfigService,
       stubLogger(),
     );
@@ -237,9 +234,8 @@ describe('PullContentUseCase', () => {
           renderModeConfigurationService,
           accountsPort,
           eventEmitterService,
-          gitPort,
           distributionRepository,
-          targetService,
+          targetResolutionService,
           packmindConfigService,
           stubLogger(),
         );
@@ -1257,45 +1253,17 @@ describe('PullContentUseCase', () => {
           codingAgentPort.getSkillsFolderPathForAgents.mockReturnValue(
             new Map([['claude', '.claude/skills/']]),
           );
-
-          // Setup git port to return provider and repo
-          gitPort.listProviders.mockResolvedValue({
-            providers: [
-              {
-                id: 'provider-1',
-                type: 'github',
-                name: 'GitHub',
-                organizationId,
-              },
-            ],
-          });
-          gitPort.listRepos.mockResolvedValue([
-            {
-              id: 'git-repo-1',
-              owner: 'owner',
-              repo: 'repo',
-              branch: 'main',
-              name: 'owner/repo',
-              providerId: 'provider-1',
-            },
-          ]);
-
-          // Setup target service
-          targetService.getTargetsByGitRepoId.mockResolvedValue([
-            {
-              id: 'target-1',
-              name: 'Root',
-              path: '/',
-              gitRepoId: 'git-repo-1',
-            },
-          ]);
         });
 
         describe('when previously deployed skills exist in distribution history', () => {
           beforeEach(() => {
-            // Distribution repository returns previously deployed skill
-            distributionRepository.findActiveSkillVersionsByTargetAndPackages.mockResolvedValue(
-              [previouslyDeployedSkillVersion],
+            // TargetResolutionService returns previously deployed skill
+            targetResolutionService.findPreviouslyDeployedVersions.mockResolvedValue(
+              {
+                standardVersions: [],
+                recipeVersions: [],
+                skillVersions: [previouslyDeployedSkillVersion],
+              },
             );
 
             codingAgentPort.generateRemovalUpdatesForAgents.mockResolvedValue({
@@ -1306,14 +1274,12 @@ describe('PullContentUseCase', () => {
             });
           });
 
-          it('queries distribution history for previously deployed skills', async () => {
+          it('calls targetResolutionService for previously deployed versions', async () => {
             await useCase.execute(command);
 
             expect(
-              distributionRepository.findActiveSkillVersionsByTargetAndPackages,
-            ).toHaveBeenCalledWith(organizationId, 'target-1', [
-              'test-package-id',
-            ]);
+              targetResolutionService.findPreviouslyDeployedVersions,
+            ).toHaveBeenCalled();
           });
 
           it('includes previously deployed skill folder in skillFolders for cleanup', async () => {
@@ -1335,8 +1301,12 @@ describe('PullContentUseCase', () => {
 
         describe('when no previously deployed skills exist', () => {
           beforeEach(() => {
-            distributionRepository.findActiveSkillVersionsByTargetAndPackages.mockResolvedValue(
-              [],
+            targetResolutionService.findPreviouslyDeployedVersions.mockResolvedValue(
+              {
+                standardVersions: [],
+                recipeVersions: [],
+                skillVersions: [],
+              },
             );
           });
 
@@ -1357,30 +1327,22 @@ describe('PullContentUseCase', () => {
           });
         });
 
-        describe('when git repo is not found in providers', () => {
+        describe('when target resolution returns empty results', () => {
           beforeEach(() => {
-            gitPort.listRepos.mockResolvedValue([]);
+            targetResolutionService.findPreviouslyDeployedVersions.mockResolvedValue(
+              {
+                standardVersions: [],
+                recipeVersions: [],
+                skillVersions: [],
+              },
+            );
           });
 
-          it('does not query distribution repository', async () => {
+          it('does not call generateRemovalUpdatesForAgents', async () => {
             await useCase.execute(command);
 
             expect(
-              distributionRepository.findActiveSkillVersionsByTargetAndPackages,
-            ).not.toHaveBeenCalled();
-          });
-        });
-
-        describe('when target is not found for git repo', () => {
-          beforeEach(() => {
-            targetService.getTargetsByGitRepoId.mockResolvedValue([]);
-          });
-
-          it('does not query distribution repository', async () => {
-            await useCase.execute(command);
-
-            expect(
-              distributionRepository.findActiveSkillVersionsByTargetAndPackages,
+              codingAgentPort.generateRemovalUpdatesForAgents,
             ).not.toHaveBeenCalled();
           });
         });
@@ -1471,55 +1433,16 @@ describe('PullContentUseCase', () => {
           [CodingAgents.packmind],
         );
         codingAgentPort.getSkillsFolderPathForAgents.mockReturnValue(new Map());
-
-        // Setup git port to return provider and repo
-        gitPort.listProviders.mockResolvedValue({
-          providers: [
-            {
-              id: 'provider-1',
-              type: 'github',
-              name: 'GitHub',
-              organizationId,
-            },
-          ],
-        });
-        gitPort.listRepos.mockResolvedValue([
-          {
-            id: 'git-repo-1',
-            owner: 'owner',
-            repo: 'repo',
-            branch: 'main',
-            name: 'owner/repo',
-            providerId: 'provider-1',
-          },
-        ]);
-
-        // Setup target service
-        targetService.getTargetsByGitRepoId.mockResolvedValue([
-          {
-            id: 'target-1',
-            name: 'Root',
-            path: '/',
-            gitRepoId: 'git-repo-1',
-          },
-        ]);
-
-        // Default: no previously deployed artifacts
-        distributionRepository.findActiveStandardVersionsByTargetAndPackages.mockResolvedValue(
-          [],
-        );
-        distributionRepository.findActiveRecipeVersionsByTargetAndPackages.mockResolvedValue(
-          [],
-        );
-        distributionRepository.findActiveSkillVersionsByTargetAndPackages.mockResolvedValue(
-          [],
-        );
       });
 
       describe('when previously deployed standards exist in distribution history', () => {
         beforeEach(() => {
-          distributionRepository.findActiveStandardVersionsByTargetAndPackages.mockResolvedValue(
-            [previouslyDeployedStandardVersion],
+          targetResolutionService.findPreviouslyDeployedVersions.mockResolvedValue(
+            {
+              standardVersions: [previouslyDeployedStandardVersion],
+              recipeVersions: [],
+              skillVersions: [],
+            },
           );
 
           codingAgentPort.generateRemovalUpdatesForAgents.mockResolvedValue({
@@ -1530,14 +1453,12 @@ describe('PullContentUseCase', () => {
           });
         });
 
-        it('queries distribution history for previously deployed standards', async () => {
+        it('calls targetResolutionService for previously deployed versions', async () => {
           await useCase.execute(command);
 
           expect(
-            distributionRepository.findActiveStandardVersionsByTargetAndPackages,
-          ).toHaveBeenCalledWith(organizationId, 'target-1', [
-            'test-package-id',
-          ]);
+            targetResolutionService.findPreviouslyDeployedVersions,
+          ).toHaveBeenCalled();
         });
 
         it('calls generateRemovalUpdatesForAgents with previously deployed standards', async () => {
@@ -1567,12 +1488,6 @@ describe('PullContentUseCase', () => {
       });
 
       describe('when no previously deployed standards exist', () => {
-        beforeEach(() => {
-          distributionRepository.findActiveStandardVersionsByTargetAndPackages.mockResolvedValue(
-            [],
-          );
-        });
-
         it('does not call generateRemovalUpdatesForAgents', async () => {
           await useCase.execute(command);
 
@@ -1665,55 +1580,16 @@ describe('PullContentUseCase', () => {
           [CodingAgents.packmind],
         );
         codingAgentPort.getSkillsFolderPathForAgents.mockReturnValue(new Map());
-
-        // Setup git port to return provider and repo
-        gitPort.listProviders.mockResolvedValue({
-          providers: [
-            {
-              id: 'provider-1',
-              type: 'github',
-              name: 'GitHub',
-              organizationId,
-            },
-          ],
-        });
-        gitPort.listRepos.mockResolvedValue([
-          {
-            id: 'git-repo-1',
-            owner: 'owner',
-            repo: 'repo',
-            branch: 'main',
-            name: 'owner/repo',
-            providerId: 'provider-1',
-          },
-        ]);
-
-        // Setup target service
-        targetService.getTargetsByGitRepoId.mockResolvedValue([
-          {
-            id: 'target-1',
-            name: 'Root',
-            path: '/',
-            gitRepoId: 'git-repo-1',
-          },
-        ]);
-
-        // Default: no previously deployed artifacts
-        distributionRepository.findActiveStandardVersionsByTargetAndPackages.mockResolvedValue(
-          [],
-        );
-        distributionRepository.findActiveRecipeVersionsByTargetAndPackages.mockResolvedValue(
-          [],
-        );
-        distributionRepository.findActiveSkillVersionsByTargetAndPackages.mockResolvedValue(
-          [],
-        );
       });
 
       describe('when previously deployed recipes exist in distribution history', () => {
         beforeEach(() => {
-          distributionRepository.findActiveRecipeVersionsByTargetAndPackages.mockResolvedValue(
-            [previouslyDeployedRecipeVersion],
+          targetResolutionService.findPreviouslyDeployedVersions.mockResolvedValue(
+            {
+              standardVersions: [],
+              recipeVersions: [previouslyDeployedRecipeVersion],
+              skillVersions: [],
+            },
           );
 
           codingAgentPort.generateRemovalUpdatesForAgents.mockResolvedValue({
@@ -1724,14 +1600,12 @@ describe('PullContentUseCase', () => {
           });
         });
 
-        it('queries distribution history for previously deployed recipes', async () => {
+        it('calls targetResolutionService for previously deployed versions', async () => {
           await useCase.execute(command);
 
           expect(
-            distributionRepository.findActiveRecipeVersionsByTargetAndPackages,
-          ).toHaveBeenCalledWith(organizationId, 'target-1', [
-            'test-package-id',
-          ]);
+            targetResolutionService.findPreviouslyDeployedVersions,
+          ).toHaveBeenCalled();
         });
 
         it('calls generateRemovalUpdatesForAgents with previously deployed recipes', async () => {
@@ -1761,12 +1635,6 @@ describe('PullContentUseCase', () => {
       });
 
       describe('when no previously deployed recipes exist', () => {
-        beforeEach(() => {
-          distributionRepository.findActiveRecipeVersionsByTargetAndPackages.mockResolvedValue(
-            [],
-          );
-        });
-
         it('does not call generateRemovalUpdatesForAgents', async () => {
           await useCase.execute(command);
 
@@ -2689,25 +2557,12 @@ describe('PullContentUseCase', () => {
         },
       ]);
 
-      gitPort.listProviders.mockResolvedValue({
-        providers: [{ id: 'provider-1' }],
+      targetResolutionService.findTargetFromGitInfo.mockResolvedValue({
+        id: targetId,
+        name: 'default',
+        path: '/',
+        gitRepoId: 'repo-1' as never,
       });
-      gitPort.listRepos.mockResolvedValue([
-        {
-          id: 'repo-1',
-          owner: 'packmind',
-          repo: 'packmind',
-          branch: gitBranch,
-        },
-      ]);
-      targetService.getTargetsByGitRepoId.mockResolvedValue([
-        {
-          id: targetId,
-          name: 'default',
-          path: '/',
-          gitRepoId: 'repo-1' as never,
-        },
-      ]);
     });
 
     describe('when render modes drop an agent', () => {
@@ -2762,7 +2617,7 @@ describe('PullContentUseCase', () => {
 
     describe('when target is not found', () => {
       beforeEach(() => {
-        targetService.getTargetsByGitRepoId.mockResolvedValue([]);
+        targetResolutionService.findTargetFromGitInfo.mockResolvedValue(null);
       });
 
       it('skips agent cleanup', async () => {

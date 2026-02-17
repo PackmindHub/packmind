@@ -1,4 +1,8 @@
-import { ChangeProposalType } from '@packmind/types';
+import {
+  ChangeProposalType,
+  IListChangeProposalsBySpace,
+  NewGateway,
+} from '@packmind/types';
 import { PackmindGateway } from '../../../../shared/PackmindGateway';
 import {
   CreateChangeProposalParams,
@@ -22,4 +26,13 @@ export class ChangeProposalsGatewayApi
       body,
     );
   }
+
+  getGroupedChangeProposals: NewGateway<IListChangeProposalsBySpace> = async ({
+    organizationId,
+    spaceId,
+  }) => {
+    return this._api.get(
+      `/organizations/${organizationId}/spaces/${spaceId}/change-proposals/grouped`,
+    );
+  };
 }

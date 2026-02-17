@@ -33,14 +33,29 @@ This is the prompt body.`;
       expect(result?.body).toBe('This is the prompt body.');
     });
 
-    it('serializes remaining fields as sorted JSON metadata', () => {
+    it('extracts the license field', () => {
+      const result = parseSkillMd(content);
+
+      expect(result?.license).toBe('MIT');
+    });
+
+    it('extracts the compatibility field', () => {
+      const result = parseSkillMd(content);
+
+      expect(result?.compatibility).toBe('Claude Code');
+    });
+
+    it('extracts the allowedTools field', () => {
+      const result = parseSkillMd(content);
+
+      expect(result?.allowedTools).toBe('Read,Write');
+    });
+
+    it('serializes only metadata as JSON', () => {
       const result = parseSkillMd(content);
       const metadata = JSON.parse(result!.metadataJson);
 
       expect(metadata).toEqual({
-        allowedTools: 'Read,Write',
-        compatibility: 'Claude Code',
-        license: 'MIT',
         metadata: { category: 'testing', version: '1.0' },
       });
     });
@@ -63,6 +78,24 @@ Body content.`;
       const result = parseSkillMd(content);
 
       expect(result?.description).toBe('');
+    });
+
+    it('extracts the license field', () => {
+      const result = parseSkillMd(content);
+
+      expect(result?.license).toBe('MIT');
+    });
+
+    it('returns empty string for missing compatibility', () => {
+      const result = parseSkillMd(content);
+
+      expect(result?.compatibility).toBe('');
+    });
+
+    it('returns empty string for missing allowedTools', () => {
+      const result = parseSkillMd(content);
+
+      expect(result?.allowedTools).toBe('');
     });
   });
 

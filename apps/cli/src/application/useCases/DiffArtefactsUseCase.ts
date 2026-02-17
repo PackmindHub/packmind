@@ -23,9 +23,8 @@ export class DiffArtefactsUseCase implements IDiffArtefactsUseCase {
   ): Promise<IDiffArtefactsResult> {
     const baseDirectory = command.baseDirectory || process.cwd();
 
-    const response = await this.packmindGateway.deployment.pull({
+    const response = await this.packmindGateway.deployment.getDeployed({
       packagesSlugs: command.packagesSlugs,
-      previousPackagesSlugs: command.previousPackagesSlugs,
       gitRemoteUrl: command.gitRemoteUrl,
       gitBranch: command.gitBranch,
       relativePath: command.relativePath,

@@ -8,6 +8,7 @@ import {
   formatHeader,
   formatBold,
   formatFilePath,
+  logSuccessConsole,
 } from '../utils/consoleLogger';
 import { formatContentDiff } from '../utils/diffFormatter';
 import chalk from 'chalk';
@@ -37,6 +38,9 @@ const CHANGE_TYPE_LABELS: Partial<Record<ChangeProposalType, string>> = {
   [ChangeProposalType.updateSkillDescription]: 'skill description changed',
   [ChangeProposalType.updateSkillPrompt]: 'skill prompt changed',
   [ChangeProposalType.updateSkillMetadata]: 'skill metadata changed',
+  [ChangeProposalType.updateSkillLicense]: 'skill license changed',
+  [ChangeProposalType.updateSkillCompatibility]: 'skill compatibility changed',
+  [ChangeProposalType.updateSkillAllowedTools]: 'skill allowed tools changed',
   [ChangeProposalType.updateSkillFileContent]: 'skill file content changed',
   [ChangeProposalType.updateSkillFilePermissions]:
     'skill file permissions changed',
@@ -88,8 +92,15 @@ function formatDiffPayload(diff: ArtefactDiff, log: typeof console.log): void {
     if (item.isBase64) {
       log(chalk.red('    - [binary file]'));
     } else {
-      for (const line of item.content.split('\n')) {
+      const lines = item.content.split('\n');
+      const MAX_DELETED_LINES = 3;
+      const preview = lines.slice(0, MAX_DELETED_LINES);
+      for (const line of preview) {
         log(chalk.red(`    - ${line}`));
+      }
+      if (lines.length > MAX_DELETED_LINES) {
+        const remaining = lines.length - MAX_DELETED_LINES;
+        log(chalk.red(`    ... and ${remaining} more lines deleted`));
       }
     }
     return;
@@ -143,7 +154,7 @@ export async function diffArtefactsHandler(
   }
 
   try {
-    // Collect git info
+    // Collect git info (required for deployed content lookup)
     let gitRemoteUrl: string | undefined;
     let gitBranch: string | undefined;
     let relativePath: string | undefined;
@@ -163,9 +174,19 @@ export async function diffArtefactsHandler(
         if (!relativePath.endsWith('/')) {
           relativePath = relativePath + '/';
         }
-      } catch {
-        // Git info collection failed, continue without it
+      } catch (err) {
+        logWarningConsole(
+          `Failed to collect git info: ${err instanceof Error ? err.message : String(err)}`,
+        );
       }
+    }
+
+    if (!gitRemoteUrl || !gitBranch || !relativePath) {
+      error(
+        '\n❌ Could not determine git repository info. The diff command requires a git repository with a remote configured.',
+      );
+      exit(1);
+      return { diffsFound: 0 };
     }
 
     const packageCount = configPackages.length;
@@ -177,7 +198,6 @@ export async function diffArtefactsHandler(
     const diffs = await packmindCliHexa.diffArtefacts({
       baseDirectory: cwd,
       packagesSlugs: configPackages,
-      previousPackagesSlugs: configPackages,
       gitRemoteUrl,
       gitBranch,
       relativePath,
@@ -216,14 +236,54 @@ export async function diffArtefactsHandler(
 
     const changeCount = diffs.length;
     const changeWord = changeCount === 1 ? 'change' : 'changes';
-    logWarningConsole(`Summary: ${changeCount} ${changeWord} found`);
+
+    const typeSortOrder: Record<ArtifactType, number> = {
+      command: 0,
+      skill: 1,
+      standard: 2,
+    };
+
+    const uniqueArtefacts = new Map<
+      string,
+      { type: ArtifactType; name: string }
+    >();
+    for (const [key, groupDiffs] of groups) {
+      if (!uniqueArtefacts.has(key)) {
+        uniqueArtefacts.set(key, {
+          type: groupDiffs[0].artifactType,
+          name: groupDiffs[0].artifactName,
+        });
+      }
+    }
+
+    const sortedArtefacts = Array.from(uniqueArtefacts.values()).sort(
+      (a, b) =>
+        typeSortOrder[a.type] - typeSortOrder[b.type] ||
+        a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }),
+    );
+
+    const artefactCount = sortedArtefacts.length;
+    const artefactWord = artefactCount === 1 ? 'artefact' : 'artefacts';
+    logWarningConsole(
+      `Summary: ${changeCount} ${changeWord} found on ${artefactCount} ${artefactWord}:`,
+    );
+    for (const artefact of sortedArtefacts) {
+      const typeLabel = ARTIFACT_TYPE_LABELS[artefact.type];
+      logWarningConsole(`* ${typeLabel} "${artefact.name}"`);
+    }
 
     if (submit) {
       const groupedDiffs = Array.from(groupDiffsByArtefact(diffs).values());
       const result = await packmindCliHexa.submitDiffs(groupedDiffs);
 
       for (const err of result.errors) {
-        logErrorConsole(`Failed to submit "${err.name}": ${err.message}`);
+        if (err.code === 'ChangeProposalPayloadMismatchError') {
+          logErrorConsole(
+            `Failed to submit "${err.name}": ${err.artifactType ?? 'artifact'} is outdated, please run \`packmind-cli install\` to update it`,
+          );
+        } else {
+          logErrorConsole(`Failed to submit "${err.name}": ${err.message}`);
+        }
       }
 
       const summaryParts: string[] = [];
@@ -240,12 +300,15 @@ export async function diffArtefactsHandler(
 
       if (summaryParts.length > 0) {
         const summaryMessage = `Summary: ${summaryParts.join(', ')}`;
-        if (result.errors.length > 0) {
-          logErrorConsole(summaryMessage);
-        } else if (result.alreadySubmitted > 0) {
+        if (result.errors.length === 0 && result.alreadySubmitted === 0) {
+          logSuccessConsole(summaryMessage);
+        } else if (
+          (result.errors.length > 0 && result.submitted > 0) ||
+          result.alreadySubmitted > 0
+        ) {
           logWarningConsole(summaryMessage);
         } else {
-          logInfoConsole(summaryMessage);
+          logErrorConsole(summaryMessage);
         }
       }
     }
