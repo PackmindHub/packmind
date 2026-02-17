@@ -9,7 +9,6 @@ import {
   OrganizationId,
   SignUpWithOrganizationCommand,
   SignUpWithOrganizationResponse,
-  SocialProvider,
   User,
   UserSignedUpEvent,
 } from '@packmind/types';
