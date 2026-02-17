@@ -198,9 +198,10 @@ export const RecipeDetails = ({ id, orgSlug }: RecipeDetailsProps) => {
                 variant="tertiary"
                 onClick={() =>
                   navigate(
-                    routes.space.toCommandChangeProposals(
+                    routes.space.toReviewChangesArtefact(
                       orgSlug || '',
                       spaceSlug || '',
+                      'commands',
                       recipe.id,
                     ),
                   )
