@@ -14,7 +14,6 @@ export default function StandardDetailSummaryRouteModule() {
   return (
     <PMVStack align="stretch" gap={6} width="full">
       <PMVStack align="stretch" gap={4} width="full">
-        <PMHeading level="h3">Description</PMHeading>
         <MarkdownEditorProvider>
           <MarkdownEditor
             key={standard.id}
