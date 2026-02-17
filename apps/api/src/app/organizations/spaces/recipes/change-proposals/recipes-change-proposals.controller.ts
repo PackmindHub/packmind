@@ -1,7 +1,17 @@
-import { Controller, Get, Param, Req, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Post,
+  Req,
+  UseGuards,
+} from '@nestjs/common';
 import { LogLevel, PackmindLogger } from '@packmind/logger';
 import { AuthenticatedRequest } from '@packmind/node-utils';
 import {
+  ApplyChangeProposalsResponse,
+  ChangeProposalId,
   ListChangeProposalsByArtefactResponse,
   OrganizationId,
   RecipeId,
@@ -58,6 +68,53 @@ export class OrganizationsSpacesRecipesChangeProposalsController {
         spaceId,
         recipeId,
         count: result.changeProposals.length,
+      },
+    );
+
+    return result;
+  }
+
+  /**
+   * Apply or reject change proposals for a recipe
+   * POST /organizations/:orgId/spaces/:spaceId/recipes/:recipeId/change-proposals/apply
+   */
+  @Post('apply')
+  async applyRecipeChangeProposals(
+    @Param('orgId') organizationId: OrganizationId,
+    @Param('spaceId') spaceId: SpaceId,
+    @Param('recipeId') recipeId: RecipeId,
+    @Body()
+    body: { accepted: ChangeProposalId[]; rejected: ChangeProposalId[] },
+    @Req() request: AuthenticatedRequest,
+  ): Promise<ApplyChangeProposalsResponse> {
+    this.logger.info(
+      'POST /organizations/:orgId/spaces/:spaceId/recipes/:recipeId/change-proposals/apply',
+      {
+        organizationId,
+        spaceId,
+        recipeId,
+        acceptedCount: body.accepted.length,
+        rejectedCount: body.rejected.length,
+      },
+    );
+
+    const result = await this.service.applyRecipeChangeProposals({
+      userId: request.user.userId,
+      organizationId,
+      spaceId,
+      artefactId: recipeId,
+      accepted: body.accepted,
+      rejected: body.rejected,
+    });
+
+    this.logger.info(
+      'POST /organizations/:orgId/spaces/:spaceId/recipes/:recipeId/change-proposals/apply - Applied successfully',
+      {
+        organizationId,
+        spaceId,
+        recipeId,
+        successCount: result.success.length,
+        failureCount: result.failure.length,
       },
     );
 

@@ -1,7 +1,17 @@
-import { Controller, Get, Param, Req, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Post,
+  Req,
+  UseGuards,
+} from '@nestjs/common';
 import { LogLevel, PackmindLogger } from '@packmind/logger';
 import { AuthenticatedRequest } from '@packmind/node-utils';
 import {
+  ApplyChangeProposalsResponse,
+  ChangeProposalId,
   ListChangeProposalsByArtefactResponse,
   OrganizationId,
   SpaceId,
@@ -58,6 +68,53 @@ export class OrganizationsSpacesStandardsChangeProposalsController {
         spaceId,
         standardId,
         count: result.changeProposals.length,
+      },
+    );
+
+    return result;
+  }
+
+  /**
+   * Apply or reject change proposals for a standard
+   * POST /organizations/:orgId/spaces/:spaceId/standards/:standardId/change-proposals/apply
+   */
+  @Post('apply')
+  async applyStandardChangeProposals(
+    @Param('orgId') organizationId: OrganizationId,
+    @Param('spaceId') spaceId: SpaceId,
+    @Param('standardId') standardId: StandardId,
+    @Body()
+    body: { accepted: ChangeProposalId[]; rejected: ChangeProposalId[] },
+    @Req() request: AuthenticatedRequest,
+  ): Promise<ApplyChangeProposalsResponse> {
+    this.logger.info(
+      'POST /organizations/:orgId/spaces/:spaceId/standards/:standardId/change-proposals/apply',
+      {
+        organizationId,
+        spaceId,
+        standardId,
+        acceptedCount: body.accepted.length,
+        rejectedCount: body.rejected.length,
+      },
+    );
+
+    const result = await this.service.applyStandardChangeProposals({
+      userId: request.user.userId,
+      organizationId,
+      spaceId,
+      artefactId: standardId,
+      accepted: body.accepted,
+      rejected: body.rejected,
+    });
+
+    this.logger.info(
+      'POST /organizations/:orgId/spaces/:spaceId/standards/:standardId/change-proposals/apply - Applied successfully',
+      {
+        organizationId,
+        spaceId,
+        standardId,
+        successCount: result.success.length,
+        failureCount: result.failure.length,
       },
     );
 

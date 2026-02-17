@@ -7,6 +7,7 @@ import {
   SpaceId,
   IListChangeProposalsBySpace,
   IListChangeProposalsByArtefact,
+  IApplyChangeProposalsUseCase,
   NewGateway,
   RecipeId,
   StandardId,
@@ -34,6 +35,14 @@ export interface IChangeProposalsGateway {
   listChangeProposalsBySkill: NewGateway<
     IListChangeProposalsByArtefact<SkillId>
   >;
+
+  applyRecipeChangeProposals: NewGateway<
+    IApplyChangeProposalsUseCase<RecipeId>
+  >;
+  applyStandardChangeProposals: NewGateway<
+    IApplyChangeProposalsUseCase<StandardId>
+  >;
+  applySkillChangeProposals: NewGateway<IApplyChangeProposalsUseCase<SkillId>>;
 
   createChangeProposal<T extends ChangeProposalType>(
     params: CreateChangeProposalParams<T>,

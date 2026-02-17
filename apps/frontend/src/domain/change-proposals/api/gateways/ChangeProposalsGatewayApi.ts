@@ -1,5 +1,6 @@
 import {
   ChangeProposalType,
+  IApplyChangeProposalsUseCase,
   IListChangeProposalsBySpace,
   IListChangeProposalsByArtefact,
   NewGateway,
@@ -63,4 +64,30 @@ export class ChangeProposalsGatewayApi
       `/organizations/${organizationId}/spaces/${spaceId}/skills/${artefactId}/change-proposals`,
     );
   };
+
+  applyRecipeChangeProposals: NewGateway<
+    IApplyChangeProposalsUseCase<RecipeId>
+  > = async ({ organizationId, spaceId, artefactId, accepted, rejected }) => {
+    return this._api.post(
+      `/organizations/${organizationId}/spaces/${spaceId}/recipes/${artefactId}/change-proposals/apply`,
+      { accepted, rejected },
+    );
+  };
+
+  applyStandardChangeProposals: NewGateway<
+    IApplyChangeProposalsUseCase<StandardId>
+  > = async ({ organizationId, spaceId, artefactId, accepted, rejected }) => {
+    return this._api.post(
+      `/organizations/${organizationId}/spaces/${spaceId}/standards/${artefactId}/change-proposals/apply`,
+      { accepted, rejected },
+    );
+  };
+
+  applySkillChangeProposals: NewGateway<IApplyChangeProposalsUseCase<SkillId>> =
+    async ({ organizationId, spaceId, artefactId, accepted, rejected }) => {
+      return this._api.post(
+        `/organizations/${organizationId}/spaces/${spaceId}/skills/${artefactId}/change-proposals/apply`,
+        { accepted, rejected },
+      );
+    };
 }
