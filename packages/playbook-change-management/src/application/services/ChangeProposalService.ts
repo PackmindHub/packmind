@@ -291,7 +291,6 @@ export class ChangeProposalService {
 
     for (const proposal of proposals) {
       const artefactCategory = getArtefactCategory(proposal.type);
-      console.log({ artefactCategory });
       switch (artefactCategory) {
         case 'standards':
           grouped.standards.set(
@@ -322,5 +321,23 @@ export class ChangeProposalService {
     });
 
     return grouped;
+  }
+
+  async findProposalsByArtefact(
+    spaceId: SpaceId,
+    artefactId: StandardId | RecipeId | SkillId,
+  ): Promise<ChangeProposal<ChangeProposalType>[]> {
+    const proposals = await this.repository.findByArtefactId(
+      spaceId,
+      artefactId,
+    );
+
+    this.logger.info('Found change proposals for artefact', {
+      spaceId,
+      artefactId,
+      count: proposals.length,
+    });
+
+    return proposals;
   }
 }
