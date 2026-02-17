@@ -2,7 +2,6 @@ import { useMemo, useState } from 'react';
 import {
   PMBadge,
   PMBox,
-  PMButton,
   PMHStack,
   PMIconButton,
   PMText,
@@ -15,14 +14,17 @@ import {
 } from '@packmind/types';
 import { ChangeProposalWithConflicts } from '../../types';
 import {
-  LuTriangleAlert,
   LuCheck,
   LuChevronDown,
   LuChevronRight,
   LuUndo2,
   LuX,
 } from 'react-icons/lu';
-import { getChangeProposalFieldLabel } from '../../utils/changeProposalHelpers';
+import {
+  getChangeProposalFieldLabel,
+  getStatusBadgeProps,
+} from '../../utils/changeProposalHelpers';
+import { formatRelativeTime } from '../../utils/formatRelativeTime';
 
 interface ChangeProposalsChangesListProps {
   proposals: ChangeProposalWithConflicts[];
@@ -34,14 +36,6 @@ interface ChangeProposalsChangesListProps {
   onPoolAccept: (proposalId: ChangeProposalId) => void;
   onPoolReject: (proposalId: ChangeProposalId) => void;
   onUndoPool: (proposalId: ChangeProposalId) => void;
-}
-
-function formatDate(date: Date): string {
-  return new Intl.DateTimeFormat('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-  }).format(new Date(date));
 }
 
 export function ChangeProposalsChangesList({
@@ -94,18 +88,25 @@ export function ChangeProposalsChangesList({
   return (
     <PMBox display="flex" flexDirection="column" height="full">
       <PMBox overflowY="auto" flex={1}>
-        <PMVStack gap={4}>
+        <PMVStack gap={4} align="stretch">
+          <PMText fontSize="md" fontWeight="bold">
+            Changes to review
+          </PMText>
+
           {reviewingProposal && (
             <ReviewingSection
               proposal={reviewingProposal}
               userLookup={userLookup}
-              onAccept={() => onPoolAccept(reviewingProposal.id)}
-              onReject={() => onPoolReject(reviewingProposal.id)}
             />
           )}
 
           {reviewingProposal && reviewingProposal.conflictsWith.length > 0 && (
-            <ConflictWarningSection />
+            <ConflictWithSection
+              reviewingProposal={reviewingProposal}
+              proposals={proposals}
+              userLookup={userLookup}
+              onSelectProposal={onSelectProposal}
+            />
           )}
 
           {pendingProposals.length > 0 && (
@@ -115,6 +116,7 @@ export function ChangeProposalsChangesList({
                 fontWeight="bold"
                 color="secondary"
                 textTransform="uppercase"
+                width="full"
               >
                 Pending ({pendingProposals.length})
               </PMText>
@@ -122,6 +124,7 @@ export function ChangeProposalsChangesList({
                 <PendingProposalCard
                   key={proposal.id}
                   proposal={proposal}
+                  userLookup={userLookup}
                   onSelect={() => onSelectProposal(proposal.id)}
                   onAccept={() => onPoolAccept(proposal.id)}
                   onReject={() => onPoolReject(proposal.id)}
@@ -142,6 +145,7 @@ export function ChangeProposalsChangesList({
                 <PoolProposalCard
                   key={proposal.id}
                   proposal={proposal}
+                  userLookup={userLookup}
                   onUndo={() => onUndoPool(proposal.id)}
                 />
               ))}
@@ -150,7 +154,7 @@ export function ChangeProposalsChangesList({
 
           {rejectedProposals.length > 0 && (
             <CollapsiblePoolSection
-              label="Rejected"
+              label="Dismissed"
               count={rejectedProposals.length}
               isOpen={showRejected}
               onToggle={() => setShowRejected((prev) => !prev)}
@@ -160,6 +164,7 @@ export function ChangeProposalsChangesList({
                 <PoolProposalCard
                   key={proposal.id}
                   proposal={proposal}
+                  userLookup={userLookup}
                   onUndo={() => onUndoPool(proposal.id)}
                 />
               ))}
@@ -182,15 +187,12 @@ export function ChangeProposalsChangesList({
 function ReviewingSection({
   proposal,
   userLookup,
-  onAccept,
-  onReject,
 }: {
   proposal: ChangeProposalWithConflicts;
   userLookup: Map<UserId, string>;
-  onAccept: () => void;
-  onReject: () => void;
 }) {
   const authorEmail = userLookup.get(proposal.createdBy) ?? 'Unknown user';
+  const statusBadge = getStatusBadgeProps(proposal.status);
 
   return (
     <PMVStack gap={2}>
@@ -199,88 +201,123 @@ function ReviewingSection({
         fontWeight="bold"
         color="secondary"
         textTransform="uppercase"
+        width="full"
       >
         Reviewing
       </PMText>
       <PMBox
         borderRadius="md"
-        border="1px solid"
-        borderColor="border.primary"
         p={3}
-        background="background.tertiary"
+        width="full"
+        backgroundColor="background.tertiary"
       >
-        <PMVStack gap={2}>
-          <PMHStack gap={2} justify="space-between" align="start">
-            <PMVStack gap={1} flex={1}>
-              <PMText fontSize="sm" fontWeight="bold">
-                {getChangeProposalFieldLabel(proposal.type)}
-              </PMText>
-              <PMText fontSize="xs" color="secondary">
-                By {authorEmail}
-              </PMText>
-              <PMText fontSize="xs" color="secondary">
-                {formatDate(proposal.createdAt)}
-              </PMText>
-            </PMVStack>
-            {proposal.conflictsWith.length > 0 && (
-              <PMBadge colorPalette="orange" size="sm">
-                <LuTriangleAlert size={12} />
-                Outdated
-              </PMBadge>
-            )}
+        <PMVStack
+          gap={2}
+          flex={1}
+          alignItems="flex-start"
+          justifyContent="center"
+        >
+          <PMHStack gap={2} justify="space-between" align="center" width="full">
+            <PMBadge colorPalette={statusBadge.colorPalette} size="sm">
+              {statusBadge.label}
+            </PMBadge>
+            <PMText fontSize="xs" color="secondary">
+              {formatRelativeTime(proposal.createdAt)}
+            </PMText>
           </PMHStack>
-          <PMHStack gap={2}>
-            <PMButton size="sm" colorPalette="green" onClick={onAccept}>
-              <LuCheck size={14} />
-              Accept
-            </PMButton>
-            <PMButton
-              size="sm"
-              colorPalette="red"
-              variant="outline"
-              onClick={onReject}
-            >
-              <LuX size={14} />
-              Reject
-            </PMButton>
-          </PMHStack>
+          <PMText fontSize="sm" fontWeight="bold">
+            {getChangeProposalFieldLabel(proposal.type)}
+          </PMText>
+          <PMText fontSize="xs" color="secondary">
+            <PMText as="span" fontWeight="bold">
+              From
+            </PMText>{' '}
+            {authorEmail}
+          </PMText>
+          <PMText fontSize="xs" color="secondary">
+            <PMText as="span" fontWeight="bold">
+              Base version
+            </PMText>{' '}
+            {proposal.artefactVersion}
+          </PMText>
         </PMVStack>
       </PMBox>
     </PMVStack>
   );
 }
 
-function ConflictWarningSection() {
+function ConflictWithSection({
+  reviewingProposal,
+  proposals,
+  userLookup,
+  onSelectProposal,
+}: {
+  reviewingProposal: ChangeProposalWithConflicts;
+  proposals: ChangeProposalWithConflicts[];
+  userLookup: Map<UserId, string>;
+  onSelectProposal: (proposalId: ChangeProposalId) => void;
+}) {
+  const conflictingProposals = proposals.filter((p) =>
+    reviewingProposal.conflictsWith.includes(p.id),
+  );
+
+  if (conflictingProposals.length === 0) {
+    return null;
+  }
+
   return (
-    <PMBox
-      borderRadius="md"
-      border="1px solid"
-      borderColor="border.primary"
-      p={3}
-      background="background.secondary"
-    >
-      <PMHStack gap={2} align="center">
-        <LuTriangleAlert size={16} color="var(--chakra-colors-orange-500)" />
-        <PMText fontSize="xs" color="secondary">
-          This proposal may conflict with the current version. Review carefully
-          before accepting.
-        </PMText>
-      </PMHStack>
-    </PMBox>
+    <PMVStack gap={2}>
+      <PMText
+        fontSize="xs"
+        fontWeight="bold"
+        color="secondary"
+        textTransform="uppercase"
+        width="full"
+      >
+        Conflict with
+      </PMText>
+      {conflictingProposals.map((proposal) => (
+        <PMBox
+          key={proposal.id}
+          borderRadius="md"
+          border="1px solid"
+          borderColor="border.tertiary"
+          cursor="pointer"
+          width="full"
+          p={2}
+          _hover={{ background: 'background.tertiary' }}
+          onClick={() => onSelectProposal(proposal.id)}
+        >
+          <PMVStack gap={0} flex={1}>
+            <PMText fontSize="sm" fontWeight="medium">
+              {getChangeProposalFieldLabel(proposal.type)}
+            </PMText>
+            <PMText fontSize="xs" color="secondary">
+              {formatRelativeTime(proposal.createdAt)} -{' '}
+              {userLookup.get(proposal.createdBy) ?? 'Unknown user'}
+            </PMText>
+          </PMVStack>
+        </PMBox>
+      ))}
+    </PMVStack>
   );
 }
 
 function PendingProposalCard({
   proposal,
+  userLookup,
   onSelect,
   onAccept,
   onReject,
 }: {
   proposal: ChangeProposalWithConflicts;
+  userLookup: Map<UserId, string>;
   onSelect: () => void;
   onAccept: () => void;
   onReject: () => void;
 }) {
+  const authorEmail = userLookup.get(proposal.createdBy) ?? 'Unknown user';
+
   return (
     <PMBox
       borderRadius="md"
@@ -293,9 +330,14 @@ function PendingProposalCard({
       onClick={onSelect}
     >
       <PMHStack gap={2} justify="space-between" align="center">
-        <PMText fontSize="sm" fontWeight="medium" flex={1}>
-          {getChangeProposalFieldLabel(proposal.type)}
-        </PMText>
+        <PMVStack gap={0} flex={1}>
+          <PMText fontSize="sm" fontWeight="medium">
+            {getChangeProposalFieldLabel(proposal.type)}
+          </PMText>
+          <PMText fontSize="xs" color="secondary">
+            {formatRelativeTime(proposal.createdAt)} - {authorEmail}
+          </PMText>
+        </PMVStack>
         <PMHStack gap={1}>
           <PMIconButton
             aria-label="Accept proposal"
@@ -345,6 +387,7 @@ function CollapsiblePoolSection({
       <PMHStack
         gap={1}
         align="center"
+        width="full"
         cursor="pointer"
         onClick={onToggle}
         role="button"
@@ -370,11 +413,15 @@ function CollapsiblePoolSection({
 
 function PoolProposalCard({
   proposal,
+  userLookup,
   onUndo,
 }: {
   proposal: ChangeProposalWithConflicts;
+  userLookup: Map<UserId, string>;
   onUndo: () => void;
 }) {
+  const authorEmail = userLookup.get(proposal.createdBy) ?? 'Unknown user';
+
   return (
     <PMBox
       borderRadius="md"
@@ -384,9 +431,14 @@ function PoolProposalCard({
       width="full"
     >
       <PMHStack gap={2} justify="space-between" align="center">
-        <PMText fontSize="sm" color="secondary">
-          {getChangeProposalFieldLabel(proposal.type)}
-        </PMText>
+        <PMVStack gap={0} flex={1}>
+          <PMText fontSize="sm" fontWeight="medium">
+            {getChangeProposalFieldLabel(proposal.type)}
+          </PMText>
+          <PMText fontSize="xs" color="secondary">
+            {formatRelativeTime(proposal.createdAt)} - {authorEmail}
+          </PMText>
+        </PMVStack>
         <PMIconButton
           aria-label="Undo"
           size="xs"

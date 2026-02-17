@@ -12,12 +12,15 @@ import {
 } from '@packmind/ui';
 import {
   ChangeProposalId,
+  ChangeProposalType,
   OrganizationId,
   Recipe,
   RecipeId,
+  ScalarUpdatePayload,
   SpaceId,
   UserId,
 } from '@packmind/types';
+import { diffWords } from 'diff';
 import { useAuthContext } from '../../src/domain/accounts/hooks/useAuthContext';
 import { useCurrentSpace } from '../../src/domain/spaces/hooks/useCurrentSpace';
 import { useGetRecipeByIdQuery } from '../../src/domain/recipes/api/queries/RecipesQueries';
@@ -35,42 +38,67 @@ import {
 } from '../../src/domain/change-proposals/api/queryKeys';
 import { useUserLookup } from '../../src/domain/change-proposals/hooks/useUserLookup';
 import { ChangeProposalsChangesList } from '../../src/domain/change-proposals/components/ChangeProposals/ChangeProposalsChangesList';
-import { InlineDiffContent } from '../../src/domain/change-proposals/components/InlineDiffContent';
-import { getChangeProposalFieldLabel } from '../../src/domain/change-proposals/utils/changeProposalHelpers';
+import {
+  getChangeProposalFieldLabel,
+  getStatusBadgeProps,
+} from '../../src/domain/change-proposals/utils/changeProposalHelpers';
+import { formatRelativeTime } from '../../src/domain/change-proposals/utils/formatRelativeTime';
 import { ChangeProposalWithConflicts } from '../../src/domain/change-proposals/types';
-import { LuTriangleAlert } from 'react-icons/lu';
+import { LuCheck, LuX } from 'react-icons/lu';
 import { GET_RECIPE_BY_ID_KEY } from '../../src/domain/recipes/api/queryKeys';
 
-function formatDate(date: Date): string {
-  return new Intl.DateTimeFormat('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-  }).format(new Date(date));
+function renderDiffText(oldValue: string, newValue: string) {
+  const changes = diffWords(oldValue, newValue);
+  return changes.map((change, i) => {
+    if (change.added) {
+      return (
+        <PMText
+          key={i}
+          as="span"
+          bg="green.subtle"
+          paddingX={0.5}
+          borderRadius="sm"
+        >
+          {change.value}
+        </PMText>
+      );
+    }
+    if (change.removed) {
+      return (
+        <PMText
+          key={i}
+          as="span"
+          bg="red.subtle"
+          textDecoration="line-through"
+          paddingX={0.5}
+          borderRadius="sm"
+        >
+          {change.value}
+        </PMText>
+      );
+    }
+    return (
+      <PMText key={i} as="span">
+        {change.value}
+      </PMText>
+    );
+  });
 }
 
 function MiddlePanelContent({
   selectedRecipe,
   selectedRecipeProposals,
   reviewingProposalId,
-  acceptedProposalIds,
-  rejectedProposalIds,
   userLookup,
   onPoolAccept,
   onPoolReject,
-  onUndoPool,
-  onReviewProposal,
 }: Readonly<{
   selectedRecipe: Recipe | undefined;
   selectedRecipeProposals: ChangeProposalWithConflicts[];
   reviewingProposalId: ChangeProposalId | null;
-  acceptedProposalIds: Set<ChangeProposalId>;
-  rejectedProposalIds: Set<ChangeProposalId>;
   userLookup: Map<UserId, string>;
   onPoolAccept: (proposalId: ChangeProposalId) => void;
   onPoolReject: (proposalId: ChangeProposalId) => void;
-  onUndoPool: (proposalId: ChangeProposalId) => void;
-  onReviewProposal: (proposalId: ChangeProposalId) => void;
 }>) {
   const reviewingProposal = reviewingProposalId
     ? (selectedRecipeProposals.find((p) => p.id === reviewingProposalId) ??
@@ -78,50 +106,90 @@ function MiddlePanelContent({
     : null;
 
   if (reviewingProposal) {
+    const statusBadge = getStatusBadgeProps(reviewingProposal.status);
+    const payload = reviewingProposal.payload as ScalarUpdatePayload;
+
+    const isNameDiff =
+      reviewingProposal.type === ChangeProposalType.updateCommandName;
+    const isDescriptionDiff =
+      reviewingProposal.type === ChangeProposalType.updateCommandDescription;
+
     return (
       <PMVStack gap={4} align="stretch">
+        {/* Header card */}
         <PMBox
           borderRadius="md"
           border="1px solid"
           borderColor="border.primary"
           p={4}
         >
-          <PMVStack gap={2}>
-            <PMHStack gap={2} justify="space-between" align="start">
-              <PMVStack gap={1}>
-                <PMText fontSize="lg" fontWeight="semibold">
-                  {getChangeProposalFieldLabel(reviewingProposal.type)}
-                </PMText>
-                <PMHStack gap={4}>
-                  <PMText fontSize="sm" color="secondary">
-                    By{' '}
-                    {userLookup.get(reviewingProposal.createdBy) ??
-                      'Unknown user'}
-                  </PMText>
-                  <PMText fontSize="sm" color="secondary">
-                    {formatDate(reviewingProposal.createdAt)}
-                  </PMText>
-                </PMHStack>
-              </PMVStack>
-              {reviewingProposal.conflictsWith.length > 0 && (
-                <PMBadge colorPalette="orange" size="sm">
-                  <LuTriangleAlert size={12} />
-                  Outdated
-                </PMBadge>
-              )}
+          <PMHStack justify="space-between" align="center">
+            <PMHStack gap={3} align="center">
+              <PMBadge colorPalette={statusBadge.colorPalette} size="sm">
+                {statusBadge.label}
+              </PMBadge>
+              <PMText fontSize="sm" color="secondary">
+                {formatRelativeTime(reviewingProposal.createdAt)}
+              </PMText>
             </PMHStack>
-          </PMVStack>
+            <PMHStack gap={2}>
+              <PMButton
+                size="sm"
+                colorPalette="green"
+                onClick={() => onPoolAccept(reviewingProposal.id)}
+              >
+                <LuCheck />
+                Accept
+              </PMButton>
+              <PMButton
+                size="sm"
+                variant="outline"
+                colorPalette="red"
+                onClick={() => onPoolReject(reviewingProposal.id)}
+              >
+                <LuX />
+                Dismiss
+              </PMButton>
+            </PMHStack>
+          </PMHStack>
         </PMBox>
-        <InlineDiffContent
-          proposal={reviewingProposal}
-          isReviewing={true}
-          isAccepted={acceptedProposalIds.has(reviewingProposal.id)}
-          isRejected={rejectedProposalIds.has(reviewingProposal.id)}
-          onPoolAccept={() => onPoolAccept(reviewingProposal.id)}
-          onPoolReject={() => onPoolReject(reviewingProposal.id)}
-          onUndoPool={() => onUndoPool(reviewingProposal.id)}
-          onReviewProposal={() => onReviewProposal(reviewingProposal.id)}
-        />
+
+        {/* Proposal metadata */}
+        <PMVStack gap={1} align="stretch">
+          <PMText fontWeight="bold">
+            {getChangeProposalFieldLabel(reviewingProposal.type)}
+          </PMText>
+          <PMHStack gap={1}>
+            <PMText fontWeight="bold" fontSize="sm">
+              From
+            </PMText>
+            <PMText fontSize="sm">
+              {userLookup.get(reviewingProposal.createdBy) ?? 'Unknown user'}
+            </PMText>
+          </PMHStack>
+          <PMHStack gap={1}>
+            <PMText fontWeight="bold" fontSize="sm">
+              Base version
+            </PMText>
+            <PMText fontSize="sm">{reviewingProposal.artefactVersion}</PMText>
+          </PMHStack>
+        </PMVStack>
+
+        {/* Full artefact content with inline diff */}
+        {selectedRecipe && (
+          <PMVStack gap={2} align="stretch">
+            <PMText fontSize="lg" fontWeight="semibold">
+              {isNameDiff
+                ? renderDiffText(payload.oldValue, payload.newValue)
+                : selectedRecipe.name}
+            </PMText>
+            <PMText whiteSpace="pre-wrap">
+              {isDescriptionDiff
+                ? renderDiffText(payload.oldValue, payload.newValue)
+                : selectedRecipe.content}
+            </PMText>
+          </PMVStack>
+        )}
       </PMVStack>
     );
   }
@@ -307,13 +375,9 @@ function CommandReviewDetail({ artefactId }: Readonly<{ artefactId: string }>) {
             selectedRecipe={selectedRecipe}
             selectedRecipeProposals={selectedRecipeProposals}
             reviewingProposalId={reviewingProposalId}
-            acceptedProposalIds={acceptedProposalIds}
-            rejectedProposalIds={rejectedProposalIds}
             userLookup={userLookup}
             onPoolAccept={handlePoolAccept}
             onPoolReject={handlePoolReject}
-            onUndoPool={handleUndoPool}
-            onReviewProposal={handleReviewProposal}
           />
         )}
       </PMBox>
