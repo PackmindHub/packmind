@@ -1,4 +1,4 @@
-import { ChangeProposalType } from '@packmind/types';
+import { ChangeProposalStatus, ChangeProposalType } from '@packmind/types';
 
 const changeProposalFieldLabels: Record<ChangeProposalType, string> = {
   [ChangeProposalType.updateCommandName]: 'Name',
@@ -23,4 +23,18 @@ const changeProposalFieldLabels: Record<ChangeProposalType, string> = {
 
 export function getChangeProposalFieldLabel(type: ChangeProposalType): string {
   return changeProposalFieldLabels[type];
+}
+
+export function getStatusBadgeProps(status: ChangeProposalStatus): {
+  label: string;
+  colorPalette: string;
+} {
+  switch (status) {
+    case ChangeProposalStatus.pending:
+      return { label: 'Pending', colorPalette: 'green' };
+    case ChangeProposalStatus.applied:
+      return { label: 'Accepted', colorPalette: 'green' };
+    case ChangeProposalStatus.rejected:
+      return { label: 'Dismissed', colorPalette: 'red' };
+  }
 }
