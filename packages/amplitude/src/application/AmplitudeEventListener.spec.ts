@@ -12,6 +12,7 @@ import {
   LinterCalledEvent,
   SkillCreatedEvent,
   OrganizationCreatedEvent,
+  UserSignedInEvent,
   createUserId,
   createOrganizationId,
   createRecipeId,
@@ -333,6 +334,61 @@ describe('AmplitudeEventListener', () => {
           fileCount: 3,
         },
       );
+    });
+  });
+
+  describe('UserSignedInEvent', () => {
+    it('tracks user_signed_in event with correct payload', async () => {
+      const event = new UserSignedInEvent({
+        userId: createUserId('user-123'),
+        organizationId: createOrganizationId('org-456'),
+        email: 'test@example.com',
+        authType: 'social',
+        socialProvider: 'google',
+        source: 'ui',
+      });
+
+      eventEmitterService.emit(event);
+
+      await flushPromises();
+
+      expect(mockAdapter.trackEvent).toHaveBeenCalledWith(
+        'user-123',
+        'org-456',
+        'user_signed_in',
+        {
+          authType: 'social',
+          socialProvider: 'google',
+          source: 'ui',
+        },
+      );
+    });
+
+    describe('when signing in with password', () => {
+      it('tracks user_signed_in event with empty socialProvider', async () => {
+        const event = new UserSignedInEvent({
+          userId: createUserId('user-123'),
+          organizationId: createOrganizationId('org-456'),
+          email: 'test@example.com',
+          authType: 'password',
+          source: 'ui',
+        });
+
+        eventEmitterService.emit(event);
+
+        await flushPromises();
+
+        expect(mockAdapter.trackEvent).toHaveBeenCalledWith(
+          'user-123',
+          'org-456',
+          'user_signed_in',
+          {
+            authType: 'password',
+            socialProvider: '',
+            source: 'ui',
+          },
+        );
+      });
     });
   });
 

@@ -18,6 +18,7 @@ import {
   RuleUpdatedEvent,
   UserEvent,
   UserSignedUpEvent,
+  UserSignedInEvent,
   OrganizationCreatedEvent,
   StandardSampleSelectedEvent,
 } from '@packmind/types';
@@ -53,6 +54,7 @@ export class AmplitudeEventListener extends PackmindListener<EventTrackingAdapte
     this.subscribe(SkillCreatedEvent, this.onSkillCreated);
     this.subscribe(SkillUpdatedEvent, this.onSkillUpdated);
     this.subscribe(UserSignedUpEvent, this.onUserSignedUpEvent);
+    this.subscribe(UserSignedInEvent, this.onUserSignedInEvent);
     this.subscribe(OrganizationCreatedEvent, this.onOrganizationCreatedEvent);
   }
 
@@ -79,6 +81,15 @@ export class AmplitudeEventListener extends PackmindListener<EventTrackingAdapte
       socialProvider: payload.socialProvider ?? '',
     }));
   }
+
+  private onUserSignedInEvent = async (
+    event: UserSignedInEvent,
+  ): Promise<void> => {
+    return this.emitAmplitudeEvent(event, 'user_signed_in', (payload) => ({
+      authType: payload.authType,
+      socialProvider: payload.socialProvider ?? '',
+    }));
+  };
 
   private onStandardCreated = async (
     event: StandardCreatedEvent,
