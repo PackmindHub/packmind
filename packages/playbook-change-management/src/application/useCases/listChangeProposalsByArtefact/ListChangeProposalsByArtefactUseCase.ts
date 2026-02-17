@@ -1,9 +1,6 @@
 import { PackmindLogger } from '@packmind/logger';
 import { AbstractMemberUseCase, MemberContext } from '@packmind/node-utils';
 import {
-  ChangeProposal,
-  ChangeProposalId,
-  ChangeProposalType,
   IAccountsPort,
   IRecipesPort,
   ISkillsPort,
@@ -16,6 +13,7 @@ import {
   StandardId,
 } from '@packmind/types';
 import { ChangeProposalService } from '../../services/ChangeProposalService';
+import { ConflictDetectionService } from '../../services/ConflictDetectionService';
 import { validateArtefactInSpace } from '../../services/validateArtefactInSpace';
 import { validateSpaceOwnership } from '../../services/validateSpaceOwnership';
 
@@ -34,6 +32,7 @@ export class ListChangeProposalsByArtefactUseCase<
     private readonly recipesPort: IRecipesPort,
     private readonly skillsPort: ISkillsPort,
     private readonly service: ChangeProposalService,
+    private readonly conflictDetectionService: ConflictDetectionService,
     logger: PackmindLogger = new PackmindLogger(origin),
   ) {
     super(accountsPort, logger);
@@ -61,12 +60,8 @@ export class ListChangeProposalsByArtefactUseCase<
       command.artefactId,
     );
 
-    const changeProposals = proposals.map(
-      (proposal: ChangeProposal<ChangeProposalType>) => ({
-        ...proposal,
-        conflictsWith: [] as ChangeProposalId[],
-      }),
-    );
+    const changeProposals =
+      this.conflictDetectionService.detectConflicts(proposals);
 
     return { changeProposals };
   }

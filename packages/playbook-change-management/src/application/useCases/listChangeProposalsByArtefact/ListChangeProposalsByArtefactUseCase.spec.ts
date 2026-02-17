@@ -1,6 +1,7 @@
 import { stubLogger } from '@packmind/test-utils';
 import {
   ChangeProposalType,
+  createChangeProposalId,
   createOrganizationId,
   createRecipeId,
   createSkillId,
@@ -29,6 +30,7 @@ import { ArtefactNotInSpaceError } from '../../../domain/errors/ArtefactNotInSpa
 import { SpaceNotFoundError } from '../../../domain/errors/SpaceNotFoundError';
 import { SpaceOwnershipMismatchError } from '../../../domain/errors/SpaceOwnershipMismatchError';
 import { ChangeProposalService } from '../../services/ChangeProposalService';
+import { ConflictDetectionService } from '../../services/ConflictDetectionService';
 import { ListChangeProposalsByArtefactUseCase } from './ListChangeProposalsByArtefactUseCase';
 
 describe('ListChangeProposalsByArtefactUseCase', () => {
@@ -58,6 +60,7 @@ describe('ListChangeProposalsByArtefactUseCase', () => {
   let recipesPort: jest.Mocked<IRecipesPort>;
   let skillsPort: jest.Mocked<ISkillsPort>;
   let service: jest.Mocked<ChangeProposalService>;
+  let conflictDetectionService: jest.Mocked<ConflictDetectionService>;
 
   const buildCommand = (
     overrides?: Partial<
@@ -97,6 +100,10 @@ describe('ListChangeProposalsByArtefactUseCase', () => {
       findProposalsByArtefact: jest.fn(),
     } as unknown as jest.Mocked<ChangeProposalService>;
 
+    conflictDetectionService = {
+      detectConflicts: jest.fn(),
+    } as unknown as jest.Mocked<ConflictDetectionService>;
+
     useCase = new ListChangeProposalsByArtefactUseCase(
       accountsPort,
       spacesPort,
@@ -104,6 +111,7 @@ describe('ListChangeProposalsByArtefactUseCase', () => {
       recipesPort,
       skillsPort,
       service,
+      conflictDetectionService,
       stubLogger(),
     );
 
@@ -137,6 +145,9 @@ describe('ListChangeProposalsByArtefactUseCase', () => {
       recipesPort.getRecipeByIdInternal.mockResolvedValue(null);
       skillsPort.getSkill.mockResolvedValue(null);
       service.findProposalsByArtefact.mockResolvedValue(proposals);
+      conflictDetectionService.detectConflicts.mockReturnValue(
+        proposals.map((p) => ({ ...p, conflictsWith: [] })),
+      );
     });
 
     it('returns all proposals', async () => {
@@ -189,6 +200,14 @@ describe('ListChangeProposalsByArtefactUseCase', () => {
         standardId,
       );
     });
+
+    it('calls conflict detection service', async () => {
+      await useCase.execute(command);
+
+      expect(conflictDetectionService.detectConflicts).toHaveBeenCalledWith(
+        proposals,
+      );
+    });
   });
 
   describe('with valid recipe artefact', () => {
@@ -208,6 +227,9 @@ describe('ListChangeProposalsByArtefactUseCase', () => {
       recipesPort.getRecipeByIdInternal.mockResolvedValue(recipe);
       skillsPort.getSkill.mockResolvedValue(null);
       service.findProposalsByArtefact.mockResolvedValue(proposals);
+      conflictDetectionService.detectConflicts.mockReturnValue(
+        proposals.map((p) => ({ ...p, conflictsWith: [] })),
+      );
     });
 
     it('returns recipe proposals', async () => {
@@ -240,6 +262,9 @@ describe('ListChangeProposalsByArtefactUseCase', () => {
       recipesPort.getRecipeByIdInternal.mockResolvedValue(null);
       skillsPort.getSkill.mockResolvedValue(skill);
       service.findProposalsByArtefact.mockResolvedValue(proposals);
+      conflictDetectionService.detectConflicts.mockReturnValue(
+        proposals.map((p) => ({ ...p, conflictsWith: [] })),
+      );
     });
 
     it('returns skill proposals', async () => {
@@ -264,6 +289,7 @@ describe('ListChangeProposalsByArtefactUseCase', () => {
       recipesPort.getRecipeByIdInternal.mockResolvedValue(null);
       skillsPort.getSkill.mockResolvedValue(null);
       service.findProposalsByArtefact.mockResolvedValue([]);
+      conflictDetectionService.detectConflicts.mockReturnValue([]);
     });
 
     it('returns empty proposals array', async () => {
@@ -380,6 +406,221 @@ describe('ListChangeProposalsByArtefactUseCase', () => {
       });
 
       expect(service.findProposalsByArtefact).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('conflict detection', () => {
+    const oldValue = `My command:
+
+It has a description.
+`;
+
+    describe('when multiple updateCommandName proposals exist', () => {
+      const proposals = [
+        changeProposalFactory({
+          id: createChangeProposalId('1'),
+          type: ChangeProposalType.updateCommandName,
+          artefactId: recipeId,
+          spaceId,
+          payload: { oldValue: 'My command', newValue: 'My super command' },
+        }),
+        changeProposalFactory({
+          id: createChangeProposalId('2'),
+          type: ChangeProposalType.updateCommandName,
+          artefactId: recipeId,
+          spaceId,
+          payload: { oldValue: 'My command', newValue: 'My updated command' },
+        }),
+      ];
+
+      const command = buildCommand({ artefactId: recipeId });
+
+      beforeEach(() => {
+        spacesPort.getSpaceById.mockResolvedValue(space);
+        standardsPort.getStandard.mockResolvedValue(null);
+        recipesPort.getRecipeByIdInternal.mockResolvedValue(recipe);
+        skillsPort.getSkill.mockResolvedValue(null);
+        service.findProposalsByArtefact.mockResolvedValue(proposals);
+        conflictDetectionService.detectConflicts.mockImplementation((ps) =>
+          ps.map((p) => ({
+            ...p,
+            conflictsWith: ps
+              .filter((other) => other.id !== p.id)
+              .map((other) => other.id),
+          })),
+        );
+      });
+
+      it('marks first proposal as conflicting with second', async () => {
+        const result = await useCase.execute(command);
+
+        expect(result.changeProposals[0].conflictsWith).toEqual([
+          proposals[1].id,
+        ]);
+      });
+
+      it('marks second proposal as conflicting with first', async () => {
+        const result = await useCase.execute(command);
+
+        expect(result.changeProposals[1].conflictsWith).toEqual([
+          proposals[0].id,
+        ]);
+      });
+    });
+
+    describe('when updateCommandDescription proposals conflict', () => {
+      const proposals = [
+        changeProposalFactory({
+          id: createChangeProposalId('1'),
+          type: ChangeProposalType.updateCommandDescription,
+          artefactId: recipeId,
+          spaceId,
+          payload: {
+            oldValue,
+            newValue: `My updated command:
+
+It has a description.
+`,
+          },
+        }),
+        changeProposalFactory({
+          id: createChangeProposalId('2'),
+          type: ChangeProposalType.updateCommandDescription,
+          artefactId: recipeId,
+          spaceId,
+          payload: {
+            oldValue,
+            newValue: `It has a description.`,
+          },
+        }),
+      ];
+
+      const command = buildCommand({ artefactId: recipeId });
+
+      beforeEach(() => {
+        spacesPort.getSpaceById.mockResolvedValue(space);
+        standardsPort.getStandard.mockResolvedValue(null);
+        recipesPort.getRecipeByIdInternal.mockResolvedValue(recipe);
+        skillsPort.getSkill.mockResolvedValue(null);
+        service.findProposalsByArtefact.mockResolvedValue(proposals);
+        conflictDetectionService.detectConflicts.mockImplementation((ps) =>
+          ps.map((p) => ({
+            ...p,
+            conflictsWith: ps
+              .filter((other) => other.id !== p.id)
+              .map((other) => other.id),
+          })),
+        );
+      });
+
+      it('marks proposals as conflicting', async () => {
+        const result = await useCase.execute(command);
+
+        expect(result.changeProposals[0].conflictsWith).toEqual([
+          proposals[1].id,
+        ]);
+      });
+    });
+
+    describe('when updateCommandDescription proposals do not conflict', () => {
+      const proposal = changeProposalFactory({
+        id: createChangeProposalId('1'),
+        type: ChangeProposalType.updateCommandDescription,
+        artefactId: recipeId,
+        spaceId,
+        payload: {
+          oldValue,
+          newValue: `My command:
+
+It has a description.
+
+And a new line at the end
+`,
+        },
+      });
+
+      const command = buildCommand({ artefactId: recipeId });
+
+      beforeEach(() => {
+        spacesPort.getSpaceById.mockResolvedValue(space);
+        standardsPort.getStandard.mockResolvedValue(null);
+        recipesPort.getRecipeByIdInternal.mockResolvedValue(recipe);
+        skillsPort.getSkill.mockResolvedValue(null);
+        service.findProposalsByArtefact.mockResolvedValue([proposal]);
+        conflictDetectionService.detectConflicts.mockImplementation((ps) =>
+          ps.map((p) => ({ ...p, conflictsWith: [] })),
+        );
+      });
+
+      it('marks proposal as not conflicting', async () => {
+        const result = await useCase.execute(command);
+
+        expect(result.changeProposals[0].conflictsWith).toEqual([]);
+      });
+    });
+
+    describe('when mixed proposal types exist', () => {
+      const proposals = [
+        changeProposalFactory({
+          id: createChangeProposalId('1'),
+          type: ChangeProposalType.updateCommandName,
+          artefactId: recipeId,
+          spaceId,
+          payload: { oldValue: 'My command', newValue: 'My super command' },
+        }),
+        changeProposalFactory({
+          id: createChangeProposalId('2'),
+          type: ChangeProposalType.updateCommandName,
+          artefactId: recipeId,
+          spaceId,
+          payload: { oldValue: 'My command', newValue: 'My updated command' },
+        }),
+        changeProposalFactory({
+          id: createChangeProposalId('3'),
+          type: ChangeProposalType.updateCommandDescription,
+          artefactId: recipeId,
+          spaceId,
+          payload: {
+            oldValue,
+            newValue: `My command:
+
+It has a description.
+
+And a new line at the end
+`,
+          },
+        }),
+      ];
+
+      const command = buildCommand({ artefactId: recipeId });
+
+      beforeEach(() => {
+        spacesPort.getSpaceById.mockResolvedValue(space);
+        standardsPort.getStandard.mockResolvedValue(null);
+        recipesPort.getRecipeByIdInternal.mockResolvedValue(recipe);
+        skillsPort.getSkill.mockResolvedValue(null);
+        service.findProposalsByArtefact.mockResolvedValue(proposals);
+        conflictDetectionService.detectConflicts.mockImplementation((ps) =>
+          ps.map((p, index) => ({
+            ...p,
+            conflictsWith: index < 2 ? [ps[index === 0 ? 1 : 0].id] : [],
+          })),
+        );
+      });
+
+      it('marks name proposals as conflicting with each other', async () => {
+        const result = await useCase.execute(command);
+
+        expect(result.changeProposals[0].conflictsWith).toEqual([
+          proposals[1].id,
+        ]);
+      });
+
+      it('marks description proposal as not conflicting', async () => {
+        const result = await useCase.execute(command);
+
+        expect(result.changeProposals[2].conflictsWith).toEqual([]);
+      });
     });
   });
 });

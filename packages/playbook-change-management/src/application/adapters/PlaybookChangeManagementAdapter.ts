@@ -203,6 +203,8 @@ export class PlaybookChangeManagementAdapter
     }
 
     const changeProposalService = this.services.getChangeProposalService();
+    const conflictDetectionService =
+      this.services.getConflictDetectionService();
 
     const validators: IChangeProposalValidator[] = [
       new CommandChangeProposalValidator(recipesPort),
@@ -262,6 +264,7 @@ export class PlaybookChangeManagementAdapter
         recipesPort,
         skillsPort,
         changeProposalService,
+        conflictDetectionService,
       );
 
     this._listChangeProposalsBySpace = new ListChangeProposalsBySpaceUseCase(
