@@ -4,7 +4,7 @@ import {
   RecipeId,
   ScalarUpdatePayload,
 } from '@packmind/types';
-import { getChangeProposalFieldLabel } from '../utils/changeProposalHelpers';
+import { getChangeProposalFieldLabel } from '../../change-proposals/utils/changeProposalHelpers';
 import { formatDate } from '../../../shared/utils/dateUtils';
 import { ChangeProposalActionButtons } from './ChangeProposalActionButtons';
 
