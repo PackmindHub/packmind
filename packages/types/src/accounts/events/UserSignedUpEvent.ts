@@ -3,7 +3,7 @@ import { UserEvent } from '../../events';
 export interface UserSignedUpPayload {
   email: string;
   quickStart: boolean;
-  authType: string;
+  method: string;
   socialProvider?: string;
 }
 

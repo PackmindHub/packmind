@@ -179,7 +179,7 @@ export class SignUpWithOrganizationUseCase implements ISignUpWithOrganizationUse
         email: command.email,
         quickStart: false,
         source: 'ui',
-        authType: command.authType,
+        method: command.authType,
         socialProvider: command.socialProvider ?? '',
       }),
     );
