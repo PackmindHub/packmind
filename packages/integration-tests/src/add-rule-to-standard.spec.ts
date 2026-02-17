@@ -40,9 +40,9 @@ describe('Add rule to standard integration', () => {
     const signUpResult = await testApp.accountsHexa
       .getAdapter()
       .signUpWithOrganization({
-        organizationName: 'test organization',
         email: 'toto@packmind.com',
         password: 's3cr3t!@',
+        authType: 'password',
       });
     user = signUpResult.user;
     organization = signUpResult.organization;
@@ -100,9 +100,9 @@ describe('Add rule to standard integration', () => {
       const otherSignUpResult = await testApp.accountsHexa
         .getAdapter()
         .signUpWithOrganization({
-          organizationName: 'other organization',
           email: 'other@packmind.com',
           password: 's3cr3t!@',
+          authType: 'password',
         });
       const otherUser = otherSignUpResult.user;
 
