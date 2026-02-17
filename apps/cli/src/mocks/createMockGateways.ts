@@ -42,8 +42,7 @@ export function createMockChangeProposalGateway(
   overrides?: Partial<jest.Mocked<IChangeProposalGateway>>,
 ): jest.Mocked<IChangeProposalGateway> {
   return {
-    createChangeProposal: jest.fn(),
-    batchCreateChangeProposals: jest.fn(),
+    batchCreate: jest.fn(),
     ...overrides,
   };
 }

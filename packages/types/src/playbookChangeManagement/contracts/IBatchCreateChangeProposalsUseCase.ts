@@ -1,14 +1,12 @@
 import { IUseCase, PackmindCommand } from '../../UseCase';
-import { ChangeProposalCaptureMode } from '../ChangeProposalCaptureMode';
 import { ChangeProposalType } from '../ChangeProposalType';
 import { SpaceId } from '../../spaces';
+import { CreateChangeProposalCommand } from './ICreateChangeProposalUseCase';
 
-export type BatchCreateChangeProposalItem = {
-  type: ChangeProposalType;
-  artefactId: string;
-  payload: unknown;
-  captureMode: ChangeProposalCaptureMode;
-};
+export type BatchCreateChangeProposalItem = Omit<
+  CreateChangeProposalCommand<ChangeProposalType>,
+  keyof PackmindCommand | 'spaceId'
+>;
 
 export type BatchCreateChangeProposalsCommand = PackmindCommand & {
   spaceId: SpaceId;
