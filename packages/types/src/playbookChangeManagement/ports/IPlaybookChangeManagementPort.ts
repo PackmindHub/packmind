@@ -3,6 +3,10 @@ import {
   ApplyCommandChangeProposalResponse,
 } from '../contracts/IApplyCommandChangeProposalUseCase';
 import {
+  ApplyChangeProposalsCommand,
+  ApplyChangeProposalsResponse,
+} from '../contracts/IApplyChangeProposals';
+import {
   CreateChangeProposalCommand,
   CreateChangeProposalResponse,
 } from '../contracts/ICreateChangeProposalUseCase';
@@ -50,6 +54,10 @@ export interface IPlaybookChangeManagementPort {
   applyCommandChangeProposal(
     command: ApplyCommandChangeProposalCommand,
   ): Promise<ApplyCommandChangeProposalResponse>;
+
+  applyChangeProposals<T extends StandardId | RecipeId | SkillId>(
+    command: ApplyChangeProposalsCommand<T>,
+  ): Promise<ApplyChangeProposalsResponse>;
 
   createChangeProposal<T extends ChangeProposalType>(
     command: CreateChangeProposalCommand<T>,

@@ -1,3 +1,4 @@
+export * from './applyChangeProposals';
 export * from './batchApplyChangeProposals';
 export * from './batchCreateChangeProposals';
 export * from './createChangeProposal';
