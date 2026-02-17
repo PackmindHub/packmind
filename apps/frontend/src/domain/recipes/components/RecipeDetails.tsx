@@ -29,7 +29,7 @@ import {
   useGetRecipeByIdQuery,
   useDeleteRecipeMutation,
 } from '../api/queries/RecipesQueries';
-import { RecipeVersionsListDrawer } from './RecipeVersionsListDrawer';
+
 import { RecipeDistributionsList } from '../../deployments/components/RecipeDistributionsList/RecipeDistributionsList';
 import { useListRecipeDistributionsQuery } from '../../deployments/api/queries/DeploymentsQueries';
 import { useGetChangeProposalsQuery } from '../api/queries/ChangeProposalsQueries';
@@ -45,6 +45,7 @@ import { useAuthContext } from '../../accounts/hooks/useAuthContext';
 import { useNavigation } from '../../../shared/hooks/useNavigation';
 import { ProposeChangeModal } from './ProposeChangeModal';
 import { ProposeDescriptionChangeModal } from './ProposeDescriptionChangeModal';
+import { RecipeVersionHistoryHeader } from './RecipeVersionHistoryHeader';
 
 interface RecipeDetailsProps {
   id: RecipeId;
@@ -156,6 +157,7 @@ export const RecipeDetails = ({ id, orgSlug }: RecipeDetailsProps) => {
   return (
     <PMPage
       title={recipe.name}
+      breadcrumbComponent={<RecipeVersionHistoryHeader recipe={recipe} />}
       titleAction={
         <PMFeatureFlag
           featureKeys={[CHANGE_PROPOSALS_FEATURE_KEY]}
@@ -254,15 +256,6 @@ export const RecipeDetails = ({ id, orgSlug }: RecipeDetailsProps) => {
               label: 'Slug',
               value: recipe.slug,
             },
-            {
-              label: 'Version',
-              value: (
-                <PMHStack>
-                  {recipe.version}
-                  <RecipeVersionsListDrawer recipeId={recipe.id} />
-                </PMHStack>
-              ),
-            },
           ]}
         />
 
@@ -273,7 +266,7 @@ export const RecipeDetails = ({ id, orgSlug }: RecipeDetailsProps) => {
               value: 'instructions',
               triggerLabel: 'Instructions',
               content: (
-                <PMPageSection title="Instructions">
+                <>
                   <PMFeatureFlag
                     featureKeys={[CHANGE_PROPOSALS_FEATURE_KEY]}
                     featureDomainMap={DEFAULT_FEATURE_DOMAIN_MAP}
@@ -297,7 +290,7 @@ export const RecipeDetails = ({ id, orgSlug }: RecipeDetailsProps) => {
                       <MarkdownEditor defaultValue={recipe.content} readOnly />
                     </MarkdownEditorProvider>
                   </PMBox>
-                </PMPageSection>
+                </>
               ),
             },
             {
