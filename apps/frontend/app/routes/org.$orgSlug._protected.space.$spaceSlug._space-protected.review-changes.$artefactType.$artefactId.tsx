@@ -25,7 +25,10 @@ import {
   useBatchApplyChangeProposalsMutation,
   useBatchRejectChangeProposalsMutation,
 } from '../../src/domain/recipes/api/queries/ChangeProposalsQueries';
-import { useListChangeProposalsByRecipeQuery } from '../../src/domain/change-proposals/api/queries/ChangeProposalsQueries';
+import {
+  useApplyRecipeChangeProposalsMutation,
+  useListChangeProposalsByRecipeQuery,
+} from '../../src/domain/change-proposals/api/queries/ChangeProposalsQueries';
 import {
   GET_CHANGE_PROPOSALS_BY_RECIPE_KEY,
   GET_GROUPED_CHANGE_PROPOSALS_KEY,
@@ -36,6 +39,7 @@ import { InlineDiffContent } from '../../src/domain/change-proposals/components/
 import { getChangeProposalFieldLabel } from '../../src/domain/change-proposals/utils/changeProposalHelpers';
 import { ChangeProposalWithConflicts } from '../../src/domain/change-proposals/types';
 import { LuTriangleAlert } from 'react-icons/lu';
+import { GET_RECIPE_BY_ID_KEY } from '../../src/domain/recipes/api/queryKeys';
 
 function formatDate(date: Date): string {
   return new Intl.DateTimeFormat('en-US', {
@@ -165,8 +169,8 @@ function CommandReviewDetail({ artefactId }: Readonly<{ artefactId: string }>) {
     Set<ChangeProposalId>
   >(new Set());
 
-  const batchApplyMutation = useBatchApplyChangeProposalsMutation();
-  const batchRejectMutation = useBatchRejectChangeProposalsMutation();
+  const applyRecipeChangeProposalsMutation =
+    useApplyRecipeChangeProposalsMutation();
 
   const { data: selectedRecipeProposalsData, isLoading: isLoadingProposals } =
     useListChangeProposalsByRecipeQuery(recipeId);
@@ -224,45 +228,14 @@ function CommandReviewDetail({ artefactId }: Readonly<{ artefactId: string }>) {
     if (acceptedProposalIds.size === 0 && rejectedProposalIds.size === 0)
       return;
 
-    const acceptProposals = selectedRecipeProposals
-      .filter((p) => acceptedProposalIds.has(p.id))
-      .map((p) => ({
-        changeProposalId: p.id,
-        recipeId: p.artefactId as RecipeId,
-        force: false,
-      }));
-
-    const rejectProposals = selectedRecipeProposals
-      .filter((p) => rejectedProposalIds.has(p.id))
-      .map((p) => ({
-        changeProposalId: p.id,
-        recipeId: p.artefactId as RecipeId,
-      }));
-
-    const mutations: Promise<unknown>[] = [];
-
-    if (acceptProposals.length > 0) {
-      mutations.push(
-        batchApplyMutation.mutateAsync({
-          organizationId: organizationId as OrganizationId,
-          spaceId: spaceId as SpaceId,
-          proposals: acceptProposals,
-        }),
-      );
-    }
-
-    if (rejectProposals.length > 0) {
-      mutations.push(
-        batchRejectMutation.mutateAsync({
-          organizationId: organizationId as OrganizationId,
-          spaceId: spaceId as SpaceId,
-          proposals: rejectProposals,
-        }),
-      );
-    }
-
     try {
-      await Promise.all(mutations);
+      await applyRecipeChangeProposalsMutation.mutateAsync({
+        organizationId: organizationId as OrganizationId,
+        spaceId: spaceId as SpaceId,
+        artefactId: recipeId,
+        accepted: Array.from(acceptedProposalIds),
+        rejected: Array.from(rejectedProposalIds),
+      });
 
       await Promise.all([
         queryClient.invalidateQueries({
@@ -270,6 +243,9 @@ function CommandReviewDetail({ artefactId }: Readonly<{ artefactId: string }>) {
         }),
         queryClient.invalidateQueries({
           queryKey: [...GET_CHANGE_PROPOSALS_BY_RECIPE_KEY, recipeId],
+        }),
+        queryClient.invalidateQueries({
+          queryKey: [GET_RECIPE_BY_ID_KEY, recipeId],
         }),
       ]);
 
@@ -285,13 +261,11 @@ function CommandReviewDetail({ artefactId }: Readonly<{ artefactId: string }>) {
     acceptedProposalIds,
     rejectedProposalIds,
     selectedRecipeProposals,
-    batchApplyMutation,
-    batchRejectMutation,
+    applyRecipeChangeProposalsMutation,
     queryClient,
   ]);
 
-  const isMutating =
-    batchApplyMutation.isPending || batchRejectMutation.isPending;
+  const isMutating = applyRecipeChangeProposalsMutation.isPending;
 
   const hasPooledDecisions =
     acceptedProposalIds.size > 0 || rejectedProposalIds.size > 0;
