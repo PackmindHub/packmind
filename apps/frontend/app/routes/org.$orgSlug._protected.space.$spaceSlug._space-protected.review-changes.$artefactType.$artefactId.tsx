@@ -1,12 +1,22 @@
 import { useParams } from 'react-router';
 import { useState, useCallback } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { PMBox, PMHStack, PMText, PMSpinner, PMButton } from '@packmind/ui';
+import {
+  PMBadge,
+  PMBox,
+  PMHStack,
+  PMText,
+  PMSpinner,
+  PMButton,
+  PMVStack,
+} from '@packmind/ui';
 import {
   ChangeProposalId,
   OrganizationId,
+  Recipe,
   RecipeId,
   SpaceId,
+  UserId,
 } from '@packmind/types';
 import { useAuthContext } from '../../src/domain/accounts/hooks/useAuthContext';
 import { useCurrentSpace } from '../../src/domain/spaces/hooks/useCurrentSpace';
@@ -21,8 +31,121 @@ import {
   GET_GROUPED_CHANGE_PROPOSALS_KEY,
 } from '../../src/domain/change-proposals/api/queryKeys';
 import { useUserLookup } from '../../src/domain/change-proposals/hooks/useUserLookup';
-import { ChangeProposalsPreviewPanel } from '../../src/domain/change-proposals/components/ChangeProposals/ChangeProposalsPreviewPanel';
 import { ChangeProposalsChangesList } from '../../src/domain/change-proposals/components/ChangeProposals/ChangeProposalsChangesList';
+import { InlineDiffContent } from '../../src/domain/change-proposals/components/InlineDiffContent';
+import { getChangeProposalFieldLabel } from '../../src/domain/change-proposals/utils/changeProposalHelpers';
+import { ChangeProposalWithConflicts } from '../../src/domain/change-proposals/types';
+import { LuTriangleAlert } from 'react-icons/lu';
+
+function formatDate(date: Date): string {
+  return new Intl.DateTimeFormat('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  }).format(new Date(date));
+}
+
+function MiddlePanelContent({
+  selectedRecipe,
+  selectedRecipeProposals,
+  reviewingProposalId,
+  acceptedProposalIds,
+  rejectedProposalIds,
+  userLookup,
+  onPoolAccept,
+  onPoolReject,
+  onUndoPool,
+  onReviewProposal,
+}: Readonly<{
+  selectedRecipe: Recipe | undefined;
+  selectedRecipeProposals: ChangeProposalWithConflicts[];
+  reviewingProposalId: ChangeProposalId | null;
+  acceptedProposalIds: Set<ChangeProposalId>;
+  rejectedProposalIds: Set<ChangeProposalId>;
+  userLookup: Map<UserId, string>;
+  onPoolAccept: (proposalId: ChangeProposalId) => void;
+  onPoolReject: (proposalId: ChangeProposalId) => void;
+  onUndoPool: (proposalId: ChangeProposalId) => void;
+  onReviewProposal: (proposalId: ChangeProposalId) => void;
+}>) {
+  const reviewingProposal = reviewingProposalId
+    ? (selectedRecipeProposals.find((p) => p.id === reviewingProposalId) ??
+      null)
+    : null;
+
+  if (reviewingProposal) {
+    return (
+      <PMVStack gap={4} align="stretch">
+        <PMBox
+          borderRadius="md"
+          border="1px solid"
+          borderColor="border.primary"
+          p={4}
+        >
+          <PMVStack gap={2}>
+            <PMHStack gap={2} justify="space-between" align="start">
+              <PMVStack gap={1}>
+                <PMText fontSize="lg" fontWeight="semibold">
+                  {getChangeProposalFieldLabel(reviewingProposal.type)}
+                </PMText>
+                <PMHStack gap={4}>
+                  <PMText fontSize="sm" color="secondary">
+                    By{' '}
+                    {userLookup.get(reviewingProposal.createdBy) ??
+                      'Unknown user'}
+                  </PMText>
+                  <PMText fontSize="sm" color="secondary">
+                    {formatDate(reviewingProposal.createdAt)}
+                  </PMText>
+                </PMHStack>
+              </PMVStack>
+              {reviewingProposal.conflictsWith.length > 0 && (
+                <PMBadge colorPalette="orange" size="sm">
+                  <LuTriangleAlert size={12} />
+                  Outdated
+                </PMBadge>
+              )}
+            </PMHStack>
+          </PMVStack>
+        </PMBox>
+        <InlineDiffContent
+          proposal={reviewingProposal}
+          isReviewing={true}
+          isAccepted={acceptedProposalIds.has(reviewingProposal.id)}
+          isRejected={rejectedProposalIds.has(reviewingProposal.id)}
+          onPoolAccept={() => onPoolAccept(reviewingProposal.id)}
+          onPoolReject={() => onPoolReject(reviewingProposal.id)}
+          onUndoPool={() => onUndoPool(reviewingProposal.id)}
+          onReviewProposal={() => onReviewProposal(reviewingProposal.id)}
+        />
+      </PMVStack>
+    );
+  }
+
+  if (!selectedRecipe) {
+    return (
+      <PMBox
+        display="flex"
+        alignItems="center"
+        justifyContent="center"
+        height="full"
+      >
+        <PMText color="secondary">
+          Select a proposal to preview the change
+        </PMText>
+      </PMBox>
+    );
+  }
+
+  return (
+    <PMVStack gap={2} align="stretch">
+      <PMText fontSize="lg" fontWeight="semibold">
+        {selectedRecipe.name}
+      </PMText>
+      <PMText whiteSpace="pre-wrap">{selectedRecipe.content}</PMText>
+    </PMVStack>
+  );
+}
 
 function CommandReviewDetail({ artefactId }: Readonly<{ artefactId: string }>) {
   const recipeId = artefactId as RecipeId;
@@ -206,19 +329,13 @@ function CommandReviewDetail({ artefactId }: Readonly<{ artefactId: string }>) {
         {isLoadingProposals ? (
           <PMSpinner />
         ) : (
-          <ChangeProposalsPreviewPanel
-            recipe={
-              selectedRecipe
-                ? {
-                    name: selectedRecipe.name,
-                    content: selectedRecipe.content,
-                  }
-                : null
-            }
-            proposals={selectedRecipeProposals}
+          <MiddlePanelContent
+            selectedRecipe={selectedRecipe}
+            selectedRecipeProposals={selectedRecipeProposals}
             reviewingProposalId={reviewingProposalId}
             acceptedProposalIds={acceptedProposalIds}
             rejectedProposalIds={rejectedProposalIds}
+            userLookup={userLookup}
             onPoolAccept={handlePoolAccept}
             onPoolReject={handlePoolReject}
             onUndoPool={handleUndoPool}
