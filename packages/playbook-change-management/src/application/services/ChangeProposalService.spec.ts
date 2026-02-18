@@ -13,6 +13,7 @@ import {
   CreateCommandChangeProposalCommand,
 } from '@packmind/types';
 import { stubLogger } from '@packmind/test-utils';
+import { DataSource } from 'typeorm';
 import { ChangeProposalConflictError } from '../../domain/errors/ChangeProposalConflictError';
 import { IChangeProposalRepository } from '../../domain/repositories/IChangeProposalRepository';
 import { ChangeProposalService } from './ChangeProposalService';
@@ -21,6 +22,7 @@ import { DiffService } from './DiffService';
 describe('ChangeProposalService', () => {
   let service: ChangeProposalService;
   let repository: jest.Mocked<IChangeProposalRepository>;
+  let dataSource: jest.Mocked<DataSource>;
   let diffService: DiffService;
 
   const spaceId = createSpaceId();
@@ -35,8 +37,19 @@ describe('ChangeProposalService', () => {
       update: jest.fn(),
     } as unknown as jest.Mocked<IChangeProposalRepository>;
 
+    dataSource = {
+      manager: {
+        transaction: jest.fn(),
+      },
+    } as unknown as jest.Mocked<DataSource>;
+
     diffService = new DiffService();
-    service = new ChangeProposalService(repository, stubLogger(), diffService);
+    service = new ChangeProposalService(
+      repository,
+      dataSource,
+      stubLogger(),
+      diffService,
+    );
   });
 
   afterEach(() => {

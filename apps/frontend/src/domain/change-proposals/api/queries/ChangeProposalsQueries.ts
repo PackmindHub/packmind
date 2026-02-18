@@ -8,6 +8,7 @@ import {
   SpaceId,
   StandardId,
 } from '@packmind/types';
+import { pmToaster } from '@packmind/ui';
 import { changeProposalsGateway } from '../gateways';
 import { CreateChangeProposalParams } from '../gateways/IChangeProposalsGateway';
 import {
@@ -24,6 +25,7 @@ import { GET_RECIPES_KEY } from '../../../recipes/api/queryKeys';
 import { GET_SKILLS_KEY } from '../../../skills/api/queryKeys';
 import { STANDARDS_QUERY_SCOPE } from '../../../standards/api/queryKeys';
 import { ORGANIZATION_QUERY_SCOPE } from '../../../organizations/api/queryKeys';
+import { routes } from '../../../../shared/utils/routes';
 
 export const getGroupedChangeProposalsOptions = (
   organizationId: OrganizationId | undefined,
@@ -107,7 +109,10 @@ export const useCreateChangeProposalMutation = () => {
   });
 };
 
-export const useApplyRecipeChangeProposalsMutation = () => {
+export const useApplyRecipeChangeProposalsMutation = (params?: {
+  orgSlug?: string;
+  spaceSlug?: string;
+}) => {
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -117,7 +122,7 @@ export const useApplyRecipeChangeProposalsMutation = () => {
     ) => {
       return changeProposalsGateway.applyRecipeChangeProposals(command);
     },
-    onSuccess: async () => {
+    onSuccess: async (response, variables) => {
       await Promise.all([
         queryClient.invalidateQueries({
           queryKey: GET_GROUPED_CHANGE_PROPOSALS_KEY,
@@ -129,12 +134,44 @@ export const useApplyRecipeChangeProposalsMutation = () => {
           queryKey: GET_RECIPES_KEY,
         }),
       ]);
+
+      // Show success toast with link to the new recipe version
+      if (params?.orgSlug && params?.spaceSlug) {
+        const recipeUrl = routes.space.toCommand(
+          params.orgSlug,
+          params.spaceSlug,
+          variables.artefactId,
+        );
+        pmToaster.create({
+          title: 'Changes applied successfully',
+          description: `View the updated recipe`,
+          type: 'success',
+          action: {
+            label: 'View recipe',
+            onClick: () => {
+              window.location.href = recipeUrl;
+            },
+          },
+        });
+      } else {
+        pmToaster.create({
+          title: 'Changes applied successfully',
+          type: 'success',
+        });
+      }
     },
     onError: (error, variables, context) => {
       console.error('Error applying recipe change proposals');
       console.log('error: ', error);
       console.log('variables: ', variables);
       console.log('context: ', context);
+
+      pmToaster.create({
+        title: 'Failed to apply changes',
+        description:
+          'The changes could not be applied. Please try again or contact support if the problem persists.',
+        type: 'error',
+      });
     },
   });
 };

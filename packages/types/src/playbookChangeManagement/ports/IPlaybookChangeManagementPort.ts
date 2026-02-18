@@ -57,7 +57,7 @@ export interface IPlaybookChangeManagementPort {
 
   applyChangeProposals<T extends StandardId | RecipeId | SkillId>(
     command: ApplyChangeProposalsCommand<T>,
-  ): Promise<ApplyChangeProposalsResponse>;
+  ): Promise<ApplyChangeProposalsResponse<T>>;
 
   createChangeProposal<T extends ChangeProposalType>(
     command: CreateChangeProposalCommand<T>,

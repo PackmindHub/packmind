@@ -26,7 +26,7 @@ export class StandardsChangeProposalsService {
 
   async applyStandardChangeProposals(
     command: ApplyChangeProposalsCommand<StandardId>,
-  ): Promise<ApplyChangeProposalsResponse> {
+  ): Promise<ApplyChangeProposalsResponse<StandardId>> {
     return this.playbookChangeManagementAdapter.applyChangeProposals(command);
   }
 }

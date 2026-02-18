@@ -91,7 +91,7 @@ export class PlaybookChangeManagementAdapter
 
   async applyChangeProposals<T extends StandardId | RecipeId | SkillId>(
     command: ApplyChangeProposalsCommand<T>,
-  ): Promise<ApplyChangeProposalsResponse> {
+  ): Promise<ApplyChangeProposalsResponse<T>> {
     return this._applyChangeProposals.execute(command);
   }
 
@@ -225,7 +225,6 @@ export class PlaybookChangeManagementAdapter
       recipesPort,
       skillsPort,
       changeProposalService,
-      this,
     );
 
     this._batchApplyChangeProposals = new BatchApplyChangeProposalsUseCase(

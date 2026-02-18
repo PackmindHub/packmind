@@ -26,7 +26,7 @@ export class RecipesChangeProposalsService {
 
   async applyRecipeChangeProposals(
     command: ApplyChangeProposalsCommand<RecipeId>,
-  ): Promise<ApplyChangeProposalsResponse> {
+  ): Promise<ApplyChangeProposalsResponse<RecipeId>> {
     return this.playbookChangeManagementAdapter.applyChangeProposals(command);
   }
 }

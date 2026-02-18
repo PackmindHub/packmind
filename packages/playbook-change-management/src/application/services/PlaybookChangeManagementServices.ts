@@ -1,3 +1,4 @@
+import { DataSource } from 'typeorm';
 import { IPlaybookChangeManagementRepositories } from '../../domain/repositories/IPlaybookChangeManagementRepositories';
 import { ChangeProposalService } from './ChangeProposalService';
 import { ConflictDetectionService } from './ConflictDetectionService';
@@ -10,9 +11,11 @@ export class PlaybookChangeManagementServices {
 
   constructor(
     private readonly repositories: IPlaybookChangeManagementRepositories,
+    private readonly dataSource: DataSource,
   ) {
     this.changeProposalService = new ChangeProposalService(
       this.repositories.getChangeProposalRepository(),
+      this.dataSource,
     );
     this.diffService = new DiffService();
     this.conflictDetectionService = new ConflictDetectionService(

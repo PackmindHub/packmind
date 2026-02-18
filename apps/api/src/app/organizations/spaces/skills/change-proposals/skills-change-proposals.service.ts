@@ -26,7 +26,7 @@ export class SkillsChangeProposalsService {
 
   async applySkillChangeProposals(
     command: ApplyChangeProposalsCommand<SkillId>,
-  ): Promise<ApplyChangeProposalsResponse> {
+  ): Promise<ApplyChangeProposalsResponse<SkillId>> {
     return this.playbookChangeManagementAdapter.applyChangeProposals(command);
   }
 }

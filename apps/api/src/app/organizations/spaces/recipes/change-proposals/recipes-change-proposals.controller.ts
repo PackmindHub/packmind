@@ -86,7 +86,7 @@ export class OrganizationsSpacesRecipesChangeProposalsController {
     @Body()
     body: { accepted: ChangeProposalId[]; rejected: ChangeProposalId[] },
     @Req() request: AuthenticatedRequest,
-  ): Promise<ApplyChangeProposalsResponse> {
+  ): Promise<ApplyChangeProposalsResponse<RecipeId>> {
     this.logger.info(
       'POST /organizations/:orgId/spaces/:spaceId/recipes/:recipeId/change-proposals/apply',
       {
@@ -113,8 +113,7 @@ export class OrganizationsSpacesRecipesChangeProposalsController {
         organizationId,
         spaceId,
         recipeId,
-        successCount: result.success.length,
-        failureCount: result.failure.length,
+        newVersion: result.newArtefactVersion,
       },
     );
 
