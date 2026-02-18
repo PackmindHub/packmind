@@ -11,6 +11,7 @@ import { ChangeProposalPayloadMismatchError } from '../errors/ChangeProposalPayl
 
 const SUPPORTED_TYPES: ReadonlySet<ChangeProposalType> = new Set([
   ChangeProposalType.updateStandardName,
+  ChangeProposalType.updateStandardDescription,
 ]);
 
 export class StandardChangeProposalValidator implements IChangeProposalValidator {
@@ -31,11 +32,16 @@ export class StandardChangeProposalValidator implements IChangeProposalValidator
     }
 
     const payload = command.payload as ScalarUpdatePayload;
-    if (payload.oldValue !== standard.name) {
+    const currentValue =
+      command.type === ChangeProposalType.updateStandardDescription
+        ? standard.description
+        : standard.name;
+
+    if (payload.oldValue !== currentValue) {
       throw new ChangeProposalPayloadMismatchError(
         command.type,
         payload.oldValue,
-        standard.name,
+        currentValue,
       );
     }
 
