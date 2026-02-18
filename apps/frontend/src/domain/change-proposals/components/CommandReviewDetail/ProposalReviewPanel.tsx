@@ -4,6 +4,7 @@ import {
   PMButton,
   PMHStack,
   PMIcon,
+  PMMarkdownViewer,
   PMText,
   PMTooltip,
   PMVStack,
@@ -23,6 +24,17 @@ import {
 } from '../../utils/changeProposalHelpers';
 import { formatRelativeTime } from '../../utils/formatRelativeTime';
 import { ChangeProposalWithConflicts } from '../../types';
+
+function buildDiffMarkdown(oldValue: string, newValue: string): string {
+  const changes = diffWords(oldValue, newValue);
+  return changes
+    .map((change) => {
+      if (change.added) return `<ins>${change.value}</ins>`;
+      if (change.removed) return `<del>${change.value}</del>`;
+      return change.value;
+    })
+    .join('');
+}
 
 function renderDiffText(oldValue: string, newValue: string) {
   const changes = diffWords(oldValue, newValue);
@@ -205,11 +217,29 @@ export function ProposalReviewPanel({
                 ? renderDiffText(payload.oldValue, payload.newValue)
                 : selectedRecipe.name}
             </PMText>
-            <PMText whiteSpace="pre-wrap">
-              {isDescriptionDiff
-                ? renderDiffText(payload.oldValue, payload.newValue)
-                : selectedRecipe.content}
-            </PMText>
+            <PMBox
+              css={{
+                '& ins': {
+                  backgroundColor: 'var(--Palette-Semantic-Green800)',
+                  padding: '0 2px',
+                  borderRadius: '2px',
+                  textDecoration: 'none',
+                },
+                '& del': {
+                  backgroundColor: 'var(--Palette-Semantic-Red800)',
+                  padding: '0 2px',
+                  borderRadius: '2px',
+                },
+              }}
+            >
+              <PMMarkdownViewer
+                content={
+                  isDescriptionDiff
+                    ? buildDiffMarkdown(payload.oldValue, payload.newValue)
+                    : selectedRecipe.content
+                }
+              />
+            </PMBox>
           </PMVStack>
         )}
       </PMVStack>
@@ -236,7 +266,7 @@ export function ProposalReviewPanel({
       <PMText fontSize="lg" fontWeight="semibold">
         {selectedRecipe.name}
       </PMText>
-      <PMText whiteSpace="pre-wrap">{selectedRecipe.content}</PMText>
+      <PMMarkdownViewer content={selectedRecipe.content} />
     </PMVStack>
   );
 }

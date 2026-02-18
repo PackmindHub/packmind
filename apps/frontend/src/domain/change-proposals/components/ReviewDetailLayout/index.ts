@@ -1,0 +1,1 @@
+export { ReviewDetailLayout } from './ReviewDetailLayout';

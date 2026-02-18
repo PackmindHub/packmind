@@ -1,12 +1,7 @@
-import { useState, useCallback, useMemo } from 'react';
+import { useCallback } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { PMBox, PMButton, PMHStack, PMSpinner, PMText } from '@packmind/ui';
-import {
-  ChangeProposalId,
-  OrganizationId,
-  RecipeId,
-  SpaceId,
-} from '@packmind/types';
+import { PMSpinner } from '@packmind/ui';
+import { OrganizationId, RecipeId, SpaceId } from '@packmind/types';
 import { useAuthContext } from '../../../accounts/hooks/useAuthContext';
 import { useCurrentSpace } from '../../../spaces/hooks/useCurrentSpace';
 import { useGetRecipeByIdQuery } from '../../../recipes/api/queries/RecipesQueries';
@@ -19,8 +14,9 @@ import {
   GET_GROUPED_CHANGE_PROPOSALS_KEY,
 } from '../../api/queryKeys';
 import { useUserLookup } from '../../hooks/useUserLookup';
-import { ChangeProposalsChangesList } from '../ChangeProposals/ChangeProposalsChangesList';
+import { useChangeProposalPool } from '../../hooks/useChangeProposalPool';
 import { GET_RECIPE_BY_ID_KEY } from '../../../recipes/api/queryKeys';
+import { ReviewDetailLayout } from '../ReviewDetailLayout';
 import { ProposalReviewPanel } from './ProposalReviewPanel';
 import { useParams } from 'react-router';
 
@@ -40,15 +36,6 @@ export function CommandReviewDetail({
 
   const organizationId = organization?.id;
 
-  const [reviewingProposalId, setReviewingProposalId] =
-    useState<ChangeProposalId | null>(null);
-  const [acceptedProposalIds, setAcceptedProposalIds] = useState<
-    Set<ChangeProposalId>
-  >(new Set());
-  const [rejectedProposalIds, setRejectedProposalIds] = useState<
-    Set<ChangeProposalId>
-  >(new Set());
-
   const applyRecipeChangeProposalsMutation =
     useApplyRecipeChangeProposalsMutation({
       orgSlug,
@@ -62,74 +49,19 @@ export function CommandReviewDetail({
 
   const { data: selectedRecipe } = useGetRecipeByIdQuery(recipeId);
 
-  const blockedByConflictIds = useMemo(() => {
-    const blocked = new Set<ChangeProposalId>();
-    for (const id of acceptedProposalIds) {
-      const proposal = selectedRecipeProposals.find((p) => p.id === id);
-      if (proposal) {
-        for (const conflictId of proposal.conflictsWith) {
-          blocked.add(conflictId);
-        }
-      }
-    }
-    return blocked;
-  }, [acceptedProposalIds, selectedRecipeProposals]);
-
-  const handleReviewProposal = useCallback((proposalId: ChangeProposalId) => {
-    setReviewingProposalId((prev) => (prev === proposalId ? null : proposalId));
-  }, []);
-
-  const handlePoolAccept = useCallback((proposalId: ChangeProposalId) => {
-    setAcceptedProposalIds((prev) => {
-      const next = new Set(prev);
-      next.add(proposalId);
-      return next;
-    });
-    setRejectedProposalIds((prev) => {
-      const next = new Set(prev);
-      next.delete(proposalId);
-      return next;
-    });
-  }, []);
-
-  const handlePoolReject = useCallback((proposalId: ChangeProposalId) => {
-    setRejectedProposalIds((prev) => {
-      const next = new Set(prev);
-      next.add(proposalId);
-      return next;
-    });
-    setAcceptedProposalIds((prev) => {
-      const next = new Set(prev);
-      next.delete(proposalId);
-      return next;
-    });
-  }, []);
-
-  const handleUndoPool = useCallback((proposalId: ChangeProposalId) => {
-    setAcceptedProposalIds((prev) => {
-      const next = new Set(prev);
-      next.delete(proposalId);
-      return next;
-    });
-    setRejectedProposalIds((prev) => {
-      const next = new Set(prev);
-      next.delete(proposalId);
-      return next;
-    });
-  }, []);
+  const pool = useChangeProposalPool(selectedRecipeProposals);
 
   const handleSave = useCallback(async () => {
     if (!organizationId || !spaceId) return;
-    if (acceptedProposalIds.size === 0 && rejectedProposalIds.size === 0)
-      return;
+    if (!pool.hasPooledDecisions) return;
 
     try {
       await applyRecipeChangeProposalsMutation.mutateAsync({
         organizationId: organizationId as OrganizationId,
         spaceId: spaceId as SpaceId,
         artefactId: recipeId,
-        accepted: Array.from(acceptedProposalIds),
-        rejected: Array.from(rejectedProposalIds),
+        accepted: Array.from(pool.acceptedProposalIds),
+        rejected: Array.from(pool.rejectedProposalIds),
       });
 
       await Promise.all([
@@ -144,88 +76,54 @@ export function CommandReviewDetail({
         }),
       ]);
 
-      setAcceptedProposalIds(new Set());
-      setRejectedProposalIds(new Set());
-      setReviewingProposalId(null);
+      pool.resetPool();
     } catch {
       // Errors are handled by the mutation onError callbacks
     }
   }, [
     organizationId,
     spaceId,
-    acceptedProposalIds,
-    rejectedProposalIds,
+    pool.acceptedProposalIds,
+    pool.rejectedProposalIds,
+    pool.hasPooledDecisions,
     applyRecipeChangeProposalsMutation,
     queryClient,
+    pool.resetPool,
   ]);
 
-  const isMutating = applyRecipeChangeProposalsMutation.isPending;
-
-  const hasPooledDecisions =
-    acceptedProposalIds.size > 0 || rejectedProposalIds.size > 0;
-
   return (
-    <>
-      <PMBox
-        gridColumn="span 2"
-        borderBottomWidth="1px"
-        paddingX={4}
-        paddingY={2}
-        display="flex"
-        justifyContent="flex-end"
-        alignItems="center"
-        minH="40px"
-      >
-        {hasPooledDecisions && (
-          <PMHStack gap={2}>
-            <PMText fontSize="sm" color="secondary">
-              {acceptedProposalIds.size} accepted, {rejectedProposalIds.size}{' '}
-              rejected
-            </PMText>
-            <PMButton
-              size="sm"
-              colorPalette="blue"
-              disabled={isMutating}
-              onClick={handleSave}
-            >
-              {isMutating ? 'Saving...' : 'Save'}
-            </PMButton>
-          </PMHStack>
-        )}
-      </PMBox>
-      <PMBox minW={0} overflowY="auto" p={4}>
-        {isLoadingProposals ? (
-          <PMSpinner />
-        ) : (
-          <ProposalReviewPanel
-            selectedRecipe={selectedRecipe}
-            selectedRecipeProposals={selectedRecipeProposals}
-            reviewingProposalId={reviewingProposalId}
-            acceptedProposalIds={acceptedProposalIds}
-            rejectedProposalIds={rejectedProposalIds}
-            blockedByConflictIds={blockedByConflictIds}
-            userLookup={userLookup}
-            onPoolAccept={handlePoolAccept}
-            onPoolReject={handlePoolReject}
-            onUndoPool={handleUndoPool}
-          />
-        )}
-      </PMBox>
-      <PMBox borderLeftWidth="1px" p={4} overflowY="auto">
-        <ChangeProposalsChangesList
-          proposals={selectedRecipeProposals}
-          reviewingProposalId={reviewingProposalId}
-          acceptedProposalIds={acceptedProposalIds}
-          rejectedProposalIds={rejectedProposalIds}
-          blockedByConflictIds={blockedByConflictIds}
-          currentArtefactVersion={selectedRecipe?.version}
+    <ReviewDetailLayout
+      proposals={selectedRecipeProposals}
+      reviewingProposalId={pool.reviewingProposalId}
+      acceptedProposalIds={pool.acceptedProposalIds}
+      rejectedProposalIds={pool.rejectedProposalIds}
+      blockedByConflictIds={pool.blockedByConflictIds}
+      hasPooledDecisions={pool.hasPooledDecisions}
+      currentArtefactVersion={selectedRecipe?.version}
+      userLookup={userLookup}
+      onSelectProposal={pool.handleSelectProposal}
+      onPoolAccept={pool.handlePoolAccept}
+      onPoolReject={pool.handlePoolReject}
+      onUndoPool={pool.handleUndoPool}
+      onSave={handleSave}
+      isSaving={applyRecipeChangeProposalsMutation.isPending}
+    >
+      {isLoadingProposals ? (
+        <PMSpinner />
+      ) : (
+        <ProposalReviewPanel
+          selectedRecipe={selectedRecipe}
+          selectedRecipeProposals={selectedRecipeProposals}
+          reviewingProposalId={pool.reviewingProposalId}
+          acceptedProposalIds={pool.acceptedProposalIds}
+          rejectedProposalIds={pool.rejectedProposalIds}
+          blockedByConflictIds={pool.blockedByConflictIds}
           userLookup={userLookup}
-          onSelectProposal={handleReviewProposal}
-          onPoolAccept={handlePoolAccept}
-          onPoolReject={handlePoolReject}
-          onUndoPool={handleUndoPool}
+          onPoolAccept={pool.handlePoolAccept}
+          onPoolReject={pool.handlePoolReject}
+          onUndoPool={pool.handleUndoPool}
         />
-      </PMBox>
-    </>
+      )}
+    </ReviewDetailLayout>
   );
 }
