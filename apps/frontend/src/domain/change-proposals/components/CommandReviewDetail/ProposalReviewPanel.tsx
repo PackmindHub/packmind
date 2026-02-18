@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import {
   PMBadge,
   PMBox,
@@ -19,9 +20,12 @@ import {
 import { diffWords } from 'diff';
 import { LuCheck, LuCircleAlert, LuUndo2, LuX } from 'react-icons/lu';
 import {
+  buildBlockedByAcceptedMap,
+  buildProposalNumberMap,
   getChangeProposalFieldLabel,
   getStatusBadgeProps,
 } from '../../utils/changeProposalHelpers';
+import { ConflictWarning } from '../ChangeProposals/ConflictWarning';
 import { formatRelativeTime } from '../../utils/formatRelativeTime';
 import { ChangeProposalWithConflicts } from '../../types';
 
@@ -82,6 +86,7 @@ interface ProposalReviewPanelProps {
   rejectedProposalIds: Set<ChangeProposalId>;
   blockedByConflictIds: Set<ChangeProposalId>;
   userLookup: Map<UserId, string>;
+  onSelectProposal: (proposalId: ChangeProposalId) => void;
   onPoolAccept: (proposalId: ChangeProposalId) => void;
   onPoolReject: (proposalId: ChangeProposalId) => void;
   onUndoPool: (proposalId: ChangeProposalId) => void;
@@ -95,10 +100,22 @@ export function ProposalReviewPanel({
   rejectedProposalIds,
   blockedByConflictIds,
   userLookup,
+  onSelectProposal,
   onPoolAccept,
   onPoolReject,
   onUndoPool,
 }: Readonly<ProposalReviewPanelProps>) {
+  const proposalNumberMap = useMemo(
+    () => buildProposalNumberMap(selectedRecipeProposals),
+    [selectedRecipeProposals],
+  );
+
+  const blockedByAcceptedMap = useMemo(
+    () =>
+      buildBlockedByAcceptedMap(selectedRecipeProposals, acceptedProposalIds),
+    [selectedRecipeProposals, acceptedProposalIds],
+  );
+
   const reviewingProposal = reviewingProposalId
     ? (selectedRecipeProposals.find((p) => p.id === reviewingProposalId) ??
       null)
@@ -143,6 +160,7 @@ export function ProposalReviewPanel({
                   </PMBadge>
                 )}
                 <PMText fontSize="sm" color="secondary">
+                  #{proposalNumberMap.get(reviewingProposal.id)} -{' '}
                   {formatRelativeTime(reviewingProposal.createdAt)}
                 </PMText>
               </PMHStack>
@@ -184,6 +202,22 @@ export function ProposalReviewPanel({
                 )}
               </PMHStack>
             </PMHStack>
+            {blockedByConflictIds.has(reviewingProposal.id) &&
+              (() => {
+                const acceptedIds = blockedByAcceptedMap.get(
+                  reviewingProposal.id,
+                );
+                if (!acceptedIds || acceptedIds.length === 0) return null;
+                const conflictingAcceptedNumbers = acceptedIds
+                  .map((id) => ({ id, number: proposalNumberMap.get(id) ?? 0 }))
+                  .sort((a, b) => a.number - b.number);
+                return (
+                  <ConflictWarning
+                    conflictingAcceptedNumbers={conflictingAcceptedNumbers}
+                    onSelectConflicting={onSelectProposal}
+                  />
+                );
+              })()}
             <PMVStack gap={1} align="stretch" width="full">
               <PMText fontWeight="bold" fontSize="sm">
                 {getChangeProposalFieldLabel(reviewingProposal.type)}
