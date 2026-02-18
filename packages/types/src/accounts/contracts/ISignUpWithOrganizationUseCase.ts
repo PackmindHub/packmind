@@ -4,7 +4,7 @@ import { AuthMethod, User, Organization, SocialProvider } from '../index';
 export type SignUpWithOrganizationCommand = {
   email: string;
   password?: string;
-  authType: AuthMethod;
+  method: AuthMethod;
   socialProvider?: SocialProvider;
 };
 

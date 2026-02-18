@@ -78,7 +78,7 @@ describe('GitHub Copilot Deployment Integration', () => {
       .signUpWithOrganization({
         email: 'testuser@packmind.com',
         password: 's3cret!@',
-        authType: 'password',
+        method: 'password',
       });
     user = signUpResult.user;
     organization = signUpResult.organization;

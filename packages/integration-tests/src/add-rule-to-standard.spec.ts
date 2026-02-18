@@ -42,7 +42,7 @@ describe('Add rule to standard integration', () => {
       .signUpWithOrganization({
         email: 'toto@packmind.com',
         password: 's3cr3t!@',
-        authType: 'password',
+        method: 'password',
       });
     user = signUpResult.user;
     organization = signUpResult.organization;
@@ -102,7 +102,7 @@ describe('Add rule to standard integration', () => {
         .signUpWithOrganization({
           email: 'other@packmind.com',
           password: 's3cr3t!@',
-          authType: 'password',
+          method: 'password',
         });
       const otherUser = otherSignUpResult.user;
 

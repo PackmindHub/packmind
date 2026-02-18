@@ -82,7 +82,7 @@ describe('SignUpWithOrganizationUseCase', () => {
       const command: SignUpWithOrganizationCommand = {
         email: 'testuser@packmind.com',
         password: 'password123!@',
-        authType: 'password' as const,
+        method: 'password' as const,
       };
 
       beforeEach(() => {
@@ -159,7 +159,7 @@ describe('SignUpWithOrganizationUseCase', () => {
       const command: SignUpWithOrganizationCommand = {
         email: 'john@example.com',
         password: 'password123!@',
-        authType: 'password' as const,
+        method: 'password' as const,
       };
 
       beforeEach(() => {
@@ -231,7 +231,7 @@ describe('SignUpWithOrganizationUseCase', () => {
       const command: SignUpWithOrganizationCommand = {
         email: 'firstName.lastName@example.com',
         password: 'password123!@',
-        authType: 'password' as const,
+        method: 'password' as const,
       };
 
       beforeEach(() => {
@@ -255,7 +255,7 @@ describe('SignUpWithOrganizationUseCase', () => {
         const command: SignUpWithOrganizationCommand = {
           email: 'testuser@packmind.com',
           password: '',
-          authType: 'password',
+          method: 'password',
         };
 
         it('throws password required error', async () => {
@@ -291,7 +291,7 @@ describe('SignUpWithOrganizationUseCase', () => {
         const command: SignUpWithOrganizationCommand = {
           email: 'testuser@packmind.com',
           password: 'short',
-          authType: 'password',
+          method: 'password',
         };
 
         it('throws password minimum length error', async () => {
@@ -327,7 +327,7 @@ describe('SignUpWithOrganizationUseCase', () => {
         const command: SignUpWithOrganizationCommand = {
           email: 'testuser@packmind.com',
           password: 'password123',
-          authType: 'password',
+          method: 'password',
         };
 
         it('throws non-alphanumerical characters error', async () => {
@@ -366,7 +366,7 @@ describe('SignUpWithOrganizationUseCase', () => {
       const command: SignUpWithOrganizationCommand = {
         email: 'testuser@packmind.com',
         password: 'password123!@',
-        authType: 'password' as const,
+        method: 'password' as const,
       };
 
       beforeEach(() => {
@@ -418,7 +418,7 @@ describe('SignUpWithOrganizationUseCase', () => {
       const command: SignUpWithOrganizationCommand = {
         email: 'testuser@packmind.com',
         password: 'password123!@',
-        authType: 'password' as const,
+        method: 'password' as const,
       };
 
       beforeEach(() => {
@@ -467,7 +467,7 @@ describe('SignUpWithOrganizationUseCase', () => {
       const command: SignUpWithOrganizationCommand = {
         email: 'testuser@packmind.com',
         password: 'password123!@',
-        authType: 'password' as const,
+        method: 'password' as const,
       };
 
       beforeEach(() => {
@@ -509,7 +509,7 @@ describe('SignUpWithOrganizationUseCase', () => {
       const command: SignUpWithOrganizationCommand = {
         email: 'testuser@packmind.com',
         password: 'password123!@',
-        authType: 'password' as const,
+        method: 'password' as const,
       };
 
       beforeEach(() => {
@@ -554,10 +554,10 @@ describe('SignUpWithOrganizationUseCase', () => {
       });
     });
 
-    describe('when authType is social', () => {
+    describe('when method is social', () => {
       const command: SignUpWithOrganizationCommand = {
         email: 'socialuser@packmind.com',
-        authType: 'social',
+        method: 'social',
         socialProvider: 'GoogleOAuth',
       };
 
@@ -627,7 +627,7 @@ describe('SignUpWithOrganizationUseCase', () => {
       it('succeeds without password', async () => {
         const commandWithoutPassword: SignUpWithOrganizationCommand = {
           email: 'socialuser@packmind.com',
-          authType: 'social',
+          method: 'social',
           socialProvider: 'GoogleOAuth',
         };
 

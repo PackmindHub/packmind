@@ -258,12 +258,12 @@ describe('SignInSocialUserUseCase', () => {
       expect(result.role).toBe('admin');
     });
 
-    it('calls signUpWithOrganization with social authType', async () => {
+    it('calls signUpWithOrganization with social method', async () => {
       await useCase.execute(command);
 
       expect(signUpWithOrganizationUseCase.execute).toHaveBeenCalledWith({
         email: 'new@example.com',
-        authType: 'social',
+        method: 'social',
         socialProvider: 'GoogleOAuth',
       });
     });
