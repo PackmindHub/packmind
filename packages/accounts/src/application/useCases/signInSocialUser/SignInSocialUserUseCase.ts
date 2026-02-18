@@ -48,7 +48,7 @@ export class SignInSocialUserUseCase implements ISignInSocialUserUseCase {
   ): Promise<SignInSocialUserResponse> {
     const signUpResult = await this.signUpWithOrganizationUseCase.execute({
       email: command.email,
-      authType: 'social',
+      method: 'social',
       socialProvider: command.socialProvider,
     });
 

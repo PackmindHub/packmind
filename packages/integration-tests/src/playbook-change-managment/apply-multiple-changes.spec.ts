@@ -57,7 +57,7 @@ describe('Applying multiple changes', () => {
       .signUpWithOrganization({
         email: 'someone@example.com',
         password: 'some-secret-apssword',
-        authType: 'password',
+        method: 'password',
       });
     user = signUpResponse.user;
     organization = signUpResponse.organization;
