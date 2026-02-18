@@ -119,6 +119,7 @@ export function CommandReviewDetail({
           rejectedProposalIds={pool.rejectedProposalIds}
           blockedByConflictIds={pool.blockedByConflictIds}
           userLookup={userLookup}
+          onSelectProposal={pool.handleSelectProposal}
           onPoolAccept={pool.handlePoolAccept}
           onPoolReject={pool.handlePoolReject}
           onUndoPool={pool.handleUndoPool}

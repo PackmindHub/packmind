@@ -6,6 +6,7 @@ import {
   UserId,
 } from '@packmind/types';
 import { ChangeProposalWithConflicts } from '../../types';
+import { buildProposalNumberMap } from '../../utils/changeProposalHelpers';
 import { PendingProposalCard } from './PendingProposalCard';
 import { PoolProposalCard } from './PoolProposalCard';
 import { CollapsiblePoolSection } from './CollapsiblePoolSection';
@@ -40,37 +41,40 @@ export function ChangeProposalsChangesList({
   const [showAccepted, setShowAccepted] = useState(true);
   const [showRejected, setShowRejected] = useState(true);
 
-  const {
-    conflictingIds,
-    pendingProposals,
-    acceptedProposals,
-    rejectedProposals,
-  } = useMemo(() => {
-    const reviewing =
-      proposals.find((p) => p.id === reviewingProposalId) ?? null;
+  const proposalNumberMap = useMemo(
+    () => buildProposalNumberMap(proposals),
+    [proposals],
+  );
 
-    const pending = proposals.filter(
-      (p) =>
-        p.status === ChangeProposalStatus.pending &&
-        !acceptedProposalIds.has(p.id) &&
-        !rejectedProposalIds.has(p.id),
-    );
+  const sortByDate = (
+    a: ChangeProposalWithConflicts,
+    b: ChangeProposalWithConflicts,
+  ) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
 
-    const accepted = proposals.filter((p) => acceptedProposalIds.has(p.id));
-    const rejected = proposals.filter((p) => rejectedProposalIds.has(p.id));
+  const { pendingProposals, acceptedProposals, rejectedProposals } =
+    useMemo(() => {
+      const pending = proposals
+        .filter(
+          (p) =>
+            p.status === ChangeProposalStatus.pending &&
+            !acceptedProposalIds.has(p.id) &&
+            !rejectedProposalIds.has(p.id),
+        )
+        .sort(sortByDate);
 
-    return {
-      conflictingIds: new Set<ChangeProposalId>(reviewing?.conflictsWith ?? []),
-      pendingProposals: pending,
-      acceptedProposals: accepted,
-      rejectedProposals: rejected,
-    };
-  }, [
-    proposals,
-    reviewingProposalId,
-    acceptedProposalIds,
-    rejectedProposalIds,
-  ]);
+      const accepted = proposals
+        .filter((p) => acceptedProposalIds.has(p.id))
+        .sort(sortByDate);
+      const rejected = proposals
+        .filter((p) => rejectedProposalIds.has(p.id))
+        .sort(sortByDate);
+
+      return {
+        pendingProposals: pending,
+        acceptedProposals: accepted,
+        rejectedProposals: rejected,
+      };
+    }, [proposals, acceptedProposalIds, rejectedProposalIds]);
 
   return (
     <PMBox display="flex" flexDirection="column" height="full">
@@ -96,8 +100,8 @@ export function ChangeProposalsChangesList({
                   key={proposal.id}
                   proposal={proposal}
                   isSelected={proposal.id === reviewingProposalId}
-                  isConflicting={conflictingIds.has(proposal.id)}
                   isBlockedByConflict={blockedByConflictIds.has(proposal.id)}
+                  proposalNumber={proposalNumberMap.get(proposal.id)}
                   userLookup={userLookup}
                   currentArtefactVersion={currentArtefactVersion}
                   onSelect={() => onSelectProposal(proposal.id)}
@@ -121,6 +125,7 @@ export function ChangeProposalsChangesList({
                   key={proposal.id}
                   proposal={proposal}
                   isSelected={proposal.id === reviewingProposalId}
+                  proposalNumber={proposalNumberMap.get(proposal.id)}
                   userLookup={userLookup}
                   currentArtefactVersion={currentArtefactVersion}
                   onSelect={() => onSelectProposal(proposal.id)}
@@ -143,6 +148,7 @@ export function ChangeProposalsChangesList({
                   key={proposal.id}
                   proposal={proposal}
                   isSelected={proposal.id === reviewingProposalId}
+                  proposalNumber={proposalNumberMap.get(proposal.id)}
                   userLookup={userLookup}
                   currentArtefactVersion={currentArtefactVersion}
                   onSelect={() => onSelectProposal(proposal.id)}

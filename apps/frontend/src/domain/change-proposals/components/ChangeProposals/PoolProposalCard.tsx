@@ -7,6 +7,7 @@ import { ProposalCardBase } from './ProposalCardBase';
 interface PoolProposalCardProps {
   proposal: ChangeProposalWithConflicts;
   isSelected: boolean;
+  proposalNumber?: number;
   userLookup: Map<UserId, string>;
   currentArtefactVersion?: number;
   onSelect: () => void;
@@ -16,6 +17,7 @@ interface PoolProposalCardProps {
 export function PoolProposalCard({
   proposal,
   isSelected,
+  proposalNumber,
   userLookup,
   currentArtefactVersion,
   onSelect,
@@ -25,6 +27,7 @@ export function PoolProposalCard({
     <ProposalCardBase
       proposal={proposal}
       isSelected={isSelected}
+      proposalNumber={proposalNumber}
       userLookup={userLookup}
       currentArtefactVersion={currentArtefactVersion}
       onSelect={onSelect}

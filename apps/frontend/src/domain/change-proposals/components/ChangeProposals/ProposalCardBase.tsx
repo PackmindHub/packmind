@@ -19,6 +19,7 @@ interface ProposalCardBaseProps {
   proposal: ChangeProposalWithConflicts;
   isSelected: boolean;
   borderColor?: string;
+  proposalNumber?: number;
   userLookup: Map<UserId, string>;
   currentArtefactVersion?: number;
   onSelect: () => void;
@@ -29,6 +30,7 @@ export function ProposalCardBase({
   proposal,
   isSelected,
   borderColor = 'border.tertiary',
+  proposalNumber,
   userLookup,
   currentArtefactVersion,
   onSelect,
@@ -55,6 +57,7 @@ export function ProposalCardBase({
         <PMHStack gap={2} justify="space-between" align="center">
           <PMHStack gap={1} align="center">
             <PMText fontSize="xs" color="secondary">
+              {proposalNumber !== undefined && `#${proposalNumber} - `}
               {formatRelativeTime(proposal.createdAt)}
             </PMText>
             <PMText fontSize="xs" color="secondary">

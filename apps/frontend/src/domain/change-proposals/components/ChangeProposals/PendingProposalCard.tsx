@@ -7,8 +7,8 @@ import { ProposalCardBase } from './ProposalCardBase';
 interface PendingProposalCardProps {
   proposal: ChangeProposalWithConflicts;
   isSelected: boolean;
-  isConflicting: boolean;
   isBlockedByConflict: boolean;
+  proposalNumber?: number;
   userLookup: Map<UserId, string>;
   currentArtefactVersion?: number;
   onSelect: () => void;
@@ -19,8 +19,8 @@ interface PendingProposalCardProps {
 export function PendingProposalCard({
   proposal,
   isSelected,
-  isConflicting,
   isBlockedByConflict,
+  proposalNumber,
   userLookup,
   currentArtefactVersion,
   onSelect,
@@ -35,7 +35,8 @@ export function PendingProposalCard({
     <ProposalCardBase
       proposal={proposal}
       isSelected={isSelected}
-      borderColor={isConflicting ? 'border.error' : 'border.tertiary'}
+      borderColor={isBlockedByConflict ? 'border.error' : 'border.tertiary'}
+      proposalNumber={proposalNumber}
       userLookup={userLookup}
       currentArtefactVersion={currentArtefactVersion}
       onSelect={onSelect}
