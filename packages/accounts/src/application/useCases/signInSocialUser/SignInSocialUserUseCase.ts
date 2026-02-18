@@ -9,7 +9,10 @@ import {
   UserSignedInEvent,
 } from '@packmind/types';
 import { UserService } from '../../services/UserService';
-import { MembershipResolutionService } from '../../services/MembershipResolutionService';
+import {
+  MembershipResolutionService,
+  getPrimaryOrganizationId,
+} from '../../services/MembershipResolutionService';
 import { UserMetadataService } from '../../services/UserMetadataService';
 
 export class SignInSocialUserUseCase implements ISignInSocialUserUseCase {
@@ -78,8 +81,7 @@ export class SignInSocialUserUseCase implements ISignInSocialUserUseCase {
     const resolved =
       await this.membershipResolutionService.resolveUserOrganizations(user);
 
-    const organizationId =
-      resolved.organization?.id ?? resolved.organizations?.[0]?.organization.id;
+    const organizationId = getPrimaryOrganizationId(resolved);
 
     if (organizationId) {
       this.eventEmitterService.emit(

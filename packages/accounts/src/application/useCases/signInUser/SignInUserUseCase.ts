@@ -6,7 +6,10 @@ import {
   UserSignedInEvent,
 } from '@packmind/types';
 import { UserService } from '../../services/UserService';
-import { MembershipResolutionService } from '../../services/MembershipResolutionService';
+import {
+  MembershipResolutionService,
+  getPrimaryOrganizationId,
+} from '../../services/MembershipResolutionService';
 import { LoginRateLimiterService } from '../../services/LoginRateLimiterService';
 import { MissingEmailError } from '../../../domain/errors/MissingEmailError';
 import { InvalidEmailOrPasswordError } from '../../../domain/errors/InvalidEmailOrPasswordError';
@@ -53,8 +56,7 @@ export class SignInUserUseCase implements ISignInUserUseCase {
       await this.membershipResolutionService.resolveUserOrganizations(user);
 
     // Emit event when organizationId is available
-    const organizationId =
-      resolved.organization?.id ?? resolved.organizations?.[0]?.organization.id;
+    const organizationId = getPrimaryOrganizationId(resolved);
 
     if (organizationId) {
       this.eventEmitterService.emit(

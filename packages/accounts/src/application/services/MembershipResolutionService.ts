@@ -1,5 +1,10 @@
 import { PackmindLogger } from '@packmind/logger';
-import { Organization, User, UserOrganizationRole } from '@packmind/types';
+import {
+  Organization,
+  OrganizationId,
+  User,
+  UserOrganizationRole,
+} from '@packmind/types';
 import { OrganizationService } from './OrganizationService';
 import { InvalidEmailOrPasswordError } from '../../domain/errors/InvalidEmailOrPasswordError';
 
@@ -11,6 +16,14 @@ export type ResolvedMemberships = {
     role: UserOrganizationRole;
   }>;
 };
+
+export function getPrimaryOrganizationId(
+  resolved: ResolvedMemberships,
+): OrganizationId | undefined {
+  return (
+    resolved.organization?.id ?? resolved.organizations?.[0]?.organization.id
+  );
+}
 
 export class MembershipResolutionService {
   constructor(

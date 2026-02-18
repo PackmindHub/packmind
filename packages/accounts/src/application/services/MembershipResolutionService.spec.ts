@@ -47,27 +47,6 @@ describe('MembershipResolutionService', () => {
     jest.clearAllMocks();
   });
 
-  describe('when user has no memberships', () => {
-    const userWithNoMemberships: User = {
-      ...testUser,
-      memberships: [],
-    };
-
-    it('returns empty organizations array', async () => {
-      const result = await service.resolveUserOrganizations(
-        userWithNoMemberships,
-      );
-
-      expect(result).toEqual({ organizations: [] });
-    });
-
-    it('does not call getOrganizationById', async () => {
-      await service.resolveUserOrganizations(userWithNoMemberships);
-
-      expect(organizationService.getOrganizationById).not.toHaveBeenCalled();
-    });
-  });
-
   describe('when user has a single membership', () => {
     beforeEach(() => {
       organizationService.getOrganizationById.mockResolvedValue(
@@ -102,6 +81,27 @@ describe('MembershipResolutionService', () => {
           service.resolveUserOrganizations(testUser),
         ).rejects.toThrow(InvalidEmailOrPasswordError);
       });
+    });
+  });
+
+  describe('when user has no memberships', () => {
+    const userWithNoMemberships: User = {
+      ...testUser,
+      memberships: [],
+    };
+
+    it('returns empty organizations array', async () => {
+      const result = await service.resolveUserOrganizations(
+        userWithNoMemberships,
+      );
+
+      expect(result).toEqual({ organizations: [] });
+    });
+
+    it('does not call getOrganizationById', async () => {
+      await service.resolveUserOrganizations(userWithNoMemberships);
+
+      expect(organizationService.getOrganizationById).not.toHaveBeenCalled();
     });
   });
 
