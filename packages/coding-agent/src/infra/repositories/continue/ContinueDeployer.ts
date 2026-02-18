@@ -12,7 +12,7 @@ import {
 } from '@packmind/types';
 import { ICodingAgentDeployer } from '../../../domain/repository/ICodingAgentDeployer';
 import { GenericStandardSectionWriter } from '../genericSectionWriter/GenericStandardSectionWriter';
-import { getTargetPrefixedPath } from '../utils/FileUtils';
+import { escapeSingleQuotes, getTargetPrefixedPath } from '../utils/FileUtils';
 
 const origin = 'ContinueDeployer';
 
@@ -356,8 +356,8 @@ export class ContinueDeployer implements ICodingAgentDeployer {
     const description = recipeVersion.summary?.trim() || recipeVersion.name;
 
     const frontmatter = `---
-name: '${this.escapeSingleQuotes(recipeVersion.name)}'
-description: '${this.escapeSingleQuotes(description)}'
+name: '${escapeSingleQuotes(recipeVersion.name)}'
+description: '${escapeSingleQuotes(description)}'
 invokable: true
 ---`;
 
@@ -371,13 +371,6 @@ ${recipeVersion.content}`;
       path,
       content,
     };
-  }
-
-  /**
-   * Escape single quotes in YAML values to prevent parsing errors
-   */
-  private escapeSingleQuotes(value: string): string {
-    return value.replace(/'/g, "''");
   }
 
   /**
@@ -473,17 +466,17 @@ ${recipeVersion.content}`;
     if (standardVersion.scope && standardVersion.scope.trim() !== '') {
       // When the scope is not null or empty
       frontmatter = `---
-name: '${this.escapeSingleQuotes(standardVersion.name)}'
+name: '${escapeSingleQuotes(standardVersion.name)}'
 globs: ${this.formatGlobsValue(standardVersion.scope)}
 alwaysApply: false
-description: '${this.escapeSingleQuotes(summary)}'
+description: '${escapeSingleQuotes(summary)}'
 ---`;
     } else {
       // When the scope is empty
       frontmatter = `---
-name: '${this.escapeSingleQuotes(standardVersion.name)}'
+name: '${escapeSingleQuotes(standardVersion.name)}'
 alwaysApply: true
-description: '${this.escapeSingleQuotes(summary)}'
+description: '${escapeSingleQuotes(summary)}'
 ---`;
     }
 

@@ -332,7 +332,7 @@ class MyService {
 
       it('includes standard name in frontmatter', () => {
         expect(deployedFile.content).toContain(
-          'name: IDE Code Quality Standards',
+          "name: 'IDE Code Quality Standards'",
         );
       });
 
@@ -810,7 +810,7 @@ class MyService {
 
       it('includes description in frontmatter', () => {
         expect(deployedFile?.content).toContain(
-          'description: JetBrains services best practices',
+          "description: 'JetBrains services best practices'",
         );
       });
 

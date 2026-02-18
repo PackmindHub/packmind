@@ -1,3 +1,4 @@
+import { PackmindLogger } from '@packmind/logger';
 import { PackmindEventEmitterService } from '@packmind/node-utils';
 import {
   ISignInUserUseCase,
@@ -13,6 +14,7 @@ import {
 import { LoginRateLimiterService } from '../../services/LoginRateLimiterService';
 import { MissingEmailError } from '../../../domain/errors/MissingEmailError';
 import { InvalidEmailOrPasswordError } from '../../../domain/errors/InvalidEmailOrPasswordError';
+import { OrganizationNotFoundError } from '../../../domain/errors/OrganizationNotFoundError';
 
 export class SignInUserUseCase implements ISignInUserUseCase {
   constructor(
@@ -20,6 +22,9 @@ export class SignInUserUseCase implements ISignInUserUseCase {
     private readonly membershipResolutionService: MembershipResolutionService,
     private readonly loginRateLimiterService: LoginRateLimiterService,
     private readonly eventEmitterService: PackmindEventEmitterService,
+    private readonly logger: PackmindLogger = new PackmindLogger(
+      'SignInUserUseCase',
+    ),
   ) {}
 
   async execute(command: SignInUserCommand): Promise<SignInUserResponse> {
@@ -52,10 +57,17 @@ export class SignInUserUseCase implements ISignInUserUseCase {
     // Successful login - clear any previous failed attempts
     await this.loginRateLimiterService.clearAttempts(command.email);
 
-    const resolved =
-      await this.membershipResolutionService.resolveUserOrganizations(user);
+    let resolved;
+    try {
+      resolved =
+        await this.membershipResolutionService.resolveUserOrganizations(user);
+    } catch (error) {
+      if (error instanceof OrganizationNotFoundError) {
+        throw new InvalidEmailOrPasswordError();
+      }
+      throw error;
+    }
 
-    // Emit event when organizationId is available
     const organizationId = getPrimaryOrganizationId(resolved);
 
     if (organizationId) {

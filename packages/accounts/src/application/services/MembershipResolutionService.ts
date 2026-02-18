@@ -1,4 +1,3 @@
-import { PackmindLogger } from '@packmind/logger';
 import {
   Organization,
   OrganizationId,
@@ -6,7 +5,7 @@ import {
   UserOrganizationRole,
 } from '@packmind/types';
 import { OrganizationService } from './OrganizationService';
-import { InvalidEmailOrPasswordError } from '../../domain/errors/InvalidEmailOrPasswordError';
+import { OrganizationNotFoundError } from '../../domain/errors/OrganizationNotFoundError';
 
 export type ResolvedMemberships = {
   organization?: Organization;
@@ -26,12 +25,7 @@ export function getPrimaryOrganizationId(
 }
 
 export class MembershipResolutionService {
-  constructor(
-    private readonly organizationService: OrganizationService,
-    private readonly logger: PackmindLogger = new PackmindLogger(
-      'MembershipResolutionService',
-    ),
-  ) {}
+  constructor(private readonly organizationService: OrganizationService) {}
 
   async resolveUserOrganizations(user: User): Promise<ResolvedMemberships> {
     if (user.memberships.length === 0) {
@@ -45,7 +39,7 @@ export class MembershipResolutionService {
       );
 
       if (!organization) {
-        throw new InvalidEmailOrPasswordError();
+        throw new OrganizationNotFoundError(membership.organizationId);
       }
 
       return { organization, role: membership.role };
@@ -58,7 +52,7 @@ export class MembershipResolutionService {
         );
 
         if (!organization) {
-          throw new InvalidEmailOrPasswordError();
+          throw new OrganizationNotFoundError(membership.organizationId);
         }
 
         return { organization, role: membership.role };

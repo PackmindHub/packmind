@@ -78,85 +78,6 @@ describe('SignInSocialUserUseCase', () => {
     jest.clearAllMocks();
   });
 
-  describe('when user does not exist', () => {
-    const command: SignInSocialUserCommand = {
-      email: 'new@example.com',
-      socialProvider: 'GoogleOAuth',
-    };
-
-    const newUserId = createUserId('new-user');
-    const newOrgId = createOrganizationId('new-org');
-    const newUser: User = userFactory({
-      id: newUserId,
-      email: 'new@example.com',
-      memberships: [
-        { userId: newUserId, organizationId: newOrgId, role: 'admin' },
-      ],
-    });
-    const newOrg: Organization = {
-      id: newOrgId,
-      name: "new's organization",
-      slug: 'news-organization',
-    };
-
-    beforeEach(() => {
-      userService.getUserByEmailCaseInsensitive.mockResolvedValue(null);
-      signUpWithOrganizationUseCase.execute.mockResolvedValue({
-        user: newUser,
-        organization: newOrg,
-      });
-    });
-
-    it('returns isNewUser true', async () => {
-      const result = await useCase.execute(command);
-
-      expect(result.isNewUser).toBe(true);
-    });
-
-    it('returns the created user', async () => {
-      const result = await useCase.execute(command);
-
-      expect(result.user).toEqual(newUser);
-    });
-
-    it('returns the created organization', async () => {
-      const result = await useCase.execute(command);
-
-      expect(result.organization).toEqual(newOrg);
-    });
-
-    it('returns admin role', async () => {
-      const result = await useCase.execute(command);
-
-      expect(result.role).toBe('admin');
-    });
-
-    it('calls signUpWithOrganization with social authType', async () => {
-      await useCase.execute(command);
-
-      expect(signUpWithOrganizationUseCase.execute).toHaveBeenCalledWith({
-        email: 'new@example.com',
-        authType: 'social',
-        socialProvider: 'GoogleOAuth',
-      });
-    });
-
-    it('tracks the social provider', async () => {
-      await useCase.execute(command);
-
-      expect(userMetadataService.addSocialProvider).toHaveBeenCalledWith(
-        newUserId,
-        'GoogleOAuth',
-      );
-    });
-
-    it('does not emit UserSignedInEvent', async () => {
-      await useCase.execute(command);
-
-      expect(mockEventEmitterService.emit).not.toHaveBeenCalled();
-    });
-  });
-
   describe('when user exists with single organization', () => {
     const command: SignInSocialUserCommand = {
       email: 'user@example.com',
@@ -281,6 +202,85 @@ describe('SignInSocialUserUseCase', () => {
           },
         }),
       );
+    });
+  });
+
+  describe('when user does not exist', () => {
+    const command: SignInSocialUserCommand = {
+      email: 'new@example.com',
+      socialProvider: 'GoogleOAuth',
+    };
+
+    const newUserId = createUserId('new-user');
+    const newOrgId = createOrganizationId('new-org');
+    const newUser: User = userFactory({
+      id: newUserId,
+      email: 'new@example.com',
+      memberships: [
+        { userId: newUserId, organizationId: newOrgId, role: 'admin' },
+      ],
+    });
+    const newOrg: Organization = {
+      id: newOrgId,
+      name: "new's organization",
+      slug: 'news-organization',
+    };
+
+    beforeEach(() => {
+      userService.getUserByEmailCaseInsensitive.mockResolvedValue(null);
+      signUpWithOrganizationUseCase.execute.mockResolvedValue({
+        user: newUser,
+        organization: newOrg,
+      });
+    });
+
+    it('returns isNewUser true', async () => {
+      const result = await useCase.execute(command);
+
+      expect(result.isNewUser).toBe(true);
+    });
+
+    it('returns the created user', async () => {
+      const result = await useCase.execute(command);
+
+      expect(result.user).toEqual(newUser);
+    });
+
+    it('returns the created organization', async () => {
+      const result = await useCase.execute(command);
+
+      expect(result.organization).toEqual(newOrg);
+    });
+
+    it('returns admin role', async () => {
+      const result = await useCase.execute(command);
+
+      expect(result.role).toBe('admin');
+    });
+
+    it('calls signUpWithOrganization with social authType', async () => {
+      await useCase.execute(command);
+
+      expect(signUpWithOrganizationUseCase.execute).toHaveBeenCalledWith({
+        email: 'new@example.com',
+        authType: 'social',
+        socialProvider: 'GoogleOAuth',
+      });
+    });
+
+    it('tracks the social provider', async () => {
+      await useCase.execute(command);
+
+      expect(userMetadataService.addSocialProvider).toHaveBeenCalledWith(
+        newUserId,
+        'GoogleOAuth',
+      );
+    });
+
+    it('does not emit UserSignedInEvent', async () => {
+      await useCase.execute(command);
+
+      expect(mockEventEmitterService.emit).not.toHaveBeenCalled();
     });
   });
 

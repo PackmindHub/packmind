@@ -14,6 +14,8 @@ import {
   getPrimaryOrganizationId,
 } from '../../services/MembershipResolutionService';
 import { UserMetadataService } from '../../services/UserMetadataService';
+import { OrganizationNotFoundError } from '../../../domain/errors/OrganizationNotFoundError';
+import { InvalidEmailOrPasswordError } from '../../../domain/errors/InvalidEmailOrPasswordError';
 
 export class SignInSocialUserUseCase implements ISignInSocialUserUseCase {
   constructor(
@@ -78,8 +80,16 @@ export class SignInSocialUserUseCase implements ISignInSocialUserUseCase {
       command.socialProvider,
     );
 
-    const resolved =
-      await this.membershipResolutionService.resolveUserOrganizations(user);
+    let resolved;
+    try {
+      resolved =
+        await this.membershipResolutionService.resolveUserOrganizations(user);
+    } catch (error) {
+      if (error instanceof OrganizationNotFoundError) {
+        throw new InvalidEmailOrPasswordError();
+      }
+      throw error;
+    }
 
     const organizationId = getPrimaryOrganizationId(resolved);
 
