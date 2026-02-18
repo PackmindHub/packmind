@@ -53,6 +53,7 @@ import { RejectCommandChangeProposalUseCase } from '../useCases/rejectCommandCha
 import { IChangeProposalValidator } from '../validators/IChangeProposalValidator';
 import { CommandChangeProposalValidator } from '../validators/CommandChangeProposalValidator';
 import { SkillChangeProposalValidator } from '../validators/SkillChangeProposalValidator';
+import { StandardChangeProposalValidator } from '../validators/StandardChangeProposalValidator';
 import { BatchRejectChangeProposalsUseCase } from '../useCases/batchRejectChangeProposals/BatchRejectChangeProposalsUseCase';
 
 const origin = 'PlaybookChangeManagementAdapter';
@@ -209,6 +210,7 @@ export class PlaybookChangeManagementAdapter
     const validators: IChangeProposalValidator[] = [
       new CommandChangeProposalValidator(recipesPort),
       new SkillChangeProposalValidator(skillsPort),
+      new StandardChangeProposalValidator(standardsPort),
     ];
 
     this._applyCommandChangeProposal = new ApplyCommandChangeProposalUseCase(

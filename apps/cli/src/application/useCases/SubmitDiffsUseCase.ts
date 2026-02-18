@@ -13,7 +13,7 @@ import {
 import { IPackmindGateway } from '../../domain/repositories/IPackmindGateway';
 import { ArtefactDiff } from '../../domain/useCases/IDiffArtefactsUseCase';
 
-const SUPPORTED_ARTIFACT_TYPES = new Set(['command', 'skill']);
+const SUPPORTED_ARTIFACT_TYPES = new Set(['command', 'skill', 'standard']);
 
 type ValidDiff = ArtefactDiff & { artifactId: string; spaceId: string };
 
@@ -34,7 +34,7 @@ export class SubmitDiffsUseCase implements ISubmitDiffsUseCase {
       if (!SUPPORTED_ARTIFACT_TYPES.has(firstDiff.artifactType)) {
         skipped.push({
           name: firstDiff.artifactName,
-          reason: 'Only commands and skills are supported',
+          reason: 'Only commands, skills, and standards are supported',
         });
         continue;
       }
