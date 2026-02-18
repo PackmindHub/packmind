@@ -47,6 +47,21 @@ export class StandardDiffStrategy implements IDiffStrategy {
       });
     }
 
+    if (serverParsed.description !== localParsed.description) {
+      diffs.push({
+        filePath: file.path,
+        type: ChangeProposalType.updateStandardDescription,
+        payload: {
+          oldValue: serverParsed.description,
+          newValue: localParsed.description,
+        },
+        artifactName: file.artifactName,
+        artifactType: file.artifactType,
+        artifactId: file.artifactId,
+        spaceId: file.spaceId,
+      });
+    }
+
     return diffs;
   }
 }
