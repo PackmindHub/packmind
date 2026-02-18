@@ -263,7 +263,7 @@ Create a JSON playbook file named \`<standard-name>.playbook.json\` based on the
 - **name**: Non-empty Title Case string, descriptive and specific (2–5 words, e.g., "TypeScript Testing Conventions")
 - **description**: Non-empty string explaining purpose
 - **scope**: Non-empty string describing applicability
-- **rules**: Array with at least one rule
+- **rules**: Array with at least one rule. Limit to 15 rules max.
 - **rules[].content**: Non-empty string starting with action verb (max ~25 words)
 - **rules[].examples** (optional): If provided, must include positive, negative, and language
 
