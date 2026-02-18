@@ -6,7 +6,7 @@ import {
   UserSignedInEvent,
 } from '@packmind/types';
 import { UserService } from '../../services/UserService';
-import { OrganizationService } from '../../services/OrganizationService';
+import { MembershipResolutionService } from '../../services/MembershipResolutionService';
 import { LoginRateLimiterService } from '../../services/LoginRateLimiterService';
 import { MissingEmailError } from '../../../domain/errors/MissingEmailError';
 import { InvalidEmailOrPasswordError } from '../../../domain/errors/InvalidEmailOrPasswordError';
@@ -14,7 +14,7 @@ import { InvalidEmailOrPasswordError } from '../../../domain/errors/InvalidEmail
 export class SignInUserUseCase implements ISignInUserUseCase {
   constructor(
     private readonly userService: UserService,
-    private readonly organizationService: OrganizationService,
+    private readonly membershipResolutionService: MembershipResolutionService,
     private readonly loginRateLimiterService: LoginRateLimiterService,
     private readonly eventEmitterService: PackmindEventEmitterService,
   ) {}
@@ -46,83 +46,28 @@ export class SignInUserUseCase implements ISignInUserUseCase {
       throw new InvalidEmailOrPasswordError();
     }
 
-    // If user has no memberships, allow them to sign in to create an organization
-    // No UserSignedInEvent emitted here: event requires organizationId which is unavailable without memberships
-    if (user.memberships.length === 0) {
-      // Successful login - clear any previous failed attempts
-      await this.loginRateLimiterService.clearAttempts(command.email);
-
-      return {
-        user,
-        organizations: [],
-      };
-    }
-
-    // If user belongs to a single organization, return the same behavior
-    if (user.memberships.length === 1) {
-      const membership = user.memberships[0];
-      const organization = await this.organizationService.getOrganizationById(
-        membership.organizationId,
-      );
-
-      if (!organization) {
-        throw new InvalidEmailOrPasswordError();
-      }
-
-      // Successful login - clear any previous failed attempts
-      await this.loginRateLimiterService.clearAttempts(command.email);
-
-      this.eventEmitterService.emit(
-        new UserSignedInEvent({
-          userId: user.id,
-          organizationId: organization.id,
-          email: user.email,
-          authType: 'password',
-          source: 'ui',
-        }),
-      );
-
-      return {
-        user,
-        organization,
-        role: membership.role,
-      };
-    }
-
-    // If user belongs to multiple organizations, return the list of available organizations
-    const organizationsWithRoles = await Promise.all(
-      user.memberships.map(async (membership) => {
-        const organization = await this.organizationService.getOrganizationById(
-          membership.organizationId,
-        );
-
-        if (!organization) {
-          throw new InvalidEmailOrPasswordError();
-        }
-
-        return {
-          organization,
-          role: membership.role,
-        };
-      }),
-    );
-
     // Successful login - clear any previous failed attempts
     await this.loginRateLimiterService.clearAttempts(command.email);
 
-    this.eventEmitterService.emit(
-      new UserSignedInEvent({
-        userId: user.id,
-        organizationId: organizationsWithRoles[0].organization.id,
-        email: user.email,
-        authType: 'password',
-        source: 'ui',
-      }),
-    );
+    const resolved =
+      await this.membershipResolutionService.resolveUserOrganizations(user);
 
-    return {
-      user,
-      organizations: organizationsWithRoles,
-    };
+    // Emit event when organizationId is available
+    const organizationId =
+      resolved.organization?.id ?? resolved.organizations?.[0]?.organization.id;
+
+    if (organizationId) {
+      this.eventEmitterService.emit(
+        new UserSignedInEvent({
+          userId: user.id,
+          organizationId,
+          email: user.email,
+          method: 'password',
+          source: 'ui',
+        }),
+      );
+    }
+
+    return { user, ...resolved };
   }
 }
