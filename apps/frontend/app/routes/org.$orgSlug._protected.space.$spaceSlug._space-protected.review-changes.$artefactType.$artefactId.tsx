@@ -242,7 +242,8 @@ function MiddlePanelContent({
 function CommandReviewDetail({ artefactId }: Readonly<{ artefactId: string }>) {
   const recipeId = artefactId as RecipeId;
   const { organization } = useAuthContext();
-  const { spaceId } = useCurrentSpace();
+  const { spaceId, space } = useCurrentSpace();
+  const { orgSlug } = useParams<{ orgSlug: string }>();
   const queryClient = useQueryClient();
   const userLookup = useUserLookup();
 
@@ -258,7 +259,10 @@ function CommandReviewDetail({ artefactId }: Readonly<{ artefactId: string }>) {
   >(new Set());
 
   const applyRecipeChangeProposalsMutation =
-    useApplyRecipeChangeProposalsMutation();
+    useApplyRecipeChangeProposalsMutation({
+      orgSlug,
+      spaceSlug: space?.slug,
+    });
 
   const { data: selectedRecipeProposalsData, isLoading: isLoadingProposals } =
     useListChangeProposalsByRecipeQuery(recipeId);

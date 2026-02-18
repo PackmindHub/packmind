@@ -15,6 +15,7 @@ import { SpacesHexa } from '@packmind/spaces';
 import { StandardsHexa } from '@packmind/standards';
 import { DataSource } from 'typeorm';
 import * as jwt from 'jsonwebtoken';
+import { PlaybookChangeManagementHexa } from '@packmind/playbook-change-management';
 
 const TEST_JWT_SECRET = 'test-jwt-secret-for-integration-tests';
 
@@ -46,6 +47,7 @@ export class TestApp {
   public deploymentsHexa!: DeploymentsHexa;
   public linterHexa!: LinterHexa;
   public amplitudeHexa!: AmplitudeHexa;
+  public playbookManagementHexa!: PlaybookChangeManagementHexa;
 
   private _registry: HexaRegistry;
   private dataSource: DataSource;
@@ -73,6 +75,7 @@ export class TestApp {
     this._registry.register(SkillsHexa);
     this._registry.register(CodingAgentHexa);
     this._registry.register(DeploymentsHexa);
+    this._registry.register(PlaybookChangeManagementHexa);
   }
 
   public async initialize() {
@@ -91,5 +94,8 @@ export class TestApp {
     this.jobsService = this._registry.getService(JobsService);
     this.deploymentsHexa = this._registry.get(DeploymentsHexa);
     this.amplitudeHexa = this._registry.get(AmplitudeHexa);
+    this.playbookManagementHexa = this._registry.get(
+      PlaybookChangeManagementHexa,
+    );
   }
 }

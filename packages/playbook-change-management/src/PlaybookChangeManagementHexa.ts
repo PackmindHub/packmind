@@ -51,6 +51,7 @@ export class PlaybookChangeManagementHexa extends BaseHexa<
       this.playbookChangeManagementServices =
         new PlaybookChangeManagementServices(
           this.playbookChangeManagementRepositories,
+          this.dataSource,
         );
       this.playbookChangeManagementAdapter =
         new PlaybookChangeManagementAdapter(

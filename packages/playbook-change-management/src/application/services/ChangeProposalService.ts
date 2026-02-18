@@ -19,9 +19,11 @@ import {
   UserId,
 } from '@packmind/types';
 import { v4 as uuidv4 } from 'uuid';
+import { DataSource } from 'typeorm';
 import { ChangeProposalConflictError } from '../../domain/errors/ChangeProposalConflictError';
 import { IChangeProposalRepository } from '../../domain/repositories/IChangeProposalRepository';
 import { DiffService } from './DiffService';
+import { ChangeProposalSchema } from '../../infra/schemas/ChangeProposalSchema';
 
 const origin = 'ChangeProposalService';
 
@@ -62,6 +64,7 @@ function getArtefactCategory(type: ChangeProposalType): ArtefactCategory {
 export class ChangeProposalService {
   constructor(
     private readonly repository: IChangeProposalRepository,
+    private readonly dataSource: DataSource,
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
     private readonly diffService: DiffService = new DiffService(),
   ) {}
@@ -229,6 +232,88 @@ export class ChangeProposalService {
     });
 
     return rejectedProposal;
+  }
+
+  async markProposalAsApplied(
+    proposal: ChangeProposal<ChangeProposalType>,
+    userId: UserId,
+  ): Promise<ChangeProposal<ChangeProposalType>> {
+    const appliedProposal: ChangeProposal<ChangeProposalType> = {
+      ...proposal,
+      status: ChangeProposalStatus.applied,
+      resolvedBy: userId,
+      resolvedAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    await this.repository.update(appliedProposal);
+
+    this.logger.info('Change proposal marked as applied', {
+      proposalId: proposal.id,
+      artefactId: proposal.artefactId,
+    });
+
+    return appliedProposal;
+  }
+
+  /**
+   * Batch update proposals (mark as applied or rejected) within a transaction.
+   * This ensures atomicity - if any operation fails, all changes are rolled back.
+   */
+  async batchUpdateProposalsInTransaction(params: {
+    acceptedProposals: Array<{
+      proposal: ChangeProposal<ChangeProposalType>;
+      userId: UserId;
+    }>;
+    rejectedProposals: Array<{
+      proposal: ChangeProposal<ChangeProposalType>;
+      userId: UserId;
+    }>;
+  }): Promise<void> {
+    const { acceptedProposals, rejectedProposals } = params;
+
+    await this.dataSource.manager.transaction(async (entityManager) => {
+      const now = new Date();
+
+      // Update accepted proposals
+      for (const { proposal, userId } of acceptedProposals) {
+        const appliedProposal: ChangeProposal<ChangeProposalType> = {
+          ...proposal,
+          status: ChangeProposalStatus.applied,
+          resolvedBy: userId,
+          resolvedAt: now,
+          updatedAt: now,
+        };
+
+        await entityManager.save(ChangeProposalSchema, appliedProposal);
+
+        this.logger.info('Change proposal marked as applied (in transaction)', {
+          proposalId: proposal.id,
+          artefactId: proposal.artefactId,
+        });
+      }
+
+      // Update rejected proposals
+      for (const { proposal, userId } of rejectedProposals) {
+        const rejectedProposal: ChangeProposal<ChangeProposalType> = {
+          ...proposal,
+          status: ChangeProposalStatus.rejected,
+          resolvedBy: userId,
+          resolvedAt: now,
+          updatedAt: now,
+        };
+
+        await entityManager.save(ChangeProposalSchema, rejectedProposal);
+
+        this.logger.info(
+          'Change proposal marked as rejected (in transaction)',
+          {
+            proposalId: proposal.id,
+            artefactId: proposal.artefactId,
+          },
+        );
+      }
+    });
   }
 
   async applyProposal(
