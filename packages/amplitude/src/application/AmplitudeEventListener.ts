@@ -86,7 +86,7 @@ export class AmplitudeEventListener extends PackmindListener<EventTrackingAdapte
     event: UserSignedInEvent,
   ): Promise<void> => {
     return this.emitAmplitudeEvent(event, 'user_signed_in', (payload) => ({
-      authType: payload.authType,
+      authType: payload.method,
       socialProvider: payload.socialProvider ?? '',
     }));
   };

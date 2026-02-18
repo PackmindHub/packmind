@@ -343,7 +343,7 @@ describe('AmplitudeEventListener', () => {
         userId: createUserId('user-123'),
         organizationId: createOrganizationId('org-456'),
         email: 'test@example.com',
-        authType: 'social',
+        method: 'social',
         socialProvider: 'google',
         source: 'ui',
       });
@@ -370,7 +370,7 @@ describe('AmplitudeEventListener', () => {
           userId: createUserId('user-123'),
           organizationId: createOrganizationId('org-456'),
           email: 'test@example.com',
-          authType: 'password',
+          method: 'password',
           source: 'ui',
         });
 
