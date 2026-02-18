@@ -56,6 +56,7 @@ import {
   IRenameOrganizationUseCase,
   IRequestPasswordResetUseCase,
   IResetPasswordUseCase,
+  ISignInSocialUserUseCase,
   ISignInUserUseCase,
   ISpacesPort,
   ISpacesPortName,
@@ -86,10 +87,11 @@ import {
   RequestPasswordResetResponse,
   ResetPasswordCommand,
   ResetPasswordResponse,
+  SignInSocialUserCommand,
+  SignInSocialUserResponse,
   SignInUserCommand,
   StartTrialCommand,
   StartTrialResult,
-  SocialProvider,
   User,
   UserId,
   ValidateInvitationTokenCommand,
@@ -134,6 +136,7 @@ import { ListOrganizationUsersUseCase } from '../useCases/listOrganizationUsers/
 import { ListUserOrganizationsUseCase } from '../useCases/listUserOrganizations/ListUserOrganizationsUseCase';
 import { RemoveUserFromOrganizationUseCase } from '../useCases/removeUserFromOrganization/RemoveUserFromOrganizationUseCase';
 import { SignInUserUseCase } from '../useCases/signInUser/SignInUserUseCase';
+import { SignInSocialUserUseCase } from '../useCases/signInSocialUser/SignInSocialUserUseCase';
 import { SignUpWithOrganizationUseCase } from '../useCases/signUpWithOrganization/SignUpWithOrganizationUseCase';
 import { ValidateInvitationTokenUseCase } from '../useCases/validateInvitationToken/ValidateInvitationTokenUseCase';
 import { ValidatePasswordUseCase } from '../useCases/validatePasswordUseCase/ValidatePasswordUseCase';
@@ -153,6 +156,7 @@ export class AccountsAdapter
 
   private _signUpWithOrganization!: ISignUpWithOrganizationUseCase;
   private _signInUser!: ISignInUserUseCase;
+  private _signInSocialUser!: ISignInSocialUserUseCase;
   private _getUserById!: IGetUserByIdUseCase;
   private _removeUserFromOrganization!: IRemoveUserFromOrganizationUseCase;
   private _listOrganizationUserStatuses!: IListOrganizationUserStatusesUseCase;
@@ -228,8 +232,15 @@ export class AccountsAdapter
     );
     this._signInUser = new SignInUserUseCase(
       this.accountsServices.getUserService(),
-      this.accountsServices.getOrganizationService(),
+      this.accountsServices.getMembershipResolutionService(),
       this.accountsServices.getLoginRateLimiterService(),
+      ports.eventEmitterService,
+    );
+    this._signInSocialUser = new SignInSocialUserUseCase(
+      this.accountsServices.getUserService(),
+      this.accountsServices.getMembershipResolutionService(),
+      this.accountsServices.getUserMetadataService(),
+      this._signUpWithOrganization,
       ports.eventEmitterService,
     );
     this._getUserById = new GetUserByIdUseCase(
@@ -647,31 +658,9 @@ export class AccountsAdapter
   }
 
   // Social login operations
-  public async getUserByEmail(email: string): Promise<User | null> {
-    return this.accountsServices
-      .getUserService()
-      .getUserByEmailCaseInsensitive(email);
-  }
-
-  public async createSocialLoginUser(
-    email: string,
-    provider: SocialProvider,
-  ): Promise<User> {
-    const user = await this.accountsServices
-      .getUserService()
-      .createSocialLoginUser(email);
-    await this.accountsServices
-      .getUserMetadataService()
-      .addSocialProvider(user.id, provider);
-    return user;
-  }
-
-  public async addSocialProvider(
-    userId: UserId,
-    provider: SocialProvider,
-  ): Promise<void> {
-    await this.accountsServices
-      .getUserMetadataService()
-      .addSocialProvider(userId, provider);
+  public async signInSocialUser(
+    command: SignInSocialUserCommand,
+  ): Promise<SignInSocialUserResponse> {
+    return this._signInSocialUser.execute(command);
   }
 }

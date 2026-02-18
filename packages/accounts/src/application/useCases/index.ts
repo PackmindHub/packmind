@@ -26,6 +26,7 @@ export { RemoveUserFromOrganizationUseCase } from './removeUserFromOrganization/
 export { RequestPasswordResetUseCase } from './RequestPasswordResetUseCase';
 export { ResetPasswordUseCase } from './ResetPasswordUseCase';
 export { SignInUserUseCase } from './signInUser/SignInUserUseCase';
+export { SignInSocialUserUseCase } from './signInSocialUser/SignInSocialUserUseCase';
 export { SignUpWithOrganizationUseCase } from './signUpWithOrganization/SignUpWithOrganizationUseCase';
 export { ValidateInvitationTokenUseCase } from './validateInvitationToken/ValidateInvitationTokenUseCase';
 export { ValidatePasswordResetTokenUseCase } from './ValidatePasswordResetTokenUseCase';

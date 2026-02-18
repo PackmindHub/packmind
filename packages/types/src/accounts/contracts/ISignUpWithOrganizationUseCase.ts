@@ -1,10 +1,10 @@
 import { IPublicUseCase } from '../../UseCase';
-import { User, Organization, SocialProvider } from '../index';
+import { AuthMethod, User, Organization, SocialProvider } from '../index';
 
 export type SignUpWithOrganizationCommand = {
   email: string;
   password?: string;
-  authType: 'password' | 'social';
+  authType: AuthMethod;
   socialProvider?: SocialProvider;
 };
 

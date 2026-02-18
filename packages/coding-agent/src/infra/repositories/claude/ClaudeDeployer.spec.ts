@@ -228,7 +228,7 @@ describe('ClaudeDeployer', () => {
 
         const recipeFile = result.createOrUpdate[0];
         expect(recipeFile.content).toContain(
-          'description: A test recipe summary',
+          "description: 'A test recipe summary'",
         );
       });
 
@@ -312,7 +312,7 @@ describe('ClaudeDeployer', () => {
 
         const recipeFile = result.createOrUpdate[0];
         expect(recipeFile.content).toContain(
-          'description: Recipe Without Summary',
+          "description: 'Recipe Without Summary'",
         );
       });
     });
@@ -593,7 +593,7 @@ describe('ClaudeDeployer', () => {
         );
 
         const standardFile = result.createOrUpdate[0];
-        expect(standardFile.content).toContain(`name: ${standard.name}`);
+        expect(standardFile.content).toContain(`name: '${standard.name}'`);
       });
 
       describe('when scope exists', () => {
@@ -902,7 +902,7 @@ describe('ClaudeDeployer', () => {
 
         const standardFile = result.createOrUpdate[0];
         expect(standardFile.content).toContain(
-          'description: A test standard summary',
+          "description: 'A test standard summary'",
         );
       });
 
@@ -1126,7 +1126,7 @@ describe('ClaudeDeployer', () => {
 
           const standardFile = result.createOrUpdate[0];
           expect(standardFile.content).toContain(
-            `description: ${standard.name}`,
+            `description: '${standard.name}'`,
           );
         });
       });
@@ -1160,7 +1160,7 @@ describe('ClaudeDeployer', () => {
 
           const standardFile = result.createOrUpdate[0];
           expect(standardFile.content).toContain(
-            `description: ${standard.name}`,
+            `description: '${standard.name}'`,
           );
         });
       });
@@ -1562,7 +1562,7 @@ describe('ClaudeDeployer', () => {
 
       it('includes frontmatter with description from summary', () => {
         expect(result.createOrUpdate[0].content).toContain(
-          'description: Recipe summary',
+          "description: 'Recipe summary'",
         );
       });
 
@@ -1597,7 +1597,7 @@ describe('ClaudeDeployer', () => {
         ]);
 
         expect(result.createOrUpdate[0].content).toContain(
-          'description: Recipe Without Summary',
+          "description: 'Recipe Without Summary'",
         );
       });
     });
@@ -2095,7 +2095,7 @@ describe('ClaudeDeployer', () => {
         const result = await deployer.deployArtifacts([recipeVersion], []);
 
         expect(result.createOrUpdate[0].content).toContain(
-          'description: Recipe summary',
+          "description: 'Recipe summary'",
         );
       });
 
