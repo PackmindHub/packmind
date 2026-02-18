@@ -94,7 +94,7 @@ export class ClaudeDeployer implements ICodingAgentDeployer {
     const description = recipeVersion.summary?.trim() || recipeVersion.name;
 
     const frontmatter = `---
-description: ${description}
+description: '${this.escapeSingleQuotes(description)}'
 ---`;
 
     const content = `${frontmatter}
@@ -573,17 +573,17 @@ ${recipeVersion.content}`;
     if (standardVersion.scope && standardVersion.scope.trim() !== '') {
       // When the scope is not null or empty
       frontmatter = `---
-name: ${standardVersion.name}
+name: '${this.escapeSingleQuotes(standardVersion.name)}'
 paths: ${this.formatGlobsValue(standardVersion.scope)}
 alwaysApply: false
-description: ${summary}
+description: '${this.escapeSingleQuotes(summary)}'
 ---`;
     } else {
       // When the scope is empty
       frontmatter = `---
-name: ${standardVersion.name}
+name: '${this.escapeSingleQuotes(standardVersion.name)}'
 alwaysApply: true
-description: ${summary}
+description: '${this.escapeSingleQuotes(summary)}'
 ---`;
     }
 

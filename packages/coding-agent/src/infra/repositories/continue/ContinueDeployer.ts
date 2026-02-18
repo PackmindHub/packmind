@@ -356,8 +356,8 @@ export class ContinueDeployer implements ICodingAgentDeployer {
     const description = recipeVersion.summary?.trim() || recipeVersion.name;
 
     const frontmatter = `---
-name: ${recipeVersion.name}
-description: ${description}
+name: '${this.escapeSingleQuotes(recipeVersion.name)}'
+description: '${this.escapeSingleQuotes(description)}'
 invokable: true
 ---`;
 
@@ -371,6 +371,13 @@ ${recipeVersion.content}`;
       path,
       content,
     };
+  }
+
+  /**
+   * Escape single quotes in YAML values to prevent parsing errors
+   */
+  private escapeSingleQuotes(value: string): string {
+    return value.replace(/'/g, "''");
   }
 
   /**
@@ -466,17 +473,17 @@ ${recipeVersion.content}`;
     if (standardVersion.scope && standardVersion.scope.trim() !== '') {
       // When the scope is not null or empty
       frontmatter = `---
-name: ${standardVersion.name}
+name: '${this.escapeSingleQuotes(standardVersion.name)}'
 globs: ${this.formatGlobsValue(standardVersion.scope)}
 alwaysApply: false
-description: ${summary}
+description: '${this.escapeSingleQuotes(summary)}'
 ---`;
     } else {
       // When the scope is empty
       frontmatter = `---
-name: ${standardVersion.name}
+name: '${this.escapeSingleQuotes(standardVersion.name)}'
 alwaysApply: true
-description: ${summary}
+description: '${this.escapeSingleQuotes(summary)}'
 ---`;
     }
 
