@@ -1,7 +1,9 @@
 import {
   ChangeProposalType,
+  CollectionItemDeletePayload,
   CreateChangeProposalCommand,
   IStandardsPort,
+  Rule,
   ScalarUpdatePayload,
   Standard,
   StandardId,
@@ -19,6 +21,8 @@ const SUPPORTED_TYPES: ReadonlySet<ChangeProposalType> = new Set([
   ChangeProposalType.updateStandardName,
   ChangeProposalType.updateStandardDescription,
   ChangeProposalType.updateStandardScope,
+  ChangeProposalType.addRule,
+  ChangeProposalType.deleteRule,
 ]);
 
 const STANDARD_FIELD_BY_TYPE: Record<
@@ -48,6 +52,14 @@ export class StandardChangeProposalValidator implements IChangeProposalValidator
       throw new Error(`Standard ${standardId} not found`);
     }
 
+    if (command.type === ChangeProposalType.addRule) {
+      return { artefactVersion: standard.version };
+    }
+
+    if (command.type === ChangeProposalType.deleteRule) {
+      return this.validateDeleteRule(standard, command);
+    }
+
     const payload = command.payload as ScalarUpdatePayload;
     const currentValue =
       STANDARD_FIELD_BY_TYPE[command.type as ScalarStandardType](standard);
@@ -57,6 +69,29 @@ export class StandardChangeProposalValidator implements IChangeProposalValidator
         command.type,
         payload.oldValue,
         currentValue,
+      );
+    }
+
+    return { artefactVersion: standard.version };
+  }
+
+  private async validateDeleteRule(
+    standard: Standard,
+    command: CreateChangeProposalCommand<ChangeProposalType> & MemberContext,
+  ): Promise<{ artefactVersion: number }> {
+    const payload = command.payload as CollectionItemDeletePayload<
+      Omit<Rule, 'standardVersionId'>
+    >;
+    const rules = await this.standardsPort.getRulesByStandardId(standard.id);
+    const ruleExists = rules.some(
+      (rule) => rule.content === payload.item.content,
+    );
+
+    if (!ruleExists) {
+      throw new ChangeProposalPayloadMismatchError(
+        command.type,
+        payload.item.content,
+        'rule not found',
       );
     }
 

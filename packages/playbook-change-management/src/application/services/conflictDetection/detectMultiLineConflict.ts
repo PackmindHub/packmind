@@ -7,7 +7,9 @@ import { sameArtefact } from './sameArtefact';
 type MultiLineChangeProposals =
   | ChangeProposalType.updateCommandDescription
   | ChangeProposalType.updateSkillDescription
-  | ChangeProposalType.updateStandardDescription;
+  | ChangeProposalType.updateStandardDescription
+  | ChangeProposalType.updateSkillPrompt;
+
 export const detectMultiLineConflict: ConflictDetector<
   MultiLineChangeProposals
 > = (cp1, cp2, diffService) => {

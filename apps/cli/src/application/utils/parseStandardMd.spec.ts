@@ -13,6 +13,7 @@ describe('parseStandardMd', () => {
         name: 'My Standard',
         description: 'Some description',
         scope: '',
+        rules: ['Rule 1'],
       });
     });
 
@@ -26,7 +27,26 @@ describe('parseStandardMd', () => {
         name: 'My Standard',
         description: 'Line one\nLine two',
         scope: '',
+        rules: ['Rule 1'],
       });
+    });
+
+    it('extracts multiple rules', () => {
+      const content =
+        '# My Standard\n\nDesc\n\n## Rules\n\n* Rule one\n* Rule two\n* Rule three';
+
+      const result = parseStandardMd(content, filePath);
+
+      expect(result?.rules).toEqual(['Rule one', 'Rule two', 'Rule three']);
+    });
+
+    it('extracts rules with dash bullets', () => {
+      const content =
+        '# My Standard\n\nDesc\n\n## Rules\n\n- Rule one\n- Rule two';
+
+      const result = parseStandardMd(content, filePath);
+
+      expect(result?.rules).toEqual(['Rule one', 'Rule two']);
     });
 
     describe('when no content between name and rules', () => {
@@ -39,6 +59,7 @@ describe('parseStandardMd', () => {
           name: 'My Standard',
           description: '',
           scope: '',
+          rules: ['Rule 1'],
         });
       });
     });
@@ -53,6 +74,7 @@ describe('parseStandardMd', () => {
           name: 'My Standard',
           description: 'Just a description with no rules',
           scope: '',
+          rules: [],
         });
       });
     });
@@ -76,6 +98,7 @@ describe('parseStandardMd', () => {
         name: 'Spaced Name',
         description: 'Description',
         scope: '',
+        rules: [],
       });
     });
 
@@ -101,6 +124,7 @@ describe('parseStandardMd', () => {
         name: 'My Standard',
         description: 'Some description',
         scope: '',
+        rules: ['Rule 1'],
       });
     });
 
@@ -114,6 +138,7 @@ describe('parseStandardMd', () => {
         name: 'Name',
         description: 'Desc',
         scope: '**/*.ts',
+        rules: ['Rule 1'],
       });
     });
 
@@ -127,6 +152,7 @@ describe('parseStandardMd', () => {
         name: 'Name',
         description: 'Desc',
         scope: '**/*.ts, **/*.tsx',
+        rules: ['Rule 1'],
       });
     });
 
@@ -141,6 +167,7 @@ describe('parseStandardMd', () => {
           name: 'Name',
           description: 'Desc',
           scope: '',
+          rules: ['Rule 1'],
         });
       });
     });
@@ -155,6 +182,7 @@ describe('parseStandardMd', () => {
         name: 'Name',
         description: 'My description',
         scope: '',
+        rules: ['Rule 1'],
       });
     });
 
@@ -168,7 +196,26 @@ describe('parseStandardMd', () => {
         name: 'Name',
         description: 'Desc',
         scope: '',
+        rules: ['Rule 1'],
       });
+    });
+
+    it('extracts multiple rules sorted alphabetically', () => {
+      const content =
+        '---\nalwaysApply: true\n---\n## Standard: Name\n\nDesc :\n\n* Beta rule\n* Alpha rule\n\nFull standard is available here for further request: [Name](link)';
+
+      const result = parseStandardMd(content, filePath);
+
+      expect(result?.rules).toEqual(['Beta rule', 'Alpha rule']);
+    });
+
+    it('ignores "No rules defined yet." placeholder', () => {
+      const content =
+        '---\nalwaysApply: true\n---\n## Standard: Name\n\nDesc :\n\n* No rules defined yet.\n\nFull standard is available here for further request: [Name](link)';
+
+      const result = parseStandardMd(content, filePath);
+
+      expect(result?.rules).toEqual([]);
     });
 
     describe('when frontmatter has name and description', () => {
@@ -214,6 +261,7 @@ describe('parseStandardMd', () => {
         name: 'Name',
         description: 'Desc',
         scope: '**/*.ts',
+        rules: ['Rule 1'],
       });
     });
 
@@ -228,6 +276,7 @@ describe('parseStandardMd', () => {
           name: 'Name',
           description: 'Desc',
           scope: '',
+          rules: ['Rule 1'],
         });
       });
     });
@@ -246,6 +295,7 @@ describe('parseStandardMd', () => {
         name: 'Name',
         description: 'Desc',
         scope: '**/*.ts',
+        rules: ['Rule 1'],
       });
     });
 
@@ -259,6 +309,7 @@ describe('parseStandardMd', () => {
         name: 'Name',
         description: 'Desc',
         scope: '**/*.ts, **/*.tsx',
+        rules: ['Rule 1'],
       });
     });
 
@@ -306,6 +357,7 @@ describe('parseStandardMd', () => {
         name: 'Name',
         description: 'Desc',
         scope: '**/*.ts',
+        rules: ['Rule 1'],
       });
     });
 
@@ -319,6 +371,7 @@ describe('parseStandardMd', () => {
         name: 'Name',
         description: 'Desc',
         scope: '',
+        rules: ['Rule 1'],
       });
     });
   });

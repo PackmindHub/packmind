@@ -238,6 +238,181 @@ describe('StandardDiffStrategy', () => {
     });
   });
 
+  describe('when a rule is added locally', () => {
+    it('returns addRule diff', async () => {
+      const file: DiffableFile = {
+        path: '.packmind/standards/my-standard.md',
+        content: '# Same Name\n\nSame desc\n\n## Rules\n* Rule 1',
+        artifactType: 'standard',
+        artifactName: 'My Standard',
+        artifactId: 'art-1',
+        spaceId: 'spc-1',
+      } as DiffableFile;
+
+      (fs.readFile as jest.Mock).mockResolvedValue(
+        '# Same Name\n\nSame desc\n\n## Rules\n* Rule 1\n* Rule 2',
+      );
+
+      const result = await strategy.diff(file, '/test');
+
+      expect(result).toEqual([
+        expect.objectContaining({
+          type: ChangeProposalType.addRule,
+          payload: expect.objectContaining({
+            item: expect.objectContaining({ content: 'Rule 2' }),
+          }),
+        }),
+      ]);
+    });
+  });
+
+  describe('when a rule is deleted locally', () => {
+    it('returns deleteRule diff', async () => {
+      const file: DiffableFile = {
+        path: '.packmind/standards/my-standard.md',
+        content: '# Same Name\n\nSame desc\n\n## Rules\n* Rule 1\n* Rule 2',
+        artifactType: 'standard',
+        artifactName: 'My Standard',
+        artifactId: 'art-1',
+        spaceId: 'spc-1',
+      } as DiffableFile;
+
+      (fs.readFile as jest.Mock).mockResolvedValue(
+        '# Same Name\n\nSame desc\n\n## Rules\n* Rule 1',
+      );
+
+      const result = await strategy.diff(file, '/test');
+
+      expect(result).toEqual([
+        expect.objectContaining({
+          type: ChangeProposalType.deleteRule,
+          payload: expect.objectContaining({
+            item: expect.objectContaining({ content: 'Rule 2' }),
+          }),
+        }),
+      ]);
+    });
+  });
+
+  describe('when a rule is modified locally', () => {
+    it('returns deleteRule and addRule diffs', async () => {
+      const file: DiffableFile = {
+        path: '.packmind/standards/my-standard.md',
+        content: '# Same Name\n\nSame desc\n\n## Rules\n* Original rule',
+        artifactType: 'standard',
+        artifactName: 'My Standard',
+        artifactId: 'art-1',
+        spaceId: 'spc-1',
+      } as DiffableFile;
+
+      (fs.readFile as jest.Mock).mockResolvedValue(
+        '# Same Name\n\nSame desc\n\n## Rules\n* Modified rule',
+      );
+
+      const result = await strategy.diff(file, '/test');
+
+      expect(result).toHaveLength(2);
+    });
+
+    it('includes deleteRule for original content', async () => {
+      const file: DiffableFile = {
+        path: '.packmind/standards/my-standard.md',
+        content: '# Same Name\n\nSame desc\n\n## Rules\n* Original rule',
+        artifactType: 'standard',
+        artifactName: 'My Standard',
+        artifactId: 'art-1',
+        spaceId: 'spc-1',
+      } as DiffableFile;
+
+      (fs.readFile as jest.Mock).mockResolvedValue(
+        '# Same Name\n\nSame desc\n\n## Rules\n* Modified rule',
+      );
+
+      const result = await strategy.diff(file, '/test');
+
+      expect(result[0]).toEqual(
+        expect.objectContaining({
+          type: ChangeProposalType.deleteRule,
+          payload: expect.objectContaining({
+            item: expect.objectContaining({ content: 'Original rule' }),
+          }),
+        }),
+      );
+    });
+
+    it('includes addRule for new content', async () => {
+      const file: DiffableFile = {
+        path: '.packmind/standards/my-standard.md',
+        content: '# Same Name\n\nSame desc\n\n## Rules\n* Original rule',
+        artifactType: 'standard',
+        artifactName: 'My Standard',
+        artifactId: 'art-1',
+        spaceId: 'spc-1',
+      } as DiffableFile;
+
+      (fs.readFile as jest.Mock).mockResolvedValue(
+        '# Same Name\n\nSame desc\n\n## Rules\n* Modified rule',
+      );
+
+      const result = await strategy.diff(file, '/test');
+
+      expect(result[1]).toEqual(
+        expect.objectContaining({
+          type: ChangeProposalType.addRule,
+          payload: expect.objectContaining({
+            item: expect.objectContaining({ content: 'Modified rule' }),
+          }),
+        }),
+      );
+    });
+  });
+
+  describe('when rules are identical', () => {
+    it('returns no rule diffs', async () => {
+      const file: DiffableFile = {
+        path: '.packmind/standards/my-standard.md',
+        content: '# Same Name\n\nSame desc\n\n## Rules\n* Rule 1\n* Rule 2',
+        artifactType: 'standard',
+        artifactName: 'My Standard',
+        artifactId: 'art-1',
+        spaceId: 'spc-1',
+      } as DiffableFile;
+
+      (fs.readFile as jest.Mock).mockResolvedValue(
+        '# Same Name\n\nSame desc\n\n## Rules\n* Rule 1\n* Rule 2',
+      );
+
+      const result = await strategy.diff(file, '/test');
+
+      expect(result).toEqual([]);
+    });
+  });
+
+  describe('when rule diff payload structure', () => {
+    it('includes targetId and item with id and content', async () => {
+      const file: DiffableFile = {
+        path: '.packmind/standards/my-standard.md',
+        content: '# Same Name\n\nSame desc\n\n## Rules\n* Rule 1',
+        artifactType: 'standard',
+        artifactName: 'My Standard',
+        artifactId: 'art-1',
+        spaceId: 'spc-1',
+      } as DiffableFile;
+
+      (fs.readFile as jest.Mock).mockResolvedValue(
+        '# Same Name\n\nSame desc\n\n## Rules\n* Rule 1\n* New rule',
+      );
+
+      const result = await strategy.diff(file, '/test');
+      const payload = result[0].payload as {
+        targetId: string;
+        item: { id: string; content: string };
+      };
+
+      expect(payload.targetId).toBe(payload.item.id);
+    });
+  });
+
   describe('when nothing differs', () => {
     it('returns empty array', async () => {
       const file: DiffableFile = {

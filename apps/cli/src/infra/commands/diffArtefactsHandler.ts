@@ -50,6 +50,8 @@ const CHANGE_TYPE_LABELS: Partial<Record<ChangeProposalType, string>> = {
   [ChangeProposalType.updateStandardDescription]:
     'standard description changed',
   [ChangeProposalType.updateStandardScope]: 'standard scope changed',
+  [ChangeProposalType.addRule]: 'new rule added',
+  [ChangeProposalType.deleteRule]: 'rule deleted',
 };
 
 function subGroupByChangeContent(diffs: ArtefactDiff[]): ArtefactDiff[][] {
@@ -107,6 +109,18 @@ function formatDiffPayload(diff: ArtefactDiff, log: typeof console.log): void {
         log(chalk.red(`    ... and ${remaining} more lines deleted`));
       }
     }
+    return;
+  }
+
+  if (diff.type === ChangeProposalType.addRule) {
+    const item = payload.item as { content: string };
+    log(chalk.green(`    + ${item.content}`));
+    return;
+  }
+
+  if (diff.type === ChangeProposalType.deleteRule) {
+    const item = payload.item as { content: string };
+    log(chalk.red(`    - ${item.content}`));
     return;
   }
 
