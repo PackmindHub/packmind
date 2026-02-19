@@ -6,6 +6,9 @@ import { createMockPackmindGateway } from '../../mocks/createMockGateways';
 import { ArtefactDiff } from '../../domain/useCases/IDiffArtefactsUseCase';
 
 jest.mock('fs/promises');
+jest.mock('../../infra/utils/binaryDetection', () => ({
+  isBinaryFile: jest.fn().mockReturnValue(false),
+}));
 
 describe('DiffArtefactsUseCase', () => {
   let useCase: DiffArtefactsUseCase;
@@ -690,7 +693,9 @@ describe('DiffArtefactsUseCase', () => {
         skillFolders: [],
       });
 
-      (fs.readFile as jest.Mock).mockResolvedValue('local content');
+      (fs.readFile as jest.Mock).mockResolvedValue(
+        Buffer.from('local content'),
+      );
 
       result = await useCase.execute({
         ...defaultGitInfo,
@@ -739,7 +744,7 @@ describe('DiffArtefactsUseCase', () => {
         skillFolders: [],
       });
 
-      (fs.readFile as jest.Mock).mockResolvedValue('same content');
+      (fs.readFile as jest.Mock).mockResolvedValue(Buffer.from('same content'));
       (fs.stat as jest.Mock).mockResolvedValue({
         mode: 0o100755,
       });
@@ -793,7 +798,9 @@ describe('DiffArtefactsUseCase', () => {
         skillFolders: [],
       });
 
-      (fs.readFile as jest.Mock).mockResolvedValue('local content');
+      (fs.readFile as jest.Mock).mockResolvedValue(
+        Buffer.from('local content'),
+      );
       (fs.stat as jest.Mock).mockResolvedValue({
         mode: 0o100755,
       });
@@ -838,7 +845,7 @@ describe('DiffArtefactsUseCase', () => {
         skillFolders: [],
       });
 
-      (fs.readFile as jest.Mock).mockResolvedValue('same content');
+      (fs.readFile as jest.Mock).mockResolvedValue(Buffer.from('same content'));
       (fs.stat as jest.Mock).mockResolvedValue({
         mode: 0o100644,
       });
@@ -986,7 +993,7 @@ describe('DiffArtefactsUseCase', () => {
           );
         }
         if (filePath.endsWith('new-file.ts')) {
-          return Promise.resolve('new file content');
+          return Promise.resolve(Buffer.from('new file content'));
         }
         return Promise.reject(new Error('ENOENT'));
       });
@@ -1613,7 +1620,7 @@ describe('DiffArtefactsUseCase', () => {
       (fs.stat as jest.Mock).mockImplementation(() =>
         Promise.resolve({ isDirectory: () => false }),
       );
-      (fs.readFile as jest.Mock).mockResolvedValue('file content');
+      (fs.readFile as jest.Mock).mockResolvedValue(Buffer.from('file content'));
     });
 
     it('returns empty result', async () => {
@@ -1654,7 +1661,7 @@ describe('DiffArtefactsUseCase', () => {
           );
         }
         if (filePath.endsWith('nested-file.ts')) {
-          return Promise.resolve('nested content');
+          return Promise.resolve(Buffer.from('nested content'));
         }
         return Promise.reject(new Error('ENOENT'));
       });
@@ -1867,7 +1874,7 @@ describe('DiffArtefactsUseCase', () => {
           );
         }
         if (filePath.endsWith('new-file.ts')) {
-          return Promise.resolve('new content');
+          return Promise.resolve(Buffer.from('new content'));
         }
         return Promise.reject(new Error('ENOENT'));
       });
@@ -1979,10 +1986,10 @@ describe('DiffArtefactsUseCase', () => {
           );
         }
         if (filePath.endsWith('existing.md')) {
-          return Promise.resolve('existing content');
+          return Promise.resolve(Buffer.from('existing content'));
         }
         if (filePath.endsWith('new-file.md')) {
-          return Promise.resolve('brand new content');
+          return Promise.resolve(Buffer.from('brand new content'));
         }
         return Promise.reject(new Error('ENOENT'));
       });
@@ -2206,7 +2213,7 @@ describe('DiffArtefactsUseCase', () => {
           );
         }
         if (filePath.endsWith('new-file.ts')) {
-          return Promise.resolve('new file content');
+          return Promise.resolve(Buffer.from('new file content'));
         }
         return Promise.reject(new Error('ENOENT'));
       });

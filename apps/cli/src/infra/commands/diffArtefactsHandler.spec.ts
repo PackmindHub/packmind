@@ -737,6 +737,82 @@ describe('diffArtefactsHandler', () => {
     });
   });
 
+  describe('when binary skill file content is updated', () => {
+    beforeEach(() => {
+      mockPackmindCliHexa.readFullConfig.mockResolvedValue({
+        packages: { 'my-package': '*' },
+      });
+
+      mockPackmindCliHexa.diffArtefacts.mockResolvedValue([
+        {
+          filePath: '.claude/skills/my-skill/icon.png',
+          type: ChangeProposalType.updateSkillFileContent,
+          payload: {
+            targetId: createSkillFileId('file-id'),
+            oldValue: 'aVZCT1J3MEtHZ29BQUFBTlN==',
+            newValue: 'iVBORw0KGgoAAAANSUhEUg==',
+            isBase64: true,
+          },
+          artifactName: 'My Skill',
+          artifactType: 'skill',
+        },
+      ]);
+    });
+
+    it('displays binary content changed message', async () => {
+      await diffArtefactsHandler(deps);
+
+      const logCalls = mockLog.mock.calls.map((c) => c[0]);
+      const binaryMessage = logCalls.find((c: string) =>
+        c.includes('[binary content changed]'),
+      );
+
+      expect(binaryMessage).toBeDefined();
+    });
+  });
+
+  describe('when non-binary skill file content is updated', () => {
+    beforeEach(() => {
+      mockPackmindCliHexa.readFullConfig.mockResolvedValue({
+        packages: { 'my-package': '*' },
+      });
+
+      mockPackmindCliHexa.diffArtefacts.mockResolvedValue([
+        {
+          filePath: '.claude/skills/my-skill/helper.ts',
+          type: ChangeProposalType.updateSkillFileContent,
+          payload: {
+            targetId: createSkillFileId('file-id'),
+            oldValue: 'const x = 1;',
+            newValue: 'const x = 2;',
+          },
+          artifactName: 'My Skill',
+          artifactType: 'skill',
+        },
+      ]);
+    });
+
+    it('displays normal diff lines', async () => {
+      await diffArtefactsHandler(deps);
+
+      const logCalls = mockLog.mock.calls.map((c) => c[0]);
+      const diffLine = logCalls.find((c: string) => c.includes('+ added'));
+
+      expect(diffLine).toBeDefined();
+    });
+
+    it('does not display binary content changed message', async () => {
+      await diffArtefactsHandler(deps);
+
+      const logCalls = mockLog.mock.calls.map((c) => c[0]);
+      const binaryMessage = logCalls.find((c: string) =>
+        c.includes('[binary content changed]'),
+      );
+
+      expect(binaryMessage).toBeUndefined();
+    });
+  });
+
   describe('when no diffs found', () => {
     beforeEach(() => {
       mockPackmindCliHexa.readFullConfig.mockResolvedValue({

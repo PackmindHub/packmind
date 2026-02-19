@@ -2,6 +2,8 @@ import fs from 'fs/promises';
 import path from 'path';
 import { minimatch } from 'minimatch';
 
+import { isBinaryFile } from './binaryDetection';
+
 type SkillFile = {
   path: string;
   relativePath: string;
@@ -31,93 +33,6 @@ function normalizePath(filePath: string): string {
  */
 function normalizeLineEndings(content: string): string {
   return content.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
-}
-
-/**
- * Known binary file extensions that should always be treated as binary.
- * This supplements the null-byte detection for files where null bytes
- * may not appear in the first 8000 bytes.
- */
-const BINARY_EXTENSIONS = new Set([
-  // Images
-  '.png',
-  '.jpg',
-  '.jpeg',
-  '.gif',
-  '.bmp',
-  '.ico',
-  '.webp',
-  '.tiff',
-  '.tif',
-  '.heic',
-  '.heif',
-  '.avif',
-  // Documents
-  '.pdf',
-  // Archives
-  '.zip',
-  '.tar',
-  '.gz',
-  '.rar',
-  '.7z',
-  '.bz2',
-  '.xz',
-  // Audio
-  '.mp3',
-  '.wav',
-  '.ogg',
-  '.flac',
-  '.m4a',
-  '.aac',
-  // Video
-  '.mp4',
-  '.avi',
-  '.mkv',
-  '.mov',
-  '.webm',
-  '.wmv',
-  // Executables/Libraries
-  '.exe',
-  '.dll',
-  '.so',
-  '.dylib',
-  // Fonts
-  '.ttf',
-  '.otf',
-  '.woff',
-  '.woff2',
-  '.eot',
-  // Other binary formats
-  '.bin',
-  '.dat',
-  '.db',
-  '.sqlite',
-  '.sqlite3',
-]);
-
-/**
- * Detects if a file is binary based on its extension.
- */
-function isBinaryExtension(filePath: string): boolean {
-  const ext = path.extname(filePath).toLowerCase();
-  return BINARY_EXTENSIONS.has(ext);
-}
-
-/**
- * Detects if a buffer contains binary content using Git's algorithm:
- * A file is considered binary if it contains a null byte (0x00) in the first 8000 bytes.
- */
-function isBinaryBuffer(buffer: Buffer): boolean {
-  return buffer.subarray(0, 8000).includes(0x00);
-}
-
-/**
- * Detects if a file is binary using multiple strategies:
- * 1. Check if the file extension is a known binary type
- * 2. Check for null bytes in the first 8000 bytes (Git's algorithm)
- */
-function isBinaryFile(filePath: string, buffer: Buffer): boolean {
-  return isBinaryExtension(filePath) || isBinaryBuffer(buffer);
 }
 
 const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024; // 10 MB

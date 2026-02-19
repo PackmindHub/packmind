@@ -8,6 +8,7 @@ import * as fs from 'fs/promises';
 import * as path from 'path';
 
 import { ArtefactDiff } from '../../../domain/useCases/IDiffArtefactsUseCase';
+import { isBinaryFile } from '../../../infra/utils/binaryDetection';
 import { stripFrontmatter } from '../../utils/stripFrontmatter';
 import { ParsedSkillMd, parseSkillMd } from '../../utils/parseSkillMd';
 import { DiffContext, IDiffStrategy } from './IDiffStrategy';
@@ -79,8 +80,8 @@ export class SkillDiffStrategy implements IDiffStrategy {
         }
 
         const fullPath = path.join(baseDirectory, filePath);
-        const content = await this.tryReadFile(fullPath);
-        if (content === null) {
+        const localRead = await this.tryReadFileBinaryAware(fullPath);
+        if (localRead === null) {
           continue;
         }
 
@@ -93,9 +94,9 @@ export class SkillDiffStrategy implements IDiffStrategy {
           payload: {
             item: {
               path: relativePath,
-              content,
+              content: localRead.content,
               permissions,
-              isBase64: false,
+              isBase64: localRead.isBase64,
             },
           },
           artifactName: skillMdFile.artifactName,
@@ -177,10 +178,10 @@ export class SkillDiffStrategy implements IDiffStrategy {
 
     const skillFileId = createSkillFileId(file.skillFileId);
     const fullPath = path.join(baseDirectory, file.path);
-    const localContent = await this.tryReadFile(fullPath);
+    const localRead = await this.tryReadFileBinaryAware(fullPath);
     const fileRelativePath = this.computeRelativePath(file.path, skillFolders);
 
-    if (localContent === null) {
+    if (localRead === null) {
       return [
         {
           filePath: file.path,
@@ -214,7 +215,8 @@ export class SkillDiffStrategy implements IDiffStrategy {
     const checks = await Promise.all([
       this.checkUpdateSkillFileContent(
         file,
-        localContent,
+        localRead.content,
+        localRead.isBase64,
         skillFileId,
         baseDiff,
       ),
@@ -351,9 +353,28 @@ export class SkillDiffStrategy implements IDiffStrategy {
   private checkUpdateSkillFileContent(
     file: DiffableFile,
     localContent: string,
+    localIsBase64: boolean,
     skillFileId: SkillFileId,
     baseDiff: BaseDiff,
   ): ArtefactDiff | null {
+    const isBinary = localIsBase64 || (file.isBase64 ?? false);
+
+    if (isBinary) {
+      if (localContent === file.content) {
+        return null;
+      }
+      return {
+        ...baseDiff,
+        type: ChangeProposalType.updateSkillFileContent,
+        payload: {
+          targetId: skillFileId,
+          oldValue: file.content,
+          newValue: localContent,
+          isBase64: true,
+        },
+      };
+    }
+
     if (localContent === file.content) {
       return null;
     }
@@ -395,6 +416,20 @@ export class SkillDiffStrategy implements IDiffStrategy {
   private async tryReadFile(filePath: string): Promise<string | null> {
     try {
       return await fs.readFile(filePath, 'utf-8');
+    } catch {
+      return null;
+    }
+  }
+
+  private async tryReadFileBinaryAware(
+    filePath: string,
+  ): Promise<{ content: string; isBase64: boolean } | null> {
+    try {
+      const buffer = await fs.readFile(filePath);
+      if (isBinaryFile(filePath, buffer)) {
+        return { content: buffer.toString('base64'), isBase64: true };
+      }
+      return { content: buffer.toString('utf-8'), isBase64: false };
     } catch {
       return null;
     }
