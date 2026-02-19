@@ -7,7 +7,9 @@ import {
   PMField,
   PMFieldset,
   PMHeading,
+  PMIconButton,
 } from '@packmind/ui';
+import { LuPencilLine } from 'react-icons/lu';
 import { PMButton, PMInput, PMTextArea, PMText, PMAlert } from '@packmind/ui';
 import {
   useCreateStandardMutation,
@@ -230,16 +232,29 @@ export const StandardForm: React.FC<StandardFormProps> = ({
             disabled={isPending}
             placeholder="Enter standard name"
           >
-            <PMEditable.Preview
-              fontSize="2xl"
-              fontWeight="bold"
-              cursor="pointer"
-              _hover={{ bg: 'background.tertiary' }}
-              minW="200px"
-              px={2}
-              mx={-2}
-            />
-            <PMEditable.Input fontSize="2xl" fontWeight="bold" px={0} />
+            <PMEditable.Area>
+              <PMHStack gap={2} alignItems="center">
+                <PMEditable.Preview
+                  fontSize="2xl"
+                  fontWeight="bold"
+                  cursor="pointer"
+                  _hover={{ bg: 'background.tertiary' }}
+                  minW="200px"
+                  px={2}
+                  mx={-2}
+                />
+                <PMEditable.EditTrigger asChild>
+                  <PMIconButton
+                    aria-label="Edit standard name"
+                    variant="ghost"
+                    size="xs"
+                  >
+                    <LuPencilLine />
+                  </PMIconButton>
+                </PMEditable.EditTrigger>
+              </PMHStack>
+              <PMEditable.Input fontSize="2xl" fontWeight="bold" px={0} />
+            </PMEditable.Area>
           </PMEditable.Root>
         )}
 

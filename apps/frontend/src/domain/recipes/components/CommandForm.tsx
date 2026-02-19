@@ -10,7 +10,9 @@ import {
   PMAlert,
   PMText,
   PMEditable,
+  PMIconButton,
 } from '@packmind/ui';
+import { LuPencilLine } from 'react-icons/lu';
 import { Recipe } from '@packmind/types';
 import slug from 'slug';
 import { RECIPE_MESSAGES } from '../constants/messages';
@@ -123,16 +125,29 @@ export const CommandForm: React.FC<ICommandFormProps> = ({
             disabled={isPending}
             placeholder="Enter command name"
           >
-            <PMEditable.Preview
-              fontSize="2xl"
-              fontWeight="bold"
-              cursor="pointer"
-              _hover={{ bg: 'background.tertiary' }}
-              minW="200px"
-              px={2}
-              mx={-2}
-            />
-            <PMEditable.Input fontSize="2xl" fontWeight="bold" px={0} />
+            <PMEditable.Area>
+              <PMHStack gap={2} alignItems="center">
+                <PMEditable.Preview
+                  fontSize="2xl"
+                  fontWeight="bold"
+                  cursor="pointer"
+                  _hover={{ bg: 'background.tertiary' }}
+                  minW="200px"
+                  px={2}
+                  mx={-2}
+                />
+                <PMEditable.EditTrigger asChild>
+                  <PMIconButton
+                    aria-label="Edit command name"
+                    variant="ghost"
+                    size="xs"
+                  >
+                    <LuPencilLine />
+                  </PMIconButton>
+                </PMEditable.EditTrigger>
+              </PMHStack>
+              <PMEditable.Input fontSize="2xl" fontWeight="bold" px={0} />
+            </PMEditable.Area>
           </PMEditable.Root>
         )}
 
