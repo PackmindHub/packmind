@@ -1,10 +1,13 @@
 import {
+  ActiveDetectionProgram,
+  createActiveDetectionProgramId,
   createOrganizationId,
   createRuleExampleId,
   createRuleId,
   createStandardId,
   createStandardVersionId,
   createUserId,
+  DetectionSeverity,
   IAccountsPort,
   IComputeRuleLanguageDetectionStatusUseCase,
   IStandardsPort,
@@ -15,6 +18,7 @@ import {
   RuleLanguageDetectionStatus,
   User,
 } from '@packmind/types';
+import { IActiveDetectionProgramRepository } from '../../../domain/repositories/IActiveDetectionProgramRepository';
 import { stubLogger } from '@packmind/test-utils';
 import { GetStandardRulesDetectionStatusUseCase } from './getStandardRulesDetectionStatus.usecase';
 
@@ -23,6 +27,7 @@ describe('GetStandardRulesDetectionStatusUseCase', () => {
   let mockStandardsAdapter: jest.Mocked<IStandardsPort>;
   let mockAccountsPort: jest.Mocked<IAccountsPort>;
   let mockComputeRuleLanguageDetectionStatusUseCase: jest.Mocked<IComputeRuleLanguageDetectionStatusUseCase>;
+  let mockActiveDetectionProgramRepository: jest.Mocked<IActiveDetectionProgramRepository>;
 
   const mockStandardId = createStandardId('standard-123');
   const mockOrganizationId = createOrganizationId('org-123');
@@ -81,10 +86,24 @@ describe('GetStandardRulesDetectionStatusUseCase', () => {
       status: RuleLanguageDetectionStatus.NONE,
     });
 
+    mockActiveDetectionProgramRepository = {
+      findByRuleId: jest.fn().mockResolvedValue([]),
+      findByRuleIdAndLanguage: jest.fn(),
+      findByRuleIdWithPrograms: jest.fn(),
+      updateActiveDetectionProgram: jest.fn(),
+      updateSeverity: jest.fn(),
+      deleteByRuleId: jest.fn(),
+      findById: jest.fn(),
+      add: jest.fn(),
+      deleteById: jest.fn(),
+      restoreById: jest.fn(),
+    } as unknown as jest.Mocked<IActiveDetectionProgramRepository>;
+
     useCase = new GetStandardRulesDetectionStatusUseCase(
       mockAccountsPort,
       mockStandardsAdapter,
       mockComputeRuleLanguageDetectionStatusUseCase,
+      mockActiveDetectionProgramRepository,
       stubLogger(),
     );
   });
@@ -323,5 +342,65 @@ describe('GetStandardRulesDetectionStatusUseCase', () => {
         userId: mockUserId,
       }),
     ).rejects.toThrow('Failed to get rule examples');
+  });
+
+  describe('when rule has active detection programs with severity', () => {
+    const rule: Rule = {
+      id: createRuleId('rule-1'),
+      content: 'Test rule',
+      standardVersionId: createStandardVersionId('version-id'),
+    };
+
+    const examples: RuleExample[] = [
+      {
+        id: createRuleExampleId('example-1'),
+        ruleId: rule.id,
+        lang: ProgrammingLanguage.TYPESCRIPT,
+        positive: 'const x = 1;',
+        negative: 'var x = 1;',
+      },
+    ];
+
+    const activeDetectionProgramId = createActiveDetectionProgramId('adp-1');
+
+    const activeDetectionProgram: ActiveDetectionProgram = {
+      id: activeDetectionProgramId,
+      ruleId: rule.id,
+      language: ProgrammingLanguage.TYPESCRIPT,
+      detectionProgramVersion: null,
+      detectionProgramDraftVersion: null,
+      severity: DetectionSeverity.WARNING,
+    };
+
+    let result: Awaited<ReturnType<typeof useCase.execute>>;
+
+    beforeEach(async () => {
+      mockStandardsAdapter.getLatestRulesByStandardId.mockResolvedValue([rule]);
+      mockStandardsAdapter.getRuleCodeExamples.mockResolvedValue(examples);
+      mockComputeRuleLanguageDetectionStatusUseCase.execute.mockResolvedValue({
+        status: RuleLanguageDetectionStatus.OK,
+      });
+      mockActiveDetectionProgramRepository.findByRuleId.mockResolvedValue([
+        activeDetectionProgram,
+      ]);
+
+      result = await useCase.execute({
+        standardId: mockStandardId,
+        organizationId: mockOrganizationId,
+        userId: mockUserId,
+      });
+    });
+
+    it('includes severity in the language status', () => {
+      expect(result.rules[0].languages[0].severity).toBe(
+        DetectionSeverity.WARNING,
+      );
+    });
+
+    it('includes activeDetectionProgramId in the language status', () => {
+      expect(result.rules[0].languages[0].activeDetectionProgramId).toBe(
+        activeDetectionProgramId,
+      );
+    });
   });
 });

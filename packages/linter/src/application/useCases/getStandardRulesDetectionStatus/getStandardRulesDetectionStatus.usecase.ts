@@ -10,6 +10,7 @@ import {
   RuleDetectionStatusSummary,
   RuleLanguageStatus,
 } from '@packmind/types';
+import { IActiveDetectionProgramRepository } from '../../../domain/repositories/IActiveDetectionProgramRepository';
 
 const origin = 'GetStandardRulesDetectionStatusUseCase';
 
@@ -21,6 +22,7 @@ export class GetStandardRulesDetectionStatusUseCase extends AbstractMemberUseCas
     accountsPort: IAccountsPort,
     private readonly standardsAdapter: IStandardsPort,
     private readonly computeRuleLanguageDetectionStatusUseCase: IComputeRuleLanguageDetectionStatusUseCase,
+    private readonly activeDetectionProgramRepository: IActiveDetectionProgramRepository,
     logger: PackmindLogger = new PackmindLogger(origin),
   ) {
     super(accountsPort, logger);
@@ -79,9 +81,29 @@ export class GetStandardRulesDetectionStatusUseCase extends AbstractMemberUseCas
 
         const languageStatuses = await Promise.all(languageStatusPromises);
 
+        const activeDetectionPrograms =
+          await this.activeDetectionProgramRepository.findByRuleId(rule.id);
+
+        const adpByLanguage = new Map(
+          activeDetectionPrograms.map((adp) => [adp.language, adp]),
+        );
+
+        const enrichedLanguageStatuses: RuleLanguageStatus[] =
+          languageStatuses.map((ls) => {
+            const adp = adpByLanguage.get(ls.language);
+            if (adp) {
+              return {
+                ...ls,
+                severity: adp.severity,
+                activeDetectionProgramId: adp.id,
+              };
+            }
+            return ls;
+          });
+
         const ruleSummary: RuleDetectionStatusSummary = {
           ruleId: rule.id,
-          languages: languageStatuses,
+          languages: enrichedLanguageStatuses,
         };
 
         return ruleSummary;
