@@ -82,12 +82,7 @@ async function sendPing(version: string, instanceId: string): Promise<void> {
       instanceId,
     });
   } catch (error) {
-    // Log error but don't throw - this should not affect server startup
-    logger.warn('Failed to send ping to Packmind setup webhook', {
-      error: error instanceof Error ? error.message : String(error),
-      version,
-      instanceId,
-    });
+    // Don't raise anything here
   }
 }
 
