@@ -101,4 +101,11 @@ export interface IDetectionGateway {
     ruleId: string,
     language: string,
   ): Promise<RuleDetectionAssessment>;
+
+  updateActiveDetectionProgramSeverity(
+    standardId: string,
+    ruleId: string,
+    activeDetectionProgramId: string,
+    severity: string,
+  ): Promise<ActiveDetectionProgram>;
 }

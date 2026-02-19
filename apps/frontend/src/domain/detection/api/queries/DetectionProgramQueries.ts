@@ -19,6 +19,8 @@ export const UPDATE_DETECTION_HEURISTICS_MUTATION_KEY =
   'updateDetectionHeuristics';
 export const START_RULE_DETECTION_ASSESSMENT_MUTATION_KEY =
   'startRuleDetectionAssessment';
+export const UPDATE_ACTIVE_DETECTION_PROGRAM_SEVERITY_MUTATION_KEY =
+  'updateActiveDetectionProgramSeverity';
 
 export const useSaveDetectionProgramMutation = () => {
   const queryClient = useQueryClient();
@@ -396,6 +398,48 @@ export const useStartRuleDetectionAssessmentMutation = () => {
           variables.language,
         ],
       });
+    },
+  });
+};
+
+export const useUpdateActiveDetectionProgramSeverityMutation = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationKey: [UPDATE_ACTIVE_DETECTION_PROGRAM_SEVERITY_MUTATION_KEY],
+    mutationFn: async ({
+      standardId,
+      ruleId,
+      activeDetectionProgramId,
+      severity,
+    }: {
+      standardId: string;
+      ruleId: string;
+      activeDetectionProgramId: string;
+      severity: string;
+    }) => {
+      return detectionGateway.updateActiveDetectionProgramSeverity(
+        standardId,
+        ruleId,
+        activeDetectionProgramId,
+        severity,
+      );
+    },
+    onSuccess: async (_, variables) => {
+      await Promise.all([
+        queryClient.invalidateQueries({
+          queryKey: [
+            ...GET_ACTIVE_DETECTION_PROGRAMS_KEY,
+            variables.standardId,
+            variables.ruleId,
+          ],
+        }),
+        queryClient.invalidateQueries({
+          queryKey: [
+            ...GET_STANDARD_RULES_DETECTION_STATUS_KEY,
+            variables.standardId,
+          ],
+        }),
+      ]);
     },
   });
 };

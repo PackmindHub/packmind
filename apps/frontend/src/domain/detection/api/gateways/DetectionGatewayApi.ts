@@ -191,4 +191,16 @@ export class DetectionGatewayApi
       },
     );
   }
+
+  async updateActiveDetectionProgramSeverity(
+    standardId: string,
+    ruleId: string,
+    activeDetectionProgramId: string,
+    severity: string,
+  ): Promise<ActiveDetectionProgram> {
+    return this._api.patch<ActiveDetectionProgram>(
+      `${this._endpoint}/${standardId}/rules/${ruleId}/detection-program/${activeDetectionProgramId}/severity`,
+      { severity },
+    );
+  }
 }
