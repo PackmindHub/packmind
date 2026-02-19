@@ -24,13 +24,6 @@ export class ConflictDetectionService {
     proposal: ChangeProposal<ChangeProposalType>,
     allProposals: ChangeProposal<ChangeProposalType>[],
   ): ChangeProposalId[] {
-    if (
-      proposal.type !== ChangeProposalType.updateCommandName &&
-      proposal.type !== ChangeProposalType.updateCommandDescription
-    ) {
-      return [];
-    }
-
     const conflictDetector = getConflictDetector(proposal);
     const conflictingProposals = allProposals.filter((otherProposal) => {
       return conflictDetector(proposal, otherProposal, this.diffService);

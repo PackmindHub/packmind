@@ -1,4 +1,5 @@
 import {
+  ChangeProposal,
   ChangeProposalType,
   createChangeProposalId,
   createRecipeId,
@@ -21,7 +22,7 @@ describe('ConflictDetectionService', () => {
     diffService = {
       hasConflict: jest.fn(),
       applyLineDiff: jest.fn(),
-    } as unknown as jest.Mocked<DiffService>;
+    };
 
     service = new ConflictDetectionService(diffService);
   });
@@ -216,7 +217,7 @@ It has a description.
 `,
         },
         createdBy,
-      });
+      }) as ChangeProposal<ChangeProposalType.updateCommandDescription>;
 
       const proposal2 = changeProposalFactory({
         id: createChangeProposalId('2'),
@@ -228,7 +229,7 @@ It has a description.
           newValue: `It has a description.`,
         },
         createdBy,
-      });
+      }) as ChangeProposal<ChangeProposalType.updateCommandDescription>;
 
       beforeEach(() => {
         diffService.hasConflict.mockReturnValue(true);
@@ -341,29 +342,6 @@ And a new line at the end
       ]);
 
       expect(result[2].conflictsWith).toEqual([]);
-    });
-  });
-
-  describe('with non-supported proposal types', () => {
-    const standardProposal = changeProposalFactory({
-      id: createChangeProposalId('1'),
-      type: ChangeProposalType.updateStandardName,
-      artefactId: recipeId,
-      spaceId,
-      payload: { oldValue: 'Old Name', newValue: 'New Name' },
-      createdBy,
-    });
-
-    it('marks proposal as not conflicting', () => {
-      const result = service.detectConflicts([standardProposal]);
-
-      expect(result[0].conflictsWith).toEqual([]);
-    });
-
-    it('does not call diffService', () => {
-      service.detectConflicts([standardProposal]);
-
-      expect(diffService.hasConflict).not.toHaveBeenCalled();
     });
   });
 

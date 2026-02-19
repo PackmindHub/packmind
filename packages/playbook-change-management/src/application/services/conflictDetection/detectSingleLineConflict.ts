@@ -7,7 +7,11 @@ import { ConflictDetector } from './ConflictDetector';
 type SingleLineChangeProposals =
   | ChangeProposalType.updateCommandName
   | ChangeProposalType.updateSkillName
-  | ChangeProposalType.updateStandardName;
+  | ChangeProposalType.updateStandardName
+  | ChangeProposalType.updateStandardScope
+  | ChangeProposalType.updateSkillCompatibility
+  | ChangeProposalType.updateSkillLicense
+  | ChangeProposalType.updateSkillAllowedTools;
 
 export const detectSingleLineConflict: ConflictDetector<
   SingleLineChangeProposals
