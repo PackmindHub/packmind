@@ -184,11 +184,11 @@ describe('SubmitDiffsUseCase', () => {
     });
   });
 
-  describe('when group contains a non-command artifact type', () => {
+  describe('when group contains a standard artifact type', () => {
     const standardGroup: ArtefactDiff[] = [
       {
         filePath: '.packmind/standards/my-standard.md',
-        type: ChangeProposalType.updateStandardDescription,
+        type: ChangeProposalType.updateStandardName,
         payload: { oldValue: 'old', newValue: 'new' },
         artifactName: 'My Standard',
         artifactType: 'standard',
@@ -197,27 +197,36 @@ describe('SubmitDiffsUseCase', () => {
       },
     ];
 
-    it('returns 0 submitted', async () => {
-      const result = await useCase.execute({ groupedDiffs: [standardGroup] });
-
-      expect(result.submitted).toBe(0);
+    beforeEach(() => {
+      mockChangeProposals.batchCreate.mockResolvedValue(batchResponse(1));
     });
 
-    it('skips with reason "Only commands and skills are supported"', async () => {
+    it('returns created count from batch response', async () => {
       const result = await useCase.execute({ groupedDiffs: [standardGroup] });
 
-      expect(result.skipped).toEqual([
-        {
-          name: 'My Standard',
-          reason: 'Only commands and skills are supported',
-        },
-      ]);
+      expect(result.submitted).toBe(1);
     });
 
-    it('does not call batchCreate', async () => {
+    it('sends standard diff with correct type and payload', async () => {
       await useCase.execute({ groupedDiffs: [standardGroup] });
 
-      expect(mockChangeProposals.batchCreate).not.toHaveBeenCalled();
+      expect(mockChangeProposals.batchCreate).toHaveBeenCalledWith({
+        spaceId: 'spc-std',
+        proposals: [
+          {
+            type: ChangeProposalType.updateStandardName,
+            artefactId: 'art-std',
+            payload: { oldValue: 'old', newValue: 'new' },
+            captureMode: ChangeProposalCaptureMode.commit,
+          },
+        ],
+      });
+    });
+
+    it('returns empty skipped array', async () => {
+      const result = await useCase.execute({ groupedDiffs: [standardGroup] });
+
+      expect(result.skipped).toEqual([]);
     });
   });
 
@@ -429,7 +438,7 @@ describe('SubmitDiffsUseCase', () => {
     const standardGroup: ArtefactDiff[] = [
       {
         filePath: '.packmind/standards/a-standard.md',
-        type: ChangeProposalType.updateStandardDescription,
+        type: ChangeProposalType.updateStandardName,
         payload: { oldValue: 'old', newValue: 'new' },
         artifactName: 'A Standard',
         artifactType: 'standard',
@@ -459,7 +468,7 @@ describe('SubmitDiffsUseCase', () => {
         groupedDiffs: [validGroup, standardGroup, missingMetadataGroup],
       });
 
-      expect(result.submitted).toBe(1);
+      expect(result.submitted).toBe(2);
     });
 
     it('returns correct skipped entries', async () => {
@@ -468,10 +477,6 @@ describe('SubmitDiffsUseCase', () => {
       });
 
       expect(result.skipped).toEqual([
-        {
-          name: 'A Standard',
-          reason: 'Only commands and skills are supported',
-        },
         { name: 'No Meta Command', reason: 'Missing artifact metadata' },
       ]);
     });

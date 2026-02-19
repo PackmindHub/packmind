@@ -1,6 +1,7 @@
 import { FileUpdates } from '@packmind/types';
 import { ISkillDeployer } from './IDefaultSkillDeployer';
 
+// Markdown-first workflow - agent drafts in markdown, converts to JSON for CLI
 function getCommandCreatorSkillMd(agentName: string): string {
   return `---
 name: 'packmind-create-command'
@@ -23,58 +24,74 @@ Commands are structured, multi-step workflows that capture repeatable tasks, rec
 3. **When-to-use guidance** - Clear scenarios describing when the command is applicable
 4. **Code snippets** - Optional examples demonstrating each step's implementation
 
-### Command Playbook Structure
+### Command Structure
 
-Every command playbook is a JSON file with this structure:
+Every command is drafted as a markdown file with this structure:
 
-\`\`\`json
-{
-  "name": "Command Name",
-  "summary": "What the command does, why it's useful, and when it's relevant",
-  "whenToUse": [
-    "Scenario 1 when this command applies",
-    "Scenario 2 when this command applies"
-  ],
-  "contextValidationCheckpoints": [
-    "Question 1 to validate before proceeding?",
-    "Question 2 to ensure context is clear?"
-  ],
-  "steps": [
-    {
-      "name": "Step Name",
-      "description": "What this step does and how to implement it",
-      "codeSnippet": "\`\`\`typescript\\n// Optional code example\\n\`\`\`"
-    }
-  ]
-}
+\`\`\`
+# Command Name
+
+## Summary
+
+What the command does, why it's useful, and when it's relevant.
+
+## When to Use
+
+- Scenario 1 when this command applies
+- Scenario 2 when this command applies
+
+## Context Validation Checkpoints
+
+- Question 1 to validate before proceeding?
+- Question 2 to ensure context is clear?
+
+## Steps
+
+### Step Name
+
+What this step does and how to implement it.
+
+\\\`\\\`\\\`typescript
+// Optional code example
+\\\`\\\`\\\`
+
+### Another Step
+
+Description without code.
 \`\`\`
 
 ### Naming Guidelines
 
-The \`name\` field is the **display name** shown in indexes and dashboards. The slug is auto-generated from it.
+The \`# Title\` heading is the **display name** shown in indexes and dashboards. The slug is auto-generated from it — never write the slug yourself.
 
-- **Use Title Case** — capitalize each significant word
+**Format:** Use **Title Case with spaces** — natural language, not a slug.
+- Capitalize each significant word
 - **Start with an action verb** (e.g., "Create", "Setup", "Configure")
-- **Be descriptive and specific** (2–5 words)
+- Use spaces between words, never hyphens or underscores
+- Be descriptive and specific (2–5 words)
+
+**Examples:**
 - Good: \`"Create API Endpoint"\`, \`"Setup Database Migration"\`, \`"Configure CI Pipeline"\`
-- Bad: \`"api-endpoint"\`, \`"setup migration"\`, \`"create-api-endpoint"\`
+- Bad: \`"api-endpoint"\` (slug format — use Title Case with spaces)
+- Bad: \`"setup migration"\` (not Title Case)
+- Bad: \`"create-api-endpoint"\` (slug format)
 
-### Validation Requirements
+### Markdown Structure Requirements
 
-The CLI validates playbooks automatically. Requirements:
+The CLI validates the command after conversion. Ensure the markdown file meets these requirements:
 
-- **name**: Non-empty Title Case string starting with an action verb, descriptive and specific (2–5 words, e.g., "Create API Endpoint")
-- **summary**: Non-empty string describing intent, value, and relevance
-- **whenToUse**: Array with at least one scenario (non-empty strings)
-- **contextValidationCheckpoints**: Array with at least one checkpoint (non-empty strings)
-- **steps**: Array with at least one step
-- **steps[].name**: Non-empty string (step title)
-- **steps[].description**: Non-empty string (implementation details)
-- **steps[].codeSnippet** (optional): Code example wrapped in markdown code fences with language identifier (e.g., \\\`\\\`\\\`typescript\\\\n...code...\\\\n\\\`\\\`\\\`)
+- **\`# Title\`**: Non-empty Title Case string starting with an action verb, descriptive and specific (2–5 words, e.g., "Create API Endpoint")
+- **\`## Summary\`**: Non-empty string describing intent, value, and relevance
+- **\`## When to Use\`**: At least one bullet item (non-empty strings)
+- **\`## Context Validation Checkpoints\`**: At least one bullet item (non-empty strings)
+- **\`## Steps\`**: At least one step subsection
+- **\`### Step Name\`**: Non-empty string (step title)
+- **Step body paragraph**: Non-empty string (implementation details)
+- **Step body code block** (optional): Code fenced with language identifier (e.g., \\\`\\\`\\\`typescript)
 
 ## Prerequisites
 
-### Packmind CLI
+Before creating a command, verify that packmind-cli is available:
 
 Check if packmind-cli is installed:
 
@@ -116,9 +133,22 @@ Example clarifying questions:
 - "What scenarios should trigger this command?"
 - "What context needs to be validated before running this workflow?"
 
-### Step 2: Designing the Workflow
+### Step 2: Design Command in Markdown
 
-Transform the understanding from Step 1 into concrete steps.
+Transform the understanding from Step 1 into a complete markdown draft with steps and validation checkpoints.
+
+#### Draft Creation
+
+1. Create a draft markdown file in \`.packmind/commands/_drafts/\` (create the folder if missing) using filename \`<slug>.md\` (lowercase with hyphens)
+2. Draft structure:
+   - \`# <Command Title>\` (Title Case, action-verb prefix, 2–5 words)
+   - \`## Summary\` — what the command does, why it's useful, and when it's relevant
+   - \`## When to Use\` — bullet list of specific scenarios
+   - \`## Context Validation Checkpoints\` — bullet list of validation questions
+   - \`## Steps\` — each step as a \`### <step title>\` subsection following the Step Writing Guidelines below
+   - For each step that benefits from a code example, add a language-annotated code block
+
+This draft file is the **only** file created during drafting — no separate files are needed.
 
 #### Step Writing Guidelines
 
@@ -155,54 +185,48 @@ Define specific, actionable scenarios:
 **Bad scenarios:**
 - "When coding" (too broad)
 
-### Step 3: Creating the Playbook File
-
-1. Create a draft JSON file in \`.packmind/commands/_drafts/\` (create the folder if missing) using filename \`<command-slug>-draft.json\` (lowercase with hyphens)
-2. Structure the playbook with all required fields documented above
-
-Example minimal playbook:
-
-\`\`\`json
-{
-  "name": "Create API Endpoint",
-  "summary": "Set up a new REST API endpoint with controller, service, and tests.",
-  "whenToUse": [
-    "When adding a new REST endpoint to the API"
-  ],
-  "contextValidationCheckpoints": [
-    "Is the HTTP method and path defined?"
-  ],
-  "steps": [
-    {
-      "name": "Create Controller",
-      "description": "Create the controller file in \\\`infra/http/controllers/\\\` with the endpoint handler."
-    }
-  ]
-}
-\`\`\`
-
-### Step 4: Review Before Submission
+### Step 3: Review Before Submission
 
 **Before running the CLI command**, you MUST get explicit user approval:
 
-1. Show the user the complete playbook content in a formatted preview:
+1. Show the user the complete command content in a formatted preview:
    - Name
    - Summary
    - When to use scenarios
    - Context validation checkpoints
    - Each step with name, description, and code snippet (if any)
 
-2. **Provide the file path** to the draft JSON file (\`.packmind/commands/_drafts/<command-slug>-draft.json\`) so users can open and edit it directly if needed.
+2. **Provide the file path** to the markdown file (\`.packmind/commands/_drafts/<slug>.md\`) so users can open and edit it directly if needed.
 
 3. Ask: **"Here is the command that will be created on Packmind. The draft file is at \\\`<path>\\\` if you want to review or edit it. Do you approve?"**
 
-4. **Wait for explicit user confirmation** before proceeding to Step 5.
+4. **Wait for explicit user confirmation** before proceeding to Step 4.
 
-5. If the user requests changes, edit the draft file and re-submit for approval.
+5. If the user requests changes, go back to earlier steps to make adjustments.
 
-### Step 5: Creating the Command via CLI
+### Step 4: Confirm and Submit
 
-Run the packmind-cli command to create the command:
+1. **Re-read the markdown file** from disk to capture any user edits.
+
+2. **Compare with the original content** you created in Step 2.
+
+3. **If changes were detected**:
+   - Display the formatted preview again (same format as Step 3)
+   - Ask: **"The file was modified. Here is the updated content that will be sent. Do you confirm?"**
+   - **Wait for explicit confirmation** before proceeding.
+
+4. **If no changes**: Proceed directly to submission.
+
+5. **Convert the markdown to JSON** using these conversion rules:
+   - \`# heading\` → \`name\`
+   - \`## Summary\` content → \`summary\`
+   - \`## When to Use\` bullet items → \`whenToUse[]\`
+   - \`## Context Validation Checkpoints\` bullet items → \`contextValidationCheckpoints[]\`
+   - Each \`### ...\` under \`## Steps\` → step \`name\`, paragraph text → \`description\`, code block → \`codeSnippet\` (wrapped in markdown code fences with language identifier)
+
+6. Write the resulting JSON to a temporary \`.playbook.json\` file next to the markdown file (e.g., \`.packmind/commands/_drafts/<slug>.playbook.json\`).
+
+7. Run the packmind-cli command:
 
 \`\`\`bash
 packmind-cli commands create <path-to-playbook.json>
@@ -210,7 +234,7 @@ packmind-cli commands create <path-to-playbook.json>
 
 Example:
 \`\`\`bash
-packmind-cli commands create ./.packmind/commands/_drafts/create-api-endpoint-draft.json
+packmind-cli commands create .packmind/commands/_drafts/create-api-endpoint.playbook.json
 \`\`\`
 
 Expected output on success:
@@ -230,20 +254,21 @@ packmind-cli login
 - Verify your API key is valid
 - Check network connectivity to Packmind server
 
-**JSON validation errors:**
-- Ensure all required fields are present
-- Verify JSON syntax is valid (use a JSON validator)
-- Check that all arrays have at least one entry
+**Validation errors:**
+- Ensure all required sections are present in the markdown file
+- Check that the \`## Steps\` section has at least one \`###\` step subsection
+- Verify code blocks have language annotations
 
-### Step 6: Cleanup
+### Step 5: Cleanup
 
 After the command is **successfully created**, delete the temporary files:
 
-1. Delete the draft JSON file in \`.packmind/commands/_drafts/\` (e.g., \`<command-slug>-draft.json\`)
+1. Delete the temporary \`.playbook.json\` file
+2. Delete the draft markdown file in \`.packmind/commands/_drafts/\`
 
 **Only clean up on success** - if the CLI command fails, keep the files so the user can retry.
 
-### Step 7: Offer to Add to Package
+### Step 6: Offer to Add to Package
 
 After successful creation, check if the command fits an existing package:
 
@@ -266,59 +291,71 @@ After successful creation, check if the command fits an existing package:
 
 Here's a complete example creating a command for setting up a new API endpoint:
 
-**File: create-api-endpoint.command.playbook.json**
-\`\`\`json
-{
-  "name": "Create API Endpoint",
-  "summary": "Set up a new REST API endpoint with controller, service, and tests following the hexagonal architecture pattern.",
-  "whenToUse": [
-    "When adding a new REST endpoint to the API",
-    "When implementing a new backend feature that exposes HTTP endpoints"
-  ],
-  "contextValidationCheckpoints": [
-    "Is the HTTP method and path defined (e.g., POST /users)?",
-    "Is the request/response payload structure specified?",
-    "Is the associated use case or business logic identified?"
-  ],
-  "steps": [
-    {
-      "name": "Create Controller",
-      "description": "Create the controller file in the \\\`infra/http/controllers/\\\` directory with the endpoint handler and input validation.",
-      "codeSnippet": "\`\`\`typescript\\n@Controller('users')\\nexport class UsersController {\\n  @Post()\\n  async create(@Body() dto: CreateUserDTO) {\\n    return this.useCase.execute(dto);\\n  }\\n}\\n\`\`\`"
-    },
-    {
-      "name": "Create Use Case",
-      "description": "Create the use case in the \\\`application/useCases/\\\` directory implementing the business logic."
-    },
-    {
-      "name": "Create Tests",
-      "description": "Create unit tests for the controller and use case in their respective \\\`.spec.ts\\\` files following the Arrange-Act-Assert pattern."
-    },
-    {
-      "name": "Register in Module",
-      "description": "Add the controller and use case to the appropriate NestJS module's \\\`controllers\\\` and \\\`providers\\\` arrays."
-    }
-  ]
+**File: .packmind/commands/_drafts/create-api-endpoint.md**
+\`\`\`markdown
+# Create API Endpoint
+
+## Summary
+
+Set up a new REST API endpoint with controller, service, and tests following the hexagonal architecture pattern.
+
+## When to Use
+
+- When adding a new REST endpoint to the API
+- When implementing a new backend feature that exposes HTTP endpoints
+
+## Context Validation Checkpoints
+
+- Is the HTTP method and path defined (e.g., POST /users)?
+- Is the request/response payload structure specified?
+- Is the associated use case or business logic identified?
+
+## Steps
+
+### Create Controller
+
+Create the controller file in the \\\`infra/http/controllers/\\\` directory with the endpoint handler and input validation.
+
+\\\`\\\`\\\`typescript
+@Controller('users')
+export class UsersController {
+  @Post()
+  async create(@Body() dto: CreateUserDTO) {
+    return this.useCase.execute(dto);
+  }
 }
+\\\`\\\`\\\`
+
+### Create Use Case
+
+Create the use case in the \\\`application/useCases/\\\` directory implementing the business logic.
+
+### Create Tests
+
+Create unit tests for the controller and use case in their respective \\\`.spec.ts\\\` files following the Arrange-Act-Assert pattern.
+
+### Register in Module
+
+Add the controller and use case to the appropriate NestJS module's \\\`controllers\\\` and \\\`providers\\\` arrays.
 \`\`\`
 
 **Creating the command:**
 \`\`\`bash
-packmind-cli commands create ./.packmind/commands/_drafts/create-api-endpoint-draft.json
+packmind-cli commands create .packmind/commands/_drafts/create-api-endpoint.playbook.json
 \`\`\`
 
 ## Quick Reference
 
-| Field                         | Required | Description                                    |
-| ----------------------------- | -------- | ---------------------------------------------- |
-| name                          | Yes      | Title Case, action-verb prefix, 2–5 words      |
-| summary                       | Yes      | What, why, and when (one sentence)             |
-| whenToUse                     | Yes      | At least one scenario                          |
-| contextValidationCheckpoints  | Yes      | At least one checkpoint question               |
-| steps                         | Yes      | At least one step                              |
-| steps[].name                  | Yes      | Step title                                     |
-| steps[].description           | Yes      | Implementation details                         |
-| steps[].codeSnippet           | No       | Markdown code block with language (e.g., \\\`\\\`\\\`ts) |
+| Section | Required | Description |
+|---|---|---|
+| \`# Title\` | Yes | Title Case, action-verb prefix, 2–5 words |
+| \`## Summary\` | Yes | What, why, and when (one sentence) |
+| \`## When to Use\` | Yes | Bullet list, at least one scenario |
+| \`## Context Validation Checkpoints\` | Yes | Bullet list, at least one checkpoint |
+| \`## Steps\` | Yes | Contains step subsections |
+| \`### Step Name\` | Yes (≥1) | Step title |
+| Step body (paragraph) | Yes | Implementation details |
+| Step body (code block) | No | Markdown code block with language |
 `;
 }
 
@@ -345,9 +382,9 @@ The AI agent will:
 
 1. Ask clarifying questions to understand the command's purpose
 2. Help you define steps with proper formatting
-3. Create a playbook JSON file
+3. Draft a markdown file for review
 4. Get your approval before submission
-5. Run the CLI command to create the command
+5. Convert to JSON and run the CLI command to create the command
 
 ## Prerequisites
 

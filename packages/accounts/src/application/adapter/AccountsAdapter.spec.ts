@@ -42,6 +42,7 @@ describe('AccountsAdapter', () => {
     mockServices = {
       getUserService: jest.fn(),
       getOrganizationService: jest.fn(),
+      getMembershipResolutionService: jest.fn(),
       getLoginRateLimiterService: jest.fn(),
       getInvitationService: jest.fn(),
       getPasswordResetTokenService: jest.fn(),

@@ -1,9 +1,10 @@
 import { UserEvent } from '../../events';
+import { AuthMethod } from '../AuthMethod';
 import { SocialProvider } from '../SocialProvider';
 
 export interface UserSignedInPayload {
   email: string;
-  authType: 'password' | 'social';
+  method: AuthMethod;
   socialProvider?: SocialProvider;
 }
 

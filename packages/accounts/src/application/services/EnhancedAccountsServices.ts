@@ -1,5 +1,6 @@
 import { UserService } from './UserService';
 import { OrganizationService } from './OrganizationService';
+import { MembershipResolutionService } from './MembershipResolutionService';
 import { InvitationService } from './InvitationService';
 import { ApiKeyService, IJwtService } from './ApiKeyService';
 import { LoginRateLimiterService } from './LoginRateLimiterService';
@@ -20,6 +21,7 @@ import { SmtpMailService } from '@packmind/node-utils';
 export class EnhancedAccountsServices {
   private readonly userService: UserService;
   private readonly organizationService: OrganizationService;
+  private readonly membershipResolutionService: MembershipResolutionService;
   private readonly invitationService: InvitationService;
   private readonly passwordResetTokenService: PasswordResetTokenService;
   private readonly loginRateLimiterService: LoginRateLimiterService;
@@ -40,6 +42,9 @@ export class EnhancedAccountsServices {
     );
     this.organizationService = new OrganizationService(
       this.accountsRepositories.getOrganizationRepository(),
+    );
+    this.membershipResolutionService = new MembershipResolutionService(
+      this.organizationService,
     );
     this.invitationService = new InvitationService(
       this.accountsRepositories.getInvitationRepository(),
@@ -77,6 +82,10 @@ export class EnhancedAccountsServices {
 
   getOrganizationService(): OrganizationService {
     return this.organizationService;
+  }
+
+  getMembershipResolutionService(): MembershipResolutionService {
+    return this.membershipResolutionService;
   }
 
   getInvitationService(): InvitationService {

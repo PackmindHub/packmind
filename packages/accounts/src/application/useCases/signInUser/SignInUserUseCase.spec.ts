@@ -1,7 +1,7 @@
 import { PackmindEventEmitterService } from '@packmind/node-utils';
 import { SignInUserUseCase } from './SignInUserUseCase';
 import { UserService } from '../../services/UserService';
-import { OrganizationService } from '../../services/OrganizationService';
+import { MembershipResolutionService } from '../../services/MembershipResolutionService';
 import { LoginRateLimiterService } from '../../services/LoginRateLimiterService';
 import { ISignInUserUseCase, SignInUserCommand } from '@packmind/types';
 import {
@@ -17,7 +17,7 @@ import { userFactory } from '../../../../test';
 describe('SignInUserUseCase', () => {
   let useCase: ISignInUserUseCase;
   let userService: jest.Mocked<UserService>;
-  let organizationService: jest.Mocked<OrganizationService>;
+  let membershipResolutionService: jest.Mocked<MembershipResolutionService>;
   let loginRateLimiterService: jest.Mocked<LoginRateLimiterService>;
   let mockEventEmitterService: jest.Mocked<PackmindEventEmitterService>;
 
@@ -51,9 +51,9 @@ describe('SignInUserUseCase', () => {
       validatePassword: jest.fn(),
     } as unknown as jest.Mocked<UserService>;
 
-    organizationService = {
-      getOrganizationById: jest.fn(),
-    } as unknown as jest.Mocked<OrganizationService>;
+    membershipResolutionService = {
+      resolveUserOrganizations: jest.fn(),
+    } as unknown as jest.Mocked<MembershipResolutionService>;
 
     loginRateLimiterService = {
       checkLoginAllowed: jest.fn(),
@@ -67,7 +67,7 @@ describe('SignInUserUseCase', () => {
 
     useCase = new SignInUserUseCase(
       userService,
-      organizationService,
+      membershipResolutionService,
       loginRateLimiterService,
       mockEventEmitterService,
     );
@@ -87,10 +87,11 @@ describe('SignInUserUseCase', () => {
       loginRateLimiterService.checkLoginAllowed.mockResolvedValue();
       userService.getUserByEmailCaseInsensitive.mockResolvedValue(testUser);
       userService.validatePassword.mockResolvedValue(true);
-      organizationService.getOrganizationById.mockResolvedValue(
-        testOrganization,
-      );
       loginRateLimiterService.clearAttempts.mockResolvedValue();
+      membershipResolutionService.resolveUserOrganizations.mockResolvedValue({
+        organization: testOrganization,
+        role: 'admin',
+      });
     });
 
     it('returns the user, organization from first membership, and membership role', async () => {
@@ -120,12 +121,12 @@ describe('SignInUserUseCase', () => {
       );
     });
 
-    it('calls getOrganizationById with organizationId', async () => {
+    it('calls resolveUserOrganizations with the user', async () => {
       await useCase.execute(command);
 
-      expect(organizationService.getOrganizationById).toHaveBeenCalledWith(
-        organizationId,
-      );
+      expect(
+        membershipResolutionService.resolveUserOrganizations,
+      ).toHaveBeenCalledWith(testUser);
     });
 
     it('emits UserSignedInEvent with user and organization details', async () => {
@@ -137,7 +138,7 @@ describe('SignInUserUseCase', () => {
             userId,
             organizationId,
             email: 'testuser@packmind.com',
-            authType: 'password',
+            method: 'password',
             source: 'ui',
           },
         }),
@@ -162,10 +163,11 @@ describe('SignInUserUseCase', () => {
         userWithOriginalCase,
       );
       userService.validatePassword.mockResolvedValue(true);
-      organizationService.getOrganizationById.mockResolvedValue(
-        testOrganization,
-      );
       loginRateLimiterService.clearAttempts.mockResolvedValue();
+      membershipResolutionService.resolveUserOrganizations.mockResolvedValue({
+        organization: testOrganization,
+        role: 'admin',
+      });
 
       const result = await useCase.execute(command);
 
@@ -183,7 +185,10 @@ describe('SignInUserUseCase', () => {
       loginRateLimiterService.checkLoginAllowed.mockResolvedValue();
       userService.getUserByEmailCaseInsensitive.mockResolvedValue(testUser);
       userService.validatePassword.mockResolvedValue(true);
-      organizationService.getOrganizationById.mockResolvedValue(null);
+      loginRateLimiterService.clearAttempts.mockResolvedValue();
+      membershipResolutionService.resolveUserOrganizations.mockRejectedValue(
+        new InvalidEmailOrPasswordError(),
+      );
     });
 
     it('throws InvalidEmailOrPasswordError', async () => {
@@ -217,16 +222,16 @@ describe('SignInUserUseCase', () => {
       );
     });
 
-    it('calls getOrganizationById with organizationId', async () => {
+    it('calls resolveUserOrganizations with the user', async () => {
       try {
         await useCase.execute(command);
       } catch {
         // Expected to throw
       }
 
-      expect(organizationService.getOrganizationById).toHaveBeenCalledWith(
-        organizationId,
-      );
+      expect(
+        membershipResolutionService.resolveUserOrganizations,
+      ).toHaveBeenCalledWith(testUser);
     });
   });
 
@@ -281,6 +286,10 @@ describe('SignInUserUseCase', () => {
         userWithNoMemberships,
       );
       userService.validatePassword.mockResolvedValue(true);
+      loginRateLimiterService.clearAttempts.mockResolvedValue();
+      membershipResolutionService.resolveUserOrganizations.mockResolvedValue({
+        organizations: [],
+      });
     });
 
     it('returns the user with empty organizations array', async () => {
@@ -292,10 +301,12 @@ describe('SignInUserUseCase', () => {
       });
     });
 
-    it('does not call getOrganizationById', async () => {
+    it('calls resolveUserOrganizations with the user', async () => {
       await useCase.execute(command);
 
-      expect(organizationService.getOrganizationById).not.toHaveBeenCalled();
+      expect(
+        membershipResolutionService.resolveUserOrganizations,
+      ).toHaveBeenCalledWith(userWithNoMemberships);
     });
 
     it('calls clearAttempts with the email', async () => {
@@ -315,21 +326,11 @@ describe('SignInUserUseCase', () => {
 
   describe('when user belongs to multiple organizations', () => {
     const organizationId2 = createOrganizationId('org-456');
-    const membership2: UserOrganizationMembership = {
-      userId,
-      organizationId: organizationId2,
-      role: 'member',
-    };
 
     const testOrganization2: Organization = {
       id: organizationId2,
       name: 'Second Organization',
       slug: 'second-org',
-    };
-
-    const userWithMultipleOrgs: User = {
-      ...testUser,
-      memberships: [membership, membership2],
     };
 
     const command: SignInUserCommand = {
@@ -339,21 +340,22 @@ describe('SignInUserUseCase', () => {
 
     beforeEach(() => {
       loginRateLimiterService.checkLoginAllowed.mockResolvedValue();
-      userService.getUserByEmailCaseInsensitive.mockResolvedValue(
-        userWithMultipleOrgs,
-      );
+      userService.getUserByEmailCaseInsensitive.mockResolvedValue(testUser);
       userService.validatePassword.mockResolvedValue(true);
-      organizationService.getOrganizationById
-        .mockResolvedValueOnce(testOrganization)
-        .mockResolvedValueOnce(testOrganization2);
       loginRateLimiterService.clearAttempts.mockResolvedValue();
+      membershipResolutionService.resolveUserOrganizations.mockResolvedValue({
+        organizations: [
+          { organization: testOrganization, role: 'admin' },
+          { organization: testOrganization2, role: 'member' },
+        ],
+      });
     });
 
     it('returns the user and list of available organizations with roles', async () => {
       const result = await useCase.execute(command);
 
       expect(result).toEqual({
-        user: userWithMultipleOrgs,
+        user: testUser,
         organizations: [
           {
             organization: testOrganization,
@@ -367,26 +369,12 @@ describe('SignInUserUseCase', () => {
       });
     });
 
-    it('calls getOrganizationById twice', async () => {
+    it('calls resolveUserOrganizations with the user', async () => {
       await useCase.execute(command);
 
-      expect(organizationService.getOrganizationById).toHaveBeenCalledTimes(2);
-    });
-
-    it('calls getOrganizationById with first organizationId', async () => {
-      await useCase.execute(command);
-
-      expect(organizationService.getOrganizationById).toHaveBeenCalledWith(
-        organizationId,
-      );
-    });
-
-    it('calls getOrganizationById with second organizationId', async () => {
-      await useCase.execute(command);
-
-      expect(organizationService.getOrganizationById).toHaveBeenCalledWith(
-        organizationId2,
-      );
+      expect(
+        membershipResolutionService.resolveUserOrganizations,
+      ).toHaveBeenCalledWith(testUser);
     });
 
     it('emits UserSignedInEvent with the first organization', async () => {
@@ -398,44 +386,10 @@ describe('SignInUserUseCase', () => {
             userId,
             organizationId,
             email: 'testuser@packmind.com',
-            authType: 'password',
+            method: 'password',
             source: 'ui',
           },
         }),
-      );
-    });
-  });
-
-  describe('when user belongs to multiple organizations and one does not exist', () => {
-    const organizationId2 = createOrganizationId('org-456');
-    const membership2: UserOrganizationMembership = {
-      userId,
-      organizationId: organizationId2,
-      role: 'member',
-    };
-
-    const userWithMultipleOrgs: User = {
-      ...testUser,
-      memberships: [membership, membership2],
-    };
-
-    const command: SignInUserCommand = {
-      email: 'testuser@packmind.com',
-      password: 'password123',
-    };
-
-    it('throws InvalidEmailOrPasswordError', async () => {
-      loginRateLimiterService.checkLoginAllowed.mockResolvedValue();
-      userService.getUserByEmailCaseInsensitive.mockResolvedValue(
-        userWithMultipleOrgs,
-      );
-      userService.validatePassword.mockResolvedValue(true);
-      organizationService.getOrganizationById
-        .mockResolvedValueOnce(testOrganization)
-        .mockResolvedValueOnce(null);
-
-      await expect(useCase.execute(command)).rejects.toThrow(
-        InvalidEmailOrPasswordError,
       );
     });
   });
@@ -578,7 +532,10 @@ describe('SignInUserUseCase', () => {
         loginRateLimiterService.checkLoginAllowed.mockResolvedValue();
         userService.getUserByEmailCaseInsensitive.mockResolvedValue(testUser);
         userService.validatePassword.mockResolvedValue(true);
-        organizationService.getOrganizationById.mockResolvedValue(null);
+        loginRateLimiterService.clearAttempts.mockResolvedValue();
+        membershipResolutionService.resolveUserOrganizations.mockRejectedValue(
+          new InvalidEmailOrPasswordError(),
+        );
       });
 
       it('does not record failed attempt', async () => {
@@ -593,14 +550,16 @@ describe('SignInUserUseCase', () => {
         ).not.toHaveBeenCalled();
       });
 
-      it('does not clear attempts', async () => {
+      it('clears attempts before resolving memberships', async () => {
         try {
           await useCase.execute(command);
         } catch {
           // Expected to throw
         }
 
-        expect(loginRateLimiterService.clearAttempts).not.toHaveBeenCalled();
+        expect(loginRateLimiterService.clearAttempts).toHaveBeenCalledWith(
+          command.email,
+        );
       });
     });
 
@@ -614,10 +573,11 @@ describe('SignInUserUseCase', () => {
         loginRateLimiterService.checkLoginAllowed.mockResolvedValue();
         userService.getUserByEmailCaseInsensitive.mockResolvedValue(testUser);
         userService.validatePassword.mockResolvedValue(true);
-        organizationService.getOrganizationById.mockResolvedValue(
-          testOrganization,
-        );
         loginRateLimiterService.clearAttempts.mockResolvedValue();
+        membershipResolutionService.resolveUserOrganizations.mockResolvedValue({
+          organization: testOrganization,
+          role: 'admin',
+        });
       });
 
       it('calls checkLoginAllowed with the email', async () => {

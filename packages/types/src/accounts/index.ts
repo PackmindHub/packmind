@@ -1,3 +1,4 @@
+export * from './AuthMethod';
 export * from './ClientSource';
 export * from './Organization';
 export * from './SocialProvider';

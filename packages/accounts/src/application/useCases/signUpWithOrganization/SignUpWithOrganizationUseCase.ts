@@ -68,13 +68,13 @@ export class SignUpWithOrganizationUseCase implements ISignUpWithOrganizationUse
   async execute(
     command: SignUpWithOrganizationCommand,
   ): Promise<SignUpWithOrganizationResponse> {
-    const { email, password, authType } = command;
+    const { email, password, method } = command;
     this.logger.info('Executing sign up with organization use case', {
       email,
-      authType,
+      method,
     });
 
-    if (authType === 'password') {
+    if (method === 'password') {
       this.validatePasswordForSignup(password);
     }
 
@@ -90,16 +90,16 @@ export class SignUpWithOrganizationUseCase implements ISignUpWithOrganizationUse
       await this.tryCreateDefaultSpace(organization.id);
 
       let user;
-      if (authType === 'password') {
+      if (method === 'password') {
         user = await this.userService.createUser(
           email,
           password,
           organization.id,
         );
-      } else if (authType === 'social') {
+      } else if (method === 'social') {
         user = await this.createSocialUser(email, organization.id);
       } else {
-        throw new Error(`Authentication type not found: ${authType}`);
+        throw new Error(`Authentication type not found: ${method}`);
       }
 
       this.logger.info('User signed up with organization successfully', {
@@ -107,7 +107,7 @@ export class SignUpWithOrganizationUseCase implements ISignUpWithOrganizationUse
         email,
         organizationId: organization.id,
         organizationName: organization.name,
-        authType,
+        method,
       });
 
       this.emitSignUpEvents(user, organization, organizationName, command);
@@ -179,7 +179,7 @@ export class SignUpWithOrganizationUseCase implements ISignUpWithOrganizationUse
         email: command.email,
         quickStart: false,
         source: 'ui',
-        method: command.authType,
+        method: command.method,
         socialProvider: command.socialProvider ?? '',
       }),
     );

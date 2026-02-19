@@ -71,7 +71,7 @@ describe('Continue Deployment Integration', () => {
       .signUpWithOrganization({
         email: 'testuser@packmind.com',
         password: 's3cret!@',
-        authType: 'password',
+        method: 'password',
       });
     user = signUpResult.user;
     organization = signUpResult.organization;
@@ -218,12 +218,12 @@ describe('Continue Deployment Integration', () => {
 
     it('includes recipe description in frontmatter', () => {
       expect(recipeFile?.content).toContain(
-        'description: Test recipe for Continue deployment with detailed instructions',
+        "description: 'Test recipe for Continue deployment with detailed instructions'",
       );
     });
 
     it('includes recipe name in frontmatter', () => {
-      expect(recipeFile?.content).toContain(`name: ${recipe.name}`);
+      expect(recipeFile?.content).toContain(`name: '${recipe.name}'`);
     });
 
     it('includes invokable set to true in frontmatter', () => {
@@ -372,7 +372,7 @@ describe('Continue Deployment Integration', () => {
     });
 
     it('includes frontmatter with name', () => {
-      expect(standardFile?.content).toContain(`name: ${standard.name}`);
+      expect(standardFile?.content).toContain(`name: '${standard.name}'`);
     });
 
     describe('when scope exists', () => {
@@ -387,7 +387,7 @@ describe('Continue Deployment Integration', () => {
 
     it('includes frontmatter with description from summary', () => {
       expect(standardFile?.content).toContain(
-        'description: Test standard for Continue deployment',
+        "description: 'Test standard for Continue deployment'",
       );
     });
 
@@ -574,7 +574,7 @@ describe('Continue Deployment Integration', () => {
 
       it('includes recipe description in frontmatter', () => {
         expect(recipeFile?.content).toContain(
-          'description: Test recipe for combined deployment',
+          "description: 'Test recipe for combined deployment'",
         );
       });
     });
@@ -737,7 +737,7 @@ describe('Continue Deployment Integration', () => {
         });
 
         it('includes name in frontmatter', () => {
-          expect(frontendFile?.content).toContain(`name: ${standard1.name}`);
+          expect(frontendFile?.content).toContain(`name: '${standard1.name}'`);
         });
 
         it('includes globs in frontmatter', () => {
@@ -761,7 +761,7 @@ describe('Continue Deployment Integration', () => {
         });
 
         it('includes name in frontmatter', () => {
-          expect(backendFile?.content).toContain(`name: ${standard2.name}`);
+          expect(backendFile?.content).toContain(`name: '${standard2.name}'`);
         });
 
         it('does not include globs in frontmatter', () => {

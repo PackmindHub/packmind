@@ -48,6 +48,8 @@ import {
   RequestPasswordResetResponse,
   ResetPasswordCommand,
   ResetPasswordResponse,
+  SignInSocialUserCommand,
+  SignInSocialUserResponse,
   SignInUserCommand,
   SignInUserResponse,
   SignUpWithOrganizationCommand,
@@ -61,7 +63,6 @@ import {
   ValidatePasswordCommand,
   ValidatePasswordResetTokenCommand,
   ValidatePasswordResetTokenResponse,
-  SocialProvider,
 } from '../index';
 
 /**
@@ -200,7 +201,7 @@ export interface IAccountsPort {
   ): Promise<ActivateTrialAccountResult>;
 
   // Social login operations
-  getUserByEmail(email: string): Promise<User | null>;
-  createSocialLoginUser(email: string, provider: SocialProvider): Promise<User>;
-  addSocialProvider(userId: UserId, provider: SocialProvider): Promise<void>;
+  signInSocialUser(
+    command: SignInSocialUserCommand,
+  ): Promise<SignInSocialUserResponse>;
 }

@@ -79,7 +79,7 @@ export const integrationTestWithUser: IntegrationTest<
         .signUpWithOrganization({
           email: 'someone@example.com',
           password: 'some-secret-apssword',
-          authType: 'password',
+          method: 'password',
         });
       const user = signUpResponse.user;
       const organization = signUpResponse.organization;

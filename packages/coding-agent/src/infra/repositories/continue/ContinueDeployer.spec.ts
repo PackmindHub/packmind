@@ -184,7 +184,7 @@ describe('ContinueDeployer', () => {
 
         const commandFile = result.createOrUpdate[0];
         expect(commandFile.content).toContain(
-          'description: A test recipe summary',
+          "description: 'A test recipe summary'",
         );
       });
 
@@ -212,7 +212,7 @@ describe('ContinueDeployer', () => {
         );
 
         const commandFile = result.createOrUpdate[0];
-        expect(commandFile.content).toContain('name: Test Recipe');
+        expect(commandFile.content).toContain("name: 'Test Recipe'");
       });
 
       it('includes frontmatter with invokable set to true', async () => {
@@ -293,7 +293,7 @@ describe('ContinueDeployer', () => {
           );
 
           const commandFile = result.createOrUpdate[0];
-          expect(commandFile.content).toContain('description: Test Recipe');
+          expect(commandFile.content).toContain("description: 'Test Recipe'");
         });
       });
     });
@@ -554,7 +554,7 @@ describe('ContinueDeployer', () => {
         );
 
         const standardFile = result.createOrUpdate[0];
-        expect(standardFile.content).toContain(`name: ${standard.name}`);
+        expect(standardFile.content).toContain(`name: '${standard.name}'`);
       });
 
       describe('when scope exists', () => {
@@ -833,7 +833,7 @@ describe('ContinueDeployer', () => {
 
         const standardFile = result.createOrUpdate[0];
         expect(standardFile.content).toContain(
-          'description: A test standard summary',
+          "description: 'A test standard summary'",
         );
       });
 
@@ -1057,7 +1057,7 @@ describe('ContinueDeployer', () => {
 
           const standardFile = result.createOrUpdate[0];
           expect(standardFile.content).toContain(
-            `description: ${standard.name}`,
+            `description: '${standard.name}'`,
           );
         });
       });
@@ -1091,7 +1091,7 @@ describe('ContinueDeployer', () => {
 
           const standardFile = result.createOrUpdate[0];
           expect(standardFile.content).toContain(
-            `description: ${standard.name}`,
+            `description: '${standard.name}'`,
           );
         });
       });

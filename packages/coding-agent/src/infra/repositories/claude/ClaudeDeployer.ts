@@ -14,7 +14,7 @@ import {
 } from '@packmind/types';
 import { ICodingAgentDeployer } from '../../../domain/repository/ICodingAgentDeployer';
 import { GenericStandardSectionWriter } from '../genericSectionWriter/GenericStandardSectionWriter';
-import { getTargetPrefixedPath } from '../utils/FileUtils';
+import { escapeSingleQuotes, getTargetPrefixedPath } from '../utils/FileUtils';
 import { DefaultSkillsDeployer } from '../defaultSkillsDeployer/DefaultSkillsDeployer';
 
 const origin = 'ClaudeDeployer';
@@ -94,7 +94,7 @@ export class ClaudeDeployer implements ICodingAgentDeployer {
     const description = recipeVersion.summary?.trim() || recipeVersion.name;
 
     const frontmatter = `---
-description: ${description}
+description: '${escapeSingleQuotes(description)}'
 ---`;
 
     const content = `${frontmatter}
@@ -573,17 +573,17 @@ ${recipeVersion.content}`;
     if (standardVersion.scope && standardVersion.scope.trim() !== '') {
       // When the scope is not null or empty
       frontmatter = `---
-name: ${standardVersion.name}
+name: '${escapeSingleQuotes(standardVersion.name)}'
 paths: ${this.formatGlobsValue(standardVersion.scope)}
 alwaysApply: false
-description: ${summary}
+description: '${escapeSingleQuotes(summary)}'
 ---`;
     } else {
       // When the scope is empty
       frontmatter = `---
-name: ${standardVersion.name}
+name: '${escapeSingleQuotes(standardVersion.name)}'
 alwaysApply: true
-description: ${summary}
+description: '${escapeSingleQuotes(summary)}'
 ---`;
     }
 
@@ -640,31 +640,31 @@ ${instructionContent}`;
 
     if (skillVersion.name) {
       frontmatterFields.push(
-        `name: '${this.escapeSingleQuotes(skillVersion.name)}'`,
+        `name: '${escapeSingleQuotes(skillVersion.name)}'`,
       );
     }
 
     if (skillVersion.description) {
       frontmatterFields.push(
-        `description: '${this.escapeSingleQuotes(skillVersion.description)}'`,
+        `description: '${escapeSingleQuotes(skillVersion.description)}'`,
       );
     }
 
     if (skillVersion.license) {
       frontmatterFields.push(
-        `license: '${this.escapeSingleQuotes(skillVersion.license)}'`,
+        `license: '${escapeSingleQuotes(skillVersion.license)}'`,
       );
     }
 
     if (skillVersion.compatibility) {
       frontmatterFields.push(
-        `compatibility: '${this.escapeSingleQuotes(skillVersion.compatibility)}'`,
+        `compatibility: '${escapeSingleQuotes(skillVersion.compatibility)}'`,
       );
     }
 
     if (skillVersion.allowedTools) {
       frontmatterFields.push(
-        `allowed-tools: '${this.escapeSingleQuotes(skillVersion.allowedTools)}'`,
+        `allowed-tools: '${escapeSingleQuotes(skillVersion.allowedTools)}'`,
       );
     }
 
@@ -675,8 +675,7 @@ ${instructionContent}`;
       // Metadata is stored as JSONB, convert to YAML format
       const metadataYaml = Object.entries(skillVersion.metadata)
         .map(
-          ([key, value]) =>
-            `  ${key}: '${this.escapeSingleQuotes(String(value))}'`,
+          ([key, value]) => `  ${key}: '${escapeSingleQuotes(String(value))}'`,
         )
         .join('\n');
       frontmatterFields.push(`metadata:\n${metadataYaml}`);
@@ -690,13 +689,6 @@ ${frontmatterFields.join('\n')}
     return `${frontmatter}
 
 ${skillVersion.prompt}`;
-  }
-
-  /**
-   * Escape single quotes in YAML values to prevent parsing errors
-   */
-  private escapeSingleQuotes(value: string): string {
-    return value.replace(/'/g, "''");
   }
 
   getSkillsFolderPath(): string {

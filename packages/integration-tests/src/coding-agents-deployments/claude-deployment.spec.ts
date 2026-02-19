@@ -72,7 +72,7 @@ describe('Claude Deployment Integration', () => {
       .signUpWithOrganization({
         email: 'testuser@packmind.com',
         password: 's3cret!@',
-        authType: 'password',
+        method: 'password',
       });
     user = signUpResult.user;
     organization = signUpResult.organization;
@@ -220,7 +220,7 @@ describe('Claude Deployment Integration', () => {
 
       it('includes recipe description in frontmatter', () => {
         expect(recipeFile?.content).toContain(
-          'description: Test recipe for deployment',
+          "description: 'Test recipe for deployment'",
         );
       });
 
@@ -298,7 +298,7 @@ describe('Claude Deployment Integration', () => {
       });
 
       it('includes standard name in frontmatter', () => {
-        expect(standardFile?.content).toContain('name: Test Standard');
+        expect(standardFile?.content).toContain("name: 'Test Standard'");
       });
 
       it('includes paths in frontmatter', () => {
@@ -311,7 +311,7 @@ describe('Claude Deployment Integration', () => {
 
       it('includes standard description', () => {
         expect(standardFile?.content).toContain(
-          'description: Test standard for deployment',
+          "description: 'Test standard for deployment'",
         );
       });
 
@@ -430,7 +430,7 @@ describe('Claude Deployment Integration', () => {
 
         it('includes recipe description in frontmatter', () => {
           expect(recipeFile?.content).toContain(
-            'description: Test recipe for deployment',
+            "description: 'Test recipe for deployment'",
           );
         });
       });
@@ -530,7 +530,7 @@ describe('Claude Deployment Integration', () => {
 
       it('includes recipe description in frontmatter', () => {
         expect(recipeFile.content).toContain(
-          'description: Test recipe for deployment',
+          "description: 'Test recipe for deployment'",
         );
       });
 
@@ -610,7 +610,7 @@ describe('Claude Deployment Integration', () => {
       });
 
       it('includes standard name in frontmatter', () => {
-        expect(standardFile.content).toContain('name: Test Standard');
+        expect(standardFile.content).toContain("name: 'Test Standard'");
       });
 
       it('includes standard header', () => {
@@ -765,7 +765,7 @@ describe('Claude Deployment Integration', () => {
       });
 
       it('includes recipe description in frontmatter', () => {
-        expect(recipeFile?.content).toContain('description: Test recipe');
+        expect(recipeFile?.content).toContain("description: 'Test recipe'");
       });
     });
   });

@@ -170,7 +170,8 @@ describe('DiffArtefactsUseCase', () => {
           createOrUpdate: [
             {
               path: '.packmind/standards/my-standard.md',
-              content: 'Server standard content',
+              content:
+                '# Server Standard Name\n\nDescription\n\n## Rules\n* Rule 1',
               artifactType: 'standard',
               artifactName: 'My Standard',
               artifactId: 'artifact-4',
@@ -182,17 +183,32 @@ describe('DiffArtefactsUseCase', () => {
         skillFolders: [],
       });
 
-      (fs.readFile as jest.Mock).mockResolvedValue('Local standard content');
+      (fs.readFile as jest.Mock).mockResolvedValue(
+        '# Local Standard Name\n\nDescription\n\n## Rules\n* Rule 1',
+      );
     });
 
-    it('returns empty result (standard diffing unsupported)', async () => {
+    it('returns updateStandardName diff', async () => {
       const result = await useCase.execute({
         ...defaultGitInfo,
         packagesSlugs: ['test-package'],
         baseDirectory: '/test',
       });
 
-      expect(result).toEqual([]);
+      expect(result).toEqual([
+        {
+          filePath: '.packmind/standards/my-standard.md',
+          type: ChangeProposalType.updateStandardName,
+          payload: {
+            oldValue: 'Server Standard Name',
+            newValue: 'Local Standard Name',
+          },
+          artifactName: 'My Standard',
+          artifactType: 'standard',
+          artifactId: 'artifact-4',
+          spaceId: 'space-4',
+        },
+      ]);
     });
   });
 

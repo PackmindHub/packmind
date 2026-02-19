@@ -1,7 +1,7 @@
 import { FileUpdates } from '@packmind/types';
 import { ISkillDeployer } from './IDefaultSkillDeployer';
 
-// Python scripts removed - agent creates JSON directly
+// Markdown-first workflow - agent drafts in markdown, converts to JSON for CLI
 function getStandardCreatorSkillMd(agentName: string): string {
   return `---
 name: 'packmind-create-standard'
@@ -26,35 +26,53 @@ Coding standards are collections of rules that capture team conventions, best pr
 
 ### Standard Structure
 
-Every standard consists of:
+Every standard is drafted as a markdown file with this structure:
 
 \`\`\`
-{
-  "name": "Standard Name",
-  "description": "What the standard covers and why",
-  "summary": "One-sentence description of when to apply the rules (optional)",
-  "scope": "Where/when the standard applies (e.g., 'TypeScript files', 'React components')",
-  "rules": [
-    {
-      "content": "Rule description starting with action verb",
-      "examples": {
-        "positive": "Valid code example",
-        "negative": "Invalid code example",
-        "language": "TYPESCRIPT"
-      }
-    }
-  ]
-}
+# Standard Name
+
+## Description
+
+What the standard covers and why.
+
+## Scope
+
+Where/when the standard applies (e.g., "TypeScript files", "React components").
+
+## Rules
+
+### Rule description starting with action verb
+
+#### Positive Example
+
+\\\`\\\`\\\`typescript
+// Valid code example
+\\\`\\\`\\\`
+
+#### Negative Example
+
+\\\`\\\`\\\`typescript
+// Invalid code example
+\\\`\\\`\\\`
+
+### Another rule without examples
 \`\`\`
 
 ### Naming Guidelines
 
-The \`name\` field is the **display name** shown in indexes and dashboards. The slug is auto-generated from it.
+The \`# Title\` heading is the **display name** shown in indexes and dashboards. The slug is auto-generated from it — never write the slug yourself.
 
-- **Use Title Case** — capitalize each significant word
-- **Be descriptive and specific** (2–5 words) — indicate the domain/technology and the aspect covered
-- Good: \`"TypeScript Testing Conventions"\`, \`"React Component File Organization"\`, \`"Backend Error Handling"\`
-- Bad: \`"testing"\`, \`"good-practices"\`, \`"typescript-good-practices"\`, \`"Standards for Code"\`
+**Format:** Use **Title Case with spaces** — natural language, not a slug.
+- Capitalize each significant word
+- Use spaces between words, never hyphens or underscores
+- Be descriptive and specific (2–5 words) — indicate the domain/technology and the aspect covered
+
+**Examples:**
+- ✅ \`"TypeScript Testing Conventions"\`, \`"React Component File Organization"\`, \`"Backend Error Handling"\`
+- ❌ \`"typescript-testing-conventions"\` (slug format — use Title Case with spaces)
+- ❌ \`"testing"\` (too generic)
+- ❌ \`"good-practices"\` (slug format and too vague)
+- ❌ \`"Standards for Code"\` (describes meta-concept, not the actual domain)
 
 **Note**: The Packmind CLI currently requires the \`scope\` field. The \`summary\` field is used in other workflows (like MCP) but not yet supported by the CLI.
 
@@ -122,19 +140,24 @@ Take brief notes on:
 
 Keep notes concise—just enough to unlock drafting.
 
-### Step 2: Draft Rules
+### Step 2: Draft Standard in Markdown
 
-Transform the understanding into concrete rules. **Do not add examples yet** - examples will be added in Step 3.
+Transform the understanding into a complete markdown draft with rules and examples.
 
-#### Draft Creation (Rules Only)
+#### Draft Creation
 
-1. Create a draft markdown file in \`.packmind/standards/_drafts/\` (create the folder if missing) using filename \`<slug>-draft.md\` (lowercase with hyphens)
-2. Initial draft structure:
-   - \`# <Standard Title>\`
-   - Context paragraph explaining when/why to apply the standard
-   - Optional **Key References** list citing files or authoritative sources
-   - \`## Rules\` as bullet points following the Rule Writing Guidelines below
-   - **DO NOT include examples yet** - examples will be added in Phase 2
+1. Create a draft markdown file in \`.packmind/standards/_drafts/\` (create the folder if missing) using filename \`<slug>.md\` (lowercase with hyphens)
+2. Draft structure:
+   - \`# <Standard Title>\` (Title Case, 2–5 words)
+   - \`## Description\` — what the standard covers and why it exists
+   - \`## Scope\` — where/when the standard applies (file patterns, technologies)
+   - \`## Rules\` — each rule as a \`### <rule text>\` subsection following the Rule Writing Guidelines below
+   - For each rule that benefits from code examples, add:
+     - \`#### Positive Example\` with a language-annotated code block showing the compliant approach
+     - \`#### Negative Example\` with a language-annotated code block showing the anti-pattern
+   - If a rule doesn't benefit from code examples (e.g., process or organizational rules), skip examples for that rule
+
+This draft file is the **only** file created during drafting — no separate files are needed.
 
 #### Rule Writing Guidelines
 
@@ -196,32 +219,12 @@ Inline examples (code, paths, patterns) within the rule content are **optional**
 - "Use const and prefix interfaces with I" (multiple concepts)
 - "Don't use var" (no positive guidance)
 
-#### Draft Summary
-
-After saving the draft file, write a concise summary that captures:
-- One sentence summarizing the standard's purpose
-- A bullet list of all rules (each rule ~22 words max, imperative form, with inline code if helpful)
-
-Then proceed directly to Step 3.
-
-### Step 3: Add Examples
-
-Add illustrative examples to each rule in the draft file.
-
-#### Examples Creation
-
-1. Open the existing draft file and add examples to each rule:
-   - \`### Positive Example\` showing the compliant approach
-   - \`### Negative Example\` highlighting the anti-pattern to avoid
-   - Annotate every code block with its language (e.g., \`typescript\`, \`sql\`, \`javascript\`)
-   - Keep examples concise and focused on demonstrating the specific rule
-2. If a rule doesn't benefit from code examples (e.g., process or organizational rules), skip examples for that rule
-
 #### Examples Guidelines
 
 - Examples should be realistic and directly relevant to this codebase
 - Each example should clearly demonstrate why the rule matters
 - Keep code snippets minimal—only include what's necessary to illustrate the point
+- Annotate every code block with its language (e.g., \`typescript\`, \`sql\`, \`javascript\`)
 
 Valid language values for code blocks:
 - TYPESCRIPT, TYPESCRIPT_TSX
@@ -231,51 +234,19 @@ Valid language values for code blocks:
 - HTML, CSS, SCSS, YAML, JSON
 - MARKDOWN, BASH, GENERIC
 
-Then proceed directly to Step 4.
+#### Draft Summary
 
-### Step 4: Creating the Playbook File
+After saving the draft file, write a concise summary that captures:
+- One sentence summarizing the standard's purpose
+- A bullet list of all rules (each rule ~22 words max, imperative form, with inline code if helpful)
 
-Create a JSON playbook file named \`<standard-name>.playbook.json\` based on the draft content:
+Then proceed directly to Step 3.
 
-\`\`\`json
-{
-  "name": "Your Standard Name",
-  "description": "A clear description of what this standard covers, why it exists, and what problems it solves.",
-  "scope": "Where this standard applies (e.g., 'TypeScript files', 'React components', '*.spec.ts test files')",
-  "rules": [
-    {
-      "content": "First rule starting with action verb"
-    },
-    {
-      "content": "Second rule with examples",
-      "examples": {
-        "positive": "const x = getValue();",
-        "negative": "let x = getValue();",
-        "language": "TYPESCRIPT"
-      }
-    }
-  ]
-}
-\`\`\`
-
-#### Playbook Requirements
-
-- **name**: Non-empty Title Case string, descriptive and specific (2–5 words, e.g., "TypeScript Testing Conventions")
-- **description**: Non-empty string explaining purpose
-- **scope**: Non-empty string describing applicability
-- **rules**: Array with at least one rule
-- **rules[].content**: Non-empty string starting with action verb (max ~25 words)
-- **rules[].examples** (optional): If provided, must include positive, negative, and language
-
-#### Valid Language Values
-
-TYPESCRIPT, TYPESCRIPT_TSX, JAVASCRIPT, JAVASCRIPT_JSX, PYTHON, JAVA, GO, RUST, CSHARP, PHP, RUBY, KOTLIN, SWIFT, SQL, HTML, CSS, SCSS, YAML, JSON, MARKDOWN, BASH, GENERIC
-
-### Step 5: Review Before Submission
+### Step 3: Review Before Submission
 
 **Before running the CLI command**, you MUST get explicit user approval:
 
-1. **Display a formatted recap** of the playbook content:
+1. **Display a formatted recap** of the standard content:
 
 \`\`\`
 ---
@@ -297,28 +268,39 @@ Rules:
 ---
 \`\`\`
 
-2. **Provide the file path** to the playbook JSON file so users can open and edit it directly if needed.
+2. **Provide the file path** to the markdown file so users can open and edit it directly if needed.
 
-3. Ask: **"Here is the standard that will be created on Packmind. The playbook file is at \`<path>\` if you want to review or edit it. Do you approve?"**
+3. Ask: **"Here is the standard that will be created on Packmind. The draft file is at \`<path>\` if you want to review or edit it. Do you approve?"**
 
-4. **Wait for explicit user confirmation** before proceeding to Step 6.
+4. **Wait for explicit user confirmation** before proceeding to Step 4.
 
 5. If the user requests changes, go back to earlier steps to make adjustments.
 
-### Step 6: Confirm and Submit
+### Step 4: Confirm and Submit
 
-1. **Re-read the playbook file** from disk to capture any user edits.
+1. **Re-read the markdown file** from disk to capture any user edits.
 
-2. **Compare with the original content** you created in Step 4.
+2. **Compare with the original content** you created in Step 2.
 
 3. **If changes were detected**:
-   - Display the formatted recap again (same format as Step 5)
+   - Display the formatted recap again (same format as Step 3)
    - Ask: **"The file was modified. Here is the updated content that will be sent. Do you confirm?"**
    - **Wait for explicit confirmation** before proceeding.
 
 4. **If no changes**: Proceed directly to submission.
 
-5. Run the packmind-cli command:
+5. **Convert the markdown to JSON** using these conversion rules:
+   - \`# heading\` → \`name\`
+   - \`## Description\` content → \`description\`
+   - \`## Scope\` content → \`scope\`
+   - Each \`### ...\` under \`## Rules\` → rule \`content\`
+   - \`#### Positive Example\` code block → \`examples.positive\`
+   - \`#### Negative Example\` code block → \`examples.negative\`
+   - Code fence language identifier → \`examples.language\` (UPPERCASED)
+
+6. Write the resulting JSON to a temporary \`.playbook.json\` file next to the markdown file (e.g., \`.packmind/standards/_drafts/<slug>.playbook.json\`).
+
+7. Run the packmind-cli command:
 
 \`\`\`bash
 packmind-cli standards create <path-to-playbook.json>
@@ -326,7 +308,7 @@ packmind-cli standards create <path-to-playbook.json>
 
 Example:
 \`\`\`bash
-packmind-cli standards create ./typescript-conventions.playbook.json
+packmind-cli standards create .packmind/standards/_drafts/testing-conventions.playbook.json
 \`\`\`
 
 Expected output on success:
@@ -345,21 +327,21 @@ packmind-cli login
 - Verify your API key is valid
 - Check network connectivity to Packmind server
 
-**JSON validation errors:**
-- Ensure all required fields are present
-- Verify JSON syntax is valid (use a JSON validator)
-- Check that rules array has at least one entry
+**Validation errors:**
+- Ensure all required sections are present in the markdown file
+- Check that the \`## Rules\` section has at least one \`###\` rule subsection
+- Verify code blocks have language annotations
 
-### Step 7: Cleanup
+### Step 5: Cleanup
 
 After the standard is **successfully created**, delete the temporary files:
 
-1. Delete the playbook JSON file (e.g., \`<standard-name>.playbook.json\`)
-2. Delete the draft markdown file in \`.packmind/standards/_drafts/\` if it exists
+1. Delete the temporary \`.playbook.json\` file
+2. Delete the draft markdown file in \`.packmind/standards/_drafts/\`
 
 **Only clean up on success** - if the CLI command fails, keep the files so the user can retry.
 
-### Step 8: Offer to Add to Package
+### Step 6: Offer to Add to Package
 
 After successful creation, check if the standard fits an existing package:
 
@@ -382,63 +364,84 @@ After successful creation, check if the standard fits an existing package:
 
 Here's a complete example creating a TypeScript testing standard:
 
-**File: testing-conventions.playbook.json**
-\`\`\`json
-{
-  "name": "TypeScript Testing Conventions",
-  "description": "Enforce consistent testing patterns in TypeScript test files to improve readability, maintainability, and reliability of the test suite.",
-  "scope": "TypeScript test files (*.spec.ts, *.test.ts)",
-  "rules": [
-    {
-      "content": "Use descriptive test names that explain the expected behavior",
-      "examples": {
-        "positive": "it('returns empty array when no items match filter')",
-        "negative": "it('test filter')",
-        "language": "TYPESCRIPT"
-      }
-    },
-    {
-      "content": "Follow Arrange-Act-Assert pattern in test structure",
-      "examples": {
-        "positive": "const input = createInput();\\nconst result = processInput(input);\\nexpect(result).toEqual(expected);",
-        "negative": "expect(processInput(createInput())).toEqual(expected);",
-        "language": "TYPESCRIPT"
-      }
-    },
-    {
-      "content": "Use one assertion per test for better error isolation",
-      "examples": {
-        "positive": "it('validates name', () => { expect(result.name).toBe('test'); });\\nit('validates age', () => { expect(result.age).toBe(25); });",
-        "negative": "it('validates user', () => { expect(result.name).toBe('test'); expect(result.age).toBe(25); });",
-        "language": "TYPESCRIPT"
-      }
-    },
-    {
-      "content": "Avoid using 'should' at the start of test names - use assertive verb-first naming"
-    }
-  ]
-}
+**File: .packmind/standards/_drafts/testing-conventions.md**
+\`\`\`markdown
+# TypeScript Testing Conventions
+
+## Description
+
+Enforce consistent testing patterns in TypeScript test files to improve readability, maintainability, and reliability of the test suite.
+
+## Scope
+
+TypeScript test files (*.spec.ts, *.test.ts)
+
+## Rules
+
+### Use descriptive test names that explain the expected behavior
+
+#### Positive Example
+
+\\\`\\\`\\\`typescript
+it('returns empty array when no items match filter')
+\\\`\\\`\\\`
+
+#### Negative Example
+
+\\\`\\\`\\\`typescript
+it('test filter')
+\\\`\\\`\\\`
+
+### Follow Arrange-Act-Assert pattern in test structure
+
+#### Positive Example
+
+\\\`\\\`\\\`typescript
+const input = createInput();
+const result = processInput(input);
+expect(result).toEqual(expected);
+\\\`\\\`\\\`
+
+#### Negative Example
+
+\\\`\\\`\\\`typescript
+expect(processInput(createInput())).toEqual(expected);
+\\\`\\\`\\\`
+
+### Use one assertion per test for better error isolation
+
+#### Positive Example
+
+\\\`\\\`\\\`typescript
+it('validates name', () => { expect(result.name).toBe('test'); });
+it('validates age', () => { expect(result.age).toBe(25); });
+\\\`\\\`\\\`
+
+#### Negative Example
+
+\\\`\\\`\\\`typescript
+it('validates user', () => { expect(result.name).toBe('test'); expect(result.age).toBe(25); });
+\\\`\\\`\\\`
+
+### Avoid using 'should' at the start of test names - use assertive verb-first naming
 \`\`\`
 
 **Creating the standard:**
 \`\`\`bash
-packmind-cli standards create testing-conventions.playbook.json
+packmind-cli standards create .packmind/standards/_drafts/testing-conventions.playbook.json
 \`\`\`
 
 ## Quick Reference
 
-| Field             | Required    | Description                              |
-| ----------------- | ----------- | ---------------------------------------- |
-| name              | Yes         | Title Case, descriptive, 2–5 words       |
-| description       | Yes         | What and why                             |
-| summary           | No          | One-sentence (not yet supported by CLI)  |
-| scope             | Yes (CLI)   | Where it applies                         |
-| rules             | Yes         | At least one rule                        |
-| rules[].content   | Yes         | Rule text (verb-first, max ~25 words)    |
-| rules[].examples  | No          | Code examples                            |
-| examples.positive | If examples | Valid code                               |
-| examples.negative | If examples | Invalid code                             |
-| examples.language | If examples | Language ID                              |
+| Section | Required | Description |
+|---|---|---|
+| \`# Title\` | Yes | Title Case, descriptive, 2–5 words |
+| \`## Description\` | Yes | What and why |
+| \`## Scope\` | Yes (CLI) | Where it applies |
+| \`## Rules\` | Yes | Contains rule subsections |
+| \`### Rule text\` | Yes (≥1) | Rule text (verb-first, max ~25 words) |
+| \`#### Positive Example\` | No | Valid code in fenced block |
+| \`#### Negative Example\` | No | Invalid code in fenced block |
 `;
 }
 
@@ -465,9 +468,9 @@ The AI agent will:
 
 1. Ask clarifying questions to understand the standard's purpose
 2. Help you define rules with proper formatting
-3. Create a playbook JSON file
+3. Draft a markdown file for review
 4. Get your approval before submission
-5. Run the CLI command to create the standard
+5. Convert to JSON and run the CLI command to create the standard
 
 ## Prerequisites
 
