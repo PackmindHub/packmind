@@ -49,6 +49,7 @@ const CHANGE_TYPE_LABELS: Partial<Record<ChangeProposalType, string>> = {
   [ChangeProposalType.updateStandardName]: 'standard name changed',
   [ChangeProposalType.updateStandardDescription]:
     'standard description changed',
+  [ChangeProposalType.updateStandardScope]: 'standard scope changed',
 };
 
 function subGroupByChangeContent(diffs: ArtefactDiff[]): ArtefactDiff[][] {
