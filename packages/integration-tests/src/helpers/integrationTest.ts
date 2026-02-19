@@ -18,6 +18,7 @@ import {
   UserId,
 } from '@packmind/types';
 import { v4 as uuidv4 } from 'uuid';
+import { deploymentsSchemas } from '@packmind/deployments';
 
 type IntegrationTestContext = {
   testApp: TestApp;
@@ -37,6 +38,7 @@ export const integrationTest: IntegrationTest = (tests) => {
       ...skillsSchemas,
       ...gitSchemas,
       ...playbookChangeManagementSchemas,
+      ...deploymentsSchemas,
     ]);
 
     beforeAll(() => fixture.initialize());
