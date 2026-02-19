@@ -11,6 +11,7 @@ export type ListChangeProposalsByArtefactCommand<
 > = PackmindCommand & {
   spaceId: SpaceId;
   artefactId: T;
+  pendingOnly?: boolean;
 };
 
 export type ListChangeProposalsByArtefactResponse = {

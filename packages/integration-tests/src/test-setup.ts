@@ -66,6 +66,7 @@ jest.mock('@packmind/node-utils', () => {
       publishDistributionStatusChangeEvent: jest
         .fn()
         .mockResolvedValue(undefined),
+      publishChangeProposalUpdateEvent: jest.fn().mockResolvedValue(undefined),
       publishEvent: jest.fn().mockResolvedValue(undefined),
     },
   };

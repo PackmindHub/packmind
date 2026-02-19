@@ -12,6 +12,7 @@ import {
   createDetectionHeuristicsUpdatedEvent,
   createUserContextChangeEvent,
   createDistributionStatusChangeEvent,
+  createChangeProposalUpdateEvent,
   type UserContextChangeType,
 } from '@packmind/types';
 import { UserOrganizationRole } from '@packmind/types';
@@ -299,6 +300,51 @@ export class SSEEventPublisher {
           distributionId,
           status,
           organizationId,
+          error: error instanceof Error ? error.message : String(error),
+        },
+      );
+      throw error;
+    }
+  }
+
+  /**
+   * Publish a change proposal update event for cache invalidation
+   * This triggers React Query to refetch change proposal data when proposals are created, applied, or rejected
+   */
+  static async publishChangeProposalUpdateEvent(
+    organizationId: string,
+    spaceId: string,
+  ): Promise<void> {
+    SSEEventPublisher.getInstance().logger.info(
+      'Publishing change proposal update event',
+      {
+        organizationId,
+        spaceId,
+      },
+    );
+
+    try {
+      const event = createChangeProposalUpdateEvent(organizationId, spaceId);
+
+      await SSEEventPublisher.publishEvent(
+        'CHANGE_PROPOSAL_UPDATE',
+        [spaceId],
+        event,
+      );
+
+      SSEEventPublisher.getInstance().logger.debug(
+        'Successfully published change proposal update event',
+        {
+          organizationId,
+          spaceId,
+        },
+      );
+    } catch (error) {
+      SSEEventPublisher.getInstance().logger.error(
+        'Failed to publish change proposal update event',
+        {
+          organizationId,
+          spaceId,
           error: error instanceof Error ? error.message : String(error),
         },
       );

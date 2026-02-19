@@ -1,11 +1,16 @@
 import { PackmindLogger } from '@packmind/logger';
-import { AbstractMemberUseCase, MemberContext } from '@packmind/node-utils';
+import {
+  AbstractMemberUseCase,
+  MemberContext,
+  SSEEventPublisher,
+} from '@packmind/node-utils';
 import {
   ChangeProposalType,
   CreateChangeProposalCommand,
   CreateChangeProposalResponse,
   createUserId,
   IAccountsPort,
+  ICreateChangeProposalUseCase,
   ISpacesPort,
 } from '@packmind/types';
 import { ChangeProposalService } from '../../services/ChangeProposalService';
@@ -15,10 +20,13 @@ import { IChangeProposalValidator } from '../../validators/IChangeProposalValida
 
 const origin = 'CreateChangeProposalUseCase';
 
-export class CreateChangeProposalUseCase extends AbstractMemberUseCase<
-  CreateChangeProposalCommand<ChangeProposalType>,
-  CreateChangeProposalResponse<ChangeProposalType>
-> {
+export class CreateChangeProposalUseCase
+  extends AbstractMemberUseCase<
+    CreateChangeProposalCommand<ChangeProposalType>,
+    CreateChangeProposalResponse<ChangeProposalType>
+  >
+  implements ICreateChangeProposalUseCase<ChangeProposalType>
+{
   constructor(
     accountsPort: IAccountsPort,
     private readonly spacesPort: ISpacesPort,
@@ -61,6 +69,17 @@ export class CreateChangeProposalUseCase extends AbstractMemberUseCase<
       command,
       artefactVersion,
     );
+
+    SSEEventPublisher.publishChangeProposalUpdateEvent(
+      command.organization.id,
+      command.spaceId,
+    ).catch((error) => {
+      this.logger.error('Failed to publish change proposal update SSE event', {
+        organizationId: command.organization.id,
+        spaceId: command.spaceId,
+        error: error instanceof Error ? error.message : String(error),
+      });
+    });
 
     return { changeProposal, wasCreated: true };
   }

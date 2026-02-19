@@ -103,9 +103,10 @@ describe(
           const { changeProposals: queriedProposals } =
             await testContext.testApp.playbookManagementHexa
               .getAdapter()
-              .listCommandChangeProposals({
+              .listChangeProposalsByArtefact({
                 ...testContext.basePackmindCommand,
-                recipeId: command.id,
+                artefactId: command.id,
+                pendingOnly: false,
               });
 
           expect(queriedProposals).toEqual([
@@ -152,9 +153,10 @@ describe(
           const { changeProposals: queriedProposals } =
             await testContext.testApp.playbookManagementHexa
               .getAdapter()
-              .listCommandChangeProposals({
+              .listChangeProposalsByArtefact({
                 ...testContext.basePackmindCommand,
-                recipeId: command.id,
+                artefactId: command.id,
+                pendingOnly: false,
               });
 
           expect(queriedProposals).toEqual([
@@ -245,9 +247,10 @@ describe(
           const { changeProposals: queriedProposals } =
             await testContext.testApp.playbookManagementHexa
               .getAdapter()
-              .listCommandChangeProposals({
+              .listChangeProposalsByArtefact({
                 ...testContext.basePackmindCommand,
-                recipeId: command.id,
+                artefactId: command.id,
+                pendingOnly: false,
               });
 
           expect(queriedProposals).toEqual([

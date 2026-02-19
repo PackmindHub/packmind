@@ -19,7 +19,8 @@ export type SSEEventType =
   | 'ASSESSMENT_STATUS_CHANGE'
   | 'DETECTION_HEURISTICS_UPDATED'
   | 'USER_CONTEXT_CHANGE'
-  | 'DISTRIBUTION_STATUS_CHANGE';
+  | 'DISTRIBUTION_STATUS_CHANGE'
+  | 'CHANGE_PROPOSAL_UPDATE';
 
 // Hello World event for testing
 export interface HelloWorldEvent extends SSEEvent<{ message: string }> {
@@ -87,6 +88,14 @@ export interface DistributionStatusChangeEvent extends SSEEvent<{
   type: 'DISTRIBUTION_STATUS_CHANGE';
 }
 
+// Change proposal update event for cache invalidation
+export interface ChangeProposalUpdateEvent extends SSEEvent<{
+  organizationId: string;
+  spaceId: string;
+}> {
+  type: 'CHANGE_PROPOSAL_UPDATE';
+}
+
 // Union type of all possible SSE events
 export type AnySSEEvent =
   | HelloWorldEvent
@@ -96,7 +105,8 @@ export type AnySSEEvent =
   | AssessmentStatusChangeEvent
   | DetectionHeuristicsUpdatedEvent
   | UserContextChangeEvent
-  | DistributionStatusChangeEvent;
+  | DistributionStatusChangeEvent
+  | ChangeProposalUpdateEvent;
 
 // Event creation helpers
 export function createHelloWorldEvent(message: string): HelloWorldEvent {
@@ -200,6 +210,20 @@ export function createDistributionStatusChangeEvent(
       distributionId,
       status,
       organizationId,
+    },
+    timestamp: new Date().toISOString(),
+  };
+}
+
+export function createChangeProposalUpdateEvent(
+  organizationId: string,
+  spaceId: string,
+): ChangeProposalUpdateEvent {
+  return {
+    type: 'CHANGE_PROPOSAL_UPDATE',
+    data: {
+      organizationId,
+      spaceId,
     },
     timestamp: new Date().toISOString(),
   };
