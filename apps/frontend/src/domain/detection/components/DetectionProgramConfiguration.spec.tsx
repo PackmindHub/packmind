@@ -27,6 +27,18 @@ import * as DetectionProgramQueries from '../api/queries/DetectionProgramQueries
 
 jest.mock('../api/queries/DetectionProgramQueries');
 
+jest.mock('../../accounts/hooks/useAuthContext', () => ({
+  useAuthContext: () => ({
+    user: { email: 'test@packmind.com' },
+    organization: {
+      id: 'org-1',
+      name: 'Org',
+      slug: 'org-slug',
+      role: 'ADMIN',
+    },
+  }),
+}));
+
 type UpdateDetectionHeuristicsMutationResult = UseMutationResult<
   DetectionHeuristics,
   Error,

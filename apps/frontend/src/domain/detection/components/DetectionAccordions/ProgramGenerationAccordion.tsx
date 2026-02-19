@@ -13,8 +13,14 @@ import {
   AccordionProgramActionButtons,
   ViewMode,
 } from './AccordionProgramActionButtons';
+import {
+  PMFeatureFlag,
+  DEFAULT_FEATURE_DOMAIN_MAP,
+  SEVERITY_FEATURE_KEY,
+} from '@packmind/ui';
 import { SeverityDropdownBadge } from '../SeverityDropdownBadge';
 import { useUpdateActiveDetectionProgramSeverityMutation } from '../../api/queries/DetectionProgramQueries';
+import { useAuthContext } from '../../../accounts/hooks/useAuthContext';
 
 interface ProgramGenerationSectionProps {
   isOpen: boolean;
@@ -61,6 +67,7 @@ export const ProgramGenerationAccordion: React.FC<
   disabled,
   onNavigateToExamples,
 }) => {
+  const { user } = useAuthContext();
   const updateSeverity = useUpdateActiveDetectionProgramSeverityMutation();
   const [isLogsDrawerOpen, setIsLogsDrawerOpen] = useState(false);
   const [isProgramDrawerOpen, setIsProgramDrawerOpen] = useState(false);
@@ -108,23 +115,29 @@ export const ProgramGenerationAccordion: React.FC<
       title="Detection program"
       actions={
         <>
-          {!disabled &&
-            activeConfigurations.length > 0 &&
-            activeConfigurations[0].severity &&
-            activeConfigurations[0].detectionProgram && (
-              <SeverityDropdownBadge
-                severity={activeConfigurations[0].severity}
-                onSeverityChange={(newSeverity) => {
-                  updateSeverity.mutate({
-                    standardId,
-                    ruleId,
-                    activeDetectionProgramId: activeConfigurations[0].id,
-                    severity: newSeverity,
-                  });
-                }}
-                isDisabled={updateSeverity.isPending}
-              />
-            )}
+          <PMFeatureFlag
+            featureKeys={[SEVERITY_FEATURE_KEY]}
+            featureDomainMap={DEFAULT_FEATURE_DOMAIN_MAP}
+            userEmail={user?.email}
+          >
+            {!disabled &&
+              activeConfigurations.length > 0 &&
+              activeConfigurations[0].severity &&
+              activeConfigurations[0].detectionProgram && (
+                <SeverityDropdownBadge
+                  severity={activeConfigurations[0].severity}
+                  onSeverityChange={(newSeverity) => {
+                    updateSeverity.mutate({
+                      standardId,
+                      ruleId,
+                      activeDetectionProgramId: activeConfigurations[0].id,
+                      severity: newSeverity,
+                    });
+                  }}
+                  isDisabled={updateSeverity.isPending}
+                />
+              )}
+          </PMFeatureFlag>
           {!disabled && (
             <AccordionProgramActionButtons
               activeConfigurations={activeConfigurations}

@@ -6,10 +6,15 @@ import {
   PMTableRow,
   PMText,
   PMLink,
+  isFeatureFlagEnabled,
+  DEFAULT_FEATURE_DOMAIN_MAP,
+  SEVERITY_FEATURE_KEY,
 } from '@packmind/ui';
 import type { Rule } from '@packmind/types';
 import { RuleSummaryStatus } from './RuleSummaryStatus';
+import { RuleSummarySeverity } from './RuleSummarySeverity';
 import { routes } from '../../../shared/utils/routes';
+import { useAuthContext } from '../../accounts/hooks/useAuthContext';
 
 interface RuleSummaryTableProps {
   standardId: string;
@@ -29,13 +34,21 @@ export const RuleSummaryTable = ({
     orgSlug?: string;
     spaceSlug?: string;
   }>();
+  const { user } = useAuthContext();
+
+  const showSeverity = isFeatureFlagEnabled({
+    featureKeys: [SEVERITY_FEATURE_KEY],
+    featureDomainMap: DEFAULT_FEATURE_DOMAIN_MAP,
+    userEmail: user?.email,
+  });
 
   const columns = useMemo<PMTableColumn[]>(
     () => [
       { key: 'name', header: 'Name', grow: true },
       { key: 'linter', header: 'Linter status', grow: true },
+      ...(showSeverity ? [{ key: 'severity', header: 'Severity' }] : []),
     ],
-    [],
+    [showSeverity],
   );
 
   const data = useMemo<PMTableRow[]>(() => {
@@ -87,9 +100,16 @@ export const RuleSummaryTable = ({
           </PMLink>
         ),
         linter: <RuleSummaryStatus ruleId={rule.id} standardId={standardId} />,
+        ...(showSeverity
+          ? {
+              severity: (
+                <RuleSummarySeverity ruleId={rule.id} standardId={standardId} />
+              ),
+            }
+          : {}),
       };
     });
-  }, [rules, standardId, orgSlug, spaceSlug, navigate]);
+  }, [rules, standardId, orgSlug, spaceSlug, navigate, showSeverity]);
 
   if (isLoading) {
     return <PMText color="faded">Loading rules...</PMText>;

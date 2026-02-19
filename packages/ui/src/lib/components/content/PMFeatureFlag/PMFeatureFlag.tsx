@@ -16,11 +16,14 @@ export const STANDARD_SAMPLES_FEATURE_KEY = 'standard-samples';
 
 export const CHANGE_PROPOSALS_FEATURE_KEY = 'change-proposals';
 
+export const SEVERITY_FEATURE_KEY = 'severity';
+
 export const DEFAULT_FEATURE_DOMAIN_MAP: Record<string, readonly string[]> = {
   [RULE_DETAILS_DETECTION_TAB_FEATURE_KEY]: ['@packmind.com', '@promyze.com'],
   [MCP_CONFIG_REDESIGN_FEATURE_KEY]: ['@packmind.com', '@promyze.com'],
   [STANDARD_SAMPLES_FEATURE_KEY]: ['@packmind.com', '@promyze.com'],
   [CHANGE_PROPOSALS_FEATURE_KEY]: ['@packmind.com', '@promyze.com'],
+  [SEVERITY_FEATURE_KEY]: ['@packmind.com', '@promyze.com'],
 };
 
 const normalizeDomain = (domain: string): string =>

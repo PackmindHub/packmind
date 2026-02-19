@@ -1,5 +1,6 @@
 import React from 'react';
-import { PMBox, PMMenu, PMPortal, PMIcon, PMText } from '@packmind/ui';
+import { PMButton, PMMenu, PMPortal, PMIcon } from '@packmind/ui';
+import type { PMButtonVariants } from '@packmind/ui';
 import { LuChevronDown } from 'react-icons/lu';
 import { DetectionSeverity } from '@packmind/types';
 
@@ -11,15 +12,15 @@ interface SeverityDropdownBadgeProps {
 
 const SEVERITY_CONFIG: Record<
   DetectionSeverity,
-  { colorPalette: 'red' | 'orange' }
+  { text: string; variant: PMButtonVariants }
 > = {
-  [DetectionSeverity.ERROR]: { colorPalette: 'red' },
-  [DetectionSeverity.WARNING]: { colorPalette: 'orange' },
+  [DetectionSeverity.ERROR]: { text: 'Error', variant: 'danger' },
+  [DetectionSeverity.WARNING]: { text: 'Warning', variant: 'warning' },
 };
 
 const SEVERITY_OPTIONS = [
-  { value: DetectionSeverity.ERROR, label: 'error' },
-  { value: DetectionSeverity.WARNING, label: 'warning' },
+  { value: DetectionSeverity.ERROR, label: 'Error' },
+  { value: DetectionSeverity.WARNING, label: 'Warning' },
 ];
 
 export const SeverityDropdownBadge: React.FC<SeverityDropdownBadgeProps> = ({
@@ -31,52 +32,27 @@ export const SeverityDropdownBadge: React.FC<SeverityDropdownBadgeProps> = ({
 
   if (isDisabled) {
     return (
-      <PMBox
-        as="span"
-        backgroundColor={`${config.colorPalette}.solid`}
-        color="white"
-        px={2}
-        py={0.5}
-        borderRadius="full"
-        fontSize="xs"
-        fontWeight="small"
-        display="inline-flex"
-        alignItems="center"
-        gap={0.5}
-        opacity={0.6}
-        cursor="not-allowed"
-      >
-        {severity}
-      </PMBox>
+      <PMButton variant={config.variant} size="2xs" disabled>
+        {config.text}
+      </PMButton>
     );
   }
 
   return (
     <PMMenu.Root>
       <PMMenu.Trigger asChild>
-        <PMBox
-          as="span"
-          backgroundColor={`${config.colorPalette}.solid`}
-          color="white"
-          px={2}
-          py={0.5}
-          borderRadius="full"
-          fontSize="xs"
-          fontWeight="small"
-          cursor="pointer"
-          display="inline-flex"
-          alignItems="center"
-          gap={0.5}
-          _hover={{ opacity: 0.9 }}
+        <PMButton
+          variant={config.variant}
+          size="2xs"
           onClick={(e: React.MouseEvent) => {
             e.stopPropagation();
           }}
         >
-          {severity}
+          {config.text}
           <PMIcon size="xs">
             <LuChevronDown />
           </PMIcon>
-        </PMBox>
+        </PMButton>
       </PMMenu.Trigger>
       <PMPortal>
         <PMMenu.Positioner>
@@ -94,18 +70,7 @@ export const SeverityDropdownBadge: React.FC<SeverityDropdownBadgeProps> = ({
                   }
                 }}
               >
-                <PMBox
-                  as="span"
-                  display="inline-block"
-                  width="8px"
-                  height="8px"
-                  borderRadius="full"
-                  backgroundColor={`${SEVERITY_CONFIG[option.value].colorPalette}.solid`}
-                  mr={2}
-                />
-                <PMText as="span" fontSize="sm">
-                  {option.label}
-                </PMText>
+                {option.label}
               </PMMenu.Item>
             ))}
           </PMMenu.Content>
