@@ -1,6 +1,6 @@
 import { useCallback } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { PMSpinner } from '@packmind/ui';
+import { PMAlertDialog, PMSpinner } from '@packmind/ui';
 import { OrganizationId, RecipeId, SpaceId } from '@packmind/types';
 import { useAuthContext } from '../../../accounts/hooks/useAuthContext';
 import { useCurrentSpace } from '../../../spaces/hooks/useCurrentSpace';
@@ -18,7 +18,7 @@ import { useChangeProposalPool } from '../../hooks/useChangeProposalPool';
 import { GET_RECIPE_BY_ID_KEY } from '../../../recipes/api/queryKeys';
 import { ReviewDetailLayout } from '../ReviewDetailLayout';
 import { ProposalReviewPanel } from './ProposalReviewPanel';
-import { useParams } from 'react-router';
+import { useParams, useBlocker, useBeforeUnload } from 'react-router';
 
 interface CommandReviewDetailProps {
   artefactId: string;
@@ -50,6 +50,19 @@ export function CommandReviewDetail({
   const { data: selectedRecipe } = useGetRecipeByIdQuery(recipeId);
 
   const pool = useChangeProposalPool(selectedRecipeProposals);
+
+  useBeforeUnload(
+    useCallback(
+      (event) => {
+        if (pool.hasPooledDecisions) {
+          event.preventDefault();
+        }
+      },
+      [pool.hasPooledDecisions],
+    ),
+  );
+
+  const blocker = useBlocker(pool.hasPooledDecisions);
 
   const handleSave = useCallback(async () => {
     if (!organizationId || !spaceId) return;
@@ -92,39 +105,55 @@ export function CommandReviewDetail({
   ]);
 
   return (
-    <ReviewDetailLayout
-      proposals={selectedRecipeProposals}
-      reviewingProposalId={pool.reviewingProposalId}
-      acceptedProposalIds={pool.acceptedProposalIds}
-      rejectedProposalIds={pool.rejectedProposalIds}
-      blockedByConflictIds={pool.blockedByConflictIds}
-      hasPooledDecisions={pool.hasPooledDecisions}
-      currentArtefactVersion={selectedRecipe?.version}
-      userLookup={userLookup}
-      onSelectProposal={pool.handleSelectProposal}
-      onPoolAccept={pool.handlePoolAccept}
-      onPoolReject={pool.handlePoolReject}
-      onUndoPool={pool.handleUndoPool}
-      onSave={handleSave}
-      isSaving={applyRecipeChangeProposalsMutation.isPending}
-    >
-      {isLoadingProposals ? (
-        <PMSpinner />
-      ) : (
-        <ProposalReviewPanel
-          selectedRecipe={selectedRecipe}
-          selectedRecipeProposals={selectedRecipeProposals}
-          reviewingProposalId={pool.reviewingProposalId}
-          acceptedProposalIds={pool.acceptedProposalIds}
-          rejectedProposalIds={pool.rejectedProposalIds}
-          blockedByConflictIds={pool.blockedByConflictIds}
-          userLookup={userLookup}
-          onSelectProposal={pool.handleSelectProposal}
-          onPoolAccept={pool.handlePoolAccept}
-          onPoolReject={pool.handlePoolReject}
-          onUndoPool={pool.handleUndoPool}
-        />
-      )}
-    </ReviewDetailLayout>
+    <>
+      <ReviewDetailLayout
+        proposals={selectedRecipeProposals}
+        reviewingProposalId={pool.reviewingProposalId}
+        acceptedProposalIds={pool.acceptedProposalIds}
+        rejectedProposalIds={pool.rejectedProposalIds}
+        blockedByConflictIds={pool.blockedByConflictIds}
+        hasPooledDecisions={pool.hasPooledDecisions}
+        currentArtefactVersion={selectedRecipe?.version}
+        userLookup={userLookup}
+        onSelectProposal={pool.handleSelectProposal}
+        onPoolAccept={pool.handlePoolAccept}
+        onPoolReject={pool.handlePoolReject}
+        onUndoPool={pool.handleUndoPool}
+        onSave={handleSave}
+        isSaving={applyRecipeChangeProposalsMutation.isPending}
+      >
+        {isLoadingProposals ? (
+          <PMSpinner />
+        ) : (
+          <ProposalReviewPanel
+            selectedRecipe={selectedRecipe}
+            selectedRecipeProposals={selectedRecipeProposals}
+            reviewingProposalId={pool.reviewingProposalId}
+            acceptedProposalIds={pool.acceptedProposalIds}
+            rejectedProposalIds={pool.rejectedProposalIds}
+            blockedByConflictIds={pool.blockedByConflictIds}
+            userLookup={userLookup}
+            onSelectProposal={pool.handleSelectProposal}
+            onPoolAccept={pool.handlePoolAccept}
+            onPoolReject={pool.handlePoolReject}
+            onUndoPool={pool.handleUndoPool}
+          />
+        )}
+      </ReviewDetailLayout>
+      <PMAlertDialog
+        open={blocker.state === 'blocked'}
+        onOpenChange={(details) => {
+          if (!details.open) {
+            blocker.reset?.();
+          }
+        }}
+        title="Unsaved changes"
+        message="You have unsaved changes. If you leave this page, your changes will be lost."
+        confirmText="Leave"
+        cancelText="Stay"
+        confirmColorScheme="red"
+        onConfirm={() => blocker.proceed?.()}
+      />
+    </>
   );
 }

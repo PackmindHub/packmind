@@ -1,5 +1,5 @@
 import { ReactNode } from 'react';
-import { PMBox, PMButton, PMHStack, PMText } from '@packmind/ui';
+import { PMBox, PMButton } from '@packmind/ui';
 import { ChangeProposalId, UserId } from '@packmind/types';
 import { ChangeProposalWithConflicts } from '../../types';
 import { ChangeProposalsChangesList } from '../ChangeProposals/ChangeProposalsChangesList';
@@ -44,29 +44,21 @@ export function ReviewDetailLayout({
       <PMBox
         gridColumn="span 2"
         borderBottomWidth="1px"
-        paddingX={4}
+        paddingX={6}
         paddingY={2}
         display="flex"
         justifyContent="flex-end"
         alignItems="center"
-        minH="40px"
+        minH="44px"
       >
-        {hasPooledDecisions && (
-          <PMHStack gap={2}>
-            <PMText fontSize="sm" color="secondary">
-              {acceptedProposalIds.size} accepted, {rejectedProposalIds.size}{' '}
-              rejected
-            </PMText>
-            <PMButton
-              size="sm"
-              colorPalette="blue"
-              disabled={isSaving}
-              onClick={onSave}
-            >
-              {isSaving ? 'Saving...' : 'Save'}
-            </PMButton>
-          </PMHStack>
-        )}
+        <PMButton
+          size="sm"
+          colorPalette="blue"
+          disabled={isSaving || !hasPooledDecisions}
+          onClick={onSave}
+        >
+          {isSaving ? 'Saving...' : 'Save'}
+        </PMButton>
       </PMBox>
       <PMBox minW={0} overflowY="auto" p={4}>
         {children}
