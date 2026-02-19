@@ -8,6 +8,7 @@ import {
   IAccountsPort,
   ICodingAgentPort,
   ISkillsPort,
+  IStandardsPort,
   normalizeCodingAgents,
 } from '@packmind/types';
 import { IDistributionRepository } from '../../domain/repositories/IDistributionRepository';
@@ -28,6 +29,7 @@ export class GetDeployedContentUseCase extends AbstractMemberUseCase<
     private readonly renderModeConfigurationService: RenderModeConfigurationService,
     private readonly packageService: PackageService,
     private readonly skillsPort: ISkillsPort,
+    private readonly standardsPort: IStandardsPort,
     accountsPort: IAccountsPort,
     logger: PackmindLogger = new PackmindLogger(origin, LogLevel.INFO),
   ) {
@@ -100,7 +102,17 @@ export class GetDeployedContentUseCase extends AbstractMemberUseCase<
       skillCount: activeSkillVersions.length,
     });
 
-    // Step 5: Fetch skill files for each skill version
+    // Step 5: Fetch rules for each standard version
+    const standardVersionsWithRules = await Promise.all(
+      standardVersions.map(async (sv) => {
+        const rules = await this.standardsPort.getRulesByStandardId(
+          sv.standardId,
+        );
+        return { ...sv, rules };
+      }),
+    );
+
+    // Step 6: Fetch skill files for each skill version
     const skillVersions = await Promise.all(
       activeSkillVersions.map(async (skillVersion) => {
         const files = await this.skillsPort.getSkillFiles(skillVersion.id);
@@ -108,10 +120,10 @@ export class GetDeployedContentUseCase extends AbstractMemberUseCase<
       }),
     );
 
-    // Step 6: Render artifacts for coding agents
+    // Step 7: Render artifacts for coding agents
     const fileUpdates = await this.codingAgentPort.deployArtifactsForAgents({
       recipeVersions,
-      standardVersions,
+      standardVersions: standardVersionsWithRules,
       skillVersions,
       codingAgents,
     });
@@ -121,7 +133,7 @@ export class GetDeployedContentUseCase extends AbstractMemberUseCase<
       deleteCount: fileUpdates.delete.length,
     });
 
-    // Step 7: Build artifact metadata from packages
+    // Step 8: Build artifact metadata from packages
     type ArtifactMetadata = { artifactId: string; spaceId: string };
     const artifactMetadata: Record<
       ArtifactType,
@@ -188,7 +200,7 @@ export class GetDeployedContentUseCase extends AbstractMemberUseCase<
       }
     }
 
-    // Step 8: Enrich file modifications with artifact metadata
+    // Step 9: Enrich file modifications with artifact metadata
     for (const file of fileUpdates.createOrUpdate) {
       if (file.artifactType && file.artifactName) {
         const metadata = artifactMetadata[file.artifactType].get(
@@ -201,7 +213,7 @@ export class GetDeployedContentUseCase extends AbstractMemberUseCase<
       }
     }
 
-    // Step 9: Generate skill folders
+    // Step 10: Generate skill folders
     const skillFolderPaths =
       this.codingAgentPort.getSkillsFolderPathForAgents(codingAgents);
 
@@ -217,7 +229,7 @@ export class GetDeployedContentUseCase extends AbstractMemberUseCase<
       skillFolderCount: skillFolders.length,
     });
 
-    // Step 10: Return response
+    // Step 11: Return response
     return { fileUpdates, skillFolders };
   }
 }

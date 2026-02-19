@@ -374,6 +374,7 @@ export class DeploymentsAdapter
       this.deploymentsServices.getRenderModeConfigurationService(),
       this.deploymentsServices.getPackageService(),
       this.skillsPort,
+      this.standardsPort,
       this.accountsPort,
     );
 

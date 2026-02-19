@@ -6,6 +6,7 @@ import {
   IAccountsPort,
   ICodingAgentPort,
   ISkillsPort,
+  IStandardsPort,
   Organization,
   OrganizationId,
   PackageWithArtefacts,
@@ -63,6 +64,7 @@ describe('GetDeployedContentUseCase', () => {
   let renderModeConfigurationService: jest.Mocked<RenderModeConfigurationService>;
   let packageService: jest.Mocked<PackageService>;
   let skillsPort: jest.Mocked<ISkillsPort>;
+  let standardsPort: jest.Mocked<IStandardsPort>;
   let accountsPort: jest.Mocked<IAccountsPort>;
   let useCase: GetDeployedContentUseCase;
   let command: GetDeployedContentCommand;
@@ -102,6 +104,10 @@ describe('GetDeployedContentUseCase', () => {
       getSkillFiles: jest.fn().mockResolvedValue([]),
     } as unknown as jest.Mocked<ISkillsPort>;
 
+    standardsPort = {
+      getRulesByStandardId: jest.fn().mockResolvedValue([]),
+    } as unknown as jest.Mocked<IStandardsPort>;
+
     accountsPort = {
       getUserById: jest.fn(),
       getOrganizationById: jest.fn(),
@@ -139,6 +145,7 @@ describe('GetDeployedContentUseCase', () => {
       renderModeConfigurationService,
       packageService,
       skillsPort,
+      standardsPort,
       accountsPort,
       stubLogger(),
     );
@@ -316,13 +323,26 @@ describe('GetDeployedContentUseCase', () => {
       expect(skillsPort.getSkillFiles).toHaveBeenCalledWith(skillVersion.id);
     });
 
-    it('calls deployArtifactsForAgents with deployed versions', async () => {
+    it('fetches rules for each standard version', async () => {
+      await useCase.execute(command);
+
+      expect(standardsPort.getRulesByStandardId).toHaveBeenCalledWith(
+        standardVersion.standardId,
+      );
+    });
+
+    it('calls deployArtifactsForAgents with deployed versions including rules', async () => {
       await useCase.execute(command);
 
       expect(codingAgentPort.deployArtifactsForAgents).toHaveBeenCalledWith(
         expect.objectContaining({
           recipeVersions: [recipeVersion],
-          standardVersions: [standardVersion],
+          standardVersions: [
+            expect.objectContaining({
+              id: standardVersion.id,
+              rules: [],
+            }),
+          ],
           skillVersions: expect.arrayContaining([
             expect.objectContaining({ id: skillVersion.id, files: [] }),
           ]),
