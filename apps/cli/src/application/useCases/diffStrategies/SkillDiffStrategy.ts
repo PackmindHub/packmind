@@ -84,7 +84,6 @@ export class SkillDiffStrategy implements IDiffStrategy {
           continue;
         }
 
-        const newFileId = createSkillFileId(relativePath);
         const permissions =
           (await this.tryGetPermissions(fullPath)) ?? 'rw-r--r--';
 
@@ -92,9 +91,7 @@ export class SkillDiffStrategy implements IDiffStrategy {
           filePath,
           type: ChangeProposalType.addSkillFile,
           payload: {
-            targetId: newFileId,
             item: {
-              id: newFileId,
               path: relativePath,
               content,
               permissions,

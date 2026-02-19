@@ -15,8 +15,7 @@ export type CollectionItemUpdatePayload<T> = {
   newValue: string;
 };
 
-export type CollectionItemAddPayload<T extends { id: string }> = {
-  targetId: T['id'];
+export type CollectionItemAddPayload<T> = {
   item: T;
 };
 
@@ -35,7 +34,7 @@ type StandardChangeProposalPayloadMap = {
   [ChangeProposalType.updateStandardDescription]: ScalarUpdatePayload;
   [ChangeProposalType.updateStandardScope]: ScalarUpdatePayload;
   [ChangeProposalType.addRule]: CollectionItemAddPayload<
-    Omit<Rule, 'standardVersionId'>
+    Omit<Rule, 'id' | 'standardVersionId'>
   >;
   [ChangeProposalType.updateRule]: CollectionItemUpdatePayload<RuleId>;
   [ChangeProposalType.deleteRule]: CollectionItemDeletePayload<
@@ -52,7 +51,7 @@ type SkillChangeProposalPayloadMap = {
   [ChangeProposalType.updateSkillCompatibility]: ScalarUpdatePayload;
   [ChangeProposalType.updateSkillAllowedTools]: ScalarUpdatePayload;
   [ChangeProposalType.addSkillFile]: CollectionItemAddPayload<
-    Omit<SkillFile, 'skillVersionId'>
+    Omit<SkillFile, 'id' | 'skillVersionId'>
   >;
   [ChangeProposalType.updateSkillFileContent]: CollectionItemUpdatePayload<SkillFileId>;
   [ChangeProposalType.updateSkillFilePermissions]: CollectionItemUpdatePayload<SkillFileId>;
