@@ -179,6 +179,7 @@ describe('GetActiveDetectionProgramUseCase', () => {
               detectionProgramVersion: activeProgram.detectionProgramVersion,
               ruleId: activeProgram.ruleId,
               language: activeProgram.language,
+              severity: activeProgram.severity,
               detectionProgram: {
                 id: detectionProgram.id,
                 ruleId: detectionProgram.ruleId,
@@ -426,6 +427,7 @@ describe('GetActiveDetectionProgramUseCase', () => {
               detectionProgramVersion: activeProgram1.detectionProgramVersion,
               ruleId: activeProgram1.ruleId,
               language: activeProgram1.language,
+              severity: activeProgram1.severity,
               detectionProgram: detectionProgram1,
               draftDetectionProgram: null,
               detectionProgramDraftVersion: null,
@@ -435,6 +437,7 @@ describe('GetActiveDetectionProgramUseCase', () => {
               detectionProgramVersion: activeProgram2.detectionProgramVersion,
               ruleId: activeProgram2.ruleId,
               language: activeProgram2.language,
+              severity: activeProgram2.severity,
               detectionProgram: detectionProgram2,
               draftDetectionProgram: null,
               detectionProgramDraftVersion: null,

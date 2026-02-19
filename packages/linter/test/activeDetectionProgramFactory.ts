@@ -4,6 +4,7 @@ import {
   createActiveDetectionProgramId,
   createDetectionProgramId,
   createRuleId,
+  DetectionSeverity,
   ProgrammingLanguage,
 } from '@packmind/types';
 import { v4 as uuidv4 } from 'uuid';
@@ -17,6 +18,7 @@ export const activeDetectionProgramFactory: Factory<ActiveDetectionProgram> = (
     ruleId: createRuleId(uuidv4()),
     language: ProgrammingLanguage.JAVASCRIPT,
     detectionProgramDraftVersion: null,
+    severity: DetectionSeverity.ERROR,
     ...activeProgram,
   };
 };
