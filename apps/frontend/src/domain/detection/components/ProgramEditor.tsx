@@ -237,6 +237,7 @@ const ProgramEditor: React.FC<ProgramEditorProps> = ({
           state,
           isExampleOnly: program.isExampleOnly ?? false,
           isToReview,
+          severity: program.severity,
         };
       });
   }, [normalizedPrograms, selectedLanguage]);

@@ -1,4 +1,4 @@
-import { DetectionProgram } from '@packmind/types';
+import { DetectionProgram, DetectionSeverity } from '@packmind/types';
 import { DraftCardData } from '../DetectionDraftCard/DetectionDraftCard';
 
 export enum ActiveConfigurationState {
@@ -17,6 +17,7 @@ export type ActiveConfigurationSectionData = {
   state: ActiveConfigurationState;
   isExampleOnly?: boolean;
   isToReview?: boolean;
+  severity?: DetectionSeverity;
 };
 
 // Keep old name as alias for backward compatibility during migration

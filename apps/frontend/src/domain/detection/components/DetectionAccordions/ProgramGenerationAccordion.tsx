@@ -13,6 +13,8 @@ import {
   AccordionProgramActionButtons,
   ViewMode,
 } from './AccordionProgramActionButtons';
+import { SeverityDropdownBadge } from '../SeverityDropdownBadge';
+import { useUpdateActiveDetectionProgramSeverityMutation } from '../../api/queries/DetectionProgramQueries';
 
 interface ProgramGenerationSectionProps {
   isOpen: boolean;
@@ -59,6 +61,7 @@ export const ProgramGenerationAccordion: React.FC<
   disabled,
   onNavigateToExamples,
 }) => {
+  const updateSeverity = useUpdateActiveDetectionProgramSeverityMutation();
   const [isLogsDrawerOpen, setIsLogsDrawerOpen] = useState(false);
   const [isProgramDrawerOpen, setIsProgramDrawerOpen] = useState(false);
   const [isDetailsDrawerOpen, setIsDetailsDrawerOpen] = useState(false);
@@ -105,6 +108,23 @@ export const ProgramGenerationAccordion: React.FC<
       title="Detection program"
       actions={
         <>
+          {!disabled &&
+            activeConfigurations.length > 0 &&
+            activeConfigurations[0].severity &&
+            activeConfigurations[0].detectionProgram && (
+              <SeverityDropdownBadge
+                severity={activeConfigurations[0].severity}
+                onSeverityChange={(newSeverity) => {
+                  updateSeverity.mutate({
+                    standardId,
+                    ruleId,
+                    activeDetectionProgramId: activeConfigurations[0].id,
+                    severity: newSeverity,
+                  });
+                }}
+                isDisabled={updateSeverity.isPending}
+              />
+            )}
           {!disabled && (
             <AccordionProgramActionButtons
               activeConfigurations={activeConfigurations}
