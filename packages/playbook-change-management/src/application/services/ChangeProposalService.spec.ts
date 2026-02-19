@@ -10,7 +10,6 @@ import {
   createStandardId,
   createUserId,
   CreateChangeProposalCommand,
-  CreateCommandChangeProposalCommand,
 } from '@packmind/types';
 import { stubLogger } from '@packmind/test-utils';
 import { DataSource } from 'typeorm';
@@ -54,85 +53,6 @@ describe('ChangeProposalService', () => {
 
   afterEach(() => {
     jest.clearAllMocks();
-  });
-
-  describe('createProposal', () => {
-    const recipeId = createRecipeId();
-    const userId = createUserId();
-
-    const command: CreateCommandChangeProposalCommand = {
-      userId: userId as unknown as string,
-      organizationId: 'org-1',
-      spaceId,
-      type: ChangeProposalType.updateCommandName,
-      artefactId: recipeId,
-      artefactVersion: 1,
-      payload: { oldValue: 'old name', newValue: 'new name' },
-      captureMode: ChangeProposalCaptureMode.commit,
-    };
-
-    it('creates a proposal with pending status', async () => {
-      const { changeProposal } = await service.createProposal(command);
-
-      expect(changeProposal.status).toBe(ChangeProposalStatus.pending);
-    });
-
-    it('generates an id', async () => {
-      const { changeProposal } = await service.createProposal(command);
-
-      expect(changeProposal.id).toBeDefined();
-    });
-
-    it('sets createdBy from userId', async () => {
-      const { changeProposal } = await service.createProposal(command);
-
-      expect(changeProposal.createdBy).toBe(userId);
-    });
-
-    it('sets spaceId from command', async () => {
-      const { changeProposal } = await service.createProposal(command);
-
-      expect(changeProposal.spaceId).toBe(spaceId);
-    });
-
-    it('saves the proposal to the repository', async () => {
-      await service.createProposal(command);
-
-      expect(repository.save).toHaveBeenCalledWith(
-        expect.objectContaining({
-          type: ChangeProposalType.updateCommandName,
-          artefactId: recipeId,
-          spaceId,
-          status: ChangeProposalStatus.pending,
-        }),
-      );
-    });
-
-    it('returns the created change proposal', async () => {
-      const result = await service.createProposal(command);
-
-      expect(result.changeProposal).toEqual(
-        expect.objectContaining({
-          type: ChangeProposalType.updateCommandName,
-          artefactId: recipeId,
-          artefactVersion: 1,
-          payload: { oldValue: 'old name', newValue: 'new name' },
-          captureMode: ChangeProposalCaptureMode.commit,
-        }),
-      );
-    });
-
-    it('sets resolvedBy to null', async () => {
-      const { changeProposal } = await service.createProposal(command);
-
-      expect(changeProposal.resolvedBy).toBeNull();
-    });
-
-    it('sets resolvedAt to null', async () => {
-      const { changeProposal } = await service.createProposal(command);
-
-      expect(changeProposal.resolvedAt).toBeNull();
-    });
   });
 
   describe('createChangeProposal', () => {

@@ -155,9 +155,10 @@ describe('Applying multiple changes', () => {
         const { changeProposals: queriedProposals } =
           await testApp.playbookManagementHexa
             .getAdapter()
-            .listCommandChangeProposals({
+            .listChangeProposalsByArtefact({
               ...basePackmindCommand,
-              recipeId: command.id,
+              artefactId: command.id,
+              pendingOnly: false,
             });
 
         expect(queriedProposals).toEqual([
@@ -202,9 +203,10 @@ describe('Applying multiple changes', () => {
         const { changeProposals: queriedProposals } =
           await testApp.playbookManagementHexa
             .getAdapter()
-            .listCommandChangeProposals({
+            .listChangeProposalsByArtefact({
               ...basePackmindCommand,
-              recipeId: command.id,
+              artefactId: command.id,
+              pendingOnly: false,
             });
 
         expect(queriedProposals).toEqual([
@@ -294,9 +296,10 @@ describe('Applying multiple changes', () => {
         const { changeProposals: queriedProposals } =
           await testApp.playbookManagementHexa
             .getAdapter()
-            .listCommandChangeProposals({
+            .listChangeProposalsByArtefact({
               ...basePackmindCommand,
-              recipeId: command.id,
+              artefactId: command.id,
+              pendingOnly: false,
             });
 
         expect(queriedProposals).toEqual([

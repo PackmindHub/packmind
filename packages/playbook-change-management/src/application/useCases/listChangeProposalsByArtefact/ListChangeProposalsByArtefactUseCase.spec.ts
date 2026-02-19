@@ -1,5 +1,6 @@
 import { stubLogger } from '@packmind/test-utils';
 import {
+  ChangeProposalStatus,
   ChangeProposalType,
   createChangeProposalId,
   createOrganizationId,
@@ -296,6 +297,160 @@ describe('ListChangeProposalsByArtefactUseCase', () => {
       const result = await useCase.execute(command);
 
       expect(result.changeProposals).toEqual([]);
+    });
+  });
+
+  describe('pendingOnly parameter', () => {
+    const pendingProposal = changeProposalFactory({
+      type: ChangeProposalType.updateStandardName,
+      artefactId: standardId,
+      spaceId,
+      status: ChangeProposalStatus.pending,
+    });
+    const appliedProposal = changeProposalFactory({
+      type: ChangeProposalType.addRule,
+      artefactId: standardId,
+      spaceId,
+      status: ChangeProposalStatus.applied,
+    });
+    const rejectedProposal = changeProposalFactory({
+      type: ChangeProposalType.updateStandardDescription,
+      artefactId: standardId,
+      spaceId,
+      status: ChangeProposalStatus.rejected,
+    });
+
+    const allProposals = [pendingProposal, appliedProposal, rejectedProposal];
+
+    beforeEach(() => {
+      spacesPort.getSpaceById.mockResolvedValue(space);
+      standardsPort.getStandard.mockResolvedValue(standard);
+      recipesPort.getRecipeByIdInternal.mockResolvedValue(null);
+      skillsPort.getSkill.mockResolvedValue(null);
+      service.findProposalsByArtefact.mockResolvedValue(allProposals);
+      conflictDetectionService.detectConflicts.mockImplementation((ps) =>
+        ps.map((p) => ({ ...p, conflictsWith: [] })),
+      );
+    });
+
+    describe('when pendingOnly is not specified', () => {
+      const command = buildCommand();
+
+      it('returns only pending proposals', async () => {
+        const result = await useCase.execute(command);
+
+        expect(result.changeProposals.length).toBe(1);
+      });
+
+      it('includes pending proposal', async () => {
+        const result = await useCase.execute(command);
+
+        expect(result.changeProposals).toContainEqual(
+          expect.objectContaining({
+            id: pendingProposal.id,
+          }),
+        );
+      });
+
+      it('excludes applied proposal', async () => {
+        const result = await useCase.execute(command);
+
+        expect(result.changeProposals).not.toContainEqual(
+          expect.objectContaining({
+            id: appliedProposal.id,
+          }),
+        );
+      });
+
+      it('excludes rejected proposal', async () => {
+        const result = await useCase.execute(command);
+
+        expect(result.changeProposals).not.toContainEqual(
+          expect.objectContaining({
+            id: rejectedProposal.id,
+          }),
+        );
+      });
+    });
+
+    describe('when pendingOnly is true', () => {
+      const command = buildCommand({ pendingOnly: true });
+
+      it('returns only pending proposals', async () => {
+        const result = await useCase.execute(command);
+
+        expect(result.changeProposals.length).toBe(1);
+      });
+
+      it('includes pending proposal', async () => {
+        const result = await useCase.execute(command);
+
+        expect(result.changeProposals).toContainEqual(
+          expect.objectContaining({
+            id: pendingProposal.id,
+          }),
+        );
+      });
+
+      it('excludes applied proposal', async () => {
+        const result = await useCase.execute(command);
+
+        expect(result.changeProposals).not.toContainEqual(
+          expect.objectContaining({
+            id: appliedProposal.id,
+          }),
+        );
+      });
+
+      it('excludes rejected proposal', async () => {
+        const result = await useCase.execute(command);
+
+        expect(result.changeProposals).not.toContainEqual(
+          expect.objectContaining({
+            id: rejectedProposal.id,
+          }),
+        );
+      });
+    });
+
+    describe('when pendingOnly is false', () => {
+      const command = buildCommand({ pendingOnly: false });
+
+      it('returns all proposals', async () => {
+        const result = await useCase.execute(command);
+
+        expect(result.changeProposals.length).toBe(3);
+      });
+
+      it('includes pending proposal', async () => {
+        const result = await useCase.execute(command);
+
+        expect(result.changeProposals).toContainEqual(
+          expect.objectContaining({
+            id: pendingProposal.id,
+          }),
+        );
+      });
+
+      it('includes applied proposal', async () => {
+        const result = await useCase.execute(command);
+
+        expect(result.changeProposals).toContainEqual(
+          expect.objectContaining({
+            id: appliedProposal.id,
+          }),
+        );
+      });
+
+      it('includes rejected proposal', async () => {
+        const result = await useCase.execute(command);
+
+        expect(result.changeProposals).toContainEqual(
+          expect.objectContaining({
+            id: rejectedProposal.id,
+          }),
+        );
+      });
     });
   });
 
