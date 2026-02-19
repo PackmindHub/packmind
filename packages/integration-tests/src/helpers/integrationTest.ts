@@ -17,6 +17,7 @@ import {
   User,
   UserId,
 } from '@packmind/types';
+import { v4 as uuidv4 } from 'uuid';
 
 type IntegrationTestContext = {
   testApp: TestApp;
@@ -69,16 +70,31 @@ export type IntegrationTestWithUserContext = IntegrationTestContext & {
   };
 };
 
+export type IntegrationTestWithUserInput = {
+  email: string;
+  password: string;
+};
+
+const defaultIntegrationTestWithUserInput: IntegrationTestWithUserInput = {
+  email: 'someone@example.com',
+  password: uuidv4(),
+};
+
 export const integrationTestWithUser: IntegrationTest<
   IntegrationTestWithUserContext
-> = (tests) => {
+> = (tests, testData?: Partial<IntegrationTestWithUserInput>) => {
   return integrationTest(() => {
     stage(async ({ testApp }: IntegrationTestContext) => {
+      const fullTestData = {
+        ...defaultIntegrationTestWithUserInput,
+        ...testData,
+      };
+
       const signUpResponse = await testApp.accountsHexa
         .getAdapter()
         .signUpWithOrganization({
-          email: 'someone@example.com',
-          password: 'some-secret-apssword',
+          email: fullTestData.email,
+          password: fullTestData.password,
           method: 'password',
         });
       const user = signUpResponse.user;
