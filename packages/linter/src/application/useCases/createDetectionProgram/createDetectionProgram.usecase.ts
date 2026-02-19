@@ -11,6 +11,7 @@ import {
   DetectionProgram,
   ActiveDetectionProgram,
   createActiveDetectionProgramId,
+  DetectionSeverity,
 } from '@packmind/types';
 import { clearConsoleLogFromProgramOutput } from '../generateProgramUseCase/program/ProgramExecutionUtils';
 
@@ -109,6 +110,7 @@ export class CreateDetectionProgramUseCase implements ICreateDetectionProgram {
         detectionProgramDraftVersion: command.mustBeDraftVersion
           ? createdDetectionProgram.id
           : null,
+        severity: DetectionSeverity.ERROR,
       };
 
       await this.detectionProgramService.addActiveDetectionProgram(

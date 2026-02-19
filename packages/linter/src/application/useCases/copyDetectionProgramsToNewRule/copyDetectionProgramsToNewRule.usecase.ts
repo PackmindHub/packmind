@@ -116,6 +116,7 @@ export class CopyDetectionProgramsToNewRuleUseCase implements ICopyDetectionProg
                     oldActiveProgram.detectionProgramDraftVersion,
                   ) || null
                 : null,
+            severity: oldActiveProgram.severity,
           };
 
           await this.repositories
