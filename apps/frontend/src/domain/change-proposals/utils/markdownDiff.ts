@@ -180,6 +180,20 @@ function renderModifiedPair(oldToken: Token, newToken: Token): string {
   return renderDeletedToken(oldToken) + renderAddedToken(newToken);
 }
 
+export const markdownDiffCss = {
+  '& ins': {
+    backgroundColor: 'var(--Palette-Semantic-Green800)',
+    padding: '0 2px',
+    borderRadius: '2px',
+    textDecoration: 'none',
+  },
+  '& del': {
+    backgroundColor: 'var(--Palette-Semantic-Red800)',
+    padding: '0 2px',
+    borderRadius: '2px',
+  },
+};
+
 export function buildDiffHtml(oldValue: string, newValue: string): string {
   marked.setOptions({ breaks: true, gfm: true });
 

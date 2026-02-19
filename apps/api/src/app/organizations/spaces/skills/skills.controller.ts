@@ -138,6 +138,50 @@ export class OrganizationsSpacesSkillsController {
   }
 
   /**
+   * Get a skill with its files by ID within a space
+   * GET /organizations/:orgId/spaces/:spaceId/skills/:skillId/detail
+   */
+  @Get(':skillId/detail')
+  async getSkillWithFilesById(
+    @Param('orgId') organizationId: OrganizationId,
+    @Param('spaceId') spaceId: SpaceId,
+    @Param('skillId') skillId: SkillId,
+    @Req() request: AuthenticatedRequest,
+  ): Promise<SkillWithFiles> {
+    const userId = request.user.userId;
+
+    this.logger.info(
+      'GET /organizations/:orgId/spaces/:spaceId/skills/:skillId/detail - Fetching skill with files by ID',
+      { organizationId, spaceId, skillId },
+    );
+
+    try {
+      const skillWithFiles = await this.skillsService.getSkillWithFilesById(
+        skillId,
+        spaceId,
+        organizationId,
+        userId,
+      );
+
+      if (!skillWithFiles) {
+        throw new NotFoundException(`Skill with id "${skillId}" not found`);
+      }
+
+      return skillWithFiles;
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+      const errorMessage = getErrorMessage(error);
+      this.logger.error(
+        'GET /organizations/:orgId/spaces/:spaceId/skills/:skillId/detail - Failed to fetch skill with files',
+        { organizationId, spaceId, skillId, error: errorMessage },
+      );
+      throw error;
+    }
+  }
+
+  /**
    * Get all versions for a skill
    * GET /organizations/:orgId/spaces/:spaceId/skills/:skillId/versions
    */

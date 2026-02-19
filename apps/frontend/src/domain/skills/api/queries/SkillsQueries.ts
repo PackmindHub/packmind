@@ -3,6 +3,7 @@ import { OrganizationId, SkillId, SpaceId } from '@packmind/types';
 import { skillsGateway } from '../gateways';
 import {
   GET_SKILLS_KEY,
+  getSkillByIdKey,
   getSkillBySlugKey,
   getSkillVersionsKey,
 } from '../queryKeys';
@@ -63,6 +64,40 @@ export const useGetSkillBySlugQuery = (slug: string | undefined) => {
   const { spaceId } = useCurrentSpace();
 
   return useQuery(getSkillBySlugQueryOptions(organization?.id, spaceId, slug));
+};
+
+export const getSkillWithFilesByIdQueryOptions = (
+  organizationId: OrganizationId | undefined,
+  spaceId: SpaceId | undefined,
+  skillId: SkillId | undefined,
+) => ({
+  queryKey: getSkillByIdKey(spaceId, skillId),
+  queryFn: () => {
+    if (!organizationId) {
+      throw new Error('Organization ID is required to fetch skill');
+    }
+    if (!spaceId) {
+      throw new Error('Space ID is required to fetch skill');
+    }
+    if (!skillId) {
+      throw new Error('Skill ID is required to fetch skill');
+    }
+    return skillsGateway.getSkillWithFilesById(
+      organizationId,
+      spaceId,
+      skillId,
+    );
+  },
+  enabled: !!organizationId && !!spaceId && !!skillId,
+});
+
+export const useGetSkillWithFilesByIdQuery = (skillId: SkillId | undefined) => {
+  const { organization } = useAuthContext();
+  const { spaceId } = useCurrentSpace();
+
+  return useQuery(
+    getSkillWithFilesByIdQueryOptions(organization?.id, spaceId, skillId),
+  );
 };
 
 export const getSkillVersionsQueryOptions = (

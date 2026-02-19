@@ -15,6 +15,11 @@ export interface ISkillsGateway {
     spaceId: SpaceId,
     slug: string,
   ): Promise<SkillWithFiles | null>;
+  getSkillWithFilesById(
+    organizationId: OrganizationId,
+    spaceId: SpaceId,
+    skillId: SkillId,
+  ): Promise<SkillWithFiles | null>;
   getSkillVersions(
     organizationId: OrganizationId,
     spaceId: SpaceId,

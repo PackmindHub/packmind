@@ -18,7 +18,6 @@ import {
   ScalarUpdatePayload,
   UserId,
 } from '@packmind/types';
-import { diffWords } from 'diff';
 import { LuCheck, LuCircleAlert, LuUndo2, LuX } from 'react-icons/lu';
 import {
   buildBlockedByAcceptedMap,
@@ -29,49 +28,12 @@ import {
 import { ConflictWarning } from '../ChangeProposals/ConflictWarning';
 import { formatRelativeTime } from '../../utils/formatRelativeTime';
 import { ChangeProposalWithConflicts } from '../../types';
-import { buildDiffHtml } from '../../utils/markdownDiff';
+import { buildDiffHtml, markdownDiffCss } from '../../utils/markdownDiff';
 import {
   MarkdownEditor,
   MarkdownEditorProvider,
 } from '../../../../shared/components/editor/MarkdownEditor';
-
-function renderDiffText(oldValue: string, newValue: string) {
-  const changes = diffWords(oldValue, newValue);
-  return changes.map((change, i) => {
-    if (change.added) {
-      return (
-        <PMText
-          key={i}
-          as="span"
-          bg="green.subtle"
-          paddingX={0.5}
-          borderRadius="sm"
-        >
-          {change.value}
-        </PMText>
-      );
-    }
-    if (change.removed) {
-      return (
-        <PMText
-          key={i}
-          as="span"
-          bg="red.subtle"
-          textDecoration="line-through"
-          paddingX={0.5}
-          borderRadius="sm"
-        >
-          {change.value}
-        </PMText>
-      );
-    }
-    return (
-      <PMText key={i} as="span">
-        {change.value}
-      </PMText>
-    );
-  });
-}
+import { renderDiffText } from '../../utils/renderDiffText';
 
 interface ProposalReviewPanelProps {
   selectedRecipe: Recipe | undefined;
@@ -274,22 +236,7 @@ export function ProposalReviewPanel({
                 : selectedRecipe.name}
             </PMText>
             {isDescriptionDiff && !showPreview ? (
-              <PMBox
-                padding="60px 68px"
-                css={{
-                  '& ins': {
-                    backgroundColor: 'var(--Palette-Semantic-Green800)',
-                    padding: '0 2px',
-                    borderRadius: '2px',
-                    textDecoration: 'none',
-                  },
-                  '& del': {
-                    backgroundColor: 'var(--Palette-Semantic-Red800)',
-                    padding: '0 2px',
-                    borderRadius: '2px',
-                  },
-                }}
-              >
+              <PMBox padding="60px 68px" css={markdownDiffCss}>
                 <PMMarkdownViewer
                   htmlContent={buildDiffHtml(
                     payload.oldValue,

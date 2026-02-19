@@ -37,6 +37,16 @@ export class SkillsGatewayApi
     );
   }
 
+  async getSkillWithFilesById(
+    organizationId: OrganizationId,
+    spaceId: SpaceId,
+    skillId: SkillId,
+  ): Promise<SkillWithFiles | null> {
+    return this._api.get<SkillWithFiles | null>(
+      `/organizations/${organizationId}/spaces/${spaceId}/skills/${skillId}/detail`,
+    );
+  }
+
   async getSkillVersions(
     organizationId: OrganizationId,
     spaceId: SpaceId,
