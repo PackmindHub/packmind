@@ -3,16 +3,33 @@ import {
   CreateChangeProposalCommand,
   IStandardsPort,
   ScalarUpdatePayload,
+  Standard,
   StandardId,
 } from '@packmind/types';
 import { MemberContext } from '@packmind/node-utils';
 import { IChangeProposalValidator } from './IChangeProposalValidator';
 import { ChangeProposalPayloadMismatchError } from '../errors/ChangeProposalPayloadMismatchError';
 
+type ScalarStandardType =
+  | ChangeProposalType.updateStandardName
+  | ChangeProposalType.updateStandardDescription
+  | ChangeProposalType.updateStandardScope;
+
 const SUPPORTED_TYPES: ReadonlySet<ChangeProposalType> = new Set([
   ChangeProposalType.updateStandardName,
   ChangeProposalType.updateStandardDescription,
+  ChangeProposalType.updateStandardScope,
 ]);
+
+const STANDARD_FIELD_BY_TYPE: Record<
+  ScalarStandardType,
+  (standard: Standard) => string
+> = {
+  [ChangeProposalType.updateStandardName]: (standard) => standard.name,
+  [ChangeProposalType.updateStandardDescription]: (standard) =>
+    standard.description,
+  [ChangeProposalType.updateStandardScope]: (standard) => standard.scope ?? '',
+};
 
 export class StandardChangeProposalValidator implements IChangeProposalValidator {
   constructor(private readonly standardsPort: IStandardsPort) {}
@@ -33,9 +50,7 @@ export class StandardChangeProposalValidator implements IChangeProposalValidator
 
     const payload = command.payload as ScalarUpdatePayload;
     const currentValue =
-      command.type === ChangeProposalType.updateStandardDescription
-        ? standard.description
-        : standard.name;
+      STANDARD_FIELD_BY_TYPE[command.type as ScalarStandardType](standard);
 
     if (payload.oldValue !== currentValue) {
       throw new ChangeProposalPayloadMismatchError(

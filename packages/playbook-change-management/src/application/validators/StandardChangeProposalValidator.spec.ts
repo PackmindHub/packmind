@@ -82,6 +82,12 @@ describe('StandardChangeProposalValidator', () => {
       ).toBe(true);
     });
 
+    it('returns true for updateStandardScope', () => {
+      expect(validator.supports(ChangeProposalType.updateStandardScope)).toBe(
+        true,
+      );
+    });
+
     it('returns false for updateCommandDescription', () => {
       expect(
         validator.supports(ChangeProposalType.updateCommandDescription),
@@ -144,6 +150,70 @@ describe('StandardChangeProposalValidator', () => {
           payload: {
             oldValue: 'Wrong description',
             newValue: 'Updated description',
+          },
+        });
+
+        await expect(validator.validate(command)).rejects.toBeInstanceOf(
+          ChangeProposalPayloadMismatchError,
+        );
+      });
+    });
+  });
+
+  describe('when validating updateStandardScope', () => {
+    describe('when standard has a scope and oldValue matches', () => {
+      beforeEach(() => {
+        standardsPort.getStandard.mockResolvedValue({
+          ...standard,
+          scope: '**/*.ts',
+        });
+      });
+
+      it('validates successfully and returns artefactVersion', async () => {
+        const command = buildCommand({
+          type: ChangeProposalType.updateStandardScope,
+          payload: {
+            oldValue: '**/*.ts',
+            newValue: '**/*.tsx',
+          },
+        });
+
+        const result = await validator.validate(command);
+
+        expect(result).toEqual({ artefactVersion: 3 });
+      });
+    });
+
+    describe('when standard has null scope and oldValue is empty', () => {
+      it('validates successfully and returns artefactVersion', async () => {
+        const command = buildCommand({
+          type: ChangeProposalType.updateStandardScope,
+          payload: {
+            oldValue: '',
+            newValue: '**/*.ts',
+          },
+        });
+
+        const result = await validator.validate(command);
+
+        expect(result).toEqual({ artefactVersion: 3 });
+      });
+    });
+
+    describe('when oldValue does not match standard scope', () => {
+      beforeEach(() => {
+        standardsPort.getStandard.mockResolvedValue({
+          ...standard,
+          scope: '**/*.ts',
+        });
+      });
+
+      it('throws ChangeProposalPayloadMismatchError', async () => {
+        const command = buildCommand({
+          type: ChangeProposalType.updateStandardScope,
+          payload: {
+            oldValue: 'wrong-scope',
+            newValue: '**/*.tsx',
           },
         });
 

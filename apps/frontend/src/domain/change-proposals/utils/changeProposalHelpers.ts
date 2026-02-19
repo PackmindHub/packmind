@@ -10,6 +10,7 @@ const changeProposalFieldLabels: Record<ChangeProposalType, string> = {
   [ChangeProposalType.updateCommandDescription]: 'Description',
   [ChangeProposalType.updateStandardName]: 'Name',
   [ChangeProposalType.updateStandardDescription]: 'Description',
+  [ChangeProposalType.updateStandardScope]: 'Scope',
   [ChangeProposalType.addRule]: 'Rule (add)',
   [ChangeProposalType.updateRule]: 'Rule (update)',
   [ChangeProposalType.deleteRule]: 'Rule (delete)',
