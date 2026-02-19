@@ -7,12 +7,18 @@ export type ActiveDetectionProgramId = Branded<'ActiveDetectionProgramId'>;
 export const createActiveDetectionProgramId =
   brandedIdFactory<ActiveDetectionProgramId>();
 
+export enum DetectionSeverity {
+  ERROR = 'error',
+  WARNING = 'warning',
+}
+
 export type ActiveDetectionProgram = {
   id: ActiveDetectionProgramId;
   detectionProgramVersion: DetectionProgramId | null;
   ruleId: RuleId;
   language: ProgrammingLanguage;
   detectionProgramDraftVersion: DetectionProgramId | null;
+  severity: DetectionSeverity;
 };
 
 export type LanguageDetectionPrograms = ActiveDetectionProgram & {
