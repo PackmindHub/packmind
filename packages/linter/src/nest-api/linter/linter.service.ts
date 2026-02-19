@@ -44,6 +44,7 @@ import {
   RuleId,
   ProgrammingLanguage,
   TrackLinterExecutionCommand,
+  UpdateActiveDetectionProgramSeverityCommand,
 } from '@packmind/types';
 
 @Injectable()
@@ -94,6 +95,12 @@ export class LinterService {
     command: UpdateActiveDetectionProgramCommand,
   ): Promise<ActiveDetectionProgram> {
     return this.linterAdapter.updateActiveDetectionProgram(command);
+  }
+
+  async updateActiveDetectionProgramSeverity(
+    command: UpdateActiveDetectionProgramSeverityCommand,
+  ): Promise<ActiveDetectionProgram> {
+    return this.linterAdapter.updateActiveDetectionProgramSeverity(command);
   }
 
   async getActiveDetectionProgramById(

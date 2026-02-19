@@ -1,12 +1,19 @@
 import { Repository } from 'typeorm';
 import { PackmindLogger } from '@packmind/logger';
 import { AbstractRepository, localDataSource } from '@packmind/node-utils';
-import { RuleId, QueryOption, ProgrammingLanguage } from '@packmind/types';
+import {
+  RuleId,
+  QueryOption,
+  ProgrammingLanguage,
+  ActiveDetectionProgramId,
+  DetectionSeverity,
+} from '@packmind/types';
 import {
   ActiveDetectionProgram,
   LanguageDetectionPrograms,
 } from '@packmind/types';
 import { IActiveDetectionProgramRepository } from '../../domain/repositories/IActiveDetectionProgramRepository';
+import { ActiveDetectionProgramNotFoundError } from '../../domain/errors';
 import { ActiveDetectionProgramSchema } from '../schemas';
 
 const origin = 'ActiveDetectionProgramRepository';
@@ -215,6 +222,44 @@ export class ActiveDetectionProgramRepository
         id: activeDetectionProgram.id,
         error: error instanceof Error ? error.message : String(error),
       });
+      throw error;
+    }
+  }
+
+  async updateSeverity(
+    activeDetectionProgramId: ActiveDetectionProgramId,
+    severity: DetectionSeverity,
+  ): Promise<ActiveDetectionProgram> {
+    this.logger.info('Updating severity for active detection program', {
+      id: activeDetectionProgramId,
+      severity,
+    });
+
+    try {
+      const existing = await this.findById(activeDetectionProgramId);
+
+      if (!existing) {
+        throw new ActiveDetectionProgramNotFoundError(activeDetectionProgramId);
+      }
+
+      existing.severity = severity;
+      const updated = await this.repository.save(existing);
+
+      this.logger.info('Severity updated for active detection program', {
+        id: activeDetectionProgramId,
+        severity,
+      });
+
+      return updated;
+    } catch (error) {
+      this.logger.error(
+        'Failed to update severity for active detection program',
+        {
+          id: activeDetectionProgramId,
+          severity,
+          error: error instanceof Error ? error.message : String(error),
+        },
+      );
       throw error;
     }
   }

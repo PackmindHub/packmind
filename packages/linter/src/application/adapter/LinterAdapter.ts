@@ -80,6 +80,7 @@ import {
   UpdateRuleDetectionHeuristicsCommand,
   UpdateRuleDetectionHeuristicsResponse,
   UpdateRuleDetectionStatusAfterUpdateCommand,
+  UpdateActiveDetectionProgramSeverityCommand,
 } from '@packmind/types';
 import type { DetectionProgramService } from '../services/DetectionProgramService';
 import { ComputeRuleLanguageDetectionStatusUseCase } from '../useCases/computeRuleLanguageDetectionStatus/computeRuleLanguageDetectionStatus.usecase';
@@ -105,6 +106,7 @@ import { StartGenerationProgramUseCase } from '../useCases/startProgramGeneratio
 import { StartRuleDetectionAssessmentUseCase } from '../useCases/startRuleDetectionAssessment/startRuleDetectionAssessment.usecase';
 import { TestProgramExecutionUseCase } from '../useCases/testProgramExecutionUseCase/TestProgramExecutionUseCase';
 import { UpdateActiveDetectionProgramUseCase } from '../useCases/updateActiveDetectionProgram/updateActiveDetectionProgram.usecase';
+import { UpdateActiveDetectionProgramSeverityUseCase } from '../useCases/updateActiveDetectionProgramSeverity/updateActiveDetectionProgramSeverity.usecase';
 import { UpdateDetectionProgramUseCase } from '../useCases/updateDetectionProgram/updateDetectionProgram.usecase';
 import { UpdateDetectionProgramStatusUseCase } from '../useCases/updateDetectionProgramStatus/updateDetectionProgramStatus.usecase';
 import { TrackLinterExecutionUseCase } from '../useCases/trackLinterExecution/trackLinterExecution.usecase';
@@ -162,6 +164,7 @@ export class LinterAdapter implements IBaseAdapter<ILinterPort>, ILinterPort {
   private _listDetectionProgramUseCase!: ListDetectionProgramUseCase;
   private _updateDetectionProgramUseCase!: UpdateDetectionProgramUseCase;
   private _updateActiveDetectionProgramUseCase!: UpdateActiveDetectionProgramUseCase;
+  private _updateActiveDetectionProgramSeverityUseCase!: UpdateActiveDetectionProgramSeverityUseCase;
   private _startGenerationProgramUseCase!: StartGenerationProgramUseCase;
   private _getAllDetectionProgramsByRuleUseCase!: GetAllDetectionProgramsByRuleUseCase;
   private _getDetectionProgramMetadataUseCase!: GetDetectionProgramMetadataUseCase;
@@ -262,6 +265,11 @@ export class LinterAdapter implements IBaseAdapter<ILinterPort>, ILinterPort {
       new UpdateActiveDetectionProgramUseCase(
         this.repositories.getActiveDetectionProgramRepository(),
         this.repositories.getDetectionProgramRepository(),
+      );
+
+    this._updateActiveDetectionProgramSeverityUseCase =
+      new UpdateActiveDetectionProgramSeverityUseCase(
+        this.repositories.getActiveDetectionProgramRepository(),
       );
 
     this._startGenerationProgramUseCase = new StartGenerationProgramUseCase(
@@ -424,6 +432,12 @@ export class LinterAdapter implements IBaseAdapter<ILinterPort>, ILinterPort {
     command: UpdateActiveDetectionProgramCommand,
   ): Promise<ActiveDetectionProgram> {
     return this._updateActiveDetectionProgramUseCase.execute(command);
+  }
+
+  async updateActiveDetectionProgramSeverity(
+    command: UpdateActiveDetectionProgramSeverityCommand,
+  ): Promise<ActiveDetectionProgram> {
+    return this._updateActiveDetectionProgramSeverityUseCase.execute(command);
   }
 
   async getActiveDetectionProgramById(

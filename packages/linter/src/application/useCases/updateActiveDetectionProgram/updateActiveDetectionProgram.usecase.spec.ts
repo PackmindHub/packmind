@@ -44,6 +44,7 @@ describe('UpdateActiveDetectionProgramUseCase', () => {
       findByRuleIdAndLanguage: jest.fn(),
       findByRuleIdWithPrograms: jest.fn(),
       updateActiveDetectionProgram: jest.fn(),
+      updateSeverity: jest.fn(),
       deleteById: jest.fn(),
       restoreById: jest.fn(),
       deleteByRuleId: jest.fn(),

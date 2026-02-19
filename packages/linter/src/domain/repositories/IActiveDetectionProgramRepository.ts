@@ -2,6 +2,8 @@ import { IRepository } from '@packmind/types';
 import { QueryOption } from '@packmind/types';
 import type {
   ActiveDetectionProgram,
+  ActiveDetectionProgramId,
+  DetectionSeverity,
   LanguageDetectionPrograms,
 } from '@packmind/types';
 import { RuleId } from '@packmind/types';
@@ -22,6 +24,10 @@ export interface IActiveDetectionProgramRepository extends IRepository<ActiveDet
   ): Promise<LanguageDetectionPrograms[]>;
   updateActiveDetectionProgram(
     activeDetectionProgram: ActiveDetectionProgram,
+  ): Promise<ActiveDetectionProgram>;
+  updateSeverity(
+    activeDetectionProgramId: ActiveDetectionProgramId,
+    severity: DetectionSeverity,
   ): Promise<ActiveDetectionProgram>;
   deleteByRuleId(ruleId: RuleId): Promise<void>;
 }

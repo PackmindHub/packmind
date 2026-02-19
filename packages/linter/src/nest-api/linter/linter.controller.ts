@@ -6,6 +6,7 @@ import {
   Get,
   NotFoundException,
   Param,
+  Patch,
   Post,
   Put,
   Query,
@@ -51,6 +52,8 @@ import {
   DetectionHeuristics,
   GetDetectionProgramsForPackagesCommand,
   GetDetectionProgramsForPackagesResponse,
+  DetectionSeverity,
+  UpdateActiveDetectionProgramSeverityCommand,
 } from '@packmind/types';
 import { LinterHexa } from '../../LinterHexa';
 import { LinterService } from './linter.service';
@@ -60,6 +63,7 @@ import {
   StandardNotFoundForProgramGenerationError,
   UnauthorizedProgramGenerationError,
 } from '../../application/useCases/generateProgramUseCase/errors';
+import { ActiveDetectionProgramNotFoundError } from '../../domain/errors/ActiveDetectionProgramNotFoundError';
 import { DetectionProgramNotFoundError } from '../../domain/errors/DetectionProgramNotFoundError';
 import { UnauthorizedTestProgramExecutionError } from '../../domain/errors/UnauthorizedTestProgramExecutionError';
 
@@ -520,6 +524,95 @@ export class LinterController {
           error: errorMessage,
         },
       );
+
+      if (
+        error instanceof BadRequestException ||
+        error instanceof NotFoundException
+      ) {
+        throw error;
+      }
+
+      throw new BadRequestException(errorMessage);
+    }
+  }
+
+  @Patch(
+    'standards/:standardId/rules/:ruleId/detection-program/:activeDetectionProgramId/severity',
+  )
+  async updateActiveDetectionProgramSeverity(
+    @Param('standardId') standardId: StandardId,
+    @Param('ruleId') ruleId: RuleId,
+    @Param('activeDetectionProgramId')
+    activeDetectionProgramId: ActiveDetectionProgramId,
+    @Body() body: { severity: string },
+    @Req() request: AuthenticatedRequest,
+  ): Promise<ActiveDetectionProgram> {
+    this.logger.info(
+      'PATCH /standards/:standardId/rules/:ruleId/detection-program/:activeDetectionProgramId/severity - Updating severity',
+      {
+        standardId,
+        ruleId,
+        activeDetectionProgramId,
+      },
+    );
+
+    try {
+      const organizationId = request.organization?.id;
+      const userId = request.user?.userId;
+
+      if (!organizationId || !userId) {
+        throw new BadRequestException('User authentication required');
+      }
+
+      const { severity } = body;
+
+      if (
+        severity !== DetectionSeverity.ERROR &&
+        severity !== DetectionSeverity.WARNING
+      ) {
+        throw new BadRequestException(
+          `Invalid severity value: ${severity}. Must be '${DetectionSeverity.ERROR}' or '${DetectionSeverity.WARNING}'`,
+        );
+      }
+
+      const command: UpdateActiveDetectionProgramSeverityCommand = {
+        organizationId,
+        userId,
+        activeDetectionProgramId,
+        ruleId,
+        severity,
+      };
+
+      const result =
+        await this.linterService.updateActiveDetectionProgramSeverity(command);
+
+      this.logger.info(
+        'PATCH /standards/:standardId/rules/:ruleId/detection-program/:activeDetectionProgramId/severity - Severity updated',
+        {
+          standardId,
+          ruleId,
+          activeDetectionProgramId,
+          severity: result.severity,
+        },
+      );
+
+      return result;
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      this.logger.error(
+        'PATCH /standards/:standardId/rules/:ruleId/detection-program/:activeDetectionProgramId/severity - Failed',
+        {
+          standardId,
+          ruleId,
+          activeDetectionProgramId,
+          error: errorMessage,
+        },
+      );
+
+      if (error instanceof ActiveDetectionProgramNotFoundError) {
+        throw new NotFoundException(errorMessage);
+      }
 
       if (
         error instanceof BadRequestException ||

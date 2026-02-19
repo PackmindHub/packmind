@@ -42,6 +42,7 @@ export const ActiveDetectionProgramSchema = new EntitySchema<
       nullable: true,
     },
     severity: {
+      name: 'severity',
       type: 'varchar',
       length: 10,
       default: 'error',

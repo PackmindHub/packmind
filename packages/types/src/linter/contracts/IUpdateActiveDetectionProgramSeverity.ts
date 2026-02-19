@@ -4,9 +4,11 @@ import {
   ActiveDetectionProgramId,
   DetectionSeverity,
 } from '../ActiveDetectionProgram';
+import { RuleId } from '../../standards';
 
 export type UpdateActiveDetectionProgramSeverityCommand = PackmindCommand & {
   activeDetectionProgramId: ActiveDetectionProgramId;
+  ruleId: RuleId;
   severity: DetectionSeverity;
 };
 
