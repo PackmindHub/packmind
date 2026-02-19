@@ -7,6 +7,7 @@ import {
   IGetActiveDetectionProgram,
   LanguageDetectionPrograms,
   createActiveDetectionProgramId,
+  DetectionSeverity,
 } from '@packmind/types';
 import { DetectionProgramService } from '../../services/DetectionProgramService';
 import { IStandardsPort } from '@packmind/types';
@@ -127,6 +128,7 @@ export class GetActiveDetectionProgramUseCase implements IGetActiveDetectionProg
       detectionProgramDraftVersion: null,
       ruleId,
       language,
+      severity: DetectionSeverity.ERROR,
       detectionProgram: null,
       draftDetectionProgram: null,
       isExampleOnly: true,

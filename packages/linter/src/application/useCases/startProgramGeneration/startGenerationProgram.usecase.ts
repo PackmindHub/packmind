@@ -330,6 +330,7 @@ export class StartGenerationProgramUseCase {
       detectionProgramDraftVersion,
       ruleId,
       language,
+      severity,
     } = program;
 
     return {
@@ -338,6 +339,7 @@ export class StartGenerationProgramUseCase {
       detectionProgramDraftVersion,
       ruleId,
       language,
+      severity,
     };
   }
 
