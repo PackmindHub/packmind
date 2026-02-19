@@ -1,7 +1,7 @@
-import React from 'react';
+import { type ComponentType, type FC, type MouseEvent } from 'react';
 import { PMButton, PMMenu, PMPortal, PMIcon } from '@packmind/ui';
 import type { PMButtonVariants } from '@packmind/ui';
-import { LuChevronDown } from 'react-icons/lu';
+import { LuChevronDown, LuOctagonAlert, LuTriangleAlert } from 'react-icons/lu';
 import { DetectionSeverity } from '@packmind/types';
 
 interface SeverityDropdownBadgeProps {
@@ -10,12 +10,26 @@ interface SeverityDropdownBadgeProps {
   isDisabled?: boolean;
 }
 
-const SEVERITY_CONFIG: Record<
-  DetectionSeverity,
-  { text: string; variant: PMButtonVariants }
-> = {
-  [DetectionSeverity.ERROR]: { text: 'Error', variant: 'danger' },
-  [DetectionSeverity.WARNING]: { text: 'Warning', variant: 'warning' },
+interface SeverityOptionConfig {
+  text: string;
+  variant: PMButtonVariants;
+  Icon: ComponentType;
+  iconColor: string;
+}
+
+const SEVERITY_CONFIG: Record<DetectionSeverity, SeverityOptionConfig> = {
+  [DetectionSeverity.ERROR]: {
+    text: 'Severity: Error',
+    variant: 'danger',
+    Icon: LuOctagonAlert,
+    iconColor: 'red.500',
+  },
+  [DetectionSeverity.WARNING]: {
+    text: 'Severity: Warning',
+    variant: 'warning',
+    Icon: LuTriangleAlert,
+    iconColor: 'yellow.500',
+  },
 };
 
 const SEVERITY_OPTIONS = [
@@ -23,7 +37,7 @@ const SEVERITY_OPTIONS = [
   { value: DetectionSeverity.WARNING, label: 'Warning' },
 ];
 
-export const SeverityDropdownBadge: React.FC<SeverityDropdownBadgeProps> = ({
+export const SeverityDropdownBadge: FC<SeverityDropdownBadgeProps> = ({
   severity,
   onSeverityChange,
   isDisabled = false,
@@ -44,7 +58,7 @@ export const SeverityDropdownBadge: React.FC<SeverityDropdownBadgeProps> = ({
         <PMButton
           variant={config.variant}
           size="2xs"
-          onClick={(e: React.MouseEvent) => {
+          onClick={(e: MouseEvent) => {
             e.stopPropagation();
           }}
         >
@@ -57,22 +71,28 @@ export const SeverityDropdownBadge: React.FC<SeverityDropdownBadgeProps> = ({
       <PMPortal>
         <PMMenu.Positioner>
           <PMMenu.Content>
-            {SEVERITY_OPTIONS.map((option) => (
-              <PMMenu.Item
-                key={option.value}
-                value={option.value}
-                cursor="pointer"
-                onClick={(e: React.MouseEvent) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  if (option.value !== severity) {
-                    onSeverityChange(option.value);
-                  }
-                }}
-              >
-                {option.label}
-              </PMMenu.Item>
-            ))}
+            {SEVERITY_OPTIONS.map((option) => {
+              const { Icon, iconColor } = SEVERITY_CONFIG[option.value];
+              return (
+                <PMMenu.Item
+                  key={option.value}
+                  value={option.value}
+                  cursor="pointer"
+                  onClick={(e: MouseEvent) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    if (option.value !== severity) {
+                      onSeverityChange(option.value);
+                    }
+                  }}
+                >
+                  <PMIcon size="sm" color={iconColor} mr={2}>
+                    <Icon />
+                  </PMIcon>
+                  {option.label}
+                </PMMenu.Item>
+              );
+            })}
           </PMMenu.Content>
         </PMMenu.Positioner>
       </PMPortal>
