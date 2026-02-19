@@ -4,7 +4,8 @@ import { marked } from 'marked';
 import { ComponentPropsWithoutRef, useMemo } from 'react';
 
 export type PMMarkdownViewerProps = {
-  content: string;
+  content?: string;
+  htmlContent?: string;
   sanitize?: boolean;
 } & Omit<
   ComponentPropsWithoutRef<'div'>,
@@ -13,18 +14,23 @@ export type PMMarkdownViewerProps = {
 
 export function PMMarkdownViewer({
   content,
+  htmlContent,
   sanitize = true,
   ...rest
 }: PMMarkdownViewerProps) {
-  const htmlContent = useMemo(() => {
+  const rendered = useMemo(() => {
+    if (htmlContent !== undefined) {
+      return sanitize ? DOMPurify.sanitize(htmlContent) : htmlContent;
+    }
+
     marked.setOptions({
       breaks: true,
       gfm: true,
     });
 
-    const html = marked(content) as string;
+    const html = marked(content ?? '') as string;
     return sanitize ? DOMPurify.sanitize(html) : html;
-  }, [content, sanitize]);
+  }, [content, htmlContent, sanitize]);
 
   const defaultStyles: React.CSSProperties = {
     lineHeight: '1.6',
@@ -147,7 +153,7 @@ export function PMMarkdownViewer({
       <Box
         as="div"
         className="pm-markdown-viewer"
-        dangerouslySetInnerHTML={{ __html: htmlContent }}
+        dangerouslySetInnerHTML={{ __html: rendered }}
         style={defaultStyles}
         {...rest}
       />
