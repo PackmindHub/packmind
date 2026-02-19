@@ -41,6 +41,8 @@ export const integrationTest: IntegrationTest = (tests) => {
 
     beforeAll(() => fixture.initialize());
 
+    afterAll(() => fixture.destroy());
+
     afterEach(async () => {
       await fixture.cleanup();
     });
