@@ -4,6 +4,7 @@ import {
   ChangeProposalType,
 } from '@packmind/types';
 import { DiffService } from './DiffService';
+import { getConflictDetector } from './conflictDetection/getConflictDetector';
 
 export class ConflictDetectionService {
   constructor(private readonly diffService: DiffService) {}
@@ -30,62 +31,11 @@ export class ConflictDetectionService {
       return [];
     }
 
+    const conflictDetector = getConflictDetector(proposal);
     const conflictingProposals = allProposals.filter((otherProposal) => {
-      if (otherProposal.id === proposal.id) {
-        return false;
-      }
-
-      return this.hasConflict(proposal, otherProposal);
+      return conflictDetector(proposal, otherProposal, this.diffService);
     });
 
     return conflictingProposals.map((p) => p.id);
   }
-
-  private hasConflict(
-    proposal1: ChangeProposal<ChangeProposalType>,
-    proposal2: ChangeProposal<ChangeProposalType>,
-  ): boolean {
-    if (
-      proposal1.type === ChangeProposalType.updateCommandName &&
-      proposal2.type === ChangeProposalType.updateCommandName
-    ) {
-      return true;
-    }
-
-    if (
-      isCorrectChangeProposalType(
-        proposal1,
-        ChangeProposalType.updateCommandDescription,
-      ) &&
-      isCorrectChangeProposalType(
-        proposal2,
-        ChangeProposalType.updateCommandDescription,
-      )
-    ) {
-      return this.hasDescriptionConflict(proposal1, proposal2);
-    }
-
-    return false;
-  }
-
-  private hasDescriptionConflict(
-    proposal1: ChangeProposal<ChangeProposalType.updateCommandDescription>,
-    proposal2: ChangeProposal<ChangeProposalType.updateCommandDescription>,
-  ): boolean {
-    const { oldValue: oldValue1, newValue: newValue1 } = proposal1.payload;
-    const { oldValue: oldValue2, newValue: newValue2 } = proposal2.payload;
-
-    if (oldValue1 !== oldValue2) {
-      return false;
-    }
-
-    return this.diffService.hasConflict(oldValue1, newValue1, newValue2);
-  }
-}
-
-function isCorrectChangeProposalType<T extends ChangeProposalType>(
-  tbd: ChangeProposal,
-  expected: T,
-): tbd is ChangeProposal<T> {
-  return tbd.type === expected;
 }
