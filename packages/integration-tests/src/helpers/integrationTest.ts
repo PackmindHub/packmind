@@ -24,10 +24,10 @@ type IntegrationTestContext = {
 
 export type IntegrationTest<
   T extends IntegrationTestContext = IntegrationTestContext,
-> = (name: string, tests: (getContext: () => Promise<T>) => void) => void;
+> = (tests: (getContext: () => Promise<T>) => void) => () => void;
 
-export const integrationTest: IntegrationTest = (name, tests) => {
-  describe(name, () => {
+export const integrationTest: IntegrationTest = (tests) => {
+  return () => {
     const fixture = createIntegrationTestFixture([
       ...accountsSchemas,
       ...spacesSchemas,
@@ -55,7 +55,7 @@ export const integrationTest: IntegrationTest = (name, tests) => {
     });
 
     tests(async () => stage());
-  });
+  };
 };
 
 export type IntegrationTestWithUserContext = IntegrationTestContext & {
@@ -71,8 +71,8 @@ export type IntegrationTestWithUserContext = IntegrationTestContext & {
 
 export const integrationTestWithUser: IntegrationTest<
   IntegrationTestWithUserContext
-> = (name, tests) => {
-  return integrationTest(name, () => {
+> = (tests) => {
+  return integrationTest(() => {
     stage(async ({ testApp }: IntegrationTestContext) => {
       const signUpResponse = await testApp.accountsHexa
         .getAdapter()
