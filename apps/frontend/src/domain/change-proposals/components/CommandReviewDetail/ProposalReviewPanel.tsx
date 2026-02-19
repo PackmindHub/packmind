@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import {
   PMBadge,
   PMBox,
@@ -6,6 +6,7 @@ import {
   PMHStack,
   PMIcon,
   PMMarkdownViewer,
+  PMSwitch,
   PMText,
   PMTooltip,
   PMVStack,
@@ -28,17 +29,11 @@ import {
 import { ConflictWarning } from '../ChangeProposals/ConflictWarning';
 import { formatRelativeTime } from '../../utils/formatRelativeTime';
 import { ChangeProposalWithConflicts } from '../../types';
-
-function buildDiffMarkdown(oldValue: string, newValue: string): string {
-  const changes = diffWords(oldValue, newValue);
-  return changes
-    .map((change) => {
-      if (change.added) return `<ins>${change.value}</ins>`;
-      if (change.removed) return `<del>${change.value}</del>`;
-      return change.value;
-    })
-    .join('');
-}
+import { buildDiffHtml } from '../../utils/markdownDiff';
+import {
+  MarkdownEditor,
+  MarkdownEditorProvider,
+} from '../../../../shared/components/editor/MarkdownEditor';
 
 function renderDiffText(oldValue: string, newValue: string) {
   const changes = diffWords(oldValue, newValue);
@@ -105,6 +100,8 @@ export function ProposalReviewPanel({
   onPoolReject,
   onUndoPool,
 }: Readonly<ProposalReviewPanelProps>) {
+  const [showPreview, setShowPreview] = useState(false);
+
   const proposalNumberMap = useMemo(
     () => buildProposalNumberMap(selectedRecipeProposals),
     [selectedRecipeProposals],
@@ -164,7 +161,33 @@ export function ProposalReviewPanel({
                   {formatRelativeTime(reviewingProposal.createdAt)}
                 </PMText>
               </PMHStack>
-              <PMHStack gap={2}>
+              <PMHStack gap={6} align="center">
+                {isDescriptionDiff && (
+                  <PMHStack gap={2} align="center">
+                    <PMText
+                      fontSize="sm"
+                      color={showPreview ? 'faded' : 'primary'}
+                    >
+                      Diff
+                    </PMText>
+                    <PMSwitch
+                      size="sm"
+                      checked={showPreview}
+                      onCheckedChange={(e) => setShowPreview(e.checked)}
+                      css={{
+                        '& span[data-scope="switch"][data-part="control"]': {
+                          bg: 'background.primary',
+                        },
+                      }}
+                    />
+                    <PMText
+                      fontSize="sm"
+                      color={showPreview ? 'primary' : 'faded'}
+                    >
+                      Preview
+                    </PMText>
+                  </PMHStack>
+                )}
                 {acceptedProposalIds.has(reviewingProposal.id) ||
                 rejectedProposalIds.has(reviewingProposal.id) ? (
                   <PMButton
@@ -176,10 +199,10 @@ export function ProposalReviewPanel({
                     Undo
                   </PMButton>
                 ) : (
-                  <>
+                  <PMHStack gap={2}>
                     <PMButton
-                      size="sm"
-                      colorPalette="green"
+                      size="xs"
+                      variant="secondary"
                       disabled={
                         isOutdated ||
                         blockedByConflictIds.has(reviewingProposal.id)
@@ -190,15 +213,14 @@ export function ProposalReviewPanel({
                       Accept
                     </PMButton>
                     <PMButton
-                      size="sm"
-                      variant="outline"
-                      colorPalette="red"
+                      size="xs"
+                      variant="secondary"
                       onClick={() => onPoolReject(reviewingProposal.id)}
                     >
                       <LuX />
                       Dismiss
                     </PMButton>
-                  </>
+                  </PMHStack>
                 )}
               </PMHStack>
             </PMHStack>
@@ -251,29 +273,42 @@ export function ProposalReviewPanel({
                 ? renderDiffText(payload.oldValue, payload.newValue)
                 : selectedRecipe.name}
             </PMText>
-            <PMBox
-              css={{
-                '& ins': {
-                  backgroundColor: 'var(--Palette-Semantic-Green800)',
-                  padding: '0 2px',
-                  borderRadius: '2px',
-                  textDecoration: 'none',
-                },
-                '& del': {
-                  backgroundColor: 'var(--Palette-Semantic-Red800)',
-                  padding: '0 2px',
-                  borderRadius: '2px',
-                },
-              }}
-            >
-              <PMMarkdownViewer
-                content={
-                  isDescriptionDiff
-                    ? buildDiffMarkdown(payload.oldValue, payload.newValue)
-                    : selectedRecipe.content
-                }
-              />
-            </PMBox>
+            {isDescriptionDiff && !showPreview ? (
+              <PMBox
+                padding="60px 68px"
+                css={{
+                  '& ins': {
+                    backgroundColor: 'var(--Palette-Semantic-Green800)',
+                    padding: '0 2px',
+                    borderRadius: '2px',
+                    textDecoration: 'none',
+                  },
+                  '& del': {
+                    backgroundColor: 'var(--Palette-Semantic-Red800)',
+                    padding: '0 2px',
+                    borderRadius: '2px',
+                  },
+                }}
+              >
+                <PMMarkdownViewer
+                  htmlContent={buildDiffHtml(
+                    payload.oldValue,
+                    payload.newValue,
+                  )}
+                />
+              </PMBox>
+            ) : isDescriptionDiff && showPreview ? (
+              <MarkdownEditorProvider>
+                <MarkdownEditor defaultValue={payload.newValue} readOnly />
+              </MarkdownEditorProvider>
+            ) : (
+              <MarkdownEditorProvider>
+                <MarkdownEditor
+                  defaultValue={selectedRecipe.content}
+                  readOnly
+                />
+              </MarkdownEditorProvider>
+            )}
           </PMVStack>
         )}
       </PMVStack>
@@ -300,7 +335,9 @@ export function ProposalReviewPanel({
       <PMText fontSize="lg" fontWeight="semibold">
         {selectedRecipe.name}
       </PMText>
-      <PMMarkdownViewer content={selectedRecipe.content} />
+      <MarkdownEditorProvider>
+        <MarkdownEditor defaultValue={selectedRecipe.content} readOnly />
+      </MarkdownEditorProvider>
     </PMVStack>
   );
 }
