@@ -3,6 +3,10 @@ import { detectSingleLineConflict } from './detectSingleLineConflict';
 import { ConflictDetector } from './ConflictDetector';
 import { detectMultiLineConflict } from './detectMultiLineConflict';
 import { detectUpdateRuleConflict } from './detectUpdateRuleConflict';
+import {
+  detectAddRuleConflict,
+  detectAddSkillFileConflict,
+} from './detectAddSubItemConflict';
 
 type ConflictDetectorMap = {
   [K in ChangeProposalType]: ConflictDetector<K>;
@@ -14,7 +18,7 @@ const conflictDetectors: ConflictDetectorMap = {
   [ChangeProposalType.updateStandardName]: detectSingleLineConflict,
   [ChangeProposalType.updateStandardDescription]: detectMultiLineConflict,
   [ChangeProposalType.updateStandardScope]: detectSingleLineConflict,
-  [ChangeProposalType.addRule]: () => false,
+  [ChangeProposalType.addRule]: detectAddRuleConflict,
   [ChangeProposalType.updateRule]: detectUpdateRuleConflict,
   [ChangeProposalType.deleteRule]: () => false,
   [ChangeProposalType.updateSkillName]: detectSingleLineConflict,
@@ -24,7 +28,7 @@ const conflictDetectors: ConflictDetectorMap = {
   [ChangeProposalType.updateSkillLicense]: detectSingleLineConflict,
   [ChangeProposalType.updateSkillCompatibility]: detectSingleLineConflict,
   [ChangeProposalType.updateSkillAllowedTools]: detectSingleLineConflict,
-  [ChangeProposalType.addSkillFile]: () => false,
+  [ChangeProposalType.addSkillFile]: detectAddSkillFileConflict,
   [ChangeProposalType.updateSkillFileContent]: () => false,
   [ChangeProposalType.updateSkillFilePermissions]: () => false,
   [ChangeProposalType.deleteSkillFile]: () => false,

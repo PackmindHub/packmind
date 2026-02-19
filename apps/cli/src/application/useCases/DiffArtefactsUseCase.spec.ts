@@ -1026,9 +1026,7 @@ describe('DiffArtefactsUseCase', () => {
       });
 
       expect(result[0].payload).toEqual({
-        targetId: 'new-file.ts',
         item: {
-          id: 'new-file.ts',
           path: 'new-file.ts',
           content: 'new file content',
           permissions: 'rw-r--r--',

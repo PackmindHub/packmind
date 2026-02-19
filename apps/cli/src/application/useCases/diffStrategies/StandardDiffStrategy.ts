@@ -97,13 +97,11 @@ export class StandardDiffStrategy implements IDiffStrategy {
 
     for (const rule of localRules) {
       if (!serverRules.has(rule)) {
-        const ruleId = createRuleId(crypto.randomUUID());
         diffs.push({
           filePath: file.path,
           type: ChangeProposalType.addRule,
           payload: {
-            targetId: ruleId,
-            item: { id: ruleId, content: rule },
+            item: { content: rule },
           },
           artifactName: file.artifactName,
           artifactType: file.artifactType,
