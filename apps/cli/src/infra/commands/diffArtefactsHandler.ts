@@ -1,5 +1,10 @@
 import { PackmindCliHexa } from '../../PackmindCliHexa';
-import { ArtifactType, ChangeProposalType, CodingAgent } from '@packmind/types';
+import {
+  ArtifactType,
+  ChangeProposalPayload,
+  ChangeProposalType,
+  CodingAgent,
+} from '@packmind/types';
 import { ArtefactDiff } from '../../domain/useCases/IDiffArtefactsUseCase';
 import {
   logWarningConsole,
@@ -110,6 +115,16 @@ function formatDiffPayload(diff: ArtefactDiff, log: typeof console.log): void {
       }
     }
     return;
+  }
+
+  if (diff.type === ChangeProposalType.updateSkillFileContent) {
+    const typedPayload = payload as ChangeProposalPayload<
+      typeof ChangeProposalType.updateSkillFileContent
+    >;
+    if (typedPayload.isBase64) {
+      log(chalk.green('    ~ [binary content changed]'));
+      return;
+    }
   }
 
   if (diff.type === ChangeProposalType.addRule) {

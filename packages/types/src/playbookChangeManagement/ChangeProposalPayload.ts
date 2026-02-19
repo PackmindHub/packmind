@@ -15,6 +15,11 @@ export type CollectionItemUpdatePayload<T> = {
   newValue: string;
 };
 
+export type SkillFileContentUpdatePayload =
+  CollectionItemUpdatePayload<SkillFileId> & {
+  isBase64?: boolean;
+};
+
 export type CollectionItemAddPayload<T> = {
   item: T;
 };
@@ -53,7 +58,7 @@ type SkillChangeProposalPayloadMap = {
   [ChangeProposalType.addSkillFile]: CollectionItemAddPayload<
     Omit<SkillFile, 'id' | 'skillVersionId'>
   >;
-  [ChangeProposalType.updateSkillFileContent]: CollectionItemUpdatePayload<SkillFileId>;
+  [ChangeProposalType.updateSkillFileContent]: SkillFileContentUpdatePayload;
   [ChangeProposalType.updateSkillFilePermissions]: CollectionItemUpdatePayload<SkillFileId>;
   [ChangeProposalType.deleteSkillFile]: CollectionItemDeletePayload<
     Omit<SkillFile, 'skillVersionId'>
