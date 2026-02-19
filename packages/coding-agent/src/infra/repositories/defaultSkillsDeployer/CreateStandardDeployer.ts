@@ -298,6 +298,30 @@ Rules:
    - \`#### Negative Example\` code block → \`examples.negative\`
    - Code fence language identifier → \`examples.language\` (UPPERCASED)
 
+   **Important:** \`examples\` is a **single object** (not an array) — one positive/negative pair per rule. It is **optional** — omit entirely for rules without code examples. When present, all three fields (\`positive\`, \`negative\`, \`language\`) are required.
+
+   **Expected JSON format:**
+   \`\`\`json
+   {
+     "name": "Standard Name",
+     "description": "What the standard covers and why.",
+     "scope": "Where/when the standard applies.",
+     "rules": [
+       {
+         "content": "Rule description starting with action verb",
+         "examples": {
+           "positive": "// valid code",
+           "negative": "// invalid code",
+           "language": "TYPESCRIPT"
+         }
+       },
+       {
+         "content": "Rule without examples"
+       }
+     ]
+   }
+   \`\`\`
+
 6. Write the resulting JSON to a temporary \`.playbook.json\` file next to the markdown file (e.g., \`.packmind/standards/_drafts/<slug>.playbook.json\`).
 
 7. Run the packmind-cli command:
@@ -331,6 +355,10 @@ packmind-cli login
 - Ensure all required sections are present in the markdown file
 - Check that the \`## Rules\` section has at least one \`###\` rule subsection
 - Verify code blocks have language annotations
+
+**"expected object, received array" error on examples:**
+- The \`examples\` field must be a single object \`{positive, negative, language}\`, not an array
+- Each rule supports at most one example pair
 
 ### Step 5: Cleanup
 
