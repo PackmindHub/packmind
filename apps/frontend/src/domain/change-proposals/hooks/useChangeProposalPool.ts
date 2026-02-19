@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useEffect, useMemo } from 'react';
 import { ChangeProposalId } from '@packmind/types';
 import { ChangeProposalWithConflicts } from '../types';
 
@@ -13,6 +13,22 @@ export function useChangeProposalPool(
   const [rejectedProposalIds, setRejectedProposalIds] = useState<
     Set<ChangeProposalId>
   >(new Set());
+
+  useEffect(() => {
+    const currentIds = new Set(proposals.map((p) => p.id));
+
+    setAcceptedProposalIds((prev) => {
+      const next = new Set([...prev].filter((id) => currentIds.has(id)));
+      return next.size === prev.size ? prev : next;
+    });
+    setRejectedProposalIds((prev) => {
+      const next = new Set([...prev].filter((id) => currentIds.has(id)));
+      return next.size === prev.size ? prev : next;
+    });
+    setReviewingProposalId((prev) =>
+      prev && !currentIds.has(prev) ? null : prev,
+    );
+  }, [proposals]);
 
   const blockedByConflictIds = useMemo(() => {
     const blocked = new Set<ChangeProposalId>();
