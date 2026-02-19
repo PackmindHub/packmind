@@ -31,3 +31,4 @@ export * from './IUpdateRuleDetectionHeuristics';
 export * from './IUpdateHeuristicsFollowingChatbotInput';
 export * from './IUpdateRuleDetectionStatusAfterUpdate';
 export * from './ITrackLinterExecutionUseCase';
+export * from './IUpdateActiveDetectionProgramSeverity';
