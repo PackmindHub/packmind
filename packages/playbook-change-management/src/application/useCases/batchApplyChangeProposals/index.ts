@@ -1,1 +1,0 @@
-export { BatchApplyChangeProposalsUseCase } from './BatchApplyChangeProposalsUseCase';

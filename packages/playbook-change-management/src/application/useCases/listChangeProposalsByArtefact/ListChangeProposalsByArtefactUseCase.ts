@@ -65,12 +65,13 @@ export class ListChangeProposalsByArtefactUseCase<
       command.artefactId,
     );
 
-    const pendingProposals = allProposals.filter(
-      (p) => p.status === ChangeProposalStatus.pending,
-    );
+    const proposalsToReturn =
+      command.pendingOnly === false
+        ? allProposals
+        : allProposals.filter((p) => p.status === ChangeProposalStatus.pending);
 
     const changeProposals =
-      this.conflictDetectionService.detectConflicts(pendingProposals);
+      this.conflictDetectionService.detectConflicts(proposalsToReturn);
 
     return { changeProposals };
   }

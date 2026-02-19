@@ -10,6 +10,7 @@ import {
   CreateChangeProposalResponse,
   createUserId,
   IAccountsPort,
+  ICreateChangeProposalUseCase,
   ISpacesPort,
 } from '@packmind/types';
 import { ChangeProposalService } from '../../services/ChangeProposalService';
@@ -19,10 +20,13 @@ import { IChangeProposalValidator } from '../../validators/IChangeProposalValida
 
 const origin = 'CreateChangeProposalUseCase';
 
-export class CreateChangeProposalUseCase extends AbstractMemberUseCase<
-  CreateChangeProposalCommand<ChangeProposalType>,
-  CreateChangeProposalResponse<ChangeProposalType>
-> {
+export class CreateChangeProposalUseCase
+  extends AbstractMemberUseCase<
+    CreateChangeProposalCommand<ChangeProposalType>,
+    CreateChangeProposalResponse<ChangeProposalType>
+  >
+  implements ICreateChangeProposalUseCase<ChangeProposalType>
+{
   constructor(
     accountsPort: IAccountsPort,
     private readonly spacesPort: ISpacesPort,
