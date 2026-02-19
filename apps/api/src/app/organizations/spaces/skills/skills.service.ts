@@ -96,6 +96,46 @@ export class SkillsService {
     });
   }
 
+  async getSkillWithFilesById(
+    skillId: SkillId,
+    spaceId: SpaceId,
+    organizationId: OrganizationId,
+    userId: UserId,
+  ): Promise<SkillWithFiles | null> {
+    const adapter = this.skillsHexa.getAdapter();
+
+    const { skill } = await adapter.getSkillById({
+      skillId,
+      spaceId,
+      organizationId,
+      userId,
+    });
+
+    if (!skill) {
+      return null;
+    }
+
+    const { skillVersion: latestVersion } =
+      await adapter.getLatestSkillVersionUseCase({
+        skillId,
+        spaceId,
+        organizationId,
+        userId,
+      });
+
+    if (!latestVersion) {
+      return null;
+    }
+
+    const files = await adapter.getSkillFiles(latestVersion.id);
+
+    return {
+      skill,
+      files,
+      latestVersion,
+    };
+  }
+
   async deleteSkillsBatch(
     skillIds: SkillId[],
     organizationId: OrganizationId,

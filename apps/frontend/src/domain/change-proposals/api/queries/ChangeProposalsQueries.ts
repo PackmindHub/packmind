@@ -17,6 +17,7 @@ import {
   APPLY_STANDARD_CHANGE_PROPOSALS_MUTATION_KEY,
   CREATE_CHANGE_PROPOSAL_MUTATION_KEY,
   GET_CHANGE_PROPOSALS_BY_RECIPE_KEY,
+  GET_CHANGE_PROPOSALS_BY_SKILL_KEY,
   GET_GROUPED_CHANGE_PROPOSALS_KEY,
 } from '../queryKeys';
 import { useAuthContext } from '../../../accounts/hooks/useAuthContext';
@@ -89,6 +90,42 @@ export const useListChangeProposalsByRecipeQuery = (
 
   return useQuery(
     listChangeProposalsByRecipeOptions(organization?.id, spaceId, recipeId),
+  );
+};
+
+export const listChangeProposalsBySkillOptions = (
+  organizationId: OrganizationId | undefined,
+  spaceId: SpaceId | undefined,
+  skillId: SkillId | undefined,
+) => ({
+  queryKey: [...GET_CHANGE_PROPOSALS_BY_SKILL_KEY, skillId],
+  queryFn: () => {
+    if (!organizationId) {
+      throw new Error('Organization ID is required to fetch change proposals');
+    }
+    if (!spaceId) {
+      throw new Error('Space ID is required to fetch change proposals');
+    }
+    if (!skillId) {
+      throw new Error('Skill ID is required to fetch change proposals');
+    }
+    return changeProposalsGateway.listChangeProposalsBySkill({
+      organizationId,
+      spaceId,
+      artefactId: skillId,
+    });
+  },
+  enabled: !!organizationId && !!spaceId && !!skillId,
+});
+
+export const useListChangeProposalsBySkillQuery = (
+  skillId: SkillId | undefined,
+) => {
+  const { organization } = useAuthContext();
+  const { spaceId } = useCurrentSpace();
+
+  return useQuery(
+    listChangeProposalsBySkillOptions(organization?.id, spaceId, skillId),
   );
 };
 
@@ -208,7 +245,9 @@ export const useApplySkillChangeProposalsMutation = () => {
 
   return useMutation({
     mutationKey: [...APPLY_SKILL_CHANGE_PROPOSALS_MUTATION_KEY],
-    mutationFn: async (command: ApplyChangeProposalsCommand<SkillId>) => {
+    mutationFn: async (
+      command: Omit<ApplyChangeProposalsCommand<SkillId>, 'userId'>,
+    ) => {
       return changeProposalsGateway.applySkillChangeProposals(command);
     },
     onSuccess: async () => {
@@ -217,15 +256,30 @@ export const useApplySkillChangeProposalsMutation = () => {
           queryKey: GET_GROUPED_CHANGE_PROPOSALS_KEY,
         }),
         queryClient.invalidateQueries({
+          queryKey: GET_CHANGE_PROPOSALS_BY_SKILL_KEY,
+        }),
+        queryClient.invalidateQueries({
           queryKey: GET_SKILLS_KEY,
         }),
       ]);
+
+      pmToaster.create({
+        title: 'Changes applied successfully',
+        type: 'success',
+      });
     },
     onError: (error, variables, context) => {
       console.error('Error applying skill change proposals');
       console.log('error: ', error);
       console.log('variables: ', variables);
       console.log('context: ', context);
+
+      pmToaster.create({
+        title: 'Failed to apply changes',
+        description:
+          'The changes could not be applied. Please try again or contact support if the problem persists.',
+        type: 'error',
+      });
     },
   });
 };

@@ -1,6 +1,7 @@
 import { useParams } from 'react-router';
 import { PMBox, PMText } from '@packmind/ui';
 import { CommandReviewDetail } from '../../src/domain/change-proposals/components/CommandReviewDetail';
+import { SkillReviewDetail } from '../../src/domain/change-proposals/components/SkillReviewDetail';
 
 export default function ReviewChangesDetailRouteModule() {
   const { artefactType, artefactId } = useParams<{
@@ -12,6 +13,10 @@ export default function ReviewChangesDetailRouteModule() {
 
   if (artefactType === 'commands') {
     return <CommandReviewDetail key={artefactId} artefactId={artefactId} />;
+  }
+
+  if (artefactType === 'skills') {
+    return <SkillReviewDetail key={artefactId} artefactId={artefactId} />;
   }
 
   return (

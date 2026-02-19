@@ -7,6 +7,7 @@ export const SKILLS_QUERY_SCOPE = 'skills';
 export enum SkillQueryKeys {
   LIST = 'list',
   BY_SLUG = 'bySlug',
+  BY_ID = 'byId',
   VERSIONS = 'versions',
 }
 
@@ -27,6 +28,19 @@ export const getSkillBySlugKey = (
     SKILLS_QUERY_SCOPE,
     SkillQueryKeys.BY_SLUG,
     slug,
+  ] as const;
+
+export const getSkillByIdKey = (
+  spaceId: SpaceId | undefined,
+  skillId: SkillId | undefined,
+) =>
+  [
+    ORGANIZATION_QUERY_SCOPE,
+    SPACES_SCOPE,
+    spaceId,
+    SKILLS_QUERY_SCOPE,
+    SkillQueryKeys.BY_ID,
+    skillId,
   ] as const;
 
 export const getSkillVersionsKey = (
