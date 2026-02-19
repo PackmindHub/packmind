@@ -3,6 +3,7 @@ export enum ChangeProposalType {
   updateCommandDescription = 'updateCommandDescription',
   updateStandardName = 'updateStandardName',
   updateStandardDescription = 'updateStandardDescription',
+  updateStandardScope = 'updateStandardScope',
   addRule = 'addRule',
   updateRule = 'updateRule',
   deleteRule = 'deleteRule',

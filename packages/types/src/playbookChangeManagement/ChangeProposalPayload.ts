@@ -33,6 +33,7 @@ type CommandChangeProposalPayloadMap = {
 type StandardChangeProposalPayloadMap = {
   [ChangeProposalType.updateStandardName]: ScalarUpdatePayload;
   [ChangeProposalType.updateStandardDescription]: ScalarUpdatePayload;
+  [ChangeProposalType.updateStandardScope]: ScalarUpdatePayload;
   [ChangeProposalType.addRule]: CollectionItemAddPayload<
     Omit<Rule, 'standardVersionId'>
   >;

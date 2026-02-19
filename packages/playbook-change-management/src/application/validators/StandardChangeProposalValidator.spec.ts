@@ -76,6 +76,18 @@ describe('StandardChangeProposalValidator', () => {
       );
     });
 
+    it('returns true for updateStandardDescription', () => {
+      expect(
+        validator.supports(ChangeProposalType.updateStandardDescription),
+      ).toBe(true);
+    });
+
+    it('returns true for updateStandardScope', () => {
+      expect(validator.supports(ChangeProposalType.updateStandardScope)).toBe(
+        true,
+      );
+    });
+
     it('returns false for updateCommandDescription', () => {
       expect(
         validator.supports(ChangeProposalType.updateCommandDescription),
@@ -89,26 +101,126 @@ describe('StandardChangeProposalValidator', () => {
     });
   });
 
-  describe('when oldValue matches standard name', () => {
-    it('validates successfully and returns artefactVersion', async () => {
-      const result = await validator.validate(buildCommand());
+  describe('when validating updateStandardName', () => {
+    describe('when oldValue matches standard name', () => {
+      it('validates successfully and returns artefactVersion', async () => {
+        const result = await validator.validate(buildCommand());
 
-      expect(result).toEqual({ artefactVersion: 3 });
+        expect(result).toEqual({ artefactVersion: 3 });
+      });
+    });
+
+    describe('when oldValue does not match standard name', () => {
+      it('throws ChangeProposalPayloadMismatchError', async () => {
+        const command = buildCommand({
+          payload: {
+            oldValue: 'Wrong Name',
+            newValue: 'New Name',
+          },
+        });
+
+        await expect(validator.validate(command)).rejects.toBeInstanceOf(
+          ChangeProposalPayloadMismatchError,
+        );
+      });
     });
   });
 
-  describe('when oldValue does not match standard name', () => {
-    it('throws ChangeProposalPayloadMismatchError', async () => {
-      const command = buildCommand({
-        payload: {
-          oldValue: 'Wrong Name',
-          newValue: 'New Name',
-        },
+  describe('when validating updateStandardDescription', () => {
+    describe('when oldValue matches standard description', () => {
+      it('validates successfully and returns artefactVersion', async () => {
+        const command = buildCommand({
+          type: ChangeProposalType.updateStandardDescription,
+          payload: {
+            oldValue: 'A standard description',
+            newValue: 'Updated description',
+          },
+        });
+
+        const result = await validator.validate(command);
+
+        expect(result).toEqual({ artefactVersion: 3 });
+      });
+    });
+
+    describe('when oldValue does not match standard description', () => {
+      it('throws ChangeProposalPayloadMismatchError', async () => {
+        const command = buildCommand({
+          type: ChangeProposalType.updateStandardDescription,
+          payload: {
+            oldValue: 'Wrong description',
+            newValue: 'Updated description',
+          },
+        });
+
+        await expect(validator.validate(command)).rejects.toBeInstanceOf(
+          ChangeProposalPayloadMismatchError,
+        );
+      });
+    });
+  });
+
+  describe('when validating updateStandardScope', () => {
+    describe('when standard has a scope and oldValue matches', () => {
+      beforeEach(() => {
+        standardsPort.getStandard.mockResolvedValue({
+          ...standard,
+          scope: '**/*.ts',
+        });
       });
 
-      await expect(validator.validate(command)).rejects.toBeInstanceOf(
-        ChangeProposalPayloadMismatchError,
-      );
+      it('validates successfully and returns artefactVersion', async () => {
+        const command = buildCommand({
+          type: ChangeProposalType.updateStandardScope,
+          payload: {
+            oldValue: '**/*.ts',
+            newValue: '**/*.tsx',
+          },
+        });
+
+        const result = await validator.validate(command);
+
+        expect(result).toEqual({ artefactVersion: 3 });
+      });
+    });
+
+    describe('when standard has null scope and oldValue is empty', () => {
+      it('validates successfully and returns artefactVersion', async () => {
+        const command = buildCommand({
+          type: ChangeProposalType.updateStandardScope,
+          payload: {
+            oldValue: '',
+            newValue: '**/*.ts',
+          },
+        });
+
+        const result = await validator.validate(command);
+
+        expect(result).toEqual({ artefactVersion: 3 });
+      });
+    });
+
+    describe('when oldValue does not match standard scope', () => {
+      beforeEach(() => {
+        standardsPort.getStandard.mockResolvedValue({
+          ...standard,
+          scope: '**/*.ts',
+        });
+      });
+
+      it('throws ChangeProposalPayloadMismatchError', async () => {
+        const command = buildCommand({
+          type: ChangeProposalType.updateStandardScope,
+          payload: {
+            oldValue: 'wrong-scope',
+            newValue: '**/*.tsx',
+          },
+        });
+
+        await expect(validator.validate(command)).rejects.toBeInstanceOf(
+          ChangeProposalPayloadMismatchError,
+        );
+      });
     });
   });
 

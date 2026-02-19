@@ -11,6 +11,7 @@ type CommandChangeProposalArtefactIdMap = {
 type StandardChangeProposalArtefactIdMap = {
   [ChangeProposalType.updateStandardName]: StandardId;
   [ChangeProposalType.updateStandardDescription]: StandardId;
+  [ChangeProposalType.updateStandardScope]: StandardId;
   [ChangeProposalType.addRule]: StandardId;
   [ChangeProposalType.updateRule]: StandardId;
   [ChangeProposalType.deleteRule]: StandardId;
