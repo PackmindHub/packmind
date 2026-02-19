@@ -2,6 +2,7 @@ import {
   ChangeProposalCaptureMode,
   ChangeProposalType,
   CreateChangeProposalCommand,
+  createRuleId,
   createStandardId,
   createOrganizationId,
   createUserId,
@@ -58,6 +59,13 @@ describe('StandardChangeProposalValidator', () => {
       getLatestStandardVersion: jest.fn(),
       listStandardsBySpace: jest.fn(),
       findStandardBySlug: jest.fn(),
+      getRulesByStandardId: jest.fn(),
+      getLatestRulesByStandardId: jest.fn(),
+      getRule: jest.fn(),
+      getRuleCodeExamples: jest.fn(),
+      listStandardVersions: jest.fn(),
+      createStandardWithExamples: jest.fn(),
+      createStandardSamples: jest.fn(),
     } as unknown as jest.Mocked<IStandardsPort>;
 
     validator = new StandardChangeProposalValidator(standardsPort);
@@ -86,6 +94,14 @@ describe('StandardChangeProposalValidator', () => {
       expect(validator.supports(ChangeProposalType.updateStandardScope)).toBe(
         true,
       );
+    });
+
+    it('returns true for addRule', () => {
+      expect(validator.supports(ChangeProposalType.addRule)).toBe(true);
+    });
+
+    it('returns true for deleteRule', () => {
+      expect(validator.supports(ChangeProposalType.deleteRule)).toBe(true);
     });
 
     it('returns false for updateCommandDescription', () => {
@@ -214,6 +230,99 @@ describe('StandardChangeProposalValidator', () => {
           payload: {
             oldValue: 'wrong-scope',
             newValue: '**/*.tsx',
+          },
+        });
+
+        await expect(validator.validate(command)).rejects.toBeInstanceOf(
+          ChangeProposalPayloadMismatchError,
+        );
+      });
+    });
+  });
+
+  describe('when validating addRule', () => {
+    it('validates successfully and returns artefactVersion', async () => {
+      const ruleId = createRuleId();
+      const command = buildCommand({
+        type: ChangeProposalType.addRule,
+        payload: {
+          targetId: ruleId,
+          item: { id: ruleId, content: 'New rule content' },
+        },
+      });
+
+      const result = await validator.validate(command);
+
+      expect(result).toEqual({ artefactVersion: 3 });
+    });
+  });
+
+  describe('when validating deleteRule', () => {
+    const ruleId = createRuleId();
+
+    describe('when rule content exists in standard', () => {
+      beforeEach(() => {
+        standardsPort.getRulesByStandardId.mockResolvedValue([
+          {
+            id: createRuleId(),
+            content: 'Existing rule',
+            standardVersionId: 'sv-1' as never,
+          },
+        ]);
+      });
+
+      it('validates successfully and returns artefactVersion', async () => {
+        const command = buildCommand({
+          type: ChangeProposalType.deleteRule,
+          payload: {
+            targetId: ruleId,
+            item: { id: ruleId, content: 'Existing rule' },
+          },
+        });
+
+        const result = await validator.validate(command);
+
+        expect(result).toEqual({ artefactVersion: 3 });
+      });
+    });
+
+    describe('when rule content does not exist in standard', () => {
+      beforeEach(() => {
+        standardsPort.getRulesByStandardId.mockResolvedValue([
+          {
+            id: createRuleId(),
+            content: 'Different rule',
+            standardVersionId: 'sv-1' as never,
+          },
+        ]);
+      });
+
+      it('throws ChangeProposalPayloadMismatchError', async () => {
+        const command = buildCommand({
+          type: ChangeProposalType.deleteRule,
+          payload: {
+            targetId: ruleId,
+            item: { id: ruleId, content: 'Non-existent rule' },
+          },
+        });
+
+        await expect(validator.validate(command)).rejects.toBeInstanceOf(
+          ChangeProposalPayloadMismatchError,
+        );
+      });
+    });
+
+    describe('when standard has no rules', () => {
+      beforeEach(() => {
+        standardsPort.getRulesByStandardId.mockResolvedValue([]);
+      });
+
+      it('throws ChangeProposalPayloadMismatchError', async () => {
+        const command = buildCommand({
+          type: ChangeProposalType.deleteRule,
+          payload: {
+            targetId: ruleId,
+            item: { id: ruleId, content: 'Some rule' },
           },
         });
 
