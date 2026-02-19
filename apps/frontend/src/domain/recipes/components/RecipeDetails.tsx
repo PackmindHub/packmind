@@ -32,7 +32,6 @@ import {
 
 import { RecipeDistributionsList } from '../../deployments/components/RecipeDistributionsList/RecipeDistributionsList';
 import { useListRecipeDistributionsQuery } from '../../deployments/api/queries/DeploymentsQueries';
-import { useGetChangeProposalsQuery } from '../api/queries/ChangeProposalsQueries';
 import { RECIPE_MESSAGES } from '../constants/messages';
 import { ChangeProposalStatus, RecipeId } from '@packmind/types';
 import {
@@ -46,6 +45,7 @@ import { useNavigation } from '../../../shared/hooks/useNavigation';
 import { ProposeChangeModal } from './ProposeChangeModal';
 import { ProposeDescriptionChangeModal } from './ProposeDescriptionChangeModal';
 import { RecipeVersionHistoryHeader } from './RecipeVersionHistoryHeader';
+import { useListChangeProposalsByRecipeQuery } from '../../change-proposals/api/queries/ChangeProposalsQueries';
 
 interface RecipeDetailsProps {
   id: RecipeId;
@@ -70,11 +70,12 @@ export const RecipeDetails = ({ id, orgSlug }: RecipeDetailsProps) => {
   const deleteMutation = useDeleteRecipeMutation();
   const { data: distributions, isLoading: isLoadingDistributions } =
     useListRecipeDistributionsQuery(id);
-  const { data: changeProposals } = useGetChangeProposalsQuery(id);
+  const { data: changeProposals } = useListChangeProposalsByRecipeQuery(id);
   const hasDistributions = distributions && distributions.length > 0;
   const pendingCount =
-    changeProposals?.filter((p) => p.status === ChangeProposalStatus.pending)
-      .length ?? 0;
+    changeProposals?.changeProposals?.filter(
+      (p) => p.status === ChangeProposalStatus.pending,
+    ).length ?? 0;
   const defaultPath = `.packmind/recipes/${recipe?.slug}.md`;
 
   const handleDeleteRecipe = async () => {
