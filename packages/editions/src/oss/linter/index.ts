@@ -1,4 +1,5 @@
 import {
+  DetectionSeverity,
   DetectionStatus,
   RuleId,
   Branded,
@@ -21,6 +22,7 @@ export type ActiveDetectionProgram = {
   ruleId: RuleId;
   language: ProgrammingLanguage;
   detectionProgramDraftVersion: DetectionProgramId | null;
+  severity: DetectionSeverity;
 };
 
 export type LanguageDetectionPrograms = ActiveDetectionProgram & {

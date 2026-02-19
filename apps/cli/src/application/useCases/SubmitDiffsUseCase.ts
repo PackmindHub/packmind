@@ -1,4 +1,9 @@
-import { ChangeProposalCaptureMode } from '@packmind/types';
+import {
+  ChangeProposalArtefactId,
+  ChangeProposalCaptureMode,
+  ChangeProposalType,
+  SpaceId,
+} from '@packmind/types';
 
 import {
   ISubmitDiffsUseCase,
@@ -8,7 +13,7 @@ import {
 import { IPackmindGateway } from '../../domain/repositories/IPackmindGateway';
 import { ArtefactDiff } from '../../domain/useCases/IDiffArtefactsUseCase';
 
-const SUPPORTED_ARTIFACT_TYPES = new Set(['command', 'skill']);
+const SUPPORTED_ARTIFACT_TYPES = new Set(['command', 'skill', 'standard']);
 
 type ValidDiff = ArtefactDiff & { artifactId: string; spaceId: string };
 
@@ -29,7 +34,7 @@ export class SubmitDiffsUseCase implements ISubmitDiffsUseCase {
       if (!SUPPORTED_ARTIFACT_TYPES.has(firstDiff.artifactType)) {
         skipped.push({
           name: firstDiff.artifactName,
-          reason: 'Only commands and skills are supported',
+          reason: 'Only commands, skills, and standards are supported',
         });
         continue;
       }
@@ -63,16 +68,16 @@ export class SubmitDiffsUseCase implements ISubmitDiffsUseCase {
       artifactType?: string;
     }[] = [];
     for (const [spaceId, diffs] of diffsBySpaceId) {
-      const response =
-        await this.packmindGateway.changeProposals.batchCreateChangeProposals({
-          spaceId,
-          proposals: diffs.map((diff) => ({
-            type: diff.type,
-            artefactId: diff.artifactId,
-            payload: diff.payload,
-            captureMode: ChangeProposalCaptureMode.commit,
-          })),
-        });
+      const response = await this.packmindGateway.changeProposals.batchCreate({
+        spaceId: spaceId as SpaceId,
+        proposals: diffs.map((diff) => ({
+          type: diff.type,
+          artefactId:
+            diff.artifactId as ChangeProposalArtefactId<ChangeProposalType>,
+          payload: diff.payload,
+          captureMode: ChangeProposalCaptureMode.commit,
+        })),
+      });
       submitted += response.created;
       alreadySubmitted += response.skipped;
       for (const error of response.errors) {

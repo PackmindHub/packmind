@@ -6,6 +6,7 @@ import { RecipesService } from './recipes.service';
 import { OrganizationAccessGuard } from '../../guards/organization-access.guard';
 import { SpaceAccessGuard } from '../guards/space-access.guard';
 import { PackmindLogger, LogLevel } from '@packmind/logger';
+import { OrganizationsSpacesRecipesChangeProposalsModule } from './change-proposals/recipes-change-proposals.module';
 
 /**
  * Module for space-scoped recipe routes within organizations
@@ -16,7 +17,10 @@ import { PackmindLogger, LogLevel } from '@packmind/logger';
  * Both OrganizationAccessGuard and SpaceAccessGuard are provided to ensure proper access validation.
  */
 @Module({
-  imports: [TypeOrmModule.forFeature(recipesSchemas)],
+  imports: [
+    TypeOrmModule.forFeature(recipesSchemas),
+    OrganizationsSpacesRecipesChangeProposalsModule,
+  ],
   controllers: [OrganizationsSpacesRecipesController],
   providers: [
     RecipesService,

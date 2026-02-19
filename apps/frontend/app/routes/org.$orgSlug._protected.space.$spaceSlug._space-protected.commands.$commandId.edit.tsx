@@ -1,8 +1,9 @@
 import { useParams } from 'react-router';
-import { PMPage, PMVStack, PMBox, PMSpinner, PMText } from '@packmind/ui';
+import { PMPage, PMBox, PMSpinner, PMText, PMVStack } from '@packmind/ui';
 import { EditCommand } from '../../src/domain/recipes/components/EditCommand';
 import { useGetRecipeByIdQuery } from '../../src/domain/recipes/api/queries/RecipesQueries';
 import { RecipeId } from '@packmind/types';
+import { RecipeVersionHistoryHeader } from '../../src/domain/recipes/components/RecipeVersionHistoryHeader';
 
 export default function EditCommandRouteModule() {
   const { commandId } = useParams<{
@@ -49,10 +50,10 @@ export default function EditCommandRouteModule() {
   }
 
   return (
-    <PMPage title={`Edit ${recipe.name}`} subtitle="Update command details">
-      <PMVStack align="stretch" gap={6}>
-        <EditCommand recipe={recipe} />
-      </PMVStack>
+    <PMPage
+      breadcrumbComponent={<RecipeVersionHistoryHeader recipe={recipe} />}
+    >
+      <EditCommand recipe={recipe} />
     </PMPage>
   );
 }

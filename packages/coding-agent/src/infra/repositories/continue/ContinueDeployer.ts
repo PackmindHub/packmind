@@ -12,7 +12,7 @@ import {
 } from '@packmind/types';
 import { ICodingAgentDeployer } from '../../../domain/repository/ICodingAgentDeployer';
 import { GenericStandardSectionWriter } from '../genericSectionWriter/GenericStandardSectionWriter';
-import { getTargetPrefixedPath } from '../utils/FileUtils';
+import { escapeSingleQuotes, getTargetPrefixedPath } from '../utils/FileUtils';
 
 const origin = 'ContinueDeployer';
 
@@ -356,8 +356,8 @@ export class ContinueDeployer implements ICodingAgentDeployer {
     const description = recipeVersion.summary?.trim() || recipeVersion.name;
 
     const frontmatter = `---
-name: ${recipeVersion.name}
-description: ${description}
+name: '${escapeSingleQuotes(recipeVersion.name)}'
+description: '${escapeSingleQuotes(description)}'
 invokable: true
 ---`;
 
@@ -466,17 +466,17 @@ ${recipeVersion.content}`;
     if (standardVersion.scope && standardVersion.scope.trim() !== '') {
       // When the scope is not null or empty
       frontmatter = `---
-name: ${standardVersion.name}
+name: '${escapeSingleQuotes(standardVersion.name)}'
 globs: ${this.formatGlobsValue(standardVersion.scope)}
 alwaysApply: false
-description: ${summary}
+description: '${escapeSingleQuotes(summary)}'
 ---`;
     } else {
       // When the scope is empty
       frontmatter = `---
-name: ${standardVersion.name}
+name: '${escapeSingleQuotes(standardVersion.name)}'
 alwaysApply: true
-description: ${summary}
+description: '${escapeSingleQuotes(summary)}'
 ---`;
     }
 

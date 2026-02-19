@@ -47,10 +47,12 @@ type SkillChangeProposalPayloadMap = {
   [ChangeProposalType.updateSkillDescription]: ScalarUpdatePayload;
   [ChangeProposalType.updateSkillPrompt]: ScalarUpdatePayload;
   [ChangeProposalType.updateSkillMetadata]: ScalarUpdatePayload;
+  [ChangeProposalType.updateSkillLicense]: ScalarUpdatePayload;
+  [ChangeProposalType.updateSkillCompatibility]: ScalarUpdatePayload;
+  [ChangeProposalType.updateSkillAllowedTools]: ScalarUpdatePayload;
   [ChangeProposalType.addSkillFile]: CollectionItemAddPayload<
     Omit<SkillFile, 'skillVersionId'>
   >;
-  [ChangeProposalType.updateSkillFilePath]: CollectionItemUpdatePayload<SkillFileId>;
   [ChangeProposalType.updateSkillFileContent]: CollectionItemUpdatePayload<SkillFileId>;
   [ChangeProposalType.updateSkillFilePermissions]: CollectionItemUpdatePayload<SkillFileId>;
   [ChangeProposalType.deleteSkillFile]: CollectionItemDeletePayload<

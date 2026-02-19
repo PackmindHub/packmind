@@ -16,6 +16,7 @@ import {
 import { LogLevel, PackmindLogger } from '@packmind/logger';
 import { AuthenticatedRequest } from '@packmind/node-utils';
 import {
+  BatchCreateChangeProposalItem,
   BatchApplyChangeProposalsCommand,
   BatchApplyChangeProposalsResponse,
   BatchCreateChangeProposalsCommand,
@@ -23,7 +24,6 @@ import {
   BatchRejectChangeProposalsCommand,
   BatchRejectChangeProposalsResponse,
   ChangeProposal,
-  ChangeProposalCaptureMode,
   ChangeProposalId,
   ChangeProposalType,
   CreateChangeProposalCommand,
@@ -46,13 +46,6 @@ import {
 } from '@packmind/playbook-change-management';
 
 const origin = 'OrganizationsSpacesChangeProposalsController';
-
-interface CreateChangeProposalBody {
-  type: ChangeProposalType;
-  artefactId: string;
-  payload: unknown;
-  captureMode: ChangeProposalCaptureMode;
-}
 
 interface BatchApplyChangeProposalBody {
   changeProposalId: ChangeProposalId;
@@ -88,7 +81,7 @@ export class OrganizationsSpacesChangeProposalsController {
   async batchCreateChangeProposals(
     @Param('orgId') organizationId: OrganizationId,
     @Param('spaceId') spaceId: SpaceId,
-    @Body() body: { proposals: CreateChangeProposalBody[] },
+    @Body() body: { proposals: BatchCreateChangeProposalItem[] },
     @Req() request: AuthenticatedRequest,
   ): Promise<BatchCreateChangeProposalsResponse> {
     if (!body.proposals || body.proposals.length === 0) {
@@ -229,7 +222,7 @@ export class OrganizationsSpacesChangeProposalsController {
   async createChangeProposal(
     @Param('orgId') organizationId: OrganizationId,
     @Param('spaceId') spaceId: SpaceId,
-    @Body() body: CreateChangeProposalBody,
+    @Body() body: BatchCreateChangeProposalItem,
     @Req() request: AuthenticatedRequest,
   ): Promise<CreateChangeProposalResponse<ChangeProposalType>> {
     this.logger.info(
@@ -293,14 +286,14 @@ export class OrganizationsSpacesChangeProposalsController {
    * List change proposals grouped by artefact type for a space
    * GET /organizations/:orgId/spaces/:spaceId/grouped-change-proposals
    */
-  @Get('grouped-change-proposals')
+  @Get('grouped')
   async listChangeProposalsBySpace(
     @Param('orgId') organizationId: OrganizationId,
     @Param('spaceId') spaceId: SpaceId,
     @Req() request: AuthenticatedRequest,
   ): Promise<ListChangeProposalsBySpaceResponse> {
     this.logger.info(
-      'GET /organizations/:orgId/spaces/:spaceId/grouped-change-proposals - Listing grouped change proposals',
+      'GET /organizations/:orgId/spaces/:spaceId/change-proposals/grouped - Listing grouped change proposals',
       {
         organizationId,
         spaceId,
@@ -316,7 +309,7 @@ export class OrganizationsSpacesChangeProposalsController {
         });
 
       this.logger.info(
-        'GET /organizations/:orgId/spaces/:spaceId/grouped-change-proposals - Grouped change proposals listed successfully',
+        'GET /organizations/:orgId/spaces/:spaceId/change-proposals/grouped - Grouped change proposals listed successfully',
         {
           organizationId,
           spaceId,

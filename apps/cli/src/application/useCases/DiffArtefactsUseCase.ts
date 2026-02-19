@@ -10,12 +10,17 @@ import { DiffableFile } from './diffStrategies/DiffableFile';
 import { IDiffStrategy } from './diffStrategies/IDiffStrategy';
 import { CommandDiffStrategy } from './diffStrategies/CommandDiffStrategy';
 import { SkillDiffStrategy } from './diffStrategies/SkillDiffStrategy';
+import { StandardDiffStrategy } from './diffStrategies/StandardDiffStrategy';
 
 export class DiffArtefactsUseCase implements IDiffArtefactsUseCase {
   private readonly strategies: IDiffStrategy[];
 
   constructor(private readonly packmindGateway: IPackmindGateway) {
-    this.strategies = [new CommandDiffStrategy(), new SkillDiffStrategy()];
+    this.strategies = [
+      new CommandDiffStrategy(),
+      new SkillDiffStrategy(),
+      new StandardDiffStrategy(),
+    ];
   }
 
   public async execute(

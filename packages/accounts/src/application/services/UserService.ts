@@ -42,7 +42,7 @@ export class UserService {
 
   async createUser(
     email: string,
-    password: string,
+    password: string | undefined,
     organizationId: OrganizationId,
     options?: { trial?: boolean },
   ): Promise<User> {

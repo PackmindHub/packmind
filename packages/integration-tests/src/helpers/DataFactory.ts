@@ -36,6 +36,7 @@ export class DataFactory {
         .signUpWithOrganization({
           email: 'someone@example.com',
           password: 'some-secret-password!!',
+          method: 'password',
           ...cmd,
         });
 

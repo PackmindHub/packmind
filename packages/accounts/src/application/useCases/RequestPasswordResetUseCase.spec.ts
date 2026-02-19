@@ -1,13 +1,17 @@
 import { RequestPasswordResetUseCase } from './RequestPasswordResetUseCase';
 import { UserService } from '../services/UserService';
+import { UserMetadataService } from '../services/UserMetadataService';
 import { PasswordResetTokenService } from '../services/PasswordResetTokenService';
 import { stubLogger } from '@packmind/test-utils';
 import { userFactory } from '../../../test/userFactory';
+import { createUserMetadataId } from '@packmind/types';
+import { v4 as uuidv4 } from 'uuid';
 
 describe('RequestPasswordResetUseCase', () => {
   let useCase: RequestPasswordResetUseCase;
   let mockUserService: jest.Mocked<UserService>;
   let mockPasswordResetTokenService: jest.Mocked<PasswordResetTokenService>;
+  let mockUserMetadataService: jest.Mocked<UserMetadataService>;
 
   beforeEach(() => {
     mockUserService = {
@@ -19,9 +23,14 @@ describe('RequestPasswordResetUseCase', () => {
       sendSocialLoginReminderEmail: jest.fn(),
     } as unknown as jest.Mocked<PasswordResetTokenService>;
 
+    mockUserMetadataService = {
+      getOrCreateMetadata: jest.fn(),
+    } as unknown as jest.Mocked<UserMetadataService>;
+
     useCase = new RequestPasswordResetUseCase(
       mockUserService,
       mockPasswordResetTokenService,
+      mockUserMetadataService,
       stubLogger(),
     );
   });
@@ -41,6 +50,12 @@ describe('RequestPasswordResetUseCase', () => {
       mockUserService.getUserByEmailCaseInsensitive.mockResolvedValue(
         socialUser,
       );
+      mockUserMetadataService.getOrCreateMetadata.mockResolvedValue({
+        id: createUserMetadataId(uuidv4()),
+        userId: socialUser.id,
+        onboardingCompleted: false,
+        socialProviders: ['GoogleOAuth'],
+      });
 
       result = await useCase.execute({ email: socialUser.email });
     });
@@ -55,10 +70,36 @@ describe('RequestPasswordResetUseCase', () => {
       ).not.toHaveBeenCalled();
     });
 
-    it('sends social login reminder email', () => {
+    it('sends social login reminder email with provider display names', () => {
       expect(
         mockPasswordResetTokenService.sendSocialLoginReminderEmail,
-      ).toHaveBeenCalled();
+      ).toHaveBeenCalledWith(expect.any(String), ['google']);
+    });
+  });
+
+  describe('when user is social-only with multiple providers', () => {
+    beforeEach(async () => {
+      const socialUser = userFactory({
+        passwordHash: null,
+        active: true,
+      });
+      mockUserService.getUserByEmailCaseInsensitive.mockResolvedValue(
+        socialUser,
+      );
+      mockUserMetadataService.getOrCreateMetadata.mockResolvedValue({
+        id: createUserMetadataId(uuidv4()),
+        userId: socialUser.id,
+        onboardingCompleted: false,
+        socialProviders: ['GoogleOAuth', 'MicrosoftOAuth'],
+      });
+
+      await useCase.execute({ email: socialUser.email });
+    });
+
+    it('sends social login reminder email with all provider display names', () => {
+      expect(
+        mockPasswordResetTokenService.sendSocialLoginReminderEmail,
+      ).toHaveBeenCalledWith(expect.any(String), ['google', 'microsoft']);
     });
   });
 });

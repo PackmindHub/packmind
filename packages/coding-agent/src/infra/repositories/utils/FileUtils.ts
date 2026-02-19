@@ -1,5 +1,12 @@
 import { Target } from '@packmind/types';
 
+/**
+ * Escape single quotes in YAML values to prevent parsing errors
+ */
+export function escapeSingleQuotes(value: string): string {
+  return value.replace(/'/g, "''");
+}
+
 export function getTargetPrefixedPath(
   filePath: string,
   target: Target,

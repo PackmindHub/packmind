@@ -1,4 +1,5 @@
 export * from './IApplyCommandChangeProposalUseCase';
+export * from './IApplyChangeProposals';
 export * from './ICreateCommandChangeProposalUseCase';
 export * from './IListCommandChangeProposalsUseCase';
 export * from './ICreateChangeProposalUseCase';
@@ -7,3 +8,4 @@ export * from './IBatchCreateChangeProposalsUseCase';
 export * from './IBatchApplyChangeProposalsUseCase';
 export * from './IBatchRejectChangeProposalsUseCase';
 export * from './IListChangeProposalsBySpace';
+export * from './IListChangeProposalsByArtefact';

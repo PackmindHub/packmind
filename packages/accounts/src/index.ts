@@ -8,6 +8,7 @@ export { AccountsServices } from './application/services/AccountsServices';
 export { EnhancedAccountsServices } from './application/services/EnhancedAccountsServices';
 export { UserService } from './application/services/UserService';
 export { OrganizationService } from './application/services/OrganizationService';
+export { MembershipResolutionService } from './application/services/MembershipResolutionService';
 export { InvitationService } from './application/services/InvitationService';
 export { PasswordResetTokenService } from './application/services/PasswordResetTokenService';
 export { IAccountsRepositories } from './domain/repositories/IAccountsRepositories';

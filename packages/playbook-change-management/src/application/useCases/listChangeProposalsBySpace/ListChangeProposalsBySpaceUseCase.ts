@@ -2,6 +2,7 @@ import { PackmindLogger } from '@packmind/logger';
 import { AbstractMemberUseCase, MemberContext } from '@packmind/node-utils';
 import {
   IAccountsPort,
+  IListChangeProposalsBySpace,
   IRecipesPort,
   ISkillsPort,
   ISpacesPort,
@@ -18,10 +19,13 @@ import { validateSpaceOwnership } from '../../services/validateSpaceOwnership';
 
 const origin = 'ListChangeProposalsBySpaceUseCase';
 
-export class ListChangeProposalsBySpaceUseCase extends AbstractMemberUseCase<
-  ListChangeProposalsBySpaceCommand,
-  ListChangeProposalsBySpaceResponse
-> {
+export class ListChangeProposalsBySpaceUseCase
+  extends AbstractMemberUseCase<
+    ListChangeProposalsBySpaceCommand,
+    ListChangeProposalsBySpaceResponse
+  >
+  implements IListChangeProposalsBySpace
+{
   constructor(
     accountsPort: IAccountsPort,
     private readonly spacesPort: ISpacesPort,

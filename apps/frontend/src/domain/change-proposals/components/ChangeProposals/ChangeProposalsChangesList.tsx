@@ -1,78 +1,166 @@
-import { PMBox, PMCheckbox, PMHStack, PMText, PMVStack } from '@packmind/ui';
+import { useMemo, useState } from 'react';
+import { PMBox, PMText, PMVStack } from '@packmind/ui';
 import {
   ChangeProposalId,
-  ChangeProposalWithOutdatedStatus,
-  ScalarUpdatePayload,
+  ChangeProposalStatus,
+  UserId,
 } from '@packmind/types';
-import { getChangeProposalFieldLabel } from '../../../recipes/utils/changeProposalHelpers';
-
-function truncateValue(value: string, maxLength = 40): string {
-  if (!value) return '';
-  if (value.length <= maxLength) return value;
-  return value.slice(0, maxLength) + '...';
-}
+import { ChangeProposalWithConflicts } from '../../types';
+import { buildProposalNumberMap } from '../../utils/changeProposalHelpers';
+import { PendingProposalCard } from './PendingProposalCard';
+import { PoolProposalCard } from './PoolProposalCard';
+import { CollapsiblePoolSection } from './CollapsiblePoolSection';
 
 interface ChangeProposalsChangesListProps {
-  proposals: ChangeProposalWithOutdatedStatus[];
-  selectedProposalIds: Set<ChangeProposalId>;
-  focusedProposalId: ChangeProposalId | null;
-  onToggleProposal: (proposalId: ChangeProposalId, checked: boolean) => void;
-  onFocusProposal: (proposalId: ChangeProposalId) => void;
+  proposals: ChangeProposalWithConflicts[];
+  reviewingProposalId: ChangeProposalId | null;
+  acceptedProposalIds: Set<ChangeProposalId>;
+  rejectedProposalIds: Set<ChangeProposalId>;
+  blockedByConflictIds: Set<ChangeProposalId>;
+  currentArtefactVersion?: number;
+  userLookup: Map<UserId, string>;
+  onSelectProposal: (proposalId: ChangeProposalId) => void;
+  onPoolAccept: (proposalId: ChangeProposalId) => void;
+  onPoolReject: (proposalId: ChangeProposalId) => void;
+  onUndoPool: (proposalId: ChangeProposalId) => void;
 }
 
 export function ChangeProposalsChangesList({
   proposals,
-  selectedProposalIds,
-  focusedProposalId,
-  onToggleProposal,
-  onFocusProposal,
+  reviewingProposalId,
+  acceptedProposalIds,
+  rejectedProposalIds,
+  blockedByConflictIds,
+  currentArtefactVersion,
+  userLookup,
+  onSelectProposal,
+  onPoolAccept,
+  onPoolReject,
+  onUndoPool,
 }: ChangeProposalsChangesListProps) {
-  return (
-    <PMBox display="flex" flexDirection="column">
-      <PMBox overflowY="auto" flex={1}>
-        <PMVStack gap={1}>
-          {proposals.map((proposal) => {
-            const payload = proposal.payload as ScalarUpdatePayload;
-            const isChecked = selectedProposalIds.has(proposal.id);
-            const isFocused = focusedProposalId === proposal.id;
+  const [showAccepted, setShowAccepted] = useState(true);
+  const [showRejected, setShowRejected] = useState(true);
 
-            return (
-              <PMBox
-                key={proposal.id}
-                borderRadius="md"
-                border="1px solid"
-                borderColor="border.tertiary"
-                cursor="pointer"
+  const proposalNumberMap = useMemo(
+    () => buildProposalNumberMap(proposals),
+    [proposals],
+  );
+
+  const sortByDate = (
+    a: ChangeProposalWithConflicts,
+    b: ChangeProposalWithConflicts,
+  ) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+
+  const { pendingProposals, acceptedProposals, rejectedProposals } =
+    useMemo(() => {
+      const pending = proposals
+        .filter(
+          (p) =>
+            p.status === ChangeProposalStatus.pending &&
+            !acceptedProposalIds.has(p.id) &&
+            !rejectedProposalIds.has(p.id),
+        )
+        .sort(sortByDate);
+
+      const accepted = proposals
+        .filter((p) => acceptedProposalIds.has(p.id))
+        .sort(sortByDate);
+      const rejected = proposals
+        .filter((p) => rejectedProposalIds.has(p.id))
+        .sort(sortByDate);
+
+      return {
+        pendingProposals: pending,
+        acceptedProposals: accepted,
+        rejectedProposals: rejected,
+      };
+    }, [proposals, acceptedProposalIds, rejectedProposalIds]);
+
+  return (
+    <PMBox display="flex" flexDirection="column" height="full">
+      <PMBox overflowY="auto" flex={1}>
+        <PMVStack gap={4} align="stretch">
+          <PMText fontSize="md" fontWeight="bold">
+            Changes to review
+          </PMText>
+
+          {pendingProposals.length > 0 && (
+            <PMVStack gap={2}>
+              <PMText
+                fontSize="xs"
+                fontWeight="bold"
+                color="secondary"
+                textTransform="uppercase"
                 width="full"
-                background={isFocused ? 'background.tertiary' : 'none'}
-                p={2}
-                onClick={() => onFocusProposal(proposal.id)}
               >
-                <PMHStack gap={2} align="start">
-                  <PMBox onClick={(e) => e.stopPropagation()} pt={1}>
-                    <PMCheckbox
-                      checked={isChecked}
-                      onCheckedChange={(e) =>
-                        onToggleProposal(proposal.id, e.checked === true)
-                      }
-                    />
-                  </PMBox>
-                  <PMVStack gap={0} flex={1} minW={0}>
-                    <PMText fontSize="sm" fontWeight="medium">
-                      {getChangeProposalFieldLabel(proposal.type)}
-                    </PMText>
-                    <PMText fontSize="xs" color="secondary" truncate>
-                      {truncateValue(payload.oldValue)} {'->'}{' '}
-                      {truncateValue(payload.newValue)}
-                    </PMText>
-                  </PMVStack>
-                </PMHStack>
-              </PMBox>
-            );
-          })}
+                Pending ({pendingProposals.length})
+              </PMText>
+              {pendingProposals.map((proposal) => (
+                <PendingProposalCard
+                  key={proposal.id}
+                  proposal={proposal}
+                  isSelected={proposal.id === reviewingProposalId}
+                  isBlockedByConflict={blockedByConflictIds.has(proposal.id)}
+                  proposalNumber={proposalNumberMap.get(proposal.id)}
+                  userLookup={userLookup}
+                  currentArtefactVersion={currentArtefactVersion}
+                  onSelect={() => onSelectProposal(proposal.id)}
+                  onAccept={() => onPoolAccept(proposal.id)}
+                  onReject={() => onPoolReject(proposal.id)}
+                />
+              ))}
+            </PMVStack>
+          )}
+
+          {acceptedProposals.length > 0 && (
+            <CollapsiblePoolSection
+              label="Accepted"
+              count={acceptedProposals.length}
+              isOpen={showAccepted}
+              onToggle={() => setShowAccepted((prev) => !prev)}
+              colorPalette="green"
+            >
+              {acceptedProposals.map((proposal) => (
+                <PoolProposalCard
+                  key={proposal.id}
+                  proposal={proposal}
+                  isSelected={proposal.id === reviewingProposalId}
+                  proposalNumber={proposalNumberMap.get(proposal.id)}
+                  userLookup={userLookup}
+                  currentArtefactVersion={currentArtefactVersion}
+                  onSelect={() => onSelectProposal(proposal.id)}
+                  onUndo={() => onUndoPool(proposal.id)}
+                />
+              ))}
+            </CollapsiblePoolSection>
+          )}
+
+          {rejectedProposals.length > 0 && (
+            <CollapsiblePoolSection
+              label="Dismissed"
+              count={rejectedProposals.length}
+              isOpen={showRejected}
+              onToggle={() => setShowRejected((prev) => !prev)}
+              colorPalette="red"
+            >
+              {rejectedProposals.map((proposal) => (
+                <PoolProposalCard
+                  key={proposal.id}
+                  proposal={proposal}
+                  isSelected={proposal.id === reviewingProposalId}
+                  proposalNumber={proposalNumberMap.get(proposal.id)}
+                  userLookup={userLookup}
+                  currentArtefactVersion={currentArtefactVersion}
+                  onSelect={() => onSelectProposal(proposal.id)}
+                  onUndo={() => onUndoPool(proposal.id)}
+                />
+              ))}
+            </CollapsiblePoolSection>
+          )}
+
           {proposals.length === 0 && (
             <PMBox py={4} textAlign="center">
-              <PMText fontSize="sm">
+              <PMText fontSize="sm" color="secondary">
                 No pending proposals for this command
               </PMText>
             </PMBox>

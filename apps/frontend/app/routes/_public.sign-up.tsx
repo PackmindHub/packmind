@@ -4,7 +4,10 @@ import { queryClient } from '../../src/shared/data/queryClient';
 import { getMeQueryOptions } from '../../src/domain/accounts/api/queries/UserQueries';
 
 // Onboarding routes that should remain accessible after org creation
-const ONBOARDING_ROUTES = ['/sign-up/onboarding-reason'];
+const ONBOARDING_ROUTES = [
+  '/sign-up/create-organization',
+  '/sign-up/onboarding-reason',
+];
 
 /**
  * Loader for sign-up routes - redirects authenticated users who have completed sign-up

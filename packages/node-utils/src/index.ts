@@ -29,4 +29,5 @@ export * from './security/EncryptionService';
 export * from './sse';
 export * from './text';
 export * from './skillMd/parseSkillMdContent';
+export * from './skillMd/parseSkillMd';
 export { localDataSource };

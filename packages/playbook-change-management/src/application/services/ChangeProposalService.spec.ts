@@ -13,6 +13,7 @@ import {
   CreateCommandChangeProposalCommand,
 } from '@packmind/types';
 import { stubLogger } from '@packmind/test-utils';
+import { DataSource } from 'typeorm';
 import { ChangeProposalConflictError } from '../../domain/errors/ChangeProposalConflictError';
 import { IChangeProposalRepository } from '../../domain/repositories/IChangeProposalRepository';
 import { ChangeProposalService } from './ChangeProposalService';
@@ -21,6 +22,7 @@ import { DiffService } from './DiffService';
 describe('ChangeProposalService', () => {
   let service: ChangeProposalService;
   let repository: jest.Mocked<IChangeProposalRepository>;
+  let dataSource: jest.Mocked<DataSource>;
   let diffService: DiffService;
 
   const spaceId = createSpaceId();
@@ -35,8 +37,19 @@ describe('ChangeProposalService', () => {
       update: jest.fn(),
     } as unknown as jest.Mocked<IChangeProposalRepository>;
 
+    dataSource = {
+      manager: {
+        transaction: jest.fn(),
+      },
+    } as unknown as jest.Mocked<DataSource>;
+
     diffService = new DiffService();
-    service = new ChangeProposalService(repository, stubLogger(), diffService);
+    service = new ChangeProposalService(
+      repository,
+      dataSource,
+      stubLogger(),
+      diffService,
+    );
   });
 
   afterEach(() => {
@@ -929,6 +942,152 @@ describe('ChangeProposalService', () => {
         const result = await service.groupProposalsByArtefact(spaceId);
 
         expect(result.skills.get(skillId1)).toBe(3);
+      });
+    });
+
+    describe('when space has a mix of pending and non-pending proposals', () => {
+      const proposals = [
+        createProposal(ChangeProposalType.updateStandardName, standardId1),
+        {
+          ...createProposal(ChangeProposalType.addRule, standardId1),
+          status: ChangeProposalStatus.applied,
+        },
+        {
+          ...createProposal(ChangeProposalType.updateCommandName, recipeId1),
+          status: ChangeProposalStatus.rejected,
+        },
+        createProposal(ChangeProposalType.updateCommandDescription, recipeId1),
+        {
+          ...createProposal(ChangeProposalType.updateSkillName, skillId1),
+          status: ChangeProposalStatus.applied,
+        },
+      ];
+
+      beforeEach(() => {
+        repository.findBySpaceId.mockResolvedValue(proposals);
+      });
+
+      it('counts only pending standard proposals', async () => {
+        const result = await service.groupProposalsByArtefact(spaceId);
+
+        expect(result.standards.get(standardId1)).toBe(1);
+      });
+
+      it('counts only pending command proposals', async () => {
+        const result = await service.groupProposalsByArtefact(spaceId);
+
+        expect(result.commands.get(recipeId1)).toBe(1);
+      });
+
+      it('excludes non-pending skill proposals entirely', async () => {
+        const result = await service.groupProposalsByArtefact(spaceId);
+
+        expect(result.skills.size).toBe(0);
+      });
+    });
+  });
+
+  describe('findProposalsByArtefact', () => {
+    const standardId = createStandardId('standard-1');
+    const recipeId = createRecipeId('recipe-1');
+
+    const createProposal = <T extends ChangeProposalType>(
+      type: T,
+      artefactId: string,
+    ): ChangeProposal<T> => ({
+      id: createChangeProposalId(),
+      type,
+      artefactId: artefactId as ChangeProposal<T>['artefactId'],
+      artefactVersion: 1,
+      spaceId,
+      payload: {
+        oldValue: 'old',
+        newValue: 'new',
+      } as ChangeProposal<T>['payload'],
+      captureMode: ChangeProposalCaptureMode.commit,
+      status: ChangeProposalStatus.pending,
+      createdBy: createUserId(),
+      resolvedBy: null,
+      resolvedAt: null,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
+
+    describe('when artefact has no proposals', () => {
+      beforeEach(() => {
+        repository.findByArtefactId.mockResolvedValue([]);
+      });
+
+      it('returns empty array', async () => {
+        const result = await service.findProposalsByArtefact(
+          spaceId,
+          standardId,
+        );
+
+        expect(result).toEqual([]);
+      });
+
+      it('calls repository with correct parameters', async () => {
+        await service.findProposalsByArtefact(spaceId, standardId);
+
+        expect(repository.findByArtefactId).toHaveBeenCalledWith(
+          spaceId,
+          standardId,
+        );
+      });
+    });
+
+    describe('when artefact has proposals', () => {
+      const proposals = [
+        createProposal(ChangeProposalType.updateStandardName, standardId),
+        createProposal(ChangeProposalType.addRule, standardId),
+      ];
+
+      beforeEach(() => {
+        repository.findByArtefactId.mockResolvedValue(proposals);
+      });
+
+      it('returns all proposals for the artefact', async () => {
+        const result = await service.findProposalsByArtefact(
+          spaceId,
+          standardId,
+        );
+
+        expect(result).toEqual(proposals);
+      });
+
+      it('returns correct number of proposals', async () => {
+        const result = await service.findProposalsByArtefact(
+          spaceId,
+          standardId,
+        );
+
+        expect(result.length).toBe(2);
+      });
+    });
+
+    describe('when finding proposals for a recipe', () => {
+      const proposals = [
+        createProposal(ChangeProposalType.updateCommandName, recipeId),
+      ];
+
+      beforeEach(() => {
+        repository.findByArtefactId.mockResolvedValue(proposals);
+      });
+
+      it('returns recipe proposals', async () => {
+        const result = await service.findProposalsByArtefact(spaceId, recipeId);
+
+        expect(result).toEqual(proposals);
+      });
+
+      it('calls repository with recipe id', async () => {
+        await service.findProposalsByArtefact(spaceId, recipeId);
+
+        expect(repository.findByArtefactId).toHaveBeenCalledWith(
+          spaceId,
+          recipeId,
+        );
       });
     });
   });

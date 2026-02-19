@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Outlet, useNavigate, useParams } from 'react-router';
+import { Outlet, useLocation, useNavigate, useParams } from 'react-router';
 import { PMPage, PMVStack, PMText, PMAlert, PMGrid, PMBox } from '@packmind/ui';
 import {
   useGetStandardsQuery,
@@ -41,6 +41,8 @@ export const StandardDetails = ({
   const { spaceSlug } = useParams<{ spaceSlug?: string }>();
   const { organization } = useAuthContext();
   const { spaceId } = useCurrentSpace();
+  const { pathname } = useLocation();
+  const isEditing = pathname.endsWith('/edit');
   const defaultPath = `.packmind/standards/${standard.slug}.md`;
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [deleteAlert, setDeleteAlert] = useState<{
@@ -105,7 +107,11 @@ export const StandardDetails = ({
     return sortedRules.find((rule) => rule.id === currentRuleId);
   }, [currentRuleId, sortedRules]);
 
-  const pageTitle = selectedRule ? selectedRule.content : standard.name;
+  const pageTitle = isEditing
+    ? undefined
+    : selectedRule
+      ? selectedRule.content
+      : standard.name;
 
   const deleteStandardMutation = useDeleteStandardMutation();
 

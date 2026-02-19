@@ -38,6 +38,9 @@ import { OrganizationsSpacesStandardsRulesModule } from './organizations/spaces/
 import { OrganizationsSpacesPackagesModule } from './organizations/spaces/packages/packages.module';
 import { OrganizationsSpacesSkillsModule } from './organizations/spaces/skills/skills.module';
 import { OrganizationsSpacesChangeProposalsModule } from './organizations/spaces/change-proposals/change-proposals.module';
+import { OrganizationsSpacesRecipesChangeProposalsModule } from './organizations/spaces/recipes/change-proposals/recipes-change-proposals.module';
+import { OrganizationsSpacesStandardsChangeProposalsModule } from './organizations/spaces/standards/change-proposals/standards-change-proposals.module';
+import { OrganizationsSpacesSkillsChangeProposalsModule } from './organizations/spaces/skills/change-proposals/skills-change-proposals.module';
 import { OrganizationsUsersModule } from './organizations/users/users.module';
 import { OrganizationDeploymentsModule } from './organizations/deployments/deployments.module';
 import { OrganizationTargetsModule } from './organizations/deployments/targets/targets.module';
@@ -183,6 +186,12 @@ const logger = new PackmindLogger('AppModule', LogLevel.INFO);
               {
                 path: ':spaceId/recipes',
                 module: RecipesModule,
+                children: [
+                  {
+                    path: ':recipeId/change-proposals',
+                    module: OrganizationsSpacesRecipesChangeProposalsModule,
+                  },
+                ],
               },
               {
                 path: ':spaceId/standards',
@@ -191,6 +200,10 @@ const logger = new PackmindLogger('AppModule', LogLevel.INFO);
                   {
                     path: ':standardId/rules',
                     module: OrganizationsSpacesStandardsRulesModule,
+                  },
+                  {
+                    path: ':standardId/change-proposals',
+                    module: OrganizationsSpacesStandardsChangeProposalsModule,
                   },
                 ],
               },
@@ -201,6 +214,12 @@ const logger = new PackmindLogger('AppModule', LogLevel.INFO);
               {
                 path: ':spaceId/skills',
                 module: OrganizationsSpacesSkillsModule,
+                children: [
+                  {
+                    path: ':skillId/change-proposals',
+                    module: OrganizationsSpacesSkillsChangeProposalsModule,
+                  },
+                ],
               },
               {
                 path: ':spaceId/change-proposals',

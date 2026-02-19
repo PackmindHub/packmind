@@ -2,6 +2,8 @@
 
 ## Added
 
+- Support social login thanks to WorkOS
+
 ## Changed
 
 ## Fixed

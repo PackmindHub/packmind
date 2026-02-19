@@ -14,6 +14,7 @@ import {
   CompleteUserOnboardingResponse,
   SocialProvider,
   SOCIAL_PROVIDER_DISPLAY_NAMES,
+  SignInSocialUserResponse,
 } from '@packmind/types';
 import {
   SignInUserCommand,
@@ -42,7 +43,7 @@ import { maskEmail } from '@packmind/logger';
 import { getErrorMessage } from '../shared/utils/error.utils';
 
 import { PackmindLogger } from '@packmind/logger';
-import { PackmindCommand, PackmindCommandBody, User } from '@packmind/types';
+import { PackmindCommand, PackmindCommandBody } from '@packmind/types';
 import { JwtPayload } from './JwtPayload';
 import { AuthenticatedRequest } from '@packmind/node-utils';
 
@@ -197,7 +198,6 @@ export class AuthService {
   async signInSocial(
     email: string,
     provider: SocialProvider,
-    firstName?: string,
   ): Promise<{
     accessToken: string;
     user: { id: UserId; email: string };
@@ -216,111 +216,27 @@ export class AuthService {
       },
     );
 
-    let user: User | null = await this.accountsAdapter.getUserByEmail(email);
-    let isNewUser = false;
-
-    if (!user) {
-      user = await this.accountsAdapter.createSocialLoginUser(email, provider);
-      isNewUser = true;
-      this.logger.log(
-        `New user created via social login with provider ${providerName}`,
-        {
-          userId: user.id,
-          email: maskEmail(email),
-        },
-      );
-    } else {
-      // Existing user — track provider in metadata
-      await this.accountsAdapter.addSocialProvider(user.id, provider);
-      this.logger.log(
-        `User ${user.id} logged in with provider ${providerName}`,
-        {
-          email: maskEmail(email),
-        },
-      );
-    }
-
-    let memberships = user.memberships ?? [];
-
-    // Auto-create organization for users without one (same as email signup)
-    if (memberships.length === 0) {
-      const nameBase = firstName || email.split('@')[0];
-      const orgName = `${nameBase.toLowerCase()}'s organization`;
-
-      const org = await this.accountsAdapter.createOrganization({
-        userId: user.id,
-        name: orgName,
+    const result: SignInSocialUserResponse =
+      await this.accountsAdapter.signInSocialUser({
+        email,
+        socialProvider: provider,
       });
 
-      this.logger.log('Organization auto-created for social login user', {
-        userId: user.id,
-        organizationId: org.id,
-      });
-
-      // Refresh memberships after org creation
-      const refreshedUser = await this.accountsAdapter.getUserById({
-        userId: user.id,
-      });
-      if (refreshedUser) {
-        memberships = refreshedUser.memberships ?? [];
-      }
-    }
-
-
-    let organization:
-      | { id: OrganizationId; name: string; slug: string }
-      | undefined;
-    let organizations:
-      | Array<{
-          organization: { id: OrganizationId; name: string; slug: string };
-          role: UserOrganizationRole;
-        }>
-      | undefined;
-
-    if (memberships.length === 1) {
-      const membership = memberships[0];
-      const org = await this.accountsAdapter.getOrganizationById({
-        organizationId: membership.organizationId,
-      });
-      if (org) {
-        organization = { id: org.id, name: org.name, slug: org.slug };
-      }
-    } else if (memberships.length > 1) {
-      organizations = await Promise.all(
-        memberships.map(async (membership) => {
-          const org = await this.accountsAdapter.getOrganizationById({
-            organizationId: membership.organizationId,
-          });
-          return org
-            ? {
-                organization: {
-                  id: org.id,
-                  name: org.name,
-                  slug: org.slug,
-                },
-                role: membership.role,
-              }
-            : null;
-        }),
-      ).then((orgs) =>
-        orgs.filter((o): o is NonNullable<typeof o> => o !== null),
-      );
-    }
+    const { user, organization, organizations, role, isNewUser } = result;
 
     const payload = {
       user: {
         name: user.email,
         userId: user.id,
       },
-      organization:
-        organization && memberships.length === 1
-          ? {
-              id: organization.id,
-              name: organization.name,
-              slug: organization.slug,
-              role: memberships[0].role,
-            }
-          : undefined,
+      organization: organization
+        ? {
+            id: organization.id,
+            name: organization.name,
+            slug: organization.slug,
+            role: role ?? ('admin' as UserOrganizationRole),
+          }
+        : undefined,
     };
 
     const accessToken = this.jwtService.sign(payload);
@@ -329,14 +245,26 @@ export class AuthService {
       userId: user.id,
       email: maskEmail(user.email),
       isNewUser,
-      orgCount: memberships.length,
     });
 
     return {
       accessToken,
       user: { id: user.id, email: user.email },
-      organization,
-      organizations,
+      organization: organization
+        ? {
+            id: organization.id,
+            name: organization.name,
+            slug: organization.slug,
+          }
+        : undefined,
+      organizations: organizations?.map((o) => ({
+        organization: {
+          id: o.organization.id,
+          name: o.organization.name,
+          slug: o.organization.slug,
+        },
+        role: o.role,
+      })),
       isNewUser,
     };
   }

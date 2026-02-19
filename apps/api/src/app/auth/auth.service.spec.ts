@@ -389,12 +389,7 @@ describe('AuthService - getMe method', () => {
 describe('AuthService - signInSocial method', () => {
   let mockJwtService: JwtService;
   let mockAccountsAdapter: jest.Mocked<{
-    getUserByEmail: jest.Mock;
-    getUserById: jest.Mock;
-    createSocialLoginUser: jest.Mock;
-    addSocialProvider: jest.Mock;
-    createOrganization: jest.Mock;
-    getOrganizationById: jest.Mock;
+    signInSocialUser: jest.Mock;
   }>;
   let signInSocial: (
     ...args: Parameters<AuthService['signInSocial']>
@@ -406,12 +401,7 @@ describe('AuthService - signInSocial method', () => {
     } as unknown as JwtService;
 
     mockAccountsAdapter = {
-      getUserByEmail: jest.fn(),
-      getUserById: jest.fn(),
-      createSocialLoginUser: jest.fn(),
-      addSocialProvider: jest.fn(),
-      createOrganization: jest.fn(),
-      getOrganizationById: jest.fn(),
+      signInSocialUser: jest.fn(),
     };
 
     const baseAuthService = {
@@ -434,24 +424,27 @@ describe('AuthService - signInSocial method', () => {
     let result: Awaited<ReturnType<typeof signInSocial>>;
 
     beforeEach(async () => {
-      const existingUser: User = {
-        id: createUserId('user-1'),
-        email: 'user@example.com',
-        passwordHash: 'hash',
-        active: true,
-        memberships: [
-          {
-            userId: createUserId('user-1'),
-            organizationId: createOrganizationId('org-1'),
-            role: 'admin',
-          },
-        ],
-      };
-      mockAccountsAdapter.getUserByEmail.mockResolvedValue(existingUser);
-      mockAccountsAdapter.getOrganizationById.mockResolvedValue({
-        id: createOrganizationId('org-1'),
-        name: 'Test Org',
-        slug: 'test-org',
+      mockAccountsAdapter.signInSocialUser.mockResolvedValue({
+        user: {
+          id: createUserId('user-1'),
+          email: 'user@example.com',
+          passwordHash: 'hash',
+          active: true,
+          memberships: [
+            {
+              userId: createUserId('user-1'),
+              organizationId: createOrganizationId('org-1'),
+              role: 'admin',
+            },
+          ],
+        },
+        organization: {
+          id: createOrganizationId('org-1'),
+          name: 'Test Org',
+          slug: 'test-org',
+        },
+        role: 'admin',
+        isNewUser: false,
       });
       result = await signInSocial('user@example.com', 'GoogleOAuth');
     });
@@ -472,15 +465,11 @@ describe('AuthService - signInSocial method', () => {
       expect(result.accessToken).toBe('mock-jwt-token');
     });
 
-    it('does not create a new user', () => {
-      expect(mockAccountsAdapter.createSocialLoginUser).not.toHaveBeenCalled();
-    });
-
-    it('tracks the social provider', () => {
-      expect(mockAccountsAdapter.addSocialProvider).toHaveBeenCalledWith(
-        createUserId('user-1'),
-        'GoogleOAuth',
-      );
+    it('calls signInSocialUser with correct command', () => {
+      expect(mockAccountsAdapter.signInSocialUser).toHaveBeenCalledWith({
+        email: 'user@example.com',
+        socialProvider: 'GoogleOAuth',
+      });
     });
   });
 
@@ -488,36 +477,45 @@ describe('AuthService - signInSocial method', () => {
     let result: Awaited<ReturnType<typeof signInSocial>>;
 
     beforeEach(async () => {
-      const existingUser: User = {
-        id: createUserId('user-1'),
-        email: 'user@example.com',
-        passwordHash: 'hash',
-        active: true,
-        memberships: [
+      mockAccountsAdapter.signInSocialUser.mockResolvedValue({
+        user: {
+          id: createUserId('user-1'),
+          email: 'user@example.com',
+          passwordHash: 'hash',
+          active: true,
+          memberships: [
+            {
+              userId: createUserId('user-1'),
+              organizationId: createOrganizationId('org-1'),
+              role: 'admin',
+            },
+            {
+              userId: createUserId('user-1'),
+              organizationId: createOrganizationId('org-2'),
+              role: 'member',
+            },
+          ],
+        },
+        organizations: [
           {
-            userId: createUserId('user-1'),
-            organizationId: createOrganizationId('org-1'),
+            organization: {
+              id: createOrganizationId('org-1'),
+              name: 'Org 1',
+              slug: 'org-1',
+            },
             role: 'admin',
           },
           {
-            userId: createUserId('user-1'),
-            organizationId: createOrganizationId('org-2'),
+            organization: {
+              id: createOrganizationId('org-2'),
+              name: 'Org 2',
+              slug: 'org-2',
+            },
             role: 'member',
           },
         ],
-      };
-      mockAccountsAdapter.getUserByEmail.mockResolvedValue(existingUser);
-      mockAccountsAdapter.getOrganizationById
-        .mockResolvedValueOnce({
-          id: createOrganizationId('org-1'),
-          name: 'Org 1',
-          slug: 'org-1',
-        })
-        .mockResolvedValueOnce({
-          id: createOrganizationId('org-2'),
-          name: 'Org 2',
-          slug: 'org-2',
-        });
+        isNewUser: false,
+      });
       result = await signInSocial('user@example.com', 'GoogleOAuth');
     });
 
@@ -551,167 +549,91 @@ describe('AuthService - signInSocial method', () => {
     let result: Awaited<ReturnType<typeof signInSocial>>;
 
     beforeEach(async () => {
-      const existingUser: User = {
-        id: createUserId('user-1'),
-        email: 'user@example.com',
-        passwordHash: null,
-        active: true,
-        memberships: [],
-      };
-      mockAccountsAdapter.getUserByEmail.mockResolvedValue(existingUser);
-      mockAccountsAdapter.createOrganization.mockResolvedValue({
-        id: createOrganizationId('new-org'),
-        name: "user's organization",
-        slug: 'users-organization',
-      });
-      mockAccountsAdapter.getUserById.mockResolvedValue({
-        ...existingUser,
-        memberships: [
-          {
-            userId: createUserId('user-1'),
-            organizationId: createOrganizationId('new-org'),
-            role: 'admin',
-          },
-        ],
-      });
-      mockAccountsAdapter.getOrganizationById.mockResolvedValue({
-        id: createOrganizationId('new-org'),
-        name: "user's organization",
-        slug: 'users-organization',
+      mockAccountsAdapter.signInSocialUser.mockResolvedValue({
+        user: {
+          id: createUserId('user-1'),
+          email: 'user@example.com',
+          passwordHash: null,
+          active: true,
+          memberships: [],
+        },
+        organizations: [],
+        isNewUser: false,
       });
       result = await signInSocial('user@example.com', 'GoogleOAuth');
     });
 
-    it('auto-creates an organization', () => {
-      expect(mockAccountsAdapter.createOrganization).toHaveBeenCalledWith({
-        userId: createUserId('user-1'),
-        name: "user's organization",
+    it('returns no organization', () => {
+      expect(result.organization).toBeUndefined();
+    });
+
+    it('returns empty organizations array', () => {
+      expect(result.organizations).toEqual([]);
+    });
+  });
+
+  describe('when user does not exist', () => {
+    let result: Awaited<ReturnType<typeof signInSocial>>;
+
+    const newUser: User = {
+      id: createUserId('new-user'),
+      email: 'paul@example.com',
+      passwordHash: null,
+      active: true,
+      memberships: [
+        {
+          userId: createUserId('new-user'),
+          organizationId: createOrganizationId('new-org'),
+          role: 'admin',
+        },
+      ],
+    };
+    const createdOrg = {
+      id: createOrganizationId('new-org'),
+      name: "paul's organization",
+      slug: 'pauls-organization',
+    };
+
+    beforeEach(async () => {
+      mockAccountsAdapter.signInSocialUser.mockResolvedValue({
+        user: newUser,
+        organization: createdOrg,
+        role: 'admin',
+        isNewUser: true,
+      });
+      result = await signInSocial('paul@example.com', 'GoogleOAuth');
+    });
+
+    it('returns isNewUser true', () => {
+      expect(result.isNewUser).toBe(true);
+    });
+
+    it('calls signInSocialUser with correct command', () => {
+      expect(mockAccountsAdapter.signInSocialUser).toHaveBeenCalledWith({
+        email: 'paul@example.com',
+        socialProvider: 'GoogleOAuth',
       });
     });
 
     it('returns the created organization', () => {
       expect(result.organization).toEqual({
         id: createOrganizationId('new-org'),
-        name: "user's organization",
-        slug: 'users-organization',
-      });
-    });
-  });
-
-  describe('when user does not exist', () => {
-    describe('when firstName is provided', () => {
-      let result: Awaited<ReturnType<typeof signInSocial>>;
-
-      beforeEach(async () => {
-        const newUser: User = {
-          id: createUserId('new-user'),
-          email: 'paul@example.com',
-          passwordHash: null,
-          active: true,
-          memberships: [],
-        };
-        mockAccountsAdapter.getUserByEmail.mockResolvedValueOnce(null);
-        mockAccountsAdapter.createSocialLoginUser.mockResolvedValue(newUser);
-        mockAccountsAdapter.createOrganization.mockResolvedValue({
-          id: createOrganizationId('new-org'),
-          name: "paul's organization",
-          slug: 'pauls-organization',
-        });
-        mockAccountsAdapter.getUserById.mockResolvedValue({
-          ...newUser,
-          memberships: [
-            {
-              userId: createUserId('new-user'),
-              organizationId: createOrganizationId('new-org'),
-              role: 'admin',
-            },
-          ],
-        });
-        mockAccountsAdapter.getOrganizationById.mockResolvedValue({
-          id: createOrganizationId('new-org'),
-          name: "paul's organization",
-          slug: 'pauls-organization',
-        });
-        result = await signInSocial('paul@example.com', 'GoogleOAuth', 'Paul');
-      });
-
-      it('returns isNewUser true', () => {
-        expect(result.isNewUser).toBe(true);
-      });
-
-      it('creates a new user with provider', () => {
-        expect(mockAccountsAdapter.createSocialLoginUser).toHaveBeenCalledWith(
-          'paul@example.com',
-          'GoogleOAuth',
-        );
-      });
-
-      it('auto-creates an organization using firstName', () => {
-        expect(mockAccountsAdapter.createOrganization).toHaveBeenCalledWith({
-          userId: createUserId('new-user'),
-          name: "paul's organization",
-        });
-      });
-
-      it('returns the created organization', () => {
-        expect(result.organization).toEqual({
-          id: createOrganizationId('new-org'),
-          name: "paul's organization",
-          slug: 'pauls-organization',
-        });
+        name: "paul's organization",
+        slug: 'pauls-organization',
       });
     });
 
-    describe('when firstName is not provided', () => {
-      let result: Awaited<ReturnType<typeof signInSocial>>;
-
-      beforeEach(async () => {
-        const newUser: User = {
-          id: createUserId('new-user'),
-          email: 'new@example.com',
-          passwordHash: null,
-          active: true,
-          memberships: [],
-        };
-        mockAccountsAdapter.getUserByEmail.mockResolvedValueOnce(null);
-        mockAccountsAdapter.createSocialLoginUser.mockResolvedValue(newUser);
-        mockAccountsAdapter.createOrganization.mockResolvedValue({
-          id: createOrganizationId('new-org'),
-          name: "new's organization",
-          slug: 'news-organization',
-        });
-        mockAccountsAdapter.getUserById.mockResolvedValue({
-          ...newUser,
-          memberships: [
-            {
-              userId: createUserId('new-user'),
-              organizationId: createOrganizationId('new-org'),
-              role: 'admin',
-            },
-          ],
-        });
-        mockAccountsAdapter.getOrganizationById.mockResolvedValue({
-          id: createOrganizationId('new-org'),
-          name: "new's organization",
-          slug: 'news-organization',
-        });
-        result = await signInSocial('new@example.com', 'GoogleOAuth');
-      });
-
-      it('auto-creates an organization using email local part', () => {
-        expect(mockAccountsAdapter.createOrganization).toHaveBeenCalledWith({
-          userId: createUserId('new-user'),
-          name: "new's organization",
-        });
-      });
-
-      it('returns the created organization', () => {
-        expect(result.organization).toEqual({
-          id: createOrganizationId('new-org'),
-          name: "new's organization",
-          slug: 'news-organization',
-        });
-      });
+    it('includes organization in JWT payload', () => {
+      expect(mockJwtService.sign).toHaveBeenCalledWith(
+        expect.objectContaining({
+          organization: {
+            id: createOrganizationId('new-org'),
+            name: "paul's organization",
+            slug: 'pauls-organization',
+            role: 'admin',
+          },
+        }),
+      );
     });
   });
 });

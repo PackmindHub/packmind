@@ -21,9 +21,12 @@ export function CreateOrganizationForm({
   onSuccess,
 }: CreateOrganizationFormProps) {
   const { organization } = useAuthContext();
-  const [organizationName, setOrganizationName] = useState(
-    organization?.name || '',
-  );
+
+  const getDefaultName = () => {
+    return organization?.name ?? '';
+  };
+
+  const [organizationName, setOrganizationName] = useState(getDefaultName());
   const [organizationNameError, setOrganizationNameError] = useState<
     string | undefined
   >(undefined);
@@ -77,7 +80,7 @@ export function CreateOrganizationForm({
       return;
     }
 
-    if (!organization?.id) {
+    if (!organization) {
       return;
     }
 

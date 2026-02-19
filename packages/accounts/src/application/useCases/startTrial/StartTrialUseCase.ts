@@ -81,6 +81,8 @@ export class StartTrialUseCase implements IStartTrial {
           email,
           quickStart: true,
           source: 'ui',
+          method: 'password',
+          socialProvider: 'GoogleOAuth',
         }),
       );
 

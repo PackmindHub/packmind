@@ -1,4 +1,13 @@
-import { ChangeProposalType } from '@packmind/types';
+import {
+  ChangeProposalType,
+  IApplyChangeProposalsUseCase,
+  IListChangeProposalsBySpace,
+  IListChangeProposalsByArtefact,
+  NewGateway,
+  RecipeId,
+  StandardId,
+  SkillId,
+} from '@packmind/types';
 import { PackmindGateway } from '../../../../shared/PackmindGateway';
 import {
   CreateChangeProposalParams,
@@ -22,4 +31,63 @@ export class ChangeProposalsGatewayApi
       body,
     );
   }
+
+  getGroupedChangeProposals: NewGateway<IListChangeProposalsBySpace> = async ({
+    organizationId,
+    spaceId,
+  }) => {
+    return this._api.get(
+      `/organizations/${organizationId}/spaces/${spaceId}/change-proposals/grouped`,
+    );
+  };
+
+  listChangeProposalsByRecipe: NewGateway<
+    IListChangeProposalsByArtefact<RecipeId>
+  > = async ({ organizationId, spaceId, artefactId }) => {
+    return this._api.get(
+      `/organizations/${organizationId}/spaces/${spaceId}/recipes/${artefactId}/change-proposals`,
+    );
+  };
+
+  listChangeProposalsByStandard: NewGateway<
+    IListChangeProposalsByArtefact<StandardId>
+  > = async ({ organizationId, spaceId, artefactId }) => {
+    return this._api.get(
+      `/organizations/${organizationId}/spaces/${spaceId}/standards/${artefactId}/change-proposals`,
+    );
+  };
+
+  listChangeProposalsBySkill: NewGateway<
+    IListChangeProposalsByArtefact<SkillId>
+  > = async ({ organizationId, spaceId, artefactId }) => {
+    return this._api.get(
+      `/organizations/${organizationId}/spaces/${spaceId}/skills/${artefactId}/change-proposals`,
+    );
+  };
+
+  applyRecipeChangeProposals: NewGateway<
+    IApplyChangeProposalsUseCase<RecipeId>
+  > = async ({ organizationId, spaceId, artefactId, accepted, rejected }) => {
+    return this._api.post(
+      `/organizations/${organizationId}/spaces/${spaceId}/recipes/${artefactId}/change-proposals/apply`,
+      { accepted, rejected },
+    );
+  };
+
+  applyStandardChangeProposals: NewGateway<
+    IApplyChangeProposalsUseCase<StandardId>
+  > = async ({ organizationId, spaceId, artefactId, accepted, rejected }) => {
+    return this._api.post(
+      `/organizations/${organizationId}/spaces/${spaceId}/standards/${artefactId}/change-proposals/apply`,
+      { accepted, rejected },
+    );
+  };
+
+  applySkillChangeProposals: NewGateway<IApplyChangeProposalsUseCase<SkillId>> =
+    async ({ organizationId, spaceId, artefactId, accepted, rejected }) => {
+      return this._api.post(
+        `/organizations/${organizationId}/spaces/${spaceId}/skills/${artefactId}/change-proposals/apply`,
+        { accepted, rejected },
+      );
+    };
 }

@@ -84,8 +84,8 @@ describe('OnboardingBuild', () => {
     it('renders the Install tabs', () => {
       renderWithProviders(<OnboardingBuild />);
 
-      expect(screen.getByText('Script')).toBeInTheDocument();
-      expect(screen.getByText('NPM')).toBeInTheDocument();
+      expect(screen.getByText('Script (Mac/Linux)')).toBeInTheDocument();
+      expect(screen.getByText('NPM (all OS)')).toBeInTheDocument();
     });
 
     it('renders the Initialize section', () => {

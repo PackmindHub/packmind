@@ -1,19 +1,30 @@
+import { PackmindLogger } from '@packmind/logger';
+import { PackmindEventEmitterService } from '@packmind/node-utils';
 import {
   ISignInUserUseCase,
   SignInUserCommand,
   SignInUserResponse,
+  UserSignedInEvent,
 } from '@packmind/types';
 import { UserService } from '../../services/UserService';
-import { OrganizationService } from '../../services/OrganizationService';
+import {
+  MembershipResolutionService,
+  getPrimaryOrganizationId,
+} from '../../services/MembershipResolutionService';
 import { LoginRateLimiterService } from '../../services/LoginRateLimiterService';
 import { MissingEmailError } from '../../../domain/errors/MissingEmailError';
 import { InvalidEmailOrPasswordError } from '../../../domain/errors/InvalidEmailOrPasswordError';
+import { OrganizationNotFoundError } from '../../../domain/errors/OrganizationNotFoundError';
 
 export class SignInUserUseCase implements ISignInUserUseCase {
   constructor(
     private readonly userService: UserService,
-    private readonly organizationService: OrganizationService,
+    private readonly membershipResolutionService: MembershipResolutionService,
     private readonly loginRateLimiterService: LoginRateLimiterService,
+    private readonly eventEmitterService: PackmindEventEmitterService,
+    private readonly logger: PackmindLogger = new PackmindLogger(
+      'SignInUserUseCase',
+    ),
   ) {}
 
   async execute(command: SignInUserCommand): Promise<SignInUserResponse> {
@@ -43,62 +54,34 @@ export class SignInUserUseCase implements ISignInUserUseCase {
       throw new InvalidEmailOrPasswordError();
     }
 
-    // If user has no memberships, allow them to sign in to create an organization
-    if (user.memberships.length === 0) {
-      // Successful login - clear any previous failed attempts
-      await this.loginRateLimiterService.clearAttempts(command.email);
-
-      return {
-        user,
-        organizations: [],
-      };
-    }
-
-    // If user belongs to a single organization, return the same behavior
-    if (user.memberships.length === 1) {
-      const membership = user.memberships[0];
-      const organization = await this.organizationService.getOrganizationById(
-        membership.organizationId,
-      );
-
-      if (!organization) {
-        throw new InvalidEmailOrPasswordError();
-      }
-
-      // Successful login - clear any previous failed attempts
-      await this.loginRateLimiterService.clearAttempts(command.email);
-
-      return {
-        user,
-        organization,
-        role: membership.role,
-      };
-    }
-
-    // If user belongs to multiple organizations, return the list of available organizations
-    const organizationsWithRoles = await Promise.all(
-      user.memberships.map(async (membership) => {
-        const organization = await this.organizationService.getOrganizationById(
-          membership.organizationId,
-        );
-
-        if (!organization) {
-          throw new InvalidEmailOrPasswordError();
-        }
-
-        return {
-          organization,
-          role: membership.role,
-        };
-      }),
-    );
-
     // Successful login - clear any previous failed attempts
     await this.loginRateLimiterService.clearAttempts(command.email);
 
-    return {
-      user,
-      organizations: organizationsWithRoles,
-    };
+    let resolved;
+    try {
+      resolved =
+        await this.membershipResolutionService.resolveUserOrganizations(user);
+    } catch (error) {
+      if (error instanceof OrganizationNotFoundError) {
+        throw new InvalidEmailOrPasswordError();
+      }
+      throw error;
+    }
+
+    const organizationId = getPrimaryOrganizationId(resolved);
+
+    if (organizationId) {
+      this.eventEmitterService.emit(
+        new UserSignedInEvent({
+          userId: user.id,
+          organizationId,
+          email: user.email,
+          method: 'password',
+          source: 'ui',
+        }),
+      );
+    }
+
+    return { user, ...resolved };
   }
 }

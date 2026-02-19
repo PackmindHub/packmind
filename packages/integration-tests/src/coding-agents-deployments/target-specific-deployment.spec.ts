@@ -84,9 +84,9 @@ describe('Target-Specific Deployment Integration', () => {
     const signUpResult = await testApp.accountsHexa
       .getAdapter()
       .signUpWithOrganization({
-        organizationName: 'test organization',
         email: 'testuser@packmind.com',
         password: 's3cret!@',
+        method: 'password',
       });
     user = signUpResult.user;
     organization = signUpResult.organization;
@@ -332,7 +332,7 @@ class MyService {
 
       it('includes standard name in frontmatter', () => {
         expect(deployedFile.content).toContain(
-          'name: IDE Code Quality Standards',
+          "name: 'IDE Code Quality Standards'",
         );
       });
 
@@ -810,7 +810,7 @@ class MyService {
 
       it('includes description in frontmatter', () => {
         expect(deployedFile?.content).toContain(
-          'description: JetBrains services best practices',
+          "description: 'JetBrains services best practices'",
         );
       });
 

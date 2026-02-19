@@ -110,7 +110,7 @@ describe('SignUpWithOrganizationForm', () => {
       mockUseSocialProvidersQuery.mockReturnValue({
         data: { providers: [] },
         isLoading: false,
-      } as ReturnType<typeof useSocialProvidersQuery>);
+      } as unknown as ReturnType<typeof useSocialProvidersQuery>);
 
       renderWithProviders(<SignUpWithOrganizationForm />);
     });
@@ -171,7 +171,7 @@ describe('SignUpWithOrganizationForm', () => {
       mockUseSocialProvidersQuery.mockReturnValue({
         data: { providers: [] },
         isLoading: false,
-      } as ReturnType<typeof useSocialProvidersQuery>);
+      } as unknown as ReturnType<typeof useSocialProvidersQuery>);
 
       renderWithProviders(<SignUpWithOrganizationForm />);
 
@@ -210,7 +210,7 @@ describe('SignUpWithOrganizationForm', () => {
     mockUseSocialProvidersQuery.mockReturnValue({
       data: { providers: [] },
       isLoading: false,
-    } as ReturnType<typeof useSocialProvidersQuery>);
+    } as unknown as ReturnType<typeof useSocialProvidersQuery>);
 
     renderWithProviders(<SignUpWithOrganizationForm />);
 
@@ -229,7 +229,7 @@ describe('SignUpWithOrganizationForm', () => {
     mockUseSocialProvidersQuery.mockReturnValue({
       data: { providers: [] },
       isLoading: false,
-    } as ReturnType<typeof useSocialProvidersQuery>);
+    } as unknown as ReturnType<typeof useSocialProvidersQuery>);
 
     renderWithProviders(<SignUpWithOrganizationForm />);
 
@@ -256,7 +256,7 @@ describe('SignUpWithOrganizationForm', () => {
       mockUseSocialProvidersQuery.mockReturnValue({
         data: { providers: [] },
         isLoading: false,
-      } as ReturnType<typeof useSocialProvidersQuery>);
+      } as unknown as ReturnType<typeof useSocialProvidersQuery>);
 
       renderWithProviders(<SignUpWithOrganizationForm />);
 
@@ -299,6 +299,7 @@ describe('SignUpWithOrganizationForm', () => {
           {
             email: 'test@example.com',
             password: 'password123!@',
+            method: 'password',
           },
           expect.objectContaining({
             onSuccess: expect.any(Function),
@@ -338,7 +339,7 @@ describe('SignUpWithOrganizationForm', () => {
       mockUseSocialProvidersQuery.mockReturnValue({
         data: { providers: [] },
         isLoading: false,
-      } as ReturnType<typeof useSocialProvidersQuery>);
+      } as unknown as ReturnType<typeof useSocialProvidersQuery>);
 
       renderWithProviders(<SignUpWithOrganizationForm />);
 
@@ -368,8 +369,11 @@ describe('SignUpWithOrganizationForm', () => {
         expect(mockSignUpMutation.mutate).toHaveBeenCalled();
       });
 
-      const signUpCall = mockSignUpMutation.mutate.mock.calls[0];
-      const onSuccess = signUpCall[1].onSuccess;
+      const signUpCall = jest.mocked(mockSignUpMutation.mutate).mock
+        .calls[0] as unknown[];
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const onSuccess = (signUpCall[1] as { onSuccess: (data: any) => void })
+        .onSuccess;
       onSuccess(mockSignUpResponse);
     });
 
@@ -388,8 +392,11 @@ describe('SignUpWithOrganizationForm', () => {
 
     describe('when auto-login succeeds', () => {
       beforeEach(() => {
-        const signInCall = mockSignInMutation.mutate.mock.calls[0];
-        const onSignInSuccess = signInCall[1].onSuccess;
+        const signInCall = jest.mocked(mockSignInMutation.mutate).mock
+          .calls[0] as unknown[];
+        const onSignInSuccess = (
+          signInCall[1] as { onSuccess: (data: unknown) => void }
+        ).onSuccess;
         onSignInSuccess({});
       });
 
@@ -402,8 +409,11 @@ describe('SignUpWithOrganizationForm', () => {
 
     describe('when auto-login fails', () => {
       beforeEach(() => {
-        const signInCall = mockSignInMutation.mutate.mock.calls[0];
-        const onSignInError = signInCall[1].onError;
+        const signInCall = jest.mocked(mockSignInMutation.mutate).mock
+          .calls[0] as unknown[];
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const onSignInError = (signInCall[1] as { onError: (err: any) => void })
+          .onError;
         onSignInError(new Error('Sign in failed'));
       });
 

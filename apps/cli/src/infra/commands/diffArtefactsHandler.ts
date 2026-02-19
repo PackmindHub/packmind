@@ -38,11 +38,15 @@ const CHANGE_TYPE_LABELS: Partial<Record<ChangeProposalType, string>> = {
   [ChangeProposalType.updateSkillDescription]: 'skill description changed',
   [ChangeProposalType.updateSkillPrompt]: 'skill prompt changed',
   [ChangeProposalType.updateSkillMetadata]: 'skill metadata changed',
+  [ChangeProposalType.updateSkillLicense]: 'skill license changed',
+  [ChangeProposalType.updateSkillCompatibility]: 'skill compatibility changed',
+  [ChangeProposalType.updateSkillAllowedTools]: 'skill allowed tools changed',
   [ChangeProposalType.updateSkillFileContent]: 'skill file content changed',
   [ChangeProposalType.updateSkillFilePermissions]:
     'skill file permissions changed',
   [ChangeProposalType.addSkillFile]: 'new skill file added',
   [ChangeProposalType.deleteSkillFile]: 'skill file deleted',
+  [ChangeProposalType.updateStandardName]: 'standard name changed',
 };
 
 function subGroupByChangeContent(diffs: ArtefactDiff[]): ArtefactDiff[][] {
@@ -276,7 +280,7 @@ export async function diffArtefactsHandler(
       for (const err of result.errors) {
         if (err.code === 'ChangeProposalPayloadMismatchError') {
           logErrorConsole(
-            `Failed to submit "${err.name}": ${err.artifactType ?? 'artifact'} is outdated, please run packmind-cli install to update it`,
+            `Failed to submit "${err.name}": ${err.artifactType ?? 'artifact'} is outdated, please run \`packmind-cli install\` to update it`,
           );
         } else {
           logErrorConsole(`Failed to submit "${err.name}": ${err.message}`);
