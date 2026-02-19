@@ -2,6 +2,7 @@ export type ParsedStandardMd = {
   name: string;
   description: string;
   scope: string;
+  rules: string[];
   frontmatterName?: string;
   frontmatterDescription?: string;
 };
@@ -54,17 +55,26 @@ function parsePackmindStandard(content: string): ParsedStandardMd | null {
   }
 
   const descriptionLines: string[] = [];
+  let rulesStartIndex = -1;
   for (let i = nameLineIndex + 1; i < lines.length; i++) {
-    if (lines[i].startsWith('## ')) break;
-    if (lines[i].startsWith('* ')) break;
-    if (lines[i].startsWith('- ')) break;
+    if (lines[i].startsWith('## ')) {
+      rulesStartIndex = i + 1;
+      break;
+    }
+    if (lines[i].startsWith('* ') || lines[i].startsWith('- ')) {
+      rulesStartIndex = i;
+      break;
+    }
     descriptionLines.push(lines[i]);
   }
+
+  const rules = extractRulesList(lines, rulesStartIndex);
 
   return {
     name,
     description: descriptionLines.join('\n').trim(),
     scope: '',
+    rules,
   };
 }
 
@@ -102,6 +112,27 @@ function parseCopilotStandard(content: string): ParsedStandardMd | null {
 }
 
 // --- Shared helpers ---
+
+const RULES_FALLBACK = 'No rules defined yet.';
+
+function extractRulesList(lines: string[], startIndex: number): string[] {
+  if (startIndex < 0) return [];
+  const rules: string[] = [];
+  for (let i = startIndex; i < lines.length; i++) {
+    const line = lines[i];
+    if (line.startsWith('* ') || line.startsWith('- ')) {
+      const content = line.slice(2).trim();
+      if (content && content !== RULES_FALLBACK) {
+        rules.push(content);
+      }
+    } else if (line.startsWith('Full standard is available')) {
+      break;
+    } else if (line.startsWith('## ')) {
+      break;
+    }
+  }
+  return rules;
+}
 
 function extractFrontmatter(content: string): {
   frontmatter: string;
@@ -141,9 +172,12 @@ function parseIdeStandardBody(
   }
 
   const descriptionLines: string[] = [];
+  let rulesStartIndex = -1;
   for (let i = nameLineIndex + 1; i < lines.length; i++) {
-    if (lines[i].startsWith('* ')) break;
-    if (lines[i].startsWith('- ')) break;
+    if (lines[i].startsWith('* ') || lines[i].startsWith('- ')) {
+      rulesStartIndex = i;
+      break;
+    }
     if (lines[i].startsWith('Full standard is available')) break;
     descriptionLines.push(lines[i]);
   }
@@ -153,7 +187,9 @@ function parseIdeStandardBody(
     description = description.slice(0, -2).trim();
   }
 
-  return { name, description, scope };
+  const rules = extractRulesList(lines, rulesStartIndex);
+
+  return { name, description, scope, rules };
 }
 
 function addFrontmatterFields(

@@ -1,4 +1,5 @@
-import { ChangeProposalType } from '@packmind/types';
+import { ChangeProposalType, createRuleId } from '@packmind/types';
+import * as crypto from 'crypto';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import { ArtefactDiff } from '../../../domain/useCases/IDiffArtefactsUseCase';
@@ -71,6 +72,45 @@ export class StandardDiffStrategy implements IDiffStrategy {
         artifactId: file.artifactId,
         spaceId: file.spaceId,
       });
+    }
+
+    const serverRules = new Set(serverParsed.rules);
+    const localRules = new Set(localParsed.rules);
+
+    for (const rule of serverRules) {
+      if (!localRules.has(rule)) {
+        const ruleId = createRuleId(crypto.randomUUID());
+        diffs.push({
+          filePath: file.path,
+          type: ChangeProposalType.deleteRule,
+          payload: {
+            targetId: ruleId,
+            item: { id: ruleId, content: rule },
+          },
+          artifactName: file.artifactName,
+          artifactType: file.artifactType,
+          artifactId: file.artifactId,
+          spaceId: file.spaceId,
+        });
+      }
+    }
+
+    for (const rule of localRules) {
+      if (!serverRules.has(rule)) {
+        const ruleId = createRuleId(crypto.randomUUID());
+        diffs.push({
+          filePath: file.path,
+          type: ChangeProposalType.addRule,
+          payload: {
+            targetId: ruleId,
+            item: { id: ruleId, content: rule },
+          },
+          artifactName: file.artifactName,
+          artifactType: file.artifactType,
+          artifactId: file.artifactId,
+          spaceId: file.spaceId,
+        });
+      }
     }
 
     return diffs;
