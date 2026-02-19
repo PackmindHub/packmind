@@ -41,6 +41,11 @@ export const ActiveDetectionProgramSchema = new EntitySchema<
       type: 'uuid',
       nullable: true,
     },
+    severity: {
+      type: 'varchar',
+      length: 10,
+      default: 'error',
+    },
     ...uuidSchema,
     ...timestampsSchemas,
     ...softDeleteSchemas,
