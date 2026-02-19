@@ -124,30 +124,34 @@ export const CommandForm: React.FC<ICommandFormProps> = ({
             activationMode="click"
             disabled={isPending}
             placeholder="Enter command name"
+            width="full"
           >
-            <PMEditable.Area>
-              <PMHStack gap={2} alignItems="center">
-                <PMEditable.Preview
-                  fontSize="2xl"
-                  fontWeight="bold"
-                  cursor="pointer"
-                  _hover={{ bg: 'background.tertiary' }}
-                  minW="200px"
-                  px={2}
-                  mx={-2}
-                />
-                <PMEditable.EditTrigger asChild>
-                  <PMIconButton
-                    aria-label="Edit command name"
-                    variant="ghost"
-                    size="xs"
-                  >
-                    <LuPencilLine />
-                  </PMIconButton>
-                </PMEditable.EditTrigger>
-              </PMHStack>
-              <PMEditable.Input fontSize="2xl" fontWeight="bold" px={0} />
-            </PMEditable.Area>
+            <PMHStack gap={2} alignItems="center">
+              <PMEditable.Preview
+                fontSize="2xl"
+                fontWeight="bold"
+                cursor="pointer"
+                _hover={{ bg: 'background.tertiary' }}
+                minW="200px"
+                px={2}
+                mx={-2}
+              />
+              <PMEditable.EditTrigger asChild>
+                <PMIconButton
+                  aria-label="Edit command name"
+                  variant="ghost"
+                  size="xs"
+                >
+                  <LuPencilLine />
+                </PMIconButton>
+              </PMEditable.EditTrigger>
+            </PMHStack>
+            <PMEditable.Input
+              fontSize="2xl"
+              fontWeight="bold"
+              px={0}
+              width="full"
+            />
           </PMEditable.Root>
         )}
 
