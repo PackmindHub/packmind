@@ -9,9 +9,7 @@ import {
   CreateChangeProposalCommand,
   createChangeProposalId,
   createUserId,
-  ListCommandChangeProposalsResponse,
   RecipeId,
-  ScalarUpdatePayload,
   SkillId,
   SpaceId,
   StandardId,
@@ -19,17 +17,10 @@ import {
 } from '@packmind/types';
 import { v4 as uuidv4 } from 'uuid';
 import { DataSource } from 'typeorm';
-import { ChangeProposalConflictError } from '../../domain/errors/ChangeProposalConflictError';
 import { IChangeProposalRepository } from '../../domain/repositories/IChangeProposalRepository';
-import { DiffService } from './DiffService';
 import { ChangeProposalSchema } from '../../infra/schemas/ChangeProposalSchema';
 
 const origin = 'ChangeProposalService';
-
-export type ApplyProposalResult = {
-  appliedProposal: ChangeProposal<ChangeProposalType>;
-  updatedFields: { name: string; content: string };
-};
 
 export type GroupedProposalsByArtefact = {
   standards: Map<StandardId, number>;
@@ -65,7 +56,6 @@ export class ChangeProposalService {
     private readonly repository: IChangeProposalRepository,
     private readonly dataSource: DataSource,
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
-    private readonly diffService: DiffService = new DiffService(),
   ) {}
 
   async createChangeProposal<T extends ChangeProposalType>(
@@ -130,97 +120,10 @@ export class ChangeProposalService {
     return existing;
   }
 
-  async listProposalsByArtefactId(
-    spaceId: SpaceId,
-    artefactId: string,
-    currentRecipe?: { name: string; content: string },
-  ): Promise<ListCommandChangeProposalsResponse> {
-    const changeProposals = await this.repository.findByArtefactId(
-      spaceId,
-      artefactId,
-    );
-
-    return {
-      changeProposals: changeProposals.map((proposal) => ({
-        ...proposal,
-        outdated: this.isOutdated(proposal, currentRecipe),
-      })),
-    };
-  }
-
-  private isOutdated(
-    proposal: ChangeProposal,
-    currentRecipe?: { name: string; content: string },
-  ): boolean {
-    if (proposal.status !== ChangeProposalStatus.pending || !currentRecipe) {
-      return false;
-    }
-
-    const payload = proposal.payload as ScalarUpdatePayload;
-
-    if (proposal.type === ChangeProposalType.updateCommandName) {
-      return payload.oldValue !== currentRecipe.name;
-    }
-
-    if (proposal.type === ChangeProposalType.updateCommandDescription) {
-      return this.diffService.hasConflict(
-        payload.oldValue,
-        payload.newValue,
-        currentRecipe.content,
-      );
-    }
-
-    return false;
-  }
-
   async findById(
     changeProposalId: ChangeProposalId,
   ): Promise<ChangeProposal<ChangeProposalType> | null> {
     return this.repository.findById(changeProposalId);
-  }
-
-  async rejectProposal(
-    proposal: ChangeProposal<ChangeProposalType>,
-    userId: UserId,
-  ): Promise<ChangeProposal<ChangeProposalType>> {
-    const rejectedProposal: ChangeProposal<ChangeProposalType> = {
-      ...proposal,
-      status: ChangeProposalStatus.rejected,
-      resolvedBy: userId,
-      resolvedAt: new Date(),
-      updatedAt: new Date(),
-    };
-
-    await this.repository.update(rejectedProposal);
-
-    this.logger.info('Change proposal rejected', {
-      proposalId: proposal.id,
-      artefactId: proposal.artefactId,
-    });
-
-    return rejectedProposal;
-  }
-
-  async markProposalAsApplied(
-    proposal: ChangeProposal<ChangeProposalType>,
-    userId: UserId,
-  ): Promise<ChangeProposal<ChangeProposalType>> {
-    const appliedProposal: ChangeProposal<ChangeProposalType> = {
-      ...proposal,
-      status: ChangeProposalStatus.applied,
-      resolvedBy: userId,
-      resolvedAt: new Date(),
-      updatedAt: new Date(),
-    };
-
-    await this.repository.update(appliedProposal);
-
-    this.logger.info('Change proposal marked as applied', {
-      proposalId: proposal.id,
-      artefactId: proposal.artefactId,
-    });
-
-    return appliedProposal;
   }
 
   /**
@@ -281,53 +184,6 @@ export class ChangeProposalService {
         );
       }
     });
-  }
-
-  async applyProposal(
-    proposal: ChangeProposal<ChangeProposalType>,
-    userId: UserId,
-    currentRecipe: { name: string; content: string },
-    force: boolean,
-  ): Promise<ApplyProposalResult> {
-    const payload = proposal.payload as ScalarUpdatePayload;
-    const updatedFields = { ...currentRecipe };
-
-    if (proposal.type === ChangeProposalType.updateCommandName) {
-      updatedFields.name = payload.newValue;
-    } else if (proposal.type === ChangeProposalType.updateCommandDescription) {
-      const diffResult = this.diffService.applyLineDiff(
-        payload.oldValue,
-        payload.newValue,
-        currentRecipe.content,
-      );
-
-      if (!diffResult.success) {
-        if (!force) {
-          throw new ChangeProposalConflictError(proposal.id);
-        }
-        updatedFields.content = payload.newValue;
-      } else {
-        updatedFields.content = diffResult.value;
-      }
-    }
-
-    const appliedProposal: ChangeProposal<ChangeProposalType> = {
-      ...proposal,
-      status: ChangeProposalStatus.applied,
-      resolvedBy: userId,
-      resolvedAt: new Date(),
-      updatedAt: new Date(),
-    };
-
-    await this.repository.update(appliedProposal);
-
-    this.logger.info('Change proposal applied', {
-      proposalId: proposal.id,
-      artefactId: proposal.artefactId,
-      forced: force,
-    });
-
-    return { appliedProposal, updatedFields };
   }
 
   async groupProposalsByArtefact(
