@@ -1,4 +1,5 @@
 import { Outlet, redirect } from 'react-router';
+import { ChangeProposalUpdateSubscription } from '../../src/domain/change-proposals/components/ChangeProposalUpdateSubscription';
 import type { LoaderFunctionArgs, Params } from 'react-router';
 import { queryClient } from '../../src/shared/data/queryClient';
 import { getMeQueryOptions } from '../../src/domain/accounts/api/queries/UserQueries';
@@ -138,5 +139,10 @@ async function clientLoaderWithMe(
 
 export default function SpaceProtectedLayout() {
   // Just pass through to child routes - space validation is done in loader
-  return <Outlet />;
+  return (
+    <>
+      <ChangeProposalUpdateSubscription />
+      <Outlet />
+    </>
+  );
 }

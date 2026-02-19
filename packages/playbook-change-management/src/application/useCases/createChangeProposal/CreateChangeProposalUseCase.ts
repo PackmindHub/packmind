@@ -1,5 +1,9 @@
 import { PackmindLogger } from '@packmind/logger';
-import { AbstractMemberUseCase, MemberContext } from '@packmind/node-utils';
+import {
+  AbstractMemberUseCase,
+  MemberContext,
+  SSEEventPublisher,
+} from '@packmind/node-utils';
 import {
   ChangeProposalType,
   CreateChangeProposalCommand,
@@ -61,6 +65,17 @@ export class CreateChangeProposalUseCase extends AbstractMemberUseCase<
       command,
       artefactVersion,
     );
+
+    SSEEventPublisher.publishChangeProposalUpdateEvent(
+      command.organization.id,
+      command.spaceId,
+    ).catch((error) => {
+      this.logger.error('Failed to publish change proposal update SSE event', {
+        organizationId: command.organization.id,
+        spaceId: command.spaceId,
+        error: error instanceof Error ? error.message : String(error),
+      });
+    });
 
     return { changeProposal, wasCreated: true };
   }
