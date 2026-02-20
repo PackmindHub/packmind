@@ -166,8 +166,69 @@ describe('lintHandler', () => {
       });
     });
 
+    describe('when only warning violations are found', () => {
+      it('exits with code 0', async () => {
+        const violations: LintViolation[] = [
+          {
+            file: '/project/file.ts',
+            violations: [
+              {
+                line: 1,
+                character: 0,
+                rule: 'test-rule',
+                standard: 'test',
+                severity: DetectionSeverity.WARNING,
+              },
+            ],
+          },
+        ];
+
+        mockPackmindCliHexa.lintFilesFromConfig.mockResolvedValue({
+          violations,
+        });
+
+        await lintHandler(createArgs({ path: '/project' }), deps);
+
+        expect(mockExit).toHaveBeenCalledWith(0);
+      });
+    });
+
+    describe('when mixed error and warning violations are found', () => {
+      it('exits with code 1', async () => {
+        const violations: LintViolation[] = [
+          {
+            file: '/project/file.ts',
+            violations: [
+              {
+                line: 1,
+                character: 0,
+                rule: 'error-rule',
+                standard: 'test',
+                severity: DetectionSeverity.ERROR,
+              },
+              {
+                line: 5,
+                character: 0,
+                rule: 'warning-rule',
+                standard: 'test',
+                severity: DetectionSeverity.WARNING,
+              },
+            ],
+          },
+        ];
+
+        mockPackmindCliHexa.lintFilesFromConfig.mockResolvedValue({
+          violations,
+        });
+
+        await lintHandler(createArgs({ path: '/project' }), deps);
+
+        expect(mockExit).toHaveBeenCalledWith(1);
+      });
+    });
+
     describe('--continue-on-error flag', () => {
-      describe('when violations are found and --continue-on-error is set', () => {
+      describe('when error violations are found and --continue-on-error is set', () => {
         it('exits with code 0', async () => {
           const violations: LintViolation[] = [
             {
@@ -201,6 +262,36 @@ describe('lintHandler', () => {
         it('exits with code 0', async () => {
           mockPackmindCliHexa.lintFilesFromConfig.mockResolvedValue({
             violations: [],
+          });
+
+          await lintHandler(
+            createArgs({ path: '/project', continueOnError: true }),
+            deps,
+          );
+
+          expect(mockExit).toHaveBeenCalledWith(0);
+        });
+      });
+
+      describe('when only warning violations and --continue-on-error is set', () => {
+        it('exits with code 0', async () => {
+          const violations: LintViolation[] = [
+            {
+              file: '/project/file.ts',
+              violations: [
+                {
+                  line: 1,
+                  character: 0,
+                  rule: 'test-rule',
+                  standard: 'test',
+                  severity: DetectionSeverity.WARNING,
+                },
+              ],
+            },
+          ];
+
+          mockPackmindCliHexa.lintFilesFromConfig.mockResolvedValue({
+            violations,
           });
 
           await lintHandler(

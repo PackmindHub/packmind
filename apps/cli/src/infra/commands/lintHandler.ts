@@ -1,4 +1,4 @@
-import { RuleId } from '@packmind/types';
+import { DetectionSeverity, RuleId } from '@packmind/types';
 import { PackmindCliHexa } from '../../PackmindCliHexa';
 import { LintViolation } from '../../domain/entities/LintViolation';
 import { DiffMode } from '../../domain/entities/DiffMode';
@@ -134,7 +134,11 @@ export async function lintHandler(
   const durationSeconds = (Date.now() - startedAt) / 1000;
   logInfoConsole(`Lint completed in ${durationSeconds.toFixed(2)}s`);
 
-  if (violations.length > 0 && !continueOnError) {
+  const hasErrors = violations.some((v) =>
+    v.violations.some((d) => d.severity === DetectionSeverity.ERROR),
+  );
+
+  if (hasErrors && !continueOnError) {
     exit(1);
   } else {
     exit(0);
