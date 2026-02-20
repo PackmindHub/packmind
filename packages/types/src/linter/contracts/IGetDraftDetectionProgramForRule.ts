@@ -1,6 +1,6 @@
 import { IUseCase, PackmindCommand } from '../../UseCase';
 import { RuleId } from '../../standards';
-import { DetectionProgram } from '../DetectionProgram';
+import { DetectionProgramWithSeverity } from './IGetActiveDetectionProgramForRule';
 
 export type GetDraftDetectionProgramForRuleCommand = PackmindCommand & {
   standardSlug: string;
@@ -9,7 +9,7 @@ export type GetDraftDetectionProgramForRuleCommand = PackmindCommand & {
 };
 
 export type GetDraftDetectionProgramForRuleResponse = {
-  programs: DetectionProgram[];
+  programs: DetectionProgramWithSeverity[];
   ruleContent: string;
   scope: string | null;
 };

@@ -1,3 +1,4 @@
+import { DetectionSeverity } from '@packmind/types';
 import { DiffMode } from '../../domain/entities/DiffMode';
 import { LintViolation } from '../../domain/entities/LintViolation';
 import { PackmindCliHexa } from '../../PackmindCliHexa';
@@ -144,7 +145,74 @@ describe('lintHandler', () => {
           {
             file: '/project/file.ts',
             violations: [
-              { line: 1, character: 0, rule: 'test-rule', standard: 'test' },
+              {
+                line: 1,
+                character: 0,
+                rule: 'test-rule',
+                standard: 'test',
+                severity: DetectionSeverity.ERROR,
+              },
+            ],
+          },
+        ];
+
+        mockPackmindCliHexa.lintFilesFromConfig.mockResolvedValue({
+          violations,
+        });
+
+        await lintHandler(createArgs({ path: '/project' }), deps);
+
+        expect(mockExit).toHaveBeenCalledWith(1);
+      });
+    });
+
+    describe('when only warning violations are found', () => {
+      it('exits with code 0', async () => {
+        const violations: LintViolation[] = [
+          {
+            file: '/project/file.ts',
+            violations: [
+              {
+                line: 1,
+                character: 0,
+                rule: 'test-rule',
+                standard: 'test',
+                severity: DetectionSeverity.WARNING,
+              },
+            ],
+          },
+        ];
+
+        mockPackmindCliHexa.lintFilesFromConfig.mockResolvedValue({
+          violations,
+        });
+
+        await lintHandler(createArgs({ path: '/project' }), deps);
+
+        expect(mockExit).toHaveBeenCalledWith(0);
+      });
+    });
+
+    describe('when mixed error and warning violations are found', () => {
+      it('exits with code 1', async () => {
+        const violations: LintViolation[] = [
+          {
+            file: '/project/file.ts',
+            violations: [
+              {
+                line: 1,
+                character: 0,
+                rule: 'error-rule',
+                standard: 'test',
+                severity: DetectionSeverity.ERROR,
+              },
+              {
+                line: 5,
+                character: 0,
+                rule: 'warning-rule',
+                standard: 'test',
+                severity: DetectionSeverity.WARNING,
+              },
             ],
           },
         ];
@@ -160,13 +228,19 @@ describe('lintHandler', () => {
     });
 
     describe('--continue-on-error flag', () => {
-      describe('when violations are found and --continue-on-error is set', () => {
+      describe('when error violations are found and --continue-on-error is set', () => {
         it('exits with code 0', async () => {
           const violations: LintViolation[] = [
             {
               file: '/project/file.ts',
               violations: [
-                { line: 1, character: 0, rule: 'test-rule', standard: 'test' },
+                {
+                  line: 1,
+                  character: 0,
+                  rule: 'test-rule',
+                  standard: 'test',
+                  severity: DetectionSeverity.ERROR,
+                },
               ],
             },
           ];
@@ -196,6 +270,166 @@ describe('lintHandler', () => {
           );
 
           expect(mockExit).toHaveBeenCalledWith(0);
+        });
+      });
+
+      describe('when only warning violations and --continue-on-error is set', () => {
+        it('exits with code 0', async () => {
+          const violations: LintViolation[] = [
+            {
+              file: '/project/file.ts',
+              violations: [
+                {
+                  line: 1,
+                  character: 0,
+                  rule: 'test-rule',
+                  standard: 'test',
+                  severity: DetectionSeverity.WARNING,
+                },
+              ],
+            },
+          ];
+
+          mockPackmindCliHexa.lintFilesFromConfig.mockResolvedValue({
+            violations,
+          });
+
+          await lintHandler(
+            createArgs({ path: '/project', continueOnError: true }),
+            deps,
+          );
+
+          expect(mockExit).toHaveBeenCalledWith(0);
+        });
+      });
+    });
+
+    describe('--level flag', () => {
+      const warningViolation: LintViolation = {
+        file: '/project/file.ts',
+        violations: [
+          {
+            line: 1,
+            character: 0,
+            rule: 'no-console-log',
+            standard: 'test',
+            severity: DetectionSeverity.WARNING,
+          },
+        ],
+      };
+
+      const errorViolation: LintViolation = {
+        file: '/project/other.ts',
+        violations: [
+          {
+            line: 5,
+            character: 0,
+            rule: 'prefix-interfaces',
+            standard: 'test',
+            severity: DetectionSeverity.ERROR,
+          },
+        ],
+      };
+
+      describe('when --level is "warning"', () => {
+        it('displays both warnings and errors', async () => {
+          mockPackmindCliHexa.lintFilesFromConfig.mockResolvedValue({
+            violations: [warningViolation, errorViolation],
+          });
+
+          await lintHandler(
+            createArgs({ path: '/project', level: DetectionSeverity.WARNING }),
+            deps,
+          );
+
+          expect(mockHumanLogger.logViolations).toHaveBeenCalledWith([
+            warningViolation,
+            errorViolation,
+          ]);
+        });
+
+        it('exits with code 1 when errors are present', async () => {
+          mockPackmindCliHexa.lintFilesFromConfig.mockResolvedValue({
+            violations: [warningViolation, errorViolation],
+          });
+
+          await lintHandler(
+            createArgs({ path: '/project', level: DetectionSeverity.WARNING }),
+            deps,
+          );
+
+          expect(mockExit).toHaveBeenCalledWith(1);
+        });
+      });
+
+      describe('when --level is "error"', () => {
+        it('displays only error violations', async () => {
+          mockPackmindCliHexa.lintFilesFromConfig.mockResolvedValue({
+            violations: [warningViolation, errorViolation],
+          });
+
+          await lintHandler(
+            createArgs({ path: '/project', level: DetectionSeverity.ERROR }),
+            deps,
+          );
+
+          expect(mockHumanLogger.logViolations).toHaveBeenCalledWith([
+            errorViolation,
+          ]);
+        });
+
+        it('exits with code 1 when errors are present', async () => {
+          mockPackmindCliHexa.lintFilesFromConfig.mockResolvedValue({
+            violations: [warningViolation, errorViolation],
+          });
+
+          await lintHandler(
+            createArgs({ path: '/project', level: DetectionSeverity.ERROR }),
+            deps,
+          );
+
+          expect(mockExit).toHaveBeenCalledWith(1);
+        });
+
+        it('exits with code 0 when only warnings exist (all filtered out)', async () => {
+          mockPackmindCliHexa.lintFilesFromConfig.mockResolvedValue({
+            violations: [warningViolation],
+          });
+
+          await lintHandler(
+            createArgs({ path: '/project', level: DetectionSeverity.ERROR }),
+            deps,
+          );
+
+          expect(mockExit).toHaveBeenCalledWith(0);
+        });
+
+        it('passes empty violations to logger when only warnings exist', async () => {
+          mockPackmindCliHexa.lintFilesFromConfig.mockResolvedValue({
+            violations: [warningViolation],
+          });
+
+          await lintHandler(
+            createArgs({ path: '/project', level: DetectionSeverity.ERROR }),
+            deps,
+          );
+
+          expect(mockHumanLogger.logViolations).toHaveBeenCalledWith([]);
+        });
+      });
+
+      describe('when --level is not specified', () => {
+        it('displays all violations (default behavior)', async () => {
+          mockPackmindCliHexa.lintFilesFromConfig.mockResolvedValue({
+            violations: [warningViolation, errorViolation],
+          });
+
+          await lintHandler(createArgs({ path: '/project' }), deps);
+
+          expect(mockHumanLogger.logViolations).toHaveBeenCalledWith([
+            warningViolation,
+            errorViolation,
+          ]);
         });
       });
     });

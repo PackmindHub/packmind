@@ -3,7 +3,10 @@ import {
   ExecuteSingleFileAstUseCaseResult,
   IExecuteSingleFileAstUseCase,
 } from '../../domain/useCases/IExecuteSingleFileAstUseCase';
-import { IExecuteLinterProgramsUseCase } from '@packmind/types';
+import {
+  DetectionSeverity,
+  IExecuteLinterProgramsUseCase,
+} from '@packmind/types';
 
 export class ExecuteSingleFileAstUseCase implements IExecuteSingleFileAstUseCase {
   private static readonly fallbackStandardSlug = 'adhoc-linter';
@@ -29,6 +32,7 @@ export class ExecuteSingleFileAstUseCase implements IExecuteSingleFileAstUseCase
           standardSlug: ExecuteSingleFileAstUseCase.fallbackStandardSlug,
           sourceCodeState: 'AST',
           language,
+          severity: DetectionSeverity.ERROR,
         },
       ],
     });

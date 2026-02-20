@@ -1,3 +1,5 @@
+import { DetectionSeverity } from '@packmind/types';
+
 export type LintViolation = {
   file: string;
   violations: {
@@ -5,5 +7,6 @@ export type LintViolation = {
     character: number;
     rule: string;
     standard: string;
+    severity: DetectionSeverity;
   }[];
 };

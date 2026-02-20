@@ -68,6 +68,13 @@ export function formatError(text: string): string {
 }
 
 /**
+ * Formats text as a warning (yellow).
+ */
+export function formatWarning(text: string): string {
+  return chalk.yellow(text);
+}
+
+/**
  * Formats text as bold.
  */
 export function formatBold(text: string): string {
