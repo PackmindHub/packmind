@@ -376,6 +376,7 @@ export class SkillDiffStrategy implements IDiffStrategy {
         targetId: skillFileId,
         oldValue: file.content,
         newValue: localContent,
+        isBase64: false,
       },
     };
   }
