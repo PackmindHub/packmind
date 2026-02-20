@@ -1,6 +1,6 @@
 import { PackmindLogger } from '@packmind/logger';
 import { IStandardsPort } from '@packmind/types';
-import { DetectionStatus, RuleId } from '@packmind/types';
+import { DetectionSeverity, DetectionStatus, RuleId } from '@packmind/types';
 import {
   IExecuteLinterProgramsUseCase,
   ExecuteLinterProgramsCommand,
