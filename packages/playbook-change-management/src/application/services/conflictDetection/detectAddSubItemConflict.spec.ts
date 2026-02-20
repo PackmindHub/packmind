@@ -24,9 +24,7 @@ describe('makeDetectAddSubItemConflict', () => {
       type: ChangeProposalType.addRule,
     }) as ChangeProposal<ChangeProposalType.addRule>;
     diffService = {} as jest.Mocked<DiffService>;
-    detectAddSubItemConflict = makeDetectAddSubItemConflict(() => {
-      throw new Error('...');
-    }, {});
+    detectAddSubItemConflict = makeDetectAddSubItemConflict({});
   });
 
   it('returns false if items have the same id', () => {

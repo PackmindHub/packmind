@@ -1,15 +1,16 @@
-import { ConflictDetector } from './ConflictDetector';
 import { ChangeProposalType } from '@packmind/types';
+import { ConflictDetector } from './ConflictDetector';
 import { sameProposal } from './sameProposal';
 import { sameArtefact } from './sameArtefact';
 import { isExpectedType } from './isExpectedType';
+import { sameSubTarget } from './sameSubTarget';
 
-type AddSubItemChangeProposals =
-  | ChangeProposalType.addRule
-  | ChangeProposalType.addSkillFile;
+type DeleteSubItemChangeProposals =
+  | ChangeProposalType.deleteRule
+  | ChangeProposalType.deleteSkillFile;
 
-export function makeDetectAddSubItemConflict<
-  T extends AddSubItemChangeProposals,
+export function makeDetectSubItemDeleteConflict<
+  T extends DeleteSubItemChangeProposals,
 >(
   conflictDetectorByType: Partial<{
     [K in ChangeProposalType]: ConflictDetector<T, K>;
@@ -37,17 +38,15 @@ export function makeDetectAddSubItemConflict<
   };
 }
 
-export const detectAddRuleConflict =
-  makeDetectAddSubItemConflict<ChangeProposalType.addRule>({
-    [ChangeProposalType.addRule]: (cp1, cp2) =>
-      cp1.payload.item.content === cp2.payload.item.content,
-    [ChangeProposalType.updateRule]: (cp1, cp2) => {
-      return cp1.payload.item.content === cp2.payload.newValue;
-    },
+export const detectDeleteRuleConflict =
+  makeDetectSubItemDeleteConflict<ChangeProposalType.deleteRule>({
+    [ChangeProposalType.deleteRule]: sameSubTarget,
+    [ChangeProposalType.updateRule]: sameSubTarget,
   });
 
-export const detectAddSkillFileConflict =
-  makeDetectAddSubItemConflict<ChangeProposalType.addSkillFile>({
-    [ChangeProposalType.addSkillFile]: (cp1, cp2) =>
-      cp1.payload.item.path === cp2.payload.item.path,
+export const detectDeleteSkillFileConflict =
+  makeDetectSubItemDeleteConflict<ChangeProposalType.deleteSkillFile>({
+    [ChangeProposalType.deleteSkillFile]: sameSubTarget,
+    [ChangeProposalType.updateSkillFileContent]: sameSubTarget,
+    [ChangeProposalType.updateSkillFilePermissions]: sameSubTarget,
   });
