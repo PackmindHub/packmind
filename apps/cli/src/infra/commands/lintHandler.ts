@@ -23,6 +23,7 @@ export type LintHandlerArgs = {
   continueOnError: boolean;
   continueOnMissingKey: boolean;
   diff?: DiffMode;
+  level?: DetectionSeverity;
 };
 
 export type LintHandlerDependencies = {
