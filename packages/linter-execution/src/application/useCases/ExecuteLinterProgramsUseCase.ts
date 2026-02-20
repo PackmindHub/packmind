@@ -216,6 +216,7 @@ export class ExecuteLinterProgramsUseCase implements IExecuteLinterProgramsUseCa
       character,
       rule: ruleName,
       standard: program.standardSlug,
+      severity: program.severity,
     };
   }
 

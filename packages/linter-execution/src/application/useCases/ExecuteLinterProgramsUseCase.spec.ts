@@ -79,18 +79,21 @@ describe('ExecuteLinterProgramsUseCase', () => {
           character: 0,
           rule: 'interface-rule',
           standard: 'interface-standard',
+          severity: DetectionSeverity.ERROR,
         },
         {
           line: 4,
           character: 0,
           rule: 'interface-rule',
           standard: 'interface-standard',
+          severity: DetectionSeverity.ERROR,
         },
         {
           line: 6,
           character: 2,
           rule: 'Method rule',
           standard: 'method-standard',
+          severity: DetectionSeverity.ERROR,
         },
       ]);
     });
@@ -196,6 +199,7 @@ describe('ExecuteLinterProgramsUseCase', () => {
           character: 0,
           rule: 'Raw content rule',
           standard: 'raw-standard',
+          severity: DetectionSeverity.ERROR,
         },
       ]);
     });
@@ -240,12 +244,14 @@ describe('ExecuteLinterProgramsUseCase', () => {
           character: 0,
           rule: 'Raw rule',
           standard: 'raw-standard',
+          severity: DetectionSeverity.ERROR,
         },
         {
           line: 5,
           character: 0,
           rule: 'AST rule',
           standard: 'ast-standard',
+          severity: DetectionSeverity.ERROR,
         },
       ]);
     });
@@ -325,8 +331,39 @@ describe('ExecuteLinterProgramsUseCase', () => {
         character: 0,
         rule: 'Raw rule',
         standard: 'raw-standard',
+        severity: DetectionSeverity.ERROR,
       },
     ]);
+  });
+
+  describe('when program has warning severity', () => {
+    let result: Awaited<ReturnType<ExecuteLinterProgramsUseCase['execute']>>;
+
+    beforeEach(async () => {
+      const logger = stubLogger();
+      const useCase = new ExecuteLinterProgramsUseCase(astAdapter, logger);
+      const command = buildCommand({
+        programs: [
+          {
+            code: 'function checkSourceCode(input) { return [0]; }',
+            ruleContent: 'console-log-rule',
+            standardSlug: 'logging-standard',
+            sourceCodeState: 'RAW',
+            language: ProgrammingLanguage.TYPESCRIPT,
+            severity: DetectionSeverity.WARNING,
+          },
+        ],
+      });
+      result = await useCase.execute(command);
+    });
+
+    it('includes warning severity in violations', () => {
+      expect(result.violations).toEqual([
+        expect.objectContaining({
+          severity: DetectionSeverity.WARNING,
+        }),
+      ]);
+    });
   });
 
   describe('language filtering', () => {
@@ -364,6 +401,7 @@ describe('ExecuteLinterProgramsUseCase', () => {
           character: 0,
           rule: 'TypeScript rule',
           standard: 'ts-standard',
+          severity: DetectionSeverity.ERROR,
         },
       ]);
     });
