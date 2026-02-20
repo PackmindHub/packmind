@@ -8,6 +8,11 @@ import { CommunityEditionError } from '../../domain/errors/CommunityEditionError
 import { NotLoggedInError } from '../../domain/errors/NotLoggedInError';
 import { logInfoConsole, logWarningConsole } from '../utils/consoleLogger';
 
+const SEVERITY_LEVELS: Record<DetectionSeverity, number> = {
+  [DetectionSeverity.WARNING]: 0,
+  [DetectionSeverity.ERROR]: 1,
+};
+
 export enum Loggers {
   ide = 'ide',
   human = 'human',
@@ -51,6 +56,7 @@ export async function lintHandler(
     continueOnError,
     continueOnMissingKey,
     diff,
+    level,
   } = args;
   const {
     packmindCliHexa,
@@ -128,14 +134,25 @@ export async function lintHandler(
     throw error;
   }
 
+  const filteredViolations = level
+    ? violations
+        .map((v) => ({
+          ...v,
+          violations: v.violations.filter(
+            (d) => SEVERITY_LEVELS[d.severity] >= SEVERITY_LEVELS[level],
+          ),
+        }))
+        .filter((v) => v.violations.length > 0)
+    : violations;
+
   (logger === Loggers.ide ? ideLintLogger : humanReadableLogger).logViolations(
-    violations,
+    filteredViolations,
   );
 
   const durationSeconds = (Date.now() - startedAt) / 1000;
   logInfoConsole(`Lint completed in ${durationSeconds.toFixed(2)}s`);
 
-  const hasErrors = violations.some((v) =>
+  const hasErrors = filteredViolations.some((v) =>
     v.violations.some((d) => d.severity === DetectionSeverity.ERROR),
   );
 
