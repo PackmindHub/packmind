@@ -1,15 +1,11 @@
-import { useMemo, useState } from 'react';
+import { ReactNode, useMemo, useState } from 'react';
 import {
   PMAccordion,
   PMBadge,
   PMBox,
-  PMButton,
   PMHStack,
-  PMIcon,
   PMMarkdownViewer,
-  PMSwitch,
   PMText,
-  PMTooltip,
   PMVStack,
 } from '@packmind/ui';
 import {
@@ -24,15 +20,10 @@ import {
   SkillWithFiles,
   UserId,
 } from '@packmind/types';
-import { LuCheck, LuCircleAlert, LuUndo2, LuX } from 'react-icons/lu';
 import {
   buildBlockedByAcceptedMap,
   buildProposalNumberMap,
-  getChangeProposalFieldLabel,
-  getStatusBadgeProps,
 } from '../../utils/changeProposalHelpers';
-import { ConflictWarning } from '../ChangeProposals/ConflictWarning';
-import { formatRelativeTime } from '../../utils/formatRelativeTime';
 import { ChangeProposalWithConflicts } from '../../types';
 import { buildDiffHtml, markdownDiffCss } from '../../utils/markdownDiff';
 import {
@@ -40,6 +31,7 @@ import {
   MarkdownEditorProvider,
 } from '../../../../shared/components/editor/MarkdownEditor';
 import { renderDiffText } from '../../utils/renderDiffText';
+import { ProposalReviewHeader } from '../ProposalReviewHeader';
 
 interface SkillProposalReviewPanelProps {
   selectedSkill: SkillWithFiles | undefined;
@@ -55,7 +47,78 @@ interface SkillProposalReviewPanelProps {
   onUndoPool: (proposalId: ChangeProposalId) => void;
 }
 
-function renderFileItem(file: SkillFile) {
+const markdownExtensions = ['.md', '.mdx', '.mdc'];
+
+function renderMarkdownDiffOrPreview(
+  isDiff: boolean,
+  showPreview: boolean,
+  payload: ScalarUpdatePayload,
+  currentValue: string,
+  options?: {
+    diffBoxPadding?: string;
+    previewPaddingVariant?: 'none';
+    defaultPaddingVariant?: 'none';
+  },
+) {
+  if (isDiff && !showPreview) {
+    return (
+      <PMBox padding={options?.diffBoxPadding} css={markdownDiffCss}>
+        <PMMarkdownViewer
+          htmlContent={buildDiffHtml(payload.oldValue, payload.newValue)}
+        />
+      </PMBox>
+    );
+  }
+  const value = isDiff ? payload.newValue : currentValue;
+  const paddingVariant = isDiff
+    ? options?.previewPaddingVariant
+    : options?.defaultPaddingVariant;
+  return (
+    <MarkdownEditorProvider>
+      <MarkdownEditor
+        defaultValue={value}
+        readOnly
+        paddingVariant={paddingVariant}
+      />
+    </MarkdownEditorProvider>
+  );
+}
+
+function FileContent({
+  file,
+}: {
+  file: Pick<SkillFile, 'isBase64' | 'path' | 'content'>;
+}) {
+  if (file.isBase64) {
+    return (
+      <PMText fontSize="xs" color="secondary">
+        Binary file
+      </PMText>
+    );
+  }
+  if (markdownExtensions.some((ext) => file.path.toLowerCase().endsWith(ext))) {
+    return (
+      <PMBox p={4}>
+        <PMMarkdownViewer content={file.content} />
+      </PMBox>
+    );
+  }
+  return (
+    <PMBox
+      as="pre"
+      fontSize="xs"
+      overflow="auto"
+      maxHeight="200px"
+      p={2}
+      borderRadius="sm"
+      bg="background.secondary"
+    >
+      {file.content}
+    </PMBox>
+  );
+}
+
+function FileAccordionItem({ file }: { file: SkillFile }) {
   return (
     <PMAccordion.Item
       key={file.id}
@@ -64,7 +127,7 @@ function renderFileItem(file: SkillFile) {
       border="1px solid"
       borderColor="border.primary"
     >
-      <PMAccordion.ItemTrigger cursor="pointer">
+      <PMAccordion.ItemTrigger cursor="pointer" bg="background.primary" px={2}>
         <PMAccordion.ItemIndicator />
         <PMHStack justify="space-between" width="full">
           <PMText fontSize="sm" fontWeight="semibold">
@@ -76,25 +139,157 @@ function renderFileItem(file: SkillFile) {
         </PMHStack>
       </PMAccordion.ItemTrigger>
       <PMAccordion.ItemContent>
+        <FileContent file={file} />
+      </PMAccordion.ItemContent>
+    </PMAccordion.Item>
+  );
+}
+
+function UpdatedFileContentItem({
+  file,
+  payload,
+}: {
+  file: SkillFile;
+  payload: CollectionItemUpdatePayload<SkillFileId>;
+}) {
+  return (
+    <PMAccordion.Item
+      key={file.id}
+      value={file.id}
+      borderRadius="md"
+      border="1px solid"
+      borderColor="border.primary"
+    >
+      <PMAccordion.ItemTrigger cursor="pointer" bg="background.primary" px={2}>
+        <PMAccordion.ItemIndicator />
+        <PMText fontSize="sm" fontWeight="semibold">
+          {file.path}
+        </PMText>
+      </PMAccordion.ItemTrigger>
+      <PMAccordion.ItemContent>
         {file.isBase64 ? (
-          <PMText fontSize="xs" color="secondary">
-            Binary file
+          <PMText fontSize="sm" color="secondary">
+            Binary file has changed
           </PMText>
         ) : (
-          <PMBox
-            as="pre"
-            fontSize="xs"
-            overflow="auto"
-            maxHeight="200px"
-            p={2}
-            borderRadius="sm"
-            bg="background.secondary"
-          >
-            {file.content}
+          <PMBox padding="16px" css={markdownDiffCss}>
+            <PMMarkdownViewer
+              htmlContent={buildDiffHtml(payload.oldValue, payload.newValue)}
+            />
           </PMBox>
         )}
       </PMAccordion.ItemContent>
     </PMAccordion.Item>
+  );
+}
+
+function UpdatedFilePermissionsItem({
+  file,
+  payload,
+}: {
+  file: SkillFile;
+  payload: CollectionItemUpdatePayload<SkillFileId>;
+}) {
+  return (
+    <PMAccordion.Item
+      key={file.id}
+      value={file.id}
+      borderRadius="md"
+      border="1px solid"
+      borderColor="border.primary"
+    >
+      <PMAccordion.ItemTrigger cursor="pointer" bg="background.primary" px={2}>
+        <PMAccordion.ItemIndicator />
+        <PMText fontSize="sm" fontWeight="semibold">
+          {file.path}
+        </PMText>
+      </PMAccordion.ItemTrigger>
+      <PMAccordion.ItemContent>
+        <PMHStack gap={1}>
+          <PMText fontSize="sm" fontWeight="bold">
+            Permissions:
+          </PMText>
+          <PMText fontSize="sm">
+            {renderDiffText(payload.oldValue, payload.newValue)}
+          </PMText>
+        </PMHStack>
+      </PMAccordion.ItemContent>
+    </PMAccordion.Item>
+  );
+}
+
+function DeletedFileItem({ file }: { file: SkillFile }) {
+  return (
+    <PMAccordion.Item
+      key={file.id}
+      value={file.id}
+      borderRadius="md"
+      border="1px solid"
+      borderColor="red.500"
+      bg="red.subtle"
+      opacity={0.7}
+    >
+      <PMAccordion.ItemTrigger cursor="pointer" bg="background.primary" px={2}>
+        <PMAccordion.ItemIndicator />
+        <PMText
+          fontSize="sm"
+          fontWeight="semibold"
+          textDecoration="line-through"
+        >
+          {file.path}
+        </PMText>
+      </PMAccordion.ItemTrigger>
+    </PMAccordion.Item>
+  );
+}
+
+function AddedFileItem({
+  payload,
+}: {
+  payload: CollectionItemAddPayload<Omit<SkillFile, 'skillVersionId'>>;
+}) {
+  const newFile = payload.item;
+  return (
+    <PMAccordion.Item
+      key={newFile.id}
+      value={newFile.id}
+      borderRadius="md"
+      border="1px solid"
+      borderColor="green.500"
+      bg="green.subtle"
+    >
+      <PMAccordion.ItemTrigger cursor="pointer" bg="background.primary" px={2}>
+        <PMAccordion.ItemIndicator />
+        <PMHStack justify="space-between" width="full">
+          <PMText fontSize="sm" fontWeight="semibold">
+            {newFile.path}
+          </PMText>
+          <PMBadge colorPalette="green" size="sm">
+            New
+          </PMBadge>
+        </PMHStack>
+      </PMAccordion.ItemTrigger>
+      <PMAccordion.ItemContent>
+        <FileContent file={newFile} />
+      </PMAccordion.ItemContent>
+    </PMAccordion.Item>
+  );
+}
+
+function SkillOptionalField({
+  label,
+  children,
+}: {
+  label: string;
+  children: ReactNode;
+}) {
+  return (
+    <PMVStack gap={1}>
+      <PMText fontSize="sm" fontWeight="bold" color="secondary">
+        {label}
+      </PMText>
+      {children}
+    </PMVStack>
   );
 }
 
@@ -132,33 +327,47 @@ export function SkillProposalReviewPanel({
   const files = selectedSkill?.files ?? [];
 
   if (reviewingProposal) {
-    const statusBadge = getStatusBadgeProps(reviewingProposal.status);
     const isOutdated =
       skill !== undefined &&
       reviewingProposal.artefactVersion !== skill.version;
 
-    const isNameDiff =
-      reviewingProposal.type === ChangeProposalType.updateSkillName;
-    const isDescriptionDiff =
-      reviewingProposal.type === ChangeProposalType.updateSkillDescription;
-    const isPromptDiff =
-      reviewingProposal.type === ChangeProposalType.updateSkillPrompt;
-    const isMetadataDiff =
-      reviewingProposal.type === ChangeProposalType.updateSkillMetadata;
-    const isLicenseDiff =
-      reviewingProposal.type === ChangeProposalType.updateSkillLicense;
-    const isCompatibilityDiff =
-      reviewingProposal.type === ChangeProposalType.updateSkillCompatibility;
-    const isAllowedToolsDiff =
-      reviewingProposal.type === ChangeProposalType.updateSkillAllowedTools;
-    const isAddFile =
-      reviewingProposal.type === ChangeProposalType.addSkillFile;
-    const isUpdateFileContent =
-      reviewingProposal.type === ChangeProposalType.updateSkillFileContent;
-    const isUpdateFilePermissions =
-      reviewingProposal.type === ChangeProposalType.updateSkillFilePermissions;
-    const isDeleteFile =
-      reviewingProposal.type === ChangeProposalType.deleteSkillFile;
+    const proposalTypeFlags = {
+      isNameDiff: reviewingProposal.type === ChangeProposalType.updateSkillName,
+      isDescriptionDiff:
+        reviewingProposal.type === ChangeProposalType.updateSkillDescription,
+      isPromptDiff:
+        reviewingProposal.type === ChangeProposalType.updateSkillPrompt,
+      isMetadataDiff:
+        reviewingProposal.type === ChangeProposalType.updateSkillMetadata,
+      isLicenseDiff:
+        reviewingProposal.type === ChangeProposalType.updateSkillLicense,
+      isCompatibilityDiff:
+        reviewingProposal.type === ChangeProposalType.updateSkillCompatibility,
+      isAllowedToolsDiff:
+        reviewingProposal.type === ChangeProposalType.updateSkillAllowedTools,
+      isAddFile: reviewingProposal.type === ChangeProposalType.addSkillFile,
+      isUpdateFileContent:
+        reviewingProposal.type === ChangeProposalType.updateSkillFileContent,
+      isUpdateFilePermissions:
+        reviewingProposal.type ===
+        ChangeProposalType.updateSkillFilePermissions,
+      isDeleteFile:
+        reviewingProposal.type === ChangeProposalType.deleteSkillFile,
+    } as const;
+
+    const {
+      isNameDiff,
+      isDescriptionDiff,
+      isPromptDiff,
+      isMetadataDiff,
+      isLicenseDiff,
+      isCompatibilityDiff,
+      isAllowedToolsDiff,
+      isAddFile,
+      isUpdateFileContent,
+      isUpdateFilePermissions,
+      isDeleteFile,
+    } = proposalTypeFlags;
 
     const isMarkdownDiff = isDescriptionDiff || isPromptDiff;
     const scalarPayload = reviewingProposal.payload as ScalarUpdatePayload;
@@ -188,138 +397,23 @@ export function SkillProposalReviewPanel({
 
     return (
       <PMVStack gap={4} align="stretch">
-        {/* Header card */}
-        <PMBox
-          borderRadius="md"
-          border="1px solid"
-          borderColor="border.primary"
-          p={4}
-        >
-          <PMVStack gap={3}>
-            <PMHStack justify="space-between" align="center" width="full">
-              <PMHStack gap={3} align="center">
-                {isOutdated ? (
-                  <PMTooltip label="This proposal was made on an outdated version">
-                    <PMBadge colorPalette="orange" variant="subtle" size="sm">
-                      <PMIcon>
-                        <LuCircleAlert />
-                      </PMIcon>
-                      Outdated
-                    </PMBadge>
-                  </PMTooltip>
-                ) : (
-                  <PMBadge colorPalette={statusBadge.colorPalette} size="sm">
-                    {statusBadge.label}
-                  </PMBadge>
-                )}
-                <PMText fontSize="sm" color="secondary">
-                  #{proposalNumberMap.get(reviewingProposal.id)} -{' '}
-                  {formatRelativeTime(reviewingProposal.createdAt)}
-                </PMText>
-              </PMHStack>
-              <PMHStack gap={6} align="center">
-                {isMarkdownDiff && (
-                  <PMHStack gap={2} align="center">
-                    <PMText
-                      fontSize="sm"
-                      color={showPreview ? 'faded' : 'primary'}
-                    >
-                      Diff
-                    </PMText>
-                    <PMSwitch
-                      size="sm"
-                      checked={showPreview}
-                      onCheckedChange={(e) => setShowPreview(e.checked)}
-                      css={{
-                        '& span[data-scope="switch"][data-part="control"]': {
-                          bg: 'background.primary',
-                        },
-                      }}
-                    />
-                    <PMText
-                      fontSize="sm"
-                      color={showPreview ? 'primary' : 'faded'}
-                    >
-                      Preview
-                    </PMText>
-                  </PMHStack>
-                )}
-                {acceptedProposalIds.has(reviewingProposal.id) ||
-                rejectedProposalIds.has(reviewingProposal.id) ? (
-                  <PMButton
-                    size="sm"
-                    variant="outline"
-                    onClick={() => onUndoPool(reviewingProposal.id)}
-                  >
-                    <LuUndo2 />
-                    Undo
-                  </PMButton>
-                ) : (
-                  <PMHStack gap={2}>
-                    <PMButton
-                      size="xs"
-                      variant="secondary"
-                      disabled={
-                        isOutdated ||
-                        blockedByConflictIds.has(reviewingProposal.id)
-                      }
-                      onClick={() => onPoolAccept(reviewingProposal.id)}
-                    >
-                      <LuCheck />
-                      Accept
-                    </PMButton>
-                    <PMButton
-                      size="xs"
-                      variant="secondary"
-                      onClick={() => onPoolReject(reviewingProposal.id)}
-                    >
-                      <LuX />
-                      Dismiss
-                    </PMButton>
-                  </PMHStack>
-                )}
-              </PMHStack>
-            </PMHStack>
-            {blockedByConflictIds.has(reviewingProposal.id) &&
-              (() => {
-                const acceptedIds = blockedByAcceptedMap.get(
-                  reviewingProposal.id,
-                );
-                if (!acceptedIds || acceptedIds.length === 0) return null;
-                const conflictingAcceptedNumbers = acceptedIds
-                  .map((id) => ({ id, number: proposalNumberMap.get(id) ?? 0 }))
-                  .sort((a, b) => a.number - b.number);
-                return (
-                  <ConflictWarning
-                    conflictingAcceptedNumbers={conflictingAcceptedNumbers}
-                    onSelectConflicting={onSelectProposal}
-                  />
-                );
-              })()}
-            <PMVStack gap={1} align="stretch" width="full">
-              <PMText fontWeight="bold" fontSize="sm">
-                {getChangeProposalFieldLabel(reviewingProposal.type)}
-              </PMText>
-              <PMHStack gap={1}>
-                <PMText fontWeight="bold" fontSize="sm">
-                  From
-                </PMText>
-                <PMText fontSize="sm">
-                  {userLookup.get(reviewingProposal.createdBy) ??
-                    'Unknown user'}
-                </PMText>
-              </PMHStack>
-              <PMHStack gap={1}>
-                <PMText fontWeight="bold" fontSize="sm">
-                  Base version
-                </PMText>
-                <PMText fontSize="sm">
-                  {reviewingProposal.artefactVersion}
-                </PMText>
-              </PMHStack>
-            </PMVStack>
-          </PMVStack>
-        </PMBox>
+        <ProposalReviewHeader
+          proposal={reviewingProposal}
+          isOutdated={isOutdated}
+          proposalNumberMap={proposalNumberMap}
+          acceptedProposalIds={acceptedProposalIds}
+          rejectedProposalIds={rejectedProposalIds}
+          blockedByConflictIds={blockedByConflictIds}
+          blockedByAcceptedMap={blockedByAcceptedMap}
+          userLookup={userLookup}
+          showDiffPreviewToggle={isMarkdownDiff}
+          showPreview={showPreview}
+          onPreviewChange={setShowPreview}
+          onSelectProposal={onSelectProposal}
+          onPoolAccept={onPoolAccept}
+          onPoolReject={onPoolReject}
+          onUndoPool={onUndoPool}
+        />
 
         {/* Full skill context with inline diff */}
         {skill && (
@@ -332,36 +426,22 @@ export function SkillProposalReviewPanel({
             </PMText>
 
             {/* Description */}
-            <PMVStack gap={1}>
-              {isDescriptionDiff && !showPreview ? (
-                <PMBox padding="60px 68px" css={markdownDiffCss}>
-                  <PMMarkdownViewer
-                    htmlContent={buildDiffHtml(
-                      scalarPayload.oldValue,
-                      scalarPayload.newValue,
-                    )}
-                  />
-                </PMBox>
-              ) : isDescriptionDiff && showPreview ? (
-                <MarkdownEditorProvider>
-                  <MarkdownEditor
-                    defaultValue={scalarPayload.newValue}
-                    readOnly
-                  />
-                </MarkdownEditorProvider>
-              ) : (
-                <MarkdownEditorProvider>
-                  <MarkdownEditor defaultValue={skill.description} readOnly />
-                </MarkdownEditorProvider>
+            <PMVStack gap={1} align="stretch">
+              {renderMarkdownDiffOrPreview(
+                isDescriptionDiff,
+                showPreview,
+                scalarPayload,
+                skill.description,
+                {
+                  previewPaddingVariant: 'none',
+                  defaultPaddingVariant: 'none',
+                },
               )}
             </PMVStack>
 
             {/* License (optional) */}
             {(skill.license || isLicenseDiff) && (
-              <PMVStack gap={1}>
-                <PMText fontSize="sm" fontWeight="bold" color="secondary">
-                  License
-                </PMText>
+              <SkillOptionalField label="License">
                 <PMText>
                   {isLicenseDiff
                     ? renderDiffText(
@@ -370,15 +450,12 @@ export function SkillProposalReviewPanel({
                       )
                     : skill.license}
                 </PMText>
-              </PMVStack>
+              </SkillOptionalField>
             )}
 
             {/* Compatibility (optional) */}
             {(skill.compatibility || isCompatibilityDiff) && (
-              <PMVStack gap={1}>
-                <PMText fontSize="sm" fontWeight="bold" color="secondary">
-                  Compatibility
-                </PMText>
+              <SkillOptionalField label="Compatibility">
                 <PMText>
                   {isCompatibilityDiff
                     ? renderDiffText(
@@ -387,15 +464,12 @@ export function SkillProposalReviewPanel({
                       )
                     : skill.compatibility}
                 </PMText>
-              </PMVStack>
+              </SkillOptionalField>
             )}
 
             {/* Allowed Tools (optional) */}
             {(skill.allowedTools || isAllowedToolsDiff) && (
-              <PMVStack gap={1}>
-                <PMText fontSize="sm" fontWeight="bold" color="secondary">
-                  Allowed Tools
-                </PMText>
+              <SkillOptionalField label="Allowed Tools">
                 <PMText>
                   {isAllowedToolsDiff
                     ? renderDiffText(
@@ -404,15 +478,12 @@ export function SkillProposalReviewPanel({
                       )
                     : skill.allowedTools}
                 </PMText>
-              </PMVStack>
+              </SkillOptionalField>
             )}
 
             {/* Metadata (optional) */}
             {(skill.metadata || isMetadataDiff) && (
-              <PMVStack gap={1}>
-                <PMText fontSize="sm" fontWeight="bold" color="secondary">
-                  Metadata
-                </PMText>
+              <SkillOptionalField label="Metadata">
                 <PMText>
                   {isMetadataDiff
                     ? renderDiffText(
@@ -421,21 +492,18 @@ export function SkillProposalReviewPanel({
                       )
                     : JSON.stringify(skill.metadata, null, 2)}
                 </PMText>
-              </PMVStack>
+              </SkillOptionalField>
             )}
 
-            {/* Files section */}
+            {/* SKILL.md section */}
             <PMVStack gap={2}>
               <PMText fontSize="sm" fontWeight="bold" color="secondary">
-                Files
+                SKILL.md
               </PMText>
               <PMAccordion.Root
                 collapsible
                 multiple
-                defaultValue={[
-                  ...(isPromptDiff ? ['SKILL.md'] : []),
-                  ...(targetFileId ? [targetFileId] : []),
-                ]}
+                defaultValue={['SKILL.md']}
               >
                 <PMAccordion.Item
                   value="SKILL.md"
@@ -443,198 +511,95 @@ export function SkillProposalReviewPanel({
                   border="1px solid"
                   borderColor="border.primary"
                 >
-                  <PMAccordion.ItemTrigger cursor="pointer">
+                  <PMAccordion.ItemTrigger
+                    cursor="pointer"
+                    bg="background.primary"
+                    px={2}
+                  >
                     <PMAccordion.ItemIndicator />
                     <PMText fontSize="sm" fontWeight="semibold">
                       SKILL.md
                     </PMText>
                   </PMAccordion.ItemTrigger>
                   <PMAccordion.ItemContent>
-                    {isPromptDiff && !showPreview ? (
-                      <PMBox padding="16px" css={markdownDiffCss}>
-                        <PMMarkdownViewer
-                          htmlContent={buildDiffHtml(
-                            scalarPayload.oldValue,
-                            scalarPayload.newValue,
-                          )}
-                        />
-                      </PMBox>
-                    ) : isPromptDiff && showPreview ? (
-                      <MarkdownEditorProvider>
-                        <MarkdownEditor
-                          defaultValue={scalarPayload.newValue}
-                          readOnly
-                        />
-                      </MarkdownEditorProvider>
-                    ) : (
-                      <MarkdownEditorProvider>
-                        <MarkdownEditor defaultValue={skill.prompt} readOnly />
-                      </MarkdownEditorProvider>
+                    {renderMarkdownDiffOrPreview(
+                      isPromptDiff,
+                      showPreview,
+                      scalarPayload,
+                      skill.prompt,
+                      {
+                        diffBoxPadding: '16px',
+                        defaultPaddingVariant: 'none',
+                      },
                     )}
                   </PMAccordion.ItemContent>
                 </PMAccordion.Item>
-                {files.map((file) => {
-                  if (isUpdateFileContent) {
-                    const payload =
-                      reviewingProposal.payload as CollectionItemUpdatePayload<SkillFileId>;
-                    if (file.id === payload.targetId) {
-                      return (
-                        <PMAccordion.Item
-                          key={file.id}
-                          value={file.id}
-                          borderRadius="md"
-                          border="1px solid"
-                          borderColor="border.primary"
-                        >
-                          <PMAccordion.ItemTrigger cursor="pointer">
-                            <PMAccordion.ItemIndicator />
-                            <PMText fontSize="sm" fontWeight="semibold">
-                              {file.path}
-                            </PMText>
-                          </PMAccordion.ItemTrigger>
-                          <PMAccordion.ItemContent>
-                            {file.isBase64 ? (
-                              <PMText fontSize="sm" color="secondary">
-                                Binary file has changed
-                              </PMText>
-                            ) : (
-                              <PMBox padding="16px" css={markdownDiffCss}>
-                                <PMMarkdownViewer
-                                  htmlContent={buildDiffHtml(
-                                    payload.oldValue,
-                                    payload.newValue,
-                                  )}
-                                />
-                              </PMBox>
-                            )}
-                          </PMAccordion.ItemContent>
-                        </PMAccordion.Item>
-                      );
-                    }
-                  }
-
-                  if (isUpdateFilePermissions) {
-                    const payload =
-                      reviewingProposal.payload as CollectionItemUpdatePayload<SkillFileId>;
-                    if (file.id === payload.targetId) {
-                      return (
-                        <PMAccordion.Item
-                          key={file.id}
-                          value={file.id}
-                          borderRadius="md"
-                          border="1px solid"
-                          borderColor="border.primary"
-                        >
-                          <PMAccordion.ItemTrigger cursor="pointer">
-                            <PMAccordion.ItemIndicator />
-                            <PMText fontSize="sm" fontWeight="semibold">
-                              {file.path}
-                            </PMText>
-                          </PMAccordion.ItemTrigger>
-                          <PMAccordion.ItemContent>
-                            <PMHStack gap={1}>
-                              <PMText fontSize="sm" fontWeight="bold">
-                                Permissions:
-                              </PMText>
-                              <PMText fontSize="sm">
-                                {renderDiffText(
-                                  payload.oldValue,
-                                  payload.newValue,
-                                )}
-                              </PMText>
-                            </PMHStack>
-                          </PMAccordion.ItemContent>
-                        </PMAccordion.Item>
-                      );
-                    }
-                  }
-
-                  if (isDeleteFile) {
-                    const payload =
-                      reviewingProposal.payload as CollectionItemDeletePayload<
-                        Omit<SkillFile, 'skillVersionId'>
-                      >;
-                    if (file.id === payload.targetId) {
-                      return (
-                        <PMAccordion.Item
-                          key={file.id}
-                          value={file.id}
-                          borderRadius="md"
-                          border="1px solid"
-                          borderColor="red.500"
-                          bg="red.subtle"
-                          opacity={0.7}
-                        >
-                          <PMAccordion.ItemTrigger cursor="pointer">
-                            <PMAccordion.ItemIndicator />
-                            <PMText
-                              fontSize="sm"
-                              fontWeight="semibold"
-                              textDecoration="line-through"
-                            >
-                              {file.path}
-                            </PMText>
-                          </PMAccordion.ItemTrigger>
-                        </PMAccordion.Item>
-                      );
-                    }
-                  }
-
-                  return renderFileItem(file);
-                })}
-
-                {/* Show new file for addSkillFile */}
-                {isAddFile &&
-                  (() => {
-                    const payload =
-                      reviewingProposal.payload as CollectionItemAddPayload<
-                        Omit<SkillFile, 'skillVersionId'>
-                      >;
-                    const newFile = payload.item;
-                    return (
-                      <PMAccordion.Item
-                        key={newFile.id}
-                        value={newFile.id}
-                        borderRadius="md"
-                        border="1px solid"
-                        borderColor="green.500"
-                        bg="green.subtle"
-                      >
-                        <PMAccordion.ItemTrigger cursor="pointer">
-                          <PMAccordion.ItemIndicator />
-                          <PMHStack justify="space-between" width="full">
-                            <PMText fontSize="sm" fontWeight="semibold">
-                              {newFile.path}
-                            </PMText>
-                            <PMBadge colorPalette="green" size="sm">
-                              New
-                            </PMBadge>
-                          </PMHStack>
-                        </PMAccordion.ItemTrigger>
-                        <PMAccordion.ItemContent>
-                          {newFile.isBase64 ? (
-                            <PMText fontSize="xs" color="secondary">
-                              Binary file
-                            </PMText>
-                          ) : (
-                            <PMBox
-                              as="pre"
-                              fontSize="xs"
-                              overflow="auto"
-                              maxHeight="200px"
-                              p={2}
-                              borderRadius="sm"
-                              bg="background.secondary"
-                            >
-                              {newFile.content}
-                            </PMBox>
-                          )}
-                        </PMAccordion.ItemContent>
-                      </PMAccordion.Item>
-                    );
-                  })()}
               </PMAccordion.Root>
             </PMVStack>
+
+            {/* Files section */}
+            {(files.length > 0 ||
+              isAddFile ||
+              isDeleteFile ||
+              isUpdateFileContent ||
+              isUpdateFilePermissions) && (
+              <PMVStack gap={2}>
+                <PMText fontSize="sm" fontWeight="bold" color="secondary">
+                  Files
+                </PMText>
+                <PMAccordion.Root
+                  collapsible
+                  multiple
+                  defaultValue={targetFileId ? [targetFileId] : []}
+                  spaceY={2}
+                >
+                  {files.map((file) => {
+                    if (isUpdateFileContent) {
+                      const contentPayload =
+                        reviewingProposal.payload as CollectionItemUpdatePayload<SkillFileId>;
+                      if (file.id === contentPayload.targetId)
+                        return (
+                          <UpdatedFileContentItem
+                            key={file.id}
+                            file={file}
+                            payload={contentPayload}
+                          />
+                        );
+                    }
+                    if (isUpdateFilePermissions) {
+                      const permPayload =
+                        reviewingProposal.payload as CollectionItemUpdatePayload<SkillFileId>;
+                      if (file.id === permPayload.targetId)
+                        return (
+                          <UpdatedFilePermissionsItem
+                            key={file.id}
+                            file={file}
+                            payload={permPayload}
+                          />
+                        );
+                    }
+                    if (isDeleteFile) {
+                      const deletePayload =
+                        reviewingProposal.payload as CollectionItemDeletePayload<
+                          Omit<SkillFile, 'skillVersionId'>
+                        >;
+                      if (file.id === deletePayload.targetId)
+                        return <DeletedFileItem key={file.id} file={file} />;
+                    }
+                    return <FileAccordionItem key={file.id} file={file} />;
+                  })}
+                  {isAddFile && (
+                    <AddedFileItem
+                      payload={
+                        reviewingProposal.payload as CollectionItemAddPayload<
+                          Omit<SkillFile, 'skillVersionId'>
+                        >
+                      }
+                    />
+                  )}
+                </PMAccordion.Root>
+              </PMVStack>
+            )}
           </PMVStack>
         )}
       </PMVStack>
@@ -663,79 +628,88 @@ export function SkillProposalReviewPanel({
         {skill?.name}
       </PMText>
 
-      <PMVStack gap={1} width="full">
+      <PMVStack gap={1} align="stretch" width="full">
         <MarkdownEditorProvider>
-          <MarkdownEditor defaultValue={skill?.description ?? ''} readOnly />
+          <MarkdownEditor
+            defaultValue={skill?.description ?? ''}
+            readOnly
+            paddingVariant="none"
+          />
         </MarkdownEditorProvider>
       </PMVStack>
 
       {skill?.license && (
-        <PMVStack gap={1}>
-          <PMText fontSize="sm" fontWeight="bold" color="secondary">
-            License
-          </PMText>
+        <SkillOptionalField label="License">
           <PMText>{skill.license}</PMText>
-        </PMVStack>
+        </SkillOptionalField>
       )}
 
       {skill?.compatibility && (
-        <PMVStack gap={1}>
-          <PMText fontSize="sm" fontWeight="bold" color="secondary">
-            Compatibility
-          </PMText>
+        <SkillOptionalField label="Compatibility">
           <PMText>{skill.compatibility}</PMText>
-        </PMVStack>
+        </SkillOptionalField>
       )}
 
       {skill?.allowedTools && (
-        <PMVStack gap={1}>
-          <PMText fontSize="sm" fontWeight="bold" color="secondary">
-            Allowed Tools
-          </PMText>
+        <SkillOptionalField label="Allowed Tools">
           <PMText>{skill.allowedTools}</PMText>
-        </PMVStack>
+        </SkillOptionalField>
       )}
 
       {skill?.metadata && (
-        <PMVStack gap={1}>
-          <PMText fontSize="sm" fontWeight="bold" color="secondary">
-            Metadata
-          </PMText>
+        <SkillOptionalField label="Metadata">
           <PMText>{JSON.stringify(skill.metadata, null, 2)}</PMText>
-        </PMVStack>
+        </SkillOptionalField>
       )}
 
       <PMVStack gap={2}>
-        <PMText
-          fontSize="sm"
-          fontWeight="bold"
-          color="secondary"
-          alignItems="flex-start"
-        >
-          Files
-        </PMText>
-        <PMAccordion.Root collapsible multiple>
+        <PMAccordion.Root collapsible multiple defaultValue={['SKILL.md']}>
           <PMAccordion.Item
             value="SKILL.md"
             borderRadius="md"
             border="1px solid"
             borderColor="border.primary"
           >
-            <PMAccordion.ItemTrigger cursor="pointer">
+            <PMAccordion.ItemTrigger
+              cursor="pointer"
+              bg="background.primary"
+              px={2}
+            >
               <PMAccordion.ItemIndicator />
               <PMText fontSize="sm" fontWeight="semibold">
                 SKILL.md
               </PMText>
             </PMAccordion.ItemTrigger>
-            <PMAccordion.ItemContent>
+            <PMAccordion.ItemContent p={4}>
               <MarkdownEditorProvider>
-                <MarkdownEditor defaultValue={skill?.prompt ?? ''} readOnly />
+                <MarkdownEditor
+                  defaultValue={skill?.prompt ?? ''}
+                  readOnly
+                  paddingVariant="none"
+                />
               </MarkdownEditorProvider>
             </PMAccordion.ItemContent>
           </PMAccordion.Item>
-          {files.map((file) => renderFileItem(file))}
         </PMAccordion.Root>
       </PMVStack>
+
+      {files.length > 0 && (
+        <PMVStack gap={2}>
+          <PMText
+            fontSize="sm"
+            fontWeight="bold"
+            color="secondary"
+            width="full"
+          >
+            Files
+          </PMText>
+          <PMAccordion.Root collapsible multiple spaceY={2}>
+            {files.map((file) => (
+              <FileAccordionItem key={file.id} file={file} />
+            ))}
+          </PMAccordion.Root>
+        </PMVStack>
+      )}
     </PMVStack>
   );
 }
