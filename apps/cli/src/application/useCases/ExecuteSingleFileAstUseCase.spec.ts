@@ -1,4 +1,5 @@
 import {
+  DetectionSeverity,
   IExecuteLinterProgramsUseCase,
   ProgrammingLanguage,
 } from '@packmind/types';
@@ -40,6 +41,7 @@ describe('ExecuteSingleFileAstUseCase', () => {
           standardSlug: 'adhoc-linter',
           sourceCodeState: 'AST',
           language: ProgrammingLanguage.TYPESCRIPT,
+          severity: DetectionSeverity.ERROR,
         },
       ],
     });
