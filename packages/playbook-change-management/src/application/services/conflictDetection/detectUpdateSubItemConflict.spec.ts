@@ -31,15 +31,12 @@ describe('detectUpdateSubItemConflict', () => {
   };
 
   beforeEach(() => {
-    console.log('HEHOOOO');
     changeProposal = changeProposalFactory({
       type: ChangeProposalType.updateRule,
       payload,
     }) as ChangeProposal<ChangeProposalType.updateRule>;
     diffService = {} as jest.Mocked<DiffService>;
-    detectAddSubItemConflict = makeDetectUpdateSubItemConflict(() => {
-      throw new Error('...');
-    }, {});
+    detectAddSubItemConflict = makeDetectUpdateSubItemConflict({});
   });
 
   it('returns false if both proposals have the same id', () => {
@@ -76,8 +73,9 @@ describe('detectUpdateSubItemConflict', () => {
           type: changeProposal.type,
           artefactId: changeProposal.artefactId,
           payload: {
-            ...payload,
             targetId: createRuleId('another-rule-id'),
+            oldValue: 'whatever',
+            newValue: 'some new value',
           },
         }),
         diffService,

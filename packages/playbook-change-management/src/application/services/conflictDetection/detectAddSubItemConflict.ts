@@ -1,7 +1,6 @@
 import { ConflictDetector } from './ConflictDetector';
-import { ChangeProposalPayload, ChangeProposalType } from '@packmind/types';
+import { ChangeProposalType } from '@packmind/types';
 import { sameProposal } from './sameProposal';
-import { sameType } from './sameType';
 import { sameArtefact } from './sameArtefact';
 import { isExpectedType } from './isExpectedType';
 
@@ -12,20 +11,16 @@ type AddSubItemChangeProposals =
 export function makeDetectAddSubItemConflict<
   T extends AddSubItemChangeProposals,
 >(
-  payloadSkimmer: (payload: ChangeProposalPayload<T>) => string,
-  otherTypeConflicts: Partial<{
+  conflictDetectorByType: Partial<{
     [K in ChangeProposalType]: ConflictDetector<T, K>;
   }>,
 ): ConflictDetector<T> {
   return (cp1, cp2, diffService) => {
     if (sameProposal(cp1, cp2) || !sameArtefact(cp1, cp2)) return false;
 
-    if (sameType(cp1, cp2)) {
-      return payloadSkimmer(cp1.payload) === payloadSkimmer(cp2.payload);
-    }
-    for (const key of Object.keys(otherTypeConflicts)) {
+    for (const key of Object.keys(conflictDetectorByType)) {
       const expectedType = key as ChangeProposalType;
-      const conflictDetector = otherTypeConflicts[
+      const conflictDetector = conflictDetectorByType[
         expectedType
       ] as ConflictDetector<T, typeof expectedType>;
 
@@ -43,17 +38,16 @@ export function makeDetectAddSubItemConflict<
 }
 
 export const detectAddRuleConflict =
-  makeDetectAddSubItemConflict<ChangeProposalType.addRule>(
-    (payload) => payload.item.content,
-    {
-      [ChangeProposalType.updateRule]: (cp1, cp2) => {
-        return cp1.payload.item.content === cp2.payload.newValue;
-      },
+  makeDetectAddSubItemConflict<ChangeProposalType.addRule>({
+    [ChangeProposalType.addRule]: (cp1, cp2) =>
+      cp1.payload.item.content === cp2.payload.item.content,
+    [ChangeProposalType.updateRule]: (cp1, cp2) => {
+      return cp1.payload.item.content === cp2.payload.newValue;
     },
-  );
+  });
 
 export const detectAddSkillFileConflict =
-  makeDetectAddSubItemConflict<ChangeProposalType.addSkillFile>(
-    (payload) => payload.item.path,
-    {},
-  );
+  makeDetectAddSubItemConflict<ChangeProposalType.addSkillFile>({
+    [ChangeProposalType.addSkillFile]: (cp1, cp2) =>
+      cp1.payload.item.path === cp2.payload.item.path,
+  });

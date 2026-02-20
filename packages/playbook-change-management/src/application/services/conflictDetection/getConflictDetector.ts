@@ -11,6 +11,10 @@ import {
   detectUpdateSkillFileContentConflict,
   detectUpdateSkillPermissionsContentConflict,
 } from './detectUpdateSubItemConflict';
+import {
+  detectDeleteRuleConflict,
+  detectDeleteSkillFileConflict,
+} from './detectSubItemDeleteConflict';
 
 type ConflictDetectorMap = {
   [K in ChangeProposalType]: ConflictDetector<K>;
@@ -24,7 +28,7 @@ const conflictDetectors: ConflictDetectorMap = {
   [ChangeProposalType.updateStandardScope]: detectSingleLineConflict,
   [ChangeProposalType.addRule]: detectAddRuleConflict,
   [ChangeProposalType.updateRule]: detectUpdateRuleConflict,
-  [ChangeProposalType.deleteRule]: () => false,
+  [ChangeProposalType.deleteRule]: detectDeleteRuleConflict,
   [ChangeProposalType.updateSkillName]: detectSingleLineConflict,
   [ChangeProposalType.updateSkillDescription]: detectMultiLineConflict,
   [ChangeProposalType.updateSkillPrompt]: detectMultiLineConflict,
@@ -37,7 +41,7 @@ const conflictDetectors: ConflictDetectorMap = {
     detectUpdateSkillFileContentConflict,
   [ChangeProposalType.updateSkillFilePermissions]:
     detectUpdateSkillPermissionsContentConflict,
-  [ChangeProposalType.deleteSkillFile]: () => false,
+  [ChangeProposalType.deleteSkillFile]: detectDeleteSkillFileConflict,
 };
 
 export function getConflictDetector<T extends ChangeProposalType>(

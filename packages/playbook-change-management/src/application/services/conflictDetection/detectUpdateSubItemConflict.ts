@@ -15,26 +15,22 @@ type UpdateSubItemChangeProposals =
 export function makeDetectUpdateSubItemConflict<
   T extends UpdateSubItemChangeProposals,
 >(
-  hasConflicts: ConflictDetector<T, T>,
-  otherTypeConflicts: Partial<{
+  conflictDetectorByType: Partial<{
     [K in ChangeProposalType]: ConflictDetector<T, K>;
   }>,
 ): ConflictDetector<T> {
   return (cp1, cp2, diffService) => {
     if (sameProposal(cp1, cp2) || !sameArtefact(cp1, cp2)) return false;
 
-    if (sameType(cp1, cp2)) {
-      if (cp1.payload.targetId !== cp2.payload.targetId) {
-        return false;
-      }
-      return hasConflicts(cp1, cp2, diffService);
-    }
-
-    for (const key of Object.keys(otherTypeConflicts)) {
+    for (const key of Object.keys(conflictDetectorByType)) {
       const expectedType = key as ChangeProposalType;
-      const conflictDetector = otherTypeConflicts[
+      const conflictDetector = conflictDetectorByType[
         expectedType
       ] as ConflictDetector<T, typeof expectedType>;
+
+      if (sameType(cp1, cp2) && cp1.payload.targetId !== cp2.payload.targetId) {
+        return false;
+      }
 
       if (
         conflictDetector &&
@@ -50,31 +46,27 @@ export function makeDetectUpdateSubItemConflict<
 }
 
 export const detectUpdateRuleConflict =
-  makeDetectUpdateSubItemConflict<ChangeProposalType.updateRule>(
-    detectSingleLineConflict,
-    {
-      [ChangeProposalType.addRule]: (cp1, cp2) => {
-        return cp1.payload.newValue === cp2.payload.item.content;
-      },
-      [ChangeProposalType.deleteRule]: (cp1, cp2) => {
-        return cp1.payload.targetId === cp2.payload.targetId;
-      },
+  makeDetectUpdateSubItemConflict<ChangeProposalType.updateRule>({
+    [ChangeProposalType.updateRule]: detectSingleLineConflict,
+    [ChangeProposalType.addRule]: (cp1, cp2) => {
+      return cp1.payload.newValue === cp2.payload.item.content;
     },
-  );
+    [ChangeProposalType.deleteRule]: (cp1, cp2) => {
+      return cp1.payload.targetId === cp2.payload.targetId;
+    },
+  });
 
 export const detectUpdateSkillFileContentConflict =
-  makeDetectUpdateSubItemConflict<ChangeProposalType.updateSkillFileContent>(
-    detectMultiLineConflict,
-    {
-      [ChangeProposalType.deleteSkillFile]: (cp1, cp2) =>
-        cp1.payload.targetId === cp2.payload.targetId,
-    },
-  );
+  makeDetectUpdateSubItemConflict<ChangeProposalType.updateSkillFileContent>({
+    [ChangeProposalType.updateSkillFileContent]: detectMultiLineConflict,
+    [ChangeProposalType.deleteSkillFile]: (cp1, cp2) =>
+      cp1.payload.targetId === cp2.payload.targetId,
+  });
 
 export const detectUpdateSkillPermissionsContentConflict =
   makeDetectUpdateSubItemConflict<ChangeProposalType.updateSkillFilePermissions>(
-    detectSingleLineConflict,
     {
+      [ChangeProposalType.updateSkillFilePermissions]: detectSingleLineConflict,
       [ChangeProposalType.deleteSkillFile]: (cp1, cp2) =>
         cp1.payload.targetId === cp2.payload.targetId,
     },
