@@ -1,0 +1,91 @@
+import { AbstractApplyChangeProposals } from './AbstractApplyChangeProposals';
+import {
+  ChangeProposal,
+  ChangeProposalType,
+  IRecipesPort,
+  OrganizationId,
+  RecipeVersion,
+  SpaceId,
+  UserId,
+} from '@packmind/types';
+import { isExpectedChangeProposalType } from '../../utils/isExpectedChangeProposalType';
+import { DiffService } from '../../services/DiffService';
+import { ChangeProposalConflictError } from '../../../domain/errors';
+
+export class ApplyCommandChangeProposals extends AbstractApplyChangeProposals<RecipeVersion> {
+  constructor(
+    private readonly diffService: DiffService,
+    private recipesPort: IRecipesPort,
+  ) {
+    super();
+  }
+
+  protected applyChangeProposal(
+    source: RecipeVersion,
+    changeProposal: ChangeProposal,
+  ): RecipeVersion {
+    if (
+      isExpectedChangeProposalType(
+        changeProposal,
+        ChangeProposalType.updateCommandName,
+      )
+    ) {
+      return {
+        ...source,
+        name: changeProposal.payload.newValue,
+      };
+    }
+
+    if (
+      isExpectedChangeProposalType(
+        changeProposal,
+        ChangeProposalType.updateCommandDescription,
+      )
+    ) {
+      const diffResult = this.diffService.applyLineDiff(
+        changeProposal.payload.oldValue,
+        changeProposal.payload.newValue,
+        source.content,
+      );
+
+      if (!diffResult.success) {
+        throw new ChangeProposalConflictError(changeProposal.id);
+      }
+
+      return {
+        ...source,
+        content: diffResult.value,
+      };
+    }
+    throw new Error('Method not implemented.');
+  }
+
+  async saveNewVersion(
+    version: RecipeVersion,
+    userId: UserId,
+    spaceId: SpaceId,
+    organizationId: OrganizationId,
+  ): Promise<RecipeVersion> {
+    const updateResult = await this.recipesPort.updateRecipeFromUI({
+      name: version.name,
+      content: version.content,
+      recipeId: version.recipeId,
+      userId,
+      spaceId,
+      organizationId,
+    });
+
+    const newVersion = await this.recipesPort.getRecipeVersion(
+      updateResult.recipe.id,
+      updateResult.recipe.version,
+    );
+
+    if (!newVersion) {
+      throw new Error(
+        `Failed to retrieve recipe version ${updateResult.recipe.version} for recipe ${updateResult.recipe.id}`,
+      );
+    }
+
+    return newVersion;
+  }
+}

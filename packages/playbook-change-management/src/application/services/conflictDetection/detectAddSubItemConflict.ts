@@ -2,7 +2,7 @@ import { ConflictDetector } from './ConflictDetector';
 import { ChangeProposalType } from '@packmind/types';
 import { sameProposal } from './sameProposal';
 import { sameArtefact } from './sameArtefact';
-import { isExpectedType } from './isExpectedType';
+import { isExpectedChangeProposalType } from '../../utils/isExpectedChangeProposalType';
 
 type AddSubItemChangeProposals =
   | ChangeProposalType.addRule
@@ -26,7 +26,7 @@ export function makeDetectAddSubItemConflict<
 
       if (
         conflictDetector &&
-        isExpectedType(cp2, expectedType) &&
+        isExpectedChangeProposalType(cp2, expectedType) &&
         conflictDetector(cp1, cp2, diffService)
       ) {
         return true;

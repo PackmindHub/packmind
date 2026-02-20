@@ -3,7 +3,7 @@ import { ConflictDetector } from './ConflictDetector';
 import { sameProposal } from './sameProposal';
 import { sameArtefact } from './sameArtefact';
 import { sameType } from './sameType';
-import { isExpectedType } from './isExpectedType';
+import { isExpectedChangeProposalType } from '../../utils/isExpectedChangeProposalType';
 import { detectSingleLineConflict } from './detectSingleLineConflict';
 import { detectMultiLineConflict } from './detectMultiLineConflict';
 import { sameSubTarget } from './sameSubTarget';
@@ -35,7 +35,7 @@ export function makeDetectUpdateSubItemConflict<
 
       if (
         conflictDetector &&
-        isExpectedType(cp2, expectedType) &&
+        isExpectedChangeProposalType(cp2, expectedType) &&
         conflictDetector(cp1, cp2, diffService)
       ) {
         return true;

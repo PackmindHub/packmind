@@ -2,7 +2,7 @@ import { ChangeProposalType } from '@packmind/types';
 import { ConflictDetector } from './ConflictDetector';
 import { sameProposal } from './sameProposal';
 import { sameArtefact } from './sameArtefact';
-import { isExpectedType } from './isExpectedType';
+import { isExpectedChangeProposalType } from '../../utils/isExpectedChangeProposalType';
 import { sameSubTarget } from './sameSubTarget';
 
 type DeleteSubItemChangeProposals =
@@ -27,7 +27,7 @@ export function makeDetectSubItemDeleteConflict<
 
       if (
         conflictDetector &&
-        isExpectedType(cp2, expectedType) &&
+        isExpectedChangeProposalType(cp2, expectedType) &&
         conflictDetector(cp1, cp2, diffService)
       ) {
         return true;
