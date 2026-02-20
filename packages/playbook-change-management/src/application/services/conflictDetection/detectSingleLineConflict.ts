@@ -12,7 +12,9 @@ type SingleLineChangeProposals =
   | ChangeProposalType.updateSkillCompatibility
   | ChangeProposalType.updateSkillLicense
   | ChangeProposalType.updateSkillAllowedTools
-  | ChangeProposalType.updateSkillMetadata;
+  | ChangeProposalType.updateSkillMetadata
+  | ChangeProposalType.updateRule
+  | ChangeProposalType.updateSkillFilePermissions;
 
 export const detectSingleLineConflict: ConflictDetector<
   SingleLineChangeProposals

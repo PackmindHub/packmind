@@ -8,7 +8,8 @@ type MultiLineChangeProposals =
   | ChangeProposalType.updateCommandDescription
   | ChangeProposalType.updateSkillDescription
   | ChangeProposalType.updateStandardDescription
-  | ChangeProposalType.updateSkillPrompt;
+  | ChangeProposalType.updateSkillPrompt
+  | ChangeProposalType.updateSkillFileContent;
 
 export const detectMultiLineConflict: ConflictDetector<
   MultiLineChangeProposals

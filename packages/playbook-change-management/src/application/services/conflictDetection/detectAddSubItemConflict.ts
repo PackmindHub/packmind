@@ -21,22 +21,20 @@ export function makeDetectAddSubItemConflict<
     if (sameProposal(cp1, cp2) || !sameArtefact(cp1, cp2)) return false;
 
     if (sameType(cp1, cp2)) {
-      if (payloadSkimmer(cp1.payload) === payloadSkimmer(cp2.payload))
-        return true;
-    } else {
-      for (const key of Object.keys(otherTypeConflicts)) {
-        const expectedType = key as ChangeProposalType;
-        const conflictDetector = otherTypeConflicts[
-          expectedType
-        ] as ConflictDetector<T, typeof expectedType>;
+      return payloadSkimmer(cp1.payload) === payloadSkimmer(cp2.payload);
+    }
+    for (const key of Object.keys(otherTypeConflicts)) {
+      const expectedType = key as ChangeProposalType;
+      const conflictDetector = otherTypeConflicts[
+        expectedType
+      ] as ConflictDetector<T, typeof expectedType>;
 
-        if (
-          conflictDetector &&
-          isExpectedType(cp2, expectedType) &&
-          conflictDetector(cp1, cp2, diffService)
-        ) {
-          return true;
-        }
+      if (
+        conflictDetector &&
+        isExpectedType(cp2, expectedType) &&
+        conflictDetector(cp1, cp2, diffService)
+      ) {
+        return true;
       }
     }
 
