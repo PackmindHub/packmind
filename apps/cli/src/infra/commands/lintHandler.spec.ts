@@ -303,6 +303,136 @@ describe('lintHandler', () => {
         });
       });
     });
+
+    describe('--level flag', () => {
+      const warningViolation: LintViolation = {
+        file: '/project/file.ts',
+        violations: [
+          {
+            line: 1,
+            character: 0,
+            rule: 'no-console-log',
+            standard: 'test',
+            severity: DetectionSeverity.WARNING,
+          },
+        ],
+      };
+
+      const errorViolation: LintViolation = {
+        file: '/project/other.ts',
+        violations: [
+          {
+            line: 5,
+            character: 0,
+            rule: 'prefix-interfaces',
+            standard: 'test',
+            severity: DetectionSeverity.ERROR,
+          },
+        ],
+      };
+
+      describe('when --level is "warning"', () => {
+        it('displays both warnings and errors', async () => {
+          mockPackmindCliHexa.lintFilesFromConfig.mockResolvedValue({
+            violations: [warningViolation, errorViolation],
+          });
+
+          await lintHandler(
+            createArgs({ path: '/project', level: DetectionSeverity.WARNING }),
+            deps,
+          );
+
+          expect(mockHumanLogger.logViolations).toHaveBeenCalledWith([
+            warningViolation,
+            errorViolation,
+          ]);
+        });
+
+        it('exits with code 1 when errors are present', async () => {
+          mockPackmindCliHexa.lintFilesFromConfig.mockResolvedValue({
+            violations: [warningViolation, errorViolation],
+          });
+
+          await lintHandler(
+            createArgs({ path: '/project', level: DetectionSeverity.WARNING }),
+            deps,
+          );
+
+          expect(mockExit).toHaveBeenCalledWith(1);
+        });
+      });
+
+      describe('when --level is "error"', () => {
+        it('displays only error violations', async () => {
+          mockPackmindCliHexa.lintFilesFromConfig.mockResolvedValue({
+            violations: [warningViolation, errorViolation],
+          });
+
+          await lintHandler(
+            createArgs({ path: '/project', level: DetectionSeverity.ERROR }),
+            deps,
+          );
+
+          expect(mockHumanLogger.logViolations).toHaveBeenCalledWith([
+            errorViolation,
+          ]);
+        });
+
+        it('exits with code 1 when errors are present', async () => {
+          mockPackmindCliHexa.lintFilesFromConfig.mockResolvedValue({
+            violations: [warningViolation, errorViolation],
+          });
+
+          await lintHandler(
+            createArgs({ path: '/project', level: DetectionSeverity.ERROR }),
+            deps,
+          );
+
+          expect(mockExit).toHaveBeenCalledWith(1);
+        });
+
+        it('exits with code 0 when only warnings exist (all filtered out)', async () => {
+          mockPackmindCliHexa.lintFilesFromConfig.mockResolvedValue({
+            violations: [warningViolation],
+          });
+
+          await lintHandler(
+            createArgs({ path: '/project', level: DetectionSeverity.ERROR }),
+            deps,
+          );
+
+          expect(mockExit).toHaveBeenCalledWith(0);
+        });
+
+        it('passes empty violations to logger when only warnings exist', async () => {
+          mockPackmindCliHexa.lintFilesFromConfig.mockResolvedValue({
+            violations: [warningViolation],
+          });
+
+          await lintHandler(
+            createArgs({ path: '/project', level: DetectionSeverity.ERROR }),
+            deps,
+          );
+
+          expect(mockHumanLogger.logViolations).toHaveBeenCalledWith([]);
+        });
+      });
+
+      describe('when --level is not specified', () => {
+        it('displays all violations (default behavior)', async () => {
+          mockPackmindCliHexa.lintFilesFromConfig.mockResolvedValue({
+            violations: [warningViolation, errorViolation],
+          });
+
+          await lintHandler(createArgs({ path: '/project' }), deps);
+
+          expect(mockHumanLogger.logViolations).toHaveBeenCalledWith([
+            warningViolation,
+            errorViolation,
+          ]);
+        });
+      });
+    });
   });
 
   describe('logger selection', () => {

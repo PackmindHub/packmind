@@ -175,6 +175,6 @@ export const lintCommand = command({
       exit: (code: number) => process.exit(code),
     };
 
-    await lintHandler({ ...args, diff, level: args.level }, deps);
+    await lintHandler({ ...args, diff }, deps);
   },
 });
