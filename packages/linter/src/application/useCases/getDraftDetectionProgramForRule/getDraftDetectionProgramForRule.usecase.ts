@@ -1,8 +1,9 @@
 import { LogLevel, PackmindLogger } from '@packmind/logger';
-import { OrganizationId } from '@packmind/types';
-import { IStandardsPort } from '@packmind/types';
-import { stringToProgrammingLanguage } from '@packmind/types';
 import {
+  OrganizationId,
+  IStandardsPort,
+  stringToProgrammingLanguage,
+  DetectionSeverity,
   GetDraftDetectionProgramForRuleCommand,
   GetDraftDetectionProgramForRuleResponse,
   IGetDraftDetectionProgramForRule,
@@ -87,7 +88,7 @@ export class GetDraftDetectionProgramForRuleUseCase implements IGetDraftDetectio
           .filter((p) => p.draftDetectionProgram !== null)
           .map((p) => ({
             program: p.draftDetectionProgram!,
-            severity: p.severity,
+            severity: p.severity ?? DetectionSeverity.ERROR,
           }));
 
       // Filter by language if specified

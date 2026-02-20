@@ -12,6 +12,7 @@ import {
   createActiveDetectionProgramId,
   createDetectionProgramId,
   DetectionModeEnum,
+  DetectionSeverity,
   GetActiveDetectionProgramForRuleCommand,
 } from '@packmind/types';
 import { stubLogger } from '@packmind/test-utils';
@@ -181,16 +182,22 @@ describe('GetActiveDetectionProgramForRuleUseCase', () => {
         expect(result.programs).toHaveLength(2);
       });
 
-      it('returns first active program matching javascript', async () => {
+      it('returns first active program matching javascript with severity', async () => {
         const result = await useCase.execute(command);
 
-        expect(result.programs[0].program).toEqual(activeProgram1);
+        expect(result.programs[0]).toEqual({
+          program: activeProgram1,
+          severity: DetectionSeverity.ERROR,
+        });
       });
 
-      it('returns second active program matching typescript', async () => {
+      it('returns second active program matching typescript with severity', async () => {
         const result = await useCase.execute(command);
 
-        expect(result.programs[1].program).toEqual(activeProgram2);
+        expect(result.programs[1]).toEqual({
+          program: activeProgram2,
+          severity: DetectionSeverity.ERROR,
+        });
       });
 
       it('returns scope from existing standard', async () => {
@@ -636,10 +643,13 @@ describe('GetActiveDetectionProgramForRuleUseCase', () => {
         expect(result.programs).toHaveLength(1);
       });
 
-      it('returns the typescript active program', async () => {
+      it('returns the typescript active program with severity', async () => {
         const result = await useCase.execute(command);
 
-        expect(result.programs[0].program).toEqual(tsActive);
+        expect(result.programs[0]).toEqual({
+          program: tsActive,
+          severity: DetectionSeverity.ERROR,
+        });
       });
 
       it('returns program with TypeScript language', async () => {
@@ -724,10 +734,13 @@ describe('GetActiveDetectionProgramForRuleUseCase', () => {
           expect(result.programs).toHaveLength(1);
         });
 
-        it('returns the active program', async () => {
+        it('returns the active program with severity', async () => {
           const result = await useCase.execute(command);
 
-          expect(result.programs[0].program).toEqual(activeProgram);
+          expect(result.programs[0]).toEqual({
+            program: activeProgram,
+            severity: DetectionSeverity.ERROR,
+          });
         });
 
         it('returns the JavaScript active program', async () => {

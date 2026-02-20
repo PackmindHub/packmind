@@ -12,6 +12,7 @@ import {
   createActiveDetectionProgramId,
   createDetectionProgramId,
   DetectionModeEnum,
+  DetectionSeverity,
   GetDraftDetectionProgramForRuleCommand,
   GetDraftDetectionProgramForRuleResponse,
 } from '@packmind/types';
@@ -169,12 +170,18 @@ describe('GetDraftDetectionProgramForRuleUseCase', () => {
           expect(result.programs).toHaveLength(2);
         });
 
-        it('returns first draft program correctly', () => {
-          expect(result.programs[0].program).toEqual(draftProgram1);
+        it('returns first draft program with severity', () => {
+          expect(result.programs[0]).toEqual({
+            program: draftProgram1,
+            severity: DetectionSeverity.ERROR,
+          });
         });
 
-        it('returns second draft program correctly', () => {
-          expect(result.programs[1].program).toEqual(draftProgram2);
+        it('returns second draft program with severity', () => {
+          expect(result.programs[1]).toEqual({
+            program: draftProgram2,
+            severity: DetectionSeverity.ERROR,
+          });
         });
 
         it('returns correct scope from standard', () => {
@@ -596,8 +603,11 @@ describe('GetDraftDetectionProgramForRuleUseCase', () => {
         expect(result.programs).toHaveLength(1);
       });
 
-      it('returns the TypeScript draft program', () => {
-        expect(result.programs[0].program).toEqual(tsDraft);
+      it('returns the TypeScript draft program with severity', () => {
+        expect(result.programs[0]).toEqual({
+          program: tsDraft,
+          severity: DetectionSeverity.ERROR,
+        });
       });
 
       it('returns program with TypeScript language', () => {
@@ -676,8 +686,11 @@ describe('GetDraftDetectionProgramForRuleUseCase', () => {
           expect(result.programs).toHaveLength(1);
         });
 
-        it('returns the draft program', () => {
-          expect(result.programs[0].program).toEqual(draftProgram);
+        it('returns the draft program with severity', () => {
+          expect(result.programs[0]).toEqual({
+            program: draftProgram,
+            severity: DetectionSeverity.ERROR,
+          });
         });
 
         it('returns program with TypeScript language', () => {
