@@ -1,16 +1,5 @@
 import { useMemo, useState } from 'react';
-import {
-  PMBadge,
-  PMBox,
-  PMButton,
-  PMHStack,
-  PMIcon,
-  PMMarkdownViewer,
-  PMSwitch,
-  PMText,
-  PMTooltip,
-  PMVStack,
-} from '@packmind/ui';
+import { PMBox, PMMarkdownViewer, PMText, PMVStack } from '@packmind/ui';
 import {
   ChangeProposalId,
   ChangeProposalType,
@@ -18,15 +7,10 @@ import {
   ScalarUpdatePayload,
   UserId,
 } from '@packmind/types';
-import { LuCheck, LuCircleAlert, LuUndo2, LuX } from 'react-icons/lu';
 import {
   buildBlockedByAcceptedMap,
   buildProposalNumberMap,
-  getChangeProposalFieldLabel,
-  getStatusBadgeProps,
 } from '../../utils/changeProposalHelpers';
-import { ConflictWarning } from '../ChangeProposals/ConflictWarning';
-import { formatRelativeTime } from '../../utils/formatRelativeTime';
 import { ChangeProposalWithConflicts } from '../../types';
 import { buildDiffHtml, markdownDiffCss } from '../../utils/markdownDiff';
 import {
@@ -34,6 +18,7 @@ import {
   MarkdownEditorProvider,
 } from '../../../../shared/components/editor/MarkdownEditor';
 import { renderDiffText } from '../../utils/renderDiffText';
+import { ProposalReviewHeader } from '../ProposalReviewHeader';
 
 interface ProposalReviewPanelProps {
   selectedRecipe: Recipe | undefined;
@@ -81,7 +66,6 @@ export function ProposalReviewPanel({
     : null;
 
   if (reviewingProposal) {
-    const statusBadge = getStatusBadgeProps(reviewingProposal.status);
     const payload = reviewingProposal.payload as ScalarUpdatePayload;
     const isOutdated =
       selectedRecipe !== undefined &&
@@ -94,138 +78,23 @@ export function ProposalReviewPanel({
 
     return (
       <PMVStack gap={4} align="stretch">
-        {/* Header card */}
-        <PMBox
-          borderRadius="md"
-          border="1px solid"
-          borderColor="border.primary"
-          p={4}
-        >
-          <PMVStack gap={3}>
-            <PMHStack justify="space-between" align="center" width="full">
-              <PMHStack gap={3} align="center">
-                {isOutdated ? (
-                  <PMTooltip label="This proposal was made on an outdated version">
-                    <PMBadge colorPalette="orange" variant="subtle" size="sm">
-                      <PMIcon>
-                        <LuCircleAlert />
-                      </PMIcon>
-                      Outdated
-                    </PMBadge>
-                  </PMTooltip>
-                ) : (
-                  <PMBadge colorPalette={statusBadge.colorPalette} size="sm">
-                    {statusBadge.label}
-                  </PMBadge>
-                )}
-                <PMText fontSize="sm" color="secondary">
-                  #{proposalNumberMap.get(reviewingProposal.id)} -{' '}
-                  {formatRelativeTime(reviewingProposal.createdAt)}
-                </PMText>
-              </PMHStack>
-              <PMHStack gap={6} align="center">
-                {isDescriptionDiff && (
-                  <PMHStack gap={2} align="center">
-                    <PMText
-                      fontSize="sm"
-                      color={showPreview ? 'faded' : 'primary'}
-                    >
-                      Diff
-                    </PMText>
-                    <PMSwitch
-                      size="sm"
-                      checked={showPreview}
-                      onCheckedChange={(e) => setShowPreview(e.checked)}
-                      css={{
-                        '& span[data-scope="switch"][data-part="control"]': {
-                          bg: 'background.primary',
-                        },
-                      }}
-                    />
-                    <PMText
-                      fontSize="sm"
-                      color={showPreview ? 'primary' : 'faded'}
-                    >
-                      Preview
-                    </PMText>
-                  </PMHStack>
-                )}
-                {acceptedProposalIds.has(reviewingProposal.id) ||
-                rejectedProposalIds.has(reviewingProposal.id) ? (
-                  <PMButton
-                    size="sm"
-                    variant="outline"
-                    onClick={() => onUndoPool(reviewingProposal.id)}
-                  >
-                    <LuUndo2 />
-                    Undo
-                  </PMButton>
-                ) : (
-                  <PMHStack gap={2}>
-                    <PMButton
-                      size="xs"
-                      variant="secondary"
-                      disabled={
-                        isOutdated ||
-                        blockedByConflictIds.has(reviewingProposal.id)
-                      }
-                      onClick={() => onPoolAccept(reviewingProposal.id)}
-                    >
-                      <LuCheck />
-                      Accept
-                    </PMButton>
-                    <PMButton
-                      size="xs"
-                      variant="secondary"
-                      onClick={() => onPoolReject(reviewingProposal.id)}
-                    >
-                      <LuX />
-                      Dismiss
-                    </PMButton>
-                  </PMHStack>
-                )}
-              </PMHStack>
-            </PMHStack>
-            {blockedByConflictIds.has(reviewingProposal.id) &&
-              (() => {
-                const acceptedIds = blockedByAcceptedMap.get(
-                  reviewingProposal.id,
-                );
-                if (!acceptedIds || acceptedIds.length === 0) return null;
-                const conflictingAcceptedNumbers = acceptedIds
-                  .map((id) => ({ id, number: proposalNumberMap.get(id) ?? 0 }))
-                  .sort((a, b) => a.number - b.number);
-                return (
-                  <ConflictWarning
-                    conflictingAcceptedNumbers={conflictingAcceptedNumbers}
-                    onSelectConflicting={onSelectProposal}
-                  />
-                );
-              })()}
-            <PMVStack gap={1} align="stretch" width="full">
-              <PMText fontWeight="bold" fontSize="sm">
-                {getChangeProposalFieldLabel(reviewingProposal.type)}
-              </PMText>
-              <PMHStack gap={1}>
-                <PMText fontWeight="bold" fontSize="sm">
-                  From
-                </PMText>
-                <PMText fontSize="sm">
-                  {userLookup.get(reviewingProposal.createdBy) ??
-                    'Unknown user'}
-                </PMText>
-              </PMHStack>
-              <PMHStack gap={1}>
-                <PMText fontWeight="bold" fontSize="sm">
-                  Base version
-                </PMText>
-                <PMText fontSize="sm">
-                  {reviewingProposal.artefactVersion}
-                </PMText>
-              </PMHStack>
-            </PMVStack>
-          </PMVStack>
-        </PMBox>
+        <ProposalReviewHeader
+          proposal={reviewingProposal}
+          isOutdated={isOutdated}
+          proposalNumberMap={proposalNumberMap}
+          acceptedProposalIds={acceptedProposalIds}
+          rejectedProposalIds={rejectedProposalIds}
+          blockedByConflictIds={blockedByConflictIds}
+          blockedByAcceptedMap={blockedByAcceptedMap}
+          userLookup={userLookup}
+          showDiffPreviewToggle={isDescriptionDiff}
+          showPreview={showPreview}
+          onPreviewChange={setShowPreview}
+          onSelectProposal={onSelectProposal}
+          onPoolAccept={onPoolAccept}
+          onPoolReject={onPoolReject}
+          onUndoPool={onUndoPool}
+        />
 
         {/* Full artefact content with inline diff */}
         {selectedRecipe && (
