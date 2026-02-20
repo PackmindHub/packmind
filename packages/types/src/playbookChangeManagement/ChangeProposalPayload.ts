@@ -17,8 +17,8 @@ export type CollectionItemUpdatePayload<T> = {
 
 export type SkillFileContentUpdatePayload =
   CollectionItemUpdatePayload<SkillFileId> & {
-  isBase64?: boolean;
-};
+    isBase64?: boolean;
+  };
 
 export type CollectionItemAddPayload<T> = {
   item: T;
