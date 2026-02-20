@@ -1,23 +1,14 @@
 import {
   ChangeProposal,
-  ChangeProposalType,
-  Recipe,
+  OrganizationId,
   RecipeVersion,
-  Skill,
   SkillVersion,
-  Standard,
+  SpaceId,
   StandardVersion,
+  UserId,
 } from '@packmind/types';
 
 type ObjectVersions = RecipeVersion | StandardVersion | SkillVersion;
-
-export type SourceObject<T extends ObjectVersions> = T extends RecipeVersion
-  ? Recipe
-  : T extends StandardVersion
-    ? Standard
-    : T extends SkillVersion
-      ? Skill
-      : never;
 
 export abstract class AbstractApplyChangeProposals<
   Version extends ObjectVersions,
@@ -34,7 +25,10 @@ export abstract class AbstractApplyChangeProposals<
 
   public abstract saveNewVersion(
     version: Version,
-  ): Promise<SourceObject<Version>>;
+    userId: UserId,
+    spaceId: SpaceId,
+    organizationId: OrganizationId,
+  ): Promise<Version>;
 
   protected abstract applyChangeProposal(
     source: Version,

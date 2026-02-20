@@ -11,6 +11,8 @@ import {
   ChangeProposal,
   ChangeProposalStatus,
   ChangeProposalType,
+  createOrganizationId,
+  createUserId,
   IAccountsPort,
   IApplyChangeProposalsUseCase,
   IRecipesPort,
@@ -18,16 +20,13 @@ import {
   ISpacesPort,
   IStandardsPort,
   RecipeId,
-  ScalarUpdatePayload,
   SkillId,
-  SpaceId,
   StandardId,
   UserId,
 } from '@packmind/types';
 import { ChangeProposalService } from '../../services/ChangeProposalService';
 import { validateSpaceOwnership } from '../../services/validateSpaceOwnership';
 import { validateArtefactInSpace } from '../../services/validateArtefactInSpace';
-import { ChangeProposalConflictError } from '../../../domain/errors/ChangeProposalConflictError';
 import { DiffService } from '../../services/DiffService';
 import { ApplyCommandChangeProposals } from './ApplyCommandChangeProposals';
 
@@ -179,7 +178,10 @@ export class ApplyChangeProposalsUseCase<
       return proposal;
     });
 
-    const changesApplier = new ApplyCommandChangeProposals(this.diffService);
+    const changesApplier = new ApplyCommandChangeProposals(
+      this.diffService,
+      this.recipesPort,
+    );
     const recipeVersionWithChanges = changesApplier.applyChangeProposals(
       recipeVersion,
       changeProposalsToApply,
@@ -206,37 +208,14 @@ export class ApplyChangeProposalsUseCase<
       }
     }
 
-    // Now persist everything atomically
-    // 1. Update recipe (creates new version) if there are accepted proposals
-    let newRecipeVersionNumber: number;
-
-    if (command.accepted.length > 0) {
-      const updateResult = await this.recipesPort.updateRecipeFromUI({
-        recipeId: recipe.id,
-        name: recipeVersionWithChanges.name,
-        content: recipeVersionWithChanges.content,
-        userId: command.userId as UserId,
-        spaceId: command.spaceId,
-        organizationId: command.organization.id,
-      });
-
-      newRecipeVersionNumber = updateResult.recipe.version;
-    } else {
-      // No accepted proposals, use current version
-      newRecipeVersionNumber = recipe.version;
-    }
-
-    // 2. Get the recipe version to return its ID
-    const newRecipeVersion = await this.recipesPort.getRecipeVersion(
-      recipe.id,
-      newRecipeVersionNumber,
-    );
-
-    if (!newRecipeVersion) {
-      throw new Error(
-        `Failed to retrieve recipe version ${newRecipeVersionNumber} for recipe ${recipe.id}`,
-      );
-    }
+    const newRecipeVersion = changeProposalsToApply.length
+      ? await changesApplier.saveNewVersion(
+          recipeVersionWithChanges,
+          createUserId(command.userId),
+          command.spaceId,
+          createOrganizationId(command.organizationId),
+        )
+      : recipeVersion;
 
     // 3. Mark all proposals as applied/rejected in a single transaction
     // This ensures atomicity - if any proposal update fails, all are rolled back
@@ -278,7 +257,7 @@ export class ApplyChangeProposalsUseCase<
         'Failed to mark change proposals - recipe was updated but proposals remain pending',
         {
           recipeId: recipe.id,
-          newVersion: newRecipeVersionNumber,
+          newVersion: newRecipeVersion.version,
           error: error instanceof Error ? error.message : String(error),
         },
       );
