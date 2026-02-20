@@ -1,3 +1,4 @@
+import { DetectionSeverity } from '@packmind/types';
 import { DiffMode } from '../../domain/entities/DiffMode';
 import { LintViolation } from '../../domain/entities/LintViolation';
 import { PackmindCliHexa } from '../../PackmindCliHexa';
@@ -144,7 +145,13 @@ describe('lintHandler', () => {
           {
             file: '/project/file.ts',
             violations: [
-              { line: 1, character: 0, rule: 'test-rule', standard: 'test' },
+              {
+                line: 1,
+                character: 0,
+                rule: 'test-rule',
+                standard: 'test',
+                severity: DetectionSeverity.ERROR,
+              },
             ],
           },
         ];
@@ -166,7 +173,13 @@ describe('lintHandler', () => {
             {
               file: '/project/file.ts',
               violations: [
-                { line: 1, character: 0, rule: 'test-rule', standard: 'test' },
+                {
+                  line: 1,
+                  character: 0,
+                  rule: 'test-rule',
+                  standard: 'test',
+                  severity: DetectionSeverity.ERROR,
+                },
               ],
             },
           ];

@@ -293,6 +293,7 @@ export class LintFilesFromConfigUseCase implements ILintFilesFromConfig {
                     sourceCodeState:
                       activeProgram.detectionProgram.sourceCodeState,
                     language: fileLanguage,
+                    severity: activeProgram.severity,
                   });
 
                   programsByLanguage.set(programLanguage, programsForLanguage);

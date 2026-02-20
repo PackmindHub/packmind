@@ -1,6 +1,7 @@
 import {
   AllConfigsResult,
   DetectionModeEnum,
+  DetectionSeverity,
   ExecuteLinterProgramsCommand,
   GetDetectionProgramsForPackagesResponse,
   IExecuteLinterProgramsUseCase,
@@ -58,6 +59,7 @@ describe('LintFilesFromConfigUseCase', () => {
             character: 0,
             rule: program.ruleContent,
             standard: program.standardSlug,
+            severity: program.severity,
           }),
         ),
       })),
@@ -301,6 +303,7 @@ describe('LintFilesFromConfigUseCase', () => {
                       activeDetectionPrograms: [
                         {
                           language: 'typescript',
+                          severity: DetectionSeverity.ERROR,
                           detectionProgram: {
                             mode: DetectionModeEnum.SINGLE_AST,
                             code: 'function checkSourceCode(ast) { return [1]; }',
@@ -383,6 +386,7 @@ describe('LintFilesFromConfigUseCase', () => {
                       activeDetectionPrograms: [
                         {
                           language: 'typescript',
+                          severity: DetectionSeverity.ERROR,
                           detectionProgram: {
                             mode: DetectionModeEnum.SINGLE_AST,
                             code: 'function checkSourceCode(ast) { return [1]; }',
@@ -414,6 +418,7 @@ describe('LintFilesFromConfigUseCase', () => {
                       activeDetectionPrograms: [
                         {
                           language: 'typescript',
+                          severity: DetectionSeverity.ERROR,
                           detectionProgram: {
                             mode: DetectionModeEnum.SINGLE_AST,
                             code: 'function checkSourceCode(ast) { return [2]; }',
@@ -540,6 +545,7 @@ describe('LintFilesFromConfigUseCase', () => {
                       activeDetectionPrograms: [
                         {
                           language: 'typescript',
+                          severity: DetectionSeverity.ERROR,
                           detectionProgram: {
                             mode: DetectionModeEnum.SINGLE_AST,
                             code: 'function checkSourceCode(ast) { return [1]; }',
@@ -571,6 +577,7 @@ describe('LintFilesFromConfigUseCase', () => {
                       activeDetectionPrograms: [
                         {
                           language: 'typescript',
+                          severity: DetectionSeverity.ERROR,
                           detectionProgram: {
                             mode: DetectionModeEnum.SINGLE_AST,
                             code: 'function checkSourceCode(ast) { return [2]; }',
