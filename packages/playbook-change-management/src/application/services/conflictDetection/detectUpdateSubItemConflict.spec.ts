@@ -243,33 +243,54 @@ describe('detectUpdateSkillFileContentConflict', () => {
   describe('when second proposal is also a updateSkillFileContent', () => {
     let result: boolean;
 
-    beforeEach(() => {
-      diffService.hasConflict.mockReturnValue(true);
-
-      result = detectUpdateSkillFileContentConflict(
-        changeProposal,
-        changeProposalFactory({
-          type: changeProposal.type,
-          artefactId: changeProposal.artefactId,
-          payload: {
-            ...payload,
-            newValue: 'Some brand new value',
-          },
-        }),
-        diffService,
-      );
+    describe('when change proposal is base64', () => {
+      it('returns true', () => {
+        expect(
+          detectUpdateSkillFileContentConflict(
+            changeProposal,
+            changeProposalFactory({
+              type: changeProposal.type,
+              artefactId: changeProposal.artefactId,
+              payload: {
+                ...payload,
+                isBase64: true,
+              },
+            }),
+            diffService,
+          ),
+        ).toBe(true);
+      });
     });
 
-    it('uses the diff service to check for conflicts', () => {
-      expect(diffService.hasConflict).toHaveBeenCalledWith(
-        payload.oldValue,
-        payload.newValue,
-        'Some brand new value',
-      );
-    });
+    describe('when change proposal is not base64', () => {
+      beforeEach(() => {
+        diffService.hasConflict.mockReturnValue(true);
 
-    it('returns the results from the diffService', () => {
-      expect(result).toBe(true);
+        result = detectUpdateSkillFileContentConflict(
+          changeProposal,
+          changeProposalFactory({
+            type: changeProposal.type,
+            artefactId: changeProposal.artefactId,
+            payload: {
+              ...payload,
+              newValue: 'Some brand new value',
+            },
+          }),
+          diffService,
+        );
+      });
+
+      it('uses the diff service to check for conflicts', () => {
+        expect(diffService.hasConflict).toHaveBeenCalledWith(
+          payload.oldValue,
+          payload.newValue,
+          'Some brand new value',
+        );
+      });
+
+      it('returns the results from the diffService', () => {
+        expect(result).toBe(true);
+      });
     });
   });
 
