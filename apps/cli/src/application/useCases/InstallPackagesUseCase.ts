@@ -7,6 +7,10 @@ import { IPackmindGateway } from '../../domain/repositories/IPackmindGateway';
 import { mergeSectionsIntoFileContent } from '@packmind/node-utils';
 import * as fs from 'fs/promises';
 import * as path from 'path';
+import {
+  parsePermissionString,
+  supportsUnixPermissions,
+} from '../../infra/utils/permissions';
 
 export class InstallPackagesUseCase implements IInstallPackagesUseCase {
   constructor(private readonly packmindGateway: IPackmindGateway) {}
@@ -50,6 +54,7 @@ export class InstallPackagesUseCase implements IInstallPackagesUseCase {
         path: string;
         content?: string;
         sections?: { key: string; content: string }[];
+        skillFilePermissions?: string;
       }
     >();
 
@@ -88,7 +93,12 @@ export class InstallPackagesUseCase implements IInstallPackagesUseCase {
       // Process createOrUpdate files (deduplicated)
       for (const file of uniqueFiles) {
         try {
-          await this.createOrUpdateFile(baseDirectory, file, result);
+          await this.createOrUpdateFile(
+            baseDirectory,
+            file,
+            result,
+            file.skillFilePermissions,
+          );
         } catch (error) {
           const errorMsg =
             error instanceof Error ? error.message : String(error);
@@ -125,6 +135,7 @@ export class InstallPackagesUseCase implements IInstallPackagesUseCase {
       isBase64?: boolean;
     },
     result: IInstallPackagesResult,
+    skillFilePermissions?: string,
   ): Promise<void> {
     const fullPath = path.join(baseDirectory, file.path);
     const directory = path.dirname(fullPath);
@@ -153,6 +164,10 @@ export class InstallPackagesUseCase implements IInstallPackagesUseCase {
         result,
         baseDirectory,
       );
+    }
+
+    if (skillFilePermissions && supportsUnixPermissions()) {
+      await fs.chmod(fullPath, parsePermissionString(skillFilePermissions));
     }
   }
 
