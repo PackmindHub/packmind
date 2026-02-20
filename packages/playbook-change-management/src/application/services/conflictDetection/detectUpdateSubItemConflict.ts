@@ -6,6 +6,7 @@ import { sameType } from './sameType';
 import { isExpectedType } from './isExpectedType';
 import { detectSingleLineConflict } from './detectSingleLineConflict';
 import { detectMultiLineConflict } from './detectMultiLineConflict';
+import { sameSubTarget } from './sameSubTarget';
 
 type UpdateSubItemChangeProposals =
   | ChangeProposalType.updateRule
@@ -28,7 +29,7 @@ export function makeDetectUpdateSubItemConflict<
         expectedType
       ] as ConflictDetector<T, typeof expectedType>;
 
-      if (sameType(cp1, cp2) && cp1.payload.targetId !== cp2.payload.targetId) {
+      if (sameType(cp1, cp2) && !sameSubTarget(cp1, cp2, diffService)) {
         return false;
       }
 
@@ -51,23 +52,19 @@ export const detectUpdateRuleConflict =
     [ChangeProposalType.addRule]: (cp1, cp2) => {
       return cp1.payload.newValue === cp2.payload.item.content;
     },
-    [ChangeProposalType.deleteRule]: (cp1, cp2) => {
-      return cp1.payload.targetId === cp2.payload.targetId;
-    },
+    [ChangeProposalType.deleteRule]: sameSubTarget,
   });
 
 export const detectUpdateSkillFileContentConflict =
   makeDetectUpdateSubItemConflict<ChangeProposalType.updateSkillFileContent>({
     [ChangeProposalType.updateSkillFileContent]: detectMultiLineConflict,
-    [ChangeProposalType.deleteSkillFile]: (cp1, cp2) =>
-      cp1.payload.targetId === cp2.payload.targetId,
+    [ChangeProposalType.deleteSkillFile]: sameSubTarget,
   });
 
 export const detectUpdateSkillPermissionsContentConflict =
   makeDetectUpdateSubItemConflict<ChangeProposalType.updateSkillFilePermissions>(
     {
       [ChangeProposalType.updateSkillFilePermissions]: detectSingleLineConflict,
-      [ChangeProposalType.deleteSkillFile]: (cp1, cp2) =>
-        cp1.payload.targetId === cp2.payload.targetId,
+      [ChangeProposalType.deleteSkillFile]: sameSubTarget,
     },
   );

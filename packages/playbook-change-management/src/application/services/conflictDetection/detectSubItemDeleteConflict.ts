@@ -2,8 +2,8 @@ import { ChangeProposalType } from '@packmind/types';
 import { ConflictDetector } from './ConflictDetector';
 import { sameProposal } from './sameProposal';
 import { sameArtefact } from './sameArtefact';
-import { sameType } from './sameType';
 import { isExpectedType } from './isExpectedType';
+import { sameSubTarget } from './sameSubTarget';
 
 type DeleteSubItemChangeProposals =
   | ChangeProposalType.deleteRule
@@ -40,18 +40,13 @@ export function makeDetectSubItemDeleteConflict<
 
 export const detectDeleteRuleConflict =
   makeDetectSubItemDeleteConflict<ChangeProposalType.deleteRule>({
-    [ChangeProposalType.deleteRule]: (cp1, cp2) =>
-      cp1.payload.targetId === cp2.payload.targetId,
-    [ChangeProposalType.updateRule]: (cp1, cp2) =>
-      cp1.payload.targetId === cp2.payload.targetId,
+    [ChangeProposalType.deleteRule]: sameSubTarget,
+    [ChangeProposalType.updateRule]: sameSubTarget,
   });
 
 export const detectDeleteSkillFileConflict =
   makeDetectSubItemDeleteConflict<ChangeProposalType.deleteSkillFile>({
-    [ChangeProposalType.deleteSkillFile]: (cp1, cp2) =>
-      cp1.payload.targetId === cp2.payload.targetId,
-    [ChangeProposalType.updateSkillFileContent]: (cp1, cp2) =>
-      cp1.payload.targetId === cp2.payload.targetId,
-    [ChangeProposalType.updateSkillFilePermissions]: (cp1, cp2) =>
-      cp1.payload.targetId === cp2.payload.targetId,
+    [ChangeProposalType.deleteSkillFile]: sameSubTarget,
+    [ChangeProposalType.updateSkillFileContent]: sameSubTarget,
+    [ChangeProposalType.updateSkillFilePermissions]: sameSubTarget,
   });
