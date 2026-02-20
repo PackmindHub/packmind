@@ -1,4 +1,5 @@
 import {
+  DetectionSeverity,
   ExecuteLinterProgramsCommand,
   ILinterAstPort,
   ProgrammingLanguage,
@@ -19,6 +20,7 @@ const buildCommand = (
       standardSlug: 'naming-standard',
       sourceCodeState: 'AST',
       language: ProgrammingLanguage.TYPESCRIPT,
+      severity: DetectionSeverity.ERROR,
     },
   ],
   ...overrides,
@@ -45,6 +47,7 @@ describe('ExecuteLinterProgramsUseCase', () => {
         standardSlug: 'interface-standard',
         sourceCodeState: 'AST' as const,
         language: ProgrammingLanguage.TYPESCRIPT,
+        severity: DetectionSeverity.ERROR,
       },
       {
         code: 'function checkSourceCode(ast) { return [{ line: 5, character: 2 }]; }',
@@ -52,6 +55,7 @@ describe('ExecuteLinterProgramsUseCase', () => {
         standardSlug: 'method-standard',
         sourceCodeState: 'AST' as const,
         language: ProgrammingLanguage.TYPESCRIPT,
+        severity: DetectionSeverity.ERROR,
       },
     ];
 
@@ -130,6 +134,7 @@ describe('ExecuteLinterProgramsUseCase', () => {
           standardSlug: 'standard',
           sourceCodeState: 'AST',
           language: ProgrammingLanguage.TYPESCRIPT,
+          severity: DetectionSeverity.ERROR,
         },
       ],
     });
@@ -150,6 +155,7 @@ describe('ExecuteLinterProgramsUseCase', () => {
           standardSlug: 'danger-standard',
           sourceCodeState: 'AST',
           language: ProgrammingLanguage.TYPESCRIPT,
+          severity: DetectionSeverity.ERROR,
         },
       ],
     });
@@ -172,6 +178,7 @@ describe('ExecuteLinterProgramsUseCase', () => {
             standardSlug: 'raw-standard',
             sourceCodeState: 'RAW',
             language: ProgrammingLanguage.TYPESCRIPT,
+            severity: DetectionSeverity.ERROR,
           },
         ],
       });
@@ -207,6 +214,7 @@ describe('ExecuteLinterProgramsUseCase', () => {
             standardSlug: 'raw-standard',
             sourceCodeState: 'RAW',
             language: ProgrammingLanguage.TYPESCRIPT,
+            severity: DetectionSeverity.ERROR,
           },
           {
             code: 'function checkSourceCode(ast) { return [4]; }',
@@ -214,6 +222,7 @@ describe('ExecuteLinterProgramsUseCase', () => {
             standardSlug: 'ast-standard',
             sourceCodeState: 'AST',
             language: ProgrammingLanguage.TYPESCRIPT,
+            severity: DetectionSeverity.ERROR,
           },
         ],
       });
@@ -255,6 +264,7 @@ describe('ExecuteLinterProgramsUseCase', () => {
             standardSlug: 'raw-standard-1',
             sourceCodeState: 'RAW',
             language: ProgrammingLanguage.TYPESCRIPT,
+            severity: DetectionSeverity.ERROR,
           },
           {
             code: 'function checkSourceCode(code) { return [2]; }',
@@ -262,6 +272,7 @@ describe('ExecuteLinterProgramsUseCase', () => {
             standardSlug: 'raw-standard-2',
             sourceCodeState: 'RAW',
             language: ProgrammingLanguage.TYPESCRIPT,
+            severity: DetectionSeverity.ERROR,
           },
         ],
       });
@@ -293,6 +304,7 @@ describe('ExecuteLinterProgramsUseCase', () => {
           standardSlug: 'raw-standard',
           sourceCodeState: 'RAW',
           language: ProgrammingLanguage.TYPESCRIPT,
+          severity: DetectionSeverity.ERROR,
         },
         {
           code: 'function checkSourceCode(ast) { return [2]; }',
@@ -300,6 +312,7 @@ describe('ExecuteLinterProgramsUseCase', () => {
           standardSlug: 'ast-standard',
           sourceCodeState: 'AST',
           language: ProgrammingLanguage.TYPESCRIPT,
+          severity: DetectionSeverity.ERROR,
         },
       ],
     });
@@ -329,6 +342,7 @@ describe('ExecuteLinterProgramsUseCase', () => {
             standardSlug: 'ts-standard',
             sourceCodeState: 'AST',
             language: ProgrammingLanguage.TYPESCRIPT,
+            severity: DetectionSeverity.ERROR,
           },
           {
             code: 'function checkSourceCode(code) { return [2]; }',
@@ -336,6 +350,7 @@ describe('ExecuteLinterProgramsUseCase', () => {
             standardSlug: 'py-standard',
             sourceCodeState: 'RAW',
             language: ProgrammingLanguage.PYTHON,
+            severity: DetectionSeverity.ERROR,
           },
         ],
       });
@@ -367,6 +382,7 @@ describe('ExecuteLinterProgramsUseCase', () => {
               standardSlug: 'py-standard',
               sourceCodeState: 'RAW',
               language: ProgrammingLanguage.PYTHON,
+              severity: DetectionSeverity.ERROR,
             },
           ],
         });
