@@ -3,7 +3,6 @@ import * as fs from 'fs/promises';
 import { IPackmindGateway } from '../../domain/repositories/IPackmindGateway';
 import { InstallPackagesUseCase } from './InstallPackagesUseCase';
 import { DeleteItemType } from '@packmind/types';
-
 jest.mock('fs/promises');
 
 describe('InstallPackagesUseCase', () => {
@@ -34,6 +33,7 @@ describe('InstallPackagesUseCase', () => {
     (fs.rm as jest.Mock).mockResolvedValue(undefined);
     (fs.readdir as jest.Mock).mockResolvedValue([]);
     (fs.rmdir as jest.Mock).mockResolvedValue(undefined);
+    (fs.chmod as jest.Mock).mockResolvedValue(undefined);
 
     useCase = new InstallPackagesUseCase(mockGateway);
   });
@@ -1345,6 +1345,107 @@ Old packmind content
         });
 
         expect(result.filesDeleted).toBe(1);
+      });
+    });
+  });
+
+  describe('when file has skillFilePermissions', () => {
+    const originalPlatform = process.platform;
+
+    afterEach(() => {
+      Object.defineProperty(process, 'platform', { value: originalPlatform });
+    });
+
+    describe('when permissions are provided on Unix', () => {
+      beforeEach(() => {
+        Object.defineProperty(process, 'platform', { value: 'linux' });
+
+        mockGateway.deployment.pull.mockResolvedValue({
+          fileUpdates: {
+            createOrUpdate: [
+              {
+                path: '.claude/skills/my-skill/script.sh',
+                content: '#!/bin/bash',
+                skillFilePermissions: 'rwxr-xr-x',
+              },
+            ],
+            delete: [],
+          },
+          skillFolders: [],
+        });
+
+        (fs.access as jest.Mock).mockRejectedValue(new Error('File not found'));
+      });
+
+      it('calls chmod with correct octal mode', async () => {
+        await useCase.execute({
+          packagesSlugs: ['test-package'],
+          baseDirectory: '/test',
+        });
+
+        expect(fs.chmod).toHaveBeenCalledWith(
+          '/test/.claude/skills/my-skill/script.sh',
+          0o755,
+        );
+      });
+    });
+
+    describe('when permissions are provided on Windows', () => {
+      beforeEach(() => {
+        Object.defineProperty(process, 'platform', { value: 'win32' });
+
+        mockGateway.deployment.pull.mockResolvedValue({
+          fileUpdates: {
+            createOrUpdate: [
+              {
+                path: '.claude/skills/my-skill/script.sh',
+                content: '#!/bin/bash',
+                skillFilePermissions: 'rwxr-xr-x',
+              },
+            ],
+            delete: [],
+          },
+          skillFolders: [],
+        });
+
+        (fs.access as jest.Mock).mockRejectedValue(new Error('File not found'));
+      });
+
+      it('does not call chmod', async () => {
+        await useCase.execute({
+          packagesSlugs: ['test-package'],
+          baseDirectory: '/test',
+        });
+
+        expect(fs.chmod).not.toHaveBeenCalled();
+      });
+    });
+
+    describe('when permissions are not provided', () => {
+      beforeEach(() => {
+        mockGateway.deployment.pull.mockResolvedValue({
+          fileUpdates: {
+            createOrUpdate: [
+              {
+                path: '.claude/skills/my-skill/helper.ts',
+                content: 'export {}',
+              },
+            ],
+            delete: [],
+          },
+          skillFolders: [],
+        });
+
+        (fs.access as jest.Mock).mockRejectedValue(new Error('File not found'));
+      });
+
+      it('does not call chmod', async () => {
+        await useCase.execute({
+          packagesSlugs: ['test-package'],
+          baseDirectory: '/test',
+        });
+
+        expect(fs.chmod).not.toHaveBeenCalled();
       });
     });
   });

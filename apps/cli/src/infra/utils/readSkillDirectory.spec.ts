@@ -334,13 +334,28 @@ describe('readSkillDirectory', () => {
       expect(file.path).toBe(path.join(tempDir, 'SKILL.md'));
     });
 
-    it('sets default permissions', async () => {
-      await fs.writeFile(path.join(tempDir, 'test.md'), 'content');
+    it('reads actual file permissions', async () => {
+      const filePath = path.join(tempDir, 'test.md');
+      await fs.writeFile(filePath, 'content');
 
       const files = await readSkillDirectory(tempDir);
       const file = files[0];
 
-      expect(file.permissions).toBe('rw-r--r--');
+      // Default file permissions depend on umask, but should be a valid 9-char string
+      expect(file.permissions).toMatch(
+        /^[r-][w-][x-][r-][w-][x-][r-][w-][x-]$/,
+      );
+    });
+
+    it('reads executable permissions', async () => {
+      const filePath = path.join(tempDir, 'script.sh');
+      await fs.writeFile(filePath, '#!/bin/bash');
+      await fs.chmod(filePath, 0o755);
+
+      const files = await readSkillDirectory(tempDir);
+      const file = files.find((f) => f.relativePath === 'script.sh');
+
+      expect(file?.permissions).toBe('rwxr-xr-x');
     });
   });
 

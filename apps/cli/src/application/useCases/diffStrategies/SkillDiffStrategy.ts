@@ -13,16 +13,7 @@ import { stripFrontmatter } from '../../utils/stripFrontmatter';
 import { ParsedSkillMd, parseSkillMd } from '../../utils/parseSkillMd';
 import { DiffContext, IDiffStrategy } from './IDiffStrategy';
 import { DiffableFile } from './DiffableFile';
-
-function modeToPermissionString(mode: number): string {
-  const perms = mode & 0o777;
-  const chars = 'rwx';
-  let result = '';
-  for (let i = 8; i >= 0; i--) {
-    result += perms & (1 << i) ? chars[(8 - i) % 3] : '-';
-  }
-  return result;
-}
+import { modeToPermissionStringOrDefault } from '../../../infra/utils/permissions';
 
 type BaseDiff = Pick<
   ArtefactDiff,
@@ -482,7 +473,7 @@ export class SkillDiffStrategy implements IDiffStrategy {
   private async tryGetPermissions(filePath: string): Promise<string | null> {
     try {
       const stat = await fs.stat(filePath);
-      return modeToPermissionString(stat.mode);
+      return modeToPermissionStringOrDefault(stat.mode);
     } catch {
       return null;
     }

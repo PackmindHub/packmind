@@ -81,6 +81,7 @@ async function sendPing(version: string, instanceId: string): Promise<void> {
       version,
       instanceId,
     });
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
   } catch (error) {
     // Don't raise anything here
   }

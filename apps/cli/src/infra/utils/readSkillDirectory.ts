@@ -3,6 +3,7 @@ import path from 'path';
 import { minimatch } from 'minimatch';
 
 import { isBinaryFile } from './binaryDetection';
+import { modeToPermissionStringOrDefault } from './permissions';
 
 type SkillFile = {
   path: string;
@@ -99,7 +100,7 @@ export async function readSkillDirectory(
           relativePath: normalizedPath,
           content,
           size: Buffer.byteLength(content, isBinary ? 'base64' : 'utf-8'),
-          permissions: 'rw-r--r--', // Simple default
+          permissions: modeToPermissionStringOrDefault(stat.mode),
           isBase64: isBinary,
         });
       }
