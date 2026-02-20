@@ -11,12 +11,16 @@ type SingleLineChangeProposals =
   | ChangeProposalType.updateStandardScope
   | ChangeProposalType.updateSkillCompatibility
   | ChangeProposalType.updateSkillLicense
-  | ChangeProposalType.updateSkillAllowedTools;
+  | ChangeProposalType.updateSkillAllowedTools
+  | ChangeProposalType.updateSkillMetadata;
 
 export const detectSingleLineConflict: ConflictDetector<
   SingleLineChangeProposals
 > = (cp1, cp2) => {
   return (
-    !sameProposal(cp1, cp2) && sameType(cp1, cp2) && sameArtefact(cp1, cp2)
+    !sameProposal(cp1, cp2) &&
+    sameType(cp1, cp2) &&
+    sameArtefact(cp1, cp2) &&
+    cp1.payload.newValue !== cp2.payload.newValue
   );
 };
