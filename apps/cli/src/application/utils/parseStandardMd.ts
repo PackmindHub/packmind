@@ -105,7 +105,7 @@ function parseCopilotStandard(content: string): ParsedStandardMd | null {
   const rawScope = extractFrontmatterValue(frontmatter, 'applyTo');
   let scope = '';
   if (rawScope) {
-    const stripped = rawScope.replace(/^['"]|['"]$/g, '');
+    const stripped = rawScope.replace(/(?:^['"])|(?:['"]$)/g, '');
     scope = stripped === '**' ? '' : stripped;
   }
   return parseIdeStandardBody(body, scope);
@@ -230,10 +230,10 @@ function normalizeScopeValue(rawValue: string): string {
     const inner = rawValue.slice(1, -1);
     const items = inner
       .split(',')
-      .map((item) => item.trim().replace(/^["']|["']$/g, ''));
+      .map((item) => item.trim().replace(/(?:^["'])|(?:["']$)/g, ''));
     return items.join(', ');
   }
 
   // Quoted string: "**/*.ts"
-  return rawValue.replace(/^["']|["']$/g, '');
+  return rawValue.replace(/(?:^["'])|(?:["']$)/g, '');
 }
