@@ -14,10 +14,10 @@ import { ChangeProposalConflictError } from '../../../domain/errors';
 
 export class ApplyCommandChangeProposals extends AbstractApplyChangeProposals<RecipeVersion> {
   constructor(
-    private readonly diffService: DiffService,
+    diffService: DiffService,
     private recipesPort: IRecipesPort,
   ) {
-    super();
+    super(diffService);
   }
 
   protected applyChangeProposal(
@@ -42,19 +42,13 @@ export class ApplyCommandChangeProposals extends AbstractApplyChangeProposals<Re
         ChangeProposalType.updateCommandDescription,
       )
     ) {
-      const diffResult = this.diffService.applyLineDiff(
-        changeProposal.payload.oldValue,
-        changeProposal.payload.newValue,
-        source.content,
-      );
-
-      if (!diffResult.success) {
-        throw new ChangeProposalConflictError(changeProposal.id);
-      }
-
       return {
         ...source,
-        content: diffResult.value,
+        content: this.applyDiff(
+          changeProposal.id,
+          changeProposal.payload,
+          source.content,
+        ),
       };
     }
     throw new Error('Method not implemented.');

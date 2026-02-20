@@ -46,7 +46,7 @@ describe('ApplyCommandChangeProposals', () => {
               oldValue: recipeVersion.name,
               newValue: `Before: ${recipeVersion.name}`,
             },
-          }) as ChangeProposal<ChangeProposalType.updateCommandName>,
+          }),
           changeProposalFactory({
             type: ChangeProposalType.updateCommandName,
             artefactId: recipeVersion.recipeId,
@@ -55,7 +55,7 @@ describe('ApplyCommandChangeProposals', () => {
               oldValue: recipeVersion.name,
               newValue: `${recipeVersion.name} - after`,
             },
-          }) as ChangeProposal<ChangeProposalType.updateCommandName>,
+          }),
         ]);
 
         expect(newVersion).toEqual(
@@ -78,7 +78,7 @@ describe('ApplyCommandChangeProposals', () => {
               oldValue: recipeVersion.content,
               newValue: `Some content before\n${recipeVersion.content}`,
             },
-          }) as ChangeProposal<ChangeProposalType.updateCommandDescription>,
+          }),
           changeProposalFactory({
             type: ChangeProposalType.updateCommandDescription,
             artefactId: recipeVersion.recipeId,
@@ -87,7 +87,7 @@ describe('ApplyCommandChangeProposals', () => {
               oldValue: recipeVersion.content,
               newValue: `${recipeVersion.content}\nSome content after`,
             },
-          }) as ChangeProposal<ChangeProposalType.updateCommandDescription>,
+          }),
         ]);
 
         expect(newVersion).toEqual(
@@ -110,7 +110,7 @@ describe('ApplyCommandChangeProposals', () => {
                 oldValue: recipeVersion.content,
                 newValue: `---${recipeVersion.content}`,
               },
-            }) as ChangeProposal<ChangeProposalType.updateCommandDescription>,
+            }),
             changeProposalFactory({
               id: createChangeProposalId('proposal-2'),
               type: ChangeProposalType.updateCommandDescription,
@@ -120,7 +120,7 @@ describe('ApplyCommandChangeProposals', () => {
                 oldValue: recipeVersion.content,
                 newValue: `${recipeVersion.content}---`,
               },
-            }) as ChangeProposal<ChangeProposalType.updateCommandDescription>,
+            }),
           ]),
         ).toThrow(
           new ChangeProposalConflictError(createChangeProposalId('proposal-2')),
