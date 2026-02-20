@@ -57,7 +57,12 @@ export const detectUpdateRuleConflict =
 
 export const detectUpdateSkillFileContentConflict =
   makeDetectUpdateSubItemConflict<ChangeProposalType.updateSkillFileContent>({
-    [ChangeProposalType.updateSkillFileContent]: detectMultiLineConflict,
+    [ChangeProposalType.updateSkillFileContent]: (cp1, cp2, diffService) => {
+      if (cp1.payload.isBase64 || cp2.payload.isBase64) {
+        return true;
+      }
+      return detectMultiLineConflict(cp1, cp2, diffService);
+    },
     [ChangeProposalType.deleteSkillFile]: sameSubTarget,
   });
 
