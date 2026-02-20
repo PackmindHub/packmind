@@ -33,7 +33,7 @@ export class HumanReadableLogger implements ILogger {
 
     if (errorCount > 0) {
       logErrorConsole(
-        `❌ Found ${formatBold(String(errorCount))} error(s) in ${formatBold(String(violations.length))} file(s)`,
+        `❌  Found ${formatBold(String(errorCount))} error(s) in ${formatBold(String(violations.length))} file(s)`,
       );
     }
     if (warningCount > 0) {

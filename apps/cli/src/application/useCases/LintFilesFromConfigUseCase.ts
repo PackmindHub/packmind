@@ -251,6 +251,7 @@ export class LintFilesFromConfigUseCase implements ILintFilesFromConfig {
         ProgrammingLanguage,
         LinterExecutionProgram[]
       >();
+      const seenPrograms = new Set<string>();
 
       // Accumulate programs from all matching targets
       for (const targetConfig of matchingTargets) {
@@ -282,6 +283,12 @@ export class LintFilesFromConfigUseCase implements ILintFilesFromConfig {
                   if (!programLanguage || programLanguage !== fileLanguage) {
                     continue;
                   }
+
+                  const programKey = `${standard.slug}:${rule.content}:${activeProgram.language}`;
+                  if (seenPrograms.has(programKey)) {
+                    continue;
+                  }
+                  seenPrograms.add(programKey);
 
                   const programsForLanguage =
                     programsByLanguage.get(programLanguage) ?? [];

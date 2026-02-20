@@ -468,6 +468,81 @@ describe('LintFilesFromConfigUseCase', () => {
       });
     });
 
+    describe('when overlapping configs reference the same standard and rule', () => {
+      let result: Awaited<ReturnType<LintFilesFromConfigUseCase['execute']>>;
+
+      beforeEach(async () => {
+        const allConfigs: AllConfigsResult = {
+          configs: [
+            {
+              targetPath: '/',
+              absoluteTargetPath: '/project',
+              packages: { generic: '*' },
+            },
+            {
+              targetPath: '/src',
+              absoluteTargetPath: '/project/src',
+              packages: { generic: '*' },
+            },
+          ],
+          hasConfigs: true,
+          basePath: '/project',
+        };
+
+        const sharedPrograms: GetDetectionProgramsForPackagesResponse = {
+          targets: [
+            {
+              name: 'Generic Target',
+              path: '/',
+              standards: [
+                {
+                  name: 'Shared Standard',
+                  slug: 'shared-standard',
+                  scope: [],
+                  rules: [
+                    {
+                      content: 'Shared rule',
+                      activeDetectionPrograms: [
+                        {
+                          language: 'typescript',
+                          severity: DetectionSeverity.ERROR,
+                          detectionProgram: {
+                            mode: DetectionModeEnum.SINGLE_AST,
+                            code: 'function checkSourceCode(ast) { return [1]; }',
+                            sourceCodeState: 'AST' as const,
+                          },
+                        },
+                      ],
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        };
+
+        mockGitRemoteUrlService.tryGetGitRepositoryRoot.mockReturnValue(
+          '/project',
+        );
+        mockConfigFileRepository.findAllConfigsInTree.mockResolvedValue(
+          allConfigs,
+        );
+        mockListFiles.listFilesInDirectory.mockResolvedValue([
+          { path: '/project/src/file.ts' },
+        ]);
+        mockListFiles.readFileContent.mockResolvedValue('const x = 1;');
+        mockLinterGateway.getDetectionProgramsForPackages.mockResolvedValue(
+          sharedPrograms,
+        );
+
+        result = await useCase.execute({ path: '/project' });
+      });
+
+      it('deduplicates programs from overlapping configs', () => {
+        expect(result.violations[0].violations).toHaveLength(1);
+      });
+    });
+
     it('caches API calls for identical package sets', async () => {
       const allConfigs: AllConfigsResult = {
         configs: [
