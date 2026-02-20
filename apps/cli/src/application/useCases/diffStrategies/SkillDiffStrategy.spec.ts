@@ -136,11 +136,12 @@ describe('SkillDiffStrategy', () => {
       expect(contentDiff).toBeDefined();
     });
 
-    it('includes old and new values without isBase64', () => {
+    it('includes old and new values with isBase64 false', () => {
       expect(contentDiff!.payload).toEqual({
         targetId: createSkillFileId('helper.ts'),
         oldValue: 'const x = 1;',
         newValue: 'const x = 2;',
+        isBase64: false,
       });
     });
   });

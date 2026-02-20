@@ -717,6 +717,7 @@ describe('DiffArtefactsUseCase', () => {
         targetId: 'skill-file-1',
         oldValue: 'server content',
         newValue: 'local content',
+        isBase64: false,
       });
     });
   });
