@@ -24,6 +24,7 @@
     "@packmind/playbook-change-management": "*",
     "uuid": "11.1.0",
     "@packmind/test-utils": "*",
-    "@packmind/llm": "*"
+    "@packmind/llm": "*",
+    "jest-stage": "^1.0.0"
   }
 }
