@@ -3,6 +3,7 @@ import {
   ChangeProposal,
   ChangeProposalPayload,
   ChangeProposalType,
+  createRuleId,
   createStandardId,
 } from '@packmind/types';
 import { DiffService } from '../DiffService';
@@ -25,7 +26,7 @@ describe('makeDetectAddSubItemConflict', () => {
     diffService = {} as jest.Mocked<DiffService>;
     detectAddSubItemConflict = makeDetectAddSubItemConflict(() => {
       throw new Error('...');
-    });
+    }, {});
   });
 
   it('returns false if items have the same id', () => {
@@ -118,6 +119,56 @@ describe('detectAddRuleConflict', () => {
         diffService,
       ),
     ).toEqual(true);
+  });
+
+  describe('when the second proposal updates a rule', () => {
+    const payload = {
+      item: {
+        content: 'My new rule',
+      },
+    };
+
+    it('returns false if the second proposal renames a rule with another value', () => {
+      expect(
+        detectAddRuleConflict(
+          {
+            ...changeProposal,
+            payload,
+          },
+          changeProposalFactory({
+            type: ChangeProposalType.updateRule,
+            artefactId: changeProposal.artefactId,
+            payload: {
+              targetId: createRuleId('second-rule'),
+              oldValue: 'whatever',
+              newValue: 'Something completely different',
+            },
+          }),
+          diffService,
+        ),
+      ).toEqual(false);
+    });
+
+    it('returns true if the second proposal renames a rule with the same name', () => {
+      expect(
+        detectAddRuleConflict(
+          {
+            ...changeProposal,
+            payload,
+          },
+          changeProposalFactory({
+            type: ChangeProposalType.updateRule,
+            artefactId: changeProposal.artefactId,
+            payload: {
+              targetId: createRuleId('second-rule'),
+              oldValue: 'whatever',
+              newValue: payload.item.content,
+            },
+          }),
+          diffService,
+        ),
+      ).toEqual(true);
+    });
   });
 });
 
