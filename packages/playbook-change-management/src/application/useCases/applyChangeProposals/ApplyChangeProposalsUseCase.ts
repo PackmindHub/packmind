@@ -29,6 +29,7 @@ import { validateSpaceOwnership } from '../../services/validateSpaceOwnership';
 import { validateArtefactInSpace } from '../../services/validateArtefactInSpace';
 import { ChangeProposalConflictError } from '../../../domain/errors/ChangeProposalConflictError';
 import { DiffService } from '../../services/DiffService';
+import { ApplyCommandChangeProposals } from './ApplyCommandChangeProposals';
 
 const origin = 'ApplyChangeProposalsUseCase';
 
@@ -159,36 +160,30 @@ export class ApplyChangeProposalsUseCase<
       throw new Error(`Recipe ${command.artefactId} not found`);
     }
 
-    // Compute all changes in memory (for accepted proposals)
-    const updatedFields = { name: recipe.name, content: recipe.content };
+    const recipeVersion = await this.recipesPort.getRecipeVersion(
+      recipe.id,
+      recipe.version,
+    );
+    if (!recipeVersion) {
+      throw new Error(
+        `No version #${recipe.version} found for recipe ${command.artefactId}`,
+      );
+    }
 
-    for (const changeProposalId of command.accepted) {
+    const changeProposalsToApply = command.accepted.map((changeProposalId) => {
       const proposal = changeProposals.find((p) => p?.id === changeProposalId);
 
       if (!proposal) {
         throw new Error(`Change proposal ${changeProposalId} not found`);
       }
+      return proposal;
+    });
 
-      const payload = proposal.payload as ScalarUpdatePayload;
-
-      if (proposal.type === ChangeProposalType.updateCommandName) {
-        updatedFields.name = payload.newValue;
-      } else if (
-        proposal.type === ChangeProposalType.updateCommandDescription
-      ) {
-        const diffResult = this.diffService.applyLineDiff(
-          payload.oldValue,
-          payload.newValue,
-          updatedFields.content,
-        );
-
-        if (!diffResult.success) {
-          throw new ChangeProposalConflictError(proposal.id);
-        }
-
-        updatedFields.content = diffResult.value;
-      }
-    }
+    const changesApplier = new ApplyCommandChangeProposals(this.diffService);
+    const recipeVersionWithChanges = changesApplier.applyChangeProposals(
+      recipeVersion,
+      changeProposalsToApply,
+    );
 
     // Re-validate that all proposals are still pending (fresh from DB)
     // This prevents race conditions where proposals were already processed
@@ -218,10 +213,10 @@ export class ApplyChangeProposalsUseCase<
     if (command.accepted.length > 0) {
       const updateResult = await this.recipesPort.updateRecipeFromUI({
         recipeId: recipe.id,
-        name: updatedFields.name,
-        content: updatedFields.content,
+        name: recipeVersionWithChanges.name,
+        content: recipeVersionWithChanges.content,
         userId: command.userId as UserId,
-        spaceId: command.spaceId as SpaceId,
+        spaceId: command.spaceId,
         organizationId: command.organization.id,
       });
 

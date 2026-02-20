@@ -124,6 +124,7 @@ describe('ApplyChangeProposalsUseCase', () => {
       id: recipeVersionId,
       recipeId,
       version: 2,
+      content: 'Test content',
     });
 
     beforeEach(() => {
