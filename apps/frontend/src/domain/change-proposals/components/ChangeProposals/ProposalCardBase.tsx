@@ -36,7 +36,8 @@ export function ProposalCardBase({
   onSelect,
   actions,
 }: ProposalCardBaseProps) {
-  const authorEmail = userLookup.get(proposal.createdBy) ?? 'Unknown user';
+  const authorDisplayName =
+    userLookup.get(proposal.createdBy) ?? 'Unknown user';
   const isOutdated =
     currentArtefactVersion !== undefined &&
     proposal.artefactVersion !== currentArtefactVersion;
@@ -63,7 +64,7 @@ export function ProposalCardBase({
             <PMText fontSize="xs" color="secondary">
               -
             </PMText>
-            <UserAvatarWithInitials displayName={authorEmail} size="xs" />
+            <UserAvatarWithInitials displayName={authorDisplayName} size="xs" />
           </PMHStack>
           {actions}
         </PMHStack>
