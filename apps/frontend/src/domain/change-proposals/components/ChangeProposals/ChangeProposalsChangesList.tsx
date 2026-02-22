@@ -95,7 +95,7 @@ export function ChangeProposalsChangesList({
                 >
                   Pending
                 </PMText>
-                <PMBadge colorPalette="orange" size="sm">
+                <PMBadge colorPalette="blue" size="sm">
                   {pendingProposals.length}
                 </PMBadge>
               </PMHStack>
