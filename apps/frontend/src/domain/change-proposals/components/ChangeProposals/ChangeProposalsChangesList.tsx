@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { PMBox, PMText, PMVStack } from '@packmind/ui';
+import { PMBadge, PMBox, PMHStack, PMText, PMVStack } from '@packmind/ui';
 import {
   ChangeProposalId,
   ChangeProposalStatus,
@@ -86,15 +86,19 @@ export function ChangeProposalsChangesList({
 
           {pendingProposals.length > 0 && (
             <PMVStack gap={2}>
-              <PMText
-                fontSize="xs"
-                fontWeight="bold"
-                color="secondary"
-                textTransform="uppercase"
-                width="full"
-              >
-                Pending ({pendingProposals.length})
-              </PMText>
+              <PMHStack gap={1} align="center" width="full">
+                <PMText
+                  fontSize="xs"
+                  fontWeight="bold"
+                  color="secondary"
+                  textTransform="uppercase"
+                >
+                  Pending
+                </PMText>
+                <PMBadge colorPalette="orange" size="sm">
+                  {pendingProposals.length}
+                </PMBadge>
+              </PMHStack>
               {pendingProposals.map((proposal) => (
                 <PendingProposalCard
                   key={proposal.id}
