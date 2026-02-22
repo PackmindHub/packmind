@@ -72,10 +72,7 @@ export function ProposalCardBase({
         </PMText>
         <PMHStack gap={2} align="center">
           <PMText fontSize="xs" color="secondary">
-            <PMText as="span" fontWeight="bold">
-              Base version
-            </PMText>{' '}
-            {proposal.artefactVersion}
+            Base version {proposal.artefactVersion}
           </PMText>
           {isOutdated && (
             <PMTooltip label="This proposal was made on an outdated version">
