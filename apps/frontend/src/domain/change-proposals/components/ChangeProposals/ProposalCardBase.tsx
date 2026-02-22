@@ -70,11 +70,11 @@ export function ProposalCardBase({
         <PMText fontSize="sm" fontWeight="bold">
           {getChangeProposalFieldLabel(proposal.type)}
         </PMText>
-        <PMHStack gap={2} align="center">
-          <PMText fontSize="xs" color="secondary">
-            Base version {proposal.artefactVersion}
-          </PMText>
-          {isOutdated && (
+        {isOutdated && (
+          <PMHStack gap={2} align="center">
+            <PMText fontSize="xs" color="secondary">
+              Base version {proposal.artefactVersion}
+            </PMText>
             <PMTooltip label="This proposal was made on an outdated version">
               <PMBadge colorPalette="orange" variant="subtle" size="sm">
                 <PMIcon>
@@ -83,8 +83,8 @@ export function ProposalCardBase({
                 Outdated
               </PMBadge>
             </PMTooltip>
-          )}
-        </PMHStack>
+          </PMHStack>
+        )}
       </PMVStack>
     </PMBox>
   );
