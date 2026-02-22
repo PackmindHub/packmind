@@ -23,6 +23,7 @@ import { LuHouse, LuSettings, LuWrench } from 'react-icons/lu';
 import { useGetSpacesQuery } from '../../spaces/api/queries/SpacesQueries';
 import { routes } from '../../../shared/utils/routes';
 import { SidebarNavigationDataTestId } from '@packmind/frontend';
+import { ReviewChangesNavLink } from '../../change-proposals/components/ReviewChangesNavLink';
 
 interface ISidebarNavigationProps {
   organization: AuthContextOrganization | undefined;
@@ -36,6 +37,7 @@ interface SidebarNavigationLinkProps {
   badge?: {
     text: string;
     colorScheme?: string;
+    tooltipLabel?: string;
   };
   'data-testid'?: string;
 }
@@ -61,8 +63,19 @@ export function SidebarNavigationLink(
             {icon && <PMIcon mr={2}>{icon}</PMIcon>}
             {label}
           </span>
-          {badge && (
-            <PMTooltip label="Coming soon to the Enterprise plan">
+          {badge &&
+            (badge.tooltipLabel ? (
+              <PMTooltip label={badge.tooltipLabel}>
+                <PMBadge
+                  size="sm"
+                  colorScheme={badge.colorScheme || 'purple'}
+                  ml={2}
+                  fontSize="xs"
+                >
+                  {badge.text}
+                </PMBadge>
+              </PMTooltip>
+            ) : (
               <PMBadge
                 size="sm"
                 colorScheme={badge.colorScheme || 'purple'}
@@ -71,8 +84,7 @@ export function SidebarNavigationLink(
               >
                 {badge.text}
               </PMBadge>
-            </PMTooltip>
-          )}
+            ))}
         </PMLink>
       )}
     </NavLink>
@@ -148,9 +160,9 @@ export const SidebarNavigation: React.FunctionComponent<
             featureDomainMap={DEFAULT_FEATURE_DOMAIN_MAP}
             userEmail={user?.email}
           >
-            <SidebarNavigationLink
-              url={routes.space.toReviewChanges(orgSlug, currentSpaceSlug)}
-              label="Review changes"
+            <ReviewChangesNavLink
+              orgSlug={orgSlug}
+              spaceSlug={currentSpaceSlug}
             />
           </PMFeatureFlag>,
         ]}
@@ -168,7 +180,11 @@ export const SidebarNavigation: React.FunctionComponent<
             key="overview"
             url={routes.org.toDeployments(orgSlug)}
             label="Overview"
-            badge={{ text: 'Enterprise', colorScheme: 'purple' }}
+            badge={{
+              text: 'Enterprise',
+              colorScheme: 'purple',
+              tooltipLabel: 'Coming soon to the Enterprise plan',
+            }}
           />,
         ]}
       />
