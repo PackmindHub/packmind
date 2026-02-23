@@ -19,15 +19,6 @@ const DIFF_SUBMIT_COMMAND = 'packmind-cli diff --submit';
 export const ReviewChangesBlankState = () => {
   return (
     <PMVStack gap={4} width="full">
-      <PMAlert.Root status="info">
-        <PMAlert.Indicator />
-        <PMAlert.Content>
-          <PMAlert.Description>
-            Playbook update management will soon require an Enterprise plan.
-          </PMAlert.Description>
-        </PMAlert.Content>
-      </PMAlert.Root>
-
       <PMBox
         borderRadius={'md'}
         backgroundColor={'background.primary'}
@@ -35,11 +26,19 @@ export const ReviewChangesBlankState = () => {
         border="solid 1px"
         borderColor={'border.tertiary'}
       >
+        <PMAlert.Root status="info" mb={4}>
+          <PMAlert.Indicator />
+          <PMAlert.Content>
+            <PMAlert.Description>
+              Playbook update management will soon require an Enterprise plan.
+            </PMAlert.Description>
+          </PMAlert.Content>
+        </PMAlert.Root>
+
         <PMHeading level="h2">No playbook updates to review.</PMHeading>
         <PMText as="p" fontWeight={'medium'} color="secondary">
-          When your AI agents modify standards, commands, or skills locally, use
-          the Packmind CLI to submit those changes as proposals. They will
-          appear here for your team to review and approve.
+          The Packmind CLI detects local changes to your local playbook, then
+          submits them as change proposals for your team to review.
         </PMText>
 
         <PMVStack alignItems={'flex-start'} width={'full'} mt={8}>
