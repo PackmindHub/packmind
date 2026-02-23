@@ -8,9 +8,12 @@ import {
   ISpacesPort,
   createOrganizationId,
   createSpaceId,
+  createSkillFileId,
 } from '@packmind/types';
+import { v4 as uuidv4 } from 'uuid';
 import { SkillService } from '../../services/SkillService';
 import { SkillVersionService } from '../../services/SkillVersionService';
+import { SkillFileService } from '../../services/SkillFileService';
 
 const origin = 'SaveSkillVersionUsecase';
 
@@ -26,6 +29,7 @@ export class SaveSkillVersionUsecase
     private readonly spacesPort: ISpacesPort,
     private readonly skillService: SkillService,
     private readonly skillVersionService: SkillVersionService,
+    private readonly skillFileService: SkillFileService,
     logger: PackmindLogger = new PackmindLogger(origin),
   ) {
     super(accountsPort, logger);
@@ -113,6 +117,30 @@ export class SaveSkillVersionUsecase
         metadata: skillVersion.metadata,
         version: newVersionNumber,
       });
+
+      // Create skill files if provided
+      if (skillVersion.skillFiles && skillVersion.skillFiles.length > 0) {
+        this.logger.info('Creating skill files', {
+          count: skillVersion.skillFiles.length,
+          versionId: savedVersion.id,
+        });
+
+        const skillFiles = skillVersion.skillFiles.map((file) => ({
+          id: createSkillFileId(uuidv4()),
+          skillVersionId: savedVersion.id,
+          path: file.path,
+          content: file.content,
+          permissions: file.permissions,
+          isBase64: file.isBase64,
+        }));
+
+        await this.skillFileService.addMany(skillFiles);
+
+        this.logger.info('Skill files created successfully', {
+          count: skillFiles.length,
+          versionId: savedVersion.id,
+        });
+      }
 
       // Update the skill with the new version and data
       await this.skillService.updateSkill(skillVersion.skillId, {

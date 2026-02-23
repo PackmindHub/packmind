@@ -18,12 +18,14 @@ import { skillFactory } from '../../../../test/skillFactory';
 import { skillVersionFactory } from '../../../../test/skillVersionFactory';
 import { SkillService } from '../../services/SkillService';
 import { SkillVersionService } from '../../services/SkillVersionService';
+import { SkillFileService } from '../../services/SkillFileService';
 import { SaveSkillVersionUsecase } from './saveSkillVersion.usecase';
 
 describe('SaveSkillVersionUsecase', () => {
   let usecase: SaveSkillVersionUsecase;
   let skillVersionService: jest.Mocked<SkillVersionService>;
   let skillService: jest.Mocked<SkillService>;
+  let skillFileService: jest.Mocked<SkillFileService>;
   let accountsPort: jest.Mocked<IAccountsPort>;
   let spacesPort: jest.Mocked<ISpacesPort>;
   let stubbedLogger: jest.Mocked<PackmindLogger>;
@@ -38,6 +40,10 @@ describe('SaveSkillVersionUsecase', () => {
       getSkillById: jest.fn(),
       updateSkill: jest.fn(),
     } as unknown as jest.Mocked<SkillService>;
+
+    skillFileService = {
+      addMany: jest.fn(),
+    } as unknown as jest.Mocked<SkillFileService>;
 
     accountsPort = {
       getUserById: jest.fn(),
@@ -55,6 +61,7 @@ describe('SaveSkillVersionUsecase', () => {
       spacesPort,
       skillService,
       skillVersionService,
+      skillFileService,
       stubbedLogger,
     );
   });
@@ -106,6 +113,7 @@ describe('SaveSkillVersionUsecase', () => {
         compatibility: 'All environments',
         metadata: { version: 'v2' },
         allowedTools: 'Read,Write',
+        skillFiles: [],
       };
 
       command = {
@@ -211,6 +219,74 @@ describe('SaveSkillVersionUsecase', () => {
       expect(result).toEqual(savedSkillVersion);
     });
 
+    describe('when skill files are provided', () => {
+      beforeEach(() => {
+        skillVersionInput.skillFiles = [
+          {
+            path: '/path/to/file1.txt',
+            content: 'file1 content',
+            permissions: '644',
+            isBase64: false,
+          },
+          {
+            path: '/path/to/file2.txt',
+            content: 'file2 content',
+            permissions: '755',
+            isBase64: false,
+          },
+        ];
+
+        command = {
+          userId,
+          organizationId,
+          spaceId,
+          skillVersion: skillVersionInput,
+        };
+      });
+
+      it('creates skill files with generated IDs', async () => {
+        await usecase.execute(command);
+
+        expect(skillFileService.addMany).toHaveBeenCalledWith(
+          expect.arrayContaining([
+            expect.objectContaining({
+              skillVersionId: savedSkillVersion.id,
+              path: '/path/to/file1.txt',
+              content: 'file1 content',
+              permissions: '644',
+              isBase64: false,
+            }),
+            expect.objectContaining({
+              skillVersionId: savedSkillVersion.id,
+              path: '/path/to/file2.txt',
+              content: 'file2 content',
+              permissions: '755',
+              isBase64: false,
+            }),
+          ]),
+        );
+      });
+    });
+
+    describe('when no skill files are provided', () => {
+      beforeEach(() => {
+        skillVersionInput.skillFiles = [];
+
+        command = {
+          userId,
+          organizationId,
+          spaceId,
+          skillVersion: skillVersionInput,
+        };
+      });
+
+      it('does not create skill files', async () => {
+        await usecase.execute(command);
+
+        expect(skillFileService.addMany).not.toHaveBeenCalled();
+      });
+    });
+
     describe('when no previous version exists', () => {
       beforeEach(() => {
         skillVersionService.getLatestSkillVersion.mockResolvedValue(null);
@@ -270,6 +346,7 @@ describe('SaveSkillVersionUsecase', () => {
             slug: 'test',
             description: 'Test',
             prompt: 'Test',
+            skillFiles: [],
           },
         };
 
@@ -316,6 +393,7 @@ describe('SaveSkillVersionUsecase', () => {
             slug: 'test',
             description: 'Test',
             prompt: 'Test',
+            skillFiles: [],
           },
         };
 
@@ -358,12 +436,12 @@ describe('SaveSkillVersionUsecase', () => {
           spaceId,
           skillVersion: {
             skillId,
-            version: 1,
             userId,
             name: 'Test',
             slug: 'test',
             description: 'Test',
             prompt: 'Test',
+            skillFiles: [],
           },
         };
 
@@ -410,12 +488,12 @@ describe('SaveSkillVersionUsecase', () => {
           spaceId,
           skillVersion: {
             skillId,
-            version: 1,
             userId,
             name: 'Test',
             slug: 'test',
             description: 'Test',
             prompt: 'Test',
+            skillFiles: [],
           },
         };
 
@@ -459,6 +537,7 @@ describe('SaveSkillVersionUsecase', () => {
             slug: 'test',
             description: 'Test',
             prompt: 'Test',
+            skillFiles: [],
           },
         };
 
@@ -502,6 +581,7 @@ describe('SaveSkillVersionUsecase', () => {
             slug: 'test',
             description: 'Test',
             prompt: 'Test',
+            skillFiles: [],
           },
         };
 
@@ -549,6 +629,7 @@ describe('SaveSkillVersionUsecase', () => {
             slug: 'test',
             description: 'Test',
             prompt: 'Test',
+            skillFiles: [],
           },
         };
 

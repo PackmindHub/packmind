@@ -197,6 +197,7 @@ export class SkillsAdapter implements IBaseAdapter<ISkillsPort>, ISkillsPort {
       this.spacesPort,
       this.services.getSkillService(),
       this.services.getSkillVersionService(),
+      this.services.getSkillFileService(),
     );
 
     this.logger.info('SkillsAdapter initialized successfully');
