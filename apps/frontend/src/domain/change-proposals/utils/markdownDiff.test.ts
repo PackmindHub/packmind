@@ -180,12 +180,9 @@ describe('buildDiffHtml', () => {
         expect(result).toContain('<code');
       });
 
-      it('does not contain del tags', () => {
-        expect(result).not.toContain('<del>');
-      });
-
-      it('does not contain ins tags', () => {
-        expect(result).not.toContain('<ins>');
+      it('does not contain diff markers', () => {
+        expect(result).not.toContain('diff-del');
+        expect(result).not.toContain('diff-ins');
       });
     });
 
@@ -203,16 +200,34 @@ describe('buildDiffHtml', () => {
         expect(preCount).toBe(1);
       });
 
-      it('contains del tags for removed code', () => {
-        expect(result).toContain('<del>');
+      it('uses span with diff-del class for removed code', () => {
+        expect(result).toContain('<span class="diff-del">');
       });
 
-      it('contains ins tags for added code', () => {
-        expect(result).toContain('<ins>');
+      it('uses span with diff-ins class for added code', () => {
+        expect(result).toContain('<span class="diff-ins">');
       });
 
       it('includes language class', () => {
         expect(result).toContain('class="language-js"');
+      });
+    });
+
+    describe('when lines are added', () => {
+      const oldValue = '```ts\nconst a = 1;\nconst b = 2;\n```';
+      const newValue = '```ts\nconst a = 1;\n// new line\nconst b = 2;\n```';
+      let result: string;
+
+      beforeEach(() => {
+        result = buildDiffHtml(oldValue, newValue);
+      });
+
+      it('uses span with diff-ins class for added lines', () => {
+        expect(result).toContain('<span class="diff-ins">');
+      });
+
+      it('does not use raw ins tags inside code block', () => {
+        expect(result).not.toMatch(/<code[^>]*>[\s\S]*<ins>/);
       });
     });
 
@@ -238,7 +253,7 @@ describe('buildDiffHtml', () => {
       });
 
       it('does not contain unescaped HTML in code blocks', () => {
-        expect(result).not.toMatch(/<code[^>]*>.*[^&]<[^/di]/);
+        expect(result).not.toMatch(/<code[^>]*>.*[^&]<[^/dis]/);
       });
     });
   });

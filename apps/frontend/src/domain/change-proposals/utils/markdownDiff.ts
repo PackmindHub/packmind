@@ -94,8 +94,8 @@ function renderCodeBlockDiff(
   const diffHtml = changes
     .map((change) => {
       const escaped = escapeHtml(change.value);
-      if (change.added) return `<ins>${escaped}</ins>`;
-      if (change.removed) return `<del>${escaped}</del>`;
+      if (change.added) return `<span class="diff-ins">${escaped}</span>`;
+      if (change.removed) return `<span class="diff-del">${escaped}</span>`;
       return escaped;
     })
     .join('');
@@ -133,6 +133,12 @@ function renderDeletedToken(token: Token): string {
     const content = renderInlineContent(heading.text);
     return `<h${heading.depth}><del>${content}</del></h${heading.depth}>\n`;
   }
+  if (token.type === 'code') {
+    const code = token as Tokens.Code;
+    const langClass = code.lang ? ` class="language-${code.lang}"` : '';
+    const escaped = escapeHtml(code.text);
+    return `<pre><code${langClass}><span class="diff-del">${escaped}</span>\n</code></pre>\n`;
+  }
   return `<del>${renderToken(token)}</del>`;
 }
 
@@ -148,6 +154,12 @@ function renderAddedToken(token: Token): string {
     const heading = token as Tokens.Heading;
     const content = renderInlineContent(heading.text);
     return `<h${heading.depth}><ins>${content}</ins></h${heading.depth}>\n`;
+  }
+  if (token.type === 'code') {
+    const code = token as Tokens.Code;
+    const langClass = code.lang ? ` class="language-${code.lang}"` : '';
+    const escaped = escapeHtml(code.text);
+    return `<pre><code${langClass}><span class="diff-ins">${escaped}</span>\n</code></pre>\n`;
   }
   return `<ins>${renderToken(token)}</ins>`;
 }
@@ -181,13 +193,13 @@ function renderModifiedPair(oldToken: Token, newToken: Token): string {
 }
 
 export const markdownDiffCss = {
-  '& ins': {
+  '& ins, & .diff-ins': {
     backgroundColor: 'var(--Palette-Semantic-Green800)',
     padding: '0 2px',
     borderRadius: '2px',
     textDecoration: 'none',
   },
-  '& del': {
+  '& del, & .diff-del': {
     backgroundColor: 'var(--Palette-Semantic-Red800)',
     padding: '0 2px',
     borderRadius: '2px',

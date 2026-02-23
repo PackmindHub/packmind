@@ -36,7 +36,8 @@ export function ProposalCardBase({
   onSelect,
   actions,
 }: ProposalCardBaseProps) {
-  const authorEmail = userLookup.get(proposal.createdBy) ?? 'Unknown user';
+  const authorDisplayName =
+    userLookup.get(proposal.createdBy) ?? 'Unknown user';
   const isOutdated =
     currentArtefactVersion !== undefined &&
     proposal.artefactVersion !== currentArtefactVersion;
@@ -63,21 +64,18 @@ export function ProposalCardBase({
             <PMText fontSize="xs" color="secondary">
               -
             </PMText>
-            <UserAvatarWithInitials displayName={authorEmail} size="xs" />
+            <UserAvatarWithInitials displayName={authorDisplayName} size="xs" />
           </PMHStack>
           {actions}
         </PMHStack>
         <PMText fontSize="sm" fontWeight="bold">
           {getChangeProposalFieldLabel(proposal.type)}
         </PMText>
-        <PMHStack gap={2} align="center">
-          <PMText fontSize="xs" color="secondary">
-            <PMText as="span" fontWeight="bold">
-              Base version
-            </PMText>{' '}
-            {proposal.artefactVersion}
-          </PMText>
-          {isOutdated && (
+        {isOutdated && (
+          <PMHStack gap={2} align="center">
+            <PMText fontSize="xs" color="secondary">
+              From version {proposal.artefactVersion}
+            </PMText>
             <PMTooltip label="This proposal was made on an outdated version">
               <PMBadge colorPalette="orange" variant="subtle" size="sm">
                 <PMIcon>
@@ -86,8 +84,8 @@ export function ProposalCardBase({
                 Outdated
               </PMBadge>
             </PMTooltip>
-          )}
-        </PMHStack>
+          </PMHStack>
+        )}
       </PMVStack>
     </PMBox>
   );

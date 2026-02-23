@@ -50,9 +50,12 @@ export const getGroupedChangeProposalsOptions = (
   enabled: !!organizationId && !!spaceId,
 });
 
-export const useGetGroupedChangeProposalsQuery = () => {
+export const useGetGroupedChangeProposalsQuery = (
+  overrideSpaceId?: SpaceId,
+) => {
   const { organization } = useAuthContext();
-  const { spaceId } = useCurrentSpace();
+  const { spaceId: currentSpaceId } = useCurrentSpace();
+  const spaceId = overrideSpaceId ?? currentSpaceId;
 
   return useQuery(getGroupedChangeProposalsOptions(organization?.id, spaceId));
 };

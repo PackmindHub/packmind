@@ -7,7 +7,7 @@ import { ChangeProposalWithConflicts } from '../types';
 
 const changeProposalFieldLabels: Record<ChangeProposalType, string> = {
   [ChangeProposalType.updateCommandName]: 'Name',
-  [ChangeProposalType.updateCommandDescription]: 'Description',
+  [ChangeProposalType.updateCommandDescription]: 'Instructions updated',
   [ChangeProposalType.updateStandardName]: 'Name',
   [ChangeProposalType.updateStandardDescription]: 'Description',
   [ChangeProposalType.updateStandardScope]: 'Scope',
