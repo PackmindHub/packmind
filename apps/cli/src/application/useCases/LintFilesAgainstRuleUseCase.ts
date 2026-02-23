@@ -540,12 +540,12 @@ export class LintFilesAgainstRuleUseCase implements ILintFilesAgainstRule {
     fallbackLanguage?: string,
   ) => {
     return {
-      language: item.program.language ?? fallbackLanguage,
+      language: item.language ?? fallbackLanguage,
       severity: item.severity,
       detectionProgram: {
-        mode: item.program.mode,
-        code: item.program.code,
-        sourceCodeState: item.program.sourceCodeState,
+        mode: item.mode,
+        code: item.code,
+        sourceCodeState: item.sourceCodeState,
       },
     };
   };
