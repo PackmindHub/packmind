@@ -192,35 +192,40 @@ jobs:
       # ========================================================================
       # STEP 2: CVE SCANNING (ALL 3 IMAGES)
       # ========================================================================
+      - name: Install Docker Scout CLI
+        run: |
+          curl -fsSL https://raw.githubusercontent.com/docker/scout-cli/main/install.sh -o install-scout.sh
+          sh install-scout.sh
+
       - name: Scan API Docker image for vulnerabilities
-        uses: docker/scout-action@v1
-        with:
-          command: cves
-          organization: packmind
-          image: packmind/api${{ steps.set-image-naming.outputs.name_suffix }}:${{ steps.get-version.outputs.version }}${{ steps.set-image-naming.outputs.version_suffix }}
-          only-fixed: true # set to false in most cases
-          only-severities: critical #,high
-          exit-code: true
+        run: |
+          docker scout cves \
+            --exit-code \
+            --only-fixed \
+            --only-severity critical \
+            --org packmind \
+            --ignore-suppressed \
+            "packmind/api${{ steps.set-image-naming.outputs.name_suffix }}:${{ steps.get-version.outputs.version }}${{ steps.set-image-naming.outputs.version_suffix }}"
 
       - name: Scan Frontend Docker image for vulnerabilities
-        uses: docker/scout-action@v1
-        with:
-          command: cves
-          organization: packmind
-          image: packmind/frontend${{ steps.set-image-naming.outputs.name_suffix }}:${{ steps.get-version.outputs.version }}${{ steps.set-image-naming.outputs.version_suffix }}
-          only-severities: critical #,high
-          only-fixed: true # set to false in most cases
-          exit-code: true
+        run: |
+          docker scout cves \
+            --exit-code \
+            --only-fixed \
+            --only-severity critical \
+            --org packmind \
+            --ignore-suppressed \
+            "packmind/frontend${{ steps.set-image-naming.outputs.name_suffix }}:${{ steps.get-version.outputs.version }}${{ steps.set-image-naming.outputs.version_suffix }}"
 
       - name: Scan MCP Server Docker image for vulnerabilities
-        uses: docker/scout-action@v1
-        with:
-          command: cves
-          organization: packmind
-          image: packmind/mcp${{ steps.set-image-naming.outputs.name_suffix }}:${{ steps.get-version.outputs.version }}${{ steps.set-image-naming.outputs.version_suffix }}
-          only-severities: critical
-          only-fixed: true # set to false in most cases
-          exit-code: true
+        run: |
+          docker scout cves \
+            --exit-code \
+            --only-fixed \
+            --only-severity critical \
+            --org packmind \
+            --ignore-suppressed \
+            "packmind/mcp${{ steps.set-image-naming.outputs.name_suffix }}:${{ steps.get-version.outputs.version }}${{ steps.set-image-naming.outputs.version_suffix }}"
 
       # ========================================================================
       # STEP 3: PUSH IMAGES
