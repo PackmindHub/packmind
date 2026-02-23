@@ -13,6 +13,10 @@ import {
 } from '../utils/consoleLogger';
 
 export class HumanReadableLogger implements ILogger {
+  private effectiveSeverity(s?: DetectionSeverity): DetectionSeverity {
+    return s ?? DetectionSeverity.ERROR;
+  }
+
   logViolations(violations: LintViolation[]) {
     violations.forEach((violation) => {
       this.logViolation(violation);
@@ -25,16 +29,20 @@ export class HumanReadableLogger implements ILogger {
 
     const allDetails = violations.flatMap((v) => v.violations);
     const errorCount = allDetails.filter(
-      (d) => d.severity === DetectionSeverity.ERROR,
+      (d) => this.effectiveSeverity(d.severity) === DetectionSeverity.ERROR,
     ).length;
     const warningCount = allDetails.filter(
-      (d) => d.severity === DetectionSeverity.WARNING,
+      (d) => this.effectiveSeverity(d.severity) === DetectionSeverity.WARNING,
     ).length;
     const errorFileCount = violations.filter((v) =>
-      v.violations.some((d) => d.severity === DetectionSeverity.ERROR),
+      v.violations.some(
+        (d) => this.effectiveSeverity(d.severity) === DetectionSeverity.ERROR,
+      ),
     ).length;
     const warningFileCount = violations.filter((v) =>
-      v.violations.some((d) => d.severity === DetectionSeverity.WARNING),
+      v.violations.some(
+        (d) => this.effectiveSeverity(d.severity) === DetectionSeverity.WARNING,
+      ),
     ).length;
 
     if (errorCount > 0) {
@@ -53,10 +61,11 @@ export class HumanReadableLogger implements ILogger {
     logConsole(formatFilePath(violation.file));
     violation.violations.forEach(
       ({ line, character, standard, rule, severity }) => {
+        const effective = this.effectiveSeverity(severity);
         const label =
-          severity === DetectionSeverity.WARNING ? 'warning' : 'error';
+          effective === DetectionSeverity.WARNING ? 'warning' : 'error';
         const format =
-          severity === DetectionSeverity.WARNING ? formatWarning : formatError;
+          effective === DetectionSeverity.WARNING ? formatWarning : formatError;
         logConsole(
           format(`\t${line}:${character}\t${label}\t@${standard}/${rule}`),
         );
