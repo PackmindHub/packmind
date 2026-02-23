@@ -4,7 +4,6 @@ import {
   DetectionSeverity,
   IExecuteLinterProgramsUseCase,
   LinterExecutionProgram,
-  DetectionSeverity,
 } from '@packmind/types';
 import {
   TestProgramExecutionCommand,

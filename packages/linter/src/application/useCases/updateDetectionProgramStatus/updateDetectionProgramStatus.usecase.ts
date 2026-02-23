@@ -6,7 +6,6 @@ import {
   ExecuteLinterProgramsCommand,
   ExecuteLinterProgramsResult,
   LinterExecutionProgram,
-  DetectionSeverity,
 } from '@packmind/types';
 import { ProgrammingLanguage } from '@packmind/types';
 import { ILinterRepositories } from '../../../domain/repositories/ILinterRepositories';

@@ -8,5 +8,5 @@ export interface LinterRuleSeverityUpdatedPayload {
 }
 
 export class LinterRuleSeverityUpdatedEvent extends UserEvent<LinterRuleSeverityUpdatedPayload> {
-  static override readonly eventName = 'linter.rule.severityUpdated';
+  static override readonly eventName = 'linter.rule.severity-updated';
 }
