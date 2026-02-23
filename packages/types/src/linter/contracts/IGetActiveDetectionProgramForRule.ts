@@ -9,8 +9,7 @@ export type GetActiveDetectionProgramForRuleCommand = PackmindCommand & {
   language?: string;
 };
 
-export type DetectionProgramWithSeverity = {
-  program: DetectionProgram;
+export type DetectionProgramWithSeverity = DetectionProgram & {
   severity?: DetectionSeverity;
 };
 

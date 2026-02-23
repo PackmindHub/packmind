@@ -110,12 +110,10 @@ describe('LintFilesAgainstRuleUseCase', () => {
         ruleContent: 'Interface names should start with I',
         programs: [
           {
-            program: {
-              language: 'typescript',
-              mode: DetectionModeEnum.SINGLE_AST,
-              code: 'function checkSourceCode(ast) { return [1]; }',
-              sourceCodeState: 'AST' as const,
-            },
+            language: 'typescript',
+            mode: DetectionModeEnum.SINGLE_AST,
+            code: 'function checkSourceCode(ast) { return [1]; }',
+            sourceCodeState: 'AST' as const,
             severity: DetectionSeverity.ERROR,
           },
         ],
@@ -208,12 +206,10 @@ describe('LintFilesAgainstRuleUseCase', () => {
         ruleContent: 'Test rule',
         programs: [
           {
-            program: {
-              language: 'typescript',
-              mode: DetectionModeEnum.SINGLE_AST,
-              code: 'function checkSourceCode(ast) { return []; }',
-              sourceCodeState: 'AST' as const,
-            },
+            language: 'typescript',
+            mode: DetectionModeEnum.SINGLE_AST,
+            code: 'function checkSourceCode(ast) { return []; }',
+            sourceCodeState: 'AST' as const,
             severity: DetectionSeverity.ERROR,
           },
         ],
@@ -266,12 +262,10 @@ describe('LintFilesAgainstRuleUseCase', () => {
           ruleContent: 'Interface names should start with I',
           programs: [
             {
-              program: {
-                language: 'typescript',
-                mode: DetectionModeEnum.SINGLE_AST,
-                code: 'function checkSourceCode(ast) { return [1]; }',
-                sourceCodeState: 'AST' as const,
-              },
+              language: 'TYPESCRIPT',
+              mode: DetectionModeEnum.SINGLE_AST,
+              code: 'function checkSourceCode(ast) { return [1]; }',
+              sourceCodeState: 'AST' as const,
               severity: DetectionSeverity.ERROR,
             },
           ],
@@ -334,12 +328,10 @@ describe('LintFilesAgainstRuleUseCase', () => {
           ruleContent: 'Test rule',
           programs: [
             {
-              program: {
-                language: 'js',
-                mode: DetectionModeEnum.SINGLE_AST,
-                code: 'function check() { return [1]; }',
-                sourceCodeState: 'AST' as const,
-              },
+              language: 'js',
+              mode: DetectionModeEnum.SINGLE_AST,
+              code: 'function check() { return [1]; }',
+              sourceCodeState: 'AST' as const,
               severity: DetectionSeverity.ERROR,
             },
           ],
@@ -382,12 +374,10 @@ describe('LintFilesAgainstRuleUseCase', () => {
         ruleContent: 'Test rule',
         programs: [
           {
-            program: {
-              language: 'typescript',
-              mode: DetectionModeEnum.SINGLE_AST,
-              code: 'invalid code',
-              sourceCodeState: 'AST' as const,
-            },
+            language: 'typescript',
+            mode: DetectionModeEnum.SINGLE_AST,
+            code: 'invalid code',
+            sourceCodeState: 'AST' as const,
             severity: DetectionSeverity.ERROR,
           },
         ],
@@ -449,12 +439,10 @@ describe('LintFilesAgainstRuleUseCase', () => {
         ruleContent: 'Test specific rule',
         programs: [
           {
-            program: {
-              language: 'typescript',
-              mode: DetectionModeEnum.SINGLE_AST,
-              code: 'function checkSourceCode(ast) { return [1]; }',
-              sourceCodeState: 'AST' as const,
-            },
+            language: 'typescript',
+            mode: DetectionModeEnum.SINGLE_AST,
+            code: 'function checkSourceCode(ast) { return [1]; }',
+            sourceCodeState: 'AST' as const,
             severity: DetectionSeverity.ERROR,
           },
         ],
@@ -505,12 +493,10 @@ describe('LintFilesAgainstRuleUseCase', () => {
         ruleContent: 'Global rule',
         programs: [
           {
-            program: {
-              language: 'typescript',
-              mode: DetectionModeEnum.SINGLE_AST,
-              code: 'function checkSourceCode(ast) { return [1]; }',
-              sourceCodeState: 'AST' as const,
-            },
+            language: 'typescript',
+            mode: DetectionModeEnum.SINGLE_AST,
+            code: 'function checkSourceCode(ast) { return [1]; }',
+            sourceCodeState: 'AST' as const,
             severity: DetectionSeverity.ERROR,
           },
         ],
@@ -536,12 +522,10 @@ describe('LintFilesAgainstRuleUseCase', () => {
       ruleContent: 'Test rule',
       programs: [
         {
-          program: {
-            language: 'unsupported-lang',
-            mode: DetectionModeEnum.SINGLE_AST,
-            code: 'function checkSourceCode() { return [1]; }',
-            sourceCodeState: 'AST' as const,
-          },
+          language: 'unsupported-lang',
+          mode: DetectionModeEnum.SINGLE_AST,
+          code: 'function checkSourceCode() { return [1]; }',
+          sourceCodeState: 'AST' as const,
           severity: DetectionSeverity.ERROR,
         },
       ],
@@ -611,12 +595,10 @@ describe('LintFilesAgainstRuleUseCase', () => {
       const draftProgramsResponse = {
         programs: [
           {
-            program: {
-              language: 'typescript',
-              code: 'const x = 1;',
-              mode: 'singleAst',
-              sourceCodeState: 'AST' as const,
-            },
+            language: 'typescript',
+            code: 'const x = 1;',
+            mode: 'singleAst',
+            sourceCodeState: 'AST' as const,
             severity: DetectionSeverity.ERROR,
           },
         ],
@@ -675,12 +657,10 @@ describe('LintFilesAgainstRuleUseCase', () => {
           .mockResolvedValue({
             programs: [
               {
-                program: {
-                  language: null,
-                  code: 'const x = 1;',
-                  mode: 'singleAst',
-                  sourceCodeState: 'AST' as const,
-                },
+                language: null,
+                code: 'const x = 1;',
+                mode: 'singleAst',
+                sourceCodeState: 'AST' as const,
                 severity: DetectionSeverity.ERROR,
               },
             ],
@@ -726,12 +706,10 @@ describe('LintFilesAgainstRuleUseCase', () => {
       const draftProgramsResponse = {
         programs: [
           {
-            program: {
-              language: 'typescript',
-              code: 'const x = 1;',
-              mode: 'singleAst',
-              sourceCodeState: 'AST' as const,
-            },
+            language: 'typescript',
+            code: 'const x = 1;',
+            mode: 'singleAst',
+            sourceCodeState: 'AST' as const,
             severity: DetectionSeverity.ERROR,
           },
         ],
@@ -795,12 +773,10 @@ describe('LintFilesAgainstRuleUseCase', () => {
       const draftProgramsResponse = {
         programs: [
           {
-            program: {
-              language: 'typescript',
-              code: 'const x = 1;',
-              mode: 'singleAst',
-              sourceCodeState: 'AST' as const,
-            },
+            language: 'typescript',
+            code: 'const x = 1;',
+            mode: 'singleAst',
+            sourceCodeState: 'AST' as const,
             severity: DetectionSeverity.ERROR,
           },
         ],
@@ -890,12 +866,10 @@ describe('LintFilesAgainstRuleUseCase', () => {
           ruleContent: 'Test rule',
           programs: [
             {
-              program: {
-                language: null,
-                mode: DetectionModeEnum.SINGLE_AST,
-                code: 'function checkSourceCode(ast) { return []; }',
-                sourceCodeState: 'AST' as const,
-              },
+              language: null,
+              mode: DetectionModeEnum.SINGLE_AST,
+              code: 'function checkSourceCode(ast) { return []; }',
+              sourceCodeState: 'AST' as const,
               severity: DetectionSeverity.ERROR,
             },
           ],
@@ -938,12 +912,10 @@ describe('LintFilesAgainstRuleUseCase', () => {
       const activeProgramsResponse = {
         programs: [
           {
-            program: {
-              language: 'typescript',
-              code: 'const x = 1;',
-              mode: 'singleAst',
-              sourceCodeState: 'AST' as const,
-            },
+            language: 'typescript',
+            code: 'const x = 1;',
+            mode: 'singleAst',
+            sourceCodeState: 'AST' as const,
             severity: DetectionSeverity.ERROR,
           },
         ],
