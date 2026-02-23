@@ -281,15 +281,18 @@ export class LintFilesAgainstRuleUseCase implements ILintFilesAgainstRule {
                   {
                     content: draftProgramsResult.ruleContent || 'Draft Rule',
                     activeDetectionPrograms: draftProgramsResult.programs.map(
-                      (item) => ({
-                        language: item.program.language,
-                        severity: item.severity,
-                        detectionProgram: {
-                          mode: item.program.mode,
-                          code: item.program.code,
-                          sourceCodeState: item.program.sourceCodeState,
-                        },
-                      }),
+                      (item) => {
+                        const program = item.program ?? item;
+                        return {
+                          language: program.language,
+                          severity: item.severity,
+                          detectionProgram: {
+                            mode: program.mode,
+                            code: program.code,
+                            sourceCodeState: program.sourceCodeState,
+                          },
+                        };
+                      },
                     ),
                   },
                 ],
@@ -329,15 +332,18 @@ export class LintFilesAgainstRuleUseCase implements ILintFilesAgainstRule {
                   {
                     content: activeProgramsResult.ruleContent || 'Active Rule',
                     activeDetectionPrograms: activeProgramsResult.programs.map(
-                      (item) => ({
-                        language: item.program.language,
-                        severity: item.severity,
-                        detectionProgram: {
-                          mode: item.program.mode,
-                          code: item.program.code,
-                          sourceCodeState: item.program.sourceCodeState,
-                        },
-                      }),
+                      (item) => {
+                        const program = item.program ?? item;
+                        return {
+                          language: program.language,
+                          severity: item.severity,
+                          detectionProgram: {
+                            mode: program.mode,
+                            code: program.code,
+                            sourceCodeState: program.sourceCodeState,
+                          },
+                        };
+                      },
                     ),
                   },
                 ],
