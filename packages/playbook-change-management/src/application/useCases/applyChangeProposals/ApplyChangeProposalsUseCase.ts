@@ -35,18 +35,9 @@ import {
   ObjectVersions,
 } from './IChangesProposalApplier';
 import { SkillChangeProposalsApplier } from './SkillChangeProposalsApplier';
+import { StandardChangeProposalsApplier } from './StandardChangeProposalsApplier';
 
 const origin = 'ApplyChangeProposalsUseCase';
-/*
-
-const STANDARD_CHANGE_TYPES = [
-  ChangeProposalType.updateStandardName,
-  ChangeProposalType.updateStandardDescription,
-  ChangeProposalType.addRule,
-  ChangeProposalType.updateRule,
-  ChangeProposalType.deleteRule,
-];
-*/
 export class ApplyChangeProposalsUseCase<
   T extends StandardId | RecipeId | SkillId,
 >
@@ -252,6 +243,7 @@ export class ApplyChangeProposalsUseCase<
     const appliers: IChangesProposalApplier<ObjectVersions>[] = [
       new CommandChangeProposalsApplier(this.diffService, this.recipesPort),
       new SkillChangeProposalsApplier(this.diffService, this.skillsPort),
+      new StandardChangeProposalsApplier(this.diffService, this.standardsPort),
     ];
 
     for (const applier of appliers) {
