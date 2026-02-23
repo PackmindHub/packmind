@@ -72,6 +72,35 @@ describe('HumanReadableLogger', () => {
         );
       });
     });
+
+    describe('when violation has undefined severity', () => {
+      beforeEach(() => {
+        const violation: LintViolation = {
+          file: '/path/to/file.ts',
+          violations: [
+            {
+              line: 10,
+              character: 5,
+              rule: 'rule1',
+              standard: 'standard1',
+              severity: undefined,
+            },
+          ],
+        };
+
+        logger.logViolation(violation);
+      });
+
+      it('formats with error styling', () => {
+        expect(consoleLogger.formatError).toHaveBeenCalledWith(
+          expect.stringContaining('error'),
+        );
+      });
+
+      it('does not format with warning styling', () => {
+        expect(consoleLogger.formatWarning).not.toHaveBeenCalled();
+      });
+    });
   });
 
   describe('logViolations', () => {
@@ -174,6 +203,37 @@ describe('HumanReadableLogger', () => {
 
       it('logs warning summary', () => {
         expect(consoleLogger.logWarningConsole).toHaveBeenCalled();
+      });
+    });
+
+    describe('when violation has undefined severity', () => {
+      beforeEach(() => {
+        const violations: LintViolation[] = [
+          {
+            file: '/path/to/file.ts',
+            violations: [
+              {
+                line: 10,
+                character: 5,
+                rule: 'rule1',
+                standard: 'standard1',
+                severity: undefined,
+              },
+            ],
+          },
+        ];
+
+        logger.logViolations(violations);
+      });
+
+      it('counts undefined severity as error in summary', () => {
+        expect(consoleLogger.logErrorConsole).toHaveBeenCalledWith(
+          expect.stringContaining('1'),
+        );
+      });
+
+      it('does not count undefined severity as warning', () => {
+        expect(consoleLogger.logWarningConsole).not.toHaveBeenCalled();
       });
     });
 

@@ -60,7 +60,7 @@ export function ReviewDetailLayout({
           {isSaving ? 'Applying...' : 'Apply changes'}
         </PMButton>
       </PMBox>
-      <PMBox minW={0} overflowY="auto" p={4}>
+      <PMBox minW={0} overflowY="auto">
         {children}
       </PMBox>
       <PMBox borderLeftWidth="1px" p={4} overflowY="auto">

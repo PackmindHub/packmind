@@ -24,7 +24,11 @@ import {
 import { useAuthContext } from '../../../accounts/hooks/useAuthContext';
 import { useCurrentSpace } from '../../../spaces/hooks/useCurrentSpace';
 import { GET_RECIPES_KEY } from '../../../recipes/api/queryKeys';
-import { GET_SKILLS_KEY } from '../../../skills/api/queryKeys';
+import {
+  GET_SKILLS_KEY,
+  SKILLS_QUERY_SCOPE,
+} from '../../../skills/api/queryKeys';
+import { SPACES_SCOPE } from '../../../spaces/api/queryKeys';
 import { STANDARDS_QUERY_SCOPE } from '../../../standards/api/queryKeys';
 import { ORGANIZATION_QUERY_SCOPE } from '../../../organizations/api/queryKeys';
 import { routes } from '../../../../shared/utils/routes';
@@ -304,7 +308,7 @@ export const useApplySkillChangeProposalsMutation = () => {
     ) => {
       return changeProposalsGateway.applySkillChangeProposals(command);
     },
-    onSuccess: async () => {
+    onSuccess: async (_response, variables) => {
       await Promise.all([
         queryClient.invalidateQueries({
           queryKey: GET_GROUPED_CHANGE_PROPOSALS_KEY,
@@ -314,6 +318,14 @@ export const useApplySkillChangeProposalsMutation = () => {
         }),
         queryClient.invalidateQueries({
           queryKey: GET_SKILLS_KEY,
+        }),
+        queryClient.invalidateQueries({
+          queryKey: [
+            ORGANIZATION_QUERY_SCOPE,
+            SPACES_SCOPE,
+            variables.spaceId,
+            SKILLS_QUERY_SCOPE,
+          ],
         }),
       ]);
 

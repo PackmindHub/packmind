@@ -1,5 +1,4 @@
 import { useCallback } from 'react';
-import { useQueryClient } from '@tanstack/react-query';
 import { PMAlertDialog, PMSpinner } from '@packmind/ui';
 import { OrganizationId, SkillId, SpaceId } from '@packmind/types';
 import { useAuthContext } from '../../../accounts/hooks/useAuthContext';
@@ -11,7 +10,6 @@ import {
 } from '../../api/queries/ChangeProposalsQueries';
 import { useUserLookup } from '../../hooks/useUserLookup';
 import { useChangeProposalPool } from '../../hooks/useChangeProposalPool';
-import { getSkillByIdKey } from '../../../skills/api/queryKeys';
 import { ReviewDetailLayout } from '../ReviewDetailLayout';
 import { SkillProposalReviewPanel } from './SkillProposalReviewPanel';
 import { useBlocker, useBeforeUnload } from 'react-router';
@@ -26,7 +24,6 @@ export function SkillReviewDetail({
   const skillId = artefactId as SkillId;
   const { organization } = useAuthContext();
   const { spaceId } = useCurrentSpace();
-  const queryClient = useQueryClient();
   const userLookup = useUserLookup();
 
   const organizationId = organization?.id;
@@ -70,10 +67,6 @@ export function SkillReviewDetail({
         rejected: Array.from(pool.rejectedProposalIds),
       });
 
-      await queryClient.invalidateQueries({
-        queryKey: getSkillByIdKey(spaceId, skillId),
-      });
-
       pool.resetPool();
     } catch {
       // Errors are handled by the mutation onError callbacks
@@ -85,7 +78,6 @@ export function SkillReviewDetail({
     pool.rejectedProposalIds,
     pool.hasPooledDecisions,
     applySkillChangeProposalsMutation,
-    queryClient,
     pool.resetPool,
   ]);
 

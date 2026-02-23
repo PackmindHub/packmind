@@ -7,6 +7,6 @@ export type LintViolation = {
     character: number;
     rule: string;
     standard: string;
-    severity: DetectionSeverity;
+    severity?: DetectionSeverity;
   }[];
 };

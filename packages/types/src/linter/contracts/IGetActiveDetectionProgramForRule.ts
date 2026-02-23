@@ -11,7 +11,7 @@ export type GetActiveDetectionProgramForRuleCommand = PackmindCommand & {
 
 export type DetectionProgramWithSeverity = {
   program: DetectionProgram;
-  severity: DetectionSeverity;
+  severity?: DetectionSeverity;
 };
 
 export type GetActiveDetectionProgramForRuleResponse = {

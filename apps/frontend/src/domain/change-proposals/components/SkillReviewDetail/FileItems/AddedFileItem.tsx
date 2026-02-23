@@ -15,11 +15,15 @@ export function AddedFileItem({
       borderRadius="md"
       border="1px solid"
       borderColor="green.500"
-      bg="green.subtle"
     >
-      <PMAccordion.ItemTrigger cursor="pointer" bg="background.primary" px={2}>
+      <PMAccordion.ItemTrigger
+        cursor="pointer"
+        bg="background.primary"
+        px={2}
+        data-diff-change
+      >
         <PMAccordion.ItemIndicator />
-        <PMHStack justify="space-between" width="full">
+        <PMHStack gap={2}>
           <PMText fontSize="sm" fontWeight="semibold">
             {newFile.path}
           </PMText>

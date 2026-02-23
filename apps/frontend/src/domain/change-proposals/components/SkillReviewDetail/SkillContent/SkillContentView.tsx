@@ -1,4 +1,5 @@
-import { PMAccordion, PMText, PMVStack } from '@packmind/ui';
+import { useEffect, useState } from 'react';
+import { PMAccordion, PMBox, PMHStack, PMText, PMVStack } from '@packmind/ui';
 import {
   CollectionItemAddPayload,
   CollectionItemDeletePayload,
@@ -38,6 +39,122 @@ export type ProposalTypeFlags = {
 
 const emptyPayload = { oldValue: '', newValue: '' } as ScalarUpdatePayload;
 
+function MetadataKeyValueDisplay({
+  metadata,
+}: {
+  metadata: Record<string, string>;
+}) {
+  return (
+    <PMVStack gap={1} align="flex-start">
+      {Object.entries(metadata).map(([key, value]) => (
+        <PMHStack key={key} gap={2}>
+          <PMText fontSize="sm" fontWeight="bold">
+            {key}:
+          </PMText>
+          <PMText fontSize="sm">{value}</PMText>
+        </PMHStack>
+      ))}
+    </PMVStack>
+  );
+}
+
+function parseMetadataJson(value: string): Record<string, string> {
+  try {
+    return JSON.parse(value) as Record<string, string>;
+  } catch {
+    return {};
+  }
+}
+
+function MetadataKeyValueDiff({
+  oldValue,
+  newValue,
+}: {
+  oldValue: string;
+  newValue: string;
+}) {
+  const oldMetadata = parseMetadataJson(oldValue);
+  const newMetadata = parseMetadataJson(newValue);
+  const allKeys = [
+    ...new Set([...Object.keys(oldMetadata), ...Object.keys(newMetadata)]),
+  ];
+
+  return (
+    <PMVStack gap={1} align="flex-start">
+      {allKeys.map((key) => {
+        const inOld = key in oldMetadata;
+        const inNew = key in newMetadata;
+
+        if (inOld && !inNew) {
+          return (
+            <PMBox
+              key={key}
+              bg="red.subtle"
+              borderRadius="sm"
+              paddingX={1}
+              data-diff-change
+            >
+              <PMHStack gap={2}>
+                <PMText
+                  fontSize="sm"
+                  fontWeight="bold"
+                  textDecoration="line-through"
+                >
+                  {key}:
+                </PMText>
+                <PMText fontSize="sm" textDecoration="line-through">
+                  {oldMetadata[key]}
+                </PMText>
+              </PMHStack>
+            </PMBox>
+          );
+        }
+
+        if (!inOld && inNew) {
+          return (
+            <PMBox
+              key={key}
+              bg="green.subtle"
+              borderRadius="sm"
+              paddingX={1}
+              data-diff-change
+            >
+              <PMHStack gap={2}>
+                <PMText fontSize="sm" fontWeight="bold">
+                  {key}:
+                </PMText>
+                <PMText fontSize="sm">{newMetadata[key]}</PMText>
+              </PMHStack>
+            </PMBox>
+          );
+        }
+
+        if (oldMetadata[key] !== newMetadata[key]) {
+          return (
+            <PMHStack key={key} gap={2}>
+              <PMText fontSize="sm" fontWeight="bold">
+                {key}:
+              </PMText>
+              <PMText fontSize="sm">
+                {renderDiffText(oldMetadata[key], newMetadata[key])}
+              </PMText>
+            </PMHStack>
+          );
+        }
+
+        return (
+          <PMHStack key={key} gap={2}>
+            <PMText fontSize="sm" fontWeight="bold">
+              {key}:
+            </PMText>
+            <PMText fontSize="sm">{newMetadata[key]}</PMText>
+          </PMHStack>
+        );
+      })}
+    </PMVStack>
+  );
+}
+
 export function SkillContentView({
   skill,
   files,
@@ -69,17 +186,37 @@ export function SkillContentView({
     isDeleteFile,
   } = proposalTypeFlags;
 
+  const [openFileIds, setOpenFileIds] = useState<string[]>(
+    targetFileId ? [targetFileId] : [],
+  );
+
+  useEffect(() => {
+    if (targetFileId) {
+      setOpenFileIds((prev) =>
+        prev.includes(targetFileId) ? prev : [...prev, targetFileId],
+      );
+    }
+  }, [targetFileId]);
+
   return (
     <PMVStack gap={4} align="stretch">
       {/* Skill Name */}
-      <PMText fontSize="lg" fontWeight="semibold">
+      <PMText
+        fontSize="lg"
+        fontWeight="semibold"
+        {...(isNameDiff && { 'data-diff-section': true })}
+      >
         {isNameDiff
           ? renderDiffText(scalarPayload.oldValue, scalarPayload.newValue)
           : skill.name}
       </PMText>
 
       {/* Description */}
-      <PMVStack gap={1} align="stretch">
+      <PMVStack
+        gap={1}
+        align="stretch"
+        {...(isDescriptionDiff && { 'data-diff-section': true })}
+      >
         {renderMarkdownDiffOrPreview(
           isDescriptionDiff,
           showPreview,
@@ -94,7 +231,10 @@ export function SkillContentView({
 
       {/* License (optional) */}
       {(skill.license || isLicenseDiff) && (
-        <SkillOptionalField label="License">
+        <SkillOptionalField
+          label="License"
+          {...(isLicenseDiff && { 'data-diff-section': true })}
+        >
           <PMText>
             {isLicenseDiff
               ? renderDiffText(scalarPayload.oldValue, scalarPayload.newValue)
@@ -105,7 +245,10 @@ export function SkillContentView({
 
       {/* Compatibility (optional) */}
       {(skill.compatibility || isCompatibilityDiff) && (
-        <SkillOptionalField label="Compatibility">
+        <SkillOptionalField
+          label="Compatibility"
+          {...(isCompatibilityDiff && { 'data-diff-section': true })}
+        >
           <PMText>
             {isCompatibilityDiff
               ? renderDiffText(scalarPayload.oldValue, scalarPayload.newValue)
@@ -116,7 +259,10 @@ export function SkillContentView({
 
       {/* Allowed Tools (optional) */}
       {(skill.allowedTools || isAllowedToolsDiff) && (
-        <SkillOptionalField label="Allowed Tools">
+        <SkillOptionalField
+          label="Allowed Tools"
+          {...(isAllowedToolsDiff && { 'data-diff-section': true })}
+        >
           <PMText>
             {isAllowedToolsDiff
               ? renderDiffText(scalarPayload.oldValue, scalarPayload.newValue)
@@ -127,17 +273,25 @@ export function SkillContentView({
 
       {/* Metadata (optional) */}
       {(skill.metadata || isMetadataDiff) && (
-        <SkillOptionalField label="Metadata">
-          <PMText>
-            {isMetadataDiff
-              ? renderDiffText(scalarPayload.oldValue, scalarPayload.newValue)
-              : JSON.stringify(skill.metadata, null, 2)}
-          </PMText>
+        <SkillOptionalField
+          label="Metadata"
+          {...(isMetadataDiff && { 'data-diff-section': true })}
+        >
+          {isMetadataDiff ? (
+            <MetadataKeyValueDiff
+              oldValue={scalarPayload.oldValue}
+              newValue={scalarPayload.newValue}
+            />
+          ) : (
+            <MetadataKeyValueDisplay
+              metadata={skill.metadata as Record<string, string>}
+            />
+          )}
         </SkillOptionalField>
       )}
 
       {/* SKILL.md section */}
-      <PMVStack gap={2}>
+      <PMVStack gap={2} {...(isPromptDiff && { 'data-diff-section': true })}>
         <PMAccordion.Root collapsible multiple defaultValue={['SKILL.md']}>
           <PMAccordion.Item
             value="SKILL.md"
@@ -177,14 +331,26 @@ export function SkillContentView({
         isDeleteFile ||
         isUpdateFileContent ||
         isUpdateFilePermissions) && (
-        <PMVStack gap={2}>
-          <PMText fontSize="sm" fontWeight="bold" color="secondary">
+        <PMVStack
+          gap={2}
+          {...((isAddFile ||
+            isUpdateFileContent ||
+            isUpdateFilePermissions ||
+            isDeleteFile) && { 'data-diff-section': true })}
+        >
+          <PMText
+            fontSize="sm"
+            fontWeight="bold"
+            color="secondary"
+            width="full"
+          >
             Files
           </PMText>
           <PMAccordion.Root
             collapsible
             multiple
-            defaultValue={targetFileId ? [targetFileId] : []}
+            value={openFileIds}
+            onValueChange={(details) => setOpenFileIds(details.value)}
             spaceY={2}
           >
             {files.map((file) => {

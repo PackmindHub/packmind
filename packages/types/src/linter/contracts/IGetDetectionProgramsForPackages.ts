@@ -23,7 +23,7 @@ export type GetDetectionProgramsForPackagesResponse = {
         content: string;
         activeDetectionPrograms: {
           language: string;
-          severity: DetectionSeverity;
+          severity?: DetectionSeverity;
           detectionProgram: {
             mode: DetectionModeEnum;
             code: string;
