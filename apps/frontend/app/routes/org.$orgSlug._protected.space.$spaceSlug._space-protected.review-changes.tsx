@@ -2,6 +2,7 @@ import { Outlet } from 'react-router';
 import { PMGrid, PMBox, PMText, PMSpinner, PMVStack } from '@packmind/ui';
 import { useGetGroupedChangeProposalsQuery } from '../../src/domain/change-proposals/api/queries/ChangeProposalsQueries';
 import { ReviewChangesSidebar } from '../../src/domain/change-proposals/components/ReviewChangesSidebar';
+import { ReviewChangesBlankState } from '../../src/domain/change-proposals/components/ReviewChangesBlankState';
 
 export default function ReviewChangesLayoutRouteModule() {
   const {
@@ -36,7 +37,7 @@ export default function ReviewChangesLayoutRouteModule() {
   if (!hasProposals) {
     return (
       <PMBox p={8}>
-        <PMText>No pending change proposals to review.</PMText>
+        <ReviewChangesBlankState />
       </PMBox>
     );
   }
