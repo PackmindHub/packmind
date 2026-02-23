@@ -81,6 +81,72 @@ export class SkillChangeProposalsApplier extends AbstractChangeProposalsApplier<
       };
     }
 
+    if (
+      isExpectedChangeProposalType(
+        changeProposal,
+        ChangeProposalType.updateSkillPrompt,
+      )
+    ) {
+      return {
+        ...source,
+        prompt: this.applyDiff(
+          changeProposal.id,
+          changeProposal.payload,
+          source.prompt,
+        ),
+      };
+    }
+
+    if (
+      isExpectedChangeProposalType(
+        changeProposal,
+        ChangeProposalType.updateSkillMetadata,
+      )
+    ) {
+      return {
+        ...source,
+        metadata: changeProposal.payload.newValue
+          ? JSON.parse(changeProposal.payload.newValue)
+          : undefined,
+      };
+    }
+
+    if (
+      isExpectedChangeProposalType(
+        changeProposal,
+        ChangeProposalType.updateSkillLicense,
+      )
+    ) {
+      return {
+        ...source,
+        license: changeProposal.payload.newValue,
+      };
+    }
+
+    if (
+      isExpectedChangeProposalType(
+        changeProposal,
+        ChangeProposalType.updateSkillCompatibility,
+      )
+    ) {
+      return {
+        ...source,
+        compatibility: changeProposal.payload.newValue,
+      };
+    }
+
+    if (
+      isExpectedChangeProposalType(
+        changeProposal,
+        ChangeProposalType.updateSkillAllowedTools,
+      )
+    ) {
+      return {
+        ...source,
+        allowedTools: changeProposal.payload.newValue,
+      };
+    }
+
     throw new Error(`Unsupported ChangeProposalType: ${changeProposal.type}`);
   }
 

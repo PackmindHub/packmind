@@ -47,7 +47,7 @@ export function parseSkillMd(content: string): ParsedSkillMd | null {
   const metadata = properties['metadata'];
   const metadataJson =
     metadata != null && typeof metadata === 'object'
-      ? serializeSkillMetadata({ metadata })
+      ? serializeSkillMetadata(metadata as Record<string, unknown>)
       : '{}';
 
   return {

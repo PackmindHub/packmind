@@ -56,7 +56,8 @@ This is the prompt body.`;
       const metadata = JSON.parse(result!.metadataJson);
 
       expect(metadata).toEqual({
-        metadata: { category: 'testing', version: '1.0' },
+        category: 'testing',
+        version: '1.0',
       });
     });
   });

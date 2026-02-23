@@ -260,8 +260,8 @@ describe('SkillChangeProposalValidator', () => {
         const command = buildCommand({
           type: ChangeProposalType.updateSkillMetadata,
           payload: {
-            oldValue: '{"metadata":{"key1":"value1"}}',
-            newValue: '{"metadata":{"key1":"value2"}}',
+            oldValue: '{"key1":"value1"}',
+            newValue: '{"key1":"value2"}',
           },
         });
 
@@ -276,8 +276,8 @@ describe('SkillChangeProposalValidator', () => {
         const command = buildCommand({
           type: ChangeProposalType.updateSkillMetadata,
           payload: {
-            oldValue: '{"metadata":{"key1":"wrong"}}',
-            newValue: '{"metadata":{"key1":"value2"}}',
+            oldValue: '{"key1":"wrong"}',
+            newValue: '{"key1":"value2"}',
           },
         });
 
@@ -302,7 +302,7 @@ describe('SkillChangeProposalValidator', () => {
           type: ChangeProposalType.updateSkillMetadata,
           payload: {
             oldValue: '{}',
-            newValue: '{"metadata":{"key1":"value1"}}',
+            newValue: '{"key1":"value1"}',
           },
         });
 

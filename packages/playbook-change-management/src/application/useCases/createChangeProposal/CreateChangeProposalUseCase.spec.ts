@@ -287,9 +287,7 @@ describe('CreateChangeProposalUseCase', () => {
         type: ChangeProposalType.addSkillFile,
         artefactId: skillId,
         payload: {
-          targetId: 'new-file-id',
           item: {
-            id: 'new-file-id',
             path: 'helper.ts',
             content: 'console.log("hello")',
             permissions: 'read',
@@ -680,7 +678,7 @@ describe('CreateChangeProposalUseCase', () => {
     const command = buildCommand();
 
     const existingProposal: ChangeProposal<ChangeProposalType> = {
-      id: createChangeProposalId(),
+      id: createChangeProposalId('change-proposal-id'),
       type: ChangeProposalType.updateCommandName,
       artefactId: recipeId,
       artefactVersion: 5,
