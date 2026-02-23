@@ -1,8 +1,12 @@
 import { PackmindLogger } from '@packmind/logger';
+import { PackmindEventEmitterService } from '@packmind/node-utils';
 import {
   IUpdateActiveDetectionProgramSeverityUseCase,
   UpdateActiveDetectionProgramSeverityCommand,
   ActiveDetectionProgram,
+  LinterRuleSeverityUpdatedEvent,
+  createUserId,
+  createOrganizationId,
 } from '@packmind/types';
 import { IActiveDetectionProgramRepository } from '../../../domain/repositories/IActiveDetectionProgramRepository';
 import { ActiveDetectionProgramNotFoundError } from '../../../domain/errors';
@@ -12,6 +16,7 @@ const origin = 'UpdateActiveDetectionProgramSeverityUseCase';
 export class UpdateActiveDetectionProgramSeverityUseCase implements IUpdateActiveDetectionProgramSeverityUseCase {
   constructor(
     private readonly activeDetectionProgramRepository: IActiveDetectionProgramRepository,
+    private readonly eventEmitterService: PackmindEventEmitterService,
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {}
 
@@ -37,6 +42,16 @@ export class UpdateActiveDetectionProgramSeverityUseCase implements IUpdateActiv
     const result = await this.activeDetectionProgramRepository.updateSeverity(
       command.activeDetectionProgramId,
       command.severity,
+    );
+
+    this.eventEmitterService.emit(
+      new LinterRuleSeverityUpdatedEvent({
+        ruleId: command.ruleId,
+        severity: result.severity,
+        userId: createUserId(command.userId),
+        organizationId: createOrganizationId(command.organizationId),
+        source: 'ui',
+      }),
     );
 
     this.logger.info('Active detection program severity updated', {
