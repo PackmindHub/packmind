@@ -87,10 +87,8 @@ export class GetDraftDetectionProgramForRuleUseCase implements IGetDraftDetectio
         activeProgramsWithPrograms
           .filter((p) => p.draftDetectionProgram !== null)
           .map((p) => ({
-            program: {
-              ...p.draftDetectionProgram!,
-              language: p.draftDetectionProgram!.language ?? p.language,
-            },
+            ...p.draftDetectionProgram!,
+            language: p.draftDetectionProgram!.language ?? p.language,
             severity: p.severity ?? DetectionSeverity.ERROR,
           }));
 
@@ -98,7 +96,7 @@ export class GetDraftDetectionProgramForRuleUseCase implements IGetDraftDetectio
       if (command.language) {
         const targetLanguage = stringToProgrammingLanguage(command.language);
         draftProgramsWithSeverity = draftProgramsWithSeverity.filter(
-          (p) => p.program.language === targetLanguage,
+          (p) => p.language === targetLanguage,
         );
       }
 

@@ -83,10 +83,8 @@ export class GetActiveDetectionProgramForRuleUseCase implements IGetActiveDetect
         activeProgramsWithPrograms
           .filter((p) => p.detectionProgram !== null)
           .map((p) => ({
-            program: {
-              ...p.detectionProgram!,
-              language: p.detectionProgram!.language ?? p.language,
-            },
+            ...p.detectionProgram!,
+            language: p.detectionProgram!.language ?? p.language,
             severity: p.severity,
           }));
 
@@ -94,7 +92,7 @@ export class GetActiveDetectionProgramForRuleUseCase implements IGetActiveDetect
       if (command.language) {
         const targetLanguage = stringToProgrammingLanguage(command.language);
         programsWithSeverity = programsWithSeverity.filter(
-          (p) => p.program.language === targetLanguage,
+          (p) => p.language === targetLanguage,
         );
       }
 

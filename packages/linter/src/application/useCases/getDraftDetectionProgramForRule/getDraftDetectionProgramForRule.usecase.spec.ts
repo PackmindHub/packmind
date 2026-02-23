@@ -172,14 +172,14 @@ describe('GetDraftDetectionProgramForRuleUseCase', () => {
 
         it('returns first draft program with severity', () => {
           expect(result.programs[0]).toEqual({
-            program: draftProgram1,
+            ...draftProgram1,
             severity: DetectionSeverity.ERROR,
           });
         });
 
         it('returns second draft program with severity', () => {
           expect(result.programs[1]).toEqual({
-            program: draftProgram2,
+            ...draftProgram2,
             severity: DetectionSeverity.ERROR,
           });
         });
@@ -264,21 +264,19 @@ describe('GetDraftDetectionProgramForRuleUseCase', () => {
         });
 
         it('returns JavaScript draft first', () => {
-          expect(result.programs[0].program.language).toBe(
+          expect(result.programs[0].language).toBe(
             ProgrammingLanguage.JAVASCRIPT,
           );
         });
 
         it('returns TypeScript draft second', () => {
-          expect(result.programs[1].program.language).toBe(
+          expect(result.programs[1].language).toBe(
             ProgrammingLanguage.TYPESCRIPT,
           );
         });
 
         it('returns Python draft third', () => {
-          expect(result.programs[2].program.language).toBe(
-            ProgrammingLanguage.PYTHON,
-          );
+          expect(result.programs[2].language).toBe(ProgrammingLanguage.PYTHON);
         });
       });
     });
@@ -327,7 +325,7 @@ describe('GetDraftDetectionProgramForRuleUseCase', () => {
 
         const result = await useCase.execute(command);
 
-        expect(result.programs[0].program.language).toBe(
+        expect(result.programs[0].language).toBe(
           ProgrammingLanguage.TYPESCRIPT,
         );
       });
@@ -354,7 +352,7 @@ describe('GetDraftDetectionProgramForRuleUseCase', () => {
 
           const result = await useCase.execute(command);
 
-          expect(result.programs[0].program.language).toBe(
+          expect(result.programs[0].language).toBe(
             ProgrammingLanguage.TYPESCRIPT,
           );
         });
@@ -683,19 +681,19 @@ describe('GetDraftDetectionProgramForRuleUseCase', () => {
 
       it('returns the TypeScript draft program with severity', () => {
         expect(result.programs[0]).toEqual({
-          program: tsDraft,
+          ...tsDraft,
           severity: DetectionSeverity.ERROR,
         });
       });
 
       it('returns program with TypeScript language', () => {
-        expect(result.programs[0].program.language).toBe(
+        expect(result.programs[0].language).toBe(
           ProgrammingLanguage.TYPESCRIPT,
         );
       });
 
       it('returns program with correct code', () => {
-        expect(result.programs[0].program.code).toBe('typescript draft code');
+        expect(result.programs[0].code).toBe('typescript draft code');
       });
     });
 
@@ -766,13 +764,13 @@ describe('GetDraftDetectionProgramForRuleUseCase', () => {
 
         it('returns the draft program with severity', () => {
           expect(result.programs[0]).toEqual({
-            program: draftProgram,
+            ...draftProgram,
             severity: DetectionSeverity.ERROR,
           });
         });
 
         it('returns program with TypeScript language', () => {
-          expect(result.programs[0].program.language).toBe(
+          expect(result.programs[0].language).toBe(
             ProgrammingLanguage.TYPESCRIPT,
           );
         });
