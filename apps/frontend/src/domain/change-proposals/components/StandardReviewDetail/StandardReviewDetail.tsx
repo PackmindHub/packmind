@@ -4,7 +4,10 @@ import { PMAlertDialog, PMSpinner } from '@packmind/ui';
 import { OrganizationId, StandardId, SpaceId } from '@packmind/types';
 import { useAuthContext } from '../../../accounts/hooks/useAuthContext';
 import { useCurrentSpace } from '../../../spaces/hooks/useCurrentSpace';
-import { useGetStandardByIdQuery } from '../../../standards/api/queries/StandardsQueries';
+import {
+  useGetStandardByIdQuery,
+  useGetRulesByStandardIdQuery,
+} from '../../../standards/api/queries/StandardsQueries';
 import {
   useApplyStandardChangeProposalsMutation,
   useListChangeProposalsByStandardQuery,
@@ -45,6 +48,14 @@ export function StandardReviewDetail({
 
   const { data: selectedStandardData } = useGetStandardByIdQuery(standardId);
   const selectedStandard = selectedStandardData?.standard ?? undefined;
+
+  const { data: rulesData, isLoading: isLoadingRules } =
+    useGetRulesByStandardIdQuery(
+      organizationId as OrganizationId,
+      spaceId as SpaceId,
+      standardId,
+    );
+  const rules = rulesData ?? [];
 
   const pool = useChangeProposalPool(selectedStandardProposals);
 
@@ -117,12 +128,13 @@ export function StandardReviewDetail({
         onSave={handleSave}
         isSaving={applyStandardChangeProposalsMutation.isPending}
       >
-        {isLoadingProposals ? (
+        {isLoadingProposals || isLoadingRules ? (
           <PMSpinner />
         ) : (
           <ProposalReviewPanel
             selectedStandard={selectedStandard}
             selectedStandardProposals={selectedStandardProposals}
+            rules={rules}
             reviewingProposalId={pool.reviewingProposalId}
             acceptedProposalIds={pool.acceptedProposalIds}
             rejectedProposalIds={pool.rejectedProposalIds}
