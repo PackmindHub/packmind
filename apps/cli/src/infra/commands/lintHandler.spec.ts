@@ -75,10 +75,12 @@ describe('lintHandler', () => {
     ...overrides,
   });
 
-  const createViolation = (
+  const createLintViolation = (
     overrides: Partial<LintViolation['violations'][0]> = {},
+    fileOverrides: Partial<Omit<LintViolation, 'violations'>> = {},
   ): LintViolation => ({
     file: '/project/file.ts',
+    ...fileOverrides,
     violations: [
       {
         line: 1,
@@ -189,23 +191,8 @@ describe('lintHandler', () => {
 
     describe('when violations have undefined severity', () => {
       it('exits with code 1', async () => {
-        const violations: LintViolation[] = [
-          {
-            file: '/project/file.ts',
-            violations: [
-              {
-                line: 1,
-                character: 0,
-                rule: 'test-rule',
-                standard: 'test',
-                severity: undefined,
-              },
-            ],
-          },
-        ];
-
         mockPackmindCliHexa.lintFilesFromConfig.mockResolvedValue({
-          violations,
+          violations: [createLintViolation({ severity: undefined })],
         });
 
         await lintHandler(createArgs({ path: '/project' }), deps);
@@ -310,6 +297,21 @@ describe('lintHandler', () => {
         it('exits with code 0', async () => {
           mockPackmindCliHexa.lintFilesFromConfig.mockResolvedValue({
             violations: [],
+          });
+
+          await lintHandler(
+            createArgs({ path: '/project', continueOnError: true }),
+            deps,
+          );
+
+          expect(mockExit).toHaveBeenCalledWith(0);
+        });
+      });
+
+      describe('when undefined severity violations and --continue-on-error is set', () => {
+        it('exits with code 0', async () => {
+          mockPackmindCliHexa.lintFilesFromConfig.mockResolvedValue({
+            violations: [createLintViolation({ severity: undefined })],
           });
 
           await lintHandler(
@@ -464,6 +466,66 @@ describe('lintHandler', () => {
 
           it('passes empty violations to logger', () => {
             expect(mockHumanLogger.logViolations).toHaveBeenCalledWith([]);
+          });
+        });
+      });
+
+      describe('when violations have undefined severity', () => {
+        const undefinedViolation = createLintViolation({
+          severity: undefined,
+        });
+
+        describe('when --level is "error"', () => {
+          it('includes undefined severity violations', async () => {
+            mockPackmindCliHexa.lintFilesFromConfig.mockResolvedValue({
+              violations: [undefinedViolation],
+            });
+
+            await lintHandler(
+              createArgs({ path: '/project', level: DetectionSeverity.ERROR }),
+              deps,
+            );
+
+            expect(mockHumanLogger.logViolations).toHaveBeenCalledWith([
+              undefinedViolation,
+            ]);
+          });
+        });
+
+        describe('when --level is "warning"', () => {
+          it('includes undefined severity violations', async () => {
+            mockPackmindCliHexa.lintFilesFromConfig.mockResolvedValue({
+              violations: [undefinedViolation],
+            });
+
+            await lintHandler(
+              createArgs({
+                path: '/project',
+                level: DetectionSeverity.WARNING,
+              }),
+              deps,
+            );
+
+            expect(mockHumanLogger.logViolations).toHaveBeenCalledWith([
+              undefinedViolation,
+            ]);
+          });
+        });
+
+        describe('when mixed with warnings and --level is "error"', () => {
+          it('keeps only undefined severity violations', async () => {
+            mockPackmindCliHexa.lintFilesFromConfig.mockResolvedValue({
+              violations: [undefinedViolation, warningViolation],
+            });
+
+            await lintHandler(
+              createArgs({ path: '/project', level: DetectionSeverity.ERROR }),
+              deps,
+            );
+
+            expect(mockHumanLogger.logViolations).toHaveBeenCalledWith([
+              undefinedViolation,
+            ]);
           });
         });
       });
@@ -684,7 +746,21 @@ describe('lintHandler', () => {
     describe('when errors are found', () => {
       it('logs failure message', async () => {
         mockPackmindCliHexa.lintFilesFromConfig.mockResolvedValue({
-          violations: [createViolation()],
+          violations: [createLintViolation()],
+        });
+
+        await lintHandler(createArgs(), deps);
+
+        expect(logErrorConsole).toHaveBeenCalledWith(
+          expect.stringMatching(/^Lint failed in \d+\.\d+s$/),
+        );
+      });
+    });
+
+    describe('when violations have undefined severity', () => {
+      it('logs failure message', async () => {
+        mockPackmindCliHexa.lintFilesFromConfig.mockResolvedValue({
+          violations: [createLintViolation({ severity: undefined })],
         });
 
         await lintHandler(createArgs(), deps);
