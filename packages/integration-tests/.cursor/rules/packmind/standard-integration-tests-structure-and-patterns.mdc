@@ -1,0 +1,25 @@
+---
+globs: Integration test files in packages/integration-tests/src/**/*.spec.ts
+alwaysApply: false
+---
+## Standard: Integration Tests Structure and Patterns
+
+Standardize Packmind monorepo integration tests in packages/integration-tests/src/**/*.spec.ts using integrationTestWithUser, typed entities from @packmind/types, hexagonal adapter access via testContext.testApp.<domain>Hexa.getAdapter(), Jest spies with proper cleanup, factories, and structured describe/beforeEach patterns to ensure consistent organization, reliable resource management, and comprehensive coverage. :
+* Access domain adapters through testContext.testApp.<domain>Hexa.getAdapter() hexagonal architecture pattern
+* Clean up database connections in afterEach with datasource.destroy() when datasource is initialized in beforeEach
+* Clear all mocks in afterEach using jest.clearAllMocks() to prevent inter-test pollution
+* Create test data using factory functions (e.g., changeProposalFactory()) for consistent, realistic test fixtures
+* Declare all test variables with explicit types at the top of the test suite before beforeEach hooks
+* Initialize test context in beforeEach using await getContext() and assign to a local testContext variable
+* Mock external dependencies using jest.spyOn() instead of manual mock creation
+* Restore all mocks in afterEach using jest.restoreAllMocks() after tests that use jest.spyOn()
+* Test both success and failure scenarios for comprehensive coverage
+* Use .toHaveLength() for array length assertions instead of manual .length checks
+* Use expect.objectContaining() for partial object matching when testing subset of properties
+* Use nested describe('when...') blocks to organize test scenarios with shared setup in beforeEach
+* Use one primary assertion per test case for clarity and easier debugging
+* Use typed domain entities from @packmind/types for all test data to ensure type safety
+* Use verb-first test names without should prefix for assertive, clear descriptions
+* Wrap integration tests with integrationTestWithUser((getContext) => {...}) to provide authenticated user context
+
+Full standard is available here for further request: [Integration Tests Structure and Patterns](../../../.packmind/standards/integration-tests-structure-and-patterns.md)
