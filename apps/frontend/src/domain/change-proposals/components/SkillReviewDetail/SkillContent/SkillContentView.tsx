@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { PMAccordion, PMText, PMVStack } from '@packmind/ui';
+import { PMAccordion, PMBox, PMHStack, PMText, PMVStack } from '@packmind/ui';
 import {
   CollectionItemAddPayload,
   CollectionItemDeletePayload,
@@ -38,6 +38,122 @@ export type ProposalTypeFlags = {
 };
 
 const emptyPayload = { oldValue: '', newValue: '' } as ScalarUpdatePayload;
+
+function MetadataKeyValueDisplay({
+  metadata,
+}: {
+  metadata: Record<string, string>;
+}) {
+  return (
+    <PMVStack gap={1} align="flex-start">
+      {Object.entries(metadata).map(([key, value]) => (
+        <PMHStack key={key} gap={2}>
+          <PMText fontSize="sm" fontWeight="bold">
+            {key}:
+          </PMText>
+          <PMText fontSize="sm">{value}</PMText>
+        </PMHStack>
+      ))}
+    </PMVStack>
+  );
+}
+
+function parseMetadataJson(value: string): Record<string, string> {
+  try {
+    return JSON.parse(value) as Record<string, string>;
+  } catch {
+    return {};
+  }
+}
+
+function MetadataKeyValueDiff({
+  oldValue,
+  newValue,
+}: {
+  oldValue: string;
+  newValue: string;
+}) {
+  const oldMetadata = parseMetadataJson(oldValue);
+  const newMetadata = parseMetadataJson(newValue);
+  const allKeys = [
+    ...new Set([...Object.keys(oldMetadata), ...Object.keys(newMetadata)]),
+  ];
+
+  return (
+    <PMVStack gap={1} align="flex-start">
+      {allKeys.map((key) => {
+        const inOld = key in oldMetadata;
+        const inNew = key in newMetadata;
+
+        if (inOld && !inNew) {
+          return (
+            <PMBox
+              key={key}
+              bg="red.subtle"
+              borderRadius="sm"
+              paddingX={1}
+              data-diff-change
+            >
+              <PMHStack gap={2}>
+                <PMText
+                  fontSize="sm"
+                  fontWeight="bold"
+                  textDecoration="line-through"
+                >
+                  {key}:
+                </PMText>
+                <PMText fontSize="sm" textDecoration="line-through">
+                  {oldMetadata[key]}
+                </PMText>
+              </PMHStack>
+            </PMBox>
+          );
+        }
+
+        if (!inOld && inNew) {
+          return (
+            <PMBox
+              key={key}
+              bg="green.subtle"
+              borderRadius="sm"
+              paddingX={1}
+              data-diff-change
+            >
+              <PMHStack gap={2}>
+                <PMText fontSize="sm" fontWeight="bold">
+                  {key}:
+                </PMText>
+                <PMText fontSize="sm">{newMetadata[key]}</PMText>
+              </PMHStack>
+            </PMBox>
+          );
+        }
+
+        if (oldMetadata[key] !== newMetadata[key]) {
+          return (
+            <PMHStack key={key} gap={2}>
+              <PMText fontSize="sm" fontWeight="bold">
+                {key}:
+              </PMText>
+              <PMText fontSize="sm">
+                {renderDiffText(oldMetadata[key], newMetadata[key])}
+              </PMText>
+            </PMHStack>
+          );
+        }
+
+        return (
+          <PMHStack key={key} gap={2}>
+            <PMText fontSize="sm" fontWeight="bold">
+              {key}:
+            </PMText>
+            <PMText fontSize="sm">{newMetadata[key]}</PMText>
+          </PMHStack>
+        );
+      })}
+    </PMVStack>
+  );
+}
 
 export function SkillContentView({
   skill,
@@ -161,11 +277,16 @@ export function SkillContentView({
           label="Metadata"
           {...(isMetadataDiff && { 'data-diff-section': true })}
         >
-          <PMText>
-            {isMetadataDiff
-              ? renderDiffText(scalarPayload.oldValue, scalarPayload.newValue)
-              : JSON.stringify(skill.metadata, null, 2)}
-          </PMText>
+          {isMetadataDiff ? (
+            <MetadataKeyValueDiff
+              oldValue={scalarPayload.oldValue}
+              newValue={scalarPayload.newValue}
+            />
+          ) : (
+            <MetadataKeyValueDisplay
+              metadata={skill.metadata as Record<string, string>}
+            />
+          )}
         </SkillOptionalField>
       )}
 
@@ -217,7 +338,12 @@ export function SkillContentView({
             isUpdateFilePermissions ||
             isDeleteFile) && { 'data-diff-section': true })}
         >
-          <PMText fontSize="sm" fontWeight="bold" color="secondary">
+          <PMText
+            fontSize="sm"
+            fontWeight="bold"
+            color="secondary"
+            width="full"
+          >
             Files
           </PMText>
           <PMAccordion.Root

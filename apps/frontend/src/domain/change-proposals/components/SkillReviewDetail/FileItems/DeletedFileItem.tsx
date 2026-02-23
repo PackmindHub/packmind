@@ -1,5 +1,6 @@
 import { PMAccordion, PMText } from '@packmind/ui';
 import { SkillFile } from '@packmind/types';
+import { FileContent } from './FileContent';
 
 export function DeletedFileItem({ file }: { file: SkillFile }) {
   return (
@@ -9,8 +10,6 @@ export function DeletedFileItem({ file }: { file: SkillFile }) {
       borderRadius="md"
       border="1px solid"
       borderColor="red.500"
-      bg="red.subtle"
-      opacity={0.7}
     >
       <PMAccordion.ItemTrigger
         cursor="pointer"
@@ -27,6 +26,9 @@ export function DeletedFileItem({ file }: { file: SkillFile }) {
           {file.path}
         </PMText>
       </PMAccordion.ItemTrigger>
+      <PMAccordion.ItemContent>
+        <FileContent file={file} />
+      </PMAccordion.ItemContent>
     </PMAccordion.Item>
   );
 }

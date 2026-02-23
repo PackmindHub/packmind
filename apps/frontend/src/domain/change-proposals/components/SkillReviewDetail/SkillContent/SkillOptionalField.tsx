@@ -10,8 +10,14 @@ export function SkillOptionalField({
   children: ReactNode;
 } & Omit<PMVStackProps, 'gap'>) {
   return (
-    <PMVStack gap={1} {...rest}>
-      <PMText fontSize="sm" fontWeight="bold" color="secondary">
+    <PMVStack gap={1} {...rest} align="flex-start">
+      <PMText
+        fontSize="sm"
+        fontWeight="bold"
+        color="secondary"
+        width="full"
+        mb={2}
+      >
         {label}
       </PMText>
       {children}

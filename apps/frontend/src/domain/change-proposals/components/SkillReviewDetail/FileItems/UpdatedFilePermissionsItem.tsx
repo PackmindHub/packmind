@@ -4,7 +4,7 @@ import {
   SkillFile,
   SkillFileId,
 } from '@packmind/types';
-import { renderDiffText } from '../../../utils/renderDiffText';
+import { FileContent } from './FileContent';
 
 export function UpdatedFilePermissionsItem({
   file,
@@ -21,21 +21,45 @@ export function UpdatedFilePermissionsItem({
       border="1px solid"
       borderColor="border.primary"
     >
-      <PMAccordion.ItemTrigger cursor="pointer" bg="background.primary" px={2}>
+      <PMAccordion.ItemTrigger
+        cursor="pointer"
+        bg="background.primary"
+        px={2}
+        data-diff-change
+      >
         <PMAccordion.ItemIndicator />
-        <PMText fontSize="sm" fontWeight="semibold">
-          {file.path}
-        </PMText>
+        <PMHStack justify="space-between" width="full">
+          <PMText fontSize="sm" fontWeight="semibold">
+            {file.path}
+          </PMText>
+          <PMHStack gap={2} align="center">
+            <PMText
+              fontSize="xs"
+              fontFamily="mono"
+              bg="red.subtle"
+              paddingX={1}
+              borderRadius="sm"
+              textDecoration="line-through"
+            >
+              {payload.oldValue}
+            </PMText>
+            <PMText fontSize="xs" color="faded">
+              →
+            </PMText>
+            <PMText
+              fontSize="xs"
+              fontFamily="mono"
+              bg="green.subtle"
+              paddingX={1}
+              borderRadius="sm"
+            >
+              {payload.newValue}
+            </PMText>
+          </PMHStack>
+        </PMHStack>
       </PMAccordion.ItemTrigger>
       <PMAccordion.ItemContent>
-        <PMHStack gap={1}>
-          <PMText fontSize="sm" fontWeight="bold">
-            Permissions:
-          </PMText>
-          <PMText fontSize="sm">
-            {renderDiffText(payload.oldValue, payload.newValue)}
-          </PMText>
-        </PMHStack>
+        <FileContent file={file} />
       </PMAccordion.ItemContent>
     </PMAccordion.Item>
   );
