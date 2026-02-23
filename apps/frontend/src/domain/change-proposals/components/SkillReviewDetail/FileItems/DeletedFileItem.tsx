@@ -12,7 +12,12 @@ export function DeletedFileItem({ file }: { file: SkillFile }) {
       bg="red.subtle"
       opacity={0.7}
     >
-      <PMAccordion.ItemTrigger cursor="pointer" bg="background.primary" px={2}>
+      <PMAccordion.ItemTrigger
+        cursor="pointer"
+        bg="background.primary"
+        px={2}
+        data-diff-change
+      >
         <PMAccordion.ItemIndicator />
         <PMText
           fontSize="sm"

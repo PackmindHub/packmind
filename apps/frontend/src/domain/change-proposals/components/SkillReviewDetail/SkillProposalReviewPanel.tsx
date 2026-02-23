@@ -22,6 +22,7 @@ import {
   SkillContentView,
   ProposalTypeFlags,
 } from './SkillContent/SkillContentView';
+import { useDiffNavigation } from '../../hooks/useDiffNavigation';
 
 interface SkillProposalReviewPanelProps {
   selectedSkill: SkillWithFiles | undefined;
@@ -50,6 +51,14 @@ export function SkillProposalReviewPanel({
   onPoolReject,
   onUndoPool,
 }: Readonly<SkillProposalReviewPanelProps>) {
+  const {
+    currentIndex,
+    totalChanges,
+    hasScroll,
+    goToNext,
+    goToPrevious,
+    scrollToCurrent,
+  } = useDiffNavigation(reviewingProposalId);
   const [showPreview, setShowPreview] = useState(false);
 
   const proposalNumberMap = useMemo(
@@ -152,18 +161,27 @@ export function SkillProposalReviewPanel({
           onPoolAccept={onPoolAccept}
           onPoolReject={onPoolReject}
           onUndoPool={onUndoPool}
+          diffNavigation={{
+            currentIndex,
+            totalChanges,
+            hasScroll,
+            onNext: goToNext,
+            onPrevious: goToPrevious,
+            onScrollToCurrent: scrollToCurrent,
+          }}
         />
-
         {skill && (
-          <SkillContentView
-            skill={skill}
-            files={files}
-            proposalTypeFlags={proposalTypeFlags}
-            scalarPayload={scalarPayload}
-            reviewingProposal={reviewingProposal}
-            showPreview={showPreview}
-            targetFileId={targetFileId}
-          />
+          <PMBox px={4} pb={4}>
+            <SkillContentView
+              skill={skill}
+              files={files}
+              proposalTypeFlags={proposalTypeFlags}
+              scalarPayload={scalarPayload}
+              reviewingProposal={reviewingProposal}
+              showPreview={showPreview}
+              targetFileId={targetFileId}
+            />
+          </PMBox>
         )}
       </PMVStack>
     );
@@ -176,6 +194,7 @@ export function SkillProposalReviewPanel({
         alignItems="center"
         justifyContent="center"
         height="full"
+        p={4}
       >
         <PMText color="secondary">
           Select a proposal to preview the change
@@ -185,5 +204,9 @@ export function SkillProposalReviewPanel({
   }
 
   // Read-only full skill view (no proposal selected)
-  return <SkillContentView skill={skill} files={files} showPreview={false} />;
+  return (
+    <PMBox p={4}>
+      <SkillContentView skill={skill} files={files} showPreview={false} />
+    </PMBox>
+  );
 }

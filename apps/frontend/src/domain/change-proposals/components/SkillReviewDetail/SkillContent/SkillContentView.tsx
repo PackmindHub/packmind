@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import { PMAccordion, PMText, PMVStack } from '@packmind/ui';
 import {
   CollectionItemAddPayload,
@@ -69,17 +70,37 @@ export function SkillContentView({
     isDeleteFile,
   } = proposalTypeFlags;
 
+  const [openFileIds, setOpenFileIds] = useState<string[]>(
+    targetFileId ? [targetFileId] : [],
+  );
+
+  useEffect(() => {
+    if (targetFileId) {
+      setOpenFileIds((prev) =>
+        prev.includes(targetFileId) ? prev : [...prev, targetFileId],
+      );
+    }
+  }, [targetFileId]);
+
   return (
     <PMVStack gap={4} align="stretch">
       {/* Skill Name */}
-      <PMText fontSize="lg" fontWeight="semibold">
+      <PMText
+        fontSize="lg"
+        fontWeight="semibold"
+        {...(isNameDiff && { 'data-diff-section': true })}
+      >
         {isNameDiff
           ? renderDiffText(scalarPayload.oldValue, scalarPayload.newValue)
           : skill.name}
       </PMText>
 
       {/* Description */}
-      <PMVStack gap={1} align="stretch">
+      <PMVStack
+        gap={1}
+        align="stretch"
+        {...(isDescriptionDiff && { 'data-diff-section': true })}
+      >
         {renderMarkdownDiffOrPreview(
           isDescriptionDiff,
           showPreview,
@@ -94,7 +115,10 @@ export function SkillContentView({
 
       {/* License (optional) */}
       {(skill.license || isLicenseDiff) && (
-        <SkillOptionalField label="License">
+        <SkillOptionalField
+          label="License"
+          {...(isLicenseDiff && { 'data-diff-section': true })}
+        >
           <PMText>
             {isLicenseDiff
               ? renderDiffText(scalarPayload.oldValue, scalarPayload.newValue)
@@ -105,7 +129,10 @@ export function SkillContentView({
 
       {/* Compatibility (optional) */}
       {(skill.compatibility || isCompatibilityDiff) && (
-        <SkillOptionalField label="Compatibility">
+        <SkillOptionalField
+          label="Compatibility"
+          {...(isCompatibilityDiff && { 'data-diff-section': true })}
+        >
           <PMText>
             {isCompatibilityDiff
               ? renderDiffText(scalarPayload.oldValue, scalarPayload.newValue)
@@ -116,7 +143,10 @@ export function SkillContentView({
 
       {/* Allowed Tools (optional) */}
       {(skill.allowedTools || isAllowedToolsDiff) && (
-        <SkillOptionalField label="Allowed Tools">
+        <SkillOptionalField
+          label="Allowed Tools"
+          {...(isAllowedToolsDiff && { 'data-diff-section': true })}
+        >
           <PMText>
             {isAllowedToolsDiff
               ? renderDiffText(scalarPayload.oldValue, scalarPayload.newValue)
@@ -127,7 +157,10 @@ export function SkillContentView({
 
       {/* Metadata (optional) */}
       {(skill.metadata || isMetadataDiff) && (
-        <SkillOptionalField label="Metadata">
+        <SkillOptionalField
+          label="Metadata"
+          {...(isMetadataDiff && { 'data-diff-section': true })}
+        >
           <PMText>
             {isMetadataDiff
               ? renderDiffText(scalarPayload.oldValue, scalarPayload.newValue)
@@ -137,7 +170,7 @@ export function SkillContentView({
       )}
 
       {/* SKILL.md section */}
-      <PMVStack gap={2}>
+      <PMVStack gap={2} {...(isPromptDiff && { 'data-diff-section': true })}>
         <PMAccordion.Root collapsible multiple defaultValue={['SKILL.md']}>
           <PMAccordion.Item
             value="SKILL.md"
@@ -177,14 +210,21 @@ export function SkillContentView({
         isDeleteFile ||
         isUpdateFileContent ||
         isUpdateFilePermissions) && (
-        <PMVStack gap={2}>
+        <PMVStack
+          gap={2}
+          {...((isAddFile ||
+            isUpdateFileContent ||
+            isUpdateFilePermissions ||
+            isDeleteFile) && { 'data-diff-section': true })}
+        >
           <PMText fontSize="sm" fontWeight="bold" color="secondary">
             Files
           </PMText>
           <PMAccordion.Root
             collapsible
             multiple
-            defaultValue={targetFileId ? [targetFileId] : []}
+            value={openFileIds}
+            onValueChange={(details) => setOpenFileIds(details.value)}
             spaceY={2}
           >
             {files.map((file) => {

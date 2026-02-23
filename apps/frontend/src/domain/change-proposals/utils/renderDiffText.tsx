@@ -12,6 +12,7 @@ export function renderDiffText(oldValue: string, newValue: string) {
           bg="green.subtle"
           paddingX={0.5}
           borderRadius="sm"
+          data-diff-change=""
         >
           {change.value}
         </PMText>
@@ -26,6 +27,7 @@ export function renderDiffText(oldValue: string, newValue: string) {
           textDecoration="line-through"
           paddingX={0.5}
           borderRadius="sm"
+          data-diff-change=""
         >
           {change.value}
         </PMText>

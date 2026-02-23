@@ -16,6 +16,7 @@ import {
   getStatusBadgeProps,
 } from '../../utils/changeProposalHelpers';
 import { ConflictWarning } from '../ChangeProposals/ConflictWarning';
+import { DiffNavigator } from '../DiffNavigator';
 import { formatRelativeTime } from '../../utils/formatRelativeTime';
 import { ChangeProposalWithConflicts } from '../../types';
 
@@ -35,6 +36,14 @@ interface ProposalReviewHeaderProps {
   onPoolAccept: (id: ChangeProposalId) => void;
   onPoolReject: (id: ChangeProposalId) => void;
   onUndoPool: (id: ChangeProposalId) => void;
+  diffNavigation?: {
+    currentIndex: number;
+    totalChanges: number;
+    hasScroll: boolean;
+    onNext: () => void;
+    onPrevious: () => void;
+    onScrollToCurrent: () => void;
+  };
 }
 
 export function ProposalReviewHeader({
@@ -53,6 +62,7 @@ export function ProposalReviewHeader({
   onPoolAccept,
   onPoolReject,
   onUndoPool,
+  diffNavigation,
 }: Readonly<ProposalReviewHeaderProps>) {
   const statusBadge = getStatusBadgeProps(proposal.status);
 
@@ -65,8 +75,11 @@ export function ProposalReviewHeader({
 
   return (
     <PMBox
-      borderRadius="md"
-      border="1px solid"
+      position="sticky"
+      top={0}
+      zIndex={1}
+      background="background.secondary"
+      borderBottom="1px solid"
       borderColor="border.primary"
       p={4}
     >
@@ -91,6 +104,16 @@ export function ProposalReviewHeader({
               #{proposalNumberMap.get(proposal.id)} -{' '}
               {formatRelativeTime(proposal.createdAt)}
             </PMText>
+            {diffNavigation && (
+              <DiffNavigator
+                currentIndex={diffNavigation.currentIndex}
+                totalChanges={diffNavigation.totalChanges}
+                hasScroll={diffNavigation.hasScroll}
+                onNext={diffNavigation.onNext}
+                onPrevious={diffNavigation.onPrevious}
+                onScrollToCurrent={diffNavigation.onScrollToCurrent}
+              />
+            )}
           </PMHStack>
           <PMHStack gap={6} align="center">
             {showDiffPreviewToggle && (

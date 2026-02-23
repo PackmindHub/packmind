@@ -19,6 +19,7 @@ import {
 } from '../../../../shared/components/editor/MarkdownEditor';
 import { renderDiffText } from '../../utils/renderDiffText';
 import { ProposalReviewHeader } from '../ProposalReviewHeader';
+import { useDiffNavigation } from '../../hooks/useDiffNavigation';
 
 interface ProposalReviewPanelProps {
   selectedRecipe: Recipe | undefined;
@@ -47,6 +48,14 @@ export function ProposalReviewPanel({
   onPoolReject,
   onUndoPool,
 }: Readonly<ProposalReviewPanelProps>) {
+  const {
+    currentIndex,
+    totalChanges,
+    hasScroll,
+    goToNext,
+    goToPrevious,
+    scrollToCurrent,
+  } = useDiffNavigation(reviewingProposalId);
   const [showPreview, setShowPreview] = useState(false);
 
   const proposalNumberMap = useMemo(
@@ -94,18 +103,32 @@ export function ProposalReviewPanel({
           onPoolAccept={onPoolAccept}
           onPoolReject={onPoolReject}
           onUndoPool={onUndoPool}
+          diffNavigation={{
+            currentIndex,
+            totalChanges,
+            hasScroll,
+            onNext: goToNext,
+            onPrevious: goToPrevious,
+            onScrollToCurrent: scrollToCurrent,
+          }}
         />
-
-        {/* Full artefact content with inline diff */}
         {selectedRecipe && (
-          <PMVStack gap={2} align="stretch">
-            <PMText fontSize="lg" fontWeight="semibold">
+          <PMVStack gap={2} align="stretch" px={4} pb={4}>
+            <PMText
+              fontSize="lg"
+              fontWeight="semibold"
+              {...(isNameDiff && { 'data-diff-section': true })}
+            >
               {isNameDiff
                 ? renderDiffText(payload.oldValue, payload.newValue)
                 : selectedRecipe.name}
             </PMText>
             {isDescriptionDiff && !showPreview ? (
-              <PMBox padding="60px 68px" css={markdownDiffCss}>
+              <PMBox
+                padding="60px 68px"
+                css={markdownDiffCss}
+                {...(isDescriptionDiff && { 'data-diff-section': true })}
+              >
                 <PMMarkdownViewer
                   htmlContent={buildDiffHtml(
                     payload.oldValue,
@@ -138,6 +161,7 @@ export function ProposalReviewPanel({
         alignItems="center"
         justifyContent="center"
         height="full"
+        p={4}
       >
         <PMText color="secondary">
           Select a proposal to preview the change
@@ -147,7 +171,7 @@ export function ProposalReviewPanel({
   }
 
   return (
-    <PMVStack gap={2} align="stretch">
+    <PMVStack gap={2} align="stretch" p={4}>
       <PMText fontSize="lg" fontWeight="semibold">
         {selectedRecipe.name}
       </PMText>

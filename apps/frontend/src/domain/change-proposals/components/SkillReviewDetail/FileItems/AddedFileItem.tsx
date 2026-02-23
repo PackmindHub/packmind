@@ -17,7 +17,12 @@ export function AddedFileItem({
       borderColor="green.500"
       bg="green.subtle"
     >
-      <PMAccordion.ItemTrigger cursor="pointer" bg="background.primary" px={2}>
+      <PMAccordion.ItemTrigger
+        cursor="pointer"
+        bg="background.primary"
+        px={2}
+        data-diff-change
+      >
         <PMAccordion.ItemIndicator />
         <PMHStack justify="space-between" width="full">
           <PMText fontSize="sm" fontWeight="semibold">
