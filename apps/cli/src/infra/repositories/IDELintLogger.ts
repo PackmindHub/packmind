@@ -14,7 +14,9 @@ export class IDELintLogger implements ILogger {
     violation.violations.forEach(
       ({ line, character, standard, rule, severity }) => {
         const label =
-          severity === DetectionSeverity.WARNING ? 'warning' : 'error';
+          (severity ?? DetectionSeverity.ERROR) === DetectionSeverity.WARNING
+            ? 'warning'
+            : 'error';
         logConsole(
           `${violation.file}:${line}:${character}:${label}:@${standard}/${rule}`,
         );
