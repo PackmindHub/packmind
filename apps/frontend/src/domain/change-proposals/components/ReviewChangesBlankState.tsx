@@ -23,7 +23,7 @@ export const ReviewChangesBlankState = () => {
         <PMAlert.Indicator />
         <PMAlert.Content>
           <PMAlert.Description>
-            Playbook updates will soon require an Enterprise plan.
+            Playbook update management will soon require an Enterprise plan.
           </PMAlert.Description>
         </PMAlert.Content>
       </PMAlert.Root>
