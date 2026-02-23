@@ -360,7 +360,7 @@ describe('ApplyChangeProposalsUseCase', () => {
       changeProposalService.batchUpdateProposalsInTransaction.mockResolvedValue();
     });
 
-    it('applies standard change proposals successfully', async () => {
+    it('returns the new artefact version', async () => {
       const result = await useCase.execute({
         userId,
         organizationId,
@@ -371,6 +371,18 @@ describe('ApplyChangeProposalsUseCase', () => {
       });
 
       expect(result.newArtefactVersion).toBe(standardVersion.id);
+    });
+
+    it('calls updateStandard', async () => {
+      await useCase.execute({
+        userId,
+        organizationId,
+        spaceId,
+        artefactId: standardId,
+        accepted: [changeProposal.id],
+        rejected: [],
+      });
+
       expect(standardsPort.updateStandard).toHaveBeenCalled();
     });
 

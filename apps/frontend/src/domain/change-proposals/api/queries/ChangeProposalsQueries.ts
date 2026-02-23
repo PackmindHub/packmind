@@ -18,6 +18,7 @@ import {
   CREATE_CHANGE_PROPOSAL_MUTATION_KEY,
   GET_CHANGE_PROPOSALS_BY_RECIPE_KEY,
   GET_CHANGE_PROPOSALS_BY_SKILL_KEY,
+  GET_CHANGE_PROPOSALS_BY_STANDARD_KEY,
   GET_GROUPED_CHANGE_PROPOSALS_KEY,
 } from '../queryKeys';
 import { useAuthContext } from '../../../accounts/hooks/useAuthContext';
@@ -132,6 +133,42 @@ export const useListChangeProposalsBySkillQuery = (
   );
 };
 
+export const listChangeProposalsByStandardOptions = (
+  organizationId: OrganizationId | undefined,
+  spaceId: SpaceId | undefined,
+  standardId: StandardId | undefined,
+) => ({
+  queryKey: [...GET_CHANGE_PROPOSALS_BY_STANDARD_KEY, standardId],
+  queryFn: () => {
+    if (!organizationId) {
+      throw new Error('Organization ID is required to fetch change proposals');
+    }
+    if (!spaceId) {
+      throw new Error('Space ID is required to fetch change proposals');
+    }
+    if (!standardId) {
+      throw new Error('Standard ID is required to fetch change proposals');
+    }
+    return changeProposalsGateway.listChangeProposalsByStandard({
+      organizationId,
+      spaceId,
+      artefactId: standardId,
+    });
+  },
+  enabled: !!organizationId && !!spaceId && !!standardId,
+});
+
+export const useListChangeProposalsByStandardQuery = (
+  standardId: StandardId | undefined,
+) => {
+  const { organization } = useAuthContext();
+  const { spaceId } = useCurrentSpace();
+
+  return useQuery(
+    listChangeProposalsByStandardOptions(organization?.id, spaceId, standardId),
+  );
+};
+
 export const useCreateChangeProposalMutation = () => {
   return useMutation({
     mutationKey: [...CREATE_CHANGE_PROPOSAL_MUTATION_KEY],
@@ -221,7 +258,9 @@ export const useApplyStandardChangeProposalsMutation = () => {
 
   return useMutation({
     mutationKey: [...APPLY_STANDARD_CHANGE_PROPOSALS_MUTATION_KEY],
-    mutationFn: async (command: ApplyChangeProposalsCommand<StandardId>) => {
+    mutationFn: async (
+      command: Omit<ApplyChangeProposalsCommand<StandardId>, 'userId'>,
+    ) => {
       return changeProposalsGateway.applyStandardChangeProposals(command);
     },
     onSuccess: async () => {
@@ -233,12 +272,24 @@ export const useApplyStandardChangeProposalsMutation = () => {
           queryKey: [ORGANIZATION_QUERY_SCOPE, STANDARDS_QUERY_SCOPE],
         }),
       ]);
+
+      pmToaster.create({
+        title: 'Changes applied successfully',
+        type: 'success',
+      });
     },
     onError: (error, variables, context) => {
       console.error('Error applying standard change proposals');
       console.log('error: ', error);
       console.log('variables: ', variables);
       console.log('context: ', context);
+
+      pmToaster.create({
+        title: 'Failed to apply changes',
+        description:
+          'The changes could not be applied. Please try again or contact support if the problem persists.',
+        type: 'error',
+      });
     },
   });
 };

@@ -6,6 +6,7 @@ import {
   createOrganizationId,
   createSpaceId,
   IStandardsPort,
+  ChangeProposal,
 } from '@packmind/types';
 import { changeProposalFactory } from '../../../../test';
 import { DiffService } from '../../services/DiffService';
@@ -253,8 +254,10 @@ describe('StandardChangeProposalsApplier', () => {
     });
 
     describe('when applying multiple changes', () => {
-      it('applies all changes in sequence', () => {
-        const changeProposals = [
+      let changeProposals: ChangeProposal[];
+
+      beforeEach(() => {
+        changeProposals = [
           changeProposalFactory({
             type: ChangeProposalType.updateStandardName,
             payload: {
@@ -278,13 +281,23 @@ describe('StandardChangeProposalsApplier', () => {
             },
           }),
         ];
+      });
 
+      it('updates the standard name', () => {
         const newVersion = applier.applyChangeProposals(
           standardVersion,
           changeProposals,
         );
 
         expect(newVersion.name).toBe('Updated TypeScript Best Practices');
+      });
+
+      it('applies all rule changes correctly', () => {
+        const newVersion = applier.applyChangeProposals(
+          standardVersion,
+          changeProposals,
+        );
+
         expect(newVersion.rules).toEqual([
           expect.objectContaining({
             id: rule2.id,
@@ -316,47 +329,62 @@ describe('StandardChangeProposalsApplier', () => {
   });
 
   describe('getVersion', () => {
-    it('fetches the latest standard version with rules', async () => {
-      const standardId = standardVersion.standardId;
+    const standardId = standardVersion.standardId;
+
+    beforeEach(() => {
       standardsPort.getLatestStandardVersion = jest
         .fn()
         .mockResolvedValue(standardVersion);
       standardsPort.getRulesByStandardId = jest
         .fn()
         .mockResolvedValue([rule1, rule2]);
+    });
 
+    it('returns the standard version with rules', async () => {
       const result = await applier.getVersion(standardId);
 
       expect(result).toEqual({
         ...standardVersion,
         rules: [rule1, rule2],
       });
+    });
+
+    it('calls getLatestStandardVersion with standardId', async () => {
+      await applier.getVersion(standardId);
+
       expect(standardsPort.getLatestStandardVersion).toHaveBeenCalledWith(
         standardId,
       );
+    });
+
+    it('calls getRulesByStandardId with standardId', async () => {
+      await applier.getVersion(standardId);
+
       expect(standardsPort.getRulesByStandardId).toHaveBeenCalledWith(
         standardId,
       );
     });
 
-    it('throws an error when standard version is not found', async () => {
-      const standardId = standardVersion.standardId;
-      standardsPort.getLatestStandardVersion = jest
-        .fn()
-        .mockResolvedValue(null);
+    describe('when standard version is not found', () => {
+      it('throws an error', async () => {
+        const standardId = standardVersion.standardId;
+        standardsPort.getLatestStandardVersion = jest
+          .fn()
+          .mockResolvedValue(null);
 
-      await expect(applier.getVersion(standardId)).rejects.toThrow(
-        `Unable to find standard version with id ${standardId}`,
-      );
+        await expect(applier.getVersion(standardId)).rejects.toThrow(
+          `Unable to find standard version with id ${standardId}`,
+        );
+      });
     });
   });
 
   describe('saveNewVersion', () => {
-    it('calls updateStandard and returns the new version with rules', async () => {
-      const userId = createUserId('test-user-id');
-      const organizationId = createOrganizationId('test-org-id');
-      const spaceId = createSpaceId('test-space-id');
+    const userId = createUserId('test-user-id');
+    const organizationId = createOrganizationId('test-org-id');
+    const spaceId = createSpaceId('test-space-id');
 
+    beforeEach(() => {
       const updatedStandard = {
         id: standardVersion.standardId,
         name: standardVersion.name,
@@ -377,8 +405,10 @@ describe('StandardChangeProposalsApplier', () => {
       standardsPort.getRulesByStandardId = jest
         .fn()
         .mockResolvedValue([rule1, rule2]);
+    });
 
-      const result = await applier.saveNewVersion(
+    it('calls updateStandard with correct parameters', async () => {
+      await applier.saveNewVersion(
         standardVersion,
         userId,
         spaceId,
@@ -398,6 +428,20 @@ describe('StandardChangeProposalsApplier', () => {
         ],
         scope: standardVersion.scope,
       });
+    });
+
+    it('returns the new version with rules', async () => {
+      const result = await applier.saveNewVersion(
+        standardVersion,
+        userId,
+        spaceId,
+        organizationId,
+      );
+
+      const newVersion = {
+        ...standardVersion,
+        version: 2,
+      };
 
       expect(result).toEqual({
         ...newVersion,
@@ -405,34 +449,32 @@ describe('StandardChangeProposalsApplier', () => {
       });
     });
 
-    it('throws an error when failed to retrieve the new version', async () => {
-      const userId = createUserId('test-user-id');
-      const organizationId = createOrganizationId('test-org-id');
-      const spaceId = createSpaceId('test-space-id');
+    describe('when failed to retrieve the new version', () => {
+      it('throws an error', async () => {
+        const updatedStandard = {
+          id: standardVersion.standardId,
+          name: standardVersion.name,
+          version: 2,
+        };
 
-      const updatedStandard = {
-        id: standardVersion.standardId,
-        name: standardVersion.name,
-        version: 2,
-      };
+        standardsPort.updateStandard = jest
+          .fn()
+          .mockResolvedValue(updatedStandard);
+        standardsPort.getLatestStandardVersion = jest
+          .fn()
+          .mockResolvedValue(null);
 
-      standardsPort.updateStandard = jest
-        .fn()
-        .mockResolvedValue(updatedStandard);
-      standardsPort.getLatestStandardVersion = jest
-        .fn()
-        .mockResolvedValue(null);
-
-      await expect(
-        applier.saveNewVersion(
-          standardVersion,
-          userId,
-          spaceId,
-          organizationId,
-        ),
-      ).rejects.toThrow(
-        `Failed to retrieve latest version for standard ${updatedStandard.id}`,
-      );
+        await expect(
+          applier.saveNewVersion(
+            standardVersion,
+            userId,
+            spaceId,
+            organizationId,
+          ),
+        ).rejects.toThrow(
+          `Failed to retrieve latest version for standard ${updatedStandard.id}`,
+        );
+      });
     });
   });
 });
