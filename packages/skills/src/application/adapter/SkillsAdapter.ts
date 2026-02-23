@@ -24,6 +24,7 @@ import {
   ListSkillVersionsResponse,
   OrganizationId,
   QueryOption,
+  SaveSkillVersionCommand,
   Skill,
   SkillFile,
   SkillId,
@@ -49,6 +50,7 @@ import { GetSkillVersionUsecase } from '../useCases/getSkillVersion/getSkillVers
 import { GetSkillWithFilesUsecase } from '../useCases/getSkillWithFiles/getSkillWithFiles.usecase';
 import { ListSkillsBySpaceUsecase } from '../useCases/listSkillsBySpace/listSkillsBySpace.usecase';
 import { ListSkillVersionsUsecase } from '../useCases/listSkillVersions/listSkillVersions.usecase';
+import { SaveSkillVersionUsecase } from '../useCases/saveSkillVersion/saveSkillVersion.usecase';
 import { UpdateSkillUsecase } from '../useCases/updateSkill/updateSkill.usecase';
 import { UploadSkillUseCase } from '../useCases/uploadSkill/uploadSkill.usecase';
 
@@ -72,6 +74,7 @@ export class SkillsAdapter implements IBaseAdapter<ISkillsPort>, ISkillsPort {
   private _getSkillVersion!: GetSkillVersionUsecase;
   private _getLatestSkillVersion!: GetLatestSkillVersionUsecase;
   private _listSkillVersions!: ListSkillVersionsUsecase;
+  private _saveSkillVersion!: SaveSkillVersionUsecase;
 
   constructor(
     private readonly services: SkillsServices,
@@ -189,6 +192,13 @@ export class SkillsAdapter implements IBaseAdapter<ISkillsPort>, ISkillsPort {
       this.services.getSkillVersionService(),
     );
 
+    this._saveSkillVersion = new SaveSkillVersionUsecase(
+      this.accountsPort,
+      this.spacesPort,
+      this.services.getSkillService(),
+      this.services.getSkillVersionService(),
+    );
+
     this.logger.info('SkillsAdapter initialized successfully');
   }
 
@@ -269,6 +279,18 @@ export class SkillsAdapter implements IBaseAdapter<ISkillsPort>, ISkillsPort {
     return this.repositories
       .getSkillFileRepository()
       .findBySkillVersionId(skillVersionId);
+  }
+
+  async saveSkillVersion(
+    command: SaveSkillVersionCommand,
+  ): Promise<SkillVersion> {
+    this.logger.info('saveSkillVersion called via port', {
+      skillId: command.skillVersion.skillId,
+      version: command.skillVersion.version,
+      userId: command.userId.substring(0, 6) + '*',
+      organizationId: command.organizationId,
+    });
+    return this._saveSkillVersion.execute(command);
   }
 
   // ========================================================================
@@ -406,6 +428,18 @@ export class SkillsAdapter implements IBaseAdapter<ISkillsPort>, ISkillsPort {
       organizationId: command.organizationId,
     });
     return this._listSkillVersions.execute(command);
+  }
+
+  async saveSkillVersionUseCase(
+    command: SaveSkillVersionCommand,
+  ): Promise<SkillVersion> {
+    this.logger.info('saveSkillVersion use case invoked', {
+      skillId: command.skillVersion.skillId,
+      version: command.skillVersion.version,
+      userId: command.userId.substring(0, 6) + '*',
+      organizationId: command.organizationId,
+    });
+    return this._saveSkillVersion.execute(command);
   }
 
   /**
