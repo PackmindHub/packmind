@@ -182,7 +182,7 @@ export class ApplyChangeProposalsUseCase<
         },
       );
       throw new Error(
-        'Failed to mark change proposals. The recipe was updated successfully, but the proposal statuses could not be changed. Please try again.',
+        'Failed to mark change proposals. The artefact was updated successfully, but the proposal statuses could not be changed. Please try again.',
       );
     }
 
