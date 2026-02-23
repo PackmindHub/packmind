@@ -1,5 +1,6 @@
 import { IPublicUseCase } from '../../UseCase';
 import { ProgrammingLanguage } from '../../languages';
+import { DetectionSeverity } from '../ActiveDetectionProgram';
 import { SourceCodeState } from '../DetectionProgram';
 
 export type LinterExecutionProgram = {
@@ -8,6 +9,7 @@ export type LinterExecutionProgram = {
   code: string;
   sourceCodeState: SourceCodeState;
   language: ProgrammingLanguage;
+  severity: DetectionSeverity;
 };
 
 export type ExecuteLinterProgramsCommand = {
@@ -22,6 +24,7 @@ export type LinterExecutionViolation = {
   character: number;
   rule: string;
   standard: string;
+  severity: DetectionSeverity;
 };
 
 export type ExecuteLinterProgramsResult = {

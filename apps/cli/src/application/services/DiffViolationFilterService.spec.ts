@@ -1,3 +1,4 @@
+import { DetectionSeverity } from '@packmind/types';
 import { DiffViolationFilterService } from './DiffViolationFilterService';
 import { LintViolation } from '../../domain/entities/LintViolation';
 import { ModifiedLine } from '../../domain/entities/DiffMode';
@@ -18,13 +19,25 @@ describe('DiffViolationFilterService', () => {
           {
             file: '/path/to/file1.ts',
             violations: [
-              { line: 10, character: 5, rule: 'rule1', standard: 'standard1' },
+              {
+                line: 10,
+                character: 5,
+                rule: 'rule1',
+                standard: 'standard1',
+                severity: DetectionSeverity.ERROR,
+              },
             ],
           },
           {
             file: '/path/to/file2.ts',
             violations: [
-              { line: 20, character: 10, rule: 'rule2', standard: 'standard2' },
+              {
+                line: 20,
+                character: 10,
+                rule: 'rule2',
+                standard: 'standard2',
+                severity: DetectionSeverity.ERROR,
+              },
             ],
           },
         ];
@@ -48,7 +61,13 @@ describe('DiffViolationFilterService', () => {
           {
             file: '/path/to/file1.ts',
             violations: [
-              { line: 10, character: 5, rule: 'rule1', standard: 'standard1' },
+              {
+                line: 10,
+                character: 5,
+                rule: 'rule1',
+                standard: 'standard1',
+                severity: DetectionSeverity.ERROR,
+              },
             ],
           },
         ];
@@ -66,7 +85,13 @@ describe('DiffViolationFilterService', () => {
           {
             file: '/path/to/file1.ts',
             violations: [
-              { line: 10, character: 5, rule: 'rule1', standard: 'standard1' },
+              {
+                line: 10,
+                character: 5,
+                rule: 'rule1',
+                standard: 'standard1',
+                severity: DetectionSeverity.ERROR,
+              },
             ],
           },
         ];
@@ -84,13 +109,25 @@ describe('DiffViolationFilterService', () => {
           {
             file: '/path/to/file1.ts',
             violations: [
-              { line: 10, character: 5, rule: 'rule1', standard: 'standard1' },
+              {
+                line: 10,
+                character: 5,
+                rule: 'rule1',
+                standard: 'standard1',
+                severity: DetectionSeverity.ERROR,
+              },
             ],
           },
           {
             file: '/path/to/file2.ts',
             violations: [
-              { line: 20, character: 10, rule: 'rule2', standard: 'standard2' },
+              {
+                line: 20,
+                character: 10,
+                rule: 'rule2',
+                standard: 'standard2',
+                severity: DetectionSeverity.ERROR,
+              },
             ],
           },
         ];
@@ -112,7 +149,13 @@ describe('DiffViolationFilterService', () => {
           {
             file: '/path/to/file.ts',
             violations: [
-              { line: 15, character: 5, rule: 'rule1', standard: 'standard1' },
+              {
+                line: 15,
+                character: 5,
+                rule: 'rule1',
+                standard: 'standard1',
+                severity: DetectionSeverity.ERROR,
+              },
             ],
           },
         ];
@@ -142,7 +185,13 @@ describe('DiffViolationFilterService', () => {
           {
             file: '/path/to/file.ts',
             violations: [
-              { line: 5, character: 5, rule: 'rule1', standard: 'standard1' },
+              {
+                line: 5,
+                character: 5,
+                rule: 'rule1',
+                standard: 'standard1',
+                severity: DetectionSeverity.ERROR,
+              },
             ],
           },
         ];
@@ -162,7 +211,13 @@ describe('DiffViolationFilterService', () => {
           {
             file: '/path/to/file.ts',
             violations: [
-              { line: 15, character: 5, rule: 'rule1', standard: 'standard1' },
+              {
+                line: 15,
+                character: 5,
+                rule: 'rule1',
+                standard: 'standard1',
+                severity: DetectionSeverity.ERROR,
+              },
             ],
           },
         ];
@@ -182,7 +237,13 @@ describe('DiffViolationFilterService', () => {
           {
             file: '/path/to/file.ts',
             violations: [
-              { line: 10, character: 5, rule: 'rule1', standard: 'standard1' },
+              {
+                line: 10,
+                character: 5,
+                rule: 'rule1',
+                standard: 'standard1',
+                severity: DetectionSeverity.ERROR,
+              },
             ],
           },
         ];
@@ -202,7 +263,13 @@ describe('DiffViolationFilterService', () => {
           {
             file: '/path/to/file.ts',
             violations: [
-              { line: 14, character: 5, rule: 'rule1', standard: 'standard1' },
+              {
+                line: 14,
+                character: 5,
+                rule: 'rule1',
+                standard: 'standard1',
+                severity: DetectionSeverity.ERROR,
+              },
             ],
           },
         ];
@@ -222,8 +289,20 @@ describe('DiffViolationFilterService', () => {
           {
             file: '/path/to/file.ts',
             violations: [
-              { line: 9, character: 5, rule: 'rule1', standard: 'standard1' },
-              { line: 15, character: 5, rule: 'rule2', standard: 'standard2' },
+              {
+                line: 9,
+                character: 5,
+                rule: 'rule1',
+                standard: 'standard1',
+                severity: DetectionSeverity.ERROR,
+              },
+              {
+                line: 15,
+                character: 5,
+                rule: 'rule2',
+                standard: 'standard2',
+                severity: DetectionSeverity.ERROR,
+              },
             ],
           },
         ];
@@ -245,9 +324,27 @@ describe('DiffViolationFilterService', () => {
           {
             file: '/path/to/file.ts',
             violations: [
-              { line: 5, character: 5, rule: 'rule1', standard: 'standard1' },
-              { line: 25, character: 5, rule: 'rule2', standard: 'standard2' },
-              { line: 50, character: 5, rule: 'rule3', standard: 'standard3' },
+              {
+                line: 5,
+                character: 5,
+                rule: 'rule1',
+                standard: 'standard1',
+                severity: DetectionSeverity.ERROR,
+              },
+              {
+                line: 25,
+                character: 5,
+                rule: 'rule2',
+                standard: 'standard2',
+                severity: DetectionSeverity.ERROR,
+              },
+              {
+                line: 50,
+                character: 5,
+                rule: 'rule3',
+                standard: 'standard3',
+                severity: DetectionSeverity.ERROR,
+              },
             ],
           },
         ];
@@ -284,8 +381,20 @@ describe('DiffViolationFilterService', () => {
           {
             file: '/path/to/file.ts',
             violations: [
-              { line: 15, character: 5, rule: 'rule1', standard: 'standard1' },
-              { line: 100, character: 5, rule: 'rule2', standard: 'standard2' },
+              {
+                line: 15,
+                character: 5,
+                rule: 'rule1',
+                standard: 'standard1',
+                severity: DetectionSeverity.ERROR,
+              },
+              {
+                line: 100,
+                character: 5,
+                rule: 'rule2',
+                standard: 'standard2',
+                severity: DetectionSeverity.ERROR,
+              },
             ],
           },
         ];
@@ -315,7 +424,13 @@ describe('DiffViolationFilterService', () => {
           {
             file: '/path/to/file.ts',
             violations: [
-              { line: 15, character: 5, rule: 'rule1', standard: 'standard1' },
+              {
+                line: 15,
+                character: 5,
+                rule: 'rule1',
+                standard: 'standard1',
+                severity: DetectionSeverity.ERROR,
+              },
             ],
           },
         ];
@@ -333,7 +448,13 @@ describe('DiffViolationFilterService', () => {
           {
             file: '/path/to/file.ts',
             violations: [
-              { line: 10, character: 5, rule: 'rule1', standard: 'standard1' },
+              {
+                line: 10,
+                character: 5,
+                rule: 'rule1',
+                standard: 'standard1',
+                severity: DetectionSeverity.ERROR,
+              },
             ],
           },
         ];

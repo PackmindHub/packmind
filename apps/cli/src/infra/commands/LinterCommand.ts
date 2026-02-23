@@ -8,7 +8,7 @@ import {
   Type,
 } from 'cmd-ts';
 import { LogLevel, PackmindLogger } from '@packmind/logger';
-import { createRuleId, RuleId } from '@packmind/types';
+import { createRuleId, DetectionSeverity, RuleId } from '@packmind/types';
 import { PackmindCliHexa } from '../../PackmindCliHexa';
 import { DiffMode } from '../../domain/entities/DiffMode';
 import { IDELintLogger } from '../repositories/IDELintLogger';
@@ -56,6 +56,20 @@ const DiffModeType: Type<string, DiffMode> = {
     }
     throw new Error(
       `${input} is not a valid value for the --diff option. Expected values are: files, lines`,
+    );
+  },
+};
+
+const LevelType: Type<string, DetectionSeverity> = {
+  from: async (input) => {
+    switch (input) {
+      case 'error':
+        return DetectionSeverity.ERROR;
+      case 'warning':
+        return DetectionSeverity.WARNING;
+    }
+    throw new Error(
+      `${input} is not a valid value for the --level option. Expected values are: error, warning`,
     );
   },
 };
@@ -118,6 +132,11 @@ export const lintCommand = command({
     changedLines: flag({
       long: 'changed-lines',
       description: 'Only lint lines that have changed',
+    }),
+    level: option({
+      long: 'level',
+      description: 'Minimum severity level to display (error | warning)',
+      type: optional(LevelType),
     }),
   },
   handler: async (args) => {
