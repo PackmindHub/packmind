@@ -183,7 +183,7 @@ describe('StandardDiffStrategy', () => {
       const file: DiffableFile = {
         path: '.claude/rules/packmind/standard-my-standard.md',
         content:
-          '---\nname: Same FM\ndescription: Same FM\nalwaysApply: true\n---\n## Standard: Server Body Name\n\nDesc :\n\n* Rule 1',
+          "---\nname: 'Same FM'\ndescription: 'Same FM'\nalwaysApply: true\n---\n## Standard: Server Body Name\n\nDesc :\n\n* Rule 1",
         artifactType: 'standard',
         artifactName: 'My Standard',
         artifactId: 'art-1',
@@ -191,7 +191,7 @@ describe('StandardDiffStrategy', () => {
       } as DiffableFile;
 
       (fs.readFile as jest.Mock).mockResolvedValue(
-        '---\nname: Same FM\ndescription: Same FM\nalwaysApply: true\n---\n## Standard: Local Body Name\n\nDesc :\n\n* Rule 1',
+        "---\nname: 'Same FM'\ndescription: 'Same FM'\nalwaysApply: true\n---\n## Standard: Local Body Name\n\nDesc :\n\n* Rule 1",
       );
 
       const result = await strategy.diff(file, '/test');
@@ -213,7 +213,7 @@ describe('StandardDiffStrategy', () => {
       const file: DiffableFile = {
         path: '.claude/rules/packmind/standard-my-standard.md',
         content:
-          '---\nname: Server FM Name\ndescription: Desc\nalwaysApply: true\n---\n## Standard: Same Body\n\nDesc :\n\n* Rule 1',
+          "---\nname: 'Server FM Name'\ndescription: 'Desc'\nalwaysApply: true\n---\n## Standard: Same Body\n\nDesc :\n\n* Rule 1",
         artifactType: 'standard',
         artifactName: 'My Standard',
         artifactId: 'art-1',
@@ -221,7 +221,7 @@ describe('StandardDiffStrategy', () => {
       } as DiffableFile;
 
       (fs.readFile as jest.Mock).mockResolvedValue(
-        '---\nname: Local FM Name\ndescription: Desc\nalwaysApply: true\n---\n## Standard: Same Body\n\nDesc :\n\n* Rule 1',
+        "---\nname: 'Local FM Name'\ndescription: 'Desc'\nalwaysApply: true\n---\n## Standard: Same Body\n\nDesc :\n\n* Rule 1",
       );
 
       const result = await strategy.diff(file, '/test');
@@ -245,7 +245,7 @@ describe('StandardDiffStrategy', () => {
       const file: DiffableFile = {
         path: '.claude/rules/packmind/standard-my-standard.md',
         content:
-          '---\nname: Server FM Name\ndescription: Desc\nalwaysApply: true\n---\n## Standard: Server Body\n\nDesc :\n\n* Rule 1',
+          "---\nname: 'Server FM Name'\ndescription: 'Desc'\nalwaysApply: true\n---\n## Standard: Server Body\n\nDesc :\n\n* Rule 1",
         artifactType: 'standard',
         artifactName: 'My Standard',
         artifactId: 'art-1',
@@ -253,7 +253,7 @@ describe('StandardDiffStrategy', () => {
       } as DiffableFile;
 
       (fs.readFile as jest.Mock).mockResolvedValue(
-        '---\nname: Local FM Name\ndescription: Desc\nalwaysApply: true\n---\n## Standard: Local Body\n\nDesc :\n\n* Rule 1',
+        "---\nname: 'Local FM Name'\ndescription: 'Desc'\nalwaysApply: true\n---\n## Standard: Local Body\n\nDesc :\n\n* Rule 1",
       );
 
       result = await strategy.diff(file, '/test');

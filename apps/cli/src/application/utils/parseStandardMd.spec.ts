@@ -220,7 +220,7 @@ describe('parseStandardMd', () => {
 
     describe('when frontmatter has name and description', () => {
       const content =
-        '---\nname: FM Name\ndescription: FM Desc\nalwaysApply: true\n---\n## Standard: Body Name\n\nBody desc :\n\n* Rule 1';
+        "---\nname: 'FM Name'\ndescription: 'FM Desc'\nalwaysApply: true\n---\n## Standard: Body Name\n\nBody desc :\n\n* Rule 1";
 
       it('returns body name as name', () => {
         const result = parseStandardMd(content, filePath);
@@ -241,6 +241,40 @@ describe('parseStandardMd', () => {
       });
 
       it('returns frontmatter description as frontmatterDescription', () => {
+        const result = parseStandardMd(content, filePath);
+
+        expect(result?.frontmatterDescription).toBe('FM Desc');
+      });
+    });
+
+    describe('when frontmatter has escaped single quotes', () => {
+      const content =
+        "---\nname: 'Don''t use eval'\ndescription: 'It''s dangerous'\nalwaysApply: true\n---\n## Standard: Body Name\n\nBody desc :\n\n* Rule 1";
+
+      it('unescapes frontmatter name', () => {
+        const result = parseStandardMd(content, filePath);
+
+        expect(result?.frontmatterName).toBe("Don't use eval");
+      });
+
+      it('unescapes frontmatter description', () => {
+        const result = parseStandardMd(content, filePath);
+
+        expect(result?.frontmatterDescription).toBe("It's dangerous");
+      });
+    });
+
+    describe('when frontmatter has unquoted values', () => {
+      const content =
+        '---\nname: FM Name\ndescription: FM Desc\nalwaysApply: true\n---\n## Standard: Body Name\n\nBody desc :\n\n* Rule 1';
+
+      it('returns frontmatter name as-is', () => {
+        const result = parseStandardMd(content, filePath);
+
+        expect(result?.frontmatterName).toBe('FM Name');
+      });
+
+      it('returns frontmatter description as-is', () => {
         const result = parseStandardMd(content, filePath);
 
         expect(result?.frontmatterDescription).toBe('FM Desc');
@@ -315,7 +349,7 @@ describe('parseStandardMd', () => {
 
     describe('when frontmatter has name and description', () => {
       const content =
-        '---\nname: FM Name\ndescription: FM Desc\nglobs: "**/*.ts"\nalwaysApply: false\n---\n## Standard: Body Name\n\nBody desc :\n\n* Rule 1';
+        "---\nname: 'FM Name'\ndescription: 'FM Desc'\nglobs: \"**/*.ts\"\nalwaysApply: false\n---\n## Standard: Body Name\n\nBody desc :\n\n* Rule 1";
 
       it('returns body name as name', () => {
         const result = parseStandardMd(content, filePath);
