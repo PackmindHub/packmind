@@ -6,9 +6,9 @@ import {
   GetActiveDetectionProgramForRuleCommand,
   GetActiveDetectionProgramForRuleResponse,
   IGetActiveDetectionProgramForRule,
+  DetectionProgramWithSeverity,
 } from '@packmind/types';
 import { DetectionProgramService } from '../../services/DetectionProgramService';
-import { DetectionProgram } from '@packmind/types';
 
 const origin = 'GetActiveDetectionProgramForRuleUseCase';
 
@@ -78,16 +78,20 @@ export class GetActiveDetectionProgramForRuleUseCase implements IGetActiveDetect
           command.ruleId,
         );
 
-      // Extract only active detection programs (current versions)
-      let activePrograms = activeProgramsWithPrograms
-        .filter((program) => program.detectionProgram !== null)
-        .map((program) => program.detectionProgram) as DetectionProgram[];
+      // Extract only active detection programs (current versions) with severity
+      let programsWithSeverity: DetectionProgramWithSeverity[] =
+        activeProgramsWithPrograms
+          .filter((p) => p.detectionProgram !== null)
+          .map((p) => ({
+            program: p.detectionProgram!,
+            severity: p.severity,
+          }));
 
       // Filter by language if specified
       if (command.language) {
         const targetLanguage = stringToProgrammingLanguage(command.language);
-        activePrograms = activePrograms.filter(
-          (program) => program.language === targetLanguage,
+        programsWithSeverity = programsWithSeverity.filter(
+          (p) => p.program.language === targetLanguage,
         );
       }
 
@@ -96,12 +100,12 @@ export class GetActiveDetectionProgramForRuleUseCase implements IGetActiveDetect
         ruleId: command.ruleId,
         ruleContent: rule.content,
         language: command.language,
-        activeCount: activePrograms.length,
+        activeCount: programsWithSeverity.length,
         scope: standard.scope,
       });
 
       return {
-        programs: activePrograms,
+        programs: programsWithSeverity,
         ruleContent: rule.content,
         scope: standard.scope,
       };

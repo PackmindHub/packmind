@@ -23,7 +23,7 @@ export class DiffService {
     newValue: string,
     currentValue: string,
   ): boolean {
-    const result = this.applyLineDiff(oldValue, newValue, currentValue);
-    return !result.success;
+    const { success } = this.applyLineDiff(oldValue, newValue, currentValue);
+    return !success;
   }
 }

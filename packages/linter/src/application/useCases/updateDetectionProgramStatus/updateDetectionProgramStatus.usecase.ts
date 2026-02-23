@@ -6,6 +6,7 @@ import {
   ExecuteLinterProgramsCommand,
   ExecuteLinterProgramsResult,
   LinterExecutionProgram,
+  DetectionSeverity,
 } from '@packmind/types';
 import { ProgrammingLanguage } from '@packmind/types';
 import { ILinterRepositories } from '../../../domain/repositories/ILinterRepositories';
@@ -391,6 +392,7 @@ export class UpdateDetectionProgramStatusUseCase implements IUpdateDetectionProg
       code: program.code,
       sourceCodeState: program.sourceCodeState as 'AST' | 'RAW',
       language: program.language,
+      severity: DetectionSeverity.ERROR,
     };
   }
 }

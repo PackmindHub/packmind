@@ -6,9 +6,9 @@ import {
   GetDraftDetectionProgramForRuleCommand,
   GetDraftDetectionProgramForRuleResponse,
   IGetDraftDetectionProgramForRule,
+  DetectionProgramWithSeverity,
 } from '@packmind/types';
 import { DetectionProgramService } from '../../services/DetectionProgramService';
-import { DetectionProgram } from '@packmind/types';
 
 const origin = 'GetDraftDetectionProgramForRuleUseCase';
 
@@ -81,16 +81,20 @@ export class GetDraftDetectionProgramForRuleUseCase implements IGetDraftDetectio
           command.ruleId,
         );
 
-      // Filter and extract only draft detection programs
-      let draftPrograms = activeProgramsWithPrograms
-        .filter((program) => program.draftDetectionProgram !== null)
-        .map((program) => program.draftDetectionProgram) as DetectionProgram[];
+      // Filter and extract only draft detection programs with severity
+      let draftProgramsWithSeverity: DetectionProgramWithSeverity[] =
+        activeProgramsWithPrograms
+          .filter((p) => p.draftDetectionProgram !== null)
+          .map((p) => ({
+            program: p.draftDetectionProgram!,
+            severity: p.severity,
+          }));
 
       // Filter by language if specified
       if (command.language) {
         const targetLanguage = stringToProgrammingLanguage(command.language);
-        draftPrograms = draftPrograms.filter(
-          (program) => program.language === targetLanguage,
+        draftProgramsWithSeverity = draftProgramsWithSeverity.filter(
+          (p) => p.program.language === targetLanguage,
         );
       }
 
@@ -99,12 +103,12 @@ export class GetDraftDetectionProgramForRuleUseCase implements IGetDraftDetectio
         ruleId: command.ruleId,
         ruleContent: rule.content,
         language: command.language,
-        draftCount: draftPrograms.length,
+        draftCount: draftProgramsWithSeverity.length,
         scope: standard.scope,
       });
 
       return {
-        programs: draftPrograms,
+        programs: draftProgramsWithSeverity,
         ruleContent: rule.content,
         scope: standard.scope,
       };

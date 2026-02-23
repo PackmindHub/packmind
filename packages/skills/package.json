@@ -6,6 +6,7 @@
   "main": "./src/index.js",
   "types": "./src/index.d.ts",
   "dependencies": {
+    "@packmind/accounts": "0.0.1",
     "@packmind/logger": "0.0.1",
     "@packmind/node-utils": "0.0.1",
     "@packmind/spaces": "0.0.1",

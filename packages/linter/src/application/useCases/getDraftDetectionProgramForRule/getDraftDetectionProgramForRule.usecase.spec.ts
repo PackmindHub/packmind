@@ -170,11 +170,11 @@ describe('GetDraftDetectionProgramForRuleUseCase', () => {
         });
 
         it('returns first draft program correctly', () => {
-          expect(result.programs[0]).toEqual(draftProgram1);
+          expect(result.programs[0].program).toEqual(draftProgram1);
         });
 
         it('returns second draft program correctly', () => {
-          expect(result.programs[1]).toEqual(draftProgram2);
+          expect(result.programs[1].program).toEqual(draftProgram2);
         });
 
         it('returns correct scope from standard', () => {
@@ -257,19 +257,21 @@ describe('GetDraftDetectionProgramForRuleUseCase', () => {
         });
 
         it('returns JavaScript draft first', () => {
-          expect(result.programs[0].language).toBe(
+          expect(result.programs[0].program.language).toBe(
             ProgrammingLanguage.JAVASCRIPT,
           );
         });
 
         it('returns TypeScript draft second', () => {
-          expect(result.programs[1].language).toBe(
+          expect(result.programs[1].program.language).toBe(
             ProgrammingLanguage.TYPESCRIPT,
           );
         });
 
         it('returns Python draft third', () => {
-          expect(result.programs[2].language).toBe(ProgrammingLanguage.PYTHON);
+          expect(result.programs[2].program.language).toBe(
+            ProgrammingLanguage.PYTHON,
+          );
         });
       });
     });
@@ -595,17 +597,17 @@ describe('GetDraftDetectionProgramForRuleUseCase', () => {
       });
 
       it('returns the TypeScript draft program', () => {
-        expect(result.programs[0]).toEqual(tsDraft);
+        expect(result.programs[0].program).toEqual(tsDraft);
       });
 
       it('returns program with TypeScript language', () => {
-        expect(result.programs[0].language).toBe(
+        expect(result.programs[0].program.language).toBe(
           ProgrammingLanguage.TYPESCRIPT,
         );
       });
 
       it('returns program with correct code', () => {
-        expect(result.programs[0].code).toBe('typescript draft code');
+        expect(result.programs[0].program.code).toBe('typescript draft code');
       });
     });
 
@@ -675,11 +677,11 @@ describe('GetDraftDetectionProgramForRuleUseCase', () => {
         });
 
         it('returns the draft program', () => {
-          expect(result.programs[0]).toEqual(draftProgram);
+          expect(result.programs[0].program).toEqual(draftProgram);
         });
 
         it('returns program with TypeScript language', () => {
-          expect(result.programs[0].language).toBe(
+          expect(result.programs[0].program.language).toBe(
             ProgrammingLanguage.TYPESCRIPT,
           );
         });

@@ -210,10 +210,21 @@ function extractFrontmatterValue(frontmatter: string, key: string): string {
   for (const line of frontmatter.split('\n')) {
     const trimmed = line.trim();
     if (trimmed.startsWith(`${key}:`)) {
-      return trimmed.slice(key.length + 1).trim();
+      const raw = trimmed.slice(key.length + 1).trim();
+      return stripYamlQuotes(raw);
     }
   }
   return '';
+}
+
+function stripYamlQuotes(value: string): string {
+  if (value.startsWith("'") && value.endsWith("'") && value.length >= 2) {
+    return value.slice(1, -1).replace(/''/g, "'");
+  }
+  if (value.startsWith('"') && value.endsWith('"') && value.length >= 2) {
+    return value.slice(1, -1);
+  }
+  return value;
 }
 
 function extractScopeFromKey(frontmatter: string, key: string): string {

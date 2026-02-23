@@ -109,7 +109,7 @@ describe('diffArtefactsHandler', () => {
 
       const logCalls = mockLog.mock.calls.map((c) => c[0]);
       const contentChangedCall = logCalls.find((c: string) =>
-        c.includes('content changed'),
+        c.includes('Instructions updated'),
       );
 
       expect(contentChangedCall).toBeDefined();
@@ -421,7 +421,7 @@ describe('diffArtefactsHandler', () => {
 
       const logCalls = mockLog.mock.calls.map((c) => c[0]);
       const contentChangedCalls = logCalls.filter(
-        (c: string) => c === '  - command content changed',
+        (c: string) => c === '  - Instructions updated',
       );
 
       expect(contentChangedCalls).toHaveLength(1);
@@ -496,7 +496,7 @@ describe('diffArtefactsHandler', () => {
 
       const logCalls = mockLog.mock.calls.map((c) => c[0]);
       const contentChangedCalls = logCalls.filter(
-        (c: string) => c === '  - command content changed',
+        (c: string) => c === '  - Instructions updated',
       );
 
       expect(contentChangedCalls).toHaveLength(2);
@@ -671,9 +671,7 @@ describe('diffArtefactsHandler', () => {
       await diffArtefactsHandler(deps);
 
       const logCalls = mockLog.mock.calls.map((c) => c[0]);
-      const label = logCalls.find((c: string) =>
-        c.includes('skill license changed'),
-      );
+      const label = logCalls.find((c: string) => c.includes('License'));
 
       expect(label).toBeDefined();
     });
@@ -700,9 +698,7 @@ describe('diffArtefactsHandler', () => {
       await diffArtefactsHandler(deps);
 
       const logCalls = mockLog.mock.calls.map((c) => c[0]);
-      const label = logCalls.find((c: string) =>
-        c.includes('skill compatibility changed'),
-      );
+      const label = logCalls.find((c: string) => c.includes('Compatibility'));
 
       expect(label).toBeDefined();
     });
@@ -729,9 +725,7 @@ describe('diffArtefactsHandler', () => {
       await diffArtefactsHandler(deps);
 
       const logCalls = mockLog.mock.calls.map((c) => c[0]);
-      const label = logCalls.find((c: string) =>
-        c.includes('skill allowed tools changed'),
-      );
+      const label = logCalls.find((c: string) => c.includes('Allowed Tools'));
 
       expect(label).toBeDefined();
     });

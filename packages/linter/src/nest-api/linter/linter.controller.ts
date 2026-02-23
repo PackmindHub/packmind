@@ -54,6 +54,8 @@ import {
   GetDetectionProgramsForPackagesResponse,
   DetectionSeverity,
   UpdateActiveDetectionProgramSeverityCommand,
+  GetActiveDetectionProgramForRuleResponse,
+  GetDraftDetectionProgramForRuleResponse,
 } from '@packmind/types';
 import { LinterHexa } from '../../LinterHexa';
 import { LinterService } from './linter.service';
@@ -1347,11 +1349,7 @@ export class LinterController {
   async getDraftDetectionProgramForRule(
     @Body() body: { standardSlug: string; ruleId: string; language?: string },
     @Req() request: AuthenticatedRequest,
-  ): Promise<{
-    programs: DetectionProgram[];
-    ruleContent: string;
-    scope: string | null;
-  }> {
+  ): Promise<GetDraftDetectionProgramForRuleResponse> {
     this.logger.info(
       'POST /list-draft-detection-program - Getting draft detection programs',
       {
@@ -1597,11 +1595,7 @@ export class LinterController {
   async getActiveDetectionProgramForRule(
     @Body() body: { standardSlug: string; ruleId: string; language?: string },
     @Req() request: AuthenticatedRequest,
-  ): Promise<{
-    programs: DetectionProgram[];
-    ruleContent: string;
-    scope: string | null;
-  }> {
+  ): Promise<GetActiveDetectionProgramForRuleResponse> {
     this.logger.info(
       'POST /list-active-detection-program - Getting active detection programs',
       {

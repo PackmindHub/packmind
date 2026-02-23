@@ -39,8 +39,6 @@ describe('detectSubItemDeleteConflict', () => {
   });
 
   it('returns false if both proposals have the same id', () => {
-    console.log({ changeProposal, diffService });
-
     expect(
       detectDeleteSubItemConflict(
         changeProposal,

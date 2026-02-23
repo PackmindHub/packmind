@@ -1,34 +1,13 @@
 import {
+  CHANGE_PROPOSAL_TYPE_LABELS,
   ChangeProposalId,
   ChangeProposalStatus,
   ChangeProposalType,
 } from '@packmind/types';
 import { ChangeProposalWithConflicts } from '../types';
 
-const changeProposalFieldLabels: Record<ChangeProposalType, string> = {
-  [ChangeProposalType.updateCommandName]: 'Name',
-  [ChangeProposalType.updateCommandDescription]: 'Instructions updated',
-  [ChangeProposalType.updateStandardName]: 'Name',
-  [ChangeProposalType.updateStandardDescription]: 'Description',
-  [ChangeProposalType.updateStandardScope]: 'Scope',
-  [ChangeProposalType.addRule]: 'Rule (add)',
-  [ChangeProposalType.updateRule]: 'Rule (update)',
-  [ChangeProposalType.deleteRule]: 'Rule (delete)',
-  [ChangeProposalType.updateSkillName]: 'Name',
-  [ChangeProposalType.updateSkillDescription]: 'Description',
-  [ChangeProposalType.updateSkillPrompt]: 'Prompt',
-  [ChangeProposalType.updateSkillMetadata]: 'Metadata',
-  [ChangeProposalType.updateSkillLicense]: 'License',
-  [ChangeProposalType.updateSkillCompatibility]: 'Compatibility',
-  [ChangeProposalType.updateSkillAllowedTools]: 'Allowed Tools',
-  [ChangeProposalType.addSkillFile]: 'File (add)',
-  [ChangeProposalType.updateSkillFileContent]: 'File content',
-  [ChangeProposalType.updateSkillFilePermissions]: 'File permissions',
-  [ChangeProposalType.deleteSkillFile]: 'File (delete)',
-};
-
 export function getChangeProposalFieldLabel(type: ChangeProposalType): string {
-  return changeProposalFieldLabels[type];
+  return CHANGE_PROPOSAL_TYPE_LABELS[type];
 }
 
 export function buildProposalNumberMap(

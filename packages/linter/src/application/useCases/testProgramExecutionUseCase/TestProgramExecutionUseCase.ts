@@ -3,6 +3,7 @@ import { IStandardsPort } from '@packmind/types';
 import {
   IExecuteLinterProgramsUseCase,
   LinterExecutionProgram,
+  DetectionSeverity,
 } from '@packmind/types';
 import {
   TestProgramExecutionCommand,
@@ -63,6 +64,7 @@ export class TestProgramExecutionUseCase implements ITestProgramExecutionUseCase
         code: detectionProgram.code,
         sourceCodeState: detectionProgram.sourceCodeState as 'AST' | 'RAW',
         language: detectionProgram.language,
+        severity: DetectionSeverity.ERROR,
       };
 
       // Execute the program with sandbox code

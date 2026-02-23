@@ -10,3 +10,4 @@ export * from './FindSkillBySlugContract';
 export * from './GetSkillVersionContract';
 export * from './GetLatestSkillVersionContract';
 export * from './UploadSkillUseCase';
+export * from './SaveSkillVersionUseCase';

@@ -184,13 +184,13 @@ describe('GetActiveDetectionProgramForRuleUseCase', () => {
       it('returns first active program matching javascript', async () => {
         const result = await useCase.execute(command);
 
-        expect(result.programs[0]).toEqual(activeProgram1);
+        expect(result.programs[0].program).toEqual(activeProgram1);
       });
 
       it('returns second active program matching typescript', async () => {
         const result = await useCase.execute(command);
 
-        expect(result.programs[1]).toEqual(activeProgram2);
+        expect(result.programs[1].program).toEqual(activeProgram2);
       });
 
       it('returns scope from existing standard', async () => {
@@ -279,7 +279,7 @@ describe('GetActiveDetectionProgramForRuleUseCase', () => {
       it('returns first program as JavaScript', async () => {
         const result = await useCase.execute(command);
 
-        expect(result.programs[0].language).toBe(
+        expect(result.programs[0].program.language).toBe(
           ProgrammingLanguage.JAVASCRIPT,
         );
       });
@@ -287,7 +287,7 @@ describe('GetActiveDetectionProgramForRuleUseCase', () => {
       it('returns second program as TypeScript', async () => {
         const result = await useCase.execute(command);
 
-        expect(result.programs[1].language).toBe(
+        expect(result.programs[1].program.language).toBe(
           ProgrammingLanguage.TYPESCRIPT,
         );
       });
@@ -295,7 +295,9 @@ describe('GetActiveDetectionProgramForRuleUseCase', () => {
       it('returns third program as Python', async () => {
         const result = await useCase.execute(command);
 
-        expect(result.programs[2].language).toBe(ProgrammingLanguage.PYTHON);
+        expect(result.programs[2].program.language).toBe(
+          ProgrammingLanguage.PYTHON,
+        );
       });
     });
 
@@ -637,13 +639,13 @@ describe('GetActiveDetectionProgramForRuleUseCase', () => {
       it('returns the typescript active program', async () => {
         const result = await useCase.execute(command);
 
-        expect(result.programs[0]).toEqual(tsActive);
+        expect(result.programs[0].program).toEqual(tsActive);
       });
 
       it('returns program with TypeScript language', async () => {
         const result = await useCase.execute(command);
 
-        expect(result.programs[0].language).toBe(
+        expect(result.programs[0].program.language).toBe(
           ProgrammingLanguage.TYPESCRIPT,
         );
       });
@@ -651,7 +653,7 @@ describe('GetActiveDetectionProgramForRuleUseCase', () => {
       it('returns program with typescript active code', async () => {
         const result = await useCase.execute(command);
 
-        expect(result.programs[0].code).toBe('typescript active code');
+        expect(result.programs[0].program.code).toBe('typescript active code');
       });
     });
 
@@ -725,13 +727,13 @@ describe('GetActiveDetectionProgramForRuleUseCase', () => {
         it('returns the active program', async () => {
           const result = await useCase.execute(command);
 
-          expect(result.programs[0]).toEqual(activeProgram);
+          expect(result.programs[0].program).toEqual(activeProgram);
         });
 
         it('returns the JavaScript active program', async () => {
           const result = await useCase.execute(command);
 
-          expect(result.programs[0].language).toBe(
+          expect(result.programs[0].program.language).toBe(
             ProgrammingLanguage.JAVASCRIPT,
           );
         });

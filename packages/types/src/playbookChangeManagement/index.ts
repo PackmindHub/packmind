@@ -1,5 +1,6 @@
 export * from './ChangeProposalId';
 export * from './ChangeProposalType';
+export * from './ChangeProposalTypeLabels';
 export * from './ChangeProposalStatus';
 export * from './ChangeProposalPayload';
 export * from './ChangeProposal';

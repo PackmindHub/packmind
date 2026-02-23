@@ -114,6 +114,7 @@ export class GetDetectionProgramsForPackagesUseCase implements IGetDetectionProg
                   )
                   .map((adp) => ({
                     language: adp.language,
+                    severity: adp.severity,
                     detectionProgram: {
                       mode: adp.detectionProgram!.mode,
                       code: adp.detectionProgram!.code,

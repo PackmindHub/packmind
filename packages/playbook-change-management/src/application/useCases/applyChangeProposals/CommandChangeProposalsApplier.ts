@@ -88,8 +88,6 @@ export class CommandChangeProposalsApplier extends AbstractChangeProposalsApplie
     spaceId: SpaceId,
     organizationId: OrganizationId,
   ): Promise<RecipeVersion> {
-    console.log('Save new version', version);
-
     const updateResult = await this.recipesPort.updateRecipeFromUI({
       name: version.name,
       content: version.content,

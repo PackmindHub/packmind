@@ -34,6 +34,7 @@ import {
   IChangesProposalApplier,
   ObjectVersions,
 } from './IChangesProposalApplier';
+import { SkillChangeProposalsApplier } from './SkillChangeProposalsApplier';
 
 const origin = 'ApplyChangeProposalsUseCase';
 /*
@@ -250,6 +251,7 @@ export class ApplyChangeProposalsUseCase<
   ): IChangesProposalApplier<V> {
     const appliers: IChangesProposalApplier<ObjectVersions>[] = [
       new CommandChangeProposalsApplier(this.diffService, this.recipesPort),
+      new SkillChangeProposalsApplier(this.diffService, this.skillsPort),
     ];
 
     for (const applier of appliers) {

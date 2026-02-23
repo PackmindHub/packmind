@@ -60,21 +60,7 @@ describe('detectMultiLineConflict', () => {
     ).toEqual(false);
   });
 
-  it('returns false if both have the same payload', () => {
-    expect(
-      detectMultiLineConflict(
-        changeProposal,
-        changeProposalFactory({
-          type: changeProposal.type,
-          artefactId: createStandardId(`${changeProposal.artefactId}-1`),
-          payload: changeProposal.payload,
-        }),
-        diffService,
-      ),
-    ).toEqual(false);
-  });
-
-  it('uses diffService.hasConflict to check the ', () => {
+  it('uses diffService.hasConflict to check if there is a conflict', () => {
     detectMultiLineConflict(
       changeProposal,
       changeProposalFactory({

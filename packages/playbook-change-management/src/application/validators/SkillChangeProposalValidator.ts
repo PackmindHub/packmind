@@ -45,9 +45,7 @@ const SKILL_FIELD_BY_TYPE: Record<ScalarSkillType, (skill: Skill) => string> = {
   [ChangeProposalType.updateSkillDescription]: (skill) => skill.description,
   [ChangeProposalType.updateSkillPrompt]: (skill) => skill.prompt,
   [ChangeProposalType.updateSkillMetadata]: (skill) =>
-    skill.metadata != null
-      ? serializeSkillMetadata({ metadata: skill.metadata })
-      : '{}',
+    skill.metadata != null ? serializeSkillMetadata(skill.metadata) : '{}',
   [ChangeProposalType.updateSkillLicense]: (skill) => skill.license ?? '',
   [ChangeProposalType.updateSkillCompatibility]: (skill) =>
     skill.compatibility ?? '',
