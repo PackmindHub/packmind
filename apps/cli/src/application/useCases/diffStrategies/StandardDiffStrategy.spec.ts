@@ -208,8 +208,40 @@ describe('StandardDiffStrategy', () => {
     });
   });
 
-  describe('when frontmatter name differs in Claude format', () => {
-    it('uses frontmatter values over body values', async () => {
+  describe('when only frontmatter name differs in Claude format', () => {
+    it('returns one updateStandardName diff from frontmatter', async () => {
+      const file: DiffableFile = {
+        path: '.claude/rules/packmind/standard-my-standard.md',
+        content:
+          '---\nname: Server FM Name\ndescription: Desc\nalwaysApply: true\n---\n## Standard: Same Body\n\nDesc :\n\n* Rule 1',
+        artifactType: 'standard',
+        artifactName: 'My Standard',
+        artifactId: 'art-1',
+        spaceId: 'spc-1',
+      } as DiffableFile;
+
+      (fs.readFile as jest.Mock).mockResolvedValue(
+        '---\nname: Local FM Name\ndescription: Desc\nalwaysApply: true\n---\n## Standard: Same Body\n\nDesc :\n\n* Rule 1',
+      );
+
+      const result = await strategy.diff(file, '/test');
+
+      expect(result).toEqual([
+        expect.objectContaining({
+          type: ChangeProposalType.updateStandardName,
+          payload: {
+            oldValue: 'Server FM Name',
+            newValue: 'Local FM Name',
+          },
+        }),
+      ]);
+    });
+  });
+
+  describe('when both frontmatter and body name differ in Claude format', () => {
+    let result: ArtefactDiff[];
+
+    beforeEach(async () => {
       const file: DiffableFile = {
         path: '.claude/rules/packmind/standard-my-standard.md',
         content:
@@ -224,9 +256,15 @@ describe('StandardDiffStrategy', () => {
         '---\nname: Local FM Name\ndescription: Desc\nalwaysApply: true\n---\n## Standard: Local Body\n\nDesc :\n\n* Rule 1',
       );
 
-      const result = await strategy.diff(file, '/test');
+      result = await strategy.diff(file, '/test');
+    });
 
-      expect(result).toEqual([
+    it('returns two updateStandardName diffs', () => {
+      expect(result).toHaveLength(2);
+    });
+
+    it('includes frontmatter name diff', () => {
+      expect(result[0]).toEqual(
         expect.objectContaining({
           type: ChangeProposalType.updateStandardName,
           payload: {
@@ -234,7 +272,19 @@ describe('StandardDiffStrategy', () => {
             newValue: 'Local FM Name',
           },
         }),
-      ]);
+      );
+    });
+
+    it('includes body name diff', () => {
+      expect(result[1]).toEqual(
+        expect.objectContaining({
+          type: ChangeProposalType.updateStandardName,
+          payload: {
+            oldValue: 'Server Body',
+            newValue: 'Local Body',
+          },
+        }),
+      );
     });
   });
 

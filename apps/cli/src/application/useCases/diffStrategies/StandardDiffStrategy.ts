@@ -3,7 +3,7 @@ import * as crypto from 'crypto';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import { ArtefactDiff } from '../../../domain/useCases/IDiffArtefactsUseCase';
-import { parseStandardMd, ParsedStandardMd } from '../../utils/parseStandardMd';
+import { parseStandardMd } from '../../utils/parseStandardMd';
 import { IDiffStrategy } from './IDiffStrategy';
 import { DiffableFile } from './DiffableFile';
 
@@ -32,45 +32,74 @@ export class StandardDiffStrategy implements IDiffStrategy {
     }
 
     const diffs: ArtefactDiff[] = [];
+    const diffBase = {
+      filePath: file.path,
+      artifactName: file.artifactName,
+      artifactType: file.artifactType,
+      artifactId: file.artifactId,
+      spaceId: file.spaceId,
+    };
 
-    const nameDiff = resolveFieldDiff(serverParsed, localParsed, 'name');
-    if (nameDiff) {
+    if (
+      serverParsed.frontmatterName &&
+      localParsed.frontmatterName &&
+      serverParsed.frontmatterName !== localParsed.frontmatterName
+    ) {
       diffs.push({
-        filePath: file.path,
+        ...diffBase,
         type: ChangeProposalType.updateStandardName,
-        payload: nameDiff,
-        artifactName: file.artifactName,
-        artifactType: file.artifactType,
-        artifactId: file.artifactId,
-        spaceId: file.spaceId,
+        payload: {
+          oldValue: serverParsed.frontmatterName,
+          newValue: localParsed.frontmatterName,
+        },
       });
     }
 
-    const descDiff = resolveFieldDiff(serverParsed, localParsed, 'description');
-    if (descDiff) {
+    if (serverParsed.name !== localParsed.name) {
       diffs.push({
-        filePath: file.path,
+        ...diffBase,
+        type: ChangeProposalType.updateStandardName,
+        payload: {
+          oldValue: serverParsed.name,
+          newValue: localParsed.name,
+        },
+      });
+    }
+
+    if (
+      serverParsed.frontmatterDescription &&
+      localParsed.frontmatterDescription &&
+      serverParsed.frontmatterDescription !== localParsed.frontmatterDescription
+    ) {
+      diffs.push({
+        ...diffBase,
         type: ChangeProposalType.updateStandardDescription,
-        payload: descDiff,
-        artifactName: file.artifactName,
-        artifactType: file.artifactType,
-        artifactId: file.artifactId,
-        spaceId: file.spaceId,
+        payload: {
+          oldValue: serverParsed.frontmatterDescription,
+          newValue: localParsed.frontmatterDescription,
+        },
+      });
+    }
+
+    if (serverParsed.description !== localParsed.description) {
+      diffs.push({
+        ...diffBase,
+        type: ChangeProposalType.updateStandardDescription,
+        payload: {
+          oldValue: serverParsed.description,
+          newValue: localParsed.description,
+        },
       });
     }
 
     if (serverParsed.scope !== localParsed.scope) {
       diffs.push({
-        filePath: file.path,
+        ...diffBase,
         type: ChangeProposalType.updateStandardScope,
         payload: {
           oldValue: serverParsed.scope,
           newValue: localParsed.scope,
         },
-        artifactName: file.artifactName,
-        artifactType: file.artifactType,
-        artifactId: file.artifactId,
-        spaceId: file.spaceId,
       });
     }
 
@@ -81,16 +110,12 @@ export class StandardDiffStrategy implements IDiffStrategy {
       if (!localRules.has(rule)) {
         const ruleId = createRuleId(crypto.randomUUID());
         diffs.push({
-          filePath: file.path,
+          ...diffBase,
           type: ChangeProposalType.deleteRule,
           payload: {
             targetId: ruleId,
             item: { id: ruleId, content: rule },
           },
-          artifactName: file.artifactName,
-          artifactType: file.artifactType,
-          artifactId: file.artifactId,
-          spaceId: file.spaceId,
         });
       }
     }
@@ -98,53 +123,15 @@ export class StandardDiffStrategy implements IDiffStrategy {
     for (const rule of localRules) {
       if (!serverRules.has(rule)) {
         diffs.push({
-          filePath: file.path,
+          ...diffBase,
           type: ChangeProposalType.addRule,
           payload: {
             item: { content: rule },
           },
-          artifactName: file.artifactName,
-          artifactType: file.artifactType,
-          artifactId: file.artifactId,
-          spaceId: file.spaceId,
         });
       }
     }
 
     return diffs;
   }
-}
-
-type FrontmatterKey = 'name' | 'description';
-
-const FRONTMATTER_FIELD: Record<FrontmatterKey, keyof ParsedStandardMd> = {
-  name: 'frontmatterName',
-  description: 'frontmatterDescription',
-};
-
-function resolveFieldDiff(
-  server: ParsedStandardMd,
-  local: ParsedStandardMd,
-  field: FrontmatterKey,
-): { oldValue: string; newValue: string } | null {
-  const fmField = FRONTMATTER_FIELD[field];
-  const serverFm = server[fmField] as string | undefined;
-  const localFm = local[fmField] as string | undefined;
-
-  // If both have frontmatter values, check frontmatter first (priority)
-  if (serverFm !== undefined && localFm !== undefined) {
-    if (serverFm !== localFm) {
-      return { oldValue: serverFm, newValue: localFm };
-    }
-  }
-
-  // Fall back to body values
-  if (server[field] !== local[field]) {
-    return {
-      oldValue: server[field] as string,
-      newValue: local[field] as string,
-    };
-  }
-
-  return null;
 }
