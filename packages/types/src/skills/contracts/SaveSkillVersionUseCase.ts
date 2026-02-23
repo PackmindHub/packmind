@@ -4,7 +4,7 @@ import { SkillVersion } from '../SkillVersion';
 import { SkillFile } from '../SkillFile';
 
 export type SkillVersionInput = Omit<SkillVersion, 'id' | 'version'> & {
-  skillFiles: Omit<SkillFile, 'id' | 'skillVersionId'>[];
+  files: Omit<SkillFile, 'id' | 'skillVersionId'>[];
 };
 
 export type SaveSkillVersionCommand = PackmindCommand & {

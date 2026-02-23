@@ -113,7 +113,7 @@ describe('SaveSkillVersionUsecase', () => {
         compatibility: 'All environments',
         metadata: { version: 'v2' },
         allowedTools: 'Read,Write',
-        skillFiles: [],
+        files: [],
       };
 
       command = {
@@ -221,7 +221,7 @@ describe('SaveSkillVersionUsecase', () => {
 
     describe('when skill files are provided', () => {
       beforeEach(() => {
-        skillVersionInput.skillFiles = [
+        skillVersionInput.files = [
           {
             path: '/path/to/file1.txt',
             content: 'file1 content',
@@ -270,7 +270,7 @@ describe('SaveSkillVersionUsecase', () => {
 
     describe('when no skill files are provided', () => {
       beforeEach(() => {
-        skillVersionInput.skillFiles = [];
+        skillVersionInput.files = [];
 
         command = {
           userId,
@@ -346,7 +346,7 @@ describe('SaveSkillVersionUsecase', () => {
             slug: 'test',
             description: 'Test',
             prompt: 'Test',
-            skillFiles: [],
+            files: [],
           },
         };
 
@@ -393,7 +393,7 @@ describe('SaveSkillVersionUsecase', () => {
             slug: 'test',
             description: 'Test',
             prompt: 'Test',
-            skillFiles: [],
+            files: [],
           },
         };
 
@@ -441,7 +441,7 @@ describe('SaveSkillVersionUsecase', () => {
             slug: 'test',
             description: 'Test',
             prompt: 'Test',
-            skillFiles: [],
+            files: [],
           },
         };
 
@@ -493,7 +493,7 @@ describe('SaveSkillVersionUsecase', () => {
             slug: 'test',
             description: 'Test',
             prompt: 'Test',
-            skillFiles: [],
+            files: [],
           },
         };
 
@@ -537,7 +537,7 @@ describe('SaveSkillVersionUsecase', () => {
             slug: 'test',
             description: 'Test',
             prompt: 'Test',
-            skillFiles: [],
+            files: [],
           },
         };
 
@@ -581,7 +581,7 @@ describe('SaveSkillVersionUsecase', () => {
             slug: 'test',
             description: 'Test',
             prompt: 'Test',
-            skillFiles: [],
+            files: [],
           },
         };
 
@@ -629,7 +629,7 @@ describe('SaveSkillVersionUsecase', () => {
             slug: 'test',
             description: 'Test',
             prompt: 'Test',
-            skillFiles: [],
+            files: [],
           },
         };
 

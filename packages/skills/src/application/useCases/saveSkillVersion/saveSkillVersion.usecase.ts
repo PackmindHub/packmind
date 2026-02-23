@@ -119,13 +119,13 @@ export class SaveSkillVersionUsecase
       });
 
       // Create skill files if provided
-      if (skillVersion.skillFiles && skillVersion.skillFiles.length > 0) {
+      if (skillVersion.files && skillVersion.files.length > 0) {
         this.logger.info('Creating skill files', {
-          count: skillVersion.skillFiles.length,
+          count: skillVersion.files.length,
           versionId: savedVersion.id,
         });
 
-        const skillFiles = skillVersion.skillFiles.map((file) => ({
+        const skillFiles = skillVersion.files.map((file) => ({
           id: createSkillFileId(uuidv4()),
           skillVersionId: savedVersion.id,
           path: file.path,

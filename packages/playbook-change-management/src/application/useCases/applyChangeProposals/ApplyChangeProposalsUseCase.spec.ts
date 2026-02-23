@@ -74,6 +74,7 @@ describe('ApplyChangeProposalsUseCase', () => {
     skillsPort = {
       getSkill: jest.fn(),
       getLatestSkillVersion: jest.fn(),
+      getSkillFiles: jest.fn(),
       saveSkillVersion: jest.fn(),
     } as unknown as jest.Mocked<ISkillsPort>;
 
@@ -389,6 +390,7 @@ describe('ApplyChangeProposalsUseCase', () => {
         spaceId,
       } as never);
       skillsPort.getLatestSkillVersion.mockResolvedValue(skillVersion);
+      skillsPort.getSkillFiles.mockResolvedValue([]);
       skillsPort.saveSkillVersion.mockResolvedValue(skillVersion);
     });
 
@@ -407,6 +409,7 @@ describe('ApplyChangeProposalsUseCase', () => {
         organizationId,
         skillVersion: {
           ...skillVersion,
+          files: [],
           name: 'the new value',
         },
       });

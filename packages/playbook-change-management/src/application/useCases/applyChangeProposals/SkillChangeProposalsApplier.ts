@@ -5,12 +5,13 @@ import {
   ISkillsPort,
   OrganizationId,
   SkillId,
-  SkillVersion,
   SpaceId,
   UserId,
+  createSkillFileId,
 } from '@packmind/types';
 import { isExpectedChangeProposalType } from '../../utils/isExpectedChangeProposalType';
 import { DiffService } from '../../services/DiffService';
+import { SkillVersionWithFiles } from './IChangesProposalApplier';
 
 const SKILL_CHANGE_TYPES = [
   ChangeProposalType.updateSkillName,
@@ -26,7 +27,7 @@ const SKILL_CHANGE_TYPES = [
   ChangeProposalType.deleteSkillFile,
 ];
 
-export class SkillChangeProposalsApplier extends AbstractChangeProposalsApplier<SkillVersion> {
+export class SkillChangeProposalsApplier extends AbstractChangeProposalsApplier<SkillVersionWithFiles> {
   constructor(
     diffService: DiffService,
     private readonly skillsPort: ISkillsPort,
@@ -38,7 +39,7 @@ export class SkillChangeProposalsApplier extends AbstractChangeProposalsApplier<
     return this.checkChangesApplicable(changeProposals, SKILL_CHANGE_TYPES);
   }
 
-  async getVersion(artefactId: SkillId): Promise<SkillVersion> {
+  async getVersion(artefactId: SkillId): Promise<SkillVersionWithFiles> {
     const skillVersion =
       await this.skillsPort.getLatestSkillVersion(artefactId);
 
@@ -46,13 +47,20 @@ export class SkillChangeProposalsApplier extends AbstractChangeProposalsApplier<
       throw new Error(`Unable to find skillVersion with id ${artefactId}.`);
     }
 
-    return skillVersion;
+    const skillVersionsFiles = await this.skillsPort.getSkillFiles(
+      skillVersion.id,
+    );
+
+    return {
+      ...skillVersion,
+      files: skillVersionsFiles,
+    };
   }
 
   protected applyChangeProposal(
-    source: SkillVersion,
+    source: SkillVersionWithFiles,
     changeProposal: ChangeProposal,
-  ): SkillVersion {
+  ): SkillVersionWithFiles {
     if (
       isExpectedChangeProposalType(
         changeProposal,
@@ -147,20 +155,117 @@ export class SkillChangeProposalsApplier extends AbstractChangeProposalsApplier<
       };
     }
 
+    if (
+      isExpectedChangeProposalType(
+        changeProposal,
+        ChangeProposalType.addSkillFile,
+      )
+    ) {
+      const newFile = {
+        ...changeProposal.payload.item,
+        id: createSkillFileId(''),
+        skillVersionId: source.id,
+      };
+
+      return {
+        ...source,
+        files: [...(source.files || []), newFile],
+      };
+    }
+
+    if (
+      isExpectedChangeProposalType(
+        changeProposal,
+        ChangeProposalType.updateSkillFileContent,
+      )
+    ) {
+      const files = source.files || [];
+      const updatedFiles = files.map((file) => {
+        if (file.id !== changeProposal.payload.targetId) {
+          return file;
+        }
+
+        const updatedContent = this.applyDiff(
+          changeProposal.id,
+          changeProposal.payload,
+          file.content,
+        );
+
+        return {
+          ...file,
+          content: updatedContent,
+          ...(changeProposal.payload.isBase64 !== undefined && {
+            isBase64: changeProposal.payload.isBase64,
+          }),
+        };
+      });
+
+      return {
+        ...source,
+        files: updatedFiles,
+      };
+    }
+
+    if (
+      isExpectedChangeProposalType(
+        changeProposal,
+        ChangeProposalType.updateSkillFilePermissions,
+      )
+    ) {
+      const files = source.files || [];
+      const updatedFiles = files.map((file) => {
+        if (file.id !== changeProposal.payload.targetId) {
+          return file;
+        }
+
+        return {
+          ...file,
+          permissions: changeProposal.payload.newValue,
+        };
+      });
+
+      return {
+        ...source,
+        files: updatedFiles,
+      };
+    }
+
+    if (
+      isExpectedChangeProposalType(
+        changeProposal,
+        ChangeProposalType.deleteSkillFile,
+      )
+    ) {
+      const files = source.files || [];
+      const filteredFiles = files.filter(
+        (file) => file.id !== changeProposal.payload.targetId,
+      );
+
+      return {
+        ...source,
+        files: filteredFiles,
+      };
+    }
+
     throw new Error(`Unsupported ChangeProposalType: ${changeProposal.type}`);
   }
 
   async saveNewVersion(
-    skillVersion: SkillVersion,
+    skillVersion: SkillVersionWithFiles,
     userId: UserId,
     spaceId: SpaceId,
     organizationId: OrganizationId,
-  ): Promise<SkillVersion> {
-    return this.skillsPort.saveSkillVersion({
+  ): Promise<SkillVersionWithFiles> {
+    const newVersion = await this.skillsPort.saveSkillVersion({
       skillVersion,
       userId,
       spaceId,
       organizationId,
     });
+
+    return {
+      ...newVersion,
+      files: await this.skillsPort.getSkillFiles(newVersion.id),
+    };
   }
 }
