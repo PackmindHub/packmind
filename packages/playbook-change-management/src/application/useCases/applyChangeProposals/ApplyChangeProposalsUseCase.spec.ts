@@ -63,6 +63,9 @@ describe('ApplyChangeProposalsUseCase', () => {
 
     standardsPort = {
       getStandard: jest.fn(),
+      getLatestStandardVersion: jest.fn(),
+      getRulesByStandardId: jest.fn(),
+      updateStandard: jest.fn(),
     } as unknown as jest.Mocked<IStandardsPort>;
 
     recipesPort = {
@@ -324,41 +327,62 @@ describe('ApplyChangeProposalsUseCase', () => {
       status: ChangeProposalStatus.pending,
     });
 
+    const standardVersion = {
+      id: 'standard-version-id',
+      standardId,
+      name: 'Test Standard',
+      description: 'Test description',
+      version: 1,
+      slug: 'test-standard',
+      scope: null,
+      rules: [],
+    };
+
+    const updatedStandard = {
+      id: standardId,
+      name: standardVersion.name,
+      version: 2,
+      spaceId,
+    };
+
     beforeEach(() => {
       changeProposalService.findById.mockResolvedValue(changeProposal);
       standardsPort.getStandard.mockResolvedValue({
         id: standardId,
         spaceId,
       } as never);
+      standardsPort.getLatestStandardVersion.mockResolvedValue(
+        standardVersion as never,
+      );
+      standardsPort.getRulesByStandardId.mockResolvedValue([]);
+      standardsPort.updateStandard.mockResolvedValue(updatedStandard as never);
       recipesPort.getRecipeByIdInternal.mockResolvedValue(null);
+      changeProposalService.batchUpdateProposalsInTransaction.mockResolvedValue();
     });
 
-    it('throws error for standard change proposals', async () => {
-      await expect(
-        useCase.execute({
-          userId,
-          organizationId,
-          spaceId,
-          artefactId: standardId,
-          accepted: [changeProposal.id],
-          rejected: [],
-        }),
-      ).rejects.toThrow('Unable to find a valid applier for changes: addRule');
+    it('applies standard change proposals successfully', async () => {
+      const result = await useCase.execute({
+        userId,
+        organizationId,
+        spaceId,
+        artefactId: standardId,
+        accepted: [changeProposal.id],
+        rejected: [],
+      });
+
+      expect(result.newArtefactVersion).toBe(standardVersion.id);
+      expect(standardsPort.updateStandard).toHaveBeenCalled();
     });
 
     it('does not call updateRecipeFromUI', async () => {
-      await useCase
-        .execute({
-          userId,
-          organizationId,
-          spaceId,
-          artefactId: standardId,
-          accepted: [changeProposal.id],
-          rejected: [],
-        })
-        .catch(() => {
-          /* expected error */
-        });
+      await useCase.execute({
+        userId,
+        organizationId,
+        spaceId,
+        artefactId: standardId,
+        accepted: [changeProposal.id],
+        rejected: [],
+      });
 
       expect(recipesPort.updateRecipeFromUI).not.toHaveBeenCalled();
     });
