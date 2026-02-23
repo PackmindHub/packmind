@@ -9,6 +9,7 @@ import {
   ApplyChangeProposalsResponse,
   ArtefactVersionId,
   ChangeProposal,
+  ChangeProposalId,
   ChangeProposalStatus,
   ChangeProposalType,
   createOrganizationId,
@@ -28,14 +29,14 @@ import { ChangeProposalService } from '../../services/ChangeProposalService';
 import { validateSpaceOwnership } from '../../services/validateSpaceOwnership';
 import { validateArtefactInSpace } from '../../services/validateArtefactInSpace';
 import { DiffService } from '../../services/DiffService';
-import { ApplyCommandChangeProposals } from './ApplyCommandChangeProposals';
+import { CommandChangeProposalsApplier } from './CommandChangeProposalsApplier';
+import {
+  IChangesProposalApplier,
+  ObjectVersions,
+} from './IChangesProposalApplier';
 
 const origin = 'ApplyChangeProposalsUseCase';
-
-const RECIPE_CHANGE_TYPES = [
-  ChangeProposalType.updateCommandName,
-  ChangeProposalType.updateCommandDescription,
-];
+/*
 
 const STANDARD_CHANGE_TYPES = [
   ChangeProposalType.updateStandardName,
@@ -44,21 +45,7 @@ const STANDARD_CHANGE_TYPES = [
   ChangeProposalType.updateRule,
   ChangeProposalType.deleteRule,
 ];
-
-const SKILL_CHANGE_TYPES = [
-  ChangeProposalType.updateSkillName,
-  ChangeProposalType.updateSkillDescription,
-  ChangeProposalType.updateSkillPrompt,
-  ChangeProposalType.updateSkillMetadata,
-  ChangeProposalType.updateSkillLicense,
-  ChangeProposalType.updateSkillCompatibility,
-  ChangeProposalType.updateSkillAllowedTools,
-  ChangeProposalType.addSkillFile,
-  ChangeProposalType.updateSkillFileContent,
-  ChangeProposalType.updateSkillFilePermissions,
-  ChangeProposalType.deleteSkillFile,
-];
-
+*/
 export class ApplyChangeProposalsUseCase<
   T extends StandardId | RecipeId | SkillId,
 >
@@ -107,67 +94,14 @@ export class ApplyChangeProposalsUseCase<
       allChangeProposalIds.map((id) => this.changeProposalService.findById(id)),
     );
 
-    // Validate all proposals exist, belong to artefact, and are pending
-    for (let i = 0; i < changeProposals.length; i++) {
-      const proposal = changeProposals[i];
-      const proposalId = allChangeProposalIds[i];
-
-      if (!proposal) {
-        throw new Error(`Change proposal ${proposalId} not found`);
-      }
-
-      if (proposal.artefactId !== command.artefactId) {
-        throw new Error(
-          `Change proposal ${proposal.id} does not belong to artefact ${command.artefactId}`,
-        );
-      }
-
-      if (proposal.status !== ChangeProposalStatus.pending) {
-        throw new Error(
-          `Change proposal ${proposal.id} is not pending (status: ${proposal.status})`,
-        );
-      }
-    }
-
-    // Focus on recipes only - throw error for other types
-    for (const proposal of changeProposals) {
-      if (!proposal) break;
-
-      if (
-        !RECIPE_CHANGE_TYPES.includes(proposal.type) &&
-        !STANDARD_CHANGE_TYPES.includes(proposal.type) &&
-        !SKILL_CHANGE_TYPES.includes(proposal.type)
-      ) {
-        throw new Error(`Unknown change proposal type: ${proposal.type}`);
-      }
-
-      if (
-        STANDARD_CHANGE_TYPES.includes(proposal.type) ||
-        SKILL_CHANGE_TYPES.includes(proposal.type)
-      ) {
-        throw new Error(
-          `Change proposal type ${proposal.type} is not supported yet. Only recipe change proposals are supported.`,
-        );
-      }
-    }
-
-    // Get current recipe
-    const recipe = await this.recipesPort.getRecipeByIdInternal(
-      command.artefactId as RecipeId,
+    this.assertAllProposalsValid(
+      changeProposals,
+      allChangeProposalIds,
+      command.artefactId,
     );
-    if (!recipe) {
-      throw new Error(`Recipe ${command.artefactId} not found`);
-    }
 
-    const recipeVersion = await this.recipesPort.getRecipeVersion(
-      recipe.id,
-      recipe.version,
-    );
-    if (!recipeVersion) {
-      throw new Error(
-        `No version #${recipe.version} found for recipe ${command.artefactId}`,
-      );
-    }
+    const changesApplier = this.getApplier(changeProposals);
+    const currentVersion = await changesApplier.getVersion(command.artefactId);
 
     const changeProposalsToApply = command.accepted.map((changeProposalId) => {
       const proposal = changeProposals.find((p) => p?.id === changeProposalId);
@@ -177,15 +111,6 @@ export class ApplyChangeProposalsUseCase<
       }
       return proposal;
     });
-
-    const changesApplier = new ApplyCommandChangeProposals(
-      this.diffService,
-      this.recipesPort,
-    );
-    const recipeVersionWithChanges = changesApplier.applyChangeProposals(
-      recipeVersion,
-      changeProposalsToApply,
-    );
 
     // Re-validate that all proposals are still pending (fresh from DB)
     // This prevents race conditions where proposals were already processed
@@ -208,14 +133,17 @@ export class ApplyChangeProposalsUseCase<
       }
     }
 
-    const newRecipeVersion = changeProposalsToApply.length
+    const newVersion = changeProposalsToApply.length
       ? await changesApplier.saveNewVersion(
-          recipeVersionWithChanges,
+          changesApplier.applyChangeProposals(
+            currentVersion,
+            changeProposalsToApply,
+          ),
           createUserId(command.userId),
           command.spaceId,
           createOrganizationId(command.organizationId),
         )
-      : recipeVersion;
+      : currentVersion;
 
     // 3. Mark all proposals as applied/rejected in a single transaction
     // This ensures atomicity - if any proposal update fails, all are rolled back
@@ -254,10 +182,10 @@ export class ApplyChangeProposalsUseCase<
       });
     } catch (error) {
       this.logger.error(
-        'Failed to mark change proposals - recipe was updated but proposals remain pending',
+        'Failed to mark change proposals - object was updated but proposals remain pending',
         {
-          recipeId: recipe.id,
-          newVersion: newRecipeVersion.version,
+          newVersionId: newVersion.id,
+          newVersion: newVersion.version,
           error: error instanceof Error ? error.message : String(error),
         },
       );
@@ -271,7 +199,7 @@ export class ApplyChangeProposalsUseCase<
       spaceId: command.spaceId,
       accepted: command.accepted.length,
       rejected: command.rejected.length,
-      newVersion: newRecipeVersion.id,
+      newVersion: newVersion.id,
     });
 
     SSEEventPublisher.publishChangeProposalUpdateEvent(
@@ -286,7 +214,55 @@ export class ApplyChangeProposalsUseCase<
     });
 
     return {
-      newArtefactVersion: newRecipeVersion.id as ArtefactVersionId<T>,
+      newArtefactVersion: newVersion.id as ArtefactVersionId<T>,
     };
+  }
+
+  private assertAllProposalsValid(
+    changeProposals: (ChangeProposal | null)[],
+    allChangeProposalIds: ChangeProposalId[],
+    artefactId: T,
+  ): asserts changeProposals is ChangeProposal[] {
+    for (let i = 0; i < changeProposals.length; i++) {
+      const proposal = changeProposals[i];
+      const proposalId = allChangeProposalIds[i];
+
+      if (!proposal) {
+        throw new Error(`Change proposal ${proposalId} not found`);
+      }
+
+      if (proposal.artefactId !== artefactId) {
+        throw new Error(
+          `Change proposal ${proposal.id} does not belong to artefact ${artefactId}`,
+        );
+      }
+
+      if (proposal.status !== ChangeProposalStatus.pending) {
+        throw new Error(
+          `Change proposal ${proposal.id} is not pending (status: ${proposal.status})`,
+        );
+      }
+    }
+  }
+
+  private getApplier<V extends ObjectVersions>(
+    changeProposals: ChangeProposal[],
+  ): IChangesProposalApplier<V> {
+    const appliers: IChangesProposalApplier<ObjectVersions>[] = [
+      new CommandChangeProposalsApplier(this.diffService, this.recipesPort),
+    ];
+
+    for (const applier of appliers) {
+      if (applier.areChangesApplicable(changeProposals)) {
+        return applier as IChangesProposalApplier<V>;
+      }
+    }
+
+    const changeProposalTypes = Array.from(
+      new Set(changeProposals.map((cp) => cp.type)),
+    ).join(', ');
+    throw new Error(
+      `Unable to find a valid applier for changes: ${changeProposalTypes}`,
+    );
   }
 }
