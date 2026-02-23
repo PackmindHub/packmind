@@ -30,15 +30,21 @@ export class HumanReadableLogger implements ILogger {
     const warningCount = allDetails.filter(
       (d) => d.severity === DetectionSeverity.WARNING,
     ).length;
+    const errorFileCount = violations.filter((v) =>
+      v.violations.some((d) => d.severity === DetectionSeverity.ERROR),
+    ).length;
+    const warningFileCount = violations.filter((v) =>
+      v.violations.some((d) => d.severity === DetectionSeverity.WARNING),
+    ).length;
 
     if (errorCount > 0) {
       logErrorConsole(
-        `❌  Found ${formatBold(String(errorCount))} error(s) in ${formatBold(String(violations.length))} file(s)`,
+        `❌  Found ${formatBold(String(errorCount))} error(s) in ${formatBold(String(errorFileCount))} file(s)`,
       );
     }
     if (warningCount > 0) {
       logWarningConsole(
-        `⚠️ Found ${formatBold(String(warningCount))} warning(s) in ${formatBold(String(violations.length))} file(s)`,
+        `⚠️ Found ${formatBold(String(warningCount))} warning(s) in ${formatBold(String(warningFileCount))} file(s)`,
       );
     }
   }

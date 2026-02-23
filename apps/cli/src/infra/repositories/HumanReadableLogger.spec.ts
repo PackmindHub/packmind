@@ -176,5 +176,50 @@ describe('HumanReadableLogger', () => {
         expect(consoleLogger.logWarningConsole).toHaveBeenCalled();
       });
     });
+
+    describe('when errors and warnings are in separate files', () => {
+      beforeEach(() => {
+        const violations: LintViolation[] = [
+          {
+            file: '/path/to/error-file.ts',
+            violations: [
+              {
+                line: 10,
+                character: 5,
+                rule: 'error-rule',
+                standard: 'standard1',
+                severity: DetectionSeverity.ERROR,
+              },
+            ],
+          },
+          {
+            file: '/path/to/warning-file.ts',
+            violations: [
+              {
+                line: 20,
+                character: 5,
+                rule: 'warning-rule',
+                standard: 'standard1',
+                severity: DetectionSeverity.WARNING,
+              },
+            ],
+          },
+        ];
+
+        logger.logViolations(violations);
+      });
+
+      it('reports error file count excluding warning-only files', () => {
+        expect(consoleLogger.logErrorConsole).toHaveBeenCalledWith(
+          expect.stringContaining('1'),
+        );
+      });
+
+      it('reports warning file count excluding error-only files', () => {
+        expect(consoleLogger.logWarningConsole).toHaveBeenCalledWith(
+          expect.stringContaining('1'),
+        );
+      });
+    });
   });
 });
