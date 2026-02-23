@@ -668,6 +668,60 @@ describe('LintFilesAgainstRuleUseCase', () => {
       });
     });
 
+    describe('when program language is missing', () => {
+      beforeEach(async () => {
+        mockPackmindGateway.linter.getDraftDetectionProgramsForRule = jest
+          .fn()
+          .mockResolvedValue({
+            programs: [
+              {
+                program: {
+                  language: null,
+                  code: 'const x = 1;',
+                  mode: 'singleAst',
+                  sourceCodeState: 'AST' as const,
+                },
+                severity: DetectionSeverity.ERROR,
+              },
+            ],
+            ruleContent: 'Test draft rule',
+            standardSlug: 'test-standard',
+            scope: null,
+          });
+
+        (fs.stat as jest.Mock).mockResolvedValue({
+          isFile: () => true,
+          isDirectory: () => false,
+        });
+
+        mockGitRemoteUrlService.tryGetGitRepositoryRoot.mockReturnValue(
+          '/project',
+        );
+        mockListFiles.readFileContent.mockResolvedValue('const x = 1;');
+
+        mockLinterExecutionUseCase.execute.mockResolvedValue({
+          file: '/project/test.ts',
+          violations: [],
+        });
+
+        await useCase.execute({
+          path: '/project/test.ts',
+          draftMode: true,
+          standardSlug: 'test-standard',
+          ruleId: 'rule-123' as RuleId,
+          language: 'typescript',
+        });
+      });
+
+      it('falls back to command language for linter execution', () => {
+        expect(mockLinterExecutionUseCase.execute).toHaveBeenCalledWith(
+          expect.objectContaining({
+            language: ProgrammingLanguage.TYPESCRIPT,
+          }),
+        );
+      });
+    });
+
     describe('when scope filtering is skipped', () => {
       const draftProgramsResponse = {
         programs: [
@@ -829,6 +883,57 @@ describe('LintFilesAgainstRuleUseCase', () => {
   });
 
   describe('when active mode is enabled', () => {
+    describe('when program language is missing', () => {
+      beforeEach(async () => {
+        mockLinterGateway.getActiveDetectionProgramsForRule.mockResolvedValue({
+          scope: [],
+          ruleContent: 'Test rule',
+          programs: [
+            {
+              program: {
+                language: null,
+                mode: DetectionModeEnum.SINGLE_AST,
+                code: 'function checkSourceCode(ast) { return []; }',
+                sourceCodeState: 'AST' as const,
+              },
+              severity: DetectionSeverity.ERROR,
+            },
+          ],
+        });
+
+        (fs.stat as jest.Mock).mockResolvedValue({
+          isFile: () => true,
+          isDirectory: () => false,
+        });
+
+        mockGitRemoteUrlService.tryGetGitRepositoryRoot.mockReturnValue(
+          '/project',
+        );
+        mockListFiles.readFileContent.mockResolvedValue('const x = 1;');
+
+        mockLinterExecutionUseCase.execute.mockResolvedValue({
+          file: '/project/test.ts',
+          violations: [],
+        });
+
+        await useCase.execute({
+          path: '/project/test.ts',
+          draftMode: false,
+          standardSlug: 'test-standard',
+          ruleId: 'rule-1' as RuleId,
+          language: 'typescript',
+        });
+      });
+
+      it('falls back to command language for linter execution', () => {
+        expect(mockLinterExecutionUseCase.execute).toHaveBeenCalledWith(
+          expect.objectContaining({
+            language: ProgrammingLanguage.TYPESCRIPT,
+          }),
+        );
+      });
+    });
+
     describe('when using active mode with comma-separated scope', () => {
       const activeProgramsResponse = {
         programs: [

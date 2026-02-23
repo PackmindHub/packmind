@@ -283,7 +283,8 @@ export class LintFilesAgainstRuleUseCase implements ILintFilesAgainstRule {
                   {
                     content: draftProgramsResult.ruleContent || 'Draft Rule',
                     activeDetectionPrograms: draftProgramsResult.programs.map(
-                      this.mapToActiveDetectionProgram,
+                      (item) =>
+                        this.mapToActiveDetectionProgram(item, language),
                     ),
                   },
                 ],
@@ -323,7 +324,8 @@ export class LintFilesAgainstRuleUseCase implements ILintFilesAgainstRule {
                   {
                     content: activeProgramsResult.ruleContent || 'Active Rule',
                     activeDetectionPrograms: activeProgramsResult.programs.map(
-                      this.mapToActiveDetectionProgram,
+                      (item) =>
+                        this.mapToActiveDetectionProgram(item, language),
                     ),
                   },
                 ],
@@ -535,9 +537,10 @@ export class LintFilesAgainstRuleUseCase implements ILintFilesAgainstRule {
 
   private mapToActiveDetectionProgram = (
     item: DetectionProgramWithSeverity,
+    fallbackLanguage?: string,
   ) => {
     return {
-      language: item.program.language,
+      language: item.program.language ?? fallbackLanguage,
       severity: item.severity,
       detectionProgram: {
         mode: item.program.mode,
