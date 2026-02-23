@@ -1,6 +1,7 @@
 import { PackmindCliHexa } from '../../PackmindCliHexa';
 import {
   ArtifactType,
+  CHANGE_PROPOSAL_TYPE_LABELS,
   ChangeProposalPayload,
   ChangeProposalType,
   CodingAgent,
@@ -35,28 +36,6 @@ const ARTIFACT_TYPE_LABELS: Record<ArtifactType, string> = {
   command: 'Command',
   standard: 'Standard',
   skill: 'Skill',
-};
-
-const CHANGE_TYPE_LABELS: Partial<Record<ChangeProposalType, string>> = {
-  [ChangeProposalType.updateCommandDescription]: 'command content changed',
-  [ChangeProposalType.updateSkillName]: 'skill name changed',
-  [ChangeProposalType.updateSkillDescription]: 'skill description changed',
-  [ChangeProposalType.updateSkillPrompt]: 'skill prompt changed',
-  [ChangeProposalType.updateSkillMetadata]: 'skill metadata changed',
-  [ChangeProposalType.updateSkillLicense]: 'skill license changed',
-  [ChangeProposalType.updateSkillCompatibility]: 'skill compatibility changed',
-  [ChangeProposalType.updateSkillAllowedTools]: 'skill allowed tools changed',
-  [ChangeProposalType.updateSkillFileContent]: 'skill file content changed',
-  [ChangeProposalType.updateSkillFilePermissions]:
-    'skill file permissions changed',
-  [ChangeProposalType.addSkillFile]: 'new skill file added',
-  [ChangeProposalType.deleteSkillFile]: 'skill file deleted',
-  [ChangeProposalType.updateStandardName]: 'standard name changed',
-  [ChangeProposalType.updateStandardDescription]:
-    'standard description changed',
-  [ChangeProposalType.updateStandardScope]: 'standard scope changed',
-  [ChangeProposalType.addRule]: 'new rule added',
-  [ChangeProposalType.deleteRule]: 'rule deleted',
 };
 
 function subGroupByChangeContent(diffs: ArtefactDiff[]): ArtefactDiff[][] {
@@ -260,7 +239,8 @@ export async function diffArtefactsHandler(
         for (const diff of subGroup) {
           log(`  ${formatFilePath(diff.filePath)}`);
         }
-        const label = CHANGE_TYPE_LABELS[subGroup[0].type] ?? 'content changed';
+        const label =
+          CHANGE_PROPOSAL_TYPE_LABELS[subGroup[0].type] ?? 'content changed';
         log(`  - ${label}`);
         formatDiffPayload(subGroup[0], log);
       }
