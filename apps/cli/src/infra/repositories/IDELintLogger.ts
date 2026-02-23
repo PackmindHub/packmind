@@ -1,3 +1,4 @@
+import { DetectionSeverity } from '@packmind/types';
 import { LintViolation } from '../../domain/entities/LintViolation';
 import { ILogger } from '../../domain/repositories/ILogger';
 import { logConsole } from '../utils/consoleLogger';
@@ -10,10 +11,14 @@ export class IDELintLogger implements ILogger {
   }
 
   logViolation(violation: LintViolation) {
-    violation.violations.forEach(({ line, character, standard, rule }) => {
-      logConsole(
-        `${violation.file}:${line}:${character}:error:@${standard}/${rule}`,
-      );
-    });
+    violation.violations.forEach(
+      ({ line, character, standard, rule, severity }) => {
+        const label =
+          severity === DetectionSeverity.WARNING ? 'warning' : 'error';
+        logConsole(
+          `${violation.file}:${line}:${character}:${label}:@${standard}/${rule}`,
+        );
+      },
+    );
   }
 }

@@ -1,4 +1,4 @@
-import { RuleId } from '@packmind/types';
+import { DetectionSeverity, RuleId } from '@packmind/types';
 import { PackmindCliHexa } from '../../PackmindCliHexa';
 import { LintViolation } from '../../domain/entities/LintViolation';
 import { DiffMode } from '../../domain/entities/DiffMode';
@@ -7,6 +7,11 @@ import { HumanReadableLogger } from '../repositories/HumanReadableLogger';
 import { CommunityEditionError } from '../../domain/errors/CommunityEditionError';
 import { NotLoggedInError } from '../../domain/errors/NotLoggedInError';
 import { logInfoConsole, logWarningConsole } from '../utils/consoleLogger';
+
+const SEVERITY_LEVELS: Record<DetectionSeverity, number> = {
+  [DetectionSeverity.WARNING]: 0,
+  [DetectionSeverity.ERROR]: 1,
+};
 
 export enum Loggers {
   ide = 'ide',
@@ -23,6 +28,7 @@ export type LintHandlerArgs = {
   continueOnError: boolean;
   continueOnMissingKey: boolean;
   diff?: DiffMode;
+  level?: DetectionSeverity;
 };
 
 export type LintHandlerDependencies = {
@@ -50,6 +56,7 @@ export async function lintHandler(
     continueOnError,
     continueOnMissingKey,
     diff,
+    level,
   } = args;
   const {
     packmindCliHexa,
@@ -127,14 +134,29 @@ export async function lintHandler(
     throw error;
   }
 
+  const filteredViolations = level
+    ? violations
+        .map((v) => ({
+          ...v,
+          violations: v.violations.filter(
+            (d) => SEVERITY_LEVELS[d.severity] >= SEVERITY_LEVELS[level],
+          ),
+        }))
+        .filter((v) => v.violations.length > 0)
+    : violations;
+
   (logger === Loggers.ide ? ideLintLogger : humanReadableLogger).logViolations(
-    violations,
+    filteredViolations,
   );
 
   const durationSeconds = (Date.now() - startedAt) / 1000;
   logInfoConsole(`Lint completed in ${durationSeconds.toFixed(2)}s`);
 
-  if (violations.length > 0 && !continueOnError) {
+  const hasErrors = filteredViolations.some((v) =>
+    v.violations.some((d) => d.severity === DetectionSeverity.ERROR),
+  );
+
+  if (hasErrors && !continueOnError) {
     exit(1);
   } else {
     exit(0);

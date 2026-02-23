@@ -1,4 +1,5 @@
 import { IUseCase, PackmindCommand } from '../../UseCase';
+import { DetectionSeverity } from '../ActiveDetectionProgram';
 import { DetectionModeEnum, SourceCodeState } from '../DetectionProgram';
 
 export type IGetDetectionProgramsForPackagesUseCase = IUseCase<
@@ -22,6 +23,7 @@ export type GetDetectionProgramsForPackagesResponse = {
         content: string;
         activeDetectionPrograms: {
           language: string;
+          severity: DetectionSeverity;
           detectionProgram: {
             mode: DetectionModeEnum;
             code: string;

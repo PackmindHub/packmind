@@ -1,5 +1,6 @@
 import {
   DetectionModeEnum,
+  DetectionSeverity,
   ExecuteLinterProgramsCommand,
   IExecuteLinterProgramsUseCase,
   LinterExecutionViolation,
@@ -51,6 +52,7 @@ describe('LintFilesAgainstRuleUseCase', () => {
             character: 0,
             rule: program.ruleContent,
             standard: program.standardSlug,
+            severity: program.severity,
           }),
         ),
       })),
@@ -108,10 +110,13 @@ describe('LintFilesAgainstRuleUseCase', () => {
         ruleContent: 'Interface names should start with I',
         programs: [
           {
-            language: 'typescript',
-            mode: DetectionModeEnum.SINGLE_AST,
-            code: 'function checkSourceCode(ast) { return [1]; }',
-            sourceCodeState: 'AST' as const,
+            program: {
+              language: 'typescript',
+              mode: DetectionModeEnum.SINGLE_AST,
+              code: 'function checkSourceCode(ast) { return [1]; }',
+              sourceCodeState: 'AST' as const,
+            },
+            severity: DetectionSeverity.ERROR,
           },
         ],
       });
@@ -203,10 +208,13 @@ describe('LintFilesAgainstRuleUseCase', () => {
         ruleContent: 'Test rule',
         programs: [
           {
-            language: 'typescript',
-            mode: DetectionModeEnum.SINGLE_AST,
-            code: 'function checkSourceCode(ast) { return []; }',
-            sourceCodeState: 'AST' as const,
+            program: {
+              language: 'typescript',
+              mode: DetectionModeEnum.SINGLE_AST,
+              code: 'function checkSourceCode(ast) { return []; }',
+              sourceCodeState: 'AST' as const,
+            },
+            severity: DetectionSeverity.ERROR,
           },
         ],
       });
@@ -258,10 +266,13 @@ describe('LintFilesAgainstRuleUseCase', () => {
           ruleContent: 'Interface names should start with I',
           programs: [
             {
-              language: 'typescript',
-              mode: DetectionModeEnum.SINGLE_AST,
-              code: 'function checkSourceCode(ast) { return [1]; }',
-              sourceCodeState: 'AST' as const,
+              program: {
+                language: 'typescript',
+                mode: DetectionModeEnum.SINGLE_AST,
+                code: 'function checkSourceCode(ast) { return [1]; }',
+                sourceCodeState: 'AST' as const,
+              },
+              severity: DetectionSeverity.ERROR,
             },
           ],
         });
@@ -323,10 +334,13 @@ describe('LintFilesAgainstRuleUseCase', () => {
           ruleContent: 'Test rule',
           programs: [
             {
-              language: 'js',
-              mode: DetectionModeEnum.SINGLE_AST,
-              code: 'function check() { return [1]; }',
-              sourceCodeState: 'AST' as const,
+              program: {
+                language: 'js',
+                mode: DetectionModeEnum.SINGLE_AST,
+                code: 'function check() { return [1]; }',
+                sourceCodeState: 'AST' as const,
+              },
+              severity: DetectionSeverity.ERROR,
             },
           ],
         });
@@ -368,10 +382,13 @@ describe('LintFilesAgainstRuleUseCase', () => {
         ruleContent: 'Test rule',
         programs: [
           {
-            language: 'typescript',
-            mode: DetectionModeEnum.SINGLE_AST,
-            code: 'invalid code',
-            sourceCodeState: 'AST' as const,
+            program: {
+              language: 'typescript',
+              mode: DetectionModeEnum.SINGLE_AST,
+              code: 'invalid code',
+              sourceCodeState: 'AST' as const,
+            },
+            severity: DetectionSeverity.ERROR,
           },
         ],
       });
@@ -432,10 +449,13 @@ describe('LintFilesAgainstRuleUseCase', () => {
         ruleContent: 'Test specific rule',
         programs: [
           {
-            language: 'typescript',
-            mode: DetectionModeEnum.SINGLE_AST,
-            code: 'function checkSourceCode(ast) { return [1]; }',
-            sourceCodeState: 'AST' as const,
+            program: {
+              language: 'typescript',
+              mode: DetectionModeEnum.SINGLE_AST,
+              code: 'function checkSourceCode(ast) { return [1]; }',
+              sourceCodeState: 'AST' as const,
+            },
+            severity: DetectionSeverity.ERROR,
           },
         ],
       });
@@ -485,10 +505,13 @@ describe('LintFilesAgainstRuleUseCase', () => {
         ruleContent: 'Global rule',
         programs: [
           {
-            language: 'typescript',
-            mode: DetectionModeEnum.SINGLE_AST,
-            code: 'function checkSourceCode(ast) { return [1]; }',
-            sourceCodeState: 'AST' as const,
+            program: {
+              language: 'typescript',
+              mode: DetectionModeEnum.SINGLE_AST,
+              code: 'function checkSourceCode(ast) { return [1]; }',
+              sourceCodeState: 'AST' as const,
+            },
+            severity: DetectionSeverity.ERROR,
           },
         ],
       });
@@ -513,10 +536,13 @@ describe('LintFilesAgainstRuleUseCase', () => {
       ruleContent: 'Test rule',
       programs: [
         {
-          language: 'unsupported-lang',
-          mode: DetectionModeEnum.SINGLE_AST,
-          code: 'function checkSourceCode() { return [1]; }',
-          sourceCodeState: 'AST' as const,
+          program: {
+            language: 'unsupported-lang',
+            mode: DetectionModeEnum.SINGLE_AST,
+            code: 'function checkSourceCode() { return [1]; }',
+            sourceCodeState: 'AST' as const,
+          },
+          severity: DetectionSeverity.ERROR,
         },
       ],
     });
@@ -585,10 +611,13 @@ describe('LintFilesAgainstRuleUseCase', () => {
       const draftProgramsResponse = {
         programs: [
           {
-            language: 'typescript',
-            code: 'const x = 1;',
-            mode: 'singleAst',
-            sourceCodeState: 'AST' as const,
+            program: {
+              language: 'typescript',
+              code: 'const x = 1;',
+              mode: 'singleAst',
+              sourceCodeState: 'AST' as const,
+            },
+            severity: DetectionSeverity.ERROR,
           },
         ],
         ruleContent: 'Test draft rule',
@@ -643,10 +672,13 @@ describe('LintFilesAgainstRuleUseCase', () => {
       const draftProgramsResponse = {
         programs: [
           {
-            language: 'typescript',
-            code: 'const x = 1;',
-            mode: 'singleAst',
-            sourceCodeState: 'AST' as const,
+            program: {
+              language: 'typescript',
+              code: 'const x = 1;',
+              mode: 'singleAst',
+              sourceCodeState: 'AST' as const,
+            },
+            severity: DetectionSeverity.ERROR,
           },
         ],
         ruleContent: 'Test draft rule',
@@ -683,6 +715,7 @@ describe('LintFilesAgainstRuleUseCase', () => {
               character: 1,
               rule: 'Test draft rule',
               standard: 'test-standard',
+              severity: DetectionSeverity.ERROR,
             },
           ],
         });
@@ -708,10 +741,13 @@ describe('LintFilesAgainstRuleUseCase', () => {
       const draftProgramsResponse = {
         programs: [
           {
-            language: 'typescript',
-            code: 'const x = 1;',
-            mode: 'singleAst',
-            sourceCodeState: 'AST' as const,
+            program: {
+              language: 'typescript',
+              code: 'const x = 1;',
+              mode: 'singleAst',
+              sourceCodeState: 'AST' as const,
+            },
+            severity: DetectionSeverity.ERROR,
           },
         ],
         ruleContent: 'Test hexagonal architecture rule',
@@ -749,6 +785,7 @@ describe('LintFilesAgainstRuleUseCase', () => {
               character: 1,
               rule: 'Test hexagonal architecture rule',
               standard: 'hexagonal-architecture',
+              severity: DetectionSeverity.ERROR,
             },
           ],
         });
@@ -796,10 +833,13 @@ describe('LintFilesAgainstRuleUseCase', () => {
       const activeProgramsResponse = {
         programs: [
           {
-            language: 'typescript',
-            code: 'const x = 1;',
-            mode: 'singleAst',
-            sourceCodeState: 'AST' as const,
+            program: {
+              language: 'typescript',
+              code: 'const x = 1;',
+              mode: 'singleAst',
+              sourceCodeState: 'AST' as const,
+            },
+            severity: DetectionSeverity.ERROR,
           },
         ],
         ruleContent: 'Test hexagonal architecture rule',
@@ -837,6 +877,7 @@ describe('LintFilesAgainstRuleUseCase', () => {
               character: 1,
               rule: 'Test hexagonal architecture rule',
               standard: 'hexagonal-architecture',
+              severity: DetectionSeverity.ERROR,
             },
           ],
         });

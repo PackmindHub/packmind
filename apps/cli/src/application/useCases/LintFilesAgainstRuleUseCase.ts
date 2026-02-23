@@ -281,12 +281,13 @@ export class LintFilesAgainstRuleUseCase implements ILintFilesAgainstRule {
                   {
                     content: draftProgramsResult.ruleContent || 'Draft Rule',
                     activeDetectionPrograms: draftProgramsResult.programs.map(
-                      (program) => ({
-                        language: program.language,
+                      (item) => ({
+                        language: item.program.language,
+                        severity: item.severity,
                         detectionProgram: {
-                          mode: program.mode,
-                          code: program.code,
-                          sourceCodeState: program.sourceCodeState,
+                          mode: item.program.mode,
+                          code: item.program.code,
+                          sourceCodeState: item.program.sourceCodeState,
                         },
                       }),
                     ),
@@ -328,12 +329,13 @@ export class LintFilesAgainstRuleUseCase implements ILintFilesAgainstRule {
                   {
                     content: activeProgramsResult.ruleContent || 'Active Rule',
                     activeDetectionPrograms: activeProgramsResult.programs.map(
-                      (program) => ({
-                        language: program.language,
+                      (item) => ({
+                        language: item.program.language,
+                        severity: item.severity,
                         detectionProgram: {
-                          mode: program.mode,
-                          code: program.code,
-                          sourceCodeState: program.sourceCodeState,
+                          mode: item.program.mode,
+                          code: item.program.code,
+                          sourceCodeState: item.program.sourceCodeState,
                         },
                       }),
                     ),
@@ -454,6 +456,7 @@ export class LintFilesAgainstRuleUseCase implements ILintFilesAgainstRule {
                   sourceCodeState:
                     activeProgram.detectionProgram.sourceCodeState,
                   language: fileLanguage,
+                  severity: activeProgram.severity,
                 });
 
                 programsByLanguage.set(programLanguage, programsForLanguage);
